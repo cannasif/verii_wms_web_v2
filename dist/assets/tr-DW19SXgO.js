@@ -1,1 +1,0 @@
-const t="SAC Mal Kabul",a="SAC Planları",e="Varış ve Kabul Kontrolü",l="Mal Kabule Aktarım ve Yerleştirme",n={title:t,import:"Beklenti Aktarımı",plans:a,inspection:e,operations:l};export{n as default,e as inspection,l as operations,a as plans,t as title};

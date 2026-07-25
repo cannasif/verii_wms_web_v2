@@ -1,1 +1,0 @@
-import{q as a}from"./index-C1FyW1_d.js";const e=t=>{if(!t.success)throw new Error(t.message||"İşlem başarısız.");return t.data},s={current:async()=>e(await a.get("/api/project-settings/current")),get:async()=>e(await a.get("/api/project-settings")),update:async t=>e(await a.put("/api/project-settings",t,{useNativeHttpMethod:!0}))};export{s as p};

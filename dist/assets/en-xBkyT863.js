@@ -1,1 +1,0 @@
-const t="Steel Goods Receipt",e="Steel Plans",n="Arrival and Acceptance Inspection",o="Receipt Conversion and Putaway",c={title:t,import:"Expected Plate Import",plans:e,inspection:n,operations:o};export{c as default,n as inspection,o as operations,e as plans,t as title};

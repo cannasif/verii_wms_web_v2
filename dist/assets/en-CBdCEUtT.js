@@ -1,1 +1,0 @@
-const t="WarehouseOutbound",e="WarehouseOutbound Process Center",s="Create Shipment",n="Shipments",o="WarehouseOutbound Settings",u={title:t,hub:e,create:s,list:n,settings:o};export{s as create,u as default,e as hub,n as list,o as settings,t as title};

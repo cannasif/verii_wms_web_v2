@@ -1,1 +1,0 @@
-const t="Shipping",e="Shipping Process Center",n="Create Shipment",s="Shipments",i="Shipping Settings",p={title:t,hub:e,create:n,list:s,settings:i};export{n as create,p as default,e as hub,s as list,i as settings,t as title};
