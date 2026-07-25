@@ -3,7 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Eye, Loader2, ShieldCheck, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdvancedDataGrid, type GridColumn, type GridRequest } from '@/components/shared/AdvancedDataGrid';
-import { requiredActionColumn, systemColumns } from '@/components/shared/GridSystemColumns';
+import { requiredActionColumn } from '@/components/shared/GridSystemColumns';
 import { AppDropdown } from '@/components/shared/AppDropdown';
 import { formatProjectDate, formatProjectDateTime, formatProjectNumber } from '@/lib/project-format';
 import { qualityApi, type QualityInspection, type QualityInspectionDetail } from '../api/quality.api';
@@ -14,18 +14,19 @@ export function QualityInspectionsPage({ quarantineOnly = false }: { quarantineO
   const fetchPage=useCallback((request:GridRequest)=>qualityApi.inspectionsPaged(quarantineOnly?{...request,filters:[...request.filters,{column:'status',operator:'equals',value:'Quarantined'}]}:request),[quarantineOnly]);
   const open=useCallback(async(id:number)=>{setLoading(id);try{setDetail(await qualityApi.inspection(id))}catch(error){toast.error(message(error,'Kalite detayı alınamadı.'))}finally{setLoading(null)}},[]);
   const columns=useMemo<GridColumn<QualityInspection>[]>(()=>[
-    ...systemColumns<QualityInspection>(),
     {key:'inspectionNo',label:'Kontrol No',sortable:true,filterable:true,render:r=><span className="font-mono font-semibold">{r.inspectionNo}</span>},
-    {key:'sourceDocumentNo',label:'Mal Kabul',sortable:true,filterable:true,render:r=>r.sourceDocumentNo},
+    {key:'sourceWaybillNo',label:'İrsaliye No',sortable:true,filterable:true,render:r=>r.sourceWaybillNo||'—'},
+    {key:'sourceDocumentNo',label:'Mal Kabul No',sortable:true,filterable:true,render:r=>r.sourceDocumentNo},
+    {key:'createdByName',label:'İşlemi Yapan',sortable:true,filterable:true,render:r=>r.createdByName||`Kullanıcı #${r.createdBy??'—'}`},
     {key:'warehouseName',label:'Depo',sortable:true,filterable:true,render:r=>`${r.warehouseCode??''} ${r.warehouseName??''}`},
     {key:'status',label:'Durum',sortable:true,filterable:true,render:r=>r.status},
     {key:'lineCount',label:'Satır',sortable:true,filterable:true,render:r=>r.lineCount},
     {key:'totalQuantity',label:'Miktar',sortable:true,filterable:true,render:r=>formatProjectNumber(r.totalQuantity)},
-    {key:'createdAtUtc',label:'Oluşma',sortable:true,filterable:true,render:r=>formatProjectDateTime(r.createdAtUtc)},
+    {key:'queuedAtUtc',label:'Kaliteye Gönderilme',sortable:true,filterable:true,render:r=>formatProjectDateTime(r.queuedAtUtc??r.createdAtUtc)},
     {key:'actions',label:'İşlemler',...requiredActionColumn,render:r=><button type="button" onClick={()=>void open(r.id)} disabled={loading===r.id} className="rounded-lg p-2 text-cyan-500 hover:bg-cyan-500/10" aria-label="Kalite kontrolünü aç">{loading===r.id?<Loader2 className="size-4 animate-spin"/>:<Eye className="size-4"/>}</button>},
   ],[loading,open]);
   const decided=async()=>{setDetail(null);await queryClient.invalidateQueries({queryKey:['advanced-grid',pageKey]})};
-  return <><AdvancedDataGrid<QualityInspection> pageKey={pageKey} title={quarantineOnly?'Karantina Karar Kuyruğu':'Kalite Kontrol Kuyruğu'} description={quarantineOnly?'Karantinadaki ürünleri yetkili biçimde serbest bırakın, reddedin veya iade edin.':'Mal kabulden oluşan kontrolleri satır bazında inceleyin ve stok kararını uygulayın.'} columns={columns} fetchPage={fetchPage}/>{detail&&<InspectionModal detail={detail} close={()=>setDetail(null)} decided={()=>void decided()}/>}</>;
+  return <><AdvancedDataGrid<QualityInspection> pageKey={pageKey} title={quarantineOnly?'Karantina Karar Kuyruğu':'Kalite İnceleme Listesi'} description={quarantineOnly?'Karantinadaki ürünleri yetkili biçimde serbest bırakın, reddedin veya iade edin.':'Tamamlanan mal kabullerin özetini görüntüleyin; stok, lot, seri ve karar ayrıntıları için kaydı açın.'} columns={columns} fetchPage={fetchPage}/>{detail&&<InspectionModal detail={detail} close={()=>setDetail(null)} decided={()=>void decided()}/>}</>;
 }
 
 function InspectionModal({detail,close,decided}:{detail:QualityInspectionDetail;close:()=>void;decided:()=>void}):ReactElement {

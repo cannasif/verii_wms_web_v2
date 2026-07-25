@@ -1,12 +1,12 @@
 import { useCallback,useMemo,useState,type ReactElement } from 'react';
-import { ArrowRightLeft,Ban,CheckCircle2,Eye,FileText,Loader2,PackageCheck,PackageMinus,Printer,Warehouse,X } from 'lucide-react';
+import { ArrowRightLeft,Ban,CheckCircle2,Eye,FileText,Loader2,PackageCheck,Printer,Warehouse,X } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdvancedDataGrid,type GridColumn } from '@/components/shared/AdvancedDataGrid';
 import { requiredActionColumn,systemColumns } from '@/components/shared/GridSystemColumns';
 import { Dialog,DialogContent,DialogTitle } from '@/components/ui/dialog';
 import { formatProjectDate,formatProjectDateTime,formatProjectNumber } from '@/lib/project-format';
 import { goodsReceiptV2Api } from '../api/goods-receipt.api';
-import type { GoodsReceiptDetail,GoodsReceiptGridRow,GoodsReceiptLifecycleResult,GoodsReceiptRoutingResult } from '../types/goods-receipt.types';
+import type { GoodsReceiptDetail,GoodsReceiptGridRow,GoodsReceiptLifecycleResult,GoodsReceiptSplitRoutingResult } from '../types/goods-receipt.types';
 import { previewReceiptLabelsPdf,printableLabels,printReceiptLabels } from '../utils/goods-receipt-label-output';
 import { GoodsReceiptLifecycleDialog,type GoodsReceiptLifecycleAction } from './GoodsReceiptLifecycleDialog';
 import { GoodsReceiptRoutingDialog } from './GoodsReceiptRoutingDialog';
@@ -53,14 +53,15 @@ export function GoodsReceiptListPage():ReactElement{
     setDetail(await goodsReceiptV2Api.detail(result.id));
     setGridVersion((value)=>value+1);
   },[]);
-  const routingCompleted=useCallback(async(result:GoodsReceiptRoutingResult)=>{
-    setDetail(await goodsReceiptV2Api.detail(detail?.header.id??result.targetDocumentId));
+  const routingCompleted=useCallback(async()=>{
+    if (!detail?.header.id) return;
+    setDetail(await goodsReceiptV2Api.detail(detail.header.id));
     setGridVersion((value)=>value+1);
   },[detail?.header.id]);
   return <><AdvancedDataGrid<GoodsReceiptGridRow> key={gridVersion} pageKey="goods-receipts" title="Mal Kabul Kayıtları" description="Mal kabulü görüntüleyin; belge veya kalem bazında etiket yazdırın ve PDF önizleyin." columns={columns} fetchPage={goodsReceiptV2Api.paged}/>{detail&&<DetailModal detail={detail} close={()=>setDetail(null)} output={output} busyKey={outputBusy} onLifecycleCompleted={lifecycleCompleted} onRoutingCompleted={routingCompleted}/>}</>;
 }
 
-function DetailModal({detail,close,output,busyKey,onLifecycleCompleted,onRoutingCompleted}:{detail:GoodsReceiptDetail;close:()=>void;output:(receiptId:number,lineId:number|undefined,mode:OutputMode,title:string)=>Promise<void>;busyKey:string;onLifecycleCompleted:(result:GoodsReceiptLifecycleResult)=>Promise<void>;onRoutingCompleted:(result:GoodsReceiptRoutingResult)=>Promise<void>}):ReactElement{
+function DetailModal({detail,close,output,busyKey,onLifecycleCompleted,onRoutingCompleted}:{detail:GoodsReceiptDetail;close:()=>void;output:(receiptId:number,lineId:number|undefined,mode:OutputMode,title:string)=>Promise<void>;busyKey:string;onLifecycleCompleted:(result:GoodsReceiptLifecycleResult)=>Promise<void>;onRoutingCompleted:(result:GoodsReceiptSplitRoutingResult)=>Promise<void>}):ReactElement{
   const[action,setAction]=useState<GoodsReceiptLifecycleAction|null>(null);
   const[routeKind,setRouteKind]=useState<'transfer'|'outbound'|null>(null);
   const shortCloseAvailable=detail.lines.some(line=>line.expectedQuantity-line.receivedQuantity-line.shortClosedQuantity>0);
@@ -72,8 +73,7 @@ function DetailModal({detail,close,output,busyKey,onLifecycleCompleted,onRouting
       {detail.header.approvalStatus==='Pending'&&!cancelled&&<LifecycleButton label="Onayla" icon={<CheckCircle2 className="size-4"/>} onClick={()=>setAction('approve')}/>}
       {shortCloseAvailable&&!cancelled&&<LifecycleButton label="Kısa Kapat" icon={<PackageCheck className="size-4"/>} onClick={()=>setAction('shortClose')}/>}
       {detail.putawayCandidates.length>0&&!cancelled&&<LifecycleButton label={`Rafa Yerleştir (${detail.putawayCandidates.length})`} icon={<Warehouse className="size-4"/>} onClick={()=>setAction('putaway')}/>}
-      {routingAvailable&&<LifecycleButton label="DAT Oluştur" icon={<ArrowRightLeft className="size-4"/>} onClick={()=>setRouteKind('transfer')}/>}
-      {routingAvailable&&<LifecycleButton label="Ambar Çıkış Oluştur" icon={<PackageMinus className="size-4"/>} onClick={()=>setRouteKind('outbound')}/>}
+      {routingAvailable&&<LifecycleButton label="Transfer / Ambar Çıkış Dağıt" icon={<ArrowRightLeft className="size-4"/>} onClick={()=>setRouteKind('transfer')}/>}
       {!cancelled&&<LifecycleButton label="İptal Et" danger icon={<Ban className="size-4"/>} onClick={()=>setAction('cancel')}/>}
     </div>
     <div className="mt-4 grid gap-3 md:grid-cols-4"><Info label="İşlem tipi" value={processTypeLabel(detail.header.processType)}/><Info label="Durum" value={detail.header.status}/><Info label="Kalite" value={detail.header.qualityStatus}/><Info label="Raflama" value={detail.header.putawayStatus}/><Info label="Görev" value={detail.taskNumbers.join(', ')||'—'}/><Info label="Fiziksel kabul" value={String(detail.executionCount)}/><Info label="İrsaliye" value={detail.header.waybillNo||'—'}/><Info label="Belge tarihi" value={formatProjectDate(detail.header.documentDate)}/><Info label="Alınma zamanı" value={detail.header.receivedAtUtc?formatProjectDateTime(detail.header.receivedAtUtc):'—'}/></div>

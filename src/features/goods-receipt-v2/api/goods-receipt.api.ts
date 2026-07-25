@@ -2,7 +2,7 @@ import { api } from '@/lib/axios';
 import { resolveStockTrackingPolicy } from '@/features/stock-tracking/effective-stock-tracking';
 import type { DropdownPage, DropdownPageRequest } from '@/hooks/useDropdownInfiniteSearch';
 import type { GridPage as AdvancedGridPage, GridRequest } from '@/components/shared/AdvancedDataGrid';
-import type { ActiveUserOption, CreateGoodsReceiptResult, CustomerOption, GoodsReceiptDetail, GoodsReceiptGridRow, GoodsReceiptLabelBatchDetail, GoodsReceiptLabelBatchRow, GoodsReceiptLabelRow, GoodsReceiptLifecycleResult, GoodsReceiptRoutingResult, GoodsReceiptTaskDetail, GoodsReceiptTaskGridRow, LocationOption, ManualGoodsReceiptResult, OpenOrderHeader, OpenOrderLine, PutawayLocationSuggestion, ReceiveGoodsReceiptTaskResult, SeriesOption, StockOption, WarehouseOption, YapCodeOption } from '../types/goods-receipt.types';
+import type { ActiveUserOption, CreateGoodsReceiptResult, CustomerOption, GoodsReceiptDetail, GoodsReceiptGridRow, GoodsReceiptLabelBatchDetail, GoodsReceiptLabelBatchRow, GoodsReceiptLabelRow, GoodsReceiptLifecycleResult, GoodsReceiptRoutingResult, GoodsReceiptSplitRoutingResult, GoodsReceiptTaskDetail, GoodsReceiptTaskGridRow, LocationOption, ManualGoodsReceiptResult, OpenOrderHeader, OpenOrderLine, PutawayLocationSuggestion, ReceiveGoodsReceiptTaskResult, SeriesOption, StockOption, WarehouseOption, YapCodeOption } from '../types/goods-receipt.types';
 
 interface Envelope<T> { success: boolean; data: T; message?: string }
 type GridPage<T> = DropdownPage<T>;
@@ -34,6 +34,7 @@ export const goodsReceiptV2Api = {
   detail: async (id: number): Promise<GoodsReceiptDetail> => unwrap(await api.get<Envelope<GoodsReceiptDetail>>(`/api/goods-receipts/${id}`)),
   routeToTransfer: async (id: number, payload: unknown): Promise<GoodsReceiptRoutingResult> => unwrap(await api.post<Envelope<GoodsReceiptRoutingResult>>(`/api/goods-receipts/${id}/routes/warehouse-transfer`, payload)),
   routeToOutbound: async (id: number, payload: unknown): Promise<GoodsReceiptRoutingResult> => unwrap(await api.post<Envelope<GoodsReceiptRoutingResult>>(`/api/goods-receipts/${id}/routes/warehouse-outbound`, payload)),
+  routeSplit: async (id: number, payload: unknown): Promise<GoodsReceiptSplitRoutingResult> => unwrap(await api.post<Envelope<GoodsReceiptSplitRoutingResult>>(`/api/goods-receipts/${id}/routes/split`, payload)),
   approve: async (id: number, payload: { idempotencyKey: string; rowVersion: string; reason?: string }): Promise<GoodsReceiptLifecycleResult> =>
     unwrap(await api.post<Envelope<GoodsReceiptLifecycleResult>>(`/api/goods-receipts/${id}/approve`, payload)),
   shortClose: async (id: number, payload: { idempotencyKey: string; rowVersion: string; reason: string; lines: Array<{ lineId: number; quantity: number }> }): Promise<GoodsReceiptLifecycleResult> =>

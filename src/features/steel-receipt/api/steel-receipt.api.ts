@@ -13,8 +13,8 @@ export const steelReceiptApi={
   line:async(id:number):Promise<SteelLineRow>=>unwrap(await api.get<Envelope<SteelLineRow>>(`/api/steel-receipts/lines/${id}`)),
   inspect:async(id:number,payload:{isArrived:boolean;arrivedQuantity:number;approvedQuantity:number;rejectedQuantity:number;rejectReason?:string;note?:string;rowVersion:string}):Promise<SteelLineRow>=>unwrap(await api.put<Envelope<SteelLineRow>>(`/api/steel-receipts/lines/${id}/inspection`,payload)),
   convert:async(planId:number,lineIds:number[],options?:{description?:string;priority?:number;assignedUserIds?:number[];assignToAllActiveUsers?:boolean}):Promise<ConvertResult>=>unwrap(await api.post<Envelope<ConvertResult>>(`/api/steel-receipts/${planId}/convert`,{idempotencyKey:crypto.randomUUID(),documentDate:new Date().toLocaleDateString('en-CA'),lineIds,assignedUserIds:options?.assignedUserIds??null,assignToAllActiveUsers:options?.assignToAllActiveUsers??false,priority:options?.priority??3,description:options?.description||'SAC kontrolünden ortak mal kabule aktarım'})),
-  place:async(id:number,payload:{locationId:number;placementType:'SideBySide'|'Stacked';rowNo?:number;positionNo?:number;stackOrderNo?:number;rowVersion:string})=>
-    unwrap(await api.post<Envelope<{placementId:number;stockMovementOperationId:number}>>(`/api/steel-receipts/lines/${id}/place`,{idempotencyKey:crypto.randomUUID(),...payload})),
+  place:async(id:number,payload:{locationId:number;rowVersion:string})=>
+    unwrap(await api.post<Envelope<{placementId:number;stockMovementOperationId:number;replayed:boolean;locationId:number;placementType:'Stacked';rowNo:number;positionNo:number;stackOrderNo:number}>>(`/api/steel-receipts/lines/${id}/place`,{idempotencyKey:crypto.randomUUID(),...payload})),
   attachments:async(id:number):Promise<SteelAttachment[]>=>unwrap(await api.get<Envelope<SteelAttachment[]>>(`/api/steel-receipts/lines/${id}/attachments`)),
   uploadAttachment:async(id:number,file:File,caption?:string):Promise<SteelAttachment>=>{
     const body=new FormData();body.append('file',file);if(caption)body.append('caption',caption);

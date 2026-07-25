@@ -13,6 +13,7 @@ export function VehicleCheckInListPage(){
     {key:'checkedInAtUtc',label:'Giriş Zamanı',render:r=>formatProjectDateTime(r.checkedInAtUtc)},
     {key:'driverFirstName',label:'Şoför',render:r=>`${r.driverFirstName||''} ${r.driverLastName||''}`.trim()||'—'},
     {key:'driverPhone',label:'Telefon',render:r=>r.driverPhone||'—'},
+    {key:'steelSheetCount',label:'Sac Levha Adedi',sortable:true,filterable:true,render:r=>r.steelSheetCount},
     {key:'customerCode',label:'Tedarikçi',render:r=><><strong>{r.customerCode||'—'}</strong><small className="block text-slate-500">{r.customerName}</small></>},
     {key:'status',label:'Durum',render:r=>r.status},
     {key:'imageCount',label:'Görsel',render:r=>r.imageCount},

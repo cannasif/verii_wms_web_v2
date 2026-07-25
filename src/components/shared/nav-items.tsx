@@ -75,7 +75,7 @@ export const WMS_NAV_ITEMS: NavItem[] = [
     { title: 'sidebar.goodsReceiptSettings', titleFallback: 'Süreç Ayarları', href: '/warehouse/goods-receipt-settings', searchAliases: ['fazla kabul', 'onay', 'erp', 'kalite', 'politika'], requiredPermission: 'WMS.GOODS_RECEIPT.SETTINGS.VIEW' },
   ] },
   { title: 'sidebar.qualityControl', titleFallback: 'Kalite', icon: analyticsIcon, children: [
-    { title: 'sidebar.qualityControlInspections', titleFallback: 'Kontrol Kuyruğu', href: '/warehouse/quality/inspections', searchAliases: ['kalite', 'kontrol', 'karantina', 'onay'], requiredPermission: 'WMS.QUALITY.INSPECTIONS.VIEW' },
+    { title: 'sidebar.qualityControlInspections', titleFallback: 'Kalite İnceleme Listesi', href: '/warehouse/quality/inspections', searchAliases: ['kalite', 'kontrol', 'karantina', 'onay'], requiredPermission: 'WMS.QUALITY.INSPECTIONS.VIEW' },
     { title: 'sidebar.qualityQuarantine', titleFallback: 'Karantina Kararları', href: '/warehouse/quality/quarantine', searchAliases: ['kalite', 'karantina', 'serbest bırak', 'ret', 'iade'], requiredPermission: 'WMS.QUALITY.INSPECTIONS.VIEW' },
     { title: 'sidebar.qualityControlRules', titleFallback: 'Stok Kuralları', href: '/warehouse/quality/rules', searchAliases: ['kalite', 'örnekleme', 'stok kuralı'], requiredPermission: 'WMS.QUALITY.RULES.VIEW' },
     { title: 'sidebar.qualityControlSettings', titleFallback: 'Genel Ayarlar', href: '/warehouse/quality/settings', searchAliases: ['kalite', 'karantina', 'bekletme', 'ayar'], requiredPermission: 'WMS.QUALITY.SETTINGS.VIEW' },

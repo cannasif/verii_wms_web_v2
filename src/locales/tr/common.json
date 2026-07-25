@@ -439,7 +439,7 @@
     "qualityControlSettings": "Kalite Parametreleri",
     "qualityControlRules": "Kalite Kural Tanımları",
     "qualityControlRulesList": "Kalite Kural Listesi",
-    "qualityControlInspections": "Kalite İnceleme Kayıtları",
+    "qualityControlInspections": "Kalite İnceleme Listesi",
     "qualityControlInspectionsList": "Kalite İnceleme Listesi",
     "qualityControlQuarantine": "Karantina Kuyruğu",
     "sacMalKabul": "Sac Mal Kabul",
@@ -1283,7 +1283,7 @@
       }
     },
     "inspections": {
-      "pageTitle": "Kalite İnceleme Kayıtları",
+      "pageTitle": "Kalite İnceleme Listesi",
       "title": "Kalite İnceleme Formu",
       "description": "Gelen ürün için kalite kararı verilecek satırları oluşturun, durumu yönetin ve karar geçmişini izleyin.",
       "guidanceTitle": "İş Akışı",
