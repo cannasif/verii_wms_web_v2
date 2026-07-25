@@ -11,6 +11,7 @@ export interface EffectiveStockTrackingPolicy {
   trackingType: StockTrackingType;
   requireSerial: boolean;
   serialQuantityRule: 'NotApplicable' | 'OneSerialPerLine' | 'OneSerialPerBaseUnit';
+  autoGenerateSerials: boolean;
   requireLot: boolean;
   requireManufacturingDate: boolean;
   requireExpirationDate: boolean;
@@ -75,6 +76,7 @@ export function StockTrackingPolicyField({
   const requirements = [
     policy.requireSerial && 'Seri zorunlu',
     policy.serialQuantityRule === 'OneSerialPerBaseUnit' && 'Miktar kadar seri',
+    policy.autoGenerateSerials && 'Otomatik seri',
     policy.requireLot && 'Lot zorunlu',
     policy.requireManufacturingDate && 'Üretim tarihi',
     policy.requireExpirationDate && 'SKT',

@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { AppDropdown } from '@/components/shared/AppDropdown';
 import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
 import { StockTrackingPolicyField } from '@/features/stock-tracking/effective-stock-tracking';
+import { stockTrackingApi } from '@/features/stock-tracking/api/stock-tracking.api';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { useAuthStore } from '@/stores/auth-store';
 import { goodsReceiptV2Api } from '../api/goods-receipt.api';
@@ -86,11 +87,61 @@ export function GoodsReceiptCreatePage(): ReactElement {
   const updateTracking = (key: string, trackingId: string, patch: Partial<PlannedReceiptTracking>): void => setLines((current) => current.map((line) => lineKey(line) !== key ? line : { ...line, trackings: line.trackings.map((tracking) => tracking.localId === trackingId ? { ...tracking, ...patch } : tracking) }));
   const addTracking = (key: string): void => setLines((current) => current.map((line) => lineKey(line) !== key ? line : { ...line, trackings: [...line.trackings, { localId: crypto.randomUUID(), quantity: line.trackingType === 'Serial' || line.trackingType === 'LotAndSerial' ? 1 : Math.max(line.quantity - line.trackings.reduce((sum, x) => sum + x.quantity, 0), 0) }] }));
   const removeTracking = (key: string, trackingId: string): void => setLines((current) => current.map((line) => lineKey(line) !== key ? line : { ...line, trackings: line.trackings.filter((x) => x.localId !== trackingId) }));
-  const createSerialRows = (key: string): void => setLines((current) => current.map((line) => {
-    if (lineKey(line) !== key) return line;
-    if (!Number.isInteger(line.quantity) || line.quantity < 1 || line.quantity > 500) { toast.error('Seri satırları için miktar 1-500 arasında tam sayı olmalıdır.'); return line; }
-    return { ...line, trackings: Array.from({ length: line.quantity }, () => ({ localId: crypto.randomUUID(), quantity: 1 })) };
-  }));
+  const createSerialRows = async (key: string): Promise<void> => {
+    const line = lines.find((item) => lineKey(item) === key);
+    if (!line) return;
+    if (!Number.isInteger(line.quantity) || line.quantity < 1 || line.quantity > 500) {
+      toast.error('Seri satırları için miktar 1-500 arasında tam sayı olmalıdır.');
+      return;
+    }
+    if (!line.trackingPolicy.autoGenerateSerials) {
+      updateLine(key, { trackings: Array.from({ length: line.quantity }, () => ({ localId: crypto.randomUUID(), quantity: 1 })) });
+      return;
+    }
+    let idempotencyKey = line.serialGenerationKey;
+    try {
+      if (idempotencyKey && line.trackings.length !== line.quantity) {
+        await stockTrackingApi.voidGeneratedSerials({
+          branchCode: customer?.branch ?? branchCode,
+          stockId: line.stockId,
+          idempotencyKey,
+          reason: 'Mal kabul taslağında miktar veya seri planı değiştirildi.',
+        });
+        idempotencyKey = undefined;
+      }
+      idempotencyKey ??= crypto.randomUUID();
+      const serials = await stockTrackingApi.generateSerials({
+        branchCode: customer?.branch ?? branchCode,
+        stockId: line.stockId,
+        quantity: line.quantity,
+        idempotencyKey,
+        sourceOperationType: 'GoodsReceiptDraft',
+      });
+      updateLine(key, {
+        serialGenerationKey: idempotencyKey,
+        trackings: serials.map((item) => ({ localId: crypto.randomUUID(), quantity: 1, serialNo: item.serialNo })),
+      });
+      toast.success(`${serials.length} seri stok kuralına göre üretildi.`);
+    } catch (cause) {
+      report(cause, 'Seriler üretilemedi.');
+    }
+  };
+  const cancelGeneratedSerials = async (key: string): Promise<void> => {
+    const line = lines.find((item) => lineKey(item) === key);
+    if (!line?.serialGenerationKey) return;
+    try {
+      await stockTrackingApi.voidGeneratedSerials({
+        branchCode: customer?.branch ?? branchCode,
+        stockId: line.stockId,
+        idempotencyKey: line.serialGenerationKey,
+        reason: 'Kullanıcı mal kabul taslağındaki otomatik seri üretimini iptal etti.',
+      });
+      updateLine(key, { serialGenerationKey: undefined, trackings: [] });
+      toast.success('Üretilen seriler iptal edildi ve tekrar kullanıma kapatıldı.');
+    } catch (cause) {
+      report(cause, 'Üretilen seriler iptal edilemedi.');
+    }
+  };
 
   const validatePlan = (): string | null => {
     for (const line of lines) {
@@ -152,7 +203,7 @@ export function GoodsReceiptCreatePage(): ReactElement {
     </Panel>}
 
     {step === 1 && <div className="space-y-4">
-      {lines.map((line) => <ReceiptLineCard key={lineKey(line)} line={line} branch={customer?.branch ?? branchCode} updateLine={updateLine} updateTracking={updateTracking} addTracking={addTracking} removeTracking={removeTracking} createSerialRows={createSerialRows}/>) }
+      {lines.map((line) => <ReceiptLineCard key={lineKey(line)} line={line} branch={customer?.branch ?? branchCode} updateLine={updateLine} updateTracking={updateTracking} addTracking={addTracking} removeTracking={removeTracking} createSerialRows={createSerialRows} cancelGeneratedSerials={cancelGeneratedSerials}/>) }
       <Panel title="Belge ve emir ayarları" icon={<PackageCheck className="size-5"/>}><div className="grid gap-4 md:grid-cols-2"><Field label="Belge serisi"><AppDropdown value={seriesValue} onValueChange={setSeriesValue} options={series.map((x) => ({ value: String(x.id), label: `${x.code} · ${x.name}`, description: x.previewDocumentNumber }))} placeholder="Belge serisi" searchable/></Field><Field label={t('documentDate')}><input className="input" type="date" value={documentDate} onChange={(event) => setDocumentDate(event.target.value)}/></Field><Field label={t('plannedArrival')}><input className="input" type="datetime-local" value={plannedArrival} onChange={(event) => setPlannedArrival(event.target.value)}/></Field><Field label={t('priority')}><AppDropdown value={priority} onValueChange={setPriority} options={[1,2,3,4,5].map((x) => ({ value: String(x), label: String(x) }))}/></Field><Field label={t('labelStrategy')}><AppDropdown value={labelStrategy} onValueChange={setLabelStrategy} options={[{value:'None',label:'Etiket yok'},{value:'PreGenerate',label:'Önceden üret'},{value:'SupplierLabel',label:'Tedarikçi etiketi'},{value:'GenerateOnReceipt',label:'Kabulde üret'}]}/></Field><Field label={t('description')}><input className="input" maxLength={1000} value={description} onChange={(event) => setDescription(event.target.value)}/></Field></div><section className="mt-4 rounded-xl border border-[var(--wms-app-border)] p-4"><div className="mb-3 flex items-start gap-2"><UserRoundCog className="mt-0.5 size-5 text-cyan-500"/><div><h3 className="font-bold">Emir sorumluları <span className="text-red-500">*</span></h3><p className="text-xs text-slate-500">Seçilen kullanıcılar oluşturulan tüm depo görevlerine atanır; kullanıcılar kendi “Bana Atanan Emirler” ekranında görevi görür.</p></div></div><PagedAppDropdown queryKey={['gr-create-active-users']} fetchPage={goodsReceiptV2Api.activeUsersPaged} toOption={(user) => ({ ...userOption(user), disabled: assignees.some((selected) => selected.id === user.id) })} value={null} onValueChange={(value) => { const user = decodeUser(value); setAssignees((current) => current.some((x) => x.id === user.id) ? current : [...current, user]); }} placeholder="Operasyon kullanıcısı ekle" searchable minSearchLength={2}/><div className="mt-3 flex flex-wrap gap-2">{assignees.map((user) => <span key={user.id} className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 text-sm"><span><strong>{userLabel(user)}</strong><small className="ml-1 text-slate-500">({user.username})</small></span><button type="button" onClick={() => setAssignees((current) => current.filter((x) => x.id !== user.id))} className="rounded-full p-0.5 text-slate-500 hover:bg-red-500/15 hover:text-red-500" aria-label={`${userLabel(user)} atamasını kaldır`}><X className="size-3.5"/></button></span>)}{assignees.length === 0 && <span className="text-xs text-amber-500">Henüz kullanıcı atanmadı.</span>}</div></section><p className="mt-4 text-xs text-slate-500">Siparişteki depo kaleme varsayılan gelir; yetkili kullanıcı kabul deposu ve rafını kalem bazında değiştirebilir. Farklı depolar için aynı başlık altında ayrı görevler oluşturulur.</p><Footer back={() => setStep(0)} next={goToConfirmation} disabled={lines.length === 0 || busy} t={t}/></Panel>
     </div>}
 
@@ -160,7 +211,7 @@ export function GoodsReceiptCreatePage(): ReactElement {
   </section>;
 }
 
-function ReceiptLineCard({ line, branch, updateLine, updateTracking, addTracking, removeTracking, createSerialRows }: { line: SelectedReceiptLine; branch: string; updateLine: (key: string, patch: Partial<SelectedReceiptLine>) => void; updateTracking: (key: string, id: string, patch: Partial<PlannedReceiptTracking>) => void; addTracking: (key: string) => void; removeTracking: (key: string, id: string) => void; createSerialRows: (key: string) => void }): ReactElement {
+function ReceiptLineCard({ line, branch, updateLine, updateTracking, addTracking, removeTracking, createSerialRows, cancelGeneratedSerials }: { line: SelectedReceiptLine; branch: string; updateLine: (key: string, patch: Partial<SelectedReceiptLine>) => void; updateTracking: (key: string, id: string, patch: Partial<PlannedReceiptTracking>) => void; addTracking: (key: string) => void; removeTracking: (key: string, id: string) => void; createSerialRows: (key: string) => Promise<void>; cancelGeneratedSerials: (key: string) => Promise<void> }): ReactElement {
   const key = lineKey(line); const serialMode = line.trackingType === 'Serial' || line.trackingType === 'LotAndSerial'; const lotMode = line.trackingType === 'Lot' || line.trackingType === 'LotAndSerial';
   const [suggestions, setSuggestions] = useState<Array<{ id:number; code:string; reason:string; remainingCapacity?:number }>>([]);
   const [suggestionsBusy, setSuggestionsBusy] = useState(false);
@@ -191,6 +242,10 @@ function ReceiptLineCard({ line, branch, updateLine, updateTracking, addTracking
     {(suggestionsBusy || suggestions.length > 0) && <div className="mt-3 rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3"><div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-cyan-500">{suggestionsBusy && <Loader2 className="size-3.5 animate-spin"/>}Akıllı raf önerileri</div><div className="flex flex-wrap gap-2">{suggestions.map((item, index) => <button type="button" key={item.id} onClick={() => updateLine(key, { receivingLocationId: item.id, receivingLocationValue: String(item.id) })} className={`rounded-lg border px-3 py-2 text-left text-xs ${line.receivingLocationId === item.id ? 'border-cyan-500 bg-cyan-500/15' : 'border-[var(--wms-app-border)] bg-[var(--wms-app-panel)]'}`}><strong>{index + 1}. {item.code}</strong><span className="ml-2 text-slate-500">{item.reason}</span>{item.remainingCapacity != null && <span className="ml-2 font-mono text-slate-500">Kalan: {item.remainingCapacity}</span>}</button>)}</div></div>}
     {line.targetWarehouseValue && Number(line.targetWarehouseValue.split('|')[2]) !== line.targetWarehouseCode && <p className="mt-3 rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-500">Sipariş deposu {line.targetWarehouseCode}; bu kalem için farklı bir kabul deposu seçildi.</p>}
     {line.trackingType !== 'None' && <div className="mt-4 rounded-xl border border-[var(--wms-app-border)] p-3"><div className="mb-3 flex flex-wrap items-center justify-between gap-2"><div><strong>Lot / seri dağılımı</strong><p className="text-xs text-slate-500">Dağıtılan: {line.trackings.reduce((sum, x) => sum + Number(x.quantity || 0), 0)} / {line.quantity}</p></div><div className="flex gap-2">{serialMode && <button type="button" onClick={() => createSerialRows(key)} className="rounded-lg border px-3 py-2 text-xs font-semibold">Miktardan seri satırı üret</button>}<button type="button" onClick={() => addTracking(key)} className="flex items-center gap-1 rounded-lg bg-cyan-600 px-3 py-2 text-xs font-semibold text-white"><Plus className="size-3.5"/> Satır ekle</button></div></div><div className="space-y-2">{line.trackings.map((tracking, index) => <div key={tracking.localId} className="grid gap-2 rounded-lg bg-black/5 p-2 dark:bg-white/5 md:grid-cols-[4rem_8rem_1fr_1fr_9rem_9rem_auto]"><span className="self-center text-center text-xs font-semibold">#{index + 1}</span><input className="input" aria-label="Miktar" type="number" min="0.000001" step="0.000001" disabled={serialMode} value={tracking.quantity} onChange={(event) => updateTracking(key, tracking.localId, { quantity: Number(event.target.value) })}/>{lotMode ? <input className="input" aria-label="Lot" placeholder="Lot no" value={tracking.lotNo ?? ''} onChange={(event) => updateTracking(key, tracking.localId, { lotNo: event.target.value })}/> : <span/>}{serialMode ? <input className="input" aria-label="Seri" placeholder="Seri no" value={tracking.serialNo ?? ''} onChange={(event) => updateTracking(key, tracking.localId, { serialNo: event.target.value })}/> : <span/>}<input className="input" aria-label="Üretim tarihi" type="date" value={tracking.manufacturingDate ?? ''} onChange={(event) => updateTracking(key, tracking.localId, { manufacturingDate: event.target.value })}/><input className="input" aria-label="Son kullanma tarihi" type="date" value={tracking.expirationDate ?? ''} onChange={(event) => updateTracking(key, tracking.localId, { expirationDate: event.target.value })}/><button type="button" aria-label="Takip satırını sil" onClick={() => removeTracking(key, tracking.localId)} className="grid size-10 place-items-center rounded-lg text-red-500 hover:bg-red-500/10"><Trash2 className="size-4"/></button></div>)}</div></div>}
+    {serialMode && line.serialGenerationKey && <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-500/25 bg-amber-500/10 px-3 py-2">
+      <span className="text-xs text-amber-700 dark:text-amber-300">Bu satırın otomatik serileri rezerve edildi. Miktar değişirse eski seri grubu iptal edilerek yenisi üretilir.</span>
+      <button type="button" onClick={() => void cancelGeneratedSerials(key)} className="rounded-lg border border-amber-500/40 px-3 py-2 text-xs font-semibold text-amber-700 hover:bg-amber-500/10 dark:text-amber-300">Otomatik serileri iptal et</button>
+    </div>}
   </Panel>;
 }
 

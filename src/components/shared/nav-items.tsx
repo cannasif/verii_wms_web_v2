@@ -89,7 +89,6 @@ export const WMS_NAV_ITEMS: NavItem[] = [
     { title: 'sidebar.locationBalances', titleFallback: 'Raf Bakiyeleri', href: '/warehouse/location-balances', searchAliases: ['raf', 'bakiye', 'lot', 'seri', 'yap'], requiredPermission: 'WMS.STOCK_BALANCES.VIEW' },
     { title: 'sidebar.warehouseBalances', titleFallback: 'Depo Stok Bakiyesi', href: '/warehouse/stock-balances', searchAliases: ['depo', 'stok', 'bakiye', 'drill down'], requiredPermission: 'WMS.STOCK_BALANCES.VIEW' },
     { title: 'sidebar.serialBalances', titleFallback: 'Stok Seri Bakiyesi', href: '/warehouse/serial-balances', searchAliases: ['stok', 'seri', 'bakiye', 'izlenebilirlik', 'lot'], requiredPermission: 'WMS.STOCK_BALANCES.VIEW' },
-    { title: 'sidebar.serialNumberRules', titleFallback: 'Seri Maske Kuralları', href: '/warehouse/serial-number-rules', searchAliases: ['seri', 'maske', 'stok grubu', 'tekillik', 'gs1'], requiredPermission: 'WMS.SERIAL_RULES.VIEW' },
   ] },
   { title: 'sidebar.systemGroup', titleFallback: 'Sistem ve Yetki', icon: systemIcon, children: [
     { title: 'sidebar.projectSettings', titleFallback: 'Genel Proje Ayarları', href: '/system/project-settings', searchAliases: ['genel', 'proje', 'sayı', 'tarih', 'saat', 'format'], requiredPermission: 'SYSTEM.PROJECT_SETTINGS.VIEW' },

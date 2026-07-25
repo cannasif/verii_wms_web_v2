@@ -20,22 +20,28 @@ const emptyForm = (branchCode: string): UpdateStockTrackingSettingsInput => ({
   branchCode,
   requireSerial: false,
   serialQuantityRule: 'NotApplicable',
+  autoGenerateSerials: false,
+  serialMaskTemplate: '{STOCK}-{YY}{MM}-{N:6}',
   requireLot: false,
   requireManufacturingDate: false,
   requireExpirationDate: false,
   minimumRemainingShelfLifeDays: null,
   concurrencyToken: null,
+  serialRuleConcurrencyToken: null,
 });
 
 const fromSettings = (value: StockTrackingSettings): UpdateStockTrackingSettingsInput => ({
   branchCode: value.branchCode,
   requireSerial: value.requireSerial,
   serialQuantityRule: value.requireSerial ? value.serialQuantityRule : 'NotApplicable',
+  autoGenerateSerials: value.requireSerial && value.autoGenerateSerials,
+  serialMaskTemplate: value.serialMaskTemplate ?? '{STOCK}-{YY}{MM}-{N:6}',
   requireLot: value.requireLot,
   requireManufacturingDate: value.requireManufacturingDate,
   requireExpirationDate: value.requireExpirationDate,
   minimumRemainingShelfLifeDays: value.minimumRemainingShelfLifeDays ?? null,
   concurrencyToken: value.concurrencyToken ?? null,
+  serialRuleConcurrencyToken: value.serialRuleConcurrencyToken ?? null,
 });
 
 const hasSameTrackingValues = (
@@ -44,6 +50,8 @@ const hasSameTrackingValues = (
 ) =>
   current.requireSerial === baseline.requireSerial
   && current.serialQuantityRule === (baseline.requireSerial ? baseline.serialQuantityRule : 'NotApplicable')
+  && current.autoGenerateSerials === (baseline.requireSerial && baseline.autoGenerateSerials)
+  && current.serialMaskTemplate === (baseline.serialMaskTemplate ?? '{STOCK}-{YY}{MM}-{N:6}')
   && current.requireLot === baseline.requireLot
   && current.requireManufacturingDate === baseline.requireManufacturingDate
   && current.requireExpirationDate === baseline.requireExpirationDate
@@ -86,10 +94,17 @@ export function StockTrackingSettingsDialog({ stock, onClose }: Props) {
     ...current,
     requireSerial: required,
     serialQuantityRule: required ? 'OneSerialPerLine' : 'NotApplicable',
+    autoGenerateSerials: false,
   }));
   const updateOnePerUnit = (enabled: boolean) => setForm(current => ({
     ...current,
     serialQuantityRule: enabled ? 'OneSerialPerBaseUnit' : 'OneSerialPerLine',
+    autoGenerateSerials: enabled ? current.autoGenerateSerials : false,
+  }));
+  const updateAutoGenerate = (enabled: boolean) => setForm(current => ({
+    ...current,
+    autoGenerateSerials: enabled,
+    serialQuantityRule: enabled ? 'OneSerialPerBaseUnit' : current.serialQuantityRule,
   }));
   const updateExpiration = (required: boolean) => setForm(current => ({
     ...current,
@@ -99,6 +114,10 @@ export function StockTrackingSettingsDialog({ stock, onClose }: Props) {
   const save = () => {
     if (form.minimumRemainingShelfLifeDays != null && form.minimumRemainingShelfLifeDays < 0) {
       toast.error('Minimum kalan raf ömrü negatif olamaz.');
+      return;
+    }
+    if (form.autoGenerateSerials && !/\{N:[1-9]\d?\}/.test(form.serialMaskTemplate ?? '')) {
+      toast.error('Seri maskesinde sıra alanı zorunludur. Örnek: {N:6}.');
       return;
     }
     mutation.mutate(form);
@@ -169,6 +188,30 @@ export function StockTrackingSettingsDialog({ stock, onClose }: Props) {
                   disabled={!canManage || !form.requireSerial}
                   onChange={updateOnePerUnit}
                 />
+                <TrackingCheck
+                  label="Serileri otomatik oluştur"
+                  description="Giriş operasyonunda miktar kadar benzersiz seri merkezi sıradan üretilir."
+                  checked={form.autoGenerateSerials}
+                  disabled={!canManage || !form.requireSerial}
+                  onChange={updateAutoGenerate}
+                />
+                <label className="rounded-xl border border-[var(--wms-app-border)] p-4 sm:col-span-2">
+                  <span className="block text-sm font-bold">Seri üretim maskesi</span>
+                  <span className="mt-1 block text-xs text-slate-500">
+                    Stok kartına özeldir. Örnek: {'{STOCK}-{YY}{MM}-{N:6}'}
+                  </span>
+                  <input
+                    className="input mt-3 w-full font-mono"
+                    value={form.serialMaskTemplate ?? ''}
+                    disabled={!canManage || !form.requireSerial}
+                    onChange={event => setForm(current => ({ ...current, serialMaskTemplate: event.target.value.toUpperCase() }))}
+                  />
+                  {query.data?.nextSerialSequence != null && (
+                    <span className="mt-2 block text-xs text-slate-500">
+                      Sıradaki sıra: {query.data.nextSerialSequence}
+                    </span>
+                  )}
+                </label>
                 <TrackingCheck
                   label="Lot zorunlu"
                   description="Hareketler lot kırılımında izlenir."

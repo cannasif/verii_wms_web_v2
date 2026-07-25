@@ -16,6 +16,7 @@ export interface EffectiveStockTrackingPolicy {
   trackingType: TrackingType;
   requireSerial: boolean;
   serialQuantityRule: SerialQuantityRule;
+  autoGenerateSerials: boolean;
   requireLot: boolean;
   requireManufacturingDate: boolean;
   requireExpirationDate: boolean;
@@ -36,6 +37,10 @@ export interface StockTrackingSettings {
   trackingType: TrackingType;
   requireSerial: boolean;
   serialQuantityRule: SerialQuantityRule;
+  autoGenerateSerials: boolean;
+  serialMaskTemplate?: string | null;
+  nextSerialSequence?: number | null;
+  serialRuleConcurrencyToken?: string | null;
   requireLot: boolean;
   requireManufacturingDate: boolean;
   requireExpirationDate: boolean;
@@ -50,11 +55,22 @@ export interface UpdateStockTrackingSettingsInput {
   branchCode: string;
   requireSerial: boolean;
   serialQuantityRule: SerialQuantityRule;
+  autoGenerateSerials: boolean;
+  serialMaskTemplate: string | null;
   requireLot: boolean;
   requireManufacturingDate: boolean;
   requireExpirationDate: boolean;
   minimumRemainingShelfLifeDays: number | null;
   concurrencyToken: string | null;
+  serialRuleConcurrencyToken: string | null;
+}
+
+export interface GeneratedStockSerial {
+  registryId: number;
+  serialNo: string;
+  sequenceNumber: number;
+  ordinal: number;
+  status: string;
 }
 
 export const stockTrackingApi = {
@@ -71,4 +87,20 @@ export const stockTrackingApi = {
     unwrap(await api.get<Envelope<EffectiveStockTrackingPolicy>>('/api/stock-tracking-policies/resolve', {
       params: { branchCode, stockId },
     })),
+  generateSerials: async (input: {
+    branchCode: string;
+    stockId: number;
+    quantity: number;
+    idempotencyKey: string;
+    sourceOperationType: string;
+    sourceOperationId?: number | null;
+  }): Promise<GeneratedStockSerial[]> =>
+    unwrap(await api.post<Envelope<{ serials: GeneratedStockSerial[] }>>('/api/serial-number-rules/generate', input)).serials,
+  voidGeneratedSerials: async (input: {
+    branchCode: string;
+    stockId: number;
+    idempotencyKey: string;
+    reason: string;
+  }): Promise<{ voidedCount: number; replayed: boolean }> =>
+    unwrap(await api.post<Envelope<{ voidedCount: number; replayed: boolean }>>('/api/serial-number-rules/void', input)),
 };
