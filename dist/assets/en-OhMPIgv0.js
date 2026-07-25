@@ -1,0 +1,1 @@
+const e={select:"Select",search:"Search...",noResults:"No results found.",loading:"Loading...",loadingMore:"Loading more records...",retry:"Try again",loadError:"Options could not be loaded.",minSearchCharacters:"Type at least {{count}} characters to search."},o={dropdown:e};export{o as default,e as dropdown};

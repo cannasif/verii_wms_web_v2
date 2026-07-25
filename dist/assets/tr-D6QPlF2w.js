@@ -1,0 +1,1 @@
+const a="Seri Maske Kuralları",t="Stok, stok grubu veya şube varsayılanı bazında seri formatını, tekillik kapsamını ve yürürlük tarihini yönetin.",r={Stock:"Stok",StockGroup:"Stok grubu",BranchDefault:"Şube varsayılanı"},e={title:a,description:t,new:"Yeni seri kuralı",scope:r};export{e as default,t as description,r as scope,a as title};

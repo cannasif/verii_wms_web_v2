@@ -1,0 +1,10 @@
+{
+  "title": "Depolar Arası Transfer",
+  "hubTitle": "Transfer Süreç Merkezi",
+  "hubDescription": "Kaynak depodan hedef depoya planlama, toplama, sevk, transit kabul ve yerleştirmeyi tek belge üzerinden izleyin.",
+  "newDraft": "Transfer Taslağı",
+  "records": "Transfer Kayıtları",
+  "sourceExecution": "Kaynak Depo Operasyonu",
+  "targetExecution": "Hedef Depo Operasyonu",
+  "comingSoon": "Sonraki dilimde etkinleşecek"
+}

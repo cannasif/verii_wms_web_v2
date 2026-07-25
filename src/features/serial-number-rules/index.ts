@@ -1,0 +1,1 @@
+export { SerialNumberRulesPage } from './SerialNumberRulesPage';

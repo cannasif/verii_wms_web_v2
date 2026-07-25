@@ -1,0 +1,1 @@
+const t="Sevk",e="Sevk Süreç Merkezi",s="Sevk Oluştur",r="Sevk Kayıtları",a="Sevk Ayarları",c={title:t,hub:e,create:s,list:r,settings:a};export{s as create,c as default,e as hub,r as list,a as settings,t as title};

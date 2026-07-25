@@ -1,0 +1,98 @@
+{
+  "page": {
+    "title": "Raf Tanımları",
+    "description": "Depo içi bölge, koridor, raf, seviye ve göz hiyerarşisini yönetin.",
+    "newAction": "Yeni Raf"
+  },
+  "form": {
+    "createTitle": "Yeni Raf Tanımı",
+    "editTitle": "Raf Tanımını Düzenle",
+    "description": "Adres hiyerarşisini, kullanım kurallarını ve kapasiteyi yönetin.",
+    "basicInformation": "Temel Bilgiler",
+    "addressAndBarcode": "Adres ve Barkod",
+    "capacity": "Kapasite",
+    "usageRules": "Kullanım Kuralları",
+    "warehouse": "Depo",
+    "warehousePlaceholder": "Depo seçin",
+    "locationType": "Lokasyon tipi",
+    "parentLocation": "Üst lokasyon",
+    "rootLocation": "Kök lokasyon",
+    "code": "Raf kodu",
+    "name": "Raf adı",
+    "zoneCode": "Bölge kodu",
+    "aisleNo": "Koridor no",
+    "rackNo": "Raf no",
+    "levelNo": "Seviye no",
+    "binNo": "Göz no",
+    "barcodeMode": "Barkod modu",
+    "barcode": "Barkod",
+    "barcodeAutoPlaceholder": "Sistem tarafından üretilecek",
+    "quantity": "Miktar",
+    "weight": "Ağırlık",
+    "volume": "Hacim",
+    "unit": "Birim",
+    "descriptionLabel": "Açıklama",
+    "cancel": "Vazgeç",
+    "create": "Raf Oluştur",
+    "save": "Değişiklikleri Kaydet",
+    "close": "Kapat"
+  },
+  "rules": {
+    "mixedStock": "Karma stok",
+    "mixedLot": "Karma lot",
+    "mixedStatus": "Karma durum",
+    "cycleCount": "Sayım yapılabilir",
+    "pickable": "Toplanabilir",
+    "putaway": "Yerleştirilebilir",
+    "quarantine": "Karantina",
+    "active": "Aktif"
+  },
+  "types": {
+    "Zone": "Bölge",
+    "Aisle": "Koridor",
+    "Rack": "Raf",
+    "Shelf": "Raf Seviyesi",
+    "Cell": "Göz",
+    "Receiving": "Mal Kabul",
+    "Staging": "Hazırlık",
+    "Shipping": "Sevkiyat",
+    "Quarantine": "Karantina",
+    "Virtual": "Sanal"
+  },
+  "barcodeModes": { "Auto": "Otomatik", "Manual": "Manuel" },
+  "columns": {
+    "branch": "Şube",
+    "warehouseCode": "Depo Kodu",
+    "warehouseName": "Depo Adı",
+    "code": "Raf Kodu",
+    "name": "Raf Adı",
+    "locationType": "Lokasyon Tipi",
+    "parentLocation": "Üst Lokasyon",
+    "barcode": "Barkod",
+    "zone": "Bölge",
+    "status": "Durum",
+    "actions": "İşlemler"
+  },
+  "status": { "active": "Aktif", "passive": "Pasif" },
+  "actions": { "edit": "Düzenle", "delete": "Sil" },
+  "validation": {
+    "requiredBasic": "Depo, raf kodu ve raf adı zorunludur.",
+    "parentRequired": "Koridor, raf, raf seviyesi ve göz tipleri için önce uygun bir üst lokasyon seçmelisiniz.",
+    "barcodeRequired": "Manuel barkod modunda barkod zorunludur.",
+    "capacityUnitRequired": "Kapasite değeri girdiğinizde kapasite birimi de zorunludur."
+  },
+  "messages": {
+    "warehousesLoadFailed": "Depolar alınamadı.",
+    "detailLoadFailed": "Raf bilgileri alınamadı.",
+    "parentsLoadFailed": "Üst lokasyonlar alınamadı.",
+    "createSuccess": "Raf tanımı oluşturuldu.",
+    "updateSuccess": "Raf tanımı güncellendi.",
+    "saveFailed": "Raf tanımı kaydedilemedi.",
+    "deleteSuccess": "Raf tanımı silindi.",
+    "deleteFailed": "Raf tanımı silinemedi."
+  },
+  "deleteDialog": {
+    "title": "Raf tanımını sil",
+    "description": "{{name}} soft-delete ile pasife alınacak. Alt lokasyonu varsa işlem güvenlik nedeniyle reddedilir."
+  }
+}

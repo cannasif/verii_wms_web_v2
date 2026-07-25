@@ -1,0 +1,12 @@
+import { api } from '@/lib/axios';
+import type { GridPage,GridRequest } from '@/components/shared/AdvancedDataGrid';
+type Envelope<T>={success:boolean;data:T;message?:string}; const unwrap=<T,>(x:Envelope<T>)=>{if(!x.success)throw new Error(x.message||'İşlem başarısız.');return x.data};
+export type SerialRule={id:number;branchCode:string;ruleCode:string;displayName:string;scope:string;stockId?:number|null;stockCode?:string|null;stockName?:string|null;stockGroupCode?:string|null;version:number;priority:number;maskTemplate:string;characterSet:string;uniquenessScope:string;minLength:number;maxLength:number;isRequired:boolean;isActive:boolean;effectiveFromUtc:string;effectiveToUtc?:string|null;description?:string|null;concurrencyToken:string;createdBy?:number|null;createdDate?:string|null};
+export type SerialRuleInput={branchCode:string;ruleCode:string;displayName:string;scope:string;stockId:number|null;stockGroupCode:string|null;priority:number;maskTemplate:string;characterSet:string;uniquenessScope:string;minLength:number;maxLength:number;trimWhitespace:boolean;normalizeToUpper:boolean;isRequired:boolean;isActive:boolean;effectiveFromUtc:string;effectiveToUtc:string|null;description:string|null};
+export const serialRulesApi={
+ paged:async(p:GridRequest):Promise<GridPage<SerialRule>>=>unwrap(await api.post<Envelope<GridPage<SerialRule>>>('/api/serial-number-rules/paged',p)),
+ create:async(x:SerialRuleInput)=>unwrap(await api.post<Envelope<{id:number}>>('/api/serial-number-rules',x)),
+ version:async(id:number,token:string,x:SerialRuleInput)=>unwrap(await api.post<Envelope<{id:number}>>(`/api/serial-number-rules/${id}/versions?concurrencyToken=${encodeURIComponent(token)}`,x)),
+ remove:async(id:number)=>unwrap(await api.post<Envelope<boolean>>(`/api/serial-number-rules/${id}/delete`,{})),
+ stocks:async(request:{pageNumber:number;pageSize:number;search?:string|null;signal?:AbortSignal},branchCode:string)=>unwrap(await api.post<Envelope<{items:Array<{id:number;erpStockCode:string;stockName:string;groupCode?:string|null}>;pageNumber:number;pageSize:number;totalCount:number;totalPages:number;hasNextPage:boolean}>>('/api/erp-mirror/stocks/paged',{pageNumber:request.pageNumber,pageSize:request.pageSize,search:request.search??null,sortBy:'erpStockCode',sortDirection:'asc',filterLogic:'and',filters:[{column:'branchCode',operator:'equals',value:branchCode}]},{signal:request.signal}))
+};

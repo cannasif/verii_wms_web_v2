@@ -1,0 +1,12 @@
+{
+  "page": { "title": "Belge Seri Tanımları", "description": "Mal kabul, transfer, sevk ve ambar işlemleri için güvenli belge numaralandırmasını yönetin.", "newAction": "Yeni Belge Serisi" },
+  "columns": { "branch": "Şube", "warehouse": "Depo", "code": "Seri Kodu", "name": "Seri Adı", "documentType": "Belge Türü", "prefix": "Ön Ek", "preview": "Sıradaki Belge No", "nextNumber": "Sıradaki Sayaç", "default": "Varsayılan", "active": "Aktif", "issued": "Kullanıldı", "lastIssuedAt": "Son Üretim", "actions": "İşlemler" },
+  "types": { "GoodsReceipt": "Mal Kabul", "InterWarehouseTransfer": "Depolar Arası Transfer", "Shipment": "Sevk", "WarehouseReceipt": "Ambar Giriş", "WarehouseIssue": "Ambar Çıkış" },
+  "yearFormats": { "None": "Yıl yok", "TwoDigit": "2 haneli yıl", "FourDigit": "4 haneli yıl" },
+  "status": { "yes": "Evet", "no": "Hayır", "active": "Aktif", "passive": "Pasif" },
+  "form": { "createTitle": "Belge Serisi Oluştur", "editTitle": "Belge Serisini Düzenle", "description": "Belge türü, kapsam ve numara biçimini tanımlayın.", "warehouse": "Depo Kapsamı", "allWarehouses": "Tüm depolar", "code": "Seri Kodu", "name": "Seri Adı", "documentType": "Belge Türü", "prefix": "Ön Ek", "separator": "Ayraç", "yearFormat": "Yıl Biçimi", "numberLength": "Numara Uzunluğu", "startNumber": "Başlangıç Numarası", "nextNumber": "Sıradaki Numara", "incrementBy": "Artış", "default": "Varsayılan seri", "active": "Aktif", "descriptionLabel": "Açıklama", "preview": "Canlı Önizleme", "lockedNotice": "Bu seri numara ürettiği için kapsam ve numaralandırma alanları kilitlidir. Ad ve durum bilgileri güncellenebilir.", "cancel": "Vazgeç", "create": "Oluştur", "save": "Kaydet", "close": "Kapat" },
+  "validation": { "required": "Seri kodu, seri adı ve ön ek zorunludur.", "numbers": "Numaralandırma alanları geçersiz." },
+  "messages": { "createSuccess": "Belge serisi oluşturuldu.", "updateSuccess": "Belge serisi güncellendi.", "deleteSuccess": "Belge serisi silindi.", "saveFailed": "Belge serisi kaydedilemedi.", "deleteFailed": "Belge serisi silinemedi." },
+  "actions": { "edit": "Düzenle", "delete": "Sil" },
+  "deleteDialog": { "title": "Belge serisini sil", "description": "{{name}} serisini silmek istediğinize emin misiniz? Numara üretmiş seriler silinemez, pasifleştirilmelidir." }
+}

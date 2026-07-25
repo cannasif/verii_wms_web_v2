@@ -1,0 +1,12 @@
+{
+  "page": { "title": "Document Series", "description": "Manage safe numbering for goods receipt, transfer, shipment and warehouse operations.", "newAction": "New Document Series" },
+  "columns": { "branch": "Branch", "warehouse": "Warehouse", "code": "Series Code", "name": "Series Name", "documentType": "Document Type", "prefix": "Prefix", "preview": "Next Document No", "nextNumber": "Next Counter", "default": "Default", "active": "Active", "issued": "Used", "lastIssuedAt": "Last Issued", "actions": "Actions" },
+  "types": { "GoodsReceipt": "Goods Receipt", "InterWarehouseTransfer": "Inter-warehouse Transfer", "Shipment": "Shipment", "WarehouseReceipt": "Warehouse Receipt", "WarehouseIssue": "Warehouse Issue" },
+  "yearFormats": { "None": "No year", "TwoDigit": "2-digit year", "FourDigit": "4-digit year" },
+  "status": { "yes": "Yes", "no": "No", "active": "Active", "passive": "Passive" },
+  "form": { "createTitle": "Create Document Series", "editTitle": "Edit Document Series", "description": "Define document type, scope and number format.", "warehouse": "Warehouse Scope", "allWarehouses": "All warehouses", "code": "Series Code", "name": "Series Name", "documentType": "Document Type", "prefix": "Prefix", "separator": "Separator", "yearFormat": "Year Format", "numberLength": "Number Length", "startNumber": "Start Number", "nextNumber": "Next Number", "incrementBy": "Increment", "default": "Default series", "active": "Active", "descriptionLabel": "Description", "preview": "Live Preview", "lockedNotice": "This series has issued numbers, so scope and numbering fields are locked. Name and status can still be updated.", "cancel": "Cancel", "create": "Create", "save": "Save", "close": "Close" },
+  "validation": { "required": "Series code, name and prefix are required.", "numbers": "Numbering fields are invalid." },
+  "messages": { "createSuccess": "Document series created.", "updateSuccess": "Document series updated.", "deleteSuccess": "Document series deleted.", "saveFailed": "Document series could not be saved.", "deleteFailed": "Document series could not be deleted." },
+  "actions": { "edit": "Edit", "delete": "Delete" },
+  "deleteDialog": { "title": "Delete document series", "description": "Are you sure you want to delete {{name}}? Series that issued numbers must be deactivated instead." }
+}

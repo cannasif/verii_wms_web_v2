@@ -1,0 +1,60 @@
+import { api } from '@/lib/axios';
+import { resolveStockTrackingPolicy } from '@/features/stock-tracking/effective-stock-tracking';
+import type { DropdownPage, DropdownPageRequest } from '@/hooks/useDropdownInfiniteSearch';
+import type { GridPage as AdvancedGridPage, GridRequest } from '@/components/shared/AdvancedDataGrid';
+import type { ActiveUserOption, CreateGoodsReceiptResult, CustomerOption, GoodsReceiptDetail, GoodsReceiptGridRow, GoodsReceiptLabelBatchDetail, GoodsReceiptLabelBatchRow, GoodsReceiptLabelRow, GoodsReceiptLifecycleResult, GoodsReceiptRoutingResult, GoodsReceiptTaskDetail, GoodsReceiptTaskGridRow, LocationOption, ManualGoodsReceiptResult, OpenOrderHeader, OpenOrderLine, PutawayLocationSuggestion, ReceiveGoodsReceiptTaskResult, SeriesOption, StockOption, WarehouseOption, YapCodeOption } from '../types/goods-receipt.types';
+
+interface Envelope<T> { success: boolean; data: T; message?: string }
+type GridPage<T> = DropdownPage<T>;
+const unwrap = <T,>(value: Envelope<T>): T => { if (!value.success) throw new Error(value.message || 'İşlem başarısız.'); return value.data; };
+const pagedBody = (request: DropdownPageRequest, filters: unknown[] = []) => ({ pageNumber: request.pageNumber, pageSize: request.pageSize, search: request.search ?? null, sortBy: request.sortBy, sortDirection: request.sortDirection, filterLogic: 'and', filters });
+
+export const goodsReceiptV2Api = {
+  trackingPolicy: resolveStockTrackingPolicy,
+  customers: async (request: DropdownPageRequest, branchCode: string): Promise<GridPage<CustomerOption>> => unwrap(await api.post<Envelope<GridPage<CustomerOption>>>('/api/erp-mirror/customers/paged', pagedBody({ ...request, sortBy: request.sortBy ?? 'customerCode' }, [{ column: 'branchCode', operator: 'equals', value: branchCode }]), { signal: request.signal })),
+  warehouses: async (request: DropdownPageRequest, branchCode: string): Promise<GridPage<WarehouseOption>> => unwrap(await api.post<Envelope<GridPage<WarehouseOption>>>('/api/erp-mirror/warehouses/paged', pagedBody({ ...request, sortBy: request.sortBy ?? 'warehouseCode' }, [{ column: 'branchCode', operator: 'equals', value: branchCode }]), { signal: request.signal })),
+  stocks: async (request: DropdownPageRequest, branchCode: string): Promise<GridPage<StockOption>> => unwrap(await api.post<Envelope<GridPage<StockOption>>>('/api/erp-mirror/stocks/paged', pagedBody({ ...request, sortBy: request.sortBy ?? 'erpStockCode' }, [{ column: 'branchCode', operator: 'equals', value: branchCode }]), { signal: request.signal })),
+  yapCodes: async (request: DropdownPageRequest, branchCode: string): Promise<GridPage<YapCodeOption>> => unwrap(await api.post<Envelope<GridPage<YapCodeOption>>>('/api/erp-mirror/yap-codes/paged', pagedBody({ ...request, sortBy: request.sortBy ?? 'configurationCode' }, [{ column: 'branchCode', operator: 'equals', value: branchCode }]), { signal: request.signal })),
+  locations: async (request: DropdownPageRequest, warehouseId: number): Promise<GridPage<LocationOption>> => unwrap(await api.post<Envelope<GridPage<LocationOption>>>('/api/locations/paged', pagedBody({ ...request, sortBy: request.sortBy ?? 'code' }, [
+    { column: 'warehouseId', operator: 'equals', value: String(warehouseId) }, { column: 'isActive', operator: 'equals', value: 'true' },
+  ]), { signal: request.signal })),
+  putawaySuggestions: async (warehouseId: number, params: { stockId?: number; stockCode?: string; yapCodeId?: number; quantity: number; limit?: number }): Promise<PutawayLocationSuggestion[]> =>
+    unwrap(await api.get<Envelope<PutawayLocationSuggestion[]>>('/api/locations/putaway-suggestions', {
+      params: { warehouseId, stockId: params.stockId, stockCode: params.stockCode, yapCodeId: params.yapCodeId, quantity: params.quantity, limit: params.limit ?? 5 },
+    })),
+  series: async (warehouseId: number): Promise<SeriesOption[]> => unwrap(await api.get<Envelope<SeriesOption[]>>(`/api/document-series/lookup?documentType=GoodsReceipt&warehouseId=${warehouseId}`)),
+  transferSeries: async (warehouseId: number): Promise<SeriesOption[]> => unwrap(await api.get<Envelope<SeriesOption[]>>(`/api/document-series/lookup?documentType=InterWarehouseTransfer&warehouseId=${warehouseId}`)),
+  outboundSeries: async (warehouseId: number): Promise<SeriesOption[]> => unwrap(await api.get<Envelope<SeriesOption[]>>(`/api/document-series/lookup?documentType=WarehouseIssue&warehouseId=${warehouseId}`)),
+  orderHeaders: async (customerCode: string, branchCode: string): Promise<OpenOrderHeader[]> => unwrap(await api.get<Envelope<OpenOrderHeader[]>>(`/api/netsis-read/goods-receipt/open-orders/headers?customerCode=${encodeURIComponent(customerCode)}&branchCode=${encodeURIComponent(branchCode)}`)),
+  orderLines: async (customerCode: string, branchCode: string, orderNumbers: string[]): Promise<OpenOrderLine[]> => unwrap(await api.get<Envelope<OpenOrderLine[]>>(`/api/netsis-read/goods-receipt/open-orders/lines?customerCode=${encodeURIComponent(customerCode)}&branchCode=${encodeURIComponent(branchCode)}&orderNumbersCsv=${encodeURIComponent(orderNumbers.join(','))}`)),
+  create: async (payload: unknown): Promise<CreateGoodsReceiptResult> => unwrap(await api.post<Envelope<CreateGoodsReceiptResult>>('/api/goods-receipts/from-orders', payload)),
+  createOrderless: async (payload: unknown): Promise<ManualGoodsReceiptResult> => unwrap(await api.post<Envelope<ManualGoodsReceiptResult>>('/api/goods-receipts/orderless', payload)),
+  createDirect: async (payload: unknown): Promise<ManualGoodsReceiptResult> => unwrap(await api.post<Envelope<ManualGoodsReceiptResult>>('/api/goods-receipts/direct', payload)),
+  paged: async (request: GridRequest): Promise<AdvancedGridPage<GoodsReceiptGridRow>> => unwrap(await api.post<Envelope<AdvancedGridPage<GoodsReceiptGridRow>>>('/api/goods-receipts/paged', request)),
+  detail: async (id: number): Promise<GoodsReceiptDetail> => unwrap(await api.get<Envelope<GoodsReceiptDetail>>(`/api/goods-receipts/${id}`)),
+  routeToTransfer: async (id: number, payload: unknown): Promise<GoodsReceiptRoutingResult> => unwrap(await api.post<Envelope<GoodsReceiptRoutingResult>>(`/api/goods-receipts/${id}/routes/warehouse-transfer`, payload)),
+  routeToOutbound: async (id: number, payload: unknown): Promise<GoodsReceiptRoutingResult> => unwrap(await api.post<Envelope<GoodsReceiptRoutingResult>>(`/api/goods-receipts/${id}/routes/warehouse-outbound`, payload)),
+  approve: async (id: number, payload: { idempotencyKey: string; rowVersion: string; reason?: string }): Promise<GoodsReceiptLifecycleResult> =>
+    unwrap(await api.post<Envelope<GoodsReceiptLifecycleResult>>(`/api/goods-receipts/${id}/approve`, payload)),
+  shortClose: async (id: number, payload: { idempotencyKey: string; rowVersion: string; reason: string; lines: Array<{ lineId: number; quantity: number }> }): Promise<GoodsReceiptLifecycleResult> =>
+    unwrap(await api.post<Envelope<GoodsReceiptLifecycleResult>>(`/api/goods-receipts/${id}/short-close`, payload)),
+  putaway: async (id: number, payload: { idempotencyKey: string; rowVersion: string; reason?: string; occurredAtUtc?: string; lines: Array<{ lineId: number; quantity: number; sourceLocationId: number; targetLocationId: number; lotNo?: string; serialNo?: string }> }): Promise<GoodsReceiptLifecycleResult> =>
+    unwrap(await api.post<Envelope<GoodsReceiptLifecycleResult>>(`/api/goods-receipts/${id}/putaway`, payload)),
+  cancel: async (id: number, payload: { idempotencyKey: string; rowVersion: string; reason: string }): Promise<GoodsReceiptLifecycleResult> =>
+    unwrap(await api.post<Envelope<GoodsReceiptLifecycleResult>>(`/api/goods-receipts/${id}/cancel`, payload)),
+  tasksPaged: async (request: GridRequest): Promise<AdvancedGridPage<GoodsReceiptTaskGridRow>> => unwrap(await api.post<Envelope<AdvancedGridPage<GoodsReceiptTaskGridRow>>>('/api/goods-receipts/tasks/paged', request)),
+  myTasksPaged: async (request: GridRequest): Promise<AdvancedGridPage<GoodsReceiptTaskGridRow>> => unwrap(await api.post<Envelope<AdvancedGridPage<GoodsReceiptTaskGridRow>>>('/api/goods-receipts/tasks/assigned/paged', request)),
+  taskDetail: async (id: number): Promise<GoodsReceiptTaskDetail> => unwrap(await api.get<Envelope<GoodsReceiptTaskDetail>>(`/api/goods-receipts/tasks/${id}`)),
+  replaceTaskAssignments: async (id: number, userIds: number[], rowVersion: string): Promise<GoodsReceiptTaskDetail> => unwrap(await api.put<Envelope<GoodsReceiptTaskDetail>>(`/api/goods-receipts/tasks/${id}/assignments`, { userIds, rowVersion })),
+  acceptTask: async (id: number): Promise<GoodsReceiptTaskDetail> => unwrap(await api.post<Envelope<GoodsReceiptTaskDetail>>(`/api/goods-receipts/tasks/${id}/accept`)),
+  startTask: async (id: number): Promise<GoodsReceiptTaskDetail> => unwrap(await api.post<Envelope<GoodsReceiptTaskDetail>>(`/api/goods-receipts/tasks/${id}/start`)),
+  generateLabels: async (goodsReceiptId:number, taskId:number, lines:Array<{taskLineId:number;labelCount:number;quantityPerLabel?:number}>, description?:string):Promise<GoodsReceiptLabelBatchDetail> => unwrap(await api.post<Envelope<GoodsReceiptLabelBatchDetail>>(`/api/goods-receipts/${goodsReceiptId}/label-batches`, { idempotencyKey: crypto.randomUUID(), taskId, lines, description })),
+  labelBatchesPaged: async (request:GridRequest):Promise<AdvancedGridPage<GoodsReceiptLabelBatchRow>> => unwrap(await api.post<Envelope<AdvancedGridPage<GoodsReceiptLabelBatchRow>>>('/api/goods-receipts/label-batches/paged',request)),
+  labelBatch: async (id:number):Promise<GoodsReceiptLabelBatchDetail> => unwrap(await api.get<Envelope<GoodsReceiptLabelBatchDetail>>(`/api/goods-receipts/label-batches/${id}`)),
+  receiptLabels: async (id:number,lineId?:number):Promise<GoodsReceiptLabelRow[]> => unwrap(await api.get<Envelope<GoodsReceiptLabelRow[]>>(`/api/goods-receipts/${id}/labels`,{params:{lineId}})),
+  markLabelsPrinted: async (labelIds:number[]):Promise<boolean> => unwrap(await api.post<Envelope<boolean>>('/api/goods-receipts/labels/printed',{labelIds})),
+  voidLabel: async (id:number,reason:string,rowVersion:string):Promise<boolean> => unwrap(await api.post<Envelope<boolean>>(`/api/goods-receipts/labels/${id}/void`,{reason,rowVersion})),
+  receiveTaskScan: async (taskId:number,payload:{idempotencyKey:string;taskLineId:number;barcode:string;quantity?:number;lotNo?:string;serialNo?:string;manufacturingDate?:string;expirationDate?:string;toLocationId?:number;occurredAtUtc?:string;deviceId?:string}):Promise<ReceiveGoodsReceiptTaskResult> => unwrap(await api.post<Envelope<ReceiveGoodsReceiptTaskResult>>(`/api/goods-receipts/tasks/${taskId}/receive`,payload)),
+  activeUsersPaged: async (request: DropdownPageRequest): Promise<GridPage<ActiveUserOption>> => unwrap(await api.post<Envelope<GridPage<ActiveUserOption>>>('/api/users/paged', pagedBody({ ...request, sortBy: request.sortBy ?? 'username' }, [{ column: 'isActive', operator: 'equals', value: 'true' }]), { signal: request.signal })),
+  activeUsers: async (): Promise<ActiveUserOption[]> => (unwrap(await api.post<Envelope<AdvancedGridPage<ActiveUserOption>>>('/api/users/paged', { pageNumber: 1, pageSize: 500, search: null, sortBy: 'username', sortDirection: 'asc', filterLogic: 'and', filters: [{ column: 'isActive', operator: 'equals', value: 'true' }] }))).items,
+};

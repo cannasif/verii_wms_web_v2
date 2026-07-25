@@ -1,0 +1,1 @@
+import{a as r,G as i}from"./index-C1FyW1_d.js";const p=r()(i(a=>({isSidebarOpen:!0,toggleSidebar:()=>a(e=>({isSidebarOpen:!e.isSidebarOpen})),setSidebarOpen:e=>a({isSidebarOpen:e}),pageTitle:null,setPageTitle:e=>a({pageTitle:e}),searchQuery:"",setSearchQuery:e=>a({searchQuery:e})}),{name:"ui-storage",partialize:a=>({isSidebarOpen:a.isSidebarOpen})}));export{p as u};

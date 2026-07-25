@@ -1,0 +1,10 @@
+{
+  "title": "Inter-Warehouse Transfer",
+  "hubTitle": "Transfer Process Center",
+  "hubDescription": "Track planning, picking, dispatch, transit receipt and putaway between warehouses on one document.",
+  "newDraft": "Transfer Draft",
+  "records": "Transfer Records",
+  "sourceExecution": "Source Warehouse Execution",
+  "targetExecution": "Destination Warehouse Execution",
+  "comingSoon": "Available in the next delivery"
+}

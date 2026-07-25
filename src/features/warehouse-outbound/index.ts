@@ -1,0 +1,1 @@
+export {WarehouseOutboundHubPage} from './WarehouseOutboundHubPage';export {WarehouseOutboundCreatePage} from './WarehouseOutboundCreatePage';export {WarehouseOutboundListPage} from './WarehouseOutboundListPage';export {WarehouseOutboundPolicyPage} from './WarehouseOutboundPolicyPage';export {WarehouseOutboundOperationPage} from './WarehouseOutboundOperationPage';

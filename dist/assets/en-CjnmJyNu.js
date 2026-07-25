@@ -1,0 +1,1 @@
+const e="Serial Mask Rules",t="Manage serial format, uniqueness and effective dates by stock, stock group or branch default.",o={Stock:"Stock",StockGroup:"Stock group",BranchDefault:"Branch default"},a={title:e,description:t,new:"New serial rule",scope:o};export{a as default,t as description,o as scope,e as title};

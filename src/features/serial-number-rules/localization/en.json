@@ -1,0 +1,1 @@
+{"title":"Serial Mask Rules","description":"Manage serial format, uniqueness and effective dates by stock, stock group or branch default.","new":"New serial rule","scope":{"Stock":"Stock","StockGroup":"Stock group","BranchDefault":"Branch default"}}

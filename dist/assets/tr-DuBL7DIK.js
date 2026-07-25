@@ -1,0 +1,1 @@
+const a={select:"Seçiniz",search:"Ara...",noResults:"Sonuç bulunamadı.",loading:"Yükleniyor...",loadingMore:"Daha fazla kayıt yükleniyor...",retry:"Tekrar dene",loadError:"Seçenekler alınamadı.",minSearchCharacters:"Aramak için en az {{count}} karakter yazın."},e={dropdown:a};export{e as default,a as dropdown};

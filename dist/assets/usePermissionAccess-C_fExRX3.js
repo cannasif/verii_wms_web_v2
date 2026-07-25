@@ -1,0 +1,1 @@
+import{b as i}from"./vendor-react-5DPfve-U.js";import{u as e,h as o}from"./useMyPermissionsQuery-BfeENiNq.js";const c=()=>{const s=e();return i.useMemo(()=>({can:r=>o(s.data,r),permissions:s.data,isLoading:s.isLoading,isError:s.isError,refetch:s.refetch}),[s.data,s.isError,s.isLoading,s.refetch])};export{c as u};
