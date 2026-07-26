@@ -6,6 +6,7 @@ export interface BuildPagedRequestDefaults {
   sortBy?: string;
   sortDirection?: string;
   search?: string;
+  searchFields?: string[];
   filters?: PagedFilter[];
   filterLogic?: 'and' | 'or';
 }
@@ -20,6 +21,7 @@ export function buildPagedRequest(
     sortBy: params.sortBy ?? defaults.sortBy ?? 'Id',
     sortDirection: params.sortDirection ?? defaults.sortDirection ?? 'desc',
     search: params.search ?? defaults.search ?? '',
+    searchFields: params.searchFields ?? defaults.searchFields ?? [],
     filters: params.filters ?? defaults.filters ?? [],
     filterLogic: params.filterLogic ?? defaults.filterLogic ?? 'and',
   };

@@ -20,6 +20,7 @@ export interface GridPreferences {
 }
 
 const GRID_PREFERENCE_VERSION = 2;
+export const MAX_GRID_SEARCH_FIELDS = 12;
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const;
 const MIN_COLUMN_WIDTH = 80;
 const MAX_COLUMN_WIDTH = 800;
@@ -33,6 +34,7 @@ function createDefaults(columns: GridPreferenceColumn[]): GridPreferences {
   const searchableFields = columns.filter((column) => column.searchable === true);
   const defaultSearchFields = searchableFields
     .filter((column) => column.searchable === true && column.defaultSearch !== false)
+    .slice(0, MAX_GRID_SEARCH_FIELDS)
     .map((column) => column.key);
   const searchFields = defaultSearchFields.length > 0
     ? defaultSearchFields

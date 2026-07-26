@@ -24,6 +24,7 @@ export interface PagedParams {
   sortBy?: string;
   sortDirection?: string;
   search?: string;
+  searchFields?: string[];
   filters?: PagedFilter[];
   filterLogic?: 'and' | 'or';
 }

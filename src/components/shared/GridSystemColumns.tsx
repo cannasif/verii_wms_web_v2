@@ -25,7 +25,7 @@ const actor = (value?: number | null, name?: string | null) => name?.trim() || (
 
 export function systemColumns<T extends AuditableGridRow>(options: SystemColumnOptions = {}): GridColumn<T>[] {
   const search = (key: SystemColumnKey) => ({
-    searchable: options.searchable?.includes(key) ?? false,
+    searchable: options.searchable?.includes(key) ?? key === 'id',
     defaultSearch: options.defaultSearch?.includes(key) ?? false,
   });
   return [
