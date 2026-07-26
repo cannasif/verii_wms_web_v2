@@ -33,6 +33,10 @@ export default defineConfig({
         warn(warning);
       },
       output: {
+        // Keep Rollup from pulling transitive/runtime helpers into an explicitly
+        // named feature chunk. Without this, Vite's preload helper was absorbed
+        // by the PDF chunk and made PDF/Konva part of every page's cold path.
+        onlyExplicitManualChunks: true,
         manualChunks(id) {
           const chunkId = normalizeChunkId(id);
 
