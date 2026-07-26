@@ -1,0 +1,101 @@
+import { normalizeLanguage } from '@/lib/i18n';
+
+/*
+ * Compatibility translator for labels supplied by legacy grid definitions.
+ * New feature code must use module translation keys; this bridge prevents a
+ * partially migrated column/title from leaking Turkish into another locale.
+ */
+const ENGLISH_PHRASES: ReadonlyArray<readonly [string, string]> = [
+  ['Kayıt Zamanı', 'Created At'],
+  ['Kayıt Eden Kullanıcı', 'Created By'],
+  ['Kayıt Eden', 'Created By'],
+  ['Güncelleme Zamanı', 'Updated At'],
+  ['Güncelleyen Kullanıcı', 'Updated By'],
+  ['Son Güncelleyen', 'Updated By'],
+  ['Yapılandırma Kodu', 'Configuration Code'],
+  ['Yapılandırma', 'Configuration'],
+  ['Belge Numarası', 'Document Number'],
+  ['Belge No', 'Document No'],
+  ['Belge Tarihi', 'Document Date'],
+  ['Mal Kabul', 'Goods Receipt'],
+  ['Ambar Giriş', 'Warehouse Inbound'],
+  ['Ambar Çıkış', 'Warehouse Outbound'],
+  ['Depolar Arası Transfer', 'Inter-Warehouse Transfer'],
+  ['Stok Hareket Defteri', 'Stock Movement Ledger'],
+  ['Depo Stok Bakiyesi', 'Warehouse Stock Balance'],
+  ['Stok Seri Bakiyesi', 'Stock Serial Balance'],
+  ['Raf Bakiyesi', 'Location Balance'],
+  ['Toplam Miktar', 'Total Quantity'],
+  ['Kalan Miktar', 'Remaining Quantity'],
+  ['Kabul Miktarı', 'Received Quantity'],
+  ['Planlanan Miktar', 'Planned Quantity'],
+  ['Rezerve Miktar', 'Reserved Quantity'],
+  ['Kullanılabilir Miktar', 'Available Quantity'],
+  ['İşlem Tipi', 'Operation Type'],
+  ['Hareket Tipi', 'Movement Type'],
+  ['Kaynak Depo', 'Source Warehouse'],
+  ['Hedef Depo', 'Destination Warehouse'],
+  ['Kaynak Raf', 'Source Location'],
+  ['Hedef Raf', 'Destination Location'],
+  ['Son Kullanma Tarihi', 'Expiration Date'],
+  ['Üretim Tarihi', 'Manufacturing Date'],
+  ['Araç Plakası', 'Vehicle Plate'],
+  ['Çekici Plakası', 'Truck Plate'],
+  ['İrsaliye No', 'Dispatch Note No'],
+  ['İrsaliye', 'Dispatch Note'],
+  ['İşlemler', 'Actions'],
+  ['Görüntüle', 'View'],
+  ['Düzenle', 'Edit'],
+  ['Güncelle', 'Update'],
+  ['Kayıt ID', 'Record ID'],
+  ['Kayıt', 'Record'],
+  ['Oluşturan', 'Created By'],
+  ['Oluşturma', 'Creation'],
+  ['Güncellenme', 'Updated'],
+  ['Stok Kodu', 'Stock Code'],
+  ['Stok Adı', 'Stock Name'],
+  ['Cari Kodu', 'Customer Code'],
+  ['Cari Adı', 'Customer Name'],
+  ['Şube', 'Branch'],
+  ['Depo', 'Warehouse'],
+  ['Raf', 'Location'],
+  ['Konum', 'Location'],
+  ['Stok', 'Stock'],
+  ['Miktar', 'Quantity'],
+  ['Birim', 'Unit'],
+  ['Seri', 'Serial'],
+  ['Lot', 'Lot'],
+  ['Durum', 'Status'],
+  ['Kalite', 'Quality'],
+  ['Karantina', 'Quarantine'],
+  ['Onay', 'Approval'],
+  ['Öncelik', 'Priority'],
+  ['Açıklama', 'Description'],
+  ['Tarih', 'Date'],
+  ['Saat', 'Time'],
+  ['Kullanıcı', 'User'],
+  ['Rol', 'Role'],
+  ['İzin', 'Permission'],
+  ['Grup', 'Group'],
+  ['Adı', 'Name'],
+  ['Kod', 'Code'],
+  ['Tip', 'Type'],
+  ['Sıra', 'Sequence'],
+  ['Beklenen', 'Expected'],
+  ['Kabul', 'Receipt'],
+  ['Toplanan', 'Picked'],
+  ['Sevk', 'Shipment'],
+  ['Alınan', 'Received'],
+  ['Aktif', 'Active'],
+  ['Pasif', 'Inactive'],
+];
+
+export function localizeLegacyUiText(value: string, language?: string): string {
+  if (!value || normalizeLanguage(language) === 'tr') return value;
+
+  let translated = value;
+  for (const [source, target] of ENGLISH_PHRASES) {
+    translated = translated.split(source).join(target);
+  }
+  return translated;
+}

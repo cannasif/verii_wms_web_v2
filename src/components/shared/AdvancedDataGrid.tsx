@@ -56,6 +56,7 @@ import { useAuthStore } from '@/stores/auth-store';
 import { AppDropdown, type AppDropdownOption } from './AppDropdown';
 import { AppDateInput } from './AppInput';
 import { getWorkspacePortalRoot } from '@/lib/workspace-portal';
+import { localizeLegacyUiText } from '@/lib/legacy-ui-localization';
 
 export interface GridFilter { column: string; operator: string; value: string }
 export interface GridRequest { pageNumber?: number; page?: number; pageSize: number; search: string | null; sortBy?: string | null; sortDirection?: 'asc' | 'desc'; filterLogic: 'and' | 'or'; filters: GridFilter[] }
@@ -182,6 +183,8 @@ function SortableHeader({ columnKey, label, sortable, isActiveSort, sortDirectio
 export function AdvancedDataGrid<T extends { id: number }>({ pageKey, title, description, columns: sourceColumns, fetchPage, toolbarAction }: Props<T>) {
   const { t, i18n } = useTranslation();
   const enumLanguage = i18n.resolvedLanguage ?? i18n.language;
+  const localizedTitle = localizeLegacyUiText(title, enumLanguage);
+  const localizedDescription = description ? localizeLegacyUiText(description, enumLanguage) : undefined;
   const filterLogicOptions = useMemo<AppDropdownOption[]>(() => [
     { value: 'and', label: t('dataGrid.logicAll') },
     { value: 'or', label: t('dataGrid.logicAny') },
@@ -208,6 +211,10 @@ export function AdvancedDataGrid<T extends { id: number }>({ pageKey, title, des
       ? { ...localizedColumn, hideable: false }
       : localizedColumn;
   }), [sourceColumns, t]);
+  const localizedColumns = useMemo(
+    () => columns.map((column) => ({ ...column, label: localizeLegacyUiText(column.label, enumLanguage) })),
+    [columns, enumLanguage],
+  );
   const userId = useAuthStore((state) => state.user?.id);
   const preferenceColumns = useMemo(() => columns.map(({ key, sortable, hideable }) => ({ key, sortable, hideable: (key === 'id' || key === 'actions') ? false : hideable })), [columns]);
   const storageKey = getGridPreferenceKey(pageKey, userId);
@@ -280,7 +287,7 @@ export function AdvancedDataGrid<T extends { id: number }>({ pageKey, title, des
 
   const request = useMemo<GridRequest>(() => ({ pageNumber: page, pageSize, search: search || null, sortBy, sortDirection, filterLogic, filters }), [page, pageSize, search, sortBy, sortDirection, filterLogic, filters]);
   const query = useQuery({ queryKey: ['advanced-grid', pageKey, request], queryFn: () => fetchPage(request), placeholderData: (previous) => previous });
-  const activeColumns = order.map((key) => columns.find((column) => column.key === key)).filter((column): column is GridColumn<T> => Boolean(column && visible.includes(column.key)));
+  const activeColumns = order.map((key) => localizedColumns.find((column) => column.key === key)).filter((column): column is GridColumn<T> => Boolean(column && visible.includes(column.key)));
   const total = query.data?.totalCount ?? 0;
   const totalPages = Math.max(1, query.data?.totalPages ?? Math.ceil(total / pageSize));
   const first = total ? ((page - 1) * pageSize) + 1 : 0;
@@ -331,7 +338,7 @@ export function AdvancedDataGrid<T extends { id: number }>({ pageKey, title, des
 
   return <section className="min-h-[calc(100vh-8rem)] rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-4 shadow-sm sm:p-6">
     <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-      <div><p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--wms-brand-primary)]">V3RII WMS</p><h1 className="mt-1 text-2xl font-bold">{title}</h1>{description && <p className="mt-1 text-sm text-slate-500">{description}</p>}</div>
+      <div><p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--wms-brand-primary)]">V3RII WMS</p><h1 className="mt-1 text-2xl font-bold">{localizedTitle}</h1>{localizedDescription && <p className="mt-1 text-sm text-[var(--wms-app-text-muted)]">{localizedDescription}</p>}</div>
       <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
         <label className="relative col-span-2 w-full sm:w-auto"><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"/><input value={searchInput} onChange={(event) => setSearchInput(event.target.value)} placeholder={t('dataGrid.searchPlaceholder')} aria-label={t('dataGrid.searchPlaceholder')} className="h-11 w-full rounded-xl border border-[var(--wms-app-border)] bg-transparent pl-9 pr-11 text-sm outline-none sm:w-64"/>{searchInput && <button type="button" aria-label={t('dataGrid.clearSearch')} onClick={() => setSearchInput('')} className="absolute right-0 top-0 grid size-11 place-items-center"><X className="size-4"/></button>}</label>
         <PopoverPrimitive.Root open={showColumns} onOpenChange={setShowColumns}>
@@ -348,7 +355,7 @@ export function AdvancedDataGrid<T extends { id: number }>({ pageKey, title, des
             >
               <p className="mb-2 text-xs text-[var(--wms-app-text-muted)]">{t('dataGrid.columnHelp')}</p>
               {order.map((key) => {
-                const column = columns.find((item) => item.key === key);
+                const column = localizedColumns.find((item) => item.key === key);
                 return column ? <label key={key} className={`flex min-h-10 items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-[var(--wms-brand-soft)] ${column.hideable === false ? 'opacity-60' : ''}`}>
                   <input type="checkbox" checked={visible.includes(key)} disabled={column.hideable === false} onChange={() => toggleColumn(key)}/>
                   <span className="truncate">{column.label}</span>
@@ -367,15 +374,15 @@ export function AdvancedDataGrid<T extends { id: number }>({ pageKey, title, des
     {showFilters && <div className="mb-4 rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel-muted)] p-4">
       <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"><div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center"><strong className="text-sm">{t('dataGrid.filters')}</strong><AppDropdown value={filterLogic} onValueChange={(value) => setFilterLogic(value as 'and' | 'or')} options={filterLogicOptions} ariaLabel={t('dataGrid.filterMatchType')} className="h-11 w-full sm:w-44" /></div><button type="button" onClick={addFilter} className="inline-flex min-h-11 items-center justify-center gap-1 rounded-lg border border-[var(--wms-app-border)] px-3 text-sm text-[var(--wms-brand-primary)] sm:border-0"><Plus className="size-4"/>{t('advancedFilter.add')}</button></div>
       {draftFilters.length === 0 ? <p className="text-sm text-slate-500">{t('dataGrid.noFilters')}</p> : <div className="space-y-2">{draftFilters.map((filter, index) => {
-        const selectedColumn = columns.find((column) => column.key === filter.column) ?? columns[0];
+        const selectedColumn = localizedColumns.find((column) => column.key === filter.column) ?? localizedColumns[0];
         const filterType = inferFilterType(selectedColumn);
         const valueOptions = selectedColumn.filterOptions ?? (filterType === 'boolean' ? booleanFilterOptions : undefined);
         return <div key={`${filter.column}-${index}`} className="grid gap-2 sm:grid-cols-[1fr_190px_1fr_40px]">
           <AppDropdown value={filter.column} onValueChange={(value) => setDraftFilters((items) => items.map((item, number) => {
             if (number !== index) return item;
-            const nextColumn = columns.find((column) => column.key === value) ?? columns[0];
+            const nextColumn = localizedColumns.find((column) => column.key === value) ?? localizedColumns[0];
             return { ...item, column: value, operator: defaultFilterOperator(nextColumn), value: '' };
-          }))} options={columns.filter((column) => column.filterable !== false).map((column) => ({ value: column.key, label: column.label }))} ariaLabel={t('dataGrid.filterColumnAria', { number: index + 1 })} searchable className="h-10" />
+          }))} options={localizedColumns.filter((column) => column.filterable !== false).map((column) => ({ value: column.key, label: column.label }))} ariaLabel={t('dataGrid.filterColumnAria', { number: index + 1 })} searchable className="h-10" />
           <AppDropdown value={filter.operator} onValueChange={(value) => setDraftFilters((items) => items.map((item, number) => number === index ? { ...item, operator: value } : item))} options={filterOperatorOptions[filterType]} ariaLabel={t('dataGrid.filterOperatorAria', { number: index + 1 })} className="h-10" />
           {!operatorNeedsValue(filter.operator) ? <div className="flex items-center rounded-lg border border-[var(--wms-app-border)] px-3 text-sm text-slate-500">{t('dataGrid.valueNotRequired')}</div>
             : valueOptions ? <AppDropdown value={filter.value || null} onValueChange={(value) => setDraftFilters((items) => items.map((item, number) => number === index ? { ...item, value } : item))} options={valueOptions} ariaLabel={t('dataGrid.filterValueAria', { number: index + 1 })} className="h-10" />
