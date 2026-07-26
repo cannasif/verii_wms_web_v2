@@ -1,6 +1,7 @@
 import type { GridPage, GridRequest } from '@/components/shared/AdvancedDataGrid';
 import type { DropdownPage, DropdownPageRequest } from '@/hooks/useDropdownInfiniteSearch';
 import { api } from '@/lib/axios';
+import { buildDropdownPagedBody } from '@/lib/dropdown-paging';
 import { requireCompletedCancellation, type OperationCancellationResult } from '@/features/shared/api/operation-cancellation';
 import type {
   LocationOption,
@@ -46,15 +47,8 @@ const unwrap = <T,>(value: Envelope<T>): T => {
   if (!value.success) throw new Error(value.message || 'İşlem başarısız.');
   return value.data;
 };
-const pagedBody = (request: DropdownPageRequest, filters: unknown[] = []) => ({
-  pageNumber: request.pageNumber,
-  pageSize: request.pageSize,
-  search: request.search ?? null,
-  sortBy: request.sortBy,
-  sortDirection: request.sortDirection,
-  filterLogic: 'and',
-  filters,
-});
+const pagedBody = (request: DropdownPageRequest, filters: unknown[] = []) =>
+  buildDropdownPagedBody(request, { filters });
 
 export const warehouseTransferApi = {
   warehouses: async (request: DropdownPageRequest, branchCode: string): Promise<DropdownPage<WarehouseOption>> =>

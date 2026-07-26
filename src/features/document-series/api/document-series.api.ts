@@ -1,6 +1,7 @@
 import type { GridPage, GridRequest } from '@/components/shared/AdvancedDataGrid';
 import type { DropdownPage, DropdownPageRequest } from '@/hooks/useDropdownInfiniteSearch';
 import { api } from '@/lib/axios';
+import { buildDropdownPagedBody } from '@/lib/dropdown-paging';
 import type { DocumentSeriesRow, DocumentSeriesUpsertPayload, WarehouseOption } from '../types/document-series.types';
 
 interface ApiEnvelope<T> { success: boolean; data: T; message?: string }
@@ -25,8 +26,9 @@ export const documentSeriesApi = {
     unwrap(await api.delete<ApiEnvelope<boolean>>(`/api/document-series/${id}`));
   },
   getWarehousesPaged: async (request: DropdownPageRequest): Promise<DropdownPage<WarehouseOption>> =>
-    unwrap(await api.post<ApiEnvelope<GridPage<WarehouseOption>>>('/api/erp-mirror/warehouses/paged', {
-      pageNumber: request.pageNumber, pageSize: request.pageSize, search: request.search ?? null,
-      sortBy: request.sortBy ?? 'warehouseCode', sortDirection: request.sortDirection ?? 'asc', filterLogic: 'and', filters: [],
-    }, { signal: request.signal })),
+    unwrap(await api.post<ApiEnvelope<GridPage<WarehouseOption>>>(
+      '/api/erp-mirror/warehouses/paged',
+      buildDropdownPagedBody(request, { sortBy: 'warehouseCode' }),
+      { signal: request.signal },
+    )),
 };

@@ -6,6 +6,7 @@ export interface DropdownPageRequest {
   pageNumber: number;
   pageSize: number;
   search?: string;
+  searchFields?: string[];
   sortBy?: string;
   sortDirection?: 'asc' | 'desc';
   filters?: PagedFilter[] | Record<string, unknown>;
@@ -30,6 +31,7 @@ interface DropdownInfiniteSearchOptions<TItem> {
   enabled?: boolean;
   minSearchLength?: number;
   pageSize?: number;
+  searchFields?: readonly string[];
   sortBy?: string;
   sortDirection?: 'asc' | 'desc';
   filterLogic?: 'and' | 'or';
@@ -46,6 +48,7 @@ export function useDropdownInfiniteSearch<TItem>({
   pageSize = 25,
   sortBy,
   sortDirection = 'asc',
+  searchFields = [],
   filterLogic = 'or',
   dependencies = [],
 }: DropdownInfiniteSearchOptions<TItem>) {
@@ -57,13 +60,14 @@ export function useDropdownInfiniteSearch<TItem>({
   const stableKey = Array.isArray(queryKey) ? queryKey : [queryKey];
 
   const query = useInfiniteQuery({
-    queryKey: [...stableKey, 'dropdown', isSearchMode ? 'search' : 'browse', activeSearch, pageSize, sortBy ?? null, sortDirection, ...dependencies],
+    queryKey: [...stableKey, 'dropdown', isSearchMode ? 'search' : 'browse', activeSearch, searchFields.join('|'), pageSize, sortBy ?? null, sortDirection, ...dependencies],
     enabled: enabled && !isThresholdMode,
     initialPageParam: 1,
     queryFn: ({ pageParam, signal }) => fetchPage({
       pageNumber: pageParam,
       pageSize,
       search: activeSearch || undefined,
+      searchFields: isSearchMode ? [...searchFields] : undefined,
       sortBy,
       sortDirection,
       filters: buildFilters?.(activeSearch),

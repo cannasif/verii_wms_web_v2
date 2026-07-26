@@ -29,6 +29,8 @@ export interface PagedAppDropdownProps<TItem, TValue extends string = string> ex
   enabled?: boolean;
   pageSize?: number;
   minSearchLength?: number;
+  /** API genel aramasına yalnızca kullanıcıya gösterilen lookup alanları gönderilir. */
+  searchFields?: readonly string[];
   sortBy?: string;
   sortDirection?: 'asc' | 'desc';
   dependencies?: readonly unknown[];
@@ -43,6 +45,7 @@ export function PagedAppDropdown<TItem, TValue extends string = string>({
   enabled = true,
   pageSize = 20,
   minSearchLength = 1,
+  searchFields = [],
   sortBy,
   sortDirection = 'asc',
   dependencies,
@@ -59,6 +62,7 @@ export function PagedAppDropdown<TItem, TValue extends string = string>({
     enabled,
     pageSize,
     minSearchLength,
+    searchFields,
     sortBy,
     sortDirection,
     dependencies,

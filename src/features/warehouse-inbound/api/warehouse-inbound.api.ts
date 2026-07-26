@@ -3,12 +3,14 @@ import { resolveStockTrackingPolicy } from '@/features/stock-tracking/effective-
 import type { DropdownPage, DropdownPageRequest } from '@/hooks/useDropdownInfiniteSearch';
 import type { GridPage as AdvancedGridPage, GridRequest } from '@/components/shared/AdvancedDataGrid';
 import type { OperationCancellationResult } from '@/features/shared/api/operation-cancellation';
+import { buildDropdownPagedBody } from '@/lib/dropdown-paging';
 import type { ActiveUserOption, CreateWarehouseInboundResult, CustomerOption, WarehouseInboundDetail, WarehouseInboundGridRow, WarehouseInboundLabelBatchDetail, WarehouseInboundLabelBatchRow, WarehouseInboundLabelRow, WarehouseInboundLifecycleResult, WarehouseInboundTaskDetail, WarehouseInboundTaskGridRow, LocationOption, ManualWarehouseInboundResult, OpenOrderHeader, OpenOrderLine, PutawayLocationSuggestion, ReceiveWarehouseInboundTaskResult, SeriesOption, StockOption, WarehouseOption, YapCodeOption } from '../types/warehouse-inbound.types';
 
 interface Envelope<T> { success: boolean; data: T; message?: string }
 type GridPage<T> = DropdownPage<T>;
 const unwrap = <T,>(value: Envelope<T>): T => { if (!value.success) throw new Error(value.message || 'İşlem başarısız.'); return value.data; };
-const pagedBody = (request: DropdownPageRequest, filters: unknown[] = []) => ({ pageNumber: request.pageNumber, pageSize: request.pageSize, search: request.search ?? null, sortBy: request.sortBy, sortDirection: request.sortDirection, filterLogic: 'and', filters });
+const pagedBody = (request: DropdownPageRequest, filters: unknown[] = []) =>
+  buildDropdownPagedBody(request, { filters });
 
 export const warehouseInboundV2Api = {
   trackingPolicy: resolveStockTrackingPolicy,

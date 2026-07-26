@@ -4,11 +4,13 @@ import type { DropdownPage, DropdownPageRequest } from '@/hooks/useDropdownInfin
 import type { GridPage as AdvancedGridPage, GridRequest } from '@/components/shared/AdvancedDataGrid';
 import type { ActiveUserOption, CreateGoodsReceiptResult, CustomerOption, GoodsReceiptDetail, GoodsReceiptGridRow, GoodsReceiptLabelBatchDetail, GoodsReceiptLabelBatchRow, GoodsReceiptLabelRow, GoodsReceiptLifecycleResult, GoodsReceiptRoutingResult, GoodsReceiptSplitRoutingResult, GoodsReceiptTaskDetail, GoodsReceiptTaskGridRow, LocationOption, ManualGoodsReceiptResult, OpenOrderHeader, OpenOrderLine, PutawayLocationSuggestion, ReceiveGoodsReceiptTaskResult, SeriesOption, StockOption, WarehouseOption, YapCodeOption } from '../types/goods-receipt.types';
 import type { OperationCancellationResult } from '@/features/shared/api/operation-cancellation';
+import { buildDropdownPagedBody } from '@/lib/dropdown-paging';
 
 interface Envelope<T> { success: boolean; data: T; message?: string }
 type GridPage<T> = DropdownPage<T>;
 const unwrap = <T,>(value: Envelope<T>): T => { if (!value.success) throw new Error(value.message || 'İşlem başarısız.'); return value.data; };
-const pagedBody = (request: DropdownPageRequest, filters: unknown[] = []) => ({ pageNumber: request.pageNumber, pageSize: request.pageSize, search: request.search ?? null, sortBy: request.sortBy, sortDirection: request.sortDirection, filterLogic: 'and', filters });
+const pagedBody = (request: DropdownPageRequest, filters: unknown[] = []) =>
+  buildDropdownPagedBody(request, { filters });
 
 export const goodsReceiptV2Api = {
   trackingPolicy: resolveStockTrackingPolicy,

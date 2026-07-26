@@ -2,19 +2,13 @@ import type { GridPage, GridRequest } from '@/components/shared/AdvancedDataGrid
 import { api } from '@/lib/axios';
 import type { DropdownPage, DropdownPageRequest } from '@/hooks/useDropdownInfiniteSearch';
 import type { LocationOption, PostStockMovementRequest, StockMovementDetail, StockMovementGridRow, StockOption, WarehouseOption, YapCodeOption } from '../types/stock-movement.types';
+import { buildDropdownPagedBody } from '@/lib/dropdown-paging';
 
 interface Envelope<T> { success:boolean; data:T; message?:string }
 const unwrap = <T>(response:Envelope<T>):T => { if (!response.success) throw new Error(response.message || 'İşlem başarısız.'); return response.data; };
 const pageRequest = { pageNumber:1, pageSize:100, search:null, sortDirection:'asc' as const, filterLogic:'and' as const, filters:[] };
-const toPagedRequest = (request:DropdownPageRequest, sortBy:string, extraFilters:unknown[] = []) => ({
-  pageNumber:request.pageNumber,
-  pageSize:request.pageSize,
-  search:request.search ?? null,
-  sortBy:request.sortBy ?? sortBy,
-  sortDirection:request.sortDirection ?? 'asc',
-  filterLogic:request.filterLogic ?? 'or',
-  filters:[...(Array.isArray(request.filters) ? request.filters : []), ...extraFilters],
-});
+const toPagedRequest = (request:DropdownPageRequest, sortBy:string, extraFilters:unknown[] = []) =>
+  buildDropdownPagedBody(request, { sortBy, filters: extraFilters, filterLogic: 'or' });
 
 export const stockMovementsApi = {
   getPaged: async (request:GridRequest):Promise<GridPage<StockMovementGridRow>> => unwrap(await api.post<Envelope<GridPage<StockMovementGridRow>>>('/api/stock-movements/paged', request)),

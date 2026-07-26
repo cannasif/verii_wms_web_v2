@@ -2,9 +2,10 @@ import {api} from '@/lib/axios';
 import type {GridPage,GridRequest} from '@/components/shared/AdvancedDataGrid';
 import type {DropdownPageRequest} from '@/hooks/useDropdownInfiniteSearch';
 import type {CustomerOption,HandlingUnit,LocationOption,MaterialRow,PackingPolicy,PackingPrintJob,PackingSourceDocumentOption,PackingSourceLine,PackingSourceType,ScaleReading,SessionDetail,SessionRow,SpecificationRow,StationRow,StockOption,WarehouseOption} from './types';
+import {buildDropdownPagedBody} from '@/lib/dropdown-paging';
 type Envelope<T>={success:boolean;data:T;message?:string};
 const unwrap=<T,>(r:Envelope<T>)=>{if(!r.success)throw new Error(r.message||'İşlem başarısız.');return r.data};
-const pagedBody=(r:DropdownPageRequest,filters:unknown[]=[])=>({pageNumber:r.pageNumber,pageSize:r.pageSize,search:r.search??null,sortBy:r.sortBy,sortDirection:r.sortDirection,filterLogic:'and',filters});
+const pagedBody=(r:DropdownPageRequest,filters:unknown[]=[])=>buildDropdownPagedBody(r,{filters});
 export const packingApi={
  materials:async(r:GridRequest):Promise<GridPage<MaterialRow>>=>unwrap(await api.post('/api/packing/materials/paged',r)),
  createMaterial:async(r:unknown):Promise<{id:number}>=>unwrap(await api.post('/api/packing/materials',r)),

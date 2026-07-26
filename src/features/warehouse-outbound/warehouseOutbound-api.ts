@@ -4,18 +4,19 @@ import type {ActiveUserOption,CustomerOption,LocationOption,SeriesOption,StockOp
 import {api} from '@/lib/axios';
 import {resolveStockTrackingPolicy} from '@/features/stock-tracking/effective-stock-tracking.service';
 import {requireCompletedCancellation,type OperationCancellationResult} from '@/features/shared/api/operation-cancellation';
+import {buildDropdownPagedBody} from '@/lib/dropdown-paging';
 import type {ShipmentDetail,ShipmentGridRow,ShipmentOrderHeader,ShipmentOrderLine,ShipmentPolicy,ShipmentResult,UpdateShipmentDraft} from './types';
 interface Envelope<T>{success:boolean;data:T;message?:string}const unwrap=<T,>(x:Envelope<T>)=>{if(!x.success)throw new Error(x.message||'İşlem başarısız.');return x.data};
 export interface ShipmentOperationLinePayload{lineId:number;quantity:number;sourceLocationId:number|null;targetLocationId:number|null;lotNo:string|null;serialNo:string|null;handlingUnitNo:string|null}
 export interface ShipmentOperationResult{shipmentId:number;documentNo:string;status:string;stockMovementOperationId?:number;pickedQuantity:number;packedQuantity:number;loadedQuantity:number;shippedQuantity:number;replayed:boolean}
-const body=(r:DropdownPageRequest,filters:unknown[]=[])=>({pageNumber:r.pageNumber,pageSize:r.pageSize,search:r.search??null,sortBy:r.sortBy,sortDirection:r.sortDirection,filterLogic:'and',filters});
+const body=(r:DropdownPageRequest,filters:unknown[]=[])=>buildDropdownPagedBody(r,{filters});
 export const warehouseOutboundApi={
- warehouses:async(r:DropdownPageRequest,b:string):Promise<DropdownPage<WarehouseOption>>=>unwrap(await api.post('/api/erp-mirror/warehouses/paged',body(r,[{column:'branchCode',operator:'equals',value:b}]),{signal:r.signal})),
- customers:async(r:DropdownPageRequest,b:string):Promise<DropdownPage<CustomerOption>>=>unwrap(await api.post('/api/erp-mirror/customers/paged',body(r,[{column:'branchCode',operator:'equals',value:b}]),{signal:r.signal})),
- stocks:async(r:DropdownPageRequest,b:string):Promise<DropdownPage<StockOption>>=>unwrap(await api.post('/api/erp-mirror/stocks/paged',body(r,[{column:'branchCode',operator:'equals',value:b}]),{signal:r.signal})),
- yaps:async(r:DropdownPageRequest,b:string):Promise<DropdownPage<YapCodeOption>>=>unwrap(await api.post('/api/erp-mirror/yap-codes/paged',body(r,[{column:'branchCode',operator:'equals',value:b}]),{signal:r.signal})),
- locations:async(r:DropdownPageRequest,w:number):Promise<DropdownPage<LocationOption>>=>unwrap(await api.post('/api/locations/paged',body(r,[{column:'warehouseId',operator:'equals',value:String(w)},{column:'isActive',operator:'equals',value:'true'}]),{signal:r.signal})),
- users:async(r:DropdownPageRequest):Promise<DropdownPage<ActiveUserOption>>=>unwrap(await api.post('/api/users/paged',body(r,[{column:'isActive',operator:'equals',value:'true'}]),{signal:r.signal})),
+ warehouses:async(r:DropdownPageRequest,b:string):Promise<DropdownPage<WarehouseOption>>=>unwrap(await api.post('/api/erp-mirror/warehouses/paged',body({...r,sortBy:r.sortBy??'warehouseCode'},[{column:'branchCode',operator:'equals',value:b}]),{signal:r.signal})),
+ customers:async(r:DropdownPageRequest,b:string):Promise<DropdownPage<CustomerOption>>=>unwrap(await api.post('/api/erp-mirror/customers/paged',body({...r,sortBy:r.sortBy??'customerCode'},[{column:'branchCode',operator:'equals',value:b}]),{signal:r.signal})),
+ stocks:async(r:DropdownPageRequest,b:string):Promise<DropdownPage<StockOption>>=>unwrap(await api.post('/api/erp-mirror/stocks/paged',body({...r,sortBy:r.sortBy??'erpStockCode'},[{column:'branchCode',operator:'equals',value:b}]),{signal:r.signal})),
+ yaps:async(r:DropdownPageRequest,b:string):Promise<DropdownPage<YapCodeOption>>=>unwrap(await api.post('/api/erp-mirror/yap-codes/paged',body({...r,sortBy:r.sortBy??'configurationCode'},[{column:'branchCode',operator:'equals',value:b}]),{signal:r.signal})),
+ locations:async(r:DropdownPageRequest,w:number):Promise<DropdownPage<LocationOption>>=>unwrap(await api.post('/api/locations/paged',body({...r,sortBy:r.sortBy??'code'},[{column:'warehouseId',operator:'equals',value:String(w)},{column:'isActive',operator:'equals',value:'true'}]),{signal:r.signal})),
+ users:async(r:DropdownPageRequest):Promise<DropdownPage<ActiveUserOption>>=>unwrap(await api.post('/api/users/paged',body({...r,sortBy:r.sortBy??'username'},[{column:'isActive',operator:'equals',value:'true'}]),{signal:r.signal})),
  series:async(w:number):Promise<SeriesOption[]>=>unwrap(await api.get(`/api/document-series/lookup?documentType=Shipment&warehouseId=${w}`)),
  orderHeaders:async(c:string,b:string):Promise<ShipmentOrderHeader[]>=>unwrap(await api.get('/api/netsis-read/warehouseOutbound/open-orders/headers',{params:{customerCode:c,branchCode:b}})),
  orderLines:async(o:string[],b:string):Promise<ShipmentOrderLine[]>=>unwrap(await api.get('/api/netsis-read/warehouseOutbound/open-orders/lines',{params:{orderNumbersCsv:o.join(','),branchCode:b}})),

@@ -1,5 +1,6 @@
 import type { GridPage, GridRequest } from '@/components/shared/AdvancedDataGrid';
 import { api } from '@/lib/axios';
+import { buildDropdownPagedBody } from '@/lib/dropdown-paging';
 import type { DropdownPage, DropdownPageRequest } from '@/hooks/useDropdownInfiniteSearch';
 import type { LocationLookupRow, LocationRow, LocationUpsertPayload, WarehouseOption } from '../types/location.types';
 
@@ -22,29 +23,20 @@ export const locationsApi = {
   getLookup: async (warehouseId: number): Promise<LocationLookupRow[]> =>
     unwrap(await api.get<ApiEnvelope<LocationLookupRow[]>>(`/api/locations/lookup?warehouseId=${warehouseId}&includeInactive=false`)),
   getLocationsPaged: async (request: DropdownPageRequest, warehouseId: number): Promise<DropdownPage<LocationLookupRow>> =>
-    unwrap(await api.post<ApiEnvelope<GridPage<LocationLookupRow>>>('/api/locations/paged', {
-      pageNumber: request.pageNumber,
-      pageSize: request.pageSize,
-      search: request.search ?? null,
-      sortBy: request.sortBy ?? 'code',
-      sortDirection: request.sortDirection ?? 'asc',
-      filterLogic: 'and',
+    unwrap(await api.post<ApiEnvelope<GridPage<LocationLookupRow>>>('/api/locations/paged', buildDropdownPagedBody(request, {
+      sortBy: 'code',
       filters: [
         ...(Array.isArray(request.filters) ? request.filters : []),
         { column: 'warehouseId', operator: 'equals', value: String(warehouseId) },
         { column: 'isActive', operator: 'equals', value: 'true' },
       ],
-    }, { signal: request.signal })),
+    }), { signal: request.signal })),
   getWarehousesPaged: async (request: DropdownPageRequest): Promise<DropdownPage<WarehouseOption>> =>
-    unwrap(await api.post<ApiEnvelope<GridPage<WarehouseOption>>>('/api/erp-mirror/warehouses/paged', {
-      pageNumber: request.pageNumber,
-      pageSize: request.pageSize,
-      search: request.search ?? null,
-      sortBy: request.sortBy ?? 'warehouseCode',
-      sortDirection: request.sortDirection ?? 'asc',
-      filterLogic: request.filterLogic ?? 'or',
-      filters: Array.isArray(request.filters) ? request.filters : [],
-    }, { signal: request.signal })),
+    unwrap(await api.post<ApiEnvelope<GridPage<WarehouseOption>>>(
+      '/api/erp-mirror/warehouses/paged',
+      buildDropdownPagedBody(request, { sortBy: 'warehouseCode' }),
+      { signal: request.signal },
+    )),
   getWarehouses: async (): Promise<WarehouseOption[]> => {
     const page = unwrap(await api.post<ApiEnvelope<GridPage<WarehouseOption>>>('/api/erp-mirror/warehouses/paged', {
       pageNumber: 1, pageSize: 100, search: null, sortBy: 'warehouseCode', sortDirection: 'asc', filterLogic: 'and', filters: [],
