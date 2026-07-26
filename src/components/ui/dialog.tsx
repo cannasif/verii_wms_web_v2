@@ -72,8 +72,8 @@ function DialogContent({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          "pointer-events-auto bg-background/95 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 top-[50%] left-[50%] grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-2xl border border-slate-200/70 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.18)] backdrop-blur-md duration-200 dark:border-white/10 dark:shadow-[0_20px_60px_rgba(2,6,23,0.65)] sm:max-w-lg",
-          contained ? "absolute z-10 max-h-[calc(100%_-_2rem)]" : "fixed z-50 max-h-[calc(100dvh_-_2rem)]",
+          "pointer-events-auto bg-background/95 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 top-[50%] left-[50%] grid w-full max-w-[calc(100%-1rem)] translate-x-[-50%] translate-y-[-50%] gap-4 overflow-y-auto overscroll-contain rounded-2xl border border-slate-200/70 p-4 shadow-[0_20px_60px_rgba(15,23,42,0.18)] [scrollbar-gutter:stable] backdrop-blur-md duration-200 dark:border-white/10 dark:shadow-[0_20px_60px_rgba(2,6,23,0.65)] sm:max-w-lg sm:p-6",
+          contained ? "absolute z-10 max-h-[calc(100%_-_1rem)] sm:max-h-[calc(100%_-_2rem)]" : "fixed z-50 max-h-[calc(100dvh_-_1rem)] sm:max-h-[calc(100dvh_-_2rem)]",
           className
         )}
         {...props}
