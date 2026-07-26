@@ -7,17 +7,36 @@ import { ResponsiveDialog } from '@/components/shared/ResponsiveDialog';
 import { requiredActionColumn, systemColumns } from '@/components/shared/GridSystemColumns';
 import { localizeEnumValue } from '@/lib/enum-localization';
 import { formatProjectDate, formatProjectDateTime, formatProjectNumber } from '@/lib/project-format';
-import { transferApiFor, type TransferApiVariant } from '../api/warehouse-transfer.api';
+import {
+  transferApiFor,
+  type SubcontractingTransferDirection,
+  type TransferApiVariant,
+} from '../api/warehouse-transfer.api';
 import type { WarehouseTransferDetail, WarehouseTransferGridRow } from '../types/warehouse-transfer.types';
 
 type TransferClient = ReturnType<typeof transferApiFor>;
 
-export function WarehouseTransferListPage({ variant = 'warehouse' }: { variant?: TransferApiVariant }): ReactElement {
-  const transferApi = useMemo(() => transferApiFor(variant), [variant]);
+export function WarehouseTransferListPage({
+  variant = 'warehouse',
+  subcontractingDirection,
+}: {
+  variant?: TransferApiVariant;
+  subcontractingDirection?: SubcontractingTransferDirection;
+}): ReactElement {
+  const transferApi = useMemo(
+    () => transferApiFor(variant, subcontractingDirection),
+    [subcontractingDirection, variant],
+  );
   const baseUrl = variant === 'production' ? '/warehouse/production-transfers'
     : variant === 'subcontracting' ? '/warehouse/subcontracting-transfers' : '/warehouse/transfers';
   const title = variant === 'production' ? 'Üretim Transfer Kayıtları'
-    : variant === 'subcontracting' ? 'Fason Transfer Kayıtları' : 'Depolar Arası Transfer Kayıtları';
+    : variant === 'subcontracting'
+      ? subcontractingDirection === 'IssueToSupplier'
+        ? 'Fasona Çıkış Kayıtları'
+        : subcontractingDirection === 'ReceiptFromSupplier'
+          ? 'Fasondan Giriş Kayıtları'
+          : 'Fason Transfer Kayıtları'
+      : 'Depolar Arası Transfer Kayıtları';
   const [detail, setDetail] = useState<WarehouseTransferDetail | null>(null);
   const [editDetail, setEditDetail] = useState<WarehouseTransferDetail | null>(null);
   const [lifecycle, setLifecycle] = useState<{ row: WarehouseTransferGridRow; kind: 'delete' | 'cancel' } | null>(null);
@@ -64,7 +83,7 @@ export function WarehouseTransferListPage({ variant = 'warehouse' }: { variant?:
 
   const refreshed = () => setRevision((value) => value + 1);
   return <>
-    <AdvancedDataGrid key={revision} pageKey={`${variant}-transfers`} title={title}
+    <AdvancedDataGrid key={revision} pageKey={`${variant}-${subcontractingDirection ?? 'all'}-transfers`} title={title}
       description="Planlanan, toplanan, sevk edilen, alınan ve yerleştirilen miktarları sunucu taraflı filtreleme ile izleyin."
       columns={columns} fetchPage={transferApi.paged} />
     {detail && <Detail detail={detail} baseUrl={baseUrl} close={() => setDetail(null)} />}

@@ -89,11 +89,17 @@ const blankLine = (): TransferDraftLine => ({
 });
 
 export type TransferDraftVariant = "warehouse" | "production" | "subcontracting";
+export type SubcontractingTransferDirection =
+  | "IssueToSupplier"
+  | "ReceiptFromSupplier"
+  | "SupplierToSupplier";
 
 export function WarehouseTransferDraftPage({
   variant = "warehouse",
+  fixedSubcontractingDirection,
 }: {
   variant?: TransferDraftVariant;
+  fixedSubcontractingDirection?: SubcontractingTransferDirection;
 }): ReactElement {
   const branchCode = useAuthStore((x) => x.branch?.code ?? "0");
   const [policy, setPolicy] = useState<WarehouseTransferPolicy | null>(null);
@@ -125,7 +131,10 @@ export function WarehouseTransferDraftPage({
   const [productionOperationCode, setProductionOperationCode] = useState("");
   const [sourceWorkCenterCode, setSourceWorkCenterCode] = useState("");
   const [targetWorkCenterCode, setTargetWorkCenterCode] = useState("");
-  const [subcontractDirection, setSubcontractDirection] = useState<"IssueToSupplier" | "ReceiptFromSupplier" | "SupplierToSupplier">("IssueToSupplier");
+  const [subcontractDirection, setSubcontractDirection] =
+    useState<SubcontractingTransferDirection>(
+      fixedSubcontractingDirection ?? "IssueToSupplier",
+    );
   const [supplierValue, setSupplierValue] = useState<string | null>(null);
   const [subcontractOrderNo, setSubcontractOrderNo] = useState("");
   const [expectedReturnAt, setExpectedReturnAt] = useState("");
@@ -135,6 +144,12 @@ export function WarehouseTransferDraftPage({
   const [lines, setLines] = useState<TransferDraftLine[]>([blankLine()]);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<CreateTransferDraftResult | null>(null);
+
+  useEffect(() => {
+    if (fixedSubcontractingDirection) {
+      setSubcontractDirection(fixedSubcontractingDirection);
+    }
+  }, [fixedSubcontractingDirection]);
 
   useEffect(() => {
     void warehouseTransferApi
@@ -512,7 +527,13 @@ export function WarehouseTransferDraftPage({
     }
   };
   const title = variant === "production" ? "Üretime Transfer"
-    : variant === "subcontracting" ? "Fason Transfer" : "Depolar Arası Transfer";
+    : variant === "subcontracting"
+      ? subcontractDirection === "ReceiptFromSupplier"
+        ? "Fasondan Giriş"
+        : subcontractDirection === "IssueToSupplier"
+          ? "Fasona Çıkış"
+          : "Fason Transfer"
+      : "Depolar Arası Transfer";
   const listUrl = variant === "production" ? "/warehouse/production-transfers/list"
     : variant === "subcontracting" ? "/warehouse/subcontracting-transfers/list"
       : "/warehouse/transfers/list";
@@ -621,7 +642,7 @@ export function WarehouseTransferDraftPage({
       {variant === "subcontracting" && (
         <Panel title="Fason tedarikçi ve süreç bağlantısı" icon={<ClipboardList className="size-5" />}>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <Field label="Fason işlem yönü *"><AppDropdown value={subcontractDirection} onValueChange={(value)=>setSubcontractDirection(value as typeof subcontractDirection)} options={[
+            <Field label="Fason işlem yönü *"><AppDropdown value={subcontractDirection} disabled={Boolean(fixedSubcontractingDirection)} onValueChange={(value)=>setSubcontractDirection(value as typeof subcontractDirection)} options={[
               {value:"IssueToSupplier",label:"Fasona çıkış"},
               {value:"ReceiptFromSupplier",label:"Fasondan dönüş"},
               {value:"SupplierToSupplier",label:"Fasoncudan fasoncuya"},

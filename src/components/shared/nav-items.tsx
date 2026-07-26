@@ -43,22 +43,27 @@ export const WMS_NAV_ITEMS: NavItem[] = [
       { title: 'sidebar.warehouseOutboundSettings', titleFallback: 'Çıkış Ayarları', href: '/warehouse/warehouse-outbounds/settings', requiredPermission: 'WMS.WAREHOUSE_OUTBOUND.SETTINGS.VIEW' },
     ] },
   ] },  { title: 'sidebar.warehouseTransfer', titleFallback: 'Depolar Arası Transfer', icon: operationsIcon, children: [
-    { title: 'sidebar.warehouseTransferHub', titleFallback: 'Süreç Merkezi', href: '/warehouse/transfers', searchAliases: ['depo', 'transfer', 'süreç', 'transit'], requiredPermission: 'WMS.WAREHOUSE_TRANSFER.VIEW' },
-    { title: 'sidebar.warehouseTransferCreate', titleFallback: 'Transfer Taslağı', href: '/warehouse/transfers/new', searchAliases: ['depo', 'transfer', 'emir', 'taslak'], requiredPermission: 'WMS.WAREHOUSE_TRANSFER.CREATE' },
-    { title: 'sidebar.warehouseTransferList', titleFallback: 'Transfer Kayıtları', href: '/warehouse/transfers/list', searchAliases: ['depo', 'transfer', 'liste', 'kayıt'], requiredPermission: 'WMS.WAREHOUSE_TRANSFER.VIEW' },
-    { title: 'sidebar.warehouseTransferSettings', titleFallback: 'Süreç Ayarları', href: '/warehouse/transfers/settings', searchAliases: ['depo', 'transfer', 'ayar', 'politika', 'rezervasyon'], requiredPermission: 'WMS.WAREHOUSE_TRANSFER.SETTINGS.VIEW' },
-  ] },
-  { title: 'sidebar.productionTransfer', titleFallback: 'Üretim', icon: operationsIcon, children: [
-    { title: 'sidebar.productionTransferHub', titleFallback: 'Üretime Transfer', href: '/warehouse/production-transfers', searchAliases: ['üretim', 'hammadde', 'besleme', 'yarı mamul', 'mamul'], requiredPermission: 'WMS.PRODUCTION_TRANSFER.VIEW' },
-    { title: 'sidebar.productionTransferCreate', titleFallback: 'Üretim Transferi Oluştur', href: '/warehouse/production-transfers/new', searchAliases: ['üretim', 'transfer', 'emir', 'görev'], requiredPermission: 'WMS.PRODUCTION_TRANSFER.CREATE' },
-    { title: 'sidebar.productionTransferList', titleFallback: 'Üretim Transfer Kayıtları', href: '/warehouse/production-transfers/list', searchAliases: ['üretim', 'transfer', 'liste'], requiredPermission: 'WMS.PRODUCTION_TRANSFER.VIEW' },
-    { title: 'sidebar.productionTransferSettings', titleFallback: 'Üretim Transfer Ayarları', href: '/warehouse/production-transfers/settings', searchAliases: ['üretim', 'malzeme', 'uygunluk', 'tolerans'], requiredPermission: 'WMS.PRODUCTION_TRANSFER.SETTINGS.VIEW' },
-  ] },
-  { title: 'sidebar.subcontractingTransfer', titleFallback: 'Fason İşlemleri', icon: operationsIcon, children: [
-    { title: 'sidebar.subcontractingTransferHub', titleFallback: 'Fason Süreç Merkezi', href: '/warehouse/subcontracting-transfers', searchAliases: ['fason', 'tedarikçi', 'çıkış', 'dönüş'], requiredPermission: 'WMS.SUBCONTRACTING_TRANSFER.VIEW' },
-    { title: 'sidebar.subcontractingTransferCreate', titleFallback: 'Fason Transferi Oluştur', href: '/warehouse/subcontracting-transfers/new', searchAliases: ['fasona çıkış', 'fasondan dönüş', 'emir'], requiredPermission: 'WMS.SUBCONTRACTING_TRANSFER.CREATE' },
-    { title: 'sidebar.subcontractingTransferList', titleFallback: 'Fason Transfer Kayıtları', href: '/warehouse/subcontracting-transfers/list', searchAliases: ['fason', 'liste', 'tedarikçi stok'], requiredPermission: 'WMS.SUBCONTRACTING_TRANSFER.VIEW' },
-    { title: 'sidebar.subcontractingTransferSettings', titleFallback: 'Fason Ayarları', href: '/warehouse/subcontracting-transfers/settings', searchAliases: ['fason', 'ayar', 'kalite', 'termin'], requiredPermission: 'WMS.SUBCONTRACTING_TRANSFER.SETTINGS.VIEW' },
+    { title: 'sidebar.normalTransferGroup', titleFallback: 'Normal Transfer', children: [
+      { title: 'sidebar.warehouseTransferHub', titleFallback: 'Süreç Merkezi', href: '/warehouse/transfers', searchAliases: ['depo', 'transfer', 'süreç', 'transit'], requiredPermission: 'WMS.WAREHOUSE_TRANSFER.VIEW' },
+      { title: 'sidebar.warehouseTransferCreate', titleFallback: 'Transfer Taslağı', href: '/warehouse/transfers/new', searchAliases: ['depo', 'transfer', 'emir', 'taslak'], requiredPermission: 'WMS.WAREHOUSE_TRANSFER.CREATE' },
+      { title: 'sidebar.warehouseTransferList', titleFallback: 'Transfer Kayıtları', href: '/warehouse/transfers/list', searchAliases: ['depo', 'transfer', 'liste', 'kayıt'], requiredPermission: 'WMS.WAREHOUSE_TRANSFER.VIEW' },
+      { title: 'sidebar.warehouseTransferSettings', titleFallback: 'Süreç Ayarları', href: '/warehouse/transfers/settings', searchAliases: ['depo', 'transfer', 'ayar', 'politika', 'rezervasyon'], requiredPermission: 'WMS.WAREHOUSE_TRANSFER.SETTINGS.VIEW' },
+    ] },
+    { title: 'sidebar.subcontractingIssueGroup', titleFallback: 'Fasona Çıkış', children: [
+      { title: 'sidebar.subcontractingIssueCreate', titleFallback: 'Fasona Çıkış Oluştur', href: '/warehouse/subcontracting-transfers/issue/new', searchAliases: ['fason', 'fasona çıkış', 'tedarikçi', 'emir'], requiredPermission: 'WMS.SUBCONTRACTING_TRANSFER.CREATE' },
+      { title: 'sidebar.subcontractingIssueList', titleFallback: 'Fasona Çıkış Kayıtları', href: '/warehouse/subcontracting-transfers/issue/list', searchAliases: ['fason', 'çıkış', 'liste'], requiredPermission: 'WMS.SUBCONTRACTING_TRANSFER.VIEW' },
+    ] },
+    { title: 'sidebar.subcontractingReceiptGroup', titleFallback: 'Fasondan Giriş', children: [
+      { title: 'sidebar.subcontractingReceiptCreate', titleFallback: 'Fasondan Giriş Oluştur', href: '/warehouse/subcontracting-transfers/receipt/new', searchAliases: ['fason', 'fasondan giriş', 'dönüş', 'kalite'], requiredPermission: 'WMS.SUBCONTRACTING_TRANSFER.CREATE' },
+      { title: 'sidebar.subcontractingReceiptList', titleFallback: 'Fasondan Giriş Kayıtları', href: '/warehouse/subcontracting-transfers/receipt/list', searchAliases: ['fason', 'giriş', 'dönüş', 'liste'], requiredPermission: 'WMS.SUBCONTRACTING_TRANSFER.VIEW' },
+      { title: 'sidebar.subcontractingTransferSettings', titleFallback: 'Fason Ayarları', href: '/warehouse/subcontracting-transfers/settings', searchAliases: ['fason', 'ayar', 'kalite', 'termin'], requiredPermission: 'WMS.SUBCONTRACTING_TRANSFER.SETTINGS.VIEW' },
+    ] },
+    { title: 'sidebar.productionTransferGroup', titleFallback: 'Üretime Transfer', children: [
+      { title: 'sidebar.productionTransferHub', titleFallback: 'Süreç Merkezi', href: '/warehouse/production-transfers', searchAliases: ['üretim', 'hammadde', 'besleme', 'yarı mamul', 'mamul'], requiredPermission: 'WMS.PRODUCTION_TRANSFER.VIEW' },
+      { title: 'sidebar.productionTransferCreate', titleFallback: 'Üretim Transferi Oluştur', href: '/warehouse/production-transfers/new', searchAliases: ['üretim', 'transfer', 'emir', 'görev'], requiredPermission: 'WMS.PRODUCTION_TRANSFER.CREATE' },
+      { title: 'sidebar.productionTransferList', titleFallback: 'Üretim Transfer Kayıtları', href: '/warehouse/production-transfers/list', searchAliases: ['üretim', 'transfer', 'liste'], requiredPermission: 'WMS.PRODUCTION_TRANSFER.VIEW' },
+      { title: 'sidebar.productionTransferSettings', titleFallback: 'Üretim Transfer Ayarları', href: '/warehouse/production-transfers/settings', searchAliases: ['üretim', 'malzeme', 'uygunluk', 'tolerans'], requiredPermission: 'WMS.PRODUCTION_TRANSFER.SETTINGS.VIEW' },
+    ] },
   ] },
   { title: 'sidebar.shipping', titleFallback: 'Sevk', icon: operationsIcon, children: [
     { title: 'sidebar.shippingHub', titleFallback: 'Süreç Merkezi', href: '/warehouse/shipments', searchAliases: ['sevk', 'outbound', 'toplama', 'paketleme'], requiredPermission: 'WMS.SHIPPING.VIEW' },

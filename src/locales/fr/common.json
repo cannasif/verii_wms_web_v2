@@ -290,8 +290,16 @@
     "search_placeholder": "Recherche rapide..."
   },
   "sidebar": {
-    "warehouseOperations": "Opérations d’entrepôt",
+    "warehouseOperations": "Opérations d'entrepôt",
     "warehouseTransfer": "Transfert inter-entrepôts",
+    "normalTransferGroup": "Transfert standard",
+    "subcontractingIssueGroup": "Sortie vers sous-traitant",
+    "subcontractingIssueCreate": "Créer une sortie de sous-traitance",
+    "subcontractingIssueList": "Sorties de sous-traitance",
+    "subcontractingReceiptGroup": "Retour de sous-traitance",
+    "subcontractingReceiptCreate": "Créer un retour de sous-traitance",
+    "subcontractingReceiptList": "Retours de sous-traitance",
+    "productionTransferGroup": "Transfert vers la production",
     "productionTransfer": "Production",
     "productionTransferHub": "Transfert vers la production",
     "productionTransferCreate": "Créer un transfert de production",

@@ -173,8 +173,12 @@ export const warehouseTransferApi = {
 };
 
 export type TransferApiVariant = 'warehouse' | 'production' | 'subcontracting';
+export type SubcontractingTransferDirection = 'IssueToSupplier' | 'ReceiptFromSupplier' | 'SupplierToSupplier';
 
-export const transferApiFor = (variant: TransferApiVariant) => {
+export const transferApiFor = (
+  variant: TransferApiVariant,
+  subcontractingDirection?: SubcontractingTransferDirection,
+) => {
   if (variant === 'warehouse') {
     return {
       paged: warehouseTransferApi.paged,
@@ -189,7 +193,12 @@ export const transferApiFor = (variant: TransferApiVariant) => {
   const base = variant === 'production' ? '/api/production-transfers' : '/api/subcontracting-transfers';
   return {
     paged: async (request: GridRequest): Promise<GridPage<WarehouseTransferGridRow>> =>
-      unwrap(await api.post<Envelope<GridPage<WarehouseTransferGridRow>>>(`${base}/paged`, request)),
+      unwrap(await api.post<Envelope<GridPage<WarehouseTransferGridRow>>>(
+        variant === 'subcontracting' && subcontractingDirection
+          ? `${base}/paged/${subcontractingDirection}`
+          : `${base}/paged`,
+        request,
+      )),
     detail: async (id: number): Promise<WarehouseTransferDetail> => {
       const result = unwrap(await api.get<Envelope<{ transfer: WarehouseTransferDetail }>>(`${base}/${id}`));
       return result.transfer;

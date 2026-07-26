@@ -23,6 +23,10 @@ export function SubcontractingTransferHubPage(){
 export function SubcontractingTransferDraftPage(){return <WarehouseTransferDraftPage variant="subcontracting"/>;}
 export function SubcontractingTransferListPage(){return <WarehouseTransferListPage variant="subcontracting"/>;}
 export function SubcontractingTransferOperationPage(){return <WarehouseTransferOperationPage variant="subcontracting"/>;}
+export function SubcontractingIssueDraftPage(){return <WarehouseTransferDraftPage variant="subcontracting" fixedSubcontractingDirection="IssueToSupplier"/>;}
+export function SubcontractingIssueListPage(){return <WarehouseTransferListPage variant="subcontracting" subcontractingDirection="IssueToSupplier"/>;}
+export function SubcontractingReceiptDraftPage(){return <WarehouseTransferDraftPage variant="subcontracting" fixedSubcontractingDirection="ReceiptFromSupplier"/>;}
+export function SubcontractingReceiptListPage(){return <WarehouseTransferListPage variant="subcontracting" subcontractingDirection="ReceiptFromSupplier"/>;}
 
 export function SubcontractingTransferPolicyPage(){
   const{t}=useModuleTranslation('subcontracting-transfer');

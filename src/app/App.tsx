@@ -87,6 +87,10 @@ const SubcontractingTransferDraftPage = lazy(() => loadSubcontractingTransferPag
 const SubcontractingTransferListPage = lazy(() => loadSubcontractingTransferPages().then((m) => ({ default: m.SubcontractingTransferListPage })));
 const SubcontractingTransferPolicyPage = lazy(() => loadSubcontractingTransferPages().then((m) => ({ default: m.SubcontractingTransferPolicyPage })));
 const SubcontractingTransferOperationPage = lazy(() => loadSubcontractingTransferPages().then((m) => ({ default: m.SubcontractingTransferOperationPage })));
+const SubcontractingIssueDraftPage = lazy(() => loadSubcontractingTransferPages().then((m) => ({ default: m.SubcontractingIssueDraftPage })));
+const SubcontractingIssueListPage = lazy(() => loadSubcontractingTransferPages().then((m) => ({ default: m.SubcontractingIssueListPage })));
+const SubcontractingReceiptDraftPage = lazy(() => loadSubcontractingTransferPages().then((m) => ({ default: m.SubcontractingReceiptDraftPage })));
+const SubcontractingReceiptListPage = lazy(() => loadSubcontractingTransferPages().then((m) => ({ default: m.SubcontractingReceiptListPage })));
 const ShippingCreatePage = lazy(() => loadShippingCreatePage().then((m) => ({ default: m.ShippingCreatePage })));
 const ShippingHubPage = lazy(() => loadShippingHubPage().then((m) => ({ default: m.ShippingHubPage })));
 const ShippingListPage = lazy(() => loadShippingListPage().then((m) => ({ default: m.ShippingListPage })));
@@ -188,6 +192,10 @@ export function App(): ReactElement {
           <Route path="warehouse/subcontracting-transfers/list" element={<SubcontractingTransferListPage />} />
           <Route path="warehouse/subcontracting-transfers/:id/operations" element={<SubcontractingTransferOperationPage />} />
           <Route path="warehouse/subcontracting-transfers/settings" element={<SubcontractingTransferPolicyPage />} />
+          <Route path="warehouse/subcontracting-transfers/issue/new" element={<SubcontractingIssueDraftPage />} />
+          <Route path="warehouse/subcontracting-transfers/issue/list" element={<SubcontractingIssueListPage />} />
+          <Route path="warehouse/subcontracting-transfers/receipt/new" element={<SubcontractingReceiptDraftPage />} />
+          <Route path="warehouse/subcontracting-transfers/receipt/list" element={<SubcontractingReceiptListPage />} />
           <Route path="warehouse/shipments" element={<ShippingHubPage />} />
           <Route path="warehouse/shipments/new" element={<ShippingCreatePage />} />
           <Route path="warehouse/shipments/list" element={<ShippingListPage />} />
