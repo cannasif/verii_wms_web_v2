@@ -33,8 +33,10 @@ export interface DocumentSeriesRow {
   lastIssuedAt?: string | null;
   description?: string | null;
   createdBy?: number | null;
+  createdByName?: string | null;
   createdDate?: string | null;
   updatedBy?: number | null;
+  updatedByName?: string | null;
   updatedDate?: string | null;
 }
 

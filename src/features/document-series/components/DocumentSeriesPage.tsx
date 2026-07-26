@@ -102,15 +102,15 @@ export function DocumentSeriesPage() {
   };
 
   const columns = useMemo<GridColumn<DocumentSeriesRow>[]>(() => moduleReady ? [
-    ...systemColumns<DocumentSeriesRow>(),
-    { key: 'branchCode', label: t('columns.branch'), render: (row) => row.branchCode },
+    ...systemColumns<DocumentSeriesRow>({ searchable: ['id', 'createdBy', 'updatedBy'] }),
+    { key: 'branchCode', label: t('columns.branch'), searchable: true, defaultSearch: false, render: (row) => row.branchCode },
     { key: 'warehouseName', label: t('columns.warehouse'), searchable: true, defaultSearch: false, render: (row) => row.warehouseCode == null ? t('form.allWarehouses') : `${row.warehouseCode} - ${row.warehouseName ?? ''}` },
     { key: 'code', label: t('columns.code'), searchable: true, defaultSearch: true, render: (row) => <span className="font-mono font-semibold">{row.code}</span> },
     { key: 'name', label: t('columns.name'), searchable: true, defaultSearch: true, render: (row) => row.name },
     { key: 'documentType', label: t('columns.documentType'), searchable: true, defaultSearch: false, render: (row) => t(`types.${row.documentType}`) },
     { key: 'prefix', label: t('columns.prefix'), searchable: true, defaultSearch: false, render: (row) => row.prefix },
     { key: 'previewDocumentNumber', label: t('columns.preview'), sortable: false, filterable: false, render: (row) => <span className="font-mono text-[var(--wms-brand-primary)]">{row.previewDocumentNumber}</span> },
-    { key: 'nextNumber', label: t('columns.nextNumber'), render: (row) => row.nextNumber },
+    { key: 'nextNumber', label: t('columns.nextNumber'), searchable: true, defaultSearch: false, render: (row) => row.nextNumber },
     { key: 'isDefault', label: t('columns.default'), render: (row) => row.isDefault ? t('status.yes') : t('status.no') },
     { key: 'isActive', label: t('columns.active'), render: (row) => <Status active={row.isActive} activeText={t('status.active')} passiveText={t('status.passive')} /> },
     { key: 'hasIssuedNumbers', label: t('columns.issued'), render: (row) => row.hasIssuedNumbers ? t('status.yes') : t('status.no') },
