@@ -7,6 +7,8 @@
   "columns": {
     "branch": "فرع",
     "warehouse": "مستودع",
+    "warehouseCode": "رمز المستودع",
+    "warehouseName": "اسم المستودع",
     "code": "كود السلسلة",
     "name": "اسم السلسلة",
     "documentType": "نوع الوثيقة",

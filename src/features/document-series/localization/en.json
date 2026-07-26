@@ -1,6 +1,6 @@
 {
   "page": { "title": "Document Series", "description": "Manage safe numbering for goods receipt, transfer, shipment and warehouse operations.", "newAction": "New Document Series" },
-  "columns": { "branch": "Branch", "warehouse": "Warehouse", "code": "Series Code", "name": "Series Name", "documentType": "Document Type", "prefix": "Prefix", "preview": "Next Document No", "nextNumber": "Next Counter", "default": "Default", "active": "Active", "issued": "Used", "lastIssuedAt": "Last Issued", "actions": "Actions" },
+  "columns": { "branch": "Branch", "warehouse": "Warehouse", "warehouseCode": "Warehouse Code", "warehouseName": "Warehouse Name", "code": "Series Code", "name": "Series Name", "documentType": "Document Type", "prefix": "Prefix", "preview": "Next Document No", "nextNumber": "Next Counter", "default": "Default", "active": "Active", "issued": "Used", "lastIssuedAt": "Last Issued", "actions": "Actions" },
   "types": { "GoodsReceipt": "Goods Receipt", "InterWarehouseTransfer": "Inter-warehouse Transfer", "Shipment": "Shipment", "WarehouseReceipt": "Warehouse Receipt", "WarehouseIssue": "Warehouse Issue", "ProductionOrder": "Production Order", "ProductionTransfer": "Production Transfer", "SubcontractingIssue": "Subcontracting Issue", "SubcontractingReceipt": "Subcontracting Receipt" },
   "yearFormats": { "None": "No year", "TwoDigit": "2-digit year", "FourDigit": "4-digit year" },
   "status": { "yes": "Yes", "no": "No", "active": "Active", "passive": "Passive" },

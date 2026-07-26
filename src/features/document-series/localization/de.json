@@ -7,6 +7,8 @@
   "columns": {
     "branch": "Zweig",
     "warehouse": "Lager",
+    "warehouseCode": "Lagercode",
+    "warehouseName": "Lagername",
     "code": "Seriencode",
     "name": "Serienname",
     "documentType": "Dokumenttyp",

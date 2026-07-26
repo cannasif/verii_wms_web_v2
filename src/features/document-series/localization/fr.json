@@ -7,6 +7,8 @@
   "columns": {
     "branch": "Branche",
     "warehouse": "Entrepôt",
+    "warehouseCode": "Code entrepôt",
+    "warehouseName": "Nom de l’entrepôt",
     "code": "Code de série",
     "name": "Nom de la série",
     "documentType": "Type de document",

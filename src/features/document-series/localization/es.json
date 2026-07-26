@@ -7,6 +7,8 @@
   "columns": {
     "branch": "Sucursal",
     "warehouse": "Almacén",
+    "warehouseCode": "Código de almacén",
+    "warehouseName": "Nombre del almacén",
     "code": "Código de serie",
     "name": "Nombre de la serie",
     "documentType": "Tipo de documento",

@@ -1,6 +1,6 @@
 {
   "page": { "title": "Belge Seri Tanımları", "description": "Mal kabul, transfer, sevk ve ambar işlemleri için güvenli belge numaralandırmasını yönetin.", "newAction": "Yeni Belge Serisi" },
-  "columns": { "branch": "Şube", "warehouse": "Depo", "code": "Seri Kodu", "name": "Seri Adı", "documentType": "Belge Türü", "prefix": "Ön Ek", "preview": "Sıradaki Belge No", "nextNumber": "Sıradaki Sayaç", "default": "Varsayılan", "active": "Aktif", "issued": "Kullanıldı", "lastIssuedAt": "Son Üretim", "actions": "İşlemler" },
+  "columns": { "branch": "Şube", "warehouse": "Depo", "warehouseCode": "Depo Kodu", "warehouseName": "Depo Adı", "code": "Seri Kodu", "name": "Seri Adı", "documentType": "Belge Türü", "prefix": "Ön Ek", "preview": "Sıradaki Belge No", "nextNumber": "Sıradaki Sayaç", "default": "Varsayılan", "active": "Aktif", "issued": "Kullanıldı", "lastIssuedAt": "Son Üretim", "actions": "İşlemler" },
   "types": { "GoodsReceipt": "Mal Kabul", "InterWarehouseTransfer": "Depolar Arası Transfer", "Shipment": "Sevk", "WarehouseReceipt": "Ambar Giriş", "WarehouseIssue": "Ambar Çıkış", "ProductionOrder": "Üretim Emri", "ProductionTransfer": "Üretime Transfer", "SubcontractingIssue": "Fasona Çıkış", "SubcontractingReceipt": "Fasondan Dönüş" },
   "yearFormats": { "None": "Yıl yok", "TwoDigit": "2 haneli yıl", "FourDigit": "4 haneli yıl" },
   "status": { "yes": "Evet", "no": "Hayır", "active": "Aktif", "passive": "Pasif" },
