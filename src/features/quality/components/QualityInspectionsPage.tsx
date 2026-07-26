@@ -1,49 +1,434 @@
-import { useCallback, useMemo, useState, type ReactElement } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
-import { Eye, Loader2, ShieldCheck, X } from 'lucide-react';
-import { toast } from 'sonner';
-import { AdvancedDataGrid, type GridColumn, type GridRequest } from '@/components/shared/AdvancedDataGrid';
-import { requiredActionColumn } from '@/components/shared/GridSystemColumns';
-import { AppDropdown } from '@/components/shared/AppDropdown';
-import { ResponsiveDialog } from '@/components/shared/ResponsiveDialog';
-import { formatProjectDate, formatProjectDateTime, formatProjectNumber } from '@/lib/project-format';
-import { qualityApi, type QualityInspection, type QualityInspectionDetail } from '../api/quality.api';
+import { useCallback, useMemo, useState, type ReactElement } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { Eye, Loader2, ShieldCheck, X } from "lucide-react";
+import { toast } from "sonner";
+import {
+  AdvancedDataGrid,
+  type GridColumn,
+  type GridRequest,
+} from "@/components/shared/AdvancedDataGrid";
+import { requiredActionColumn } from "@/components/shared/GridSystemColumns";
+import { AppDropdown } from "@/components/shared/AppDropdown";
+import { ResponsiveDialog } from "@/components/shared/ResponsiveDialog";
+import { localizeEnumValue } from "@/lib/enum-localization";
+import {
+  formatProjectDate,
+  formatProjectDateTime,
+  formatProjectNumber,
+} from "@/lib/project-format";
+import {
+  qualityApi,
+  type QualityInspection,
+  type QualityInspectionDetail,
+} from "../api/quality.api";
 
-export function QualityInspectionsPage({ quarantineOnly = false }: { quarantineOnly?: boolean }): ReactElement {
-  const queryClient = useQueryClient(); const [detail,setDetail]=useState<QualityInspectionDetail|null>(null); const [loading,setLoading]=useState<number|null>(null);
-  const pageKey=quarantineOnly?'quality-quarantine':'quality-inspections';
-  const fetchPage=useCallback((request:GridRequest)=>qualityApi.inspectionsPaged(quarantineOnly?{...request,filters:[...request.filters,{column:'status',operator:'equals',value:'Quarantined'}]}:request),[quarantineOnly]);
-  const open=useCallback(async(id:number)=>{setLoading(id);try{setDetail(await qualityApi.inspection(id))}catch(error){toast.error(message(error,'Kalite detayı alınamadı.'))}finally{setLoading(null)}},[]);
-  const columns=useMemo<GridColumn<QualityInspection>[]>(()=>[
-    {key:'inspectionNo',label:'Kontrol No',sortable:true,filterable:true,render:r=><span className="font-mono font-semibold">{r.inspectionNo}</span>},
-    {key:'sourceWaybillNo',label:'İrsaliye No',sortable:true,filterable:true,render:r=>r.sourceWaybillNo||'—'},
-    {key:'sourceDocumentNo',label:'Mal Kabul No',sortable:true,filterable:true,render:r=>r.sourceDocumentNo},
-    {key:'createdByName',label:'İşlemi Yapan',sortable:true,filterable:true,render:r=>r.createdByName||`Kullanıcı #${r.createdBy??'—'}`},
-    {key:'warehouseName',label:'Depo',sortable:true,filterable:true,render:r=>`${r.warehouseCode??''} ${r.warehouseName??''}`},
-    {key:'status',label:'Durum',sortable:true,filterable:true,render:r=>r.status},
-    {key:'lineCount',label:'Satır',sortable:true,filterable:true,render:r=>r.lineCount},
-    {key:'totalQuantity',label:'Miktar',sortable:true,filterable:true,render:r=>formatProjectNumber(r.totalQuantity)},
-    {key:'queuedAtUtc',label:'Kaliteye Gönderilme',sortable:true,filterable:true,render:r=>formatProjectDateTime(r.queuedAtUtc??r.createdAtUtc)},
-    {key:'actions',label:'İşlemler',...requiredActionColumn,render:r=><button type="button" onClick={()=>void open(r.id)} disabled={loading===r.id} className="rounded-lg p-2 text-cyan-500 hover:bg-cyan-500/10" aria-label="Kalite kontrolünü aç">{loading===r.id?<Loader2 className="size-4 animate-spin"/>:<Eye className="size-4"/>}</button>},
-  ],[loading,open]);
-  const decided=async()=>{setDetail(null);await queryClient.invalidateQueries({queryKey:['advanced-grid',pageKey]})};
-  return <><AdvancedDataGrid<QualityInspection> pageKey={pageKey} title={quarantineOnly?'Karantina Karar Kuyruğu':'Kalite İnceleme Listesi'} description={quarantineOnly?'Karantinadaki ürünleri yetkili biçimde serbest bırakın, reddedin veya iade edin.':'Tamamlanan mal kabullerin özetini görüntüleyin; stok, lot, seri ve karar ayrıntıları için kaydı açın.'} columns={columns} fetchPage={fetchPage}/>{detail&&<InspectionModal detail={detail} close={()=>setDetail(null)} decided={()=>void decided()}/>}</>;
+export function QualityInspectionsPage({
+  quarantineOnly = false,
+}: {
+  quarantineOnly?: boolean;
+}): ReactElement {
+  const queryClient = useQueryClient();
+  const [detail, setDetail] = useState<QualityInspectionDetail | null>(null);
+  const [loading, setLoading] = useState<number | null>(null);
+  const pageKey = quarantineOnly ? "quality-quarantine" : "quality-inspections";
+  const fetchPage = useCallback(
+    (request: GridRequest) =>
+      qualityApi.inspectionsPaged(
+        quarantineOnly
+          ? {
+              ...request,
+              filters: [
+                ...request.filters,
+                { column: "status", operator: "equals", value: "Quarantined" },
+              ],
+            }
+          : request,
+      ),
+    [quarantineOnly],
+  );
+  const open = useCallback(async (id: number) => {
+    setLoading(id);
+    try {
+      setDetail(await qualityApi.inspection(id));
+    } catch (error) {
+      toast.error(message(error, "Kalite detayı alınamadı."));
+    } finally {
+      setLoading(null);
+    }
+  }, []);
+  const columns = useMemo<GridColumn<QualityInspection>[]>(
+    () => [
+      {
+        key: "inspectionNo",
+        label: "Kontrol No",
+        sortable: true,
+        filterable: true,
+        render: (r) => (
+          <span className="font-mono font-semibold">{r.inspectionNo}</span>
+        ),
+      },
+      {
+        key: "sourceWaybillNo",
+        label: "İrsaliye No",
+        sortable: true,
+        filterable: true,
+        render: (r) => r.sourceWaybillNo || "—",
+      },
+      {
+        key: "sourceDocumentNo",
+        label: "Mal Kabul No",
+        sortable: true,
+        filterable: true,
+        render: (r) => r.sourceDocumentNo,
+      },
+      {
+        key: "createdByName",
+        label: "İşlemi Yapan",
+        sortable: true,
+        filterable: true,
+        render: (r) => r.createdByName || `Kullanıcı #${r.createdBy ?? "—"}`,
+      },
+      {
+        key: "warehouseName",
+        label: "Depo",
+        sortable: true,
+        filterable: true,
+        render: (r) => `${r.warehouseCode ?? ""} ${r.warehouseName ?? ""}`,
+      },
+      {
+        key: "status",
+        label: "Durum",
+        sortable: true,
+        filterable: true,
+        render: (r) => r.status,
+      },
+      {
+        key: "lineCount",
+        label: "Satır",
+        sortable: true,
+        filterable: true,
+        render: (r) => r.lineCount,
+      },
+      {
+        key: "totalQuantity",
+        label: "Miktar",
+        sortable: true,
+        filterable: true,
+        render: (r) => formatProjectNumber(r.totalQuantity),
+      },
+      {
+        key: "queuedAtUtc",
+        label: "Kaliteye Gönderilme",
+        sortable: true,
+        filterable: true,
+        render: (r) => formatProjectDateTime(r.queuedAtUtc ?? r.createdAtUtc),
+      },
+      {
+        key: "actions",
+        label: "İşlemler",
+        ...requiredActionColumn,
+        render: (r) => (
+          <button
+            type="button"
+            onClick={() => void open(r.id)}
+            disabled={loading === r.id}
+            className="rounded-lg p-2 text-cyan-500 hover:bg-cyan-500/10"
+            aria-label="Kalite kontrolünü aç"
+          >
+            {loading === r.id ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Eye className="size-4" />
+            )}
+          </button>
+        ),
+      },
+    ],
+    [loading, open],
+  );
+  const decided = async () => {
+    setDetail(null);
+    await queryClient.invalidateQueries({
+      queryKey: ["advanced-grid", pageKey],
+    });
+  };
+  return (
+    <>
+      <AdvancedDataGrid<QualityInspection>
+        pageKey={pageKey}
+        title={
+          quarantineOnly ? "Karantina Karar Kuyruğu" : "Kalite İnceleme Listesi"
+        }
+        description={
+          quarantineOnly
+            ? "Karantinadaki ürünleri yetkili biçimde serbest bırakın, reddedin veya iade edin."
+            : "Tamamlanan mal kabullerin özetini görüntüleyin; stok, lot, seri ve karar ayrıntıları için kaydı açın."
+        }
+        columns={columns}
+        fetchPage={fetchPage}
+      />
+      {detail && (
+        <InspectionModal
+          detail={detail}
+          close={() => setDetail(null)}
+          decided={() => void decided()}
+        />
+      )}
+    </>
+  );
 }
 
-function InspectionModal({detail,close,decided}:{detail:QualityInspectionDetail;close:()=>void;decided:()=>void}):ReactElement {
-  const eligible=detail.lines.filter(x=>['Pending','Hold','Quarantined'].includes(x.decision)); const [selected,setSelected]=useState<number[]>(eligible.map(x=>x.id));
-  const [decision,setDecision]=useState(detail.header.status==='Quarantined'?'Accepted':''); const [reasonCode,setReasonCode]=useState(''); const [note,setNote]=useState(detail.note??''); const [saving,setSaving]=useState(false);
-  const final=['Passed','Failed','Released','Cancelled'].includes(detail.header.status)&&eligible.length===0;
-  const options=detail.header.status==='Quarantined'?[{value:'Accepted',label:'Serbest Bırak / Kabul'},{value:'Rejected',label:'Reddet'},{value:'Returned',label:'Tedarikçiye İade'}]:[{value:'Accepted',label:'Kabul'},{value:'Quarantined',label:'Karantinaya Al'},{value:'Rejected',label:'Reddet'},{value:'Returned',label:'Tedarikçiye İade'}];
-  const toggle=(id:number)=>setSelected(value=>value.includes(id)?value.filter(x=>x!==id):[...value,id]);
-  const save=async()=>{if(!decision||selected.length===0){toast.error('Karar ve en az bir kalite satırı seçin.');return}if(!detail.allowPartialDecision&&selected.length!==eligible.length){toast.error('Bu şubede kısmi kalite kararı kapalıdır.');return}if(decision!=='Accepted'&&!reasonCode.trim()){toast.error('Ret, karantina ve iade kararlarında neden kodu zorunludur.');return}setSaving(true);try{await qualityApi.decide(detail.header.id,{idempotencyKey:crypto.randomUUID(),decision,note:note.trim()||undefined,reasonCode:reasonCode.trim()||undefined,lineIds:selected,rowVersion:detail.rowVersion});toast.success('Kalite kararı ve stok hareketi kaydedildi.');decided()}catch(error){toast.error(message(error,'Kalite kararı kaydedilemedi.'))}finally{setSaving(false)}};
-  return <ResponsiveDialog onClose={close} title={`Kalite İncelemesi ${detail.header.inspectionNo}`} className="!max-w-6xl"><header className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="text-xs font-semibold uppercase tracking-wider text-cyan-500">Kalite İncelemesi</p><h2 className="truncate text-xl font-bold">{detail.header.inspectionNo}</h2><p className="text-sm text-slate-500">{detail.header.sourceDocumentNo} · {detail.header.warehouseCode} {detail.header.warehouseName}</p></div><button type="button" aria-label="Kapat" onClick={close} className="grid size-11 shrink-0 place-items-center rounded-lg border border-[var(--wms-app-border)]"><X className="size-5"/></button></header><div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><Info label="Durum" value={detail.header.status}/><Info label="Toplam" value={formatProjectNumber(detail.header.totalQuantity)}/><Info label="Oluşma" value={formatProjectDateTime(detail.header.createdAtUtc)}/><Info label="Karar" value={detail.header.decidedAtUtc?formatProjectDateTime(detail.header.decidedAtUtc):'—'}/></div>
-    {detail.requireManagerApprovalForRelease&&detail.header.status==='Quarantined'&&<div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-600">Karantinadan serbest bırakma işlemi ayrı yönetici yetkisi gerektirir.</div>}
-    <div className="mt-5 overflow-x-auto rounded-xl border border-[var(--wms-app-border)]"><table className="w-full text-sm"><thead className="bg-black/5 text-left dark:bg-white/5"><tr><th className="p-3">Seç</th><th className="p-3">Stok</th><th className="p-3">Lot / Seri</th><th className="p-3">SKT</th><th className="p-3 text-right">Miktar</th><th className="p-3 text-right">Numune</th><th className="p-3">Karar</th></tr></thead><tbody>{detail.lines.map(line=><tr key={line.id} className="border-t border-[var(--wms-app-border)]"><td className="p-3"><input type="checkbox" disabled={!eligible.some(x=>x.id===line.id)} checked={selected.includes(line.id)} onChange={()=>toggle(line.id)}/></td><td className="p-3"><strong>{line.stockCode}</strong><div className="text-xs text-slate-500">{line.stockName} {line.yapCode&&`· ${line.yapCode}`}</div></td><td className="p-3">{line.lotNo||'—'} / {line.serialNo||'—'}</td><td className="p-3">{line.expiryDate?formatProjectDate(line.expiryDate):'—'}</td><td className="p-3 text-right">{formatProjectNumber(line.quantity)}</td><td className="p-3 text-right">{formatProjectNumber(line.sampleQuantity)}</td><td className="p-3">{line.decision}</td></tr>)}</tbody></table></div>
-    {!final&&<section className="mt-5 grid gap-4 rounded-xl border border-[var(--wms-app-border)] p-4 md:grid-cols-2"><label className="space-y-1 text-sm"><span className="font-semibold">Karar</span><AppDropdown value={decision} onValueChange={setDecision} options={options} placeholder="Karar seçin" searchable={false}/></label><label className="space-y-1 text-sm"><span className="font-semibold">Neden Kodu</span><input className="input" maxLength={100} value={reasonCode} onChange={e=>setReasonCode(e.target.value)} placeholder="HASAR, UYGUNSUZLUK..."/></label><label className="space-y-1 text-sm md:col-span-2"><span className="font-semibold">Açıklama</span><textarea className="input min-h-24" maxLength={1000} value={note} onChange={e=>setNote(e.target.value)}/></label><div className="flex items-center justify-between gap-3 md:col-span-2"><span className="text-xs text-slate-500">{selected.length}/{eligible.length} bekleyen satır seçili {detail.allowPartialDecision?'· Kısmi karar açık':'· Tüm satırlar zorunlu'}</span><button type="button" disabled={saving||!decision||selected.length===0} onClick={()=>void save()} className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-5 py-2.5 font-semibold text-white disabled:opacity-40">{saving?<Loader2 className="size-4 animate-spin"/>:<ShieldCheck className="size-4"/>}Kararı Uygula</button></div></section>}
-  </ResponsiveDialog>;
+function InspectionModal({
+  detail,
+  close,
+  decided,
+}: {
+  detail: QualityInspectionDetail;
+  close: () => void;
+  decided: () => void;
+}): ReactElement {
+  const eligible = detail.lines.filter((x) =>
+    ["Pending", "Hold", "Quarantined"].includes(x.decision),
+  );
+  const [selected, setSelected] = useState<number[]>(eligible.map((x) => x.id));
+  const [decision, setDecision] = useState(
+    detail.header.status === "Quarantined" ? "Accepted" : "",
+  );
+  const [reasonCode, setReasonCode] = useState("");
+  const [note, setNote] = useState(detail.note ?? "");
+  const [saving, setSaving] = useState(false);
+  const final =
+    ["Passed", "Failed", "Released", "Cancelled"].includes(
+      detail.header.status,
+    ) && eligible.length === 0;
+  const options =
+    detail.header.status === "Quarantined"
+      ? [
+          { value: "Accepted", label: "Serbest Bırak / Kabul" },
+          { value: "Rejected", label: "Reddet" },
+          { value: "Returned", label: "Tedarikçiye İade" },
+        ]
+      : [
+          { value: "Accepted", label: "Kabul" },
+          { value: "Quarantined", label: "Karantinaya Al" },
+          { value: "Rejected", label: "Reddet" },
+          { value: "Returned", label: "Tedarikçiye İade" },
+        ];
+  const toggle = (id: number) =>
+    setSelected((value) =>
+      value.includes(id) ? value.filter((x) => x !== id) : [...value, id],
+    );
+  const save = async () => {
+    if (!decision || selected.length === 0) {
+      toast.error("Karar ve en az bir kalite satırı seçin.");
+      return;
+    }
+    if (!detail.allowPartialDecision && selected.length !== eligible.length) {
+      toast.error("Bu şubede kısmi kalite kararı kapalıdır.");
+      return;
+    }
+    if (decision !== "Accepted" && !reasonCode.trim()) {
+      toast.error("Ret, karantina ve iade kararlarında neden kodu zorunludur.");
+      return;
+    }
+    setSaving(true);
+    try {
+      await qualityApi.decide(detail.header.id, {
+        idempotencyKey: crypto.randomUUID(),
+        decision,
+        note: note.trim() || undefined,
+        reasonCode: reasonCode.trim() || undefined,
+        lineIds: selected,
+        rowVersion: detail.rowVersion,
+      });
+      toast.success("Kalite kararı ve stok hareketi kaydedildi.");
+      decided();
+    } catch (error) {
+      toast.error(message(error, "Kalite kararı kaydedilemedi."));
+    } finally {
+      setSaving(false);
+    }
+  };
+  return (
+    <ResponsiveDialog
+      onClose={close}
+      title={`Kalite İncelemesi ${detail.header.inspectionNo}`}
+      className="!max-w-6xl"
+    >
+      <header className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-wider text-cyan-500">
+            Kalite İncelemesi
+          </p>
+          <h2 className="truncate text-xl font-bold">
+            {detail.header.inspectionNo}
+          </h2>
+          <p className="text-sm text-slate-500">
+            {detail.header.sourceDocumentNo} · {detail.header.warehouseCode}{" "}
+            {detail.header.warehouseName}
+          </p>
+        </div>
+        <button
+          type="button"
+          aria-label="Kapat"
+          onClick={close}
+          className="grid size-11 shrink-0 place-items-center rounded-lg border border-[var(--wms-app-border)]"
+        >
+          <X className="size-5" />
+        </button>
+      </header>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Info label="Durum" value={localizeEnumValue(detail.header.status)} />
+        <Info
+          label="Toplam"
+          value={formatProjectNumber(detail.header.totalQuantity)}
+        />
+        <Info
+          label="Oluşma"
+          value={formatProjectDateTime(detail.header.createdAtUtc)}
+        />
+        <Info
+          label="Karar"
+          value={
+            detail.header.decidedAtUtc
+              ? formatProjectDateTime(detail.header.decidedAtUtc)
+              : "—"
+          }
+        />
+      </div>
+      {detail.requireManagerApprovalForRelease &&
+        detail.header.status === "Quarantined" && (
+          <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-600">
+            Karantinadan serbest bırakma işlemi ayrı yönetici yetkisi
+            gerektirir.
+          </div>
+        )}
+      <div className="mt-5 overflow-x-auto rounded-xl border border-[var(--wms-app-border)]">
+        <table className="w-full text-sm">
+          <thead className="bg-black/5 text-left dark:bg-white/5">
+            <tr>
+              <th className="p-3">Seç</th>
+              <th className="p-3">Stok</th>
+              <th className="p-3">Lot / Seri</th>
+              <th className="p-3">SKT</th>
+              <th className="p-3 text-right">Miktar</th>
+              <th className="p-3 text-right">Numune</th>
+              <th className="p-3">Karar</th>
+            </tr>
+          </thead>
+          <tbody>
+            {detail.lines.map((line) => (
+              <tr
+                key={line.id}
+                className="border-t border-[var(--wms-app-border)]"
+              >
+                <td className="p-3">
+                  <input
+                    type="checkbox"
+                    disabled={!eligible.some((x) => x.id === line.id)}
+                    checked={selected.includes(line.id)}
+                    onChange={() => toggle(line.id)}
+                  />
+                </td>
+                <td className="p-3">
+                  <strong>{line.stockCode}</strong>
+                  <div className="text-xs text-slate-500">
+                    {line.stockName} {line.yapCode && `· ${line.yapCode}`}
+                  </div>
+                </td>
+                <td className="p-3">
+                  {line.lotNo || "—"} / {line.serialNo || "—"}
+                </td>
+                <td className="p-3">
+                  {line.expiryDate ? formatProjectDate(line.expiryDate) : "—"}
+                </td>
+                <td className="p-3 text-right">
+                  {formatProjectNumber(line.quantity)}
+                </td>
+                <td className="p-3 text-right">
+                  {formatProjectNumber(line.sampleQuantity)}
+                </td>
+                <td className="p-3">{localizeEnumValue(line.decision)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {!final && (
+        <section className="mt-5 grid gap-4 rounded-xl border border-[var(--wms-app-border)] p-4 md:grid-cols-2">
+          <label className="space-y-1 text-sm">
+            <span className="font-semibold">Karar</span>
+            <AppDropdown
+              value={decision}
+              onValueChange={setDecision}
+              options={options}
+              placeholder="Karar seçin"
+              searchable={false}
+            />
+          </label>
+          <label className="space-y-1 text-sm">
+            <span className="font-semibold">Neden Kodu</span>
+            <input
+              className="input"
+              maxLength={100}
+              value={reasonCode}
+              onChange={(e) => setReasonCode(e.target.value)}
+              placeholder="HASAR, UYGUNSUZLUK..."
+            />
+          </label>
+          <label className="space-y-1 text-sm md:col-span-2">
+            <span className="font-semibold">Açıklama</span>
+            <textarea
+              className="input min-h-24"
+              maxLength={1000}
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+            />
+          </label>
+          <div className="flex items-center justify-between gap-3 md:col-span-2">
+            <span className="text-xs text-slate-500">
+              {selected.length}/{eligible.length} bekleyen satır seçili{" "}
+              {detail.allowPartialDecision
+                ? "· Kısmi karar açık"
+                : "· Tüm satırlar zorunlu"}
+            </span>
+            <button
+              type="button"
+              disabled={saving || !decision || selected.length === 0}
+              onClick={() => void save()}
+              className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-5 py-2.5 font-semibold text-white disabled:opacity-40"
+            >
+              {saving ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <ShieldCheck className="size-4" />
+              )}
+              Kararı Uygula
+            </button>
+          </div>
+        </section>
+      )}
+    </ResponsiveDialog>
+  );
 }
 
-function Info({label,value}:{label:string;value:string}):ReactElement{return <div className="rounded-xl border border-[var(--wms-app-border)] p-3"><div className="text-xs text-slate-500">{label}</div><strong className="mt-1 block text-sm">{value}</strong></div>}
-function message(error:unknown,fallback:string):string{return error instanceof Error?error.message:fallback}
-export const QualityQuarantinePage=():ReactElement=><QualityInspectionsPage quarantineOnly/>;
+function Info({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}): ReactElement {
+  return (
+    <div className="rounded-xl border border-[var(--wms-app-border)] p-3">
+      <div className="text-xs text-slate-500">{label}</div>
+      <strong className="mt-1 block text-sm">{value}</strong>
+    </div>
+  );
+}
+function message(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
+}
+export const QualityQuarantinePage = (): ReactElement => (
+  <QualityInspectionsPage quarantineOnly />
+);
