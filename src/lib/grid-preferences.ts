@@ -57,6 +57,33 @@ function uniqueValidKeys(value: unknown, validKeys: string[]): string[] {
   );
 }
 
+function mergeColumnOrder(storedOrder: string[], canonicalOrder: string[]): string[] {
+  const merged = [...storedOrder];
+  canonicalOrder.forEach((key, canonicalIndex) => {
+    if (merged.includes(key)) return;
+
+    const nextExisting = canonicalOrder
+      .slice(canonicalIndex + 1)
+      .find((candidate) => merged.includes(candidate));
+    if (nextExisting) {
+      merged.splice(merged.indexOf(nextExisting), 0, key);
+      return;
+    }
+
+    const previousExisting = canonicalOrder
+      .slice(0, canonicalIndex)
+      .reverse()
+      .find((candidate) => merged.includes(candidate));
+    if (previousExisting) {
+      merged.splice(merged.indexOf(previousExisting) + 1, 0, key);
+      return;
+    }
+
+    merged.push(key);
+  });
+  return merged;
+}
+
 function normalizePreferences(value: unknown, columns: GridPreferenceColumn[]): GridPreferences {
   const defaults = createDefaults(columns);
   if (!value || typeof value !== 'object') return defaults;
@@ -65,7 +92,7 @@ function normalizePreferences(value: unknown, columns: GridPreferenceColumn[]): 
   const keys = defaults.order;
   const storedOrder = uniqueValidKeys(parsed.order, keys);
   const newKeys = keys.filter((key) => !storedOrder.includes(key));
-  const order = [...storedOrder, ...newKeys];
+  const order = mergeColumnOrder(storedOrder, keys);
   const storedVisible = uniqueValidKeys(parsed.visible, keys);
   // A user's explicit hidden-column choices are preserved, while columns added by
   // a later application version become visible instead of silently disappearing.
