@@ -6,13 +6,12 @@ import { AdvancedDataGrid, type GridColumn } from '@/components/shared/AdvancedD
 import { systemColumns } from '@/components/shared/GridSystemColumns';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { formatProjectDateTime } from '@/lib/project-format';
+import { localizeEnumValue } from '@/lib/enum-localization';
 import { hangfireApi as systemApi, type HangfireExecutionRow } from '../api/hangfire.api';
-
-const statusLabels: Record<string, string> = { Running: 'Çalışıyor', Succeeded: 'Başarılı', Failed: 'Başarısız', TriggerFailed: 'Tetiklenemedi' };
 
 function StatusBadge({ status }: { status: string }) {
   const styles = status === 'Succeeded' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300' : status === 'Running' ? 'bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300' : 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300';
-  return <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${styles}`}>{statusLabels[status] ?? status}</span>;
+  return <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${styles}`}>{localizeEnumValue(status)}</span>;
 }
 
 export function HangfirePage() {

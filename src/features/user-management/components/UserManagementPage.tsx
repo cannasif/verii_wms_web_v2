@@ -6,6 +6,7 @@ import { AdvancedDataGrid, type GridColumn } from '@/components/shared/AdvancedD
 import { AppDropdown } from '@/components/shared/AppDropdown';
 import { systemColumns } from '@/components/shared/GridSystemColumns';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { localizeEnumValue } from '@/lib/enum-localization';
 import { formatProjectDateTime } from '@/lib/project-format';
 import { userManagementApi } from '../api/user-management.api';
 import type { PermissionGroupOption, UpdateUserPayload, UserRow } from '../types/user-management.types';
@@ -106,7 +107,7 @@ export function UserManagementPage() {
     { key: 'firstName', label: 'Ad', render: (row) => row.firstName || '-' },
     { key: 'lastName', label: 'Soyad', render: (row) => row.lastName || '-' },
     { key: 'email', label: 'E-posta', render: (row) => row.email },
-    { key: 'role', label: 'Rol', render: (row) => <span className="rounded-full bg-[var(--wms-brand-soft)] px-2.5 py-1 text-xs font-semibold">{row.role}</span> },
+    { key: 'role', label: 'Rol', render: (row) => <span className="rounded-full bg-[var(--wms-brand-soft)] px-2.5 py-1 text-xs font-semibold">{localizeEnumValue(row.role)}</span> },
     { key: 'isActive', label: 'Durum', render: (row) => <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${row.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>{row.isActive ? 'Aktif' : 'Pasif'}</span> },
     { key: 'lastLoginAt', label: 'Son Giriş', render: (row) => formatProjectDateTime(row.lastLoginAt) },
     { key: 'actions', label: 'İşlemler', sortable: false, filterable: false, render: (row) => <div className="flex items-center gap-1"><button type="button" aria-label={`${row.username} düzenle`} title="Düzenle" onClick={() => openEdit(row)} className="rounded-lg border p-2 text-blue-600 hover:bg-blue-50"><Pencil className="size-4"/></button><button type="button" aria-label={`${row.username} pasife al`} title="Pasife al" disabled={!row.isActive || row.role.toLowerCase() === 'superadmin'} onClick={() => setDeactivateTarget(row)} className="rounded-lg border p-2 text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-35"><Trash2 className="size-4"/></button></div> },

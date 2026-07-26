@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { AppDropdown } from '@/components/shared/AppDropdown';
 import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
 import { WarehouseBarcodeScanner } from '@/features/barcode-resolution/WarehouseBarcodeScanner';
+import { localizeEnumValue } from '@/lib/enum-localization';
 import { formatProjectNumber } from '@/lib/project-format';
 import { warehouseTransferApi, type WarehouseTransferOperationLinePayload } from './api/warehouse-transfer.api';
 import type { WarehouseTransferDetail } from './types/warehouse-transfer.types';
@@ -81,7 +82,7 @@ export function WarehouseTransferOperationPage() {
     setBusy(true);
     try {
       const result = await warehouseTransferApi.transition(id, action, reason);
-      toast.success(`${result.documentNo}: ${result.status}`);
+      toast.success(`${result.documentNo}: ${localizeEnumValue(result.status)}`);
       await load();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'İşlem tamamlanamadı.');
@@ -118,7 +119,7 @@ export function WarehouseTransferOperationPage() {
         driverName,
         waybillNo,
       });
-      toast.success(`${result.documentNo}: ${result.status}`);
+      toast.success(`${result.documentNo}: ${localizeEnumValue(result.status)}`);
       await load();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Operasyon tamamlanamadı.');
@@ -151,7 +152,7 @@ export function WarehouseTransferOperationPage() {
 
     <section className="rounded-2xl border bg-[var(--wms-app-panel)] p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div><h2 className="font-black">Belge kapıları</h2><p className="text-xs text-slate-500">Durum: {detail.header.status} · Onay: {detail.header.approvalStatus}</p></div>
+        <div><h2 className="font-black">Belge kapıları</h2><p className="text-xs text-slate-500">Durum: {localizeEnumValue(detail.header.status)} · Onay: {localizeEnumValue(detail.header.approvalStatus)}</p></div>
         <div className="flex gap-2">
           <button disabled={busy} onClick={() => void transition('approve')} className="inline-flex items-center gap-2 rounded-xl border border-emerald-500 px-4 py-2 text-emerald-500"><ShieldCheck className="size-4" />Onayla</button>
           <button disabled={busy} onClick={() => void transition('release')} className="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2 text-white"><PlayCircle className="size-4" />Serbest bırak</button>

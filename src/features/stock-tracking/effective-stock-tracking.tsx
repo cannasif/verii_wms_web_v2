@@ -1,6 +1,7 @@
 import { BadgeCheck, CircleSlash2, Loader2 } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { api } from '@/lib/axios';
+import { localizeEnumValue } from '@/lib/enum-localization';
 
 export type StockTrackingType = 'None' | 'Lot' | 'Serial' | 'LotAndSerial';
 
@@ -89,7 +90,7 @@ export function StockTrackingPolicyField({
         {trackingTypeLabel(policy.trackingType)}
       </div>
       <p className="mt-0.5 text-xs text-slate-500">
-        {policy.hasPolicy ? `${policy.policyCode ?? 'Aktif politika'} · ${policy.source}` : 'Aktif kural yok · sistem varsayılanı'}
+        {policy.hasPolicy ? `${policy.policyCode ?? 'Aktif politika'} · ${localizeEnumValue(policy.source)}` : 'Aktif kural yok · sistem varsayılanı'}
         {requirements.length > 0 ? ` · ${requirements.join(' · ')}` : ''}
       </p>
     </div>

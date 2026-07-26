@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { AppDropdown } from '@/components/shared/AppDropdown';
 import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
 import { WarehouseBarcodeScanner } from '@/features/barcode-resolution/WarehouseBarcodeScanner';
+import { localizeEnumValue } from '@/lib/enum-localization';
 import { formatProjectNumber } from '@/lib/project-format';
 import { warehouseOutboundApi, type ShipmentOperationLinePayload } from './warehouseOutbound-api';
 import type { ShipmentDetail } from './types';
@@ -61,7 +62,7 @@ export function WarehouseOutboundOperationPage() {
 
   const transition = async (action: 'approve' | 'release') => {
     setBusy(true);
-    try { const result = await warehouseOutboundApi.transition(id, action, reason); toast.success(`${result.documentNo}: ${result.status}`); await load(); }
+    try { const result = await warehouseOutboundApi.transition(id, action, reason); toast.success(`${result.documentNo}: ${localizeEnumValue(result.status)}`); await load(); }
     catch (error) { toast.error(error instanceof Error ? error.message : 'İşlem tamamlanamadı.'); }
     finally { setBusy(false); }
   };
@@ -93,7 +94,7 @@ export function WarehouseOutboundOperationPage() {
         })),
         reason, vehiclePlate, driverName, waybillNo, trackingNo,
       });
-      toast.success(`${result.documentNo}: ${result.status}`);
+      toast.success(`${result.documentNo}: ${localizeEnumValue(result.status)}`);
       await load();
     } catch (error) { toast.error(error instanceof Error ? error.message : 'Operasyon tamamlanamadı.'); }
     finally { setBusy(false); }
@@ -114,7 +115,7 @@ export function WarehouseOutboundOperationPage() {
       <div className="mt-4 grid gap-2 sm:grid-cols-5"><Metric label="Plan" value={totals.requested} /><Metric label="Toplanan" value={totals.picked} /><Metric label="Paket" value={totals.packed} /><Metric label="Yüklenen" value={totals.loaded} /><Metric label="Sevk" value={totals.shipped} /></div>
     </header>
     <section className="rounded-2xl border bg-[var(--wms-app-panel)] p-5">
-      <div className="flex flex-wrap justify-between gap-3"><div><h2 className="font-black">Belge kapıları</h2><p className="text-xs text-slate-500">Durum: {detail.header.status} · Onay: {detail.header.approvalStatus}</p></div><div className="flex gap-2"><button disabled={busy} onClick={() => void transition('approve')} className="inline-flex items-center gap-2 rounded-xl border border-emerald-500 px-4 py-2 text-emerald-500"><ShieldCheck className="size-4" />Onayla</button><button disabled={busy} onClick={() => void transition('release')} className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-4 py-2 text-white"><PlayCircle className="size-4" />Serbest bırak</button></div></div>
+      <div className="flex flex-wrap justify-between gap-3"><div><h2 className="font-black">Belge kapıları</h2><p className="text-xs text-slate-500">Durum: {localizeEnumValue(detail.header.status)} · Onay: {localizeEnumValue(detail.header.approvalStatus)}</p></div><div className="flex gap-2"><button disabled={busy} onClick={() => void transition('approve')} className="inline-flex items-center gap-2 rounded-xl border border-emerald-500 px-4 py-2 text-emerald-500"><ShieldCheck className="size-4" />Onayla</button><button disabled={busy} onClick={() => void transition('release')} className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-4 py-2 text-white"><PlayCircle className="size-4" />Serbest bırak</button></div></div>
     </section>
     <section className="rounded-2xl border bg-[var(--wms-app-panel)] p-5">
       <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-6"><Field label="Operasyon"><AppDropdown value={phase} onValueChange={(value) => setPhase(value as Phase)} options={phases} /></Field><Field label="Araç plakası"><input className="input" value={vehiclePlate} onChange={(e) => setVehiclePlate(e.target.value)} /></Field><Field label="Şoför"><input className="input" value={driverName} onChange={(e) => setDriverName(e.target.value)} /></Field><Field label="İrsaliye"><input className="input" value={waybillNo} onChange={(e) => setWaybillNo(e.target.value)} /></Field><Field label="Takip no"><input className="input" value={trackingNo} onChange={(e) => setTrackingNo(e.target.value)} /></Field><Field label="Not"><input className="input" value={reason} onChange={(e) => setReason(e.target.value)} /></Field></div>
