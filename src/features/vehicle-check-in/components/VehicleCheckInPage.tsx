@@ -1,4 +1,4 @@
-import {useEffect,useMemo,useState,type ChangeEvent,type ReactNode} from 'react';
+import {useCallback,useEffect,useMemo,useState,type ChangeEvent,type ReactNode} from 'react';
 import {useQuery} from '@tanstack/react-query';
 import {useSearchParams} from 'react-router-dom';
 import {
@@ -89,7 +89,7 @@ export function VehicleCheckInPage(){
   const patch=<K extends keyof SaveVehicleCheckInRequest>(key:K,value:SaveVehicleCheckInRequest[K])=>
     setForm(current=>({...current,[key]:value}));
 
-  const hydrate=(detail:VehicleCheckInDetail)=>{
+  const hydrate=useCallback((detail:VehicleCheckInDetail)=>{
     setRecord(detail);
     const header=detail.header;
     setForm({
@@ -109,11 +109,11 @@ export function VehicleCheckInPage(){
     setCustomer(header.customerId
       ?`${header.customerId}|${encodeURIComponent(header.customerCode||'')}|${encodeURIComponent(header.customerName||'')}`
       :null);
-  };
-  const hydrateWithAcceptance=async(detail:VehicleCheckInDetail)=>{
+  },[]);
+  const hydrateWithAcceptance=useCallback(async(detail:VehicleCheckInDetail)=>{
     hydrate(detail);
     setCompleted(await vehicleCheckInApi.steelAcceptanceByVehicle(detail.header.id));
-  };
+  },[hydrate]);
 
   useEffect(()=>{
     const id=Number(searchParams.get('id'));
@@ -123,7 +123,7 @@ export function VehicleCheckInPage(){
       .then(hydrateWithAcceptance)
       .catch(error=>toast.error(error instanceof Error?error.message:'Araç kaydı getirilemedi.'))
       .finally(()=>setBusy(false));
-  },[searchParams]);
+  },[hydrateWithAcceptance,searchParams]);
 
   const findToday=async()=>{
     if(!form.plateNo.trim()){toast.error('Plaka zorunludur.');return}

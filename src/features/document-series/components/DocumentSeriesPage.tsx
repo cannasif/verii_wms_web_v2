@@ -40,9 +40,9 @@ export function DocumentSeriesPage() {
   const locked = Boolean(editing?.hasIssuedNumbers);
 
   const documentTypes = useMemo(() => (['GoodsReceipt', 'InterWarehouseTransfer', 'Shipment', 'WarehouseReceipt', 'WarehouseIssue'] as WmsDocumentType[])
-    .map((value) => ({ value, label: t(`types.${value}`) })), [t, moduleReady]);
+    .map((value) => ({ value, label: t(`types.${value}`) })), [t]);
   const yearFormats = useMemo(() => (['None', 'TwoDigit', 'FourDigit'] as DocumentYearFormat[])
-    .map((value) => ({ value, label: t(`yearFormats.${value}`) })), [t, moduleReady]);
+    .map((value) => ({ value, label: t(`yearFormats.${value}`) })), [t]);
 
   const update = <K extends keyof FormState>(key: K, value: FormState[K]) => setForm((previous) => ({ ...previous, [key]: value }));
   const openCreate = async () => { setEditing(null); setForm(emptyForm()); setFormError(null); setMode('create'); };
