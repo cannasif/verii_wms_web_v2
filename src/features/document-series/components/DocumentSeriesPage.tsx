@@ -6,7 +6,7 @@ import { AdvancedDataGrid, type GridColumn } from '@/components/shared/AdvancedD
 import { AppDropdown } from '@/components/shared/AppDropdown';
 import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
 import { requiredActionColumn, systemColumns } from '@/components/shared/GridSystemColumns';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { formatProjectDateTime } from '@/lib/project-format';
@@ -39,10 +39,20 @@ export function DocumentSeriesPage() {
   const canDelete = can('WMS.DOCUMENT_SERIES.DELETE');
   const locked = Boolean(editing?.hasIssuedNumbers);
 
-  const documentTypes = useMemo(() => (['GoodsReceipt', 'InterWarehouseTransfer', 'Shipment', 'WarehouseReceipt', 'WarehouseIssue', 'ProductionTransfer', 'SubcontractingIssue', 'SubcontractingReceipt'] as WmsDocumentType[])
-    .map((value) => ({ value, label: t(`types.${value}`) })), [t]);
-  const yearFormats = useMemo(() => (['None', 'TwoDigit', 'FourDigit'] as DocumentYearFormat[])
-    .map((value) => ({ value, label: t(`yearFormats.${value}`) })), [t]);
+  const documentTypes = useMemo(
+    () => moduleReady
+      ? (['GoodsReceipt', 'InterWarehouseTransfer', 'Shipment', 'WarehouseReceipt', 'WarehouseIssue', 'ProductionTransfer', 'SubcontractingIssue', 'SubcontractingReceipt'] as WmsDocumentType[])
+        .map((value) => ({ value, label: t(`types.${value}`) }))
+      : [],
+    [moduleReady, t],
+  );
+  const yearFormats = useMemo(
+    () => moduleReady
+      ? (['None', 'TwoDigit', 'FourDigit'] as DocumentYearFormat[])
+        .map((value) => ({ value, label: t(`yearFormats.${value}`) }))
+      : [],
+    [moduleReady, t],
+  );
 
   const update = <K extends keyof FormState>(key: K, value: FormState[K]) => setForm((previous) => ({ ...previous, [key]: value }));
   const openCreate = async () => { setEditing(null); setForm(emptyForm()); setFormError(null); setMode('create'); };
@@ -114,7 +124,7 @@ export function DocumentSeriesPage() {
     <AdvancedDataGrid<DocumentSeriesRow> pageKey="document-series-v2" title={t('page.title')} description={t('page.description')} columns={columns} fetchPage={documentSeriesApi.getPaged} toolbarAction={canCreate ? { label: t('page.newAction'), run: openCreate } : undefined}/>
 
     {mode && <Dialog open onOpenChange={(open) => { if (!open && !saving) setMode(null); }}><DialogContent showCloseButton={false} className="max-h-[calc(100%-2rem)] w-full !max-w-4xl overflow-auto rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-0 shadow-2xl">
-      <div className="flex items-center justify-between border-b border-[var(--wms-app-border)] px-6 py-4"><div className="flex items-center gap-3"><div className="grid size-11 place-items-center rounded-xl bg-[var(--wms-brand-primary)] text-white"><FileDigit className="size-5"/></div><div><DialogTitle className="text-xl font-bold">{mode === 'create' ? t('form.createTitle') : t('form.editTitle')}</DialogTitle><p className="text-sm text-slate-500">{t('form.description')}</p></div></div><button type="button" aria-label={t('form.close')} disabled={saving} onClick={() => setMode(null)} className="rounded-lg border p-2"><X className="size-4"/></button></div>
+      <div className="flex items-center justify-between border-b border-[var(--wms-app-border)] px-6 py-4"><div className="flex items-center gap-3"><div className="grid size-11 place-items-center rounded-xl bg-[var(--wms-brand-primary)] text-white"><FileDigit className="size-5"/></div><div><DialogTitle className="text-xl font-bold">{mode === 'create' ? t('form.createTitle') : t('form.editTitle')}</DialogTitle><DialogDescription className="text-sm text-slate-500">{t('form.description')}</DialogDescription></div></div><button type="button" aria-label={t('form.close')} disabled={saving} onClick={() => setMode(null)} className="rounded-lg border p-2"><X className="size-4"/></button></div>
       <form onSubmit={submit} className="space-y-5 p-6">
         {formError && <div role="alert" className="rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">{formError}</div>}
         {locked && <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">{t('form.lockedNotice')}</div>}
@@ -138,7 +148,7 @@ export function DocumentSeriesPage() {
       </form>
     </DialogContent></Dialog>}
 
-    {deleteTarget && <Dialog open onOpenChange={(open) => { if (!open && !saving) setDeleteTarget(null); }}><DialogContent showCloseButton={false} className="w-full !max-w-md rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-6 shadow-2xl"><div className="grid size-11 place-items-center rounded-full bg-red-100 text-red-600"><Trash2 className="size-5"/></div><DialogTitle className="mt-4 text-xl font-bold">{t('deleteDialog.title')}</DialogTitle><p className="mt-2 text-sm text-slate-500">{t('deleteDialog.description', { name: `${deleteTarget.code} - ${deleteTarget.name}` })}</p><div className="mt-5 flex justify-end gap-2"><button type="button" disabled={saving} onClick={() => setDeleteTarget(null)} className="rounded-xl border px-4 py-2">{t('form.cancel')}</button><button type="button" disabled={saving} onClick={() => void remove()} className="rounded-xl bg-red-600 px-4 py-2 text-white">{t('actions.delete')}</button></div></DialogContent></Dialog>}
+    {deleteTarget && <Dialog open onOpenChange={(open) => { if (!open && !saving) setDeleteTarget(null); }}><DialogContent showCloseButton={false} className="w-full !max-w-md rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-6 shadow-2xl"><div className="grid size-11 place-items-center rounded-full bg-red-100 text-red-600"><Trash2 className="size-5"/></div><DialogTitle className="mt-4 text-xl font-bold">{t('deleteDialog.title')}</DialogTitle><DialogDescription className="mt-2 text-sm text-slate-500">{t('deleteDialog.description', { name: `${deleteTarget.code} - ${deleteTarget.name}` })}</DialogDescription><div className="mt-5 flex justify-end gap-2"><button type="button" disabled={saving} onClick={() => setDeleteTarget(null)} className="rounded-xl border px-4 py-2">{t('form.cancel')}</button><button type="button" disabled={saving} onClick={() => void remove()} className="rounded-xl bg-red-600 px-4 py-2 text-white">{t('actions.delete')}</button></div></DialogContent></Dialog>}
   </>;
 }
 
