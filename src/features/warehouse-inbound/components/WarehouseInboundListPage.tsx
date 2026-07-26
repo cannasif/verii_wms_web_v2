@@ -116,22 +116,31 @@ export function WarehouseInboundListPage(): ReactElement {
       },
       {
         key: "supplierCode",
-        label: "Cari",
+        label: "Cari Kodu",
         sortable: true,
         filterable: true,
-        render: (r) => (
-          <>
-            <strong>{r.supplierCode || "—"}</strong>
-            <div className="text-xs text-slate-500">{r.supplierName}</div>
-          </>
-        ),
+        render: (r) => r.supplierCode || "—",
+      },
+      {
+        key: "supplierName",
+        label: "Cari Adı",
+        sortable: true,
+        filterable: true,
+        render: (r) => r.supplierName || "—",
       },
       {
         key: "warehouseCode",
-        label: "Depo",
+        label: "Depo Kodu",
         sortable: true,
         filterable: true,
-        render: (r) => `${r.warehouseCode} · ${r.warehouseName}`,
+        render: (r) => r.warehouseCode,
+      },
+      {
+        key: "warehouseName",
+        label: "Depo Adı",
+        sortable: true,
+        filterable: true,
+        render: (r) => r.warehouseName,
       },
       {
         key: "processType",

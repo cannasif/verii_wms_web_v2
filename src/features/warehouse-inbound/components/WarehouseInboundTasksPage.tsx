@@ -145,22 +145,31 @@ export function WarehouseInboundTasksPage({
       },
       {
         key: "supplierCode",
-        label: "Tedarikçi",
+        label: "Tedarikçi Kodu",
         sortable: true,
         filterable: true,
-        render: (row) => (
-          <>
-            <strong>{row.supplierCode || "—"}</strong>
-            <div className="text-xs text-slate-500">{row.supplierName}</div>
-          </>
-        ),
+        render: (row) => row.supplierCode || "—",
+      },
+      {
+        key: "supplierName",
+        label: "Tedarikçi Adı",
+        sortable: true,
+        filterable: true,
+        render: (row) => row.supplierName || "—",
       },
       {
         key: "warehouseCode",
-        label: "Depo",
+        label: "Depo Kodu",
         sortable: true,
         filterable: true,
-        render: (row) => `${row.warehouseCode} · ${row.warehouseName}`,
+        render: (row) => row.warehouseCode,
+      },
+      {
+        key: "warehouseName",
+        label: "Depo Adı",
+        sortable: true,
+        filterable: true,
+        render: (row) => row.warehouseName,
       },
       {
         key: "status",
