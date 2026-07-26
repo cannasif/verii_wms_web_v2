@@ -37,6 +37,7 @@ import {
   Columns3,
   Filter,
   GripVertical,
+  ListFilter,
   Plus,
   RefreshCw,
   RotateCcw,
@@ -59,7 +60,7 @@ import { getWorkspacePortalRoot } from '@/lib/workspace-portal';
 import { localizeLegacyUiText } from '@/lib/legacy-ui-localization';
 
 export interface GridFilter { column: string; operator: string; value: string }
-export interface GridRequest { pageNumber?: number; page?: number; pageSize: number; search: string | null; sortBy?: string | null; sortDirection?: 'asc' | 'desc'; filterLogic: 'and' | 'or'; filters: GridFilter[] }
+export interface GridRequest { pageNumber?: number; page?: number; pageSize: number; search: string | null; searchFields?: string[]; sortBy?: string | null; sortDirection?: 'asc' | 'desc'; filterLogic: 'and' | 'or'; filters: GridFilter[] }
 export interface GridPage<T> { items: T[]; pageNumber: number; page?: number; pageSize: number; totalCount: number; totalPages?: number; hasPreviousPage?: boolean; hasNextPage?: boolean }
 export type GridFilterType = 'text' | 'number' | 'date' | 'datetime' | 'boolean' | 'enum' | 'guid';
 export interface GridColumn<T> {
@@ -69,6 +70,8 @@ export interface GridColumn<T> {
   filterable?: boolean;
   sortable?: boolean;
   hideable?: boolean;
+  searchable?: boolean;
+  defaultSearch?: boolean;
   filterType?: GridFilterType;
   filterOptions?: AppDropdownOption[];
 }
@@ -233,13 +236,23 @@ export function AdvancedDataGrid<T extends { id: number }>({
     [columns, enumLanguage],
   );
   const userId = useAuthStore((state) => state.user?.id);
-  const preferenceColumns = useMemo(() => columns.map(({ key, sortable, hideable }) => ({ key, sortable, hideable: (key === 'id' || key === 'actions') ? false : hideable })), [columns]);
+  const preferenceColumns = useMemo(
+    () => columns.map(({ key, sortable, hideable, searchable, defaultSearch }) => ({
+      key,
+      sortable,
+      hideable: (key === 'id' || key === 'actions') ? false : hideable,
+      searchable,
+      defaultSearch,
+    })),
+    [columns],
+  );
   const storageKey = getGridPreferenceKey(pageKey, userId);
   const initialPreferences = useMemo(() => loadGridPreferences(pageKey, userId, preferenceColumns), [pageKey, userId, preferenceColumns]);
   const [loadedKey, setLoadedKey] = useState(storageKey);
   const [visible, setVisible] = useState<string[]>(initialPreferences.visible);
   const [order, setOrder] = useState<string[]>(initialPreferences.order);
   const [widths, setWidths] = useState<Record<string, number>>(initialPreferences.widths);
+  const [searchFields, setSearchFields] = useState<string[]>(initialPreferences.searchFields);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(initialPreferences.pageSize);
   const [searchInput, setSearchInput] = useState('');
@@ -247,6 +260,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
   const [sortBy, setSortBy] = useState<string | null>(initialPreferences.sortBy);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>(initialPreferences.sortDirection);
   const [showColumns, setShowColumns] = useState(false);
+  const [showSearchFields, setShowSearchFields] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [draftFilters, setDraftFilters] = useState<GridFilter[]>([]);
   const [filters, setFilters] = useState<GridFilter[]>([]);
@@ -266,6 +280,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
     setVisible(preferences.visible);
     setOrder(preferences.order);
     setWidths(preferences.widths);
+    setSearchFields(preferences.searchFields);
     setPageSize(preferences.pageSize);
     setSortBy(preferences.sortBy);
     setSortDirection(preferences.sortDirection);
@@ -276,11 +291,11 @@ export function AdvancedDataGrid<T extends { id: number }>({
   useEffect(() => {
     if (loadedKey !== storageKey) return;
     const timer = window.setTimeout(() => {
-      const preferences: GridPreferences = { version: 1, visible, order, widths, sortBy, sortDirection, pageSize };
+      const preferences: GridPreferences = { version: 2, visible, order, widths, searchFields, sortBy, sortDirection, pageSize };
       saveGridPreferences(pageKey, userId, preferences);
     }, 150);
     return () => window.clearTimeout(timer);
-  }, [loadedKey, order, pageKey, pageSize, sortBy, sortDirection, storageKey, userId, visible, widths]);
+  }, [loadedKey, order, pageKey, pageSize, searchFields, sortBy, sortDirection, storageKey, userId, visible, widths]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => { setSearch(searchInput.trim()); setPage(1); }, 350);
@@ -302,7 +317,23 @@ export function AdvancedDataGrid<T extends { id: number }>({
     };
   }, []);
 
-  const request = useMemo<GridRequest>(() => ({ pageNumber: page, pageSize, search: search || null, sortBy, sortDirection, filterLogic, filters }), [page, pageSize, search, sortBy, sortDirection, filterLogic, filters]);
+  const searchableColumns = useMemo(
+    () => localizedColumns.filter((column) => column.searchable === true),
+    [localizedColumns],
+  );
+  const request = useMemo<GridRequest>(
+    () => ({
+      pageNumber: page,
+      pageSize,
+      search: search || null,
+      searchFields: searchableColumns.length > 0 ? searchFields : undefined,
+      sortBy,
+      sortDirection,
+      filterLogic,
+      filters,
+    }),
+    [page, pageSize, search, searchFields, searchableColumns.length, sortBy, sortDirection, filterLogic, filters],
+  );
   const query = useQuery({
     queryKey: ['advanced-grid', pageKey, refreshKey, request],
     queryFn: () => fetchPage(request),
@@ -337,9 +368,21 @@ export function AdvancedDataGrid<T extends { id: number }>({
     setVisible(defaults.visible);
     setOrder(defaults.order);
     setWidths(defaults.widths);
+    setSearchFields(defaults.searchFields);
     setSortBy(defaults.sortBy);
     setSortDirection(defaults.sortDirection);
     setPageSize(defaults.pageSize);
+    setPage(1);
+  };
+  const toggleSearchField = (key: string) => {
+    setSearchFields((current) => {
+      if (!current.includes(key)) return [...current, key];
+      return current.length > 1 ? current.filter((item) => item !== key) : current;
+    });
+    setPage(1);
+  };
+  const resetSearchFields = () => {
+    setSearchFields(getDefaultGridPreferences(preferenceColumns).searchFields);
     setPage(1);
   };
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
@@ -361,7 +404,33 @@ export function AdvancedDataGrid<T extends { id: number }>({
     <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
       <div><p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--wms-brand-primary)]">V3RII WMS</p><h1 className="mt-1 text-2xl font-bold">{localizedTitle}</h1>{localizedDescription && <p className="mt-1 text-sm text-[var(--wms-app-text-muted)]">{localizedDescription}</p>}</div>
       <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-        <label className="relative col-span-2 w-full sm:w-auto"><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"/><input value={searchInput} onChange={(event) => setSearchInput(event.target.value)} placeholder={t('dataGrid.searchPlaceholder')} aria-label={t('dataGrid.searchPlaceholder')} className="h-11 w-full rounded-xl border border-[var(--wms-app-border)] bg-transparent pl-9 pr-11 text-sm outline-none sm:w-64"/>{searchInput && <button type="button" aria-label={t('dataGrid.clearSearch')} onClick={() => setSearchInput('')} className="absolute right-0 top-0 grid size-11 place-items-center"><X className="size-4"/></button>}</label>
+        <div className="col-span-2 flex min-w-0 gap-2 sm:w-auto">
+          <label className="relative min-w-0 flex-1 sm:w-64 sm:flex-none"><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"/><input value={searchInput} onChange={(event) => setSearchInput(event.target.value)} placeholder={t('dataGrid.searchPlaceholder')} aria-label={t('dataGrid.searchPlaceholder')} className="h-11 w-full rounded-xl border border-[var(--wms-app-border)] bg-transparent pl-9 pr-11 text-sm outline-none"/>{searchInput && <button type="button" aria-label={t('dataGrid.clearSearch')} onClick={() => setSearchInput('')} className="absolute right-0 top-0 grid size-11 place-items-center"><X className="size-4"/></button>}</label>
+          {searchableColumns.length > 0 && <PopoverPrimitive.Root open={showSearchFields} onOpenChange={setShowSearchFields}>
+            <PopoverPrimitive.Trigger asChild>
+              <button type="button" aria-expanded={showSearchFields} aria-haspopup="menu" title={t('dataGrid.searchFields')} className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-[var(--wms-app-border)] px-3 text-sm">
+                <ListFilter className="size-4"/>
+                <span className="hidden lg:inline">{t('dataGrid.searchFields')}</span>
+                <span className="rounded-full bg-[var(--wms-brand-primary)] px-1.5 text-xs text-white">{searchFields.length}</span>
+              </button>
+            </PopoverPrimitive.Trigger>
+            <PopoverPrimitive.Portal container={getWorkspacePortalRoot() ?? undefined}>
+              <PopoverPrimitive.Content role="menu" align="end" sideOffset={8} collisionPadding={8} className="wms-floating-surface z-[2000] w-72 rounded-xl outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95">
+                <strong className="block text-sm">{t('dataGrid.searchFields')}</strong>
+                <p className="mb-2 mt-1 text-xs text-[var(--wms-app-text-muted)]">{t('dataGrid.searchFieldsHelp')}</p>
+                {searchableColumns.map((column) => {
+                  const checked = searchFields.includes(column.key);
+                  const locked = checked && searchFields.length === 1;
+                  return <label key={column.key} className={`flex min-h-10 items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-[var(--wms-brand-soft)] ${locked ? 'opacity-60' : ''}`}>
+                    <input type="checkbox" checked={checked} disabled={locked} onChange={() => toggleSearchField(column.key)}/>
+                    <span className="truncate">{column.label}</span>
+                  </label>;
+                })}
+                <button type="button" onClick={resetSearchFields} className="mt-2 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-[var(--wms-app-border)] px-3 py-2 text-sm hover:bg-[var(--wms-brand-soft)]"><RotateCcw className="size-4"/>{t('dataGrid.resetSearchFields')}</button>
+              </PopoverPrimitive.Content>
+            </PopoverPrimitive.Portal>
+          </PopoverPrimitive.Root>}
+        </div>
         <PopoverPrimitive.Root open={showColumns} onOpenChange={setShowColumns}>
           <PopoverPrimitive.Trigger asChild>
             <button type="button" aria-expanded={showColumns} aria-haspopup="menu" className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-[var(--wms-app-border)] px-3 text-sm sm:w-auto"><Columns3 className="size-4"/>{t('dataGrid.columns')}</button>
