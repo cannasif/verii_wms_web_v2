@@ -1,5 +1,5 @@
 import { api } from '@/lib/axios';
-import { resolveStockTrackingPolicy } from '@/features/stock-tracking/effective-stock-tracking';
+import { resolveStockTrackingPolicy } from '@/features/stock-tracking/effective-stock-tracking.service';
 import type { DropdownPage, DropdownPageRequest } from '@/hooks/useDropdownInfiniteSearch';
 import type { GridPage as AdvancedGridPage, GridRequest } from '@/components/shared/AdvancedDataGrid';
 import type { OperationCancellationResult } from '@/features/shared/api/operation-cancellation';

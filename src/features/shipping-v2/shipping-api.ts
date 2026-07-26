@@ -2,7 +2,7 @@ import type {GridRequest} from '@/components/shared/AdvancedDataGrid';
 import type {DropdownPage,DropdownPageRequest} from '@/hooks/useDropdownInfiniteSearch';
 import type {ActiveUserOption,CustomerOption,LocationOption,SeriesOption,StockOption,WarehouseOption,YapCodeOption} from '@/features/goods-receipt-v2/types/goods-receipt.types';
 import {api} from '@/lib/axios';
-import {resolveStockTrackingPolicy} from '@/features/stock-tracking/effective-stock-tracking';
+import {resolveStockTrackingPolicy} from '@/features/stock-tracking/effective-stock-tracking.service';
 import {requireCompletedCancellation,type OperationCancellationResult} from '@/features/shared/api/operation-cancellation';
 import type {ShipmentDetail,ShipmentGridRow,ShipmentOrderHeader,ShipmentOrderLine,ShipmentPolicy,ShipmentResult,UpdateShipmentDraft} from './types';
 interface Envelope<T>{success:boolean;data:T;message?:string}const unwrap=<T,>(x:Envelope<T>)=>{if(!x.success)throw new Error(x.message||'İşlem başarısız.');return x.data};

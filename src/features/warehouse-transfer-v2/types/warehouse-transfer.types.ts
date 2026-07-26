@@ -183,4 +183,4 @@ export interface CreateTransferDraftResult {
   taskId?: number;
   taskNo?: string;
 }
-import type { EffectiveStockTrackingPolicy } from '@/features/stock-tracking/effective-stock-tracking';
+import type { EffectiveStockTrackingPolicy } from '@/features/stock-tracking/effective-stock-tracking.service';

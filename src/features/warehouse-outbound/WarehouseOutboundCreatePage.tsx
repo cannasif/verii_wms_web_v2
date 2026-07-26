@@ -9,9 +9,11 @@ import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
 import { TrackingPlanEditor, type TrackingPlanRow } from '@/components/shared/TrackingPlanEditor';
 import {
   StockTrackingPolicyField,
-  type EffectiveStockTrackingPolicy,
-  type StockTrackingType,
 } from '@/features/stock-tracking/effective-stock-tracking';
+import type {
+  EffectiveStockTrackingPolicy,
+  StockTrackingType,
+} from '@/features/stock-tracking/effective-stock-tracking.service';
 import { useAuthStore } from '@/stores/auth-store';
 import type {
   ActiveUserOption,

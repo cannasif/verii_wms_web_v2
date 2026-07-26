@@ -1,5 +1,5 @@
 import { api } from '@/lib/axios';
-import { resolveStockTrackingPolicy } from '@/features/stock-tracking/effective-stock-tracking';
+import { resolveStockTrackingPolicy } from '@/features/stock-tracking/effective-stock-tracking.service';
 import type { DropdownPage, DropdownPageRequest } from '@/hooks/useDropdownInfiniteSearch';
 import type { GridPage as AdvancedGridPage, GridRequest } from '@/components/shared/AdvancedDataGrid';
 import type { ActiveUserOption, CreateGoodsReceiptResult, CustomerOption, GoodsReceiptDetail, GoodsReceiptGridRow, GoodsReceiptLabelBatchDetail, GoodsReceiptLabelBatchRow, GoodsReceiptLabelRow, GoodsReceiptLifecycleResult, GoodsReceiptRoutingResult, GoodsReceiptSplitRoutingResult, GoodsReceiptTaskDetail, GoodsReceiptTaskGridRow, LocationOption, ManualGoodsReceiptResult, OpenOrderHeader, OpenOrderLine, PutawayLocationSuggestion, ReceiveGoodsReceiptTaskResult, SeriesOption, StockOption, WarehouseOption, YapCodeOption } from '../types/goods-receipt.types';
