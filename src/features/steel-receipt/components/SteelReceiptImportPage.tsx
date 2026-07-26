@@ -17,7 +17,18 @@ const find=(row:Record<string,unknown>,names:string[])=>{const entries=Object.en
 const number=(v:unknown)=>{const compact=text(v).replace(/\s/g,'');if(!compact)return 0;const comma=compact.includes(','),dot=compact.includes('.');const normalized=comma&&dot?(compact.lastIndexOf(',')>compact.lastIndexOf('.')?compact.replace(/\./g,'').replace(',','.'):compact.replace(/,/g,'')):comma?compact.replace(',','.'):compact;const parsed=Number(normalized);return Number.isFinite(parsed)?parsed:0};
 const knownHeaders=new Set(['siparisno','sipariskalemno','stokkodu','yapkodu','serino','serino2','miktar','miktarkg','birim','kombinesize','olcu','materialquality','malzemekalitesi','heatnumber','dokumno','certificatenumber','sertifikano'].map(normalize));
 const headerRow=(sheet:WorkSheet,XLSX:typeof import('xlsx'))=>{const rows=XLSX.utils.sheet_to_json<unknown[]>(sheet,{header:1,defval:'',blankrows:false});let best=0,score=0;rows.slice(0,25).forEach((row,index)=>{const current=row.reduce<number>((sum:number,cell:unknown)=>sum+(knownHeaders.has(normalize(text(cell)))?1:0),0);if(current>score){best=index;score=current}});return score>=2?best:0};
-const downloadTemplate=async()=>{const XLSX=await import('xlsx');const rows=[{'Sipariş No':'SIP-001','Sipariş Kalem No':'1','Stok Kodu':'STK-001','Yap Kodu':'','Seri No (Levha No)':'LVH-001','Seri-2 (Poz No)':'POZ-001','Miktar(Kg)':'1.234,50','Birim':'KG','Kombine Size':'1200x2400x8','Material Quality':'S235','Heat Number':'HEAT-001','Certificate Number':'CERT-001'}];const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),'SAC Mal Kabul');XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['Kural','Açıklama'],['Seri','Her levha için tedarikçi seri zorunludur.'],['Miktar','1.234,50 ve 1234.50 biçimleri desteklenir.'],['Stok','Stok kodu ERP mirror kaydıyla eşleşmelidir.']]),'Kılavuz');XLSX.writeFile(wb,'SAC_Mal_Kabul_Sablonu.xlsx')};
+const downloadTemplate=async()=>{
+  const XLSX=await import('xlsx');
+  const rows=Array.from({length:8},(_,index)=>{
+    const n=String(index+1).padStart(3,'0');
+    const stock=String(index+2).padStart(3,'0');
+    return {'Sipariş No':'SIP-001','Sipariş Kalem No':String(index+1),'Stok Kodu':`01/${stock}`,'Yap Kodu':'','Seri No (Levha No)':`LVH-${n}`,'Seri-2 (Poz No)':`POZ-${n}`,'Miktar(Kg)':'1.234,50','Birim':'KG','Kombine Size':'1200x2400x8','Material Quality':'S235','Heat Number':`HEAT-${n}`,'Certificate Number':`CERT-${n}`};
+  });
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),'SAC Mal Kabul');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['Kural','Açıklama'],['Seri','Her levha için tedarikçi seri zorunludur.'],['Miktar','1.234,50 ve 1234.50 biçimleri desteklenir.'],['Stok','Stok kodu ERP mirror kaydıyla eşleşmelidir.']]),'Kılavuz');
+  XLSX.writeFile(wb,'SAC_Mal_Kabul_Sablonu.xlsx');
+};
 export function SteelReceiptImportPage(){
   const branch=useAuthStore(s=>s.branch?.code??'0');const [vehicle,setVehicle]=useState<string|null>(null);const [customer,setCustomer]=useState<string|null>(null);const [warehouse,setWarehouse]=useState<string|null>(null);
   const [location,setLocation]=useState<string|null>(null);const [series,setSeries]=useState<Array<{id:number;code:string;name:string;previewDocumentNumber:string;isDefault:boolean}>>([]);

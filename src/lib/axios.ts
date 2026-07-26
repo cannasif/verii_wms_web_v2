@@ -187,7 +187,9 @@ api.interceptors.request.use((config) => {
 
   const method = config.method?.toLowerCase();
   const hasBody = config.data !== undefined && config.data !== null && config.data !== '';
-  if ((method === 'get' || method === 'delete' || method === 'head') && !hasBody) {
+  const isMultipart = typeof FormData !== 'undefined' && config.data instanceof FormData;
+  // Axios must generate the multipart boundary itself, so the JSON default has to be dropped.
+  if (isMultipart || ((method === 'get' || method === 'delete' || method === 'head') && !hasBody)) {
     if (typeof config.headers.delete === 'function') {
       config.headers.delete('Content-Type');
     } else if (config.headers && typeof config.headers === 'object') {

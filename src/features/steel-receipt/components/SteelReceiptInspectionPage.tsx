@@ -28,7 +28,7 @@ export function SteelReceiptInspectionPage(){
     {batchSearch.length>=2&&<div className="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-3">{(batches.data?.items??[]).map(item=><button key={item.id} onClick={()=>setRow(item)} className="rounded-xl border p-3 text-left hover:border-cyan-500"><strong className="font-mono text-cyan-500">{item.dCode}</strong><span className="ml-2 text-sm">{item.stockCode}</span><small className="block text-slate-500">{item.importReferenceNo} · {item.supplierSerialNo} · {item.inspectionStatus}</small></button>)}{!batches.isLoading&&!batches.data?.items.length&&<p className="text-sm text-slate-500">Eşleşen SAC levhası bulunamadı.</p>}</div>}</section>
     <AdvancedDataGrid pageKey="steel-receipt-inspection" title="2 · Seri Bazında Kontrol Listesi" description="Geldi, gelmedi, incelendi, kabul, kısmi kabul ve ret kararlarını; fotoğraf ve sertifika kanıtlarıyla yönetin." columns={columns} fetchPage={steelReceiptApi.linesPaged}/>{row&&<InspectionDialog row={row} close={()=>setRow(null)} done={()=>void done()}/>}</>;
 }
-function InspectionDialog({row,close,done}:{row:SteelLineRow;close:()=>void;done:()=>void}){
+export function InspectionDialog({row,close,done}:{row:SteelLineRow;close:()=>void;done:()=>void}){
   const [arrived,setArrived]=useState(row.arrivalStatus!=='Missing');const [arrivedQty,setArrivedQty]=useState(String(row.arrivedQuantity||row.expectedQuantity));
   const [approved,setApproved]=useState(String(row.approvedQuantity||row.expectedQuantity));const [rejected,setRejected]=useState(String(row.rejectedQuantity));
   const [reason,setReason]=useState('');const [note,setNote]=useState('');const [busy,setBusy]=useState(false);
