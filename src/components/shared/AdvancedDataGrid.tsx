@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import * as PopoverPrimitive from '@radix-ui/react-popover';
 import {
   DndContext,
   KeyboardSensor,
@@ -54,6 +55,7 @@ import { isKnownEnumValue, localizeEnumValue } from '@/lib/enum-localization';
 import { useAuthStore } from '@/stores/auth-store';
 import { AppDropdown, type AppDropdownOption } from './AppDropdown';
 import { AppDateInput } from './AppInput';
+import { getWorkspacePortalRoot } from '@/lib/workspace-portal';
 
 export interface GridFilter { column: string; operator: string; value: string }
 export interface GridRequest { pageNumber?: number; page?: number; pageSize: number; search: string | null; sortBy?: string | null; sortDirection?: 'asc' | 'desc'; filterLogic: 'and' | 'or'; filters: GridFilter[] }
@@ -332,21 +334,31 @@ export function AdvancedDataGrid<T extends { id: number }>({ pageKey, title, des
       <div><p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--wms-brand-primary)]">V3RII WMS</p><h1 className="mt-1 text-2xl font-bold">{title}</h1>{description && <p className="mt-1 text-sm text-slate-500">{description}</p>}</div>
       <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
         <label className="relative col-span-2 w-full sm:w-auto"><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"/><input value={searchInput} onChange={(event) => setSearchInput(event.target.value)} placeholder={t('dataGrid.searchPlaceholder')} aria-label={t('dataGrid.searchPlaceholder')} className="h-11 w-full rounded-xl border border-[var(--wms-app-border)] bg-transparent pl-9 pr-11 text-sm outline-none sm:w-64"/>{searchInput && <button type="button" aria-label={t('dataGrid.clearSearch')} onClick={() => setSearchInput('')} className="absolute right-0 top-0 grid size-11 place-items-center"><X className="size-4"/></button>}</label>
-        <div className="relative">
-          <button type="button" onClick={() => setShowColumns((value) => !value)} aria-expanded={showColumns} aria-haspopup="menu" className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-[var(--wms-app-border)] px-3 text-sm sm:w-auto"><Columns3 className="size-4"/>{t('dataGrid.columns')}</button>
-          {showColumns && <div role="menu" className="wms-floating-surface absolute left-0 z-30 mt-2 max-h-[min(32rem,calc(100dvh-8rem))] w-64 max-w-[calc(100vw-2rem)] overflow-y-auto overscroll-contain rounded-xl p-3 sm:left-auto sm:right-0">
-            <p className="mb-2 text-xs text-[var(--wms-app-text-muted)]">{t('dataGrid.columnHelp')}</p>
-            {order.map((key) => {
-              const column = columns.find((item) => item.key === key);
-              return column ? <label key={key} className={`flex items-center gap-2 py-1.5 text-sm ${column.hideable === false ? 'opacity-60' : ''}`}>
-                <input type="checkbox" checked={visible.includes(key)} disabled={column.hideable === false} onChange={() => toggleColumn(key)}/>
-                <span className="truncate">{column.label}</span>
-                {column.hideable === false && <small className="ml-auto text-[10px] uppercase text-slate-400">{t('dataGrid.fixed')}</small>}
-              </label> : null;
-            })}
-            <button type="button" onClick={resetLayout} className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[var(--wms-app-border)] px-3 py-2 text-sm"><RotateCcw className="size-4"/>{t('dataGrid.resetLayout')}</button>
-          </div>}
-        </div>
+        <PopoverPrimitive.Root open={showColumns} onOpenChange={setShowColumns}>
+          <PopoverPrimitive.Trigger asChild>
+            <button type="button" aria-expanded={showColumns} aria-haspopup="menu" className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-[var(--wms-app-border)] px-3 text-sm sm:w-auto"><Columns3 className="size-4"/>{t('dataGrid.columns')}</button>
+          </PopoverPrimitive.Trigger>
+          <PopoverPrimitive.Portal container={getWorkspacePortalRoot() ?? undefined}>
+            <PopoverPrimitive.Content
+              role="menu"
+              align="end"
+              sideOffset={8}
+              collisionPadding={8}
+              className="wms-floating-surface wms-grid-columns-popover z-[2000] rounded-xl outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95"
+            >
+              <p className="mb-2 text-xs text-[var(--wms-app-text-muted)]">{t('dataGrid.columnHelp')}</p>
+              {order.map((key) => {
+                const column = columns.find((item) => item.key === key);
+                return column ? <label key={key} className={`flex min-h-10 items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-[var(--wms-brand-soft)] ${column.hideable === false ? 'opacity-60' : ''}`}>
+                  <input type="checkbox" checked={visible.includes(key)} disabled={column.hideable === false} onChange={() => toggleColumn(key)}/>
+                  <span className="truncate">{column.label}</span>
+                  {column.hideable === false && <small className="ml-auto text-[10px] uppercase text-slate-400">{t('dataGrid.fixed')}</small>}
+                </label> : null;
+              })}
+              <button type="button" onClick={resetLayout} className="mt-2 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-[var(--wms-app-border)] px-3 py-2 text-sm hover:bg-[var(--wms-brand-soft)]"><RotateCcw className="size-4"/>{t('dataGrid.resetLayout')}</button>
+            </PopoverPrimitive.Content>
+          </PopoverPrimitive.Portal>
+        </PopoverPrimitive.Root>
         <button type="button" onClick={() => setShowFilters((value) => !value)} aria-expanded={showFilters} className="relative inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-[var(--wms-app-border)] px-3 text-sm sm:w-auto"><Filter className="size-4"/>{t('advancedFilter.title')}{filters.length > 0 && <span className="rounded-full bg-[var(--wms-brand-primary)] px-1.5 text-xs text-white">{filters.length}</span>}</button>
         <button type="button" aria-label={t('dataGrid.refresh')} onClick={() => query.refetch()} className="h-11 rounded-xl border border-[var(--wms-app-border)] p-2.5"><RefreshCw className={`size-4 ${query.isFetching ? 'animate-spin' : ''}`}/></button>
         {toolbarAction && <button type="button" onClick={runAction} disabled={actionRunning} className="col-span-2 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[var(--wms-brand-primary)] px-4 text-sm font-semibold text-white disabled:opacity-50 sm:w-auto"><RefreshCw className={`size-4 ${actionRunning ? 'animate-spin' : ''}`}/>{toolbarAction.label}</button>}

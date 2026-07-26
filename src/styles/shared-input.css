@@ -1,5 +1,13 @@
 /* Shared application input system.
    `.input` remains the compatibility contract for existing feature modules. */
+:root {
+  --wms-app-text: #0f172a;
+}
+
+.dark {
+  --wms-app-text: #f8fafc;
+}
+
 .input,
 [data-slot='input'] {
   width: 100%;
@@ -155,12 +163,27 @@ input.input:is([type='date'], [type='datetime-local'], [type='time'])::-webkit-c
 .wms-floating-surface {
   isolation: isolate;
   border: 1px solid var(--wms-app-border);
-  background: var(--wms-app-panel-strong);
+  background-color: var(--wms-app-panel-strong);
+  background-image:
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--wms-brand-primary) 3%, var(--wms-app-panel-strong)),
+      var(--wms-app-panel-strong)
+    );
   color: var(--wms-app-text);
   box-shadow:
     0 24px 64px rgb(2 6 23 / 24%),
     0 0 0 1px color-mix(in oklab, var(--wms-brand-primary) 8%, transparent);
   backdrop-filter: none;
+  opacity: 1;
+}
+
+.wms-grid-columns-popover {
+  width: min(20rem, calc(100vw - 1.5rem));
+  max-height: min(32rem, calc(100dvh - 2rem));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.75rem;
 }
 
 @media (max-width: 639px) {
@@ -176,6 +199,11 @@ input.input:is([type='date'], [type='datetime-local'], [type='time'])::-webkit-c
   .app-date-input {
     min-width: 0;
     max-width: 100%;
+  }
+
+  .wms-grid-columns-popover {
+    width: min(24rem, calc(100vw - 1rem));
+    max-height: min(70dvh, 36rem);
   }
 }
 

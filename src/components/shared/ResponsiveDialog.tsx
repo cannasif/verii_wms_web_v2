@@ -43,7 +43,7 @@ export function ResponsiveDialog({
       >
         <DialogTitle className="sr-only">{title}</DialogTitle>
         <DialogDescription className="sr-only">
-          {description ?? `${title} işlem penceresi`}
+          {description ?? title}
         </DialogDescription>
         {children}
       </DialogContent>
