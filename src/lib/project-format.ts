@@ -1,10 +1,106 @@
-import { DEFAULT_PROJECT_SETTINGS,useProjectSettingsStore } from '@/stores/project-settings-store';import type{ProjectSettings}from'@/features/project-settings/project-settings.types';
-const settings=(override?:Partial<ProjectSettings>)=>({...DEFAULT_PROJECT_SETTINGS,...(useProjectSettingsStore.getState().settings??DEFAULT_PROJECT_SETTINGS),...override});
-type DateInput=string|number|Date|null|undefined;
-const parsed=(value:DateInput)=>{if(value==null||value==='')return null;const date=value instanceof Date?value:new Date(value);return Number.isNaN(date.getTime())?null:date;};
-export function formatProjectNumber(value:number,options?:{minimumFractionDigits?:number;maximumFractionDigits?:number},override?:Partial<ProjectSettings>){const s=settings(override);return new Intl.NumberFormat(s.numberLocale,{minimumFractionDigits:options?.minimumFractionDigits??s.decimalPlaces,maximumFractionDigits:options?.maximumFractionDigits??s.decimalPlaces}).format(value);}
-function dateParts(value:DateInput,override?:Partial<ProjectSettings>){const date=parsed(value);if(!date)return null;const s=settings(override);const parts=new Intl.DateTimeFormat('en-US',{timeZone:s.timeZoneId,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(date);const get=(type:Intl.DateTimeFormatPartTypes)=>parts.find(x=>x.type===type)?.value??'';const fullYear=get('year');return{day:get('day'),month:get('month'),year:s.yearFormat==='yy'?fullYear.slice(-2):fullYear};}
-export function formatProjectDate(value:DateInput,override?:Partial<ProjectSettings>){const p=dateParts(value,override);if(!p)return'-';const pattern=settings(override).dateFormat;return pattern==='MM/dd/yyyy'?`${p.month}/${p.day}/${p.year}`:pattern==='yyyy-MM-dd'?`${p.year}-${p.month}-${p.day}`:`${p.day}.${p.month}.${p.year}`;}
-export function formatProjectTime(value:DateInput,override?:Partial<ProjectSettings>){const date=parsed(value);if(!date)return'-';const s=settings(override);const hour12=s.timeFormat.startsWith('hh');const withSeconds=s.timeFormat.includes('ss');return new Intl.DateTimeFormat(s.numberLocale,{timeZone:s.timeZoneId,hour:'2-digit',minute:'2-digit',second:withSeconds?'2-digit':undefined,hour12}).format(date);}
-export function formatProjectDateTime(value:DateInput,override?:Partial<ProjectSettings>){if(!parsed(value))return'-';return`${formatProjectDate(value,override)} ${formatProjectTime(value,override)}`;}
-export function formatProjectYear(value:DateInput,override?:Partial<ProjectSettings>){const p=dateParts(value,override);return p?.year??'-';}
+import {
+  DEFAULT_PROJECT_SETTINGS,
+  useProjectSettingsStore,
+} from "@/stores/project-settings-store";
+import type { ProjectSettings } from "@/features/project-settings/project-settings.types";
+const settings = (override?: Partial<ProjectSettings>) => ({
+  ...DEFAULT_PROJECT_SETTINGS,
+  ...(useProjectSettingsStore.getState().settings ?? DEFAULT_PROJECT_SETTINGS),
+  ...override,
+});
+type DateInput = string | number | Date | null | undefined;
+const parsed = (value: DateInput) => {
+  if (value == null || value === "") return null;
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+export function formatProjectNumber(
+  value: number,
+  options?: { minimumFractionDigits?: number; maximumFractionDigits?: number },
+  override?: Partial<ProjectSettings>,
+) {
+  const s = settings(override);
+  const clampFractionDigits = (input: number): number =>
+    Math.min(20, Math.max(0, Number.isFinite(input) ? Math.trunc(input) : 0));
+  const maximumFractionDigits = clampFractionDigits(
+    options?.maximumFractionDigits ?? s.decimalPlaces,
+  );
+  const requestedMinimum = clampFractionDigits(
+    options?.minimumFractionDigits
+      ?? (options?.maximumFractionDigits == null
+        ? s.decimalPlaces
+        : Math.min(s.decimalPlaces, maximumFractionDigits)),
+  );
+  const minimumFractionDigits = Math.min(
+    requestedMinimum,
+    maximumFractionDigits,
+  );
+
+  return new Intl.NumberFormat(s.numberLocale, {
+    minimumFractionDigits,
+    maximumFractionDigits,
+  }).format(value);
+}
+function dateParts(value: DateInput, override?: Partial<ProjectSettings>) {
+  const date = parsed(value);
+  if (!date) return null;
+  const s = settings(override);
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: s.timeZoneId,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((x) => x.type === type)?.value ?? "";
+  const fullYear = get("year");
+  return {
+    day: get("day"),
+    month: get("month"),
+    year: s.yearFormat === "yy" ? fullYear.slice(-2) : fullYear,
+  };
+}
+export function formatProjectDate(
+  value: DateInput,
+  override?: Partial<ProjectSettings>,
+) {
+  const p = dateParts(value, override);
+  if (!p) return "-";
+  const pattern = settings(override).dateFormat;
+  return pattern === "MM/dd/yyyy"
+    ? `${p.month}/${p.day}/${p.year}`
+    : pattern === "yyyy-MM-dd"
+      ? `${p.year}-${p.month}-${p.day}`
+      : `${p.day}.${p.month}.${p.year}`;
+}
+export function formatProjectTime(
+  value: DateInput,
+  override?: Partial<ProjectSettings>,
+) {
+  const date = parsed(value);
+  if (!date) return "-";
+  const s = settings(override);
+  const hour12 = s.timeFormat.startsWith("hh");
+  const withSeconds = s.timeFormat.includes("ss");
+  return new Intl.DateTimeFormat(s.numberLocale, {
+    timeZone: s.timeZoneId,
+    hour: "2-digit",
+    minute: "2-digit",
+    second: withSeconds ? "2-digit" : undefined,
+    hour12,
+  }).format(date);
+}
+export function formatProjectDateTime(
+  value: DateInput,
+  override?: Partial<ProjectSettings>,
+) {
+  if (!parsed(value)) return "-";
+  return `${formatProjectDate(value, override)} ${formatProjectTime(value, override)}`;
+}
+export function formatProjectYear(
+  value: DateInput,
+  override?: Partial<ProjectSettings>,
+) {
+  const p = dateParts(value, override);
+  return p?.year ?? "-";
+}
