@@ -1,7 +1,9 @@
 import { type ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, MonitorCog, Palette, ShieldCheck, Sparkles, TerminalSquare, X } from 'lucide-react';
+import { ChevronRight, MonitorCog, Palette, ScanLine, ShieldCheck, Sparkles, TerminalSquare, X } from 'lucide-react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { HugeiconsIcon } from '@hugeicons/react';
 import Building03Icon from '@hugeicons/core-free-icons/Building03Icon';
 import LanguageCircleIcon from '@hugeicons/core-free-icons/LanguageCircleIcon';
@@ -22,6 +24,15 @@ import { getFullProfileImageUrl } from '../utils/profile-image';
 import { cn } from '@/lib/utils';
 import { normalizeLanguage, setAppLanguage } from '@/lib/i18n';
 import { localizeLegacyUiText } from '@/lib/legacy-ui-localization';
+import { WarehouseMotionScene } from '@/components/shared/WarehouseAmbientBackground';
+import { useMotionEnvironment } from '@/hooks/use-motion-environment';
+import {
+  wmsBackgroundMotionOptions,
+  type WmsBackgroundMotionVariant,
+} from '@/lib/background-motion';
+import { userDetailApi } from '../api/user-detail-api';
+import { USER_DETAIL_QUERY_KEYS } from '../utils/query-keys';
+import type { UpdateUserAppearanceDto, UserDetailDto } from '../types/user-detail';
 
 type SupportedLanguage = {
   code: string;
@@ -71,9 +82,38 @@ export function UserProfileModal({
 }: UserProfileModalProps): ReactElement {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { resolvedTheme, brandTheme, useCustomBrandThemes, skin, setTheme, setBrandTheme, setUseCustomBrandThemes, setSkin } = useTheme();
+  const {
+    resolvedTheme,
+    brandTheme,
+    useCustomBrandThemes,
+    skin,
+    backgroundMotionEnabled,
+    backgroundMotionVariant,
+    setTheme,
+    setBrandTheme,
+    setUseCustomBrandThemes,
+    setSkin,
+    setBackgroundMotionPreferences,
+  } = useTheme();
   const { user, logout } = useAuthStore();
   const { data: userDetail } = useUserDetail();
+  const queryClient = useQueryClient();
+  const { prefersReducedMotion } = useMotionEnvironment();
+  const appearanceMutation = useMutation({
+    mutationFn: async (request: UpdateUserAppearanceDto): Promise<UserDetailDto> => {
+      const response = await userDetailApi.updateAppearance(request);
+      if (!response.success || !response.data) {
+        throw new Error(response.message || t('profile.backgroundMotionSaveError'));
+      }
+      return response.data;
+    },
+    onSuccess: (updated) => {
+      queryClient.setQueryData(
+        [USER_DETAIL_QUERY_KEYS.CURRENT, updated.userId],
+        updated,
+      );
+    },
+  });
 
   const displayName = user?.name || user?.email || t('dashboard.user');
   const displayInitial = displayName.charAt(0).toUpperCase();
@@ -96,6 +136,34 @@ export function UserProfileModal({
     logout();
     onOpenChange(false);
     navigate('/auth/login');
+  };
+
+  const updateBackgroundMotion = (
+    enabled: boolean,
+    variant: WmsBackgroundMotionVariant,
+  ): void => {
+    if (appearanceMutation.isPending) return;
+
+    const previousEnabled = backgroundMotionEnabled;
+    const previousVariant = backgroundMotionVariant;
+    setBackgroundMotionPreferences(enabled, variant);
+
+    appearanceMutation.mutate(
+      {
+        backgroundMotionEnabled: enabled,
+        backgroundMotionVariant: variant,
+      },
+      {
+        onError: (error) => {
+          setBackgroundMotionPreferences(previousEnabled, previousVariant);
+          toast.error(
+            error instanceof Error
+              ? error.message
+              : t('profile.backgroundMotionSaveError'),
+          );
+        },
+      },
+    );
   };
 
   return (
@@ -330,6 +398,91 @@ export function UserProfileModal({
                   {t('profile.skinPremium')}
                 </button>
               </div>
+            </div>
+
+            <div
+              className={cn(
+                'wms-ops-profile-modal__theme-panel border px-4 py-4 sm:px-5',
+                'border-slate-200/70 bg-white/90 dark:border-white/[0.06] dark:bg-white/[0.03]',
+              )}
+              aria-busy={appearanceMutation.isPending}
+            >
+              <div className="flex items-center justify-between gap-3 sm:gap-4">
+                <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
+                  <span className={cn(settingsIconClass, 'bg-[var(--wms-brand-soft)] text-[var(--wms-brand-primary)]')}>
+                    <ScanLine className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={2.2} aria-hidden />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-slate-900 sm:text-base dark:text-white">
+                      {t('profile.settingsBackgroundMotion')}
+                    </p>
+                    <p className="mt-0.5 text-xs leading-snug text-slate-500 sm:text-sm dark:text-slate-400">
+                      {t('profile.settingsBackgroundMotionHint')}
+                    </p>
+                  </div>
+                </div>
+                <div className="wms-ops-profile-modal__circuit-slot shrink-0">
+                  <OpsCircuitToggle
+                    horizontal
+                    checked={backgroundMotionEnabled}
+                    disabled={appearanceMutation.isPending}
+                    onCheckedChange={(checked) => updateBackgroundMotion(checked, backgroundMotionVariant)}
+                    aria-label={t('profile.settingsBackgroundMotion')}
+                  />
+                </div>
+              </div>
+
+              {backgroundMotionEnabled ? (
+                <>
+                  {prefersReducedMotion ? (
+                    <p
+                      className="mt-3 rounded-xl border border-amber-400/25 bg-amber-400/10 px-3 py-2 text-xs font-medium text-amber-700 dark:text-amber-200"
+                      role="status"
+                    >
+                      {t('profile.backgroundMotionReduced')}
+                    </p>
+                  ) : null}
+
+                  <div
+                    className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3"
+                    role="radiogroup"
+                    aria-label={t('profile.settingsBackgroundMotion')}
+                  >
+                    {wmsBackgroundMotionOptions.map((option) => {
+                      const isSelected = option.id === backgroundMotionVariant;
+                      return (
+                        <button
+                          key={option.id}
+                          type="button"
+                          role="radio"
+                          aria-checked={isSelected}
+                          disabled={appearanceMutation.isPending}
+                          onClick={() => updateBackgroundMotion(true, option.id)}
+                          className={cn(
+                            'group min-w-0 rounded-xl border p-2 text-left transition-[border-color,box-shadow,transform] duration-200',
+                            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--wms-brand-ring)] disabled:cursor-wait disabled:opacity-60',
+                            isSelected
+                              ? 'border-[var(--wms-brand-primary)] bg-[var(--wms-brand-soft)] shadow-[0_10px_24px_-18px_var(--wms-brand-shadow)]'
+                              : 'border-slate-200 bg-white/65 hover:-translate-y-0.5 hover:border-[var(--wms-brand-ring)] dark:border-white/10 dark:bg-black/10',
+                          )}
+                        >
+                          <WarehouseMotionScene
+                            variant={option.id}
+                            running={isSelected && !prefersReducedMotion && !appearanceMutation.isPending}
+                            preview
+                          />
+                          <span className="mt-2 block truncate text-xs font-bold text-slate-900 dark:text-white">
+                            {t(option.labelKey)}
+                          </span>
+                          <span className="mt-0.5 block text-[10px] leading-snug text-slate-500 dark:text-slate-400">
+                            {t(option.descriptionKey)}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              ) : null}
             </div>
 
             <div

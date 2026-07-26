@@ -5,6 +5,8 @@ import type {
   CreateUserDetailResponse,
   UpdateUserDetailDto,
   UpdateUserDetailResponse,
+  UpdateUserAppearanceDto,
+  UpdateUserAppearanceResponse,
 } from '../types/user-detail';
 import type { ApiResponse } from '@/types/api';
 
@@ -19,6 +21,10 @@ export const userDetailApi = {
 
   updateCurrent: async (data: UpdateUserDetailDto): Promise<UpdateUserDetailResponse> => {
     return await api.put<UpdateUserDetailResponse>('/api/userdetail/current', data);
+  },
+
+  updateAppearance: async (data: UpdateUserAppearanceDto): Promise<UpdateUserAppearanceResponse> => {
+    return await api.put<UpdateUserAppearanceResponse>('/api/userdetail/current/appearance', data);
   },
 
   uploadProfilePicture: async (file: File): Promise<ApiResponse<string>> => {

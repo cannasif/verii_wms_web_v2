@@ -2,6 +2,7 @@ import { z } from 'zod';
 import type { ApiResponse } from '@/types/api';
 import type { TFunction } from 'i18next';
 import { serializeProfileMeta } from '../utils/profile-description-meta';
+import type { WmsBackgroundMotionVariant } from '@/lib/background-motion';
 
 export const Gender = {
   NotSpecified: 0,
@@ -20,6 +21,8 @@ export interface UserDetailDto {
   weight?: number | null;
   description?: string | null;
   gender?: Gender | null;
+  backgroundMotionEnabled: boolean;
+  backgroundMotionVariant: WmsBackgroundMotionVariant;
   createdDate?: string | null;
   updatedDate?: string | null;
 }
@@ -39,9 +42,15 @@ export interface UpdateUserDetailDto {
   gender?: Gender;
 }
 
+export interface UpdateUserAppearanceDto {
+  backgroundMotionEnabled: boolean;
+  backgroundMotionVariant: WmsBackgroundMotionVariant;
+}
+
 export type UserDetailResponse = ApiResponse<UserDetailDto>;
 export type CreateUserDetailResponse = ApiResponse<UserDetailDto>;
 export type UpdateUserDetailResponse = ApiResponse<UserDetailDto>;
+export type UpdateUserAppearanceResponse = ApiResponse<UserDetailDto>;
 
 export const createUserDetailFormSchema = (t: TFunction) =>
   z

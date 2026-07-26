@@ -15,16 +15,23 @@ import { useProjectSettingsStore } from '@/stores/project-settings-store';
 import { useMyPermissionsQuery } from '@/features/access-control/hooks/useMyPermissionsQuery';
 import { canAccessPath } from '@/features/access-control/utils/hasPermission';
 import { SessionRecoveryPage } from '@/features/auth/components/SessionRecoveryPage';
+import { WarehouseAmbientBackground } from '@/components/shared/WarehouseAmbientBackground';
+import { useUserDetail } from '@/features/user-detail/hooks/useUserDetail';
+import {
+  DEFAULT_WMS_BACKGROUND_MOTION,
+  isWmsBackgroundMotionVariant,
+} from '@/lib/background-motion';
 
 export function AppLayout() {
   const { t } = useTranslation();
   const location = useLocation();
   const mainRef = useRef<HTMLElement>(null);
-  const { skin } = useTheme();
+  const { skin, setBackgroundMotionPreferences } = useTheme();
   const authenticated = useAuthStore((state) => state.isAuthenticated());
   const sessionStatus = useAuthStore((state) => state.sessionStatus);
   const setProjectSettings = useProjectSettingsStore((state) => state.setSettings);
   const permissionQuery = useMyPermissionsQuery();
+  const userDetailQuery = useUserDetail(authenticated);
   const isPremium = skin === 'premium';
   const visibleNavItems = useMemo(
     () => permissionQuery.data ? filterAuthorizedNavItems(WMS_NAV_ITEMS, permissionQuery.data) : [],
@@ -39,6 +46,21 @@ export function AppLayout() {
     if (!authenticated) return;
     projectSettingsApi.current().then(setProjectSettings).catch(() => undefined);
   }, [authenticated, setProjectSettings]);
+
+  useEffect(() => {
+    const detail = userDetailQuery.data;
+    if (!detail) return;
+
+    setBackgroundMotionPreferences(
+      detail.backgroundMotionEnabled === true,
+      isWmsBackgroundMotionVariant(detail.backgroundMotionVariant)
+        ? detail.backgroundMotionVariant
+        : DEFAULT_WMS_BACKGROUND_MOTION,
+    );
+  }, [
+    setBackgroundMotionPreferences,
+    userDetailQuery.data,
+  ]);
 
   if (sessionStatus === 'restoring' || sessionStatus === 'recovery-required') {
     return <SessionRecoveryPage />;
@@ -83,6 +105,7 @@ export function AppLayout() {
   return (
     <div className="relative flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-[var(--wms-app-background)] transition-colors duration-300">
       <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+        <WarehouseAmbientBackground />
         {!isPremium ? (
           <>
             <div className="absolute -left-[5%] -top-[1%] h-[720px] w-[720px] rounded-full bg-[var(--wms-app-aura-start)] blur-[120px]" />

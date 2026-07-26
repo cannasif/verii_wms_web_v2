@@ -1,0 +1,257 @@
+.wms-ambient-motion {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  contain: strict;
+  pointer-events: none;
+  color: var(--wms-brand-primary);
+  opacity: 0.2;
+  isolation: isolate;
+}
+
+.wms-ambient-motion::before {
+  position: absolute;
+  inset: 0;
+  content: '';
+  background:
+    radial-gradient(circle at 20% 22%, var(--wms-app-aura-start), transparent 38%),
+    radial-gradient(circle at 82% 76%, var(--wms-app-aura-end), transparent 42%);
+}
+
+.wms-ambient-motion > svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.wms-ambient-motion--preview {
+  position: relative;
+  inset: auto;
+  min-height: 4.5rem;
+  width: 100%;
+  border-radius: 0.75rem;
+  opacity: 0.72;
+  background: color-mix(in oklab, var(--wms-app-background) 88%, var(--wms-brand-soft));
+}
+
+.wms-ambient-motion[data-motion-state='paused'] *,
+.wms-ambient-motion[data-motion-state='paused'] *::before,
+.wms-ambient-motion[data-motion-state='paused'] *::after {
+  animation-play-state: paused !important;
+}
+
+.wms-ambient-motion[data-motion-state='paused'] * {
+  will-change: auto !important;
+}
+
+.wms-motion-racks {
+  fill: color-mix(in oklab, var(--wms-brand-primary) 6%, transparent);
+  stroke: currentColor;
+  stroke-width: 1.5;
+  opacity: 0.34;
+}
+
+.wms-motion-scan-beam {
+  fill: currentColor;
+  opacity: 0.42;
+  animation: wms-rack-scan 9s ease-in-out infinite alternate;
+  will-change: transform, opacity;
+}
+
+.wms-motion-scan-beam__halo {
+  opacity: 0.08;
+}
+
+.wms-motion-scan-pulse,
+.wms-motion-route-marker {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: wms-scan-pulse 4.8s ease-out infinite;
+  will-change: transform, opacity;
+}
+
+.wms-motion-scan-pulse--two,
+.wms-motion-route-marker--two {
+  animation-delay: -2.4s;
+}
+
+.wms-motion-scan-pulse__core,
+.wms-motion-route-marker__core {
+  fill: currentColor;
+}
+
+.wms-motion-conveyor {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 4;
+  opacity: 0.3;
+}
+
+.wms-motion-conveyor circle {
+  stroke-width: 2;
+}
+
+.wms-motion-package {
+  fill: color-mix(in oklab, var(--wms-brand-primary) 10%, transparent);
+  stroke: currentColor;
+  stroke-width: 2;
+  animation: wms-conveyor-package 18s linear infinite;
+  will-change: transform, opacity;
+}
+
+.wms-motion-package--2 {
+  animation-delay: -6s;
+}
+
+.wms-motion-package--3 {
+  animation-delay: -12s;
+}
+
+.wms-motion-package__label {
+  fill: none;
+  stroke-width: 5;
+  opacity: 0.7;
+}
+
+.wms-motion-conveyor-signal {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: wms-signal-pulse 3.2s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+.wms-motion-route,
+.wms-motion-route-dashes {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 4;
+  opacity: 0.28;
+}
+
+.wms-motion-route-dashes {
+  stroke-width: 2;
+  stroke-dasharray: 18 24;
+  opacity: 0.18;
+}
+
+.wms-motion-forklift {
+  fill: color-mix(in oklab, var(--wms-brand-primary) 14%, transparent);
+  stroke: currentColor;
+  stroke-width: 3;
+  animation: wms-forklift-route 22s linear infinite;
+  will-change: transform, opacity;
+}
+
+.wms-motion-forklift__window {
+  fill: color-mix(in oklab, var(--wms-brand-secondary) 24%, transparent);
+}
+
+.wms-motion-forklift__wheel {
+  fill: color-mix(in oklab, var(--wms-app-background) 80%, black);
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: wms-wheel-spin 1.7s linear infinite;
+  will-change: transform;
+}
+
+.wms-motion-forklift__hub {
+  fill: currentColor;
+}
+
+@keyframes wms-rack-scan {
+  from {
+    transform: translate3d(0, -190px, 0);
+    opacity: 0.2;
+  }
+  to {
+    transform: translate3d(0, 190px, 0);
+    opacity: 0.56;
+  }
+}
+
+@keyframes wms-scan-pulse {
+  0% {
+    transform: scale(0.35);
+    opacity: 0;
+  }
+  24% {
+    opacity: 0.72;
+  }
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+@keyframes wms-conveyor-package {
+  0% {
+    transform: translate3d(-120px, 0, 0);
+    opacity: 0;
+  }
+  8%,
+  92% {
+    opacity: 0.75;
+  }
+  100% {
+    transform: translate3d(1340px, 0, 0);
+    opacity: 0;
+  }
+}
+
+@keyframes wms-signal-pulse {
+  0%,
+  100% {
+    transform: scale(0.94);
+    opacity: 0.32;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 0.78;
+  }
+}
+
+@keyframes wms-forklift-route {
+  0% {
+    transform: translate3d(-180px, 0, 0);
+    opacity: 0;
+  }
+  8%,
+  92% {
+    opacity: 0.72;
+  }
+  100% {
+    transform: translate3d(1380px, 0, 0);
+    opacity: 0;
+  }
+}
+
+@keyframes wms-wheel-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wms-ambient-motion *,
+  .wms-ambient-motion *::before,
+  .wms-ambient-motion *::after {
+    animation: none !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .wms-ambient-motion {
+    opacity: 0.14;
+  }
+
+  .wms-ambient-motion--preview {
+    opacity: 0.68;
+  }
+}

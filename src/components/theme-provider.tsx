@@ -17,6 +17,10 @@ import {
   type WmsSkin,
   readStoredWmsSkin,
 } from "@/lib/skins"
+import {
+  DEFAULT_WMS_BACKGROUND_MOTION,
+  type WmsBackgroundMotionVariant,
+} from "@/lib/background-motion"
 
 type Theme = "dark" | "light" | "system"
 type ResolvedTheme = Exclude<Theme, "system">
@@ -36,10 +40,16 @@ type ThemeProviderState = {
   brandTheme: BrandTheme
   useCustomBrandThemes: boolean
   skin: WmsSkin
+  backgroundMotionEnabled: boolean
+  backgroundMotionVariant: WmsBackgroundMotionVariant
   setTheme: (theme: Theme) => void
   setBrandTheme: (theme: BrandTheme) => void
   setUseCustomBrandThemes: (enabled: boolean) => void
   setSkin: (skin: WmsSkin) => void
+  setBackgroundMotionPreferences: (
+    enabled: boolean,
+    variant: WmsBackgroundMotionVariant,
+  ) => void
 }
 
 const initialState: ThemeProviderState = {
@@ -48,10 +58,13 @@ const initialState: ThemeProviderState = {
   brandTheme: "v3rii",
   useCustomBrandThemes: false,
   skin: "terminal",
+  backgroundMotionEnabled: false,
+  backgroundMotionVariant: DEFAULT_WMS_BACKGROUND_MOTION,
   setTheme: () => null,
   setBrandTheme: () => null,
   setUseCustomBrandThemes: () => null,
   setSkin: () => null,
+  setBackgroundMotionPreferences: () => null,
 }
 
 const ThemeProviderContext = createContext<ThemeProviderState>(initialState)
@@ -113,6 +126,9 @@ export function ThemeProvider({
     return isBrandTheme(stored) ? stored : "v3rii"
   })
   const [skin, setSkin] = useState<WmsSkin>(() => readStoredWmsSkin(skinStorageKey))
+  const [backgroundMotionEnabled, setBackgroundMotionEnabled] = useState(false)
+  const [backgroundMotionVariant, setBackgroundMotionVariant] =
+    useState<WmsBackgroundMotionVariant>(DEFAULT_WMS_BACKGROUND_MOTION)
   const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>(() => {
     if (readUseCustomBrandThemes(useCustomBrandThemesStorageKey)) {
       const storedBrandTheme = localStorage.getItem(brandThemeStorageKey)
@@ -153,6 +169,12 @@ export function ThemeProvider({
   useEffect(() => {
     applySkinClass(skin)
   }, [skin])
+
+  useEffect(() => {
+    const root = window.document.documentElement
+    root.dataset.backgroundMotion = backgroundMotionEnabled ? 'enabled' : 'disabled'
+    root.dataset.backgroundMotionVariant = backgroundMotionVariant
+  }, [backgroundMotionEnabled, backgroundMotionVariant])
 
   const setThemeAndStore = useCallback((nextTheme: Theme) => {
     if (useCustomBrandThemes) return
@@ -196,26 +218,40 @@ export function ThemeProvider({
     setSkin(nextSkin)
   }, [skinStorageKey])
 
+  const setBackgroundMotionPreferences = useCallback((
+    enabled: boolean,
+    variant: WmsBackgroundMotionVariant,
+  ) => {
+    setBackgroundMotionEnabled(enabled)
+    setBackgroundMotionVariant(variant)
+  }, [])
+
   const value = useMemo(() => ({
     theme,
     resolvedTheme,
     brandTheme,
     useCustomBrandThemes,
     skin,
+    backgroundMotionEnabled,
+    backgroundMotionVariant,
     setTheme: setThemeAndStore,
     setBrandTheme: setBrandThemeAndStore,
     setUseCustomBrandThemes: setUseCustomBrandThemesAndStore,
     setSkin: setSkinAndStore,
+    setBackgroundMotionPreferences,
   }), [
     theme,
     resolvedTheme,
     brandTheme,
     useCustomBrandThemes,
     skin,
+    backgroundMotionEnabled,
+    backgroundMotionVariant,
     setThemeAndStore,
     setBrandThemeAndStore,
     setUseCustomBrandThemesAndStore,
     setSkinAndStore,
+    setBackgroundMotionPreferences,
   ])
 
   return (
