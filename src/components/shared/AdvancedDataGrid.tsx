@@ -7,8 +7,10 @@ import {
   type MouseEvent as ReactMouseEvent,
   type ReactNode,
 } from 'react';
+import { createPortal } from 'react-dom';
 import { useQuery } from '@tanstack/react-query';
 import * as PopoverPrimitive from '@radix-ui/react-popover';
+import { toast } from 'sonner';
 import {
   DndContext,
   KeyboardSensor,
@@ -34,6 +36,7 @@ import {
   ChevronsUpDown,
   ChevronLeft,
   ChevronRight,
+  Copy,
   Columns3,
   Filter,
   GripVertical,
@@ -67,6 +70,9 @@ export interface GridColumn<T> {
   key: string;
   label: string;
   render: (row: T) => ReactNode;
+  /** Sağ tık menüsünde gösterilecek ve kopyalanacak biçimlendirilmiş hücre değeri. */
+  contextValue?: (row: T) => string | number | boolean | null | undefined;
+  contextCopyDisabled?: boolean;
   filterable?: boolean;
   sortable?: boolean;
   hideable?: boolean;
@@ -84,6 +90,14 @@ interface Props<T extends { id: number }> {
   toolbarAction?: { label: string; run: () => Promise<void> };
   /** Mutation sonrasında sunucu verisini yeniden okumak için artırılan sürüm anahtarı. */
   refreshKey?: string | number;
+}
+
+interface GridCellContext<T> {
+  row: T;
+  column: GridColumn<T>;
+  value: string | null;
+  x: number;
+  y: number;
 }
 
 const MIN_COLUMN_WIDTH = 80;
@@ -134,6 +148,48 @@ function renderGridCell<T>(column: GridColumn<T>, row: T, language: string): Rea
     && isKnownEnumValue(rendered)
     ? localizeEnumValue(rendered, language)
     : rendered;
+}
+
+function toContextText(value: unknown, language: string): string | null {
+  if (value == null || value === '') return null;
+  if (typeof value === 'string') {
+    return isKnownEnumValue(value)
+      ? localizeEnumValue(value, language)
+      : localizeLegacyUiText(value, language);
+  }
+  if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint') {
+    return String(value);
+  }
+  return null;
+}
+
+function getContextValue<T>(column: GridColumn<T>, row: T, language: string): string | null {
+  const explicit = column.contextValue?.(row);
+  if (explicit !== undefined) return toContextText(explicit, language);
+
+  const rendered = renderGridCell(column, row, language);
+  const renderedText = toContextText(rendered, language);
+  if (renderedText != null) return renderedText;
+
+  return toContextText((row as Record<string, unknown>)[column.key], language);
+}
+
+async function copyText(value: string): Promise<void> {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(value);
+    return;
+  }
+
+  const textarea = document.createElement('textarea');
+  textarea.value = value;
+  textarea.setAttribute('readonly', '');
+  textarea.style.position = 'fixed';
+  textarea.style.opacity = '0';
+  document.body.appendChild(textarea);
+  textarea.select();
+  const copied = document.execCommand('copy');
+  textarea.remove();
+  if (!copied) throw new Error('Clipboard unavailable');
 }
 
 interface SortableHeaderProps {
@@ -266,6 +322,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
   const [filters, setFilters] = useState<GridFilter[]>([]);
   const [filterLogic, setFilterLogic] = useState<'and' | 'or'>('and');
   const [actionRunning, setActionRunning] = useState(false);
+  const [cellContext, setCellContext] = useState<GridCellContext<T> | null>(null);
   const resizeRef = useRef<{ key: string; startX: number; startWidth: number } | null>(null);
 
   const sensors = useSensors(
@@ -317,6 +374,24 @@ export function AdvancedDataGrid<T extends { id: number }>({
     };
   }, []);
 
+  useEffect(() => {
+    if (!cellContext) return;
+    const close = () => setCellContext(null);
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') close();
+    };
+    document.addEventListener('pointerdown', close);
+    document.addEventListener('keydown', closeOnEscape);
+    window.addEventListener('resize', close);
+    window.addEventListener('scroll', close, true);
+    return () => {
+      document.removeEventListener('pointerdown', close);
+      document.removeEventListener('keydown', closeOnEscape);
+      window.removeEventListener('resize', close);
+      window.removeEventListener('scroll', close, true);
+    };
+  }, [cellContext]);
+
   const searchableColumns = useMemo(
     () => localizedColumns.filter((column) => column.searchable === true),
     [localizedColumns],
@@ -340,6 +415,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
     placeholderData: (previous) => previous,
   });
   const activeColumns = order.map((key) => localizedColumns.find((column) => column.key === key)).filter((column): column is GridColumn<T> => Boolean(column && visible.includes(column.key)));
+  const actionColumn = localizedColumns.find((column) => column.key === 'actions');
   const total = query.data?.totalCount ?? 0;
   const totalPages = Math.max(1, query.data?.totalPages ?? Math.ceil(total / pageSize));
   const first = total ? ((page - 1) * pageSize) + 1 : 0;
@@ -398,6 +474,28 @@ export function AdvancedDataGrid<T extends { id: number }>({
     event.stopPropagation();
     const header = event.currentTarget.closest('th');
     resizeRef.current = { key, startX: event.clientX, startWidth: widths[key] ?? header?.getBoundingClientRect().width ?? 160 };
+  };
+  const openCellContext = (event: ReactMouseEvent<HTMLTableCellElement>, row: T, column: GridColumn<T>) => {
+    event.preventDefault();
+    const menuWidth = 320;
+    const menuHeight = actionColumn ? 300 : 220;
+    setCellContext({
+      row,
+      column,
+      value: getContextValue(column, row, enumLanguage),
+      x: Math.max(8, Math.min(event.clientX, window.innerWidth - menuWidth - 8)),
+      y: Math.max(8, Math.min(event.clientY, window.innerHeight - menuHeight - 8)),
+    });
+  };
+  const copyCellValue = async () => {
+    if (!cellContext?.value) return;
+    try {
+      await copyText(cellContext.value);
+      toast.success(t('dataGrid.cellCopied'));
+      setCellContext(null);
+    } catch {
+      toast.error(t('dataGrid.cellCopyFailed'));
+    }
   };
 
   return <section className="min-h-[calc(100vh-8rem)] rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-4 shadow-sm sm:p-6">
@@ -484,7 +582,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
       })}</div>}
       <div className="mt-3 flex justify-end gap-2"><button type="button" onClick={clearFilters} className="rounded-lg border border-[var(--wms-app-border)] px-3 py-2 text-sm">{t('advancedFilter.clear')}</button><button type="button" onClick={applyFilters} className="rounded-lg bg-[var(--wms-brand-primary)] px-3 py-2 text-sm text-white">{t('dataGrid.apply')}</button></div>
     </div>}
-    <div className="hidden overflow-hidden rounded-xl border border-[var(--wms-app-border)] sm:block"><div className="overflow-x-auto"><DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}><table className={`w-full min-w-[760px] border-collapse text-sm ${Object.keys(widths).length ? 'table-fixed' : ''}`}><thead className="bg-[var(--wms-app-panel-muted)] text-left text-xs uppercase tracking-wide text-[var(--wms-app-text-muted)]"><tr><SortableContext items={activeColumns.map((column) => column.key)} strategy={horizontalListSortingStrategy}>{activeColumns.map((column) => <SortableHeader key={column.key} columnKey={column.key} label={column.label} sortable={column.sortable !== false} isActiveSort={sortBy === column.key} sortDirection={sortDirection} width={widths[column.key]} onSort={() => changeSort(column.key)} onResizeStart={(event) => startResize(event, column.key)} dragLabel={t('dataGrid.dragColumn', { column: column.label })} resizeLabel={t('dataGrid.resizeColumn', { column: column.label })}/>)}</SortableContext></tr></thead><tbody>{query.isLoading ? <tr><td colSpan={activeColumns.length} className="h-40 text-center">{t('common.loading')}</td></tr> : query.isError ? <tr><td colSpan={activeColumns.length} className="h-40 text-center text-red-500">{query.error instanceof Error ? query.error.message : t('dataGrid.loadError')}</td></tr> : !query.data?.items.length ? <tr><td colSpan={activeColumns.length} className="h-40 text-center text-slate-500">{t('dataGrid.noRecords')}</td></tr> : query.data.items.map((row) => <tr key={row.id} className="border-b border-[var(--wms-app-border)] hover:bg-[var(--wms-brand-soft)]">{activeColumns.map((column) => <td key={column.key} style={widths[column.key] ? { width: widths[column.key], maxWidth: widths[column.key] } : undefined} className="overflow-hidden border-r border-[var(--wms-app-border)] px-4 py-3 last:border-r-0"><div className="truncate">{renderGridCell(column, row, enumLanguage)}</div></td>)}</tr>)}</tbody></table></DndContext></div></div>
+    <div className="hidden overflow-hidden rounded-xl border border-[var(--wms-app-border)] sm:block"><div className="overflow-x-auto"><DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}><table className={`w-full min-w-[760px] border-collapse text-sm ${Object.keys(widths).length ? 'table-fixed' : ''}`}><thead className="bg-[var(--wms-app-panel-muted)] text-left text-xs uppercase tracking-wide text-[var(--wms-app-text-muted)]"><tr><SortableContext items={activeColumns.map((column) => column.key)} strategy={horizontalListSortingStrategy}>{activeColumns.map((column) => <SortableHeader key={column.key} columnKey={column.key} label={column.label} sortable={column.sortable !== false} isActiveSort={sortBy === column.key} sortDirection={sortDirection} width={widths[column.key]} onSort={() => changeSort(column.key)} onResizeStart={(event) => startResize(event, column.key)} dragLabel={t('dataGrid.dragColumn', { column: column.label })} resizeLabel={t('dataGrid.resizeColumn', { column: column.label })}/>)}</SortableContext></tr></thead><tbody>{query.isLoading ? <tr><td colSpan={activeColumns.length} className="h-40 text-center">{t('common.loading')}</td></tr> : query.isError ? <tr><td colSpan={activeColumns.length} className="h-40 text-center text-red-500">{query.error instanceof Error ? query.error.message : t('dataGrid.loadError')}</td></tr> : !query.data?.items.length ? <tr><td colSpan={activeColumns.length} className="h-40 text-center text-slate-500">{t('dataGrid.noRecords')}</td></tr> : query.data.items.map((row) => <tr key={row.id} className="border-b border-[var(--wms-app-border)] hover:bg-[var(--wms-brand-soft)]">{activeColumns.map((column) => <td key={column.key} onContextMenu={(event) => openCellContext(event, row, column)} style={widths[column.key] ? { width: widths[column.key], maxWidth: widths[column.key] } : undefined} className="overflow-hidden border-r border-[var(--wms-app-border)] px-4 py-3 last:border-r-0"><div className="truncate">{renderGridCell(column, row, enumLanguage)}</div></td>)}</tr>)}</tbody></table></DndContext></div></div>
     <div className="space-y-3 sm:hidden" aria-live="polite">
       {query.isLoading ? <GridMobileStatus text={t('common.loading')} /> : query.isError ? <GridMobileStatus text={query.error instanceof Error ? query.error.message : t('dataGrid.loadError')} error /> : !query.data?.items.length ? <GridMobileStatus text={t('dataGrid.noRecords')} /> : query.data.items.map((row) => (
         <article key={row.id} className="overflow-hidden rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] shadow-sm">
@@ -498,6 +596,36 @@ export function AdvancedDataGrid<T extends { id: number }>({
       ))}
     </div>
     <div className="mt-4 flex flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between"><div className="flex items-center gap-2 text-slate-500"><span>{t('dataGrid.recordRange', { first, last, total })}</span><AppDropdown value={String(pageSize)} onValueChange={(value) => { setPageSize(Number(value)); setPage(1); }} options={PAGE_SIZE_DROPDOWN_OPTIONS} ariaLabel={t('dataGrid.rowsPerPage')} className="h-9 w-20" /></div><div className="flex items-center gap-2"><button type="button" aria-label={t('common.previous')} disabled={page <= 1 || query.isFetching} onClick={() => setPage((value) => value - 1)} className="rounded-lg border border-[var(--wms-app-border)] p-2 disabled:opacity-40"><ChevronLeft className="size-4"/></button><span>{t('dataGrid.pageOf', { page, totalPages })}</span><button type="button" aria-label={t('common.next')} disabled={page >= totalPages || query.isFetching} onClick={() => setPage((value) => value + 1)} className="rounded-lg border border-[var(--wms-app-border)] p-2 disabled:opacity-40"><ChevronRight className="size-4"/></button></div></div>
+    {cellContext && createPortal(
+      <div
+        role="menu"
+        aria-label={t('dataGrid.cellMenu')}
+        style={{ left: cellContext.x, top: cellContext.y }}
+        className="fixed z-[4000] w-80 max-w-[calc(100vw-1rem)] overflow-hidden rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-2 text-sm shadow-2xl"
+        onPointerDown={(event) => event.stopPropagation()}
+      >
+        <div className="rounded-xl bg-[var(--wms-app-panel-muted)] px-3 py-2.5">
+          <span className="block text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-[var(--wms-app-text-muted)]">{t('dataGrid.selectedCell')}</span>
+          <strong className="mt-1 block truncate">{cellContext.column.label}</strong>
+          <p className="mt-1 max-h-24 overflow-auto whitespace-pre-wrap break-all font-mono text-xs text-[var(--wms-app-text-muted)]">
+            {cellContext.value ?? t('dataGrid.emptyCell')}
+          </p>
+        </div>
+        {cellContext.value != null && !cellContext.column.contextCopyDisabled && (
+          <button type="button" role="menuitem" onClick={() => void copyCellValue()} className="mt-2 inline-flex min-h-11 w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-medium hover:bg-[var(--wms-brand-soft)]">
+            <Copy className="size-4 text-[var(--wms-brand-primary)]"/>
+            {t('dataGrid.copyCell')}
+          </button>
+        )}
+        {actionColumn?.render && (
+          <div className="mt-2 border-t border-[var(--wms-app-border)] px-2 pt-2" onClick={() => setCellContext(null)}>
+            <span className="mb-2 block text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-[var(--wms-app-text-muted)]">{t('dataGrid.rowActions')}</span>
+            <div className="[&>div]:flex-wrap">{actionColumn.render(cellContext.row)}</div>
+          </div>
+        )}
+      </div>,
+      document.body,
+    )}
   </section>;
 }
 
