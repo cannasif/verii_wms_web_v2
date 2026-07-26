@@ -22,6 +22,7 @@ const ENGLISH_PHRASES: ReadonlyArray<readonly [string, string]> = [
   ['Transfer Kayıtları', 'Transfer Records'],
   ['Sevk Oluştur', 'Create Shipment'],
   ['Süreç Merkezi', 'Process Centre'],
+  ['Bu kombinasyon süreç politikasında kapalı.', 'This combination is disabled by the process policy.'],
   ['Siparişten Emir', 'Order-Based Task'],
   ['Siparişsiz Emir', 'Orderless Task'],
   ['Doğrudan Mal Kabul', 'Direct Goods Receipt'],
