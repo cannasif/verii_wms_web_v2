@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { getLanguageForHttpHeader } from './i18n';
 import { useAuthStore } from '@/stores/auth-store';
+import { withSessionRefreshLock } from '@/lib/session-refresh-lock';
 import { getUserFromToken } from '@/utils/jwt';
 import { isRequestCanceled } from './request-utils';
 import {
@@ -218,13 +219,14 @@ let refreshPromise: Promise<string> | null = null;
 
 async function refreshAccessToken(): Promise<string> {
   if (!refreshPromise) {
-    refreshPromise = axios.post(
-      `${getApiBaseUrl()}/api/auth/refresh`,
-      {},
-      { withCredentials: true, headers: { 'Content-Type': 'application/json' } },
-    ).then((response: unknown) => {
-      const rawResponse = response as { data?: unknown };
-      const envelope = normalizeApiEnvelope(rawResponse.data) as { data?: { accessToken?: string } };
+    refreshPromise = withSessionRefreshLock(async () => {
+      const rawResponse = await axios.post(
+        `${getApiBaseUrl()}/api/auth/refresh`,
+        {},
+        { withCredentials: true, headers: { 'Content-Type': 'application/json' } },
+      );
+      const response = rawResponse as { data?: unknown };
+      const envelope = normalizeApiEnvelope(response.data) as { data?: { accessToken?: string } };
       const token = envelope.data?.accessToken;
       const user = token ? getUserFromToken(token) : null;
       if (!token || !user) throw new Error('Session refresh response is invalid.');

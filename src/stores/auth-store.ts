@@ -4,6 +4,7 @@ import { getApiBaseUrl } from '@/lib/api-config';
 import { getUserFromToken, isTokenValid } from '@/utils/jwt';
 import { usePermissionsStore } from '@/stores/permissions-store';
 import { useAppShellStore } from '@/stores/app-shell-store';
+import { withSessionRefreshLock } from '@/lib/session-refresh-lock';
 
 interface User {
   id: number;
@@ -75,13 +76,15 @@ export const useAuthStore = create<AuthState>()(
       },
       init: async () => {
         try {
-          const response = await fetch(`${getApiBaseUrl()}/api/auth/refresh`, {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
+          const token = await withSessionRefreshLock(async () => {
+            const response = await fetch(`${getApiBaseUrl()}/api/auth/refresh`, {
+              method: 'POST',
+              credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+            });
+            if (!response.ok) throw new Error('Session refresh failed.');
+            return extractAccessToken(await response.json() as AuthTokenEnvelope);
           });
-          if (!response.ok) throw new Error('Session refresh failed.');
-          const token = extractAccessToken(await response.json() as AuthTokenEnvelope);
           const user = token ? getUserFromToken(token) : null;
           if (!token || !user) throw new Error('Session response is invalid.');
           set({ user, token });
