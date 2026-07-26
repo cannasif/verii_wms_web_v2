@@ -6,9 +6,9 @@ import { ForgotPasswordPage } from '@/features/auth/components/ForgotPasswordPag
 import { ResetPasswordPage } from '@/features/auth/components/ResetPasswordPage';
 import {
   loadAppLayout, loadAuditLogsPage, loadBarcodeDesignerPage, loadBarcodePolicyPage, loadDocumentSeriesPage,
-  loadErpMirrorPages, loadGoodsReceiptAssignedTasksPage, loadGoodsReceiptCreatePage, loadGoodsReceiptHubPage,
+  loadELogoConnectionsPage, loadErpMirrorPages, loadGoodsReceiptAssignedTasksPage, loadGoodsReceiptCreatePage, loadGoodsReceiptHubPage,
   loadGoodsReceiptLabelsPage, loadGoodsReceiptListPage, loadGoodsReceiptManualPage, loadGoodsReceiptPolicyPage,
-  loadHangfirePage, loadLocationDefinitionsPage, loadPermissionGroupsPage, loadPermissionsPage, loadProfilePage,
+  loadHangfirePage, loadIncomingInvoiceArchivePage, loadLocationDefinitionsPage, loadPermissionGroupsPage, loadPermissionsPage, loadProfilePage,
   loadProjectSettingsPage, loadQualityInspectionsPage, loadQualityRulesPage, loadQualitySettingsPage,
   loadSerialNumberRulesPage, loadShippingCreatePage, loadShippingHubPage, loadShippingListPage,
   loadShippingOperationPage, loadShippingPolicyPage, loadSmtpSettingsPage, loadSteelReceiptHubPage,
@@ -47,6 +47,8 @@ const ProjectSettingsPage = lazy(() => loadProjectSettingsPage().then((m) => ({ 
 const DocumentSeriesPage = lazy(() => loadDocumentSeriesPage().then((m) => ({ default: m.DocumentSeriesPage })));
 const BarcodeDesignerPage = lazy(() => loadBarcodeDesignerPage().then((m) => ({ default: m.BarcodeDesignerPage })));
 const BarcodePolicyPage = lazy(() => loadBarcodePolicyPage().then((m) => ({ default: m.BarcodePolicyPage })));
+const IncomingInvoiceArchivePage = lazy(() => loadIncomingInvoiceArchivePage().then((m) => ({ default: m.IncomingInvoiceArchivePage })));
+const ELogoConnectionsPage = lazy(() => loadELogoConnectionsPage().then((m) => ({ default: m.ELogoConnectionsPage })));
 const GoodsReceiptAssignedTasksPage = lazy(() => loadGoodsReceiptAssignedTasksPage().then((m) => ({ default: m.GoodsReceiptAssignedTasksPage })));
 const GoodsReceiptTasksPage = lazy(() => loadGoodsReceiptAssignedTasksPage().then((m) => ({ default: m.GoodsReceiptTasksPage })));
 const GoodsReceiptCreatePage = lazy(() => loadGoodsReceiptCreatePage().then((m) => ({ default: m.GoodsReceiptCreatePage })));
@@ -175,6 +177,8 @@ export function App(): ReactElement {
           <Route path="warehouse/goods-receipts/orderless" element={<GoodsReceiptOrderlessPage />} />
           <Route path="warehouse/goods-receipts/direct" element={<GoodsReceiptDirectPage />} />
           <Route path="warehouse/goods-receipts/list" element={<GoodsReceiptListPage />} />
+          <Route path="warehouse/incoming-invoices" element={<IncomingInvoiceArchivePage />} />
+          <Route path="warehouse/incoming-invoices/connections" element={<ELogoConnectionsPage />} />
           <Route path="warehouse/goods-receipts/tasks" element={<GoodsReceiptTasksPage />} />
           <Route path="warehouse/goods-receipts/assigned" element={<GoodsReceiptAssignedTasksPage />} />
           <Route path="warehouse/goods-receipts/labels" element={<GoodsReceiptLabelsPage />} />

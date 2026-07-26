@@ -1,0 +1,205 @@
+{
+  "archive": {
+    "title": "Gelen e-Fatura / e-Arşiv",
+    "description": "ERP entegratöründeki gelen belgeleri UUID ile güvenli biçimde arşivleyin, UBL kalemlerini doğrulayın ve mal kabul hazırlığına alın."
+  },
+  "columns": {
+    "invoiceNo": "Fatura No",
+    "kind": "Belge Türü",
+    "issueDate": "Belge Tarihi",
+    "supplierTaxNo": "Satıcı VKN / TCKN",
+    "supplier": "Satıcı",
+    "payable": "Ödenecek Tutar",
+    "lines": "Eşleşen / Kalem",
+    "archiveStatus": "Arşiv Durumu",
+    "validation": "Doğrulama",
+    "importedAt": "Arşivlenme",
+    "actions": "İşlemler"
+  },
+  "actions": {
+    "detail": "Detayı Görüntüle",
+    "importByUuid": "UUID ile Belge Getir",
+    "cancel": "Vazgeç",
+    "import": "Belgeyi Arşivle",
+    "showPdf": "PDF Göster",
+    "downloadUbl": "UBL İndir",
+    "edit": "Düzenle",
+    "delete": "Sil",
+    "save": "Kaydet"
+  },
+  "messages": {
+    "detailFailed": "Fatura detayı alınamadı.",
+    "connectionsFailed": "eLogo bağlantıları alınamadı.",
+    "alreadyArchived": "Belge daha önce arşivlenmişti; mevcut kayıt açıldı.",
+    "imported": "Belge güvenli arşive alındı.",
+    "importFailed": "Belge entegratörden alınamadı.",
+    "documentFailed": "Belge dosyası açılamadı.",
+    "connectionDeleted": "eLogo bağlantısı silindi.",
+    "connectionDeleteFailed": "eLogo bağlantısı silinemedi.",
+    "connectionUpdated": "eLogo bağlantısı güncellendi.",
+    "connectionCreated": "eLogo bağlantısı oluşturuldu.",
+    "connectionSaveFailed": "eLogo bağlantısı kaydedilemedi."
+  },
+  "import": {
+    "eyebrow": "Güvenli belge aktarımı",
+    "title": "Gelen Belgeyi Arşivle",
+    "description": "Entegratördeki belgeyi evrensel belge numarasıyla sorgulayın. Belge türünü bilmiyorsanız sistem otomatik olarak dener.",
+    "connection": "Şirket / eLogo bağlantısı",
+    "documentKind": "Belge türü",
+    "uuid": "Belge UUID",
+    "noConnection": "Bu şube için etkin ve şifresi tanımlı bir eLogo bağlantısı yok. Önce bağlantı tanımlayın.",
+    "includePdf": "PDF nüshasını da arşivle",
+    "includePdfDescription": "UBL zorunlu olarak alınır; mevcutsa insan okunabilir PDF de özel dosya alanına kaydedilir.",
+    "securityNote": "Oturum bilgileri yalnızca sunucuda kullanılır. Şifre istemciye dönmez; UBL ve PDF dosyaları veritabanına Base64 olarak yazılmaz."
+  },
+  "kind": {
+    "automatic": "Otomatik Algıla",
+    "automaticDescription": "Önce e-Fatura, bulunamazsa e-Arşiv sorgulanır.",
+    "eInvoice": "e-Fatura",
+    "eArchive": "e-Arşiv Fatura"
+  },
+  "validation": {
+    "connectionRequired": "Bir eLogo bağlantısı seçin.",
+    "uuid": "Geçerli bir belge UUID bilgisi girin.",
+    "requiredFields": "Kod, ad, VKN/TCKN, kullanıcı ve kaynak alanları zorunludur.",
+    "passwordRequired": "Yeni bağlantı için şifre zorunludur."
+  },
+  "archiveStatus": {
+    "Imported": "Arşivlendi",
+    "NeedsReview": "Eşleşme Bekliyor",
+    "ReadyForReceipt": "Mal Kabule Hazır",
+    "PartiallyLinked": "Kısmen Bağlandı",
+    "Linked": "Mal Kabule Bağlandı",
+    "Rejected": "Reddedildi"
+  },
+  "validationStatus": {
+    "Parsed": "Doğrulandı",
+    "Warning": "Uyarılı",
+    "Invalid": "Geçersiz"
+  },
+  "detail": {
+    "issueDate": "Belge Tarihi",
+    "supplier": "Satıcı",
+    "customer": "Alıcı",
+    "payable": "Ödenecek Tutar",
+    "invoiceType": "Fatura Tipi",
+    "profile": "Senaryo / Profil",
+    "orderReference": "Sipariş Referansı",
+    "despatchReference": "İrsaliye Referansı",
+    "reviewRequired": "{{count}} kalem ERP stok kartıyla eşleştirilemedi",
+    "stockMatchesReady": "Tüm kalemler ERP stok kartlarıyla eşleşti",
+    "lines": "Fatura Kalemleri",
+    "lineSummary": "{{total}} kalemin {{visible}} tanesi gösteriliyor; {{matched}} kalem eşleşti.",
+    "searchLines": "Stok kodu, adı veya satır no ara...",
+    "stock": "Stok",
+    "description": "Açıklama",
+    "quantity": "Miktar",
+    "unitPrice": "Birim Fiyat",
+    "tax": "KDV",
+    "total": "Satır Tutarı",
+    "match": "Stok Eşleşmesi"
+  },
+  "match": {
+    "stockMatched": "Stok Eşleşti",
+    "unmatched": "Eşleşmedi"
+  },
+  "receipt": {
+    "title": "Mal kabul bağlantısı kontrollü ilerleyecek",
+    "nextStep": "Fatura tek başına stok oluşturmaz. Eşleşen kalemlerden emir açılır; depo görevlisi raf, lot, seri ve fiziksel miktarı doğruladıktan sonra mevcut mal kabul motoru bakiyeyi işler.",
+    "createTask": "Mal Kabul Emri Oluştur"
+  },
+  "receiptDialog": {
+    "eyebrow": "Faturadan kontrollü operasyona",
+    "title": "Mal Kabul Emri Oluştur",
+    "description": "{{invoiceNo}} faturasının seçilen kalemlerini fiziksel mal kabul emrine dönüştürün.",
+    "supplier": "ERP Cari Kartı",
+    "waybillDate": "İrsaliye Tarihi",
+    "isElectronic": "E-irsaliye",
+    "despatchReference": "UBL irsaliye referansı: {{value}}",
+    "noDespatchReference": "UBL içinde irsaliye referansı yok. Fiziksel belgedeki numarayı girin.",
+    "warehouse": "Hedef Depo",
+    "location": "Kabul / Staging Rafı",
+    "series": "Mal Kabul Belge Serisi",
+    "priority": "Öncelik",
+    "labelStrategy": "Etiket Stratejisi",
+    "plannedArrival": "Planlanan Geliş",
+    "descriptionLabel": "Operasyon Notu",
+    "create": "Emri Oluştur",
+    "document": {
+      "title": "Belge ve Tedarikçi"
+    },
+    "operation": {
+      "title": "Depo Operasyonu"
+    },
+    "assignment": {
+      "title": "Emir Sorumluları",
+      "placeholder": "Operasyon kullanıcısı ekle"
+    },
+    "lines": {
+      "title": "Aktarılacak Fatura Kalemleri",
+      "quantity": "Emir Miktarı",
+      "summary": "Fatura: {{invoice}} · Bağlanan: {{linked}} · Kalan: {{remaining}} {{unit}}",
+      "trackingNotice": "UBL fatura stok, miktar ve fiyat bilgisinin kaynağıdır; lot/seri/SKT fiziksel kabul kanıtıdır. Bu bilgiler fatura aktarımında uydurulmaz, atanan emir yürütülürken stok takip politikasına göre barkodla doğrulanır.",
+      "total": "Seçili toplam miktar"
+    },
+    "labels": {
+      "none": "Etiket yok",
+      "preGenerate": "Önceden etiket üret",
+      "supplier": "Tedarikçi etiketi",
+      "onReceipt": "Kabul sırasında üret"
+    },
+    "validation": {
+      "supplier": "ERP cari kartını seçin.",
+      "waybill": "Normal irsaliye numarası tam 15 rakam olmalıdır.",
+      "eWaybill": "E-irsaliye numarası 3 karakter birim kodu ve 13 rakamdan oluşmalıdır.",
+      "operation": "Depo, kabul rafı ve belge serisini seçin.",
+      "assignee": "Emir için en az bir operasyon kullanıcısı atayın.",
+      "lines": "En az bir fatura kalemi seçin.",
+      "quantity": "{{line}}. kalem miktarı geçersiz. Kullanılabilir miktar: {{remaining}}."
+    },
+    "messages": {
+      "created": "{{documentNo}} numaralı mal kabul emri oluşturuldu.",
+      "replayed": "Aynı istek daha önce tamamlanmıştı; mevcut mal kabul emri açıldı.",
+      "failed": "Faturadan mal kabul emri oluşturulamadı."
+    }
+  },
+  "connections": {
+    "title": "eLogo Şirket Bağlantıları",
+    "description": "Gelen e-Fatura ve e-Arşiv belgelerinin okunacağı şirket hesaplarını şube bazında yönetin.",
+    "add": "Yeni eLogo Bağlantısı",
+    "edit": "eLogo Bağlantısını Düzenle",
+    "confirmDelete": "{{name}} bağlantısını silmek istediğinize emin misiniz?",
+    "formDescription": "Şirket ve entegratör oturum bilgilerini tanımlayın. Kaydedilen şifre geri gösterilmez.",
+    "securityNote": "Şifre veri koruma anahtarıyla şifrelenerek saklanır. Uç nokta izin listesinden ve HTTPS zorunluluğundan geçmeden kullanılamaz.",
+    "columns": {
+      "name": "Bağlantı",
+      "vkn": "VKN / TCKN",
+      "username": "Kullanıcı",
+      "source": "Kaynak",
+      "configured": "Şifre Tanımlı",
+      "default": "Varsayılan",
+      "active": "Aktif"
+    },
+    "fields": {
+      "key": "Bağlantı Kodu",
+      "name": "Görünen Ad",
+      "vkn": "VKN / TCKN",
+      "source": "Kaynak / Firma Kodu",
+      "username": "Kullanıcı Adı",
+      "newPassword": "Yeni Şifre",
+      "password": "Şifre",
+      "keepPassword": "Boş bırakırsanız mevcut şifre korunur",
+      "endpoint": "PostBox Servis Adresi",
+      "application": "Uygulama Adı",
+      "version": "Servis Sürümü",
+      "timeout": "Zaman Aşımı (saniye)",
+      "description": "Açıklama",
+      "active": "Bağlantı aktif",
+      "default": "Şubenin varsayılan bağlantısı"
+    }
+  },
+  "common": {
+    "yes": "Evet",
+    "no": "Hayır"
+  }
+}

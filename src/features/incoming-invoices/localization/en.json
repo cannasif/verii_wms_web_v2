@@ -1,0 +1,205 @@
+{
+  "archive": {
+    "title": "Incoming e-Invoice / e-Archive",
+    "description": "Securely archive incoming documents from the ERP integrator by UUID, validate UBL lines and prepare them for goods receipt."
+  },
+  "columns": {
+    "invoiceNo": "Invoice No",
+    "kind": "Document Type",
+    "issueDate": "Issue Date",
+    "supplierTaxNo": "Supplier Tax ID",
+    "supplier": "Supplier",
+    "payable": "Payable",
+    "lines": "Matched / Lines",
+    "archiveStatus": "Archive Status",
+    "validation": "Validation",
+    "importedAt": "Archived At",
+    "actions": "Actions"
+  },
+  "actions": {
+    "detail": "View Details",
+    "importByUuid": "Fetch by UUID",
+    "cancel": "Cancel",
+    "import": "Archive Document",
+    "showPdf": "View PDF",
+    "downloadUbl": "Download UBL",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save"
+  },
+  "messages": {
+    "detailFailed": "Invoice details could not be loaded.",
+    "connectionsFailed": "eLogo connections could not be loaded.",
+    "alreadyArchived": "The document was already archived; the existing record was opened.",
+    "imported": "The document was added to the secure archive.",
+    "importFailed": "The document could not be retrieved from the integrator.",
+    "documentFailed": "The document file could not be opened.",
+    "connectionDeleted": "The eLogo connection was deleted.",
+    "connectionDeleteFailed": "The eLogo connection could not be deleted.",
+    "connectionUpdated": "The eLogo connection was updated.",
+    "connectionCreated": "The eLogo connection was created.",
+    "connectionSaveFailed": "The eLogo connection could not be saved."
+  },
+  "import": {
+    "eyebrow": "Secure document transfer",
+    "title": "Archive Incoming Document",
+    "description": "Query the integrator using the universal document number. Automatic mode tries e-Invoice first and then e-Archive.",
+    "connection": "Company / eLogo connection",
+    "documentKind": "Document type",
+    "uuid": "Document UUID",
+    "noConnection": "There is no active eLogo connection with credentials for this branch. Define a connection first.",
+    "includePdf": "Archive the PDF copy",
+    "includePdfDescription": "UBL is always retrieved; when available, the human-readable PDF is stored in private file storage.",
+    "securityNote": "Session credentials are used only by the server. Passwords are never returned to the client; UBL and PDF files are not stored as Base64 in the database."
+  },
+  "kind": {
+    "automatic": "Detect Automatically",
+    "automaticDescription": "Queries e-Invoice first, then e-Archive if not found.",
+    "eInvoice": "e-Invoice",
+    "eArchive": "e-Archive Invoice"
+  },
+  "validation": {
+    "connectionRequired": "Select an eLogo connection.",
+    "uuid": "Enter a valid document UUID.",
+    "requiredFields": "Code, name, tax ID, username and source are required.",
+    "passwordRequired": "A password is required for a new connection."
+  },
+  "archiveStatus": {
+    "Imported": "Archived",
+    "NeedsReview": "Awaiting Match",
+    "ReadyForReceipt": "Ready for Receipt",
+    "PartiallyLinked": "Partially Linked",
+    "Linked": "Linked to Receipt",
+    "Rejected": "Rejected"
+  },
+  "validationStatus": {
+    "Parsed": "Validated",
+    "Warning": "Warning",
+    "Invalid": "Invalid"
+  },
+  "detail": {
+    "issueDate": "Issue Date",
+    "supplier": "Supplier",
+    "customer": "Customer",
+    "payable": "Payable",
+    "invoiceType": "Invoice Type",
+    "profile": "Scenario / Profile",
+    "orderReference": "Order Reference",
+    "despatchReference": "Despatch Reference",
+    "reviewRequired": "{{count}} line could not be matched to an ERP stock card",
+    "stockMatchesReady": "All lines are matched to ERP stock cards",
+    "lines": "Invoice Lines",
+    "lineSummary": "Showing {{visible}} of {{total}} lines; {{matched}} lines matched.",
+    "searchLines": "Search stock code, name or line no...",
+    "stock": "Stock",
+    "description": "Description",
+    "quantity": "Quantity",
+    "unitPrice": "Unit Price",
+    "tax": "VAT",
+    "total": "Line Amount",
+    "match": "Stock Match"
+  },
+  "match": {
+    "stockMatched": "Stock Matched",
+    "unmatched": "Unmatched"
+  },
+  "receipt": {
+    "title": "Goods receipt linking is intentionally controlled",
+    "nextStep": "An invoice never creates inventory by itself. A task is created from matched lines; the existing receipt engine posts inventory only after location, lot, serial and physical quantity validation.",
+    "createTask": "Create Receipt Task"
+  },
+  "receiptDialog": {
+    "eyebrow": "From invoice to controlled operation",
+    "title": "Create Goods Receipt Task",
+    "description": "Convert selected lines of invoice {{invoiceNo}} into a physical goods receipt task.",
+    "supplier": "ERP Supplier Card",
+    "waybillDate": "Despatch Date",
+    "isElectronic": "Electronic despatch",
+    "despatchReference": "UBL despatch reference: {{value}}",
+    "noDespatchReference": "The UBL has no despatch reference. Enter the number from the physical document.",
+    "warehouse": "Target Warehouse",
+    "location": "Receiving / Staging Location",
+    "series": "Goods Receipt Number Series",
+    "priority": "Priority",
+    "labelStrategy": "Label Strategy",
+    "plannedArrival": "Planned Arrival",
+    "descriptionLabel": "Operation Note",
+    "create": "Create Task",
+    "document": {
+      "title": "Document and Supplier"
+    },
+    "operation": {
+      "title": "Warehouse Operation"
+    },
+    "assignment": {
+      "title": "Task Assignees",
+      "placeholder": "Add an operation user"
+    },
+    "lines": {
+      "title": "Invoice Lines to Transfer",
+      "quantity": "Task Quantity",
+      "summary": "Invoice: {{invoice}} · Linked: {{linked}} · Remaining: {{remaining}} {{unit}}",
+      "trackingNotice": "The UBL invoice is the source for stock, quantity and price; lot/serial/expiry are physical receipt evidence. These values are never invented during invoice import and are captured by barcode according to the stock tracking policy while executing the assigned task.",
+      "total": "Selected total quantity"
+    },
+    "labels": {
+      "none": "No label",
+      "preGenerate": "Pre-generate labels",
+      "supplier": "Supplier label",
+      "onReceipt": "Generate on receipt"
+    },
+    "validation": {
+      "supplier": "Select an ERP supplier card.",
+      "waybill": "A normal despatch number must contain exactly 15 digits.",
+      "eWaybill": "An electronic despatch number must contain a 3-character unit code and 13 digits.",
+      "operation": "Select warehouse, receiving location and number series.",
+      "assignee": "Assign at least one operation user.",
+      "lines": "Select at least one invoice line.",
+      "quantity": "Quantity on line {{line}} is invalid. Available: {{remaining}}."
+    },
+    "messages": {
+      "created": "Goods receipt task {{documentNo}} was created.",
+      "replayed": "The same request was completed earlier; the existing task was opened.",
+      "failed": "The goods receipt task could not be created from the invoice."
+    }
+  },
+  "connections": {
+    "title": "eLogo Company Connections",
+    "description": "Manage branch-scoped company accounts used to retrieve incoming e-Invoice and e-Archive documents.",
+    "add": "New eLogo Connection",
+    "edit": "Edit eLogo Connection",
+    "confirmDelete": "Are you sure you want to delete {{name}}?",
+    "formDescription": "Define company and integrator session details. Saved passwords are never displayed.",
+    "securityNote": "The password is protected with the application data-protection key. An endpoint cannot be used unless it passes the HTTPS and allow-list policies.",
+    "columns": {
+      "name": "Connection",
+      "vkn": "Tax ID",
+      "username": "Username",
+      "source": "Source",
+      "configured": "Credentials Set",
+      "default": "Default",
+      "active": "Active"
+    },
+    "fields": {
+      "key": "Connection Code",
+      "name": "Display Name",
+      "vkn": "Tax ID",
+      "source": "Source / Company Code",
+      "username": "Username",
+      "newPassword": "New Password",
+      "password": "Password",
+      "keepPassword": "Leave blank to keep the existing password",
+      "endpoint": "PostBox Service URL",
+      "application": "Application Name",
+      "version": "Service Version",
+      "timeout": "Timeout (seconds)",
+      "description": "Description",
+      "active": "Connection active",
+      "default": "Default connection for this branch"
+    }
+  },
+  "common": {
+    "yes": "Yes",
+    "no": "No"
+  }
+}

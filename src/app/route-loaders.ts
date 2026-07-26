@@ -14,6 +14,8 @@ export const loadProjectSettingsPage = () => import('@/features/project-settings
 export const loadDocumentSeriesPage = () => import('@/features/document-series');
 export const loadBarcodeDesignerPage = () => import('@/features/barcode-designer');
 export const loadBarcodePolicyPage = () => import('@/features/barcode-policy');
+export const loadIncomingInvoiceArchivePage = () => import('@/features/incoming-invoices/components/IncomingInvoiceArchivePage');
+export const loadELogoConnectionsPage = () => import('@/features/incoming-invoices/components/ELogoConnectionsPage');
 
 export const loadGoodsReceiptAssignedTasksPage = () => import('@/features/goods-receipt-v2/components/GoodsReceiptTasksPage');
 export const loadGoodsReceiptCreatePage = () => import('@/features/goods-receipt-v2/components/GoodsReceiptCreatePage');
@@ -63,6 +65,8 @@ export const loadWarehouseOutboundPolicyPage = () => import('@/features/warehous
 export const loadWarehouseOutboundOperationPage = () => import('@/features/warehouse-outbound/WarehouseOutboundOperationPage');
 export const loadPackingPages = () => import('@/features/packing');
 const routePreloaders: Array<[prefix: string, load: () => Promise<unknown>]> = [
+  ['/warehouse/incoming-invoices/connections', loadELogoConnectionsPage],
+  ['/warehouse/incoming-invoices', loadIncomingInvoiceArchivePage],
   ['/warehouse/packing', loadPackingPages],
   ['/warehouse/warehouse-inbounds/settings', loadWarehouseInboundPolicyPage],
   ['/warehouse/warehouse-inbounds/assigned', loadWarehouseInboundTasksPage],
