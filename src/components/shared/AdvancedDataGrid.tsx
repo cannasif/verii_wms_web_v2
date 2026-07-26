@@ -72,7 +72,16 @@ export interface GridColumn<T> {
   filterType?: GridFilterType;
   filterOptions?: AppDropdownOption[];
 }
-interface Props<T extends { id: number }> { pageKey: string; title: string; description?: string; columns: GridColumn<T>[]; fetchPage: (request: GridRequest) => Promise<GridPage<T>>; toolbarAction?: { label: string; run: () => Promise<void> } }
+interface Props<T extends { id: number }> {
+  pageKey: string;
+  title: string;
+  description?: string;
+  columns: GridColumn<T>[];
+  fetchPage: (request: GridRequest) => Promise<GridPage<T>>;
+  toolbarAction?: { label: string; run: () => Promise<void> };
+  /** Mutation sonrasında sunucu verisini yeniden okumak için artırılan sürüm anahtarı. */
+  refreshKey?: string | number;
+}
 
 const MIN_COLUMN_WIDTH = 80;
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const;
@@ -180,7 +189,15 @@ function SortableHeader({ columnKey, label, sortable, isActiveSort, sortDirectio
   );
 }
 
-export function AdvancedDataGrid<T extends { id: number }>({ pageKey, title, description, columns: sourceColumns, fetchPage, toolbarAction }: Props<T>) {
+export function AdvancedDataGrid<T extends { id: number }>({
+  pageKey,
+  title,
+  description,
+  columns: sourceColumns,
+  fetchPage,
+  toolbarAction,
+  refreshKey = 0,
+}: Props<T>) {
   const { t, i18n } = useTranslation();
   const enumLanguage = i18n.resolvedLanguage ?? i18n.language;
   const localizedTitle = localizeLegacyUiText(title, enumLanguage);
@@ -286,7 +303,11 @@ export function AdvancedDataGrid<T extends { id: number }>({ pageKey, title, des
   }, []);
 
   const request = useMemo<GridRequest>(() => ({ pageNumber: page, pageSize, search: search || null, sortBy, sortDirection, filterLogic, filters }), [page, pageSize, search, sortBy, sortDirection, filterLogic, filters]);
-  const query = useQuery({ queryKey: ['advanced-grid', pageKey, request], queryFn: () => fetchPage(request), placeholderData: (previous) => previous });
+  const query = useQuery({
+    queryKey: ['advanced-grid', pageKey, refreshKey, request],
+    queryFn: () => fetchPage(request),
+    placeholderData: (previous) => previous,
+  });
   const activeColumns = order.map((key) => localizedColumns.find((column) => column.key === key)).filter((column): column is GridColumn<T> => Boolean(column && visible.includes(column.key)));
   const total = query.data?.totalCount ?? 0;
   const totalPages = Math.max(1, query.data?.totalPages ?? Math.ceil(total / pageSize));
