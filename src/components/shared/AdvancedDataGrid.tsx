@@ -140,6 +140,45 @@ function isGridColumnSearchable<T>(column: GridColumn<T>): boolean {
   return ['text', 'number', 'guid'].includes(inferFilterType(column));
 }
 
+function normalizeGridMenuSearch(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLocaleLowerCase()
+    .replace(/ı/g, 'i')
+    .trim();
+}
+
+function matchesGridMenuSearch(label: string, search: string): boolean {
+  const normalizedSearch = normalizeGridMenuSearch(search);
+  return !normalizedSearch || normalizeGridMenuSearch(label).includes(normalizedSearch);
+}
+
+function GridMenuSearch({
+  value,
+  onChange,
+  placeholder,
+  clearLabel,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  clearLabel: string;
+}) {
+  return <div className="relative mb-2">
+    <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"/>
+    <input
+      type="search"
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      placeholder={placeholder}
+      aria-label={placeholder}
+      className="h-10 w-full rounded-lg border border-[var(--wms-app-border)] bg-transparent pl-9 pr-9 text-sm outline-none focus:border-[var(--wms-brand-primary)]"
+    />
+    {value && <button type="button" aria-label={clearLabel} onClick={() => onChange('')} className="absolute right-0 top-0 grid size-10 place-items-center text-slate-400 hover:text-[var(--wms-app-text)]"><X className="size-4"/></button>}
+  </div>;
+}
+
 function defaultFilterOperator<T>(column: GridColumn<T>): string {
   return FILTER_OPERATOR_VALUES[inferFilterType(column)][0];
 }
@@ -324,6 +363,8 @@ export function AdvancedDataGrid<T extends { id: number }>({
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>(initialPreferences.sortDirection);
   const [showColumns, setShowColumns] = useState(false);
   const [showSearchFields, setShowSearchFields] = useState(false);
+  const [columnMenuSearch, setColumnMenuSearch] = useState('');
+  const [searchFieldMenuSearch, setSearchFieldMenuSearch] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [draftFilters, setDraftFilters] = useState<GridFilter[]>([]);
   const [filters, setFilters] = useState<GridFilter[]>([]);
@@ -406,6 +447,17 @@ export function AdvancedDataGrid<T extends { id: number }>({
   const visibleSearchableColumns = useMemo(
     () => searchableColumns.filter((column) => visible.includes(column.key)),
     [searchableColumns, visible],
+  );
+  const filteredSearchableColumns = useMemo(
+    () => visibleSearchableColumns.filter((column) => matchesGridMenuSearch(column.label, searchFieldMenuSearch)),
+    [searchFieldMenuSearch, visibleSearchableColumns],
+  );
+  const columnMenuColumns = useMemo(
+    () => order
+      .map((key) => localizedColumns.find((column) => column.key === key))
+      .filter((column): column is GridColumn<T> => Boolean(column))
+      .filter((column) => matchesGridMenuSearch(column.label, columnMenuSearch)),
+    [columnMenuSearch, localizedColumns, order],
   );
   const effectiveSearchFields = useMemo(() => {
     const selected = searchFields
@@ -527,7 +579,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
       <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
         <div className="col-span-2 flex min-w-0 gap-2 sm:w-auto">
           <label className="relative min-w-0 flex-1 sm:w-64 sm:flex-none"><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"/><input value={searchInput} onChange={(event) => setSearchInput(event.target.value)} placeholder={t('dataGrid.searchPlaceholder')} aria-label={t('dataGrid.searchPlaceholder')} className="h-11 w-full rounded-xl border border-[var(--wms-app-border)] bg-transparent pl-9 pr-11 text-sm outline-none"/>{searchInput && <button type="button" aria-label={t('dataGrid.clearSearch')} onClick={() => setSearchInput('')} className="absolute right-0 top-0 grid size-11 place-items-center"><X className="size-4"/></button>}</label>
-          {visibleSearchableColumns.length > 0 && <PopoverPrimitive.Root open={showSearchFields} onOpenChange={setShowSearchFields}>
+          {visibleSearchableColumns.length > 0 && <PopoverPrimitive.Root open={showSearchFields} onOpenChange={(open) => { setShowSearchFields(open); if (!open) setSearchFieldMenuSearch(''); }}>
             <PopoverPrimitive.Trigger asChild>
               <button type="button" aria-expanded={showSearchFields} aria-haspopup="menu" title={t('dataGrid.searchFields')} className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-[var(--wms-app-border)] px-3 text-sm">
                 <ListFilter className="size-4"/>
@@ -539,21 +591,26 @@ export function AdvancedDataGrid<T extends { id: number }>({
               <PopoverPrimitive.Content role="menu" align="end" sideOffset={8} collisionPadding={8} className="wms-floating-surface z-[2000] w-72 rounded-xl outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95">
                 <strong className="block text-sm">{t('dataGrid.searchFields')}</strong>
                 <p className="mb-2 mt-1 text-xs text-[var(--wms-app-text-muted)]">{t('dataGrid.searchFieldsHelp')}</p>
-                {visibleSearchableColumns.map((column) => {
-                  const checked = effectiveSearchFields.includes(column.key);
-                  const locked = checked && effectiveSearchFields.length === 1;
-                  const limitReached = !checked && effectiveSearchFields.length >= MAX_GRID_SEARCH_FIELDS;
-                  return <label key={column.key} className={`flex min-h-10 items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-[var(--wms-brand-soft)] ${locked ? 'opacity-60' : ''}`}>
-                    <input type="checkbox" checked={checked} disabled={locked || limitReached} onChange={() => toggleSearchField(column.key)}/>
-                    <span className="truncate">{column.label}</span>
-                  </label>;
-                })}
+                <GridMenuSearch value={searchFieldMenuSearch} onChange={setSearchFieldMenuSearch} placeholder={t('dataGrid.menuSearchPlaceholder')} clearLabel={t('dataGrid.clearMenuSearch')}/>
+                <div className="max-h-64 overflow-y-auto overscroll-contain pr-1">
+                  {filteredSearchableColumns.length === 0
+                    ? <p role="status" className="px-2 py-6 text-center text-sm text-[var(--wms-app-text-muted)]">{t('dataGrid.noMatchingColumns')}</p>
+                    : filteredSearchableColumns.map((column) => {
+                      const checked = effectiveSearchFields.includes(column.key);
+                      const locked = checked && effectiveSearchFields.length === 1;
+                      const limitReached = !checked && effectiveSearchFields.length >= MAX_GRID_SEARCH_FIELDS;
+                      return <label key={column.key} className={`flex min-h-10 items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-[var(--wms-brand-soft)] ${locked ? 'opacity-60' : ''}`}>
+                        <input type="checkbox" checked={checked} disabled={locked || limitReached} onChange={() => toggleSearchField(column.key)}/>
+                        <span className="truncate">{column.label}</span>
+                      </label>;
+                    })}
+                </div>
                 <button type="button" onClick={resetSearchFields} className="mt-2 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-[var(--wms-app-border)] px-3 py-2 text-sm hover:bg-[var(--wms-brand-soft)]"><RotateCcw className="size-4"/>{t('dataGrid.resetSearchFields')}</button>
               </PopoverPrimitive.Content>
             </PopoverPrimitive.Portal>
           </PopoverPrimitive.Root>}
         </div>
-        <PopoverPrimitive.Root open={showColumns} onOpenChange={setShowColumns}>
+        <PopoverPrimitive.Root open={showColumns} onOpenChange={(open) => { setShowColumns(open); if (!open) setColumnMenuSearch(''); }}>
           <PopoverPrimitive.Trigger asChild>
             <button type="button" aria-expanded={showColumns} aria-haspopup="menu" className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-[var(--wms-app-border)] px-3 text-sm sm:w-auto"><Columns3 className="size-4"/>{t('dataGrid.columns')}</button>
           </PopoverPrimitive.Trigger>
@@ -566,14 +623,16 @@ export function AdvancedDataGrid<T extends { id: number }>({
               className="wms-floating-surface wms-grid-columns-popover z-[2000] rounded-xl outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95"
             >
               <p className="mb-2 text-xs text-[var(--wms-app-text-muted)]">{t('dataGrid.columnHelp')}</p>
-              {order.map((key) => {
-                const column = localizedColumns.find((item) => item.key === key);
-                return column ? <label key={key} className={`flex min-h-10 items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-[var(--wms-brand-soft)] ${column.hideable === false ? 'opacity-60' : ''}`}>
-                  <input type="checkbox" checked={visible.includes(key)} disabled={column.hideable === false} onChange={() => toggleColumn(key)}/>
-                  <span className="truncate">{column.label}</span>
-                  {column.hideable === false && <small className="ml-auto text-[10px] uppercase text-slate-400">{t('dataGrid.fixed')}</small>}
-                </label> : null;
-              })}
+              <GridMenuSearch value={columnMenuSearch} onChange={setColumnMenuSearch} placeholder={t('dataGrid.menuSearchPlaceholder')} clearLabel={t('dataGrid.clearMenuSearch')}/>
+              <div className="max-h-64 overflow-y-auto overscroll-contain pr-1">
+                {columnMenuColumns.length === 0
+                  ? <p role="status" className="px-2 py-6 text-center text-sm text-[var(--wms-app-text-muted)]">{t('dataGrid.noMatchingColumns')}</p>
+                  : columnMenuColumns.map((column) => <label key={column.key} className={`flex min-h-10 items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-[var(--wms-brand-soft)] ${column.hideable === false ? 'opacity-60' : ''}`}>
+                    <input type="checkbox" checked={visible.includes(column.key)} disabled={column.hideable === false} onChange={() => toggleColumn(column.key)}/>
+                    <span className="truncate">{column.label}</span>
+                    {column.hideable === false && <small className="ml-auto text-[10px] uppercase text-slate-400">{t('dataGrid.fixed')}</small>}
+                  </label>)}
+              </div>
               <button type="button" onClick={resetLayout} className="mt-2 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-[var(--wms-app-border)] px-3 py-2 text-sm hover:bg-[var(--wms-brand-soft)]"><RotateCcw className="size-4"/>{t('dataGrid.resetLayout')}</button>
             </PopoverPrimitive.Content>
           </PopoverPrimitive.Portal>
