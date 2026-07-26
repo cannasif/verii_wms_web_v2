@@ -1,6 +1,7 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { normalizeLanguage } from '@/lib/i18n';
+import { localizeLegacyUiText } from '@/lib/legacy-ui-localization';
 
 type FlatResource = Map<string, string>;
 
@@ -64,23 +65,27 @@ function buildStaticTextMap(
   return translated;
 }
 
-function localizeTextNode(textNode: Text, translations: Map<string, string>): void {
+function localizeTextNode(
+  textNode: Text,
+  translations: Map<string, string>,
+  language: string,
+): void {
   if (shouldSkip(textNode)) return;
 
   const current = textNode.data;
   const trimmed = current.trim();
   if (!trimmed) return;
 
-  const next = translations.get(trimmed);
-  if (!next) return;
+  const next = translations.get(trimmed) ?? localizeLegacyUiText(trimmed, language);
+  if (!next || next === trimmed) return;
 
   const start = current.indexOf(trimmed);
   textNode.data = `${current.slice(0, start)}${next}${current.slice(start + trimmed.length)}`;
 }
 
-function walkTextNodes(root: Node, translations: Map<string, string>): void {
+function walkTextNodes(root: Node, translations: Map<string, string>, language: string): void {
   if (root.nodeType === Node.TEXT_NODE) {
-    localizeTextNode(root as Text, translations);
+    localizeTextNode(root as Text, translations, language);
     return;
   }
 
@@ -89,7 +94,7 @@ function walkTextNodes(root: Node, translations: Map<string, string>): void {
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
   let current = walker.nextNode();
   while (current) {
-    localizeTextNode(current as Text, translations);
+    localizeTextNode(current as Text, translations, language);
     current = walker.nextNode();
   }
 }
@@ -109,23 +114,19 @@ export function LegacyLocalizationBoundary({ children }: { children: ReactNode }
     if (!root) return undefined;
 
     let translations = buildStaticTextMap(i18n, language);
-    walkTextNodes(root, translations);
+    walkTextNodes(root, translations, language);
 
     const rebuild = () => {
       translations = buildStaticTextMap(i18n, language);
-      walkTextNodes(root, translations);
+      walkTextNodes(root, translations, language);
     };
     const observer = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
-        if (mutation.type === 'characterData') {
-          localizeTextNode(mutation.target as Text, translations);
-          continue;
-        }
-        mutation.addedNodes.forEach((node) => walkTextNodes(node, translations));
+        mutation.addedNodes.forEach((node) => walkTextNodes(node, translations, language));
       }
     });
 
-    observer.observe(root, { childList: true, subtree: true, characterData: true });
+    observer.observe(root, { childList: true, subtree: true });
     i18n.store.on('added', rebuild);
 
     return () => {
