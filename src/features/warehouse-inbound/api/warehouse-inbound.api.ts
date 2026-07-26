@@ -2,6 +2,7 @@ import { api } from '@/lib/axios';
 import { resolveStockTrackingPolicy } from '@/features/stock-tracking/effective-stock-tracking';
 import type { DropdownPage, DropdownPageRequest } from '@/hooks/useDropdownInfiniteSearch';
 import type { GridPage as AdvancedGridPage, GridRequest } from '@/components/shared/AdvancedDataGrid';
+import type { OperationCancellationResult } from '@/features/shared/api/operation-cancellation';
 import type { ActiveUserOption, CreateWarehouseInboundResult, CustomerOption, WarehouseInboundDetail, WarehouseInboundGridRow, WarehouseInboundLabelBatchDetail, WarehouseInboundLabelBatchRow, WarehouseInboundLabelRow, WarehouseInboundLifecycleResult, WarehouseInboundTaskDetail, WarehouseInboundTaskGridRow, LocationOption, ManualWarehouseInboundResult, OpenOrderHeader, OpenOrderLine, PutawayLocationSuggestion, ReceiveWarehouseInboundTaskResult, SeriesOption, StockOption, WarehouseOption, YapCodeOption } from '../types/warehouse-inbound.types';
 
 interface Envelope<T> { success: boolean; data: T; message?: string }
@@ -36,8 +37,8 @@ export const warehouseInboundV2Api = {
     unwrap(await api.post<Envelope<WarehouseInboundLifecycleResult>>(`/api/warehouse-inbounds/${id}/short-close`, payload)),
   putaway: async (id: number, payload: { idempotencyKey: string; rowVersion: string; reason?: string; occurredAtUtc?: string; lines: Array<{ lineId: number; quantity: number; sourceLocationId: number; targetLocationId: number; lotNo?: string; serialNo?: string }> }): Promise<WarehouseInboundLifecycleResult> =>
     unwrap(await api.post<Envelope<WarehouseInboundLifecycleResult>>(`/api/warehouse-inbounds/${id}/putaway`, payload)),
-  cancel: async (id: number, payload: { idempotencyKey: string; rowVersion: string; reason: string }): Promise<WarehouseInboundLifecycleResult> =>
-    unwrap(await api.post<Envelope<WarehouseInboundLifecycleResult>>(`/api/warehouse-inbounds/${id}/cancel`, payload)),
+  cancel: async (id: number, payload: { idempotencyKey: string; rowVersion: string; reason: string }): Promise<OperationCancellationResult> =>
+    unwrap(await api.post<Envelope<OperationCancellationResult>>(`/api/warehouse-inbounds/${id}/cancel`, payload)),
   tasksPaged: async (request: GridRequest): Promise<AdvancedGridPage<WarehouseInboundTaskGridRow>> => unwrap(await api.post<Envelope<AdvancedGridPage<WarehouseInboundTaskGridRow>>>('/api/warehouse-inbounds/tasks/paged', request)),
   myTasksPaged: async (request: GridRequest): Promise<AdvancedGridPage<WarehouseInboundTaskGridRow>> => unwrap(await api.post<Envelope<AdvancedGridPage<WarehouseInboundTaskGridRow>>>('/api/warehouse-inbounds/tasks/assigned/paged', request)),
   taskDetail: async (id: number): Promise<WarehouseInboundTaskDetail> => unwrap(await api.get<Envelope<WarehouseInboundTaskDetail>>(`/api/warehouse-inbounds/tasks/${id}`)),

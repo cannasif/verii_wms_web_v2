@@ -3,14 +3,9 @@ import { resolveStockTrackingPolicy } from '@/features/stock-tracking/effective-
 import type { DropdownPage, DropdownPageRequest } from '@/hooks/useDropdownInfiniteSearch';
 import type { GridPage as AdvancedGridPage, GridRequest } from '@/components/shared/AdvancedDataGrid';
 import type { ActiveUserOption, CreateGoodsReceiptResult, CustomerOption, GoodsReceiptDetail, GoodsReceiptGridRow, GoodsReceiptLabelBatchDetail, GoodsReceiptLabelBatchRow, GoodsReceiptLabelRow, GoodsReceiptLifecycleResult, GoodsReceiptRoutingResult, GoodsReceiptSplitRoutingResult, GoodsReceiptTaskDetail, GoodsReceiptTaskGridRow, LocationOption, ManualGoodsReceiptResult, OpenOrderHeader, OpenOrderLine, PutawayLocationSuggestion, ReceiveGoodsReceiptTaskResult, SeriesOption, StockOption, WarehouseOption, YapCodeOption } from '../types/goods-receipt.types';
+import type { OperationCancellationResult } from '@/features/shared/api/operation-cancellation';
 
 interface Envelope<T> { success: boolean; data: T; message?: string }
-export interface ErpCancellationResult {
-  cancellationRecordId: number;
-  status: 'Pending' | 'Processing' | 'ErpDeletionConfirmed' | 'Succeeded' | 'Failed' | 'CommitUncertain' | 'CompensationRequired';
-  errorCode?: string;
-  errorMessage?: string;
-}
 type GridPage<T> = DropdownPage<T>;
 const unwrap = <T,>(value: Envelope<T>): T => { if (!value.success) throw new Error(value.message || 'İşlem başarısız.'); return value.data; };
 const pagedBody = (request: DropdownPageRequest, filters: unknown[] = []) => ({ pageNumber: request.pageNumber, pageSize: request.pageSize, search: request.search ?? null, sortBy: request.sortBy, sortDirection: request.sortDirection, filterLogic: 'and', filters });
@@ -47,10 +42,8 @@ export const goodsReceiptV2Api = {
     unwrap(await api.post<Envelope<GoodsReceiptLifecycleResult>>(`/api/goods-receipts/${id}/short-close`, payload)),
   putaway: async (id: number, payload: { idempotencyKey: string; rowVersion: string; reason?: string; occurredAtUtc?: string; lines: Array<{ lineId: number; quantity: number; sourceLocationId: number; targetLocationId: number; lotNo?: string; serialNo?: string }> }): Promise<GoodsReceiptLifecycleResult> =>
     unwrap(await api.post<Envelope<GoodsReceiptLifecycleResult>>(`/api/goods-receipts/${id}/putaway`, payload)),
-  cancel: async (id: number, payload: { idempotencyKey: string; rowVersion: string; reason: string }): Promise<GoodsReceiptLifecycleResult> =>
-    unwrap(await api.post<Envelope<GoodsReceiptLifecycleResult>>(`/api/goods-receipts/${id}/cancel`, payload)),
-  cancelErp: async (id: number, payload: { idempotencyKey: string; reason: string }): Promise<ErpCancellationResult> =>
-    unwrap(await api.post<Envelope<ErpCancellationResult>>(`/api/goods-receipts/${id}/erp/cancel`, payload)),
+  cancel: async (id: number, payload: { idempotencyKey: string; rowVersion: string; reason: string }): Promise<OperationCancellationResult> =>
+    unwrap(await api.post<Envelope<OperationCancellationResult>>(`/api/goods-receipts/${id}/cancel`, payload)),
   tasksPaged: async (request: GridRequest): Promise<AdvancedGridPage<GoodsReceiptTaskGridRow>> => unwrap(await api.post<Envelope<AdvancedGridPage<GoodsReceiptTaskGridRow>>>('/api/goods-receipts/tasks/paged', request)),
   myTasksPaged: async (request: GridRequest): Promise<AdvancedGridPage<GoodsReceiptTaskGridRow>> => unwrap(await api.post<Envelope<AdvancedGridPage<GoodsReceiptTaskGridRow>>>('/api/goods-receipts/tasks/assigned/paged', request)),
   taskDetail: async (id: number): Promise<GoodsReceiptTaskDetail> => unwrap(await api.get<Envelope<GoodsReceiptTaskDetail>>(`/api/goods-receipts/tasks/${id}`)),

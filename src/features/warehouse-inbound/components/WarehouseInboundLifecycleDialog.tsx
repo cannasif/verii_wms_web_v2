@@ -4,6 +4,7 @@ import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
 import { ResponsiveDialog } from '@/components/shared/ResponsiveDialog';
 import { formatProjectNumber } from '@/lib/project-format';
 import { warehouseInboundV2Api } from '../api/warehouse-inbound.api';
+import { requireCompletedCancellation } from '@/features/shared/api/operation-cancellation';
 import type {
   WarehouseInboundDetail,
   WarehouseInboundLifecycleResult,
@@ -17,7 +18,7 @@ interface Props {
   action: WarehouseInboundLifecycleAction;
   detail: WarehouseInboundDetail;
   onClose: () => void;
-  onCompleted: (result: WarehouseInboundLifecycleResult) => Promise<void>;
+  onCompleted: (result: WarehouseInboundLifecycleResult | null) => Promise<void>;
 }
 
 interface PutawayFormLine extends WarehouseInboundPutawayCandidate {
@@ -95,7 +96,7 @@ export function WarehouseInboundLifecycleDialog({ action, detail, onClose, onCom
     }
     try {
       setBusy(true);
-      let result: WarehouseInboundLifecycleResult;
+      let result: WarehouseInboundLifecycleResult | null;
       if (action === 'approve') {
         result = await warehouseInboundV2Api.approve(detail.header.id, {
           idempotencyKey: idempotencyKey.current,
@@ -133,11 +134,12 @@ export function WarehouseInboundLifecycleDialog({ action, detail, onClose, onCom
           })),
         });
       } else {
-        result = await warehouseInboundV2Api.cancel(detail.header.id, {
+        requireCompletedCancellation(await warehouseInboundV2Api.cancel(detail.header.id, {
           idempotencyKey: idempotencyKey.current,
           rowVersion: detail.header.rowVersion,
           reason: reason.trim(),
-        });
+        }));
+        result = null;
       }
       await onCompleted(result);
     } catch (caught) {

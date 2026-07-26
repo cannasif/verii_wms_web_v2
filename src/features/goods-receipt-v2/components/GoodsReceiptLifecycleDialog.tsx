@@ -4,6 +4,7 @@ import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
 import { ResponsiveDialog } from '@/components/shared/ResponsiveDialog';
 import { formatProjectNumber } from '@/lib/project-format';
 import { goodsReceiptV2Api } from '../api/goods-receipt.api';
+import { requireCompletedCancellation } from '@/features/shared/api/operation-cancellation';
 import type {
   GoodsReceiptDetail,
   GoodsReceiptLifecycleResult,
@@ -133,21 +134,12 @@ export function GoodsReceiptLifecycleDialog({ action, detail, onClose, onComplet
           })),
         });
       } else {
-        if (detail.header.erpIntegrationStatus === 'Succeeded') {
-          const cancellation = await goodsReceiptV2Api.cancelErp(detail.header.id, {
-            idempotencyKey: idempotencyKey.current,
-            reason: reason.trim(),
-          });
-          if (cancellation.status !== 'Succeeded')
-            throw new Error(cancellation.errorMessage || `ERP iptal süreci ${cancellation.status} durumunda kaldı.`);
-          result = null;
-        } else {
-          result = await goodsReceiptV2Api.cancel(detail.header.id, {
-            idempotencyKey: idempotencyKey.current,
-            rowVersion: detail.header.rowVersion,
-            reason: reason.trim(),
-          });
-        }
+        requireCompletedCancellation(await goodsReceiptV2Api.cancel(detail.header.id, {
+          idempotencyKey: idempotencyKey.current,
+          rowVersion: detail.header.rowVersion,
+          reason: reason.trim(),
+        }));
+        result = null;
       }
       await onCompleted(result);
     } catch (caught) {

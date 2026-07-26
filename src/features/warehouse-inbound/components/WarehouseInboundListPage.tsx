@@ -215,16 +215,17 @@ export function WarehouseInboundListPage(): ReactElement {
     [loadingId, openDetail, output, outputBusy],
   );
   const lifecycleCompleted = useCallback(
-    async (result: WarehouseInboundLifecycleResult) => {
+    async (result: WarehouseInboundLifecycleResult | null) => {
       toast.success(
-        result.replayed
+        result?.replayed
           ? "İşlemin önceki sonucu güvenle döndürüldü."
           : "Mal kabul işlemi başarıyla tamamlandı.",
       );
-      setDetail(await warehouseInboundV2Api.detail(result.id));
+      const id = result?.id ?? detail?.header.id;
+      if (id) setDetail(await warehouseInboundV2Api.detail(id));
       setGridVersion((value) => value + 1);
     },
-    [],
+    [detail?.header.id],
   );
   return (
     <>
@@ -266,7 +267,7 @@ function DetailModal({
   ) => Promise<void>;
   busyKey: string;
   onLifecycleCompleted: (
-    result: WarehouseInboundLifecycleResult,
+    result: WarehouseInboundLifecycleResult | null,
   ) => Promise<void>;
 }): ReactElement {
   const [action, setAction] = useState<WarehouseInboundLifecycleAction | null>(
