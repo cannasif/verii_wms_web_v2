@@ -26,6 +26,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useTranslation } from 'react-i18next';
 import {
   ArrowDown,
   ArrowUp,
@@ -49,8 +50,10 @@ import {
   saveGridPreferences,
   type GridPreferences,
 } from '@/lib/grid-preferences';
+import { isKnownEnumValue, localizeEnumValue } from '@/lib/enum-localization';
 import { useAuthStore } from '@/stores/auth-store';
 import { AppDropdown, type AppDropdownOption } from './AppDropdown';
+import { AppDateInput } from './AppInput';
 
 export interface GridFilter { column: string; operator: string; value: string }
 export interface GridRequest { pageNumber?: number; page?: number; pageSize: number; search: string | null; sortBy?: string | null; sortDirection?: 'asc' | 'desc'; filterLogic: 'and' | 'or'; filters: GridFilter[] }
@@ -71,47 +74,30 @@ interface Props<T extends { id: number }> { pageKey: string; title: string; desc
 const MIN_COLUMN_WIDTH = 80;
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const;
 const PAGE_SIZE_DROPDOWN_OPTIONS: AppDropdownOption[] = PAGE_SIZE_OPTIONS.map((size) => ({ value: String(size), label: String(size) }));
-const FILTER_LOGIC_OPTIONS: AppDropdownOption[] = [{ value: 'and', label: 'Tümü (AND)' }, { value: 'or', label: 'Herhangi biri (OR)' }];
-const FILTER_OPERATOR_OPTIONS: Record<GridFilterType, AppDropdownOption[]> = {
-  text: [
-    { value: 'contains', label: 'İçerir' }, { value: 'notContains', label: 'İçermez' },
-    { value: 'equals', label: 'Eşittir' }, { value: 'notEquals', label: 'Eşit değildir' },
-    { value: 'startsWith', label: 'İle başlar' }, { value: 'endsWith', label: 'İle biter' },
-    { value: 'isNull', label: 'Boştur' }, { value: 'isNotNull', label: 'Boş değildir' },
-  ],
-  number: [
-    { value: 'equals', label: 'Eşittir' }, { value: 'notEquals', label: 'Eşit değildir' },
-    { value: 'gt', label: 'Büyüktür' }, { value: 'gte', label: 'Büyük veya eşittir' },
-    { value: 'lt', label: 'Küçüktür' }, { value: 'lte', label: 'Küçük veya eşittir' },
-    { value: 'isNull', label: 'Boştur' }, { value: 'isNotNull', label: 'Boş değildir' },
-  ],
-  date: [
-    { value: 'equals', label: 'Tarihe eşittir' }, { value: 'gt', label: 'Tarihten sonradır' },
-    { value: 'gte', label: 'Tarih veya sonrasıdır' }, { value: 'lt', label: 'Tarihten öncedir' },
-    { value: 'lte', label: 'Tarih veya öncesidir' }, { value: 'isNull', label: 'Boştur' },
-    { value: 'isNotNull', label: 'Boş değildir' },
-  ],
-  datetime: [
-    { value: 'equals', label: 'Zamana eşittir' }, { value: 'gt', label: 'Zamandan sonradır' },
-    { value: 'gte', label: 'Zaman veya sonrasıdır' }, { value: 'lt', label: 'Zamandan öncedir' },
-    { value: 'lte', label: 'Zaman veya öncesidir' }, { value: 'isNull', label: 'Boştur' },
-    { value: 'isNotNull', label: 'Boş değildir' },
-  ],
-  boolean: [{ value: 'equals', label: 'Eşittir' }, { value: 'notEquals', label: 'Eşit değildir' }],
-  enum: [{ value: 'equals', label: 'Eşittir' }, { value: 'notEquals', label: 'Eşit değildir' }],
-  guid: [
-    { value: 'equals', label: 'Eşittir' }, { value: 'notEquals', label: 'Eşit değildir' },
-    { value: 'isNull', label: 'Boştur' }, { value: 'isNotNull', label: 'Boş değildir' },
-  ],
+const SYSTEM_COLUMN_LABEL_KEYS: Record<string, string> = {
+  id: 'recordId',
+  createdBy: 'createdBy',
+  createdDate: 'createdAt',
+  updatedBy: 'updatedBy',
+  updatedDate: 'updatedAt',
+  actions: 'actions',
 };
-const BOOLEAN_FILTER_OPTIONS: AppDropdownOption[] = [{ value: 'true', label: 'Evet' }, { value: 'false', label: 'Hayır' }];
+const FILTER_OPERATOR_VALUES: Record<GridFilterType, string[]> = {
+  text: ['contains', 'notContains', 'equals', 'notEquals', 'startsWith', 'endsWith', 'isNull', 'isNotNull'],
+  number: ['equals', 'notEquals', 'gt', 'gte', 'lt', 'lte', 'isNull', 'isNotNull'],
+  date: ['equals', 'gt', 'gte', 'lt', 'lte', 'isNull', 'isNotNull'],
+  datetime: ['equals', 'gt', 'gte', 'lt', 'lte', 'isNull', 'isNotNull'],
+  boolean: ['equals', 'notEquals'],
+  enum: ['equals', 'notEquals'],
+  guid: ['equals', 'notEquals', 'isNull', 'isNotNull'],
+};
 
 function inferFilterType<T>(column: GridColumn<T>): GridFilterType {
   if (column.filterType) return column.filterType;
   const key = column.key.toLowerCase();
   if (/(correlationid$|operationcode$|traceid$|requestid$)/.test(key)) return 'guid';
   if (/(^id$|id$|count$|quantity$|amount$|percent$|priority$|number$|lineno$|sequenceno$|version$|dpi$|widthmm$|heightmm$|warehousecode$)/.test(key)) return 'number';
-  if (/(status$|type$|mode$|scope$|policy$|direction$)/.test(key)) return 'enum';
+  if (/(status$|type$|mode$|scope$|policy$|direction$|action$|strategy$|decision$|state$|format$|characterset$|uniqueness$)/.test(key)) return 'enum';
   if (/(atutc$|datetime$|createdat$|updatedat$|occurredat$)/.test(key)) return 'datetime';
   if (/(date$|day$)/.test(key)) return 'date';
   if (/^(is|has|can|allow|require)[a-z]/.test(key)) return 'boolean';
@@ -119,11 +105,20 @@ function inferFilterType<T>(column: GridColumn<T>): GridFilterType {
 }
 
 function defaultFilterOperator<T>(column: GridColumn<T>): string {
-  return FILTER_OPERATOR_OPTIONS[inferFilterType(column)][0].value;
+  return FILTER_OPERATOR_VALUES[inferFilterType(column)][0];
 }
 
 function operatorNeedsValue(operator: string): boolean {
   return operator !== 'isNull' && operator !== 'isNotNull';
+}
+
+function renderGridCell<T>(column: GridColumn<T>, row: T, language: string): ReactNode {
+  const rendered = column.render(row);
+  return typeof rendered === 'string'
+    && inferFilterType(column) === 'enum'
+    && isKnownEnumValue(rendered)
+    ? localizeEnumValue(rendered, language)
+    : rendered;
 }
 
 interface SortableHeaderProps {
@@ -135,9 +130,11 @@ interface SortableHeaderProps {
   width?: number;
   onSort: () => void;
   onResizeStart: (event: ReactMouseEvent<HTMLButtonElement>) => void;
+  dragLabel: string;
+  resizeLabel: string;
 }
 
-function SortableHeader({ columnKey, label, sortable, isActiveSort, sortDirection, width, onSort, onResizeStart }: SortableHeaderProps) {
+function SortableHeader({ columnKey, label, sortable, isActiveSort, sortDirection, width, onSort, onResizeStart, dragLabel, resizeLabel }: SortableHeaderProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: columnKey });
   const style: CSSProperties = {
     transform: CSS.Translate.toString(transform),
@@ -157,8 +154,8 @@ function SortableHeader({ columnKey, label, sortable, isActiveSort, sortDirectio
           type="button"
           {...attributes}
           {...listeners}
-          aria-label={`${label} kolonunu taşı`}
-          title="Kolonu sürükleyerek taşı"
+          aria-label={dragLabel}
+          title={dragLabel}
           className="hidden min-h-11 min-w-11 cursor-grab touch-none items-center justify-center rounded-md text-slate-400 opacity-60 hover:bg-black/5 hover:opacity-100 active:cursor-grabbing sm:inline-flex dark:hover:bg-white/10"
           onClick={(event) => event.stopPropagation()}
         >
@@ -171,8 +168,8 @@ function SortableHeader({ columnKey, label, sortable, isActiveSort, sortDirectio
       </div>
       <button
         type="button"
-        aria-label={`${label} kolon genişliğini değiştir`}
-        title="Kolon genişliğini değiştir"
+        aria-label={resizeLabel}
+        title={resizeLabel}
         onMouseDown={onResizeStart}
         className="absolute right-0 top-0 hidden h-full w-2 cursor-col-resize touch-none bg-transparent hover:bg-[var(--wms-brand-primary)]/30 sm:block"
       />
@@ -181,7 +178,34 @@ function SortableHeader({ columnKey, label, sortable, isActiveSort, sortDirectio
 }
 
 export function AdvancedDataGrid<T extends { id: number }>({ pageKey, title, description, columns: sourceColumns, fetchPage, toolbarAction }: Props<T>) {
-  const columns = useMemo(() => sourceColumns.map((column) => (column.key === 'id' || column.key === 'actions') ? { ...column, hideable: false } : column), [sourceColumns]);
+  const { t, i18n } = useTranslation();
+  const enumLanguage = i18n.resolvedLanguage ?? i18n.language;
+  const filterLogicOptions = useMemo<AppDropdownOption[]>(() => [
+    { value: 'and', label: t('dataGrid.logicAll') },
+    { value: 'or', label: t('dataGrid.logicAny') },
+  ], [t]);
+  const booleanFilterOptions = useMemo<AppDropdownOption[]>(() => [
+    { value: 'true', label: t('common.yes') },
+    { value: 'false', label: t('common.no') },
+  ], [t]);
+  const filterOperatorOptions = useMemo<Record<GridFilterType, AppDropdownOption[]>>(
+    () => Object.fromEntries(
+      Object.entries(FILTER_OPERATOR_VALUES).map(([type, operators]) => [
+        type,
+        operators.map((operator) => ({ value: operator, label: t(`dataGrid.operators.${operator}`) })),
+      ]),
+    ) as Record<GridFilterType, AppDropdownOption[]>,
+    [t],
+  );
+  const columns = useMemo(() => sourceColumns.map((column) => {
+    const systemLabelKey = SYSTEM_COLUMN_LABEL_KEYS[column.key];
+    const localizedColumn = systemLabelKey
+      ? { ...column, label: t(`dataGrid.systemColumns.${systemLabelKey}`) }
+      : column;
+    return column.key === 'id' || column.key === 'actions'
+      ? { ...localizedColumn, hideable: false }
+      : localizedColumn;
+  }), [sourceColumns, t]);
   const userId = useAuthStore((state) => state.user?.id);
   const preferenceColumns = useMemo(() => columns.map(({ key, sortable, hideable }) => ({ key, sortable, hideable: (key === 'id' || key === 'actions') ? false : hideable })), [columns]);
   const storageKey = getGridPreferenceKey(pageKey, userId);
@@ -307,62 +331,64 @@ export function AdvancedDataGrid<T extends { id: number }>({ pageKey, title, des
     <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
       <div><p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--wms-brand-primary)]">V3RII WMS</p><h1 className="mt-1 text-2xl font-bold">{title}</h1>{description && <p className="mt-1 text-sm text-slate-500">{description}</p>}</div>
       <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-        <label className="relative col-span-2 w-full sm:w-auto"><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"/><input value={searchInput} onChange={(event) => setSearchInput(event.target.value)} placeholder="Ara..." className="h-11 w-full rounded-xl border border-[var(--wms-app-border)] bg-transparent pl-9 pr-11 text-sm outline-none sm:w-64"/>{searchInput && <button type="button" aria-label="Aramayı temizle" onClick={() => setSearchInput('')} className="absolute right-0 top-0 grid size-11 place-items-center"><X className="size-4"/></button>}</label>
+        <label className="relative col-span-2 w-full sm:w-auto"><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"/><input value={searchInput} onChange={(event) => setSearchInput(event.target.value)} placeholder={t('dataGrid.searchPlaceholder')} aria-label={t('dataGrid.searchPlaceholder')} className="h-11 w-full rounded-xl border border-[var(--wms-app-border)] bg-transparent pl-9 pr-11 text-sm outline-none sm:w-64"/>{searchInput && <button type="button" aria-label={t('dataGrid.clearSearch')} onClick={() => setSearchInput('')} className="absolute right-0 top-0 grid size-11 place-items-center"><X className="size-4"/></button>}</label>
         <div className="relative">
-          <button type="button" onClick={() => setShowColumns((value) => !value)} className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-[var(--wms-app-border)] px-3 text-sm sm:w-auto"><Columns3 className="size-4"/>Kolonlar</button>
-          {showColumns && <div className="absolute left-0 z-30 mt-2 w-64 max-w-[calc(100vw-2rem)] rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-3 shadow-xl sm:left-auto sm:right-0">
-            <p className="mb-2 text-xs text-slate-500">Başlıklardaki tutamaçlarla kolonları taşıyabilirsiniz.</p>
+          <button type="button" onClick={() => setShowColumns((value) => !value)} aria-expanded={showColumns} aria-haspopup="menu" className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-[var(--wms-app-border)] px-3 text-sm sm:w-auto"><Columns3 className="size-4"/>{t('dataGrid.columns')}</button>
+          {showColumns && <div role="menu" className="wms-floating-surface absolute left-0 z-30 mt-2 max-h-[min(32rem,calc(100dvh-8rem))] w-64 max-w-[calc(100vw-2rem)] overflow-y-auto overscroll-contain rounded-xl p-3 sm:left-auto sm:right-0">
+            <p className="mb-2 text-xs text-[var(--wms-app-text-muted)]">{t('dataGrid.columnHelp')}</p>
             {order.map((key) => {
               const column = columns.find((item) => item.key === key);
               return column ? <label key={key} className={`flex items-center gap-2 py-1.5 text-sm ${column.hideable === false ? 'opacity-60' : ''}`}>
                 <input type="checkbox" checked={visible.includes(key)} disabled={column.hideable === false} onChange={() => toggleColumn(key)}/>
                 <span className="truncate">{column.label}</span>
-                {column.hideable === false && <small className="ml-auto text-[10px] uppercase text-slate-400">Sabit</small>}
+                {column.hideable === false && <small className="ml-auto text-[10px] uppercase text-slate-400">{t('dataGrid.fixed')}</small>}
               </label> : null;
             })}
-            <button type="button" onClick={resetLayout} className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm"><RotateCcw className="size-4"/>Düzeni sıfırla</button>
+            <button type="button" onClick={resetLayout} className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[var(--wms-app-border)] px-3 py-2 text-sm"><RotateCcw className="size-4"/>{t('dataGrid.resetLayout')}</button>
           </div>}
         </div>
-        <button type="button" onClick={() => setShowFilters((value) => !value)} className="relative inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-[var(--wms-app-border)] px-3 text-sm sm:w-auto"><Filter className="size-4"/>Gelişmiş Filtre{filters.length > 0 && <span className="rounded-full bg-[var(--wms-brand-primary)] px-1.5 text-xs text-white">{filters.length}</span>}</button>
-        <button type="button" aria-label="Verileri yenile" onClick={() => query.refetch()} className="h-11 rounded-xl border border-[var(--wms-app-border)] p-2.5"><RefreshCw className={`size-4 ${query.isFetching ? 'animate-spin' : ''}`}/></button>
+        <button type="button" onClick={() => setShowFilters((value) => !value)} aria-expanded={showFilters} className="relative inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-[var(--wms-app-border)] px-3 text-sm sm:w-auto"><Filter className="size-4"/>{t('advancedFilter.title')}{filters.length > 0 && <span className="rounded-full bg-[var(--wms-brand-primary)] px-1.5 text-xs text-white">{filters.length}</span>}</button>
+        <button type="button" aria-label={t('dataGrid.refresh')} onClick={() => query.refetch()} className="h-11 rounded-xl border border-[var(--wms-app-border)] p-2.5"><RefreshCw className={`size-4 ${query.isFetching ? 'animate-spin' : ''}`}/></button>
         {toolbarAction && <button type="button" onClick={runAction} disabled={actionRunning} className="col-span-2 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[var(--wms-brand-primary)] px-4 text-sm font-semibold text-white disabled:opacity-50 sm:w-auto"><RefreshCw className={`size-4 ${actionRunning ? 'animate-spin' : ''}`}/>{toolbarAction.label}</button>}
       </div>
     </div>
-    {showFilters && <div className="mb-4 rounded-xl border border-[var(--wms-app-border)] bg-slate-50/60 p-4 dark:bg-white/[.03]">
-      <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"><div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center"><strong className="text-sm">Filtreler</strong><AppDropdown value={filterLogic} onValueChange={(value) => setFilterLogic(value as 'and' | 'or')} options={FILTER_LOGIC_OPTIONS} ariaLabel="Filtre eşleşme türü" className="h-11 w-full sm:w-44" /></div><button type="button" onClick={addFilter} className="inline-flex min-h-11 items-center justify-center gap-1 rounded-lg border border-[var(--wms-app-border)] px-3 text-sm text-[var(--wms-brand-primary)] sm:border-0"><Plus className="size-4"/>Filtre ekle</button></div>
-      {draftFilters.length === 0 ? <p className="text-sm text-slate-500">Henüz filtre eklenmedi.</p> : <div className="space-y-2">{draftFilters.map((filter, index) => {
+    {showFilters && <div className="mb-4 rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel-muted)] p-4">
+      <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"><div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center"><strong className="text-sm">{t('dataGrid.filters')}</strong><AppDropdown value={filterLogic} onValueChange={(value) => setFilterLogic(value as 'and' | 'or')} options={filterLogicOptions} ariaLabel={t('dataGrid.filterMatchType')} className="h-11 w-full sm:w-44" /></div><button type="button" onClick={addFilter} className="inline-flex min-h-11 items-center justify-center gap-1 rounded-lg border border-[var(--wms-app-border)] px-3 text-sm text-[var(--wms-brand-primary)] sm:border-0"><Plus className="size-4"/>{t('advancedFilter.add')}</button></div>
+      {draftFilters.length === 0 ? <p className="text-sm text-slate-500">{t('dataGrid.noFilters')}</p> : <div className="space-y-2">{draftFilters.map((filter, index) => {
         const selectedColumn = columns.find((column) => column.key === filter.column) ?? columns[0];
         const filterType = inferFilterType(selectedColumn);
-        const valueOptions = selectedColumn.filterOptions ?? (filterType === 'boolean' ? BOOLEAN_FILTER_OPTIONS : undefined);
+        const valueOptions = selectedColumn.filterOptions ?? (filterType === 'boolean' ? booleanFilterOptions : undefined);
         return <div key={`${filter.column}-${index}`} className="grid gap-2 sm:grid-cols-[1fr_190px_1fr_40px]">
           <AppDropdown value={filter.column} onValueChange={(value) => setDraftFilters((items) => items.map((item, number) => {
             if (number !== index) return item;
             const nextColumn = columns.find((column) => column.key === value) ?? columns[0];
             return { ...item, column: value, operator: defaultFilterOperator(nextColumn), value: '' };
-          }))} options={columns.filter((column) => column.filterable !== false).map((column) => ({ value: column.key, label: column.label }))} ariaLabel={`${index + 1}. filtre kolonu`} searchable className="h-10" />
-          <AppDropdown value={filter.operator} onValueChange={(value) => setDraftFilters((items) => items.map((item, number) => number === index ? { ...item, operator: value } : item))} options={FILTER_OPERATOR_OPTIONS[filterType]} ariaLabel={`${index + 1}. filtre operatörü`} className="h-10" />
-          {!operatorNeedsValue(filter.operator) ? <div className="flex items-center rounded-lg border px-3 text-sm text-slate-500">Değer gerektirmez</div>
-            : valueOptions ? <AppDropdown value={filter.value || null} onValueChange={(value) => setDraftFilters((items) => items.map((item, number) => number === index ? { ...item, value } : item))} options={valueOptions} ariaLabel={`${index + 1}. filtre değeri`} className="h-10" />
-              : <input type={filterType === 'number' ? 'number' : filterType === 'date' ? 'date' : filterType === 'datetime' ? 'datetime-local' : 'text'} value={filter.value} onChange={(event) => setDraftFilters((items) => items.map((item, number) => number === index ? { ...item, value: event.target.value } : item))} className="rounded-lg border bg-transparent px-3 py-2 text-sm"/>}
-          <button type="button" aria-label="Filtreyi kaldır" onClick={() => setDraftFilters((value) => value.filter((_, number) => number !== index))} className="rounded-lg border p-2"><Trash2 className="size-4"/></button>
+          }))} options={columns.filter((column) => column.filterable !== false).map((column) => ({ value: column.key, label: column.label }))} ariaLabel={t('dataGrid.filterColumnAria', { number: index + 1 })} searchable className="h-10" />
+          <AppDropdown value={filter.operator} onValueChange={(value) => setDraftFilters((items) => items.map((item, number) => number === index ? { ...item, operator: value } : item))} options={filterOperatorOptions[filterType]} ariaLabel={t('dataGrid.filterOperatorAria', { number: index + 1 })} className="h-10" />
+          {!operatorNeedsValue(filter.operator) ? <div className="flex items-center rounded-lg border border-[var(--wms-app-border)] px-3 text-sm text-slate-500">{t('dataGrid.valueNotRequired')}</div>
+            : valueOptions ? <AppDropdown value={filter.value || null} onValueChange={(value) => setDraftFilters((items) => items.map((item, number) => number === index ? { ...item, value } : item))} options={valueOptions} ariaLabel={t('dataGrid.filterValueAria', { number: index + 1 })} className="h-10" />
+              : filterType === 'date' || filterType === 'datetime'
+                ? <AppDateInput type={filterType === 'date' ? 'date' : 'datetime-local'} value={filter.value} onChange={(event) => setDraftFilters((items) => items.map((item, number) => number === index ? { ...item, value: event.target.value } : item))} aria-label={t('dataGrid.filterValueAria', { number: index + 1 })} className="h-10"/>
+                : <input type={filterType === 'number' ? 'number' : 'text'} value={filter.value} onChange={(event) => setDraftFilters((items) => items.map((item, number) => number === index ? { ...item, value: event.target.value } : item))} aria-label={t('dataGrid.filterValueAria', { number: index + 1 })} className="input h-10"/>}
+          <button type="button" aria-label={t('advancedFilter.remove')} onClick={() => setDraftFilters((value) => value.filter((_, number) => number !== index))} className="rounded-lg border border-[var(--wms-app-border)] p-2"><Trash2 className="size-4"/></button>
         </div>;
       })}</div>}
-      <div className="mt-3 flex justify-end gap-2"><button type="button" onClick={clearFilters} className="rounded-lg border px-3 py-2 text-sm">Temizle</button><button type="button" onClick={applyFilters} className="rounded-lg bg-[var(--wms-brand-primary)] px-3 py-2 text-sm text-white">Uygula</button></div>
+      <div className="mt-3 flex justify-end gap-2"><button type="button" onClick={clearFilters} className="rounded-lg border border-[var(--wms-app-border)] px-3 py-2 text-sm">{t('advancedFilter.clear')}</button><button type="button" onClick={applyFilters} className="rounded-lg bg-[var(--wms-brand-primary)] px-3 py-2 text-sm text-white">{t('dataGrid.apply')}</button></div>
     </div>}
-    <div className="hidden overflow-hidden rounded-xl border border-[var(--wms-app-border)] sm:block"><div className="overflow-x-auto"><DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}><table className={`w-full min-w-[760px] border-collapse text-sm ${Object.keys(widths).length ? 'table-fixed' : ''}`}><thead className="bg-slate-100/90 text-left text-xs uppercase tracking-wide text-slate-600 dark:bg-white/[.06] dark:text-slate-300"><tr><SortableContext items={activeColumns.map((column) => column.key)} strategy={horizontalListSortingStrategy}>{activeColumns.map((column) => <SortableHeader key={column.key} columnKey={column.key} label={column.label} sortable={column.sortable !== false} isActiveSort={sortBy === column.key} sortDirection={sortDirection} width={widths[column.key]} onSort={() => changeSort(column.key)} onResizeStart={(event) => startResize(event, column.key)}/>)}</SortableContext></tr></thead><tbody>{query.isLoading ? <tr><td colSpan={activeColumns.length} className="h-40 text-center">Yükleniyor...</td></tr> : query.isError ? <tr><td colSpan={activeColumns.length} className="h-40 text-center text-red-500">{query.error instanceof Error ? query.error.message : 'Veri alınamadı.'}</td></tr> : !query.data?.items.length ? <tr><td colSpan={activeColumns.length} className="h-40 text-center text-slate-500">Kayıt bulunamadı.</td></tr> : query.data.items.map((row) => <tr key={row.id} className="border-b border-[var(--wms-app-border)] hover:bg-[var(--wms-brand-soft)]">{activeColumns.map((column) => <td key={column.key} style={widths[column.key] ? { width: widths[column.key], maxWidth: widths[column.key] } : undefined} className="overflow-hidden border-r border-[var(--wms-app-border)] px-4 py-3 last:border-r-0"><div className="truncate">{column.render(row)}</div></td>)}</tr>)}</tbody></table></DndContext></div></div>
+    <div className="hidden overflow-hidden rounded-xl border border-[var(--wms-app-border)] sm:block"><div className="overflow-x-auto"><DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}><table className={`w-full min-w-[760px] border-collapse text-sm ${Object.keys(widths).length ? 'table-fixed' : ''}`}><thead className="bg-[var(--wms-app-panel-muted)] text-left text-xs uppercase tracking-wide text-[var(--wms-app-text-muted)]"><tr><SortableContext items={activeColumns.map((column) => column.key)} strategy={horizontalListSortingStrategy}>{activeColumns.map((column) => <SortableHeader key={column.key} columnKey={column.key} label={column.label} sortable={column.sortable !== false} isActiveSort={sortBy === column.key} sortDirection={sortDirection} width={widths[column.key]} onSort={() => changeSort(column.key)} onResizeStart={(event) => startResize(event, column.key)} dragLabel={t('dataGrid.dragColumn', { column: column.label })} resizeLabel={t('dataGrid.resizeColumn', { column: column.label })}/>)}</SortableContext></tr></thead><tbody>{query.isLoading ? <tr><td colSpan={activeColumns.length} className="h-40 text-center">{t('common.loading')}</td></tr> : query.isError ? <tr><td colSpan={activeColumns.length} className="h-40 text-center text-red-500">{query.error instanceof Error ? query.error.message : t('dataGrid.loadError')}</td></tr> : !query.data?.items.length ? <tr><td colSpan={activeColumns.length} className="h-40 text-center text-slate-500">{t('dataGrid.noRecords')}</td></tr> : query.data.items.map((row) => <tr key={row.id} className="border-b border-[var(--wms-app-border)] hover:bg-[var(--wms-brand-soft)]">{activeColumns.map((column) => <td key={column.key} style={widths[column.key] ? { width: widths[column.key], maxWidth: widths[column.key] } : undefined} className="overflow-hidden border-r border-[var(--wms-app-border)] px-4 py-3 last:border-r-0"><div className="truncate">{renderGridCell(column, row, enumLanguage)}</div></td>)}</tr>)}</tbody></table></DndContext></div></div>
     <div className="space-y-3 sm:hidden" aria-live="polite">
-      {query.isLoading ? <GridMobileStatus text="Yükleniyor..." /> : query.isError ? <GridMobileStatus text={query.error instanceof Error ? query.error.message : 'Veri alınamadı.'} error /> : !query.data?.items.length ? <GridMobileStatus text="Kayıt bulunamadı." /> : query.data.items.map((row) => (
+      {query.isLoading ? <GridMobileStatus text={t('common.loading')} /> : query.isError ? <GridMobileStatus text={query.error instanceof Error ? query.error.message : t('dataGrid.loadError')} error /> : !query.data?.items.length ? <GridMobileStatus text={t('dataGrid.noRecords')} /> : query.data.items.map((row) => (
         <article key={row.id} className="overflow-hidden rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] shadow-sm">
           {activeColumns.map((column) => (
             <div key={column.key} className={`grid min-w-0 grid-cols-[minmax(0,7rem)_minmax(0,1fr)] gap-3 border-b border-[var(--wms-app-border)] px-3 py-3 last:border-b-0 ${column.key === 'actions' ? 'items-center bg-[var(--wms-brand-soft)]' : 'items-start'}`}>
               <span className="text-[0.68rem] font-semibold uppercase tracking-wide text-slate-500">{column.label}</span>
-              <div className="min-w-0 break-words text-right text-sm [&_button]:min-h-11 [&_button]:min-w-11 [&_button]:touch-manipulation [&>div]:justify-end">{column.render(row)}</div>
+              <div className="min-w-0 break-words text-right text-sm [&_button]:min-h-11 [&_button]:min-w-11 [&_button]:touch-manipulation [&>div]:justify-end">{renderGridCell(column, row, enumLanguage)}</div>
             </div>
           ))}
         </article>
       ))}
     </div>
-    <div className="mt-4 flex flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between"><div className="flex items-center gap-2 text-slate-500"><span>{first}-{last} / {total} kayıt</span><AppDropdown value={String(pageSize)} onValueChange={(value) => { setPageSize(Number(value)); setPage(1); }} options={PAGE_SIZE_DROPDOWN_OPTIONS} ariaLabel="Sayfa başına kayıt" className="h-9 w-20" /></div><div className="flex items-center gap-2"><button type="button" aria-label="Önceki sayfa" disabled={page <= 1 || query.isFetching} onClick={() => setPage((value) => value - 1)} className="rounded-lg border p-2 disabled:opacity-40"><ChevronLeft className="size-4"/></button><span>Sayfa {page} / {totalPages}</span><button type="button" aria-label="Sonraki sayfa" disabled={page >= totalPages || query.isFetching} onClick={() => setPage((value) => value + 1)} className="rounded-lg border p-2 disabled:opacity-40"><ChevronRight className="size-4"/></button></div></div>
+    <div className="mt-4 flex flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between"><div className="flex items-center gap-2 text-slate-500"><span>{t('dataGrid.recordRange', { first, last, total })}</span><AppDropdown value={String(pageSize)} onValueChange={(value) => { setPageSize(Number(value)); setPage(1); }} options={PAGE_SIZE_DROPDOWN_OPTIONS} ariaLabel={t('dataGrid.rowsPerPage')} className="h-9 w-20" /></div><div className="flex items-center gap-2"><button type="button" aria-label={t('common.previous')} disabled={page <= 1 || query.isFetching} onClick={() => setPage((value) => value - 1)} className="rounded-lg border border-[var(--wms-app-border)] p-2 disabled:opacity-40"><ChevronLeft className="size-4"/></button><span>{t('dataGrid.pageOf', { page, totalPages })}</span><button type="button" aria-label={t('common.next')} disabled={page >= totalPages || query.isFetching} onClick={() => setPage((value) => value + 1)} className="rounded-lg border border-[var(--wms-app-border)] p-2 disabled:opacity-40"><ChevronRight className="size-4"/></button></div></div>
   </section>;
 }
 

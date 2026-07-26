@@ -7,6 +7,7 @@ import {
   type Ref,
 } from 'react';
 import { CalendarDays, Clock3 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 
 export interface AppInputProps extends ComponentPropsWithoutRef<'input'> {
@@ -50,6 +51,7 @@ export const AppDateInput = forwardRef<HTMLInputElement, AppDateInputProps>(func
   { type = 'date', className, ...props },
   forwardedRef,
 ): ReactElement {
+  const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const setRef = (node: HTMLInputElement | null): void => {
     inputRef.current = node;
@@ -73,7 +75,11 @@ export const AppDateInput = forwardRef<HTMLInputElement, AppDateInputProps>(func
         <button
           type="button"
           tabIndex={-1}
-          aria-label={type === 'date' ? 'Takvimi aç' : type === 'time' ? 'Saat seçiciyi aç' : 'Tarih ve saat seçiciyi aç'}
+          aria-label={type === 'date'
+            ? t('dateInput.openDate')
+            : type === 'time'
+              ? t('dateInput.openTime')
+              : t('dateInput.openDateTime')}
           className="app-input-shell__picker"
           onClick={openPicker}
         >

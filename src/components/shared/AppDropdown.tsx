@@ -11,7 +11,9 @@ import {
 import * as PopoverPrimitive from '@radix-ui/react-popover';
 import { Check, ChevronDown, Loader2, Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { localizeEnumOptionLabel } from '@/lib/enum-localization';
 import { cn } from '@/lib/utils';
+import { getWorkspacePortalRoot } from '@/lib/workspace-portal';
 
 export interface AppDropdownOption<TValue extends string = string> {
   value: TValue;
@@ -75,7 +77,7 @@ export function AppDropdown<TValue extends string = string>({
   contentClassName,
   testId,
 }: AppDropdownProps<TValue>): ReactElement {
-  const { t } = useTranslation('shared');
+  const { t, i18n } = useTranslation('shared');
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const listRef = useRef<HTMLDivElement>(null);
@@ -95,15 +97,27 @@ export function AppDropdown<TValue extends string = string>({
     if (remoteSearch) onSearchChange('');
   }, [onSearchChange, open, remoteSearch]);
 
+  const localizedOptions = useMemo(
+    () => options.map((option) => ({
+      ...option,
+      label: localizeEnumOptionLabel(
+        option.value,
+        option.label,
+        i18n.resolvedLanguage ?? i18n.language,
+      ),
+    })),
+    [i18n.language, i18n.resolvedLanguage, options],
+  );
+
   const visibleOptions = useMemo(() => {
-    if (remoteSearch || !search.trim()) return options;
+    if (remoteSearch || !search.trim()) return localizedOptions;
     const normalized = search.trim().toLocaleLowerCase('tr-TR');
-    return options.filter((option) =>
+    return localizedOptions.filter((option) =>
       `${option.label} ${option.value}`.toLocaleLowerCase('tr-TR').includes(normalized),
     );
-  }, [options, remoteSearch, search]);
+  }, [localizedOptions, remoteSearch, search]);
 
-  const selected = options.find((option) => option.value === value);
+  const selected = localizedOptions.find((option) => option.value === value);
 
   const fetchNextPage = useCallback((): void => {
     if (!hasNextPage || !onFetchNextPage || isFetchingNextPage) return;
@@ -153,20 +167,19 @@ export function AppDropdown<TValue extends string = string>({
         </button>
       </PopoverPrimitive.Trigger>
 
-      <PopoverPrimitive.Portal>
+      <PopoverPrimitive.Portal container={getWorkspacePortalRoot() ?? undefined}>
         <PopoverPrimitive.Content
           align="start"
           sideOffset={6}
           collisionPadding={12}
           className={cn(
-            'z-[2000] w-[var(--radix-popover-trigger-width)] overflow-hidden rounded-xl border border-slate-200 bg-white text-slate-900 shadow-2xl outline-none',
-            'dark:border-white/15 dark:bg-[#090914] dark:text-slate-100',
+            'wms-floating-surface z-[2000] w-[var(--radix-popover-trigger-width)] overflow-hidden rounded-xl outline-none',
             'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95',
             contentClassName,
           )}
         >
           {showSearch && (
-            <div className="flex items-center gap-2 border-b border-slate-200 px-3 dark:border-white/10">
+            <div className="flex items-center gap-2 border-b border-[var(--wms-app-border)] px-3">
               <Search className="size-4 shrink-0 text-slate-400" />
               <input
                 value={search}
@@ -210,8 +223,8 @@ export function AppDropdown<TValue extends string = string>({
                     }}
                     className={cn(
                       'flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm outline-none transition-colors',
-                      'hover:bg-slate-100 focus-visible:bg-slate-100 dark:hover:bg-white/10 dark:focus-visible:bg-white/10',
-                      active && 'bg-cyan-50 font-semibold text-cyan-800 dark:bg-cyan-400/15 dark:text-cyan-200',
+                      'hover:bg-[var(--wms-brand-soft)] focus-visible:bg-[var(--wms-brand-soft)]',
+                      active && 'bg-[var(--wms-brand-soft)] font-semibold text-[var(--wms-brand-primary)]',
                       option.disabled && 'cursor-not-allowed opacity-45',
                     )}
                   >

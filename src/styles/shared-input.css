@@ -152,6 +152,33 @@ input.input:is([type='date'], [type='datetime-local'], [type='time'])::-webkit-c
   pointer-events: none;
 }
 
+.wms-floating-surface {
+  isolation: isolate;
+  border: 1px solid var(--wms-app-border);
+  background: var(--wms-app-panel-strong);
+  color: var(--wms-app-text);
+  box-shadow:
+    0 24px 64px rgb(2 6 23 / 24%),
+    0 0 0 1px color-mix(in oklab, var(--wms-brand-primary) 8%, transparent);
+  backdrop-filter: none;
+}
+
+@media (max-width: 639px) {
+  .input,
+  [data-slot='input'] {
+    font-size: 1rem;
+  }
+
+  .app-input-shell {
+    max-width: 100%;
+  }
+
+  .app-date-input {
+    min-width: 0;
+    max-width: 100%;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .input,
   [data-slot='input'],

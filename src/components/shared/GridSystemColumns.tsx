@@ -1,5 +1,6 @@
 import type { GridColumn } from './AdvancedDataGrid';
 import { formatProjectDateTime } from '@/lib/project-format';
+import i18n from '@/lib/i18n';
 
 export interface AuditableGridRow {
   id: number;
@@ -10,7 +11,9 @@ export interface AuditableGridRow {
 }
 
 const date = (value?: string | null) => value ? formatProjectDateTime(value) : '-';
-const actor = (value?: number | null) => value ? `Kullanıcı #${value}` : 'Sistem';
+const actor = (value?: number | null) => value
+  ? i18n.t('dataGrid.userNumber', { number: value })
+  : i18n.t('dataGrid.systemActor');
 
 export function systemColumns<T extends AuditableGridRow>(): GridColumn<T>[] {
   return [
