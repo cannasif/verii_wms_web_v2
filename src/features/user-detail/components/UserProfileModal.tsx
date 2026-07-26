@@ -106,10 +106,10 @@ export function UserProfileModal({
           'wms-ops-profile-modal gap-0 overflow-hidden border border-slate-200/80 bg-white p-0 text-slate-900',
           'shadow-[0_28px_70px_rgba(15,23,42,0.14)] dark:border-white/[0.08] dark:bg-[#09090f] dark:text-white dark:shadow-[0_28px_90px_rgba(0,0,0,0.62)]',
           'grid w-[95vw] max-w-[95vw] grid-cols-1',
-          'max-h-[min(760px,92vh)] overflow-y-auto',
-          'sm:max-w-4xl sm:w-full',
+          'max-h-[calc(100%_-_1rem)] overflow-y-auto',
+          'sm:max-h-[calc(100%_-_2rem)] sm:max-w-4xl sm:w-full',
           'lg:!max-w-[1100px]',
-          'md:h-[min(760px,90vh)] md:max-h-[min(760px,90vh)] md:grid-cols-[320px_minmax(0,1fr)] md:overflow-hidden',
+          'md:h-[calc(100%_-_2rem)] md:max-h-[760px] md:grid-cols-[320px_minmax(0,1fr)] md:overflow-hidden',
           'lg:grid-cols-[380px_minmax(0,1fr)]',
         )}
         aria-describedby="user-profile-description"
