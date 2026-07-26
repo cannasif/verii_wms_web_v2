@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState, type FormEvent, type ReactElement } from 'react';
 import { CheckCircle2, Loader2, PackageCheck, ShieldAlert, Warehouse } from 'lucide-react';
 import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
+import { ResponsiveDialog } from '@/components/shared/ResponsiveDialog';
 import { formatProjectNumber } from '@/lib/project-format';
 import { warehouseInboundV2Api } from '../api/warehouse-inbound.api';
 import type {
@@ -147,8 +148,8 @@ export function WarehouseInboundLifecycleDialog({ action, detail, onClose, onCom
   };
 
   return (
-    <div className="fixed inset-0 z-[140] grid place-items-center bg-black/70 p-4">
-      <form onSubmit={(event) => void submit(event)} className="max-h-[92vh] w-full max-w-5xl overflow-auto rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-6 shadow-2xl">
+    <ResponsiveDialog onClose={onClose} title={content.title} description={`${detail.header.documentNo} · ${content.description}`} className="!max-w-5xl">
+      <form onSubmit={(event) => void submit(event)}>
         <header className="flex items-start gap-3">
           <span className={content.destructive ? 'rounded-xl bg-rose-500/15 p-2.5 text-rose-500' : 'rounded-xl bg-cyan-500/15 p-2.5 text-cyan-500'}>{content.icon}</span>
           <div>
@@ -187,13 +188,13 @@ export function WarehouseInboundLifecycleDialog({ action, detail, onClose, onCom
           <textarea autoFocus={action !== 'putaway'} rows={3} maxLength={1000} value={reason} onChange={(event) => setReason(event.target.value)} className="input h-auto py-3" placeholder="Operasyon notunu yazın..." />
         </label>
 
-        <footer className="mt-6 flex justify-end gap-2 border-t border-[var(--wms-app-border)] pt-4">
-          <button type="button" disabled={busy} onClick={onClose} className="rounded-xl border px-4 py-2 disabled:opacity-50">Vazgeç</button>
-          <button type="submit" disabled={busy || (action === 'putaway' && !putawayLines.length)} className={content.destructive ? 'inline-flex items-center gap-2 rounded-xl bg-rose-600 px-5 py-2 font-semibold text-white disabled:opacity-40' : 'inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-5 py-2 font-semibold text-white disabled:opacity-40'}>
+        <footer className="mt-6 flex flex-col-reverse gap-2 border-t border-[var(--wms-app-border)] pt-4 sm:flex-row sm:justify-end">
+          <button type="button" disabled={busy} onClick={onClose} className="min-h-11 rounded-xl border px-4 py-2 disabled:opacity-50">Vazgeç</button>
+          <button type="submit" disabled={busy || (action === 'putaway' && !putawayLines.length)} className={content.destructive ? 'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-rose-600 px-5 py-2 font-semibold text-white disabled:opacity-40' : 'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-cyan-600 px-5 py-2 font-semibold text-white disabled:opacity-40'}>
             {busy ? <Loader2 className="size-4 animate-spin" /> : content.icon}{content.submit}
           </button>
         </footer>
       </form>
-    </div>
+    </ResponsiveDialog>
   );
 }
