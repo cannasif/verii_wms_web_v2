@@ -21,6 +21,7 @@ import { useUserDetail } from '../hooks/useUserDetail';
 import { getFullProfileImageUrl } from '../utils/profile-image';
 import { cn } from '@/lib/utils';
 import { normalizeLanguage, setAppLanguage } from '@/lib/i18n';
+import { localizeLegacyUiText } from '@/lib/legacy-ui-localization';
 
 type SupportedLanguage = {
   code: string;
@@ -81,6 +82,7 @@ export function UserProfileModal({
   const currentLanguage =
     SUPPORTED_LANGUAGES.find((lang) => lang.code === normalizeLanguage(i18n.resolvedLanguage ?? i18n.language))
     ?? SUPPORTED_LANGUAGES[0];
+  const activeLanguage = currentLanguage.code;
   const languageOptions: AppDropdownOption[] = SUPPORTED_LANGUAGES.map((language) => ({
     value: language.code,
     label: `${language.flagEmoji} ${language.flagLabel} · ${language.name}`,
@@ -380,16 +382,16 @@ export function UserProfileModal({
                       )}
                     >
                       <span className="flex h-9 w-12 shrink-0 overflow-hidden border border-white/50 shadow-sm dark:border-white/10">
-                        {item.swatches.map((color) => (
-                          <span key={color} className="h-full flex-1" style={{ backgroundColor: color }} />
+                        {item.swatches.map((color, index) => (
+                          <span key={`${item.id}-${index}-${color}`} className="h-full flex-1" style={{ backgroundColor: color }} />
                         ))}
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-xs font-bold text-slate-900 sm:text-sm dark:text-white">
-                          {item.label}
+                          {localizeLegacyUiText(item.label, activeLanguage)}
                         </span>
                         <span className="mt-0.5 line-clamp-1 text-[10px] font-medium text-[var(--wms-app-text-muted)] sm:text-[11px]">
-                          {item.description}
+                          {localizeLegacyUiText(item.description, activeLanguage)}
                         </span>
                       </span>
                       <span

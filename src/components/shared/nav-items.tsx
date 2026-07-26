@@ -1,6 +1,8 @@
 import type { ReactElement } from 'react';
+import type { TFunction } from 'i18next';
 import type { MyPermissionsDto } from '@/features/access-control/types/access-control.types';
 import { hasPermission } from '@/features/access-control/utils/hasPermission';
+import { localizeLegacyUiText } from '@/lib/legacy-ui-localization';
 import { dashboardIcon, inventoryIcon, masterDataIcon, operationsIcon, systemIcon } from './sidebar/sidebar-icons';
 
 export interface NavItem {
@@ -11,6 +13,16 @@ export interface NavItem {
   icon?: ReactElement;
   children?: NavItem[];
   requiredPermission?: string;
+}
+
+export function resolveNavItemTitle(
+  t: TFunction,
+  language: string,
+  item: NavItem,
+): string {
+  const translated = t(item.title, { defaultValue: '' }).trim();
+  if (translated && translated !== item.title) return translated;
+  return localizeLegacyUiText(item.titleFallback ?? item.title, language);
 }
 
 export const WMS_NAV_ITEMS: NavItem[] = [

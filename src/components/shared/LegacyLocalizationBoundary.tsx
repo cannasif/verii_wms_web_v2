@@ -122,11 +122,15 @@ export function LegacyLocalizationBoundary({ children }: { children: ReactNode }
     };
     const observer = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
+        if (mutation.type === 'characterData') {
+          localizeTextNode(mutation.target as Text, translations, language);
+          continue;
+        }
         mutation.addedNodes.forEach((node) => walkTextNodes(node, translations, language));
       }
     });
 
-    observer.observe(root, { childList: true, subtree: true });
+    observer.observe(root, { childList: true, characterData: true, subtree: true });
     i18n.store.on('added', rebuild);
 
     return () => {

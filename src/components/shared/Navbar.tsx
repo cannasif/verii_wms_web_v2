@@ -15,7 +15,7 @@ import { NavbarGradientIcon, NavbarIconGradientDefs } from '@/components/shared/
 import { navbarIconButtonClassName } from '@/components/shared/navbar-gradient-icon.styles';
 import { cn } from '@/lib/utils';
 import { useVoiceSearch } from '@/hooks/useVoiceSearch';
-import type { NavItem } from './nav-items';
+import { resolveNavItemTitle, type NavItem } from './nav-items';
 
 const UserProfileModal = lazy(() =>
   import('@/features/user-detail').then((module) => ({
@@ -99,7 +99,7 @@ const searchInputClassName = (isFocused: boolean): string =>
   );
 
 export function Navbar({ navItems = [] }: NavbarProps): ReactElement {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const searchInputRef = useRef<HTMLInputElement>(null);
   const { user, branch } = useAuthStore();
@@ -110,8 +110,8 @@ export function Navbar({ navItems = [] }: NavbarProps): ReactElement {
   const [isSearchFocus, setIsSearchFocus] = useState(false);
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const resolveTitle = useMemo(
-    () => (item: NavItem): string => t(item.title, { defaultValue: item.titleFallback ?? item.title }),
-    [t],
+    () => (item: NavItem): string => resolveNavItemTitle(t, i18n.resolvedLanguage ?? i18n.language, item),
+    [i18n.language, i18n.resolvedLanguage, t],
   );
   const resolveAlias = useMemo(
     () => (alias: string): string => t(alias, { defaultValue: alias }),

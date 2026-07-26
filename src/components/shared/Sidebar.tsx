@@ -7,7 +7,7 @@ import { useUIStore } from '@/stores/ui-store';
 import { cn } from '@/lib/utils';
 import v3riiWmsLogo from '@/assets/v3riiwms.png';
 import v3logo from '@/assets/v3logo.png';
-import type { NavItem } from './nav-items';
+import { resolveNavItemTitle, type NavItem } from './nav-items';
 import { SidebarNavItem } from './sidebar/SidebarNavItem';
 import {
   buildNavIndex,
@@ -26,13 +26,13 @@ const DESKTOP_SIDEBAR_QUERY = '(min-width: 1024px)';
 
 export function Sidebar({ items }: SidebarProps): ReactElement {
   const { isSidebarOpen, searchQuery, setSidebarOpen } = useUIStore();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const location = useLocation();
   const [expandedItemKeys, setExpandedItemKeys] = useState<string[]>([]);
   const collapsedByUserRef = useRef<Set<string>>(new Set());
   const resolveTitle = useCallback(
-    (item: NavItem): string => t(item.title, { defaultValue: item.titleFallback ?? item.title }),
-    [t],
+    (item: NavItem): string => resolveNavItemTitle(t, i18n.resolvedLanguage ?? i18n.language, item),
+    [i18n.language, i18n.resolvedLanguage, t],
   );
 
   useEffect(() => {

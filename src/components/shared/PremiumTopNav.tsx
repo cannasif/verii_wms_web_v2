@@ -12,7 +12,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { NavItem } from './nav-items';
+import { resolveNavItemTitle, type NavItem } from './nav-items';
 
 interface PremiumTopNavProps {
   items: NavItem[];
@@ -52,8 +52,8 @@ export function PremiumTopNav({ items }: PremiumTopNavProps): ReactElement {
   const navRef = useRef<HTMLElement>(null);
 
   const resolveTitle = useCallback(
-    (item: NavItem): string => t(item.title, { defaultValue: item.titleFallback ?? item.title }),
-    [t],
+    (item: NavItem): string => resolveNavItemTitle(t, i18n.resolvedLanguage ?? i18n.language, item),
+    [i18n.language, i18n.resolvedLanguage, t],
   );
 
   const activeIndex = useMemo(
