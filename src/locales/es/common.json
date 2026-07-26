@@ -237,6 +237,15 @@
       "startAnimation": "Iniciar animación",
       "stopAnimation": "Detener animación"
     },
+    "sessionRecovery": {
+      "title": "La conexión de la sesión se interrumpió temporalmente",
+      "description": "Su sesión segura no se eliminó. Podrá continuar cuando se restablezca la conexión con la API.",
+      "retry": "Reintentar conexión",
+      "retrying": "Conectando...",
+      "signOut": "Cerrar sesión",
+      "connectionUnavailable": "El servicio de sesión no está disponible en este momento.",
+      "safetyNote": "Solo se le redirige al inicio de sesión cuando la sesión es definitivamente inválida o está revocada."
+    },
     "forgotPassword": {
       "title": "Olvidé mi Contraseña",
       "description": "Ingrese su correo para recibir el enlace de restablecimiento.",

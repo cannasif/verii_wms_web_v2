@@ -1,7 +1,10 @@
 import axios from 'axios';
 import { getLanguageForHttpHeader } from './i18n';
 import { useAuthStore } from '@/stores/auth-store';
-import { withSessionRefreshLock } from '@/lib/session-refresh-lock';
+import {
+  isDefinitiveSessionRefreshError,
+  requestSessionAccessToken,
+} from '@/lib/auth-session';
 import { getUserFromToken } from '@/utils/jwt';
 import { isRequestCanceled } from './request-utils';
 import {
@@ -219,15 +222,7 @@ let refreshPromise: Promise<string> | null = null;
 
 async function refreshAccessToken(): Promise<string> {
   if (!refreshPromise) {
-    refreshPromise = withSessionRefreshLock(async () => {
-      const rawResponse = await axios.post(
-        `${getApiBaseUrl()}/api/auth/refresh`,
-        {},
-        { withCredentials: true, headers: { 'Content-Type': 'application/json' } },
-      );
-      const response = rawResponse as { data?: unknown };
-      const envelope = normalizeApiEnvelope(response.data) as { data?: { accessToken?: string } };
-      const token = envelope.data?.accessToken;
+    refreshPromise = requestSessionAccessToken().then((token) => {
       const user = token ? getUserFromToken(token) : null;
       if (!token || !user) throw new Error('Session refresh response is invalid.');
       const state = useAuthStore.getState();
@@ -268,11 +263,20 @@ api.interceptors.response.use(
       try {
         await refreshAccessToken();
         return api.request(error.config);
-      } catch {
-        useAuthStore.getState().logout(false);
-        if (!isCurrentAppPath('/auth/login?sessionExpired=true')) {
-          window.location.href = resolveAppPath('/auth/login?sessionExpired=true');
+      } catch (refreshError) {
+        if (isDefinitiveSessionRefreshError(refreshError)) {
+          useAuthStore.getState().logout(false);
+          if (!isCurrentAppPath('/auth/login?sessionExpired=true')) {
+            window.location.href = resolveAppPath('/auth/login?sessionExpired=true');
+          }
+        } else {
+          useAuthStore.getState().markSessionRecoveryRequired(
+            refreshError instanceof Error
+              ? refreshError.message
+              : 'Oturum servisine geçici olarak ulaşılamıyor.',
+          );
         }
+        return Promise.reject(refreshError);
       }
     }
 

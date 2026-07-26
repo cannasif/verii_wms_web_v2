@@ -37,11 +37,11 @@ export const getUserFromToken = (token: string): { id: number; email: string; na
   };
 };
 
-export const isTokenValid = (token: string): boolean => {
+export const isTokenValid = (token: string, minimumValiditySeconds = 0): boolean => {
   const payload = decodeJwt(token);
   if (!payload || !payload.exp) return false;
   
   const currentTime = Math.floor(Date.now() / 1000);
-  return payload.exp > currentTime;
+  return payload.exp > currentTime + minimumValiditySeconds;
 };
 

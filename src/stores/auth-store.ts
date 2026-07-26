@@ -1,10 +1,16 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { getApiBaseUrl } from '@/lib/api-config';
+import {
+  clearSessionAccessToken,
+  isDefinitiveSessionRefreshError,
+  readSessionAccessToken,
+  requestSessionAccessToken,
+  writeSessionAccessToken,
+} from '@/lib/auth-session';
 import { getUserFromToken, isTokenValid } from '@/utils/jwt';
 import { usePermissionsStore } from '@/stores/permissions-store';
 import { useAppShellStore } from '@/stores/app-shell-store';
-import { withSessionRefreshLock } from '@/lib/session-refresh-lock';
 
 interface User {
   id: number;
@@ -18,18 +24,21 @@ interface Branch {
   code?: string;
 }
 
-interface AuthTokenEnvelope {
-  success?: boolean;
-  data?: { accessToken?: string };
-  Success?: boolean;
-  Data?: { AccessToken?: string; accessToken?: string };
-}
+export type AuthSessionStatus =
+  | 'idle'
+  | 'restoring'
+  | 'authenticated'
+  | 'recovery-required'
+  | 'anonymous';
 
 interface AuthState {
   user: User | null;
   token: string | null;
   branch: Branch | null;
+  sessionStatus: AuthSessionStatus;
+  sessionError: string | null;
   setAuth: (user: User, token: string, branch: Branch | null) => void;
+  markSessionRecoveryRequired: (message?: string) => void;
   logout: (revoke?: boolean) => void;
   isAuthenticated: () => boolean;
   init: () => Promise<void>;
@@ -40,20 +49,32 @@ function clearClientState(userId: number | null): void {
   useAppShellStore.getState().clearAppShellData();
 }
 
-function extractAccessToken(payload: AuthTokenEnvelope): string | null {
-  return payload.data?.accessToken
-    ?? payload.Data?.accessToken
-    ?? payload.Data?.AccessToken
-    ?? null;
-}
-
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       user: null,
       token: null,
       branch: null,
-      setAuth: (user, token, branch) => set({ user, token, branch }),
+      sessionStatus: 'idle',
+      sessionError: null,
+      setAuth: (user, token, branch) => {
+        writeSessionAccessToken(token);
+        set({
+          user,
+          token,
+          branch,
+          sessionStatus: 'authenticated',
+          sessionError: null,
+        });
+      },
+      markSessionRecoveryRequired: (message = 'Oturum servisine geçici olarak ulaşılamıyor.') => {
+        clearSessionAccessToken();
+        set({
+          token: null,
+          sessionStatus: 'recovery-required',
+          sessionError: message,
+        });
+      },
       logout: (revoke = true) => {
         const currentUserId = get().user?.id ?? null;
         if (revoke) {
@@ -64,7 +85,14 @@ export const useAuthStore = create<AuthState>()(
           }).catch(() => undefined);
         }
         clearClientState(currentUserId);
-        set({ user: null, token: null, branch: null });
+        clearSessionAccessToken();
+        set({
+          user: null,
+          token: null,
+          branch: null,
+          sessionStatus: 'anonymous',
+          sessionError: null,
+        });
       },
       isAuthenticated: () => {
         const state = get();
@@ -75,29 +103,65 @@ export const useAuthStore = create<AuthState>()(
         return true;
       },
       init: async () => {
-        try {
-          const token = await withSessionRefreshLock(async () => {
-            const response = await fetch(`${getApiBaseUrl()}/api/auth/refresh`, {
-              method: 'POST',
-              credentials: 'include',
-              headers: { 'Content-Type': 'application/json' },
-            });
-            if (!response.ok) throw new Error('Session refresh failed.');
-            return extractAccessToken(await response.json() as AuthTokenEnvelope);
+        const restoredToken = readSessionAccessToken();
+        const restoredUser = restoredToken && isTokenValid(restoredToken, 30)
+          ? getUserFromToken(restoredToken)
+          : null;
+
+        if (restoredToken && restoredUser) {
+          set({
+            user: restoredUser,
+            token: restoredToken,
+            sessionStatus: 'authenticated',
+            sessionError: null,
           });
-          const user = token ? getUserFromToken(token) : null;
-          if (!token || !user) throw new Error('Session response is invalid.');
-          set({ user, token });
-        } catch {
-          const currentUserId = get().user?.id ?? null;
-          clearClientState(currentUserId);
-          set({ user: null, token: null, branch: null });
+          return;
+        }
+
+        clearSessionAccessToken();
+        set({ token: null, sessionStatus: 'restoring', sessionError: null });
+
+        try {
+          const token = await requestSessionAccessToken();
+          const user = getUserFromToken(token);
+          if (!user) {
+            throw new Error('Oturum yanıtındaki kullanıcı bilgisi geçersiz.');
+          }
+
+          writeSessionAccessToken(token);
+          set({
+            user,
+            token,
+            sessionStatus: 'authenticated',
+            sessionError: null,
+          });
+        } catch (error) {
+          if (isDefinitiveSessionRefreshError(error)) {
+            const currentUserId = get().user?.id ?? null;
+            clearClientState(currentUserId);
+            set({
+              user: null,
+              token: null,
+              branch: null,
+              sessionStatus: 'anonymous',
+              sessionError: null,
+            });
+            return;
+          }
+
+          set({
+            token: null,
+            sessionStatus: 'recovery-required',
+            sessionError: error instanceof Error
+              ? error.message
+              : 'Oturum servisine geçici olarak ulaşılamıyor.',
+          });
         }
       },
     }),
     {
       name: 'auth-storage',
-      // Access token yalnızca bellekte tutulur. Kalıcı depoda kullanıcı/şube tercihi bulunur.
+      // The token is tab-scoped in sessionStorage; only user and branch preferences persist here.
       partialize: (state) => ({ user: state.user, branch: state.branch }),
     },
   ),

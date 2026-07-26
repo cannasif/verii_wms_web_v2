@@ -28,6 +28,7 @@ import Mail01Icon from '@hugeicons/core-free-icons/Mail01Icon';
 import TelegramIcon from '@hugeicons/core-free-icons/TelegramIcon';
 import TelephoneIcon from '@hugeicons/core-free-icons/TelephoneIcon';
 import WhatsappIcon from '@hugeicons/core-free-icons/WhatsappIcon';
+import { SessionRecoveryPage } from './SessionRecoveryPage';
 
 export function LoginPage(): React.JSX.Element {
   const { t, i18n } = useTranslation('common');
@@ -38,6 +39,7 @@ export function LoginPage(): React.JSX.Element {
   const token = useAuthStore((state) => state.token);
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
+  const sessionStatus = useAuthStore((state) => state.sessionStatus);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [capsLockActive, setCapsLockActive] = useState(false);
   const [isBgAnimationPaused, setIsBgAnimationPaused] = useState(true);
@@ -85,6 +87,10 @@ export function LoginPage(): React.JSX.Element {
 
     navigate('/', { replace: true });
   }, [token, user, navigate]);
+
+  if (sessionStatus === 'restoring' || sessionStatus === 'recovery-required') {
+    return <SessionRecoveryPage />;
+  }
 
   const onSubmit = (data: LoginRequest): void => {
     form.clearErrors('root');

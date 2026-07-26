@@ -249,6 +249,15 @@
       "startAnimation": "Animation starten",
       "stopAnimation": "Animation stoppen"
     },
+    "sessionRecovery": {
+      "title": "Die Sitzungsverbindung wurde vorübergehend unterbrochen",
+      "description": "Ihre sichere Sitzung wurde nicht gelöscht. Sobald die API-Verbindung wiederhergestellt ist, können Sie fortfahren.",
+      "retry": "Verbindung erneut versuchen",
+      "retrying": "Verbindung wird hergestellt...",
+      "signOut": "Abmelden",
+      "connectionUnavailable": "Der Sitzungsdienst ist derzeit nicht erreichbar.",
+      "safetyNote": "Sie werden nur bei einer eindeutig ungültigen oder widerrufenen Sitzung zur Anmeldung weitergeleitet."
+    },
     "forgotPassword": {
       "title": "Passwort vergessen",
       "description": "Geben Sie Ihre E-Mail-Adresse ein, um einen Reset-Link zu erhalten.",

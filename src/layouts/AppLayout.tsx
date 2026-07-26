@@ -14,6 +14,7 @@ import { projectSettingsApi } from '@/features/project-settings/project-settings
 import { useProjectSettingsStore } from '@/stores/project-settings-store';
 import { useMyPermissionsQuery } from '@/features/access-control/hooks/useMyPermissionsQuery';
 import { canAccessPath } from '@/features/access-control/utils/hasPermission';
+import { SessionRecoveryPage } from '@/features/auth/components/SessionRecoveryPage';
 
 export function AppLayout() {
   const { t } = useTranslation();
@@ -21,6 +22,7 @@ export function AppLayout() {
   const mainRef = useRef<HTMLElement>(null);
   const { skin } = useTheme();
   const authenticated = useAuthStore((state) => state.isAuthenticated());
+  const sessionStatus = useAuthStore((state) => state.sessionStatus);
   const setProjectSettings = useProjectSettingsStore((state) => state.setSettings);
   const permissionQuery = useMyPermissionsQuery();
   const isPremium = skin === 'premium';
@@ -37,6 +39,10 @@ export function AppLayout() {
     if (!authenticated) return;
     projectSettingsApi.current().then(setProjectSettings).catch(() => undefined);
   }, [authenticated, setProjectSettings]);
+
+  if (sessionStatus === 'restoring' || sessionStatus === 'recovery-required') {
+    return <SessionRecoveryPage />;
+  }
 
   if (!authenticated) {
     return <Navigate to="/auth/login" replace state={{ from: location.pathname }} />;

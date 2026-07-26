@@ -259,6 +259,15 @@
       "stopAnimation": "Animasyonu durdur",
       "comingSoon": "Çok yakında!"
     },
+    "sessionRecovery": {
+      "title": "Oturum bağlantısı geçici olarak kesildi",
+      "description": "Güvenli oturumunuz silinmedi. API bağlantısı yeniden kurulduğunda kaldığınız yerden devam edebilirsiniz.",
+      "retry": "Bağlantıyı Yeniden Dene",
+      "retrying": "Bağlanıyor...",
+      "signOut": "Oturumu Kapat",
+      "connectionUnavailable": "Oturum servisine şu anda bağlanılamıyor.",
+      "safetyNote": "Yalnızca kesin olarak geçersiz veya iptal edilmiş oturumlarda giriş ekranına yönlendirilirsiniz."
+    },
     "forgotPassword": {
       "title": "Şifremi Unuttum",
       "description": "Şifre sıfırlama bağlantısı için e-posta adresinizi girin.",

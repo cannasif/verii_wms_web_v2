@@ -237,6 +237,15 @@
       "startAnimation": "بدء الحركة",
       "stopAnimation": "إيقاف الحركة"
     },
+    "sessionRecovery": {
+      "title": "انقطع اتصال الجلسة مؤقتًا",
+      "description": "لم يتم حذف جلستك الآمنة. يمكنك المتابعة عند استعادة الاتصال بواجهة API.",
+      "retry": "إعادة محاولة الاتصال",
+      "retrying": "جارٍ الاتصال...",
+      "signOut": "تسجيل الخروج",
+      "connectionUnavailable": "خدمة الجلسة غير متاحة حاليًا.",
+      "safetyNote": "تتم إعادة توجيهك لتسجيل الدخول فقط عندما تكون الجلسة غير صالحة أو ملغاة بشكل مؤكد."
+    },
     "forgotPassword": {
       "title": "Forgot Password",
       "description": "Enter your email address to receive a reset link.",

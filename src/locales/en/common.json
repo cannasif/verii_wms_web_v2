@@ -259,6 +259,15 @@
       "stopAnimation": "Stop animation",
       "comingSoon": "Coming soon!"
     },
+    "sessionRecovery": {
+      "title": "The session connection was temporarily interrupted",
+      "description": "Your secure session was not deleted. You can continue where you left off when the API connection is restored.",
+      "retry": "Retry Connection",
+      "retrying": "Connecting...",
+      "signOut": "Sign Out",
+      "connectionUnavailable": "The session service is currently unavailable.",
+      "safetyNote": "You are redirected to sign in only when the session is definitively invalid or revoked."
+    },
     "forgotPassword": {
       "title": "Forgot Password",
       "description": "Enter your email address to receive a reset link.",

@@ -237,6 +237,15 @@
       "startAnimation": "Démarrer l'animation",
       "stopAnimation": "Arrêter l'animation"
     },
+    "sessionRecovery": {
+      "title": "La connexion de session a été temporairement interrompue",
+      "description": "Votre session sécurisée n'a pas été supprimée. Vous pourrez reprendre lorsque la connexion API sera rétablie.",
+      "retry": "Réessayer la connexion",
+      "retrying": "Connexion...",
+      "signOut": "Se déconnecter",
+      "connectionUnavailable": "Le service de session est actuellement indisponible.",
+      "safetyNote": "Vous êtes redirigé vers la connexion uniquement si la session est définitivement invalide ou révoquée."
+    },
     "forgotPassword": {
       "title": "Mot de passe oublié",
       "description": "Entrez votre adresse e-mail pour recevoir un lien de réinitialisation.",
