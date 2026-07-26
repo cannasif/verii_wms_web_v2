@@ -137,14 +137,23 @@ export function PackingDefinitionsPage() {
     ...systemColumns<SpecificationRow>(),
     {
       key: "packagingMaterialCode",
-      label: "Ambalaj",
-      render: (r) => `${r.packagingMaterialCode} · ${r.packagingMaterialName}`,
+      label: "Ambalaj Kodu",
+      render: (r) => r.packagingMaterialCode,
+    },
+    {
+      key: "packagingMaterialName",
+      label: "Ambalaj Adı",
+      render: (r) => r.packagingMaterialName,
     },
     {
       key: "stockCode",
-      label: "Stok",
-      render: (r) =>
-        r.stockCode ? `${r.stockCode} · ${r.stockName ?? ""}` : "Tümü",
+      label: "Stok Kodu",
+      render: (r) => r.stockCode ?? "Tümü",
+    },
+    {
+      key: "stockName",
+      label: "Stok Adı",
+      render: (r) => r.stockName ?? "Tümü",
     },
     {
       key: "stockGroupCode",
@@ -153,9 +162,13 @@ export function PackingDefinitionsPage() {
     },
     {
       key: "customerCode",
-      label: "Müşteri",
-      render: (r) =>
-        r.customerCode ? `${r.customerCode} · ${r.customerName ?? ""}` : "Tümü",
+      label: "Müşteri Kodu",
+      render: (r) => r.customerCode ?? "Tümü",
+    },
+    {
+      key: "customerName",
+      label: "Müşteri Adı",
+      render: (r) => r.customerName ?? "Tümü",
     },
     {
       key: "unitsPerHandlingUnit",
