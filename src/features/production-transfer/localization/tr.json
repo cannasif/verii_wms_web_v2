@@ -1,0 +1,35 @@
+{
+  "eyebrow": "Depo ve Üretim",
+  "title": "Üretime Transfer Süreç Merkezi",
+  "description": "Hammadde besleme, yarı mamul taşıma ve mamul çıkışını üretim bağlantıları, görev, rezervasyon, seri/lot ve tam izlenebilirlikle yönetin.",
+  "cards": {
+    "create": { "title": "Üretim Transferi Oluştur", "text": "Üretim emrine bağlı veya manuel ihtiyaca göre besleme, proses arası ya da mamul çıkış emri açın." },
+    "list": { "title": "Transfer Kayıtları", "text": "Planlanan, rezerve edilen, toplanan, sevk edilen ve üretim alanına yerleşen miktarları izleyin." },
+    "settings": { "title": "Süreç Ayarları", "text": "Malzeme uygunluğu, eksik stok, kullanıcı ataması, raf ve tolerans kurallarını yönetin." }
+  },
+  "policy": {
+    "loading": "Üretim transfer ayarları yükleniyor…",
+    "saved": "Üretim transfer politikası kaydedildi.",
+    "saveFailed": "Ayarlar kaydedilemedi.",
+    "saving": "Kaydediliyor…",
+    "save": "Ayarları Kaydet",
+    "eyebrow": "Üretime Transfer",
+    "title": "Üretim Besleme Politikası",
+    "description": "Üretim emri, malzeme uygunluğu, görev, raf ve tolerans kurallarını merkezi yönetin.",
+    "sections": { "order": "Üretim emri ve malzeme uygunluğu", "execution": "Fiziksel yürütme ve tolerans" },
+    "fields": {
+      "requireProductionOrderReference": "Üretim emri referansı zorunlu",
+      "allowManualTransfer": "Manuel transfer açılabilir",
+      "allowAutomaticGeneration": "Üretim otomatik transfer üretebilir",
+      "checkMaterialAvailability": "Malzeme uygunluğunu kontrol et",
+      "blockOnShortage": "Eksik stokta bloke et",
+      "requireTaskAssignment": "Kullanıcı ataması zorunlu",
+      "requireSourceProductionLocation": "Kaynak raf zorunlu",
+      "requireTargetProductionLocation": "Üretim besleme/hedef rafı zorunlu",
+      "allowPartialSupply": "Kısmi beslemeye izin ver",
+      "allowOverIssue": "Fazla sarfa izin ver",
+      "requireApproval": "Onay zorunlu",
+      "overIssueTolerancePercent": "Fazla sarf toleransı (%)"
+    }
+  }
+}

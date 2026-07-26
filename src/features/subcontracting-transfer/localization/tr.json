@@ -1,0 +1,37 @@
+{
+  "eyebrow": "Depo ve Fason Operasyon",
+  "title": "Fason Transfer Süreç Merkezi",
+  "description": "Fasona çıkış, fasondan dönüş ve tedarikçiler arası hareketleri sipariş bağlantısı, görev, seri/lot, kalite ve tam izlenebilirlikle yönetin.",
+  "cards": {
+    "create": { "title": "Fason Transferi Oluştur", "text": "Fasona çıkış, fasondan dönüş veya tedarikçiler arası transfer taslağı oluşturun." },
+    "list": { "title": "Fason Kayıtları", "text": "Tedarikçideki stok, beklenen dönüş, sevk, kabul ve yerleştirme ilerlemesini izleyin." },
+    "settings": { "title": "Süreç Ayarları", "text": "Sipariş, çıkış-dönüş bağı, kalite, kısmi işlem ve tolerans kurallarını yönetin." }
+  },
+  "policy": {
+    "loading": "Fason transfer ayarları yükleniyor…",
+    "saved": "Fason transfer politikası kaydedildi.",
+    "saveFailed": "Ayarlar kaydedilemedi.",
+    "saving": "Kaydediliyor…",
+    "save": "Ayarları Kaydet",
+    "eyebrow": "Fason İşlemleri",
+    "title": "Fason Transfer Politikası",
+    "description": "Fasona çıkış, fasondan dönüş ve fasoncudan fasoncuya akışların belge, görev, kalite ve tolerans kurallarını yönetin.",
+    "sections": { "document": "Belge ve zincir kuralları", "execution": "Fiziksel yürütme, kalite ve tolerans" },
+    "fields": {
+      "requireSupplier": "Tedarikçi zorunlu",
+      "requireSubcontractOrderForReceipt": "Dönüşte fason siparişi zorunlu",
+      "requireIssueBeforeReceipt": "Dönüşten önce çıkış zorunlu",
+      "allowOrderlessIssue": "Siparişsiz fasona çıkış",
+      "allowOrderlessReceipt": "Siparişsiz fasondan dönüş",
+      "allowSupplierToSupplier": "Fasoncudan fasoncuya transfer",
+      "allowPartialIssue": "Kısmi çıkışa izin ver",
+      "allowPartialReceipt": "Kısmi dönüşe izin ver",
+      "requireQualityOnReceipt": "Dönüşte kalite kontrolü",
+      "requireTaskAssignment": "Kullanıcı ataması zorunlu",
+      "requireApproval": "Onay zorunlu",
+      "allowOverReceipt": "Fazla dönüşe izin ver",
+      "overReceiptTolerancePercent": "Fazla dönüş toleransı (%)",
+      "defaultLeadTimeDays": "Varsayılan termin (gün)"
+    }
+  }
+}

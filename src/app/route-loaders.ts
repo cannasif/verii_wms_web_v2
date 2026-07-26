@@ -44,6 +44,8 @@ export const loadWarehouseTransferDraftPage = () => import('@/features/warehouse
 export const loadWarehouseTransferListPage = () => import('@/features/warehouse-transfer-v2/components/WarehouseTransferListPage');
 export const loadWarehouseTransferPolicyPage = () => import('@/features/warehouse-transfer-v2/components/WarehouseTransferPolicyPage');
 export const loadWarehouseTransferOperationPage = () => import('@/features/warehouse-transfer-v2/WarehouseTransferOperationPage');
+export const loadProductionTransferPages = () => import('@/features/production-transfer/ProductionTransferPages');
+export const loadSubcontractingTransferPages = () => import('@/features/subcontracting-transfer/SubcontractingTransferPages');
 
 export const loadShippingHubPage = () => import('@/features/shipping-v2/ShippingHubPage');
 export const loadShippingCreatePage = () => import('@/features/shipping-v2/ShippingCreatePage');
@@ -102,6 +104,8 @@ const routePreloaders: Array<[prefix: string, load: () => Promise<unknown>]> = [
   ['/warehouse/transfers/list', loadWarehouseTransferListPage],
   ['/warehouse/transfers/new', loadWarehouseTransferDraftPage],
   ['/warehouse/transfers', loadWarehouseTransferHubPage],
+  ['/warehouse/production-transfers', loadProductionTransferPages],
+  ['/warehouse/subcontracting-transfers', loadSubcontractingTransferPages],
   ['/warehouse/shipments/settings', loadShippingPolicyPage],
   ['/warehouse/shipments/list', loadShippingListPage],
   ['/warehouse/shipments/new', loadShippingCreatePage],

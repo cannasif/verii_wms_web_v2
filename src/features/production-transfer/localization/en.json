@@ -1,0 +1,35 @@
+{
+  "eyebrow": "Warehouse and Production",
+  "title": "Production Transfer Process Center",
+  "description": "Manage material supply, WIP moves and output moves with production links, assignments, reservations, serial/lot tracking and traceability.",
+  "cards": {
+    "create": { "title": "Create Production Transfer", "text": "Create material supply, inter-operation or output tasks from a production order or a manual requirement." },
+    "list": { "title": "Transfer Records", "text": "Track planned, reserved, picked, dispatched and staged quantities." },
+    "settings": { "title": "Process Settings", "text": "Manage availability, shortage, assignment, location and tolerance rules." }
+  },
+  "policy": {
+    "loading": "Loading production transfer settings…",
+    "saved": "Production transfer policy saved.",
+    "saveFailed": "Settings could not be saved.",
+    "saving": "Saving…",
+    "save": "Save Settings",
+    "eyebrow": "Production Transfer",
+    "title": "Production Supply Policy",
+    "description": "Centrally manage production order, material availability, assignment, location and tolerance rules.",
+    "sections": { "order": "Production order and material availability", "execution": "Physical execution and tolerance" },
+    "fields": {
+      "requireProductionOrderReference": "Require production order reference",
+      "allowManualTransfer": "Allow manual transfers",
+      "allowAutomaticGeneration": "Allow production to auto-generate transfers",
+      "checkMaterialAvailability": "Check material availability",
+      "blockOnShortage": "Block on shortage",
+      "requireTaskAssignment": "Require operator assignment",
+      "requireSourceProductionLocation": "Require source location",
+      "requireTargetProductionLocation": "Require production supply/target location",
+      "allowPartialSupply": "Allow partial supply",
+      "allowOverIssue": "Allow over-issue",
+      "requireApproval": "Require approval",
+      "overIssueTolerancePercent": "Over-issue tolerance (%)"
+    }
+  }
+}

@@ -10,6 +10,7 @@ import {
   loadGoodsReceiptLabelsPage, loadGoodsReceiptListPage, loadGoodsReceiptManualPage, loadGoodsReceiptPolicyPage,
   loadHangfirePage, loadIncomingInvoiceArchivePage, loadLocationDefinitionsPage, loadPermissionGroupsPage, loadPermissionsPage, loadProfilePage,
   loadProjectSettingsPage, loadQualityInspectionsPage, loadQualityRulesPage, loadQualitySettingsPage,
+  loadProductionTransferPages, loadSubcontractingTransferPages,
   loadSerialNumberRulesPage, loadShippingCreatePage, loadShippingHubPage, loadShippingListPage,
   loadShippingOperationPage, loadShippingPolicyPage, loadSmtpSettingsPage, loadSteelReceiptHubPage,
   loadSteelReceiptImportPage, loadSteelReceiptInspectionPage, loadSteelReceiptOperationsPage,
@@ -76,6 +77,16 @@ const WarehouseTransferHubPage = lazy(() => loadWarehouseTransferHubPage().then(
 const WarehouseTransferListPage = lazy(() => loadWarehouseTransferListPage().then((m) => ({ default: m.WarehouseTransferListPage })));
 const WarehouseTransferPolicyPage = lazy(() => loadWarehouseTransferPolicyPage().then((m) => ({ default: m.WarehouseTransferPolicyPage })));
 const WarehouseTransferOperationPage = lazy(() => loadWarehouseTransferOperationPage().then((m) => ({ default: m.WarehouseTransferOperationPage })));
+const ProductionTransferHubPage = lazy(() => loadProductionTransferPages().then((m) => ({ default: m.ProductionTransferHubPage })));
+const ProductionTransferDraftPage = lazy(() => loadProductionTransferPages().then((m) => ({ default: m.ProductionTransferDraftPage })));
+const ProductionTransferListPage = lazy(() => loadProductionTransferPages().then((m) => ({ default: m.ProductionTransferListPage })));
+const ProductionTransferPolicyPage = lazy(() => loadProductionTransferPages().then((m) => ({ default: m.ProductionTransferPolicyPage })));
+const ProductionTransferOperationPage = lazy(() => loadProductionTransferPages().then((m) => ({ default: m.ProductionTransferOperationPage })));
+const SubcontractingTransferHubPage = lazy(() => loadSubcontractingTransferPages().then((m) => ({ default: m.SubcontractingTransferHubPage })));
+const SubcontractingTransferDraftPage = lazy(() => loadSubcontractingTransferPages().then((m) => ({ default: m.SubcontractingTransferDraftPage })));
+const SubcontractingTransferListPage = lazy(() => loadSubcontractingTransferPages().then((m) => ({ default: m.SubcontractingTransferListPage })));
+const SubcontractingTransferPolicyPage = lazy(() => loadSubcontractingTransferPages().then((m) => ({ default: m.SubcontractingTransferPolicyPage })));
+const SubcontractingTransferOperationPage = lazy(() => loadSubcontractingTransferPages().then((m) => ({ default: m.SubcontractingTransferOperationPage })));
 const ShippingCreatePage = lazy(() => loadShippingCreatePage().then((m) => ({ default: m.ShippingCreatePage })));
 const ShippingHubPage = lazy(() => loadShippingHubPage().then((m) => ({ default: m.ShippingHubPage })));
 const ShippingListPage = lazy(() => loadShippingListPage().then((m) => ({ default: m.ShippingListPage })));
@@ -167,6 +178,16 @@ export function App(): ReactElement {
           <Route path="warehouse/transfers/list" element={<WarehouseTransferListPage />} />
           <Route path="warehouse/transfers/:id/operations" element={<WarehouseTransferOperationPage />} />
           <Route path="warehouse/transfers/settings" element={<WarehouseTransferPolicyPage />} />
+          <Route path="warehouse/production-transfers" element={<ProductionTransferHubPage />} />
+          <Route path="warehouse/production-transfers/new" element={<ProductionTransferDraftPage />} />
+          <Route path="warehouse/production-transfers/list" element={<ProductionTransferListPage />} />
+          <Route path="warehouse/production-transfers/:id/operations" element={<ProductionTransferOperationPage />} />
+          <Route path="warehouse/production-transfers/settings" element={<ProductionTransferPolicyPage />} />
+          <Route path="warehouse/subcontracting-transfers" element={<SubcontractingTransferHubPage />} />
+          <Route path="warehouse/subcontracting-transfers/new" element={<SubcontractingTransferDraftPage />} />
+          <Route path="warehouse/subcontracting-transfers/list" element={<SubcontractingTransferListPage />} />
+          <Route path="warehouse/subcontracting-transfers/:id/operations" element={<SubcontractingTransferOperationPage />} />
+          <Route path="warehouse/subcontracting-transfers/settings" element={<SubcontractingTransferPolicyPage />} />
           <Route path="warehouse/shipments" element={<ShippingHubPage />} />
           <Route path="warehouse/shipments/new" element={<ShippingCreatePage />} />
           <Route path="warehouse/shipments/list" element={<ShippingListPage />} />

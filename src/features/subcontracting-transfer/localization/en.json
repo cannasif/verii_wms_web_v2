@@ -1,0 +1,37 @@
+{
+  "eyebrow": "Warehouse and Subcontracting",
+  "title": "Subcontracting Transfer Process Center",
+  "description": "Manage supplier issues, supplier receipts and supplier-to-supplier moves with order links, tasks, serial/lot tracking, quality and traceability.",
+  "cards": {
+    "create": { "title": "Create Subcontracting Transfer", "text": "Create an issue, receipt or supplier-to-supplier transfer draft." },
+    "list": { "title": "Subcontracting Records", "text": "Track supplier stock, expected return, dispatch, receipt and putaway progress." },
+    "settings": { "title": "Process Settings", "text": "Manage order links, issue/receipt chains, quality, partial execution and tolerance rules." }
+  },
+  "policy": {
+    "loading": "Loading subcontracting transfer settings…",
+    "saved": "Subcontracting transfer policy saved.",
+    "saveFailed": "Settings could not be saved.",
+    "saving": "Saving…",
+    "save": "Save Settings",
+    "eyebrow": "Subcontracting Operations",
+    "title": "Subcontracting Transfer Policy",
+    "description": "Manage document, assignment, quality and tolerance rules for supplier issue, receipt and supplier-to-supplier flows.",
+    "sections": { "document": "Document and chain rules", "execution": "Physical execution, quality and tolerance" },
+    "fields": {
+      "requireSupplier": "Require supplier",
+      "requireSubcontractOrderForReceipt": "Require subcontract order on receipt",
+      "requireIssueBeforeReceipt": "Require issue before receipt",
+      "allowOrderlessIssue": "Allow orderless supplier issue",
+      "allowOrderlessReceipt": "Allow orderless supplier receipt",
+      "allowSupplierToSupplier": "Allow supplier-to-supplier transfer",
+      "allowPartialIssue": "Allow partial issue",
+      "allowPartialReceipt": "Allow partial receipt",
+      "requireQualityOnReceipt": "Require quality inspection on receipt",
+      "requireTaskAssignment": "Require operator assignment",
+      "requireApproval": "Require approval",
+      "allowOverReceipt": "Allow over-receipt",
+      "overReceiptTolerancePercent": "Over-receipt tolerance (%)",
+      "defaultLeadTimeDays": "Default lead time (days)"
+    }
+  }
+}
