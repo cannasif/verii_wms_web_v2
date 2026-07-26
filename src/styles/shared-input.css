@@ -221,7 +221,11 @@ input.input:is([type='date'], [type='datetime-local'], [type='time'])::-webkit-c
 
 .wms-grid-columns-popover {
   width: min(20rem, calc(100vw - 1.5rem));
-  max-height: min(32rem, calc(100dvh - 2rem));
+  max-height: min(
+    32rem,
+    calc(100dvh - 2rem),
+    var(--radix-popover-content-available-height, calc(100dvh - 2rem))
+  );
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: 0.75rem;
@@ -244,7 +248,11 @@ input.input:is([type='date'], [type='datetime-local'], [type='time'])::-webkit-c
 
   .wms-grid-columns-popover {
     width: min(24rem, calc(100vw - 1rem));
-    max-height: min(70dvh, 36rem);
+    max-height: min(
+      70dvh,
+      36rem,
+      var(--radix-popover-content-available-height, 70dvh)
+    );
   }
 }
 
