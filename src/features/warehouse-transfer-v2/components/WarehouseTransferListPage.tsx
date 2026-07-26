@@ -3,6 +3,7 @@ import { Ban, Eye, Loader2, Pencil, PlayCircle, Save, Trash2, X } from 'lucide-r
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { AdvancedDataGrid, type GridColumn } from '@/components/shared/AdvancedDataGrid';
+import { ResponsiveDialog } from '@/components/shared/ResponsiveDialog';
 import { requiredActionColumn, systemColumns } from '@/components/shared/GridSystemColumns';
 import { formatProjectDate, formatProjectDateTime, formatProjectNumber } from '@/lib/project-format';
 import { warehouseTransferApi } from '../api/warehouse-transfer.api';
@@ -90,9 +91,9 @@ function EditDraft({ detail, close, saved }: { detail: WarehouseTransferDetail; 
     } catch (error) { toast.error(error instanceof Error ? error.message : 'Transfer güncellenemedi.'); }
     finally { setBusy(false); }
   };
-  return <div className="fixed inset-0 z-[110] grid place-items-center bg-black/65 p-4">
-    <form onSubmit={(event) => void submit(event)} className="w-full max-w-2xl space-y-4 rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-6 shadow-2xl">
-      <header className="flex items-start justify-between"><div><h2 className="text-xl font-black">Transfer taslağını düzenle</h2><p className="font-mono text-sm text-slate-500">{detail.header.documentNo}</p></div><button type="button" onClick={close}><X /></button></header>
+  return <ResponsiveDialog onClose={close} title="Transfer taslağını düzenle" description={`${detail.header.documentNo} numaralı transfer taslağını düzenleyin.`} className="!max-w-2xl">
+    <form onSubmit={(event) => void submit(event)} className="space-y-4">
+      <header className="flex items-start justify-between gap-3"><div><h2 className="text-xl font-black">Transfer taslağını düzenle</h2><p className="font-mono text-sm text-slate-500">{detail.header.documentNo}</p></div><button type="button" onClick={close} aria-label="Pencereyi kapat" className="grid size-11 shrink-0 place-items-center rounded-xl hover:bg-black/5 dark:hover:bg-white/10"><X /></button></header>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Belge tarihi"><input type="date" required value={form.documentDate} onChange={(e) => setForm({ ...form, documentDate: e.target.value })} className="input" /></Field>
         <Field label="Öncelik"><input type="number" min={1} max={5} required value={form.priority} onChange={(e) => setForm({ ...form, priority: Number(e.target.value) })} className="input" /></Field>
@@ -102,9 +103,9 @@ function EditDraft({ detail, close, saved }: { detail: WarehouseTransferDetail; 
       </div>
       <Field label="Açıklama"><textarea rows={4} maxLength={2000} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="input h-auto py-3" /></Field>
       <p className="text-xs text-slate-500">Depo, raf, stok ve miktar alanları operasyon bütünlüğü için bu ekranda değiştirilemez.</p>
-      <div className="flex justify-end gap-2"><button type="button" onClick={close} className="rounded-xl border px-4 py-2">Vazgeç</button><button disabled={busy} className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-4 py-2 font-semibold text-white">{busy ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}Kaydet</button></div>
+      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"><button type="button" onClick={close} className="min-h-11 rounded-xl border px-4 py-2">Vazgeç</button><button disabled={busy} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-cyan-600 px-4 py-2 font-semibold text-white">{busy ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}Kaydet</button></div>
     </form>
-  </div>;
+  </ResponsiveDialog>;
 }
 
 function LifecycleDialog({ value, close, completed }: { value: { row: WarehouseTransferGridRow; kind: 'delete' | 'cancel' }; close: () => void; completed: () => void }) {
@@ -121,23 +122,22 @@ function LifecycleDialog({ value, close, completed }: { value: { row: WarehouseT
     } catch (error) { toast.error(error instanceof Error ? error.message : 'İşlem tamamlanamadı.'); }
     finally { setBusy(false); }
   };
-  return <div className="fixed inset-0 z-[120] grid place-items-center bg-black/70 p-4"><section className="w-full max-w-lg rounded-2xl border border-rose-500/30 bg-[var(--wms-app-panel)] p-6 shadow-2xl">
+  const title = value.kind === 'delete' ? 'Taslağı sil' : 'Transferi iptal et';
+  return <ResponsiveDialog onClose={close} title={title} description={`${value.row.documentNo} için geri alınamaz işlem onayı.`} className="!max-w-lg border-rose-500/30">
     <h2 className="text-xl font-black">{value.kind === 'delete' ? 'Taslağı sil' : 'Transferi iptal et'}</h2>
     <p className="mt-2 text-sm text-slate-500">{value.row.documentNo} için işlem geri alınamaz. Hareket görmüş belgede iptal, ters stok hareketlerini tek transaction içinde oluşturur.</p>
     {value.kind === 'cancel' && <textarea autoFocus rows={4} maxLength={500} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="İptal nedenini yazın" className="input mt-4 h-auto py-3" />}
-    <div className="mt-5 flex justify-end gap-2"><button type="button" onClick={close} className="rounded-xl border px-4 py-2">Vazgeç</button><button type="button" disabled={busy} onClick={() => void run()} className="rounded-xl bg-rose-600 px-4 py-2 font-semibold text-white">{busy ? 'İşleniyor…' : value.kind === 'delete' ? 'Taslağı Sil' : 'İptal Et'}</button></div>
-  </section></div>;
+    <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"><button type="button" onClick={close} className="min-h-11 rounded-xl border px-4 py-2">Vazgeç</button><button type="button" disabled={busy} onClick={() => void run()} className="min-h-11 rounded-xl bg-rose-600 px-4 py-2 font-semibold text-white">{busy ? 'İşleniyor…' : value.kind === 'delete' ? 'Taslağı Sil' : 'İptal Et'}</button></div>
+  </ResponsiveDialog>;
 }
 
 function Detail({ detail, close }: { detail: WarehouseTransferDetail; close: () => void }): ReactElement {
   const header = detail.header;
-  return <div className="fixed inset-0 z-[100] grid place-items-center bg-black/60 p-4">
-    <section className="max-h-[90vh] w-full max-w-6xl overflow-auto rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-6 shadow-2xl">
-      <header className="flex items-start justify-between gap-3"><div><h2 className="text-xl font-black">{header.documentNo}</h2><p className="text-sm text-slate-500">{header.sourceWarehouseCode} {header.sourceWarehouseName} → {header.targetWarehouseCode} {header.targetWarehouseName}</p></div><div className="flex items-center gap-2">{header.status !== 'Cancelled' && <Link to={`/warehouse/transfers/${header.id}/operations`} className="rounded-lg bg-cyan-500 px-3 py-2 text-sm font-bold text-slate-950">Operasyonu aç</Link>}<button type="button" onClick={close} className="rounded-lg p-2"><X className="size-5" /></button></div></header>
+  return <ResponsiveDialog onClose={close} title={`Transfer ${header.documentNo}`} description="Transfer kalemleri ve operasyon ilerlemesi." className="!max-w-6xl">
+      <header className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start"><div><h2 className="text-xl font-black">{header.documentNo}</h2><p className="text-sm text-slate-500">{header.sourceWarehouseCode} {header.sourceWarehouseName} → {header.targetWarehouseCode} {header.targetWarehouseName}</p></div><div className="flex items-center gap-2 self-end sm:self-auto">{header.status !== 'Cancelled' && <Link to={`/warehouse/transfers/${header.id}/operations`} className="inline-flex min-h-11 items-center rounded-lg bg-cyan-500 px-3 py-2 text-sm font-bold text-slate-950">Operasyonu aç</Link>}<button type="button" onClick={close} aria-label="Pencereyi kapat" className="grid size-11 place-items-center rounded-xl hover:bg-black/5 dark:hover:bg-white/10"><X className="size-5" /></button></div></header>
       <div className="mt-4 grid gap-3 md:grid-cols-4"><Info label="Durum" value={header.status} /><Info label="Onay" value={header.approvalStatus} /><Info label="Belge tarihi" value={formatProjectDate(header.documentDate)} /><Info label="Planlanan varış" value={header.plannedArrivalAtUtc ? formatProjectDateTime(header.plannedArrivalAtUtc) : '—'} /></div>
       <div className="mt-5 overflow-x-auto rounded-xl border border-[var(--wms-app-border)]"><table className="w-full text-sm"><thead className="bg-black/5 text-left dark:bg-white/5"><tr><th className="p-3">#</th><th className="p-3">Stok</th><th className="p-3">YAP</th><th className="p-3 text-right">Plan</th><th className="p-3 text-right">Rezerve</th><th className="p-3 text-right">Toplanan</th><th className="p-3 text-right">Sevk</th><th className="p-3 text-right">Alınan</th><th className="p-3">Durum</th></tr></thead><tbody>{detail.lines.map((line) => <tr key={line.id} className="border-t border-[var(--wms-app-border)]"><td className="p-3">{line.lineNo}</td><td className="p-3"><strong>{line.stockCode}</strong><div className="text-xs text-slate-500">{line.stockName}</div></td><td className="p-3">{line.yapCode || '—'}</td><td className="p-3 text-right">{formatProjectNumber(line.requestedQuantity)}</td><td className="p-3 text-right">{formatProjectNumber(line.reservedQuantity ?? 0)}</td><td className="p-3 text-right">{formatProjectNumber(line.pickedQuantity)}</td><td className="p-3 text-right">{formatProjectNumber(line.shippedQuantity)}</td><td className="p-3 text-right">{formatProjectNumber(line.receivedQuantity)}</td><td className="p-3">{line.status}</td></tr>)}</tbody></table></div>
-    </section>
-  </div>;
+  </ResponsiveDialog>;
 }
 
 function Info({ label, value }: { label: string; value: string }) { return <div className="rounded-xl border border-[var(--wms-app-border)] p-3"><div className="text-xs text-slate-500">{label}</div><strong className="mt-1 block text-sm">{value}</strong></div>; }
