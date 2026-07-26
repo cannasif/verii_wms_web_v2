@@ -9,6 +9,15 @@
   "create": "Create task and reserve", "created": "Goods receipt task created", "assignedSelf": "The task will be assigned to the signed-in user.",
   "quantity": "Reserved quantity", "available": "Available", "back": "Back", "continue": "Continue",
   "configurationHint": "Select a target warehouse, receiving location, and document series to continue.",
+  "createFlow": {
+    "subtitle": "Manage order selection, line-level warehouse and location planning, and lot/serial traceability in one controlled flow.",
+    "orderSelection": "Order selection",
+    "steps": { "0": "Order selection", "1": "Lines and receipt plan", "2": "Review and create" },
+    "orderNo": "Order No",
+    "date": "Date",
+    "defaultWarehouse": "Default warehouse",
+    "documentSettings": "Document and task settings"
+  },
   "manual": {
     "eyebrow": "Goods Receipt Operation", "directTitle": "Direct Goods Receipt", "orderlessTitle": "Orderless Receipt Task",
     "directSubtitle": "Validate the document and post receipt, quality and stock movement in a controlled flow.",

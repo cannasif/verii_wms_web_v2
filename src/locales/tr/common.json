@@ -1,4 +1,11 @@
 {
+  "appLayout": {
+    "permissionsLoadFailed": "Yetkiler yüklenemedi",
+    "permissionsLoading": "Yetkiler yükleniyor",
+    "permissionsLoadFailedDescription": "Oturum yetkileri alınamadı. Bağlantıyı kontrol edip yeniden deneyin.",
+    "permissionsLoadingDescription": "Güvenli uygulama oturumu hazırlanıyor.",
+    "pageLoading": "Sayfa yükleniyor"
+  },
   "common": {
     "loading": "Yükleniyor...",
     "save": "Kaydet",

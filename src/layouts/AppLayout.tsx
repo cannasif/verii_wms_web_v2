@@ -1,8 +1,10 @@
 import { Suspense, useEffect, useMemo, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { Navbar } from '@/components/shared/Navbar';
 import { PremiumTopNav } from '@/components/shared/PremiumTopNav';
 import { Sidebar } from '@/components/shared/Sidebar';
+import { LegacyLocalizationBoundary } from '@/components/shared/LegacyLocalizationBoundary';
 import { filterAuthorizedNavItems, WMS_NAV_ITEMS } from '@/components/shared/nav-items';
 import { useTheme } from '@/components/theme-provider';
 import { useAuthStore } from '@/stores/auth-store';
@@ -14,6 +16,7 @@ import { useMyPermissionsQuery } from '@/features/access-control/hooks/useMyPerm
 import { canAccessPath } from '@/features/access-control/utils/hasPermission';
 
 export function AppLayout() {
+  const { t } = useTranslation();
   const location = useLocation();
   const mainRef = useRef<HTMLElement>(null);
   const { skin } = useTheme();
@@ -44,12 +47,14 @@ export function AppLayout() {
       <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--wms-app-background)] p-6">
         <div className="max-w-md rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-6 text-center shadow-xl">
           <h1 className="text-lg font-semibold">
-            {permissionQuery.isError ? 'Yetkiler yüklenemedi' : 'Yetkiler yükleniyor'}
-          </h1>
-          <p className="mt-2 text-sm text-slate-500">
             {permissionQuery.isError
-              ? 'Oturum yetkileri alınamadı. Bağlantıyı kontrol edip yeniden deneyin.'
-              : 'Güvenli uygulama oturumu hazırlanıyor.'}
+              ? t('appLayout.permissionsLoadFailed', { defaultValue: 'Permissions could not be loaded' })
+              : t('appLayout.permissionsLoading', { defaultValue: 'Loading permissions' })}
+          </h1>
+          <p className="mt-2 text-sm text-[var(--wms-app-muted)]">
+            {permissionQuery.isError
+              ? t('appLayout.permissionsLoadFailedDescription', { defaultValue: 'Session permissions could not be retrieved. Check the connection and try again.' })
+              : t('appLayout.permissionsLoadingDescription', { defaultValue: 'Preparing the secure application session.' })}
           </p>
           {permissionQuery.isError ? (
             <button
@@ -57,7 +62,7 @@ export function AppLayout() {
               className="mt-4 rounded-xl bg-[var(--wms-brand-primary)] px-4 py-2 text-sm font-semibold text-white"
               onClick={() => void permissionQuery.refetch()}
             >
-              Yeniden dene
+              {t('common.retry', { defaultValue: 'Retry' })}
             </button>
           ) : null}
         </div>
@@ -114,7 +119,9 @@ export function AppLayout() {
                 )}
               >
                 <Suspense fallback={<WorkspaceRouteLoader />}>
-                  <Outlet />
+                  <LegacyLocalizationBoundary>
+                    <Outlet />
+                  </LegacyLocalizationBoundary>
                 </Suspense>
               </div>
             </main>
@@ -130,11 +137,13 @@ export function AppLayout() {
 }
 
 function WorkspaceRouteLoader() {
+  const { t } = useTranslation();
+
   return (
     <section
       className="min-h-[18rem] animate-pulse rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-6"
       aria-live="polite"
-      aria-label="Sayfa yükleniyor"
+      aria-label={t('appLayout.pageLoading', { defaultValue: 'Loading page' })}
     >
       <div className="h-4 w-28 rounded bg-[var(--wms-brand-soft)]" />
       <div className="mt-4 h-8 w-64 max-w-full rounded bg-[var(--wms-brand-soft)]" />

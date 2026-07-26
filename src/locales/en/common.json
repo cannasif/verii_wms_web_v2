@@ -1,4 +1,11 @@
 {
+  "appLayout": {
+    "permissionsLoadFailed": "Permissions could not be loaded",
+    "permissionsLoading": "Loading permissions",
+    "permissionsLoadFailedDescription": "Session permissions could not be retrieved. Check the connection and try again.",
+    "permissionsLoadingDescription": "Preparing the secure application session.",
+    "pageLoading": "Loading page"
+  },
   "common": {
     "loading": "Loading...",
     "save": "Save",

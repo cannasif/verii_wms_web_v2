@@ -25,6 +25,15 @@
   "back": "Geri",
   "continue": "Devam",
   "configurationHint": "Devam etmek için hedef depo, mal kabul alanı ve belge serisi seçilmelidir.",
+  "createFlow": {
+    "subtitle": "Sipariş seçimi, kalem bazlı depo ve raf planı ile lot/seri izlenebilirliğini tek kontrollü akışta yönetin.",
+    "orderSelection": "Sipariş seçimi",
+    "steps": { "0": "Sipariş seçimi", "1": "Kalem ve kabul planı", "2": "Kontrol ve oluşturma" },
+    "orderNo": "Sipariş No",
+    "date": "Tarih",
+    "defaultWarehouse": "Varsayılan depo",
+    "documentSettings": "Belge ve emir ayarları"
+  },
   "manual": {
     "eyebrow": "Mal Kabul Operasyonu", "directTitle": "Doğrudan Mal Kabul", "orderlessTitle": "Siparişsiz Mal Kabul Emri",
     "directSubtitle": "Belgeyi doğrulayın; fiziksel kabul, kalite ve stok hareketini kontrollü biçimde oluşturun.",

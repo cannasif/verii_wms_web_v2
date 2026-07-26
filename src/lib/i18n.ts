@@ -282,6 +282,15 @@ export async function ensureNamespaces(
       await loadNamespace(fallbackLng, ns);
     }
   }
+
+  // Legacy feature pages can still contain static Turkish labels. Keep the
+  // Turkish source bundle available so the migration boundary can resolve the
+  // same key in the active language without touching operation data.
+  if (target !== DEFAULT_LANGUAGE) {
+    for (const ns of uniqueNamespaces) {
+      await loadNamespace(DEFAULT_LANGUAGE, ns);
+    }
+  }
 }
 
 export async function loadLanguage(language: string): Promise<void> {
