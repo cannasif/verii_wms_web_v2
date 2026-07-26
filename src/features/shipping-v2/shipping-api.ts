@@ -26,7 +26,11 @@ export const shippingApi={
  detail:async(id:number):Promise<ShipmentDetail>=>unwrap(await api.get(`/api/shipments/${id}`)),
  update:async(id:number,p:UpdateShipmentDraft):Promise<ShipmentDetail>=>unwrap(await api.post(`/api/shipments/${id}/update`,p)),
  deleteDraft:async(id:number):Promise<boolean>=>unwrap(await api.post(`/api/shipments/${id}/delete`)),
- cancel:async(id:number,reason:string):Promise<ShipmentOperationResult>=>unwrap(await api.post(`/api/shipments/${id}/cancel`,{idempotencyKey:crypto.randomUUID(),reason:reason.trim()})),
+ cancel:async(id:number,reason:string,erpIntegrationStatus?:string):Promise<unknown>=>{
+  const result=unwrap<ShipmentOperationResult|{status:string;errorMessage?:string}>(await api.post(`/api/shipments/${id}${erpIntegrationStatus==='Succeeded'?'/erp/cancel':'/cancel'}`,{idempotencyKey:crypto.randomUUID(),reason:reason.trim()}));
+  if(erpIntegrationStatus==='Succeeded'&&result.status!=='Succeeded')throw new Error('errorMessage'in result&&result.errorMessage?result.errorMessage:`ERP iptal süreci ${result.status} durumunda kaldı.`);
+  return result;
+ },
  transition:async(id:number,action:'approve'|'release',reason?:string):Promise<ShipmentOperationResult>=>unwrap(await api.post(`/api/shipments/${id}/${action}`,{idempotencyKey:crypto.randomUUID(),reason:reason?.trim()||null})),
  operate:async(id:number,action:'pick'|'pack'|'load'|'ship',payload:{lines:ShipmentOperationLinePayload[];reason?:string;vehiclePlate?:string;driverName?:string;waybillNo?:string;trackingNo?:string}):Promise<ShipmentOperationResult>=>unwrap(await api.post(`/api/shipments/${id}/${action}`,{idempotencyKey:crypto.randomUUID(),occurredAtUtc:new Date().toISOString(),lines:payload.lines,reason:payload.reason?.trim()||null,vehiclePlate:payload.vehiclePlate?.trim()||null,driverName:payload.driverName?.trim()||null,waybillNo:payload.waybillNo?.trim()||null,trackingNo:payload.trackingNo?.trim()||null})),
 };

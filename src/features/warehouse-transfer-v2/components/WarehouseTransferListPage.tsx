@@ -117,7 +117,7 @@ function LifecycleDialog({ value, close, completed }: { value: { row: WarehouseT
     setBusy(true);
     try {
       if (value.kind === 'delete') await warehouseTransferApi.deleteDraft(value.row.id);
-      else await warehouseTransferApi.cancel(value.row.id, reason);
+      else await warehouseTransferApi.cancel(value.row.id, reason, value.row.erpIntegrationStatus);
       toast.success(value.kind === 'delete' ? 'Transfer taslağı silindi.' : 'Transfer iptal edildi; stok hareketleri ters çevrildi.');
       completed();
     } catch (error) { toast.error(error instanceof Error ? error.message : 'İşlem tamamlanamadı.'); }

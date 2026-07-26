@@ -17,7 +17,7 @@ interface Props {
   action: GoodsReceiptLifecycleAction;
   detail: GoodsReceiptDetail;
   onClose: () => void;
-  onCompleted: (result: GoodsReceiptLifecycleResult) => Promise<void>;
+  onCompleted: (result: GoodsReceiptLifecycleResult | null) => Promise<void>;
 }
 
 interface PutawayFormLine extends GoodsReceiptPutawayCandidate {
@@ -95,7 +95,7 @@ export function GoodsReceiptLifecycleDialog({ action, detail, onClose, onComplet
     }
     try {
       setBusy(true);
-      let result: GoodsReceiptLifecycleResult;
+      let result: GoodsReceiptLifecycleResult | null;
       if (action === 'approve') {
         result = await goodsReceiptV2Api.approve(detail.header.id, {
           idempotencyKey: idempotencyKey.current,
@@ -133,11 +133,21 @@ export function GoodsReceiptLifecycleDialog({ action, detail, onClose, onComplet
           })),
         });
       } else {
-        result = await goodsReceiptV2Api.cancel(detail.header.id, {
-          idempotencyKey: idempotencyKey.current,
-          rowVersion: detail.header.rowVersion,
-          reason: reason.trim(),
-        });
+        if (detail.header.erpIntegrationStatus === 'Succeeded') {
+          const cancellation = await goodsReceiptV2Api.cancelErp(detail.header.id, {
+            idempotencyKey: idempotencyKey.current,
+            reason: reason.trim(),
+          });
+          if (cancellation.status !== 'Succeeded')
+            throw new Error(cancellation.errorMessage || `ERP iptal süreci ${cancellation.status} durumunda kaldı.`);
+          result = null;
+        } else {
+          result = await goodsReceiptV2Api.cancel(detail.header.id, {
+            idempotencyKey: idempotencyKey.current,
+            rowVersion: detail.header.rowVersion,
+            reason: reason.trim(),
+          });
+        }
       }
       await onCompleted(result);
     } catch (caught) {

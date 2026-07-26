@@ -54,11 +54,12 @@ export function GoodsReceiptListPage():ReactElement{
     </div>},
     ];
   },[loadingId,moduleReady,openDetail,output,outputBusy,t]);
-  const lifecycleCompleted=useCallback(async(result:GoodsReceiptLifecycleResult)=>{
-    toast.success(result.replayed?t('list.replayed'):t('list.operationCompleted'));
-    setDetail(await goodsReceiptV2Api.detail(result.id));
+  const lifecycleCompleted=useCallback(async(result:GoodsReceiptLifecycleResult|null)=>{
+    toast.success(result?.replayed?t('list.replayed'):t('list.operationCompleted'));
+    const id=result?.id??detail?.header.id;
+    if(id)setDetail(await goodsReceiptV2Api.detail(id));
     setGridVersion((value)=>value+1);
-  },[t]);
+  },[detail?.header.id,t]);
   const routingCompleted=useCallback(async()=>{
     if (!detail?.header.id) return;
     setDetail(await goodsReceiptV2Api.detail(detail.header.id));
@@ -67,7 +68,7 @@ export function GoodsReceiptListPage():ReactElement{
   return <><AdvancedDataGrid<GoodsReceiptGridRow> key={gridVersion} pageKey="goods-receipts" title={t('list.title')} description={t('list.description')} columns={columns} fetchPage={goodsReceiptV2Api.paged}/>{detail&&<DetailModal detail={detail} close={()=>setDetail(null)} output={output} busyKey={outputBusy} onLifecycleCompleted={lifecycleCompleted} onRoutingCompleted={routingCompleted}/>}</>;
 }
 
-function DetailModal({detail,close,output,busyKey,onLifecycleCompleted,onRoutingCompleted}:{detail:GoodsReceiptDetail;close:()=>void;output:(receiptId:number,lineId:number|undefined,mode:OutputMode,title:string)=>Promise<void>;busyKey:string;onLifecycleCompleted:(result:GoodsReceiptLifecycleResult)=>Promise<void>;onRoutingCompleted:(result:GoodsReceiptSplitRoutingResult)=>Promise<void>}):ReactElement{
+function DetailModal({detail,close,output,busyKey,onLifecycleCompleted,onRoutingCompleted}:{detail:GoodsReceiptDetail;close:()=>void;output:(receiptId:number,lineId:number|undefined,mode:OutputMode,title:string)=>Promise<void>;busyKey:string;onLifecycleCompleted:(result:GoodsReceiptLifecycleResult|null)=>Promise<void>;onRoutingCompleted:(result:GoodsReceiptSplitRoutingResult)=>Promise<void>}):ReactElement{
   const {t}=useModuleTranslation('goods-receipt-v2');
   const[action,setAction]=useState<GoodsReceiptLifecycleAction|null>(null);
   const[routeKind,setRouteKind]=useState<'transfer'|'outbound'|null>(null);

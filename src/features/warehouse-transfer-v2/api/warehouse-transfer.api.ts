@@ -111,11 +111,17 @@ export const warehouseTransferApi = {
     unwrap(await api.post<Envelope<WarehouseTransferDetail>>(`/api/warehouse-transfers/${id}/update`, payload)),
   deleteDraft: async (id: number): Promise<boolean> =>
     unwrap(await api.post<Envelope<boolean>>(`/api/warehouse-transfers/${id}/delete`)),
-  cancel: async (id: number, reason: string): Promise<WarehouseTransferOperationResult> =>
-    unwrap(await api.post<Envelope<WarehouseTransferOperationResult>>(`/api/warehouse-transfers/${id}/cancel`, {
-      idempotencyKey: crypto.randomUUID(),
-      reason: reason.trim(),
-    })),
+  cancel: async (id: number, reason: string, erpIntegrationStatus?: string): Promise<unknown> => {
+    const result = unwrap(await api.post<Envelope<WarehouseTransferOperationResult | { status: string; errorMessage?: string }>>(
+      `/api/warehouse-transfers/${id}${erpIntegrationStatus === 'Succeeded' ? '/erp/cancel' : '/cancel'}`,
+      { idempotencyKey: crypto.randomUUID(), reason: reason.trim() },
+    ));
+    if (erpIntegrationStatus === 'Succeeded' && result.status !== 'Succeeded')
+      throw new Error('errorMessage' in result && result.errorMessage
+        ? result.errorMessage
+        : `ERP iptal süreci ${result.status} durumunda kaldı.`);
+    return result;
+  },
   activeUsers: async (request: DropdownPageRequest): Promise<DropdownPage<ActiveUserOption>> =>
     unwrap(await api.post<Envelope<DropdownPage<ActiveUserOption>>>('/api/users/paged', pagedBody(
       { ...request, sortBy: request.sortBy ?? 'username' },

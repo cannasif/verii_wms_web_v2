@@ -113,7 +113,7 @@ function LifecycleDialog({ value, close, completed }: { value: { row: ShipmentGr
     if (value.kind === 'cancel' && !reason.trim()) { toast.error('İptal nedeni zorunludur.'); return; }
     setBusy(true);
     try {
-      if (value.kind === 'delete') await shippingApi.deleteDraft(value.row.id); else await shippingApi.cancel(value.row.id, reason);
+      if (value.kind === 'delete') await shippingApi.deleteDraft(value.row.id); else await shippingApi.cancel(value.row.id, reason, value.row.erpIntegrationStatus);
       toast.success(value.kind === 'delete' ? 'Sevk taslağı silindi.' : 'Sevk iptal edildi; stok hareketleri ters çevrildi.'); completed();
     } catch (error) { toast.error(error instanceof Error ? error.message : 'İşlem tamamlanamadı.'); }
     finally { setBusy(false); }
