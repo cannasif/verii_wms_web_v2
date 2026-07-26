@@ -1,6 +1,7 @@
 import type { GridPage, GridRequest } from '@/components/shared/AdvancedDataGrid';
 import type { DropdownPage, DropdownPageRequest } from '@/hooks/useDropdownInfiniteSearch';
 import { api } from '@/lib/axios';
+import { requireCompletedCancellation, type OperationCancellationResult } from '@/features/shared/api/operation-cancellation';
 import type {
   LocationOption,
   ActiveUserOption,
@@ -111,17 +112,11 @@ export const warehouseTransferApi = {
     unwrap(await api.post<Envelope<WarehouseTransferDetail>>(`/api/warehouse-transfers/${id}/update`, payload)),
   deleteDraft: async (id: number): Promise<boolean> =>
     unwrap(await api.post<Envelope<boolean>>(`/api/warehouse-transfers/${id}/delete`)),
-  cancel: async (id: number, reason: string, erpIntegrationStatus?: string): Promise<unknown> => {
-    const result = unwrap(await api.post<Envelope<WarehouseTransferOperationResult | { status: string; errorMessage?: string }>>(
-      `/api/warehouse-transfers/${id}${erpIntegrationStatus === 'Succeeded' ? '/erp/cancel' : '/cancel'}`,
+  cancel: async (id: number, reason: string): Promise<OperationCancellationResult> =>
+    requireCompletedCancellation(unwrap(await api.post<Envelope<OperationCancellationResult>>(
+      `/api/warehouse-transfers/${id}/cancel`,
       { idempotencyKey: crypto.randomUUID(), reason: reason.trim() },
-    ));
-    if (erpIntegrationStatus === 'Succeeded' && result.status !== 'Succeeded')
-      throw new Error('errorMessage' in result && result.errorMessage
-        ? result.errorMessage
-        : `ERP iptal süreci ${result.status} durumunda kaldı.`);
-    return result;
-  },
+    ))),
   activeUsers: async (request: DropdownPageRequest): Promise<DropdownPage<ActiveUserOption>> =>
     unwrap(await api.post<Envelope<DropdownPage<ActiveUserOption>>>('/api/users/paged', pagedBody(
       { ...request, sortBy: request.sortBy ?? 'username' },

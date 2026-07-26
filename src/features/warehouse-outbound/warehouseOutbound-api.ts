@@ -3,6 +3,7 @@ import type {DropdownPage,DropdownPageRequest} from '@/hooks/useDropdownInfinite
 import type {ActiveUserOption,CustomerOption,LocationOption,SeriesOption,StockOption,WarehouseOption,YapCodeOption} from '@/features/goods-receipt-v2/types/goods-receipt.types';
 import {api} from '@/lib/axios';
 import {resolveStockTrackingPolicy} from '@/features/stock-tracking/effective-stock-tracking';
+import {requireCompletedCancellation,type OperationCancellationResult} from '@/features/shared/api/operation-cancellation';
 import type {ShipmentDetail,ShipmentGridRow,ShipmentOrderHeader,ShipmentOrderLine,ShipmentPolicy,ShipmentResult,UpdateShipmentDraft} from './types';
 interface Envelope<T>{success:boolean;data:T;message?:string}const unwrap=<T,>(x:Envelope<T>)=>{if(!x.success)throw new Error(x.message||'İşlem başarısız.');return x.data};
 export interface ShipmentOperationLinePayload{lineId:number;quantity:number;sourceLocationId:number|null;targetLocationId:number|null;lotNo:string|null;serialNo:string|null;handlingUnitNo:string|null}
@@ -26,7 +27,9 @@ export const warehouseOutboundApi={
  detail:async(id:number):Promise<ShipmentDetail>=>unwrap(await api.get(`/api/warehouse-outbounds/${id}`)),
  update:async(id:number,p:UpdateShipmentDraft):Promise<ShipmentDetail>=>unwrap(await api.post(`/api/warehouse-outbounds/${id}/update`,p)),
  deleteDraft:async(id:number):Promise<boolean>=>unwrap(await api.post(`/api/warehouse-outbounds/${id}/delete`)),
- cancel:async(id:number,reason:string):Promise<ShipmentOperationResult>=>unwrap(await api.post(`/api/warehouse-outbounds/${id}/cancel`,{idempotencyKey:crypto.randomUUID(),reason:reason.trim()})),
+ cancel:async(id:number,reason:string):Promise<OperationCancellationResult>=>requireCompletedCancellation(
+  unwrap(await api.post(`/api/warehouse-outbounds/${id}/cancel`,{idempotencyKey:crypto.randomUUID(),reason:reason.trim()})),
+ ),
  transition:async(id:number,action:'approve'|'release',reason?:string):Promise<ShipmentOperationResult>=>unwrap(await api.post(`/api/warehouse-outbounds/${id}/${action}`,{idempotencyKey:crypto.randomUUID(),reason:reason?.trim()||null})),
  operate:async(id:number,action:'pick'|'pack'|'load'|'ship',payload:{lines:ShipmentOperationLinePayload[];reason?:string;vehiclePlate?:string;driverName?:string;waybillNo?:string;trackingNo?:string}):Promise<ShipmentOperationResult>=>unwrap(await api.post(`/api/warehouse-outbounds/${id}/${action}`,{idempotencyKey:crypto.randomUUID(),occurredAtUtc:new Date().toISOString(),lines:payload.lines,reason:payload.reason?.trim()||null,vehiclePlate:payload.vehiclePlate?.trim()||null,driverName:payload.driverName?.trim()||null,waybillNo:payload.waybillNo?.trim()||null,trackingNo:payload.trackingNo?.trim()||null})),
 };
