@@ -42,11 +42,6 @@ export const WMS_NAV_ITEMS: NavItem[] = [
     { title: 'sidebar.shippingList', titleFallback: 'Sevk Kayıtları', href: '/warehouse/shipments/list', searchAliases: ['sevk', 'liste', 'yükleme', 'irsaliye'], requiredPermission: 'WMS.SHIPPING.VIEW' },
     { title: 'sidebar.shippingSettings', titleFallback: 'Süreç Ayarları', href: '/warehouse/shipments/settings', searchAliases: ['sevk', 'ayar', 'rezervasyon', 'paketleme'], requiredPermission: 'WMS.SHIPPING.SETTINGS.VIEW' },
   ] },
-  { title: 'sidebar.packing', titleFallback: 'Paketleme', icon: inventoryIcon, children: [
-    { title: 'sidebar.packingWorkbench', titleFallback: 'Paketleme İstasyonu', href: '/warehouse/packing', searchAliases: ['paket', 'koli', 'palet', 'sscc', 'tartı'], requiredPermission: 'WMS.PACKING.VIEW' },
-    { title: 'sidebar.packingDefinitions', titleFallback: 'Paketleme Tanımları', href: '/warehouse/packing/definitions', searchAliases: ['ambalaj', 'koli', 'palet', 'istasyon'], requiredPermission: 'WMS.PACKING.DEFINITIONS.VIEW' },
-    { title: 'sidebar.packingSettings', titleFallback: 'Paketleme Ayarları', href: '/warehouse/packing/settings', searchAliases: ['paket', 'politika', 'sscc', 'tolerans'], requiredPermission: 'WMS.PACKING.SETTINGS.VIEW' },
-  ] },
   { title: 'sidebar.erp', titleFallback: 'ERP', icon: masterDataIcon, children: [
     { title: 'sidebar.erpWarehouses', titleFallback: 'Depolar', href: '/erp/warehouses', requiredPermission: 'ERP.MIRROR.VIEW' },
     { title: 'sidebar.erpStocks', titleFallback: 'Stoklar', href: '/erp/stocks', requiredPermission: 'ERP.MIRROR.VIEW' },
@@ -89,6 +84,11 @@ export const WMS_NAV_ITEMS: NavItem[] = [
     { title: 'sidebar.locationBalances', titleFallback: 'Raf Bakiyeleri', href: '/warehouse/location-balances', searchAliases: ['raf', 'bakiye', 'lot', 'seri', 'yap'], requiredPermission: 'WMS.STOCK_BALANCES.VIEW' },
     { title: 'sidebar.warehouseBalances', titleFallback: 'Depo Stok Bakiyesi', href: '/warehouse/stock-balances', searchAliases: ['depo', 'stok', 'bakiye', 'drill down'], requiredPermission: 'WMS.STOCK_BALANCES.VIEW' },
     { title: 'sidebar.serialBalances', titleFallback: 'Stok Seri Bakiyesi', href: '/warehouse/serial-balances', searchAliases: ['stok', 'seri', 'bakiye', 'izlenebilirlik', 'lot'], requiredPermission: 'WMS.STOCK_BALANCES.VIEW' },
+    { title: 'sidebar.packing', titleFallback: 'Paketleme', children: [
+      { title: 'sidebar.packingWorkbench', titleFallback: 'Paketleme İstasyonu', href: '/warehouse/packing', searchAliases: ['paket', 'koli', 'palet', 'sscc', 'tartı'], requiredPermission: 'WMS.PACKING.VIEW' },
+      { title: 'sidebar.packingDefinitions', titleFallback: 'Paketleme Tanımları', href: '/warehouse/packing/definitions', searchAliases: ['ambalaj', 'koli', 'palet', 'istasyon'], requiredPermission: 'WMS.PACKING.DEFINITIONS.VIEW' },
+      { title: 'sidebar.packingSettings', titleFallback: 'Paketleme Ayarları', href: '/warehouse/packing/settings', searchAliases: ['paket', 'politika', 'sscc', 'tolerans'], requiredPermission: 'WMS.PACKING.SETTINGS.VIEW' },
+    ] },
   ] },
   { title: 'sidebar.systemGroup', titleFallback: 'Sistem ve Yetki', icon: systemIcon, children: [
     { title: 'sidebar.projectSettings', titleFallback: 'Genel Proje Ayarları', href: '/system/project-settings', searchAliases: ['genel', 'proje', 'sayı', 'tarih', 'saat', 'format'], requiredPermission: 'SYSTEM.PROJECT_SETTINGS.VIEW' },
