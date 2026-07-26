@@ -4,6 +4,7 @@ export type WmsDocumentType =
   | 'Shipment'
   | 'WarehouseReceipt'
   | 'WarehouseIssue'
+  | 'ProductionOrder'
   | 'ProductionTransfer'
   | 'SubcontractingIssue'
   | 'SubcontractingReceipt';

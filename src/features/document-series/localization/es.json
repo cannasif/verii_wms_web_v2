@@ -25,6 +25,7 @@
     "Shipment": "Envío",
     "WarehouseReceipt": "Recibo de almacén",
     "WarehouseIssue": "Problema de almacén",
+    "ProductionOrder": "Orden de producción",
     "ProductionTransfer": "Transferencia a producción",
     "SubcontractingIssue": "Salida a subcontratista",
     "SubcontractingReceipt": "Recepción de subcontratista"

@@ -100,7 +100,7 @@ export const warehouseTransferApi = {
     )),
   series: async (
     warehouseId: number,
-    documentType: 'InterWarehouseTransfer' | 'ProductionTransfer' | 'SubcontractingIssue' | 'SubcontractingReceipt' = 'InterWarehouseTransfer',
+    documentType: 'InterWarehouseTransfer' | 'ProductionTransfer' | 'SubcontractingIssue' | 'SubcontractingReceipt' | 'ProductionOrder' = 'InterWarehouseTransfer',
   ): Promise<SeriesOption[]> =>
     unwrap(await api.get<Envelope<SeriesOption[]>>(
       `/api/document-series/lookup?documentType=${documentType}&warehouseId=${warehouseId}`,

@@ -25,6 +25,7 @@
     "Shipment": "شحنة",
     "WarehouseReceipt": "إيصال المستودع",
     "WarehouseIssue": "قضية المستودع",
+    "ProductionOrder": "أمر إنتاج",
     "ProductionTransfer": "نقل إلى الإنتاج",
     "SubcontractingIssue": "صرف إلى المقاول",
     "SubcontractingReceipt": "استلام من المقاول"

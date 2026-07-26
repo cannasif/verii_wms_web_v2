@@ -25,6 +25,7 @@
     "Shipment": "Versand",
     "WarehouseReceipt": "Lagerbeleg",
     "WarehouseIssue": "Lagerproblem",
+    "ProductionOrder": "Produktionsauftrag",
     "ProductionTransfer": "Produktionstransfer",
     "SubcontractingIssue": "Beistellungsentnahme",
     "SubcontractingReceipt": "Lohnbearbeitungseingang"

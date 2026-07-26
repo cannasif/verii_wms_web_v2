@@ -25,6 +25,7 @@
     "Shipment": "Expédition",
     "WarehouseReceipt": "Récépissé d'entrepôt",
     "WarehouseIssue": "Problème d'entrepôt",
+    "ProductionOrder": "Ordre de production",
     "ProductionTransfer": "Transfert vers la production",
     "SubcontractingIssue": "Sortie vers sous-traitant",
     "SubcontractingReceipt": "Retour de sous-traitance"
