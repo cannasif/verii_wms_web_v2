@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import type { MyPermissionsDto } from '@/features/access-control/types/access-control.types';
 import { hasPermission } from '@/features/access-control/utils/hasPermission';
-import { analyticsIcon, dashboardIcon, inventoryIcon, masterDataIcon, operationsIcon, systemIcon } from './sidebar/sidebar-icons';
+import { dashboardIcon, inventoryIcon, masterDataIcon, operationsIcon, systemIcon } from './sidebar/sidebar-icons';
 
 export interface NavItem {
   title: string;
@@ -69,12 +69,6 @@ export const WMS_NAV_ITEMS: NavItem[] = [
     { title: 'sidebar.goodsReceiptList', titleFallback: 'Mal Kabul Kayıtları', href: '/warehouse/goods-receipts/list', searchAliases: ['mal kabul', 'liste', 'irsaliye', 'görev'], requiredPermission: 'WMS.GOODS_RECEIPT.VIEW' },
     { title: 'sidebar.goodsReceiptSettings', titleFallback: 'Süreç Ayarları', href: '/warehouse/goods-receipt-settings', searchAliases: ['fazla kabul', 'onay', 'erp', 'kalite', 'politika'], requiredPermission: 'WMS.GOODS_RECEIPT.SETTINGS.VIEW' },
   ] },
-  { title: 'sidebar.qualityControl', titleFallback: 'Kalite', icon: analyticsIcon, children: [
-    { title: 'sidebar.qualityControlInspections', titleFallback: 'Kalite İnceleme Listesi', href: '/warehouse/quality/inspections', searchAliases: ['kalite', 'kontrol', 'karantina', 'onay'], requiredPermission: 'WMS.QUALITY.INSPECTIONS.VIEW' },
-    { title: 'sidebar.qualityQuarantine', titleFallback: 'Karantina Kararları', href: '/warehouse/quality/quarantine', searchAliases: ['kalite', 'karantina', 'serbest bırak', 'ret', 'iade'], requiredPermission: 'WMS.QUALITY.INSPECTIONS.VIEW' },
-    { title: 'sidebar.qualityControlRules', titleFallback: 'Stok Kuralları', href: '/warehouse/quality/rules', searchAliases: ['kalite', 'örnekleme', 'stok kuralı'], requiredPermission: 'WMS.QUALITY.RULES.VIEW' },
-    { title: 'sidebar.qualityControlSettings', titleFallback: 'Genel Ayarlar', href: '/warehouse/quality/settings', searchAliases: ['kalite', 'karantina', 'bekletme', 'ayar'], requiredPermission: 'WMS.QUALITY.SETTINGS.VIEW' },
-  ] },
   { title: 'sidebar.warehouseManagement', titleFallback: 'Depo Yönetimi', icon: inventoryIcon, children: [
     { title: 'sidebar.locationDefinitions', titleFallback: 'Raf Tanımları', href: '/warehouse/locations', searchAliases: ['lokasyon', 'raf', 'adres', 'göz'], requiredPermission: 'WMS.LOCATIONS.VIEW' },
     { title: 'sidebar.documentSeries', titleFallback: 'Belge Seri Tanımları', href: '/warehouse/document-series', searchAliases: ['belge', 'seri', 'numara', 'mal kabul', 'transfer', 'sevk', 'ambar'], requiredPermission: 'WMS.DOCUMENT_SERIES.VIEW' },
@@ -84,6 +78,12 @@ export const WMS_NAV_ITEMS: NavItem[] = [
     { title: 'sidebar.locationBalances', titleFallback: 'Raf Bakiyeleri', href: '/warehouse/location-balances', searchAliases: ['raf', 'bakiye', 'lot', 'seri', 'yap'], requiredPermission: 'WMS.STOCK_BALANCES.VIEW' },
     { title: 'sidebar.warehouseBalances', titleFallback: 'Depo Stok Bakiyesi', href: '/warehouse/stock-balances', searchAliases: ['depo', 'stok', 'bakiye', 'drill down'], requiredPermission: 'WMS.STOCK_BALANCES.VIEW' },
     { title: 'sidebar.serialBalances', titleFallback: 'Stok Seri Bakiyesi', href: '/warehouse/serial-balances', searchAliases: ['stok', 'seri', 'bakiye', 'izlenebilirlik', 'lot'], requiredPermission: 'WMS.STOCK_BALANCES.VIEW' },
+    { title: 'sidebar.qualityControl', titleFallback: 'Kalite', children: [
+      { title: 'sidebar.qualityControlInspections', titleFallback: 'Kalite İnceleme Listesi', href: '/warehouse/quality/inspections', searchAliases: ['kalite', 'kontrol', 'karantina', 'onay'], requiredPermission: 'WMS.QUALITY.INSPECTIONS.VIEW' },
+      { title: 'sidebar.qualityQuarantine', titleFallback: 'Karantina Kararları', href: '/warehouse/quality/quarantine', searchAliases: ['kalite', 'karantina', 'serbest bırak', 'ret', 'iade'], requiredPermission: 'WMS.QUALITY.INSPECTIONS.VIEW' },
+      { title: 'sidebar.qualityControlRules', titleFallback: 'Stok Kuralları', href: '/warehouse/quality/rules', searchAliases: ['kalite', 'örnekleme', 'stok kuralı'], requiredPermission: 'WMS.QUALITY.RULES.VIEW' },
+      { title: 'sidebar.qualityControlSettings', titleFallback: 'Genel Ayarlar', href: '/warehouse/quality/settings', searchAliases: ['kalite', 'karantina', 'bekletme', 'ayar'], requiredPermission: 'WMS.QUALITY.SETTINGS.VIEW' },
+    ] },
     { title: 'sidebar.packing', titleFallback: 'Paketleme', children: [
       { title: 'sidebar.packingWorkbench', titleFallback: 'Paketleme İstasyonu', href: '/warehouse/packing', searchAliases: ['paket', 'koli', 'palet', 'sscc', 'tartı'], requiredPermission: 'WMS.PACKING.VIEW' },
       { title: 'sidebar.packingDefinitions', titleFallback: 'Paketleme Tanımları', href: '/warehouse/packing/definitions', searchAliases: ['ambalaj', 'koli', 'palet', 'istasyon'], requiredPermission: 'WMS.PACKING.DEFINITIONS.VIEW' },
