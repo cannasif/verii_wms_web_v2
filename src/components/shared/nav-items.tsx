@@ -46,7 +46,7 @@ export const WMS_NAV_ITEMS: NavItem[] = [
     { title: 'sidebar.erpWarehouses', titleFallback: 'Depolar', href: '/erp/warehouses', requiredPermission: 'ERP.MIRROR.VIEW' },
     { title: 'sidebar.erpStocks', titleFallback: 'Stoklar', href: '/erp/stocks', requiredPermission: 'ERP.MIRROR.VIEW' },
     { title: 'sidebar.erpCustomers', titleFallback: 'Cariler', href: '/erp/customers', requiredPermission: 'ERP.MIRROR.VIEW' },
-    { title: 'sidebar.erpYapKodlar', titleFallback: 'Yapı Kodları', href: '/erp/yapkodlar', requiredPermission: 'ERP.MIRROR.VIEW' },
+    { title: 'sidebar.erpConfigurationCodes', titleFallback: 'Yapılandırma Kodları', href: '/erp/configuration-codes', searchAliases: ['yapılandırma', 'konfigürasyon', 'varyant', 'yapkod'], requiredPermission: 'ERP.MIRROR.VIEW' },
   ] },
   { title: 'sidebar.goodsReceipt', titleFallback: 'Mal Kabul', icon: operationsIcon, children: [
     { title: 'sidebar.goodsReceiptHub', titleFallback: 'Süreç Merkezi', href: '/warehouse/goods-receipts', searchAliases: ['mal kabul', 'süreç', 'başlangıç'], requiredPermission: 'WMS.GOODS_RECEIPT.VIEW' },

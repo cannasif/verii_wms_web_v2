@@ -367,7 +367,7 @@
     "erpCustomers": "Customers",
     "erpStocks": "Stocks",
     "erpWarehouses": "Warehouses",
-    "erpYapKodlar": "YapKodlar",
+    "erpConfigurationCodes": "Configuration Codes",
     "erpBarcodeDefinitions": "Barcode Definitions",
     "settings": "Settings",
     "subcontracting": "Subcontracting",
@@ -521,8 +521,8 @@
       "description": "View warehouse records synchronized from ERP."
     },
     "yapkod": {
-      "title": "YapKod Mirror",
-      "description": "View structure codes synchronized from ERP."
+      "title": "Configuration Code Mirror",
+      "description": "View configuration codes synchronized from ERP."
     }
   },
   "shelfManagement": {
@@ -683,7 +683,7 @@
     },
     "resolveDetail": {
       "stock": "Stock",
-      "yapKod": "Variant Code",
+      "yapKod": "Configuration Code",
       "serial": "Serial",
       "quantity": "Quantity",
       "pattern": "Pattern"
@@ -1006,7 +1006,7 @@
       "complete": "Complete",
       "scanBarcode": "Scan Barcode",
       "scanBarcodeDescription": "Align barcode to camera",
-      "yapKod": "Structure"
+      "yapKod": "Configuration Code"
     },
     "edit": {
       "title": "Edit Goods Receipt",
@@ -1603,7 +1603,7 @@
       "complete": "Complete",
       "scanBarcode": "Scan Barcode",
       "scanBarcodeDescription": "Align barcode to camera",
-      "yapKod": "Structure"
+      "yapKod": "Configuration Code"
     },
     "approval": {
       "title": "Shipment Orders Awaiting Approval",
@@ -1808,7 +1808,7 @@
       "complete": "Complete",
       "scanBarcode": "Scan Barcode",
       "scanBarcodeDescription": "Align barcode to camera",
-      "yapKod": "Structure Code",
+      "yapKod": "Configuration Code",
       "yapAcik": "Structure Description",
       "serialNo": "Serial No",
       "barcode": "Barcode",
@@ -2002,7 +2002,7 @@
         "complete": "Complete",
         "scanBarcode": "Scan Barcode",
         "scanBarcodeDescription": "Align barcode to camera",
-        "yapKod": "Structure"
+        "yapKod": "Configuration Code"
       }
     },
     "srt": {
@@ -2047,7 +2047,7 @@
         "complete": "Complete",
         "scanBarcode": "Scan Barcode",
         "scanBarcodeDescription": "Align barcode to camera",
-        "yapKod": "Structure"
+        "yapKod": "Configuration Code"
       }
     },
     "validation": {
@@ -2525,7 +2525,7 @@
       "volume": "Volume",
       "isMixed": "Mixed",
       "stockCode": "Stock Code",
-      "yapKod": "Yap Code",
+      "yapKod": "Configuration Code",
       "quantity": "Quantity",
       "serialNo": "Serial No",
       "barcode": "Barcode",
@@ -2585,7 +2585,7 @@
       "isMixed": "Mixed",
       "addLine": "Add New Line",
       "stockCode": "Stock Code",
-      "yapKod": "Yap Code",
+      "yapKod": "Configuration Code",
       "quantity": "Quantity",
       "serialNo": "Serial No",
       "actions": "Actions",
@@ -2646,7 +2646,7 @@
       "volume": "Volume",
       "package": "Package",
       "selectPackage": "Select Package",
-      "yapKod": "Structure Code",
+      "yapKod": "Configuration Code",
       "yapAcik": "Structure Description",
       "serialNo": "Serial No",
       "sourceType": "Source Type",
@@ -3120,7 +3120,7 @@
       "documentNo": "Plan No",
       "documentDate": "Document Date",
       "mainStockCode": "Main Stock",
-      "mainYapKod": "Main YapKod",
+      "mainYapKod": "Main Configuration Code",
       "plannedQuantity": "Planned",
       "completedQuantity": "Completed",
       "actions": "Actions",
@@ -3222,7 +3222,7 @@
       "modeErp": "Quick entry",
       "modeManualDescription": "You define every order, output, and consumption breakdown. ERP may still be used as reference.",
       "mainStockCode": "Main product code",
-      "mainYapKod": "Main YapKod",
+      "mainYapKod": "Main Configuration Code",
       "plannedQuantity": "Planned quantity",
       "erp": {
         "fetch": "Fill fields",
@@ -3350,7 +3350,7 @@
       },
       "orderType": "Order type",
       "producedStockCode": "Stock to produce",
-      "producedYapKod": "YapKod to produce",
+      "producedYapKod": "Configuration Code to Produce",
       "sourceWarehouse": "Source warehouse",
       "targetWarehouse": "Target warehouse",
       "sequenceNo": "Sequence no.",
@@ -3438,16 +3438,16 @@
       "productSelect": "Ana urun secin",
       "productSearch": "Urunlerde ara",
       "productEmpty": "Urun bulunamadi",
-      "yapKodSelect": "Ana yapkod secin",
-      "yapKodSearch": "Yapkodlarda ara",
-      "yapKodEmpty": "Bu urune uygun yapkod bulunamadi",
+      "yapKodSelect": "Select Main Configuration Code",
+      "yapKodSearch": "Search configuration codes",
+      "yapKodEmpty": "Bu urune uygun configuration code bulunamadi",
       "plannerTab": "Planlamaci Modu",
       "advancedTab": "Gelismis Teknik Mod",
       "info": {
         "overviewTitle": "Bu ekran ne yapiyor?",
         "overviewBody": "Bu ekran once ana urunu ve miktari secmenizi, sonra uretimi asamalara bolmenizi, en son da hangi asamanin once veya ayni anda ilerleyecegini belirlemenizi saglar. Kayit aninda sistem plani uretim emirlerine cevirir.",
         "headerTitle": "Ana urun secimi nasil dusunulmeli?",
-        "headerBody": "Ana urun, planin sonunda elde etmek istediginiz mamuldur. Ana yapkod bu mamulun varyantini anlatir. Hazir bir is emri veya stok bilgisi varsa hizli giris ile bu alanlari otomatik doldurabilirsiniz.",
+        "headerBody": "Ana urun, planin sonunda elde etmek istediginiz mamuldur. Ana configuration code bu mamulun varyantini anlatir. Hazir bir is emri veya stok bilgisi varsa hizli giris ile bu alanlari otomatik doldurabilirsiniz.",
         "stageTitle": "Asama nedir?",
         "stageBody": "Her kart tek bir uretim asamasidir. Ornek: govde hazirlama, montaj, paketleme. Seri modda bir asama bitmeden sonraki baslamaz. Paralel veya karma modda ayni sequence numarasina sahip asamalar birlikte ilerleyebilir.",
         "outputTitle": "Cikti neyi anlatir?",
@@ -3465,7 +3465,7 @@
       "assignedRoleSelect": "Rol secin",
       "roleSearch": "Rollerde ara",
       "roleEmpty": "Rol bulunamadi",
-      "yapKod": "Yap Kod"
+      "yapKod": "Configuration Code"
     },
     "process": {
       "title": "Production process",
@@ -3598,8 +3598,8 @@
       "operatorFlowSubtitle": "Kioskta tek ekrandan ilerlemek icin asamanin su anki gerekli adimlarini takip edin.",
       "currentAction": "Siradaki Islem",
       "quickEntryTitle": "Hizli Giris",
-      "quickEntrySubtitle": "Stok kodu, yapkod veya barkod benzeri bir bilgi girin; sistem uygun plan satirini doldursun.",
-      "quickEntryPlaceholder": "Stok kodu / YapKod / Barkod girin",
+      "quickEntrySubtitle": "Stok kodu, configuration code veya barkod benzeri bir bilgi girin; sistem uygun plan satirini doldursun.",
+      "quickEntryPlaceholder": "Stok kodu / Configuration Code / Barkod girin",
       "quickEntryApply": "Satiri Doldur",
       "remainingQuantity": "Kalan",
       "requiredConsumptions": "Tuketilmesi Gereken Kalemler",
@@ -4066,7 +4066,7 @@
       "isFirstCount": "Open as first count",
       "warehouse": "Warehouse",
       "stock": "Stock",
-      "yapKod": "YapKod",
+      "yapKod": "Configuration Code",
       "rack": "Rack",
       "cell": "Cell",
       "scopeType": "Scope type",
@@ -4085,7 +4085,7 @@
     "placeholders": {
       "selectWarehouse": "Select warehouse",
       "selectStock": "Select stock",
-      "selectYapKod": "Select YapKod",
+      "selectYapKod": "Select Configuration Code",
       "enterRack": "Enter rack code",
       "enterCell": "Enter cell code",
       "selectHeader": "Select count order",
@@ -4422,7 +4422,7 @@
     "stock": {
       "badgeModule": "Warehouse Balance",
       "badgeSummary": "Summary",
-      "subtitle": "Track aggregated warehouse stock, structure code, serial count, and shelf distribution on one screen.",
+      "subtitle": "Track aggregated warehouse stock, configuration code, serial count, and shelf distribution on one screen.",
       "toastRebuildAllOk": "Warehouse stock balance rebuilt",
       "toastRebuildAllFailed": "Could not rebuild warehouse stock balance",
       "toastRebuildWarehouseOk": "Warehouse-based balance rebuilt",
@@ -4432,7 +4432,7 @@
       "columns": {
         "warehouse": "Warehouse",
         "stock": "Stock",
-        "yapKod": "YapKod",
+        "yapKod": "Configuration Code",
         "quantity": "Quantity",
         "available": "Available",
         "serialCount": "Serial count",
@@ -4446,7 +4446,7 @@
         "serials": "Visible serial count"
       },
       "empty": "No warehouse stock balance found",
-      "searchPlaceholder": "Search warehouse, stock or yapkod...",
+      "searchPlaceholder": "Search warehouse, stock or configuration code...",
       "rebuildWarehouse": "Rebuild warehouse",
       "rebuildWarehouseHint": "Recalculates the balance summary for this warehouse row.",
       "rebuildStock": "Rebuild stock",
@@ -4457,7 +4457,7 @@
         "issueType": "Issue type",
         "warehouse": "Warehouse",
         "stock": "Stock",
-        "yapKod": "YapKod",
+        "yapKod": "Configuration Code",
         "quantityDelta": "Quantity delta",
         "availableDelta": "Available delta",
         "serialDelta": "Serial delta"
@@ -4477,7 +4477,7 @@
         "extraSummary": "Extra summary"
       },
       "empty": "No inconsistency found",
-      "searchPlaceholder": "Search warehouse, stock, yapkod or issue type..."
+      "searchPlaceholder": "Search warehouse, stock, configuration code or issue type..."
     },
     "serial": {
       "badgeModule": "Warehouse Balance",
@@ -4487,7 +4487,7 @@
         "warehouse": "Warehouse",
         "shelf": "Shelf / Cell",
         "stock": "Stock",
-        "yapKod": "YapKod",
+        "yapKod": "Configuration Code",
         "serials": "Serials",
         "quantity": "Quantity",
         "status": "Stock status",

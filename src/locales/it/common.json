@@ -370,7 +370,7 @@
     "erpCustomers": "Cariler",
     "erpStocks": "Stoklar",
     "erpWarehouses": "Depolar",
-    "erpYapKodlar": "YapKodlar",
+    "erpConfigurationCodes": "Codici di configurazione",
     "goodsReceiptProcess": "Goods Receipt Direct Entry",
     "goodsReceiptApproval": "Goods Receipt Orders Awaiting Approval",
     "transferProcess": "Transfer Direct Entry",
@@ -683,7 +683,7 @@
       "complete": "Complete",
       "scanBarcode": "Scan Barcode",
       "scanBarcodeDescription": "Align barcode to camera",
-      "yapKod": "Structure"
+      "yapKod": "Codice di configurazione"
     },
     "process": {
       "title": "Goods Receipt Process",
@@ -851,7 +851,7 @@
       "complete": "Complete",
       "scanBarcode": "Scan Barcode",
       "scanBarcodeDescription": "Align barcode to camera",
-      "yapKod": "Structure"
+      "yapKod": "Codice di configurazione"
     },
     "approval": {
       "title": "Shipment Orders Awaiting Approval",
@@ -1050,7 +1050,7 @@
       "complete": "Complete",
       "scanBarcode": "Scan Barcode",
       "scanBarcodeDescription": "Align barcode to camera",
-      "yapKod": "Structure Code",
+      "yapKod": "Codice di configurazione",
       "yapAcik": "Structure Description",
       "serialNo": "Serial No",
       "barcode": "Barcode",
@@ -1232,7 +1232,7 @@
         "complete": "Complete",
         "scanBarcode": "Scan Barcode",
         "scanBarcodeDescription": "Align barcode to camera",
-        "yapKod": "Structure"
+        "yapKod": "Codice di configurazione"
       }
     },
     "srt": {
@@ -1277,7 +1277,7 @@
         "complete": "Complete",
         "scanBarcode": "Scan Barcode",
         "scanBarcodeDescription": "Align barcode to camera",
-        "yapKod": "Structure"
+        "yapKod": "Codice di configurazione"
       }
     },
     "validation": {
@@ -1755,7 +1755,7 @@
       "volume": "Volume",
       "isMixed": "Mixed",
       "stockCode": "Stock Code",
-      "yapKod": "Yap Code",
+      "yapKod": "Codice di configurazione",
       "quantity": "Quantity",
       "serialNo": "Serial No",
       "barcode": "Barcode",
@@ -1815,7 +1815,7 @@
       "isMixed": "Mixed",
       "addLine": "Add New Line",
       "stockCode": "Stock Code",
-      "yapKod": "Yap Code",
+      "yapKod": "Codice di configurazione",
       "quantity": "Quantity",
       "serialNo": "Serial No",
       "actions": "Actions",
@@ -1876,7 +1876,7 @@
       "volume": "Volume",
       "package": "Package",
       "selectPackage": "Select Package",
-      "yapKod": "Structure Code",
+      "yapKod": "Codice di configurazione",
       "yapAcik": "Structure Description",
       "serialNo": "Serial No",
       "sourceType": "Source Type",
@@ -2856,7 +2856,7 @@
       "warehouseEmpty": "Depo bulunamadi",
       "targetWarehouseSelect": "Hedef depo secin",
       "mainStockCode": "Ana Stok",
-      "mainYapKod": "Ana YapKod",
+      "mainYapKod": "Codice di configurazione principale",
       "executionMode": "Mod",
       "editTitle": "Uretim Planini Duzenle",
       "planner": {
@@ -2933,7 +2933,7 @@
         "fetchByWorkOrder": "Is emrinden getir",
         "fetchByStock": "Stok bilgisinden getir",
         "fetchByWorkOrderDescription": "ERP tarafinda hazir bir is emri varsa sadece is emrini secin. Sistem gerekli alt kirilimlari taslak olarak forma getirir.",
-        "fetchByStockDescription": "Hazir bir is emri yoksa ana urunu, varsa yapkodunu ve miktari secin. Sistem stok bilgisinden uygun uretim taslagini getirir.",
+        "fetchByStockDescription": "Hazir bir is emri yoksa ana urunu, varsa codice di configurazioneunu ve miktari secin. Sistem stok bilgisinden uygun uretim taslagini getirir.",
         "fetch": "Fill fields"
       },
       "mainOrderNo": "Ana Is Emri No",
@@ -2941,9 +2941,9 @@
       "productSelect": "Ana urun secin",
       "productSearch": "Urunlerde ara",
       "productEmpty": "Urun bulunamadi",
-      "yapKodSelect": "Ana yapkod secin",
-      "yapKodSearch": "Yapkodlarda ara",
-      "yapKodEmpty": "Bu urune uygun yapkod bulunamadi",
+      "yapKodSelect": "Seleziona codice di configurazione principale",
+      "yapKodSearch": "Cerca nei codici di configurazione",
+      "yapKodEmpty": "Bu urune uygun codice di configurazione bulunamadi",
       "editSubtitle": "Sadece draft durumundaki ve islem gormemis planlari guncelleyebilirsiniz.",
       "editModeTitle": "Kayit guncelleme modu",
       "editModeBody": "Bu plan daha once kaydedildi, burada guncelliyorsunuz. Kaydettiginizde draft plani yeni bir kayit acmadan mevcut haliyle guncelleyecegiz.",
@@ -2953,7 +2953,7 @@
         "overviewTitle": "Bu ekran ne yapiyor?",
         "overviewBody": "Bu ekran once ana urunu ve miktari secmenizi, sonra uretimi asamalara bolmenizi, en son da hangi asamanin once veya ayni anda ilerleyecegini belirlemenizi saglar. Kayit aninda sistem plani uretim emirlerine cevirir.",
         "headerTitle": "Ana urun secimi nasil dusunulmeli?",
-        "headerBody": "Ana urun, planin sonunda elde etmek istediginiz mamuldur. Ana yapkod bu mamulun varyantini anlatir. Hazir bir is emri veya stok bilgisi varsa hizli giris ile bu alanlari otomatik doldurabilirsiniz.",
+        "headerBody": "Ana urun, planin sonunda elde etmek istediginiz mamuldur. Ana codice di configurazione bu mamulun varyantini anlatir. Hazir bir is emri veya stok bilgisi varsa hizli giris ile bu alanlari otomatik doldurabilirsiniz.",
         "stageTitle": "Asama nedir?",
         "stageBody": "Her kart tek bir uretim asamasidir. Ornek: govde hazirlama, montaj, paketleme. Seri modda bir asama bitmeden sonraki baslamaz. Paralel veya karma modda ayni sequence numarasina sahip asamalar birlikte ilerleyebilir.",
         "outputTitle": "Cikti neyi anlatir?",
@@ -2972,7 +2972,7 @@
       "assignedRoleSelect": "Rol secin",
       "roleSearch": "Rollerde ara",
       "roleEmpty": "Rol bulunamadi",
-      "yapKod": "Yap Kod",
+      "yapKod": "Codice di configurazione",
       "title": "Create Production Plan",
       "subtitle": "You can start quickly from a work order or stock information, then complete the plan normally on this screen.",
       "erpLoaded": "Quick entry applied. Main product, variant, and quantity fields were filled.",
@@ -3054,7 +3054,7 @@
         "quantity": "Qty"
       },
       "orderType": "Order type",
-      "producedYapKod": "YapKod to produce",
+      "producedYapKod": "Codice di configurazione da produrre",
       "sequenceNo": "Sequence no.",
       "canStartManually": "Allow manual start",
       "canStartManuallyHint": "Operator can start the order before dependencies complete.",
@@ -3157,8 +3157,8 @@
       "currentAction": "Siradaki Islem",
       "lineHistory": "Kayitlar",
       "quickEntryTitle": "Hizli Giris",
-      "quickEntrySubtitle": "Stok kodu, yapkod veya barkod benzeri bir bilgi girin; sistem uygun plan satirini doldursun.",
-      "quickEntryPlaceholder": "Stok kodu / YapKod / Barkod girin",
+      "quickEntrySubtitle": "Stok kodu, codice di configurazione veya barkod benzeri bir bilgi girin; sistem uygun plan satirini doldursun.",
+      "quickEntryPlaceholder": "Stok kodu / Codice di configurazione / Barkod girin",
       "quickEntryApply": "Satiri Doldur",
       "remainingQuantity": "Kalan",
       "requiredConsumptions": "Tuketilmesi Gereken Kalemler",
@@ -3369,7 +3369,7 @@
       "documentNo": "Plan No",
       "documentDate": "Document Date",
       "mainStockCode": "Main Stock",
-      "mainYapKod": "Main YapKod",
+      "mainYapKod": "Codice di configurazione principale",
       "plannedQuantity": "Planned",
       "completedQuantity": "Completed",
       "actions": "Actions",
@@ -3423,7 +3423,7 @@
       "isFirstCount": "Ilk sayim olarak ac",
       "warehouse": "Depo",
       "stock": "Stok",
-      "yapKod": "YapKod",
+      "yapKod": "Codice di configurazione",
       "rack": "Raf",
       "cell": "Hucre",
       "scopeType": "Kapsam tipi"
@@ -3435,7 +3435,7 @@
       "enterNote": "Gerekirse kisa not dus",
       "selectWarehouse": "Depo sec",
       "selectStock": "Stok sec",
-      "selectYapKod": "YapKod sec",
+      "selectYapKod": "Seleziona codice di configurazione",
       "enterRack": "Raf kodu gir",
       "enterCell": "Hucre kodu gir"
     },
@@ -3562,7 +3562,7 @@
     "hintLabel": "Kullanıcı İpuçları",
     "activeHelp": "Pasif tanım runtime resolve tarafında kullanılmaz.",
     "erpFallbackLabel": "WMS Mirror Lookup",
-    "erpFallbackHelp": "Pattern tek başına çözemezse WMS mirror stok ve yapı kodu alanlarında arama yapar."
+    "erpFallbackHelp": "Se il modello non è sufficiente, WMS cerca nei campi mirror ERP di stock e codice di configurazione."
   },
   "erpReference": {
     "customer": {
@@ -3589,7 +3589,7 @@
       "description": "ERP tarafindan senkronlanan depo kayıtlarını izleyin."
     },
     "yapkod": {
-      "title": "YapKod Mirror",
+      "title": "Codice di configurazione Mirror",
       "description": "ERP tarafindan senkronlanan yapı kodlarını izleyin."
     },
     "badge": "ERP Mirror"
@@ -3625,7 +3625,7 @@
       "columns": {
         "warehouse": "Warehouse",
         "stock": "Stock",
-        "yapKod": "YapKod",
+        "yapKod": "Codice di configurazione",
         "quantity": "Quantity",
         "available": "Available",
         "serialCount": "Serial count",
@@ -3639,7 +3639,7 @@
         "serials": "Visible serial count"
       },
       "empty": "No warehouse stock balance found",
-      "searchPlaceholder": "Search warehouse, stock or yapkod...",
+      "searchPlaceholder": "Search warehouse, stock or codice di configurazione...",
       "rebuildWarehouse": "Rebuild warehouse",
       "rebuildStock": "Rebuild stock"
     },
@@ -3648,7 +3648,7 @@
         "issueType": "Issue type",
         "warehouse": "Warehouse",
         "stock": "Stock",
-        "yapKod": "YapKod",
+        "yapKod": "Codice di configurazione",
         "quantityDelta": "Quantity delta",
         "availableDelta": "Available delta",
         "serialDelta": "Serial delta"
@@ -3668,14 +3668,14 @@
         "extraSummary": "Extra summary"
       },
       "empty": "No inconsistency found",
-      "searchPlaceholder": "Search warehouse, stock, yapkod or issue type..."
+      "searchPlaceholder": "Search warehouse, stock, codice di configurazione or issue type..."
     },
     "serial": {
       "columns": {
         "warehouse": "Warehouse",
         "shelf": "Shelf / Cell",
         "stock": "Stock",
-        "yapKod": "YapKod",
+        "yapKod": "Codice di configurazione",
         "serials": "Serials",
         "quantity": "Quantity",
         "status": "Stock status",

@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
 import { formatProjectDateTime } from '@/lib/project-format';
 import { getErpMirrorPage, syncErpMirror } from '../api/erp-mirror.api';
-import type { CustomerMirror, StockMirror, WarehouseMirror, YapCodeMirror } from '../types/erp-mirror.types';
+import type { ConfigurationCodeMirror, CustomerMirror, StockMirror, WarehouseMirror } from '../types/erp-mirror.types';
 import { StockTrackingSettingsDialog } from './StockTrackingSettingsDialog';
 
 const date = (value?: string) => formatProjectDateTime(value);
@@ -41,11 +41,11 @@ const customerColumns: GridColumn<CustomerMirror>[] = [
   { key: 'lastSyncDate', label: 'Son Eşleme', render: row => date(row.lastSyncDate) },
 ];
 
-const yapColumns: GridColumn<YapCodeMirror>[] = [
+const configurationCodeColumns: GridColumn<ConfigurationCodeMirror>[] = [
   { key: 'branchCode', label: 'Şube', render: row => row.branchCode },
-  { key: 'configurationCode', label: 'Yapı Kodu', render: row => row.configurationCode },
+  { key: 'configurationCode', label: 'Yapılandırma Kodu', render: row => row.configurationCode },
   { key: 'description', label: 'Açıklama', render: row => row.description },
-  { key: 'configurableStockCode', label: 'Yapılandırılabilir Stok', render: row => row.configurableStockCode || '-' },
+  { key: 'configurableStockCode', label: 'Yapılandırılabilir Stok Kodu', render: row => row.configurableStockCode || '-' },
   { key: 'lastSyncDate', label: 'Son Eşleme', render: row => date(row.lastSyncDate) },
 ];
 
@@ -168,11 +168,11 @@ export const CustomerMirrorPage = () => (
   />
 );
 
-export const YapCodeMirrorPage = () => (
+export const ConfigurationCodeMirrorPage = () => (
   <MirrorPage
-    pageKey="yap-codes"
-    title="Yapı Kodları"
-    description="Netsis yapı kodlarının eşlenmiş görünümü."
-    dataColumns={yapColumns}
+    pageKey="configuration-codes"
+    title="Yapılandırma Kodları"
+    description="Netsis ürün konfigüratöründeki stok varyantlarının WMS ayna görünümü."
+    dataColumns={configurationCodeColumns}
   />
 );

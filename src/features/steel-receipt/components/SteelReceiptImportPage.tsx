@@ -23,7 +23,7 @@ const downloadTemplate=async()=>{
   const rows=Array.from({length:8},(_,index)=>{
     const n=String(index+1).padStart(3,'0');
     const stock=String(index+2).padStart(3,'0');
-    return {'Sipariş No':'SIP-001','Sipariş Kalem No':String(index+1),'Stok Kodu':`01/${stock}`,'Yap Kodu':'','Seri No (Levha No)':`LVH-${n}`,'Seri-2 (Poz No)':`POZ-${n}`,'Miktar(Kg)':'1.234,50','Birim':'KG','Kombine Size':'1200x2400x8','Material Quality':'S235','Heat Number':`HEAT-${n}`,'Certificate Number':`CERT-${n}`};
+    return {'Sipariş No':'SIP-001','Sipariş Kalem No':String(index+1),'Stok Kodu':`01/${stock}`,'Yapılandırma Kodu':'','Seri No (Levha No)':`LVH-${n}`,'Seri-2 (Poz No)':`POZ-${n}`,'Miktar(Kg)':'1.234,50','Birim':'KG','Kombine Size':'1200x2400x8','Material Quality':'S235','Heat Number':`HEAT-${n}`,'Certificate Number':`CERT-${n}`};
   });
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),'SAC Mal Kabul');
@@ -41,7 +41,7 @@ export function SteelReceiptImportPage(){
   const onFile=async(e:ChangeEvent<HTMLInputElement>)=>{const file=e.target.files?.[0];if(!file)return;setFileName(file.name);setPreview(null);
     const XLSX=await import('xlsx');const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});const ws=wb.Sheets[wb.SheetNames[0]];const offset=headerRow(ws,XLSX);const rows=XLSX.utils.sheet_to_json<Record<string,unknown>>(ws,{defval:'',range:offset});
     const mapped=rows.map((r,i)=>({rowNumber:i+offset+2,netsisOrderNo:find(r,['NetsisOrderNo','Sipariş No','SiparisNo']),netsisOrderLineNo:find(r,['NetsisOrderLineNo','Sipariş Kalem No','SiparisKalemNo']),
-      stockCode:find(r,['StockCode','Stok Kodu','StokKodu']),yapCode:find(r,['YapCode','Yap Kodu','YapKodu'])||undefined,supplierSerialNo:find(r,['SerialNo','Seri No','Seri No (Levha No)']),
+      stockCode:find(r,['StockCode','Stok Kodu','StokKodu']),yapCode:find(r,['ConfigurationCode','Yapılandırma Kodu','YapCode','Yap Kodu','YapKodu'])||undefined,supplierSerialNo:find(r,['SerialNo','Seri No','Seri No (Levha No)']),
       secondarySerialNo:find(r,['SerialNo2','Seri-2','Seri-2 (Poz No)'])||undefined,expectedQuantity:number(find(r,['ExpectedQuantity','Miktar','Miktar(Kg)','Miktar Kg'])),unitCode:find(r,['Unit','Birim'])||'KG',
       combinedSize:find(r,['CombinedSize','Kombine Size','Ölçü','Olcu'])||undefined,materialGrade:find(r,['MaterialQuality','Material Quality','Malzeme Kalitesi'])||undefined,
       heatNumber:find(r,['HeatNumber','Heat Number','Döküm No','DokumNo'])||undefined,certificateNumber:find(r,['CertificateNumber','Certificate Number','Sertifika No'])||undefined}));

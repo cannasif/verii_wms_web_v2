@@ -23,14 +23,14 @@ export function LocationBalancesPage(){
     {key:'warehouseName',label:'Depo',render:r=><><strong>{r.warehouseCode}</strong><small className="block text-slate-500">{r.warehouseName}</small></>},
     {key:'locationCode',label:'Raf',render:r=><><strong>{r.locationCode}</strong><small className="block text-slate-500">{r.locationName}</small></>},
     {key:'stockCode',label:'Stok',render:r=><><strong>{r.stockCode}</strong><small className="block text-slate-500">{r.stockName}</small></>},
-    {key:'yapCode',label:'YAP Kodu',render:r=>r.yapCode||'-'}, {key:'lotNo',label:'Lot',render:r=>r.lotNo||'-'}, {key:'serialNo',label:'Seri',render:r=>r.serialNo||'-'},
+    {key:'yapCode',label:'Yapılandırma Kodu',render:r=>r.yapCode||'-'}, {key:'lotNo',label:'Lot',render:r=>r.lotNo||'-'}, {key:'serialNo',label:'Seri',render:r=>r.serialNo||'-'},
     {key:'stockStatus',label:'Durum',render:r=>r.stockStatus}, {key:'quantity',label:'Fiziksel',render:r=>quantity(r.quantity)},
     {key:'reservedQuantity',label:'Rezerve',render:r=>quantity(r.reservedQuantity)}, {key:'availableQuantity',label:'Kullanılabilir',render:r=>quantity(r.availableQuantity)},
     {key:'unitCode',label:'Birim',render:r=>r.unitCode}, {key:'lastMovementEntryId',label:'Son Hareket ID',render:r=>r.lastMovementEntryId},
     {key:'lastTransactionDate',label:'Son Hareket',render:r=>date(r.lastTransactionDate)},
     {key:'actions',label:'İşlemler',sortable:false,filterable:false,hideable:false,render:()=> <span className="text-xs text-slate-500">Salt okunur</span>},
   ],[]);
-  return <div className="space-y-4">{summary&&<div className={`rounded-xl border p-4 ${summary.mismatchCount?'border-amber-400 bg-amber-50 text-amber-900':'border-emerald-400 bg-emerald-50 text-emerald-900'}`}><strong>Reconciliation:</strong> {summary.mismatchCount} fark · Defter son ID {summary.ledgerLastEntryId} · Projection son ID {summary.projectionLastEntryId}</div>}<AdvancedDataGrid pageKey="location-stock-balances" title="Raf Bakiyeleri" description="Depo, raf, stok, YAP kodu, lot, seri ve stok durumu seviyesinde güncel fiziksel/rezerve/kullanılabilir miktarlar." columns={columns} fetchPage={stockBalancesApi.getLocations} toolbarAction={allow?{label:working?'Kontrol ediliyor...':'Uzlaştır ve Onar',run:reconcile}:undefined}/></div>;
+  return <div className="space-y-4">{summary&&<div className={`rounded-xl border p-4 ${summary.mismatchCount?'border-amber-400 bg-amber-50 text-amber-900':'border-emerald-400 bg-emerald-50 text-emerald-900'}`}><strong>Reconciliation:</strong> {summary.mismatchCount} fark · Defter son ID {summary.ledgerLastEntryId} · Projection son ID {summary.projectionLastEntryId}</div>}<AdvancedDataGrid pageKey="location-stock-balances" title="Raf Bakiyeleri" description="Depo, raf, stok, yapılandırma kodu, lot, seri ve stok durumu seviyesinde güncel fiziksel/rezerve/kullanılabilir miktarlar." columns={columns} fetchPage={stockBalancesApi.getLocations} toolbarAction={allow?{label:working?'Kontrol ediliyor...':'Uzlaştır ve Onar',run:reconcile}:undefined}/></div>;
 }
 
 export function WarehouseBalancesPage(){
@@ -40,7 +40,7 @@ export function WarehouseBalancesPage(){
     ...systemColumns<WarehouseBalanceRow>(),
     {key:'warehouseName',label:'Depo',render:r=><><strong>{r.warehouseCode}</strong><small className="block text-slate-500">{r.warehouseName}</small></>},
     {key:'stockCode',label:'Stok',render:r=><><strong>{r.stockCode}</strong><small className="block text-slate-500">{r.stockName}</small></>},
-    {key:'yapCode',label:'YAP Kodu',render:r=>r.yapCode||'-'}, {key:'stockStatus',label:'Durum',render:r=>r.stockStatus},
+    {key:'yapCode',label:'Yapılandırma Kodu',render:r=>r.yapCode||'-'}, {key:'stockStatus',label:'Durum',render:r=>r.stockStatus},
     {key:'quantity',label:'Fiziksel',render:r=>quantity(r.quantity)}, {key:'reservedQuantity',label:'Rezerve',render:r=>quantity(r.reservedQuantity)},
     {key:'availableQuantity',label:'Kullanılabilir',render:r=>quantity(r.availableQuantity)}, {key:'unitCode',label:'Birim',render:r=>r.unitCode},
     {key:'distinctLocationCount',label:'Raf Sayısı',render:r=>r.distinctLocationCount}, {key:'distinctLotCount',label:'Lot Sayısı',render:r=>r.distinctLotCount},
@@ -62,7 +62,7 @@ export function SerialBalancesPage(){
     {key:'stockCode',label:'Stok',render:r=><><strong>{r.stockCode}</strong><small className="block text-slate-500">{r.stockName}</small></>},
     {key:'warehouseName',label:'Depo',render:r=><><strong>{r.warehouseCode}</strong><small className="block text-slate-500">{r.warehouseName}</small></>},
     {key:'locationCode',label:'Raf',render:r=><><strong>{r.locationCode}</strong><small className="block text-slate-500">{r.locationName}</small></>},
-    {key:'yapCode',label:'YAP Kodu',render:r=>r.yapCode||'-'}, {key:'lotNo',label:'Lot',render:r=>r.lotNo||'-'},
+    {key:'yapCode',label:'Yapılandırma Kodu',render:r=>r.yapCode||'-'}, {key:'lotNo',label:'Lot',render:r=>r.lotNo||'-'},
     {key:'stockStatus',label:'Durum',render:r=>r.stockStatus}, {key:'quantity',label:'Fiziksel',render:r=>quantity(r.quantity)},
     {key:'reservedQuantity',label:'Rezerve',render:r=>quantity(r.reservedQuantity)}, {key:'availableQuantity',label:'Kullanılabilir',render:r=>quantity(r.availableQuantity)},
     {key:'unitCode',label:'Birim',render:r=>r.unitCode}, {key:'lastMovementEntryId',label:'Son Hareket ID',render:r=>r.lastMovementEntryId},

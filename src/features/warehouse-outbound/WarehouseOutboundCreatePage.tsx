@@ -204,7 +204,7 @@ export function WarehouseOutboundCreatePage() {
             (x) => x.configurationCode.toUpperCase() === row.yapCode!.toUpperCase(),
           );
           if (!yap)
-            throw new Error(`${row.yapCode} yapı kodu ERP mirror tablosunda bulunamadı.`);
+            throw new Error(`${row.yapCode} yapılandırma kodu ERP ayna tablosunda bulunamadı.`);
         }
 
         return {
@@ -541,7 +541,7 @@ export function WarehouseOutboundCreatePage() {
                       })();
                     }} searchable minSearchLength={2} />
                 </Field>
-                <Field label="Yapı kodu">
+                <Field label="Yapılandırma kodu">
                   <PagedAppDropdown queryKey={['sh-yap', line.key, branch]} fetchPage={(request) => warehouseOutboundApi.yaps(request, branch)}
                     toOption={(item) => ({ value: encoded(item), label: `${item.configurationCode} · ${item.description ?? ''}` })}
                     selectedOption={line.yapCodeId ? { value: String(line.yapCodeId), label: line.yapCode ?? '' } : undefined}

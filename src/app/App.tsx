@@ -30,7 +30,7 @@ const ProfilePage = lazy(() => loadProfilePage().then((m) => ({ default: m.Profi
 const CustomerMirrorPage = lazy(() => loadErpMirrorPages().then((m) => ({ default: m.CustomerMirrorPage })));
 const StockMirrorPage = lazy(() => loadErpMirrorPages().then((m) => ({ default: m.StockMirrorPage })));
 const WarehouseMirrorPage = lazy(() => loadErpMirrorPages().then((m) => ({ default: m.WarehouseMirrorPage })));
-const YapCodeMirrorPage = lazy(() => loadErpMirrorPages().then((m) => ({ default: m.YapCodeMirrorPage })));
+const ConfigurationCodeMirrorPage = lazy(() => loadErpMirrorPages().then((m) => ({ default: m.ConfigurationCodeMirrorPage })));
 const UserManagementPage = lazy(() => loadUserManagementPage().then((m) => ({ default: m.UserManagementPage })));
 const PermissionGroupsPage = lazy(() => loadPermissionGroupsPage().then((m) => ({ default: m.PermissionGroupsPage })));
 const AuditLogsPage = lazy(() => loadAuditLogsPage().then((m) => ({ default: m.AuditLogsPage })));
@@ -136,7 +136,8 @@ export function App(): ReactElement {
           <Route path="erp/warehouses" element={<WarehouseMirrorPage />} />
           <Route path="erp/stocks" element={<StockMirrorPage />} />
           <Route path="erp/customers" element={<CustomerMirrorPage />} />
-          <Route path="erp/yapkodlar" element={<YapCodeMirrorPage />} />
+          <Route path="erp/configuration-codes" element={<ConfigurationCodeMirrorPage />} />
+          <Route path="erp/yapkodlar" element={<Navigate to="/erp/configuration-codes" replace />} />
           <Route path="warehouse/warehouse-inbounds" element={<WarehouseInboundHubPage />} />
           <Route path="warehouse/warehouse-inbounds/new" element={<WarehouseInboundCreatePage />} />
           <Route path="warehouse/warehouse-inbounds/orderless" element={<WarehouseInboundOrderlessPage />} />

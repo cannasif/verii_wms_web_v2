@@ -361,7 +361,7 @@
     "erpCustomers": "Kunden",
     "erpStocks": "Aktien",
     "erpWarehouses": "Lager",
-    "erpYapKodlar": "Strukturcodes",
+    "erpConfigurationCodes": "Konfigurationscodes",
     "erpBarcodeDefinitions": "Barcode-Definitionen",
     "settings": "Einstellungen",
     "subcontracting": "Fremdfertigung",
@@ -502,8 +502,8 @@
       "description": "Zeigen Sie Lagersätze an, die aus ERP synchronisiert wurden."
     },
     "yapkod": {
-      "title": "Strukturcode-Spiegel",
-      "description": "Aus ERP synchronisierte Strukturcodes anzeigen."
+      "title": "Konfigurationscode-Spiegel",
+      "description": "Aus ERP synchronisierte Konfigurationscodes anzeigen."
     }
   },
   "shelfManagement": {
@@ -646,11 +646,11 @@
         "hint": "Beispiel: STK-0001"
       },
       "stockYapkod": {
-        "label": "Bestand + Strukturcode",
+        "label": "Bestand + Konfigurationscode",
         "hint": "Beispiel: STK-0001///RED-L"
       },
       "stockYapkodSerial": {
-        "label": "Bestand + Strukturcode + Serie",
+        "label": "Bestand + Konfigurationscode + Serie",
         "hint": "Beispiel: STK-0001///RED-L///SN000245"
       },
       "stockLot": {
@@ -664,7 +664,7 @@
     },
     "resolveDetail": {
       "stock": "Bestand",
-      "yapKod": "Strukturcode",
+      "yapKod": "Konfigurationscode",
       "serial": "Serie",
       "quantity": "Menge",
       "pattern": "Muster"
@@ -939,7 +939,7 @@
       "complete": "Abschließen",
       "scanBarcode": "Barcode scannen",
       "scanBarcodeDescription": "Barcode zur Kamera ausrichten",
-      "yapKod": "Struktur"
+      "yapKod": "Konfigurationscode"
     },
     "edit": {
       "title": "Bearbeiten Wareneingang",
@@ -1520,7 +1520,7 @@
       "complete": "Abschließen",
       "scanBarcode": "Barcode scannen",
       "scanBarcodeDescription": "Barcode zur Kamera ausrichten",
-      "yapKod": "Struktur"
+      "yapKod": "Konfigurationscode"
     },
     "approval": {
       "title": "Versandaufträge auf Genehmigung wartend",
@@ -1725,7 +1725,7 @@
       "complete": "Abschließen",
       "scanBarcode": "Barcode scannen",
       "scanBarcodeDescription": "Barcode zur Kamera ausrichten",
-      "yapKod": "Strukturcode",
+      "yapKod": "Konfigurationscode",
       "yapAcik": "Strukturbeschreibung",
       "serialNo": "Seriennummer No",
       "barcode": "QR-Code",
@@ -1917,7 +1917,7 @@
         "complete": "Abschließen",
         "scanBarcode": "Barcode scannen",
         "scanBarcodeDescription": "Barcode zur Kamera ausrichten",
-        "yapKod": "Struktur",
+        "yapKod": "Konfigurationscode",
         "title": "SIT-Erfassung",
         "invalidHeaderId": "Invalid SIT Auftrag"
       }
@@ -1962,7 +1962,7 @@
         "complete": "Abschließen",
         "scanBarcode": "Barcode scannen",
         "scanBarcodeDescription": "Barcode zur Kamera ausrichten",
-        "yapKod": "Struktur",
+        "yapKod": "Konfigurationscode",
         "title": "SRT-Erfassung",
         "invalidHeaderId": "Invalid SRT Auftrag"
       }
@@ -2468,7 +2468,7 @@
       "grossWeight": "Bruttogewicht",
       "volume": "Volumen",
       "isMixed": "Gemischt",
-      "yapKod": "Yap-Code",
+      "yapKod": "Konfigurationscode",
       "deleteConfirmMessage": "Möchten Sie diese Verpackung wirklich löschen?",
       "deleteSuccess": "Verpackung erfolgreich gelöscht",
       "deleteError": "Beim Löschen der Verpackung ist ein Fehler aufgetreten",
@@ -2521,7 +2521,7 @@
       "grossWeight": "Bruttogewicht",
       "isMixed": "Gemischt",
       "addLine": "Neue Position hinzufügen",
-      "yapKod": "Yap-Code",
+      "yapKod": "Konfigurationscode",
       "deleteConfirmMessage": "Möchten Sie dieses Paket wirklich löschen?",
       "deleteSuccess": "Paket erfolgreich gelöscht",
       "deleteError": "Beim Löschen des Pakets ist ein Fehler aufgetreten",
@@ -2550,7 +2550,7 @@
       "length": "Länge",
       "package": "Paket",
       "selectPackage": "Paket auswählen",
-      "yapKod": "Strukturcode",
+      "yapKod": "Konfigurationscode",
       "yapAcik": "Strukturbeschreibung",
       "serialNo": "Seriennummer No",
       "selectSourceType": "Quelltyp auswählen",
@@ -3022,7 +3022,7 @@
       "searchPlaceholder": "Suchen nach Plan no, main Bestand, oder variant",
       "documentNo": "Plannummer",
       "mainStockCode": "Hauptbestand",
-      "mainYapKod": "Haupt-YapKod",
+      "mainYapKod": "Hauptkonfigurationscode",
       "noData": "Keine Produktionspläne zur Genehmigung vorhanden"
     },
     "detail": {
@@ -3184,7 +3184,7 @@
       "modeErp": "Schnellerfassung",
       "modeManualDescription": "Sie definieren jeden Auftrag, Output und Verbrauch. ERP kann weiterhin als Referenz dienen.",
       "mainStockCode": "Hauptproduktcode",
-      "mainYapKod": "Haupt-YapKod",
+      "mainYapKod": "Hauptkonfigurationscode",
       "plannedQuantity": "Geplante Menge",
       "erp": {
         "fetch": "Felder ausfüllen",
@@ -3296,7 +3296,7 @@
       },
       "orderPlaceholder": "Neuer Auftrag",
       "producedStockCode": "Zu produzierender Bestand",
-      "producedYapKod": "Zu produzierender YapKod",
+      "producedYapKod": "Zu produzierender Konfigurationscode",
       "sourceWarehouse": "Quelllager",
       "targetWarehouse": "Ziellager",
       "sequenceNo": "Sequenznr.",
@@ -3331,16 +3331,16 @@
       "productSelect": "Hauptprodukt auswählen",
       "productSearch": "In Produkten suchen",
       "productEmpty": "Kein Produkt gefunden",
-      "yapKodSelect": "Haupt-YapKod auswählen",
-      "yapKodSearch": "In YapKods suchen",
-      "yapKodEmpty": "Kein passender YapKod für dieses Produkt gefunden",
+      "yapKodSelect": "Hauptkonfigurationscode auswählen",
+      "yapKodSearch": "In Konfigurationscodes suchen",
+      "yapKodEmpty": "Kein passender Konfigurationscode für dieses Produkt gefunden",
       "plannerTab": "Planermodus",
       "advancedTab": "Erweiterter Technikmodus",
       "info": {
         "overviewTitle": "Was macht dieser Bildschirm?",
         "overviewBody": "Dieser Bildschirm lässt Sie zuerst Hauptprodukt und Menge wählen, dann die Produktion in Stufen gliedern und schließlich festlegen, welche Stufe zuerst oder parallel läuft. Beim Speichern wandelt das System den Plan in Fertigungsaufträge um.",
         "headerTitle": "Wie sollte die Auswahl des Hauptprodukts gedacht werden?",
-        "headerBody": "Das Hauptprodukt ist das Endprodukt des Plans. Der Haupt-YapKod beschreibt die Variante. Mit Schnellerfassung können vorhandene Arbeitsauftrags- oder Bestandsdaten diese Felder automatisch füllen.",
+        "headerBody": "Das Hauptprodukt ist das Endprodukt des Plans. Der Haupt-Konfigurationscode beschreibt die Variante. Mit Schnellerfassung können vorhandene Arbeitsauftrags- oder Bestandsdaten diese Felder automatisch füllen.",
         "stageTitle": "Was ist eine Stufe?",
         "stageBody": "Jede Karte ist eine Produktionsstufe, z. B. Rohling vorbereiten, Montage, Verpackung. Im Serienmodus startet die nächste Stufe erst nach Abschluss der vorherigen. Im Parallel- oder Hybridmodus können Stufen mit gleicher Sequenznummer gemeinsam laufen.",
         "outputTitle": "Was bedeutet Output?",
@@ -3358,7 +3358,7 @@
       "assignedRoleSelect": "Rolle auswählen",
       "roleSearch": "In Rollen suchen",
       "roleEmpty": "Keine Rolle gefunden",
-      "yapKod": "Yap-Kod"
+      "yapKod": "Konfigurationscode"
     },
     "process": {
       "title": "Produktionsprozess",
@@ -3491,8 +3491,8 @@
       "operatorFlowSubtitle": "Verfolgen Sie auf dem Kiosk in einem Bildschirm die aktuell erforderlichen Schritte der Stufe.",
       "currentAction": "Nächster Schritt",
       "quickEntryTitle": "Schnellerfassung",
-      "quickEntrySubtitle": "Geben Sie Bestandscode, YapKod oder einen Barcode ein; das System füllt die passende Planzeile.",
-      "quickEntryPlaceholder": "Bestandscode / YapKod / Barcode eingeben",
+      "quickEntrySubtitle": "Geben Sie Bestandscode, Konfigurationscode oder einen Barcode ein; das System füllt die passende Planzeile.",
+      "quickEntryPlaceholder": "Bestandscode / Konfigurationscode / Barcode eingeben",
       "quickEntryApply": "Zeile ausfüllen",
       "remainingQuantity": "Verbleibend",
       "requiredConsumptions": "Zu verbrauchende Positionen",
@@ -3945,7 +3945,7 @@
       "plannedStartDate": "Geplanter Start",
       "plannedEndDate": "Geplantes Ende",
       "isFirstCount": "Als Erstinventur öffnen",
-      "yapKod": "YapKod",
+      "yapKod": "Konfigurationscode",
       "rack": "Regal",
       "cell": "Fach",
       "scopeType": "Bereich Typ",
@@ -3961,7 +3961,7 @@
     "placeholders": {
       "selectWarehouse": "Lager auswählen",
       "selectStock": "WÄHLEN SIE EINE AKTIE",
-      "selectYapKod": "YapKod auswählen",
+      "selectYapKod": "Konfigurationscode auswählen",
       "enterRack": "Enter Regal code",
       "enterCell": "Enter Fach code",
       "selectHeader": "Auswählen Inventurauftrag",
@@ -4272,7 +4272,7 @@
     "stock": {
       "badgeModule": "Lagerbestand",
       "badgeSummary": "Zusammenfassung",
-      "subtitle": "Kumulierten Lagerbestand, Strukturcode, Serienanzahl und Regalverteilung auf einem Bildschirm verfolgen.",
+      "subtitle": "Kumulierten Lagerbestand, Konfigurationscode, Serienanzahl und Regalverteilung auf einem Bildschirm verfolgen.",
       "toastRebuildAllOk": "Lagerbestandsbilanz wurde neu erstellt",
       "toastRebuildAllFailed": "Lagerbestandsbilanz konnte nicht neu erstellt werden",
       "toastRebuildWarehouseOk": "Lagerbasierte Bilanz wurde neu erstellt",
@@ -4282,7 +4282,7 @@
       "columns": {
         "warehouse": "Lager",
         "stock": "Bestand",
-        "yapKod": "Strukturcode",
+        "yapKod": "Konfigurationscode",
         "quantity": "Menge",
         "available": "Verfügbar",
         "serialCount": "Anzahl Serien",
@@ -4296,7 +4296,7 @@
         "serials": "Sichtbare Serienanzahl"
       },
       "empty": "Keine Lagerbestandsbilanz gefunden",
-      "searchPlaceholder": "Lager, Bestand oder Strukturcode suchen...",
+      "searchPlaceholder": "Lager, Bestand oder Konfigurationscode suchen...",
       "rebuildWarehouse": "Lager neu erstellen",
       "rebuildStock": "Bestand neu erstellen"
     },
@@ -4305,7 +4305,7 @@
         "issueType": "Problemtyp",
         "warehouse": "Lager",
         "stock": "Bestand",
-        "yapKod": "Strukturcode",
+        "yapKod": "Konfigurationscode",
         "quantityDelta": "Mengendifferenz",
         "availableDelta": "Verfügbarkeitsdifferenz",
         "serialDelta": "Seriendifferenz"
@@ -4325,7 +4325,7 @@
         "extraSummary": "Überzählige Zusammenfassung"
       },
       "empty": "Keine Inkonsistenz gefunden",
-      "searchPlaceholder": "Lager, Bestand, Strukturcode oder Problemtyp suchen..."
+      "searchPlaceholder": "Lager, Bestand, Konfigurationscode oder Problemtyp suchen..."
     },
     "serial": {
       "badgeModule": "Lagerbestand",
@@ -4335,7 +4335,7 @@
         "warehouse": "Lager",
         "shelf": "Regal / Zelle",
         "stock": "Bestand",
-        "yapKod": "Strukturcode",
+        "yapKod": "Konfigurationscode",
         "serials": "Serien",
         "quantity": "Menge",
         "status": "Bestandsstatus",

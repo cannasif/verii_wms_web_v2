@@ -2,6 +2,7 @@ export const ROUTE_PERMISSION_MAP: Record<string, string> = {
   '/erp/warehouses': 'ERP.MIRROR.VIEW',
   '/erp/stocks': 'ERP.MIRROR.VIEW',
   '/erp/customers': 'ERP.MIRROR.VIEW',
+  '/erp/configuration-codes': 'ERP.MIRROR.VIEW',
   '/erp/yapkodlar': 'ERP.MIRROR.VIEW',
   '/system/users': 'SYSTEM.USERS.VIEW',
   '/system/permissions': 'SYSTEM.PERMISSIONS.VIEW',
@@ -127,7 +128,7 @@ export const ROUTE_PERMISSION_MAP: Record<string, string> = {
 };
 
 export const PATH_TO_PERMISSION_PATTERNS: Array<{ pattern: RegExp; permission: string }> = [
-  { pattern: /^\/erp\/(warehouses|stocks|customers|yapkodlar)(\/|$)/, permission: 'ERP.MIRROR.VIEW' },
+  { pattern: /^\/erp\/(warehouses|stocks|customers|configuration-codes|yapkodlar)(\/|$)/, permission: 'ERP.MIRROR.VIEW' },
   { pattern: /^\/system\/users(\/|$)/, permission: 'SYSTEM.USERS.VIEW' },
   { pattern: /^\/system\/(permissions|permission-groups)(\/|$)/, permission: 'SYSTEM.PERMISSIONS.VIEW' },
   { pattern: /^\/system\/audit-logs(\/|$)/, permission: 'SYSTEM.AUDIT.VIEW' },
@@ -206,7 +207,7 @@ export const PATH_TO_PERMISSION_PATTERNS: Array<{ pattern: RegExp; permission: s
   { pattern: /^\/erp\/shelves(\/|$)/, permission: 'wms.shelf.view' },
   { pattern: /^\/erp\/warehouse-stock-balance(\/|$)/, permission: 'wms.warehouse-balance.view' },
   { pattern: /^\/erp\/warehouse-serial-balance(\/|$)/, permission: 'wms.warehouse-balance.view' },
-  { pattern: /^\/erp\/yapkodlar(\/|$)/, permission: 'wms.print-management.view' },
+  { pattern: /^\/erp\/(configuration-codes|yapkodlar)(\/|$)/, permission: 'wms.print-management.view' },
   { pattern: /^\/erp\/barcodes(\/|$)/, permission: 'wms.print-management.view' },
   { pattern: /^\/erp\/barcode-designer\/new(\/|$)/, permission: 'wms.print-management.create' },
   { pattern: /^\/erp\/barcode-designer\/\d+\/edit(\/|$)/, permission: 'wms.print-management.update' },

@@ -253,7 +253,7 @@ const TR_ENUM_LABELS: Record<string, string> = {
   StartsWith: 'İle Başlar',
   SteelPlate: 'SAC Levha',
   Stock: 'Stok',
-  StockAndYapCode: 'Stok ve YAP Kodu',
+  StockAndYapCode: 'Stok ve Yapılandırma Kodu',
   StockBasedDirect: 'Stoktan Doğrudan',
   StockBasedTask: 'Stoktan Emirli',
   StockCode: 'Stok Kodu',
@@ -280,7 +280,7 @@ const TR_ENUM_LABELS: Record<string, string> = {
   WarehouseTransfer: 'Depolar Arası Transfer',
   WithinTolerance: 'Tolerans İçinde',
   Worker: 'Depo Personeli',
-  YapCode: 'YAP Kodu',
+  YapCode: 'Yapılandırma Kodu',
   User: 'Kullanıcı',
   Manager: 'Yönetici',
   Admin: 'Uygulama Yöneticisi',
@@ -297,7 +297,7 @@ const EN_ACRONYMS: Record<string, string> = {
   Sscc: 'SSCC',
   SacMalKabul: 'SAC Goods Receipt',
   SacPanel: 'SAC Plate',
-  YapCode: 'YAP Code',
+  YapCode: 'Yapılandırma Kodu',
 };
 
 function humanizeEnumValue(value: string): string {

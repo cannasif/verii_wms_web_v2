@@ -367,7 +367,7 @@
     "erpCustomers": "Cariler",
     "erpStocks": "Stoklar",
     "erpWarehouses": "Depolar",
-    "erpYapKodlar": "YapKodlar",
+    "erpConfigurationCodes": "Yapılandırma Kodları",
     "erpBarcodeDefinitions": "Barkod Tanımları",
     "settings": "Ayarlar",
     "subcontracting": "Fason İşlemleri",
@@ -521,7 +521,7 @@
       "description": "ERP tarafindan senkronlanan depo kayıtlarını görüntüleyin."
     },
     "yapkod": {
-      "title": "YapKod Mirror",
+      "title": "Yapılandırma Kodu Aynası",
       "description": "ERP tarafindan senkronlanan yapı kodlarını görüntüleyin."
     }
   },
@@ -623,7 +623,7 @@
     "hintLabel": "Kullanıcı İpucu",
     "activeHelp": "Pasif tanım runtime'da kullanılmaz.",
     "erpFallbackLabel": "WMS Mirror Lookup",
-    "erpFallbackHelp": "Pattern tek başına çözemezse WMS mirror stok ve yapı kodu alanlarında arama yapar.",
+    "erpFallbackHelp": "Desen tek başına çözemezse WMS, ERP ayna stok ve yapılandırma kodu alanlarında arama yapar.",
     "createOverride": "Override Oluştur",
     "sourceDatabase": "Veritabanı override",
     "sourceConfig": "Konfigürasyon fallback",
@@ -665,11 +665,11 @@
         "hint": "Örnek: STK-0001"
       },
       "stockYapkod": {
-        "label": "Stok + yapkod",
+        "label": "Stok + yapılandırma kodu",
         "hint": "Örnek: STK-0001///RED-L"
       },
       "stockYapkodSerial": {
-        "label": "Stok + yapkod + seri",
+        "label": "Stok + yapılandırma kodu + seri",
         "hint": "Örnek: STK-0001///RED-L///SN000245"
       },
       "stockLot": {
@@ -683,7 +683,7 @@
     },
     "resolveDetail": {
       "stock": "Stok",
-      "yapKod": "YapKod",
+      "yapKod": "Yapılandırma Kodu",
       "serial": "Seri",
       "quantity": "Miktar",
       "pattern": "Pattern"
@@ -1006,7 +1006,7 @@
       "complete": "Tamamla",
       "scanBarcode": "Barkod Okut",
       "scanBarcodeDescription": "Barkodu kameraya hizalayın",
-      "yapKod": "Yapı"
+      "yapKod": "Yapılandırma Kodu"
     },
     "edit": {
       "title": "Mal Kabul Düzenle",
@@ -1619,7 +1619,7 @@
       "complete": "Tamamla",
       "scanBarcode": "Barkod Okut",
       "scanBarcodeDescription": "Barkodu kameraya hizalayın",
-      "yapKod": "Yapı"
+      "yapKod": "Yapılandırma Kodu"
     },
     "approval": {
       "title": "Onay Bekleyen Sevkiyat Emirleri",
@@ -1824,7 +1824,7 @@
       "complete": "Tamamla",
       "scanBarcode": "Barkod Okut",
       "scanBarcodeDescription": "Barkodu kameraya hizalayın",
-      "yapKod": "Yapı Kodu",
+      "yapKod": "Yapılandırma Kodu",
       "yapAcik": "Yapı Açıklaması",
       "serialNo": "Seri No",
       "barcode": "Barkod",
@@ -2018,7 +2018,7 @@
         "complete": "Tamamla",
         "scanBarcode": "Barkod Okut",
         "scanBarcodeDescription": "Barkodu kameraya hizalayın",
-        "yapKod": "Yapı"
+        "yapKod": "Yapılandırma Kodu"
       }
     },
     "srt": {
@@ -2063,7 +2063,7 @@
         "complete": "Tamamla",
         "scanBarcode": "Barkod Okut",
         "scanBarcodeDescription": "Barkodu kameraya hizalayın",
-        "yapKod": "Yapı"
+        "yapKod": "Yapılandırma Kodu"
       }
     },
     "validation": {
@@ -2541,7 +2541,7 @@
       "volume": "Hacim",
       "isMixed": "Karışık",
       "stockCode": "Stok Kodu",
-      "yapKod": "Yap Kodu",
+      "yapKod": "Yapılandırma Kodu",
       "quantity": "Miktar",
       "serialNo": "Seri No",
       "barcode": "Barkod",
@@ -2601,7 +2601,7 @@
       "isMixed": "Karışık",
       "addLine": "Yeni Satır Ekle",
       "stockCode": "Stok Kodu",
-      "yapKod": "Yap Kodu",
+      "yapKod": "Yapılandırma Kodu",
       "quantity": "Miktar",
       "serialNo": "Seri No",
       "actions": "İşlemler",
@@ -2662,7 +2662,7 @@
       "volume": "Hacim",
       "package": "Paket",
       "selectPackage": "Paket Seçin",
-      "yapKod": "Yap Kodu",
+      "yapKod": "Yapılandırma Kodu",
       "yapAcik": "Yap Açıklama",
       "serialNo": "Seri No",
       "sourceType": "Kaynak Tipi",
@@ -3131,12 +3131,12 @@
       "rejectSuccess": "Üretim planı başarıyla reddedildi",
       "rejectError": "Üretim planı reddedilemedi",
       "error": "Veri yüklenirken bir hata oluştu",
-      "searchPlaceholder": "Plan no, ana stok veya yapkod ile ara",
+      "searchPlaceholder": "Plan no, ana stok veya yapılandırma kodu ile ara",
       "id": "ID",
       "documentNo": "Plan No",
       "documentDate": "Belge Tarihi",
       "mainStockCode": "Ana Stok",
-      "mainYapKod": "Ana YapKod",
+      "mainYapKod": "Ana Yapılandırma Kodu",
       "plannedQuantity": "Planlanan",
       "completedQuantity": "Gerçekleşen",
       "actions": "İşlemler",
@@ -3199,7 +3199,7 @@
       "editTitle": "Üretim Planını Düzenle",
       "subtitle": "İş emrinden ya da stok bilgisinden hızlı giriş yapabilir, sonra planı normal şekilde tamamlayabilirsiniz.",
       "editSubtitle": "Sadece draft durumundaki ve işlem görmemiş planları burada güncelleyebilirsiniz.",
-      "erpLoaded": "Hızlı giriş bilgileri uygulandı. Ana ürün, yapkod ve miktar alanları dolduruldu.",
+      "erpLoaded": "Hızlı giriş bilgileri uygulandı. Ana ürün, yapılandırma kodu ve miktar alanları dolduruldu.",
       "erpError": "ERP taslağı alınamadı",
       "success": "Üretim planı kaydedildi",
       "updateSuccess": "Üretim planı güncellendi",
@@ -3238,14 +3238,14 @@
       "modeErp": "Hızlı giriş yap",
       "modeManualDescription": "Bu modda tüm emir, çıktı ve tüketim kırılımlarını siz tanımlarsınız. ERP yalnızca referans olabilir.",
       "mainStockCode": "Ana ürün kodu",
-      "mainYapKod": "Ana YapKod",
+      "mainYapKod": "Ana Yapılandırma Kodu",
       "plannedQuantity": "Planlanan miktar",
       "erp": {
         "fetch": "Alanları doldur",
         "fetchByWorkOrder": "İş emrinden getir",
-        "fetchByWorkOrderDescription": "Hazır bir iş emri varsa onu girin. Sistem ana ürün, yapkod ve gerekli plan bilgisini Aşama 1 alanlarına doldurur.",
+        "fetchByWorkOrderDescription": "Hazır bir iş emri varsa onu girin. Sistem ana ürün, yapılandırma kodu ve gerekli plan bilgisini Aşama 1 alanlarına doldurur.",
         "fetchByStock": "Stok bilgisinden getir",
-        "fetchByStockDescription": "Hazır iş emri yoksa ana ürünü, varsa yapkodunu ve miktarı seçin. Sistem Aşama 1 alanlarını buna göre doldurur."
+        "fetchByStockDescription": "Hazır iş emri yoksa ana ürünü, varsa yapılandırma kodunu ve miktarı seçin. Sistem Aşama 1 alanlarını buna göre doldurur."
       },
       "erpNote": {
         "title": "Hızlı giriş yalnızca başlangıçtır",
@@ -3366,7 +3366,7 @@
       },
       "orderType": "Emir tipi",
       "producedStockCode": "Üretilecek stok",
-      "producedYapKod": "Üretilecek YapKod",
+      "producedYapKod": "Üretilecek Yapılandırma Kodu",
       "sourceWarehouse": "Kaynak depo",
       "targetWarehouse": "Hedef depo",
       "sequenceNo": "Sıra no.",
@@ -3454,16 +3454,16 @@
       "productSelect": "Ana urun secin",
       "productSearch": "Urunlerde ara",
       "productEmpty": "Urun bulunamadi",
-      "yapKodSelect": "Ana yapkod secin",
-      "yapKodSearch": "Yapkodlarda ara",
-      "yapKodEmpty": "Bu urune uygun yapkod bulunamadi",
+      "yapKodSelect": "Ana Yapılandırma Kodunu Seç",
+      "yapKodSearch": "Yapılandırma kodlarında ara",
+      "yapKodEmpty": "Bu ürüne uygun yapılandırma kodu bulunamadı",
       "plannerTab": "Planlamaci Modu",
       "advancedTab": "Gelismis Teknik Mod",
       "info": {
         "overviewTitle": "Bu ekran ne yapiyor?",
         "overviewBody": "Bu ekran once ana urunu ve miktari secmenizi, sonra uretimi asamalara bolmenizi, en son da hangi asamanin once veya ayni anda ilerleyecegini belirlemenizi saglar. Kayit aninda sistem plani uretim emirlerine cevirir.",
         "headerTitle": "Ana urun secimi nasil dusunulmeli?",
-        "headerBody": "Ana urun, planin sonunda elde etmek istediginiz mamuldur. Ana yapkod bu mamulun varyantini anlatir. Hazir bir is emri veya stok bilgisi varsa hizli giris ile bu alanlari otomatik doldurabilirsiniz.",
+        "headerBody": "Ana ürün, planın sonunda elde etmek istediğiniz mamuldür. Ana yapılandırma kodu bu mamulün varyantını belirtir. Hazır bir iş emri veya stok bilgisi varsa hızlı giriş ile bu alanları otomatik doldurabilirsiniz.",
         "stageTitle": "Asama nedir?",
         "stageBody": "Her kart tek bir uretim asamasidir. Ornek: govde hazirlama, montaj, paketleme. Seri modda bir asama bitmeden sonraki baslamaz. Paralel veya karma modda ayni sequence numarasina sahip asamalar birlikte ilerleyebilir.",
         "outputTitle": "Cikti neyi anlatir?",
@@ -3481,7 +3481,7 @@
       "assignedRoleSelect": "Rol secin",
       "roleSearch": "Rollerde ara",
       "roleEmpty": "Rol bulunamadi",
-      "yapKod": "Yap Kod"
+      "yapKod": "Yapılandırma Kodu"
     },
     "process": {
       "title": "Üretim süreci",
@@ -3614,8 +3614,8 @@
       "operatorFlowSubtitle": "Kioskta tek ekrandan ilerlemek icin asamanin su anki gerekli adimlarini takip edin.",
       "currentAction": "Siradaki Islem",
       "quickEntryTitle": "Hizli Giris",
-      "quickEntrySubtitle": "Stok kodu, yapkod veya barkod benzeri bir bilgi girin; sistem uygun plan satirini doldursun.",
-      "quickEntryPlaceholder": "Stok kodu / YapKod / Barkod girin",
+      "quickEntrySubtitle": "Stok kodu, yapılandırma kodu veya barkod girin; sistem uygun plan satırını doldursun.",
+      "quickEntryPlaceholder": "Stok kodu / Yapılandırma kodu / Barkod girin",
       "quickEntryApply": "Satiri Doldur",
       "remainingQuantity": "Kalan",
       "requiredConsumptions": "Tuketilmesi Gereken Kalemler",
@@ -4087,7 +4087,7 @@
       "isFirstCount": "İlk sayım olarak aç",
       "warehouse": "Depo",
       "stock": "Stok",
-      "yapKod": "YapKod",
+      "yapKod": "Yapılandırma Kodu",
       "rack": "Raf",
       "cell": "Hücre",
       "scopeType": "Kapsam tipi",
@@ -4106,7 +4106,7 @@
     "placeholders": {
       "selectWarehouse": "Depo seç",
       "selectStock": "Stok seç",
-      "selectYapKod": "YapKod seç",
+      "selectYapKod": "Yapılandırma Kodu Seç",
       "enterRack": "Raf kodu gir",
       "enterCell": "Hücre kodu gir",
       "selectHeader": "Sayım emri seç",
@@ -4443,7 +4443,7 @@
     "stock": {
       "badgeModule": "WarehouseBalance",
       "badgeSummary": "Özet",
-      "subtitle": "Depo bazlı kümüle stok, yapkod, seri sayısı ve raf yayılımını tek ekranda izleyin.",
+      "subtitle": "Depo bazlı kümüle stok, yapılandırma kodu, seri sayısı ve raf yayılımını tek ekranda izleyin.",
       "toastRebuildAllOk": "Depo stok bakiyesi yeniden oluşturuldu",
       "toastRebuildAllFailed": "Depo stok bakiyesi yeniden oluşturulamadı",
       "toastRebuildWarehouseOk": "Depo bazlı bakiye yeniden oluşturuldu",
@@ -4453,7 +4453,7 @@
       "columns": {
         "warehouse": "Depo",
         "stock": "Stok",
-        "yapKod": "YapKod",
+        "yapKod": "Yapılandırma Kodu",
         "quantity": "Miktar",
         "available": "Kullanılabilir",
         "serialCount": "Seri sayısı",
@@ -4467,7 +4467,7 @@
         "serials": "Görünen seri sayısı"
       },
       "empty": "Depo stok bakiyesi bulunamadı",
-      "searchPlaceholder": "Depo, stok veya yapkod ara...",
+      "searchPlaceholder": "Depo, stok veya yapılandırma kodu ara...",
       "rebuildWarehouse": "Depoyu yeniden oluştur",
       "rebuildWarehouseHint": "Bu satırdaki depo için bakiye özetini yeniden hesaplar.",
       "rebuildStock": "Stoğu yeniden oluştur",
@@ -4478,7 +4478,7 @@
         "issueType": "Sorun tipi",
         "warehouse": "Depo",
         "stock": "Stok",
-        "yapKod": "YapKod",
+        "yapKod": "Yapılandırma Kodu",
         "quantityDelta": "Miktar farkı",
         "availableDelta": "Kullanılabilir farkı",
         "serialDelta": "Seri farkı"
@@ -4498,7 +4498,7 @@
         "extraSummary": "Fazla özet"
       },
       "empty": "Tutarsızlık bulunamadı",
-      "searchPlaceholder": "Depo, stok, yapkod veya sorun tipi ara..."
+      "searchPlaceholder": "Depo, stok, yapılandırma kodu veya sorun tipi ara..."
     },
     "serial": {
       "badgeModule": "WarehouseBalance",
@@ -4508,7 +4508,7 @@
         "warehouse": "Depo",
         "shelf": "Raf / Hücre",
         "stock": "Stok",
-        "yapKod": "YapKod",
+        "yapKod": "Yapılandırma Kodu",
         "serials": "Seriler",
         "quantity": "Miktar",
         "status": "Stok durumu",

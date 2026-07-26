@@ -39,7 +39,7 @@
     "eReceiptHint": "E-irsaliye: 3 karakter birim kodu + 4 karakter yıl + 9 karakter sıra numarası.",
     "validNumber": "Belge numarası biçimi geçerli.", "plannedArrival": "Planlanan Geliş", "warehouse": "Hedef Depo",
     "location": "Kabul / Staging Alanı", "series": "WMS Belge Serisi", "priority": "Öncelik",
-    "labelStrategy": "Etiket Stratejisi", "executionMode": "Kabul Yöntemi", "stock": "Stok", "yap": "YAP Kodu",
+    "labelStrategy": "Etiket Stratejisi", "executionMode": "Kabul Yöntemi", "stock": "Stok", "yap": "Yapılandırma Kodu",
     "quantity": "Miktar", "unit": "Birim", "lot": "Lot", "serial": "Seri", "manufacturingDate": "Üretim Tarihi",
     "expirationDate": "Son Kullanma Tarihi", "scannedBarcode": "Okutulan Barkod", "addLine": "Satır Ekle",
     "actions": "İşlemler", "removeLine": "Satırı sil", "noLines": "Henüz stok satırı eklenmedi.", "description": "Açıklama",
