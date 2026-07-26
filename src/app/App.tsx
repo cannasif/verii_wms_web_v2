@@ -12,7 +12,7 @@ import {
   loadSerialNumberRulesPage, loadShippingCreatePage, loadShippingHubPage, loadShippingListPage,
   loadShippingOperationPage, loadShippingPolicyPage, loadSmtpSettingsPage, loadSteelReceiptHubPage,
   loadSteelReceiptImportPage, loadSteelReceiptInspectionPage, loadSteelReceiptOperationsPage,
-  loadSteelReceiptPlansPage, loadStockBalancePages, loadStockMovementsPage, loadUserManagementPage,
+  loadSteelReceiptPlansPage, loadSteelReceiptReportsPage, loadStockBalancePages, loadStockMovementsPage, loadUserManagementPage,
   loadVehicleCheckInListPage, loadVehicleCheckInPage, loadWarehouseTransferDraftPage,
   loadWarehouseTransferHubPage, loadWarehouseTransferListPage, loadWarehouseTransferOperationPage,
   loadWarehouseTransferPolicyPage,
@@ -65,6 +65,7 @@ const SteelReceiptImportPage = lazy(() => loadSteelReceiptImportPage().then((m) 
 const SteelReceiptPlansPage = lazy(() => loadSteelReceiptPlansPage().then((m) => ({ default: m.SteelReceiptPlansPage })));
 const SteelReceiptInspectionPage = lazy(() => loadSteelReceiptInspectionPage().then((m) => ({ default: m.SteelReceiptInspectionPage })));
 const SteelReceiptOperationsPage = lazy(() => loadSteelReceiptOperationsPage().then((m) => ({ default: m.SteelReceiptOperationsPage })));
+const SteelReceiptReportsPage = lazy(() => loadSteelReceiptReportsPage().then((m) => ({ default: m.SteelReceiptReportsPage })));
 const VehicleCheckInListPage = lazy(() => loadVehicleCheckInListPage().then((m) => ({ default: m.VehicleCheckInListPage })));
 const VehicleCheckInPage = lazy(() => loadVehicleCheckInPage().then((m) => ({ default: m.VehicleCheckInPage })));
 const WarehouseTransferDraftPage = lazy(() => loadWarehouseTransferDraftPage().then((m) => ({ default: m.WarehouseTransferDraftPage })));
@@ -180,6 +181,7 @@ export function App(): ReactElement {
           <Route path="warehouse/goods-receipts/steel/operations" element={<SteelReceiptOperationsPage />} />
           <Route path="warehouse/goods-receipts/steel/receipt" element={<SteelReceiptOperationsPage initialTab="receipt" />} />
           <Route path="warehouse/goods-receipts/steel/placement" element={<SteelReceiptOperationsPage initialTab="placement" />} />
+          <Route path="warehouse/goods-receipts/steel/reports" element={<SteelReceiptReportsPage />} />
           <Route path="warehouse/goods-receipt-settings" element={<GoodsReceiptPolicyPage />} />
           <Route path="warehouse/quality/settings" element={<QualitySettingsPage />} />
           <Route path="warehouse/quality/rules" element={<QualityRulesPage />} />

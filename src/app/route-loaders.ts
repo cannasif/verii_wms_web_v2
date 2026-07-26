@@ -33,6 +33,7 @@ export const loadSteelReceiptImportPage = () => import('@/features/steel-receipt
 export const loadSteelReceiptPlansPage = () => import('@/features/steel-receipt/components/SteelReceiptPlansPage');
 export const loadSteelReceiptInspectionPage = () => import('@/features/steel-receipt/components/SteelReceiptInspectionPage');
 export const loadSteelReceiptOperationsPage = () => import('@/features/steel-receipt/components/SteelReceiptOperationsPage');
+export const loadSteelReceiptReportsPage = () => import('@/features/steel-receipt/components/SteelReceiptReportsPage');
 export const loadVehicleCheckInPage = () => import('@/features/vehicle-check-in/components/VehicleCheckInPage');
 export const loadVehicleCheckInListPage = () => import('@/features/vehicle-check-in/components/VehicleCheckInListPage');
 
@@ -77,6 +78,7 @@ const routePreloaders: Array<[prefix: string, load: () => Promise<unknown>]> = [
   ['/warehouse/warehouse-outbounds/new', loadWarehouseOutboundCreatePage],
   ['/warehouse/warehouse-outbounds', loadWarehouseOutboundHubPage],  ['/warehouse/goods-receipts/steel/vehicle-check-ins', loadVehicleCheckInListPage],
   ['/warehouse/goods-receipts/steel/vehicle-check-in', loadVehicleCheckInPage],
+  ['/warehouse/goods-receipts/steel/reports', loadSteelReceiptReportsPage],
   ['/warehouse/goods-receipts/steel/inspection', loadSteelReceiptInspectionPage],
   ['/warehouse/goods-receipts/steel/operations', loadSteelReceiptOperationsPage],
   ['/warehouse/goods-receipts/steel/receipt', loadSteelReceiptOperationsPage],

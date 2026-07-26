@@ -5,6 +5,7 @@ import {toast} from 'sonner';
 import {AdvancedDataGrid,type GridColumn} from '@/components/shared/AdvancedDataGrid';
 import {systemColumns,requiredActionColumn} from '@/components/shared/GridSystemColumns';
 import {Dialog,DialogContent,DialogTitle} from '@/components/ui/dialog';
+import {localizeEnumValue} from '@/lib/enum-localization';
 import {formatProjectNumber} from '@/lib/project-format';
 import {steelReceiptApi} from '../api/steel-receipt.api';
 import type {SteelAttachment,SteelLineRow} from '../types/steel-receipt.types';
@@ -25,7 +26,7 @@ export function SteelReceiptInspectionPage(){
   ],[]);
   const done=async()=>{await cache.invalidateQueries({queryKey:['advanced-grid','steel-receipt-inspection']});setRow(null)};
   return <><SteelProcessHeader currentStep="inspection" title="SAC Kabul ve Kalite Kontrolü" description="İthalat referansı, DCode, tedarikçi seri, stok veya Netsis sipariş numarasıyla partiyi bulun; ardından seri bazında izlenebilir karar verin." notice="Kalite kararı verilmeden levha ortak mal kabul emrine dönüştürülemez. Ret miktarı varsa gerekçe ve mümkünse fotoğraf/sertifika kanıtı ekleyin."/><section className="my-5 rounded-2xl border bg-[var(--wms-app-surface)] p-5"><p className="text-xs font-bold uppercase tracking-[.2em] text-cyan-500">1 · Parti veya Levhayı Bul</p><div className="mt-4 flex gap-2"><input className="input" value={batchInput} onChange={e=>setBatchInput(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')setBatchSearch(batchInput.trim())}} placeholder="Parti / seri / stok / sipariş ara..."/><button onClick={()=>setBatchSearch(batchInput.trim())} className="rounded-xl bg-cyan-600 px-5 font-bold text-white">Ara</button></div>
-    {batchSearch.length>=2&&<div className="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-3">{(batches.data?.items??[]).map(item=><button key={item.id} onClick={()=>setRow(item)} className="rounded-xl border p-3 text-left hover:border-cyan-500"><strong className="font-mono text-cyan-500">{item.dCode}</strong><span className="ml-2 text-sm">{item.stockCode}</span><small className="block text-slate-500">{item.importReferenceNo} · {item.supplierSerialNo} · {item.inspectionStatus}</small></button>)}{!batches.isLoading&&!batches.data?.items.length&&<p className="text-sm text-slate-500">Eşleşen SAC levhası bulunamadı.</p>}</div>}</section>
+    {batchSearch.length>=2&&<div className="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-3">{(batches.data?.items??[]).map(item=><button key={item.id} onClick={()=>setRow(item)} className="rounded-xl border p-3 text-left hover:border-cyan-500"><strong className="font-mono text-cyan-500">{item.dCode}</strong><span className="ml-2 text-sm">{item.stockCode}</span><small className="block text-slate-500">{item.importReferenceNo} · {item.supplierSerialNo} · {localizeEnumValue(item.inspectionStatus)}</small></button>)}{!batches.isLoading&&!batches.data?.items.length&&<p className="text-sm text-slate-500">Eşleşen SAC levhası bulunamadı.</p>}</div>}</section>
     <AdvancedDataGrid pageKey="steel-receipt-inspection" title="2 · Seri Bazında Kontrol Listesi" description="Geldi, gelmedi, incelendi, kabul, kısmi kabul ve ret kararlarını; fotoğraf ve sertifika kanıtlarıyla yönetin." columns={columns} fetchPage={steelReceiptApi.linesPaged}/>{row&&<InspectionDialog row={row} close={()=>setRow(null)} done={()=>void done()}/>}</>;
 }
 export function InspectionDialog({row,close,done}:{row:SteelLineRow;close:()=>void;done:()=>void}){
@@ -61,6 +62,6 @@ export function InspectionDialog({row,close,done}:{row:SteelLineRow;close:()=>vo
     </section>
     <div className="flex justify-end gap-3"><button onClick={close} className="rounded-xl border px-4 py-2">Vazgeç</button><button disabled={busy||!!validationError} onClick={()=>void save()} className="rounded-xl bg-cyan-600 px-4 py-2 font-bold text-white disabled:cursor-not-allowed disabled:opacity-40">Kararı Kaydet</button></div>
   </DialogContent></Dialog>}
-function Badge({value}:{value:string}){return <span className="rounded-full border px-2.5 py-1 text-xs font-bold">{value}</span>}
+function Badge({value}:{value:string}){return <span className="rounded-full border px-2.5 py-1 text-xs font-bold">{localizeEnumValue(value)}</span>}
 function Field({label,children}:{label:string;children:React.ReactNode}){return <label className="space-y-1.5 text-sm"><span className="font-bold">{label}</span>{children}</label>}
 function Card({label,value}:{label:string;value:string}){return <div className="rounded-xl border p-3"><small className="text-slate-500">{label}</small><strong className="block">{value}</strong></div>}

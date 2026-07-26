@@ -1,6 +1,7 @@
 import {useMemo} from 'react';
 import {AdvancedDataGrid,type GridColumn} from '@/components/shared/AdvancedDataGrid';
 import {systemColumns} from '@/components/shared/GridSystemColumns';
+import {localizeEnumValue} from '@/lib/enum-localization';
 import {formatProjectDateTime,formatProjectNumber} from '@/lib/project-format';
 import {steelReceiptApi} from '../api/steel-receipt.api';
 import type {SteelPlanRow} from '../types/steel-receipt.types';
@@ -20,4 +21,4 @@ export function SteelReceiptPlansPage(){
   return <AdvancedDataGrid pageKey="steel-receipt-plans" title="SAC Beklenti Planları" description="Araç girişiyle ilişkilendirilen beklenen levha partileri ve süreç durumları." columns={columns} fetchPage={steelReceiptApi.plansPaged}/>;
 }
 
-function Status({value}:{value:string}){return <span className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-2.5 py-1 text-xs font-bold text-cyan-500">{value}</span>}
+function Status({value}:{value:string}){return <span className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-2.5 py-1 text-xs font-bold text-cyan-500">{localizeEnumValue(value)}</span>}

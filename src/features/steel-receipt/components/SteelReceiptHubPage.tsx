@@ -1,10 +1,9 @@
-import {ArrowRight,CarFront,ClipboardCheck,FileSpreadsheet,Layers3,Rows3,Truck} from 'lucide-react';
+import {ArrowRight,BarChart3,ClipboardCheck,FileSpreadsheet,Layers3,Rows3,Truck} from 'lucide-react';
 import {Link} from 'react-router-dom';
 
 const phases=[
   {number:'01',title:'Kapı ve Beklenti',description:'Araç, şoför, tedarikçi ve beklenen levha verisini operasyondan önce doğrulayın.',items:[
-    {title:'Araç Giriş İşlemi',text:'Çekici/dorse, şoför, nakliyeci ve saha görsellerini kaydedin.',href:'/warehouse/goods-receipts/steel/vehicle-check-in',icon:CarFront},
-    {title:'Araç Giriş Kayıtları',text:'Kapı kayıtlarını sunucu taraflı listede izleyin ve güncelleyin.',href:'/warehouse/goods-receipts/steel/vehicle-check-ins',icon:Truck},
+    {title:'Araç Giriş Kayıtları',text:'Kapı kayıtlarını izleyin; yeni araç ve SAC kabulünü listenin + aksiyonundan başlatın.',href:'/warehouse/goods-receipts/steel/vehicle-check-ins',icon:Truck},
     {title:'Beklenti Aktarımı',text:'Excel’i önizleyin, doğrulayın ve DCode ile idempotent kaydedin.',href:'/warehouse/goods-receipts/steel/import',icon:FileSpreadsheet},
     {title:'SAC Planları',text:'Aktarım partilerini ve süreç durumlarını izleyin.',href:'/warehouse/goods-receipts/steel/plans',icon:Rows3},
   ]},
@@ -14,6 +13,9 @@ const phases=[
   {number:'03',title:'Kabul ve Yerleştirme',description:'Onaylı levhaları emre dönüştürün; fiziksel kabul sonrası stok hareketiyle rafa alın.',items:[
     {title:'Mal Kabul Emri',text:'Onaylı levhaları ortak emre aktarın ve sorumlulara atayın.',href:'/warehouse/goods-receipts/steel/receipt',icon:Layers3},
     {title:'Saha / Raf Yerleştirme',text:'Raf doluluğunu görerek nihai konumu ve istif sırasını kaydedin.',href:'/warehouse/goods-receipts/steel/placement',icon:Layers3},
+  ]},
+  {number:'04',title:'İzleme ve Raporlama',description:'Levha izlenebilirliğini, bekleyen işleri ve operasyon istisnalarını tek merkezden izleyin.',items:[
+    {title:'SAC Operasyon Raporları',text:'DCode, tedarikçi serisi, kalite, mal kabul ve yerleştirme durumlarını arayın.',href:'/warehouse/goods-receipts/steel/reports',icon:BarChart3},
   ]},
 ];
 

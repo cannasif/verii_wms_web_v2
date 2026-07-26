@@ -1,7 +1,7 @@
 import {InboundProcessHeader} from '@/features/inbound-operations/components/InboundProcessHeader';
 
 const steps=[
-  {key:'gate',label:'Araç Girişi',description:'Plaka, şoför ve saha kaydı',href:'/warehouse/goods-receipts/steel/vehicle-check-in'},
+  {key:'gate',label:'Araç Kayıtları',description:'Liste, yeni kabul ve güncelleme',href:'/warehouse/goods-receipts/steel/vehicle-check-ins'},
   {key:'plan',label:'Beklenti Planı',description:'Excel önizleme ve doğrulama',href:'/warehouse/goods-receipts/steel/import'},
   {key:'inspection',label:'Kalite Kontrol',description:'Levha bazında kabul ve ret',href:'/warehouse/goods-receipts/steel/inspection'},
   {key:'receipt',label:'Mal Kabul Emri',description:'Emre dönüştürme ve atama',href:'/warehouse/goods-receipts/steel/receipt'},
