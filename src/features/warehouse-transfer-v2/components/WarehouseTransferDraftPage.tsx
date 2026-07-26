@@ -88,7 +88,13 @@ const blankLine = (): TransferDraftLine => ({
   trackings: [],
 });
 
-export function WarehouseTransferDraftPage(): ReactElement {
+export type TransferDraftVariant = "warehouse" | "production" | "subcontracting";
+
+export function WarehouseTransferDraftPage({
+  variant = "warehouse",
+}: {
+  variant?: TransferDraftVariant;
+}): ReactElement {
   const branchCode = useAuthStore((x) => x.branch?.code ?? "0");
   const [policy, setPolicy] = useState<WarehouseTransferPolicy | null>(null);
   const [sourceKind, setSourceKind] =
@@ -113,6 +119,19 @@ export function WarehouseTransferDraftPage(): ReactElement {
   const [priority, setPriority] = useState("3");
   const [externalReference, setExternalReference] = useState("");
   const [description, setDescription] = useState("");
+  const [productionPurpose, setProductionPurpose] = useState<"MaterialSupply" | "WorkInProgressMove" | "OutputMove">("MaterialSupply");
+  const [productionPlanNo, setProductionPlanNo] = useState("");
+  const [productionOrderNo, setProductionOrderNo] = useState("");
+  const [productionOperationCode, setProductionOperationCode] = useState("");
+  const [sourceWorkCenterCode, setSourceWorkCenterCode] = useState("");
+  const [targetWorkCenterCode, setTargetWorkCenterCode] = useState("");
+  const [subcontractDirection, setSubcontractDirection] = useState<"IssueToSupplier" | "ReceiptFromSupplier" | "SupplierToSupplier">("IssueToSupplier");
+  const [supplierValue, setSupplierValue] = useState<string | null>(null);
+  const [subcontractOrderNo, setSubcontractOrderNo] = useState("");
+  const [expectedReturnAt, setExpectedReturnAt] = useState("");
+  const [parentIssueTransferId, setParentIssueTransferId] = useState("");
+  const [qualityInspectionRequired, setQualityInspectionRequired] = useState(true);
+  const [supplierDispatchNo, setSupplierDispatchNo] = useState("");
   const [lines, setLines] = useState<TransferDraftLine[]>([blankLine()]);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<CreateTransferDraftResult | null>(null);
@@ -127,15 +146,20 @@ export function WarehouseTransferDraftPage(): ReactElement {
     setSeries([]);
     setSeriesId(null);
     if (!sourceId) return;
+    const documentType = variant === "production"
+      ? "ProductionTransfer"
+      : variant === "subcontracting"
+        ? subcontractDirection === "ReceiptFromSupplier" ? "SubcontractingReceipt" : "SubcontractingIssue"
+        : "InterWarehouseTransfer";
     void warehouseTransferApi
-      .series(sourceId)
+      .series(sourceId, documentType)
       .then((rows) => {
         setSeries(rows);
         const preferred = rows.find((x) => x.isDefault) ?? rows[0];
         setSeriesId(preferred ? String(preferred.id) : null);
       })
       .catch((error: Error) => toast.error(error.message));
-  }, [sourceId]);
+  }, [sourceId, subcontractDirection, variant]);
   const total = useMemo(
     () => lines.reduce((sum, x) => sum + Number(x.quantity || 0), 0),
     [lines],
@@ -147,7 +171,7 @@ export function WarehouseTransferDraftPage(): ReactElement {
 
   const setSource = (value: TransferSourceKind) => {
     setSourceKind(value);
-    setLines(value === "StockBased" ? [blankLine()] : []);
+    setLines(value === "StockBased" || variant !== "warehouse" ? [blankLine()] : []);
     setOrders([]);
     setSelectedOrders([]);
     setCustomerValue(null);
@@ -276,13 +300,24 @@ export function WarehouseTransferDraftPage(): ReactElement {
           : policy.allowStockBasedDirect;
     if (!allowed) return "Seçilen transfer kombinasyonu politikada kapalıdır.";
     if (!sourceId || !targetId) return "Kaynak ve hedef depo seçilmelidir.";
-    if (sourceId === targetId) return "Kaynak ve hedef depo aynı olamaz.";
+    if (variant === "warehouse" && sourceId === targetId) return "Kaynak ve hedef depo aynı olamaz.";
+    if (variant !== "warehouse" && sourceId === targetId && lines.some((x) =>
+      !x.sourceLocationId || !x.targetLocationId || x.sourceLocationId === x.targetLocationId))
+      return "Aynı depo içindeki operasyonda her kalemin kaynak ve hedef rafı farklı olmalıdır.";
     if (!seriesId) return "Transfer belge serisi seçilmelidir.";
     if (dispatchAt && arrivalAt && new Date(arrivalAt) < new Date(dispatchAt))
       return "Planlanan varış sevk zamanından önce olamaz.";
     if (!lines.length) return "En az bir transfer kalemi olmalıdır.";
-    if (sourceKind === "OrderBased" && lines.some((x) => !x.source))
+    if (variant === "warehouse" && sourceKind === "OrderBased" && lines.some((x) => !x.source))
       return "Siparişli transferde Netsis emir kalemleri seçilmelidir.";
+    if (variant === "production" && sourceKind === "OrderBased" && !productionOrderNo.trim())
+      return "Üretim emrine istinaden işlemde üretim emri numarası zorunludur.";
+    if (variant === "subcontracting" && !supplierValue)
+      return "Fason tedarikçi seçilmelidir.";
+    if (variant === "subcontracting" && sourceKind === "OrderBased" && !subcontractOrderNo.trim())
+      return "Siparişli fason işlemde fason sipariş numarası zorunludur.";
+    if (variant === "subcontracting" && subcontractDirection === "ReceiptFromSupplier" && !parentIssueTransferId.trim())
+      return "Fasondan dönüşte kaynak fasona çıkış transferi zorunludur.";
     if (
       executionKind === "TaskBased" &&
       policy.requireAssigneeForTask &&
@@ -363,13 +398,13 @@ export function WarehouseTransferDraftPage(): ReactElement {
     }
     setBusy(true);
     try {
-      const created = await warehouseTransferApi.createDraft({
+      const transfer = {
         idempotencyKey: crypto.randomUUID(),
         branchCode,
         documentSeriesId: Number(seriesId),
         documentDate,
         initiationMode:
-          sourceKind === "OrderBased"
+          variant === "warehouse" && sourceKind === "OrderBased"
             ? executionKind === "TaskBased"
               ? "OrderBasedTask"
               : "OrderBasedDirectTransfer"
@@ -377,7 +412,7 @@ export function WarehouseTransferDraftPage(): ReactElement {
               ? "StockBasedTask"
               : "DirectTransfer",
         processType:
-          sourceKind === "OrderBased" ? "ErpOrderBased" : "InternalRequest",
+          variant === "warehouse" && sourceKind === "OrderBased" ? "ErpOrderBased" : "InternalRequest",
         sourceWarehouseId: sourceId,
         targetWarehouseId: targetId,
         sourceStagingLocationId: sourceStaging ? Number(sourceStaging) : null,
@@ -418,7 +453,56 @@ export function WarehouseTransferDraftPage(): ReactElement {
         })),
         assignedUserIds:
           executionKind === "TaskBased" ? assignees.map((x) => x.id) : [],
-      });
+      };
+      const created = variant === "production"
+        ? await warehouseTransferApi.createProductionDraft({
+            transfer,
+            purpose: productionPurpose,
+            productionHeaderId: null,
+            productionOrderId: null,
+            productionOperationId: null,
+            productionPlanNo: productionPlanNo.trim() || null,
+            productionOrderNo: productionOrderNo.trim() || null,
+            productionOperationCode: productionOperationCode.trim() || null,
+            sourceWorkCenterCode: sourceWorkCenterCode.trim() || null,
+            targetWorkCenterCode: targetWorkCenterCode.trim() || null,
+            triggeredByProduction: sourceKind === "OrderBased",
+            autoGenerated: false,
+            requiredForOrderStart: productionPurpose === "MaterialSupply",
+            requiredForOrderCompletion: productionPurpose === "OutputMove",
+            lineContexts: lines.map((line, lineIndex) => ({
+              lineIndex,
+              lineRole: productionPurpose === "MaterialSupply" ? "ConsumptionSupply"
+                : productionPurpose === "WorkInProgressMove" ? "WorkInProgress" : "ProductionOutput",
+              productionConsumptionId: null,
+              productionOutputId: null,
+              requirementReference: productionOrderNo.trim() || null,
+              requiredQuantity: line.quantity,
+            })),
+          })
+        : variant === "subcontracting"
+          ? await warehouseTransferApi.createSubcontractingDraft({
+              transfer,
+              direction: subcontractDirection,
+              supplierId: Number(supplierValue?.split("|")[0]),
+              subcontractOrderNo: subcontractOrderNo.trim() || null,
+              subcontractOrderDate: documentDate,
+              parentIssueTransferId: parentIssueTransferId.trim() ? Number(parentIssueTransferId) : null,
+              expectedReturnAtUtc: expectedReturnAt ? new Date(expectedReturnAt).toISOString() : null,
+              ownershipType: "CompanyOwned",
+              qualityInspectionRequired,
+              operationCode: productionOperationCode.trim() || null,
+              supplierDispatchNo: supplierDispatchNo.trim() || null,
+              lineContexts: lines.map((line, lineIndex) => ({
+                lineIndex,
+                lineRole: subcontractDirection === "ReceiptFromSupplier" ? "FinishedProduct" : "Component",
+                sourceIssueLineId: null,
+                expectedQuantity: line.quantity,
+                scrapQuantity: 0,
+                requirementReference: subcontractOrderNo.trim() || null,
+              })),
+            })
+          : await warehouseTransferApi.createDraft(transfer);
       setResult(created);
       toast.success(`${created.documentNo} transferi oluşturuldu.`);
     } catch (error) {
@@ -427,6 +511,15 @@ export function WarehouseTransferDraftPage(): ReactElement {
       setBusy(false);
     }
   };
+  const title = variant === "production" ? "Üretime Transfer"
+    : variant === "subcontracting" ? "Fason Transfer" : "Depolar Arası Transfer";
+  const listUrl = variant === "production" ? "/warehouse/production-transfers/list"
+    : variant === "subcontracting" ? "/warehouse/subcontracting-transfers/list"
+      : "/warehouse/transfers/list";
+  const orderLabel = variant === "production" ? "Üretim emrine istinaden"
+    : variant === "subcontracting" ? "Fason siparişe istinaden" : "Netsis transfer emrine istinaden";
+  const stockLabel = variant === "production" ? "Plansız / manuel üretim ihtiyacı"
+    : variant === "subcontracting" ? "Siparişsiz fason işlem" : "Siparişsiz / serbest stoktan";
 
   if (result)
     return (
@@ -444,7 +537,7 @@ export function WarehouseTransferDraftPage(): ReactElement {
         )}
         <div className="mt-5 flex justify-center gap-2">
           <Link
-            to="/warehouse/transfers/list"
+            to={listUrl}
             className="rounded-xl bg-emerald-600 px-5 py-2.5 font-semibold text-white"
           >
             Kayıtlara Git
@@ -453,7 +546,7 @@ export function WarehouseTransferDraftPage(): ReactElement {
             type="button"
             onClick={() => {
               setResult(null);
-              setLines(sourceKind === "StockBased" ? [blankLine()] : []);
+              setLines(sourceKind === "StockBased" || variant !== "warehouse" ? [blankLine()] : []);
             }}
             className="rounded-xl border px-5 py-2.5"
           >
@@ -467,12 +560,12 @@ export function WarehouseTransferDraftPage(): ReactElement {
     <section className="space-y-5">
       <header className="rounded-2xl border border-[var(--wms-app-border)] bg-gradient-to-r from-violet-500/10 via-[var(--wms-app-panel)] to-cyan-500/10 p-6">
         <p className="text-xs font-bold uppercase tracking-[.18em] text-violet-500">
-          Depolar Arası Transfer
+          {title}
         </p>
-        <h1 className="mt-1 text-2xl font-black">Esnek Transfer Oluşturma</h1>
+        <h1 className="mt-1 text-2xl font-black">{title} Oluşturma</h1>
         <p className="mt-2 text-sm text-slate-500">
-          Sipariş kaynağı ile emir yürütmesini bağımsız seçin; bütün varyantlar
-          aynı transfer başlık, kalem, takip ve hareket yapısını kullanır.
+          Kaynak biçimi ile emir yürütmesini bağımsız seçin; stok, raf, seri/lot,
+          rezervasyon ve hareketler ortak fiziksel transfer motorunda yürütülür.
         </p>
       </header>
       <OperationFlowTabs
@@ -485,8 +578,8 @@ export function WarehouseTransferDraftPage(): ReactElement {
           setExecution(value === "task" ? "TaskBased" : "Direct")
         }
         accent="violet"
-        orderLabel="Netsis transfer emrine istinaden"
-        stockLabel="Siparişsiz / serbest stoktan"
+        orderLabel={orderLabel}
+        stockLabel={stockLabel}
         isAllowed={(source, execution) => {
           if (!policy) return false;
           return source === "order"
@@ -499,13 +592,50 @@ export function WarehouseTransferDraftPage(): ReactElement {
         }}
       >
         {sourceKind === "OrderBased"
-          ? "Netsis emir ve kalem bağlantıları kaynak tablolarda saklanır."
+          ? variant === "warehouse" ? "Netsis emir ve kalem bağlantıları kaynak tablolarda saklanır."
+            : "Operasyon belgesi bağlantısı uzman modül tablosunda saklanır."
           : "Kalemler ERP stok mirror üzerinden seçilir."}{" "}
         {executionKind === "TaskBased"
           ? "Toplama emri, rezervasyon ve kullanıcı ataması oluşur."
           : "Görev oluşturulmaz; yetki ve doğrudan transfer politikası uygulanır."}
       </OperationFlowTabs>
-      {sourceKind === "OrderBased" && (
+      {variant === "production" && (
+        <Panel title="Üretim bağlantısı ve transfer amacı" icon={<ClipboardList className="size-5" />}>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <Field label="Transfer amacı *"><AppDropdown value={productionPurpose} onValueChange={(value) => setProductionPurpose(value as typeof productionPurpose)} options={[
+              {value:"MaterialSupply",label:"Hammadde / bileşen besleme"},
+              {value:"WorkInProgressMove",label:"Yarı mamul / proses arası taşıma"},
+              {value:"OutputMove",label:"Mamul çıkışı"},
+            ]}/></Field>
+            <Field label="Üretim planı"><input className="input" maxLength={100} value={productionPlanNo} onChange={(e)=>setProductionPlanNo(e.target.value)}/></Field>
+            <Field label={`Üretim emri${sourceKind === "OrderBased" ? " *" : ""}`}><input className="input" maxLength={100} value={productionOrderNo} onChange={(e)=>setProductionOrderNo(e.target.value)}/></Field>
+            <Field label="Operasyon kodu"><input className="input" maxLength={100} value={productionOperationCode} onChange={(e)=>setProductionOperationCode(e.target.value)}/></Field>
+            <Field label="Kaynak iş merkezi"><input className="input" maxLength={100} value={sourceWorkCenterCode} onChange={(e)=>setSourceWorkCenterCode(e.target.value)}/></Field>
+            <Field label="Hedef iş merkezi"><input className="input" maxLength={100} value={targetWorkCenterCode} onChange={(e)=>setTargetWorkCenterCode(e.target.value)}/></Field>
+          </div>
+          <p className="mt-4 rounded-xl border border-violet-500/20 bg-violet-500/10 p-3 text-sm">
+            Hammadde besleme üretim başlangıcını; mamul çıkışı üretim tamamlamayı bloke edebilecek bağlantılarla kaydedilir.
+          </p>
+        </Panel>
+      )}
+      {variant === "subcontracting" && (
+        <Panel title="Fason tedarikçi ve süreç bağlantısı" icon={<ClipboardList className="size-5" />}>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <Field label="Fason işlem yönü *"><AppDropdown value={subcontractDirection} onValueChange={(value)=>setSubcontractDirection(value as typeof subcontractDirection)} options={[
+              {value:"IssueToSupplier",label:"Fasona çıkış"},
+              {value:"ReceiptFromSupplier",label:"Fasondan dönüş"},
+              {value:"SupplierToSupplier",label:"Fasoncudan fasoncuya"},
+            ]}/></Field>
+            <Field label="Fason tedarikçi *"><PagedAppDropdown queryKey={["subcontract-supplier",branchCode]} fetchPage={(r)=>warehouseTransferApi.customers(r,branchCode)} toOption={customerOption} value={supplierValue} onValueChange={setSupplierValue} searchable minSearchLength={2} placeholder="Tedarikçi ara"/></Field>
+            <Field label={`Fason sipariş no${sourceKind === "OrderBased" ? " *" : ""}`}><input className="input" maxLength={100} value={subcontractOrderNo} onChange={(e)=>setSubcontractOrderNo(e.target.value)}/></Field>
+            <Field label="Beklenen dönüş"><AppDateInput type="datetime-local" value={expectedReturnAt} onChange={(e)=>setExpectedReturnAt(e.target.value)}/></Field>
+            {subcontractDirection === "ReceiptFromSupplier" && <Field label="Kaynak fasona çıkış ID *"><input className="input" type="number" min={1} value={parentIssueTransferId} onChange={(e)=>setParentIssueTransferId(e.target.value)}/></Field>}
+            <Field label="Tedarikçi irsaliyesi"><input className="input" maxLength={100} value={supplierDispatchNo} onChange={(e)=>setSupplierDispatchNo(e.target.value)}/></Field>
+            {subcontractDirection === "ReceiptFromSupplier" && <label className="flex h-11 items-center gap-2 self-end rounded-xl border border-[var(--wms-app-border)] px-3 text-sm"><input type="checkbox" checked={qualityInspectionRequired} onChange={(e)=>setQualityInspectionRequired(e.target.checked)}/>Kalite kontrolü zorunlu</label>}
+          </div>
+        </Panel>
+      )}
+      {variant === "warehouse" && sourceKind === "OrderBased" && (
         <OrderSelection
           branchCode={branchCode}
           customerValue={customerValue}
@@ -544,7 +674,7 @@ export function WarehouseTransferDraftPage(): ReactElement {
               }
               toOption={(warehouse) => ({
                 ...warehouseOption(warehouse),
-                disabled: warehouse.id === sourceId,
+                disabled: variant === "warehouse" && warehouse.id === sourceId,
               })}
               value={targetValue}
               onValueChange={(value) => {
@@ -664,7 +794,7 @@ export function WarehouseTransferDraftPage(): ReactElement {
             />
           ))}
         </div>
-        {sourceKind === "StockBased" && (
+        {(sourceKind === "StockBased" || variant !== "warehouse") && (
           <button
             type="button"
             onClick={() => setLines((current) => [...current, blankLine()])}
@@ -682,7 +812,7 @@ export function WarehouseTransferDraftPage(): ReactElement {
           onClick={() => void create()}
           className="inline-flex min-w-48 items-center justify-center gap-2 rounded-xl bg-violet-600 px-5 py-3 font-bold text-white disabled:opacity-50"
         >
-          {busy && <Loader2 className="size-4 animate-spin" />}Transferi Oluştur
+          {busy && <Loader2 className="size-4 animate-spin" />}{title} Oluştur
         </button>
       </div>
     </section>

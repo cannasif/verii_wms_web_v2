@@ -39,7 +39,7 @@ export function DocumentSeriesPage() {
   const canDelete = can('WMS.DOCUMENT_SERIES.DELETE');
   const locked = Boolean(editing?.hasIssuedNumbers);
 
-  const documentTypes = useMemo(() => (['GoodsReceipt', 'InterWarehouseTransfer', 'Shipment', 'WarehouseReceipt', 'WarehouseIssue'] as WmsDocumentType[])
+  const documentTypes = useMemo(() => (['GoodsReceipt', 'InterWarehouseTransfer', 'Shipment', 'WarehouseReceipt', 'WarehouseIssue', 'ProductionTransfer', 'SubcontractingIssue', 'SubcontractingReceipt'] as WmsDocumentType[])
     .map((value) => ({ value, label: t(`types.${value}`) })), [t]);
   const yearFormats = useMemo(() => (['None', 'TwoDigit', 'FourDigit'] as DocumentYearFormat[])
     .map((value) => ({ value, label: t(`yearFormats.${value}`) })), [t]);

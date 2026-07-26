@@ -3,6 +3,14 @@ export type TransferProcessType = 'PlannedTask' | 'DirectTransfer';
 export type StockTrackingType = 'None' | 'Lot' | 'Serial' | 'LotAndSerial';
 export type TransferSourceKind = 'OrderBased' | 'StockBased';
 export type TransferExecutionKind = 'TaskBased' | 'Direct';
+export type WarehouseTransferBusinessContext =
+  | 'InterWarehouse'
+  | 'ProductionMaterialSupply'
+  | 'ProductionWipMove'
+  | 'ProductionOutputMove'
+  | 'SubcontractingIssue'
+  | 'SubcontractingReceipt'
+  | 'SubcontractorToSubcontractor';
 
 export type EffectiveTrackingPolicy = EffectiveStockTrackingPolicy;
 
@@ -104,6 +112,7 @@ export interface WarehouseTransferGridRow {
   branchCode: string;
   documentNo: string;
   documentDate: string;
+  businessContext: WarehouseTransferBusinessContext;
   initiationMode: TransferInitiationMode;
   processType: TransferProcessType;
   status: string;

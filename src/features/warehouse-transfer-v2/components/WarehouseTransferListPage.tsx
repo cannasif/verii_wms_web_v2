@@ -7,10 +7,17 @@ import { ResponsiveDialog } from '@/components/shared/ResponsiveDialog';
 import { requiredActionColumn, systemColumns } from '@/components/shared/GridSystemColumns';
 import { localizeEnumValue } from '@/lib/enum-localization';
 import { formatProjectDate, formatProjectDateTime, formatProjectNumber } from '@/lib/project-format';
-import { warehouseTransferApi } from '../api/warehouse-transfer.api';
+import { transferApiFor, type TransferApiVariant } from '../api/warehouse-transfer.api';
 import type { WarehouseTransferDetail, WarehouseTransferGridRow } from '../types/warehouse-transfer.types';
 
-export function WarehouseTransferListPage(): ReactElement {
+type TransferClient = ReturnType<typeof transferApiFor>;
+
+export function WarehouseTransferListPage({ variant = 'warehouse' }: { variant?: TransferApiVariant }): ReactElement {
+  const transferApi = useMemo(() => transferApiFor(variant), [variant]);
+  const baseUrl = variant === 'production' ? '/warehouse/production-transfers'
+    : variant === 'subcontracting' ? '/warehouse/subcontracting-transfers' : '/warehouse/transfers';
+  const title = variant === 'production' ? 'Üretim Transfer Kayıtları'
+    : variant === 'subcontracting' ? 'Fason Transfer Kayıtları' : 'Depolar Arası Transfer Kayıtları';
   const [detail, setDetail] = useState<WarehouseTransferDetail | null>(null);
   const [editDetail, setEditDetail] = useState<WarehouseTransferDetail | null>(null);
   const [lifecycle, setLifecycle] = useState<{ row: WarehouseTransferGridRow; kind: 'delete' | 'cancel' } | null>(null);
@@ -20,14 +27,14 @@ export function WarehouseTransferListPage(): ReactElement {
   const load = useCallback(async (id: number, mode: 'detail' | 'edit') => {
     setLoadingId(id);
     try {
-      const result = await warehouseTransferApi.detail(id);
+      const result = await transferApi.detail(id);
       if (mode === 'detail') setDetail(result); else setEditDetail(result);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Transfer açılamadı.');
     } finally {
       setLoadingId(null);
     }
-  }, []);
+  }, [transferApi]);
 
   const columns = useMemo<GridColumn<WarehouseTransferGridRow>[]>(() => [
     ...systemColumns<WarehouseTransferGridRow>(),
@@ -46,27 +53,27 @@ export function WarehouseTransferListPage(): ReactElement {
     {
       key: 'actions', label: 'İşlemler', ...requiredActionColumn,
       render: (row) => <div className="flex items-center gap-1">
-        {row.status !== 'Cancelled' && <Link to={`/warehouse/transfers/${row.id}/operations`} title="Operasyonu yürüt" className="rounded-lg p-2 text-cyan-500 hover:bg-cyan-500/10"><PlayCircle className="size-4" /></Link>}
+        {row.status !== 'Cancelled' && <Link to={`${baseUrl}/${row.id}/operations`} title="Operasyonu yürüt" className="rounded-lg p-2 text-cyan-500 hover:bg-cyan-500/10"><PlayCircle className="size-4" /></Link>}
         {row.status === 'Draft' && <button type="button" title="Taslağı düzenle" onClick={() => void load(row.id, 'edit')} className="rounded-lg p-2 text-amber-500 hover:bg-amber-500/10"><Pencil className="size-4" /></button>}
         {row.status === 'Draft' && <button type="button" title="Taslağı sil" onClick={() => setLifecycle({ row, kind: 'delete' })} className="rounded-lg p-2 text-rose-500 hover:bg-rose-500/10"><Trash2 className="size-4" /></button>}
         {row.status !== 'Cancelled' && <button type="button" title="Transferi iptal et" onClick={() => setLifecycle({ row, kind: 'cancel' })} className="rounded-lg p-2 text-orange-500 hover:bg-orange-500/10"><Ban className="size-4" /></button>}
         <button type="button" title="Detayı göster" onClick={() => void load(row.id, 'detail')} className="rounded-lg p-2 text-violet-500 hover:bg-violet-500/10">{loadingId === row.id ? <Loader2 className="size-4 animate-spin" /> : <Eye className="size-4" />}</button>
       </div>,
     },
-  ], [load, loadingId]);
+  ], [baseUrl, load, loadingId]);
 
   const refreshed = () => setRevision((value) => value + 1);
   return <>
-    <AdvancedDataGrid key={revision} pageKey="warehouse-transfers" title="Depolar Arası Transfer Kayıtları"
+    <AdvancedDataGrid key={revision} pageKey={`${variant}-transfers`} title={title}
       description="Planlanan, toplanan, sevk edilen, alınan ve yerleştirilen miktarları sunucu taraflı filtreleme ile izleyin."
-      columns={columns} fetchPage={warehouseTransferApi.paged} />
-    {detail && <Detail detail={detail} close={() => setDetail(null)} />}
-    {editDetail && <EditDraft detail={editDetail} close={() => setEditDetail(null)} saved={() => { setEditDetail(null); refreshed(); }} />}
-    {lifecycle && <LifecycleDialog value={lifecycle} close={() => setLifecycle(null)} completed={() => { setLifecycle(null); refreshed(); }} />}
+      columns={columns} fetchPage={transferApi.paged} />
+    {detail && <Detail detail={detail} baseUrl={baseUrl} close={() => setDetail(null)} />}
+    {editDetail && <EditDraft api={transferApi} detail={editDetail} close={() => setEditDetail(null)} saved={() => { setEditDetail(null); refreshed(); }} />}
+    {lifecycle && <LifecycleDialog api={transferApi} value={lifecycle} close={() => setLifecycle(null)} completed={() => { setLifecycle(null); refreshed(); }} />}
   </>;
 }
 
-function EditDraft({ detail, close, saved }: { detail: WarehouseTransferDetail; close: () => void; saved: () => void }) {
+function EditDraft({ api, detail, close, saved }: { api: TransferClient; detail: WarehouseTransferDetail; close: () => void; saved: () => void }) {
   const [form, setForm] = useState({
     documentDate: detail.header.documentDate,
     plannedDispatchAtUtc: localDateTime(detail.header.plannedDispatchAtUtc),
@@ -79,7 +86,7 @@ function EditDraft({ detail, close, saved }: { detail: WarehouseTransferDetail; 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault(); setBusy(true);
     try {
-      await warehouseTransferApi.updateDraft(detail.header.id, {
+      await api.updateDraft(detail.header.id, {
         rowVersion: detail.rowVersion, documentDate: form.documentDate,
         sourceStagingLocationId: detail.draft.sourceStagingLocationId ?? null,
         targetReceivingLocationId: detail.draft.targetReceivingLocationId ?? null,
@@ -109,15 +116,15 @@ function EditDraft({ detail, close, saved }: { detail: WarehouseTransferDetail; 
   </ResponsiveDialog>;
 }
 
-function LifecycleDialog({ value, close, completed }: { value: { row: WarehouseTransferGridRow; kind: 'delete' | 'cancel' }; close: () => void; completed: () => void }) {
+function LifecycleDialog({ api, value, close, completed }: { api: TransferClient; value: { row: WarehouseTransferGridRow; kind: 'delete' | 'cancel' }; close: () => void; completed: () => void }) {
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
   const run = async () => {
     if (value.kind === 'cancel' && !reason.trim()) { toast.error('İptal nedeni zorunludur.'); return; }
     setBusy(true);
     try {
-      if (value.kind === 'delete') await warehouseTransferApi.deleteDraft(value.row.id);
-      else await warehouseTransferApi.cancel(value.row.id, reason);
+      if (value.kind === 'delete') await api.deleteDraft(value.row.id);
+      else await api.cancel(value.row.id, reason);
       toast.success(value.kind === 'delete' ? 'Transfer taslağı silindi.' : 'Transfer iptal edildi; stok hareketleri ters çevrildi.');
       completed();
     } catch (error) { toast.error(error instanceof Error ? error.message : 'İşlem tamamlanamadı.'); }
@@ -132,10 +139,10 @@ function LifecycleDialog({ value, close, completed }: { value: { row: WarehouseT
   </ResponsiveDialog>;
 }
 
-function Detail({ detail, close }: { detail: WarehouseTransferDetail; close: () => void }): ReactElement {
+function Detail({ detail, baseUrl, close }: { detail: WarehouseTransferDetail; baseUrl: string; close: () => void }): ReactElement {
   const header = detail.header;
   return <ResponsiveDialog onClose={close} title={`Transfer ${header.documentNo}`} description="Transfer kalemleri ve operasyon ilerlemesi." className="!max-w-6xl">
-      <header className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start"><div><h2 className="text-xl font-black">{header.documentNo}</h2><p className="text-sm text-slate-500">{header.sourceWarehouseCode} {header.sourceWarehouseName} → {header.targetWarehouseCode} {header.targetWarehouseName}</p></div><div className="flex items-center gap-2 self-end sm:self-auto">{header.status !== 'Cancelled' && <Link to={`/warehouse/transfers/${header.id}/operations`} className="inline-flex min-h-11 items-center rounded-lg bg-cyan-500 px-3 py-2 text-sm font-bold text-slate-950">Operasyonu aç</Link>}<button type="button" onClick={close} aria-label="Pencereyi kapat" className="grid size-11 place-items-center rounded-xl hover:bg-black/5 dark:hover:bg-white/10"><X className="size-5" /></button></div></header>
+      <header className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start"><div><h2 className="text-xl font-black">{header.documentNo}</h2><p className="text-sm text-slate-500">{header.sourceWarehouseCode} {header.sourceWarehouseName} → {header.targetWarehouseCode} {header.targetWarehouseName}</p></div><div className="flex items-center gap-2 self-end sm:self-auto">{header.status !== 'Cancelled' && <Link to={`${baseUrl}/${header.id}/operations`} className="inline-flex min-h-11 items-center rounded-lg bg-cyan-500 px-3 py-2 text-sm font-bold text-slate-950">Operasyonu aç</Link>}<button type="button" onClick={close} aria-label="Pencereyi kapat" className="grid size-11 place-items-center rounded-xl hover:bg-black/5 dark:hover:bg-white/10"><X className="size-5" /></button></div></header>
       <div className="mt-4 grid gap-3 md:grid-cols-4"><Info label="Durum" value={localizeEnumValue(header.status)} /><Info label="Onay" value={localizeEnumValue(header.approvalStatus)} /><Info label="Belge tarihi" value={formatProjectDate(header.documentDate)} /><Info label="Planlanan varış" value={header.plannedArrivalAtUtc ? formatProjectDateTime(header.plannedArrivalAtUtc) : '—'} /></div>
       <div className="mt-5 overflow-x-auto rounded-xl border border-[var(--wms-app-border)]"><table className="w-full text-sm"><thead className="bg-black/5 text-left dark:bg-white/5"><tr><th className="p-3">#</th><th className="p-3">Stok</th><th className="p-3">YAP</th><th className="p-3 text-right">Plan</th><th className="p-3 text-right">Rezerve</th><th className="p-3 text-right">Toplanan</th><th className="p-3 text-right">Sevk</th><th className="p-3 text-right">Alınan</th><th className="p-3">Durum</th></tr></thead><tbody>{detail.lines.map((line) => <tr key={line.id} className="border-t border-[var(--wms-app-border)]"><td className="p-3">{line.lineNo}</td><td className="p-3"><strong>{line.stockCode}</strong><div className="text-xs text-slate-500">{line.stockName}</div></td><td className="p-3">{line.yapCode || '—'}</td><td className="p-3 text-right">{formatProjectNumber(line.requestedQuantity)}</td><td className="p-3 text-right">{formatProjectNumber(line.reservedQuantity ?? 0)}</td><td className="p-3 text-right">{formatProjectNumber(line.pickedQuantity)}</td><td className="p-3 text-right">{formatProjectNumber(line.shippedQuantity)}</td><td className="p-3 text-right">{formatProjectNumber(line.receivedQuantity)}</td><td className="p-3">{localizeEnumValue(line.status)}</td></tr>)}</tbody></table></div>
   </ResponsiveDialog>;

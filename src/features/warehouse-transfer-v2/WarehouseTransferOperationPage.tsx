@@ -7,7 +7,7 @@ import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
 import { WarehouseBarcodeScanner } from '@/features/barcode-resolution/WarehouseBarcodeScanner';
 import { localizeEnumValue } from '@/lib/enum-localization';
 import { formatProjectNumber } from '@/lib/project-format';
-import { warehouseTransferApi, type WarehouseTransferOperationLinePayload } from './api/warehouse-transfer.api';
+import { transferApiFor, warehouseTransferApi, type TransferApiVariant, type WarehouseTransferOperationLinePayload } from './api/warehouse-transfer.api';
 import type { WarehouseTransferDetail } from './types/warehouse-transfer.types';
 
 type Phase = 'pick' | 'dispatch' | 'receive' | 'putaway';
@@ -20,8 +20,11 @@ const phaseOptions = [
   { value: 'putaway', label: '04 · Hedef rafa yerleştirme' },
 ];
 
-export function WarehouseTransferOperationPage() {
+export function WarehouseTransferOperationPage({ variant = 'warehouse' }: { variant?: TransferApiVariant }) {
   const id = Number(useParams().id);
+  const transferApi = useMemo(() => transferApiFor(variant), [variant]);
+  const listUrl = variant === 'production' ? '/warehouse/production-transfers/list'
+    : variant === 'subcontracting' ? '/warehouse/subcontracting-transfers/list' : '/warehouse/transfers/list';
   const [detail, setDetail] = useState<WarehouseTransferDetail>();
   const [loadError, setLoadError] = useState<string>();
   const [phase, setPhase] = useState<Phase>('pick');
@@ -35,14 +38,14 @@ export function WarehouseTransferOperationPage() {
   const load = useCallback(async () => {
     if (!id) return;
     try {
-      setDetail(await warehouseTransferApi.detail(id));
+      setDetail(await transferApi.detail(id));
       setLoadError(undefined);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Transfer kaydı açılamadı.';
       setLoadError(message);
       throw error;
     }
-  }, [id]);
+  }, [id, transferApi]);
 
   useEffect(() => { void load().catch((error: Error) => toast.error(error.message)); }, [load]);
 
@@ -81,7 +84,7 @@ export function WarehouseTransferOperationPage() {
   const transition = async (action: 'approve' | 'release') => {
     setBusy(true);
     try {
-      const result = await warehouseTransferApi.transition(id, action, reason);
+      const result = await transferApi.transition(id, action, reason);
       toast.success(`${result.documentNo}: ${localizeEnumValue(result.status)}`);
       await load();
     } catch (error) {
@@ -105,7 +108,7 @@ export function WarehouseTransferOperationPage() {
     if (invalidTracking) return toast.error('Seri, lot ve miktar bilgilerini stok takip kuralına uygun doldurun.');
     setBusy(true);
     try {
-      const result = await warehouseTransferApi.operate(id, phase, {
+      const result = await transferApi.operate(id, phase, {
         lines: selected.map((line) => ({
           lineId: line.lineId,
           quantity: line.quantity,
@@ -136,14 +139,14 @@ export function WarehouseTransferOperationPage() {
     putaway: detail.lines.reduce((x, y) => x + y.putawayQuantity, 0),
   } : null, [detail]);
 
-  if (loadError) return <OperationLoadError message={loadError} listUrl="/warehouse/transfers/list" />;
+  if (loadError) return <OperationLoadError message={loadError} listUrl={listUrl} />;
   if (!detail || !totals) return <div className="grid min-h-80 place-items-center"><Loader2 className="size-7 animate-spin text-violet-500" /></div>;
 
   return <section className="space-y-5">
     <header className="rounded-2xl border bg-gradient-to-r from-violet-500/10 via-[var(--wms-app-panel)] to-cyan-500/10 p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div><p className="text-xs font-bold uppercase tracking-widest text-violet-500">Transfer Operasyon Merkezi</p><h1 className="mt-1 text-2xl font-black">{detail.header.documentNo}</h1><p className="text-sm text-slate-500">{detail.header.sourceWarehouseCode} {detail.header.sourceWarehouseName} → {detail.header.targetWarehouseCode} {detail.header.targetWarehouseName}</p></div>
-        <Link to="/warehouse/transfers/list" className="rounded-xl border px-4 py-2 text-sm">Kayıtlara dön</Link>
+        <Link to={listUrl} className="rounded-xl border px-4 py-2 text-sm">Kayıtlara dön</Link>
       </div>
       <div className="mt-4 grid gap-2 sm:grid-cols-5">
         <Metric label="Plan" value={totals.requested} /><Metric label="Toplanan" value={totals.picked} /><Metric label="Sevk" value={totals.shipped} /><Metric label="Kabul" value={totals.received} /><Metric label="Yerleşen" value={totals.putaway} />

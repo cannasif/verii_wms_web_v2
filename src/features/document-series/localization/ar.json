@@ -24,7 +24,10 @@
     "InterWarehouseTransfer": "النقل بين المستودعات",
     "Shipment": "شحنة",
     "WarehouseReceipt": "إيصال المستودع",
-    "WarehouseIssue": "قضية المستودع"
+    "WarehouseIssue": "قضية المستودع",
+    "ProductionTransfer": "نقل إلى الإنتاج",
+    "SubcontractingIssue": "صرف إلى المقاول",
+    "SubcontractingReceipt": "استلام من المقاول"
   },
   "yearFormats": {
     "None": "لا سنة",

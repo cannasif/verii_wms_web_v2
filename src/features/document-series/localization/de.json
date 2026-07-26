@@ -24,7 +24,10 @@
     "InterWarehouseTransfer": "Transfer zwischen Lagern",
     "Shipment": "Versand",
     "WarehouseReceipt": "Lagerbeleg",
-    "WarehouseIssue": "Lagerproblem"
+    "WarehouseIssue": "Lagerproblem",
+    "ProductionTransfer": "Produktionstransfer",
+    "SubcontractingIssue": "Beistellungsentnahme",
+    "SubcontractingReceipt": "Lohnbearbeitungseingang"
   },
   "yearFormats": {
     "None": "Kein Jahr",

@@ -24,7 +24,10 @@
     "InterWarehouseTransfer": "Transfert inter-entrepôts",
     "Shipment": "Expédition",
     "WarehouseReceipt": "Récépissé d'entrepôt",
-    "WarehouseIssue": "Problème d'entrepôt"
+    "WarehouseIssue": "Problème d'entrepôt",
+    "ProductionTransfer": "Transfert vers la production",
+    "SubcontractingIssue": "Sortie vers sous-traitant",
+    "SubcontractingReceipt": "Retour de sous-traitance"
   },
   "yearFormats": {
     "None": "Pas d'année",

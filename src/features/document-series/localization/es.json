@@ -24,7 +24,10 @@
     "InterWarehouseTransfer": "Traslado entre almacenes",
     "Shipment": "Envío",
     "WarehouseReceipt": "Recibo de almacén",
-    "WarehouseIssue": "Problema de almacén"
+    "WarehouseIssue": "Problema de almacén",
+    "ProductionTransfer": "Transferencia a producción",
+    "SubcontractingIssue": "Salida a subcontratista",
+    "SubcontractingReceipt": "Recepción de subcontratista"
   },
   "yearFormats": {
     "None": "ningún año",

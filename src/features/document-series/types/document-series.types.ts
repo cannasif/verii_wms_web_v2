@@ -1,4 +1,12 @@
-export type WmsDocumentType = 'GoodsReceipt' | 'InterWarehouseTransfer' | 'Shipment' | 'WarehouseReceipt' | 'WarehouseIssue';
+export type WmsDocumentType =
+  | 'GoodsReceipt'
+  | 'InterWarehouseTransfer'
+  | 'Shipment'
+  | 'WarehouseReceipt'
+  | 'WarehouseIssue'
+  | 'ProductionTransfer'
+  | 'SubcontractingIssue'
+  | 'SubcontractingReceipt';
 export type DocumentYearFormat = 'None' | 'TwoDigit' | 'FourDigit';
 
 export interface DocumentSeriesRow {
