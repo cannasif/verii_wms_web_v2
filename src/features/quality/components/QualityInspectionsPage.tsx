@@ -89,11 +89,18 @@ export function QualityInspectionsPage({
         render: (r) => r.createdByName || `Kullanıcı #${r.createdBy ?? "—"}`,
       },
       {
-        key: "warehouseName",
-        label: "Depo",
+        key: "warehouseCode",
+        label: "Depo Kodu",
         sortable: true,
         filterable: true,
-        render: (r) => `${r.warehouseCode ?? ""} ${r.warehouseName ?? ""}`,
+        render: (r) => r.warehouseCode ?? "—",
+      },
+      {
+        key: "warehouseName",
+        label: "Depo Adı",
+        sortable: true,
+        filterable: true,
+        render: (r) => r.warehouseName ?? "—",
       },
       {
         key: "status",
