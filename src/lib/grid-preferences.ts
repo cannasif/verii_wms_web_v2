@@ -4,19 +4,22 @@ export interface GridPreferenceColumn {
   key: string;
   sortable?: boolean;
   hideable?: boolean;
+  searchable?: boolean;
+  defaultSearch?: boolean;
 }
 
 export interface GridPreferences {
-  version: 1;
+  version: 2;
   visible: string[];
   order: string[];
   widths: Record<string, number>;
+  searchFields: string[];
   sortBy: string | null;
   sortDirection: GridSortDirection;
   pageSize: number;
 }
 
-const GRID_PREFERENCE_VERSION = 1;
+const GRID_PREFERENCE_VERSION = 2;
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const;
 const MIN_COLUMN_WIDTH = 80;
 const MAX_COLUMN_WIDTH = 800;
@@ -27,11 +30,19 @@ export function getGridPreferenceKey(pageKey: string, userId?: number): string {
 
 function createDefaults(columns: GridPreferenceColumn[]): GridPreferences {
   const keys = columns.map((column) => column.key);
+  const searchableFields = columns.filter((column) => column.searchable === true);
+  const defaultSearchFields = searchableFields
+    .filter((column) => column.searchable === true && column.defaultSearch !== false)
+    .map((column) => column.key);
+  const searchFields = defaultSearchFields.length > 0
+    ? defaultSearchFields
+    : searchableFields.slice(0, 1).map((column) => column.key);
   return {
     version: GRID_PREFERENCE_VERSION,
     visible: keys,
     order: keys,
     widths: {},
+    searchFields,
     sortBy: null,
     sortDirection: 'asc',
     pageSize: 25,
@@ -65,6 +76,11 @@ function normalizePreferences(value: unknown, columns: GridPreferenceColumn[]): 
     if (!visible.includes(key)) visible.push(key);
   }
   const sortableKeys = columns.filter((column) => column.sortable !== false).map((column) => column.key);
+  const searchableKeys = columns.filter((column) => column.searchable === true).map((column) => column.key);
+  const storedSearchFields = uniqueValidKeys(parsed.searchFields, searchableKeys);
+  const searchFields = parsed.version === GRID_PREFERENCE_VERSION && storedSearchFields.length > 0
+    ? storedSearchFields
+    : defaults.searchFields;
   const sortBy = typeof parsed.sortBy === 'string' && sortableKeys.includes(parsed.sortBy) ? parsed.sortBy : null;
   const sortDirection = parsed.sortDirection === 'desc' ? 'desc' : 'asc';
   const pageSize = PAGE_SIZE_OPTIONS.includes(parsed.pageSize as (typeof PAGE_SIZE_OPTIONS)[number])
@@ -76,7 +92,7 @@ function normalizePreferences(value: unknown, columns: GridPreferenceColumn[]): 
     ),
   );
 
-  return { version: GRID_PREFERENCE_VERSION, visible, order, widths, sortBy, sortDirection, pageSize };
+  return { version: GRID_PREFERENCE_VERSION, visible, order, widths, searchFields, sortBy, sortDirection, pageSize };
 }
 
 function loadLegacyPreferences(pageKey: string, columns: GridPreferenceColumn[]): GridPreferences {
@@ -101,7 +117,13 @@ function loadLegacyPreferences(pageKey: string, columns: GridPreferenceColumn[])
 export function loadGridPreferences(pageKey: string, userId: number | undefined, columns: GridPreferenceColumn[]): GridPreferences {
   try {
     const raw = localStorage.getItem(getGridPreferenceKey(pageKey, userId));
-    return raw ? normalizePreferences(JSON.parse(raw), columns) : loadLegacyPreferences(pageKey, columns);
+    if (raw) return normalizePreferences(JSON.parse(raw), columns);
+
+    const versionOneKey = `wms-grid:v1:${userId ?? 'anonymous'}:${pageKey}`;
+    const versionOne = localStorage.getItem(versionOneKey);
+    return versionOne
+      ? normalizePreferences(JSON.parse(versionOne), columns)
+      : loadLegacyPreferences(pageKey, columns);
   } catch {
     return createDefaults(columns);
   }
