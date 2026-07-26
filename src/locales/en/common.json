@@ -305,6 +305,10 @@
     "search_placeholder": "Quick search..."
   },
   "sidebar": {
+    "warehouseOperations": "Warehouse Operations",
+    "warehouseTransfer": "Inter-Warehouse Transfer",
+    "shipping": "Shipping",
+    "warehouseManagement": "Warehouse Management",
     "mainNavigation": "Main navigation",
     "dashboard": "Dashboard",
     "goodsReceipt": "Goods Receipt",

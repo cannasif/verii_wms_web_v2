@@ -305,6 +305,10 @@
     "search_placeholder": "Hızlı arama yap..."
   },
   "sidebar": {
+    "warehouseOperations": "Ambar İşlemleri",
+    "warehouseTransfer": "Depolar Arası Transfer",
+    "shipping": "Sevk",
+    "warehouseManagement": "Depo Yönetimi",
     "mainNavigation": "Ana menü",
     "dashboard": "Dashboard",
     "goodsReceipt": "Mal Kabul",

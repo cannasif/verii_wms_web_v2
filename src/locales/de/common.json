@@ -293,6 +293,10 @@
     "search_placeholder": "Schnellsuche..."
   },
   "sidebar": {
+    "warehouseOperations": "Lageroperationen",
+    "warehouseTransfer": "Lagerumlagerung",
+    "shipping": "Versand",
+    "warehouseManagement": "Lagerverwaltung",
     "mainNavigation": "Hauptnavigation",
     "dashboard": "Dashboard",
     "goodsReceipt": "Wareneingang",
