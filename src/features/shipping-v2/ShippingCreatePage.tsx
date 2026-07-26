@@ -3,6 +3,7 @@ import { CheckCircle2, Loader2, Plus, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { AppDropdown } from '@/components/shared/AppDropdown';
+import { AppDateInput } from '@/components/shared/AppInput';
 import { OperationFlowTabs } from '@/components/shared/OperationFlowTabs';
 import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
 import { TrackingPlanEditor, type TrackingPlanRow } from '@/components/shared/TrackingPlanEditor';
@@ -419,8 +420,8 @@ export function ShippingCreatePage() {
             <AppDropdown value={seriesId} onValueChange={setSeriesId}
               options={series.map((item) => ({ value: String(item.id), label: `${item.code} · ${item.previewDocumentNumber}` }))} />
           </Field>
-          <Field label="Belge tarihi"><input className="input" type="date" value={documentDate} onChange={(e) => setDocumentDate(e.target.value)} /></Field>
-          <Field label="Planlanan sevk"><input className="input" type="datetime-local" value={plannedAt} onChange={(e) => setPlannedAt(e.target.value)} /></Field>
+          <Field label="Belge tarihi"><AppDateInput value={documentDate} onChange={(e) => setDocumentDate(e.target.value)} /></Field>
+          <Field label="Planlanan sevk"><AppDateInput type="datetime-local" value={plannedAt} onChange={(e) => setPlannedAt(e.target.value)} /></Field>
           <Field label="Hazırlama alanı">
             <PagedAppDropdown queryKey={['sh-stage', warehouseId]} fetchPage={(request) => shippingApi.locations(request, warehouseId)}
               toOption={(item) => ({ value: String(item.id), label: `${item.code} · ${item.name}` })}
