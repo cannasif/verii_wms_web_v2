@@ -4,8 +4,10 @@ import { toast } from 'sonner';
 import { AppDropdown } from '@/components/shared/AppDropdown';
 import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { formatProjectNumber } from '@/lib/project-format';
 import { goodsReceiptV2Api } from '../api/goods-receipt.api';
+import { goodsReceiptEnumLabel } from '../localization/enum-labels';
 import type {
   CustomerOption,
   GoodsReceiptDetail,
@@ -34,6 +36,7 @@ export function GoodsReceiptRoutingDialog({
   onClose: () => void;
   onCompleted: (result: GoodsReceiptSplitRoutingResult) => Promise<void>;
 }): ReactElement {
+  const { t } = useModuleTranslation('goods-receipt-v2');
   const [transferSeries, setTransferSeries] = useState<SeriesOption[]>([]);
   const [outboundSeries, setOutboundSeries] = useState<SeriesOption[]>([]);
   const [transferSeriesId, setTransferSeriesId] = useState('');
@@ -134,7 +137,7 @@ export function GoodsReceiptRoutingDialog({
         <div><p className="text-xs font-bold uppercase tracking-widest text-cyan-500">Mal Kabul Sonrası Dağıtım</p><DialogTitle className="mt-1 text-xl font-bold">{detail.header.documentNo}</DialogTitle><p className="text-sm text-slate-500">Her kalemin kalan miktarını aynı işlemde transfer ve ambar çıkış arasında bölün.</p></div>
         <button type="button" aria-label="Kapat" onClick={onClose} className="rounded-lg p-2"><X className="size-5"/></button>
       </header>
-      <div className={`mt-4 rounded-xl border p-3 text-sm ${qualityReady && approvalReady ? 'border-emerald-500/30 bg-emerald-500/5 text-emerald-600' : 'border-amber-500/30 bg-amber-500/5 text-amber-600'}`}>Kalite/GKK: <strong>{detail.header.qualityStatus}</strong> · Mal kabul onayı: <strong>{detail.header.approvalStatus}</strong></div>
+      <div className={`mt-4 rounded-xl border p-3 text-sm ${qualityReady && approvalReady ? 'border-emerald-500/30 bg-emerald-500/5 text-emerald-600' : 'border-amber-500/30 bg-amber-500/5 text-amber-600'}`}>Kalite/GKK: <strong>{goodsReceiptEnumLabel(t, 'qualityStatus', detail.header.qualityStatus)}</strong> · Mal kabul onayı: <strong>{goodsReceiptEnumLabel(t, 'approvalStatus', detail.header.approvalStatus)}</strong></div>
 
       <div className="mt-4 grid gap-4 xl:grid-cols-2">
         <RouteCard title="Depolar Arası Transfer" icon={<ArrowRightLeft className="size-5"/>} total={transferTotal}>

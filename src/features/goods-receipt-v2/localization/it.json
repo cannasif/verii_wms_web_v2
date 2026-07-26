@@ -1,0 +1,27 @@
+{
+  "list": {
+    "title": "Registri di ricevimento merci",
+    "description": "Controlla i ricevimenti, stampa le etichette per documento o riga e visualizza i PDF.",
+    "documentNo": "N. documento", "documentDate": "Data documento", "supplier": "Fornitore", "warehouse": "Magazzino",
+    "processType": "Tipo di processo", "status": "Stato", "quality": "Qualità", "waybill": "Documento di trasporto",
+    "line": "Riga", "expected": "Previsto", "received": "Ricevuto", "actions": "Azioni",
+    "showDetail": "Mostra dettagli", "printAllLabels": "Stampa tutte le etichette", "showAllLabelsPdf": "Mostra tutte le etichette in PDF",
+    "detailLoadError": "Impossibile aprire i dettagli del ricevimento.",
+    "noLineLabels": "Nessuna etichetta utilizzabile trovata per questa riga.",
+    "noReceiptLabels": "Nessuna etichetta utilizzabile trovata per questo ricevimento.",
+    "pdfReady": "{{count}} etichette sono pronte nell'anteprima PDF.",
+    "sentToPrinter": "{{count}} etichette sono state inviate alla finestra di stampa.",
+    "outputError": "Impossibile generare le etichette.", "replayed": "Il risultato precedente è stato restituito in sicurezza.",
+    "operationCompleted": "Il ricevimento merci è stato completato correttamente.",
+    "printLabels": "Stampa etichette", "showPdf": "Mostra PDF", "close": "Chiudi", "approve": "Approva",
+    "shortClose": "Chiudi quantità mancante", "putaway": "Ubica ({{count}})", "route": "Distribuisci a trasferimento / uscita magazzino",
+    "cancel": "Annulla", "approval": "Approvazione", "putawayStatus": "Ubicazione", "erpPosting": "Registrazione ERP",
+    "task": "Attività", "physicalReceipt": "Ricevimento fisico", "receivedAt": "Ora di ricevimento",
+    "receiptLines": "Righe di ricevimento", "linesShown": "{{visible}} di {{total}} righe visualizzate",
+    "lineSearchPlaceholder": "Cerca articolo, configurazione, stato o riga...",
+    "lineSearchAria": "Cerca nelle righe di ricevimento", "noMatchingLines": "Nessuna riga di ricevimento corrisponde ai criteri.",
+    "stock": "Articolo", "yap": "Configurazione", "accepted": "Accettato", "routed": "Instradato", "remaining": "Rimanente",
+    "label": "Etichetta", "printLineLabel": "Stampa etichetta riga", "showLineLabelPdf": "Mostra etichetta riga in PDF",
+    "lineNumber": "Riga #{{number}}", "noStockName": "Nome articolo assente"
+  }
+}

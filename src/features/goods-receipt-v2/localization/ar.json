@@ -1,0 +1,24 @@
+{
+  "list": {
+    "title": "سجلات استلام البضائع",
+    "description": "راجع عمليات الاستلام واطبع الملصقات حسب المستند أو السطر واعرض ملفات PDF.",
+    "documentNo": "رقم المستند", "documentDate": "تاريخ المستند", "supplier": "المورد", "warehouse": "المستودع",
+    "processType": "نوع العملية", "status": "الحالة", "quality": "الجودة", "waybill": "إشعار التسليم",
+    "line": "السطر", "expected": "المتوقع", "received": "المستلم", "actions": "الإجراءات",
+    "showDetail": "عرض التفاصيل", "printAllLabels": "طباعة جميع الملصقات", "showAllLabelsPdf": "عرض جميع الملصقات بصيغة PDF",
+    "detailLoadError": "تعذر فتح تفاصيل الاستلام.", "noLineLabels": "لم يتم العثور على ملصقات صالحة لهذا السطر.",
+    "noReceiptLabels": "لم يتم العثور على ملصقات صالحة لهذا الاستلام.", "pdfReady": "{{count}} ملصق جاهز في معاينة PDF.",
+    "sentToPrinter": "تم إرسال {{count}} ملصق إلى نافذة الطباعة.", "outputError": "تعذر إنشاء مخرجات الملصقات.",
+    "replayed": "تم إرجاع النتيجة السابقة بأمان.", "operationCompleted": "اكتملت عملية الاستلام بنجاح.",
+    "printLabels": "طباعة الملصقات", "showPdf": "عرض PDF", "close": "إغلاق", "approve": "اعتماد",
+    "shortClose": "إغلاق الكمية الناقصة", "putaway": "تخزين ({{count}})", "route": "توزيع إلى النقل / خروج المستودع",
+    "cancel": "إلغاء", "approval": "الاعتماد", "putawayStatus": "التخزين", "erpPosting": "ترحيل ERP",
+    "task": "المهمة", "physicalReceipt": "الاستلام الفعلي", "receivedAt": "وقت الاستلام",
+    "receiptLines": "سطور الاستلام", "linesShown": "عرض {{visible}} من {{total}} سطر",
+    "lineSearchPlaceholder": "ابحث عن المخزون أو التكوين أو الحالة أو السطر...",
+    "lineSearchAria": "البحث في سطور الاستلام", "noMatchingLines": "لا توجد سطور استلام مطابقة لمعايير البحث.",
+    "stock": "المخزون", "yap": "التكوين", "accepted": "المقبول", "routed": "الموجّه", "remaining": "المتبقي",
+    "label": "الملصق", "printLineLabel": "طباعة ملصق السطر", "showLineLabelPdf": "عرض ملصق السطر بصيغة PDF",
+    "lineNumber": "السطر #{{number}}", "noStockName": "لا يوجد اسم للمخزون"
+  }
+}

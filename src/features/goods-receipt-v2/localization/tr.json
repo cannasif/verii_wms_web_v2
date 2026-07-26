@@ -49,5 +49,112 @@
     "resultDirect": "Mal Kabul İşlendi", "resultOrderless": "Mal Kabul Emri Oluşturuldu", "linesText": "satır", "newRecord": "Yeni Kayıt",
     "options": { "noLabel": "Etiket Yok", "preGenerate": "Önceden Üret", "supplierLabel": "Tedarikçi Etiketi", "generateOnReceipt": "Kabulde Üret", "manual": "Manuel", "barcode": "Barkod Okutma", "preLabel": "Ön Etiket" },
     "validation": { "customer": "Tedarikçi cari seçimi zorunludur.", "receiptNo": "Normal irsaliye mal kabul numarası tam 15 rakam olmalıdır.", "eReceiptNo": "E-irsaliye numarası 3 karakter birim kodu ve ardından 13 rakam içermelidir.", "date": "İrsaliye tarihi zorunludur.", "operation": "Depo, kabul alanı ve belge serisi seçilmelidir.", "lines": "En az bir stok satırı eklenmelidir.", "stock": "Stok ve sıfırdan büyük miktar zorunludur.", "serialQuantity": "Seri numaralı satırın miktarı 1 olmalıdır.", "expiry": "Son kullanma tarihi üretim tarihinden önce olamaz.", "incomplete": "Formda eksik veya geçersiz alan bulunuyor.", "submit": "Mal kabul oluşturulamadı." }
+  },
+  "list": {
+    "title": "Mal Kabul Kayıtları",
+    "description": "Mal kabulü görüntüleyin; belge veya kalem bazında etiket yazdırın ve PDF önizleyin.",
+    "documentNo": "Belge No",
+    "documentDate": "Belge Tarihi",
+    "supplier": "Cari",
+    "warehouse": "Depo",
+    "processType": "İşlem Tipi",
+    "status": "Durum",
+    "quality": "Kalite",
+    "waybill": "İrsaliye",
+    "line": "Satır",
+    "expected": "Beklenen",
+    "received": "Alınan",
+    "actions": "İşlemler",
+    "showDetail": "Detayı göster",
+    "printAllLabels": "Tüm etiketleri yazdır",
+    "showAllLabelsPdf": "Tüm etiketleri PDF göster",
+    "detailLoadError": "Mal kabul detayı açılamadı.",
+    "noLineLabels": "Bu kalem için oluşturulmuş kullanılabilir etiket bulunamadı.",
+    "noReceiptLabels": "Bu mal kabul için oluşturulmuş kullanılabilir etiket bulunamadı.",
+    "pdfReady": "{{count}} etiket PDF önizlemesine hazırlandı.",
+    "sentToPrinter": "{{count}} etiket yazdırma penceresine gönderildi.",
+    "outputError": "Etiket çıktısı oluşturulamadı.",
+    "replayed": "İşlemin önceki sonucu güvenle döndürüldü.",
+    "operationCompleted": "Mal kabul işlemi başarıyla tamamlandı.",
+    "printLabels": "Etiketleri Bas",
+    "showPdf": "PDF Göster",
+    "close": "Kapat",
+    "approve": "Onayla",
+    "shortClose": "Kısa Kapat",
+    "putaway": "Rafa Yerleştir ({{count}})",
+    "route": "Transfer / Ambar Çıkış Dağıt",
+    "cancel": "İptal Et",
+    "approval": "Onay",
+    "putawayStatus": "Raflama",
+    "erpPosting": "ERP Aktarımı",
+    "task": "Görev",
+    "physicalReceipt": "Fiziksel Kabul",
+    "receivedAt": "Alınma Zamanı",
+    "receiptLines": "Mal Kabul Kalemleri",
+    "linesShown": "{{visible}}/{{total}} kalem gösteriliyor",
+    "lineSearchPlaceholder": "Stok, YAP, durum veya satır ara...",
+    "lineSearchAria": "Mal kabul kalemlerinde ara",
+    "noMatchingLines": "Arama kriterine uygun mal kabul kalemi bulunamadı.",
+    "stock": "Stok",
+    "yap": "YAP",
+    "accepted": "Kabul",
+    "routed": "Yönlendirilen",
+    "remaining": "Kalan",
+    "label": "Etiket",
+    "printLineLabel": "Kalem etiketini yazdır",
+    "showLineLabelPdf": "Kalem etiketini PDF göster",
+    "lineNumber": "Kalem #{{number}}",
+    "noStockName": "Stok adı yok"
+  },
+  "enums": {
+    "operationStatus": {
+      "Draft": "Taslak", "Released": "Serbest Bırakıldı", "InProgress": "Devam Ediyor",
+      "PartiallyProcessed": "Kısmen İşlendi", "Processed": "İşlendi", "Completed": "Tamamlandı", "Cancelled": "İptal Edildi"
+    },
+    "approvalStatus": {
+      "NotRequired": "Onay Gerekmiyor", "Pending": "Onay Bekliyor", "Approved": "Onaylandı", "Rejected": "Reddedildi"
+    },
+    "qualityStatus": {
+      "NotRequired": "Kalite Kontrolü Gerekmiyor", "Pending": "Kalite Kontrolü Bekliyor", "InProgress": "Kalite Kontrolünde",
+      "PartiallyCompleted": "Kısmen Sonuçlandı", "Passed": "Kalite Onaylı", "Failed": "Kalite Reddi"
+    },
+    "putawayStatus": {
+      "NotRequired": "Raflama Gerekmiyor", "Pending": "Raflama Bekliyor", "InProgress": "Raflama Devam Ediyor",
+      "PartiallyCompleted": "Kısmen Raflandı", "Completed": "Raflama Tamamlandı"
+    },
+    "erpStatus": {
+      "NotRequired": "ERP Aktarımı Gerekmiyor", "Pending": "ERP Aktarımı Bekliyor", "Processing": "ERP'ye Aktarılıyor",
+      "Succeeded": "ERP'ye Aktarıldı", "Failed": "ERP Aktarımı Başarısız", "CommitUncertain": "ERP Sonucu Belirsiz"
+    },
+    "lineStatus": {
+      "Open": "Açık", "PartiallyReceived": "Kısmen Kabul Edildi", "Received": "Kabul Edildi",
+      "ShortClosed": "Eksik Kapatıldı", "Cancelled": "İptal Edildi"
+    },
+    "taskStatus": {
+      "Draft": "Taslak", "Released": "Serbest Bırakıldı", "Assigned": "Atandı", "InProgress": "Devam Ediyor",
+      "Paused": "Duraklatıldı", "PartiallyCompleted": "Kısmen Tamamlandı", "Completed": "Tamamlandı", "Cancelled": "İptal Edildi"
+    },
+    "assignmentStatus": {
+      "Assigned": "Atandı", "Accepted": "Kabul Edildi", "InProgress": "Devam Ediyor", "Completed": "Tamamlandı",
+      "Unassigned": "Atama Kaldırıldı", "Rejected": "Reddedildi"
+    },
+    "labelBatchStatus": {
+      "Draft": "Taslak", "Generated": "Oluşturuldu", "PartiallyPrinted": "Kısmen Yazdırıldı", "Printed": "Yazdırıldı",
+      "PartiallyConsumed": "Kısmen Kullanıldı", "Consumed": "Kullanıldı", "Cancelled": "İptal Edildi"
+    },
+    "labelStatus": {
+      "Generated": "Oluşturuldu", "Printed": "Yazdırıldı", "Assigned": "Atandı", "Consumed": "Kullanıldı", "Void": "Geçersiz Kılındı"
+    },
+    "processType": {
+      "OrderBasedTask": "Siparişe İstinaden Emirli", "OrderlessTask": "Siparişsiz Emirli",
+      "OrderBasedDirectReceipt": "Siparişe İstinaden Doğrudan", "OrderlessDirectReceipt": "Siparişsiz Doğrudan"
+    },
+    "initiationMode": {
+      "OrderBasedTask": "Siparişe İstinaden Emirli", "UnplannedTask": "Plansız Emir", "DirectReceipt": "Doğrudan Mal Kabul"
+    },
+    "executionMode": {
+      "Manual": "Manuel", "BarcodeScan": "Barkod Okutma", "PreGeneratedLabel": "Önceden Üretilmiş Etiket",
+      "SupplierLabel": "Tedarikçi Etiketi", "Import": "İçe Aktarım"
+    }
   }
 }

@@ -1,0 +1,28 @@
+{
+  "list": {
+    "title": "Wareneingänge",
+    "description": "Wareneingänge prüfen, Etiketten je Beleg oder Position drucken und PDFs anzeigen.",
+    "documentNo": "Belegnummer", "documentDate": "Belegdatum", "supplier": "Lieferant", "warehouse": "Lager",
+    "processType": "Vorgangsart", "status": "Status", "quality": "Qualität", "waybill": "Lieferschein",
+    "line": "Position", "expected": "Erwartet", "received": "Empfangen", "actions": "Aktionen",
+    "showDetail": "Details anzeigen", "printAllLabels": "Alle Etiketten drucken", "showAllLabelsPdf": "Alle Etiketten als PDF anzeigen",
+    "detailLoadError": "Wareneingangsdetails konnten nicht geöffnet werden.",
+    "noLineLabels": "Für diese Position wurden keine verwendbaren Etiketten gefunden.",
+    "noReceiptLabels": "Für diesen Wareneingang wurden keine verwendbaren Etiketten gefunden.",
+    "pdfReady": "{{count}} Etiketten sind in der PDF-Vorschau bereit.",
+    "sentToPrinter": "{{count}} Etiketten wurden an das Druckfenster gesendet.",
+    "outputError": "Die Etikettenausgabe konnte nicht erstellt werden.",
+    "replayed": "Das vorherige Ergebnis wurde sicher zurückgegeben.",
+    "operationCompleted": "Der Wareneingang wurde erfolgreich abgeschlossen.",
+    "printLabels": "Etiketten drucken", "showPdf": "PDF anzeigen", "close": "Schließen", "approve": "Genehmigen",
+    "shortClose": "Untermenge schließen", "putaway": "Einlagern ({{count}})", "route": "Auf Umlagerung / Lagerausgang verteilen",
+    "cancel": "Stornieren", "approval": "Genehmigung", "putawayStatus": "Einlagerung", "erpPosting": "ERP-Buchung",
+    "task": "Auftrag", "physicalReceipt": "Physischer Eingang", "receivedAt": "Eingangszeit",
+    "receiptLines": "Wareneingangspositionen", "linesShown": "{{visible}} von {{total}} Positionen werden angezeigt",
+    "lineSearchPlaceholder": "Bestand, Konfiguration, Status oder Position suchen...",
+    "lineSearchAria": "Wareneingangspositionen durchsuchen", "noMatchingLines": "Keine Wareneingangsposition entspricht den Suchkriterien.",
+    "stock": "Bestand", "yap": "Konfiguration", "accepted": "Angenommen", "routed": "Weitergeleitet",
+    "remaining": "Verbleibend", "label": "Etikett", "printLineLabel": "Positionsetikett drucken",
+    "showLineLabelPdf": "Positionsetikett als PDF anzeigen", "lineNumber": "Position #{{number}}", "noStockName": "Kein Bestandsname"
+  }
+}

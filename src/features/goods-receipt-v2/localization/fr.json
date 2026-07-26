@@ -1,0 +1,28 @@
+{
+  "list": {
+    "title": "Réceptions de marchandises",
+    "description": "Consultez les réceptions, imprimez les étiquettes par document ou ligne et prévisualisez les PDF.",
+    "documentNo": "N° de document", "documentDate": "Date du document", "supplier": "Fournisseur", "warehouse": "Entrepôt",
+    "processType": "Type de processus", "status": "Statut", "quality": "Qualité", "waybill": "Bon de livraison",
+    "line": "Ligne", "expected": "Prévu", "received": "Reçu", "actions": "Actions",
+    "showDetail": "Afficher les détails", "printAllLabels": "Imprimer toutes les étiquettes", "showAllLabelsPdf": "Afficher toutes les étiquettes en PDF",
+    "detailLoadError": "Impossible d'ouvrir les détails de la réception.",
+    "noLineLabels": "Aucune étiquette utilisable n'a été trouvée pour cette ligne.",
+    "noReceiptLabels": "Aucune étiquette utilisable n'a été trouvée pour cette réception.",
+    "pdfReady": "{{count}} étiquettes sont prêtes dans l'aperçu PDF.",
+    "sentToPrinter": "{{count}} étiquettes ont été envoyées à la fenêtre d'impression.",
+    "outputError": "Impossible de générer les étiquettes.",
+    "replayed": "Le résultat précédent a été renvoyé en toute sécurité.",
+    "operationCompleted": "La réception a été terminée avec succès.",
+    "printLabels": "Imprimer les étiquettes", "showPdf": "Afficher le PDF", "close": "Fermer", "approve": "Approuver",
+    "shortClose": "Clôturer partiellement", "putaway": "Mettre en stock ({{count}})", "route": "Répartir vers transfert / sortie d'entrepôt",
+    "cancel": "Annuler", "approval": "Approbation", "putawayStatus": "Mise en stock", "erpPosting": "Envoi ERP",
+    "task": "Tâche", "physicalReceipt": "Réception physique", "receivedAt": "Heure de réception",
+    "receiptLines": "Lignes de réception", "linesShown": "{{visible}} lignes affichées sur {{total}}",
+    "lineSearchPlaceholder": "Rechercher un stock, une configuration, un statut ou une ligne...",
+    "lineSearchAria": "Rechercher dans les lignes de réception", "noMatchingLines": "Aucune ligne de réception ne correspond aux critères.",
+    "stock": "Stock", "yap": "Configuration", "accepted": "Accepté", "routed": "Orienté", "remaining": "Restant",
+    "label": "Étiquette", "printLineLabel": "Imprimer l'étiquette de ligne", "showLineLabelPdf": "Afficher l'étiquette de ligne en PDF",
+    "lineNumber": "Ligne #{{number}}", "noStockName": "Nom du stock indisponible"
+  }
+}

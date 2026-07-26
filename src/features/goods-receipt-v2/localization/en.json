@@ -32,5 +32,105 @@
     "resultOrderless": "Receipt Task Created", "linesText": "lines", "newRecord": "New Record",
     "options": { "noLabel": "No Label", "preGenerate": "Pre-generate", "supplierLabel": "Supplier Label", "generateOnReceipt": "Generate on Receipt", "manual": "Manual", "barcode": "Barcode Scan", "preLabel": "Pre-generated Label" },
     "validation": { "customer": "Supplier is required.", "receiptNo": "Standard dispatch receipt number must contain exactly 15 digits.", "eReceiptNo": "e-Dispatch number must contain a 3-character unit code followed by 13 digits.", "date": "Dispatch date is required.", "operation": "Warehouse, receiving location and document series are required.", "lines": "At least one stock line is required.", "stock": "Stock and a quantity greater than zero are required.", "serialQuantity": "A serial-tracked line must have quantity 1.", "expiry": "Expiration date cannot precede manufacturing date.", "incomplete": "The form contains missing or invalid fields.", "submit": "Goods receipt could not be created." }
+  },
+  "list": {
+    "title": "Goods Receipt Records",
+    "description": "Review goods receipts, print labels by document or line, and preview PDFs.",
+    "documentNo": "Document No",
+    "documentDate": "Document Date",
+    "supplier": "Supplier",
+    "warehouse": "Warehouse",
+    "processType": "Process Type",
+    "status": "Status",
+    "quality": "Quality",
+    "waybill": "Dispatch Note",
+    "line": "Line",
+    "expected": "Expected",
+    "received": "Received",
+    "actions": "Actions",
+    "showDetail": "Show details",
+    "printAllLabels": "Print all labels",
+    "showAllLabelsPdf": "Show all labels as PDF",
+    "detailLoadError": "Goods receipt details could not be opened.",
+    "noLineLabels": "No usable labels were found for this line.",
+    "noReceiptLabels": "No usable labels were found for this goods receipt.",
+    "pdfReady": "{{count}} labels are ready in PDF preview.",
+    "sentToPrinter": "{{count}} labels were sent to the print window.",
+    "outputError": "Label output could not be generated.",
+    "replayed": "The previous result was returned safely.",
+    "operationCompleted": "The goods receipt operation was completed successfully.",
+    "printLabels": "Print Labels",
+    "showPdf": "Show PDF",
+    "close": "Close",
+    "approve": "Approve",
+    "shortClose": "Short Close",
+    "putaway": "Put Away ({{count}})",
+    "route": "Distribute to Transfer / Warehouse Outbound",
+    "cancel": "Cancel",
+    "approval": "Approval",
+    "putawayStatus": "Putaway",
+    "erpPosting": "ERP Posting",
+    "task": "Task",
+    "physicalReceipt": "Physical Receipt",
+    "receivedAt": "Received At",
+    "receiptLines": "Goods Receipt Lines",
+    "linesShown": "Showing {{visible}} of {{total}} lines",
+    "lineSearchPlaceholder": "Search stock, configuration, status, or line...",
+    "lineSearchAria": "Search goods receipt lines",
+    "noMatchingLines": "No goods receipt lines match the search criteria.",
+    "stock": "Stock",
+    "yap": "Configuration",
+    "accepted": "Accepted",
+    "routed": "Routed",
+    "remaining": "Remaining",
+    "label": "Label",
+    "printLineLabel": "Print line label",
+    "showLineLabelPdf": "Show line label as PDF",
+    "lineNumber": "Line #{{number}}",
+    "noStockName": "No stock name"
+  },
+  "enums": {
+    "operationStatus": {
+      "Draft": "Draft", "Released": "Released", "InProgress": "In Progress", "PartiallyProcessed": "Partially Processed",
+      "Processed": "Processed", "Completed": "Completed", "Cancelled": "Cancelled"
+    },
+    "approvalStatus": { "NotRequired": "Approval Not Required", "Pending": "Pending Approval", "Approved": "Approved", "Rejected": "Rejected" },
+    "qualityStatus": {
+      "NotRequired": "Quality Check Not Required", "Pending": "Pending Quality Check", "InProgress": "Quality Check In Progress",
+      "PartiallyCompleted": "Partially Completed", "Passed": "Quality Approved", "Failed": "Quality Rejected"
+    },
+    "putawayStatus": {
+      "NotRequired": "Putaway Not Required", "Pending": "Pending Putaway", "InProgress": "Putaway In Progress",
+      "PartiallyCompleted": "Partially Put Away", "Completed": "Putaway Completed"
+    },
+    "erpStatus": {
+      "NotRequired": "ERP Posting Not Required", "Pending": "Pending ERP Posting", "Processing": "Posting to ERP",
+      "Succeeded": "Posted to ERP", "Failed": "ERP Posting Failed", "CommitUncertain": "ERP Result Uncertain"
+    },
+    "lineStatus": {
+      "Open": "Open", "PartiallyReceived": "Partially Received", "Received": "Received", "ShortClosed": "Short Closed", "Cancelled": "Cancelled"
+    },
+    "taskStatus": {
+      "Draft": "Draft", "Released": "Released", "Assigned": "Assigned", "InProgress": "In Progress", "Paused": "Paused",
+      "PartiallyCompleted": "Partially Completed", "Completed": "Completed", "Cancelled": "Cancelled"
+    },
+    "assignmentStatus": {
+      "Assigned": "Assigned", "Accepted": "Accepted", "InProgress": "In Progress", "Completed": "Completed",
+      "Unassigned": "Unassigned", "Rejected": "Rejected"
+    },
+    "labelBatchStatus": {
+      "Draft": "Draft", "Generated": "Generated", "PartiallyPrinted": "Partially Printed", "Printed": "Printed",
+      "PartiallyConsumed": "Partially Consumed", "Consumed": "Consumed", "Cancelled": "Cancelled"
+    },
+    "labelStatus": { "Generated": "Generated", "Printed": "Printed", "Assigned": "Assigned", "Consumed": "Consumed", "Void": "Voided" },
+    "processType": {
+      "OrderBasedTask": "Order-based Task", "OrderlessTask": "Orderless Task",
+      "OrderBasedDirectReceipt": "Order-based Direct Receipt", "OrderlessDirectReceipt": "Orderless Direct Receipt"
+    },
+    "initiationMode": { "OrderBasedTask": "Order-based Task", "UnplannedTask": "Unplanned Task", "DirectReceipt": "Direct Receipt" },
+    "executionMode": {
+      "Manual": "Manual", "BarcodeScan": "Barcode Scan", "PreGeneratedLabel": "Pre-generated Label",
+      "SupplierLabel": "Supplier Label", "Import": "Import"
+    }
   }
 }
