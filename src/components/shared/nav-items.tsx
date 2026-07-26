@@ -65,6 +65,11 @@ export const WMS_NAV_ITEMS: NavItem[] = [
       { title: 'sidebar.productionTransferSettings', titleFallback: 'Üretim Transfer Ayarları', href: '/warehouse/production-transfers/settings', searchAliases: ['üretim', 'malzeme', 'uygunluk', 'tolerans'], requiredPermission: 'WMS.PRODUCTION_TRANSFER.SETTINGS.VIEW' },
     ] },
   ] },
+  { title: 'sidebar.production', titleFallback: 'Üretim', icon: operationsIcon, children: [
+    { title: 'sidebar.productionHub', titleFallback: 'Üretim Süreç Merkezi', href: '/warehouse/production', searchAliases: ['üretim', 'plan', 'iş emri', 'mamul', 'sarf'], requiredPermission: 'WMS.PRODUCTION.VIEW' },
+    { title: 'sidebar.productionCreate', titleFallback: 'Üretim Planı Oluştur', href: '/warehouse/production/new', searchAliases: ['üretim', 'plan', 'iş emri', 'bom', 'rota'], requiredPermission: 'WMS.PRODUCTION.CREATE' },
+    { title: 'sidebar.productionList', titleFallback: 'Üretim Planları', href: '/warehouse/production/list', searchAliases: ['üretim', 'plan', 'emir', 'liste', 'serbest bırak'], requiredPermission: 'WMS.PRODUCTION.VIEW' },
+  ] },
   { title: 'sidebar.shipping', titleFallback: 'Sevk', icon: operationsIcon, children: [
     { title: 'sidebar.shippingHub', titleFallback: 'Süreç Merkezi', href: '/warehouse/shipments', searchAliases: ['sevk', 'outbound', 'toplama', 'paketleme'], requiredPermission: 'WMS.SHIPPING.VIEW' },
     { title: 'sidebar.shippingCreate', titleFallback: 'Sevk Oluştur', href: '/warehouse/shipments/new', searchAliases: ['sevk', 'sipariş', 'emir', 'doğrudan'], requiredPermission: 'WMS.SHIPPING.CREATE' },

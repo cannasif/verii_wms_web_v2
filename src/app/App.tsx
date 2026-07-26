@@ -10,7 +10,7 @@ import {
   loadGoodsReceiptLabelsPage, loadGoodsReceiptListPage, loadGoodsReceiptManualPage, loadGoodsReceiptPolicyPage,
   loadHangfirePage, loadIncomingInvoiceArchivePage, loadLocationDefinitionsPage, loadPermissionGroupsPage, loadPermissionsPage, loadProfilePage,
   loadProjectSettingsPage, loadQualityInspectionsPage, loadQualityRulesPage, loadQualitySettingsPage,
-  loadProductionTransferPages, loadSubcontractingTransferPages,
+  loadProductionPages, loadProductionTransferPages, loadSubcontractingTransferPages,
   loadSerialNumberRulesPage, loadShippingCreatePage, loadShippingHubPage, loadShippingListPage,
   loadShippingOperationPage, loadShippingPolicyPage, loadSmtpSettingsPage, loadSteelReceiptHubPage,
   loadSteelReceiptImportPage, loadSteelReceiptInspectionPage, loadSteelReceiptOperationsPage,
@@ -82,6 +82,9 @@ const ProductionTransferDraftPage = lazy(() => loadProductionTransferPages().the
 const ProductionTransferListPage = lazy(() => loadProductionTransferPages().then((m) => ({ default: m.ProductionTransferListPage })));
 const ProductionTransferPolicyPage = lazy(() => loadProductionTransferPages().then((m) => ({ default: m.ProductionTransferPolicyPage })));
 const ProductionTransferOperationPage = lazy(() => loadProductionTransferPages().then((m) => ({ default: m.ProductionTransferOperationPage })));
+const ProductionHubPage = lazy(() => loadProductionPages().then((m) => ({ default: m.ProductionHubPage })));
+const ProductionCreatePage = lazy(() => loadProductionPages().then((m) => ({ default: m.ProductionCreatePage })));
+const ProductionListPage = lazy(() => loadProductionPages().then((m) => ({ default: m.ProductionListPage })));
 const SubcontractingTransferHubPage = lazy(() => loadSubcontractingTransferPages().then((m) => ({ default: m.SubcontractingTransferHubPage })));
 const SubcontractingTransferDraftPage = lazy(() => loadSubcontractingTransferPages().then((m) => ({ default: m.SubcontractingTransferDraftPage })));
 const SubcontractingTransferListPage = lazy(() => loadSubcontractingTransferPages().then((m) => ({ default: m.SubcontractingTransferListPage })));
@@ -182,6 +185,9 @@ export function App(): ReactElement {
           <Route path="warehouse/transfers/list" element={<WarehouseTransferListPage />} />
           <Route path="warehouse/transfers/:id/operations" element={<WarehouseTransferOperationPage />} />
           <Route path="warehouse/transfers/settings" element={<WarehouseTransferPolicyPage />} />
+          <Route path="warehouse/production" element={<ProductionHubPage />} />
+          <Route path="warehouse/production/new" element={<ProductionCreatePage />} />
+          <Route path="warehouse/production/list" element={<ProductionListPage />} />
           <Route path="warehouse/production-transfers" element={<ProductionTransferHubPage />} />
           <Route path="warehouse/production-transfers/new" element={<ProductionTransferDraftPage />} />
           <Route path="warehouse/production-transfers/list" element={<ProductionTransferListPage />} />

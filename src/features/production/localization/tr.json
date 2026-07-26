@@ -1,0 +1,65 @@
+{
+  "hub": {
+    "eyebrow": "Üretim yönetimi",
+    "title": "Üretim Planlama ve Emir Merkezi",
+    "description": "Üretilecek mamulü, reçete/BOM referansını, iş merkezini, malzeme ihtiyaçlarını, çıktıları ve sorumluları aynı denetlenebilir plan altında yönetin.",
+    "create": { "title": "Üretim Planı Oluştur", "text": "Üretim emri, ana çıktı, malzeme ihtiyaçları ve kullanıcı atamasını birlikte planlayın." },
+    "list": { "title": "Üretim Planları", "text": "Taslak, serbest bırakılmış ve devam eden üretim planlarını sunucu taraflı listede izleyin." },
+    "boundary": { "title": "İlk operasyonel dilim", "text": "Bu sürüm plan ve emri güvenli biçimde kaydeder ve serbest bırakır. Fiziksel sarf, üretim bildirimi ve mamul stok hareketleri sonraki yürütme diliminde bu kimliklere bağlanacaktır." }
+  },
+  "create": {
+    "eyebrow": "Yeni üretim planı",
+    "title": "Üretim Planı ve Emir Oluştur",
+    "description": "Birim bilgisi stok kartından alınır; ana çıktı emirdeki mamul ve miktarla birebir doğrulanır.",
+    "sections": { "plan": "Plan ve zamanlama", "order": "Üretim emri ve ana çıktı", "materials": "Reçete / malzeme ihtiyaçları", "notes": "Operasyon notları" },
+    "fields": {
+      "sourceWarehouse": "Malzeme kaynak deposu *", "targetWarehouse": "Mamul hedef deposu *", "series": "Üretim belge serisi *",
+      "documentDate": "Belge tarihi *", "planType": "Plan tipi *", "executionMode": "Yürütme biçimi *", "priority": "Öncelik *",
+      "plannedStart": "Planlanan başlangıç", "plannedEnd": "Planlanan bitiş", "producedStock": "Üretilecek stok *",
+      "configurationCode": "Yapılandırma kodu", "quantity": "Planlanan miktar *", "unit": "Ölçü birimi",
+      "externalOrderNo": "ERP / harici emir no", "workCenter": "İş merkezi", "bom": "Reçete / BOM referansı",
+      "routing": "Rota referansı", "assignee": "Birincil sorumlu", "materialStock": "Malzeme stoku",
+      "requiredQuantity": "İhtiyaç miktarı", "issueMode": "Sarf yöntemi", "mandatory": "Zorunlu malzeme"
+    },
+    "material": "{{number}}. malzeme",
+    "addMaterial": "Malzeme ekle",
+    "save": "Üretim Planını Oluştur",
+    "saving": "Oluşturuluyor…",
+    "success": "Üretim planı oluşturuldu.",
+    "failed": "Üretim planı oluşturulamadı.",
+    "validation": {
+      "header": "Kaynak depo, hedef depo, belge serisi ve üretilecek stok zorunludur.",
+      "quantity": "Planlanan üretim miktarı sıfırdan büyük olmalıdır.",
+      "assignment": "Üretim emri bir kullanıcıya veya iş merkezine atanmalıdır.",
+      "materialQuantity": "Malzeme ihtiyaç miktarları sıfırdan büyük olmalıdır."
+    },
+    "result": {
+      "title": "Üretim planı oluşturuldu",
+      "summary": "{{orderCount}} emir · {{materialCount}} malzeme · {{outputCount}} çıktı",
+      "new": "Yeni plan oluştur",
+      "list": "Planlara git"
+    }
+  },
+  "list": {
+    "title": "Üretim Planları",
+    "description": "Plan, emir, malzeme ve çıktı ilerlemesini sunucu taraflı arama, filtreleme ve sıralama ile izleyin.",
+    "create": "Yeni Üretim Planı", "loadFailed": "Üretim planı yüklenemedi.", "release": "Serbest bırak", "delete": "Taslağı sil", "detail": "Detayı göster",
+    "columns": {
+      "documentNo": "Plan No", "documentDate": "Belge Tarihi", "planType": "Plan Tipi", "executionMode": "Yürütme",
+      "status": "Durum", "orders": "Emir", "materials": "Malzeme", "planned": "Planlanan", "completed": "Tamamlanan", "actions": "İşlemler"
+    }
+  },
+  "detail": { "materials": "Malzeme ihtiyaçları", "outputs": "Beklenen çıktılar", "assignees": "Sorumlular", "workCenter": "İş merkezi" },
+  "lifecycle": {
+    "release": { "title": "Üretim Planını Serbest Bırak", "text": "{{documentNo}} planındaki emirler yürütmeye açılacak.", "action": "Serbest Bırak", "success": "Üretim planı serbest bırakıldı." },
+    "delete": { "title": "Taslak Üretim Planını Sil", "text": "{{documentNo}} taslağı ve bağlı plan satırları silinecek.", "action": "Taslağı Sil", "success": "Üretim planı silindi." },
+    "failed": "İşlem tamamlanamadı."
+  },
+  "enum": {
+    "planType": { "MakeToStock": "Stoğa Üretim", "MakeToOrder": "Siparişe Üretim", "Rework": "Yeniden İşleme", "Disassembly": "Söküm" },
+    "executionMode": { "Serial": "Sıralı", "Parallel": "Paralel" },
+    "issueMode": { "Manual": "Manuel Sarf", "Backflush": "Otomatik Sarf" },
+    "status": { "Draft": "Taslak", "Released": "Serbest Bırakıldı", "InProgress": "Devam Ediyor", "PartiallyCompleted": "Kısmi Tamamlandı", "Completed": "Tamamlandı", "Cancelled": "İptal Edildi" }
+  },
+  "common": { "close": "Kapat", "cancel": "Vazgeç", "processing": "İşleniyor…" }
+}

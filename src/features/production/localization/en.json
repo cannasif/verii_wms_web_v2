@@ -1,0 +1,49 @@
+{
+  "hub": {
+    "eyebrow": "Production management", "title": "Production Planning and Order Center",
+    "description": "Manage the produced item, BOM reference, work center, material requirements, outputs and assignees under one auditable plan.",
+    "create": { "title": "Create Production Plan", "text": "Plan the order, primary output, material requirements and assignment together." },
+    "list": { "title": "Production Plans", "text": "Track draft, released and active production plans in a server-side list." },
+    "boundary": { "title": "First operational slice", "text": "This version safely records and releases plans and orders. Physical consumption, production reporting and output stock movements will be linked to these identities in the execution slice." }
+  },
+  "create": {
+    "eyebrow": "New production plan", "title": "Create Production Plan and Order",
+    "description": "The unit comes from the stock card; the primary output is validated against the produced item and quantity.",
+    "sections": { "plan": "Plan and schedule", "order": "Production order and primary output", "materials": "BOM / material requirements", "notes": "Operation notes" },
+    "fields": {
+      "sourceWarehouse": "Material source warehouse *", "targetWarehouse": "Output target warehouse *", "series": "Production document series *",
+      "documentDate": "Document date *", "planType": "Plan type *", "executionMode": "Execution mode *", "priority": "Priority *",
+      "plannedStart": "Planned start", "plannedEnd": "Planned end", "producedStock": "Produced item *", "configurationCode": "Configuration code",
+      "quantity": "Planned quantity *", "unit": "Unit", "externalOrderNo": "ERP / external order no", "workCenter": "Work center",
+      "bom": "BOM reference", "routing": "Routing reference", "assignee": "Primary assignee", "materialStock": "Material item",
+      "requiredQuantity": "Required quantity", "issueMode": "Issue mode", "mandatory": "Mandatory material"
+    },
+    "material": "Material {{number}}", "addMaterial": "Add material", "save": "Create Production Plan", "saving": "Creating…",
+    "success": "Production plan created.", "failed": "Production plan could not be created.",
+    "validation": {
+      "header": "Source warehouse, target warehouse, document series and produced item are required.",
+      "quantity": "Planned production quantity must be greater than zero.",
+      "assignment": "The production order must be assigned to a user or work center.",
+      "materialQuantity": "Material requirement quantities must be greater than zero."
+    },
+    "result": { "title": "Production plan created", "summary": "{{orderCount}} order · {{materialCount}} material · {{outputCount}} output", "new": "Create another", "list": "Open plans" }
+  },
+  "list": {
+    "title": "Production Plans", "description": "Track plan, order, material and output progress with server-side search, filtering and sorting.",
+    "create": "New Production Plan", "loadFailed": "Production plan could not be loaded.", "release": "Release", "delete": "Delete draft", "detail": "Show details",
+    "columns": { "documentNo": "Plan No", "documentDate": "Document Date", "planType": "Plan Type", "executionMode": "Execution", "status": "Status", "orders": "Orders", "materials": "Materials", "planned": "Planned", "completed": "Completed", "actions": "Actions" }
+  },
+  "detail": { "materials": "Material requirements", "outputs": "Expected outputs", "assignees": "Assignees", "workCenter": "Work center" },
+  "lifecycle": {
+    "release": { "title": "Release Production Plan", "text": "Orders in {{documentNo}} will be opened for execution.", "action": "Release", "success": "Production plan released." },
+    "delete": { "title": "Delete Draft Production Plan", "text": "Draft {{documentNo}} and its planning lines will be deleted.", "action": "Delete Draft", "success": "Production plan deleted." },
+    "failed": "The operation could not be completed."
+  },
+  "enum": {
+    "planType": { "MakeToStock": "Make to Stock", "MakeToOrder": "Make to Order", "Rework": "Rework", "Disassembly": "Disassembly" },
+    "executionMode": { "Serial": "Serial", "Parallel": "Parallel" },
+    "issueMode": { "Manual": "Manual Issue", "Backflush": "Backflush" },
+    "status": { "Draft": "Draft", "Released": "Released", "InProgress": "In Progress", "PartiallyCompleted": "Partially Completed", "Completed": "Completed", "Cancelled": "Cancelled" }
+  },
+  "common": { "close": "Close", "cancel": "Cancel", "processing": "Processing…" }
+}
