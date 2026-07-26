@@ -6,5 +6,22 @@
   "records": "Transfer Records",
   "sourceExecution": "Source Warehouse Execution",
   "targetExecution": "Destination Warehouse Execution",
-  "comingSoon": "Available in the next delivery"
+  "comingSoon": "Available in the next delivery",
+  "hub": {
+    "startTitle": "01 · Start Transfer",
+    "startDescription": "The request source and execution mode are independent; all four scenarios share the same domain model.",
+    "executeTitle": "02 · Execute, Receive and Manage",
+    "executeDescription": "Source picking and dispatch are tracked separately from destination receipt and putaway.",
+    "operationSlice": "Operation Stage",
+    "cards": {
+      "orderedErp": {"title": "Netsis Request · Assigned", "description": "Select Netsis transfer requests, allocate open quantities and assign picking tasks to operators."},
+      "orderedStock": {"title": "Free Stock · Assigned", "description": "Create planned picking and dispatch tasks from available stock without an ERP request."},
+      "directErp": {"title": "Netsis Request · Direct", "description": "When policy allows it, start a transfer from a Netsis request without creating an operator task."},
+      "directStock": {"title": "Free Stock · Direct", "description": "Start an urgent, controlled direct transfer from available stock."}
+    },
+    "source": {"title": "Picking and Dispatch", "description": "Reservation, task acceptance, barcode picking and dispatch finalisation."},
+    "target": {"title": "Destination Receipt and Putaway", "description": "Transit receipt, discrepancy reason, partial receipt and destination putaway."},
+    "records": {"title": "Transfer Records", "description": "Review every variant and quantity milestone in the shared data grid."},
+    "settings": {"title": "Transfer Process Settings", "description": "Manage variant permissions, reservation, partial execution, transit, receipt, putaway and discrepancy policies."}
+  }
 }

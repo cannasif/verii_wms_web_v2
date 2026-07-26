@@ -1,1 +1,27 @@
-{"title":"Steel Goods Receipt","import":"Expected Plate Import","plans":"Steel Plans","inspection":"Arrival and Acceptance Inspection","operations":"Receipt Conversion and Putaway"}
+{
+  "title": "Steel Goods Receipt",
+  "import": "Expected Plate Import",
+  "plans": "Steel Plans",
+  "inspection": "Arrival and Acceptance Inspection",
+  "operations": "Receipt Conversion and Putaway",
+  "hub": {
+    "eyebrow": "Goods Receipt · Steel Operations",
+    "title": "Steel Goods Receipt Process Center",
+    "description": "Trace every plate by DCode from gate check-in and quality decision through goods receipt and final putaway.",
+    "phases": {
+      "gate": { "title": "Gate and Expectation", "description": "Validate vehicle, driver, supplier and expected plate data before processing." },
+      "quality": { "title": "Inspection and Decision", "description": "Record physical arrival, quantity and quality decision for each plate with evidence." },
+      "putaway": { "title": "Receipt and Putaway", "description": "Convert approved plates to tasks and post final inventory movements after physical receipt." },
+      "report": { "title": "Monitoring and Reporting", "description": "Monitor plate traceability, pending work and operational exceptions from one center." }
+    },
+    "cards": {
+      "vehicles": { "title": "Vehicle Check-In Records", "description": "Review gate records and start a new vehicle and steel acceptance from the list action." },
+      "import": { "title": "Expectation Import", "description": "Preview, validate and save Excel data idempotently by DCode." },
+      "plans": { "title": "Steel Plans", "description": "Track imported batches and their process statuses." },
+      "inspection": { "title": "Arrival and Quality Inspection", "description": "Manage arrived, missing, accepted, partially accepted and rejected decisions." },
+      "receipt": { "title": "Goods Receipt Task", "description": "Convert approved plates to a shared task and assign warehouse operators." },
+      "placement": { "title": "Yard / Location Putaway", "description": "Save the final location and stack order using current location occupancy." },
+      "reports": { "title": "Steel Operation Reports", "description": "Search DCode, supplier serial, quality, receipt and putaway statuses." }
+    }
+  }
+}

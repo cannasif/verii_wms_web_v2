@@ -1,4 +1,53 @@
 {
+  "hub": {
+    "eyebrow": "Warehouse Operations",
+    "title": "Warehouse Inbound Process Centre",
+    "description": "Start order-based, orderless and direct inbound flows with the same domain rules; trace every step from task assignment to quality and stock movement.",
+    "phases": {
+      "start": {
+        "title": "Start Inbound",
+        "description": "Choose the correct entry point for the document source and execution mode."
+      },
+      "execute": {
+        "title": "Execute the Task",
+        "description": "Assign operators, accept assigned work and manage physical progress."
+      },
+      "manage": {
+        "title": "Monitor and Manage",
+        "description": "Use records and policies for full traceability and configurable process control."
+      }
+    },
+    "items": {
+      "fromOrder": {
+        "title": "Create from Purchase Order",
+        "description": "Select Netsis purchase orders, reserve open quantities and create an inbound task."
+      },
+      "orderless": {
+        "title": "Orderless Inbound Task",
+        "description": "Create a planned task with dispatch and stock lines without an order link."
+      },
+      "direct": {
+        "title": "Direct Inbound",
+        "description": "Post an orderless inbound atomically with quality, quarantine and stock movement."
+      },
+      "tasks": {
+        "title": "Tasks and Assignments",
+        "description": "Assign open tasks to one or more operators and monitor their progress."
+      },
+      "assigned": {
+        "title": "My Assigned Tasks",
+        "description": "Accept, start and complete inbound tasks assigned to you."
+      },
+      "records": {
+        "title": "Inbound Records",
+        "description": "Monitor all inbound modes in the shared server-side data grid."
+      },
+      "settings": {
+        "title": "Inbound Settings",
+        "description": "Manage overage, shortage, quality hold, approval and ERP posting policies."
+      }
+    }
+  },
   "title": "Goods Receipt from Orders",
   "subtitle": "Select Netsis orders, validate quantities, and reserve a receiving task safely.",
   "steps": ["Customer and orders", "Lines and quantities", "Warehouse settings", "Confirmation"],

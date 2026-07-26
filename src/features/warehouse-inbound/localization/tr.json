@@ -1,4 +1,53 @@
 {
+  "hub": {
+    "eyebrow": "Depo Operasyonları",
+    "title": "Ambar Giriş Süreç Merkezi",
+    "description": "Siparişli, siparişsiz ve doğrudan ambar girişini aynı domain kurallarıyla başlatın; emirden kalite ve stok hareketine kadar izleyin.",
+    "phases": {
+      "start": {
+        "title": "Girişi Başlat",
+        "description": "Belgenin kaynağına ve operasyon şekline göre doğru başlangıcı seçin."
+      },
+      "execute": {
+        "title": "Emri Yürüt",
+        "description": "Sorumluları belirleyin, atanan işleri alın ve fiziksel ilerlemeyi yönetin."
+      },
+      "manage": {
+        "title": "İzle ve Yönet",
+        "description": "Tam izlenebilirlik ve parametrik süreç yönetimi için kayıtları ve kuralları kullanın."
+      }
+    },
+    "items": {
+      "fromOrder": {
+        "title": "Siparişten Emir",
+        "description": "Netsis satınalma siparişlerini seçin, açık miktarları rezerve edip görev oluşturun."
+      },
+      "orderless": {
+        "title": "Siparişsiz Emir",
+        "description": "İrsaliye ve stok satırlarıyla sipariş bağlantısız planlı görev açın."
+      },
+      "direct": {
+        "title": "Doğrudan Giriş",
+        "description": "Emirsiz girişi kalite, karantina ve stok hareketiyle atomik kaydedin."
+      },
+      "tasks": {
+        "title": "Emir ve Atamalar",
+        "description": "Açık emirleri bir veya birden çok kullanıcıya atayın ve ilerlemeyi izleyin."
+      },
+      "assigned": {
+        "title": "Bana Atanan Emirler",
+        "description": "Size atanmış emirleri kabul edin, başlatın ve operasyonu tamamlayın."
+      },
+      "records": {
+        "title": "Ambar Giriş Listesi",
+        "description": "Tüm işlem tiplerini ortak sunucu taraflı grid üzerinde izleyin."
+      },
+      "settings": {
+        "title": "Giriş Ayarları",
+        "description": "Fazla ve eksik giriş, kalite bekletme, onay ve ERP aktarım politikalarını yönetin."
+      }
+    }
+  },
   "title": "Siparişten Mal Kabul Emri",
   "subtitle": "Netsis siparişini seçin, miktarları doğrulayın ve kabul emrini güvenli biçimde rezerve edin.",
   "steps": ["Cari ve sipariş", "Satır ve miktar", "Depo ayarları", "Onay"],

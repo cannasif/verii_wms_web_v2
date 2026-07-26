@@ -1,25 +1,28 @@
 import {ArrowRight,ClipboardList,PackageCheck,PackagePlus,Rows3,Settings2,UserCheck,UsersRound} from 'lucide-react';
 import {Link} from 'react-router-dom';
+import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 
 const phases=[
-  {number:'01',title:'Kabulü Başlat',description:'Belgenin kaynağına ve operasyon şekline göre doğru başlangıcı seçin.',items:[
-    {title:'Siparişten Emir',description:'Netsis satınalma siparişlerini seçin, açık miktarları rezerve edip görev oluşturun.',href:'/warehouse/warehouse-inbounds/new',icon:ClipboardList},
-    {title:'Siparişsiz Emir',description:'İrsaliye ve stok satırlarıyla sipariş bağlantısız planlı görev açın.',href:'/warehouse/warehouse-inbounds/orderless',icon:PackagePlus},
-    {title:'Doğrudan Mal Kabul',description:'Emirsiz kabulü kalite, karantina ve stok hareketiyle atomik kaydedin.',href:'/warehouse/warehouse-inbounds/direct',icon:PackageCheck},
+  {number:'01',titleKey:'hub.phases.start.title',descriptionKey:'hub.phases.start.description',items:[
+    {titleKey:'hub.items.fromOrder.title',descriptionKey:'hub.items.fromOrder.description',href:'/warehouse/warehouse-inbounds/new',icon:ClipboardList},
+    {titleKey:'hub.items.orderless.title',descriptionKey:'hub.items.orderless.description',href:'/warehouse/warehouse-inbounds/orderless',icon:PackagePlus},
+    {titleKey:'hub.items.direct.title',descriptionKey:'hub.items.direct.description',href:'/warehouse/warehouse-inbounds/direct',icon:PackageCheck},
   ]},
-  {number:'02',title:'Emri Yürüt',description:'Sorumluları belirleyin, atanan işleri alın ve fiziksel ilerlemeyi yönetin.',items:[
-    {title:'Emir Yönetimi',description:'Açık emirleri bir veya birden çok kullanıcıya atayın ve ilerlemeyi izleyin.',href:'/warehouse/warehouse-inbounds/tasks',icon:UsersRound},
-    {title:'Bana Atanan Emirler',description:'Size atanmış emirleri kabul edin, başlatın ve operasyonu tamamlayın.',href:'/warehouse/warehouse-inbounds/assigned',icon:UserCheck},
+  {number:'02',titleKey:'hub.phases.execute.title',descriptionKey:'hub.phases.execute.description',items:[
+    {titleKey:'hub.items.tasks.title',descriptionKey:'hub.items.tasks.description',href:'/warehouse/warehouse-inbounds/tasks',icon:UsersRound},
+    {titleKey:'hub.items.assigned.title',descriptionKey:'hub.items.assigned.description',href:'/warehouse/warehouse-inbounds/assigned',icon:UserCheck},
   ]},
-  {number:'03',title:'İzle ve Yönet',description:'Tam izlenebilirlik ve parametrik süreç yönetimi için kayıtları ve kuralları kullanın.',items:[
-    {title:'Mal Kabul Kayıtları',description:'Tüm işlem tiplerini ortak sunucu taraflı grid üzerinde izleyin.',href:'/warehouse/warehouse-inbounds/list',icon:Rows3},
-    {title:'Süreç Ayarları',description:'Fazla/eksik kabul, kalite bekletme, onay ve ERP aktarım politikalarını yönetin.',href:'/warehouse/warehouse-inbound-settings',icon:Settings2},
+  {number:'03',titleKey:'hub.phases.manage.title',descriptionKey:'hub.phases.manage.description',items:[
+    {titleKey:'hub.items.records.title',descriptionKey:'hub.items.records.description',href:'/warehouse/warehouse-inbounds/list',icon:Rows3},
+    {titleKey:'hub.items.settings.title',descriptionKey:'hub.items.settings.description',href:'/warehouse/warehouse-inbounds/settings',icon:Settings2},
   ]},
 ];
 
 export function WarehouseInboundHubPage(){
+  const { t } = useModuleTranslation('warehouse-inbound');
+
   return <section className="space-y-6">
-    <header className="rounded-2xl border border-[var(--wms-app-border)] bg-gradient-to-r from-cyan-500/10 via-[var(--wms-app-panel)] to-violet-500/10 p-6"><p className="text-xs font-bold uppercase tracking-[.18em] text-cyan-500">Depo Operasyonları</p><h1 className="mt-1 text-3xl font-black">Mal Kabul Süreç Merkezi</h1><p className="mt-2 max-w-4xl text-sm leading-6 text-slate-500">Siparişli, siparişsiz ve doğrudan kabulü aynı domain kurallarıyla başlatın; emirden kalite ve stok hareketine kadar izleyin.</p></header>
-    {phases.map(phase=><section key={phase.number} className="space-y-3"><div className="flex items-start gap-3"><span className="grid size-10 shrink-0 place-items-center rounded-xl bg-cyan-500/15 font-black text-cyan-500">{phase.number}</span><div><h2 className="text-lg font-black">{phase.title}</h2><p className="text-sm text-slate-500">{phase.description}</p></div></div><div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{phase.items.map(({title,description,href,icon:Icon})=><Link key={href} to={href} className="group rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-4 transition hover:-translate-y-0.5 hover:border-cyan-500/50"><div className="flex items-start justify-between"><div className="grid size-10 place-items-center rounded-xl bg-cyan-500/15 text-cyan-500"><Icon className="size-5"/></div><ArrowRight className="size-5 text-slate-500 transition group-hover:translate-x-1 group-hover:text-cyan-500"/></div><h3 className="mt-3 font-black">{title}</h3><p className="mt-1 text-xs leading-5 text-slate-500">{description}</p></Link>)}</div></section>)}
+    <header className="rounded-2xl border border-[var(--wms-app-border)] bg-[image:var(--wms-brand-gradient-soft)] p-6"><p className="text-xs font-bold uppercase tracking-[.18em] text-[var(--wms-brand-primary)]">{t('hub.eyebrow')}</p><h1 className="mt-1 text-3xl font-black">{t('hub.title')}</h1><p className="mt-2 max-w-4xl text-sm leading-6 text-[var(--wms-app-text-muted)]">{t('hub.description')}</p></header>
+    {phases.map(phase=><section key={phase.number} className="space-y-3"><div className="flex items-start gap-3"><span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[var(--wms-brand-soft)] font-black text-[var(--wms-brand-primary)]">{phase.number}</span><div><h2 className="text-lg font-black">{t(phase.titleKey)}</h2><p className="text-sm text-[var(--wms-app-text-muted)]">{t(phase.descriptionKey)}</p></div></div><div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{phase.items.map(({titleKey,descriptionKey,href,icon:Icon})=><Link key={href} to={href} className="group rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-4 transition hover:-translate-y-0.5 hover:border-[var(--wms-brand-primary)]"><div className="flex items-start justify-between"><div className="grid size-10 place-items-center rounded-xl bg-[var(--wms-brand-soft)] text-[var(--wms-brand-primary)]"><Icon className="size-5"/></div><ArrowRight className="size-5 text-[var(--wms-app-text-muted)] transition group-hover:translate-x-1 group-hover:text-[var(--wms-brand-primary)]"/></div><h3 className="mt-3 font-black">{t(titleKey)}</h3><p className="mt-1 text-xs leading-5 text-[var(--wms-app-text-muted)]">{t(descriptionKey)}</p></Link>)}</div></section>)}
   </section>;
 }

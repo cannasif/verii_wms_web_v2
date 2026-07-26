@@ -1,3 +1,49 @@
-import {ArrowRight,ClipboardList,PackageCheck,Settings2,Truck,UserRoundCog} from 'lucide-react';import {Link} from 'react-router-dom';
-const cards=[['Siparişten · Emirli','Netsis satış siparişlerini seçin ve toplama görevini kullanıcılara atayın.',ClipboardList],['Siparişsiz · Emirli','Serbest stoktan planlı toplama ve sevk emri oluşturun.',UserRoundCog],['Siparişten · Doğrudan','Politika izin veriyorsa görevsiz sipariş sevki hazırlayın.',Truck],['Siparişsiz · Doğrudan','Acil ve kontrollü emirsiz sevk taslağı oluşturun.',PackageCheck]] as const;
-export function WarehouseOutboundHubPage(){return <section className="space-y-6"><header className="rounded-2xl border border-[var(--wms-app-border)] bg-gradient-to-r from-cyan-500/10 via-[var(--wms-app-panel)] to-violet-500/10 p-6"><p className="text-xs font-bold uppercase tracking-widest text-cyan-500">Outbound</p><h1 className="mt-2 text-2xl font-black">Sevk Süreç Merkezi</h1><p className="mt-2 text-sm text-slate-500">Sipariş kaynağı, görev, toplama, paketleme, yükleme, onay ve ERP kesinleştirmeyi tek çatıdan yönetin.</p></header><div className="grid gap-3 md:grid-cols-2">{cards.map(([t,d,I])=><Link key={t} to="/warehouse/warehouse-outbounds/new" className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5"><I className="size-6 text-cyan-500"/><h2 className="mt-3 font-black">{t}</h2><p className="mt-1 text-sm text-slate-500">{d}</p><ArrowRight className="ml-auto mt-3 size-4"/></Link>)}</div><div className="grid gap-3 md:grid-cols-2"><Link to="/warehouse/warehouse-outbounds/list" className="rounded-2xl border p-5"><PackageCheck className="text-cyan-500"/><h3 className="mt-2 font-black">Sevk Kayıtları</h3><p className="text-sm text-slate-500">Planlanan, toplanan, paketlenen, yüklenen ve sevk edilen miktarlar.</p></Link><Link to="/warehouse/warehouse-outbounds/settings" className="rounded-2xl border border-cyan-500/30 bg-cyan-500/10 p-5"><Settings2 className="text-cyan-500"/><h3 className="mt-2 font-black">Sevk Politikası</h3><p className="text-sm text-slate-500">Dört akış türü, rezervasyon, paket, kısmi işlem, onay ve ERP kuralları.</p></Link></div></section>}
+import { ArrowRight, ClipboardList, Loader2, PackageCheck, Settings2, ShoppingCart, Truck, UserRoundCog } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { useModuleTranslation } from '@/hooks/useModuleTranslation';
+
+const cards = [
+  { key: 'orderedAssigned', icon: ClipboardList },
+  { key: 'stockAssigned', icon: UserRoundCog },
+  { key: 'orderedDirect', icon: ShoppingCart },
+  { key: 'stockDirect', icon: Truck },
+] as const;
+
+export function WarehouseOutboundHubPage() {
+  const { t, moduleReady } = useModuleTranslation('warehouse-outbound');
+  if (!moduleReady) {
+    return <section className="grid min-h-[50vh] place-items-center"><Loader2 className="size-7 animate-spin text-[var(--wms-brand-primary)]" /></section>;
+  }
+
+  return (
+    <section className="space-y-6">
+      <header className="rounded-2xl border border-[var(--wms-app-border)] bg-[image:var(--wms-brand-gradient-soft)] p-6">
+        <p className="text-xs font-bold uppercase tracking-[.18em] text-[var(--wms-brand-primary)]">{t('title')}</p>
+        <h1 className="mt-1 text-3xl font-black">{t('hub.title')}</h1>
+        <p className="mt-2 max-w-4xl text-sm leading-6 text-[var(--wms-app-text-muted)]">{t('hub.description')}</p>
+      </header>
+      <div className="grid gap-3 md:grid-cols-2">
+        {cards.map(({ key, icon: Icon }) => (
+          <Link key={key} to="/warehouse/warehouse-outbounds/new" className="group rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5 transition hover:-translate-y-0.5 hover:border-[var(--wms-brand-primary)]">
+            <Icon className="size-6 text-[var(--wms-brand-primary)]" />
+            <h2 className="mt-3 font-black">{t(`hub.cards.${key}.title`)}</h2>
+            <p className="mt-1 text-sm text-[var(--wms-app-text-muted)]">{t(`hub.cards.${key}.description`)}</p>
+            <ArrowRight className="ml-auto mt-3 size-4 text-[var(--wms-app-text-muted)] transition group-hover:translate-x-1 group-hover:text-[var(--wms-brand-primary)]" />
+          </Link>
+        ))}
+      </div>
+      <div className="grid gap-3 md:grid-cols-2">
+        <Link to="/warehouse/warehouse-outbounds/list" className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5">
+          <PackageCheck className="text-[var(--wms-brand-primary)]" />
+          <h3 className="mt-2 font-black">{t('hub.records.title')}</h3>
+          <p className="text-sm text-[var(--wms-app-text-muted)]">{t('hub.records.description')}</p>
+        </Link>
+        <Link to="/warehouse/warehouse-outbounds/settings" className="rounded-2xl border border-[var(--wms-brand-ring)] bg-[var(--wms-brand-soft)] p-5">
+          <Settings2 className="text-[var(--wms-brand-primary)]" />
+          <h3 className="mt-2 font-black">{t('hub.settings.title')}</h3>
+          <p className="text-sm text-[var(--wms-app-text-muted)]">{t('hub.settings.description')}</p>
+        </Link>
+      </div>
+    </section>
+  );
+}

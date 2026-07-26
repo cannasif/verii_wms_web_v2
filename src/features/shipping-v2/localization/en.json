@@ -1,1 +1,15 @@
-{"title":"Shipping","hub":"Shipping Process Center","create":"Create Shipment","list":"Shipments","settings":"Shipping Settings"}
+{
+  "title": "Shipping",
+  "hub": {
+    "title": "Shipping Process Center",
+    "description": "Manage order source, tasks, picking, packing, loading, approval and ERP finalisation in one place.",
+    "cards": {
+      "orderedAssigned": { "title": "Order-Based · Assigned", "description": "Select open sales orders, allocate lines and assign the shipping task." },
+      "stockAssigned": { "title": "Free Stock · Assigned", "description": "Create a planned shipment and operator task without an order reference." },
+      "orderedDirect": { "title": "Order-Based · Direct", "description": "When policy allows, start an order-based shipment without creating a task." },
+      "stockDirect": { "title": "Free Stock · Direct", "description": "Execute an urgent shipment with stock, location, lot, serial and quantity validation." }
+    },
+    "records": { "title": "Shipping Records", "description": "Track planned, picked, packed, loaded and shipped quantities." },
+    "settings": { "title": "Shipping Settings", "description": "Manage flow variants, reservation, packing, partial execution, approval and ERP rules." }
+  }
+}

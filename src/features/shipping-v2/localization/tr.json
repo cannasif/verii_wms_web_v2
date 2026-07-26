@@ -1,1 +1,15 @@
-{"title":"Sevk","hub":"Sevk Süreç Merkezi","create":"Sevk Oluştur","list":"Sevk Kayıtları","settings":"Sevk Ayarları"}
+{
+  "title": "Sevk",
+  "hub": {
+    "title": "Sevk Süreç Merkezi",
+    "description": "Sipariş kaynağı, görev, toplama, paketleme, yükleme, onay ve ERP kesinleştirmeyi tek çatıdan yönetin.",
+    "cards": {
+      "orderedAssigned": { "title": "Siparişli · Emirli", "description": "Açık satış siparişlerini seçin, kalemleri ayırın ve sevk görevini atayın." },
+      "stockAssigned": { "title": "Serbest Stok · Emirli", "description": "Sipariş bağlantısı olmadan planlı sevk ve kullanıcı görevi oluşturun." },
+      "orderedDirect": { "title": "Siparişli · Doğrudan", "description": "Politika izin veriyorsa görev açmadan siparişe istinaden sevk başlatın." },
+      "stockDirect": { "title": "Serbest Stok · Doğrudan", "description": "Acil sevki stok, raf, lot, seri ve miktar doğrulamalarıyla yürütün." }
+    },
+    "records": { "title": "Sevk Kayıtları", "description": "Planlanan, toplanan, paketlenen, yüklenen ve sevk edilen miktarları izleyin." },
+    "settings": { "title": "Sevk Ayarları", "description": "Akış türleri, rezervasyon, paketleme, kısmi işlem, onay ve ERP kurallarını yönetin." }
+  }
+}

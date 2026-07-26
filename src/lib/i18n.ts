@@ -81,12 +81,13 @@ for (const [path, loader] of Object.entries(featureModules)) {
 }
 
 const DEFAULT_LANGUAGE = 'tr';
+const FALLBACK_LANGUAGE = 'en';
 const DEFAULT_NAMESPACE = 'translation';
 const COMMON_NAMESPACE = 'common';
 const SHARED_NAMESPACE = 'shared';
 const STORAGE_KEY_LEGACY = 'i18nextLng';
 const STORAGE_KEY_WMS = 'wms-app-language';
-const fallbackLng = DEFAULT_LANGUAGE;
+const fallbackLng = FALLBACK_LANGUAGE;
 const supportedLngs = ['tr', 'en', 'de', 'fr', 'ar', 'es', 'it'] as const;
 const supportedLanguageSet = new Set<string>(supportedLngs);
 const PRELOADED_NAMESPACES = [DEFAULT_NAMESPACE, COMMON_NAMESPACE, SHARED_NAMESPACE] as const;

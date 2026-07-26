@@ -6,5 +6,22 @@
   "records": "Transfer Kayıtları",
   "sourceExecution": "Kaynak Depo Operasyonu",
   "targetExecution": "Hedef Depo Operasyonu",
-  "comingSoon": "Sonraki dilimde etkinleşecek"
+  "comingSoon": "Sonraki dilimde etkinleşecek",
+  "hub": {
+    "startTitle": "01 · Transferi Başlat",
+    "startDescription": "Sipariş kaynağı ve emir yürütme biçimi birbirinden bağımsızdır; dört senaryo aynı domain üzerinde ilerler.",
+    "executeTitle": "02 · Yürüt, Kabul Et ve Yönet",
+    "executeDescription": "Kaynak toplama ve sevk ile hedef kabul ve yerleştirme ayrı durumlar ve miktarlar üzerinden izlenir.",
+    "operationSlice": "Operasyon Dilimi",
+    "cards": {
+      "orderedErp": {"title": "Netsis Emrinden · Emirli", "description": "Netsis transfer emirlerini seçin, açık miktarı ayırın ve toplama görevini kullanıcılara atayın."},
+      "orderedStock": {"title": "Serbest Stoktan · Emirli", "description": "Sipariş bağlantısı olmadan stok kalemlerinden planlı toplama ve sevk emri oluşturun."},
+      "directErp": {"title": "Netsis Emrinden · Doğrudan", "description": "Politika izin veriyorsa Netsis emrine istinaden kullanıcı görevi oluşturmadan transfer başlatın."},
+      "directStock": {"title": "Serbest Stoktan · Doğrudan", "description": "Acil ve kontrollü emirsiz transferi serbest stok kalemlerinden başlatın."}
+    },
+    "source": {"title": "Toplama ve Sevk", "description": "Rezervasyon, görev kabulü, barkodlu toplama ve sevk kesinleştirme."},
+    "target": {"title": "Hedef Kabul ve Yerleştirme", "description": "Transit kabul, fark nedeni, kısmi kabul ve hedef rafa yerleştirme."},
+    "records": {"title": "Transfer Kayıtları", "description": "Tüm varyantları ve miktar ilerlemelerini ortak gridde görüntüleyin."},
+    "settings": {"title": "Transfer Süreç Ayarları", "description": "Varyant izinleri, rezervasyon, kısmi işlem, transit, kabul, raf ve fark politikaları."}
+  }
 }

@@ -132,5 +132,24 @@
       "Manual": "Manual", "BarcodeScan": "Barcode Scan", "PreGeneratedLabel": "Pre-generated Label",
       "SupplierLabel": "Supplier Label", "Import": "Import"
     }
+  },
+  "hub": {
+    "eyebrow": "Warehouse Operations",
+    "title": "Goods Receipt Process Center",
+    "description": "Start order-based, orderless and direct receipts under the same domain rules; track every step from assignment through quality and inventory posting.",
+    "phases": {
+      "start": { "title": "Start Receipt", "description": "Choose the correct starting point for the document source and execution mode." },
+      "execute": { "title": "Execute Assignment", "description": "Define assignees, accept assigned work and manage physical progress." },
+      "manage": { "title": "Monitor and Manage", "description": "Use records and policies for complete traceability and configurable process control." }
+    },
+    "cards": {
+      "ordered": { "title": "Order-Based Task", "description": "Select Netsis purchase orders, reserve open quantities and create receiving tasks." },
+      "orderless": { "title": "Orderless Task", "description": "Create a planned receipt task with dispatch and stock lines, without an order link." },
+      "direct": { "title": "Direct Goods Receipt", "description": "Post a taskless receipt atomically with quality, quarantine and inventory movement." },
+      "tasks": { "title": "Task Management", "description": "Assign open tasks to one or more users and track their progress." },
+      "assigned": { "title": "My Assigned Tasks", "description": "Accept, start and complete goods receipt tasks assigned to you." },
+      "records": { "title": "Goods Receipt Records", "description": "Review every receipt type in the shared server-side data grid." },
+      "settings": { "title": "Process Settings", "description": "Manage over/under receipt, quality hold, approval and ERP posting policies." }
+    }
   }
 }

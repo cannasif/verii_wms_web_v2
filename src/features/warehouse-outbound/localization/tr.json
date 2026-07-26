@@ -1,1 +1,15 @@
-{"title":"Sevk","hub":"Sevk Süreç Merkezi","create":"Sevk Oluştur","list":"Sevk Kayıtları","settings":"Sevk Ayarları"}
+{
+  "title": "Ambar Çıkış",
+  "hub": {
+    "title": "Ambar Çıkış Süreç Merkezi",
+    "description": "Talep, rezervasyon, toplama, doğrulama, yükleme ve ERP kesinleştirme adımlarını tek belge üzerinden yönetin.",
+    "cards": {
+      "orderedAssigned": { "title": "Siparişli · Emirli", "description": "Sipariş kalemlerini ayırın ve toplama görevini depo personeline atayın." },
+      "stockAssigned": { "title": "Serbest Stok · Emirli", "description": "Kullanılabilir stoktan planlı çıkış emri ve kullanıcı görevi oluşturun." },
+      "orderedDirect": { "title": "Siparişli · Doğrudan", "description": "Politika izin veriyorsa görev açmadan siparişe istinaden kontrollü çıkış başlatın." },
+      "stockDirect": { "title": "Serbest Stok · Doğrudan", "description": "Acil serbest stok çıkışını raf, lot, seri ve miktar doğrulamalarıyla yürütün." }
+    },
+    "records": { "title": "Ambar Çıkış Kayıtları", "description": "Planlanan, ayrılan, toplanan ve çıkışı tamamlanan miktarları izleyin." },
+    "settings": { "title": "Ambar Çıkış Ayarları", "description": "Akış türleri, rezervasyon, kısmi işlem, onay ve ERP aktarım kurallarını yönetin." }
+  }
+}

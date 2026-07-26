@@ -1,5 +1,6 @@
 import { lazy, Suspense, type ReactElement } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { LoginPage } from '@/features/auth/components/LoginPage';
 import { ForgotPasswordPage } from '@/features/auth/components/ForgotPasswordPage';
 import { ResetPasswordPage } from '@/features/auth/components/ResetPasswordPage';
@@ -97,25 +98,29 @@ const PackingWorkbenchPage = lazy(() => loadPackingPages().then((m) => ({ defaul
 const PackingDefinitionsPage = lazy(() => loadPackingPages().then((m) => ({ default: m.PackingDefinitionsPage })));
 const PackingPolicyPage = lazy(() => loadPackingPages().then((m) => ({ default: m.PackingPolicyPage })));
 function Dashboard(): ReactElement {
+  const { t } = useTranslation('common');
+
   return (
     <section className="min-h-[calc(100vh-8rem)] rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-6 shadow-sm">
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--wms-brand-primary)]">
         V3RII WMS v2
       </p>
-      <h1 className="mt-2 text-2xl font-bold">Depo yönetim merkezi</h1>
+      <h1 className="mt-2 text-2xl font-bold">{t('dashboard.title')}</h1>
       <p className="mt-2 text-slate-500">
-        Yeni modüller bu kabuk altında feature bazlı geliştirilecek.
+        {t('dashboard.subtitle')}
       </p>
     </section>
   );
 }
 
 function AccessDenied(): ReactElement {
+  const { t } = useTranslation('common');
+
   return (
     <section className="mx-auto max-w-xl rounded-2xl border border-amber-500/30 bg-[var(--wms-app-panel)] p-8 text-center shadow-xl">
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-500">403</p>
-      <h1 className="mt-2 text-2xl font-bold">Bu sayfa için yetkiniz bulunmuyor</h1>
-      <p className="mt-2 text-sm text-slate-500">Gerekli yetki grubunun tanımlanması için sistem yöneticinizle görüşün.</p>
+      <h1 className="mt-2 text-2xl font-bold">{t('common.accessDenied')}</h1>
+      <p className="mt-2 text-sm text-slate-500">{t('common.accessDeniedMessage')}</p>
     </section>
   );
 }
@@ -214,9 +219,11 @@ export function App(): ReactElement {
 }
 
 function RouteLoader(): ReactElement {
+  const { t } = useTranslation('common');
+
   return (
     <div className="grid min-h-screen place-items-center bg-[var(--wms-app-bg)] text-sm font-semibold text-[var(--wms-brand-primary)]">
-      Modül yükleniyor…
+      {t('common.loading')}
     </div>
   );
 }

@@ -1,1 +1,15 @@
-{"title":"WarehouseOutbound","hub":"WarehouseOutbound Process Center","create":"Create Shipment","list":"Shipments","settings":"WarehouseOutbound Settings"}
+{
+  "title": "Warehouse Outbound",
+  "hub": {
+    "title": "Warehouse Outbound Process Center",
+    "description": "Manage request, reservation, picking, verification, loading and ERP finalisation on one document.",
+    "cards": {
+      "orderedAssigned": { "title": "Order-Based · Assigned", "description": "Allocate order lines and assign the picking task to warehouse operators." },
+      "stockAssigned": { "title": "Free Stock · Assigned", "description": "Create a planned outbound order and operator task from available stock." },
+      "orderedDirect": { "title": "Order-Based · Direct", "description": "When policy allows, start a controlled order-based outbound without creating a task." },
+      "stockDirect": { "title": "Free Stock · Direct", "description": "Execute an urgent free-stock outbound with location, lot, serial and quantity validation." }
+    },
+    "records": { "title": "Warehouse Outbound Records", "description": "Track planned, reserved, picked and completed outbound quantities." },
+    "settings": { "title": "Warehouse Outbound Settings", "description": "Manage flow variants, reservation, partial execution, approval and ERP posting rules." }
+  }
+}
