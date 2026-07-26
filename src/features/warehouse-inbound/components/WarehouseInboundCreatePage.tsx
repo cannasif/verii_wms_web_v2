@@ -228,6 +228,10 @@ export function WarehouseInboundCreatePage(): ReactElement {
               throw new Error(
                 `${x.stockCode} ERP stok mirror tablosunda bulunamadı.`,
               );
+            if (!stock.unitCode)
+              throw new Error(
+                `${x.stockCode} stok kartının ölçü birimi tanımlı değil.`,
+              );
             if (!trackingPolicies.has(stock.id))
               trackingPolicies.set(
                 stock.id,
@@ -237,6 +241,7 @@ export function WarehouseInboundCreatePage(): ReactElement {
             return {
               ...x,
               stockId: stock.id,
+              unitCode: stock.unitCode,
               quantity: x.availableQuantity ?? 0,
               targetWarehouseId: warehouse?.id,
               targetWarehouseValue: warehouse

@@ -63,7 +63,7 @@ type ShipmentLine = {
 const blankLine = (): ShipmentLine => ({
   key: crypto.randomUUID(),
   quantity: 1,
-  unitCode: 'ADET',
+  unitCode: '',
   trackingType: 'None',
   requireHandlingUnit: false,
   trackings: [],
@@ -218,7 +218,7 @@ export function ShippingCreatePage() {
           yapCodeId: yap?.id,
           yapCode: yap?.configurationCode,
           quantity: row.availableQuantity ?? 0,
-          unitCode: stock.unitCode || 'ADET',
+          unitCode: stock.unitCode || '',
           trackingType: trackingPolicy.trackingType,
           trackingPolicy,
           requireHandlingUnit: false,
@@ -524,7 +524,7 @@ export function ShippingCreatePage() {
                           stockId: stock.id,
                           stockCode: stock.erpStockCode,
                           stockName: stock.stockName,
-                          unitCode: stock.unitCode || line.unitCode,
+                          unitCode: stock.unitCode || '',
                           trackingPolicy: undefined,
                           trackingPolicyLoading: true,
                           trackingType: 'None',
@@ -558,7 +558,7 @@ export function ShippingCreatePage() {
                     max={line.source?.availableQuantity} value={line.quantity}
                     onChange={(e) => patchLine(line.key, { quantity: Number(e.target.value) })} />
                 </Field>
-                <Field label="Birim"><input className="input" value={line.unitCode} onChange={(e) => patchLine(line.key, { unitCode: e.target.value })} /></Field>
+                <Field label="Birim"><div className={`input flex items-center font-bold ${line.unitCode ? 'text-cyan-600' : 'text-amber-600'}`}>{line.unitCode || 'Önce stok seçin'}</div></Field>
                 <Field label="Kaynak raf">
                   <PagedAppDropdown queryKey={['sh-location', line.key, warehouseId]} fetchPage={(request) => shippingApi.locations(request, warehouseId)}
                     toOption={(item: LocationOption) => ({ value: String(item.id), label: `${item.code} · ${item.name}` })}

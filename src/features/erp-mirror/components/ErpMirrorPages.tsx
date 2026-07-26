@@ -19,6 +19,7 @@ const warehouseColumns: GridColumn<WarehouseMirror>[] = [
 ];
 
 const stockColumns: GridColumn<StockMirror>[] = [
+  { key: 'unitCode', label: 'Ölçü Birimi', render: row => <span className="font-semibold text-cyan-600">{row.unitCode || 'Tanımsız'}</span> },
   { key: 'branchCode', label: 'Şube', render: row => row.branchCode },
   { key: 'businessUnitCode', label: 'İşletme', render: row => row.businessUnitCode },
   { key: 'erpStockCode', label: 'Stok Kodu', render: row => row.erpStockCode },

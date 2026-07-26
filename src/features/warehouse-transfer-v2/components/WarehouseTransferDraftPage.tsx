@@ -82,7 +82,7 @@ const userOption = (x: ActiveUserOption) => ({
 const blankLine = (): TransferDraftLine => ({
   localId: crypto.randomUUID(),
   quantity: 1,
-  unitCode: "ADET",
+  unitCode: "",
   trackingType: "None",
   requireHandlingUnit: false,
   trackings: [],
@@ -236,7 +236,7 @@ export function WarehouseTransferDraftPage(): ReactElement {
             yapCodeId: yap?.id,
             yapCode: yap?.configurationCode,
             quantity: row.availableQuantity ?? 0,
-            unitCode: stock.unitCode || "ADET",
+            unitCode: stock.unitCode || "",
             trackingType: trackingPolicy.trackingType,
             trackingPolicy,
             requireHandlingUnit: false,
@@ -894,7 +894,7 @@ function LineCard({
                     stockId: x.id,
                     stockCode: x.erpStockCode,
                     stockName: x.stockName,
-                    unitCode: x.unitCode || line.unitCode,
+                    unitCode: x.unitCode || "",
                     trackingType: trackingPolicy.trackingType,
                     trackingPolicy,
                     trackings: [],
@@ -945,11 +945,9 @@ function LineCard({
           />
         </Field>
         <Field label="Birim">
-          <input
-            className="input"
-            value={line.unitCode}
-            onChange={(e) => patch(line.localId, { unitCode: e.target.value })}
-          />
+          <div className={`input flex items-center font-bold ${line.unitCode ? "text-cyan-600" : "text-amber-600"}`}>
+            {line.unitCode || "Önce stok seçin"}
+          </div>
         </Field>
         <Field label="Kaynak raf">
           <PagedAppDropdown
