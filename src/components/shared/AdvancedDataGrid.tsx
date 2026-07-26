@@ -159,7 +159,7 @@ function SortableHeader({ columnKey, label, sortable, isActiveSort, sortDirectio
           {...listeners}
           aria-label={`${label} kolonunu taşı`}
           title="Kolonu sürükleyerek taşı"
-          className="cursor-grab touch-none rounded-md p-1 text-slate-400 opacity-60 hover:bg-black/5 hover:opacity-100 active:cursor-grabbing dark:hover:bg-white/10"
+          className="hidden min-h-11 min-w-11 cursor-grab touch-none items-center justify-center rounded-md text-slate-400 opacity-60 hover:bg-black/5 hover:opacity-100 active:cursor-grabbing sm:inline-flex dark:hover:bg-white/10"
           onClick={(event) => event.stopPropagation()}
         >
           <GripVertical className="size-3.5" />
@@ -174,7 +174,7 @@ function SortableHeader({ columnKey, label, sortable, isActiveSort, sortDirectio
         aria-label={`${label} kolon genişliğini değiştir`}
         title="Kolon genişliğini değiştir"
         onMouseDown={onResizeStart}
-        className="absolute right-0 top-0 h-full w-1.5 cursor-col-resize touch-none bg-transparent hover:bg-[var(--wms-brand-primary)]/30"
+        className="absolute right-0 top-0 hidden h-full w-2 cursor-col-resize touch-none bg-transparent hover:bg-[var(--wms-brand-primary)]/30 sm:block"
       />
     </th>
   );
@@ -306,11 +306,11 @@ export function AdvancedDataGrid<T extends { id: number }>({ pageKey, title, des
   return <section className="min-h-[calc(100vh-8rem)] rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-4 shadow-sm sm:p-6">
     <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
       <div><p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--wms-brand-primary)]">V3RII WMS</p><h1 className="mt-1 text-2xl font-bold">{title}</h1>{description && <p className="mt-1 text-sm text-slate-500">{description}</p>}</div>
-      <div className="flex flex-wrap gap-2">
-        <label className="relative"><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"/><input value={searchInput} onChange={(event) => setSearchInput(event.target.value)} placeholder="Ara..." className="h-10 w-64 rounded-xl border border-[var(--wms-app-border)] bg-transparent pl-9 pr-9 text-sm outline-none"/>{searchInput && <button type="button" aria-label="Aramayı temizle" onClick={() => setSearchInput('')} className="absolute right-2 top-1/2 -translate-y-1/2"><X className="size-4"/></button>}</label>
+      <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+        <label className="relative col-span-2 w-full sm:w-auto"><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"/><input value={searchInput} onChange={(event) => setSearchInput(event.target.value)} placeholder="Ara..." className="h-11 w-full rounded-xl border border-[var(--wms-app-border)] bg-transparent pl-9 pr-11 text-sm outline-none sm:w-64"/>{searchInput && <button type="button" aria-label="Aramayı temizle" onClick={() => setSearchInput('')} className="absolute right-0 top-0 grid size-11 place-items-center"><X className="size-4"/></button>}</label>
         <div className="relative">
-          <button type="button" onClick={() => setShowColumns((value) => !value)} className="inline-flex h-10 items-center gap-2 rounded-xl border border-[var(--wms-app-border)] px-3 text-sm"><Columns3 className="size-4"/>Kolonlar</button>
-          {showColumns && <div className="absolute right-0 z-30 mt-2 w-64 rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-3 shadow-xl">
+          <button type="button" onClick={() => setShowColumns((value) => !value)} className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-[var(--wms-app-border)] px-3 text-sm sm:w-auto"><Columns3 className="size-4"/>Kolonlar</button>
+          {showColumns && <div className="absolute left-0 z-30 mt-2 w-64 max-w-[calc(100vw-2rem)] rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-3 shadow-xl sm:left-auto sm:right-0">
             <p className="mb-2 text-xs text-slate-500">Başlıklardaki tutamaçlarla kolonları taşıyabilirsiniz.</p>
             {order.map((key) => {
               const column = columns.find((item) => item.key === key);
@@ -323,13 +323,13 @@ export function AdvancedDataGrid<T extends { id: number }>({ pageKey, title, des
             <button type="button" onClick={resetLayout} className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm"><RotateCcw className="size-4"/>Düzeni sıfırla</button>
           </div>}
         </div>
-        <button type="button" onClick={() => setShowFilters((value) => !value)} className="relative inline-flex h-10 items-center gap-2 rounded-xl border border-[var(--wms-app-border)] px-3 text-sm"><Filter className="size-4"/>Gelişmiş Filtre{filters.length > 0 && <span className="rounded-full bg-[var(--wms-brand-primary)] px-1.5 text-xs text-white">{filters.length}</span>}</button>
-        <button type="button" aria-label="Verileri yenile" onClick={() => query.refetch()} className="h-10 rounded-xl border border-[var(--wms-app-border)] p-2.5"><RefreshCw className={`size-4 ${query.isFetching ? 'animate-spin' : ''}`}/></button>
-        {toolbarAction && <button type="button" onClick={runAction} disabled={actionRunning} className="inline-flex h-10 items-center gap-2 rounded-xl bg-[var(--wms-brand-primary)] px-4 text-sm font-semibold text-white disabled:opacity-50"><RefreshCw className={`size-4 ${actionRunning ? 'animate-spin' : ''}`}/>{toolbarAction.label}</button>}
+        <button type="button" onClick={() => setShowFilters((value) => !value)} className="relative inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-[var(--wms-app-border)] px-3 text-sm sm:w-auto"><Filter className="size-4"/>Gelişmiş Filtre{filters.length > 0 && <span className="rounded-full bg-[var(--wms-brand-primary)] px-1.5 text-xs text-white">{filters.length}</span>}</button>
+        <button type="button" aria-label="Verileri yenile" onClick={() => query.refetch()} className="h-11 rounded-xl border border-[var(--wms-app-border)] p-2.5"><RefreshCw className={`size-4 ${query.isFetching ? 'animate-spin' : ''}`}/></button>
+        {toolbarAction && <button type="button" onClick={runAction} disabled={actionRunning} className="col-span-2 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[var(--wms-brand-primary)] px-4 text-sm font-semibold text-white disabled:opacity-50 sm:w-auto"><RefreshCw className={`size-4 ${actionRunning ? 'animate-spin' : ''}`}/>{toolbarAction.label}</button>}
       </div>
     </div>
     {showFilters && <div className="mb-4 rounded-xl border border-[var(--wms-app-border)] bg-slate-50/60 p-4 dark:bg-white/[.03]">
-      <div className="mb-3 flex items-center justify-between"><div className="flex items-center gap-2"><strong className="text-sm">Filtreler</strong><AppDropdown value={filterLogic} onValueChange={(value) => setFilterLogic(value as 'and' | 'or')} options={FILTER_LOGIC_OPTIONS} ariaLabel="Filtre eşleşme türü" className="h-9 w-44" /></div><button type="button" onClick={addFilter} className="inline-flex items-center gap-1 text-sm text-[var(--wms-brand-primary)]"><Plus className="size-4"/>Filtre ekle</button></div>
+      <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"><div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center"><strong className="text-sm">Filtreler</strong><AppDropdown value={filterLogic} onValueChange={(value) => setFilterLogic(value as 'and' | 'or')} options={FILTER_LOGIC_OPTIONS} ariaLabel="Filtre eşleşme türü" className="h-11 w-full sm:w-44" /></div><button type="button" onClick={addFilter} className="inline-flex min-h-11 items-center justify-center gap-1 rounded-lg border border-[var(--wms-app-border)] px-3 text-sm text-[var(--wms-brand-primary)] sm:border-0"><Plus className="size-4"/>Filtre ekle</button></div>
       {draftFilters.length === 0 ? <p className="text-sm text-slate-500">Henüz filtre eklenmedi.</p> : <div className="space-y-2">{draftFilters.map((filter, index) => {
         const selectedColumn = columns.find((column) => column.key === filter.column) ?? columns[0];
         const filterType = inferFilterType(selectedColumn);
@@ -349,7 +349,32 @@ export function AdvancedDataGrid<T extends { id: number }>({ pageKey, title, des
       })}</div>}
       <div className="mt-3 flex justify-end gap-2"><button type="button" onClick={clearFilters} className="rounded-lg border px-3 py-2 text-sm">Temizle</button><button type="button" onClick={applyFilters} className="rounded-lg bg-[var(--wms-brand-primary)] px-3 py-2 text-sm text-white">Uygula</button></div>
     </div>}
-    <div className="overflow-hidden rounded-xl border border-[var(--wms-app-border)]"><div className="overflow-x-auto"><DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}><table className={`w-full min-w-[760px] border-collapse text-sm ${Object.keys(widths).length ? 'table-fixed' : ''}`}><thead className="bg-slate-100/90 text-left text-xs uppercase tracking-wide text-slate-600 dark:bg-white/[.06] dark:text-slate-300"><tr><SortableContext items={activeColumns.map((column) => column.key)} strategy={horizontalListSortingStrategy}>{activeColumns.map((column) => <SortableHeader key={column.key} columnKey={column.key} label={column.label} sortable={column.sortable !== false} isActiveSort={sortBy === column.key} sortDirection={sortDirection} width={widths[column.key]} onSort={() => changeSort(column.key)} onResizeStart={(event) => startResize(event, column.key)}/>)}</SortableContext></tr></thead><tbody>{query.isLoading ? <tr><td colSpan={activeColumns.length} className="h-40 text-center">Yükleniyor...</td></tr> : query.isError ? <tr><td colSpan={activeColumns.length} className="h-40 text-center text-red-500">{query.error instanceof Error ? query.error.message : 'Veri alınamadı.'}</td></tr> : !query.data?.items.length ? <tr><td colSpan={activeColumns.length} className="h-40 text-center text-slate-500">Kayıt bulunamadı.</td></tr> : query.data.items.map((row) => <tr key={row.id} className="border-b border-[var(--wms-app-border)] hover:bg-[var(--wms-brand-soft)]">{activeColumns.map((column) => <td key={column.key} style={widths[column.key] ? { width: widths[column.key], maxWidth: widths[column.key] } : undefined} className="overflow-hidden border-r border-[var(--wms-app-border)] px-4 py-3 last:border-r-0"><div className="truncate">{column.render(row)}</div></td>)}</tr>)}</tbody></table></DndContext></div></div>
+    <div className="hidden overflow-hidden rounded-xl border border-[var(--wms-app-border)] sm:block"><div className="overflow-x-auto"><DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}><table className={`w-full min-w-[760px] border-collapse text-sm ${Object.keys(widths).length ? 'table-fixed' : ''}`}><thead className="bg-slate-100/90 text-left text-xs uppercase tracking-wide text-slate-600 dark:bg-white/[.06] dark:text-slate-300"><tr><SortableContext items={activeColumns.map((column) => column.key)} strategy={horizontalListSortingStrategy}>{activeColumns.map((column) => <SortableHeader key={column.key} columnKey={column.key} label={column.label} sortable={column.sortable !== false} isActiveSort={sortBy === column.key} sortDirection={sortDirection} width={widths[column.key]} onSort={() => changeSort(column.key)} onResizeStart={(event) => startResize(event, column.key)}/>)}</SortableContext></tr></thead><tbody>{query.isLoading ? <tr><td colSpan={activeColumns.length} className="h-40 text-center">Yükleniyor...</td></tr> : query.isError ? <tr><td colSpan={activeColumns.length} className="h-40 text-center text-red-500">{query.error instanceof Error ? query.error.message : 'Veri alınamadı.'}</td></tr> : !query.data?.items.length ? <tr><td colSpan={activeColumns.length} className="h-40 text-center text-slate-500">Kayıt bulunamadı.</td></tr> : query.data.items.map((row) => <tr key={row.id} className="border-b border-[var(--wms-app-border)] hover:bg-[var(--wms-brand-soft)]">{activeColumns.map((column) => <td key={column.key} style={widths[column.key] ? { width: widths[column.key], maxWidth: widths[column.key] } : undefined} className="overflow-hidden border-r border-[var(--wms-app-border)] px-4 py-3 last:border-r-0"><div className="truncate">{column.render(row)}</div></td>)}</tr>)}</tbody></table></DndContext></div></div>
+    <div className="space-y-3 sm:hidden" aria-live="polite">
+      {query.isLoading ? <GridMobileStatus text="Yükleniyor..." /> : query.isError ? <GridMobileStatus text={query.error instanceof Error ? query.error.message : 'Veri alınamadı.'} error /> : !query.data?.items.length ? <GridMobileStatus text="Kayıt bulunamadı." /> : query.data.items.map((row) => (
+        <article key={row.id} className="overflow-hidden rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] shadow-sm">
+          {activeColumns.map((column) => (
+            <div key={column.key} className={`grid min-w-0 grid-cols-[minmax(0,7rem)_minmax(0,1fr)] gap-3 border-b border-[var(--wms-app-border)] px-3 py-3 last:border-b-0 ${column.key === 'actions' ? 'items-center bg-[var(--wms-brand-soft)]' : 'items-start'}`}>
+              <span className="text-[0.68rem] font-semibold uppercase tracking-wide text-slate-500">{column.label}</span>
+              <div className="min-w-0 break-words text-right text-sm [&_button]:min-h-11 [&_button]:min-w-11 [&_button]:touch-manipulation [&>div]:justify-end">{column.render(row)}</div>
+            </div>
+          ))}
+        </article>
+      ))}
+    </div>
     <div className="mt-4 flex flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between"><div className="flex items-center gap-2 text-slate-500"><span>{first}-{last} / {total} kayıt</span><AppDropdown value={String(pageSize)} onValueChange={(value) => { setPageSize(Number(value)); setPage(1); }} options={PAGE_SIZE_DROPDOWN_OPTIONS} ariaLabel="Sayfa başına kayıt" className="h-9 w-20" /></div><div className="flex items-center gap-2"><button type="button" aria-label="Önceki sayfa" disabled={page <= 1 || query.isFetching} onClick={() => setPage((value) => value - 1)} className="rounded-lg border p-2 disabled:opacity-40"><ChevronLeft className="size-4"/></button><span>Sayfa {page} / {totalPages}</span><button type="button" aria-label="Sonraki sayfa" disabled={page >= totalPages || query.isFetching} onClick={() => setPage((value) => value + 1)} className="rounded-lg border p-2 disabled:opacity-40"><ChevronRight className="size-4"/></button></div></div>
   </section>;
+}
+
+function GridMobileStatus({ text, error = false }: { text: string; error?: boolean }) {
+  return (
+    <div
+      role={error ? 'alert' : 'status'}
+      className={`grid min-h-40 place-items-center rounded-xl border border-[var(--wms-app-border)] px-4 text-center text-sm ${
+        error ? 'text-red-500' : 'text-slate-500'
+      }`}
+    >
+      {text}
+    </div>
+  );
 }
