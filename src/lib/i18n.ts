@@ -92,6 +92,7 @@ const supportedLngs = ['tr', 'en', 'de', 'fr', 'ar', 'es', 'it'] as const;
 const supportedLanguageSet = new Set<string>(supportedLngs);
 const PRELOADED_NAMESPACES = [DEFAULT_NAMESPACE, COMMON_NAMESPACE, SHARED_NAMESPACE] as const;
 const loadedBundlesByLanguage: Record<string, Record<string, Record<string, unknown>>> = {};
+const loadingBundles = new Map<string, Promise<void>>();
 
 type SupportedLanguage = (typeof supportedLngs)[number];
 
@@ -261,9 +262,22 @@ async function loadNamespace(lang: string, ns: string): Promise<void> {
     return;
   }
 
-  const mod = await loader();
-  loadedBundlesByLanguage[target][ns] = mod.default;
-  rebuildLanguageResources(target);
+  const key = `${target}:${ns}`;
+  const currentLoad = loadingBundles.get(key);
+  if (currentLoad) {
+    return currentLoad;
+  }
+
+  const loadPromise = (async () => {
+    const mod = await loader();
+    loadedBundlesByLanguage[target][ns] = mod.default;
+    rebuildLanguageResources(target);
+  })().finally(() => {
+    loadingBundles.delete(key);
+  });
+
+  loadingBundles.set(key, loadPromise);
+  return loadPromise;
 }
 
 export async function ensureNamespaces(
@@ -272,25 +286,23 @@ export async function ensureNamespaces(
 ): Promise<void> {
   const target = normalizeLanguage(language ?? i18n.resolvedLanguage ?? i18n.language ?? fallbackLng);
   const uniqueNamespaces = [...new Set(namespaces.map((ns) => ns.trim()).filter(Boolean))];
-
-  for (const ns of uniqueNamespaces) {
-    await loadNamespace(target, ns);
-  }
+  const languages = new Set<string>([target]);
 
   if (target !== fallbackLng) {
-    for (const ns of uniqueNamespaces) {
-      await loadNamespace(fallbackLng, ns);
-    }
+    languages.add(fallbackLng);
   }
 
   // Legacy feature pages can still contain static Turkish labels. Keep the
   // Turkish source bundle available so the migration boundary can resolve the
   // same key in the active language without touching operation data.
   if (target !== DEFAULT_LANGUAGE) {
-    for (const ns of uniqueNamespaces) {
-      await loadNamespace(DEFAULT_LANGUAGE, ns);
-    }
+    languages.add(DEFAULT_LANGUAGE);
   }
+
+  await Promise.all(
+    [...languages].flatMap((lang) =>
+      uniqueNamespaces.map((ns) => loadNamespace(lang, ns))),
+  );
 }
 
 export async function loadLanguage(language: string): Promise<void> {
@@ -327,10 +339,7 @@ const initPromise = (async () => {
     },
   });
 
-  await ensureNamespaces(PRELOADED_NAMESPACES, fallbackLng);
-  if (resolvedInitialLng !== fallbackLng) {
-    await ensureNamespaces(PRELOADED_NAMESPACES, resolvedInitialLng);
-  }
+  await ensureNamespaces(PRELOADED_NAMESPACES, resolvedInitialLng);
 
   if (i18n.language !== resolvedInitialLng || i18n.resolvedLanguage !== resolvedInitialLng) {
     await i18n.changeLanguage(resolvedInitialLng);
