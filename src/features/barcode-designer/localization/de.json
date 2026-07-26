@@ -1,0 +1,90 @@
+{
+  "page": {
+    "title": "Barcode-Design und -Druck",
+    "description": "Design, Version, Veröffentlichung und Druck von Lager-, Serien-/Chargen-, Standort- und Logistiketiketten.",
+    "new": "Neue Vorlage"
+  },
+  "columns": {
+    "code": "Vorlagencode",
+    "name": "Vorlagenname",
+    "type": "Etikettentyp",
+    "size": "Größe",
+    "dpi": "DPI",
+    "status": "Status",
+    "draft": "Entwurf",
+    "published": "Veröffentlicht",
+    "actions": "Aktionen"
+  },
+  "actions": {
+    "design": "Design",
+    "edit": "Metadaten bearbeiten",
+    "delete": "Löschen",
+    "demo": "Demo-Design laden",
+    "saveDraft": "Entwurf speichern",
+    "publish": "Veröffentlichen",
+    "pdf": "PDF öffnen/herunterladen",
+    "print": "Drucken",
+    "addText": "Text",
+    "addBarcode": "Barcode",
+    "addQr": "QR",
+    "addMatrix": "DataMatrix",
+    "addBox": "Kiste"
+  },
+  "status": {
+    "active": "Aktiv",
+    "passive": "Passiv",
+    "none": "Keine"
+  },
+  "types": {
+    "Product": "Produkt",
+    "SerialLot": "Serie / Los",
+    "Location": "Standort",
+    "Logistics": "Logistik",
+    "Sscc": "SSCC Palette"
+  },
+  "form": {
+    "create": "Vorlage erstellen",
+    "edit": "Vorlagenmetadaten",
+    "code": "Vorlagencode",
+    "name": "Vorlagenname",
+    "type": "Etikettentyp",
+    "width": "Breite (mm)",
+    "height": "Höhe (mm)",
+    "dpi": "Drucker-DPI",
+    "active": "Aktiv",
+    "cancel": "Abbrechen",
+    "save": "Speichern"
+  },
+  "editor": {
+    "title": "Etikettendesign-Studio",
+    "toolbox": "Werkzeuge",
+    "properties": "Elementeigenschaften",
+    "bindings": "Datenfelder",
+    "versions": "Versionen",
+    "sample": "Beispieldaten",
+    "notes": "Versionshinweis",
+    "noSelection": "Wählen Sie ein Element zum Bearbeiten aus.",
+    "value": "Fester Wert",
+    "binding": "Datenbindung",
+    "symbology": "Symbologie",
+    "x": "X (mm)",
+    "y": "Y (mm)",
+    "width": "Breite",
+    "height": "Höhe",
+    "font": "Schriftgröße",
+    "remove": "Element entfernen",
+    "demoHint": "Das fertige Demo-Etikett ist unten abgebildet. Sie können Elemente ziehen oder Datenfelder binden."
+  },
+  "messages": {
+    "created": "Vorlage erstellt.",
+    "saved": "Entwurfsversion gespeichert.",
+    "published": "Version veröffentlicht.",
+    "deleted": "Vorlage gelöscht.",
+    "demoLoaded": "Demodesign geladen. Beim Speichern wird eine neue Version erstellt.",
+    "canvasNotReady": "Die Etikettenvorschau ist noch nicht fertig. Bitte versuchen Sie es gleich noch einmal.",
+    "popupBlocked": "Das Fenster PDF wurde blockiert. Lassen Sie Pop-ups zu und versuchen Sie es erneut.",
+    "preparingPdf": "PDF wird vorbereitet...",
+    "pdf": "PDF in einem neuen Tab geöffnet; Der Download wurde auch in unterstützten Browsern gestartet.",
+    "print": "Systemdruckdialog geöffnet."
+  }
+}

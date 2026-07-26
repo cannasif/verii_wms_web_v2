@@ -1,0 +1,33 @@
+{
+  "title": "Versand",
+  "hub": {
+    "title": "Versandprozesszentrum",
+    "description": "Verwalten Sie Bestellquelle, Aufgaben, Kommissionierung, Verpackung, Verladung, Genehmigung und ERP-Abschluss an einem Ort.",
+    "cards": {
+      "orderedAssigned": {
+        "title": "Auftragsbasiert · Zugewiesen",
+        "description": "Wählen Sie offene Kundenaufträge aus, weisen Sie Positionen zu und weisen Sie die Versandaufgabe zu."
+      },
+      "stockAssigned": {
+        "title": "Freier Bestand · Zugewiesen",
+        "description": "Erstellen Sie eine geplante Sendung und eine Bedieneraufgabe ohne Auftragsbezug."
+      },
+      "orderedDirect": {
+        "title": "Auftragsbasiert · Direkt",
+        "description": "Wenn die Richtlinien es zulassen, können Sie einen auftragsbasierten Versand starten, ohne eine Aufgabe zu erstellen."
+      },
+      "stockDirect": {
+        "title": "Kostenloser Lagerbestand · Direkt",
+        "description": "Führen Sie eine dringende Sendung mit Bestands-, Standort-, Chargen-, Serien- und Mengenvalidierung durch."
+      }
+    },
+    "records": {
+      "title": "Versandunterlagen",
+      "description": "Verfolgen Sie geplante, kommissionierte, verpackte, geladene und versandte Mengen."
+    },
+    "settings": {
+      "title": "Versandeinstellungen",
+      "description": "Verwalten Sie Ablaufvarianten, Reservierungen, Verpackungen, Teilausführungen, Genehmigungen und ERP-Regeln."
+    }
+  }
+}

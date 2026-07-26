@@ -1,0 +1,190 @@
+{
+  "hub": {
+    "eyebrow": "Operazioni di magazzino",
+    "title": "Centro processi in entrata del magazzino",
+    "description": "Avviare flussi in entrata order-based, orderless e diretti con le stesse regole di dominio; tracciare ogni fase dall'assegnazione delle attività alla qualità e al movimento delle scorte.",
+    "phases": {
+      "start": {
+        "title": "Inizia in entrata",
+        "description": "Scegliere il punto di ingresso corretto per l'origine del documento e la modalità di esecuzione."
+      },
+      "execute": {
+        "title": "Esegui l'attività",
+        "description": "Assegna gli operatori, accetta il lavoro assegnato e gestisci l'avanzamento fisico."
+      },
+      "manage": {
+        "title": "Monitorare e gestire",
+        "description": "Utilizza record e policy per la tracciabilità completa e il controllo del processo configurabile."
+      }
+    },
+    "items": {
+      "fromOrder": {
+        "title": "Crea da ordine d'acquisto",
+        "description": "Seleziona Netsis ordini di acquisto, prenota quantità aperte e crea un'attività in entrata."
+      },
+      "orderless": {
+        "title": "Attività in entrata senza ordine",
+        "description": "Creare un'attività pianificata con righe di spedizione e di stock senza un collegamento all'ordine."
+      },
+      "direct": {
+        "title": "Ingresso diretto",
+        "description": "Pubblica un ordine in entrata atomico con qualità, quarantena e movimento delle scorte."
+      },
+      "tasks": {
+        "title": "Compiti e incarichi",
+        "description": "Assegna le attività aperte a uno o più operatori e monitora i loro progressi."
+      },
+      "assigned": {
+        "title": "I miei compiti assegnati",
+        "description": "Accetta, avvia e completa le attività in entrata assegnate a te."
+      },
+      "records": {
+        "title": "Record in entrata",
+        "description": "Monitora tutte le modalità in entrata nella griglia dati condivisa lato server."
+      },
+      "settings": {
+        "title": "Impostazioni in entrata",
+        "description": "Gestisci l'eccesso, la carenza, il blocco della qualità, l'approvazione e le politiche di pubblicazione ERP."
+      }
+    }
+  },
+  "title": "Entrata Merci da Ordini",
+  "subtitle": "Seleziona gli ordini Netsis, convalida le quantità e prenota un'attività di ricezione in sicurezza.",
+  "steps": [
+    "Customer and orders",
+    "Lines and quantities",
+    "Warehouse settings",
+    "Confirmation"
+  ],
+  "customer": "Cliente",
+  "selectCustomer": "Seleziona cliente",
+  "loadOrders": "Carica gli ordini aperti",
+  "orders": "Ordini aperti",
+  "loadLines": "Carica le righe dell'ordine selezionate",
+  "noOrders": "Non è stato trovato alcun ordine aperto.",
+  "noLines": "Non è stata trovata alcuna linea disponibile.",
+  "warehouse": "Magazzino di destinazione",
+  "location": "Posizione di ricezione",
+  "series": "Serie di documenti",
+  "documentDate": "Data del documento",
+  "plannedArrival": "Arrivo previsto",
+  "priority": "Priorità",
+  "labelStrategy": "Strategia dell'etichetta",
+  "description": "Descrizione",
+  "create": "Crea attività e prenota",
+  "created": "Attività di entrata merci creata",
+  "assignedSelf": "L'attività verrà assegnata all'utente che ha effettuato l'accesso.",
+  "quantity": "Quantità riservata",
+  "available": "Disponibile",
+  "back": "Indietro",
+  "continue": "Continua",
+  "configurationHint": "Seleziona un magazzino di destinazione, un'ubicazione di ricezione e una serie di documenti per continuare.",
+  "createFlow": {
+    "subtitle": "Gestisci la selezione degli ordini, la pianificazione del magazzino e dell'ubicazione a livello di linea e la tracciabilità di lotto/numero di serie in un unico flusso controllato.",
+    "orderSelection": "Selezione dell'ordine",
+    "steps": {
+      "0": "Selezione dell'ordine",
+      "1": "Linee e piano di ricevimento",
+      "2": "Rivedi e crea"
+    },
+    "orderNo": "Ordine n",
+    "date": "Data",
+    "defaultWarehouse": "Magazzino predefinito",
+    "documentSettings": "Impostazioni di documenti e attività"
+  },
+  "manual": {
+    "eyebrow": "Operazione di entrata merci",
+    "directTitle": "Entrata diretta delle merci",
+    "orderlessTitle": "Attività di ricezione senza ordine",
+    "directSubtitle": "Convalida il documento e registra la ricezione, la qualità e il movimento delle scorte in un flusso controllato.",
+    "orderlessSubtitle": "Creare un'attività di ricezione pianificata senza un collegamento all'ordine.",
+    "currentStep": "Passo",
+    "steps": {
+      "document": "Documento",
+      "operation": "Operazione",
+      "lines": "Linee di stock",
+      "review": "Recensione"
+    },
+    "document": {
+      "title": "Documento e Fornitore",
+      "description": "Convalida il tipo di spedizione, il numero e il fornitore dietro la ricevuta."
+    },
+    "operation": {
+      "title": "Magazzino e processo",
+      "description": "Scegli la posizione di ricezione, la serie, la priorità e il metodo di etichetta."
+    },
+    "lines": {
+      "title": "Azioni da ricevere",
+      "description": "Inserisci stock, configurazione, quantità e tracciabilità per linea."
+    },
+    "review": {
+      "title": "Revisione finale",
+      "description": "Verificare il documento e il riepilogo delle quantità prima della registrazione."
+    },
+    "customer": "Fornitore",
+    "documentDate": "Data di spedizione/ricezione",
+    "receiptNo": "Numero della ricevuta",
+    "isElectronic": "e-Spedizione",
+    "receiptHint": "Inserisci esattamente 15 cifre per una nota di spedizione standard.",
+    "eReceiptHint": "e-Dispatch: codice unitario di 3 caratteri + anno di 4 cifre + sequenza di 9 cifre.",
+    "validNumber": "Il formato del numero del documento è valido.",
+    "plannedArrival": "Arrivo previsto",
+    "warehouse": "Magazzino di destinazione",
+    "location": "Luogo di ricezione/staging",
+    "series": "WMS Serie di documenti",
+    "priority": "Priorità",
+    "labelStrategy": "Strategia dell'etichetta",
+    "executionMode": "Metodo di ricezione",
+    "stock": "Magazzino",
+    "yap": "Codice di configurazione",
+    "quantity": "Quantità",
+    "unit": "Unità",
+    "lot": "Lotto",
+    "serial": "Seriale",
+    "manufacturingDate": "Data di produzione",
+    "expirationDate": "Data di scadenza",
+    "scannedBarcode": "Codice a barre scansionato",
+    "addLine": "Aggiungi linea",
+    "actions": "Azioni",
+    "removeLine": "Rimuovi riga",
+    "noLines": "Non è stata aggiunta alcuna riga di stock.",
+    "description": "Descrizione",
+    "documentType": "Tipo di spedizione",
+    "normalReceipt": "Spedizione standard",
+    "eReceipt": "e-Spedizione",
+    "lineCount": "Conteggio righe",
+    "totalQuantity": "Quantità totale",
+    "operationType": "Tipo di operazione",
+    "direct": "Ricevuta diretta",
+    "orderless": "Compito senza ordine",
+    "postReceipt": "Ricevuta postale",
+    "createTask": "Crea attività",
+    "success": "L'entrata merci è stata creata correttamente.",
+    "resultDirect": "Entrata merci registrata",
+    "resultOrderless": "Attività di ricevuta creata",
+    "linesText": "linee",
+    "newRecord": "Nuovo record",
+    "options": {
+      "noLabel": "Nessuna etichetta",
+      "preGenerate": "Pregenerare",
+      "supplierLabel": "Etichetta del fornitore",
+      "generateOnReceipt": "Genera su ricevuta",
+      "manual": "Manuale",
+      "barcode": "Scansione del codice a barre",
+      "preLabel": "Etichetta pregenerata"
+    },
+    "validation": {
+      "customer": "Il fornitore è obbligatorio.",
+      "receiptNo": "Il numero di ricevuta di spedizione standard deve contenere esattamente 15 cifre.",
+      "eReceiptNo": "Il numero e-Dispatch deve contenere un codice unità di 3 caratteri seguito da 13 cifre.",
+      "date": "La data di spedizione è obbligatoria.",
+      "operation": "Sono obbligatori il magazzino, l'ubicazione di ricevimento e la serie di documenti.",
+      "lines": "È obbligatoria almeno una riga stock.",
+      "stock": "Sono richiesti stock e una quantità maggiore di zero.",
+      "serialQuantity": "Una linea tracciata in serie deve avere la quantità 1.",
+      "expiry": "La data di scadenza non può precedere la data di produzione.",
+      "incomplete": "Il modulo contiene campi mancanti o non validi.",
+      "submit": "Impossibile creare l'entrata merci."
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "title": "Regole della maschera seriale",
+  "description": "Gestisci il formato seriale, l'unicità e le date di validità per stock, gruppo di stock o filiale predefinita.",
+  "new": "Nuova regola seriale",
+  "scope": {
+    "Stock": "Magazzino",
+    "StockGroup": "Gruppo azionario",
+    "BranchDefault": "Impostazione predefinita della filiale"
+  }
+}

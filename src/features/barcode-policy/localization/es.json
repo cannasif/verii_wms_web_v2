@@ -1,0 +1,93 @@
+{
+  "page": {
+    "title": "Política global de códigos de barras",
+    "description": "Administre la política central única de generación de códigos de barras utilizada por todos los módulos WMS.",
+    "loading": "Cargando política de código de barras...",
+    "version": "Versión de política",
+    "active": "Política activa",
+    "inactive": "Política inactiva",
+    "historyTitle": "Códigos de barras generados",
+    "historyDescription": "Historial de emisión de códigos de barras inmutable con versión y alcance de la política."
+  },
+  "scope": {
+    "ProductSerial": "Producto / Serie",
+    "ProductLot": "Producto / Lote",
+    "Location": "Estante / Ubicación",
+    "Logistics": "Palet/Paquete/Logística",
+    "Document": "Documento / Operación"
+  },
+  "scopeHelp": {
+    "ProductSerial": "Identifica instancias de stock individuales por código de stock y número de serie.",
+    "ProductLot": "Identifica el stock con seguimiento de lote por código de stock y número de lote.",
+    "Location": "Identifica los estantes y ubicaciones del almacén.",
+    "Logistics": "Identifica pallets, bultos y unidades logísticas.",
+    "Document": "Identifica recibo, transferencia, envío y otros documentos de operación."
+  },
+  "actions": {
+    "edit": "Editar perfil",
+    "test": "Vista previa / Generar",
+    "save": "Guardar perfil",
+    "cancel": "Cancelar",
+    "add": "Agregar segmento",
+    "remove": "Quitar",
+    "preview": "Vista previa",
+    "generate": "Generar único",
+    "close": "Cerrar"
+  },
+  "form": {
+    "name": "Nombre del perfil",
+    "prefix": "Prefijo",
+    "separator": "Separador",
+    "enabled": "Habilitar este alcance",
+    "segments": "Segmentos de código de barras",
+    "segmentsHelp": "Reordene los segmentos con las flechas. Cada perfil debe contener exactamente un segmento de secuencia.",
+    "type": "Tipo de segmento",
+    "source": "Campo fuente",
+    "transform": "transformar",
+    "required": "Requerido",
+    "sequenceLength": "Longitud de la secuencia",
+    "dateFormat": "Formato de fecha",
+    "literal": "valor literal",
+    "idempotency": "clave de idempotencia"
+  },
+  "segmentType": {
+    "Field": "campo",
+    "Literal": "literales",
+    "Sequence": "secuencia",
+    "Date": "Fecha"
+  },
+  "field": {
+    "StockCode": "Código de acciones",
+    "SerialNo": "Número de serie",
+    "YapCode": "Código de configuración",
+    "LotNo": "Número de lote",
+    "WarehouseCode": "código de almacén",
+    "LocationCode": "Código de ubicación",
+    "DocumentNo": "Número de documento"
+  },
+  "transform": {
+    "Upper": "SUPERIOR",
+    "Lower": "inferior",
+    "None": "Sin cambios"
+  },
+  "messages": {
+    "saved": "Perfil de política guardado.",
+    "previewed": "Vista previa del código de barras creada sin consumir una secuencia.",
+    "generated": "Código de barras único reservado permanentemente.",
+    "failed": "No se pudo completar la operación.",
+    "concurrency": "El perfil fue cambiado por otro usuario; la página fue actualizada."
+  },
+  "history": {
+    "id": "ID de registro",
+    "scope": "Alcance",
+    "version": "Versión",
+    "barcode": "código de barras",
+    "stock": "Valores",
+    "serial": "Serie",
+    "lot": "lote",
+    "location": "Ubicación",
+    "document": "Documento",
+    "sequence": "secuencia",
+    "generatedAt": "Generado en"
+  }
+}

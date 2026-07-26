@@ -1,0 +1,19 @@
+{
+  "title": "Emballage",
+  "workbench": "Station d'emballage",
+  "workbenchDescription": "Reliez le stock sortant sélectionné aux boîtes, caisses et palettes avec des contrôles de série/lot, de poids et SSCC.",
+  "definitions": "Définitions d'emballage",
+  "definitionsDescription": "Gérer les capacités d’emballage et les stations d’emballage physiques.",
+  "settings": "Politique d'emballage",
+  "materials": "Matériaux d'emballage",
+  "stations": "Gares",
+  "newMaterial": "Nouveau matériel",
+  "newStation": "Nouvelle gare",
+  "newSession": "Séance ouverte",
+  "open": "Ouvert",
+  "close": "Fermer l'unité",
+  "reopen": "Réouvrir",
+  "addUnit": "Boîte ouverte/palette",
+  "pack": "Ajouter un article",
+  "actions": "Actions"
+}

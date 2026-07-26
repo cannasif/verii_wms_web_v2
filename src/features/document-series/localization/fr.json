@@ -1,0 +1,85 @@
+{
+  "page": {
+    "title": "Série de documents",
+    "description": "Gérez la numérotation sécurisée pour les opérations de réception, de transfert, d’expédition et d’entrepôt des marchandises.",
+    "newAction": "Nouvelle série de documents"
+  },
+  "columns": {
+    "branch": "Branche",
+    "warehouse": "Entrepôt",
+    "code": "Code de série",
+    "name": "Nom de la série",
+    "documentType": "Type de document",
+    "prefix": "Préfixe",
+    "preview": "Numéro du document suivant",
+    "nextNumber": "Compteur suivant",
+    "default": "Par défaut",
+    "active": "Actif",
+    "issued": "Utilisé",
+    "lastIssuedAt": "Dernière publication",
+    "actions": "Actions"
+  },
+  "types": {
+    "GoodsReceipt": "Entrée de marchandises",
+    "InterWarehouseTransfer": "Transfert inter-entrepôts",
+    "Shipment": "Expédition",
+    "WarehouseReceipt": "Récépissé d'entrepôt",
+    "WarehouseIssue": "Problème d'entrepôt"
+  },
+  "yearFormats": {
+    "None": "Pas d'année",
+    "TwoDigit": "Année à 2 chiffres",
+    "FourDigit": "année à 4 chiffres"
+  },
+  "status": {
+    "yes": "Oui",
+    "no": "Non",
+    "active": "Actif",
+    "passive": "Passif"
+  },
+  "form": {
+    "createTitle": "Créer une série de documents",
+    "editTitle": "Modifier une série de documents",
+    "description": "Définir le type de document, la portée et le format des numéros.",
+    "warehouse": "Portée de l'entrepôt",
+    "allWarehouses": "Tous les entrepôts",
+    "code": "Code de série",
+    "name": "Nom de la série",
+    "documentType": "Type de document",
+    "prefix": "Préfixe",
+    "separator": "Séparateur",
+    "yearFormat": "Format de l'année",
+    "numberLength": "Longueur du numéro",
+    "startNumber": "Numéro de départ",
+    "nextNumber": "Numéro suivant",
+    "incrementBy": "Incrément",
+    "default": "Série par défaut",
+    "active": "Actif",
+    "descriptionLabel": "Descriptif",
+    "preview": "Aperçu en direct",
+    "lockedNotice": "Cette série a émis des numéros, donc les champs de portée et de numérotation sont verrouillés. Le nom et le statut peuvent toujours être mis à jour.",
+    "cancel": "Annuler",
+    "create": "Créer",
+    "save": "Enregistrer",
+    "close": "Fermer"
+  },
+  "validation": {
+    "required": "Le code de série, le nom et le préfixe sont requis.",
+    "numbers": "Les champs de numérotation ne sont pas valides."
+  },
+  "messages": {
+    "createSuccess": "Série de documents créée.",
+    "updateSuccess": "Série de documents mise à jour.",
+    "deleteSuccess": "Série de documents supprimée.",
+    "saveFailed": "La série de documents n'a pas pu être enregistrée.",
+    "deleteFailed": "La série de documents n'a pas pu être supprimée."
+  },
+  "actions": {
+    "edit": "Modifier",
+    "delete": "Supprimer"
+  },
+  "deleteDialog": {
+    "title": "Supprimer une série de documents",
+    "description": "Êtes-vous sûr de vouloir supprimer {{name}} ? Les séries qui ont émis des numéros doivent plutôt être désactivées."
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "title": "Reglas de máscara de serie",
+  "description": "Administre el formato de serie, la unicidad y las fechas de vigencia por acción, grupo de acciones o sucursal por defecto.",
+  "new": "Nueva regla serial",
+  "scope": {
+    "Stock": "Valores",
+    "StockGroup": "Grupo de acciones",
+    "BranchDefault": "Incumplimiento de sucursal"
+  }
+}

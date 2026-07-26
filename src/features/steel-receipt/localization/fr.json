@@ -1,0 +1,60 @@
+{
+  "title": "Réception de marchandises en acier",
+  "import": "Importation de plaques prévue",
+  "plans": "Plans d'acier",
+  "inspection": "Inspection à l'arrivée et à l'acceptation",
+  "operations": "Conversion et rangement des reçus",
+  "hub": {
+    "eyebrow": "Entrée de marchandises · Opérations sidérurgiques",
+    "title": "Centre de traitement de réception de marchandises en acier",
+    "description": "Suivez chaque plaque par DCode depuis l'enregistrement à la porte d'entrée et la décision qualité jusqu'à la réception des marchandises et le rangement final.",
+    "phases": {
+      "gate": {
+        "title": "Porte et attente",
+        "description": "Validez les données du véhicule, du conducteur, du fournisseur et de la plaque attendue avant le traitement."
+      },
+      "quality": {
+        "title": "Inspection et décision",
+        "description": "Enregistrez l’arrivée physique, la quantité et la décision de qualité pour chaque plaque avec des preuves."
+      },
+      "putaway": {
+        "title": "Réception et rangement",
+        "description": "Convertissez les plaques approuvées en tâches et publiez les mouvements de stock finaux après la réception physique."
+      },
+      "report": {
+        "title": "Surveillance et rapports",
+        "description": "Surveillez la traçabilité des plaques, les travaux en attente et les exceptions opérationnelles à partir d’un seul centre."
+      }
+    },
+    "cards": {
+      "vehicles": {
+        "title": "Dossiers d'enregistrement du véhicule",
+        "description": "Examinez les enregistrements de porte et démarrez une nouvelle acceptation de véhicule et d’acier à partir de l’action de liste."
+      },
+      "import": {
+        "title": "Importation des attentes",
+        "description": "Prévisualisez, validez et enregistrez les données Excel de manière idempotente par DCode."
+      },
+      "plans": {
+        "title": "Plans d'acier",
+        "description": "Suivez les lots importés et leurs statuts de processus."
+      },
+      "inspection": {
+        "title": "Arrivée et inspection de la qualité",
+        "description": "Gérer les décisions arrivées, manquantes, acceptées, partiellement acceptées et rejetées."
+      },
+      "receipt": {
+        "title": "Tâche de réception de marchandises",
+        "description": "Convertissez les plaques approuvées en une tâche partagée et affectez des opérateurs d'entrepôt."
+      },
+      "placement": {
+        "title": "Cour/Emplacement Rangement",
+        "description": "Enregistrez l'emplacement final et l'ordre de pile en utilisant l'occupation actuelle de l'emplacement."
+      },
+      "reports": {
+        "title": "Rapports d'exploitation de l'acier",
+        "description": "Recherchez les statuts DCode, numéro de série du fournisseur, qualité, réception et mise en stock."
+      }
+    }
+  }
+}

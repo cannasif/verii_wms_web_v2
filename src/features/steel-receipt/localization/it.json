@@ -1,0 +1,60 @@
+{
+  "title": "Ricevuta di prodotti in acciaio",
+  "import": "Importazione piastra prevista",
+  "plans": "Piani d'acciaio",
+  "inspection": "Ispezione all'arrivo e all'accettazione",
+  "operations": "Conversione e stoccaggio delle ricevute",
+  "hub": {
+    "eyebrow": "Entrata merci · Operazioni siderurgiche",
+    "title": "Centro di elaborazione delle ricevute di prodotti in acciaio",
+    "description": "Traccia ogni piatto tramite DCode dal check-in al gate e dalla decisione sulla qualità fino al ricevimento della merce e allo stoccaggio finale.",
+    "phases": {
+      "gate": {
+        "title": "Porta e aspettativa",
+        "description": "Convalida dei dati relativi a veicolo, conducente, fornitore e targa prevista prima dell'elaborazione."
+      },
+      "quality": {
+        "title": "Ispezione e decisione",
+        "description": "Registrare l'arrivo fisico, la quantità e la decisione sulla qualità per ogni piatto con prove."
+      },
+      "putaway": {
+        "title": "Ricevimento e stoccaggio",
+        "description": "Converti le piastre approvate in attività e registra i movimenti di inventario finali dopo il ricevimento fisico."
+      },
+      "report": {
+        "title": "Monitoraggio e reporting",
+        "description": "Monitora la tracciabilità delle lastre, i lavori in sospeso e le eccezioni operative da un unico centro."
+      }
+    },
+    "cards": {
+      "vehicles": {
+        "title": "Registri del check-in del veicolo",
+        "description": "Esaminare i record dei cancelli e avviare una nuova accettazione di veicoli e acciaio dall'azione dell'elenco."
+      },
+      "import": {
+        "title": "Importazione delle aspettative",
+        "description": "Visualizza in anteprima, convalida e salva i dati Excel in modo idempotente tramite DCode."
+      },
+      "plans": {
+        "title": "Piani d'acciaio",
+        "description": "Tieni traccia dei lotti importati e dei relativi stati di processo."
+      },
+      "inspection": {
+        "title": "Arrivo e controllo qualità",
+        "description": "Gestire le decisioni arrivate, mancanti, accettate, parzialmente accettate e rifiutate."
+      },
+      "receipt": {
+        "title": "Attività di entrata merci",
+        "description": "Converti le targhe approvate in un'attività condivisa e assegna gli operatori di magazzino."
+      },
+      "placement": {
+        "title": "Cantiere/Posizione Stoccaggio",
+        "description": "Salva la posizione finale e l'ordine di stack utilizzando l'occupazione della posizione corrente."
+      },
+      "reports": {
+        "title": "Rapporti sulle operazioni dell'acciaio",
+        "description": "Cerca DCode, numero di serie del fornitore, qualità, ricezione e stato di stoccaggio."
+      }
+    }
+  }
+}

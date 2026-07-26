@@ -1,0 +1,190 @@
+{
+  "hub": {
+    "eyebrow": "Opérations d'entrepôt",
+    "title": "Centre de processus entrants d’entrepôt",
+    "description": "Démarrez des flux entrants directs, sans ordre et basés sur les commandes avec les mêmes règles de domaine ; suivez chaque étape, depuis l'attribution des tâches jusqu'à la qualité et le mouvement des stocks.",
+    "phases": {
+      "start": {
+        "title": "Démarrer le trafic entrant",
+        "description": "Choisissez le point d'entrée correct pour la source du document et le mode d'exécution."
+      },
+      "execute": {
+        "title": "Exécuter la tâche",
+        "description": "Affectez des opérateurs, acceptez le travail assigné et gérez les progrès physiques."
+      },
+      "manage": {
+        "title": "Surveiller et gérer",
+        "description": "Utilisez des enregistrements et des politiques pour une traçabilité complète et un contrôle des processus configurable."
+      }
+    },
+    "items": {
+      "fromOrder": {
+        "title": "Créer à partir d'un bon de commande",
+        "description": "Sélectionnez Netsis bons de commande, réservez les quantités ouvertes et créez une tâche entrante."
+      },
+      "orderless": {
+        "title": "Tâche entrante sans ordre",
+        "description": "Créez une tâche planifiée avec des lignes d'expédition et de stock sans lien de commande."
+      },
+      "direct": {
+        "title": "Entrée directe",
+        "description": "Publiez un courrier entrant sans ordre de manière atomique avec qualité, quarantaine et mouvement de stock."
+      },
+      "tasks": {
+        "title": "Tâches et affectations",
+        "description": "Attribuez des tâches ouvertes à un ou plusieurs opérateurs et suivez leur progression."
+      },
+      "assigned": {
+        "title": "Mes tâches assignées",
+        "description": "Acceptez, démarrez et terminez les tâches entrantes qui vous sont assignées."
+      },
+      "records": {
+        "title": "Enregistrements entrants",
+        "description": "Surveillez tous les modes entrants dans la grille de données partagée côté serveur."
+      },
+      "settings": {
+        "title": "Paramètres entrants",
+        "description": "Gérez les politiques de publication en excédent, en pénurie, en qualité, en approbation et en ERP."
+      }
+    }
+  },
+  "title": "Entrée de marchandises provenant des commandes",
+  "subtitle": "Sélectionnez Netsis commandes, validez les quantités et réservez une tâche de réception en toute sécurité.",
+  "steps": [
+    "Customer and orders",
+    "Lines and quantities",
+    "Warehouse settings",
+    "Confirmation"
+  ],
+  "customer": "Client",
+  "selectCustomer": "Sélectionner un client",
+  "loadOrders": "Charger les commandes ouvertes",
+  "orders": "Commandes ouvertes",
+  "loadLines": "Charger les lignes de commande sélectionnées",
+  "noOrders": "Aucune commande ouverte n'a été trouvée.",
+  "noLines": "Aucune ligne disponible n'a été trouvée.",
+  "warehouse": "Entrepôt cible",
+  "location": "Lieu de réception",
+  "series": "Série de documents",
+  "documentDate": "Date du document",
+  "plannedArrival": "Arrivée prévue",
+  "priority": "Priorité",
+  "labelStrategy": "Stratégie de label",
+  "description": "Descriptif",
+  "create": "Créer une tâche et réserver",
+  "created": "Tâche d'entrée de marchandises créée",
+  "assignedSelf": "La tâche sera attribuée à l'utilisateur connecté.",
+  "quantity": "Quantité réservée",
+  "available": "Disponible",
+  "back": "Retour",
+  "continue": "Continuer",
+  "configurationHint": "Sélectionnez un entrepôt cible, un emplacement de réception et une série de documents pour continuer.",
+  "createFlow": {
+    "subtitle": "Gérez la sélection des commandes, la planification des entrepôts et des emplacements au niveau de la ligne, ainsi que la traçabilité des lots/séries dans un flux contrôlé.",
+    "orderSelection": "Sélection de commande",
+    "steps": {
+      "0": "Sélection de commande",
+      "1": "Lignes et plan de réception",
+      "2": "Réviser et créer"
+    },
+    "orderNo": "Numéro de commande",
+    "date": "Date",
+    "defaultWarehouse": "Entrepôt par défaut",
+    "documentSettings": "Paramètres des documents et des tâches"
+  },
+  "manual": {
+    "eyebrow": "Opération de réception de marchandises",
+    "directTitle": "Entrée directe des marchandises",
+    "orderlessTitle": "Tâche de réception sans commande",
+    "directSubtitle": "Validez le document et postez la réception, la qualité et les mouvements de stock dans un flux contrôlé.",
+    "orderlessSubtitle": "Créez une tâche de réception planifiée sans lien de commande.",
+    "currentStep": "Étape",
+    "steps": {
+      "document": "Documenter",
+      "operation": "Fonctionnement",
+      "lines": "Lignes de stock",
+      "review": "Examen"
+    },
+    "document": {
+      "title": "Document et fournisseur",
+      "description": "Validez le type d'expédition, le numéro et le fournisseur derrière le reçu."
+    },
+    "operation": {
+      "title": "Entrepôt et processus",
+      "description": "Choisissez le lieu de réception, la série, la priorité et la méthode d'étiquetage."
+    },
+    "lines": {
+      "title": "Actions à recevoir",
+      "description": "Saisir le stock, la configuration, la quantité et la traçabilité par ligne."
+    },
+    "review": {
+      "title": "Examen final",
+      "description": "Vérifiez le document et le récapitulatif des quantités avant de les valider."
+    },
+    "customer": "Fournisseur",
+    "documentDate": "Date d'expédition/réception",
+    "receiptNo": "Numéro de reçu",
+    "isElectronic": "Expédition électronique",
+    "receiptHint": "Saisissez exactement 15 chiffres pour un bon d'expédition standard.",
+    "eReceiptHint": "e-Dispatch : code d'unité à 3 caractères + année à 4 chiffres + séquence de 9 chiffres.",
+    "validNumber": "Le format du numéro de document est valide.",
+    "plannedArrival": "Arrivée prévue",
+    "warehouse": "Entrepôt cible",
+    "location": "Lieu de réception/de transfert",
+    "series": "WMS Série de documents",
+    "priority": "Priorité",
+    "labelStrategy": "Stratégie de label",
+    "executionMode": "Méthode de réception",
+    "stock": "Actions",
+    "yap": "Code de configuration",
+    "quantity": "Quantité",
+    "unit": "Unité",
+    "lot": "Beaucoup",
+    "serial": "Série",
+    "manufacturingDate": "Date de fabrication",
+    "expirationDate": "Date d'expiration",
+    "scannedBarcode": "Code-barres scanné",
+    "addLine": "Ajouter une ligne",
+    "actions": "Actions",
+    "removeLine": "Supprimer la ligne",
+    "noLines": "Aucune ligne de stock n'a été ajoutée.",
+    "description": "Descriptif",
+    "documentType": "Type d'expédition",
+    "normalReceipt": "Expédition standard",
+    "eReceipt": "Expédition électronique",
+    "lineCount": "Nombre de lignes",
+    "totalQuantity": "Quantité totale",
+    "operationType": "Type d'opération",
+    "direct": "Réception directe",
+    "orderless": "Tâche sans ordre",
+    "postReceipt": "Publier le reçu",
+    "createTask": "Créer une tâche",
+    "success": "L'entrée de marchandises a été créée avec succès.",
+    "resultDirect": "Entrée de marchandises enregistrée",
+    "resultOrderless": "Tâche de réception créée",
+    "linesText": "lignes",
+    "newRecord": "Nouveau record",
+    "options": {
+      "noLabel": "Aucune étiquette",
+      "preGenerate": "Pré-générer",
+      "supplierLabel": "Étiquette du fournisseur",
+      "generateOnReceipt": "Générer à réception",
+      "manual": "Manuel",
+      "barcode": "Numérisation de codes à barres",
+      "preLabel": "Étiquette pré-générée"
+    },
+    "validation": {
+      "customer": "Le fournisseur est requis.",
+      "receiptNo": "Le numéro de récépissé d’expédition standard doit contenir exactement 15 chiffres.",
+      "eReceiptNo": "Le numéro e-Dispatch doit contenir un code d’unité à 3 caractères suivi de 13 chiffres.",
+      "date": "La date d'expédition est requise.",
+      "operation": "L’entrepôt, le lieu de réception et la série de documents sont requis.",
+      "lines": "Au moins une ligne de stock est requise.",
+      "stock": "Un stock et une quantité supérieure à zéro sont requis.",
+      "serialQuantity": "Une ligne suivie en série doit avoir la quantité 1.",
+      "expiry": "La date de péremption ne peut pas précéder la date de fabrication.",
+      "incomplete": "Le formulaire contient des champs manquants ou invalides.",
+      "submit": "L'entrée de marchandises n'a pas pu être créée."
+    }
+  }
+}

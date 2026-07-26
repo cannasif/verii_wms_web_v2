@@ -1,0 +1,10 @@
+{
+  "title": "Règles de masque en série",
+  "description": "Gérez le format des séries, l'unicité et les dates d'effet par stock, groupe de stock ou succursale par défaut.",
+  "new": "Nouvelle règle série",
+  "scope": {
+    "Stock": "Actions",
+    "StockGroup": "Groupe de stocks",
+    "BranchDefault": "Branche par défaut"
+  }
+}

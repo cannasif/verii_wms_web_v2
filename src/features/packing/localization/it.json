@@ -1,0 +1,19 @@
+{
+  "title": "Imballaggio",
+  "workbench": "Stazione di imballaggio",
+  "workbenchDescription": "Associa lo stock in uscita prelevato a scatole, casse e pallet con controlli di serie/lotto, peso e SSCC.",
+  "definitions": "Definizioni di imballaggio",
+  "definitionsDescription": "Gestisci le capacità di imballaggio e le stazioni di imballaggio fisiche.",
+  "settings": "Politica di imballaggio",
+  "materials": "Materiali di imballaggio",
+  "stations": "Stazioni",
+  "newMaterial": "Nuovo materiale",
+  "newStation": "Nuova stazione",
+  "newSession": "Sessione aperta",
+  "open": "Aperto",
+  "close": "Chiudi unità",
+  "reopen": "Riaprire",
+  "addUnit": "Scatola/Pallet aperto",
+  "pack": "Aggiungi articolo",
+  "actions": "Azioni"
+}

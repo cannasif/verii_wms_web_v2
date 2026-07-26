@@ -1,0 +1,107 @@
+{
+  "page": {
+    "title": "Standortdefinitionen",
+    "description": "Verwalten Sie die Lagerzone, den Gang, das Regal, die Ebene und die Lagerplatzhierarchie.",
+    "newAction": "Neuer Standort"
+  },
+  "form": {
+    "createTitle": "Neue Standortdefinition",
+    "editTitle": "Standortdefinition bearbeiten",
+    "description": "Verwalten Sie Adresshierarchie, Nutzungsregeln und Kapazität.",
+    "basicInformation": "Grundlegende Informationen",
+    "addressAndBarcode": "Adresse und Barcode",
+    "capacity": "Kapazität",
+    "usageRules": "Nutzungsregeln",
+    "warehouse": "Lager",
+    "warehousePlaceholder": "Lager auswählen",
+    "locationType": "Standorttyp",
+    "parentLocation": "Übergeordneter Standort",
+    "rootLocation": "Root-Standort",
+    "code": "Standortcode",
+    "name": "Standortname",
+    "zoneCode": "Zonencode",
+    "aisleNo": "Gang-Nr",
+    "rackNo": "Rack-Nr",
+    "levelNo": "Level-Nr",
+    "binNo": "Behälternr",
+    "barcodeMode": "Barcode-Modus",
+    "barcode": "Barcode",
+    "barcodeAutoPlaceholder": "Wird vom System generiert",
+    "quantity": "Menge",
+    "weight": "Gewicht",
+    "volume": "Lautstärke",
+    "unit": "Einheit",
+    "descriptionLabel": "Beschreibung",
+    "cancel": "Abbrechen",
+    "create": "Standort erstellen",
+    "save": "Änderungen speichern",
+    "close": "Schließen"
+  },
+  "rules": {
+    "mixedStock": "Gemischte Brühe",
+    "mixedLot": "Gemischtes Los",
+    "mixedStatus": "Gemischter Status",
+    "cycleCount": "Zykluszählung aktiviert",
+    "pickable": "Auswählbar",
+    "putaway": "Einlagerung aktiviert",
+    "quarantine": "Quarantäne",
+    "active": "Aktiv"
+  },
+  "types": {
+    "Zone": "Zone",
+    "Aisle": "Gang",
+    "Rack": "Gestell",
+    "Shelf": "Regalebene",
+    "Cell": "Bin",
+    "Receiving": "Empfangen",
+    "Staging": "Inszenierung",
+    "Shipping": "Versand",
+    "Quarantine": "Quarantäne",
+    "Virtual": "Virtuell"
+  },
+  "barcodeModes": {
+    "Auto": "Automatisch",
+    "Manual": "Handbuch"
+  },
+  "columns": {
+    "branch": "Zweig",
+    "warehouseCode": "Lagercode",
+    "warehouseName": "Lagername",
+    "code": "Standortcode",
+    "name": "Standortname",
+    "locationType": "Standorttyp",
+    "parentLocation": "Übergeordneter Standort",
+    "barcode": "Barcode",
+    "zone": "Zone",
+    "status": "Status",
+    "actions": "Aktionen"
+  },
+  "status": {
+    "active": "Aktiv",
+    "passive": "Passiv"
+  },
+  "actions": {
+    "edit": "Bearbeiten",
+    "delete": "Löschen"
+  },
+  "validation": {
+    "requiredBasic": "Lager, Standortcode und Standortname sind erforderlich.",
+    "parentRequired": "Wählen Sie einen gültigen übergeordneten Standort für Gang-, Regal-, Regalebenen- und Lagerplatztypen aus.",
+    "barcodeRequired": "Im manuellen Barcode-Modus ist ein Barcode erforderlich.",
+    "capacityUnitRequired": "Die Kapazitätseinheit ist erforderlich, wenn ein Kapazitätswert eingegeben wird."
+  },
+  "messages": {
+    "warehousesLoadFailed": "Lager konnten nicht beladen werden.",
+    "detailLoadFailed": "Standortdetails konnten nicht geladen werden.",
+    "parentsLoadFailed": "Übergeordnete Standorte konnten nicht geladen werden.",
+    "createSuccess": "Standortdefinition erstellt.",
+    "updateSuccess": "Standortdefinition aktualisiert.",
+    "saveFailed": "Die Standortdefinition konnte nicht gespeichert werden.",
+    "deleteSuccess": "Standortdefinition gelöscht.",
+    "deleteFailed": "Die Standortdefinition konnte nicht gelöscht werden."
+  },
+  "deleteDialog": {
+    "title": "Standortdefinition löschen",
+    "description": "{{name}} wird durch vorläufiges Löschen deaktiviert. Der Vorgang wird abgelehnt, wenn untergeordnete Standorte vorhanden sind."
+  }
+}

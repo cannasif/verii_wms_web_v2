@@ -1,0 +1,93 @@
+{
+  "page": {
+    "title": "Politica globale sui codici a barre",
+    "description": "Gestisci l'unica policy centrale di generazione dei codici a barre utilizzata da tutti i moduli WMS.",
+    "loading": "Caricamento policy codici a barre...",
+    "version": "Versione politica",
+    "active": "Politica attiva",
+    "inactive": "Politica inattiva",
+    "historyTitle": "Codici a barre generati",
+    "historyDescription": "Cronologia dei problemi relativi ai codici a barre immutabili con versione e ambito della policy."
+  },
+  "scope": {
+    "ProductSerial": "Prodotto/Seriale",
+    "ProductLot": "Prodotto/lotto",
+    "Location": "Scaffale/Posizione",
+    "Logistics": "Pallet/Pacchi/Logistica",
+    "Document": "Documento/Operazione"
+  },
+  "scopeHelp": {
+    "ProductSerial": "Identifica le singole istanze di stock in base al codice stock e al numero di serie.",
+    "ProductLot": "Identifica lo stock monitorato per lotto in base al codice stock e al numero di lotto.",
+    "Location": "Identifica gli scaffali e le posizioni del magazzino.",
+    "Logistics": "Identifica pallet, pacchi e unità logistiche.",
+    "Document": "Identifica la ricevuta, il trasferimento, la spedizione e altri documenti operativi."
+  },
+  "actions": {
+    "edit": "Modifica profilo",
+    "test": "Anteprima/Genera",
+    "save": "Salva profilo",
+    "cancel": "Annulla",
+    "add": "Aggiungi segmento",
+    "remove": "Rimuovi",
+    "preview": "Anteprima",
+    "generate": "Genera unico",
+    "close": "Chiudi"
+  },
+  "form": {
+    "name": "Nome del profilo",
+    "prefix": "Prefisso",
+    "separator": "Separatore",
+    "enabled": "Abilita questo ambito",
+    "segments": "Segmenti di codici a barre",
+    "segmentsHelp": "Riordina i segmenti con le frecce. Ogni profilo deve contenere esattamente un segmento di sequenza.",
+    "type": "Tipo di segmento",
+    "source": "Campo di origine",
+    "transform": "Trasformare",
+    "required": "Obbligatorio",
+    "sequenceLength": "Lunghezza della sequenza",
+    "dateFormat": "Formato data",
+    "literal": "Valore letterale",
+    "idempotency": "Chiave di idepotenza"
+  },
+  "segmentType": {
+    "Field": "Campo",
+    "Literal": "Letterale",
+    "Sequence": "Sequenza",
+    "Date": "Data"
+  },
+  "field": {
+    "StockCode": "Codice magazzino",
+    "SerialNo": "N. di serie",
+    "YapCode": "Codice di configurazione",
+    "LotNo": "Lotto n",
+    "WarehouseCode": "Codice magazzino",
+    "LocationCode": "Codice di posizione",
+    "DocumentNo": "Documento n"
+  },
+  "transform": {
+    "Upper": "SUPERIORE",
+    "Lower": "inferiore",
+    "None": "Invariato"
+  },
+  "messages": {
+    "saved": "Profilo delle norme salvato.",
+    "previewed": "Anteprima del codice a barre creata senza consumare una sequenza.",
+    "generated": "Codice a barre unico riservato permanentemente.",
+    "failed": "Impossibile completare l'operazione.",
+    "concurrency": "Il profilo è stato modificato da un altro utente; la pagina è stata aggiornata."
+  },
+  "history": {
+    "id": "Identificativo della registrazione",
+    "scope": "Ambito",
+    "version": "Versione",
+    "barcode": "Codice a barre",
+    "stock": "Magazzino",
+    "serial": "Seriale",
+    "lot": "Lotto",
+    "location": "Posizione",
+    "document": "Documento",
+    "sequence": "Sequenza",
+    "generatedAt": "Generato a"
+  }
+}

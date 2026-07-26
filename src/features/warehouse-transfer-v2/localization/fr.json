@@ -1,0 +1,51 @@
+{
+  "title": "Transfert inter-entrepôts",
+  "hubTitle": "Centre de processus de transfert",
+  "hubDescription": "Suivez la planification, la préparation, l’expédition, la réception de transit et le rangement entre les entrepôts sur un seul document.",
+  "newDraft": "Brouillon de transfert",
+  "records": "Transférer des enregistrements",
+  "sourceExecution": "Exécution de l’entrepôt source",
+  "targetExecution": "Exécution de l'entrepôt de destination",
+  "comingSoon": "Disponible lors de la prochaine livraison",
+  "hub": {
+    "startTitle": "01 · Démarrer le transfert",
+    "startDescription": "La source de la requête et le mode d'exécution sont indépendants ; les quatre scénarios partagent le même modèle de domaine.",
+    "executeTitle": "02 · Exécuter, recevoir et gérer",
+    "executeDescription": "La préparation à la source et l'expédition sont suivies séparément de la réception et de l'entrée à destination.",
+    "operationSlice": "Étape d'opération",
+    "cards": {
+      "orderedErp": {
+        "title": "Netsis Demande · Attribué",
+        "description": "Sélectionnez les demandes de transfert Netsis, attribuez les quantités ouvertes et attribuez les tâches de prélèvement aux opérateurs."
+      },
+      "orderedStock": {
+        "title": "Stock gratuit · Attribué",
+        "description": "Créez des tâches planifiées de prélèvement et d'expédition à partir du stock disponible sans demande ERP."
+      },
+      "directErp": {
+        "title": "Netsis Demande · Direct",
+        "description": "Lorsque la politique le permet, démarrez un transfert à partir d'une requête Netsis sans créer de tâche d'opérateur."
+      },
+      "directStock": {
+        "title": "Stock gratuit · Direct",
+        "description": "Démarrez un transfert direct urgent et contrôlé à partir du stock disponible."
+      }
+    },
+    "source": {
+      "title": "Cueillette et expédition",
+      "description": "Réservation, acceptation des tâches, prélèvement des codes-barres et finalisation de l'expédition."
+    },
+    "target": {
+      "title": "Réception et mise en stock à destination",
+      "description": "Réception de transit, motif de divergence, réception partielle et mise en stock à destination."
+    },
+    "records": {
+      "title": "Transférer des enregistrements",
+      "description": "Passez en revue chaque étape de variante et de quantité dans la grille de données partagée."
+    },
+    "settings": {
+      "title": "Paramètres du processus de transfert",
+      "description": "Gérez les autorisations de variantes, les réservations, l'exécution partielle, le transit, la réception, le rangement et les politiques de divergence."
+    }
+  }
+}

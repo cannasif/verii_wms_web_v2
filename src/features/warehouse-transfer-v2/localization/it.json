@@ -1,0 +1,51 @@
+{
+  "title": "Trasferimento tra magazzini",
+  "hubTitle": "Centro processi di trasferimento",
+  "hubDescription": "Tieni traccia della pianificazione, del prelievo, della spedizione, della ricevuta di transito e dello stoccaggio tra magazzini su un unico documento.",
+  "newDraft": "Progetto di trasferimento",
+  "records": "Trasferisci record",
+  "sourceExecution": "Esecuzione del magazzino di origine",
+  "targetExecution": "Esecuzione del magazzino di destinazione",
+  "comingSoon": "Disponibile nella prossima consegna",
+  "hub": {
+    "startTitle": "01 · Avvia trasferimento",
+    "startDescription": "L'origine della richiesta e la modalità di esecuzione sono indipendenti; tutti e quattro gli scenari condividono lo stesso modello di dominio.",
+    "executeTitle": "02 · Eseguire, ricevere e gestire",
+    "executeDescription": "Il prelievo e la spedizione all'origine vengono monitorati separatamente dalla ricezione e dallo stoccaggio a destinazione.",
+    "operationSlice": "Fase operativa",
+    "cards": {
+      "orderedErp": {
+        "title": "Netsis Richiesta · Assegnato",
+        "description": "Seleziona Netsis richieste di trasferimento, alloca quantità aperte e assegna attività di prelievo agli operatori."
+      },
+      "orderedStock": {
+        "title": "Stock libero · Assegnato",
+        "description": "Crea attività di prelievo e spedizione pianificate dalle scorte disponibili senza una richiesta ERP."
+      },
+      "directErp": {
+        "title": "Netsis Richiesta · Diretto",
+        "description": "Quando la policy lo consente, avvia un trasferimento da una richiesta Netsis senza creare un'attività dell'operatore."
+      },
+      "directStock": {
+        "title": "Stock gratuito · Diretto",
+        "description": "Avvia un trasferimento diretto urgente e controllato dallo stock disponibile."
+      }
+    },
+    "source": {
+      "title": "Raccolta e spedizione",
+      "description": "Prenotazione, accettazione dell'incarico, prelievo del codice a barre e finalizzazione della spedizione."
+    },
+    "target": {
+      "title": "Ricevimento a destinazione e stoccaggio",
+      "description": "Ricevuta di transito, motivo della discrepanza, ricevuta parziale e stoccaggio di destinazione."
+    },
+    "records": {
+      "title": "Trasferisci record",
+      "description": "Esamina ogni variante e ogni traguardo relativo alla quantità nella griglia di dati condivisa."
+    },
+    "settings": {
+      "title": "Impostazioni del processo di trasferimento",
+      "description": "Gestisci le autorizzazioni delle varianti, la prenotazione, l'esecuzione parziale, il transito, la ricezione, lo stoccaggio e le politiche di discrepanza."
+    }
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "title": "Transferencia entre almacenes",
+  "hubTitle": "Centro de proceso de transferencia",
+  "hubDescription": "Realice un seguimiento de la planificación, la selección, el envío, la recepción en tránsito y el almacenamiento entre almacenes en un solo documento.",
+  "newDraft": "Borrador de transferencia",
+  "records": "Transferir registros",
+  "sourceExecution": "Ejecución del almacén de origen",
+  "targetExecution": "Ejecución del almacén de destino",
+  "comingSoon": "Disponible en la próxima entrega",
+  "hub": {
+    "startTitle": "01 · Iniciar transferencia",
+    "startDescription": "El origen de la solicitud y el modo de ejecución son independientes; Los cuatro escenarios comparten el mismo modelo de dominio.",
+    "executeTitle": "02 · Ejecutar, Recibir y Gestionar",
+    "executeDescription": "La recolección y el envío en origen se rastrean por separado de la recepción y el almacenamiento en destino.",
+    "operationSlice": "Etapa de operación",
+    "cards": {
+      "orderedErp": {
+        "title": "Netsis Solicitud · Asignada",
+        "description": "Seleccione Netsis solicitudes de transferencia, asigne cantidades pendientes y asigne tareas de recolección a los operadores."
+      },
+      "orderedStock": {
+        "title": "Stock Libre · Asignado",
+        "description": "Cree tareas planificadas de recolección y envío a partir del stock disponible sin una solicitud ERP."
+      },
+      "directErp": {
+        "title": "Netsis Solicitud · Directa",
+        "description": "Cuando la política lo permita, inicie una transferencia desde una solicitud Netsis sin crear una tarea de operador."
+      },
+      "directStock": {
+        "title": "Stock Gratis · Directo",
+        "description": "Inicie una transferencia directa urgente y controlada desde el stock disponible."
+      }
+    },
+    "source": {
+      "title": "Recogida y despacho",
+      "description": "Reserva, aceptación de tareas, selección de códigos de barras y finalización de envíos."
+    },
+    "target": {
+      "title": "Recepción y almacenamiento en destino",
+      "description": "Recibo en tránsito, motivo de discrepancia, recibo parcial y almacenamiento en destino."
+    },
+    "records": {
+      "title": "Transferir registros",
+      "description": "Revise cada variante y cantidad hito en la cuadrícula de datos compartida."
+    },
+    "settings": {
+      "title": "Configuración del proceso de transferencia",
+      "description": "Gestionar políticas de permisos de variantes, reservas, ejecución parcial, tránsito, recepción, almacenamiento y discrepancias."
+    }
+  }
+}

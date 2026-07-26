@@ -1,0 +1,93 @@
+{
+  "page": {
+    "title": "Globale Barcode-Richtlinie",
+    "description": "Verwalten Sie die einzige zentrale Barcode-Generierungsrichtlinie, die von allen WMS-Modulen verwendet wird.",
+    "loading": "Barcode-Richtlinie wird geladen...",
+    "version": "Richtlinienversion",
+    "active": "Richtlinie aktiv",
+    "inactive": "Richtlinie inaktiv",
+    "historyTitle": "Generierte Barcodes",
+    "historyDescription": "Unveränderlicher Barcode-Problemverlauf mit Richtlinienversion und -umfang."
+  },
+  "scope": {
+    "ProductSerial": "Produkt / Serie",
+    "ProductLot": "Produkt / Los",
+    "Location": "Regal / Standort",
+    "Logistics": "Palette / Paket / Logistik",
+    "Document": "Dokument / Vorgang"
+  },
+  "scopeHelp": {
+    "ProductSerial": "Identifiziert einzelne Lagerexemplare anhand des Lagercodes und der Seriennummer.",
+    "ProductLot": "Identifiziert den Chargenbestand anhand des Lagercodes und der Chargennummer.",
+    "Location": "Identifiziert Lagerregale und Standorte.",
+    "Logistics": "Identifiziert Paletten, Pakete und Logistikeinheiten.",
+    "Document": "Identifiziert Empfangs-, Transfer-, Versand- und andere Betriebsdokumente."
+  },
+  "actions": {
+    "edit": "Profil bearbeiten",
+    "test": "Vorschau / Generieren",
+    "save": "Profil speichern",
+    "cancel": "Abbrechen",
+    "add": "Segment hinzufügen",
+    "remove": "Entfernen",
+    "preview": "Vorschau",
+    "generate": "Einzigartig generieren",
+    "close": "Schließen"
+  },
+  "form": {
+    "name": "Profilname",
+    "prefix": "Präfix",
+    "separator": "Trennzeichen",
+    "enabled": "Aktivieren Sie diesen Bereich",
+    "segments": "Barcode-Segmente",
+    "segmentsHelp": "Ordnen Sie die Segmente mit den Pfeilen neu an. Jedes Profil muss genau ein Sequenzsegment enthalten.",
+    "type": "Segmenttyp",
+    "source": "Quellfeld",
+    "transform": "Verwandeln",
+    "required": "Erforderlich",
+    "sequenceLength": "Sequenzlänge",
+    "dateFormat": "Datumsformat",
+    "literal": "Wörtlicher Wert",
+    "idempotency": "Idempotenzschlüssel"
+  },
+  "segmentType": {
+    "Field": "Feld",
+    "Literal": "Wörtlich",
+    "Sequence": "Reihenfolge",
+    "Date": "Datum"
+  },
+  "field": {
+    "StockCode": "Lagercode",
+    "SerialNo": "Seriennr",
+    "YapCode": "Konfigurationscode",
+    "LotNo": "Lot-Nr",
+    "WarehouseCode": "Lagercode",
+    "LocationCode": "Standortcode",
+    "DocumentNo": "Dokument-Nr"
+  },
+  "transform": {
+    "Upper": "OBER",
+    "Lower": "niedriger",
+    "None": "Unverändert"
+  },
+  "messages": {
+    "saved": "Richtlinienprofil gespeichert.",
+    "previewed": "Barcode-Vorschau erstellt, ohne eine Sequenz zu verbrauchen.",
+    "generated": "Eindeutiger Barcode dauerhaft reserviert.",
+    "failed": "Der Vorgang konnte nicht abgeschlossen werden.",
+    "concurrency": "Das Profil wurde von einem anderen Benutzer geändert; Die Seite wurde aktualisiert."
+  },
+  "history": {
+    "id": "Datensatz-ID",
+    "scope": "Umfang",
+    "version": "Version",
+    "barcode": "Barcode",
+    "stock": "Lager",
+    "serial": "Seriell",
+    "lot": "Viel",
+    "location": "Standort",
+    "document": "Dokument",
+    "sequence": "Reihenfolge",
+    "generatedAt": "Erstellt am"
+  }
+}

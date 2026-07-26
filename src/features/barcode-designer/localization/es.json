@@ -1,0 +1,90 @@
+{
+  "page": {
+    "title": "Diseño e impresión de códigos de barras",
+    "description": "Diseñar, versionar, publicar e imprimir etiquetas de stock, serie/lote, ubicación y logística.",
+    "new": "Nueva plantilla"
+  },
+  "columns": {
+    "code": "Código de plantilla",
+    "name": "Nombre de la plantilla",
+    "type": "Tipo de etiqueta",
+    "size": "Tamaño",
+    "dpi": "PPP",
+    "status": "Estado",
+    "draft": "Borrador",
+    "published": "Publicado",
+    "actions": "Acciones"
+  },
+  "actions": {
+    "design": "Diseño",
+    "edit": "Editar metadatos",
+    "delete": "Eliminar",
+    "demo": "Cargar diseño de demostración",
+    "saveDraft": "Guardar borrador",
+    "publish": "Publicar",
+    "pdf": "Abrir/Descargar PDF",
+    "print": "Imprimir",
+    "addText": "Texto",
+    "addBarcode": "código de barras",
+    "addQr": "QR",
+    "addMatrix": "DataMatrix",
+    "addBox": "Caja"
+  },
+  "status": {
+    "active": "Activo",
+    "passive": "Pasivo",
+    "none": "Ninguno"
+  },
+  "types": {
+    "Product": "Producto",
+    "SerialLot": "Serie / Lote",
+    "Location": "Ubicación",
+    "Logistics": "Logística",
+    "Sscc": "SSCC Paleta"
+  },
+  "form": {
+    "create": "Crear plantilla",
+    "edit": "Metadatos de plantilla",
+    "code": "Código de plantilla",
+    "name": "Nombre de la plantilla",
+    "type": "Tipo de etiqueta",
+    "width": "Ancho (mm)",
+    "height": "Altura (mm)",
+    "dpi": "PPP de la impresora",
+    "active": "Activo",
+    "cancel": "Cancelar",
+    "save": "Guardar"
+  },
+  "editor": {
+    "title": "Estudio de diseño de etiquetas",
+    "toolbox": "Herramientas",
+    "properties": "Propiedades del elemento",
+    "bindings": "Campos de datos",
+    "versions": "Versiones",
+    "sample": "Datos de muestra",
+    "notes": "Nota de versión",
+    "noSelection": "Seleccione un elemento para editar.",
+    "value": "Valor fijo",
+    "binding": "Enlace de datos",
+    "symbology": "Simbología",
+    "x": "X(mm)",
+    "y": "Y (mm)",
+    "width": "Ancho",
+    "height": "altura",
+    "font": "Tamaño de fuente",
+    "remove": "Eliminar elemento",
+    "demoHint": "La etiqueta de demostración lista para usar se muestra a continuación. Puede arrastrar elementos o vincular campos de datos."
+  },
+  "messages": {
+    "created": "Plantilla creada.",
+    "saved": "Versión borrador guardada.",
+    "published": "Versión publicada.",
+    "deleted": "Plantilla eliminada.",
+    "demoLoaded": "Diseño de demostración cargado. Al guardar se crea una nueva versión.",
+    "canvasNotReady": "La vista previa de la etiqueta aún no está lista. Inténtelo de nuevo en un momento.",
+    "popupBlocked": "La ventana PDF fue bloqueada. Permita ventanas emergentes e inténtelo de nuevo.",
+    "preparingPdf": "Preparando PDF...",
+    "pdf": "PDF se abrió en una nueva pestaña; La descarga también se inició en los navegadores compatibles.",
+    "print": "Se abrió el cuadro de diálogo de impresión del sistema."
+  }
+}

@@ -1,0 +1,107 @@
+{
+  "page": {
+    "title": "Definiciones de ubicación",
+    "description": "Administre la zona del almacén, pasillo, estante, nivel y jerarquía de contenedores.",
+    "newAction": "Nueva ubicación"
+  },
+  "form": {
+    "createTitle": "Nueva definición de ubicación",
+    "editTitle": "Editar definición de ubicación",
+    "description": "Administre la jerarquía de direcciones, las reglas de uso y la capacidad.",
+    "basicInformation": "Información básica",
+    "addressAndBarcode": "Dirección y código de barras",
+    "capacity": "Capacidad",
+    "usageRules": "Reglas de uso",
+    "warehouse": "Almacén",
+    "warehousePlaceholder": "Seleccionar almacén",
+    "locationType": "Tipo de ubicación",
+    "parentLocation": "Ubicación principal",
+    "rootLocation": "Ubicación de la raíz",
+    "code": "Código de ubicación",
+    "name": "Nombre de la ubicación",
+    "zoneCode": "código de zona",
+    "aisleNo": "Pasillo no",
+    "rackNo": "Estante no",
+    "levelNo": "Nivel no",
+    "binNo": "Papelera no",
+    "barcodeMode": "Modo de código de barras",
+    "barcode": "código de barras",
+    "barcodeAutoPlaceholder": "Generado por el sistema.",
+    "quantity": "Cantidad",
+    "weight": "Peso",
+    "volume": "Volumen",
+    "unit": "Unidad",
+    "descriptionLabel": "Descripción",
+    "cancel": "Cancelar",
+    "create": "Crear ubicación",
+    "save": "Guardar cambios",
+    "close": "Cerrar"
+  },
+  "rules": {
+    "mixedStock": "Stock mixto",
+    "mixedLot": "Lote mixto",
+    "mixedStatus": "Estado mixto",
+    "cycleCount": "Conteo de ciclos habilitado",
+    "pickable": "Recogible",
+    "putaway": "Almacenamiento habilitado",
+    "quarantine": "cuarentena",
+    "active": "Activo"
+  },
+  "types": {
+    "Zone": "Zona",
+    "Aisle": "pasillo",
+    "Rack": "estante",
+    "Shelf": "Nivel del estante",
+    "Cell": "Papelera",
+    "Receiving": "recibiendo",
+    "Staging": "Puesta en escena",
+    "Shipping": "Envío",
+    "Quarantine": "cuarentena",
+    "Virtual": "virtuales"
+  },
+  "barcodeModes": {
+    "Auto": "Automático",
+    "Manual": "manuales"
+  },
+  "columns": {
+    "branch": "Sucursal",
+    "warehouseCode": "Código de almacén",
+    "warehouseName": "Nombre del almacén",
+    "code": "Código de ubicación",
+    "name": "Nombre de la ubicación",
+    "locationType": "Tipo de ubicación",
+    "parentLocation": "Ubicación de los padres",
+    "barcode": "código de barras",
+    "zone": "Zona",
+    "status": "Estado",
+    "actions": "Acciones"
+  },
+  "status": {
+    "active": "Activo",
+    "passive": "Pasivo"
+  },
+  "actions": {
+    "edit": "Editar",
+    "delete": "Eliminar"
+  },
+  "validation": {
+    "requiredBasic": "Se requieren almacén, código de ubicación y nombre de la ubicación.",
+    "parentRequired": "Seleccione una ubicación principal válida para pasillo, estante, nivel de estante y tipos de contenedores.",
+    "barcodeRequired": "Se requiere código de barras en el modo de código de barras manual.",
+    "capacityUnitRequired": "Se requiere unidad de capacidad cuando se ingresa un valor de capacidad."
+  },
+  "messages": {
+    "warehousesLoadFailed": "No se pudieron cargar los almacenes.",
+    "detailLoadFailed": "No se pudieron cargar los detalles de la ubicación.",
+    "parentsLoadFailed": "No se pudieron cargar las ubicaciones principales.",
+    "createSuccess": "Definición de ubicación creada.",
+    "updateSuccess": "Definición de ubicación actualizada.",
+    "saveFailed": "No se pudo guardar la definición de ubicación.",
+    "deleteSuccess": "Se eliminó la definición de ubicación.",
+    "deleteFailed": "No se pudo eliminar la definición de ubicación."
+  },
+  "deleteDialog": {
+    "title": "Eliminar definición de ubicación",
+    "description": "{{name}} se desactivará mediante eliminación temporal. La operación se rechaza cuando existen ubicaciones secundarias."
+  }
+}

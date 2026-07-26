@@ -1,0 +1,60 @@
+{
+  "title": "Stahlwareneingang",
+  "import": "Erwarteter Plattenimport",
+  "plans": "Stahlpläne",
+  "inspection": "Ankunfts- und Annahmekontrolle",
+  "operations": "Wareneingangsumrechnung und Einlagerung",
+  "hub": {
+    "eyebrow": "Wareneingang · Stahlbetriebe",
+    "title": "Wareneingangsprozesszentrum für Stahl",
+    "description": "Verfolgen Sie jeden Teller mit DCode vom Gate-Check-in und der Qualitätsentscheidung bis zum Wareneingang und der endgültigen Einlagerung.",
+    "phases": {
+      "gate": {
+        "title": "Tor und Erwartung",
+        "description": "Validieren Sie Fahrzeug-, Fahrer-, Lieferanten- und erwartete Kennzeichendaten vor der Verarbeitung."
+      },
+      "quality": {
+        "title": "Inspektion und Entscheidung",
+        "description": "Erfassen Sie den physischen Eingang, die Menge und die Qualitätsentscheidung für jeden Teller mit Belegen."
+      },
+      "putaway": {
+        "title": "Wareneingang und Einlagerung",
+        "description": "Wandeln Sie genehmigte Kennzeichen in Aufgaben um und buchen Sie die endgültigen Bestandsbewegungen nach dem physischen Eingang."
+      },
+      "report": {
+        "title": "Überwachung und Berichterstattung",
+        "description": "Überwachen Sie die Rückverfolgbarkeit der Platten, ausstehende Arbeiten und Betriebsausnahmen von einem Zentrum aus."
+      }
+    },
+    "cards": {
+      "vehicles": {
+        "title": "Fahrzeug-Check-in-Aufzeichnungen",
+        "description": "Überprüfen Sie die Gate-Datensätze und starten Sie eine neue Fahrzeug- und Stahlannahme aus der Listenaktion."
+      },
+      "import": {
+        "title": "Erwartungsimport",
+        "description": "Vorschau, Validierung und Speicherung von Excel-Daten idempotent durch DCode."
+      },
+      "plans": {
+        "title": "Stahlpläne",
+        "description": "Verfolgen Sie importierte Chargen und deren Prozessstatus."
+      },
+      "inspection": {
+        "title": "Ankunft und Qualitätskontrolle",
+        "description": "Verwalten Sie angekommene, fehlende, akzeptierte, teilweise akzeptierte und abgelehnte Entscheidungen."
+      },
+      "receipt": {
+        "title": "Aufgabe Wareneingang",
+        "description": "Wandeln Sie genehmigte Platten in eine gemeinsame Aufgabe um und weisen Sie Lagermitarbeiter zu."
+      },
+      "placement": {
+        "title": "Hof-/Standorteinlagerung",
+        "description": "Speichern Sie den endgültigen Standort und die Stapelreihenfolge unter Verwendung der aktuellen Standortbelegung."
+      },
+      "reports": {
+        "title": "Stahlbetriebsberichte",
+        "description": "Durchsuchen Sie DCode, Lieferantenserien-, Qualitäts-, Empfangs- und Einlagerungsstatus."
+      }
+    }
+  }
+}

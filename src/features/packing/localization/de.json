@@ -1,0 +1,19 @@
+{
+  "title": "Verpackung",
+  "workbench": "Packstation",
+  "workbenchDescription": "Binden Sie kommissionierte ausgehende Bestände an Kartons, Kisten und Paletten mit Seriennummer/Charge, Gewicht und SSCC-Kontrollen.",
+  "definitions": "Verpackungsdefinitionen",
+  "definitionsDescription": "Verwalten Sie Verpackungskapazitäten und physische Packstationen.",
+  "settings": "Verpackungsrichtlinie",
+  "materials": "Verpackungsmaterialien",
+  "stations": "Stationen",
+  "newMaterial": "Neues Material",
+  "newStation": "Neuer Bahnhof",
+  "newSession": "Offene Sitzung",
+  "open": "Offen",
+  "close": "Einheit schließen",
+  "reopen": "Wieder öffnen",
+  "addUnit": "Offener Karton/Palette",
+  "pack": "Artikel hinzufügen",
+  "actions": "Aktionen"
+}

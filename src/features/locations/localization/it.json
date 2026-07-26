@@ -1,0 +1,107 @@
+{
+  "page": {
+    "title": "Definizioni di posizione",
+    "description": "Gestisci la zona del magazzino, il corridoio, lo scaffale, il livello e la gerarchia dei contenitori.",
+    "newAction": "Nuova posizione"
+  },
+  "form": {
+    "createTitle": "Nuova definizione di posizione",
+    "editTitle": "Modifica la definizione della posizione",
+    "description": "Gestisci la gerarchia degli indirizzi, le regole di utilizzo e la capacità.",
+    "basicInformation": "Informazioni di base",
+    "addressAndBarcode": "Indirizzo e codice a barre",
+    "capacity": "Capacità",
+    "usageRules": "Regole di utilizzo",
+    "warehouse": "Magazzino",
+    "warehousePlaceholder": "Seleziona magazzino",
+    "locationType": "Tipo di posizione",
+    "parentLocation": "Posizione del genitore",
+    "rootLocation": "Posizione della radice",
+    "code": "Codice di posizione",
+    "name": "Nome della posizione",
+    "zoneCode": "Codice della zona",
+    "aisleNo": "Corridoio n",
+    "rackNo": "Cremagliera n",
+    "levelNo": "Livello n",
+    "binNo": "Contenitore n",
+    "barcodeMode": "Modalità codice a barre",
+    "barcode": "Codice a barre",
+    "barcodeAutoPlaceholder": "Generato dal sistema",
+    "quantity": "Quantità",
+    "weight": "Peso",
+    "volume": "Volume",
+    "unit": "Unità",
+    "descriptionLabel": "Descrizione",
+    "cancel": "Annulla",
+    "create": "Crea posizione",
+    "save": "Salva modifiche",
+    "close": "Chiudi"
+  },
+  "rules": {
+    "mixedStock": "Azione mista",
+    "mixedLot": "Lotto misto",
+    "mixedStatus": "Stato misto",
+    "cycleCount": "Conteggio cicli abilitato",
+    "pickable": "Selezionabile",
+    "putaway": "Stoccaggio abilitato",
+    "quarantine": "Quarantena",
+    "active": "Attivo"
+  },
+  "types": {
+    "Zone": "Zona",
+    "Aisle": "Corridoio",
+    "Rack": "Cremagliera",
+    "Shelf": "Livello dello scaffale",
+    "Cell": "Bidone",
+    "Receiving": "Ricevere",
+    "Staging": "Messa in scena",
+    "Shipping": "Spedizione",
+    "Quarantine": "Quarantena",
+    "Virtual": "Virtuale"
+  },
+  "barcodeModes": {
+    "Auto": "Automatico",
+    "Manual": "Manuale"
+  },
+  "columns": {
+    "branch": "Ramo",
+    "warehouseCode": "Codice Magazzino",
+    "warehouseName": "Nome del magazzino",
+    "code": "Codice di posizione",
+    "name": "Nome della posizione",
+    "locationType": "Tipo di posizione",
+    "parentLocation": "Posizione del genitore",
+    "barcode": "Codice a barre",
+    "zone": "Zona",
+    "status": "Stato",
+    "actions": "Azioni"
+  },
+  "status": {
+    "active": "Attivo",
+    "passive": "Passivo"
+  },
+  "actions": {
+    "edit": "Modifica",
+    "delete": "Elimina"
+  },
+  "validation": {
+    "requiredBasic": "Magazzino, codice ubicazione e nome ubicazione sono obbligatori.",
+    "parentRequired": "Seleziona una posizione principale valida per i tipi di corridoio, scaffale, livello di scaffale e contenitore.",
+    "barcodeRequired": "Il codice a barre è richiesto in modalità codice a barre manuale.",
+    "capacityUnitRequired": "L'unità di capacità è obbligatoria quando viene immesso un valore di capacità."
+  },
+  "messages": {
+    "warehousesLoadFailed": "Impossibile caricare i magazzini.",
+    "detailLoadFailed": "Impossibile caricare i dettagli sulla posizione.",
+    "parentsLoadFailed": "Impossibile caricare le posizioni principali.",
+    "createSuccess": "Definizione della posizione creata.",
+    "updateSuccess": "Definizione della posizione aggiornata.",
+    "saveFailed": "Impossibile salvare la definizione della posizione.",
+    "deleteSuccess": "Definizione della posizione eliminata.",
+    "deleteFailed": "Impossibile eliminare la definizione della posizione."
+  },
+  "deleteDialog": {
+    "title": "Elimina la definizione della posizione",
+    "description": "{{name}} verrà disattivato tramite eliminazione temporanea. L'operazione viene rifiutata quando esistono posizioni secondarie."
+  }
+}

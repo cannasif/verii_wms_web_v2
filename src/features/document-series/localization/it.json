@@ -1,0 +1,85 @@
+{
+  "page": {
+    "title": "Serie di documenti",
+    "description": "Gestisci la numerazione sicura per le operazioni di ricevimento, trasferimento, spedizione e magazzino delle merci.",
+    "newAction": "Nuova serie di documenti"
+  },
+  "columns": {
+    "branch": "Ramo",
+    "warehouse": "Magazzino",
+    "code": "Codice serie",
+    "name": "Nome della serie",
+    "documentType": "Tipo di documento",
+    "prefix": "Prefisso",
+    "preview": "Prossimo documento n",
+    "nextNumber": "Contatore successivo",
+    "default": "Predefinito",
+    "active": "Attivo",
+    "issued": "Usato",
+    "lastIssuedAt": "Ultimo rilascio",
+    "actions": "Azioni"
+  },
+  "types": {
+    "GoodsReceipt": "Ricevuta Merci",
+    "InterWarehouseTransfer": "Trasferimento tra magazzini",
+    "Shipment": "Spedizione",
+    "WarehouseReceipt": "Ricevuta di magazzino",
+    "WarehouseIssue": "Problema del magazzino"
+  },
+  "yearFormats": {
+    "None": "Nessun anno",
+    "TwoDigit": "Anno a 2 cifre",
+    "FourDigit": "Anno a 4 cifre"
+  },
+  "status": {
+    "yes": "Sì",
+    "no": "No",
+    "active": "Attivo",
+    "passive": "Passivo"
+  },
+  "form": {
+    "createTitle": "Crea serie di documenti",
+    "editTitle": "Modifica serie di documenti",
+    "description": "Definire il tipo di documento, l'ambito e il formato numerico.",
+    "warehouse": "Ambito del magazzino",
+    "allWarehouses": "Tutti i magazzini",
+    "code": "Codice serie",
+    "name": "Nome della serie",
+    "documentType": "Tipo di documento",
+    "prefix": "Prefisso",
+    "separator": "Separatore",
+    "yearFormat": "Formato anno",
+    "numberLength": "Lunghezza del numero",
+    "startNumber": "Numero di partenza",
+    "nextNumber": "Numero successivo",
+    "incrementBy": "Incremento",
+    "default": "Serie predefinita",
+    "active": "Attivo",
+    "descriptionLabel": "Descrizione",
+    "preview": "Anteprima dal vivo",
+    "lockedNotice": "Questa serie ha emesso numeri, quindi i campi di ambito e numerazione sono bloccati. Il nome e lo stato possono ancora essere aggiornati.",
+    "cancel": "Annulla",
+    "create": "Crea",
+    "save": "Salva",
+    "close": "Chiudi"
+  },
+  "validation": {
+    "required": "Sono richiesti il codice della serie, il nome e il prefisso.",
+    "numbers": "I campi di numerazione non sono validi."
+  },
+  "messages": {
+    "createSuccess": "Serie di documenti creata.",
+    "updateSuccess": "Serie di documenti aggiornata.",
+    "deleteSuccess": "Serie di documenti eliminata.",
+    "saveFailed": "Impossibile salvare la serie di documenti.",
+    "deleteFailed": "Impossibile eliminare la serie di documenti."
+  },
+  "actions": {
+    "edit": "Modifica",
+    "delete": "Elimina"
+  },
+  "deleteDialog": {
+    "title": "Elimina serie di documenti",
+    "description": "Sei sicuro di voler eliminare {{name}}? Le serie che hanno emesso i numeri devono invece essere disattivate."
+  }
+}

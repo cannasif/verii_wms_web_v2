@@ -1,0 +1,10 @@
+{
+  "title": "Regeln für die Serienmaske",
+  "description": "Verwalten Sie das Serienformat, die Einzigartigkeit und die Gültigkeitsdaten nach Lagerbestand, Lagergruppe oder Filialstandard.",
+  "new": "Neue Serienregel",
+  "scope": {
+    "Stock": "Lager",
+    "StockGroup": "Aktiengruppe",
+    "BranchDefault": "Filialstandard"
+  }
+}

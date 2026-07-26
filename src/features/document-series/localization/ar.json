@@ -1,0 +1,85 @@
+{
+  "page": {
+    "title": "سلسلة الوثائق",
+    "description": "إدارة الترقيم الآمن لعمليات استلام البضائع ونقلها وشحنها والمستودعات.",
+    "newAction": "سلسلة وثائق جديدة"
+  },
+  "columns": {
+    "branch": "فرع",
+    "warehouse": "مستودع",
+    "code": "كود السلسلة",
+    "name": "اسم السلسلة",
+    "documentType": "نوع الوثيقة",
+    "prefix": "بادئة",
+    "preview": "رقم المستند التالي",
+    "nextNumber": "العداد التالي",
+    "default": "الافتراضي",
+    "active": "نشط",
+    "issued": "مستعملة",
+    "lastIssuedAt": "آخر إصدار",
+    "actions": "الإجراءات"
+  },
+  "types": {
+    "GoodsReceipt": "استلام البضائع",
+    "InterWarehouseTransfer": "النقل بين المستودعات",
+    "Shipment": "شحنة",
+    "WarehouseReceipt": "إيصال المستودع",
+    "WarehouseIssue": "قضية المستودع"
+  },
+  "yearFormats": {
+    "None": "لا سنة",
+    "TwoDigit": "سنة مكونة من رقمين",
+    "FourDigit": "سنة مكونة من 4 أرقام"
+  },
+  "status": {
+    "yes": "نعم",
+    "no": "لا",
+    "active": "نشط",
+    "passive": "سلبي"
+  },
+  "form": {
+    "createTitle": "إنشاء سلسلة المستندات",
+    "editTitle": "تحرير سلسلة المستندات",
+    "description": "تحديد نوع المستند ونطاقه وتنسيق الأرقام.",
+    "warehouse": "نطاق المستودع",
+    "allWarehouses": "جميع المستودعات",
+    "code": "كود السلسلة",
+    "name": "اسم السلسلة",
+    "documentType": "نوع الوثيقة",
+    "prefix": "بادئة",
+    "separator": "فاصل",
+    "yearFormat": "تنسيق السنة",
+    "numberLength": "طول الرقم",
+    "startNumber": "رقم البداية",
+    "nextNumber": "الرقم التالي",
+    "incrementBy": "زيادة",
+    "default": "السلسلة الافتراضية",
+    "active": "نشط",
+    "descriptionLabel": "الوصف",
+    "preview": "المعاينة المباشرة",
+    "lockedNotice": "أصدرت هذه السلسلة أرقامًا، لذا تم قفل حقول النطاق والترقيم. لا يزال من الممكن تحديث الاسم والحالة.",
+    "cancel": "إلغاء",
+    "create": "إنشاء",
+    "save": "حفظ",
+    "close": "إغلاق"
+  },
+  "validation": {
+    "required": "مطلوب رمز السلسلة والاسم والبادئة.",
+    "numbers": "حقول الترقيم غير صالحة."
+  },
+  "messages": {
+    "createSuccess": "تم إنشاء سلسلة المستندات.",
+    "updateSuccess": "تم تحديث سلسلة المستندات.",
+    "deleteSuccess": "تم حذف سلسلة المستندات.",
+    "saveFailed": "لا يمكن حفظ سلسلة المستندات.",
+    "deleteFailed": "لا يمكن حذف سلسلة المستندات."
+  },
+  "actions": {
+    "edit": "تحرير",
+    "delete": "حذف"
+  },
+  "deleteDialog": {
+    "title": "حذف سلسلة المستندات",
+    "description": "هل أنت متأكد أنك تريد حذف {{name}}؟ يجب إلغاء تنشيط السلسلة التي أصدرت الأرقام بدلاً من ذلك."
+  }
+}

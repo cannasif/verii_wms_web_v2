@@ -1,0 +1,107 @@
+{
+  "page": {
+    "title": "تعريفات الموقع",
+    "description": "إدارة منطقة المستودع والممر والرف والمستوى والتسلسل الهرمي للحاويات.",
+    "newAction": "الموقع الجديد"
+  },
+  "form": {
+    "createTitle": "تعريف الموقع الجديد",
+    "editTitle": "تحرير تعريف الموقع",
+    "description": "إدارة التسلسل الهرمي للعناوين وقواعد الاستخدام والسعة.",
+    "basicInformation": "المعلومات الأساسية",
+    "addressAndBarcode": "العنوان والباركود",
+    "capacity": "سعة",
+    "usageRules": "قواعد الاستخدام",
+    "warehouse": "مستودع",
+    "warehousePlaceholder": "حدد المستودع",
+    "locationType": "نوع الموقع",
+    "parentLocation": "موقع الوالدين",
+    "rootLocation": "موقع الجذر",
+    "code": "رمز الموقع",
+    "name": "اسم الموقع",
+    "zoneCode": "رمز المنطقة",
+    "aisleNo": "الممر رقم",
+    "rackNo": "رقم الرف",
+    "levelNo": "المستوى لا",
+    "binNo": "بن لا",
+    "barcodeMode": "وضع الباركود",
+    "barcode": "الباركود",
+    "barcodeAutoPlaceholder": "تم إنشاؤها بواسطة النظام",
+    "quantity": "الكمية",
+    "weight": "وزن",
+    "volume": "الحجم",
+    "unit": "وحدة",
+    "descriptionLabel": "وصف",
+    "cancel": "إلغاء",
+    "create": "إنشاء الموقع",
+    "save": "حفظ التغييرات",
+    "close": "إغلاق"
+  },
+  "rules": {
+    "mixedStock": "مخزون مختلط",
+    "mixedLot": "الكثير مختلط",
+    "mixedStatus": "الوضع مختلط",
+    "cycleCount": "تم تفعيل عدد الدورات",
+    "pickable": "يمكن اختياره",
+    "putaway": "تم تمكين الوضع المخبأ",
+    "quarantine": "الحجر الصحي",
+    "active": "نشط"
+  },
+  "types": {
+    "Zone": "المنطقة",
+    "Aisle": "الممر",
+    "Rack": "رف",
+    "Shelf": "مستوى الرف",
+    "Cell": "بن",
+    "Receiving": "الاستلام",
+    "Staging": "التدريج",
+    "Shipping": "الشحن",
+    "Quarantine": "الحجر الصحي",
+    "Virtual": "افتراضية"
+  },
+  "barcodeModes": {
+    "Auto": "تلقائي",
+    "Manual": "دليل"
+  },
+  "columns": {
+    "branch": "فرع",
+    "warehouseCode": "رمز المستودع",
+    "warehouseName": "اسم المستودع",
+    "code": "رمز الموقع",
+    "name": "اسم الموقع",
+    "locationType": "نوع الموقع",
+    "parentLocation": "موقع الوالدين",
+    "barcode": "الباركود",
+    "zone": "المنطقة",
+    "status": "الحالة",
+    "actions": "الإجراءات"
+  },
+  "status": {
+    "active": "نشيط",
+    "passive": "سلبي"
+  },
+  "actions": {
+    "edit": "تحرير",
+    "delete": "حذف"
+  },
+  "validation": {
+    "requiredBasic": "المستودع ورمز الموقع واسم الموقع مطلوبة.",
+    "parentRequired": "حدد موقعًا أصليًا صالحًا لأنواع الممرات والرف ومستوى الرف والحاويات.",
+    "barcodeRequired": "مطلوب الباركود في وضع الباركود اليدوي.",
+    "capacityUnitRequired": "وحدة السعة مطلوبة عند إدخال قيمة السعة."
+  },
+  "messages": {
+    "warehousesLoadFailed": "لا يمكن تحميل المستودعات.",
+    "detailLoadFailed": "لا يمكن تحميل تفاصيل الموقع.",
+    "parentsLoadFailed": "لا يمكن تحميل المواقع الأصلية.",
+    "createSuccess": "تم إنشاء تعريف الموقع.",
+    "updateSuccess": "تم تحديث تعريف الموقع.",
+    "saveFailed": "لا يمكن حفظ تعريف الموقع.",
+    "deleteSuccess": "تم حذف تعريف الموقع.",
+    "deleteFailed": "لا يمكن حذف تعريف الموقع."
+  },
+  "deleteDialog": {
+    "title": "حذف تعريف الموقع",
+    "description": "سيتم إلغاء تنشيط {{name}} عن طريق الحذف الناعم. يتم رفض العملية عند وجود مواقع فرعية."
+  }
+}

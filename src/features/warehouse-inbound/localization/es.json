@@ -1,0 +1,190 @@
+{
+  "hub": {
+    "eyebrow": "Operaciones de almacén",
+    "title": "Centro de proceso de entrada de almacén",
+    "description": "Inicie flujos entrantes directos, sin orden y basados en pedidos con las mismas reglas de dominio; rastree cada paso desde la asignación de tareas hasta la calidad y el movimiento de existencias.",
+    "phases": {
+      "start": {
+        "title": "Iniciar entrada",
+        "description": "Elija el punto de entrada correcto para el origen del documento y el modo de ejecución."
+      },
+      "execute": {
+        "title": "Ejecutar la tarea",
+        "description": "Asigna operadores, acepta trabajos asignados y gestiona el progreso físico."
+      },
+      "manage": {
+        "title": "Monitorear y administrar",
+        "description": "Utilice registros y políticas para una trazabilidad completa y un control de procesos configurable."
+      }
+    },
+    "items": {
+      "fromOrder": {
+        "title": "Crear desde orden de compra",
+        "description": "Seleccione Netsis órdenes de compra, reserve cantidades abiertas y cree una tarea entrante."
+      },
+      "orderless": {
+        "title": "Tarea entrante sin orden",
+        "description": "Cree una tarea planificada con líneas de despacho y stock sin un vínculo de pedido."
+      },
+      "direct": {
+        "title": "Entrante directo",
+        "description": "Publicar un inbound sin orden de forma atómica con calidad, cuarentena y movimiento de stock."
+      },
+      "tasks": {
+        "title": "Tareas y asignaciones",
+        "description": "Asigne tareas abiertas a uno o más operadores y supervise su progreso."
+      },
+      "assigned": {
+        "title": "Mis tareas asignadas",
+        "description": "Acepte, inicie y complete las tareas entrantes que se le asignen."
+      },
+      "records": {
+        "title": "Registros entrantes",
+        "description": "Supervise todos los modos entrantes en la cuadrícula de datos compartida del lado del servidor."
+      },
+      "settings": {
+        "title": "Configuración entrante",
+        "description": "Administre políticas de excedente, escasez, retención de calidad, aprobación y ERP de publicación."
+      }
+    }
+  },
+  "title": "Entrada de mercancías de pedidos",
+  "subtitle": "Seleccione Netsis pedidos, valide cantidades y reserve una tarea de recepción de forma segura.",
+  "steps": [
+    "Customer and orders",
+    "Lines and quantities",
+    "Warehouse settings",
+    "Confirmation"
+  ],
+  "customer": "Cliente",
+  "selectCustomer": "Seleccionar cliente",
+  "loadOrders": "Cargar órdenes abiertas",
+  "orders": "Órdenes abiertas",
+  "loadLines": "Cargar líneas de pedido seleccionadas",
+  "noOrders": "No se encontraron pedidos abiertos.",
+  "noLines": "No se encontraron líneas disponibles.",
+  "warehouse": "Almacén objetivo",
+  "location": "Ubicación de recepción",
+  "series": "Serie de documentos",
+  "documentDate": "Fecha del documento",
+  "plannedArrival": "Llegada prevista",
+  "priority": "Prioridad",
+  "labelStrategy": "Estrategia de etiquetas",
+  "description": "Descripción",
+  "create": "Crear tarea y reservar",
+  "created": "Tarea de entrada de mercancías creada",
+  "assignedSelf": "La tarea se asignará al usuario que haya iniciado sesión.",
+  "quantity": "Cantidad reservada",
+  "available": "Disponible",
+  "back": "Atrás",
+  "continue": "Continuar",
+  "configurationHint": "Seleccione un almacén de destino, una ubicación de recepción y una serie de documentos para continuar.",
+  "createFlow": {
+    "subtitle": "Administre la selección de pedidos, la planificación de ubicación y almacén a nivel de línea y la trazabilidad de lotes/series en un flujo controlado.",
+    "orderSelection": "Selección de pedido",
+    "steps": {
+      "0": "Selección de pedido",
+      "1": "Plan de líneas y recibos.",
+      "2": "Revisar y crear"
+    },
+    "orderNo": "Número de pedido",
+    "date": "Fecha",
+    "defaultWarehouse": "Almacén predeterminado",
+    "documentSettings": "Configuración de documentos y tareas"
+  },
+  "manual": {
+    "eyebrow": "Operación de recepción de mercancías",
+    "directTitle": "Recepción directa de mercancías",
+    "orderlessTitle": "Tarea de recibo sin orden",
+    "directSubtitle": "Validar el documento y registrar la recepción, la calidad y el movimiento de stock en un flujo controlado.",
+    "orderlessSubtitle": "Cree una tarea de recepción planificada sin un vínculo de pedido.",
+    "currentStep": "paso",
+    "steps": {
+      "document": "Documento",
+      "operation": "Operación",
+      "lines": "Líneas de acciones",
+      "review": "Revisión"
+    },
+    "document": {
+      "title": "Documento y Proveedor",
+      "description": "Valida el tipo de envío, número y proveedor detrás del recibo."
+    },
+    "operation": {
+      "title": "Almacén y Proceso",
+      "description": "Elija la ubicación de recepción, la serie, la prioridad y el método de etiqueta."
+    },
+    "lines": {
+      "title": "Acciones para recibir",
+      "description": "Ingrese stock, configuración, cantidad y trazabilidad por línea."
+    },
+    "review": {
+      "title": "Revisión final",
+      "description": "Verifique el documento y el resumen de cantidad antes de publicarlo."
+    },
+    "customer": "Proveedor",
+    "documentDate": "Fecha de envío/recepción",
+    "receiptNo": "Número de recibo",
+    "isElectronic": "envío electrónico",
+    "receiptHint": "Ingrese exactamente 15 dígitos para una nota de envío estándar.",
+    "eReceiptHint": "e-Dispatch: código de unidad de 3 caracteres + año de 4 dígitos + secuencia de 9 dígitos.",
+    "validNumber": "El formato del número de documento es válido.",
+    "plannedArrival": "Llegada prevista",
+    "warehouse": "Almacén objetivo",
+    "location": "Ubicación de recepción/ensayo",
+    "series": "WMS Serie de documentos",
+    "priority": "Prioridad",
+    "labelStrategy": "Estrategia de etiquetas",
+    "executionMode": "Método de recepción",
+    "stock": "Valores",
+    "yap": "Código de configuración",
+    "quantity": "Cantidad",
+    "unit": "Unidad",
+    "lot": "lote",
+    "serial": "Serie",
+    "manufacturingDate": "Fecha de fabricación",
+    "expirationDate": "Fecha de vencimiento",
+    "scannedBarcode": "Código de barras escaneado",
+    "addLine": "Agregar línea",
+    "actions": "Acciones",
+    "removeLine": "Quitar línea",
+    "noLines": "No se han agregado líneas de stock.",
+    "description": "Descripción",
+    "documentType": "Tipo de envío",
+    "normalReceipt": "Envío estándar",
+    "eReceipt": "envío electrónico",
+    "lineCount": "Conteo de líneas",
+    "totalQuantity": "Cantidad total",
+    "operationType": "Tipo de operación",
+    "direct": "Recepción directa",
+    "orderless": "Tarea sin orden",
+    "postReceipt": "Publicar recibo",
+    "createTask": "Crear tarea",
+    "success": "La entrada de mercancías se creó correctamente.",
+    "resultDirect": "Entrada de mercancías contabilizada",
+    "resultOrderless": "Tarea de recibo creada",
+    "linesText": "lineas",
+    "newRecord": "Nuevo récord",
+    "options": {
+      "noLabel": "Sin etiqueta",
+      "preGenerate": "Pregenerar",
+      "supplierLabel": "Etiqueta de proveedor",
+      "generateOnReceipt": "Generar al recibir",
+      "manual": "manuales",
+      "barcode": "Escaneo de código de barras",
+      "preLabel": "Etiqueta pregenerada"
+    },
+    "validation": {
+      "customer": "Se requiere proveedor.",
+      "receiptNo": "El número de recibo de envío estándar debe contener exactamente 15 dígitos.",
+      "eReceiptNo": "El número de envío electrónico debe contener un código de unidad de 3 caracteres seguido de 13 dígitos.",
+      "date": "Se requiere fecha de envío.",
+      "operation": "Se requiere almacén, lugar de recepción y serie de documentos.",
+      "lines": "Se requiere al menos una línea de stock.",
+      "stock": "Se requiere stock y una cantidad mayor que cero.",
+      "serialQuantity": "Una línea con seguimiento en serie debe tener la cantidad 1.",
+      "expiry": "La fecha de vencimiento no puede preceder a la fecha de fabricación.",
+      "incomplete": "El formulario contiene campos faltantes o no válidos.",
+      "submit": "No se pudo crear la entrada de mercancías."
+    }
+  }
+}

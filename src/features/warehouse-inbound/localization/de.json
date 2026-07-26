@@ -1,0 +1,190 @@
+{
+  "hub": {
+    "eyebrow": "Lagerbetrieb",
+    "title": "Lagereingangsprozesszentrum",
+    "description": "Starten Sie auftragsbasierte, auftragslose und direkte Inbound-Flows mit denselben Domänenregeln; Verfolgen Sie jeden Schritt von der Aufgabenzuweisung bis zur Qualität und Lagerbewegung.",
+    "phases": {
+      "start": {
+        "title": "Starten Sie den Eingang",
+        "description": "Wählen Sie den richtigen Einstiegspunkt für die Dokumentquelle und den Ausführungsmodus."
+      },
+      "execute": {
+        "title": "Führen Sie die Aufgabe aus",
+        "description": "Weisen Sie Bediener zu, nehmen Sie zugewiesene Arbeiten an und verwalten Sie den physischen Fortschritt."
+      },
+      "manage": {
+        "title": "Überwachen und verwalten",
+        "description": "Nutzen Sie Aufzeichnungen und Richtlinien für vollständige Rückverfolgbarkeit und konfigurierbare Prozesskontrolle."
+      }
+    },
+    "items": {
+      "fromOrder": {
+        "title": "Aus Bestellung erstellen",
+        "description": "Wählen Sie Netsis Bestellungen aus, reservieren Sie offene Mengen und erstellen Sie eine Eingangsaufgabe."
+      },
+      "orderless": {
+        "title": "Auftragslose Eingangsaufgabe",
+        "description": "Erstellen Sie eine geplante Aufgabe mit Versand- und Lagerzeilen ohne Bestellverknüpfung."
+      },
+      "direct": {
+        "title": "Direkter Inbound",
+        "description": "Verbuchen Sie einen auftragslosen Eingang atomar mit Qualität, Quarantäne und Lagerbewegung."
+      },
+      "tasks": {
+        "title": "Aufgaben und Aufgaben",
+        "description": "Weisen Sie offene Aufgaben einem oder mehreren Bedienern zu und überwachen Sie deren Fortschritt."
+      },
+      "assigned": {
+        "title": "Meine zugewiesenen Aufgaben",
+        "description": "Akzeptieren, starten und erledigen Sie die Ihnen zugewiesenen Inbound-Aufgaben."
+      },
+      "records": {
+        "title": "Eingehende Datensätze",
+        "description": "Überwachen Sie alle eingehenden Modi im gemeinsam genutzten serverseitigen Datenraster."
+      },
+      "settings": {
+        "title": "Eingehende Einstellungen",
+        "description": "Verwalten Sie Überschuss-, Mangel-, Qualitätssperr-, Genehmigungs- und ERP-Veröffentlichungsrichtlinien."
+      }
+    }
+  },
+  "title": "Wareneingang aus Bestellungen",
+  "subtitle": "Wählen Sie Netsis Bestellungen aus, validieren Sie Mengen und reservieren Sie sicher eine Empfangsaufgabe.",
+  "steps": [
+    "Customer and orders",
+    "Lines and quantities",
+    "Warehouse settings",
+    "Confirmation"
+  ],
+  "customer": "Kunde",
+  "selectCustomer": "Kunde auswählen",
+  "loadOrders": "Offene Bestellungen laden",
+  "orders": "Offene Bestellungen",
+  "loadLines": "Ausgewählte Auftragszeilen laden",
+  "noOrders": "Es wurden keine offenen Bestellungen gefunden.",
+  "noLines": "Es wurden keine verfügbaren Zeilen gefunden.",
+  "warehouse": "Ziellager",
+  "location": "Empfangsort",
+  "series": "Dokumentenreihe",
+  "documentDate": "Dokumentdatum",
+  "plannedArrival": "Geplante Ankunft",
+  "priority": "Priorität",
+  "labelStrategy": "Etikettenstrategie",
+  "description": "Beschreibung",
+  "create": "Aufgabe erstellen und reservieren",
+  "created": "Wareneingangsaufgabe angelegt",
+  "assignedSelf": "Die Aufgabe wird dem angemeldeten Benutzer zugewiesen.",
+  "quantity": "Reservierte Menge",
+  "available": "Verfügbar",
+  "back": "Zurück",
+  "continue": "Weiter",
+  "configurationHint": "Wählen Sie ein Ziellager, einen Empfangsort und eine Dokumentenserie aus, um fortzufahren.",
+  "createFlow": {
+    "subtitle": "Verwalten Sie die Auftragsauswahl, die Lager- und Standortplanung auf Linienebene sowie die Chargen-/Serienrückverfolgbarkeit in einem kontrollierten Ablauf.",
+    "orderSelection": "Bestellauswahl",
+    "steps": {
+      "0": "Bestellauswahl",
+      "1": "Linien- und Empfangsplan",
+      "2": "Überprüfen und erstellen"
+    },
+    "orderNo": "Bestell-Nr",
+    "date": "Datum",
+    "defaultWarehouse": "Standardlager",
+    "documentSettings": "Dokument- und Aufgabeneinstellungen"
+  },
+  "manual": {
+    "eyebrow": "Wareneingangsoperation",
+    "directTitle": "Direkter Wareneingang",
+    "orderlessTitle": "Aufgabe „Bestellloser Empfang“.",
+    "directSubtitle": "Validieren Sie das Dokument und buchen Sie Wareneingang, Qualität und Lagerbewegung in einem kontrollierten Ablauf.",
+    "orderlessSubtitle": "Erstellen Sie eine geplante Wareneingangsaufgabe ohne Bestelllink.",
+    "currentStep": "Schritt",
+    "steps": {
+      "document": "Dokument",
+      "operation": "Betrieb",
+      "lines": "Aktienlinien",
+      "review": "Rezension"
+    },
+    "document": {
+      "title": "Dokument und Lieferant",
+      "description": "Bestätigen Sie die Versandart, -nummer und den Lieferanten hinter der Quittung."
+    },
+    "operation": {
+      "title": "Lager und Prozess",
+      "description": "Wählen Sie Empfangsort, Serie, Priorität und Etikettenmethode."
+    },
+    "lines": {
+      "title": "Zu erhaltende Aktien",
+      "description": "Geben Sie Lagerbestand, Konfiguration, Menge und Rückverfolgbarkeit pro Zeile ein."
+    },
+    "review": {
+      "title": "Abschließende Überprüfung",
+      "description": "Überprüfen Sie die Beleg- und Mengenzusammenfassung vor dem Buchen."
+    },
+    "customer": "Lieferant",
+    "documentDate": "Versand-/Empfangsdatum",
+    "receiptNo": "Belegnummer",
+    "isElectronic": "E-Versand",
+    "receiptHint": "Geben Sie für eine Standardversandanzeige genau 15 Ziffern ein.",
+    "eReceiptHint": "E-Versand: 3-stelliger Einheitencode + 4-stelliges Jahr + 9-stellige Folge.",
+    "validNumber": "Das Dokumentnummernformat ist gültig.",
+    "plannedArrival": "Geplante Ankunft",
+    "warehouse": "Ziellager",
+    "location": "Empfangs-/Bereitstellungsort",
+    "series": "WMS Dokumentenreihe",
+    "priority": "Priorität",
+    "labelStrategy": "Etikettenstrategie",
+    "executionMode": "Empfangsmethode",
+    "stock": "Lager",
+    "yap": "Konfigurationscode",
+    "quantity": "Menge",
+    "unit": "Einheit",
+    "lot": "Viel",
+    "serial": "Seriell",
+    "manufacturingDate": "Herstellungsdatum",
+    "expirationDate": "Ablaufdatum",
+    "scannedBarcode": "Gescannter Barcode",
+    "addLine": "Zeile hinzufügen",
+    "actions": "Aktionen",
+    "removeLine": "Zeile entfernen",
+    "noLines": "Es wurden keine Lagerbestände hinzugefügt.",
+    "description": "Beschreibung",
+    "documentType": "Versandart",
+    "normalReceipt": "Standardversand",
+    "eReceipt": "E-Versand",
+    "lineCount": "Zeilenanzahl",
+    "totalQuantity": "Gesamtmenge",
+    "operationType": "Operationstyp",
+    "direct": "Direkter Empfang",
+    "orderless": "Auftragslose Aufgabe",
+    "postReceipt": "Posteingang",
+    "createTask": "Aufgabe erstellen",
+    "success": "Der Wareneingang wurde erfolgreich erstellt.",
+    "resultDirect": "Wareneingang gebucht",
+    "resultOrderless": "Empfangsaufgabe erstellt",
+    "linesText": "Linien",
+    "newRecord": "Neuer Rekord",
+    "options": {
+      "noLabel": "Kein Etikett",
+      "preGenerate": "Vorgenerieren",
+      "supplierLabel": "Lieferantenetikett",
+      "generateOnReceipt": "Bei Erhalt generieren",
+      "manual": "Handbuch",
+      "barcode": "Barcode-Scan",
+      "preLabel": "Vorgeneriertes Etikett"
+    },
+    "validation": {
+      "customer": "Lieferant ist erforderlich.",
+      "receiptNo": "Die Standard-Versandbelegnummer muss genau 15 Ziffern enthalten.",
+      "eReceiptNo": "Die E-Dispatch-Nummer muss einen dreistelligen Einheitencode gefolgt von 13 Ziffern enthalten.",
+      "date": "Das Versanddatum ist erforderlich.",
+      "operation": "Lager, Empfangsort und Dokumentenserie sind erforderlich.",
+      "lines": "Es ist mindestens eine Lagerzeile erforderlich.",
+      "stock": "Es sind Lagerbestände und eine Menge größer Null erforderlich.",
+      "serialQuantity": "Eine seriell verfolgte Linie muss die Menge 1 haben.",
+      "expiry": "Das Ablaufdatum darf nicht vor dem Herstellungsdatum liegen.",
+      "incomplete": "Das Formular enthält fehlende oder ungültige Felder.",
+      "submit": "Der Wareneingang konnte nicht erstellt werden."
+    }
+  }
+}

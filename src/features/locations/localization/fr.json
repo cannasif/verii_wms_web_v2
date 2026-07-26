@@ -1,0 +1,107 @@
+{
+  "page": {
+    "title": "Définitions d'emplacement",
+    "description": "Gérez la hiérarchie des zones d'entrepôt, des allées, des racks, des niveaux et des bacs.",
+    "newAction": "Nouvel emplacement"
+  },
+  "form": {
+    "createTitle": "Nouvelle définition d'emplacement",
+    "editTitle": "Modifier la définition d'emplacement",
+    "description": "Gérez la hiérarchie des adresses, les règles d'utilisation et la capacité.",
+    "basicInformation": "Informations de base",
+    "addressAndBarcode": "Adresse et code-barres",
+    "capacity": "Capacité",
+    "usageRules": "Règles d'utilisation",
+    "warehouse": "Entrepôt",
+    "warehousePlaceholder": "Sélectionnez un entrepôt",
+    "locationType": "Type d'emplacement",
+    "parentLocation": "Localisation des parents",
+    "rootLocation": "Emplacement racine",
+    "code": "Code de localisation",
+    "name": "Nom du lieu",
+    "zoneCode": "Code de zone",
+    "aisleNo": "Allée non",
+    "rackNo": "Support non",
+    "levelNo": "Niveau non",
+    "binNo": "Bac non",
+    "barcodeMode": "Mode code-barres",
+    "barcode": "Code à barres",
+    "barcodeAutoPlaceholder": "Généré par le système",
+    "quantity": "Quantité",
+    "weight": "Poids",
+    "volume": "Volume",
+    "unit": "Unité",
+    "descriptionLabel": "Descriptif",
+    "cancel": "Annuler",
+    "create": "Créer un emplacement",
+    "save": "Enregistrer les modifications",
+    "close": "Fermer"
+  },
+  "rules": {
+    "mixedStock": "Stock mixte",
+    "mixedLot": "Lot mixte",
+    "mixedStatus": "Statut mixte",
+    "cycleCount": "Nombre de cycles activé",
+    "pickable": "Sélectionnable",
+    "putaway": "Rangement activé",
+    "quarantine": "Quarantaine",
+    "active": "Actif"
+  },
+  "types": {
+    "Zone": "Zone",
+    "Aisle": "Allée",
+    "Rack": "Support",
+    "Shelf": "Niveau d'étagère",
+    "Cell": "Poubelle",
+    "Receiving": "Réception",
+    "Staging": "Mise en scène",
+    "Shipping": "Expédition",
+    "Quarantine": "Quarantaine",
+    "Virtual": "Virtuel"
+  },
+  "barcodeModes": {
+    "Auto": "Automatique",
+    "Manual": "Manuel"
+  },
+  "columns": {
+    "branch": "Branche",
+    "warehouseCode": "Code d'entrepôt",
+    "warehouseName": "Nom de l'entrepôt",
+    "code": "Code de localisation",
+    "name": "Nom du lieu",
+    "locationType": "Type d'emplacement",
+    "parentLocation": "Emplacement des parents",
+    "barcode": "Code à barres",
+    "zone": "Zone",
+    "status": "Statut",
+    "actions": "Actions"
+  },
+  "status": {
+    "active": "Actif",
+    "passive": "Passif"
+  },
+  "actions": {
+    "edit": "Modifier",
+    "delete": "Supprimer"
+  },
+  "validation": {
+    "requiredBasic": "L’entrepôt, le code d’emplacement et le nom de l’emplacement sont requis.",
+    "parentRequired": "Sélectionnez un emplacement parent valide pour les types d'allée, de rack, de niveau d'étagère et de bac.",
+    "barcodeRequired": "Le code-barres est requis en mode code-barres manuel.",
+    "capacityUnitRequired": "L'unité de capacité est requise lorsqu'une valeur de capacité est saisie."
+  },
+  "messages": {
+    "warehousesLoadFailed": "Les entrepôts n'ont pas pu être chargés.",
+    "detailLoadFailed": "Les détails de localisation n'ont pas pu être chargés.",
+    "parentsLoadFailed": "Les emplacements parents n'ont pas pu être chargés.",
+    "createSuccess": "Définition d'emplacement créée.",
+    "updateSuccess": "Définition de l'emplacement mise à jour.",
+    "saveFailed": "La définition de l'emplacement n'a pas pu être enregistrée.",
+    "deleteSuccess": "Définition d'emplacement supprimée.",
+    "deleteFailed": "La définition de l'emplacement n'a pas pu être supprimée."
+  },
+  "deleteDialog": {
+    "title": "Supprimer la définition d'emplacement",
+    "description": "{{name}} sera désactivé par suppression logicielle. L'opération est rejetée lorsque des emplacements enfants existent."
+  }
+}

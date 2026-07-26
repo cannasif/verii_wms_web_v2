@@ -1,0 +1,33 @@
+{
+  "title": "Expédition",
+  "hub": {
+    "title": "Centre de processus d'expédition",
+    "description": "Gérez la source des commandes, les tâches, la préparation, l'emballage, le chargement, l'approbation et la finalisation ERP en un seul endroit.",
+    "cards": {
+      "orderedAssigned": {
+        "title": "Basé sur la commande · Attribué",
+        "description": "Sélectionnez les commandes client en cours, attribuez les lignes et attribuez la tâche d'expédition."
+      },
+      "stockAssigned": {
+        "title": "Stock gratuit · Attribué",
+        "description": "Créez une expédition planifiée et une tâche d'opérateur sans référence de commande."
+      },
+      "orderedDirect": {
+        "title": "Sur commande · Direct",
+        "description": "Lorsque la politique le permet, démarrez une expédition basée sur une commande sans créer de tâche."
+      },
+      "stockDirect": {
+        "title": "Stock gratuit · Direct",
+        "description": "Exécutez une expédition urgente avec validation du stock, de l’emplacement, du lot, de la série et de la quantité."
+      }
+    },
+    "records": {
+      "title": "Dossiers d'expédition",
+      "description": "Suivez les quantités planifiées, prélevées, emballées, chargées et expédiées."
+    },
+    "settings": {
+      "title": "Paramètres d'expédition",
+      "description": "Gérez les variantes de flux, la réservation, le packaging, l'exécution partielle, l'approbation et les règles ERP."
+    }
+  }
+}

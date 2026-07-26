@@ -1,0 +1,33 @@
+{
+  "title": "Sortie d'entrepôt",
+  "hub": {
+    "title": "Centre de traitement des sorties d'entrepôt",
+    "description": "Gérez la demande, la réservation, la préparation, la vérification, le chargement et la finalisation ERP sur un seul document.",
+    "cards": {
+      "orderedAssigned": {
+        "title": "Basé sur la commande · Attribué",
+        "description": "Allouez les lignes de commande et attribuez la tâche de prélèvement aux opérateurs d’entrepôt."
+      },
+      "stockAssigned": {
+        "title": "Stock gratuit · Attribué",
+        "description": "Créez une commande sortante planifiée et une tâche d'opérateur à partir du stock disponible."
+      },
+      "orderedDirect": {
+        "title": "Sur commande · Direct",
+        "description": "Lorsque la politique le permet, démarrez une commande sortante contrôlée sans créer de tâche."
+      },
+      "stockDirect": {
+        "title": "Stock gratuit · Direct",
+        "description": "Exécutez une sortie de stock urgente avec validation de l'emplacement, du lot, de la série et de la quantité."
+      }
+    },
+    "records": {
+      "title": "Enregistrements sortants de l'entrepôt",
+      "description": "Suivez les quantités sortantes planifiées, réservées, prélevées et complétées."
+    },
+    "settings": {
+      "title": "Paramètres sortants de l'entrepôt",
+      "description": "Gérez les variantes de flux, la réservation, l'exécution partielle, l'approbation et les règles de publication ERP."
+    }
+  }
+}

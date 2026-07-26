@@ -1,0 +1,33 @@
+{
+  "title": "Magazzino in uscita",
+  "hub": {
+    "title": "Centro processi in uscita dal magazzino",
+    "description": "Gestisci richiesta, prenotazione, prelievo, verifica, caricamento e finalizzazione ERP su un unico documento.",
+    "cards": {
+      "orderedAssigned": {
+        "title": "Basato sugli ordini · Assegnato",
+        "description": "Assegnare le righe ordine e assegnare l'attività di prelievo agli operatori di magazzino."
+      },
+      "stockAssigned": {
+        "title": "Stock libero · Assegnato",
+        "description": "Creare un ordine di uscita pianificato e un'attività dell'operatore dallo stock disponibile."
+      },
+      "orderedDirect": {
+        "title": "Basato sugli ordini · Diretto",
+        "description": "Quando la policy lo consente, avvia un'uscita controllata basata su ordini senza creare un'attività."
+      },
+      "stockDirect": {
+        "title": "Stock gratuito · Diretto",
+        "description": "Esegui un'uscita urgente di scorte gratuite con convalida di posizione, lotto, numero di serie e quantità."
+      }
+    },
+    "records": {
+      "title": "Record di uscita dal magazzino",
+      "description": "Tieni traccia delle quantità in uscita pianificate, prenotate, prelevate e completate."
+    },
+    "settings": {
+      "title": "Impostazioni in uscita dal magazzino",
+      "description": "Gestisci varianti di flusso, prenotazione, esecuzione parziale, approvazione e regole di pubblicazione ERP."
+    }
+  }
+}

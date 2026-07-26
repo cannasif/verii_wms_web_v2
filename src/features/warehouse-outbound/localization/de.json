@@ -1,0 +1,33 @@
+{
+  "title": "Lagerausgang",
+  "hub": {
+    "title": "Lagerausgangsprozesszentrum",
+    "description": "Verwalten Sie Anfrage, Reservierung, Kommissionierung, Überprüfung, Laden und ERP Abschluss in einem Dokument.",
+    "cards": {
+      "orderedAssigned": {
+        "title": "Auftragsbasiert · Zugewiesen",
+        "description": "Ordnen Sie Auftragspositionen zu und weisen Sie Lagermitarbeitern die Kommissionierungsaufgabe zu."
+      },
+      "stockAssigned": {
+        "title": "Freier Bestand · Zugewiesen",
+        "description": "Erstellen Sie einen geplanten ausgehenden Auftrag und eine Bedieneraufgabe aus dem verfügbaren Bestand."
+      },
+      "orderedDirect": {
+        "title": "Auftragsbasiert · Direkt",
+        "description": "Wenn die Richtlinie es zulässt, starten Sie einen kontrollierten, auftragsbasierten Outbound, ohne eine Aufgabe zu erstellen."
+      },
+      "stockDirect": {
+        "title": "Kostenloser Lagerbestand · Direkt",
+        "description": "Führen Sie einen dringenden freien Lagerausgang mit Standort-, Chargen-, Serien- und Mengenvalidierung durch."
+      }
+    },
+    "records": {
+      "title": "Lagerausgangsdatensätze",
+      "description": "Verfolgen Sie geplante, reservierte, kommissionierte und abgeschlossene Ausgangsmengen."
+    },
+    "settings": {
+      "title": "Lagerausgangseinstellungen",
+      "description": "Verwalten Sie Ablaufvarianten, Reservierungen, Teilausführungen, Genehmigungen und ERP Buchungsregeln."
+    }
+  }
+}

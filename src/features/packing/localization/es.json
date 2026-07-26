@@ -1,0 +1,19 @@
+{
+  "title": "Embalaje",
+  "workbench": "Estación de embalaje",
+  "workbenchDescription": "Vincule el stock saliente seleccionado a cajas, cajones y paletas con controles de serie/lote, peso y SSCC.",
+  "definitions": "Definiciones de embalaje",
+  "definitionsDescription": "Gestionar capacidades de embalaje y estaciones físicas de embalaje.",
+  "settings": "Política de embalaje",
+  "materials": "Materiales de embalaje",
+  "stations": "Estaciones",
+  "newMaterial": "Nuevo material",
+  "newStation": "Nueva Estación",
+  "newSession": "Sesión abierta",
+  "open": "Abierto",
+  "close": "Cerrar unidad",
+  "reopen": "Reabrir",
+  "addUnit": "Caja Abierta/Palet",
+  "pack": "Agregar artículo",
+  "actions": "Acciones"
+}

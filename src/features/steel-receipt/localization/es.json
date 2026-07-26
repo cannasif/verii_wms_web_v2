@@ -1,0 +1,60 @@
+{
+  "title": "Recepción de mercancías de acero",
+  "import": "Importación de placas prevista",
+  "plans": "Planos de acero",
+  "inspection": "Inspección de llegada y aceptación",
+  "operations": "Conversión y almacenamiento de recibos",
+  "hub": {
+    "eyebrow": "Recepción de Mercaderías · Operaciones Siderúrgicas",
+    "title": "Centro de proceso de recepción de mercancías de acero",
+    "description": "Rastree cada placa mediante DCode desde el registro en puerta y la decisión de calidad hasta la recepción de mercancías y el almacenamiento final.",
+    "phases": {
+      "gate": {
+        "title": "Puerta y expectativa",
+        "description": "Valide los datos del vehículo, conductor, proveedor y placa esperada antes del procesamiento."
+      },
+      "quality": {
+        "title": "Inspección y Decisión",
+        "description": "Registre la llegada física, la cantidad y la decisión de calidad de cada plato con evidencia."
+      },
+      "putaway": {
+        "title": "Recibo y almacenamiento",
+        "description": "Convierta placas aprobadas en tareas y registre los movimientos finales de inventario después de la recepción física."
+      },
+      "report": {
+        "title": "Monitoreo e informes",
+        "description": "Monitorear la trazabilidad de placas, trabajos pendientes y excepciones operativas desde un solo centro."
+      }
+    },
+    "cards": {
+      "vehicles": {
+        "title": "Registros de registro de vehículos",
+        "description": "Revise los registros de la puerta e inicie la aceptación de un nuevo vehículo y acero desde la lista de acciones."
+      },
+      "import": {
+        "title": "Importación de expectativas",
+        "description": "Obtenga una vista previa, valide y guarde datos de Excel de forma idempotente mediante DCode."
+      },
+      "plans": {
+        "title": "Planos de acero",
+        "description": "Realice un seguimiento de los lotes importados y sus estados de proceso."
+      },
+      "inspection": {
+        "title": "Llegada e inspección de calidad",
+        "description": "Gestionar decisiones llegadas, faltantes, aceptadas, parcialmente aceptadas y rechazadas."
+      },
+      "receipt": {
+        "title": "Tarea de recepción de mercancías",
+        "description": "Convierta las placas aprobadas en una tarea compartida y asigne operadores de almacén."
+      },
+      "placement": {
+        "title": "Almacenamiento en el patio/ubicación",
+        "description": "Guarde la ubicación final y el orden de apilamiento utilizando la ocupación de la ubicación actual."
+      },
+      "reports": {
+        "title": "Informes de operación de acero",
+        "description": "Busque estados de código DC, serie de proveedor, calidad, recepción y almacenamiento."
+      }
+    }
+  }
+}

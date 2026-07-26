@@ -1,0 +1,90 @@
+{
+  "page": {
+    "title": "Progettazione e stampa di codici a barre",
+    "description": "Progetta, esegui la versione, pubblica e stampa etichette di stock, serie/lotto, ubicazione e logistica.",
+    "new": "Nuovo modello"
+  },
+  "columns": {
+    "code": "Codice modello",
+    "name": "Nome del modello",
+    "type": "Tipo di etichetta",
+    "size": "Dimensioni",
+    "dpi": "DPI",
+    "status": "Stato",
+    "draft": "Bozza",
+    "published": "Pubblicato",
+    "actions": "Azioni"
+  },
+  "actions": {
+    "design": "Progettazione",
+    "edit": "Modifica metadati",
+    "delete": "Elimina",
+    "demo": "Carica il progetto dimostrativo",
+    "saveDraft": "Salva bozza",
+    "publish": "Pubblica",
+    "pdf": "Apri/Scarica PDF",
+    "print": "Stampa",
+    "addText": "Testo",
+    "addBarcode": "Codice a barre",
+    "addQr": "QR",
+    "addMatrix": "DataMatrix",
+    "addBox": "Scatola"
+  },
+  "status": {
+    "active": "Attivo",
+    "passive": "Passivo",
+    "none": "Nessuno"
+  },
+  "types": {
+    "Product": "Prodotto",
+    "SerialLot": "Seriale/Lotto",
+    "Location": "Posizione",
+    "Logistics": "Logistica",
+    "Sscc": "SSCC Pallet"
+  },
+  "form": {
+    "create": "Crea modello",
+    "edit": "Metadati del modello",
+    "code": "Codice modello",
+    "name": "Nome del modello",
+    "type": "Tipo di etichetta",
+    "width": "Larghezza (mm)",
+    "height": "Altezza (mm)",
+    "dpi": "DPI della stampante",
+    "active": "Attivo",
+    "cancel": "Annulla",
+    "save": "Salva"
+  },
+  "editor": {
+    "title": "Studio di progettazione di etichette",
+    "toolbox": "Strumenti",
+    "properties": "Proprietà dell'elemento",
+    "bindings": "Campi dati",
+    "versions": "Versioni",
+    "sample": "Dati campione",
+    "notes": "Nota sulla versione",
+    "noSelection": "Seleziona un elemento da modificare.",
+    "value": "Valore fisso",
+    "binding": "Associazione dei dati",
+    "symbology": "Simbologia",
+    "x": "X(mm)",
+    "y": "Y (mm)",
+    "width": "Larghezza",
+    "height": "Altezza",
+    "font": "Dimensione del carattere",
+    "remove": "Rimuovi elemento",
+    "demoHint": "L'etichetta demo già pronta è mostrata di seguito. Puoi trascinare elementi o associare campi dati."
+  },
+  "messages": {
+    "created": "Modello creato.",
+    "saved": "Bozza di versione salvata.",
+    "published": "Versione pubblicata.",
+    "deleted": "Modello eliminato.",
+    "demoLoaded": "Design demo caricato. Il salvataggio crea una nuova versione.",
+    "canvasNotReady": "L'anteprima dell'etichetta non è ancora pronta. Per favore riprova tra poco.",
+    "popupBlocked": "La finestra PDF è stata bloccata. Consenti i popup e riprova.",
+    "preparingPdf": "Preparazione PDF...",
+    "pdf": "PDF aperto in una nuova scheda; il download è stato avviato anche nei browser supportati.",
+    "print": "Finestra di dialogo di stampa del sistema aperta."
+  }
+}

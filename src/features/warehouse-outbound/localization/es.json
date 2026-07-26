@@ -1,0 +1,33 @@
+{
+  "title": "Salida del almacén",
+  "hub": {
+    "title": "Centro de proceso de salida de almacén",
+    "description": "Administre solicitudes, reservas, recolección, verificación, carga y finalización de ERP en un solo documento.",
+    "cards": {
+      "orderedAssigned": {
+        "title": "Basado en pedidos · Asignado",
+        "description": "Asigne líneas de pedido y asigne la tarea de recolección a los operadores del almacén."
+      },
+      "stockAssigned": {
+        "title": "Stock Libre · Asignado",
+        "description": "Cree una orden de salida planificada y una tarea de operador a partir del stock disponible."
+      },
+      "orderedDirect": {
+        "title": "Basado en pedidos · Directo",
+        "description": "Cuando la política lo permita, inicie una salida controlada basada en pedidos sin crear una tarea."
+      },
+      "stockDirect": {
+        "title": "Stock Gratis · Directo",
+        "description": "Ejecutar una salida urgente de stock libre con validación de ubicación, lote, serial y cantidad."
+      }
+    },
+    "records": {
+      "title": "Registros de salida del almacén",
+      "description": "Realice un seguimiento de las cantidades salientes planificadas, reservadas, seleccionadas y completadas."
+    },
+    "settings": {
+      "title": "Configuración de salida del almacén",
+      "description": "Gestionar variantes de flujo, reserva, ejecución parcial, aprobación y reglas de contabilización ERP."
+    }
+  }
+}

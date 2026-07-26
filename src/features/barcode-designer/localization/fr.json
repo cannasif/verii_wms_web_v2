@@ -1,0 +1,90 @@
+{
+  "page": {
+    "title": "Conception et impression de codes-barres",
+    "description": "Concevoir, versionner, publier et imprimer des étiquettes de stock, de série/lot, de localisation et de logistique.",
+    "new": "Nouveau modèle"
+  },
+  "columns": {
+    "code": "Code du modèle",
+    "name": "Nom du modèle",
+    "type": "Type d'étiquette",
+    "size": "Taille",
+    "dpi": "PPP",
+    "status": "Statut",
+    "draft": "Brouillon",
+    "published": "Publié",
+    "actions": "Actions"
+  },
+  "actions": {
+    "design": "Conception",
+    "edit": "Modifier les métadonnées",
+    "delete": "Supprimer",
+    "demo": "Charger la conception de démonstration",
+    "saveDraft": "Enregistrer le brouillon",
+    "publish": "Publier",
+    "pdf": "Ouvrir/Télécharger PDF",
+    "print": "Imprimer",
+    "addText": "Texte",
+    "addBarcode": "Code à barres",
+    "addQr": "QR",
+    "addMatrix": "DataMatrix",
+    "addBox": "Boîte"
+  },
+  "status": {
+    "active": "Actif",
+    "passive": "Passif",
+    "none": "Aucun"
+  },
+  "types": {
+    "Product": "Produit",
+    "SerialLot": "Série / Lot",
+    "Location": "Emplacement",
+    "Logistics": "Logistique",
+    "Sscc": "SSCC Palette"
+  },
+  "form": {
+    "create": "Créer un modèle",
+    "edit": "Métadonnées du modèle",
+    "code": "Code du modèle",
+    "name": "Nom du modèle",
+    "type": "Type d'étiquette",
+    "width": "Largeur (mm)",
+    "height": "Hauteur (mm)",
+    "dpi": "PPP de l'imprimante",
+    "active": "Actif",
+    "cancel": "Annuler",
+    "save": "Enregistrer"
+  },
+  "editor": {
+    "title": "Studio de création d'étiquettes",
+    "toolbox": "Outils",
+    "properties": "Propriétés des éléments",
+    "bindings": "Champs de données",
+    "versions": "Versions",
+    "sample": "Exemples de données",
+    "notes": "Notes de version",
+    "noSelection": "Sélectionnez un élément à modifier.",
+    "value": "Valeur fixe",
+    "binding": "Liaison de données",
+    "symbology": "Symbologie",
+    "x": "X (mm)",
+    "y": "Y (mm)",
+    "width": "Largeur",
+    "height": "Hauteur",
+    "font": "Taille de la police",
+    "remove": "Supprimer l'élément",
+    "demoHint": "L'étiquette de démonstration prête à l'emploi est présentée ci-dessous. Vous pouvez faire glisser des éléments ou lier des champs de données."
+  },
+  "messages": {
+    "created": "Modèle créé.",
+    "saved": "Version brouillon enregistrée.",
+    "published": "Version publiée.",
+    "deleted": "Modèle supprimé.",
+    "demoLoaded": "Conception de démonstration chargée. L'enregistrement crée une nouvelle version.",
+    "canvasNotReady": "L'aperçu de l'étiquette n'est pas encore prêt. Veuillez réessayer dans un instant.",
+    "popupBlocked": "La fenêtre PDF a été bloquée. Autorisez les fenêtres contextuelles et réessayez.",
+    "preparingPdf": "Préparation de PDF...",
+    "pdf": "PDF ouvert dans un nouvel onglet ; le téléchargement a également démarré dans les navigateurs pris en charge.",
+    "print": "La boîte de dialogue d'impression du système s'est ouverte."
+  }
+}

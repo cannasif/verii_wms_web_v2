@@ -1,0 +1,33 @@
+{
+  "title": "Spedizione",
+  "hub": {
+    "title": "Centro processi di spedizione",
+    "description": "Gestisci l'origine dell'ordine, le attività, il prelievo, l'imballaggio, il caricamento, l'approvazione e la finalizzazione ERP in un unico posto.",
+    "cards": {
+      "orderedAssigned": {
+        "title": "Basato sugli ordini · Assegnato",
+        "description": "Seleziona gli ordini cliente aperti, assegna le righe e assegna l'attività di spedizione."
+      },
+      "stockAssigned": {
+        "title": "Stock libero · Assegnato",
+        "description": "Creare una spedizione pianificata e un'attività dell'operatore senza un riferimento all'ordine."
+      },
+      "orderedDirect": {
+        "title": "Basato sugli ordini · Diretto",
+        "description": "Quando la policy lo consente, avvia una spedizione basata sull'ordine senza creare un'attività."
+      },
+      "stockDirect": {
+        "title": "Stock gratuito · Diretto",
+        "description": "Esegui una spedizione urgente con convalida di stock, ubicazione, lotto, numero di serie e quantità."
+      }
+    },
+    "records": {
+      "title": "Documenti di spedizione",
+      "description": "Tieni traccia delle quantità pianificate, prelevate, imballate, caricate e spedite."
+    },
+    "settings": {
+      "title": "Impostazioni di spedizione",
+      "description": "Gestisci varianti di flusso, prenotazione, imballaggio, esecuzione parziale, approvazione e regole ERP."
+    }
+  }
+}

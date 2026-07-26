@@ -1,0 +1,85 @@
+{
+  "page": {
+    "title": "Dokumentenreihe",
+    "description": "Verwalten Sie eine sichere Nummerierung für Wareneingang, -transfer, -versand und Lagervorgänge.",
+    "newAction": "Neue Dokumentenreihe"
+  },
+  "columns": {
+    "branch": "Zweig",
+    "warehouse": "Lager",
+    "code": "Seriencode",
+    "name": "Serienname",
+    "documentType": "Dokumenttyp",
+    "prefix": "Präfix",
+    "preview": "Nächstes Dokument Nr",
+    "nextNumber": "Nächster Zähler",
+    "default": "Standard",
+    "active": "Aktiv",
+    "issued": "Gebraucht",
+    "lastIssuedAt": "Letzte Ausgabe",
+    "actions": "Aktionen"
+  },
+  "types": {
+    "GoodsReceipt": "Wareneingang",
+    "InterWarehouseTransfer": "Transfer zwischen Lagern",
+    "Shipment": "Versand",
+    "WarehouseReceipt": "Lagerbeleg",
+    "WarehouseIssue": "Lagerproblem"
+  },
+  "yearFormats": {
+    "None": "Kein Jahr",
+    "TwoDigit": "2-stellige Jahreszahl",
+    "FourDigit": "4-stellige Jahreszahl"
+  },
+  "status": {
+    "yes": "Ja",
+    "no": "Nein",
+    "active": "Aktiv",
+    "passive": "Passiv"
+  },
+  "form": {
+    "createTitle": "Dokumentserie erstellen",
+    "editTitle": "Dokumentserie bearbeiten",
+    "description": "Definieren Sie Dokumenttyp, Umfang und Zahlenformat.",
+    "warehouse": "Lagerbereich",
+    "allWarehouses": "Alle Lager",
+    "code": "Seriencode",
+    "name": "Serienname",
+    "documentType": "Dokumenttyp",
+    "prefix": "Präfix",
+    "separator": "Trennzeichen",
+    "yearFormat": "Jahresformat",
+    "numberLength": "Nummernlänge",
+    "startNumber": "Startnummer",
+    "nextNumber": "Nächste Nummer",
+    "incrementBy": "Inkrement",
+    "default": "Standardserie",
+    "active": "Aktiv",
+    "descriptionLabel": "Beschreibung",
+    "preview": "Live-Vorschau",
+    "lockedNotice": "Diese Serie verfügt über vergebene Nummern, daher sind Umfangs- und Nummerierungsfelder gesperrt. Name und Status können noch aktualisiert werden.",
+    "cancel": "Abbrechen",
+    "create": "Erstellen",
+    "save": "Speichern",
+    "close": "Schließen"
+  },
+  "validation": {
+    "required": "Seriencode, Name und Präfix sind erforderlich.",
+    "numbers": "Nummerierungsfelder sind ungültig."
+  },
+  "messages": {
+    "createSuccess": "Dokumentenserie erstellt.",
+    "updateSuccess": "Dokumentenreihe aktualisiert.",
+    "deleteSuccess": "Dokumentenserie gelöscht.",
+    "saveFailed": "Dokumentenserie konnte nicht gespeichert werden.",
+    "deleteFailed": "Dokumentenserie konnte nicht gelöscht werden."
+  },
+  "actions": {
+    "edit": "Bearbeiten",
+    "delete": "Löschen"
+  },
+  "deleteDialog": {
+    "title": "Dokumentenserie löschen",
+    "description": "Sind Sie sicher, dass Sie {{name}} löschen möchten? Serien, die Nummern vergeben haben, müssen stattdessen deaktiviert werden."
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "title": "Lagerübergreifender Transfer",
+  "hubTitle": "Transferprozesszentrum",
+  "hubDescription": "Verfolgen Sie Planung, Kommissionierung, Versand, Transporteingang und Einlagerung zwischen Lagern in einem Dokument.",
+  "newDraft": "Transferentwurf",
+  "records": "Datensätze übertragen",
+  "sourceExecution": "Quell-Warehouse-Ausführung",
+  "targetExecution": "Ziellagerausführung",
+  "comingSoon": "Verfügbar in der nächsten Lieferung",
+  "hub": {
+    "startTitle": "01 · Übertragung starten",
+    "startDescription": "Die Anforderungsquelle und der Ausführungsmodus sind unabhängig; Alle vier Szenarien verwenden dasselbe Domänenmodell.",
+    "executeTitle": "02 · Ausführen, Empfangen und Verwalten",
+    "executeDescription": "Die Kommissionierung und der Versand an der Quelle werden getrennt vom Eingang und der Einlagerung am Zielort verfolgt.",
+    "operationSlice": "Operationsphase",
+    "cards": {
+      "orderedErp": {
+        "title": "Netsis Anfrage · Zugewiesen",
+        "description": "Wählen Sie Netsis Transferanfragen aus, weisen Sie offene Mengen zu und weisen Sie den Bedienern Kommissionierungsaufgaben zu."
+      },
+      "orderedStock": {
+        "title": "Freier Bestand · Zugewiesen",
+        "description": "Erstellen Sie geplante Kommissionierungs- und Versandaufgaben aus dem verfügbaren Bestand ohne ERP-Anfrage."
+      },
+      "directErp": {
+        "title": "Netsis Anfrage · Direkt",
+        "description": "Wenn die Richtlinie dies zulässt, starten Sie eine Übertragung von einer Netsis-Anfrage, ohne eine Operatoraufgabe zu erstellen."
+      },
+      "directStock": {
+        "title": "Kostenloser Lagerbestand · Direkt",
+        "description": "Starten Sie eine dringende, kontrollierte Direktübertragung aus dem verfügbaren Bestand."
+      }
+    },
+    "source": {
+      "title": "Kommissionierung und Versand",
+      "description": "Reservierung, Auftragsannahme, Barcode-Kommissionierung und Versandabschluss."
+    },
+    "target": {
+      "title": "Wareneingang und Einlagerung am Zielort",
+      "description": "Transiteingang, Abweichungsgrund, Teileingang und Einlagerung am Bestimmungsort."
+    },
+    "records": {
+      "title": "Datensätze übertragen",
+      "description": "Überprüfen Sie alle Varianten- und Mengenmeilensteine im gemeinsamen Datenraster."
+    },
+    "settings": {
+      "title": "Einstellungen für den Übertragungsprozess",
+      "description": "Verwalten Sie Variantenberechtigungen, Reservierungen, Teilausführungs-, Transport-, Wareneingangs-, Einlagerungs- und Abweichungsrichtlinien."
+    }
+  }
+}

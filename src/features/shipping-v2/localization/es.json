@@ -1,0 +1,33 @@
+{
+  "title": "Envío",
+  "hub": {
+    "title": "Centro de proceso de envío",
+    "description": "Administre el origen de los pedidos, las tareas, la selección, el embalaje, la carga, la aprobación y la finalización de ERP en un solo lugar.",
+    "cards": {
+      "orderedAssigned": {
+        "title": "Basado en pedidos · Asignado",
+        "description": "Seleccione órdenes de venta abiertas, asigne líneas y asigne la tarea de envío."
+      },
+      "stockAssigned": {
+        "title": "Stock Libre · Asignado",
+        "description": "Cree un envío planificado y una tarea de operador sin una referencia de pedido."
+      },
+      "orderedDirect": {
+        "title": "Basado en pedidos · Directo",
+        "description": "Cuando la política lo permita, inicie un envío basado en pedidos sin crear una tarea."
+      },
+      "stockDirect": {
+        "title": "Stock Gratis · Directo",
+        "description": "Ejecutar un envío urgente con validación de stock, ubicación, lote, serial y cantidad."
+      }
+    },
+    "records": {
+      "title": "Registros de envío",
+      "description": "Realice un seguimiento de las cantidades planificadas, seleccionadas, empaquetadas, cargadas y enviadas."
+    },
+    "settings": {
+      "title": "Configuración de envío",
+      "description": "Gestionar variantes de flujo, reserva, embalaje, ejecución parcial, aprobación y reglas ERP."
+    }
+  }
+}

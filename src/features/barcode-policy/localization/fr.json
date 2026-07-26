@@ -1,0 +1,93 @@
+{
+  "page": {
+    "title": "Politique mondiale relative aux codes-barres",
+    "description": "Gérez la politique de génération de codes-barres centrale unique utilisée par tous les modules WMS.",
+    "loading": "Chargement de la politique relative aux codes-barres...",
+    "version": "Version de la politique",
+    "active": "Politique active",
+    "inactive": "Politique inactive",
+    "historyTitle": "Codes-barres générés",
+    "historyDescription": "Historique immuable des problèmes de codes-barres avec version et portée de la politique."
+  },
+  "scope": {
+    "ProductSerial": "Produit/Série",
+    "ProductLot": "Produit / Lot",
+    "Location": "Étagère / Emplacement",
+    "Logistics": "Palette / Colis / Logistique",
+    "Document": "Document / Opération"
+  },
+  "scopeHelp": {
+    "ProductSerial": "Identifie les instances de stock individuelles par code de stock et numéro de série.",
+    "ProductLot": "Identifie le stock suivi par lot par code de stock et numéro de lot.",
+    "Location": "Identifie les étagères et les emplacements de l'entrepôt.",
+    "Logistics": "Identifie les palettes, les colis et les unités logistiques.",
+    "Document": "Identifie les documents de réception, de transfert, d’expédition et autres opérations."
+  },
+  "actions": {
+    "edit": "Modifier le profil",
+    "test": "Aperçu / Générer",
+    "save": "Enregistrer le profil",
+    "cancel": "Annuler",
+    "add": "Ajouter un segment",
+    "remove": "Supprimer",
+    "preview": "Aperçu",
+    "generate": "Générer des uniques",
+    "close": "Fermer"
+  },
+  "form": {
+    "name": "Nom du profil",
+    "prefix": "Préfixe",
+    "separator": "Séparateur",
+    "enabled": "Activer cette étendue",
+    "segments": "Segments de codes-barres",
+    "segmentsHelp": "Réorganisez les segments avec les flèches. Chaque profil doit contenir exactement un segment de séquence.",
+    "type": "Type de segment",
+    "source": "Champ source",
+    "transform": "Transformer",
+    "required": "Obligatoire",
+    "sequenceLength": "Longueur de la séquence",
+    "dateFormat": "Format des dates",
+    "literal": "Valeur littérale",
+    "idempotency": "Clé d'idempotence"
+  },
+  "segmentType": {
+    "Field": "Champ",
+    "Literal": "Littéral",
+    "Sequence": "Séquence",
+    "Date": "Date"
+  },
+  "field": {
+    "StockCode": "Code de stock",
+    "SerialNo": "Numéro de série",
+    "YapCode": "Code de configuration",
+    "LotNo": "Lot non",
+    "WarehouseCode": "Code entrepôt",
+    "LocationCode": "Code de localisation",
+    "DocumentNo": "Numéro de document"
+  },
+  "transform": {
+    "Upper": "SUPÉRIEUR",
+    "Lower": "inférieur",
+    "None": "Inchangé"
+  },
+  "messages": {
+    "saved": "Profil de stratégie enregistré.",
+    "previewed": "Aperçu du code-barres créé sans consommer de séquence.",
+    "generated": "Code barre unique réservé en permanence.",
+    "failed": "L'opération n'a pas pu être terminée.",
+    "concurrency": "Le profil a été modifié par un autre utilisateur ; la page a été rafraîchie."
+  },
+  "history": {
+    "id": "Identifiant de l'enregistrement",
+    "scope": "Portée",
+    "version": "Version",
+    "barcode": "Code à barres",
+    "stock": "Actions",
+    "serial": "Série",
+    "lot": "Beaucoup",
+    "location": "Emplacement",
+    "document": "Documenter",
+    "sequence": "Séquence",
+    "generatedAt": "Généré à"
+  }
+}
