@@ -8,6 +8,47 @@
   --wms-app-text: #f8fafc;
 }
 
+/*
+ * Compatibility bridge for feature screens that still use the original
+ * cyan/violet utility classes. Semantic WMS theme tokens remain the source
+ * of truth for every selectable application theme.
+ */
+html[class*='theme-'] [class~='text-cyan-500'],
+html[class*='theme-'] [class~='text-cyan-600'],
+html[class*='theme-'] [class~='text-violet-500'],
+html[class*='theme-'] [class~='text-violet-600'] {
+  color: var(--wms-brand-primary);
+}
+
+html[class*='theme-'] [class~='bg-cyan-500'],
+html[class*='theme-'] [class~='bg-cyan-600'],
+html[class*='theme-'] [class~='bg-violet-500'],
+html[class*='theme-'] [class~='bg-violet-600'] {
+  background-color: var(--wms-brand-primary);
+}
+
+html[class*='theme-'] [class~='bg-cyan-500/10'],
+html[class*='theme-'] [class~='bg-cyan-500/15'],
+html[class*='theme-'] [class~='bg-violet-500/10'],
+html[class*='theme-'] [class~='bg-violet-500/15'] {
+  background-color: var(--wms-brand-soft);
+}
+
+html[class*='theme-'] [class~='border-cyan-500'],
+html[class*='theme-'] [class~='border-cyan-500/30'],
+html[class*='theme-'] [class~='border-cyan-500/40'],
+html[class*='theme-'] [class~='border-cyan-500/50'],
+html[class*='theme-'] [class~='border-violet-500'],
+html[class*='theme-'] [class~='border-violet-500/30'],
+html[class*='theme-'] [class~='border-violet-500/50'] {
+  border-color: var(--wms-brand-ring);
+}
+
+html[class*='theme-'] [class~='accent-cyan-500'],
+html[class*='theme-'] [class~='accent-cyan-600'] {
+  accent-color: var(--wms-brand-primary);
+}
+
 .input,
 [data-slot='input'] {
   width: 100%;
