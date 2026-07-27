@@ -4233,6 +4233,41 @@
       "createdDate": "Erstellungsdatum",
       "updatedBy": "Aktualisiert von",
       "updatedDate": "Aktualisierungsdatum"
+    },
+    "stockTrackingSettings": {
+      "title": "Bestands-Tracking-Einstellungen",
+      "loading": "Tracking-Einstellungen werden geladen…",
+      "loadFailed": "Tracking-Einstellungen konnten nicht geladen werden.",
+      "activeTrackingType": "Aktiver Tracking-Typ",
+      "trackingTypes": {
+        "lotAndSerial": "Charge + Seriennummer",
+        "lot": "Charge",
+        "serial": "Seriennummer",
+        "none": "Ohne Tracking"
+      },
+      "stockOverride": "Bestandsspezifische Definition · Version {{version}}",
+      "noStockOverride": "Keine bestandsspezifische Definition; beim Speichern werden bestandsspezifische Einstellungen erstellt.",
+      "requireSerialDescription": "Vorgänge können ohne Seriennummerninformation nicht abgeschlossen werden.",
+      "oneSerialPerUnitDescription": "Jede Einheit erfordert eine separate eindeutige Seriennummer.",
+      "autoGenerateSerialsDescription": "Bei Eingangsvorgängen werden eindeutige Seriennummern zentral in Mengenreihenfolge erzeugt.",
+      "serialMaskLabel": "Seriennummern-Generierungsmaske",
+      "serialMaskDescription": "Spezifisch für die Bestandskarte. Beispiel: {STOCK}-{YY}{MM}-{N:6}",
+      "nextSequence": "Nächste Sequenz: {{value}}",
+      "requireLotDescription": "Bewegungen werden auf Chargenebene verfolgt.",
+      "requireManufacturingDateLabel": "Herstellungsdatum erforderlich",
+      "requireManufacturingDateDescription": "Beim Eingeben von Seriennummer/Charge ist ein Herstellungsdatum erforderlich.",
+      "requireExpirationDateLabel": "Verfallsdatum erforderlich",
+      "requireExpirationDateDescription": "Vorgänge können ohne Verfallsdatum nicht abgeschlossen werden.",
+      "minimumShelfLifeLabel": "Minimale Resthaltbarkeit",
+      "minimumShelfLifeDescription": "Mindestanzahl Tage für das Verfallsdatum bei Wareneingang.",
+      "daysUnit": "Tage",
+      "validationNote": "Diese Regeln werden zentral bei Wareneingang, Transfer, Versand und Lageroperationen validiert; sie können auf Vorgangsbildschirmen nicht geändert werden.",
+      "saveSettings": "Einstellungen speichern",
+      "noChanges": "Keine Änderungen",
+      "saveSuccess": "{{stockCode}} Tracking-Einstellungen gespeichert.",
+      "saveFailed": "Bestands-Tracking-Einstellungen konnten nicht gespeichert werden.",
+      "minShelfLifeNegative": "Minimale Resthaltbarkeit darf nicht negativ sein.",
+      "serialMaskRequired": "Serienmasken müssen ein Sequenzfeld enthalten. Beispiel: {N:6}."
     }
   },
   "processPolicy": {

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Boxes, Save, ShieldCheck } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
@@ -15,6 +16,9 @@ interface Props {
   stock: StockMirror | null;
   onClose: () => void;
 }
+
+const STS = 'erpMirror.stockTrackingSettings';
+const ST = 'stockTrackingPolicyField';
 
 const emptyForm = (branchCode: string): UpdateStockTrackingSettingsInput => ({
   branchCode,
@@ -58,6 +62,7 @@ const hasSameTrackingValues = (
   && current.minimumRemainingShelfLifeDays === (baseline.minimumRemainingShelfLifeDays ?? null);
 
 export function StockTrackingSettingsDialog({ stock, onClose }: Props) {
+  const { t } = useTranslation('common');
   const queryClient = useQueryClient();
   const { can, isLoading: permissionsLoading } = usePermissionAccess();
   const [form, setForm] = useState<UpdateStockTrackingSettingsInput>(() => emptyForm(stock?.branchCode ?? '0'));
@@ -82,11 +87,11 @@ export function StockTrackingSettingsDialog({ stock, onClose }: Props) {
     onSuccess: async (value) => {
       setForm(fromSettings(value));
       await queryClient.invalidateQueries({ queryKey });
-      toast.success(`${value.stockCode} takip ayarları kaydedildi.`);
+      toast.success(t(`${STS}.saveSuccess`, { stockCode: value.stockCode }));
       onClose();
     },
     onError: (error) => {
-      toast.error(error instanceof Error ? error.message : 'Stok takip ayarları kaydedilemedi.');
+      toast.error(error instanceof Error ? error.message : t(`${STS}.saveFailed`));
     },
   });
 
@@ -113,11 +118,11 @@ export function StockTrackingSettingsDialog({ stock, onClose }: Props) {
   }));
   const save = () => {
     if (form.minimumRemainingShelfLifeDays != null && form.minimumRemainingShelfLifeDays < 0) {
-      toast.error('Minimum kalan raf ömrü negatif olamaz.');
+      toast.error(t(`${STS}.minShelfLifeNegative`));
       return;
     }
     if (form.autoGenerateSerials && !/\{N:[1-9]\d?\}/.test(form.serialMaskTemplate ?? '')) {
-      toast.error('Seri maskesinde sıra alanı zorunludur. Örnek: {N:6}.');
+      toast.error(t(`${STS}.serialMaskRequired`));
       return;
     }
     mutation.mutate(form);
@@ -128,23 +133,26 @@ export function StockTrackingSettingsDialog({ stock, onClose }: Props) {
     && (!query.data.hasStockOverride || !hasSameTrackingValues(form, query.data)),
   );
   const trackingLabel = form.requireLot && form.requireSerial
-    ? 'Lot + Seri'
+    ? t(`${STS}.trackingTypes.lotAndSerial`)
     : form.requireLot
-      ? 'Lot'
+      ? t(`${STS}.trackingTypes.lot`)
       : form.requireSerial
-        ? 'Seri'
-        : 'Takipsiz';
+        ? t(`${STS}.trackingTypes.serial`)
+        : t(`${STS}.trackingTypes.none`);
 
   return (
     <Dialog open={Boolean(stock)} onOpenChange={open => { if (!open) onClose(); }}>
-      <DialogContent className="max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] !max-w-3xl overflow-y-auto rounded-2xl border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-0">
+      <DialogContent
+        className="max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] !max-w-3xl overflow-y-auto rounded-2xl border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-0"
+        data-no-auto-localize="true"
+      >
         <header className="border-b border-[var(--wms-app-border)] p-5 sm:p-6">
           <div className="flex items-start gap-3">
             <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-cyan-500/10 text-cyan-500">
               <Boxes className="size-5" />
             </div>
             <div className="min-w-0">
-              <DialogTitle className="truncate text-xl font-black">Stok Takip Ayarları</DialogTitle>
+              <DialogTitle className="truncate text-xl font-black">{t(`${STS}.title`)}</DialogTitle>
               <DialogDescription className="mt-1">
                 {stock?.erpStockCode} · {stock?.stockName}
               </DialogDescription>
@@ -154,51 +162,51 @@ export function StockTrackingSettingsDialog({ stock, onClose }: Props) {
 
         <div className="space-y-5 p-5 sm:p-6">
           {query.isLoading ? (
-            <div className="grid min-h-48 place-items-center text-sm text-slate-500">Takip ayarları yükleniyor…</div>
+            <div className="grid min-h-48 place-items-center text-sm text-slate-500">{t(`${STS}.loading`)}</div>
           ) : query.isError ? (
             <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-500">
-              {query.error instanceof Error ? query.error.message : 'Takip ayarları yüklenemedi.'}
+              {query.error instanceof Error ? query.error.message : t(`${STS}.loadFailed`)}
             </div>
           ) : (
             <>
               <div className="flex flex-col gap-3 rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Etkin takip tipi</p>
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-500">{t(`${STS}.activeTrackingType`)}</p>
                   <p className="mt-1 text-lg font-black text-cyan-500">{trackingLabel}</p>
                 </div>
                 <div className="text-left text-xs text-slate-500 sm:text-right">
                   {query.data?.hasStockOverride
-                    ? `Bu stoğa özel tanım · Sürüm ${query.data.version ?? 1}`
-                    : 'Bu stok için özel tanım yok; kaydettiğinizde stoğa özel ayar oluşur.'}
+                    ? t(`${STS}.stockOverride`, { version: query.data.version ?? 1 })
+                    : t(`${STS}.noStockOverride`)}
                 </div>
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <TrackingCheck
-                  label="Seri zorunlu"
-                  description="Operasyon seri bilgisi olmadan tamamlanamaz."
+                  label={t(`${ST}.requireSerial`)}
+                  description={t(`${STS}.requireSerialDescription`)}
                   checked={form.requireSerial}
                   disabled={!canManage}
                   onChange={updateSerial}
                 />
                 <TrackingCheck
-                  label="Miktar kadar seri"
-                  description="Her birim için ayrı ve benzersiz seri gerekir."
+                  label={t(`${ST}.oneSerialPerUnit`)}
+                  description={t(`${STS}.oneSerialPerUnitDescription`)}
                   checked={form.serialQuantityRule === 'OneSerialPerBaseUnit'}
                   disabled={!canManage || !form.requireSerial}
                   onChange={updateOnePerUnit}
                 />
                 <TrackingCheck
-                  label="Serileri otomatik oluştur"
-                  description="Giriş operasyonunda miktar kadar benzersiz seri merkezi sıradan üretilir."
+                  label={t(`${ST}.autoGenerateSerials`)}
+                  description={t(`${STS}.autoGenerateSerialsDescription`)}
                   checked={form.autoGenerateSerials}
                   disabled={!canManage || !form.requireSerial}
                   onChange={updateAutoGenerate}
                 />
                 <label className="rounded-xl border border-[var(--wms-app-border)] p-4 sm:col-span-2">
-                  <span className="block text-sm font-bold">Seri üretim maskesi</span>
+                  <span className="block text-sm font-bold">{t(`${STS}.serialMaskLabel`)}</span>
                   <span className="mt-1 block text-xs text-slate-500">
-                    Stok kartına özeldir. Örnek: {'{STOCK}-{YY}{MM}-{N:6}'}
+                    {t(`${STS}.serialMaskDescription`)}
                   </span>
                   <input
                     className="input mt-3 w-full font-mono"
@@ -208,34 +216,34 @@ export function StockTrackingSettingsDialog({ stock, onClose }: Props) {
                   />
                   {query.data?.nextSerialSequence != null && (
                     <span className="mt-2 block text-xs text-slate-500">
-                      Sıradaki sıra: {query.data.nextSerialSequence}
+                      {t(`${STS}.nextSequence`, { value: query.data.nextSerialSequence })}
                     </span>
                   )}
                 </label>
                 <TrackingCheck
-                  label="Lot zorunlu"
-                  description="Hareketler lot kırılımında izlenir."
+                  label={t(`${ST}.requireLot`)}
+                  description={t(`${STS}.requireLotDescription`)}
                   checked={form.requireLot}
                   disabled={!canManage}
                   onChange={value => setForm(current => ({ ...current, requireLot: value }))}
                 />
                 <TrackingCheck
-                  label="Üretim tarihi zorunlu"
-                  description="Seri/lot girişinde üretim tarihi istenir."
+                  label={t(`${STS}.requireManufacturingDateLabel`)}
+                  description={t(`${STS}.requireManufacturingDateDescription`)}
                   checked={form.requireManufacturingDate}
                   disabled={!canManage}
                   onChange={value => setForm(current => ({ ...current, requireManufacturingDate: value }))}
                 />
                 <TrackingCheck
-                  label="SKT zorunlu"
-                  description="Son kullanma tarihi olmadan işlem tamamlanamaz."
+                  label={t(`${STS}.requireExpirationDateLabel`)}
+                  description={t(`${STS}.requireExpirationDateDescription`)}
                   checked={form.requireExpirationDate}
                   disabled={!canManage}
                   onChange={updateExpiration}
                 />
                 <label className="rounded-xl border border-[var(--wms-app-border)] p-4">
-                  <span className="block text-sm font-bold">Minimum kalan raf ömrü</span>
-                  <span className="mt-1 block text-xs text-slate-500">Kabul sırasında SKT için gereken en az gün.</span>
+                  <span className="block text-sm font-bold">{t(`${STS}.minimumShelfLifeLabel`)}</span>
+                  <span className="mt-1 block text-xs text-slate-500">{t(`${STS}.minimumShelfLifeDescription`)}</span>
                   <div className="mt-3 flex items-center gap-2">
                     <input
                       className="input min-w-0 flex-1"
@@ -249,17 +257,14 @@ export function StockTrackingSettingsDialog({ stock, onClose }: Props) {
                         minimumRemainingShelfLifeDays: event.target.value === '' ? null : Number(event.target.value),
                       }))}
                     />
-                    <span className="text-sm font-semibold text-slate-500">gün</span>
+                    <span className="text-sm font-semibold text-slate-500">{t(`${STS}.daysUnit`)}</span>
                   </div>
                 </label>
               </div>
 
               <div className="flex items-start gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-sm">
                 <ShieldCheck className="mt-0.5 size-5 shrink-0 text-emerald-500" />
-                <p className="text-slate-500">
-                  Bu kurallar mal kabul, transfer, sevk ve ambar işlemlerinde merkezi olarak doğrulanır;
-                  işlem ekranında kullanıcı tarafından değiştirilemez.
-                </p>
+                <p className="text-slate-500">{t(`${STS}.validationNote`)}</p>
               </div>
             </>
           )}
@@ -267,7 +272,7 @@ export function StockTrackingSettingsDialog({ stock, onClose }: Props) {
 
         <footer className="flex flex-col-reverse gap-2 border-t border-[var(--wms-app-border)] p-5 sm:flex-row sm:justify-end sm:p-6">
           <button type="button" className="rounded-xl border px-4 py-2.5 font-semibold" onClick={onClose}>
-            {canManage ? 'Vazgeç' : 'Kapat'}
+            {canManage ? t('common.cancel') : t('common.close')}
           </button>
           {canManage && (
             <button
@@ -283,7 +288,11 @@ export function StockTrackingSettingsDialog({ stock, onClose }: Props) {
               onClick={save}
             >
               <Save className="size-4" />
-              {mutation.isPending ? 'Kaydediliyor…' : isDirty ? 'Ayarları Kaydet' : 'Değişiklik Yok'}
+              {mutation.isPending
+                ? t('common.saving')
+                : isDirty
+                  ? t(`${STS}.saveSettings`)
+                  : t(`${STS}.noChanges`)}
             </button>
           )}
         </footer>
