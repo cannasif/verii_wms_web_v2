@@ -1,4 +1,4 @@
-import loginBg from '@/assets/v3riiwmsloginbg.webp';
+import loginBg from '@/assets/v3riiwmsloginbg.png';
 
 interface AuthBackgroundProps {
   isActive: boolean;

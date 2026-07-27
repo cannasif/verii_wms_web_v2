@@ -11,29 +11,53 @@ interface AuthPageShellProps {
 
 export function AuthPageShell({ title, description, children }: AuthPageShellProps): ReactElement {
   return (
-    <div className="relative min-h-dvh w-full overflow-x-hidden overflow-y-auto bg-[#070d1f] text-white">
+    <div data-wms-auth-surface="true" className="relative min-h-dvh w-full overflow-x-hidden overflow-y-auto bg-[#070d1f] text-white">
+      <style>{`
+        input { color-scheme: dark; }
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover,
+        input:-webkit-autofill:focus,
+        input:-webkit-autofill:active {
+          -webkit-text-fill-color: #fff !important;
+          caret-color: #fff !important;
+          background-color: #0b1228 !important;
+          background-image: none !important;
+          transition: background-color 99999s ease-out 0s !important;
+          -webkit-box-shadow: 0 0 0 40px #0b1228 inset !important;
+          box-shadow: 0 0 0 40px #0b1228 inset !important;
+        }
+      `}</style>
+
+      <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden transition-opacity duration-1000 opacity-100">
+        <div className="absolute left-[-12%] top-[-12%] h-[58vw] max-h-[520px] w-[58vw] max-w-[520px] rounded-full bg-cyan-900/20 blur-[120px] mix-blend-screen" />
+        <div className="absolute bottom-[-10%] right-[-10%] h-[58vw] max-h-[520px] w-[58vw] max-w-[520px] rounded-full bg-blue-900/20 blur-[120px] mix-blend-screen" />
+        <div className="absolute inset-0 bg-linear-to-b from-transparent via-[#070d1f]/60 to-[#070d1f]" />
+      </div>
+
       <AuthBackground isActive isPaused />
 
-      <div className="fixed right-4 top-4 z-50 sm:right-6 sm:top-6">
+      <div className="fixed bottom-6 right-6 z-50 hidden sm:block">
         <LanguageSwitcher variant="pill" />
       </div>
 
-      <main className="relative z-10 flex min-h-dvh items-center justify-center px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-20 sm:px-6 sm:pt-24">
-        <section className="relative w-full max-w-[520px] overflow-hidden rounded-[1.75rem] border border-cyan-300/20 bg-[#0a132b]/85 p-5 shadow-[0_28px_80px_rgba(0,0,0,0.55),0_0_45px_rgba(14,165,233,0.08)] backdrop-blur-2xl sm:p-9">
-          <div className="absolute inset-x-10 top-0 h-px bg-linear-to-r from-transparent via-cyan-300/80 to-transparent" />
-          <header className="mb-7 text-center">
-            <img
-              src={logo}
-              alt="V3RII WMS"
-              className="mx-auto w-[190px] max-w-[72%] object-contain drop-shadow-[0_10px_24px_rgba(236,72,153,0.12)] sm:w-[220px]"
-            />
-            <div className="mx-auto mt-5 h-px w-16 bg-linear-to-r from-transparent via-cyan-300/60 to-transparent" />
-            <h1 className="mt-5 text-xl font-bold tracking-tight sm:text-2xl">{title}</h1>
-            <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-slate-400">{description}</p>
-          </header>
-          {children}
+      <div className="relative z-10 mx-auto box-border flex min-h-dvh w-full flex-col items-center justify-center px-4 py-8">
+        <section className="w-full max-w-[480px] min-w-0 overflow-hidden rounded-3xl border border-sky-400/15 bg-[#0b1228]/70 shadow-[0_0_24px_2px_rgba(56,132,246,0.10),inset_0_0_14px_1px_rgba(96,150,255,0.05),0_20px_50px_rgba(0,0,0,0.45)] backdrop-blur-xl">
+          <div className="relative overflow-hidden px-6 pb-16 pt-12 sm:px-10">
+            <header className="relative z-10 mb-8 text-center">
+              <div className="mx-auto mb-4 flex justify-center">
+                <img src={logo} alt="V3RII WMS" className="h-32 w-auto object-contain" />
+              </div>
+              <h1 className="mb-2 text-2xl font-bold tracking-tight text-white">{title}</h1>
+              <p className="text-sm text-slate-400">{description}</p>
+            </header>
+            <div className="relative z-10">{children}</div>
+          </div>
         </section>
-      </main>
+
+        <div className="mt-6 flex justify-center sm:hidden">
+          <LanguageSwitcher variant="pill" />
+        </div>
+      </div>
     </div>
   );
 }

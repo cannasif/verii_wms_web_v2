@@ -13,7 +13,7 @@ import { useAuthStore } from '@/stores/auth-store';
 import { isTokenValid } from '@/utils/jwt';
 import type React from 'react';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
-import { AppDropdown } from '@/components/shared/AppDropdown';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { LanguageSwitcher } from '@/components/shared/LanguageSwitcher';
@@ -106,26 +106,9 @@ export function LoginPage(): React.JSX.Element {
   };
 
   return (
-    <div className="relative min-h-dvh w-full overflow-x-hidden overflow-y-auto bg-[#070d1f] text-white">
+    <div data-wms-auth-surface="true" className="relative min-h-dvh w-full overflow-x-hidden overflow-y-auto bg-[#070d1f] text-white">
       <style>{`
         input { color-scheme: dark; }
-        .auth-login-control.input {
-          height: 3.25rem;
-          padding-left: 3.5rem !important;
-          padding-right: 1rem !important;
-          border-radius: 0.875rem;
-          background: rgba(7, 14, 31, 0.72);
-        }
-        .auth-login-control--password.input {
-          padding-right: 3.5rem !important;
-        }
-        .auth-login-select {
-          height: 3.25rem !important;
-          padding-left: 3.5rem !important;
-          padding-right: 1rem !important;
-          border-radius: 0.875rem;
-          background: rgba(7, 14, 31, 0.72);
-        }
         input:-webkit-autofill,
         input:-webkit-autofill:hover,
         input:-webkit-autofill:focus,
@@ -145,7 +128,7 @@ export function LoginPage(): React.JSX.Element {
 
       <AuthBackground isActive isPaused={isBgAnimationPaused} />
 
-      <div className="fixed right-4 top-4 z-50 flex items-center gap-2 sm:right-6 sm:top-6">
+      <div className="pointer-events-auto fixed bottom-6 right-6 z-[100] flex flex-col items-end gap-3">
         <button
           type="button"
           onClick={() => setIsBgAnimationPaused((p) => !p)}
@@ -158,57 +141,58 @@ export function LoginPage(): React.JSX.Element {
         <LanguageSwitcher variant="pill" />
       </div>
 
-      <div className="relative z-10 mx-auto box-border flex min-h-dvh w-full flex-col px-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6 lg:px-10">
-        <main className="flex flex-1 items-center justify-center py-6">
-          <div className="w-full max-w-[520px] min-w-0">
-            <div className="relative overflow-hidden rounded-[1.75rem] border border-cyan-300/20 bg-[#0a132b]/85 shadow-[0_0_0_1px_rgba(59,130,246,0.04),0_28px_80px_rgba(0,0,0,0.55),0_0_45px_rgba(14,165,233,0.08)] backdrop-blur-2xl">
-              <div className="absolute inset-x-10 top-0 h-px bg-linear-to-r from-transparent via-cyan-300/80 to-transparent" />
-              <div className="relative overflow-hidden px-5 pb-7 pt-7 sm:px-9 sm:pb-9 sm:pt-9">
-                <div className="relative z-10 mb-7 text-center">
-                  <img
-                    src={logo}
-                    alt="V3RII WMS"
-                    className="mx-auto w-[190px] max-w-[72%] object-contain drop-shadow-[0_10px_24px_rgba(236,72,153,0.12)] sm:w-[220px]"
-                  />
-                  <div className="mx-auto mt-5 h-px w-16 bg-linear-to-r from-transparent via-cyan-300/60 to-transparent" />
-                  <p className="mt-4 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-cyan-100/65 sm:text-xs">
-                    {t('auth.login.title')}
-                  </p>
+      <div className="relative z-10 mx-auto box-border flex min-h-dvh w-full flex-col px-3 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 sm:px-4 sm:pb-6 sm:pt-8">
+        <main className="flex flex-1 flex-col items-center justify-center py-4 sm:py-6 lg:py-8 [@media(max-height:720px)]:py-2">
+          <div className="w-full max-w-[480px] min-w-0">
+            <div className="overflow-hidden rounded-2xl border border-sky-400/15 bg-[#0b1228]/70 shadow-[0_0_24px_2px_rgba(56,132,246,0.10),inset_0_0_14px_1px_rgba(96,150,255,0.05),0_20px_50px_rgba(0,0,0,0.45)] backdrop-blur-xl sm:rounded-3xl">
+              <div className="relative overflow-hidden px-4 pb-6 pt-6 sm:px-10 sm:pb-10 sm:pt-12 [@media(max-height:720px)]:px-4 [@media(max-height:720px)]:pb-5 [@media(max-height:720px)]:pt-5">
+                <div className="relative z-10 mb-4 text-center sm:mb-6 [@media(max-height:720px)]:mb-3">
+                  <div className="mx-auto mb-3 flex justify-center sm:mb-4 [@media(max-height:720px)]:mb-2">
+                    <img src={logo} alt="V3RII WMS" className="h-20 w-auto max-w-[85%] object-contain sm:h-32 md:h-36 [@media(max-height:720px)]:h-16" />
+                  </div>
+                  <h1 className="text-xs tracking-tight text-white/70 sm:text-sm">{t('auth.login.title')}</h1>
                 </div>
 
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 sm:space-y-4" noValidate>
                 <FormField
                   control={form.control}
                   name="branchId"
                   render={({ field, fieldState }) => (
                     <FormItem>
-                      <div className="mb-2 block text-xs font-semibold uppercase tracking-[0.12em] text-slate-300">
-                        {t('auth.login.branch')}
-                      </div>
                       <div className="group relative">
-                        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 flex w-14 items-center justify-center">
+                        <div className="absolute inset-y-0 left-0 z-10 flex w-12 items-center justify-center rounded-l-xl border-r border-white/10 bg-black/30">
                           <Building2
                             className={fieldState.invalid ? 'text-red-400' : 'text-slate-400 group-focus-within:text-cyan-300'}
                             size={18}
                           />
                         </div>
-                        <AppDropdown
-                          value={field.value}
-                          onValueChange={field.onChange}
-                          options={(branches ?? []).map((branch) => ({ value: branch.id, label: branch.name }))}
-                          placeholder={t('auth.login.selectBranch')}
-                          emptyText={t('auth.login.branchNotFound')}
-                          ariaLabel={t('auth.login.selectBranch')}
-                          searchable
-                          searchPlaceholder={t('common.search')}
-                          className={`auth-login-select !w-full min-w-0 text-sm text-white transition-all ${fieldState.invalid
-                            ? 'border-2 border-red-500 bg-red-950/25 ring-2 ring-red-500/40 focus-visible:!border-red-500 focus-visible:!ring-2 focus-visible:!ring-red-500/40'
-                            : 'border border-white/15 hover:border-cyan-300/40 focus-visible:!border-cyan-400/70'
-                          }`}
-                          contentClassName="border-sky-400/20 !bg-[#0b1733] !text-white shadow-[0_0_24px_rgba(56,132,246,0.18)]"
-                          testId="login-branch"
-                        />
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger
+                              data-testid="login-branch"
+                              className={`auth-field-input !h-12 !w-full min-w-0 rounded-xl pl-14 pr-4 text-sm text-white focus:ring-0 ${fieldState.invalid
+                                ? 'auth-field-invalid border-2 border-red-500 bg-red-950/25 ring-2 ring-red-500/40 focus-visible:!border-red-500 focus-visible:!ring-2 focus-visible:!ring-red-500/40'
+                                : 'border border-white/10 bg-white/[0.03] focus:border-cyan-400/70 focus-visible:!border-cyan-400/70'
+                                }`}
+                            >
+                              <SelectValue placeholder={t('auth.login.selectBranch')} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="auth-select-content border-sky-400/20 !bg-[#0b1733] text-white shadow-[0_0_24px_rgba(56,132,246,0.18)]">
+                            {branches?.length ? (
+                              branches.map((branch) => (
+                                <SelectItem key={branch.id} value={branch.id} className="h-12 cursor-pointer focus:!bg-sky-500/25 focus:!text-white data-[state=checked]:!text-sky-300">
+                                  {branch.name}
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <SelectItem value="no-branch" disabled className="h-12 focus:text-white">
+                                {t('auth.login.branchNotFound')}
+                              </SelectItem>
+                            )}
+                          </SelectContent>
+                        </Select>
                       </div>
                       <FormMessage className="text-xs text-red-400" />
                     </FormItem>
@@ -223,11 +207,8 @@ export function LoginPage(): React.JSX.Element {
                     const invalid = Boolean(fieldState.error) || authFailed;
                     return (
                       <FormItem>
-                        <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.12em] text-slate-300" htmlFor="login-identifier">
-                          {t('auth.login.identifierPlaceholder')}
-                        </label>
                         <div className="group relative">
-                          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 flex w-14 items-center justify-center">
+                          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 flex w-12 items-center justify-center rounded-l-xl border-r border-white/10 bg-black/30">
                             <Mail
                               className={invalid ? 'text-red-400' : 'text-slate-400 group-focus-within:text-cyan-300'}
                               size={18}
@@ -243,9 +224,9 @@ export function LoginPage(): React.JSX.Element {
                               autoCorrect="off"
                               autoComplete="username"
                               placeholder={t('auth.login.identifierPlaceholder')}
-                              className={`auth-login-control min-w-0 text-sm text-white placeholder:text-slate-500 ${invalid
-                                ? 'border-2 border-red-500 bg-red-950/25 ring-2 ring-red-500/40 focus-visible:!border-red-500 focus-visible:!ring-2 focus-visible:!ring-red-500/40'
-                                : 'border border-white/15 transition-all duration-200 hover:border-cyan-300/40 focus-visible:!border-cyan-400/70 focus-visible:!ring-cyan-500/25'
+                              className={`auth-field-input h-12 min-w-0 rounded-xl pl-14 pr-4 text-sm text-white placeholder:text-slate-500 ${invalid
+                                ? 'auth-field-invalid border-2 border-red-500 bg-red-950/25 ring-2 ring-red-500/40 focus-visible:!border-red-500 focus-visible:!ring-2 focus-visible:!ring-red-500/40'
+                                : 'border border-white/10 bg-white/[0.03] focus-visible:!border-cyan-400/70 focus-visible:!ring-cyan-500/25'
                                 }`}
                               onChange={(e) => {
                                 form.clearErrors('root');
@@ -268,20 +249,8 @@ export function LoginPage(): React.JSX.Element {
                     const invalid = Boolean(fieldState.error) || authFailed;
                     return (
                       <FormItem>
-                        <div className="mb-2 flex items-center justify-between gap-4">
-                          <label className="block text-xs font-semibold uppercase tracking-[0.12em] text-slate-300" htmlFor="login-password">
-                            {t('auth.login.password')}
-                          </label>
-                          <button
-                            type="button"
-                            className="text-xs font-medium text-cyan-300 transition hover:text-cyan-100 hover:underline"
-                            onClick={() => navigate('/auth/forgot-password')}
-                          >
-                            {t('auth.login.forgotPassword')}
-                          </button>
-                        </div>
                         <div className="group relative">
-                          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 flex w-14 items-center justify-center">
+                          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 flex w-12 items-center justify-center rounded-l-xl border-r border-white/10 bg-black/30">
                             <Lock
                               className={invalid ? 'text-red-400' : 'text-slate-400 group-focus-within:text-cyan-300'}
                               size={18}
@@ -292,10 +261,11 @@ export function LoginPage(): React.JSX.Element {
                               {...field}
                               id="login-password"
                               type={isPasswordVisible ? 'text' : 'password'}
+                              autoComplete="current-password"
                               placeholder={t('auth.login.passwordPlaceholder')}
-                              className={`auth-login-control auth-login-control--password min-w-0 text-sm text-white placeholder:text-slate-500 ${invalid
-                                ? 'border-2 border-red-500 bg-red-950/25 ring-2 ring-red-500/40 focus-visible:!border-red-500 focus-visible:!ring-2 focus-visible:!ring-red-500/40'
-                                : 'border border-white/15 transition-all duration-200 hover:border-cyan-300/40 focus-visible:!border-cyan-400/70 focus-visible:!ring-cyan-500/25'
+                              className={`auth-field-input h-12 min-w-0 rounded-xl pl-14 pr-11 text-sm text-white placeholder:text-slate-500 ${invalid
+                                ? 'auth-field-invalid border-2 border-red-500 bg-red-950/25 ring-2 ring-red-500/40 focus-visible:!border-red-500 focus-visible:!ring-2 focus-visible:!ring-red-500/40'
+                                : 'border border-white/10 bg-white/[0.03] focus-visible:!border-cyan-400/70 focus-visible:!ring-cyan-500/25'
                                 }`}
                               onChange={(e) => {
                                 form.clearErrors('root');
@@ -332,9 +302,19 @@ export function LoginPage(): React.JSX.Element {
                   }}
                 />
 
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    className="text-sm text-cyan-300 transition hover:text-cyan-200 hover:underline"
+                    onClick={() => navigate('/auth/forgot-password')}
+                  >
+                    {t('auth.login.forgotPassword')}
+                  </button>
+                </div>
+
                 <Button
                   type="submit"
-                  className="mt-2 h-[3.25rem] w-full rounded-[0.875rem] border border-white/10 bg-linear-to-r from-cyan-500 via-blue-600 to-violet-600 text-sm font-bold uppercase tracking-[0.12em] text-white shadow-[0_12px_28px_rgba(37,99,235,0.24)] transition-all duration-300 hover:-translate-y-0.5 hover:brightness-110 hover:shadow-[0_16px_34px_rgba(37,99,235,0.34)]"
+                  className="auth-login-submit mt-2 h-12 w-full rounded-xl bg-linear-to-r from-cyan-600 via-blue-600 to-orange-400 text-sm font-semibold uppercase tracking-wide text-white transition-all duration-300 hover:brightness-105 hover:shadow-[0_0_16px_rgba(56,132,246,0.30)]"
                   disabled={isPending}
                 >
                   {isPending ? t('auth.login.loggingIn') : t('auth.login.loginButton')}
@@ -344,7 +324,7 @@ export function LoginPage(): React.JSX.Element {
               </div>
             </div>
 
-            <p className="mt-4 px-3 text-center text-[0.62rem] font-medium uppercase leading-relaxed tracking-[0.1em] text-white/45 sm:mt-5 sm:text-xs sm:tracking-[0.16em]">
+            <p className="mt-3 px-1 text-center text-[0.65rem] font-light uppercase leading-relaxed tracking-[0.08em] text-white/50 sm:mt-5 sm:text-sm sm:tracking-[0.14em] md:tracking-[0.2em] [@media(max-height:720px)]:mt-2">
               <Trans
                 i18nKey="auth.login.slogan"
                 components={{
@@ -362,8 +342,8 @@ export function LoginPage(): React.JSX.Element {
           </div>
         </main>
 
-        <footer className="shrink-0 pb-1 pt-2 [@media(max-height:900px)]:hidden">
-          <div className="mx-auto grid w-full max-w-[360px] grid-cols-7 items-center gap-1 rounded-2xl border border-white/10 bg-[#0a132b]/55 p-1.5 shadow-[0_10px_30px_rgba(0,0,0,0.3)] backdrop-blur-md">
+        <footer className="shrink-0 pb-4 pt-2 sm:pt-1 [@media(max-height:720px)]:pb-2">
+          <div className="mx-auto grid w-full max-w-[480px] grid-cols-7 items-center gap-0 rounded-2xl border border-white/10 bg-white/[0.04] p-1 shadow-[0_10px_30px_rgba(0,0,0,0.4)] backdrop-blur-md sm:p-1.5">
             <a
               href="tel:+905070123018"
               aria-label={t('auth.login.title')}
