@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
-import { Eye, Loader2, X } from 'lucide-react';
+import { Eye, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdvancedDataGrid, type GridColumn } from '@/components/shared/AdvancedDataGrid';
+import { OpsDialogBody, OpsDialogContent, OpsDialogHeader } from '@/components/shared/OpsDialogShell';
 import { WorkspaceOverlay } from '@/components/shared/WorkspaceOverlay';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogTitle } from '@/components/ui/dialog';
 import { formatProjectDateTime } from '@/lib/project-format';
 import { auditLogsApi } from '../api/audit-logs.api';
 import type { AuditLogDetail, AuditLogRow } from '../types/audit-log.types';
@@ -38,7 +39,35 @@ export function AuditLogsPage() {
   return <>
     <AdvancedDataGrid pageKey="audit-logs" title="Audit Kayıtları" description="Kritik kullanıcı ve yetki değişikliklerini eski-yeni değerleriyle izleyin." columns={columns} fetchPage={auditLogsApi.getPaged}/>
     {loading && !detail && <WorkspaceOverlay><Loader2 className="size-8 animate-spin text-white"/></WorkspaceOverlay>}
-    {detail && <Dialog open onOpenChange={(open) => { if (!open) setDetail(null); }}><DialogContent showCloseButton={false} className="max-h-[calc(100%-2rem)] w-full !max-w-5xl overflow-auto rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-0 shadow-2xl"><div className="flex items-start justify-between border-b border-[var(--wms-app-border)] px-6 py-4"><div><DialogTitle className="text-xl font-bold">Audit Kaydı #{detail.id}</DialogTitle><p className="mt-1 text-sm text-slate-500">{detail.actionType} • {detail.entityType} #{detail.entityId}</p></div><button type="button" aria-label="Kapat" onClick={() => setDetail(null)} className="rounded-lg border p-2"><X className="size-4"/></button></div><div className="space-y-5 p-6"><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><Info label="Tarih" value={formatProjectDateTime(detail.createdDate)}/><Info label="Sonuç" value={detail.result}/><Info label="Kaynak" value={detail.source}/><Info label="Şube" value={detail.branchCode || '-'}/><Info label="İşlemi yapan" value={detail.performedByUserEmail || (detail.performedByUserId ? `#${detail.performedByUserId}` : 'Sistem')}/><Info label="HTTP" value={`${detail.requestMethod || '-'} ${detail.requestPath || ''}`}/><Info label="Trace ID" value={detail.traceId} wide/><Info label="Neden / Hata" value={detail.failureReason || detail.reason || '-'} wide/></div><div className="grid gap-4 lg:grid-cols-2"><JsonPanel title="Eski Değerler" value={detail.oldValues}/><JsonPanel title="Yeni Değerler" value={detail.newValues}/></div><JsonPanel title="Değişen Alanlar" value={detail.changedFields}/></div></DialogContent></Dialog>}
+    {detail && (
+      <Dialog open onOpenChange={(open) => { if (!open) setDetail(null); }}>
+        <OpsDialogContent size="xl">
+          <OpsDialogHeader>
+            <div>
+              <DialogTitle className="wms-ops-detail-dialog__title text-xl font-bold">Audit Kaydı #{detail.id}</DialogTitle>
+              <p className="mt-1 text-sm text-slate-500">{detail.actionType} • {detail.entityType} #{detail.entityId}</p>
+            </div>
+          </OpsDialogHeader>
+          <OpsDialogBody className="space-y-5">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <Info label="Tarih" value={formatProjectDateTime(detail.createdDate)}/>
+              <Info label="Sonuç" value={detail.result}/>
+              <Info label="Kaynak" value={detail.source}/>
+              <Info label="Şube" value={detail.branchCode || '-'}/>
+              <Info label="İşlemi yapan" value={detail.performedByUserEmail || (detail.performedByUserId ? `#${detail.performedByUserId}` : 'Sistem')}/>
+              <Info label="HTTP" value={`${detail.requestMethod || '-'} ${detail.requestPath || ''}`}/>
+              <Info label="Trace ID" value={detail.traceId} wide/>
+              <Info label="Neden / Hata" value={detail.failureReason || detail.reason || '-'} wide/>
+            </div>
+            <div className="grid gap-4 lg:grid-cols-2">
+              <JsonPanel title="Eski Değerler" value={detail.oldValues}/>
+              <JsonPanel title="Yeni Değerler" value={detail.newValues}/>
+            </div>
+            <JsonPanel title="Değişen Alanlar" value={detail.changedFields}/>
+          </OpsDialogBody>
+        </OpsDialogContent>
+      </Dialog>
+    )}
   </>;
 }
 

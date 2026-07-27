@@ -11,7 +11,6 @@ import {
   Printer,
   RotateCcw,
   Scale,
-  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -23,6 +22,12 @@ import {
   systemColumns,
   requiredActionColumn,
 } from "@/components/shared/GridSystemColumns";
+import {
+  OpsDialogBody,
+  OpsDialogContent,
+  OpsDialogFooter,
+  OpsDialogHeader,
+} from "@/components/shared/OpsDialogShell";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useModuleTranslation } from "@/hooks/useModuleTranslation";
 import { localizeEnumValue } from "@/lib/enum-localization";
@@ -249,9 +254,12 @@ function CreateSessionModal({
   };
   return (
     <Dialog open onOpenChange={(o) => !o && close()}>
-      <DialogContent className="!max-w-2xl bg-[var(--wms-app-panel)]">
-        <DialogTitle>Paketleme oturumu aç</DialogTitle>
-        <form onSubmit={submit} className="space-y-4">
+      <OpsDialogContent size="lg">
+        <OpsDialogHeader>
+          <DialogTitle className="wms-ops-detail-dialog__title">Paketleme oturumu aç</DialogTitle>
+        </OpsDialogHeader>
+        <form onSubmit={submit} className="flex min-h-0 flex-1 flex-col">
+          <OpsDialogBody className="space-y-4">
           <Field label="Kaynak tipi">
             <AppDropdown
               value={sourceType}
@@ -287,7 +295,8 @@ function CreateSessionModal({
               }))}
             />
           </Field>
-          <div className="flex justify-end gap-2">
+          </OpsDialogBody>
+          <OpsDialogFooter>
             <button
               type="button"
               onClick={close}
@@ -301,9 +310,9 @@ function CreateSessionModal({
             >
               {saving ? "Açılıyor…" : "Oturumu aç"}
             </button>
-          </div>
+          </OpsDialogFooter>
         </form>
-      </DialogContent>
+      </OpsDialogContent>
     </Dialog>
   );
 }
@@ -321,12 +330,13 @@ function SessionModal({
   return (
     <Dialog open onOpenChange={(o) => !o && close()}>
       <DialogContent
-        showCloseButton={false}
-        className="max-h-[calc(100%-2rem)] w-full !max-w-6xl overflow-auto bg-[var(--wms-app-panel)] p-0"
+        tone="ops"
+        portalRoot="body"
+        className="max-h-[calc(100%-2rem)] w-full !max-w-6xl overflow-hidden p-0"
       >
-        <header className="sticky top-0 z-10 flex items-start justify-between border-b bg-[var(--wms-app-panel)] p-5">
+        <header className="sticky top-0 z-10 flex items-start justify-between border-b bg-[var(--wms-app-panel)] p-5 pr-14">
           <div>
-            <DialogTitle className="text-xl">
+            <DialogTitle className="wms-ops-detail-dialog__title text-xl">
               {detail.header.packingNo}
             </DialogTitle>
             <p className="text-sm text-slate-500">
@@ -343,11 +353,9 @@ function SessionModal({
               <Plus className="size-4" />
               Koli / palet aç
             </button>
-            <button onClick={close} className="rounded-lg border p-2">
-              <X className="size-4" />
-            </button>
           </div>
         </header>
+        <div className="wms-ops-scrollbar max-h-[calc(100%-5rem)] overflow-auto">
         <div className="grid gap-4 p-5 lg:grid-cols-2">
           {detail.handlingUnits.map((u) => (
             <UnitCard
@@ -364,6 +372,7 @@ function SessionModal({
             Henüz koli veya palet açılmadı.
           </div>
         )}
+        </div>
         {add && (
           <CreateUnitModal
             sessionId={detail.header.id}
@@ -663,9 +672,12 @@ function CreateUnitModal({
   };
   return (
     <Dialog open onOpenChange={(o) => !o && close()}>
-      <DialogContent className="bg-[var(--wms-app-panel)]">
-        <DialogTitle>Koli / palet aç</DialogTitle>
-        <form onSubmit={submit} className="space-y-4">
+      <OpsDialogContent size="md">
+        <OpsDialogHeader>
+          <DialogTitle className="wms-ops-detail-dialog__title">Koli / palet aç</DialogTitle>
+        </OpsDialogHeader>
+        <form onSubmit={submit} className="flex min-h-0 flex-1 flex-col">
+          <OpsDialogBody className="space-y-4">
           <Field label="Ambalaj malzemesi">
             <AppDropdown
               value={materialId}
@@ -693,11 +705,14 @@ function CreateUnitModal({
               ]}
             />
           </Field>
+          </OpsDialogBody>
+          <OpsDialogFooter>
           <button className="w-full rounded-xl bg-cyan-500 py-2 font-bold text-slate-950">
             Aç
           </button>
+          </OpsDialogFooter>
         </form>
-      </DialogContent>
+      </OpsDialogContent>
     </Dialog>
   );
 }
@@ -744,9 +759,12 @@ function PackLineModal({
   };
   return (
     <Dialog open onOpenChange={(o) => !o && close()}>
-      <DialogContent className="bg-[var(--wms-app-panel)]">
-        <DialogTitle>Pakete ürün ekle</DialogTitle>
-        <form onSubmit={submit} className="grid gap-3 md:grid-cols-2">
+      <OpsDialogContent size="lg">
+        <OpsDialogHeader>
+          <DialogTitle className="wms-ops-detail-dialog__title">Pakete ürün ekle</DialogTitle>
+        </OpsDialogHeader>
+        <form onSubmit={submit} className="flex min-h-0 flex-1 flex-col">
+          <OpsDialogBody className="grid gap-3 md:grid-cols-2">
           <Field label="Paketlenebilir kaynak satırı">
             <AppDropdown
               value={f.sourceLineId}
@@ -793,11 +811,14 @@ function PackLineModal({
               }
             />
           </Field>
-          <button className="md:col-span-2 rounded-xl bg-cyan-500 py-2 font-bold text-slate-950">
+          </OpsDialogBody>
+          <OpsDialogFooter>
+          <button className="w-full rounded-xl bg-cyan-500 py-2 font-bold text-slate-950 md:col-span-2">
             Ürünü ekle
           </button>
+          </OpsDialogFooter>
         </form>
-      </DialogContent>
+      </OpsDialogContent>
     </Dialog>
   );
 }

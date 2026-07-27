@@ -13,6 +13,7 @@ import {
   systemColumns,
   requiredActionColumn,
 } from "@/components/shared/GridSystemColumns";
+import { OpsStatusBadge } from "@/components/shared/OpsStatusBadge";
 import { useAuthStore } from "@/stores/auth-store";
 import { qualityApi, type QualityRule } from "../api/quality.api";
 import { localizeEnumValue } from "@/lib/enum-localization";
@@ -65,7 +66,11 @@ export function QualityRulesPage() {
       {
         key: "isActive",
         label: "Durum",
-        render: (r) => (r.isActive ? "Aktif" : "Pasif"),
+        render: (r) => (
+          <OpsStatusBadge tone={r.isActive ? "done" : "pending"}>
+            {r.isActive ? "Aktif" : "Pasif"}
+          </OpsStatusBadge>
+        ),
       },
       {
         key: "actions",

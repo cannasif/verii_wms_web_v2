@@ -9,6 +9,7 @@ import {
   type GridRequest,
 } from '@/components/shared/AdvancedDataGrid';
 import { systemColumns } from '@/components/shared/GridSystemColumns';
+import { OpsStatusBadge, inferOpsStatusTone } from '@/components/shared/OpsStatusBadge';
 import { formatProjectNumber } from '@/lib/project-format';
 import { steelReceiptApi } from '../api/steel-receipt.api';
 import type { SteelLineRow } from '../types/steel-receipt.types';
@@ -79,10 +80,10 @@ export function SteelReceiptReportsPage(): ReactElement {
     { key: 'arrivedQuantity', label: t(`${G}.arrivedQuantity`), sortable: true, filterable: true, render: row => formatProjectNumber(row.arrivedQuantity) },
     { key: 'approvedQuantity', label: t(`${G}.approvedQuantity`), sortable: true, filterable: true, render: row => formatProjectNumber(row.approvedQuantity) },
     { key: 'rejectedQuantity', label: t(`${G}.rejectedQuantity`), sortable: true, filterable: true, render: row => formatProjectNumber(row.rejectedQuantity) },
-    { key: 'arrivalStatus', label: t(`${G}.arrivalStatus`), sortable: true, filterable: true, render: row => statusLabel(row.arrivalStatus) },
-    { key: 'inspectionStatus', label: t(`${G}.inspectionStatus`), sortable: true, filterable: true, render: row => statusLabel(row.inspectionStatus) },
-    { key: 'conversionStatus', label: t(`${G}.conversionStatus`), sortable: true, filterable: true, render: row => statusLabel(row.conversionStatus) },
-    { key: 'putawayStatus', label: t(`${G}.putawayStatus`), sortable: true, filterable: true, render: row => statusLabel(row.putawayStatus) },
+    { key: 'arrivalStatus', label: t(`${G}.arrivalStatus`), sortable: true, filterable: true, render: row => <OpsStatusBadge tone={inferOpsStatusTone(row.arrivalStatus)}>{statusLabel(row.arrivalStatus)}</OpsStatusBadge> },
+    { key: 'inspectionStatus', label: t(`${G}.inspectionStatus`), sortable: true, filterable: true, render: row => <OpsStatusBadge tone={inferOpsStatusTone(row.inspectionStatus)}>{statusLabel(row.inspectionStatus)}</OpsStatusBadge> },
+    { key: 'conversionStatus', label: t(`${G}.conversionStatus`), sortable: true, filterable: true, render: row => <OpsStatusBadge tone={inferOpsStatusTone(row.conversionStatus)}>{statusLabel(row.conversionStatus)}</OpsStatusBadge> },
+    { key: 'putawayStatus', label: t(`${G}.putawayStatus`), sortable: true, filterable: true, render: row => <OpsStatusBadge tone={inferOpsStatusTone(row.putawayStatus)}>{statusLabel(row.putawayStatus)}</OpsStatusBadge> },
     { key: 'goodsReceiptNo', label: t(`${G}.goodsReceiptNo`), sortable: true, filterable: true, render: row => row.goodsReceiptNo || '—' },
   ], [statusLabel, t, gridLanguage]);
 

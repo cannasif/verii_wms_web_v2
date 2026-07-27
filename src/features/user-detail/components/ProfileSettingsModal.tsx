@@ -261,6 +261,8 @@ export function ProfileSettingsModal({ open, onOpenChange }: ProfileSettingsModa
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
           showCloseButton
+          tone="plain"
+          portalRoot="body"
           className={cn(
             'wms-ops-profile-settings wms-ops-form flex h-full max-h-[100dvh] w-full max-w-[min(100vw,24rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-[28rem]',
             '!fixed !top-0 !right-0 !bottom-0 !left-auto !flex !translate-x-0 !translate-y-0',

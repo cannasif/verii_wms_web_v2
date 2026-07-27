@@ -5,7 +5,8 @@ import { Eye, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdvancedDataGrid, type GridColumn } from '@/components/shared/AdvancedDataGrid';
 import { systemColumns } from '@/components/shared/GridSystemColumns';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { OpsDialogBody, OpsDialogContent, OpsDialogHeader } from '@/components/shared/OpsDialogShell';
+import { Dialog, DialogTitle } from '@/components/ui/dialog';
 import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
 import { localizeEnumValue } from '@/lib/enum-localization';
 import { stockBalancesApi } from '../api/stock-balances.api';
@@ -144,47 +145,53 @@ export function WarehouseBalancesPage() {
       />
       {(detail || loading) && (
         <Dialog open onOpenChange={v => { if (!v) setDetail(null); }}>
-          <DialogContent className="max-h-[calc(100%-2rem)] w-full !max-w-6xl overflow-auto rounded-2xl">
+          <OpsDialogContent size="full" portalRoot="body">
             {!detail ? (
-              <div className="grid h-48 place-items-center"><Loader2 className="size-7 animate-spin" /></div>
+              <OpsDialogBody>
+                <div className="grid h-48 place-items-center"><Loader2 className="size-7 animate-spin" /></div>
+              </OpsDialogBody>
             ) : (
               <>
-                <DialogTitle>{detail.summary.stockCode} · {detail.summary.warehouseName}</DialogTitle>
-                <div className="mt-3 grid gap-3 sm:grid-cols-4">
-                  <SummaryCard label={t(`${W}.quantity`)} value={detail.summary.quantity} />
-                  <SummaryCard label={t(`${W}.reservedQuantity`)} value={detail.summary.reservedQuantity} />
-                  <SummaryCard label={t(`${W}.availableQuantity`)} value={detail.summary.availableQuantity} />
-                  <SummaryCard label={t(`${W}.locationLabel`)} value={detail.summary.distinctLocationCount} />
-                </div>
-                <div className="mt-5 overflow-x-auto rounded-xl border">
-                  <table className="w-full min-w-[900px] text-sm">
-                    <thead>
-                      <tr className="bg-slate-100 dark:bg-white/5">
-                        <th className="p-3 text-left">{t(`${W}.locationLabel`)}</th>
-                        <th className="p-3 text-left">{t(`${W}.yapLotSerial`)}</th>
-                        <th className="p-3 text-left">{t(`${W}.stockStatus`)}</th>
-                        <th className="p-3 text-right">{t(`${W}.quantity`)}</th>
-                        <th className="p-3 text-right">{t(`${W}.reservedQuantity`)}</th>
-                        <th className="p-3 text-right">{t(`${W}.availableQuantity`)}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {detail.locations.map(r => (
-                        <tr key={r.id} className="border-t">
-                          <td className="p-3"><strong>{r.locationCode}</strong><small className="block text-slate-500">{r.locationName}</small></td>
-                          <td className="p-3">{r.yapCode || '-'} / {r.lotNo || '-'} / {r.serialNo || '-'}</td>
-                          <td className="p-3">{localizeEnumValue(r.stockStatus)}</td>
-                          <td className="p-3 text-right">{quantity(r.quantity)}</td>
-                          <td className="p-3 text-right">{quantity(r.reservedQuantity)}</td>
-                          <td className="p-3 text-right">{quantity(r.availableQuantity)}</td>
+                <OpsDialogHeader>
+                  <DialogTitle className="wms-ops-detail-dialog__title">{detail.summary.stockCode} · {detail.summary.warehouseName}</DialogTitle>
+                </OpsDialogHeader>
+                <OpsDialogBody>
+                  <div className="grid gap-3 sm:grid-cols-4">
+                    <SummaryCard label={t(`${W}.quantity`)} value={detail.summary.quantity} />
+                    <SummaryCard label={t(`${W}.reservedQuantity`)} value={detail.summary.reservedQuantity} />
+                    <SummaryCard label={t(`${W}.availableQuantity`)} value={detail.summary.availableQuantity} />
+                    <SummaryCard label={t(`${W}.locationLabel`)} value={detail.summary.distinctLocationCount} />
+                  </div>
+                  <div className="mt-5 overflow-x-auto rounded-xl border">
+                    <table className="w-full min-w-[900px] text-sm">
+                      <thead>
+                        <tr className="bg-slate-100 dark:bg-white/5">
+                          <th className="p-3 text-left">{t(`${W}.locationLabel`)}</th>
+                          <th className="p-3 text-left">{t(`${W}.yapLotSerial`)}</th>
+                          <th className="p-3 text-left">{t(`${W}.stockStatus`)}</th>
+                          <th className="p-3 text-right">{t(`${W}.quantity`)}</th>
+                          <th className="p-3 text-right">{t(`${W}.reservedQuantity`)}</th>
+                          <th className="p-3 text-right">{t(`${W}.availableQuantity`)}</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {detail.locations.map(r => (
+                          <tr key={r.id} className="border-t">
+                            <td className="p-3"><strong>{r.locationCode}</strong><small className="block text-slate-500">{r.locationName}</small></td>
+                            <td className="p-3">{r.yapCode || '-'} / {r.lotNo || '-'} / {r.serialNo || '-'}</td>
+                            <td className="p-3">{localizeEnumValue(r.stockStatus)}</td>
+                            <td className="p-3 text-right">{quantity(r.quantity)}</td>
+                            <td className="p-3 text-right">{quantity(r.reservedQuantity)}</td>
+                            <td className="p-3 text-right">{quantity(r.availableQuantity)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </OpsDialogBody>
               </>
             )}
-          </DialogContent>
+          </OpsDialogContent>
         </Dialog>
       )}
     </div>
@@ -254,10 +261,12 @@ export function SerialBalancesPage() {
       />
       {selected && (
         <Dialog open onOpenChange={open => { if (!open) setSelected(null); }}>
-          <DialogContent className="max-h-[calc(100%-2rem)] w-full !max-w-7xl overflow-auto rounded-2xl">
-            <DialogTitle>{t(`${S}.historyTitle`, { stockCode: selected.stockCode, serialNo: selected.serialNo })}</DialogTitle>
-            <p className="text-sm text-slate-500">{t(`${S}.historyDescription`)}</p>
-            <div className="mt-4">
+          <OpsDialogContent size="full" portalRoot="body" className="sm:max-w-7xl">
+            <OpsDialogHeader>
+              <DialogTitle className="wms-ops-detail-dialog__title">{t(`${S}.historyTitle`, { stockCode: selected.stockCode, serialNo: selected.serialNo })}</DialogTitle>
+              <p className="text-sm text-slate-500">{t(`${S}.historyDescription`)}</p>
+            </OpsDialogHeader>
+            <OpsDialogBody>
               <AdvancedDataGrid
                 pageKey={`serial-movement-history-${selected.id}`}
                 title={t(`${S}.historyGridTitle`)}
@@ -270,8 +279,8 @@ export function SerialBalancesPage() {
                 columns={historyColumns}
                 fetchPage={fetchHistory}
               />
-            </div>
-          </DialogContent>
+            </OpsDialogBody>
+          </OpsDialogContent>
         </Dialog>
       )}
     </div>

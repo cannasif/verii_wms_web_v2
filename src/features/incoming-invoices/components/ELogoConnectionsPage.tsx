@@ -3,6 +3,7 @@ import { CheckCircle2, Edit3, Loader2, Plus, Save, ShieldCheck, Trash2, X } from
 import { toast } from 'sonner';
 import { AdvancedDataGrid, type GridColumn } from '@/components/shared/AdvancedDataGrid';
 import { requiredActionColumn, systemColumns } from '@/components/shared/GridSystemColumns';
+import { OpsStatusBadge } from '@/components/shared/OpsStatusBadge';
 import { AppInput } from '@/components/shared/AppInput';
 import { ResponsiveDialog } from '@/components/shared/ResponsiveDialog';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
@@ -39,9 +40,9 @@ export function ELogoConnectionsPage(): ReactElement {
       { key: 'vkn', label: t('connections.columns.vkn'), sortable: true, filterable: true, render: (row) => row.vkn },
       { key: 'username', label: t('connections.columns.username'), sortable: true, filterable: true, render: (row) => row.username },
       { key: 'source', label: t('connections.columns.source'), sortable: true, filterable: true, render: (row) => row.source },
-      { key: 'isConfigured', label: t('connections.columns.configured'), sortable: true, filterable: true, filterType: 'boolean', render: (row) => row.isConfigured ? <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-bold text-emerald-600"><CheckCircle2 className="size-3.5" />{t('common.yes')}</span> : <span className="text-rose-500">{t('common.no')}</span> },
-      { key: 'isDefault', label: t('connections.columns.default'), sortable: true, filterable: true, filterType: 'boolean', render: (row) => row.isDefault ? t('common.yes') : t('common.no') },
-      { key: 'isActive', label: t('connections.columns.active'), sortable: true, filterable: true, filterType: 'boolean', render: (row) => row.isActive ? t('common.yes') : t('common.no') },
+      { key: 'isConfigured', label: t('connections.columns.configured'), sortable: true, filterable: true, filterType: 'boolean', render: (row) => row.isConfigured ? <OpsStatusBadge tone="done" className="gap-1"><CheckCircle2 className="size-3.5" />{t('common.yes')}</OpsStatusBadge> : <OpsStatusBadge tone="danger">{t('common.no')}</OpsStatusBadge> },
+      { key: 'isDefault', label: t('connections.columns.default'), sortable: true, filterable: true, filterType: 'boolean', render: (row) => row.isDefault ? <OpsStatusBadge tone="done">{t('common.yes')}</OpsStatusBadge> : <OpsStatusBadge tone="pending">{t('common.no')}</OpsStatusBadge> },
+      { key: 'isActive', label: t('connections.columns.active'), sortable: true, filterable: true, filterType: 'boolean', render: (row) => row.isActive ? <OpsStatusBadge tone="done">{t('common.yes')}</OpsStatusBadge> : <OpsStatusBadge tone="pending">{t('common.no')}</OpsStatusBadge> },
       {
         key: 'actions', label: t('columns.actions'), ...requiredActionColumn,
         render: (row) => <div className="flex gap-1"><button type="button" aria-label={t('actions.edit')} title={t('actions.edit')} onClick={() => setEditing(row)} className="grid size-11 place-items-center rounded-xl text-cyan-600 hover:bg-cyan-500/10"><Edit3 className="size-4" /></button><button type="button" aria-label={t('actions.delete')} title={t('actions.delete')} disabled={deleting === row.id} onClick={() => void remove(row)} className="grid size-11 place-items-center rounded-xl text-rose-500 hover:bg-rose-500/10 disabled:opacity-50">{deleting === row.id ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}</button></div>,

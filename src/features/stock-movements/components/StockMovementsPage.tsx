@@ -1,12 +1,13 @@
 import { useCallback, useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { ArrowDownToLine, ArrowUpFromLine, Eye, Loader2, Plus, RotateCcw, X } from 'lucide-react';
+import { ArrowDownToLine, ArrowUpFromLine, Eye, Loader2, Plus, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdvancedDataGrid, type GridColumn } from '@/components/shared/AdvancedDataGrid';
 import { AppDropdown } from '@/components/shared/AppDropdown';
 import { systemColumns } from '@/components/shared/GridSystemColumns';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { OpsDialogBody, OpsDialogContent, OpsDialogFooter, OpsDialogHeader } from '@/components/shared/OpsDialogShell';
+import { Dialog, DialogTitle } from '@/components/ui/dialog';
 import { formatProjectDateTime, formatProjectNumber } from '@/lib/project-format';
 import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
 import { stockMovementsApi } from '../api/stock-movements.api';
@@ -61,9 +62,92 @@ export function StockMovementsPage() {
 
   return <div data-no-auto-localize="true">
     <AdvancedDataGrid pageKey="stock-movements" title={t(`${G}.title`)} description={t(`${G}.description`)} columns={columns} fetchPage={stockMovementsApi.getPaged} toolbarAction={allow('WMS.STOCK_MOVEMENTS.POST') ? { label: t(`${G}.toolbarAction`), run: openCreate } : undefined} />
-    {formOpen && <Dialog open onOpenChange={open => { if (!open && !saving) setFormOpen(false); }}><DialogContent showCloseButton={false} className="max-h-[calc(100%-2rem)] w-full !max-w-4xl overflow-auto rounded-2xl" data-no-auto-localize="true"><div className="flex items-start justify-between"><div><DialogTitle className="text-xl font-bold">{t(`${P}.formTitle`)}</DialogTitle><p className="mt-1 text-sm text-slate-500">{t(`${P}.formDescription`)}</p></div><button type="button" onClick={() => setFormOpen(false)} className="rounded-lg border p-2"><X className="size-4" /></button></div><form onSubmit={submit} className="mt-5 space-y-5"><div className="grid gap-4 md:grid-cols-3"><Field label={t(`${P}.operationType`)}><AppDropdown value={form.operationType} onValueChange={(value) => { setForm(current => ({ ...newForm(), idempotencyKey: current.idempotencyKey, operationType: value })); setSourceLocations([]); setTargetLocations([]); }} options={operationOptions} ariaLabel={t(`${P}.operationType`)} /></Field><Field label={t(`${P}.stock`)}><AppDropdown value={form.stockId} onValueChange={(value) => { const selected = stocks.find(item => String(item.id) === value); setForm(current => ({ ...current, stockId: value, unitCode: selected?.unitCode ?? '' })); }} options={stocks.map((item) => ({ value: String(item.id), label: `${item.erpStockCode} - ${item.stockName}`, description: item.unitCode ? t(`${P}.unitLabel`, { unit: item.unitCode }) : t(`${P}.unitUndefined`) }))} placeholder={t(`${P}.selectStock`)} ariaLabel={t(`${P}.stock`)} searchable /></Field><Field label={t(`${P}.quantity`)}><input type="number" min="0.000001" step="0.000001" value={form.quantity} onChange={e => setValue('quantity', e.target.value)} className="input" /></Field></div>{needsSource && <section className="rounded-xl border p-4"><h3 className="mb-3 flex items-center gap-2 font-semibold text-red-600"><ArrowUpFromLine className="size-4" />{t(`${P}.sourceSection`)}</h3><div className="grid gap-4 sm:grid-cols-2"><Field label={t(`${P}.sourceWarehouse`)}><AppDropdown value={form.sourceWarehouseId} onValueChange={(value) => void selectWarehouse('source', value)} options={warehouses.map((item) => ({ value: String(item.id), label: `${item.warehouseCode} - ${item.warehouseName}` }))} placeholder={t(`${P}.selectWarehouse`)} ariaLabel={t(`${P}.sourceWarehouse`)} searchable /></Field><Field label={t(`${P}.sourceLocation`)}><AppDropdown value={form.sourceLocationId} onValueChange={(value) => setValue('sourceLocationId', value)} options={sourceLocations.map((item) => ({ value: String(item.id), label: `${item.code} - ${item.name}` }))} placeholder={t(`${P}.selectLocation`)} ariaLabel={t(`${P}.sourceLocation`)} searchable /></Field></div></section>}{needsTarget && <section className="rounded-xl border p-4"><h3 className="mb-3 flex items-center gap-2 font-semibold text-emerald-600"><ArrowDownToLine className="size-4" />{t(`${P}.targetSection`)}</h3><div className="grid gap-4 sm:grid-cols-2"><Field label={t(`${P}.targetWarehouse`)}><AppDropdown value={form.targetWarehouseId} onValueChange={(value) => void selectWarehouse('target', value)} options={warehouses.map((item) => ({ value: String(item.id), label: `${item.warehouseCode} - ${item.warehouseName}` }))} placeholder={t(`${P}.selectWarehouse`)} ariaLabel={t(`${P}.targetWarehouse`)} searchable /></Field><Field label={t(`${P}.targetLocation`)}><AppDropdown value={form.targetLocationId} onValueChange={(value) => setValue('targetLocationId', value)} options={targetLocations.map((item) => ({ value: String(item.id), label: `${item.code} - ${item.name}` }))} placeholder={t(`${P}.selectLocation`)} ariaLabel={t(`${P}.targetLocation`)} searchable /></Field></div></section>}<div className="grid gap-4 md:grid-cols-4"><Field label={t(`${P}.unit`)}><div className={`input flex items-center font-bold ${form.unitCode ? 'text-cyan-600' : 'text-amber-600'}`}>{form.unitCode || t(`${P}.selectStockFirst`)}</div></Field><Field label={t(`${P}.lot`)}><input value={form.lotNo} maxLength={100} onChange={e => setValue('lotNo', e.target.value)} className="input" /></Field><Field label={t(`${P}.serial`)}><input value={form.serialNo} maxLength={100} onChange={e => setValue('serialNo', e.target.value)} className="input" /></Field><Field label={t(`${P}.stockStatus`)}><AppDropdown value={form.stockStatus} onValueChange={(value) => setValue('stockStatus', value)} options={stockStatusOptions} ariaLabel={t(`${P}.stockStatus`)} /></Field><Field label={t(`${P}.referenceType`)}><input value={form.referenceType} maxLength={50} onChange={e => setValue('referenceType', e.target.value)} className="input" /></Field><Field label={t(`${P}.referenceNo`)}><input value={form.referenceNo} maxLength={100} onChange={e => setValue('referenceNo', e.target.value)} className="input" /></Field><Field label={t(`${P}.reason`)}><input value={form.reason} maxLength={500} onChange={e => setValue('reason', e.target.value)} className="input" /></Field><Field label={t(`${P}.idempotency`)}><input readOnly value={form.idempotencyKey} className="input font-mono text-xs opacity-70" /></Field></div><Field label={t(`${P}.description`)}><textarea value={form.description} maxLength={1000} rows={3} onChange={e => setValue('description', e.target.value)} className="w-full rounded-xl border bg-transparent px-3 py-2" /></Field><div className="flex justify-end gap-2 border-t pt-4"><button type="button" onClick={() => setFormOpen(false)} className="rounded-xl border px-4 py-2">{t(`${P}.cancel`)}</button><button type="submit" disabled={saving} className="inline-flex items-center gap-2 rounded-xl bg-[var(--wms-brand-primary)] px-4 py-2 font-semibold text-white disabled:opacity-50">{saving ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}{t(`${P}.save`)}</button></div></form></DialogContent></Dialog>}
-    {(detail || loadingDetail) && <Dialog open onOpenChange={open => { if (!open) setDetail(null); }}><DialogContent className="max-h-[calc(100%-2rem)] w-full !max-w-5xl overflow-auto rounded-2xl" data-no-auto-localize="true">{!detail ? <div className="grid h-48 place-items-center"><Loader2 className="size-7 animate-spin" /></div> : <><DialogTitle>{t(`${P}.detailTitle`, { id: detail.id })}</DialogTitle><div className="mt-3 grid gap-3 sm:grid-cols-4"><Info label={t(`${P}.detailCode`)} value={detail.operationCode} /><Info label={t(`${P}.detailType`)} value={typeLabel(detail.operationType)} /><Info label={t(`${P}.detailReference`)} value={detail.referenceNo || '-'} /><Info label={t(`${P}.detailTime`)} value={formatProjectDateTime(detail.occurredAt)} /></div><div className="mt-5 overflow-x-auto rounded-xl border"><table className="w-full min-w-[900px] text-sm"><thead><tr className="bg-slate-100 dark:bg-white/[.05]"><th className="p-3 text-left">{t(`${P}.detailLine`)}</th><th className="p-3 text-left">{t(`${P}.detailStock`)}</th><th className="p-3 text-left">{t(`${P}.detailWarehouseLocation`)}</th><th className="p-3 text-left">{t(`${P}.detailLotSerial`)}</th><th className="p-3 text-right">{t(`${P}.detailQuantity`)}</th></tr></thead><tbody>{detail.entries.map(e => <tr key={e.id} className="border-t"><td className="p-3">{e.lineNo}</td><td className="p-3"><strong>{e.stockCode}</strong><small className="block text-slate-500">{e.stockName}</small></td><td className="p-3">{e.warehouseCode} / {e.locationCode}</td><td className="p-3">{e.lotNo || '-'} / {e.serialNo || '-'}</td><td className={`p-3 text-right font-bold ${e.quantityDelta > 0 ? 'text-emerald-600' : 'text-red-600'}`}>{e.quantityDelta > 0 ? '+' : ''}{formatProjectNumber(e.quantityDelta)} {e.unitCode}</td></tr>)}</tbody></table></div></>}</DialogContent></Dialog>}
-    {reverseTarget && <Dialog open onOpenChange={open => { if (!open && !saving) setReverseTarget(null); }}><DialogContent className="w-full !max-w-md rounded-2xl" data-no-auto-localize="true"><DialogTitle>{t(`${P}.reverseTitle`)}</DialogTitle><p className="mt-2 text-sm text-slate-500">{t(`${P}.reverseDescription`, { id: reverseTarget.id })}</p><textarea autoFocus value={reverseReason} onChange={e => setReverseReason(e.target.value)} rows={3} maxLength={500} placeholder={t(`${P}.reverseReasonPlaceholder`)} className="mt-4 w-full rounded-xl border bg-transparent p-3" /><div className="mt-4 flex justify-end gap-2"><button type="button" onClick={() => setReverseTarget(null)} className="rounded-xl border px-4 py-2">{t(`${P}.cancel`)}</button><button type="button" disabled={saving} onClick={reverse} className="rounded-xl bg-amber-600 px-4 py-2 text-white">{t(`${P}.reverseButton`)}</button></div></DialogContent></Dialog>}
+    {formOpen && (
+      <Dialog open onOpenChange={open => { if (!open && !saving) setFormOpen(false); }}>
+        <OpsDialogContent size="xl" className="data-no-auto-localize">
+          <OpsDialogHeader>
+            <div>
+              <DialogTitle className="wms-ops-detail-dialog__title text-xl font-bold">{t(`${P}.formTitle`)}</DialogTitle>
+              <p className="mt-1 text-sm text-slate-500">{t(`${P}.formDescription`)}</p>
+            </div>
+          </OpsDialogHeader>
+          <form onSubmit={submit} className="flex min-h-0 flex-1 flex-col">
+            <OpsDialogBody className="space-y-5">
+              <div className="grid gap-4 md:grid-cols-3">
+                <Field label={t(`${P}.operationType`)}><AppDropdown value={form.operationType} onValueChange={(value) => { setForm(current => ({ ...newForm(), idempotencyKey: current.idempotencyKey, operationType: value })); setSourceLocations([]); setTargetLocations([]); }} options={operationOptions} ariaLabel={t(`${P}.operationType`)} /></Field>
+                <Field label={t(`${P}.stock`)}><AppDropdown value={form.stockId} onValueChange={(value) => { const selected = stocks.find(item => String(item.id) === value); setForm(current => ({ ...current, stockId: value, unitCode: selected?.unitCode ?? '' })); }} options={stocks.map((item) => ({ value: String(item.id), label: `${item.erpStockCode} - ${item.stockName}`, description: item.unitCode ? t(`${P}.unitLabel`, { unit: item.unitCode }) : t(`${P}.unitUndefined`) }))} placeholder={t(`${P}.selectStock`)} ariaLabel={t(`${P}.stock`)} searchable /></Field>
+                <Field label={t(`${P}.quantity`)}><input type="number" min="0.000001" step="0.000001" value={form.quantity} onChange={e => setValue('quantity', e.target.value)} className="input" /></Field>
+              </div>
+              {needsSource && <section className="rounded-xl border p-4"><h3 className="mb-3 flex items-center gap-2 font-semibold text-red-600"><ArrowUpFromLine className="size-4" />{t(`${P}.sourceSection`)}</h3><div className="grid gap-4 sm:grid-cols-2"><Field label={t(`${P}.sourceWarehouse`)}><AppDropdown value={form.sourceWarehouseId} onValueChange={(value) => void selectWarehouse('source', value)} options={warehouses.map((item) => ({ value: String(item.id), label: `${item.warehouseCode} - ${item.warehouseName}` }))} placeholder={t(`${P}.selectWarehouse`)} ariaLabel={t(`${P}.sourceWarehouse`)} searchable /></Field><Field label={t(`${P}.sourceLocation`)}><AppDropdown value={form.sourceLocationId} onValueChange={(value) => setValue('sourceLocationId', value)} options={sourceLocations.map((item) => ({ value: String(item.id), label: `${item.code} - ${item.name}` }))} placeholder={t(`${P}.selectLocation`)} ariaLabel={t(`${P}.sourceLocation`)} searchable /></Field></div></section>}
+              {needsTarget && <section className="rounded-xl border p-4"><h3 className="mb-3 flex items-center gap-2 font-semibold text-emerald-600"><ArrowDownToLine className="size-4" />{t(`${P}.targetSection`)}</h3><div className="grid gap-4 sm:grid-cols-2"><Field label={t(`${P}.targetWarehouse`)}><AppDropdown value={form.targetWarehouseId} onValueChange={(value) => void selectWarehouse('target', value)} options={warehouses.map((item) => ({ value: String(item.id), label: `${item.warehouseCode} - ${item.warehouseName}` }))} placeholder={t(`${P}.selectWarehouse`)} ariaLabel={t(`${P}.targetWarehouse`)} searchable /></Field><Field label={t(`${P}.targetLocation`)}><AppDropdown value={form.targetLocationId} onValueChange={(value) => setValue('targetLocationId', value)} options={targetLocations.map((item) => ({ value: String(item.id), label: `${item.code} - ${item.name}` }))} placeholder={t(`${P}.selectLocation`)} ariaLabel={t(`${P}.targetLocation`)} searchable /></Field></div></section>}
+              <div className="grid gap-4 md:grid-cols-4">
+                <Field label={t(`${P}.unit`)}><div className={`input flex items-center font-bold ${form.unitCode ? 'text-cyan-600' : 'text-amber-600'}`}>{form.unitCode || t(`${P}.selectStockFirst`)}</div></Field>
+                <Field label={t(`${P}.lot`)}><input value={form.lotNo} maxLength={100} onChange={e => setValue('lotNo', e.target.value)} className="input" /></Field>
+                <Field label={t(`${P}.serial`)}><input value={form.serialNo} maxLength={100} onChange={e => setValue('serialNo', e.target.value)} className="input" /></Field>
+                <Field label={t(`${P}.stockStatus`)}><AppDropdown value={form.stockStatus} onValueChange={(value) => setValue('stockStatus', value)} options={stockStatusOptions} ariaLabel={t(`${P}.stockStatus`)} /></Field>
+                <Field label={t(`${P}.referenceType`)}><input value={form.referenceType} maxLength={50} onChange={e => setValue('referenceType', e.target.value)} className="input" /></Field>
+                <Field label={t(`${P}.referenceNo`)}><input value={form.referenceNo} maxLength={100} onChange={e => setValue('referenceNo', e.target.value)} className="input" /></Field>
+                <Field label={t(`${P}.reason`)}><input value={form.reason} maxLength={500} onChange={e => setValue('reason', e.target.value)} className="input" /></Field>
+                <Field label={t(`${P}.idempotency`)}><input readOnly value={form.idempotencyKey} className="input font-mono text-xs opacity-70" /></Field>
+              </div>
+              <Field label={t(`${P}.description`)}><textarea value={form.description} maxLength={1000} rows={3} onChange={e => setValue('description', e.target.value)} className="w-full rounded-xl border bg-transparent px-3 py-2" /></Field>
+            </OpsDialogBody>
+            <OpsDialogFooter>
+              <button type="button" onClick={() => setFormOpen(false)} className="rounded-xl border px-4 py-2">{t(`${P}.cancel`)}</button>
+              <button type="submit" disabled={saving} className="inline-flex items-center gap-2 rounded-xl bg-[var(--wms-brand-primary)] px-4 py-2 font-semibold text-white disabled:opacity-50">{saving ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}{t(`${P}.save`)}</button>
+            </OpsDialogFooter>
+          </form>
+        </OpsDialogContent>
+      </Dialog>
+    )}
+    {(detail || loadingDetail) && (
+      <Dialog open onOpenChange={open => { if (!open) setDetail(null); }}>
+        <OpsDialogContent size="xl" className="data-no-auto-localize">
+          {!detail ? (
+            <OpsDialogBody>
+              <div className="grid h-48 place-items-center"><Loader2 className="size-7 animate-spin" /></div>
+            </OpsDialogBody>
+          ) : (
+            <>
+              <OpsDialogHeader>
+                <DialogTitle className="wms-ops-detail-dialog__title">{t(`${P}.detailTitle`, { id: detail.id })}</DialogTitle>
+              </OpsDialogHeader>
+              <OpsDialogBody>
+                <div className="grid gap-3 sm:grid-cols-4">
+                  <Info label={t(`${P}.detailCode`)} value={detail.operationCode} />
+                  <Info label={t(`${P}.detailType`)} value={typeLabel(detail.operationType)} />
+                  <Info label={t(`${P}.detailReference`)} value={detail.referenceNo || '-'} />
+                  <Info label={t(`${P}.detailTime`)} value={formatProjectDateTime(detail.occurredAt)} />
+                </div>
+                <div className="mt-5 overflow-x-auto rounded-xl border">
+                  <table className="w-full min-w-[900px] text-sm">
+                    <thead><tr className="bg-slate-100 dark:bg-white/[.05]"><th className="p-3 text-left">{t(`${P}.detailLine`)}</th><th className="p-3 text-left">{t(`${P}.detailStock`)}</th><th className="p-3 text-left">{t(`${P}.detailWarehouseLocation`)}</th><th className="p-3 text-left">{t(`${P}.detailLotSerial`)}</th><th className="p-3 text-right">{t(`${P}.detailQuantity`)}</th></tr></thead>
+                    <tbody>{detail.entries.map(e => <tr key={e.id} className="border-t"><td className="p-3">{e.lineNo}</td><td className="p-3"><strong>{e.stockCode}</strong><small className="block text-slate-500">{e.stockName}</small></td><td className="p-3">{e.warehouseCode} / {e.locationCode}</td><td className="p-3">{e.lotNo || '-'} / {e.serialNo || '-'}</td><td className={`p-3 text-right font-bold ${e.quantityDelta > 0 ? 'text-emerald-600' : 'text-red-600'}`}>{e.quantityDelta > 0 ? '+' : ''}{formatProjectNumber(e.quantityDelta)} {e.unitCode}</td></tr>)}</tbody>
+                  </table>
+                </div>
+              </OpsDialogBody>
+            </>
+          )}
+        </OpsDialogContent>
+      </Dialog>
+    )}
+    {reverseTarget && (
+      <Dialog open onOpenChange={open => { if (!open && !saving) setReverseTarget(null); }}>
+        <OpsDialogContent size="md" className="wms-ops-delete-dialog data-no-auto-localize">
+          <OpsDialogHeader>
+            <DialogTitle className="wms-ops-detail-dialog__title wms-ops-delete-dialog__title">{t(`${P}.reverseTitle`)}</DialogTitle>
+          </OpsDialogHeader>
+          <OpsDialogBody className="wms-ops-delete-dialog__body space-y-4">
+            <p className="wms-ops-delete-dialog__message text-sm text-slate-500">{t(`${P}.reverseDescription`, { id: reverseTarget.id })}</p>
+            <textarea autoFocus value={reverseReason} onChange={e => setReverseReason(e.target.value)} rows={3} maxLength={500} placeholder={t(`${P}.reverseReasonPlaceholder`)} className="w-full rounded-xl border bg-transparent p-3" />
+          </OpsDialogBody>
+          <OpsDialogFooter className="wms-ops-delete-dialog__footer">
+            <button type="button" onClick={() => setReverseTarget(null)} className="rounded-xl border px-4 py-2">{t(`${P}.cancel`)}</button>
+            <button type="button" disabled={saving} onClick={reverse} className="wms-ops-action-btn wms-ops-delete-btn rounded-xl bg-amber-600 px-4 py-2 text-white">{t(`${P}.reverseButton`)}</button>
+          </OpsDialogFooter>
+        </OpsDialogContent>
+      </Dialog>
+    )}
   </div>;
 }
 function Field({ label, children }: { label: string; children: ReactNode }) { return <label className="space-y-1.5 text-sm"><span className="font-medium">{label}</span>{children}</label> }

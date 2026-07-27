@@ -150,7 +150,7 @@ export function WarehouseInboundLifecycleDialog({ action, detail, onClose, onCom
   };
 
   return (
-    <ResponsiveDialog onClose={onClose} title={content.title} description={`${detail.header.documentNo} · ${content.description}`} className="!max-w-5xl">
+    <ResponsiveDialog onClose={onClose} framed={false} title={content.title} description={`${detail.header.documentNo} · ${content.description}`} className="!max-w-5xl">
       <form onSubmit={(event) => void submit(event)}>
         <header className="flex items-start gap-3">
           <span className={content.destructive ? 'rounded-xl bg-rose-500/15 p-2.5 text-rose-500' : 'rounded-xl bg-cyan-500/15 p-2.5 text-cyan-500'}>{content.icon}</span>

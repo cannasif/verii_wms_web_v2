@@ -4,7 +4,8 @@ import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { AdvancedDataGrid, type GridColumn } from '@/components/shared/AdvancedDataGrid';
 import { systemColumns, type AuditableGridRow } from '@/components/shared/GridSystemColumns';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { OpsDialogBody, OpsDialogContent, OpsDialogHeader } from '@/components/shared/OpsDialogShell';
+import { Dialog, DialogTitle } from '@/components/ui/dialog';
 import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
 import { formatProjectDateTime } from '@/lib/project-format';
 import { getErpMirrorPage, syncErpMirror } from '../api/erp-mirror.api';
@@ -119,17 +120,21 @@ function MirrorPage<T extends AuditableGridRow>({
       />
       {detail && (
         <Dialog open onOpenChange={open => { if (!open) setDetail(null); }}>
-          <DialogContent className="max-h-[calc(100%-2rem)] w-full !max-w-2xl overflow-auto rounded-2xl" data-no-auto-localize="true">
-            <DialogTitle>{t(`${M}.recordDetail`, { title, id: detail.id })}</DialogTitle>
-            <dl className="mt-4 grid gap-3 sm:grid-cols-2">
-              {Object.entries(detail).map(([key, value]) => (
-                <div key={key} className="rounded-xl border p-3">
-                  <dt className="text-xs font-semibold text-slate-500">{fieldLabel(t, key)}</dt>
-                  <dd className="mt-1 break-all text-sm">{value == null || value === '' ? '-' : String(value)}</dd>
-                </div>
-              ))}
-            </dl>
-          </DialogContent>
+          <OpsDialogContent size="xl" portalRoot="body" className="data-no-auto-localize">
+            <OpsDialogHeader>
+              <DialogTitle className="wms-ops-detail-dialog__title">{t(`${M}.recordDetail`, { title, id: detail.id })}</DialogTitle>
+            </OpsDialogHeader>
+            <OpsDialogBody>
+              <dl className="grid gap-3 sm:grid-cols-2">
+                {Object.entries(detail).map(([key, value]) => (
+                  <div key={key} className="rounded-xl border p-3">
+                    <dt className="text-xs font-semibold text-slate-500">{fieldLabel(t, key)}</dt>
+                    <dd className="mt-1 break-all text-sm">{value == null || value === '' ? '-' : String(value)}</dd>
+                  </div>
+                ))}
+              </dl>
+            </OpsDialogBody>
+          </OpsDialogContent>
         </Dialog>
       )}
     </>

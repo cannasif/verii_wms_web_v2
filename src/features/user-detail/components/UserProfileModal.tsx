@@ -170,34 +170,20 @@ export function UserProfileModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
+        portalRoot="body"
+        tone="plain"
         className={cn(
           'wms-ops-profile-modal gap-0 overflow-hidden border border-slate-200/80 bg-white p-0 text-slate-900',
           'shadow-[0_28px_70px_rgba(15,23,42,0.14)] dark:border-white/[0.08] dark:bg-[#09090f] dark:text-white dark:shadow-[0_28px_90px_rgba(0,0,0,0.62)]',
-          'grid w-[95vw] max-w-[95vw] grid-cols-1',
-          'max-h-[calc(100%_-_1rem)] overflow-y-auto',
-          'sm:max-h-[calc(100%_-_2rem)] sm:max-w-4xl sm:w-full',
-          'lg:!max-w-[1100px]',
-          'md:h-[calc(100%_-_2rem)] md:max-h-[760px] md:grid-cols-[320px_minmax(0,1fr)] md:overflow-hidden',
-          'lg:grid-cols-[380px_minmax(0,1fr)]',
+          'grid w-[min(95vw,1100px)] max-w-[min(95vw,1100px)] grid-cols-1',
+          '!h-[min(760px,calc(100dvh-2rem))] !max-h-[calc(100dvh-2rem)] !overflow-hidden [scrollbar-gutter:auto]',
+          'sm:w-full sm:max-w-4xl',
+          'md:grid-cols-[320px_minmax(0,1fr)]',
+          'lg:!max-w-[1100px] lg:grid-cols-[380px_minmax(0,1fr)]',
         )}
         aria-describedby="user-profile-description"
       >
         <DialogTitle className="sr-only">{t('sidebar.settings')}</DialogTitle>
-
-        <DialogClose
-          type="button"
-          className={cn(
-            'wms-ops-profile-modal__close absolute right-4 top-4 z-20 flex cursor-pointer items-center justify-center p-2.5 transition-[border-color,box-shadow,transform] duration-300 md:right-6 md:top-6',
-            'border border-slate-200/80 bg-white/80 text-slate-500',
-            'hover:border-red-300/50 hover:bg-red-50/90 hover:text-red-600 active:scale-90',
-            'dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-400',
-            'dark:hover:border-red-500/30 dark:hover:bg-red-950/30 dark:hover:text-red-400',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--wms-brand-ring)] focus-visible:ring-offset-0',
-          )}
-        >
-          <X className="h-5 w-5" strokeWidth={2.25} aria-hidden />
-          <span className="sr-only">{t('common.close')}</span>
-        </DialogClose>
 
         <aside
           id="user-profile-description"
@@ -252,18 +238,34 @@ export function UserProfileModal({
           </div>
         </aside>
 
-        <div className="wms-ops-profile-modal__panel flex h-full min-h-0 min-w-0 flex-col bg-slate-50/80 md:overflow-hidden dark:bg-[#07070c]">
-          <header className="wms-ops-profile-modal__header flex shrink-0 items-center gap-3 border-b border-dashed border-slate-200/70 px-6 pb-4 pt-14 sm:px-8 md:px-10 md:pt-8 dark:border-white/[0.08]">
-            <span
-              className="h-8 w-0.5 shrink-0 rounded-full bg-[var(--wms-brand-primary)] shadow-[0_0_10px_var(--wms-brand-shadow)]"
-              aria-hidden
-            />
-            <h2 className="text-xl font-bold uppercase tracking-[0.12em] text-slate-900 sm:text-2xl lg:text-3xl dark:text-white">
-              {t('sidebar.settings')}
-            </h2>
+        <div className="wms-ops-profile-modal__panel flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-slate-50/80 dark:bg-[#07070c]">
+          <header className="wms-ops-profile-modal__header flex shrink-0 items-center justify-between gap-3 border-b border-dashed border-slate-200/70 px-6 py-5 sm:px-8 md:px-10 dark:border-white/[0.08]">
+            <div className="flex min-w-0 items-center gap-3">
+              <span
+                className="h-8 w-0.5 shrink-0 rounded-full bg-[var(--wms-brand-primary)] shadow-[0_0_10px_var(--wms-brand-shadow)]"
+                aria-hidden
+              />
+              <h2 className="text-xl font-bold uppercase tracking-[0.12em] text-slate-900 sm:text-2xl lg:text-3xl dark:text-white">
+                {t('sidebar.settings')}
+              </h2>
+            </div>
+            <DialogClose
+              type="button"
+              className={cn(
+                'wms-ops-profile-modal__close flex size-9 shrink-0 cursor-pointer items-center justify-center transition-[border-color,box-shadow,transform] duration-300',
+                'border border-slate-200/80 bg-white/80 text-slate-500',
+                'hover:border-red-300/50 hover:bg-red-50/90 hover:text-red-600 active:scale-90',
+                'dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-400',
+                'dark:hover:border-red-500/30 dark:hover:bg-red-950/30 dark:hover:text-red-400',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--wms-brand-ring)] focus-visible:ring-offset-0',
+              )}
+            >
+              <X className="h-4 w-4" strokeWidth={2.25} aria-hidden />
+              <span className="sr-only">{t('common.close')}</span>
+            </DialogClose>
           </header>
 
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-y-auto px-6 py-4 sm:px-8 md:px-10">
+          <div className="wms-ops-scrollbar flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-x-hidden overflow-y-auto overscroll-contain px-6 py-4 sm:px-8 md:px-10">
             <button type="button" onClick={onOpenProfileDetails} className={settingsProfileRowClass}>
               <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
                 <span className={cn(settingsIconClass, 'bg-violet-600/90')}>
@@ -301,7 +303,7 @@ export function UserProfileModal({
                     aria-hidden
                   />
                 </span>
-                <span className="text-sm font-semibold text-slate-900 sm:text-base dark:text-white">
+                <span className="min-w-0 truncate text-sm font-semibold text-slate-900 sm:text-base dark:text-white">
                   {t('profile.settingsLanguage')}
                 </span>
               </div>
@@ -311,7 +313,16 @@ export function UserProfileModal({
                 options={languageOptions}
                 ariaLabel={t('profile.settingsLanguage')}
                 searchable
-                renderValue={() => <span className="flex items-center gap-2"><span aria-hidden>{currentLanguage.flagEmoji}</span><span className="font-semibold tracking-wide">{currentLanguage.flagLabel}</span></span>}
+                tone="plain"
+                portalContainer={null}
+                matchTriggerWidth={false}
+                contentAlign="end"
+                renderValue={() => (
+                  <span className="flex items-center gap-2">
+                    <span aria-hidden>{currentLanguage.flagEmoji}</span>
+                    <span className="font-semibold tracking-wide">{currentLanguage.flagLabel}</span>
+                  </span>
+                )}
                 className="wms-ops-profile-lang-trigger h-10 w-auto min-w-[6.5rem] shrink-0 px-3 text-sm font-semibold sm:h-11 sm:px-4 sm:text-base"
                 contentClassName="wms-ops-profile-lang-select wms-ops-scrollbar min-w-[15rem]"
               />

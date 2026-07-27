@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react';
 import {
   AlertTriangle, CheckCircle2, Download, Eye, FileArchive, FileText,
-  Loader2, PackageCheck, Search, ShieldCheck, UploadCloud, X,
+  Loader2, PackageCheck, Search, ShieldCheck, UploadCloud,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdvancedDataGrid, type GridColumn } from '@/components/shared/AdvancedDataGrid';
 import { requiredActionColumn, systemColumns } from '@/components/shared/GridSystemColumns';
+import { OpsStatusBadge } from '@/components/shared/OpsStatusBadge';
 import { AppDropdown } from '@/components/shared/AppDropdown';
 import { AppInput } from '@/components/shared/AppInput';
 import { ResponsiveDialog } from '@/components/shared/ResponsiveDialog';
@@ -51,8 +52,8 @@ export function IncomingInvoiceArchivePage(): ReactElement {
       { key: 'supplierName', label: t('columns.supplier'), sortable: true, filterable: true, render: (row) => row.supplierName || '—' },
       { key: 'payableAmount', label: t('columns.payable'), sortable: true, filterable: true, filterType: 'number', render: (row) => `${formatProjectNumber(row.payableAmount)} ${row.currencyCode}` },
       { key: 'lineCount', label: t('columns.lines'), sortable: true, filterable: true, filterType: 'number', render: (row) => `${row.matchedLineCount}/${row.lineCount}` },
-      { key: 'archiveStatus', label: t('columns.archiveStatus'), sortable: true, filterable: true, filterType: 'enum', render: (row) => <StatusBadge tone={row.archiveStatus === 'Linked' ? 'success' : row.archiveStatus === 'Rejected' ? 'danger' : 'warning'}>{archiveLabel(t, row.archiveStatus)}</StatusBadge> },
-      { key: 'validationStatus', label: t('columns.validation'), sortable: true, filterable: true, filterType: 'enum', render: (row) => <StatusBadge tone={row.validationStatus === 'Parsed' ? 'success' : row.validationStatus === 'Invalid' ? 'danger' : 'warning'}>{validationLabel(t, row.validationStatus)}</StatusBadge> },
+      { key: 'archiveStatus', label: t('columns.archiveStatus'), sortable: true, filterable: true, filterType: 'enum', render: (row) => <OpsStatusBadge tone={row.archiveStatus === 'Linked' ? 'done' : row.archiveStatus === 'Rejected' ? 'danger' : 'pending'}>{archiveLabel(t, row.archiveStatus)}</OpsStatusBadge> },
+      { key: 'validationStatus', label: t('columns.validation'), sortable: true, filterable: true, filterType: 'enum', render: (row) => <OpsStatusBadge tone={row.validationStatus === 'Parsed' ? 'done' : row.validationStatus === 'Invalid' ? 'danger' : 'pending'}>{validationLabel(t, row.validationStatus)}</OpsStatusBadge> },
       { key: 'importedAtUtc', label: t('columns.importedAt'), sortable: true, filterable: true, filterType: 'datetime', render: (row) => formatProjectDateTime(row.importedAtUtc) },
       {
         key: 'actions', label: t('columns.actions'), ...requiredActionColumn,
@@ -145,10 +146,11 @@ function ImportDialog({
     }
   };
 
-  return <ResponsiveDialog onClose={onClose} title={t('import.title')} className="max-h-[calc(100dvh-1rem)]">
-    <header className="flex items-start justify-between gap-3">
-      <div><p className="text-xs font-black uppercase tracking-[.18em] text-cyan-500">{t('import.eyebrow')}</p><h2 className="mt-1 text-xl font-black">{t('import.title')}</h2><p className="mt-1 text-sm text-slate-500">{t('import.description')}</p></div>
-      <button type="button" onClick={onClose} className="grid size-11 shrink-0 place-items-center rounded-xl hover:bg-black/5 dark:hover:bg-white/10"><X className="size-5" /></button>
+  return <ResponsiveDialog onClose={onClose} framed={false} title={t('import.title')} className="max-h-[calc(100dvh-1rem)]">
+    <header className="pr-14">
+      <p className="text-xs font-black uppercase tracking-[.18em] text-cyan-500">{t('import.eyebrow')}</p>
+      <h2 className="mt-1 text-xl font-black">{t('import.title')}</h2>
+      <p className="mt-1 text-sm text-slate-500">{t('import.description')}</p>
     </header>
     {!loading && connections.length === 0 && <div className="mt-5 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-700 dark:text-amber-300"><AlertTriangle className="mb-2 size-5" />{t('import.noConnection')}</div>}
     <div className="mt-5 grid gap-4 sm:grid-cols-2">
@@ -225,13 +227,12 @@ function InvoiceDetailDialog({
     }
   };
 
-  return <ResponsiveDialog onClose={onClose} title={detail.header.invoiceNo} className="max-h-[calc(100dvh-1rem)] !max-w-7xl">
-    <header className="flex flex-wrap items-start justify-between gap-3">
+  return <ResponsiveDialog onClose={onClose} framed={false} title={detail.header.invoiceNo} className="max-h-[calc(100dvh-1rem)] !max-w-7xl">
+    <header className="flex flex-wrap items-start justify-between gap-3 pr-12">
       <div><p className="text-xs font-black uppercase tracking-[.18em] text-cyan-500">{kindLabel(t, detail.header.documentKind)}</p><h2 className="mt-1 text-xl font-black sm:text-2xl">{detail.header.invoiceNo}</h2><p className="mt-1 break-all font-mono text-xs text-slate-500">{detail.header.uuid}</p></div>
       <div className="flex flex-wrap items-center gap-2">
         {detail.header.hasPdf && <DocumentButton label={t('actions.showPdf')} busy={documentBusy === 'Pdf'} icon={<FileText className="size-4" />} onClick={() => void openDocument('Pdf')} />}
         {detail.header.hasUbl && <DocumentButton label={t('actions.downloadUbl')} busy={documentBusy === 'UblXml'} icon={<Download className="size-4" />} onClick={() => void openDocument('UblXml')} />}
-        <button type="button" onClick={onClose} className="grid size-11 place-items-center rounded-xl hover:bg-black/5 dark:hover:bg-white/10"><X className="size-5" /></button>
       </div>
     </header>
     <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -254,10 +255,10 @@ function InvoiceDetailDialog({
       </div>
       <div className="mt-3 hidden overflow-x-auto rounded-2xl border border-[var(--wms-app-border)] md:block">
         <table className="w-full min-w-[1050px] text-sm"><thead className="bg-[var(--wms-app-panel-muted)] text-left"><tr><th className="p-3">#</th><th className="p-3">{t('detail.stock')}</th><th className="p-3">{t('detail.description')}</th><th className="p-3 text-right">{t('detail.quantity')}</th><th className="p-3 text-right">{t('detail.unitPrice')}</th><th className="p-3 text-right">{t('detail.tax')}</th><th className="p-3 text-right">{t('detail.total')}</th><th className="p-3">{t('detail.match')}</th></tr></thead>
-          <tbody>{lines.map((line) => <tr key={line.id} className="border-t border-[var(--wms-app-border)]"><td className="p-3">{line.lineNo}</td><td className="p-3"><strong>{line.stockCode || '—'}</strong><p className="text-xs text-slate-500">{line.stockName}</p></td><td className="max-w-72 p-3 text-slate-600 dark:text-slate-300">{line.description || '—'}</td><td className="p-3 text-right">{formatProjectNumber(line.quantity)} {line.unitCode}</td><td className="p-3 text-right">{formatProjectNumber(line.unitPrice)}</td><td className="p-3 text-right">%{formatProjectNumber(line.taxRate)}</td><td className="p-3 text-right font-bold">{formatProjectNumber(line.lineExtensionAmount)}</td><td className="p-3"><StatusBadge tone={line.stockId ? 'success' : 'warning'}>{line.stockId ? t('match.stockMatched') : t('match.unmatched')}</StatusBadge>{line.matchMessage && <p className="mt-1 max-w-56 text-xs text-amber-600">{line.matchMessage}</p>}</td></tr>)}</tbody>
+          <tbody>{lines.map((line) => <tr key={line.id} className="border-t border-[var(--wms-app-border)]"><td className="p-3">{line.lineNo}</td><td className="p-3"><strong>{line.stockCode || '—'}</strong><p className="text-xs text-slate-500">{line.stockName}</p></td><td className="max-w-72 p-3 text-slate-600 dark:text-slate-300">{line.description || '—'}</td><td className="p-3 text-right">{formatProjectNumber(line.quantity)} {line.unitCode}</td><td className="p-3 text-right">{formatProjectNumber(line.unitPrice)}</td><td className="p-3 text-right">%{formatProjectNumber(line.taxRate)}</td><td className="p-3 text-right font-bold">{formatProjectNumber(line.lineExtensionAmount)}</td><td className="p-3"><OpsStatusBadge tone={line.stockId ? 'done' : 'pending'}>{line.stockId ? t('match.stockMatched') : t('match.unmatched')}</OpsStatusBadge>{line.matchMessage && <p className="mt-1 max-w-56 text-xs text-amber-600">{line.matchMessage}</p>}</td></tr>)}</tbody>
         </table>
       </div>
-      <div className="mt-3 grid gap-3 md:hidden">{lines.map((line) => <article key={line.id} className="rounded-2xl border border-[var(--wms-app-border)] p-4"><header className="flex items-start justify-between gap-3"><div><span className="text-xs font-bold text-cyan-500">#{line.lineNo}</span><h4 className="font-black">{line.stockCode || '—'}</h4><p className="text-xs text-slate-500">{line.stockName}</p></div><StatusBadge tone={line.stockId ? 'success' : 'warning'}>{line.stockId ? t('match.stockMatched') : t('match.unmatched')}</StatusBadge></header><div className="mt-3 grid grid-cols-2 gap-2"><Info label={t('detail.quantity')} value={`${formatProjectNumber(line.quantity)} ${line.unitCode}`} /><Info label={t('detail.unitPrice')} value={formatProjectNumber(line.unitPrice)} /><Info label={t('detail.tax')} value={`%${formatProjectNumber(line.taxRate)}`} /><Info label={t('detail.total')} value={formatProjectNumber(line.lineExtensionAmount)} strong /></div>{line.matchMessage && <p className="mt-3 text-xs text-amber-600">{line.matchMessage}</p>}</article>)}</div>
+      <div className="mt-3 grid gap-3 md:hidden">{lines.map((line) => <article key={line.id} className="rounded-2xl border border-[var(--wms-app-border)] p-4"><header className="flex items-start justify-between gap-3"><div><span className="text-xs font-bold text-cyan-500">#{line.lineNo}</span><h4 className="font-black">{line.stockCode || '—'}</h4><p className="text-xs text-slate-500">{line.stockName}</p></div><OpsStatusBadge tone={line.stockId ? 'done' : 'pending'}>{line.stockId ? t('match.stockMatched') : t('match.unmatched')}</OpsStatusBadge></header><div className="mt-3 grid grid-cols-2 gap-2"><Info label={t('detail.quantity')} value={`${formatProjectNumber(line.quantity)} ${line.unitCode}`} /><Info label={t('detail.unitPrice')} value={formatProjectNumber(line.unitPrice)} /><Info label={t('detail.tax')} value={`%${formatProjectNumber(line.taxRate)}`} /><Info label={t('detail.total')} value={formatProjectNumber(line.lineExtensionAmount)} strong /></div>{line.matchMessage && <p className="mt-3 text-xs text-amber-600">{line.matchMessage}</p>}</article>)}</div>
     </section>
     <section className="mt-5 rounded-2xl border border-violet-500/25 bg-violet-500/8 p-4">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -285,10 +286,6 @@ function Field({ label, required, children }: { label: string; required?: boolea
 }
 function Info({ label, value, strong = false }: { label: string; value: string; strong?: boolean }): ReactElement {
   return <div className="rounded-xl border border-[var(--wms-app-border)] p-3"><span className="block text-xs text-slate-500">{label}</span><span className={`mt-1 block break-words text-sm ${strong ? 'font-black text-cyan-600' : 'font-bold'}`}>{value}</span></div>;
-}
-function StatusBadge({ tone, children }: { tone: 'success' | 'warning' | 'danger'; children: string }): ReactElement {
-  const classes = tone === 'success' ? 'bg-emerald-500/10 text-emerald-600' : tone === 'danger' ? 'bg-rose-500/10 text-rose-600' : 'bg-amber-500/10 text-amber-600';
-  return <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${classes}`}>{children}</span>;
 }
 function DocumentButton({ label, busy, icon, onClick }: { label: string; busy: boolean; icon: ReactElement; onClick: () => void }): ReactElement {
   return <button type="button" disabled={busy} onClick={onClick} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[var(--wms-app-border)] px-3 text-sm font-bold disabled:opacity-50">{busy ? <Loader2 className="size-4 animate-spin" /> : icon}{label}</button>;

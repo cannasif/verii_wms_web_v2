@@ -10,6 +10,7 @@ import {
 import { requiredActionColumn } from "@/components/shared/GridSystemColumns";
 import { AppDropdown } from "@/components/shared/AppDropdown";
 import { ResponsiveDialog } from "@/components/shared/ResponsiveDialog";
+import { OpsStatusBadge, inferOpsStatusTone } from "@/components/shared/OpsStatusBadge";
 import { localizeEnumValue } from "@/lib/enum-localization";
 import {
   formatProjectDate,
@@ -75,6 +76,14 @@ export function QualityInspectionsPage({
         render: (r) => r.sourceWaybillNo || "—",
       },
       {
+        key: "sourceDocumentType",
+        label: "Evrak Tipi",
+        sortable: true,
+        filterable: true,
+        render: (r) =>
+          localizeEnumValue(r.sourceDocumentType === "GR" ? "GoodsReceipt" : r.sourceDocumentType),
+      },
+      {
         key: "sourceDocumentNo",
         label: "Mal Kabul No",
         sortable: true,
@@ -89,39 +98,18 @@ export function QualityInspectionsPage({
         render: (r) => r.createdByName || `Kullanıcı #${r.createdBy ?? "—"}`,
       },
       {
-        key: "warehouseCode",
-        label: "Depo Kodu",
-        sortable: true,
-        filterable: true,
-        render: (r) => r.warehouseCode ?? "—",
-      },
-      {
-        key: "warehouseName",
-        label: "Depo Adı",
-        sortable: true,
-        filterable: true,
-        render: (r) => r.warehouseName ?? "—",
-      },
-      {
         key: "status",
         label: "Durum",
         sortable: true,
         filterable: true,
-        render: (r) => r.status,
+        render: (r) => <OpsStatusBadge tone={inferOpsStatusTone(r.status)}>{localizeEnumValue(r.status)}</OpsStatusBadge>,
       },
       {
-        key: "lineCount",
-        label: "Satır",
+        key: "createdAtUtc",
+        label: "Oluşturma",
         sortable: true,
         filterable: true,
-        render: (r) => r.lineCount,
-      },
-      {
-        key: "totalQuantity",
-        label: "Miktar",
-        sortable: true,
-        filterable: true,
-        render: (r) => formatProjectNumber(r.totalQuantity),
+        render: (r) => formatProjectDateTime(r.createdAtUtc),
       },
       {
         key: "queuedAtUtc",
@@ -129,6 +117,14 @@ export function QualityInspectionsPage({
         sortable: true,
         filterable: true,
         render: (r) => formatProjectDateTime(r.queuedAtUtc ?? r.createdAtUtc),
+      },
+      {
+        key: "decidedAtUtc",
+        label: "Kalite Onay Tarihi",
+        sortable: true,
+        filterable: true,
+        render: (r) =>
+          r.decidedAtUtc ? formatProjectDateTime(r.decidedAtUtc) : "—",
       },
       {
         key: "actions",
@@ -287,15 +283,29 @@ function InspectionModal({
       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Info label="Durum" value={localizeEnumValue(detail.header.status)} />
         <Info
+          label="Evrak Tipi"
+          value={localizeEnumValue(
+            detail.header.sourceDocumentType === "GR"
+              ? "GoodsReceipt"
+              : detail.header.sourceDocumentType,
+          )}
+        />
+        <Info
           label="Toplam"
           value={formatProjectNumber(detail.header.totalQuantity)}
         />
         <Info
-          label="Oluşma"
+          label="Oluşturma Tarihi"
           value={formatProjectDateTime(detail.header.createdAtUtc)}
         />
         <Info
-          label="Karar"
+          label="Kaliteye Gönderilme"
+          value={formatProjectDateTime(
+            detail.header.queuedAtUtc ?? detail.header.createdAtUtc,
+          )}
+        />
+        <Info
+          label="Kalite Onay Tarihi"
           value={
             detail.header.decidedAtUtc
               ? formatProjectDateTime(detail.header.decidedAtUtc)

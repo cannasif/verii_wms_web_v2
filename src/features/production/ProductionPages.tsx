@@ -355,8 +355,8 @@ function ModuleLoading(): ReactElement {
 
 function ProductionDetailDialog({ detail, close }: { detail: ProductionPlanDetail; close: () => void }) {
   const { t } = useModuleTranslation('production');
-  return <ResponsiveDialog onClose={close} title={detail.header.documentNo} className="max-h-[calc(100dvh-1rem)] !max-w-6xl">
-    <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="font-mono text-xl font-black">{detail.header.documentNo}</p><p className="text-sm text-[var(--wms-app-text-muted)]">{t(`enum.status.${detail.header.status}`)} · {formatProjectDateTime(detail.header.createdDate)}</p></div><button type="button" onClick={close} className="rounded-xl border border-[var(--wms-app-border)] px-4 py-2">{t('common.close')}</button></div>
+  return <ResponsiveDialog onClose={close} framed={false} title={detail.header.documentNo} className="max-h-[calc(100dvh-1rem)] !max-w-6xl">
+    <div className="flex flex-wrap items-start justify-between gap-3 pr-12"><div><p className="font-mono text-xl font-black">{detail.header.documentNo}</p><p className="text-sm text-[var(--wms-app-text-muted)]">{t(`enum.status.${detail.header.status}`)} · {formatProjectDateTime(detail.header.createdDate)}</p></div></div>
     <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <Stat label={t('list.columns.orders')} value={detail.header.orderCount} />
       <Stat label={t('list.columns.materials')} value={detail.header.materialCount} />

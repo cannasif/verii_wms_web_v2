@@ -5,18 +5,15 @@ import { CheckCircle2, Clock3, Eye, Play, RefreshCw, XCircle } from 'lucide-reac
 import { toast } from 'sonner';
 import { AdvancedDataGrid, type GridColumn } from '@/components/shared/AdvancedDataGrid';
 import { systemColumns } from '@/components/shared/GridSystemColumns';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { OpsStatusBadge, inferOpsStatusTone } from '@/components/shared/OpsStatusBadge';
+import { OpsDialogBody, OpsDialogContent, OpsDialogFooter, OpsDialogHeader } from '@/components/shared/OpsDialogShell';
+import { Dialog, DialogTitle } from '@/components/ui/dialog';
 import { formatProjectDateTime } from '@/lib/project-format';
 import { localizeEnumValue } from '@/lib/enum-localization';
 import { hangfireApi as systemApi, type HangfireExecutionRow } from '../api/hangfire.api';
 
 const H = 'hangfireMonitoring';
 const G = 'dataGrid.hangfireExecutions';
-
-function StatusBadge({ status }: { status: string }) {
-  const styles = status === 'Succeeded' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300' : status === 'Running' ? 'bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300' : 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300';
-  return <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${styles}`}>{localizeEnumValue(status)}</span>;
-}
 
 export function HangfirePage() {
   const { t, i18n } = useTranslation('common');
@@ -52,7 +49,7 @@ export function HangfirePage() {
   const executionColumns = useMemo<GridColumn<HangfireExecutionRow>[]>(() => [
     ...systemColumns<HangfireExecutionRow>(),
     { key: 'jobKey', label: t(`${G}.jobKey`), render: row => <span className="font-semibold">{row.jobKey}</span> },
-    { key: 'status', label: t(`${G}.status`), render: row => <StatusBadge status={row.status} /> },
+    { key: 'status', label: t(`${G}.status`), render: row => <OpsStatusBadge tone={inferOpsStatusTone(row.status)}>{localizeEnumValue(row.status)}</OpsStatusBadge> },
     { key: 'triggerSource', label: t(`${G}.triggerSource`), render: row => triggerLabel(row.triggerSource) },
     { key: 'startedAt', label: t(`${G}.startedAt`), render: row => formatProjectDateTime(row.startedAt) },
     { key: 'durationMs', label: t(`${G}.durationMs`), render: row => row.durationMs == null ? '-' : `${row.durationMs} ms` },
@@ -137,28 +134,29 @@ export function HangfirePage() {
 
       {detail && (
         <Dialog open onOpenChange={open => { if (!open) setDetail(null); }}>
-          <DialogContent showCloseButton={false} className="max-h-[calc(100%-2rem)] w-full !max-w-3xl overflow-auto rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-6 shadow-2xl">
-            <div className="flex items-start justify-between gap-3">
+          <OpsDialogContent size="lg">
+            <OpsDialogHeader>
               <div>
-                <DialogTitle className="text-xl font-bold">{t(`${H}.detail.title`)}</DialogTitle>
+                <DialogTitle className="wms-ops-detail-dialog__title text-xl font-bold">{t(`${H}.detail.title`)}</DialogTitle>
                 <p className="mt-1 text-sm text-slate-500">{detail.jobKey}</p>
               </div>
-              <button type="button" aria-label={t(`${H}.detail.close`)} onClick={() => setDetail(null)} className="rounded-lg border p-2"><XCircle className="size-4" /></button>
-            </div>
-            <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              <Detail label={t(`${H}.detail.status`)}><StatusBadge status={detail.status} /></Detail>
-              <Detail label={t(`${H}.detail.startedAt`)}>{formatProjectDateTime(detail.startedAt)}</Detail>
-              <Detail label={t(`${H}.detail.completedAt`)}>{formatProjectDateTime(detail.completedAt)}</Detail>
-              <Detail label={t(`${H}.detail.duration`)}>{detail.durationMs == null ? '-' : `${detail.durationMs} ms`}</Detail>
-              <Detail label={t(`${H}.detail.result`)} wide>{detail.resultSummary ?? '-'}</Detail>
-              <Detail label={t(`${H}.detail.errorType`)} wide>{detail.errorType ?? '-'}</Detail>
-              <Detail label={t(`${H}.detail.errorMessage`)} wide><span className="text-red-600">{detail.errorMessage ?? '-'}</span></Detail>
-              {detail.stackTrace && <Detail label={t(`${H}.detail.stackTrace`)} wide><pre className="max-h-64 overflow-auto whitespace-pre-wrap rounded-xl bg-slate-950 p-4 text-xs text-slate-100">{detail.stackTrace}</pre></Detail>}
-            </div>
-            <div className="mt-5 flex justify-end">
+            </OpsDialogHeader>
+            <OpsDialogBody>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Detail label={t(`${H}.detail.status`)}><OpsStatusBadge tone={inferOpsStatusTone(detail.status)}>{localizeEnumValue(detail.status)}</OpsStatusBadge></Detail>
+                <Detail label={t(`${H}.detail.startedAt`)}>{formatProjectDateTime(detail.startedAt)}</Detail>
+                <Detail label={t(`${H}.detail.completedAt`)}>{formatProjectDateTime(detail.completedAt)}</Detail>
+                <Detail label={t(`${H}.detail.duration`)}>{detail.durationMs == null ? '-' : `${detail.durationMs} ms`}</Detail>
+                <Detail label={t(`${H}.detail.result`)} wide>{detail.resultSummary ?? '-'}</Detail>
+                <Detail label={t(`${H}.detail.errorType`)} wide>{detail.errorType ?? '-'}</Detail>
+                <Detail label={t(`${H}.detail.errorMessage`)} wide><span className="text-red-600">{detail.errorMessage ?? '-'}</span></Detail>
+                {detail.stackTrace && <Detail label={t(`${H}.detail.stackTrace`)} wide><pre className="max-h-64 overflow-auto whitespace-pre-wrap rounded-xl bg-slate-950 p-4 text-xs text-slate-100">{detail.stackTrace}</pre></Detail>}
+              </div>
+            </OpsDialogBody>
+            <OpsDialogFooter>
               <button type="button" onClick={() => setDetail(null)} className="rounded-xl bg-[var(--wms-brand-primary)] px-4 py-2 text-white">{t(`${H}.detail.close`)}</button>
-            </div>
-          </DialogContent>
+            </OpsDialogFooter>
+          </OpsDialogContent>
         </Dialog>
       )}
     </div>
