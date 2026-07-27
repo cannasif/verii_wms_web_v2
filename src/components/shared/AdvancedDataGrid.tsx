@@ -1,4 +1,4 @@
-﻿import {
+import {
   useEffect,
   useMemo,
   useRef,
@@ -118,6 +118,8 @@ interface Props<T extends { id: number }> {
   toolbarAction?: { label: string; run: () => Promise<void>; icon?: ReactNode };
   /** Mutation sonrasında sunucu verisini yeniden okumak için artırılan sürüm anahtarı. */
   refreshKey?: string | number;
+  /** Satıra çift tıklanınca çağrılır (aksiyon hücreleri hariç etkileşimleri engellemez). */
+  onRowDoubleClick?: (row: T) => void;
 }
 
 interface GridCellContext<T> {
@@ -388,6 +390,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
   fetchPage,
   toolbarAction,
   refreshKey = 0,
+  onRowDoubleClick,
 }: Props<T>) {
   const { t, i18n } = useTranslation();
   const { pathname } = useLocation();
@@ -463,12 +466,13 @@ export function AdvancedDataGrid<T extends { id: number }>({
   const [isScrollDragging, setIsScrollDragging] = useState(false);
   const resizeRef = useRef<{ key: string; startX: number; startWidth: number; pointerId: number } | null>(null);
   const tableScrollRef = useRef<HTMLDivElement | null>(null);
-  const scrollDragRef = useRef<{ isDragging: boolean; startX: number; startScrollLeft: number; pointerId: number; moved: boolean }>({
+  const scrollDragRef = useRef<{ isDragging: boolean; startX: number; startScrollLeft: number; pointerId: number; moved: boolean; captured: boolean }>({
     isDragging: false,
     startX: 0,
     startScrollLeft: 0,
     pointerId: -1,
     moved: false,
+    captured: false,
   });
 
   const sensors = useSensors(
@@ -687,29 +691,42 @@ export function AdvancedDataGrid<T extends { id: number }>({
     if (isInteractiveScrollTarget(event.target)) return;
     const container = tableScrollRef.current;
     if (!container) return;
+    // Do not capture the pointer until the user actually drags. Immediate capture
+    // steals the second click of a double-click from the row element.
     scrollDragRef.current = {
       isDragging: true,
       startX: event.clientX,
       startScrollLeft: container.scrollLeft,
       pointerId: event.pointerId,
       moved: false,
+      captured: false,
     };
-    setIsScrollDragging(true);
-    container.setPointerCapture(event.pointerId);
   };
   const handleScrollDragMove = (event: ReactPointerEvent<HTMLDivElement>) => {
     const container = tableScrollRef.current;
     const state = scrollDragRef.current;
     if (!container || !state.isDragging || state.pointerId !== event.pointerId) return;
     const deltaX = event.clientX - state.startX;
-    if (Math.abs(deltaX) > 4) state.moved = true;
+    if (Math.abs(deltaX) <= 4) return;
+    if (!state.moved) {
+      state.moved = true;
+      setIsScrollDragging(true);
+      if (!state.captured) {
+        container.setPointerCapture(event.pointerId);
+        state.captured = true;
+      }
+    }
     container.scrollLeft = state.startScrollLeft - deltaX;
   };
   const handleScrollDragEnd = (event: ReactPointerEvent<HTMLDivElement>) => {
     const container = tableScrollRef.current;
-    if (container?.hasPointerCapture(event.pointerId)) container.releasePointerCapture(event.pointerId);
+    const state = scrollDragRef.current;
+    if (state.captured && container?.hasPointerCapture(event.pointerId)) {
+      container.releasePointerCapture(event.pointerId);
+    }
     scrollDragRef.current.isDragging = false;
     scrollDragRef.current.pointerId = -1;
+    scrollDragRef.current.captured = false;
     setIsScrollDragging(false);
   };
   const suppressClickAfterDrag = (event: ReactMouseEvent<HTMLDivElement>) => {
@@ -1291,7 +1308,14 @@ export function AdvancedDataGrid<T extends { id: number }>({
                       </td>
                     </tr>
                   ) : pageRows.map((row) => (
-                    <tr key={row.id} className="border-b border-[var(--wms-app-border)] hover:bg-[var(--wms-brand-soft)]">
+                    <tr
+                      key={row.id}
+                      className={cn(
+                        'border-b border-[var(--wms-app-border)] hover:bg-[var(--wms-brand-soft)]',
+                        onRowDoubleClick && 'cursor-pointer',
+                      )}
+                      onDoubleClick={() => onRowDoubleClick?.(row)}
+                    >
                       {activeColumns.map((column) => (
                         <td
                           key={column.key}
@@ -1338,7 +1362,14 @@ export function AdvancedDataGrid<T extends { id: number }>({
         ) : pageRows.length === 0 ? (
           <OpsGridEmptyState message={resolvedEmptyMessage} />
         ) : pageRows.map((row) => (
-          <article key={row.id} className="overflow-hidden rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] shadow-sm">
+          <article
+            key={row.id}
+            className={cn(
+              'overflow-hidden rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] shadow-sm',
+              onRowDoubleClick && 'cursor-pointer',
+            )}
+            onDoubleClick={() => onRowDoubleClick?.(row)}
+          >
             {activeColumns.map((column) => (
               <div key={column.key} className={`grid min-w-0 grid-cols-[minmax(0,7rem)_minmax(0,1fr)] gap-3 border-b border-[var(--wms-app-border)] px-3 py-3 last:border-b-0 ${column.key === 'actions' ? 'items-center bg-[var(--wms-brand-soft)]' : 'items-start'}`}>
                 <span className="text-[0.68rem] font-semibold uppercase tracking-wide text-slate-500">{column.label}</span>

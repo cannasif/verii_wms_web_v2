@@ -1,9 +1,11 @@
-import {useEffect,useMemo,useState} from 'react';
+import {useCallback,useEffect,useMemo,useState} from 'react';
 import {useQuery,useQueryClient} from '@tanstack/react-query';
 import {useTranslation} from 'react-i18next';
 import {ArrowRight,Boxes,ChevronLeft,ChevronRight,Layers3,Search,UserRoundCog,X} from 'lucide-react';
 import {toast} from 'sonner';
+import {AdvancedDataGrid,type GridColumn} from '@/components/shared/AdvancedDataGrid';
 import {AppDropdown} from '@/components/shared/AppDropdown';
+import {requiredActionColumn} from '@/components/shared/GridSystemColumns';
 import {PagedAppDropdown} from '@/components/shared/PagedAppDropdown';
 import {goodsReceiptV2Api} from '@/features/goods-receipt-v2/api/goods-receipt.api';
 import type {ActiveUserOption} from '@/features/goods-receipt-v2/types/goods-receipt.types';
@@ -32,18 +34,34 @@ export function SteelReceiptOperationsPage({initialTab='receipt'}:{initialTab?:'
 }
 
 function ReceiptPanel(){
-  const {t}=useTranslation('common');
+  const {t,i18n}=useTranslation('common');
   const R=`${O}.receipt`;
-  const cache=useQueryClient();const [page,setPage]=useState(1);const [input,setInput]=useState('');const [search,setSearch]=useState('');
-  const [selected,setSelected]=useState<Record<number,SteelLineRow>>({});const [note,setNote]=useState('');const [priority,setPriority]=useState('3');const [assignees,setAssignees]=useState<ActiveUserOption[]>([]);const [assignAll,setAssignAll]=useState(false);const [busy,setBusy]=useState(false);
-  const query=useQuery({queryKey:['steel-receipt-candidates',page,search],queryFn:()=>steelReceiptApi.receiptCandidatesPaged(request(page,search))});
-  const rows=query.data?.items??[];const selectedRows=Object.values(selected);const selectedPlan=selectedRows[0]?.planId;
+  const gridLanguage=i18n.resolvedLanguage??i18n.language;
+  const cache=useQueryClient();
+  const [selected,setSelected]=useState<Record<number,SteelLineRow>>({});
+  const [note,setNote]=useState('');
+  const [priority,setPriority]=useState('3');
+  const [assignees,setAssignees]=useState<ActiveUserOption[]>([]);
+  const [assignAll,setAssignAll]=useState(false);
+  const [busy,setBusy]=useState(false);
+  const [refreshKey,setRefreshKey]=useState(0);
+  const selectedRows=Object.values(selected);const selectedPlan=selectedRows[0]?.planId;
   const total=selectedRows.reduce((sum,row)=>sum+row.approvedQuantity,0);
-  const toggle=(row:SteelLineRow)=>setSelected(current=>{
+  const toggle=useCallback((row:SteelLineRow)=>setSelected(current=>{
     if(current[row.id]){const next={...current};delete next[row.id];return next}
-    if(Object.keys(current).length&&selectedPlan!==row.planId){toast.error(t(`${R}.samePlanOnly`));return current}
+    const currentPlan=Object.values(current)[0]?.planId;
+    if(Object.keys(current).length&&currentPlan!==row.planId){toast.error(t(`${R}.samePlanOnly`));return current}
     return {...current,[row.id]:row};
-  });
+  }),[t,R]);
+  const columns=useMemo<GridColumn<SteelLineRow>[]>(()=>[
+    {key:'actions',label:t(`${R}.select`),...requiredActionColumn,render:r=><input type="checkbox" checked={!!selected[r.id]} onChange={()=>toggle(r)} className="size-4 accent-cyan-500" aria-label={t(`${R}.select`)}/>},
+    {key:'dCode',label:t(`${R}.dCodeSerial`),searchable:true,defaultSearch:true,render:r=><><strong className="font-mono text-cyan-500">{r.dCode}</strong><small className="block text-slate-500">{r.supplierSerialNo}</small></>},
+    {key:'stockCode',label:t(`${R}.stock`),searchable:true,render:r=><><strong>{r.stockCode}</strong><small className="block text-slate-500">{r.stockName||'-'}</small></>},
+    {key:'importReferenceNo',label:t(`${R}.plan`),searchable:true,render:r=><>{r.importReferenceNo}<small className="block text-slate-500">{r.netsisOrderNo||t(`${R}.noOrder`)}</small></>},
+    {key:'inspectionStatus',label:t(`${R}.quality`),render:r=>localizeEnumValue(r.inspectionStatus)},
+    {key:'approvedQuantity',label:t(`${R}.approvedQty`),render:r=><span className="font-bold">{formatProjectNumber(r.approvedQuantity)} {r.unitCode}</span>},
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- gridLanguage forces column label refresh
+  ],[t,gridLanguage,selected,toggle,R]);
   const convert=async()=>{
     if(!selectedRows.length||!selectedPlan)return;
     if(!assignAll&&!assignees.length){toast.error(t(`${R}.assigneeRequired`));return}
@@ -51,17 +69,13 @@ function ReceiptPanel(){
     try{
       const result=await steelReceiptApi.convert(selectedPlan,selectedRows.map(x=>x.id),{description:note,priority:Number(priority),assignedUserIds:assignees.map(x=>x.id),assignToAllActiveUsers:assignAll});
       toast.success(t(`${R}.convertSuccess`,{documentNo:result.documentNo,count:result.convertedLineCount}));
-      setSelected({});setNote('');setAssignees([]);setAssignAll(false);
-      await cache.invalidateQueries({queryKey:['steel-receipt-candidates']})
+      setSelected({});setNote('');setAssignees([]);setAssignAll(false);setRefreshKey(key=>key+1);
+      await cache.invalidateQueries({queryKey:['advanced-grid','steel-receipt-candidates']})
     }catch(e){toast.error(e instanceof Error?e.message:t(`${R}.convertFailed`))}finally{setBusy(false)}
   };
   return <div className="grid gap-5 xl:grid-cols-[minmax(0,1.6fr)_minmax(320px,.7fr)]">
-    <section className="overflow-hidden rounded-2xl border bg-[var(--wms-app-surface)]"><SectionHead title={t(`${R}.candidatesTitle`)} text={t(`${R}.candidatesText`)}/>
-      <SearchBar value={input} setValue={setInput} run={()=>{setSearch(input.trim());setPage(1)}}/>
-      <div className="overflow-x-auto"><table className="w-full min-w-[900px] text-sm"><thead><tr className="border-y text-left text-xs uppercase text-slate-500"><th className="p-3">{t(`${R}.select`)}</th><th>{t(`${R}.dCodeSerial`)}</th><th>{t(`${R}.stock`)}</th><th>{t(`${R}.plan`)}</th><th>{t(`${R}.quality`)}</th><th className="text-right">{t(`${R}.approvedQty`)}</th></tr></thead><tbody>{rows.map(row=><tr key={row.id} className="border-b last:border-0"><td className="p-3"><input type="checkbox" checked={!!selected[row.id]} onChange={()=>toggle(row)} className="size-4 accent-cyan-500"/></td><td><strong className="font-mono text-cyan-500">{row.dCode}</strong><small className="block">{row.supplierSerialNo}</small></td><td><strong>{row.stockCode}</strong><small className="block text-slate-500">{row.stockName}</small></td><td>{row.importReferenceNo}<small className="block">{row.netsisOrderNo||t(`${R}.noOrder`)}</small></td><td>{localizeEnumValue(row.inspectionStatus)}</td><td className="text-right font-bold">{formatProjectNumber(row.approvedQuantity)} {row.unitCode}</td></tr>)}</tbody></table></div>
-      {!query.isLoading&&!rows.length&&<Empty text={t(`${R}.empty`)}/>}<Pager page={page} totalPages={query.data?.totalPages??1} setPage={setPage}/>
-    </section>
-    <aside className="h-fit space-y-4 rounded-2xl border bg-[var(--wms-app-surface)] p-5"><SectionHead title={t(`${R}.summaryTitle`)} text={t(`${R}.summaryText`)}/>
+    <div className="min-w-0"><AdvancedDataGrid pageKey="steel-receipt-candidates" title={t(`${R}.candidatesTitle`)} description={t(`${R}.candidatesText`)} columns={columns} fetchPage={steelReceiptApi.receiptCandidatesPaged} refreshKey={refreshKey}/></div>
+    <aside className="h-fit space-y-4 rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5 xl:mt-10"><SectionHead title={t(`${R}.summaryTitle`)} text={t(`${R}.summaryText`)}/>
       <Metric label={t(`${R}.selectedSheets`)} value={String(selectedRows.length)}/><Metric label={t(`${R}.totalApprovedQty`)} value={formatProjectNumber(total)}/><Metric label={t(`${R}.sacPlan`)} value={selectedRows[0]?.importReferenceNo||'-'}/>
       <Field label={t(`${R}.priority`)}><AppDropdown value={priority} onValueChange={setPriority} options={[{value:'1',label:t(`${R}.priorityLow`)},{value:'3',label:t(`${R}.priorityNormal`)},{value:'5',label:t(`${R}.priorityHigh`)},{value:'9',label:t(`${R}.priorityUrgent`)}]}/></Field>
       <section className="rounded-xl border p-3">
@@ -86,8 +100,8 @@ function PlacementPanel(){
   const nextStack=useMemo(()=>{const items=occupancy.data??[];return Math.max(items.length,...items.map(x=>x.stackOrderNo??0))+1},[occupancy.data]);
   const choose=(row:SteelLineRow)=>{setSelected(row);setLocation(null)};
   const place=async()=>{if(!selected||!location){toast.error(t(`${P}.sheetAndShelfRequired`));return}setBusy(true);try{const result=await steelReceiptApi.place(selected.id,{locationId:Number(location),rowVersion:selected.rowVersion});toast.success(t(`${P}.placeSuccess`,{dCode:selected.dCode,order:result.stackOrderNo}));setSelected(null);setLocation(null);await cache.invalidateQueries({queryKey:['steel-placement-candidates']});await cache.invalidateQueries({queryKey:['steel-occupancy']})}catch(e){toast.error(e instanceof Error?e.message:t(`${P}.placeFailed`))}finally{setBusy(false)}};
-  return <div className="grid gap-5 xl:grid-cols-[.8fr_1.2fr]"><section className="rounded-2xl border bg-[var(--wms-app-surface)]"><SectionHead title={t(`${P}.pendingTitle`)} text={t(`${P}.pendingText`)}/><SearchBar value={input} setValue={setInput} run={()=>{setSearch(input.trim());setPage(1)}}/><div className="space-y-2 p-4">{(query.data?.items??[]).map(row=><button key={row.id} onClick={()=>choose(row)} className={`w-full rounded-xl border p-3 text-left ${selected?.id===row.id?'border-cyan-500 bg-cyan-500/10':''}`}><strong className="font-mono text-cyan-500">{row.dCode}</strong><span className="ml-2">{row.stockCode}</span><small className="block text-slate-500">{row.supplierSerialNo} · {formatProjectNumber(row.approvedQuantity)} {row.unitCode}</small></button>)}</div>{!query.isLoading&&!query.data?.items.length&&<Empty text={t(`${P}.empty`)}/>}<Pager page={page} totalPages={query.data?.totalPages??1} setPage={setPage}/></section>
-    <section className="space-y-4 rounded-2xl border bg-[var(--wms-app-surface)] p-5"><SectionHead title={t(`${P}.occupancyTitle`)} text={selected?`${selected.dCode} · ${selected.stockCode}`:t(`${P}.occupancyTextSelect`)}/>
+  return <div className="grid gap-5 xl:grid-cols-[.8fr_1.2fr]"><section className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)]"><SectionHead title={t(`${P}.pendingTitle`)} text={t(`${P}.pendingText`)}/><SearchBar value={input} setValue={setInput} run={()=>{setSearch(input.trim());setPage(1)}}/><div className="space-y-2 p-4">{(query.data?.items??[]).map(row=><button key={row.id} onClick={()=>choose(row)} className={`w-full rounded-xl border p-3 text-left ${selected?.id===row.id?'border-cyan-500 bg-cyan-500/10':''}`}><strong className="font-mono text-cyan-500">{row.dCode}</strong><span className="ml-2">{row.stockCode}</span><small className="block text-slate-500">{row.supplierSerialNo} · {formatProjectNumber(row.approvedQuantity)} {row.unitCode}</small></button>)}</div>{!query.isLoading&&!query.data?.items.length&&<Empty text={t(`${P}.empty`)}/>}<Pager page={page} totalPages={query.data?.totalPages??1} setPage={setPage}/></section>
+    <section className="space-y-4 rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5"><SectionHead title={t(`${P}.occupancyTitle`)} text={selected?`${selected.dCode} · ${selected.stockCode}`:t(`${P}.occupancyTextSelect`)}/>
       {selected&&<><Field label={t(`${P}.targetShelf`)}><PagedAppDropdown queryKey={['steel-putaway',selected.targetWarehouseId]} fetchPage={r=>goodsReceiptV2Api.locations(r,selected.targetWarehouseId)} toOption={x=>({value:String(x.id),label:`${x.code} · ${x.name}`,description:x.locationType})} value={location} onValueChange={setLocation} searchable/></Field>
       {location&&<><div className="grid gap-4 lg:grid-cols-[.8fr_1.2fr]">
         <section className="overflow-hidden rounded-2xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/10 via-transparent to-violet-500/10 p-5">
