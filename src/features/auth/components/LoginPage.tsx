@@ -158,8 +158,8 @@ export function LoginPage(): React.JSX.Element {
         <LanguageSwitcher variant="pill" />
       </div>
 
-      <div className="relative z-10 mx-auto box-border flex min-h-dvh w-full flex-col px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-20 sm:px-6 sm:pt-24 lg:px-10">
-        <main className="flex flex-1 items-center justify-center pb-6 lg:justify-end lg:pb-10 lg:pr-[clamp(1rem,7vw,8rem)]">
+      <div className="relative z-10 mx-auto box-border flex min-h-dvh w-full flex-col px-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6 lg:px-10">
+        <main className="flex flex-1 items-center justify-center py-6">
           <div className="w-full max-w-[520px] min-w-0">
             <div className="relative overflow-hidden rounded-[1.75rem] border border-cyan-300/20 bg-[#0a132b]/85 shadow-[0_0_0_1px_rgba(59,130,246,0.04),0_28px_80px_rgba(0,0,0,0.55),0_0_45px_rgba(14,165,233,0.08)] backdrop-blur-2xl">
               <div className="absolute inset-x-10 top-0 h-px bg-linear-to-r from-transparent via-cyan-300/80 to-transparent" />

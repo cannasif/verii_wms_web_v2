@@ -46,6 +46,9 @@ export interface AppDropdownProps<TValue extends string = string> {
   hideChevron?: boolean;
   className?: string;
   contentClassName?: string;
+  /** Popover genişliğini tetikleyici ile eşleştir (varsayılan: true). Dar pill butonlarda false kullanın. */
+  matchTriggerWidth?: boolean;
+  contentAlign?: 'start' | 'center' | 'end';
   testId?: string;
 }
 
@@ -75,6 +78,8 @@ export function AppDropdown<TValue extends string = string>({
   hideChevron = false,
   className,
   contentClassName,
+  matchTriggerWidth = true,
+  contentAlign = 'start',
   testId,
 }: AppDropdownProps<TValue>): ReactElement {
   const { t, i18n } = useTranslation('shared');
@@ -169,11 +174,12 @@ export function AppDropdown<TValue extends string = string>({
 
       <PopoverPrimitive.Portal container={getWorkspacePortalRoot() ?? undefined}>
         <PopoverPrimitive.Content
-          align="start"
+          align={contentAlign}
           sideOffset={6}
           collisionPadding={12}
           className={cn(
-            'wms-floating-surface z-[2000] w-[var(--radix-popover-trigger-width)] overflow-hidden rounded-xl outline-none',
+            'wms-floating-surface z-[2000] overflow-hidden rounded-xl outline-none',
+            matchTriggerWidth ? 'w-[var(--radix-popover-trigger-width)]' : 'min-w-[12rem] w-max max-w-[min(18rem,calc(100vw-1.5rem))]',
             'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95',
             contentClassName,
           )}
