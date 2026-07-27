@@ -3,7 +3,7 @@ import tailwindcss from "@tailwindcss/vite"
 import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite"
 
-const allowedHosts = ["https://wms.v3rii.com"];
+const allowedHosts = ["wms2.v3rii.com"];
 
 function normalizeChunkId(id: string): string {
   return id.split(path.sep).join('/');

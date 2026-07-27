@@ -1,5 +1,5 @@
 {
   "baseUrl": "/",
-  "apiUrl": "http://127.0.0.1:5099",
+  "apiUrl": "https://wms2api.v3rii.com",
   "realtimeNotificationsEnabled": false
 }

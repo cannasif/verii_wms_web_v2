@@ -1,4 +1,4 @@
-export const DEFAULT_API_BASE_URL = 'https://api.v3rii.com';
+export const DEFAULT_API_BASE_URL = 'https://wms2api.v3rii.com';
 const RUNTIME_CONFIG_CACHE_KEY = 'wms-runtime-config:v1';
 const RUNTIME_CONFIG_TTL_MS = 60 * 60 * 1000;
 
