@@ -1,0 +1,5 @@
+{
+  "baseUrl": "/",
+  "apiUrl": "https://wms2api.v3rii.com",
+  "realtimeNotificationsEnabled": false
+}

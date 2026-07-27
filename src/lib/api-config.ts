@@ -1,6 +1,4 @@
-export const DEFAULT_API_BASE_URL = 'https://wms2api.v3rii.com';
 const RUNTIME_CONFIG_FILE_NAME = 'runtime-settings.json';
-const RUNTIME_CONFIG_CACHE_KEY = 'wms-runtime-config:v2';
 
 interface RuntimeConfig {
   apiUrl?: string;
@@ -12,13 +10,6 @@ interface ResolvedRuntimeConfig {
   apiUrl: string;
   baseUrl: string;
   realtimeNotificationsEnabled: boolean;
-}
-
-interface PersistedRuntimeConfig {
-  apiUrl: string;
-  baseUrl: string;
-  realtimeNotificationsEnabled: boolean;
-  fetchedAt: number;
 }
 
 function isValidApiUrl(value: string | undefined | null): boolean {
@@ -68,20 +59,7 @@ function normalizeAppBasePath(value: string | undefined | null): string {
   return `/${trimmed.replace(/^\/+|\/+$/g, '')}`;
 }
 
-function getWindowOriginFallback(): string | null {
-  if (typeof window === 'undefined') {
-    return null;
-  }
-
-  const hostname = window.location.hostname;
-  if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    return normalizeBaseUrl(window.location.origin);
-  }
-
-  return null;
-}
-
-let cachedApiUrl = normalizeBaseUrl(DEFAULT_API_BASE_URL);
+let cachedApiUrl = '';
 let cachedAppBasePath = normalizeAppBasePath(import.meta.env.BASE_URL || '/');
 let cachedRealtimeNotificationsEnabled = false;
 let configPromise: Promise<ResolvedRuntimeConfig> | null = null;
@@ -92,102 +70,28 @@ function toBaseRelativePath(fileName: string): string {
   return `${normalizedBase}${fileName}`;
 }
 
-function resolveEnvRuntimeConfig(): ResolvedRuntimeConfig {
-  // .env.local is intentionally a development-only convenience. Never allow a
-  // stale Jenkins workspace file to embed a localhost endpoint in production.
-  const envUrl = import.meta.env.DEV ? import.meta.env.VITE_API_URL : undefined;
-  const devFallback = getWindowOriginFallback();
+async function fetchRuntimeConfig(): Promise<ResolvedRuntimeConfig> {
+  const response = await fetch(toBaseRelativePath(RUNTIME_CONFIG_FILE_NAME), {
+    cache: 'no-store',
+    credentials: 'same-origin',
+    headers: {
+      Accept: 'application/json',
+    },
+  });
+  if (!response.ok) {
+    throw new Error(`${RUNTIME_CONFIG_FILE_NAME} HTTP ${response.status}`);
+  }
+
+  const config = (await response.json()) as RuntimeConfig;
+  if (!isValidApiUrl(config?.apiUrl)) {
+    throw new Error(`${RUNTIME_CONFIG_FILE_NAME} geçerli bir apiUrl içermiyor`);
+  }
 
   return {
-    apiUrl: isValidApiUrl(envUrl)
-      ? normalizeBaseUrl(envUrl)
-      : (import.meta.env.DEV && devFallback ? devFallback : normalizeBaseUrl(DEFAULT_API_BASE_URL)),
-    baseUrl: normalizeAppBasePath(import.meta.env.BASE_URL || '/'),
-    realtimeNotificationsEnabled: false,
+    apiUrl: normalizeBaseUrl(config.apiUrl!),
+    baseUrl: normalizeAppBasePath(config?.baseUrl ?? '/'),
+    realtimeNotificationsEnabled: config?.realtimeNotificationsEnabled === true,
   };
-}
-
-async function fetchRuntimeConfig(): Promise<ResolvedRuntimeConfig | null> {
-  const fallbackConfig = resolveEnvRuntimeConfig();
-
-  try {
-    const response = await fetch(toBaseRelativePath(RUNTIME_CONFIG_FILE_NAME), {
-      cache: 'no-store',
-      credentials: 'same-origin',
-      headers: {
-        Accept: 'application/json',
-      },
-    });
-    if (!response.ok) {
-      throw new Error(`${RUNTIME_CONFIG_FILE_NAME} HTTP ${response.status}`);
-    }
-
-    const config = (await response.json()) as RuntimeConfig;
-    if (!isValidApiUrl(config?.apiUrl)) {
-      throw new Error(`${RUNTIME_CONFIG_FILE_NAME} geçerli bir apiUrl içermiyor`);
-    }
-
-    return {
-      apiUrl: normalizeBaseUrl(config.apiUrl!),
-      baseUrl: normalizeAppBasePath(config?.baseUrl ?? fallbackConfig.baseUrl),
-      realtimeNotificationsEnabled: config?.realtimeNotificationsEnabled === true,
-    };
-  } catch (error) {
-    console.warn(`[api-config] ${RUNTIME_CONFIG_FILE_NAME} yüklenemedi, fallback kullanılacak:`, error);
-  }
-
-  return null;
-}
-
-function readPersistedRuntimeConfig(): PersistedRuntimeConfig | null {
-  if (typeof window === 'undefined') {
-    return null;
-  }
-
-  try {
-    const raw = window.localStorage.getItem(RUNTIME_CONFIG_CACHE_KEY);
-    if (!raw) {
-      return null;
-    }
-
-    const parsed = JSON.parse(raw) as Partial<PersistedRuntimeConfig>;
-    if (
-      !isValidApiUrl(parsed.apiUrl) ||
-      typeof parsed.baseUrl !== 'string' ||
-      typeof parsed.realtimeNotificationsEnabled !== 'boolean' ||
-      typeof parsed.fetchedAt !== 'number'
-    ) {
-      return null;
-    }
-
-    return {
-      apiUrl: normalizeBaseUrl(parsed.apiUrl as string),
-      baseUrl: normalizeAppBasePath(parsed.baseUrl),
-      realtimeNotificationsEnabled: parsed.realtimeNotificationsEnabled,
-      fetchedAt: parsed.fetchedAt,
-    };
-  } catch {
-    return null;
-  }
-}
-
-function persistRuntimeConfig(config: ResolvedRuntimeConfig): void {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  const payload: PersistedRuntimeConfig = {
-    apiUrl: config.apiUrl,
-    baseUrl: config.baseUrl,
-    realtimeNotificationsEnabled: config.realtimeNotificationsEnabled,
-    fetchedAt: Date.now(),
-  };
-
-  try {
-    window.localStorage.setItem(RUNTIME_CONFIG_CACHE_KEY, JSON.stringify(payload));
-  } catch {
-    // Runtime config cache is an optimization only.
-  }
 }
 
 function hydrateMemoryCache(config: ResolvedRuntimeConfig): ResolvedRuntimeConfig {
@@ -197,35 +101,9 @@ function hydrateMemoryCache(config: ResolvedRuntimeConfig): ResolvedRuntimeConfi
   return config;
 }
 
-function hasExplicitDevApiUrl(): boolean {
-  return import.meta.env.DEV && isValidApiUrl(import.meta.env.VITE_API_URL);
-}
-
 export function loadConfig(): Promise<string> {
   if (!configPromise) {
-    if (hasExplicitDevApiUrl()) {
-      configPromise = Promise.resolve(resolveEnvRuntimeConfig());
-    } else {
-      configPromise = fetchRuntimeConfig().then((runtimeConfig) => {
-        if (runtimeConfig) {
-          persistRuntimeConfig(runtimeConfig);
-          return runtimeConfig;
-        }
-
-        const persisted = readPersistedRuntimeConfig();
-        if (persisted) {
-          return {
-            apiUrl: persisted.apiUrl,
-            baseUrl: persisted.baseUrl,
-            realtimeNotificationsEnabled: persisted.realtimeNotificationsEnabled,
-          };
-        }
-
-        return resolveEnvRuntimeConfig();
-      });
-    }
-
-    configPromise = configPromise.then(hydrateMemoryCache);
+    configPromise = fetchRuntimeConfig().then(hydrateMemoryCache);
   }
 
   return configPromise.then((config) => config.apiUrl);
@@ -236,7 +114,7 @@ export async function getApiUrl(): Promise<string> {
 }
 
 export function getApiBaseUrl(): string {
-  return cachedApiUrl || resolveEnvRuntimeConfig().apiUrl;
+  return cachedApiUrl;
 }
 
 export function getAppBasePath(): string {
