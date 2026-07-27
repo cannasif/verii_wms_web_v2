@@ -369,10 +369,54 @@ input.input:is([type='date'], [type='datetime-local'], [type='time'])::-webkit-c
   color: var(--wms-brand-primary);
 }
 
+.wms-date-picker-panel {
+  width: min(20rem, calc(100vw - 2rem));
+}
+
+.wms-date-picker-popover {
+  width: min(20rem, calc(100vw - 1.5rem));
+  padding: 0.75rem;
+}
+
+.wms-date-picker-dialog {
+  width: min(24rem, calc(100vw - 1rem));
+  overflow: hidden;
+}
+
+.app-date-input {
+  caret-color: transparent;
+}
+
+.app-date-input:focus {
+  cursor: pointer;
+}
+
 .app-date-input::-webkit-calendar-picker-indicator {
-  position: absolute;
-  opacity: 0 !important;
+  opacity: 0;
   pointer-events: none;
+  position: absolute;
+  right: 0;
+  width: 0;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.app-date-input::-webkit-datetime-edit-fields-wrapper {
+  padding: 0;
+}
+
+.app-date-input::-moz-calendar-picker-indicator {
+  opacity: 0;
+  pointer-events: none;
+  width: 0;
+  height: 0;
+  border: none;
+  background: none;
 }
 
 .wms-floating-surface {
@@ -406,7 +450,11 @@ input.input:is([type='date'], [type='datetime-local'], [type='time'])::-webkit-c
   padding: 0.75rem;
 }
 
-@media (max-width: 639px) {
+.app-input-shell--trailing .app-date-input {
+  position: relative;
+}
+
+@media (max-width: 767px) {
   .input,
   [data-slot='input'] {
     font-size: 1rem;
@@ -414,11 +462,17 @@ input.input:is([type='date'], [type='datetime-local'], [type='time'])::-webkit-c
 
   .app-input-shell {
     max-width: 100%;
+    min-width: 0;
   }
 
-  .app-date-input {
+  .app-date-input,
+  input.input[type='date'],
+  input.input[type='datetime-local'],
+  input.input[type='time'] {
+    box-sizing: border-box;
     min-width: 0;
     max-width: 100%;
+    width: 100%;
   }
 
   .wms-grid-columns-popover {

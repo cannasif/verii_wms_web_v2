@@ -1192,10 +1192,8 @@ function ReceiptLineCard({
                 ) : (
                   <span />
                 )}
-                <input
-                  className="input"
+                <AppDateInput
                   aria-label="Üretim tarihi"
-                  type="date"
                   value={tracking.manufacturingDate ?? ""}
                   onChange={(event) =>
                     updateTracking(key, tracking.localId, {
@@ -1203,10 +1201,8 @@ function ReceiptLineCard({
                     })
                   }
                 />
-                <input
-                  className="input"
+                <AppDateInput
                   aria-label="Son kullanma tarihi"
-                  type="date"
                   value={tracking.expirationDate ?? ""}
                   onChange={(event) =>
                     updateTracking(key, tracking.localId, {

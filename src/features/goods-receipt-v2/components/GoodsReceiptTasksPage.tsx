@@ -19,6 +19,7 @@ import {
   type GridColumn,
 } from "@/components/shared/AdvancedDataGrid";
 import { AppDropdown } from "@/components/shared/AppDropdown";
+import { AppDateInput } from "@/components/shared/AppInput";
 import { ResponsiveDialog } from "@/components/shared/ResponsiveDialog";
 import {
   requiredActionColumn,
@@ -657,16 +658,12 @@ function TaskScanPanel({
             onChange={(e) => setSerial(e.target.value)}
             placeholder="Seri"
           />
-          <input
-            className="input"
-            type="date"
+          <AppDateInput
             value={manufacturingDate}
             onChange={(e) => setManufacturingDate(e.target.value)}
             aria-label="Üretim tarihi"
           />
-          <input
-            className="input"
-            type="date"
+          <AppDateInput
             value={expirationDate}
             onChange={(e) => setExpirationDate(e.target.value)}
             aria-label="Son kullanma tarihi"

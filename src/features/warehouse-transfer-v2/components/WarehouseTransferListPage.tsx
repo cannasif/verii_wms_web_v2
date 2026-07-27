@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { AdvancedDataGrid, type GridColumn } from '@/components/shared/AdvancedDataGrid';
+import { AppDateInput } from '@/components/shared/AppInput';
 import { ResponsiveDialog } from '@/components/shared/ResponsiveDialog';
 import { requiredActionColumn, systemColumns } from '@/components/shared/GridSystemColumns';
 import { localizeEnumValue } from '@/lib/enum-localization';
@@ -130,10 +131,10 @@ function EditDraft({ api, detail, close, saved }: { api: TransferClient; detail:
     <form onSubmit={(event) => void submit(event)} className="space-y-4">
       <header className="flex items-start justify-between gap-3"><div><h2 className="text-xl font-black">Transfer taslağını düzenle</h2><p className="font-mono text-sm text-slate-500">{detail.header.documentNo}</p></div><button type="button" onClick={close} aria-label="Pencereyi kapat" className="grid size-11 shrink-0 place-items-center rounded-xl hover:bg-black/5 dark:hover:bg-white/10"><X /></button></header>
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Belge tarihi"><input type="date" required value={form.documentDate} onChange={(e) => setForm({ ...form, documentDate: e.target.value })} className="input" /></Field>
+        <Field label="Belge tarihi"><AppDateInput required value={form.documentDate} onChange={(e) => setForm({ ...form, documentDate: e.target.value })} /></Field>
         <Field label="Öncelik"><input type="number" min={1} max={5} required value={form.priority} onChange={(e) => setForm({ ...form, priority: Number(e.target.value) })} className="input" /></Field>
-        <Field label="Planlanan sevk"><input type="datetime-local" value={form.plannedDispatchAtUtc} onChange={(e) => setForm({ ...form, plannedDispatchAtUtc: e.target.value })} className="input" /></Field>
-        <Field label="Planlanan varış"><input type="datetime-local" value={form.plannedArrivalAtUtc} onChange={(e) => setForm({ ...form, plannedArrivalAtUtc: e.target.value })} className="input" /></Field>
+        <Field label="Planlanan sevk"><AppDateInput type="datetime-local" value={form.plannedDispatchAtUtc} onChange={(e) => setForm({ ...form, plannedDispatchAtUtc: e.target.value })} /></Field>
+        <Field label="Planlanan varış"><AppDateInput type="datetime-local" value={form.plannedArrivalAtUtc} onChange={(e) => setForm({ ...form, plannedArrivalAtUtc: e.target.value })} /></Field>
         <Field label="Dış referans"><input maxLength={100} value={form.externalReferenceNo} onChange={(e) => setForm({ ...form, externalReferenceNo: e.target.value })} className="input" /></Field>
       </div>
       <Field label="Açıklama"><textarea rows={4} maxLength={2000} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="input h-auto py-3" /></Field>

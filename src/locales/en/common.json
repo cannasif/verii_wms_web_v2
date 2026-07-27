@@ -3914,7 +3914,14 @@
   "dateInput": {
     "openDate": "Open date picker",
     "openTime": "Open time picker",
-    "openDateTime": "Open date and time picker"
+    "openDateTime": "Open date and time picker",
+    "clear": "Clear",
+    "today": "Today",
+    "done": "Done",
+    "hour": "Hour",
+    "minute": "Minute",
+    "prevMonth": "Previous month",
+    "nextMonth": "Next month"
   },
   "dataGrid": {
     "systemColumns": {

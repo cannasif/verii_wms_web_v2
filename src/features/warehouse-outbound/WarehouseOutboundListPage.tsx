@@ -3,6 +3,7 @@ import { Ban, Eye, Loader2, Pencil, PlayCircle, Save, Trash2, X } from 'lucide-r
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { AdvancedDataGrid, type GridColumn } from '@/components/shared/AdvancedDataGrid';
+import { AppDateInput } from '@/components/shared/AppInput';
 import { ResponsiveDialog } from '@/components/shared/ResponsiveDialog';
 import { requiredActionColumn, systemColumns } from '@/components/shared/GridSystemColumns';
 import { formatProjectDate, formatProjectNumber } from '@/lib/project-format';
@@ -90,8 +91,8 @@ function EditShipment({ detail, close, saved }: { detail: ShipmentDetail; close:
   return <ResponsiveDialog onClose={close} title="Ambar çıkış taslağını düzenle" description={`${detail.header.documentNo} numaralı ambar çıkış taslağını düzenleyin.`} className="!max-w-3xl"><form onSubmit={(event) => void submit(event)} className="space-y-4">
     <header className="flex items-start justify-between gap-3"><div><h2 className="text-xl font-black">Ambar çıkış taslağını düzenle</h2><p className="font-mono text-sm text-slate-500">{detail.header.documentNo}</p></div><button type="button" onClick={close} aria-label="Pencereyi kapat" className="grid size-11 shrink-0 place-items-center rounded-xl hover:bg-black/5 dark:hover:bg-white/10"><X /></button></header>
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      <Field label="Belge tarihi"><input type="date" required value={form.documentDate} onChange={(e) => set('documentDate', e.target.value)} className="input" /></Field>
-      <Field label="Planlanan sevk"><input type="datetime-local" value={form.plannedShipmentAtUtc} onChange={(e) => set('plannedShipmentAtUtc', e.target.value)} className="input" /></Field>
+      <Field label="Belge tarihi"><AppDateInput required value={form.documentDate} onChange={(e) => set('documentDate', e.target.value)} /></Field>
+      <Field label="Planlanan sevk"><AppDateInput type="datetime-local" value={form.plannedShipmentAtUtc} onChange={(e) => set('plannedShipmentAtUtc', e.target.value)} /></Field>
       <Field label="Öncelik"><input type="number" min={1} max={5} value={form.priority} onChange={(e) => set('priority', Number(e.target.value))} className="input" /></Field>
       <Field label="Dış referans"><input maxLength={100} value={form.externalReferenceNo} onChange={(e) => set('externalReferenceNo', e.target.value)} className="input" /></Field>
       <Field label="Taşıyıcı kodu"><input maxLength={50} value={form.carrierCode} onChange={(e) => set('carrierCode', e.target.value)} className="input" /></Field>

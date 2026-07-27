@@ -3935,7 +3935,14 @@
   "dateInput": {
     "openDate": "Takvimi aç",
     "openTime": "Saat seçiciyi aç",
-    "openDateTime": "Tarih ve saat seçiciyi aç"
+    "openDateTime": "Tarih ve saat seçiciyi aç",
+    "clear": "Temizle",
+    "today": "Bugün",
+    "done": "Tamam",
+    "hour": "Saat",
+    "minute": "Dakika",
+    "prevMonth": "Önceki ay",
+    "nextMonth": "Sonraki ay"
   },
   "dataGrid": {
     "systemColumns": {
