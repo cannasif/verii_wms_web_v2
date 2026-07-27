@@ -23,5 +23,24 @@
     "stock": "Stock", "yap": "Configuración", "accepted": "Aceptado", "routed": "Enrutado", "remaining": "Restante",
     "label": "Etiqueta", "printLineLabel": "Imprimir etiqueta de línea", "showLineLabelPdf": "Mostrar etiqueta de línea en PDF",
     "lineNumber": "Línea #{{number}}", "noStockName": "Sin nombre de stock"
+  },
+  "tasks": {
+    "title": "Gestión de tareas de recepción",
+    "assignedTitle": "Mis tareas de recepción asignadas",
+    "description": "Gestione las tareas de recepción, los responsables y las etiquetas pregeneradas.",
+    "assignedDescription": "Acepte las tareas asignadas, inícielas y procese la recepción física mediante código de barras.",
+    "taskNo": "N.º de tarea",
+    "documentNo": "N.º de recepción",
+    "processType": "Tipo de proceso",
+    "supplierCode": "Código de proveedor",
+    "supplierName": "Nombre del proveedor",
+    "warehouseCode": "Código de almacén",
+    "warehouseName": "Nombre del almacén",
+    "status": "Estado de la tarea",
+    "myAssignmentStatus": "Mi estado de asignación",
+    "plannedQuantity": "Planificado",
+    "processedQuantity": "Recibido",
+    "actions": "Acciones",
+    "viewTask": "Ver tarea"
   }
 }

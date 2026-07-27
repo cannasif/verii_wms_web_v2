@@ -23,5 +23,24 @@
     "stock": "Articolo", "yap": "Configurazione", "accepted": "Accettato", "routed": "Instradato", "remaining": "Rimanente",
     "label": "Etichetta", "printLineLabel": "Stampa etichetta riga", "showLineLabelPdf": "Mostra etichetta riga in PDF",
     "lineNumber": "Riga #{{number}}", "noStockName": "Nome articolo assente"
+  },
+  "tasks": {
+    "title": "Gestione attività di ricevimento",
+    "assignedTitle": "Le mie attività di ricevimento assegnate",
+    "description": "Gestisci le attività di ricevimento, i responsabili e le etichette pre-generate.",
+    "assignedDescription": "Accetta le attività assegnate, avviale e processa il ricevimento fisico tramite codice a barre.",
+    "taskNo": "N. attività",
+    "documentNo": "N. ricevimento",
+    "processType": "Tipo di processo",
+    "supplierCode": "Codice fornitore",
+    "supplierName": "Nome fornitore",
+    "warehouseCode": "Codice magazzino",
+    "warehouseName": "Nome magazzino",
+    "status": "Stato attività",
+    "myAssignmentStatus": "Il mio stato di assegnazione",
+    "plannedQuantity": "Pianificato",
+    "processedQuantity": "Ricevuto",
+    "actions": "Azioni",
+    "viewTask": "Visualizza attività"
   }
 }

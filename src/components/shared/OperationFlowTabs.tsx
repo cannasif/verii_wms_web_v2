@@ -1,9 +1,12 @@
 import type { ReactElement, ReactNode } from 'react';
 import { ClipboardList, PackageOpen, UserRoundCheck, Zap } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 
 export type OperationSourceMode = 'order' | 'stock';
 export type OperationExecutionMode = 'task' | 'direct';
+
+const OF = 'transferDraft.operationFlow';
 
 type Props = {
   source: OperationSourceMode;
@@ -25,28 +28,29 @@ export function OperationFlowTabs({
   onSourceChange,
   onExecutionChange,
   isAllowed = () => true,
-  orderLabel = 'Siparişe istinaden',
-  stockLabel = 'Siparişsiz / serbest stoktan',
-  taskDescription = 'Operasyon emri oluşturulur, kullanıcı atanır ve saha ilerlemesi izlenir.',
-  directDescription = 'Görev oluşturmadan yetkili kullanıcı tarafından doğrudan işlenir.',
+  orderLabel,
+  stockLabel,
+  taskDescription,
+  directDescription,
   accent = 'cyan',
   children,
 }: Props): ReactElement {
+  const { t } = useTranslation('common');
   const tone = accent === 'violet' ? 'violet' : 'cyan';
   const executions: Array<{ value: OperationExecutionMode; title: string; description: string; icon: typeof UserRoundCheck }> = [
-    { value: 'task', title: 'Emirli İşlem', description: taskDescription, icon: UserRoundCheck },
-    { value: 'direct', title: 'Emirsiz İşlem', description: directDescription, icon: Zap },
+    { value: 'task', title: t(`${OF}.taskBased`), description: taskDescription ?? t(`${OF}.taskDescription`), icon: UserRoundCheck },
+    { value: 'direct', title: t(`${OF}.direct`), description: directDescription ?? t(`${OF}.directDescription`), icon: Zap },
   ];
   const sources: Array<{ value: OperationSourceMode; title: string; description: string; icon: typeof ClipboardList }> = [
-    { value: 'order', title: orderLabel, description: 'ERP belgesi ve açık miktarlar ile izlenebilir bağlantı kurar.', icon: ClipboardList },
-    { value: 'stock', title: stockLabel, description: 'Stok, miktar, depo ve raf bilgileri kullanıcı tarafından belirlenir.', icon: PackageOpen },
+    { value: 'order', title: orderLabel ?? t('transferDraft.sourceLabels.warehouseOrder'), description: t(`${OF}.orderSourceDescription`), icon: ClipboardList },
+    { value: 'stock', title: stockLabel ?? t('transferDraft.sourceLabels.warehouseStock'), description: t(`${OF}.stockSourceDescription`), icon: PackageOpen },
   ];
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] shadow-sm">
+    <section className="overflow-hidden rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] shadow-sm" data-no-auto-localize="true">
       <div className="border-b border-[var(--wms-app-border)] p-4 sm:p-5">
-        <p className="text-[0.68rem] font-black uppercase tracking-[.18em] text-slate-500">01 · Yürütme Modeli</p>
-        <div className="mt-3 grid gap-2 sm:grid-cols-2" role="tablist" aria-label="Emir yürütme modeli">
+        <p className="text-[0.68rem] font-black uppercase tracking-[.18em] text-slate-500">{t(`${OF}.executionModel`)}</p>
+        <div className="mt-3 grid gap-2 sm:grid-cols-2" role="tablist" aria-label={t(`${OF}.executionAriaLabel`)}>
           {executions.map(({ value, title, description, icon: Icon }) => {
             const active = execution === value;
             const hasAnyAllowedSource = isAllowed('order', value) || isAllowed('stock', value);
@@ -77,8 +81,8 @@ export function OperationFlowTabs({
       </div>
 
       <div className="p-4 sm:p-5">
-        <p className="text-[0.68rem] font-black uppercase tracking-[.18em] text-slate-500">02 · Belge Kaynağı</p>
-        <div className="mt-3 grid gap-2 sm:grid-cols-2" role="tablist" aria-label="Operasyon belge kaynağı">
+        <p className="text-[0.68rem] font-black uppercase tracking-[.18em] text-slate-500">{t(`${OF}.documentSource`)}</p>
+        <div className="mt-3 grid gap-2 sm:grid-cols-2" role="tablist" aria-label={t(`${OF}.sourceAriaLabel`)}>
           {sources.map(({ value, title, description, icon: Icon }) => {
             const active = source === value;
             const allowed = isAllowed(value, execution);
@@ -101,7 +105,7 @@ export function OperationFlowTabs({
                 )}
               >
                 <span className="flex items-center gap-2 font-bold"><Icon className="size-4"/>{title}</span>
-                <span className="mt-1 block text-xs leading-5 text-slate-500">{allowed ? description : 'Bu kombinasyon süreç politikasında kapalı.'}</span>
+                <span className="mt-1 block text-xs leading-5 text-slate-500">{allowed ? description : t(`${OF}.combinationDisabled`)}</span>
               </button>
             );
           })}

@@ -29,5 +29,46 @@
       "title": "إعدادات الشحن",
       "description": "إدارة متغيرات التدفق والحجز والتعبئة والتنفيذ الجزئي والموافقة وقواعد ERP."
     }
+  },
+  "policy": {
+    "eyebrow": "الشحن",
+    "title": "سياسة عملية الشحن",
+    "description": "يتم حفظ القواعد في الرأس عند إنشاء المسودة؛ الشحنات المفتوحة لا تتأثر بالتغييرات اللاحقة.",
+    "save": "حفظ",
+    "saveSuccess": "تم حفظ سياسة الشحن.",
+    "saveError": "تعذر الحفظ.",
+    "sections": {
+      "flowMatrix": "مصفوفة التدفقات المسموحة",
+      "reservation": "الحجز والانتقاء والكمية",
+      "gates": "بوابات التشغيل"
+    },
+    "toggles": {
+      "allowOrderBasedTask": "من الطلب + بمهمة",
+      "allowStockBasedTask": "بدون طلب + بمهمة",
+      "allowOrderBasedDirect": "من الطلب + مباشر",
+      "allowStockBasedDirect": "بدون طلب + مباشر",
+      "requireApproval": "موافقة الشحن إلزامية",
+      "requireAssigneeForTask": "المستخدم إلزامي للشحن بالمهمة",
+      "allowMultipleAssignees": "تعيين متعدد للمستخدمين",
+      "autoReleaseTaskBased": "تحرير المهمة تلقائيًا",
+      "allowPartialPicking": "انتقاء جزئي",
+      "allowPartialShipment": "شحن جزئي",
+      "requireSourceLocation": "موقع المصدر إلزامي",
+      "requireShipmentInformation": "معلومات المركبة/الناقل إلزامية",
+      "requireLoadingConfirmation": "تأكيد التحميل إلزامي",
+      "autoPostErpAfterApproval": "إرسال ERP تلقائيًا بعد الموافقة"
+    },
+    "fields": {
+      "reservation": "الحجز",
+      "shortage": "شحن ناقص",
+      "overPick": "انتقاء زائد",
+      "packing": "التعبئة",
+      "minimumFulfillment": "الحد الأدنى للتنفيذ %",
+      "overPickTolerance": "تسامح الانتقاء الزائد %"
+    },
+    "reservationPolicy": { "None": "لا يوجد", "OnCreate": "عند الإنشاء", "OnRelease": "عند التحرير" },
+    "shortagePolicy": { "Block": "حظر", "AllowPartial": "السماح بالجزئي", "RequireApproval": "إرسال للموافقة" },
+    "overPickPolicy": { "Block": "حظر", "AllowWithinTolerance": "ضمن التسامح", "RequireApproval": "إرسال للموافقة" },
+    "packingPolicy": { "NotRequired": "غير مطلوب", "Optional": "اختياري", "Required": "إلزامي" }
   }
 }

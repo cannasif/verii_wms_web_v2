@@ -29,5 +29,46 @@
       "title": "Paramètres d'expédition",
       "description": "Gérez les variantes de flux, la réservation, le packaging, l'exécution partielle, l'approbation et les règles ERP."
     }
+  },
+  "policy": {
+    "eyebrow": "Expédition",
+    "title": "Politique de processus d'expédition",
+    "description": "Les règles sont enregistrées dans l'en-tête à la création du brouillon ; les expéditions ouvertes ne sont pas affectées par les changements ultérieurs.",
+    "save": "Enregistrer",
+    "saveSuccess": "Politique d'expédition enregistrée.",
+    "saveError": "Enregistrement impossible.",
+    "sections": {
+      "flowMatrix": "Matrice de flux autorisés",
+      "reservation": "Réservation, prélèvement et quantité",
+      "gates": "Portes opérationnelles"
+    },
+    "toggles": {
+      "allowOrderBasedTask": "Depuis commande + avec tâche",
+      "allowStockBasedTask": "Sans commande + avec tâche",
+      "allowOrderBasedDirect": "Depuis commande + direct",
+      "allowStockBasedDirect": "Sans commande + direct",
+      "requireApproval": "Approbation d'expédition obligatoire",
+      "requireAssigneeForTask": "Utilisateur obligatoire pour expédition avec tâche",
+      "allowMultipleAssignees": "Affectation multiple d'utilisateurs",
+      "autoReleaseTaskBased": "Libérer la tâche automatiquement",
+      "allowPartialPicking": "Prélèvement partiel",
+      "allowPartialShipment": "Expédition partielle",
+      "requireSourceLocation": "Emplacement source obligatoire",
+      "requireShipmentInformation": "Informations véhicule/transporteur obligatoires",
+      "requireLoadingConfirmation": "Confirmation de chargement obligatoire",
+      "autoPostErpAfterApproval": "Transfert ERP automatique après approbation"
+    },
+    "fields": {
+      "reservation": "Réservation",
+      "shortage": "Expédition incomplète",
+      "overPick": "Sur-prélèvement",
+      "packing": "Emballage",
+      "minimumFulfillment": "Exécution minimale %",
+      "overPickTolerance": "Tolérance de sur-prélèvement %"
+    },
+    "reservationPolicy": { "None": "Aucune", "OnCreate": "À la création", "OnRelease": "À la libération" },
+    "shortagePolicy": { "Block": "Bloquer", "AllowPartial": "Autoriser partiel", "RequireApproval": "Envoyer pour approbation" },
+    "overPickPolicy": { "Block": "Bloquer", "AllowWithinTolerance": "Dans la tolérance", "RequireApproval": "Envoyer pour approbation" },
+    "packingPolicy": { "NotRequired": "Non requis", "Optional": "Optionnel", "Required": "Obligatoire" }
   }
 }

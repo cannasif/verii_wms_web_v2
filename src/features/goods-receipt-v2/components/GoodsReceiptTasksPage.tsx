@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState, type ReactElement } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import {
   Barcode,
   Check,
@@ -43,6 +44,8 @@ export function GoodsReceiptTasksPage({
   assignedOnly?: boolean;
 }): ReactElement {
   const { t } = useModuleTranslation("goods-receipt-v2");
+  const { t: tGrid, i18n } = useTranslation("common");
+  const gridLanguage = i18n.resolvedLanguage ?? i18n.language;
   const queryClient = useQueryClient();
   const [detail, setDetail] = useState<GoodsReceiptTaskDetail | null>(null);
   const [users, setUsers] = useState<ActiveUserOption[]>([]);
@@ -124,7 +127,7 @@ export function GoodsReceiptTasksPage({
       ...systemColumns<GoodsReceiptTaskGridRow>(),
       {
         key: "taskNo",
-        label: "Emir No",
+        label: tGrid("dataGrid.goodsReceiptTasks.taskNo"),
         sortable: true,
         filterable: true,
         render: (row) => (
@@ -133,14 +136,14 @@ export function GoodsReceiptTasksPage({
       },
       {
         key: "documentNo",
-        label: "Mal Kabul No",
+        label: tGrid("dataGrid.goodsReceiptTasks.documentNo"),
         sortable: true,
         filterable: true,
         render: (row) => row.documentNo,
       },
       {
         key: "processType",
-        label: "İşlem Tipi",
+        label: tGrid("dataGrid.goodsReceiptTasks.processType"),
         sortable: true,
         filterable: true,
         render: (row) =>
@@ -148,42 +151,42 @@ export function GoodsReceiptTasksPage({
       },
       {
         key: "supplierCode",
-        label: "Tedarikçi Kodu",
+        label: tGrid("dataGrid.goodsReceiptTasks.supplierCode"),
         sortable: true,
         filterable: true,
         render: (row) => row.supplierCode || "—",
       },
       {
         key: "supplierName",
-        label: "Tedarikçi Adı",
+        label: tGrid("dataGrid.goodsReceiptTasks.supplierName"),
         sortable: true,
         filterable: true,
         render: (row) => row.supplierName || "—",
       },
       {
         key: "warehouseCode",
-        label: "Depo Kodu",
+        label: tGrid("dataGrid.goodsReceiptTasks.warehouseCode"),
         sortable: true,
         filterable: true,
         render: (row) => row.warehouseCode,
       },
       {
         key: "warehouseName",
-        label: "Depo Adı",
+        label: tGrid("dataGrid.goodsReceiptTasks.warehouseName"),
         sortable: true,
         filterable: true,
         render: (row) => row.warehouseName,
       },
       {
         key: "status",
-        label: "Emir Durumu",
+        label: tGrid("dataGrid.goodsReceiptTasks.status"),
         sortable: true,
         filterable: true,
         render: (row) => goodsReceiptEnumLabel(t, "taskStatus", row.status),
       },
       {
         key: "myAssignmentStatus",
-        label: "Atama Durumum",
+        label: tGrid("dataGrid.goodsReceiptTasks.myAssignmentStatus"),
         sortable: true,
         filterable: true,
         render: (row) =>
@@ -191,21 +194,21 @@ export function GoodsReceiptTasksPage({
       },
       {
         key: "plannedQuantity",
-        label: "Planlanan",
+        label: tGrid("dataGrid.goodsReceiptTasks.plannedQuantity"),
         sortable: true,
         filterable: true,
         render: (row) => formatProjectNumber(row.plannedQuantity),
       },
       {
         key: "processedQuantity",
-        label: "Toplanan",
+        label: tGrid("dataGrid.goodsReceiptTasks.processedQuantity"),
         sortable: true,
         filterable: true,
         render: (row) => formatProjectNumber(row.processedQuantity),
       },
       {
         key: "actions",
-        label: "İşlemler",
+        label: tGrid("dataGrid.goodsReceiptTasks.actions"),
         ...requiredActionColumn,
         render: (row) => (
           <button
@@ -213,7 +216,7 @@ export function GoodsReceiptTasksPage({
             disabled={busy === row.id}
             onClick={() => void open(row)}
             className="rounded-lg p-2 text-cyan-500 hover:bg-cyan-500/10"
-            aria-label="Emri görüntüle"
+            aria-label={tGrid("dataGrid.goodsReceiptTasks.viewTask")}
           >
             {busy === row.id ? (
               <Loader2 className="size-4 animate-spin" />
@@ -224,7 +227,7 @@ export function GoodsReceiptTasksPage({
         ),
       },
     ],
-    [busy, open, t],
+    [busy, gridLanguage, open, t, tGrid],
   );
   return (
     <>
@@ -232,13 +235,13 @@ export function GoodsReceiptTasksPage({
         pageKey={pageKey}
         title={
           assignedOnly
-            ? "Bana Atanan Mal Kabul Emirleri"
-            : "Mal Kabul Emir Yönetimi"
+            ? tGrid("dataGrid.goodsReceiptTasks.assignedTitle")
+            : tGrid("dataGrid.goodsReceiptTasks.title")
         }
         description={
           assignedOnly
-            ? "Atanmış emirleri kabul edin, başlatın ve barkodla fiziksel kabulü işleyin."
-            : "Mal kabul emirlerini, sorumlularını ve ön etiketlerini yönetin."
+            ? tGrid("dataGrid.goodsReceiptTasks.assignedDescription")
+            : tGrid("dataGrid.goodsReceiptTasks.description")
         }
         columns={columns}
         fetchPage={

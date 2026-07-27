@@ -11,5 +11,46 @@
     },
     "records": { "title": "Sevk Kayıtları", "description": "Planlanan, toplanan, paketlenen, yüklenen ve sevk edilen miktarları izleyin." },
     "settings": { "title": "Sevk Ayarları", "description": "Akış türleri, rezervasyon, paketleme, kısmi işlem, onay ve ERP kurallarını yönetin." }
+  },
+  "policy": {
+    "eyebrow": "Sevk",
+    "title": "Sevk Süreç Politikası",
+    "description": "Kurallar taslak oluşturulurken başlığa snapshot alınır; açık sevkler sonraki ayar değişikliklerinden etkilenmez.",
+    "save": "Kaydet",
+    "saveSuccess": "Sevk politikası kaydedildi.",
+    "saveError": "Kaydedilemedi.",
+    "sections": {
+      "flowMatrix": "İzin verilen akış matrisi",
+      "reservation": "Rezervasyon, toplama ve miktar",
+      "gates": "Operasyon kapıları"
+    },
+    "toggles": {
+      "allowOrderBasedTask": "Siparişten + emirli",
+      "allowStockBasedTask": "Siparişsiz + emirli",
+      "allowOrderBasedDirect": "Siparişten + doğrudan",
+      "allowStockBasedDirect": "Siparişsiz + doğrudan",
+      "requireApproval": "Sevk onayı zorunlu",
+      "requireAssigneeForTask": "Emirli sevkte kullanıcı zorunlu",
+      "allowMultipleAssignees": "Çoklu kullanıcı ataması",
+      "autoReleaseTaskBased": "Emri otomatik serbest bırak",
+      "allowPartialPicking": "Kısmi toplama",
+      "allowPartialShipment": "Kısmi sevk",
+      "requireSourceLocation": "Kaynak raf zorunlu",
+      "requireShipmentInformation": "Araç/taşıyıcı zorunlu",
+      "requireLoadingConfirmation": "Yükleme teyidi zorunlu",
+      "autoPostErpAfterApproval": "Onaydan sonra ERP'ye otomatik aktar"
+    },
+    "fields": {
+      "reservation": "Rezervasyon",
+      "shortage": "Eksik sevk",
+      "overPick": "Fazla toplama",
+      "packing": "Paketleme",
+      "minimumFulfillment": "Minimum karşılama %",
+      "overPickTolerance": "Fazla toplama toleransı %"
+    },
+    "reservationPolicy": { "None": "Yok", "OnCreate": "Oluştururken", "OnRelease": "Serbest bırakırken" },
+    "shortagePolicy": { "Block": "Bloke et", "AllowPartial": "Kısmi izin ver", "RequireApproval": "Onaya gönder" },
+    "overPickPolicy": { "Block": "Bloke et", "AllowWithinTolerance": "Tolerans içinde", "RequireApproval": "Onaya gönder" },
+    "packingPolicy": { "NotRequired": "Gerekli değil", "Optional": "Opsiyonel", "Required": "Zorunlu" }
   }
 }

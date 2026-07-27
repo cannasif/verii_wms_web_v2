@@ -1,13 +1,24 @@
+import {useMemo} from 'react';
+import {useTranslation} from 'react-i18next';
 import {InboundProcessHeader} from '@/features/inbound-operations/components/InboundProcessHeader';
 
-const steps=[
-  {key:'gate',label:'Araç Kayıtları',description:'Liste, yeni kabul ve güncelleme',href:'/warehouse/goods-receipts/steel/vehicle-check-ins'},
-  {key:'plan',label:'Beklenti Planı',description:'Excel önizleme ve doğrulama',href:'/warehouse/goods-receipts/steel/import'},
-  {key:'inspection',label:'Kalite Kontrol',description:'Levha bazında kabul ve ret',href:'/warehouse/goods-receipts/steel/inspection'},
-  {key:'receipt',label:'Mal Kabul Emri',description:'Emre dönüştürme ve atama',href:'/warehouse/goods-receipts/steel/receipt'},
-  {key:'placement',label:'Raf Yerleştirme',description:'Stok hareketi ve konum',href:'/warehouse/goods-receipts/steel/placement'},
-];
+const STEP_KEYS=['gate','plan','inspection','receipt','placement'] as const;
+const STEP_HREFS={
+  gate:'/warehouse/goods-receipts/steel/vehicle-check-ins',
+  plan:'/warehouse/goods-receipts/steel/import',
+  inspection:'/warehouse/goods-receipts/steel/inspection',
+  receipt:'/warehouse/goods-receipts/steel/receipt',
+  placement:'/warehouse/goods-receipts/steel/placement',
+} as const;
 
 export function SteelProcessHeader({currentStep,title,description,notice}:{currentStep:string;title:string;description:string;notice?:string}){
-  return <InboundProcessHeader eyebrow="Mal Kabul · SAC İşlemleri" title={title} description={description} steps={steps} currentStep={currentStep} notice={notice}/>;
+  const {t}=useTranslation('common');
+  const P='steelGoodReceiptAcceptance.processHeader';
+  const steps=useMemo(()=>STEP_KEYS.map(key=>({
+    key,
+    label:t(`${P}.steps.${key}.label`),
+    description:t(`${P}.steps.${key}.description`),
+    href:STEP_HREFS[key],
+  })),[t]);
+  return <div data-no-auto-localize="true"><InboundProcessHeader eyebrow={t(`${P}.eyebrow`)} title={title} description={description} steps={steps} currentStep={currentStep} notice={notice}/></div>;
 }

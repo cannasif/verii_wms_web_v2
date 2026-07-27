@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState, type ReactElement, type ReactNode } from 'react';
 import { Ban, Eye, Loader2, Pencil, PlayCircle, Save, Trash2, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { AdvancedDataGrid, type GridColumn } from '@/components/shared/AdvancedDataGrid';
 import { ResponsiveDialog } from '@/components/shared/ResponsiveDialog';
@@ -15,6 +16,7 @@ import {
 import type { WarehouseTransferDetail, WarehouseTransferGridRow } from '../types/warehouse-transfer.types';
 
 type TransferClient = ReturnType<typeof transferApiFor>;
+const G = 'dataGrid.transferRecords';
 
 export function WarehouseTransferListPage({
   variant = 'warehouse',
@@ -23,20 +25,22 @@ export function WarehouseTransferListPage({
   variant?: TransferApiVariant;
   subcontractingDirection?: SubcontractingTransferDirection;
 }): ReactElement {
+  const { t, i18n } = useTranslation('common');
+  const gridLanguage = i18n.resolvedLanguage ?? i18n.language;
   const transferApi = useMemo(
     () => transferApiFor(variant, subcontractingDirection),
     [subcontractingDirection, variant],
   );
   const baseUrl = variant === 'production' ? '/warehouse/production-transfers'
     : variant === 'subcontracting' ? '/warehouse/subcontracting-transfers' : '/warehouse/transfers';
-  const title = variant === 'production' ? 'Üretim Transfer Kayıtları'
+  const title = variant === 'production' ? t(`${G}.productionTitle`)
     : variant === 'subcontracting'
       ? subcontractingDirection === 'IssueToSupplier'
-        ? 'Fasona Çıkış Kayıtları'
+        ? t(`${G}.subcontractingIssueTitle`)
         : subcontractingDirection === 'ReceiptFromSupplier'
-          ? 'Fasondan Giriş Kayıtları'
-          : 'Fason Transfer Kayıtları'
-      : 'Depolar Arası Transfer Kayıtları';
+          ? t(`${G}.subcontractingReceiptTitle`)
+          : t(`${G}.subcontractingGeneralTitle`)
+      : t(`${G}.warehouseTitle`);
   const [detail, setDetail] = useState<WarehouseTransferDetail | null>(null);
   const [editDetail, setEditDetail] = useState<WarehouseTransferDetail | null>(null);
   const [lifecycle, setLifecycle] = useState<{ row: WarehouseTransferGridRow; kind: 'delete' | 'cancel' } | null>(null);
@@ -57,22 +61,22 @@ export function WarehouseTransferListPage({
 
   const columns = useMemo<GridColumn<WarehouseTransferGridRow>[]>(() => [
     ...systemColumns<WarehouseTransferGridRow>(),
-    { key: 'documentNo', label: 'Belge No', sortable: true, filterable: true, render: (row) => <span className="font-mono font-semibold">{row.documentNo}</span> },
-    { key: 'documentDate', label: 'Belge Tarihi', sortable: true, filterable: true, render: (row) => formatProjectDate(row.documentDate) },
-    { key: 'sourceWarehouseCode', label: 'Kaynak Depo Kodu', sortable: true, filterable: true, render: (row) => row.sourceWarehouseCode },
-    { key: 'sourceWarehouseName', label: 'Kaynak Depo Adı', sortable: true, filterable: true, render: (row) => row.sourceWarehouseName },
-    { key: 'targetWarehouseCode', label: 'Hedef Depo Kodu', sortable: true, filterable: true, render: (row) => row.targetWarehouseCode },
-    { key: 'targetWarehouseName', label: 'Hedef Depo Adı', sortable: true, filterable: true, render: (row) => row.targetWarehouseName },
-    { key: 'initiationMode', label: 'Başlangıç', sortable: true, filterable: true, render: (row) => row.initiationMode },
-    { key: 'status', label: 'Durum', sortable: true, filterable: true, render: (row) => row.status },
-    { key: 'lineCount', label: 'Kalem', sortable: true, filterable: true, render: (row) => row.lineCount },
-    { key: 'requestedQuantity', label: 'Planlanan', sortable: true, filterable: true, render: (row) => formatProjectNumber(row.requestedQuantity) },
-    { key: 'pickedQuantity', label: 'Toplanan', sortable: true, filterable: true, render: (row) => formatProjectNumber(row.pickedQuantity) },
-    { key: 'shippedQuantity', label: 'Sevk', sortable: true, filterable: true, render: (row) => formatProjectNumber(row.shippedQuantity) },
-    { key: 'receivedQuantity', label: 'Alınan', sortable: true, filterable: true, render: (row) => formatProjectNumber(row.receivedQuantity) },
-    { key: 'putawayQuantity', label: 'Yerleşen', sortable: true, filterable: true, render: (row) => formatProjectNumber(row.putawayQuantity) },
+    { key: 'documentNo', label: t(`${G}.documentNo`), sortable: true, filterable: true, render: (row) => <span className="font-mono font-semibold">{row.documentNo}</span> },
+    { key: 'documentDate', label: t(`${G}.documentDate`), sortable: true, filterable: true, render: (row) => formatProjectDate(row.documentDate) },
+    { key: 'sourceWarehouseCode', label: t(`${G}.sourceWarehouseCode`), sortable: true, filterable: true, render: (row) => row.sourceWarehouseCode },
+    { key: 'sourceWarehouseName', label: t(`${G}.sourceWarehouseName`), sortable: true, filterable: true, render: (row) => row.sourceWarehouseName },
+    { key: 'targetWarehouseCode', label: t(`${G}.targetWarehouseCode`), sortable: true, filterable: true, render: (row) => row.targetWarehouseCode },
+    { key: 'targetWarehouseName', label: t(`${G}.targetWarehouseName`), sortable: true, filterable: true, render: (row) => row.targetWarehouseName },
+    { key: 'initiationMode', label: t(`${G}.flow`), sortable: true, filterable: true, render: (row) => row.initiationMode },
+    { key: 'status', label: t(`${G}.status`), sortable: true, filterable: true, render: (row) => row.status },
+    { key: 'lineCount', label: t(`${G}.lineCount`), sortable: true, filterable: true, render: (row) => row.lineCount },
+    { key: 'requestedQuantity', label: t(`${G}.planned`), sortable: true, filterable: true, render: (row) => formatProjectNumber(row.requestedQuantity) },
+    { key: 'pickedQuantity', label: t(`${G}.picked`), sortable: true, filterable: true, render: (row) => formatProjectNumber(row.pickedQuantity) },
+    { key: 'shippedQuantity', label: t(`${G}.shipped`), sortable: true, filterable: true, render: (row) => formatProjectNumber(row.shippedQuantity) },
+    { key: 'receivedQuantity', label: t(`${G}.received`), sortable: true, filterable: true, render: (row) => formatProjectNumber(row.receivedQuantity) },
+    { key: 'putawayQuantity', label: t(`${G}.putaway`), sortable: true, filterable: true, render: (row) => formatProjectNumber(row.putawayQuantity) },
     {
-      key: 'actions', label: 'İşlemler', ...requiredActionColumn,
+      key: 'actions', label: t(`${G}.actions`), ...requiredActionColumn,
       render: (row) => <div className="flex items-center gap-1">
         {row.status !== 'Cancelled' && <Link to={`${baseUrl}/${row.id}/operations`} title="Operasyonu yürüt" className="rounded-lg p-2 text-cyan-500 hover:bg-cyan-500/10"><PlayCircle className="size-4" /></Link>}
         {row.status === 'Draft' && <button type="button" title="Taslağı düzenle" onClick={() => void load(row.id, 'edit')} className="rounded-lg p-2 text-amber-500 hover:bg-amber-500/10"><Pencil className="size-4" /></button>}
@@ -81,17 +85,19 @@ export function WarehouseTransferListPage({
         <button type="button" title="Detayı göster" onClick={() => void load(row.id, 'detail')} className="rounded-lg p-2 text-violet-500 hover:bg-violet-500/10">{loadingId === row.id ? <Loader2 className="size-4 animate-spin" /> : <Eye className="size-4" />}</button>
       </div>,
     },
-  ], [baseUrl, load, loadingId]);
+  ], [baseUrl, gridLanguage, load, loadingId, t]);
 
   const refreshed = () => setRevision((value) => value + 1);
-  return <>
-    <AdvancedDataGrid key={revision} pageKey={`${variant}-${subcontractingDirection ?? 'all'}-transfers`} title={title}
-      description="Planlanan, toplanan, sevk edilen, alınan ve yerleştirilen miktarları sunucu taraflı filtreleme ile izleyin."
-      columns={columns} fetchPage={transferApi.paged} />
-    {detail && <Detail detail={detail} baseUrl={baseUrl} close={() => setDetail(null)} />}
-    {editDetail && <EditDraft api={transferApi} detail={editDetail} close={() => setEditDetail(null)} saved={() => { setEditDetail(null); refreshed(); }} />}
-    {lifecycle && <LifecycleDialog api={transferApi} value={lifecycle} close={() => setLifecycle(null)} completed={() => { setLifecycle(null); refreshed(); }} />}
-  </>;
+  return (
+    <div data-no-auto-localize="true">
+      <AdvancedDataGrid key={revision} pageKey={`${variant}-${subcontractingDirection ?? 'all'}-transfers`} title={title}
+        description={t(`${G}.description`)}
+        columns={columns} fetchPage={transferApi.paged} />
+      {detail && <Detail detail={detail} baseUrl={baseUrl} close={() => setDetail(null)} />}
+      {editDetail && <EditDraft api={transferApi} detail={editDetail} close={() => setEditDetail(null)} saved={() => { setEditDetail(null); refreshed(); }} />}
+      {lifecycle && <LifecycleDialog api={transferApi} value={lifecycle} close={() => setLifecycle(null)} completed={() => { setLifecycle(null); refreshed(); }} />}
+    </div>
+  );
 }
 
 function EditDraft({ api, detail, close, saved }: { api: TransferClient; detail: WarehouseTransferDetail; close: () => void; saved: () => void }) {

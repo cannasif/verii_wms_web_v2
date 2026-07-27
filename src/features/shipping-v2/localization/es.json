@@ -29,5 +29,46 @@
       "title": "Configuración de envío",
       "description": "Gestionar variantes de flujo, reserva, embalaje, ejecución parcial, aprobación y reglas ERP."
     }
+  },
+  "policy": {
+    "eyebrow": "Envío",
+    "title": "Política de proceso de envío",
+    "description": "Las reglas se guardan en el encabezado al crear el borrador; los envíos abiertos no se ven afectados por cambios posteriores.",
+    "save": "Guardar",
+    "saveSuccess": "Política de envío guardada.",
+    "saveError": "No se pudo guardar.",
+    "sections": {
+      "flowMatrix": "Matriz de flujos permitidos",
+      "reservation": "Reserva, preparación y cantidad",
+      "gates": "Puertas de operación"
+    },
+    "toggles": {
+      "allowOrderBasedTask": "Desde pedido + con tarea",
+      "allowStockBasedTask": "Sin pedido + con tarea",
+      "allowOrderBasedDirect": "Desde pedido + directo",
+      "allowStockBasedDirect": "Sin pedido + directo",
+      "requireApproval": "Aprobación de envío obligatoria",
+      "requireAssigneeForTask": "Usuario obligatorio en envío con tarea",
+      "allowMultipleAssignees": "Asignación múltiple de usuarios",
+      "autoReleaseTaskBased": "Liberar tarea automáticamente",
+      "allowPartialPicking": "Preparación parcial",
+      "allowPartialShipment": "Envío parcial",
+      "requireSourceLocation": "Ubicación de origen obligatoria",
+      "requireShipmentInformation": "Información de vehículo/transportista obligatoria",
+      "requireLoadingConfirmation": "Confirmación de carga obligatoria",
+      "autoPostErpAfterApproval": "Enviar a ERP automáticamente tras aprobación"
+    },
+    "fields": {
+      "reservation": "Reserva",
+      "shortage": "Envío incompleto",
+      "overPick": "Sobrepreparación",
+      "packing": "Embalaje",
+      "minimumFulfillment": "Cumplimiento mínimo %",
+      "overPickTolerance": "Tolerancia de sobrepreparación %"
+    },
+    "reservationPolicy": { "None": "Ninguna", "OnCreate": "Al crear", "OnRelease": "Al liberar" },
+    "shortagePolicy": { "Block": "Bloquear", "AllowPartial": "Permitir parcial", "RequireApproval": "Enviar a aprobación" },
+    "overPickPolicy": { "Block": "Bloquear", "AllowWithinTolerance": "Dentro de tolerancia", "RequireApproval": "Enviar a aprobación" },
+    "packingPolicy": { "NotRequired": "No requerido", "Optional": "Opcional", "Required": "Obligatorio" }
   }
 }

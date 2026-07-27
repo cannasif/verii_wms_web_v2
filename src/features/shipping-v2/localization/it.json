@@ -29,5 +29,46 @@
       "title": "Impostazioni di spedizione",
       "description": "Gestisci varianti di flusso, prenotazione, imballaggio, esecuzione parziale, approvazione e regole ERP."
     }
+  },
+  "policy": {
+    "eyebrow": "Spedizione",
+    "title": "Politica di processo di spedizione",
+    "description": "Le regole vengono salvate nell'intestazione alla creazione della bozza; le spedizioni aperte non sono influenzate da modifiche successive.",
+    "save": "Salva",
+    "saveSuccess": "Politica di spedizione salvata.",
+    "saveError": "Salvataggio non riuscito.",
+    "sections": {
+      "flowMatrix": "Matrice flussi consentiti",
+      "reservation": "Prenotazione, prelievo e quantità",
+      "gates": "Gate operativi"
+    },
+    "toggles": {
+      "allowOrderBasedTask": "Da ordine + con attività",
+      "allowStockBasedTask": "Senza ordine + con attività",
+      "allowOrderBasedDirect": "Da ordine + diretto",
+      "allowStockBasedDirect": "Senza ordine + diretto",
+      "requireApproval": "Approvazione spedizione obbligatoria",
+      "requireAssigneeForTask": "Utente obbligatorio per spedizione con attività",
+      "allowMultipleAssignees": "Assegnazione multipla utenti",
+      "autoReleaseTaskBased": "Rilascia attività automaticamente",
+      "allowPartialPicking": "Prelievo parziale",
+      "allowPartialShipment": "Spedizione parziale",
+      "requireSourceLocation": "Ubicazione origine obbligatoria",
+      "requireShipmentInformation": "Informazioni veicolo/vettore obbligatorie",
+      "requireLoadingConfirmation": "Conferma caricamento obbligatoria",
+      "autoPostErpAfterApproval": "Invio ERP automatico dopo approvazione"
+    },
+    "fields": {
+      "reservation": "Prenotazione",
+      "shortage": "Spedizione incompleta",
+      "overPick": "Sovraprelievo",
+      "packing": "Imballaggio",
+      "minimumFulfillment": "Esecuzione minima %",
+      "overPickTolerance": "Tolleranza sovraprelievo %"
+    },
+    "reservationPolicy": { "None": "Nessuna", "OnCreate": "Alla creazione", "OnRelease": "Al rilascio" },
+    "shortagePolicy": { "Block": "Blocca", "AllowPartial": "Consenti parziale", "RequireApproval": "Invia per approvazione" },
+    "overPickPolicy": { "Block": "Blocca", "AllowWithinTolerance": "Entro tolleranza", "RequireApproval": "Invia per approvazione" },
+    "packingPolicy": { "NotRequired": "Non richiesto", "Optional": "Opzionale", "Required": "Obbligatorio" }
   }
 }

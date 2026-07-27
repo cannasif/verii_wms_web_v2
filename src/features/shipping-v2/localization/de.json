@@ -29,5 +29,46 @@
       "title": "Versandeinstellungen",
       "description": "Verwalten Sie Ablaufvarianten, Reservierungen, Verpackungen, Teilausführungen, Genehmigungen und ERP-Regeln."
     }
+  },
+  "policy": {
+    "eyebrow": "Versand",
+    "title": "Versandprozessrichtlinie",
+    "description": "Regeln werden beim Erstellen des Entwurfs im Kopf gespeichert; offene Sendungen werden durch spätere Änderungen nicht beeinflusst.",
+    "save": "Speichern",
+    "saveSuccess": "Versandrichtlinie gespeichert.",
+    "saveError": "Speichern fehlgeschlagen.",
+    "sections": {
+      "flowMatrix": "Zulässige Ablaufmatrix",
+      "reservation": "Reservierung, Kommissionierung und Menge",
+      "gates": "Operations-Gates"
+    },
+    "toggles": {
+      "allowOrderBasedTask": "Aus Auftrag + auftragsbasiert",
+      "allowStockBasedTask": "Auftragslos + auftragsbasiert",
+      "allowOrderBasedDirect": "Aus Auftrag + direkt",
+      "allowStockBasedDirect": "Auftragslos + direkt",
+      "requireApproval": "Versandgenehmigung erforderlich",
+      "requireAssigneeForTask": "Bearbeiter für auftragsbasierten Versand erforderlich",
+      "allowMultipleAssignees": "Mehrfachzuweisung",
+      "autoReleaseTaskBased": "Auftrag automatisch freigeben",
+      "allowPartialPicking": "Teilkommissionierung",
+      "allowPartialShipment": "Teilversand",
+      "requireSourceLocation": "Quellplatz erforderlich",
+      "requireShipmentInformation": "Fahrzeug/Spediteur erforderlich",
+      "requireLoadingConfirmation": "Verladebestätigung erforderlich",
+      "autoPostErpAfterApproval": "Nach Genehmigung automatisch an ERP übertragen"
+    },
+    "fields": {
+      "reservation": "Reservierung",
+      "shortage": "Unterversand",
+      "overPick": "Überkommissionierung",
+      "packing": "Verpackung",
+      "minimumFulfillment": "Mindestabdeckung %",
+      "overPickTolerance": "Überkommissionierungstoleranz %"
+    },
+    "reservationPolicy": { "None": "Keine", "OnCreate": "Beim Erstellen", "OnRelease": "Bei Freigabe" },
+    "shortagePolicy": { "Block": "Blockieren", "AllowPartial": "Teilweise erlauben", "RequireApproval": "Zur Genehmigung senden" },
+    "overPickPolicy": { "Block": "Blockieren", "AllowWithinTolerance": "Innerhalb Toleranz", "RequireApproval": "Zur Genehmigung senden" },
+    "packingPolicy": { "NotRequired": "Nicht erforderlich", "Optional": "Optional", "Required": "Erforderlich" }
   }
 }

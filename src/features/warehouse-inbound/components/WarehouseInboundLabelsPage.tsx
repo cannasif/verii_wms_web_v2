@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState, type ReactElement } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { code128 } from "bwip-js/browser";
 import { Ban, Eye, Loader2, Printer, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
   AdvancedDataGrid,
@@ -24,7 +25,11 @@ import type {
   WarehouseInboundLabelRow,
 } from "../types/warehouse-inbound.types";
 
+const G = "dataGrid.goodsReceiptPreLabels";
+
 export function WarehouseInboundLabelsPage(): ReactElement {
+  const { t: tGrid, i18n } = useTranslation("common");
+  const gridLanguage = i18n.resolvedLanguage ?? i18n.language;
   const cache = useQueryClient();
   const [detail, setDetail] = useState<WarehouseInboundLabelBatchDetail | null>(
     null,
@@ -45,7 +50,7 @@ export function WarehouseInboundLabelsPage(): ReactElement {
       ...systemColumns<WarehouseInboundLabelBatchRow>(),
       {
         key: "batchNo",
-        label: "Paket No",
+        label: tGrid(`${G}.batchNo`),
         sortable: true,
         filterable: true,
         render: (r) => (
@@ -54,49 +59,49 @@ export function WarehouseInboundLabelsPage(): ReactElement {
       },
       {
         key: "documentNo",
-        label: "Mal Kabul No",
+        label: tGrid(`${G}.documentNo`),
         sortable: true,
         filterable: true,
         render: (r) => r.documentNo,
       },
       {
         key: "taskNo",
-        label: "Emir No",
+        label: tGrid(`${G}.taskNo`),
         sortable: true,
         filterable: true,
         render: (r) => r.taskNo || "—",
       },
       {
         key: "status",
-        label: "Durum",
+        label: tGrid(`${G}.status`),
         sortable: true,
         filterable: true,
         render: (r) => r.status,
       },
       {
         key: "totalLabelCount",
-        label: "Toplam",
+        label: tGrid(`${G}.total`),
         sortable: true,
         filterable: true,
         render: (r) => r.totalLabelCount,
       },
       {
         key: "printedLabelCount",
-        label: "Basılı",
+        label: tGrid(`${G}.printed`),
         sortable: true,
         filterable: true,
         render: (r) => r.printedLabelCount,
       },
       {
         key: "consumedLabelCount",
-        label: "Kullanılan",
+        label: tGrid(`${G}.consumed`),
         sortable: true,
         filterable: true,
         render: (r) => r.consumedLabelCount,
       },
       {
         key: "lastPrintedAtUtc",
-        label: "Son Baskı",
+        label: tGrid(`${G}.lastPrint`),
         sortable: true,
         filterable: true,
         render: (r) =>
@@ -104,14 +109,14 @@ export function WarehouseInboundLabelsPage(): ReactElement {
       },
       {
         key: "actions",
-        label: "İşlemler",
+        label: tGrid(`${G}.actions`),
         ...requiredActionColumn,
         render: (r) => (
           <button
             type="button"
             onClick={() => void open(r.id)}
             className="rounded-lg p-2 text-cyan-500"
-            aria-label="Etiket paketini aç"
+            aria-label={tGrid(`${G}.openBatch`)}
           >
             {busy === r.id ? (
               <Loader2 className="size-4 animate-spin" />
@@ -122,7 +127,7 @@ export function WarehouseInboundLabelsPage(): ReactElement {
         ),
       },
     ],
-    [busy, open],
+    [busy, gridLanguage, open, tGrid],
   );
   const reload = async () => {
     if (detail)
@@ -132,11 +137,11 @@ export function WarehouseInboundLabelsPage(): ReactElement {
     });
   };
   return (
-    <>
+    <div data-no-auto-localize="true">
       <AdvancedDataGrid
         pageKey="warehouse-inbound-labels"
-        title="Mal Kabul Ön Etiketleri"
-        description="Emirden üretilen etiketleri izleyin, yazdırın ve kullanım yaşam döngüsünü yönetin."
+        title={tGrid(`${G}.title`)}
+        description={tGrid(`${G}.description`)}
         columns={columns}
         fetchPage={warehouseInboundV2Api.labelBatchesPaged}
       />
@@ -147,7 +152,7 @@ export function WarehouseInboundLabelsPage(): ReactElement {
           reload={() => void reload()}
         />
       )}
-    </>
+    </div>
   );
 }
 

@@ -11,5 +11,46 @@
     },
     "records": { "title": "Shipping Records", "description": "Track planned, picked, packed, loaded and shipped quantities." },
     "settings": { "title": "Shipping Settings", "description": "Manage flow variants, reservation, packing, partial execution, approval and ERP rules." }
+  },
+  "policy": {
+    "eyebrow": "Shipping",
+    "title": "Shipping Process Policy",
+    "description": "Rules are snapshotted onto the header when a draft is created; open shipments are not affected by later setting changes.",
+    "save": "Save",
+    "saveSuccess": "Shipping policy saved.",
+    "saveError": "Could not save.",
+    "sections": {
+      "flowMatrix": "Allowed flow matrix",
+      "reservation": "Reservation, picking and quantity",
+      "gates": "Operation gates"
+    },
+    "toggles": {
+      "allowOrderBasedTask": "From order + task-based",
+      "allowStockBasedTask": "Orderless + task-based",
+      "allowOrderBasedDirect": "From order + direct",
+      "allowStockBasedDirect": "Orderless + direct",
+      "requireApproval": "Shipment approval required",
+      "requireAssigneeForTask": "Assignee required for task-based shipment",
+      "allowMultipleAssignees": "Multiple user assignment",
+      "autoReleaseTaskBased": "Automatically release task",
+      "allowPartialPicking": "Partial picking",
+      "allowPartialShipment": "Partial shipment",
+      "requireSourceLocation": "Source location required",
+      "requireShipmentInformation": "Vehicle/carrier information required",
+      "requireLoadingConfirmation": "Loading confirmation required",
+      "autoPostErpAfterApproval": "Auto-post to ERP after approval"
+    },
+    "fields": {
+      "reservation": "Reservation",
+      "shortage": "Short shipment",
+      "overPick": "Over-picking",
+      "packing": "Packaging",
+      "minimumFulfillment": "Minimum fulfilment %",
+      "overPickTolerance": "Over-pick tolerance %"
+    },
+    "reservationPolicy": { "None": "None", "OnCreate": "On create", "OnRelease": "On release" },
+    "shortagePolicy": { "Block": "Block", "AllowPartial": "Allow partial", "RequireApproval": "Send for approval" },
+    "overPickPolicy": { "Block": "Block", "AllowWithinTolerance": "Within tolerance", "RequireApproval": "Send for approval" },
+    "packingPolicy": { "NotRequired": "Not required", "Optional": "Optional", "Required": "Required" }
   }
 }

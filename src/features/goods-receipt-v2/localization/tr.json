@@ -115,6 +115,25 @@
     "lineNumber": "Kalem #{{number}}",
     "noStockName": "Stok adı yok"
   },
+  "tasks": {
+    "title": "Mal Kabul Emir Yönetimi",
+    "assignedTitle": "Bana Atanan Mal Kabul Emirleri",
+    "description": "Mal kabul emirlerini, sorumlularını ve ön etiketlerini yönetin.",
+    "assignedDescription": "Atanmış emirleri kabul edin, başlatın ve barkodla fiziksel kabulü işleyin.",
+    "taskNo": "Emir No",
+    "documentNo": "Mal Kabul No",
+    "processType": "İşlem Tipi",
+    "supplierCode": "Tedarikçi Kodu",
+    "supplierName": "Tedarikçi Adı",
+    "warehouseCode": "Depo Kodu",
+    "warehouseName": "Depo Adı",
+    "status": "Emir Durumu",
+    "myAssignmentStatus": "Atama Durumum",
+    "plannedQuantity": "Planlanan",
+    "processedQuantity": "Toplanan",
+    "actions": "İşlemler",
+    "viewTask": "Emri görüntüle"
+  },
   "enums": {
     "operationStatus": {
       "Draft": "Taslak", "Released": "Serbest Bırakıldı", "InProgress": "Devam Ediyor",

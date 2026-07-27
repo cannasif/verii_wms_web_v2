@@ -20,5 +20,24 @@
     "stock": "المخزون", "yap": "التكوين", "accepted": "المقبول", "routed": "الموجّه", "remaining": "المتبقي",
     "label": "الملصق", "printLineLabel": "طباعة ملصق السطر", "showLineLabelPdf": "عرض ملصق السطر بصيغة PDF",
     "lineNumber": "السطر #{{number}}", "noStockName": "لا يوجد اسم للمخزون"
+  },
+  "tasks": {
+    "title": "إدارة مهام استلام البضائع",
+    "assignedTitle": "مهام الاستلام المخصصة لي",
+    "description": "إدارة مهام الاستلام والمسؤولين والملصقات المُنشأة مسبقًا.",
+    "assignedDescription": "اقبل المهام المخصصة وابدأها وعالج الاستلام الفعلي عبر الباركود.",
+    "taskNo": "رقم المهمة",
+    "documentNo": "رقم الاستلام",
+    "processType": "نوع العملية",
+    "supplierCode": "رمز المورد",
+    "supplierName": "اسم المورد",
+    "warehouseCode": "رمز المستودع",
+    "warehouseName": "اسم المستودع",
+    "status": "حالة المهمة",
+    "myAssignmentStatus": "حالة تعييني",
+    "plannedQuantity": "المخطط",
+    "processedQuantity": "المستلم",
+    "actions": "الإجراءات",
+    "viewTask": "عرض المهمة"
   }
 }

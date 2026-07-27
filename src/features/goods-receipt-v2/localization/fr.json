@@ -24,5 +24,24 @@
     "stock": "Stock", "yap": "Configuration", "accepted": "Accepté", "routed": "Orienté", "remaining": "Restant",
     "label": "Étiquette", "printLineLabel": "Imprimer l'étiquette de ligne", "showLineLabelPdf": "Afficher l'étiquette de ligne en PDF",
     "lineNumber": "Ligne #{{number}}", "noStockName": "Nom du stock indisponible"
+  },
+  "tasks": {
+    "title": "Gestion des tâches de réception",
+    "assignedTitle": "Mes tâches de réception assignées",
+    "description": "Gérez les tâches de réception, les responsables et les étiquettes pré-générées.",
+    "assignedDescription": "Acceptez les tâches assignées, démarrez-les et traitez la réception physique par code-barres.",
+    "taskNo": "N° de tâche",
+    "documentNo": "N° de réception",
+    "processType": "Type de processus",
+    "supplierCode": "Code fournisseur",
+    "supplierName": "Nom du fournisseur",
+    "warehouseCode": "Code entrepôt",
+    "warehouseName": "Nom de l'entrepôt",
+    "status": "Statut de la tâche",
+    "myAssignmentStatus": "Mon statut d'affectation",
+    "plannedQuantity": "Prévu",
+    "processedQuantity": "Reçu",
+    "actions": "Actions",
+    "viewTask": "Voir la tâche"
   }
 }

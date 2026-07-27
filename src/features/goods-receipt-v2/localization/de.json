@@ -23,6 +23,25 @@
     "lineSearchAria": "Wareneingangspositionen durchsuchen", "noMatchingLines": "Keine Wareneingangsposition entspricht den Suchkriterien.",
     "stock": "Bestand", "yap": "Konfiguration", "accepted": "Angenommen", "routed": "Weitergeleitet",
     "remaining": "Verbleibend", "label": "Etikett", "printLineLabel": "Positionsetikett drucken",
-    "showLineLabelPdf": "Positionsetikett als PDF anzeigen", "lineNumber": "Position #{{number}}", "noStockName": "Kein Bestandsname"
+    "showLineLabelPdf": "Positionsetikett als PDF anzeigen",     "lineNumber": "Position #{{number}}", "noStockName": "Kein Bestandsname"
+  },
+  "tasks": {
+    "title": "Wareneingangsauftragsverwaltung",
+    "assignedTitle": "Mir zugewiesene Wareneingangsaufträge",
+    "description": "Verwalten Sie Wareneingangsaufträge, Verantwortliche und vorgenerierte Etiketten.",
+    "assignedDescription": "Akzeptieren Sie zugewiesene Aufträge, starten Sie sie und verarbeiten Sie die physische Annahme per Barcode.",
+    "taskNo": "Auftrags-Nr.",
+    "documentNo": "Wareneingangs-Nr.",
+    "processType": "Vorgangsart",
+    "supplierCode": "Lieferantencode",
+    "supplierName": "Lieferantenname",
+    "warehouseCode": "Lagercode",
+    "warehouseName": "Lagername",
+    "status": "Auftragsstatus",
+    "myAssignmentStatus": "Mein Zuweisungsstatus",
+    "plannedQuantity": "Geplant",
+    "processedQuantity": "Empfangen",
+    "actions": "Aktionen",
+    "viewTask": "Auftrag anzeigen"
   }
 }

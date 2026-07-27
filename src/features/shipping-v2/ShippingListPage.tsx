@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Ban, Eye, Loader2, Pencil, PlayCircle, Save, Trash2, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -10,6 +11,8 @@ import { shippingApi } from './shipping-api';
 import type { ShipmentDetail, ShipmentGridRow } from './types';
 
 export function ShippingListPage() {
+  const { t: tGrid, i18n } = useTranslation('common');
+  const gridLanguage = i18n.resolvedLanguage ?? i18n.language;
   const [detail, setDetail] = useState<ShipmentDetail | null>(null);
   const [editDetail, setEditDetail] = useState<ShipmentDetail | null>(null);
   const [lifecycle, setLifecycle] = useState<{ row: ShipmentGridRow; kind: 'delete' | 'cancel' } | null>(null);
@@ -25,21 +28,21 @@ export function ShippingListPage() {
 
   const columns = useMemo<GridColumn<ShipmentGridRow>[]>(() => [
     ...systemColumns<ShipmentGridRow>(),
-    { key: 'documentNo', label: 'Sevk No', sortable: true, filterable: true, render: (row) => row.documentNo },
-    { key: 'documentDate', label: 'Tarih', sortable: true, filterable: true, render: (row) => formatProjectDate(row.documentDate) },
-    { key: 'customerCode', label: 'Cari Kodu', sortable: true, filterable: true, render: (row) => row.customerCode },
-    { key: 'customerName', label: 'Cari Adı', sortable: true, filterable: true, render: (row) => row.customerName ?? '—' },
-    { key: 'sourceWarehouseCode', label: 'Depo Kodu', sortable: true, filterable: true, render: (row) => row.sourceWarehouseCode },
-    { key: 'sourceWarehouseName', label: 'Depo Adı', sortable: true, filterable: true, render: (row) => row.sourceWarehouseName },
-    { key: 'initiationMode', label: 'Akış', sortable: true, filterable: true, render: (row) => row.initiationMode },
-    { key: 'status', label: 'Durum', sortable: true, filterable: true, render: (row) => row.status },
-    { key: 'requestedQuantity', label: 'Plan', sortable: true, filterable: true, render: (row) => formatProjectNumber(row.requestedQuantity) },
-    { key: 'pickedQuantity', label: 'Toplandı', sortable: true, filterable: true, render: (row) => formatProjectNumber(row.pickedQuantity) },
-    { key: 'packedQuantity', label: 'Paketlendi', sortable: true, filterable: true, render: (row) => formatProjectNumber(row.packedQuantity) },
-    { key: 'loadedQuantity', label: 'Yüklendi', sortable: true, filterable: true, render: (row) => formatProjectNumber(row.loadedQuantity) },
-    { key: 'shippedQuantity', label: 'Sevk', sortable: true, filterable: true, render: (row) => formatProjectNumber(row.shippedQuantity) },
+    { key: 'documentNo', label: tGrid('dataGrid.shippingRecords.documentNo'), sortable: true, filterable: true, render: (row) => row.documentNo },
+    { key: 'documentDate', label: tGrid('dataGrid.shippingRecords.documentDate'), sortable: true, filterable: true, render: (row) => formatProjectDate(row.documentDate) },
+    { key: 'customerCode', label: tGrid('dataGrid.shippingRecords.customerCode'), sortable: true, filterable: true, render: (row) => row.customerCode },
+    { key: 'customerName', label: tGrid('dataGrid.shippingRecords.customerName'), sortable: true, filterable: true, render: (row) => row.customerName ?? '—' },
+    { key: 'sourceWarehouseCode', label: tGrid('dataGrid.shippingRecords.warehouseCode'), sortable: true, filterable: true, render: (row) => row.sourceWarehouseCode },
+    { key: 'sourceWarehouseName', label: tGrid('dataGrid.shippingRecords.warehouseName'), sortable: true, filterable: true, render: (row) => row.sourceWarehouseName },
+    { key: 'initiationMode', label: tGrid('dataGrid.shippingRecords.flow'), sortable: true, filterable: true, render: (row) => row.initiationMode },
+    { key: 'status', label: tGrid('dataGrid.shippingRecords.status'), sortable: true, filterable: true, render: (row) => row.status },
+    { key: 'requestedQuantity', label: tGrid('dataGrid.shippingRecords.planned'), sortable: true, filterable: true, render: (row) => formatProjectNumber(row.requestedQuantity) },
+    { key: 'pickedQuantity', label: tGrid('dataGrid.shippingRecords.picked'), sortable: true, filterable: true, render: (row) => formatProjectNumber(row.pickedQuantity) },
+    { key: 'packedQuantity', label: tGrid('dataGrid.shippingRecords.packed'), sortable: true, filterable: true, render: (row) => formatProjectNumber(row.packedQuantity) },
+    { key: 'loadedQuantity', label: tGrid('dataGrid.shippingRecords.loaded'), sortable: true, filterable: true, render: (row) => formatProjectNumber(row.loadedQuantity) },
+    { key: 'shippedQuantity', label: tGrid('dataGrid.shippingRecords.shipped'), sortable: true, filterable: true, render: (row) => formatProjectNumber(row.shippedQuantity) },
     {
-      key: 'actions', label: 'İşlemler', ...requiredActionColumn,
+      key: 'actions', label: tGrid('dataGrid.shippingRecords.actions'), ...requiredActionColumn,
       render: (row) => <div className="flex items-center gap-1">
         {row.status !== 'Cancelled' && <Link to={`/warehouse/shipments/${row.id}/operations`} title="Operasyonu yürüt" className="rounded-lg p-2 text-cyan-500 hover:bg-cyan-500/10"><PlayCircle className="size-4" /></Link>}
         {row.status === 'Draft' && <button type="button" title="Taslağı düzenle" onClick={() => void load(row.id, 'edit')} className="rounded-lg p-2 text-amber-500 hover:bg-amber-500/10"><Pencil className="size-4" /></button>}
@@ -48,12 +51,12 @@ export function ShippingListPage() {
         <button type="button" title="Detayı göster" onClick={() => void load(row.id, 'detail')} className="rounded-lg p-2 text-violet-500 hover:bg-violet-500/10">{busyId === row.id ? <Loader2 className="size-4 animate-spin" /> : <Eye className="size-4" />}</button>
       </div>,
     },
-  ], [busyId, load]);
+  ], [busyId, gridLanguage, load, tGrid]);
 
   const refreshed = () => setRevision((value) => value + 1);
   return <>
-    <AdvancedDataGrid key={revision} pageKey="shipments-v2" title="Sevk Kayıtları"
-      description="Plan, toplama, paketleme, yükleme ve sevk miktarlarını sunucu taraflı izleyin."
+    <AdvancedDataGrid key={revision} pageKey="shipments-v2" title={tGrid('dataGrid.shippingRecords.title')}
+      description={tGrid('dataGrid.shippingRecords.description')}
       columns={columns} fetchPage={shippingApi.paged} />
     {detail && <ShipmentDetailDialog detail={detail} close={() => setDetail(null)} />}
     {editDetail && <EditShipment detail={editDetail} close={() => setEditDetail(null)} saved={() => { setEditDetail(null); refreshed(); }} />}
