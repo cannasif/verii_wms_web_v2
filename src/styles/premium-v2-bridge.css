@@ -1,0 +1,1534 @@
+/**
+ * Premium ↔ v2 DOM bridge
+ * Applies Premium soft-glass DNA to existing page structure without changing workflows.
+ * Scope: html.skin-premium only. Auth/login stays untouched ([data-wms-auth-surface]).
+ * Pair with terminal-v2-bridge.css (html:not(.skin-premium)).
+ */
+
+html.skin-premium {
+  --wms-premium-bridge-radius: 0.9rem;
+  --wms-premium-bridge-radius-sm: 0.7rem;
+  --wms-premium-bridge-pill: 999px;
+}
+
+/* ?? Workspace host tokens (pages + portaled overlays) ?? */
+html.skin-premium .wms-ops-workspace-host,
+html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host,
+html.skin-premium .wms-ops-form,
+html.skin-premium .wms-ops-list,
+html.skin-premium .wms-ops-lookup-dialog,
+html.skin-premium .wms-ops-detail-dialog,
+html.skin-premium .wms-ops-lookup-popover,
+html.skin-premium .wms-ops-list-popover,
+html.skin-premium .wms-ops-list-dropdown,
+html.skin-premium .wms-ops-list-select-content,
+html.skin-premium .wms-ops-barcode-print,
+html.skin-premium .wms-ops-collection,
+html.skin-premium .wms-ops-profile-modal {
+  --wms-ops-card-bg: rgb(255 255 255 / 80%);
+  --wms-ops-card-border: rgb(148 163 184 / 34%);
+  --wms-ops-field-bg: rgb(255 255 255 / 96%);
+  --wms-ops-field-border: rgb(148 163 184 / 45%);
+  --wms-ops-field-fg: #1e293b;
+  --wms-ops-toggle-bg: rgb(248 250 252 / 90%);
+  --wms-ops-toggle-border: rgb(148 163 184 / 30%);
+  --wms-ops-accent: var(--wms-brand-primary);
+  --wms-ops-accent-electric: var(--wms-brand-secondary);
+  --wms-ops-accent-glow: var(--wms-brand-shadow);
+  --wms-ops-warm: var(--wms-brand-accent);
+}
+
+html.skin-premium.dark .wms-ops-workspace-host,
+html.skin-premium.dark #wms-workspace-portal-root.wms-ops-workspace-host,
+html.skin-premium.dark .wms-ops-form,
+html.skin-premium.dark .wms-ops-list,
+html.skin-premium.dark .wms-ops-lookup-dialog,
+html.skin-premium.dark .wms-ops-detail-dialog,
+html.skin-premium.dark .wms-ops-lookup-popover,
+html.skin-premium.dark .wms-ops-list-popover,
+html.skin-premium.dark .wms-ops-list-dropdown,
+html.skin-premium.dark .wms-ops-list-select-content,
+html.skin-premium.dark .wms-ops-barcode-print,
+html.skin-premium.dark .wms-ops-collection,
+html.skin-premium.dark .wms-ops-profile-modal {
+  --wms-ops-card-bg: rgb(20 20 30 / 78%);
+  --wms-ops-card-border: rgb(255 255 255 / 7%);
+  --wms-ops-field-bg: rgb(13 13 20 / 88%);
+  --wms-ops-field-border: rgb(255 255 255 / 9%);
+  --wms-ops-field-fg: #e4e4e7;
+  --wms-ops-toggle-bg: rgb(16 16 24 / 82%);
+  --wms-ops-toggle-border: rgb(255 255 255 / 7%);
+}
+
+/* Soft radius for Tailwind utility corners inside workspace (not auth) */
+html.skin-premium .wms-ops-workspace-host :is(.rounded-2xl),
+html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host :is(.rounded-2xl) {
+  border-radius: 1.1rem !important;
+}
+
+html.skin-premium .wms-ops-workspace-host :is(.rounded-xl),
+html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host :is(.rounded-xl) {
+  border-radius: 0.9rem !important;
+}
+
+html.skin-premium .wms-ops-workspace-host :is(.rounded-lg, .rounded-md, .rounded),
+html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host :is(.rounded-lg, .rounded-md, .rounded) {
+  border-radius: 0.7rem !important;
+}
+
+/* Keep pills as pills */
+html.skin-premium .wms-ops-workspace-host :is(.rounded-full),
+html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host :is(.rounded-full) {
+  border-radius: 9999px !important;
+}
+
+/* ?? Page headers / hub cards ?? */
+html.skin-premium .wms-ops-workspace-host > .relative > section > header,
+html.skin-premium .wms-ops-workspace-host section > header.rounded-2xl,
+html.skin-premium .wms-ops-workspace-host header[class*='rounded'] {
+  border-color: color-mix(in oklab, var(--wms-brand-primary) 16%, var(--wms-app-border));
+  background:
+    linear-gradient(
+      155deg,
+      color-mix(in oklab, var(--wms-brand-primary) 8%, transparent) 0%,
+      transparent 48%,
+      color-mix(in oklab, var(--wms-brand-accent) 5%, transparent) 100%
+    ),
+    color-mix(in srgb, var(--wms-app-panel-strong) 82%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow:
+    0 12px 32px -18px rgb(0 0 0 / 28%),
+    inset 0 1px 0 rgb(255 255 255 / 10%);
+}
+
+html.skin-premium .wms-ops-workspace-host header p.text-xs,
+html.skin-premium .wms-ops-workspace-host .wms-ops-eyebrow,
+html.skin-premium .wms-ops-workspace-host .wms-ops-list > div > div > p.text-xs {
+  font-family: var(--wms-premium-font) !important;
+  letter-spacing: 0.08em;
+  text-transform: none;
+  font-weight: 700;
+  color: color-mix(in oklab, var(--wms-brand-primary) 62%, hsl(var(--foreground)));
+}
+
+html.skin-premium .wms-ops-workspace-host header h1,
+html.skin-premium .wms-ops-workspace-host .wms-ops-list h1,
+html.skin-premium .wms-ops-workspace-host .wms-ops-title-main {
+  font-family: var(--wms-premium-display) !important;
+  letter-spacing: -0.01em;
+  text-transform: none;
+  font-weight: 700;
+  background: linear-gradient(
+    118deg,
+    hsl(var(--foreground)) 0%,
+    color-mix(in oklab, hsl(var(--foreground)) 72%, var(--wms-brand-primary)) 48%,
+    var(--wms-brand-primary) 100%
+  ) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  color: transparent !important;
+  filter: drop-shadow(0 0 18px color-mix(in oklab, var(--wms-brand-primary) 28%, transparent));
+}
+
+html.skin-premium .wms-ops-workspace-host .wms-ops-subtitle-prefix {
+  display: none;
+}
+
+html.skin-premium .wms-ops-workspace-host a.group[class*='rounded'],
+html.skin-premium .wms-ops-workspace-host a.group {
+  border-color: color-mix(in oklab, var(--wms-brand-primary) 14%, var(--wms-app-border));
+  background:
+    linear-gradient(
+      145deg,
+      color-mix(in oklab, var(--wms-brand-primary) 7%, transparent),
+      transparent 55%
+    ),
+    color-mix(in srgb, var(--wms-app-panel-strong) 78%, transparent);
+  transition:
+    border-color 180ms ease,
+    box-shadow 220ms ease,
+    transform 180ms ease,
+    background 220ms ease;
+}
+
+html.skin-premium .wms-ops-workspace-host a.group:hover {
+  border-color: color-mix(in oklab, var(--wms-brand-primary) 42%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--wms-brand-primary) 16%, transparent),
+    0 0 22px -8px var(--wms-brand-shadow);
+  transform: translateY(-2px);
+}
+
+/* ?? Inputs (AppInput + bare .input) — glow ring focus ?? */
+html.skin-premium .wms-ops-workspace-host .input:not(.wms-ops-field),
+html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .input:not(.wms-ops-field),
+html.skin-premium .wms-ops-workspace-host .app-input-control {
+  border-radius: 0.7rem !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+  border-color: var(--wms-ops-field-border) !important;
+  background: var(--wms-ops-field-bg) !important;
+  color: var(--wms-ops-field-fg) !important;
+  font-family: var(--wms-premium-font) !important;
+  font-size: 0.875rem;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  box-shadow: 0 2px 6px -2px rgb(0 0 0 / 12%);
+  transition:
+    border-color 300ms ease,
+    box-shadow 340ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html.skin-premium .wms-ops-workspace-host .input:focus,
+html.skin-premium .wms-ops-workspace-host .input:focus-visible,
+html.skin-premium .wms-ops-workspace-host .app-input-control:focus,
+html.skin-premium .wms-ops-workspace-host .app-input-control:focus-visible,
+html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .input:focus,
+html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .input:focus-visible {
+  outline: none !important;
+  border-color: color-mix(in oklab, var(--wms-brand-primary) 65%, transparent) !important;
+  box-shadow:
+    0 0 0 3.5px color-mix(in oklab, var(--wms-brand-primary) 24%, transparent),
+    0 0 22px -2px color-mix(in oklab, var(--wms-brand-primary) 38%, transparent),
+    0 14px 30px -10px var(--wms-brand-shadow) !important;
+}
+
+html.skin-premium .wms-ops-workspace-host .input::placeholder,
+html.skin-premium .wms-ops-workspace-host .app-input-control::placeholder,
+html.skin-premium .wms-ops-workspace-host input::placeholder {
+  color: color-mix(in oklab, var(--wms-app-text-muted) 78%, transparent);
+  letter-spacing: 0.02em;
+  text-transform: none;
+  font-size: inherit;
+}
+
+/* AdvancedDataGrid search */
+html.skin-premium .wms-ops-list label.relative > input,
+html.skin-premium .wms-ops-list .wms-ops-list-search .wms-ops-field,
+html.skin-premium .wms-ops-list .wms-ops-field {
+  border-radius: 0.7rem !important;
+  border-width: 1px !important;
+  border-color: var(--wms-ops-field-border) !important;
+  background: var(--wms-ops-field-bg) !important;
+  color: var(--wms-ops-field-fg) !important;
+  font-family: var(--wms-premium-font) !important;
+  font-size: 0.78rem !important;
+  letter-spacing: 0.01em !important;
+  text-transform: none !important;
+  box-shadow: 0 2px 6px -2px rgb(0 0 0 / 10%) !important;
+}
+
+html.skin-premium .wms-ops-list label.relative > input:focus,
+html.skin-premium .wms-ops-list .wms-ops-list-search:focus-within .wms-ops-field {
+  outline: none;
+  border-color: color-mix(in oklab, var(--wms-brand-primary) 65%, transparent) !important;
+  box-shadow:
+    0 0 0 3.5px color-mix(in oklab, var(--wms-brand-primary) 24%, transparent),
+    0 0 22px -2px color-mix(in oklab, var(--wms-brand-primary) 38%, transparent),
+    0 14px 30px -10px var(--wms-brand-shadow) !important;
+}
+
+/* ?? Dropdown / combobox / floating surfaces ?? */
+html.skin-premium .wms-ops-workspace-host .wms-ops-lookup-trigger,
+html.skin-premium .wms-ops-workspace-host button[role='combobox'],
+html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .wms-ops-lookup-trigger,
+html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host button[role='combobox'] {
+  border-radius: 0.7rem !important;
+  border-width: 1px !important;
+  border-color: var(--wms-ops-field-border) !important;
+  background: var(--wms-ops-field-bg) !important;
+  color: var(--wms-ops-field-fg) !important;
+  font-family: var(--wms-premium-font) !important;
+  font-size: 0.875rem;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  min-height: 2.625rem;
+  box-shadow: 0 2px 6px -2px rgb(0 0 0 / 10%);
+}
+
+html.skin-premium .wms-ops-workspace-host .wms-ops-lookup-trigger[aria-expanded='true'],
+html.skin-premium .wms-ops-workspace-host button[role='combobox'][aria-expanded='true'],
+html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .wms-ops-lookup-trigger[aria-expanded='true'] {
+  border-color: color-mix(in oklab, var(--wms-brand-primary) 65%, transparent) !important;
+  box-shadow:
+    0 0 0 3.5px color-mix(in oklab, var(--wms-brand-primary) 24%, transparent),
+    0 0 22px -2px color-mix(in oklab, var(--wms-brand-primary) 38%, transparent) !important;
+}
+
+html.skin-premium .wms-ops-workspace-host .wms-ops-list-select-content,
+html.skin-premium .wms-ops-workspace-host .wms-ops-list-popover,
+html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .wms-ops-list-select-content,
+html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .wms-ops-list-popover,
+html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .wms-floating-surface,
+html.skin-premium .wms-ops-list-popover,
+html.skin-premium .wms-ops-list-dropdown,
+html.skin-premium .wms-ops-list-select-content {
+  border-radius: 0.9rem !important;
+  border: 1px solid color-mix(in oklab, var(--wms-brand-primary) 18%, var(--wms-app-border)) !important;
+  background: color-mix(in srgb, var(--wms-app-panel-strong) 90%, transparent) !important;
+  backdrop-filter: blur(18px) !important;
+  -webkit-backdrop-filter: blur(18px) !important;
+  box-shadow:
+    0 20px 48px -20px rgb(2 6 23 / 40%),
+    0 0 24px -14px var(--wms-brand-shadow) !important;
+  clip-path: none !important;
+}
+
+html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host button[role='option'] {
+  border-radius: 0.55rem !important;
+  font-family: var(--wms-premium-font) !important;
+  font-size: 0.82rem;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+
+html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host button[role='option']:hover,
+html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host button[role='option'][aria-selected='true'] {
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklab, var(--wms-brand-primary) 12%, transparent) 0%,
+    color-mix(in oklab, var(--wms-brand-accent) 8%, transparent) 100%
+  ) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--wms-brand-primary) 18%, transparent);
+  transform: none;
+}
+
+/* ?? AdvancedDataGrid shell / table ?? */
+html.skin-premium .wms-ops-list .wms-ops-data-grid-shell,
+html.skin-premium section.wms-ops-list .wms-ops-data-grid-shell {
+  border-radius: 1.1rem !important;
+  border-color: color-mix(in oklab, var(--wms-brand-primary) 14%, var(--wms-app-border)) !important;
+  background:
+    linear-gradient(
+      165deg,
+      color-mix(in oklab, var(--wms-brand-primary) 6%, transparent),
+      transparent 42%
+    ),
+    color-mix(in srgb, var(--wms-app-panel-strong) 82%, transparent) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow:
+    0 14px 34px -22px var(--wms-brand-shadow),
+    inset 0 1px 0 rgb(255 255 255 / 8%);
+}
+
+html.skin-premium .wms-ops-list .wms-ops-table-wrap,
+html.skin-premium .wms-ops-list .wms-ops-data-grid-wrap,
+html.skin-premium .wms-ops-list .wms-ops-table-h-scroll {
+  border-radius: 0.9rem !important;
+  overflow-x: scroll !important;
+  overflow-y: hidden !important;
+  box-shadow:
+    0 8px 28px -14px rgb(0 0 0 / 25%),
+    inset 0 1px 0 rgb(255 255 255 / 8%);
+}
+
+html.skin-premium .wms-ops-list table.wms-ops-data-grid thead,
+html.skin-premium .wms-ops-list table.wms-ops-data-grid th,
+html.skin-premium .wms-ops-list .wms-ops-table-head,
+html.skin-premium .wms-ops-list thead th {
+  background: color-mix(in oklab, var(--wms-brand-primary) 7%, var(--wms-app-panel-strong)) !important;
+  font-family: var(--wms-premium-font) !important;
+  font-size: 0.7rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.02em !important;
+  text-transform: none !important;
+  color: color-mix(in oklab, var(--wms-brand-primary) 60%, var(--wms-app-text-muted)) !important;
+}
+
+html.skin-premium.dark .wms-ops-list table.wms-ops-data-grid thead,
+html.skin-premium.dark .wms-ops-list table.wms-ops-data-grid th,
+html.skin-premium.dark .wms-ops-list .wms-ops-table-head,
+html.skin-premium.dark .wms-ops-list thead th {
+  background: color-mix(in oklab, var(--wms-brand-primary) 9%, #12121a) !important;
+  color: color-mix(in oklab, var(--wms-brand-primary) 62%, #94a3b8) !important;
+}
+
+html.skin-premium .wms-ops-list table.wms-ops-data-grid td,
+html.skin-premium .wms-ops-list tbody td {
+  font-family: var(--wms-premium-font) !important;
+  font-size: 0.8rem;
+  padding: 0.45rem 0.65rem !important;
+  color: color-mix(in oklab, hsl(var(--foreground)) 92%, transparent);
+}
+
+html.skin-premium .wms-ops-list table.wms-ops-data-grid tbody tr,
+html.skin-premium .wms-ops-list tbody tr {
+  border-bottom: 1px solid color-mix(in oklab, var(--wms-brand-primary) 7%, var(--wms-app-border)) !important;
+}
+
+html.skin-premium .wms-ops-list table.wms-ops-data-grid tbody tr:hover,
+html.skin-premium .wms-ops-list tbody tr:hover {
+  background: var(--wms-brand-soft) !important;
+}
+
+/* Toolbar buttons → premium pills */
+html.skin-premium .wms-ops-list .wms-ops-list-toolbar-btn,
+html.skin-premium .wms-ops-workspace-host .wms-ops-list-toolbar-btn {
+  border-radius: 999px !important;
+  border: 1px solid color-mix(in oklab, var(--wms-brand-primary) 38%, transparent) !important;
+  background:
+    linear-gradient(
+      118deg,
+      color-mix(in oklab, var(--wms-brand-primary) 12%, transparent) 0%,
+      color-mix(in oklab, var(--wms-brand-primary) 4%, transparent) 45%,
+      color-mix(in oklab, var(--wms-brand-accent) 10%, transparent) 100%
+    ),
+    color-mix(in srgb, var(--wms-app-panel-strong) 78%, transparent) !important;
+  color: color-mix(in oklab, var(--wms-brand-primary) 72%, hsl(var(--foreground))) !important;
+  font-family: var(--wms-premium-font) !important;
+  font-size: 0.72rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.03em !important;
+  text-transform: none !important;
+  clip-path: none !important;
+  box-shadow:
+    0 0 10px -4px var(--wms-brand-shadow),
+    inset 0 0 8px -6px var(--wms-brand-shadow) !important;
+  transition:
+    background 260ms ease,
+    border-color 260ms ease,
+    box-shadow 260ms ease,
+    transform 180ms ease !important;
+}
+
+html.skin-premium .wms-ops-list .wms-ops-list-toolbar-btn:hover:not(:disabled),
+html.skin-premium .wms-ops-workspace-host .wms-ops-list-toolbar-btn:hover:not(:disabled) {
+  background:
+    linear-gradient(
+      118deg,
+      color-mix(in oklab, var(--wms-brand-primary) 42%, transparent) 0%,
+      color-mix(in oklab, var(--wms-brand-primary) 22%, transparent) 42%,
+      color-mix(in oklab, var(--wms-brand-accent) 36%, transparent) 100%
+    ),
+    var(--wms-app-panel-strong) !important;
+  border-color: color-mix(in oklab, var(--wms-brand-primary) 62%, transparent) !important;
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--wms-brand-primary) 22%, transparent),
+    0 0 18px -2px var(--wms-brand-shadow),
+    0 0 34px -8px color-mix(in oklab, var(--wms-brand-primary) 45%, transparent) !important;
+  transform: translateY(-1px);
+}
+
+html.skin-premium .wms-ops-list .wms-ops-list-toolbar-btn--active {
+  background:
+    linear-gradient(
+      118deg,
+      color-mix(in oklab, var(--wms-brand-primary) 34%, transparent) 0%,
+      color-mix(in oklab, var(--wms-brand-accent) 28%, transparent) 100%
+    ),
+    var(--wms-app-panel-strong) !important;
+  border-color: color-mix(in oklab, var(--wms-brand-primary) 55%, transparent) !important;
+  color: var(--wms-brand-primary) !important;
+}
+
+/* ?? Primary / secondary CTAs (Tailwind brand buttons → premium neon) ?? */
+html.skin-premium .wms-ops-workspace-host button.rounded-xl.bg-cyan-600,
+html.skin-premium .wms-ops-workspace-host button.rounded-xl.bg-emerald-600,
+html.skin-premium .wms-ops-workspace-host button[class*='bg-cyan-600'],
+html.skin-premium .wms-ops-workspace-host button[class*='bg-emerald-600'],
+html.skin-premium .wms-ops-workspace-host button[class*='bg-[var(--wms-brand-primary)]'],
+html.skin-premium .wms-ops-workspace-host a.bg-\[var\(--wms-brand-primary\)\],
+html.skin-premium .wms-ops-workspace-host button.bg-\[var\(--wms-brand-primary\)\] {
+  border-radius: 0.75rem !important;
+  clip-path: none !important;
+  font-family: var(--wms-premium-font) !important;
+  font-size: 0.78rem !important;
+  font-weight: 650 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: none !important;
+  min-height: 2.75rem;
+  border: 1px solid color-mix(in oklab, var(--wms-brand-primary) 58%, transparent) !important;
+  background:
+    linear-gradient(
+      118deg,
+      color-mix(in oklab, var(--wms-brand-primary) 20%, transparent) 0%,
+      color-mix(in oklab, var(--wms-brand-primary) 8%, transparent) 38%,
+      color-mix(in oklab, var(--wms-brand-accent) 16%, transparent) 72%,
+      color-mix(in oklab, var(--wms-brand-primary) 20%, transparent) 100%
+    ),
+    var(--wms-app-panel-strong) !important;
+  background-size: 260% 260%, auto !important;
+  color: color-mix(in oklab, var(--wms-brand-primary) 70%, hsl(var(--foreground))) !important;
+  text-shadow: 0 0 10px color-mix(in oklab, var(--wms-brand-primary) 30%, transparent);
+  box-shadow:
+    0 0 9px -2px var(--wms-brand-shadow),
+    0 0 26px -12px var(--wms-brand-shadow),
+    inset 0 0 10px -5px var(--wms-brand-shadow) !important;
+  animation: wms-premium-btn-flow 6s ease-in-out infinite;
+  transition:
+    transform 200ms ease,
+    box-shadow 260ms ease,
+    background 300ms ease,
+    color 260ms ease,
+    border-color 260ms ease !important;
+}
+
+html.skin-premium .wms-ops-workspace-host button.rounded-xl.bg-cyan-600:hover:not(:disabled),
+html.skin-premium .wms-ops-workspace-host button.rounded-xl.bg-emerald-600:hover:not(:disabled),
+html.skin-premium .wms-ops-workspace-host button[class*='bg-cyan-600']:hover:not(:disabled),
+html.skin-premium .wms-ops-workspace-host button[class*='bg-emerald-600']:hover:not(:disabled),
+html.skin-premium .wms-ops-workspace-host button[class*='bg-[var(--wms-brand-primary)]']:hover:not(:disabled),
+html.skin-premium .wms-ops-workspace-host a.bg-\[var\(--wms-brand-primary\)\]:hover,
+html.skin-premium .wms-ops-workspace-host button.bg-\[var\(--wms-brand-primary\)\]:hover:not(:disabled) {
+  animation: none;
+  transform: translateY(-1px);
+  border-color: color-mix(in oklab, var(--wms-brand-primary) 80%, transparent) !important;
+  background: linear-gradient(
+    135deg,
+    var(--wms-brand-primary) 0%,
+    var(--wms-brand-secondary) 55%,
+    color-mix(in oklab, var(--wms-brand-accent) 55%, var(--wms-brand-secondary)) 100%
+  ) !important;
+  color: var(--wms-brand-on-primary) !important;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 22%);
+  box-shadow:
+    0 0 16px 1px var(--wms-brand-shadow),
+    0 0 42px -6px var(--wms-brand-shadow),
+    0 0 64px -14px color-mix(in oklab, var(--wms-brand-primary) 45%, transparent) !important;
+}
+
+/* OpsActionButton — ensure host-less usage still gets premium DNA */
+html.skin-premium .wms-ops-workspace-host .wms-ops-action-btn,
+html.skin-premium .wms-ops-action-btn {
+  border-radius: 0.75rem !important;
+  clip-path: none !important;
+  font-family: var(--wms-premium-font) !important;
+  letter-spacing: 0.06em;
+  text-transform: none;
+}
+
+html.skin-premium .wms-ops-workspace-host .wms-ops-action-btn--primary,
+html.skin-premium .wms-ops-action-btn--primary {
+  border: 1px solid color-mix(in oklab, var(--wms-brand-primary) 58%, transparent) !important;
+  background:
+    linear-gradient(
+      118deg,
+      color-mix(in oklab, var(--wms-brand-primary) 20%, transparent) 0%,
+      color-mix(in oklab, var(--wms-brand-primary) 8%, transparent) 38%,
+      color-mix(in oklab, var(--wms-brand-accent) 16%, transparent) 72%,
+      color-mix(in oklab, var(--wms-brand-primary) 20%, transparent) 100%
+    ),
+    var(--wms-app-panel-strong) !important;
+  background-size: 260% 260%, auto !important;
+  color: color-mix(in oklab, var(--wms-brand-primary) 70%, hsl(var(--foreground))) !important;
+  animation: wms-premium-btn-flow 6s ease-in-out infinite;
+}
+
+html.skin-premium .wms-ops-workspace-host .wms-ops-action-btn--primary:hover:not(:disabled),
+html.skin-premium .wms-ops-action-btn--primary:hover:not(:disabled) {
+  animation: none;
+  transform: translateY(-1px);
+  background: linear-gradient(
+    135deg,
+    var(--wms-brand-primary) 0%,
+    var(--wms-brand-secondary) 55%,
+    color-mix(in oklab, var(--wms-brand-accent) 55%, var(--wms-brand-secondary)) 100%
+  ) !important;
+  color: var(--wms-brand-on-primary) !important;
+  box-shadow:
+    0 0 16px 1px var(--wms-brand-shadow),
+    0 0 42px -6px var(--wms-brand-shadow) !important;
+}
+
+html.skin-premium .wms-ops-workspace-host .wms-ops-action-btn--secondary,
+html.skin-premium .wms-ops-action-btn--secondary {
+  border: 1px solid color-mix(in oklab, var(--wms-brand-primary) 32%, var(--wms-app-border)) !important;
+  background: color-mix(in srgb, var(--wms-app-panel-strong) 55%, transparent) !important;
+  color: color-mix(in oklab, var(--wms-brand-primary) 78%, hsl(var(--foreground))) !important;
+  backdrop-filter: blur(8px);
+  box-shadow: none !important;
+}
+
+html.skin-premium .wms-ops-workspace-host .wms-ops-action-btn--secondary:hover:not(:disabled),
+html.skin-premium .wms-ops-action-btn--secondary:hover:not(:disabled) {
+  background: var(--wms-brand-soft) !important;
+  box-shadow: 0 0 16px -6px var(--wms-brand-shadow) !important;
+}
+
+/* Secondary outline buttons / step chips */
+html.skin-premium .wms-ops-workspace-host button[class*='rounded-xl'].border.text-xs.font-semibold {
+  border-radius: 999px !important;
+  font-family: var(--wms-premium-font) !important;
+  letter-spacing: 0.03em;
+  text-transform: none;
+  clip-path: none !important;
+}
+
+html.skin-premium .wms-ops-workspace-host button[class*='border-cyan-500'].bg-cyan-500\/10,
+html.skin-premium .wms-ops-workspace-host button.border-\[var\(--wms-brand-primary\)\] {
+  border-color: color-mix(in oklab, var(--wms-brand-primary) 45%, transparent) !important;
+  background: color-mix(in oklab, var(--wms-brand-primary) 12%, transparent) !important;
+  color: color-mix(in oklab, var(--wms-brand-primary) 72%, hsl(var(--foreground))) !important;
+  box-shadow: 0 0 14px -4px var(--wms-brand-shadow);
+}
+
+/* Status chips stay pill */
+html.skin-premium .wms-ops-workspace-host span[class*='rounded-full'],
+html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host span[class*='rounded-full'] {
+  border-radius: 9999px !important;
+  font-family: var(--wms-premium-font) !important;
+  font-size: 0.65rem;
+  letter-spacing: 0.03em;
+  text-transform: none;
+}
+
+/* Dialog tables */
+html.skin-premium .wms-ops-detail-dialog table th,
+html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host [data-slot='dialog-content'] table th {
+  font-family: var(--wms-premium-font) !important;
+  font-size: 0.7rem;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  font-weight: 700;
+}
+
+html.skin-premium .wms-ops-detail-dialog table td,
+html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host [data-slot='dialog-content'] table td {
+  font-family: var(--wms-premium-font) !important;
+  font-size: 0.8rem;
+}
+
+html.skin-premium .wms-ops-detail-dialog table tbody tr:hover,
+html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host [data-slot='dialog-content'] table tbody tr:hover {
+  background: var(--wms-brand-soft) !important;
+}
+
+/* Dialog shells portaled under workspace */
+html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host [data-slot='dialog-content'],
+html.skin-premium #wms-shell-portal-root [data-slot='dialog-content'] {
+  border-radius: 1.1rem !important;
+  border: 1px solid color-mix(in oklab, var(--wms-brand-primary) 18%, var(--wms-app-border)) !important;
+  background:
+    linear-gradient(
+      165deg,
+      color-mix(in oklab, var(--wms-brand-primary) 8%, transparent) 0%,
+      transparent 42%,
+      color-mix(in oklab, var(--wms-brand-accent) 5%, transparent) 100%
+    ),
+    color-mix(in srgb, var(--wms-app-panel-strong) 92%, transparent) !important;
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  box-shadow:
+    0 24px 48px -18px rgb(0 0 0 / 28%),
+    0 0 0 1px color-mix(in oklab, var(--wms-brand-primary) 8%, transparent),
+    inset 0 1px 0 rgb(255 255 255 / 10%) !important;
+  clip-path: none !important;
+  font-family: var(--wms-premium-font) !important;
+}
+
+html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host [data-slot='dialog-close'],
+html.skin-premium #wms-shell-portal-root [data-slot='dialog-close'] {
+  border-radius: 999px !important;
+}
+
+html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host [data-slot='dialog-close']:hover,
+html.skin-premium #wms-shell-portal-root [data-slot='dialog-close']:hover {
+  color: #ef4444;
+  background: color-mix(in oklab, #ef4444 14%, transparent);
+  box-shadow: 0 0 14px -2px color-mix(in oklab, #ef4444 35%, transparent);
+}
+
+/* Soft loading pulse cards */
+html.skin-premium .wms-ops-workspace-host .animate-pulse {
+  border-radius: 0.85rem !important;
+}
+
+/* Form cards inside create flows */
+html.skin-premium .wms-ops-workspace-host .wms-ops-form-card,
+html.skin-premium .wms-ops-form .wms-ops-form-card {
+  border-radius: 1.1rem !important;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--wms-ops-card-bg) 100%, transparent) 0%, color-mix(in srgb, var(--wms-ops-card-bg) 86%, transparent) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow:
+    0 8px 32px rgb(0 0 0 / 10%),
+    inset 0 1px 0 rgb(255 255 255 / 10%);
+}
+
+/* Toast: drop terminal SYS header / square DNA */
+html.skin-premium .wms-ops-toaster [data-sonner-toast][data-styled='true']::before,
+html.skin-premium .wms-ops-toaster [data-sonner-toast]::before {
+  display: none !important;
+  content: none !important;
+}
+
+html.skin-premium .wms-ops-toaster [data-sonner-toast] {
+  border-radius: 0.95rem !important;
+  font-family: var(--wms-premium-font) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.skin-premium .wms-ops-workspace-host button[class*='bg-[var(--wms-brand-primary)]'],
+  html.skin-premium .wms-ops-workspace-host .wms-ops-action-btn--primary,
+  html.skin-premium .wms-ops-action-btn--primary {
+    animation: none !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   v1 DNA port — badges, scrollbars, circuit toggles, dialogs, sidebar fonts
+   Scoped to workspace-host / portal so v2 DOM inherits without page rewrites.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Sidebar: soft premium chrome + pill scroll thumbs */
+html.skin-premium .app-sidebar-panel {
+  font-family: var(--wms-premium-font);
+}
+
+html.skin-premium .app-sidebar-panel nav button,
+html.skin-premium .app-sidebar-panel nav a {
+  font-family: var(--wms-premium-font) !important;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+
+html.skin-premium .app-sidebar-panel nav button .font-mono,
+html.skin-premium .app-sidebar-panel nav a .font-mono {
+  font-family: var(--wms-premium-font) !important;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 0.625rem;
+}
+
+html.skin-premium .app-sidebar-panel,
+html.skin-premium .app-sidebar-panel .custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color:
+    color-mix(in oklab, var(--wms-brand-primary) 70%, var(--wms-brand-accent))
+    color-mix(in oklab, var(--wms-brand-primary) 10%, transparent);
+}
+
+html.skin-premium .app-sidebar-panel::-webkit-scrollbar,
+html.skin-premium .app-sidebar-panel .custom-scrollbar::-webkit-scrollbar {
+  width: 11px;
+  height: 11px;
+}
+
+html.skin-premium .app-sidebar-panel::-webkit-scrollbar-track,
+html.skin-premium .app-sidebar-panel .custom-scrollbar::-webkit-scrollbar-track {
+  margin: 8px 2px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--wms-brand-primary) 18%, transparent);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--wms-brand-primary) 12%, transparent),
+      color-mix(in oklab, var(--wms-brand-accent) 8%, transparent)
+    ),
+    color-mix(in oklab, hsl(var(--foreground)) 4%, transparent);
+}
+
+html.skin-premium .app-sidebar-panel::-webkit-scrollbar-thumb,
+html.skin-premium .app-sidebar-panel .custom-scrollbar::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  background-image: linear-gradient(
+    180deg,
+    var(--wms-brand-primary) 0%,
+    color-mix(in oklab, var(--wms-brand-secondary) 70%, var(--wms-brand-primary)) 48%,
+    var(--wms-brand-accent) 100%
+  );
+  box-shadow:
+    0 0 10px color-mix(in oklab, var(--wms-brand-primary) 45%, transparent),
+    0 0 18px -4px var(--wms-brand-shadow);
+}
+
+html.skin-premium .app-sidebar-panel::-webkit-scrollbar-thumb:hover,
+html.skin-premium .app-sidebar-panel .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--wms-brand-primary) 85%, white) 0%,
+    var(--wms-brand-secondary) 50%,
+    color-mix(in oklab, var(--wms-brand-accent) 85%, white) 100%
+  );
+}
+
+/* Status badges → soft pills (DNA classes are square by default) */
+html.skin-premium .wms-ops-workspace-host .wms-ops-status-badge,
+html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .wms-ops-status-badge,
+html.skin-premium .wms-ops-list .wms-ops-status-badge,
+html.skin-premium .wms-ops-detail-dialog .wms-ops-status-badge,
+html.skin-premium .wms-ops-detail-dialog .wms-ops-prelabel-detail__status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px !important;
+  padding-inline: 0.65rem;
+  font-family: var(--wms-premium-font) !important;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  white-space: nowrap;
+}
+
+/* Code badges → soft capsules */
+html.skin-premium .wms-ops-workspace-host .wms-ops-code-badge,
+html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .wms-ops-code-badge,
+html.skin-premium .wms-ops-detail-dialog .wms-ops-code-badge,
+html.skin-premium .wms-ops-list .wms-ops-code-badge,
+html.skin-premium .wms-ops-form .wms-ops-code-badge {
+  border-radius: 999px !important;
+  padding-inline: 0.5rem;
+  font-family: var(--wms-premium-mono) !important;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  border-color: color-mix(in oklab, var(--wms-brand-primary) 30%, transparent);
+  background: color-mix(in oklab, var(--wms-brand-primary) 9%, var(--wms-ops-field-bg));
+  color: color-mix(in oklab, var(--wms-brand-primary) 68%, hsl(var(--foreground)));
+  box-shadow: none;
+}
+
+/* Circuit toggle → modern pill switch under host/portal */
+html.skin-premium .wms-ops-workspace-host .wms-ops-circuit-toggle,
+html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .wms-ops-circuit-toggle {
+  padding: 0;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+html.skin-premium .wms-ops-workspace-host .wms-ops-circuit-toggle,
+html.skin-premium .wms-ops-workspace-host .wms-ops-circuit-toggle__housing,
+html.skin-premium .wms-ops-workspace-host .wms-ops-circuit-toggle__rail,
+html.skin-premium .wms-ops-workspace-host .wms-ops-circuit-toggle__lever,
+html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .wms-ops-circuit-toggle,
+html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .wms-ops-circuit-toggle__housing,
+html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .wms-ops-circuit-toggle__rail,
+html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .wms-ops-circuit-toggle__lever {
+  border-radius: 999px !important;
+}
+
+html.skin-premium .wms-ops-workspace-host .wms-ops-circuit-toggle__housing,
+html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .wms-ops-circuit-toggle__housing {
+  width: 2.6rem !important;
+  height: 1.45rem !important;
+  border: 1px solid var(--wms-ops-field-border) !important;
+  background: color-mix(in oklab, hsl(var(--foreground)) 10%, var(--wms-ops-field-bg)) !important;
+  box-shadow: inset 0 1px 3px rgb(0 0 0 / 18%) !important;
+  transition: background 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
+}
+
+html.skin-premium .wms-ops-workspace-host .wms-ops-circuit-toggle--on .wms-ops-circuit-toggle__housing,
+html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .wms-ops-circuit-toggle--on .wms-ops-circuit-toggle__housing {
+  border-color: color-mix(in oklab, var(--wms-brand-primary) 60%, transparent) !important;
+  background: linear-gradient(135deg, var(--wms-brand-primary), var(--wms-brand-accent)) !important;
+  box-shadow:
+    0 0 10px var(--wms-brand-shadow),
+    0 0 22px -2px color-mix(in oklab, var(--wms-brand-primary) 38%, transparent) !important;
+}
+
+html.skin-premium .wms-ops-workspace-host .wms-ops-circuit-toggle__rail,
+html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .wms-ops-circuit-toggle__rail {
+  display: none !important;
+}
+
+html.skin-premium .wms-ops-workspace-host .wms-ops-circuit-toggle__lever,
+html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .wms-ops-circuit-toggle__lever {
+  top: 50% !important;
+  left: 0.05rem !important;
+  width: 1.35rem !important;
+  height: 1.35rem !important;
+  margin: 0 !important;
+  border-radius: 50% !important;
+  transform: translateY(-50%) !important;
+  background: #ffffff !important;
+  outline: 2px solid var(--wms-ops-field-border);
+  outline-offset: -1px;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 30%) !important;
+  transition:
+    left 250ms cubic-bezier(0.34, 1.3, 0.64, 1),
+    outline-color 220ms ease,
+    box-shadow 220ms ease;
+}
+
+html.skin-premium .wms-ops-workspace-host .wms-ops-circuit-toggle__lever::after,
+html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .wms-ops-circuit-toggle__lever::after {
+  content: '';
+  position: absolute;
+  inset: 26%;
+  background: color-mix(in oklab, var(--wms-brand-primary) 85%, #0f172a);
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='none' stroke='%23000' stroke-width='5' stroke-linecap='round' stroke-linejoin='round' d='m6 17 7 7 13-13'/%3E%3C/svg%3E") center / contain no-repeat;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='none' stroke='%23000' stroke-width='5' stroke-linecap='round' stroke-linejoin='round' d='m6 17 7 7 13-13'/%3E%3C/svg%3E") center / contain no-repeat;
+  opacity: 0;
+  transform: scale(0.5);
+  transition:
+    opacity 150ms ease-in-out,
+    transform 260ms cubic-bezier(0.34, 1.5, 0.64, 1);
+}
+
+html.skin-premium .wms-ops-workspace-host .wms-ops-circuit-toggle--on .wms-ops-circuit-toggle__lever,
+html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .wms-ops-circuit-toggle--on .wms-ops-circuit-toggle__lever {
+  left: calc(100% - 1.4rem) !important;
+  outline-color: color-mix(in oklab, var(--wms-brand-primary) 70%, transparent);
+}
+
+html.skin-premium .wms-ops-workspace-host .wms-ops-circuit-toggle--on .wms-ops-circuit-toggle__lever::after,
+html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .wms-ops-circuit-toggle--on .wms-ops-circuit-toggle__lever::after {
+  opacity: 1;
+  transform: scale(1);
+}
+
+html.skin-premium .wms-ops-workspace-host .wms-ops-circuit-toggle-field,
+html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .wms-ops-circuit-toggle-field {
+  border-radius: 0.8rem;
+}
+
+html.skin-premium .wms-ops-workspace-host .wms-ops-circuit-toggle--compact,
+html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .wms-ops-circuit-toggle--compact {
+  width: auto;
+  height: auto;
+  padding: 0.35rem;
+}
+
+/* Detail / lookup dialog shells + close DNA */
+html.skin-premium .wms-ops-detail-dialog,
+html.skin-premium .wms-ops-lookup-dialog,
+html.skin-premium .wms-ops-delete-dialog {
+  border-radius: 1.1rem !important;
+  padding: 0 !important;
+  gap: 0 !important;
+  overflow: hidden !important;
+  clip-path: none !important;
+  font-family: var(--wms-premium-font) !important;
+}
+
+/* Premium softens terminal square fields inside dialogs */
+html.skin-premium :is(.wms-ops-detail-dialog, .wms-ops-lookup-dialog, .wms-ops-form)
+  :is(
+    input.input,
+    textarea.input,
+    select.input,
+    .input,
+    input:not([type='checkbox']):not([type='radio']):not([type='hidden']):not([type='file']):not([type='submit']):not([type='button']):not([type='reset']):not([type='image']),
+    textarea,
+    select,
+    button[role='combobox'],
+    .wms-ops-lookup-trigger
+  ) {
+  border-radius: 0.75rem !important;
+  border-width: 1px !important;
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--wms-brand-primary) 10%, transparent) !important;
+  font-family: var(--wms-premium-font) !important;
+  letter-spacing: 0.01em;
+}
+
+html.skin-premium :is(.wms-ops-detail-dialog, .wms-ops-lookup-dialog, .wms-ops-form) input[type='checkbox'] {
+  border-radius: 0.35rem;
+  accent-color: var(--wms-brand-primary);
+}
+
+html.skin-premium .wms-ops-detail-dialog__header,
+html.skin-premium .wms-ops-lookup-dialog header {
+  width: 100%;
+  margin: 0;
+  padding: 1.2rem 1.4rem !important;
+  padding-right: 3.75rem !important;
+  border-radius: 0;
+  border-bottom: 1px solid color-mix(in oklab, var(--wms-brand-primary) 16%, var(--wms-ops-card-border)) !important;
+  background: color-mix(in oklab, var(--wms-brand-primary) 7%, var(--wms-app-panel-strong)) !important;
+}
+
+html.skin-premium .wms-ops-detail-dialog__title,
+html.skin-premium .wms-ops-lookup-dialog [data-slot='dialog-title'] {
+  font-family: var(--wms-premium-display) !important;
+  color: hsl(var(--foreground)) !important;
+  text-transform: none !important;
+  letter-spacing: 0.01em !important;
+}
+
+html.skin-premium :is(.wms-ops-lookup-dialog, .wms-ops-detail-dialog, .wms-ops-delete-dialog, .wms-ops-profile-modal)
+  [data-slot='dialog-close'] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  opacity: 0.72;
+  color: color-mix(in oklab, hsl(var(--foreground)) 70%, transparent);
+  transition:
+    color 180ms ease,
+    background-color 180ms ease,
+    box-shadow 180ms ease,
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+html.skin-premium :is(.wms-ops-lookup-dialog, .wms-ops-detail-dialog, .wms-ops-delete-dialog, .wms-ops-profile-modal)
+  [data-slot='dialog-close']:hover {
+  opacity: 1;
+  color: #ef4444;
+  background: color-mix(in oklab, #ef4444 14%, transparent);
+  box-shadow: 0 0 14px -2px color-mix(in oklab, #ef4444 35%, transparent);
+  transform: scale(1.04);
+}
+
+html.skin-premium :is(.wms-ops-lookup-dialog, .wms-ops-detail-dialog, .wms-ops-delete-dialog, .wms-ops-profile-modal)
+  [data-slot='dialog-close']:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in oklab, #ef4444 28%, transparent);
+}
+
+/* Premium gradient scrollbars — main, ops, dialogs, popovers */
+html.skin-premium :is(
+  main.wms-ops-scrollbar,
+  .wms-ops-scrollbar,
+  .wms-ops-workspace-host .wms-ops-scrollbar,
+  .wms-ops-lookup-dialog :is(.overflow-y-auto, .overflow-y-scroll, .overflow-auto, .overflow-x-auto),
+  .wms-ops-detail-dialog :is(.overflow-y-auto, .overflow-y-scroll, .overflow-auto, .overflow-x-auto, .overflow-x-scroll),
+  .wms-ops-list :is(.overflow-y-auto, .overflow-y-scroll, .overflow-auto, .overflow-x-auto),
+  .wms-ops-list-popover__body,
+  .wms-ops-list-popover__scroll,
+  .wms-ops-lookup-list,
+  #wms-workspace-portal-root.wms-ops-workspace-host :is(.overflow-y-auto, .overflow-auto),
+  .wms-premium-nav__tabs.wms-ops-scrollbar
+) {
+  scrollbar-width: thin;
+  scrollbar-color:
+    color-mix(in oklab, var(--wms-brand-primary) 70%, var(--wms-brand-accent))
+    color-mix(in oklab, var(--wms-brand-primary) 10%, transparent);
+}
+
+html.skin-premium :is(
+  main.wms-ops-scrollbar,
+  .wms-ops-scrollbar,
+  .wms-ops-workspace-host .wms-ops-scrollbar,
+  .wms-ops-lookup-dialog :is(.overflow-y-auto, .overflow-y-scroll, .overflow-auto, .overflow-x-auto),
+  .wms-ops-detail-dialog :is(.overflow-y-auto, .overflow-y-scroll, .overflow-auto, .overflow-x-auto, .overflow-x-scroll),
+  .wms-ops-list :is(.overflow-y-auto, .overflow-y-scroll, .overflow-auto, .overflow-x-auto),
+  .wms-ops-list-popover__body,
+  .wms-ops-list-popover__scroll,
+  .wms-ops-lookup-list,
+  #wms-workspace-portal-root.wms-ops-workspace-host :is(.overflow-y-auto, .overflow-auto),
+  .wms-premium-nav__tabs.wms-ops-scrollbar
+)::-webkit-scrollbar {
+  width: 11px;
+  height: 11px;
+}
+
+html.skin-premium :is(
+  main.wms-ops-scrollbar,
+  .wms-ops-scrollbar,
+  .wms-ops-workspace-host .wms-ops-scrollbar,
+  .wms-ops-lookup-dialog :is(.overflow-y-auto, .overflow-y-scroll, .overflow-auto, .overflow-x-auto),
+  .wms-ops-detail-dialog :is(.overflow-y-auto, .overflow-y-scroll, .overflow-auto, .overflow-x-auto, .overflow-x-scroll),
+  .wms-ops-list :is(.overflow-y-auto, .overflow-y-scroll, .overflow-auto, .overflow-x-auto),
+  .wms-ops-list-popover__body,
+  .wms-ops-list-popover__scroll,
+  .wms-ops-lookup-list,
+  #wms-workspace-portal-root.wms-ops-workspace-host :is(.overflow-y-auto, .overflow-auto),
+  .wms-premium-nav__tabs.wms-ops-scrollbar
+)::-webkit-scrollbar-track {
+  margin: 8px 2px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--wms-brand-primary) 18%, transparent);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--wms-brand-primary) 12%, transparent),
+      color-mix(in oklab, var(--wms-brand-accent) 8%, transparent)
+    ),
+    color-mix(in oklab, hsl(var(--foreground)) 4%, transparent);
+  box-shadow: inset 0 0 8px color-mix(in oklab, var(--wms-brand-primary) 12%, transparent);
+}
+
+html.skin-premium :is(
+  main.wms-ops-scrollbar,
+  .wms-ops-scrollbar,
+  .wms-ops-workspace-host .wms-ops-scrollbar,
+  .wms-ops-lookup-dialog :is(.overflow-y-auto, .overflow-y-scroll, .overflow-auto, .overflow-x-auto),
+  .wms-ops-detail-dialog :is(.overflow-y-auto, .overflow-y-scroll, .overflow-auto, .overflow-x-auto, .overflow-x-scroll),
+  .wms-ops-list :is(.overflow-y-auto, .overflow-y-scroll, .overflow-auto, .overflow-x-auto),
+  .wms-ops-list-popover__body,
+  .wms-ops-list-popover__scroll,
+  .wms-ops-lookup-list,
+  #wms-workspace-portal-root.wms-ops-workspace-host :is(.overflow-y-auto, .overflow-auto),
+  .wms-premium-nav__tabs.wms-ops-scrollbar
+)::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  background-image: linear-gradient(
+    180deg,
+    var(--wms-brand-primary) 0%,
+    color-mix(in oklab, var(--wms-brand-secondary) 70%, var(--wms-brand-primary)) 48%,
+    var(--wms-brand-accent) 100%
+  );
+  box-shadow:
+    0 0 10px color-mix(in oklab, var(--wms-brand-primary) 45%, transparent),
+    0 0 18px -4px var(--wms-brand-shadow),
+    inset 0 1px 0 rgb(255 255 255 / 28%);
+}
+
+html.skin-premium :is(
+  main.wms-ops-scrollbar,
+  .wms-ops-scrollbar,
+  .wms-ops-workspace-host .wms-ops-scrollbar,
+  .wms-ops-lookup-dialog :is(.overflow-y-auto, .overflow-y-scroll, .overflow-auto, .overflow-x-auto),
+  .wms-ops-detail-dialog :is(.overflow-y-auto, .overflow-y-scroll, .overflow-auto, .overflow-x-auto, .overflow-x-scroll),
+  .wms-ops-list :is(.overflow-y-auto, .overflow-y-scroll, .overflow-auto, .overflow-x-auto),
+  .wms-ops-list-popover__body,
+  .wms-ops-list-popover__scroll,
+  .wms-ops-lookup-list,
+  #wms-workspace-portal-root.wms-ops-workspace-host :is(.overflow-y-auto, .overflow-auto),
+  .wms-premium-nav__tabs.wms-ops-scrollbar
+)::-webkit-scrollbar-thumb:hover {
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--wms-brand-primary) 85%, white) 0%,
+    var(--wms-brand-secondary) 50%,
+    color-mix(in oklab, var(--wms-brand-accent) 85%, white) 100%
+  );
+  box-shadow:
+    0 0 14px color-mix(in oklab, var(--wms-brand-primary) 60%, transparent),
+    0 0 26px -2px var(--wms-brand-shadow),
+    inset 0 1px 0 rgb(255 255 255 / 35%);
+}
+
+html.skin-premium :is(
+  main.wms-ops-scrollbar,
+  .wms-ops-scrollbar,
+  .wms-ops-lookup-dialog :is(.overflow-y-auto, .overflow-y-scroll, .overflow-auto, .overflow-x-auto),
+  .wms-ops-detail-dialog :is(.overflow-y-auto, .overflow-y-scroll, .overflow-auto),
+  .wms-ops-list-popover__body,
+  .wms-ops-lookup-list
+)::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+html.skin-premium :is(
+  main.wms-ops-scrollbar,
+  .wms-ops-scrollbar,
+  .wms-ops-lookup-dialog :is(.overflow-y-auto, .overflow-y-scroll, .overflow-auto, .overflow-x-auto),
+  .wms-ops-detail-dialog :is(.overflow-y-auto, .overflow-y-scroll, .overflow-auto),
+  .wms-ops-list-popover__body,
+  .wms-ops-lookup-list
+)::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* AUTH SURFACE FINAL OVERRIDES — load last, defeat index.css premium select glow */
+html.skin-premium .auth-select-content[data-slot='select-content'],
+.auth-select-content[data-slot='select-content'] {
+  border-radius: var(--radius-xl) !important;
+  background: #0b1733 !important;
+  background-image: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid rgba(56, 189, 248, 0.2) !important;
+  box-shadow: 0 0 24px rgba(56, 132, 246, 0.18) !important;
+  color: #fff !important;
+  font-family: 'Outfit', sans-serif !important;
+}
+
+html.skin-premium .auth-select-content [data-slot='select-item'],
+html.skin-premium .auth-select-content [data-slot='select-item']:hover,
+html.skin-premium .auth-select-content [data-slot='select-item']:focus,
+html.skin-premium .auth-select-content [data-slot='select-item'][data-highlighted],
+html.skin-premium .auth-select-content [data-slot='select-item'][data-state='checked'],
+html.skin-premium .auth-select-content [data-slot='select-item'][aria-selected='true'],
+.auth-select-content [data-slot='select-item'],
+.auth-select-content [data-slot='select-item']:hover,
+.auth-select-content [data-slot='select-item']:focus,
+.auth-select-content [data-slot='select-item'][data-highlighted],
+.auth-select-content [data-slot='select-item'][data-state='checked'],
+.auth-select-content [data-slot='select-item'][aria-selected='true'] {
+  position: static !important;
+  overflow: visible !important;
+  min-height: 3rem !important;
+  height: 3rem !important;
+  border-radius: 0.5rem !important;
+  padding-left: 0.5rem !important;
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  color: #fff !important;
+  font-family: 'Outfit', sans-serif !important;
+}
+
+html.skin-premium .auth-select-content [data-slot='select-item'][data-highlighted],
+html.skin-premium .auth-select-content [data-slot='select-item']:focus,
+html.skin-premium .auth-select-content [data-slot='select-item']:hover,
+.auth-select-content [data-slot='select-item'][data-highlighted],
+.auth-select-content [data-slot='select-item']:focus,
+.auth-select-content [data-slot='select-item']:hover {
+  background: rgba(14, 165, 233, 0.25) !important;
+  background-image: none !important;
+  color: #fff !important;
+  box-shadow: none !important;
+}
+
+html.skin-premium .auth-select-content [data-slot='select-item'][data-state='checked'],
+.auth-select-content [data-slot='select-item'][data-state='checked'] {
+  color: #7dd3fc !important;
+}
+
+html.skin-premium .auth-select-content [data-slot='select-item'][data-state='checked'][data-highlighted],
+html.skin-premium .auth-select-content [data-slot='select-item'][data-state='checked']:hover,
+.auth-select-content [data-slot='select-item'][data-state='checked'][data-highlighted],
+.auth-select-content [data-slot='select-item'][data-state='checked']:hover {
+  background: rgba(14, 165, 233, 0.25) !important;
+  color: #fff !important;
+}
+
+html.skin-premium .auth-select-content [data-slot='select-item']::before,
+html.skin-premium .auth-select-content [data-slot='select-item']::after,
+.auth-select-content [data-slot='select-item']::before,
+.auth-select-content [data-slot='select-item']::after {
+  content: none !important;
+  display: none !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  box-shadow: none !important;
+  background: none !important;
+}
+
+html.skin-premium [data-wms-auth-surface='true'] button.auth-login-submit,
+html.skin-premium [data-wms-auth-surface='true'] [data-slot='button'].auth-login-submit {
+  color: #fff !important;
+  background-image: linear-gradient(to right, #0891b2, #2563eb, #fb923c) !important;
+  background-color: transparent !important;
+}
+
+/* ── Advanced filter / list select: v1 Premium DNA (body-portaled too) ── */
+html.skin-premium .wms-ops-list-popover,
+html.skin-premium .wms-ops-list-dropdown,
+html.skin-premium .wms-ops-list-select-content {
+  border-radius: 0.9rem !important;
+  border: 1px solid color-mix(in oklab, var(--wms-brand-primary) 18%, var(--wms-app-border)) !important;
+  background: color-mix(in srgb, var(--wms-app-panel-strong) 90%, transparent) !important;
+  backdrop-filter: blur(18px) !important;
+  -webkit-backdrop-filter: blur(18px) !important;
+  box-shadow:
+    0 20px 48px -20px rgb(2 6 23 / 40%),
+    0 0 24px -14px var(--wms-brand-shadow) !important;
+  clip-path: none !important;
+  overflow: hidden;
+}
+
+html.skin-premium .wms-ops-list-popover__header {
+  border-bottom-color: color-mix(in oklab, var(--wms-brand-primary) 14%, var(--wms-app-border)) !important;
+  background: color-mix(in oklab, var(--wms-brand-primary) 7%, transparent) !important;
+}
+
+html.skin-premium .wms-ops-list-popover__header::before {
+  display: none !important;
+}
+
+html.skin-premium .wms-ops-list-popover__title,
+html.skin-premium .wms-ops-list-popover__section-title {
+  font-family: var(--wms-premium-font) !important;
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: none !important;
+  color: color-mix(in oklab, var(--wms-brand-primary) 70%, hsl(var(--foreground))) !important;
+}
+
+html.skin-premium .wms-ops-list-popover__close {
+  width: 1.75rem !important;
+  height: 1.75rem !important;
+  border-radius: 999px !important;
+  border: 1px solid color-mix(in oklab, var(--wms-brand-primary) 22%, var(--wms-app-border)) !important;
+  color: color-mix(in oklab, var(--wms-brand-primary) 55%, var(--wms-app-text-muted)) !important;
+  background: transparent !important;
+  transition:
+    color 160ms ease,
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease !important;
+}
+
+html.skin-premium .wms-ops-list-popover__close:hover {
+  color: var(--wms-brand-primary) !important;
+  border-color: color-mix(in oklab, var(--wms-brand-primary) 45%, transparent) !important;
+  background: color-mix(in oklab, var(--wms-brand-primary) 8%, transparent) !important;
+  box-shadow: 0 0 12px -3px var(--wms-brand-shadow) !important;
+}
+
+html.skin-premium .wms-ops-list-popover .wms-ops-action-btn,
+html.skin-premium .wms-ops-advanced-filter__toolbar .wms-ops-action-btn {
+  border-radius: 999px !important;
+  min-height: 2rem !important;
+  height: 2rem !important;
+  font-family: var(--wms-premium-font) !important;
+  font-size: 0.7rem !important;
+  letter-spacing: 0.03em !important;
+  text-transform: none !important;
+  clip-path: none !important;
+}
+
+html.skin-premium .wms-ops-list-popover .wms-ops-action-btn--secondary {
+  border: 1px solid color-mix(in oklab, var(--wms-brand-primary) 38%, transparent) !important;
+  background:
+    linear-gradient(
+      118deg,
+      color-mix(in oklab, var(--wms-brand-primary) 12%, transparent) 0%,
+      color-mix(in oklab, var(--wms-brand-primary) 4%, transparent) 45%,
+      color-mix(in oklab, var(--wms-brand-accent) 10%, transparent) 100%
+    ),
+    color-mix(in srgb, var(--wms-app-panel-strong) 78%, transparent) !important;
+  color: color-mix(in oklab, var(--wms-brand-primary) 72%, hsl(var(--foreground))) !important;
+  box-shadow:
+    0 0 10px -4px var(--wms-brand-shadow),
+    inset 0 0 8px -6px var(--wms-brand-shadow) !important;
+}
+
+html.skin-premium .wms-ops-list-popover .wms-ops-action-btn--secondary:hover:not(:disabled) {
+  border-color: color-mix(in oklab, var(--wms-brand-primary) 62%, transparent) !important;
+  background:
+    linear-gradient(
+      118deg,
+      color-mix(in oklab, var(--wms-brand-primary) 42%, transparent) 0%,
+      color-mix(in oklab, var(--wms-brand-primary) 22%, transparent) 42%,
+      color-mix(in oklab, var(--wms-brand-accent) 36%, transparent) 100%
+    ),
+    var(--wms-app-panel-strong) !important;
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--wms-brand-primary) 22%, transparent),
+    0 0 18px -2px var(--wms-brand-shadow),
+    0 0 34px -8px color-mix(in oklab, var(--wms-brand-primary) 45%, transparent) !important;
+  transform: translateY(-1px);
+}
+
+html.skin-premium .wms-ops-list-popover .wms-ops-action-btn--primary {
+  border: 1px solid color-mix(in oklab, var(--wms-brand-primary) 38%, transparent) !important;
+  background:
+    linear-gradient(
+      118deg,
+      color-mix(in oklab, var(--wms-brand-primary) 12%, transparent) 0%,
+      color-mix(in oklab, var(--wms-brand-accent) 10%, transparent) 100%
+    ),
+    color-mix(in srgb, var(--wms-app-panel-strong) 78%, transparent) !important;
+  color: color-mix(in oklab, var(--wms-brand-primary) 72%, hsl(var(--foreground))) !important;
+  box-shadow:
+    0 0 10px -4px var(--wms-brand-shadow),
+    inset 0 0 8px -6px var(--wms-brand-shadow) !important;
+}
+
+html.skin-premium .wms-ops-list-popover .wms-ops-action-btn--primary:hover:not(:disabled) {
+  border-color: color-mix(in oklab, var(--wms-brand-primary) 62%, transparent) !important;
+  background:
+    linear-gradient(
+      118deg,
+      color-mix(in oklab, var(--wms-brand-primary) 42%, transparent) 0%,
+      color-mix(in oklab, var(--wms-brand-accent) 36%, transparent) 100%
+    ),
+    var(--wms-app-panel-strong) !important;
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--wms-brand-primary) 22%, transparent),
+    0 0 18px -2px var(--wms-brand-shadow) !important;
+  transform: translateY(-1px);
+}
+
+html.skin-premium .wms-ops-advanced-filter .wms-ops-lookup-trigger,
+html.skin-premium .wms-ops-advanced-filter .wms-ops-list-field-trigger,
+html.skin-premium .wms-ops-advanced-filter .wms-ops-field,
+html.skin-premium .wms-ops-advanced-filter input.wms-ops-field,
+html.skin-premium .wms-ops-list-field-trigger,
+html.skin-premium .wms-ops-list-popover .wms-ops-field {
+  border-radius: 999px !important;
+  font-family: var(--wms-premium-font) !important;
+  font-size: 0.78rem !important;
+  letter-spacing: 0.01em !important;
+  text-transform: none !important;
+  border: 1px solid color-mix(in oklab, var(--wms-brand-primary) 28%, var(--wms-ops-field-border)) !important;
+  background: color-mix(in oklab, var(--wms-brand-primary) 4%, var(--wms-ops-field-bg)) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--wms-brand-primary) 10%, transparent) !important;
+}
+
+html.skin-premium .wms-ops-advanced-filter .wms-ops-lookup-trigger:hover,
+html.skin-premium .wms-ops-advanced-filter .wms-ops-list-field-trigger:hover,
+html.skin-premium .wms-ops-list-field-trigger:hover {
+  border-color: color-mix(in oklab, var(--wms-brand-primary) 48%, transparent) !important;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklab, var(--wms-brand-primary) 18%, transparent),
+    0 0 12px -4px var(--wms-brand-shadow) !important;
+}
+
+html.skin-premium .wms-ops-advanced-filter .wms-ops-lookup-trigger[aria-expanded='true'],
+html.skin-premium .wms-ops-advanced-filter .wms-ops-list-field-trigger[aria-expanded='true'] {
+  border-color: color-mix(in oklab, var(--wms-brand-primary) 62%, transparent) !important;
+  box-shadow:
+    0 0 0 3px color-mix(in oklab, var(--wms-brand-primary) 18%, transparent),
+    0 0 16px -4px var(--wms-brand-shadow) !important;
+}
+
+html.skin-premium .wms-ops-advanced-filter__remove {
+  border-radius: 999px !important;
+}
+
+html.skin-premium .wms-ops-advanced-filter__row {
+  border-radius: 0.65rem !important;
+}
+
+/* Dropdown rows: left neon bar + right LED check (v1 select-item DNA) */
+html.skin-premium .wms-ops-list-select-content button[role='option'],
+html.skin-premium .wms-ops-list-select-content [data-slot='select-item'] {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.55rem !important;
+  padding: 0.55rem 0.75rem 0.55rem 1.05rem !important;
+  font-family: var(--wms-premium-font) !important;
+  font-size: 0.82rem !important;
+  letter-spacing: 0.01em !important;
+  text-transform: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transition:
+    color 200ms ease,
+    background-color 200ms ease,
+    box-shadow 200ms ease !important;
+}
+
+html.skin-premium .wms-ops-list-select-content button[role='option']::before,
+html.skin-premium .wms-ops-list-select-content [data-slot='select-item']::before {
+  content: '';
+  position: absolute;
+  left: 0.3rem;
+  top: 16%;
+  height: 68%;
+  width: 3px;
+  border-radius: 999px;
+  pointer-events: none;
+  opacity: 0;
+  transform: scaleY(0.2);
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    var(--wms-brand-primary) 50%,
+    transparent 100%
+  );
+  box-shadow:
+    0 0 8px color-mix(in oklab, var(--wms-brand-primary) 65%, transparent),
+    0 0 16px color-mix(in oklab, var(--wms-brand-primary) 30%, transparent);
+  transition:
+    transform 500ms cubic-bezier(0.37, 1.95, 0.66, 0.56),
+    opacity 160ms ease;
+}
+
+html.skin-premium .wms-ops-list-select-content button[role='option']:is(:hover, :focus-visible, [aria-selected='true'])::before,
+html.skin-premium .wms-ops-list-select-content [data-slot='select-item']:is(:hover, :focus, [data-highlighted], [data-state='checked'])::before {
+  opacity: 1;
+  transform: scaleY(1);
+}
+
+html.skin-premium .wms-ops-list-select-content button[role='option']:is(:hover, :focus-visible, [aria-selected='true']),
+html.skin-premium .wms-ops-list-select-content [data-slot='select-item']:is(:hover, :focus, [data-highlighted], [data-state='checked']) {
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklab, var(--wms-brand-primary) 30%, transparent) 0%,
+    color-mix(in oklab, var(--wms-brand-primary) 14%, transparent) 55%,
+    color-mix(in oklab, var(--wms-brand-primary) 6%, transparent) 100%
+  ) !important;
+  color: color-mix(in oklab, var(--wms-brand-primary) 85%, hsl(var(--foreground))) !important;
+  font-weight: 600 !important;
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--wms-brand-primary) 22%, transparent) !important;
+}
+
+html.skin-premium .wms-ops-list-select-content button[role='option'] :is(svg.lucide-check, svg.lucide-check-icon),
+html.skin-premium .wms-ops-list-select-content [data-slot='select-item'] :is(svg.lucide-check, svg.lucide-check-icon) {
+  width: 0.55rem !important;
+  height: 0.55rem !important;
+  margin-left: 0.35rem;
+  flex-shrink: 0;
+  border-radius: 999px !important;
+  background: linear-gradient(135deg, var(--wms-brand-primary), var(--wms-brand-accent)) !important;
+  color: transparent !important;
+  box-shadow:
+    0 0 6px color-mix(in oklab, var(--wms-brand-primary) 70%, transparent),
+    0 0 14px color-mix(in oklab, var(--wms-brand-primary) 35%, transparent),
+    inset 0 0 3px rgb(255 255 255 / 45%) !important;
+}
+
+html.skin-premium .wms-ops-list-select-content button[role='option'] :is(svg.lucide-check, svg.lucide-check-icon) path,
+html.skin-premium .wms-ops-list-select-content [data-slot='select-item'] :is(svg.lucide-check, svg.lucide-check-icon) path {
+  display: none !important;
+}
+
+html.skin-premium .wms-ops-list-select-content button[role='option'][aria-selected='false'] :is(svg.lucide-check, svg.lucide-check-icon),
+html.skin-premium .wms-ops-list-select-content button[role='option'] .opacity-0 {
+  opacity: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+html.skin-premium .wms-ops-list .wms-ops-grid-icon-btn,
+html.skin-premium .wms-ops-detail-dialog .wms-ops-grid-icon-btn,
+html.skin-premium .wms-ops-form .wms-ops-grid-icon-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  line-height: 0 !important;
+}
+
+html.skin-premium .wms-ops-list .wms-ops-grid-icon-btn > svg,
+html.skin-premium .wms-ops-detail-dialog .wms-ops-grid-icon-btn > svg,
+html.skin-premium .wms-ops-form .wms-ops-grid-icon-btn > svg {
+  display: block !important;
+  margin: 0 !important;
+}
+
+/* List table bottom horizontal scrollbar — Premium (loads last, beats thin/margin scrollbars) */
+html.skin-premium .wms-ops-list :is(.wms-ops-table-h-scroll, .wms-ops-table-wrap, .wms-ops-data-grid-wrap) {
+  overflow-x: scroll !important;
+  overflow-y: hidden !important;
+  scrollbar-gutter: stable;
+  scrollbar-width: auto !important;
+  scrollbar-color:
+    color-mix(in oklab, var(--wms-brand-primary) 72%, var(--wms-brand-accent))
+    color-mix(in oklab, var(--wms-brand-primary) 12%, transparent) !important;
+}
+
+html.skin-premium .wms-ops-list :is(.wms-ops-table-h-scroll, .wms-ops-table-wrap, .wms-ops-data-grid-wrap)::-webkit-scrollbar {
+  width: 14px !important;
+  height: 14px !important;
+}
+
+html.skin-premium .wms-ops-list :is(.wms-ops-table-h-scroll, .wms-ops-table-wrap, .wms-ops-data-grid-wrap)::-webkit-scrollbar-track {
+  margin: 0 !important;
+  border-radius: 0 0 0.9rem 0.9rem !important;
+  border: 0 !important;
+  border-top: 1px solid color-mix(in oklab, var(--wms-brand-primary) 18%, transparent) !important;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--wms-brand-primary) 10%, transparent),
+      color-mix(in oklab, var(--wms-brand-accent) 6%, transparent)
+    ),
+    color-mix(in oklab, hsl(var(--foreground)) 4%, transparent) !important;
+  box-shadow: none !important;
+}
+
+html.skin-premium .wms-ops-list :is(.wms-ops-table-h-scroll, .wms-ops-table-wrap, .wms-ops-data-grid-wrap)::-webkit-scrollbar-thumb {
+  border-radius: 999px !important;
+  border: 2px solid transparent !important;
+  background-clip: padding-box !important;
+  background-image: linear-gradient(
+    90deg,
+    var(--wms-brand-primary) 0%,
+    color-mix(in oklab, var(--wms-brand-secondary) 70%, var(--wms-brand-primary)) 48%,
+    var(--wms-brand-accent) 100%
+  ) !important;
+  box-shadow:
+    0 0 10px color-mix(in oklab, var(--wms-brand-primary) 42%, transparent),
+    0 0 16px -4px var(--wms-brand-shadow) !important;
+}
+
+html.skin-premium .wms-ops-list :is(.wms-ops-table-h-scroll, .wms-ops-table-wrap, .wms-ops-data-grid-wrap)::-webkit-scrollbar-thumb:hover {
+  box-shadow:
+    0 0 14px color-mix(in oklab, var(--wms-brand-primary) 58%, transparent),
+    0 0 22px -4px var(--wms-brand-shadow) !important;
+}
+
+html.skin-premium .wms-ops-list :is(.wms-ops-table-h-scroll, .wms-ops-table-wrap, .wms-ops-data-grid-wrap)::-webkit-scrollbar-corner {
+  background: color-mix(in oklab, var(--wms-brand-primary) 8%, transparent) !important;
+}
+
