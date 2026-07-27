@@ -9,7 +9,7 @@ import { filterAuthorizedNavItems, WMS_NAV_ITEMS } from '@/components/shared/nav
 import { useTheme } from '@/components/theme-provider';
 import { useAuthStore } from '@/stores/auth-store';
 import { cn } from '@/lib/utils';
-import { WORKSPACE_PORTAL_ROOT_ID } from '@/lib/workspace-portal';
+import { SHELL_PORTAL_ROOT_ID, WORKSPACE_PORTAL_ROOT_ID } from '@/lib/workspace-portal';
 import { projectSettingsApi } from '@/features/project-settings/project-settings.api';
 import { useProjectSettingsStore } from '@/stores/project-settings-store';
 import { useMyPermissionsQuery } from '@/features/access-control/hooks/useMyPermissionsQuery';
@@ -159,6 +159,10 @@ export function AppLayout() {
               className="pointer-events-none absolute inset-0 z-[80] overflow-hidden"
             />
           </section>
+          <div
+            id={SHELL_PORTAL_ROOT_ID}
+            className="pointer-events-none absolute inset-0 z-[100] overflow-visible"
+          />
         </div>
       </div>
     </div>

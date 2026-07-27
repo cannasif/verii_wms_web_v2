@@ -4383,6 +4383,41 @@
       "createdDate": "Oluşturma Tarihi",
       "updatedBy": "Güncelleyen",
       "updatedDate": "Güncelleme Tarihi"
+    },
+    "stockTrackingSettings": {
+      "title": "Stok Takip Ayarları",
+      "loading": "Takip ayarları yükleniyor…",
+      "loadFailed": "Takip ayarları yüklenemedi.",
+      "activeTrackingType": "Etkin takip tipi",
+      "trackingTypes": {
+        "lotAndSerial": "Lot + Seri",
+        "lot": "Lot",
+        "serial": "Seri",
+        "none": "Takipsiz"
+      },
+      "stockOverride": "Bu stoğa özel tanım · Sürüm {{version}}",
+      "noStockOverride": "Bu stok için özel tanım yok; kaydettiğinizde stoğa özel ayar oluşur.",
+      "requireSerialDescription": "Operasyon seri bilgisi olmadan tamamlanamaz.",
+      "oneSerialPerUnitDescription": "Her birim için ayrı ve benzersiz seri gerekir.",
+      "autoGenerateSerialsDescription": "Giriş operasyonunda miktar kadar benzersiz seri merkezi sıradan üretilir.",
+      "serialMaskLabel": "Seri üretim maskesi",
+      "serialMaskDescription": "Stok kartına özeldir. Örnek: {STOCK}-{YY}{MM}-{N:6}",
+      "nextSequence": "Sıradaki sıra: {{value}}",
+      "requireLotDescription": "Hareketler lot kırılımında izlenir.",
+      "requireManufacturingDateLabel": "Üretim tarihi zorunlu",
+      "requireManufacturingDateDescription": "Seri/lot girişinde üretim tarihi istenir.",
+      "requireExpirationDateLabel": "SKT zorunlu",
+      "requireExpirationDateDescription": "Son kullanma tarihi olmadan işlem tamamlanamaz.",
+      "minimumShelfLifeLabel": "Minimum kalan raf ömrü",
+      "minimumShelfLifeDescription": "Kabul sırasında SKT için gereken en az gün.",
+      "daysUnit": "gün",
+      "validationNote": "Bu kurallar mal kabul, transfer, sevk ve ambar işlemlerinde merkezi olarak doğrulanır; işlem ekranında kullanıcı tarafından değiştirilemez.",
+      "saveSettings": "Ayarları Kaydet",
+      "noChanges": "Değişiklik Yok",
+      "saveSuccess": "{{stockCode}} takip ayarları kaydedildi.",
+      "saveFailed": "Stok takip ayarları kaydedilemedi.",
+      "minShelfLifeNegative": "Minimum kalan raf ömrü negatif olamaz.",
+      "serialMaskRequired": "Seri maskesinde sıra alanı zorunludur. Örnek: {N:6}."
     }
   },
   "processPolicy": {

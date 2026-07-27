@@ -4362,6 +4362,41 @@
       "createdDate": "Created Date",
       "updatedBy": "Updated By",
       "updatedDate": "Updated Date"
+    },
+    "stockTrackingSettings": {
+      "title": "Stock Tracking Settings",
+      "loading": "Loading tracking settings…",
+      "loadFailed": "Tracking settings could not be loaded.",
+      "activeTrackingType": "Active tracking type",
+      "trackingTypes": {
+        "lotAndSerial": "Lot + Serial",
+        "lot": "Lot",
+        "serial": "Serial",
+        "none": "Untracked"
+      },
+      "stockOverride": "Stock-specific definition · Version {{version}}",
+      "noStockOverride": "No stock-specific definition; saving will create stock-specific settings.",
+      "requireSerialDescription": "Operations cannot be completed without serial information.",
+      "oneSerialPerUnitDescription": "Each unit requires a separate unique serial.",
+      "autoGenerateSerialsDescription": "On inbound operations, unique serials are generated centrally in quantity order.",
+      "serialMaskLabel": "Serial generation mask",
+      "serialMaskDescription": "Specific to the stock card. Example: {STOCK}-{YY}{MM}-{N:6}",
+      "nextSequence": "Next sequence: {{value}}",
+      "requireLotDescription": "Movements are tracked at lot level.",
+      "requireManufacturingDateLabel": "Manufacturing date required",
+      "requireManufacturingDateDescription": "Manufacturing date is required when entering serial/lot.",
+      "requireExpirationDateLabel": "Expiration date required",
+      "requireExpirationDateDescription": "Operations cannot be completed without an expiration date.",
+      "minimumShelfLifeLabel": "Minimum remaining shelf life",
+      "minimumShelfLifeDescription": "Minimum days required for expiration date on receipt.",
+      "daysUnit": "days",
+      "validationNote": "These rules are validated centrally in goods receipt, transfer, shipping and warehouse operations; they cannot be changed by users on operation screens.",
+      "saveSettings": "Save Settings",
+      "noChanges": "No Changes",
+      "saveSuccess": "{{stockCode}} tracking settings saved.",
+      "saveFailed": "Stock tracking settings could not be saved.",
+      "minShelfLifeNegative": "Minimum remaining shelf life cannot be negative.",
+      "serialMaskRequired": "Serial mask must include a sequence field. Example: {N:6}."
     }
   },
   "processPolicy": {

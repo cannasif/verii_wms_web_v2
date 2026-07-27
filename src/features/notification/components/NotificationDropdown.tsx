@@ -9,6 +9,7 @@ import { useNotificationStore } from '../stores/notification-store';
 import { notificationApi } from '../api/notification-api';
 import { NotificationItem } from './NotificationItem';
 import { debounce } from '@/lib/utils/debounce';
+import { getShellPortalRoot } from '@/lib/workspace-portal';
 
 interface NotificationDropdownProps {
   children: ReactElement;
@@ -168,7 +169,12 @@ export function NotificationDropdown({ children }: NotificationDropdownProps): R
       <DropdownMenuTrigger asChild>
         {children}
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="wms-ops-notification-terminal w-80 p-0" sideOffset={8}>
+      <DropdownMenuContent
+        align="end"
+        className="wms-ops-notification-terminal z-[110] w-80 p-0"
+        container={getShellPortalRoot()}
+        sideOffset={8}
+      >
         <div className="wms-ops-notification-terminal__header">
           <div className="wms-ops-notification-terminal__title-row">
             <span className="wms-ops-notification-terminal__prompt" aria-hidden>
