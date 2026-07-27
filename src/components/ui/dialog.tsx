@@ -4,7 +4,30 @@ import { XIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import { cn } from "@/lib/utils"
-import { getWorkspacePortalRoot } from "@/lib/workspace-portal"
+import { getShellPortalRoot, getWorkspacePortalRoot } from "@/lib/workspace-portal"
+
+export type DialogPortalRoot = "workspace" | "shell" | "body"
+export type DialogTone = "ops" | "plain"
+
+function resolveDialogPortalContainer(
+  portalRoot: DialogPortalRoot | undefined,
+): HTMLElement | undefined {
+  if (typeof document === "undefined") return undefined
+  if (portalRoot === "body") return document.body
+  if (portalRoot === "shell") return getShellPortalRoot() ?? document.body
+  return getWorkspacePortalRoot() ?? undefined
+}
+
+function shouldApplyOpsDialogDna(className: string | undefined, tone: DialogTone | undefined): boolean {
+  if (tone === "plain") return false
+  if (tone === "ops") return true
+  const value = className ?? ""
+  if (value.includes("wms-ops-profile-settings")) return false
+  if (value.includes("wms-ops-profile-modal")) return false
+  if (value.includes("wms-date-picker")) return false
+  if (value.includes("data-wms-auth")) return false
+  return true
+}
 
 function Dialog({
   ...props
@@ -39,7 +62,7 @@ function DialogClose({
 
 function DialogOverlay({
   className,
-  contained = Boolean(getWorkspacePortalRoot()),
+  contained = false,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Overlay> & { contained?: boolean }) {
   return (
@@ -59,33 +82,46 @@ function DialogContent({
   className,
   children,
   showCloseButton = true,
+  portalRoot = "body",
+  tone,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
+  /** Where the dialog is portaled. Default `body` centers on the full viewport (v1 parity). */
+  portalRoot?: DialogPortalRoot
+  /** `ops` applies Terminal/Premium dialog DNA. `plain` skips it (profile slide-over, date pickers). */
+  tone?: DialogTone
 }) {
   const { t } = useTranslation()
-  const workspaceContainer = getWorkspacePortalRoot()
-  const contained = Boolean(workspaceContainer)
+  const portalContainer = resolveDialogPortalContainer(portalRoot)
+  const contained = portalRoot !== "body" && portalRoot !== "shell" && Boolean(portalContainer)
+  const applyOps = shouldApplyOpsDialogDna(className, tone)
+  /* Ops DNA always exposes the v1 close control; CSS hides duplicate custom X buttons. */
+  const effectiveShowClose = applyOps ? true : showCloseButton
   return (
-    <DialogPortal data-slot="dialog-portal" container={workspaceContainer ?? undefined}>
+    <DialogPortal data-slot="dialog-portal" container={portalContainer}>
       <DialogOverlay contained={contained} />
       <DialogPrimitive.Content
         data-slot="dialog-content"
+        data-wms-dialog-tone={applyOps ? "ops" : "plain"}
         className={cn(
-          "wms-floating-surface pointer-events-auto data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 top-[50%] left-[50%] grid w-full max-w-[calc(100%-1rem)] translate-x-[-50%] translate-y-[-50%] gap-4 overflow-y-auto overscroll-contain rounded-2xl p-4 [scrollbar-gutter:stable] duration-200 sm:max-w-lg sm:p-6",
-          contained ? "absolute z-10 max-h-[calc(100%_-_1rem)] sm:max-h-[calc(100%_-_2rem)]" : "fixed z-50 max-h-[calc(100dvh_-_1rem)] sm:max-h-[calc(100dvh_-_2rem)]",
+          "wms-floating-surface pointer-events-auto data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 top-[50%] left-[50%] grid w-full max-w-[calc(100%-1rem)] translate-x-[-50%] translate-y-[-50%] gap-4 overflow-hidden overscroll-contain rounded-2xl p-4 duration-200 sm:max-w-lg sm:p-6",
+          contained
+            ? "absolute z-10 max-h-[calc(100%_-_1rem)] sm:max-h-[calc(100%_-_2rem)]"
+            : "fixed z-50 max-h-[calc(100dvh_-_1rem)] sm:max-h-[calc(100dvh_-_2rem)]",
+          applyOps && "wms-ops-detail-dialog wms-ops-form flex flex-col !gap-0 border-0 !p-0 shadow-none",
           className
         )}
         {...props}
       >
         {children}
-        {showCloseButton && (
+        {effectiveShowClose && (
           <DialogPrimitive.Close
             data-slot="dialog-close"
-            className="absolute top-3 right-3 grid size-11 place-items-center rounded-xl text-[var(--wms-app-text-muted)] opacity-80 transition hover:bg-[var(--wms-brand-soft)] hover:text-[var(--wms-app-text)] hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--wms-brand-ring)] disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+            className="absolute top-4 right-4 z-30 grid size-8 place-items-center text-[var(--wms-app-text-muted)] opacity-90 transition hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--wms-brand-ring)] disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
           >
             <XIcon />
-            <span className="sr-only">{t('common.close')}</span>
+            <span className="sr-only">{t("common.close")}</span>
           </DialogPrimitive.Close>
         )}
       </DialogPrimitive.Content>

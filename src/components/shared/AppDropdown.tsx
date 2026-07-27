@@ -50,6 +50,13 @@ export interface AppDropdownProps<TValue extends string = string> {
   matchTriggerWidth?: boolean;
   contentAlign?: 'start' | 'center' | 'end';
   testId?: string;
+  /**
+   * `ops` (varsayılan): Terminal/Premium ops host sınıfları.
+   * `plain`: Auth/login gibi ops dışı yüzeyler — Terminal DNA uygulanmaz.
+   */
+  tone?: 'ops' | 'plain';
+  /** Override popover portal target. Pass `null` to use document.body. */
+  portalContainer?: HTMLElement | null;
 }
 
 const SEARCH_DEBOUNCE_MS = 300;
@@ -81,14 +88,21 @@ export function AppDropdown<TValue extends string = string>({
   matchTriggerWidth = true,
   contentAlign = 'start',
   testId,
+  tone = 'ops',
+  portalContainer,
 }: AppDropdownProps<TValue>): ReactElement {
   const { t, i18n } = useTranslation('shared');
+  const opsTone = tone === 'ops';
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const listRef = useRef<HTMLDivElement>(null);
   const fetchLockRef = useRef(false);
   const remoteSearch = searchApi && typeof onSearchChange === 'function';
   const showSearch = searchable || remoteSearch;
+  const resolvedPortalContainer =
+    portalContainer === null
+      ? undefined
+      : (portalContainer ?? getWorkspacePortalRoot() ?? undefined);
 
   useEffect(() => {
     if (!remoteSearch || !open) return;
@@ -155,6 +169,7 @@ export function AppDropdown<TValue extends string = string>({
           disabled={disabled || isLoading}
           data-testid={testId}
           className={cn(
+            opsTone && 'wms-ops-lookup-trigger',
             'flex h-11 w-full min-w-0 items-center justify-between gap-3 rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] px-3 text-left text-sm text-[var(--wms-app-text)] shadow-sm outline-none transition',
             'hover:border-[var(--wms-brand-primary)]/60 focus-visible:border-[var(--wms-brand-primary)] focus-visible:ring-2 focus-visible:ring-[var(--wms-brand-primary)]/25',
             'disabled:cursor-not-allowed disabled:opacity-50',
@@ -172,13 +187,14 @@ export function AppDropdown<TValue extends string = string>({
         </button>
       </PopoverPrimitive.Trigger>
 
-      <PopoverPrimitive.Portal container={getWorkspacePortalRoot() ?? undefined}>
+      <PopoverPrimitive.Portal container={resolvedPortalContainer}>
         <PopoverPrimitive.Content
           align={contentAlign}
           sideOffset={6}
           collisionPadding={12}
           className={cn(
             'wms-floating-surface z-[2000] overflow-hidden rounded-xl outline-none',
+            opsTone && 'wms-ops-list-select-content',
             matchTriggerWidth ? 'w-[var(--radix-popover-trigger-width)]' : 'min-w-[12rem] w-max max-w-[min(18rem,calc(100vw-1.5rem))]',
             'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95',
             contentClassName,
@@ -234,7 +250,6 @@ export function AppDropdown<TValue extends string = string>({
                       option.disabled && 'cursor-not-allowed opacity-45',
                     )}
                   >
-                    <Check className={cn('size-4 shrink-0 text-[var(--wms-brand-primary)]', !active && 'opacity-0')} />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate">{option.label}</span>
                       {option.description && (
@@ -243,6 +258,7 @@ export function AppDropdown<TValue extends string = string>({
                         </span>
                       )}
                     </span>
+                    <Check className={cn('size-4 shrink-0 text-[var(--wms-brand-primary)]', !active && 'opacity-0')} />
                   </button>
                 );
               })

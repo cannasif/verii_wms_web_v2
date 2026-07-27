@@ -26,28 +26,36 @@ export interface AppInputProps extends ComponentPropsWithoutRef<'input'> {
   leadingIcon?: ReactNode;
   trailingContent?: ReactNode;
   invalid?: boolean;
+  /**
+   * `ops` (varsayılan): Terminal field shell.
+   * `plain`: Auth yüzeyleri — ops underline / mono DNA yok.
+   */
+  tone?: 'ops' | 'plain';
 }
 
 export const AppInput = forwardRef<HTMLInputElement, AppInputProps>(function AppInput(
-  { className, leadingIcon, trailingContent, invalid, disabled, ...props },
+  { className, leadingIcon, trailingContent, invalid, disabled, tone = 'ops', ...props },
   ref,
 ): ReactElement {
+  const opsTone = tone === 'ops';
   return (
     <span
       className={cn(
         'app-input-shell',
+        opsTone && 'wms-ops-field-shell',
         leadingIcon && 'app-input-shell--leading',
         trailingContent && 'app-input-shell--trailing',
       )}
       data-disabled={disabled || undefined}
       data-invalid={invalid || undefined}
+      aria-invalid={opsTone ? (invalid || undefined) : undefined}
     >
       {leadingIcon ? <span className="app-input-shell__leading" aria-hidden>{leadingIcon}</span> : null}
       <input
         ref={ref}
         disabled={disabled}
         aria-invalid={invalid || undefined}
-        className={cn('input app-input-control', className)}
+        className={cn('input app-input-control', opsTone && 'wms-ops-field', className)}
         {...props}
       />
       {trailingContent ? <span className="app-input-shell__trailing">{trailingContent}</span> : null}
