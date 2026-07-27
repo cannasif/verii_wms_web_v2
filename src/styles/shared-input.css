@@ -9,43 +9,217 @@
 }
 
 /*
- * Compatibility bridge for feature screens that still use the original
- * cyan/violet utility classes. Semantic WMS theme tokens remain the source
- * of truth for every selectable application theme.
+ * Compatibility bridge for feature screens that still use legacy Tailwind
+ * palette utilities (cyan/violet/emerald/amber/slate). When a custom brand
+ * theme is active, remap those classes to semantic WMS tokens.
  */
-html[class*='theme-'] [class~='text-cyan-500'],
-html[class*='theme-'] [class~='text-cyan-600'],
-html[class*='theme-'] [class~='text-violet-500'],
-html[class*='theme-'] [class~='text-violet-600'] {
-  color: var(--wms-brand-primary);
+html[class*='theme-'] :is(
+  [class~='text-cyan-500'],
+  [class~='text-cyan-600'],
+  [class~='text-violet-500'],
+  [class~='text-violet-600'],
+  [class*='text-cyan-500'],
+  [class*='text-violet-500']
+) {
+  color: var(--wms-brand-primary) !important;
 }
 
-html[class*='theme-'] [class~='bg-cyan-500'],
-html[class*='theme-'] [class~='bg-cyan-600'],
-html[class*='theme-'] [class~='bg-violet-500'],
-html[class*='theme-'] [class~='bg-violet-600'] {
-  background-color: var(--wms-brand-primary);
+html[class*='theme-'].dark :is(
+  [class~='dark:text-cyan-400'],
+  [class*='dark:text-cyan-400']
+) {
+  color: var(--wms-brand-primary) !important;
 }
 
-html[class*='theme-'] [class~='bg-cyan-500/10'],
-html[class*='theme-'] [class~='bg-cyan-500/15'],
-html[class*='theme-'] [class~='bg-violet-500/10'],
-html[class*='theme-'] [class~='bg-violet-500/15'] {
-  background-color: var(--wms-brand-soft);
+html[class*='theme-'] :is(
+  [class~='text-emerald-500'],
+  [class~='text-emerald-600'],
+  [class~='text-emerald-700'],
+  [class*='text-emerald-500'],
+  [class*='text-emerald-600']
+) {
+  color: var(--wms-brand-secondary) !important;
 }
 
-html[class*='theme-'] [class~='border-cyan-500'],
-html[class*='theme-'] [class~='border-cyan-500/30'],
-html[class*='theme-'] [class~='border-cyan-500/40'],
-html[class*='theme-'] [class~='border-cyan-500/50'],
-html[class*='theme-'] [class~='border-violet-500'],
-html[class*='theme-'] [class~='border-violet-500/30'],
-html[class*='theme-'] [class~='border-violet-500/50'] {
-  border-color: var(--wms-brand-ring);
+html[class*='theme-'] :is(
+  [class~='text-amber-500'],
+  [class~='text-amber-600'],
+  [class~='text-amber-700'],
+  [class*='text-amber-500'],
+  [class*='text-amber-600'],
+  [class*='text-amber-700']
+) {
+  color: var(--wms-brand-accent) !important;
 }
 
-html[class*='theme-'] [class~='accent-cyan-500'],
-html[class*='theme-'] [class~='accent-cyan-600'] {
+html[class*='theme-'].dark :is(
+  [class~='dark:text-amber-300'],
+  [class*='dark:text-amber-300']
+) {
+  color: color-mix(in oklab, var(--wms-brand-accent) 82%, white) !important;
+}
+
+html[class*='theme-'] :is(
+  [class~='text-orange-500'],
+  [class*='text-orange-500']
+) {
+  color: var(--wms-brand-accent) !important;
+}
+
+html[class*='theme-'] :is(
+  [class~='text-slate-500'],
+  [class~='text-slate-600'],
+  [class~='text-slate-400'],
+  [class*='text-slate-500'],
+  [class*='text-slate-600']
+) {
+  color: var(--wms-app-text-muted) !important;
+}
+
+html[class*='theme-'] :is(
+  [class~='bg-cyan-500'],
+  [class~='bg-cyan-600'],
+  [class~='bg-violet-500'],
+  [class~='bg-violet-600'],
+  [class*='bg-cyan-600'],
+  [class*='bg-violet-600']
+) {
+  background-color: var(--wms-brand-primary) !important;
+}
+
+html[class*='theme-'] :is(
+  [class~='bg-emerald-500'],
+  [class~='bg-emerald-600'],
+  [class*='bg-emerald-600']
+) {
+  background-color: var(--wms-brand-secondary) !important;
+}
+
+html[class*='theme-'] :is(
+  [class~='bg-cyan-500/5'],
+  [class~='bg-cyan-500/10'],
+  [class~='bg-cyan-500/15'],
+  [class~='bg-cyan-500/20'],
+  [class~='bg-violet-500/10'],
+  [class~='bg-violet-500/15'],
+  [class~='bg-violet-500/20'],
+  [class*='bg-cyan-500/10'],
+  [class*='bg-violet-500/10']
+) {
+  background-color: var(--wms-brand-soft) !important;
+}
+
+html[class*='theme-'] :is(
+  [class~='bg-emerald-500/5'],
+  [class~='bg-emerald-500/10'],
+  [class~='bg-emerald-500/30'],
+  [class*='bg-emerald-500/10']
+) {
+  background-color: color-mix(in oklab, var(--wms-brand-secondary) 12%, transparent) !important;
+}
+
+html[class*='theme-'] :is(
+  [class~='bg-amber-500/10'],
+  [class~='bg-amber-500/25'],
+  [class*='bg-amber-500/10']
+) {
+  background-color: color-mix(in oklab, var(--wms-brand-accent) 12%, transparent) !important;
+}
+
+html[class*='theme-'] :is(
+  [class~='border-cyan-500'],
+  [class~='border-cyan-500/20'],
+  [class~='border-cyan-500/25'],
+  [class~='border-cyan-500/30'],
+  [class~='border-cyan-500/40'],
+  [class~='border-cyan-500/50'],
+  [class~='border-violet-500'],
+  [class~='border-violet-500/20'],
+  [class~='border-violet-500/30'],
+  [class~='border-violet-500/40'],
+  [class~='border-violet-500/50'],
+  [class*='border-cyan-500/30'],
+  [class*='border-violet-500/30']
+) {
+  border-color: var(--wms-brand-ring) !important;
+}
+
+html[class*='theme-'] :is(
+  [class~='border-emerald-500'],
+  [class~='border-emerald-500/30'],
+  [class*='border-emerald-500']
+) {
+  border-color: color-mix(in oklab, var(--wms-brand-secondary) 35%, transparent) !important;
+}
+
+html[class*='theme-'] :is(
+  [class~='border-amber-500/25'],
+  [class~='border-amber-500/30'],
+  [class~='border-amber-500/40'],
+  [class*='border-amber-500/30']
+) {
+  border-color: color-mix(in oklab, var(--wms-brand-accent) 35%, transparent) !important;
+}
+
+html[class*='theme-'] :is(
+  [class~='bg-cyan-600'][class~='text-white'],
+  [class~='bg-cyan-500'][class~='text-white'],
+  [class~='bg-violet-600'][class~='text-white'],
+  [class~='bg-emerald-600'][class~='text-white'],
+  [class*='bg-cyan-600'][class*='text-white'],
+  [class*='bg-violet-600'][class*='text-white']
+) {
+  color: var(--wms-brand-on-primary) !important;
+}
+
+html[class*='theme-'] :is(
+  [class~='bg-cyan-500'][class~='text-slate-950'],
+  [class*='bg-cyan-500'][class*='text-slate-950']
+) {
+  color: var(--wms-brand-on-primary) !important;
+}
+
+html[class*='theme-'] :is(
+  [class~='hover:bg-cyan-500/10']:hover,
+  [class~='hover:bg-violet-500/10']:hover,
+  [class~='hover:bg-amber-500/10']:hover,
+  [class~='hover:bg-orange-500/10']:hover,
+  [class~='hover:bg-rose-500/10']:hover
+) {
+  background-color: var(--wms-brand-soft) !important;
+}
+
+html[class*='theme-'] :is(
+  [class~='hover:border-cyan-500']:hover,
+  [class*='hover:border-cyan-500']:hover
+) {
+  border-color: var(--wms-brand-primary) !important;
+}
+
+html[class*='theme-'] :is(
+  [class*='bg-gradient-to-r'][class*='from-cyan-500/10'],
+  [class*='bg-gradient-to-r'][class*='from-violet-500/10'],
+  [class*='bg-gradient-to-br'][class*='from-cyan-500/10']
+) {
+  background-image: linear-gradient(
+    to right,
+    var(--wms-brand-soft),
+    var(--wms-app-panel),
+    color-mix(in oklab, var(--wms-brand-secondary) 10%, transparent)
+  ) !important;
+}
+
+html[class*='theme-'] :is(
+  [class*='bg-gradient-to-r'][class*='from-cyan-500']:not([class*='from-cyan-500/10']),
+  [class*='bg-gradient-to-r'][class*='from-violet-500']:not([class*='from-violet-500/10'])
+) {
+  background-image: var(--wms-brand-gradient) !important;
+}
+
+html[class*='theme-'] :is(
+  [class~='accent-cyan-500'],
+  [class~='accent-cyan-600']
+) {
   accent-color: var(--wms-brand-primary);
 }
 
