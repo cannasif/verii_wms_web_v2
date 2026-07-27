@@ -567,22 +567,22 @@ export function WarehouseTransferDraftPage({
 
   if (result)
     return (
-      <section className="mx-auto max-w-3xl rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-8 text-center" data-no-auto-localize="true">
-        <CheckCircle2 className="mx-auto size-12 text-emerald-500" />
+      <section className="mx-auto max-w-3xl rounded-2xl border border-[color-mix(in_oklab,var(--wms-brand-secondary)_30%,transparent)] bg-[color-mix(in_oklab,var(--wms-brand-secondary)_10%,transparent)] p-8 text-center" data-no-auto-localize="true">
+        <CheckCircle2 className="mx-auto size-12 text-[var(--wms-brand-secondary)]" />
         <h1 className="mt-3 text-2xl font-black">{t(`${D}.success.title`)}</h1>
         <p className="mt-2 font-mono text-xl">{result.documentNo}</p>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-[var(--wms-app-text-muted)]">
           {t(`${D}.success.linesAndQty`, { count: result.lineCount, total: result.requestedQuantity })}
         </p>
         {result.taskNo && (
-          <p className="mt-1 font-mono text-sm text-violet-500">
+          <p className="mt-1 font-mono text-sm text-[var(--wms-brand-primary)]">
             {t(`${D}.success.taskNo`, { taskNo: result.taskNo })}
           </p>
         )}
         <div className="mt-5 flex justify-center gap-2">
           <Link
             to={listUrl}
-            className="rounded-xl bg-emerald-600 px-5 py-2.5 font-semibold text-white"
+            className="rounded-xl bg-[var(--wms-brand-secondary)] px-5 py-2.5 font-semibold text-[var(--wms-brand-on-primary)]"
           >
             {t(`${D}.success.goToRecords`)}
           </Link>
@@ -592,7 +592,7 @@ export function WarehouseTransferDraftPage({
               setResult(null);
               setLines(sourceKind === "StockBased" || variant !== "warehouse" ? [blankLine()] : []);
             }}
-            className="rounded-xl border px-5 py-2.5"
+            className="rounded-xl border border-[var(--wms-app-border)] px-5 py-2.5"
           >
             {t(`${D}.success.newTransfer`)}
           </button>
@@ -602,12 +602,12 @@ export function WarehouseTransferDraftPage({
 
   return (
     <section className="space-y-5" data-no-auto-localize="true">
-      <header className="rounded-2xl border border-[var(--wms-app-border)] bg-gradient-to-r from-violet-500/10 via-[var(--wms-app-panel)] to-cyan-500/10 p-6">
-        <p className="text-xs font-bold uppercase tracking-[.18em] text-violet-500">
+      <header className="rounded-2xl border border-[var(--wms-app-border)] bg-[image:var(--wms-brand-gradient-soft)] p-6">
+        <p className="text-xs font-bold uppercase tracking-[.18em] text-[var(--wms-brand-primary)]">
           {title}
         </p>
         <h1 className="mt-1 text-2xl font-black">{title} {t(`${D}.createSuffix`)}</h1>
-        <p className="mt-2 text-sm text-slate-500">
+        <p className="mt-2 text-sm text-[var(--wms-app-text-muted)]">
           {t(`${D}.headerDescription`)}
         </p>
       </header>
@@ -652,7 +652,7 @@ export function WarehouseTransferDraftPage({
             <Field label={t(`${D}.production.sourceWorkCenter`)}><input className="input" maxLength={100} value={sourceWorkCenterCode} onChange={(e)=>setSourceWorkCenterCode(e.target.value)}/></Field>
             <Field label={t(`${D}.production.targetWorkCenter`)}><input className="input" maxLength={100} value={targetWorkCenterCode} onChange={(e)=>setTargetWorkCenterCode(e.target.value)}/></Field>
           </div>
-          <p className="mt-4 rounded-xl border border-violet-500/20 bg-violet-500/10 p-3 text-sm">
+          <p className="mt-4 rounded-xl border border-[var(--wms-brand-ring)] bg-[var(--wms-brand-soft)] p-3 text-sm text-[var(--wms-app-text)]">
             {t(`${D}.production.note`)}
           </p>
         </Panel>
@@ -833,7 +833,7 @@ export function WarehouseTransferDraftPage({
           <button
             type="button"
             onClick={() => setLines((current) => [...current, blankLine()])}
-            className="mt-4 inline-flex items-center gap-2 rounded-xl border border-violet-500/40 px-4 py-2.5 text-sm font-semibold text-violet-500"
+            className="mt-4 inline-flex items-center gap-2 rounded-xl border border-[var(--wms-brand-ring)] px-4 py-2.5 text-sm font-semibold text-[var(--wms-brand-primary)]"
           >
             <Plus className="size-4" />
             {t(`${D}.lines.addLine`)}
@@ -845,7 +845,7 @@ export function WarehouseTransferDraftPage({
           type="button"
           disabled={busy}
           onClick={() => void create()}
-          className="inline-flex min-w-48 items-center justify-center gap-2 rounded-xl bg-violet-600 px-5 py-3 font-bold text-white disabled:opacity-50"
+          className="inline-flex min-w-48 items-center justify-center gap-2 rounded-xl bg-[var(--wms-brand-primary)] px-5 py-3 font-bold text-[var(--wms-brand-on-primary)] disabled:opacity-50"
         >
           {busy && <Loader2 className="size-4 animate-spin" />}{t(`${D}.createButton`, { title })}
         </button>
@@ -886,7 +886,7 @@ function OrderSelection(p: {
           type="button"
           disabled={!p.customerValue || p.busy}
           onClick={() => void p.loadOrders()}
-          className="rounded-xl bg-violet-600 px-4 py-2 font-semibold text-white disabled:opacity-40"
+          className="rounded-xl bg-[var(--wms-brand-primary)] px-4 py-2 font-semibold text-[var(--wms-brand-on-primary)] disabled:opacity-40"
         >
           {t(`${D}.orderSelection.loadOrders`)}
         </button>
@@ -910,7 +910,7 @@ function OrderSelection(p: {
             />
             <span className="flex-1">
               <strong className="font-mono">{order.orderNumber}</strong>
-              <small className="ml-2 text-slate-500">
+              <small className="ml-2 text-[var(--wms-app-text-muted)]">
                 {order.projectCode} · depo {order.targetWarehouseCode ?? "—"}
               </small>
             </span>
@@ -923,7 +923,7 @@ function OrderSelection(p: {
           type="button"
           disabled={!p.selectedOrders.length || p.busy}
           onClick={() => void p.loadLines()}
-          className="mt-3 rounded-xl border border-violet-500/40 px-4 py-2.5 font-semibold text-violet-500"
+          className="mt-3 rounded-xl border border-[var(--wms-brand-ring)] px-4 py-2.5 font-semibold text-[var(--wms-brand-primary)]"
         >
           {t(`${D}.orderSelection.loadLines`)}
         </button>
@@ -967,7 +967,7 @@ function Assignees({
         {assignees.map((user) => (
           <span
             key={user.id}
-            className="inline-flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 px-3 py-1.5 text-sm"
+            className="inline-flex items-center gap-2 rounded-full border border-[var(--wms-brand-ring)] bg-[var(--wms-brand-soft)] px-3 py-1.5 text-sm"
           >
             {`${user.firstName} ${user.lastName}`.trim() || user.username}
             <button
@@ -1025,7 +1025,7 @@ function LineCard({
         <strong>
           #{index + 1}{" "}
           {line.source && (
-            <span className="mr-2 font-mono text-violet-500">
+            <span className="mr-2 font-mono text-[var(--wms-brand-primary)]">
               {line.source.orderNumber}
             </span>
           )}
@@ -1113,7 +1113,7 @@ function LineCard({
           />
         </Field>
         <Field label={t(`${D}.lines.unit`)}>
-          <div className={`input flex items-center font-bold ${line.unitCode ? "text-cyan-600" : "text-amber-600"}`}>
+          <div className={`input flex items-center font-bold ${line.unitCode ? "text-[var(--wms-brand-primary)]" : "text-[var(--wms-brand-accent)]"}`}>
             {line.unitCode || t(`${D}.lines.selectStockFirst`)}
           </div>
         </Field>
@@ -1189,7 +1189,7 @@ function Panel({
 }) {
   return (
     <section className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5 shadow-sm">
-      <h2 className="mb-4 flex items-center gap-2 text-lg font-black text-violet-500">
+      <h2 className="mb-4 flex items-center gap-2 text-lg font-black text-[var(--wms-brand-primary)]">
         {icon}
         {title}
       </h2>
@@ -1200,7 +1200,7 @@ function Panel({
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="space-y-1.5 text-sm">
-      <span className="font-semibold">{label}</span>
+      <span className="font-semibold text-[var(--wms-app-text)]">{label}</span>
       {children}
     </label>
   );

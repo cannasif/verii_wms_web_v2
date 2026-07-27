@@ -71,12 +71,12 @@ export function WarehouseTransferPolicyPage() {
   return (
     <section className="mx-auto max-w-6xl space-y-5" data-no-auto-localize="true">
       <header>
-        <div className="flex items-center gap-2 text-violet-500">
+        <div className="flex items-center gap-2 text-[var(--wms-brand-primary)]">
           <SlidersHorizontal />
           <span className="text-xs font-bold uppercase tracking-widest">{t(`${POLICY}.eyebrow`)}</span>
         </div>
         <h1 className="mt-2 text-2xl font-black">{t(`${POLICY}.title`)}</h1>
-        <p className="text-sm text-slate-500">{t(`${POLICY}.description`)}</p>
+        <p className="text-sm text-[var(--wms-app-text-muted)]">{t(`${POLICY}.description`)}</p>
       </header>
 
       <div className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5">
@@ -148,7 +148,7 @@ export function WarehouseTransferPolicyPage() {
           </div>
         </Section>
 
-        <div className="rounded-xl border border-violet-500/30 bg-violet-500/10 p-4 text-sm">
+        <div className="rounded-xl border border-[var(--wms-brand-ring)] bg-[var(--wms-brand-soft)] p-4 text-sm text-[var(--wms-app-text)]">
           {t(`${POLICY}.snapshotNote`)}
         </div>
 
@@ -157,7 +157,7 @@ export function WarehouseTransferPolicyPage() {
             type="button"
             onClick={() => void save()}
             disabled={saving}
-            className="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-5 py-2.5 font-semibold text-white disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-xl bg-[var(--wms-brand-primary)] px-5 py-2.5 font-semibold text-[var(--wms-brand-on-primary)] disabled:opacity-50"
           >
             {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
             {t(`${POLICY}.save`)}
@@ -171,7 +171,7 @@ export function WarehouseTransferPolicyPage() {
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="mb-6 border-b border-[var(--wms-app-border)] pb-6">
-      <h2 className="mb-3 font-black">{title}</h2>
+      <h2 className="mb-3 font-black text-[var(--wms-app-text)]">{title}</h2>
       {children}
     </section>
   );
@@ -180,7 +180,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="space-y-1.5 text-sm">
-      <span className="font-semibold">{label}</span>
+      <span className="font-semibold text-[var(--wms-app-text)]">{label}</span>
       {children}
     </label>
   );
@@ -196,9 +196,9 @@ function Toggle({
   set: (value: boolean) => void;
 }) {
   return (
-    <label className="flex items-center justify-between rounded-xl border border-[var(--wms-app-border)] p-3 text-sm">
+    <label className="flex items-center justify-between rounded-xl border border-[var(--wms-app-border)] p-3 text-sm text-[var(--wms-app-text)]">
       <span>{label}</span>
-      <input className="size-4" type="checkbox" checked={value} onChange={(event) => set(event.target.checked)} />
+      <input className="size-4 accent-[var(--wms-brand-primary)]" type="checkbox" checked={value} onChange={(event) => set(event.target.checked)} />
     </label>
   );
 }

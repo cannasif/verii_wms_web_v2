@@ -73,18 +73,18 @@ export function ProductionHubPage(): ReactElement {
   const { t, moduleReady } = useModuleTranslation('production');
   if (!moduleReady) return <ModuleLoading />;
   return <section className="space-y-5">
-    <header className="rounded-2xl border border-[var(--wms-app-border)] bg-gradient-to-r from-orange-500/15 via-[var(--wms-app-panel)] to-cyan-500/10 p-6">
-      <p className="text-xs font-bold uppercase tracking-[.18em] text-orange-500">{t('hub.eyebrow')}</p>
+    <header className="rounded-2xl border border-[var(--wms-app-border)] bg-[image:var(--wms-brand-gradient-soft)] p-6">
+      <p className="text-xs font-bold uppercase tracking-[.18em] text-[var(--wms-brand-primary)]">{t('hub.eyebrow')}</p>
       <h1 className="mt-1 text-2xl font-black">{t('hub.title')}</h1>
-      <p className="mt-2 max-w-4xl text-sm text-slate-500">{t('hub.description')}</p>
+      <p className="mt-2 max-w-4xl text-sm text-[var(--wms-app-text-muted)]">{t('hub.description')}</p>
     </header>
     <div className="grid gap-4 md:grid-cols-2">
       <HubCard href="/warehouse/production/new" icon={<Factory />} title={t('hub.create.title')} text={t('hub.create.text')} />
       <HubCard href="/warehouse/production/list" icon={<ListChecks />} title={t('hub.list.title')} text={t('hub.list.text')} />
     </div>
-    <section className="rounded-2xl border border-orange-500/20 bg-orange-500/5 p-5">
-      <h2 className="font-black text-orange-500">{t('hub.boundary.title')}</h2>
-      <p className="mt-1 text-sm text-slate-500">{t('hub.boundary.text')}</p>
+    <section className="rounded-2xl border border-[var(--wms-brand-ring)] bg-[var(--wms-brand-soft)] p-5">
+      <h2 className="font-black text-[var(--wms-brand-primary)]">{t('hub.boundary.title')}</h2>
+      <p className="mt-1 text-sm text-[var(--wms-app-text-muted)]">{t('hub.boundary.text')}</p>
     </section>
   </section>;
 }
@@ -221,26 +221,26 @@ export function ProductionCreatePage(): ReactElement {
 
   if (!moduleReady) return <ModuleLoading />;
 
-  if (result) return <section className="mx-auto max-w-3xl rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-8 text-center">
-    <CheckCircle2 className="mx-auto size-12 text-emerald-500" />
+  if (result) return <section className="mx-auto max-w-3xl rounded-2xl border border-[color-mix(in_oklab,var(--wms-brand-secondary)_30%,transparent)] bg-[color-mix(in_oklab,var(--wms-brand-secondary)_10%,transparent)] p-8 text-center">
+    <CheckCircle2 className="mx-auto size-12 text-[var(--wms-brand-secondary)]" />
     <h1 className="mt-3 text-2xl font-black">{t('create.result.title')}</h1>
     <p className="mt-2 font-mono text-xl">{result.documentNo}</p>
-    <p className="mt-2 text-sm text-slate-500">{t('create.result.summary', {
+    <p className="mt-2 text-sm text-[var(--wms-app-text-muted)]">{t('create.result.summary', {
       orderCount: result.orderCount,
       materialCount: result.materialCount,
       outputCount: result.outputCount,
     })}</p>
     <div className="mt-6 flex flex-col justify-center gap-2 sm:flex-row">
-      <button type="button" onClick={() => setResult(null)} className="min-h-11 rounded-xl border px-5">{t('create.result.new')}</button>
-      <Link to="/warehouse/production/list" className="inline-flex min-h-11 items-center justify-center rounded-xl bg-orange-600 px-5 font-bold text-white">{t('create.result.list')}</Link>
+      <button type="button" onClick={() => setResult(null)} className="min-h-11 rounded-xl border border-[var(--wms-app-border)] px-5">{t('create.result.new')}</button>
+      <Link to="/warehouse/production/list" className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[var(--wms-brand-primary)] px-5 font-bold text-[var(--wms-brand-on-primary)]">{t('create.result.list')}</Link>
     </div>
   </section>;
 
   return <section className="space-y-5">
     <header>
-      <p className="text-xs font-bold uppercase tracking-widest text-orange-500">{t('create.eyebrow')}</p>
+      <p className="text-xs font-bold uppercase tracking-widest text-[var(--wms-brand-primary)]">{t('create.eyebrow')}</p>
       <h1 className="mt-1 text-2xl font-black">{t('create.title')}</h1>
-      <p className="mt-1 text-sm text-slate-500">{t('create.description')}</p>
+      <p className="mt-1 text-sm text-[var(--wms-app-text-muted)]">{t('create.description')}</p>
     </header>
     <Panel title={t('create.sections.plan')} icon={<Factory className="size-5" />}>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -292,13 +292,13 @@ export function ProductionCreatePage(): ReactElement {
             <label className="flex min-h-11 items-center gap-2 self-end rounded-xl border border-[var(--wms-app-border)] px-3 text-sm"><input type="checkbox" checked={row.isMandatory} onChange={(event) => patchMaterial(row.localId, { isMandatory: event.target.checked })} />{t('create.fields.mandatory')}</label>
           </div>
         </article>)}
-        <button type="button" onClick={() => setMaterials((rows) => [...rows, blankMaterial()])} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-orange-500/40 px-4 font-bold text-orange-500"><Plus className="size-4" />{t('create.addMaterial')}</button>
+        <button type="button" onClick={() => setMaterials((rows) => [...rows, blankMaterial()])} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[var(--wms-brand-ring)] px-4 font-bold text-[var(--wms-brand-primary)]"><Plus className="size-4" />{t('create.addMaterial')}</button>
       </div>
     </Panel>
     <Panel title={t('create.sections.notes')} icon={<UserRoundCog className="size-5" />}>
       <textarea className="input h-auto py-3" rows={4} maxLength={2000} value={description} onChange={(event) => setDescription(event.target.value)} />
     </Panel>
-    <div className="flex justify-end"><button type="button" disabled={busy} onClick={() => void save()} className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-orange-600 px-6 font-black text-white disabled:opacity-50">{busy ? <Loader2 className="size-4 animate-spin" /> : <Factory className="size-4" />}{busy ? t('create.saving') : t('create.save')}</button></div>
+    <div className="flex justify-end"><button type="button" disabled={busy} onClick={() => void save()} className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-[var(--wms-brand-primary)] px-6 font-black text-[var(--wms-brand-on-primary)] disabled:opacity-50">{busy ? <Loader2 className="size-4 animate-spin" /> : <Factory className="size-4" />}{busy ? t('create.saving') : t('create.save')}</button></div>
   </section>;
 }
 
@@ -345,10 +345,10 @@ export function ProductionListPage(): ReactElement {
 
 function ModuleLoading(): ReactElement {
   return <div aria-busy="true" className="space-y-4">
-    <div className="h-28 animate-pulse rounded-2xl bg-slate-500/10" />
+    <div className="h-28 animate-pulse rounded-2xl bg-[var(--wms-brand-soft)]" />
     <div className="grid gap-4 md:grid-cols-2">
-      <div className="h-36 animate-pulse rounded-2xl bg-slate-500/10" />
-      <div className="h-36 animate-pulse rounded-2xl bg-slate-500/10" />
+      <div className="h-36 animate-pulse rounded-2xl bg-[var(--wms-brand-soft)]" />
+      <div className="h-36 animate-pulse rounded-2xl bg-[var(--wms-brand-soft)]" />
     </div>
   </div>;
 }
@@ -356,7 +356,7 @@ function ModuleLoading(): ReactElement {
 function ProductionDetailDialog({ detail, close }: { detail: ProductionPlanDetail; close: () => void }) {
   const { t } = useModuleTranslation('production');
   return <ResponsiveDialog onClose={close} title={detail.header.documentNo} className="max-h-[calc(100dvh-1rem)] !max-w-6xl">
-    <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="font-mono text-xl font-black">{detail.header.documentNo}</p><p className="text-sm text-slate-500">{t(`enum.status.${detail.header.status}`)} · {formatProjectDateTime(detail.header.createdDate)}</p></div><button type="button" onClick={close} className="rounded-xl border px-4 py-2">{t('common.close')}</button></div>
+    <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="font-mono text-xl font-black">{detail.header.documentNo}</p><p className="text-sm text-[var(--wms-app-text-muted)]">{t(`enum.status.${detail.header.status}`)} · {formatProjectDateTime(detail.header.createdDate)}</p></div><button type="button" onClick={close} className="rounded-xl border border-[var(--wms-app-border)] px-4 py-2">{t('common.close')}</button></div>
     <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <Stat label={t('list.columns.orders')} value={detail.header.orderCount} />
       <Stat label={t('list.columns.materials')} value={detail.header.materialCount} />
@@ -364,12 +364,12 @@ function ProductionDetailDialog({ detail, close }: { detail: ProductionPlanDetai
       <Stat label={t('list.columns.completed')} value={formatProjectNumber(detail.header.completedQuantity)} />
     </div>
     <div className="mt-5 space-y-4">{detail.orders.map((order) => <article key={order.id} className="rounded-xl border border-[var(--wms-app-border)] p-4">
-      <div className="flex flex-wrap justify-between gap-2"><div><strong className="font-mono">{order.orderNo}</strong><p className="text-sm text-slate-500">{order.producedStockCode} · {order.producedStockName}</p></div><span className="text-sm font-bold text-orange-500">{formatProjectNumber(order.plannedQuantity)} {order.unitCode}</span></div>
+      <div className="flex flex-wrap justify-between gap-2"><div><strong className="font-mono">{order.orderNo}</strong><p className="text-sm text-[var(--wms-app-text-muted)]">{order.producedStockCode} · {order.producedStockName}</p></div><span className="text-sm font-bold text-[var(--wms-brand-primary)]">{formatProjectNumber(order.plannedQuantity)} {order.unitCode}</span></div>
       <div className="mt-3 grid gap-4 lg:grid-cols-2">
         <DetailList title={t('detail.materials')} rows={order.materials.map((row) => `${row.stockCode} · ${formatProjectNumber(row.requiredQuantity)} ${row.unitCode}`)} />
         <DetailList title={t('detail.outputs')} rows={order.outputs.map((row) => `${row.stockCode} · ${formatProjectNumber(row.plannedQuantity)} ${row.unitCode}`)} />
       </div>
-      <p className="mt-3 text-xs text-slate-500">{t('detail.assignees')}: {order.assignments.map((x) => x.displayName).join(', ') || '—'} · {t('detail.workCenter')}: {order.workCenterCode || '—'}</p>
+      <p className="mt-3 text-xs text-[var(--wms-app-text-muted)]">{t('detail.assignees')}: {order.assignments.map((x) => x.displayName).join(', ') || '—'} · {t('detail.workCenter')}: {order.workCenterCode || '—'}</p>
     </article>)}</div>
   </ResponsiveDialog>;
 }
@@ -393,23 +393,23 @@ function ProductionLifecycleDialog({ value, close, completed }: { value: { row: 
   };
   return <ResponsiveDialog onClose={close} title={t(`lifecycle.${value.kind}.title`)} className="!max-w-lg">
     <h2 className="text-xl font-black">{t(`lifecycle.${value.kind}.title`)}</h2>
-    <p className="mt-2 text-sm text-slate-500">{t(`lifecycle.${value.kind}.text`, { documentNo: value.row.documentNo })}</p>
+    <p className="mt-2 text-sm text-[var(--wms-app-text-muted)]">{t(`lifecycle.${value.kind}.text`, { documentNo: value.row.documentNo })}</p>
     <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"><button type="button" onClick={close} className="min-h-11 rounded-xl border px-4">{t('common.cancel')}</button><button type="button" disabled={busy} onClick={() => void run()} className={`min-h-11 rounded-xl px-5 font-bold text-white disabled:opacity-50 ${value.kind === 'delete' ? 'bg-rose-600' : 'bg-emerald-600'}`}>{busy ? t('common.processing') : t(`lifecycle.${value.kind}.action`)}</button></div>
   </ResponsiveDialog>;
 }
 
 function HubCard({ href, icon, title, text }: { href: string; icon: ReactNode; title: string; text: string }) {
-  return <Link to={href} className="group rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-orange-500/40"><div className="flex items-center justify-between text-orange-500">{icon}<ArrowRight className="size-5 transition group-hover:translate-x-1" /></div><h2 className="mt-4 font-black">{title}</h2><p className="mt-1 text-sm text-slate-500">{text}</p></Link>;
+  return <Link to={href} className="group rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--wms-brand-primary)]"><div className="flex items-center justify-between text-[var(--wms-brand-primary)]">{icon}<ArrowRight className="size-5 transition group-hover:translate-x-1" /></div><h2 className="mt-4 font-black">{title}</h2><p className="mt-1 text-sm text-[var(--wms-app-text-muted)]">{text}</p></Link>;
 }
 function Panel({ title, icon, children }: { title: string; icon: ReactNode; children: ReactNode }) {
-  return <section className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5"><h2 className="mb-4 flex items-center gap-2 font-black text-orange-500">{icon}{title}</h2>{children}</section>;
+  return <section className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5"><h2 className="mb-4 flex items-center gap-2 font-black text-[var(--wms-brand-primary)]">{icon}{title}</h2>{children}</section>;
 }
 function Field({ label, children }: { label: string; children: ReactNode }) {
-  return <label className="space-y-1.5 text-sm"><span className="font-semibold">{label}</span>{children}</label>;
+  return <label className="space-y-1.5 text-sm"><span className="font-semibold text-[var(--wms-app-text)]">{label}</span>{children}</label>;
 }
 function Stat({ label, value }: { label: string; value: ReactNode }) {
-  return <div className="rounded-xl border border-[var(--wms-app-border)] p-3"><p className="text-xs text-slate-500">{label}</p><p className="mt-1 font-black">{value}</p></div>;
+  return <div className="rounded-xl border border-[var(--wms-app-border)] p-3"><p className="text-xs text-[var(--wms-app-text-muted)]">{label}</p><p className="mt-1 font-black">{value}</p></div>;
 }
 function DetailList({ title, rows }: { title: string; rows: string[] }) {
-  return <div><h3 className="text-sm font-black">{title}</h3><ul className="mt-2 space-y-1 text-sm text-slate-500">{rows.length ? rows.map((row) => <li key={row} className="rounded-lg border border-[var(--wms-app-border)] px-3 py-2">{row}</li>) : <li>—</li>}</ul></div>;
+  return <div><h3 className="text-sm font-black">{title}</h3><ul className="mt-2 space-y-1 text-sm text-[var(--wms-app-text-muted)]">{rows.length ? rows.map((row) => <li key={row} className="rounded-lg border border-[var(--wms-app-border)] px-3 py-2">{row}</li>) : <li>—</li>}</ul></div>;
 }
