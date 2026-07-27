@@ -32,11 +32,9 @@ export function OperationFlowTabs({
   stockLabel,
   taskDescription,
   directDescription,
-  accent = 'cyan',
   children,
 }: Props): ReactElement {
   const { t } = useTranslation('common');
-  const tone = accent === 'violet' ? 'violet' : 'cyan';
   const executions: Array<{ value: OperationExecutionMode; title: string; description: string; icon: typeof UserRoundCheck }> = [
     { value: 'task', title: t(`${OF}.taskBased`), description: taskDescription ?? t(`${OF}.taskDescription`), icon: UserRoundCheck },
     { value: 'direct', title: t(`${OF}.direct`), description: directDescription ?? t(`${OF}.directDescription`), icon: Zap },
@@ -49,7 +47,7 @@ export function OperationFlowTabs({
   return (
     <section className="overflow-hidden rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] shadow-sm" data-no-auto-localize="true">
       <div className="border-b border-[var(--wms-app-border)] p-4 sm:p-5">
-        <p className="text-[0.68rem] font-black uppercase tracking-[.18em] text-slate-500">{t(`${OF}.executionModel`)}</p>
+        <p className="text-[0.68rem] font-black uppercase tracking-[.18em] text-[var(--wms-app-text-muted)]">{t(`${OF}.executionModel`)}</p>
         <div className="mt-3 grid gap-2 sm:grid-cols-2" role="tablist" aria-label={t(`${OF}.executionAriaLabel`)}>
           {executions.map(({ value, title, description, icon: Icon }) => {
             const active = execution === value;
@@ -65,15 +63,13 @@ export function OperationFlowTabs({
                 className={cn(
                   'min-h-24 rounded-xl border p-3 text-left transition sm:p-4',
                   active
-                    ? tone === 'violet'
-                      ? 'border-violet-500 bg-violet-500/10 shadow-[0_0_0_1px_rgba(139,92,246,.12)]'
-                      : 'border-cyan-500 bg-cyan-500/10 shadow-[0_0_0_1px_rgba(6,182,212,.12)]'
-                    : 'border-[var(--wms-app-border)] hover:border-slate-400/70 hover:bg-black/[.025] dark:hover:bg-white/[.035]',
+                    ? 'border-[var(--wms-brand-primary)] bg-[var(--wms-brand-soft)] shadow-[0_0_0_1px_var(--wms-brand-ring)]'
+                    : 'border-[var(--wms-app-border)] hover:border-[color-mix(in_oklab,var(--wms-brand-primary)_45%,var(--wms-app-border))] hover:bg-[var(--wms-brand-soft)]',
                   !hasAnyAllowedSource && 'cursor-not-allowed opacity-40',
                 )}
               >
                 <span className="flex items-center gap-2 font-black"><Icon className="size-4.5"/>{title}</span>
-                <span className="mt-1.5 block text-xs leading-5 text-slate-500">{description}</span>
+                <span className="mt-1.5 block text-xs leading-5 text-[var(--wms-app-text-muted)]">{description}</span>
               </button>
             );
           })}
@@ -81,7 +77,7 @@ export function OperationFlowTabs({
       </div>
 
       <div className="p-4 sm:p-5">
-        <p className="text-[0.68rem] font-black uppercase tracking-[.18em] text-slate-500">{t(`${OF}.documentSource`)}</p>
+        <p className="text-[0.68rem] font-black uppercase tracking-[.18em] text-[var(--wms-app-text-muted)]">{t(`${OF}.documentSource`)}</p>
         <div className="mt-3 grid gap-2 sm:grid-cols-2" role="tablist" aria-label={t(`${OF}.sourceAriaLabel`)}>
           {sources.map(({ value, title, description, icon: Icon }) => {
             const active = source === value;
@@ -97,20 +93,18 @@ export function OperationFlowTabs({
                 className={cn(
                   'rounded-xl border p-3 text-left transition sm:p-4',
                   active
-                    ? tone === 'violet'
-                      ? 'border-violet-500 bg-violet-500/10'
-                      : 'border-cyan-500 bg-cyan-500/10'
-                    : 'border-[var(--wms-app-border)] hover:border-slate-400/70',
+                    ? 'border-[var(--wms-brand-primary)] bg-[var(--wms-brand-soft)] shadow-[0_0_0_1px_var(--wms-brand-ring)]'
+                    : 'border-[var(--wms-app-border)] hover:border-[color-mix(in_oklab,var(--wms-brand-primary)_45%,var(--wms-app-border))] hover:bg-[var(--wms-brand-soft)]',
                   !allowed && 'cursor-not-allowed opacity-40',
                 )}
               >
                 <span className="flex items-center gap-2 font-bold"><Icon className="size-4"/>{title}</span>
-                <span className="mt-1 block text-xs leading-5 text-slate-500">{allowed ? description : t(`${OF}.combinationDisabled`)}</span>
+                <span className="mt-1 block text-xs leading-5 text-[var(--wms-app-text-muted)]">{allowed ? description : t(`${OF}.combinationDisabled`)}</span>
               </button>
             );
           })}
         </div>
-        {children && <div className={cn('mt-4 rounded-xl border p-3 text-xs leading-5', tone === 'violet' ? 'border-violet-500/20 bg-violet-500/5 text-violet-600 dark:text-violet-300' : 'border-cyan-500/20 bg-cyan-500/5 text-cyan-700 dark:text-cyan-300')}>{children}</div>}
+        {children && <div className="mt-4 rounded-xl border border-[var(--wms-brand-ring)] bg-[var(--wms-brand-soft)] p-3 text-xs leading-5 text-[var(--wms-brand-primary)]">{children}</div>}
       </div>
     </section>
   );
