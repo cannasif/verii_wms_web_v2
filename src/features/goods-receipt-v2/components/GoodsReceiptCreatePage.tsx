@@ -10,7 +10,8 @@ import {
   ClipboardList,
   Loader2,
   PackageCheck,
-  Plus,
+  ScanBarcode,
+  ShieldCheck,
   Trash2,
   UserRoundCog,
   X,
@@ -19,9 +20,15 @@ import { toast } from "sonner";
 import { AppDropdown } from "@/components/shared/AppDropdown";
 import { AppDateInput } from "@/components/shared/AppInput";
 import { PagedAppDropdown } from "@/components/shared/PagedAppDropdown";
+import { ResponsiveDialog } from "@/components/shared/ResponsiveDialog";
 import { StockTrackingPolicyField } from "@/features/stock-tracking/effective-stock-tracking";
 import { stockTrackingApi } from "@/features/stock-tracking/api/stock-tracking.api";
+import { qualityApi } from "@/features/quality/api/quality.api";
 import { useModuleTranslation } from "@/hooks/useModuleTranslation";
+import {
+  formatProjectNumber,
+  parseLocalizedNumber,
+} from "@/lib/project-format";
 import { useAuthStore } from "@/stores/auth-store";
 import { goodsReceiptV2Api } from "../api/goods-receipt.api";
 import type {
@@ -34,6 +41,14 @@ import type {
   StockOption,
   WarehouseOption,
 } from "../types/goods-receipt.types";
+
+type OrderSearchMode = "customer" | "orderNo" | "projectCode";
+const QUALITY_REQUIRED_MODES = new Set([
+  "InspectionRequired",
+  "QuickCheck",
+  "QualityCheck",
+  "Required",
+]);
 
 const customerOption = (x: {
   id: number;
@@ -81,6 +96,9 @@ export function GoodsReceiptCreatePage(): ReactElement {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [customerValue, setCustomerValue] = useState<string | null>(null);
+  const [searchMode, setSearchMode] = useState<OrderSearchMode>("customer");
+  const [orderNumberQuery, setOrderNumberQuery] = useState("");
+  const [projectCodeQuery, setProjectCodeQuery] = useState("");
   const [orders, setOrders] = useState<OpenOrderHeader[]>([]);
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
   const [lines, setLines] = useState<SelectedReceiptLine[]>([]);
@@ -117,15 +135,59 @@ export function GoodsReceiptCreatePage(): ReactElement {
   }, [primaryLine?.targetWarehouseId]);
 
   const loadOrders = async (): Promise<void> => {
+    const orderNumber = orderNumberQuery.trim();
+    const projectCode = projectCodeQuery.trim();
+    if (searchMode === "customer" && !customer) {
+      toast.error("Önce tedarikçi cari seçin.");
+      return;
+    }
+    if (searchMode === "orderNo" && !orderNumber) {
+      toast.error("Sipariş numarası girin.");
+      return;
+    }
+    if (searchMode === "projectCode" && !projectCode) {
+      toast.error("Proje kodu girin.");
+      return;
+    }
+    if ((searchMode === "orderNo" || searchMode === "projectCode") && !customer) {
+      toast.error(
+        "Bağımsız sipariş/proje araması için API’de customerCode olmadan filtre desteği gerekir. Şimdilik tedarikçi cariyi de seçin.",
+      );
+      return;
+    }
     if (!customer) return;
     setBusy(true);
     setError(null);
     setSelectedOrders([]);
     setLines([]);
     try {
-      setOrders(
-        await goodsReceiptV2Api.orderHeaders(customer.code, customer.branch),
-      );
+      const rows = await goodsReceiptV2Api.orderHeaders({
+        branchCode: customer.branch,
+        customerCode: customer.code,
+        orderNumber: searchMode === "orderNo" ? orderNumber : undefined,
+        projectCode: searchMode === "projectCode" ? projectCode : undefined,
+      });
+      const normalizedOrder = orderNumber.toLocaleUpperCase("tr-TR");
+      const normalizedProject = projectCode.toLocaleUpperCase("tr-TR");
+      const filtered = rows.filter((row) => {
+        if (
+          searchMode === "orderNo" &&
+          normalizedOrder &&
+          !row.siparisNo.toLocaleUpperCase("tr-TR").includes(normalizedOrder)
+        )
+          return false;
+        if (
+          searchMode === "projectCode" &&
+          normalizedProject &&
+          !(row.projectCode ?? "")
+            .toLocaleUpperCase("tr-TR")
+            .includes(normalizedProject)
+        )
+          return false;
+        return true;
+      });
+      setOrders(filtered);
+      if (filtered.length === 1) setSelectedOrders([filtered[0].siparisNo]);
     } catch (cause) {
       report(cause, "Siparişler alınamadı.");
     } finally {
@@ -205,6 +267,32 @@ export function GoodsReceiptCreatePage(): ReactElement {
         number,
         ReturnType<typeof goodsReceiptV2Api.trackingPolicy>
       >();
+      let qualityStockIds = new Set<number>();
+      try {
+        const rules = await qualityApi.rulesPaged({
+          pageNumber: 1,
+          pageSize: 500,
+          search: null,
+          sortBy: "id",
+          sortDirection: "asc",
+          filterLogic: "and",
+          filters: [
+            { column: "branchCode", operator: "equals", value: customer.branch },
+            { column: "isActive", operator: "equals", value: "true" },
+          ],
+        });
+        qualityStockIds = new Set(
+          rules.items
+            .filter(
+              (rule) =>
+                rule.stockId != null &&
+                QUALITY_REQUIRED_MODES.has(rule.inspectionMode),
+            )
+            .map((rule) => rule.stockId as number),
+        );
+      } catch {
+        qualityStockIds = new Set();
+      }
       setLines(
         await Promise.all(
           rows.map(async (x) => {
@@ -246,6 +334,7 @@ export function GoodsReceiptCreatePage(): ReactElement {
               trackingType: trackingPolicy.trackingType,
               trackingPolicy,
               trackings: [],
+              requireQualityControl: qualityStockIds.has(stock.id),
             };
           }),
         ),
@@ -497,7 +586,7 @@ export function GoodsReceiptCreatePage(): ReactElement {
         allowOverReceipt: false,
         overReceiptTolerancePercent: 0,
         allowUnderReceipt: true,
-        requireQualityControl: false,
+        requireQualityControl: lines.some((line) => line.requireQualityControl),
         requirePutaway: true,
         priority: Number(priority),
         description: description.trim() || null,
@@ -541,8 +630,8 @@ export function GoodsReceiptCreatePage(): ReactElement {
       </div>
     );
   return (
-    <section className="space-y-5">
-      <header className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5 shadow-sm">
+    <section className="wms-ops-form space-y-5">
+      <header className="wms-ops-form-card rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5 shadow-sm">
         <div className="flex items-start gap-3">
           <div className="grid size-11 place-items-center rounded-xl bg-[var(--wms-brand-soft)] text-[var(--wms-brand-primary)]">
             <PackageCheck />
@@ -576,25 +665,63 @@ export function GoodsReceiptCreatePage(): ReactElement {
           title={t("createFlow.orderSelection")}
           icon={<ClipboardList className="size-5" />}
         >
+          <div className="mb-3 flex flex-wrap gap-2">
+            {(
+              [
+                ["customer", "Tedarikçi Cari"],
+                ["orderNo", "Sipariş Numarası"],
+                ["projectCode", "Proje Kodu"],
+              ] as const
+            ).map(([mode, label]) => (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => setSearchMode(mode)}
+                className={`rounded-xl border px-3 py-2 text-xs font-semibold ${searchMode === mode ? "border-cyan-500 bg-cyan-500/10 text-cyan-600" : "border-[var(--wms-app-border)]"}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
           <div className="grid gap-3 md:grid-cols-[1fr_auto]">
-            <PagedAppDropdown
-              queryKey={["gr-customers", branchCode]}
-              fetchPage={(request) =>
-                goodsReceiptV2Api.customers(request, branchCode)
-              }
-              toOption={customerOption}
-              value={customerValue}
-              onValueChange={(value) => {
-                setCustomerValue(value);
-                setOrders([]);
-                setSelectedOrders([]);
-              }}
-              placeholder={t("selectCustomer")}
-              searchable
-              minSearchLength={2}
-            />
+            <div className="grid gap-3 md:grid-cols-2">
+              <PagedAppDropdown
+                queryKey={["gr-customers", branchCode]}
+                fetchPage={(request) =>
+                  goodsReceiptV2Api.customers(request, branchCode)
+                }
+                toOption={customerOption}
+                value={customerValue}
+                onValueChange={(value) => {
+                  setCustomerValue(value);
+                  setOrders([]);
+                  setSelectedOrders([]);
+                }}
+                placeholder={t("selectCustomer")}
+                searchable
+                minSearchLength={2}
+              />
+              {searchMode === "orderNo" && (
+                <input
+                  className="input font-mono"
+                  value={orderNumberQuery}
+                  onChange={(event) => setOrderNumberQuery(event.target.value)}
+                  placeholder="Sipariş numarası"
+                  aria-label="Sipariş numarası"
+                />
+              )}
+              {searchMode === "projectCode" && (
+                <input
+                  className="input font-mono"
+                  value={projectCodeQuery}
+                  onChange={(event) => setProjectCodeQuery(event.target.value)}
+                  placeholder="Proje kodu"
+                  aria-label="Proje kodu"
+                />
+              )}
+            </div>
             <button
-              disabled={!customer || busy}
+              disabled={busy}
               onClick={() => void loadOrders()}
               className="rounded-xl bg-cyan-600 px-5 py-2.5 font-semibold text-white disabled:opacity-40"
             >
@@ -605,15 +732,23 @@ export function GoodsReceiptCreatePage(): ReactElement {
               )}
             </button>
           </div>
+          <p className="mt-2 text-xs text-slate-500">
+            Tedarikçi üzerinden ilerleyebilir; sipariş no veya proje kodu ile
+            sonuçları daraltabilirsiniz. Miktar alanları siparişten gelir,
+            kabul miktarı bir sonraki adımda düzenlenir.
+          </p>
           <div className="mt-4 overflow-x-auto rounded-xl border border-[var(--wms-app-border)]">
             <table className="w-full text-sm">
               <thead className="bg-black/5 text-left dark:bg-white/5">
                 <tr>
                   <th className="p-3"></th>
                   <th className="p-3">Sipariş No</th>
+                  <th className="p-3">Proje Kodu</th>
                   <th className="p-3">Tarih</th>
-                  <th className="p-3 text-right">{t("available")}</th>
-                  <th className="p-3">Varsayılan depo</th>
+                  <th className="p-3 text-right">Sipariş Miktarı</th>
+                  <th className="p-3 text-right">Kalan</th>
+                  <th className="p-3 text-right">Mal Kabul</th>
+                  <th className="p-3">Depo Kodu</th>
                 </tr>
               </thead>
               <tbody>
@@ -638,11 +773,22 @@ export function GoodsReceiptCreatePage(): ReactElement {
                     <td className="p-3 font-mono font-semibold">
                       {order.siparisNo}
                     </td>
+                    <td className="p-3 font-mono">{order.projectCode || "—"}</td>
                     <td className="p-3">
                       {order.orderDate?.slice(0, 10) ?? "—"}
                     </td>
                     <td className="p-3 text-right font-mono">
-                      {order.availableQuantity ?? 0}
+                      {formatProjectNumber(order.orderedQuantity ?? 0)}
+                    </td>
+                    <td className="p-3 text-right font-mono">
+                      {formatProjectNumber(
+                        order.remainingQuantity ??
+                          order.availableQuantity ??
+                          0,
+                      )}
+                    </td>
+                    <td className="p-3 text-right font-mono font-semibold text-cyan-600">
+                      {formatProjectNumber(order.availableQuantity ?? 0)}
                     </td>
                     <td className="p-3">{order.targetWarehouseCode ?? "—"}</td>
                   </tr>
@@ -874,6 +1020,14 @@ export function GoodsReceiptCreatePage(): ReactElement {
                 )}
               />
               <Summary
+                label="Kaliteye gidecek"
+                value={
+                  lines.some((x) => x.requireQualityControl)
+                    ? `${lines.filter((x) => x.requireQualityControl).length} kalem · Mal kabul bitince kalite listesine düşer`
+                    : "Yok"
+                }
+              />
+              <Summary
                 label="Belge serisi"
                 value={
                   series.find((x) => String(x.id) === seriesValue)
@@ -933,8 +1087,6 @@ function ReceiptLineCard({
   const key = lineKey(line);
   const serialMode =
     line.trackingType === "Serial" || line.trackingType === "LotAndSerial";
-  const lotMode =
-    line.trackingType === "Lot" || line.trackingType === "LotAndSerial";
   const [suggestions, setSuggestions] = useState<
     Array<{
       id: number;
@@ -944,6 +1096,21 @@ function ReceiptLineCard({
     }>
   >([]);
   const [suggestionsBusy, setSuggestionsBusy] = useState(false);
+  const [serialOpen, setSerialOpen] = useState(false);
+  const [quantityText, setQuantityText] = useState(
+    formatProjectNumber(line.quantity, {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 6,
+    }),
+  );
+  useEffect(() => {
+    setQuantityText(
+      formatProjectNumber(line.quantity, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 6,
+      }),
+    );
+  }, [line.quantity]);
   useEffect(() => {
     if (!line.targetWarehouseId || !line.stockCode || line.quantity <= 0) {
       setSuggestions([]);
@@ -995,25 +1162,47 @@ function ReceiptLineCard({
         <Info label="YAP" value={line.yapCode || "—"} />
         <Info
           label="Kullanılabilir"
-          value={`${line.availableQuantity ?? 0} ${line.unitCode ?? ""}`}
+          value={`${formatProjectNumber(line.availableQuantity ?? 0)} ${line.unitCode ?? ""}`}
         />
         <Info
           label="Sipariş deposu"
           value={String(line.targetWarehouseCode ?? "—")}
         />
       </div>
+      {line.requireQualityControl && (
+        <div className="mb-3 flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-300">
+          <ShieldCheck className="size-4 shrink-0" />
+          Bu stok kodunda kalite kuralı var; mal kabul bitince kalite inceleme
+          listesine aktarılır.
+        </div>
+      )}
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <Field label="Kabul miktarı">
           <input
-            className="input"
-            type="number"
-            min="0.000001"
-            max={line.availableQuantity}
-            step="0.000001"
-            value={line.quantity}
-            onChange={(event) =>
-              updateLine(key, { quantity: Number(event.target.value) })
-            }
+            className="input font-mono"
+            inputMode="decimal"
+            value={quantityText}
+            onChange={(event) => setQuantityText(event.target.value)}
+            onBlur={() => {
+              const parsed = parseLocalizedNumber(quantityText);
+              if (!Number.isFinite(parsed) || parsed <= 0) {
+                setQuantityText(
+                  formatProjectNumber(line.quantity, {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 6,
+                  }),
+                );
+                return;
+              }
+              const capped = Math.min(parsed, line.availableQuantity ?? parsed);
+              updateLine(key, { quantity: capped });
+              setQuantityText(
+                formatProjectNumber(capped, {
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 6,
+                }),
+              );
+            }}
           />
         </Field>
         <Field label="Hedef depo">
@@ -1102,120 +1291,29 @@ function ReceiptLineCard({
           </p>
         )}
       {line.trackingType !== "None" && (
-        <div className="mt-4 rounded-xl border border-[var(--wms-app-border)] p-3">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <strong>Lot / seri dağılımı</strong>
-              <p className="text-xs text-slate-500">
-                Dağıtılan:{" "}
-                {line.trackings.reduce(
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--wms-app-border)] p-3">
+          <div>
+            <strong>Lot / seri dağılımı</strong>
+            <p className="text-xs text-slate-500">
+              Dağıtılan:{" "}
+              {formatProjectNumber(
+                line.trackings.reduce(
                   (sum, x) => sum + Number(x.quantity || 0),
                   0,
-                )}{" "}
-                / {line.quantity}
-              </p>
-            </div>
-            <div className="flex gap-2">
-              {serialMode && (
-                <button
-                  type="button"
-                  onClick={() => createSerialRows(key)}
-                  className="rounded-lg border px-3 py-2 text-xs font-semibold"
-                >
-                  Miktardan seri satırı üret
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={() => addTracking(key)}
-                className="flex items-center gap-1 rounded-lg bg-cyan-600 px-3 py-2 text-xs font-semibold text-white"
-              >
-                <Plus className="size-3.5" /> Satır ekle
-              </button>
-            </div>
+                ),
+              )}{" "}
+              / {formatProjectNumber(line.quantity)}
+              {serialMode ? ` · ${line.trackings.filter((x) => x.serialNo).length} seri` : ""}
+            </p>
           </div>
-          <div className="space-y-2">
-            {line.trackings.map((tracking, index) => (
-              <div
-                key={tracking.localId}
-                className="grid gap-2 rounded-lg bg-black/5 p-2 dark:bg-white/5 md:grid-cols-[4rem_8rem_1fr_1fr_9rem_9rem_auto]"
-              >
-                <span className="self-center text-center text-xs font-semibold">
-                  #{index + 1}
-                </span>
-                <input
-                  className="input"
-                  aria-label="Miktar"
-                  type="number"
-                  min="0.000001"
-                  step="0.000001"
-                  disabled={serialMode}
-                  value={tracking.quantity}
-                  onChange={(event) =>
-                    updateTracking(key, tracking.localId, {
-                      quantity: Number(event.target.value),
-                    })
-                  }
-                />
-                {lotMode ? (
-                  <input
-                    className="input"
-                    aria-label="Lot"
-                    placeholder="Lot no"
-                    value={tracking.lotNo ?? ""}
-                    onChange={(event) =>
-                      updateTracking(key, tracking.localId, {
-                        lotNo: event.target.value,
-                      })
-                    }
-                  />
-                ) : (
-                  <span />
-                )}
-                {serialMode ? (
-                  <input
-                    className="input"
-                    aria-label="Seri"
-                    placeholder="Seri no"
-                    value={tracking.serialNo ?? ""}
-                    onChange={(event) =>
-                      updateTracking(key, tracking.localId, {
-                        serialNo: event.target.value,
-                      })
-                    }
-                  />
-                ) : (
-                  <span />
-                )}
-                <AppDateInput
-                  aria-label="Üretim tarihi"
-                  value={tracking.manufacturingDate ?? ""}
-                  onChange={(event) =>
-                    updateTracking(key, tracking.localId, {
-                      manufacturingDate: event.target.value,
-                    })
-                  }
-                />
-                <AppDateInput
-                  aria-label="Son kullanma tarihi"
-                  value={tracking.expirationDate ?? ""}
-                  onChange={(event) =>
-                    updateTracking(key, tracking.localId, {
-                      expirationDate: event.target.value,
-                    })
-                  }
-                />
-                <button
-                  type="button"
-                  aria-label="Takip satırını sil"
-                  onClick={() => removeTracking(key, tracking.localId)}
-                  className="grid size-10 place-items-center rounded-lg text-red-500 hover:bg-red-500/10"
-                >
-                  <Trash2 className="size-4" />
-                </button>
-              </div>
-            ))}
-          </div>
+          <button
+            type="button"
+            onClick={() => setSerialOpen(true)}
+            className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white"
+          >
+            <ScanBarcode className="size-4" />
+            {serialMode ? "Seri no yönet" : "Lot / izleme yönet"}
+          </button>
         </div>
       )}
       {serialMode && line.serialGenerationKey && (
@@ -1233,7 +1331,301 @@ function ReceiptLineCard({
           </button>
         </div>
       )}
+      {serialOpen && (
+        <SerialTrackingDialog
+          line={line}
+          onClose={() => setSerialOpen(false)}
+          updateLine={updateLine}
+          updateTracking={updateTracking}
+          addTracking={addTracking}
+          removeTracking={removeTracking}
+          createSerialRows={createSerialRows}
+          cancelGeneratedSerials={cancelGeneratedSerials}
+        />
+      )}
     </Panel>
+  );
+}
+
+function SerialTrackingDialog({
+  line,
+  onClose,
+  updateLine,
+  updateTracking,
+  addTracking,
+  removeTracking,
+  createSerialRows,
+  cancelGeneratedSerials,
+}: {
+  line: SelectedReceiptLine;
+  onClose: () => void;
+  updateLine: (key: string, patch: Partial<SelectedReceiptLine>) => void;
+  updateTracking: (
+    key: string,
+    id: string,
+    patch: Partial<PlannedReceiptTracking>,
+  ) => void;
+  addTracking: (key: string) => void;
+  removeTracking: (key: string, id: string) => void;
+  createSerialRows: (key: string) => Promise<void>;
+  cancelGeneratedSerials: (key: string) => Promise<void>;
+}): ReactElement {
+  const key = lineKey(line);
+  const serialMode =
+    line.trackingType === "Serial" || line.trackingType === "LotAndSerial";
+  const lotMode =
+    line.trackingType === "Lot" || line.trackingType === "LotAndSerial";
+  const [bulkText, setBulkText] = useState("");
+  const applyBulk = () => {
+    const serials = [
+      ...new Set(
+        bulkText
+          .split(/[\n,;]+/)
+          .map((value) => value.trim())
+          .filter(Boolean),
+      ),
+    ];
+    if (!serials.length) {
+      toast.error("En az bir seri girin.");
+      return;
+    }
+    if (serials.length > Math.floor(line.quantity)) {
+      toast.error("Seri sayısı kabul miktarını aşamaz.");
+      return;
+    }
+    updateLine(key, {
+      serialGenerationKey: undefined,
+      trackings: serials.map((serialNo) => ({
+        localId: crypto.randomUUID(),
+        quantity: 1,
+        serialNo,
+      })),
+    });
+    setBulkText("");
+    toast.success(`${serials.length} seri satıra bölündü.`);
+  };
+  return (
+    <ResponsiveDialog
+      onClose={onClose}
+      title="Seri / lot yönetimi"
+      className="!max-w-5xl"
+    >
+      <header className="mb-4 flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-cyan-500">
+            İzlenebilirlik
+          </p>
+          <h2 className="text-xl font-bold">
+            {line.stockCode} · {formatProjectNumber(line.quantity)}{" "}
+            {line.unitCode}
+          </h2>
+          <p className="text-sm text-slate-500">
+            Sistem önerisi, miktardan bölme veya tekli giriş.
+          </p>
+        </div>
+        <button
+          type="button"
+          aria-label="Kapat"
+          onClick={onClose}
+          className="grid size-10 place-items-center rounded-xl hover:bg-[var(--wms-brand-soft)]"
+        >
+          <X className="size-5" />
+        </button>
+      </header>
+      <div className="mb-4 grid gap-2 sm:grid-cols-3">
+        {serialMode && (
+          <button
+            type="button"
+            onClick={() => void createSerialRows(key)}
+            className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-3 text-left text-sm font-semibold text-cyan-700 dark:text-cyan-300"
+          >
+            Otomatik seri öner
+            <span className="mt-1 block text-xs font-normal opacity-80">
+              Miktardan stok kuralına göre seri üret
+            </span>
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() => addTracking(key)}
+          className="rounded-xl border border-[var(--wms-app-border)] px-4 py-3 text-left text-sm font-semibold"
+        >
+          Tekli satır ekle
+          <span className="mt-1 block text-xs font-normal text-slate-500">
+            Manuel lot / seri girişi
+          </span>
+        </button>
+        {serialMode && line.serialGenerationKey && (
+          <button
+            type="button"
+            onClick={() => void cancelGeneratedSerials(key)}
+            className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-left text-sm font-semibold text-amber-700 dark:text-amber-300"
+          >
+            Otomatik serileri iptal
+            <span className="mt-1 block text-xs font-normal opacity-80">
+              Rezerve serileri bırak
+            </span>
+          </button>
+        )}
+      </div>
+      {serialMode && (
+        <div className="mb-4 rounded-xl border border-[var(--wms-app-border)] p-3">
+          <label className="text-sm font-semibold">
+            Mevcut seriyi böl / toplu yapıştır
+          </label>
+          <textarea
+            className="input mt-2 min-h-24 font-mono text-sm"
+            value={bulkText}
+            onChange={(event) => setBulkText(event.target.value)}
+            placeholder={"SN-0001\nSN-0002\nSN-0003"}
+          />
+          <button
+            type="button"
+            onClick={applyBulk}
+            className="mt-2 rounded-lg border px-3 py-2 text-xs font-semibold"
+          >
+            Toplu serileri uygula
+          </button>
+        </div>
+      )}
+      <div className="space-y-2">
+        {line.trackings.map((tracking, index) => (
+          <div
+            key={tracking.localId}
+            className="grid gap-2 rounded-lg bg-black/5 p-2 dark:bg-white/5 md:grid-cols-[4rem_8rem_1fr_1fr_9rem_9rem_auto]"
+          >
+            <span className="self-center text-center text-xs font-semibold">
+              #{index + 1}
+            </span>
+            <QuantityInput
+              value={tracking.quantity}
+              disabled={serialMode}
+              onCommit={(quantity) =>
+                updateTracking(key, tracking.localId, { quantity })
+              }
+            />
+            {lotMode ? (
+              <input
+                className="input"
+                aria-label="Lot"
+                placeholder="Lot no"
+                value={tracking.lotNo ?? ""}
+                onChange={(event) =>
+                  updateTracking(key, tracking.localId, {
+                    lotNo: event.target.value,
+                  })
+                }
+              />
+            ) : (
+              <span />
+            )}
+            {serialMode ? (
+              <input
+                className="input"
+                aria-label="Seri"
+                placeholder="Seri no"
+                value={tracking.serialNo ?? ""}
+                onChange={(event) =>
+                  updateTracking(key, tracking.localId, {
+                    serialNo: event.target.value,
+                  })
+                }
+              />
+            ) : (
+              <span />
+            )}
+            <AppDateInput
+              aria-label="Üretim tarihi"
+              value={tracking.manufacturingDate ?? ""}
+              onChange={(event) =>
+                updateTracking(key, tracking.localId, {
+                  manufacturingDate: event.target.value,
+                })
+              }
+            />
+            <AppDateInput
+              aria-label="Son kullanma tarihi"
+              value={tracking.expirationDate ?? ""}
+              onChange={(event) =>
+                updateTracking(key, tracking.localId, {
+                  expirationDate: event.target.value,
+                })
+              }
+            />
+            <button
+              type="button"
+              aria-label="Takip satırını sil"
+              onClick={() => removeTracking(key, tracking.localId)}
+              className="grid size-10 place-items-center rounded-lg text-red-500 hover:bg-red-500/10"
+            >
+              <Trash2 className="size-4" />
+            </button>
+          </div>
+        ))}
+        {line.trackings.length === 0 && (
+          <p className="rounded-xl border border-dashed p-6 text-center text-sm text-slate-500">
+            Henüz lot/seri satırı yok. Otomatik öner veya tekli satır ekleyin.
+          </p>
+        )}
+      </div>
+      <div className="mt-4 flex justify-end">
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded-xl bg-[var(--wms-brand-primary)] px-5 py-2.5 font-semibold text-white"
+        >
+          Tamam
+        </button>
+      </div>
+    </ResponsiveDialog>
+  );
+}
+
+function QuantityInput({
+  value,
+  disabled,
+  onCommit,
+}: {
+  value: number;
+  disabled?: boolean;
+  onCommit: (value: number) => void;
+}): ReactElement {
+  const [text, setText] = useState(
+    formatProjectNumber(value, {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 6,
+    }),
+  );
+  useEffect(() => {
+    setText(
+      formatProjectNumber(value, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 6,
+      }),
+    );
+  }, [value]);
+  return (
+    <input
+      className="input font-mono"
+      aria-label="Miktar"
+      inputMode="decimal"
+      disabled={disabled}
+      value={text}
+      onChange={(event) => setText(event.target.value)}
+      onBlur={() => {
+        const parsed = parseLocalizedNumber(text);
+        if (!Number.isFinite(parsed) || parsed <= 0) {
+          setText(
+            formatProjectNumber(value, {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 6,
+            }),
+          );
+          return;
+        }
+        onCommit(parsed);
+      }}
+    />
   );
 }
 

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactElement } from 'react';
-import { ArrowRightLeft, Loader2, PackageMinus, X } from 'lucide-react';
+import { ArrowRightLeft, Loader2, PackageMinus } from 'lucide-react';
 import { toast } from 'sonner';
 import { AppDropdown } from '@/components/shared/AppDropdown';
 import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
@@ -132,10 +132,9 @@ export function GoodsReceiptRoutingDialog({
   };
 
   return <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
-    <DialogContent showCloseButton={false} aria-describedby={undefined} className="max-h-[calc(100%_-_2rem)] w-full overflow-auto rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-4 shadow-2xl sm:max-w-7xl sm:p-6">
-      <header className="flex items-start justify-between gap-3">
+    <DialogContent aria-describedby={undefined} className="wms-ops-detail-dialog max-h-[calc(100%_-_2rem)] w-full overflow-auto rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-4 shadow-2xl sm:max-w-7xl sm:p-6">
+      <header className="flex items-start justify-between gap-3 pr-12">
         <div><p className="text-xs font-bold uppercase tracking-widest text-cyan-500">Mal Kabul Sonrası Dağıtım</p><DialogTitle className="mt-1 text-xl font-bold">{detail.header.documentNo}</DialogTitle><p className="text-sm text-slate-500">Her kalemin kalan miktarını aynı işlemde transfer ve ambar çıkış arasında bölün.</p></div>
-        <button type="button" aria-label="Kapat" onClick={onClose} className="rounded-lg p-2"><X className="size-5"/></button>
       </header>
       <div className={`mt-4 rounded-xl border p-3 text-sm ${qualityReady && approvalReady ? 'border-emerald-500/30 bg-emerald-500/5 text-emerald-600' : 'border-amber-500/30 bg-amber-500/5 text-amber-600'}`}>Kalite/GKK: <strong>{goodsReceiptEnumLabel(t, 'qualityStatus', detail.header.qualityStatus)}</strong> · Mal kabul onayı: <strong>{goodsReceiptEnumLabel(t, 'approvalStatus', detail.header.approvalStatus)}</strong></div>
 

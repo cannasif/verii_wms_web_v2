@@ -5,6 +5,7 @@ import { AppDropdown } from '@/components/shared/AppDropdown';
 import { AppDateInput } from '@/components/shared/AppInput';
 import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
+import { parseLocalizedNumber } from '@/lib/project-format';
 import { useAuthStore } from '@/stores/auth-store';
 import { goodsReceiptV2Api } from '../api/goods-receipt.api';
 import type { ActiveUserOption, ManualGoodsReceiptResult, ManualReceiptLine, PutawayLocationSuggestion, SeriesOption } from '../types/goods-receipt.types';
@@ -113,7 +114,7 @@ export function GoodsReceiptManualPage({ direct }: { direct: boolean }): ReactEl
   const next = (): void => { if (canLeaveStep()) setStep((current) => Math.min(3, current + 1)); };
 
   const addLine = (): void => {
-    const [stockId, stockCode, encodedName, encodedUnit] = split(stock); const numericQuantity = Number(quantity);
+    const [stockId, stockCode, encodedName, encodedUnit] = split(stock); const numericQuantity = parseLocalizedNumber(quantity);
     if (!stockId || !Number.isFinite(numericQuantity) || numericQuantity <= 0) { showError(t('manual.validation.stock')); return; }
     const stockUnitCode = encodedUnit ? decodeURIComponent(encodedUnit) : '';
     if (!stockUnitCode) { showError(`${stockCode} stok kartının ölçü birimi tanımlı değil.`); return; }
@@ -189,7 +190,7 @@ export function GoodsReceiptManualPage({ direct }: { direct: boolean }): ReactEl
     {step === 2 && <Panel title={t('manual.lines.title')} description={t('manual.lines.description')} icon={<ScanBarcode/>}><div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
       <Field label={t('manual.stock')} required><PagedAppDropdown queryKey={['gr-manual-stocks', branchCode]} fetchPage={(request) => goodsReceiptV2Api.stocks(request, branchCode)} toOption={(x) => ({ value: `${x.id}|${x.erpStockCode}|${encodeURIComponent(x.stockName || '')}|${encodeURIComponent(x.unitCode || '')}`, label: `${x.erpStockCode} · ${x.stockName || ''}`, description: x.unitCode ? `Birim: ${x.unitCode}` : 'Birim tanımsız' })} value={stock} onValueChange={(value) => { setStock(value); setUnitCode(decodeURIComponent(split(value)[3] || '')); }} searchable minSearchLength={2}/></Field>
       <Field label={t('manual.yap')}><PagedAppDropdown queryKey={['gr-manual-yaps', branchCode]} fetchPage={(request) => goodsReceiptV2Api.yapCodes(request, branchCode)} toOption={(x) => ({ value: `${x.id}|${x.configurationCode}`, label: `${x.configurationCode} · ${x.description || ''}` })} value={yap} onValueChange={setYap} searchable minSearchLength={1}/></Field>
-      <Field label={t('manual.quantity')} required><input className="input" type="number" min="0.000001" step="0.000001" value={quantity} onChange={(e) => setQuantity(e.target.value)}/></Field><Field label={t('manual.unit')}><div className={`input flex items-center font-bold ${unitCode ? 'text-cyan-600' : 'text-amber-600'}`}>{unitCode || 'Önce stok seçin'}</div></Field>
+      <Field label={t('manual.quantity')} required><input className="input font-mono" inputMode="decimal" value={quantity} onChange={(e) => setQuantity(e.target.value)}/></Field><Field label={t('manual.unit')}><div className={`input flex items-center font-bold ${unitCode ? 'text-cyan-600' : 'text-amber-600'}`}>{unitCode || 'Önce stok seçin'}</div></Field>
       <Field label="Hedef raf" required><PagedAppDropdown queryKey={['gr-manual-line-locations', warehouseId]} fetchPage={(request) => goodsReceiptV2Api.locations(request, warehouseId)} toOption={(x) => ({ value: `${x.id}|${x.code}`, label: `${x.code} · ${x.name}`, description: x.locationType })} enabled={warehouseId > 0} dependencies={[warehouseId]} value={lineLocation} onValueChange={setLineLocation} searchable/></Field>
       <Field label={t('manual.lot')}><input className="input" maxLength={100} value={lotNo} onChange={(e) => setLotNo(e.target.value)}/></Field><Field label={t('manual.serial')}><input className="input" maxLength={100} value={serialNo} onChange={(e) => setSerialNo(e.target.value)}/></Field>
       <Field label={t('manual.manufacturingDate')}><AppDateInput value={manufacturingDate} onChange={(e) => setManufacturingDate(e.target.value)}/></Field><Field label={t('manual.expirationDate')}><AppDateInput value={expirationDate} onChange={(e) => setExpirationDate(e.target.value)}/></Field>

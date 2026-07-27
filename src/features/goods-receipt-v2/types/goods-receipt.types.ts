@@ -1,3 +1,5 @@
+import type { EffectiveStockTrackingPolicy } from '@/features/stock-tracking/effective-stock-tracking.service';
+
 export interface CustomerOption { id: number; branchCode: string; customerCode: string; customerName: string }
 export interface WarehouseOption { id: number; branchCode: string; warehouseCode: number; warehouseName: string }
 export interface LocationOption { id: number; warehouseId: number; code: string; name: string; locationType: string }
@@ -14,11 +16,11 @@ export interface PutawayLocationSuggestion extends LocationOption {
   reason: string;
 }
 export interface SeriesOption { id: number; code: string; name: string; previewDocumentNumber: string; isDefault: boolean }
-export interface OpenOrderHeader { siparisNo: string; customerCode?: string; customerName?: string; branchCode?: number; targetWarehouseCode?: number; orderDate?: string; orderedQuantity?: number; deliveredQuantity?: number; remainingQuantity?: number; plannedQuantity?: number; availableQuantity?: number }
-export interface OpenOrderLine { siparisNo: string; orderId: number; stockCode?: string; stockName?: string; unitCode?: string; yapCode?: string; yapDescription?: string; customerCode?: string; branchCode?: number; targetWarehouseCode?: number; orderDate?: string; orderedQuantity?: number; deliveredQuantity?: number; remainingQuantity?: number; plannedQuantity?: number; availableQuantity?: number }
+export interface OpenOrderHeader { siparisNo: string; customerCode?: string; customerName?: string; branchCode?: number; targetWarehouseCode?: number; orderDate?: string; projectCode?: string; orderedQuantity?: number; deliveredQuantity?: number; remainingQuantity?: number; plannedQuantity?: number; availableQuantity?: number }
+export interface OpenOrderLine { siparisNo: string; orderId: number; stockCode?: string; stockName?: string; unitCode?: string; yapCode?: string; yapDescription?: string; customerCode?: string; branchCode?: number; targetWarehouseCode?: number; orderDate?: string; projectCode?: string; orderedQuantity?: number; deliveredQuantity?: number; remainingQuantity?: number; plannedQuantity?: number; availableQuantity?: number }
 export type StockTrackingType = 'None' | 'Lot' | 'Serial' | 'LotAndSerial';
 export interface PlannedReceiptTracking { localId: string; quantity: number; lotNo?: string; serialNo?: string; manufacturingDate?: string; expirationDate?: string; description?: string }
-export interface SelectedReceiptLine extends OpenOrderLine { stockId: number; quantity: number; targetWarehouseId?: number; targetWarehouseValue?: string | null; receivingLocationId?: number; receivingLocationValue?: string | null; trackingType: StockTrackingType; trackingPolicy: EffectiveStockTrackingPolicy; trackings: PlannedReceiptTracking[]; serialGenerationKey?: string }
+export interface SelectedReceiptLine extends OpenOrderLine { stockId: number; quantity: number; targetWarehouseId?: number; targetWarehouseValue?: string | null; receivingLocationId?: number; receivingLocationValue?: string | null; trackingType: StockTrackingType; trackingPolicy: EffectiveStockTrackingPolicy; trackings: PlannedReceiptTracking[]; serialGenerationKey?: string; requireQualityControl?: boolean }
 export interface CreatedGoodsReceiptTaskResult { id: number; taskNo: string; warehouseId: number; lineCount: number; plannedQuantity: number }
 export interface CreateGoodsReceiptResult { id: number; documentNo: string; taskId: number; taskNo: string; lineCount: number; reservedQuantity: number; replayed: boolean; tasks: CreatedGoodsReceiptTaskResult[] }
 export interface StockOption { id: number; branchCode: string; erpStockCode: string; stockName?: string; unitCode?: string }
@@ -43,4 +45,3 @@ export interface GoodsReceiptLabelBatchRow { id:number; goodsReceiptId:number; d
 export interface GoodsReceiptLabelRow { id:number; batchId:number; goodsReceiptId:number; goodsReceiptLineId?:number; taskLineId?:number; stockId?:number; stockCode:string; stockName?:string; yapCode?:string; quantity:number; unitCode:string; lotNo?:string; serialNo?:string; manufacturingDate?:string; expirationDate?:string; barcodeValue:string; status:string; printCount:number; lastPrintedAtUtc?:string; consumedAtUtc?:string; voidReason?:string; rowVersion:string }
 export interface GoodsReceiptLabelBatchDetail { batch:GoodsReceiptLabelBatchRow; labels:GoodsReceiptLabelRow[] }
 export interface ReceiveGoodsReceiptTaskResult { executionId:number; stockMovementOperationId:number; goodsReceiptId:number; taskId:number; taskLineId:number; processedQuantity:number; remainingQuantity:number; taskStatus:string; lineStatus:string; qualityInspectionId?:number; consumedLabelId?:number; replayed:boolean }
-import type { EffectiveStockTrackingPolicy } from '@/features/stock-tracking/effective-stock-tracking.service';

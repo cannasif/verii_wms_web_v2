@@ -28,7 +28,18 @@ export const goodsReceiptV2Api = {
   series: async (warehouseId: number): Promise<SeriesOption[]> => unwrap(await api.get<Envelope<SeriesOption[]>>(`/api/document-series/lookup?documentType=GoodsReceipt&warehouseId=${warehouseId}`)),
   transferSeries: async (warehouseId: number): Promise<SeriesOption[]> => unwrap(await api.get<Envelope<SeriesOption[]>>(`/api/document-series/lookup?documentType=InterWarehouseTransfer&warehouseId=${warehouseId}`)),
   outboundSeries: async (warehouseId: number): Promise<SeriesOption[]> => unwrap(await api.get<Envelope<SeriesOption[]>>(`/api/document-series/lookup?documentType=WarehouseIssue&warehouseId=${warehouseId}`)),
-  orderHeaders: async (customerCode: string, branchCode: string): Promise<OpenOrderHeader[]> => unwrap(await api.get<Envelope<OpenOrderHeader[]>>(`/api/netsis-read/goods-receipt/open-orders/headers?customerCode=${encodeURIComponent(customerCode)}&branchCode=${encodeURIComponent(branchCode)}`)),
+  orderHeaders: async (params: {
+    branchCode: string;
+    customerCode?: string;
+    orderNumber?: string;
+    projectCode?: string;
+  }): Promise<OpenOrderHeader[]> => {
+    const query = new URLSearchParams({ branchCode: params.branchCode });
+    if (params.customerCode?.trim()) query.set('customerCode', params.customerCode.trim());
+    if (params.orderNumber?.trim()) query.set('orderNumber', params.orderNumber.trim());
+    if (params.projectCode?.trim()) query.set('projectCode', params.projectCode.trim());
+    return unwrap(await api.get<Envelope<OpenOrderHeader[]>>(`/api/netsis-read/goods-receipt/open-orders/headers?${query}`));
+  },
   orderLines: async (customerCode: string, branchCode: string, orderNumbers: string[]): Promise<OpenOrderLine[]> => unwrap(await api.get<Envelope<OpenOrderLine[]>>(`/api/netsis-read/goods-receipt/open-orders/lines?customerCode=${encodeURIComponent(customerCode)}&branchCode=${encodeURIComponent(branchCode)}&orderNumbersCsv=${encodeURIComponent(orderNumbers.join(','))}`)),
   create: async (payload: unknown): Promise<CreateGoodsReceiptResult> => unwrap(await api.post<Envelope<CreateGoodsReceiptResult>>('/api/goods-receipts/from-orders', payload)),
   createOrderless: async (payload: unknown): Promise<ManualGoodsReceiptResult> => unwrap(await api.post<Envelope<ManualGoodsReceiptResult>>('/api/goods-receipts/orderless', payload)),

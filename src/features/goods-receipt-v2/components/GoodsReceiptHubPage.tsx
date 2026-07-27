@@ -24,11 +24,11 @@ export function GoodsReceiptHubPage() {
     return <section className="grid min-h-[50vh] place-items-center"><Loader2 className="size-7 animate-spin text-[var(--wms-brand-primary)]" /></section>;
   }
 
-  return <section className="space-y-6">
-    <header className="rounded-2xl border border-[var(--wms-app-border)] bg-[image:var(--wms-brand-gradient-soft)] p-6">
-      <p className="text-xs font-bold uppercase tracking-[.18em] text-[var(--wms-brand-primary)]">{t('hub.eyebrow')}</p>
-      <h1 className="mt-1 text-3xl font-black">{t('hub.title')}</h1>
-      <p className="mt-2 max-w-4xl text-sm leading-6 text-[var(--wms-app-text-muted)]">{t('hub.description')}</p>
+  return <section className="wms-ops-form space-y-6">
+    <header className="wms-ops-form-card rounded-2xl border border-[var(--wms-app-border)] bg-[image:var(--wms-brand-gradient-soft)] p-6">
+      <p className="wms-ops-eyebrow text-xs font-bold uppercase tracking-[.18em] text-[var(--wms-brand-primary)]">{t('hub.eyebrow')}</p>
+      <h1 className="wms-ops-title-main mt-1 text-3xl font-black">{t('hub.title')}</h1>
+      <p className="wms-ops-subtitle mt-2 max-w-4xl text-sm leading-6 text-[var(--wms-app-text-muted)]"><span className="wms-ops-subtitle-prefix" aria-hidden>&gt; </span>{t('hub.description')}</p>
     </header>
     {phases.map((phase) => <section key={phase.key} className="space-y-3">
       <div className="flex items-start gap-3">

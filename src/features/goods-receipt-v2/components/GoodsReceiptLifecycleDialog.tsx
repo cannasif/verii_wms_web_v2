@@ -150,9 +150,9 @@ export function GoodsReceiptLifecycleDialog({ action, detail, onClose, onComplet
   };
 
   return (
-    <ResponsiveDialog onClose={onClose} title={content.title} description={`${detail.header.documentNo} · ${content.description}`} className="!max-w-5xl">
-      <form onSubmit={(event) => void submit(event)}>
-        <header className="flex items-start gap-3">
+    <ResponsiveDialog onClose={onClose} framed={false} title={content.title} description={`${detail.header.documentNo} · ${content.description}`} className={content.destructive ? 'wms-ops-delete-dialog !max-w-5xl' : '!max-w-5xl'}>
+      <form onSubmit={(event) => void submit(event)} className="pr-2">
+        <header className="flex items-start gap-3 pr-10">
           <span className={content.destructive ? 'rounded-xl bg-rose-500/15 p-2.5 text-rose-500' : 'rounded-xl bg-cyan-500/15 p-2.5 text-cyan-500'}>{content.icon}</span>
           <div>
             <h2 className="text-xl font-bold">{content.title}</h2>

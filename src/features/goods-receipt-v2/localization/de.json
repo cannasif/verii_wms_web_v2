@@ -1,5 +1,7 @@
 {
   "list": {
+    "eyebrowParent": "INBOUND_OP",
+    "eyebrowModule": "GOODS_RECEIPT",
     "title": "Wareneingänge",
     "description": "Wareneingänge prüfen, Etiketten je Beleg oder Position drucken und PDFs anzeigen.",
     "documentNo": "Belegnummer", "documentDate": "Belegdatum", "supplier": "Lieferant", "warehouse": "Lager",

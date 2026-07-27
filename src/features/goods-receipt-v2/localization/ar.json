@@ -1,5 +1,7 @@
 {
   "list": {
+    "eyebrowParent": "INBOUND_OP",
+    "eyebrowModule": "GOODS_RECEIPT",
     "title": "سجلات استلام البضائع",
     "description": "راجع عمليات الاستلام واطبع الملصقات حسب المستند أو السطر واعرض ملفات PDF.",
     "documentNo": "رقم المستند", "documentDate": "تاريخ المستند", "supplier": "المورد", "warehouse": "المستودع",

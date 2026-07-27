@@ -1,5 +1,7 @@
 {
   "list": {
+    "eyebrowParent": "INBOUND_OP",
+    "eyebrowModule": "GOODS_RECEIPT",
     "title": "Registri di ricevimento merci",
     "description": "Controlla i ricevimenti, stampa le etichette per documento o riga e visualizza i PDF.",
     "documentNo": "N. documento", "documentDate": "Data documento", "supplier": "Fornitore", "warehouse": "Magazzino",

@@ -1,5 +1,7 @@
 {
   "list": {
+    "eyebrowParent": "INBOUND_OP",
+    "eyebrowModule": "GOODS_RECEIPT",
     "title": "Registros de recepción",
     "description": "Revise las recepciones, imprima etiquetas por documento o línea y previsualice los PDF.",
     "documentNo": "N.º de documento", "documentDate": "Fecha del documento", "supplier": "Proveedor", "warehouse": "Almacén",

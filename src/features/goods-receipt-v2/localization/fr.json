@@ -1,5 +1,7 @@
 {
   "list": {
+    "eyebrowParent": "INBOUND_OP",
+    "eyebrowModule": "GOODS_RECEIPT",
     "title": "Réceptions de marchandises",
     "description": "Consultez les réceptions, imprimez les étiquettes par document ou ligne et prévisualisez les PDF.",
     "documentNo": "N° de document", "documentDate": "Date du document", "supplier": "Fournisseur", "warehouse": "Entrepôt",

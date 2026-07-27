@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState, type ReactElement } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
@@ -554,6 +555,7 @@ function TaskScanPanel({
   const [manufacturingDate, setManufacturingDate] = useState("");
   const [expirationDate, setExpirationDate] = useState("");
   const [busy, setBusy] = useState(false);
+  const navigate = useNavigate();
   const selectedLine = openLines.find((x) => String(x.id) === lineId);
   const submit = async () => {
     if (!lineId || !barcode.trim()) {
@@ -573,11 +575,20 @@ function TaskScanPanel({
         expirationDate: expirationDate || undefined,
         deviceId: navigator.userAgent.slice(0, 100),
       });
-      toast.success(
-        result.replayed
-          ? "Okutma daha önce işlenmişti."
-          : "Barkod doğrulandı; seri/lot, stok hareketi, bakiye ve kalite tek işlemde işlendi.",
-      );
+      if (result.qualityInspectionId) {
+        toast.success("Mal kabul işlendi; kalite inceleme listesine aktarıldı.", {
+          action: {
+            label: "Kalite listesi",
+            onClick: () => navigate("/warehouse/quality/inspections"),
+          },
+        });
+      } else {
+        toast.success(
+          result.replayed
+            ? "Okutma daha önce işlenmişti."
+            : "Barkod doğrulandı; seri/lot, stok hareketi, bakiye ve kalite tek işlemde işlendi.",
+        );
+      }
       setBarcode("");
       setQuantity("");
       setLot("");
