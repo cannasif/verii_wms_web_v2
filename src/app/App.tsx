@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { LoginPage } from '@/features/auth/components/LoginPage';
 import { ForgotPasswordPage } from '@/features/auth/components/ForgotPasswordPage';
 import { ResetPasswordPage } from '@/features/auth/components/ResetPasswordPage';
+import { DashboardPage } from '@/features/dashboard/components/DashboardPage';
+import { OpsLoadingState } from '@/components/shared/OpsLoadingState';
 import {
   loadAppLayout, loadAuditLogsPage, loadBarcodeDesignerPage, loadBarcodePolicyPage, loadDocumentSeriesPage,
   loadELogoConnectionsPage, loadErpMirrorPages, loadGoodsReceiptAssignedTasksPage, loadGoodsReceiptCreatePage, loadGoodsReceiptHubPage,
@@ -118,19 +120,7 @@ const PackingWorkbenchPage = lazy(() => loadPackingPages().then((m) => ({ defaul
 const PackingDefinitionsPage = lazy(() => loadPackingPages().then((m) => ({ default: m.PackingDefinitionsPage })));
 const PackingPolicyPage = lazy(() => loadPackingPages().then((m) => ({ default: m.PackingPolicyPage })));
 function Dashboard(): ReactElement {
-  const { t } = useTranslation('common');
-
-  return (
-    <section className="min-h-[calc(100vh-8rem)] rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-6 shadow-sm">
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--wms-brand-primary)]">
-        V3RII WMS v2
-      </p>
-      <h1 className="mt-2 text-2xl font-bold">{t('dashboard.title')}</h1>
-      <p className="mt-2 text-slate-500">
-        {t('dashboard.subtitle')}
-      </p>
-    </section>
-  );
+  return <DashboardPage />;
 }
 
 function AccessDenied(): ReactElement {
@@ -261,8 +251,8 @@ function RouteLoader(): ReactElement {
   const { t } = useTranslation('common');
 
   return (
-    <div className="grid min-h-screen place-items-center bg-[var(--wms-app-bg)] text-sm font-semibold text-[var(--wms-brand-primary)]">
-      {t('common.loading')}
+    <div className="grid min-h-screen place-items-center bg-[var(--wms-app-background)] p-6">
+      <OpsLoadingState message={t('common.loading')} code="BOOT" />
     </div>
   );
 }
