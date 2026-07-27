@@ -30,7 +30,8 @@ export const packingApi={
  sourceDocuments:async(type:PackingSourceType,r:GridRequest):Promise<GridPage<PackingSourceDocumentOption>>=>{
   const endpoint=type==='WarehouseOutbound'?'/api/warehouse-outbounds/paged':type==='Shipment'?'/api/shipments/paged':'/api/warehouse-transfers/paged';
   const page=unwrap<GridPage<Record<string,unknown>>>(await api.post(endpoint,r));
-  return {...page,items:page.items.map(x=>({id:Number(x.id),documentNo:String(x.documentNo),sourceWarehouseId:Number(x.sourceWarehouseId),status:String(x.status),sourceType:type}))};
+  const items=page.items.map(x=>({id:Number(x.id),documentNo:String(x.documentNo),sourceWarehouseId:Number(x.sourceWarehouseId),status:String(x.status),sourceType:type}));
+  return {...page,items,data:items};
  },
  detail:async(id:number):Promise<SessionDetail>=>unwrap(await api.get(`/api/packing/sessions/${id}`)),
  sourceLines:async(id:number):Promise<PackingSourceLine[]>=>unwrap(await api.get(`/api/packing/sessions/${id}/source-lines`)),

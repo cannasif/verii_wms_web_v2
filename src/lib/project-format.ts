@@ -41,6 +41,29 @@ export function formatProjectNumber(
     maximumFractionDigits,
   }).format(value);
 }
+
+/** Accepts TR/EN decimal entry (`1,5` / `1.5` / `1.234,56`) and returns a finite number or NaN. */
+export function parseLocalizedNumber(
+  value: string,
+  override?: Partial<ProjectSettings>,
+): number {
+  const compact = value.trim().replace(/\s/g, "");
+  if (!compact) return Number.NaN;
+  const comma = compact.includes(",");
+  const dot = compact.includes(".");
+  const normalized =
+    comma && dot
+      ? compact.lastIndexOf(",") > compact.lastIndexOf(".")
+        ? compact.replace(/\./g, "").replace(",", ".")
+        : compact.replace(/,/g, "")
+      : comma
+        ? compact.replace(",", ".")
+        : compact;
+  const parsed = Number(normalized);
+  if (!Number.isFinite(parsed)) return Number.NaN;
+  void settings(override);
+  return parsed;
+}
 function dateParts(value: DateInput, override?: Partial<ProjectSettings>) {
   const date = parsed(value);
   if (!date) return null;

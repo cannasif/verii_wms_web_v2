@@ -21,7 +21,7 @@ export interface GridPreferences {
 
 const GRID_PREFERENCE_VERSION = 2;
 export const MAX_GRID_SEARCH_FIELDS = 12;
-const PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const;
+const PAGE_SIZE_OPTIONS = [10, 20, 25, 50, 100] as const;
 const MIN_COLUMN_WIDTH = 80;
 const MAX_COLUMN_WIDTH = 800;
 
@@ -47,7 +47,7 @@ function createDefaults(columns: GridPreferenceColumn[]): GridPreferences {
     searchFields,
     sortBy: null,
     sortDirection: 'asc',
-    pageSize: 25,
+    pageSize: 20,
   };
 }
 

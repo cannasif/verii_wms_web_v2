@@ -87,6 +87,39 @@ function applyBranchCodeToPayload(payload: unknown, branchCode: string, visited 
   }
 }
 
+function normalizePagedPayload(value: unknown): unknown {
+  if (value == null || typeof value !== 'object' || Array.isArray(value)) {
+    return value;
+  }
+
+  const page = value as Record<string, unknown>;
+  const hasTotalCount = typeof page.totalCount === 'number' || typeof page.TotalCount === 'number';
+  if (!hasTotalCount) {
+    return value;
+  }
+
+  const next: Record<string, unknown> = { ...page };
+
+  if (next.totalCount === undefined && typeof page.TotalCount === 'number') next.totalCount = page.TotalCount;
+  if (next.pageNumber === undefined && typeof page.PageNumber === 'number') next.pageNumber = page.PageNumber;
+  if (next.pageSize === undefined && typeof page.PageSize === 'number') next.pageSize = page.PageSize;
+  if (next.totalPages === undefined && typeof page.TotalPages === 'number') next.totalPages = page.TotalPages;
+  if (next.hasNextPage === undefined && typeof page.HasNextPage === 'boolean') next.hasNextPage = page.HasNextPage;
+  if (next.hasPreviousPage === undefined && typeof page.HasPreviousPage === 'boolean') next.hasPreviousPage = page.HasPreviousPage;
+  if (next.data === undefined && Array.isArray(page.Data)) next.data = page.Data;
+  if (next.items === undefined && Array.isArray(page.Items)) next.items = page.Items;
+
+  const candidates = [next.items, next.data, next.Items, next.Data, next.records, next.results, next.Rows];
+  const arrays = candidates.filter((value): value is unknown[] => Array.isArray(value));
+  const rows = arrays.find((list) => list.length > 0) ?? arrays[0] ?? null;
+  if (rows) {
+    next.items = rows;
+    next.data = rows;
+  }
+
+  return next;
+}
+
 function normalizeApiEnvelope(payload: unknown): unknown {
   if (
     (typeof Blob !== 'undefined' && payload instanceof Blob) ||
@@ -134,6 +167,11 @@ function normalizeApiEnvelope(payload: unknown): unknown {
   }
   if (normalized.className === undefined && typeof source.ClassName === 'string') {
     normalized.className = source.ClassName;
+  }
+
+  // PagedResponse uses `data` for rows; grids/dropdowns expect `items`. Mirror both.
+  if (normalized.data !== undefined) {
+    normalized.data = normalizePagedPayload(normalized.data);
   }
 
   return normalized;

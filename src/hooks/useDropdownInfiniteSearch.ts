@@ -73,6 +73,13 @@ export function useDropdownInfiniteSearch<TItem>({
       filters: buildFilters?.(activeSearch),
       filterLogic,
       signal,
+    }).then((page) => {
+      const items = Array.isArray(page.items)
+        ? page.items
+        : Array.isArray((page as DropdownPage<TItem> & { data?: TItem[] }).data)
+          ? (page as DropdownPage<TItem> & { data?: TItem[] }).data!
+          : [];
+      return { ...page, items };
     }),
     getNextPageParam: (lastPage) => {
       const hasNextPage = lastPage.hasNextPage
