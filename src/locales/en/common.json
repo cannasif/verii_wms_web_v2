@@ -343,6 +343,7 @@
     "mainNavigation": "Main navigation",
     "dashboard": "Dashboard",
     "goodsReceipt": "Goods Receipt",
+    "goodsReceiptOps": "Operations",
     "goodsReceiptCreate": "Create Order",
     "goodsReceiptProcess": "Goods Receipt Direct Entry",
     "goodsReceiptList": "Goods Receipt List",

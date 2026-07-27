@@ -83,13 +83,17 @@ export const WMS_NAV_ITEMS: NavItem[] = [
     { title: 'sidebar.erpConfigurationCodes', titleFallback: 'Yapılandırma Kodları', href: '/erp/configuration-codes', searchAliases: ['yapılandırma', 'konfigürasyon', 'varyant', 'yapkod'], requiredPermission: 'ERP.MIRROR.VIEW' },
   ] },
   { title: 'sidebar.goodsReceipt', titleFallback: 'Mal Kabul', icon: operationsIcon, children: [
-    { title: 'sidebar.goodsReceiptHub', titleFallback: 'Süreç Merkezi', href: '/warehouse/goods-receipts', searchAliases: ['mal kabul', 'süreç', 'başlangıç'], requiredPermission: 'WMS.GOODS_RECEIPT.VIEW' },
-    { title: 'sidebar.goodsReceiptCreate', titleFallback: 'Siparişten Emir', href: '/warehouse/goods-receipts/new', searchAliases: ['mal kabul', 'sipariş', 'emir', 'rezervasyon', 'netsis'], requiredPermission: 'WMS.GOODS_RECEIPT.CREATE' },
-    { title: 'sidebar.goodsReceiptOrderless', titleFallback: 'Siparişsiz Emir', href: '/warehouse/goods-receipts/orderless', searchAliases: ['mal kabul', 'siparişsiz', 'emir', 'irsaliye'], requiredPermission: 'WMS.GOODS_RECEIPT.CREATE' },
-    { title: 'sidebar.goodsReceiptDirect', titleFallback: 'Doğrudan Mal Kabul', href: '/warehouse/goods-receipts/direct', searchAliases: ['mal kabul', 'emirsiz', 'direkt', 'barkod'], requiredPermission: 'WMS.GOODS_RECEIPT.RECEIVE' },
-    { title: 'sidebar.goodsReceiptTasks', titleFallback: 'Emir Yönetimi', href: '/warehouse/goods-receipts/tasks', searchAliases: ['mal kabul', 'emir', 'atama', 'kullanıcı'], requiredPermission: 'WMS.GOODS_RECEIPT.VIEW' },
-    { title: 'sidebar.goodsReceiptAssigned', titleFallback: 'Bana Atanan Emirler', href: '/warehouse/goods-receipts/assigned', searchAliases: ['mal kabul', 'atanan', 'görev', 'toplama'], requiredPermission: 'WMS.GOODS_RECEIPT.RECEIVE' },
-    { title: 'sidebar.goodsReceiptLabels', titleFallback: 'Ön Etiketler', href: '/warehouse/goods-receipts/labels', searchAliases: ['mal kabul', 'ön etiket', 'barkod', 'yazdır'], requiredPermission: 'WMS.GOODS_RECEIPT.VIEW' },
+    { title: 'sidebar.goodsReceiptOps', titleFallback: 'Operasyon', children: [
+      { title: 'sidebar.goodsReceiptHub', titleFallback: 'Süreç Merkezi', href: '/warehouse/goods-receipts', searchAliases: ['mal kabul', 'süreç', 'başlangıç'], requiredPermission: 'WMS.GOODS_RECEIPT.VIEW' },
+      { title: 'sidebar.goodsReceiptCreate', titleFallback: 'Siparişten Emir', href: '/warehouse/goods-receipts/new', searchAliases: ['mal kabul', 'sipariş', 'emir', 'rezervasyon', 'netsis'], requiredPermission: 'WMS.GOODS_RECEIPT.CREATE' },
+      { title: 'sidebar.goodsReceiptOrderless', titleFallback: 'Siparişsiz Emir', href: '/warehouse/goods-receipts/orderless', searchAliases: ['mal kabul', 'siparişsiz', 'emir', 'irsaliye'], requiredPermission: 'WMS.GOODS_RECEIPT.CREATE' },
+      { title: 'sidebar.goodsReceiptDirect', titleFallback: 'Doğrudan Mal Kabul', href: '/warehouse/goods-receipts/direct', searchAliases: ['mal kabul', 'emirsiz', 'direkt', 'barkod'], requiredPermission: 'WMS.GOODS_RECEIPT.RECEIVE' },
+      { title: 'sidebar.goodsReceiptTasks', titleFallback: 'Emir Yönetimi', href: '/warehouse/goods-receipts/tasks', searchAliases: ['mal kabul', 'emir', 'atama', 'kullanıcı'], requiredPermission: 'WMS.GOODS_RECEIPT.VIEW' },
+      { title: 'sidebar.goodsReceiptAssigned', titleFallback: 'Bana Atanan Emirler', href: '/warehouse/goods-receipts/assigned', searchAliases: ['mal kabul', 'atanan', 'görev', 'toplama'], requiredPermission: 'WMS.GOODS_RECEIPT.RECEIVE' },
+      { title: 'sidebar.goodsReceiptLabels', titleFallback: 'Ön Etiketler', href: '/warehouse/goods-receipts/labels', searchAliases: ['mal kabul', 'ön etiket', 'barkod', 'yazdır'], requiredPermission: 'WMS.GOODS_RECEIPT.VIEW' },
+      { title: 'sidebar.goodsReceiptList', titleFallback: 'Mal Kabul Kayıtları', href: '/warehouse/goods-receipts/list', searchAliases: ['mal kabul', 'liste', 'irsaliye', 'görev'], requiredPermission: 'WMS.GOODS_RECEIPT.VIEW' },
+      { title: 'sidebar.goodsReceiptSettings', titleFallback: 'Süreç Ayarları', href: '/warehouse/goods-receipt-settings', searchAliases: ['fazla kabul', 'onay', 'erp', 'kalite', 'politika'], requiredPermission: 'WMS.GOODS_RECEIPT.SETTINGS.VIEW' },
+    ] },
     { title: 'sidebar.incomingInvoiceArchive', titleFallback: 'Gelen e-Belgeler', children: [
       { title: 'sidebar.incomingInvoiceArchiveLookup', titleFallback: 'e-Fatura / e-Arşiv Sorgula', href: '/warehouse/incoming-invoices', searchAliases: ['e-fatura', 'e-arşiv', 'fatura', 'ubl', 'pdf', 'uuid'], requiredPermission: 'WMS.INCOMING_INVOICE.VIEW' },
       { title: 'sidebar.incomingInvoiceArchiveConnections', titleFallback: 'eLogo Bağlantıları', href: '/warehouse/incoming-invoices/connections', searchAliases: ['elogo', 'fatura', 'bağlantı', 'entegratör'], requiredPermission: 'WMS.INCOMING_INVOICE.CONNECTIONS.MANAGE' },
@@ -104,8 +108,6 @@ export const WMS_NAV_ITEMS: NavItem[] = [
       { title: 'sidebar.steelReceiptPlacement', titleFallback: 'Saha / Raf Yerleştirme', href: '/warehouse/goods-receipts/steel/placement', searchAliases: ['sac', 'yerleştirme', 'raf'], requiredPermission: 'WMS.STEEL_RECEIPT.PUTAWAY' },
       { title: 'sidebar.steelReceiptReports', titleFallback: 'SAC Operasyon Raporları', href: '/warehouse/goods-receipts/steel/reports', searchAliases: ['sac', 'rapor', 'izlenebilirlik', 'istisna', 'bekleyen'], requiredPermission: 'WMS.STEEL_RECEIPT.VIEW' },
     ] },
-    { title: 'sidebar.goodsReceiptList', titleFallback: 'Mal Kabul Kayıtları', href: '/warehouse/goods-receipts/list', searchAliases: ['mal kabul', 'liste', 'irsaliye', 'görev'], requiredPermission: 'WMS.GOODS_RECEIPT.VIEW' },
-    { title: 'sidebar.goodsReceiptSettings', titleFallback: 'Süreç Ayarları', href: '/warehouse/goods-receipt-settings', searchAliases: ['fazla kabul', 'onay', 'erp', 'kalite', 'politika'], requiredPermission: 'WMS.GOODS_RECEIPT.SETTINGS.VIEW' },
   ] },
   { title: 'sidebar.warehouseManagement', titleFallback: 'Depo Yönetimi', icon: inventoryIcon, children: [
     { title: 'sidebar.locationDefinitions', titleFallback: 'Raf Tanımları', href: '/warehouse/locations', searchAliases: ['lokasyon', 'raf', 'adres', 'göz'], requiredPermission: 'WMS.LOCATIONS.VIEW' },

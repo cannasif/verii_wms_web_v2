@@ -16,6 +16,7 @@ import { useMyPermissionsQuery } from '@/features/access-control/hooks/useMyPerm
 import { canAccessPath } from '@/features/access-control/utils/hasPermission';
 import { SessionRecoveryPage } from '@/features/auth/components/SessionRecoveryPage';
 import { WarehouseAmbientBackground } from '@/components/shared/WarehouseAmbientBackground';
+import { OpsLoadingState } from '@/components/shared/OpsLoadingState';
 import { useUserDetail } from '@/features/user-detail/hooks/useUserDetail';
 import {
   DEFAULT_WMS_BACKGROUND_MOTION,
@@ -141,7 +142,7 @@ export function AppLayout() {
               ) : null}
               <div
                 className={cn(
-                  'relative z-[1] w-full',
+                  'relative z-[1] w-full wms-ops-workspace-host wms-ops-form wms-ops-list',
                   isPremium
                     ? 'mx-auto max-w-[1560px] px-4 py-5 sm:px-6 sm:py-6 lg:px-8'
                     : 'px-3 py-3 sm:px-4 sm:py-4',
@@ -156,7 +157,7 @@ export function AppLayout() {
             </main>
             <div
               id={WORKSPACE_PORTAL_ROOT_ID}
-              className="pointer-events-none absolute inset-0 z-[80] overflow-hidden"
+              className="pointer-events-none absolute inset-0 z-[80] overflow-hidden wms-ops-workspace-host wms-ops-form wms-ops-list"
             />
           </section>
           <div
@@ -173,18 +174,11 @@ function WorkspaceRouteLoader() {
   const { t } = useTranslation();
 
   return (
-    <section
-      className="min-h-[18rem] animate-pulse rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-6"
-      aria-live="polite"
-      aria-label={t('appLayout.pageLoading', { defaultValue: 'Loading page' })}
-    >
-      <div className="h-4 w-28 rounded bg-[var(--wms-brand-soft)]" />
-      <div className="mt-4 h-8 w-64 max-w-full rounded bg-[var(--wms-brand-soft)]" />
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {Array.from({ length: 4 }, (_, index) => (
-          <div key={index} className="h-24 rounded-xl bg-[var(--wms-brand-soft)]" />
-        ))}
-      </div>
+    <section className="grid min-h-[18rem] place-items-center p-6" aria-live="polite">
+      <OpsLoadingState
+        message={t('appLayout.pageLoading', { defaultValue: 'Loading page' })}
+        code="FETCH"
+      />
     </section>
   );
 }

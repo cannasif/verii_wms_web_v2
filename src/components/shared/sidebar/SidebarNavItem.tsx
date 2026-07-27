@@ -38,7 +38,7 @@ function getLevelItemClassName(level: number, hasChildren: boolean): string {
     return 'px-2.5 py-2.5';
   }
   if (level === 1 && hasChildren) {
-    return 'px-3 py-2.5 font-semibold text-slate-600 dark:text-slate-300';
+    return 'px-2 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500';
   }
   if (level === 1) {
     return 'px-2 py-1.5';
@@ -54,7 +54,7 @@ function getLevelTextClassName(level: number, hasChildren: boolean): string {
     return 'text-sm font-semibold';
   }
   if (level === 1 && hasChildren) {
-    return 'text-[11px] font-bold uppercase tracking-[0.12em]';
+    return 'font-mono text-[10px] font-semibold uppercase tracking-[0.14em]';
   }
   if (level === 1) {
     return 'text-[13px] font-medium';
@@ -69,7 +69,7 @@ function getChildrenContainerClassName(level: number): string {
   if (level === 0) {
     return 'ms-7 space-y-0.5 border-s border-[color-mix(in_oklab,var(--wms-brand-primary)_18%,transparent)] ps-2';
   }
-  return 'ms-3 mt-1 space-y-0.5 border-s border-[color-mix(in_oklab,var(--wms-brand-primary)_22%,transparent)] ps-2';
+  return 'ms-2 space-y-0.5 border-s border-[color-mix(in_oklab,var(--wms-brand-primary)_10%,transparent)] ps-2';
 }
 
 function SidebarNavLabel({
@@ -142,7 +142,7 @@ export function SidebarNavItem({
 
   if (hasChildren) {
     return (
-      <div className={cn('space-y-0.5', isSectionHeader && 'my-1 rounded-lg border border-[color-mix(in_oklab,var(--wms-brand-primary)_16%,var(--wms-app-border))] bg-[color-mix(in_oklab,var(--wms-brand-primary)_4%,transparent)] p-1')}>
+      <div className="space-y-0.5">
         <button
           type="button"
           onClick={() => {
@@ -156,9 +156,9 @@ export function SidebarNavItem({
           className={cn(
             'flex w-full items-center gap-2.5 rounded-sm transition-colors duration-200',
             getLevelItemClassName(level, hasChildren),
-            sidebarItemHoverClassName,
+            !isSectionHeader && sidebarItemHoverClassName,
             !isSectionHeader && (isParentActive ? sidebarActiveParentClassName : 'text-slate-600 dark:text-slate-300'),
-            isSectionHeader && (isParentActive ? 'bg-[color-mix(in_oklab,var(--wms-brand-primary)_10%,transparent)] text-[var(--wms-brand-primary)]' : ''),
+            isSectionHeader && (isParentActive ? 'text-[var(--wms-brand-primary)]' : ''),
             !isSidebarOpen && 'justify-center',
           )}
         >
@@ -175,7 +175,7 @@ export function SidebarNavItem({
             </span>
           ) : null}
           <SidebarNavLabel title={title} isSidebarOpen={isSidebarOpen} level={level} hasChildren={hasChildren} />
-          {isSidebarOpen ? (
+          {isSidebarOpen && !isSectionHeader ? (
             <HugeiconsIcon
               icon={ArrowRight01Icon}
               size={13}
