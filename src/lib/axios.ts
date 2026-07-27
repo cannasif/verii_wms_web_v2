@@ -169,7 +169,7 @@ function extractApiErrorMessage(payload: unknown): string | null {
 
 api.interceptors.request.use((config) => {
   // Runtime config is resolved during bootstrap; requests should use the hydrated in-memory value
-  // instead of awaiting config.json again through loadConfig() on every call.
+  // instead of awaiting runtime-settings.json again through loadConfig() on every call.
   config.baseURL = getApiBaseUrl() || api.defaults.baseURL || config.baseURL;
   config.headers['X-Language'] = getLanguageForHttpHeader();
 

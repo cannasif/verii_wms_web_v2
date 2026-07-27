@@ -1,6 +1,6 @@
 export const DEFAULT_API_BASE_URL = 'https://wms2api.v3rii.com';
-const RUNTIME_CONFIG_CACHE_KEY = 'wms-runtime-config:v1';
-const RUNTIME_CONFIG_TTL_MS = 60 * 60 * 1000;
+const RUNTIME_CONFIG_FILE_NAME = 'runtime-settings.json';
+const RUNTIME_CONFIG_CACHE_KEY = 'wms-runtime-config:v2';
 
 interface RuntimeConfig {
   apiUrl?: string;
@@ -85,7 +85,6 @@ let cachedApiUrl = normalizeBaseUrl(DEFAULT_API_BASE_URL);
 let cachedAppBasePath = normalizeAppBasePath(import.meta.env.BASE_URL || '/');
 let cachedRealtimeNotificationsEnabled = false;
 let configPromise: Promise<ResolvedRuntimeConfig> | null = null;
-let backgroundRefreshPromise: Promise<void> | null = null;
 const runtimeBasePath = import.meta.env.BASE_URL || '/';
 
 function toBaseRelativePath(fileName: string): string {
@@ -106,31 +105,36 @@ function resolveEnvRuntimeConfig(): ResolvedRuntimeConfig {
   };
 }
 
-async function fetchRuntimeConfig(): Promise<ResolvedRuntimeConfig> {
+async function fetchRuntimeConfig(): Promise<ResolvedRuntimeConfig | null> {
   const fallbackConfig = resolveEnvRuntimeConfig();
 
   try {
-    const response = await fetch(toBaseRelativePath('config.json'), {
-      cache: import.meta.env.PROD ? 'no-cache' : 'default',
+    const response = await fetch(toBaseRelativePath(RUNTIME_CONFIG_FILE_NAME), {
+      cache: 'no-store',
+      credentials: 'same-origin',
+      headers: {
+        Accept: 'application/json',
+      },
     });
     if (!response.ok) {
-      return fallbackConfig;
+      throw new Error(`${RUNTIME_CONFIG_FILE_NAME} HTTP ${response.status}`);
     }
 
     const config = (await response.json()) as RuntimeConfig;
+    if (!isValidApiUrl(config?.apiUrl)) {
+      throw new Error(`${RUNTIME_CONFIG_FILE_NAME} geçerli bir apiUrl içermiyor`);
+    }
 
     return {
-      apiUrl: isValidApiUrl(config?.apiUrl) ? normalizeBaseUrl(config.apiUrl!) : fallbackConfig.apiUrl,
+      apiUrl: normalizeBaseUrl(config.apiUrl!),
       baseUrl: normalizeAppBasePath(config?.baseUrl ?? fallbackConfig.baseUrl),
       realtimeNotificationsEnabled: config?.realtimeNotificationsEnabled === true,
     };
   } catch (error) {
-    if (import.meta.env.DEV) {
-      console.warn('[api-config] config.json yüklenemedi, fallback kullanılıyor:', error);
-    }
+    console.warn(`[api-config] ${RUNTIME_CONFIG_FILE_NAME} yüklenemedi, fallback kullanılacak:`, error);
   }
 
-  return fallbackConfig;
+  return null;
 }
 
 function readPersistedRuntimeConfig(): PersistedRuntimeConfig | null {
@@ -191,29 +195,6 @@ function hydrateMemoryCache(config: ResolvedRuntimeConfig): ResolvedRuntimeConfi
   return config;
 }
 
-function isPersistedConfigFresh(config: PersistedRuntimeConfig | null): boolean {
-  if (!config) {
-    return false;
-  }
-
-  return Date.now() - config.fetchedAt < RUNTIME_CONFIG_TTL_MS;
-}
-
-function refreshRuntimeConfigInBackground(): void {
-  if (backgroundRefreshPromise) {
-    return;
-  }
-
-  backgroundRefreshPromise = fetchRuntimeConfig()
-    .then((config) => {
-      hydrateMemoryCache(config);
-      persistRuntimeConfig(config);
-    })
-    .finally(() => {
-      backgroundRefreshPromise = null;
-    });
-}
-
 function hasExplicitDevApiUrl(): boolean {
   return import.meta.env.DEV && isValidApiUrl(import.meta.env.VITE_API_URL);
 }
@@ -221,62 +202,28 @@ function hasExplicitDevApiUrl(): boolean {
 export function loadConfig(): Promise<string> {
   if (!configPromise) {
     if (hasExplicitDevApiUrl()) {
-      configPromise = Promise.resolve(resolveEnvRuntimeConfig()).then((config) => {
-        hydrateMemoryCache(config);
-        persistRuntimeConfig(config);
-        return config;
-      });
-
-      return configPromise.then((config) => config.apiUrl);
-    }
-
-    if (import.meta.env.DEV) {
-      const persisted = readPersistedRuntimeConfig();
-
-      if (persisted) {
-        const resolved = hydrateMemoryCache({
-          apiUrl: persisted.apiUrl,
-          baseUrl: persisted.baseUrl,
-          realtimeNotificationsEnabled: persisted.realtimeNotificationsEnabled,
-        });
-
-        if (!isPersistedConfigFresh(persisted)) {
-          refreshRuntimeConfigInBackground();
+      configPromise = Promise.resolve(resolveEnvRuntimeConfig());
+    } else {
+      configPromise = fetchRuntimeConfig().then((runtimeConfig) => {
+        if (runtimeConfig) {
+          persistRuntimeConfig(runtimeConfig);
+          return runtimeConfig;
         }
 
-        configPromise = Promise.resolve(resolved);
-      } else {
-        configPromise = fetchRuntimeConfig().then((config) => {
-          hydrateMemoryCache(config);
-          persistRuntimeConfig(config);
-          return config;
-        });
-      }
+        const persisted = readPersistedRuntimeConfig();
+        if (persisted) {
+          return {
+            apiUrl: persisted.apiUrl,
+            baseUrl: persisted.baseUrl,
+            realtimeNotificationsEnabled: persisted.realtimeNotificationsEnabled,
+          };
+        }
 
-      return configPromise.then((config) => config.apiUrl);
-    }
-
-    const persisted = readPersistedRuntimeConfig();
-
-    if (persisted) {
-      const resolved = hydrateMemoryCache({
-        apiUrl: persisted.apiUrl,
-        baseUrl: persisted.baseUrl,
-        realtimeNotificationsEnabled: persisted.realtimeNotificationsEnabled,
-      });
-
-      if (!isPersistedConfigFresh(persisted)) {
-        refreshRuntimeConfigInBackground();
-      }
-
-      configPromise = Promise.resolve(resolved);
-    } else {
-      configPromise = fetchRuntimeConfig().then((config) => {
-        hydrateMemoryCache(config);
-        persistRuntimeConfig(config);
-        return config;
+        return resolveEnvRuntimeConfig();
       });
     }
+
+    configPromise = configPromise.then(hydrateMemoryCache);
   }
 
   return configPromise.then((config) => config.apiUrl);
