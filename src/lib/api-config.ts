@@ -93,7 +93,9 @@ function toBaseRelativePath(fileName: string): string {
 }
 
 function resolveEnvRuntimeConfig(): ResolvedRuntimeConfig {
-  const envUrl = import.meta.env.VITE_API_URL;
+  // .env.local is intentionally a development-only convenience. Never allow a
+  // stale Jenkins workspace file to embed a localhost endpoint in production.
+  const envUrl = import.meta.env.DEV ? import.meta.env.VITE_API_URL : undefined;
   const devFallback = getWindowOriginFallback();
 
   return {

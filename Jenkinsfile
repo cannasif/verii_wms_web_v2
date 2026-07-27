@@ -8,6 +8,7 @@ pipeline {
     environment {
         DEPLOY_PATH                   = 'C:\\inetpub\\wwwroot\\wms2-ui'
         API_URL                       = 'https://wms2api.v3rii.com'
+        VITE_API_URL                  = 'https://wms2api.v3rii.com'
         APP_BASE_PATH                 = '/'
         REALTIME_NOTIFICATIONS_ENABLED = 'false'
     }
@@ -64,6 +65,11 @@ pipeline {
                 $utf8WithoutBom = New-Object System.Text.UTF8Encoding($false)
                 [System.IO.File]::WriteAllText($target, $json, $utf8WithoutBom)
 
+                $generated = Get-Content $target -Raw | ConvertFrom-Json
+                if ($generated.apiUrl -ne "https://wms2api.v3rii.com") {
+                    throw "Runtime settings API URL doğrulaması başarısız: $($generated.apiUrl)"
+                }
+
                 Write-Host "Runtime settings generated for $($settings.apiUrl)"
                 '''
             }
@@ -72,6 +78,10 @@ pipeline {
         stage('IIS Deploy') {
             steps {
                 bat '''
+                if not exist "dist\\runtime-settings.json" (
+                    echo DEPLOYMENT BLOCKED: dist\\runtime-settings.json bulunamadi.
+                    exit /b 1
+                )
                 if exist "%DEPLOY_PATH%" (
                     rmdir /S /Q "%DEPLOY_PATH%"
                 )
