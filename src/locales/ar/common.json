@@ -2368,7 +2368,17 @@
   "dateInput": {
     "openDate": "فتح منتقي التاريخ",
     "openTime": "فتح منتقي الوقت",
-    "openDateTime": "فتح منتقي التاريخ والوقت"
+    "openDateTime": "فتح منتقي التاريخ والوقت",
+    "clear": "مسح",
+    "today": "اليوم",
+    "done": "تم",
+    "hour": "ساعة",
+    "minute": "دقيقة",
+    "prevMonth": "الشهر السابق",
+    "nextMonth": "الشهر التالي",
+    "placeholderDate": "YYYY-MM-DD",
+    "placeholderTime": "HH:mm",
+    "placeholderDateTime": "YYYY-MM-DD HH:mm"
   },
   "dataGrid": {
     "systemColumns": {

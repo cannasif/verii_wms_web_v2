@@ -3793,7 +3793,17 @@
   "dateInput": {
     "openDate": "Datumsauswahl öffnen",
     "openTime": "Zeitauswahl öffnen",
-    "openDateTime": "Datums- und Zeitauswahl öffnen"
+    "openDateTime": "Datums- und Zeitauswahl öffnen",
+    "clear": "Löschen",
+    "today": "Heute",
+    "done": "Fertig",
+    "hour": "Stunde",
+    "minute": "Minute",
+    "prevMonth": "Vorheriger Monat",
+    "nextMonth": "Nächster Monat",
+    "placeholderDate": "YYYY-MM-DD",
+    "placeholderTime": "HH:mm",
+    "placeholderDateTime": "YYYY-MM-DD HH:mm"
   },
   "dataGrid": {
     "systemColumns": {

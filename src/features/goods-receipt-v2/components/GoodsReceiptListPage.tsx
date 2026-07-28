@@ -8,9 +8,7 @@ import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { formatProjectDate, formatProjectNumber } from '@/lib/project-format';
 import { goodsReceiptV2Api } from '../api/goods-receipt.api';
 import { goodsReceiptEnumLabel, goodsReceiptEnumHint } from '../localization/enum-labels';
-import type {
-  GoodsReceiptGridRow,
-} from '../types/goods-receipt.types';
+import type { GoodsReceiptGridRow } from '../types/goods-receipt.types';
 import { previewReceiptLabelsPdf, printableLabels, printReceiptLabels } from '../utils/goods-receipt-label-output';
 import {
   GoodsReceiptDetailDialog,
