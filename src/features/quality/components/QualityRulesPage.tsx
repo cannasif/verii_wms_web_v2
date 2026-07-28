@@ -6,26 +6,63 @@ import {
   AdvancedDataGrid,
   type GridColumn,
 } from "@/components/shared/AdvancedDataGrid";
-import { PagedAppDropdown } from "@/components/shared/PagedAppDropdown";
 import { AppDropdown } from "@/components/shared/AppDropdown";
+import { OpsActionButton } from "@/components/shared/OpsActionButton";
+import { OPS_FIELD_CLASS } from "@/components/shared/ops-field-styles";
+import { PagedLookupDialog } from "@/components/shared/PagedLookupDialog";
 import { ResponsiveDialog } from "@/components/shared/ResponsiveDialog";
 import {
   systemColumns,
   requiredActionColumn,
 } from "@/components/shared/GridSystemColumns";
 import { OpsStatusBadge } from "@/components/shared/OpsStatusBadge";
-import { useAuthStore } from "@/stores/auth-store";
-import { qualityApi, type QualityRule } from "../api/quality.api";
+import type { DropdownPage } from "@/hooks/useDropdownInfiniteSearch";
 import { localizeEnumValue } from "@/lib/enum-localization";
+import { useAuthStore } from "@/stores/auth-store";
+import type { PagedResponse } from "@/types/api";
+import { qualityApi, type QualityRule } from "../api/quality.api";
+
+type StockOption = {
+  id: number;
+  erpStockCode: string;
+  stockName: string;
+};
+
+const toPagedResponse = <T,>(page: DropdownPage<T>): PagedResponse<T> => ({
+  data: page.items,
+  totalCount: page.totalCount,
+  pageNumber: page.pageNumber,
+  pageSize: page.pageSize,
+  totalPages:
+    page.totalPages ??
+    Math.max(1, Math.ceil(page.totalCount / Math.max(page.pageSize, 1))),
+  hasPreviousPage: page.pageNumber > 1,
+  hasNextPage: Boolean(page.hasNextPage),
+});
+
 export function QualityRulesPage() {
   const branch = useAuthStore((s) => s.branch?.code ?? "0");
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [stock, setStock] = useState("");
+  const [stockLookupOpen, setStockLookupOpen] = useState(false);
+  const [selectedStock, setSelectedStock] = useState<StockOption | null>(null);
   const [mode, setMode] = useState("InspectionRequired");
   const [sampling, setSampling] = useState("All");
   const [value, setValue] = useState("100");
   const [fail, setFail] = useState("Quarantine");
+
+  const stockDisplay = selectedStock
+    ? `${selectedStock.erpStockCode} · ${selectedStock.stockName}`
+    : "";
+
+  const resetForm = () => {
+    setSelectedStock(null);
+    setMode("InspectionRequired");
+    setSampling("All");
+    setValue("100");
+    setFail("Quarantine");
+  };
+
   const remove = useCallback(
     async (id: number) => {
       try {
@@ -40,6 +77,7 @@ export function QualityRulesPage() {
     },
     [qc],
   );
+
   const columns = useMemo<GridColumn<QualityRule>[]>(
     () => [
       ...systemColumns<QualityRule>(),
@@ -89,14 +127,17 @@ export function QualityRulesPage() {
     ],
     [remove],
   );
+
   const create = async () => {
-    if (!stock) return;
-    const [id] = stock.split("|");
+    if (!selectedStock) {
+      toast.error("Stok seçiniz.");
+      return;
+    }
     try {
       await qualityApi.createRule({
         branchCode: branch,
         scopeType: "Stock",
-        stockId: Number(id),
+        stockId: selectedStock.id,
         stockGroupCode: null,
         inspectionMode: mode,
         samplingMode: sampling,
@@ -111,7 +152,7 @@ export function QualityRulesPage() {
         description: null,
       });
       setOpen(false);
-      setStock("");
+      resetForm();
       await qc.invalidateQueries({
         queryKey: ["advanced-grid", "quality-rules"],
       });
@@ -120,6 +161,7 @@ export function QualityRulesPage() {
       toast.error(e instanceof Error ? e.message : "Oluşturulamadı.");
     }
   };
+
   return (
     <section className="space-y-4">
       <AdvancedDataGrid<QualityRule>
@@ -131,6 +173,7 @@ export function QualityRulesPage() {
         toolbarAction={{
           label: "Yeni kalite kuralı",
           run: async () => {
+            resetForm();
             setOpen(true);
           },
         }}
@@ -141,26 +184,47 @@ export function QualityRulesPage() {
           title="Yeni kalite kuralı"
           className="!max-w-2xl"
         >
-          <h2 className="text-xl font-bold">Yeni kalite kuralı</h2>
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2">
             <Field label="Stok">
-              <PagedAppDropdown
-                queryKey={["quality-stocks", branch]}
-                fetchPage={(r) => qualityApi.stocks(r, branch)}
-                toOption={(x) => ({
-                  value: `${x.id}|${x.erpStockCode}`,
-                  label: `${x.erpStockCode} · ${x.stockName}`,
-                })}
-                value={stock}
-                onValueChange={setStock}
-                searchable
-                minSearchLength={2}
+              <PagedLookupDialog<StockOption>
+                variant="ops"
+                autoSearchMinLength={2}
+                open={stockLookupOpen}
+                onOpenChange={setStockLookupOpen}
+                title="Stok seçimi"
+                value={stockDisplay}
+                placeholder="Seçiniz"
+                searchPlaceholder="Stok kod / ad ara…"
+                emptyText="Stok bulunamadı."
+                triggerClassName={OPS_FIELD_CLASS}
+                queryKey={["quality-stocks-lookup", branch]}
+                fetchPage={async ({ pageNumber, pageSize, search, signal }) =>
+                  toPagedResponse(
+                    await qualityApi.stocks(
+                      {
+                        pageNumber,
+                        pageSize,
+                        search,
+                        sortBy: "erpStockCode",
+                        sortDirection: "asc",
+                        signal: signal ?? new AbortController().signal,
+                      },
+                      branch,
+                    ),
+                  )
+                }
+                getKey={(item) => String(item.id)}
+                getLabel={(item) =>
+                  `${item.erpStockCode} · ${item.stockName}`
+                }
+                onSelect={setSelectedStock}
               />
             </Field>
             <Field label="Kontrol modu">
               <AppDropdown
                 value={mode}
                 onValueChange={setMode}
+                portalContainer={null}
                 options={["QuickCheck", "InspectionRequired"].map((value) => ({
                   value,
                   label: value,
@@ -171,6 +235,7 @@ export function QualityRulesPage() {
               <AppDropdown
                 value={sampling}
                 onValueChange={setSampling}
+                portalContainer={null}
                 options={[
                   "All",
                   "Percentage",
@@ -192,6 +257,7 @@ export function QualityRulesPage() {
               <AppDropdown
                 value={fail}
                 onValueChange={setFail}
+                portalContainer={null}
                 options={[
                   "Quarantine",
                   "Reject",
@@ -202,25 +268,28 @@ export function QualityRulesPage() {
             </Field>
           </div>
           <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <button
-              className="min-h-11 rounded-xl border px-4 py-2"
+            <OpsActionButton
+              type="button"
+              variant="secondary"
               onClick={() => setOpen(false)}
             >
               Vazgeç
-            </button>
-            <button
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-cyan-600 px-4 py-2 font-semibold text-white"
+            </OpsActionButton>
+            <OpsActionButton
+              type="button"
+              variant="primary"
               onClick={() => void create()}
             >
               <Plus className="size-4" />
               Oluştur
-            </button>
+            </OpsActionButton>
           </div>
         </ResponsiveDialog>
       )}
     </section>
   );
 }
+
 function Field({
   label,
   children,
@@ -229,9 +298,9 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <label className="space-y-1.5 text-sm">
+    <div className="space-y-1.5 text-sm">
       <span className="font-semibold">{label}</span>
       {children}
-    </label>
+    </div>
   );
 }

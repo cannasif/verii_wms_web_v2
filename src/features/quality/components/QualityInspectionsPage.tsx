@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState, type ReactElement } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Eye, Loader2, ShieldCheck, X } from "lucide-react";
+import { ChevronDown, Loader2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import {
   AdvancedDataGrid,
@@ -9,7 +9,6 @@ import {
 } from "@/components/shared/AdvancedDataGrid";
 import { requiredActionColumn } from "@/components/shared/GridSystemColumns";
 import { AppDropdown } from "@/components/shared/AppDropdown";
-import { ResponsiveDialog } from "@/components/shared/ResponsiveDialog";
 import { OpsStatusBadge, inferOpsStatusTone } from "@/components/shared/OpsStatusBadge";
 import { localizeEnumValue } from "@/lib/enum-localization";
 import {
@@ -29,6 +28,7 @@ export function QualityInspectionsPage({
   quarantineOnly?: boolean;
 }): ReactElement {
   const queryClient = useQueryClient();
+  const [expandedId, setExpandedId] = useState<number | null>(null);
   const [detail, setDetail] = useState<QualityInspectionDetail | null>(null);
   const [loading, setLoading] = useState<number | null>(null);
   const pageKey = quarantineOnly ? "quality-quarantine" : "quality-inspections";
@@ -47,16 +47,25 @@ export function QualityInspectionsPage({
       ),
     [quarantineOnly],
   );
-  const open = useCallback(async (id: number) => {
-    setLoading(id);
-    try {
-      setDetail(await qualityApi.inspection(id));
-    } catch (error) {
-      toast.error(message(error, "Kalite detayı alınamadı."));
-    } finally {
-      setLoading(null);
-    }
-  }, []);
+  const toggle = useCallback(
+    async (id: number) => {
+      if (expandedId === id) {
+        setExpandedId(null);
+        setDetail(null);
+        return;
+      }
+      setLoading(id);
+      try {
+        setDetail(await qualityApi.inspection(id));
+        setExpandedId(id);
+      } catch (error) {
+        toast.error(message(error, "Kalite detayı alınamadı."));
+      } finally {
+        setLoading(null);
+      }
+    },
+    [expandedId],
+  );
   const columns = useMemo<GridColumn<QualityInspection>[]>(
     () => [
       {
@@ -65,7 +74,19 @@ export function QualityInspectionsPage({
         sortable: true,
         filterable: true,
         render: (r) => (
-          <span className="font-mono font-semibold">{r.inspectionNo}</span>
+          <button
+            type="button"
+            onClick={() => void toggle(r.id)}
+            className="inline-flex items-center gap-1.5 font-mono font-semibold text-cyan-600 hover:underline dark:text-cyan-300"
+            aria-expanded={expandedId === r.id}
+          >
+            <ChevronDown
+              className={`size-3.5 shrink-0 transition-transform ${
+                expandedId === r.id ? "rotate-180" : ""
+              }`}
+            />
+            {r.inspectionNo}
+          </button>
         ),
       },
       {
@@ -76,19 +97,23 @@ export function QualityInspectionsPage({
         render: (r) => r.sourceWaybillNo || "—",
       },
       {
+        key: "sourceDocumentNo",
+        label: "Kaynak Belge",
+        sortable: true,
+        filterable: true,
+        render: (r) => (
+          <span className="font-mono text-xs">{r.sourceDocumentNo || "—"}</span>
+        ),
+      },
+      {
         key: "sourceDocumentType",
         label: "Evrak Tipi",
         sortable: true,
         filterable: true,
         render: (r) =>
-          localizeEnumValue(r.sourceDocumentType === "GR" ? "GoodsReceipt" : r.sourceDocumentType),
-      },
-      {
-        key: "sourceDocumentNo",
-        label: "Mal Kabul No",
-        sortable: true,
-        filterable: true,
-        render: (r) => r.sourceDocumentNo,
+          localizeEnumValue(
+            r.sourceDocumentType === "GR" ? "GoodsReceipt" : r.sourceDocumentType,
+          ),
       },
       {
         key: "createdByName",
@@ -98,11 +123,26 @@ export function QualityInspectionsPage({
         render: (r) => r.createdByName || `Kullanıcı #${r.createdBy ?? "—"}`,
       },
       {
+        key: "lineCount",
+        label: "Kalem",
+        sortable: true,
+        filterable: true,
+        render: (r) => (
+          <span className="font-mono text-xs">
+            {r.lineCount} · {formatProjectNumber(r.totalQuantity)}
+          </span>
+        ),
+      },
+      {
         key: "status",
         label: "Durum",
         sortable: true,
         filterable: true,
-        render: (r) => <OpsStatusBadge tone={inferOpsStatusTone(r.status)}>{localizeEnumValue(r.status)}</OpsStatusBadge>,
+        render: (r) => (
+          <OpsStatusBadge tone={inferOpsStatusTone(r.status)}>
+            {localizeEnumValue(r.status)}
+          </OpsStatusBadge>
+        ),
       },
       {
         key: "createdAtUtc",
@@ -112,15 +152,8 @@ export function QualityInspectionsPage({
         render: (r) => formatProjectDateTime(r.createdAtUtc),
       },
       {
-        key: "queuedAtUtc",
-        label: "Kaliteye Gönderilme",
-        sortable: true,
-        filterable: true,
-        render: (r) => formatProjectDateTime(r.queuedAtUtc ?? r.createdAtUtc),
-      },
-      {
         key: "decidedAtUtc",
-        label: "Kalite Onay Tarihi",
+        label: "Kalite Onay",
         sortable: true,
         filterable: true,
         render: (r) =>
@@ -128,60 +161,81 @@ export function QualityInspectionsPage({
       },
       {
         key: "actions",
-        label: "İşlemler",
+        label: "Detay",
         ...requiredActionColumn,
         render: (r) => (
           <button
             type="button"
-            onClick={() => void open(r.id)}
+            onClick={() => void toggle(r.id)}
             disabled={loading === r.id}
-            className="rounded-lg p-2 text-cyan-500 hover:bg-cyan-500/10"
-            aria-label="Kalite kontrolünü aç"
+            className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-cyan-500 hover:bg-cyan-500/10"
+            aria-label="Kalite satır detayını aç"
+            aria-expanded={expandedId === r.id}
           >
             {loading === r.id ? (
               <Loader2 className="size-4 animate-spin" />
             ) : (
-              <Eye className="size-4" />
+              <ChevronDown
+                className={`size-4 transition-transform ${expandedId === r.id ? "rotate-180" : ""}`}
+              />
             )}
+            <span className="text-xs font-semibold">
+              {expandedId === r.id ? "Gizle" : "Aç"}
+            </span>
           </button>
         ),
       },
     ],
-    [loading, open],
+    [expandedId, loading, toggle],
   );
   const decided = async () => {
+    setExpandedId(null);
     setDetail(null);
     await queryClient.invalidateQueries({
       queryKey: ["advanced-grid", pageKey],
     });
   };
   return (
-    <>
-      <AdvancedDataGrid<QualityInspection>
-        pageKey={pageKey}
-        title={
-          quarantineOnly ? "Karantina Karar Kuyruğu" : "Kalite İnceleme Listesi"
-        }
-        description={
-          quarantineOnly
-            ? "Karantinadaki ürünleri yetkili biçimde serbest bırakın, reddedin veya iade edin."
-            : "Tamamlanan mal kabullerin özetini görüntüleyin; stok, lot, seri ve karar ayrıntıları için kaydı açın."
-        }
-        columns={columns}
-        fetchPage={fetchPage}
-      />
-      {detail && (
-        <InspectionModal
-          detail={detail}
-          close={() => setDetail(null)}
-          decided={() => void decided()}
-        />
-      )}
-    </>
+    <AdvancedDataGrid<QualityInspection>
+      pageKey={pageKey}
+      title={
+        quarantineOnly ? "Karantina Karar Kuyruğu" : "Kalite İnceleme Listesi"
+      }
+      description={
+        quarantineOnly
+          ? "Karantinadaki ürünleri yetkili biçimde serbest bırakın, reddedin veya iade edin."
+          : "Özet satırda irsaliye ve işlemi yapan görünür; satırı açınca stok / lot / seri ve karar detayı accordion içinde gelir."
+      }
+      emptyMessage={
+        quarantineOnly
+          ? "Karantinada kayıt yok."
+          : "Henüz kuyrukta kalite kaydı yok. Siparişli emir oluşturmak yetmez — Emir Yönetimi veya Bana Atanan Emirler’den fiziksel kabulü bitirince bu listeye düşer."
+      }
+      columns={columns}
+      fetchPage={fetchPage}
+      expandedRowId={expandedId}
+      onRowDoubleClick={(row) => void toggle(row.id)}
+      renderExpandedRow={(row) =>
+        detail && detail.header.id === row.id ? (
+          <InspectionDetailPanel
+            detail={detail}
+            close={() => {
+              setExpandedId(null);
+              setDetail(null);
+            }}
+            decided={() => void decided()}
+          />
+        ) : (
+          <div className="flex items-center gap-2 text-sm text-slate-500">
+            <Loader2 className="size-4 animate-spin" /> Detay yükleniyor...
+          </div>
+        )
+      }
+    />
   );
 }
 
-function InspectionModal({
+function InspectionDetailPanel({
   detail,
   close,
   decided,
@@ -253,19 +307,13 @@ function InspectionModal({
     }
   };
   return (
-    <ResponsiveDialog
-      onClose={close}
-      title={`Kalite İncelemesi ${detail.header.inspectionNo}`}
-      className="!max-w-6xl"
-    >
-      <header className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
+    <div className="space-y-4 rounded-2xl border-l-4 border-l-cyan-500 border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-4 shadow-sm">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-cyan-500">
-            Kalite İncelemesi
+            Accordion · satır detayı
           </p>
-          <h2 className="truncate text-xl font-bold">
-            {detail.header.inspectionNo}
-          </h2>
+          <h3 className="text-lg font-bold">{detail.header.inspectionNo}</h3>
           <p className="text-sm text-slate-500">
             {detail.header.sourceDocumentNo} · {detail.header.warehouseCode}{" "}
             {detail.header.warehouseName}
@@ -273,14 +321,13 @@ function InspectionModal({
         </div>
         <button
           type="button"
-          aria-label="Kapat"
           onClick={close}
-          className="grid size-11 shrink-0 place-items-center rounded-lg border border-[var(--wms-app-border)]"
+          className="rounded-lg border border-[var(--wms-app-border)] px-3 py-1.5 text-xs font-semibold"
         >
-          <X className="size-5" />
+          Kapat
         </button>
-      </header>
-      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Info label="Durum" value={localizeEnumValue(detail.header.status)} />
         <Info
           label="Evrak Tipi"
@@ -291,11 +338,18 @@ function InspectionModal({
           )}
         />
         <Info
-          label="Toplam"
-          value={formatProjectNumber(detail.header.totalQuantity)}
+          label="İrsaliye"
+          value={detail.header.sourceWaybillNo || "—"}
         />
         <Info
-          label="Oluşturma Tarihi"
+          label="İşlemi Yapan"
+          value={
+            detail.header.createdByName ||
+            `Kullanıcı #${detail.header.createdBy ?? "—"}`
+          }
+        />
+        <Info
+          label="Oluşturma"
           value={formatProjectDateTime(detail.header.createdAtUtc)}
         />
         <Info
@@ -312,15 +366,19 @@ function InspectionModal({
               : "—"
           }
         />
+        <Info
+          label="Toplam"
+          value={formatProjectNumber(detail.header.totalQuantity)}
+        />
       </div>
       {detail.requireManagerApprovalForRelease &&
         detail.header.status === "Quarantined" && (
-          <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-600">
+          <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-600">
             Karantinadan serbest bırakma işlemi ayrı yönetici yetkisi
             gerektirir.
           </div>
         )}
-      <div className="mt-5 overflow-x-auto rounded-xl border border-[var(--wms-app-border)]">
+      <div className="overflow-x-auto rounded-xl border border-[var(--wms-app-border)]">
         <table className="w-full text-sm">
           <thead className="bg-black/5 text-left dark:bg-white/5">
             <tr>
@@ -349,20 +407,18 @@ function InspectionModal({
                 </td>
                 <td className="p-3">
                   <strong>{line.stockCode}</strong>
-                  <div className="text-xs text-slate-500">
-                    {line.stockName} {line.yapCode && `· ${line.yapCode}`}
-                  </div>
+                  <div className="text-xs text-slate-500">{line.stockName}</div>
                 </td>
-                <td className="p-3">
+                <td className="p-3 font-mono text-xs">
                   {line.lotNo || "—"} / {line.serialNo || "—"}
                 </td>
                 <td className="p-3">
                   {line.expiryDate ? formatProjectDate(line.expiryDate) : "—"}
                 </td>
-                <td className="p-3 text-right">
+                <td className="p-3 text-right font-mono">
                   {formatProjectNumber(line.quantity)}
                 </td>
-                <td className="p-3 text-right">
+                <td className="p-3 text-right font-mono">
                   {formatProjectNumber(line.sampleQuantity)}
                 </td>
                 <td className="p-3">{localizeEnumValue(line.decision)}</td>
@@ -372,31 +428,29 @@ function InspectionModal({
         </table>
       </div>
       {!final && (
-        <section className="mt-5 grid gap-4 rounded-xl border border-[var(--wms-app-border)] p-4 md:grid-cols-2">
-          <label className="space-y-1 text-sm">
+        <section className="grid gap-3 rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-4 md:grid-cols-2">
+          <label className="space-y-1.5 text-sm">
             <span className="font-semibold">Karar</span>
             <AppDropdown
-              value={decision}
+              value={decision || null}
               onValueChange={setDecision}
               options={options}
               placeholder="Karar seçin"
-              searchable={false}
             />
           </label>
-          <label className="space-y-1 text-sm">
-            <span className="font-semibold">Neden Kodu</span>
+          <label className="space-y-1.5 text-sm">
+            <span className="font-semibold">Neden kodu</span>
             <input
               className="input"
-              maxLength={100}
               value={reasonCode}
               onChange={(e) => setReasonCode(e.target.value)}
-              placeholder="HASAR, UYGUNSUZLUK..."
+              placeholder="Ret / karantina / iade için"
             />
           </label>
-          <label className="space-y-1 text-sm md:col-span-2">
-            <span className="font-semibold">Açıklama</span>
+          <label className="space-y-1.5 text-sm md:col-span-2">
+            <span className="font-semibold">Not</span>
             <textarea
-              className="input min-h-24"
+              className="input min-h-20"
               maxLength={1000}
               value={note}
               onChange={(e) => setNote(e.target.value)}
@@ -425,7 +479,7 @@ function InspectionModal({
           </div>
         </section>
       )}
-    </ResponsiveDialog>
+    </div>
   );
 }
 
