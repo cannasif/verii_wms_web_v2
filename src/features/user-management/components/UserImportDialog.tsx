@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { Dialog, DialogTitle } from '@/components/ui/dialog';
 import { OpsDialogBody, OpsDialogContent, OpsDialogFooter, OpsDialogHeader } from '@/components/shared/OpsDialogShell';
 import { userManagementApi } from '../api/user-management.api';
-import type { PermissionGroupOption, UserImportResult, UserImportRowStatus } from '../types/user-management.types';
+import type { UserImportResult, UserImportRowStatus } from '../types/user-management.types';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
@@ -18,7 +18,7 @@ export function UserImportDialog({ open, onOpenChange, onImported }: UserImportD
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [result, setResult] = useState<UserImportResult | null>(null);
-  const [groups, setGroups] = useState<PermissionGroupOption[]>([]);
+  const [downloading, setDownloading] = useState(false);
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
@@ -26,9 +26,6 @@ export function UserImportDialog({ open, onOpenChange, onImported }: UserImportD
     setFile(null);
     setResult(null);
     if (inputRef.current) inputRef.current.value = '';
-    void userManagementApi.getActiveGroups()
-      .then(setGroups)
-      .catch(() => setGroups([]));
   }, [open]);
 
   const selectFile = (selected: File | null) => {
@@ -71,6 +68,27 @@ export function UserImportDialog({ open, onOpenChange, onImported }: UserImportD
     }
   };
 
+  const downloadTemplate = async () => {
+    setDownloading(true);
+    try {
+      const blob = await userManagementApi.downloadImportTemplate();
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = 'wms-kullanici-aktarim-sablonu.xlsx';
+      anchor.style.display = 'none';
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
+      toast.success('Güncel yetki gruplarıyla Excel şablonu indirildi.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Excel şablonu indirilemedi.');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => { if (!uploading) onOpenChange(nextOpen); }}>
       <OpsDialogContent size="xl">
@@ -104,14 +122,15 @@ export function UserImportDialog({ open, onOpenChange, onImported }: UserImportD
                   <h3 className="font-semibold">1. Şablonu hazırlayın</h3>
                   <p className="text-sm text-slate-500">Başlıkları ve sıralamayı değiştirmeden “Kullanıcılar” sayfasını doldurun.</p>
                 </div>
-                <a
-                  href="/templates/wms-kullanici-aktarim-sablonu.xlsx"
-                  download
-                  className="inline-flex items-center gap-2 rounded-xl border border-[var(--wms-brand-primary)] px-4 py-2 text-sm font-semibold text-[var(--wms-brand-primary)]"
+                <button
+                  type="button"
+                  disabled={downloading}
+                  onClick={() => void downloadTemplate()}
+                  className="inline-flex items-center gap-2 rounded-xl border border-[var(--wms-brand-primary)] px-4 py-2 text-sm font-semibold text-[var(--wms-brand-primary)] disabled:opacity-50"
                 >
-                  <Download className="size-4" />
-                  Excel Şablonunu İndir
-                </a>
+                  {downloading ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}
+                  {downloading ? 'Hazırlanıyor…' : 'Güncel Excel Şablonunu İndir'}
+                </button>
               </div>
 
               <label className="block rounded-xl border border-dashed p-6 text-center transition hover:border-[var(--wms-brand-primary)]">
@@ -136,16 +155,18 @@ export function UserImportDialog({ open, onOpenChange, onImported }: UserImportD
             </section>
 
             <section className="rounded-xl border p-4">
-              <h3 className="font-semibold">Aktif yetki grupları</h3>
-              <p className="mb-3 text-xs text-slate-500">PermissionGroupIds kolonuna ID’leri virgül veya noktalı virgülle yazın. Boş bırakılabilir.</p>
-              <div className="max-h-52 space-y-1 overflow-auto text-sm">
-                {groups.length > 0 ? groups.map((group) => (
-                  <div key={group.id} className="flex items-center justify-between gap-3 rounded-lg bg-slate-100 px-3 py-2 dark:bg-slate-900">
-                    <span className="truncate">{group.name}</span>
-                    <code className="font-semibold">{group.id}</code>
-                  </div>
-                )) : <p className="text-slate-500">Yetki grubu seçimi zorunlu değildir.</p>}
+              <h3 className="font-semibold">Çoklu yetki grubu seçimi</h3>
+              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                Şablon indirilirken o anda aktif olan yetki grupları API’den okunur ve her biri ayrı bir
+                <strong> true / false</strong> açılır seçim kolonu olarak eklenir.
+              </p>
+              <div className="mt-4 rounded-lg bg-slate-100 p-3 text-sm dark:bg-slate-900">
+                Aynı kullanıcıyı birden fazla gruba atamak için ilgili grup kolonlarının her birinde
+                <strong> true</strong> seçin. Seçilmeyenleri boş veya false bırakabilirsiniz.
               </div>
+              <p className="mt-3 text-xs text-slate-500">
+                “Yetki Grupları” sayfası indirme anındaki aktif grupların ID, ad ve açıklamalarını da içerir.
+              </p>
             </section>
           </div>
 
