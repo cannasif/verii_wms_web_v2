@@ -57,7 +57,7 @@ const isImageFile=(file:File)=>file.type.startsWith('image/')||(!file.type&&imag
 const validImage=(file:File)=>isImageFile(file)&&file.size<=8*1024*1024;
 const norm=(v?:string|null)=>(v??'').trim().toLocaleLowerCase('tr-TR');
 
-export function VehicleCheckInPage(){
+export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embedded?:boolean;initialId?:number;onCompleted?:()=>void}={}){
   const {t}=useTranslation('common');
   const [searchParams,setSearchParams]=useSearchParams();
   const branch=useAuthStore(s=>s.branch?.code??'0');
@@ -135,7 +135,7 @@ export function VehicleCheckInPage(){
     }),
   });
 
-  const candidateRows=candidates.data?.items??[];
+  const candidateRows=useMemo(()=>candidates.data?.items??[],[candidates.data?.items]);
   const hydratedMatch=useMemo(()=>{
     const q=norm(sheetInput);
     if(q.length<2||!candidateRows.length)return null;
@@ -177,14 +177,14 @@ export function VehicleCheckInPage(){
   },[hydrate]);
 
   useEffect(()=>{
-    const id=Number(searchParams.get('id'));
+    const id=initialId??Number(searchParams.get('id'));
     if(!Number.isFinite(id)||id<=0)return;
     setBusy(true);
     void vehicleCheckInApi.get(id)
       .then(hydrateWithAcceptance)
       .catch(error=>toast.error(error instanceof Error?error.message:t('vehicleCheckIn.toast.fetchRecordFailed',{defaultValue:'Araç kaydı getirilemedi.'})))
       .finally(()=>setBusy(false));
-  },[hydrateWithAcceptance,searchParams]);
+  },[hydrateWithAcceptance,initialId,searchParams,t]);
 
   useEffect(()=>{
     const q=sheetInput.trim();
@@ -275,13 +275,14 @@ export function VehicleCheckInPage(){
         note:form.note||undefined,
       },vehicleFiles,selectedPlates.flatMap(item=>(plateFiles[item.row.id]??[]).map(file=>({lineId:item.row.id,file}))));
       hydrate(result.vehicle);
-      setSearchParams({id:String(result.vehicle.header.id)},{replace:true});
+      if(!embedded)setSearchParams({id:String(result.vehicle.header.id)},{replace:true});
       setCompleted(result);
       setVehicleFiles([]);
       setPlateFiles({});
       setSelected({});
       setIdempotencyKey(crypto.randomUUID());
       setCandidateSearch(current=>current?{...current,run:current.run+1}:current);
+      onCompleted?.();
       toast.success(result.replayed?t('vehicleCheckIn.toast.alreadyCompleted',{defaultValue:'Bu araç ve SAC kabulü daha önce tamamlandı.'}):t('vehicleCheckIn.toast.completed',{defaultValue:'Araç giriş ve SAC kabulü başarıyla tamamlandı.'}));
     }catch(error){toast.error(error instanceof Error?error.message:t('vehicleCheckIn.toast.completeFailed',{defaultValue:'Araç giriş ve SAC kabulü tamamlanamadı.'}))}
     finally{setBusy(false)}
@@ -290,11 +291,11 @@ export function VehicleCheckInPage(){
   const entryText=record?formatProjectDateTime(record.header.checkedInAtUtc):t('vehicleCheckIn.entryTimePlaceholder',{defaultValue:'Kabul sırasında UTC olarak oluşturulur.'});
 
   return <section className="space-y-5">
-    <header>
+    {!embedded&&<header>
       <p className="text-xs font-bold uppercase tracking-[.2em] text-cyan-500">{t('vehicleCheckIn.pageEyebrow',{defaultValue:'Mal Kabul · SAC İşlemleri · Araç + Saha Kabul'})}</p>
       <h1 className="mt-1 text-2xl font-black">{t('vehicleCheckIn.pageTitle',{defaultValue:'Araç Giriş ve SAC Kabul'})}</h1>
       <p className="max-w-5xl text-sm text-slate-500">{t('vehicleCheckIn.pageDescription',{defaultValue:'Araç bilgisi, saha kabul, seçilen levhalar, görseller ve kabul konumları tek işlemde kaydedilir. Seri yazınca eşleşen levha bilgisi otomatik gelir.'})}</p>
-    </header>
+    </header>}
 
     <Panel title={t('vehicleCheckIn.section.vehicleInfo',{defaultValue:'1 · Araç ve sürücü bilgileri'})} icon={<CarFront className="size-5"/>}>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

@@ -6263,20 +6263,24 @@
       "eyebrow": "Mal Kabul · SAC İşlemleri",
       "steps": {
         "gate": {
-          "label": "Araç Kayıtları",
-          "description": "Liste, yeni kabul ve güncelleme"
+          "label": "Araç / Saha Kabul",
+          "description": "Araç gelişi ve levha saha kabulü"
         },
         "plan": {
-          "label": "Beklenti Planı",
+          "label": "Dosya Yükle",
           "description": "Excel önizleme ve doğrulama"
+        },
+        "expected": {
+          "label": "Beklenen Levhalar",
+          "description": "Opsiyonel plan ve levha kontrolü"
         },
         "inspection": {
           "label": "Kalite Kontrol",
           "description": "Levha bazında kabul ve ret"
         },
         "receipt": {
-          "label": "Mal Kabul Emri",
-          "description": "Emre dönüştürme ve atama"
+          "label": "Alış İrsaliyesi",
+          "description": "Doğrudan mal kabul ve ERP gönderimi"
         },
         "placement": {
           "label": "Raf Yerleştirme",
@@ -6287,7 +6291,7 @@
     "importTransfer": {
       "title": "Beklenen Levha Aktarımı",
       "description": "Excel'i önce önizleyin; hatasız satırlar DCode korunarak idempotent biçimde kaydedilir.",
-      "notice": "Araç giriş kaydı zorunlu değildir; saha kabulü kapıdan başladıysa planı araç kaydıyla eşleştirmek uçtan uca izlenebilirlik sağlar.",
+      "notice": "Dosya yükleme yalnızca SAC beklenti planını oluşturur. Araç ve saha kabulü bir sonraki süreç adımında yapılır.",
       "vehicleCheckIn": "Araç Giriş Kaydı",
       "vehicleCheckInPh": "Kapı girişindeki aracı seçin (opsiyonel)",
       "supplier": "Tedarikçi",
@@ -6315,7 +6319,7 @@
       "colDCode": "DCode",
       "colErrors": "Hatalar",
       "rowsRead": "{{count}} satır okundu.",
-      "validationError": "Tedarikçi, depo, kabul rafı, belge serisi, referans ve Excel zorunludur.",
+      "validationError": "Tedarikçi, depo, mal kabul belge serisi, referans ve Excel zorunludur.",
       "saveSuccess": "SAC beklenti planı kaydedildi.",
       "previewReady": "Önizleme hazır.",
       "operationFailed": "İşlem başarısız."
@@ -6372,11 +6376,11 @@
       }
     },
     "operations": {
-      "receiptTitle": "SAC Mal Kabul Emri",
-      "receiptDescription": "Kontrolden geçen levhaları ortak mal kabul emrine dönüştürün ve operasyon kullanıcılarına atayın.",
+      "receiptTitle": "SAC Alış İrsaliyesi ve Mal Kabul",
+      "receiptDescription": "Excel aktarımı veya irsaliye numarasıyla levhaları bulun; onaylı ve ERP'ye aktarılmamış olanları doğrudan mal kabul edin.",
       "placementTitle": "SAC Raf Yerleştirme",
       "placementDescription": "Fiziksel kabulü tamamlanan levhaları raf doluluğunu görerek stok hareketiyle nihai konuma yerleştirin.",
-      "receiptTab": "Mal Kabul Emri",
+      "receiptTab": "Doğrudan Mal Kabul",
       "placementTab": "Raf Yerleştirme",
       "searchPlaceholder": "DCode, seri, stok, sipariş veya plan ara...",
       "pageLabel": "Sayfa {{page}} / {{totalPages}}",

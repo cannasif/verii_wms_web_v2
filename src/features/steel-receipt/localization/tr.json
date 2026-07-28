@@ -7,11 +7,11 @@
   "hub": {
     "eyebrow": "Mal Kabul · Sac İşlemleri",
     "title": "Sac Mal Kabul Süreç Merkezi",
-    "description": "Kapı girişinden kalite kararına, ortak mal kabul emrinden nihai raf yerleşimine kadar her levhayı DCode üzerinden izleyin.",
+    "description": "Excel beklenti aktarımından araç ve saha kabulüne, alış irsaliyesinden nihai raf yerleşimine kadar her levhayı DCode üzerinden izleyin.",
     "phases": {
-      "gate": { "title": "Kapı ve Beklenti", "description": "Araç, şoför, tedarikçi ve beklenen levha verisini operasyondan önce doğrulayın." },
+      "gate": { "title": "Dosya, Araç ve Beklenti", "description": "Önce Excel dosyasını yükleyin; araç/saha kabulünü yapın ve gerekirse beklenen levha listesini kontrol edin." },
       "quality": { "title": "Kontrol ve Karar", "description": "Her levhanın fiziksel varışını, miktarını ve kalite kararını kanıtlarıyla kaydedin." },
-      "putaway": { "title": "Kabul ve Yerleştirme", "description": "Onaylı levhaları emre dönüştürün; fiziksel kabul sonrası stok hareketiyle rafa alın." },
+      "putaway": { "title": "Alış İrsaliyesi ve Raflama", "description": "Onaylı levhaları doğrudan mal kabul edin, ERP politikasını çalıştırın ve ardından nihai rafa alın." },
       "report": { "title": "İzleme ve Raporlama", "description": "Levha izlenebilirliğini, bekleyen işleri ve operasyon istisnalarını tek merkezden izleyin." }
     },
     "cards": {
@@ -19,7 +19,7 @@
       "import": { "title": "Beklenti Aktarımı", "description": "Excel verisini önizleyin, doğrulayın ve DCode ile idempotent kaydedin." },
       "plans": { "title": "Sac Planları", "description": "Aktarım partilerini ve süreç durumlarını izleyin." },
       "inspection": { "title": "Varış ve Kalite Kontrolü", "description": "Geldi, eksik, kabul, kısmi kabul ve ret kararlarını yönetin." },
-      "receipt": { "title": "Mal Kabul Emri", "description": "Onaylı levhaları ortak emre aktarın ve depo personeline atayın." },
+      "receipt": { "title": "Alış İrsaliyesi / Mal Kabul", "description": "Excel referansı veya irsaliye numarasıyla onaylı levhaları doğrudan mal kabul edin." },
       "placement": { "title": "Saha / Raf Yerleştirme", "description": "Raf doluluğunu görerek nihai konumu ve istif sırasını kaydedin." },
       "reports": { "title": "Sac Operasyon Raporları", "description": "DCode, tedarikçi serisi, kalite, mal kabul ve yerleştirme durumlarını arayın." }
     }

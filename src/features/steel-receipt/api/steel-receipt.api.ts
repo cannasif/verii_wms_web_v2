@@ -1,6 +1,6 @@
 import {api} from '@/lib/axios';
 import type {GridPage,GridRequest} from '@/components/shared/AdvancedDataGrid';
-import type {SteelAttachment,SteelImportPreview,SteelImportRequest,SteelLineRow,SteelPlacementOccupancy,SteelPlanRow,ConvertResult,SteelReceiptConversionMode} from '../types/steel-receipt.types';
+import type {SteelAttachment,SteelImportPreview,SteelImportRequest,SteelLineRow,SteelPlacementOccupancy,SteelPlanRow,SteelReceiptSource,ConvertResult,SteelReceiptConversionMode} from '../types/steel-receipt.types';
 interface Envelope<T>{success:boolean;data:T;message?:string}
 const unwrap=<T,>(x:Envelope<T>):T=>{if(!x.success)throw new Error(x.message||'İşlem başarısız.');return x.data};
 export const steelReceiptApi={
@@ -9,6 +9,7 @@ export const steelReceiptApi={
   plansPaged:async(request:GridRequest):Promise<GridPage<SteelPlanRow>>=>unwrap(await api.post<Envelope<GridPage<SteelPlanRow>>>('/api/steel-receipts/paged',request)),
   linesPaged:async(request:GridRequest):Promise<GridPage<SteelLineRow>>=>unwrap(await api.post<Envelope<GridPage<SteelLineRow>>>('/api/steel-receipts/lines/paged',request)),
   receiptCandidatesPaged:async(request:GridRequest):Promise<GridPage<SteelLineRow>>=>unwrap(await api.post<Envelope<GridPage<SteelLineRow>>>('/api/steel-receipts/receipt/candidates/paged',request)),
+  receiptSource:async(reference:string):Promise<SteelReceiptSource>=>unwrap(await api.get<Envelope<SteelReceiptSource>>('/api/steel-receipts/receipt/source',{params:{reference}})),
   placementCandidatesPaged:async(request:GridRequest):Promise<GridPage<SteelLineRow>>=>unwrap(await api.post<Envelope<GridPage<SteelLineRow>>>('/api/steel-receipts/placement/candidates/paged',request)),
   line:async(id:number):Promise<SteelLineRow>=>unwrap(await api.get<Envelope<SteelLineRow>>(`/api/steel-receipts/lines/${id}`)),
   inspect:async(id:number,payload:{isArrived:boolean;arrivedQuantity:number;approvedQuantity:number;rejectedQuantity:number;rejectReason?:string;note?:string;rowVersion:string}):Promise<SteelLineRow>=>unwrap(await api.put<Envelope<SteelLineRow>>(`/api/steel-receipts/lines/${id}/inspection`,payload)),

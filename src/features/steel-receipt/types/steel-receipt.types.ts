@@ -7,7 +7,7 @@ export interface SteelImportLine {
 export interface SteelImportRequest {
   branchCode:string; importReferenceNo:string; sourceFileName:string; exportReferenceNo?:string;
   vehicleCheckInId?:number;
-  supplierId:number; targetWarehouseId:number; receivingLocationId:number; documentSeriesId:number;
+  supplierId:number; targetWarehouseId:number; receivingLocationId?:number; documentSeriesId:number;
   waybillNo?:string; waybillDate?:string; plannedArrivalAtUtc?:string; lines:SteelImportLine[];
 }
 export interface SteelImportPreviewLine {rowNumber:number;supplierSerialNo:string;stockCode?:string;action:string;existingDCode?:string;errors:string[]}
@@ -21,7 +21,12 @@ export interface SteelLineRow {id:number;planId:number;importReferenceNo:string;
   heatNumber?:string;certificateNumber?:string;expectedQuantity:number;arrivedQuantity:number;approvedQuantity:number;
   rejectedQuantity:number;unitCode:string;arrivalStatus:string;inspectionStatus:string;conversionStatus:string;
   putawayStatus:string;goodsReceiptNo?:string;goodsReceiptId?:number;targetWarehouseId:number;receivingLocationId:number;
-  goodsReceiptLineId?:number;createdBy?:number;createdDate?:string;updatedBy?:number;updatedDate?:string;rowVersion:string}
+  erpIntegrationStatus?:string;goodsReceiptLineId?:number;createdBy?:number;createdDate?:string;updatedBy?:number;updatedDate?:string;rowVersion:string}
+export interface SteelReceiptSource {
+  planId:number;importReferenceNo:string;sourceFileName:string;waybillNo?:string;waybillDate?:string;
+  supplierId:number;supplierCode:string;supplierName:string;status:string;totalLineCount:number;
+  totalExpectedQuantity:number;lines:SteelLineRow[];
+}
 export type SteelReceiptConversionMode='Task'|'Direct';
 export interface ConvertResult {
   goodsReceiptId:number;documentNo:string;taskId?:number;taskNo?:string;

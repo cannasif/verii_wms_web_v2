@@ -1,21 +1,18 @@
-import { ArrowRight, BarChart3, ClipboardCheck, FileSpreadsheet, Layers3, Loader2, Rows3, Truck } from 'lucide-react';
+import { ArrowRight, BarChart3, FileSpreadsheet, Layers3, Loader2, Rows3, Truck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 
 const phases = [
   { key: 'gate', number: '01', items: [
-    { key: 'vehicles', href: '/warehouse/goods-receipts/steel/vehicle-check-ins', icon: Truck },
     { key: 'import', href: '/warehouse/goods-receipts/steel/import', icon: FileSpreadsheet },
+    { key: 'vehicles', href: '/warehouse/goods-receipts/steel/vehicle-check-ins', icon: Truck },
     { key: 'plans', href: '/warehouse/goods-receipts/steel/plans', icon: Rows3 },
   ] },
-  { key: 'quality', number: '02', items: [
-    { key: 'inspection', href: '/warehouse/goods-receipts/steel/inspection', icon: ClipboardCheck },
-  ] },
-  { key: 'putaway', number: '03', items: [
+  { key: 'putaway', number: '02', items: [
     { key: 'receipt', href: '/warehouse/goods-receipts/steel/receipt', icon: Layers3 },
     { key: 'placement', href: '/warehouse/goods-receipts/steel/placement', icon: Layers3 },
   ] },
-  { key: 'report', number: '04', items: [
+  { key: 'report', number: '03', items: [
     { key: 'reports', href: '/warehouse/goods-receipts/steel/reports', icon: BarChart3 },
   ] },
 ] as const;

@@ -8,8 +8,6 @@ import {AppDropdown} from '@/components/shared/AppDropdown';
 import {AppDateInput} from '@/components/shared/AppInput';
 import {useAuthStore} from '@/stores/auth-store';
 import {goodsReceiptV2Api} from '@/features/goods-receipt-v2/api/goods-receipt.api';
-import {vehicleCheckInApi} from '@/features/vehicle-check-in/api/vehicle-check-in.api';
-import {localizeEnumValue} from '@/lib/enum-localization';
 import {steelReceiptApi} from '../api/steel-receipt.api';
 import type {SteelImportLine,SteelImportPreview,SteelImportRequest} from '../types/steel-receipt.types';
 import {SteelProcessHeader} from './SteelProcessHeader';
@@ -72,13 +70,13 @@ const downloadTemplate=async()=>{
 
 export function SteelReceiptImportPage(){
   const {t}=useTranslation('common');
-  const branch=useAuthStore(s=>s.branch?.code??'0');const [vehicle,setVehicle]=useState<string|null>(null);const [customer,setCustomer]=useState<string|null>(null);const [warehouse,setWarehouse]=useState<string|null>(null);
-  const [location,setLocation]=useState<string|null>(null);const [series,setSeries]=useState<Array<{id:number;code:string;name:string;previewDocumentNumber:string;isDefault:boolean}>>([]);
+  const branch=useAuthStore(s=>s.branch?.code??'0');const [customer,setCustomer]=useState<string|null>(null);const [warehouse,setWarehouse]=useState<string|null>(null);
+  const [series,setSeries]=useState<Array<{id:number;code:string;name:string;previewDocumentNumber:string;isDefault:boolean}>>([]);
   const [seriesId,setSeriesId]=useState<string|null>(null);const [reference,setReference]=useState('');const [exportRef,setExportRef]=useState('');
   const [waybill,setWaybill]=useState('');const [waybillDate,setWaybillDate]=useState(new Date().toLocaleDateString('en-CA'));const [plannedArrival,setPlannedArrival]=useState('');
   const [fileName,setFileName]=useState('');const [lines,setLines]=useState<SteelImportLine[]>([]);
   const [preview,setPreview]=useState<SteelImportPreview|null>(null);const [busy,setBusy]=useState(false);const warehouseId=Number(split(warehouse)[0]||0);
-  useEffect(()=>{setLocation(null);setSeries([]);setSeriesId(null);if(!warehouseId)return;void goodsReceiptV2Api.series(warehouseId).then(x=>{setSeries(x);setSeriesId(String((x.find(y=>y.isDefault)??x[0])?.id??''))})},[warehouseId]);
+  useEffect(()=>{setSeries([]);setSeriesId(null);void goodsReceiptV2Api.series().then(x=>{setSeries(x);setSeriesId(String((x.find(y=>y.isDefault)??x[0])?.id??''))})},[branch]);
   const onFile=async(e:ChangeEvent<HTMLInputElement>)=>{const file=e.target.files?.[0];if(!file)return;setFileName(file.name);setPreview(null);
     const XLSX=await import('xlsx');const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});const ws=wb.Sheets[wb.SheetNames[0]];const offset=headerRow(ws,XLSX);const rows=XLSX.utils.sheet_to_json<Record<string,unknown>>(ws,{defval:'',range:offset});
     const mapped=rows.map((r,i)=>({rowNumber:i+offset+2,netsisOrderNo:find(r,['NetsisOrderNo','Sipariş No','SiparisNo']),netsisOrderLineNo:find(r,['NetsisOrderLineNo','Sipariş Kalem No','SiparisKalemNo']),
@@ -88,19 +86,16 @@ export function SteelReceiptImportPage(){
       heatNumber:find(r,['HeatNumber','Heat Number','Döküm No','DokumNo'])||undefined,certificateNumber:find(r,['CertificateNumber','Certificate Number','Sertifika No'])||undefined}));
     setLines(mapped);if(!reference)setReference(file.name.replace(/\.[^.]+$/,''));toast.success(t(`${I}.rowsRead`,{count:mapped.length}))};
   const request=():SteelImportRequest=>({branchCode:branch,importReferenceNo:reference.trim(),sourceFileName:fileName,exportReferenceNo:exportRef.trim()||undefined,
-    vehicleCheckInId:vehicle?Number(vehicle):undefined,
-    supplierId:Number(split(customer)[0]),targetWarehouseId:warehouseId,receivingLocationId:Number(location),documentSeriesId:Number(seriesId),
+    supplierId:Number(split(customer)[0]),targetWarehouseId:warehouseId,documentSeriesId:Number(seriesId),
     waybillNo:waybill.trim()||undefined,waybillDate:waybillDate||undefined,plannedArrivalAtUtc:plannedArrival?new Date(plannedArrival).toISOString():undefined,lines});
-  const run=async(commit=false)=>{if(!customer||!warehouseId||!location||!seriesId||!reference.trim()||!lines.length){toast.error(t(`${I}.validationError`));return}
+  const run=async(commit=false)=>{if(!customer||!warehouseId||!seriesId||!reference.trim()||!lines.length){toast.error(t(`${I}.validationError`));return}
     setBusy(true);try{if(commit){await steelReceiptApi.commit(request());toast.success(t(`${I}.saveSuccess`));setLines([]);setPreview(null);setFileName('')}
       else{setPreview(await steelReceiptApi.preview(request()));toast.success(t(`${I}.previewReady`))}}catch(e){toast.error(e instanceof Error?e.message:t(`${I}.operationFailed`))}finally{setBusy(false)}};
   const previewBadges=[[t(`${I}.previewTotal`),preview?.totalRows],[t(`${I}.previewNew`),preview?.newRows],[t(`${I}.previewExisting`),preview?.existingRows],[t(`${I}.previewError`),preview?.errorRows]] as const;
   return <section className="space-y-5" data-no-auto-localize="true"><SteelProcessHeader currentStep="plan" title={t(`${I}.title`)} description={t(`${I}.description`)} notice={t(`${I}.notice`)}/>
     <div className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5"><div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-      <Field label={t(`${I}.vehicleCheckIn`)}><PagedAppDropdown queryKey={['steel-vehicle-check-ins',branch]} searchFields={['plateNo','driverFirstName','driverLastName']} fetchPage={r=>vehicleCheckInApi.paged({pageNumber:r.pageNumber,pageSize:r.pageSize,search:r.search??null,searchFields:r.searchFields,sortBy:'checkedInAtUtc',sortDirection:'desc',filterLogic:'and',filters:[{column:'branchCode',operator:'equals',value:branch}]})} toOption={x=>({value:String(x.id),label:`${x.plateNo} · ${x.driverFirstName??''} ${x.driverLastName??''}`.trim(),description:`${x.businessDate} · ${localizeEnumValue(x.status)}`})} value={vehicle} onValueChange={setVehicle} searchable placeholder={t(`${I}.vehicleCheckInPh`)}/></Field>
       <Field label={t(`${I}.supplier`)}><PagedAppDropdown queryKey={['steel-customers',branch]} fetchPage={r=>goodsReceiptV2Api.customers(r,branch)} toOption={x=>({value:`${x.id}|${x.customerCode}`,label:`${x.customerCode} · ${x.customerName}`})} value={customer} onValueChange={setCustomer} searchable minSearchLength={2}/></Field>
       <Field label={t(`${I}.targetWarehouse`)}><PagedAppDropdown queryKey={['steel-warehouses',branch]} fetchPage={r=>goodsReceiptV2Api.warehouses(r,branch)} toOption={x=>({value:`${x.id}|${x.warehouseCode}`,label:`${x.warehouseCode} · ${x.warehouseName}`})} value={warehouse} onValueChange={setWarehouse} searchable/></Field>
-      <Field label={t(`${I}.receivingLocation`)}><PagedAppDropdown queryKey={['steel-locations',warehouseId]} fetchPage={r=>goodsReceiptV2Api.locations(r,warehouseId)} toOption={x=>({value:String(x.id),label:`${x.code} · ${x.name}`,description:x.locationType})} enabled={warehouseId>0} dependencies={[warehouseId]} value={location} onValueChange={setLocation} searchable/></Field>
       <Field label={t(`${I}.documentSeries`)}><AppDropdown value={seriesId} onValueChange={setSeriesId} options={series.map(x=>({value:String(x.id),label:`${x.code} · ${x.name}`,description:x.previewDocumentNumber}))}/></Field>
       <Field label={t(`${I}.importReference`)}><input className="input" value={reference} onChange={e=>setReference(e.target.value)} maxLength={100}/></Field>
       <Field label={t(`${I}.exportReference`)}><input className="input" value={exportRef} onChange={e=>setExportRef(e.target.value)} maxLength={100}/></Field>
