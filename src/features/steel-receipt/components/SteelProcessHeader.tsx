@@ -4,7 +4,7 @@ import {InboundProcessHeader} from '@/features/inbound-operations/components/Inb
 
 const STEP_KEYS=['gate','plan','inspection','receipt','placement'] as const;
 const STEP_HREFS={
-  gate:'/warehouse/goods-receipts/steel/vehicle-check-ins',
+  gate:'/warehouse/goods-receipts/steel/vehicle-check-in',
   plan:'/warehouse/goods-receipts/steel/import',
   inspection:'/warehouse/goods-receipts/steel/inspection',
   receipt:'/warehouse/goods-receipts/steel/receipt',

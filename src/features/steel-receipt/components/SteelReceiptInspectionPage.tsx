@@ -1,7 +1,8 @@
 import {useEffect,useMemo,useState} from 'react';
+import {Link} from 'react-router-dom';
 import {useQuery,useQueryClient} from '@tanstack/react-query';
 import {useTranslation} from 'react-i18next';
-import {ClipboardCheck,ExternalLink,FileImage,Trash2,Upload} from 'lucide-react';
+import {CarFront,ClipboardCheck,ExternalLink,FileImage,Trash2,Upload} from 'lucide-react';
 import {toast} from 'sonner';
 import {AdvancedDataGrid,type GridColumn} from '@/components/shared/AdvancedDataGrid';
 import {systemColumns,requiredActionColumn} from '@/components/shared/GridSystemColumns';
@@ -33,7 +34,23 @@ export function SteelReceiptInspectionPage(){
     {key:'actions',label:t(`${G}.actions`),...requiredActionColumn,render:r=><button type="button" disabled={r.conversionStatus==='Created'} onClick={()=>setRow(r)} className="rounded-lg border border-cyan-500/30 px-3 py-1.5 text-xs font-bold text-cyan-500 disabled:opacity-30"><ClipboardCheck className="mr-1 inline size-3.5"/>{t(`${G}.inspectButton`)}</button>},
   ],[t,gridLanguage]);
   const done=async()=>{await cache.invalidateQueries({queryKey:['advanced-grid','steel-receipt-inspection']});setRow(null)};
-  return <div data-no-auto-localize="true"><SteelProcessHeader currentStep="inspection" title={t(`${P}.title`)} description={t(`${P}.description`)} notice={t(`${P}.notice`)}/><section className="my-5 rounded-2xl border bg-[var(--wms-app-surface)] p-5"><p className="text-xs font-bold uppercase tracking-[.2em] text-cyan-500">{t(`${P}.findBatchStep`)}</p><div className="mt-4 flex gap-2"><input className="input" value={batchInput} onChange={e=>setBatchInput(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')setBatchSearch(batchInput.trim())}} placeholder={t(`${P}.searchPlaceholder`)}/><button onClick={()=>setBatchSearch(batchInput.trim())} className="rounded-xl bg-cyan-600 px-5 font-bold text-white">{t(`${P}.searchButton`)}</button></div>
+  return <div data-no-auto-localize="true">
+    <SteelProcessHeader currentStep="inspection" title="Saha Kalite Onayı" description="Fiziksel saha kabulü araç giriş ekranında yapılır. Bu ekran onay / red / kısmi miktar kararları içindir." notice={t(`${P}.notice`)}/>
+    <section className="my-5 rounded-2xl border border-cyan-500/30 bg-cyan-500/5 p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <CarFront className="mt-0.5 size-5 text-cyan-500"/>
+          <div>
+            <strong className="block text-sm">Fiziksel saha kabul birleştirildi</strong>
+            <p className="text-xs text-slate-500">Araç plakası + levha seçimi + görseller artık <span className="font-semibold">Araç Giriş ve SAC Kabul</span> ekranında tek işlemde yapılır.</p>
+          </div>
+        </div>
+        <Link to="/warehouse/goods-receipts/steel/vehicle-check-in" className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-4 py-2 text-sm font-bold text-white">
+          <CarFront className="size-4"/>Araç / Saha Kabul
+        </Link>
+      </div>
+    </section>
+    <section className="my-5 rounded-2xl border bg-[var(--wms-app-surface)] p-5"><p className="text-xs font-bold uppercase tracking-[.2em] text-cyan-500">{t(`${P}.findBatchStep`)}</p><div className="mt-4 flex gap-2"><input className="input" value={batchInput} onChange={e=>setBatchInput(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')setBatchSearch(batchInput.trim())}} placeholder={t(`${P}.searchPlaceholder`)}/><button onClick={()=>setBatchSearch(batchInput.trim())} className="rounded-xl bg-cyan-600 px-5 font-bold text-white">{t(`${P}.searchButton`)}</button></div>
     {batchSearch.length>=2&&<div className="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-3">{(batches.data?.items??[]).map(item=><button key={item.id} onClick={()=>setRow(item)} className="rounded-xl border p-3 text-left hover:border-cyan-500"><strong className="font-mono text-cyan-500">{item.dCode}</strong><span className="ml-2 text-sm">{item.stockCode}</span><small className="block text-slate-500">{item.importReferenceNo} · {item.supplierSerialNo} · {localizeEnumValue(item.inspectionStatus)}</small></button>)}{!batches.isLoading&&!batches.data?.items.length&&<p className="text-sm text-slate-500">{t(`${P}.noMatch`)}</p>}</div>}</section>
     <AdvancedDataGrid pageKey="steel-receipt-inspection" title={t(`${G}.title`)} description={t(`${G}.description`)} columns={columns} fetchPage={steelReceiptApi.linesPaged}/>{row&&<InspectionDialog row={row} close={()=>setRow(null)} done={()=>void done()}/>}</div>;
 }

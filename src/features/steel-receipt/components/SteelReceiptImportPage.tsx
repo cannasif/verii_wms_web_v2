@@ -27,11 +27,46 @@ const downloadTemplate=async()=>{
   const rows=Array.from({length:8},(_,index)=>{
     const n=String(index+1).padStart(3,'0');
     const stock=String(index+2).padStart(3,'0');
-    return {'Sipariş No':'SIP-001','Sipariş Kalem No':String(index+1),'Stok Kodu':`01/${stock}`,'Yapılandırma Kodu':'','Seri No (Levha No)':`LVH-${n}`,'Seri-2 (Poz No)':`POZ-${n}`,'Miktar(Kg)':'1.234,50','Birim':'KG','Kombine Size':'1200x2400x8','Material Quality':'S235','Heat Number':`HEAT-${n}`,'Certificate Number':`CERT-${n}`};
+    return {
+      'Sipariş No':'SIP-001',
+      'Sipariş Kalem No':String(index+1),
+      'Stok Kodu':`01/${stock}`,
+      'Yapılandırma Kodu':'',
+      'Seri No (Levha No)':`LVH-${n}`,
+      'Seri-2 (Poz No)':`POZ-${n}`,
+      'Miktar(Kg)':'1.234,50',
+      'Birim':'KG',
+      'Kombine Size':'1200x2400x8',
+      'Material Quality':'S235',
+      'Heat Number':`HEAT-${n}`,
+      'Certificate Number':`CERT-${n}`,
+      'Export No':'EXP-2026-001',
+      'İrsaliye No':'',
+      'Not':'',
+    };
   });
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),'SAC Mal Kabul');
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['Kural','Açıklama'],['Seri','Her levha için tedarikçi seri zorunludur.'],['Miktar','1.234,50 ve 1234.50 biçimleri desteklenir.'],['Stok','Stok kodu ERP mirror kaydıyla eşleşmelidir.']]),'Kılavuz');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([
+    ['Alan','Zorunlu','Açıklama'],
+    ['Sipariş No','Evet','Netsis / ERP sipariş numarası'],
+    ['Sipariş Kalem No','Evet','Sipariş satır numarası'],
+    ['Stok Kodu','Evet','ERP mirror stok kodu ile birebir eşleşmeli'],
+    ['Yapılandırma Kodu','Hayır','Yap kodu varsa doldurun'],
+    ['Seri No (Levha No)','Evet','Her levha için benzersiz tedarikçi seri'],
+    ['Seri-2 (Poz No)','Hayır','İkincil / pozisyon seri'],
+    ['Miktar(Kg)','Evet','1.234,50 veya 1234.50 biçimleri desteklenir'],
+    ['Birim','Evet','Varsayılan KG'],
+    ['Kombine Size','Hayır','Ölçü bilgisi (örn. 1200x2400x8)'],
+    ['Material Quality','Hayır','Malzeme kalitesi / grade'],
+    ['Heat Number','Hayır','Döküm / heat numarası'],
+    ['Certificate Number','Hayır','Sertifika numarası'],
+    ['Export No','Hayır','Export referansı; ekranda da ayrı alana yazılabilir'],
+    ['İrsaliye No','Hayır','Bilgi amaçlı; belge no ekrandan da girilir'],
+    ['Not','Hayır','Satır notu'],
+    ['—','—','Boş satırlar yok sayılır. İlk satır başlık olmalıdır.'],
+    ['—','—','Dosya adı otomatik aktarım referansı önerisi olarak kullanılır.'],
+  ]),'Kılavuz');
   XLSX.writeFile(wb,'SAC_Mal_Kabul_Sablonu.xlsx');
 };
 

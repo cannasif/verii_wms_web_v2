@@ -1,6 +1,6 @@
 import {useCallback,useEffect,useMemo,useState,type ChangeEvent,type ReactNode} from 'react';
 import {useQuery} from '@tanstack/react-query';
-import {useSearchParams} from 'react-router-dom';
+import {Link,useSearchParams} from 'react-router-dom';
 import {
   Camera,
   CarFront,
@@ -52,6 +52,7 @@ const customerOption=(x:{id:number;customerCode:string;customerName:string})=>({
 const imageExtension=/\.(jpe?g|png|webp)$/i;
 const isImageFile=(file:File)=>file.type.startsWith('image/')||(!file.type&&imageExtension.test(file.name));
 const validImage=(file:File)=>isImageFile(file)&&file.size<=8*1024*1024;
+const norm=(v?:string|null)=>(v??'').trim().toLocaleLowerCase('tr-TR');
 
 export function VehicleCheckInPage(){
   const [searchParams,setSearchParams]=useSearchParams();
@@ -85,6 +86,18 @@ export function VehicleCheckInPage(){
       sortDirection:'asc',
     }),
   });
+
+  const candidateRows=candidates.data?.items??[];
+  const hydratedMatch=useMemo(()=>{
+    const q=norm(sheetInput);
+    if(q.length<2||!candidateRows.length)return null;
+    const exact=candidateRows.find(row=>
+      norm(row.supplierSerialNo)===q ||
+      norm(row.secondarySerialNo)===q ||
+      norm(row.dCode)===q
+    );
+    return exact??(candidateRows.length===1?candidateRows[0]:null);
+  },[candidateRows,sheetInput]);
 
   const patch=<K extends keyof SaveVehicleCheckInRequest>(key:K,value:SaveVehicleCheckInRequest[K])=>
     setForm(current=>({...current,[key]:value}));
@@ -124,6 +137,15 @@ export function VehicleCheckInPage(){
       .catch(error=>toast.error(error instanceof Error?error.message:'Araç kaydı getirilemedi.'))
       .finally(()=>setBusy(false));
   },[hydrateWithAcceptance,searchParams]);
+
+  useEffect(()=>{
+    const q=sheetInput.trim();
+    if(q.length<2)return;
+    const timer=window.setTimeout(()=>{
+      setCandidateSearch(current=>({value:q,run:(current?.run??0)+1}));
+    },400);
+    return ()=>window.clearTimeout(timer);
+  },[sheetInput]);
 
   const findToday=async()=>{
     if(!form.plateNo.trim()){toast.error('Plaka zorunludur.');return}
@@ -221,9 +243,9 @@ export function VehicleCheckInPage(){
 
   return <section className="space-y-5">
     <header>
-      <p className="text-xs font-bold uppercase tracking-[.2em] text-cyan-500">Mal Kabul · SAC İşlemleri · Araç Kabul</p>
+      <p className="text-xs font-bold uppercase tracking-[.2em] text-cyan-500">Mal Kabul · SAC İşlemleri · Araç + Saha Kabul</p>
       <h1 className="mt-1 text-2xl font-black">Araç Giriş ve SAC Kabul</h1>
-      <p className="max-w-5xl text-sm text-slate-500">Araç bilgisi, araç kanıtları, seçilen levhalar, levha görselleri ve kabul konumları tek işlemde kaydedilir. Bir adım başarısız olursa veritabanı işleminin tamamı geri alınır.</p>
+      <p className="max-w-5xl text-sm text-slate-500">Araç bilgisi, saha kabul, seçilen levhalar, görseller ve kabul konumları tek işlemde kaydedilir. Seri yazınca eşleşen levha bilgisi otomatik gelir.</p>
     </header>
 
     <Panel title="1 · Araç ve sürücü bilgileri" icon={<CarFront className="size-5"/>}>
@@ -250,14 +272,29 @@ export function VehicleCheckInPage(){
       </div>
     </Panel>
 
-    <Panel title="3 · Uygun SAC levhalarını bul" icon={<PackageSearch className="size-5"/>}>
+    <Panel title="3 · Seri / DCode ile SAC levha bul" icon={<PackageSearch className="size-5"/>}>
       <div className="grid gap-4 lg:grid-cols-[1fr_auto]">
-        <Field label="Seri, DCode, stok, sipariş veya Excel aktarım numarası">
-          <input className="input" value={sheetInput} onChange={event=>setSheetInput(event.target.value)} onKeyDown={event=>{if(event.key==='Enter'){event.preventDefault();runSheetSearch()}}} placeholder="Boş bırakırsanız bekleyen ilk uygun levhalar gelir"/>
+        <Field label="Seri no yazın — eşleşen levha bilgisi otomatik gelir">
+          <input className="input" value={sheetInput} onChange={event=>setSheetInput(event.target.value)} onKeyDown={event=>{if(event.key==='Enter'){event.preventDefault();runSheetSearch()}}} placeholder="Seri, DCode, stok, sipariş veya Excel no"/>
         </Field>
         <button type="button" onClick={runSheetSearch} disabled={candidates.isFetching} className="self-end rounded-xl bg-cyan-600 px-6 py-3 font-bold text-white disabled:opacity-50">{candidates.isFetching?<Loader2 className="size-4 animate-spin"/>:<><Search className="mr-2 inline size-4"/>SAC Bul</>}</button>
       </div>
-      {candidateSearch&&<CandidateTable rows={candidates.data?.items??[]} loading={candidates.isFetching} selected={selected} onToggle={togglePlate}/>}
+      {hydratedMatch&&(
+        <div className="mt-4 rounded-2xl border border-cyan-500/35 bg-cyan-500/10 p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest text-cyan-600">Eşleşen levha</p>
+              <strong className="mt-1 block font-mono text-lg text-cyan-700 dark:text-cyan-300">{hydratedMatch.dCode} · {hydratedMatch.supplierSerialNo}</strong>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{hydratedMatch.stockCode} · {hydratedMatch.stockName||'-'} · {formatProjectNumber(hydratedMatch.expectedQuantity)} {hydratedMatch.unitCode}</p>
+              <small className="text-slate-500">{hydratedMatch.combinedSize||'-'} · {hydratedMatch.materialGrade||'-'} · Excel {hydratedMatch.importReferenceNo} · {hydratedMatch.warehouseCode} / {hydratedMatch.receivingLocationCode}</small>
+            </div>
+            <button type="button" onClick={()=>togglePlate(hydratedMatch)} className="rounded-xl bg-cyan-600 px-4 py-2 text-sm font-bold text-white">
+              {selected[hydratedMatch.id]?'Seçimden çıkar':'Seçime ekle'}
+            </button>
+          </div>
+        </div>
+      )}
+      {candidateSearch&&<CandidateTable rows={candidateRows} loading={candidates.isFetching} selected={selected} onToggle={togglePlate}/>}
     </Panel>
 
     {selectedCount>0&&<Panel title={`4 · Seçilen levhalar (${selectedCount}/${form.steelSheetCount})`} icon={<MapPin className="size-5"/>}>
@@ -280,10 +317,11 @@ export function VehicleCheckInPage(){
     {completed&&<section className="rounded-2xl border border-emerald-500/40 bg-emerald-500/10 p-5">
       <h2 className="flex items-center gap-2 font-black text-emerald-600"><CheckCircle2 className="size-5"/>Kabul tamamlandı · #{completed.acceptanceId}</h2>
       <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{completed.vehicle.header.plateNo} plakalı araçla gelen {completed.plates.length} levha, araç ve Excel aktarım bilgileriyle ilişkilendirildi.</p>
+      <p className="mt-2 text-xs text-slate-500">Kalite/onay kararları için <Link className="font-semibold text-cyan-600 underline" to="/warehouse/goods-receipts/steel/inspection">Saha Kalite Onayı</Link> ekranını kullanın.</p>
     </section>}
 
     <div className="sticky bottom-4 z-10 flex flex-col gap-3 rounded-2xl border bg-[var(--wms-app-panel)] p-4 shadow-xl sm:flex-row sm:items-center sm:justify-between">
-      <div><strong>{selectedCount}/{form.steelSheetCount} levha hazır</strong><p className="text-xs text-slate-500">Araç + görseller + levha onayı + kabul konumu tek transaction.</p></div>
+      <div><strong>{selectedCount}/{form.steelSheetCount} levha hazır</strong><p className="text-xs text-slate-500">Araç + saha kabul + görseller + konum tek transaction.</p></div>
       <button type="button" onClick={()=>void complete()} disabled={busy||selectedCount!==form.steelSheetCount} className="rounded-xl bg-cyan-600 px-6 py-3 font-black text-white disabled:cursor-not-allowed disabled:opacity-40">{busy?<Loader2 className="mr-2 inline size-4 animate-spin"/>:<CheckCircle2 className="mr-2 inline size-4"/>}Araç Giriş ve SAC Kabul</button>
     </div>
   </section>;

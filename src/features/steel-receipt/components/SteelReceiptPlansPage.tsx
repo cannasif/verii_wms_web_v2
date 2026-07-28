@@ -1,7 +1,7 @@
 import {useMemo,useState} from 'react';
 import {useQuery} from '@tanstack/react-query';
 import {useTranslation} from 'react-i18next';
-import {Eye,Loader2} from 'lucide-react';
+import {ChevronRight,Eye,Loader2} from 'lucide-react';
 import {AdvancedDataGrid,type GridColumn} from '@/components/shared/AdvancedDataGrid';
 import {requiredActionColumn,systemColumns} from '@/components/shared/GridSystemColumns';
 import {OpsDialogBody,OpsDialogContent,OpsDialogHeader} from '@/components/shared/OpsDialogShell';
@@ -20,7 +20,17 @@ export function SteelReceiptPlansPage(){
   const [plan,setPlan]=useState<SteelPlanRow|null>(null);
   const columns=useMemo<GridColumn<SteelPlanRow>[]>(()=>[
     ...systemColumns<SteelPlanRow>(),
-    {key:'importReferenceNo',label:t(`${G}.importReferenceNo`),render:r=><span className="font-mono font-bold text-cyan-500">{r.importReferenceNo}</span>},
+    {key:'importReferenceNo',label:t(`${G}.importReferenceNo`),render:r=>(
+      <button
+        type="button"
+        onClick={()=>setPlan(r)}
+        className="group inline-flex max-w-full items-center gap-1.5 text-left"
+        title="Excel / aktarım detayını aç"
+      >
+        <span className="truncate font-mono font-bold text-cyan-500 group-hover:underline">{r.importReferenceNo}</span>
+        <ChevronRight className="size-3.5 shrink-0 text-cyan-500/70 opacity-0 transition group-hover:opacity-100"/>
+      </button>
+    )},
     {key:'vehiclePlateNo',label:t(`${G}.vehicleDriver`),render:r=><>{r.vehiclePlateNo?<strong>{r.vehiclePlateNo}</strong>:<span>-</span>}<small className="block text-slate-500">{r.driverName||t(`${G}.vehicleNotLinked`)}</small></>},
     {key:'supplierCode',label:t(`${G}.supplierCode`),render:r=>r.supplierCode},
     {key:'supplierName',label:t(`${G}.supplierName`),render:r=>r.supplierName},
@@ -35,7 +45,14 @@ export function SteelReceiptPlansPage(){
   // eslint-disable-next-line react-hooks/exhaustive-deps -- gridLanguage forces column label refresh
   ],[t,gridLanguage]);
   return <div data-no-auto-localize="true">
-    <AdvancedDataGrid pageKey="steel-receipt-plans" title={t(`${G}.title`)} description={t(`${G}.description`)} columns={columns} fetchPage={steelReceiptApi.plansPaged} onRowDoubleClick={setPlan}/>
+    <AdvancedDataGrid
+      pageKey="steel-receipt-plans"
+      title={t(`${G}.title`)}
+      description="Excel / aktarım numarası başlık satırıdır; numaraya tıklayınca levha detayları açılır."
+      columns={columns}
+      fetchPage={steelReceiptApi.plansPaged}
+      onRowDoubleClick={setPlan}
+    />
     {plan&&<PlanLinesDialog plan={plan} onClose={()=>setPlan(null)}/>}
   </div>;
 }
