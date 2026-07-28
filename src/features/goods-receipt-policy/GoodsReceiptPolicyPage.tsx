@@ -1,9 +1,11 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { Loader2, PlugZap, Save, SlidersHorizontal } from 'lucide-react';
+import { Loader2, PlugZap, Save, SlidersHorizontal, UsersRound, Warehouse } from 'lucide-react';
 import { toast } from 'sonner';
 import { AppDropdown } from '@/components/shared/AppDropdown';
 import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
 import { goodsReceiptV2Api } from '@/features/goods-receipt-v2/api/goods-receipt.api';
+import { userManagementApi } from '@/features/user-management/api/user-management.api';
+import type { UserDetail, UserRow, WarehouseOption } from '@/features/user-management/types/user-management.types';
 import { api } from '@/lib/axios';
 import { useAuthStore } from '@/stores/auth-store';
 
@@ -38,6 +40,7 @@ export function GoodsReceiptPolicyPage() {
   const [form, setForm] = useState<Policy | null>(null);
   const [saving, setSaving] = useState(false);
   const [testingErp, setTestingErp] = useState(false);
+  const [tab, setTab] = useState<'policy' | 'warehouses'>('policy');
 
   useEffect(() => {
     api.get<Envelope<Policy>>(`/api/goods-receipt-policy?branchCode=${encodeURIComponent(branch)}`)
@@ -90,7 +93,18 @@ export function GoodsReceiptPolicyPage() {
         </p>
       </header>
 
-      <div className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5">
+      <div className="flex flex-wrap gap-2 rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-2">
+        <TabButton active={tab === 'policy'} onClick={() => setTab('policy')} icon={<SlidersHorizontal className="size-4" />}>
+          Süreç Politikası
+        </TabButton>
+        <TabButton active={tab === 'warehouses'} onClick={() => setTab('warehouses')} icon={<UsersRound className="size-4" />}>
+          Kullanıcı Depo Yetkileri
+        </TabButton>
+      </div>
+
+      {tab === 'warehouses' ? (
+        <UserWarehouseAssignmentsPanel branch={branch} canManage={can('WMS.GOODS_RECEIPT.SETTINGS.MANAGE')} />
+      ) : <div className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5">
         <div className="grid gap-4 md:grid-cols-2">
           <Field label="Fazla kabul">
             <AppDropdown
@@ -182,8 +196,180 @@ export function GoodsReceiptPolicyPage() {
             Politikayı kaydet
           </button>
         </div>
-      </div>
+      </div>}
     </section>
+  );
+}
+
+function UserWarehouseAssignmentsPanel({ branch, canManage }: { branch: string; canManage: boolean }) {
+  const [users, setUsers] = useState<UserRow[]>([]);
+  const [warehouses, setWarehouses] = useState<WarehouseOption[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [detail, setDetail] = useState<UserDetail | null>(null);
+  const [warehouseIds, setWarehouseIds] = useState<number[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingUser, setLoadingUser] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    Promise.all([
+      userManagementApi.getPaged({
+        pageNumber: 1,
+        pageSize: 500,
+        search: null,
+        sortBy: 'username',
+        sortDirection: 'asc',
+        filterLogic: 'and',
+        filters: [{ column: 'isActive', operator: 'equals', value: 'true' }],
+      }),
+      userManagementApi.getWarehouses(branch),
+    ]).then(([userPage, warehouseRows]) => {
+      if (!active) return;
+      setUsers(userPage.items);
+      setWarehouses(warehouseRows);
+    }).catch((error) => {
+      if (active) toast.error(error instanceof Error ? error.message : 'Kullanıcı ve depo listesi yüklenemedi.');
+    }).finally(() => {
+      if (active) setLoading(false);
+    });
+    return () => { active = false; };
+  }, [branch]);
+
+  useEffect(() => {
+    const userId = Number(selectedUserId || 0);
+    if (!userId) {
+      setDetail(null);
+      setWarehouseIds([]);
+      return;
+    }
+    let active = true;
+    setLoadingUser(true);
+    userManagementApi.getById(userId)
+      .then((value) => {
+        if (!active) return;
+        setDetail(value);
+        setWarehouseIds(value.warehouseIds);
+      })
+      .catch((error) => {
+        if (active) toast.error(error instanceof Error ? error.message : 'Kullanıcı bilgisi yüklenemedi.');
+      })
+      .finally(() => {
+        if (active) setLoadingUser(false);
+      });
+    return () => { active = false; };
+  }, [selectedUserId]);
+
+  const unrestrictedByRole = detail?.role === 'Admin' || detail?.role === 'superadmin';
+  const save = async (): Promise<void> => {
+    if (!detail || unrestrictedByRole) return;
+    setSaving(true);
+    try {
+      const savedWarehouseIds = await userManagementApi.updateWarehouseAssignments(detail.id, warehouseIds);
+      setWarehouseIds(savedWarehouseIds);
+      setDetail({ ...detail, warehouseIds: savedWarehouseIds });
+      toast.success(warehouseIds.length
+        ? 'Kullanıcının mal kabul depoları güncellendi.'
+        : 'Depo kısıtı kaldırıldı; kullanıcı tüm depolarda çalışabilir.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Depo yetkileri kaydedilemedi.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5">
+      <div className="mb-5 flex items-start gap-3">
+        <span className="rounded-xl bg-cyan-500/10 p-2 text-cyan-600"><Warehouse className="size-5" /></span>
+        <div>
+          <h2 className="font-bold">Kullanıcıya göre mal kabul depoları</h2>
+          <p className="text-sm text-slate-500">
+            Tanım yoksa kullanıcı tüm depolarda çalışır. En az bir depo seçilirse yalnızca seçilen depolarda mal kabul yapabilir.
+          </p>
+        </div>
+      </div>
+
+      {loading ? <div className="grid min-h-44 place-items-center"><Loader2 className="animate-spin" /></div> : (
+        <>
+          <Field label="Kullanıcı">
+            <AppDropdown
+              value={selectedUserId}
+              onValueChange={setSelectedUserId}
+              options={users.map((user) => ({
+                value: String(user.id),
+                label: `${`${user.firstName} ${user.lastName}`.trim() || user.username} · ${user.username}`,
+                description: `${user.email} · ${user.role}`,
+              }))}
+              placeholder="Aktif kullanıcı seçin"
+              searchable
+            />
+          </Field>
+
+          {loadingUser ? <div className="grid min-h-40 place-items-center"><Loader2 className="animate-spin" /></div> : detail ? (
+            <div className="mt-5 space-y-4">
+              <div className={`rounded-xl border p-4 text-sm ${unrestrictedByRole || warehouseIds.length === 0 ? 'border-emerald-500/30 bg-emerald-500/10' : 'border-cyan-500/30 bg-cyan-500/10'}`}>
+                <strong>{unrestrictedByRole ? 'Rol nedeniyle tüm depolar açık' : warehouseIds.length === 0 ? 'Tanım yok: tüm depolar açık' : `${warehouseIds.length} depo ile kısıtlı`}</strong>
+                <p className="mt-1 text-xs text-slate-500">
+                  {unrestrictedByRole
+                    ? 'Admin ve SuperAdmin kullanıcıları depo atamalarından bağımsız olarak tüm depoları görür.'
+                    : 'Bu kural sipariş seçimi, depo dropdownları ve mal kabul kaydı sırasında API tarafından da doğrulanır.'}
+                </p>
+              </div>
+
+              <div className="grid max-h-[28rem] gap-2 overflow-auto sm:grid-cols-2">
+                {warehouses.map((warehouse) => (
+                  <label key={warehouse.id} className="flex cursor-pointer items-start gap-3 rounded-xl border border-[var(--wms-app-border)] p-3 hover:bg-[var(--wms-brand-soft)]">
+                    <input
+                      type="checkbox"
+                      disabled={!canManage || unrestrictedByRole}
+                      checked={!unrestrictedByRole && warehouseIds.includes(warehouse.id)}
+                      onChange={() => setWarehouseIds((current) => current.includes(warehouse.id)
+                        ? current.filter((id) => id !== warehouse.id)
+                        : [...current, warehouse.id])}
+                      className="mt-1 size-4"
+                    />
+                    <span>
+                      <strong className="block text-sm">Depo {warehouse.warehouseCode}</strong>
+                      <small className="text-slate-500">{warehouse.warehouseName}</small>
+                    </span>
+                  </label>
+                ))}
+              </div>
+
+              <div className="flex flex-wrap justify-end gap-3">
+                <button
+                  type="button"
+                  disabled={!canManage || unrestrictedByRole || warehouseIds.length === 0 || saving}
+                  onClick={() => setWarehouseIds([])}
+                  className="rounded-xl border border-[var(--wms-app-border)] px-4 py-2.5 text-sm font-semibold disabled:opacity-50"
+                >
+                  Kısıtı kaldır (tüm depolar)
+                </button>
+                <button
+                  type="button"
+                  disabled={!canManage || unrestrictedByRole || saving}
+                  onClick={() => void save()}
+                  className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-5 py-2.5 font-semibold text-white disabled:opacity-50"
+                >
+                  {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+                  Depo yetkilerini kaydet
+                </button>
+              </div>
+            </div>
+          ) : null}
+        </>
+      )}
+    </div>
+  );
+}
+
+function TabButton({ active, onClick, icon, children }: { active: boolean; onClick: () => void; icon: ReactNode; children: ReactNode }) {
+  return (
+    <button type="button" onClick={onClick} className={`inline-flex min-h-11 items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold ${active ? 'bg-cyan-600 text-white' : 'hover:bg-[var(--wms-brand-soft)]'}`}>
+      {icon}{children}
+    </button>
   );
 }
 

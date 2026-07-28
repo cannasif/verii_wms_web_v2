@@ -10,6 +10,8 @@ export const userManagementApi = {
   getById: async (id: number) => unwrap(await api.get<Envelope<UserDetail>>(`/api/users/${id}`)),
   create: async (payload: CreateUserPayload) => unwrap(await api.post<Envelope<{ id: number }>>('/api/users', payload)),
   update: async (id: number, payload: UpdateUserPayload) => unwrap(await api.put<Envelope<boolean>>(`/api/users/${id}`, payload)),
+  updateWarehouseAssignments: async (id: number, warehouseIds: number[]): Promise<number[]> =>
+    unwrap(await api.put<Envelope<number[]>>(`/api/users/${id}/warehouse-assignments`, { warehouseIds })),
   deactivate: async (id: number) => unwrap(await api.delete<Envelope<boolean>>(`/api/users/${id}`)),
   downloadImportTemplate: async (): Promise<Blob> =>
     await api.get<Blob>('/api/users/import-template', { responseType: 'blob' }),
