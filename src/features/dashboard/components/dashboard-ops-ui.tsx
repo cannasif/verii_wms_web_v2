@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight02Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { cn } from '@/lib/utils';
-import type { DashboardActivityItem } from '../hooks/useDashboardMetrics';
+import type { DashboardActivityItem } from '../types/dashboard.types';
 
 type HugeIcon = ComponentProps<typeof HugeiconsIcon>['icon'];
 

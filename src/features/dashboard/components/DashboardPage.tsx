@@ -120,7 +120,7 @@ export function DashboardPage(): ReactElement {
   const isPremium = skin === 'premium';
   const { setPageTitle } = useUIStore();
   const permissionAccess = usePermissionAccess();
-  const { user, branch, metrics, isLoading } = useDashboardMetrics();
+  const { user, branch, metrics, isLoading, isError } = useDashboardMetrics();
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -214,7 +214,11 @@ export function DashboardPage(): ReactElement {
                 : t('dashboard.terminal.systemPulse', { defaultValue: 'SİSTEM DURUMU' })
             }
             pulseValue={
-              isLoading
+              isError
+                ? t(isPremium ? 'dashboard.premium.metricsError' : 'dashboard.terminal.metricsError', {
+                    defaultValue: isPremium ? 'Metrikler yüklenemedi' : 'HATA',
+                  })
+                : isLoading
                 ? t(isPremium ? 'dashboard.premium.syncing' : 'dashboard.terminal.syncing', {
                     defaultValue: isPremium ? 'Senkronize ediliyor' : 'SENKRONİZE',
                   })
