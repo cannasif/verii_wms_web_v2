@@ -279,7 +279,8 @@
       "identifierRequired": "Le nom d’utilisateur ou l’e-mail est requis.",
       "identifierTooLong": "Le nom d’utilisateur ou l’e-mail ne peut pas dépasser 200 caractères.",
       "tokenRequired": "Le jeton de réinitialisation est requis.",
-      "newPasswordMinLength": "Le nouveau mot de passe doit contenir au moins 15 caractères.",
+      "newPasswordMinLength": "Le nouveau mot de passe doit contenir au moins {{min}} caractères.",
+      "newPasswordMaxLength": "Le nouveau mot de passe doit contenir au maximum {{max}} caractères.",
       "confirmPasswordRequired": "La confirmation du mot de passe est requise.",
       "passwordsMismatch": "Les mots de passe ne correspondent pas."
     },
@@ -2046,8 +2047,8 @@
     "passwordChangedSuccessfully": "Mot de passe modifié avec succès",
     "changePasswordError": "Une erreur est survenue lors du changement du mot de passe",
     "currentPasswordRequired": "Le mot de passe actuel est requis",
-    "newPasswordMinLength": "Le nouveau mot de passe doit contenir au moins 15 caractères",
-    "newPasswordMaxLength": "Le nouveau mot de passe doit contenir au maximum 100 caractères",
+    "newPasswordMinLength": "Le nouveau mot de passe doit contenir au moins {{min}} caractères",
+    "newPasswordMaxLength": "Le nouveau mot de passe doit contenir au maximum {{max}} caractères",
     "newPasswordSameAsCurrent": "Le nouveau mot de passe ne peut pas être identique à l'actuel",
     "invalidGender": "Valeur de sexe invalide"
   },

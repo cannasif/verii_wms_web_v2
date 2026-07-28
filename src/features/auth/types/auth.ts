@@ -9,7 +9,7 @@ export type LoginRequest = {
 
 export const registerRequestSchema = z.object({
   email: z.string().email('Geçerli bir email adresi giriniz'),
-  password: z.string().min(8, 'Şifre en az 8 karakter olmalıdır'),
+  password: z.string().min(5, 'Şifre en az 5 karakter olmalıdır').max(15, 'Şifre en fazla 15 karakter olabilir'),
 });
 
 export type RegisterRequest = z.infer<typeof registerRequestSchema>;
@@ -17,6 +17,11 @@ export type RegisterRequest = z.infer<typeof registerRequestSchema>;
 export interface AuthTokenResponse {
   accessToken: string;
   accessTokenExpiresAt: string;
+}
+
+export interface PasswordPolicy {
+  minimumLength: number;
+  maximumLength: number;
 }
 
 export type LoginResponse = ApiResponse<AuthTokenResponse>;
@@ -58,8 +63,8 @@ export type ForgotPasswordRequest = z.infer<typeof forgotPasswordSchema>;
 
 export const resetPasswordSchema = z.object({
   token: z.string().min(1, 'auth.validation.tokenRequired'),
-  newPassword: z.string().min(15, 'auth.validation.newPasswordMinLength'),
-  confirmPassword: z.string().min(15, 'auth.validation.confirmPasswordRequired'),
+  newPassword: z.string().min(5, 'auth.validation.newPasswordMinLength').max(15, 'auth.validation.newPasswordMaxLength'),
+  confirmPassword: z.string().min(5, 'auth.validation.confirmPasswordRequired').max(15, 'auth.validation.newPasswordMaxLength'),
 }).refine((data) => data.newPassword === data.confirmPassword, {
   message: 'auth.validation.passwordsMismatch',
   path: ['confirmPassword'],

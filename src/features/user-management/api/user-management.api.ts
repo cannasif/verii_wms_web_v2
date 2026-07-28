@@ -11,6 +11,8 @@ export const userManagementApi = {
   create: async (payload: CreateUserPayload) => unwrap(await api.post<Envelope<{ id: number }>>('/api/users', payload)),
   update: async (id: number, payload: UpdateUserPayload) => unwrap(await api.put<Envelope<boolean>>(`/api/users/${id}`, payload)),
   deactivate: async (id: number) => unwrap(await api.delete<Envelope<boolean>>(`/api/users/${id}`)),
+  downloadImportTemplate: async (): Promise<Blob> =>
+    await api.get<Blob>('/api/users/import-template', { responseType: 'blob' }),
   importUsers: async (file: File): Promise<UserImportResult> => {
     const form = new FormData();
     form.append('file', file);

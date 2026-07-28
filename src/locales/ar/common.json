@@ -279,7 +279,8 @@
       "identifierRequired": "اسم المستخدم أو البريد الإلكتروني مطلوب.",
       "identifierTooLong": "يجب ألا يتجاوز اسم المستخدم أو البريد الإلكتروني 200 حرف.",
       "tokenRequired": "Reset token is required.",
-      "newPasswordMinLength": "New password must be at least 15 characters.",
+      "newPasswordMinLength": "New password must be at least {{min}} characters.",
+      "newPasswordMaxLength": "New password must be at most {{max}} characters.",
       "confirmPasswordRequired": "Password confirmation is required.",
       "passwordsMismatch": "Passwords do not match."
     },
@@ -2046,8 +2047,8 @@
     "passwordChangedSuccessfully": "Password changed successfully",
     "changePasswordError": "An error occurred while changing password",
     "currentPasswordRequired": "Current password is required",
-    "newPasswordMinLength": "New password must be at least 15 characters",
-    "newPasswordMaxLength": "New password must be at most 100 characters",
+    "newPasswordMinLength": "New password must be at least {{min}} characters",
+    "newPasswordMaxLength": "New password must be at most {{max}} characters",
     "newPasswordSameAsCurrent": "New password cannot be the same as current password",
     "invalidGender": "Invalid gender value"
   },

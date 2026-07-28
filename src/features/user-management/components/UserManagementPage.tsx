@@ -14,6 +14,7 @@ import { OpsDialogBody, OpsDialogContent, OpsDialogFooter, OpsDialogHeader } fro
 import { Dialog, DialogTitle } from '@/components/ui/dialog';
 import { localizeEnumValue } from '@/lib/enum-localization';
 import { formatProjectDateTime } from '@/lib/project-format';
+import { useProjectSettingsStore } from '@/stores/project-settings-store';
 import { userManagementApi } from '../api/user-management.api';
 import type { PermissionGroupOption, UpdateUserPayload, UserRow } from '../types/user-management.types';
 import { UserImportDialog } from './UserImportDialog';
@@ -26,11 +27,11 @@ interface UserFormState {
 
 const emptyForm: UserFormState = { username: '', email: '', firstName: '', lastName: '', phoneNumber: '', role: 'User', password: '', confirmPassword: '', isActive: true, permissionGroupIds: [] };
 
-function validateForm(form: UserFormState, mode: FormMode): Record<string, string> {
+function validateForm(form: UserFormState, mode: FormMode, minimumPasswordLength: number, maximumPasswordLength: number): Record<string, string> {
   const errors: Record<string, string> = {};
   if (!/^[a-zA-Z0-9._-]{3,100}$/.test(form.username.trim())) errors.username = '3-100 karakter; harf, rakam, nokta, tire veya alt çizgi kullanın.';
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) errors.email = 'Geçerli bir e-posta adresi girin.';
-  if ((mode === 'create' || form.password.length > 0) && (form.password.length < 15 || form.password.length > 128)) errors.password = 'Şifre 15-128 karakter olmalıdır.';
+  if ((mode === 'create' || form.password.length > 0) && (form.password.length < minimumPasswordLength || form.password.length > maximumPasswordLength)) errors.password = `Şifre ${minimumPasswordLength}-${maximumPasswordLength} karakter olmalıdır.`;
   if (form.password !== form.confirmPassword) errors.confirmPassword = 'Şifreler eşleşmiyor.';
   if (form.firstName.length > 100) errors.firstName = 'Ad en fazla 100 karakter olabilir.';
   if (form.lastName.length > 100) errors.lastName = 'Soyad en fazla 100 karakter olabilir.';
@@ -51,6 +52,8 @@ export function UserManagementPage() {
   const [statusBusyId, setStatusBusyId] = useState<number | null>(null);
   const [gridVersion, setGridVersion] = useState(0);
   const [importOpen, setImportOpen] = useState(false);
+  const minimumPasswordLength = useProjectSettingsStore((state) => state.settings.passwordMinimumLength);
+  const maximumPasswordLength = useProjectSettingsStore((state) => state.settings.passwordMaximumLength);
 
   const loadGroups = useCallback(async () => {
     const activeGroups = await userManagementApi.getActiveGroups();
@@ -113,7 +116,7 @@ export function UserManagementPage() {
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     if (!mode) return;
-    const nextErrors = validateForm(form, mode); setErrors(nextErrors);
+    const nextErrors = validateForm(form, mode, minimumPasswordLength, maximumPasswordLength); setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
     setSaving(true);
     try {
@@ -273,14 +276,14 @@ export function UserManagementPage() {
                     <Field label="Rol" icon={Shield} required>
                       <AppDropdown disabled={isPrimaryAdministrator} value={form.role} onValueChange={(value) => updateForm('role', value as UpdateUserPayload['role'])} portalContainer={null} options={[{ value: 'User', label: 'Kullanıcı' }, { value: 'Manager', label: 'Yönetici' }, { value: 'Admin', label: 'Uygulama Yöneticisi' }, ...(isPrimaryAdministrator ? [{ value: 'superadmin', label: 'Sistem Yöneticisi' }] : [])]} ariaLabel="Rol" />
                     </Field>
-                    <Field label={mode === 'create' ? 'Geçici şifre' : 'Yeni şifre'} icon={LockKeyhole} error={errors.password} required={mode === 'create'}>
+                    <Field label={`${mode === 'create' ? 'Geçici şifre' : 'Yeni şifre'} (${minimumPasswordLength}-${maximumPasswordLength} karakter)`} icon={LockKeyhole} error={errors.password} required={mode === 'create'}>
                       <AppInput
                         type={showPassword ? 'text' : 'password'}
                         name="wms-user-new-password"
                         autoComplete="new-password"
                         invalid={Boolean(errors.password)}
                         value={form.password}
-                        maxLength={128}
+                        maxLength={maximumPasswordLength}
                         onChange={(event) => updateForm('password', event.target.value)}
                         placeholder={mode === 'edit' ? 'Değişmeyecekse boş bırakın' : ''}
                         trailingContent={(
@@ -296,7 +299,7 @@ export function UserManagementPage() {
                       />
                     </Field>
                     <Field label="Şifre tekrar" icon={LockKeyhole} error={errors.confirmPassword} required={mode === 'create'}>
-                      <AppInput type={showPassword ? 'text' : 'password'} name="wms-user-password-confirmation" autoComplete="new-password" invalid={Boolean(errors.confirmPassword)} value={form.confirmPassword} maxLength={128} onChange={(event) => updateForm('confirmPassword', event.target.value)} />
+                      <AppInput type={showPassword ? 'text' : 'password'} name="wms-user-password-confirmation" autoComplete="new-password" invalid={Boolean(errors.confirmPassword)} value={form.confirmPassword} maxLength={maximumPasswordLength} onChange={(event) => updateForm('confirmPassword', event.target.value)} />
                     </Field>
                   </div>
                   <div>
