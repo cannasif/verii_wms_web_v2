@@ -106,6 +106,11 @@ export interface GridColumn<T> {
   filterType?: GridFilterType;
   filterOptions?: AppDropdownOption[];
 }
+export interface GridToolbarAction {
+  label: string;
+  run: () => Promise<void>;
+  icon?: ReactNode;
+}
 interface Props<T extends { id: number }> {
   pageKey: string;
   title: string;
@@ -116,7 +121,8 @@ interface Props<T extends { id: number }> {
   emptyMessage?: string;
   columns: GridColumn<T>[];
   fetchPage: (request: GridRequest) => Promise<GridPage<T>>;
-  toolbarAction?: { label: string; run: () => Promise<void>; icon?: ReactNode };
+  toolbarAction?: GridToolbarAction;
+  toolbarActions?: GridToolbarAction[];
   /** Mutation sonrasında sunucu verisini yeniden okumak için artırılan sürüm anahtarı. */
   refreshKey?: string | number;
   /** Satıra çift tıklanınca çağrılır (aksiyon hücreleri hariç etkileşimleri engellemez). */
@@ -394,6 +400,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
   columns: sourceColumns,
   fetchPage,
   toolbarAction,
+  toolbarActions,
   refreshKey = 0,
   onRowDoubleClick,
   expandedRowId = null,
@@ -468,7 +475,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
   const [draftFilters, setDraftFilters] = useState<GridFilter[]>([]);
   const [filters, setFilters] = useState<GridFilter[]>([]);
   const [filterLogic, setFilterLogic] = useState<'and' | 'or'>('and');
-  const [actionRunning, setActionRunning] = useState(false);
+  const [runningActionIndex, setRunningActionIndex] = useState<number | null>(null);
   const [cellContext, setCellContext] = useState<GridCellContext<T> | null>(null);
   const [isScrollDragging, setIsScrollDragging] = useState(false);
   const resizeRef = useRef<{ key: string; startX: number; startWidth: number; pointerId: number } | null>(null);
@@ -623,7 +630,16 @@ export function AdvancedDataGrid<T extends { id: number }>({
   };
   const clearFilters = () => { setDraftFilters([]); setFilters([]); setPage(1); };
   const changeSort = (key: string) => { if (sortBy === key) setSortDirection((value) => value === 'asc' ? 'desc' : 'asc'); else { setSortBy(key); setSortDirection('asc'); } setPage(1); };
-  const runAction = async () => { if (!toolbarAction) return; setActionRunning(true); try { await toolbarAction.run(); await query.refetch(); } finally { setActionRunning(false); } };
+  const resolvedToolbarActions = toolbarActions ?? (toolbarAction ? [toolbarAction] : []);
+  const runAction = async (action: GridToolbarAction, index: number) => {
+    setRunningActionIndex(index);
+    try {
+      await action.run();
+      await query.refetch();
+    } finally {
+      setRunningActionIndex(null);
+    }
+  };
   const toggleColumn = (key: string) => {
     if (LOCKED_COLUMN_KEYS.has(key) || EXCLUDED_COLUMN_PREF_KEYS.has(key) || columns.find((column) => column.key === key)?.hideable === false) return;
     setVisible((current) => {
@@ -832,11 +848,23 @@ export function AdvancedDataGrid<T extends { id: number }>({
       eyebrow={resolvedEyebrow}
       title={localizedTitle}
       description={localizedDescription}
-      actions={toolbarAction ? (
-        <OpsActionButton type="button" onClick={() => void runAction()} disabled={actionRunning}>
-          {toolbarAction.icon ?? <Plus className={cn('size-3.5', actionRunning && 'animate-spin')} aria-hidden />}
-          {toolbarAction.label}
-        </OpsActionButton>
+      actions={resolvedToolbarActions.length > 0 ? (
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {resolvedToolbarActions.map((action, index) => {
+            const isRunning = runningActionIndex === index;
+            return (
+              <OpsActionButton
+                key={`${action.label}-${index}`}
+                type="button"
+                onClick={() => void runAction(action, index)}
+                disabled={runningActionIndex !== null}
+              >
+                {action.icon ?? <Plus className={cn('size-3.5', isRunning && 'animate-spin')} aria-hidden />}
+                {action.label}
+              </OpsActionButton>
+            );
+          })}
+        </div>
       ) : undefined}
     >
       <div className="wms-ops-data-grid min-w-0 space-y-0">
