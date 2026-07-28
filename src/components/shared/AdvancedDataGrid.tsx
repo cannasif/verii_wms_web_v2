@@ -307,13 +307,19 @@ async function copyText(value: string): Promise<void> {
   const copied = document.execCommand('copy');
   textarea.remove();
   document.removeEventListener('copy', handleCopy);
-  if (copied && copyEventHandled) return;
+  const legacyCopySucceeded = copied && copyEventHandled;
 
   if (navigator.clipboard?.writeText) {
-    await navigator.clipboard.writeText(value);
-    return;
+    try {
+      await navigator.clipboard.writeText(value);
+      return;
+    } catch {
+      if (legacyCopySucceeded) return;
+      throw new Error('Clipboard unavailable');
+    }
   }
 
+  if (legacyCopySucceeded) return;
   throw new Error('Clipboard unavailable');
 }
 
