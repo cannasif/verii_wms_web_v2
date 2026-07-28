@@ -279,7 +279,8 @@
       "identifierRequired": "El usuario o correo electrónico es obligatorio.",
       "identifierTooLong": "El usuario o correo no puede superar los 200 caracteres.",
       "tokenRequired": "El token de restablecimiento es obligatorio.",
-      "newPasswordMinLength": "La nueva contraseña debe tener al menos 15 caracteres.",
+      "newPasswordMinLength": "La nueva contraseña debe tener al menos {{min}} caracteres.",
+      "newPasswordMaxLength": "La nueva contraseña debe tener como máximo {{max}} caracteres.",
       "confirmPasswordRequired": "La confirmación de contraseña es obligatoria.",
       "passwordsMismatch": "Las contraseñas no coinciden."
     },
@@ -2046,8 +2047,8 @@
     "passwordChangedSuccessfully": "Password changed successfully",
     "changePasswordError": "An error occurred while changing password",
     "currentPasswordRequired": "Current password is required",
-    "newPasswordMinLength": "New password must be at least 15 characters",
-    "newPasswordMaxLength": "New password must be at most 100 characters",
+    "newPasswordMinLength": "New password must be at least {{min}} characters",
+    "newPasswordMaxLength": "New password must be at most {{max}} characters",
     "newPasswordSameAsCurrent": "New password cannot be the same as current password",
     "invalidGender": "Invalid gender value"
   },

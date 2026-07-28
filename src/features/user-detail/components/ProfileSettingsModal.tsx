@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuthStore } from '@/stores/auth-store';
+import { useProjectSettingsStore } from '@/stores/project-settings-store';
 import { toast } from 'sonner';
 import { OpsActionButton } from '@/components/shared/OpsActionButton';
 import { OpsFieldShell } from '@/components/shared/OpsFieldShell';
@@ -114,6 +115,8 @@ export function ProfileSettingsModal({ open, onOpenChange }: ProfileSettingsModa
   const [isEditMode, setIsEditMode] = useState(false);
   const [isCurrentPasswordVisible, setIsCurrentPasswordVisible] = useState(false);
   const [isNewPasswordVisible, setIsNewPasswordVisible] = useState(false);
+  const passwordMinimumLength = useProjectSettingsStore((state) => state.settings.passwordMinimumLength);
+  const passwordMaximumLength = useProjectSettingsStore((state) => state.settings.passwordMaximumLength);
 
   const { data: userDetail, isLoading: isLoadingUserDetail, refetch } = useUserDetail();
   const createMutation = useCreateUserDetail();
@@ -141,14 +144,14 @@ export function ProfileSettingsModal({ open, onOpenChange }: ProfileSettingsModa
           currentPassword: z.string().min(1, t('userDetail.currentPasswordRequired')),
           newPassword: z
             .string()
-            .min(15, t('userDetail.newPasswordMinLength'))
-            .max(100, t('userDetail.newPasswordMaxLength')),
+            .min(passwordMinimumLength, t('userDetail.newPasswordMinLength', { min: passwordMinimumLength }))
+            .max(passwordMaximumLength, t('userDetail.newPasswordMaxLength', { max: passwordMaximumLength })),
         })
         .refine((data) => data.currentPassword !== data.newPassword, {
           message: t('userDetail.newPasswordSameAsCurrent'),
           path: ['newPassword'],
         }),
-    [t]
+    [passwordMaximumLength, passwordMinimumLength, t]
   );
 
   const changePasswordForm = useForm<ChangePasswordRequest>({
@@ -535,6 +538,7 @@ export function ProfileSettingsModal({ open, onOpenChange }: ProfileSettingsModa
                                 visible={isNewPasswordVisible}
                                 onToggleVisible={() => setIsNewPasswordVisible((v) => !v)}
                                 placeholder={t('userDetail.newPasswordPlaceholder')}
+                                maxLength={passwordMaximumLength}
                                 {...field}
                               />
                             </FormControl>

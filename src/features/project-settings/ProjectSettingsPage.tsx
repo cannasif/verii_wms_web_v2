@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
-import { CalendarDays, Clock3, Hash, Loader2, Save, TimerReset } from 'lucide-react';
+import { CalendarDays, Clock3, Hash, Loader2, LockKeyhole, Save, TimerReset } from 'lucide-react';
 import { toast } from 'sonner';
 import { AppDropdown, type AppDropdownOption } from '@/components/shared/AppDropdown';
 import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
@@ -13,6 +13,8 @@ import {
 import { useProjectSettingsStore } from '@/stores/project-settings-store';
 import { projectSettingsApi } from './project-settings.api';
 import type { ProjectSettings, UpdateProjectSettings } from './project-settings.types';
+
+type ProjectSettingsForm = UpdateProjectSettings & Pick<ProjectSettings, 'passwordMaximumLength'>;
 
 const numberLocaleOptions: AppDropdownOption[] = [
   { value: 'tr-TR', label: '1.234,50', description: 'Türkçe sayı biçimi' },
@@ -37,7 +39,7 @@ const timeZoneOptions: AppDropdownOption[] = [
 ];
 
 export function ProjectSettingsPage() {
-  const [form, setForm] = useState<UpdateProjectSettings | null>(null);
+  const [form, setForm] = useState<ProjectSettingsForm | null>(null);
   const [saving, setSaving] = useState(false);
   const { can, isLoading: isPermissionLoading, refetch: refreshPermissions } = usePermissionAccess();
   const setGlobal = useProjectSettingsStore((state) => state.setSettings);
@@ -63,7 +65,17 @@ export function ProjectSettingsPage() {
     if (!form || saving) return;
     setSaving(true);
     try {
-      const result = await projectSettingsApi.update(form);
+      const request: UpdateProjectSettings = {
+        numberLocale: form.numberLocale,
+        decimalPlaces: form.decimalPlaces,
+        dateFormat: form.dateFormat,
+        timeFormat: form.timeFormat,
+        yearFormat: form.yearFormat,
+        timeZoneId: form.timeZoneId,
+        sendSerialsToErp: form.sendSerialsToErp,
+        passwordMinimumLength: form.passwordMinimumLength,
+      };
+      const result = await projectSettingsApi.update(request);
       setForm(toForm(result));
       setGlobal(result);
       toast.success('Proje ayarları kaydedildi ve uygulandı.');
@@ -85,7 +97,7 @@ export function ProjectSettingsPage() {
       <div>
         <p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--wms-brand-primary)]">Sistem</p>
         <h1 className="mt-1 text-2xl font-bold">Genel Proje Ayarları</h1>
-        <p className="mt-1 text-sm text-slate-500">Tüm kullanıcılar için sayı, miktar, tarih, saat, yıl ve zaman dilimi gösterimini merkezi olarak yönetin.</p>
+        <p className="mt-1 text-sm text-slate-500">Tüm kullanıcılar için gösterim ve güvenlik politikalarını merkezi olarak yönetin.</p>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
@@ -104,10 +116,27 @@ export function ProjectSettingsPage() {
           <Field label="Saat biçimi"><AppDropdown value={form.timeFormat} onValueChange={(value) => set('timeFormat', value)} options={timeOptions} ariaLabel="Saat biçimi" testId="time-format-dropdown" /></Field>
           <Field label="Yıl biçimi"><AppDropdown value={form.yearFormat} onValueChange={(value) => set('yearFormat', value)} options={yearOptions} ariaLabel="Yıl biçimi" testId="year-format-dropdown" /></Field>
           <Field label="Zaman dilimi"><AppDropdown value={form.timeZoneId} onValueChange={(value) => set('timeZoneId', value)} options={timeZoneOptions} ariaLabel="Zaman dilimi" searchable searchPlaceholder="Zaman dilimi ara..." testId="timezone-dropdown" /></Field>
+          <Field label="Minimum şifre uzunluğu">
+            <div className="relative">
+              <LockKeyhole className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--wms-brand-primary)]" />
+              <input
+                type="number"
+                min={5}
+                max={form.passwordMaximumLength}
+                value={form.passwordMinimumLength}
+                onChange={(event) => set('passwordMinimumLength', Number(event.target.value))}
+                className="input pl-10"
+                aria-label="Minimum şifre uzunluğu"
+              />
+            </div>
+          </Field>
+          <Field label="Maksimum şifre uzunluğu">
+            <input type="number" value={form.passwordMaximumLength} disabled className="input disabled:cursor-not-allowed disabled:opacity-60" aria-label="Maksimum şifre uzunluğu" />
+          </Field>
         </div>
 
         <div className="mt-5 rounded-xl border border-[var(--wms-app-border)] bg-slate-50/70 p-4 text-sm dark:bg-white/[.03]">
-          <strong>Canlı örnek:</strong> Ayarı seçtiğiniz anda üstteki kartlar değişir. Kayıt sonrasında açık ekranlardaki ortak grid ve WMS miktar/tarih alanları yeni biçimi kullanır.
+          <strong>Parola güvenliği:</strong> Minimum değer 5-{form.passwordMaximumLength} arasında olabilir. Mevcut en kısa paroladan daha yüksek bir değer seçilemez; kullanıcılar parolalarını yeniledikçe bu sınır güvenli biçimde yükseltilebilir.
         </div>
 
         {!isPermissionLoading && !canManage && (
@@ -128,7 +157,7 @@ export function ProjectSettingsPage() {
   );
 }
 
-function toForm(settings: ProjectSettings): UpdateProjectSettings {
+function toForm(settings: ProjectSettings): ProjectSettingsForm {
   return {
     numberLocale: settings.numberLocale,
     decimalPlaces: settings.decimalPlaces,
@@ -136,6 +165,9 @@ function toForm(settings: ProjectSettings): UpdateProjectSettings {
     timeFormat: settings.timeFormat,
     yearFormat: settings.yearFormat,
     timeZoneId: settings.timeZoneId,
+    sendSerialsToErp: settings.sendSerialsToErp ?? true,
+    passwordMinimumLength: settings.passwordMinimumLength ?? 6,
+    passwordMaximumLength: settings.passwordMaximumLength ?? 15,
   };
 }
 

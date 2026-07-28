@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm, type UseFormReturn } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -11,6 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from '@/component
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useResetPassword } from '../hooks/useResetPassword';
+import { authApi } from '../api/auth-api';
 import { AuthPageShell } from './AuthPageShell';
 
 export function ResetPasswordPage(): React.JSX.Element {
@@ -21,19 +22,31 @@ export function ResetPasswordPage(): React.JSX.Element {
   const { mutate: resetPassword, isPending } = useResetPassword();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const schema = z.object({
-    token: z.string().min(1, t('auth.validation.tokenRequired')),
-    newPassword: z.string().min(15, t('auth.validation.newPasswordMinLength')),
-    confirmPassword: z.string().min(15, t('auth.validation.confirmPasswordRequired')),
-  }).refine((data) => data.newPassword === data.confirmPassword, {
-    message: t('auth.validation.passwordsMismatch'),
-    path: ['confirmPassword'],
-  });
+  const [passwordPolicy, setPasswordPolicy] = useState({ minimumLength: 6, maximumLength: 15 });
+  const schema = useMemo(
+    () => z.object({
+      token: z.string().min(1, t('auth.validation.tokenRequired')),
+      newPassword: z.string()
+        .min(passwordPolicy.minimumLength, t('auth.validation.newPasswordMinLength', { min: passwordPolicy.minimumLength }))
+        .max(passwordPolicy.maximumLength, t('auth.validation.newPasswordMaxLength', { max: passwordPolicy.maximumLength })),
+      confirmPassword: z.string()
+        .min(passwordPolicy.minimumLength, t('auth.validation.confirmPasswordRequired'))
+        .max(passwordPolicy.maximumLength, t('auth.validation.newPasswordMaxLength', { max: passwordPolicy.maximumLength })),
+    }).refine((data) => data.newPassword === data.confirmPassword, {
+      message: t('auth.validation.passwordsMismatch'),
+      path: ['confirmPassword'],
+    }),
+    [passwordPolicy.maximumLength, passwordPolicy.minimumLength, t],
+  );
   type FormData = z.infer<typeof schema>;
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: { token: token ?? '', newPassword: '', confirmPassword: '' },
   });
+
+  useEffect(() => {
+    authApi.getPasswordPolicy().then(setPasswordPolicy).catch(() => undefined);
+  }, []);
 
   useEffect(() => {
     if (!token) {
@@ -66,6 +79,7 @@ export function ResetPasswordPage(): React.JSX.Element {
             placeholder={t('auth.resetPassword.newPasswordPlaceholder')}
             visible={showPassword}
             toggle={() => setShowPassword((value) => !value)}
+            maxLength={passwordPolicy.maximumLength}
           />
           <PasswordField
             form={form}
@@ -74,6 +88,7 @@ export function ResetPasswordPage(): React.JSX.Element {
             placeholder={t('auth.resetPassword.confirmPasswordPlaceholder')}
             visible={showConfirmPassword}
             toggle={() => setShowConfirmPassword((value) => !value)}
+            maxLength={passwordPolicy.maximumLength}
           />
           <Button
             type="submit"
@@ -95,6 +110,7 @@ function PasswordField({
   placeholder,
   visible,
   toggle,
+  maxLength,
 }: {
   form: UseFormReturn<{ token: string; newPassword: string; confirmPassword: string }>;
   name: 'newPassword' | 'confirmPassword';
@@ -102,6 +118,7 @@ function PasswordField({
   placeholder: string;
   visible: boolean;
   toggle: () => void;
+  maxLength: number;
 }): React.JSX.Element {
   const { t } = useTranslation('common');
   return (
@@ -123,6 +140,7 @@ function PasswordField({
                 id={`reset-${name}`}
                 type={visible ? 'text' : 'password'}
                 autoComplete="new-password"
+                maxLength={maxLength}
                 aria-label={label}
                 placeholder={placeholder}
                 className={`auth-field-input h-12 min-w-0 rounded-xl pl-14 pr-11 text-sm text-white placeholder:text-slate-500 ${

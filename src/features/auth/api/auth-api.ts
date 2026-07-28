@@ -1,11 +1,19 @@
 import { api } from '@/lib/axios';
-import type { AuthTokenResponse, LoginRequest, LoginResponse, UserDto } from '../types/auth';
+import type { AuthTokenResponse, LoginRequest, LoginResponse, PasswordPolicy, UserDto } from '../types/auth';
 import type { ApiResponse, PagedResponse } from '@/types/api';
 import type { ApiRequestOptions } from '@/lib/request-utils';
 import { buildPagedRequest } from '@/lib/paged';
 import { fetchAllPagedData } from '@/lib/fetch-all-paged-data';
 
 export const authApi = {
+  getPasswordPolicy: async (): Promise<PasswordPolicy> => {
+    const response = await api.get<ApiResponse<PasswordPolicy>>(
+      '/api/auth/password-policy',
+      { skipAuth: true, skipSessionExpiredOn401: true },
+    );
+    if (!response.success || !response.data) throw new Error(response.message);
+    return response.data;
+  },
   login: async (data: LoginRequest): Promise<LoginResponse> => {
     const response = await api.post<LoginResponse>(
       '/api/auth/login',
