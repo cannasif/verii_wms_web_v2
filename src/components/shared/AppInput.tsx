@@ -1,9 +1,11 @@
 import {
   forwardRef,
   useEffect,
+  useRef,
   useState,
   type ChangeEvent,
   type ComponentPropsWithoutRef,
+  type FocusEvent,
   type ReactElement,
   type ReactNode,
 } from 'react';
@@ -12,6 +14,7 @@ import { CalendarDays, Clock3 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { AppDatePickerPanel } from '@/components/shared/AppDatePickerPanel';
+import { normalizeManualDateInput } from '@/components/shared/app-date-input.utils';
 import { cn } from '@/lib/utils';
 
 const MOBILE_DATE_PICKER_QUERY = '(max-width: 767px)';
@@ -78,6 +81,8 @@ export const AppDateInput = forwardRef<HTMLInputElement, AppDateInputProps>(func
     min,
     max,
     onClick,
+    onBlur,
+    onFocus,
     ...props
   },
   forwardedRef,
@@ -85,8 +90,14 @@ export const AppDateInput = forwardRef<HTMLInputElement, AppDateInputProps>(func
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [useMobilePicker, setUseMobilePicker] = useState(prefersMobileDatePicker);
+  const lastValidValue = useRef('');
   const stringValue = typeof value === 'string' ? value : value == null ? '' : String(value);
-  const pickerDisabled = disabled || readOnly;
+  const inputReadOnly = Boolean(readOnly);
+  const pickerDisabled = disabled || inputReadOnly;
+
+  useEffect(() => {
+    lastValidValue.current = stringValue;
+  }, [stringValue]);
 
   useEffect(() => {
     const media = window.matchMedia(MOBILE_DATE_PICKER_QUERY);
@@ -108,13 +119,32 @@ export const AppDateInput = forwardRef<HTMLInputElement, AppDateInputProps>(func
     setOpen(true);
   };
 
+  const handleInputChange = (event: ChangeEvent<HTMLInputElement>): void => {
+    emitChange(event.target.value);
+  };
+
+  const handleInputBlur = (event: FocusEvent<HTMLInputElement>): void => {
+    onBlur?.(event);
+    if (inputReadOnly || disabled) return;
+    const normalized = normalizeManualDateInput(stringValue, type);
+    if (normalized === null) {
+      emitChange(lastValidValue.current);
+      return;
+    }
+    emitChange(normalized);
+  };
+
+  const handleInputFocus = (event: FocusEvent<HTMLInputElement>): void => {
+    onFocus?.(event);
+  };
+
   const Icon = type === 'time' ? Clock3 : CalendarDays;
   const resolvedPlaceholder = placeholder ?? (
     type === 'date'
-      ? 'YYYY-MM-DD'
+      ? t('dateInput.placeholderDate')
       : type === 'time'
-        ? 'HH:mm'
-        : 'YYYY-MM-DD HH:mm'
+        ? t('dateInput.placeholderTime')
+        : t('dateInput.placeholderDateTime')
   );
 
   const pickerPanel = (
@@ -133,18 +163,20 @@ export const AppDateInput = forwardRef<HTMLInputElement, AppDateInputProps>(func
       {...props}
       ref={forwardedRef}
       type="text"
-      inputMode="none"
-      readOnly
+      inputMode="text"
+      autoComplete="off"
+      spellCheck={false}
+      readOnly={inputReadOnly}
       disabled={disabled}
       value={stringValue}
       placeholder={resolvedPlaceholder}
       aria-haspopup="dialog"
       aria-expanded={open}
-      className={cn('app-date-input cursor-pointer', className)}
-      onClick={(event) => {
-        onClick?.(event);
-        if (!event.defaultPrevented) openPicker();
-      }}
+      className={cn('app-date-input', inputReadOnly && 'app-date-input--readonly', className)}
+      onChange={handleInputChange}
+      onBlur={handleInputBlur}
+      onFocus={handleInputFocus}
+      onClick={onClick}
       trailingContent={(
         <button
           type="button"
@@ -156,7 +188,11 @@ export const AppDateInput = forwardRef<HTMLInputElement, AppDateInputProps>(func
               ? t('dateInput.openTime')
               : t('dateInput.openDateTime')}
           className="app-input-shell__picker disabled:pointer-events-none disabled:opacity-45"
-          onClick={openPicker}
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            openPicker();
+          }}
         >
           <Icon className="size-4" />
         </button>
@@ -170,7 +206,7 @@ export const AppDateInput = forwardRef<HTMLInputElement, AppDateInputProps>(func
         {inputShell}
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogContent className="wms-date-picker-dialog gap-0 p-0 sm:max-w-sm" showCloseButton={false}>
-            <div className="border-b border-[var(--wms-app-border)] px-4 py-3 text-sm font-bold">
+            <div className="wms-date-picker-dialog__header">
               {type === 'date'
                 ? t('dateInput.openDate')
                 : type === 'time'
@@ -190,15 +226,15 @@ export const AppDateInput = forwardRef<HTMLInputElement, AppDateInputProps>(func
         <span className="block w-full min-w-0">{inputShell}</span>
       </PopoverPrimitive.Anchor>
       {/* Body portal avoids workspace transform/overflow shifting the calendar. */}
-      <PopoverPrimitive.Portal>
+      <PopoverPrimitive.Portal container={typeof document !== 'undefined' ? document.body : undefined}>
         <PopoverPrimitive.Content
           align="start"
           side="bottom"
           sideOffset={6}
-          collisionPadding={16}
-          avoidCollisions
+          avoidCollisions={false}
+          onOpenAutoFocus={(event) => event.preventDefault()}
           className={cn(
-            'wms-floating-surface wms-date-picker-popover z-[2000] outline-none',
+            'wms-floating-surface wms-date-picker-popover z-[2000] rounded-xl text-[var(--wms-app-text)] outline-none',
             'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95',
           )}
         >

@@ -3943,7 +3943,10 @@
     "hour": "Saat",
     "minute": "Dakika",
     "prevMonth": "Önceki ay",
-    "nextMonth": "Sonraki ay"
+    "nextMonth": "Sonraki ay",
+    "placeholderDate": "YYYY-MM-DD veya GG.AA.YYYY",
+    "placeholderTime": "SS:dd",
+    "placeholderDateTime": "YYYY-MM-DD SS:dd"
   },
   "dataGrid": {
     "systemColumns": {

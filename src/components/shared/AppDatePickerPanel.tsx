@@ -1,9 +1,7 @@
 import { useEffect, useMemo, useState, type ReactElement } from 'react';
 import {
+  addDays,
   addMonths,
-  eachDayOfInterval,
-  endOfMonth,
-  endOfWeek,
   format,
   isSameDay,
   isSameMonth,
@@ -14,7 +12,7 @@ import {
   startOfWeek,
   subMonths,
 } from 'date-fns';
-import { tr, enUS, de, fr, es, it, type Locale } from 'date-fns/locale';
+import { tr, enUS, de, fr, es, it, ar, type Locale } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
@@ -28,6 +26,7 @@ const LOCALES: Record<string, Locale> = {
   fr,
   es,
   it,
+  ar,
 };
 
 function resolveLocale(language: string): Locale {
@@ -90,8 +89,7 @@ export function AppDatePickerPanel({
 
   const days = useMemo(() => {
     const start = startOfWeek(startOfMonth(viewMonth), { locale });
-    const end = endOfWeek(endOfMonth(viewMonth), { locale });
-    return eachDayOfInterval({ start, end });
+    return Array.from({ length: 42 }, (_, index) => addDays(start, index));
   }, [locale, viewMonth]);
 
   const weekdayLabels = useMemo(() => {
@@ -141,37 +139,37 @@ export function AppDatePickerPanel({
     <div className="wms-date-picker-panel">
       {mode !== 'time' && (
         <>
-          <div className="mb-3 flex items-center justify-between gap-2">
+          <div className="wms-date-picker-header flex items-center justify-between gap-2">
             <button
               type="button"
               aria-label={t('dateInput.prevMonth')}
-              className="grid size-9 shrink-0 place-items-center rounded-lg border border-[var(--wms-app-border)] text-[var(--wms-app-text)] transition hover:bg-[var(--wms-brand-soft)]"
+              className="wms-date-picker-header__nav grid shrink-0 place-items-center rounded-lg"
               onClick={() => setViewMonth((current) => subMonths(current, 1))}
             >
-              <ChevronLeft className="size-4" />
+              <ChevronLeft className="size-3.5" />
             </button>
-            <div className="min-w-0 flex-1 text-center text-sm font-bold capitalize">
+            <div className="wms-date-picker-header__title min-w-0 flex-1 text-center font-bold capitalize">
               {format(viewMonth, 'LLLL yyyy', { locale })}
             </div>
             <button
               type="button"
               aria-label={t('dateInput.nextMonth')}
-              className="grid size-9 shrink-0 place-items-center rounded-lg border border-[var(--wms-app-border)] text-[var(--wms-app-text)] transition hover:bg-[var(--wms-brand-soft)]"
+              className="wms-date-picker-header__nav grid shrink-0 place-items-center rounded-lg"
               onClick={() => setViewMonth((current) => addMonths(current, 1))}
             >
-              <ChevronRight className="size-4" />
+              <ChevronRight className="size-3.5" />
             </button>
           </div>
 
-          <div className="mb-1 grid grid-cols-7 gap-1">
-            {weekdayLabels.map((label) => (
-              <div key={label} className="py-1 text-center text-[0.65rem] font-bold uppercase tracking-wide text-[var(--wms-app-text-muted)]">
+          <div className="mb-1 wms-date-picker-grid">
+            {weekdayLabels.map((label, index) => (
+              <div key={`${label}-${index}`} className="wms-date-picker-weekday">
                 {label}
               </div>
             ))}
           </div>
 
-          <div className="grid grid-cols-7 gap-1">
+          <div className="wms-date-picker-grid wms-date-picker-days">
             {days.map((day) => {
               const inactive = !isSameMonth(day, viewMonth);
               const selectedDay = selected ? isSameDay(day, selected) : false;
@@ -183,12 +181,10 @@ export function AppDatePickerPanel({
                   disabled={disabled}
                   onClick={() => selectDay(day)}
                   className={cn(
-                    'grid h-9 min-w-0 place-items-center rounded-lg text-sm font-semibold transition sm:h-8',
-                    inactive && 'text-[var(--wms-app-text-muted)]/55',
-                    !inactive && !selectedDay && 'text-[var(--wms-app-text)] hover:bg-[var(--wms-brand-soft)]',
-                    isToday(day) && !selectedDay && 'ring-1 ring-[var(--wms-brand-primary)]/35',
-                    selectedDay && 'bg-[var(--wms-brand-primary)] text-[var(--wms-brand-on-primary)]',
-                    disabled && 'cursor-not-allowed opacity-35 hover:bg-transparent',
+                    'wms-date-picker-day grid place-items-center rounded-lg text-sm font-semibold transition',
+                    inactive && 'wms-date-picker-day--inactive',
+                    isToday(day) && !selectedDay && 'wms-date-picker-day--today',
+                    selectedDay && 'wms-date-picker-day--selected',
                   )}
                 >
                   {format(day, 'd')}
@@ -201,7 +197,7 @@ export function AppDatePickerPanel({
 
       {mode !== 'date' && (
         <div className={cn('grid grid-cols-2 gap-2', mode !== 'time' && 'mt-4 border-t border-[var(--wms-app-border)] pt-4')}>
-          <label className="space-y-1 text-xs font-semibold text-[var(--wms-app-text-muted)]">
+          <label className="wms-date-picker-time-field space-y-1">
             {t('dateInput.hour')}
             <input
               type="number"
@@ -212,7 +208,7 @@ export function AppDatePickerPanel({
               className="input h-10 px-3"
             />
           </label>
-          <label className="space-y-1 text-xs font-semibold text-[var(--wms-app-text-muted)]">
+          <label className="wms-date-picker-time-field space-y-1">
             {t('dateInput.minute')}
             <input
               type="number"
@@ -226,10 +222,10 @@ export function AppDatePickerPanel({
         </div>
       )}
 
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-[var(--wms-app-border)] pt-3">
+      <div className="wms-date-picker-footer">
         <button
           type="button"
-          className="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--wms-app-text-muted)] transition hover:bg-[var(--wms-brand-soft)] hover:text-[var(--wms-app-text)]"
+          className="wms-date-picker-footer__button wms-date-picker-footer__button--muted rounded-lg font-semibold"
           onClick={() => {
             onChange('');
             onClose?.();
@@ -237,11 +233,11 @@ export function AppDatePickerPanel({
         >
           {t('dateInput.clear')}
         </button>
-        <div className="flex gap-2">
+        <div className="wms-date-picker-footer__actions">
           {mode !== 'time' && (
             <button
               type="button"
-              className="rounded-lg px-3 py-2 text-sm font-semibold text-[var(--wms-brand-primary)] transition hover:bg-[var(--wms-brand-soft)]"
+              className="wms-date-picker-footer__button wms-date-picker-footer__button--brand rounded-lg font-semibold"
               onClick={() => {
                 const today = new Date();
                 if (mode === 'datetime-local') {
@@ -257,7 +253,7 @@ export function AppDatePickerPanel({
           {mode !== 'date' && (
             <button
               type="button"
-              className="rounded-lg bg-[var(--wms-brand-primary)] px-3 py-2 text-sm font-semibold text-[var(--wms-brand-on-primary)]"
+              className="wms-date-picker-footer__button wms-date-picker-footer__button--primary rounded-lg font-semibold"
               onClick={() => onClose?.()}
             >
               {t('dateInput.done')}

@@ -370,24 +370,216 @@ input.input:is([type='date'], [type='datetime-local'], [type='time'])::-webkit-c
 }
 
 .wms-date-picker-panel {
-  width: min(20rem, calc(100vw - 2rem));
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  color: var(--wms-app-text);
+  color-scheme: light;
+}
+
+.dark .wms-date-picker-panel {
+  color-scheme: dark;
 }
 
 .wms-date-picker-popover {
-  width: min(20rem, calc(100vw - 1.5rem));
+  box-sizing: border-box;
+  width: min(20.5rem, calc(100vw - 1.5rem));
+  min-width: 17rem;
   padding: 0.75rem;
+  border-radius: 0.875rem;
+  overflow: hidden;
+  color: var(--wms-app-text);
 }
 
 .wms-date-picker-dialog {
+  box-sizing: border-box;
   width: min(24rem, calc(100vw - 1rem));
   overflow: hidden;
+  color: var(--wms-app-text);
+}
+
+.wms-date-picker-dialog__header {
+  border-bottom: 1px solid var(--wms-app-border);
+  background: color-mix(in oklab, var(--wms-app-panel-muted) 88%, transparent);
+  color: var(--wms-app-text);
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.wms-date-picker-dialog .wms-date-picker-panel,
+.wms-date-picker-popover .wms-date-picker-panel {
+  width: 100%;
+}
+
+.wms-date-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.25rem;
+}
+
+.wms-date-picker-weekday {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  padding-block: 0.25rem;
+  text-align: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--wms-app-text-muted);
+}
+
+.wms-date-picker-days {
+  grid-template-rows: repeat(6, minmax(0, 1fr));
+  min-height: 11rem;
+}
+
+.wms-date-picker-day {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  min-height: 1.625rem;
+  max-height: 1.875rem;
+  font-size: 0.8125rem;
+  border: 0;
+  background: transparent;
+  color: var(--wms-app-text);
+  cursor: pointer;
+}
+
+.wms-date-picker-day:hover:not(:disabled):not(.wms-date-picker-day--selected) {
+  background: var(--wms-brand-soft);
+}
+
+.wms-date-picker-day--inactive {
+  color: color-mix(in oklab, var(--wms-app-text-muted) 55%, transparent);
+}
+
+.wms-date-picker-day--today:not(.wms-date-picker-day--selected) {
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--wms-brand-primary) 35%, transparent);
+}
+
+.wms-date-picker-day--selected {
+  background: var(--wms-brand-primary);
+  color: var(--wms-brand-on-primary);
+}
+
+.wms-date-picker-day--selected:hover {
+  background: var(--wms-brand-primary);
+}
+
+.wms-date-picker-day:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+
+.wms-date-picker-day:disabled:hover {
+  background: transparent;
+}
+
+.wms-date-picker-header {
+  margin-bottom: 0.625rem;
+}
+
+.wms-date-picker-header__nav {
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--wms-app-border);
+  background: transparent;
+  color: var(--wms-app-text);
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
+.wms-date-picker-header__nav:hover {
+  background: var(--wms-brand-soft);
+  border-color: color-mix(in oklab, var(--wms-brand-primary) 28%, var(--wms-app-border));
+  color: var(--wms-brand-primary);
+}
+
+.wms-date-picker-header__title {
+  font-size: 0.8125rem;
+  color: var(--wms-app-text);
+}
+
+.wms-date-picker-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.375rem;
+  margin-top: 0.625rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--wms-app-border);
+}
+
+.wms-date-picker-footer__button {
+  padding: 0.375rem 0.625rem;
+  font-size: 0.8125rem;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.wms-date-picker-footer__button--muted {
+  color: var(--wms-app-text-muted);
+}
+
+.wms-date-picker-footer__button--muted:hover {
+  background: var(--wms-brand-soft);
+  color: var(--wms-app-text);
+}
+
+.wms-date-picker-footer__button--brand {
+  color: var(--wms-brand-primary);
+}
+
+.wms-date-picker-footer__button--brand:hover {
+  background: var(--wms-brand-soft);
+}
+
+.wms-date-picker-footer__button--primary {
+  background: var(--wms-brand-primary);
+  color: var(--wms-brand-on-primary);
+}
+
+.wms-date-picker-footer__button--primary:hover {
+  background: color-mix(in oklab, var(--wms-brand-primary) 88%, black);
+}
+
+.wms-date-picker-time-field {
+  display: block;
+  color: var(--wms-app-text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.wms-date-picker-time-field .input {
+  margin-top: 0.25rem;
+}
+
+.wms-date-picker-footer__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  min-width: 0;
 }
 
 .app-date-input {
+  cursor: text;
+  caret-color: auto;
+}
+
+.app-date-input--readonly {
+  cursor: pointer;
   caret-color: transparent;
 }
 
-.app-date-input:focus {
+.app-date-input--readonly:focus {
   cursor: pointer;
 }
 
@@ -432,10 +624,32 @@ input.input:is([type='date'], [type='datetime-local'], [type='time'])::-webkit-c
     );
   color: var(--wms-app-text);
   box-shadow:
-    0 24px 64px rgb(2 6 23 / 24%),
+    0 24px 64px color-mix(in oklab, var(--wms-app-text) 18%, transparent),
     0 0 0 1px color-mix(in oklab, var(--wms-brand-primary) 8%, transparent);
   backdrop-filter: none;
   opacity: 1;
+}
+
+.dark .wms-floating-surface {
+  box-shadow:
+    0 24px 64px rgb(0 0 0 / 42%),
+    0 0 0 1px color-mix(in oklab, var(--wms-brand-primary) 12%, transparent),
+    0 0 32px -12px color-mix(in oklab, var(--wms-brand-primary) 16%, transparent);
+}
+
+.dark .input,
+.dark [data-slot='input'] {
+  box-shadow: 0 1px 2px rgb(0 0 0 / 18%), inset 0 1px 0 rgb(255 255 255 / 4%);
+}
+
+html[class*='theme-'] .wms-date-picker-day--selected,
+html[class*='theme-'] .wms-date-picker-footer__button--primary {
+  background: var(--wms-brand-primary);
+  color: var(--wms-brand-on-primary);
+}
+
+html[class*='theme-'] .wms-date-picker-day--today:not(.wms-date-picker-day--selected) {
+  box-shadow: inset 0 0 0 1px var(--wms-brand-ring);
 }
 
 .wms-grid-columns-popover {

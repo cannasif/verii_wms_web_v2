@@ -3922,7 +3922,10 @@
     "hour": "Hour",
     "minute": "Minute",
     "prevMonth": "Previous month",
-    "nextMonth": "Next month"
+    "nextMonth": "Next month",
+    "placeholderDate": "YYYY-MM-DD",
+    "placeholderTime": "HH:mm",
+    "placeholderDateTime": "YYYY-MM-DD HH:mm"
   },
   "dataGrid": {
     "systemColumns": {
