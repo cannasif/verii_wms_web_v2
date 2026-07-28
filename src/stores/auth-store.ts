@@ -82,6 +82,8 @@ export const useAuthStore = create<AuthState>()(
             method: 'POST',
             credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
+            // Keep the request compatible with IIS instances that require Content-Length.
+            body: '{}',
           }).catch(() => undefined);
         }
         clearClientState(currentUserId);
@@ -96,7 +98,10 @@ export const useAuthStore = create<AuthState>()(
       },
       isAuthenticated: () => {
         const state = get();
-        if (!state.token || !isTokenValid(state.token)) return false;
+        // Access-token expiry is not session expiry. The HttpOnly refresh cookie
+        // owns the 30-day session and the API interceptor rotates short-lived
+        // access tokens when needed.
+        if (state.sessionStatus !== 'authenticated' || !state.token) return false;
         const user = state.user ?? getUserFromToken(state.token);
         if (!user) return false;
         if (!state.user) set({ user });

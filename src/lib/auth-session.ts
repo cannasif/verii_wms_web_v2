@@ -78,6 +78,8 @@ export async function requestSessionAccessToken(): Promise<string> {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
+          // IIS rejects bodyless POST requests with HTTP 411 before they reach ASP.NET.
+          body: '{}',
           cache: 'no-store',
         });
 
