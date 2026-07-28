@@ -4,7 +4,6 @@ import { FileDigit, Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdvancedDataGrid, type GridColumn } from '@/components/shared/AdvancedDataGrid';
 import { AppDropdown } from '@/components/shared/AppDropdown';
-import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
 import { requiredActionColumn, systemColumns } from '@/components/shared/GridSystemColumns';
 import { DeleteConfirmDialog } from '@/components/shared/DeleteConfirmDialog';
 import { OpsDialogBody, OpsDialogContent, OpsDialogFooter, OpsDialogHeader } from '@/components/shared/OpsDialogShell';
@@ -13,14 +12,14 @@ import { usePermissionAccess } from '@/features/access-control/hooks/usePermissi
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { formatProjectDateTime } from '@/lib/project-format';
 import { documentSeriesApi } from '../api/document-series.api';
-import type { DocumentSeriesRow, DocumentSeriesUpsertPayload, DocumentYearFormat, WarehouseOption, WmsDocumentType } from '../types/document-series.types';
+import type { DocumentSeriesRow, DocumentSeriesUpsertPayload, DocumentYearFormat, WmsDocumentType } from '../types/document-series.types';
 
-type FormState = Omit<DocumentSeriesUpsertPayload, 'warehouseId' | 'numberLength' | 'startNumber' | 'nextNumber' | 'incrementBy'> & {
-  warehouseId: string; numberLength: string; startNumber: string; nextNumber: string; incrementBy: string;
+type FormState = Omit<DocumentSeriesUpsertPayload, 'numberLength' | 'startNumber' | 'nextNumber' | 'incrementBy'> & {
+  numberLength: string; startNumber: string; nextNumber: string; incrementBy: string;
 };
 
 const emptyForm = (): FormState => ({
-  branchCode: '0', warehouseId: '', code: '', name: '', documentType: 'GoodsReceipt', prefix: 'MK', separator: '-',
+  branchCode: '0', code: '', name: '', documentType: 'GoodsReceipt', prefix: 'MK',
   yearFormat: 'FourDigit', numberLength: '8', startNumber: '1', nextNumber: '1', incrementBy: '1',
   isDefault: false, isActive: true, description: null,
 });
@@ -61,8 +60,8 @@ export function DocumentSeriesPage() {
   const openEdit = useCallback(async (row: DocumentSeriesRow) => {
     setEditing(row);
     setForm({
-      branchCode: row.branchCode, warehouseId: row.warehouseId ? String(row.warehouseId) : '', code: row.code, name: row.name,
-      documentType: row.documentType, prefix: row.prefix, separator: row.separator, yearFormat: row.yearFormat,
+      branchCode: row.branchCode, code: row.code, name: row.name,
+      documentType: row.documentType, prefix: row.prefix, yearFormat: row.yearFormat,
       numberLength: String(row.numberLength), startNumber: String(row.startNumber), nextNumber: String(row.nextNumber), incrementBy: String(row.incrementBy),
       isDefault: row.isDefault, isActive: row.isActive, description: row.description ?? null,
     });
@@ -72,17 +71,34 @@ export function DocumentSeriesPage() {
   const preview = useMemo(() => {
     const year = form.yearFormat === 'TwoDigit' ? String(new Date().getFullYear()).slice(-2) : form.yearFormat === 'FourDigit' ? String(new Date().getFullYear()) : '';
     const number = String(Math.max(Number(form.nextNumber) || 0, 0)).padStart(Math.max(Number(form.numberLength) || 0, 0), '0');
-    return [form.prefix.trim().toUpperCase(), year, number].filter(Boolean).join(form.separator);
-  }, [form.nextNumber, form.numberLength, form.prefix, form.separator, form.yearFormat]);
+    return `${form.prefix.trim().toUpperCase()}${year}${number}`;
+  }, [form.nextNumber, form.numberLength, form.prefix, form.yearFormat]);
+
+  const yearLength = form.yearFormat === 'TwoDigit' ? 2 : form.yearFormat === 'FourDigit' ? 4 : 0;
+  const numberCapacity = 15 - form.prefix.trim().length - yearLength;
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     if (!form.code.trim() || !form.name.trim() || !form.prefix.trim()) { setFormError(t('validation.required')); return; }
     const numberLength = Number(form.numberLength), startNumber = Number(form.startNumber), nextNumber = Number(form.nextNumber), incrementBy = Number(form.incrementBy);
-    if (numberLength < 3 || numberLength > 18 || startNumber < 1 || nextNumber < startNumber || incrementBy < 1) { setFormError(t('validation.numbers')); return; }
+    if (
+      !Number.isSafeInteger(numberLength)
+      || !Number.isSafeInteger(startNumber)
+      || !Number.isSafeInteger(nextNumber)
+      || !Number.isSafeInteger(incrementBy)
+      || numberLength < 3
+      || numberLength > 15
+      || numberLength > numberCapacity
+      || String(Math.trunc(startNumber)).length > numberLength
+      || String(Math.trunc(nextNumber)).length > numberLength
+      || startNumber < 1
+      || nextNumber < startNumber
+      || incrementBy < 1
+      || incrementBy > 1000
+    ) { setFormError(t('validation.numbers')); return; }
     const payload: DocumentSeriesUpsertPayload = {
-      ...form, branchCode: form.branchCode || '0', warehouseId: form.warehouseId ? Number(form.warehouseId) : null,
-      code: form.code.trim().toUpperCase(), name: form.name.trim(), prefix: form.prefix.trim().toUpperCase(), separator: form.separator.trim(),
+      ...form, branchCode: form.branchCode || '0',
+      code: form.code.trim().toUpperCase(), name: form.name.trim(), prefix: form.prefix.trim().toUpperCase(),
       numberLength, startNumber, nextNumber, incrementBy, description: form.description?.trim() || null,
     };
     setSaving(true); setFormError(null);
@@ -106,8 +122,6 @@ export function DocumentSeriesPage() {
   const columns = useMemo<GridColumn<DocumentSeriesRow>[]>(() => moduleReady ? [
     ...systemColumns<DocumentSeriesRow>({ searchable: ['id', 'createdBy', 'updatedBy'] }),
     { key: 'branchCode', label: t('columns.branch'), searchable: true, defaultSearch: false, render: (row) => row.branchCode },
-    { key: 'warehouseCode', label: t('columns.warehouseCode'), searchable: true, defaultSearch: false, contextValue: (row) => row.warehouseCode ?? '-', render: (row) => row.warehouseCode ?? '-' },
-    { key: 'warehouseName', label: t('columns.warehouseName'), searchable: true, defaultSearch: false, contextValue: (row) => row.warehouseName ?? t('form.allWarehouses'), render: (row) => row.warehouseName ?? t('form.allWarehouses') },
     { key: 'code', label: t('columns.code'), searchable: true, defaultSearch: true, render: (row) => <span className="font-mono font-semibold">{row.code}</span> },
     { key: 'name', label: t('columns.name'), searchable: true, defaultSearch: true, render: (row) => row.name },
     { key: 'documentType', label: t('columns.documentType'), searchable: true, defaultSearch: false, contextValue: (row) => t(`types.${row.documentType}`), render: (row) => t(`types.${row.documentType}`) },
@@ -143,17 +157,20 @@ export function DocumentSeriesPage() {
             {locked && <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">{t('form.lockedNotice')}</div>}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               <Field label={t('form.documentType')} required><AppDropdown value={form.documentType} onValueChange={(value) => update('documentType', value)} options={documentTypes} searchable disabled={locked}/></Field>
-              <Field label={t('form.warehouse')}><PagedAppDropdown<WarehouseOption> value={form.warehouseId} onValueChange={(value) => update('warehouseId', value)} queryKey="document-series-warehouses" fetchPage={documentSeriesApi.getWarehousesPaged} searchFields={['warehouseCode', 'warehouseName']} toOption={(item) => ({ value: String(item.id), label: `${item.warehouseCode} - ${item.warehouseName}` })} staticOptions={[{ value: '', label: t('form.allWarehouses') }]} selectedOption={editing?.warehouseId ? { value: String(editing.warehouseId), label: `${editing.warehouseCode} - ${editing.warehouseName ?? ''}` } : undefined} disabled={locked}/></Field>
               <Field label={t('form.code')} required><input value={form.code} maxLength={20} disabled={locked} onChange={(event) => update('code', event.target.value.toUpperCase())} className="input disabled:opacity-50"/></Field>
               <Field label={t('form.name')} required><input value={form.name} maxLength={150} onChange={(event) => update('name', event.target.value)} className="input"/></Field>
               <Field label={t('form.prefix')} required><input value={form.prefix} maxLength={10} disabled={locked} onChange={(event) => update('prefix', event.target.value.toUpperCase())} className="input disabled:opacity-50"/></Field>
-              <Field label={t('form.separator')}><input value={form.separator} maxLength={3} disabled={locked} onChange={(event) => update('separator', event.target.value)} className="input disabled:opacity-50"/></Field>
               <Field label={t('form.yearFormat')}><AppDropdown value={form.yearFormat} onValueChange={(value) => update('yearFormat', value)} options={yearFormats} searchable disabled={locked}/></Field>
-              <Field label={t('form.numberLength')}><NumberField value={form.numberLength} min={3} max={18} disabled={locked} onChange={(value) => update('numberLength', value)}/></Field>
+              <Field label={t('form.numberLength')}><NumberField value={form.numberLength} min={3} max={15} disabled={locked} onChange={(value) => update('numberLength', value)}/></Field>
               <Field label={t('form.startNumber')}><NumberField value={form.startNumber} min={1} disabled={locked} onChange={(value) => update('startNumber', value)}/></Field>
               <Field label={t('form.nextNumber')}><NumberField value={form.nextNumber} min={1} disabled={locked} onChange={(value) => update('nextNumber', value)}/></Field>
               <Field label={t('form.incrementBy')}><NumberField value={form.incrementBy} min={1} max={1000} disabled={locked} onChange={(value) => update('incrementBy', value)}/></Field>
-              <Field label={t('form.preview')}><div className="input flex items-center font-mono font-semibold text-[var(--wms-brand-primary)]">{preview}</div></Field>
+              <Field label={t('form.preview')}>
+                <div className={`input flex items-center justify-between gap-3 font-mono font-semibold ${preview.length > 15 ? 'border-red-400 text-red-600' : 'text-[var(--wms-brand-primary)]'}`}>
+                  <span>{preview}</span>
+                  <span className="text-xs font-normal text-slate-500">{preview.length}/15</span>
+                </div>
+              </Field>
             </div>
             <div className="grid gap-3 sm:grid-cols-2"><Toggle label={t('form.default')} checked={form.isDefault} onChange={(value) => update('isDefault', value)}/><Toggle label={t('form.active')} checked={form.isActive} onChange={(value) => update('isActive', value)}/></div>
             <Field label={t('form.descriptionLabel')}><textarea value={form.description ?? ''} maxLength={500} rows={3} onChange={(event) => update('description', event.target.value)} className="input min-h-[5rem] resize-y"/></Field>

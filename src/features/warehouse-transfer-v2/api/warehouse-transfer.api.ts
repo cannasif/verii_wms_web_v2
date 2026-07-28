@@ -93,11 +93,10 @@ export const warehouseTransferApi = {
       { signal: request.signal },
     )),
   series: async (
-    warehouseId: number,
     documentType: 'InterWarehouseTransfer' | 'ProductionTransfer' | 'SubcontractingIssue' | 'SubcontractingReceipt' | 'ProductionOrder' = 'InterWarehouseTransfer',
   ): Promise<SeriesOption[]> =>
     unwrap(await api.get<Envelope<SeriesOption[]>>(
-      `/api/document-series/lookup?documentType=${documentType}&warehouseId=${warehouseId}`,
+      `/api/document-series/lookup?documentType=${documentType}`,
     )),
   createDraft: async (payload: unknown): Promise<CreateTransferDraftResult> =>
     unwrap(await api.post<Envelope<CreateTransferDraftResult>>('/api/warehouse-transfers/drafts', payload)),

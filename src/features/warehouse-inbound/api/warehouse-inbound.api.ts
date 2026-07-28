@@ -25,7 +25,7 @@ export const warehouseInboundV2Api = {
     unwrap(await api.get<Envelope<PutawayLocationSuggestion[]>>('/api/locations/putaway-suggestions', {
       params: { warehouseId, stockId: params.stockId, stockCode: params.stockCode, yapCodeId: params.yapCodeId, quantity: params.quantity, limit: params.limit ?? 5 },
     })),
-  series: async (warehouseId: number): Promise<SeriesOption[]> => unwrap(await api.get<Envelope<SeriesOption[]>>(`/api/document-series/lookup?documentType=WarehouseReceipt&warehouseId=${warehouseId}`)),
+  series: async (): Promise<SeriesOption[]> => unwrap(await api.get<Envelope<SeriesOption[]>>('/api/document-series/lookup?documentType=WarehouseReceipt')),
   orderHeaders: async (customerCode: string, branchCode: string): Promise<OpenOrderHeader[]> => unwrap(await api.get<Envelope<OpenOrderHeader[]>>(`/api/netsis-read/goods-receipt/open-orders/headers?customerCode=${encodeURIComponent(customerCode)}&branchCode=${encodeURIComponent(branchCode)}`)),
   orderLines: async (customerCode: string, branchCode: string, orderNumbers: string[]): Promise<OpenOrderLine[]> => unwrap(await api.get<Envelope<OpenOrderLine[]>>(`/api/netsis-read/goods-receipt/open-orders/lines?customerCode=${encodeURIComponent(customerCode)}&branchCode=${encodeURIComponent(branchCode)}&orderNumbersCsv=${encodeURIComponent(orderNumbers.join(','))}`)),
   create: async (payload: unknown): Promise<CreateWarehouseInboundResult> => unwrap(await api.post<Envelope<CreateWarehouseInboundResult>>('/api/warehouse-inbounds/from-orders', payload)),

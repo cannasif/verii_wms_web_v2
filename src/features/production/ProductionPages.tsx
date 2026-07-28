@@ -124,7 +124,7 @@ export function ProductionCreatePage(): ReactElement {
     setSeries([]);
     setSeriesId(null);
     if (!sourceWarehouse?.id) return;
-    void warehouseTransferApi.series(sourceWarehouse.id, 'ProductionOrder')
+    void warehouseTransferApi.series('ProductionOrder')
       .then((rows) => {
         setSeries(rows);
         const preferred = rows.find((x) => x.isDefault) ?? rows[0];

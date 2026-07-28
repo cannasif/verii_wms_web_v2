@@ -17,7 +17,7 @@ export const warehouseOutboundApi={
  yaps:async(r:DropdownPageRequest,b:string):Promise<DropdownPage<YapCodeOption>>=>unwrap(await api.post('/api/erp-mirror/yap-codes/paged',body({...r,sortBy:r.sortBy??'configurationCode'},[{column:'branchCode',operator:'equals',value:b}]),{signal:r.signal})),
  locations:async(r:DropdownPageRequest,w:number):Promise<DropdownPage<LocationOption>>=>unwrap(await api.post('/api/locations/paged',body({...r,sortBy:r.sortBy??'code'},[{column:'warehouseId',operator:'equals',value:String(w)},{column:'isActive',operator:'equals',value:'true'}]),{signal:r.signal})),
  users:async(r:DropdownPageRequest):Promise<DropdownPage<ActiveUserOption>>=>unwrap(await api.post('/api/users/paged',body({...r,sortBy:r.sortBy??'username'},[{column:'isActive',operator:'equals',value:'true'}]),{signal:r.signal})),
- series:async(w:number):Promise<SeriesOption[]>=>unwrap(await api.get(`/api/document-series/lookup?documentType=Shipment&warehouseId=${w}`)),
+ series:async():Promise<SeriesOption[]>=>unwrap(await api.get('/api/document-series/lookup?documentType=Shipment')),
  orderHeaders:async(c:string,b:string):Promise<ShipmentOrderHeader[]>=>unwrap(await api.get('/api/netsis-read/warehouseOutbound/open-orders/headers',{params:{customerCode:c,branchCode:b}})),
  orderLines:async(o:string[],b:string):Promise<ShipmentOrderLine[]>=>unwrap(await api.get('/api/netsis-read/warehouseOutbound/open-orders/lines',{params:{orderNumbersCsv:o.join(','),branchCode:b}})),
  policy:async(b:string):Promise<ShipmentPolicy>=>unwrap(await api.get('/api/warehouse-outbound-policy',{params:{branchCode:b}})),

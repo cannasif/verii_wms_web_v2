@@ -13,14 +13,10 @@ export type DocumentYearFormat = 'None' | 'TwoDigit' | 'FourDigit';
 export interface DocumentSeriesRow {
   id: number;
   branchCode: string;
-  warehouseId?: number | null;
-  warehouseCode?: number | null;
-  warehouseName?: string | null;
   code: string;
   name: string;
   documentType: WmsDocumentType;
   prefix: string;
-  separator: string;
   yearFormat: DocumentYearFormat;
   numberLength: number;
   startNumber: number;
@@ -42,12 +38,10 @@ export interface DocumentSeriesRow {
 
 export interface DocumentSeriesUpsertPayload {
   branchCode: string;
-  warehouseId: number | null;
   code: string;
   name: string;
   documentType: WmsDocumentType;
   prefix: string;
-  separator: string;
   yearFormat: DocumentYearFormat;
   numberLength: number;
   startNumber: number;
@@ -57,5 +51,3 @@ export interface DocumentSeriesUpsertPayload {
   isActive: boolean;
   description: string | null;
 }
-
-export interface WarehouseOption { id: number; branchCode: string; warehouseCode: number; warehouseName: string }

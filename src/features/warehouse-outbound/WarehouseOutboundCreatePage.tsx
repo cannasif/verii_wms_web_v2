@@ -115,7 +115,7 @@ export function WarehouseOutboundCreatePage() {
       sourceLocationValue: null,
     })));
     if (!warehouseId) return;
-    void warehouseOutboundApi.series(warehouseId)
+    void warehouseOutboundApi.series()
       .then((items) => {
         setSeries(items);
         const preferred = items.find((x) => x.isDefault) ?? items[0];

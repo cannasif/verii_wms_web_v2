@@ -69,7 +69,7 @@ export function WarehouseInboundManualPage({ direct }: { direct: boolean }): Rea
   useEffect(() => {
     setLocationId(null); setLineLocation(null); setLocationSuggestions([]); setSeries([]); setSeriesId(null);
     if (!warehouseId) return;
-    void warehouseInboundV2Api.series(warehouseId).then((items) => {
+    void warehouseInboundV2Api.series().then((items) => {
       setSeries(items); const preferred = items.find((item) => item.isDefault) ?? items[0]; setSeriesId(preferred ? String(preferred.id) : null);
     }).catch((cause: Error) => setError(cause.message));
   }, [warehouseId]);

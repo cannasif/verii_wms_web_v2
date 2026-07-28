@@ -170,7 +170,7 @@ export function WarehouseTransferDraftPage({
         ? subcontractDirection === "ReceiptFromSupplier" ? "SubcontractingReceipt" : "SubcontractingIssue"
         : "InterWarehouseTransfer";
     void warehouseTransferApi
-      .series(sourceId, documentType)
+      .series(documentType)
       .then((rows) => {
         setSeries(rows);
         const preferred = rows.find((x) => x.isDefault) ?? rows[0];

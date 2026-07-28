@@ -109,7 +109,7 @@ export function WarehouseInboundCreatePage(): ReactElement {
     setSeriesValue(null);
     if (!primaryLine?.targetWarehouseId) return;
     void warehouseInboundV2Api
-      .series(primaryLine.targetWarehouseId)
+      .series()
       .then((items) => {
         setSeries(items);
         const preferred = items.find((x) => x.isDefault) ?? items[0];

@@ -94,7 +94,7 @@ export function IncomingInvoiceGoodsReceiptDialog({
     setSeriesId(null);
     if (!warehouseId) return;
     let active = true;
-    void goodsReceiptV2Api.series(warehouseId)
+    void goodsReceiptV2Api.series()
       .then((items) => {
         if (!active) return;
         setSeries(items);
