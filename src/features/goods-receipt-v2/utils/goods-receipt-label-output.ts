@@ -9,7 +9,8 @@ export function printableLabels(labels:GoodsReceiptLabelRow[]):GoodsReceiptLabel
 
 export function printReceiptLabels(labels:GoodsReceiptLabelRow[],title:string):void{
   const rows=printableLabels(labels); if(!rows.length)throw new Error('Yazdırılabilir etiket bulunamadı.');
-  const win=window.open('','_blank','noopener,noreferrer'); if(!win)throw new Error('Yazdırma penceresine tarayıcı izin vermedi.');
+  const win=window.open('','_blank'); if(!win)throw new Error('Yazdırma penceresine tarayıcı izin vermedi.');
+  win.opener=null;
   const images=rows.map(x=>`<img src="${labelImage(x)}" alt="${escapeHtml(x.stockCode)}"/>`).join('');
   win.document.write(`<html><head><title>${escapeHtml(title)}</title><style>@page{size:${WIDTH_MM}mm ${HEIGHT_MM}mm;margin:0}*{box-sizing:border-box}html,body{margin:0}img{display:block;width:${WIDTH_MM}mm;height:${HEIGHT_MM}mm;page-break-after:always}</style></head><body>${images}<script>window.onload=()=>{window.print();window.onafterprint=()=>window.close()}</script></body></html>`);
   win.document.close();
@@ -17,7 +18,8 @@ export function printReceiptLabels(labels:GoodsReceiptLabelRow[],title:string):v
 
 export async function previewReceiptLabelsPdf(labels:GoodsReceiptLabelRow[],fileName:string):Promise<void>{
   const rows=printableLabels(labels); if(!rows.length)throw new Error('PDF oluşturulabilecek etiket bulunamadı.');
-  const win=window.open('','_blank','noopener,noreferrer'); if(!win)throw new Error('PDF önizleme penceresine tarayıcı izin vermedi.');
+  const win=window.open('','_blank'); if(!win)throw new Error('PDF önizleme penceresine tarayıcı izin vermedi.');
+  win.opener=null;
   const {jsPDF}=await import('jspdf');
   const pdf=new jsPDF({orientation:'landscape',unit:'mm',format:[WIDTH_MM,HEIGHT_MM]});
   rows.forEach((row,index)=>{if(index)pdf.addPage([WIDTH_MM,HEIGHT_MM],'landscape');pdf.addImage(labelImage(row),'PNG',0,0,WIDTH_MM,HEIGHT_MM)});

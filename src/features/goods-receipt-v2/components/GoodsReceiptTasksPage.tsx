@@ -8,6 +8,7 @@ import {
   Eye,
   Loader2,
   Play,
+  Printer,
   Save,
   ScanLine,
   Tags,
@@ -35,10 +36,12 @@ import { goodsReceiptV2Api } from "../api/goods-receipt.api";
 import { goodsReceiptEnumLabel } from "../localization/enum-labels";
 import type {
   ActiveUserOption,
+  GoodsReceiptLabelBatchDetail,
   GoodsReceiptTaskDetail,
   GoodsReceiptTaskGridRow,
 } from "../types/goods-receipt.types";
 import { useModuleTranslation } from "@/hooks/useModuleTranslation";
+import { printReceiptLabels } from "../utils/goods-receipt-label-output";
 
 export function GoodsReceiptTasksPage({
   assignedOnly = false,
@@ -418,6 +421,7 @@ function TaskModal({
               Emri Başlat
             </button>
           </div>
+          <PreLabelPanel detail={detail} />
           {detail.task.status === "InProgress" && (
             <TaskScanPanel detail={detail} reload={reload} />
           )}
@@ -481,6 +485,13 @@ function PreLabelPanel({
   detail: GoodsReceiptTaskDetail;
 }): ReactElement {
   const [busy, setBusy] = useState(false);
+  const [generated, setGenerated] =
+    useState<GoodsReceiptLabelBatchDetail | null>(null);
+  const [printed, setPrinted] = useState(false);
+  const generationIdempotencyKey = useRef(crypto.randomUUID());
+  const hasOpenLines = detail.lines.some(
+    (x) => x.processedQuantity < x.plannedQuantity,
+  );
   const create = async () => {
     const lines = detail.lines
       .filter((x) => x.processedQuantity < x.plannedQuantity)
@@ -496,12 +507,36 @@ function PreLabelPanel({
         detail.task.id,
         lines,
         "Emir ön etiket paketi",
+        generationIdempotencyKey.current,
       );
+      setGenerated(result);
+      setPrinted(false);
       toast.success(
-        `${result.batch.totalLabelCount} ön etiket üretildi. Ön Etiketler ekranından yazdırabilirsiniz.`,
+        `${result.batch.totalLabelCount} ön etiket üretildi. Şimdi etiketleri yazdırın.`,
       );
     } catch (error) {
       toast.error(message(error, "Ön etiket üretilemedi."));
+    } finally {
+      setBusy(false);
+    }
+  };
+  const print = async () => {
+    if (!generated) return;
+    const labelIds = generated.labels.map((x) => x.id);
+    if (labelIds.length === 0) {
+      toast.error("Yazdırılabilir etiket bulunamadı.");
+      return;
+    }
+    setBusy(true);
+    try {
+      printReceiptLabels(generated.labels, generated.batch.batchNo);
+      await goodsReceiptV2Api.markLabelsPrinted(labelIds);
+      setPrinted(true);
+      toast.success(
+        "Etiketler yazdırıldı olarak kaydedildi. Artık barkodu okutarak kabul yapabilirsiniz.",
+      );
+    } catch (error) {
+      toast.error(message(error, "Etiketler yazdırılamadı."));
     } finally {
       setBusy(false);
     }
@@ -521,7 +556,7 @@ function PreLabelPanel({
         </div>
         <button
           type="button"
-          disabled={busy}
+          disabled={busy || generated !== null || !hasOpenLines}
           onClick={() => void create()}
           className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-4 py-2 font-semibold text-white disabled:opacity-40"
         >
@@ -530,9 +565,39 @@ function PreLabelPanel({
           ) : (
             <Barcode className="size-4" />
           )}
-          Ön Etiket Oluştur
+          {generated
+            ? "Etiket Oluşturuldu"
+            : hasOpenLines
+              ? "Ön Etiket Oluştur"
+              : "Açık Satır Yok"}
         </button>
       </div>
+      {generated && (
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-cyan-500/25 bg-[var(--wms-app-surface)] p-3">
+          <div className="text-sm">
+            <strong className="block">{generated.batch.batchNo}</strong>
+            <span className="text-xs text-slate-500">
+              {generated.batch.totalLabelCount} etiket ·{" "}
+              {printed
+                ? "Yazdırıldı, barkod okutulabilir"
+                : "Kabulden önce yazdırılmalı"}
+            </span>
+          </div>
+          <button
+            type="button"
+            disabled={busy || printed}
+            onClick={() => void print()}
+            className="inline-flex items-center gap-2 rounded-xl border border-cyan-500/40 px-4 py-2 font-semibold text-cyan-500 disabled:opacity-40"
+          >
+            {busy ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Printer className="size-4" />
+            )}
+            {printed ? "Yazdırıldı" : "Etiketleri Yazdır"}
+          </button>
+        </div>
+      )}
     </section>
   );
 }
