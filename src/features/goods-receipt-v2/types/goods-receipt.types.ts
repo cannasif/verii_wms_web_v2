@@ -20,7 +20,22 @@ export interface OpenOrderHeader { siparisNo: string; customerCode?: string; cus
 export interface OpenOrderLine { siparisNo: string; orderId: number; stockCode?: string; stockName?: string; unitCode?: string; yapCode?: string; yapDescription?: string; customerCode?: string; branchCode?: number; targetWarehouseCode?: number; orderDate?: string; projectCode?: string; orderedQuantity?: number; deliveredQuantity?: number; remainingQuantity?: number; plannedQuantity?: number; availableQuantity?: number }
 export type StockTrackingType = 'None' | 'Lot' | 'Serial' | 'LotAndSerial';
 export interface PlannedReceiptTracking { localId: string; quantity: number; lotNo?: string; serialNo?: string; manufacturingDate?: string; expirationDate?: string; description?: string }
-export interface SelectedReceiptLine extends OpenOrderLine { stockId: number; quantity: number; targetWarehouseId?: number; targetWarehouseValue?: string | null; receivingLocationId?: number; receivingLocationValue?: string | null; trackingType: StockTrackingType; trackingPolicy: EffectiveStockTrackingPolicy; trackings: PlannedReceiptTracking[]; serialGenerationKey?: string; requireQualityControl?: boolean }
+export interface SelectedReceiptLine extends OpenOrderLine {
+  stockId: number;
+  quantity: number;
+  targetWarehouseId?: number;
+  targetWarehouseValue?: string | null;
+  receivingLocationId?: number;
+  receivingLocationValue?: string | null;
+  receivingLocationCode?: string;
+  putawayLocationId?: number;
+  putawayLocationCode?: string;
+  trackingType: StockTrackingType;
+  trackingPolicy: EffectiveStockTrackingPolicy;
+  trackings: PlannedReceiptTracking[];
+  serialGenerationKey?: string;
+  requireQualityControl?: boolean;
+}
 export interface CreatedGoodsReceiptTaskResult { id: number; taskNo: string; warehouseId: number; lineCount: number; plannedQuantity: number }
 export interface CreateGoodsReceiptResult { id: number; documentNo: string; taskId: number; taskNo: string; lineCount: number; reservedQuantity: number; replayed: boolean; tasks: CreatedGoodsReceiptTaskResult[] }
 export interface StockOption { id: number; branchCode: string; erpStockCode: string; stockName?: string; unitCode?: string }

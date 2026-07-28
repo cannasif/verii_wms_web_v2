@@ -73,6 +73,15 @@ export function GoodsReceiptManualPage({ direct }: { direct: boolean }): ReactEl
     void goodsReceiptV2Api.series(warehouseId).then((items) => {
       setSeries(items); const preferred = items.find((item) => item.isDefault) ?? items[0]; setSeriesId(preferred ? String(preferred.id) : null);
     }).catch((cause: Error) => setError(cause.message));
+    void goodsReceiptV2Api.receivingLocations({
+      pageNumber: 1, pageSize: 100, search: undefined, filterLogic: 'and', filters: [], sortBy: 'code', sortDirection: 'asc', signal: new AbortController().signal,
+    }, warehouseId).then((page) => {
+      const preferred = page.items.find((item) => item.locationType === 'Receiving') ?? page.items[0];
+      if (preferred) {
+        setLocationId(String(preferred.id));
+        setLineLocation(`${preferred.id}|${preferred.code}`);
+      }
+    }).catch(() => undefined);
   }, [warehouseId]);
 
   useEffect(() => {
@@ -89,9 +98,7 @@ export function GoodsReceiptManualPage({ direct }: { direct: boolean }): ReactEl
         yapCodeId: yapCodeId || undefined,
         quantity: numericQuantity,
       }).then((items) => {
-        if (cancelled) return;
-        setLocationSuggestions(items);
-        if (!lineLocation && items[0]) setLineLocation(`${items[0].id}|${items[0].code}`);
+        if (!cancelled) setLocationSuggestions(items);
       }).catch(() => {
         if (!cancelled) setLocationSuggestions([]);
       }).finally(() => {
@@ -99,7 +106,7 @@ export function GoodsReceiptManualPage({ direct }: { direct: boolean }): ReactEl
       });
     }, 300);
     return () => { cancelled = true; window.clearTimeout(timer); };
-  }, [warehouseId, stock, yap, quantity, lineLocation]);
+  }, [warehouseId, stock, yap, quantity]);
 
   const showError = (message: string): false => { setError(message); toast.error(message); return false; };
   const canLeaveStep = (): boolean => {
@@ -180,7 +187,7 @@ export function GoodsReceiptManualPage({ direct }: { direct: boolean }): ReactEl
 
     {step === 1 && <Panel title={t('manual.operation.title')} description={t('manual.operation.description')} icon={<Building2/>}><div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
       <Field label={t('manual.warehouse')} required><PagedAppDropdown queryKey={['gr-manual-warehouses', branchCode]} fetchPage={(request) => goodsReceiptV2Api.warehouses(request, branchCode)} toOption={(x) => ({ value: `${x.id}|${x.branchCode}|${x.warehouseCode}|${encodeURIComponent(x.warehouseName)}`, label: `${x.warehouseCode} · ${x.warehouseName}` })} value={warehouse} onValueChange={setWarehouse} searchable/></Field>
-      <Field label={t('manual.location')} required><PagedAppDropdown queryKey={['gr-manual-locations', warehouseId]} fetchPage={(request) => goodsReceiptV2Api.locations(request, warehouseId)} toOption={(x) => ({ value: String(x.id), label: `${x.code} · ${x.name}`, description: x.locationType })} enabled={warehouseId > 0} dependencies={[warehouseId]} value={locationId} onValueChange={setLocationId} searchable/></Field>
+      <Field label={t('manual.location')} required><PagedAppDropdown queryKey={['gr-manual-receiving-locations', warehouseId]} fetchPage={(request) => goodsReceiptV2Api.receivingLocations(request, warehouseId)} toOption={(x) => ({ value: String(x.id), label: `${x.code} · ${x.name}`, description: x.locationType })} enabled={warehouseId > 0} dependencies={[warehouseId]} value={locationId} onValueChange={setLocationId} searchable placeholder="Receiving / Staging"/></Field>
       <Field label={t('manual.series')} required><AppDropdown value={seriesId} onValueChange={setSeriesId} options={series.map((x) => ({ value: String(x.id), label: `${x.code} · ${x.name}`, description: x.previewDocumentNumber }))}/></Field>
       <Field label={t('manual.priority')}><AppDropdown value={priority} onValueChange={setPriority} options={[1,2,3,4,5].map((value) => ({ value: String(value), label: String(value) }))}/></Field>
       <Field label={t('manual.labelStrategy')}><AppDropdown value={labelStrategy} onValueChange={setLabelStrategy} options={[{value:'None',label:t('manual.options.noLabel')},{value:'PreGenerate',label:t('manual.options.preGenerate')},{value:'SupplierLabel',label:t('manual.options.supplierLabel')},{value:'GenerateOnReceipt',label:t('manual.options.generateOnReceipt')}]}/></Field>
@@ -191,13 +198,13 @@ export function GoodsReceiptManualPage({ direct }: { direct: boolean }): ReactEl
       <Field label={t('manual.stock')} required><PagedAppDropdown queryKey={['gr-manual-stocks', branchCode]} fetchPage={(request) => goodsReceiptV2Api.stocks(request, branchCode)} toOption={(x) => ({ value: `${x.id}|${x.erpStockCode}|${encodeURIComponent(x.stockName || '')}|${encodeURIComponent(x.unitCode || '')}`, label: `${x.erpStockCode} · ${x.stockName || ''}`, description: x.unitCode ? `Birim: ${x.unitCode}` : 'Birim tanımsız' })} value={stock} onValueChange={(value) => { setStock(value); setUnitCode(decodeURIComponent(split(value)[3] || '')); }} searchable minSearchLength={2}/></Field>
       <Field label={t('manual.yap')}><PagedAppDropdown queryKey={['gr-manual-yaps', branchCode]} fetchPage={(request) => goodsReceiptV2Api.yapCodes(request, branchCode)} toOption={(x) => ({ value: `${x.id}|${x.configurationCode}`, label: `${x.configurationCode} · ${x.description || ''}` })} value={yap} onValueChange={setYap} searchable minSearchLength={1}/></Field>
       <Field label={t('manual.quantity')} required><input className="input font-mono" inputMode="decimal" value={quantity} onChange={(e) => setQuantity(e.target.value)}/></Field><Field label={t('manual.unit')}><div className={`input flex items-center font-bold ${unitCode ? 'text-cyan-600' : 'text-amber-600'}`}>{unitCode || 'Önce stok seçin'}</div></Field>
-      <Field label="Hedef raf" required><PagedAppDropdown queryKey={['gr-manual-line-locations', warehouseId]} fetchPage={(request) => goodsReceiptV2Api.locations(request, warehouseId)} toOption={(x) => ({ value: `${x.id}|${x.code}`, label: `${x.code} · ${x.name}`, description: x.locationType })} enabled={warehouseId > 0} dependencies={[warehouseId]} value={lineLocation} onValueChange={setLineLocation} searchable/></Field>
+      <Field label="Kabul rafı (Receiving / Staging)" required><PagedAppDropdown queryKey={['gr-manual-line-receiving-locations', warehouseId]} fetchPage={(request) => goodsReceiptV2Api.receivingLocations(request, warehouseId)} toOption={(x) => ({ value: `${x.id}|${x.code}`, label: `${x.code} · ${x.name}`, description: x.locationType })} enabled={warehouseId > 0} dependencies={[warehouseId]} value={lineLocation} onValueChange={setLineLocation} searchable/></Field>
       <Field label={t('manual.lot')}><input className="input" maxLength={100} value={lotNo} onChange={(e) => setLotNo(e.target.value)}/></Field><Field label={t('manual.serial')}><input className="input" maxLength={100} value={serialNo} onChange={(e) => setSerialNo(e.target.value)}/></Field>
       <Field label={t('manual.manufacturingDate')}><AppDateInput value={manufacturingDate} onChange={(e) => setManufacturingDate(e.target.value)}/></Field><Field label={t('manual.expirationDate')}><AppDateInput value={expirationDate} onChange={(e) => setExpirationDate(e.target.value)}/></Field>
       {direct && <Field label={t('manual.scannedBarcode')}><input className="input" maxLength={250} value={scannedBarcode} onChange={(e) => setScannedBarcode(e.target.value)}/></Field>}
       <div className="flex items-end"><button type="button" onClick={addLine} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-cyan-600 px-4 py-2.5 font-semibold text-white"><Plus className="size-4"/>{t('manual.addLine')}</button></div>
     </div><section className="mt-4 rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-4"><div className="flex items-start gap-3"><ScanBarcode className="mt-0.5 size-5 shrink-0 text-cyan-500"/><div><h3 className="font-bold">Toplu seri ve barkod okutma</h3><p className="text-xs leading-5 text-slate-500">Miktar 13 ise okuyucuyla 13 farklı seriyi satır satır okutun. Her seri API’ye 1 miktarlı ayrı izlenebilir kalem olarak gönderilir.</p></div></div><textarea className="input mt-3 min-h-28 font-mono" value={serialBatch} onChange={(event) => setSerialBatch(event.target.value)} placeholder={'SN-000001\\nSN-000002\\nSN-000003'} aria-label="Toplu seri barkodları"/><div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs"><span>Okutulan: <strong>{serialBatch.split(/[\n,;]+/).map((value) => value.trim()).filter(Boolean).length}</strong> / Miktar: <strong>{Number(quantity) || 0}</strong></span><button type="button" onClick={() => setSerialBatch('')} disabled={!serialBatch} className="rounded-lg border px-3 py-1.5 font-semibold disabled:opacity-40">Listeyi temizle</button></div></section>
-      {(suggestionsBusy || locationSuggestions.length > 0) && <div className="mt-4 rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3"><div className="mb-2 flex items-center gap-2 text-sm font-bold text-cyan-500">{suggestionsBusy && <Loader2 className="size-4 animate-spin"/>}Akıllı raf önerileri</div><div className="flex flex-wrap gap-2">{locationSuggestions.map((item, index) => <button type="button" key={item.id} onClick={() => setLineLocation(`${item.id}|${item.code}`)} className={`rounded-xl border px-3 py-2 text-left text-xs ${lineLocation?.startsWith(`${item.id}|`) ? 'border-cyan-500 bg-cyan-500/15' : 'border-[var(--wms-app-border)] bg-[var(--wms-app-panel)]'}`}><strong>{index + 1}. {item.code}</strong><span className="ml-2 text-slate-500">{item.reason}</span>{item.remainingCapacity != null && <span className="ml-2 font-mono text-slate-500">Kalan: {item.remainingCapacity}</span>}</button>)}</div></div>}
+      {(suggestionsBusy || locationSuggestions.length > 0) && <div className="mt-4 rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3"><div className="mb-2 flex items-center gap-2 text-sm font-bold text-cyan-500">{suggestionsBusy && <Loader2 className="size-4 animate-spin"/>}Önerilen putaway rafları (bilgi)</div><p className="mb-2 text-xs text-slate-500">Kabul rafı değildir; yalnızca Receiving/Staging seçin. Bu liste sonraki raflama için bilgi amaçlıdır.</p><div className="flex flex-wrap gap-2">{locationSuggestions.map((item, index) => <div key={item.id} className="rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] px-3 py-2 text-left text-xs"><strong>{index + 1}. {item.code}</strong><span className="ml-2 text-slate-500">{item.reason}</span>{item.remainingCapacity != null && <span className="ml-2 font-mono text-slate-500">Kalan: {item.remainingCapacity}</span>}</div>)}</div></div>}
       <LineTable lines={lines} remove={(id) => setLines((current) => current.filter((line) => line.localId !== id))} t={t}/></Panel>}
 
     {step === 3 && <Panel title={t('manual.review.title')} description={t('manual.review.description')} icon={<ClipboardCheck/>}><div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4"><Summary label={t('manual.customer')} value={`${split(customer)[2] || '—'} · ${decodeURIComponent(split(customer)[3] || '')}`}/><Summary label={t('manual.receiptNo')} value={receiptNo}/><Summary label={t('manual.documentType')} value={isElectronic ? t('manual.eReceipt') : t('manual.normalReceipt')}/><Summary label={t('manual.documentDate')} value={documentDate}/><Summary label={t('manual.warehouse')} value={`${split(warehouse)[2] || '—'} · ${decodeURIComponent(split(warehouse)[3] || '')}`}/><Summary label={t('manual.lineCount')} value={String(lines.length)}/><Summary label={t('manual.totalQuantity')} value={String(total)}/><Summary label={t('manual.operationType')} value={direct ? t('manual.direct') : t('manual.orderless')}/>{!direct&&<Summary label="Emir sorumluları" value={assignees.map(userLabel).join(', ')||'—'}/>}</div><Field label={t('manual.description')}><textarea className="input mt-5 min-h-24" maxLength={1000} value={description} onChange={(e) => setDescription(e.target.value)}/></Field></Panel>}
@@ -213,4 +220,50 @@ function Panel({title,description,icon,children}:{title:string;description:strin
 function Field({label,required,children}:{label:string;required?:boolean;children:ReactNode}):ReactElement{return <label className="block space-y-1.5 text-sm"><span className="font-semibold">{label}{required&&<span className="text-red-500"> *</span>}</span>{children}</label>;}
 function Summary({label,value}:{label:string;value:string}):ReactElement{return <div className="rounded-xl border border-[var(--wms-app-border)] bg-black/[.025] p-4 dark:bg-white/[.025]"><div className="text-xs text-slate-500">{label}</div><strong className="mt-1 block break-words text-sm">{value}</strong></div>;}
 function LineTable({lines,remove,t}:{lines:ManualReceiptLine[];remove:(id:string)=>void;t:(key:string)=>string}):ReactElement{return <div className="mt-5 overflow-x-auto rounded-xl border border-[var(--wms-app-border)]"><table className="w-full text-sm"><thead className="bg-black/5 text-left dark:bg-white/5"><tr><th className="p-3">{t('manual.stock')}</th><th className="p-3">{t('manual.yap')}</th><th className="p-3">Depo / Raf</th><th className="p-3">{t('manual.lot')} / {t('manual.serial')}</th><th className="p-3 text-right">{t('manual.quantity')}</th><th className="p-3">{t('manual.actions')}</th></tr></thead><tbody>{lines.map((line)=><tr key={line.localId} className="border-t border-[var(--wms-app-border)]"><td className="p-3"><strong>{line.stockCode}</strong><div className="text-xs text-slate-500">{line.stockName}</div></td><td className="p-3">{line.yapCode||'—'}</td><td className="p-3"><strong>{line.targetWarehouseCode ?? '—'}</strong><div className="text-xs text-cyan-500">{line.receivingLocationCode}</div></td><td className="p-3">{line.lotNo||'—'} / {line.serialNo||'—'}</td><td className="p-3 text-right font-mono">{line.quantity} {line.unitCode}</td><td className="p-3"><button aria-label={t('manual.removeLine')} onClick={()=>remove(line.localId)} className="rounded-lg p-2 text-red-500 hover:bg-red-500/10"><Trash2 className="size-4"/></button></td></tr>)}</tbody></table>{lines.length===0&&<p className="p-6 text-center text-sm text-slate-500">{t('manual.noLines')}</p>}</div>;}
-function Result({result,direct,reset,t}:{result:ManualGoodsReceiptResult;direct:boolean;reset:()=>void;t:(key:string)=>string}):ReactElement{return <section className="grid min-h-[30rem] place-items-center rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-8 text-center"><div><CheckCircle2 className="mx-auto size-14 text-emerald-500"/><h1 className="mt-4 text-2xl font-bold">{direct?t('manual.resultDirect'):t('manual.resultOrderless')}</h1><p className="mt-2 font-mono text-xl">{result.documentNo}</p><p className="mt-2 text-sm text-slate-500">{result.lineCount} {t('manual.linesText')} · {result.quantity}{result.taskNo?` · ${result.taskNo}`:''}</p><button onClick={reset} className="mt-6 rounded-xl bg-emerald-600 px-5 py-2.5 font-semibold text-white">{t('manual.newRecord')}</button></div></section>;}
+function Result({result,direct,reset,t}:{result:ManualGoodsReceiptResult;direct:boolean;reset:()=>void;t:(key:string)=>string}):ReactElement{
+  return (
+    <section className="mx-auto max-w-2xl overflow-hidden rounded-3xl border border-emerald-500/35 bg-gradient-to-br from-emerald-500/15 via-[var(--wms-app-panel)] to-transparent shadow-sm">
+      <div className="border-b border-emerald-500/20 px-8 py-8 text-center">
+        <div className="mx-auto grid size-16 place-items-center rounded-2xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-300">
+          <CheckCircle2 className="size-9"/>
+        </div>
+        <p className="mt-5 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-300">
+          Mal kabul sonrası
+        </p>
+        <h1 className="mt-2 text-2xl font-black tracking-tight">
+          {direct ? 'Mal kabul sonrası irsaliye oluşturuldu' : t('manual.resultOrderless')}
+        </h1>
+        <p className="mx-auto mt-3 max-w-md text-sm text-slate-600 dark:text-slate-300">
+          {direct
+            ? 'Fiziksel kabul kaydı tamamlandı. Belge numarası aşağıda; kalite gerekiyorsa inceleme listesine aktarılmıştır.'
+            : 'Siparişsiz mal kabul emri oluşturuldu ve operasyon kuyruğuna düştü.'}
+        </p>
+        <div className="mx-auto mt-5 inline-flex rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-5 py-3">
+          <div>
+            <div className="text-[11px] uppercase tracking-wider text-slate-500">Belge No</div>
+            <div className="mt-1 font-mono text-xl font-bold text-emerald-700 dark:text-emerald-300">{result.documentNo}</div>
+          </div>
+        </div>
+      </div>
+      <div className="grid gap-3 px-8 py-6 sm:grid-cols-3">
+        <div className="rounded-xl border border-[var(--wms-app-border)] p-3 text-center">
+          <div className="text-xs text-slate-500">{t('manual.linesText')}</div>
+          <strong className="mt-1 block text-lg">{result.lineCount}</strong>
+        </div>
+        <div className="rounded-xl border border-[var(--wms-app-border)] p-3 text-center">
+          <div className="text-xs text-slate-500">Miktar</div>
+          <strong className="mt-1 block text-lg">{result.quantity}</strong>
+        </div>
+        <div className="rounded-xl border border-[var(--wms-app-border)] p-3 text-center">
+          <div className="text-xs text-slate-500">Durum</div>
+          <strong className="mt-1 block text-sm">
+            {result.qualityInspectionId ? 'Kaliteye gönderildi' : result.taskNo || result.status}
+          </strong>
+        </div>
+      </div>
+      <div className="border-t border-emerald-500/20 px-8 py-5 text-center">
+        <button onClick={reset} className="rounded-xl bg-emerald-600 px-5 py-2.5 font-semibold text-white">{t('manual.newRecord')}</button>
+      </div>
+    </section>
+  );
+}

@@ -3,11 +3,11 @@ import { Eye, FileText, Loader2, Printer } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdvancedDataGrid, type GridColumn } from '@/components/shared/AdvancedDataGrid';
 import { requiredActionColumn, systemColumns } from '@/components/shared/GridSystemColumns';
-import { OpsStatusBadge, inferOpsStatusTone } from '@/components/shared/OpsStatusBadge';
+import { OpsStatusBadge, inferOpsStatusTone, inferQualityStatusTone } from '@/components/shared/OpsStatusBadge';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { formatProjectDate, formatProjectNumber } from '@/lib/project-format';
 import { goodsReceiptV2Api } from '../api/goods-receipt.api';
-import { goodsReceiptEnumLabel } from '../localization/enum-labels';
+import { goodsReceiptEnumLabel, goodsReceiptEnumHint } from '../localization/enum-labels';
 import type {
   GoodsReceiptGridRow,
   GoodsReceiptLifecycleResult,
@@ -122,9 +122,14 @@ export function GoodsReceiptListPage(): ReactElement {
         sortable: true,
         filterable: true,
         render: (r) => (
-          <OpsStatusBadge tone={inferOpsStatusTone(r.status)}>
-            {goodsReceiptEnumLabel(t, 'operationStatus', r.status)}
-          </OpsStatusBadge>
+          <div className="flex justify-center">
+            <OpsStatusBadge
+              tone={inferOpsStatusTone(r.status)}
+              title={goodsReceiptEnumHint(t, 'operationStatus', r.status)}
+            >
+              {goodsReceiptEnumLabel(t, 'operationStatus', r.status)}
+            </OpsStatusBadge>
+          </div>
         ),
       },
       {
@@ -133,9 +138,14 @@ export function GoodsReceiptListPage(): ReactElement {
         sortable: true,
         filterable: true,
         render: (r) => (
-          <OpsStatusBadge tone={inferOpsStatusTone(r.qualityStatus)}>
-            {goodsReceiptEnumLabel(t, 'qualityStatus', r.qualityStatus)}
-          </OpsStatusBadge>
+          <div className="flex justify-center">
+            <OpsStatusBadge
+              tone={inferQualityStatusTone(r.qualityStatus)}
+              title={goodsReceiptEnumHint(t, 'qualityStatus', r.qualityStatus)}
+            >
+              {goodsReceiptEnumLabel(t, 'qualityStatus', r.qualityStatus)}
+            </OpsStatusBadge>
+          </div>
         ),
       },
       {

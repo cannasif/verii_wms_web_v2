@@ -21,6 +21,22 @@ export const goodsReceiptV2Api = {
   locations: async (request: DropdownPageRequest, warehouseId: number): Promise<GridPage<LocationOption>> => unwrap(await api.post<Envelope<GridPage<LocationOption>>>('/api/locations/paged', pagedBody({ ...request, sortBy: request.sortBy ?? 'code' }, [
     { column: 'warehouseId', operator: 'equals', value: String(warehouseId) }, { column: 'isActive', operator: 'equals', value: 'true' },
   ]), { signal: request.signal })),
+  /** Mal kabul için yalnızca Receiving/Staging lokasyonları. */
+  receivingLocations: async (request: DropdownPageRequest, warehouseId: number): Promise<GridPage<LocationOption>> => {
+    const page = await goodsReceiptV2Api.locations({
+      ...request,
+      pageSize: Math.max(request.pageSize ?? 20, 100),
+    }, warehouseId);
+    const items = page.items.filter((item) => item.locationType === 'Receiving' || item.locationType === 'Staging');
+    return {
+      ...page,
+      items,
+      totalCount: items.length,
+      totalPages: 1,
+      pageNumber: 1,
+      hasNextPage: false,
+    };
+  },
   putawaySuggestions: async (warehouseId: number, params: { stockId?: number; stockCode?: string; yapCodeId?: number; quantity: number; limit?: number }): Promise<PutawayLocationSuggestion[]> =>
     unwrap(await api.get<Envelope<PutawayLocationSuggestion[]>>('/api/locations/putaway-suggestions', {
       params: { warehouseId, stockId: params.stockId, stockCode: params.stockCode, yapCodeId: params.yapCodeId, quantity: params.quantity, limit: params.limit ?? 5 },

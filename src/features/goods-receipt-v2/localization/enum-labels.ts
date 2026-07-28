@@ -34,3 +34,19 @@ export function goodsReceiptEnumLabel(
   }
   return String(t(`enums.${group}.${value}`, { defaultValue: value }));
 }
+
+/** Longer hover hint for compact list badges (falls back to the short label). */
+export function goodsReceiptEnumHint(
+  t: TFunction,
+  group: GoodsReceiptEnumGroup,
+  value?: string | null,
+): string {
+  if (!value) return '';
+  const language = normalizeLanguage(i18n.resolvedLanguage ?? i18n.language);
+  if (language !== 'tr' && language !== 'en') {
+    return localizeEnumValue(value, language);
+  }
+  const hint = t(`enums.${group}Hint.${value}`, { defaultValue: '' });
+  if (hint) return String(hint);
+  return goodsReceiptEnumLabel(t, group, value);
+}

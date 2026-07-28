@@ -12,13 +12,13 @@ import {
   Warehouse,
 } from 'lucide-react';
 import { OpsLoadingState } from '@/components/shared/OpsLoadingState';
-import { OpsCodeBadge, OpsStatusBadge, inferOpsStatusTone } from '@/components/shared/OpsStatusBadge';
+import { OpsCodeBadge, OpsStatusBadge, inferOpsStatusTone, inferQualityStatusTone } from '@/components/shared/OpsStatusBadge';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { formatProjectDate, formatProjectDateTime, formatProjectNumber } from '@/lib/project-format';
 import { cn } from '@/lib/utils';
-import { goodsReceiptEnumLabel } from '../localization/enum-labels';
+import { goodsReceiptEnumLabel, goodsReceiptEnumHint } from '../localization/enum-labels';
 import type {
   GoodsReceiptDetail,
   GoodsReceiptDetailLine,
@@ -54,7 +54,7 @@ export function GoodsReceiptDetailDialog({
   onRoutingCompleted: (result: GoodsReceiptSplitRoutingResult) => Promise<void>;
 }): ReactElement {
   const { t } = useModuleTranslation('goods-receipt-v2');
-  const [mainTab, setMainTab] = useState<MainTab>('info');
+  const [mainTab, setMainTab] = useState<MainTab>('content');
   const [infoSubTab, setInfoSubTab] = useState<InfoSubTab>('status');
   const [action, setAction] = useState<GoodsReceiptLifecycleAction | null>(null);
   const [routeKind, setRouteKind] = useState<'transfer' | 'outbound' | null>(null);
@@ -83,6 +83,11 @@ export function GoodsReceiptDetailDialog({
     );
   }, [detail, normalizedSearch]);
 
+  const qualityLines = useMemo(
+    () => (detail?.lines ?? []).filter((line) => line.requireQualityControl),
+    [detail],
+  );
+
   const printBusy = Boolean(header && busyKey === `${header.id}:all:print`);
   const pdfBusy = Boolean(header && busyKey === `${header.id}:all:pdf`);
 
@@ -104,13 +109,43 @@ export function GoodsReceiptDetailDialog({
       >
         <header className="wms-ops-detail-dialog__header shrink-0">
           <div className="min-w-0 pr-2">
+            <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-600 dark:text-cyan-300">
+              {t('list.eyebrowModule')}
+            </p>
             <DialogTitle className="wms-ops-detail-dialog__title">
               {t('list.detailTitle')}
-              <span className="wms-ops-detail-dialog__id"> #{state.id}</span>
+              {header ? (
+                <span className="ml-2 font-mono text-base font-bold text-cyan-600 dark:text-cyan-300">
+                  {header.documentNo}
+                </span>
+              ) : (
+                <span className="wms-ops-detail-dialog__id"> #{state.id}</span>
+              )}
             </DialogTitle>
             <DialogDescription className="wms-ops-detail-dialog__description">
-              {t('list.detailDescription')}
+              {header
+                ? `${header.supplierName || header.supplierCode || '—'} · ${header.waybillNo || 'İrsaliye yok'} · ${goodsReceiptEnumLabel(t, 'operationStatus', header.status)}`
+                : t('list.detailDescription')}
             </DialogDescription>
+            {header ? (
+              <div className="mt-3 flex flex-wrap gap-2">
+                <OpsStatusBadge tone={inferOpsStatusTone(header.status)}>
+                  {goodsReceiptEnumLabel(t, 'operationStatus', header.status)}
+                </OpsStatusBadge>
+                <OpsStatusBadge
+                  tone={inferQualityStatusTone(header.qualityStatus)}
+                  title={goodsReceiptEnumHint(t, 'qualityStatus', header.qualityStatus)}
+                >
+                  {goodsReceiptEnumLabel(t, 'qualityStatus', header.qualityStatus)}
+                </OpsStatusBadge>
+                <OpsCodeBadge>{header.receiptType || '—'}</OpsCodeBadge>
+                {header.waybillNo ? (
+                  <span className="inline-flex items-center rounded-lg border border-[var(--wms-app-border)] bg-black/[.03] px-2.5 py-1 font-mono text-xs dark:bg-white/[.04]">
+                    İrsaliye {header.waybillNo}
+                  </span>
+                ) : null}
+              </div>
+            ) : null}
           </div>
         </header>
 
@@ -275,7 +310,10 @@ export function GoodsReceiptDetailDialog({
                           />
                         </OpsDetailRow>
                         <OpsDetailRow label={t('list.quality')}>
-                          <OpsStatusBadge tone={inferOpsStatusTone(header.qualityStatus)}>
+                          <OpsStatusBadge
+                            tone={inferQualityStatusTone(header.qualityStatus)}
+                            title={goodsReceiptEnumHint(t, 'qualityStatus', header.qualityStatus)}
+                          >
                             {goodsReceiptEnumLabel(t, 'qualityStatus', header.qualityStatus)}
                           </OpsStatusBadge>
                         </OpsDetailRow>
@@ -406,157 +444,103 @@ export function GoodsReceiptDetailDialog({
                       <p className="text-sm text-slate-500">{t('list.noMatchingLines')}</p>
                     </div>
                   ) : (
-                    <>
-                      <div className="hidden overflow-x-auto border border-[var(--wms-app-border)] md:block">
-                        <table className="min-w-[900px] w-full text-sm">
-                          <thead className="bg-[var(--wms-app-panel-muted)] text-left">
-                            <tr>
-                              <th className="p-3">#</th>
-                              <th className="p-3">{t('list.stock')}</th>
-                              <th className="p-3">{t('list.yap')}</th>
-                              <th className="p-3 text-right">{t('list.expected')}</th>
-                              <th className="p-3 text-right">{t('list.accepted')}</th>
-                              <th className="p-3 text-right">{t('list.routed')}</th>
-                              <th className="p-3 text-right">{t('list.remaining')}</th>
-                              <th className="p-3">{t('list.status')}</th>
-                              <th className="p-3">{t('list.quality')}</th>
-                              <th className="p-3 text-center">{t('list.label')}</th>
+                    <div className="wms-ops-gr-detail-lines-wrap overflow-x-auto">
+                      <table className="wms-ops-gr-detail-lines-table min-w-[1080px] w-full text-sm">
+                        <thead>
+                          <tr>
+                            <th>#</th>
+                            <th>{t('list.stock')}</th>
+                            <th>{t('list.yap')}</th>
+                            <th className="wms-ops-gr-detail-lines-table__num">{t('list.expected')}</th>
+                            <th className="wms-ops-gr-detail-lines-table__num">{t('list.accepted')}</th>
+                            <th className="wms-ops-gr-detail-lines-table__num">{t('list.quarantine')}</th>
+                            <th className="wms-ops-gr-detail-lines-table__num">{t('list.rejected')}</th>
+                            <th className="wms-ops-gr-detail-lines-table__num">{t('list.routed')}</th>
+                            <th className="wms-ops-gr-detail-lines-table__num">{t('list.remaining')}</th>
+                            <th>{t('list.status')}</th>
+                            <th>{t('list.quality')}</th>
+                            <th className="wms-ops-gr-detail-lines-table__actions">{t('list.label')}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {visibleLines.map((line) => (
+                            <tr key={line.id}>
+                              <td>{line.lineNo}</td>
+                              <td>
+                                <strong>{line.stockCode}</strong>
+                                <div className="wms-ops-gr-detail-lines-table__muted">{line.stockName}</div>
+                              </td>
+                              <td>{line.yapCode || '—'}</td>
+                              <td className="wms-ops-gr-detail-lines-table__num">
+                                {formatProjectNumber(line.expectedQuantity)}
+                              </td>
+                              <td className="wms-ops-gr-detail-lines-table__num">
+                                {formatProjectNumber(line.acceptedQuantity)}
+                              </td>
+                              <td className="wms-ops-gr-detail-lines-table__num">
+                                {formatProjectNumber(line.quarantineQuantity)}
+                              </td>
+                              <td className="wms-ops-gr-detail-lines-table__num">
+                                {formatProjectNumber(line.rejectedQuantity)}
+                              </td>
+                              <td className="wms-ops-gr-detail-lines-table__num">
+                                {formatProjectNumber(line.routedQuantity)}
+                              </td>
+                              <td className="wms-ops-gr-detail-lines-table__num wms-ops-gr-detail-lines-table__accent">
+                                {formatProjectNumber(line.routableQuantity)}
+                              </td>
+                              <td>
+                                <OpsStatusBadge tone={inferOpsStatusTone(line.status)}>
+                                  {goodsReceiptEnumLabel(t, 'lineStatus', line.status)}
+                                </OpsStatusBadge>
+                              </td>
+                              <td>
+                                <LineQualityCell line={line} t={t} />
+                              </td>
+                              <td className="wms-ops-gr-detail-lines-table__actions">
+                                <div className="flex justify-center gap-1">
+                                  <ActionButton
+                                    title={t('list.printLineLabel')}
+                                    busy={busyKey === `${header.id}:${line.id}:print`}
+                                    onClick={() =>
+                                      void output(
+                                        header.id,
+                                        line.id,
+                                        'print',
+                                        `${header.documentNo}-${line.lineNo}`,
+                                      )
+                                    }
+                                    icon={<Printer className="size-3.5" />}
+                                  />
+                                  <ActionButton
+                                    title={t('list.showLineLabelPdf')}
+                                    busy={busyKey === `${header.id}:${line.id}:pdf`}
+                                    onClick={() =>
+                                      void output(
+                                        header.id,
+                                        line.id,
+                                        'pdf',
+                                        `${header.documentNo}-${line.lineNo}`,
+                                      )
+                                    }
+                                    icon={<FileText className="size-3.5" />}
+                                  />
+                                </div>
+                              </td>
                             </tr>
-                          </thead>
-                          <tbody>
-                            {visibleLines.map((line) => (
-                              <tr key={line.id} className="border-t border-[var(--wms-app-border)]">
-                                <td className="p-3">{line.lineNo}</td>
-                                <td className="p-3">
-                                  <strong>{line.stockCode}</strong>
-                                  <div className="text-xs text-slate-500">{line.stockName}</div>
-                                </td>
-                                <td className="p-3">{line.yapCode || '—'}</td>
-                                <td className="p-3 text-right">{formatProjectNumber(line.expectedQuantity)}</td>
-                                <td className="p-3 text-right">{formatProjectNumber(line.acceptedQuantity)}</td>
-                                <td className="p-3 text-right">{formatProjectNumber(line.routedQuantity)}</td>
-                                <td className="p-3 text-right font-semibold text-[var(--wms-ops-accent)]">
-                                  {formatProjectNumber(line.routableQuantity)}
-                                </td>
-                                <td className="p-3">
-                                  <OpsStatusBadge tone={inferOpsStatusTone(line.status)}>
-                                    {goodsReceiptEnumLabel(t, 'lineStatus', line.status)}
-                                  </OpsStatusBadge>
-                                </td>
-                                <td className="p-3">
-                                  {line.requireQualityControl ? (
-                                    <OpsStatusBadge tone="quality">{t('list.qcSend')}</OpsStatusBadge>
-                                  ) : (
-                                    '—'
-                                  )}
-                                </td>
-                                <td className="p-3">
-                                  <div className="flex justify-center gap-1">
-                                    <ActionButton
-                                      title={t('list.printLineLabel')}
-                                      busy={busyKey === `${header.id}:${line.id}:print`}
-                                      onClick={() =>
-                                        void output(
-                                          header.id,
-                                          line.id,
-                                          'print',
-                                          `${header.documentNo}-${line.lineNo}`,
-                                        )
-                                      }
-                                      icon={<Printer className="size-3.5" />}
-                                    />
-                                    <ActionButton
-                                      title={t('list.showLineLabelPdf')}
-                                      busy={busyKey === `${header.id}:${line.id}:pdf`}
-                                      onClick={() =>
-                                        void output(
-                                          header.id,
-                                          line.id,
-                                          'pdf',
-                                          `${header.documentNo}-${line.lineNo}`,
-                                        )
-                                      }
-                                      icon={<FileText className="size-3.5" />}
-                                    />
-                                  </div>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-
-                      <div className="grid gap-3 md:hidden">
-                        {visibleLines.map((line) => (
-                          <article
-                            key={line.id}
-                            className="border border-[var(--wms-app-border)] bg-black/[0.015] p-4 dark:bg-white/[0.025]"
-                          >
-                            <header className="flex items-start justify-between gap-3">
-                              <div className="min-w-0">
-                                <p className="text-xs font-bold uppercase tracking-wider text-[var(--wms-ops-accent)]">
-                                  {t('list.lineNumber', { number: line.lineNo })}
-                                </p>
-                                <h4 className="break-words font-black">{line.stockCode}</h4>
-                                <p className="text-xs text-slate-500">{line.stockName || t('list.noStockName')}</p>
-                              </div>
-                              <OpsStatusBadge className="shrink-0" tone={inferOpsStatusTone(line.status)}>
-                                {goodsReceiptEnumLabel(t, 'lineStatus', line.status)}
-                              </OpsStatusBadge>
-                            </header>
-                            {line.requireQualityControl ? (
-                              <div className="mt-2">
-                                <OpsStatusBadge tone="quality">{t('list.qcSend')}</OpsStatusBadge>
-                              </div>
-                            ) : null}
-                            <div className="mt-3 grid grid-cols-2 gap-2">
-                              <LineMetric label={t('list.yap')} value={line.yapCode || '—'} />
-                              <LineMetric
-                                label={t('list.expected')}
-                                value={formatProjectNumber(line.expectedQuantity)}
-                              />
-                              <LineMetric
-                                label={t('list.accepted')}
-                                value={formatProjectNumber(line.acceptedQuantity)}
-                              />
-                              <LineMetric
-                                label={t('list.routed')}
-                                value={formatProjectNumber(line.routedQuantity)}
-                              />
-                              <LineMetric
-                                label={t('list.remaining')}
-                                value={formatProjectNumber(line.routableQuantity)}
-                                accent
-                              />
-                            </div>
-                            <footer className="mt-3 flex justify-end gap-2 border-t border-[var(--wms-app-border)] pt-3">
-                              <ActionButton
-                                title={t('list.printLineLabel')}
-                                busy={busyKey === `${header.id}:${line.id}:print`}
-                                onClick={() =>
-                                  void output(
-                                    header.id,
-                                    line.id,
-                                    'print',
-                                    `${header.documentNo}-${line.lineNo}`,
-                                  )
-                                }
-                                icon={<Printer className="size-3.5" />}
-                              />
-                              <ActionButton
-                                title={t('list.showLineLabelPdf')}
-                                busy={busyKey === `${header.id}:${line.id}:pdf`}
-                                onClick={() =>
-                                  void output(header.id, line.id, 'pdf', `${header.documentNo}-${line.lineNo}`)
-                                }
-                                icon={<FileText className="size-3.5" />}
-                              />
-                            </footer>
-                          </article>
-                        ))}
-                      </div>
-                    </>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   )}
+
+                  {qualityLines.length > 0 ? (
+                    <QualitySummaryPanel
+                      headerStatus={header.qualityStatus}
+                      lines={qualityLines}
+                      t={t}
+                    />
+                  ) : null}
                 </section>
               </TabsContent>
             </Tabs>
@@ -699,6 +683,150 @@ function LifecycleButton({
   );
 }
 
+function pct(part: number, whole: number): number {
+  if (!Number.isFinite(part) || !Number.isFinite(whole) || whole <= 0) return 0;
+  return Math.round((part / whole) * 1000) / 10;
+}
+
+function lineQualityMetrics(line: GoodsReceiptDetailLine) {
+  const base =
+    line.receivedQuantity > 0 ? line.receivedQuantity : line.expectedQuantity;
+  const baseKind = line.receivedQuantity > 0 ? 'received' as const : 'expected' as const;
+  const accepted = line.acceptedQuantity;
+  const rejected = line.rejectedQuantity;
+  const quarantine = line.quarantineQuantity;
+  const pendingDecision = Math.max(
+    0,
+    line.receivedQuantity - accepted - rejected - quarantine,
+  );
+  const awaitingReceipt = line.requireQualityControl && line.receivedQuantity <= 0;
+  return {
+    base,
+    baseKind,
+    accepted,
+    rejected,
+    quarantine,
+    pendingDecision,
+    awaitingReceipt,
+    pctAccepted: pct(accepted, base),
+    pctRejected: pct(rejected, base),
+    pctQuarantine: pct(quarantine, base),
+    pctPending: pct(pendingDecision, base),
+  };
+}
+
+function QualitySummaryPanel({
+  headerStatus,
+  lines,
+  t,
+}: {
+  headerStatus: string;
+  lines: GoodsReceiptDetailLine[];
+  t: (key: string, options?: Record<string, unknown>) => string;
+}): ReactElement {
+  return (
+    <div className="rounded-xl border border-violet-500/30 bg-violet-500/10 px-4 py-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <OpsStatusBadge
+          tone={inferQualityStatusTone(headerStatus)}
+          title={goodsReceiptEnumHint(t as never, 'qualityStatus', headerStatus)}
+        >
+          {goodsReceiptEnumLabel(t as never, 'qualityStatus', headerStatus)}
+        </OpsStatusBadge>
+        <strong className="text-sm">{t('list.qcSummaryTitle')}</strong>
+        <span className="text-xs text-slate-400">
+          {lines.length} kalem (yalnız kaliteye tabi)
+        </span>
+      </div>
+      <p className="mt-1 text-xs text-slate-400">{t('list.qcSummaryHint')}</p>
+      <ul className="mt-3 space-y-2">
+        {lines.map((line) => {
+          const m = lineQualityMetrics(line);
+          return (
+            <li
+              key={line.id}
+              className="rounded-lg border border-violet-500/20 bg-black/20 px-3 py-2"
+            >
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <div className="min-w-0">
+                  <span className="font-mono text-xs text-violet-300">{line.stockCode}</span>
+                  <span className="ml-2 text-sm font-medium">{line.stockName || '—'}</span>
+                </div>
+                <span className="font-mono text-[0.7rem] text-slate-400">
+                  {formatProjectNumber(m.base)} {line.unitCode || ''} ·{' '}
+                  {m.baseKind === 'received' ? t('list.qcOfReceived') : t('list.qcOfExpected')}
+                </span>
+              </div>
+              {m.awaitingReceipt ? (
+                <p className="mt-1 text-xs text-amber-300/90">{t('list.qcAwaitingReceipt')}</p>
+              ) : (
+                <div className="mt-2 flex flex-wrap gap-1.5 text-[0.7rem]">
+                  <span className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-emerald-300">
+                    {t('list.qcAcceptedShare')} {formatProjectNumber(m.accepted)} ({m.pctAccepted}%)
+                  </span>
+                  <span className="rounded-md border border-violet-500/30 bg-violet-500/10 px-2 py-0.5 text-violet-200">
+                    {t('list.qcQuarantineShare')} {formatProjectNumber(m.quarantine)} ({m.pctQuarantine}%)
+                  </span>
+                  <span className="rounded-md border border-rose-500/30 bg-rose-500/10 px-2 py-0.5 text-rose-300">
+                    {t('list.qcRejectedShare')} {formatProjectNumber(m.rejected)} ({m.pctRejected}%)
+                  </span>
+                  {m.pendingDecision > 0 ? (
+                    <span className="rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-amber-200">
+                      {t('list.qcPendingDecision')} {formatProjectNumber(m.pendingDecision)} ({m.pctPending}%)
+                    </span>
+                  ) : null}
+                </div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+function LineQualityCell({
+  line,
+  t,
+}: {
+  line: GoodsReceiptDetailLine;
+  t: (key: string, options?: Record<string, unknown>) => string;
+}): ReactElement {
+  if (!line.requireQualityControl) {
+    return <span className="text-xs text-slate-500">{t('list.qcNone')}</span>;
+  }
+  const m = lineQualityMetrics(line);
+  if (m.awaitingReceipt) {
+    return (
+      <div className="space-y-1">
+        <OpsStatusBadge tone="pending" title={t('list.qcAwaitingReceipt')}>
+          {t('list.qcLineRequired')}
+        </OpsStatusBadge>
+        <div className="text-[0.65rem] text-amber-300/90">{t('list.qcAwaitingReceipt')}</div>
+      </div>
+    );
+  }
+  const inControlPct = Math.min(100, Math.round((m.pctQuarantine + m.pctPending) * 10) / 10);
+  return (
+    <div className="space-y-1">
+      <OpsStatusBadge
+        tone={inControlPct > 0 ? 'quality' : m.pctRejected > 0 ? 'danger' : 'done'}
+        title={`${t('list.qcQuarantineShare')} ${m.pctQuarantine}% · ${t('list.qcAcceptedShare')} ${m.pctAccepted}% · ${t('list.qcRejectedShare')} ${m.pctRejected}%`}
+      >
+        {inControlPct > 0
+          ? `${t('list.qcInControl')} ${inControlPct}%`
+          : m.pctRejected > 0
+            ? `${t('list.qcRejectedShare')} ${m.pctRejected}%`
+            : `${t('list.qcAcceptedShare')} ${m.pctAccepted}%`}
+      </OpsStatusBadge>
+      <div className="font-mono text-[0.65rem] text-slate-400">
+        A {formatProjectNumber(m.accepted)} · Q {formatProjectNumber(m.quarantine)} · R{' '}
+        {formatProjectNumber(m.rejected)}
+      </div>
+    </div>
+  );
+}
+
 function ActionButton({
   title,
   busy,
@@ -721,22 +849,5 @@ function ActionButton({
     >
       {busy ? <Loader2 className="size-3.5 animate-spin" /> : icon}
     </button>
-  );
-}
-
-function LineMetric({
-  label,
-  value,
-  accent = false,
-}: {
-  label: string;
-  value: string;
-  accent?: boolean;
-}): ReactElement {
-  return (
-    <div className="border border-[var(--wms-app-border)] p-2.5">
-      <span className="block text-[11px] text-slate-500">{label}</span>
-      <strong className={cn('mt-0.5 block text-sm', accent && 'text-[var(--wms-ops-accent)]')}>{value}</strong>
-    </div>
   );
 }

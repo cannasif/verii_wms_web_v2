@@ -5,35 +5,53 @@ import {
   type ReactElement,
   type ReactNode,
 } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   CheckCircle2,
+  ChevronDown,
+  ChevronUp,
   ClipboardList,
   Loader2,
   PackageCheck,
+  PackageOpen,
   ScanBarcode,
+  Search,
   ShieldCheck,
   Trash2,
+  UserRound,
   UserRoundCog,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { AppDropdown } from "@/components/shared/AppDropdown";
 import { AppDateInput } from "@/components/shared/AppInput";
+import { OpsActionButton } from "@/components/shared/OpsActionButton";
+import { OpsFieldShell } from "@/components/shared/OpsFieldShell";
+import { OPS_FIELD_CLASS } from "@/components/shared/ops-field-styles";
 import { PagedAppDropdown } from "@/components/shared/PagedAppDropdown";
+import { PagedLookupDialog } from "@/components/shared/PagedLookupDialog";
+import { OpsStatusBadge } from "@/components/shared/OpsStatusBadge";
+import { PremiumEyebrow } from "@/components/shared/PremiumEyebrow";
 import { ResponsiveDialog } from "@/components/shared/ResponsiveDialog";
+import { useTheme } from "@/components/theme-provider";
 import { StockTrackingPolicyField } from "@/features/stock-tracking/effective-stock-tracking";
 import { stockTrackingApi } from "@/features/stock-tracking/api/stock-tracking.api";
 import { qualityApi } from "@/features/quality/api/quality.api";
 import { useModuleTranslation } from "@/hooks/useModuleTranslation";
+import type { DropdownPage } from "@/hooks/useDropdownInfiniteSearch";
 import {
   formatProjectNumber,
   parseLocalizedNumber,
 } from "@/lib/project-format";
+import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
+import type { PagedResponse } from "@/types/api";
 import { goodsReceiptV2Api } from "../api/goods-receipt.api";
 import type {
   ActiveUserOption,
   CreateGoodsReceiptResult,
+  CustomerOption,
+  LocationOption,
   OpenOrderHeader,
   PlannedReceiptTracking,
   SelectedReceiptLine,
@@ -50,28 +68,21 @@ const QUALITY_REQUIRED_MODES = new Set([
   "Required",
 ]);
 
-const customerOption = (x: {
-  id: number;
-  branchCode: string;
-  customerCode: string;
-  customerName: string;
-}) => ({
-  value: `${x.id}|${x.branchCode}|${x.customerCode}`,
-  label: `${x.customerCode} · ${x.customerName}`,
+const toPagedResponse = <T,>(page: DropdownPage<T>): PagedResponse<T> => ({
+  data: page.items,
+  totalCount: page.totalCount,
+  pageNumber: page.pageNumber,
+  pageSize: page.pageSize,
+  totalPages:
+    page.totalPages ??
+    Math.max(1, Math.ceil(page.totalCount / Math.max(page.pageSize, 1))),
+  hasPreviousPage: page.pageNumber > 1,
+  hasNextPage: Boolean(page.hasNextPage),
 });
+
 const warehouseOption = (x: WarehouseOption) => ({
   value: `${x.id}|${x.branchCode}|${x.warehouseCode}`,
   label: `${x.warehouseCode} · ${x.warehouseName}`,
-});
-const locationOption = (x: {
-  id: number;
-  code: string;
-  name: string;
-  locationType: string;
-}) => ({
-  value: String(x.id),
-  label: `${x.code} · ${x.name}`,
-  description: x.locationType,
 });
 const userLabel = (x: ActiveUserOption): string =>
   `${x.firstName} ${x.lastName}`.trim() || x.username;
@@ -89,13 +100,19 @@ const today = (): string => {
 const lineKey = (
   line: Pick<SelectedReceiptLine, "siparisNo" | "orderId">,
 ): string => `${line.siparisNo}|${line.orderId}`;
+
 export function GoodsReceiptCreatePage(): ReactElement {
   const { t, moduleReady } = useModuleTranslation("goods-receipt-v2");
+  const { skin } = useTheme();
+  const isPremium = skin === "premium";
   const branchCode = useAuthStore((state) => state.branch?.code ?? "0");
+  const createEyebrow = `${t("list.eyebrowParent")} / ${t("list.eyebrowModule")}`;
   const [step, setStep] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [customerValue, setCustomerValue] = useState<string | null>(null);
+  const [selectedCustomer, setSelectedCustomer] =
+    useState<CustomerOption | null>(null);
+  const [customerLookupOpen, setCustomerLookupOpen] = useState(false);
   const [searchMode, setSearchMode] = useState<OrderSearchMode>("customer");
   const [orderNumberQuery, setOrderNumberQuery] = useState("");
   const [projectCodeQuery, setProjectCodeQuery] = useState("");
@@ -113,12 +130,24 @@ export function GoodsReceiptCreatePage(): ReactElement {
   const [result, setResult] = useState<CreateGoodsReceiptResult | null>(null);
 
   const customer = useMemo(() => {
-    if (!customerValue) return null;
-    const [id, branch, code] = customerValue.split("|");
-    return { id: Number(id), branch, code };
-  }, [customerValue]);
+    if (!selectedCustomer) return null;
+    return {
+      id: selectedCustomer.id,
+      branch: selectedCustomer.branchCode,
+      code: selectedCustomer.customerCode,
+    };
+  }, [selectedCustomer]);
+  const customerDisplay = selectedCustomer
+    ? `${selectedCustomer.customerName} (${selectedCustomer.customerCode})`
+    : "";
   const primaryLine = lines[0];
   const selectedQuantity = lines.reduce((sum, line) => sum + line.quantity, 0);
+
+  const clearCustomerDependent = (): void => {
+    setOrders([]);
+    setSelectedOrders([]);
+    setLines([]);
+  };
 
   useEffect(() => {
     setSeries([]);
@@ -138,7 +167,7 @@ export function GoodsReceiptCreatePage(): ReactElement {
     const orderNumber = orderNumberQuery.trim();
     const projectCode = projectCodeQuery.trim();
     if (searchMode === "customer" && !customer) {
-      toast.error("Önce tedarikçi cari seçin.");
+      toast.error("Önce tedarikçi seçin.");
       return;
     }
     if (searchMode === "orderNo" && !orderNumber) {
@@ -151,7 +180,7 @@ export function GoodsReceiptCreatePage(): ReactElement {
     }
     if ((searchMode === "orderNo" || searchMode === "projectCode") && !customer) {
       toast.error(
-        "Bağımsız sipariş/proje araması için API’de customerCode olmadan filtre desteği gerekir. Şimdilik tedarikçi cariyi de seçin.",
+        "Bağımsız sipariş/proje araması için API’de customerCode olmadan filtre desteği gerekir. Şimdilik tedarikçiyi de seçin.",
       );
       return;
     }
@@ -339,7 +368,6 @@ export function GoodsReceiptCreatePage(): ReactElement {
           }),
         ),
       );
-      setStep(1);
     } catch (cause) {
       report(cause, "Sipariş satırları alınamadı.");
     } finally {
@@ -353,6 +381,8 @@ export function GoodsReceiptCreatePage(): ReactElement {
         lineKey(line) === key ? { ...line, ...patch } : line,
       ),
     );
+  const removeLine = (key: string): void =>
+    setLines((current) => current.filter((line) => lineKey(line) !== key));
   const updateTracking = (
     key: string,
     trackingId: string,
@@ -552,7 +582,7 @@ export function GoodsReceiptCreatePage(): ReactElement {
       return;
     }
     setError(null);
-    setStep(2);
+    setStep(1);
   };
   const create = async (): Promise<void> => {
     if (
@@ -622,29 +652,38 @@ export function GoodsReceiptCreatePage(): ReactElement {
     setError(message);
     toast.error(message);
   };
-  const steps = [0, 1, 2];
+  const steps = [0, 1];
+  const toggleOrder = (siparisNo: string): void => {
+    setSelectedOrders((current) =>
+      current.includes(siparisNo)
+        ? current.filter((x) => x !== siparisNo)
+        : [...current, siparisNo],
+    );
+  };
+
   if (!moduleReady)
     return (
       <div className="grid min-h-[20rem] place-items-center">
         <Loader2 className="size-7 animate-spin text-[var(--wms-brand-primary)]" />
       </div>
     );
+
   return (
     <section className="wms-ops-form space-y-5">
-      <header className="wms-ops-form-card rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5 shadow-sm">
-        <div className="flex items-start gap-3">
-          <div className="grid size-11 place-items-center rounded-xl bg-[var(--wms-brand-soft)] text-[var(--wms-brand-primary)]">
-            <PackageCheck />
+      <header className="space-y-2">
+        {isPremium ? (
+          <PremiumEyebrow eyebrow={createEyebrow} />
+        ) : (
+          <div className="wms-ops-eyebrow font-mono text-[11px] font-semibold uppercase tracking-[0.18em]">
+            {createEyebrow}
           </div>
-          <div>
-            <h1 className="text-2xl font-bold">{t("title")}</h1>
-            <p className="mt-1 text-sm text-[var(--wms-app-text-muted)]">
-              {t("createFlow.subtitle")}
-            </p>
-          </div>
-        </div>
+        )}
+        <p className="max-w-3xl text-sm leading-6 text-[var(--wms-app-text-muted)]">
+          {t("createFlow.subtitle")}
+        </p>
       </header>
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         {steps.map((value) => (
           <div
             key={value}
@@ -654,6 +693,7 @@ export function GoodsReceiptCreatePage(): ReactElement {
           </div>
         ))}
       </div>
+
       {error && (
         <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-500">
           {error}
@@ -661,397 +701,515 @@ export function GoodsReceiptCreatePage(): ReactElement {
       )}
 
       {step === 0 && (
-        <Panel
-          title={t("createFlow.orderSelection")}
-          icon={<ClipboardList className="size-5" />}
-        >
-          <div className="mb-3 flex flex-wrap gap-2">
-            {(
-              [
-                ["customer", "Tedarikçi Cari"],
-                ["orderNo", "Sipariş Numarası"],
-                ["projectCode", "Proje Kodu"],
-              ] as const
-            ).map(([mode, label]) => (
-              <button
-                key={mode}
-                type="button"
-                onClick={() => setSearchMode(mode)}
-                className={`rounded-xl border px-3 py-2 text-xs font-semibold ${searchMode === mode ? "border-cyan-500 bg-cyan-500/10 text-cyan-600" : "border-[var(--wms-app-border)]"}`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-          <div className="grid gap-3 md:grid-cols-[1fr_auto]">
-            <div className="grid gap-3 md:grid-cols-2">
-              <PagedAppDropdown
-                queryKey={["gr-customers", branchCode]}
-                fetchPage={(request) =>
-                  goodsReceiptV2Api.customers(request, branchCode)
-                }
-                toOption={customerOption}
-                value={customerValue}
-                onValueChange={(value) => {
-                  setCustomerValue(value);
-                  setOrders([]);
-                  setSelectedOrders([]);
-                }}
+        <>
+          <Panel
+            title={t("createFlow.orderSelection")}
+            icon={<ClipboardList className="size-5" />}
+          >
+            <div className="mb-4 space-y-3">
+              <label className="wms-ops-entry-label block">
+                {t("customer")} <span className="text-red-500">*</span>
+              </label>
+              <PagedLookupDialog<CustomerOption>
+                variant="ops"
+                triggerMode="combobox"
+                autoSearchMinLength={2}
+                open={customerLookupOpen}
+                onOpenChange={setCustomerLookupOpen}
+                title={t("selectCustomer")}
+                value={customerDisplay}
                 placeholder={t("selectCustomer")}
-                searchable
-                minSearchLength={2}
+                searchPlaceholder={t("searchCustomer")}
+                emptyText={t("customerEmpty")}
+                triggerClassName={OPS_FIELD_CLASS}
+                queryKey={["gr-customers-lookup", branchCode]}
+                fetchPage={async ({ pageNumber, pageSize, search, signal }) =>
+                  toPagedResponse(
+                    await goodsReceiptV2Api.customers(
+                      {
+                        pageNumber,
+                        pageSize,
+                        search,
+                        sortBy: "customerCode",
+                        sortDirection: "asc",
+                        signal: signal ?? new AbortController().signal,
+                      },
+                      branchCode,
+                    ),
+                  )
+                }
+                getKey={(item) => String(item.id)}
+                getLabel={(item) =>
+                  `${item.customerName} (${item.customerCode})`
+                }
+                onSelect={(item) => {
+                  setSelectedCustomer(item);
+                  clearCustomerDependent();
+                }}
               />
-              {searchMode === "orderNo" && (
-                <input
-                  className="input font-mono"
-                  value={orderNumberQuery}
-                  onChange={(event) => setOrderNumberQuery(event.target.value)}
-                  placeholder="Sipariş numarası"
-                  aria-label="Sipariş numarası"
+              {selectedCustomer ? (
+                <OpsSelectedEntityCard
+                  label={t("selectedCustomer")}
+                  eyebrow="TEDARIKCI"
+                  status="SEÇİLDİ"
+                  value={customerDisplay}
                 />
-              )}
-              {searchMode === "projectCode" && (
-                <input
-                  className="input font-mono"
-                  value={projectCodeQuery}
-                  onChange={(event) => setProjectCodeQuery(event.target.value)}
-                  placeholder="Proje kodu"
-                  aria-label="Proje kodu"
-                />
-              )}
+              ) : null}
             </div>
-            <button
-              disabled={busy}
-              onClick={() => void loadOrders()}
-              className="rounded-xl bg-cyan-600 px-5 py-2.5 font-semibold text-white disabled:opacity-40"
-            >
-              {busy ? (
-                <Loader2 className="mx-auto size-4 animate-spin" />
+
+            <div className="mb-3 flex flex-wrap gap-2">
+              {(
+                [
+                  ["customer", "Tedarikçi"],
+                  ["orderNo", "Sipariş No"],
+                  ["projectCode", "Proje Kodu"],
+                ] as const
+              ).map(([mode, label]) => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setSearchMode(mode)}
+                  className={`rounded-xl border px-3 py-2 text-xs font-semibold ${searchMode === mode ? "border-cyan-500 bg-cyan-500/10 text-cyan-600" : "border-[var(--wms-app-border)]"}`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            <div className="wms-ops-order-fetch space-y-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <div className="relative min-w-0 flex-1">
+                  {searchMode === "orderNo" ? (
+                    <OpsFieldShell>
+                      <div className="relative">
+                        <Search className="pointer-events-none absolute left-2.5 top-1/2 z-[1] size-3.5 -translate-y-1/2 opacity-60" />
+                        <input
+                          className={cn(OPS_FIELD_CLASS, "h-10 w-full pl-8 font-mono text-xs")}
+                          value={orderNumberQuery}
+                          onChange={(event) =>
+                            setOrderNumberQuery(event.target.value)
+                          }
+                          placeholder="Sipariş numarası"
+                          aria-label="Sipariş numarası"
+                        />
+                      </div>
+                    </OpsFieldShell>
+                  ) : searchMode === "projectCode" ? (
+                    <OpsFieldShell>
+                      <div className="relative">
+                        <Search className="pointer-events-none absolute left-2.5 top-1/2 z-[1] size-3.5 -translate-y-1/2 opacity-60" />
+                        <input
+                          className={cn(OPS_FIELD_CLASS, "h-10 w-full pl-8 font-mono text-xs")}
+                          value={projectCodeQuery}
+                          onChange={(event) =>
+                            setProjectCodeQuery(event.target.value)
+                          }
+                          placeholder="Proje kodu"
+                          aria-label="Proje kodu"
+                        />
+                      </div>
+                    </OpsFieldShell>
+                  ) : (
+                    <p className="text-xs text-[var(--wms-app-text-muted)]">
+                      Seçili tedarikçiye ait açık siparişleri getirin.
+                    </p>
+                  )}
+                </div>
+                <OpsActionButton
+                  type="button"
+                  variant="primary"
+                  disabled={busy}
+                  onClick={() => void loadOrders()}
+                  className="h-10 w-full shrink-0 sm:w-auto sm:min-w-[11rem]"
+                >
+                  {busy ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Search className="size-3.5" aria-hidden />
+                      {t("loadOrders")}
+                    </>
+                  )}
+                </OpsActionButton>
+              </div>
+
+              {orders.length === 0 ? (
+                <div className="wms-ops-panel-empty py-10 text-center">
+                  <PackageOpen className="mx-auto size-8 opacity-50" aria-hidden />
+                  <p className="mt-3 text-sm text-[var(--wms-app-text-muted)]">
+                    {t("noOrders")}
+                  </p>
+                </div>
               ) : (
-                t("loadOrders")
+                <div className="wms-ops-order-fetch__table-wrap">
+                  <table className="wms-ops-order-fetch__table w-full min-w-[720px] text-left text-xs">
+                    <thead>
+                      <tr>
+                        <th className="w-14 text-center" />
+                        <th>Sipariş No</th>
+                        <th>Proje Kodu</th>
+                        <th>Tarih</th>
+                        <th className="wms-ops-order-fetch__qty">Sipariş Miktarı</th>
+                        <th className="wms-ops-order-fetch__qty">Kalan</th>
+                        <th className="wms-ops-order-fetch__qty">Mal Kabul</th>
+                        <th>Depo Kodu</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {orders.map((order) => {
+                        const checked = selectedOrders.includes(order.siparisNo);
+                        return (
+                          <tr
+                            key={order.siparisNo}
+                            className={cn(
+                              checked && "wms-ops-order-fetch__row--selected",
+                            )}
+                            onClick={() => toggleOrder(order.siparisNo)}
+                          >
+                            <td
+                              className="text-center"
+                              onClick={(event) => event.stopPropagation()}
+                            >
+                              <label className="wms-ops-order-checkbox">
+                                <input
+                                  type="checkbox"
+                                  checked={checked}
+                                  onChange={() => toggleOrder(order.siparisNo)}
+                                  aria-label={`${order.siparisNo} seç`}
+                                />
+                                <span
+                                  className="wms-ops-order-checkbox__mark"
+                                  aria-hidden
+                                />
+                              </label>
+                            </td>
+                            <td className="font-mono font-semibold">
+                              {order.siparisNo}
+                            </td>
+                            <td className="font-mono">
+                              {order.projectCode || "—"}
+                            </td>
+                            <td>{order.orderDate?.slice(0, 10) ?? "—"}</td>
+                            <td className="wms-ops-order-fetch__qty font-mono">
+                              {formatProjectNumber(order.orderedQuantity ?? 0)}
+                            </td>
+                            <td className="wms-ops-order-fetch__qty font-mono">
+                              {formatProjectNumber(
+                                order.remainingQuantity ??
+                                  order.availableQuantity ??
+                                  0,
+                              )}
+                            </td>
+                            <td className="wms-ops-order-fetch__qty font-mono font-semibold">
+                              {formatProjectNumber(order.availableQuantity ?? 0)}
+                            </td>
+                            <td>{order.targetWarehouseCode ?? "—"}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               )}
-            </button>
-          </div>
-          <p className="mt-2 text-xs text-slate-500">
-            Tedarikçi üzerinden ilerleyebilir; sipariş no veya proje kodu ile
-            sonuçları daraltabilirsiniz. Miktar alanları siparişten gelir,
-            kabul miktarı bir sonraki adımda düzenlenir.
-          </p>
-          <div className="mt-4 overflow-x-auto rounded-xl border border-[var(--wms-app-border)]">
-            <table className="w-full text-sm">
-              <thead className="bg-black/5 text-left dark:bg-white/5">
-                <tr>
-                  <th className="p-3"></th>
-                  <th className="p-3">Sipariş No</th>
-                  <th className="p-3">Proje Kodu</th>
-                  <th className="p-3">Tarih</th>
-                  <th className="p-3 text-right">Sipariş Miktarı</th>
-                  <th className="p-3 text-right">Kalan</th>
-                  <th className="p-3 text-right">Mal Kabul</th>
-                  <th className="p-3">Depo Kodu</th>
-                </tr>
-              </thead>
-              <tbody>
-                {orders.map((order) => (
-                  <tr
-                    key={order.siparisNo}
-                    className="border-t border-[var(--wms-app-border)]"
-                  >
-                    <td className="p-3">
-                      <input
-                        type="checkbox"
-                        checked={selectedOrders.includes(order.siparisNo)}
-                        onChange={(event) =>
-                          setSelectedOrders((current) =>
-                            event.target.checked
-                              ? [...current, order.siparisNo]
-                              : current.filter((x) => x !== order.siparisNo),
-                          )
-                        }
-                      />
-                    </td>
-                    <td className="p-3 font-mono font-semibold">
-                      {order.siparisNo}
-                    </td>
-                    <td className="p-3 font-mono">{order.projectCode || "—"}</td>
-                    <td className="p-3">
-                      {order.orderDate?.slice(0, 10) ?? "—"}
-                    </td>
-                    <td className="p-3 text-right font-mono">
-                      {formatProjectNumber(order.orderedQuantity ?? 0)}
-                    </td>
-                    <td className="p-3 text-right font-mono">
-                      {formatProjectNumber(
-                        order.remainingQuantity ??
-                          order.availableQuantity ??
-                          0,
-                      )}
-                    </td>
-                    <td className="p-3 text-right font-mono font-semibold text-cyan-600">
-                      {formatProjectNumber(order.availableQuantity ?? 0)}
-                    </td>
-                    <td className="p-3">{order.targetWarehouseCode ?? "—"}</td>
-                  </tr>
+
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="text-xs text-[var(--wms-app-text-muted)]">
+                  {selectedOrders.length} sipariş seçildi
+                </p>
+                <OpsActionButton
+                  type="button"
+                  variant="primary"
+                  disabled={selectedOrders.length === 0 || busy}
+                  onClick={() => void loadLines()}
+                >
+                  {busy ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    t("loadLines")
+                  )}
+                </OpsActionButton>
+              </div>
+            </div>
+          </Panel>
+
+          {lines.length > 0 && (
+            <div className="wms-ops-selected-order-items space-y-4">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs text-[var(--wms-app-text-muted)]">
+                  {lines.length} kalem seçildi · miktar/seri/raf bu satırlarda
+                  düzenlenir
+                </p>
+              </div>
+              <div className="space-y-2">
+                {lines.map((line) => (
+                  <ReceiptEntryRow
+                    key={lineKey(line)}
+                    line={line}
+                    branch={customer?.branch ?? branchCode}
+                    updateLine={updateLine}
+                    removeLine={removeLine}
+                    updateTracking={updateTracking}
+                    addTracking={addTracking}
+                    removeTracking={removeTracking}
+                    createSerialRows={createSerialRows}
+                    cancelGeneratedSerials={cancelGeneratedSerials}
+                  />
                 ))}
-              </tbody>
-            </table>
-            {orders.length === 0 && (
-              <p className="p-6 text-center text-sm text-slate-500">
-                {t("noOrders")}
-              </p>
-            )}
-          </div>
-          <div className="mt-4 flex justify-end">
-            <button
-              disabled={selectedOrders.length === 0 || busy}
-              onClick={() => void loadLines()}
-              className="rounded-xl bg-[var(--wms-brand-primary)] px-5 py-2.5 font-semibold text-white disabled:opacity-40"
-            >
-              {t("loadLines")}
-            </button>
-          </div>
-        </Panel>
+              </div>
+
+              <Panel
+                title="Belge ve emir ayarları"
+                icon={<PackageCheck className="size-5" />}
+              >
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Field label="Belge serisi">
+                    <AppDropdown
+                      value={seriesValue}
+                      onValueChange={setSeriesValue}
+                      options={series.map((x) => ({
+                        value: String(x.id),
+                        label: `${x.code} · ${x.name}`,
+                        description: x.previewDocumentNumber,
+                      }))}
+                      placeholder="Belge serisi"
+                      searchable
+                    />
+                  </Field>
+                  <Field label={t("documentDate")}>
+                    <AppDateInput
+                      value={documentDate}
+                      onChange={(event) => setDocumentDate(event.target.value)}
+                    />
+                  </Field>
+                  <Field label={t("plannedArrival")}>
+                    <AppDateInput
+                      type="datetime-local"
+                      value={plannedArrival}
+                      onChange={(event) => setPlannedArrival(event.target.value)}
+                    />
+                  </Field>
+                  <Field label={t("priority")}>
+                    <AppDropdown
+                      value={priority}
+                      onValueChange={setPriority}
+                      options={[1, 2, 3, 4, 5].map((x) => ({
+                        value: String(x),
+                        label: String(x),
+                      }))}
+                    />
+                  </Field>
+                  <Field label={t("labelStrategy")}>
+                    <AppDropdown
+                      value={labelStrategy}
+                      onValueChange={setLabelStrategy}
+                      options={[
+                        { value: "None", label: "Etiket yok" },
+                        { value: "PreGenerate", label: "Önceden üret" },
+                        { value: "SupplierLabel", label: "Tedarikçi etiketi" },
+                        { value: "GenerateOnReceipt", label: "Kabulde üret" },
+                      ]}
+                    />
+                  </Field>
+                  <Field label={t("description")}>
+                    <input
+                      className="input"
+                      maxLength={1000}
+                      value={description}
+                      onChange={(event) => setDescription(event.target.value)}
+                    />
+                  </Field>
+                </div>
+                <section className="mt-4 rounded-xl border border-[var(--wms-app-border)] p-4">
+                  <div className="mb-3 flex items-start gap-2">
+                    <UserRoundCog className="mt-0.5 size-5 text-cyan-500" />
+                    <div>
+                      <h3 className="font-bold">
+                        Emir sorumluları <span className="text-red-500">*</span>
+                      </h3>
+                      <p className="text-xs text-slate-500">
+                        Seçilen kullanıcılar oluşturulan tüm depo görevlerine
+                        atanır; kullanıcılar kendi “Bana Atanan Emirler” ekranında
+                        görevi görür.
+                      </p>
+                    </div>
+                  </div>
+                  <PagedAppDropdown
+                    queryKey={["gr-create-active-users"]}
+                    fetchPage={goodsReceiptV2Api.activeUsersPaged}
+                    toOption={(user) => ({
+                      ...userOption(user),
+                      disabled: assignees.some(
+                        (selected) => selected.id === user.id,
+                      ),
+                    })}
+                    value={null}
+                    onValueChange={(value) => {
+                      const user = decodeUser(value);
+                      setAssignees((current) =>
+                        current.some((x) => x.id === user.id)
+                          ? current
+                          : [...current, user],
+                      );
+                    }}
+                    placeholder="Operasyon kullanıcısı ekle"
+                    searchable
+                    minSearchLength={2}
+                  />
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {assignees.map((user) => (
+                      <span
+                        key={user.id}
+                        className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 text-sm"
+                      >
+                        <span>
+                          <strong>{userLabel(user)}</strong>
+                          <small className="ml-1 text-slate-500">
+                            ({user.username})
+                          </small>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setAssignees((current) =>
+                              current.filter((x) => x.id !== user.id),
+                            )
+                          }
+                          className="rounded-full p-0.5 text-slate-500 hover:bg-red-500/15 hover:text-red-500"
+                          aria-label={`${userLabel(user)} atamasını kaldır`}
+                        >
+                          <X className="size-3.5" />
+                        </button>
+                      </span>
+                    ))}
+                    {assignees.length === 0 && (
+                      <span className="text-xs text-amber-500">
+                        Henüz kullanıcı atanmadı.
+                      </span>
+                    )}
+                  </div>
+                </section>
+                <p className="mt-4 text-xs text-slate-500">
+                  Siparişteki depo kaleme varsayılan gelir; yetkili kullanıcı kabul
+                  deposu ve rafını kalem bazında değiştirebilir. Putaway önerileri
+                  yalnızca tercih olarak saklanır; kabul rafını (Receiving/Staging)
+                  değiştirmez.
+                </p>
+                <Footer
+                  back={() => {
+                    setLines([]);
+                    setError(null);
+                  }}
+                  next={goToConfirmation}
+                  disabled={lines.length === 0 || busy}
+                  t={t}
+                />
+              </Panel>
+            </div>
+          )}
+        </>
       )}
 
       {step === 1 && (
-        <div className="space-y-4">
-          {lines.map((line) => (
-            <ReceiptLineCard
-              key={lineKey(line)}
-              line={line}
-              branch={customer?.branch ?? branchCode}
-              updateLine={updateLine}
-              updateTracking={updateTracking}
-              addTracking={addTracking}
-              removeTracking={removeTracking}
-              createSerialRows={createSerialRows}
-              cancelGeneratedSerials={cancelGeneratedSerials}
-            />
-          ))}
-          <Panel
-            title="Belge ve emir ayarları"
-            icon={<PackageCheck className="size-5" />}
-          >
-            <div className="grid gap-4 md:grid-cols-2">
-              <Field label="Belge serisi">
-                <AppDropdown
-                  value={seriesValue}
-                  onValueChange={setSeriesValue}
-                  options={series.map((x) => ({
-                    value: String(x.id),
-                    label: `${x.code} · ${x.name}`,
-                    description: x.previewDocumentNumber,
-                  }))}
-                  placeholder="Belge serisi"
-                  searchable
-                />
-              </Field>
-              <Field label={t("documentDate")}>
-                <AppDateInput
-                  value={documentDate}
-                  onChange={(event) => setDocumentDate(event.target.value)}
-                />
-              </Field>
-              <Field label={t("plannedArrival")}>
-                <AppDateInput
-                  type="datetime-local"
-                  value={plannedArrival}
-                  onChange={(event) => setPlannedArrival(event.target.value)}
-                />
-              </Field>
-              <Field label={t("priority")}>
-                <AppDropdown
-                  value={priority}
-                  onValueChange={setPriority}
-                  options={[1, 2, 3, 4, 5].map((x) => ({
-                    value: String(x),
-                    label: String(x),
-                  }))}
-                />
-              </Field>
-              <Field label={t("labelStrategy")}>
-                <AppDropdown
-                  value={labelStrategy}
-                  onValueChange={setLabelStrategy}
-                  options={[
-                    { value: "None", label: "Etiket yok" },
-                    { value: "PreGenerate", label: "Önceden üret" },
-                    { value: "SupplierLabel", label: "Tedarikçi etiketi" },
-                    { value: "GenerateOnReceipt", label: "Kabulde üret" },
-                  ]}
-                />
-              </Field>
-              <Field label={t("description")}>
-                <input
-                  className="input"
-                  maxLength={1000}
-                  value={description}
-                  onChange={(event) => setDescription(event.target.value)}
-                />
-              </Field>
-            </div>
-            <section className="mt-4 rounded-xl border border-[var(--wms-app-border)] p-4">
-              <div className="mb-3 flex items-start gap-2">
-                <UserRoundCog className="mt-0.5 size-5 text-cyan-500" />
-                <div>
-                  <h3 className="font-bold">
-                    Emir sorumluları <span className="text-red-500">*</span>
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Seçilen kullanıcılar oluşturulan tüm depo görevlerine
-                    atanır; kullanıcılar kendi “Bana Atanan Emirler” ekranında
-                    görevi görür.
-                  </p>
-                </div>
-              </div>
-              <PagedAppDropdown
-                queryKey={["gr-create-active-users"]}
-                fetchPage={goodsReceiptV2Api.activeUsersPaged}
-                toOption={(user) => ({
-                  ...userOption(user),
-                  disabled: assignees.some(
-                    (selected) => selected.id === user.id,
-                  ),
-                })}
-                value={null}
-                onValueChange={(value) => {
-                  const user = decodeUser(value);
-                  setAssignees((current) =>
-                    current.some((x) => x.id === user.id)
-                      ? current
-                      : [...current, user],
-                  );
-                }}
-                placeholder="Operasyon kullanıcısı ekle"
-                searchable
-                minSearchLength={2}
-              />
-              <div className="mt-3 flex flex-wrap gap-2">
-                {assignees.map((user) => (
-                  <span
-                    key={user.id}
-                    className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 text-sm"
-                  >
-                    <span>
-                      <strong>{userLabel(user)}</strong>
-                      <small className="ml-1 text-slate-500">
-                        ({user.username})
-                      </small>
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setAssignees((current) =>
-                          current.filter((x) => x.id !== user.id),
-                        )
-                      }
-                      className="rounded-full p-0.5 text-slate-500 hover:bg-red-500/15 hover:text-red-500"
-                      aria-label={`${userLabel(user)} atamasını kaldır`}
-                    >
-                      <X className="size-3.5" />
-                    </button>
-                  </span>
-                ))}
-                {assignees.length === 0 && (
-                  <span className="text-xs text-amber-500">
-                    Henüz kullanıcı atanmadı.
-                  </span>
-                )}
-              </div>
-            </section>
-            <p className="mt-4 text-xs text-slate-500">
-              Siparişteki depo kaleme varsayılan gelir; yetkili kullanıcı kabul
-              deposu ve rafını kalem bazında değiştirebilir. Farklı depolar için
-              aynı başlık altında ayrı görevler oluşturulur.
-            </p>
-            <Footer
-              back={() => setStep(0)}
-              next={goToConfirmation}
-              disabled={lines.length === 0 || busy}
-              t={t}
-            />
-          </Panel>
-        </div>
-      )}
-
-      {step === 2 && (
         <Panel
           title="Kontrol ve oluşturma"
           icon={<CheckCircle2 className="size-5" />}
         >
           {result ? (
-            <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-6">
-              <CheckCircle2 className="size-10 text-emerald-500" />
-              <h2 className="mt-3 text-xl font-bold">{t("created")}</h2>
-              <p className="mt-2 font-mono text-lg">{result.documentNo}</p>
-              <p className="mt-1 text-sm text-slate-500">
-                {result.tasks.length} görev · {result.lineCount} satır ·{" "}
-                {result.reservedQuantity} · {assignees.length} sorumlu
-              </p>
-              {result.tasks.map((task) => (
-                <p key={task.id} className="mt-1 font-mono text-xs">
-                  {task.taskNo} · depo #{task.warehouseId} · {task.lineCount}{" "}
-                  satır · {task.plannedQuantity}
-                </p>
-              ))}
-            </div>
+            <CreateSuccessPanel
+              result={result}
+              supplierCode={customer?.code}
+              assigneeCount={assignees.length}
+              qualityLines={lines.flatMap((x) =>
+                x.requireQualityControl && x.stockCode
+                  ? [
+                      {
+                        stockCode: x.stockCode,
+                        stockName: x.stockName,
+                        quantity: x.quantity,
+                        unitCode: x.unitCode,
+                      },
+                    ]
+                  : [],
+              )}
+              onNew={() => {
+                setResult(null);
+                setStep(0);
+                setLines([]);
+                setSelectedOrders([]);
+                setOrders([]);
+                setAssignees([]);
+                setError(null);
+              }}
+            />
           ) : (
-            <div className="space-y-3">
-              <Summary label="Cari" value={customer?.code ?? "—"} />
-              <Summary label="Sipariş" value={selectedOrders.join(", ")} />
-              <Summary
-                label="Satır / miktar"
-                value={`${lines.length} / ${selectedQuantity}`}
-              />
-              <Summary
-                label="Depo sayısı"
-                value={String(
-                  new Set(lines.map((x) => x.targetWarehouseId)).size,
-                )}
-              />
-              <Summary
-                label="Emir sorumluları"
-                value={assignees.map(userLabel).join(", ") || "—"}
-              />
-              <Summary
-                label="Lot/seri satırı"
-                value={String(
-                  lines.reduce((sum, x) => sum + x.trackings.length, 0),
-                )}
-              />
-              <Summary
-                label="Kaliteye gidecek"
-                value={
-                  lines.some((x) => x.requireQualityControl)
-                    ? `${lines.filter((x) => x.requireQualityControl).length} kalem · Mal kabul bitince kalite listesine düşer`
-                    : "Yok"
-                }
-              />
-              <Summary
-                label="Belge serisi"
-                value={
-                  series.find((x) => String(x.id) === seriesValue)
-                    ?.previewDocumentNumber ?? "—"
-                }
-              />
-              <div className="flex justify-between pt-3">
-                <button
-                  onClick={() => setStep(1)}
-                  className="rounded-xl border px-5 py-2.5"
+            <div className="wms-ops-gr-review">
+              <dl className="wms-ops-gr-review__list">
+                <ReviewRow label="Tedarikçi" value={customer?.code ?? "—"} />
+                <ReviewRow
+                  label="Sipariş"
+                  value={selectedOrders.join(", ") || "—"}
+                />
+                <ReviewRow
+                  label="Satır / miktar"
+                  value={`${lines.length} / ${formatProjectNumber(selectedQuantity, {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 6,
+                  })}`}
+                  emphasis
+                />
+                <ReviewRow
+                  label="Depo sayısı"
+                  value={String(
+                    new Set(lines.map((x) => x.targetWarehouseId)).size,
+                  )}
+                />
+                <ReviewRow
+                  label="Emir sorumluları"
+                  value={assignees.map(userLabel).join(", ") || "—"}
+                />
+                <ReviewRow
+                  label="Lot/seri satırı"
+                  value={String(
+                    lines.reduce((sum, x) => sum + x.trackings.length, 0),
+                  )}
+                />
+                <ReviewRow
+                  label="Kaliteye gidecek"
+                  value={
+                    lines.some((x) => x.requireQualityControl)
+                      ? `${lines.filter((x) => x.requireQualityControl).length} kalem · Mal kabul bitince kalite listesine düşer`
+                      : "Yok"
+                  }
+                />
+                <ReviewRow
+                  label="Belge serisi"
+                  value={
+                    series.find((x) => String(x.id) === seriesValue)
+                      ?.previewDocumentNumber ?? "—"
+                  }
+                  accent
+                />
+              </dl>
+              <div className="wms-ops-gr-review__actions">
+                <OpsActionButton
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setStep(0)}
                 >
                   {t("back")}
-                </button>
-                <button
+                </OpsActionButton>
+                <OpsActionButton
+                  type="button"
+                  variant="primary"
                   disabled={busy}
                   onClick={() => void create()}
-                  className="rounded-xl bg-emerald-600 px-5 py-2.5 font-semibold text-white disabled:opacity-50"
                 >
                   {busy ? (
-                    <Loader2 className="mx-auto size-4 animate-spin" />
+                    <Loader2 className="size-4 animate-spin" />
                   ) : (
                     t("create")
                   )}
-                </button>
+                </OpsActionButton>
               </div>
             </div>
           )}
@@ -1061,10 +1219,51 @@ export function GoodsReceiptCreatePage(): ReactElement {
   );
 }
 
-function ReceiptLineCard({
+function OpsSelectedEntityCard({
+  label,
+  eyebrow,
+  status,
+  value,
+}: {
+  label: string;
+  eyebrow?: string;
+  status?: string;
+  value: string;
+}): ReactElement {
+  const match = value.match(/^(.+?)\s*\(([^)]+)\)\s*$/);
+  const primary = match ? match[2].trim() : value.trim();
+  const secondary = match ? match[1].trim() : undefined;
+  return (
+    <div className="wms-ops-entity-card" role="status" aria-label={label}>
+      <div className="wms-ops-entity-card__rail" aria-hidden />
+      <div className="wms-ops-entity-card__body">
+        <div className="wms-ops-entity-card__icon" aria-hidden>
+          <UserRound className="size-4" />
+        </div>
+        <div className="wms-ops-entity-card__meta">
+          <div className="wms-ops-entity-card__header">
+            <span className="wms-ops-entity-card__eyebrow">
+              {eyebrow ?? label}
+            </span>
+            {status ? (
+              <span className="wms-ops-entity-card__status">{status}</span>
+            ) : null}
+          </div>
+          <div className="wms-ops-entity-card__code">{primary}</div>
+          {secondary ? (
+            <div className="wms-ops-entity-card__name">{secondary}</div>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ReceiptEntryRow({
   line,
   branch,
   updateLine,
+  removeLine,
   updateTracking,
   addTracking,
   removeTracking,
@@ -1074,6 +1273,7 @@ function ReceiptLineCard({
   line: SelectedReceiptLine;
   branch: string;
   updateLine: (key: string, patch: Partial<SelectedReceiptLine>) => void;
+  removeLine: (key: string) => void;
   updateTracking: (
     key: string,
     id: string,
@@ -1087,6 +1287,7 @@ function ReceiptLineCard({
   const key = lineKey(line);
   const serialMode =
     line.trackingType === "Serial" || line.trackingType === "LotAndSerial";
+  const needsTracking = line.trackingType !== "None";
   const [suggestions, setSuggestions] = useState<
     Array<{
       id: number;
@@ -1097,12 +1298,34 @@ function ReceiptLineCard({
   >([]);
   const [suggestionsBusy, setSuggestionsBusy] = useState(false);
   const [serialOpen, setSerialOpen] = useState(false);
+  const [warehouseLookupOpen, setWarehouseLookupOpen] = useState(false);
+  const [locationLookupOpen, setLocationLookupOpen] = useState(false);
   const [quantityText, setQuantityText] = useState(
     formatProjectNumber(line.quantity, {
       minimumFractionDigits: 0,
       maximumFractionDigits: 6,
     }),
   );
+
+  const warehouseLabel = line.targetWarehouseValue
+    ? (() => {
+        const code = line.targetWarehouseValue.split("|")[2];
+        return code ? `Depo ${code}` : "";
+      })()
+    : "";
+  const receivingLabel =
+    line.receivingLocationCode ||
+    (line.receivingLocationValue
+      ? `Raf #${line.receivingLocationValue}`
+      : "");
+  const serialSummary = needsTracking
+    ? line.trackings.length > 0
+      ? serialMode
+        ? `${line.trackings.filter((x) => x.serialNo).length} seri`
+        : `${line.trackings.length} lot/satır`
+      : "Planla…"
+    : "—";
+
   useEffect(() => {
     setQuantityText(
       formatProjectNumber(line.quantity, {
@@ -1111,6 +1334,63 @@ function ReceiptLineCard({
       }),
     );
   }, [line.quantity]);
+
+  useEffect(() => {
+    if (!line.targetWarehouseId) return;
+    let cancelled = false;
+    void goodsReceiptV2Api
+      .receivingLocations(
+        {
+          pageNumber: 1,
+          pageSize: 100,
+          search: undefined,
+          filterLogic: "and",
+          filters: [],
+          sortBy: "code",
+          sortDirection: "asc",
+          signal: new AbortController().signal,
+        },
+        line.targetWarehouseId,
+      )
+      .then((page) => {
+        if (cancelled) return;
+        const preferred =
+          page.items.find((item) => item.locationType === "Receiving") ??
+          page.items[0];
+        if (!preferred) return;
+        const selectedIsValid =
+          line.receivingLocationId != null &&
+          page.items.some((item) => item.id === line.receivingLocationId);
+        if (!selectedIsValid) {
+          updateLine(key, {
+            receivingLocationId: preferred.id,
+            receivingLocationValue: String(preferred.id),
+            receivingLocationCode: preferred.code,
+          });
+        } else if (
+          line.receivingLocationId &&
+          !line.receivingLocationCode
+        ) {
+          const current = page.items.find(
+            (item) => item.id === line.receivingLocationId,
+          );
+          if (current) {
+            updateLine(key, { receivingLocationCode: current.code });
+          }
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    key,
+    line.receivingLocationCode,
+    line.receivingLocationId,
+    line.targetWarehouseId,
+    updateLine,
+  ]);
+
   useEffect(() => {
     if (!line.targetWarehouseId || !line.stockCode || line.quantity <= 0) {
       setSuggestions([]);
@@ -1127,11 +1407,17 @@ function ReceiptLineCard({
         .then((items) => {
           if (cancelled) return;
           setSuggestions(items);
-          if (!line.receivingLocationId && items[0])
+          const top = items[0];
+          if (!top) return;
+          const stillValid = items.some(
+            (item) => item.id === line.putawayLocationId,
+          );
+          if (!stillValid) {
             updateLine(key, {
-              receivingLocationId: items[0].id,
-              receivingLocationValue: String(items[0].id),
+              putawayLocationId: top.id,
+              putawayLocationCode: top.code,
             });
+          }
         })
         .catch(() => {
           if (!cancelled) setSuggestions([]);
@@ -1144,144 +1430,316 @@ function ReceiptLineCard({
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [
-    key,
-    line.quantity,
-    line.receivingLocationId,
-    line.stockCode,
-    line.targetWarehouseId,
-    updateLine,
-  ]);
+    // putawayLocationId intentionally omitted — only used to preserve manual pick within same suggestion set
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- auto-pick first suggestion without refetch loops
+  }, [key, line.quantity, line.stockCode, line.targetWarehouseId, updateLine]);
+
   return (
-    <Panel
-      title={`${line.siparisNo} · ${line.stockCode ?? line.orderId}`}
-      icon={<PackageCheck className="size-5" />}
-    >
-      <div className="mb-4 grid gap-3 rounded-xl bg-black/5 p-3 text-sm dark:bg-white/5 md:grid-cols-4">
-        <Info label="Stok" value={line.stockName ?? "—"} />
-        <Info label="YAP" value={line.yapCode || "—"} />
-        <Info
-          label="Kullanılabilir"
-          value={`${formatProjectNumber(line.availableQuantity ?? 0)} ${line.unitCode ?? ""}`}
-        />
-        <Info
-          label="Sipariş deposu"
-          value={String(line.targetWarehouseCode ?? "—")}
-        />
-      </div>
-      {line.requireQualityControl && (
-        <div className="mb-3 flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-300">
-          <ShieldCheck className="size-4 shrink-0" />
-          Bu stok kodunda kalite kuralı var; mal kabul bitince kalite inceleme
-          listesine aktarılır.
-        </div>
-      )}
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Field label="Kabul miktarı">
-          <input
-            className="input font-mono"
-            inputMode="decimal"
-            value={quantityText}
-            onChange={(event) => setQuantityText(event.target.value)}
-            onBlur={() => {
-              const parsed = parseLocalizedNumber(quantityText);
-              if (!Number.isFinite(parsed) || parsed <= 0) {
-                setQuantityText(
-                  formatProjectNumber(line.quantity, {
+    <div className="wms-ops-receipt-entry-row space-y-3">
+      <div className="flex items-start gap-3">
+        <div className="min-w-0 flex-1 space-y-3">
+          <div className="min-w-0 space-y-1">
+            <p className="truncate text-sm font-semibold">
+              {line.stockName || line.stockCode || "—"}
+            </p>
+            <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+              <span className="wms-ops-code-badge">{line.stockCode}</span>
+              <span>•</span>
+              <span className="font-mono">{line.siparisNo}</span>
+              <span>•</span>
+              <span>
+                Sipariş:{" "}
+                <strong className="text-foreground">
+                  {formatProjectNumber(line.orderedQuantity ?? line.availableQuantity ?? 0, {
                     minimumFractionDigits: 0,
                     maximumFractionDigits: 6,
-                  }),
-                );
-                return;
-              }
-              const capped = Math.min(parsed, line.availableQuantity ?? parsed);
-              updateLine(key, { quantity: capped });
-              setQuantityText(
-                formatProjectNumber(capped, {
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 6,
-                }),
-              );
-            }}
-          />
-        </Field>
-        <Field label="Hedef depo">
-          <PagedAppDropdown
-            queryKey={["gr-line-warehouse", key, branch]}
-            fetchPage={(request) =>
-              goodsReceiptV2Api.warehouses(request, branch)
-            }
-            toOption={warehouseOption}
-            value={line.targetWarehouseValue ?? null}
-            onValueChange={(value) => {
-              const [id] = (value ?? "").split("|");
-              updateLine(key, {
-                targetWarehouseValue: value,
-                targetWarehouseId: Number(id) || undefined,
-                receivingLocationId: undefined,
-                receivingLocationValue: null,
-              });
-            }}
-            placeholder="Hedef depo"
-            searchable
-          />
-        </Field>
-        <Field label="Kabul rafı">
-          <PagedAppDropdown
-            queryKey={["gr-line-location", key, line.targetWarehouseId]}
-            fetchPage={(request) =>
-              goodsReceiptV2Api.locations(request, line.targetWarehouseId!)
-            }
-            toOption={locationOption}
-            enabled={Boolean(line.targetWarehouseId)}
-            value={line.receivingLocationValue ?? null}
-            onValueChange={(value) =>
-              updateLine(key, {
-                receivingLocationValue: value,
-                receivingLocationId: value ? Number(value) : undefined,
-              })
-            }
-            placeholder="Kabul rafı"
-            searchable
-          />
-        </Field>
-        <Field label="Stok takip politikası">
-          <StockTrackingPolicyField policy={line.trackingPolicy} />
-        </Field>
-      </div>
-      {(suggestionsBusy || suggestions.length > 0) && (
-        <div className="mt-3 rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3">
-          <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-cyan-500">
-            {suggestionsBusy && <Loader2 className="size-3.5 animate-spin" />}
-            Akıllı raf önerileri
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {suggestions.map((item, index) => (
-              <button
-                type="button"
-                key={item.id}
-                onClick={() =>
-                  updateLine(key, {
-                    receivingLocationId: item.id,
-                    receivingLocationValue: String(item.id),
-                  })
-                }
-                className={`rounded-lg border px-3 py-2 text-left text-xs ${line.receivingLocationId === item.id ? "border-cyan-500 bg-cyan-500/15" : "border-[var(--wms-app-border)] bg-[var(--wms-app-panel)]"}`}
-              >
-                <strong>
-                  {index + 1}. {item.code}
+                  })}{" "}
+                  {line.unitCode || ""}
                 </strong>
-                <span className="ml-2 text-slate-500">{item.reason}</span>
-                {item.remainingCapacity != null && (
-                  <span className="ml-2 font-mono text-slate-500">
-                    Kalan: {item.remainingCapacity}
-                  </span>
+              </span>
+              {line.requireQualityControl ? (
+                <span className="inline-flex items-center gap-1 text-amber-600">
+                  <ShieldCheck className="size-3" />
+                  Kalite
+                </span>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="space-y-1 sm:col-span-2 xl:col-span-1">
+              <label className="wms-ops-entry-label">Hedef Depo</label>
+              <OpsFieldShell
+                className={cn(
+                  warehouseLookupOpen && "wms-ops-field-shell--active",
                 )}
-              </button>
-            ))}
+              >
+                <PagedLookupDialog<WarehouseOption>
+                  variant="ops"
+                  open={warehouseLookupOpen}
+                  onOpenChange={setWarehouseLookupOpen}
+                  title="Hedef depo seçin"
+                  value={warehouseLabel}
+                  placeholder="Hedef depo"
+                  searchPlaceholder="Depo ara…"
+                  emptyText="Depo bulunamadı."
+                  triggerClassName={cn(OPS_FIELD_CLASS, "h-9")}
+                  queryKey={["gr-line-warehouse-lookup", key, branch]}
+                  fetchPage={async ({ pageNumber, pageSize, search, signal }) =>
+                    toPagedResponse(
+                      await goodsReceiptV2Api.warehouses(
+                        {
+                          pageNumber,
+                          pageSize,
+                          search,
+                          sortBy: "warehouseCode",
+                          sortDirection: "asc",
+                          signal: signal ?? new AbortController().signal,
+                        },
+                        branch,
+                      ),
+                    )
+                  }
+                  getKey={(item) => String(item.id)}
+                  getLabel={(item) =>
+                    `${item.warehouseName} (${item.warehouseCode})`
+                  }
+                  onSelect={(warehouse) => {
+                    updateLine(key, {
+                      targetWarehouseValue: warehouseOption(warehouse).value,
+                      targetWarehouseId: warehouse.id,
+                      receivingLocationId: undefined,
+                      receivingLocationValue: null,
+                      receivingLocationCode: undefined,
+                      putawayLocationId: undefined,
+                      putawayLocationCode: undefined,
+                    });
+                  }}
+                />
+              </OpsFieldShell>
+            </div>
+
+            <div className="space-y-1">
+              <label className="wms-ops-entry-label">Miktar</label>
+              <OpsFieldShell>
+                <div className="wms-ops-qty-stepper relative">
+                  <input
+                    className={cn(
+                      OPS_FIELD_CLASS,
+                      "h-9 w-full pr-8 text-right font-mono text-sm",
+                    )}
+                    inputMode="decimal"
+                    value={quantityText}
+                    onChange={(event) => setQuantityText(event.target.value)}
+                    onBlur={() => {
+                      const parsed = parseLocalizedNumber(quantityText);
+                      if (!Number.isFinite(parsed) || parsed <= 0) {
+                        setQuantityText(
+                          formatProjectNumber(line.quantity, {
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 6,
+                          }),
+                        );
+                        return;
+                      }
+                      const capped = Math.min(
+                        parsed,
+                        line.availableQuantity ?? parsed,
+                      );
+                      updateLine(key, { quantity: capped });
+                      setQuantityText(
+                        formatProjectNumber(capped, {
+                          minimumFractionDigits: 0,
+                          maximumFractionDigits: 6,
+                        }),
+                      );
+                    }}
+                  />
+                  <div className="wms-ops-qty-stepper__controls absolute inset-y-0 right-0 flex flex-col justify-center pr-0.5">
+                    <button
+                      type="button"
+                      className="wms-ops-qty-stepper__btn"
+                      aria-label="Miktarı artır"
+                      onClick={() => {
+                        const base =
+                          parseLocalizedNumber(quantityText) || line.quantity;
+                        const next = Math.min(
+                          base + 1,
+                          line.availableQuantity ?? base + 1,
+                        );
+                        updateLine(key, { quantity: next });
+                      }}
+                    >
+                      <ChevronUp className="size-3" aria-hidden />
+                    </button>
+                    <button
+                      type="button"
+                      className="wms-ops-qty-stepper__btn"
+                      aria-label="Miktarı azalt"
+                      onClick={() => {
+                        const base =
+                          parseLocalizedNumber(quantityText) || line.quantity;
+                        const next = Math.max(base - 1, 0.000001);
+                        updateLine(key, { quantity: next });
+                      }}
+                    >
+                      <ChevronDown className="size-3" aria-hidden />
+                    </button>
+                  </div>
+                </div>
+              </OpsFieldShell>
+            </div>
+
+            <div className="space-y-1">
+              <label className="wms-ops-entry-label">Seri No</label>
+              {needsTracking ? (
+                <OpsFieldShell>
+                  <button
+                    type="button"
+                    className={cn(
+                      "wms-ops-lookup-trigger wms-ops-field h-9",
+                      !line.trackings.length && "wms-ops-field--placeholder",
+                    )}
+                    onClick={() => setSerialOpen(true)}
+                  >
+                    <span className="truncate font-mono text-sm">
+                      {serialSummary}
+                    </span>
+                    <ScanBarcode className="size-3.5 shrink-0 opacity-60" />
+                  </button>
+                </OpsFieldShell>
+              ) : (
+                <OpsFieldShell>
+                  <div
+                    className={cn(
+                      OPS_FIELD_CLASS,
+                      "flex h-9 items-center text-xs text-muted-foreground",
+                    )}
+                  >
+                    Takipsiz
+                  </div>
+                </OpsFieldShell>
+              )}
+            </div>
+
+            <div className="space-y-1">
+              <label className="wms-ops-entry-label">Raf Kodu</label>
+              <OpsFieldShell
+                className={cn(
+                  locationLookupOpen && "wms-ops-field-shell--active",
+                )}
+              >
+                <PagedLookupDialog<LocationOption>
+                  variant="ops"
+                  open={locationLookupOpen}
+                  onOpenChange={setLocationLookupOpen}
+                  title="Kabul rafı (Receiving / Staging)"
+                  value={receivingLabel}
+                  placeholder="Receiving / Staging"
+                  searchPlaceholder="Raf kodu ara…"
+                  emptyText="Raf bulunamadı."
+                  disabled={!line.targetWarehouseId}
+                  triggerClassName={cn(OPS_FIELD_CLASS, "h-9")}
+                  queryKey={[
+                    "gr-line-receiving-lookup",
+                    key,
+                    line.targetWarehouseId,
+                  ]}
+                  fetchPage={async ({ pageNumber, pageSize, search, signal }) =>
+                    toPagedResponse(
+                      await goodsReceiptV2Api.receivingLocations(
+                        {
+                          pageNumber,
+                          pageSize,
+                          search,
+                          sortBy: "code",
+                          sortDirection: "asc",
+                          signal: signal ?? new AbortController().signal,
+                        },
+                        line.targetWarehouseId!,
+                      ),
+                    )
+                  }
+                  getKey={(item) => String(item.id)}
+                  getLabel={(item) => `${item.code} · ${item.name}`}
+                  onSelect={(location) => {
+                    updateLine(key, {
+                      receivingLocationValue: String(location.id),
+                      receivingLocationId: location.id,
+                      receivingLocationCode: location.code,
+                    });
+                  }}
+                />
+              </OpsFieldShell>
+            </div>
+          </div>
+
+          <StockTrackingPolicyField policy={line.trackingPolicy} compact />
+        </div>
+
+        <OpsActionButton
+          type="button"
+          variant="secondary"
+          className="wms-ops-receipt-row__remove-btn shrink-0 self-start"
+          aria-label="Kalemi kaldır"
+          onClick={() => removeLine(key)}
+        >
+          <Trash2 className="size-3.5" aria-hidden />
+        </OpsActionButton>
+      </div>
+
+      {(suggestionsBusy || suggestions.length > 0 || line.putawayLocationCode) && (
+        <div className="mt-3 space-y-2 rounded-xl border border-emerald-500/25 bg-emerald-500/5 p-3">
+          <div className="flex flex-wrap items-center gap-2 text-[0.7rem] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
+            {suggestionsBusy && <Loader2 className="size-3.5 animate-spin" />}
+            Önerilen Raf
+            {line.putawayLocationCode ? (
+              <span className="rounded-md bg-emerald-500/15 px-2 py-0.5 font-mono text-[0.7rem] normal-case tracking-normal text-emerald-700 dark:text-emerald-200">
+                Otomatik seçili: {line.putawayLocationCode}
+              </span>
+            ) : null}
+          </div>
+          <p className="text-[0.7rem] text-slate-500">
+            İlk öneri otomatik seçilir; üzerine tıklayarak değiştirebilirsiniz.
+            Kabul rafı (Receiving/Staging) yerine geçmez — raflama rehberidir.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {suggestions.map((item, index) => {
+              const selected = line.putawayLocationId === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() =>
+                    updateLine(key, {
+                      putawayLocationId: item.id,
+                      putawayLocationCode: item.code,
+                    })
+                  }
+                  className={cn(
+                    "rounded-lg border px-3 py-2 text-left text-xs transition",
+                    selected
+                      ? "border-emerald-500 bg-emerald-500/20 text-emerald-800 ring-1 ring-emerald-500/40 dark:text-emerald-200"
+                      : "border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] hover:border-emerald-500/50",
+                  )}
+                >
+                  <strong>
+                    {index === 0 ? "Öneri · " : `${index + 1}. `}
+                    {item.code}
+                  </strong>
+                  <span className="ml-2 text-slate-500">{item.reason}</span>
+                  {item.remainingCapacity != null && (
+                    <span className="ml-2 font-mono text-slate-500">
+                      Kalan: {item.remainingCapacity}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
+
       {line.targetWarehouseValue &&
         Number(line.targetWarehouseValue.split("|")[2]) !==
           line.targetWarehouseCode && (
@@ -1290,37 +1748,11 @@ function ReceiptLineCard({
             kabul deposu seçildi.
           </p>
         )}
-      {line.trackingType !== "None" && (
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--wms-app-border)] p-3">
-          <div>
-            <strong>Lot / seri dağılımı</strong>
-            <p className="text-xs text-slate-500">
-              Dağıtılan:{" "}
-              {formatProjectNumber(
-                line.trackings.reduce(
-                  (sum, x) => sum + Number(x.quantity || 0),
-                  0,
-                ),
-              )}{" "}
-              / {formatProjectNumber(line.quantity)}
-              {serialMode ? ` · ${line.trackings.filter((x) => x.serialNo).length} seri` : ""}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setSerialOpen(true)}
-            className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white"
-          >
-            <ScanBarcode className="size-4" />
-            {serialMode ? "Seri no yönet" : "Lot / izleme yönet"}
-          </button>
-        </div>
-      )}
+
       {serialMode && line.serialGenerationKey && (
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-500/25 bg-amber-500/10 px-3 py-2">
           <span className="text-xs text-amber-700 dark:text-amber-300">
-            Bu satırın otomatik serileri rezerve edildi. Miktar değişirse eski
-            seri grubu iptal edilerek yenisi üretilir.
+            Otomatik seriler rezerve edildi.
           </span>
           <button
             type="button"
@@ -1331,6 +1763,7 @@ function ReceiptLineCard({
           </button>
         </div>
       )}
+
       {serialOpen && (
         <SerialTrackingDialog
           line={line}
@@ -1343,7 +1776,7 @@ function ReceiptLineCard({
           cancelGeneratedSerials={cancelGeneratedSerials}
         />
       )}
-    </Panel>
+    </div>
   );
 }
 
@@ -1629,6 +2062,166 @@ function QuantityInput({
   );
 }
 
+function CreateSuccessPanel({
+  result,
+  supplierCode,
+  assigneeCount,
+  qualityLines,
+  onNew,
+}: {
+  result: CreateGoodsReceiptResult;
+  supplierCode?: string;
+  assigneeCount: number;
+  qualityLines: Array<{
+    stockCode: string;
+    stockName?: string;
+    quantity: number;
+    unitCode?: string;
+  }>;
+  onNew: () => void;
+}): ReactElement {
+  const navigate = useNavigate();
+  const qualityCount = qualityLines.length;
+  return (
+    <div className="mx-auto max-w-3xl overflow-hidden rounded-3xl border border-emerald-500/35 bg-gradient-to-br from-emerald-500/15 via-[var(--wms-app-panel)] to-transparent shadow-sm">
+      <div className="border-b border-emerald-500/20 px-8 py-8 text-center">
+        <div className="mx-auto grid size-16 place-items-center rounded-2xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-300">
+          <CheckCircle2 className="size-9" />
+        </div>
+        <p className="mt-5 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-300">
+          Mal kabul sonrası
+        </p>
+        <h2 className="mt-2 text-2xl font-black tracking-tight">
+          Mal kabul sonrası irsaliye oluşturuldu
+        </h2>
+        <p className="mx-auto mt-3 max-w-md text-sm text-slate-600 dark:text-slate-300">
+          {supplierCode
+            ? `${supplierCode} tedarikçisi için belge hazır.`
+            : "Mal kabul belgesi hazır."}{" "}
+          Emir atanan kullanıcıların kuyruğuna düştü; fiziksel kabul bitince
+          kaliteye gidecek kalemler listelenir.
+        </p>
+        <div className="mx-auto mt-5 inline-flex rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-5 py-3">
+          <div>
+            <div className="text-[11px] uppercase tracking-wider text-slate-500">
+              Belge No
+            </div>
+            <div className="mt-1 font-mono text-xl font-bold text-emerald-700 dark:text-emerald-300">
+              {result.documentNo}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-3 px-8 py-6 sm:grid-cols-3">
+        <div className="rounded-xl border border-[var(--wms-app-border)] p-3 text-center">
+          <div className="text-xs text-slate-500">Görev</div>
+          <strong className="mt-1 block text-lg">{result.tasks.length}</strong>
+        </div>
+        <div className="rounded-xl border border-[var(--wms-app-border)] p-3 text-center">
+          <div className="text-xs text-slate-500">Satır / miktar</div>
+          <strong className="mt-1 block text-lg">
+            {result.lineCount} · {formatProjectNumber(result.reservedQuantity)}
+          </strong>
+        </div>
+        <div className="rounded-xl border border-[var(--wms-app-border)] p-3 text-center">
+          <div className="text-xs text-slate-500">Emir sorumlusu</div>
+          <strong className="mt-1 block text-lg">{assigneeCount}</strong>
+        </div>
+      </div>
+
+      {qualityCount > 0 ? (
+        <div className="mx-8 mb-5 rounded-xl border border-violet-500/35 bg-violet-500/10 px-4 py-3 text-left">
+          <div className="flex flex-wrap items-center gap-2">
+            <OpsStatusBadge
+              tone="quality"
+              title="Fiziksel kabul bitince kalite listesine düşer"
+            >
+              Kalite kontrol bekliyor
+            </OpsStatusBadge>
+            <span className="text-sm font-semibold">
+              {qualityCount} kalem kalite kontrol aşamasında
+            </span>
+          </div>
+          <ul className="mt-3 space-y-1.5">
+            {qualityLines.map((line) => (
+              <li
+                key={line.stockCode}
+                className="flex flex-wrap items-baseline justify-between gap-2 rounded-lg border border-violet-500/20 bg-black/10 px-3 py-2 text-sm dark:bg-black/20"
+              >
+                <span className="min-w-0">
+                  <span className="font-mono text-xs text-violet-600 dark:text-violet-300">
+                    {line.stockCode}
+                  </span>
+                  <span className="ml-2 font-medium">
+                    {line.stockName || "—"}
+                  </span>
+                </span>
+                <span className="font-mono text-xs text-slate-500">
+                  {formatProjectNumber(line.quantity, {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 6,
+                  })}{" "}
+                  {line.unitCode || ""}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        <div className="mx-8 mb-5 rounded-xl border border-[var(--wms-app-border)] px-4 py-3 text-sm text-slate-500">
+          Bu emirde kalite kontrol gerektiren kalem yok.
+        </div>
+      )}
+
+      {result.tasks.length > 0 && (
+        <div className="space-y-2 border-t border-emerald-500/20 px-8 py-4 text-left">
+          <div className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            Oluşturulan görevler
+          </div>
+          {result.tasks.map((task) => (
+            <div
+              key={task.id}
+              className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] px-3 py-2 font-mono text-xs"
+            >
+              <span className="font-semibold text-cyan-600 dark:text-cyan-300">
+                {task.taskNo}
+              </span>
+              <span className="text-slate-500">
+                depo #{task.warehouseId} · {task.lineCount} satır ·{" "}
+                {formatProjectNumber(task.plannedQuantity)}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="flex flex-wrap items-center justify-center gap-3 border-t border-emerald-500/20 px-8 py-5">
+        <button
+          type="button"
+          onClick={onNew}
+          className="rounded-xl bg-emerald-600 px-5 py-2.5 font-semibold text-white"
+        >
+          Yeni kayıt
+        </button>
+        <button
+          type="button"
+          onClick={() => navigate("/warehouse/goods-receipts/tasks")}
+          className="rounded-xl border border-emerald-500/40 px-5 py-2.5 font-semibold text-emerald-700 dark:text-emerald-300"
+        >
+          Emir yönetimine git
+        </button>
+        <Link
+          to="/warehouse/goods-receipts/list"
+          className="rounded-xl border border-[var(--wms-app-border)] px-5 py-2.5 font-semibold"
+        >
+          Mal kabul listesi
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 function Panel({
   title,
   icon,
@@ -1639,8 +2232,8 @@ function Panel({
   children: ReactNode;
 }): ReactElement {
   return (
-    <div className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5 shadow-sm">
-      <div className="mb-4 flex items-center gap-2 text-lg font-bold text-[var(--wms-brand-primary)]">
+    <div className="wms-ops-gr-panel rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5 shadow-sm">
+      <div className="wms-ops-gr-panel__title mb-4 flex items-center gap-2 text-lg font-bold text-[var(--wms-brand-primary)]">
         {icon}
         {title}
       </div>
@@ -1675,46 +2268,41 @@ function Footer({
 }): ReactElement {
   return (
     <div className="mt-5 flex justify-between border-t border-[var(--wms-app-border)] pt-4">
-      <button onClick={back} className="rounded-xl border px-5 py-2.5">
+      <OpsActionButton type="button" variant="secondary" onClick={back}>
         {t("back")}
-      </button>
-      <button
+      </OpsActionButton>
+      <OpsActionButton
+        type="button"
+        variant="primary"
         disabled={disabled}
         onClick={next}
-        className="rounded-xl bg-[var(--wms-brand-primary)] px-5 py-2.5 font-semibold text-white disabled:opacity-40"
       >
         {t("continue")}
-      </button>
+      </OpsActionButton>
     </div>
   );
 }
-function Summary({
+function ReviewRow({
   label,
   value,
+  emphasis,
+  accent,
 }: {
   label: string;
   value: string;
+  emphasis?: boolean;
+  accent?: boolean;
 }): ReactElement {
   return (
-    <div className="flex items-center justify-between rounded-xl border border-[var(--wms-app-border)] px-4 py-3">
-      <span className="text-sm text-slate-500">{label}</span>
-      <strong>{value}</strong>
-    </div>
-  );
-}
-function Info({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}): ReactElement {
-  return (
-    <div>
-      <div className="text-[0.65rem] font-semibold uppercase tracking-wide text-slate-500">
-        {label}
-      </div>
-      <div className="mt-1 font-medium">{value}</div>
+    <div
+      className={cn(
+        "wms-ops-gr-review__row",
+        emphasis && "wms-ops-gr-review__row--emphasis",
+        accent && "wms-ops-gr-review__row--accent",
+      )}
+    >
+      <dt>{label}</dt>
+      <dd>{value}</dd>
     </div>
   );
 }
