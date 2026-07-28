@@ -757,9 +757,10 @@ html.skin-premium .wms-ops-detail-dialog .wms-ops-prelabel-detail__status-badge 
   align-items: center;
   justify-content: center;
   border-radius: 999px !important;
-  padding-inline: 0.65rem;
+  padding: 0.15rem 0.55rem;
   font-family: var(--wms-premium-font) !important;
-  letter-spacing: 0.02em;
+  font-weight: 600 !important;
+  letter-spacing: 0.01em;
   text-transform: none;
   white-space: nowrap;
 }
@@ -902,7 +903,7 @@ html.skin-premium :is(.wms-ops-detail-dialog, .wms-ops-lookup-dialog, .wms-ops-f
     textarea.input,
     select.input,
     .input,
-    input:not([type='checkbox']):not([type='radio']):not([type='hidden']):not([type='file']):not([type='submit']):not([type='button']):not([type='reset']):not([type='image']),
+    input:not([type='checkbox']):not([type='radio']):not([type='hidden']):not([type='file']):not([type='submit']):not([type='button']):not([type='reset']):not([type='image']):not(.wms-ops-dropdown-search),
     textarea,
     select,
     button[role='combobox'],
@@ -913,6 +914,18 @@ html.skin-premium :is(.wms-ops-detail-dialog, .wms-ops-lookup-dialog, .wms-ops-f
   box-shadow: 0 0 0 1px color-mix(in oklab, var(--wms-brand-primary) 10%, transparent) !important;
   font-family: var(--wms-premium-font) !important;
   letter-spacing: 0.01em;
+}
+
+html.skin-premium :is(.wms-ops-detail-dialog, .wms-ops-lookup-dialog, .wms-ops-form) input.wms-ops-dropdown-search,
+html.skin-premium .wms-ops-list-select-content input.wms-ops-dropdown-search,
+html.skin-premium .wms-floating-surface input.wms-ops-dropdown-search {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  min-height: 0 !important;
+  height: 2.5rem !important;
 }
 
 html.skin-premium :is(.wms-ops-detail-dialog, .wms-ops-lookup-dialog, .wms-ops-form) input[type='checkbox'] {
