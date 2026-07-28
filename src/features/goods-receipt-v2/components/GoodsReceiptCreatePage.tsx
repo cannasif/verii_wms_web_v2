@@ -59,6 +59,10 @@ import type {
   StockOption,
   WarehouseOption,
 } from "../types/goods-receipt.types";
+import {
+  isValidGoodsReceiptDocumentNo,
+  normalizeGoodsReceiptDocumentNo,
+} from "../utils/goods-receipt-document-reference";
 
 type OrderSearchMode = "customer" | "orderNo" | "projectCode";
 const QUALITY_REQUIRED_MODES = new Set([
@@ -123,6 +127,9 @@ export function GoodsReceiptCreatePage(): ReactElement {
   const [seriesValue, setSeriesValue] = useState<string | null>(null);
   const [assignees, setAssignees] = useState<ActiveUserOption[]>([]);
   const [documentDate, setDocumentDate] = useState(today);
+  const [waybillDate, setWaybillDate] = useState(today);
+  const [receiptNo, setReceiptNo] = useState("");
+  const [isElectronicReceipt, setIsElectronicReceipt] = useState(false);
   const [plannedArrival, setPlannedArrival] = useState("");
   const [priority, setPriority] = useState("3");
   const [labelStrategy, setLabelStrategy] = useState("None");
@@ -516,6 +523,11 @@ export function GoodsReceiptCreatePage(): ReactElement {
   };
 
   const validatePlan = (): string | null => {
+    if (!isValidGoodsReceiptDocumentNo(receiptNo, isElectronicReceipt))
+      return isElectronicReceipt
+        ? "E-irsaliye numarası 3 karakter birim kodu, 4 karakter yıl ve 9 karakter sıra numarasından oluşmalıdır."
+        : "Normal irsaliye numarası tam 15 rakam olmalıdır.";
+    if (!waybillDate) return "İrsaliye tarihi zorunludur.";
     for (const line of lines) {
       const name = `${line.siparisNo} / ${line.stockCode ?? line.orderId}`;
       if (line.quantity <= 0 || line.quantity > (line.availableQuantity ?? 0))
@@ -609,6 +621,9 @@ export function GoodsReceiptCreatePage(): ReactElement {
         targetWarehouseId: primaryLine.targetWarehouseId,
         receivingLocationId: primaryLine.receivingLocationId,
         documentDate,
+        waybillNo: isElectronicReceipt ? null : receiptNo,
+        waybillDate,
+        electronicWaybillNo: isElectronicReceipt ? receiptNo : null,
         plannedArrivalAtUtc: plannedArrival
           ? new Date(plannedArrival).toISOString()
           : null,
@@ -981,6 +996,91 @@ export function GoodsReceiptCreatePage(): ReactElement {
                       onChange={(event) => setDocumentDate(event.target.value)}
                     />
                   </Field>
+                  <div className="md:col-span-2 rounded-2xl border border-[var(--wms-app-border)] bg-black/[.025] p-4 dark:bg-white/[.025]">
+                    <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <h3 className="font-bold">
+                          {isElectronicReceipt
+                            ? "E-irsaliye bilgisi"
+                            : "Normal irsaliye bilgisi"}
+                          <span className="text-red-500"> *</span>
+                        </h3>
+                        <p className="text-xs text-slate-500">
+                          {isElectronicReceipt
+                            ? "3 karakter birim kodu + 4 karakter yıl + 9 karakter sıra numarası."
+                            : "Normal irsaliye numarası tam 15 rakam olmalıdır."}
+                        </p>
+                      </div>
+                      <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-[var(--wms-app-border)] px-4 py-2">
+                        <input
+                          type="checkbox"
+                          checked={isElectronicReceipt}
+                          onChange={(event) => {
+                            setIsElectronicReceipt(event.target.checked);
+                            setReceiptNo("");
+                            setError(null);
+                          }}
+                          className="size-4 accent-cyan-500"
+                        />
+                        <span className="text-sm font-semibold">E-irsaliye</span>
+                      </label>
+                    </div>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <Field
+                        label={
+                          isElectronicReceipt
+                            ? "E-irsaliye numarası"
+                            : "İrsaliye numarası"
+                        }
+                      >
+                        <div className="relative">
+                          <input
+                            className={`input pr-20 font-mono tracking-wider ${
+                              receiptNo &&
+                              !isValidGoodsReceiptDocumentNo(
+                                receiptNo,
+                                isElectronicReceipt,
+                              )
+                                ? "!border-red-500"
+                                : receiptNo
+                                  ? "!border-emerald-500"
+                                  : ""
+                            }`}
+                            inputMode={
+                              isElectronicReceipt ? "text" : "numeric"
+                            }
+                            maxLength={isElectronicReceipt ? 16 : 15}
+                            placeholder={
+                              isElectronicReceipt
+                                ? "GIB2026000000001"
+                                : "000000000000001"
+                            }
+                            value={receiptNo}
+                            onChange={(event) => {
+                              setReceiptNo(
+                                normalizeGoodsReceiptDocumentNo(
+                                  event.target.value,
+                                  isElectronicReceipt,
+                                ),
+                              );
+                              setError(null);
+                            }}
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500">
+                            {receiptNo.length}/{isElectronicReceipt ? 16 : 15}
+                          </span>
+                        </div>
+                      </Field>
+                      <Field label="İrsaliye tarihi">
+                        <AppDateInput
+                          value={waybillDate}
+                          onChange={(event) =>
+                            setWaybillDate(event.target.value)
+                          }
+                        />
+                      </Field>
+                    </div>
+                  </div>
                   <Field label={t("plannedArrival")}>
                     <AppDateInput
                       type="datetime-local"
@@ -1138,6 +1238,9 @@ export function GoodsReceiptCreatePage(): ReactElement {
                 setSelectedOrders([]);
                 setOrders([]);
                 setAssignees([]);
+                setReceiptNo("");
+                setIsElectronicReceipt(false);
+                setWaybillDate(today());
                 setError(null);
               }}
             />
@@ -1148,6 +1251,10 @@ export function GoodsReceiptCreatePage(): ReactElement {
                 <ReviewRow
                   label="Sipariş"
                   value={selectedOrders.join(", ") || "—"}
+                />
+                <ReviewRow
+                  label={isElectronicReceipt ? "E-irsaliye" : "İrsaliye"}
+                  value={`${receiptNo || "—"} · ${waybillDate || "—"}`}
                 />
                 <ReviewRow
                   label="Satır / miktar"
