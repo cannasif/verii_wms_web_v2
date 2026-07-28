@@ -1,10 +1,7 @@
 import axios from 'axios';
 import { getLanguageForHttpHeader } from './i18n';
 import { useAuthStore } from '@/stores/auth-store';
-import {
-  isDefinitiveSessionRefreshError,
-  requestSessionAccessToken,
-} from '@/lib/auth-session';
+import { requestSessionAccessToken } from '@/lib/auth-session';
 import { getUserFromToken } from '@/utils/jwt';
 import { isRequestCanceled } from './request-utils';
 import {
@@ -302,17 +299,9 @@ api.interceptors.response.use(
         await refreshAccessToken();
         return api.request(error.config);
       } catch (refreshError) {
-        if (isDefinitiveSessionRefreshError(refreshError)) {
-          useAuthStore.getState().logout(false);
-          if (!isCurrentAppPath('/auth/login?sessionExpired=true')) {
-            window.location.href = resolveAppPath('/auth/login?sessionExpired=true');
-          }
-        } else {
-          useAuthStore.getState().markSessionRecoveryRequired(
-            refreshError instanceof Error
-              ? refreshError.message
-              : 'Oturum servisine geçici olarak ulaşılamıyor.',
-          );
+        useAuthStore.getState().logout(false);
+        if (!isCurrentAppPath('/auth/login?sessionExpired=true')) {
+          window.location.href = resolveAppPath('/auth/login?sessionExpired=true');
         }
         return Promise.reject(refreshError);
       }

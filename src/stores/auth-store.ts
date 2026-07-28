@@ -3,7 +3,6 @@ import { persist } from 'zustand/middleware';
 import { getApiBaseUrl } from '@/lib/api-config';
 import {
   clearSessionAccessToken,
-  isDefinitiveSessionRefreshError,
   readSessionAccessToken,
   requestSessionAccessToken,
   writeSessionAccessToken,
@@ -28,7 +27,6 @@ export type AuthSessionStatus =
   | 'idle'
   | 'restoring'
   | 'authenticated'
-  | 'recovery-required'
   | 'anonymous';
 
 interface AuthState {
@@ -38,7 +36,6 @@ interface AuthState {
   sessionStatus: AuthSessionStatus;
   sessionError: string | null;
   setAuth: (user: User, token: string, branch: Branch | null) => void;
-  markSessionRecoveryRequired: (message?: string) => void;
   logout: (revoke?: boolean) => void;
   isAuthenticated: () => boolean;
   init: () => Promise<void>;
@@ -65,14 +62,6 @@ export const useAuthStore = create<AuthState>()(
           branch,
           sessionStatus: 'authenticated',
           sessionError: null,
-        });
-      },
-      markSessionRecoveryRequired: (message = 'Oturum servisine geçici olarak ulaşılamıyor.') => {
-        clearSessionAccessToken();
-        set({
-          token: null,
-          sessionStatus: 'recovery-required',
-          sessionError: message,
         });
       },
       logout: (revoke = true) => {
@@ -140,26 +129,16 @@ export const useAuthStore = create<AuthState>()(
             sessionStatus: 'authenticated',
             sessionError: null,
           });
-        } catch (error) {
-          if (isDefinitiveSessionRefreshError(error)) {
-            const currentUserId = get().user?.id ?? null;
-            clearClientState(currentUserId);
-            set({
-              user: null,
-              token: null,
-              branch: null,
-              sessionStatus: 'anonymous',
-              sessionError: null,
-            });
-            return;
-          }
-
+        } catch {
+          const currentUserId = get().user?.id ?? null;
+          clearClientState(currentUserId);
+          clearSessionAccessToken();
           set({
+            user: null,
             token: null,
-            sessionStatus: 'recovery-required',
-            sessionError: error instanceof Error
-              ? error.message
-              : 'Oturum servisine geçici olarak ulaşılamıyor.',
+            branch: null,
+            sessionStatus: 'anonymous',
+            sessionError: null,
           });
         }
       },

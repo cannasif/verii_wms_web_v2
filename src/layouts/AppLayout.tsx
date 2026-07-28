@@ -63,7 +63,7 @@ export function AppLayout() {
     userDetailQuery.data,
   ]);
 
-  if (sessionStatus === 'restoring' || sessionStatus === 'recovery-required') {
+  if (sessionStatus === 'restoring') {
     return <SessionRecoveryPage />;
   }
 

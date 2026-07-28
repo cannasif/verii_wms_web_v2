@@ -4,7 +4,6 @@ import { isTokenValid } from '@/utils/jwt';
 
 const accessTokenStorageKey = 'wms.session.access-token.v1';
 const sessionChannelName = 'wms.auth.session.v1';
-const defaultRetryDelaysMs = [250, 750, 1500];
 let sessionChannel: BroadcastChannel | null | undefined;
 
 interface AuthTokenEnvelope {
@@ -70,69 +69,43 @@ export async function requestSessionAccessToken(): Promise<string> {
       return peerToken;
     }
 
-    let lastError: SessionRefreshError | null = null;
+    try {
+      const response = await fetch(`${getApiBaseUrl()}/api/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        // IIS rejects bodyless POST requests with HTTP 411 before they reach ASP.NET.
+        body: '{}',
+        cache: 'no-store',
+      });
 
-    for (let attempt = 0; attempt <= defaultRetryDelaysMs.length; attempt += 1) {
-      try {
-        const response = await fetch(`${getApiBaseUrl()}/api/auth/refresh`, {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          // IIS rejects bodyless POST requests with HTTP 411 before they reach ASP.NET.
-          body: '{}',
-          cache: 'no-store',
+      if (!response.ok) {
+        throw new SessionRefreshError('Oturum artık geçerli değil.', {
+          status: response.status,
+          definitive: true,
         });
-
-        if (!response.ok) {
-          const definitive = response.status === 401 || response.status === 403;
-          const error = new SessionRefreshError(
-            definitive
-              ? 'Oturum artık geçerli değil.'
-              : 'Oturum servisine geçici olarak ulaşılamıyor.',
-            { status: response.status, definitive },
-          );
-
-          if (definitive || !isRetryableStatus(response.status) || attempt === defaultRetryDelaysMs.length) {
-            throw error;
-          }
-
-          lastError = error;
-          await delay(resolveRetryDelay(response, attempt));
-          continue;
-        }
-
-        const token = extractAccessToken(await response.json() as AuthTokenEnvelope);
-        if (!token) {
-          throw new SessionRefreshError('Oturum yenileme yanıtı geçersiz.', {
-            status: response.status,
-            definitive: false,
-          });
-        }
-
-        writeSessionAccessToken(token);
-        return token;
-      } catch (error) {
-        if (error instanceof SessionRefreshError) {
-          if (error.definitive || attempt === defaultRetryDelaysMs.length) {
-            throw error;
-          }
-          lastError = error;
-        } else {
-          lastError = new SessionRefreshError('Oturum servisine bağlanılamıyor.', {
-            definitive: false,
-            cause: error,
-          });
-        }
-
-        if (attempt === defaultRetryDelaysMs.length) {
-          throw lastError;
-        }
-
-        await delay(defaultRetryDelaysMs[attempt]);
       }
-    }
 
-    throw lastError ?? new SessionRefreshError('Oturum yenilenemedi.', { definitive: false });
+      const token = extractAccessToken(await response.json() as AuthTokenEnvelope);
+      if (!token) {
+        throw new SessionRefreshError('Oturum yenileme yanıtı geçersiz.', {
+          status: response.status,
+          definitive: true,
+        });
+      }
+
+      writeSessionAccessToken(token);
+      return token;
+    } catch (error) {
+      if (error instanceof SessionRefreshError) {
+        throw error;
+      }
+
+      throw new SessionRefreshError('Oturum yenilenemedi.', {
+        definitive: true,
+        cause: error,
+      });
+    }
   });
 }
 
@@ -211,27 +184,4 @@ function extractAccessToken(payload: AuthTokenEnvelope): string | null {
     ?? payload.Data?.accessToken
     ?? payload.Data?.AccessToken
     ?? null;
-}
-
-function isRetryableStatus(status: number): boolean {
-  return status === 408
-    || status === 425
-    || status === 429
-    || status >= 500;
-}
-
-function resolveRetryDelay(response: Response, attempt: number): number {
-  const retryAfter = response.headers.get('Retry-After');
-  if (retryAfter) {
-    const seconds = Number(retryAfter);
-    if (Number.isFinite(seconds) && seconds >= 0) {
-      return Math.min(seconds * 1000, 5000);
-    }
-  }
-
-  return defaultRetryDelaysMs[attempt];
-}
-
-function delay(milliseconds: number): Promise<void> {
-  return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
 }

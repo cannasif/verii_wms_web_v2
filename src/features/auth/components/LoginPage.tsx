@@ -88,7 +88,7 @@ export function LoginPage(): React.JSX.Element {
     navigate('/', { replace: true });
   }, [token, user, navigate]);
 
-  if (sessionStatus === 'restoring' || sessionStatus === 'recovery-required') {
+  if (sessionStatus === 'restoring') {
     return <SessionRecoveryPage />;
   }
 
