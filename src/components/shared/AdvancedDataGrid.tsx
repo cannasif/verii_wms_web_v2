@@ -497,6 +497,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
   const [filterLogic, setFilterLogic] = useState<'and' | 'or'>('and');
   const [runningActionIndex, setRunningActionIndex] = useState<number | null>(null);
   const [cellContext, setCellContext] = useState<GridCellContext<T> | null>(null);
+  const cellMenuRef = useRef<HTMLDivElement>(null);
   const [gridViewportHeight, setGridViewportHeight] = useState<number | null>(null);
   const resizeRef = useRef<{ key: string; startX: number; startWidth: number; pointerId: number } | null>(null);
   const tableScrollRef = useRef<HTMLDivElement | null>(null);
@@ -540,17 +541,13 @@ export function AdvancedDataGrid<T extends { id: number }>({
     if (!cellContext) return;
     const close = () => setCellContext(null);
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') close();
+      if (event.key === 'Escape') setCellContext(null);
     };
-    document.addEventListener('pointerdown', close);
     document.addEventListener('keydown', closeOnEscape);
     window.addEventListener('resize', close);
-    window.addEventListener('scroll', close, true);
     return () => {
-      document.removeEventListener('pointerdown', close);
       document.removeEventListener('keydown', closeOnEscape);
       window.removeEventListener('resize', close);
-      window.removeEventListener('scroll', close, true);
     };
   }, [cellContext]);
 
@@ -1473,37 +1470,44 @@ export function AdvancedDataGrid<T extends { id: number }>({
       </div>
 
       {cellContext && createPortal(
-        <div
-          role="menu"
-          aria-label={t('dataGrid.cellMenu')}
-          style={{ left: cellContext.x, top: cellContext.y }}
-          className="fixed z-[4000] w-80 max-w-[calc(100vw-1rem)] overflow-hidden rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-2 text-sm shadow-2xl"
-          onPointerDown={(event) => event.stopPropagation()}
-        >
-          <div className="rounded-xl bg-[var(--wms-app-panel-muted)] px-3 py-2.5">
-            <span className="block text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-[var(--wms-app-text-muted)]">{t('dataGrid.selectedCell')}</span>
-            <strong className="mt-1 block truncate">{cellContext.column.label}</strong>
-            <p className="mt-1 max-h-24 overflow-auto whitespace-pre-wrap break-all font-mono text-xs text-[var(--wms-app-text-muted)]">
-              {cellContext.value ?? t('dataGrid.emptyCell')}
-            </p>
-          </div>
-          {cellContext.value != null && !cellContext.column.contextCopyDisabled && (
-            <button type="button" role="menuitem" onClick={() => void copyCellValue()} className="mt-2 inline-flex min-h-11 w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-medium hover:bg-[var(--wms-brand-soft)]">
-              <Copy className="size-4 text-[var(--wms-brand-primary)]"/>
-              {t('dataGrid.copyCell')}
-            </button>
-          )}
-          <button type="button" role="menuitem" onClick={() => void copyRowValues()} className="mt-1 inline-flex min-h-11 w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-medium hover:bg-[var(--wms-brand-soft)]">
-            <Copy className="size-4 text-[var(--wms-brand-primary)]"/>
-            {t('dataGrid.copyRow')}
-          </button>
-          {actionColumn?.render && (
-            <div className="mt-2 border-t border-[var(--wms-app-border)] px-2 pt-2" onClick={() => setCellContext(null)}>
-              <span className="mb-2 block text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-[var(--wms-app-text-muted)]">{t('dataGrid.rowActions')}</span>
-              <div className="[&>div]:flex-wrap">{actionColumn.render(cellContext.row)}</div>
+        <>
+          <div
+            className="pointer-events-auto fixed inset-0 z-[3999]"
+            aria-hidden
+            onPointerDown={() => setCellContext(null)}
+          />
+          <div
+            ref={cellMenuRef}
+            role="menu"
+            aria-label={t('dataGrid.cellMenu')}
+            style={{ left: cellContext.x, top: cellContext.y }}
+            className="pointer-events-auto fixed z-[4000] w-80 max-w-[calc(100vw-1rem)] overflow-hidden rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-2 text-sm shadow-2xl"
+          >
+            <div className="rounded-xl bg-[var(--wms-app-panel-muted)] px-3 py-2.5">
+              <span className="block text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-[var(--wms-app-text-muted)]">{t('dataGrid.selectedCell')}</span>
+              <strong className="mt-1 block truncate">{cellContext.column.label}</strong>
+              <p className="mt-1 max-h-24 overflow-auto whitespace-pre-wrap break-all font-mono text-xs text-[var(--wms-app-text-muted)]">
+                {cellContext.value ?? t('dataGrid.emptyCell')}
+              </p>
             </div>
-          )}
-        </div>,
+            {cellContext.value != null && !cellContext.column.contextCopyDisabled && (
+              <button type="button" role="menuitem" onClick={() => void copyCellValue()} className="mt-2 inline-flex min-h-11 w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-medium hover:bg-[var(--wms-brand-soft)]">
+                <Copy className="size-4 text-[var(--wms-brand-primary)]"/>
+                {t('dataGrid.copyCell')}
+              </button>
+            )}
+            <button type="button" role="menuitem" onClick={() => void copyRowValues()} className="mt-1 inline-flex min-h-11 w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-medium hover:bg-[var(--wms-brand-soft)]">
+              <Copy className="size-4 text-[var(--wms-brand-primary)]"/>
+              {t('dataGrid.copyRow')}
+            </button>
+            {actionColumn?.render && (
+              <div className="mt-2 border-t border-[var(--wms-app-border)] px-2 pt-2" onClick={() => setCellContext(null)}>
+                <span className="mb-2 block text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-[var(--wms-app-text-muted)]">{t('dataGrid.rowActions')}</span>
+                <div className="[&>div]:flex-wrap">{actionColumn.render(cellContext.row)}</div>
+              </div>
+            )}
+          </div>
+        </>,
         getWorkspacePortalRoot() ?? document.body,
       )}
     </OpsListPageShell>

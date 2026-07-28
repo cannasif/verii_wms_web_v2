@@ -17689,8 +17689,8 @@ html.skin-premium .wms-ops-action-btn--secondary:hover:not(:disabled) {
 /* ?? Ops listeler: yumu?ak tablo ?? */
 html.skin-premium .wms-ops-list .wms-ops-data-grid .wms-ops-table-wrap {
   border-radius: 0.9rem;
-  overflow-x: auto !important;
-  overflow-y: hidden !important;
+  overflow-x: scroll !important;
+  overflow-y: auto !important;
   box-shadow:
     0 8px 28px -14px rgb(0 0 0 / 25%),
     inset 0 1px 0 rgb(255 255 255 / 8%);
