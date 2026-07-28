@@ -1,4 +1,5 @@
 import {
+  Fragment,
   useEffect,
   useMemo,
   useRef,
@@ -120,6 +121,10 @@ interface Props<T extends { id: number }> {
   refreshKey?: string | number;
   /** Satıra çift tıklanınca çağrılır (aksiyon hücreleri hariç etkileşimleri engellemez). */
   onRowDoubleClick?: (row: T) => void;
+  /** Açık satır detayı; `renderExpandedRow` ile birlikte kullanılır. */
+  expandedRowId?: number | null;
+  /** Özet satırın altına açılan detay içeriği. */
+  renderExpandedRow?: (row: T) => ReactNode;
 }
 
 interface GridCellContext<T> {
@@ -391,6 +396,8 @@ export function AdvancedDataGrid<T extends { id: number }>({
   toolbarAction,
   refreshKey = 0,
   onRowDoubleClick,
+  expandedRowId = null,
+  renderExpandedRow,
 }: Props<T>) {
   const { t, i18n } = useTranslation();
   const { pathname } = useLocation();
@@ -1308,37 +1315,46 @@ export function AdvancedDataGrid<T extends { id: number }>({
                       </td>
                     </tr>
                   ) : pageRows.map((row) => (
-                    <tr
-                      key={row.id}
-                      className={cn(
-                        'border-b border-[var(--wms-app-border)] hover:bg-[var(--wms-brand-soft)]',
-                        onRowDoubleClick && 'cursor-pointer',
-                      )}
-                      onDoubleClick={() => onRowDoubleClick?.(row)}
-                    >
-                      {activeColumns.map((column) => (
-                        <td
-                          key={column.key}
-                          title={getContextValue(column, row, enumLanguage) ?? undefined}
-                          onContextMenu={(event) => openCellContext(event, row, column)}
-                          style={{
-                            width: resolveColumnWidth(column.key, widths),
-                            maxWidth: resolveColumnWidth(column.key, widths),
-                          }}
-                          className={cn(
-                            'wms-ops-grid-cell overflow-hidden border-r border-[var(--wms-app-border)] px-4 py-3 last:border-r-0',
-                            column.key === 'id' && 'wms-ops-table-id-col wms-ops-table-center-col',
-                            column.key === 'actions' && 'wms-ops-table-actions-col',
-                          )}
-                        >
-                          <div className="wms-ops-grid-cell__inner min-w-0">
-                            {column.key === 'id'
-                              ? <span className="wms-ops-table-id-value">{renderGridCell(column, row, enumLanguage)}</span>
-                              : renderGridCell(column, row, enumLanguage)}
-                          </div>
-                        </td>
-                      ))}
-                    </tr>
+                    <Fragment key={row.id}>
+                      <tr
+                        className={cn(
+                          'border-b border-[var(--wms-app-border)] hover:bg-[var(--wms-brand-soft)]',
+                          onRowDoubleClick && 'cursor-pointer',
+                          expandedRowId === row.id && 'bg-[var(--wms-brand-soft)]',
+                        )}
+                        onDoubleClick={() => onRowDoubleClick?.(row)}
+                      >
+                        {activeColumns.map((column) => (
+                          <td
+                            key={column.key}
+                            title={getContextValue(column, row, enumLanguage) ?? undefined}
+                            onContextMenu={(event) => openCellContext(event, row, column)}
+                            style={{
+                              width: resolveColumnWidth(column.key, widths),
+                              maxWidth: resolveColumnWidth(column.key, widths),
+                            }}
+                            className={cn(
+                              'wms-ops-grid-cell overflow-hidden border-r border-[var(--wms-app-border)] px-4 py-3 last:border-r-0',
+                              column.key === 'id' && 'wms-ops-table-id-col wms-ops-table-center-col',
+                              column.key === 'actions' && 'wms-ops-table-actions-col',
+                            )}
+                          >
+                            <div className="wms-ops-grid-cell__inner min-w-0">
+                              {column.key === 'id'
+                                ? <span className="wms-ops-table-id-value">{renderGridCell(column, row, enumLanguage)}</span>
+                                : renderGridCell(column, row, enumLanguage)}
+                            </div>
+                          </td>
+                        ))}
+                      </tr>
+                      {expandedRowId === row.id && renderExpandedRow ? (
+                        <tr className="border-b border-[var(--wms-app-border)] bg-[color-mix(in_oklab,var(--wms-brand-soft)_55%,transparent)]">
+                          <td colSpan={Math.max(activeColumns.length, 1)} className="px-4 py-4">
+                            {renderExpandedRow(row)}
+                          </td>
+                        </tr>
+                      ) : null}
+                    </Fragment>
                   ))}
               </tbody>
             </table>

@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactElement } from 'react';
+import { useEffect, useMemo, useState, type ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AppDropdown, type AppDropdownOption, type AppDropdownProps } from './AppDropdown';
 import {
@@ -51,10 +51,13 @@ export function PagedAppDropdown<TItem, TValue extends string = string>({
   dependencies,
   searchable = true,
   emptyText,
+  value,
+  onValueChange,
   ...dropdownProps
 }: PagedAppDropdownProps<TItem, TValue>): ReactElement {
   const { t } = useTranslation('shared');
   const [searchTerm, setSearchTerm] = useState('');
+  const [rememberedSelected, setRememberedSelected] = useState<AppDropdownOption<TValue> | undefined>();
   const query = useDropdownInfiniteSearch({
     queryKey,
     searchTerm,
@@ -68,13 +71,26 @@ export function PagedAppDropdown<TItem, TValue extends string = string>({
     dependencies,
   });
 
+  useEffect(() => {
+    if (selectedOption) {
+      setRememberedSelected(selectedOption);
+      return;
+    }
+    if (value == null || value === '') {
+      setRememberedSelected(undefined);
+    }
+  }, [selectedOption, value]);
+
+  const resolvedSelected = selectedOption
+    ?? (rememberedSelected && rememberedSelected.value === value ? rememberedSelected : undefined);
+
   const options = useMemo(() => {
     const mapped = [...staticOptions, ...query.items.map(toOption)];
-    if (selectedOption && !mapped.some((option) => option.value === selectedOption.value)) {
-      mapped.unshift(selectedOption);
+    if (resolvedSelected && !mapped.some((option) => option.value === resolvedSelected.value)) {
+      mapped.unshift(resolvedSelected);
     }
     return [...new Map(mapped.map((option) => [option.value, option])).values()];
-  }, [query.items, selectedOption, staticOptions, toOption]);
+  }, [query.items, resolvedSelected, staticOptions, toOption]);
 
   const thresholdText = query.isThresholdMode
     ? t('dropdown.minSearchCharacters', { count: minSearchLength })
@@ -83,6 +99,13 @@ export function PagedAppDropdown<TItem, TValue extends string = string>({
   return (
     <AppDropdown
       {...dropdownProps}
+      value={value}
+      onValueChange={(next) => {
+        const matched = options.find((option) => option.value === next);
+        if (matched) setRememberedSelected(matched);
+        else if (next == null || next === '') setRememberedSelected(undefined);
+        onValueChange(next);
+      }}
       options={options}
       searchable={searchable}
       searchApi

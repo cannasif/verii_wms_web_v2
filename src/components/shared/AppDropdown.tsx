@@ -95,6 +95,7 @@ export function AppDropdown<TValue extends string = string>({
   const opsTone = tone === 'ops';
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
+  const [cachedSelected, setCachedSelected] = useState<AppDropdownOption<TValue> | undefined>();
   const listRef = useRef<HTMLDivElement>(null);
   const fetchLockRef = useRef(false);
   const remoteSearch = searchApi && typeof onSearchChange === 'function';
@@ -136,7 +137,21 @@ export function AppDropdown<TValue extends string = string>({
     );
   }, [localizedOptions, remoteSearch, search]);
 
-  const selected = localizedOptions.find((option) => option.value === value);
+  const selectedFromOptions = localizedOptions.find((option) => option.value === value);
+
+  useEffect(() => {
+    if (selectedFromOptions) {
+      setCachedSelected(selectedFromOptions);
+      return;
+    }
+    if (value == null || value === '') {
+      setCachedSelected(undefined);
+    }
+  }, [selectedFromOptions, value]);
+
+  const selected =
+    selectedFromOptions
+    ?? (cachedSelected && cachedSelected.value === value ? cachedSelected : undefined);
 
   const fetchNextPage = useCallback((): void => {
     if (!hasNextPage || !onFetchNextPage || isFetchingNextPage) return;
@@ -201,14 +216,14 @@ export function AppDropdown<TValue extends string = string>({
           )}
         >
           {showSearch && (
-            <div className="flex items-center gap-2 border-b border-[var(--wms-app-border)] px-3">
-              <Search className="size-4 shrink-0 text-slate-400" />
+            <div className="wms-ops-dropdown-search-row flex items-center gap-2 border-b border-[var(--wms-app-border)] px-3">
+              <Search className="size-4 shrink-0 text-slate-400" aria-hidden />
               <input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder={searchPlaceholder ?? t('dropdown.search')}
                 aria-label={searchPlaceholder ?? t('dropdown.search')}
-                className="h-10 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400"
+                className="wms-ops-dropdown-search h-10 min-w-0 flex-1 border-0 bg-transparent p-0 text-sm shadow-none outline-none ring-0 placeholder:text-slate-400 focus:border-0 focus:shadow-none focus:outline-none focus:ring-0"
               />
             </div>
           )}
@@ -240,6 +255,7 @@ export function AppDropdown<TValue extends string = string>({
                     aria-selected={active}
                     disabled={option.disabled}
                     onClick={() => {
+                      setCachedSelected(option);
                       onValueChange(option.value);
                       setOpen(false);
                     }}

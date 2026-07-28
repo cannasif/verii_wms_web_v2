@@ -13,7 +13,6 @@ import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { AppDatePickerPanel } from '@/components/shared/AppDatePickerPanel';
 import { cn } from '@/lib/utils';
-import { getWorkspacePortalRoot } from '@/lib/workspace-portal';
 
 const MOBILE_DATE_PICKER_QUERY = '(max-width: 767px)';
 
@@ -190,11 +189,14 @@ export const AppDateInput = forwardRef<HTMLInputElement, AppDateInputProps>(func
       <PopoverPrimitive.Anchor asChild>
         <span className="block w-full min-w-0">{inputShell}</span>
       </PopoverPrimitive.Anchor>
-      <PopoverPrimitive.Portal container={getWorkspacePortalRoot() ?? undefined}>
+      {/* Body portal avoids workspace transform/overflow shifting the calendar. */}
+      <PopoverPrimitive.Portal>
         <PopoverPrimitive.Content
           align="start"
+          side="bottom"
           sideOffset={6}
-          collisionPadding={12}
+          collisionPadding={16}
+          avoidCollisions
           className={cn(
             'wms-floating-surface wms-date-picker-popover z-[2000] outline-none',
             'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95',
