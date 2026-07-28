@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState, type ReactElement } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -37,6 +37,7 @@ import { goodsReceiptEnumLabel } from "../localization/enum-labels";
 import type {
   ActiveUserOption,
   GoodsReceiptLabelBatchDetail,
+  GoodsReceiptLabelRow,
   GoodsReceiptTaskDetail,
   GoodsReceiptTaskGridRow,
 } from "../types/goods-receipt.types";
@@ -421,7 +422,12 @@ function TaskModal({
               Emri Başlat
             </button>
           </div>
-          <PreLabelPanel detail={detail} />
+          {detail.task.labelStrategy === "PreGenerate" && (
+            <PreLabelPanel detail={detail} />
+          )}
+          {detail.task.labelStrategy === "GenerateOnReceipt" && (
+            <ReceiptGeneratedLabelsPanel detail={detail} />
+          )}
           {detail.task.status === "InProgress" && (
             <TaskScanPanel detail={detail} reload={reload} />
           )}
@@ -472,10 +478,95 @@ function TaskModal({
               </button>
             </div>
           </section>
-          <PreLabelPanel detail={detail} />
+          {detail.task.labelStrategy === "PreGenerate" && (
+            <PreLabelPanel detail={detail} />
+          )}
+          {detail.task.labelStrategy === "GenerateOnReceipt" && (
+            <ReceiptGeneratedLabelsPanel detail={detail} />
+          )}
         </>
       )}
     </ResponsiveDialog>
+  );
+}
+
+function ReceiptGeneratedLabelsPanel({
+  detail,
+}: {
+  detail: GoodsReceiptTaskDetail;
+}): ReactElement {
+  const [labels, setLabels] = useState<GoodsReceiptLabelRow[]>([]);
+  const [busy, setBusy] = useState(false);
+  const processedKey = detail.lines.map((x) => x.processedQuantity).join("|");
+
+  useEffect(() => {
+    let active = true;
+    setBusy(true);
+    void goodsReceiptV2Api
+      .receiptLabels(detail.task.goodsReceiptId)
+      .then((items) => {
+        if (active) setLabels(items.filter((x) => x.status !== "Consumed"));
+      })
+      .catch((error) => {
+        if (active) toast.error(message(error, "Kabul etiketleri alınamadı."));
+      })
+      .finally(() => {
+        if (active) setBusy(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [detail.task.goodsReceiptId, processedKey]);
+
+  const unprinted = labels.filter((x) => x.printCount === 0);
+  const print = async () => {
+    if (labels.length === 0) return;
+    setBusy(true);
+    try {
+      printReceiptLabels(labels, `${detail.task.documentNo} kabul etiketleri`);
+      if (unprinted.length > 0)
+        await goodsReceiptV2Api.markLabelsPrinted(unprinted.map((x) => x.id));
+      setLabels((current) =>
+        current.map((x) => ({ ...x, printCount: Math.max(1, x.printCount) })),
+      );
+      toast.success("Mal kabulde oluşan etiketler yazdırıldı.");
+    } catch (error) {
+      toast.error(message(error, "Kabul etiketleri yazdırılamadı."));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <section className="mt-4 rounded-xl border border-violet-500/25 bg-violet-500/5 p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <Tags className="mt-0.5 size-5 text-violet-500" />
+          <div>
+            <h3 className="font-bold">Mal kabulde oluşan etiketler</h3>
+            <p className="text-xs text-slate-500">
+              Her kabul hareketinden sonra gerçek miktar ve seri/lot bilgisiyle
+              otomatik oluşur.
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          disabled={busy || labels.length === 0}
+          onClick={() => void print()}
+          className="inline-flex items-center gap-2 rounded-xl border border-violet-500/40 px-4 py-2 font-semibold text-violet-500 disabled:opacity-40"
+        >
+          {busy ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            <Printer className="size-4" />
+          )}
+          {labels.length === 0
+            ? "Henüz kabul etiketi yok"
+            : `${labels.length} Etiketi Yazdır`}
+        </button>
+      </div>
+    </section>
   );
 }
 
@@ -655,6 +746,8 @@ function TaskScanPanel({
             : "Barkod doğrulandı; seri/lot, stok hareketi, bakiye ve kalite tek işlemde işlendi.",
         );
       }
+      if (result.generatedLabelId)
+        toast.success("Ürün etiketi otomatik oluşturuldu; kabul etiketleri bölümünden yazdırabilirsiniz.");
       setBarcode("");
       setQuantity("");
       setLot("");
