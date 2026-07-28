@@ -19952,8 +19952,7 @@ html.skin-premium .wms-ops-dashboard-hero__glow {
 }
 
 html.skin-premium .wms-ops-dashboard-hero__title {
-  text-shadow: none;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.025em;
 }
 
 html.skin-premium .wms-ops-dashboard-hero__main {
@@ -19976,19 +19975,42 @@ html.skin-premium .wms-ops-dashboard-hero__intro {
   flex: 1;
 }
 
+html.skin-premium .wms-ops-dashboard-hero__eyebrow {
+  display: flex;
+  width: fit-content;
+  max-width: 100%;
+}
+
 html.skin-premium .wms-ops-dashboard-hero__greeting {
-  margin-top: 0.55rem;
+  display: block;
+  margin-top: 0.85rem;
   font-family: var(--wms-premium-font) !important;
-  font-size: 0.92rem;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  color: color-mix(in oklab, var(--wms-brand-primary) 72%, hsl(var(--foreground)));
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  /* Login submit: cyan-600 → blue-600 → orange-400 */
+  background-color: transparent !important;
+  background-image: linear-gradient(90deg, #0891b2 0%, #2563eb 52%, #fb923c 100%) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+  filter: none !important;
+}
+
+html.skin-premium.dark .wms-ops-dashboard-hero__greeting {
+  /* Aynı yön, dark'ta okunur tonlar */
+  background-image: linear-gradient(90deg, #22d3ee 0%, #38bdf8 48%, #fdba74 100%) !important;
 }
 
 html.skin-premium .wms-ops-dashboard-hero__title {
-  margin-top: 0.2rem;
+  margin-top: 0.4rem;
   font-family: var(--wms-premium-display) !important;
+  font-size: clamp(1.65rem, 3.2vw, 2.45rem) !important;
   font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
 }
 
 html.skin-premium .wms-ops-dashboard-hero__eyebrow {
@@ -20179,12 +20201,35 @@ html.skin-premium .wms-ops-dashboard-page .wms-ops-dashboard-hero::before {
   box-shadow: 0 0 18px color-mix(in oklab, var(--wms-brand-primary) 45%, transparent) !important;
 }
 
+/* filter + background-clip:text Chrome'da dolu bar çiziyor — glow yok */
 html.skin-premium .wms-ops-dashboard-hero__title {
-  background: none;
-  -webkit-background-clip: unset;
-  background-clip: unset;
-  color: hsl(var(--foreground)) !important;
-  text-shadow: 0 0 28px color-mix(in oklab, var(--wms-brand-primary) 28%, transparent);
+  background-color: transparent !important;
+  background-image: linear-gradient(
+    105deg,
+    #0ea5e9 0%,
+    #2563eb 42%,
+    #fb923c 100%
+  ) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+html.skin-premium.dark .wms-ops-dashboard-hero__title {
+  background-image: linear-gradient(
+    105deg,
+    #67e8f9 0%,
+    #22d3ee 45%,
+    #38bdf8 100%
+  ) !important;
+}
+
+html.skin-premium .wms-ops-dashboard-hero__subtitle {
+  margin-top: 0.65rem;
+  color: color-mix(in oklab, var(--foreground) 58%, transparent);
 }
 
 html.skin-premium .wms-ops-dashboard-hero__clock {

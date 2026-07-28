@@ -112,17 +112,20 @@ html.skin-premium .wms-ops-workspace-host .wms-ops-list > div > div > p.text-xs 
   color: color-mix(in oklab, var(--wms-brand-primary) 62%, hsl(var(--foreground)));
 }
 
-html.skin-premium .wms-ops-workspace-host header h1,
+/* Dashboard hero title keeps its own solid color treatment (see index.css). */
+html.skin-premium .wms-ops-workspace-host header:not(.wms-ops-dashboard-hero) h1,
 html.skin-premium .wms-ops-workspace-host .wms-ops-list h1,
 html.skin-premium .wms-ops-workspace-host .wms-ops-title-main {
   font-family: var(--wms-premium-display) !important;
   letter-spacing: -0.01em;
   text-transform: none;
   font-weight: 700;
+  /* --foreground is already oklch(...); wrapping in hsl() makes the gradient invalid
+     and with color:transparent + background-clip:text the heading disappears. */
   background: linear-gradient(
     118deg,
-    hsl(var(--foreground)) 0%,
-    color-mix(in oklab, hsl(var(--foreground)) 72%, var(--wms-brand-primary)) 48%,
+    var(--foreground) 0%,
+    color-mix(in oklab, var(--foreground) 72%, var(--wms-brand-primary)) 48%,
     var(--wms-brand-primary) 100%
   ) !important;
   -webkit-background-clip: text !important;
