@@ -284,21 +284,37 @@ function getContextValue<T>(column: GridColumn<T>, row: T, language: string): st
 }
 
 async function copyText(value: string): Promise<void> {
-  if (navigator.clipboard?.writeText) {
-    await navigator.clipboard.writeText(value);
-    return;
-  }
-
+  // Keep the legacy selection copy synchronous with the user's click. Safari
+  // may reject Clipboard API writes and the user-activation window is already
+  // lost by the time that asynchronous rejection is observed.
+  let copyEventHandled = false;
+  const handleCopy = (event: ClipboardEvent) => {
+    if (!event.clipboardData) return;
+    event.preventDefault();
+    event.clipboardData.setData('text/plain', value);
+    copyEventHandled = true;
+  };
+  document.addEventListener('copy', handleCopy, { once: true });
   const textarea = document.createElement('textarea');
   textarea.value = value;
   textarea.setAttribute('readonly', '');
   textarea.style.position = 'fixed';
   textarea.style.opacity = '0';
+  textarea.style.pointerEvents = 'none';
   document.body.appendChild(textarea);
+  textarea.focus();
   textarea.select();
   const copied = document.execCommand('copy');
   textarea.remove();
-  if (!copied) throw new Error('Clipboard unavailable');
+  document.removeEventListener('copy', handleCopy);
+  if (copied && copyEventHandled) return;
+
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(value);
+    return;
+  }
+
+  throw new Error('Clipboard unavailable');
 }
 
 interface SortableHeaderProps {
@@ -772,13 +788,31 @@ export function AdvancedDataGrid<T extends { id: number }>({
     });
   };
   const copyCellValue = async () => {
-    if (!cellContext?.value) return;
+    if (cellContext?.value == null) return;
     try {
       await copyText(cellContext.value);
       toast.success(t('dataGrid.cellCopied'));
       setCellContext(null);
     } catch {
       toast.error(t('dataGrid.cellCopyFailed'));
+    }
+  };
+  const copyRowValues = async () => {
+    if (!cellContext) return;
+    const copyColumns = activeColumns.filter(
+      (column) => column.key !== 'actions' && !column.contextCopyDisabled,
+    );
+    const clean = (value: string | null) => (value ?? '').replace(/\t/g, ' ').replace(/\r?\n/g, ' ');
+    const header = copyColumns.map((column) => clean(column.label)).join('\t');
+    const values = copyColumns
+      .map((column) => clean(getContextValue(column, cellContext.row, enumLanguage)))
+      .join('\t');
+    try {
+      await copyText(`${header}\n${values}`);
+      toast.success(t('dataGrid.rowCopied'));
+      setCellContext(null);
+    } catch {
+      toast.error(t('dataGrid.rowCopyFailed'));
     }
   };
 
@@ -1453,6 +1487,10 @@ export function AdvancedDataGrid<T extends { id: number }>({
               {t('dataGrid.copyCell')}
             </button>
           )}
+          <button type="button" role="menuitem" onClick={() => void copyRowValues()} className="mt-1 inline-flex min-h-11 w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-medium hover:bg-[var(--wms-brand-soft)]">
+            <Copy className="size-4 text-[var(--wms-brand-primary)]"/>
+            {t('dataGrid.copyRow')}
+          </button>
           {actionColumn?.render && (
             <div className="mt-2 border-t border-[var(--wms-app-border)] px-2 pt-2" onClick={() => setCellContext(null)}>
               <span className="mb-2 block text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-[var(--wms-app-text-muted)]">{t('dataGrid.rowActions')}</span>
