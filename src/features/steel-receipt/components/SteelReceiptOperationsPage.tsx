@@ -17,12 +17,10 @@ const O='steelGoodReceiptAcceptance.operations';
 const pageSize=20;
 const request=(page:number,search:string)=>({pageNumber:page,pageSize,search:search||null,filterLogic:'and' as const,filters:[],sortBy:'id',sortDirection:'desc' as const});
 const today=()=>new Date().toLocaleDateString('en-CA');
-const normalizeReceiptNo=(value:string,electronic:boolean)=>electronic
-  ?value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,16)
-  :value.replace(/\D/g,'').slice(0,15);
-const validReceiptNo=(value:string,electronic:boolean)=>electronic
-  ?/^[A-Z0-9]{3}[0-9]{13}$/.test(value)
-  :/^[0-9]{15}$/.test(value);
+const normalizeReceiptNo=(value:string,electronic:boolean)=>
+  value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,electronic?16:15);
+const validReceiptNo=(value:string,electronic:boolean)=>
+  new RegExp(`^[A-Z0-9]{${electronic?16:15}}$`).test(value);
 
 export function SteelReceiptOperationsPage({initialTab='receipt'}:{initialTab?:'receipt'|'placement'}){
   const {t}=useTranslation('common');
@@ -78,7 +76,7 @@ function ReceiptPanel(){
       const result=await steelReceiptApi.receiptSource(normalized);
       setSource(result);setSelected({});
       const sourceReceipt=(result.waybillNo??'').trim();
-      const electronic=/^[A-Z0-9]{3}[0-9]{13}$/.test(sourceReceipt)&&!/^[0-9]{15}$/.test(sourceReceipt);
+      const electronic=sourceReceipt.length===16;
       setIsElectronic(electronic);
       setReceiptNo(normalizeReceiptNo(sourceReceipt,electronic));
       setDocumentDate(result.waybillDate?.slice(0,10)||today());
@@ -155,7 +153,7 @@ function ReceiptPanel(){
       <section className="space-y-3 rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3">
         <div className="flex items-start gap-2"><FileText className="mt-0.5 size-5 text-cyan-500"/><div><strong className="text-sm">İrsaliye bilgisi</strong><p className="text-xs text-slate-500">Excel aktarımında girilmiş irsaliye otomatik gelir; gerekirse bu kabul için değiştirebilirsiniz.</p></div></div>
         <label className="flex cursor-pointer items-center gap-3 rounded-xl border bg-[var(--wms-app-panel)] p-3"><input type="checkbox" checked={isElectronic} onChange={event=>{setIsElectronic(event.target.checked);setReceiptNo('')}} className="size-4 accent-cyan-500"/><span className="text-sm font-bold">E-irsaliye / GİB numarası</span></label>
-        <Field label={isElectronic?'GİB e-irsaliye no':'İrsaliye no'}><div className="relative"><input className={`input pr-16 font-mono ${receiptNo&&!receiptNoValid?'!border-red-500':receiptNoValid?'!border-emerald-500':''}`} inputMode={isElectronic?'text':'numeric'} maxLength={isElectronic?16:15} value={receiptNo} onChange={event=>setReceiptNo(normalizeReceiptNo(event.target.value,isElectronic))} placeholder={isElectronic?'GIB2026000000001':'000000000000001'}/><span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500">{receiptNo.length}/{isElectronic?16:15}</span></div></Field>
+        <Field label={isElectronic?'GİB e-irsaliye no':'İrsaliye no'}><div className="relative"><input className={`input pr-16 font-mono ${receiptNo&&!receiptNoValid?'!border-red-500':receiptNoValid?'!border-emerald-500':''}`} inputMode="text" maxLength={isElectronic?16:15} value={receiptNo} onChange={event=>setReceiptNo(normalizeReceiptNo(event.target.value,isElectronic))} placeholder={isElectronic?'GIB2026AB0000001':'IRS202600000001'}/><span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500">{receiptNo.length}/{isElectronic?16:15}</span></div></Field>
         <Field label="İrsaliye tarihi"><AppDateInput value={documentDate} onChange={event=>setDocumentDate(event.target.value)}/></Field>
       </section>
       <Field label={t(`${R}.orderNote`)}><textarea className="input min-h-24" value={note} onChange={e=>setNote(e.target.value)} placeholder={t(`${R}.orderNotePlaceholder`)}/></Field>

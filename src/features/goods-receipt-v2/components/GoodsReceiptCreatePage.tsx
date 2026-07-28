@@ -1127,12 +1127,12 @@ export function GoodsReceiptCreatePage({ direct = false }: { direct?: boolean } 
                               ? "!border-emerald-500"
                               : ""
                         }`}
-                        inputMode={isElectronicReceipt ? "text" : "numeric"}
+                        inputMode="text"
                         maxLength={isElectronicReceipt ? 16 : 15}
                         placeholder={
                           isElectronicReceipt
-                            ? "GIB2026000000001"
-                            : "000000000000001"
+                            ? "GIB2026AB0000001"
+                            : "IRS202600000001"
                         }
                         value={receiptNo}
                         onChange={(event) => {
@@ -1560,14 +1560,12 @@ export function GoodsReceiptCreatePage({ direct = false }: { direct?: boolean } 
                                   ? "!border-emerald-500"
                                   : ""
                             }`}
-                            inputMode={
-                              isElectronicReceipt ? "text" : "numeric"
-                            }
+                            inputMode="text"
                             maxLength={isElectronicReceipt ? 16 : 15}
                             placeholder={
                               isElectronicReceipt
-                                ? "GIB2026000000001"
-                                : "000000000000001"
+                                ? "GIB2026AB0000001"
+                                : "IRS202600000001"
                             }
                             value={receiptNo}
                             onChange={(event) => {
