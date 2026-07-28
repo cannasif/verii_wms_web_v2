@@ -247,7 +247,7 @@ const TR_ENUM_LABELS: Record<string, string> = {
   Shipment: 'Sevkiyat',
   Shipped: 'Sevk Edildi',
   ShortClosed: 'Eksik Kapatıldı',
-  SideBySide: 'Yan Yana',
+  SideBySide: 'Üst Üste',
   Sscc: 'SSCC',
   Stacked: 'Üst Üste',
   StartsWith: 'İle Başlar',
