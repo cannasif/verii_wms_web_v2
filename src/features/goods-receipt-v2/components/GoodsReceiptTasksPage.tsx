@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState, type ReactElement } from "react";
+import { useCallback, useMemo, useRef, useState, type ReactElement } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -555,6 +555,7 @@ function TaskScanPanel({
   const [manufacturingDate, setManufacturingDate] = useState("");
   const [expirationDate, setExpirationDate] = useState("");
   const [busy, setBusy] = useState(false);
+  const scanIdempotencyKey = useRef(crypto.randomUUID());
   const navigate = useNavigate();
   const selectedLine = openLines.find((x) => String(x.id) === lineId);
   const submit = async () => {
@@ -565,7 +566,7 @@ function TaskScanPanel({
     setBusy(true);
     try {
       const result = await goodsReceiptV2Api.receiveTaskScan(detail.task.id, {
-        idempotencyKey: crypto.randomUUID(),
+        idempotencyKey: scanIdempotencyKey.current,
         taskLineId: Number(lineId),
         barcode: barcode.trim(),
         quantity: quantity ? Number(quantity) : undefined,
@@ -595,6 +596,7 @@ function TaskScanPanel({
       setSerial("");
       setManufacturingDate("");
       setExpirationDate("");
+      scanIdempotencyKey.current = crypto.randomUUID();
       reload();
     } catch (error) {
       toast.error(message(error, "Barkod kabul edilemedi."));

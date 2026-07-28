@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactElement, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactElement, type ReactNode } from 'react';
 import { Building2, Check, CheckCircle2, ChevronLeft, ChevronRight, ClipboardCheck, FileText, Loader2, PackagePlus, Plus, ScanBarcode, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AppDropdown } from '@/components/shared/AppDropdown';
@@ -62,6 +62,7 @@ export function GoodsReceiptManualPage({ direct }: { direct: boolean }): ReactEl
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ManualGoodsReceiptResult | null>(null);
+  const submitIdempotencyKey = useRef(crypto.randomUUID());
   const warehouseId = Number(split(warehouse)[0] || 0);
   const policyBranchCode = split(customer)[1] || branchCode;
   const total = useMemo(() => lines.reduce((sum, line) => sum + line.quantity, 0), [lines]);
@@ -197,7 +198,7 @@ export function GoodsReceiptManualPage({ direct }: { direct: boolean }): ReactEl
     }
     setBusy(true); setError(null);
     try {
-      const payload = { idempotencyKey: crypto.randomUUID(), branchCode: supplierBranch || branchCode, documentSeriesId: Number(seriesId), supplierId: Number(supplierId),
+      const payload = { idempotencyKey: submitIdempotencyKey.current, branchCode: supplierBranch || branchCode, documentSeriesId: Number(seriesId), supplierId: Number(supplierId),
         targetWarehouseId: warehouseId, receivingLocationId: Number(locationId), documentDate,
         waybillNo: isElectronic ? null : receiptNo, waybillDate: documentDate, electronicWaybillNo: isElectronic ? receiptNo : null,
         shipmentReferenceNo: null, carrierCode: null, carrierName: null, vehiclePlate: null, trailerPlate: null, driverName: null, sealNo: null,
@@ -206,13 +207,13 @@ export function GoodsReceiptManualPage({ direct }: { direct: boolean }): ReactEl
         assignedUserIds: direct ? null : assignees.map((user) => user.id),
         lines: lines.map((line) => buildOrderlessLinePayload(line)) };
       const created = direct ? await goodsReceiptV2Api.createDirect(payload) : await goodsReceiptV2Api.createOrderless(payload);
-      setResult(created); toast.success(t('manual.success'));
+      setResult(created); submitIdempotencyKey.current = crypto.randomUUID(); toast.success(t('manual.success'));
     } catch (cause) { const message = cause instanceof Error ? cause.message : t('manual.validation.submit'); setError(message); toast.error(message); }
     finally { setBusy(false); }
   };
 
   if (!moduleReady) return <div className="grid min-h-80 place-items-center"><Loader2 className="size-7 animate-spin text-cyan-500"/></div>;
-  if (result) return <Result result={result} direct={direct} reset={() => { setResult(null); setLines([]); setStep(0); setReceiptNo(''); }} t={t}/>;
+  if (result) return <Result result={result} direct={direct} reset={() => { submitIdempotencyKey.current = crypto.randomUUID(); setResult(null); setLines([]); setStep(0); setReceiptNo(''); }} t={t}/>;
   return <section className="mx-auto max-w-7xl space-y-5">
     <header className="overflow-hidden rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] shadow-sm"><div className="h-1 bg-gradient-to-r from-cyan-500 via-blue-500 to-violet-500"/><div className="flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between"><div className="flex gap-3"><div className="grid size-12 shrink-0 place-items-center rounded-xl bg-cyan-500/15 text-cyan-500"><PackagePlus/></div><div><div className="text-xs font-bold uppercase tracking-[.18em] text-cyan-500">{t('manual.eyebrow')}</div><h1 className="mt-1 text-2xl font-bold">{direct ? t('manual.directTitle') : t('manual.orderlessTitle')}</h1><p className="mt-1 text-sm text-slate-500">{direct ? t('manual.directSubtitle') : t('manual.orderlessSubtitle')}</p></div></div><div className="rounded-xl border border-[var(--wms-app-border)] bg-black/5 px-4 py-2 text-sm dark:bg-white/5"><span className="text-slate-500">{t('manual.currentStep')}</span><strong className="ml-2">{step + 1}/4</strong></div></div></header>
     <Stepper steps={steps} current={step}/>
