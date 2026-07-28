@@ -22,7 +22,12 @@ export interface SteelLineRow {id:number;planId:number;importReferenceNo:string;
   rejectedQuantity:number;unitCode:string;arrivalStatus:string;inspectionStatus:string;conversionStatus:string;
   putawayStatus:string;goodsReceiptNo?:string;goodsReceiptId?:number;targetWarehouseId:number;receivingLocationId:number;
   goodsReceiptLineId?:number;createdBy?:number;createdDate?:string;updatedBy?:number;updatedDate?:string;rowVersion:string}
-export interface ConvertResult {goodsReceiptId:number;documentNo:string;taskId:number;taskNo:string;convertedLineCount:number;convertedQuantity:number;replayed:boolean}
+export type SteelReceiptConversionMode='Task'|'Direct';
+export interface ConvertResult {
+  goodsReceiptId:number;documentNo:string;taskId?:number;taskNo?:string;
+  executionId?:number;stockMovementOperationId?:number;generatedLabelIds?:number[];
+  convertedLineCount:number;convertedQuantity:number;mode:SteelReceiptConversionMode;replayed:boolean;
+}
 export interface SteelAttachment {id:number;planLineId:number;fileName:string;contentType:string;url:string;caption?:string;fileSize:number;createdBy?:number;createdDate?:string}
 export interface SteelPlacementOccupancy {placementId:number;planLineId:number;dCode:string;stockCode:string;supplierSerialNo:string;combinedSize?:string;
   materialGrade?:string;quantity:number;unitCode:string;warehouseId:number;locationId:number;placementType:'SideBySide'|'Stacked';

@@ -1,18 +1,21 @@
-import {useCallback,useEffect,useMemo,useState} from 'react';
+import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import {useQuery,useQueryClient} from '@tanstack/react-query';
 import {useTranslation} from 'react-i18next';
-import {ArrowRight,Boxes,ChevronLeft,ChevronRight,Layers3,Search,UserRoundCog,X} from 'lucide-react';
+import {ArrowRight,Boxes,CheckCircle2,ChevronLeft,ChevronRight,FileText,Layers3,Loader2,Printer,Search,UserRoundCog,X} from 'lucide-react';
 import {toast} from 'sonner';
 import {AdvancedDataGrid,type GridColumn} from '@/components/shared/AdvancedDataGrid';
 import {AppDropdown} from '@/components/shared/AppDropdown';
+import {AppDateInput} from '@/components/shared/AppInput';
 import {requiredActionColumn} from '@/components/shared/GridSystemColumns';
 import {PagedAppDropdown} from '@/components/shared/PagedAppDropdown';
+import {usePermissionAccess} from '@/features/access-control/hooks/usePermissionAccess';
 import {goodsReceiptV2Api} from '@/features/goods-receipt-v2/api/goods-receipt.api';
 import type {ActiveUserOption} from '@/features/goods-receipt-v2/types/goods-receipt.types';
+import {printReceiptLabels} from '@/features/goods-receipt-v2/utils/goods-receipt-label-output';
 import {localizeEnumValue} from '@/lib/enum-localization';
 import {formatProjectNumber} from '@/lib/project-format';
 import {steelReceiptApi} from '../api/steel-receipt.api';
-import type {SteelLineRow} from '../types/steel-receipt.types';
+import type {ConvertResult,SteelLineRow,SteelReceiptConversionMode} from '../types/steel-receipt.types';
 import {SteelProcessHeader} from './SteelProcessHeader';
 
 const O='steelGoodReceiptAcceptance.operations';
@@ -21,6 +24,13 @@ const request=(page:number,search:string)=>({pageNumber:page,pageSize,search:sea
 const userLabel=(user:ActiveUserOption):string=>`${user.firstName} ${user.lastName}`.trim()||user.username;
 const userOption=(user:ActiveUserOption)=>({value:encodeURIComponent(JSON.stringify(user)),label:userLabel(user),description:`${user.username} · ${user.email}`});
 const decodeUser=(value:string):ActiveUserOption=>JSON.parse(decodeURIComponent(value)) as ActiveUserOption;
+const today=()=>new Date().toLocaleDateString('en-CA');
+const normalizeReceiptNo=(value:string,electronic:boolean)=>electronic
+  ?value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,16)
+  :value.replace(/\D/g,'').slice(0,15);
+const validReceiptNo=(value:string,electronic:boolean)=>electronic
+  ?/^[A-Z0-9]{3}[0-9]{13}$/.test(value)
+  :/^[0-9]{15}$/.test(value);
 
 export function SteelReceiptOperationsPage({initialTab='receipt'}:{initialTab?:'receipt'|'placement'}){
   const {t}=useTranslation('common');
@@ -35,18 +45,28 @@ export function SteelReceiptOperationsPage({initialTab='receipt'}:{initialTab?:'
 
 function ReceiptPanel(){
   const {t,i18n}=useTranslation('common');
+  const {can}=usePermissionAccess();
   const R=`${O}.receipt`;
   const gridLanguage=i18n.resolvedLanguage??i18n.language;
   const cache=useQueryClient();
   const [selected,setSelected]=useState<Record<number,SteelLineRow>>({});
   const [note,setNote]=useState('');
   const [priority,setPriority]=useState('3');
+  const [mode,setMode]=useState<SteelReceiptConversionMode>('Task');
+  const [isElectronic,setIsElectronic]=useState(false);
+  const [receiptNo,setReceiptNo]=useState('');
+  const [documentDate,setDocumentDate]=useState(today);
   const [assignees,setAssignees]=useState<ActiveUserOption[]>([]);
   const [assignAll,setAssignAll]=useState(false);
+  const [confirmDirect,setConfirmDirect]=useState(false);
+  const [lastResult,setLastResult]=useState<ConvertResult|null>(null);
+  const [printing,setPrinting]=useState(false);
   const [busy,setBusy]=useState(false);
   const [refreshKey,setRefreshKey]=useState(0);
+  const idempotencyKey=useRef(crypto.randomUUID());
   const selectedRows=Object.values(selected);const selectedPlan=selectedRows[0]?.planId;
   const total=selectedRows.reduce((sum,row)=>sum+row.approvedQuantity,0);
+  const receiptNoValid=validReceiptNo(receiptNo,isElectronic);
   const toggle=useCallback((row:SteelLineRow)=>setSelected(current=>{
     if(current[row.id]){const next={...current};delete next[row.id];return next}
     const currentPlan=Object.values(current)[0]?.planId;
@@ -64,28 +84,60 @@ function ReceiptPanel(){
   ],[t,gridLanguage,selected,toggle,R]);
   const convert=async()=>{
     if(!selectedRows.length||!selectedPlan)return;
-    if(!assignAll&&!assignees.length){toast.error(t(`${R}.assigneeRequired`));return}
+    if(!receiptNoValid||!documentDate){toast.error(isElectronic?'Geçerli 16 haneli GİB e-irsaliye numarası ve tarih girin.':'Geçerli 15 haneli irsaliye numarası ve tarih girin.');return}
+    if(mode==='Task'&&!assignAll&&!assignees.length){toast.error(t(`${R}.assigneeRequired`));return}
+    if(mode==='Direct'&&!confirmDirect){toast.error('Doğrudan kabul etkisini onaylamanız gerekir.');return}
     setBusy(true);
     try{
-      const result=await steelReceiptApi.convert(selectedPlan,selectedRows.map(x=>x.id),{description:note,priority:Number(priority),assignedUserIds:assignees.map(x=>x.id),assignToAllActiveUsers:assignAll});
+      const result=await steelReceiptApi.convert(selectedPlan,selectedRows.map(x=>x.id),{
+        idempotencyKey:idempotencyKey.current,mode,documentDate,
+        waybillNo:isElectronic?undefined:receiptNo,electronicWaybillNo:isElectronic?receiptNo:undefined,
+        description:note,priority:Number(priority),assignedUserIds:assignees.map(x=>x.id),assignToAllActiveUsers:assignAll,
+      });
       toast.success(t(`${R}.convertSuccess`,{documentNo:result.documentNo,count:result.convertedLineCount}));
-      setSelected({});setNote('');setAssignees([]);setAssignAll(false);setRefreshKey(key=>key+1);
+      setLastResult(result);idempotencyKey.current=crypto.randomUUID();
+      setSelected({});setNote('');setReceiptNo('');setConfirmDirect(false);setAssignees([]);setAssignAll(false);setRefreshKey(key=>key+1);
       await cache.invalidateQueries({queryKey:['advanced-grid','steel-receipt-candidates']})
     }catch(e){toast.error(e instanceof Error?e.message:t(`${R}.convertFailed`))}finally{setBusy(false)}
+  };
+  const printLabels=async()=>{
+    if(!lastResult?.generatedLabelIds?.length)return;
+    setPrinting(true);
+    try{
+      const wanted=new Set(lastResult.generatedLabelIds??[]);
+      const labels=(await goodsReceiptV2Api.receiptLabels(lastResult.goodsReceiptId)).filter(label=>wanted.has(label.id));
+      if(!labels.length)throw new Error('Yazdırılabilir kabul etiketi bulunamadı.');
+      printReceiptLabels(labels,`${lastResult.documentNo} SAC kabul etiketleri`);
+      const unprinted=labels.filter(label=>label.printCount===0).map(label=>label.id);
+      if(unprinted.length)await goodsReceiptV2Api.markLabelsPrinted(unprinted);
+    }catch(error){toast.error(error instanceof Error?error.message:'Etiketler yazdırılamadı.')}
+    finally{setPrinting(false)}
   };
   return <div className="grid gap-5 xl:grid-cols-[minmax(0,1.6fr)_minmax(320px,.7fr)]">
     <div className="min-w-0"><AdvancedDataGrid pageKey="steel-receipt-candidates" title={t(`${R}.candidatesTitle`)} description={t(`${R}.candidatesText`)} columns={columns} fetchPage={steelReceiptApi.receiptCandidatesPaged} refreshKey={refreshKey}/></div>
     <aside className="h-fit space-y-4 rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5 xl:mt-10"><SectionHead title={t(`${R}.summaryTitle`)} text={t(`${R}.summaryText`)}/>
       <Metric label={t(`${R}.selectedSheets`)} value={String(selectedRows.length)}/><Metric label={t(`${R}.totalApprovedQty`)} value={formatProjectNumber(total)}/><Metric label={t(`${R}.sacPlan`)} value={selectedRows[0]?.importReferenceNo||'-'}/>
-      <Field label={t(`${R}.priority`)}><AppDropdown value={priority} onValueChange={setPriority} options={[{value:'1',label:t(`${R}.priorityLow`)},{value:'3',label:t(`${R}.priorityNormal`)},{value:'5',label:t(`${R}.priorityHigh`)},{value:'9',label:t(`${R}.priorityUrgent`)}]}/></Field>
-      <section className="rounded-xl border p-3">
+      <Field label="İşlem şekli"><AppDropdown value={mode} onValueChange={value=>{setMode(value as SteelReceiptConversionMode);setConfirmDirect(false)}} options={[
+        {value:'Task',label:'Mal kabul emri oluştur',description:'Seçilen kullanıcılara görev atar; fiziksel kabul görev ekranında tamamlanır.'},
+        ...(can('WMS.GOODS_RECEIPT.RECEIVE')?[{value:'Direct',label:'Doğrudan mal kabul',description:'Atama yapmadan stok hareketini ve kurala bağlı ERP gönderimini tamamlar.'}]:[]),
+      ]}/></Field>
+      <section className="space-y-3 rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3">
+        <div className="flex items-start gap-2"><FileText className="mt-0.5 size-5 text-cyan-500"/><div><strong className="text-sm">İrsaliye bilgisi</strong><p className="text-xs text-slate-500">Normal irsaliye veya GİB e-irsaliye numarasından yalnızca birini girin.</p></div></div>
+        <label className="flex cursor-pointer items-center gap-3 rounded-xl border bg-[var(--wms-app-panel)] p-3"><input type="checkbox" checked={isElectronic} onChange={event=>{setIsElectronic(event.target.checked);setReceiptNo('')}} className="size-4 accent-cyan-500"/><span className="text-sm font-bold">E-irsaliye / GİB numarası</span></label>
+        <Field label={isElectronic?'GİB e-irsaliye no':'İrsaliye no'}><div className="relative"><input className={`input pr-16 font-mono ${receiptNo&&!receiptNoValid?'!border-red-500':receiptNoValid?'!border-emerald-500':''}`} inputMode={isElectronic?'text':'numeric'} maxLength={isElectronic?16:15} value={receiptNo} onChange={event=>setReceiptNo(normalizeReceiptNo(event.target.value,isElectronic))} placeholder={isElectronic?'GIB2026000000001':'000000000000001'}/><span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500">{receiptNo.length}/{isElectronic?16:15}</span></div></Field>
+        <Field label="İrsaliye tarihi"><AppDateInput value={documentDate} onChange={event=>setDocumentDate(event.target.value)}/></Field>
+      </section>
+      <Field label={t(`${R}.priority`)}><AppDropdown value={priority} onValueChange={setPriority} options={[{value:'1',label:t(`${R}.priorityLow`)},{value:'3',label:t(`${R}.priorityNormal`)},{value:'5',label:t(`${R}.priorityHigh`)}]}/></Field>
+      {mode==='Task'&&<section className="rounded-xl border p-3">
         <div className="mb-3 flex items-start gap-2"><UserRoundCog className="mt-0.5 size-5 text-cyan-500"/><div><strong className="text-sm">{t(`${R}.assigneesTitle`)} <span className="text-red-500">*</span></strong><p className="text-xs text-slate-500">{t(`${R}.assigneesHint`)}</p></div></div>
         <label className="mb-3 flex cursor-pointer items-start gap-3 rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3"><input type="checkbox" checked={assignAll} onChange={e=>setAssignAll(e.target.checked)} className="mt-1 size-4 accent-cyan-500"/><span><strong className="block text-sm">{t(`${R}.assignAllLabel`)}</strong><small className="text-slate-500">{t(`${R}.assignAllHint`)}</small></span></label>
         {!assignAll&&<PagedAppDropdown queryKey={['steel-receipt-active-users']} fetchPage={goodsReceiptV2Api.activeUsersPaged} toOption={user=>({...userOption(user),disabled:assignees.some(selectedUser=>selectedUser.id===user.id)})} value={null} onValueChange={value=>{const user=decodeUser(value);setAssignees(current=>current.some(x=>x.id===user.id)?current:[...current,user])}} placeholder={t(`${R}.addUserPlaceholder`)} searchable minSearchLength={2}/>}
         <div className="mt-3 flex flex-wrap gap-2">{!assignAll&&assignees.map(user=><span key={user.id} className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 text-xs"><span><strong>{userLabel(user)}</strong><small className="ml-1 text-slate-500">({user.username})</small></span><button type="button" onClick={()=>setAssignees(current=>current.filter(x=>x.id!==user.id))} className="rounded-full p-0.5 text-slate-500 hover:bg-red-500/15 hover:text-red-500" aria-label={t(`${R}.removeAssigneeAria`,{name:userLabel(user)})}><X className="size-3.5"/></button></span>)}{assignAll?<span className="text-xs font-bold text-cyan-500">{t(`${R}.allUsersWillBeAssigned`)}</span>:!assignees.length&&<span className="text-xs text-amber-500">{t(`${R}.noUsersAssigned`)}</span>}</div>
-      </section>
+      </section>}
+      {mode==='Direct'&&<label className="flex cursor-pointer items-start gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3"><input type="checkbox" checked={confirmDirect} onChange={event=>setConfirmDirect(event.target.checked)} className="mt-1 size-4 accent-amber-500"/><span><strong className="block text-sm">Doğrudan kabulü onaylıyorum</strong><small className="text-slate-500">Seçili levhalar kabul stokuna alınır, kalite sonucu tekrar istenmez ve süreç politikasına uygunsa ERP’ye gönderilir.</small></span></label>}
       <Field label={t(`${R}.orderNote`)}><textarea className="input min-h-24" value={note} onChange={e=>setNote(e.target.value)} placeholder={t(`${R}.orderNotePlaceholder`)}/></Field>
-      <button disabled={busy||!selectedRows.length||(!assignAll&&!assignees.length)} onClick={()=>void convert()} className="w-full rounded-xl bg-cyan-600 px-4 py-3 font-bold text-white disabled:opacity-40"><ArrowRight className="mr-2 inline size-4"/>{t(`${R}.createOrderButton`)}</button>
+      <button disabled={busy||!selectedRows.length||!receiptNoValid||!documentDate||(mode==='Task'&&!assignAll&&!assignees.length)||(mode==='Direct'&&!confirmDirect)} onClick={()=>void convert()} className={`w-full rounded-xl px-4 py-3 font-bold text-white disabled:opacity-40 ${mode==='Direct'?'bg-emerald-600':'bg-cyan-600'}`}>{busy?<Loader2 className="mr-2 inline size-4 animate-spin"/>:<ArrowRight className="mr-2 inline size-4"/>}{mode==='Direct'?'Doğrudan mal kabulü tamamla':t(`${R}.createOrderButton`)}</button>
+      {lastResult&&<section className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4"><div className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 size-5 text-emerald-500"/><div><strong className="block">{lastResult.documentNo}</strong><small className="text-slate-500">{lastResult.mode==='Direct'?'Mal kabul tamamlandı.':'Mal kabul emri oluşturuldu.'}</small></div></div>{(lastResult.generatedLabelIds?.length??0)>0&&<button type="button" disabled={printing} onClick={()=>void printLabels()} className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-violet-500/40 px-3 py-2 text-sm font-bold text-violet-500 disabled:opacity-40">{printing?<Loader2 className="size-4 animate-spin"/>:<Printer className="size-4"/>}Kabul etiketlerini yazdır</button>}</section>}
     </aside>
   </div>;
 }
