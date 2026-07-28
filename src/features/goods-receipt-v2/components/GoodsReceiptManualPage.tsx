@@ -7,7 +7,10 @@ import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { parseLocalizedNumber } from '@/lib/project-format';
 import { useAuthStore } from '@/stores/auth-store';
+import { StockTrackingPolicyField } from '@/features/stock-tracking/StockTrackingPolicyField';
+import type { EffectiveStockTrackingPolicy } from '@/features/stock-tracking/effective-stock-tracking.service';
 import { goodsReceiptV2Api } from '../api/goods-receipt.api';
+import { buildOrderlessLinePayload, validateManualLineTracking } from '../goods-receipt-manual.utils';
 import type { ActiveUserOption, ManualGoodsReceiptResult, ManualReceiptLine, PutawayLocationSuggestion, SeriesOption } from '../types/goods-receipt.types';
 
 const today = (): string => new Date().toLocaleDateString('en-CA');
@@ -54,10 +57,13 @@ export function GoodsReceiptManualPage({ direct }: { direct: boolean }): ReactEl
   const [locationSuggestions, setLocationSuggestions] = useState<PutawayLocationSuggestion[]>([]);
   const [suggestionsBusy, setSuggestionsBusy] = useState(false);
   const [lines, setLines] = useState<ManualReceiptLine[]>([]);
+  const [trackingPolicy, setTrackingPolicy] = useState<EffectiveStockTrackingPolicy | null>(null);
+  const [trackingPolicyBusy, setTrackingPolicyBusy] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ManualGoodsReceiptResult | null>(null);
   const warehouseId = Number(split(warehouse)[0] || 0);
+  const policyBranchCode = split(customer)[1] || branchCode;
   const total = useMemo(() => lines.reduce((sum, line) => sum + line.quantity, 0), [lines]);
   const receiptNoValid = validReceiptNo(receiptNo, isElectronic);
   const steps = [
@@ -108,6 +114,19 @@ export function GoodsReceiptManualPage({ direct }: { direct: boolean }): ReactEl
     return () => { cancelled = true; window.clearTimeout(timer); };
   }, [warehouseId, stock, yap, quantity]);
 
+  useEffect(() => {
+    const stockId = Number(split(stock)[0] || 0);
+    setTrackingPolicy(null);
+    if (!stockId) return;
+    let cancelled = false;
+    setTrackingPolicyBusy(true);
+    void goodsReceiptV2Api.trackingPolicy(policyBranchCode, stockId)
+      .then((policy) => { if (!cancelled) setTrackingPolicy(policy); })
+      .catch(() => { if (!cancelled) setTrackingPolicy(null); })
+      .finally(() => { if (!cancelled) setTrackingPolicyBusy(false); });
+    return () => { cancelled = true; };
+  }, [stock, policyBranchCode]);
+
   const showError = (message: string): false => { setError(message); toast.error(message); return false; };
   const canLeaveStep = (): boolean => {
     if (step === 0 && !customer) return showError(t('manual.validation.customer'));
@@ -123,6 +142,7 @@ export function GoodsReceiptManualPage({ direct }: { direct: boolean }): ReactEl
   const addLine = (): void => {
     const [stockId, stockCode, encodedName, encodedUnit] = split(stock); const numericQuantity = parseLocalizedNumber(quantity);
     if (!stockId || !Number.isFinite(numericQuantity) || numericQuantity <= 0) { showError(t('manual.validation.stock')); return; }
+    if (!trackingPolicy) { showError(`${stockCode} için stok takip politikası yüklenemedi.`); return; }
     const stockUnitCode = encodedUnit ? decodeURIComponent(encodedUnit) : '';
     if (!stockUnitCode) { showError(`${stockCode} stok kartının ölçü birimi tanımlı değil.`); return; }
     if (!warehouseId || !lineLocation) { showError('Kalem için hedef depo ve raf seçilmelidir.'); return; }
@@ -134,24 +154,47 @@ export function GoodsReceiptManualPage({ direct }: { direct: boolean }): ReactEl
     if (new Set(normalizedSerials).size !== normalizedSerials.length) { showError('Toplu seri listesinde aynı seri birden fazla kullanılamaz.'); return; }
     if (serials.some((value) => lines.some((line) => line.serialNo?.trim().toLocaleUpperCase('tr-TR') === value.toLocaleUpperCase('tr-TR')))) { showError('Serilerden biri bu kabul listesinde daha önce kullanılmış.'); return; }
     if (manufacturingDate && expirationDate && expirationDate < manufacturingDate) { showError(t('manual.validation.expiry')); return; }
+    const trackingType = trackingPolicy.trackingType;
+    const draftLine = {
+      stockCode,
+      trackingType,
+      quantity: serials.length ? 1 : numericQuantity,
+      lotNo: lotNo.trim() || undefined,
+      serialNo: serialNo.trim() || undefined,
+      manufacturingDate: manufacturingDate || undefined,
+      expirationDate: expirationDate || undefined,
+    };
+    const trackingError = validateManualLineTracking(draftLine, trackingPolicy);
+    if (trackingError) { showError(trackingError); return; }
+    if (serials.length) {
+      for (const serial of serials) {
+        const serialLine = { ...draftLine, quantity: 1, serialNo: serial };
+        const serialError = validateManualLineTracking(serialLine, trackingPolicy);
+        if (serialError) { showError(serialError); return; }
+      }
+    }
     const [yapCodeId, yapCode] = split(yap);
     const [receivingLocationId, receivingLocationCode] = split(lineLocation);
     const base = { stockId: Number(stockId), stockCode, stockName: encodedName ? decodeURIComponent(encodedName) : undefined,
       yapCodeId: yapCodeId ? Number(yapCodeId) : undefined, yapCode: yapCode || undefined, unitCode: stockUnitCode,
       targetWarehouseId: warehouseId, targetWarehouseCode: Number(split(warehouse)[2] || 0) || undefined,
-      receivingLocationId: Number(receivingLocationId), receivingLocationCode,
+      receivingLocationId: Number(receivingLocationId), receivingLocationCode, trackingType,
       lotNo: lotNo.trim() || undefined, manufacturingDate: manufacturingDate || undefined,
       expirationDate: expirationDate || undefined };
     const nextLines: ManualReceiptLine[] = serials.length
       ? serials.map((serial) => ({ ...base, localId: crypto.randomUUID(), quantity: 1, serialNo: serial, scannedBarcode: serial }))
       : [{ ...base, localId: crypto.randomUUID(), quantity: numericQuantity, serialNo: serialNo.trim() || undefined, scannedBarcode: scannedBarcode.trim() || undefined }];
     setLines((current) => [...current, ...nextLines]);
-    setStock(null); setUnitCode(''); setYap(null); setQuantity('1'); setLineLocation(null); setLocationSuggestions([]); setLotNo(''); setSerialNo(''); setSerialBatch(''); setManufacturingDate(''); setExpirationDate(''); setScannedBarcode(''); setError(null);
+    setStock(null); setTrackingPolicy(null); setUnitCode(''); setYap(null); setQuantity('1'); setLineLocation(null); setLocationSuggestions([]); setLotNo(''); setSerialNo(''); setSerialBatch(''); setManufacturingDate(''); setExpirationDate(''); setScannedBarcode(''); setError(null);
   };
 
   const submit = async (): Promise<void> => {
     const [supplierId, supplierBranch] = split(customer);
     if (!supplierId || !warehouseId || !locationId || !seriesId || !receiptNoValid || lines.length === 0) { showError(t('manual.validation.incomplete')); return; }
+    for (const line of lines) {
+      const trackingError = validateManualLineTracking(line);
+      if (trackingError) { showError(trackingError); return; }
+    }
     setBusy(true); setError(null);
     try {
       const payload = { idempotencyKey: crypto.randomUUID(), branchCode: supplierBranch || branchCode, documentSeriesId: Number(seriesId), supplierId: Number(supplierId),
@@ -161,10 +204,7 @@ export function GoodsReceiptManualPage({ direct }: { direct: boolean }): ReactEl
         plannedArrivalAtUtc: plannedArrival ? new Date(plannedArrival).toISOString() : null, occurredAtUtc: direct ? new Date().toISOString() : null,
         labelStrategy, executionMode, priority: Number(priority), deviceId: null, description: description.trim() || null,
         assignedUserIds: direct ? null : assignees.map((user) => user.id),
-        lines: lines.map((line) => ({ stockId: line.stockId, yapCodeId: line.yapCodeId ?? null, quantity: line.quantity, unitCode: line.unitCode,
-          lotNo: line.lotNo ?? null, serialNo: line.serialNo ?? null, manufacturingDate: line.manufacturingDate ?? null,
-          expirationDate: line.expirationDate ?? null, scannedBarcode: line.scannedBarcode ?? null, goodsReceiptLabelId: null,
-          description: line.description ?? null, targetWarehouseId: line.targetWarehouseId, receivingLocationId: line.receivingLocationId })) };
+        lines: lines.map((line) => buildOrderlessLinePayload(line)) };
       const created = direct ? await goodsReceiptV2Api.createDirect(payload) : await goodsReceiptV2Api.createOrderless(payload);
       setResult(created); toast.success(t('manual.success'));
     } catch (cause) { const message = cause instanceof Error ? cause.message : t('manual.validation.submit'); setError(message); toast.error(message); }
@@ -196,6 +236,7 @@ export function GoodsReceiptManualPage({ direct }: { direct: boolean }): ReactEl
 
     {step === 2 && <Panel title={t('manual.lines.title')} description={t('manual.lines.description')} icon={<ScanBarcode/>}><div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
       <Field label={t('manual.stock')} required><PagedAppDropdown queryKey={['gr-manual-stocks', branchCode]} fetchPage={(request) => goodsReceiptV2Api.stocks(request, branchCode)} toOption={(x) => ({ value: `${x.id}|${x.erpStockCode}|${encodeURIComponent(x.stockName || '')}|${encodeURIComponent(x.unitCode || '')}`, label: `${x.erpStockCode} · ${x.stockName || ''}`, description: x.unitCode ? `Birim: ${x.unitCode}` : 'Birim tanımsız' })} value={stock} onValueChange={(value) => { setStock(value); setUnitCode(decodeURIComponent(split(value)[3] || '')); }} searchable minSearchLength={2}/></Field>
+      {stock && <div className="md:col-span-2 xl:col-span-4"><StockTrackingPolicyField policy={trackingPolicy ?? undefined} loading={trackingPolicyBusy} compact /></div>}
       <Field label={t('manual.yap')}><PagedAppDropdown queryKey={['gr-manual-yaps', branchCode]} fetchPage={(request) => goodsReceiptV2Api.yapCodes(request, branchCode)} toOption={(x) => ({ value: `${x.id}|${x.configurationCode}`, label: `${x.configurationCode} · ${x.description || ''}` })} value={yap} onValueChange={setYap} searchable minSearchLength={1}/></Field>
       <Field label={t('manual.quantity')} required><input className="input font-mono" inputMode="decimal" value={quantity} onChange={(e) => setQuantity(e.target.value)}/></Field><Field label={t('manual.unit')}><div className={`input flex items-center font-bold ${unitCode ? 'text-cyan-600' : 'text-amber-600'}`}>{unitCode || 'Önce stok seçin'}</div></Field>
       <Field label="Kabul rafı (Receiving / Staging)" required><PagedAppDropdown queryKey={['gr-manual-line-receiving-locations', warehouseId]} fetchPage={(request) => goodsReceiptV2Api.receivingLocations(request, warehouseId)} toOption={(x) => ({ value: `${x.id}|${x.code}`, label: `${x.code} · ${x.name}`, description: x.locationType })} enabled={warehouseId > 0} dependencies={[warehouseId]} value={lineLocation} onValueChange={setLineLocation} searchable/></Field>
