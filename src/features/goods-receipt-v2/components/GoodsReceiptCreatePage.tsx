@@ -57,6 +57,7 @@ import type {
   SelectedReceiptLine,
   SeriesOption,
   StockOption,
+  UserWarehouseAccess,
   WarehouseOption,
 } from "../types/goods-receipt.types";
 import {
@@ -122,6 +123,7 @@ export function GoodsReceiptCreatePage(): ReactElement {
   const [projectCodeQuery, setProjectCodeQuery] = useState("");
   const [orders, setOrders] = useState<OpenOrderHeader[]>([]);
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
+  const [warehouseAccess, setWarehouseAccess] = useState<UserWarehouseAccess | null>(null);
   const [lines, setLines] = useState<SelectedReceiptLine[]>([]);
   const [series, setSeries] = useState<SeriesOption[]>([]);
   const [seriesValue, setSeriesValue] = useState<string | null>(null);
@@ -149,6 +151,21 @@ export function GoodsReceiptCreatePage(): ReactElement {
     : "";
   const primaryLine = lines[0];
   const selectedQuantity = lines.reduce((sum, line) => sum + line.quantity, 0);
+  const selectedOrderWarehouseCode = useMemo(
+    () => orders.find((order) => selectedOrders.includes(order.siparisNo))?.targetWarehouseCode,
+    [orders, selectedOrders],
+  );
+  const canUseOrderWarehouse = (warehouseCode?: number): boolean =>
+    !warehouseAccess?.isRestricted
+    || (warehouseCode != null && warehouseAccess.warehouseCodes.includes(warehouseCode));
+
+  useEffect(() => {
+    let active = true;
+    void goodsReceiptV2Api.warehouseAccess(branchCode)
+      .then((access) => { if (active) setWarehouseAccess(access); })
+      .catch((cause: Error) => { if (active) report(cause, "Depo yetkileri alınamadı."); });
+    return () => { active = false; };
+  }, [branchCode]);
 
   const clearCustomerDependent = (): void => {
     setOrders([]);
@@ -223,7 +240,8 @@ export function GoodsReceiptCreatePage(): ReactElement {
         return true;
       });
       setOrders(filtered);
-      if (filtered.length === 1) setSelectedOrders([filtered[0].siparisNo]);
+      if (filtered.length === 1 && canUseOrderWarehouse(filtered[0].targetWarehouseCode))
+        setSelectedOrders([filtered[0].siparisNo]);
     } catch (cause) {
       report(cause, "Siparişler alınamadı.");
     } finally {
@@ -528,6 +546,11 @@ export function GoodsReceiptCreatePage(): ReactElement {
         ? "E-irsaliye numarası 3 karakter birim kodu, 4 karakter yıl ve 9 karakter sıra numarasından oluşmalıdır."
         : "Normal irsaliye numarası tam 15 rakam olmalıdır.";
     if (!waybillDate) return "İrsaliye tarihi zorunludur.";
+    const warehouseIds = [...new Set(lines.map((line) => line.targetWarehouseId).filter(Boolean))];
+    if (warehouseIds.length > 1)
+      return "Bir mal kabul emrinde yalnızca tek depo seçilebilir. Farklı depolar için ayrı emir oluşturun.";
+    if (warehouseAccess?.isRestricted && warehouseIds.some((id) => !warehouseAccess.warehouseIds.includes(id!)))
+      return "Seçilen depo kullanıcıya tanımlı değildir; bu depoda mal kabul işlemi yapılamaz.";
     for (const line of lines) {
       const name = `${line.siparisNo} / ${line.stockCode ?? line.orderId}`;
       if (line.quantity <= 0 || line.quantity > (line.availableQuantity ?? 0))
@@ -668,7 +691,18 @@ export function GoodsReceiptCreatePage(): ReactElement {
     toast.error(message);
   };
   const steps = [0, 1];
-  const toggleOrder = (siparisNo: string): void => {
+  const toggleOrder = (order: OpenOrderHeader): void => {
+    const { siparisNo, targetWarehouseCode } = order;
+    if (!selectedOrders.includes(siparisNo) && !canUseOrderWarehouse(targetWarehouseCode)) {
+      toast.error(`Depo ${targetWarehouseCode ?? "belirsiz"} kullanıcınıza tanımlı olmadığı için bu siparişi seçemezsiniz.`);
+      return;
+    }
+    if (!selectedOrders.includes(siparisNo)
+      && selectedOrderWarehouseCode != null
+      && targetWarehouseCode !== selectedOrderWarehouseCode) {
+      toast.warning("Bir mal kabul emrinde farklı depolara ait siparişler seçilemez. Önce mevcut seçimi kaldırın veya ayrı emir oluşturun.");
+      return;
+    }
     setSelectedOrders((current) =>
       current.includes(siparisNo)
         ? current.filter((x) => x !== siparisNo)
@@ -873,13 +907,15 @@ export function GoodsReceiptCreatePage(): ReactElement {
                     <tbody>
                       {orders.map((order) => {
                         const checked = selectedOrders.includes(order.siparisNo);
+                        const warehouseDenied = !canUseOrderWarehouse(order.targetWarehouseCode);
                         return (
                           <tr
                             key={order.siparisNo}
                             className={cn(
                               checked && "wms-ops-order-fetch__row--selected",
+                              warehouseDenied && "cursor-not-allowed opacity-50",
                             )}
-                            onClick={() => toggleOrder(order.siparisNo)}
+                            onClick={() => toggleOrder(order)}
                           >
                             <td
                               className="text-center"
@@ -889,8 +925,10 @@ export function GoodsReceiptCreatePage(): ReactElement {
                                 <input
                                   type="checkbox"
                                   checked={checked}
-                                  onChange={() => toggleOrder(order.siparisNo)}
+                                  disabled={warehouseDenied}
+                                  onChange={() => toggleOrder(order)}
                                   aria-label={`${order.siparisNo} seç`}
+                                  title={warehouseDenied ? "Bu depo kullanıcınıza tanımlı değil." : undefined}
                                 />
                                 <span
                                   className="wms-ops-order-checkbox__mark"
@@ -968,6 +1006,7 @@ export function GoodsReceiptCreatePage(): ReactElement {
                     removeTracking={removeTracking}
                     createSerialRows={createSerialRows}
                     cancelGeneratedSerials={cancelGeneratedSerials}
+                    lockedWarehouseId={primaryLine?.targetWarehouseId}
                   />
                 ))}
               </div>
@@ -1376,6 +1415,7 @@ function ReceiptEntryRow({
   removeTracking,
   createSerialRows,
   cancelGeneratedSerials,
+  lockedWarehouseId,
 }: {
   line: SelectedReceiptLine;
   branch: string;
@@ -1390,6 +1430,7 @@ function ReceiptEntryRow({
   removeTracking: (key: string, id: string) => void;
   createSerialRows: (key: string) => Promise<void>;
   cancelGeneratedSerials: (key: string) => Promise<void>;
+  lockedWarehouseId?: number;
 }): ReactElement {
   const key = lineKey(line);
   const serialMode =
@@ -1590,6 +1631,7 @@ function ReceiptEntryRow({
                   placeholder="Hedef depo"
                   searchPlaceholder="Depo ara…"
                   emptyText="Depo bulunamadı."
+                  disabled={Boolean(lockedWarehouseId)}
                   triggerClassName={cn(OPS_FIELD_CLASS, "h-9")}
                   queryKey={["gr-line-warehouse-lookup", key, branch]}
                   fetchPage={async ({ pageNumber, pageSize, search, signal }) =>

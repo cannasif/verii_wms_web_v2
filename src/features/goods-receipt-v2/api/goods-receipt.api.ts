@@ -2,7 +2,7 @@ import { api } from '@/lib/axios';
 import { resolveStockTrackingPolicy } from '@/features/stock-tracking/effective-stock-tracking.service';
 import type { DropdownPage, DropdownPageRequest } from '@/hooks/useDropdownInfiniteSearch';
 import type { GridPage as AdvancedGridPage, GridRequest } from '@/components/shared/AdvancedDataGrid';
-import type { ActiveUserOption, CreateGoodsReceiptResult, CustomerOption, ErpPostingResult, GoodsReceiptDetail, GoodsReceiptGridRow, GoodsReceiptLabelBatchDetail, GoodsReceiptLabelBatchRow, GoodsReceiptLabelRow, GoodsReceiptLifecycleResult, GoodsReceiptRoutingResult, GoodsReceiptSplitRoutingResult, GoodsReceiptTaskDetail, GoodsReceiptTaskGridRow, LocationOption, ManualGoodsReceiptResult, OpenOrderHeader, OpenOrderLine, PutawayLocationSuggestion, ReceiveGoodsReceiptTaskResult, SeriesOption, StockOption, WarehouseOption, YapCodeOption } from '../types/goods-receipt.types';
+import type { ActiveUserOption, CreateGoodsReceiptResult, CustomerOption, ErpPostingResult, GoodsReceiptDetail, GoodsReceiptGridRow, GoodsReceiptLabelBatchDetail, GoodsReceiptLabelBatchRow, GoodsReceiptLabelRow, GoodsReceiptLifecycleResult, GoodsReceiptRoutingResult, GoodsReceiptSplitRoutingResult, GoodsReceiptTaskDetail, GoodsReceiptTaskGridRow, LocationOption, ManualGoodsReceiptResult, OpenOrderHeader, OpenOrderLine, PutawayLocationSuggestion, ReceiveGoodsReceiptTaskResult, SeriesOption, StockOption, UserWarehouseAccess, WarehouseOption, YapCodeOption } from '../types/goods-receipt.types';
 import type { OperationCancellationResult } from '@/features/shared/api/operation-cancellation';
 import { buildDropdownPagedBody } from '@/lib/dropdown-paging';
 
@@ -14,8 +14,19 @@ const pagedBody = (request: DropdownPageRequest, filters: unknown[] = []) =>
 
 export const goodsReceiptV2Api = {
   trackingPolicy: resolveStockTrackingPolicy,
+  warehouseAccess: async (branchCode: string): Promise<UserWarehouseAccess> =>
+    unwrap(await api.get<Envelope<UserWarehouseAccess>>('/api/goods-receipts/warehouse-access', { params: { branchCode } })),
   customers: async (request: DropdownPageRequest, branchCode: string): Promise<GridPage<CustomerOption>> => unwrap(await api.post<Envelope<GridPage<CustomerOption>>>('/api/erp-mirror/customers/paged', pagedBody({ ...request, sortBy: request.sortBy ?? 'customerCode' }, [{ column: 'branchCode', operator: 'equals', value: branchCode }]), { signal: request.signal })),
-  warehouses: async (request: DropdownPageRequest, branchCode: string): Promise<GridPage<WarehouseOption>> => unwrap(await api.post<Envelope<GridPage<WarehouseOption>>>('/api/erp-mirror/warehouses/paged', pagedBody({ ...request, sortBy: request.sortBy ?? 'warehouseCode' }, [{ column: 'branchCode', operator: 'equals', value: branchCode }]), { signal: request.signal })),
+  warehouses: async (request: DropdownPageRequest, branchCode: string): Promise<GridPage<WarehouseOption>> => {
+    const [page, access] = await Promise.all([
+      api.post<Envelope<GridPage<WarehouseOption>>>('/api/erp-mirror/warehouses/paged', pagedBody({ ...request, pageSize: Math.max(request.pageSize ?? 20, 500), sortBy: request.sortBy ?? 'warehouseCode' }, [{ column: 'branchCode', operator: 'equals', value: branchCode }]), { signal: request.signal }).then(unwrap),
+      goodsReceiptV2Api.warehouseAccess(branchCode),
+    ]);
+    if (!access.isRestricted) return page;
+    const allowed = new Set(access.warehouseIds);
+    const items = page.items.filter((item) => allowed.has(item.id));
+    return { ...page, items, totalCount: items.length, totalPages: 1, pageNumber: 1, hasNextPage: false };
+  },
   stocks: async (request: DropdownPageRequest, branchCode: string): Promise<GridPage<StockOption>> => unwrap(await api.post<Envelope<GridPage<StockOption>>>('/api/erp-mirror/stocks/paged', pagedBody({ ...request, sortBy: request.sortBy ?? 'erpStockCode' }, [{ column: 'branchCode', operator: 'equals', value: branchCode }]), { signal: request.signal })),
   yapCodes: async (request: DropdownPageRequest, branchCode: string): Promise<GridPage<YapCodeOption>> => unwrap(await api.post<Envelope<GridPage<YapCodeOption>>>('/api/erp-mirror/yap-codes/paged', pagedBody({ ...request, sortBy: request.sortBy ?? 'configurationCode' }, [{ column: 'branchCode', operator: 'equals', value: branchCode }]), { signal: request.signal })),
   locations: async (request: DropdownPageRequest, warehouseId: number): Promise<GridPage<LocationOption>> => unwrap(await api.post<Envelope<GridPage<LocationOption>>>('/api/locations/paged', pagedBody({ ...request, sortBy: request.sortBy ?? 'code' }, [

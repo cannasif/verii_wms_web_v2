@@ -2,6 +2,7 @@ import type { EffectiveStockTrackingPolicy } from '@/features/stock-tracking/eff
 
 export interface CustomerOption { id: number; branchCode: string; customerCode: string; customerName: string }
 export interface WarehouseOption { id: number; branchCode: string; warehouseCode: number; warehouseName: string }
+export interface UserWarehouseAccess { isRestricted: boolean; warehouseIds: number[]; warehouseCodes: number[] }
 export interface LocationOption { id: number; warehouseId: number; code: string; name: string; locationType: string }
 export interface PutawayLocationSuggestion extends LocationOption {
   zoneCode?: string;
