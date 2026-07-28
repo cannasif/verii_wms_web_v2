@@ -1053,7 +1053,7 @@
     "breadcrumb": {
       "module": "ARAC_GIRIS"
     },
-    "pageTitle": "Araç Giriş İşlemi",
+    "pageTitle": "Araç Giriş ve SAC Kabul",
     "title": "Araç Giriş Formu",
     "description": "Sahaya gelen araç için ilk kaydı oluşturun. Aynı plaka aynı gün tekrar gelirse mevcut kayıt güncellenir.",
     "guidance": {
@@ -1117,6 +1117,99 @@
       "saveFirst": "Önce araç kontrol kaydını oluşturun.",
       "imagesUploaded": "Araç görselleri yüklendi.",
       "imageDeleted": "Araç görseli silindi."
+    },
+    "toast": {
+      "fetchRecordFailed": "Araç kaydı getirilemedi.",
+      "plateRequired": "Plaka zorunludur.",
+      "todayFound": "Bugünkü araç kaydı getirildi.",
+      "todayNotFound": "Bugün için kayıt bulunamadı; kabul ile birlikte oluşturulacak.",
+      "searchFailed": "Araç kaydı aranamadı.",
+      "sheetCountRange": "Tek araç kabulünde SAC levha adedi 1-50 arasında olmalıdır.",
+      "sheetSelectionLimit": "Araç için {{count}} levha seçebilirsiniz.",
+      "imageValidation": "Yalnız JPG, PNG veya WEBP ve en fazla 8 MB görsel yüklenebilir.",
+      "towingPlateRequired": "Çekici plakası zorunludur.",
+      "exactSheetCount": "Girilen levha adedi {{count}}; tam olarak {{count}} levha seçilmelidir.",
+      "locationRequired": "Her levha için kabul konumu seçilmelidir.",
+      "sheetImageRequired": "{{dCode}} için en az bir levha görseli zorunludur.",
+      "vehicleImageRequired": "Araç kabulü için en az bir araç görseli zorunludur.",
+      "alreadyCompleted": "Bu araç ve SAC kabulü daha önce tamamlandı.",
+      "completed": "Araç giriş ve SAC kabulü başarıyla tamamlandı.",
+      "completeFailed": "Araç giriş ve SAC kabulü tamamlanamadı."
+    },
+    "pageEyebrow": "Mal Kabul · SAC İşlemleri · Araç + Saha Kabul",
+    "pageDescription": "Araç bilgisi, saha kabul, seçilen levhalar, görseller ve kabul konumları tek işlemde kaydedilir. Seri yazınca eşleşen levha bilgisi otomatik gelir.",
+    "entryTimePlaceholder": "Kabul sırasında UTC olarak oluşturulur.",
+    "vehicleImagesHelp": "Plaka, dorse, yük güvenliği ve kapı kabul kanıtlarını seçin. Yeni görseller SAC kabulüyle aynı işlemde yüklenecektir.",
+    "matchedSheet": "Eşleşen levha",
+    "savedAcceptedSheetsHelp": "Bu araç için daha önce kaydedilmiş levha bilgileri ve mevcut levha ekleri aşağıda listelenir.",
+    "attachmentsTitle": "Levha görselleri / ekleri ({{count}})",
+    "loadingAttachments": "Ekler yükleniyor...",
+    "noSavedSheetImage": "Kayıtlı levha görseli bulunamadı.",
+    "completedTitle": "Kabul tamamlandı · #{{id}}",
+    "completedDescription": "{{plateNo}} plakalı araçla gelen {{count}} levha, araç ve Excel aktarım bilgileriyle ilişkilendirildi.",
+    "completedQualityPrefix": "Kalite/onay kararları için",
+    "completedQualityLink": "Saha Kalite Onayı",
+    "completedQualitySuffix": "ekranını kullanın.",
+    "footerReady": "{{selected}}/{{total}} levha hazır",
+    "footerHint": "Araç + saha kabul + görseller + konum tek transaction.",
+    "excelImportLabel": "Excel/aktarım",
+    "sheetImageInfo": "Mevcut {{current}} · Yeni {{next}} görsel",
+    "section": {
+      "vehicleInfo": "1 · Araç ve sürücü bilgileri",
+      "vehicleImages": "2 · Araç görselleri",
+      "findSheet": "3 · Seri / DCode ile SAC levha bul",
+      "selectedSheets": "4 · Seçilen levhalar ({{selected}}/{{total}})",
+      "savedAcceptedSheets": "Kayıtlı kabul levhaları ({{count}})"
+    },
+    "field": {
+      "towingPlate": "Çekici plakası *",
+      "trailerPlate": "Dorse plakası",
+      "entryTime": "Araç giriş zamanı",
+      "driverFirstName": "Şoför adı",
+      "driverLastName": "Şoför soyadı",
+      "driverPhone": "Şoför telefonu",
+      "carrier": "Nakliyeci / taşıyıcı",
+      "sheetCount": "SAC levha adedi *",
+      "customer": "Tedarikçi / cari",
+      "acceptanceNote": "Saha / kabul notu",
+      "serialSearch": "Seri no yazın — eşleşen levha bilgisi otomatik gelir",
+      "acceptanceRack": "Kabul / staging rafı *",
+      "sheetNote": "Levha kabul notu"
+    },
+    "placeholder": {
+      "selectCustomer": "Cari seçin",
+      "serialSearch": "Seri, DCode, stok, sipariş veya Excel no"
+    },
+    "action": {
+      "findToday": "Bugünkü aracı bul",
+      "pickVehicleImage": "Araç görseli seç",
+      "findSheet": "SAC Bul",
+      "removeSelection": "Seçimden çıkar",
+      "addSelection": "Seçime ekle",
+      "complete": "Araç Giriş ve SAC Kabul",
+      "addSheetImage": "Levha görseli ekle"
+    },
+    "summary": {
+      "selectedSheets": "Seçilen levha",
+      "totalQuantity": "Toplam kabul miktarı",
+      "missingSelection": "Eksik seçim",
+      "dCodeSerial": "DCode / Seri",
+      "stock": "Stok",
+      "acceptedQuantity": "Kabul miktarı"
+    },
+    "table": {
+      "select": "Seç",
+      "dCodeExcel": "DCode / Excel",
+      "serial": "Seri",
+      "stock": "Stok",
+      "sizeQuality": "Ölçü / kalite",
+      "quantity": "Miktar",
+      "warehouseRack": "Depo / kabul rafı",
+      "evidence": "Kanıt",
+      "loading": "Uygun levhalar aranıyor...",
+      "empty": "Kabul bekleyen uygun SAC levhası bulunamadı.",
+      "heat": "Heat",
+      "imageCount": "{{count}} görsel"
     }
   },
   "ocrGoodsReceiptMatch": {

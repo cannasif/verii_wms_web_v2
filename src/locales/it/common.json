@@ -5045,5 +5045,101 @@
       "reverseSuccess": "Reversal created; original movement was not changed.",
       "reverseFailed": "Could not create reversal."
     }
+  },
+  "vehicleCheckIn": {
+    "toast": {
+      "fetchRecordFailed": "Impossibile caricare il record del veicolo.",
+      "plateRequired": "La targa è obbligatoria.",
+      "todayFound": "Il record del veicolo di oggi è stato caricato.",
+      "todayNotFound": "Nessun record trovato per oggi; verrà creato durante l'accettazione.",
+      "searchFailed": "Ricerca del record del veicolo non riuscita.",
+      "sheetCountRange": "Per l'accettazione di un singolo veicolo, il numero di lamiere d'acciaio deve essere compreso tra 1 e 50.",
+      "sheetSelectionLimit": "Puoi selezionare {{count}} lamiere per questo veicolo.",
+      "imageValidation": "Sono consentite solo immagini JPG, PNG o WEBP fino a 8 MB.",
+      "towingPlateRequired": "La targa del veicolo trattore è obbligatoria.",
+      "exactSheetCount": "Il numero di lamiere inserito è {{count}}; è necessario selezionare esattamente {{count}} lamiere.",
+      "locationRequired": "È necessario selezionare una ubicazione di accettazione per ogni lamiera.",
+      "sheetImageRequired": "È richiesta almeno un'immagine della lamiera per {{dCode}}.",
+      "vehicleImageRequired": "È richiesta almeno un'immagine del veicolo per l'accettazione.",
+      "alreadyCompleted": "Questa accettazione veicolo e acciaio è già stata completata in precedenza.",
+      "completed": "Check-in veicolo e accettazione acciaio completati correttamente.",
+      "completeFailed": "Impossibile completare il check-in veicolo e l'accettazione acciaio."
+    },
+    "pageEyebrow": "Ricevimento · Operazioni acciaio · Veicolo + Accettazione in campo",
+    "pageTitle": "Check-in veicolo e accettazione acciaio",
+    "pageDescription": "Le informazioni del veicolo, l'accettazione in campo, le lamiere selezionate, le immagini e le ubicazioni di accettazione vengono salvate in un'unica operazione. Le informazioni della lamiera corrispondente vengono compilate automaticamente all'inserimento del numero di serie.",
+    "entryTimePlaceholder": "Verrà creato in UTC durante l'accettazione.",
+    "vehicleImagesHelp": "Seleziona le immagini di prova per targa, rimorchio, sicurezza del carico e accettazione al cancello. Le nuove immagini verranno caricate nella stessa transazione di accettazione.",
+    "matchedSheet": "Lamiera corrispondente",
+    "savedAcceptedSheetsHelp": "Di seguito sono elencati i dettagli delle lamiere salvati in precedenza e gli allegati esistenti per questo veicolo.",
+    "attachmentsTitle": "Immagini / allegati della lamiera ({{count}})",
+    "loadingAttachments": "Caricamento allegati...",
+    "noSavedSheetImage": "Nessuna immagine della lamiera salvata trovata.",
+    "completedTitle": "Accettazione completata · #{{id}}",
+    "completedDescription": "{{count}} lamiere consegnate dal veicolo {{plateNo}} sono state collegate ai dati del veicolo e all'importazione Excel.",
+    "completedQualityPrefix": "Per le decisioni di qualità/approvazione, usa la schermata",
+    "completedQualityLink": "Approvazione qualità in campo",
+    "completedQualitySuffix": ".",
+    "footerReady": "{{selected}}/{{total}} lamiere pronte",
+    "footerHint": "Veicolo + accettazione in campo + immagini + ubicazione in un'unica transazione.",
+    "excelImportLabel": "Excel/importazione",
+    "sheetImageInfo": "Esistenti {{current}} · Nuove {{next}} immagini",
+    "section": {
+      "vehicleInfo": "1 · Informazioni veicolo e conducente",
+      "vehicleImages": "2 · Immagini del veicolo",
+      "findSheet": "3 · Trova lamiera d'acciaio per serie / DCode",
+      "selectedSheets": "4 · Lamiere selezionate ({{selected}}/{{total}})",
+      "savedAcceptedSheets": "Lamiere accettate salvate ({{count}})"
+    },
+    "field": {
+      "towingPlate": "Targa del veicolo trattore *",
+      "trailerPlate": "Targa del rimorchio",
+      "entryTime": "Ora di ingresso del veicolo",
+      "driverFirstName": "Nome del conducente",
+      "driverLastName": "Cognome del conducente",
+      "driverPhone": "Telefono del conducente",
+      "carrier": "Trasportatore / vettore",
+      "sheetCount": "Numero di lamiere d'acciaio *",
+      "customer": "Fornitore / cliente",
+      "acceptanceNote": "Nota di campo / accettazione",
+      "serialSearch": "Inserisci il n. di serie — le informazioni della lamiera corrispondente verranno compilate automaticamente",
+      "acceptanceRack": "Scaffale di accettazione / staging *",
+      "sheetNote": "Nota di accettazione della lamiera"
+    },
+    "placeholder": {
+      "selectCustomer": "Seleziona cliente",
+      "serialSearch": "Serie, DCode, stock, ordine o n. Excel"
+    },
+    "action": {
+      "findToday": "Trova il veicolo di oggi",
+      "pickVehicleImage": "Seleziona immagine del veicolo",
+      "findSheet": "Trova lamiera",
+      "removeSelection": "Rimuovi dalla selezione",
+      "addSelection": "Aggiungi alla selezione",
+      "complete": "Check-in veicolo e accettazione acciaio",
+      "addSheetImage": "Aggiungi immagine della lamiera"
+    },
+    "summary": {
+      "selectedSheets": "Lamiere selezionate",
+      "totalQuantity": "Quantità totale accettata",
+      "missingSelection": "Selezione mancante",
+      "dCodeSerial": "DCode / Serie",
+      "stock": "Stock",
+      "acceptedQuantity": "Quantità accettata"
+    },
+    "table": {
+      "select": "Seleziona",
+      "dCodeExcel": "DCode / Excel",
+      "serial": "Serie",
+      "stock": "Stock",
+      "sizeQuality": "Misura / qualità",
+      "quantity": "Quantità",
+      "warehouseRack": "Magazzino / scaffale di accettazione",
+      "evidence": "Prova",
+      "loading": "Ricerca lamiere corrispondenti...",
+      "empty": "Nessuna lamiera d'acciaio idonea in attesa di accettazione trovata.",
+      "heat": "Heat",
+      "imageCount": "{{count}} immagini"
+    }
   }
 }

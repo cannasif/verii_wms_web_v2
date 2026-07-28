@@ -5045,5 +5045,101 @@
       "reverseSuccess": "Reversal created; original movement was not changed.",
       "reverseFailed": "Could not create reversal."
     }
+  },
+  "vehicleCheckIn": {
+    "toast": {
+      "fetchRecordFailed": "Impossible de charger l'enregistrement du véhicule.",
+      "plateRequired": "La plaque est obligatoire.",
+      "todayFound": "L'enregistrement du véhicule d'aujourd'hui a été chargé.",
+      "todayNotFound": "Aucun enregistrement trouvé pour aujourd'hui ; il sera créé lors de l'acceptation.",
+      "searchFailed": "Échec de la recherche de l'enregistrement du véhicule.",
+      "sheetCountRange": "Pour l'acceptation d'un seul véhicule, le nombre de tôles d'acier doit être compris entre 1 et 50.",
+      "sheetSelectionLimit": "Vous pouvez sélectionner {{count}} tôles pour ce véhicule.",
+      "imageValidation": "Seules les images JPG, PNG ou WEBP jusqu'à 8 Mo sont autorisées.",
+      "towingPlateRequired": "La plaque du véhicule tracteur est obligatoire.",
+      "exactSheetCount": "Le nombre de tôles saisi est {{count}} ; vous devez sélectionner exactement {{count}} tôles.",
+      "locationRequired": "Un emplacement d'acceptation doit être sélectionné pour chaque tôle.",
+      "sheetImageRequired": "Au moins une image de tôle est obligatoire pour {{dCode}}.",
+      "vehicleImageRequired": "Au moins une image du véhicule est obligatoire pour l'acceptation.",
+      "alreadyCompleted": "Cette acceptation véhicule et acier a déjà été terminée auparavant.",
+      "completed": "Entrée véhicule et acceptation acier terminées avec succès.",
+      "completeFailed": "Impossible de terminer l'entrée véhicule et l'acceptation acier."
+    },
+    "pageEyebrow": "Réception · Opérations acier · Véhicule + Acceptation terrain",
+    "pageTitle": "Entrée véhicule et acceptation acier",
+    "pageDescription": "Les infos véhicule, l'acceptation terrain, les tôles sélectionnées, les images et les emplacements d'acceptation sont enregistrés en une seule opération. Les infos de tôle correspondantes sont remplies automatiquement à la saisie du numéro de série.",
+    "entryTimePlaceholder": "Sera créé en UTC lors de l'acceptation.",
+    "vehicleImagesHelp": "Sélectionnez les images de preuve pour plaque, remorque, sécurité du chargement et acceptation à la porte. Les nouvelles images seront téléversées dans la même transaction d'acceptation.",
+    "matchedSheet": "Tôle correspondante",
+    "savedAcceptedSheetsHelp": "Les détails de tôles précédemment enregistrés et les pièces jointes existantes pour ce véhicule sont listés ci-dessous.",
+    "attachmentsTitle": "Images / pièces jointes de tôle ({{count}})",
+    "loadingAttachments": "Chargement des pièces jointes...",
+    "noSavedSheetImage": "Aucune image de tôle enregistrée trouvée.",
+    "completedTitle": "Acceptation terminée · #{{id}}",
+    "completedDescription": "{{count}} tôles livrées par le véhicule {{plateNo}} ont été liées aux données véhicule et à l'import Excel.",
+    "completedQualityPrefix": "Pour les décisions qualité/approbation, utilisez l'écran",
+    "completedQualityLink": "Approbation qualité terrain",
+    "completedQualitySuffix": ".",
+    "footerReady": "{{selected}}/{{total}} tôles prêtes",
+    "footerHint": "Véhicule + acceptation terrain + images + emplacement en une seule transaction.",
+    "excelImportLabel": "Excel/import",
+    "sheetImageInfo": "Existantes {{current}} · Nouvelles {{next}} images",
+    "section": {
+      "vehicleInfo": "1 · Informations véhicule et chauffeur",
+      "vehicleImages": "2 · Images du véhicule",
+      "findSheet": "3 · Trouver une tôle d'acier par série / DCode",
+      "selectedSheets": "4 · Tôles sélectionnées ({{selected}}/{{total}})",
+      "savedAcceptedSheets": "Tôles acceptées enregistrées ({{count}})"
+    },
+    "field": {
+      "towingPlate": "Plaque du véhicule tracteur *",
+      "trailerPlate": "Plaque de remorque",
+      "entryTime": "Heure d'entrée du véhicule",
+      "driverFirstName": "Prénom du chauffeur",
+      "driverLastName": "Nom du chauffeur",
+      "driverPhone": "Téléphone du chauffeur",
+      "carrier": "Transporteur / transporteur",
+      "sheetCount": "Nombre de tôles d'acier *",
+      "customer": "Fournisseur / client",
+      "acceptanceNote": "Note terrain / acceptation",
+      "serialSearch": "Saisissez le n° de série — les infos de tôle correspondantes seront remplies automatiquement",
+      "acceptanceRack": "Rayon d'acceptation / staging *",
+      "sheetNote": "Note d'acceptation de tôle"
+    },
+    "placeholder": {
+      "selectCustomer": "Sélectionner un client",
+      "serialSearch": "Série, DCode, stock, commande ou n° Excel"
+    },
+    "action": {
+      "findToday": "Trouver le véhicule d'aujourd'hui",
+      "pickVehicleImage": "Choisir une image du véhicule",
+      "findSheet": "Trouver la tôle",
+      "removeSelection": "Retirer de la sélection",
+      "addSelection": "Ajouter à la sélection",
+      "complete": "Entrée véhicule et acceptation acier",
+      "addSheetImage": "Ajouter une image de tôle"
+    },
+    "summary": {
+      "selectedSheets": "Tôles sélectionnées",
+      "totalQuantity": "Quantité totale acceptée",
+      "missingSelection": "Sélection manquante",
+      "dCodeSerial": "DCode / Série",
+      "stock": "Stock",
+      "acceptedQuantity": "Quantité acceptée"
+    },
+    "table": {
+      "select": "Sélectionner",
+      "dCodeExcel": "DCode / Excel",
+      "serial": "Série",
+      "stock": "Stock",
+      "sizeQuality": "Dimension / qualité",
+      "quantity": "Quantité",
+      "warehouseRack": "Entrepôt / rayon d'acceptation",
+      "evidence": "Preuve",
+      "loading": "Recherche de tôles correspondantes...",
+      "empty": "Aucune tôle d'acier éligible en attente d'acceptation n'a été trouvée.",
+      "heat": "Heat",
+      "imageCount": "{{count}} images"
+    }
   }
 }

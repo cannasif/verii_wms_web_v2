@@ -5045,5 +5045,101 @@
       "reverseSuccess": "Reversal created; original movement was not changed.",
       "reverseFailed": "Could not create reversal."
     }
+  },
+  "vehicleCheckIn": {
+    "toast": {
+      "fetchRecordFailed": "تعذر تحميل سجل المركبة.",
+      "plateRequired": "رقم اللوحة مطلوب.",
+      "todayFound": "تم تحميل سجل مركبة اليوم.",
+      "todayNotFound": "لم يتم العثور على سجل لليوم؛ سيتم إنشاؤه أثناء القبول.",
+      "searchFailed": "فشل البحث عن سجل المركبة.",
+      "sheetCountRange": "لقبول مركبة واحدة، يجب أن يكون عدد ألواح الصلب بين 1 و 50.",
+      "sheetSelectionLimit": "يمكنك تحديد {{count}} لوحًا لهذه المركبة.",
+      "imageValidation": "يُسمح فقط بصور JPG أو PNG أو WEBP بحجم أقصى 8 ميجابايت.",
+      "towingPlateRequired": "لوحة مركبة القطر مطلوبة.",
+      "exactSheetCount": "عدد الألواح المدخل هو {{count}}؛ يجب تحديد {{count}} لوحًا بالضبط.",
+      "locationRequired": "يجب تحديد موقع قبول لكل لوح.",
+      "sheetImageRequired": "مطلوب صورة لوح واحدة على الأقل لـ {{dCode}}.",
+      "vehicleImageRequired": "مطلوب صورة مركبة واحدة على الأقل للقبول.",
+      "alreadyCompleted": "تم إكمال قبول هذه المركبة والصلب مسبقًا.",
+      "completed": "اكتمل تسجيل دخول المركبة وقبول الصلب بنجاح.",
+      "completeFailed": "تعذر إكمال تسجيل دخول المركبة وقبول الصلب."
+    },
+    "pageEyebrow": "استلام البضائع · عمليات الصلب · مركبة + قبول ميداني",
+    "pageTitle": "تسجيل دخول المركبة وقبول الصلب",
+    "pageDescription": "يتم حفظ معلومات المركبة والقبول الميداني والألواح المحددة والصور ومواقع القبول في عملية واحدة. تُملأ معلومات اللوح المطابقة تلقائيًا عند إدخال الرقم التسلسلي.",
+    "entryTimePlaceholder": "سيتم إنشاؤه بتوقيت UTC أثناء القبول.",
+    "vehicleImagesHelp": "حدد صور الإثبات للوحة والمقطورة وأمان الحمولة وقبول البوابة. سيتم رفع الصور الجديدة في نفس معاملة القبول.",
+    "matchedSheet": "اللوح المطابق",
+    "savedAcceptedSheetsHelp": "تُعرض أدناه تفاصيل الألواح المحفوظة مسبقًا والمرفقات الحالية لهذه المركبة.",
+    "attachmentsTitle": "صور / مرفقات اللوح ({{count}})",
+    "loadingAttachments": "جاري تحميل المرفقات...",
+    "noSavedSheetImage": "لم يتم العثور على صورة لوح محفوظة.",
+    "completedTitle": "اكتمل القبول · #{{id}}",
+    "completedDescription": "تم ربط {{count}} لوحًا سلّمته المركبة {{plateNo}} ببيانات المركبة واستيراد Excel.",
+    "completedQualityPrefix": "لقرارات الجودة/الموافقة، استخدم شاشة",
+    "completedQualityLink": "موافقة الجودة الميدانية",
+    "completedQualitySuffix": ".",
+    "footerReady": "{{selected}}/{{total}} ألواح جاهزة",
+    "footerHint": "مركبة + قبول ميداني + صور + موقع في معاملة واحدة.",
+    "excelImportLabel": "Excel/استيراد",
+    "sheetImageInfo": "موجودة {{current}} · جديدة {{next}} صور",
+    "section": {
+      "vehicleInfo": "1 · معلومات المركبة والسائق",
+      "vehicleImages": "2 · صور المركبة",
+      "findSheet": "3 · البحث عن لوح صلب بالرقم التسلسلي / DCode",
+      "selectedSheets": "4 · الألواح المحددة ({{selected}}/{{total}})",
+      "savedAcceptedSheets": "الألواح المقبولة المحفوظة ({{count}})"
+    },
+    "field": {
+      "towingPlate": "لوحة مركبة القطر *",
+      "trailerPlate": "لوحة المقطورة",
+      "entryTime": "وقت دخول المركبة",
+      "driverFirstName": "اسم السائق",
+      "driverLastName": "لقب السائق",
+      "driverPhone": "هاتف السائق",
+      "carrier": "الناقل / شركة النقل",
+      "sheetCount": "عدد ألواح الصلب *",
+      "customer": "المورد / العميل",
+      "acceptanceNote": "ملاحظة الميدان / القبول",
+      "serialSearch": "أدخل الرقم التسلسلي — ستُملأ معلومات اللوح المطابق تلقائيًا",
+      "acceptanceRack": "رف القبول / التدريج *",
+      "sheetNote": "ملاحظة قبول اللوح"
+    },
+    "placeholder": {
+      "selectCustomer": "اختر العميل",
+      "serialSearch": "تسلسلي، DCode، مخزون، طلب أو رقم Excel"
+    },
+    "action": {
+      "findToday": "البحث عن مركبة اليوم",
+      "pickVehicleImage": "اختيار صورة المركبة",
+      "findSheet": "البحث عن اللوح",
+      "removeSelection": "إزالة من التحديد",
+      "addSelection": "إضافة إلى التحديد",
+      "complete": "تسجيل دخول المركبة وقبول الصلب",
+      "addSheetImage": "إضافة صورة اللوح"
+    },
+    "summary": {
+      "selectedSheets": "الألواح المحددة",
+      "totalQuantity": "إجمالي الكمية المقبولة",
+      "missingSelection": "تحديد ناقص",
+      "dCodeSerial": "DCode / تسلسلي",
+      "stock": "المخزون",
+      "acceptedQuantity": "الكمية المقبولة"
+    },
+    "table": {
+      "select": "تحديد",
+      "dCodeExcel": "DCode / Excel",
+      "serial": "تسلسلي",
+      "stock": "المخزون",
+      "sizeQuality": "المقاس / الجودة",
+      "quantity": "الكمية",
+      "warehouseRack": "المستودع / رف القبول",
+      "evidence": "إثبات",
+      "loading": "جاري البحث عن الألواح المطابقة...",
+      "empty": "لم يتم العثور على لوح صلب مؤهل بانتظار القبول.",
+      "heat": "Heat",
+      "imageCount": "{{count}} صور"
+    }
   }
 }

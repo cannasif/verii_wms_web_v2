@@ -26,7 +26,7 @@ export function VehicleCheckInListPage(){
     {key:'customerName',label:t(`${G}.customerName`),render:r=>r.customerName||'—'},
     {key:'status',label:t(`${G}.status`),render:r=>localizeEnumValue(r.status)},
     {key:'imageCount',label:t(`${G}.imageCount`),render:r=>r.imageCount},
-    {key:'actions',label:t(`${G}.actions`),sortable:false,filterable:false,render:r=><button onClick={()=>navigate(`/warehouse/goods-receipts/steel/vehicle-check-in?id=${r.id}`)} className="min-h-11 rounded-lg border px-3 py-2 text-xs font-bold">{t(`${G}.viewUpdate`)}</button>},
+    {key:'actions',label:t(`${G}.actions`),width:180,sortable:false,filterable:false,render:r=><button onClick={()=>navigate(`/warehouse/goods-receipts/steel/vehicle-check-in?id=${r.id}`)} className="min-h-11 rounded-lg border px-3 py-2 text-xs font-bold">{t(`${G}.viewUpdate`)}</button>},
   ],[navigate,t,gridLanguage]);
   return <div data-no-auto-localize="true"><AdvancedDataGrid pageKey="steel-vehicle-check-ins" title={t(`${G}.title`)} description={t(`${G}.description`)} columns={columns} fetchPage={vehicleCheckInApi.paged} toolbarAction={{label:t(`${G}.toolbarAction`),run:async()=>navigate('/warehouse/goods-receipts/steel/vehicle-check-in')}}/></div>;
 }

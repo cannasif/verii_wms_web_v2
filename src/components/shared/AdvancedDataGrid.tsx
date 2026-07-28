@@ -94,6 +94,7 @@ export type GridFilterType = 'text' | 'number' | 'date' | 'datetime' | 'boolean'
 export interface GridColumn<T> {
   key: string;
   label: string;
+  width?: number;
   render: (row: T) => ReactNode;
   /** SaÄŸ tÄ±k menÃ¼sÃ¼nde gÃ¶sterilecek ve kopyalanacak biÃ§imlendirilmiÅŸ hÃ¼cre deÄŸeri. */
   contextValue?: (row: T) => string | number | boolean | null | undefined;
@@ -157,8 +158,12 @@ function isInteractiveScrollTarget(target: EventTarget | null): boolean {
   );
 }
 
-function resolveColumnWidth(key: string, widths: Record<string, number>): number {
+function resolveColumnWidth<T>(columnOrKey: GridColumn<T> | string, widths: Record<string, number>, fallbackWidth?: number): number {
+  const column = typeof columnOrKey === 'string' ? undefined : columnOrKey;
+  const key = typeof columnOrKey === 'string' ? columnOrKey : columnOrKey.key;
   if (widths[key] != null) return widths[key];
+  if (typeof column?.width === 'number' && Number.isFinite(column.width)) return Math.max(MIN_COLUMN_WIDTH, column.width);
+  if (typeof fallbackWidth === 'number' && Number.isFinite(fallbackWidth)) return Math.max(MIN_COLUMN_WIDTH, fallbackWidth);
   if (key === 'id') return DEFAULT_ID_COLUMN_WIDTH;
   if (key === 'actions') return DEFAULT_ACTIONS_COLUMN_WIDTH;
   return DEFAULT_COLUMN_WIDTH;
@@ -607,7 +612,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
     return fromPrefs.length > 0 ? fromPrefs : localizedColumns;
   }, [localizedColumns, order, visible]);
   const tableMinWidthPx = useMemo(
-    () => Math.max(960, activeColumns.reduce((sum, column) => sum + resolveColumnWidth(column.key, widths), 0)),
+    () => Math.max(960, activeColumns.reduce((sum, column) => sum + resolveColumnWidth(column, widths), 0)),
     [activeColumns, widths],
   );
   const actionColumn = localizedColumns.find((column) => column.key === 'actions');
@@ -1278,7 +1283,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
                 {activeColumns.map((column) => (
                   <col
                     key={column.key}
-                    style={{ width: resolveColumnWidth(column.key, widths) }}
+                    style={{ width: resolveColumnWidth(column, widths) }}
                   />
                 ))}
               </colgroup>
@@ -1359,7 +1364,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
                             onContextMenu={(event) => openCellContext(event, row, column)}
                             style={{
                               width: resolveColumnWidth(column.key, widths),
-                              maxWidth: resolveColumnWidth(column.key, widths),
+                              maxWidth: resolveColumnWidth(column, widths),
                             }}
                             className={cn(
                               'wms-ops-grid-cell overflow-hidden border-r border-[var(--wms-app-border)] px-4 py-3 last:border-r-0',

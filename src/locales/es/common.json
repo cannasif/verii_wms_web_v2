@@ -5045,5 +5045,101 @@
       "reverseSuccess": "Reversal created; original movement was not changed.",
       "reverseFailed": "Could not create reversal."
     }
+  },
+  "vehicleCheckIn": {
+    "toast": {
+      "fetchRecordFailed": "No se pudo cargar el registro del vehículo.",
+      "plateRequired": "La matrícula es obligatoria.",
+      "todayFound": "Se ha cargado el registro del vehículo de hoy.",
+      "todayNotFound": "No se encontró ningún registro para hoy; se creará durante la aceptación.",
+      "searchFailed": "Error al buscar el registro del vehículo.",
+      "sheetCountRange": "Para la aceptación de un solo vehículo, el número de chapas de acero debe estar entre 1 y 50.",
+      "sheetSelectionLimit": "Puede seleccionar {{count}} chapas para este vehículo.",
+      "imageValidation": "Solo se permiten imágenes JPG, PNG o WEBP de hasta 8 MB.",
+      "towingPlateRequired": "La matrícula del vehículo tractor es obligatoria.",
+      "exactSheetCount": "El número de chapas introducido es {{count}}; debe seleccionar exactamente {{count}} chapas.",
+      "locationRequired": "Se debe seleccionar una ubicación de aceptación para cada chapa.",
+      "sheetImageRequired": "Se requiere al menos una imagen de chapa para {{dCode}}.",
+      "vehicleImageRequired": "Se requiere al menos una imagen del vehículo para la aceptación.",
+      "alreadyCompleted": "Esta aceptación de vehículo y acero ya se completó anteriormente.",
+      "completed": "Entrada de vehículo y aceptación de acero completadas correctamente.",
+      "completeFailed": "No se pudo completar la entrada de vehículo y la aceptación de acero."
+    },
+    "pageEyebrow": "Recepción · Operaciones de acero · Vehículo + Aceptación en campo",
+    "pageTitle": "Entrada de vehículo y aceptación de acero",
+    "pageDescription": "La información del vehículo, la aceptación en campo, las chapas seleccionadas, las imágenes y las ubicaciones de aceptación se guardan en una sola operación. La información de la chapa coincidente se completa automáticamente al introducir el número de serie.",
+    "entryTimePlaceholder": "Se creará en UTC durante la aceptación.",
+    "vehicleImagesHelp": "Seleccione imágenes de evidencia de matrícula, remolque, seguridad de la carga y aceptación en puerta. Las nuevas imágenes se cargarán en la misma transacción de aceptación.",
+    "matchedSheet": "Chapa coincidente",
+    "savedAcceptedSheetsHelp": "A continuación se enumeran los detalles de chapas guardados previamente y los archivos adjuntos existentes de este vehículo.",
+    "attachmentsTitle": "Imágenes / archivos adjuntos de chapa ({{count}})",
+    "loadingAttachments": "Cargando archivos adjuntos...",
+    "noSavedSheetImage": "No se encontró ninguna imagen de chapa guardada.",
+    "completedTitle": "Aceptación completada · #{{id}}",
+    "completedDescription": "{{count}} chapas entregadas por el vehículo {{plateNo}} se vincularon con los datos del vehículo y la importación de Excel.",
+    "completedQualityPrefix": "Para decisiones de calidad/aprobación, use la pantalla",
+    "completedQualityLink": "Aprobación de calidad en campo",
+    "completedQualitySuffix": ".",
+    "footerReady": "{{selected}}/{{total}} chapas listas",
+    "footerHint": "Vehículo + aceptación en campo + imágenes + ubicación en una sola transacción.",
+    "excelImportLabel": "Excel/importación",
+    "sheetImageInfo": "Existentes {{current}} · Nuevas {{next}} imágenes",
+    "section": {
+      "vehicleInfo": "1 · Información del vehículo y del conductor",
+      "vehicleImages": "2 · Imágenes del vehículo",
+      "findSheet": "3 · Buscar chapa de acero por serie / DCode",
+      "selectedSheets": "4 · Chapas seleccionadas ({{selected}}/{{total}})",
+      "savedAcceptedSheets": "Chapas aceptadas guardadas ({{count}})"
+    },
+    "field": {
+      "towingPlate": "Matrícula del vehículo tractor *",
+      "trailerPlate": "Matrícula del remolque",
+      "entryTime": "Hora de entrada del vehículo",
+      "driverFirstName": "Nombre del conductor",
+      "driverLastName": "Apellido del conductor",
+      "driverPhone": "Teléfono del conductor",
+      "carrier": "Transportista / transportador",
+      "sheetCount": "Cantidad de chapas de acero *",
+      "customer": "Proveedor / cliente",
+      "acceptanceNote": "Nota de campo / aceptación",
+      "serialSearch": "Escriba el n.º de serie — la información de la chapa coincidente se completará automáticamente",
+      "acceptanceRack": "Estantería de aceptación / staging *",
+      "sheetNote": "Nota de aceptación de chapa"
+    },
+    "placeholder": {
+      "selectCustomer": "Seleccionar cliente",
+      "serialSearch": "Serie, DCode, stock, pedido o n.º Excel"
+    },
+    "action": {
+      "findToday": "Buscar el vehículo de hoy",
+      "pickVehicleImage": "Seleccionar imagen del vehículo",
+      "findSheet": "Buscar chapa",
+      "removeSelection": "Quitar de la selección",
+      "addSelection": "Añadir a la selección",
+      "complete": "Entrada de vehículo y aceptación de acero",
+      "addSheetImage": "Añadir imagen de chapa"
+    },
+    "summary": {
+      "selectedSheets": "Chapas seleccionadas",
+      "totalQuantity": "Cantidad total aceptada",
+      "missingSelection": "Selección faltante",
+      "dCodeSerial": "DCode / Serie",
+      "stock": "Stock",
+      "acceptedQuantity": "Cantidad aceptada"
+    },
+    "table": {
+      "select": "Seleccionar",
+      "dCodeExcel": "DCode / Excel",
+      "serial": "Serie",
+      "stock": "Stock",
+      "sizeQuality": "Medida / calidad",
+      "quantity": "Cantidad",
+      "warehouseRack": "Almacén / estantería de aceptación",
+      "evidence": "Evidencia",
+      "loading": "Buscando chapas coincidentes...",
+      "empty": "No se encontró ninguna chapa de acero elegible en espera de aceptación.",
+      "heat": "Heat",
+      "imageCount": "{{count}} imágenes"
+    }
   }
 }

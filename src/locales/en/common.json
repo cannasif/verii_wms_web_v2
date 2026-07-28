@@ -1053,7 +1053,7 @@
     "breadcrumb": {
       "module": "VEHICLE_CHECKIN"
     },
-    "pageTitle": "Vehicle Entry Step",
+    "pageTitle": "Vehicle Check-In and Steel Acceptance",
     "title": "Vehicle Entry Form",
     "description": "Create the first record for an arriving vehicle. If the same plate returns on the same day, the current record is updated.",
     "guidance": {
@@ -1117,6 +1117,99 @@
       "saveFirst": "Create the vehicle check-in record first.",
       "imagesUploaded": "Vehicle images uploaded.",
       "imageDeleted": "Vehicle image deleted."
+    },
+    "toast": {
+      "fetchRecordFailed": "Vehicle record could not be loaded.",
+      "plateRequired": "Plate is required.",
+      "todayFound": "Today's vehicle record has been loaded.",
+      "todayNotFound": "No record found for today; it will be created during acceptance.",
+      "searchFailed": "Vehicle record search failed.",
+      "sheetCountRange": "For single vehicle acceptance, steel sheet count must be between 1 and 50.",
+      "sheetSelectionLimit": "You can select {{count}} sheets for this vehicle.",
+      "imageValidation": "Only JPG, PNG, or WEBP images up to 8 MB are allowed.",
+      "towingPlateRequired": "Towing vehicle plate is required.",
+      "exactSheetCount": "Entered sheet count is {{count}}; you must select exactly {{count}} sheets.",
+      "locationRequired": "Acceptance location must be selected for each sheet.",
+      "sheetImageRequired": "At least one sheet image is required for {{dCode}}.",
+      "vehicleImageRequired": "At least one vehicle image is required for acceptance.",
+      "alreadyCompleted": "This vehicle and steel acceptance were already completed before.",
+      "completed": "Vehicle check-in and steel acceptance completed successfully.",
+      "completeFailed": "Vehicle check-in and steel acceptance could not be completed."
+    },
+    "pageEyebrow": "Goods Receipt · Steel Operations · Vehicle + Field Acceptance",
+    "pageDescription": "Vehicle info, field acceptance, selected sheets, images, and acceptance locations are saved in a single operation. Matching sheet info is auto-populated when serial is entered.",
+    "entryTimePlaceholder": "Will be created in UTC during acceptance.",
+    "vehicleImagesHelp": "Select evidence images for plate, trailer, load safety, and gate acceptance. New images will be uploaded in the same acceptance transaction.",
+    "matchedSheet": "Matched sheet",
+    "savedAcceptedSheetsHelp": "Previously saved sheet details and existing sheet attachments for this vehicle are listed below.",
+    "attachmentsTitle": "Sheet images / attachments ({{count}})",
+    "loadingAttachments": "Loading attachments...",
+    "noSavedSheetImage": "No saved sheet image found.",
+    "completedTitle": "Acceptance completed · #{{id}}",
+    "completedDescription": "{{count}} sheets delivered by vehicle plate {{plateNo}} were linked with vehicle and Excel import data.",
+    "completedQualityPrefix": "For quality/approval decisions, use the",
+    "completedQualityLink": "Field Quality Approval",
+    "completedQualitySuffix": "screen.",
+    "footerReady": "{{selected}}/{{total}} sheets ready",
+    "footerHint": "Vehicle + field acceptance + images + location in one transaction.",
+    "excelImportLabel": "Excel/import",
+    "sheetImageInfo": "Existing {{current}} · New {{next}} images",
+    "section": {
+      "vehicleInfo": "1 · Vehicle and driver information",
+      "vehicleImages": "2 · Vehicle images",
+      "findSheet": "3 · Find steel sheet by Serial / DCode",
+      "selectedSheets": "4 · Selected sheets ({{selected}}/{{total}})",
+      "savedAcceptedSheets": "Saved accepted sheets ({{count}})"
+    },
+    "field": {
+      "towingPlate": "Towing vehicle plate *",
+      "trailerPlate": "Trailer plate",
+      "entryTime": "Vehicle entry time",
+      "driverFirstName": "Driver first name",
+      "driverLastName": "Driver last name",
+      "driverPhone": "Driver phone",
+      "carrier": "Carrier / transporter",
+      "sheetCount": "Steel sheet count *",
+      "customer": "Supplier / customer",
+      "acceptanceNote": "Field / acceptance note",
+      "serialSearch": "Enter serial number — matching sheet info will be auto-filled",
+      "acceptanceRack": "Acceptance / staging rack *",
+      "sheetNote": "Sheet acceptance note"
+    },
+    "placeholder": {
+      "selectCustomer": "Select customer",
+      "serialSearch": "Serial, DCode, stock, order, or Excel no"
+    },
+    "action": {
+      "findToday": "Find today's vehicle",
+      "pickVehicleImage": "Pick vehicle image",
+      "findSheet": "Find steel sheet",
+      "removeSelection": "Remove from selection",
+      "addSelection": "Add to selection",
+      "complete": "Vehicle Check-In and Steel Acceptance",
+      "addSheetImage": "Add sheet image"
+    },
+    "summary": {
+      "selectedSheets": "Selected sheets",
+      "totalQuantity": "Total accepted quantity",
+      "missingSelection": "Missing selection",
+      "dCodeSerial": "DCode / Serial",
+      "stock": "Stock",
+      "acceptedQuantity": "Accepted quantity"
+    },
+    "table": {
+      "select": "Select",
+      "dCodeExcel": "DCode / Excel",
+      "serial": "Serial",
+      "stock": "Stock",
+      "sizeQuality": "Size / quality",
+      "quantity": "Quantity",
+      "warehouseRack": "Warehouse / acceptance rack",
+      "evidence": "Evidence",
+      "loading": "Searching matching sheets...",
+      "empty": "No eligible steel sheet waiting for acceptance was found.",
+      "heat": "Heat",
+      "imageCount": "{{count}} images"
     }
   },
   "ocrGoodsReceiptMatch": {
