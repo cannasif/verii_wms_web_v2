@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Eye, EyeOff, Loader2, LockKeyhole, Mail, Pencil, Phone, Plus, Shield, Trash2, UserPlus, Users, type LucideIcon } from 'lucide-react';
+import { Eye, EyeOff, FileSpreadsheet, Loader2, LockKeyhole, Mail, Pencil, Phone, Plus, Shield, Trash2, UserPlus, Users, type LucideIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdvancedDataGrid, type GridColumn } from '@/components/shared/AdvancedDataGrid';
 import { AppDropdown } from '@/components/shared/AppDropdown';
@@ -14,6 +14,7 @@ import { localizeEnumValue } from '@/lib/enum-localization';
 import { formatProjectDateTime } from '@/lib/project-format';
 import { userManagementApi } from '../api/user-management.api';
 import type { PermissionGroupOption, UpdateUserPayload, UserRow } from '../types/user-management.types';
+import { UserImportDialog } from './UserImportDialog';
 
 type FormMode = 'create' | 'edit';
 interface UserFormState {
@@ -47,6 +48,7 @@ export function UserManagementPage() {
   const [deactivateTarget, setDeactivateTarget] = useState<UserRow | null>(null);
   const [statusBusyId, setStatusBusyId] = useState<number | null>(null);
   const [gridVersion, setGridVersion] = useState(0);
+  const [importOpen, setImportOpen] = useState(false);
 
   const loadGroups = useCallback(async () => {
     const activeGroups = await userManagementApi.getActiveGroups();
@@ -217,8 +219,13 @@ export function UserManagementPage() {
         emptyMessage="Kayıtlı kullanıcı bulunamadı."
         columns={columns}
         fetchPage={userManagementApi.getPaged}
-        toolbarAction={{ label: 'Yeni Kullanıcı', run: openCreate, icon: <Plus className="size-3.5" aria-hidden /> }}
+        toolbarActions={[
+          { label: 'Excel ile Kullanıcı Ekle', run: async () => setImportOpen(true), icon: <FileSpreadsheet className="size-3.5" aria-hidden /> },
+          { label: 'Yeni Kullanıcı', run: openCreate, icon: <Plus className="size-3.5" aria-hidden /> },
+        ]}
       />
+
+      <UserImportDialog open={importOpen} onOpenChange={setImportOpen} onImported={refreshGrid} />
 
       {mode && (
         <Dialog open onOpenChange={(open) => { if (!open) closeForm(); }}>
