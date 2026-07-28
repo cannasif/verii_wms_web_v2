@@ -4,7 +4,9 @@ import { Eye, EyeOff, FileSpreadsheet, Loader2, LockKeyhole, Mail, Pencil, Phone
 import { toast } from 'sonner';
 import { AdvancedDataGrid, type GridColumn } from '@/components/shared/AdvancedDataGrid';
 import { AppDropdown } from '@/components/shared/AppDropdown';
+import { AppInput } from '@/components/shared/AppInput';
 import { systemColumns } from '@/components/shared/GridSystemColumns';
+import { OpsActionButton } from '@/components/shared/OpsActionButton';
 import { OpsCircuitToggleInline } from '@/components/shared/OpsCircuitToggle';
 import { OpsCodeBadge, OpsStatusBadge } from '@/components/shared/OpsStatusBadge';
 import { DeleteConfirmDialog } from '@/components/shared/DeleteConfirmDialog';
@@ -257,31 +259,47 @@ export function UserManagementPage() {
                 <OpsDialogBody className="space-y-5">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <Field label="Kullanıcı adı" icon={Users} error={errors.username} required>
-                      <input autoFocus name="wms-user-username" autoComplete="off" disabled={isPrimaryAdministrator} value={form.username} maxLength={100} onChange={(event) => updateForm('username', event.target.value)} className="input disabled:opacity-60" />
+                      <AppInput autoFocus name="wms-user-username" autoComplete="off" disabled={isPrimaryAdministrator} invalid={Boolean(errors.username)} value={form.username} maxLength={100} onChange={(event) => updateForm('username', event.target.value)} />
                     </Field>
                     <Field label="E-posta" icon={Mail} error={errors.email} required>
-                      <input type="email" name="wms-user-email" autoComplete="off" value={form.email} maxLength={200} onChange={(event) => updateForm('email', event.target.value)} className="input" />
+                      <AppInput type="email" name="wms-user-email" autoComplete="off" invalid={Boolean(errors.email)} value={form.email} maxLength={200} onChange={(event) => updateForm('email', event.target.value)} />
                     </Field>
                     <Field label="Ad" icon={Users} error={errors.firstName}>
-                      <input value={form.firstName} maxLength={100} onChange={(event) => updateForm('firstName', event.target.value)} className="input" />
+                      <AppInput invalid={Boolean(errors.firstName)} value={form.firstName} maxLength={100} onChange={(event) => updateForm('firstName', event.target.value)} />
                     </Field>
                     <Field label="Soyad" icon={Users} error={errors.lastName}>
-                      <input value={form.lastName} maxLength={100} onChange={(event) => updateForm('lastName', event.target.value)} className="input" />
+                      <AppInput invalid={Boolean(errors.lastName)} value={form.lastName} maxLength={100} onChange={(event) => updateForm('lastName', event.target.value)} />
                     </Field>
                     <Field label="Telefon" icon={Phone} error={errors.phoneNumber}>
-                      <input value={form.phoneNumber} maxLength={40} onChange={(event) => updateForm('phoneNumber', event.target.value)} className="input" placeholder="+90 ..." />
+                      <AppInput invalid={Boolean(errors.phoneNumber)} value={form.phoneNumber} maxLength={40} onChange={(event) => updateForm('phoneNumber', event.target.value)} placeholder="+90 ..." />
                     </Field>
                     <Field label="Rol" icon={Shield} required>
-                      <AppDropdown disabled={isPrimaryAdministrator} value={form.role} onValueChange={(value) => updateForm('role', value as UpdateUserPayload['role'])} options={[{ value: 'User', label: 'Kullanıcı' }, { value: 'Manager', label: 'Yönetici' }, { value: 'Admin', label: 'Uygulama Yöneticisi' }, ...(isPrimaryAdministrator ? [{ value: 'superadmin', label: 'Sistem Yöneticisi' }] : [])]} ariaLabel="Rol" />
+                      <AppDropdown disabled={isPrimaryAdministrator} value={form.role} onValueChange={(value) => updateForm('role', value as UpdateUserPayload['role'])} portalContainer={null} options={[{ value: 'User', label: 'Kullanıcı' }, { value: 'Manager', label: 'Yönetici' }, { value: 'Admin', label: 'Uygulama Yöneticisi' }, ...(isPrimaryAdministrator ? [{ value: 'superadmin', label: 'Sistem Yöneticisi' }] : [])]} ariaLabel="Rol" />
                     </Field>
                     <Field label={`${mode === 'create' ? 'Geçici şifre' : 'Yeni şifre'} (${minimumPasswordLength}-${maximumPasswordLength} karakter)`} icon={LockKeyhole} error={errors.password} required={mode === 'create'}>
-                      <div className="relative">
-                        <input type={showPassword ? 'text' : 'password'} name="wms-user-new-password" autoComplete="new-password" value={form.password} maxLength={maximumPasswordLength} onChange={(event) => updateForm('password', event.target.value)} className="input pr-11" placeholder={mode === 'edit' ? 'Değişmeyecekse boş bırakın' : ''} />
-                        <button type="button" aria-label={showPassword ? 'Şifreyi gizle' : 'Şifreyi göster'} onClick={() => setShowPassword((value) => !value)} className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-2">{showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}</button>
-                      </div>
+                      <AppInput
+                        type={showPassword ? 'text' : 'password'}
+                        name="wms-user-new-password"
+                        autoComplete="new-password"
+                        invalid={Boolean(errors.password)}
+                        value={form.password}
+                        maxLength={maximumPasswordLength}
+                        onChange={(event) => updateForm('password', event.target.value)}
+                        placeholder={mode === 'edit' ? 'Değişmeyecekse boş bırakın' : ''}
+                        trailingContent={(
+                          <button
+                            type="button"
+                            aria-label={showPassword ? 'Şifreyi gizle' : 'Şifreyi göster'}
+                            onClick={() => setShowPassword((value) => !value)}
+                            className="app-input-shell__picker"
+                          >
+                            {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                          </button>
+                        )}
+                      />
                     </Field>
                     <Field label="Şifre tekrar" icon={LockKeyhole} error={errors.confirmPassword} required={mode === 'create'}>
-                      <input type={showPassword ? 'text' : 'password'} name="wms-user-password-confirmation" autoComplete="new-password" value={form.confirmPassword} maxLength={maximumPasswordLength} onChange={(event) => updateForm('confirmPassword', event.target.value)} className="input" />
+                      <AppInput type={showPassword ? 'text' : 'password'} name="wms-user-password-confirmation" autoComplete="new-password" invalid={Boolean(errors.confirmPassword)} value={form.confirmPassword} maxLength={maximumPasswordLength} onChange={(event) => updateForm('confirmPassword', event.target.value)} />
                     </Field>
                   </div>
                   <div>
@@ -314,12 +332,14 @@ export function UserManagementPage() {
                     <input type="checkbox" disabled={isPrimaryAdministrator} checked={form.isActive} onChange={(event) => updateForm('isActive', event.target.checked)} className="size-4" />
                   </label>
                 </OpsDialogBody>
-                <OpsDialogFooter>
-                  <button type="button" disabled={saving} onClick={closeForm} className="rounded-xl border px-5 py-2.5 disabled:opacity-50">Vazgeç</button>
-                  <button type="submit" disabled={saving} className="inline-flex items-center gap-2 rounded-xl bg-[var(--wms-brand-primary)] px-5 py-2.5 font-semibold text-white disabled:opacity-50">
-                    {saving && <Loader2 className="size-4 animate-spin" />}
+                <OpsDialogFooter className="flex flex-wrap items-center justify-end gap-2">
+                  <OpsActionButton type="button" variant="secondary" disabled={saving} onClick={closeForm}>
+                    Vazgeç
+                  </OpsActionButton>
+                  <OpsActionButton type="submit" variant="primary" disabled={saving}>
+                    {saving ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
                     {mode === 'create' ? 'Kullanıcı Oluştur' : 'Değişiklikleri Kaydet'}
-                  </button>
+                  </OpsActionButton>
                 </OpsDialogFooter>
               </form>
             )}
@@ -342,5 +362,17 @@ export function UserManagementPage() {
 }
 
 function Field({ label, icon: Icon, error, required, children }: { label: string; icon: LucideIcon; error?: string; required?: boolean; children: ReactNode }) {
-  return <label className="space-y-1.5 text-sm"><span className="flex items-center gap-2 font-medium"><Icon className="size-4 text-[var(--wms-brand-primary)]"/>{label}{required && <span className="text-red-500">*</span>}</span>{children}<span className="block min-h-4 text-xs text-red-500">{error}</span></label>;
+  return (
+    <label className="flex flex-col gap-1.5 text-sm">
+      <span className="inline-flex items-center gap-2 font-medium leading-none">
+        <Icon className="size-4 shrink-0 text-[var(--wms-brand-primary)]" aria-hidden />
+        {label}
+        {required ? <span className="text-red-500">*</span> : null}
+      </span>
+      {children}
+      <span className="wms-ops-form-message-slot">
+        {error ? <span className="wms-ops-form-message">{error}</span> : null}
+      </span>
+    </label>
+  );
 }
