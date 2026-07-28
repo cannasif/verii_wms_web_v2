@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactElement, type ReactNode } from 'react';
-import { Building2, Check, CheckCircle2, ChevronLeft, ChevronRight, ClipboardCheck, FileText, Loader2, PackagePlus, Plus, Printer, ScanBarcode, Trash2 } from 'lucide-react';
+import { Boxes, Building2, Check, CheckCircle2, ChevronLeft, ChevronRight, ClipboardCheck, FileText, ListChecks, Loader2, PackagePlus, Plus, Printer, ScanBarcode, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AppDropdown } from '@/components/shared/AppDropdown';
 import { AppDateInput } from '@/components/shared/AppInput';
@@ -13,6 +13,7 @@ import { goodsReceiptV2Api } from '../api/goods-receipt.api';
 import { buildOrderlessLinePayload, validateManualLineTracking } from '../goods-receipt-manual.utils';
 import type { ActiveUserOption, ManualGoodsReceiptResult, ManualReceiptLine, PutawayLocationSuggestion, SeriesOption } from '../types/goods-receipt.types';
 import { printReceiptLabels } from '../utils/goods-receipt-label-output';
+import { GoodsReceiptCreatePage } from './GoodsReceiptCreatePage';
 
 const today = (): string => new Date().toLocaleDateString('en-CA');
 const split = (value: string | null): string[] => value?.split('|') ?? [];
@@ -39,7 +40,6 @@ export function GoodsReceiptManualPage({ direct }: { direct: boolean }): ReactEl
   const [locationId, setLocationId] = useState<string | null>(null);
   const [series, setSeries] = useState<SeriesOption[]>([]);
   const [seriesId, setSeriesId] = useState<string | null>(null);
-  const [priority, setPriority] = useState('3');
   const [labelStrategy, setLabelStrategy] = useState('None');
   const [executionMode, setExecutionMode] = useState('Manual');
   const [description, setDescription] = useState('');
@@ -76,11 +76,18 @@ export function GoodsReceiptManualPage({ direct }: { direct: boolean }): ReactEl
   ];
 
   useEffect(() => {
-    setLocationId(null); setLineLocation(null); setLocationSuggestions([]); setSeries([]); setSeriesId(null);
-    if (!warehouseId) return;
-    void goodsReceiptV2Api.series(warehouseId).then((items) => {
-      setSeries(items); const preferred = items.find((item) => item.isDefault) ?? items[0]; setSeriesId(preferred ? String(preferred.id) : null);
+    setSeries([]);
+    setSeriesId(null);
+    void goodsReceiptV2Api.series().then((items) => {
+      setSeries(items);
+      const preferred = items.find((item) => item.isDefault) ?? items[0];
+      setSeriesId(preferred ? String(preferred.id) : null);
     }).catch((cause: Error) => setError(cause.message));
+  }, [branchCode]);
+
+  useEffect(() => {
+    setLocationId(null); setLineLocation(null); setLocationSuggestions([]);
+    if (!warehouseId) return;
     void goodsReceiptV2Api.receivingLocations({
       pageNumber: 1, pageSize: 100, search: undefined, filterLogic: 'and', filters: [], sortBy: 'code', sortDirection: 'asc', signal: new AbortController().signal,
     }, warehouseId).then((page) => {
@@ -134,7 +141,8 @@ export function GoodsReceiptManualPage({ direct }: { direct: boolean }): ReactEl
     if (step === 0 && !customer) return showError(t('manual.validation.customer'));
     if (step === 0 && !receiptNoValid) return showError(isElectronic ? t('manual.validation.eReceiptNo') : t('manual.validation.receiptNo'));
     if (step === 0 && !documentDate) return showError(t('manual.validation.date'));
-    if (step === 1 && (!warehouseId || !locationId || !seriesId)) return showError(t('manual.validation.operation'));
+    if (step === 0 && !seriesId) return showError('Bu işlem için aktif bir belge serisi seçilmelidir.');
+    if (step === 1 && (!warehouseId || !locationId)) return showError(t('manual.validation.operation'));
     if (step === 1 && !direct && assignees.length === 0) return showError('Emir için en az bir operasyon kullanıcısı atanmalıdır.');
     if (step === 2 && lines.length === 0) return showError(t('manual.validation.lines'));
     setError(null); return true;
@@ -204,7 +212,7 @@ export function GoodsReceiptManualPage({ direct }: { direct: boolean }): ReactEl
         waybillNo: isElectronic ? null : receiptNo, waybillDate: documentDate, electronicWaybillNo: isElectronic ? receiptNo : null,
         shipmentReferenceNo: null, carrierCode: null, carrierName: null, vehiclePlate: null, trailerPlate: null, driverName: null, sealNo: null,
         plannedArrivalAtUtc: plannedArrival ? new Date(plannedArrival).toISOString() : null, occurredAtUtc: direct ? new Date().toISOString() : null,
-        labelStrategy, executionMode, priority: Number(priority), deviceId: null, description: description.trim() || null,
+        labelStrategy, executionMode, priority: 1, deviceId: null, description: description.trim() || null,
         assignedUserIds: direct ? null : assignees.map((user) => user.id),
         lines: lines.map((line) => buildOrderlessLinePayload(line)) };
       const created = direct ? await goodsReceiptV2Api.createDirect(payload) : await goodsReceiptV2Api.createOrderless(payload);
@@ -223,6 +231,7 @@ export function GoodsReceiptManualPage({ direct }: { direct: boolean }): ReactEl
     {step === 0 && <Panel title={t('manual.document.title')} description={t('manual.document.description')} icon={<FileText/>}><div className="grid gap-5 lg:grid-cols-2">
       <Field label={t('manual.customer')} required><PagedAppDropdown queryKey={['gr-manual-customers', branchCode]} fetchPage={(request) => goodsReceiptV2Api.customers(request, branchCode)} toOption={(x) => ({ value: `${x.id}|${x.branchCode}|${x.customerCode}|${encodeURIComponent(x.customerName)}`, label: `${x.customerCode} · ${x.customerName}` })} value={customer} onValueChange={setCustomer} searchable minSearchLength={2}/></Field>
       <Field label={t('manual.documentDate')} required><AppDateInput value={documentDate} onChange={(e) => setDocumentDate(e.target.value)}/></Field>
+      <Field label={t('manual.series')} required><AppDropdown value={seriesId} onValueChange={setSeriesId} options={series.map((x) => ({ value: String(x.id), label: `${x.code} · ${x.name}`, description: x.previewDocumentNumber }))} placeholder="Belge serisi seçin"/></Field>
       <div className="lg:col-span-2 rounded-2xl border border-[var(--wms-app-border)] bg-black/[.025] p-4 dark:bg-white/[.025]"><div className="mb-4 flex flex-wrap items-center justify-between gap-3"><div><h3 className="font-bold">{t('manual.receiptNo')}</h3><p className="text-xs text-slate-500">{isElectronic ? t('manual.eReceiptHint') : t('manual.receiptHint')}</p></div><label className="flex cursor-pointer items-center gap-3 rounded-xl border border-[var(--wms-app-border)] px-4 py-2"><input type="checkbox" checked={isElectronic} onChange={(e) => { setIsElectronic(e.target.checked); setReceiptNo(''); setError(null); }} className="size-4 accent-cyan-500"/><span className="text-sm font-semibold">{t('manual.isElectronic')}</span></label></div><div className="relative"><input autoFocus className={`input pr-24 font-mono tracking-wider ${receiptNo && !receiptNoValid ? '!border-red-500' : receiptNoValid ? '!border-emerald-500' : ''}`} inputMode={isElectronic ? 'text' : 'numeric'} maxLength={isElectronic ? 16 : 15} placeholder={isElectronic ? 'GIB2026000000001' : '000000000000001'} value={receiptNo} onChange={(e) => { setReceiptNo(normalizeReceiptNo(e.target.value, isElectronic)); setError(null); }}/><span className={`absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold ${receiptNoValid ? 'text-emerald-500' : 'text-slate-500'}`}>{receiptNo.length}/{isElectronic ? 16 : 15}</span></div>{receiptNo && <p className={`mt-2 flex items-center gap-1.5 text-xs ${receiptNoValid ? 'text-emerald-500' : 'text-red-500'}`}>{receiptNoValid && <Check className="size-3.5"/>}{receiptNoValid ? t('manual.validNumber') : (isElectronic ? t('manual.validation.eReceiptNo') : t('manual.validation.receiptNo'))}</p>}</div>
       {!direct && <Field label={t('manual.plannedArrival')}><AppDateInput type="datetime-local" value={plannedArrival} onChange={(e) => setPlannedArrival(e.target.value)}/></Field>}
     </div></Panel>}
@@ -230,8 +239,6 @@ export function GoodsReceiptManualPage({ direct }: { direct: boolean }): ReactEl
     {step === 1 && <Panel title={t('manual.operation.title')} description={t('manual.operation.description')} icon={<Building2/>}><div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
       <Field label={t('manual.warehouse')} required><PagedAppDropdown queryKey={['gr-manual-warehouses', branchCode]} fetchPage={(request) => goodsReceiptV2Api.warehouses(request, branchCode)} toOption={(x) => ({ value: `${x.id}|${x.branchCode}|${x.warehouseCode}|${encodeURIComponent(x.warehouseName)}`, label: `${x.warehouseCode} · ${x.warehouseName}` })} value={warehouse} onValueChange={setWarehouse} searchable/></Field>
       <Field label={t('manual.location')} required><PagedAppDropdown queryKey={['gr-manual-receiving-locations', warehouseId]} fetchPage={(request) => goodsReceiptV2Api.receivingLocations(request, warehouseId)} toOption={(x) => ({ value: String(x.id), label: `${x.code} · ${x.name}`, description: x.locationType })} enabled={warehouseId > 0} dependencies={[warehouseId]} value={locationId} onValueChange={setLocationId} searchable placeholder="Receiving / Staging"/></Field>
-      <Field label={t('manual.series')} required><AppDropdown value={seriesId} onValueChange={setSeriesId} options={series.map((x) => ({ value: String(x.id), label: `${x.code} · ${x.name}`, description: x.previewDocumentNumber }))}/></Field>
-      <Field label={t('manual.priority')}><AppDropdown value={priority} onValueChange={setPriority} options={[1,2,3,4,5].map((value) => ({ value: String(value), label: String(value) }))}/></Field>
       <Field label={t('manual.labelStrategy')}><AppDropdown value={labelStrategy} onValueChange={(value)=>{setLabelStrategy(value);if(direct)setExecutionMode(value==='SupplierLabel'?'SupplierLabel':'Manual')}} options={[{value:'None',label:t('manual.options.noLabel')},...(!direct?[{value:'PreGenerate',label:t('manual.options.preGenerate')}]:[]),{value:'SupplierLabel',label:t('manual.options.supplierLabel')},{value:'GenerateOnReceipt',label:t('manual.options.generateOnReceipt')}]}/></Field>
       {direct && <Field label={t('manual.executionMode')}><AppDropdown value={executionMode} onValueChange={setExecutionMode} options={[{value:'Manual',label:t('manual.options.manual')},{value:'BarcodeScan',label:t('manual.options.barcode')},{value:'SupplierLabel',label:t('manual.options.supplierLabel')}]}/></Field>}
     </div>{!direct&&<section className="mt-5 rounded-xl border border-[var(--wms-app-border)] p-4"><h3 className="font-bold">Emir sorumluları <span className="text-red-500">*</span></h3><p className="mb-3 text-xs text-slate-500">Siparişsiz emir seçilen kullanıcılara atanır ve “Bana Atanan Emirler” kuyruğuna düşer.</p><PagedAppDropdown queryKey={['gr-manual-active-users']} fetchPage={goodsReceiptV2Api.activeUsersPaged} toOption={user=>({value:encodeUser(user),label:userLabel(user),description:`${user.username} · ${user.email}`,disabled:assignees.some(selected=>selected.id===user.id)})} value={null} onValueChange={value=>{const user=decodeUser(value);setAssignees(current=>current.some(x=>x.id===user.id)?current:[...current,user])}} placeholder="Operasyon kullanıcısı ekle" searchable minSearchLength={2}/><div className="mt-3 flex flex-wrap gap-2">{assignees.map(user=><span key={user.id} className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 text-sm"><strong>{userLabel(user)}</strong><button type="button" onClick={()=>setAssignees(current=>current.filter(x=>x.id!==user.id))} className="text-red-500">×</button></span>)}</div></section>}</Panel>}
@@ -257,7 +264,26 @@ export function GoodsReceiptManualPage({ direct }: { direct: boolean }): ReactEl
 }
 
 export const GoodsReceiptOrderlessPage = (): ReactElement => <GoodsReceiptManualPage direct={false}/>;
-export const GoodsReceiptDirectPage = (): ReactElement => <GoodsReceiptManualPage direct/>;
+export function GoodsReceiptDirectPage(): ReactElement {
+  const [sourceMode, setSourceMode] = useState<'order' | 'stock'>('order');
+  return <section className="space-y-5">
+    <div className="flex flex-col gap-4 rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-4 shadow-sm md:flex-row md:items-center md:justify-between">
+      <div>
+        <div className="text-xs font-bold uppercase tracking-[.18em] text-cyan-500">Doğrudan mal kabul kaynağı</div>
+        <p className="mt-1 text-sm text-slate-500">Sipariş kalemlerinden kabul yapın veya sipariş bağlantısı olmadan stok detayı girin.</p>
+      </div>
+      <div className="grid min-w-72 grid-cols-2 rounded-xl border border-[var(--wms-app-border)] bg-black/5 p-1 dark:bg-white/5">
+        <button type="button" onClick={() => setSourceMode('order')} className={`inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-bold transition ${sourceMode === 'order' ? 'bg-cyan-600 text-white shadow' : 'text-slate-500 hover:text-cyan-500'}`}>
+          <ListChecks className="size-4"/>Sipariş
+        </button>
+        <button type="button" onClick={() => setSourceMode('stock')} className={`inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-bold transition ${sourceMode === 'stock' ? 'bg-cyan-600 text-white shadow' : 'text-slate-500 hover:text-cyan-500'}`}>
+          <Boxes className="size-4"/>Stok Detayı
+        </button>
+      </div>
+    </div>
+    {sourceMode === 'order' ? <GoodsReceiptCreatePage direct/> : <GoodsReceiptManualPage direct/>}
+  </section>;
+}
 function Stepper({ steps, current }: { steps: Array<{label:string;icon:typeof FileText}>; current:number }): ReactElement { return <ol className="grid grid-cols-2 gap-2 lg:grid-cols-4">{steps.map(({label,icon:Icon},index)=><li key={label} className={`flex items-center gap-3 rounded-xl border px-4 py-3 ${index===current?'border-cyan-500 bg-cyan-500/10 text-cyan-500':index<current?'border-emerald-500/30 bg-emerald-500/5 text-emerald-500':'border-[var(--wms-app-border)] text-slate-500'}`}><span className="grid size-8 shrink-0 place-items-center rounded-full border border-current">{index<current?<Check className="size-4"/>:<Icon className="size-4"/>}</span><span className="text-sm font-bold">{index+1}. {label}</span></li>)}</ol>; }
 function Panel({title,description,icon,children}:{title:string;description:string;icon:ReactElement;children:ReactNode}):ReactElement{return <section className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] shadow-sm"><header className="flex gap-3 border-b border-[var(--wms-app-border)] p-5"><span className="text-cyan-500">{icon}</span><div><h2 className="text-lg font-bold">{title}</h2><p className="text-sm text-slate-500">{description}</p></div></header><div className="p-5">{children}</div></section>;}
 function Field({label,required,children}:{label:string;required?:boolean;children:ReactNode}):ReactElement{return <label className="block space-y-1.5 text-sm"><span className="font-semibold">{label}{required&&<span className="text-red-500"> *</span>}</span>{children}</label>;}

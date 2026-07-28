@@ -14,13 +14,13 @@ const pagedBody = (request: DropdownPageRequest, filters: unknown[] = []) =>
 
 export const goodsReceiptV2Api = {
   trackingPolicy: resolveStockTrackingPolicy,
-  warehouseAccess: async (branchCode: string): Promise<UserWarehouseAccess> =>
-    unwrap(await api.get<Envelope<UserWarehouseAccess>>('/api/goods-receipts/warehouse-access', { params: { branchCode } })),
+  warehouseAccess: async (): Promise<UserWarehouseAccess> =>
+    unwrap(await api.get<Envelope<UserWarehouseAccess>>('/api/goods-receipts/warehouse-access')),
   customers: async (request: DropdownPageRequest, branchCode: string): Promise<GridPage<CustomerOption>> => unwrap(await api.post<Envelope<GridPage<CustomerOption>>>('/api/erp-mirror/customers/paged', pagedBody({ ...request, sortBy: request.sortBy ?? 'customerCode' }, [{ column: 'branchCode', operator: 'equals', value: branchCode }]), { signal: request.signal })),
   warehouses: async (request: DropdownPageRequest, branchCode: string): Promise<GridPage<WarehouseOption>> => {
     const [page, access] = await Promise.all([
       api.post<Envelope<GridPage<WarehouseOption>>>('/api/erp-mirror/warehouses/paged', pagedBody({ ...request, pageSize: Math.max(request.pageSize ?? 20, 500), sortBy: request.sortBy ?? 'warehouseCode' }, [{ column: 'branchCode', operator: 'equals', value: branchCode }]), { signal: request.signal }).then(unwrap),
-      goodsReceiptV2Api.warehouseAccess(branchCode),
+      goodsReceiptV2Api.warehouseAccess(),
     ]);
     if (!access.isRestricted) return page;
     const allowed = new Set(access.warehouseIds);
@@ -52,9 +52,9 @@ export const goodsReceiptV2Api = {
     unwrap(await api.get<Envelope<PutawayLocationSuggestion[]>>('/api/locations/putaway-suggestions', {
       params: { warehouseId, stockId: params.stockId, stockCode: params.stockCode, yapCodeId: params.yapCodeId, quantity: params.quantity, limit: params.limit ?? 5 },
     })),
-  series: async (warehouseId: number): Promise<SeriesOption[]> => unwrap(await api.get<Envelope<SeriesOption[]>>(`/api/document-series/lookup?documentType=GoodsReceipt&warehouseId=${warehouseId}`)),
-  transferSeries: async (warehouseId: number): Promise<SeriesOption[]> => unwrap(await api.get<Envelope<SeriesOption[]>>(`/api/document-series/lookup?documentType=InterWarehouseTransfer&warehouseId=${warehouseId}`)),
-  outboundSeries: async (warehouseId: number): Promise<SeriesOption[]> => unwrap(await api.get<Envelope<SeriesOption[]>>(`/api/document-series/lookup?documentType=WarehouseIssue&warehouseId=${warehouseId}`)),
+  series: async (): Promise<SeriesOption[]> => unwrap(await api.get<Envelope<SeriesOption[]>>('/api/document-series/lookup?documentType=GoodsReceipt')),
+  transferSeries: async (): Promise<SeriesOption[]> => unwrap(await api.get<Envelope<SeriesOption[]>>('/api/document-series/lookup?documentType=InterWarehouseTransfer')),
+  outboundSeries: async (): Promise<SeriesOption[]> => unwrap(await api.get<Envelope<SeriesOption[]>>('/api/document-series/lookup?documentType=WarehouseIssue')),
   orderHeaders: async (params: {
     branchCode: string;
     customerCode?: string;
@@ -67,7 +67,24 @@ export const goodsReceiptV2Api = {
     if (params.projectCode?.trim()) query.set('projectCode', params.projectCode.trim());
     return unwrap(await api.get<Envelope<OpenOrderHeader[]>>(`/api/netsis-read/goods-receipt/open-orders/headers?${query}`));
   },
-  orderLines: async (customerCode: string, branchCode: string, orderNumbers: string[]): Promise<OpenOrderLine[]> => unwrap(await api.get<Envelope<OpenOrderLine[]>>(`/api/netsis-read/goods-receipt/open-orders/lines?customerCode=${encodeURIComponent(customerCode)}&branchCode=${encodeURIComponent(branchCode)}&orderNumbersCsv=${encodeURIComponent(orderNumbers.join(','))}`)),
+  orderLines: async (
+    customerCode: string | undefined,
+    branchCode: string,
+    orderNumbers: string[],
+    includeUnavailable = false,
+  ): Promise<OpenOrderLine[]> => {
+    const query = new URLSearchParams({
+      branchCode,
+      includeUnavailable: String(includeUnavailable),
+    });
+    if (customerCode?.trim()) query.set('customerCode', customerCode.trim());
+    if (orderNumbers.length > 0) query.set('orderNumbersCsv', orderNumbers.join(','));
+    return unwrap(
+      await api.get<Envelope<OpenOrderLine[]>>(
+        `/api/netsis-read/goods-receipt/open-orders/lines?${query}`,
+      ),
+    );
+  },
   create: async (payload: unknown): Promise<CreateGoodsReceiptResult> => unwrap(await api.post<Envelope<CreateGoodsReceiptResult>>('/api/goods-receipts/from-orders', payload)),
   createOrderless: async (payload: unknown): Promise<ManualGoodsReceiptResult> => unwrap(await api.post<Envelope<ManualGoodsReceiptResult>>('/api/goods-receipts/orderless', payload)),
   createDirect: async (payload: unknown): Promise<ManualGoodsReceiptResult> => unwrap(await api.post<Envelope<ManualGoodsReceiptResult>>('/api/goods-receipts/direct', payload)),

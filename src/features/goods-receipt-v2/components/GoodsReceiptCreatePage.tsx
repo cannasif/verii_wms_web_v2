@@ -18,7 +18,6 @@ import {
   Search,
   ShieldCheck,
   Trash2,
-  UserRound,
   UserRoundCog,
   X,
 } from "lucide-react";
@@ -52,7 +51,9 @@ import type {
   CreateGoodsReceiptResult,
   CustomerOption,
   LocationOption,
+  ManualGoodsReceiptResult,
   OpenOrderHeader,
+  OpenOrderLine,
   PlannedReceiptTracking,
   SelectedReceiptLine,
   SeriesOption,
@@ -65,7 +66,6 @@ import {
   normalizeGoodsReceiptDocumentNo,
 } from "../utils/goods-receipt-document-reference";
 
-type OrderSearchMode = "customer" | "orderNo" | "projectCode";
 const QUALITY_REQUIRED_MODES = new Set([
   "InspectionRequired",
   "QuickCheck",
@@ -98,6 +98,10 @@ const userOption = (x: ActiveUserOption) => ({
 });
 const decodeUser = (value: string): ActiveUserOption =>
   JSON.parse(decodeURIComponent(value)) as ActiveUserOption;
+const encodeCustomer = (customer: CustomerOption): string =>
+  encodeURIComponent(JSON.stringify(customer));
+const decodeCustomer = (value: string): CustomerOption =>
+  JSON.parse(decodeURIComponent(value)) as CustomerOption;
 const today = (): string => {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
@@ -105,8 +109,35 @@ const today = (): string => {
 const lineKey = (
   line: Pick<SelectedReceiptLine, "siparisNo" | "orderId">,
 ): string => `${line.siparisNo}|${line.orderId}`;
+const groupOrderLines = (rows: OpenOrderLine[]): OpenOrderHeader[] => {
+  const grouped = new Map<string, OpenOrderHeader>();
+  for (const line of rows) {
+    const current = grouped.get(line.siparisNo);
+    grouped.set(line.siparisNo, {
+      siparisNo: line.siparisNo,
+      customerCode: line.customerCode,
+      customerName: line.customerName,
+      branchCode: line.branchCode,
+      targetWarehouseCode:
+        current?.targetWarehouseCode ?? line.targetWarehouseCode,
+      orderDate: current?.orderDate ?? line.orderDate,
+      projectCode: current?.projectCode ?? line.projectCode,
+      orderedQuantity:
+        (current?.orderedQuantity ?? 0) + (line.orderedQuantity ?? 0),
+      deliveredQuantity:
+        (current?.deliveredQuantity ?? 0) + (line.deliveredQuantity ?? 0),
+      remainingQuantity:
+        (current?.remainingQuantity ?? 0) + (line.remainingQuantity ?? 0),
+      plannedQuantity:
+        (current?.plannedQuantity ?? 0) + (line.plannedQuantity ?? 0),
+      availableQuantity:
+        (current?.availableQuantity ?? 0) + (line.availableQuantity ?? 0),
+    });
+  }
+  return [...grouped.values()];
+};
 
-export function GoodsReceiptCreatePage(): ReactElement {
+export function GoodsReceiptCreatePage({ direct = false }: { direct?: boolean } = {}): ReactElement {
   const { t, moduleReady } = useModuleTranslation("goods-receipt-v2");
   const { skin } = useTheme();
   const isPremium = skin === "premium";
@@ -117,11 +148,11 @@ export function GoodsReceiptCreatePage(): ReactElement {
   const [error, setError] = useState<string | null>(null);
   const [selectedCustomer, setSelectedCustomer] =
     useState<CustomerOption | null>(null);
-  const [customerLookupOpen, setCustomerLookupOpen] = useState(false);
-  const [searchMode, setSearchMode] = useState<OrderSearchMode>("customer");
-  const [orderNumberQuery, setOrderNumberQuery] = useState("");
-  const [projectCodeQuery, setProjectCodeQuery] = useState("");
+  const [projectCodeFilter, setProjectCodeFilter] = useState("");
+  const [orderNumberSearch, setOrderNumberSearch] = useState("");
   const [orders, setOrders] = useState<OpenOrderHeader[]>([]);
+  const [directOrderLines, setDirectOrderLines] = useState<OpenOrderLine[]>([]);
+  const [selectedDirectLineKeys, setSelectedDirectLineKeys] = useState<string[]>([]);
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
   const [warehouseAccess, setWarehouseAccess] = useState<UserWarehouseAccess | null>(null);
   const [lines, setLines] = useState<SelectedReceiptLine[]>([]);
@@ -136,7 +167,7 @@ export function GoodsReceiptCreatePage(): ReactElement {
   const [priority, setPriority] = useState("3");
   const [labelStrategy, setLabelStrategy] = useState("None");
   const [description, setDescription] = useState("");
-  const [result, setResult] = useState<CreateGoodsReceiptResult | null>(null);
+  const [result, setResult] = useState<CreateGoodsReceiptResult | ManualGoodsReceiptResult | null>(null);
 
   const customer = useMemo(() => {
     if (!selectedCustomer) return null;
@@ -146,14 +177,34 @@ export function GoodsReceiptCreatePage(): ReactElement {
       code: selectedCustomer.customerCode,
     };
   }, [selectedCustomer]);
-  const customerDisplay = selectedCustomer
-    ? `${selectedCustomer.customerName} (${selectedCustomer.customerCode})`
-    : "";
+  const directProjectCodes = useMemo(
+    () =>
+      [...new Set(
+        directOrderLines
+          .map((line) => line.projectCode?.trim())
+          .filter((value): value is string => Boolean(value)),
+      )].sort((left, right) => left.localeCompare(right, "tr-TR")),
+    [directOrderLines],
+  );
+  const visibleDirectOrderLines = useMemo(
+    () =>
+      projectCodeFilter
+        ? directOrderLines.filter((line) => line.projectCode?.trim() === projectCodeFilter)
+        : directOrderLines,
+    [directOrderLines, projectCodeFilter],
+  );
   const primaryLine = lines[0];
   const selectedQuantity = lines.reduce((sum, line) => sum + line.quantity, 0);
   const selectedOrderWarehouseCode = useMemo(
     () => orders.find((order) => selectedOrders.includes(order.siparisNo))?.targetWarehouseCode,
     [orders, selectedOrders],
+  );
+  const selectedDirectWarehouseCode = useMemo(
+    () =>
+      directOrderLines.find((line) =>
+        selectedDirectLineKeys.includes(lineKey(line)),
+      )?.targetWarehouseCode,
+    [directOrderLines, selectedDirectLineKeys],
   );
   const canUseOrderWarehouse = (warehouseCode?: number): boolean =>
     !warehouseAccess?.isRestricted
@@ -161,84 +212,150 @@ export function GoodsReceiptCreatePage(): ReactElement {
 
   useEffect(() => {
     let active = true;
-    void goodsReceiptV2Api.warehouseAccess(branchCode)
+    void goodsReceiptV2Api.warehouseAccess()
       .then((access) => { if (active) setWarehouseAccess(access); })
       .catch((cause: Error) => { if (active) report(cause, "Depo yetkileri alınamadı."); });
     return () => { active = false; };
   }, [branchCode]);
 
   const clearCustomerDependent = (): void => {
+    setProjectCodeFilter("");
     setOrders([]);
+    setDirectOrderLines([]);
+    setSelectedDirectLineKeys([]);
     setSelectedOrders([]);
     setLines([]);
+  };
+
+  const findCustomerByCode = async (customerCode: string): Promise<CustomerOption> => {
+    const page = await goodsReceiptV2Api.customers(
+      {
+        pageNumber: 1,
+        pageSize: 20,
+        search: customerCode,
+        sortBy: "customerCode",
+        sortDirection: "asc",
+        signal: new AbortController().signal,
+      },
+      branchCode,
+    );
+    const match = page.items.find(
+      (item) =>
+        item.customerCode.trim().toLocaleUpperCase("tr-TR") ===
+        customerCode.trim().toLocaleUpperCase("tr-TR"),
+    );
+    if (!match)
+      throw new Error(
+        `${customerCode} cari kodu ERP tedarikçi mirror tablosunda bulunamadı.`,
+      );
+    return match;
+  };
+
+  const loadOrderByNumber = async (): Promise<void> => {
+    const orderNumber = orderNumberSearch.trim().toLocaleUpperCase("tr-TR");
+    if (!orderNumber) {
+      toast.error("Sipariş numarasını girin.");
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      const fetched = await goodsReceiptV2Api.orderLines(
+        undefined,
+        branchCode,
+        [orderNumber],
+        direct,
+      );
+      const rows = fetched.filter(
+        (line) =>
+          line.siparisNo.trim().toLocaleUpperCase("tr-TR") === orderNumber,
+      );
+      if (rows.length === 0)
+        throw new Error(`${orderNumber} numaralı açık sipariş bulunamadı.`);
+
+      const customerCodes = [
+        ...new Set(
+          rows
+            .map((line) => line.customerCode?.trim())
+            .filter((value): value is string => Boolean(value)),
+        ),
+      ];
+      if (customerCodes.length !== 1)
+        throw new Error(
+          `${orderNumber} siparişinin tek bir cari kodu bulunamadı.`,
+        );
+
+      const resolvedCustomer = await findCustomerByCode(customerCodes[0]);
+      const groupedOrders = groupOrderLines(rows);
+      setSelectedCustomer(resolvedCustomer);
+      setProjectCodeFilter("");
+      setOrders(groupedOrders);
+      setDirectOrderLines(direct ? rows : []);
+      setSelectedDirectLineKeys([]);
+      setSelectedOrders(
+        !direct &&
+          groupedOrders.length === 1 &&
+          canUseOrderWarehouse(groupedOrders[0].targetWarehouseCode)
+          ? [groupedOrders[0].siparisNo]
+          : [],
+      );
+      setLines([]);
+      toast.success(
+        `${orderNumber} siparişi ve ${resolvedCustomer.customerCode} tedarikçisi getirildi.`,
+      );
+    } catch (cause) {
+      report(cause, "Sipariş numarasıyla arama başarısız.");
+    } finally {
+      setBusy(false);
+    }
   };
 
   useEffect(() => {
     setSeries([]);
     setSeriesValue(null);
-    if (!primaryLine?.targetWarehouseId) return;
     void goodsReceiptV2Api
-      .series(primaryLine.targetWarehouseId)
+      .series()
       .then((items) => {
         setSeries(items);
         const preferred = items.find((x) => x.isDefault) ?? items[0];
         setSeriesValue(preferred ? String(preferred.id) : null);
       })
       .catch((cause: Error) => setError(cause.message));
-  }, [primaryLine?.targetWarehouseId]);
+  }, [branchCode]);
 
   const loadOrders = async (): Promise<void> => {
-    const orderNumber = orderNumberQuery.trim();
-    const projectCode = projectCodeQuery.trim();
-    if (searchMode === "customer" && !customer) {
+    if (!customer) {
       toast.error("Önce tedarikçi seçin.");
       return;
     }
-    if (searchMode === "orderNo" && !orderNumber) {
-      toast.error("Sipariş numarası girin.");
-      return;
-    }
-    if (searchMode === "projectCode" && !projectCode) {
-      toast.error("Proje kodu girin.");
-      return;
-    }
-    if ((searchMode === "orderNo" || searchMode === "projectCode") && !customer) {
-      toast.error(
-        "Bağımsız sipariş/proje araması için API’de customerCode olmadan filtre desteği gerekir. Şimdilik tedarikçiyi de seçin.",
-      );
-      return;
-    }
-    if (!customer) return;
     setBusy(true);
     setError(null);
     setSelectedOrders([]);
     setLines([]);
     try {
+      if (direct) {
+        const allLines = await goodsReceiptV2Api.orderLines(
+          customer.code,
+          customer.branch,
+          [],
+          true,
+        );
+        const filteredLines = allLines;
+        setDirectOrderLines(filteredLines);
+        const directOrders = groupOrderLines(filteredLines);
+        setOrders(directOrders);
+        if (
+          directOrders.length === 1 &&
+          canUseOrderWarehouse(directOrders[0].targetWarehouseCode)
+        )
+          setSelectedOrders([directOrders[0].siparisNo]);
+        return;
+      }
       const rows = await goodsReceiptV2Api.orderHeaders({
         branchCode: customer.branch,
         customerCode: customer.code,
-        orderNumber: searchMode === "orderNo" ? orderNumber : undefined,
-        projectCode: searchMode === "projectCode" ? projectCode : undefined,
       });
-      const normalizedOrder = orderNumber.toLocaleUpperCase("tr-TR");
-      const normalizedProject = projectCode.toLocaleUpperCase("tr-TR");
-      const filtered = rows.filter((row) => {
-        if (
-          searchMode === "orderNo" &&
-          normalizedOrder &&
-          !row.siparisNo.toLocaleUpperCase("tr-TR").includes(normalizedOrder)
-        )
-          return false;
-        if (
-          searchMode === "projectCode" &&
-          normalizedProject &&
-          !(row.projectCode ?? "")
-            .toLocaleUpperCase("tr-TR")
-            .includes(normalizedProject)
-        )
-          return false;
-        return true;
-      });
+      const filtered = rows;
       setOrders(filtered);
       if (filtered.length === 1 && canUseOrderWarehouse(filtered[0].targetWarehouseCode))
         setSelectedOrders([filtered[0].siparisNo]);
@@ -250,15 +367,35 @@ export function GoodsReceiptCreatePage(): ReactElement {
   };
 
   const loadLines = async (): Promise<void> => {
-    if (!customer || selectedOrders.length === 0) return;
+    if (
+      !customer ||
+      (direct
+        ? selectedDirectLineKeys.length === 0
+        : selectedOrders.length === 0)
+    )
+      return;
     setBusy(true);
     setError(null);
     try {
-      const rows = await goodsReceiptV2Api.orderLines(
-        customer.code,
-        customer.branch,
-        selectedOrders,
-      );
+      const rows =
+        direct && directOrderLines.length > 0
+          ? directOrderLines.filter((line) =>
+              selectedDirectLineKeys.includes(lineKey(line)),
+            )
+          : await goodsReceiptV2Api.orderLines(
+              customer.code,
+              customer.branch,
+              selectedOrders,
+            );
+      if (
+        direct &&
+        new Set(rows.map((line) => line.targetWarehouseCode).filter((code) => code != null)).size > 1
+      ) {
+        toast.warning(
+          "Farklı hedef depolara ait sipariş kalemleri tek mal kabulde hazırlanamaz. Her depo için ayrı kabul oluşturun.",
+        );
+        return;
+      }
       const warehouseCodes = [
         ...new Set(
           rows
@@ -317,6 +454,37 @@ export function GoodsReceiptCreatePage(): ReactElement {
         }),
       );
       const stockByCode = new Map<string, StockOption>(stockLookups);
+      const yapCodes = [
+        ...new Set(
+          rows
+            .map((x) => x.yapCode?.trim())
+            .filter((x): x is string => Boolean(x)),
+        ),
+      ];
+      const yapLookups = await Promise.all(
+        yapCodes.map(async (code) => {
+          const page = await goodsReceiptV2Api.yapCodes(
+            {
+              pageNumber: 1,
+              pageSize: 20,
+              search: code,
+              sortBy: "configurationCode",
+              sortDirection: "asc",
+              signal: new AbortController().signal,
+            },
+            customer.branch,
+          );
+          const item = page.items.find(
+            (candidate) =>
+              candidate.configurationCode.toLocaleUpperCase("tr-TR") ===
+              code.toLocaleUpperCase("tr-TR"),
+          );
+          if (!item)
+            throw new Error(`${code} YAP kodu ERP mirror tablosunda bulunamadı.`);
+          return [code.toLocaleUpperCase("tr-TR"), item.id] as const;
+        }),
+      );
+      const yapIdByCode = new Map<string, number>(yapLookups);
       const trackingPolicies = new Map<
         number,
         ReturnType<typeof goodsReceiptV2Api.trackingPolicy>
@@ -347,8 +515,7 @@ export function GoodsReceiptCreatePage(): ReactElement {
       } catch {
         qualityStockIds = new Set();
       }
-      setLines(
-        await Promise.all(
+      const preparedLines = await Promise.all(
           rows.map(async (x) => {
             const warehouse =
               x.targetWarehouseCode == null
@@ -378,6 +545,9 @@ export function GoodsReceiptCreatePage(): ReactElement {
             return {
               ...x,
               stockId: stock.id,
+              yapCodeId: x.yapCode
+                ? yapIdByCode.get(x.yapCode.toLocaleUpperCase("tr-TR"))
+                : undefined,
               unitCode: stock.unitCode,
               quantity: x.availableQuantity ?? 0,
               targetWarehouseId: warehouse?.id,
@@ -391,7 +561,12 @@ export function GoodsReceiptCreatePage(): ReactElement {
               requireQualityControl: qualityStockIds.has(stock.id),
             };
           }),
-        ),
+        );
+      setLines(preparedLines);
+      window.requestAnimationFrame(() =>
+        document
+          .getElementById("goods-receipt-selected-lines")
+          ?.scrollIntoView({ behavior: "smooth", block: "start" }),
       );
     } catch (cause) {
       report(cause, "Sipariş satırları alınamadı.");
@@ -401,11 +576,30 @@ export function GoodsReceiptCreatePage(): ReactElement {
   };
 
   const updateLine = (key: string, patch: Partial<SelectedReceiptLine>): void =>
-    setLines((current) =>
-      current.map((line) =>
-        lineKey(line) === key ? { ...line, ...patch } : line,
-      ),
-    );
+    setLines((current) => {
+      const primaryKey = current[0] ? lineKey(current[0]) : null;
+      const primaryWarehouseChanged =
+        key === primaryKey &&
+        patch.targetWarehouseId != null &&
+        patch.targetWarehouseId !== current[0]?.targetWarehouseId;
+
+      return current.map((line) => {
+        if (lineKey(line) === key)
+          return { ...line, ...patch };
+        if (!primaryWarehouseChanged)
+          return line;
+        return {
+          ...line,
+          targetWarehouseValue: patch.targetWarehouseValue ?? null,
+          targetWarehouseId: patch.targetWarehouseId,
+          receivingLocationId: undefined,
+          receivingLocationValue: null,
+          receivingLocationCode: undefined,
+          putawayLocationId: undefined,
+          putawayLocationCode: undefined,
+        };
+      });
+    });
   const removeLine = (key: string): void =>
     setLines((current) => current.filter((line) => lineKey(line) !== key));
   const updateTracking = (
@@ -604,7 +798,7 @@ export function GoodsReceiptCreatePage(): ReactElement {
         return `${name}: aynı seri birden fazla kullanılamaz.`;
     }
     if (!seriesValue) return "Belge serisi seçilmelidir.";
-    if (assignees.length === 0)
+    if (!direct && assignees.length === 0)
       return "Emir için en az bir operasyon kullanıcısı atanmalıdır.";
     return null;
   };
@@ -636,7 +830,7 @@ export function GoodsReceiptCreatePage(): ReactElement {
     setBusy(true);
     setError(null);
     try {
-      const created = await goodsReceiptV2Api.create({
+      const commonPayload = {
         idempotencyKey: crypto.randomUUID(),
         branchCode: customer.branch,
         documentSeriesId: Number(seriesValue),
@@ -647,19 +841,65 @@ export function GoodsReceiptCreatePage(): ReactElement {
         waybillNo: isElectronicReceipt ? null : receiptNo,
         waybillDate,
         electronicWaybillNo: isElectronicReceipt ? receiptNo : null,
-        plannedArrivalAtUtc: plannedArrival
+        plannedArrivalAtUtc: !direct && plannedArrival
           ? new Date(plannedArrival).toISOString()
           : null,
+        occurredAtUtc: direct ? new Date().toISOString() : null,
         labelStrategy,
         allowOverReceipt: false,
         overReceiptTolerancePercent: 0,
         allowUnderReceipt: true,
         requireQualityControl: lines.some((line) => line.requireQualityControl),
         requirePutaway: true,
-        priority: Number(priority),
+        priority: direct ? 1 : Number(priority),
         description: description.trim() || null,
-        assignedUserIds: assignees.map((user) => user.id),
-        lines: lines.map((line) => ({
+        assignedUserIds: direct ? null : assignees.map((user) => user.id),
+      };
+      const created = direct
+        ? await goodsReceiptV2Api.createDirect({
+          ...commonPayload,
+          executionMode: labelStrategy === "SupplierLabel" ? "SupplierLabel" : "Manual",
+          deviceId: null,
+          lines: lines.flatMap((line) => {
+            const trackings = line.trackings.length > 0 ? line.trackings : [{
+              quantity: line.quantity,
+              lotNo: undefined,
+              serialNo: undefined,
+              manufacturingDate: undefined,
+              expirationDate: undefined,
+              description: undefined,
+            }];
+            return trackings.map((tracking) => ({
+              stockId: line.stockId,
+              yapCodeId: line.yapCodeId ?? null,
+              quantity: tracking.quantity,
+              unitCode: line.unitCode,
+              trackingType: line.trackingType,
+              trackings: line.trackingType === "None" ? [] : [{
+                quantity: tracking.quantity,
+                lotNo: tracking.lotNo?.trim() || null,
+                serialNo: tracking.serialNo?.trim() || null,
+                manufacturingDate: tracking.manufacturingDate || null,
+                expirationDate: tracking.expirationDate || null,
+                description: tracking.description?.trim() || null,
+              }],
+              lotNo: tracking.lotNo?.trim() || null,
+              serialNo: tracking.serialNo?.trim() || null,
+              manufacturingDate: tracking.manufacturingDate || null,
+              expirationDate: tracking.expirationDate || null,
+              scannedBarcode: tracking.serialNo?.trim() || null,
+              goodsReceiptLabelId: null,
+              description: tracking.description?.trim() || null,
+              targetWarehouseId: line.targetWarehouseId,
+              receivingLocationId: line.receivingLocationId,
+              sourceOrderNumber: line.siparisNo,
+              sourceOrderId: line.orderId,
+            }));
+          }),
+        })
+        : await goodsReceiptV2Api.create({
+          ...commonPayload,
+          lines: lines.map((line) => ({
           orderNumber: line.siparisNo,
           orderId: line.orderId,
           quantity: line.quantity,
@@ -674,12 +914,12 @@ export function GoodsReceiptCreatePage(): ReactElement {
             expirationDate: x.expirationDate || null,
             description: x.description?.trim() || null,
           })),
-        })),
-      });
+          })),
+        });
       setResult(created);
       toast.success(`${t("created")}: ${created.documentNo}`);
     } catch (cause) {
-      report(cause, "Mal kabul emri oluşturulamadı.");
+      report(cause, direct ? "Doğrudan mal kabul tamamlanamadı." : "Mal kabul emri oluşturulamadı.");
     } finally {
       setBusy(false);
     }
@@ -728,7 +968,9 @@ export function GoodsReceiptCreatePage(): ReactElement {
           </div>
         )}
         <p className="max-w-3xl text-sm leading-6 text-[var(--wms-app-text-muted)]">
-          {t("createFlow.subtitle")}
+          {direct
+            ? "Tedarikçinin açık siparişlerini seçin; kabul deposu, miktar, raf ve lot/seri bilgisini tamamlayıp fiziksel kabulü tek akışta bitirin."
+            : t("createFlow.subtitle")}
         </p>
       </header>
 
@@ -759,110 +1001,188 @@ export function GoodsReceiptCreatePage(): ReactElement {
               <label className="wms-ops-entry-label block">
                 {t("customer")} <span className="text-red-500">*</span>
               </label>
-              <PagedLookupDialog<CustomerOption>
-                variant="ops"
-                triggerMode="combobox"
-                autoSearchMinLength={2}
-                open={customerLookupOpen}
-                onOpenChange={setCustomerLookupOpen}
-                title={t("selectCustomer")}
-                value={customerDisplay}
-                placeholder={t("selectCustomer")}
-                searchPlaceholder={t("searchCustomer")}
-                emptyText={t("customerEmpty")}
-                triggerClassName={OPS_FIELD_CLASS}
-                queryKey={["gr-customers-lookup", branchCode]}
-                fetchPage={async ({ pageNumber, pageSize, search, signal }) =>
-                  toPagedResponse(
-                    await goodsReceiptV2Api.customers(
-                      {
-                        pageNumber,
-                        pageSize,
-                        search,
-                        sortBy: "customerCode",
-                        sortDirection: "asc",
-                        signal: signal ?? new AbortController().signal,
-                      },
-                      branchCode,
-                    ),
-                  )
+              <PagedAppDropdown<CustomerOption>
+                queryKey={["gr-customers", branchCode]}
+                fetchPage={(request) =>
+                  goodsReceiptV2Api.customers(request, branchCode)
                 }
-                getKey={(item) => String(item.id)}
-                getLabel={(item) =>
-                  `${item.customerName} (${item.customerCode})`
+                toOption={(item) => ({
+                  value: encodeCustomer(item),
+                  label: `${item.customerCode} · ${item.customerName}`,
+                })}
+                value={
+                  selectedCustomer ? encodeCustomer(selectedCustomer) : null
                 }
-                onSelect={(item) => {
-                  setSelectedCustomer(item);
+                selectedOption={
+                  selectedCustomer
+                    ? {
+                        value: encodeCustomer(selectedCustomer),
+                        label: `${selectedCustomer.customerCode} · ${selectedCustomer.customerName}`,
+                      }
+                    : undefined
+                }
+                onValueChange={(value) => {
+                  setSelectedCustomer(decodeCustomer(value));
+                  setOrderNumberSearch("");
                   clearCustomerDependent();
                 }}
+                placeholder={t("selectCustomer")}
+                searchable
+                minSearchLength={2}
               />
-              {selectedCustomer ? (
-                <OpsSelectedEntityCard
-                  label={t("selectedCustomer")}
-                  eyebrow="TEDARIKCI"
-                  status="SEÇİLDİ"
-                  value={customerDisplay}
-                />
-              ) : null}
             </div>
 
-            <div className="mb-3 flex flex-wrap gap-2">
-              {(
-                [
-                  ["customer", "Tedarikçi"],
-                  ["orderNo", "Sipariş No"],
-                  ["projectCode", "Proje Kodu"],
-                ] as const
-              ).map(([mode, label]) => (
-                <button
-                  key={mode}
+            <section className="mb-5 rounded-2xl border border-cyan-500/25 bg-cyan-500/[.05] p-4">
+              <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+                <Field label="Sipariş numarasıyla getir">
+                  <div className="relative">
+                    <Search
+                      className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-500"
+                      aria-hidden
+                    />
+                    <input
+                      className="input pl-10 font-mono uppercase"
+                      value={orderNumberSearch}
+                      onChange={(event) =>
+                        setOrderNumberSearch(
+                          event.target.value.toLocaleUpperCase("tr-TR"),
+                        )
+                      }
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") {
+                          event.preventDefault();
+                          void loadOrderByNumber();
+                        }
+                      }}
+                      placeholder="Örn. SAS202600000001"
+                      maxLength={50}
+                    />
+                  </div>
+                </Field>
+                <OpsActionButton
                   type="button"
-                  onClick={() => setSearchMode(mode)}
-                  className={`rounded-xl border px-3 py-2 text-xs font-semibold ${searchMode === mode ? "border-cyan-500 bg-cyan-500/10 text-cyan-600" : "border-[var(--wms-app-border)]"}`}
+                  variant="primary"
+                  disabled={busy || !orderNumberSearch.trim()}
+                  onClick={() => void loadOrderByNumber()}
+                  className="h-10 w-full lg:w-auto lg:min-w-[13rem]"
                 >
-                  {label}
-                </button>
-              ))}
-            </div>
+                  {busy ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Search className="size-4" aria-hidden />
+                      Siparişi getir
+                    </>
+                  )}
+                </OpsActionButton>
+              </div>
+              <p className="mt-2 text-xs text-[var(--wms-app-text-muted)]">
+                Siparişin cari kodu Netsis’ten okunur; eşleşen tedarikçi otomatik
+                seçilir ve sipariş bakiyesi aşağıda açılır.
+              </p>
+            </section>
+
+            {direct && (
+              <section className="mb-5 rounded-2xl border border-[var(--wms-app-border)] bg-black/[.025] p-4 dark:bg-white/[.025]">
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h3 className="font-bold">İrsaliye bilgileri</h3>
+                    <p className="text-xs text-slate-500">
+                      Belge türü, numarası ve tarihleri sipariş seçiminden önce
+                      girilir.
+                    </p>
+                  </div>
+                  <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-[var(--wms-app-border)] px-4 py-2">
+                    <input
+                      type="checkbox"
+                      checked={isElectronicReceipt}
+                      onChange={(event) => {
+                        setIsElectronicReceipt(event.target.checked);
+                        setReceiptNo("");
+                        setError(null);
+                      }}
+                      className="size-4 accent-cyan-500"
+                    />
+                    <span className="text-sm font-semibold">E-irsaliye</span>
+                  </label>
+                </div>
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                  <Field
+                    label={
+                      isElectronicReceipt
+                        ? "E-irsaliye numarası"
+                        : "İrsaliye numarası"
+                    }
+                  >
+                    <div className="relative">
+                      <input
+                        className={`input pr-20 font-mono tracking-wider ${
+                          receiptNo &&
+                          !isValidGoodsReceiptDocumentNo(
+                            receiptNo,
+                            isElectronicReceipt,
+                          )
+                            ? "!border-red-500"
+                            : receiptNo
+                              ? "!border-emerald-500"
+                              : ""
+                        }`}
+                        inputMode={isElectronicReceipt ? "text" : "numeric"}
+                        maxLength={isElectronicReceipt ? 16 : 15}
+                        placeholder={
+                          isElectronicReceipt
+                            ? "GIB2026000000001"
+                            : "000000000000001"
+                        }
+                        value={receiptNo}
+                        onChange={(event) => {
+                          setReceiptNo(
+                            normalizeGoodsReceiptDocumentNo(
+                              event.target.value,
+                              isElectronicReceipt,
+                            ),
+                          );
+                          setError(null);
+                        }}
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500">
+                        {receiptNo.length}/{isElectronicReceipt ? 16 : 15}
+                      </span>
+                    </div>
+                  </Field>
+                  <Field label="İrsaliye tarihi">
+                    <AppDateInput
+                      value={waybillDate}
+                      onChange={(event) => setWaybillDate(event.target.value)}
+                    />
+                  </Field>
+                  <Field label={t("documentDate")}>
+                    <AppDateInput
+                      value={documentDate}
+                      onChange={(event) => setDocumentDate(event.target.value)}
+                    />
+                  </Field>
+                  <Field label="Mal kabul belge serisi">
+                    <AppDropdown
+                      value={seriesValue}
+                      onValueChange={setSeriesValue}
+                      options={series.map((x) => ({
+                        value: String(x.id),
+                        label: `${x.code} · ${x.name}`,
+                        description: x.previewDocumentNumber,
+                      }))}
+                      placeholder="Belge serisi seçin"
+                      searchable
+                    />
+                  </Field>
+                </div>
+              </section>
+            )}
 
             <div className="wms-ops-order-fetch space-y-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                <div className="relative min-w-0 flex-1">
-                  {searchMode === "orderNo" ? (
-                    <OpsFieldShell>
-                      <div className="relative">
-                        <Search className="pointer-events-none absolute left-2.5 top-1/2 z-[1] size-3.5 -translate-y-1/2 opacity-60" />
-                        <input
-                          className={cn(OPS_FIELD_CLASS, "h-10 w-full pl-8 font-mono text-xs")}
-                          value={orderNumberQuery}
-                          onChange={(event) =>
-                            setOrderNumberQuery(event.target.value)
-                          }
-                          placeholder="Sipariş numarası"
-                          aria-label="Sipariş numarası"
-                        />
-                      </div>
-                    </OpsFieldShell>
-                  ) : searchMode === "projectCode" ? (
-                    <OpsFieldShell>
-                      <div className="relative">
-                        <Search className="pointer-events-none absolute left-2.5 top-1/2 z-[1] size-3.5 -translate-y-1/2 opacity-60" />
-                        <input
-                          className={cn(OPS_FIELD_CLASS, "h-10 w-full pl-8 font-mono text-xs")}
-                          value={projectCodeQuery}
-                          onChange={(event) =>
-                            setProjectCodeQuery(event.target.value)
-                          }
-                          placeholder="Proje kodu"
-                          aria-label="Proje kodu"
-                        />
-                      </div>
-                    </OpsFieldShell>
-                  ) : (
-                    <p className="text-xs text-[var(--wms-app-text-muted)]">
-                      Seçili tedarikçiye ait açık siparişleri getirin.
-                    </p>
-                  )}
+                <div className="relative min-w-0 flex-1 text-xs text-[var(--wms-app-text-muted)]">
+                  Seçili tedarikçiye ait açık sipariş bakiyelerini getirin.
                 </div>
                 <OpsActionButton
                   type="button"
@@ -882,14 +1202,150 @@ export function GoodsReceiptCreatePage(): ReactElement {
                 </OpsActionButton>
               </div>
 
-              {orders.length === 0 ? (
+              {direct && directProjectCodes.length > 0 ? (
+                <div className="max-w-sm">
+                  <label className="wms-ops-entry-label mb-1.5 block">
+                    Proje filtresi
+                  </label>
+                  <select
+                    className={cn(OPS_FIELD_CLASS, "h-10 w-full font-mono text-xs")}
+                    value={projectCodeFilter}
+                    onChange={(event) => setProjectCodeFilter(event.target.value)}
+                  >
+                    <option value="">Tüm projeler</option>
+                    {directProjectCodes.map((code) => (
+                      <option key={code} value={code}>{code}</option>
+                    ))}
+                  </select>
+                </div>
+              ) : null}
+
+              {direct && directOrderLines.length > 0 && (
+                <div className="wms-ops-order-fetch__table-wrap">
+                  <table className="wms-ops-order-fetch__table w-full min-w-[840px] text-left text-xs">
+                    <thead>
+                      <tr>
+                        <th className="w-14 text-center" />
+                        <th>Sipariş No</th>
+                        <th>Proje Kodu</th>
+                        <th>Stok Kodu</th>
+                        <th>Stok Adı</th>
+                        <th className="wms-ops-order-fetch__qty">Kalan</th>
+                        <th>Hedef Depo</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {visibleDirectOrderLines.map((line) => {
+                        const key = lineKey(line);
+                        const checked = selectedDirectLineKeys.includes(key);
+                        const unavailable = (line.availableQuantity ?? 0) <= 0;
+                        const warehouseDenied = !canUseOrderWarehouse(
+                          line.targetWarehouseCode,
+                        );
+                        const toggle = (): void => {
+                          if (unavailable) {
+                            toast.error(
+                              "Bu sipariş kaleminin açık miktarı aktif bir mal kabul emrine ayrılmış.",
+                            );
+                            return;
+                          }
+                          if (warehouseDenied) {
+                            toast.error(
+                              "Bu sipariş kaleminin deposu kullanıcınıza tanımlı değil.",
+                            );
+                            return;
+                          }
+                          if (
+                            !checked &&
+                            selectedDirectWarehouseCode != null &&
+                            line.targetWarehouseCode !== selectedDirectWarehouseCode
+                          ) {
+                            toast.warning(
+                              "Farklı hedef depolara ait kalemler aynı mal kabulde seçilemez. Önce mevcut seçimi kaldırın veya ayrı kabul oluşturun.",
+                            );
+                            return;
+                          }
+                          setSelectedDirectLineKeys((current) =>
+                            current.includes(key)
+                              ? current.filter((item) => item !== key)
+                              : [...current, key],
+                          );
+                          setLines([]);
+                        };
+                        return (
+                          <tr
+                            key={key}
+                            className={cn(
+                              checked && "wms-ops-order-fetch__row--selected",
+                              (warehouseDenied || unavailable) &&
+                                "cursor-not-allowed opacity-50",
+                            )}
+                            onClick={toggle}
+                          >
+                            <td
+                              className="text-center"
+                              onClick={(event) => event.stopPropagation()}
+                            >
+                              <label className="wms-ops-order-checkbox">
+                                <input
+                                  type="checkbox"
+                                  checked={checked}
+                                  disabled={warehouseDenied || unavailable}
+                                  onChange={toggle}
+                                  aria-label={`${line.siparisNo} ${line.stockCode ?? ""} seç`}
+                                  title={
+                                    unavailable
+                                      ? "Aktif bir mal kabul emrine ayrılmış."
+                                      : warehouseDenied
+                                        ? "Bu depo kullanıcınıza tanımlı değil."
+                                        : undefined
+                                  }
+                                />
+                                <span
+                                  className="wms-ops-order-checkbox__mark"
+                                  aria-hidden
+                                />
+                              </label>
+                            </td>
+                            <td className="font-mono font-semibold">
+                              {line.siparisNo}
+                            </td>
+                            <td className="font-mono">
+                              {line.projectCode || "—"}
+                            </td>
+                            <td className="font-mono font-semibold">
+                              {line.stockCode || "—"}
+                            </td>
+                            <td>{line.stockName || "—"}</td>
+                            <td className="wms-ops-order-fetch__qty font-mono">
+                              {formatProjectNumber(
+                                line.availableQuantity ??
+                                  line.remainingQuantity ??
+                                  0,
+                              )}
+                              {unavailable ? (
+                                <span className="ml-2 whitespace-nowrap text-[10px] text-amber-600">
+                                  Ayrılmış
+                                </span>
+                              ) : null}
+                            </td>
+                            <td>{line.targetWarehouseCode ?? "—"}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {(direct ? directOrderLines.length === 0 : orders.length === 0) ? (
                 <div className="wms-ops-panel-empty py-10 text-center">
                   <PackageOpen className="mx-auto size-8 opacity-50" aria-hidden />
                   <p className="mt-3 text-sm text-[var(--wms-app-text-muted)]">
                     {t("noOrders")}
                   </p>
                 </div>
-              ) : (
+              ) : !direct ? (
                 <div className="wms-ops-order-fetch__table-wrap">
                   <table className="wms-ops-order-fetch__table w-full min-w-[720px] text-left text-xs">
                     <thead>
@@ -963,22 +1419,28 @@ export function GoodsReceiptCreatePage(): ReactElement {
                     </tbody>
                   </table>
                 </div>
-              )}
+              ) : null}
 
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <p className="text-xs text-[var(--wms-app-text-muted)]">
-                  {selectedOrders.length} sipariş seçildi
+                  {direct
+                    ? `${selectedDirectLineKeys.length} sipariş kalemi seçildi`
+                    : `${selectedOrders.length} sipariş seçildi`}
                 </p>
                 <OpsActionButton
                   type="button"
                   variant="primary"
-                  disabled={selectedOrders.length === 0 || busy}
+                  disabled={
+                    (direct
+                      ? selectedDirectLineKeys.length === 0
+                      : selectedOrders.length === 0) || busy
+                  }
                   onClick={() => void loadLines()}
                 >
                   {busy ? (
                     <Loader2 className="size-4 animate-spin" />
                   ) : (
-                    t("loadLines")
+                    direct ? "Seçili kalemleri hazırla" : t("loadLines")
                   )}
                 </OpsActionButton>
               </div>
@@ -986,11 +1448,33 @@ export function GoodsReceiptCreatePage(): ReactElement {
           </Panel>
 
           {lines.length > 0 && (
-            <div className="wms-ops-selected-order-items space-y-4">
+            <section
+              id="goods-receipt-selected-lines"
+              className="scroll-mt-5 overflow-hidden rounded-2xl border border-cyan-500/30 bg-[var(--wms-app-panel)] shadow-sm"
+            >
+                  <header className="border-b border-[var(--wms-app-border)] bg-cyan-500/[.07] px-5 py-4">
+                    <h2 className="text-xl font-black">
+                      Seçili Kalemler ve Mal Kabul Detayları
+                    </h2>
+                    <p className="mt-1 text-sm text-[var(--wms-app-text-muted)]">
+                      Miktar, depo, raf ve seri/lot bilgilerini bu ekrandan ayrılmadan
+                      kalem bazında yönetin.
+                    </p>
+                    <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
+                        <span className="rounded-lg border border-cyan-500/25 bg-cyan-500/10 px-3 py-2 font-semibold text-cyan-600">
+                          {lines.length} kalem
+                        </span>
+                        <span className="rounded-lg border border-[var(--wms-app-border)] px-3 py-2 font-mono">
+                          {formatProjectNumber(selectedQuantity)}
+                        </span>
+                    </div>
+                  </header>
+
+                  <div className="px-4 py-4 sm:px-5">
+                    <div className="wms-ops-selected-order-items space-y-4">
               <div className="flex items-center justify-between gap-3">
                 <p className="text-xs text-[var(--wms-app-text-muted)]">
-                  {lines.length} kalem seçildi · miktar/seri/raf bu satırlarda
-                  düzenlenir
+                  Kalem detayları · miktar/depo/raf/seri-lot
                 </p>
               </div>
               <div className="space-y-2">
@@ -1006,36 +1490,27 @@ export function GoodsReceiptCreatePage(): ReactElement {
                     removeTracking={removeTracking}
                     createSerialRows={createSerialRows}
                     cancelGeneratedSerials={cancelGeneratedSerials}
-                    lockedWarehouseId={primaryLine?.targetWarehouseId}
+                    lockedWarehouseId={
+                      primaryLine && lineKey(line) !== lineKey(primaryLine)
+                        ? primaryLine.targetWarehouseId
+                        : undefined
+                    }
                   />
                 ))}
               </div>
 
               <Panel
-                title="Belge ve emir ayarları"
+                title="Emir ve işlem ayarları"
                 icon={<PackageCheck className="size-5" />}
               >
                 <div className="grid gap-4 md:grid-cols-2">
-                  <Field label="Belge serisi">
-                    <AppDropdown
-                      value={seriesValue}
-                      onValueChange={setSeriesValue}
-                      options={series.map((x) => ({
-                        value: String(x.id),
-                        label: `${x.code} · ${x.name}`,
-                        description: x.previewDocumentNumber,
-                      }))}
-                      placeholder="Belge serisi"
-                      searchable
-                    />
-                  </Field>
-                  <Field label={t("documentDate")}>
+                  {!direct && <Field label={t("documentDate")}>
                     <AppDateInput
                       value={documentDate}
                       onChange={(event) => setDocumentDate(event.target.value)}
                     />
-                  </Field>
-                  <div className="md:col-span-2 rounded-2xl border border-[var(--wms-app-border)] bg-black/[.025] p-4 dark:bg-white/[.025]">
+                  </Field>}
+                  {!direct && <div className="md:col-span-2 rounded-2xl border border-[var(--wms-app-border)] bg-black/[.025] p-4 dark:bg-white/[.025]">
                     <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                       <div>
                         <h3 className="font-bold">
@@ -1064,7 +1539,7 @@ export function GoodsReceiptCreatePage(): ReactElement {
                         <span className="text-sm font-semibold">E-irsaliye</span>
                       </label>
                     </div>
-                    <div className="grid gap-4 md:grid-cols-2">
+                    <div className="grid gap-4 md:grid-cols-3">
                       <Field
                         label={
                           isElectronicReceipt
@@ -1118,16 +1593,29 @@ export function GoodsReceiptCreatePage(): ReactElement {
                           }
                         />
                       </Field>
+                      <Field label="Mal kabul belge serisi">
+                        <AppDropdown
+                          value={seriesValue}
+                          onValueChange={setSeriesValue}
+                          options={series.map((x) => ({
+                            value: String(x.id),
+                            label: `${x.code} · ${x.name}`,
+                            description: x.previewDocumentNumber,
+                          }))}
+                          placeholder="Belge serisi seçin"
+                          searchable
+                        />
+                      </Field>
                     </div>
-                  </div>
-                  <Field label={t("plannedArrival")}>
+                  </div>}
+                  {!direct && <Field label={t("plannedArrival")}>
                     <AppDateInput
                       type="datetime-local"
                       value={plannedArrival}
                       onChange={(event) => setPlannedArrival(event.target.value)}
                     />
-                  </Field>
-                  <Field label={t("priority")}>
+                  </Field>}
+                  {!direct && <Field label={t("priority")}>
                     <AppDropdown
                       value={priority}
                       onValueChange={setPriority}
@@ -1136,14 +1624,14 @@ export function GoodsReceiptCreatePage(): ReactElement {
                         label: String(x),
                       }))}
                     />
-                  </Field>
+                  </Field>}
                   <Field label={t("labelStrategy")}>
                     <AppDropdown
                       value={labelStrategy}
                       onValueChange={setLabelStrategy}
                       options={[
                         { value: "None", label: "Etiket yok" },
-                        { value: "PreGenerate", label: "Önceden üret" },
+                        ...(!direct ? [{ value: "PreGenerate", label: "Önceden üret" }] : []),
                         { value: "SupplierLabel", label: "Tedarikçi etiketi" },
                         { value: "GenerateOnReceipt", label: "Kabulde üret" },
                       ]}
@@ -1158,7 +1646,7 @@ export function GoodsReceiptCreatePage(): ReactElement {
                     />
                   </Field>
                 </div>
-                <section className="mt-4 rounded-xl border border-[var(--wms-app-border)] p-4">
+                {!direct && <section className="mt-4 rounded-xl border border-[var(--wms-app-border)] p-4">
                   <div className="mb-3 flex items-start gap-2">
                     <UserRoundCog className="mt-0.5 size-5 text-cyan-500" />
                     <div>
@@ -1226,7 +1714,7 @@ export function GoodsReceiptCreatePage(): ReactElement {
                       </span>
                     )}
                   </div>
-                </section>
+                </section>}
                 <p className="mt-4 text-xs text-slate-500">
                   Siparişteki depo kaleme varsayılan gelir; yetkili kullanıcı kabul
                   deposu ve rafını kalem bazında değiştirebilir. Putaway önerileri
@@ -1235,15 +1723,17 @@ export function GoodsReceiptCreatePage(): ReactElement {
                 </p>
                 <Footer
                   back={() => {
-                    setLines([]);
                     setError(null);
+                    setLines([]);
                   }}
                   next={goToConfirmation}
                   disabled={lines.length === 0 || busy}
                   t={t}
                 />
               </Panel>
-            </div>
+                    </div>
+                  </div>
+            </section>
           )}
         </>
       )}
@@ -1254,8 +1744,25 @@ export function GoodsReceiptCreatePage(): ReactElement {
           icon={<CheckCircle2 className="size-5" />}
         >
           {result ? (
+            direct && "quantity" in result ? (
+              <DirectCreateSuccessPanel
+                result={result}
+                supplierCode={customer?.code}
+                onNew={() => {
+                  setResult(null);
+                  setStep(0);
+                  setLines([]);
+                  setSelectedOrders([]);
+                  setOrders([]);
+                  setReceiptNo("");
+                  setIsElectronicReceipt(false);
+                  setWaybillDate(today());
+                  setError(null);
+                }}
+              />
+            ) : (
             <CreateSuccessPanel
-              result={result}
+              result={result as CreateGoodsReceiptResult}
               supplierCode={customer?.code}
               assigneeCount={assignees.length}
               qualityLines={lines.flatMap((x) =>
@@ -1282,7 +1789,7 @@ export function GoodsReceiptCreatePage(): ReactElement {
                 setWaybillDate(today());
                 setError(null);
               }}
-            />
+            />)
           ) : (
             <div className="wms-ops-gr-review">
               <dl className="wms-ops-gr-review__list">
@@ -1309,10 +1816,10 @@ export function GoodsReceiptCreatePage(): ReactElement {
                     new Set(lines.map((x) => x.targetWarehouseId)).size,
                   )}
                 />
-                <ReviewRow
+                {!direct && <ReviewRow
                   label="Emir sorumluları"
                   value={assignees.map(userLabel).join(", ") || "—"}
-                />
+                />}
                 <ReviewRow
                   label="Lot/seri satırı"
                   value={String(
@@ -1362,46 +1869,6 @@ export function GoodsReceiptCreatePage(): ReactElement {
         </Panel>
       )}
     </section>
-  );
-}
-
-function OpsSelectedEntityCard({
-  label,
-  eyebrow,
-  status,
-  value,
-}: {
-  label: string;
-  eyebrow?: string;
-  status?: string;
-  value: string;
-}): ReactElement {
-  const match = value.match(/^(.+?)\s*\(([^)]+)\)\s*$/);
-  const primary = match ? match[2].trim() : value.trim();
-  const secondary = match ? match[1].trim() : undefined;
-  return (
-    <div className="wms-ops-entity-card" role="status" aria-label={label}>
-      <div className="wms-ops-entity-card__rail" aria-hidden />
-      <div className="wms-ops-entity-card__body">
-        <div className="wms-ops-entity-card__icon" aria-hidden>
-          <UserRound className="size-4" />
-        </div>
-        <div className="wms-ops-entity-card__meta">
-          <div className="wms-ops-entity-card__header">
-            <span className="wms-ops-entity-card__eyebrow">
-              {eyebrow ?? label}
-            </span>
-            {status ? (
-              <span className="wms-ops-entity-card__status">{status}</span>
-            ) : null}
-          </div>
-          <div className="wms-ops-entity-card__code">{primary}</div>
-          {secondary ? (
-            <div className="wms-ops-entity-card__name">{secondary}</div>
-          ) : null}
-        </div>
-      </div>
-    </div>
   );
 }
 
@@ -1594,11 +2061,17 @@ function ReceiptEntryRow({
               <span className="wms-ops-code-badge">{line.stockCode}</span>
               <span>•</span>
               <span className="font-mono">{line.siparisNo}</span>
+              {line.projectCode ? (
+                <>
+                  <span>•</span>
+                  <span className="font-mono">Proje: {line.projectCode}</span>
+                </>
+              ) : null}
               <span>•</span>
               <span>
-                Sipariş:{" "}
+                Kalan:{" "}
                 <strong className="text-foreground">
-                  {formatProjectNumber(line.orderedQuantity ?? line.availableQuantity ?? 0, {
+                  {formatProjectNumber(line.availableQuantity ?? line.remainingQuantity ?? 0, {
                     minimumFractionDigits: 0,
                     maximumFractionDigits: 6,
                   })}{" "}
@@ -2209,6 +2682,54 @@ function QuantityInput({
       }}
     />
   );
+}
+
+function DirectCreateSuccessPanel({
+  result,
+  supplierCode,
+  onNew,
+}: {
+  result: ManualGoodsReceiptResult;
+  supplierCode?: string;
+  onNew: () => void;
+}): ReactElement {
+  const navigate = useNavigate();
+  return (
+    <div className="mx-auto max-w-2xl overflow-hidden rounded-3xl border border-emerald-500/35 bg-gradient-to-br from-emerald-500/15 via-[var(--wms-app-panel)] to-transparent shadow-sm">
+      <div className="border-b border-emerald-500/20 px-8 py-8 text-center">
+        <div className="mx-auto grid size-16 place-items-center rounded-2xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-300">
+          <CheckCircle2 className="size-9" />
+        </div>
+        <p className="mt-5 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-300">
+          Siparişten doğrudan mal kabul
+        </p>
+        <h2 className="mt-2 text-2xl font-black tracking-tight">Mal kabul tamamlandı</h2>
+        <p className="mx-auto mt-3 max-w-md text-sm text-slate-600 dark:text-slate-300">
+          {supplierCode ? `${supplierCode} tedarikçisinin ` : ""}
+          seçilen sipariş kalemleri kabul edildi ve sipariş kaynaklarıyla ilişkilendirildi.
+        </p>
+        <div className="mx-auto mt-5 inline-flex rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-5 py-3">
+          <div>
+            <div className="text-[11px] uppercase tracking-wider text-slate-500">Belge No</div>
+            <div className="mt-1 font-mono text-xl font-bold text-emerald-700 dark:text-emerald-300">{result.documentNo}</div>
+          </div>
+        </div>
+      </div>
+      <div className="grid gap-3 px-8 py-6 sm:grid-cols-3">
+        <SummaryCard label="Satır" value={String(result.lineCount)} />
+        <SummaryCard label="Miktar" value={formatProjectNumber(result.quantity)} />
+        <SummaryCard label="Durum" value={result.qualityInspectionId ? "Kaliteye gönderildi" : result.status} />
+      </div>
+      <div className="flex flex-wrap items-center justify-center gap-3 border-t border-emerald-500/20 px-8 py-5">
+        <button type="button" onClick={onNew} className="rounded-xl bg-emerald-600 px-5 py-2.5 font-semibold text-white">Yeni kayıt</button>
+        <button type="button" onClick={() => navigate("/warehouse/goods-receipts")} className="rounded-xl border border-emerald-500/40 px-5 py-2.5 font-semibold text-emerald-700 dark:text-emerald-300">Mal kabul listesi</button>
+      </div>
+    </div>
+  );
+}
+
+function SummaryCard({ label, value }: { label: string; value: string }): ReactElement {
+  return <div className="rounded-xl border border-[var(--wms-app-border)] p-3 text-center"><div className="text-xs text-slate-500">{label}</div><strong className="mt-1 block text-lg">{value}</strong></div>;
 }
 
 function CreateSuccessPanel({

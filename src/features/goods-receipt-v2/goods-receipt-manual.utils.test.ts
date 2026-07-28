@@ -125,4 +125,14 @@ describe('buildOrderlessLinePayload', () => {
       description: null,
     }]);
   });
+
+  it('preserves purchase order source references for direct receipt', () => {
+    const payload = buildOrderlessLinePayload(serialLine({
+      sourceOrderNumber: 'SAS202600000001',
+      sourceOrderId: 42,
+    }));
+
+    assert.equal(payload.sourceOrderNumber, 'SAS202600000001');
+    assert.equal(payload.sourceOrderId, 42);
+  });
 });

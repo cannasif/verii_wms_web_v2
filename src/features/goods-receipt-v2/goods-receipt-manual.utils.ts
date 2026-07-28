@@ -51,5 +51,7 @@ export function buildOrderlessLinePayload(line: ManualReceiptLine) {
     description: line.description ?? null,
     targetWarehouseId: line.targetWarehouseId,
     receivingLocationId: line.receivingLocationId,
+    sourceOrderNumber: line.sourceOrderNumber ?? null,
+    sourceOrderId: line.sourceOrderId ?? null,
   };
 }

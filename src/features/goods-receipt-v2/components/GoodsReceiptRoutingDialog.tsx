@@ -83,8 +83,8 @@ export function GoodsReceiptRoutingDialog({
 
   useEffect(() => {
     void Promise.all([
-      goodsReceiptV2Api.transferSeries(detail.header.targetWarehouseId),
-      goodsReceiptV2Api.outboundSeries(detail.header.targetWarehouseId),
+      goodsReceiptV2Api.transferSeries(),
+      goodsReceiptV2Api.outboundSeries(),
     ])
       .then(([transferItems, outboundItems]) => {
         setTransferSeries(transferItems);
