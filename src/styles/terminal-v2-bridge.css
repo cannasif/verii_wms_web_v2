@@ -254,7 +254,7 @@ html:not(.skin-premium) .wms-ops-list .wms-ops-table-h-scroll {
   border-radius: 0 !important;
   border-color: var(--wms-ops-card-border) !important;
   overflow-x: scroll !important;
-  overflow-y: hidden !important;
+  overflow-y: auto !important;
   box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--wms-ops-card-border) 55%, transparent);
 }
 
@@ -340,10 +340,6 @@ html:not(.skin-premium) .wms-ops-list .wms-ops-grid-icon-btn > svg,
 html:not(.skin-premium) .wms-ops-detail-dialog .wms-ops-grid-icon-btn > svg {
   display: block !important;
   margin: 0 !important;
-}
-
-html:not(.skin-premium) .wms-ops-list .wms-ops-table-wrap:active {
-  cursor: grabbing;
 }
 
 html:not(.skin-premium) .wms-ops-list table.wms-ops-data-grid thead {
@@ -1100,6 +1096,10 @@ html:not(.skin-premium) .wms-ops-list :is(.wms-ops-table-h-scroll, .wms-ops-tabl
     color-mix(in oklab, var(--wms-ops-field-bg) 78%, #020617) !important;
 }
 
+html:not(.skin-premium) .wms-ops-list .wms-ops-data-grid-wrap {
+  overflow-y: auto !important;
+}
+
 html:not(.skin-premium) .wms-ops-list :is(.wms-ops-table-h-scroll, .wms-ops-table-wrap, .wms-ops-data-grid-wrap)::-webkit-scrollbar {
   width: 14px !important;
   height: 14px !important;
@@ -1135,4 +1135,3 @@ html:not(.skin-premium) .wms-ops-list :is(.wms-ops-table-h-scroll, .wms-ops-tabl
 html:not(.skin-premium) .wms-ops-list :is(.wms-ops-table-h-scroll, .wms-ops-table-wrap, .wms-ops-data-grid-wrap)::-webkit-scrollbar-corner {
   background: color-mix(in oklab, var(--wms-ops-field-bg) 86%, #020617) !important;
 }
-

@@ -321,7 +321,7 @@ html.skin-premium .wms-ops-list .wms-ops-data-grid-wrap,
 html.skin-premium .wms-ops-list .wms-ops-table-h-scroll {
   border-radius: 0.9rem !important;
   overflow-x: scroll !important;
-  overflow-y: hidden !important;
+  overflow-y: auto !important;
   box-shadow:
     0 8px 28px -14px rgb(0 0 0 / 25%),
     inset 0 1px 0 rgb(255 255 255 / 8%);
@@ -1503,6 +1503,10 @@ html.skin-premium .wms-ops-list :is(.wms-ops-table-h-scroll, .wms-ops-table-wrap
     color-mix(in oklab, var(--wms-brand-primary) 12%, transparent) !important;
 }
 
+html.skin-premium .wms-ops-list .wms-ops-data-grid-wrap {
+  overflow-y: auto !important;
+}
+
 html.skin-premium .wms-ops-list :is(.wms-ops-table-h-scroll, .wms-ops-table-wrap, .wms-ops-data-grid-wrap)::-webkit-scrollbar {
   width: 14px !important;
   height: 14px !important;
@@ -1547,4 +1551,3 @@ html.skin-premium .wms-ops-list :is(.wms-ops-table-h-scroll, .wms-ops-table-wrap
 html.skin-premium .wms-ops-list :is(.wms-ops-table-h-scroll, .wms-ops-table-wrap, .wms-ops-data-grid-wrap)::-webkit-scrollbar-corner {
   background: color-mix(in oklab, var(--wms-brand-primary) 8%, transparent) !important;
 }
-

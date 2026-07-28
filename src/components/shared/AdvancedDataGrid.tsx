@@ -151,13 +151,6 @@ const LOCKED_COLUMN_KEYS = new Set(['id']);
 const EXCLUDED_COLUMN_PREF_KEYS = new Set(['actions']);
 const gridScrollPositions = new Map<string, number>();
 
-function isInteractiveScrollTarget(target: EventTarget | null): boolean {
-  if (!(target instanceof Element)) return false;
-  return Boolean(
-    target.closest('button, a, input, select, textarea, label, [role="button"], [data-no-drag-scroll="true"]'),
-  );
-}
-
 function resolveColumnWidth<T>(columnOrKey: GridColumn<T> | string, widths: Record<string, number>, fallbackWidth?: number): number {
   const column = typeof columnOrKey === 'string' ? undefined : columnOrKey;
   const key = typeof columnOrKey === 'string' ? columnOrKey : columnOrKey.key;
@@ -482,17 +475,10 @@ export function AdvancedDataGrid<T extends { id: number }>({
   const [filterLogic, setFilterLogic] = useState<'and' | 'or'>('and');
   const [runningActionIndex, setRunningActionIndex] = useState<number | null>(null);
   const [cellContext, setCellContext] = useState<GridCellContext<T> | null>(null);
-  const [isScrollDragging, setIsScrollDragging] = useState(false);
+  const [gridViewportHeight, setGridViewportHeight] = useState<number | null>(null);
   const resizeRef = useRef<{ key: string; startX: number; startWidth: number; pointerId: number } | null>(null);
   const tableScrollRef = useRef<HTMLDivElement | null>(null);
-  const scrollDragRef = useRef<{ isDragging: boolean; startX: number; startScrollLeft: number; pointerId: number; moved: boolean; captured: boolean }>({
-    isDragging: false,
-    startX: 0,
-    startScrollLeft: 0,
-    pointerId: -1,
-    moved: false,
-    captured: false,
-  });
+  const paginationRef = useRef<HTMLDivElement | null>(null);
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
@@ -714,56 +700,30 @@ export function AdvancedDataGrid<T extends { id: number }>({
     return () => node.removeEventListener('scroll', onScroll);
   }, [pageKey, pageRows.length, activeColumns.length]);
 
-  const handleScrollDragStart = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (event.pointerType === 'mouse' && event.button !== 0) return;
-    if (isInteractiveScrollTarget(event.target)) return;
-    const container = tableScrollRef.current;
-    if (!container) return;
-    // Do not capture the pointer until the user actually drags. Immediate capture
-    // steals the second click of a double-click from the row element.
-    scrollDragRef.current = {
-      isDragging: true,
-      startX: event.clientX,
-      startScrollLeft: container.scrollLeft,
-      pointerId: event.pointerId,
-      moved: false,
-      captured: false,
+  useEffect(() => {
+    const grid = tableScrollRef.current;
+    if (!grid) return;
+    let frame = 0;
+    const updateHeight = () => {
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(() => {
+        const paginationHeight = paginationRef.current?.getBoundingClientRect().height ?? 52;
+        const top = grid.getBoundingClientRect().top;
+        const bottomSpace = paginationHeight + 32;
+        setGridViewportHeight(Math.max(240, Math.floor(window.innerHeight - top - bottomSpace)));
+      });
     };
-  };
-  const handleScrollDragMove = (event: ReactPointerEvent<HTMLDivElement>) => {
-    const container = tableScrollRef.current;
-    const state = scrollDragRef.current;
-    if (!container || !state.isDragging || state.pointerId !== event.pointerId) return;
-    const deltaX = event.clientX - state.startX;
-    if (Math.abs(deltaX) <= 4) return;
-    if (!state.moved) {
-      state.moved = true;
-      setIsScrollDragging(true);
-      if (!state.captured) {
-        container.setPointerCapture(event.pointerId);
-        state.captured = true;
-      }
-    }
-    container.scrollLeft = state.startScrollLeft - deltaX;
-  };
-  const handleScrollDragEnd = (event: ReactPointerEvent<HTMLDivElement>) => {
-    const container = tableScrollRef.current;
-    const state = scrollDragRef.current;
-    if (state.captured && container?.hasPointerCapture(event.pointerId)) {
-      container.releasePointerCapture(event.pointerId);
-    }
-    scrollDragRef.current.isDragging = false;
-    scrollDragRef.current.pointerId = -1;
-    scrollDragRef.current.captured = false;
-    setIsScrollDragging(false);
-  };
-  const suppressClickAfterDrag = (event: ReactMouseEvent<HTMLDivElement>) => {
-    if (scrollDragRef.current.moved) {
-      event.preventDefault();
-      event.stopPropagation();
-      scrollDragRef.current.moved = false;
-    }
-  };
+    updateHeight();
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(grid.parentElement ?? grid);
+    if (paginationRef.current) observer.observe(paginationRef.current);
+    window.addEventListener('resize', updateHeight);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      observer.disconnect();
+      window.removeEventListener('resize', updateHeight);
+    };
+  }, [pageRows.length, showFilters, showColumns, showSearchFields]);
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
     if (!over || active.id === over.id) return;
     setOrder((current) => {
@@ -1264,15 +1224,11 @@ export function AdvancedDataGrid<T extends { id: number }>({
 
       <div
         ref={tableScrollRef}
+        style={{ maxHeight: gridViewportHeight ?? undefined }}
         className={cn(
-          'relative mt-4 block wms-ops-table-wrap wms-ops-data-grid-wrap wms-ops-scrollbar wms-ops-table-h-scroll overflow-x-scroll overflow-y-hidden border border-[var(--wms-ops-card-border)] max-sm:hidden',
-          query.isLoading ? 'cursor-wait' : isScrollDragging ? 'cursor-grabbing select-none' : 'cursor-grab',
+          'relative mt-4 block wms-ops-table-wrap wms-ops-data-grid-wrap wms-ops-scrollbar wms-ops-table-h-scroll overflow-auto border border-[var(--wms-ops-card-border)] max-sm:hidden',
+          query.isLoading && 'cursor-wait',
         )}
-        onPointerDown={handleScrollDragStart}
-        onPointerMove={handleScrollDragMove}
-        onPointerUp={handleScrollDragEnd}
-        onPointerCancel={handleScrollDragEnd}
-        onClickCapture={suppressClickAfterDrag}
       >
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd} autoScroll={false}>
             <table
@@ -1353,6 +1309,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
                         className={cn(
                           'border-b border-[var(--wms-app-border)] hover:bg-[var(--wms-brand-soft)]',
                           onRowDoubleClick && 'cursor-pointer',
+                          cellContext?.row.id === row.id && 'bg-[var(--wms-brand-soft)]',
                           expandedRowId === row.id && 'bg-[var(--wms-brand-soft)]',
                         )}
                         onDoubleClick={() => onRowDoubleClick?.(row)}
@@ -1429,7 +1386,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
         ))}
       </div>
 
-      <div className="wms-ops-grid-pagination mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div ref={paginationRef} className="wms-ops-grid-pagination mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
