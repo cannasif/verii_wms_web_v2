@@ -46,6 +46,22 @@ export interface GoodsReceiptGridRow { id: number; branchCode: string; documentN
 export interface GoodsReceiptDetailLine { id: number; lineNo: number; stockId: number; stockCode: string; stockName?: string; yapCodeId?: number; yapCode?: string; unitCode: string; expectedQuantity: number; receivedQuantity: number; acceptedQuantity: number; rejectedQuantity: number; quarantineQuantity: number; shortClosedQuantity: number; putawayQuantity: number; status: string; requireQualityControl: boolean; targetWarehouseId: number; defaultReceivingLocationId?: number; defaultPutawayLocationId?: number; routedQuantity: number; routableQuantity: number }
 export interface GoodsReceiptPutawayCandidate { lineId: number; lineNo: number; stockId: number; stockCode: string; stockName?: string; yapCodeId?: number; yapCode?: string; unitCode: string; quantity: number; warehouseId: number; sourceLocationId: number; lotNo?: string; serialNo?: string; stockStatus: string; defaultTargetLocationId?: number }
 export interface GoodsReceiptDetail { header: GoodsReceiptGridRow; lines: GoodsReceiptDetailLine[]; putawayCandidates: GoodsReceiptPutawayCandidate[]; sourceDocuments: string[]; taskNumbers: string[]; executionCount: number }
+export type ErpPostingStatus = 'Pending' | 'Processing' | 'Succeeded' | 'Failed' | 'CommitUncertain';
+export interface ErpPostingResult {
+  postingRecordId: number;
+  sourceType: string;
+  sourceEntityId: number;
+  sourceDocumentNo: string;
+  status: ErpPostingStatus;
+  attemptCount: number;
+  erpDocumentNo?: string;
+  erpWaybillNo?: string;
+  erpRecordNo?: string;
+  erpReferenceNo?: string;
+  errorCode?: string;
+  errorMessage?: string;
+  completedAtUtc?: string;
+}
 export interface GoodsReceiptLifecycleResult { id: number; documentNo: string; status: string; approvalStatus: string; qualityStatus: string; putawayStatus: string; stockMovementOperationId?: number; affectedQuantity: number; replayed: boolean; rowVersion: string }
 export type GoodsReceiptRouteType = 'WarehouseTransfer' | 'WarehouseOutbound';
 export interface GoodsReceiptRoutingResult { routingBatchId: number; routeType: GoodsReceiptRouteType; targetDocumentId: number; targetDocumentNo: string; routedQuantity: number; replayed: boolean }

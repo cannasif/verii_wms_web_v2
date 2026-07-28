@@ -8,6 +8,7 @@ import {
   PackageCheck,
   PackageOpen,
   Printer,
+  RefreshCw,
   Search,
   Warehouse,
 } from 'lucide-react';
@@ -15,6 +16,7 @@ import { OpsLoadingState } from '@/components/shared/OpsLoadingState';
 import { OpsCodeBadge, OpsStatusBadge, inferOpsStatusTone, inferQualityStatusTone } from '@/components/shared/OpsStatusBadge';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { formatProjectDate, formatProjectDateTime, formatProjectNumber } from '@/lib/project-format';
 import { cn } from '@/lib/utils';
@@ -26,6 +28,7 @@ import type {
   GoodsReceiptSplitRoutingResult,
 } from '../types/goods-receipt.types';
 import { GoodsReceiptLifecycleDialog, type GoodsReceiptLifecycleAction } from './GoodsReceiptLifecycleDialog';
+import { GoodsReceiptErpRetryDialog } from './GoodsReceiptErpRetryDialog';
 import { GoodsReceiptRoutingDialog } from './GoodsReceiptRoutingDialog';
 
 type OutputMode = 'print' | 'pdf';
@@ -54,10 +57,12 @@ export function GoodsReceiptDetailDialog({
   onRoutingCompleted: (result: GoodsReceiptSplitRoutingResult) => Promise<void>;
 }): ReactElement {
   const { t } = useModuleTranslation('goods-receipt-v2');
+  const { can } = usePermissionAccess();
   const [mainTab, setMainTab] = useState<MainTab>('content');
   const [infoSubTab, setInfoSubTab] = useState<InfoSubTab>('status');
   const [action, setAction] = useState<GoodsReceiptLifecycleAction | null>(null);
   const [routeKind, setRouteKind] = useState<'transfer' | 'outbound' | null>(null);
+  const [erpRetryOpen, setErpRetryOpen] = useState(false);
   const [lineSearch, setLineSearch] = useState('');
   const detail = state.detail;
   const header = detail?.header;
@@ -90,6 +95,11 @@ export function GoodsReceiptDetailDialog({
 
   const printBusy = Boolean(header && busyKey === `${header.id}:all:print`);
   const pdfBusy = Boolean(header && busyKey === `${header.id}:all:pdf`);
+  const erpRetryAvailable = Boolean(
+    header
+      && can('WMS.GOODS_RECEIPT.ERP_RETRY')
+      && ['Pending', 'Failed', 'CommitUncertain'].includes(header.erpIntegrationStatus),
+  );
 
   return (
     <Dialog
@@ -184,6 +194,15 @@ export function GoodsReceiptDetailDialog({
                       label={t('list.route')}
                       icon={<ArrowRightLeft className="size-4" />}
                       onClick={() => setRouteKind('transfer')}
+                    />
+                  ) : null}
+                  {erpRetryAvailable ? (
+                    <LifecycleButton
+                      label={header.erpIntegrationStatus === 'CommitUncertain'
+                        ? 'ERP Mutabakat / Yeniden Gönder'
+                        : 'ERP’ye Gönder'}
+                      icon={<RefreshCw className="size-4" />}
+                      onClick={() => setErpRetryOpen(true)}
                     />
                   ) : null}
                   <LifecycleButton
@@ -564,6 +583,16 @@ export function GoodsReceiptDetailDialog({
                 onCompleted={async (result) => {
                   setRouteKind(null);
                   await onRoutingCompleted(result);
+                }}
+              />
+            ) : null}
+            {erpRetryOpen ? (
+              <GoodsReceiptErpRetryDialog
+                header={header}
+                close={() => setErpRetryOpen(false)}
+                completed={async () => {
+                  setErpRetryOpen(false);
+                  await onLifecycleCompleted(null);
                 }}
               />
             ) : null}

@@ -10,8 +10,6 @@ import { goodsReceiptV2Api } from '../api/goods-receipt.api';
 import { goodsReceiptEnumLabel, goodsReceiptEnumHint } from '../localization/enum-labels';
 import type {
   GoodsReceiptGridRow,
-  GoodsReceiptLifecycleResult,
-  GoodsReceiptSplitRoutingResult,
 } from '../types/goods-receipt.types';
 import { previewReceiptLabelsPdf, printableLabels, printReceiptLabels } from '../utils/goods-receipt-label-output';
 import {
@@ -207,7 +205,7 @@ export function GoodsReceiptListPage(): ReactElement {
   }, [detailView?.id, detailView?.loading, moduleReady, openDetail, output, outputBusy, t]);
 
   const lifecycleCompleted = useCallback(
-    async (_result: GoodsReceiptLifecycleResult | null) => {
+    async () => {
       const id = detailView?.detail?.header.id ?? detailView?.id;
       if (!id) return;
       setDetailView({ id, loading: false, detail: await goodsReceiptV2Api.detail(id) });
@@ -217,7 +215,7 @@ export function GoodsReceiptListPage(): ReactElement {
   );
 
   const routingCompleted = useCallback(
-    async (_result: GoodsReceiptSplitRoutingResult) => {
+    async () => {
       const id = detailView?.detail?.header.id ?? detailView?.id;
       if (!id) return;
       setDetailView({ id, loading: false, detail: await goodsReceiptV2Api.detail(id) });
