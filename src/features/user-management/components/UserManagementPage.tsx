@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Eye, EyeOff, FileSpreadsheet, Loader2, LockKeyhole, Mail, Pencil, Phone, Plus, Shield, Trash2, UserPlus, Users, type LucideIcon } from 'lucide-react';
+import { Eye, EyeOff, FileSpreadsheet, Loader2, LockKeyhole, Mail, Pencil, Phone, Plus, Shield, Trash2, UserPlus, Users, Warehouse, type LucideIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdvancedDataGrid, type GridColumn } from '@/components/shared/AdvancedDataGrid';
 import { AppDropdown } from '@/components/shared/AppDropdown';
@@ -15,17 +15,18 @@ import { Dialog, DialogTitle } from '@/components/ui/dialog';
 import { localizeEnumValue } from '@/lib/enum-localization';
 import { formatProjectDateTime } from '@/lib/project-format';
 import { useProjectSettingsStore } from '@/stores/project-settings-store';
+import { useAuthStore } from '@/stores/auth-store';
 import { userManagementApi } from '../api/user-management.api';
-import type { PermissionGroupOption, UpdateUserPayload, UserRow } from '../types/user-management.types';
+import type { PermissionGroupOption, UpdateUserPayload, UserRow, WarehouseOption } from '../types/user-management.types';
 import { UserImportDialog } from './UserImportDialog';
 
 type FormMode = 'create' | 'edit';
 interface UserFormState {
   id?: number; username: string; email: string; firstName: string; lastName: string; phoneNumber: string;
-  role: UpdateUserPayload['role']; password: string; confirmPassword: string; isActive: boolean; permissionGroupIds: number[];
+  role: UpdateUserPayload['role']; password: string; confirmPassword: string; isActive: boolean; permissionGroupIds: number[]; warehouseIds: number[];
 }
 
-const emptyForm: UserFormState = { username: '', email: '', firstName: '', lastName: '', phoneNumber: '', role: 'User', password: '', confirmPassword: '', isActive: true, permissionGroupIds: [] };
+const emptyForm: UserFormState = { username: '', email: '', firstName: '', lastName: '', phoneNumber: '', role: 'User', password: '', confirmPassword: '', isActive: true, permissionGroupIds: [], warehouseIds: [] };
 
 function validateForm(form: UserFormState, mode: FormMode, minimumPasswordLength: number, maximumPasswordLength: number): Record<string, string> {
   const errors: Record<string, string> = {};
@@ -44,6 +45,7 @@ export function UserManagementPage() {
   const [mode, setMode] = useState<FormMode | null>(null);
   const [form, setForm] = useState<UserFormState>(emptyForm);
   const [groups, setGroups] = useState<PermissionGroupOption[]>([]);
+  const [warehouses, setWarehouses] = useState<WarehouseOption[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [loadingForm, setLoadingForm] = useState(false);
@@ -54,29 +56,33 @@ export function UserManagementPage() {
   const [importOpen, setImportOpen] = useState(false);
   const minimumPasswordLength = useProjectSettingsStore((state) => state.settings.passwordMinimumLength);
   const maximumPasswordLength = useProjectSettingsStore((state) => state.settings.passwordMaximumLength);
+  const branchCode = useAuthStore((state) => state.branch?.code ?? '0');
 
-  const loadGroups = useCallback(async () => {
-    const activeGroups = await userManagementApi.getActiveGroups();
+  const loadLookups = useCallback(async () => {
+    const [activeGroups, warehouseOptions] = await Promise.all([
+      userManagementApi.getActiveGroups(),
+      userManagementApi.getWarehouses(branchCode),
+    ]);
     setGroups(activeGroups);
-    return activeGroups;
-  }, []);
+    setWarehouses(warehouseOptions);
+  }, [branchCode]);
 
   const openCreate = useCallback(async () => {
     setMode('create'); setForm(emptyForm); setErrors({}); setShowPassword(false); setLoadingForm(true);
-    try { await loadGroups(); }
-    catch (error) { toast.error(error instanceof Error ? error.message : 'Yetki grupları alınamadı.'); setMode(null); }
+    try { await loadLookups(); }
+    catch (error) { toast.error(error instanceof Error ? error.message : 'Yetki grupları ve depolar alınamadı.'); setMode(null); }
     finally { setLoadingForm(false); }
-  }, [loadGroups]);
+  }, [loadLookups]);
 
   const openEdit = useCallback(async (row: UserRow) => {
     setMode('edit'); setForm({ ...emptyForm, id: row.id, username: row.username, email: row.email, firstName: row.firstName, lastName: row.lastName, role: row.role as UpdateUserPayload['role'], isActive: row.isActive });
     setErrors({}); setShowPassword(false); setLoadingForm(true);
     try {
-      const [detail] = await Promise.all([userManagementApi.getById(row.id), loadGroups()]);
-      setForm({ id: detail.id, username: detail.username, email: detail.email, firstName: detail.firstName || '', lastName: detail.lastName || '', phoneNumber: detail.phoneNumber || '', role: detail.role as UpdateUserPayload['role'], password: '', confirmPassword: '', isActive: detail.isActive, permissionGroupIds: detail.permissionGroupIds });
+      const [detail] = await Promise.all([userManagementApi.getById(row.id), loadLookups()]);
+      setForm({ id: detail.id, username: detail.username, email: detail.email, firstName: detail.firstName || '', lastName: detail.lastName || '', phoneNumber: detail.phoneNumber || '', role: detail.role as UpdateUserPayload['role'], password: '', confirmPassword: '', isActive: detail.isActive, permissionGroupIds: detail.permissionGroupIds, warehouseIds: detail.warehouseIds });
     } catch (error) { toast.error(error instanceof Error ? error.message : 'Kullanıcı bilgileri alınamadı.'); setMode(null); }
     finally { setLoadingForm(false); }
-  }, [loadGroups]);
+  }, [loadLookups]);
 
   const closeForm = () => { if (!saving) { setMode(null); setErrors({}); } };
   const updateForm = <K extends keyof UserFormState>(key: K, value: UserFormState[K]) => {
@@ -103,6 +109,7 @@ export function UserManagementPage() {
         role: detail.role as UpdateUserPayload['role'],
         isActive: checked,
         permissionGroupIds: detail.permissionGroupIds,
+        warehouseIds: detail.warehouseIds,
       });
       toast.success(checked ? 'Kullanıcı aktifleştirildi.' : 'Kullanıcı pasife alındı.');
       await refreshGrid();
@@ -120,7 +127,7 @@ export function UserManagementPage() {
     if (Object.keys(nextErrors).length > 0) return;
     setSaving(true);
     try {
-      const shared = { username: form.username.trim(), email: form.email.trim(), firstName: form.firstName.trim() || undefined, lastName: form.lastName.trim() || undefined, phoneNumber: form.phoneNumber.trim() || undefined, role: form.role, isActive: form.isActive, permissionGroupIds: form.permissionGroupIds };
+      const shared = { username: form.username.trim(), email: form.email.trim(), firstName: form.firstName.trim() || undefined, lastName: form.lastName.trim() || undefined, phoneNumber: form.phoneNumber.trim() || undefined, role: form.role, isActive: form.isActive, permissionGroupIds: form.permissionGroupIds, warehouseIds: form.warehouseIds };
       if (mode === 'create') {
         if (form.role === 'superadmin') throw new Error('Form üzerinden superadmin oluşturulamaz.');
         await userManagementApi.create({ ...shared, password: form.password, role: form.role });
@@ -314,6 +321,31 @@ export function UserManagementPage() {
                           <span>
                             <strong className="block text-sm">{group.name}</strong>
                             <small className="text-slate-500">{group.permissionCount} izin{group.isSystemAdmin ? ' • Sistem grubu' : ''}</small>
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="mb-2 flex items-center justify-between">
+                      <p className="inline-flex items-center gap-2 text-sm font-semibold"><Warehouse className="size-4 text-[var(--wms-brand-primary)]" /> Çalışabileceği Depolar</p>
+                      <span className="text-xs text-slate-500">{form.warehouseIds.length ? `${form.warehouseIds.length} depo seçili` : 'Tanım yok: tüm depolar'}</span>
+                    </div>
+                    <p className="mb-3 text-xs text-slate-500">
+                      Depo seçilirse kullanıcı yalnızca seçilen depolarda mal kabul yapabilir. Hiç depo seçilmezse tüm depolar açık olur. Admin rolü her zaman tüm depoları görür.
+                    </p>
+                    <div className="grid max-h-56 gap-2 overflow-auto sm:grid-cols-2">
+                      {warehouses.map((warehouse) => (
+                        <label key={warehouse.id} className="flex cursor-pointer items-start gap-3 rounded-xl border p-3 hover:bg-[var(--wms-brand-soft)]">
+                          <input
+                            type="checkbox"
+                            disabled={form.role === 'Admin' || isPrimaryAdministrator}
+                            checked={form.warehouseIds.includes(warehouse.id)}
+                            onChange={() => updateForm('warehouseIds', form.warehouseIds.includes(warehouse.id) ? form.warehouseIds.filter((id) => id !== warehouse.id) : [...form.warehouseIds, warehouse.id])}
+                          />
+                          <span>
+                            <strong className="block text-sm">Depo {warehouse.warehouseCode}</strong>
+                            <small className="text-slate-500">{warehouse.warehouseName}</small>
                           </span>
                         </label>
                       ))}
