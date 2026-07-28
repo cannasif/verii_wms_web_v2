@@ -43,6 +43,11 @@ import type {
 } from "../types/goods-receipt.types";
 import { useModuleTranslation } from "@/hooks/useModuleTranslation";
 import { printReceiptLabels } from "../utils/goods-receipt-label-output";
+import {
+  activePreLabelsForTask,
+  isGoodsReceiptLabelBarcode,
+  printedPreLabelsForTask,
+} from "../utils/goods-receipt-pre-label-flow";
 
 export function GoodsReceiptTasksPage({
   assignedOnly = false,
@@ -301,6 +306,7 @@ function TaskModal({
   reload: () => void;
 }): ReactElement {
   const { t } = useModuleTranslation("goods-receipt-v2");
+  const [labelsRevision, setLabelsRevision] = useState(0);
   const toggle = (id: number) =>
     setSelectedUsers(
       selectedUsers.includes(id)
@@ -423,13 +429,20 @@ function TaskModal({
             </button>
           </div>
           {detail.task.labelStrategy === "PreGenerate" && (
-            <PreLabelPanel detail={detail} />
+            <PreLabelPanel
+              detail={detail}
+              onLabelsChanged={() => setLabelsRevision((value) => value + 1)}
+            />
           )}
           {detail.task.labelStrategy === "GenerateOnReceipt" && (
             <ReceiptGeneratedLabelsPanel detail={detail} />
           )}
           {detail.task.status === "InProgress" && (
-            <TaskScanPanel detail={detail} reload={reload} />
+            <TaskScanPanel
+              detail={detail}
+              labelsRevision={labelsRevision}
+              reload={reload}
+            />
           )}
         </>
       ) : (
@@ -479,7 +492,10 @@ function TaskModal({
             </div>
           </section>
           {detail.task.labelStrategy === "PreGenerate" && (
-            <PreLabelPanel detail={detail} />
+            <PreLabelPanel
+              detail={detail}
+              onLabelsChanged={() => setLabelsRevision((value) => value + 1)}
+            />
           )}
           {detail.task.labelStrategy === "GenerateOnReceipt" && (
             <ReceiptGeneratedLabelsPanel detail={detail} />
@@ -572,17 +588,54 @@ function ReceiptGeneratedLabelsPanel({
 
 function PreLabelPanel({
   detail,
+  onLabelsChanged,
 }: {
   detail: GoodsReceiptTaskDetail;
+  onLabelsChanged: () => void;
 }): ReactElement {
   const [busy, setBusy] = useState(false);
   const [generated, setGenerated] =
     useState<GoodsReceiptLabelBatchDetail | null>(null);
-  const [printed, setPrinted] = useState(false);
+  const [existingLabels, setExistingLabels] = useState<GoodsReceiptLabelRow[]>([]);
   const generationIdempotencyKey = useRef(crypto.randomUUID());
-  const hasOpenLines = detail.lines.some(
-    (x) => x.processedQuantity < x.plannedQuantity,
+  const openTaskLineIds = useMemo(
+    () =>
+      new Set(
+        detail.lines
+          .filter((line) => line.processedQuantity < line.plannedQuantity)
+          .map((line) => line.id),
+      ),
+    [detail.lines],
   );
+  const openLineKey = [...openTaskLineIds].join("|");
+  const hasOpenLines = openTaskLineIds.size > 0;
+  const generatedLabels = generated?.labels ?? [];
+  const availableLabels =
+    generatedLabels.length > 0 ? generatedLabels : existingLabels;
+  const printedCount = availableLabels.filter(
+    (label) => label.status === "Printed" || label.printCount > 0,
+  ).length;
+
+  useEffect(() => {
+    let active = true;
+    setBusy(true);
+    void goodsReceiptV2Api
+      .receiptLabels(detail.task.goodsReceiptId)
+      .then((labels) => {
+        if (active)
+          setExistingLabels(activePreLabelsForTask(labels, openTaskLineIds));
+      })
+      .catch((error) => {
+        if (active) toast.error(message(error, "Mevcut ön etiketler alınamadı."));
+      })
+      .finally(() => {
+        if (active) setBusy(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [detail.task.goodsReceiptId, openLineKey, openTaskLineIds]);
+
   const create = async () => {
     const lines = detail.lines
       .filter((x) => x.processedQuantity < x.plannedQuantity)
@@ -601,7 +654,8 @@ function PreLabelPanel({
         generationIdempotencyKey.current,
       );
       setGenerated(result);
-      setPrinted(false);
+      setExistingLabels(result.labels);
+      onLabelsChanged();
       toast.success(
         `${result.batch.totalLabelCount} ön etiket üretildi. Şimdi etiketleri yazdırın.`,
       );
@@ -612,17 +666,38 @@ function PreLabelPanel({
     }
   };
   const print = async () => {
-    if (!generated) return;
-    const labelIds = generated.labels.map((x) => x.id);
+    const labelIds = availableLabels.map((x) => x.id);
     if (labelIds.length === 0) {
       toast.error("Yazdırılabilir etiket bulunamadı.");
       return;
     }
     setBusy(true);
     try {
-      printReceiptLabels(generated.labels, generated.batch.batchNo);
+      printReceiptLabels(
+        availableLabels,
+        generated?.batch.batchNo ?? `${detail.task.taskNo} ön etiketleri`,
+      );
       await goodsReceiptV2Api.markLabelsPrinted(labelIds);
-      setPrinted(true);
+      setExistingLabels((current) =>
+        current.map((label) =>
+          labelIds.includes(label.id)
+            ? { ...label, status: "Printed", printCount: label.printCount + 1 }
+            : label,
+        ),
+      );
+      setGenerated((current) =>
+        current
+          ? {
+              ...current,
+              labels: current.labels.map((label) => ({
+                ...label,
+                status: "Printed",
+                printCount: label.printCount + 1,
+              })),
+            }
+          : current,
+      );
+      onLabelsChanged();
       toast.success(
         "Etiketler yazdırıldı olarak kaydedildi. Artık barkodu okutarak kabul yapabilirsiniz.",
       );
@@ -647,7 +722,7 @@ function PreLabelPanel({
         </div>
         <button
           type="button"
-          disabled={busy || generated !== null || !hasOpenLines}
+          disabled={busy || availableLabels.length > 0 || !hasOpenLines}
           onClick={() => void create()}
           className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-4 py-2 font-semibold text-white disabled:opacity-40"
         >
@@ -656,27 +731,26 @@ function PreLabelPanel({
           ) : (
             <Barcode className="size-4" />
           )}
-          {generated
-            ? "Etiket Oluşturuldu"
+          {availableLabels.length > 0
+            ? "Aktif Etiket Mevcut"
             : hasOpenLines
               ? "Ön Etiket Oluştur"
               : "Açık Satır Yok"}
         </button>
       </div>
-      {generated && (
+      {availableLabels.length > 0 && (
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-cyan-500/25 bg-[var(--wms-app-surface)] p-3">
           <div className="text-sm">
-            <strong className="block">{generated.batch.batchNo}</strong>
+            <strong className="block">
+              {generated?.batch.batchNo ?? detail.task.taskNo}
+            </strong>
             <span className="text-xs text-slate-500">
-              {generated.batch.totalLabelCount} etiket ·{" "}
-              {printed
-                ? "Yazdırıldı, barkod okutulabilir"
-                : "Kabulden önce yazdırılmalı"}
+              {availableLabels.length} aktif etiket · {printedCount} yazdırılmış
             </span>
           </div>
           <button
             type="button"
-            disabled={busy || printed}
+            disabled={busy}
             onClick={() => void print()}
             className="inline-flex items-center gap-2 rounded-xl border border-cyan-500/40 px-4 py-2 font-semibold text-cyan-500 disabled:opacity-40"
           >
@@ -685,7 +759,9 @@ function PreLabelPanel({
             ) : (
               <Printer className="size-4" />
             )}
-            {printed ? "Yazdırıldı" : "Etiketleri Yazdır"}
+            {printedCount === availableLabels.length
+              ? "Etiketleri Yeniden Yazdır"
+              : "Etiketleri Yazdır"}
           </button>
         </div>
       )}
@@ -695,16 +771,24 @@ function PreLabelPanel({
 
 function TaskScanPanel({
   detail,
+  labelsRevision,
   reload,
 }: {
   detail: GoodsReceiptTaskDetail;
+  labelsRevision: number;
   reload: () => void;
 }): ReactElement {
-  const openLines = detail.lines.filter(
-    (x) => x.processedQuantity < x.plannedQuantity,
+  const openLines = useMemo(
+    () =>
+      detail.lines.filter(
+        (line) => line.processedQuantity < line.plannedQuantity,
+      ),
+    [detail.lines],
   );
   const [lineId, setLineId] = useState(String(openLines[0]?.id ?? ""));
   const [barcode, setBarcode] = useState("");
+  const [barcodeSource, setBarcodeSource] = useState("");
+  const [printedLabels, setPrintedLabels] = useState<GoodsReceiptLabelRow[]>([]);
   const [quantity, setQuantity] = useState("");
   const [lot, setLot] = useState("");
   const [serial, setSerial] = useState("");
@@ -714,8 +798,42 @@ function TaskScanPanel({
   const scanIdempotencyKey = useRef(crypto.randomUUID());
   const navigate = useNavigate();
   const selectedLine = openLines.find((x) => String(x.id) === lineId);
+  const requiresPreLabel = detail.task.labelStrategy === "PreGenerate";
+  const hasValidBarcode =
+    barcode.trim().length > 0 &&
+    (!requiresPreLabel || isGoodsReceiptLabelBarcode(barcodeSource));
+  const openLineKey = openLines.map((line) => line.id).join("|");
+
+  useEffect(() => {
+    if (!requiresPreLabel) {
+      setPrintedLabels([]);
+      return;
+    }
+    let active = true;
+    void goodsReceiptV2Api
+      .receiptLabels(detail.task.goodsReceiptId)
+      .then((labels) => {
+        if (active)
+          setPrintedLabels(
+            printedPreLabelsForTask(labels, new Set(openLines.map((line) => line.id))),
+          );
+      })
+      .catch((error) => {
+        if (active) toast.error(message(error, "Basılmış ön etiketler alınamadı."));
+      });
+    return () => {
+      active = false;
+    };
+  }, [
+    detail.task.goodsReceiptId,
+    labelsRevision,
+    openLineKey,
+    openLines,
+    requiresPreLabel,
+  ]);
+
   const submit = async () => {
-    if (!lineId || !barcode.trim()) {
+    if (!lineId || !hasValidBarcode) {
       toast.error("Önce barkodu çözümleyin ve emir satırını doğrulayın.");
       return;
     }
@@ -749,6 +867,7 @@ function TaskScanPanel({
       if (result.generatedLabelId)
         toast.success("Ürün etiketi otomatik oluşturuldu; kabul etiketleri bölümünden yazdırabilirsiniz.");
       setBarcode("");
+      setBarcodeSource("");
       setQuantity("");
       setLot("");
       setSerial("");
@@ -764,6 +883,19 @@ function TaskScanPanel({
   };
   return (
     <section className="mt-5 space-y-4">
+      {requiresPreLabel && (
+        <div
+          className={`rounded-xl border p-3 text-sm ${
+            printedLabels.length > 0
+              ? "border-cyan-500/30 bg-cyan-500/5"
+              : "border-amber-500/30 bg-amber-500/5"
+          }`}
+        >
+          {printedLabels.length > 0
+            ? `${printedLabels.length} basılmış ön etiket okutmaya hazır. Ürün/tedarikçi barkodu yerine bu etiketlerden birini okutun.`
+            : "Bu emir ön etiketlidir. Kabulden önce yukarıdaki bölümden etiket oluşturup yazdırın."}
+        </div>
+      )}
       <WarehouseBarcodeScanner
         branchCode={detail.task.branchCode ?? "0"}
         purpose="Inbound"
@@ -771,8 +903,20 @@ function TaskScanPanel({
         expectedStockId={selectedLine?.stockId}
         disabled={busy}
         title="Mal kabul barkodunu okut"
-        description="Sistem etiketi, GS1, tedarikçi stok barkodu veya seçili stok için seri barkodu çözümlenir."
+        description={
+          requiresPreLabel
+            ? "Bu emir için yalnız oluşturulup yazdırılan ön etiket barkodu kabul edilir."
+            : "Sistem etiketi, GS1, tedarikçi stok barkodu veya seçili stok için seri barkodu çözümlenir."
+        }
         onResolved={(value) => {
+          if (requiresPreLabel && !isGoodsReceiptLabelBarcode(value.source)) {
+            setBarcode("");
+            setBarcodeSource("");
+            toast.error(
+              "Bu emir ön etiketlidir. Ürün/tedarikçi barkodu değil, oluşturup yazdırdığınız ön etiketin üzerindeki barkodu okutun.",
+            );
+            return;
+          }
           const matched = openLines.find(
             (x) =>
               x.stockId === value.stockId &&
@@ -780,6 +924,7 @@ function TaskScanPanel({
           );
           if (matched) setLineId(String(matched.id));
           setBarcode(value.rawBarcode);
+          setBarcodeSource(value.source);
           setQuantity(value.quantity != null ? String(value.quantity) : "");
           setLot(value.lotNo ?? "");
           setSerial(value.serialNo ?? "");
@@ -841,7 +986,7 @@ function TaskScanPanel({
           />
           <button
             type="button"
-            disabled={busy || !barcode}
+            disabled={busy || !hasValidBarcode}
             onClick={() => void submit()}
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 font-semibold text-white disabled:opacity-40"
           >
