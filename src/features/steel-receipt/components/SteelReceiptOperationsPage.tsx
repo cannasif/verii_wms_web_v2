@@ -9,8 +9,9 @@ import {goodsReceiptV2Api} from '@/features/goods-receipt-v2/api/goods-receipt.a
 import {printReceiptLabels} from '@/features/goods-receipt-v2/utils/goods-receipt-label-output';
 import {localizeEnumValue} from '@/lib/enum-localization';
 import {formatProjectNumber} from '@/lib/project-format';
+import {useAuthStore} from '@/stores/auth-store';
 import {steelReceiptApi} from '../api/steel-receipt.api';
-import type {ConvertResult,SteelLineRow,SteelReceiptSource} from '../types/steel-receipt.types';
+import type {ConvertResult,SteelLineRow,SteelPendingReceiptSource,SteelReceiptSource} from '../types/steel-receipt.types';
 import {SteelProcessHeader} from './SteelProcessHeader';
 
 const O='steelGoodReceiptAcceptance.operations';
@@ -36,7 +37,9 @@ export function SteelReceiptOperationsPage({initialTab='receipt'}:{initialTab?:'
 function ReceiptPanel(){
   const {t}=useTranslation('common');
   const R=`${O}.receipt`;
+  const branchCode=useAuthStore(state=>state.branch?.code??'0');
   const [reference,setReference]=useState('');
+  const [selectedSourceReference,setSelectedSourceReference]=useState<string|null>(null);
   const [source,setSource]=useState<SteelReceiptSource|null>(null);
   const [selected,setSelected]=useState<Record<number,SteelLineRow>>({});
   const [note,setNote]=useState('');
@@ -74,7 +77,7 @@ function ReceiptPanel(){
     setBusy(true);if(!preserveResult)setLastResult(null);
     try{
       const result=await steelReceiptApi.receiptSource(normalized);
-      setSource(result);setSelected({});
+      setSource(result);setSelectedSourceReference(result.importReferenceNo);setSelected({});
       const sourceReceipt=(result.waybillNo??'').trim();
       const electronic=sourceReceipt.length===16;
       setIsElectronic(electronic);
@@ -82,7 +85,7 @@ function ReceiptPanel(){
       setDocumentDate(result.waybillDate?.slice(0,10)||today());
       toast.success(`${result.importReferenceNo} aktarımı getirildi.`);
     }catch(error){
-      setSource(null);setSelected({});setReceiptNo('');
+      setSource(null);setSelectedSourceReference(null);setSelected({});setReceiptNo('');
       toast.error(error instanceof Error?error.message:'SAC kaynağı getirilemedi.');
     }finally{setBusy(false)}
   };
@@ -120,6 +123,42 @@ function ReceiptPanel(){
   return <div className="space-y-5">
     <section className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5">
       <SectionHead title="Excel aktarımı veya irsaliye ile SAC kaynağı bul" text="Kaynağa bağlı onaylı, onaysız ve daha önce işlenmiş tüm levhalar birlikte gösterilir. Yalnızca onaylı ve henüz mal kabule aktarılmamış satırlar seçilebilir."/>
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        <Field label="Tamamlanmamış Excel aktarımı">
+          <PagedAppDropdown<SteelPendingReceiptSource>
+            queryKey={['steel-pending-receipt-sources',branchCode]}
+            fetchPage={request=>steelReceiptApi.pendingReceiptSourcesPaged({
+              pageNumber:request.pageNumber,
+              pageSize:request.pageSize,
+              search:request.search??null,
+              searchFields:request.searchFields,
+              sortBy:request.sortBy??'importedAtUtc',
+              sortDirection:request.sortDirection??'desc',
+              filterLogic:'and',
+              filters:[{column:'branchCode',operator:'equals',value:branchCode}],
+            })}
+            toOption={item=>({
+              value:item.importReferenceNo,
+              label:`${item.importReferenceNo} · ${item.supplierCode}`,
+              description:`${item.waybillNo?`İrsaliye ${item.waybillNo} · `:''}${item.pendingLineCount}/${item.totalLineCount} levha bekliyor`,
+            })}
+            value={selectedSourceReference}
+            onValueChange={value=>{setSelectedSourceReference(value);setReference(value);void loadSource(value)}}
+            selectedOption={source?{
+              value:source.importReferenceNo,
+              label:`${source.importReferenceNo} · ${source.supplierCode}`,
+              description:`${source.waybillNo?`İrsaliye ${source.waybillNo} · `:''}${source.lines.filter(line=>line.conversionStatus==='NotCreated').length}/${source.totalLineCount} levha bekliyor`,
+            }:undefined}
+            searchFields={['importReferenceNo','waybillNo','supplierCode','supplierName']}
+            sortBy="importedAtUtc"
+            sortDirection="desc"
+            searchable
+            minSearchLength={0}
+            placeholder="Mal kabulü tamamlanmamış aktarımı seçin"
+            emptyText="Bekleyen Excel aktarımı bulunmuyor"
+          />
+        </Field>
+      </div>
       <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto]">
         <Field label="Excel aktarım referansı / irsaliye no">
           <div className="relative"><Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-500"/><input className="input pl-10 font-mono" value={reference} onChange={event=>setReference(event.target.value)} onKeyDown={event=>{if(event.key==='Enter'){event.preventDefault();void loadSource()}}} placeholder="Aktarım ref veya alış irsaliye no"/></div>

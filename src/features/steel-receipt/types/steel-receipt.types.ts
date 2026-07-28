@@ -27,6 +27,11 @@ export interface SteelReceiptSource {
   supplierId:number;supplierCode:string;supplierName:string;status:string;totalLineCount:number;
   totalExpectedQuantity:number;lines:SteelLineRow[];
 }
+export interface SteelPendingReceiptSource {
+  planId:number;branchCode:string;importReferenceNo:string;sourceFileName:string;
+  waybillNo?:string;waybillDate?:string;supplierCode:string;supplierName:string;
+  pendingLineCount:number;totalLineCount:number;importedAtUtc:string;
+}
 export type SteelReceiptConversionMode='Task'|'Direct';
 export interface ConvertResult {
   goodsReceiptId:number;documentNo:string;taskId?:number;taskNo?:string;
