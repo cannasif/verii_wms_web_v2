@@ -2,7 +2,7 @@ import { api } from '@/lib/axios';
 import { resolveStockTrackingPolicy } from '@/features/stock-tracking/effective-stock-tracking.service';
 import type { DropdownPage, DropdownPageRequest } from '@/hooks/useDropdownInfiniteSearch';
 import type { GridPage as AdvancedGridPage, GridRequest } from '@/components/shared/AdvancedDataGrid';
-import type { ActiveUserOption, CreateGoodsReceiptResult, CustomerOption, ErpPostingResult, GoodsReceiptDetail, GoodsReceiptGridRow, GoodsReceiptLabelBatchDetail, GoodsReceiptLabelBatchRow, GoodsReceiptLabelRow, GoodsReceiptLifecycleResult, GoodsReceiptRoutingResult, GoodsReceiptSplitRoutingResult, GoodsReceiptTaskDetail, GoodsReceiptTaskGridRow, LocationOption, ManualGoodsReceiptResult, OpenOrderHeader, OpenOrderLine, PutawayLocationSuggestion, ReceiveGoodsReceiptTaskResult, SeriesOption, StockOption, UserWarehouseAccess, WarehouseOption, YapCodeOption } from '../types/goods-receipt.types';
+import type { ActiveUserOption, CreateGoodsReceiptResult, CustomerOption, ErpPostingResult, GoodsReceiptDetail, GoodsReceiptGridRow, GoodsReceiptLabelBatchDetail, GoodsReceiptLabelBatchRow, GoodsReceiptLabelRow, GoodsReceiptLifecycleResult, GoodsReceiptQualityRequirementResult, GoodsReceiptRoutingResult, GoodsReceiptSplitRoutingResult, GoodsReceiptTaskDetail, GoodsReceiptTaskGridRow, LocationOption, ManualGoodsReceiptResult, OpenOrderHeader, OpenOrderLine, PutawayLocationSuggestion, ReceiveGoodsReceiptTaskResult, SeriesOption, StockOption, UserWarehouseAccess, WarehouseOption, YapCodeOption } from '../types/goods-receipt.types';
 import type { OperationCancellationResult } from '@/features/shared/api/operation-cancellation';
 import { buildDropdownPagedBody } from '@/lib/dropdown-paging';
 
@@ -14,6 +14,14 @@ const pagedBody = (request: DropdownPageRequest, filters: unknown[] = []) =>
 
 export const goodsReceiptV2Api = {
   trackingPolicy: resolveStockTrackingPolicy,
+  qualityRequirements: async (
+    branchCode: string,
+    stockIds: number[],
+  ): Promise<GoodsReceiptQualityRequirementResult> =>
+    unwrap(await api.post<Envelope<GoodsReceiptQualityRequirementResult>>(
+      '/api/goods-receipts/quality-requirements',
+      { branchCode, stockIds: [...new Set(stockIds)] },
+    )),
   warehouseAccess: async (): Promise<UserWarehouseAccess> =>
     unwrap(await api.get<Envelope<UserWarehouseAccess>>('/api/goods-receipts/warehouse-access')),
   customers: async (request: DropdownPageRequest, branchCode: string): Promise<GridPage<CustomerOption>> => unwrap(await api.post<Envelope<GridPage<CustomerOption>>>('/api/erp-mirror/customers/paged', pagedBody({ ...request, sortBy: request.sortBy ?? 'customerCode' }, [{ column: 'branchCode', operator: 'equals', value: branchCode }]), { signal: request.signal })),
