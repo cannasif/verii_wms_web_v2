@@ -1182,6 +1182,13 @@ html[dir='rtl'] .app-navbar-panel::after {
   filter: drop-shadow(0 0 22px var(--wms-ops-accent-soft));
 }
 
+/* Eyebrow pill + gradient title aynı satıra kaymasın */
+.wms-ops-form .wms-ops-eyebrow + .wms-ops-title-main {
+  display: block;
+  width: 100%;
+  margin-top: 0.35rem;
+}
+
 .dark .wms-ops-form .wms-ops-title-main {
   background: linear-gradient(
     118deg,
