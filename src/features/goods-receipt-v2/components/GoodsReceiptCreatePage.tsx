@@ -1735,7 +1735,8 @@ export function GoodsReceiptCreatePage({
               id="goods-receipt-selected-lines"
               className="wms-ops-receipt-selected-lines scroll-mt-5 overflow-visible rounded-2xl pb-24"
               data-wms-error-target="selectedLines"
-              data-wms-error-keys="hedef depo|kabul rafı|miktar|lot/seri|seri satırı|üretim tarihi|son kullanma|aynı seri|tek depo|seçilen depo|target warehouse|receiving shelf|quantity|lot/serial|serial row|manufacturing date|expiration date|duplicate serial|document series|operation user|assignees"
+              data-wms-error-scope="container"
+              data-wms-error-keys="tek depo|seçilen depo|single warehouse|selected warehouse"
             >
                   <header className="wms-ops-receipt-selected-lines__header px-5 py-4">
                     <h2 className="text-xl font-black">
@@ -2506,6 +2507,7 @@ function ReceiptEntryRow({
   return (
     <div
       data-receipt-line-key={dataLineKey}
+      data-wms-error-line-ref={`${line.siparisNo} / ${line.stockCode ?? line.orderId}`}
       style={{ order: sortOrder }}
       className={cn(
         "wms-ops-receipt-entry-row space-y-3 rounded-xl",
@@ -2561,7 +2563,11 @@ function ReceiptEntryRow({
           </div>
 
           <div className="wms-ops-receipt-entry-row__fields grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-            <div className="space-y-1">
+            <div
+              className="space-y-1"
+              data-wms-error-target="quantity"
+              data-wms-error-keys="miktar kullanılabilir|miktar aralığında|quantity range|available quantity"
+            >
               <label className="wms-ops-entry-label">{t("createFlow.entryRow.quantity")}</label>
               <OpsFieldShell>
                 <div className="wms-ops-qty-stepper relative">
@@ -2632,7 +2638,11 @@ function ReceiptEntryRow({
               </OpsFieldShell>
             </div>
 
-            <div className="space-y-1">
+            <div
+              className="space-y-1"
+              data-wms-error-target="serial"
+              data-wms-error-keys="lot/seri planı|lot/seri toplamı|seri satırı|benzersiz seri|aynı seri|miktar kadar benzersiz seri|takipsiz kalemde lot|lot zorunludur|üretim tarihi|son kullanma|lot/serial plan|serial row|duplicate serial|manufacturing date|expiration date"
+            >
               <label className="wms-ops-entry-label">{t("createFlow.entryRow.serialNo")}</label>
               {needsTracking ? (
                 <OpsFieldShell>
@@ -2664,7 +2674,11 @@ function ReceiptEntryRow({
               )}
             </div>
 
-            <div className="space-y-1">
+            <div
+              className="space-y-1"
+              data-wms-error-target="location"
+              data-wms-error-keys="hedef depo|kabul rafı|target warehouse|receiving shelf"
+            >
               <label className="wms-ops-entry-label">{t("createFlow.entryRow.locationCode")}</label>
               <OpsFieldShell
                 className={cn(

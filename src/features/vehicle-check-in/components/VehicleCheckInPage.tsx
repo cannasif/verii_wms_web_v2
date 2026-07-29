@@ -1,4 +1,4 @@
-import {useCallback,useEffect,useMemo,useState,type ChangeEvent,type ReactNode} from 'react';
+import {useCallback,useEffect,useMemo,useRef,useState,type ChangeEvent,type ReactNode} from 'react';
 import {useQuery} from '@tanstack/react-query';
 import {useTranslation} from 'react-i18next';
 import {Link,useSearchParams} from 'react-router-dom';
@@ -126,7 +126,7 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
     enabled:Boolean(candidateSearch),
     queryFn:()=>vehicleCheckInApi.steelCandidates(branch,{
       pageNumber:1,
-      pageSize:Math.min(100,Math.max(10,form.steelSheetCount*2)),
+      pageSize:500,
       search:candidateSearch?.value||null,
       filterLogic:'and',
       filters:[],
@@ -236,6 +236,29 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
       };
     });
   };
+  const toggleAllCandidates=(visibleRows:SteelVehicleAcceptanceCandidate[],select:boolean)=>{
+    if(select){
+      setSelected(current=>{
+        const next={...current};
+        let count=Object.keys(next).length;
+        let skipped=0;
+        for(const row of visibleRows){
+          if(next[row.id])continue;
+          if(count>=form.steelSheetCount){skipped++;continue}
+          next[row.id]={row,locationId:row.receivingLocationId,locationValue:String(row.receivingLocationId),note:''};
+          count++;
+        }
+        if(skipped>0)toast.error(t('vehicleCheckIn.toast.sheetSelectionLimit',{defaultValue:'Araç için {{count}} levha seçebilirsiniz.',count:form.steelSheetCount}));
+        return next;
+      });
+      return;
+    }
+    setSelected(current=>{
+      const next={...current};
+      visibleRows.forEach(row=>{delete next[row.id]});
+      return next;
+    });
+  };
 
   const updateSelected=(lineId:number,changes:Partial<SelectedPlate>)=>
     setSelected(current=>current[lineId]?{...current,[lineId]:{...current[lineId],...changes}}:current);
@@ -257,8 +280,6 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
     if(!form.plateNo.trim()){toast.error(t('vehicleCheckIn.toast.towingPlateRequired',{defaultValue:'Çekici plakası zorunludur.'}));return}
     if(selectedCount!==form.steelSheetCount){toast.error(t('vehicleCheckIn.toast.exactSheetCount',{defaultValue:'Girilen levha adedi {{count}}; tam olarak {{count}} levha seçilmelidir.',count:form.steelSheetCount}));return}
     if(selectedPlates.some(item=>!item.locationId)){toast.error(t('vehicleCheckIn.toast.locationRequired',{defaultValue:'Her levha için kabul konumu seçilmelidir.'}));return}
-    const missingPhoto=selectedPlates.find(item=>item.row.attachmentCount+(plateFiles[item.row.id]?.length??0)===0);
-    if(missingPhoto){toast.error(t('vehicleCheckIn.toast.sheetImageRequired',{defaultValue:'{{dCode}} için en az bir levha görseli zorunludur.',dCode:missingPhoto.row.dCode}));return}
     if((record?.images.length??0)+vehicleFiles.length===0){toast.error(t('vehicleCheckIn.toast.vehicleImageRequired',{defaultValue:'Araç kabulü için en az bir araç görseli zorunludur.'}));return}
 
     setBusy(true);
@@ -307,7 +328,7 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
         <Field label={t('vehicleCheckIn.field.driverPhone',{defaultValue:'Şoför telefonu'})}><input className="input" value={form.driverPhone||''} onChange={event=>patch('driverPhone',event.target.value)} maxLength={40}/></Field>
         <Field label={t('vehicleCheckIn.field.carrier',{defaultValue:'Nakliyeci / taşıyıcı'})}><input className="input" value={form.carrierName||''} onChange={event=>patch('carrierName',event.target.value)} maxLength={200}/></Field>
         <Field label={t('vehicleCheckIn.field.sheetCount',{defaultValue:'SAC levha adedi *'})}><input className="input" type="number" min="1" max="50" step="1" value={form.steelSheetCount} onChange={event=>patch('steelSheetCount',Number(event.target.value))}/></Field>
-        <Field label={t('vehicleCheckIn.field.customer',{defaultValue:'Tedarikçi / cari'})}><PagedAppDropdown queryKey={['vehicle-check-in-customers',branch]} fetchPage={request=>goodsReceiptV2Api.customers(request,branch)} toOption={customerOption} value={customer} onValueChange={value=>{setCustomer(value);const [id]=value?.split('|')??[];patch('customerId',id?Number(id):undefined)}} searchable minSearchLength={2} placeholder={t('vehicleCheckIn.placeholder.selectCustomer',{defaultValue:'Cari seçin'})}/></Field>
+        <Field label={t('vehicleCheckIn.field.customer',{defaultValue:'Tedarikçi / cari'})}><PagedAppDropdown portalContainer={null} queryKey={['vehicle-check-in-customers',branch]} fetchPage={request=>goodsReceiptV2Api.customers(request,branch)} toOption={customerOption} value={customer} onValueChange={value=>{setCustomer(value);const [id]=value?.split('|')??[];patch('customerId',id?Number(id):undefined)}} searchable minSearchLength={2} placeholder={t('vehicleCheckIn.placeholder.selectCustomer',{defaultValue:'Cari seçin'})}/></Field>
         <div className="md:col-span-2 xl:col-span-3"><Field label={t('vehicleCheckIn.field.acceptanceNote',{defaultValue:'Saha / kabul notu'})}><textarea className="input min-h-20" value={form.note||''} onChange={event=>patch('note',event.target.value)} maxLength={1000}/></Field></div>
       </div>
     </Panel>
@@ -343,7 +364,7 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
           </div>
         </div>
       )}
-      {candidateSearch&&<CandidateTable rows={candidateRows} loading={candidates.isFetching} selected={selected} onToggle={togglePlate}/>}
+      {candidateSearch&&<CandidateTable rows={candidateRows} loading={candidates.isFetching} selected={selected} onToggle={togglePlate} onToggleAll={toggleAllCandidates}/>}
     </Panel>
 
     {selectedCount>0&&<Panel title={t('vehicleCheckIn.section.selectedSheets',{defaultValue:'4 · Seçilen levhalar ({{selected}}/{{total}})',selected:selectedCount,total:form.steelSheetCount})} icon={<MapPin className="size-5"/>}>
@@ -398,11 +419,16 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
   </section>;
 }
 
-function CandidateTable({rows,loading,selected,onToggle}:{rows:SteelVehicleAcceptanceCandidate[];loading:boolean;selected:Record<number,SelectedPlate>;onToggle:(row:SteelVehicleAcceptanceCandidate)=>void}){
+function CandidateTable({rows,loading,selected,onToggle,onToggleAll}:{rows:SteelVehicleAcceptanceCandidate[];loading:boolean;selected:Record<number,SelectedPlate>;onToggle:(row:SteelVehicleAcceptanceCandidate)=>void;onToggleAll:(rows:SteelVehicleAcceptanceCandidate[],select:boolean)=>void}){
   const {t}=useTranslation('common');
+  const selectAllRef=useRef<HTMLInputElement>(null);
+  const visibleSelectedCount=rows.filter(row=>selected[row.id]).length;
+  const allVisibleSelected=rows.length>0&&visibleSelectedCount===rows.length;
+  const someVisibleSelected=visibleSelectedCount>0&&!allVisibleSelected;
+  useEffect(()=>{if(selectAllRef.current)selectAllRef.current.indeterminate=someVisibleSelected},[someVisibleSelected]);
   return <div className="mt-5 overflow-x-auto rounded-xl border">
     <table className="min-w-[1100px] w-full text-left text-sm">
-      <thead className="bg-[var(--wms-app-surface)] text-xs uppercase tracking-wide text-slate-500"><tr><th className="p-3">{t('vehicleCheckIn.table.select',{defaultValue:'Seç'})}</th><th className="p-3">{t('vehicleCheckIn.table.dCodeExcel',{defaultValue:'DCode / Excel'})}</th><th className="p-3">{t('vehicleCheckIn.table.serial',{defaultValue:'Seri'})}</th><th className="p-3">{t('vehicleCheckIn.table.stock',{defaultValue:'Stok'})}</th><th className="p-3">{t('vehicleCheckIn.table.sizeQuality',{defaultValue:'Ölçü / kalite'})}</th><th className="p-3">{t('vehicleCheckIn.table.quantity',{defaultValue:'Miktar'})}</th><th className="p-3">{t('vehicleCheckIn.table.warehouseRack',{defaultValue:'Depo / kabul rafı'})}</th><th className="p-3">{t('vehicleCheckIn.table.evidence',{defaultValue:'Kanıt'})}</th></tr></thead>
+      <thead className="bg-[var(--wms-app-surface)] text-xs uppercase tracking-wide text-slate-500"><tr><th className="p-3"><input ref={selectAllRef} type="checkbox" checked={allVisibleSelected} disabled={loading||rows.length===0} onChange={event=>onToggleAll(rows,event.target.checked)} className="size-5 accent-cyan-600" aria-label={t('vehicleCheckIn.table.selectAll',{defaultValue:'Tümünü seç'})} title={t('vehicleCheckIn.table.selectAll',{defaultValue:'Tümünü seç'})}/></th><th className="p-3">{t('vehicleCheckIn.table.dCodeExcel',{defaultValue:'DCode / Excel'})}</th><th className="p-3">{t('vehicleCheckIn.table.serial',{defaultValue:'Seri'})}</th><th className="p-3">{t('vehicleCheckIn.table.stock',{defaultValue:'Stok'})}</th><th className="p-3">{t('vehicleCheckIn.table.sizeQuality',{defaultValue:'Ölçü / kalite'})}</th><th className="p-3">{t('vehicleCheckIn.table.quantity',{defaultValue:'Miktar'})}</th><th className="p-3">{t('vehicleCheckIn.table.warehouseRack',{defaultValue:'Depo / kabul rafı'})}</th><th className="p-3">{t('vehicleCheckIn.table.evidence',{defaultValue:'Kanıt'})}</th></tr></thead>
       <tbody>
         {loading&&<tr><td colSpan={8} className="p-5 text-slate-500">{t('vehicleCheckIn.table.loading',{defaultValue:'Uygun levhalar aranıyor...'})}</td></tr>}
         {!loading&&rows.length===0&&<tr><td colSpan={8} className="p-5 text-slate-500">{t('vehicleCheckIn.table.empty',{defaultValue:'Kabul bekleyen uygun SAC levhası bulunamadı.'})}</td></tr>}
@@ -430,7 +456,7 @@ function SelectedPlateCard({item,files,onChange,onFiles,onRemoveFile,onRemove}:{
       <button type="button" onClick={onRemove} className="rounded-lg border border-red-500/30 p-2 text-red-500" title={t('vehicleCheckIn.action.removeSelection',{defaultValue:'Seçimden çıkar'})}><X className="size-4"/></button>
     </div>
     <div className="grid gap-4 lg:grid-cols-2">
-      <Field label={t('vehicleCheckIn.field.acceptanceRack',{defaultValue:'Kabul / staging rafı *'})}><PagedAppDropdown queryKey={['steel-acceptance-location',row.id,row.targetWarehouseId]} fetchPage={request=>goodsReceiptV2Api.locations(request,row.targetWarehouseId)} toOption={location=>({value:String(location.id),label:`${location.code} · ${location.name}`,description:location.locationType})} selectedOption={{value:String(row.receivingLocationId),label:`${row.receivingLocationCode} · ${row.receivingLocationName}`}} value={item.locationValue} onValueChange={value=>onChange({locationId:Number(value),locationValue:value||''})} searchable/></Field>
+      <Field label={t('vehicleCheckIn.field.acceptanceRack',{defaultValue:'Kabul / staging rafı *'})}><PagedAppDropdown portalContainer={null} queryKey={['steel-acceptance-location',row.id,row.targetWarehouseId]} fetchPage={request=>goodsReceiptV2Api.locations(request,row.targetWarehouseId)} toOption={location=>({value:String(location.id),label:`${location.code} · ${location.name}`,description:location.locationType})} selectedOption={{value:String(row.receivingLocationId),label:`${row.receivingLocationCode} · ${row.receivingLocationName}`}} value={item.locationValue} onValueChange={value=>onChange({locationId:Number(value),locationValue:value||''})} searchable enabled={row.targetWarehouseId>0} dependencies={[row.targetWarehouseId]}/></Field>
       <Field label={t('vehicleCheckIn.field.sheetNote',{defaultValue:'Levha kabul notu'})}><input className="input" value={item.note} onChange={event=>onChange({note:event.target.value})} maxLength={1000}/></Field>
     </div>
     <div className="mt-4 flex flex-wrap items-center gap-3">

@@ -155,7 +155,7 @@ function ReceiptPanel(){
       </div>
       <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto]">
         <Field label="Excel aktarım referansı / irsaliye no">
-          <div className="relative"><Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-500"/><input className="input pl-10 font-mono" value={reference} onChange={event=>setReference(event.target.value)} onKeyDown={event=>{if(event.key==='Enter'){event.preventDefault();void loadSource()}}} placeholder="Aktarım ref veya alış irsaliye no"/></div>
+          <div className="relative"><Search className="pointer-events-none absolute left-3 top-1/2 z-10 size-4 -translate-y-1/2 text-slate-500"/><input className="input !pl-10 font-mono" value={reference} onChange={event=>setReference(event.target.value)} onKeyDown={event=>{if(event.key==='Enter'){event.preventDefault();void loadSource()}}} placeholder="Aktarım ref veya alış irsaliye no"/></div>
         </Field>
         <button type="button" disabled={busy||!reference.trim()} onClick={()=>void loadSource()} className="self-end rounded-xl bg-cyan-600 px-6 py-3 font-bold text-white disabled:opacity-40">{busy?<Loader2 className="size-4 animate-spin"/>:<><Search className="mr-2 inline size-4"/>Levhaları getir</>}</button>
       </div>

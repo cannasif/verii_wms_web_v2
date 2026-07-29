@@ -326,7 +326,12 @@ export function GoodsReceiptManualPage({ direct }: { direct: boolean }): ReactEl
     {error && <div role="alert" className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm font-medium text-red-500">{error}</div>}
 
     {step === 0 && <Panel title={t('manual.document.title')} description={t('manual.document.description')} icon={<FileText/>}><div className="grid gap-5 lg:grid-cols-2">
-      <Field label={t('manual.customer')} required>
+      <Field
+        label={t('manual.customer')}
+        required
+        errorTarget="customer"
+        errorKeys="tedarikçi cari|tedarik carisi|supplier"
+      >
         <PagedLookupDialog<CustomerOption>
           variant="ops"
           triggerMode="combobox"
@@ -360,9 +365,27 @@ export function GoodsReceiptManualPage({ direct }: { direct: boolean }): ReactEl
           onSelect={(item) => setCustomer(encodeCustomerValue(item))}
         />
       </Field>
-      <Field label={t('manual.documentDate')} required><AppDateInput value={documentDate} onChange={(e) => setDocumentDate(e.target.value)}/></Field>
-      <Field label={t('manual.series')} required><AppDropdown value={seriesId} onValueChange={setSeriesId} options={series.map((x) => ({ value: String(x.id), label: `${x.code} · ${x.name}`, description: x.previewDocumentNumber }))} placeholder="Belge serisi seçin"/></Field>
-      <div className="lg:col-span-2 rounded-2xl border border-[var(--wms-app-border)] bg-black/[.025] p-4 dark:bg-white/[.025]"><div className="mb-4 flex flex-wrap items-center justify-between gap-3"><div><h3 className="font-bold">{t('manual.receiptNo')}</h3><p className="text-xs text-slate-500">E-irsaliye / GİB numarası tam 15 alfanümerik karakter olmalıdır.</p></div><label className="flex items-center gap-3 rounded-xl border border-[var(--wms-app-border)] px-4 py-2"><OpsSkinCheckbox checked={isElectronic} onCheckedChange={() => undefined} disabled aria-label={t('manual.isElectronic')} /><span className="text-sm font-semibold">{t('manual.isElectronic')}</span></label></div><AppInput autoFocus className="font-mono tracking-wider" inputMode="text" maxLength={15} placeholder="GIB2026AB000000" value={receiptNo} invalid={Boolean(receiptNo) && !receiptNoValid} onChange={(e) => { setReceiptNo(normalizeReceiptNo(e.target.value)); setError(null); }} trailingContent={<span className={`pr-1 text-xs font-bold ${receiptNoValid ? 'text-emerald-500' : 'text-[var(--wms-ops-field-placeholder-fg)]'}`}>{receiptNo.length}/15</span>}/>{receiptNo && <p className={`mt-2 flex items-center gap-1.5 text-xs ${receiptNoValid ? 'text-emerald-500' : 'text-red-500'}`}>{receiptNoValid && <Check className="size-3.5"/>}{receiptNoValid ? t('manual.validNumber') : 'E-irsaliye / GİB numarası tam 15 alfanümerik karakter olmalıdır.'}</p>}</div>
+      <Field
+        label={t('manual.documentDate')}
+        required
+        errorTarget="documentDate"
+        errorKeys="irsaliye tarihi|kabul tarihi|belge tarihi|dispatch date|waybill date"
+      >
+        <AppDateInput value={documentDate} onChange={(e) => setDocumentDate(e.target.value)}/>
+      </Field>
+      <Field
+        label={t('manual.series')}
+        required
+        errorTarget="documentSeries"
+        errorKeys="belge serisi|document series|aktif bir belge serisi"
+      >
+        <AppDropdown value={seriesId} onValueChange={setSeriesId} options={series.map((x) => ({ value: String(x.id), label: `${x.code} · ${x.name}`, description: x.previewDocumentNumber }))} placeholder="Belge serisi seçin"/>
+      </Field>
+      <div
+        className="lg:col-span-2 rounded-2xl border border-[var(--wms-app-border)] bg-black/[.025] p-4 dark:bg-white/[.025]"
+        data-wms-error-target="receiptNo"
+        data-wms-error-keys="irsaliye numarası|e-irsaliye numarası|normal irsaliye|mal kabul no|gib numarası|15 alfanümerik|e-dispatch|dispatch number"
+      ><div className="mb-4 flex flex-wrap items-center justify-between gap-3"><div><h3 className="font-bold">{t('manual.receiptNo')}</h3><p className="text-xs text-slate-500">E-irsaliye / GİB numarası tam 15 alfanümerik karakter olmalıdır.</p></div><label className="flex items-center gap-3 rounded-xl border border-[var(--wms-app-border)] px-4 py-2"><OpsSkinCheckbox checked={isElectronic} onCheckedChange={() => undefined} disabled aria-label={t('manual.isElectronic')} /><span className="text-sm font-semibold">{t('manual.isElectronic')}</span></label></div><AppInput autoFocus className="font-mono tracking-wider" inputMode="text" maxLength={15} placeholder="GIB2026AB000000" value={receiptNo} invalid={!receiptNoValid} onChange={(e) => { setReceiptNo(normalizeReceiptNo(e.target.value)); setError(null); }} trailingContent={<span className={`pr-1 text-xs font-bold ${receiptNoValid ? 'text-emerald-500' : 'text-[var(--wms-ops-field-placeholder-fg)]'}`}>{receiptNo.length}/15</span>}/>{receiptNo && <p className={`mt-2 flex items-center gap-1.5 text-xs ${receiptNoValid ? 'text-emerald-500' : 'text-red-500'}`}>{receiptNoValid && <Check className="size-3.5"/>}{receiptNoValid ? t('manual.validNumber') : 'E-irsaliye / GİB numarası tam 15 alfanümerik karakter olmalıdır.'}</p>}</div>
       {!direct && <Field label={t('manual.plannedArrival')}><AppDateInput type="datetime-local" value={plannedArrival} onChange={(e) => setPlannedArrival(e.target.value)}/></Field>}
     </div></Panel>}
 
@@ -377,9 +400,9 @@ export function GoodsReceiptManualPage({ direct }: { direct: boolean }): ReactEl
       <Field label={t('manual.stock')} required><PagedAppDropdown queryKey={['gr-manual-stocks', branchCode]} fetchPage={(request) => goodsReceiptV2Api.stocks(request, branchCode)} toOption={(x) => ({ value: `${x.id}|${x.erpStockCode}|${encodeURIComponent(x.stockName || '')}|${encodeURIComponent(x.unitCode || '')}`, label: `${x.erpStockCode} · ${x.stockName || ''}`, description: x.unitCode ? `Birim: ${x.unitCode}` : 'Birim tanımsız' })} value={stock} onValueChange={(value) => { setStock(value); setUnitCode(decodeURIComponent(split(value)[3] || '')); }} searchable minSearchLength={2}/></Field>
       {stock && <div className="md:col-span-2 xl:col-span-4"><StockTrackingPolicyField policy={trackingPolicy ?? undefined} loading={trackingPolicyBusy} compact /></div>}
       <Field label={t('manual.yap')}><PagedAppDropdown queryKey={['gr-manual-yaps', branchCode]} fetchPage={(request) => goodsReceiptV2Api.yapCodes(request, branchCode)} toOption={(x) => ({ value: `${x.id}|${x.configurationCode}`, label: `${x.configurationCode} · ${x.description || ''}` })} value={yap} onValueChange={setYap} searchable minSearchLength={1}/></Field>
-      <Field label={t('manual.quantity')} required><AppInput className="font-mono" inputMode="decimal" value={quantity} onChange={(e) => setQuantity(e.target.value)}/></Field><Field label={t('manual.unit')}><div className={cn(OPS_FIELD_CLASS, 'flex items-center font-bold', unitCode ? 'text-cyan-600' : 'text-amber-600')}>{unitCode || 'Önce stok seçin'}</div></Field>
-      <Field label="Kabul rafı (Receiving / Staging)" required><PagedAppDropdown queryKey={['gr-manual-line-receiving-locations', warehouseId]} fetchPage={(request) => goodsReceiptV2Api.receivingLocations(request, warehouseId)} toOption={(x) => ({ value: `${x.id}|${x.code}`, label: `${x.code} · ${x.name}`, description: x.locationType })} enabled={warehouseId > 0} dependencies={[warehouseId]} value={lineLocation} onValueChange={setLineLocation} searchable/></Field>
-      <Field label={t('manual.lot')}><AppInput maxLength={100} value={lotNo} onChange={(e) => setLotNo(e.target.value)}/></Field><Field label={t('manual.serial')}><AppInput maxLength={100} value={serialNo} onChange={(e) => setSerialNo(e.target.value)}/></Field>
+      <Field label={t('manual.quantity')} required errorTarget="quantity" errorKeys="stok ve sıfırdan|seri takipli satırın miktarı|toplu seri sayısı|quantity"><AppInput className="font-mono" inputMode="decimal" value={quantity} onChange={(e) => setQuantity(e.target.value)}/></Field><Field label={t('manual.unit')}><div className={cn(OPS_FIELD_CLASS, 'flex items-center font-bold', unitCode ? 'text-cyan-600' : 'text-amber-600')}>{unitCode || 'Önce stok seçin'}</div></Field>
+      <Field label="Kabul rafı (Receiving / Staging)" required errorTarget="lineLocation" errorKeys="hedef depo ve raf|kabul rafı|target warehouse"><PagedAppDropdown queryKey={['gr-manual-line-receiving-locations', warehouseId]} fetchPage={(request) => goodsReceiptV2Api.receivingLocations(request, warehouseId)} toOption={(x) => ({ value: `${x.id}|${x.code}`, label: `${x.code} · ${x.name}`, description: x.locationType })} enabled={warehouseId > 0} dependencies={[warehouseId]} value={lineLocation} onValueChange={setLineLocation} searchable/></Field>
+      <Field label={t('manual.lot')} errorTarget="lot" errorKeys="lot numarası|lot zorunludur"><AppInput maxLength={100} value={lotNo} onChange={(e) => setLotNo(e.target.value)}/></Field><Field label={t('manual.serial')} errorTarget="serial" errorKeys="seri numarası|seri takipli|toplu seri|tek seri alanı|serial"><AppInput maxLength={100} value={serialNo} onChange={(e) => setSerialNo(e.target.value)}/></Field>
       <Field label={t('manual.manufacturingDate')}><AppDateInput value={manufacturingDate} onChange={(e) => setManufacturingDate(e.target.value)}/></Field><Field label={t('manual.expirationDate')}><AppDateInput value={expirationDate} onChange={(e) => setExpirationDate(e.target.value)}/></Field>
       {direct && <Field label={t('manual.scannedBarcode')}><AppInput maxLength={250} value={scannedBarcode} onChange={(e) => setScannedBarcode(e.target.value)}/></Field>}
       <div className="flex items-end"><OpsActionButton type="button" variant="primary" disabled={qualityCheckBusy} onClick={() => void addLine()} className="w-full">{qualityCheckBusy?<Loader2 className="size-3.5 shrink-0 animate-spin"/>:<Plus className="size-3.5 shrink-0"/>}{t('manual.addLine')}</OpsActionButton></div>
@@ -517,7 +540,7 @@ function Stepper({ steps, current }: { steps: Array<{label:string;icon:typeof Fi
   );
 }
 function Panel({title,description,icon,children}:{title:string;description:string;icon:ReactElement;children:ReactNode}):ReactElement{return <section className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] shadow-sm"><header className="flex gap-3 border-b border-[var(--wms-app-border)] p-5"><span className="text-cyan-500">{icon}</span><div><h2 className="text-lg font-bold">{title}</h2><p className="text-sm text-slate-500">{description}</p></div></header><div className="p-5">{children}</div></section>;}
-function Field({label,required,children}:{label:string;required?:boolean;children:ReactNode}):ReactElement{return <label className="block space-y-1.5 text-sm"><span className="font-semibold">{label}{required&&<span className="text-red-500"> *</span>}</span>{children}</label>;}
+function Field({label,required,children,errorTarget,errorKeys}:{label:string;required?:boolean;children:ReactNode;errorTarget?:string;errorKeys?:string}):ReactElement{return <label className="block space-y-1.5 text-sm" data-wms-error-target={errorTarget || undefined} data-wms-error-keys={errorKeys || undefined}><span className="font-semibold">{label}{required&&<span className="text-red-500"> *</span>}</span>{children}</label>;}
 function Summary({label,value}:{label:string;value:string}):ReactElement{return <div className="rounded-xl border border-[var(--wms-app-border)] bg-black/[.025] p-4 dark:bg-white/[.025]"><div className="text-xs text-slate-500">{label}</div><strong className="mt-1 block break-words text-sm">{value}</strong></div>;}
 function LineTable({lines,remove,t}:{lines:ManualReceiptLine[];remove:(id:string)=>void;t:(key:string)=>string}):ReactElement{return <div className="mt-5 overflow-x-auto rounded-xl border border-[var(--wms-app-border)]"><table className="w-full text-sm"><thead className="bg-black/5 text-left dark:bg-white/5"><tr><th className="p-3">{t('manual.stock')}</th><th className="p-3">{t('manual.yap')}</th><th className="p-3">Depo / Raf</th><th className="p-3">{t('manual.lot')} / {t('manual.serial')}</th><th className="p-3 text-right">{t('manual.quantity')}</th><th className="p-3">{t('manual.actions')}</th></tr></thead><tbody>{lines.map((line)=><tr key={line.localId} className="border-t border-[var(--wms-app-border)]"><td className="p-3"><strong>{line.stockCode}</strong><div className="text-xs text-slate-500">{line.stockName}</div></td><td className="p-3">{line.yapCode||'—'}</td><td className="p-3"><strong>{line.targetWarehouseCode ?? '—'}</strong><div className="text-xs text-cyan-500">{line.receivingLocationCode}</div></td><td className="p-3">{line.lotNo||'—'} / {line.serialNo||'—'}</td><td className="p-3 text-right font-mono">{line.quantity} {line.unitCode}</td><td className="p-3"><button aria-label={t('manual.removeLine')} onClick={()=>remove(line.localId)} className="rounded-lg p-2 text-red-500 hover:bg-red-500/10"><Trash2 className="size-4"/></button></td></tr>)}</tbody></table>{lines.length===0&&<p className="p-6 text-center text-sm text-slate-500">{t('manual.noLines')}</p>}</div>;}
 function Result({result,direct,reset,t}:{result:ManualGoodsReceiptResult;direct:boolean;reset:()=>void;t:(key:string)=>string}):ReactElement{

@@ -1,16 +1,20 @@
-import {useEffect,useState,type ChangeEvent} from 'react';
+import {useCallback,useEffect,useMemo,useState,type ChangeEvent} from 'react';
 import type {WorkSheet} from 'xlsx';
 import {Download,Loader2,Upload} from 'lucide-react';
 import {useTranslation} from 'react-i18next';
 import {toast} from 'sonner';
+import {AdvancedDataGrid,type GridColumn,type GridFilter,type GridPage,type GridRequest} from '@/components/shared/AdvancedDataGrid';
 import {PagedAppDropdown} from '@/components/shared/PagedAppDropdown';
-import {AppDropdown} from '@/components/shared/AppDropdown';
 import {AppDateInput} from '@/components/shared/AppInput';
+import {OpsDialogBody,OpsDialogContent,OpsDialogHeader} from '@/components/shared/OpsDialogShell';
+import {Dialog,DialogTitle} from '@/components/ui/dialog';
+import {Tooltip,TooltipContent,TooltipProvider,TooltipTrigger} from '@/components/ui/tooltip';
 import {useAuthStore} from '@/stores/auth-store';
 import {goodsReceiptV2Api} from '@/features/goods-receipt-v2/api/goods-receipt.api';
 import {isValidGoodsReceiptDocumentNo,normalizeGoodsReceiptDocumentNo} from '@/features/goods-receipt-v2/utils/goods-receipt-document-reference';
+import {formatProjectNumber} from '@/lib/project-format';
 import {steelReceiptApi} from '../api/steel-receipt.api';
-import type {SteelImportLine,SteelImportPreview,SteelImportRequest} from '../types/steel-receipt.types';
+import type {SteelImportLine,SteelImportPreview,SteelImportPreviewLine,SteelImportRequest} from '../types/steel-receipt.types';
 import {SteelProcessHeader} from './SteelProcessHeader';
 
 const I='steelGoodReceiptAcceptance.importTransfer';
@@ -69,15 +73,83 @@ const downloadTemplate=async()=>{
   XLSX.writeFile(wb,'SAC_Mal_Kabul_Sablonu.xlsx');
 };
 
+type SteelImportPreviewGridRow={
+  id:number;lineNo:number;netsisOrderNo?:string;netsisOrderLineNo?:string;stockCode?:string;yapCode?:string;
+  supplierSerialNo:string;secondarySerialNo?:string;expectedQuantity:number;unitCode:string;combinedSize?:string;
+  materialGrade?:string;heatNumber?:string;certificateNumber?:string;action:string;existingDCode?:string;errors:string[];
+};
+const gridText=(value:unknown)=>value==null?'':Array.isArray(value)?value.join(', '):String(value);
+const gridDash=(value:string|number|undefined|null)=>value==null||value===''?'-':value;
+const matchesGridSearch=(row:Record<string,unknown>,search:string,keys:string[])=>{
+  const term=search.trim().toLocaleLowerCase('tr-TR');
+  if(!term)return true;
+  return keys.some(key=>gridText(row[key]).toLocaleLowerCase('tr-TR').includes(term));
+};
+const compareGridValues=(a:unknown,b:unknown)=>{
+  if(a==null&&b==null)return 0;
+  if(a==null)return 1;
+  if(b==null)return-1;
+  if(typeof a==='number'&&typeof b==='number')return a-b;
+  return gridText(a).localeCompare(gridText(b),'tr',{numeric:true});
+};
+const matchesGridFilter=(row:Record<string,unknown>,filter:GridFilter)=>{
+  const raw=gridText(row[filter.column]).toLocaleLowerCase('tr-TR');
+  const value=filter.value.trim().toLocaleLowerCase('tr-TR');
+  switch(filter.operator){
+    case'contains':return raw.includes(value);
+    case'notContains':return!raw.includes(value);
+    case'equals':return raw===value;
+    case'notEquals':return raw!==value;
+    case'startsWith':return raw.startsWith(value);
+    case'endsWith':return raw.endsWith(value);
+    case'isNull':return!raw;
+    case'isNotNull':return Boolean(raw);
+    case'gt':case'gte':case'lt':case'lte':{
+      const num=Number(raw),cmp=Number(value);
+      if(!Number.isFinite(num)||!Number.isFinite(cmp))return false;
+      if(filter.operator==='gt')return num>cmp;
+      if(filter.operator==='gte')return num>=cmp;
+      if(filter.operator==='lt')return num<cmp;
+      return num<=cmp;
+    }
+    default:return true;
+  }
+};
+const filterLocalGrid=<T extends {id:number}>(items:T[],request:GridRequest,searchableKeys:string[]):GridPage<T>=>{
+  let rows=[...items];
+  const search=request.search?.trim();
+  if(search){
+    const keys=request.searchFields?.length?request.searchFields:searchableKeys;
+    rows=rows.filter(row=>matchesGridSearch(row as Record<string,unknown>,search,keys));
+  }
+  if(request.filters.length){
+    rows=rows.filter(row=>request.filterLogic==='or'
+      ?request.filters.some(filter=>matchesGridFilter(row as Record<string,unknown>,filter))
+      :request.filters.every(filter=>matchesGridFilter(row as Record<string,unknown>,filter)));
+  }
+  if(request.sortBy){
+    const dir=request.sortDirection==='desc'?-1:1;
+    rows.sort((a,b)=>compareGridValues((a as Record<string,unknown>)[request.sortBy!],(b as Record<string,unknown>)[request.sortBy!])*dir);
+  }
+  const totalCount=rows.length;
+  return {items:rows,pageNumber:1,pageSize:Math.max(totalCount,1),totalCount,totalPages:1,hasPreviousPage:false,hasNextPage:false};
+};
+const toPreviewGridRow=({row,source,lineNo}:{row:SteelImportPreviewLine;source?:SteelImportLine;lineNo:number}):SteelImportPreviewGridRow=>({
+  id:row.rowNumber,lineNo,netsisOrderNo:source?.netsisOrderNo,netsisOrderLineNo:source?.netsisOrderLineNo,
+  stockCode:row.stockCode??source?.stockCode,yapCode:source?.yapCode,supplierSerialNo:row.supplierSerialNo??source?.supplierSerialNo??'',
+  secondarySerialNo:source?.secondarySerialNo,expectedQuantity:source?.expectedQuantity??0,unitCode:source?.unitCode??'KG',
+  combinedSize:source?.combinedSize,materialGrade:source?.materialGrade,heatNumber:source?.heatNumber,certificateNumber:source?.certificateNumber,
+  action:row.action,existingDCode:row.existingDCode,errors:row.errors,
+});
+
 export function SteelReceiptImportPage(){
   const {t}=useTranslation('common');
   const branch=useAuthStore(s=>s.branch?.code??'0');const [customer,setCustomer]=useState<string|null>(null);const [warehouse,setWarehouse]=useState<string|null>(null);
-  const [series,setSeries]=useState<Array<{id:number;code:string;name:string;previewDocumentNumber:string;isDefault:boolean}>>([]);
   const [seriesId,setSeriesId]=useState<string|null>(null);const [reference,setReference]=useState('');const [exportRef,setExportRef]=useState('');
   const [waybill,setWaybill]=useState('');const [waybillDate,setWaybillDate]=useState(new Date().toLocaleDateString('en-CA'));const [plannedArrival,setPlannedArrival]=useState('');
   const [fileName,setFileName]=useState('');const [lines,setLines]=useState<SteelImportLine[]>([]);
   const [preview,setPreview]=useState<SteelImportPreview|null>(null);const [busy,setBusy]=useState(false);const warehouseId=Number(split(warehouse)[0]||0);
-  useEffect(()=>{setSeries([]);setSeriesId(null);void goodsReceiptV2Api.series().then(x=>{setSeries(x);setSeriesId(String((x.find(y=>y.isDefault)??x[0])?.id??''))})},[branch]);
+  useEffect(()=>{setSeriesId(null);void goodsReceiptV2Api.series().then(x=>{setSeriesId(String((x.find(y=>y.isDefault)??x[0])?.id??''))})},[branch]);
   const onFile=async(e:ChangeEvent<HTMLInputElement>)=>{const file=e.target.files?.[0];if(!file)return;setFileName(file.name);setPreview(null);
     const XLSX=await import('xlsx');const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});const ws=wb.Sheets[wb.SheetNames[0]];const offset=headerRow(ws,XLSX);const rows=XLSX.utils.sheet_to_json<Record<string,unknown>>(ws,{defval:'',range:offset});
     const mapped=rows.map((r,i)=>({rowNumber:i+offset+2,netsisOrderNo:find(r,['NetsisOrderNo','Sipariş No','SiparisNo']),netsisOrderLineNo:find(r,['NetsisOrderLineNo','Sipariş Kalem No','SiparisKalemNo']),
@@ -86,25 +158,118 @@ export function SteelReceiptImportPage(){
       combinedSize:find(r,['CombinedSize','Kombine Size','Ölçü','Olcu'])||undefined,materialGrade:find(r,['MaterialQuality','Material Quality','Malzeme Kalitesi'])||undefined,
       heatNumber:find(r,['HeatNumber','Heat Number','Döküm No','DokumNo'])||undefined,certificateNumber:find(r,['CertificateNumber','Certificate Number','Sertifika No'])||undefined}));
     setLines(mapped);if(!reference)setReference(file.name.replace(/\.[^.]+$/,''));toast.success(t(`${I}.rowsRead`,{count:mapped.length}))};
-  const request=():SteelImportRequest=>({branchCode:branch,importReferenceNo:reference.trim(),sourceFileName:fileName,exportReferenceNo:exportRef.trim()||undefined,
-    supplierId:Number(split(customer)[0]),targetWarehouseId:warehouseId,documentSeriesId:Number(seriesId),
+  const buildRequest=(documentSeriesId:number):SteelImportRequest=>({branchCode:branch,importReferenceNo:reference.trim(),sourceFileName:fileName,exportReferenceNo:exportRef.trim()||undefined,
+    supplierId:Number(split(customer)[0]),targetWarehouseId:warehouseId,documentSeriesId,
     waybillNo:waybill.trim()||undefined,waybillDate:waybillDate||undefined,plannedArrivalAtUtc:plannedArrival?new Date(plannedArrival).toISOString():undefined,lines});
-  const run=async(commit=false)=>{if(!customer||!warehouseId||!seriesId||!reference.trim()||!lines.length){toast.error(t(`${I}.validationError`));return}
-    if(!isValidGoodsReceiptDocumentNo(waybill)||!waybillDate){toast.error('E-irsaliye / GİB numarası tam 15 alfanümerik karakter olmalı ve irsaliye tarihi girilmelidir.');return}
-    setBusy(true);try{if(commit){await steelReceiptApi.commit(request());toast.success(t(`${I}.saveSuccess`));setLines([]);setPreview(null);setFileName('')}
-      else{setPreview(await steelReceiptApi.preview(request()));toast.success(t(`${I}.previewReady`))}}catch(e){toast.error(e instanceof Error?e.message:t(`${I}.operationFailed`))}finally{setBusy(false)}};
-  const previewBadges=[[t(`${I}.previewTotal`),preview?.totalRows],[t(`${I}.previewNew`),preview?.newRows],[t(`${I}.previewExisting`),preview?.existingRows],[t(`${I}.previewError`),preview?.errorRows]] as const;
+  const resolveDocumentSeriesId=async():Promise<number>=>{
+    const current=Number(seriesId);
+    if(Number.isFinite(current)&&current>0)return current;
+    const items=await goodsReceiptV2Api.series();
+    const picked=items.find(x=>x.isDefault)??items[0];
+    if(picked?.id){setSeriesId(String(picked.id));return picked.id}
+    return 0;
+  };
+  const validationMessage=():string|null=>{
+    const missing:string[]=[];
+    if(!customer)missing.push(t(`${I}.supplier`));
+    if(!warehouseId)missing.push(t(`${I}.targetWarehouse`));
+    if(!reference.trim())missing.push(t(`${I}.importReference`));
+    if(!lines.length)missing.push(t(`${I}.excelFile`));
+    if(!isValidGoodsReceiptDocumentNo(waybill))missing.push(t(`${I}.gibWaybillNo`));
+    if(!waybillDate.trim())missing.push(t(`${I}.waybillDate`));
+    if(missing.length===0)return null;
+    if(missing.length===1)return t(`${I}.validationFieldRequired`,{field:missing[0]});
+    return t(`${I}.validationFieldsRequired`,{fields:missing.join(', ')});
+  };
+  const run=async(commit=false)=>{const validation=validationMessage();if(validation){toast.error(validation);return}
+    setBusy(true);try{const documentSeriesId=await resolveDocumentSeriesId();const payload=buildRequest(documentSeriesId);if(commit){await steelReceiptApi.commit(payload);toast.success(t(`${I}.saveSuccess`));setLines([]);setPreview(null);setFileName('')}
+      else{setPreview(await steelReceiptApi.preview(payload));toast.success(t(`${I}.previewReady`))}}catch(e){toast.error(e instanceof Error?e.message:t(`${I}.operationFailed`))}finally{setBusy(false)}};
   return <section className="space-y-5" data-no-auto-localize="true"><SteelProcessHeader currentStep="plan" title={t(`${I}.title`)} description={t(`${I}.description`)} notice={t(`${I}.notice`)}/>
     <div className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5"><div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
       <Field label={t(`${I}.supplier`)}><PagedAppDropdown queryKey={['steel-customers',branch]} fetchPage={r=>goodsReceiptV2Api.customers(r,branch)} toOption={x=>({value:`${x.id}|${x.customerCode}`,label:`${x.customerCode} · ${x.customerName}`})} value={customer} onValueChange={setCustomer} searchable minSearchLength={2}/></Field>
       <Field label={t(`${I}.targetWarehouse`)}><PagedAppDropdown queryKey={['steel-warehouses',branch]} fetchPage={r=>goodsReceiptV2Api.warehouses(r,branch)} toOption={x=>({value:`${x.id}|${x.warehouseCode}`,label:`${x.warehouseCode} · ${x.warehouseName}`})} value={warehouse} onValueChange={setWarehouse} searchable/></Field>
-      <Field label={t(`${I}.documentSeries`)}><AppDropdown value={seriesId} onValueChange={setSeriesId} options={series.map(x=>({value:String(x.id),label:`${x.code} · ${x.name}`,description:x.previewDocumentNumber}))}/></Field>
       <Field label={t(`${I}.importReference`)}><input className="input" value={reference} onChange={e=>setReference(e.target.value)} maxLength={100}/></Field>
       <Field label={t(`${I}.exportReference`)}><input className="input" value={exportRef} onChange={e=>setExportRef(e.target.value)} maxLength={100}/></Field>
-      <Field label="E-irsaliye / GİB numarası"><div className="relative"><input className="input pr-16 font-mono" value={waybill} onChange={e=>{setWaybill(normalizeGoodsReceiptDocumentNo(e.target.value));setPreview(null)}} maxLength={15} placeholder="GIB2026AB000000"/><span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500">{waybill.length}/15</span></div><span className="mt-1 inline-flex items-center gap-2 text-xs font-semibold text-cyan-500"><input type="checkbox" checked disabled readOnly className="size-3.5 accent-cyan-500"/>E-irsaliye / GİB</span></Field>
+      <Field label={t(`${I}.gibWaybillNo`)}><div className="relative"><input className="input pr-16 font-mono" value={waybill} onChange={e=>{setWaybill(normalizeGoodsReceiptDocumentNo(e.target.value));setPreview(null)}} maxLength={15} placeholder="GIB2026AB000000"/><span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500">{waybill.length}/15</span></div><span className="mt-1 inline-flex items-center gap-2 text-xs font-semibold text-cyan-500"><input type="checkbox" checked disabled readOnly className="size-3.5 accent-cyan-500"/>E-irsaliye / GİB</span></Field>
       <Field label={t(`${I}.waybillDate`)}><AppDateInput value={waybillDate} onChange={e=>{setWaybillDate(e.target.value);setPreview(null)}}/></Field>
       <Field label={t(`${I}.plannedArrival`)}><AppDateInput type="datetime-local" value={plannedArrival} onChange={e=>{setPlannedArrival(e.target.value);setPreview(null)}}/></Field>
       <Field label={t(`${I}.excelFile`)}><label className="flex h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-cyan-500/50 bg-cyan-500/5 text-sm font-bold text-cyan-500"><Upload className="size-4"/>{fileName||t(`${I}.selectFile`)}<input type="file" accept=".xlsx,.xls" className="hidden" onChange={e=>void onFile(e)}/></label></Field>
     </div><div className="mt-5 flex flex-wrap justify-between gap-3"><button onClick={downloadTemplate} className="rounded-xl border px-5 py-2.5 font-bold"><Download className="mr-2 inline size-4"/>{t(`${I}.templateBtn`)}</button><div className="flex gap-3"><button onClick={()=>void run(false)} disabled={busy} className="rounded-xl border px-5 py-2.5 font-bold">{busy?<Loader2 className="size-4 animate-spin"/>:t(`${I}.previewBtn`)}</button><button onClick={()=>void run(true)} disabled={busy||!preview||preview.errorRows>0} className="rounded-xl bg-cyan-600 px-5 py-2.5 font-bold text-white disabled:opacity-40">{t(`${I}.saveTransferBtn`)}</button></div></div></div>
-    {preview&&<div className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5"><div className="mb-4 flex flex-wrap gap-2">{previewBadges.map(([k,v])=><span key={k} className="rounded-full border px-3 py-1 text-xs font-bold">{k}: {v}</span>)}</div><div className="max-h-[28rem] overflow-auto rounded-xl border"><table className="w-full min-w-[800px] text-sm"><thead><tr><th>{t(`${I}.colRow`)}</th><th>{t(`${I}.colStock`)}</th><th>{t(`${I}.colSerial`)}</th><th>{t(`${I}.colAction`)}</th><th>{t(`${I}.colDCode`)}</th><th>{t(`${I}.colErrors`)}</th></tr></thead><tbody>{preview.lines.map(r=><tr key={r.rowNumber} className="border-t"><td>{r.rowNumber}</td><td>{r.stockCode||'-'}</td><td>{r.supplierSerialNo}</td><td>{r.action}</td><td>{r.existingDCode||'-'}</td><td className="text-red-500">{r.errors.join(', ')||'-'}</td></tr>)}</tbody></table></div></div>}</section>}
+    {preview&&<SteelImportPreviewGrid preview={preview} lines={lines}/>}</section>}
+function SteelImportPreviewGrid({preview,lines}:{preview:SteelImportPreview;lines:SteelImportLine[]}){
+  const {t,i18n}=useTranslation('common');
+  const gridLanguage=i18n.resolvedLanguage??i18n.language;
+  const previewBadges=[[t(`${I}.previewTotal`),preview.totalRows],[t(`${I}.previewNew`),preview.newRows],[t(`${I}.previewExisting`),preview.existingRows],[t(`${I}.previewError`),preview.errorRows]] as const;
+  const rows=useMemo(()=>{
+    const sourceByRow=new Map(lines.map(line=>[line.rowNumber,line]));
+    return preview.lines.map((row,index)=>toPreviewGridRow({row,source:sourceByRow.get(row.rowNumber),lineNo:index+1}));
+  },[lines,preview]);
+  const searchableKeys=useMemo(()=>['lineNo','netsisOrderNo','netsisOrderLineNo','stockCode','yapCode','supplierSerialNo','secondarySerialNo','combinedSize','materialGrade','heatNumber','certificateNumber','action','existingDCode','errors'],[]);
+  const columns=useMemo<GridColumn<SteelImportPreviewGridRow>[]>(()=>[
+    {key:'lineNo',label:t(`${I}.colRow`),width:88,render:r=>r.lineNo,contextValue:r=>r.lineNo},
+    {key:'netsisOrderNo',label:t(`${I}.colOrderNo`),render:r=><span className="font-mono">{gridDash(r.netsisOrderNo)}</span>,contextValue:r=>r.netsisOrderNo},
+    {key:'netsisOrderLineNo',label:t(`${I}.colOrderLineNo`),render:r=><span className="font-mono">{gridDash(r.netsisOrderLineNo)}</span>,contextValue:r=>r.netsisOrderLineNo},
+    {key:'stockCode',label:t(`${I}.colStock`),render:r=><span className="font-mono font-bold">{gridDash(r.stockCode)}</span>,contextValue:r=>r.stockCode},
+    {key:'yapCode',label:t(`${I}.colYapCode`),render:r=><span className="font-mono">{gridDash(r.yapCode)}</span>,contextValue:r=>r.yapCode},
+    {key:'supplierSerialNo',label:t(`${I}.colSerial`),render:r=><span className="font-mono">{gridDash(r.supplierSerialNo)}</span>,contextValue:r=>r.supplierSerialNo},
+    {key:'secondarySerialNo',label:t(`${I}.colSerial2`),render:r=><span className="font-mono">{gridDash(r.secondarySerialNo)}</span>,contextValue:r=>r.secondarySerialNo},
+    {key:'expectedQuantity',label:t(`${I}.colQuantity`),render:r=><span className="font-mono font-bold">{r.expectedQuantity?formatProjectNumber(r.expectedQuantity):'-'}</span>,contextValue:r=>r.expectedQuantity},
+    {key:'unitCode',label:t(`${I}.colUnit`),render:r=>gridDash(r.unitCode),contextValue:r=>r.unitCode},
+    {key:'combinedSize',label:t(`${I}.colCombinedSize`),render:r=>gridDash(r.combinedSize),contextValue:r=>r.combinedSize},
+    {key:'materialGrade',label:t(`${I}.colMaterialGrade`),render:r=>gridDash(r.materialGrade),contextValue:r=>r.materialGrade},
+    {key:'heatNumber',label:t(`${I}.colHeatNumber`),render:r=><span className="font-mono">{gridDash(r.heatNumber)}</span>,contextValue:r=>r.heatNumber},
+    {key:'certificateNumber',label:t(`${I}.colCertificateNumber`),render:r=><span className="font-mono">{gridDash(r.certificateNumber)}</span>,contextValue:r=>r.certificateNumber},
+    {key:'action',label:t(`${I}.colAction`),filterType:'enum',render:r=>r.action,contextValue:r=>r.action},
+    {key:'existingDCode',label:t(`${I}.colDCode`),render:r=><span className="font-mono font-bold text-cyan-500">{gridDash(r.existingDCode)}</span>,contextValue:r=>r.existingDCode},
+    {key:'errors',label:t(`${I}.colErrors`),sortable:false,width:220,render:r=><PreviewErrorCell errors={r.errors} lineNo={r.lineNo}/>,contextValue:r=>r.errors.join(', ')},
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- gridLanguage forces column label refresh
+  ],[t,gridLanguage]);
+  const fetchPage=useCallback(async(request:GridRequest)=>filterLocalGrid(rows,request,searchableKeys),[rows,searchableKeys]);
+  return <>
+    <style>{`
+      html .steel-import-preview-grid .wms-ops-data-grid-shell {
+        overflow: visible !important;
+      }
+      html .steel-import-preview-grid .wms-ops-list :is(.wms-ops-data-grid-wrap, .wms-ops-table-wrap, .wms-ops-table-h-scroll) {
+        max-height: none !important;
+        overflow-y: visible !important;
+      }
+    `}</style>
+    <div className="steel-import-preview-grid space-y-3 [&_.wms-ops-grid-pagination]:hidden">
+      <div className="flex flex-wrap gap-2">{previewBadges.map(([label,value])=><span key={label} className="rounded-full border px-3 py-1 text-xs font-bold">{label}: {value}</span>)}</div>
+      <AdvancedDataGrid pageKey="steel-import-preview" title={t(`${I}.previewTitle`)} description={t(`${I}.previewTableHint`)} columns={columns} fetchPage={fetchPage} refreshKey={rows.length}/>
+    </div>
+  </>;
+}
+function PreviewErrorCell({errors,lineNo}:{errors:string[];lineNo:number}){
+  const {t}=useTranslation('common');
+  const [open,setOpen]=useState(false);
+  const text=errors.join(', ');
+  if(!errors.length)return <span className="text-slate-500">-</span>;
+  return <>
+    <TooltipProvider delayDuration={200}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button type="button" onClick={()=>setOpen(true)} className="block w-full max-w-full truncate text-left font-medium text-red-500 hover:underline" title={text}>
+            {text}
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="top" align="start" className="max-w-sm whitespace-pre-wrap break-words text-left">
+          <p>{text}</p>
+          <p className="mt-1 text-xs opacity-80">{t(`${I}.errorDetailHint`)}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+    {open&&<Dialog open onOpenChange={setOpen}>
+      <OpsDialogContent size="md" portalRoot="body" className="data-no-auto-localize">
+        <OpsDialogHeader>
+          <DialogTitle className="wms-ops-detail-dialog__title">{t(`${I}.errorDetailTitle`,{row:lineNo})}</DialogTitle>
+        </OpsDialogHeader>
+        <OpsDialogBody>
+          <ul className="space-y-2 text-sm text-red-600">{errors.map((error,index)=><li key={index} className="rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2">{error}</li>)}</ul>
+        </OpsDialogBody>
+      </OpsDialogContent>
+    </Dialog>}
+  </>;
+}
 function Field({label,children}:{label:string;children:React.ReactNode}){return <label className="space-y-1.5 text-sm"><span className="font-bold">{label}</span>{children}</label>}
