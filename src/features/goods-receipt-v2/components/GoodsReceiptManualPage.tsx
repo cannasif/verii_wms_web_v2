@@ -399,8 +399,7 @@ export function GoodsReceiptDirectPage(): ReactElement {
   const { skin } = useTheme();
   const isPremium = skin === 'premium';
   const pageEyebrow = `${t('list.eyebrowParent')} / ${t('list.eyebrowModule')}`;
-  const pageHint =
-    'Tedarikçinin açık siparişlerini seçin; kabul deposu, miktar, raf ve lot/seri bilgisini tamamlayıp fiziksel kabulü tek akışta bitirin.';
+  const pageHint = t("createFlow.directSubtitle");
 
   if (!moduleReady) {
     return (
@@ -422,14 +421,14 @@ export function GoodsReceiptDirectPage(): ReactElement {
             </div>
           )}
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-black tracking-tight">Mal kabul girişi</h1>
+            <h1 className="text-2xl font-black tracking-tight">{t("createFlow.directPageTitle")}</h1>
             <TooltipProvider delayDuration={160}>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
                     type="button"
                     className="inline-grid size-7 place-items-center rounded-full border border-[color-mix(in_oklab,var(--wms-ops-accent)_28%,var(--wms-app-border))] bg-[color-mix(in_oklab,var(--wms-ops-accent)_8%,transparent)] text-[var(--wms-ops-accent)] transition hover:border-[color-mix(in_oklab,var(--wms-ops-accent)_55%,var(--wms-app-border))] hover:bg-[color-mix(in_oklab,var(--wms-ops-accent)_14%,transparent)] hover:shadow-[0_0_14px_color-mix(in_oklab,var(--wms-ops-accent)_18%,transparent)]"
-                    aria-label="Mal kabul girişi hakkında"
+                    aria-label={t("createFlow.directPageHintAria")}
                   >
                     <CircleHelp className="size-3.5" aria-hidden />
                   </button>
@@ -448,7 +447,7 @@ export function GoodsReceiptDirectPage(): ReactElement {
                   <div className="border-b border-[color-mix(in_oklab,var(--wms-ops-accent)_18%,transparent)] bg-[color-mix(in_oklab,var(--wms-ops-accent)_8%,transparent)] px-3.5 py-2">
                     <span className="inline-flex items-center gap-1.5 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-[var(--wms-ops-accent)]">
                       <span className="size-1.5 rounded-full bg-[var(--wms-ops-accent)] shadow-[0_0_8px_var(--wms-ops-accent)]" aria-hidden />
-                      Nasıl çalışır
+                      {t("createFlow.howItWorks")}
                     </span>
                   </div>
                   <p className="px-3.5 py-3 text-[0.78rem] leading-5 text-[var(--wms-app-text-muted)]">
@@ -462,7 +461,7 @@ export function GoodsReceiptDirectPage(): ReactElement {
 
         <div className="inline-flex items-center gap-2 rounded-xl border border-[color-mix(in_oklab,var(--wms-ops-accent)_40%,var(--wms-app-border))] bg-[color-mix(in_oklab,var(--wms-ops-accent)_12%,transparent)] px-3 py-2 text-xs font-semibold text-[var(--wms-ops-accent)] shadow-[0_0_16px_color-mix(in_oklab,var(--wms-ops-accent)_12%,transparent)]">
           <ListChecks className="size-3.5 shrink-0" aria-hidden />
-          <span>Sipariş</span>
+          <span>{t("createFlow.orderedBadge")}</span>
         </div>
       </header>
 

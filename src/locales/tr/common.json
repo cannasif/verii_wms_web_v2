@@ -4432,7 +4432,13 @@
     "manufacturingDate": "Üretim tarihi",
     "expirationDate": "SKT",
     "activePolicy": "Aktif politika",
-    "noActiveRule": "Aktif kural yok · sistem varsayılanı"
+    "noActiveRule": "Aktif kural yok · sistem varsayılanı",
+    "trackingTypes": {
+      "lot": "Lot",
+      "serial": "Seri",
+      "lotAndSerial": "Lot + Seri",
+      "none": "Takipsiz"
+    }
   },
   "erpMirror": {
     "recordDetail": "{{title}} Kayıt Detayı #{{id}}",

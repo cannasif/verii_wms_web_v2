@@ -1,12 +1,16 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
+  useRef,
   useState,
   type ReactElement,
   type ReactNode,
+  type RefObject,
 } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   Building2,
   CalendarDays,
@@ -49,6 +53,7 @@ import { stockTrackingApi } from "@/features/stock-tracking/api/stock-tracking.a
 import { useModuleTranslation } from "@/hooks/useModuleTranslation";
 import type { DropdownPage } from "@/hooks/useDropdownInfiniteSearch";
 import {
+  formatProjectDate,
   formatProjectNumber,
   parseLocalizedNumber,
 } from "@/lib/project-format";
@@ -135,6 +140,68 @@ const groupOrderLines = (rows: OpenOrderLine[]): OpenOrderHeader[] => {
   }
   return [...grouped.values()];
 };
+
+function useReceiptLineReorderAnimation(
+  orderedKeys: string[],
+): RefObject<HTMLDivElement | null> {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const prevRectsRef = useRef<Map<string, DOMRect>>(new Map());
+
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const nextRects = new Map<string, DOMRect>();
+    container
+      .querySelectorAll<HTMLElement>("[data-receipt-line-key]")
+      .forEach((element) => {
+        const key = element.dataset.receiptLineKey;
+        if (!key) return;
+        nextRects.set(key, element.getBoundingClientRect());
+      });
+
+    container
+      .querySelectorAll<HTMLElement>("[data-receipt-line-key]")
+      .forEach((element) => {
+        const key = element.dataset.receiptLineKey;
+        if (!key) return;
+        const nextRect = nextRects.get(key);
+        const previousRect = prevRectsRef.current.get(key);
+        if (!nextRect || !previousRect) return;
+
+        const deltaY = previousRect.top - nextRect.top;
+        if (Math.abs(deltaY) < 2) return;
+
+        element.animate(
+          [
+            { transform: `translateY(${deltaY}px)` },
+            { transform: "translateY(0)" },
+          ],
+          {
+            duration: 480,
+            easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+          },
+        );
+      });
+
+    prevRectsRef.current = nextRects;
+  }, [orderedKeys]);
+
+  return containerRef;
+}
+
+function putawayLocationPatch(location: {
+  id: number;
+  code: string;
+}): Partial<SelectedReceiptLine> {
+  return {
+    putawayLocationId: location.id,
+    putawayLocationCode: location.code,
+    receivingLocationId: location.id,
+    receivingLocationValue: String(location.id),
+    receivingLocationCode: location.code,
+  };
+}
 
 export function GoodsReceiptCreatePage({
   direct = false,
@@ -229,9 +296,13 @@ export function GoodsReceiptCreatePage({
   const selectedProjectCodesForReview = [
     ...new Set(lines.map((line) => line.projectCode?.trim()).filter(Boolean)),
   ].join(", ");
-  const selectedOrderDatesForReview = [
-    ...new Set(lines.map((line) => line.orderDate).filter(Boolean)),
-  ].join(", ");
+  const selectedOrderDatesForReview = useMemo(
+    () =>
+      [...new Set(lines.map((line) => line.orderDate).filter(Boolean))]
+        .map((date) => formatProjectDate(date))
+        .join(", "),
+    [lines],
+  );
   const selectedAvailableQuantity = lines.reduce(
     (sum, line) => sum + Math.max(0, line.availableQuantity ?? 0),
     0,
@@ -248,6 +319,11 @@ export function GoodsReceiptCreatePage({
     const rest = lines.filter((line) => !confirmedSet.has(lineKey(line)));
     return [...confirmed, ...rest];
   }, [lines, confirmedLineOrder]);
+  const orderedLineKeys = useMemo(
+    () => orderedLines.map((line) => lineKey(line)),
+    [orderedLines],
+  );
+  const receiptLinesListRef = useReceiptLineReorderAnimation(orderedLineKeys);
   const selectedOrderWarehouseCode = useMemo(
     () => orders.find((order) => selectedOrders.includes(order.siparisNo))?.targetWarehouseCode,
     [orders, selectedOrders],
@@ -644,8 +720,24 @@ export function GoodsReceiptCreatePage({
         patch.targetWarehouseId !== current[0]?.targetWarehouseId;
 
       return current.map((line) => {
-        if (lineKey(line) === key)
-          return { ...line, ...patch };
+        if (lineKey(line) === key) {
+          const warehouseChanged =
+            patch.targetWarehouseId != null &&
+            patch.targetWarehouseId !== line.targetWarehouseId;
+          return {
+            ...line,
+            ...patch,
+            ...(warehouseChanged
+              ? {
+                  receivingLocationId: undefined,
+                  receivingLocationValue: null,
+                  receivingLocationCode: undefined,
+                  putawayLocationId: undefined,
+                  putawayLocationCode: undefined,
+                }
+              : {}),
+          };
+        }
         if (!primaryWarehouseChanged)
           return line;
         return {
@@ -1129,13 +1221,13 @@ export function GoodsReceiptCreatePage({
           )}
           <p className="max-w-3xl text-sm leading-6 text-[var(--wms-app-text-muted)]">
             {direct
-              ? "Tedarikçinin açık siparişlerini seçin; kabul deposu, miktar, raf ve lot/seri bilgisini tamamlayıp fiziksel kabulü tek akışta bitirin."
+              ? t("createFlow.directSubtitle")
               : t("createFlow.subtitle")}
           </p>
         </header>
       ) : null}
 
-      <nav className="wms-ops-create-steps" aria-label="Oluşturma adımları">
+      <nav className="wms-ops-create-steps" aria-label={t("createFlow.stepsAriaLabel")}>
         {steps.map((value) => {
           const active = value === step;
           const done = value < step;
@@ -1237,7 +1329,7 @@ export function GoodsReceiptCreatePage({
                 <div className="wms-ops-order-lookup__field min-w-0 flex-1">
                   <div className="mb-1.5 flex items-center gap-1.5">
                     <span className="wms-ops-entry-label">
-                      Sipariş No
+                      {t("createFlow.orderNo")}
                     </span>
                     <TooltipProvider delayDuration={180}>
                       <Tooltip>
@@ -1245,7 +1337,7 @@ export function GoodsReceiptCreatePage({
                           <button
                             type="button"
                             className="wms-ops-order-lookup__help"
-                            aria-label="Sipariş numarasıyla getirme hakkında"
+                            aria-label={t("createFlow.orderNoHelpAria")}
                           >
                             <CircleHelp className="size-3.5" aria-hidden />
                           </button>
@@ -1255,9 +1347,7 @@ export function GoodsReceiptCreatePage({
                           sideOffset={8}
                           className="wms-ops-order-lookup__tooltip !bg-[var(--wms-app-panel)] !text-[var(--wms-app-text)] border-[color-mix(in_oklab,var(--wms-ops-accent)_40%,var(--wms-app-border))]"
                         >
-                          Siparişin cari kodu Netsis’ten okunur; eşleşen
-                          tedarikçi otomatik seçilir ve sipariş bakiyesi aşağıda
-                          açılır.
+                          {t("createFlow.orderNoTooltip")}
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
@@ -1277,7 +1367,7 @@ export function GoodsReceiptCreatePage({
                         void loadOrderByNumber();
                       }
                     }}
-                    placeholder="Örn. SAS202600000001"
+                    placeholder={t("createFlow.orderNoPlaceholder")}
                     maxLength={50}
                   />
                 </div>
@@ -1291,7 +1381,7 @@ export function GoodsReceiptCreatePage({
                   {busy ? (
                     <Loader2 className="size-3.5 shrink-0 animate-spin" />
                   ) : (
-                    "Siparişi getir"
+                    t("createFlow.fetchOrder")
                   )}
                 </OpsActionButton>
               </div>
@@ -1301,10 +1391,9 @@ export function GoodsReceiptCreatePage({
               <section className="mb-5 rounded-2xl border border-[var(--wms-app-border)] bg-black/[.025] p-4 dark:bg-white/[.025]">
                 <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <h3 className="font-bold">İrsaliye bilgileri</h3>
+                    <h3 className="font-bold">{t("createFlow.waybill.sectionTitle")}</h3>
                     <p className="text-xs text-slate-500">
-                      Belge türü, numarası ve tarihleri sipariş seçiminden önce
-                      girilir.
+                      {t("createFlow.waybill.sectionHint")}
                     </p>
                   </div>
                   <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-[var(--wms-app-border)] px-4 py-2">
@@ -1315,17 +1404,17 @@ export function GoodsReceiptCreatePage({
                         setReceiptNo("");
                         setError(null);
                       }}
-                      aria-label="E-irsaliye"
+                      aria-label={t("createFlow.waybill.eReceipt")}
                     />
-                    <span className="text-sm font-semibold">E-irsaliye</span>
+                    <span className="text-sm font-semibold">{t("createFlow.waybill.eReceipt")}</span>
                   </label>
                 </div>
                 <div className="grid gap-4 md:grid-cols-2">
                   <Field
                     label={
                       isElectronicReceipt
-                        ? "E-irsaliye numarası"
-                        : "İrsaliye numarası"
+                        ? t("createFlow.waybill.eReceiptNumber")
+                        : t("createFlow.waybill.receiptNumber")
                     }
                     errorTarget="receiptNo"
                     errorKeys="irsaliye numarası|e-irsaliye numarası|normal irsaliye"
@@ -1364,7 +1453,7 @@ export function GoodsReceiptCreatePage({
                     />
                   </Field>
                   <Field
-                    label="İrsaliye tarihi"
+                    label={t("createFlow.waybill.waybillDate")}
                     errorTarget="waybillDate"
                     errorKeys="irsaliye tarihi"
                   >
@@ -1385,7 +1474,7 @@ export function GoodsReceiptCreatePage({
                       />
                     </Field>
                     <Field
-                      label="Mal kabul belge serisi"
+                      label={t("createFlow.documentSeries")}
                       errorTarget="documentSeries"
                       errorKeys="belge serisi|mal kabul belge serisi"
                     >
@@ -1397,7 +1486,7 @@ export function GoodsReceiptCreatePage({
                           label: `${x.code} · ${x.name}`,
                           description: x.previewDocumentNumber,
                         }))}
-                        placeholder="Belge serisi seçin"
+                        placeholder={t("createFlow.selectDocumentSeries")}
                         searchable
                       />
                     </Field>
@@ -1410,14 +1499,14 @@ export function GoodsReceiptCreatePage({
               {direct && directProjectCodes.length > 0 ? (
                 <div className="max-w-sm">
                   <label className="wms-ops-entry-label mb-1.5 block">
-                    Proje filtresi
+                    {t("createFlow.projectFilter")}
                   </label>
                   <select
                     className={cn(OPS_FIELD_CLASS, "h-10 w-full font-mono text-xs")}
                     value={projectCodeFilter}
                     onChange={(event) => setProjectCodeFilter(event.target.value)}
                   >
-                    <option value="">Tüm projeler</option>
+                    <option value="">{t("createFlow.allProjects")}</option>
                     {directProjectCodes.map((code) => (
                       <option key={code} value={code}>{code}</option>
                     ))}
@@ -1435,16 +1524,16 @@ export function GoodsReceiptCreatePage({
                             checked={allDirectLinesSelected}
                             disabled={directSelectAllKeys.length === 0}
                             onCheckedChange={() => toggleAllDirectLines()}
-                            aria-label="Tümünü seç"
-                            title="Tümünü seç"
+                            aria-label={t("createFlow.table.selectAll")}
+                            title={t("createFlow.table.selectAll")}
                           />
                         </th>
-                        <th>Sipariş No</th>
-                        <th>Proje Kodu</th>
-                        <th>Stok Kodu</th>
-                        <th>Stok Adı</th>
-                        <th className="wms-ops-order-fetch__qty">Kalan</th>
-                        <th>Hedef Depo</th>
+                        <th>{t("createFlow.table.orderNo")}</th>
+                        <th>{t("createFlow.table.projectCode")}</th>
+                        <th>{t("createFlow.table.stockCode")}</th>
+                        <th>{t("createFlow.table.stockName")}</th>
+                        <th className="wms-ops-order-fetch__qty">{t("createFlow.table.remaining")}</th>
+                        <th>{t("createFlow.table.targetWarehouse")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1557,13 +1646,13 @@ export function GoodsReceiptCreatePage({
                     <thead>
                       <tr>
                         <th className="w-14 text-center" />
-                        <th>Sipariş No</th>
-                        <th>Proje Kodu</th>
-                        <th>Tarih</th>
-                        <th className="wms-ops-order-fetch__qty">Sipariş Miktarı</th>
-                        <th className="wms-ops-order-fetch__qty">Kalan</th>
-                        <th className="wms-ops-order-fetch__qty">Mal Kabul</th>
-                        <th>Depo Kodu</th>
+                        <th>{t("createFlow.table.orderNo")}</th>
+                        <th>{t("createFlow.table.projectCode")}</th>
+                        <th>{t("createFlow.date")}</th>
+                        <th className="wms-ops-order-fetch__qty">{t("createFlow.table.orderQty")}</th>
+                        <th className="wms-ops-order-fetch__qty">{t("createFlow.table.remaining")}</th>
+                        <th className="wms-ops-order-fetch__qty">{t("available")}</th>
+                        <th>{t("createFlow.table.warehouseCode")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1623,8 +1712,12 @@ export function GoodsReceiptCreatePage({
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <p className="text-xs text-[var(--wms-app-text-muted)]">
                   {direct
-                    ? `${selectedDirectLineKeys.length} sipariş kalemi seçildi`
-                    : `${selectedOrders.length} sipariş seçildi`}
+                    ? t("createFlow.selectedDirectLinesCount", {
+                        count: selectedDirectLineKeys.length,
+                      })
+                    : t("createFlow.selectedOrdersCount", {
+                        count: selectedOrders.length,
+                      })}
                 </p>
                 <OpsActionButton
                   type="button"
@@ -1639,7 +1732,7 @@ export function GoodsReceiptCreatePage({
                   {busy ? (
                     <Loader2 className="size-4 animate-spin" />
                   ) : (
-                    direct ? "Seçili kalemleri hazırla" : t("loadLines")
+                    direct ? t("createFlow.prepareSelectedLines") : t("loadLines")
                   )}
                 </OpsActionButton>
               </div>
@@ -1655,22 +1748,25 @@ export function GoodsReceiptCreatePage({
             >
                   <header className="border-b border-[var(--wms-app-border)] bg-cyan-500/[.07] px-5 py-4">
                     <h2 className="text-xl font-black">
-                      Seçili Kalemler ve Mal Kabul Detayları
+                      {t("createFlow.selectedLines.title")}
                     </h2>
                     <p className="mt-1 text-sm text-[var(--wms-app-text-muted)]">
-                      Miktar, depo, raf ve seri/lot bilgilerini bu ekrandan ayrılmadan
-                      kalem bazında yönetin.
+                      {t("createFlow.selectedLines.description")}
                     </p>
                     <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
                         <span className="rounded-lg border border-cyan-500/25 bg-cyan-500/10 px-3 py-2 font-semibold text-cyan-600">
-                          {lines.length} kalem
+                          {t("createFlow.selectedLines.lineCount", {
+                            count: lines.length,
+                          })}
                         </span>
                         <span className="rounded-lg border border-[var(--wms-app-border)] px-3 py-2 font-mono">
                           {formatProjectNumber(selectedQuantity)}
                         </span>
                         {confirmedLineOrder.length > 0 ? (
                           <span className="rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-3 py-2 font-semibold text-emerald-600 dark:text-emerald-300">
-                            {confirmedLineOrder.length} seçili
+                            {t("createFlow.selectedLines.selectedCount", {
+                              count: confirmedLineOrder.length,
+                            })}
                           </span>
                         ) : null}
                         <button
@@ -1692,7 +1788,9 @@ export function GoodsReceiptCreatePage({
                               disabled={confirmableLineKeys.length === 0}
                             />
                           </span>
-                          {allLinesConfirmed ? "Seçimi kaldır" : "Tümünü seç"}
+                          {allLinesConfirmed
+                            ? t("createFlow.selectedLines.clearSelection")
+                            : t("createFlow.selectedLines.selectAll")}
                         </button>
                     </div>
                   </header>
@@ -1701,16 +1799,16 @@ export function GoodsReceiptCreatePage({
                     <div className="wms-ops-selected-order-items space-y-4">
               <div className="flex items-center justify-between gap-3">
                 <p className="text-xs text-[var(--wms-app-text-muted)]">
-                  Kalem detayları · miktar girdikten sonra kutuyu işaretleyin;
-                  onaylananlar sırayla üste gelir
+                  {t("createFlow.selectedLines.detailsHint")}
                 </p>
               </div>
-              <div className="space-y-2">
+              <div ref={receiptLinesListRef} className="space-y-2">
                 {orderedLines.map((line) => {
                   const key = lineKey(line);
                   return (
                   <ReceiptEntryRow
                     key={key}
+                    dataLineKey={key}
                     line={line}
                     confirmed={confirmedLineOrder.includes(key)}
                     onConfirmedChange={(next) => toggleLineConfirmed(key, next)}
@@ -1726,7 +1824,7 @@ export function GoodsReceiptCreatePage({
               </div>
 
               <Panel
-                title="Emir ve işlem ayarları"
+                title={t("createFlow.taskSettings")}
                 icon={<PackageCheck className="size-5" />}
               >
                 <div className="grid gap-4 md:grid-cols-2">
@@ -1741,14 +1839,14 @@ export function GoodsReceiptCreatePage({
                       <div>
                         <h3 className="font-bold">
                           {isElectronicReceipt
-                            ? "E-irsaliye bilgisi"
-                            : "Normal irsaliye bilgisi"}
+                            ? t("createFlow.waybill.eReceiptInfo")
+                            : t("createFlow.waybill.normalReceiptInfo")}
                           <span className="text-red-500"> *</span>
                         </h3>
                         <p className="text-xs text-slate-500">
                           {isElectronicReceipt
-                            ? "3 karakter birim kodu + 4 karakter yıl + 9 karakter sıra numarası."
-                            : "Normal irsaliye numarası tam 15 rakam olmalıdır."}
+                            ? t("createFlow.waybill.eReceiptHint")
+                            : t("createFlow.waybill.normalReceiptHint")}
                         </p>
                       </div>
                       <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-[var(--wms-app-border)] px-4 py-2">
@@ -1759,17 +1857,17 @@ export function GoodsReceiptCreatePage({
                             setReceiptNo("");
                             setError(null);
                           }}
-                          aria-label="E-irsaliye"
+                          aria-label={t("createFlow.waybill.eReceipt")}
                         />
-                        <span className="text-sm font-semibold">E-irsaliye</span>
+                        <span className="text-sm font-semibold">{t("createFlow.waybill.eReceipt")}</span>
                       </label>
                     </div>
                     <div className="grid gap-4 md:grid-cols-3">
                       <Field
                         label={
                           isElectronicReceipt
-                            ? "E-irsaliye numarası"
-                            : "İrsaliye numarası"
+                            ? t("createFlow.waybill.eReceiptNumber")
+                            : t("createFlow.waybill.receiptNumber")
                         }
                         errorTarget="receiptNo"
                         errorKeys="irsaliye numarası|e-irsaliye numarası|normal irsaliye"
@@ -1808,7 +1906,7 @@ export function GoodsReceiptCreatePage({
                         />
                       </Field>
                       <Field
-                        label="İrsaliye tarihi"
+                        label={t("createFlow.waybill.waybillDate")}
                         errorTarget="waybillDate"
                         errorKeys="irsaliye tarihi"
                       >
@@ -1820,7 +1918,7 @@ export function GoodsReceiptCreatePage({
                         />
                       </Field>
                       <Field
-                        label="Mal kabul belge serisi"
+                        label={t("createFlow.documentSeries")}
                         errorTarget="documentSeries"
                         errorKeys="belge serisi|mal kabul belge serisi"
                       >
@@ -1832,7 +1930,7 @@ export function GoodsReceiptCreatePage({
                             label: `${x.code} · ${x.name}`,
                             description: x.previewDocumentNumber,
                           }))}
-                          placeholder="Belge serisi seçin"
+                          placeholder={t("createFlow.selectDocumentSeries")}
                           searchable
                         />
                       </Field>
@@ -1860,10 +1958,10 @@ export function GoodsReceiptCreatePage({
                       value={labelStrategy}
                       onValueChange={setLabelStrategy}
                       options={[
-                        { value: "None", label: "Etiket yok" },
-                        ...(!direct ? [{ value: "PreGenerate", label: "Önceden üret" }] : []),
-                        { value: "SupplierLabel", label: "Tedarikçi etiketi" },
-                        { value: "GenerateOnReceipt", label: "Kabulde üret" },
+                        { value: "None", label: t("createFlow.labelOptions.none") },
+                        ...(!direct ? [{ value: "PreGenerate", label: t("createFlow.labelOptions.preGenerate") }] : []),
+                        { value: "SupplierLabel", label: t("createFlow.labelOptions.supplierLabel") },
+                        { value: "GenerateOnReceipt", label: t("createFlow.labelOptions.generateOnReceipt") },
                       ]}
                     />
                   </Field>
@@ -1884,12 +1982,11 @@ export function GoodsReceiptCreatePage({
                     <UserRoundCog className="mt-0.5 size-5 text-cyan-500" />
                     <div>
                       <h3 className="font-bold">
-                        Emir sorumluları <span className="text-red-500">*</span>
+                        {t("createFlow.assignees.title")}{" "}
+                        <span className="text-red-500">*</span>
                       </h3>
                       <p className="text-xs text-slate-500">
-                        Seçilen kullanıcılar oluşturulan tüm depo görevlerine
-                        atanır; kullanıcılar kendi “Bana Atanan Emirler” ekranında
-                        görevi görür.
+                        {t("createFlow.assignees.hint")}
                       </p>
                     </div>
                   </div>
@@ -1911,7 +2008,7 @@ export function GoodsReceiptCreatePage({
                           : [...current, user],
                       );
                     }}
-                    placeholder="Operasyon kullanıcısı ekle"
+                    placeholder={t("createFlow.assignees.addPlaceholder")}
                     searchable
                     minSearchLength={2}
                   />
@@ -1943,16 +2040,13 @@ export function GoodsReceiptCreatePage({
                     ))}
                     {assignees.length === 0 && (
                       <span className="text-xs text-amber-500">
-                        Henüz kullanıcı atanmadı.
+                        {t("createFlow.assignees.empty")}
                       </span>
                     )}
                   </div>
                 </section>}
                 <p className="mt-4 text-xs text-slate-500">
-                  Siparişteki depo kaleme varsayılan gelir; yetkili kullanıcı kabul
-                  deposu ve rafını kalem bazında değiştirebilir. Putaway önerileri
-                  yalnızca tercih olarak saklanır; kabul rafını (Receiving/Staging)
-                  değiştirmez.
+                  {t("createFlow.warehouseHint")}
                 </p>
                 <Footer
                   back={() => {
@@ -1973,7 +2067,7 @@ export function GoodsReceiptCreatePage({
 
       {step === 1 && (
         <Panel
-          title="Kontrol ve oluşturma"
+          title={t("createFlow.steps.1")}
           icon={<CheckCircle2 className="size-5" />}
         >
           {result ? (
@@ -2029,19 +2123,19 @@ export function GoodsReceiptCreatePage({
                       <span className="wms-ops-gr-review__hero-icon">
                         <Building2 className="size-4" />
                       </span>
-                      <span className="wms-ops-gr-review__hero-label">Tedarikçi Carisi</span>
+                      <span className="wms-ops-gr-review__hero-label">{t("createFlow.review.supplierCard")}</span>
                     </div>
                     <div className="wms-ops-gr-review__hero-title">
                       {selectedCustomer?.customerName || "—"}
                     </div>
                     <div className="wms-ops-gr-review__hero-meta">
-                      Cari kodu:{" "}
+                      {t("createFlow.review.customerCode")}:{" "}
                       <strong className="wms-ops-gr-review__hero-meta-code">
                         {selectedCustomer?.customerCode || customer?.code || "—"}
                       </strong>
                     </div>
                     <div className="wms-ops-gr-review__hero-meta wms-ops-gr-review__hero-meta--muted">
-                      Şube: {selectedCustomer?.branchCode ?? branchCode}
+                      {t("createFlow.review.branch")}: {selectedCustomer?.branchCode ?? branchCode}
                     </div>
                   </section>
 
@@ -2050,12 +2144,12 @@ export function GoodsReceiptCreatePage({
                       <span className="wms-ops-gr-review__hero-icon">
                         <ClipboardList className="size-4" />
                       </span>
-                      <span className="wms-ops-gr-review__hero-label">Sipariş Bilgileri</span>
+                      <span className="wms-ops-gr-review__hero-label">{t("createFlow.review.orderInfoCard")}</span>
                     </div>
                     <div className="wms-ops-gr-review__meta-list">
                       <div className="wms-ops-gr-review__meta-item">
                         <span className="wms-ops-gr-review__meta-label">
-                          <Hash className="size-3.5" /> Belge serisi
+                          <Hash className="size-3.5" /> {t("createFlow.review.documentSeries")}
                         </span>
                         <strong className="wms-ops-gr-review__meta-value wms-ops-gr-review__meta-value--series">
                           {selectedSeriesPreview}
@@ -2063,7 +2157,7 @@ export function GoodsReceiptCreatePage({
                       </div>
                       <div className="wms-ops-gr-review__meta-item">
                         <span className="wms-ops-gr-review__meta-label">
-                          <ClipboardList className="size-3.5" /> {isElectronicReceipt ? "E-irsaliye" : "İrsaliye"}
+                          <ClipboardList className="size-3.5" /> {isElectronicReceipt ? t("createFlow.waybill.eReceipt") : t("createFlow.review.waybill")}
                         </span>
                         <strong className="wms-ops-gr-review__meta-value wms-ops-gr-review__meta-value--receipt">
                           {receiptNo || "—"}
@@ -2071,7 +2165,7 @@ export function GoodsReceiptCreatePage({
                       </div>
                       <div className="wms-ops-gr-review__meta-item">
                         <span className="wms-ops-gr-review__meta-label">
-                          <CalendarDays className="size-3.5" /> İrsaliye tarihi
+                          <CalendarDays className="size-3.5" /> {t("createFlow.waybill.waybillDate")}
                         </span>
                         <strong className="wms-ops-gr-review__meta-value wms-ops-gr-review__meta-value--date">
                           {waybillDate || "—"}
@@ -2079,7 +2173,7 @@ export function GoodsReceiptCreatePage({
                       </div>
                       <div className="wms-ops-gr-review__meta-item">
                         <span className="wms-ops-gr-review__meta-label">
-                          <PackageOpen className="size-3.5" /> Sipariş no
+                          <PackageOpen className="size-3.5" /> {t("createFlow.table.orderNo")}
                         </span>
                         <strong className="wms-ops-gr-review__meta-value wms-ops-gr-review__meta-value--order">
                           {selectedOrderNumbersForReview || "—"}
@@ -2088,7 +2182,7 @@ export function GoodsReceiptCreatePage({
                       {direct ? (
                         <div className="wms-ops-gr-review__meta-item">
                           <span className="wms-ops-gr-review__meta-label">
-                            <Building2 className="size-3.5" /> Proje / sipariş tarihi
+                            <Building2 className="size-3.5" /> {t("createFlow.review.projectAndOrderDate")}
                           </span>
                           <strong className="wms-ops-gr-review__meta-value wms-ops-gr-review__meta-value--project">
                             {`${selectedProjectCodesForReview || "—"} · ${selectedOrderDatesForReview || "—"}`}
@@ -2099,9 +2193,9 @@ export function GoodsReceiptCreatePage({
                   </section>
                 </div>
 
-                <div className="wms-ops-gr-review__section-title">Kontrol ozeti</div>
+                <div className="wms-ops-gr-review__section-title">{t("createFlow.review.summaryTitle")}</div>
                 <ReviewRow
-                  label="Satır / miktar"
+                  label={t("createFlow.review.linesAndQuantity")}
                   value={`${lines.length} / ${formatProjectNumber(selectedQuantity, {
                     minimumFractionDigits: 0,
                     maximumFractionDigits: 6,
@@ -2110,7 +2204,7 @@ export function GoodsReceiptCreatePage({
                 />
                 {direct ? (
                   <ReviewRow
-                    label="Sipariş uygun miktar"
+                    label={t("createFlow.review.orderAvailableQuantity")}
                     value={formatProjectNumber(selectedAvailableQuantity, {
                       minimumFractionDigits: 0,
                       maximumFractionDigits: 6,
@@ -2118,17 +2212,17 @@ export function GoodsReceiptCreatePage({
                   />
                 ) : null}
                 <ReviewRow
-                  label="Depo sayısı"
+                  label={t("createFlow.review.warehouseCount")}
                   value={String(new Set(lines.map((x) => x.targetWarehouseId)).size)}
                 />
                 {!direct && (
                   <ReviewRow
-                    label="Emir sorumluları"
+                    label={t("createFlow.assignees.title")}
                     value={assignees.map(userLabel).join(", ") || "—"}
                   />
                 )}
                 <ReviewRow
-                  label="Lot/seri satırı"
+                  label={t("createFlow.review.trackingLineCount")}
                   value={String(
                     lines.reduce((sum, x) => sum + x.trackings.length, 0),
                   )}
@@ -2147,18 +2241,18 @@ export function GoodsReceiptCreatePage({
                   <ShieldCheck className="size-5" />
                 </span>
                 <span className="wms-ops-gr-review__quality-text">
-                  <strong>Kalite Kontrol Yönlendirmesi</strong>
+                  <strong>{t("createFlow.review.qualityRoutingTitle")}</strong>
                   <small>
                     {hasQualityLines
-                      ? "İşlem sonrası otomatik aşama"
-                      : "Bu kabulde kalite kontrol gerekmiyor"}
+                      ? t("createFlow.review.qualityRoutingActiveHint")
+                      : t("createFlow.review.qualityRoutingNoneHint")}
                   </small>
                 </span>
                 {hasQualityLines ? (
                   <QualityLinesReviewTrigger lines={qualityLines} />
                 ) : (
                   <span className="wms-ops-gr-review__quality-pill wms-ops-gr-review__quality-pill--muted">
-                    Kalite kontrol yok
+                    {t("createFlow.review.qualityNone")}
                   </span>
                 )}
               </div>
@@ -2181,8 +2275,8 @@ export function GoodsReceiptCreatePage({
                   ) : null}
                   {direct
                     ? hasQualityLines
-                      ? "Kaliteye Gönder"
-                      : "İrsaliye Oluştur"
+                      ? t("createFlow.sendToQuality")
+                      : t("createFlow.createDirect")
                     : t("create")}
                 </OpsActionButton>
               </div>
@@ -2196,6 +2290,7 @@ export function GoodsReceiptCreatePage({
 
 function ReceiptEntryRow({
   line,
+  dataLineKey,
   confirmed,
   onConfirmedChange,
   updateLine,
@@ -2206,6 +2301,7 @@ function ReceiptEntryRow({
   cancelGeneratedSerials,
 }: {
   line: SelectedReceiptLine;
+  dataLineKey: string;
   confirmed: boolean;
   onConfirmedChange: (next: boolean) => void;
   updateLine: (key: string, patch: Partial<SelectedReceiptLine>) => void;
@@ -2219,6 +2315,7 @@ function ReceiptEntryRow({
   createSerialRows: (key: string) => Promise<void>;
   cancelGeneratedSerials: (key: string) => Promise<void>;
 }): ReactElement {
+  const { t } = useTranslation("goods-receipt-v2");
   const key = lineKey(line);
   const serialMode =
     line.trackingType === "Serial" || line.trackingType === "LotAndSerial";
@@ -2252,7 +2349,7 @@ function ReceiptEntryRow({
       : line.targetWarehouseName
         ? line.targetWarehouseName
         : warehouseCode != null
-          ? `Depo ${warehouseCode}`
+          ? t("createFlow.entryRow.warehouseFallback", { code: warehouseCode })
           : "";
   const receivingLabel =
     line.receivingLocationCode ||
@@ -2262,9 +2359,11 @@ function ReceiptEntryRow({
   const serialSummary = needsTracking
     ? line.trackings.length > 0
       ? serialMode
-        ? `${line.trackings.filter((x) => x.serialNo).length} seri`
-        : `${line.trackings.length} lot/satır`
-      : "Planla…"
+        ? t("createFlow.entryRow.serialCount", {
+            count: line.trackings.filter((x) => x.serialNo).length,
+          })
+        : t("createFlow.entryRow.lotRowCount", { count: line.trackings.length })
+      : t("createFlow.entryRow.planSerial")
     : "—";
 
   useEffect(() => {
@@ -2299,26 +2398,48 @@ function ReceiptEntryRow({
           page.items.find((item) => item.locationType === "Receiving") ??
           page.items[0];
         if (!preferred) return;
-        const selectedIsValid =
-          line.receivingLocationId != null &&
-          page.items.some((item) => item.id === line.receivingLocationId);
-        if (!selectedIsValid) {
+
+        if (line.receivingLocationId == null) {
           updateLine(key, {
             receivingLocationId: preferred.id,
             receivingLocationValue: String(preferred.id),
             receivingLocationCode: preferred.code,
           });
-        } else if (
-          line.receivingLocationId &&
-          !line.receivingLocationCode
-        ) {
-          const current = page.items.find(
-            (item) => item.id === line.receivingLocationId,
-          );
-          if (current) {
-            updateLine(key, { receivingLocationCode: current.code });
-          }
+          return;
         }
+
+        const selectedIsValid = page.items.some(
+          (item) => item.id === line.receivingLocationId,
+        );
+        if (selectedIsValid) {
+          if (!line.receivingLocationCode) {
+            const current = page.items.find(
+              (item) => item.id === line.receivingLocationId,
+            );
+            if (current) {
+              updateLine(key, { receivingLocationCode: current.code });
+            }
+          }
+          return;
+        }
+
+        if (
+          line.putawayLocationId != null &&
+          line.receivingLocationId === line.putawayLocationId
+        ) {
+          if (!line.receivingLocationCode && line.putawayLocationCode) {
+            updateLine(key, {
+              receivingLocationCode: line.putawayLocationCode,
+            });
+          }
+          return;
+        }
+
+        updateLine(key, {
+          receivingLocationId: preferred.id,
+          receivingLocationValue: String(preferred.id),
+          receivingLocationCode: preferred.code,
+        });
       })
       .catch(() => undefined);
     return () => {
@@ -2326,6 +2447,8 @@ function ReceiptEntryRow({
     };
   }, [
     key,
+    line.putawayLocationCode,
+    line.putawayLocationId,
     line.receivingLocationCode,
     line.receivingLocationId,
     line.targetWarehouseId,
@@ -2335,11 +2458,13 @@ function ReceiptEntryRow({
   useEffect(() => {
     if (!line.targetWarehouseId || !line.stockCode || line.quantity <= 0) {
       setSuggestions([]);
+      setSuggestionsBusy(false);
       return;
     }
+    setSuggestions([]);
+    setSuggestionsBusy(true);
     let cancelled = false;
     const timer = window.setTimeout(() => {
-      setSuggestionsBusy(true);
       void goodsReceiptV2Api
         .putawaySuggestions(line.targetWarehouseId!, {
           stockCode: line.stockCode,
@@ -2354,10 +2479,7 @@ function ReceiptEntryRow({
             (item) => item.id === line.putawayLocationId,
           );
           if (!stillValid) {
-            updateLine(key, {
-              putawayLocationId: top.id,
-              putawayLocationCode: top.code,
-            });
+            updateLine(key, putawayLocationPatch(top));
           }
         })
         .catch(() => {
@@ -2377,6 +2499,7 @@ function ReceiptEntryRow({
 
   return (
     <div
+      data-receipt-line-key={dataLineKey}
       className={cn(
         "wms-ops-receipt-entry-row space-y-3 rounded-xl transition-[box-shadow,border-color,background-color] duration-300",
         confirmed && "wms-ops-receipt-entry-row--confirmed",
@@ -2388,25 +2511,31 @@ function ReceiptEntryRow({
             <p className="truncate text-sm font-semibold">
               {line.stockName || line.stockCode || "—"}
             </p>
-            <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-              <span className="wms-ops-code-badge">{line.stockCode}</span>
+            <div className="wms-ops-receipt-meta-badges flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+              <span className="wms-ops-code-badge wms-ops-code-badge--stock">
+                <Hash className="wms-ops-meta-badge__icon" aria-hidden />
+                {line.stockCode}
+              </span>
               {warehouseBadge ? (
-                <>
-                  <span>•</span>
-                  <span className="wms-ops-code-badge">{warehouseBadge}</span>
-                </>
+                <span className="wms-ops-meta-badge-divider" aria-hidden />
               ) : null}
-              <span>•</span>
+              {warehouseBadge ? (
+                <span className="wms-ops-warehouse-badge">
+                  <Building2 className="wms-ops-meta-badge__icon" aria-hidden />
+                  {warehouseBadge}
+                </span>
+              ) : null}
+              <span className="wms-ops-meta-badge-divider" aria-hidden />
               <span className="font-mono">{line.siparisNo}</span>
               {line.projectCode ? (
                 <>
                   <span>•</span>
-                  <span className="font-mono">Proje: {line.projectCode}</span>
+                  <span className="font-mono">{t("createFlow.entryRow.project")}: {line.projectCode}</span>
                 </>
               ) : null}
               <span>•</span>
               <span>
-                Kalan:{" "}
+                {t("createFlow.entryRow.remaining")}:{" "}
                 <strong className="text-foreground">
                   {formatProjectNumber(line.availableQuantity ?? line.remainingQuantity ?? 0, {
                     minimumFractionDigits: 0,
@@ -2418,7 +2547,7 @@ function ReceiptEntryRow({
               {line.requireQualityControl ? (
                 <span className="inline-flex items-center gap-1 text-amber-600">
                   <ShieldCheck className="size-3" />
-                  Kalite
+                  {t("createFlow.entryRow.quality")}
                 </span>
               ) : null}
             </div>
@@ -2426,7 +2555,7 @@ function ReceiptEntryRow({
 
           <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
             <div className="space-y-1">
-              <label className="wms-ops-entry-label">Miktar</label>
+              <label className="wms-ops-entry-label">{t("createFlow.entryRow.quantity")}</label>
               <OpsFieldShell>
                 <div className="wms-ops-qty-stepper relative">
                   <input
@@ -2465,7 +2594,7 @@ function ReceiptEntryRow({
                     <button
                       type="button"
                       className="wms-ops-qty-stepper__btn"
-                      aria-label="Miktarı artır"
+                      aria-label={t("createFlow.entryRow.increaseQty")}
                       onClick={() => {
                         const base =
                           parseLocalizedNumber(quantityText) || line.quantity;
@@ -2481,7 +2610,7 @@ function ReceiptEntryRow({
                     <button
                       type="button"
                       className="wms-ops-qty-stepper__btn"
-                      aria-label="Miktarı azalt"
+                      aria-label={t("createFlow.entryRow.decreaseQty")}
                       onClick={() => {
                         const base =
                           parseLocalizedNumber(quantityText) || line.quantity;
@@ -2497,7 +2626,7 @@ function ReceiptEntryRow({
             </div>
 
             <div className="space-y-1">
-              <label className="wms-ops-entry-label">Seri No</label>
+              <label className="wms-ops-entry-label">{t("createFlow.entryRow.serialNo")}</label>
               {needsTracking ? (
                 <OpsFieldShell>
                   <button
@@ -2519,17 +2648,17 @@ function ReceiptEntryRow({
                   <div
                     className={cn(
                       OPS_FIELD_CLASS,
-                      "flex h-9 items-center text-xs text-muted-foreground",
+                      "wms-ops-field--placeholder flex min-h-[2.625rem] w-full items-center px-3 text-xs uppercase tracking-wide",
                     )}
                   >
-                    Takipsiz
+                    {t("createFlow.entryRow.untracked")}
                   </div>
                 </OpsFieldShell>
               )}
             </div>
 
             <div className="space-y-1">
-              <label className="wms-ops-entry-label">Raf Kodu</label>
+              <label className="wms-ops-entry-label">{t("createFlow.entryRow.locationCode")}</label>
               <OpsFieldShell
                 className={cn(
                   locationLookupOpen && "wms-ops-field-shell--active",
@@ -2539,11 +2668,11 @@ function ReceiptEntryRow({
                   variant="ops"
                   open={locationLookupOpen}
                   onOpenChange={setLocationLookupOpen}
-                  title="Kabul rafı (Receiving / Staging)"
+                  title={t("createFlow.entryRow.receivingLookupTitle")}
                   value={receivingLabel}
-                  placeholder="Receiving / Staging"
-                  searchPlaceholder="Raf kodu ara…"
-                  emptyText="Raf bulunamadı."
+                  placeholder={t("createFlow.entryRow.receivingPlaceholder")}
+                  searchPlaceholder={t("createFlow.entryRow.receivingSearchPlaceholder")}
+                  emptyText={t("createFlow.entryRow.receivingEmpty")}
                   disabled={!line.targetWarehouseId}
                   triggerClassName={cn(OPS_FIELD_CLASS, "h-9")}
                   queryKey={[
@@ -2587,37 +2716,39 @@ function ReceiptEntryRow({
           <OpsSkinCheckbox
             checked={confirmed}
             onCheckedChange={onConfirmedChange}
-            aria-label={`${line.stockCode ?? line.siparisNo} onayla`}
+            aria-label={t("createFlow.entryRow.confirmLine", {
+              label: line.stockCode ?? line.siparisNo,
+            })}
             title={
               confirmed
-                ? "Onayı kaldır"
-                : "Miktar girildikten sonra onayla (üste taşınır)"
+                ? t("createFlow.entryRow.removeConfirm")
+                : t("createFlow.entryRow.confirmHint")
             }
           />
           <span className="text-[0.58rem] font-semibold uppercase tracking-wider text-[var(--wms-app-text-muted)]">
-            {confirmed ? "Onay" : "Hazır"}
+            {confirmed ? t("createFlow.entryRow.confirm") : t("createFlow.entryRow.ready")}
           </span>
         </div>
       </div>
 
       {(suggestionsBusy || suggestions.length > 0 || line.putawayLocationCode) && (
-        <div className="mt-2.5 overflow-hidden rounded-xl border border-emerald-500/15 bg-[color-mix(in_oklab,var(--wms-app-panel)_88%,transparent)] shadow-[inset_0_1px_0_color-mix(in_oklab,white_4%,transparent)]">
-          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-emerald-500/10 bg-emerald-500/[0.04] px-3 py-1.5">
+        <div className="wms-ops-putaway-suggestions mt-2.5">
+          <div className="wms-ops-putaway-suggestions__header">
             <div className="flex min-w-0 flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-emerald-700 dark:text-emerald-300">
+              <span className="wms-ops-putaway-suggestions__title">
                 {suggestionsBusy ? (
                   <Loader2 className="size-3 animate-spin" />
                 ) : (
-                  <span className="size-1.5 rounded-full bg-emerald-500/80" aria-hidden />
+                  <span className="wms-ops-putaway-suggestions__title-dot" aria-hidden />
                 )}
-                Önerilen Raf
+                {t("createFlow.entryRow.suggestedRack")}
               </span>
               <span className="hidden text-[0.62rem] text-[var(--wms-app-text-muted)] sm:inline">
-                İlk öneri otomatik · kabul rafı değildir
+                {t("createFlow.entryRow.suggestedRackHint")}
               </span>
             </div>
             {line.putawayLocationCode ? (
-              <span className="inline-flex max-w-[14rem] items-center gap-1 rounded-full bg-emerald-500/12 px-2 py-0.5 font-mono text-[0.6rem] text-emerald-700 dark:text-emerald-200">
+              <span className="wms-ops-putaway-suggestions__selected-pill">
                 <CheckCircle2 className="size-2.5 shrink-0 opacity-80" aria-hidden />
                 <span className="truncate">{line.putawayLocationCode}</span>
               </span>
@@ -2625,43 +2756,32 @@ function ReceiptEntryRow({
           </div>
 
           {suggestions.length > 0 ? (
-            <div className="grid gap-1.5 p-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+            <div className="wms-ops-putaway-suggestions__grid">
               {suggestions.map((item, index) => {
                 const selected = line.putawayLocationId === item.id;
                 return (
                   <button
                     key={item.id}
                     type="button"
-                    onClick={() =>
-                      updateLine(key, {
-                        putawayLocationId: item.id,
-                        putawayLocationCode: item.code,
-                      })
-                    }
+                    onClick={() => updateLine(key, putawayLocationPatch(item))}
                     className={cn(
-                      "relative flex flex-col gap-0.5 overflow-hidden rounded-lg border px-2.5 py-1.5 text-left transition duration-150",
-                      selected
-                        ? "border-emerald-500/45 bg-emerald-500/[0.1] shadow-[inset_3px_0_0_0_rgb(16_185_129)]"
-                        : "border-transparent bg-black/[0.025] hover:-translate-y-px hover:border-emerald-500/25 hover:bg-emerald-500/[0.05] dark:bg-white/[0.03]",
+                      "wms-ops-putaway-suggestions__card",
+                      selected && "wms-ops-putaway-suggestions__card--selected",
                     )}
                   >
                     <div className="flex items-center gap-1.5">
                       <span
                         className={cn(
-                          "font-mono text-[0.58rem] tabular-nums",
-                          selected
-                            ? "text-emerald-600 dark:text-emerald-300"
-                            : "text-[var(--wms-app-text-muted)]",
+                          "wms-ops-putaway-suggestions__card-index font-mono text-[0.58rem] tabular-nums",
+                          selected && "wms-ops-putaway-suggestions__card-index--selected",
                         )}
                       >
                         {String(index + 1).padStart(2, "0")}
                       </span>
                       <span
                         className={cn(
-                          "min-w-0 flex-1 truncate font-mono text-[0.68rem] font-semibold tracking-tight",
-                          selected
-                            ? "text-emerald-800 dark:text-emerald-50"
-                            : "text-[var(--wms-app-text)]",
+                          "wms-ops-putaway-suggestions__card-code min-w-0 flex-1 truncate font-mono text-[0.68rem] font-semibold tracking-tight",
+                          selected && "wms-ops-putaway-suggestions__card-code--selected",
                         )}
                         title={item.code}
                       >
@@ -2669,12 +2789,12 @@ function ReceiptEntryRow({
                       </span>
                       {selected ? (
                         <CheckCircle2
-                          className="size-3 shrink-0 text-emerald-500"
-                          aria-label="Seçili"
+                          className="wms-ops-putaway-suggestions__card-check size-3 shrink-0"
+                          aria-label={t("createFlow.entryRow.selected")}
                         />
                       ) : index === 0 ? (
                         <span className="shrink-0 text-[0.55rem] font-medium uppercase tracking-wider text-[var(--wms-app-text-muted)]">
-                          öneri
+                          {t("createFlow.entryRow.suggestion")}
                         </span>
                       ) : null}
                     </div>
@@ -2702,14 +2822,14 @@ function ReceiptEntryRow({
       {serialMode && line.serialGenerationKey && (
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-500/25 bg-amber-500/10 px-3 py-2">
           <span className="text-xs text-amber-700 dark:text-amber-300">
-            Otomatik seriler rezerve edildi.
+            {t("createFlow.entryRow.autoSerialReserved")}
           </span>
           <button
             type="button"
             onClick={() => void cancelGeneratedSerials(key)}
             className="rounded-lg border border-amber-500/40 px-3 py-2 text-xs font-semibold text-amber-700 hover:bg-amber-500/10 dark:text-amber-300"
           >
-            Otomatik serileri iptal et
+            {t("createFlow.entryRow.cancelAutoSerials")}
           </button>
         </div>
       )}
@@ -3016,9 +3136,9 @@ function QualityLinesDialog({
   lines,
   open,
   onClose,
-  title = "Kaliteye gidecek stoklar",
-  description = "Mal kabul bitince bu kalemler kalite listesine düşer.",
-  searchAriaLabel = "Stoklarda ara",
+  title,
+  description,
+  searchAriaLabel,
 }: {
   lines: Array<{
     stockCode: string;
@@ -3033,6 +3153,7 @@ function QualityLinesDialog({
   description?: string;
   searchAriaLabel?: string;
 }): ReactElement {
+  const { t } = useTranslation("goods-receipt-v2");
   const [search, setSearch] = useState("");
   const filtered = useMemo(() => {
     const query = search.trim().toLocaleLowerCase("tr-TR");
@@ -3051,8 +3172,8 @@ function QualityLinesDialog({
         onClose();
         setSearch("");
       }}
-      title={title}
-      description={description}
+      title={title ?? t("createFlow.qualityDialog.title")}
+      description={description ?? t("createFlow.qualityDialog.description")}
       variant="lookup"
       className="!max-w-2xl"
     >
@@ -3063,20 +3184,20 @@ function QualityLinesDialog({
             <AppInput
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Stok kodu veya adı ara…"
-              aria-label={searchAriaLabel}
+              placeholder={t("createFlow.qualityDialog.searchPlaceholder")}
+              aria-label={searchAriaLabel ?? t("createFlow.qualityDialog.searchAria")}
             />
           </div>
         ) : null}
         <div className="wms-ops-gr-review__quality-dialog-meta">
           <span>
-            Gösterilen: <strong>{filtered.length}</strong> / {lines.length}
+            {t("createFlow.qualityDialog.showing")}: <strong>{filtered.length}</strong> / {lines.length}
           </span>
-          <span>Kaydırarak tüm listeyi inceleyebilirsiniz</span>
+          <span>{t("createFlow.qualityDialog.scrollHint")}</span>
         </div>
         {filtered.length === 0 ? (
           <div className="wms-ops-gr-review__quality-dialog-empty">
-            Aramayla eşleşen stok bulunamadı.
+            {t("createFlow.qualityDialog.empty")}
           </div>
         ) : (
           <ul className="wms-ops-gr-review__quality-dialog-list">
@@ -3092,7 +3213,7 @@ function QualityLinesDialog({
                   {line.stockName || "—"}
                 </span>
                 {line.requireQualityControl ? (
-                  <span className="wms-ops-gr-review__quality-dialog-badge">Kalite</span>
+                  <span className="wms-ops-gr-review__quality-dialog-badge">{t("createFlow.qualityDialog.qualityBadge")}</span>
                 ) : null}
                 <span className="wms-ops-gr-review__quality-dialog-qty">
                   {formatProjectNumber(line.quantity, {
@@ -3124,6 +3245,7 @@ function QualityLinesReviewTrigger({
   label?: string;
   className?: string;
 }): ReactElement {
+  const { t } = useTranslation("goods-receipt-v2");
   const [open, setOpen] = useState(false);
 
   return (
@@ -3133,7 +3255,7 @@ function QualityLinesReviewTrigger({
         className={cn("wms-ops-gr-review__quality-pill", className)}
         onClick={() => setOpen(true)}
       >
-        {label ?? `${lines.length} kalem · Listeyi gör`}
+        {label ?? t("createFlow.review.viewQualityList", { count: lines.length })}
       </button>
       <QualityLinesDialog lines={lines} open={open} onClose={() => setOpen(false)} />
     </>
@@ -3170,11 +3292,14 @@ function DirectCreateSuccessPanel({
   }>;
   onNew: () => void;
 }): ReactElement {
+  const { t } = useTranslation("goods-receipt-v2");
   const navigate = useNavigate();
   const [linesOpen, setLinesOpen] = useState(false);
   const [qualityOpen, setQualityOpen] = useState(false);
   const hasQuality = qualityLines.length > 0;
-  const statusLabel = hasQuality ? "Kaliteye gönderildi" : "İrsaliye oluşturuldu";
+  const statusLabel = hasQuality
+    ? t("createFlow.success.sentToQuality")
+    : t("createFlow.success.receiptCreated");
 
   return (
     <div className="wms-ops-gr-success wms-ops-gr-success--done">
@@ -3183,20 +3308,24 @@ function DirectCreateSuccessPanel({
         <div className="wms-ops-gr-success__icon" aria-hidden>
           <CheckCircle2 className="size-9" />
         </div>
-        <p className="wms-ops-gr-success__eyebrow">Siparişten doğrudan mal kabul</p>
+        <p className="wms-ops-gr-success__eyebrow">{t("createFlow.success.directEyebrow")}</p>
         <h2 className="wms-ops-gr-success__title">{statusLabel}</h2>
         <p className="wms-ops-gr-success__subtitle">
-          {supplierName || supplierCode ? `${supplierName ?? supplierCode} için ` : ""}
+          {supplierName || supplierCode
+            ? t("createFlow.success.subtitleForSupplier", {
+                name: supplierName ?? supplierCode ?? "",
+              })
+            : ""}
           {hasQuality
-            ? "kaliteye gönderilen ürünler için kalite onayından sonra irsaliye oluşturulacaktır."
-            : "irsaliye oluşturma işlemi tamamlandı."}
+            ? t("createFlow.success.qualityPendingSubtitle")
+            : t("createFlow.success.receiptDoneSubtitle")}
         </p>
-        {receiptNo ? (
+{(receiptNo || result?.documentNo) ? (
           <div className="wms-ops-gr-success__doc">
             <span className="wms-ops-gr-success__doc-label">
-              {isElectronicReceipt ? "E-irsaliye" : "İrsaliye"}
+              {isElectronicReceipt ? "E-irsaliye" : t("createFlow.success.documentNo")}
             </span>
-            <strong className="wms-ops-gr-success__doc-value">{receiptNo}</strong>
+            <strong className="wms-ops-gr-success__doc-value">{receiptNo ?? result?.documentNo}</strong>
           </div>
         ) : null}
       </header>
@@ -3207,26 +3336,26 @@ function DirectCreateSuccessPanel({
             type="button"
             className="wms-ops-gr-success__stat wms-ops-gr-success__stat--action"
             onClick={() => setLinesOpen(true)}
-            title="Tüm kabul satırlarını aç"
+            title={t("createFlow.success.openAllLines")}
           >
-            <span className="wms-ops-gr-success__stat-label">Satır</span>
+            <span className="wms-ops-gr-success__stat-label">{t("createFlow.success.line")}</span>
             <strong className="wms-ops-gr-success__stat-value">{result.lineCount}</strong>
-            <span className="wms-ops-gr-success__stat-hint">Listeyi gör</span>
+            <span className="wms-ops-gr-success__stat-hint">{t("createFlow.success.viewList")}</span>
           </button>
         ) : (
           <div className="wms-ops-gr-success__stat">
-            <span className="wms-ops-gr-success__stat-label">Satır</span>
+            <span className="wms-ops-gr-success__stat-label">{t("createFlow.success.line")}</span>
             <strong className="wms-ops-gr-success__stat-value">{result.lineCount}</strong>
           </div>
         )}
         <div className="wms-ops-gr-success__stat">
-          <span className="wms-ops-gr-success__stat-label">Miktar</span>
+          <span className="wms-ops-gr-success__stat-label">{t("createFlow.success.quantity")}</span>
           <strong className="wms-ops-gr-success__stat-value">
             {formatProjectNumber(result.quantity)}
           </strong>
         </div>
         <div className="wms-ops-gr-success__stat">
-          <span className="wms-ops-gr-success__stat-label">Durum</span>
+          <span className="wms-ops-gr-success__stat-label">{t("createFlow.success.status")}</span>
           <strong className="wms-ops-gr-success__stat-value wms-ops-gr-success__stat-value--status">
             {statusLabel}
           </strong>
@@ -3238,8 +3367,8 @@ function DirectCreateSuccessPanel({
           <div className="wms-ops-gr-success__quality-copy">
             <ShieldCheck className="size-4 shrink-0" aria-hidden />
             <div>
-              <strong>{qualityLines.length} kalem kalitede</strong>
-              <span>Onay sonrası irsaliye oluşur</span>
+              <strong>{t("createFlow.success.qualityLinesCount", { count: qualityLines.length })}</strong>
+              <span>{t("createFlow.success.qualityReceiptAfterApproval")}</span>
             </div>
           </div>
           <button
@@ -3247,14 +3376,14 @@ function DirectCreateSuccessPanel({
             className="wms-ops-gr-success__quality-btn"
             onClick={() => setQualityOpen(true)}
           >
-            Listeyi gör
+            {t("createFlow.success.viewList")}
           </button>
         </div>
       ) : null}
 
       <footer className="wms-ops-gr-success__actions">
         <OpsActionButton type="button" variant="primary" onClick={onNew}>
-          Yeni kayıt
+          {t("createFlow.success.newRecord")}
         </OpsActionButton>
         <OpsActionButton
           type="button"
@@ -3267,7 +3396,7 @@ function DirectCreateSuccessPanel({
             )
           }
         >
-          {hasQuality ? "Kalite listesi" : "Mal kabul listesi"}
+          {hasQuality ? t("createFlow.success.qualityList") : t("createFlow.success.receiptList")}
         </OpsActionButton>
       </footer>
 
@@ -3275,9 +3404,9 @@ function DirectCreateSuccessPanel({
         lines={receiptLines}
         open={linesOpen}
         onClose={() => setLinesOpen(false)}
-        title="Kabul satırları"
-        description="Bu mal kabulde yer alan tüm satırlar."
-        searchAriaLabel="Kabul satırlarında ara"
+        title={t("createFlow.qualityDialog.receiptLinesTitle")}
+        description={t("createFlow.qualityDialog.receiptLinesDescription")}
+        searchAriaLabel={t("createFlow.qualityDialog.receiptLinesSearchAria")}
       />
       <QualityLinesDialog
         lines={qualityLines}
@@ -3318,6 +3447,7 @@ function CreateSuccessPanel({
   }>;
   onNew: () => void;
 }): ReactElement {
+  const { t } = useTranslation("goods-receipt-v2");
   const navigate = useNavigate();
   const [linesOpen, setLinesOpen] = useState(false);
   const [qualityOpen, setQualityOpen] = useState(false);
@@ -3331,28 +3461,27 @@ function CreateSuccessPanel({
         <div className="wms-ops-gr-success__icon" aria-hidden>
           <CheckCircle2 className="size-9" />
         </div>
-        <p className="wms-ops-gr-success__eyebrow">Mal kabul sonrası</p>
-        <h2 className="wms-ops-gr-success__title">Mal kabul emri oluşturuldu</h2>
+        <p className="wms-ops-gr-success__eyebrow">{t("createFlow.success.orderEyebrow")}</p>
+        <h2 className="wms-ops-gr-success__title">{t("createFlow.success.orderCreatedTitle")}</h2>
         <p className="wms-ops-gr-success__subtitle">
           {supplierCode
-            ? `${supplierCode} tedarikçisi için belge hazır.`
-            : "Mal kabul belgesi hazır."}{" "}
-          Emir atanan kullanıcıların kuyruğuna düştü; fiziksel kabul bitince
-          kaliteye gidecek kalemler listelenir.
+            ? t("createFlow.success.orderSubtitleWithSupplier", { code: supplierCode })
+            : t("createFlow.success.orderSubtitleGeneric")}{" "}
+          {t("createFlow.success.orderSubtitleTail")}
         </p>
-        {receiptNo ? (
+{(receiptNo || result?.documentNo) ? (
           <div className="wms-ops-gr-success__doc">
             <span className="wms-ops-gr-success__doc-label">
-              {isElectronicReceipt ? "E-irsaliye" : "İrsaliye"}
+              {isElectronicReceipt ? "E-irsaliye" : t("createFlow.success.documentNo")}
             </span>
-            <strong className="wms-ops-gr-success__doc-value">{receiptNo}</strong>
+            <strong className="wms-ops-gr-success__doc-value">{receiptNo ?? result?.documentNo}</strong>
           </div>
         ) : null}
       </header>
 
       <div className="wms-ops-gr-success__stats">
         <div className="wms-ops-gr-success__stat">
-          <span className="wms-ops-gr-success__stat-label">Görev</span>
+          <span className="wms-ops-gr-success__stat-label">{t("createFlow.success.task")}</span>
           <strong className="wms-ops-gr-success__stat-value">{result.tasks.length}</strong>
         </div>
         {receiptLines.length > 0 ? (
@@ -3360,24 +3489,24 @@ function CreateSuccessPanel({
             type="button"
             className="wms-ops-gr-success__stat wms-ops-gr-success__stat--action"
             onClick={() => setLinesOpen(true)}
-            title="Tüm kabul satırlarını aç"
+            title={t("createFlow.success.openAllLines")}
           >
-            <span className="wms-ops-gr-success__stat-label">Satır / miktar</span>
+            <span className="wms-ops-gr-success__stat-label">{t("createFlow.success.linesAndQuantityStat")}</span>
             <strong className="wms-ops-gr-success__stat-value">
               {result.lineCount} · {formatProjectNumber(result.reservedQuantity)}
             </strong>
-            <span className="wms-ops-gr-success__stat-hint">Listeyi gör</span>
+            <span className="wms-ops-gr-success__stat-hint">{t("createFlow.success.viewList")}</span>
           </button>
         ) : (
           <div className="wms-ops-gr-success__stat">
-            <span className="wms-ops-gr-success__stat-label">Satır / miktar</span>
+            <span className="wms-ops-gr-success__stat-label">{t("createFlow.success.linesAndQuantityStat")}</span>
             <strong className="wms-ops-gr-success__stat-value">
               {result.lineCount} · {formatProjectNumber(result.reservedQuantity)}
             </strong>
           </div>
         )}
         <div className="wms-ops-gr-success__stat">
-          <span className="wms-ops-gr-success__stat-label">Emir sorumlusu</span>
+          <span className="wms-ops-gr-success__stat-label">{t("createFlow.success.assignee")}</span>
           <strong className="wms-ops-gr-success__stat-value">{assigneeCount}</strong>
         </div>
       </div>
@@ -3387,8 +3516,8 @@ function CreateSuccessPanel({
           <div className="wms-ops-gr-success__quality-copy">
             <ShieldCheck className="size-4 shrink-0" aria-hidden />
             <div>
-              <strong>{qualityCount} kalem kalitede</strong>
-              <span>Fiziksel kabul bitince kalite listesine düşer</span>
+              <strong>{t("createFlow.success.qualityLinesCount", { count: qualityCount })}</strong>
+              <span>{t("createFlow.success.qualityAfterReceipt")}</span>
             </div>
           </div>
           <button
@@ -3396,25 +3525,28 @@ function CreateSuccessPanel({
             className="wms-ops-gr-success__quality-btn"
             onClick={() => setQualityOpen(true)}
           >
-            Listeyi gör
+            {t("createFlow.success.viewList")}
           </button>
         </div>
       ) : (
         <div className="wms-ops-gr-success__quality wms-ops-gr-success__quality--muted">
-          Bu emirde kalite kontrol gerektiren kalem yok.
+          {t("createFlow.success.noQualityLines")}
         </div>
       )}
 
       {result.tasks.length > 0 ? (
         <div className="wms-ops-gr-success__tasks">
-          <div className="wms-ops-gr-success__tasks-title">Oluşturulan görevler</div>
+          <div className="wms-ops-gr-success__tasks-title">{t("createFlow.success.createdTasks")}</div>
           <ul className="wms-ops-gr-success__tasks-list">
             {result.tasks.map((task) => (
               <li key={task.id}>
                 <span className="wms-ops-gr-success__task-no">{task.taskNo}</span>
                 <span className="wms-ops-gr-success__task-meta">
-                  depo #{task.warehouseId} · {task.lineCount} satır ·{" "}
-                  {formatProjectNumber(task.plannedQuantity)}
+                  {t("createFlow.success.taskMeta", {
+                    warehouseId: task.warehouseId,
+                    lineCount: task.lineCount,
+                    quantity: formatProjectNumber(task.plannedQuantity),
+                  })}
                 </span>
               </li>
             ))}
@@ -3424,17 +3556,17 @@ function CreateSuccessPanel({
 
       <footer className="wms-ops-gr-success__actions">
         <OpsActionButton type="button" variant="primary" onClick={onNew}>
-          Yeni kayıt
+          {t("createFlow.success.newRecord")}
         </OpsActionButton>
         <OpsActionButton
           type="button"
           variant="secondary"
           onClick={() => navigate("/warehouse/goods-receipts/tasks")}
         >
-          Emir yönetimine git
+          {t("createFlow.success.goToTaskManagement")}
         </OpsActionButton>
         <OpsActionButton type="button" variant="secondary" asChild>
-          <Link to="/warehouse/goods-receipts/list">Mal kabul listesi</Link>
+          <Link to="/warehouse/goods-receipts/list">{t("createFlow.success.receiptList")}</Link>
         </OpsActionButton>
       </footer>
 
@@ -3442,9 +3574,9 @@ function CreateSuccessPanel({
         lines={receiptLines}
         open={linesOpen}
         onClose={() => setLinesOpen(false)}
-        title="Kabul satırları"
-        description="Bu mal kabul emrinde yer alan tüm satırlar."
-        searchAriaLabel="Kabul satırlarında ara"
+        title={t("createFlow.qualityDialog.receiptLinesTitle")}
+        description={t("createFlow.qualityDialog.orderLinesDescription")}
+        searchAriaLabel={t("createFlow.qualityDialog.receiptLinesSearchAria")}
       />
       <QualityLinesDialog
         lines={qualityLines}

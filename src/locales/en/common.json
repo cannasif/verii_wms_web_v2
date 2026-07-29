@@ -4411,7 +4411,13 @@
     "manufacturingDate": "Manufacturing date",
     "expirationDate": "Expiration date",
     "activePolicy": "Active policy",
-    "noActiveRule": "No active rule · system default"
+    "noActiveRule": "No active rule · system default",
+    "trackingTypes": {
+      "lot": "Lot",
+      "serial": "Serial",
+      "lotAndSerial": "Lot + Serial",
+      "none": "Untracked"
+    }
   },
   "erpMirror": {
     "recordDetail": "{{title}} Record Detail #{{id}}",
