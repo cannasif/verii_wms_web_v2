@@ -228,17 +228,17 @@ function GridMenuSearch({
   placeholder: string;
   clearLabel: string;
 }) {
-  return <div className="relative mb-2">
-    <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-slate-400"/>
+  return <div className="wms-ops-list-popover__search relative mb-2">
+    <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-[var(--wms-ops-field-placeholder-fg)]"/>
     <input
       type="search"
       value={value}
       onChange={(event) => onChange(event.target.value)}
       placeholder={placeholder}
       aria-label={placeholder}
-      className={cn(OPS_FIELD_CLASS, 'h-8 w-full border pl-8 pr-8 text-xs outline-none')}
+      className={cn(OPS_FIELD_CLASS, 'wms-ops-list-popover__search-input h-8 w-full border pl-8 pr-8 text-xs outline-none')}
     />
-    {value && <button type="button" aria-label={clearLabel} onClick={() => onChange('')} className="absolute right-0 top-0 grid size-8 place-items-center text-slate-400 hover:text-[var(--wms-app-text)]"><X className="size-3.5"/></button>}
+    {value && <button type="button" aria-label={clearLabel} onClick={() => onChange('')} className="absolute right-0 top-0 grid size-8 place-items-center text-[var(--wms-ops-field-placeholder-fg)] hover:text-[var(--wms-app-text)]"><X className="size-3.5"/></button>}
   </div>;
 }
 
@@ -720,6 +720,111 @@ export function AdvancedDataGrid<T extends { id: number }>({
   }, [pageKey, pageRows.length, activeColumns.length]);
 
   useEffect(() => {
+    const node = tableScrollRef.current;
+    if (!node) return;
+
+    let dragging = false;
+    let pointerId: number | null = null;
+    let startX = 0;
+    let startScrollLeft = 0;
+
+    const isBlockedTarget = (target: EventTarget | null): boolean => {
+      if (!(target instanceof Element)) return false;
+      return Boolean(
+        target.closest(
+          '[data-no-drag-scroll="true"], input, textarea, select, option, [contenteditable="true"]',
+        ),
+      );
+    };
+
+    const setAltReady = (active: boolean) => {
+      node.classList.toggle('wms-ops-table-h-scroll--alt', active);
+      if (!dragging) {
+        node.style.cursor = active ? 'grab' : '';
+      }
+    };
+    const setPanning = (active: boolean) => {
+      node.classList.toggle('wms-ops-table-h-scroll--panning', active);
+      document.body.classList.toggle('wms-ops-grid-panning', active);
+      document.documentElement.classList.toggle('wms-ops-grid-panning', active);
+      // Force closed-fist cursor immediately on click (child cursor-pointer otherwise sticks).
+      node.style.cursor = active ? 'grabbing' : (node.classList.contains('wms-ops-table-h-scroll--alt') ? 'grab' : '');
+      document.body.style.cursor = active ? 'grabbing' : '';
+      document.documentElement.style.cursor = active ? 'grabbing' : '';
+    };
+
+    const endDrag = (event: PointerEvent) => {
+      if (!dragging || pointerId !== event.pointerId) return;
+      dragging = false;
+      pointerId = null;
+      setPanning(false);
+      if (node.hasPointerCapture(event.pointerId)) {
+        node.releasePointerCapture(event.pointerId);
+      }
+      if (event.altKey) setAltReady(true);
+    };
+
+    const onPointerDown = (event: PointerEvent) => {
+      if (event.button !== 0 || !event.altKey || dragging) return;
+      if (isBlockedTarget(event.target)) return;
+      dragging = true;
+      pointerId = event.pointerId;
+      startX = event.clientX;
+      startScrollLeft = node.scrollLeft;
+      setAltReady(true);
+      setPanning(true);
+      node.setPointerCapture(event.pointerId);
+      event.preventDefault();
+      event.stopPropagation();
+    };
+
+    const onPointerMove = (event: PointerEvent) => {
+      if (!dragging || pointerId !== event.pointerId) return;
+      node.scrollLeft = startScrollLeft - (event.clientX - startX);
+      event.preventDefault();
+    };
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Alt') setAltReady(true);
+    };
+    const onKeyUp = (event: KeyboardEvent) => {
+      if (event.key === 'Alt') setAltReady(false);
+    };
+    const onWindowBlur = () => {
+      setAltReady(false);
+      if (dragging && pointerId != null) {
+        dragging = false;
+        pointerId = null;
+        setPanning(false);
+      }
+    };
+
+    node.addEventListener('pointerdown', onPointerDown, true);
+    node.addEventListener('pointermove', onPointerMove);
+    node.addEventListener('pointerup', endDrag);
+    node.addEventListener('pointercancel', endDrag);
+    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('keyup', onKeyUp);
+    window.addEventListener('blur', onWindowBlur);
+
+    return () => {
+      node.removeEventListener('pointerdown', onPointerDown, true);
+      node.removeEventListener('pointermove', onPointerMove);
+      node.removeEventListener('pointerup', endDrag);
+      node.removeEventListener('pointercancel', endDrag);
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('keyup', onKeyUp);
+      window.removeEventListener('blur', onWindowBlur);
+      node.classList.remove('wms-ops-table-h-scroll--alt', 'wms-ops-table-h-scroll--panning');
+      node.style.cursor = '';
+      document.body.classList.remove('wms-ops-grid-panning');
+      document.documentElement.classList.remove('wms-ops-grid-panning');
+      document.body.style.cursor = '';
+      document.documentElement.style.cursor = '';
+    };
+  }, [pageKey, pageRows.length, activeColumns.length]);
+
+  useEffect(() => {
     const grid = tableScrollRef.current;
     if (!grid) return;
     let frame = 0;
@@ -939,7 +1044,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
                               locked && 'opacity-60',
                             )}
                           >
-                            <input type="checkbox" checked={checked} disabled={locked || limitReached} onChange={() => toggleSearchField(column.key)} className="size-3.5 shrink-0" />
+                            <input type="checkbox" checked={checked} disabled={locked || limitReached} onChange={() => toggleSearchField(column.key)} className="wms-ops-list-popover__checkbox size-3.5 shrink-0" />
                             <span className="min-w-0 truncate">{column.label}</span>
                           </label>
                         );

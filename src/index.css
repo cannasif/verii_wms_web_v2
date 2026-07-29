@@ -6189,18 +6189,20 @@ html:not(.dark) .wms-ops-list .wms-ops-data-grid tbody tr:hover .wms-ops-table-i
   left: 50%;
   width: 1px;
   transform: translateX(-50%);
-  background: color-mix(in oklab, var(--wms-ops-accent) 22%, #94a3b8);
-  opacity: 0;
-  transition: opacity 0.15s ease;
+  background: color-mix(in oklab, var(--wms-ops-accent) 42%, #64748b);
+  opacity: 0.55;
+  transition: opacity 0.15s ease, background-color 0.15s ease, width 0.15s ease;
 }
 
 .wms-ops-list .wms-ops-col-resize-handle:hover::after,
 .wms-ops-list .wms-ops-col-resize-handle:active::after {
   opacity: 1;
+  width: 2px;
+  background: color-mix(in oklab, var(--wms-ops-accent) 72%, #0ea5e9);
 }
 
 .dark .wms-ops-list .wms-ops-col-resize-handle::after {
-  background: color-mix(in oklab, var(--wms-ops-accent) 40%, transparent);
+  background: color-mix(in oklab, var(--wms-ops-accent) 55%, transparent);
 }
 
 .wms-ops-list .wms-ops-table-center-col .wms-ops-code-badge,
@@ -6428,7 +6430,9 @@ html:not(.dark) .wms-ops-list .wms-ops-data-grid tbody tr:hover .wms-ops-table-i
 
 .wms-ops-list .wms-ops-table-head {
   background: color-mix(in oklab, var(--wms-ops-accent) 6%, #e2e8f0) !important;
-  border-color: color-mix(in oklab, var(--wms-ops-card-border) 75%, transparent) !important;
+  border-color: color-mix(in oklab, var(--wms-ops-accent) 26%, var(--wms-ops-card-border)) !important;
+  border-right-color: color-mix(in oklab, var(--wms-ops-accent) 34%, var(--wms-ops-card-border)) !important;
+  box-shadow: inset -1px 0 0 color-mix(in oklab, var(--wms-ops-accent) 22%, transparent);
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.65rem !important;
   letter-spacing: 0.1em;
@@ -6438,7 +6442,15 @@ html:not(.dark) .wms-ops-list .wms-ops-data-grid tbody tr:hover .wms-ops-table-i
 
 .dark .wms-ops-list .wms-ops-table-head {
   background: color-mix(in oklab, var(--wms-ops-accent) 8%, rgba(5, 10, 15, 0.9)) !important;
+  border-color: color-mix(in oklab, var(--wms-ops-accent) 32%, var(--wms-ops-card-border)) !important;
+  border-right-color: color-mix(in oklab, var(--wms-ops-accent) 40%, transparent) !important;
+  box-shadow: inset -1px 0 0 color-mix(in oklab, var(--wms-ops-accent) 28%, transparent);
   color: color-mix(in oklab, var(--wms-ops-accent) 82%, white) !important;
+}
+
+.wms-ops-list .wms-ops-table-head:last-child {
+  box-shadow: none;
+  border-right-width: 0 !important;
 }
 
 .wms-ops-list .wms-ops-table-head button {
@@ -6516,7 +6528,12 @@ html:not(.dark) .wms-ops-list .wms-ops-data-grid tbody tr:hover .wms-ops-table-i
   font-size: 0.8125rem;
   line-height: 1.25;
   overflow: hidden;
-  border-color: color-mix(in oklab, var(--wms-ops-accent) 14%, var(--wms-ops-card-border)) !important;
+  border-color: color-mix(in oklab, var(--wms-ops-accent) 18%, var(--wms-ops-card-border)) !important;
+  border-right-color: color-mix(in oklab, var(--wms-ops-accent) 24%, var(--wms-ops-card-border)) !important;
+}
+
+.dark .wms-ops-list .wms-ops-data-grid td {
+  border-right-color: color-mix(in oklab, var(--wms-ops-accent) 30%, transparent) !important;
 }
 
 /* max-width:0 is only safe with table-fixed; otherwise the body collapses and looks blank */
@@ -6535,6 +6552,31 @@ html:not(.dark) .wms-ops-list .wms-ops-data-grid tbody tr:hover .wms-ops-table-i
   overflow-y: hidden !important;
   overscroll-behavior-x: contain;
   scrollbar-gutter: stable;
+}
+
+.wms-ops-list .wms-ops-table-h-scroll--alt,
+.wms-ops-list .wms-ops-table-h-scroll--alt * {
+  cursor: grab !important;
+}
+
+.wms-ops-list .wms-ops-table-h-scroll--alt [data-no-drag-scroll='true'],
+.wms-ops-list .wms-ops-table-h-scroll--alt [data-no-drag-scroll='true'] * {
+  cursor: auto;
+}
+
+.wms-ops-list .wms-ops-table-h-scroll--panning,
+.wms-ops-list .wms-ops-table-h-scroll--panning * {
+  cursor: grabbing !important;
+  user-select: none !important;
+  scroll-behavior: auto;
+}
+
+html.wms-ops-grid-panning,
+html.wms-ops-grid-panning *,
+body.wms-ops-grid-panning,
+body.wms-ops-grid-panning * {
+  cursor: grabbing !important;
+  user-select: none !important;
 }
 
 @media (max-width: 639.98px) {
@@ -6605,6 +6647,355 @@ html:not(.dark) .wms-ops-list .wms-ops-data-grid tbody tr:hover .wms-ops-table-i
   border-color: color-mix(in oklab, #e11d48 34%, transparent);
   background: color-mix(in oklab, #f43f5e 10%, transparent);
   color: #be123c;
+}
+
+.wms-ops-quality-lines__cell {
+  border-right: 1px solid
+    color-mix(in oklab, var(--wms-brand-primary) 18%, var(--wms-app-border));
+  border-bottom: 1px solid
+    color-mix(in oklab, var(--wms-brand-primary) 12%, var(--wms-app-border));
+}
+
+.wms-ops-quality-lines__cell:last-child {
+  border-right: 0;
+}
+
+.wms-ops-quality-lines thead .wms-ops-quality-lines__cell {
+  border-bottom-color: color-mix(
+    in oklab,
+    var(--wms-brand-primary) 28%,
+    var(--wms-app-border)
+  );
+  color: color-mix(in oklab, var(--wms-brand-primary) 55%, #64748b);
+}
+
+.dark .wms-ops-quality-lines__cell {
+  border-right-color: color-mix(in oklab, var(--wms-brand-primary) 26%, transparent);
+  border-bottom-color: color-mix(in oklab, var(--wms-brand-primary) 18%, transparent);
+}
+
+html.skin-premium .wms-ops-quality-lines {
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+html.skin-premium .wms-ops-quality-lines__cell {
+  border-right-color: color-mix(in oklab, var(--wms-brand-primary) 14%, var(--wms-app-border));
+}
+
+html.skin-premium .wms-ops-quality-bulk {
+  border-radius: 0.7rem;
+}
+
+/* Quality detail panel: full light border + very soft ambient glow */
+.wms-ops-quality-detail {
+  border: 1px solid
+    color-mix(in oklab, var(--wms-brand-primary) 22%, var(--wms-app-border));
+  box-shadow: 0 0 14px -6px
+    color-mix(in oklab, var(--wms-brand-primary) 14%, transparent);
+}
+
+.dark .wms-ops-quality-detail {
+  border-color: color-mix(in oklab, var(--wms-brand-primary) 28%, transparent);
+  box-shadow: 0 0 16px -6px
+    color-mix(in oklab, var(--wms-brand-primary) 16%, transparent);
+}
+
+.wms-ops-quality-detail__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.65rem 0.85rem;
+}
+
+.wms-ops-quality-detail__identity {
+  flex: 0 1 auto;
+}
+
+.wms-ops-quality-detail__meta {
+  display: flex;
+  flex: 1 1 16rem;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.wms-ops-quality-detail__close {
+  margin-left: auto;
+}
+
+.wms-ops-quality-detail__chip {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.08rem;
+  min-height: 1.9rem;
+  padding: 0.22rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid
+    color-mix(in oklab, var(--wms-brand-primary) 14%, var(--wms-app-border));
+  background: color-mix(
+    in oklab,
+    var(--wms-brand-primary) 4%,
+    color-mix(in oklab, hsl(var(--foreground)) 2.5%, transparent)
+  );
+}
+
+.wms-ops-quality-detail__chip--accent {
+  border-color: color-mix(in oklab, var(--wms-brand-primary) 32%, transparent);
+  background: color-mix(in oklab, var(--wms-brand-primary) 8%, transparent);
+}
+
+.wms-ops-quality-detail__chip-label {
+  font-size: 0.5rem;
+  font-weight: 600;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  line-height: 1;
+  color: color-mix(in oklab, hsl(var(--foreground)) 40%, transparent);
+}
+
+.wms-ops-quality-detail__chip-value {
+  display: inline-flex;
+  align-items: center;
+  min-height: 0.95rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1.15;
+  color: hsl(var(--foreground));
+}
+
+.wms-ops-quality-detail__chip-value--mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.02em;
+}
+
+.wms-ops-quality-detail__badge.wms-ops-status-badge,
+.wms-ops-quality-detail .wms-ops-quality-detail__badge {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0.12rem 0.5rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.58rem;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.wms-ops-quality-detail__badge.wms-ops-status-badge--pending {
+  border-color: color-mix(in oklab, #d97706 38%, transparent);
+  background: color-mix(in oklab, #f59e0b 12%, transparent);
+  color: #d97706;
+}
+
+.wms-ops-quality-detail__badge.wms-ops-status-badge--active {
+  border-color: color-mix(in oklab, var(--wms-brand-primary) 42%, transparent);
+  background: color-mix(in oklab, var(--wms-brand-primary) 12%, transparent);
+  color: var(--wms-brand-primary);
+}
+
+.wms-ops-quality-detail__badge.wms-ops-status-badge--done {
+  border-color: color-mix(in oklab, #059669 36%, transparent);
+  background: color-mix(in oklab, #10b981 12%, transparent);
+  color: #059669;
+}
+
+.wms-ops-quality-detail__badge.wms-ops-status-badge--danger {
+  border-color: color-mix(in oklab, #e11d48 36%, transparent);
+  background: color-mix(in oklab, #f43f5e 12%, transparent);
+  color: #e11d48;
+}
+
+.wms-ops-quality-detail__badge.wms-ops-status-badge--quality {
+  border-color: color-mix(in oklab, #8b5cf6 36%, transparent);
+  background: color-mix(in oklab, #8b5cf6 12%, transparent);
+  color: #8b5cf6;
+}
+
+.wms-ops-quality-detail__badge.wms-ops-status-badge--neutral {
+  border-color: color-mix(in oklab, #64748b 30%, transparent);
+  background: color-mix(in oklab, #64748b 10%, transparent);
+  color: #64748b;
+}
+
+.wms-ops-quality-bulk {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  max-width: 100%;
+  padding: 0.45rem 0.65rem;
+  border-radius: 0.7rem;
+  border: 1px solid
+    color-mix(in oklab, var(--wms-brand-primary) 22%, var(--wms-app-border));
+  background: color-mix(in oklab, var(--wms-brand-primary) 5%, transparent);
+}
+
+.wms-ops-quality-bulk__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.55rem;
+}
+
+.wms-ops-quality-bulk__title {
+  margin: 0;
+  font-size: 0.58rem;
+  font-weight: 650;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--wms-brand-primary);
+}
+
+.wms-ops-quality-bulk__count {
+  font-size: 0.65rem;
+  color: color-mix(in oklab, hsl(var(--foreground)) 48%, transparent);
+}
+
+.wms-ops-quality-bulk__selects {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-left: auto;
+}
+
+.wms-ops-quality-bulk__fields {
+  display: grid;
+  grid-template-columns: minmax(7rem, 1fr) minmax(7rem, 1fr) minmax(8rem, 1.2fr) auto;
+  gap: 0.4rem;
+  align-items: end;
+}
+
+@media (max-width: 900px) {
+  .wms-ops-quality-bulk__fields {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .wms-ops-quality-bulk__apply {
+    grid-column: 1 / -1;
+    justify-self: end;
+  }
+}
+
+.wms-ops-quality-bulk__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.wms-ops-quality-bulk__field > span {
+  font-size: 0.55rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, hsl(var(--foreground)) 45%, transparent);
+}
+
+.wms-ops-quality-detail .wms-ops-quality-bulk__control.wms-ops-quality-field,
+.wms-ops-quality-detail .wms-ops-quality-bulk__control.wms-ops-quality-field.wms-ops-field,
+.wms-ops-quality-detail .wms-ops-quality-bulk__control.wms-ops-quality-field.wms-ops-lookup-trigger {
+  height: 1.9rem !important;
+  min-height: 1.9rem !important;
+  font-size: 0.72rem !important;
+}
+
+.wms-ops-quality-detail .wms-ops-quality-bulk__btn.wms-ops-quality-decide-btn,
+.wms-ops-quality-detail .wms-ops-quality-bulk__apply.wms-ops-quality-decide-btn {
+  min-height: 1.9rem !important;
+  height: 1.9rem !important;
+  padding-inline: 0.55rem !important;
+  font-size: 0.62rem !important;
+  letter-spacing: 0.04em !important;
+}
+
+html.skin-premium .wms-ops-quality-detail {
+  border-radius: 0.9rem;
+}
+
+html.skin-premium .wms-ops-quality-detail__chip {
+  border-radius: 0.55rem;
+  font-family: var(--wms-premium-font);
+}
+
+/* Open decision panel must not be clipped by the lines scroller */
+.wms-ops-quality-lines:has(.wms-ops-quality-decision-popover--open) {
+  overflow: visible !important;
+}
+
+.wms-ops-quality-decision-popover {
+  min-width: 16.5rem;
+}
+
+.wms-ops-quality-detail .wms-ops-quality-field,
+.wms-ops-quality-detail .wms-ops-quality-field.wms-ops-field,
+.wms-ops-quality-detail .wms-ops-quality-field.wms-ops-lookup-trigger,
+.wms-ops-quality-decision-popover .wms-ops-quality-field,
+.wms-ops-quality-decision-popover .wms-ops-quality-field.wms-ops-field,
+.wms-ops-quality-decision-popover .wms-ops-quality-field.wms-ops-lookup-trigger {
+  height: 2.5rem !important;
+  min-height: 2.5rem !important;
+  border-radius: 0 !important;
+  font-size: 0.8125rem !important;
+}
+
+.wms-ops-quality-detail textarea.wms-ops-quality-field,
+.wms-ops-quality-decision-popover textarea.wms-ops-quality-field {
+  height: auto !important;
+  min-height: 4rem !important;
+}
+
+.wms-ops-quality-detail .wms-ops-quality-field-shell,
+.wms-ops-quality-decision-popover .wms-ops-quality-field-shell,
+.wms-ops-quality-detail .app-input-shell.wms-ops-field-shell:has(.wms-ops-quality-field),
+.wms-ops-quality-decision-popover .app-input-shell.wms-ops-field-shell:has(.wms-ops-quality-field) {
+  border-radius: 0 !important;
+}
+
+.wms-ops-quality-detail .wms-ops-quality-decide-btn,
+.wms-ops-quality-decision-popover .wms-ops-quality-decide-btn {
+  min-height: 2.25rem !important;
+  height: 2.25rem !important;
+  padding-inline: 0.75rem !important;
+  font-size: 0.7rem !important;
+  letter-spacing: 0.08em !important;
+}
+
+.wms-ops-quality-bulk {
+  max-width: 100%;
+}
+
+html.skin-premium .wms-ops-quality-detail .wms-ops-quality-field,
+html.skin-premium .wms-ops-quality-detail .wms-ops-quality-field.wms-ops-field,
+html.skin-premium .wms-ops-quality-detail .wms-ops-quality-field.wms-ops-lookup-trigger,
+html.skin-premium .wms-ops-quality-decision-popover .wms-ops-quality-field,
+html.skin-premium .wms-ops-quality-decision-popover .wms-ops-quality-field.wms-ops-field,
+html.skin-premium .wms-ops-quality-decision-popover .wms-ops-quality-field.wms-ops-lookup-trigger {
+  border-radius: 0.45rem !important;
+  font-family: var(--wms-premium-font) !important;
+  letter-spacing: 0.01em !important;
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--wms-brand-primary) 12%, var(--wms-ops-field-border)) !important;
+}
+
+html.skin-premium .wms-ops-quality-detail .wms-ops-quality-field-shell,
+html.skin-premium .wms-ops-quality-decision-popover .wms-ops-quality-field-shell,
+html.skin-premium .wms-ops-quality-detail .app-input-shell.wms-ops-field-shell:has(.wms-ops-quality-field),
+html.skin-premium .wms-ops-quality-decision-popover .app-input-shell.wms-ops-field-shell:has(.wms-ops-quality-field) {
+  border-radius: 0.45rem !important;
+}
+
+html.skin-premium .wms-ops-quality-detail .wms-ops-quality-decide-btn,
+html.skin-premium .wms-ops-quality-decision-popover .wms-ops-quality-decide-btn {
+  border-radius: 0.55rem !important;
+  clip-path: none !important;
+  text-transform: none !important;
+  letter-spacing: 0.02em !important;
+  font-family: var(--wms-premium-font) !important;
 }
 
 .dark .wms-ops-list .wms-ops-status-badge--neutral {
@@ -8439,6 +8830,39 @@ html:not(.skin-premium) .wms-ops-advanced-filter .wms-ops-field-shell {
   text-transform: uppercase;
   color: color-mix(in oklab, var(--wms-ops-accent) 58%, #64748b);
   padding: 0.375rem 0.5rem;
+}
+
+.wms-ops-list-popover__checkbox {
+  width: 0.95rem;
+  height: 0.95rem;
+  border-radius: 0.15rem;
+  accent-color: var(--wms-ops-accent);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.wms-ops-list-popover__checkbox:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.wms-ops-list-popover__search-input.wms-ops-field {
+  border-color: color-mix(in oklab, var(--wms-ops-accent) 28%, var(--wms-ops-field-border)) !important;
+  background: var(--wms-ops-field-bg) !important;
+  color: var(--wms-ops-field-fg) !important;
+}
+
+.wms-ops-list-popover__search-input.wms-ops-field::placeholder {
+  color: var(--wms-ops-field-placeholder-fg) !important;
+}
+
+.wms-ops-list-popover__search-input.wms-ops-field:focus,
+.wms-ops-list-popover__search-input.wms-ops-field:focus-visible {
+  outline: none;
+  border-color: color-mix(in oklab, var(--wms-ops-accent) 55%, transparent) !important;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklab, var(--wms-ops-accent) 35%, transparent),
+    0 0 0 3px color-mix(in oklab, var(--wms-ops-accent) 14%, transparent);
 }
 
 .wms-ops-list-popover--columns .wms-ops-list-popover__row {
@@ -17031,6 +17455,7 @@ html.skin-premium.dark .wms-premium-nav__tab--open {
   padding: 0;
   border: 1px solid color-mix(in oklab, var(--wms-brand-primary) 22%, var(--wms-app-border));
   border-radius: 1.2rem;
+  /* Solid fill — do not rely on backdrop-filter (often weak/missing in prod GPUs). */
   background:
     linear-gradient(
       155deg,
@@ -17038,13 +17463,13 @@ html.skin-premium.dark .wms-premium-nav__tab--open {
       transparent 38%,
       color-mix(in oklab, var(--wms-brand-accent) 7%, transparent) 100%
     ),
-    color-mix(in srgb, var(--wms-app-panel-strong) 72%, transparent);
+    var(--wms-app-panel-strong);
   box-shadow:
     0 28px 56px -22px rgb(0 0 0 / 48%),
     0 0 36px -14px var(--wms-brand-shadow),
     inset 0 1px 0 rgb(255 255 255 / 14%);
-  backdrop-filter: blur(24px) saturate(1.18);
-  -webkit-backdrop-filter: blur(24px) saturate(1.18);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   animation: wms-premium-panel-in 260ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -17077,7 +17502,7 @@ html.skin-premium.dark .wms-premium-nav__panel {
       transparent 40%,
       color-mix(in oklab, var(--wms-brand-accent) 8%, transparent) 100%
     ),
-    rgb(16 16 24 / 78%);
+    #101018;
 }
 
 html.skin-premium:not(.dark) .wms-premium-nav__panel {
@@ -17088,7 +17513,7 @@ html.skin-premium:not(.dark) .wms-premium-nav__panel {
       transparent 42%,
       color-mix(in oklab, var(--wms-brand-accent) 6%, transparent) 100%
     ),
-    rgb(255 255 255 / 86%);
+    #ffffff;
 }
 
 @media (min-width: 640px) {
@@ -18981,9 +19406,26 @@ html.skin-premium .wms-ops-list .wms-ops-data-grid th {
   font-size: 0.8rem;
 }
 
+html.skin-premium .wms-ops-list .wms-ops-table-head {
+  border-right-color: color-mix(in oklab, var(--wms-brand-primary) 22%, var(--wms-app-border)) !important;
+  box-shadow: inset -1px 0 0 color-mix(in oklab, var(--wms-brand-primary) 14%, transparent);
+}
+
 html.skin-premium .wms-ops-list .wms-ops-data-grid td {
   color: color-mix(in oklab, hsl(var(--foreground)) 92%, transparent);
   font-family: var(--wms-premium-font) !important;
+  border-right-color: color-mix(in oklab, var(--wms-brand-primary) 14%, var(--wms-app-border)) !important;
+}
+
+html.skin-premium .wms-ops-list .wms-ops-col-resize-handle::after {
+  background: color-mix(in oklab, var(--wms-brand-primary) 38%, #94a3b8);
+  opacity: 0.5;
+}
+
+html.skin-premium .wms-ops-list .wms-ops-col-resize-handle:hover::after,
+html.skin-premium .wms-ops-list .wms-ops-col-resize-handle:active::after {
+  background: var(--wms-brand-primary);
+  opacity: 1;
 }
 
 /* Popover / geli?mi? filtre ? premium cam kart */
@@ -19093,6 +19535,26 @@ html.skin-premium .wms-ops-list-popover .wms-ops-field {
   font-size: 0.78rem !important;
   letter-spacing: 0.01em !important;
   box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--wms-brand-primary) 12%, var(--wms-ops-field-border)) !important;
+}
+
+html.skin-premium .wms-ops-list-popover__checkbox {
+  border-radius: 0.35rem;
+  accent-color: var(--wms-brand-primary);
+}
+
+html.skin-premium .wms-ops-list-popover__search-input.wms-ops-field {
+  border-radius: 0.55rem !important;
+  border-color: color-mix(in oklab, var(--wms-brand-primary) 22%, var(--wms-ops-field-border)) !important;
+  font-family: var(--wms-premium-font) !important;
+  box-shadow: 0 2px 6px -2px rgb(0 0 0 / 10%);
+}
+
+html.skin-premium .wms-ops-list-popover__search-input.wms-ops-field:focus,
+html.skin-premium .wms-ops-list-popover__search-input.wms-ops-field:focus-visible {
+  border-color: color-mix(in oklab, var(--wms-brand-primary) 55%, transparent) !important;
+  box-shadow:
+    0 0 0 3.5px color-mix(in oklab, var(--wms-brand-primary) 18%, transparent),
+    0 8px 20px -10px var(--wms-brand-shadow) !important;
 }
 
 html.skin-premium .wms-ops-advanced-filter .wms-ops-lookup-trigger,

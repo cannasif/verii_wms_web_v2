@@ -60,9 +60,19 @@ export function inferOpsStatusTone(status: string | null | undefined): OpsStatus
     return 'done';
   }
   if (/(pend|wait|hold|draft|approval|warn|partial)/.test(value)) return 'pending';
-  if (/(quality|inspect|qc)/.test(value)) return 'quality';
+  if (/(quarant|quality|inspect|qc)/.test(value)) return 'quality';
   if (/(progress|released|active|open|assigned)/.test(value)) return 'active';
   return 'active';
+}
+
+/** Document / source type chip tones (e.g. GoodsReceipt → mal kabul). */
+export function inferDocumentTypeTone(type: string | null | undefined): OpsStatusTone {
+  const value = String(type ?? '').toLowerCase();
+  if (!value) return 'neutral';
+  if (/(^gr$|goodsreceipt|goods_receipt|mal.?kabul|inbound|receipt)/.test(value)) return 'active';
+  if (/(ship|outbound|transfer)/.test(value)) return 'pending';
+  if (/(return|reject)/.test(value)) return 'danger';
+  return 'neutral';
 }
 
 /** Quality-column tones: kontrol aşaması = violet, gerekmiyor = nötr. */
