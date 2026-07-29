@@ -20,6 +20,7 @@ import {
   qualityApi,
   type QualityInspection,
   type QualityInspectionDetail,
+  type QualityInspectionLine,
 } from "../api/quality.api";
 
 export function QualityInspectionsPage({
@@ -248,9 +249,19 @@ function InspectionDetailPanel({
     ["Pending", "Hold", "Quarantined"].includes(x.decision),
   );
   const [selected, setSelected] = useState<number[]>(eligible.map((x) => x.id));
-  const [decision, setDecision] = useState(
-    detail.header.status === "Quarantined" ? "Accepted" : "",
-  );
+  const [decision, setDecision] = useState("Split");
+  const [allocations, setAllocations] = useState<Record<number, {
+    acceptedQuantity: number;
+    rejectedQuantity: number;
+    quarantineQuantity: number;
+  }>>(() => Object.fromEntries(eligible.map((line) => [
+    line.id,
+    {
+      acceptedQuantity: actionableQuantity(line),
+      rejectedQuantity: 0,
+      quarantineQuantity: 0,
+    },
+  ])));
   const [reasonCode, setReasonCode] = useState("");
   const [note, setNote] = useState(detail.note ?? "");
   const [saving, setSaving] = useState(false);
@@ -261,11 +272,13 @@ function InspectionDetailPanel({
   const options =
     detail.header.status === "Quarantined"
       ? [
+          { value: "Split", label: "Miktarı Onay / Karantina / Ret Olarak Böl" },
           { value: "Accepted", label: "Serbest Bırak / Kabul" },
           { value: "Rejected", label: "Reddet" },
           { value: "Returned", label: "Tedarikçiye İade" },
         ]
       : [
+          { value: "Split", label: "Miktarı Onay / Karantina / Ret Olarak Böl" },
           { value: "Accepted", label: "Kabul" },
           { value: "Quarantined", label: "Karantinaya Al" },
           { value: "Rejected", label: "Reddet" },
@@ -275,6 +288,17 @@ function InspectionDetailPanel({
     setSelected((value) =>
       value.includes(id) ? value.filter((x) => x !== id) : [...value, id],
     );
+  const updateAllocation = (
+    lineId: number,
+    field: "acceptedQuantity" | "rejectedQuantity" | "quarantineQuantity",
+    value: string,
+  ) => setAllocations((current) => ({
+    ...current,
+    [lineId]: {
+      ...current[lineId],
+      [field]: Math.max(0, Number(value) || 0),
+    },
+  }));
   const save = async () => {
     if (!decision || selected.length === 0) {
       toast.error("Karar ve en az bir kalite satırı seçin.");
@@ -284,7 +308,27 @@ function InspectionDetailPanel({
       toast.error("Bu şubede kısmi kalite kararı kapalıdır.");
       return;
     }
-    if (decision !== "Accepted" && !reasonCode.trim()) {
+    const quantityDecisions = decision === "Split"
+      ? selected.map((lineId) => ({ lineId, ...allocations[lineId] }))
+      : undefined;
+    if (quantityDecisions) {
+      for (const allocation of quantityDecisions) {
+        const line = eligible.find((item) => item.id === allocation.lineId)!;
+        const total = allocation.acceptedQuantity
+          + allocation.rejectedQuantity
+          + allocation.quarantineQuantity;
+        if (Math.abs(total - actionableQuantity(line)) > 0.000001) {
+          toast.error(
+            `${line.stockCode}: Onay, karantina ve ret toplamı ${formatProjectNumber(actionableQuantity(line))} olmalıdır.`,
+          );
+          return;
+        }
+      }
+    }
+    const hasNonAcceptedOutcome = quantityDecisions
+      ? quantityDecisions.some((x) => x.rejectedQuantity > 0 || x.quarantineQuantity > 0)
+      : decision !== "Accepted";
+    if (hasNonAcceptedOutcome && !reasonCode.trim()) {
       toast.error("Ret, karantina ve iade kararlarında neden kodu zorunludur.");
       return;
     }
@@ -292,11 +336,12 @@ function InspectionDetailPanel({
     try {
       await qualityApi.decide(detail.header.id, {
         idempotencyKey: crypto.randomUUID(),
-        decision,
+        decision: decision === "Split" ? "Accepted" : decision,
         note: note.trim() || undefined,
         reasonCode: reasonCode.trim() || undefined,
         lineIds: selected,
         rowVersion: detail.rowVersion,
+        quantityDecisions,
       });
       toast.success("Kalite kararı ve stok hareketi kaydedildi.");
       decided();
@@ -388,6 +433,9 @@ function InspectionDetailPanel({
               <th className="p-3">SKT</th>
               <th className="p-3 text-right">Miktar</th>
               <th className="p-3 text-right">Numune</th>
+              <th className="p-3 text-right">Onay</th>
+              <th className="p-3 text-right">Karantina</th>
+              <th className="p-3 text-right">Ret</th>
               <th className="p-3">Karar</th>
             </tr>
           </thead>
@@ -421,6 +469,31 @@ function InspectionDetailPanel({
                 <td className="p-3 text-right font-mono">
                   {formatProjectNumber(line.sampleQuantity)}
                 </td>
+                {decision === "Split" && eligible.some((x) => x.id === line.id) ? (
+                  <>
+                    <QuantityInput
+                      value={allocations[line.id]?.acceptedQuantity ?? 0}
+                      disabled={!selected.includes(line.id)}
+                      onChange={(value) => updateAllocation(line.id, "acceptedQuantity", value)}
+                    />
+                    <QuantityInput
+                      value={allocations[line.id]?.quarantineQuantity ?? 0}
+                      disabled={!selected.includes(line.id)}
+                      onChange={(value) => updateAllocation(line.id, "quarantineQuantity", value)}
+                    />
+                    <QuantityInput
+                      value={allocations[line.id]?.rejectedQuantity ?? 0}
+                      disabled={!selected.includes(line.id)}
+                      onChange={(value) => updateAllocation(line.id, "rejectedQuantity", value)}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <OutcomeQuantity value={line.acceptedQuantity} />
+                    <OutcomeQuantity value={line.quarantineQuantity} />
+                    <OutcomeQuantity value={line.rejectedQuantity} />
+                  </>
+                )}
                 <td className="p-3">{localizeEnumValue(line.decision)}</td>
               </tr>
             ))}
@@ -437,6 +510,11 @@ function InspectionDetailPanel({
               options={options}
               placeholder="Karar seçin"
             />
+            {decision === "Split" && (
+              <small className="block text-slate-500">
+                Her satırda onay, karantina ve ret toplamı karar bekleyen miktara eşit olmalıdır.
+              </small>
+            )}
           </label>
           <label className="space-y-1.5 text-sm">
             <span className="font-semibold">Neden kodu</span>
@@ -495,6 +573,46 @@ function Info({
       <div className="text-xs text-slate-500">{label}</div>
       <strong className="mt-1 block text-sm">{value}</strong>
     </div>
+  );
+}
+function actionableQuantity(line: QualityInspectionLine): number {
+  if (line.decision === "Quarantined") return line.quarantineQuantity;
+  return Math.max(
+    0,
+    line.quantity
+      - line.acceptedQuantity
+      - line.rejectedQuantity
+      - line.quarantineQuantity,
+  );
+}
+function QuantityInput({
+  value,
+  disabled,
+  onChange,
+}: {
+  value: number;
+  disabled: boolean;
+  onChange: (value: string) => void;
+}): ReactElement {
+  return (
+    <td className="min-w-32 p-2">
+      <input
+        type="number"
+        min="0"
+        step="any"
+        className="input h-9 w-28 text-right font-mono"
+        value={value}
+        disabled={disabled}
+        onChange={(event) => onChange(event.target.value)}
+      />
+    </td>
+  );
+}
+function OutcomeQuantity({ value }: { value: number }): ReactElement {
+  return (
+    <td className="p-3 text-right font-mono">
+      {formatProjectNumber(value)}
+    </td>
   );
 }
 function message(error: unknown, fallback: string): string {
