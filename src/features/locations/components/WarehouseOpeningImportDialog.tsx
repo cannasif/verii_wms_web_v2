@@ -152,7 +152,10 @@ export function WarehouseOpeningImportDialog({
           <div className="grid gap-4 md:grid-cols-2">
             <section className="rounded-xl border p-4">
               <h3 className="font-semibold">Güncel şablonu indirin</h3>
-              <p className="mt-1 text-sm text-slate-500">Şablon aktif depo, raf, stok ve YAP referanslarını içerir.</p>
+              <p className="mt-1 text-sm text-slate-500">
+                Şablon depo ve raf referanslarını, ayrıca ilk 5.000 stok/YAP kaydını örnek olarak içerir.
+                Listede görünmeyen geçerli kodları da doğrudan yazabilirsiniz; ön doğrulama bunları sistemden kontrol eder.
+              </p>
               <button type="button" disabled={Boolean(busy)} onClick={() => void download()} className="mt-4 inline-flex items-center gap-2 rounded-xl border border-[var(--wms-brand-primary)] px-4 py-2 text-sm font-semibold text-[var(--wms-brand-primary)] disabled:opacity-50">
                 {busy === 'download' ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}
                 Şablonu indir
