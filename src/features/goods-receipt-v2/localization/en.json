@@ -2,7 +2,7 @@
   "title": "Goods Receipt from Orders",
   "subtitle": "Select Netsis orders, validate quantities, and reserve a receiving task safely.",
   "steps": ["Supplier and orders", "Lines and quantities", "Warehouse settings", "Confirmation"],
-  "customer": "Supplier", "selectCustomer": "Select supplier account...", "searchCustomer": "Search supplier code / name…", "customerEmpty": "No supplier found.", "selectedCustomer": "Selected supplier",
+  "customer": "Supplier Account", "selectCustomer": "Select supplier account...", "searchCustomer": "Search supplier code / name…", "customerEmpty": "No supplier account found.", "selectedCustomer": "Selected supplier account",
   "loadOrders": "Load open orders", "orders": "Open orders",
   "loadLines": "Load selected order lines", "noOrders": "No open orders were found for this supplier.", "noLines": "No available lines were found.",
   "warehouse": "Target warehouse", "location": "Receiving location", "series": "Document series", "documentDate": "Document date",

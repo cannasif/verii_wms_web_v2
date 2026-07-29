@@ -1759,6 +1759,7 @@ html[dir='rtl'] .app-navbar-panel::after {
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
+  line-height: 1;
   white-space: nowrap;
   cursor: pointer;
   clip-path: polygon(0 0, calc(100% - 9px) 0, 100% 9px, 100% 100%, 9px 100%, 0 calc(100% - 9px));
@@ -1767,6 +1768,14 @@ html[dir='rtl'] .app-navbar-panel::after {
     box-shadow 0.25s ease,
     filter 0.25s ease,
     color 0.2s ease;
+}
+
+.wms-ops-form .wms-ops-action-btn svg,
+.wms-ops-lookup-dialog .wms-ops-action-btn svg,
+.wms-ops-list-popover .wms-ops-action-btn svg,
+.wms-ops-detail-dialog .wms-ops-action-btn svg {
+  display: block;
+  flex-shrink: 0;
 }
 
 .wms-ops-form .wms-ops-action-btn:disabled,
@@ -12322,7 +12331,7 @@ html:not(.dark) .wms-ops-access-control-page .wms-ops-access-control-group-label
 }
 
 /* Terminal checkbox ? access control / user management / admin / dialogs */
-:is(.wms-ops-access-control-page, .wms-ops-user-management-page, .wms-ops-admin-page, .wms-ops-access-control-dialog, .wms-ops-purchase-rfq-dialog, .wms-ops-purchase-create-page) .wms-ops-access-control-terminal-checkbox {
+:is(.wms-ops-access-control-page, .wms-ops-user-management-page, .wms-ops-admin-page, .wms-ops-access-control-dialog, .wms-ops-purchase-rfq-dialog, .wms-ops-purchase-create-page, .wms-ops-form) .wms-ops-access-control-terminal-checkbox {
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -12343,14 +12352,14 @@ html:not(.dark) .wms-ops-access-control-page .wms-ops-access-control-group-label
     background 160ms ease;
 }
 
-:is(.wms-ops-access-control-page, .wms-ops-user-management-page, .wms-ops-admin-page, .wms-ops-access-control-dialog, .wms-ops-purchase-rfq-dialog, .wms-ops-purchase-create-page) .wms-ops-access-control-terminal-checkbox:hover:not(:disabled) {
+:is(.wms-ops-access-control-page, .wms-ops-user-management-page, .wms-ops-admin-page, .wms-ops-access-control-dialog, .wms-ops-purchase-rfq-dialog, .wms-ops-purchase-create-page, .wms-ops-form) .wms-ops-access-control-terminal-checkbox:hover:not(:disabled) {
   border-color: color-mix(in oklab, var(--wms-ops-accent) 62%, white);
   box-shadow:
     inset 0 0 0 1px color-mix(in oklab, var(--wms-ops-accent) 12%, transparent),
     0 0 10px color-mix(in oklab, var(--wms-ops-accent) 18%, transparent);
 }
 
-:is(.wms-ops-access-control-page, .wms-ops-user-management-page, .wms-ops-admin-page, .wms-ops-access-control-dialog, .wms-ops-purchase-rfq-dialog, .wms-ops-purchase-create-page) .wms-ops-access-control-terminal-checkbox__fill {
+:is(.wms-ops-access-control-page, .wms-ops-user-management-page, .wms-ops-admin-page, .wms-ops-access-control-dialog, .wms-ops-purchase-rfq-dialog, .wms-ops-purchase-create-page, .wms-ops-form) .wms-ops-access-control-terminal-checkbox__fill {
   position: absolute;
   inset: 2px;
   border-radius: 0;
@@ -12372,7 +12381,7 @@ html:not(.dark) .wms-ops-access-control-page .wms-ops-access-control-group-label
   pointer-events: none;
 }
 
-:is(.wms-ops-access-control-page, .wms-ops-user-management-page, .wms-ops-admin-page, .wms-ops-access-control-dialog, .wms-ops-purchase-rfq-dialog, .wms-ops-purchase-create-page) .wms-ops-access-control-terminal-checkbox--checked {
+:is(.wms-ops-access-control-page, .wms-ops-user-management-page, .wms-ops-admin-page, .wms-ops-access-control-dialog, .wms-ops-purchase-rfq-dialog, .wms-ops-purchase-create-page, .wms-ops-form) .wms-ops-access-control-terminal-checkbox--checked {
   border-color: color-mix(in oklab, var(--wms-ops-accent) 82%, white);
   background: color-mix(in oklab, var(--wms-ops-accent) 10%, var(--wms-ops-field-bg));
   box-shadow:
@@ -12381,7 +12390,7 @@ html:not(.dark) .wms-ops-access-control-page .wms-ops-access-control-group-label
     0 0 28px color-mix(in oklab, var(--wms-ops-accent) 18%, transparent);
 }
 
-:is(.wms-ops-access-control-page, .wms-ops-user-management-page, .wms-ops-admin-page, .wms-ops-access-control-dialog, .wms-ops-purchase-rfq-dialog, .wms-ops-purchase-create-page) .wms-ops-access-control-terminal-checkbox--checked .wms-ops-access-control-terminal-checkbox__fill {
+:is(.wms-ops-access-control-page, .wms-ops-user-management-page, .wms-ops-admin-page, .wms-ops-access-control-dialog, .wms-ops-purchase-rfq-dialog, .wms-ops-purchase-create-page, .wms-ops-form) .wms-ops-access-control-terminal-checkbox--checked .wms-ops-access-control-terminal-checkbox__fill {
   opacity: 1;
   transform: scale(1);
   box-shadow:
@@ -12390,13 +12399,13 @@ html:not(.dark) .wms-ops-access-control-page .wms-ops-access-control-group-label
     0 0 10px color-mix(in oklab, var(--wms-ops-accent) 55%, transparent);
 }
 
-:is(.wms-ops-access-control-page, .wms-ops-user-management-page, .wms-ops-admin-page, .wms-ops-access-control-dialog, .wms-ops-purchase-rfq-dialog, .wms-ops-purchase-create-page) .wms-ops-access-control-terminal-checkbox--checked .wms-ops-access-control-terminal-checkbox__corner {
+:is(.wms-ops-access-control-page, .wms-ops-user-management-page, .wms-ops-admin-page, .wms-ops-access-control-dialog, .wms-ops-purchase-rfq-dialog, .wms-ops-purchase-create-page, .wms-ops-form) .wms-ops-access-control-terminal-checkbox--checked .wms-ops-access-control-terminal-checkbox__corner {
   border-color: color-mix(in oklab, var(--wms-ops-accent) 92%, white);
   opacity: 1;
   filter: drop-shadow(0 0 3px color-mix(in oklab, var(--wms-ops-accent) 65%, transparent));
 }
 
-:is(.wms-ops-access-control-page, .wms-ops-user-management-page, .wms-ops-admin-page, .wms-ops-access-control-dialog, .wms-ops-purchase-rfq-dialog, .wms-ops-purchase-create-page) .wms-ops-access-control-terminal-checkbox__corner {
+:is(.wms-ops-access-control-page, .wms-ops-user-management-page, .wms-ops-admin-page, .wms-ops-access-control-dialog, .wms-ops-purchase-rfq-dialog, .wms-ops-purchase-create-page, .wms-ops-form) .wms-ops-access-control-terminal-checkbox__corner {
   position: absolute;
   width: 0.3rem;
   height: 0.3rem;
@@ -12405,35 +12414,35 @@ html:not(.dark) .wms-ops-access-control-page .wms-ops-access-control-group-label
   transition: border-color 160ms ease, opacity 160ms ease, filter 160ms ease;
 }
 
-:is(.wms-ops-access-control-page, .wms-ops-user-management-page, .wms-ops-admin-page, .wms-ops-access-control-dialog, .wms-ops-purchase-rfq-dialog, .wms-ops-purchase-create-page) .wms-ops-access-control-terminal-checkbox__corner--tl {
+:is(.wms-ops-access-control-page, .wms-ops-user-management-page, .wms-ops-admin-page, .wms-ops-access-control-dialog, .wms-ops-purchase-rfq-dialog, .wms-ops-purchase-create-page, .wms-ops-form) .wms-ops-access-control-terminal-checkbox__corner--tl {
   top: -1px;
   left: -1px;
   border-top: 1px solid;
   border-left: 1px solid;
 }
 
-:is(.wms-ops-access-control-page, .wms-ops-user-management-page, .wms-ops-admin-page, .wms-ops-access-control-dialog, .wms-ops-purchase-rfq-dialog, .wms-ops-purchase-create-page) .wms-ops-access-control-terminal-checkbox__corner--tr {
+:is(.wms-ops-access-control-page, .wms-ops-user-management-page, .wms-ops-admin-page, .wms-ops-access-control-dialog, .wms-ops-purchase-rfq-dialog, .wms-ops-purchase-create-page, .wms-ops-form) .wms-ops-access-control-terminal-checkbox__corner--tr {
   top: -1px;
   right: -1px;
   border-top: 1px solid;
   border-right: 1px solid;
 }
 
-:is(.wms-ops-access-control-page, .wms-ops-user-management-page, .wms-ops-admin-page, .wms-ops-access-control-dialog, .wms-ops-purchase-rfq-dialog, .wms-ops-purchase-create-page) .wms-ops-access-control-terminal-checkbox__corner--bl {
+:is(.wms-ops-access-control-page, .wms-ops-user-management-page, .wms-ops-admin-page, .wms-ops-access-control-dialog, .wms-ops-purchase-rfq-dialog, .wms-ops-purchase-create-page, .wms-ops-form) .wms-ops-access-control-terminal-checkbox__corner--bl {
   bottom: -1px;
   left: -1px;
   border-bottom: 1px solid;
   border-left: 1px solid;
 }
 
-:is(.wms-ops-access-control-page, .wms-ops-user-management-page, .wms-ops-admin-page, .wms-ops-access-control-dialog, .wms-ops-purchase-rfq-dialog, .wms-ops-purchase-create-page) .wms-ops-access-control-terminal-checkbox__corner--br {
+:is(.wms-ops-access-control-page, .wms-ops-user-management-page, .wms-ops-admin-page, .wms-ops-access-control-dialog, .wms-ops-purchase-rfq-dialog, .wms-ops-purchase-create-page, .wms-ops-form) .wms-ops-access-control-terminal-checkbox__corner--br {
   bottom: -1px;
   right: -1px;
   border-bottom: 1px solid;
   border-right: 1px solid;
 }
 
-html:not(.dark) :is(.wms-ops-access-control-page, .wms-ops-user-management-page, .wms-ops-admin-page, .wms-ops-access-control-dialog, .wms-ops-purchase-rfq-dialog, .wms-ops-purchase-create-page) .wms-ops-access-control-terminal-checkbox {
+html:not(.dark) :is(.wms-ops-access-control-page, .wms-ops-user-management-page, .wms-ops-admin-page, .wms-ops-access-control-dialog, .wms-ops-purchase-rfq-dialog, .wms-ops-purchase-create-page, .wms-ops-form) .wms-ops-access-control-terminal-checkbox {
   border-color: color-mix(in oklab, var(--wms-ops-accent) 48%, #94a3b8);
   background: color-mix(in oklab, var(--wms-ops-field-bg) 98%, #fff);
   box-shadow:
@@ -12441,7 +12450,7 @@ html:not(.dark) :is(.wms-ops-access-control-page, .wms-ops-user-management-page,
     0 0 8px color-mix(in oklab, var(--wms-ops-accent) 12%, transparent);
 }
 
-html:not(.dark) :is(.wms-ops-access-control-page, .wms-ops-user-management-page, .wms-ops-admin-page, .wms-ops-access-control-dialog, .wms-ops-purchase-rfq-dialog, .wms-ops-purchase-create-page) .wms-ops-access-control-terminal-checkbox__fill {
+html:not(.dark) :is(.wms-ops-access-control-page, .wms-ops-user-management-page, .wms-ops-admin-page, .wms-ops-access-control-dialog, .wms-ops-purchase-rfq-dialog, .wms-ops-purchase-create-page, .wms-ops-form) .wms-ops-access-control-terminal-checkbox__fill {
   background: radial-gradient(
     circle at 50% 50%,
     color-mix(in oklab, var(--wms-ops-accent) 72%, #0ea5e9) 0%,
@@ -12453,7 +12462,7 @@ html:not(.dark) :is(.wms-ops-access-control-page, .wms-ops-user-management-page,
     inset 0 0 16px color-mix(in oklab, var(--wms-ops-accent) 32%, transparent);
 }
 
-html:not(.dark) :is(.wms-ops-access-control-page, .wms-ops-user-management-page, .wms-ops-admin-page, .wms-ops-access-control-dialog, .wms-ops-purchase-rfq-dialog, .wms-ops-purchase-create-page) .wms-ops-access-control-terminal-checkbox--checked {
+html:not(.dark) :is(.wms-ops-access-control-page, .wms-ops-user-management-page, .wms-ops-admin-page, .wms-ops-access-control-dialog, .wms-ops-purchase-rfq-dialog, .wms-ops-purchase-create-page, .wms-ops-form) .wms-ops-access-control-terminal-checkbox--checked {
   border-color: color-mix(in oklab, var(--wms-ops-accent) 68%, #0284c7);
   background: color-mix(in oklab, var(--wms-ops-accent) 16%, #fff);
   box-shadow:
@@ -12462,14 +12471,14 @@ html:not(.dark) :is(.wms-ops-access-control-page, .wms-ops-user-management-page,
     0 0 24px color-mix(in oklab, var(--wms-ops-accent) 16%, transparent);
 }
 
-html:not(.dark) :is(.wms-ops-access-control-page, .wms-ops-user-management-page, .wms-ops-admin-page, .wms-ops-access-control-dialog, .wms-ops-purchase-rfq-dialog, .wms-ops-purchase-create-page) .wms-ops-access-control-terminal-checkbox--checked .wms-ops-access-control-terminal-checkbox__fill {
+html:not(.dark) :is(.wms-ops-access-control-page, .wms-ops-user-management-page, .wms-ops-admin-page, .wms-ops-access-control-dialog, .wms-ops-purchase-rfq-dialog, .wms-ops-purchase-create-page, .wms-ops-form) .wms-ops-access-control-terminal-checkbox--checked .wms-ops-access-control-terminal-checkbox__fill {
   box-shadow:
     inset 0 0 10px color-mix(in oklab, var(--wms-ops-accent) 68%, #0ea5e9),
     inset 0 0 20px color-mix(in oklab, var(--wms-ops-accent) 38%, #7dd3fc),
     0 0 8px color-mix(in oklab, var(--wms-ops-accent) 42%, #38bdf8);
 }
 
-html:not(.dark) :is(.wms-ops-access-control-page, .wms-ops-user-management-page, .wms-ops-admin-page, .wms-ops-access-control-dialog, .wms-ops-purchase-rfq-dialog, .wms-ops-purchase-create-page) .wms-ops-access-control-terminal-checkbox--checked .wms-ops-access-control-terminal-checkbox__corner {
+html:not(.dark) :is(.wms-ops-access-control-page, .wms-ops-user-management-page, .wms-ops-admin-page, .wms-ops-access-control-dialog, .wms-ops-purchase-rfq-dialog, .wms-ops-purchase-create-page, .wms-ops-form) .wms-ops-access-control-terminal-checkbox--checked .wms-ops-access-control-terminal-checkbox__corner {
   border-color: color-mix(in oklab, var(--wms-ops-accent) 78%, #0284c7);
   filter: drop-shadow(0 0 2px color-mix(in oklab, var(--wms-ops-accent) 45%, #38bdf8));
 }
@@ -22645,6 +22654,169 @@ html.skin-premium .wms-ops-list .wms-ops-pt-terminal__meta {
   background: color-mix(in oklab, var(--wms-ops-field-bg) 55%, transparent);
   padding: 1rem;
 }
+
+/* Sipariş / tedarikçi lookup şeridi */
+.wms-ops-form .wms-ops-order-lookup {
+  position: relative;
+  padding: 0.9rem 1rem 0.85rem 1rem;
+  border: 1px solid color-mix(in oklab, var(--wms-ops-accent) 18%, var(--wms-ops-card-border, var(--wms-app-border)));
+  background: color-mix(in oklab, var(--wms-ops-field-bg) 62%, transparent);
+}
+
+.wms-ops-form .wms-ops-order-lookup__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.7rem;
+}
+
+.wms-ops-form .wms-ops-order-lookup__help {
+  display: inline-grid;
+  place-items: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  margin: 0;
+  padding: 0;
+  border: 1px solid color-mix(in oklab, var(--wms-ops-accent) 28%, transparent);
+  background: color-mix(in oklab, var(--wms-ops-accent) 8%, transparent);
+  color: color-mix(in oklab, var(--wms-ops-accent) 78%, hsl(var(--foreground)));
+  cursor: help;
+  transition:
+    color 160ms ease,
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.wms-ops-form .wms-ops-order-lookup__help:hover,
+.wms-ops-form .wms-ops-order-lookup__help:focus-visible {
+  color: var(--wms-ops-accent);
+  border-color: color-mix(in oklab, var(--wms-ops-accent) 55%, transparent);
+  background: color-mix(in oklab, var(--wms-ops-accent) 14%, transparent);
+  box-shadow: 0 0 12px color-mix(in oklab, var(--wms-ops-accent) 22%, transparent);
+  outline: none;
+}
+
+.wms-ops-form .wms-ops-order-lookup__action {
+  min-width: 10.5rem;
+}
+
+[data-slot='tooltip-content'].wms-ops-order-lookup__tooltip {
+  max-width: 17.5rem;
+  border: 1px solid color-mix(in oklab, var(--wms-ops-accent) 40%, var(--wms-app-border)) !important;
+  background: var(--wms-app-panel) !important;
+  padding: 0.6rem 0.75rem !important;
+  color: var(--wms-app-text) !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.7rem;
+  line-height: 1.45;
+  text-wrap: pretty;
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--wms-ops-accent) 14%, transparent),
+    0 14px 32px -10px rgb(0 0 0 / 55%) !important;
+}
+
+[data-slot='tooltip-content'].wms-ops-order-lookup__tooltip [class*='Arrow'],
+[data-slot='tooltip-content'].wms-ops-order-lookup__tooltip svg {
+  fill: var(--wms-app-panel) !important;
+  background: var(--wms-app-panel) !important;
+}
+
+/* Create flow step tabs */
+.wms-ops-form .wms-ops-create-steps {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .wms-ops-form .wms-ops-create-steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .wms-ops-form .wms-ops-create-steps--four {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .wms-ops-form .wms-ops-create-steps--four {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.wms-ops-form .wms-ops-create-steps__tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  min-height: 2.6rem;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid color-mix(in oklab, var(--wms-app-border) 88%, transparent);
+  background: color-mix(in oklab, var(--wms-ops-field-bg) 45%, transparent);
+  color: color-mix(in oklab, var(--wms-app-text-muted) 92%, transparent);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition:
+    border-color 180ms ease,
+    background-color 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.wms-ops-form .wms-ops-create-steps__index {
+  display: inline-grid;
+  place-items: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  opacity: 0.85;
+}
+
+.wms-ops-form .wms-ops-create-steps__label {
+  text-align: left;
+}
+
+.wms-ops-form .wms-ops-create-steps__tab--active {
+  border-color: color-mix(in oklab, var(--wms-brand-primary) 70%, var(--wms-app-border));
+  background: color-mix(in oklab, var(--wms-brand-primary) 12%, var(--wms-ops-field-bg));
+  color: var(--wms-brand-primary);
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--wms-brand-primary) 22%, transparent);
+}
+
+.wms-ops-form .wms-ops-create-steps__tab--active .wms-ops-create-steps__index {
+  background: color-mix(in oklab, var(--wms-brand-primary) 18%, transparent);
+  opacity: 1;
+}
+
+.wms-ops-form .wms-ops-create-steps__tab--done {
+  border-color: color-mix(in oklab, #10b981 40%, var(--wms-app-border));
+  color: color-mix(in oklab, #34d399 70%, hsl(var(--foreground)));
+}
+
+html.skin-premium .wms-ops-form .wms-ops-create-steps__tab {
+  border-radius: 999px;
+}
+
+html.skin-premium .wms-ops-form .wms-ops-order-lookup {
+  border-radius: 0.85rem;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 14px 32px -22px rgb(0 0 0 / 22%);
+}
+
+html.skin-premium .wms-ops-form .wms-ops-order-lookup__help {
+  border-radius: 0.45rem;
+}
+
+html:not(.dark) .wms-ops-form .wms-ops-order-lookup {
+  background: color-mix(in oklab, #fff 78%, transparent);
+}
 .wms-ops-form .wms-ops-order-fetch__table-wrap {
   max-height: min(28rem, 55vh);
   overflow: auto;
@@ -22679,24 +22851,101 @@ html.skin-premium .wms-ops-list .wms-ops-pt-terminal__meta {
   cursor: pointer;
 }
 .wms-ops-form .wms-ops-order-checkbox {
-  display: inline-flex; position: relative; width: 16px; height: 16px; margin: 0 auto; cursor: pointer;
+  display: inline-flex;
+  position: relative;
+  width: 16px;
+  height: 16px;
+  margin: 0 auto;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  vertical-align: middle;
 }
-.wms-ops-form .wms-ops-order-checkbox input { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
+.wms-ops-form .wms-ops-order-checkbox input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
 .wms-ops-form .wms-ops-order-checkbox__mark {
-  box-sizing: border-box; display: block; width: 16px; height: 16px;
+  box-sizing: border-box;
+  position: relative;
+  display: block;
+  width: 16px;
+  height: 16px;
   border: 1.5px solid color-mix(in oklab, var(--wms-ops-accent) 55%, #94a3b8);
-  border-radius: 3px; background: transparent;
+  border-radius: 3px;
+  background-color: transparent;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 .wms-ops-form .wms-ops-order-checkbox__mark::after {
-  content: ''; position: absolute; left: 4.5px; top: 1.5px; width: 5px; height: 9px;
-  border: solid #fff; border-width: 0 1.5px 1.5px 0; opacity: 0; transform: rotate(45deg) scale(0.6);
+  content: '';
+  position: absolute;
+  left: 4.5px;
+  top: 1.5px;
+  width: 5px;
+  height: 9px;
+  border: solid #fff;
+  border-width: 0 1.5px 1.5px 0;
+  opacity: 0;
+  transform: rotate(45deg) scale(0.6);
+  transition: opacity 0.15s ease, transform 0.15s ease;
 }
 .wms-ops-form .wms-ops-order-checkbox input:checked ~ .wms-ops-order-checkbox__mark {
-  background-color: #2196f3; border-color: #2196f3;
+  background-color: #2196f3;
+  border-color: #2196f3;
 }
 .wms-ops-form .wms-ops-order-checkbox input:checked ~ .wms-ops-order-checkbox__mark::after {
-  opacity: 1; transform: rotate(45deg) scale(1);
+  opacity: 1;
+  transform: rotate(45deg) scale(1);
 }
+.wms-ops-form .wms-ops-order-checkbox input:indeterminate ~ .wms-ops-order-checkbox__mark {
+  background-color: color-mix(in oklab, #2196f3 70%, transparent);
+  border-color: #2196f3;
+}
+.wms-ops-form .wms-ops-order-checkbox input:indeterminate ~ .wms-ops-order-checkbox__mark::after {
+  left: 3px;
+  top: 6px;
+  width: 8px;
+  height: 0;
+  border-width: 0 0 1.5px 0;
+  opacity: 1;
+  transform: none;
+}
+
+/* Premium: goods-receipt process checkbox — soft tick + brand glow (v1 order-checkbox DNA) */
+html.skin-premium .wms-ops-form .wms-ops-order-checkbox__mark {
+  border-radius: 0.35rem;
+  border-color: color-mix(in oklab, var(--wms-brand-primary) 48%, #94a3b8);
+  background: color-mix(in oklab, var(--wms-ops-field-bg) 92%, transparent);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklab, var(--wms-brand-primary) 8%, transparent),
+    0 0 6px color-mix(in oklab, var(--wms-brand-primary) 10%, transparent);
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.22s ease;
+}
+html.skin-premium .wms-ops-form .wms-ops-order-checkbox:hover .wms-ops-order-checkbox__mark {
+  border-color: color-mix(in oklab, var(--wms-brand-primary) 62%, #64748b);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklab, var(--wms-brand-primary) 12%, transparent),
+    0 0 10px color-mix(in oklab, var(--wms-brand-primary) 18%, transparent);
+}
+html.skin-premium .wms-ops-form .wms-ops-order-checkbox input:checked ~ .wms-ops-order-checkbox__mark {
+  background-color: var(--wms-brand-primary);
+  border-color: var(--wms-brand-primary);
+  box-shadow:
+    0 0 10px color-mix(in oklab, var(--wms-brand-primary) 48%, transparent),
+    0 0 20px color-mix(in oklab, var(--wms-brand-primary) 24%, transparent);
+}
+html.skin-premium .wms-ops-form .wms-ops-order-checkbox input:indeterminate ~ .wms-ops-order-checkbox__mark {
+  background-color: color-mix(in oklab, var(--wms-brand-primary) 72%, transparent);
+  border-color: var(--wms-brand-primary);
+  box-shadow: 0 0 10px color-mix(in oklab, var(--wms-brand-primary) 32%, transparent);
+}
+
 .wms-ops-form .wms-ops-entry-label {
   font-size: 0.65rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
   color: color-mix(in oklab, var(--wms-ops-accent) 55%, hsl(var(--muted-foreground)));

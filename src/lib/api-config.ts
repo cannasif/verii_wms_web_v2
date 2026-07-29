@@ -71,14 +71,6 @@ function toBaseRelativePath(fileName: string): string {
 }
 
 async function fetchRuntimeConfig(): Promise<ResolvedRuntimeConfig> {
-  if (import.meta.env.DEV) {
-    return {
-      apiUrl: 'http://localhost:5234',
-      baseUrl: normalizeAppBasePath(import.meta.env.BASE_URL || '/'),
-      realtimeNotificationsEnabled: false,
-    };
-  }
-
   const response = await fetch(toBaseRelativePath(RUNTIME_CONFIG_FILE_NAME), {
     cache: 'no-store',
     credentials: 'same-origin',

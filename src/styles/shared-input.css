@@ -314,7 +314,7 @@ input.input:is([type='date'], [type='datetime-local'], [type='time'])::-webkit-c
 }
 
 .app-input-shell--leading .app-input-control {
-  padding-left: 2.75rem;
+  padding-left: 2.75rem !important;
 }
 
 .app-input-shell--trailing .app-input-control {

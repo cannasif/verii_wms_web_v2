@@ -402,8 +402,8 @@ export function PagedLookupDialog<T>({
             placeholder={placeholder}
             className={cn(
               isOps
-                ? cn(OPS_FIELD_CLASS, 'h-10 w-full !py-2 !pl-3 !pr-10')
-                : 'flex h-11 w-full min-w-0 rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] py-2 pl-3 pr-10 text-sm text-[var(--wms-app-text)] shadow-sm outline-none transition hover:border-[var(--wms-brand-primary)]/60 focus:border-[var(--wms-brand-primary)] focus:ring-2 focus:ring-[var(--wms-brand-primary)]/25',
+                ? cn(OPS_FIELD_CLASS, 'h-10 w-full !py-2 !pl-10 !pr-3')
+                : 'flex h-11 w-full min-w-0 rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] py-2 pl-10 pr-3 text-sm text-[var(--wms-app-text)] shadow-sm outline-none transition hover:border-[var(--wms-brand-primary)]/60 focus:border-[var(--wms-brand-primary)] focus:ring-2 focus:ring-[var(--wms-brand-primary)]/25',
               disabled && 'cursor-not-allowed opacity-50',
               !displayValue && 'wms-ops-field--placeholder',
               triggerClassName,
@@ -444,7 +444,7 @@ export function PagedLookupDialog<T>({
             tabIndex={-1}
             disabled={disabled}
             aria-label={resolvedSearchPlaceholder}
-            className="absolute right-1.5 top-1/2 z-[1] inline-flex size-8 -translate-y-1/2 items-center justify-center rounded-lg text-[var(--wms-app-text-muted)] transition hover:bg-[var(--wms-brand-soft)] hover:text-[var(--wms-brand-primary)] disabled:opacity-50"
+            className="absolute left-1.5 top-1/2 z-[1] inline-flex size-8 -translate-y-1/2 items-center justify-center rounded-lg text-[var(--wms-app-text-muted)] transition hover:bg-[var(--wms-brand-soft)] hover:text-[var(--wms-brand-primary)] disabled:opacity-50"
             onMouseDown={(event) => {
               event.preventDefault();
               skipBlurCloseRef.current = true;

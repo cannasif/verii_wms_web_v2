@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronUp,
+  CircleHelp,
   ClipboardList,
   Loader2,
   PackageCheck,
@@ -23,15 +24,22 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { AppDropdown } from "@/components/shared/AppDropdown";
-import { AppDateInput } from "@/components/shared/AppInput";
+import { AppDateInput, AppInput } from "@/components/shared/AppInput";
 import { OpsActionButton } from "@/components/shared/OpsActionButton";
 import { OpsFieldShell } from "@/components/shared/OpsFieldShell";
 import { OPS_FIELD_CLASS } from "@/components/shared/ops-field-styles";
+import { OpsSkinCheckbox } from "@/components/shared/OpsSkinCheckbox";
 import { PagedAppDropdown } from "@/components/shared/PagedAppDropdown";
 import { PagedLookupDialog } from "@/components/shared/PagedLookupDialog";
 import { OpsStatusBadge } from "@/components/shared/OpsStatusBadge";
 import { PremiumEyebrow } from "@/components/shared/PremiumEyebrow";
 import { ResponsiveDialog } from "@/components/shared/ResponsiveDialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useTheme } from "@/components/theme-provider";
 import { StockTrackingPolicyField } from "@/features/stock-tracking/effective-stock-tracking";
 import { stockTrackingApi } from "@/features/stock-tracking/api/stock-tracking.api";
@@ -98,10 +106,6 @@ const userOption = (x: ActiveUserOption) => ({
 });
 const decodeUser = (value: string): ActiveUserOption =>
   JSON.parse(decodeURIComponent(value)) as ActiveUserOption;
-const encodeCustomer = (customer: CustomerOption): string =>
-  encodeURIComponent(JSON.stringify(customer));
-const decodeCustomer = (value: string): CustomerOption =>
-  JSON.parse(decodeURIComponent(value)) as CustomerOption;
 const today = (): string => {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
@@ -148,6 +152,7 @@ export function GoodsReceiptCreatePage({ direct = false }: { direct?: boolean } 
   const [error, setError] = useState<string | null>(null);
   const [selectedCustomer, setSelectedCustomer] =
     useState<CustomerOption | null>(null);
+  const [customerLookupOpen, setCustomerLookupOpen] = useState(false);
   const [projectCodeFilter, setProjectCodeFilter] = useState("");
   const [orderNumberSearch, setOrderNumberSearch] = useState("");
   const [orders, setOrders] = useState<OpenOrderHeader[]>([]);
@@ -177,6 +182,9 @@ export function GoodsReceiptCreatePage({ direct = false }: { direct?: boolean } 
       code: selectedCustomer.customerCode,
     };
   }, [selectedCustomer]);
+  const customerDisplay = selectedCustomer
+    ? `${selectedCustomer.customerName} (${selectedCustomer.customerCode})`
+    : "";
   const directProjectCodes = useMemo(
     () =>
       [...new Set(
@@ -974,16 +982,29 @@ export function GoodsReceiptCreatePage({ direct = false }: { direct?: boolean } 
         </p>
       </header>
 
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-        {steps.map((value) => (
-          <div
-            key={value}
-            className={`rounded-xl border px-3 py-2 text-center text-xs font-semibold ${value <= step ? "border-[var(--wms-brand-primary)] bg-[var(--wms-brand-soft)] text-[var(--wms-brand-primary)]" : "border-[var(--wms-app-border)] text-[var(--wms-app-text-muted)]"}`}
-          >
-            {value + 1}. {t(`createFlow.steps.${value}`)}
-          </div>
-        ))}
-      </div>
+      <nav className="wms-ops-create-steps" aria-label="Oluşturma adımları">
+        {steps.map((value) => {
+          const active = value === step;
+          const done = value < step;
+          return (
+            <div
+              key={value}
+              role="tab"
+              aria-selected={active}
+              className={cn(
+                "wms-ops-create-steps__tab",
+                active && "wms-ops-create-steps__tab--active",
+                done && "wms-ops-create-steps__tab--done",
+              )}
+            >
+              <span className="wms-ops-create-steps__index">{value + 1}</span>
+              <span className="wms-ops-create-steps__label">
+                {t(`createFlow.steps.${value}`)}
+              </span>
+            </div>
+          );
+        })}
+      </nav>
 
       {error && (
         <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-500">
@@ -997,90 +1018,131 @@ export function GoodsReceiptCreatePage({ direct = false }: { direct?: boolean } 
             title={t("createFlow.orderSelection")}
             icon={<ClipboardList className="size-5" />}
           >
-            <div className="mb-4 space-y-3">
-              <label className="wms-ops-entry-label block">
+            <div className="wms-ops-order-lookup mb-4">
+              <label className="wms-ops-entry-label mb-1.5 block">
                 {t("customer")} <span className="text-red-500">*</span>
               </label>
-              <PagedAppDropdown<CustomerOption>
-                queryKey={["gr-customers", branchCode]}
-                fetchPage={(request) =>
-                  goodsReceiptV2Api.customers(request, branchCode)
-                }
-                toOption={(item) => ({
-                  value: encodeCustomer(item),
-                  label: `${item.customerCode} · ${item.customerName}`,
-                })}
-                value={
-                  selectedCustomer ? encodeCustomer(selectedCustomer) : null
-                }
-                selectedOption={
-                  selectedCustomer
-                    ? {
-                        value: encodeCustomer(selectedCustomer),
-                        label: `${selectedCustomer.customerCode} · ${selectedCustomer.customerName}`,
-                      }
-                    : undefined
-                }
-                onValueChange={(value) => {
-                  setSelectedCustomer(decodeCustomer(value));
-                  setOrderNumberSearch("");
-                  clearCustomerDependent();
-                }}
-                placeholder={t("selectCustomer")}
-                searchable
-                minSearchLength={2}
-              />
+              <div className="wms-ops-order-lookup__row">
+                <div className="wms-ops-order-lookup__field min-w-0 flex-1">
+                  <PagedLookupDialog<CustomerOption>
+                    variant="ops"
+                    triggerMode="combobox"
+                    autoSearchMinLength={2}
+                    open={customerLookupOpen}
+                    onOpenChange={setCustomerLookupOpen}
+                    title={t("selectCustomer")}
+                    value={customerDisplay}
+                    placeholder={t("selectCustomer")}
+                    searchPlaceholder={t("searchCustomer")}
+                    emptyText={t("customerEmpty")}
+                    triggerClassName={OPS_FIELD_CLASS}
+                    queryKey={["gr-customers-lookup", branchCode]}
+                    fetchPage={async ({ pageNumber, pageSize, search, signal }) =>
+                      toPagedResponse(
+                        await goodsReceiptV2Api.customers(
+                          {
+                            pageNumber,
+                            pageSize,
+                            search,
+                            sortBy: "customerCode",
+                            sortDirection: "asc",
+                            signal: signal ?? new AbortController().signal,
+                          },
+                          branchCode,
+                        ),
+                      )
+                    }
+                    getKey={(item) => String(item.id)}
+                    getLabel={(item) =>
+                      `${item.customerName} (${item.customerCode})`
+                    }
+                    onSelect={(item) => {
+                      setSelectedCustomer(item);
+                      setOrderNumberSearch("");
+                      clearCustomerDependent();
+                    }}
+                  />
+                </div>
+                <OpsActionButton
+                  type="button"
+                  variant="primary"
+                  disabled={busy || !customer}
+                  onClick={() => void loadOrders()}
+                  className="wms-ops-order-lookup__action w-full shrink-0 sm:w-auto"
+                >
+                  {busy ? (
+                    <Loader2 className="size-3.5 shrink-0 animate-spin" />
+                  ) : (
+                    t("loadOrders")
+                  )}
+                </OpsActionButton>
+              </div>
             </div>
 
-            <section className="mb-5 rounded-2xl border border-cyan-500/25 bg-cyan-500/[.05] p-4">
-              <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
-                <Field label="Sipariş numarasıyla getir">
-                  <div className="relative">
-                    <Search
-                      className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-500"
-                      aria-hidden
-                    />
-                    <input
-                      className="input pl-10 font-mono uppercase"
-                      value={orderNumberSearch}
-                      onChange={(event) =>
-                        setOrderNumberSearch(
-                          event.target.value.toLocaleUpperCase("tr-TR"),
-                        )
-                      }
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter") {
-                          event.preventDefault();
-                          void loadOrderByNumber();
-                        }
-                      }}
-                      placeholder="Örn. SAS202600000001"
-                      maxLength={50}
-                    />
+            <div className="wms-ops-order-lookup mb-5">
+              <div className="wms-ops-order-lookup__row">
+                <div className="wms-ops-order-lookup__field min-w-0 flex-1">
+                  <div className="mb-1.5 flex items-center gap-1.5">
+                    <span className="wms-ops-entry-label">
+                      Sipariş numarasıyla getir
+                    </span>
+                    <TooltipProvider delayDuration={180}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            className="wms-ops-order-lookup__help"
+                            aria-label="Sipariş numarasıyla getirme hakkında"
+                          >
+                            <CircleHelp className="size-3.5" aria-hidden />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent
+                          side="top"
+                          sideOffset={8}
+                          className="wms-ops-order-lookup__tooltip !bg-[var(--wms-app-panel)] !text-[var(--wms-app-text)] border-[color-mix(in_oklab,var(--wms-ops-accent)_40%,var(--wms-app-border))]"
+                        >
+                          Siparişin cari kodu Netsis’ten okunur; eşleşen
+                          tedarikçi otomatik seçilir ve sipariş bakiyesi aşağıda
+                          açılır.
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </div>
-                </Field>
+                  <AppInput
+                    leadingIcon={<Search className="size-4" aria-hidden />}
+                    className="font-mono uppercase"
+                    value={orderNumberSearch}
+                    onChange={(event) =>
+                      setOrderNumberSearch(
+                        event.target.value.toLocaleUpperCase("tr-TR"),
+                      )
+                    }
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        void loadOrderByNumber();
+                      }
+                    }}
+                    placeholder="Örn. SAS202600000001"
+                    maxLength={50}
+                  />
+                </div>
                 <OpsActionButton
                   type="button"
                   variant="primary"
                   disabled={busy || !orderNumberSearch.trim()}
                   onClick={() => void loadOrderByNumber()}
-                  className="h-10 w-full lg:w-auto lg:min-w-[13rem]"
+                  className="wms-ops-order-lookup__action w-full sm:w-auto"
                 >
                   {busy ? (
-                    <Loader2 className="size-4 animate-spin" />
+                    <Loader2 className="size-3.5 shrink-0 animate-spin" />
                   ) : (
-                    <>
-                      <Search className="size-4" aria-hidden />
-                      Siparişi getir
-                    </>
+                    "Siparişi getir"
                   )}
                 </OpsActionButton>
               </div>
-              <p className="mt-2 text-xs text-[var(--wms-app-text-muted)]">
-                Siparişin cari kodu Netsis’ten okunur; eşleşen tedarikçi otomatik
-                seçilir ve sipariş bakiyesi aşağıda açılır.
-              </p>
-            </section>
+            </div>
 
             {direct && (
               <section className="mb-5 rounded-2xl border border-[var(--wms-app-border)] bg-black/[.025] p-4 dark:bg-white/[.025]">
@@ -1093,15 +1155,14 @@ export function GoodsReceiptCreatePage({ direct = false }: { direct?: boolean } 
                     </p>
                   </div>
                   <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-[var(--wms-app-border)] px-4 py-2">
-                    <input
-                      type="checkbox"
+                    <OpsSkinCheckbox
                       checked={isElectronicReceipt}
-                      onChange={(event) => {
-                        setIsElectronicReceipt(event.target.checked);
+                      onCheckedChange={(next) => {
+                        setIsElectronicReceipt(next);
                         setReceiptNo("");
                         setError(null);
                       }}
-                      className="size-4 accent-cyan-500"
+                      aria-label="E-irsaliye"
                     />
                     <span className="text-sm font-semibold">E-irsaliye</span>
                   </label>
@@ -1114,41 +1175,38 @@ export function GoodsReceiptCreatePage({ direct = false }: { direct?: boolean } 
                         : "İrsaliye numarası"
                     }
                   >
-                    <div className="relative">
-                      <input
-                        className={`input pr-20 font-mono tracking-wider ${
-                          receiptNo &&
-                          !isValidGoodsReceiptDocumentNo(
-                            receiptNo,
+                    <AppInput
+                      className="font-mono tracking-wider"
+                      inputMode="text"
+                      maxLength={isElectronicReceipt ? 16 : 15}
+                      placeholder={
+                        isElectronicReceipt
+                          ? "GIB2026AB0000001"
+                          : "IRS202600000001"
+                      }
+                      value={receiptNo}
+                      invalid={
+                        Boolean(receiptNo) &&
+                        !isValidGoodsReceiptDocumentNo(
+                          receiptNo,
+                          isElectronicReceipt,
+                        )
+                      }
+                      onChange={(event) => {
+                        setReceiptNo(
+                          normalizeGoodsReceiptDocumentNo(
+                            event.target.value,
                             isElectronicReceipt,
-                          )
-                            ? "!border-red-500"
-                            : receiptNo
-                              ? "!border-emerald-500"
-                              : ""
-                        }`}
-                        inputMode="text"
-                        maxLength={isElectronicReceipt ? 16 : 15}
-                        placeholder={
-                          isElectronicReceipt
-                            ? "GIB2026AB0000001"
-                            : "IRS202600000001"
-                        }
-                        value={receiptNo}
-                        onChange={(event) => {
-                          setReceiptNo(
-                            normalizeGoodsReceiptDocumentNo(
-                              event.target.value,
-                              isElectronicReceipt,
-                            ),
-                          );
-                          setError(null);
-                        }}
-                      />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500">
-                        {receiptNo.length}/{isElectronicReceipt ? 16 : 15}
-                      </span>
-                    </div>
+                          ),
+                        );
+                        setError(null);
+                      }}
+                      trailingContent={
+                        <span className="pr-1 text-xs font-bold text-[var(--wms-ops-field-placeholder-fg)]">
+                          {receiptNo.length}/{isElectronicReceipt ? 16 : 15}
+                        </span>
+                      }
+                    />
                   </Field>
                   <Field label="İrsaliye tarihi">
                     <AppDateInput
@@ -1180,28 +1238,6 @@ export function GoodsReceiptCreatePage({ direct = false }: { direct?: boolean } 
             )}
 
             <div className="wms-ops-order-fetch space-y-4">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                <div className="relative min-w-0 flex-1 text-xs text-[var(--wms-app-text-muted)]">
-                  Seçili tedarikçiye ait açık sipariş bakiyelerini getirin.
-                </div>
-                <OpsActionButton
-                  type="button"
-                  variant="primary"
-                  disabled={busy}
-                  onClick={() => void loadOrders()}
-                  className="h-10 w-full shrink-0 sm:w-auto sm:min-w-[11rem]"
-                >
-                  {busy ? (
-                    <Loader2 className="size-4 animate-spin" />
-                  ) : (
-                    <>
-                      <Search className="size-3.5" aria-hidden />
-                      {t("loadOrders")}
-                    </>
-                  )}
-                </OpsActionButton>
-              </div>
-
               {direct && directProjectCodes.length > 0 ? (
                 <div className="max-w-sm">
                   <label className="wms-ops-entry-label mb-1.5 block">
@@ -1286,26 +1322,19 @@ export function GoodsReceiptCreatePage({ direct = false }: { direct?: boolean } 
                               className="text-center"
                               onClick={(event) => event.stopPropagation()}
                             >
-                              <label className="wms-ops-order-checkbox">
-                                <input
-                                  type="checkbox"
-                                  checked={checked}
-                                  disabled={warehouseDenied || unavailable}
-                                  onChange={toggle}
-                                  aria-label={`${line.siparisNo} ${line.stockCode ?? ""} seç`}
-                                  title={
-                                    unavailable
-                                      ? "Aktif bir mal kabul emrine ayrılmış."
-                                      : warehouseDenied
-                                        ? "Bu depo kullanıcınıza tanımlı değil."
-                                        : undefined
-                                  }
-                                />
-                                <span
-                                  className="wms-ops-order-checkbox__mark"
-                                  aria-hidden
-                                />
-                              </label>
+                              <OpsSkinCheckbox
+                                checked={checked}
+                                disabled={warehouseDenied || unavailable}
+                                onCheckedChange={() => toggle()}
+                                aria-label={`${line.siparisNo} ${line.stockCode ?? ""} seç`}
+                                title={
+                                  unavailable
+                                    ? "Aktif bir mal kabul emrine ayrılmış."
+                                    : warehouseDenied
+                                      ? "Bu depo kullanıcınıza tanımlı değil."
+                                      : undefined
+                                }
+                              />
                             </td>
                             <td className="font-mono font-semibold">
                               {line.siparisNo}
@@ -1377,20 +1406,13 @@ export function GoodsReceiptCreatePage({ direct = false }: { direct?: boolean } 
                               className="text-center"
                               onClick={(event) => event.stopPropagation()}
                             >
-                              <label className="wms-ops-order-checkbox">
-                                <input
-                                  type="checkbox"
-                                  checked={checked}
-                                  disabled={warehouseDenied}
-                                  onChange={() => toggleOrder(order)}
-                                  aria-label={`${order.siparisNo} seç`}
-                                  title={warehouseDenied ? "Bu depo kullanıcınıza tanımlı değil." : undefined}
-                                />
-                                <span
-                                  className="wms-ops-order-checkbox__mark"
-                                  aria-hidden
-                                />
-                              </label>
+                              <OpsSkinCheckbox
+                                checked={checked}
+                                disabled={warehouseDenied}
+                                onCheckedChange={() => toggleOrder(order)}
+                                aria-label={`${order.siparisNo} seç`}
+                                title={warehouseDenied ? "Bu depo kullanıcınıza tanımlı değil." : undefined}
+                              />
                             </td>
                             <td className="font-mono font-semibold">
                               {order.siparisNo}
@@ -1526,15 +1548,14 @@ export function GoodsReceiptCreatePage({ direct = false }: { direct?: boolean } 
                         </p>
                       </div>
                       <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-[var(--wms-app-border)] px-4 py-2">
-                        <input
-                          type="checkbox"
+                        <OpsSkinCheckbox
                           checked={isElectronicReceipt}
-                          onChange={(event) => {
-                            setIsElectronicReceipt(event.target.checked);
+                          onCheckedChange={(next) => {
+                            setIsElectronicReceipt(next);
                             setReceiptNo("");
                             setError(null);
                           }}
-                          className="size-4 accent-cyan-500"
+                          aria-label="E-irsaliye"
                         />
                         <span className="text-sm font-semibold">E-irsaliye</span>
                       </label>
@@ -1547,41 +1568,38 @@ export function GoodsReceiptCreatePage({ direct = false }: { direct?: boolean } 
                             : "İrsaliye numarası"
                         }
                       >
-                        <div className="relative">
-                          <input
-                            className={`input pr-20 font-mono tracking-wider ${
-                              receiptNo &&
-                              !isValidGoodsReceiptDocumentNo(
-                                receiptNo,
+                        <AppInput
+                          className="font-mono tracking-wider"
+                          inputMode="text"
+                          maxLength={isElectronicReceipt ? 16 : 15}
+                          placeholder={
+                            isElectronicReceipt
+                              ? "GIB2026AB0000001"
+                              : "IRS202600000001"
+                          }
+                          value={receiptNo}
+                          invalid={
+                            Boolean(receiptNo) &&
+                            !isValidGoodsReceiptDocumentNo(
+                              receiptNo,
+                              isElectronicReceipt,
+                            )
+                          }
+                          onChange={(event) => {
+                            setReceiptNo(
+                              normalizeGoodsReceiptDocumentNo(
+                                event.target.value,
                                 isElectronicReceipt,
-                              )
-                                ? "!border-red-500"
-                                : receiptNo
-                                  ? "!border-emerald-500"
-                                  : ""
-                            }`}
-                            inputMode="text"
-                            maxLength={isElectronicReceipt ? 16 : 15}
-                            placeholder={
-                              isElectronicReceipt
-                                ? "GIB2026AB0000001"
-                                : "IRS202600000001"
-                            }
-                            value={receiptNo}
-                            onChange={(event) => {
-                              setReceiptNo(
-                                normalizeGoodsReceiptDocumentNo(
-                                  event.target.value,
-                                  isElectronicReceipt,
-                                ),
-                              );
-                              setError(null);
-                            }}
-                          />
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500">
-                            {receiptNo.length}/{isElectronicReceipt ? 16 : 15}
-                          </span>
-                        </div>
+                              ),
+                            );
+                            setError(null);
+                          }}
+                          trailingContent={
+                            <span className="pr-1 text-xs font-bold text-[var(--wms-ops-field-placeholder-fg)]">
+                              {receiptNo.length}/{isElectronicReceipt ? 16 : 15}
+                            </span>
+                          }
+                        />
                       </Field>
                       <Field label="İrsaliye tarihi">
                         <AppDateInput
@@ -1636,8 +1654,7 @@ export function GoodsReceiptCreatePage({ direct = false }: { direct?: boolean } 
                     />
                   </Field>
                   <Field label={t("description")}>
-                    <input
-                      className="input"
+                    <AppInput
                       maxLength={1000}
                       value={description}
                       onChange={(event) => setDescription(event.target.value)}
