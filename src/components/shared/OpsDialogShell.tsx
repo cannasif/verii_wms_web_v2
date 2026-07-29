@@ -80,7 +80,7 @@ export function OpsDialogFooter({
   className?: string;
 }): ReactElement {
   return (
-    <footer className={cn('wms-ops-actions wms-ops-detail-dialog__footer shrink-0 border-t px-5 py-4', className)}>
+    <footer className={cn('wms-ops-actions wms-ops-detail-dialog__footer flex shrink-0 flex-wrap items-center justify-end gap-2 border-t px-5 py-4', className)}>
       {children}
     </footer>
   );

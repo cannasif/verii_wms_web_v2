@@ -196,7 +196,7 @@ export function GoodsReceiptCreatePage({
   const receiptNoInvalid =
     (showFieldErrors || Boolean(receiptNo)) &&
     !isValidGoodsReceiptDocumentNo(receiptNo);
-  const isElectronicReceipt = true;
+  const [isElectronicReceipt, setIsElectronicReceipt] = useState(true);
   const [plannedArrival, setPlannedArrival] = useState("");
   const [priority, setPriority] = useState("3");
   const [labelStrategy, setLabelStrategy] = useState("None");
@@ -1211,8 +1211,7 @@ export function GoodsReceiptCreatePage({
       <label className="flex shrink-0 cursor-pointer items-center gap-3 self-end rounded-xl border border-[var(--wms-app-border)] px-4 py-2">
         <OpsSkinCheckbox
           checked={isElectronicReceipt}
-          onCheckedChange={() => undefined}
-          disabled
+          onCheckedChange={setIsElectronicReceipt}
           aria-label={t("createFlow.waybill.eReceipt")}
         />
         <span className="text-sm font-semibold">{t("createFlow.waybill.eReceipt")}</span>
