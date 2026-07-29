@@ -6,8 +6,9 @@ import {
   readSessionAccessToken,
   requestSessionAccessToken,
   writeSessionAccessToken,
+  isDefinitiveSessionRefreshError,
 } from '@/lib/auth-session';
-import { getUserFromToken, isTokenValid } from '@/utils/jwt';
+import { getBranchCodeFromToken, getUserFromToken, isTokenValid } from '@/utils/jwt';
 import { usePermissionsStore } from '@/stores/permissions-store';
 import { useAppShellStore } from '@/stores/app-shell-store';
 
@@ -20,12 +21,13 @@ interface User {
 interface Branch {
   id: string;
   name: string;
-  code?: string;
+  code: string;
 }
 
 export type AuthSessionStatus =
   | 'idle'
   | 'restoring'
+  | 'unavailable'
   | 'authenticated'
   | 'anonymous';
 
@@ -46,6 +48,17 @@ function clearClientState(userId: number | null): void {
   useAppShellStore.getState().clearAppShellData();
 }
 
+function resolveSessionBranch(token: string, branch: Branch | null): Branch | null {
+  const branchCode = getBranchCodeFromToken(token);
+  if (!branchCode) return null;
+  if (branch?.code === branchCode) return branch;
+  return {
+    id: branchCode,
+    code: branchCode,
+    name: branchCode,
+  };
+}
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
@@ -59,7 +72,7 @@ export const useAuthStore = create<AuthState>()(
         set({
           user,
           token,
-          branch,
+          branch: resolveSessionBranch(token, branch),
           sessionStatus: 'authenticated',
           sessionError: null,
         });
@@ -103,13 +116,19 @@ export const useAuthStore = create<AuthState>()(
           : null;
 
         if (restoredToken && restoredUser) {
-          set({
-            user: restoredUser,
-            token: restoredToken,
-            sessionStatus: 'authenticated',
-            sessionError: null,
-          });
-          return;
+          const restoredBranch = resolveSessionBranch(restoredToken, get().branch);
+          if (!restoredBranch) {
+            clearSessionAccessToken();
+          } else {
+            set({
+              user: restoredUser,
+              token: restoredToken,
+              branch: restoredBranch,
+              sessionStatus: 'authenticated',
+              sessionError: null,
+            });
+            return;
+          }
         }
 
         clearSessionAccessToken();
@@ -123,13 +142,27 @@ export const useAuthStore = create<AuthState>()(
           }
 
           writeSessionAccessToken(token);
+          const branch = resolveSessionBranch(token, get().branch);
+          if (!branch) {
+            throw new Error('Oturum yanıtındaki şube bilgisi geçersiz.');
+          }
           set({
             user,
             token,
+            branch,
             sessionStatus: 'authenticated',
             sessionError: null,
           });
-        } catch {
+        } catch (error) {
+          if (!isDefinitiveSessionRefreshError(error)) {
+            set({
+              token: null,
+              sessionStatus: 'unavailable',
+              sessionError: error instanceof Error ? error.message : 'Oturum servisine ulaşılamıyor.',
+            });
+            return;
+          }
+
           const currentUserId = get().user?.id ?? null;
           clearClientState(currentUserId);
           clearSessionAccessToken();

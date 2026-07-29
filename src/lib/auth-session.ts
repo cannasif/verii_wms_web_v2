@@ -1,6 +1,7 @@
 import { getApiBaseUrl } from '@/lib/api-config';
+import { isDefinitiveSessionRefreshStatus } from '@/lib/session-refresh-policy';
 import { withSessionRefreshLock } from '@/lib/session-refresh-lock';
-import { isTokenValid } from '@/utils/jwt';
+import { getBranchCodeFromToken, isTokenValid } from '@/utils/jwt';
 
 const accessTokenStorageKey = 'wms.session.access-token.v1';
 const sessionChannelName = 'wms.auth.session.v1';
@@ -82,7 +83,7 @@ export async function requestSessionAccessToken(): Promise<string> {
       if (!response.ok) {
         throw new SessionRefreshError('Oturum artık geçerli değil.', {
           status: response.status,
-          definitive: true,
+          definitive: isDefinitiveSessionRefreshStatus(response.status),
         });
       }
 
@@ -102,7 +103,7 @@ export async function requestSessionAccessToken(): Promise<string> {
       }
 
       throw new SessionRefreshError('Oturum yenilenemedi.', {
-        definitive: true,
+        definitive: false,
         cause: error,
       });
     }
@@ -132,7 +133,7 @@ function ensureSessionChannel(): BroadcastChannel | null {
       return;
     }
 
-    if (!token || !isTokenValid(token, 30)) {
+    if (!token || !isTokenValid(token, 30) || !getBranchCodeFromToken(token)) {
       return;
     }
 
@@ -165,6 +166,7 @@ function requestAccessTokenFromPeer(timeoutMs = 150): Promise<string | null> {
         || event.data.requestId !== requestId
         || !event.data.token
         || !isTokenValid(event.data.token, 30)
+        || !getBranchCodeFromToken(event.data.token)
       ) {
         return;
       }

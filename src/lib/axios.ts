@@ -1,8 +1,11 @@
 import axios from 'axios';
 import { getLanguageForHttpHeader } from './i18n';
 import { useAuthStore } from '@/stores/auth-store';
-import { requestSessionAccessToken } from '@/lib/auth-session';
-import { getUserFromToken } from '@/utils/jwt';
+import {
+  isDefinitiveSessionRefreshError,
+  requestSessionAccessToken,
+} from '@/lib/auth-session';
+import { getBranchCodeFromToken, getUserFromToken } from '@/utils/jwt';
 import { isRequestCanceled } from './request-utils';
 import {
   loadConfig,
@@ -45,19 +48,18 @@ function hasNumericTailSegment(url: string | undefined): boolean {
 function shouldSkipBranchInjection(payload: unknown): boolean {
   return payload == null
     || typeof payload !== 'object'
-    || payload instanceof FormData
     || payload instanceof Blob
     || payload instanceof ArrayBuffer;
 }
 
-function shouldReplaceBranchCode(value: unknown): boolean {
-  return value == null
-    || (typeof value === 'string' && (value.trim() === '' || value.trim() === '0'))
-    || (typeof value === 'number' && value === 0);
-}
-
 function applyBranchCodeToPayload(payload: unknown, branchCode: string, visited = new WeakSet<object>()): void {
   if (shouldSkipBranchInjection(payload)) {
+    return;
+  }
+
+  if (payload instanceof FormData) {
+    if (payload.has('branchCode')) payload.set('branchCode', branchCode);
+    if (payload.has('BranchCode')) payload.set('BranchCode', branchCode);
     return;
   }
 
@@ -75,8 +77,11 @@ function applyBranchCodeToPayload(payload: unknown, branchCode: string, visited 
 
   visited.add(target);
 
-  if (Object.prototype.hasOwnProperty.call(target, 'branchCode') && shouldReplaceBranchCode(target.branchCode)) {
+  if (Object.prototype.hasOwnProperty.call(target, 'branchCode')) {
     target.branchCode = branchCode;
+  }
+  if (Object.prototype.hasOwnProperty.call(target, 'BranchCode')) {
+    target.BranchCode = branchCode;
   }
 
   for (const value of Object.values(target)) {
@@ -243,10 +248,13 @@ api.interceptors.request.use((config) => {
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    const branch = useAuthStore.getState().branch;
-    if (branch?.code) {
-      config.headers['X-Branch-Code'] = branch.code;
-      applyBranchCodeToPayload(config.data, branch.code);
+    const branchCode = token ? getBranchCodeFromToken(token) : null;
+    if (branchCode) {
+      config.headers['X-Branch-Code'] = branchCode;
+      applyBranchCodeToPayload(config.data, branchCode);
+      if (config.params && typeof config.params === 'object') {
+        applyBranchCodeToPayload(config.params, branchCode);
+      }
     }
   }
 
@@ -299,9 +307,15 @@ api.interceptors.response.use(
         await refreshAccessToken();
         return api.request(error.config);
       } catch (refreshError) {
-        useAuthStore.getState().logout(false);
-        if (!isCurrentAppPath('/auth/login?sessionExpired=true')) {
-          window.location.href = resolveAppPath('/auth/login?sessionExpired=true');
+        if (isDefinitiveSessionRefreshError(refreshError)) {
+          useAuthStore.getState().logout(false);
+          if (!isCurrentAppPath('/auth/login?sessionExpired=true')) {
+            window.location.href = resolveAppPath('/auth/login?sessionExpired=true');
+          }
+        } else {
+          // Keep the HttpOnly session intact while IIS/API is restarting. init() moves the
+          // application to the recovery surface and retries without forcing a logout.
+          void useAuthStore.getState().init();
         }
         return Promise.reject(refreshError);
       }

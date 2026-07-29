@@ -5,6 +5,7 @@ interface JwtPayload {
   firstName: string;
   lastName: string;
   'http://schemas.microsoft.com/ws/2008/06/identity/claims/role': string;
+  branch_code?: string;
   exp: number;
   iss: string;
   aud: string;
@@ -26,6 +27,13 @@ export const decodeJwt = (token: string): JwtPayload | null => {
   }
 };
 
+export const getBranchCodeFromToken = (token: string): string | null => {
+  const branchCode = decodeJwt(token)?.branch_code;
+  if (typeof branchCode !== 'string') return null;
+  const normalized = branchCode.trim();
+  return normalized.length > 0 ? normalized : null;
+};
+
 export const getUserFromToken = (token: string): { id: number; email: string; name: string } | null => {
   const payload = decodeJwt(token);
   if (!payload) return null;
@@ -44,4 +52,3 @@ export const isTokenValid = (token: string, minimumValiditySeconds = 0): boolean
   const currentTime = Math.floor(Date.now() / 1000);
   return payload.exp > currentTime + minimumValiditySeconds;
 };
-
