@@ -9,6 +9,7 @@ interface ApiEnvelope<T> {
   data: T;
   message?: string;
 }
+export interface LocationImportResult { totalRows: number; createdRows: number; failedRows: number }
 
 function unwrap<T>(response: ApiEnvelope<T>): T {
   if (!response.success) throw new Error(response.message || 'Raf tanımları alınamadı.');
@@ -52,5 +53,12 @@ export const locationsApi = {
   },
   delete: async (id: number): Promise<void> => {
     unwrap(await api.delete<ApiEnvelope<boolean>>(`/api/locations/${id}`));
+  },
+  downloadImportTemplate: async (branchCode: string): Promise<Blob> =>
+    await api.get<Blob>(`/api/locations/import/template?branchCode=${encodeURIComponent(branchCode)}`, { responseType: 'blob' }),
+  importLocations: async (file: File, branchCode: string): Promise<LocationImportResult> => {
+    const form = new FormData();
+    form.append('file', file);
+    return unwrap(await api.post<ApiEnvelope<LocationImportResult>>(`/api/locations/import?branchCode=${encodeURIComponent(branchCode)}`, form));
   },
 };

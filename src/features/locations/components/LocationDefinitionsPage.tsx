@@ -1,8 +1,9 @@
 import { useCallback, useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Boxes, Loader2, MapPin, Pencil, Plus, Trash2 } from 'lucide-react';
+import { Boxes, FileSpreadsheet, Loader2, MapPin, Pencil, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdvancedDataGrid, type GridColumn } from '@/components/shared/AdvancedDataGrid';
+import { InitialExcelImportDialog } from '@/components/shared/InitialExcelImportDialog';
 import { AppDropdown } from '@/components/shared/AppDropdown';
 import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
 import { systemColumns } from '@/components/shared/GridSystemColumns';
@@ -11,6 +12,7 @@ import { OpsDialogBody, OpsDialogContent, OpsDialogFooter, OpsDialogHeader } fro
 import { Dialog, DialogTitle } from '@/components/ui/dialog';
 import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
+import { useAuthStore } from '@/stores/auth-store';
 import { locationsApi } from '../api/locations.api';
 import type { LocationLookupRow, LocationRow, LocationUpsertPayload, WarehouseOption } from '../types/location.types';
 import './location-definitions.css';
@@ -64,6 +66,7 @@ function fromRow(row: LocationRow): FormState {
 export function LocationDefinitionsPage() {
   const { t, moduleReady } = useModuleTranslation('locations');
   const queryClient = useQueryClient();
+  const branchCode = useAuthStore((state) => state.branch?.code ?? '0');
   const { can, isLoading: permissionsLoading, isError: permissionsFailed } = usePermissionAccess();
   const [mode, setMode] = useState<FormMode | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
@@ -73,6 +76,7 @@ export function LocationDefinitionsPage() {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<LocationRow | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
   const locationTypes = useMemo(
     () => moduleReady ? locationTypeValues.map((value) => [value, t(`types.${value}`)] as const) : [],
     [moduleReady, t],
@@ -172,7 +176,30 @@ export function LocationDefinitionsPage() {
   }
 
   return <>
-    <AdvancedDataGrid<LocationRow> pageKey="warehouse-location-definitions-v2" title={t('page.title')} description={t('page.description')} columns={columns} fetchPage={locationsApi.getPaged} toolbarAction={canCreate ? { label: t('page.newAction'), run: openCreate } : undefined}/>
+    <AdvancedDataGrid<LocationRow> pageKey="warehouse-location-definitions-v2" title={t('page.title')} description={t('page.description')} columns={columns} fetchPage={locationsApi.getPaged}
+      toolbarActions={canCreate ? [
+        { label: t('page.newAction'), run: openCreate },
+        { label: 'Excel ile İlk Raf Aktarımı', icon: <FileSpreadsheet className="size-4"/>, run: async () => setImportOpen(true) },
+      ] : undefined}/>
+
+    <InitialExcelImportDialog
+      open={importOpen}
+      title="Excel ile İlk Raf Tanımı Aktarımı"
+      description="Raf hiyerarşisini tek dosyada, create-only güvenli aktarım ile oluşturun."
+      warning="Mevcut raflar güncellenmez veya silinmez. Aynı depo/raf kodu varsa aktarımın tamamı durdurulur."
+      templateFileName="wms-v2-raf-ilk-aktarim-sablonu.xlsx"
+      limitText="En fazla 5 MB ve 1.000 raf satırı"
+      submitLabel="Rafları oluştur"
+      onOpenChange={setImportOpen}
+      downloadTemplate={() => locationsApi.downloadImportTemplate(branchCode)}
+      importFile={(file) => locationsApi.importLocations(file, branchCode)}
+      summarize={(result) => [
+        { label: 'Toplam', value: result.totalRows },
+        { label: 'Oluşturuldu', value: result.createdRows },
+        { label: 'Başarısız', value: result.failedRows },
+      ]}
+      onImported={async () => queryClient.invalidateQueries({ queryKey: ['advanced-grid', 'warehouse-location-definitions-v2'] })}
+    />
 
     {mode && (
       <Dialog open onOpenChange={(open) => { if (!open && !saving) setMode(null); }}>
