@@ -1,6 +1,7 @@
-import { useCallback, useMemo, useState, type ReactElement } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactElement, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, Loader2, ShieldCheck } from "lucide-react";
+import { ChevronDown, ClipboardPen, Loader2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import {
   AdvancedDataGrid,
@@ -9,7 +10,17 @@ import {
 } from "@/components/shared/AdvancedDataGrid";
 import { requiredActionColumn } from "@/components/shared/GridSystemColumns";
 import { AppDropdown } from "@/components/shared/AppDropdown";
-import { OpsStatusBadge, inferOpsStatusTone } from "@/components/shared/OpsStatusBadge";
+import { AppInput } from "@/components/shared/AppInput";
+import { OpsActionButton } from "@/components/shared/OpsActionButton";
+import {
+  OpsStatusBadge,
+  inferDocumentTypeTone,
+  inferOpsStatusTone,
+} from "@/components/shared/OpsStatusBadge";
+import { OpsSkinCheckbox } from "@/components/shared/OpsSkinCheckbox";
+import { OpsFieldShell } from "@/components/shared/OpsFieldShell";
+import { OPS_FIELD_CLASS } from "@/components/shared/ops-field-styles";
+import { cn } from "@/lib/utils";
 import { localizeEnumValue } from "@/lib/enum-localization";
 import {
   formatProjectDate,
@@ -22,6 +33,26 @@ import {
   type QualityInspectionDetail,
   type QualityInspectionLine,
 } from "../api/quality.api";
+
+const ACTIONABLE_DECISIONS = new Set(["Pending", "Hold", "Quarantined"]);
+
+type LineDraft = {
+  decision: string;
+  reasonCode: string;
+  reasonNote: string;
+};
+
+function isActionableLine(line: QualityInspectionLine): boolean {
+  return ACTIONABLE_DECISIONS.has(line.decision);
+}
+
+function emptyDraft(defaultDecision = ""): LineDraft {
+  return { decision: defaultDecision, reasonCode: "", reasonNote: "" };
+}
+
+function message(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
+}
 
 export function QualityInspectionsPage({
   quarantineOnly = false,
@@ -111,10 +142,17 @@ export function QualityInspectionsPage({
         label: "Evrak Tipi",
         sortable: true,
         filterable: true,
-        render: (r) =>
-          localizeEnumValue(
-            r.sourceDocumentType === "GR" ? "GoodsReceipt" : r.sourceDocumentType,
-          ),
+        render: (r) => {
+          const typeKey =
+            r.sourceDocumentType === "GR" ? "GoodsReceipt" : r.sourceDocumentType;
+          return (
+            <div className="flex justify-center">
+              <OpsStatusBadge tone={inferDocumentTypeTone(typeKey)}>
+                {localizeEnumValue(typeKey)}
+              </OpsStatusBadge>
+            </div>
+          );
+        },
       },
       {
         key: "createdByName",
@@ -140,9 +178,11 @@ export function QualityInspectionsPage({
         sortable: true,
         filterable: true,
         render: (r) => (
-          <OpsStatusBadge tone={inferOpsStatusTone(r.status)}>
-            {localizeEnumValue(r.status)}
-          </OpsStatusBadge>
+          <div className="flex justify-center">
+            <OpsStatusBadge tone={inferOpsStatusTone(r.status)}>
+              {localizeEnumValue(r.status)}
+            </OpsStatusBadge>
+          </div>
         ),
       },
       {
@@ -245,104 +285,178 @@ function InspectionDetailPanel({
   close: () => void;
   decided: () => void;
 }): ReactElement {
-  const eligible = detail.lines.filter((x) =>
-    ["Pending", "Hold", "Quarantined"].includes(x.decision),
+  const actionable = useMemo(
+    () => detail.lines.filter(isActionableLine),
+    [detail.lines],
   );
-  const [selected, setSelected] = useState<number[]>(eligible.map((x) => x.id));
-  const [decision, setDecision] = useState("Split");
-  const [allocations, setAllocations] = useState<Record<number, {
-    acceptedQuantity: number;
-    rejectedQuantity: number;
-    quarantineQuantity: number;
-  }>>(() => Object.fromEntries(eligible.map((line) => [
-    line.id,
-    {
-      acceptedQuantity: actionableQuantity(line),
-      rejectedQuantity: 0,
-      quarantineQuantity: 0,
-    },
-  ])));
-  const [reasonCode, setReasonCode] = useState("");
-  const [note, setNote] = useState(detail.note ?? "");
-  const [saving, setSaving] = useState(false);
-  const final =
-    ["Passed", "Failed", "Released", "Cancelled"].includes(
-      detail.header.status,
-    ) && eligible.length === 0;
+  const passive = useMemo(
+    () => detail.lines.filter((line) => !isActionableLine(line)),
+    [detail.lines],
+  );
+  const orderedLines = useMemo(
+    () => [...actionable, ...passive],
+    [actionable, passive],
+  );
+
   const options =
     detail.header.status === "Quarantined"
       ? [
-          { value: "Split", label: "Miktarı Onay / Karantina / Ret Olarak Böl" },
           { value: "Accepted", label: "Serbest Bırak / Kabul" },
           { value: "Rejected", label: "Reddet" },
           { value: "Returned", label: "Tedarikçiye İade" },
         ]
       : [
-          { value: "Split", label: "Miktarı Onay / Karantina / Ret Olarak Böl" },
           { value: "Accepted", label: "Kabul" },
           { value: "Quarantined", label: "Karantinaya Al" },
           { value: "Rejected", label: "Reddet" },
           { value: "Returned", label: "Tedarikçiye İade" },
         ];
+
+  const defaultDecision = "Accepted";
+
+  const [selected, setSelected] = useState<number[]>(() =>
+    actionable.map((line) => line.id),
+  );
+  const [drafts, setDrafts] = useState<Record<number, LineDraft>>(() =>
+    Object.fromEntries(
+      actionable.map((line) => [line.id, emptyDraft(defaultDecision)]),
+    ),
+  );
+  const [bulkDecision, setBulkDecision] = useState(defaultDecision);
+  const [bulkReasonCode, setBulkReasonCode] = useState("");
+  const [bulkReasonNote, setBulkReasonNote] = useState("");
+  const [headerNote, setHeaderNote] = useState(detail.note ?? "");
+  const [saving, setSaving] = useState(false);
+  const [openLineId, setOpenLineId] = useState<number | null>(null);
+
+  const final =
+    ["Passed", "Failed", "Released", "Cancelled"].includes(
+      detail.header.status,
+    ) && actionable.length === 0;
+
+  const decidedCount = actionable.filter((line) =>
+    Boolean(drafts[line.id]?.decision),
+  ).length;
+  const allSelected =
+    actionable.length > 0 && selected.length === actionable.length;
+  const someSelected = selected.length > 0 && !allSelected;
+
   const toggle = (id: number) =>
     setSelected((value) =>
       value.includes(id) ? value.filter((x) => x !== id) : [...value, id],
     );
-  const updateAllocation = (
-    lineId: number,
-    field: "acceptedQuantity" | "rejectedQuantity" | "quarantineQuantity",
-    value: string,
-  ) => setAllocations((current) => ({
-    ...current,
-    [lineId]: {
-      ...current[lineId],
-      [field]: Math.max(0, Number(value) || 0),
-    },
-  }));
+
+  const selectAll = () => setSelected(actionable.map((line) => line.id));
+  const clearSelection = () => setSelected([]);
+
+  const patchDraft = (id: number, patch: Partial<LineDraft>) =>
+    setDrafts((current) => ({
+      ...current,
+      [id]: { ...(current[id] ?? emptyDraft(defaultDecision)), ...patch },
+    }));
+
+  const applyBulkToSelected = () => {
+    if (!bulkDecision) {
+      toast.error("Toplu karar seçin.");
+      return;
+    }
+    if (selected.length === 0) {
+      toast.error("Önce en az bir kontrole tabi satır seçin.");
+      return;
+    }
+    if (bulkDecision !== "Accepted" && !bulkReasonCode.trim()) {
+      toast.error("Ret, karantina ve iade için karar kodu zorunludur.");
+      return;
+    }
+    setDrafts((current) => {
+      const next = { ...current };
+      for (const id of selected) {
+        next[id] = {
+          decision: bulkDecision,
+          reasonCode: bulkDecision === "Accepted" ? "" : bulkReasonCode.trim(),
+          reasonNote: bulkReasonNote.trim(),
+        };
+      }
+      return next;
+    });
+    toast.success(
+      `${selected.length} satıra “${options.find((o) => o.value === bulkDecision)?.label ?? bulkDecision}” uygulandı.`,
+    );
+  };
+
   const save = async () => {
-    if (!decision || selected.length === 0) {
-      toast.error("Karar ve en az bir kalite satırı seçin.");
+    const pending = actionable
+      .map((line) => {
+        const draft = drafts[line.id] ?? emptyDraft();
+        return { id: line.id, ...draft };
+      })
+      .filter((row) => row.decision);
+
+    if (pending.length === 0) {
+      toast.error("En az bir satır için karar seçin.");
       return;
     }
-    if (!detail.allowPartialDecision && selected.length !== eligible.length) {
-      toast.error("Bu şubede kısmi kalite kararı kapalıdır.");
+    if (!detail.allowPartialDecision && pending.length !== actionable.length) {
+      toast.error(
+        "Bu şubede kısmi kalite kararı kapalıdır. Tüm kontrole tabi satırlara karar verin.",
+      );
       return;
     }
-    const quantityDecisions = decision === "Split"
-      ? selected.map((lineId) => ({ lineId, ...allocations[lineId] }))
-      : undefined;
-    if (quantityDecisions) {
-      for (const allocation of quantityDecisions) {
-        const line = eligible.find((item) => item.id === allocation.lineId)!;
-        const total = allocation.acceptedQuantity
-          + allocation.rejectedQuantity
-          + allocation.quarantineQuantity;
-        if (Math.abs(total - actionableQuantity(line)) > 0.000001) {
-          toast.error(
-            `${line.stockCode}: Onay, karantina ve ret toplamı ${formatProjectNumber(actionableQuantity(line))} olmalıdır.`,
-          );
-          return;
-        }
+    for (const row of pending) {
+      if (row.decision !== "Accepted" && !row.reasonCode.trim()) {
+        toast.error(
+          "Ret, karantina ve iade kararlarında her satır için karar kodu zorunludur.",
+        );
+        return;
       }
     }
-    const hasNonAcceptedOutcome = quantityDecisions
-      ? quantityDecisions.some((x) => x.rejectedQuantity > 0 || x.quarantineQuantity > 0)
-      : decision !== "Accepted";
-    if (hasNonAcceptedOutcome && !reasonCode.trim()) {
-      toast.error("Ret, karantina ve iade kararlarında neden kodu zorunludur.");
-      return;
+
+    const groups = new Map<
+      string,
+      { decision: string; reasonCode: string; lineIds: number[] }
+    >();
+    for (const row of pending) {
+      const key = `${row.decision}::${row.reasonCode.trim()}`;
+      const existing = groups.get(key);
+      if (existing) existing.lineIds.push(row.id);
+      else {
+        groups.set(key, {
+          decision: row.decision,
+          reasonCode: row.reasonCode.trim(),
+          lineIds: [row.id],
+        });
+      }
     }
+
     setSaving(true);
     try {
-      await qualityApi.decide(detail.header.id, {
-        idempotencyKey: crypto.randomUUID(),
-        decision: decision === "Split" ? "Accepted" : decision,
-        note: note.trim() || undefined,
-        reasonCode: reasonCode.trim() || undefined,
-        lineIds: selected,
-        rowVersion: detail.rowVersion,
-        quantityDecisions,
-      });
+      let rowVersion = detail.rowVersion;
+      const entries = [...groups.values()];
+      for (const group of entries) {
+        const notes = pending
+          .filter(
+            (row) => group.lineIds.includes(row.id) && row.reasonNote.trim(),
+          )
+          .map((row) => row.reasonNote.trim());
+        const combinedNote = [headerNote.trim(), ...notes]
+          .filter(Boolean)
+          .join(" · ");
+        await qualityApi.decide(detail.header.id, {
+          idempotencyKey: crypto.randomUUID(),
+          decision: group.decision,
+          note: combinedNote || undefined,
+          reasonCode:
+            group.decision === "Accepted"
+              ? undefined
+              : group.reasonCode || undefined,
+          lineIds: group.lineIds,
+          rowVersion,
+        });
+        if (entries.length > 1) {
+          const fresh = await qualityApi.inspection(detail.header.id);
+          rowVersion = fresh.rowVersion;
+        }
+      }
       toast.success("Kalite kararı ve stok hareketi kaydedildi.");
       decided();
     } catch (error) {
@@ -351,71 +465,90 @@ function InspectionDetailPanel({
       setSaving(false);
     }
   };
+
+  const docTypeKey =
+    detail.header.sourceDocumentType === "GR"
+      ? "GoodsReceipt"
+      : detail.header.sourceDocumentType;
+
   return (
-    <div className="space-y-4 rounded-2xl border-l-4 border-l-cyan-500 border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-4 shadow-sm">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-cyan-500">
-            Accordion · satır detayı
+    <div className="wms-ops-quality-detail space-y-3 rounded-2xl bg-[var(--wms-app-panel)] p-3.5">
+      <div className="wms-ops-quality-detail__head">
+        <div className="wms-ops-quality-detail__identity min-w-0">
+          <p className="text-[0.6rem] font-semibold uppercase tracking-[0.16em] text-[var(--wms-brand-primary)]">
+            Kalite satır detayı
           </p>
-          <h3 className="text-lg font-bold">{detail.header.inspectionNo}</h3>
-          <p className="text-sm text-slate-500">
+          <div className="mt-0.5 flex flex-wrap items-center gap-2">
+            <h3 className="text-base font-bold tracking-tight">
+              {detail.header.inspectionNo}
+            </h3>
+            <OpsStatusBadge
+              tone={inferOpsStatusTone(detail.header.status)}
+              className="wms-ops-quality-detail__badge"
+            >
+              {localizeEnumValue(detail.header.status)}
+            </OpsStatusBadge>
+            <OpsStatusBadge
+              tone={inferDocumentTypeTone(docTypeKey)}
+              className="wms-ops-quality-detail__badge"
+            >
+              {localizeEnumValue(docTypeKey)}
+            </OpsStatusBadge>
+          </div>
+          <p className="text-xs text-slate-500">
             {detail.header.sourceDocumentNo} · {detail.header.warehouseCode}{" "}
             {detail.header.warehouseName}
           </p>
         </div>
+
+        <div className="wms-ops-quality-detail__meta">
+          <MetaChip
+            label="İrsaliye"
+            value={detail.header.sourceWaybillNo || "—"}
+            mono
+          />
+          <MetaChip
+            label="İşlemi yapan"
+            value={
+              detail.header.createdByName ||
+              `Kullanıcı #${detail.header.createdBy ?? "—"}`
+            }
+          />
+          <MetaChip
+            label="Oluşturma"
+            value={formatProjectDateTime(detail.header.createdAtUtc)}
+          />
+          <MetaChip
+            label="Kaliteye gönderilme"
+            value={formatProjectDateTime(
+              detail.header.queuedAtUtc ?? detail.header.createdAtUtc,
+            )}
+          />
+          <MetaChip
+            label="Onay tarihi"
+            value={
+              detail.header.decidedAtUtc
+                ? formatProjectDateTime(detail.header.decidedAtUtc)
+                : "—"
+            }
+          />
+          <MetaChip
+            label="Toplam"
+            value={formatProjectNumber(detail.header.totalQuantity)}
+            mono
+            accent
+          />
+        </div>
+
         <button
           type="button"
           onClick={close}
-          className="rounded-lg border border-[var(--wms-app-border)] px-3 py-1.5 text-xs font-semibold"
+          className="wms-ops-quality-detail__close shrink-0 rounded-lg border border-[var(--wms-app-border)] px-2.5 py-1 text-[0.65rem] font-semibold"
         >
           Kapat
         </button>
       </div>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Info label="Durum" value={localizeEnumValue(detail.header.status)} />
-        <Info
-          label="Evrak Tipi"
-          value={localizeEnumValue(
-            detail.header.sourceDocumentType === "GR"
-              ? "GoodsReceipt"
-              : detail.header.sourceDocumentType,
-          )}
-        />
-        <Info
-          label="İrsaliye"
-          value={detail.header.sourceWaybillNo || "—"}
-        />
-        <Info
-          label="İşlemi Yapan"
-          value={
-            detail.header.createdByName ||
-            `Kullanıcı #${detail.header.createdBy ?? "—"}`
-          }
-        />
-        <Info
-          label="Oluşturma"
-          value={formatProjectDateTime(detail.header.createdAtUtc)}
-        />
-        <Info
-          label="Kaliteye Gönderilme"
-          value={formatProjectDateTime(
-            detail.header.queuedAtUtc ?? detail.header.createdAtUtc,
-          )}
-        />
-        <Info
-          label="Kalite Onay Tarihi"
-          value={
-            detail.header.decidedAtUtc
-              ? formatProjectDateTime(detail.header.decidedAtUtc)
-              : "—"
-          }
-        />
-        <Info
-          label="Toplam"
-          value={formatProjectNumber(detail.header.totalQuantity)}
-        />
-      </div>
+
       {detail.requireManagerApprovalForRelease &&
         detail.header.status === "Quarantined" && (
           <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-600">
@@ -423,201 +556,456 @@ function InspectionDetailPanel({
             gerektirir.
           </div>
         )}
-      <div className="overflow-x-auto rounded-xl border border-[var(--wms-app-border)]">
-        <table className="w-full text-sm">
-          <thead className="bg-black/5 text-left dark:bg-white/5">
-            <tr>
-              <th className="p-3">Seç</th>
-              <th className="p-3">Stok</th>
-              <th className="p-3">Lot / Seri</th>
-              <th className="p-3">SKT</th>
-              <th className="p-3 text-right">Miktar</th>
-              <th className="p-3 text-right">Numune</th>
-              <th className="p-3 text-right">Onay</th>
-              <th className="p-3 text-right">Karantina</th>
-              <th className="p-3 text-right">Ret</th>
-              <th className="p-3">Karar</th>
+
+      {!final && actionable.length > 0 && (
+        <section className="wms-ops-quality-bulk">
+          <div className="wms-ops-quality-bulk__top">
+            <p className="wms-ops-quality-bulk__title">Seçilenlere karar</p>
+            <span className="wms-ops-quality-bulk__count">
+              {selected.length}/{actionable.length} seçili · {decidedCount}{" "}
+              satırda karar
+            </span>
+            <div className="wms-ops-quality-bulk__selects">
+              <OpsActionButton
+                type="button"
+                variant="secondary"
+                onClick={selectAll}
+                className="wms-ops-quality-decide-btn wms-ops-quality-bulk__btn"
+              >
+                Tümünü seç
+              </OpsActionButton>
+              <OpsActionButton
+                type="button"
+                variant="secondary"
+                onClick={clearSelection}
+                disabled={selected.length === 0}
+                className="wms-ops-quality-decide-btn wms-ops-quality-bulk__btn"
+              >
+                Seçimi kaldır
+              </OpsActionButton>
+            </div>
+          </div>
+          <div className="wms-ops-quality-bulk__fields">
+            <label className="wms-ops-quality-bulk__field">
+              <span>Karar</span>
+              <AppDropdown
+                value={bulkDecision || null}
+                onValueChange={setBulkDecision}
+                options={options}
+                placeholder="Karar seçin"
+                className="wms-ops-quality-field wms-ops-quality-bulk__control"
+                portalContainer={null}
+              />
+            </label>
+            <label className="wms-ops-quality-bulk__field">
+              <span>Karar kodu</span>
+              <AppInput
+                value={bulkReasonCode}
+                onChange={(e) => setBulkReasonCode(e.target.value)}
+                placeholder="Ret / karantina / iade"
+                className="wms-ops-quality-field wms-ops-quality-bulk__control"
+              />
+            </label>
+            <label className="wms-ops-quality-bulk__field">
+              <span>Neden</span>
+              <AppInput
+                value={bulkReasonNote}
+                onChange={(e) => setBulkReasonNote(e.target.value)}
+                placeholder="Kısa neden"
+                className="wms-ops-quality-field wms-ops-quality-bulk__control"
+              />
+            </label>
+            <OpsActionButton
+              type="button"
+              variant="secondary"
+              onClick={applyBulkToSelected}
+              className="wms-ops-quality-decide-btn wms-ops-quality-bulk__apply"
+            >
+              Uygula
+            </OpsActionButton>
+          </div>
+        </section>
+      )}
+
+      <div className="wms-ops-quality-lines overflow-x-auto rounded-xl border border-[var(--wms-app-border)]">
+        <table className="w-full border-collapse text-sm">
+          <thead>
+            <tr className="bg-[color-mix(in_oklab,var(--wms-brand-primary)_8%,transparent)] text-left">
+              <th className="wms-ops-quality-lines__cell w-12 p-2.5">
+                {!final && actionable.length > 0 ? (
+                  <OpsSkinCheckbox
+                    checked={allSelected}
+                    indeterminate={someSelected}
+                    onCheckedChange={(next) =>
+                      next ? selectAll() : clearSelection()
+                    }
+                    aria-label="Tüm kontrole tabi satırları seç"
+                  />
+                ) : null}
+              </th>
+              <th className="wms-ops-quality-lines__cell p-2.5 text-[0.65rem] font-semibold uppercase tracking-wider">
+                Stok
+              </th>
+              <th className="wms-ops-quality-lines__cell p-2.5 text-[0.65rem] font-semibold uppercase tracking-wider">
+                Lot / Seri
+              </th>
+              <th className="wms-ops-quality-lines__cell p-2.5 text-[0.65rem] font-semibold uppercase tracking-wider">
+                SKT
+              </th>
+              <th className="wms-ops-quality-lines__cell p-2.5 text-right text-[0.65rem] font-semibold uppercase tracking-wider">
+                Miktar
+              </th>
+              <th className="wms-ops-quality-lines__cell p-2.5 text-right text-[0.65rem] font-semibold uppercase tracking-wider">
+                Numune
+              </th>
+              <th className="wms-ops-quality-lines__cell p-2.5 text-[0.65rem] font-semibold uppercase tracking-wider">
+                Durum
+              </th>
+              <th className="wms-ops-quality-lines__cell p-2.5 text-[0.65rem] font-semibold uppercase tracking-wider">
+                Karar
+              </th>
+              <th className="wms-ops-quality-lines__cell w-28 p-2.5 text-center text-[0.65rem] font-semibold uppercase tracking-wider">
+                İşlemler
+              </th>
             </tr>
           </thead>
           <tbody>
-            {detail.lines.map((line) => (
-              <tr
-                key={line.id}
-                className="border-t border-[var(--wms-app-border)]"
-              >
-                <td className="p-3">
-                  <input
-                    type="checkbox"
-                    disabled={!eligible.some((x) => x.id === line.id)}
-                    checked={selected.includes(line.id)}
-                    onChange={() => toggle(line.id)}
-                  />
-                </td>
-                <td className="p-3">
-                  <strong>{line.stockCode}</strong>
-                  <div className="text-xs text-slate-500">{line.stockName}</div>
-                </td>
-                <td className="p-3 font-mono text-xs">
-                  {line.lotNo || "—"} / {line.serialNo || "—"}
-                </td>
-                <td className="p-3">
-                  {line.expiryDate ? formatProjectDate(line.expiryDate) : "—"}
-                </td>
-                <td className="p-3 text-right font-mono">
-                  {formatProjectNumber(line.quantity)}
-                </td>
-                <td className="p-3 text-right font-mono">
-                  {formatProjectNumber(line.sampleQuantity)}
-                </td>
-                {decision === "Split" && eligible.some((x) => x.id === line.id) ? (
-                  <>
-                    <QuantityInput
-                      value={allocations[line.id]?.acceptedQuantity ?? 0}
-                      disabled={!selected.includes(line.id)}
-                      onChange={(value) => updateAllocation(line.id, "acceptedQuantity", value)}
-                    />
-                    <QuantityInput
-                      value={allocations[line.id]?.quarantineQuantity ?? 0}
-                      disabled={!selected.includes(line.id)}
-                      onChange={(value) => updateAllocation(line.id, "quarantineQuantity", value)}
-                    />
-                    <QuantityInput
-                      value={allocations[line.id]?.rejectedQuantity ?? 0}
-                      disabled={!selected.includes(line.id)}
-                      onChange={(value) => updateAllocation(line.id, "rejectedQuantity", value)}
-                    />
-                  </>
-                ) : (
-                  <>
-                    <OutcomeQuantity value={line.acceptedQuantity} />
-                    <OutcomeQuantity value={line.quarantineQuantity} />
-                    <OutcomeQuantity value={line.rejectedQuantity} />
-                  </>
-                )}
-                <td className="p-3">{localizeEnumValue(line.decision)}</td>
-              </tr>
-            ))}
+            {orderedLines.map((line) => {
+              const active = isActionableLine(line);
+              const draft = drafts[line.id];
+              return (
+                <tr
+                  key={line.id}
+                  className={cn(
+                    active
+                      ? "bg-[color-mix(in_oklab,var(--wms-brand-primary)_6%,transparent)]"
+                      : "opacity-60",
+                  )}
+                >
+                  <td className="wms-ops-quality-lines__cell p-2.5 align-middle">
+                    {active ? (
+                      <OpsSkinCheckbox
+                        checked={selected.includes(line.id)}
+                        onCheckedChange={() => toggle(line.id)}
+                        aria-label={`${line.stockCode} satırını seç`}
+                      />
+                    ) : (
+                      <span className="text-xs text-slate-400">—</span>
+                    )}
+                  </td>
+                  <td className="wms-ops-quality-lines__cell p-2.5 align-middle">
+                    <strong className="block text-[0.8125rem] leading-tight">
+                      {line.stockCode}
+                    </strong>
+                    <span className="block truncate text-xs text-slate-500">
+                      {line.stockName}
+                    </span>
+                  </td>
+                  <td className="wms-ops-quality-lines__cell p-2.5 align-middle font-mono text-xs">
+                    {line.lotNo || "—"} / {line.serialNo || "—"}
+                  </td>
+                  <td className="wms-ops-quality-lines__cell p-2.5 align-middle">
+                    {line.expiryDate ? formatProjectDate(line.expiryDate) : "—"}
+                  </td>
+                  <td className="wms-ops-quality-lines__cell p-2.5 align-middle text-right font-mono">
+                    {formatProjectNumber(line.quantity)}
+                  </td>
+                  <td className="wms-ops-quality-lines__cell p-2.5 align-middle text-right font-mono">
+                    {formatProjectNumber(line.sampleQuantity)}
+                  </td>
+                  <td className="wms-ops-quality-lines__cell p-2.5 align-middle">
+                    {active ? (
+                      <OpsStatusBadge tone="pending">Kontrole tabi</OpsStatusBadge>
+                    ) : (
+                      <OpsStatusBadge tone="neutral">
+                        Kontrole tabi değil
+                      </OpsStatusBadge>
+                    )}
+                  </td>
+                  <td className="wms-ops-quality-lines__cell p-2.5 align-middle">
+                    {active ? (
+                      draft?.decision ? (
+                        <div className="space-y-1">
+                          <OpsStatusBadge
+                            tone={inferOpsStatusTone(draft.decision)}
+                          >
+                            {localizeEnumValue(draft.decision)}
+                          </OpsStatusBadge>
+                          {draft.reasonCode ? (
+                            <div className="font-mono text-[0.65rem] text-slate-500">
+                              {draft.reasonCode}
+                            </div>
+                          ) : null}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-slate-400">Bekliyor</span>
+                      )
+                    ) : (
+                      <OpsStatusBadge tone={inferOpsStatusTone(line.decision)}>
+                        {localizeEnumValue(line.decision)}
+                      </OpsStatusBadge>
+                    )}
+                  </td>
+                  <td className="wms-ops-quality-lines__cell p-2.5 align-middle text-center">
+                    {active && !final ? (
+                      <LineDecisionPopover
+                        open={openLineId === line.id}
+                        onOpenChange={(open) =>
+                          setOpenLineId(open ? line.id : null)
+                        }
+                        options={options}
+                        draft={draft ?? emptyDraft()}
+                        onChange={(patch) => patchDraft(line.id, patch)}
+                      />
+                    ) : (
+                      <span className="text-xs text-slate-400">—</span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
-      {!final && (
-        <section className="grid gap-3 rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-4 md:grid-cols-2">
-          <label className="space-y-1.5 text-sm">
-            <span className="font-semibold">Karar</span>
-            <AppDropdown
-              value={decision || null}
-              onValueChange={setDecision}
-              options={options}
-              placeholder="Karar seçin"
-            />
-            {decision === "Split" && (
-              <small className="block text-slate-500">
-                Her satırda onay, karantina ve ret toplamı karar bekleyen miktara eşit olmalıdır.
-              </small>
-            )}
-          </label>
-          <label className="space-y-1.5 text-sm">
-            <span className="font-semibold">Neden kodu</span>
-            <input
-              className="input"
-              value={reasonCode}
-              onChange={(e) => setReasonCode(e.target.value)}
-              placeholder="Ret / karantina / iade için"
-            />
-          </label>
-          <label className="space-y-1.5 text-sm md:col-span-2">
-            <span className="font-semibold">Not</span>
-            <textarea
-              className="input min-h-20"
-              maxLength={1000}
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-            />
-          </label>
-          <div className="flex items-center justify-between gap-3 md:col-span-2">
-            <span className="text-xs text-slate-500">
-              {selected.length}/{eligible.length} bekleyen satır seçili{" "}
-              {detail.allowPartialDecision
-                ? "· Kısmi karar açık"
-                : "· Tüm satırlar zorunlu"}
+
+      {!final && actionable.length > 0 && (
+        <section className="flex flex-col gap-3 rounded-xl border border-[color-mix(in_oklab,var(--wms-brand-primary)_22%,var(--wms-app-border))] bg-[color-mix(in_oklab,var(--wms-brand-primary)_5%,transparent)] p-4 sm:flex-row sm:items-end sm:justify-between">
+          <label className="min-w-0 flex-1 space-y-1.5 text-sm">
+            <span className="text-xs font-semibold text-slate-500">
+              Genel not
             </span>
-            <button
-              type="button"
-              disabled={saving || !decision || selected.length === 0}
-              onClick={() => void save()}
-              className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-5 py-2.5 font-semibold text-white disabled:opacity-40"
-            >
-              {saving ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <ShieldCheck className="size-4" />
-              )}
-              Kararı Uygula
-            </button>
-          </div>
+            <AppInput
+              value={headerNote}
+              onChange={(e) => setHeaderNote(e.target.value)}
+              placeholder="Opsiyonel genel not"
+              className="wms-ops-quality-field h-8 text-xs"
+            />
+            <span className="block text-xs text-slate-500">
+              {decidedCount}/{actionable.length} kontrole tabi satırda karar
+              hazır
+              {detail.allowPartialDecision
+                ? " · Kısmi karar açık"
+                : " · Tüm satırlar zorunlu"}
+            </span>
+          </label>
+          <OpsActionButton
+            type="button"
+            disabled={saving || decidedCount === 0}
+            onClick={() => void save()}
+            className="wms-ops-quality-decide-btn shrink-0 !min-h-8 !px-4 !text-[0.65rem]"
+          >
+            {saving ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <ShieldCheck className="size-4" />
+            )}
+            Kararları Kaydet
+          </OpsActionButton>
         </section>
       )}
     </div>
   );
 }
 
-function Info({
+function LineDecisionPopover({
+  open,
+  onOpenChange,
+  options,
+  draft,
+  onChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  options: Array<{ value: string; label: string }>;
+  draft: LineDraft;
+  onChange: (patch: Partial<LineDraft>) => void;
+}): ReactElement {
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [coords, setCoords] = useState<{ top: number; left: number } | null>(
+    null,
+  );
+
+  const updatePosition = useCallback(() => {
+    const trigger = triggerRef.current;
+    if (!trigger) return;
+    const rect = trigger.getBoundingClientRect();
+    const panelWidth = 288;
+    const estimatedHeight = panelRef.current?.offsetHeight || 300;
+    const gap = 6;
+    const left = Math.min(
+      Math.max(8, rect.right - panelWidth),
+      window.innerWidth - panelWidth - 8,
+    );
+    // Always open above the trigger so it stays over the table, not outside below.
+    const top = Math.max(8, rect.top - estimatedHeight - gap);
+    setCoords({ top, left });
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!open) {
+      setCoords(null);
+      return;
+    }
+    updatePosition();
+    // Remeasure after paint (real panel height).
+    const frame = window.requestAnimationFrame(() => updatePosition());
+    const onScrollOrResize = () => updatePosition();
+    window.addEventListener("resize", onScrollOrResize);
+    window.addEventListener("scroll", onScrollOrResize, true);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("resize", onScrollOrResize);
+      window.removeEventListener("scroll", onScrollOrResize, true);
+    };
+  }, [open, updatePosition]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (!target) return;
+      if (
+        triggerRef.current?.contains(target) ||
+        panelRef.current?.contains(target) ||
+        target.closest(
+          '.wms-ops-list-select-content, .wms-floating-surface, [data-radix-popper-content-wrapper], [role="listbox"]',
+        )
+      ) {
+        return;
+      }
+      onOpenChange(false);
+    };
+    const timer = window.setTimeout(() => {
+      document.addEventListener("pointerdown", onPointerDown);
+    }, 0);
+    return () => {
+      window.clearTimeout(timer);
+      document.removeEventListener("pointerdown", onPointerDown);
+    };
+  }, [open, onOpenChange]);
+
+  return (
+    <>
+      <OpsActionButton
+        ref={triggerRef}
+        type="button"
+        variant="secondary"
+        title="Karar vermek için tıklayın"
+        aria-expanded={open}
+        onClick={(event) => {
+          event.stopPropagation();
+          onOpenChange(!open);
+        }}
+        className={cn(
+          "wms-ops-quality-decide-btn inline-flex !min-h-9 !flex-row !items-center !justify-center !gap-1.5 !whitespace-nowrap !px-2.5 !text-xs",
+          draft.decision && "wms-ops-list-toolbar-btn--active",
+        )}
+      >
+        <ClipboardPen className="size-3.5 shrink-0" aria-hidden />
+        <span>{draft.decision ? "Düzenle" : "Karar ver"}</span>
+      </OpsActionButton>
+
+      {open && coords
+        ? createPortal(
+            <div
+              ref={panelRef}
+              role="dialog"
+              aria-label="Satır kararı"
+              style={{ top: coords.top, left: coords.left }}
+              className="wms-ops-quality-decision-popover wms-ops-list-popover fixed z-[5000] max-h-[min(22rem,calc(100vh-1rem))] w-72 space-y-2.5 overflow-y-auto border-0 p-3 shadow-none outline-none"
+            >
+              <div className="wms-ops-list-popover__section-title">
+                Satır kararı
+              </div>
+              <label className="block space-y-1 text-sm">
+                <span className="text-xs font-semibold text-slate-500">
+                  Karar
+                </span>
+                <AppDropdown
+                  value={draft.decision || null}
+                  onValueChange={(value) => onChange({ decision: value })}
+                  options={options}
+                  placeholder="Karar seçin"
+                  className="wms-ops-quality-field !h-10 !min-h-10 !text-sm"
+                  portalContainer={null}
+                  contentClassName="!z-[5100]"
+                />
+              </label>
+              <label className="block space-y-1 text-sm">
+                <span className="text-xs font-semibold text-slate-500">
+                  Karar kodu
+                </span>
+                <AppInput
+                  value={draft.reasonCode}
+                  onChange={(e) => onChange({ reasonCode: e.target.value })}
+                  placeholder="Ret / karantina / iade"
+                  className="wms-ops-quality-field h-10 text-sm"
+                />
+              </label>
+              <label className="block space-y-1 text-sm">
+                <span className="text-xs font-semibold text-slate-500">
+                  Neden
+                </span>
+                <OpsFieldShell className="wms-ops-quality-field-shell">
+                  <textarea
+                    className={cn(
+                      OPS_FIELD_CLASS,
+                      "wms-ops-quality-field min-h-16 w-full resize-y border px-3 py-2 text-sm outline-none",
+                    )}
+                    value={draft.reasonNote}
+                    onChange={(e) => onChange({ reasonNote: e.target.value })}
+                    placeholder="Açıklama (opsiyonel)"
+                    maxLength={500}
+                  />
+                </OpsFieldShell>
+              </label>
+              <OpsActionButton
+                type="button"
+                onClick={() => onOpenChange(false)}
+                className="wms-ops-quality-decide-btn w-full !min-h-9 !text-xs"
+              >
+                Tamam
+              </OpsActionButton>
+            </div>,
+            document.body,
+          )
+        : null}
+    </>
+  );
+}
+
+function MetaChip({
   label,
   value,
+  mono,
+  accent,
 }: {
   label: string;
-  value: string;
+  value: ReactNode;
+  mono?: boolean;
+  accent?: boolean;
 }): ReactElement {
   return (
-    <div className="rounded-xl border border-[var(--wms-app-border)] p-3">
-      <div className="text-xs text-slate-500">{label}</div>
-      <strong className="mt-1 block text-sm">{value}</strong>
+    <div
+      className={cn(
+        "wms-ops-quality-detail__chip",
+        accent && "wms-ops-quality-detail__chip--accent",
+      )}
+    >
+      <span className="wms-ops-quality-detail__chip-label">{label}</span>
+      <span
+        className={cn(
+          "wms-ops-quality-detail__chip-value",
+          mono && "wms-ops-quality-detail__chip-value--mono",
+        )}
+      >
+        {value}
+      </span>
     </div>
   );
 }
-function actionableQuantity(line: QualityInspectionLine): number {
-  if (line.decision === "Quarantined") return line.quarantineQuantity;
-  return Math.max(
-    0,
-    line.quantity
-      - line.acceptedQuantity
-      - line.rejectedQuantity
-      - line.quarantineQuantity,
-  );
-}
-function QuantityInput({
-  value,
-  disabled,
-  onChange,
-}: {
-  value: number;
-  disabled: boolean;
-  onChange: (value: string) => void;
-}): ReactElement {
-  return (
-    <td className="min-w-32 p-2">
-      <input
-        type="number"
-        min="0"
-        step="any"
-        className="input h-9 w-28 text-right font-mono"
-        value={value}
-        disabled={disabled}
-        onChange={(event) => onChange(event.target.value)}
-      />
-    </td>
-  );
-}
-function OutcomeQuantity({ value }: { value: number }): ReactElement {
-  return (
-    <td className="p-3 text-right font-mono">
-      {formatProjectNumber(value)}
-    </td>
-  );
-}
-function message(error: unknown, fallback: string): string {
-  return error instanceof Error ? error.message : fallback;
-}
+
 export const QualityQuarantinePage = (): ReactElement => (
   <QualityInspectionsPage quarantineOnly />
 );
