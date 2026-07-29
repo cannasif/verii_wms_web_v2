@@ -20,6 +20,12 @@ import {
 import { OpsSkinCheckbox } from "@/components/shared/OpsSkinCheckbox";
 import { OpsFieldShell } from "@/components/shared/OpsFieldShell";
 import { OPS_FIELD_CLASS } from "@/components/shared/ops-field-styles";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { localizeEnumValue } from "@/lib/enum-localization";
 import {
@@ -35,9 +41,12 @@ import {
 } from "../api/quality.api";
 
 const ACTIONABLE_DECISIONS = new Set(["Pending", "Hold", "Quarantined"]);
+const QTY_EPS = 0.000001;
 
 type LineDraft = {
   decision: string;
+  quantity: string;
+  remainderDecision: string;
   reasonCode: string;
   reasonNote: string;
 };
@@ -46,12 +55,208 @@ function isActionableLine(line: QualityInspectionLine): boolean {
   return ACTIONABLE_DECISIONS.has(line.decision);
 }
 
-function emptyDraft(defaultDecision = ""): LineDraft {
-  return { decision: defaultDecision, reasonCode: "", reasonNote: "" };
+function isSerialTracked(line: QualityInspectionLine): boolean {
+  return Boolean(line.serialNo?.trim());
+}
+
+/** Backend ActionableQuantity ile aynı mantık. */
+function actionableQuantity(line: QualityInspectionLine): number {
+  if (line.decision === "Quarantined") {
+    return Math.max(0, line.quarantineQuantity);
+  }
+  return Math.max(
+    0,
+    line.quantity -
+      line.acceptedQuantity -
+      line.rejectedQuantity -
+      line.quarantineQuantity,
+  );
+}
+
+function emptyDraft(
+  defaultDecision = "",
+  quantity = 0,
+  remainderDecision = "Quarantined",
+): LineDraft {
+  return {
+    decision: defaultDecision,
+    quantity: quantity > 0 ? String(quantity) : "",
+    remainderDecision,
+    reasonCode: "",
+    reasonNote: "",
+  };
+}
+
+function parseQty(value: string): number {
+  const normalized = String(value ?? "")
+    .trim()
+    .replace(/\s/g, "")
+    .replace(",", ".");
+  if (!normalized) return NaN;
+  const n = Number(normalized);
+  return Number.isFinite(n) ? n : NaN;
+}
+
+function roundQty(value: number): number {
+  return Math.round(value * 1_000_000) / 1_000_000;
+}
+
+function remainderOptionsFor(
+  decision: string,
+  quarantineAvailable: boolean,
+): Array<{ value: string; label: string }> {
+  const all = [
+    { value: "Accepted", label: "Kabul" },
+    { value: "Quarantined", label: "Karantina" },
+    { value: "Rejected", label: "Ret" },
+  ].filter((option) => option.value !== decision);
+  return quarantineAvailable
+    ? all
+    : all.filter((option) => option.value !== "Quarantined");
+}
+
+function buildQuantityDecision(
+  line: QualityInspectionLine,
+  draft: LineDraft,
+): {
+  lineId: number;
+  acceptedQuantity: number;
+  rejectedQuantity: number;
+  quarantineQuantity: number;
+} {
+  const remaining = actionableQuantity(line);
+  const qty = roundQty(parseQty(draft.quantity));
+  if (!Number.isFinite(qty) || qty <= 0) {
+    throw new Error(`‘${line.stockCode}’ için miktar 0’dan büyük olmalıdır.`);
+  }
+  if (qty - remaining > QTY_EPS) {
+    throw new Error(
+      `‘${line.stockCode}’ için miktar kalan ${formatProjectNumber(remaining)} değerini aşamaz.`,
+    );
+  }
+
+  const primary = draft.decision;
+  if (primary === "Returned") {
+    throw new Error(
+      `‘${line.stockCode}’ iade kararı miktar bölünmeden tam satır olarak kaydedilir.`,
+    );
+  }
+
+  let accepted = 0;
+  let rejected = 0;
+  let quarantine = 0;
+  if (primary === "Accepted") accepted = qty;
+  else if (primary === "Rejected") rejected = qty;
+  else if (primary === "Quarantined") quarantine = qty;
+  else throw new Error(`‘${line.stockCode}’ için geçerli bir karar seçin.`);
+
+  const rest = roundQty(remaining - qty);
+  if (rest > QTY_EPS) {
+    if (isSerialTracked(line)) {
+      throw new Error(
+        `‘${line.serialNo || line.stockCode}’ seri takipli satır miktara bölünemez.`,
+      );
+    }
+    const remainder = draft.remainderDecision;
+    if (!remainder || remainder === primary) {
+      throw new Error(
+        `‘${line.stockCode}’ için kalan ${formatProjectNumber(rest)} miktarın kararını seçin.`,
+      );
+    }
+    if (remainder === "Accepted") accepted += rest;
+    else if (remainder === "Rejected") rejected += rest;
+    else if (remainder === "Quarantined") quarantine += rest;
+    else {
+      throw new Error(
+        `‘${line.stockCode}’ kalan miktarı için kabul, ret veya karantina seçin.`,
+      );
+    }
+  }
+
+  return {
+    lineId: line.id,
+    acceptedQuantity: roundQty(accepted),
+    rejectedQuantity: roundQty(rejected),
+    quarantineQuantity: roundQty(quarantine),
+  };
 }
 
 function message(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
+}
+
+function buildApplySummary(
+  lines: QualityInspectionLine[],
+  drafts: Record<number, LineDraft>,
+): { title: string; bullets: string[] } {
+  const pending = lines.filter((line) => drafts[line.id]?.decision);
+  if (pending.length === 0) {
+    return {
+      title: "Uygulama özeti",
+      bullets: ["Önce en az bir satır için karar seçin."],
+    };
+  }
+
+  let accepted = 0;
+  let rejected = 0;
+  let quarantine = 0;
+  let returned = 0;
+  let invalid = 0;
+
+  for (const line of pending) {
+    const draft = drafts[line.id] ?? emptyDraft();
+    if (draft.decision === "Returned") {
+      returned += actionableQuantity(line);
+      continue;
+    }
+    try {
+      const allocation = buildQuantityDecision(line, draft);
+      accepted += allocation.acceptedQuantity;
+      rejected += allocation.rejectedQuantity;
+      quarantine += allocation.quarantineQuantity;
+    } catch {
+      invalid += 1;
+    }
+  }
+
+  const qtyParts: string[] = [];
+  if (accepted > QTY_EPS) {
+    qtyParts.push(`${formatProjectNumber(accepted)} kabul`);
+  }
+  if (quarantine > QTY_EPS) {
+    qtyParts.push(`${formatProjectNumber(quarantine)} karantina`);
+  }
+  if (rejected > QTY_EPS) {
+    qtyParts.push(`${formatProjectNumber(rejected)} ret`);
+  }
+  if (returned > QTY_EPS) {
+    qtyParts.push(`${formatProjectNumber(returned)} iade`);
+  }
+
+  const bullets: string[] = [
+    `${pending.length} satır kararı uygulanacak.`,
+  ];
+  if (qtyParts.length > 0) {
+    bullets.push(`Miktar: ${qtyParts.join(" · ")}.`);
+  }
+  if (invalid > 0) {
+    bullets.push(`${invalid} satırda miktar dağılımı henüz geçersiz.`);
+  }
+  bullets.push("Stok hareketi ve hedef raf yönlendirmesi oluşur.");
+  if (quarantine > QTY_EPS) {
+    bullets.push("Karantina miktarı karantina rafına alınır.");
+  }
+  if (rejected > QTY_EPS || returned > QTY_EPS) {
+    bullets.push("Ret / iade miktarı ilgili süreç ve raflara işlenir.");
+  }
+  if (accepted > QTY_EPS) {
+    bullets.push("Kabul edilen miktar kullanılabilir stoğa geçer.");
+  }
+  bullets.push(
+    "Gerekirse DAT ve ERP / irsaliye gönderimi politikalara göre tetiklenir.",
+  );
+
+  return { title: "Uygulama özeti", bullets };
 }
 
 export function QualityInspectionsPage({
@@ -313,16 +518,34 @@ function InspectionDetailPanel({
         ];
 
   const defaultDecision = "Accepted";
+  const quarantineInOptions = options.some((o) => o.value === "Quarantined");
+  const allowQuarantineRemainder =
+    quarantineInOptions ||
+    detail.header.status === "Quarantined" ||
+    actionable.some((line) => line.decision === "Quarantined");
+  const defaultRemainder = allowQuarantineRemainder
+    ? "Quarantined"
+    : "Rejected";
 
   const [selected, setSelected] = useState<number[]>(() =>
     actionable.map((line) => line.id),
   );
   const [drafts, setDrafts] = useState<Record<number, LineDraft>>(() =>
     Object.fromEntries(
-      actionable.map((line) => [line.id, emptyDraft(defaultDecision)]),
+      actionable.map((line) => [
+        line.id,
+        emptyDraft(
+          defaultDecision,
+          actionableQuantity(line),
+          defaultRemainder,
+        ),
+      ]),
     ),
   );
   const [bulkDecision, setBulkDecision] = useState(defaultDecision);
+  const [bulkQuantity, setBulkQuantity] = useState("");
+  const [bulkRemainderDecision, setBulkRemainderDecision] =
+    useState(defaultRemainder);
   const [bulkReasonCode, setBulkReasonCode] = useState("");
   const [bulkReasonNote, setBulkReasonNote] = useState("");
   const [headerNote, setHeaderNote] = useState(detail.note ?? "");
@@ -340,6 +563,14 @@ function InspectionDetailPanel({
   const allSelected =
     actionable.length > 0 && selected.length === actionable.length;
   const someSelected = selected.length > 0 && !allSelected;
+  const bulkRemainderOptions = remainderOptionsFor(
+    bulkDecision,
+    allowQuarantineRemainder,
+  );
+  const applySummary = useMemo(
+    () => buildApplySummary(actionable, drafts),
+    [actionable, drafts],
+  );
 
   const toggle = (id: number) =>
     setSelected((value) =>
@@ -350,10 +581,18 @@ function InspectionDetailPanel({
   const clearSelection = () => setSelected([]);
 
   const patchDraft = (id: number, patch: Partial<LineDraft>) =>
-    setDrafts((current) => ({
-      ...current,
-      [id]: { ...(current[id] ?? emptyDraft(defaultDecision)), ...patch },
-    }));
+    setDrafts((current) => {
+      const line = actionable.find((item) => item.id === id);
+      const fallback = emptyDraft(
+        defaultDecision,
+        line ? actionableQuantity(line) : 0,
+        defaultRemainder,
+      );
+      return {
+        ...current,
+        [id]: { ...(current[id] ?? fallback), ...patch },
+      };
+    });
 
   const applyBulkToSelected = () => {
     if (!bulkDecision) {
@@ -368,11 +607,63 @@ function InspectionDetailPanel({
       toast.error("Ret, karantina ve iade için karar kodu zorunludur.");
       return;
     }
+    const bulkQty = bulkQuantity.trim() ? parseQty(bulkQuantity) : null;
+    if (bulkQty != null && (!Number.isFinite(bulkQty) || bulkQty <= 0)) {
+      toast.error("Toplu miktar geçersiz.");
+      return;
+    }
+
+    const selectedLines = actionable.filter((line) =>
+      selected.includes(line.id),
+    );
+    for (const line of selectedLines) {
+      const remaining = actionableQuantity(line);
+      if (bulkQty != null && bulkQty - remaining > QTY_EPS) {
+        toast.error(
+          `‘${line.stockCode}’ kalan miktarı ${formatProjectNumber(remaining)}; toplu miktar daha büyük olamaz.`,
+        );
+        return;
+      }
+      if (
+        bulkQty != null &&
+        remaining - bulkQty > QTY_EPS &&
+        bulkDecision !== "Returned"
+      ) {
+        if (isSerialTracked(line)) {
+          toast.error(
+            `‘${line.serialNo || line.stockCode}’ seri satırı bölünemez; miktarı tam bırakın.`,
+          );
+          return;
+        }
+        if (
+          !bulkRemainderDecision ||
+          bulkRemainderDecision === bulkDecision
+        ) {
+          toast.error("Kısmi miktar için kalan miktarın kararını seçin.");
+          return;
+        }
+      }
+    }
+
     setDrafts((current) => {
       const next = { ...current };
-      for (const id of selected) {
-        next[id] = {
+      for (const line of selectedLines) {
+        const remaining = actionableQuantity(line);
+        const qty =
+          bulkDecision === "Returned"
+            ? remaining
+            : bulkQty == null
+              ? remaining
+              : Math.min(bulkQty, remaining);
+        next[line.id] = {
           decision: bulkDecision,
+          quantity: String(roundQty(qty)),
+          remainderDecision:
+            bulkRemainderDecision === bulkDecision
+              ? defaultRemainder === bulkDecision
+                ? "Rejected"
+                : defaultRemainder
+              : bulkRemainderDecision,
           reasonCode: bulkDecision === "Accepted" ? "" : bulkReasonCode.trim(),
           reasonNote: bulkReasonNote.trim(),
         };
@@ -388,9 +679,9 @@ function InspectionDetailPanel({
     const pending = actionable
       .map((line) => {
         const draft = drafts[line.id] ?? emptyDraft();
-        return { id: line.id, ...draft };
+        return { line, draft };
       })
-      .filter((row) => row.decision);
+      .filter((row) => row.draft.decision);
 
     if (pending.length === 0) {
       toast.error("En az bir satır için karar seçin.");
@@ -402,8 +693,19 @@ function InspectionDetailPanel({
       );
       return;
     }
-    for (const row of pending) {
-      if (row.decision !== "Accepted" && !row.reasonCode.trim()) {
+    for (const { line, draft } of pending) {
+      const needsReason =
+        draft.decision !== "Accepted" ||
+        (() => {
+          const qty = parseQty(draft.quantity);
+          const rem = actionableQuantity(line);
+          return (
+            Number.isFinite(qty) &&
+            rem - qty > QTY_EPS &&
+            draft.remainderDecision !== "Accepted"
+          );
+        })();
+      if (needsReason && !draft.reasonCode.trim()) {
         toast.error(
           "Ret, karantina ve iade kararlarında her satır için karar kodu zorunludur.",
         );
@@ -411,48 +713,110 @@ function InspectionDetailPanel({
       }
     }
 
-    const groups = new Map<
-      string,
-      { decision: string; reasonCode: string; lineIds: number[] }
-    >();
-    for (const row of pending) {
-      const key = `${row.decision}::${row.reasonCode.trim()}`;
-      const existing = groups.get(key);
-      if (existing) existing.lineIds.push(row.id);
-      else {
-        groups.set(key, {
-          decision: row.decision,
-          reasonCode: row.reasonCode.trim(),
-          lineIds: [row.id],
-        });
+    const returnedRows = pending.filter(
+      (row) => row.draft.decision === "Returned",
+    );
+    const quantityRows = pending.filter(
+      (row) => row.draft.decision !== "Returned",
+    );
+
+    let quantityDecisions: Array<{
+      lineId: number;
+      acceptedQuantity: number;
+      rejectedQuantity: number;
+      quarantineQuantity: number;
+    }> = [];
+    try {
+      quantityDecisions = quantityRows.map(({ line, draft }) =>
+        buildQuantityDecision(line, draft),
+      );
+    } catch (error) {
+      toast.error(message(error, "Miktar dağılımı geçersiz."));
+      return;
+    }
+
+    for (const { line, draft } of returnedRows) {
+      const remaining = actionableQuantity(line);
+      const qty = roundQty(parseQty(draft.quantity));
+      if (!Number.isFinite(qty) || Math.abs(qty - remaining) > QTY_EPS) {
+        toast.error(
+          `‘${line.stockCode}’ iade için miktar kalanın tamamı (${formatProjectNumber(remaining)}) olmalıdır.`,
+        );
+        return;
       }
     }
 
     setSaving(true);
     try {
       let rowVersion = detail.rowVersion;
-      const entries = [...groups.values()];
-      for (const group of entries) {
-        const notes = pending
-          .filter(
-            (row) => group.lineIds.includes(row.id) && row.reasonNote.trim(),
-          )
-          .map((row) => row.reasonNote.trim());
-        const combinedNote = [headerNote.trim(), ...notes]
-          .filter(Boolean)
-          .join(" · ");
-        await qualityApi.decide(detail.header.id, {
-          idempotencyKey: crypto.randomUUID(),
-          decision: group.decision,
-          note: combinedNote || undefined,
-          reasonCode:
-            group.decision === "Accepted"
-              ? undefined
-              : group.reasonCode || undefined,
-          lineIds: group.lineIds,
-          rowVersion,
+      const calls: Array<() => Promise<void>> = [];
+
+      if (quantityDecisions.length > 0) {
+        const notes = quantityRows
+          .map(({ draft }) => draft.reasonNote.trim())
+          .filter(Boolean);
+        const reasonCodes = [
+          ...new Set(
+            quantityRows
+              .map(({ draft }) => draft.reasonCode.trim())
+              .filter(Boolean),
+          ),
+        ];
+        const primaryDecision =
+          quantityRows.find(({ draft }) => draft.decision === "Accepted")
+            ?.draft.decision ??
+          quantityRows[0]?.draft.decision ??
+          "Accepted";
+        calls.push(async () => {
+          await qualityApi.decide(detail.header.id, {
+            idempotencyKey: crypto.randomUUID(),
+            decision: primaryDecision,
+            note:
+              [headerNote.trim(), ...notes].filter(Boolean).join(" · ") ||
+              undefined,
+            reasonCode: reasonCodes[0] || undefined,
+            rowVersion,
+            quantityDecisions,
+          });
         });
-        if (entries.length > 1) {
+      }
+
+      const returnedGroups = new Map<
+        string,
+        { reasonCode: string; lineIds: number[]; notes: string[] }
+      >();
+      for (const { line, draft } of returnedRows) {
+        const key = draft.reasonCode.trim();
+        const existing = returnedGroups.get(key);
+        if (existing) {
+          existing.lineIds.push(line.id);
+          if (draft.reasonNote.trim()) existing.notes.push(draft.reasonNote.trim());
+        } else {
+          returnedGroups.set(key, {
+            reasonCode: key,
+            lineIds: [line.id],
+            notes: draft.reasonNote.trim() ? [draft.reasonNote.trim()] : [],
+          });
+        }
+      }
+      for (const group of returnedGroups.values()) {
+        calls.push(async () => {
+          await qualityApi.decide(detail.header.id, {
+            idempotencyKey: crypto.randomUUID(),
+            decision: "Returned",
+            note:
+              [headerNote.trim(), ...group.notes].filter(Boolean).join(" · ") ||
+              undefined,
+            reasonCode: group.reasonCode || undefined,
+            lineIds: group.lineIds,
+            rowVersion,
+          });
+        });
+      }
+
+      for (let i = 0; i < calls.length; i += 1) {
+        await calls[i]();
+        if (i < calls.length - 1) {
           const fresh = await qualityApi.inspection(detail.header.id);
           rowVersion = fresh.rowVersion;
         }
@@ -590,9 +954,42 @@ function InspectionDetailPanel({
               <span>Karar</span>
               <AppDropdown
                 value={bulkDecision || null}
-                onValueChange={setBulkDecision}
+                onValueChange={(value) => {
+                  setBulkDecision(value);
+                  if (value === bulkRemainderDecision) {
+                    const next = remainderOptionsFor(
+                      value,
+                      allowQuarantineRemainder,
+                    )[0]?.value;
+                    if (next) setBulkRemainderDecision(next);
+                  }
+                }}
                 options={options}
                 placeholder="Karar seçin"
+                className="wms-ops-quality-field wms-ops-quality-bulk__control"
+                portalContainer={null}
+              />
+            </label>
+            <label className="wms-ops-quality-bulk__field">
+              <span>Miktar</span>
+              <AppInput
+                value={bulkQuantity}
+                onChange={(e) => setBulkQuantity(e.target.value)}
+                placeholder="Boş = kalanın tamamı"
+                inputMode="decimal"
+                className="wms-ops-quality-field wms-ops-quality-bulk__control"
+              />
+            </label>
+            <label className="wms-ops-quality-bulk__field">
+              <span>Kalan karar</span>
+              <AppDropdown
+                value={bulkRemainderDecision || null}
+                onValueChange={setBulkRemainderDecision}
+                options={bulkRemainderOptions}
+                placeholder="Kalan için"
+                disabled={
+                  bulkDecision === "Returned" || !bulkQuantity.trim()
+                }
                 className="wms-ops-quality-field wms-ops-quality-bulk__control"
                 portalContainer={null}
               />
@@ -653,7 +1050,7 @@ function InspectionDetailPanel({
                 SKT
               </th>
               <th className="wms-ops-quality-lines__cell p-2.5 text-right text-[0.65rem] font-semibold uppercase tracking-wider">
-                Miktar
+                Miktar / Kalan
               </th>
               <th className="wms-ops-quality-lines__cell p-2.5 text-right text-[0.65rem] font-semibold uppercase tracking-wider">
                 Numune
@@ -708,7 +1105,14 @@ function InspectionDetailPanel({
                     {line.expiryDate ? formatProjectDate(line.expiryDate) : "—"}
                   </td>
                   <td className="wms-ops-quality-lines__cell p-2.5 align-middle text-right font-mono">
-                    {formatProjectNumber(line.quantity)}
+                    <span className="block">
+                      {formatProjectNumber(line.quantity)}
+                    </span>
+                    {active ? (
+                      <span className="block text-[0.65rem] text-slate-500">
+                        kalan {formatProjectNumber(actionableQuantity(line))}
+                      </span>
+                    ) : null}
                   </td>
                   <td className="wms-ops-quality-lines__cell p-2.5 align-middle text-right font-mono">
                     {formatProjectNumber(line.sampleQuantity)}
@@ -730,7 +1134,31 @@ function InspectionDetailPanel({
                             tone={inferOpsStatusTone(draft.decision)}
                           >
                             {localizeEnumValue(draft.decision)}
+                            {draft.quantity
+                              ? ` · ${formatProjectNumber(parseQty(draft.quantity) || 0)}`
+                              : ""}
                           </OpsStatusBadge>
+                          {(() => {
+                            const remaining = actionableQuantity(line);
+                            const qty = parseQty(draft.quantity);
+                            const rest =
+                              Number.isFinite(qty) && remaining - qty > QTY_EPS
+                                ? roundQty(remaining - qty)
+                                : 0;
+                            if (rest <= QTY_EPS || !draft.remainderDecision) {
+                              return null;
+                            }
+                            return (
+                              <OpsStatusBadge
+                                tone={inferOpsStatusTone(
+                                  draft.remainderDecision,
+                                )}
+                              >
+                                {localizeEnumValue(draft.remainderDecision)} ·{" "}
+                                {formatProjectNumber(rest)}
+                              </OpsStatusBadge>
+                            );
+                          })()}
                           {draft.reasonCode ? (
                             <div className="font-mono text-[0.65rem] text-slate-500">
                               {draft.reasonCode}
@@ -754,7 +1182,15 @@ function InspectionDetailPanel({
                           setOpenLineId(open ? line.id : null)
                         }
                         options={options}
-                        draft={draft ?? emptyDraft()}
+                        line={line}
+                        draft={
+                          draft ??
+                          emptyDraft(
+                            defaultDecision,
+                            actionableQuantity(line),
+                            defaultRemainder,
+                          )
+                        }
                         onChange={(patch) => patchDraft(line.id, patch)}
                       />
                     ) : (
@@ -788,19 +1224,55 @@ function InspectionDetailPanel({
                 : " · Tüm satırlar zorunlu"}
             </span>
           </label>
-          <OpsActionButton
-            type="button"
-            disabled={saving || decidedCount === 0}
-            onClick={() => void save()}
-            className="wms-ops-quality-decide-btn shrink-0 !min-h-8 !px-4 !text-[0.65rem]"
-          >
-            {saving ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              <ShieldCheck className="size-4" />
-            )}
-            Kararları Kaydet
-          </OpsActionButton>
+          <TooltipProvider delayDuration={180}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-flex shrink-0">
+                  <OpsActionButton
+                    type="button"
+                    disabled={saving || decidedCount === 0}
+                    onClick={() => void save()}
+                    className="wms-ops-quality-decide-btn !min-h-8 !px-4 !text-[0.65rem]"
+                  >
+                    {saving ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <ShieldCheck className="size-4" />
+                    )}
+                    Kararı uygula
+                  </OpsActionButton>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent
+                side="top"
+                align="end"
+                sideOffset={10}
+                className={cn(
+                  "wms-ops-quality-apply-tooltip max-w-[22rem] overflow-hidden rounded-xl border p-0 text-left shadow-[0_12px_40px_color-mix(in_oklab,black_45%,transparent)]",
+                  "!bg-[color-mix(in_oklab,var(--wms-app-panel)_96%,black)]",
+                  "border-[color-mix(in_oklab,var(--wms-brand-primary)_32%,var(--wms-app-border))]",
+                  "!text-[var(--wms-app-text)]",
+                )}
+              >
+                <div className="border-b border-[color-mix(in_oklab,var(--wms-brand-primary)_18%,transparent)] bg-[color-mix(in_oklab,var(--wms-brand-primary)_8%,transparent)] px-3.5 py-2">
+                  <span className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-[var(--wms-brand-primary)]">
+                    {applySummary.title}
+                  </span>
+                </div>
+                <ul className="space-y-1.5 px-3.5 py-3 text-[0.78rem] leading-5 text-[color-mix(in_oklab,hsl(var(--foreground))_78%,transparent)]">
+                  {applySummary.bullets.map((bullet) => (
+                    <li key={bullet} className="flex gap-2">
+                      <span
+                        className="mt-1.5 size-1 shrink-0 rounded-full bg-[var(--wms-brand-primary)]"
+                        aria-hidden
+                      />
+                      <span>{bullet}</span>
+                    </li>
+                  ))}
+                </ul>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </section>
       )}
     </div>
@@ -811,12 +1283,14 @@ function LineDecisionPopover({
   open,
   onOpenChange,
   options,
+  line,
   draft,
   onChange,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   options: Array<{ value: string; label: string }>;
+  line: QualityInspectionLine;
   draft: LineDraft;
   onChange: (patch: Partial<LineDraft>) => void;
 }): ReactElement {
@@ -825,13 +1299,26 @@ function LineDecisionPopover({
   const [coords, setCoords] = useState<{ top: number; left: number } | null>(
     null,
   );
+  const remaining = actionableQuantity(line);
+  const serial = isSerialTracked(line);
+  const qty = parseQty(draft.quantity);
+  const hasRemainder =
+    draft.decision !== "Returned" &&
+    !serial &&
+    Number.isFinite(qty) &&
+    remaining - qty > QTY_EPS;
+  const remainderChoices = remainderOptionsFor(
+    draft.decision,
+    options.some((o) => o.value === "Quarantined") ||
+      line.decision === "Quarantined",
+  );
 
   const updatePosition = useCallback(() => {
     const trigger = triggerRef.current;
     if (!trigger) return;
     const rect = trigger.getBoundingClientRect();
-    const panelWidth = 288;
-    const estimatedHeight = panelRef.current?.offsetHeight || 300;
+    const panelWidth = 300;
+    const estimatedHeight = panelRef.current?.offsetHeight || 360;
     const gap = 6;
     const left = Math.min(
       Math.max(8, rect.right - panelWidth),
@@ -858,7 +1345,7 @@ function LineDecisionPopover({
       window.removeEventListener("resize", onScrollOrResize);
       window.removeEventListener("scroll", onScrollOrResize, true);
     };
-  }, [open, updatePosition]);
+  }, [open, updatePosition, hasRemainder]);
 
   useEffect(() => {
     if (!open) return;
@@ -913,18 +1400,42 @@ function LineDecisionPopover({
               role="dialog"
               aria-label="Satır kararı"
               style={{ top: coords.top, left: coords.left }}
-              className="wms-ops-quality-decision-popover wms-ops-list-popover fixed z-[5000] max-h-[min(22rem,calc(100vh-1rem))] w-72 space-y-2.5 overflow-y-auto border-0 p-3 shadow-none outline-none"
+              className="wms-ops-quality-decision-popover wms-ops-list-popover fixed z-[5000] max-h-[min(26rem,calc(100vh-1rem))] w-[18.75rem] space-y-2.5 overflow-y-auto border-0 p-3 shadow-none outline-none"
             >
               <div className="wms-ops-list-popover__section-title">
                 Satır kararı
               </div>
+              <p className="text-[0.65rem] text-slate-500">
+                Kalan miktar:{" "}
+                <span className="font-mono font-semibold text-foreground">
+                  {formatProjectNumber(remaining)}
+                </span>
+                {serial ? " · seri — bölünemez" : null}
+              </p>
               <label className="block space-y-1 text-sm">
                 <span className="text-xs font-semibold text-slate-500">
                   Karar
                 </span>
                 <AppDropdown
                   value={draft.decision || null}
-                  onValueChange={(value) => onChange({ decision: value })}
+                  onValueChange={(value) => {
+                    const nextRemainder = remainderOptionsFor(
+                      value,
+                      options.some((o) => o.value === "Quarantined") ||
+                        line.decision === "Quarantined",
+                    )[0]?.value;
+                    onChange({
+                      decision: value,
+                      quantity:
+                        value === "Returned" || serial
+                          ? String(remaining)
+                          : draft.quantity || String(remaining),
+                      ...(nextRemainder &&
+                      nextRemainder !== draft.remainderDecision
+                        ? { remainderDecision: nextRemainder }
+                        : {}),
+                    });
+                  }}
                   options={options}
                   placeholder="Karar seçin"
                   className="wms-ops-quality-field !h-10 !min-h-10 !text-sm"
@@ -932,6 +1443,37 @@ function LineDecisionPopover({
                   contentClassName="!z-[5100]"
                 />
               </label>
+              <label className="block space-y-1 text-sm">
+                <span className="text-xs font-semibold text-slate-500">
+                  Bu karar miktarı
+                </span>
+                <AppInput
+                  value={draft.quantity}
+                  onChange={(e) => onChange({ quantity: e.target.value })}
+                  placeholder={formatProjectNumber(remaining)}
+                  inputMode="decimal"
+                  disabled={serial || draft.decision === "Returned"}
+                  className="wms-ops-quality-field h-10 text-sm"
+                />
+              </label>
+              {hasRemainder ? (
+                <label className="block space-y-1 text-sm">
+                  <span className="text-xs font-semibold text-slate-500">
+                    Kalan ({formatProjectNumber(roundQty(remaining - qty))})
+                  </span>
+                  <AppDropdown
+                    value={draft.remainderDecision || null}
+                    onValueChange={(value) =>
+                      onChange({ remainderDecision: value })
+                    }
+                    options={remainderChoices}
+                    placeholder="Kalan karar"
+                    className="wms-ops-quality-field !h-10 !min-h-10 !text-sm"
+                    portalContainer={null}
+                    contentClassName="!z-[5100]"
+                  />
+                </label>
+              ) : null}
               <label className="block space-y-1 text-sm">
                 <span className="text-xs font-semibold text-slate-500">
                   Karar kodu
