@@ -883,7 +883,9 @@ export function GoodsReceiptCreatePage({
     }
   };
 
-  const validatePlan = (): string | null => {
+  const validatePlan = (
+    targetLines: SelectedReceiptLine[] = lines,
+  ): string | null => {
     if (!isValidGoodsReceiptDocumentNo(receiptNo))
       return t(
         isElectronicReceipt
@@ -891,12 +893,12 @@ export function GoodsReceiptCreatePage({
           : "createFlow.validation.receiptNo",
       );
     if (!waybillDate) return t("createFlow.validation.waybillDate");
-    const warehouseIds = [...new Set(lines.map((line) => line.targetWarehouseId).filter(Boolean))];
+    const warehouseIds = [...new Set(targetLines.map((line) => line.targetWarehouseId).filter(Boolean))];
     if (warehouseIds.length > 1)
       return t("createFlow.validation.singleWarehouse");
     if (warehouseAccess?.isRestricted && warehouseIds.some((id) => !warehouseAccess.warehouseIds.includes(id!)))
       return t("createFlow.validation.warehouseNotAllowed");
-    for (const line of lines) {
+    for (const line of targetLines) {
       const name = `${line.siparisNo} / ${line.stockCode ?? line.orderId}`;
       if (line.quantity <= 0 || line.quantity > (line.availableQuantity ?? 0))
         return t("createFlow.validation.lineQuantityRange", { name });
@@ -968,7 +970,14 @@ export function GoodsReceiptCreatePage({
   };
 
   const goToConfirmation = async (): Promise<void> => {
-    const message = validatePlan();
+    const confirmedLines = confirmedLineOrder
+      .map((key) => lines.find((line) => lineKey(line) === key))
+      .filter((line): line is SelectedReceiptLine => line != null);
+    if (confirmedLines.length === 0) {
+      surfaceValidationError(t("createFlow.validation.confirmedLinesRequired"));
+      return;
+    }
+    const message = validatePlan(confirmedLines);
     if (message) {
       surfaceValidationError(message);
       return;
@@ -979,7 +988,7 @@ export function GoodsReceiptCreatePage({
     try {
       const requirement = await goodsReceiptV2Api.qualityRequirements(
         customer?.branch ?? branchCode,
-        lines.map((line) => line.stockId),
+        confirmedLines.map((line) => line.stockId),
       );
       const qualityByStockId = new Map(
         requirement.stocks.map((stock) => [
@@ -987,10 +996,12 @@ export function GoodsReceiptCreatePage({
           stock.requiresQualityControl,
         ]),
       );
-      setLines((current) => current.map((line) => ({
+      const readyLines = confirmedLines.map((line) => ({
         ...line,
         requireQualityControl: qualityByStockId.get(line.stockId) === true,
-      })));
+      }));
+      setLines(readyLines);
+      setConfirmedLineOrder(readyLines.map((line) => lineKey(line)));
       setStep(1);
     } catch (cause) {
       report(cause, "Kalite kontrol kuralları doğrulanamadı.");
@@ -2032,7 +2043,7 @@ export function GoodsReceiptCreatePage({
                 setLines([]);
               }}
               next={() => void goToConfirmation()}
-              disabled={lines.length === 0 || busy}
+              disabled={confirmedLineOrder.length === 0 || busy}
               t={t}
             />
             </>

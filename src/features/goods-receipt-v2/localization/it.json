@@ -44,5 +44,10 @@
     "processedQuantity": "Ricevuto",
     "actions": "Azioni",
     "viewTask": "Visualizza attività"
+  },
+  "createFlow": {
+    "validation": {
+      "confirmedLinesRequired": "Contrassegna almeno una riga come pronta prima di continuare."
+    }
   }
 }

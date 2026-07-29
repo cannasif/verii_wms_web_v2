@@ -223,6 +223,7 @@
       "selectCustomerFirst": "Önce tedarikçi seçin.",
       "enterQuantityFirst": "Önce miktar girin.",
       "noLinesToConfirm": "Onaylanacak miktarı olan kalem yok.",
+      "confirmedLinesRequired": "Devam etmek için en az bir kalem hazır olarak işaretlenmelidir.",
       "serialQuantityRange": "Seri satırları için miktar 1-500 arasında tam sayı olmalıdır.",
       "enterAtLeastOneSerial": "En az bir seri girin.",
       "serialCountExceedsQuantity": "Seri sayısı kabul miktarını aşamaz.",

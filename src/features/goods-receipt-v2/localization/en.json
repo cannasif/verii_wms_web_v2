@@ -205,6 +205,7 @@
       "selectCustomerFirst": "Select a supplier first.",
       "enterQuantityFirst": "Enter a quantity first.",
       "noLinesToConfirm": "No lines with quantity available to confirm.",
+      "confirmedLinesRequired": "Mark at least one line as ready before continuing.",
       "serialQuantityRange": "Quantity for serial rows must be a whole number between 1 and 500.",
       "enterAtLeastOneSerial": "Enter at least one serial.",
       "serialCountExceedsQuantity": "Serial count cannot exceed receipt quantity.",

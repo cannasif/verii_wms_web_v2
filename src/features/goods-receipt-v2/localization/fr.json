@@ -45,5 +45,10 @@
     "processedQuantity": "Reçu",
     "actions": "Actions",
     "viewTask": "Voir la tâche"
+  },
+  "createFlow": {
+    "validation": {
+      "confirmedLinesRequired": "Marquez au moins une ligne comme prête avant de continuer."
+    }
   }
 }

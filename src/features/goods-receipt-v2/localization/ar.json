@@ -41,5 +41,10 @@
     "processedQuantity": "المستلم",
     "actions": "الإجراءات",
     "viewTask": "عرض المهمة"
+  },
+  "createFlow": {
+    "validation": {
+      "confirmedLinesRequired": "يجب تحديد سطر واحد على الأقل كـ«جاهز» قبل المتابعة."
+    }
   }
 }

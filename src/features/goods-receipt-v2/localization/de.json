@@ -45,5 +45,10 @@
     "processedQuantity": "Empfangen",
     "actions": "Aktionen",
     "viewTask": "Auftrag anzeigen"
+  },
+  "createFlow": {
+    "validation": {
+      "confirmedLinesRequired": "Markieren Sie mindestens eine Position als bereit, bevor Sie fortfahren."
+    }
   }
 }

@@ -44,5 +44,10 @@
     "processedQuantity": "Recibido",
     "actions": "Acciones",
     "viewTask": "Ver tarea"
+  },
+  "createFlow": {
+    "validation": {
+      "confirmedLinesRequired": "Marque al menos una línea como lista antes de continuar."
+    }
   }
 }
