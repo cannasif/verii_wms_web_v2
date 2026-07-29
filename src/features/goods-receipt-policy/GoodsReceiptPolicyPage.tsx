@@ -26,6 +26,7 @@ type Policy = {
   allowOrderlessReceipt: boolean;
   allowUnplannedReceipt: boolean;
   showAllocatedOpenOrderLines: boolean;
+  locationSelectionPolicy: 'ReceivingOrStagingOnly' | 'AnyActiveWarehouseLocation';
 };
 
 type Envelope<T> = { success: boolean; data: T; message?: string };
@@ -50,6 +51,10 @@ export function GoodsReceiptPolicyPage() {
         setForm({
           ...policy,
           showAllocatedOpenOrderLines: Boolean(policy.showAllocatedOpenOrderLines),
+          locationSelectionPolicy:
+            policy.locationSelectionPolicy === 'AnyActiveWarehouseLocation'
+              ? 'AnyActiveWarehouseLocation'
+              : 'ReceivingOrStagingOnly',
         });
       })
       .catch((error) => toast.error(error instanceof Error ? error.message : 'Politika yüklenemedi.'));
@@ -161,6 +166,27 @@ export function GoodsReceiptPolicyPage() {
                 ['AfterQualityApproval', 'Kalite onayından sonra'],
                 ['AfterAllApprovals', 'Tüm onaylardan sonra'],
               ].map(([value, label]) => ({ value, label }))}
+            />
+          </Field>
+          <Field label="Mal kabulde hangi raflar seçilebilir?">
+            <AppDropdown
+              value={form.locationSelectionPolicy}
+              onValueChange={(value) => set(
+                'locationSelectionPolicy',
+                value === 'AnyActiveWarehouseLocation'
+                  ? 'AnyActiveWarehouseLocation'
+                  : 'ReceivingOrStagingOnly',
+              )}
+              options={[
+                {
+                  value: 'ReceivingOrStagingOnly',
+                  label: 'Yalnızca kabul / staging alanları',
+                },
+                {
+                  value: 'AnyActiveWarehouseLocation',
+                  label: 'Seçilen depodaki tüm aktif raflar',
+                },
+              ]}
             />
           </Field>
         </div>

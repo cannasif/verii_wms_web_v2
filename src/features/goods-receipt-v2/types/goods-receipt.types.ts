@@ -20,6 +20,7 @@ export interface GoodsReceiptPolicy {
   allowOrderlessReceipt: boolean;
   allowUnplannedReceipt: boolean;
   showAllocatedOpenOrderLines: boolean;
+  locationSelectionPolicy: 'ReceivingOrStagingOnly' | 'AnyActiveWarehouseLocation';
 }
 export interface LocationOption { id: number; warehouseId: number; code: string; name: string; locationType: string }
 export interface PutawayLocationSuggestion extends LocationOption {
