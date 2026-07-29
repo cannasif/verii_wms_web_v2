@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { RefreshCw, ShieldCheck, WifiOff } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,12 @@ export function SessionRecoveryPage(): React.JSX.Element {
   const sessionStatus = useAuthStore((state) => state.sessionStatus);
   const sessionError = useAuthStore((state) => state.sessionError);
   const [isRetrying, setIsRetrying] = useState(false);
+
+  useEffect(() => {
+    if (sessionStatus !== 'unavailable') return;
+    const timer = window.setTimeout(() => void init(), 2500);
+    return () => window.clearTimeout(timer);
+  }, [init, sessionStatus]);
 
   const retry = async (): Promise<void> => {
     setIsRetrying(true);

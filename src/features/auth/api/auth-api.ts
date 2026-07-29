@@ -14,12 +14,13 @@ export const authApi = {
     if (!response.success || !response.data) throw new Error(response.message);
     return response.data;
   },
-  login: async (data: LoginRequest): Promise<LoginResponse> => {
+  login: async (data: LoginRequest, branchCode: string): Promise<LoginResponse> => {
     const response = await api.post<LoginResponse>(
       '/api/auth/login',
       {
         identifier: data.identifier.trim(),
         password: data.password,
+        branchCode,
       },
       { skipAuth: true, skipSessionExpiredOn401: true },
     );

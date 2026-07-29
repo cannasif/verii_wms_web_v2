@@ -17,6 +17,7 @@ export type RegisterRequest = z.infer<typeof registerRequestSchema>;
 export interface AuthTokenResponse {
   accessToken: string;
   accessTokenExpiresAt: string;
+  branchCode: string;
 }
 
 export interface PasswordPolicy {
@@ -29,7 +30,7 @@ export type LoginResponse = ApiResponse<AuthTokenResponse>;
 export interface Branch {
   id: string;
   name: string;
-  code?: string;
+  code: string;
 }
 
 export interface UserDto {

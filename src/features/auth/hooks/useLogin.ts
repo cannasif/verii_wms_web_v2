@@ -10,7 +10,14 @@ export const useLogin = (branches?: Branch[]) => {
   const setAuth = useAuthStore((state) => state.setAuth);
 
   return useMutation({
-    mutationFn: (data: LoginRequest) => authApi.login(data),
+    mutationFn: (data: LoginRequest) => {
+      const selectedBranch = branches?.find((branch) => branch.id === data.branchId);
+      const branchCode = selectedBranch?.code?.trim();
+      if (!branchCode) {
+        throw new Error('Seçilen şubenin kodu geçersiz.');
+      }
+      return authApi.login(data, branchCode);
+    },
     onSuccess: (response, variables) => {
       if (response.success && response.data) {
         const user = getUserFromToken(response.data.accessToken);
@@ -23,4 +30,3 @@ export const useLogin = (branches?: Branch[]) => {
     },
   });
 };
-
