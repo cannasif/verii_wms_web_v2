@@ -17,6 +17,7 @@ import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { useAuthStore } from '@/stores/auth-store';
 import { locationsApi } from '../api/locations.api';
 import type { LocationLookupRow, LocationRow, LocationUpsertPayload, WarehouseOption } from '../types/location.types';
+import { WarehouseOpeningImportDialog } from './WarehouseOpeningImportDialog';
 import './location-definitions.css';
 
 type FormMode = 'create' | 'edit';
@@ -79,6 +80,7 @@ export function LocationDefinitionsPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<LocationRow | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+  const [warehouseOpeningImportOpen, setWarehouseOpeningImportOpen] = useState(false);
   const locationTypes = useMemo(
     () => moduleReady ? locationTypeValues.map((value) => [value, t(`types.${value}`)] as const) : [],
     [moduleReady, t],
@@ -181,8 +183,23 @@ export function LocationDefinitionsPage() {
     <AdvancedDataGrid<LocationRow> pageKey="warehouse-location-definitions-v2" title={t('page.title')} description={t('page.description')} columns={columns} fetchPage={locationsApi.getPaged}
       toolbarActions={canCreate ? [
         { label: t('page.newAction'), run: openCreate },
+        { label: 'Tek Excel ile Depo Açılışı', icon: <FileSpreadsheet className="size-4"/>, run: async () => setWarehouseOpeningImportOpen(true) },
         { label: 'Excel ile İlk Raf Aktarımı', icon: <FileSpreadsheet className="size-4"/>, run: async () => setImportOpen(true) },
       ] : undefined}/>
+
+    <WarehouseOpeningImportDialog
+      open={warehouseOpeningImportOpen}
+      branchCode={branchCode}
+      onOpenChange={setWarehouseOpeningImportOpen}
+      onImported={async () => {
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ['advanced-grid', 'warehouse-location-definitions-v2'] }),
+          queryClient.invalidateQueries({ queryKey: ['advanced-grid', 'stock-location-balances-v2'] }),
+          queryClient.invalidateQueries({ queryKey: ['advanced-grid', 'stock-warehouse-balances-v2'] }),
+          queryClient.invalidateQueries({ queryKey: ['advanced-grid', 'stock-serial-balances-v2'] }),
+        ]);
+      }}
+    />
 
     <InitialExcelImportDialog
       open={importOpen}
