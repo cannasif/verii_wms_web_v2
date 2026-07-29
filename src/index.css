@@ -1350,6 +1350,61 @@ html[dir='rtl'] .app-navbar-panel::after {
   }
 }
 
+@keyframes wms-error-focus-flash-pulse {
+  0% {
+    box-shadow:
+      0 0 0 0 transparent,
+      0 0 0 transparent;
+  }
+  35% {
+    box-shadow:
+      0 0 0 1px color-mix(in oklab, #ef4444 55%, transparent),
+      0 0 18px color-mix(in oklab, #ef4444 42%, transparent);
+  }
+  100% {
+    box-shadow:
+      0 0 0 1px color-mix(in oklab, #ef4444 40%, transparent),
+      0 0 12px color-mix(in oklab, #ef4444 28%, transparent);
+  }
+}
+
+.wms-error-focus-flash {
+  outline: none !important;
+  z-index: 2;
+}
+
+.wms-error-focus-flash.wms-ops-field-shell .wms-ops-field,
+.wms-error-focus-flash.wms-ops-field-shell .input,
+.wms-error-focus-flash.wms-ops-field-shell input,
+.wms-error-focus-flash.wms-ops-field-shell textarea,
+.wms-error-focus-flash.wms-ops-field-shell select,
+.wms-error-focus-flash.wms-ops-field-shell button.wms-ops-lookup-trigger,
+.wms-error-focus-flash.app-input-shell .wms-ops-field,
+.wms-error-focus-flash.app-input-shell .input,
+.wms-error-focus-flash.app-input-shell input,
+.wms-error-focus-flash.app-input-shell textarea,
+.wms-error-focus-flash:is(input, textarea, select) {
+  border-color: #f87171 !important;
+  animation: wms-error-focus-flash-pulse 2.4s ease-in-out 1;
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, #ef4444 45%, transparent),
+    0 0 14px color-mix(in oklab, #ef4444 32%, transparent) !important;
+}
+
+.wms-error-focus-flash:not(.wms-ops-field-shell):not(.app-input-shell):not(input):not(textarea):not(select) {
+  border-color: color-mix(in oklab, #f87171 70%, var(--wms-app-border, transparent)) !important;
+  animation: wms-error-focus-flash-pulse 2.4s ease-in-out 1;
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, #ef4444 35%, transparent),
+    0 0 16px color-mix(in oklab, #ef4444 24%, transparent) !important;
+}
+
+.wms-ops-page-hint-tooltip [class*='arrow'],
+.wms-ops-page-hint-tooltip svg {
+  fill: color-mix(in oklab, var(--wms-app-panel) 96%, black) !important;
+  background: color-mix(in oklab, var(--wms-app-panel) 96%, black) !important;
+}
+
 .wms-ops-form .wms-ops-field-shell,
 .wms-ops-lookup-dialog .wms-ops-field-shell {
   position: relative;
@@ -22648,6 +22703,37 @@ html.skin-premium .wms-ops-list .wms-ops-pt-terminal__meta {
   border: 1px solid color-mix(in oklab, var(--wms-ops-accent) 16%, var(--wms-ops-card-border));
   background: color-mix(in oklab, var(--wms-ops-field-bg) 70%, transparent);
   padding: 0.85rem 1rem;
+}
+
+.wms-ops-form .wms-ops-receipt-entry-row--confirmed {
+  border-color: color-mix(in oklab, var(--wms-ops-accent) 42%, var(--wms-ops-card-border));
+  background: color-mix(in oklab, var(--wms-ops-accent) 6%, var(--wms-ops-field-bg));
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--wms-ops-accent) 22%, transparent),
+    0 0 10px color-mix(in oklab, var(--wms-ops-accent) 14%, transparent),
+    inset 0 0 12px color-mix(in oklab, var(--wms-ops-accent) 5%, transparent);
+  animation: wms-ops-receipt-confirm-glow 0.7s ease-out;
+}
+
+@keyframes wms-ops-receipt-confirm-glow {
+  0% {
+    box-shadow:
+      0 0 0 0 transparent,
+      0 0 0 transparent,
+      inset 0 0 0 transparent;
+  }
+  40% {
+    box-shadow:
+      0 0 0 1px color-mix(in oklab, var(--wms-ops-accent) 32%, transparent),
+      0 0 14px color-mix(in oklab, var(--wms-ops-accent) 22%, transparent),
+      inset 0 0 14px color-mix(in oklab, var(--wms-ops-accent) 7%, transparent);
+  }
+  100% {
+    box-shadow:
+      0 0 0 1px color-mix(in oklab, var(--wms-ops-accent) 22%, transparent),
+      0 0 10px color-mix(in oklab, var(--wms-ops-accent) 14%, transparent),
+      inset 0 0 12px color-mix(in oklab, var(--wms-ops-accent) 5%, transparent);
+  }
 }
 .wms-ops-form .wms-ops-order-fetch {
   border: 1px solid color-mix(in oklab, var(--wms-ops-accent) 16%, var(--wms-ops-card-border));

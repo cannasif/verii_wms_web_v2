@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactElement, type ReactNode } from 'react';
-import { Boxes, Building2, Check, CheckCircle2, ChevronLeft, ChevronRight, ClipboardCheck, FileText, ListChecks, Loader2, PackagePlus, Plus, Printer, ScanBarcode, Trash2 } from 'lucide-react';
+import { Building2, Check, CheckCircle2, ChevronLeft, ChevronRight, CircleHelp, ClipboardCheck, FileText, ListChecks, Loader2, PackagePlus, Plus, Printer, ScanBarcode, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AppDropdown } from '@/components/shared/AppDropdown';
 import { AppDateInput, AppInput } from '@/components/shared/AppInput';
@@ -10,7 +10,12 @@ import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
 import { PagedLookupDialog } from '@/components/shared/PagedLookupDialog';
 import { PremiumEyebrow } from '@/components/shared/PremiumEyebrow';
 import { useTheme } from '@/components/theme-provider';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import type { DropdownPage } from '@/hooks/useDropdownInfiniteSearch';
 import { cn } from '@/lib/utils';
@@ -337,34 +342,78 @@ export function GoodsReceiptManualPage({ direct }: { direct: boolean }): ReactEl
 
 export const GoodsReceiptOrderlessPage = (): ReactElement => <GoodsReceiptManualPage direct={false}/>;
 export function GoodsReceiptDirectPage(): ReactElement {
-  const [sourceMode, setSourceMode] = useState<'order' | 'stock'>('order');
+  const { t, moduleReady } = useModuleTranslation('goods-receipt-v2');
+  const { skin } = useTheme();
+  const isPremium = skin === 'premium';
+  const pageEyebrow = `${t('list.eyebrowParent')} / ${t('list.eyebrowModule')}`;
+  const pageHint =
+    'Tedarikçinin açık siparişlerini seçin; kabul deposu, miktar, raf ve lot/seri bilgisini tamamlayıp fiziksel kabulü tek akışta bitirin.';
+
+  if (!moduleReady) {
+    return (
+      <div className="grid min-h-[20rem] place-items-center">
+        <Loader2 className="size-7 animate-spin text-[var(--wms-brand-primary)]" />
+      </div>
+    );
+  }
+
   return (
     <section className="wms-ops-form space-y-5">
-      <div className="flex justify-end">
-        <Tabs
-          value={sourceMode}
-          onValueChange={(value) => setSourceMode(value as 'order' | 'stock')}
-          className="w-full sm:w-auto"
-        >
-          <TabsList
-            className={cn(
-              'wms-ops-tabs w-full sm:w-auto',
-              sourceMode === 'order' ? 'wms-ops-tabs--order' : 'wms-ops-tabs--stock',
-            )}
-          >
-            <span className="wms-ops-tab-indicator" aria-hidden />
-            <TabsTrigger value="order" className="wms-ops-tab gap-1.5">
-              <ListChecks className="size-3.5" />
-              Sipariş
-            </TabsTrigger>
-            <TabsTrigger value="stock" className="wms-ops-tab gap-1.5">
-              <Boxes className="size-3.5" />
-              Stok Detayı
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </div>
-      {sourceMode === 'order' ? <GoodsReceiptCreatePage direct /> : <GoodsReceiptManualPage direct />}
+      <header className="flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0 space-y-2">
+          {isPremium ? (
+            <PremiumEyebrow eyebrow={pageEyebrow} />
+          ) : (
+            <div className="wms-ops-eyebrow font-mono text-[11px] font-semibold uppercase tracking-[0.18em]">
+              {pageEyebrow}
+            </div>
+          )}
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-black tracking-tight">Mal kabul girişi</h1>
+            <TooltipProvider delayDuration={160}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    className="inline-grid size-7 place-items-center rounded-full border border-[color-mix(in_oklab,var(--wms-ops-accent)_28%,var(--wms-app-border))] bg-[color-mix(in_oklab,var(--wms-ops-accent)_8%,transparent)] text-[var(--wms-ops-accent)] transition hover:border-[color-mix(in_oklab,var(--wms-ops-accent)_55%,var(--wms-app-border))] hover:bg-[color-mix(in_oklab,var(--wms-ops-accent)_14%,transparent)] hover:shadow-[0_0_14px_color-mix(in_oklab,var(--wms-ops-accent)_18%,transparent)]"
+                    aria-label="Mal kabul girişi hakkında"
+                  >
+                    <CircleHelp className="size-3.5" aria-hidden />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent
+                  side="bottom"
+                  align="start"
+                  sideOffset={10}
+                  className={cn(
+                    'wms-ops-page-hint-tooltip max-w-[22rem] overflow-hidden rounded-xl border p-0 text-left shadow-[0_12px_40px_color-mix(in_oklab,black_45%,transparent),0_0_0_1px_color-mix(in_oklab,var(--wms-ops-accent)_18%,transparent)]',
+                    '!bg-[color-mix(in_oklab,var(--wms-app-panel)_96%,black)]',
+                    'border-[color-mix(in_oklab,var(--wms-ops-accent)_32%,var(--wms-app-border))]',
+                    '!text-[var(--wms-app-text)]',
+                  )}
+                >
+                  <div className="border-b border-[color-mix(in_oklab,var(--wms-ops-accent)_18%,transparent)] bg-[color-mix(in_oklab,var(--wms-ops-accent)_8%,transparent)] px-3.5 py-2">
+                    <span className="inline-flex items-center gap-1.5 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-[var(--wms-ops-accent)]">
+                      <span className="size-1.5 rounded-full bg-[var(--wms-ops-accent)] shadow-[0_0_8px_var(--wms-ops-accent)]" aria-hidden />
+                      Nasıl çalışır
+                    </span>
+                  </div>
+                  <p className="px-3.5 py-3 text-[0.78rem] leading-5 text-[var(--wms-app-text-muted)]">
+                    {pageHint}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        </div>
+
+        <div className="inline-flex items-center gap-2 rounded-xl border border-[color-mix(in_oklab,var(--wms-ops-accent)_40%,var(--wms-app-border))] bg-[color-mix(in_oklab,var(--wms-ops-accent)_12%,transparent)] px-3 py-2 text-xs font-semibold text-[var(--wms-ops-accent)] shadow-[0_0_16px_color-mix(in_oklab,var(--wms-ops-accent)_12%,transparent)]">
+          <ListChecks className="size-3.5 shrink-0" aria-hidden />
+          <span>Sipariş</span>
+        </div>
+      </header>
+
+      <GoodsReceiptCreatePage direct embedded />
     </section>
   );
 }

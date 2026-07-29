@@ -27,6 +27,7 @@ export interface SelectedReceiptLine extends OpenOrderLine {
   quantity: number;
   targetWarehouseId?: number;
   targetWarehouseValue?: string | null;
+  targetWarehouseName?: string;
   receivingLocationId?: number;
   receivingLocationValue?: string | null;
   receivingLocationCode?: string;

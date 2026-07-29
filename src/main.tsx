@@ -7,11 +7,14 @@ import { App } from './app/App';
 import { ThemeProvider } from './components/theme-provider';
 import i18n, { ensureI18nReady } from './lib/i18n';
 import { ensureApiReady } from './lib/axios';
+import { installGlobalToastErrorNavigation } from './lib/toast-error-navigation';
 import { useAuthStore } from './stores/auth-store';
 import './index.css';
 import './styles/shared-input.css';
 import './styles/terminal-v2-bridge.css';
 import './styles/premium-v2-bridge.css';
+
+installGlobalToastErrorNavigation();
 
 const queryClient = new QueryClient({
   defaultOptions: {

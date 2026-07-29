@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useEffect,
   useMemo,
   useState,
@@ -141,7 +142,13 @@ const groupOrderLines = (rows: OpenOrderLine[]): OpenOrderHeader[] => {
   return [...grouped.values()];
 };
 
-export function GoodsReceiptCreatePage({ direct = false }: { direct?: boolean } = {}): ReactElement {
+export function GoodsReceiptCreatePage({
+  direct = false,
+  embedded = false,
+}: {
+  direct?: boolean;
+  embedded?: boolean;
+} = {}): ReactElement {
   const { t, moduleReady } = useModuleTranslation("goods-receipt-v2");
   const { skin } = useTheme();
   const isPremium = skin === "premium";
@@ -161,13 +168,14 @@ export function GoodsReceiptCreatePage({ direct = false }: { direct?: boolean } 
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
   const [warehouseAccess, setWarehouseAccess] = useState<UserWarehouseAccess | null>(null);
   const [lines, setLines] = useState<SelectedReceiptLine[]>([]);
+  const [confirmedLineOrder, setConfirmedLineOrder] = useState<string[]>([]);
   const [series, setSeries] = useState<SeriesOption[]>([]);
   const [seriesValue, setSeriesValue] = useState<string | null>(null);
   const [assignees, setAssignees] = useState<ActiveUserOption[]>([]);
   const [documentDate, setDocumentDate] = useState(today);
   const [waybillDate, setWaybillDate] = useState(today);
   const [receiptNo, setReceiptNo] = useState("");
-  const [isElectronicReceipt, setIsElectronicReceipt] = useState(false);
+  const [isElectronicReceipt, setIsElectronicReceipt] = useState(true);
   const [plannedArrival, setPlannedArrival] = useState("");
   const [priority, setPriority] = useState("3");
   const [labelStrategy, setLabelStrategy] = useState("None");
@@ -203,6 +211,15 @@ export function GoodsReceiptCreatePage({ direct = false }: { direct?: boolean } 
   );
   const primaryLine = lines[0];
   const selectedQuantity = lines.reduce((sum, line) => sum + line.quantity, 0);
+  const orderedLines = useMemo(() => {
+    const byKey = new Map(lines.map((line) => [lineKey(line), line] as const));
+    const confirmed = confirmedLineOrder
+      .map((key) => byKey.get(key))
+      .filter((line): line is SelectedReceiptLine => Boolean(line));
+    const confirmedSet = new Set(confirmedLineOrder);
+    const rest = lines.filter((line) => !confirmedSet.has(lineKey(line)));
+    return [...confirmed, ...rest];
+  }, [lines, confirmedLineOrder]);
   const selectedOrderWarehouseCode = useMemo(
     () => orders.find((order) => selectedOrders.includes(order.siparisNo))?.targetWarehouseCode,
     [orders, selectedOrders],
@@ -214,9 +231,12 @@ export function GoodsReceiptCreatePage({ direct = false }: { direct?: boolean } 
       )?.targetWarehouseCode,
     [directOrderLines, selectedDirectLineKeys],
   );
-  const canUseOrderWarehouse = (warehouseCode?: number): boolean =>
-    !warehouseAccess?.isRestricted
-    || (warehouseCode != null && warehouseAccess.warehouseCodes.includes(warehouseCode));
+  const canUseOrderWarehouse = useCallback(
+    (warehouseCode?: number): boolean =>
+      !warehouseAccess?.isRestricted
+      || (warehouseCode != null && warehouseAccess.warehouseCodes.includes(warehouseCode)),
+    [warehouseAccess],
+  );
 
   useEffect(() => {
     let active = true;
@@ -226,6 +246,14 @@ export function GoodsReceiptCreatePage({ direct = false }: { direct?: boolean } 
     return () => { active = false; };
   }, [branchCode]);
 
+  useEffect(() => {
+    const keys = new Set(lines.map((line) => lineKey(line)));
+    setConfirmedLineOrder((current) => {
+      const next = current.filter((key) => keys.has(key));
+      return next.length === current.length ? current : next;
+    });
+  }, [lines]);
+
   const clearCustomerDependent = (): void => {
     setProjectCodeFilter("");
     setOrders([]);
@@ -233,6 +261,7 @@ export function GoodsReceiptCreatePage({ direct = false }: { direct?: boolean } 
     setSelectedDirectLineKeys([]);
     setSelectedOrders([]);
     setLines([]);
+    setConfirmedLineOrder([]);
   };
 
   const findCustomerByCode = async (customerCode: string): Promise<CustomerOption> => {
@@ -340,6 +369,7 @@ export function GoodsReceiptCreatePage({ direct = false }: { direct?: boolean } 
     setError(null);
     setSelectedOrders([]);
     setLines([]);
+    setConfirmedLineOrder([]);
     try {
       if (direct) {
         const allLines = await goodsReceiptV2Api.orderLines(
@@ -350,6 +380,7 @@ export function GoodsReceiptCreatePage({ direct = false }: { direct?: boolean } 
         );
         const filteredLines = allLines;
         setDirectOrderLines(filteredLines);
+        setSelectedDirectLineKeys([]);
         const directOrders = groupOrderLines(filteredLines);
         setOrders(directOrders);
         if (
@@ -562,6 +593,7 @@ export function GoodsReceiptCreatePage({ direct = false }: { direct?: boolean } 
               targetWarehouseValue: warehouse
                 ? warehouseOption(warehouse).value
                 : null,
+              targetWarehouseName: warehouse?.warehouseName,
               receivingLocationValue: null,
               trackingType: trackingPolicy.trackingType,
               trackingPolicy,
@@ -571,6 +603,7 @@ export function GoodsReceiptCreatePage({ direct = false }: { direct?: boolean } 
           }),
         );
       setLines(preparedLines);
+      setConfirmedLineOrder([]);
       window.requestAnimationFrame(() =>
         document
           .getElementById("goods-receipt-selected-lines")
@@ -600,6 +633,7 @@ export function GoodsReceiptCreatePage({ direct = false }: { direct?: boolean } 
           ...line,
           targetWarehouseValue: patch.targetWarehouseValue ?? null,
           targetWarehouseId: patch.targetWarehouseId,
+          targetWarehouseName: patch.targetWarehouseName,
           receivingLocationId: undefined,
           receivingLocationValue: null,
           receivingLocationCode: undefined,
@@ -608,8 +642,41 @@ export function GoodsReceiptCreatePage({ direct = false }: { direct?: boolean } 
         };
       });
     });
-  const removeLine = (key: string): void =>
-    setLines((current) => current.filter((line) => lineKey(line) !== key));
+  const toggleLineConfirmed = (key: string, next: boolean): void => {
+    if (next) {
+      const line = lines.find((item) => lineKey(item) === key);
+      if (!line || line.quantity <= 0) {
+        toast.error("Önce miktar girin.");
+        return;
+      }
+      setConfirmedLineOrder((current) =>
+        current.includes(key) ? current : [...current, key],
+      );
+      return;
+    }
+    setConfirmedLineOrder((current) => current.filter((item) => item !== key));
+  };
+  const confirmableLineKeys = useMemo(
+    () =>
+      lines
+        .filter((line) => line.quantity > 0)
+        .map((line) => lineKey(line)),
+    [lines],
+  );
+  const allLinesConfirmed =
+    confirmableLineKeys.length > 0 &&
+    confirmableLineKeys.every((key) => confirmedLineOrder.includes(key));
+  const toggleAllLinesConfirmed = (): void => {
+    if (confirmableLineKeys.length === 0) {
+      toast.error("Onaylanacak miktarı olan kalem yok.");
+      return;
+    }
+    if (allLinesConfirmed) {
+      setConfirmedLineOrder([]);
+      return;
+    }
+    setConfirmedLineOrder(confirmableLineKeys);
+  };
   const updateTracking = (
     key: string,
     trackingId: string,
@@ -958,6 +1025,50 @@ export function GoodsReceiptCreatePage({ direct = false }: { direct?: boolean } 
     );
   };
 
+  const selectableDirectOrderLines = useMemo(
+    () =>
+      visibleDirectOrderLines.filter(
+        (line) =>
+          (line.availableQuantity ?? 0) > 0 &&
+          canUseOrderWarehouse(line.targetWarehouseCode),
+      ),
+    [visibleDirectOrderLines, canUseOrderWarehouse],
+  );
+  const directSelectAllWarehouseCode =
+    selectedDirectWarehouseCode ??
+    selectableDirectOrderLines[0]?.targetWarehouseCode;
+  const directSelectAllTargets = useMemo(
+    () =>
+      selectableDirectOrderLines.filter(
+        (line) => line.targetWarehouseCode === directSelectAllWarehouseCode,
+      ),
+    [selectableDirectOrderLines, directSelectAllWarehouseCode],
+  );
+  const directSelectAllKeys = useMemo(
+    () => directSelectAllTargets.map((line) => lineKey(line)),
+    [directSelectAllTargets],
+  );
+  const allDirectLinesSelected =
+    directSelectAllKeys.length > 0 &&
+    directSelectAllKeys.every((key) => selectedDirectLineKeys.includes(key));
+  const toggleAllDirectLines = (): void => {
+    if (directSelectAllKeys.length === 0) return;
+    if (allDirectLinesSelected) {
+      setSelectedDirectLineKeys([]);
+      setLines([]);
+      return;
+    }
+    if (
+      selectableDirectOrderLines.length > directSelectAllTargets.length
+    ) {
+      toast.warning(
+        "Farklı hedef depolara ait kalemler aynı mal kabulde seçilemez. Aynı depodaki uygun kalemler seçildi.",
+      );
+    }
+    setSelectedDirectLineKeys(directSelectAllKeys);
+    setLines([]);
+  };
+
   if (!moduleReady)
     return (
       <div className="grid min-h-[20rem] place-items-center">
@@ -967,20 +1078,22 @@ export function GoodsReceiptCreatePage({ direct = false }: { direct?: boolean } 
 
   return (
     <section className="wms-ops-form space-y-5">
-      <header className="space-y-2">
-        {isPremium ? (
-          <PremiumEyebrow eyebrow={createEyebrow} />
-        ) : (
-          <div className="wms-ops-eyebrow font-mono text-[11px] font-semibold uppercase tracking-[0.18em]">
-            {createEyebrow}
-          </div>
-        )}
-        <p className="max-w-3xl text-sm leading-6 text-[var(--wms-app-text-muted)]">
-          {direct
-            ? "Tedarikçinin açık siparişlerini seçin; kabul deposu, miktar, raf ve lot/seri bilgisini tamamlayıp fiziksel kabulü tek akışta bitirin."
-            : t("createFlow.subtitle")}
-        </p>
-      </header>
+      {!embedded ? (
+        <header className="space-y-2">
+          {isPremium ? (
+            <PremiumEyebrow eyebrow={createEyebrow} />
+          ) : (
+            <div className="wms-ops-eyebrow font-mono text-[11px] font-semibold uppercase tracking-[0.18em]">
+              {createEyebrow}
+            </div>
+          )}
+          <p className="max-w-3xl text-sm leading-6 text-[var(--wms-app-text-muted)]">
+            {direct
+              ? "Tedarikçinin açık siparişlerini seçin; kabul deposu, miktar, raf ve lot/seri bilgisini tamamlayıp fiziksel kabulü tek akışta bitirin."
+              : t("createFlow.subtitle")}
+          </p>
+        </header>
+      ) : null}
 
       <nav className="wms-ops-create-steps" aria-label="Oluşturma adımları">
         {steps.map((value) => {
@@ -1084,7 +1197,7 @@ export function GoodsReceiptCreatePage({ direct = false }: { direct?: boolean } 
                 <div className="wms-ops-order-lookup__field min-w-0 flex-1">
                   <div className="mb-1.5 flex items-center gap-1.5">
                     <span className="wms-ops-entry-label">
-                      Sipariş numarasıyla getir
+                      Sipariş No
                     </span>
                     <TooltipProvider delayDuration={180}>
                       <Tooltip>
@@ -1167,13 +1280,15 @@ export function GoodsReceiptCreatePage({ direct = false }: { direct?: boolean } 
                     <span className="text-sm font-semibold">E-irsaliye</span>
                   </label>
                 </div>
-                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <div className="grid gap-4 md:grid-cols-2">
                   <Field
                     label={
                       isElectronicReceipt
                         ? "E-irsaliye numarası"
                         : "İrsaliye numarası"
                     }
+                    errorTarget="receiptNo"
+                    errorKeys="irsaliye numarası|e-irsaliye numarası|normal irsaliye"
                   >
                     <AppInput
                       className="font-mono tracking-wider"
@@ -1208,31 +1323,45 @@ export function GoodsReceiptCreatePage({ direct = false }: { direct?: boolean } 
                       }
                     />
                   </Field>
-                  <Field label="İrsaliye tarihi">
+                  <Field
+                    label="İrsaliye tarihi"
+                    errorTarget="waybillDate"
+                    errorKeys="irsaliye tarihi"
+                  >
                     <AppDateInput
                       value={waybillDate}
                       onChange={(event) => setWaybillDate(event.target.value)}
                     />
                   </Field>
-                  <Field label={t("documentDate")}>
-                    <AppDateInput
-                      value={documentDate}
-                      onChange={(event) => setDocumentDate(event.target.value)}
-                    />
-                  </Field>
-                  <Field label="Mal kabul belge serisi">
-                    <AppDropdown
-                      value={seriesValue}
-                      onValueChange={setSeriesValue}
-                      options={series.map((x) => ({
-                        value: String(x.id),
-                        label: `${x.code} · ${x.name}`,
-                        description: x.previewDocumentNumber,
-                      }))}
-                      placeholder="Belge serisi seçin"
-                      searchable
-                    />
-                  </Field>
+                  <div className="hidden">
+                    <Field
+                      label={t("documentDate")}
+                      errorTarget="documentDate"
+                      errorKeys="belge tarihi"
+                    >
+                      <AppDateInput
+                        value={documentDate}
+                        onChange={(event) => setDocumentDate(event.target.value)}
+                      />
+                    </Field>
+                    <Field
+                      label="Mal kabul belge serisi"
+                      errorTarget="documentSeries"
+                      errorKeys="belge serisi|mal kabul belge serisi"
+                    >
+                      <AppDropdown
+                        value={seriesValue}
+                        onValueChange={setSeriesValue}
+                        options={series.map((x) => ({
+                          value: String(x.id),
+                          label: `${x.code} · ${x.name}`,
+                          description: x.previewDocumentNumber,
+                        }))}
+                        placeholder="Belge serisi seçin"
+                        searchable
+                      />
+                    </Field>
+                  </div>
                 </div>
               </section>
             )}
@@ -1261,7 +1390,15 @@ export function GoodsReceiptCreatePage({ direct = false }: { direct?: boolean } 
                   <table className="wms-ops-order-fetch__table w-full min-w-[840px] text-left text-xs">
                     <thead>
                       <tr>
-                        <th className="w-14 text-center" />
+                        <th className="w-14 text-center">
+                          <OpsSkinCheckbox
+                            checked={allDirectLinesSelected}
+                            disabled={directSelectAllKeys.length === 0}
+                            onCheckedChange={() => toggleAllDirectLines()}
+                            aria-label="Tümünü seç"
+                            title="Tümünü seç"
+                          />
+                        </th>
                         <th>Sipariş No</th>
                         <th>Proje Kodu</th>
                         <th>Stok Kodu</th>
@@ -1473,6 +1610,8 @@ export function GoodsReceiptCreatePage({ direct = false }: { direct?: boolean } 
             <section
               id="goods-receipt-selected-lines"
               className="scroll-mt-5 overflow-hidden rounded-2xl border border-cyan-500/30 bg-[var(--wms-app-panel)] shadow-sm"
+              data-wms-error-target="selectedLines"
+              data-wms-error-keys="hedef depo|kabul rafı|miktar|lot/seri|seri satırı|üretim tarihi|son kullanma|aynı seri|tek depo|seçilen depo"
             >
                   <header className="border-b border-[var(--wms-app-border)] bg-cyan-500/[.07] px-5 py-4">
                     <h2 className="text-xl font-black">
@@ -1489,6 +1628,32 @@ export function GoodsReceiptCreatePage({ direct = false }: { direct?: boolean } 
                         <span className="rounded-lg border border-[var(--wms-app-border)] px-3 py-2 font-mono">
                           {formatProjectNumber(selectedQuantity)}
                         </span>
+                        {confirmedLineOrder.length > 0 ? (
+                          <span className="rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-3 py-2 font-semibold text-emerald-600 dark:text-emerald-300">
+                            {confirmedLineOrder.length} seçili
+                          </span>
+                        ) : null}
+                        <button
+                          type="button"
+                          onClick={toggleAllLinesConfirmed}
+                          disabled={confirmableLineKeys.length === 0}
+                          className={cn(
+                            "ml-auto inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold transition",
+                            allLinesConfirmed
+                              ? "border-emerald-500/35 bg-emerald-500/12 text-emerald-700 dark:text-emerald-200"
+                              : "border-cyan-500/30 bg-cyan-500/10 text-cyan-700 hover:border-cyan-500/50 hover:bg-cyan-500/15 dark:text-cyan-200",
+                            confirmableLineKeys.length === 0 && "cursor-not-allowed opacity-45",
+                          )}
+                        >
+                          <span className="pointer-events-none" aria-hidden>
+                            <OpsSkinCheckbox
+                              checked={allLinesConfirmed}
+                              onCheckedChange={() => undefined}
+                              disabled={confirmableLineKeys.length === 0}
+                            />
+                          </span>
+                          {allLinesConfirmed ? "Seçimi kaldır" : "Tümünü seç"}
+                        </button>
                     </div>
                   </header>
 
@@ -1496,29 +1661,28 @@ export function GoodsReceiptCreatePage({ direct = false }: { direct?: boolean } 
                     <div className="wms-ops-selected-order-items space-y-4">
               <div className="flex items-center justify-between gap-3">
                 <p className="text-xs text-[var(--wms-app-text-muted)]">
-                  Kalem detayları · miktar/depo/raf/seri-lot
+                  Kalem detayları · miktar girdikten sonra kutuyu işaretleyin;
+                  onaylananlar sırayla üste gelir
                 </p>
               </div>
               <div className="space-y-2">
-                {lines.map((line) => (
+                {orderedLines.map((line) => {
+                  const key = lineKey(line);
+                  return (
                   <ReceiptEntryRow
-                    key={lineKey(line)}
+                    key={key}
                     line={line}
-                    branch={customer?.branch ?? branchCode}
+                    confirmed={confirmedLineOrder.includes(key)}
+                    onConfirmedChange={(next) => toggleLineConfirmed(key, next)}
                     updateLine={updateLine}
-                    removeLine={removeLine}
                     updateTracking={updateTracking}
                     addTracking={addTracking}
                     removeTracking={removeTracking}
                     createSerialRows={createSerialRows}
                     cancelGeneratedSerials={cancelGeneratedSerials}
-                    lockedWarehouseId={
-                      primaryLine && lineKey(line) !== lineKey(primaryLine)
-                        ? primaryLine.targetWarehouseId
-                        : undefined
-                    }
                   />
-                ))}
+                  );
+                })}
               </div>
 
               <Panel
@@ -1567,6 +1731,8 @@ export function GoodsReceiptCreatePage({ direct = false }: { direct?: boolean } 
                             ? "E-irsaliye numarası"
                             : "İrsaliye numarası"
                         }
+                        errorTarget="receiptNo"
+                        errorKeys="irsaliye numarası|e-irsaliye numarası|normal irsaliye"
                       >
                         <AppInput
                           className="font-mono tracking-wider"
@@ -1601,7 +1767,11 @@ export function GoodsReceiptCreatePage({ direct = false }: { direct?: boolean } 
                           }
                         />
                       </Field>
-                      <Field label="İrsaliye tarihi">
+                      <Field
+                        label="İrsaliye tarihi"
+                        errorTarget="waybillDate"
+                        errorKeys="irsaliye tarihi"
+                      >
                         <AppDateInput
                           value={waybillDate}
                           onChange={(event) =>
@@ -1609,7 +1779,11 @@ export function GoodsReceiptCreatePage({ direct = false }: { direct?: boolean } 
                           }
                         />
                       </Field>
-                      <Field label="Mal kabul belge serisi">
+                      <Field
+                        label="Mal kabul belge serisi"
+                        errorTarget="documentSeries"
+                        errorKeys="belge serisi|mal kabul belge serisi"
+                      >
                         <AppDropdown
                           value={seriesValue}
                           onValueChange={setSeriesValue}
@@ -1661,7 +1835,11 @@ export function GoodsReceiptCreatePage({ direct = false }: { direct?: boolean } 
                     />
                   </Field>
                 </div>
-                {!direct && <section className="mt-4 rounded-xl border border-[var(--wms-app-border)] p-4">
+                {!direct && <section
+                  className="mt-4 rounded-xl border border-[var(--wms-app-border)] p-4"
+                  data-wms-error-target="assignees"
+                  data-wms-error-keys="operasyon kullanıcısı|emir sorumluları|kullanıcı atan"
+                >
                   <div className="mb-3 flex items-start gap-2">
                     <UserRoundCog className="mt-0.5 size-5 text-cyan-500" />
                     <div>
@@ -1889,20 +2067,19 @@ export function GoodsReceiptCreatePage({ direct = false }: { direct?: boolean } 
 
 function ReceiptEntryRow({
   line,
-  branch,
+  confirmed,
+  onConfirmedChange,
   updateLine,
-  removeLine,
   updateTracking,
   addTracking,
   removeTracking,
   createSerialRows,
   cancelGeneratedSerials,
-  lockedWarehouseId,
 }: {
   line: SelectedReceiptLine;
-  branch: string;
+  confirmed: boolean;
+  onConfirmedChange: (next: boolean) => void;
   updateLine: (key: string, patch: Partial<SelectedReceiptLine>) => void;
-  removeLine: (key: string) => void;
   updateTracking: (
     key: string,
     id: string,
@@ -1912,7 +2089,6 @@ function ReceiptEntryRow({
   removeTracking: (key: string, id: string) => void;
   createSerialRows: (key: string) => Promise<void>;
   cancelGeneratedSerials: (key: string) => Promise<void>;
-  lockedWarehouseId?: number;
 }): ReactElement {
   const key = lineKey(line);
   const serialMode =
@@ -1928,7 +2104,6 @@ function ReceiptEntryRow({
   >([]);
   const [suggestionsBusy, setSuggestionsBusy] = useState(false);
   const [serialOpen, setSerialOpen] = useState(false);
-  const [warehouseLookupOpen, setWarehouseLookupOpen] = useState(false);
   const [locationLookupOpen, setLocationLookupOpen] = useState(false);
   const [quantityText, setQuantityText] = useState(
     formatProjectNumber(line.quantity, {
@@ -1937,12 +2112,19 @@ function ReceiptEntryRow({
     }),
   );
 
-  const warehouseLabel = line.targetWarehouseValue
-    ? (() => {
-        const code = line.targetWarehouseValue.split("|")[2];
-        return code ? `Depo ${code}` : "";
-      })()
-    : "";
+  const warehouseCode =
+    line.targetWarehouseCode ??
+    (line.targetWarehouseValue
+      ? Number(line.targetWarehouseValue.split("|")[2]) || undefined
+      : undefined);
+  const warehouseBadge =
+    line.targetWarehouseName && warehouseCode != null
+      ? `${line.targetWarehouseName} (${warehouseCode})`
+      : line.targetWarehouseName
+        ? line.targetWarehouseName
+        : warehouseCode != null
+          ? `Depo ${warehouseCode}`
+          : "";
   const receivingLabel =
     line.receivingLocationCode ||
     (line.receivingLocationValue
@@ -2065,7 +2247,12 @@ function ReceiptEntryRow({
   }, [key, line.quantity, line.stockCode, line.targetWarehouseId, updateLine]);
 
   return (
-    <div className="wms-ops-receipt-entry-row space-y-3">
+    <div
+      className={cn(
+        "wms-ops-receipt-entry-row space-y-3 rounded-xl transition-[box-shadow,border-color,background-color] duration-300",
+        confirmed && "wms-ops-receipt-entry-row--confirmed",
+      )}
+    >
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1 space-y-3">
           <div className="min-w-0 space-y-1">
@@ -2074,6 +2261,12 @@ function ReceiptEntryRow({
             </p>
             <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
               <span className="wms-ops-code-badge">{line.stockCode}</span>
+              {warehouseBadge ? (
+                <>
+                  <span>•</span>
+                  <span className="wms-ops-code-badge">{warehouseBadge}</span>
+                </>
+              ) : null}
               <span>•</span>
               <span className="font-mono">{line.siparisNo}</span>
               {line.projectCode ? (
@@ -2102,60 +2295,7 @@ function ReceiptEntryRow({
             </div>
           </div>
 
-          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-            <div className="space-y-1 sm:col-span-2 xl:col-span-1">
-              <label className="wms-ops-entry-label">Hedef Depo</label>
-              <OpsFieldShell
-                className={cn(
-                  warehouseLookupOpen && "wms-ops-field-shell--active",
-                )}
-              >
-                <PagedLookupDialog<WarehouseOption>
-                  variant="ops"
-                  open={warehouseLookupOpen}
-                  onOpenChange={setWarehouseLookupOpen}
-                  title="Hedef depo seçin"
-                  value={warehouseLabel}
-                  placeholder="Hedef depo"
-                  searchPlaceholder="Depo ara…"
-                  emptyText="Depo bulunamadı."
-                  disabled={Boolean(lockedWarehouseId)}
-                  triggerClassName={cn(OPS_FIELD_CLASS, "h-9")}
-                  queryKey={["gr-line-warehouse-lookup", key, branch]}
-                  fetchPage={async ({ pageNumber, pageSize, search, signal }) =>
-                    toPagedResponse(
-                      await goodsReceiptV2Api.warehouses(
-                        {
-                          pageNumber,
-                          pageSize,
-                          search,
-                          sortBy: "warehouseCode",
-                          sortDirection: "asc",
-                          signal: signal ?? new AbortController().signal,
-                        },
-                        branch,
-                      ),
-                    )
-                  }
-                  getKey={(item) => String(item.id)}
-                  getLabel={(item) =>
-                    `${item.warehouseName} (${item.warehouseCode})`
-                  }
-                  onSelect={(warehouse) => {
-                    updateLine(key, {
-                      targetWarehouseValue: warehouseOption(warehouse).value,
-                      targetWarehouseId: warehouse.id,
-                      receivingLocationId: undefined,
-                      receivingLocationValue: null,
-                      receivingLocationCode: undefined,
-                      putawayLocationId: undefined,
-                      putawayLocationCode: undefined,
-                    });
-                  }}
-                />
-              </OpsFieldShell>
-            </div>
-
+          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
             <div className="space-y-1">
               <label className="wms-ops-entry-label">Miktar</label>
               <OpsFieldShell>
@@ -2314,77 +2454,121 @@ function ReceiptEntryRow({
           <StockTrackingPolicyField policy={line.trackingPolicy} compact />
         </div>
 
-        <OpsActionButton
-          type="button"
-          variant="secondary"
-          className="wms-ops-receipt-row__remove-btn shrink-0 self-start"
-          aria-label="Kalemi kaldır"
-          onClick={() => removeLine(key)}
-        >
-          <Trash2 className="size-3.5" aria-hidden />
-        </OpsActionButton>
+        <div className="flex shrink-0 flex-col items-center gap-1 self-start pt-0.5">
+          <OpsSkinCheckbox
+            checked={confirmed}
+            onCheckedChange={onConfirmedChange}
+            aria-label={`${line.stockCode ?? line.siparisNo} onayla`}
+            title={
+              confirmed
+                ? "Onayı kaldır"
+                : "Miktar girildikten sonra onayla (üste taşınır)"
+            }
+          />
+          <span className="text-[0.58rem] font-semibold uppercase tracking-wider text-[var(--wms-app-text-muted)]">
+            {confirmed ? "Onay" : "Hazır"}
+          </span>
+        </div>
       </div>
 
       {(suggestionsBusy || suggestions.length > 0 || line.putawayLocationCode) && (
-        <div className="mt-3 space-y-2 rounded-xl border border-emerald-500/25 bg-emerald-500/5 p-3">
-          <div className="flex flex-wrap items-center gap-2 text-[0.7rem] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
-            {suggestionsBusy && <Loader2 className="size-3.5 animate-spin" />}
-            Önerilen Raf
+        <div className="mt-2.5 overflow-hidden rounded-xl border border-emerald-500/15 bg-[color-mix(in_oklab,var(--wms-app-panel)_88%,transparent)] shadow-[inset_0_1px_0_color-mix(in_oklab,white_4%,transparent)]">
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-emerald-500/10 bg-emerald-500/[0.04] px-3 py-1.5">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-emerald-700 dark:text-emerald-300">
+                {suggestionsBusy ? (
+                  <Loader2 className="size-3 animate-spin" />
+                ) : (
+                  <span className="size-1.5 rounded-full bg-emerald-500/80" aria-hidden />
+                )}
+                Önerilen Raf
+              </span>
+              <span className="hidden text-[0.62rem] text-[var(--wms-app-text-muted)] sm:inline">
+                İlk öneri otomatik · kabul rafı değildir
+              </span>
+            </div>
             {line.putawayLocationCode ? (
-              <span className="rounded-md bg-emerald-500/15 px-2 py-0.5 font-mono text-[0.7rem] normal-case tracking-normal text-emerald-700 dark:text-emerald-200">
-                Otomatik seçili: {line.putawayLocationCode}
+              <span className="inline-flex max-w-[14rem] items-center gap-1 rounded-full bg-emerald-500/12 px-2 py-0.5 font-mono text-[0.6rem] text-emerald-700 dark:text-emerald-200">
+                <CheckCircle2 className="size-2.5 shrink-0 opacity-80" aria-hidden />
+                <span className="truncate">{line.putawayLocationCode}</span>
               </span>
             ) : null}
           </div>
-          <p className="text-[0.7rem] text-slate-500">
-            İlk öneri otomatik seçilir; üzerine tıklayarak değiştirebilirsiniz.
-            Kabul rafı (Receiving/Staging) yerine geçmez — raflama rehberidir.
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {suggestions.map((item, index) => {
-              const selected = line.putawayLocationId === item.id;
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() =>
-                    updateLine(key, {
-                      putawayLocationId: item.id,
-                      putawayLocationCode: item.code,
-                    })
-                  }
-                  className={cn(
-                    "rounded-lg border px-3 py-2 text-left text-xs transition",
-                    selected
-                      ? "border-emerald-500 bg-emerald-500/20 text-emerald-800 ring-1 ring-emerald-500/40 dark:text-emerald-200"
-                      : "border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] hover:border-emerald-500/50",
-                  )}
-                >
-                  <strong>
-                    {index === 0 ? "Öneri · " : `${index + 1}. `}
-                    {item.code}
-                  </strong>
-                  <span className="ml-2 text-slate-500">{item.reason}</span>
-                  {item.remainingCapacity != null && (
-                    <span className="ml-2 font-mono text-slate-500">
-                      Kalan: {item.remainingCapacity}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
+
+          {suggestions.length > 0 ? (
+            <div className="grid gap-1.5 p-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+              {suggestions.map((item, index) => {
+                const selected = line.putawayLocationId === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() =>
+                      updateLine(key, {
+                        putawayLocationId: item.id,
+                        putawayLocationCode: item.code,
+                      })
+                    }
+                    className={cn(
+                      "relative flex flex-col gap-0.5 overflow-hidden rounded-lg border px-2.5 py-1.5 text-left transition duration-150",
+                      selected
+                        ? "border-emerald-500/45 bg-emerald-500/[0.1] shadow-[inset_3px_0_0_0_rgb(16_185_129)]"
+                        : "border-transparent bg-black/[0.025] hover:-translate-y-px hover:border-emerald-500/25 hover:bg-emerald-500/[0.05] dark:bg-white/[0.03]",
+                    )}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className={cn(
+                          "font-mono text-[0.58rem] tabular-nums",
+                          selected
+                            ? "text-emerald-600 dark:text-emerald-300"
+                            : "text-[var(--wms-app-text-muted)]",
+                        )}
+                      >
+                        {String(index + 1).padStart(2, "0")}
+                      </span>
+                      <span
+                        className={cn(
+                          "min-w-0 flex-1 truncate font-mono text-[0.68rem] font-semibold tracking-tight",
+                          selected
+                            ? "text-emerald-800 dark:text-emerald-50"
+                            : "text-[var(--wms-app-text)]",
+                        )}
+                        title={item.code}
+                      >
+                        {item.code}
+                      </span>
+                      {selected ? (
+                        <CheckCircle2
+                          className="size-3 shrink-0 text-emerald-500"
+                          aria-label="Seçili"
+                        />
+                      ) : index === 0 ? (
+                        <span className="shrink-0 text-[0.55rem] font-medium uppercase tracking-wider text-[var(--wms-app-text-muted)]">
+                          öneri
+                        </span>
+                      ) : null}
+                    </div>
+                    <div className="flex items-center justify-between gap-2 pl-[1.35rem]">
+                      <span
+                        className="min-w-0 flex-1 truncate text-[0.6rem] leading-4 text-[var(--wms-app-text-muted)]"
+                        title={item.reason}
+                      >
+                        {item.reason}
+                      </span>
+                      {item.remainingCapacity != null ? (
+                        <span className="shrink-0 rounded bg-black/5 px-1 py-px font-mono text-[0.55rem] text-[var(--wms-app-text-muted)] dark:bg-white/5">
+                          {item.remainingCapacity}
+                        </span>
+                      ) : null}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
         </div>
       )}
-
-      {line.targetWarehouseValue &&
-        Number(line.targetWarehouseValue.split("|")[2]) !==
-          line.targetWarehouseCode && (
-          <p className="mt-3 rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-500">
-            Sipariş deposu {line.targetWarehouseCode}; bu kalem için farklı bir
-            kabul deposu seçildi.
-          </p>
-        )}
 
       {serialMode && line.serialGenerationKey && (
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-500/25 bg-amber-500/10 px-3 py-2">
@@ -2929,12 +3113,20 @@ function Panel({
 function Field({
   label,
   children,
+  errorTarget,
+  errorKeys,
 }: {
   label: string;
   children: ReactNode;
+  errorTarget?: string;
+  errorKeys?: string;
 }): ReactElement {
   return (
-    <label className="space-y-1.5 text-sm">
+    <label
+      className="space-y-1.5 text-sm"
+      data-wms-error-target={errorTarget || undefined}
+      data-wms-error-keys={errorKeys || undefined}
+    >
       <span className="font-semibold">{label}</span>
       {children}
     </label>
