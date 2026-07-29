@@ -146,7 +146,7 @@ export function SteelReceiptImportPage(){
   const {t}=useTranslation('common');
   const branch=useAuthStore(s=>s.branch?.code??'0');const [customer,setCustomer]=useState<string|null>(null);const [warehouse,setWarehouse]=useState<string|null>(null);
   const [seriesId,setSeriesId]=useState<string|null>(null);const [reference,setReference]=useState('');const [exportRef,setExportRef]=useState('');
-  const [waybill,setWaybill]=useState('');const [waybillDate,setWaybillDate]=useState(new Date().toLocaleDateString('en-CA'));const [plannedArrival,setPlannedArrival]=useState('');
+  const [waybill,setWaybill]=useState('');const [isElectronic,setIsElectronic]=useState(true);const [waybillDate,setWaybillDate]=useState(new Date().toLocaleDateString('en-CA'));const [plannedArrival,setPlannedArrival]=useState('');
   const [fileName,setFileName]=useState('');const [lines,setLines]=useState<SteelImportLine[]>([]);
   const [preview,setPreview]=useState<SteelImportPreview|null>(null);const [busy,setBusy]=useState(false);const warehouseId=Number(split(warehouse)[0]||0);
   useEffect(()=>{setSeriesId(null);void goodsReceiptV2Api.series().then(x=>{setSeriesId(String((x.find(y=>y.isDefault)??x[0])?.id??''))})},[branch]);
@@ -175,7 +175,7 @@ export function SteelReceiptImportPage(){
     if(!warehouseId)missing.push(t(`${I}.targetWarehouse`));
     if(!reference.trim())missing.push(t(`${I}.importReference`));
     if(!lines.length)missing.push(t(`${I}.excelFile`));
-    if(!isValidGoodsReceiptDocumentNo(waybill))missing.push(t(`${I}.gibWaybillNo`));
+    if(!isValidGoodsReceiptDocumentNo(waybill))missing.push(isElectronic?t(`${I}.gibWaybillNo`):t(`${I}.waybillNo`,{defaultValue:'İrsaliye numarası'}));
     if(!waybillDate.trim())missing.push(t(`${I}.waybillDate`));
     if(missing.length===0)return null;
     if(missing.length===1)return t(`${I}.validationFieldRequired`,{field:missing[0]});
@@ -190,7 +190,7 @@ export function SteelReceiptImportPage(){
       <Field label={t(`${I}.targetWarehouse`)}><PagedAppDropdown queryKey={['steel-warehouses',branch]} fetchPage={r=>goodsReceiptV2Api.warehouses(r,branch)} toOption={x=>({value:`${x.id}|${x.warehouseCode}`,label:`${x.warehouseCode} · ${x.warehouseName}`})} value={warehouse} onValueChange={setWarehouse} searchable/></Field>
       <Field label={t(`${I}.importReference`)}><input className="input" value={reference} onChange={e=>setReference(e.target.value)} maxLength={100}/></Field>
       <Field label={t(`${I}.exportReference`)}><input className="input" value={exportRef} onChange={e=>setExportRef(e.target.value)} maxLength={100}/></Field>
-      <Field label={t(`${I}.gibWaybillNo`)}><div className="relative"><input className="input pr-16 font-mono" value={waybill} onChange={e=>{setWaybill(normalizeGoodsReceiptDocumentNo(e.target.value));setPreview(null)}} maxLength={15} placeholder="GIB2026AB000000"/><span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500">{waybill.length}/15</span></div><span className="mt-1 inline-flex items-center gap-2 text-xs font-semibold text-cyan-500"><input type="checkbox" checked disabled readOnly className="size-3.5 accent-cyan-500"/>E-irsaliye / GİB</span></Field>
+      <Field label={isElectronic?t(`${I}.gibWaybillNo`):t(`${I}.waybillNo`,{defaultValue:'İrsaliye numarası'})}><div className="relative"><input className="input pr-16 font-mono" value={waybill} onChange={e=>{setWaybill(normalizeGoodsReceiptDocumentNo(e.target.value));setPreview(null)}} maxLength={15} placeholder={isElectronic?'GIB2026AB000000':'IRS202600000001'}/><span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500">{waybill.length}/15</span></div><label className="mt-1 inline-flex cursor-pointer items-center gap-2 text-xs font-semibold text-cyan-500"><input type="checkbox" checked={isElectronic} onChange={e=>{setIsElectronic(e.target.checked);setPreview(null)}} className="size-3.5 accent-cyan-500"/>E-irsaliye / GİB</label></Field>
       <Field label={t(`${I}.waybillDate`)}><AppDateInput value={waybillDate} onChange={e=>{setWaybillDate(e.target.value);setPreview(null)}}/></Field>
       <Field label={t(`${I}.plannedArrival`)}><AppDateInput type="datetime-local" value={plannedArrival} onChange={e=>{setPlannedArrival(e.target.value);setPreview(null)}}/></Field>
       <Field label={t(`${I}.excelFile`)}><label className="flex h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-cyan-500/50 bg-cyan-500/5 text-sm font-bold text-cyan-500"><Upload className="size-4"/>{fileName||t(`${I}.selectFile`)}<input type="file" accept=".xlsx,.xls" className="hidden" onChange={e=>void onFile(e)}/></label></Field>

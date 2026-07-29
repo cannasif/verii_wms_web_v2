@@ -39,7 +39,7 @@ function ReceiptPanel(){
   const [source,setSource]=useState<SteelReceiptSource|null>(null);
   const [selected,setSelected]=useState<Record<number,SteelLineRow>>({});
   const [note,setNote]=useState('');
-  const isElectronic=true;
+  const [isElectronic,setIsElectronic]=useState(true);
   const [receiptNo,setReceiptNo]=useState('');
   const [documentDate,setDocumentDate]=useState(today);
   const [lastResult,setLastResult]=useState<ConvertResult|null>(null);
@@ -85,12 +85,12 @@ function ReceiptPanel(){
   };
   const convert=async()=>{
     if(!selectedRows.length||!source)return;
-    if(!receiptNoValid||!documentDate){toast.error('E-irsaliye / GİB numarası tam 15 alfanümerik karakter olmalı ve irsaliye tarihi girilmelidir.');return}
+    if(!receiptNoValid||!documentDate){toast.error(isElectronic?'E-irsaliye / GİB numarası tam 15 alfanümerik karakter olmalı ve irsaliye tarihi girilmelidir.':'İrsaliye numarası tam 15 alfanümerik karakter olmalı ve irsaliye tarihi girilmelidir.');return}
     setBusy(true);
     try{
       const result=await steelReceiptApi.convert(source.planId,selectedRows.map(x=>x.id),{
         idempotencyKey:idempotencyKey.current,mode:'Direct',documentDate,
-        waybillNo:undefined,electronicWaybillNo:receiptNo,
+        waybillNo:isElectronic?undefined:receiptNo,electronicWaybillNo:isElectronic?receiptNo:undefined,
         description:note,priority:1,assignedUserIds:[],assignToAllActiveUsers:false,
       });
       toast.success(t(`${R}.convertSuccess`,{documentNo:result.documentNo,count:result.convertedLineCount}));
@@ -185,8 +185,8 @@ function ReceiptPanel(){
       <Metric label={t(`${R}.selectedSheets`)} value={String(selectedRows.length)}/><Metric label={t(`${R}.totalApprovedQty`)} value={formatProjectNumber(total)}/><Metric label={t(`${R}.sacPlan`)} value={source.importReferenceNo}/>
       <section className="space-y-3 rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3">
         <div className="flex items-start gap-2"><FileText className="mt-0.5 size-5 text-cyan-500"/><div><strong className="text-sm">İrsaliye bilgisi</strong><p className="text-xs text-slate-500">Excel aktarımında girilmiş irsaliye otomatik gelir; gerekirse bu kabul için değiştirebilirsiniz.</p></div></div>
-        <label className="flex items-center gap-3 rounded-xl border bg-[var(--wms-app-panel)] p-3"><input type="checkbox" checked={isElectronic} disabled readOnly className="size-4 accent-cyan-500"/><span className="text-sm font-bold">E-irsaliye / GİB numarası</span></label>
-        <Field label="GİB e-irsaliye no"><div className="relative"><input className={`input pr-16 font-mono ${receiptNo&&!receiptNoValid?'!border-red-500':receiptNoValid?'!border-emerald-500':''}`} inputMode="text" maxLength={15} value={receiptNo} onChange={event=>setReceiptNo(normalizeGoodsReceiptDocumentNo(event.target.value))} placeholder="GIB2026AB000000"/><span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500">{receiptNo.length}/15</span></div></Field>
+        <label className="flex cursor-pointer items-center gap-3 rounded-xl border bg-[var(--wms-app-panel)] p-3"><input type="checkbox" checked={isElectronic} onChange={event=>setIsElectronic(event.target.checked)} className="size-4 accent-cyan-500"/><span className="text-sm font-bold">E-irsaliye / GİB</span></label>
+        <Field label={isElectronic?'GİB e-irsaliye no':'İrsaliye numarası'}><div className="relative"><input className={`input pr-16 font-mono ${receiptNo&&!receiptNoValid?'!border-red-500':receiptNoValid?'!border-emerald-500':''}`} inputMode="text" maxLength={15} value={receiptNo} onChange={event=>setReceiptNo(normalizeGoodsReceiptDocumentNo(event.target.value))} placeholder={isElectronic?'GIB2026AB000000':'IRS202600000001'}/><span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500">{receiptNo.length}/15</span></div></Field>
         <Field label="İrsaliye tarihi"><AppDateInput value={documentDate} onChange={event=>setDocumentDate(event.target.value)}/></Field>
       </section>
       <Field label={t(`${R}.orderNote`)}><textarea className="input min-h-24" value={note} onChange={e=>setNote(e.target.value)} placeholder={t(`${R}.orderNotePlaceholder`)}/></Field>

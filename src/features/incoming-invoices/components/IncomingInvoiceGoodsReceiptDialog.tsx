@@ -55,7 +55,7 @@ export function IncomingInvoiceGoodsReceiptDialog({
   const [locationId, setLocationId] = useState<string | null>(null);
   const [series, setSeries] = useState<SeriesOption[]>([]);
   const [seriesId, setSeriesId] = useState<string | null>(null);
-  const isElectronic = true;
+  const [isElectronic, setIsElectronic] = useState(true);
   const [waybillNo, setWaybillNo] = useState(
     sourceIsValid ? sourceWaybill : '',
   );
@@ -113,7 +113,9 @@ export function IncomingInvoiceGoodsReceiptDialog({
     const selected = eligibleLines.filter((line) => selectedIds.has(line.id));
     if (!supplierId) { toast.error(t('receiptDialog.validation.supplier')); return; }
     if (!isValidGoodsReceiptDocumentNo(waybillNo) || !waybillDate) {
-      toast.error('E-irsaliye / GİB numarası tam 15 alfanümerik karakter olmalıdır.');
+      toast.error(isElectronic
+        ? 'E-irsaliye / GİB numarası tam 15 alfanümerik karakter olmalıdır.'
+        : 'İrsaliye numarası tam 15 alfanümerik karakter olmalıdır.');
       return;
     }
     if (!warehouseId || !locationId || !seriesId) {
@@ -222,8 +224,7 @@ export function IncomingInvoiceGoodsReceiptDialog({
             <input
               type="checkbox"
               checked={isElectronic}
-              disabled
-              readOnly
+              onChange={(event) => setIsElectronic(event.target.checked)}
               className="size-4 accent-cyan-500"
             />
             <span className="font-semibold">{t('receiptDialog.isElectronic')}</span>
@@ -233,7 +234,7 @@ export function IncomingInvoiceGoodsReceiptDialog({
             onChange={(event) => setWaybillNo(normalizeGoodsReceiptDocumentNo(event.target.value))}
             inputMode="text"
             maxLength={15}
-            placeholder="GIB2026AB000000"
+            placeholder={isElectronic ? 'GIB2026AB000000' : 'IRS202600000001'}
             invalid={Boolean(waybillNo) && !isValidGoodsReceiptDocumentNo(waybillNo)}
           />
           <p className="mt-2 text-xs text-slate-500">
