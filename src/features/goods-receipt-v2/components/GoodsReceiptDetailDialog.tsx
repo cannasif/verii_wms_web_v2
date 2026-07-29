@@ -71,8 +71,24 @@ export function GoodsReceiptDetailDialog({
     (line) => line.expectedQuantity - line.receivedQuantity - line.shortClosedQuantity > 0,
   );
   const cancelled = header?.status === 'Cancelled';
+  const qualityReady =
+    header?.qualityStatus === 'NotRequired' || header?.qualityStatus === 'Passed';
+  const approvalReady =
+    header?.approvalStatus === 'NotRequired' || header?.approvalStatus === 'Approved';
+  // Grid only exposes waybillNo; e-irsaliye comes through sourceDocuments.
+  const hasWaybill = Boolean(
+    header?.waybillNo?.trim()
+      || detail?.sourceDocuments.some((doc) =>
+        /^(SupplierWaybill|ElectronicWaybill):.+/i.test(doc.trim()),
+      ),
+  );
   const routingAvailable = Boolean(
-    detail && !cancelled && detail.lines.some((line) => line.routableQuantity > 0),
+    detail
+      && !cancelled
+      && qualityReady
+      && approvalReady
+      && hasWaybill
+      && detail.lines.some((line) => line.routableQuantity > 0),
   );
 
   const normalizedSearch = lineSearch.trim().toLocaleUpperCase('tr-TR');

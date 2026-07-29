@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactElement, type ReactNode } from 'react';
-import { Building2, Check, CheckCircle2, ChevronLeft, ChevronRight, CircleHelp, ClipboardCheck, ClipboardList, FileText, Loader2, PackagePlus, Plus, Printer, ScanBarcode, Trash2 } from 'lucide-react';
+import { Building2, Check, CheckCircle2, ChevronLeft, ChevronRight, CircleHelp, ClipboardCheck, FileText, Loader2, PackagePlus, Plus, Printer, ScanBarcode, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { AppDropdown } from '@/components/shared/AppDropdown';
@@ -9,8 +9,7 @@ import { OPS_FIELD_CLASS } from '@/components/shared/ops-field-styles';
 import { OpsSkinCheckbox } from '@/components/shared/OpsSkinCheckbox';
 import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
 import { PagedLookupDialog } from '@/components/shared/PagedLookupDialog';
-import { PremiumEyebrow } from '@/components/shared/PremiumEyebrow';
-import { useTheme } from '@/components/theme-provider';
+import { OpsListPageShell } from '@/components/shared/OpsListPageShell';
 import {
   Tooltip,
   TooltipContent,
@@ -57,12 +56,15 @@ const userLabel = (user: ActiveUserOption): string => `${user.firstName} ${user.
 const encodeUser = (user: ActiveUserOption): string => encodeURIComponent(JSON.stringify(user));
 const decodeUser = (value: string): ActiveUserOption => JSON.parse(decodeURIComponent(value)) as ActiveUserOption;
 
-export function GoodsReceiptManualPage({ direct }: { direct: boolean }): ReactElement {
+export function GoodsReceiptManualPage({
+  direct,
+  embedded = false,
+}: {
+  direct: boolean;
+  embedded?: boolean;
+}): ReactElement {
   const { t, moduleReady } = useModuleTranslation('goods-receipt-v2');
-  const { skin } = useTheme();
-  const isPremium = skin === 'premium';
   const branchCode = useAuthStore((state) => state.branch?.code ?? '0');
-  const pageEyebrow = `${t('list.eyebrowParent')} / ${t('list.eyebrowModule')}`;
   const [step, setStep] = useState(0);
   const [customer, setCustomer] = useState<string | null>(null);
   const [customerLookupOpen, setCustomerLookupOpen] = useState(false);
@@ -98,6 +100,7 @@ export function GoodsReceiptManualPage({ direct }: { direct: boolean }): ReactEl
   const [qualityCheckBusy, setQualityCheckBusy] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showFieldErrors, setShowFieldErrors] = useState(false);
   const [result, setResult] = useState<ManualGoodsReceiptResult | null>(null);
   const submitIdempotencyKey = useRef(crypto.randomUUID());
   const qualityRequirementCache = useRef(new Map<string, boolean>());
@@ -105,6 +108,7 @@ export function GoodsReceiptManualPage({ direct }: { direct: boolean }): ReactEl
   const policyBranchCode = split(customer)[1] || branchCode;
   const total = useMemo(() => lines.reduce((sum, line) => sum + line.quantity, 0), [lines]);
   const receiptNoValid = validReceiptNo(receiptNo);
+  const receiptNoInvalid = showFieldErrors && !receiptNoValid;
   const steps = [
     { label: t('manual.steps.document'), icon: FileText },
     { label: t('manual.steps.operation'), icon: Building2 },
@@ -186,13 +190,18 @@ export function GoodsReceiptManualPage({ direct }: { direct: boolean }): ReactEl
   const showError = (message: string): false => { setError(message); toast.error(message); return false; };
   const canLeaveStep = (): boolean => {
     if (step === 0 && !customer) return showError(t('manual.validation.customer'));
-    if (step === 0 && !receiptNoValid) return showError(isElectronic ? t('manual.validation.eReceiptNo') : t('manual.validation.receiptNo'));
+    if (step === 0 && !receiptNoValid) {
+      setShowFieldErrors(true);
+      return showError(isElectronic ? t('manual.validation.eReceiptNo') : t('manual.validation.receiptNo'));
+    }
     if (step === 0 && !documentDate) return showError(t('manual.validation.date'));
     if (step === 0 && !seriesId) return showError('Bu işlem için aktif bir belge serisi seçilmelidir.');
     if (step === 1 && (!warehouseId || !locationId)) return showError(t('manual.validation.operation'));
     if (step === 1 && !direct && assignees.length === 0) return showError('Emir için en az bir operasyon kullanıcısı atanmalıdır.');
     if (step === 2 && lines.length === 0) return showError(t('manual.validation.lines'));
-    setError(null); return true;
+    setError(null);
+    setShowFieldErrors(false);
+    return true;
   };
   const next = async (): Promise<void> => {
     if (!canLeaveStep()) return;
@@ -297,7 +306,11 @@ export function GoodsReceiptManualPage({ direct }: { direct: boolean }): ReactEl
 
   const submit = async (): Promise<void> => {
     const [supplierId, supplierBranch] = split(customer);
-    if (!supplierId || !warehouseId || !locationId || !seriesId || !receiptNoValid || lines.length === 0) { showError(t('manual.validation.incomplete')); return; }
+    if (!supplierId || !warehouseId || !locationId || !seriesId || !receiptNoValid || lines.length === 0) {
+      if (!receiptNoValid) setShowFieldErrors(true);
+      showError(t('manual.validation.incomplete'));
+      return;
+    }
     for (const line of lines) {
       const trackingError = validateManualLineTracking(line);
       if (trackingError) { showError(trackingError); return; }
@@ -320,19 +333,7 @@ export function GoodsReceiptManualPage({ direct }: { direct: boolean }): ReactEl
 
   if (!moduleReady) return <div className="grid min-h-80 place-items-center"><Loader2 className="size-7 animate-spin text-cyan-500"/></div>;
   if (result) return <Result result={result} direct={direct} reset={() => { submitIdempotencyKey.current = crypto.randomUUID(); setResult(null); setLines([]); setStep(0); setReceiptNo(''); }} t={t}/>;
-  return <section className="wms-ops-form mx-auto max-w-7xl space-y-5">
-    <header className="space-y-2">
-      {isPremium ? (
-        <PremiumEyebrow eyebrow={pageEyebrow} />
-      ) : (
-        <div className="wms-ops-eyebrow font-mono text-[11px] font-semibold uppercase tracking-[0.18em]">
-          {pageEyebrow}
-        </div>
-      )}
-      <p className="max-w-3xl text-sm leading-6 text-[var(--wms-app-text-muted)]">
-        {direct ? t('manual.directSubtitle') : t('manual.orderlessSubtitle')}
-      </p>
-    </header>
+  return <section className={cn('wms-ops-form space-y-5', !embedded && 'mx-auto max-w-7xl')}>
     <Stepper steps={steps} current={step}/>
     {error && <div role="alert" className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm font-medium text-red-500">{error}</div>}
 
@@ -396,7 +397,7 @@ export function GoodsReceiptManualPage({ direct }: { direct: boolean }): ReactEl
         className="lg:col-span-2 rounded-2xl border border-[var(--wms-app-border)] bg-black/[.025] p-4 dark:bg-white/[.025]"
         data-wms-error-target="receiptNo"
         data-wms-error-keys="irsaliye numarası|e-irsaliye numarası|normal irsaliye|mal kabul no|gib numarası|15 alfanümerik|e-dispatch|dispatch number"
-      ><div className="mb-4 flex flex-wrap items-center justify-between gap-3"><div><h3 className="font-bold">{t('manual.receiptNo')}</h3><p className="text-xs text-slate-500">{isElectronic ? t('manual.eReceiptHint') : t('manual.receiptHint')}</p></div><label className="flex items-center gap-3 rounded-xl border border-[var(--wms-app-border)] px-4 py-2"><OpsSkinCheckbox checked={isElectronic} onCheckedChange={setIsElectronic} aria-label={t('manual.isElectronic')} /><span className="text-sm font-semibold">{t('manual.isElectronic')}</span></label></div><AppInput autoFocus className="font-mono tracking-wider" inputMode="text" maxLength={15} placeholder={isElectronic ? 'GIB2026AB000000' : 'IRS202600000001'} value={receiptNo} invalid={!receiptNoValid} onChange={(e) => { setReceiptNo(normalizeReceiptNo(e.target.value)); setError(null); }} trailingContent={<span className={`pr-1 text-xs font-bold ${receiptNoValid ? 'text-emerald-500' : 'text-[var(--wms-ops-field-placeholder-fg)]'}`}>{receiptNo.length}/15</span>}/>{receiptNo && <p className={`mt-2 flex items-center gap-1.5 text-xs ${receiptNoValid ? 'text-emerald-500' : 'text-red-500'}`}>{receiptNoValid && <Check className="size-3.5"/>}{receiptNoValid ? t('manual.validNumber') : (isElectronic ? t('manual.validation.eReceiptNo') : t('manual.validation.receiptNo'))}</p>}</div>
+      ><div className="mb-4 flex flex-wrap items-center justify-between gap-3"><div><h3 className="font-bold">{t('manual.receiptNo')}</h3><p className="text-xs text-slate-500">{isElectronic ? t('manual.eReceiptHint') : t('manual.receiptHint')}</p></div><label className="flex items-center gap-3 rounded-xl border border-[var(--wms-app-border)] px-4 py-2"><OpsSkinCheckbox checked={isElectronic} onCheckedChange={setIsElectronic} aria-label={t('manual.isElectronic')} /><span className="text-sm font-semibold">{t('manual.isElectronic')}</span></label></div><AppInput autoFocus className="font-mono tracking-wider" inputMode="text" maxLength={15} placeholder={isElectronic ? 'GIB2026AB000000' : 'IRS202600000001'} value={receiptNo} invalid={receiptNoInvalid} onChange={(e) => { setReceiptNo(normalizeReceiptNo(e.target.value)); setError(null); }} trailingContent={<span className={`pr-1 text-xs font-bold ${receiptNoValid ? 'text-emerald-500' : 'text-[var(--wms-ops-field-placeholder-fg)]'}`}>{receiptNo.length}/15</span>}/>{receiptNoInvalid ? <p className="mt-2 flex items-center gap-1.5 text-xs text-red-500">{isElectronic ? t('manual.validation.eReceiptNo') : t('manual.validation.receiptNo')}</p> : receiptNoValid ? <p className="mt-2 flex items-center gap-1.5 text-xs text-emerald-500"><Check className="size-3.5"/>{t('manual.validNumber')}</p> : null}</div>
       {!direct && <Field label={t('manual.plannedArrival')}><AppDateInput type="datetime-local" value={plannedArrival} onChange={(e) => setPlannedArrival(e.target.value)}/></Field>}
     </div></Panel>}
 
@@ -427,13 +428,25 @@ export function GoodsReceiptManualPage({ direct }: { direct: boolean }): ReactEl
   </section>;
 }
 
-export const GoodsReceiptOrderlessPage = (): ReactElement => <GoodsReceiptManualPage direct={false}/>;
-export function GoodsReceiptDirectPage(): ReactElement {
+function GoodsReceiptOpsPageShell({
+  title,
+  hint,
+  hintAria,
+  children,
+}: {
+  title: string;
+  hint: string;
+  hintAria: string;
+  children: ReactNode;
+}): ReactElement {
   const { t, moduleReady } = useModuleTranslation('goods-receipt-v2');
-  const { skin } = useTheme();
-  const isPremium = skin === 'premium';
-  const pageEyebrow = `${t('list.eyebrowParent')} / ${t('list.eyebrowModule')}`;
-  const pageHint = t("createFlow.directSubtitle");
+  const pageEyebrow = (
+    <>
+      <span>{t('list.eyebrowParent')}</span>
+      <span className="mx-2 opacity-60">/</span>
+      <span>{t('list.eyebrowModule')}</span>
+    </>
+  );
 
   if (!moduleReady) {
     return (
@@ -444,80 +457,79 @@ export function GoodsReceiptDirectPage(): ReactElement {
   }
 
   return (
-    <section className="wms-ops-form space-y-5">
-      <header className="wms-ops-gr-page-hero">
-        <div className="wms-ops-gr-page-hero__content">
-          <div className="wms-ops-gr-page-hero__top">
-            {isPremium ? (
-              <PremiumEyebrow eyebrow={pageEyebrow} />
-            ) : (
-              <div className="wms-ops-eyebrow font-mono text-[11px] font-semibold uppercase tracking-[0.18em]">
-                {pageEyebrow}
-              </div>
-            )}
-            <span className="wms-ops-gr-page-hero__badge">{t("manual.directTitle")}</span>
-          </div>
+    <OpsListPageShell
+      eyebrow={pageEyebrow}
+      title={
+        <span className="inline-flex items-center gap-2">
+          {title}
+          <TooltipProvider delayDuration={160}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  className="wms-ops-gr-page-hero__hint"
+                  aria-label={hintAria}
+                >
+                  <CircleHelp className="size-3.5" aria-hidden />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent
+                side="bottom"
+                align="start"
+                sideOffset={10}
+                className={cn(
+                  'wms-ops-page-hint-tooltip max-w-[22rem] overflow-hidden rounded-xl border p-0 text-left shadow-[0_12px_40px_color-mix(in_oklab,black_45%,transparent),0_0_0_1px_color-mix(in_oklab,var(--wms-ops-accent)_18%,transparent)]',
+                  '!bg-[color-mix(in_oklab,var(--wms-app-panel)_96%,black)]',
+                  'border-[color-mix(in_oklab,var(--wms-ops-accent)_32%,var(--wms-app-border))]',
+                  '!text-[var(--wms-app-text)]',
+                )}
+              >
+                <div className="border-b border-[color-mix(in_oklab,var(--wms-ops-accent)_18%,transparent)] bg-[color-mix(in_oklab,var(--wms-ops-accent)_8%,transparent)] px-3.5 py-2">
+                  <span className="inline-flex items-center gap-1.5 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-[var(--wms-ops-accent)]">
+                    <span
+                      className="size-1.5 rounded-full bg-[var(--wms-ops-accent)] shadow-[0_0_8px_var(--wms-ops-accent)]"
+                      aria-hidden
+                    />
+                    {t('createFlow.howItWorks')}
+                  </span>
+                </div>
+                <p className="px-3.5 py-3 text-[0.78rem] leading-5 text-[var(--wms-app-text-muted)]">
+                  {hint}
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </span>
+      }
+    >
+      {children}
+    </OpsListPageShell>
+  );
+}
 
-          <div className="wms-ops-gr-page-hero__main">
-            <div className="wms-ops-gr-page-hero__icon" aria-hidden>
-              <ClipboardList className="size-5" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="wms-ops-title-main wms-ops-gr-page-hero__title">
-                  {t("createFlow.directPageTitle")}
-                </h1>
-                <TooltipProvider delayDuration={160}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        className="wms-ops-gr-page-hero__hint"
-                        aria-label={t("createFlow.directPageHintAria")}
-                      >
-                        <CircleHelp className="size-3.5" aria-hidden />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent
-                      side="bottom"
-                      align="start"
-                      sideOffset={10}
-                      className={cn(
-                        "wms-ops-page-hint-tooltip max-w-[22rem] overflow-hidden rounded-xl border p-0 text-left shadow-[0_12px_40px_color-mix(in_oklab,black_45%,transparent),0_0_0_1px_color-mix(in_oklab,var(--wms-ops-accent)_18%,transparent)]",
-                        "!bg-[color-mix(in_oklab,var(--wms-app-panel)_96%,black)]",
-                        "border-[color-mix(in_oklab,var(--wms-ops-accent)_32%,var(--wms-app-border))]",
-                        "!text-[var(--wms-app-text)]",
-                      )}
-                    >
-                      <div className="border-b border-[color-mix(in_oklab,var(--wms-ops-accent)_18%,transparent)] bg-[color-mix(in_oklab,var(--wms-ops-accent)_8%,transparent)] px-3.5 py-2">
-                        <span className="inline-flex items-center gap-1.5 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-[var(--wms-ops-accent)]">
-                          <span
-                            className="size-1.5 rounded-full bg-[var(--wms-ops-accent)] shadow-[0_0_8px_var(--wms-ops-accent)]"
-                            aria-hidden
-                          />
-                          {t("createFlow.howItWorks")}
-                        </span>
-                      </div>
-                      <p className="px-3.5 py-3 text-[0.78rem] leading-5 text-[var(--wms-app-text-muted)]">
-                        {pageHint}
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-              <p className="wms-ops-subtitle wms-ops-gr-page-hero__subtitle">
-                <span className="wms-ops-subtitle-prefix" aria-hidden>
-                  &gt;{" "}
-                </span>
-                {pageHint}
-              </p>
-            </div>
-          </div>
-        </div>
-      </header>
+export function GoodsReceiptOrderlessPage(): ReactElement {
+  const { t } = useModuleTranslation('goods-receipt-v2');
+  return (
+    <GoodsReceiptOpsPageShell
+      title={t('createFlow.orderlessPageTitle')}
+      hint={t('createFlow.orderlessSubtitle')}
+      hintAria={t('createFlow.orderlessPageHintAria')}
+    >
+      <GoodsReceiptManualPage direct={false} embedded />
+    </GoodsReceiptOpsPageShell>
+  );
+}
 
+export function GoodsReceiptDirectPage(): ReactElement {
+  const { t } = useModuleTranslation('goods-receipt-v2');
+  return (
+    <GoodsReceiptOpsPageShell
+      title={t('createFlow.directPageTitle')}
+      hint={t('createFlow.directSubtitle')}
+      hintAria={t('createFlow.directPageHintAria')}
+    >
       <GoodsReceiptCreatePage direct embedded />
-    </section>
+    </GoodsReceiptOpsPageShell>
   );
 }
 function Stepper({ steps, current }: { steps: Array<{label:string;icon:typeof FileText}>; current:number }): ReactElement {

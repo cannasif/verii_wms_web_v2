@@ -15,6 +15,9 @@
     "directSubtitle": "Select the supplier's open orders, complete warehouse, quantity, shelf and lot/serial details, and finish physical receipt in one flow.",
     "directPageTitle": "Goods receipt entry",
     "directPageHintAria": "About goods receipt entry",
+    "orderlessSubtitle": "Create a planned receipt task and assignment without linking to a purchase order.",
+    "orderlessPageTitle": "Orderless goods receipt task",
+    "orderlessPageHintAria": "About orderless goods receipt task",
     "howItWorks": "How it works",
     "orderedBadge": "Ordered",
     "stepsAriaLabel": "Creation steps",
@@ -134,7 +137,10 @@
       "qualityRoutingActiveHint": "Automatic stage after processing",
       "qualityRoutingNoneHint": "No quality control required for this receipt",
       "qualityNone": "No quality control",
-      "viewQualityList": "{{count}} lines · View list"
+      "viewQualityList": "{{count}} lines · View list",
+      "multipleOrders": "More than one order",
+      "multipleOrdersCount": "{{count}} orders",
+      "ordersTooltipHint": "Scroll to see all order numbers"
     },
     "qualityDialog": {
       "title": "Stocks going to quality",
@@ -210,7 +216,9 @@
       "enterAtLeastOneSerial": "Enter at least one serial.",
       "serialCountExceedsQuantity": "Serial count cannot exceed receipt quantity.",
       "warehouseOrderNotAllowed": "You cannot select this order because warehouse {{code}} is not assigned to you.",
-      "unknownWarehouse": "unknown"
+      "unknownWarehouse": "unknown",
+      "linesRequired": "Prepare at least one order line to continue.",
+      "confirmLinesRequired": "Confirm at least one line with ONAY to continue."
     }
   },
   "manual": {

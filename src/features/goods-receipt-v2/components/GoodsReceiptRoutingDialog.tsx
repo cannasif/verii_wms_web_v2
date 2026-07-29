@@ -68,6 +68,12 @@ export function GoodsReceiptRoutingDialog({
   const approvalReady =
     detail.header.approvalStatus === "NotRequired" ||
     detail.header.approvalStatus === "Approved";
+  const hasWaybill = Boolean(
+    detail.header.waybillNo?.trim() ||
+      detail.sourceDocuments.some((doc) =>
+        /^(SupplierWaybill|ElectronicWaybill):.+/i.test(doc.trim()),
+      ),
+  );
   const routableLines = useMemo(
     () => detail.lines.filter((line) => line.routableQuantity > 0),
     [detail.lines],
@@ -115,6 +121,8 @@ export function GoodsReceiptRoutingDialog({
       return toast.error("Kalite/GKK kararı tamamlanmadan yönlendirme yapılamaz.");
     if (!approvalReady)
       return toast.error("Mal kabul onayı tamamlanmadan yönlendirme yapılamaz.");
+    if (!hasWaybill)
+      return toast.error("İrsaliye oluşturulmadan yönlendirme yapılamaz.");
     if (transferTotal <= 0 && outboundTotal <= 0)
       return toast.error("En az bir kaleme transfer veya ambar çıkış miktarı girin.");
     if (transferTotal > 0 && (!transferSeriesId || !targetWarehouseId))
@@ -488,6 +496,9 @@ export function GoodsReceiptRoutingDialog({
               type="button"
               disabled={
                 saving ||
+                !qualityReady ||
+                !approvalReady ||
+                !hasWaybill ||
                 !routableLines.length ||
                 transferTotal + outboundTotal <= 0
               }

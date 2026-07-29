@@ -33,6 +33,9 @@
     "directSubtitle": "Tedarikçinin açık siparişlerini seçin; kabul deposu, miktar, raf ve lot/seri bilgisini tamamlayıp fiziksel kabulü tek akışta bitirin.",
     "directPageTitle": "Mal kabul girişi",
     "directPageHintAria": "Mal kabul girişi hakkında",
+    "orderlessSubtitle": "Sipariş bağlantısı olmadan planlı kabul emri ve görev oluşturun.",
+    "orderlessPageTitle": "Siparişsiz mal kabul emri",
+    "orderlessPageHintAria": "Siparişsiz mal kabul emri hakkında",
     "howItWorks": "Nasıl çalışır",
     "orderedBadge": "Sipariş",
     "stepsAriaLabel": "Oluşturma adımları",
@@ -152,7 +155,10 @@
       "qualityRoutingActiveHint": "İşlem sonrası otomatik aşama",
       "qualityRoutingNoneHint": "Bu kabulde kalite kontrol gerekmiyor",
       "qualityNone": "Kalite kontrol yok",
-      "viewQualityList": "{{count}} kalem · Listeyi gör"
+      "viewQualityList": "{{count}} kalem · Listeyi gör",
+      "multipleOrders": "1'den fazla sipariş",
+      "multipleOrdersCount": "{{count}} sipariş",
+      "ordersTooltipHint": "Kaydırarak tüm sipariş numaralarını görebilirsiniz"
     },
     "qualityDialog": {
       "title": "Kaliteye gidecek stoklar",
@@ -228,7 +234,9 @@
       "enterAtLeastOneSerial": "En az bir seri girin.",
       "serialCountExceedsQuantity": "Seri sayısı kabul miktarını aşamaz.",
       "warehouseOrderNotAllowed": "Depo {{code}} kullanıcınıza tanımlı olmadığı için bu siparişi seçemezsiniz.",
-      "unknownWarehouse": "belirsiz"
+      "unknownWarehouse": "belirsiz",
+      "linesRequired": "Devam etmek için en az bir sipariş kalemi hazırlayın.",
+      "confirmLinesRequired": "Devam etmek için en az bir kalemi ONAY ile seçin."
     }
   },
   "manual": {
