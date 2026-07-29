@@ -161,6 +161,7 @@ export function GoodsReceiptCreatePage({
   const [selectedDirectLineKeys, setSelectedDirectLineKeys] = useState<string[]>([]);
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
   const [warehouseAccess, setWarehouseAccess] = useState<UserWarehouseAccess | null>(null);
+  const [showAllocatedOpenOrderLines, setShowAllocatedOpenOrderLines] = useState(false);
   const [lines, setLines] = useState<SelectedReceiptLine[]>([]);
   const [confirmedLineOrder, setConfirmedLineOrder] = useState<string[]>([]);
   const [series, setSeries] = useState<SeriesOption[]>([]);
@@ -270,6 +271,13 @@ export function GoodsReceiptCreatePage({
     void goodsReceiptV2Api.warehouseAccess()
       .then((access) => { if (active) setWarehouseAccess(access); })
       .catch((cause: Error) => { if (active) report(cause, "Depo yetkileri alınamadı."); });
+    void goodsReceiptV2Api.policy(branchCode)
+      .then((policy) => {
+        if (active) setShowAllocatedOpenOrderLines(policy.showAllocatedOpenOrderLines);
+      })
+      .catch(() => {
+        if (active) setShowAllocatedOpenOrderLines(false);
+      });
     return () => { active = false; };
   }, [branchCode]);
 
@@ -328,7 +336,7 @@ export function GoodsReceiptCreatePage({
         undefined,
         branchCode,
         [orderNumber],
-        direct,
+        showAllocatedOpenOrderLines,
       );
       const rows = fetched.filter(
         (line) =>
@@ -403,7 +411,7 @@ export function GoodsReceiptCreatePage({
           customer.code,
           customer.branch,
           [],
-          true,
+          showAllocatedOpenOrderLines,
         );
         const filteredLines = allLines;
         setDirectOrderLines(filteredLines);
@@ -1974,6 +1982,8 @@ export function GoodsReceiptCreatePage({
                 result={result}
                 supplierName={selectedCustomer?.customerName}
                 supplierCode={customer?.code}
+                receiptNo={receiptNo}
+                isElectronicReceipt={isElectronicReceipt}
                 receiptLines={receiptLines}
                 qualityLines={qualityLines}
                 onNew={() => {
@@ -1993,6 +2003,8 @@ export function GoodsReceiptCreatePage({
               result={result as CreateGoodsReceiptResult}
               supplierCode={supplierSummary}
               assigneeCount={assignees.length}
+              receiptNo={receiptNo}
+              isElectronicReceipt={isElectronicReceipt}
               receiptLines={receiptLines}
               qualityLines={qualityLines}
               onNew={() => {
@@ -3132,6 +3144,8 @@ function DirectCreateSuccessPanel({
   result,
   supplierName,
   supplierCode,
+  receiptNo,
+  isElectronicReceipt,
   receiptLines,
   qualityLines,
   onNew,
@@ -3139,6 +3153,8 @@ function DirectCreateSuccessPanel({
   result: ManualGoodsReceiptResult;
   supplierName?: string;
   supplierCode?: string;
+  receiptNo: string;
+  isElectronicReceipt: boolean;
   receiptLines: Array<{
     stockCode: string;
     stockName?: string;
@@ -3175,10 +3191,14 @@ function DirectCreateSuccessPanel({
             ? "kaliteye gönderilen ürünler için kalite onayından sonra irsaliye oluşturulacaktır."
             : "irsaliye oluşturma işlemi tamamlandı."}
         </p>
-        <div className="wms-ops-gr-success__doc">
-          <span className="wms-ops-gr-success__doc-label">Belge No</span>
-          <strong className="wms-ops-gr-success__doc-value">{result.documentNo}</strong>
-        </div>
+        {receiptNo ? (
+          <div className="wms-ops-gr-success__doc">
+            <span className="wms-ops-gr-success__doc-label">
+              {isElectronicReceipt ? "E-irsaliye" : "İrsaliye"}
+            </span>
+            <strong className="wms-ops-gr-success__doc-value">{receiptNo}</strong>
+          </div>
+        ) : null}
       </header>
 
       <div className="wms-ops-gr-success__stats">
@@ -3272,6 +3292,8 @@ function CreateSuccessPanel({
   result,
   supplierCode,
   assigneeCount,
+  receiptNo,
+  isElectronicReceipt,
   receiptLines,
   qualityLines,
   onNew,
@@ -3279,6 +3301,8 @@ function CreateSuccessPanel({
   result: CreateGoodsReceiptResult;
   supplierCode?: string;
   assigneeCount: number;
+  receiptNo: string;
+  isElectronicReceipt: boolean;
   receiptLines: Array<{
     stockCode: string;
     stockName?: string;
@@ -3316,10 +3340,14 @@ function CreateSuccessPanel({
           Emir atanan kullanıcıların kuyruğuna düştü; fiziksel kabul bitince
           kaliteye gidecek kalemler listelenir.
         </p>
-        <div className="wms-ops-gr-success__doc">
-          <span className="wms-ops-gr-success__doc-label">Belge No</span>
-          <strong className="wms-ops-gr-success__doc-value">{result.documentNo}</strong>
-        </div>
+        {receiptNo ? (
+          <div className="wms-ops-gr-success__doc">
+            <span className="wms-ops-gr-success__doc-label">
+              {isElectronicReceipt ? "E-irsaliye" : "İrsaliye"}
+            </span>
+            <strong className="wms-ops-gr-success__doc-value">{receiptNo}</strong>
+          </div>
+        ) : null}
       </header>
 
       <div className="wms-ops-gr-success__stats">

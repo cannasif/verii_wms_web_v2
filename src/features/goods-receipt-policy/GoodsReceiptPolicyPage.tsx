@@ -25,6 +25,7 @@ type Policy = {
   erpPostingPolicy: string;
   allowOrderlessReceipt: boolean;
   allowUnplannedReceipt: boolean;
+  showAllocatedOpenOrderLines: boolean;
 };
 
 type Envelope<T> = { success: boolean; data: T; message?: string };
@@ -44,7 +45,13 @@ export function GoodsReceiptPolicyPage() {
 
   useEffect(() => {
     api.get<Envelope<Policy>>(`/api/goods-receipt-policy?branchCode=${encodeURIComponent(branch)}`)
-      .then((value) => setForm(unwrap(value)))
+      .then((value) => {
+        const policy = unwrap(value);
+        setForm({
+          ...policy,
+          showAllocatedOpenOrderLines: Boolean(policy.showAllocatedOpenOrderLines),
+        });
+      })
       .catch((error) => toast.error(error instanceof Error ? error.message : 'Politika yüklenemedi.'));
   }, [branch]);
 
@@ -168,6 +175,11 @@ export function GoodsReceiptPolicyPage() {
           <Toggle label="Kalite kararına kadar rafa kaldırmayı beklet" value={form.blockPutawayUntilQualityDecision} set={(value) => set('blockPutawayUntilQualityDecision', value)} />
           <Toggle label="Emirsiz kabule izin ver" value={form.allowOrderlessReceipt} set={(value) => set('allowOrderlessReceipt', value)} />
           <Toggle label="Plansız kabule izin ver" value={form.allowUnplannedReceipt} set={(value) => set('allowUnplannedReceipt', value)} />
+          <Toggle
+            label="Ayrılmış / gönderilmiş sipariş kalemlerini göster"
+            value={form.showAllocatedOpenOrderLines}
+            set={(value) => set('showAllocatedOpenOrderLines', value)}
+          />
         </div>
 
         <div className="mt-5 rounded-xl border border-cyan-500/30 bg-cyan-500/10 p-4 text-sm">
