@@ -1,16 +1,10 @@
-export function normalizeGoodsReceiptDocumentNo(
-  value: string,
-  electronic: boolean,
-): string {
+export function normalizeGoodsReceiptDocumentNo(value: string): string {
   return value
     .toUpperCase()
     .replace(/[^A-Z0-9]/g, "")
-    .slice(0, electronic ? 16 : 15);
+    .slice(0, 15);
 }
 
-export function isValidGoodsReceiptDocumentNo(
-  value: string,
-  electronic: boolean,
-): boolean {
-  return new RegExp(`^[A-Z0-9]{${electronic ? 16 : 15}}$`).test(value);
+export function isValidGoodsReceiptDocumentNo(value: string): boolean {
+  return /^[A-Z0-9]{15}$/.test(value);
 }

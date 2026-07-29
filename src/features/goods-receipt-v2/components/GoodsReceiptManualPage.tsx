@@ -49,10 +49,10 @@ const customerDisplayFromValue = (value: string | null): string => {
   if (!parts[2]) return '';
   return `${decodeURIComponent(parts[3] || '')} (${parts[2]})`.trim();
 };
-const normalizeReceiptNo = (value: string, electronic: boolean): string =>
-  value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, electronic ? 16 : 15);
-const validReceiptNo = (value: string, electronic: boolean): boolean =>
-  new RegExp(`^[A-Z0-9]{${electronic ? 16 : 15}}$`).test(value);
+const normalizeReceiptNo = (value: string): string =>
+  value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 15);
+const validReceiptNo = (value: string): boolean =>
+  /^[A-Z0-9]{15}$/.test(value);
 const userLabel = (user: ActiveUserOption): string => `${user.firstName} ${user.lastName}`.trim() || user.username;
 const encodeUser = (user: ActiveUserOption): string => encodeURIComponent(JSON.stringify(user));
 const decodeUser = (value: string): ActiveUserOption => JSON.parse(decodeURIComponent(value)) as ActiveUserOption;
@@ -67,7 +67,7 @@ export function GoodsReceiptManualPage({ direct }: { direct: boolean }): ReactEl
   const [customer, setCustomer] = useState<string | null>(null);
   const [customerLookupOpen, setCustomerLookupOpen] = useState(false);
   const [receiptNo, setReceiptNo] = useState('');
-  const [isElectronic, setIsElectronic] = useState(false);
+  const isElectronic = true;
   const [documentDate, setDocumentDate] = useState(today);
   const [plannedArrival, setPlannedArrival] = useState('');
   const [warehouse, setWarehouse] = useState<string | null>(null);
@@ -103,7 +103,7 @@ export function GoodsReceiptManualPage({ direct }: { direct: boolean }): ReactEl
   const warehouseId = Number(split(warehouse)[0] || 0);
   const policyBranchCode = split(customer)[1] || branchCode;
   const total = useMemo(() => lines.reduce((sum, line) => sum + line.quantity, 0), [lines]);
-  const receiptNoValid = validReceiptNo(receiptNo, isElectronic);
+  const receiptNoValid = validReceiptNo(receiptNo);
   const steps = [
     { label: t('manual.steps.document'), icon: FileText },
     { label: t('manual.steps.operation'), icon: Building2 },
@@ -362,7 +362,7 @@ export function GoodsReceiptManualPage({ direct }: { direct: boolean }): ReactEl
       </Field>
       <Field label={t('manual.documentDate')} required><AppDateInput value={documentDate} onChange={(e) => setDocumentDate(e.target.value)}/></Field>
       <Field label={t('manual.series')} required><AppDropdown value={seriesId} onValueChange={setSeriesId} options={series.map((x) => ({ value: String(x.id), label: `${x.code} · ${x.name}`, description: x.previewDocumentNumber }))} placeholder="Belge serisi seçin"/></Field>
-      <div className="lg:col-span-2 rounded-2xl border border-[var(--wms-app-border)] bg-black/[.025] p-4 dark:bg-white/[.025]"><div className="mb-4 flex flex-wrap items-center justify-between gap-3"><div><h3 className="font-bold">{t('manual.receiptNo')}</h3><p className="text-xs text-slate-500">{isElectronic ? t('manual.eReceiptHint') : t('manual.receiptHint')}</p></div><label className="flex cursor-pointer items-center gap-3 rounded-xl border border-[var(--wms-app-border)] px-4 py-2"><OpsSkinCheckbox checked={isElectronic} onCheckedChange={(next) => { setIsElectronic(next); setReceiptNo(''); setError(null); }} aria-label={t('manual.isElectronic')} /><span className="text-sm font-semibold">{t('manual.isElectronic')}</span></label></div><AppInput autoFocus className="font-mono tracking-wider" inputMode="text" maxLength={isElectronic ? 16 : 15} placeholder={isElectronic ? 'GIB2026AB0000001' : 'IRS202600000001'} value={receiptNo} invalid={Boolean(receiptNo) && !receiptNoValid} onChange={(e) => { setReceiptNo(normalizeReceiptNo(e.target.value, isElectronic)); setError(null); }} trailingContent={<span className={`pr-1 text-xs font-bold ${receiptNoValid ? 'text-emerald-500' : 'text-[var(--wms-ops-field-placeholder-fg)]'}`}>{receiptNo.length}/{isElectronic ? 16 : 15}</span>}/>{receiptNo && <p className={`mt-2 flex items-center gap-1.5 text-xs ${receiptNoValid ? 'text-emerald-500' : 'text-red-500'}`}>{receiptNoValid && <Check className="size-3.5"/>}{receiptNoValid ? t('manual.validNumber') : (isElectronic ? t('manual.validation.eReceiptNo') : t('manual.validation.receiptNo'))}</p>}</div>
+      <div className="lg:col-span-2 rounded-2xl border border-[var(--wms-app-border)] bg-black/[.025] p-4 dark:bg-white/[.025]"><div className="mb-4 flex flex-wrap items-center justify-between gap-3"><div><h3 className="font-bold">{t('manual.receiptNo')}</h3><p className="text-xs text-slate-500">E-irsaliye / GİB numarası tam 15 alfanümerik karakter olmalıdır.</p></div><label className="flex items-center gap-3 rounded-xl border border-[var(--wms-app-border)] px-4 py-2"><OpsSkinCheckbox checked={isElectronic} onCheckedChange={() => undefined} disabled aria-label={t('manual.isElectronic')} /><span className="text-sm font-semibold">{t('manual.isElectronic')}</span></label></div><AppInput autoFocus className="font-mono tracking-wider" inputMode="text" maxLength={15} placeholder="GIB2026AB000000" value={receiptNo} invalid={Boolean(receiptNo) && !receiptNoValid} onChange={(e) => { setReceiptNo(normalizeReceiptNo(e.target.value)); setError(null); }} trailingContent={<span className={`pr-1 text-xs font-bold ${receiptNoValid ? 'text-emerald-500' : 'text-[var(--wms-ops-field-placeholder-fg)]'}`}>{receiptNo.length}/15</span>}/>{receiptNo && <p className={`mt-2 flex items-center gap-1.5 text-xs ${receiptNoValid ? 'text-emerald-500' : 'text-red-500'}`}>{receiptNoValid && <Check className="size-3.5"/>}{receiptNoValid ? t('manual.validNumber') : 'E-irsaliye / GİB numarası tam 15 alfanümerik karakter olmalıdır.'}</p>}</div>
       {!direct && <Field label={t('manual.plannedArrival')}><AppDateInput type="datetime-local" value={plannedArrival} onChange={(e) => setPlannedArrival(e.target.value)}/></Field>}
     </div></Panel>}
 

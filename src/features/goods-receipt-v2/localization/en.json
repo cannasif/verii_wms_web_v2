@@ -190,7 +190,7 @@
     "lines": { "title": "Stocks to Receive", "description": "Enter stock, configuration, quantity and traceability by line." },
     "review": { "title": "Final Review", "description": "Verify document and quantity summary before posting." },
     "customer": "Supplier", "documentDate": "Dispatch / Receipt Date", "receiptNo": "Receipt Number", "isElectronic": "e-Dispatch",
-    "receiptHint": "Enter exactly 15 digits for a standard dispatch note.", "eReceiptHint": "e-Dispatch: 3-character unit code + 4-digit year + 9-digit sequence.",
+    "receiptHint": "Enter exactly 15 alphanumeric characters.", "eReceiptHint": "Enter exactly 15 alphanumeric characters for the e-dispatch/GIB number.",
     "validNumber": "Document number format is valid.", "plannedArrival": "Planned Arrival", "warehouse": "Target Warehouse",
     "location": "Receiving / Staging Location", "series": "WMS Document Series", "priority": "Priority", "labelStrategy": "Label Strategy",
     "executionMode": "Receiving Method", "stock": "Stock", "yap": "Configuration Code", "quantity": "Quantity", "unit": "Unit",

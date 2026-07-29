@@ -209,7 +209,7 @@
     "review": { "title": "Son Kontrol", "description": "Kaydetmeden önce belge ve miktar özetini doğrulayın." },
     "customer": "Tedarik Carisi", "documentDate": "İrsaliye / Kabul Tarihi", "receiptNo": "Mal Kabul No",
     "isElectronic": "E-İrsaliye", "receiptHint": "Normal irsaliye için tam 15 harf veya rakam girin.",
-    "eReceiptHint": "E-irsaliye için tam 16 harf veya rakam girin.",
+    "eReceiptHint": "E-irsaliye / GİB numarası için tam 15 harf veya rakam girin.",
     "validNumber": "Belge numarası biçimi geçerli.", "plannedArrival": "Planlanan Geliş", "warehouse": "Hedef Depo",
     "location": "Kabul / Staging Alanı", "series": "WMS Belge Serisi", "priority": "Öncelik",
     "labelStrategy": "Etiket Stratejisi", "executionMode": "Kabul Yöntemi", "stock": "Stok", "yap": "Yapılandırma Kodu",
@@ -221,7 +221,7 @@
     "postReceipt": "Kabulü İşle", "createTask": "Emri Oluştur", "success": "Mal kabul başarıyla oluşturuldu.",
     "resultDirect": "Mal Kabul İşlendi", "resultOrderless": "Mal Kabul Emri Oluşturuldu", "linesText": "satır", "newRecord": "Yeni Kayıt",
     "options": { "noLabel": "Etiket Yok", "preGenerate": "Önceden Üret", "supplierLabel": "Tedarikçi Etiketi", "generateOnReceipt": "Kabulde Üret", "manual": "Manuel", "barcode": "Barkod Okutma", "preLabel": "Ön Etiket" },
-    "validation": { "customer": "Tedarikçi cari seçimi zorunludur.", "receiptNo": "Normal irsaliye numarası tam 15 alfanümerik karakter olmalıdır.", "eReceiptNo": "E-irsaliye numarası tam 16 alfanümerik karakter olmalıdır.", "date": "İrsaliye tarihi zorunludur.", "operation": "Depo, kabul alanı ve belge serisi seçilmelidir.", "lines": "En az bir stok satırı eklenmelidir.", "stock": "Stok ve sıfırdan büyük miktar zorunludur.", "serialQuantity": "Seri numaralı satırın miktarı 1 olmalıdır.", "expiry": "Son kullanma tarihi üretim tarihinden önce olamaz.", "incomplete": "Formda eksik veya geçersiz alan bulunuyor.", "submit": "Mal kabul oluşturulamadı." }
+    "validation": { "customer": "Tedarikçi cari seçimi zorunludur.", "receiptNo": "Normal irsaliye numarası tam 15 alfanümerik karakter olmalıdır.", "eReceiptNo": "E-irsaliye / GİB numarası tam 15 alfanümerik karakter olmalıdır.", "date": "İrsaliye tarihi zorunludur.", "operation": "Depo, kabul alanı ve belge serisi seçilmelidir.", "lines": "En az bir stok satırı eklenmelidir.", "stock": "Stok ve sıfırdan büyük miktar zorunludur.", "serialQuantity": "Seri numaralı satırın miktarı 1 olmalıdır.", "expiry": "Son kullanma tarihi üretim tarihinden önce olamaz.", "incomplete": "Formda eksik veya geçersiz alan bulunuyor.", "submit": "Mal kabul oluşturulamadı." }
   },
   "list": {
     "eyebrowParent": "GİRİŞ_OP",

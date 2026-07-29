@@ -237,7 +237,7 @@ export function GoodsReceiptCreatePage({
   const [documentDate, setDocumentDate] = useState(today);
   const [waybillDate, setWaybillDate] = useState(today);
   const [receiptNo, setReceiptNo] = useState("");
-  const [isElectronicReceipt, setIsElectronicReceipt] = useState(true);
+  const isElectronicReceipt = true;
   const [plannedArrival, setPlannedArrival] = useState("");
   const [priority, setPriority] = useState("3");
   const [labelStrategy, setLabelStrategy] = useState("None");
@@ -921,10 +921,8 @@ export function GoodsReceiptCreatePage({
   };
 
   const validatePlan = (): string | null => {
-    if (!isValidGoodsReceiptDocumentNo(receiptNo, isElectronicReceipt))
-      return isElectronicReceipt
-        ? "E-irsaliye numarası 3 karakter birim kodu, 4 karakter yıl ve 9 karakter sıra numarasından oluşmalıdır."
-        : "Normal irsaliye numarası tam 15 rakam olmalıdır.";
+    if (!isValidGoodsReceiptDocumentNo(receiptNo))
+      return "E-irsaliye / GİB numarası tam 15 alfanümerik karakter olmalıdır.";
     if (!waybillDate) return "İrsaliye tarihi zorunludur.";
     const warehouseIds = [...new Set(lines.map((line) => line.targetWarehouseId).filter(Boolean))];
     if (warehouseIds.length > 1)
@@ -1399,11 +1397,8 @@ export function GoodsReceiptCreatePage({
                   <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-[var(--wms-app-border)] px-4 py-2">
                     <OpsSkinCheckbox
                       checked={isElectronicReceipt}
-                      onCheckedChange={(next) => {
-                        setIsElectronicReceipt(next);
-                        setReceiptNo("");
-                        setError(null);
-                      }}
+                      onCheckedChange={() => undefined}
+                      disabled
                       aria-label={t("createFlow.waybill.eReceipt")}
                     />
                     <span className="text-sm font-semibold">{t("createFlow.waybill.eReceipt")}</span>
@@ -1422,32 +1417,26 @@ export function GoodsReceiptCreatePage({
                     <AppInput
                       className="font-mono tracking-wider"
                       inputMode="text"
-                      maxLength={isElectronicReceipt ? 16 : 15}
+                      maxLength={15}
                       placeholder={
                         isElectronicReceipt
-                          ? "GIB2026AB0000001"
+                          ? "GIB2026AB000000"
                           : "IRS202600000001"
                       }
                       value={receiptNo}
                       invalid={
                         Boolean(receiptNo) &&
-                        !isValidGoodsReceiptDocumentNo(
-                          receiptNo,
-                          isElectronicReceipt,
-                        )
+                        !isValidGoodsReceiptDocumentNo(receiptNo)
                       }
                       onChange={(event) => {
                         setReceiptNo(
-                          normalizeGoodsReceiptDocumentNo(
-                            event.target.value,
-                            isElectronicReceipt,
-                          ),
+                          normalizeGoodsReceiptDocumentNo(event.target.value),
                         );
                         setError(null);
                       }}
                       trailingContent={
                         <span className="pr-1 text-xs font-bold text-[var(--wms-ops-field-placeholder-fg)]">
-                          {receiptNo.length}/{isElectronicReceipt ? 16 : 15}
+                          {receiptNo.length}/15
                         </span>
                       }
                     />
@@ -1852,11 +1841,8 @@ export function GoodsReceiptCreatePage({
                       <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-[var(--wms-app-border)] px-4 py-2">
                         <OpsSkinCheckbox
                           checked={isElectronicReceipt}
-                          onCheckedChange={(next) => {
-                            setIsElectronicReceipt(next);
-                            setReceiptNo("");
-                            setError(null);
-                          }}
+                          onCheckedChange={() => undefined}
+                          disabled
                           aria-label={t("createFlow.waybill.eReceipt")}
                         />
                         <span className="text-sm font-semibold">{t("createFlow.waybill.eReceipt")}</span>
@@ -1875,32 +1861,26 @@ export function GoodsReceiptCreatePage({
                         <AppInput
                           className="font-mono tracking-wider"
                           inputMode="text"
-                          maxLength={isElectronicReceipt ? 16 : 15}
+                          maxLength={15}
                           placeholder={
                             isElectronicReceipt
-                              ? "GIB2026AB0000001"
+                              ? "GIB2026AB000000"
                               : "IRS202600000001"
                           }
                           value={receiptNo}
                           invalid={
                             Boolean(receiptNo) &&
-                            !isValidGoodsReceiptDocumentNo(
-                              receiptNo,
-                              isElectronicReceipt,
-                            )
+                            !isValidGoodsReceiptDocumentNo(receiptNo)
                           }
                           onChange={(event) => {
                             setReceiptNo(
-                              normalizeGoodsReceiptDocumentNo(
-                                event.target.value,
-                                isElectronicReceipt,
-                              ),
+                              normalizeGoodsReceiptDocumentNo(event.target.value),
                             );
                             setError(null);
                           }}
                           trailingContent={
                             <span className="pr-1 text-xs font-bold text-[var(--wms-ops-field-placeholder-fg)]">
-                              {receiptNo.length}/{isElectronicReceipt ? 16 : 15}
+                              {receiptNo.length}/15
                             </span>
                           }
                         />
@@ -2087,7 +2067,6 @@ export function GoodsReceiptCreatePage({
                   setSelectedOrders([]);
                   setOrders([]);
                   setReceiptNo("");
-                  setIsElectronicReceipt(false);
                   setWaybillDate(today());
                   setError(null);
                 }}
@@ -2109,7 +2088,6 @@ export function GoodsReceiptCreatePage({
                 setOrders([]);
                 setAssignees([]);
                 setReceiptNo("");
-                setIsElectronicReceipt(false);
                 setWaybillDate(today());
                 setError(null);
               }}

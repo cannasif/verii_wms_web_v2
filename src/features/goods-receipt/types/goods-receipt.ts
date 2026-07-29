@@ -36,21 +36,11 @@ export const createGoodsReceiptFormSchema = (t: TFunction) => z.object({
     return;
   }
 
-  // Mal kabul belge numarası manuel girilebilir ve seri içerebilir. Uzunluk
-  // kontrolünü sadece tamamen numerik Netsis/e-belge numaralarında uygula.
-  if (!/^\d+$/.test(documentNo)) {
-    return;
-  }
-
-  const expectedLength = data.isInvoice ? 16 : 15;
-
-  if (documentNo.length !== expectedLength) {
+  if (!/^[A-Z0-9]{15}$/i.test(documentNo)) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ['documentNo'],
-      message: data.isInvoice
-        ? t('goodsReceipt.validation.documentNoInvoiceLength')
-        : t('goodsReceipt.validation.documentNoLength'),
+      message: t('goodsReceipt.validation.documentNoInvoiceLength'),
     });
   }
 });

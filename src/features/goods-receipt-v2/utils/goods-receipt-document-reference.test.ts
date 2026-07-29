@@ -8,19 +8,19 @@ import {
 describe("emirli mal kabul irsaliye referansı", () => {
   it("normal irsaliyeyi 15 alfanümerik karaktere indirger", () => {
     assert.equal(
-      normalizeGoodsReceiptDocumentNo("irs-2026-00000001", false),
+      normalizeGoodsReceiptDocumentNo("irs-2026-00000001"),
       "IRS202600000001",
     );
-    assert.equal(isValidGoodsReceiptDocumentNo("IRS202600000001", false), true);
-    assert.equal(isValidGoodsReceiptDocumentNo("00000000000001", false), false);
+    assert.equal(isValidGoodsReceiptDocumentNo("IRS202600000001"), true);
+    assert.equal(isValidGoodsReceiptDocumentNo("00000000000001"), false);
   });
 
-  it("e-irsaliyeyi 16 alfanümerik karaktere indirger", () => {
+  it("e-irsaliyeyi 15 alfanümerik karaktere indirger", () => {
     assert.equal(
-      normalizeGoodsReceiptDocumentNo("gib-2026-ab0000001", true),
-      "GIB2026AB0000001",
+      normalizeGoodsReceiptDocumentNo("gib-2026-ab0000001"),
+      "GIB2026AB000000",
     );
-    assert.equal(isValidGoodsReceiptDocumentNo("GIB2026AB0000001", true), true);
-    assert.equal(isValidGoodsReceiptDocumentNo("GIB202600000001", true), false);
+    assert.equal(isValidGoodsReceiptDocumentNo("GIB2026AB000000"), true);
+    assert.equal(isValidGoodsReceiptDocumentNo("GIB20260000001"), false);
   });
 });
