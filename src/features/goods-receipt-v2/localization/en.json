@@ -97,6 +97,8 @@
       "warehouseFallback": "Warehouse {{code}}",
       "receivingLookupTitle": "Receiving shelf (Receiving / Staging)",
       "receivingPlaceholder": "Receiving / Staging",
+      "activeLocationLookupTitle": "Active location selection",
+      "activeLocationPlaceholder": "Select an active location in the warehouse",
       "receivingSearchPlaceholder": "Search shelf code…",
       "receivingEmpty": "No shelf found.",
       "suggestedRack": "Suggested Shelf",

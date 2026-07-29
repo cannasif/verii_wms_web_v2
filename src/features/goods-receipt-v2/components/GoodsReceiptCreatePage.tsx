@@ -182,6 +182,7 @@ export function GoodsReceiptCreatePage({
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
   const [warehouseAccess, setWarehouseAccess] = useState<UserWarehouseAccess | null>(null);
   const [showAllocatedOpenOrderLines, setShowAllocatedOpenOrderLines] = useState(false);
+  const [allowAnyActiveLocation, setAllowAnyActiveLocation] = useState(false);
   const [lines, setLines] = useState<SelectedReceiptLine[]>([]);
   const linesRef = useRef(lines);
   linesRef.current = lines;
@@ -305,10 +306,18 @@ export function GoodsReceiptCreatePage({
       .catch((cause: Error) => { if (active) report(cause, "Depo yetkileri alınamadı."); });
     void goodsReceiptV2Api.policy(branchCode)
       .then((policy) => {
-        if (active) setShowAllocatedOpenOrderLines(policy.showAllocatedOpenOrderLines);
+        if (active) {
+          setShowAllocatedOpenOrderLines(policy.showAllocatedOpenOrderLines);
+          setAllowAnyActiveLocation(
+            policy.locationSelectionPolicy === "AnyActiveWarehouseLocation",
+          );
+        }
       })
       .catch(() => {
-        if (active) setShowAllocatedOpenOrderLines(false);
+        if (active) {
+          setShowAllocatedOpenOrderLines(false);
+          setAllowAnyActiveLocation(false);
+        }
       });
     return () => { active = false; };
   }, [branchCode]);
@@ -1804,6 +1813,7 @@ export function GoodsReceiptCreatePage({
                   return (
                   <ReceiptEntryRow
                     key={key}
+                    allowAnyActiveLocation={allowAnyActiveLocation}
                     dataLineKey={key}
                     sortOrder={lineSortOrder.get(key) ?? 0}
                     line={line}
@@ -2254,6 +2264,7 @@ export function GoodsReceiptCreatePage({
 
 function ReceiptEntryRow({
   line,
+  allowAnyActiveLocation,
   dataLineKey,
   sortOrder,
   confirmed,
@@ -2266,6 +2277,7 @@ function ReceiptEntryRow({
   cancelGeneratedSerials,
 }: {
   line: SelectedReceiptLine;
+  allowAnyActiveLocation: boolean;
   dataLineKey: string;
   sortOrder: number;
   confirmed: boolean;
@@ -2355,8 +2367,10 @@ function ReceiptEntryRow({
   useEffect(() => {
     if (!line.targetWarehouseId) return;
     let cancelled = false;
-    void goodsReceiptV2Api
-      .receivingLocations(
+    const locationQuery = allowAnyActiveLocation
+      ? goodsReceiptV2Api.locations
+      : goodsReceiptV2Api.receivingLocations;
+    void locationQuery(
         {
           pageNumber: 1,
           pageSize: 100,
@@ -2371,9 +2385,10 @@ function ReceiptEntryRow({
       )
       .then((page) => {
         if (cancelled) return;
-        const preferred =
-          page.items.find((item) => item.locationType === "Receiving") ??
-          page.items[0];
+        const preferred = allowAnyActiveLocation
+          ? page.items.find((item) => item.id === line.putawayLocationId)
+          : page.items.find((item) => item.locationType === "Receiving") ??
+            page.items[0];
         if (!preferred) return;
 
         if (line.receivingLocationId == null) {
@@ -2424,6 +2439,7 @@ function ReceiptEntryRow({
     };
   }, [
     key,
+    allowAnyActiveLocation,
     line.putawayLocationCode,
     line.putawayLocationId,
     line.receivingLocationCode,
@@ -2689,21 +2705,32 @@ function ReceiptEntryRow({
                   variant="ops"
                   open={locationLookupOpen}
                   onOpenChange={setLocationLookupOpen}
-                  title={t("createFlow.entryRow.receivingLookupTitle")}
+                  title={t(
+                    allowAnyActiveLocation
+                      ? "createFlow.entryRow.activeLocationLookupTitle"
+                      : "createFlow.entryRow.receivingLookupTitle",
+                  )}
                   value={receivingLabel}
-                  placeholder={t("createFlow.entryRow.receivingPlaceholder")}
+                  placeholder={t(
+                    allowAnyActiveLocation
+                      ? "createFlow.entryRow.activeLocationPlaceholder"
+                      : "createFlow.entryRow.receivingPlaceholder",
+                  )}
                   searchPlaceholder={t("createFlow.entryRow.receivingSearchPlaceholder")}
                   emptyText={t("createFlow.entryRow.receivingEmpty")}
                   disabled={!line.targetWarehouseId}
                   triggerClassName={cn(OPS_FIELD_CLASS, "h-9")}
                   queryKey={[
-                    "gr-line-receiving-lookup",
+                    "gr-line-location-lookup",
+                    allowAnyActiveLocation ? "all-active" : "receiving",
                     key,
                     line.targetWarehouseId,
                   ]}
                   fetchPage={async ({ pageNumber, pageSize, search, signal }) =>
                     toPagedResponse(
-                      await goodsReceiptV2Api.receivingLocations(
+                      await (allowAnyActiveLocation
+                        ? goodsReceiptV2Api.locations
+                        : goodsReceiptV2Api.receivingLocations)(
                         {
                           pageNumber,
                           pageSize,

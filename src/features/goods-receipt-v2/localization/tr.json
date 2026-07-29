@@ -115,6 +115,8 @@
       "warehouseFallback": "Depo {{code}}",
       "receivingLookupTitle": "Kabul rafı (Receiving / Staging)",
       "receivingPlaceholder": "Receiving / Staging",
+      "activeLocationLookupTitle": "Aktif raf seçimi",
+      "activeLocationPlaceholder": "Depoya ait aktif rafı seçin",
       "receivingSearchPlaceholder": "Raf kodu ara…",
       "receivingEmpty": "Raf bulunamadı.",
       "suggestedRack": "Önerilen Raf",
