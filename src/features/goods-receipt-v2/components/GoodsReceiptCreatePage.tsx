@@ -44,7 +44,6 @@ import {
 import { useTheme } from "@/components/theme-provider";
 import { StockTrackingPolicyField } from "@/features/stock-tracking/effective-stock-tracking";
 import { stockTrackingApi } from "@/features/stock-tracking/api/stock-tracking.api";
-import { qualityApi } from "@/features/quality/api/quality.api";
 import { useModuleTranslation } from "@/hooks/useModuleTranslation";
 import type { DropdownPage } from "@/hooks/useDropdownInfiniteSearch";
 import {
@@ -74,13 +73,6 @@ import {
   isValidGoodsReceiptDocumentNo,
   normalizeGoodsReceiptDocumentNo,
 } from "../utils/goods-receipt-document-reference";
-
-const QUALITY_REQUIRED_MODES = new Set([
-  "InspectionRequired",
-  "QuickCheck",
-  "QualityCheck",
-  "Required",
-]);
 
 const toPagedResponse = <T,>(page: DropdownPage<T>): PagedResponse<T> => ({
   data: page.items,
@@ -528,32 +520,16 @@ export function GoodsReceiptCreatePage({
         number,
         ReturnType<typeof goodsReceiptV2Api.trackingPolicy>
       >();
-      let qualityStockIds = new Set<number>();
-      try {
-        const rules = await qualityApi.rulesPaged({
-          pageNumber: 1,
-          pageSize: 500,
-          search: null,
-          sortBy: "id",
-          sortDirection: "asc",
-          filterLogic: "and",
-          filters: [
-            { column: "branchCode", operator: "equals", value: customer.branch },
-            { column: "isActive", operator: "equals", value: "true" },
-          ],
-        });
-        qualityStockIds = new Set(
-          rules.items
-            .filter(
-              (rule) =>
-                rule.stockId != null &&
-                QUALITY_REQUIRED_MODES.has(rule.inspectionMode),
-            )
-            .map((rule) => rule.stockId as number),
-        );
-      } catch {
-        qualityStockIds = new Set();
-      }
+      const qualityRequirements = await goodsReceiptV2Api.qualityRequirements(
+        customer.branch,
+        [...stockByCode.values()].map((stock) => stock.id),
+      );
+      const qualityByStockId = new Map(
+        qualityRequirements.stocks.map((requirement) => [
+          requirement.stockId,
+          requirement.requiresQualityControl,
+        ]),
+      );
       const preparedLines = await Promise.all(
           rows.map(async (x) => {
             const warehouse =
@@ -598,7 +574,7 @@ export function GoodsReceiptCreatePage({
               trackingType: trackingPolicy.trackingType,
               trackingPolicy,
               trackings: [],
-              requireQualityControl: qualityStockIds.has(stock.id),
+              requireQualityControl: qualityByStockId.get(stock.id) === true,
             };
           }),
         );
@@ -878,15 +854,36 @@ export function GoodsReceiptCreatePage({
     return null;
   };
 
-  const goToConfirmation = (): void => {
+  const goToConfirmation = async (): Promise<void> => {
     const message = validatePlan();
     if (message) {
       setError(message);
       toast.error(message);
       return;
     }
+    setBusy(true);
     setError(null);
-    setStep(1);
+    try {
+      const requirement = await goodsReceiptV2Api.qualityRequirements(
+        customer?.branch ?? branchCode,
+        lines.map((line) => line.stockId),
+      );
+      const qualityByStockId = new Map(
+        requirement.stocks.map((stock) => [
+          stock.stockId,
+          stock.requiresQualityControl,
+        ]),
+      );
+      setLines((current) => current.map((line) => ({
+        ...line,
+        requireQualityControl: qualityByStockId.get(line.stockId) === true,
+      })));
+      setStep(1);
+    } catch (cause) {
+      report(cause, "Kalite kontrol kuralları doğrulanamadı.");
+    } finally {
+      setBusy(false);
+    }
   };
   const create = async (): Promise<void> => {
     if (
@@ -1919,7 +1916,7 @@ export function GoodsReceiptCreatePage({
                     setError(null);
                     setLines([]);
                   }}
-                  next={goToConfirmation}
+                  next={() => void goToConfirmation()}
                   disabled={lines.length === 0 || busy}
                   t={t}
                 />
@@ -2052,9 +2049,12 @@ export function GoodsReceiptCreatePage({
                 >
                   {busy ? (
                     <Loader2 className="size-4 animate-spin" />
-                  ) : (
-                    t("create")
-                  )}
+                  ) : null}
+                  {direct
+                    ? lines.some((line) => line.requireQualityControl)
+                      ? "Kaliteye Gönder"
+                      : "İrsaliye Oluştur"
+                    : t("create")}
                 </OpsActionButton>
               </div>
             </div>
