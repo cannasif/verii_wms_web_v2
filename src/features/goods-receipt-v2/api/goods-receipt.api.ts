@@ -17,11 +17,16 @@ export const goodsReceiptV2Api = {
   qualityRequirements: async (
     branchCode: string,
     stockIds: number[],
-  ): Promise<GoodsReceiptQualityRequirementResult> =>
-    unwrap(await api.post<Envelope<GoodsReceiptQualityRequirementResult>>(
+  ): Promise<GoodsReceiptQualityRequirementResult> => {
+    const params = new URLSearchParams({ branchCode });
+    for (const stockId of [...new Set(stockIds)]) {
+      params.append('stockIds', String(stockId));
+    }
+    return unwrap(await api.get<Envelope<GoodsReceiptQualityRequirementResult>>(
       '/api/goods-receipts/quality-requirements',
-      { branchCode, stockIds: [...new Set(stockIds)] },
-    )),
+      { params },
+    ));
+  },
   warehouseAccess: async (): Promise<UserWarehouseAccess> =>
     unwrap(await api.get<Envelope<UserWarehouseAccess>>('/api/goods-receipts/warehouse-access')),
   customers: async (request: DropdownPageRequest, branchCode: string): Promise<GridPage<CustomerOption>> => unwrap(await api.post<Envelope<GridPage<CustomerOption>>>('/api/erp-mirror/customers/paged', pagedBody({ ...request, sortBy: request.sortBy ?? 'customerCode' }, [{ column: 'branchCode', operator: 'equals', value: branchCode }]), { signal: request.signal })),
