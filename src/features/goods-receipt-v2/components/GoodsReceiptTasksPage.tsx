@@ -385,6 +385,17 @@ function TaskModal({
                 <td className="p-3">
                   <strong>{line.stockCode}</strong>
                   <div className="text-xs text-slate-500">{line.stockName}</div>
+                  <div
+                    className={`mt-1 text-[11px] font-semibold ${
+                      line.requireQualityControl
+                        ? "text-amber-500"
+                        : "text-emerald-500"
+                    }`}
+                  >
+                    {line.requireQualityControl
+                      ? "Kalite kontrol gerekli"
+                      : "Doğrudan irsaliye"}
+                  </div>
                 </td>
                 <td className="p-3">{line.yapCode || "—"}</td>
                 <td className="p-3 text-right">
@@ -995,7 +1006,9 @@ function TaskScanPanel({
             ) : (
               <Check className="size-4" />
             )}
-            Kabulü işle
+            {selectedLine?.requireQualityControl
+              ? "Kaliteye Gönder"
+              : "İrsaliye Oluştur"}
           </button>
         </div>
       </section>
