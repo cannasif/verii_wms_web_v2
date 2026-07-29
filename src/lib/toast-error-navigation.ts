@@ -1,7 +1,8 @@
 import { toast } from 'sonner';
 
-const HIGHLIGHT_MS = 2600;
+const HIGHLIGHT_MS = 2200;
 const FLASH_CLASS = 'wms-error-focus-flash';
+const FLASH_FIELD_CLASS = 'wms-error-focus-flash-field';
 
 let installed = false;
 let clearTimer: number | undefined;
@@ -101,7 +102,14 @@ function findByExplicitTarget(message: string): HTMLElement | null {
 
     let score = 0;
     for (const key of keys) {
-      if (msg.includes(key)) score = Math.max(score, key.length + 30);
+      if (msg.includes(key)) {
+        score = Math.max(score, key.length + 30);
+        continue;
+      }
+      const words = key.split(/\s+/).filter((word) => word.length >= 3);
+      if (words.length > 0 && words.every((word) => msg.includes(word))) {
+        score = Math.max(score, words.join('').length + words.length * 6);
+      }
     }
     if (score > 0 && (!best || score > best.score)) {
       best = { el, score };
@@ -223,12 +231,20 @@ export function navigateToErrorTarget(message: string): boolean {
   }
 
   document
-    .querySelectorAll(`.${FLASH_CLASS}`)
-    .forEach((node) => node.classList.remove(FLASH_CLASS));
+    .querySelectorAll(`.${FLASH_CLASS}, .${FLASH_FIELD_CLASS}`)
+    .forEach((node) => node.classList.remove(FLASH_CLASS, FLASH_FIELD_CLASS));
 
   const shell = resolveControlSurface(target);
+  const fieldWrapper =
+    target.matches('[data-wms-error-target]')
+      ? target
+      : target.closest<HTMLElement>('[data-wms-error-target]');
+
   shell.classList.add(FLASH_CLASS);
-  shell.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+  fieldWrapper?.classList.add(FLASH_FIELD_CLASS);
+
+  const scrollTarget = fieldWrapper ?? shell;
+  scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
 
   const focusable =
     shell.matches('input, textarea, select, button, [tabindex]')
@@ -243,6 +259,7 @@ export function navigateToErrorTarget(message: string): boolean {
 
   clearTimer = window.setTimeout(() => {
     shell.classList.remove(FLASH_CLASS);
+    fieldWrapper?.classList.remove(FLASH_FIELD_CLASS);
     clearTimer = undefined;
   }, HIGHLIGHT_MS);
 

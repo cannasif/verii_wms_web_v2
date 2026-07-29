@@ -80,7 +80,7 @@
       "quantity": "Quantity",
       "serialNo": "Serial No",
       "locationCode": "Location Code",
-      "untracked": "Untracked",
+      "untracked": "Passive",
       "planSerial": "Plan…",
       "serialCount": "{{count}} serials",
       "lotRowCount": "{{count}} lot/rows",
@@ -101,6 +101,7 @@
       "receivingEmpty": "No shelf found.",
       "suggestedRack": "Suggested Shelf",
       "suggestedRackHint": "First suggestion auto-selected · selection updates location code",
+      "suggestedRackEmpty": "No suggested shelf found for this line.",
       "suggestion": "suggested",
       "selected": "Selected",
       "autoSerialReserved": "Auto-generated serials were reserved.",
@@ -178,6 +179,35 @@
       "createdTasks": "Created tasks",
       "taskMeta": "warehouse #{{warehouseId}} · {{lineCount}} lines · {{quantity}}",
       "goToTaskManagement": "Go to task management"
+    },
+    "validation": {
+      "eReceiptNo": "e-Dispatch / GIB number must be exactly 15 alphanumeric characters.",
+      "receiptNo": "Dispatch number must be exactly 15 alphanumeric characters.",
+      "waybillDate": "Dispatch date is required.",
+      "singleWarehouse": "Only one warehouse can be used per goods receipt. Create separate receipts for different warehouses.",
+      "warehouseNotAllowed": "The selected warehouse is not assigned to you; goods receipt cannot be processed in this warehouse.",
+      "documentSeries": "Document series is required.",
+      "assigneesRequired": "At least one operation user must be assigned to the task.",
+      "lineQuantityRange": "{{name}}: quantity must be within the available quantity range.",
+      "lineWarehouseRequired": "{{name}}: target warehouse and receiving shelf are required.",
+      "lineNoTrackingRows": "{{name}}: untracked lines cannot contain lot/serial rows.",
+      "lineTrackingPlanRequired": "{{name}}: lot/serial plan is required.",
+      "lineTrackingTotalMismatch": "{{name}}: lot/serial total ({{total}}) must equal receipt quantity ({{quantity}}).",
+      "lineSerialRowInvalid": "{{name}}: each serial row must contain a unique serial and quantity 1.",
+      "lineLotRequired": "{{name}}: lot is required on each tracking row.",
+      "lineManufacturingDateRequired": "{{name}}: manufacturing date is required.",
+      "lineExpirationDateRequired": "{{name}}: expiration date is required.",
+      "lineSerialCountMismatch": "{{name}}: enter one unique serial per unit of quantity.",
+      "lineDuplicateSerial": "{{name}}: the same serial cannot be used more than once.",
+      "orderNumberRequired": "Enter an order number.",
+      "selectCustomerFirst": "Select a supplier first.",
+      "enterQuantityFirst": "Enter a quantity first.",
+      "noLinesToConfirm": "No lines with quantity available to confirm.",
+      "serialQuantityRange": "Quantity for serial rows must be a whole number between 1 and 500.",
+      "enterAtLeastOneSerial": "Enter at least one serial.",
+      "serialCountExceedsQuantity": "Serial count cannot exceed receipt quantity.",
+      "warehouseOrderNotAllowed": "You cannot select this order because warehouse {{code}} is not assigned to you.",
+      "unknownWarehouse": "unknown"
     }
   },
   "manual": {
@@ -202,7 +232,7 @@
     "createTask": "Create Task", "success": "Goods receipt was created successfully.", "resultDirect": "Goods Receipt Posted",
     "resultOrderless": "Receipt Task Created", "linesText": "lines", "newRecord": "New Record",
     "options": { "noLabel": "No Label", "preGenerate": "Pre-generate", "supplierLabel": "Supplier Label", "generateOnReceipt": "Generate on Receipt", "manual": "Manual", "barcode": "Barcode Scan", "preLabel": "Pre-generated Label" },
-    "validation": { "customer": "Supplier is required.", "receiptNo": "Standard dispatch receipt number must contain exactly 15 digits.", "eReceiptNo": "e-Dispatch number must contain a 3-character unit code followed by 13 digits.", "date": "Dispatch date is required.", "operation": "Warehouse, receiving location and document series are required.", "lines": "At least one stock line is required.", "stock": "Stock and a quantity greater than zero are required.", "serialQuantity": "A serial-tracked line must have quantity 1.", "expiry": "Expiration date cannot precede manufacturing date.", "incomplete": "The form contains missing or invalid fields.", "submit": "Goods receipt could not be created." }
+    "validation": { "customer": "Supplier is required.", "receiptNo": "Standard dispatch receipt number must contain exactly 15 digits.", "eReceiptNo": "e-Dispatch / GIB number must be exactly 15 alphanumeric characters.", "date": "Dispatch date is required.", "operation": "Warehouse, receiving location and document series are required.", "lines": "At least one stock line is required.", "stock": "Stock and a quantity greater than zero are required.", "serialQuantity": "A serial-tracked line must have quantity 1.", "expiry": "Expiration date cannot precede manufacturing date.", "incomplete": "The form contains missing or invalid fields.", "submit": "Goods receipt could not be created." }
   },
   "list": {
     "eyebrowParent": "INBOUND_OP",

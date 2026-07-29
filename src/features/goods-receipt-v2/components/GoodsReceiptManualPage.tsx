@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactElement, type ReactNode } from 'react';
-import { Building2, Check, CheckCircle2, ChevronLeft, ChevronRight, CircleHelp, ClipboardCheck, FileText, ListChecks, Loader2, PackagePlus, Plus, Printer, ScanBarcode, Trash2 } from 'lucide-react';
+import { Building2, Check, CheckCircle2, ChevronLeft, ChevronRight, CircleHelp, ClipboardCheck, ClipboardList, FileText, Loader2, PackagePlus, Plus, Printer, ScanBarcode, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { AppDropdown } from '@/components/shared/AppDropdown';
@@ -411,57 +411,74 @@ export function GoodsReceiptDirectPage(): ReactElement {
 
   return (
     <section className="wms-ops-form space-y-5">
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div className="min-w-0 space-y-2">
-          {isPremium ? (
-            <PremiumEyebrow eyebrow={pageEyebrow} />
-          ) : (
-            <div className="wms-ops-eyebrow font-mono text-[11px] font-semibold uppercase tracking-[0.18em]">
-              {pageEyebrow}
-            </div>
-          )}
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-black tracking-tight">{t("createFlow.directPageTitle")}</h1>
-            <TooltipProvider delayDuration={160}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    className="inline-grid size-7 place-items-center rounded-full border border-[color-mix(in_oklab,var(--wms-ops-accent)_28%,var(--wms-app-border))] bg-[color-mix(in_oklab,var(--wms-ops-accent)_8%,transparent)] text-[var(--wms-ops-accent)] transition hover:border-[color-mix(in_oklab,var(--wms-ops-accent)_55%,var(--wms-app-border))] hover:bg-[color-mix(in_oklab,var(--wms-ops-accent)_14%,transparent)] hover:shadow-[0_0_14px_color-mix(in_oklab,var(--wms-ops-accent)_18%,transparent)]"
-                    aria-label={t("createFlow.directPageHintAria")}
-                  >
-                    <CircleHelp className="size-3.5" aria-hidden />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent
-                  side="bottom"
-                  align="start"
-                  sideOffset={10}
-                  className={cn(
-                    'wms-ops-page-hint-tooltip max-w-[22rem] overflow-hidden rounded-xl border p-0 text-left shadow-[0_12px_40px_color-mix(in_oklab,black_45%,transparent),0_0_0_1px_color-mix(in_oklab,var(--wms-ops-accent)_18%,transparent)]',
-                    '!bg-[color-mix(in_oklab,var(--wms-app-panel)_96%,black)]',
-                    'border-[color-mix(in_oklab,var(--wms-ops-accent)_32%,var(--wms-app-border))]',
-                    '!text-[var(--wms-app-text)]',
-                  )}
-                >
-                  <div className="border-b border-[color-mix(in_oklab,var(--wms-ops-accent)_18%,transparent)] bg-[color-mix(in_oklab,var(--wms-ops-accent)_8%,transparent)] px-3.5 py-2">
-                    <span className="inline-flex items-center gap-1.5 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-[var(--wms-ops-accent)]">
-                      <span className="size-1.5 rounded-full bg-[var(--wms-ops-accent)] shadow-[0_0_8px_var(--wms-ops-accent)]" aria-hidden />
-                      {t("createFlow.howItWorks")}
-                    </span>
-                  </div>
-                  <p className="px-3.5 py-3 text-[0.78rem] leading-5 text-[var(--wms-app-text-muted)]">
-                    {pageHint}
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+      <header className="wms-ops-gr-page-hero">
+        <div className="wms-ops-gr-page-hero__content">
+          <div className="wms-ops-gr-page-hero__top">
+            {isPremium ? (
+              <PremiumEyebrow eyebrow={pageEyebrow} />
+            ) : (
+              <div className="wms-ops-eyebrow font-mono text-[11px] font-semibold uppercase tracking-[0.18em]">
+                {pageEyebrow}
+              </div>
+            )}
+            <span className="wms-ops-gr-page-hero__badge">{t("manual.directTitle")}</span>
           </div>
-        </div>
 
-        <div className="inline-flex items-center gap-2 rounded-xl border border-[color-mix(in_oklab,var(--wms-ops-accent)_40%,var(--wms-app-border))] bg-[color-mix(in_oklab,var(--wms-ops-accent)_12%,transparent)] px-3 py-2 text-xs font-semibold text-[var(--wms-ops-accent)] shadow-[0_0_16px_color-mix(in_oklab,var(--wms-ops-accent)_12%,transparent)]">
-          <ListChecks className="size-3.5 shrink-0" aria-hidden />
-          <span>{t("createFlow.orderedBadge")}</span>
+          <div className="wms-ops-gr-page-hero__main">
+            <div className="wms-ops-gr-page-hero__icon" aria-hidden>
+              <ClipboardList className="size-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="wms-ops-title-main wms-ops-gr-page-hero__title">
+                  {t("createFlow.directPageTitle")}
+                </h1>
+                <TooltipProvider delayDuration={160}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        className="wms-ops-gr-page-hero__hint"
+                        aria-label={t("createFlow.directPageHintAria")}
+                      >
+                        <CircleHelp className="size-3.5" aria-hidden />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side="bottom"
+                      align="start"
+                      sideOffset={10}
+                      className={cn(
+                        "wms-ops-page-hint-tooltip max-w-[22rem] overflow-hidden rounded-xl border p-0 text-left shadow-[0_12px_40px_color-mix(in_oklab,black_45%,transparent),0_0_0_1px_color-mix(in_oklab,var(--wms-ops-accent)_18%,transparent)]",
+                        "!bg-[color-mix(in_oklab,var(--wms-app-panel)_96%,black)]",
+                        "border-[color-mix(in_oklab,var(--wms-ops-accent)_32%,var(--wms-app-border))]",
+                        "!text-[var(--wms-app-text)]",
+                      )}
+                    >
+                      <div className="border-b border-[color-mix(in_oklab,var(--wms-ops-accent)_18%,transparent)] bg-[color-mix(in_oklab,var(--wms-ops-accent)_8%,transparent)] px-3.5 py-2">
+                        <span className="inline-flex items-center gap-1.5 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-[var(--wms-ops-accent)]">
+                          <span
+                            className="size-1.5 rounded-full bg-[var(--wms-ops-accent)] shadow-[0_0_8px_var(--wms-ops-accent)]"
+                            aria-hidden
+                          />
+                          {t("createFlow.howItWorks")}
+                        </span>
+                      </div>
+                      <p className="px-3.5 py-3 text-[0.78rem] leading-5 text-[var(--wms-app-text-muted)]">
+                        {pageHint}
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              <p className="wms-ops-subtitle wms-ops-gr-page-hero__subtitle">
+                <span className="wms-ops-subtitle-prefix" aria-hidden>
+                  &gt;{" "}
+                </span>
+                {pageHint}
+              </p>
+            </div>
+          </div>
         </div>
       </header>
 

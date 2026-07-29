@@ -1,14 +1,13 @@
 import {
   useCallback,
   useEffect,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
   type ReactElement,
   type ReactNode,
-  type RefObject,
 } from "react";
+import { createPortal } from "react-dom";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -58,6 +57,8 @@ import {
   parseLocalizedNumber,
 } from "@/lib/project-format";
 import { cn } from "@/lib/utils";
+import { getWorkspacePortalRoot } from "@/lib/workspace-portal";
+import { navigateToErrorTarget } from "@/lib/toast-error-navigation";
 import { useAuthStore } from "@/stores/auth-store";
 import type { PagedResponse } from "@/types/api";
 import { goodsReceiptV2Api } from "../api/goods-receipt.api";
@@ -141,55 +142,6 @@ const groupOrderLines = (rows: OpenOrderLine[]): OpenOrderHeader[] => {
   return [...grouped.values()];
 };
 
-function useReceiptLineReorderAnimation(
-  orderedKeys: string[],
-): RefObject<HTMLDivElement | null> {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const prevRectsRef = useRef<Map<string, DOMRect>>(new Map());
-
-  useLayoutEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const nextRects = new Map<string, DOMRect>();
-    container
-      .querySelectorAll<HTMLElement>("[data-receipt-line-key]")
-      .forEach((element) => {
-        const key = element.dataset.receiptLineKey;
-        if (!key) return;
-        nextRects.set(key, element.getBoundingClientRect());
-      });
-
-    container
-      .querySelectorAll<HTMLElement>("[data-receipt-line-key]")
-      .forEach((element) => {
-        const key = element.dataset.receiptLineKey;
-        if (!key) return;
-        const nextRect = nextRects.get(key);
-        const previousRect = prevRectsRef.current.get(key);
-        if (!nextRect || !previousRect) return;
-
-        const deltaY = previousRect.top - nextRect.top;
-        if (Math.abs(deltaY) < 2) return;
-
-        element.animate(
-          [
-            { transform: `translateY(${deltaY}px)` },
-            { transform: "translateY(0)" },
-          ],
-          {
-            duration: 480,
-            easing: "cubic-bezier(0.22, 1, 0.36, 1)",
-          },
-        );
-      });
-
-    prevRectsRef.current = nextRects;
-  }, [orderedKeys]);
-
-  return containerRef;
-}
-
 function putawayLocationPatch(location: {
   id: number;
   code: string;
@@ -218,6 +170,7 @@ export function GoodsReceiptCreatePage({
   const [step, setStep] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showFieldErrors, setShowFieldErrors] = useState(false);
   const [selectedCustomer, setSelectedCustomer] =
     useState<CustomerOption | null>(null);
   const [customerLookupOpen, setCustomerLookupOpen] = useState(false);
@@ -230,6 +183,8 @@ export function GoodsReceiptCreatePage({
   const [warehouseAccess, setWarehouseAccess] = useState<UserWarehouseAccess | null>(null);
   const [showAllocatedOpenOrderLines, setShowAllocatedOpenOrderLines] = useState(false);
   const [lines, setLines] = useState<SelectedReceiptLine[]>([]);
+  const linesRef = useRef(lines);
+  linesRef.current = lines;
   const [confirmedLineOrder, setConfirmedLineOrder] = useState<string[]>([]);
   const [series, setSeries] = useState<SeriesOption[]>([]);
   const [seriesValue, setSeriesValue] = useState<string | null>(null);
@@ -237,11 +192,13 @@ export function GoodsReceiptCreatePage({
   const [documentDate, setDocumentDate] = useState(today);
   const [waybillDate, setWaybillDate] = useState(today);
   const [receiptNo, setReceiptNo] = useState("");
+  const receiptNoInvalid =
+    (showFieldErrors || Boolean(receiptNo)) &&
+    !isValidGoodsReceiptDocumentNo(receiptNo);
   const isElectronicReceipt = true;
   const [plannedArrival, setPlannedArrival] = useState("");
   const [priority, setPriority] = useState("3");
   const [labelStrategy, setLabelStrategy] = useState("None");
-  const [description, setDescription] = useState("");
   const [result, setResult] = useState<CreateGoodsReceiptResult | ManualGoodsReceiptResult | null>(null);
 
   const customer = useMemo(() => {
@@ -310,20 +267,19 @@ export function GoodsReceiptCreatePage({
   const selectedSeriesPreview =
     series.find((x) => String(x.id) === seriesValue)?.previewDocumentNumber ?? "—";
   const selectedQuantity = lines.reduce((sum, line) => sum + line.quantity, 0);
-  const orderedLines = useMemo(() => {
-    const byKey = new Map(lines.map((line) => [lineKey(line), line] as const));
-    const confirmed = confirmedLineOrder
-      .map((key) => byKey.get(key))
-      .filter((line): line is SelectedReceiptLine => Boolean(line));
-    const confirmedSet = new Set(confirmedLineOrder);
-    const rest = lines.filter((line) => !confirmedSet.has(lineKey(line)));
-    return [...confirmed, ...rest];
+  const lineSortOrder = useMemo(() => {
+    const order = new Map<string, number>();
+    confirmedLineOrder.forEach((key, index) => {
+      order.set(key, index);
+    });
+    lines.forEach((line, index) => {
+      const key = lineKey(line);
+      if (!order.has(key)) {
+        order.set(key, confirmedLineOrder.length + index);
+      }
+    });
+    return order;
   }, [lines, confirmedLineOrder]);
-  const orderedLineKeys = useMemo(
-    () => orderedLines.map((line) => lineKey(line)),
-    [orderedLines],
-  );
-  const receiptLinesListRef = useReceiptLineReorderAnimation(orderedLineKeys);
   const selectedOrderWarehouseCode = useMemo(
     () => orders.find((order) => selectedOrders.includes(order.siparisNo))?.targetWarehouseCode,
     [orders, selectedOrders],
@@ -402,7 +358,7 @@ export function GoodsReceiptCreatePage({
   const loadOrderByNumber = async (): Promise<void> => {
     const orderNumber = orderNumberSearch.trim().toLocaleUpperCase("tr-TR");
     if (!orderNumber) {
-      toast.error("Sipariş numarasını girin.");
+      toast.error(t("createFlow.validation.orderNumberRequired"));
       return;
     }
     setBusy(true);
@@ -473,7 +429,7 @@ export function GoodsReceiptCreatePage({
 
   const loadOrders = async (): Promise<void> => {
     if (!customer) {
-      toast.error("Önce tedarikçi seçin.");
+      toast.error(t("createFlow.validation.selectCustomerFirst"));
       return;
     }
     setBusy(true);
@@ -711,7 +667,7 @@ export function GoodsReceiptCreatePage({
     }
   };
 
-  const updateLine = (key: string, patch: Partial<SelectedReceiptLine>): void =>
+  const updateLine = useCallback((key: string, patch: Partial<SelectedReceiptLine>): void =>
     setLines((current) => {
       const primaryKey = current[0] ? lineKey(current[0]) : null;
       const primaryWarehouseChanged =
@@ -752,12 +708,12 @@ export function GoodsReceiptCreatePage({
           putawayLocationCode: undefined,
         };
       });
-    });
-  const toggleLineConfirmed = (key: string, next: boolean): void => {
+    }), []);
+  const toggleLineConfirmed = useCallback((key: string, next: boolean): void => {
     if (next) {
-      const line = lines.find((item) => lineKey(item) === key);
+      const line = linesRef.current.find((item) => lineKey(item) === key);
       if (!line || line.quantity <= 0) {
-        toast.error("Önce miktar girin.");
+        toast.error(t("createFlow.validation.enterQuantityFirst"));
         return;
       }
       setConfirmedLineOrder((current) =>
@@ -766,7 +722,7 @@ export function GoodsReceiptCreatePage({
       return;
     }
     setConfirmedLineOrder((current) => current.filter((item) => item !== key));
-  };
+  }, [t]);
   const confirmableLineKeys = useMemo(
     () =>
       lines
@@ -779,7 +735,7 @@ export function GoodsReceiptCreatePage({
     confirmableLineKeys.every((key) => confirmedLineOrder.includes(key));
   const toggleAllLinesConfirmed = (): void => {
     if (confirmableLineKeys.length === 0) {
-      toast.error("Onaylanacak miktarı olan kalem yok.");
+      toast.error(t("createFlow.validation.noLinesToConfirm"));
       return;
     }
     if (allLinesConfirmed) {
@@ -854,9 +810,7 @@ export function GoodsReceiptCreatePage({
       line.quantity < 1 ||
       line.quantity > 500
     ) {
-      toast.error(
-        "Seri satırları için miktar 1-500 arasında tam sayı olmalıdır.",
-      );
+      toast.error(t("createFlow.validation.serialQuantityRange"));
       return;
     }
     if (!line.trackingPolicy.autoGenerateSerials) {
@@ -922,80 +876,97 @@ export function GoodsReceiptCreatePage({
 
   const validatePlan = (): string | null => {
     if (!isValidGoodsReceiptDocumentNo(receiptNo))
-      return "E-irsaliye / GİB numarası tam 15 alfanümerik karakter olmalıdır.";
-    if (!waybillDate) return "İrsaliye tarihi zorunludur.";
+      return t(
+        isElectronicReceipt
+          ? "createFlow.validation.eReceiptNo"
+          : "createFlow.validation.receiptNo",
+      );
+    if (!waybillDate) return t("createFlow.validation.waybillDate");
     const warehouseIds = [...new Set(lines.map((line) => line.targetWarehouseId).filter(Boolean))];
     if (warehouseIds.length > 1)
-      return "Bir mal kabul emrinde yalnızca tek depo seçilebilir. Farklı depolar için ayrı emir oluşturun.";
+      return t("createFlow.validation.singleWarehouse");
     if (warehouseAccess?.isRestricted && warehouseIds.some((id) => !warehouseAccess.warehouseIds.includes(id!)))
-      return "Seçilen depo kullanıcıya tanımlı değildir; bu depoda mal kabul işlemi yapılamaz.";
+      return t("createFlow.validation.warehouseNotAllowed");
     for (const line of lines) {
       const name = `${line.siparisNo} / ${line.stockCode ?? line.orderId}`;
       if (line.quantity <= 0 || line.quantity > (line.availableQuantity ?? 0))
-        return `${name}: miktar kullanılabilir miktar aralığında olmalıdır.`;
+        return t("createFlow.validation.lineQuantityRange", { name });
       if (!line.targetWarehouseId || !line.receivingLocationId)
-        return `${name}: hedef depo ve kabul rafı seçilmelidir.`;
+        return t("createFlow.validation.lineWarehouseRequired", { name });
       if (line.trackingType === "None") {
         if (line.trackings.length > 0)
-          return `${name}: takipsiz kalemde lot/seri satırı bulunamaz.`;
+          return t("createFlow.validation.lineNoTrackingRows", { name });
         continue;
       }
       if (line.trackings.length === 0)
-        return `${name}: lot/seri planı girilmelidir.`;
+        return t("createFlow.validation.lineTrackingPlanRequired", { name });
       const total = line.trackings.reduce(
         (sum, x) => sum + Number(x.quantity || 0),
         0,
       );
       if (Math.abs(total - line.quantity) > 0.000001)
-        return `${name}: lot/seri toplamı (${total}) kabul miktarına (${line.quantity}) eşit olmalıdır.`;
+        return t("createFlow.validation.lineTrackingTotalMismatch", {
+          name,
+          total,
+          quantity: line.quantity,
+        });
       if (
         (line.trackingType === "Serial" ||
           line.trackingType === "LotAndSerial") &&
         line.trackings.some((x) => !x.serialNo?.trim() || x.quantity !== 1)
       )
-        return `${name}: her seri satırı benzersiz bir seri ve 1 miktar içermelidir.`;
+        return t("createFlow.validation.lineSerialRowInvalid", { name });
       if (
         (line.trackingType === "Lot" || line.trackingType === "LotAndSerial") &&
         line.trackings.some((x) => !x.lotNo?.trim())
       )
-        return `${name}: her takip satırında lot zorunludur.`;
+        return t("createFlow.validation.lineLotRequired", { name });
       if (
         line.trackingPolicy.requireManufacturingDate &&
         line.trackings.some((x) => !x.manufacturingDate)
       )
-        return `${name}: üretim tarihi zorunludur.`;
+        return t("createFlow.validation.lineManufacturingDateRequired", { name });
       if (
         line.trackingPolicy.requireExpirationDate &&
         line.trackings.some((x) => !x.expirationDate)
       )
-        return `${name}: son kullanma tarihi zorunludur.`;
+        return t("createFlow.validation.lineExpirationDateRequired", { name });
       if (
         line.trackingPolicy.serialQuantityRule === "OneSerialPerBaseUnit" &&
         (!Number.isInteger(line.quantity) ||
           line.trackings.length !== line.quantity)
       )
-        return `${name}: miktar kadar benzersiz seri girilmelidir.`;
+        return t("createFlow.validation.lineSerialCountMismatch", { name });
       const serials = line.trackings
         .map((x) => x.serialNo?.trim())
         .filter(Boolean);
       if (new Set(serials).size !== serials.length)
-        return `${name}: aynı seri birden fazla kullanılamaz.`;
+        return t("createFlow.validation.lineDuplicateSerial", { name });
     }
-    if (!seriesValue) return "Belge serisi seçilmelidir.";
+    if (!seriesValue) return t("createFlow.validation.documentSeries");
     if (!direct && assignees.length === 0)
-      return "Emir için en az bir operasyon kullanıcısı atanmalıdır.";
+      return t("createFlow.validation.assigneesRequired");
     return null;
+  };
+
+  const surfaceValidationError = (message: string): void => {
+    setShowFieldErrors(true);
+    setError(message);
+    toast.error(message);
+    window.requestAnimationFrame(() => {
+      window.setTimeout(() => navigateToErrorTarget(message), 100);
+    });
   };
 
   const goToConfirmation = async (): Promise<void> => {
     const message = validatePlan();
     if (message) {
-      setError(message);
-      toast.error(message);
+      surfaceValidationError(message);
       return;
     }
     setBusy(true);
     setError(null);
+    setShowFieldErrors(false);
     try {
       const requirement = await goodsReceiptV2Api.qualityRequirements(
         customer?.branch ?? branchCode,
@@ -1028,12 +999,12 @@ export function GoodsReceiptCreatePage({
       return;
     const validation = validatePlan();
     if (validation) {
-      setError(validation);
-      toast.error(validation);
+      surfaceValidationError(validation);
       return;
     }
     setBusy(true);
     setError(null);
+    setShowFieldErrors(false);
     try {
       const commonPayload = {
         idempotencyKey: crypto.randomUUID(),
@@ -1057,7 +1028,7 @@ export function GoodsReceiptCreatePage({
         requireQualityControl: lines.some((line) => line.requireQualityControl),
         requirePutaway: true,
         priority: direct ? 1 : Number(priority),
-        description: description.trim() || null,
+        description: null,
         assignedUserIds: direct ? null : assignees.map((user) => user.id),
       };
       const created = direct
@@ -1139,7 +1110,11 @@ export function GoodsReceiptCreatePage({
   const toggleOrder = (order: OpenOrderHeader): void => {
     const { siparisNo, targetWarehouseCode } = order;
     if (!selectedOrders.includes(siparisNo) && !canUseOrderWarehouse(targetWarehouseCode)) {
-      toast.error(`Depo ${targetWarehouseCode ?? "belirsiz"} kullanıcınıza tanımlı olmadığı için bu siparişi seçemezsiniz.`);
+      toast.error(
+        t("createFlow.validation.warehouseOrderNotAllowed", {
+          code: targetWarehouseCode ?? t("createFlow.validation.unknownWarehouse"),
+        }),
+      );
       return;
     }
     if (!selectedOrders.includes(siparisNo)
@@ -1198,6 +1173,43 @@ export function GoodsReceiptCreatePage({
     setSelectedDirectLineKeys(directSelectAllKeys);
     setLines([]);
   };
+
+  const labelStrategyOptions = useMemo(
+    () => [
+      { value: "None", label: t("createFlow.labelOptions.none") },
+      ...(!direct
+        ? [{ value: "PreGenerate", label: t("createFlow.labelOptions.preGenerate") }]
+        : []),
+      { value: "SupplierLabel", label: t("createFlow.labelOptions.supplierLabel") },
+      {
+        value: "GenerateOnReceipt",
+        label: t("createFlow.labelOptions.generateOnReceipt"),
+      },
+    ],
+    [direct, t],
+  );
+
+  const waybillHeaderActions = (
+    <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:items-end sm:justify-end">
+      <div className="min-w-0 space-y-1.5 sm:min-w-[12rem]">
+        <span className="text-sm font-semibold">{t("labelStrategy")}</span>
+        <AppDropdown
+          value={labelStrategy}
+          onValueChange={setLabelStrategy}
+          options={labelStrategyOptions}
+        />
+      </div>
+      <label className="flex shrink-0 cursor-pointer items-center gap-3 self-end rounded-xl border border-[var(--wms-app-border)] px-4 py-2">
+        <OpsSkinCheckbox
+          checked={isElectronicReceipt}
+          onCheckedChange={() => undefined}
+          disabled
+          aria-label={t("createFlow.waybill.eReceipt")}
+        />
+        <span className="text-sm font-semibold">{t("createFlow.waybill.eReceipt")}</span>
+      </label>
+    </div>
+  );
 
   if (!moduleReady)
     return (
@@ -1387,22 +1399,14 @@ export function GoodsReceiptCreatePage({
 
             {direct && (
               <section className="mb-5 rounded-2xl border border-[var(--wms-app-border)] bg-black/[.025] p-4 dark:bg-white/[.025]">
-                <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                  <div>
+                <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                  <div className="min-w-0">
                     <h3 className="font-bold">{t("createFlow.waybill.sectionTitle")}</h3>
                     <p className="text-xs text-slate-500">
                       {t("createFlow.waybill.sectionHint")}
                     </p>
                   </div>
-                  <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-[var(--wms-app-border)] px-4 py-2">
-                    <OpsSkinCheckbox
-                      checked={isElectronicReceipt}
-                      onCheckedChange={() => undefined}
-                      disabled
-                      aria-label={t("createFlow.waybill.eReceipt")}
-                    />
-                    <span className="text-sm font-semibold">{t("createFlow.waybill.eReceipt")}</span>
-                  </label>
+                  {waybillHeaderActions}
                 </div>
                 <div className="grid gap-4 md:grid-cols-2">
                   <Field
@@ -1412,7 +1416,7 @@ export function GoodsReceiptCreatePage({
                         : t("createFlow.waybill.receiptNumber")
                     }
                     errorTarget="receiptNo"
-                    errorKeys="irsaliye numarası|e-irsaliye numarası|normal irsaliye"
+                    errorKeys="e-irsaliye / gib|gib numarası|15 alfanümerik|e-dispatch|gib number|15 alphanumeric|alphanumeric characters|dispatch number|irsaliye numarası|e-irsaliye numarası"
                   >
                     <AppInput
                       className="font-mono tracking-wider"
@@ -1424,10 +1428,7 @@ export function GoodsReceiptCreatePage({
                           : "IRS202600000001"
                       }
                       value={receiptNo}
-                      invalid={
-                        Boolean(receiptNo) &&
-                        !isValidGoodsReceiptDocumentNo(receiptNo)
-                      }
+                      invalid={receiptNoInvalid}
                       onChange={(event) => {
                         setReceiptNo(
                           normalizeGoodsReceiptDocumentNo(event.target.value),
@@ -1444,7 +1445,7 @@ export function GoodsReceiptCreatePage({
                   <Field
                     label={t("createFlow.waybill.waybillDate")}
                     errorTarget="waybillDate"
-                    errorKeys="irsaliye tarihi"
+                    errorKeys="irsaliye tarihi|dispatch date|waybill date"
                   >
                     <AppDateInput
                       value={waybillDate}
@@ -1465,7 +1466,7 @@ export function GoodsReceiptCreatePage({
                     <Field
                       label={t("createFlow.documentSeries")}
                       errorTarget="documentSeries"
-                      errorKeys="belge serisi|mal kabul belge serisi"
+                      errorKeys="belge serisi|mal kabul belge serisi|document series|goods receipt document series"
                     >
                       <AppDropdown
                         value={seriesValue}
@@ -1729,13 +1730,14 @@ export function GoodsReceiptCreatePage({
           </Panel>
 
           {lines.length > 0 && (
+            <>
             <section
               id="goods-receipt-selected-lines"
-              className="scroll-mt-5 overflow-hidden rounded-2xl border border-cyan-500/30 bg-[var(--wms-app-panel)] shadow-sm"
+              className="wms-ops-receipt-selected-lines scroll-mt-5 overflow-visible rounded-2xl pb-24"
               data-wms-error-target="selectedLines"
-              data-wms-error-keys="hedef depo|kabul rafı|miktar|lot/seri|seri satırı|üretim tarihi|son kullanma|aynı seri|tek depo|seçilen depo"
+              data-wms-error-keys="hedef depo|kabul rafı|miktar|lot/seri|seri satırı|üretim tarihi|son kullanma|aynı seri|tek depo|seçilen depo|target warehouse|receiving shelf|quantity|lot/serial|serial row|manufacturing date|expiration date|duplicate serial|document series|operation user|assignees"
             >
-                  <header className="border-b border-[var(--wms-app-border)] bg-cyan-500/[.07] px-5 py-4">
+                  <header className="wms-ops-receipt-selected-lines__header px-5 py-4">
                     <h2 className="text-xl font-black">
                       {t("createFlow.selectedLines.title")}
                     </h2>
@@ -1743,30 +1745,34 @@ export function GoodsReceiptCreatePage({
                       {t("createFlow.selectedLines.description")}
                     </p>
                     <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
-                        <span className="rounded-lg border border-cyan-500/25 bg-cyan-500/10 px-3 py-2 font-semibold text-cyan-600">
+                        <span className="wms-ops-receipt-selected-lines__stat wms-ops-receipt-selected-lines__stat--accent rounded-lg px-3 py-2 font-semibold">
                           {t("createFlow.selectedLines.lineCount", {
                             count: lines.length,
                           })}
                         </span>
-                        <span className="rounded-lg border border-[var(--wms-app-border)] px-3 py-2 font-mono">
+                        <span className="wms-ops-receipt-selected-lines__stat rounded-lg px-3 py-2 font-mono">
                           {formatProjectNumber(selectedQuantity)}
                         </span>
-                        {confirmedLineOrder.length > 0 ? (
-                          <span className="rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-3 py-2 font-semibold text-emerald-600 dark:text-emerald-300">
-                            {t("createFlow.selectedLines.selectedCount", {
-                              count: confirmedLineOrder.length,
-                            })}
-                          </span>
-                        ) : null}
+                        <span
+                          className={cn(
+                            "wms-ops-receipt-selected-lines__stat rounded-lg px-3 py-2 font-semibold",
+                            confirmedLineOrder.length > 0
+                              ? "wms-ops-receipt-selected-lines__stat--confirmed"
+                              : "pointer-events-none invisible border-transparent",
+                          )}
+                          aria-hidden={confirmedLineOrder.length === 0}
+                        >
+                          {t("createFlow.selectedLines.selectedCount", {
+                            count: Math.max(confirmedLineOrder.length, 1),
+                          })}
+                        </span>
                         <button
                           type="button"
                           onClick={toggleAllLinesConfirmed}
                           disabled={confirmableLineKeys.length === 0}
                           className={cn(
-                            "ml-auto inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold transition",
-                            allLinesConfirmed
-                              ? "border-emerald-500/35 bg-emerald-500/12 text-emerald-700 dark:text-emerald-200"
-                              : "border-cyan-500/30 bg-cyan-500/10 text-cyan-700 hover:border-cyan-500/50 hover:bg-cyan-500/15 dark:text-cyan-200",
+                            "wms-ops-receipt-selected-lines__select-all ml-auto inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold transition",
+                            allLinesConfirmed && "wms-ops-receipt-selected-lines__select-all--active",
                             confirmableLineKeys.length === 0 && "cursor-not-allowed opacity-45",
                           )}
                         >
@@ -1784,20 +1790,21 @@ export function GoodsReceiptCreatePage({
                     </div>
                   </header>
 
-                  <div className="px-4 py-4 sm:px-5">
+                  <div className="wms-ops-receipt-selected-lines__body px-4 py-4 sm:px-5">
                     <div className="wms-ops-selected-order-items space-y-4">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-xs text-[var(--wms-app-text-muted)]">
+                <p className="wms-ops-receipt-selected-lines__hint text-xs">
                   {t("createFlow.selectedLines.detailsHint")}
                 </p>
               </div>
-              <div ref={receiptLinesListRef} className="space-y-2">
-                {orderedLines.map((line) => {
+              <div className="wms-ops-receipt-lines-list">
+                {lines.map((line) => {
                   const key = lineKey(line);
                   return (
                   <ReceiptEntryRow
                     key={key}
                     dataLineKey={key}
+                    sortOrder={lineSortOrder.get(key) ?? 0}
                     line={line}
                     confirmed={confirmedLineOrder.includes(key)}
                     onConfirmedChange={(next) => toggleLineConfirmed(key, next)}
@@ -1812,20 +1819,25 @@ export function GoodsReceiptCreatePage({
                 })}
               </div>
 
+              {direct ? (
+                <p className="text-xs text-slate-500">
+                  {t("createFlow.warehouseHint")}
+                </p>
+              ) : (
               <Panel
                 title={t("createFlow.taskSettings")}
                 icon={<PackageCheck className="size-5" />}
               >
                 <div className="grid gap-4 md:grid-cols-2">
-                  {!direct && <Field label={t("documentDate")}>
+                  <Field label={t("documentDate")}>
                     <AppDateInput
                       value={documentDate}
                       onChange={(event) => setDocumentDate(event.target.value)}
                     />
-                  </Field>}
-                  {!direct && <div className="md:col-span-2 rounded-2xl border border-[var(--wms-app-border)] bg-black/[.025] p-4 dark:bg-white/[.025]">
-                    <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                      <div>
+                  </Field>
+                  <div className="md:col-span-2 rounded-2xl border border-[var(--wms-app-border)] bg-black/[.025] p-4 dark:bg-white/[.025]">
+                    <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                      <div className="min-w-0">
                         <h3 className="font-bold">
                           {isElectronicReceipt
                             ? t("createFlow.waybill.eReceiptInfo")
@@ -1838,15 +1850,7 @@ export function GoodsReceiptCreatePage({
                             : t("createFlow.waybill.normalReceiptHint")}
                         </p>
                       </div>
-                      <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-[var(--wms-app-border)] px-4 py-2">
-                        <OpsSkinCheckbox
-                          checked={isElectronicReceipt}
-                          onCheckedChange={() => undefined}
-                          disabled
-                          aria-label={t("createFlow.waybill.eReceipt")}
-                        />
-                        <span className="text-sm font-semibold">{t("createFlow.waybill.eReceipt")}</span>
-                      </label>
+                      {waybillHeaderActions}
                     </div>
                     <div className="grid gap-4 md:grid-cols-3">
                       <Field
@@ -1856,7 +1860,7 @@ export function GoodsReceiptCreatePage({
                             : t("createFlow.waybill.receiptNumber")
                         }
                         errorTarget="receiptNo"
-                        errorKeys="irsaliye numarası|e-irsaliye numarası|normal irsaliye"
+                        errorKeys="e-irsaliye / gib|gib numarası|15 alfanümerik|e-dispatch|gib number|15 alphanumeric|alphanumeric characters|dispatch number|irsaliye numarası|e-irsaliye numarası"
                       >
                         <AppInput
                           className="font-mono tracking-wider"
@@ -1868,10 +1872,7 @@ export function GoodsReceiptCreatePage({
                               : "IRS202600000001"
                           }
                           value={receiptNo}
-                          invalid={
-                            Boolean(receiptNo) &&
-                            !isValidGoodsReceiptDocumentNo(receiptNo)
-                          }
+                          invalid={receiptNoInvalid}
                           onChange={(event) => {
                             setReceiptNo(
                               normalizeGoodsReceiptDocumentNo(event.target.value),
@@ -1888,7 +1889,7 @@ export function GoodsReceiptCreatePage({
                       <Field
                         label={t("createFlow.waybill.waybillDate")}
                         errorTarget="waybillDate"
-                        errorKeys="irsaliye tarihi"
+                        errorKeys="irsaliye tarihi|dispatch date|waybill date"
                       >
                         <AppDateInput
                           value={waybillDate}
@@ -1900,7 +1901,7 @@ export function GoodsReceiptCreatePage({
                       <Field
                         label={t("createFlow.documentSeries")}
                         errorTarget="documentSeries"
-                        errorKeys="belge serisi|mal kabul belge serisi"
+                        errorKeys="belge serisi|mal kabul belge serisi|document series|goods receipt document series"
                       >
                         <AppDropdown
                           value={seriesValue}
@@ -1915,15 +1916,15 @@ export function GoodsReceiptCreatePage({
                         />
                       </Field>
                     </div>
-                  </div>}
-                  {!direct && <Field label={t("plannedArrival")}>
+                  </div>
+                  <Field label={t("plannedArrival")}>
                     <AppDateInput
                       type="datetime-local"
                       value={plannedArrival}
                       onChange={(event) => setPlannedArrival(event.target.value)}
                     />
-                  </Field>}
-                  {!direct && <Field label={t("priority")}>
+                  </Field>
+                  <Field label={t("priority")}>
                     <AppDropdown
                       value={priority}
                       onValueChange={setPriority}
@@ -1932,31 +1933,12 @@ export function GoodsReceiptCreatePage({
                         label: String(x),
                       }))}
                     />
-                  </Field>}
-                  <Field label={t("labelStrategy")}>
-                    <AppDropdown
-                      value={labelStrategy}
-                      onValueChange={setLabelStrategy}
-                      options={[
-                        { value: "None", label: t("createFlow.labelOptions.none") },
-                        ...(!direct ? [{ value: "PreGenerate", label: t("createFlow.labelOptions.preGenerate") }] : []),
-                        { value: "SupplierLabel", label: t("createFlow.labelOptions.supplierLabel") },
-                        { value: "GenerateOnReceipt", label: t("createFlow.labelOptions.generateOnReceipt") },
-                      ]}
-                    />
-                  </Field>
-                  <Field label={t("description")}>
-                    <AppInput
-                      maxLength={1000}
-                      value={description}
-                      onChange={(event) => setDescription(event.target.value)}
-                    />
                   </Field>
                 </div>
-                {!direct && <section
+                <section
                   className="mt-4 rounded-xl border border-[var(--wms-app-border)] p-4"
                   data-wms-error-target="assignees"
-                  data-wms-error-keys="operasyon kullanıcısı|emir sorumluları|kullanıcı atan"
+                  data-wms-error-keys="operasyon kullanıcısı|emir sorumluları|kullanıcı atan|operation user|task assignees|assignees required|at least one operation user"
                 >
                   <div className="mb-3 flex items-start gap-2">
                     <UserRoundCog className="mt-0.5 size-5 text-cyan-500" />
@@ -2024,23 +2006,26 @@ export function GoodsReceiptCreatePage({
                       </span>
                     )}
                   </div>
-                </section>}
+                </section>
                 <p className="mt-4 text-xs text-slate-500">
                   {t("createFlow.warehouseHint")}
                 </p>
-                <Footer
-                  back={() => {
-                    setError(null);
-                    setLines([]);
-                  }}
-                  next={() => void goToConfirmation()}
-                  disabled={lines.length === 0 || busy}
-                  t={t}
-                />
               </Panel>
+              )}
                     </div>
                   </div>
             </section>
+            <Footer
+              docked
+              back={() => {
+                setError(null);
+                setLines([]);
+              }}
+              next={() => void goToConfirmation()}
+              disabled={lines.length === 0 || busy}
+              t={t}
+            />
+            </>
           )}
         </>
       )}
@@ -2269,6 +2254,7 @@ export function GoodsReceiptCreatePage({
 function ReceiptEntryRow({
   line,
   dataLineKey,
+  sortOrder,
   confirmed,
   onConfirmedChange,
   updateLine,
@@ -2280,6 +2266,7 @@ function ReceiptEntryRow({
 }: {
   line: SelectedReceiptLine;
   dataLineKey: string;
+  sortOrder: number;
   confirmed: boolean;
   onConfirmedChange: (next: boolean) => void;
   updateLine: (key: string, patch: Partial<SelectedReceiptLine>) => void;
@@ -2307,6 +2294,17 @@ function ReceiptEntryRow({
     }>
   >([]);
   const [suggestionsBusy, setSuggestionsBusy] = useState(false);
+  const suggestionsRef = useRef(suggestions);
+  suggestionsRef.current = suggestions;
+  const updateLineRef = useRef(updateLine);
+  updateLineRef.current = updateLine;
+  const putawayLocationIdRef = useRef(line.putawayLocationId);
+  putawayLocationIdRef.current = line.putawayLocationId;
+  const putawayFetchGenerationRef = useRef(0);
+  const canShowPutawaySuggestions =
+    line.targetWarehouseId != null &&
+    Boolean(line.stockCode?.trim()) &&
+    line.quantity > 0;
   const [serialOpen, setSerialOpen] = useState(false);
   const [locationLookupOpen, setLocationLookupOpen] = useState(false);
   const [quantityText, setQuantityText] = useState(
@@ -2434,59 +2432,90 @@ function ReceiptEntryRow({
   ]);
 
   useEffect(() => {
-    if (!line.targetWarehouseId || !line.stockCode || line.quantity <= 0) {
+    if (!canShowPutawaySuggestions) {
       setSuggestions([]);
       setSuggestionsBusy(false);
       return;
     }
-    setSuggestions([]);
-    setSuggestionsBusy(true);
+
+    const fetchGeneration = ++putawayFetchGenerationRef.current;
+    if (suggestionsRef.current.length === 0) {
+      setSuggestionsBusy(true);
+    }
+
     let cancelled = false;
     const timer = window.setTimeout(() => {
       void goodsReceiptV2Api
         .putawaySuggestions(line.targetWarehouseId!, {
+          stockId: line.stockId,
           stockCode: line.stockCode,
+          yapCodeId: line.yapCodeId,
           quantity: line.quantity,
         })
         .then((items) => {
-          if (cancelled) return;
+          if (
+            cancelled ||
+            fetchGeneration !== putawayFetchGenerationRef.current
+          ) {
+            return;
+          }
           setSuggestions(items);
           const top = items[0];
           if (!top) return;
           const stillValid = items.some(
-            (item) => item.id === line.putawayLocationId,
+            (item) => item.id === putawayLocationIdRef.current,
           );
           if (!stillValid) {
-            updateLine(key, putawayLocationPatch(top));
+            updateLineRef.current(key, putawayLocationPatch(top));
           }
         })
         .catch(() => {
-          if (!cancelled) setSuggestions([]);
+          if (
+            cancelled ||
+            fetchGeneration !== putawayFetchGenerationRef.current ||
+            suggestionsRef.current.length > 0
+          ) {
+            return;
+          }
+          setSuggestions([]);
         })
         .finally(() => {
-          if (!cancelled) setSuggestionsBusy(false);
+          if (
+            !cancelled &&
+            fetchGeneration === putawayFetchGenerationRef.current
+          ) {
+            setSuggestionsBusy(false);
+          }
         });
     }, 300);
     return () => {
       cancelled = true;
       window.clearTimeout(timer);
     };
-    // putawayLocationId intentionally omitted — only used to preserve manual pick within same suggestion set
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- auto-pick first suggestion without refetch loops
-  }, [key, line.quantity, line.stockCode, line.targetWarehouseId, updateLine]);
+    // putawayLocationId intentionally omitted — preserve manual rack pick without refetch
+  }, [
+    canShowPutawaySuggestions,
+    key,
+    line.quantity,
+    line.stockCode,
+    line.stockId,
+    line.targetWarehouseId,
+    line.yapCodeId,
+  ]);
 
   return (
     <div
       data-receipt-line-key={dataLineKey}
+      style={{ order: sortOrder }}
       className={cn(
-        "wms-ops-receipt-entry-row space-y-3 rounded-xl transition-[box-shadow,border-color,background-color] duration-300",
+        "wms-ops-receipt-entry-row space-y-3 rounded-xl",
         confirmed && "wms-ops-receipt-entry-row--confirmed",
       )}
     >
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1 space-y-3">
-          <div className="min-w-0 space-y-1">
-            <p className="truncate text-sm font-semibold">
+          <div className="wms-ops-receipt-entry-row__header min-w-0 space-y-1">
+            <p className="wms-ops-receipt-entry-row__title truncate">
               {line.stockName || line.stockCode || "—"}
             </p>
             <div className="wms-ops-receipt-meta-badges flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
@@ -2531,7 +2560,7 @@ function ReceiptEntryRow({
             </div>
           </div>
 
-          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="wms-ops-receipt-entry-row__fields grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
             <div className="space-y-1">
               <label className="wms-ops-entry-label">{t("createFlow.entryRow.quantity")}</label>
               <OpsFieldShell>
@@ -2690,7 +2719,7 @@ function ReceiptEntryRow({
           <StockTrackingPolicyField policy={line.trackingPolicy} compact />
         </div>
 
-        <div className="flex shrink-0 flex-col items-center gap-1 self-start pt-0.5">
+        <div className="relative z-10 flex shrink-0 flex-col items-center gap-1 self-start pt-0.5">
           <OpsSkinCheckbox
             checked={confirmed}
             onCheckedChange={onConfirmedChange}
@@ -2703,18 +2732,18 @@ function ReceiptEntryRow({
                 : t("createFlow.entryRow.confirmHint")
             }
           />
-          <span className="text-[0.58rem] font-semibold uppercase tracking-wider text-[var(--wms-app-text-muted)]">
+          <span className="wms-ops-receipt-entry-row__status text-[0.58rem] font-semibold uppercase tracking-wider text-[var(--wms-app-text-muted)]">
             {confirmed ? t("createFlow.entryRow.confirm") : t("createFlow.entryRow.ready")}
           </span>
         </div>
       </div>
 
-      {(suggestionsBusy || suggestions.length > 0 || line.putawayLocationCode) && (
+      {canShowPutawaySuggestions && (
         <div className="wms-ops-putaway-suggestions mt-2.5">
           <div className="wms-ops-putaway-suggestions__header">
             <div className="flex min-w-0 flex-wrap items-center gap-2">
               <span className="wms-ops-putaway-suggestions__title">
-                {suggestionsBusy ? (
+                {suggestionsBusy && suggestions.length === 0 ? (
                   <Loader2 className="size-3 animate-spin" />
                 ) : (
                   <span className="wms-ops-putaway-suggestions__title-dot" aria-hidden />
@@ -2793,7 +2822,23 @@ function ReceiptEntryRow({
                 );
               })}
             </div>
-          ) : null}
+          ) : suggestionsBusy ? (
+            <div
+              className="wms-ops-putaway-suggestions__grid wms-ops-putaway-suggestions__grid--loading"
+              aria-hidden
+            >
+              {Array.from({ length: 3 }, (_, index) => (
+                <div
+                  key={index}
+                  className="wms-ops-putaway-suggestions__card wms-ops-putaway-suggestions__card--skeleton"
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="px-3 py-2.5 text-[0.65rem] text-[var(--wms-app-text-muted)]">
+              {t("createFlow.entryRow.suggestedRackEmpty")}
+            </p>
+          )}
         </div>
       )}
 
@@ -2851,6 +2896,7 @@ function SerialTrackingDialog({
   createSerialRows: (key: string) => Promise<void>;
   cancelGeneratedSerials: (key: string) => Promise<void>;
 }): ReactElement {
+  const { t } = useModuleTranslation("goods-receipt-v2");
   const key = lineKey(line);
   const serialMode =
     line.trackingType === "Serial" || line.trackingType === "LotAndSerial";
@@ -2867,11 +2913,11 @@ function SerialTrackingDialog({
       ),
     ];
     if (!serials.length) {
-      toast.error("En az bir seri girin.");
+      toast.error(t("createFlow.validation.enterAtLeastOneSerial"));
       return;
     }
     if (serials.length > Math.floor(line.quantity)) {
-      toast.error("Seri sayısı kabul miktarını aşamaz.");
+      toast.error(t("createFlow.validation.serialCountExceedsQuantity"));
       return;
     }
     updateLine(key, {
@@ -3301,7 +3347,7 @@ function DirectCreateSuccessPanel({
 {(receiptNo || result?.documentNo) ? (
           <div className="wms-ops-gr-success__doc">
             <span className="wms-ops-gr-success__doc-label">
-              {isElectronicReceipt ? "E-irsaliye" : t("createFlow.success.documentNo")}
+              {isElectronicReceipt ? t("createFlow.waybill.eReceipt") : t("createFlow.success.documentNo")}
             </span>
             <strong className="wms-ops-gr-success__doc-value">{receiptNo ?? result?.documentNo}</strong>
           </div>
@@ -3450,7 +3496,7 @@ function CreateSuccessPanel({
 {(receiptNo || result?.documentNo) ? (
           <div className="wms-ops-gr-success__doc">
             <span className="wms-ops-gr-success__doc-label">
-              {isElectronicReceipt ? "E-irsaliye" : t("createFlow.success.documentNo")}
+              {isElectronicReceipt ? t("createFlow.waybill.eReceipt") : t("createFlow.success.documentNo")}
             </span>
             <strong className="wms-ops-gr-success__doc-value">{receiptNo ?? result?.documentNo}</strong>
           </div>
@@ -3611,14 +3657,21 @@ function Footer({
   next,
   disabled,
   t,
+  sticky = false,
+  docked = false,
 }: {
   back: () => void;
   next: () => void;
   disabled: boolean;
   t: (key: string) => string;
+  sticky?: boolean;
+  docked?: boolean;
 }): ReactElement {
-  return (
-    <div className="mt-5 flex justify-between border-t border-[var(--wms-app-border)] pt-4">
+  const { skin } = useTheme();
+  const isPremium = skin === "premium";
+
+  const bar = (
+    <footer className="flex items-center justify-between rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)]/95 p-3 shadow-xl backdrop-blur">
       <OpsActionButton type="button" variant="secondary" onClick={back}>
         {t("back")}
       </OpsActionButton>
@@ -3630,7 +3683,53 @@ function Footer({
       >
         {t("continue")}
       </OpsActionButton>
-    </div>
+    </footer>
+  );
+
+  if (docked) {
+    const workspaceRoot = getWorkspacePortalRoot();
+    if (workspaceRoot) {
+      return createPortal(
+        <div
+          className={cn(
+            "pointer-events-none absolute inset-x-0 bottom-0 z-30",
+            isPremium ? "px-4 pb-5 sm:px-6 lg:px-8" : "px-3 pb-3 sm:px-4",
+          )}
+        >
+          <div
+            className={cn(
+              "pointer-events-auto mx-auto w-full",
+              isPremium && "max-w-[1560px]",
+            )}
+          >
+            {bar}
+          </div>
+        </div>,
+        workspaceRoot,
+      );
+    }
+  }
+
+  return (
+    <footer
+      className={cn(
+        sticky
+          ? "sticky bottom-3 z-20 flex items-center justify-between rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)]/95 p-3 shadow-xl backdrop-blur"
+          : "mt-5 flex justify-between border-t border-[var(--wms-app-border)] pt-4",
+      )}
+    >
+      <OpsActionButton type="button" variant="secondary" onClick={back}>
+        {t("back")}
+      </OpsActionButton>
+      <OpsActionButton
+        type="button"
+        variant="primary"
+        disabled={disabled}
+        onClick={next}
+      >
+        {t("continue")}
+      </OpsActionButton>
+    </footer>
   );
 }
 function ReviewRow({
