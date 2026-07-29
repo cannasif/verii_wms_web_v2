@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactElement, type ReactNode } from 'react';
 import { Building2, Check, CheckCircle2, ChevronLeft, ChevronRight, CircleHelp, ClipboardCheck, FileText, ListChecks, Loader2, PackagePlus, Plus, Printer, ScanBarcode, Trash2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { AppDropdown } from '@/components/shared/AppDropdown';
 import { AppDateInput, AppInput } from '@/components/shared/AppInput';
@@ -334,9 +335,9 @@ export function GoodsReceiptManualPage({ direct }: { direct: boolean }): ReactEl
       {(suggestionsBusy || locationSuggestions.length > 0) && <div className="mt-4 rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3"><div className="mb-2 flex items-center gap-2 text-sm font-bold text-cyan-500">{suggestionsBusy && <Loader2 className="size-4 animate-spin"/>}Önerilen putaway rafları (bilgi)</div><p className="mb-2 text-xs text-slate-500">Kabul rafı değildir; yalnızca Receiving/Staging seçin. Bu liste sonraki raflama için bilgi amaçlıdır.</p><div className="flex flex-wrap gap-2">{locationSuggestions.map((item, index) => <div key={item.id} className="rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] px-3 py-2 text-left text-xs"><strong>{index + 1}. {item.code}</strong><span className="ml-2 text-slate-500">{item.reason}</span>{item.remainingCapacity != null && <span className="ml-2 font-mono text-slate-500">Kalan: {item.remainingCapacity}</span>}</div>)}</div></div>}
       <LineTable lines={lines} remove={(id) => setLines((current) => current.filter((line) => line.localId !== id))} t={t}/></Panel>}
 
-    {step === 3 && <Panel title={t('manual.review.title')} description={t('manual.review.description')} icon={<ClipboardCheck/>}><div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4"><Summary label={t('manual.customer')} value={`${split(customer)[2] || '—'} · ${decodeURIComponent(split(customer)[3] || '')}`}/><Summary label={t('manual.receiptNo')} value={receiptNo}/><Summary label={t('manual.documentType')} value={isElectronic ? t('manual.eReceipt') : t('manual.normalReceipt')}/><Summary label={t('manual.documentDate')} value={documentDate}/><Summary label={t('manual.warehouse')} value={`${split(warehouse)[2] || '—'} · ${decodeURIComponent(split(warehouse)[3] || '')}`}/><Summary label={t('manual.lineCount')} value={String(lines.length)}/><Summary label={t('manual.totalQuantity')} value={String(total)}/><Summary label={t('manual.operationType')} value={direct ? t('manual.direct') : t('manual.orderless')}/>{!direct&&<Summary label="Emir sorumluları" value={assignees.map(userLabel).join(', ')||'—'}/>}</div><Field label={t('manual.description')}><textarea className={cn(OPS_FIELD_CLASS, 'mt-2 min-h-24 w-full')} maxLength={1000} value={description} onChange={(e) => setDescription(e.target.value)}/></Field></Panel>}
+    {step === 3 && <Panel title={t('manual.review.title')} description={t('manual.review.description')} icon={<ClipboardCheck/>}><div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4"><Summary label={t('manual.customer')} value={`${decodeURIComponent(split(customer)[3] || '') || '—'} · ${split(customer)[2] || '—'}`}/><Summary label={t('manual.receiptNo')} value={receiptNo}/><Summary label={t('manual.documentType')} value={isElectronic ? t('manual.eReceipt') : t('manual.normalReceipt')}/><Summary label={t('manual.documentDate')} value={documentDate}/><Summary label={t('manual.warehouse')} value={`${split(warehouse)[2] || '—'} · ${decodeURIComponent(split(warehouse)[3] || '')}`}/><Summary label={t('manual.lineCount')} value={String(lines.length)}/><Summary label={t('manual.totalQuantity')} value={String(total)}/><Summary label={t('manual.operationType')} value={direct ? t('manual.direct') : t('manual.orderless')}/>{!direct&&<Summary label="Emir sorumluları" value={assignees.map(userLabel).join(', ')||'—'}/>}</div><Field label={t('manual.description')}><textarea className={cn(OPS_FIELD_CLASS, 'mt-2 min-h-24 w-full')} maxLength={1000} value={description} onChange={(e) => setDescription(e.target.value)}/></Field></Panel>}
 
-    <footer className="sticky bottom-3 z-20 flex items-center justify-between rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)]/95 p-3 shadow-xl backdrop-blur"><OpsActionButton type="button" variant="secondary" disabled={step === 0 || busy} onClick={() => { setError(null); setStep((current) => Math.max(0, current - 1)); }}><ChevronLeft className="size-3.5 shrink-0"/>{t('back')}</OpsActionButton><div className="hidden text-xs text-slate-500 sm:block">{steps[step]?.label}</div>{step < 3 ? <OpsActionButton type="button" variant="primary" onClick={next}>{t('continue')}<ChevronRight className="size-3.5 shrink-0"/></OpsActionButton> : <OpsActionButton type="button" variant="primary" disabled={busy} onClick={() => void submit()}>{busy ? <Loader2 className="size-3.5 shrink-0 animate-spin"/> : <CheckCircle2 className="size-3.5 shrink-0"/>}{direct ? t('manual.postReceipt') : t('manual.createTask')}</OpsActionButton>}</footer>
+    <footer className="sticky bottom-3 z-20 flex items-center justify-between rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)]/95 p-3 shadow-xl backdrop-blur"><OpsActionButton type="button" variant="secondary" disabled={step === 0 || busy} onClick={() => { setError(null); setStep((current) => Math.max(0, current - 1)); }}><ChevronLeft className="size-3.5 shrink-0"/>{t('back')}</OpsActionButton><div className="hidden text-xs text-slate-500 sm:block">{steps[step]?.label}</div>{step < 3 ? <OpsActionButton type="button" variant="primary" onClick={next}>{t('continue')}<ChevronRight className="size-3.5 shrink-0"/></OpsActionButton> : <OpsActionButton type="button" variant="primary" disabled={busy} onClick={() => void submit()}>{busy ? <Loader2 className="size-3.5 shrink-0 animate-spin"/> : <CheckCircle2 className="size-3.5 shrink-0"/>}{direct ? "İrsaliye Oluştur" : t('manual.createTask')}</OpsActionButton>}</footer>
   </section>;
 }
 
@@ -452,7 +453,9 @@ function Field({label,required,children}:{label:string;required?:boolean;childre
 function Summary({label,value}:{label:string;value:string}):ReactElement{return <div className="rounded-xl border border-[var(--wms-app-border)] bg-black/[.025] p-4 dark:bg-white/[.025]"><div className="text-xs text-slate-500">{label}</div><strong className="mt-1 block break-words text-sm">{value}</strong></div>;}
 function LineTable({lines,remove,t}:{lines:ManualReceiptLine[];remove:(id:string)=>void;t:(key:string)=>string}):ReactElement{return <div className="mt-5 overflow-x-auto rounded-xl border border-[var(--wms-app-border)]"><table className="w-full text-sm"><thead className="bg-black/5 text-left dark:bg-white/5"><tr><th className="p-3">{t('manual.stock')}</th><th className="p-3">{t('manual.yap')}</th><th className="p-3">Depo / Raf</th><th className="p-3">{t('manual.lot')} / {t('manual.serial')}</th><th className="p-3 text-right">{t('manual.quantity')}</th><th className="p-3">{t('manual.actions')}</th></tr></thead><tbody>{lines.map((line)=><tr key={line.localId} className="border-t border-[var(--wms-app-border)]"><td className="p-3"><strong>{line.stockCode}</strong><div className="text-xs text-slate-500">{line.stockName}</div></td><td className="p-3">{line.yapCode||'—'}</td><td className="p-3"><strong>{line.targetWarehouseCode ?? '—'}</strong><div className="text-xs text-cyan-500">{line.receivingLocationCode}</div></td><td className="p-3">{line.lotNo||'—'} / {line.serialNo||'—'}</td><td className="p-3 text-right font-mono">{line.quantity} {line.unitCode}</td><td className="p-3"><button aria-label={t('manual.removeLine')} onClick={()=>remove(line.localId)} className="rounded-lg p-2 text-red-500 hover:bg-red-500/10"><Trash2 className="size-4"/></button></td></tr>)}</tbody></table>{lines.length===0&&<p className="p-6 text-center text-sm text-slate-500">{t('manual.noLines')}</p>}</div>;}
 function Result({result,direct,reset,t}:{result:ManualGoodsReceiptResult;direct:boolean;reset:()=>void;t:(key:string)=>string}):ReactElement{
+  const navigate = useNavigate();
   const [printing,setPrinting]=useState(false);
+  const hasQuality = Boolean(result.qualityInspectionId);
   const printGenerated=async():Promise<void>=>{
     setPrinting(true);
     try{
@@ -474,11 +477,13 @@ function Result({result,direct,reset,t}:{result:ManualGoodsReceiptResult;direct:
           Mal kabul sonrası
         </p>
         <h1 className="mt-2 text-2xl font-black tracking-tight">
-          {direct ? 'Mal kabul sonrası irsaliye oluşturuldu' : t('manual.resultOrderless')}
+          {direct ? (hasQuality ? 'Kaliteye gönderildi' : 'İrsaliye oluştu') : t('manual.resultOrderless')}
         </h1>
         <p className="mx-auto mt-3 max-w-md text-sm text-slate-600 dark:text-slate-300">
           {direct
-            ? 'Fiziksel kabul kaydı tamamlandı. Belge numarası aşağıda; kalite gerekiyorsa inceleme listesine aktarılmıştır.'
+            ? (hasQuality
+              ? 'Kaliteye gönderilen ürünler için kalite onayından sonra irsaliye oluşturulacaktır.'
+              : 'İrsaliye oluşturma işlemi tamamlandı.')
             : 'Siparişsiz mal kabul emri oluşturuldu ve operasyon kuyruğuna düştü.'}
         </p>
         <div className="mx-auto mt-5 inline-flex rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-5 py-3">
@@ -500,7 +505,7 @@ function Result({result,direct,reset,t}:{result:ManualGoodsReceiptResult;direct:
         <div className="rounded-xl border border-[var(--wms-app-border)] p-3 text-center">
           <div className="text-xs text-slate-500">Durum</div>
           <strong className="mt-1 block text-sm">
-            {result.qualityInspectionId ? 'Kaliteye gönderildi' : result.taskNo || result.status}
+            {hasQuality ? 'Kaliteye gönderildi' : 'İrsaliye oluştu'}
           </strong>
         </div>
       </div>
@@ -512,6 +517,21 @@ function Result({result,direct,reset,t}:{result:ManualGoodsReceiptResult;direct:
           </button>
         )}
         <button onClick={reset} className="rounded-xl bg-emerald-600 px-5 py-2.5 font-semibold text-white">{t('manual.newRecord')}</button>
+        {direct && (
+          <button
+            type="button"
+            onClick={() =>
+              navigate(
+                hasQuality
+                  ? "/warehouse/quality/inspections"
+                  : "/warehouse/goods-receipts/list",
+              )
+            }
+            className="ml-3 rounded-xl border border-emerald-500/40 px-5 py-2.5 font-semibold text-emerald-700 dark:text-emerald-300"
+          >
+            {hasQuality ? "Kalite listesi" : "Mal kabul listesi"}
+          </button>
+        )}
       </div>
     </section>
   );

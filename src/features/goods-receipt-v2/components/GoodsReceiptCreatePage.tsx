@@ -8,11 +8,14 @@ import {
 } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
+  Building2,
+  CalendarDays,
   CheckCircle2,
   ChevronDown,
   ChevronUp,
   CircleHelp,
   ClipboardList,
+  Hash,
   Loader2,
   PackageCheck,
   PackageOpen,
@@ -32,7 +35,6 @@ import { OPS_FIELD_CLASS } from "@/components/shared/ops-field-styles";
 import { OpsSkinCheckbox } from "@/components/shared/OpsSkinCheckbox";
 import { PagedAppDropdown } from "@/components/shared/PagedAppDropdown";
 import { PagedLookupDialog } from "@/components/shared/PagedLookupDialog";
-import { OpsStatusBadge } from "@/components/shared/OpsStatusBadge";
 import { PremiumEyebrow } from "@/components/shared/PremiumEyebrow";
 import { ResponsiveDialog } from "@/components/shared/ResponsiveDialog";
 import {
@@ -193,6 +195,9 @@ export function GoodsReceiptCreatePage({
   const customerDisplay = selectedCustomer
     ? `${selectedCustomer.customerName} (${selectedCustomer.customerCode})`
     : "";
+  const supplierSummary = selectedCustomer
+    ? `${selectedCustomer.customerName} · ${selectedCustomer.customerCode}`
+    : customer?.code ?? "—";
   const directProjectCodes = useMemo(
     () =>
       [...new Set(
@@ -210,6 +215,36 @@ export function GoodsReceiptCreatePage({
     [directOrderLines, projectCodeFilter],
   );
   const primaryLine = lines[0];
+  const hasQualityLines = lines.some((line) => line.requireQualityControl);
+  const receiptLines = lines.flatMap((line) =>
+    line.stockCode
+      ? [
+          {
+            stockCode: line.stockCode,
+            stockName: line.stockName,
+            quantity: line.quantity,
+            unitCode: line.unitCode,
+            requireQualityControl: Boolean(line.requireQualityControl),
+          },
+        ]
+      : [],
+  );
+  const qualityLines = receiptLines.filter((line) => line.requireQualityControl);
+  const selectedOrderNumbersForReview = direct
+    ? [...new Set(lines.map((line) => line.siparisNo).filter(Boolean))].join(", ")
+    : selectedOrders.join(", ");
+  const selectedProjectCodesForReview = [
+    ...new Set(lines.map((line) => line.projectCode?.trim()).filter(Boolean)),
+  ].join(", ");
+  const selectedOrderDatesForReview = [
+    ...new Set(lines.map((line) => line.orderDate).filter(Boolean)),
+  ].join(", ");
+  const selectedAvailableQuantity = lines.reduce(
+    (sum, line) => sum + Math.max(0, line.availableQuantity ?? 0),
+    0,
+  );
+  const selectedSeriesPreview =
+    series.find((x) => String(x.id) === seriesValue)?.previewDocumentNumber ?? "—";
   const selectedQuantity = lines.reduce((sum, line) => sum + line.quantity, 0);
   const orderedLines = useMemo(() => {
     const byKey = new Map(lines.map((line) => [lineKey(line), line] as const));
@@ -1940,7 +1975,10 @@ export function GoodsReceiptCreatePage({
             direct && "quantity" in result ? (
               <DirectCreateSuccessPanel
                 result={result}
+                supplierName={selectedCustomer?.customerName}
                 supplierCode={customer?.code}
+                receiptLines={receiptLines}
+                qualityLines={qualityLines}
                 onNew={() => {
                   setResult(null);
                   setStep(0);
@@ -1956,20 +1994,10 @@ export function GoodsReceiptCreatePage({
             ) : (
             <CreateSuccessPanel
               result={result as CreateGoodsReceiptResult}
-              supplierCode={customer?.code}
+              supplierCode={supplierSummary}
               assigneeCount={assignees.length}
-              qualityLines={lines.flatMap((x) =>
-                x.requireQualityControl && x.stockCode
-                  ? [
-                      {
-                        stockCode: x.stockCode,
-                        stockName: x.stockName,
-                        quantity: x.quantity,
-                        unitCode: x.unitCode,
-                      },
-                    ]
-                  : [],
-              )}
+              receiptLines={receiptLines}
+              qualityLines={qualityLines}
               onNew={() => {
                 setResult(null);
                 setStep(0);
@@ -1985,16 +2013,84 @@ export function GoodsReceiptCreatePage({
             />)
           ) : (
             <div className="wms-ops-gr-review">
-              <dl className="wms-ops-gr-review__list">
-                <ReviewRow label="Tedarikçi" value={customer?.code ?? "—"} />
-                <ReviewRow
-                  label="Sipariş"
-                  value={selectedOrders.join(", ") || "—"}
-                />
-                <ReviewRow
-                  label={isElectronicReceipt ? "E-irsaliye" : "İrsaliye"}
-                  value={`${receiptNo || "—"} · ${waybillDate || "—"}`}
-                />
+              <div className="wms-ops-gr-review__list">
+                <div className="wms-ops-gr-review__hero">
+                  <section className="wms-ops-gr-review__hero-card wms-ops-gr-review__hero-card--supplier">
+                    <div className="wms-ops-gr-review__hero-head">
+                      <span className="wms-ops-gr-review__hero-icon">
+                        <Building2 className="size-4" />
+                      </span>
+                      <span className="wms-ops-gr-review__hero-label">Tedarikçi Carisi</span>
+                    </div>
+                    <div className="wms-ops-gr-review__hero-title">
+                      {selectedCustomer?.customerName || "—"}
+                    </div>
+                    <div className="wms-ops-gr-review__hero-meta">
+                      Cari kodu:{" "}
+                      <strong className="wms-ops-gr-review__hero-meta-code">
+                        {selectedCustomer?.customerCode || customer?.code || "—"}
+                      </strong>
+                    </div>
+                    <div className="wms-ops-gr-review__hero-meta wms-ops-gr-review__hero-meta--muted">
+                      Şube: {selectedCustomer?.branchCode ?? branchCode}
+                    </div>
+                  </section>
+
+                  <section className="wms-ops-gr-review__hero-card wms-ops-gr-review__hero-card--meta">
+                    <div className="wms-ops-gr-review__hero-head">
+                      <span className="wms-ops-gr-review__hero-icon">
+                        <ClipboardList className="size-4" />
+                      </span>
+                      <span className="wms-ops-gr-review__hero-label">Sipariş Bilgileri</span>
+                    </div>
+                    <div className="wms-ops-gr-review__meta-list">
+                      <div className="wms-ops-gr-review__meta-item">
+                        <span className="wms-ops-gr-review__meta-label">
+                          <Hash className="size-3.5" /> Belge serisi
+                        </span>
+                        <strong className="wms-ops-gr-review__meta-value wms-ops-gr-review__meta-value--series">
+                          {selectedSeriesPreview}
+                        </strong>
+                      </div>
+                      <div className="wms-ops-gr-review__meta-item">
+                        <span className="wms-ops-gr-review__meta-label">
+                          <ClipboardList className="size-3.5" /> {isElectronicReceipt ? "E-irsaliye" : "İrsaliye"}
+                        </span>
+                        <strong className="wms-ops-gr-review__meta-value wms-ops-gr-review__meta-value--receipt">
+                          {receiptNo || "—"}
+                        </strong>
+                      </div>
+                      <div className="wms-ops-gr-review__meta-item">
+                        <span className="wms-ops-gr-review__meta-label">
+                          <CalendarDays className="size-3.5" /> İrsaliye tarihi
+                        </span>
+                        <strong className="wms-ops-gr-review__meta-value wms-ops-gr-review__meta-value--date">
+                          {waybillDate || "—"}
+                        </strong>
+                      </div>
+                      <div className="wms-ops-gr-review__meta-item">
+                        <span className="wms-ops-gr-review__meta-label">
+                          <PackageOpen className="size-3.5" /> Sipariş no
+                        </span>
+                        <strong className="wms-ops-gr-review__meta-value wms-ops-gr-review__meta-value--order">
+                          {selectedOrderNumbersForReview || "—"}
+                        </strong>
+                      </div>
+                      {direct ? (
+                        <div className="wms-ops-gr-review__meta-item">
+                          <span className="wms-ops-gr-review__meta-label">
+                            <Building2 className="size-3.5" /> Proje / sipariş tarihi
+                          </span>
+                          <strong className="wms-ops-gr-review__meta-value wms-ops-gr-review__meta-value--project">
+                            {`${selectedProjectCodesForReview || "—"} · ${selectedOrderDatesForReview || "—"}`}
+                          </strong>
+                        </div>
+                      ) : null}
+                    </div>
+                  </section>
+                </div>
+
+                <div className="wms-ops-gr-review__section-title">Kontrol ozeti</div>
                 <ReviewRow
                   label="Satır / miktar"
                   value={`${lines.length} / ${formatProjectNumber(selectedQuantity, {
@@ -2003,39 +2099,60 @@ export function GoodsReceiptCreatePage({
                   })}`}
                   emphasis
                 />
+                {direct ? (
+                  <ReviewRow
+                    label="Sipariş uygun miktar"
+                    value={formatProjectNumber(selectedAvailableQuantity, {
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 6,
+                    })}
+                  />
+                ) : null}
                 <ReviewRow
                   label="Depo sayısı"
-                  value={String(
-                    new Set(lines.map((x) => x.targetWarehouseId)).size,
-                  )}
+                  value={String(new Set(lines.map((x) => x.targetWarehouseId)).size)}
                 />
-                {!direct && <ReviewRow
-                  label="Emir sorumluları"
-                  value={assignees.map(userLabel).join(", ") || "—"}
-                />}
+                {!direct && (
+                  <ReviewRow
+                    label="Emir sorumluları"
+                    value={assignees.map(userLabel).join(", ") || "—"}
+                  />
+                )}
                 <ReviewRow
                   label="Lot/seri satırı"
                   value={String(
                     lines.reduce((sum, x) => sum + x.trackings.length, 0),
                   )}
                 />
-                <ReviewRow
-                  label="Kaliteye gidecek"
-                  value={
-                    lines.some((x) => x.requireQualityControl)
-                      ? `${lines.filter((x) => x.requireQualityControl).length} kalem · Mal kabul bitince kalite listesine düşer`
-                      : "Yok"
-                  }
-                />
-                <ReviewRow
-                  label="Belge serisi"
-                  value={
-                    series.find((x) => String(x.id) === seriesValue)
-                      ?.previewDocumentNumber ?? "—"
-                  }
-                  accent
-                />
-              </dl>
+              </div>
+
+              <div
+                className={cn(
+                  "wms-ops-gr-review__quality",
+                  hasQualityLines
+                    ? "wms-ops-gr-review__quality--active"
+                    : "wms-ops-gr-review__quality--none",
+                )}
+              >
+                <span className="wms-ops-gr-review__quality-icon">
+                  <ShieldCheck className="size-5" />
+                </span>
+                <span className="wms-ops-gr-review__quality-text">
+                  <strong>Kalite Kontrol Yönlendirmesi</strong>
+                  <small>
+                    {hasQualityLines
+                      ? "İşlem sonrası otomatik aşama"
+                      : "Bu kabulde kalite kontrol gerekmiyor"}
+                  </small>
+                </span>
+                {hasQualityLines ? (
+                  <QualityLinesReviewTrigger lines={qualityLines} />
+                ) : (
+                  <span className="wms-ops-gr-review__quality-pill wms-ops-gr-review__quality-pill--muted">
+                    Kalite kontrol yok
+                  </span>
+                )}
+              </div>
               <div className="wms-ops-gr-review__actions">
                 <OpsActionButton
                   type="button"
@@ -2053,7 +2170,11 @@ export function GoodsReceiptCreatePage({
                   {busy ? (
                     <Loader2 className="size-4 animate-spin" />
                   ) : (
-                    t("create")
+                    direct
+                      ? hasQualityLines
+                        ? "Kaliteye Gönder"
+                        : "İrsaliye Oluştur"
+                      : t("create")
                   )}
                 </OpsActionButton>
               </div>
@@ -2883,150 +3004,89 @@ function QuantityInput({
   );
 }
 
-function DirectCreateSuccessPanel({
-  result,
-  supplierCode,
-  onNew,
+function QualityLinesDialog({
+  lines,
+  open,
+  onClose,
+  title = "Kaliteye gidecek stoklar",
+  description = "Mal kabul bitince bu kalemler kalite listesine düşer.",
+  searchAriaLabel = "Stoklarda ara",
 }: {
-  result: ManualGoodsReceiptResult;
-  supplierCode?: string;
-  onNew: () => void;
-}): ReactElement {
-  const navigate = useNavigate();
-  return (
-    <div className="mx-auto max-w-2xl overflow-hidden rounded-3xl border border-emerald-500/35 bg-gradient-to-br from-emerald-500/15 via-[var(--wms-app-panel)] to-transparent shadow-sm">
-      <div className="border-b border-emerald-500/20 px-8 py-8 text-center">
-        <div className="mx-auto grid size-16 place-items-center rounded-2xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-300">
-          <CheckCircle2 className="size-9" />
-        </div>
-        <p className="mt-5 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-300">
-          Siparişten doğrudan mal kabul
-        </p>
-        <h2 className="mt-2 text-2xl font-black tracking-tight">Mal kabul tamamlandı</h2>
-        <p className="mx-auto mt-3 max-w-md text-sm text-slate-600 dark:text-slate-300">
-          {supplierCode ? `${supplierCode} tedarikçisinin ` : ""}
-          seçilen sipariş kalemleri kabul edildi ve sipariş kaynaklarıyla ilişkilendirildi.
-        </p>
-        <div className="mx-auto mt-5 inline-flex rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-5 py-3">
-          <div>
-            <div className="text-[11px] uppercase tracking-wider text-slate-500">Belge No</div>
-            <div className="mt-1 font-mono text-xl font-bold text-emerald-700 dark:text-emerald-300">{result.documentNo}</div>
-          </div>
-        </div>
-      </div>
-      <div className="grid gap-3 px-8 py-6 sm:grid-cols-3">
-        <SummaryCard label="Satır" value={String(result.lineCount)} />
-        <SummaryCard label="Miktar" value={formatProjectNumber(result.quantity)} />
-        <SummaryCard label="Durum" value={result.qualityInspectionId ? "Kaliteye gönderildi" : result.status} />
-      </div>
-      <div className="flex flex-wrap items-center justify-center gap-3 border-t border-emerald-500/20 px-8 py-5">
-        <button type="button" onClick={onNew} className="rounded-xl bg-emerald-600 px-5 py-2.5 font-semibold text-white">Yeni kayıt</button>
-        <button type="button" onClick={() => navigate("/warehouse/goods-receipts")} className="rounded-xl border border-emerald-500/40 px-5 py-2.5 font-semibold text-emerald-700 dark:text-emerald-300">Mal kabul listesi</button>
-      </div>
-    </div>
-  );
-}
-
-function SummaryCard({ label, value }: { label: string; value: string }): ReactElement {
-  return <div className="rounded-xl border border-[var(--wms-app-border)] p-3 text-center"><div className="text-xs text-slate-500">{label}</div><strong className="mt-1 block text-lg">{value}</strong></div>;
-}
-
-function CreateSuccessPanel({
-  result,
-  supplierCode,
-  assigneeCount,
-  qualityLines,
-  onNew,
-}: {
-  result: CreateGoodsReceiptResult;
-  supplierCode?: string;
-  assigneeCount: number;
-  qualityLines: Array<{
+  lines: Array<{
     stockCode: string;
     stockName?: string;
     quantity: number;
     unitCode?: string;
+    requireQualityControl?: boolean;
   }>;
-  onNew: () => void;
+  open: boolean;
+  onClose: () => void;
+  title?: string;
+  description?: string;
+  searchAriaLabel?: string;
 }): ReactElement {
-  const navigate = useNavigate();
-  const qualityCount = qualityLines.length;
+  const [search, setSearch] = useState("");
+  const filtered = useMemo(() => {
+    const query = search.trim().toLocaleLowerCase("tr-TR");
+    if (!query) return lines;
+    return lines.filter((line) => {
+      const code = line.stockCode.toLocaleLowerCase("tr-TR");
+      const name = (line.stockName || "").toLocaleLowerCase("tr-TR");
+      return code.includes(query) || name.includes(query);
+    });
+  }, [lines, search]);
+
   return (
-    <div className="mx-auto max-w-3xl overflow-hidden rounded-3xl border border-emerald-500/35 bg-gradient-to-br from-emerald-500/15 via-[var(--wms-app-panel)] to-transparent shadow-sm">
-      <div className="border-b border-emerald-500/20 px-8 py-8 text-center">
-        <div className="mx-auto grid size-16 place-items-center rounded-2xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-300">
-          <CheckCircle2 className="size-9" />
-        </div>
-        <p className="mt-5 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-300">
-          Mal kabul sonrası
-        </p>
-        <h2 className="mt-2 text-2xl font-black tracking-tight">
-          Mal kabul sonrası irsaliye oluşturuldu
-        </h2>
-        <p className="mx-auto mt-3 max-w-md text-sm text-slate-600 dark:text-slate-300">
-          {supplierCode
-            ? `${supplierCode} tedarikçisi için belge hazır.`
-            : "Mal kabul belgesi hazır."}{" "}
-          Emir atanan kullanıcıların kuyruğuna düştü; fiziksel kabul bitince
-          kaliteye gidecek kalemler listelenir.
-        </p>
-        <div className="mx-auto mt-5 inline-flex rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-5 py-3">
-          <div>
-            <div className="text-[11px] uppercase tracking-wider text-slate-500">
-              Belge No
-            </div>
-            <div className="mt-1 font-mono text-xl font-bold text-emerald-700 dark:text-emerald-300">
-              {result.documentNo}
-            </div>
+    <ResponsiveDialog
+      open={open}
+      onClose={() => {
+        onClose();
+        setSearch("");
+      }}
+      title={title}
+      description={description}
+      variant="lookup"
+      className="!max-w-2xl"
+    >
+      <div className="wms-ops-gr-review__quality-dialog-body">
+        {lines.length > 8 ? (
+          <div className="wms-ops-gr-review__quality-dialog-search">
+            <Search aria-hidden />
+            <AppInput
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Stok kodu veya adı ara…"
+              aria-label={searchAriaLabel}
+            />
           </div>
+        ) : null}
+        <div className="wms-ops-gr-review__quality-dialog-meta">
+          <span>
+            Gösterilen: <strong>{filtered.length}</strong> / {lines.length}
+          </span>
+          <span>Kaydırarak tüm listeyi inceleyebilirsiniz</span>
         </div>
-      </div>
-
-      <div className="grid gap-3 px-8 py-6 sm:grid-cols-3">
-        <div className="rounded-xl border border-[var(--wms-app-border)] p-3 text-center">
-          <div className="text-xs text-slate-500">Görev</div>
-          <strong className="mt-1 block text-lg">{result.tasks.length}</strong>
-        </div>
-        <div className="rounded-xl border border-[var(--wms-app-border)] p-3 text-center">
-          <div className="text-xs text-slate-500">Satır / miktar</div>
-          <strong className="mt-1 block text-lg">
-            {result.lineCount} · {formatProjectNumber(result.reservedQuantity)}
-          </strong>
-        </div>
-        <div className="rounded-xl border border-[var(--wms-app-border)] p-3 text-center">
-          <div className="text-xs text-slate-500">Emir sorumlusu</div>
-          <strong className="mt-1 block text-lg">{assigneeCount}</strong>
-        </div>
-      </div>
-
-      {qualityCount > 0 ? (
-        <div className="mx-8 mb-5 rounded-xl border border-violet-500/35 bg-violet-500/10 px-4 py-3 text-left">
-          <div className="flex flex-wrap items-center gap-2">
-            <OpsStatusBadge
-              tone="quality"
-              title="Fiziksel kabul bitince kalite listesine düşer"
-            >
-              Kalite kontrol bekliyor
-            </OpsStatusBadge>
-            <span className="text-sm font-semibold">
-              {qualityCount} kalem kalite kontrol aşamasında
-            </span>
+        {filtered.length === 0 ? (
+          <div className="wms-ops-gr-review__quality-dialog-empty">
+            Aramayla eşleşen stok bulunamadı.
           </div>
-          <ul className="mt-3 space-y-1.5">
-            {qualityLines.map((line) => (
-              <li
-                key={line.stockCode}
-                className="flex flex-wrap items-baseline justify-between gap-2 rounded-lg border border-violet-500/20 bg-black/10 px-3 py-2 text-sm dark:bg-black/20"
-              >
-                <span className="min-w-0">
-                  <span className="font-mono text-xs text-violet-600 dark:text-violet-300">
-                    {line.stockCode}
-                  </span>
-                  <span className="ml-2 font-medium">
-                    {line.stockName || "—"}
-                  </span>
+        ) : (
+          <ul className="wms-ops-gr-review__quality-dialog-list">
+            {filtered.map((line, index) => (
+              <li key={`${line.stockCode}-${line.quantity}-${index}`}>
+                <span className="wms-ops-gr-review__quality-dialog-code">
+                  {line.stockCode}
                 </span>
-                <span className="font-mono text-xs text-slate-500">
+                <span
+                  className="wms-ops-gr-review__quality-dialog-name"
+                  title={line.stockName || undefined}
+                >
+                  {line.stockName || "—"}
+                </span>
+                {line.requireQualityControl ? (
+                  <span className="wms-ops-gr-review__quality-dialog-badge">Kalite</span>
+                ) : null}
+                <span className="wms-ops-gr-review__quality-dialog-qty">
                   {formatProjectNumber(line.quantity, {
                     minimumFractionDigits: 0,
                     maximumFractionDigits: 6,
@@ -3036,57 +3096,337 @@ function CreateSuccessPanel({
               </li>
             ))}
           </ul>
+        )}
+      </div>
+    </ResponsiveDialog>
+  );
+}
+
+function QualityLinesReviewTrigger({
+  lines,
+  label,
+  className,
+}: {
+  lines: Array<{
+    stockCode: string;
+    stockName?: string;
+    quantity: number;
+    unitCode?: string;
+  }>;
+  label?: string;
+  className?: string;
+}): ReactElement {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <button
+        type="button"
+        className={cn("wms-ops-gr-review__quality-pill", className)}
+        onClick={() => setOpen(true)}
+      >
+        {label ?? `${lines.length} kalem · Listeyi gör`}
+      </button>
+      <QualityLinesDialog lines={lines} open={open} onClose={() => setOpen(false)} />
+    </>
+  );
+}
+
+function DirectCreateSuccessPanel({
+  result,
+  supplierName,
+  supplierCode,
+  receiptLines,
+  qualityLines,
+  onNew,
+}: {
+  result: ManualGoodsReceiptResult;
+  supplierName?: string;
+  supplierCode?: string;
+  receiptLines: Array<{
+    stockCode: string;
+    stockName?: string;
+    quantity: number;
+    unitCode?: string;
+    requireQualityControl?: boolean;
+  }>;
+  qualityLines: Array<{
+    stockCode: string;
+    stockName?: string;
+    quantity: number;
+    unitCode?: string;
+  }>;
+  onNew: () => void;
+}): ReactElement {
+  const navigate = useNavigate();
+  const [linesOpen, setLinesOpen] = useState(false);
+  const [qualityOpen, setQualityOpen] = useState(false);
+  const hasQuality = qualityLines.length > 0;
+  const statusLabel = hasQuality ? "Kaliteye gönderildi" : "İrsaliye oluşturuldu";
+
+  return (
+    <div className="wms-ops-gr-success wms-ops-gr-success--done">
+      <div className="wms-ops-gr-success__glow" aria-hidden />
+      <header className="wms-ops-gr-success__header">
+        <div className="wms-ops-gr-success__icon" aria-hidden>
+          <CheckCircle2 className="size-9" />
+        </div>
+        <p className="wms-ops-gr-success__eyebrow">Siparişten doğrudan mal kabul</p>
+        <h2 className="wms-ops-gr-success__title">{statusLabel}</h2>
+        <p className="wms-ops-gr-success__subtitle">
+          {supplierName || supplierCode ? `${supplierName ?? supplierCode} için ` : ""}
+          {hasQuality
+            ? "kaliteye gönderilen ürünler için kalite onayından sonra irsaliye oluşturulacaktır."
+            : "irsaliye oluşturma işlemi tamamlandı."}
+        </p>
+        <div className="wms-ops-gr-success__doc">
+          <span className="wms-ops-gr-success__doc-label">Belge No</span>
+          <strong className="wms-ops-gr-success__doc-value">{result.documentNo}</strong>
+        </div>
+      </header>
+
+      <div className="wms-ops-gr-success__stats">
+        {receiptLines.length > 0 ? (
+          <button
+            type="button"
+            className="wms-ops-gr-success__stat wms-ops-gr-success__stat--action"
+            onClick={() => setLinesOpen(true)}
+            title="Tüm kabul satırlarını aç"
+          >
+            <span className="wms-ops-gr-success__stat-label">Satır</span>
+            <strong className="wms-ops-gr-success__stat-value">{result.lineCount}</strong>
+            <span className="wms-ops-gr-success__stat-hint">Listeyi gör</span>
+          </button>
+        ) : (
+          <div className="wms-ops-gr-success__stat">
+            <span className="wms-ops-gr-success__stat-label">Satır</span>
+            <strong className="wms-ops-gr-success__stat-value">{result.lineCount}</strong>
+          </div>
+        )}
+        <div className="wms-ops-gr-success__stat">
+          <span className="wms-ops-gr-success__stat-label">Miktar</span>
+          <strong className="wms-ops-gr-success__stat-value">
+            {formatProjectNumber(result.quantity)}
+          </strong>
+        </div>
+        <div className="wms-ops-gr-success__stat">
+          <span className="wms-ops-gr-success__stat-label">Durum</span>
+          <strong className="wms-ops-gr-success__stat-value wms-ops-gr-success__stat-value--status">
+            {statusLabel}
+          </strong>
+        </div>
+      </div>
+
+      {hasQuality && qualityLines.length > 0 ? (
+        <div className="wms-ops-gr-success__quality">
+          <div className="wms-ops-gr-success__quality-copy">
+            <ShieldCheck className="size-4 shrink-0" aria-hidden />
+            <div>
+              <strong>{qualityLines.length} kalem kalitede</strong>
+              <span>Onay sonrası irsaliye oluşur</span>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="wms-ops-gr-success__quality-btn"
+            onClick={() => setQualityOpen(true)}
+          >
+            Listeyi gör
+          </button>
+        </div>
+      ) : null}
+
+      <footer className="wms-ops-gr-success__actions">
+        <OpsActionButton type="button" variant="primary" onClick={onNew}>
+          Yeni kayıt
+        </OpsActionButton>
+        <OpsActionButton
+          type="button"
+          variant="secondary"
+          onClick={() =>
+            navigate(
+              hasQuality
+                ? "/warehouse/quality/inspections"
+                : "/warehouse/goods-receipts/list",
+            )
+          }
+        >
+          {hasQuality ? "Kalite listesi" : "Mal kabul listesi"}
+        </OpsActionButton>
+      </footer>
+
+      <QualityLinesDialog
+        lines={receiptLines}
+        open={linesOpen}
+        onClose={() => setLinesOpen(false)}
+        title="Kabul satırları"
+        description="Bu mal kabulde yer alan tüm satırlar."
+        searchAriaLabel="Kabul satırlarında ara"
+      />
+      <QualityLinesDialog
+        lines={qualityLines}
+        open={qualityOpen}
+        onClose={() => setQualityOpen(false)}
+      />
+    </div>
+  );
+}
+
+function CreateSuccessPanel({
+  result,
+  supplierCode,
+  assigneeCount,
+  receiptLines,
+  qualityLines,
+  onNew,
+}: {
+  result: CreateGoodsReceiptResult;
+  supplierCode?: string;
+  assigneeCount: number;
+  receiptLines: Array<{
+    stockCode: string;
+    stockName?: string;
+    quantity: number;
+    unitCode?: string;
+    requireQualityControl?: boolean;
+  }>;
+  qualityLines: Array<{
+    stockCode: string;
+    stockName?: string;
+    quantity: number;
+    unitCode?: string;
+  }>;
+  onNew: () => void;
+}): ReactElement {
+  const navigate = useNavigate();
+  const [linesOpen, setLinesOpen] = useState(false);
+  const [qualityOpen, setQualityOpen] = useState(false);
+  const qualityCount = qualityLines.length;
+  const hasQuality = qualityCount > 0;
+
+  return (
+    <div className="wms-ops-gr-success wms-ops-gr-success--wide wms-ops-gr-success--done">
+      <div className="wms-ops-gr-success__glow" aria-hidden />
+      <header className="wms-ops-gr-success__header">
+        <div className="wms-ops-gr-success__icon" aria-hidden>
+          <CheckCircle2 className="size-9" />
+        </div>
+        <p className="wms-ops-gr-success__eyebrow">Mal kabul sonrası</p>
+        <h2 className="wms-ops-gr-success__title">Mal kabul emri oluşturuldu</h2>
+        <p className="wms-ops-gr-success__subtitle">
+          {supplierCode
+            ? `${supplierCode} tedarikçisi için belge hazır.`
+            : "Mal kabul belgesi hazır."}{" "}
+          Emir atanan kullanıcıların kuyruğuna düştü; fiziksel kabul bitince
+          kaliteye gidecek kalemler listelenir.
+        </p>
+        <div className="wms-ops-gr-success__doc">
+          <span className="wms-ops-gr-success__doc-label">Belge No</span>
+          <strong className="wms-ops-gr-success__doc-value">{result.documentNo}</strong>
+        </div>
+      </header>
+
+      <div className="wms-ops-gr-success__stats">
+        <div className="wms-ops-gr-success__stat">
+          <span className="wms-ops-gr-success__stat-label">Görev</span>
+          <strong className="wms-ops-gr-success__stat-value">{result.tasks.length}</strong>
+        </div>
+        {receiptLines.length > 0 ? (
+          <button
+            type="button"
+            className="wms-ops-gr-success__stat wms-ops-gr-success__stat--action"
+            onClick={() => setLinesOpen(true)}
+            title="Tüm kabul satırlarını aç"
+          >
+            <span className="wms-ops-gr-success__stat-label">Satır / miktar</span>
+            <strong className="wms-ops-gr-success__stat-value">
+              {result.lineCount} · {formatProjectNumber(result.reservedQuantity)}
+            </strong>
+            <span className="wms-ops-gr-success__stat-hint">Listeyi gör</span>
+          </button>
+        ) : (
+          <div className="wms-ops-gr-success__stat">
+            <span className="wms-ops-gr-success__stat-label">Satır / miktar</span>
+            <strong className="wms-ops-gr-success__stat-value">
+              {result.lineCount} · {formatProjectNumber(result.reservedQuantity)}
+            </strong>
+          </div>
+        )}
+        <div className="wms-ops-gr-success__stat">
+          <span className="wms-ops-gr-success__stat-label">Emir sorumlusu</span>
+          <strong className="wms-ops-gr-success__stat-value">{assigneeCount}</strong>
+        </div>
+      </div>
+
+      {hasQuality ? (
+        <div className="wms-ops-gr-success__quality">
+          <div className="wms-ops-gr-success__quality-copy">
+            <ShieldCheck className="size-4 shrink-0" aria-hidden />
+            <div>
+              <strong>{qualityCount} kalem kalitede</strong>
+              <span>Fiziksel kabul bitince kalite listesine düşer</span>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="wms-ops-gr-success__quality-btn"
+            onClick={() => setQualityOpen(true)}
+          >
+            Listeyi gör
+          </button>
         </div>
       ) : (
-        <div className="mx-8 mb-5 rounded-xl border border-[var(--wms-app-border)] px-4 py-3 text-sm text-slate-500">
+        <div className="wms-ops-gr-success__quality wms-ops-gr-success__quality--muted">
           Bu emirde kalite kontrol gerektiren kalem yok.
         </div>
       )}
 
-      {result.tasks.length > 0 && (
-        <div className="space-y-2 border-t border-emerald-500/20 px-8 py-4 text-left">
-          <div className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-            Oluşturulan görevler
-          </div>
-          {result.tasks.map((task) => (
-            <div
-              key={task.id}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] px-3 py-2 font-mono text-xs"
-            >
-              <span className="font-semibold text-cyan-600 dark:text-cyan-300">
-                {task.taskNo}
-              </span>
-              <span className="text-slate-500">
-                depo #{task.warehouseId} · {task.lineCount} satır ·{" "}
-                {formatProjectNumber(task.plannedQuantity)}
-              </span>
-            </div>
-          ))}
+      {result.tasks.length > 0 ? (
+        <div className="wms-ops-gr-success__tasks">
+          <div className="wms-ops-gr-success__tasks-title">Oluşturulan görevler</div>
+          <ul className="wms-ops-gr-success__tasks-list">
+            {result.tasks.map((task) => (
+              <li key={task.id}>
+                <span className="wms-ops-gr-success__task-no">{task.taskNo}</span>
+                <span className="wms-ops-gr-success__task-meta">
+                  depo #{task.warehouseId} · {task.lineCount} satır ·{" "}
+                  {formatProjectNumber(task.plannedQuantity)}
+                </span>
+              </li>
+            ))}
+          </ul>
         </div>
-      )}
+      ) : null}
 
-      <div className="flex flex-wrap items-center justify-center gap-3 border-t border-emerald-500/20 px-8 py-5">
-        <button
-          type="button"
-          onClick={onNew}
-          className="rounded-xl bg-emerald-600 px-5 py-2.5 font-semibold text-white"
-        >
+      <footer className="wms-ops-gr-success__actions">
+        <OpsActionButton type="button" variant="primary" onClick={onNew}>
           Yeni kayıt
-        </button>
-        <button
+        </OpsActionButton>
+        <OpsActionButton
           type="button"
+          variant="secondary"
           onClick={() => navigate("/warehouse/goods-receipts/tasks")}
-          className="rounded-xl border border-emerald-500/40 px-5 py-2.5 font-semibold text-emerald-700 dark:text-emerald-300"
         >
           Emir yönetimine git
-        </button>
-        <Link
-          to="/warehouse/goods-receipts/list"
-          className="rounded-xl border border-[var(--wms-app-border)] px-5 py-2.5 font-semibold"
-        >
-          Mal kabul listesi
-        </Link>
-      </div>
+        </OpsActionButton>
+        <OpsActionButton type="button" variant="secondary" asChild>
+          <Link to="/warehouse/goods-receipts/list">Mal kabul listesi</Link>
+        </OpsActionButton>
+      </footer>
+
+      <QualityLinesDialog
+        lines={receiptLines}
+        open={linesOpen}
+        onClose={() => setLinesOpen(false)}
+        title="Kabul satırları"
+        description="Bu mal kabul emrinde yer alan tüm satırlar."
+        searchAriaLabel="Kabul satırlarında ara"
+      />
+      <QualityLinesDialog
+        lines={qualityLines}
+        open={qualityOpen}
+        onClose={() => setQualityOpen(false)}
+      />
     </div>
   );
 }
