@@ -854,7 +854,7 @@
       "receiptDateRequired": "Datum ist erforderlich",
       "documentNoRequired": "Belegnummer ist erforderlich",
       "documentNoLength": "Die Dokumentennummer muss genau 15 Ziffern lang sein",
-      "documentNoInvoiceLength": "Bei E-Rechnung muss die Belegnummer genau 16-stellig sein",
+      "documentNoInvoiceLength": "Die E-Lieferschein-/GIB-Nummer muss genau 15 alphanumerische Zeichen enthalten",
       "warehouseRequired": "Lagerauswahl ist erforderlich",
       "customerRequired": "Kundenauswahl ist erforderlich"
     },

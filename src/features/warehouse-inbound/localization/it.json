@@ -126,7 +126,7 @@
     "receiptNo": "Numero della ricevuta",
     "isElectronic": "e-Spedizione",
     "receiptHint": "Inserisci esattamente 15 cifre per una nota di spedizione standard.",
-    "eReceiptHint": "e-Dispatch: codice unitario di 3 caratteri + anno di 4 cifre + sequenza di 9 cifre.",
+    "eReceiptHint": "Numero e-DDT/GİB: esattamente 15 caratteri alfanumerici.",
     "validNumber": "Il formato del numero del documento è valido.",
     "plannedArrival": "Arrivo previsto",
     "warehouse": "Magazzino di destinazione",

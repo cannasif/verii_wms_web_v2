@@ -8,6 +8,7 @@ import {AppDropdown} from '@/components/shared/AppDropdown';
 import {AppDateInput} from '@/components/shared/AppInput';
 import {useAuthStore} from '@/stores/auth-store';
 import {goodsReceiptV2Api} from '@/features/goods-receipt-v2/api/goods-receipt.api';
+import {isValidGoodsReceiptDocumentNo,normalizeGoodsReceiptDocumentNo} from '@/features/goods-receipt-v2/utils/goods-receipt-document-reference';
 import {steelReceiptApi} from '../api/steel-receipt.api';
 import type {SteelImportLine,SteelImportPreview,SteelImportRequest} from '../types/steel-receipt.types';
 import {SteelProcessHeader} from './SteelProcessHeader';
@@ -89,6 +90,7 @@ export function SteelReceiptImportPage(){
     supplierId:Number(split(customer)[0]),targetWarehouseId:warehouseId,documentSeriesId:Number(seriesId),
     waybillNo:waybill.trim()||undefined,waybillDate:waybillDate||undefined,plannedArrivalAtUtc:plannedArrival?new Date(plannedArrival).toISOString():undefined,lines});
   const run=async(commit=false)=>{if(!customer||!warehouseId||!seriesId||!reference.trim()||!lines.length){toast.error(t(`${I}.validationError`));return}
+    if(!isValidGoodsReceiptDocumentNo(waybill)||!waybillDate){toast.error('E-irsaliye / GİB numarası tam 15 alfanümerik karakter olmalı ve irsaliye tarihi girilmelidir.');return}
     setBusy(true);try{if(commit){await steelReceiptApi.commit(request());toast.success(t(`${I}.saveSuccess`));setLines([]);setPreview(null);setFileName('')}
       else{setPreview(await steelReceiptApi.preview(request()));toast.success(t(`${I}.previewReady`))}}catch(e){toast.error(e instanceof Error?e.message:t(`${I}.operationFailed`))}finally{setBusy(false)}};
   const previewBadges=[[t(`${I}.previewTotal`),preview?.totalRows],[t(`${I}.previewNew`),preview?.newRows],[t(`${I}.previewExisting`),preview?.existingRows],[t(`${I}.previewError`),preview?.errorRows]] as const;
@@ -99,7 +101,7 @@ export function SteelReceiptImportPage(){
       <Field label={t(`${I}.documentSeries`)}><AppDropdown value={seriesId} onValueChange={setSeriesId} options={series.map(x=>({value:String(x.id),label:`${x.code} · ${x.name}`,description:x.previewDocumentNumber}))}/></Field>
       <Field label={t(`${I}.importReference`)}><input className="input" value={reference} onChange={e=>setReference(e.target.value)} maxLength={100}/></Field>
       <Field label={t(`${I}.exportReference`)}><input className="input" value={exportRef} onChange={e=>setExportRef(e.target.value)} maxLength={100}/></Field>
-      <Field label={t(`${I}.waybillNo`)}><input className="input" value={waybill} onChange={e=>setWaybill(e.target.value)} maxLength={50}/></Field>
+      <Field label="E-irsaliye / GİB numarası"><div className="relative"><input className="input pr-16 font-mono" value={waybill} onChange={e=>{setWaybill(normalizeGoodsReceiptDocumentNo(e.target.value));setPreview(null)}} maxLength={15} placeholder="GIB2026AB000000"/><span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500">{waybill.length}/15</span></div><span className="mt-1 inline-flex items-center gap-2 text-xs font-semibold text-cyan-500"><input type="checkbox" checked disabled readOnly className="size-3.5 accent-cyan-500"/>E-irsaliye / GİB</span></Field>
       <Field label={t(`${I}.waybillDate`)}><AppDateInput value={waybillDate} onChange={e=>{setWaybillDate(e.target.value);setPreview(null)}}/></Field>
       <Field label={t(`${I}.plannedArrival`)}><AppDateInput type="datetime-local" value={plannedArrival} onChange={e=>{setPlannedArrival(e.target.value);setPreview(null)}}/></Field>
       <Field label={t(`${I}.excelFile`)}><label className="flex h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-cyan-500/50 bg-cyan-500/5 text-sm font-bold text-cyan-500"><Upload className="size-4"/>{fileName||t(`${I}.selectFile`)}<input type="file" accept=".xlsx,.xls" className="hidden" onChange={e=>void onFile(e)}/></label></Field>

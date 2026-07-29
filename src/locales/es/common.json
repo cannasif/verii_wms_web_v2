@@ -600,7 +600,7 @@
       "warehouseRequired": "Warehouse selection is required",
       "customerRequired": "Customer selection is required",
       "documentNoLength": "Document number must be exactly 15 digits",
-      "documentNoInvoiceLength": "For e-invoice, document number must be exactly 16 digits"
+      "documentNoInvoiceLength": "El número de albarán electrónico/GIB debe tener exactamente 15 caracteres alfanuméricos"
     },
     "report": {
       "title": "Goods Receipt Report",

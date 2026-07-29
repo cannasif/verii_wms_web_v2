@@ -126,7 +126,7 @@
     "receiptNo": "Belegnummer",
     "isElectronic": "E-Versand",
     "receiptHint": "Geben Sie für eine Standardversandanzeige genau 15 Ziffern ein.",
-    "eReceiptHint": "E-Versand: 3-stelliger Einheitencode + 4-stelliges Jahr + 9-stellige Folge.",
+    "eReceiptHint": "E-Versand-/GİB-Nummer: genau 15 alphanumerische Zeichen.",
     "validNumber": "Das Dokumentnummernformat ist gültig.",
     "plannedArrival": "Geplante Ankunft",
     "warehouse": "Ziellager",

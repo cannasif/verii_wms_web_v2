@@ -600,7 +600,7 @@
       "warehouseRequired": "La sélection de l'entrepôt est requise",
       "customerRequired": "La sélection du client est requise",
       "documentNoLength": "Document number must be exactly 15 digits",
-      "documentNoInvoiceLength": "For e-invoice, document number must be exactly 16 digits"
+      "documentNoInvoiceLength": "Le numéro e-bordereau/GIB doit contenir exactement 15 caractères alphanumériques"
     },
     "report": {
       "title": "Rapport de réception de marchandises",

@@ -929,7 +929,7 @@
       "receiptDateRequired": "Tarih zorunludur",
       "documentNoRequired": "Belge No zorunludur",
       "documentNoLength": "Belge No tam 15 haneli olmalıdır",
-      "documentNoInvoiceLength": "E-İrsaliye için Belge No tam 16 haneli olmalıdır",
+      "documentNoInvoiceLength": "E-İrsaliye / GİB numarası tam 15 alfanümerik karakter olmalıdır",
       "warehouseRequired": "Depo seçimi zorunludur",
       "customerRequired": "Cari seçimi zorunludur"
     },

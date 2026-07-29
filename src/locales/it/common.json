@@ -600,7 +600,7 @@
       "warehouseRequired": "Warehouse selection is required",
       "customerRequired": "Customer selection is required",
       "documentNoLength": "Document number must be exactly 15 digits",
-      "documentNoInvoiceLength": "For e-invoice, document number must be exactly 16 digits"
+      "documentNoInvoiceLength": "Il numero e-DDT/GIB deve contenere esattamente 15 caratteri alfanumerici"
     },
     "report": {
       "title": "Goods Receipt Report",

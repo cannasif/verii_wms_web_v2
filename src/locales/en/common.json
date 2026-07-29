@@ -929,7 +929,7 @@
       "receiptDateRequired": "Date is required",
       "documentNoRequired": "Document number is required",
       "documentNoLength": "Document number must be exactly 15 digits",
-      "documentNoInvoiceLength": "For e-invoice, document number must be exactly 16 digits",
+      "documentNoInvoiceLength": "The e-dispatch/GIB number must contain exactly 15 alphanumeric characters",
       "warehouseRequired": "Warehouse selection is required",
       "customerRequired": "Customer selection is required"
     },

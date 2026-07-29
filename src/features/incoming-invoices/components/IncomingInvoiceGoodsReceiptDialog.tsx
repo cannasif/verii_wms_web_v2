@@ -10,6 +10,10 @@ import type {
   ActiveUserOption,
   SeriesOption,
 } from '@/features/goods-receipt-v2/types/goods-receipt.types';
+import {
+  isValidGoodsReceiptDocumentNo,
+  normalizeGoodsReceiptDocumentNo,
+} from '@/features/goods-receipt-v2/utils/goods-receipt-document-reference';
 import { formatProjectNumber } from '@/lib/project-format';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { incomingInvoiceApi } from '../api/incoming-invoice.api';
@@ -32,15 +36,6 @@ const encodeUser = (user: ActiveUserOption): string =>
   encodeURIComponent(JSON.stringify(user));
 const decodeUser = (value: string): ActiveUserOption =>
   JSON.parse(decodeURIComponent(value)) as ActiveUserOption;
-const normalizeWaybill = (value: string, electronic: boolean): string =>
-  electronic
-    ? value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 16)
-    : value.replace(/\D/g, '').slice(0, 15);
-const validWaybill = (value: string, electronic: boolean): boolean =>
-  electronic
-    ? /^[A-Z0-9]{3}[0-9]{13}$/.test(value)
-    : /^[0-9]{15}$/.test(value);
-
 export function IncomingInvoiceGoodsReceiptDialog({
   branchCode,
   detail,
@@ -49,8 +44,7 @@ export function IncomingInvoiceGoodsReceiptDialog({
 }: Props): ReactElement {
   const { t } = useModuleTranslation('incoming-invoices');
   const sourceWaybill = (detail.despatchReferenceNo ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '');
-  const sourceIsElectronic = /^[A-Z0-9]{3}[0-9]{13}$/.test(sourceWaybill);
-  const sourceIsNormal = /^[0-9]{15}$/.test(sourceWaybill);
+  const sourceIsValid = isValidGoodsReceiptDocumentNo(sourceWaybill);
   const eligibleLines = useMemo(
     () => detail.lines.filter((line) => line.stockId && line.remainingQuantity > 0),
     [detail.lines],
@@ -61,9 +55,9 @@ export function IncomingInvoiceGoodsReceiptDialog({
   const [locationId, setLocationId] = useState<string | null>(null);
   const [series, setSeries] = useState<SeriesOption[]>([]);
   const [seriesId, setSeriesId] = useState<string | null>(null);
-  const [isElectronic, setIsElectronic] = useState(sourceIsElectronic);
+  const isElectronic = true;
   const [waybillNo, setWaybillNo] = useState(
-    sourceIsElectronic || sourceIsNormal ? sourceWaybill : '',
+    sourceIsValid ? sourceWaybill : '',
   );
   const [waybillDate, setWaybillDate] = useState(detail.header.issueDate.slice(0, 10));
   const [plannedArrival, setPlannedArrival] = useState('');
@@ -118,10 +112,8 @@ export function IncomingInvoiceGoodsReceiptDialog({
     const supplierId = Number(split(supplier)[0] || 0);
     const selected = eligibleLines.filter((line) => selectedIds.has(line.id));
     if (!supplierId) { toast.error(t('receiptDialog.validation.supplier')); return; }
-    if (!validWaybill(waybillNo, isElectronic) || !waybillDate) {
-      toast.error(isElectronic
-        ? t('receiptDialog.validation.eWaybill')
-        : t('receiptDialog.validation.waybill'));
+    if (!isValidGoodsReceiptDocumentNo(waybillNo) || !waybillDate) {
+      toast.error('E-irsaliye / GİB numarası tam 15 alfanümerik karakter olmalıdır.');
       return;
     }
     if (!warehouseId || !locationId || !seriesId) {
@@ -230,21 +222,19 @@ export function IncomingInvoiceGoodsReceiptDialog({
             <input
               type="checkbox"
               checked={isElectronic}
-              onChange={(event) => {
-                setIsElectronic(event.target.checked);
-                setWaybillNo('');
-              }}
+              disabled
+              readOnly
               className="size-4 accent-cyan-500"
             />
             <span className="font-semibold">{t('receiptDialog.isElectronic')}</span>
           </label>
           <AppInput
             value={waybillNo}
-            onChange={(event) => setWaybillNo(normalizeWaybill(event.target.value, isElectronic))}
-            inputMode={isElectronic ? 'text' : 'numeric'}
-            maxLength={isElectronic ? 16 : 15}
-            placeholder={isElectronic ? 'GIB2026000000001' : '000000000000001'}
-            invalid={Boolean(waybillNo) && !validWaybill(waybillNo, isElectronic)}
+            onChange={(event) => setWaybillNo(normalizeGoodsReceiptDocumentNo(event.target.value))}
+            inputMode="text"
+            maxLength={15}
+            placeholder="GIB2026AB000000"
+            invalid={Boolean(waybillNo) && !isValidGoodsReceiptDocumentNo(waybillNo)}
           />
           <p className="mt-2 text-xs text-slate-500">
             {detail.despatchReferenceNo
