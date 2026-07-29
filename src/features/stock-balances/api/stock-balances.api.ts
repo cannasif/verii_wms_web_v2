@@ -3,6 +3,7 @@ import { api } from '@/lib/axios';
 import type { LocationBalanceRow, ProjectionRebuildResult, ReconciliationSummary, SerialBalanceRow, SerialMovementHistoryRow, StockBalanceDrillDown, WarehouseBalanceRow } from '../types/stock-balance.types';
 
 interface Envelope<T>{success:boolean;data:T;message?:string}
+export interface OpeningBalanceImportResult { operationId:number;operationCode:string;isReplay:boolean;totalRows:number;totalQuantity:number }
 const unwrap=<T>(response:Envelope<T>):T=>{if(!response.success)throw new Error(response.message||'İşlem başarısız.');return response.data;};
 export const stockBalancesApi={
   getLocations:async(request:GridRequest):Promise<GridPage<LocationBalanceRow>>=>unwrap(await api.post<Envelope<GridPage<LocationBalanceRow>>>('/api/stock-balances/locations/paged',request)),
@@ -12,4 +13,9 @@ export const stockBalancesApi={
   getDrillDown:async(id:number):Promise<StockBalanceDrillDown>=>unwrap(await api.get<Envelope<StockBalanceDrillDown>>(`/api/stock-balances/warehouses/${id}/drill-down`)),
   getReconciliation:async():Promise<ReconciliationSummary>=>unwrap(await api.get<Envelope<ReconciliationSummary>>('/api/stock-balances/reconciliation/summary')),
   rebuild:async():Promise<ProjectionRebuildResult>=>unwrap(await api.post<Envelope<ProjectionRebuildResult>>('/api/stock-balances/rebuild')),
+  downloadOpeningTemplate:async(branchCode:string):Promise<Blob>=>await api.get<Blob>(`/api/stock-balances/opening-import/template?branchCode=${encodeURIComponent(branchCode)}`,{responseType:'blob'}),
+  importOpeningBalance:async(file:File,branchCode:string,idempotencyKey:string):Promise<OpeningBalanceImportResult>=>{
+    const form=new FormData();form.append('file',file);
+    return unwrap(await api.post<Envelope<OpeningBalanceImportResult>>(`/api/stock-balances/opening-import?branchCode=${encodeURIComponent(branchCode)}&idempotencyKey=${encodeURIComponent(idempotencyKey)}`,form));
+  },
 };

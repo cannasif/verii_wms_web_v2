@@ -1,9 +1,10 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Eye, Loader2 } from 'lucide-react';
+import { Eye, FileSpreadsheet, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdvancedDataGrid, type GridColumn } from '@/components/shared/AdvancedDataGrid';
+import { InitialExcelImportDialog } from '@/components/shared/InitialExcelImportDialog';
 import { systemColumns } from '@/components/shared/GridSystemColumns';
 import { OpsDialogBody, OpsDialogContent, OpsDialogHeader } from '@/components/shared/OpsDialogShell';
 import { Dialog, DialogTitle } from '@/components/ui/dialog';
@@ -12,6 +13,7 @@ import { localizeEnumValue } from '@/lib/enum-localization';
 import { stockBalancesApi } from '../api/stock-balances.api';
 import type { LocationBalanceRow, ReconciliationSummary, SerialBalanceRow, SerialMovementHistoryRow, StockBalanceDrillDown, WarehouseBalanceRow } from '../types/stock-balance.types';
 import { formatProjectDateTime, formatProjectNumber } from '@/lib/project-format';
+import { useAuthStore } from '@/stores/auth-store';
 
 const L = 'dataGrid.locationBalances';
 const W = 'dataGrid.warehouseBalances';
@@ -27,12 +29,15 @@ const date = (value: string) => formatProjectDateTime(value);
 
 export function LocationBalancesPage() {
   const queryClient = useQueryClient();
+  const branchCode = useAuthStore((state) => state.branch?.code ?? '0');
   const { t, i18n } = useTranslation('common');
   const gridLanguage = i18n.resolvedLanguage ?? i18n.language;
   const { can, isLoading, isError } = usePermissionAccess();
   const allow = isLoading || isError || can('WMS.STOCK_BALANCES.RECONCILE');
+  const allowOpeningImport = isLoading || isError || can('WMS.STOCK_MOVEMENTS.POST');
   const [summary, setSummary] = useState<ReconciliationSummary | null>(null);
   const [working, setWorking] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   const reconcile = async () => {
     setWorking(true);
@@ -89,7 +94,29 @@ export function LocationBalancesPage() {
         description={t(`${L}.description`)}
         columns={columns}
         fetchPage={stockBalancesApi.getLocations}
-        toolbarAction={allow ? { label: working ? t(`${L}.reconciling`) : t(`${L}.reconcile`), run: reconcile } : undefined}
+        toolbarActions={[
+          ...(allowOpeningImport ? [{ label: 'Excel ile İlk Bakiye', icon: <FileSpreadsheet className="size-4"/>, run: async () => setImportOpen(true) }] : []),
+          ...(allow ? [{ label: working ? t(`${L}.reconciling`) : t(`${L}.reconcile`), run: reconcile }] : []),
+        ]}
+      />
+      <InitialExcelImportDialog
+        open={importOpen}
+        title="Excel ile İlk Raf Bakiyesi"
+        description="Yeni başlangıç stoklarını hareket defteri ve raf bakiyesiyle birlikte oluşturun."
+        warning="Aktarım yapılacak depoda daha önce hiçbir stok hareketi bulunmamalıdır. Mevcut bakiyeler değiştirilmez; seri, lot, YAP ve birim kuralları aynen uygulanır."
+        templateFileName="wms-v2-ilk-raf-bakiyesi-sablonu.xlsx"
+        limitText="En fazla 5 MB ve 200 bakiye satırı"
+        submitLabel="İlk bakiyeyi kaydet"
+        onOpenChange={setImportOpen}
+        downloadTemplate={() => stockBalancesApi.downloadOpeningTemplate(branchCode)}
+        importFile={(file, idempotencyKey) => stockBalancesApi.importOpeningBalance(file, branchCode, idempotencyKey)}
+        summarize={(result) => [
+          { label: 'Satır', value: result.totalRows },
+          { label: 'Toplam miktar', value: formatProjectNumber(result.totalQuantity) },
+          { label: 'Operasyon', value: `#${result.operationId}` },
+          { label: 'Durum', value: result.isReplay ? 'Tekrar' : 'Kaydedildi' },
+        ]}
+        onImported={async () => queryClient.invalidateQueries({ queryKey: ['advanced-grid'] })}
       />
     </div>
   );
