@@ -40,24 +40,62 @@ export const AppInput = forwardRef<HTMLInputElement, AppInputProps>(function App
   ref,
 ): ReactElement {
   const opsTone = tone === 'ops';
+  const localRef = useRef<HTMLInputElement | null>(null);
+
+  const setRefs = (node: HTMLInputElement | null): void => {
+    localRef.current = node;
+    if (typeof ref === 'function') ref(node);
+    else if (ref) ref.current = node;
+  };
+
+  useEffect(() => {
+    const el = localRef.current;
+    if (!el) return;
+    if (invalid) {
+      el.style.setProperty('border-color', '#ef4444', 'important');
+      el.style.setProperty(
+        'background-color',
+        'color-mix(in oklab, #ef4444 12%, var(--wms-ops-field-bg, #0d0d14))',
+        'important',
+      );
+      el.style.setProperty(
+        'box-shadow',
+        '0 0 0 1px rgb(239 68 68 / 55%), 0 0 0 3px rgb(239 68 68 / 22%)',
+        'important',
+      );
+      el.style.setProperty('outline', 'none', 'important');
+    } else {
+      el.style.removeProperty('border-color');
+      el.style.removeProperty('background-color');
+      el.style.removeProperty('box-shadow');
+      el.style.removeProperty('outline');
+    }
+  }, [invalid]);
+
   return (
     <span
       className={cn(
         'app-input-shell',
         opsTone && 'wms-ops-field-shell',
+        opsTone && invalid && 'wms-ops-field-shell--error',
         leadingIcon && 'app-input-shell--leading',
         trailingContent && 'app-input-shell--trailing',
       )}
       data-disabled={disabled || undefined}
-      data-invalid={invalid || undefined}
-      aria-invalid={opsTone ? (invalid || undefined) : undefined}
+      data-invalid={invalid ? 'true' : undefined}
+      aria-invalid={invalid ? true : undefined}
     >
       {leadingIcon ? <span className="app-input-shell__leading" aria-hidden>{leadingIcon}</span> : null}
       <input
-        ref={ref}
+        ref={setRefs}
         disabled={disabled}
-        aria-invalid={invalid || undefined}
-        className={cn('input app-input-control', opsTone && 'wms-ops-field', className)}
+        aria-invalid={invalid ? true : undefined}
+        className={cn(
+          'input app-input-control',
+          opsTone && 'wms-ops-field',
+          invalid && 'wms-ops-field--invalid',
+          className,
+        )}
         {...props}
       />
       {trailingContent ? <span className="app-input-shell__trailing">{trailingContent}</span> : null}

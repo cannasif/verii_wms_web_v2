@@ -164,9 +164,9 @@ html.skin-premium .wms-ops-workspace-host a.group:hover {
 }
 
 /* ?? Inputs (AppInput + bare .input) — glow ring focus ?? */
-html.skin-premium .wms-ops-workspace-host .input:not(.wms-ops-field),
-html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .input:not(.wms-ops-field),
-html.skin-premium .wms-ops-workspace-host .app-input-control {
+html.skin-premium .wms-ops-workspace-host .input:not(.wms-ops-field):not([aria-invalid='true']):not(.wms-ops-field--invalid),
+html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .input:not(.wms-ops-field):not([aria-invalid='true']):not(.wms-ops-field--invalid),
+html.skin-premium .wms-ops-workspace-host .app-input-control:not([aria-invalid='true']):not(.wms-ops-field--invalid) {
   border-radius: 0.7rem !important;
   border-width: 1px !important;
   border-style: solid !important;
@@ -183,12 +183,12 @@ html.skin-premium .wms-ops-workspace-host .app-input-control {
     box-shadow 340ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-html.skin-premium .wms-ops-workspace-host .input:focus,
-html.skin-premium .wms-ops-workspace-host .input:focus-visible,
-html.skin-premium .wms-ops-workspace-host .app-input-control:focus,
-html.skin-premium .wms-ops-workspace-host .app-input-control:focus-visible,
-html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .input:focus,
-html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .input:focus-visible {
+html.skin-premium .wms-ops-workspace-host .input:focus:not([aria-invalid='true']):not(.wms-ops-field--invalid),
+html.skin-premium .wms-ops-workspace-host .input:focus-visible:not([aria-invalid='true']):not(.wms-ops-field--invalid),
+html.skin-premium .wms-ops-workspace-host .app-input-control:focus:not([aria-invalid='true']):not(.wms-ops-field--invalid),
+html.skin-premium .wms-ops-workspace-host .app-input-control:focus-visible:not([aria-invalid='true']):not(.wms-ops-field--invalid),
+html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .input:focus:not([aria-invalid='true']):not(.wms-ops-field--invalid),
+html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .input:focus-visible:not([aria-invalid='true']):not(.wms-ops-field--invalid) {
   outline: none !important;
   border-color: color-mix(in oklab, var(--wms-brand-primary) 65%, transparent) !important;
   box-shadow:
@@ -209,7 +209,7 @@ html.skin-premium .wms-ops-workspace-host input::placeholder {
 /* AdvancedDataGrid search */
 html.skin-premium .wms-ops-list label.relative > input,
 html.skin-premium .wms-ops-list .wms-ops-list-search .wms-ops-field,
-html.skin-premium .wms-ops-list .wms-ops-field {
+html.skin-premium .wms-ops-list .wms-ops-field:not(.wms-ops-field--invalid):not([aria-invalid='true']) {
   border-radius: 0.7rem !important;
   border-width: 1px !important;
   border-color: var(--wms-ops-field-border) !important;
@@ -1551,3 +1551,41 @@ html.skin-premium .wms-ops-list :is(.wms-ops-table-h-scroll, .wms-ops-table-wrap
 html.skin-premium .wms-ops-list :is(.wms-ops-table-h-scroll, .wms-ops-table-wrap, .wms-ops-data-grid-wrap)::-webkit-scrollbar-corner {
   background: color-mix(in oklab, var(--wms-brand-primary) 8%, transparent) !important;
 }
+
+/* Validation error must beat workspace focus glow (loaded after index.css) */
+html.skin-premium .wms-ops-workspace-host .wms-ops-field-shell--error .wms-ops-field,
+html.skin-premium .wms-ops-workspace-host .wms-ops-field-shell[aria-invalid='true'] .wms-ops-field,
+html.skin-premium .wms-ops-workspace-host .wms-ops-field-shell--error .app-input-control,
+html.skin-premium .wms-ops-workspace-host .wms-ops-field-shell[aria-invalid='true'] .app-input-control,
+html.skin-premium .wms-ops-workspace-host .wms-ops-field--invalid,
+html.skin-premium .wms-ops-workspace-host .app-input-control[aria-invalid='true'],
+html.skin-premium .wms-ops-workspace-host .input[aria-invalid='true'],
+html.skin-premium .wms-ops-workspace-host .wms-ops-field-shell--error .wms-ops-field:focus,
+html.skin-premium .wms-ops-workspace-host .wms-ops-field-shell[aria-invalid='true'] .wms-ops-field:focus,
+html.skin-premium .wms-ops-workspace-host .wms-ops-field-shell--error .app-input-control:focus,
+html.skin-premium .wms-ops-workspace-host .wms-ops-field-shell[aria-invalid='true'] .app-input-control:focus,
+html.skin-premium .wms-ops-workspace-host .wms-ops-field--invalid:focus,
+html.skin-premium .wms-ops-workspace-host .app-input-control[aria-invalid='true']:focus,
+html.skin-premium .wms-ops-workspace-host .input[aria-invalid='true']:focus,
+html.skin-premium .wms-ops-workspace-host .wms-ops-field-shell--error .wms-ops-field:focus-visible,
+html.skin-premium .wms-ops-workspace-host .wms-ops-field-shell[aria-invalid='true'] .wms-ops-field:focus-visible,
+html.skin-premium .wms-ops-workspace-host .wms-ops-field-shell--error .app-input-control:focus-visible,
+html.skin-premium .wms-ops-workspace-host .wms-ops-field-shell[aria-invalid='true'] .app-input-control:focus-visible,
+html.skin-premium .wms-ops-workspace-host .wms-ops-field--invalid:focus-visible,
+html.skin-premium .wms-ops-workspace-host .app-input-control[aria-invalid='true']:focus-visible,
+html.skin-premium .wms-ops-workspace-host .input[aria-invalid='true']:focus-visible,
+html.skin-premium .wms-ops-list .wms-ops-field-shell--error .wms-ops-field,
+html.skin-premium .wms-ops-list .wms-ops-field-shell[aria-invalid='true'] .wms-ops-field,
+html.skin-premium .wms-ops-list .wms-ops-field--invalid,
+html.skin-premium .wms-ops-list .input[aria-invalid='true'] {
+  border-radius: 0.7rem !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+  border-color: #ef4444 !important;
+  background-color: color-mix(in oklab, #ef4444 12%, var(--wms-ops-field-bg)) !important;
+  box-shadow:
+    0 0 0 1px rgb(239 68 68 / 55%),
+    0 0 0 3px rgb(239 68 68 / 22%) !important;
+  outline: none !important;
+}
+

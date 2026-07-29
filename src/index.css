@@ -1709,11 +1709,11 @@ label[data-wms-error-target].wms-error-focus-flash-field .app-input-shell input 
   font-weight: 400;
 }
 
-.wms-ops-form .wms-ops-field-shell:focus-within .wms-ops-field,
-.wms-ops-form .wms-ops-field-shell--active .wms-ops-field,
-.wms-ops-form .wms-ops-field-shell:has([data-state="open"]) .wms-ops-field,
-.wms-ops-form .wms-ops-field-shell:has([aria-expanded="true"]) .wms-ops-field,
-.wms-ops-lookup-dialog .wms-ops-field-shell:focus-within .wms-ops-field {
+.wms-ops-form .wms-ops-field-shell:focus-within:not([aria-invalid='true']):not(.wms-ops-field-shell--error) .wms-ops-field,
+.wms-ops-form .wms-ops-field-shell--active:not([aria-invalid='true']):not(.wms-ops-field-shell--error) .wms-ops-field,
+.wms-ops-form .wms-ops-field-shell:not([aria-invalid='true']):not(.wms-ops-field-shell--error):has([data-state="open"]) .wms-ops-field,
+.wms-ops-form .wms-ops-field-shell:not([aria-invalid='true']):not(.wms-ops-field-shell--error):has([aria-expanded="true"]) .wms-ops-field,
+.wms-ops-lookup-dialog .wms-ops-field-shell:focus-within:not([aria-invalid='true']):not(.wms-ops-field-shell--error) .wms-ops-field {
   border-color: color-mix(in oklab, var(--wms-ops-accent) 32%, var(--wms-ops-field-border)) !important;
   background: color-mix(in oklab, var(--wms-ops-accent) 4%, var(--wms-ops-field-bg)) !important;
   box-shadow:
@@ -1725,7 +1725,7 @@ label[data-wms-error-target].wms-error-focus-flash-field .app-input-shell input 
   --tw-ring-offset-width: 0 !important;
 }
 
-/* Hata: focus olsa bile tam kırmızı kutu — sadece input yüzeyinde, shell çerçevesi yok */
+/* Hata: focus olsa bile sabit kırmızı kutu — yanıp sönme yok */
 .wms-ops-form .wms-ops-field-shell--error .wms-ops-field,
 .wms-ops-form .wms-ops-field-shell--error button.wms-ops-lookup-trigger,
 .wms-ops-form .wms-ops-field-shell[aria-invalid='true'] .wms-ops-field,
@@ -1735,12 +1735,12 @@ label[data-wms-error-target].wms-error-focus-flash-field .app-input-shell input 
 .wms-ops-form .wms-ops-field-shell--error.wms-ops-field-shell--active .wms-ops-field,
 .wms-ops-form .wms-ops-field-shell[aria-invalid='true'].wms-ops-field-shell--active .wms-ops-field {
   border-width: 1px !important;
-  border-color: #f87171 !important;
-  background: color-mix(in oklab, #ef4444 8%, var(--wms-ops-field-bg)) !important;
+  border-color: #ef4444 !important;
+  background: color-mix(in oklab, #ef4444 10%, var(--wms-ops-field-bg)) !important;
   box-shadow:
-    0 0 0 1px color-mix(in oklab, #ef4444 38%, transparent),
-    0 0 14px color-mix(in oklab, #ef4444 22%, transparent) !important;
-  animation: wms-ops-field-error-box-pulse 1.15s ease-in-out infinite;
+    0 0 0 1px color-mix(in oklab, #ef4444 55%, transparent),
+    0 0 0 3px color-mix(in oklab, #ef4444 18%, transparent) !important;
+  animation: none;
 }
 
 .wms-ops-form .wms-ops-field-shell[aria-invalid='true'] .wms-ops-field:focus,
@@ -7072,9 +7072,15 @@ html.skin-premium .wms-ops-quality-bulk {
 
 .wms-ops-quality-bulk__fields {
   display: grid;
-  grid-template-columns: minmax(7rem, 1fr) minmax(7rem, 1fr) minmax(8rem, 1.2fr) auto;
+  grid-template-columns: repeat(3, minmax(6.5rem, 1fr)) auto;
   gap: 0.4rem;
   align-items: end;
+}
+
+@media (min-width: 1100px) {
+  .wms-ops-quality-bulk__fields {
+    grid-template-columns: repeat(5, minmax(6.5rem, 1fr)) auto;
+  }
 }
 
 @media (max-width: 900px) {
@@ -18107,11 +18113,11 @@ html.skin-premium .wms-ops-lookup-dialog .wms-ops-field-shell::after {
   display: none;
 }
 
-html.skin-premium .wms-ops-form .wms-ops-field-shell:focus-within .wms-ops-field,
-html.skin-premium .wms-ops-form .wms-ops-field-shell--active .wms-ops-field,
-html.skin-premium .wms-ops-form .wms-ops-field-shell:has([data-state="open"]) .wms-ops-field,
-html.skin-premium .wms-ops-form .wms-ops-field-shell:has([aria-expanded="true"]) .wms-ops-field,
-html.skin-premium .wms-ops-lookup-dialog .wms-ops-field-shell:focus-within .wms-ops-field {
+html.skin-premium .wms-ops-form .wms-ops-field-shell:focus-within:not([aria-invalid='true']):not(.wms-ops-field-shell--error) .wms-ops-field,
+html.skin-premium .wms-ops-form .wms-ops-field-shell--active:not([aria-invalid='true']):not(.wms-ops-field-shell--error) .wms-ops-field,
+html.skin-premium .wms-ops-form .wms-ops-field-shell:not([aria-invalid='true']):not(.wms-ops-field-shell--error):has([data-state="open"]) .wms-ops-field,
+html.skin-premium .wms-ops-form .wms-ops-field-shell:not([aria-invalid='true']):not(.wms-ops-field-shell--error):has([aria-expanded="true"]) .wms-ops-field,
+html.skin-premium .wms-ops-lookup-dialog .wms-ops-field-shell:focus-within:not([aria-invalid='true']):not(.wms-ops-field-shell--error) .wms-ops-field {
   border-color: color-mix(in oklab, var(--wms-brand-primary) 65%, transparent) !important;
   box-shadow:
     0 0 0 3.5px color-mix(in oklab, var(--wms-brand-primary) 24%, transparent),
@@ -18119,15 +18125,15 @@ html.skin-premium .wms-ops-lookup-dialog .wms-ops-field-shell:focus-within .wms-
     0 14px 30px -10px var(--wms-brand-shadow) !important;
 }
 
-/* Hata: input, lookup trigger ve select trigger — kırmızı çerçeve kutunun kendi radius'unda */
+/* Hata: input, lookup trigger ve select trigger — sabit kırmızı çerçeve */
 html.skin-premium .wms-ops-form :is(.wms-ops-field-shell--error, .wms-ops-field-shell[aria-invalid='true'])
   :is(.wms-ops-field, button.wms-ops-lookup-trigger, [data-slot='select-trigger']) {
-  border-color: color-mix(in oklab, #ef4444 68%, transparent) !important;
-  background-color: color-mix(in oklab, #ef4444 9%, var(--wms-ops-field-bg)) !important;
+  border-color: #ef4444 !important;
+  background-color: color-mix(in oklab, #ef4444 10%, var(--wms-ops-field-bg)) !important;
   box-shadow:
-    0 0 0 1px rgb(239 68 68 / 32%),
-    0 0 16px rgb(239 68 68 / 24%) !important;
-  animation: wms-premium-field-error-pulse 1.1s ease-in-out infinite;
+    0 0 0 1px rgb(239 68 68 / 45%),
+    0 0 0 3px rgb(239 68 68 / 16%) !important;
+  animation: none;
 }
 
 @keyframes wms-premium-field-error-pulse {
@@ -21961,11 +21967,11 @@ html.skin-premium .wms-ops-form .wms-ops-field-shell[aria-invalid='true']::after
   box-shadow: 0 0 10px rgb(239 68 68 / 35%);
 }
 
-/* Focus'ta i?erinin hafif?e dolmas? (?rnekteki b?y?yen dolgu hissi) */
-html.skin-premium .wms-ops-form .wms-ops-field-shell:focus-within .wms-ops-field,
-html.skin-premium .wms-ops-form .wms-ops-field-shell--active .wms-ops-field,
-html.skin-premium .wms-ops-form .wms-ops-field-shell:has([data-state='open']) .wms-ops-field,
-html.skin-premium .wms-ops-form .wms-ops-field-shell:has([aria-expanded='true']) .wms-ops-field {
+/* Focus'ta içeriinin hafifçe dolması — hata durumunda brand fill yok */
+html.skin-premium .wms-ops-form .wms-ops-field-shell:focus-within:not([aria-invalid='true']):not(.wms-ops-field-shell--error) .wms-ops-field,
+html.skin-premium .wms-ops-form .wms-ops-field-shell--active:not([aria-invalid='true']):not(.wms-ops-field-shell--error) .wms-ops-field,
+html.skin-premium .wms-ops-form .wms-ops-field-shell:not([aria-invalid='true']):not(.wms-ops-field-shell--error):has([data-state='open']) .wms-ops-field,
+html.skin-premium .wms-ops-form .wms-ops-field-shell:not([aria-invalid='true']):not(.wms-ops-field-shell--error):has([aria-expanded='true']) .wms-ops-field {
   background:
     linear-gradient(
       180deg,
@@ -21979,12 +21985,12 @@ html.skin-premium .wms-ops-form :is(.wms-ops-field-shell--error, .wms-ops-field-
   :is(.wms-ops-field, button.wms-ops-lookup-trigger, [data-slot='select-trigger']),
 html.skin-premium .wms-ops-form :is(.wms-ops-field-shell--error, .wms-ops-field-shell[aria-invalid='true']).wms-ops-field-shell--active
   :is(.wms-ops-field, button.wms-ops-lookup-trigger, [data-slot='select-trigger']) {
-  border-color: color-mix(in oklab, #ef4444 78%, transparent) !important;
-  background-color: color-mix(in oklab, #ef4444 11%, var(--wms-ops-field-bg)) !important;
+  border-color: #ef4444 !important;
+  background-color: color-mix(in oklab, #ef4444 12%, var(--wms-ops-field-bg)) !important;
   box-shadow:
-    0 0 0 1px rgb(239 68 68 / 42%),
-    0 0 22px rgb(239 68 68 / 34%) !important;
-  animation: wms-premium-field-error-pulse 1.1s ease-in-out infinite;
+    0 0 0 1px rgb(239 68 68 / 50%),
+    0 0 0 3px rgb(239 68 68 / 18%) !important;
+  animation: none;
 }
 
 
