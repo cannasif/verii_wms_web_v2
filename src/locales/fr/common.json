@@ -2779,6 +2779,8 @@
     "recordDetail": "{{title}} Détail enregistrement #{{id}}",
     "syncNow": "Synchroniser maintenant",
     "view": "Voir",
+    "details": "Détails",
+    "stockCard": "Fiche de stock",
     "trackingSettings": "Paramètres traçabilité",
     "actions": "Actions",
     "undefinedUnit": "Non défini",

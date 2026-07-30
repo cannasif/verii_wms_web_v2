@@ -4314,6 +4314,8 @@
     "recordDetail": "{{title}} Datensatzdetail #{{id}}",
     "syncNow": "Jetzt synchronisieren",
     "view": "Anzeigen",
+    "details": "Details",
+    "stockCard": "Bestandskarte",
     "trackingSettings": "Tracking-Einstellungen",
     "actions": "Aktionen",
     "undefinedUnit": "Undefiniert",

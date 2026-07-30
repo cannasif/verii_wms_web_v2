@@ -2779,6 +2779,8 @@
     "recordDetail": "{{title}} Detalle de registro #{{id}}",
     "syncNow": "Sincronizar ahora",
     "view": "Ver",
+    "details": "Detalles",
+    "stockCard": "Ficha de existencias",
     "trackingSettings": "Ajustes de trazabilidad",
     "actions": "Acciones",
     "undefinedUnit": "Indefinido",

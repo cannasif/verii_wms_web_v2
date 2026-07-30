@@ -4445,6 +4445,8 @@
     "recordDetail": "{{title}} Record Detail #{{id}}",
     "syncNow": "Sync Now",
     "view": "View",
+    "details": "Details",
+    "stockCard": "Stock Card",
     "trackingSettings": "Tracking Settings",
     "actions": "Actions",
     "undefinedUnit": "Undefined",

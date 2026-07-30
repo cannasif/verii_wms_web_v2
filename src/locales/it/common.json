@@ -2779,6 +2779,8 @@
     "recordDetail": "{{title}} Dettaglio record #{{id}}",
     "syncNow": "Sincronizza ora",
     "view": "Visualizza",
+    "details": "Dettagli",
+    "stockCard": "Scheda articolo",
     "trackingSettings": "Impostazioni tracciabilità",
     "actions": "Azioni",
     "undefinedUnit": "Non definito",

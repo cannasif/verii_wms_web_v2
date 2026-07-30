@@ -2779,6 +2779,8 @@
     "recordDetail": "{{title}} تفاصيل السجل #{{id}}",
     "syncNow": "مزامنة الآن",
     "view": "عرض",
+    "details": "التفاصيل",
+    "stockCard": "بطاقة المخزون",
     "trackingSettings": "إعدادات التتبع",
     "actions": "الإجراءات",
     "undefinedUnit": "غير محدد",

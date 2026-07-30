@@ -4466,6 +4466,8 @@
     "recordDetail": "{{title}} Kayıt Detayı #{{id}}",
     "syncNow": "Şimdi Eşle",
     "view": "Görüntüle",
+    "details": "Detaylar",
+    "stockCard": "Stok Kartı",
     "trackingSettings": "Takip Ayarları",
     "actions": "İşlemler",
     "undefinedUnit": "Tanımsız",

@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Boxes, Save, ShieldCheck } from 'lucide-react';
+import { Boxes, Eye, Save, ShieldCheck, SlidersHorizontal } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
 import {
   stockTrackingApi,
@@ -14,6 +15,7 @@ import type { StockMirror } from '../types/erp-mirror.types';
 
 interface Props {
   stock: StockMirror | null;
+  initialTab?: 'details' | 'tracking';
   onClose: () => void;
 }
 
@@ -61,10 +63,12 @@ const hasSameTrackingValues = (
   && current.requireExpirationDate === baseline.requireExpirationDate
   && current.minimumRemainingShelfLifeDays === (baseline.minimumRemainingShelfLifeDays ?? null);
 
-export function StockTrackingSettingsDialog({ stock, onClose }: Props) {
+export function StockTrackingSettingsDialog({ stock, initialTab = 'details', onClose }: Props) {
   const { t } = useTranslation('common');
   const queryClient = useQueryClient();
   const { can, isLoading: permissionsLoading } = usePermissionAccess();
+  const canViewTracking = can('WMS.SERIAL_RULES.VIEW');
+  const [activeTab, setActiveTab] = useState<'details' | 'tracking'>(initialTab);
   const [form, setForm] = useState<UpdateStockTrackingSettingsInput>(() => emptyForm(stock?.branchCode ?? '0'));
   const queryKey = useMemo(
     () => ['stock-tracking-settings', stock?.branchCode, stock?.id],
@@ -73,8 +77,12 @@ export function StockTrackingSettingsDialog({ stock, onClose }: Props) {
   const query = useQuery({
     queryKey,
     queryFn: () => stockTrackingApi.getStockSettings(stock!.id, stock!.branchCode),
-    enabled: Boolean(stock),
+    enabled: Boolean(stock && canViewTracking),
   });
+
+  useEffect(() => {
+    setActiveTab(initialTab === 'tracking' && canViewTracking ? 'tracking' : 'details');
+  }, [canViewTracking, initialTab, stock?.id]);
 
   useEffect(() => {
     if (query.data) setForm(fromSettings(query.data));
@@ -143,7 +151,7 @@ export function StockTrackingSettingsDialog({ stock, onClose }: Props) {
   return (
     <Dialog open={Boolean(stock)} onOpenChange={open => { if (!open) onClose(); }}>
       <DialogContent
-        className="max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] !max-w-3xl overflow-y-auto rounded-2xl border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-0"
+        className="flex max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] !max-w-4xl flex-col overflow-hidden rounded-2xl border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-0"
         data-no-auto-localize="true"
       >
         <header className="border-b border-[var(--wms-app-border)] p-5 sm:p-6">
@@ -152,7 +160,9 @@ export function StockTrackingSettingsDialog({ stock, onClose }: Props) {
               <Boxes className="size-5" />
             </div>
             <div className="min-w-0">
-              <DialogTitle className="truncate text-xl font-black">{t(`${STS}.title`)}</DialogTitle>
+              <DialogTitle className="truncate text-xl font-black">
+                {t('erpMirror.stockCard', { defaultValue: 'Stok Kartı' })}
+              </DialogTitle>
               <DialogDescription className="mt-1">
                 {stock?.erpStockCode} · {stock?.stockName}
               </DialogDescription>
@@ -160,15 +170,52 @@ export function StockTrackingSettingsDialog({ stock, onClose }: Props) {
           </div>
         </header>
 
-        <div className="space-y-5 p-5 sm:p-6">
-          {query.isLoading ? (
-            <div className="grid min-h-48 place-items-center text-sm text-slate-500">{t(`${STS}.loading`)}</div>
-          ) : query.isError ? (
-            <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-500">
-              {query.error instanceof Error ? query.error.message : t(`${STS}.loadFailed`)}
-            </div>
-          ) : (
-            <>
+        <Tabs
+          value={activeTab}
+          onValueChange={value => setActiveTab(value as 'details' | 'tracking')}
+          className="min-h-0 flex-1 gap-0"
+        >
+          <div className="border-b border-[var(--wms-app-border)] px-5 py-3 sm:px-6">
+            <TabsList className="h-11 w-full sm:w-auto">
+              <TabsTrigger value="details" className="gap-2 px-4">
+                <Eye className="size-4" />
+                {t('erpMirror.details', { defaultValue: 'Detaylar' })}
+              </TabsTrigger>
+              {canViewTracking && (
+                <TabsTrigger value="tracking" className="gap-2 px-4">
+                  <SlidersHorizontal className="size-4" />
+                  {t('erpMirror.trackingSettings')}
+                </TabsTrigger>
+              )}
+            </TabsList>
+          </div>
+
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            <TabsContent value="details" className="m-0 p-5 sm:p-6">
+              <dl className="grid gap-3 sm:grid-cols-2">
+                {Object.entries(stock ?? {}).map(([key, value]) => (
+                  <div key={key} className="rounded-xl border border-[var(--wms-app-border)] p-3">
+                    <dt className="text-xs font-semibold text-slate-500">
+                      {t(`erpMirror.fields.${key}`, { defaultValue: key })}
+                    </dt>
+                    <dd className="mt-1 break-all text-sm">
+                      {value == null || value === '' ? '-' : String(value)}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </TabsContent>
+
+            {canViewTracking && (
+              <TabsContent value="tracking" className="m-0 space-y-5 p-5 sm:p-6">
+                {query.isLoading ? (
+                  <div className="grid min-h-48 place-items-center text-sm text-slate-500">{t(`${STS}.loading`)}</div>
+                ) : query.isError ? (
+                  <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-500">
+                    {query.error instanceof Error ? query.error.message : t(`${STS}.loadFailed`)}
+                  </div>
+                ) : (
+                  <>
               <div className="flex flex-col gap-3 rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-wider text-slate-500">{t(`${STS}.activeTrackingType`)}</p>
@@ -266,15 +313,18 @@ export function StockTrackingSettingsDialog({ stock, onClose }: Props) {
                 <ShieldCheck className="mt-0.5 size-5 shrink-0 text-emerald-500" />
                 <p className="text-slate-500">{t(`${STS}.validationNote`)}</p>
               </div>
-            </>
-          )}
-        </div>
+                  </>
+                )}
+              </TabsContent>
+            )}
+          </div>
+        </Tabs>
 
         <footer className="flex flex-col-reverse gap-2 border-t border-[var(--wms-app-border)] p-5 sm:flex-row sm:justify-end sm:p-6">
           <button type="button" className="rounded-xl border px-4 py-2.5 font-semibold" onClick={onClose}>
-            {canManage ? t('common.cancel') : t('common.close')}
+            {activeTab === 'tracking' && canManage ? t('common.cancel') : t('common.close')}
           </button>
-          {canManage && (
+          {activeTab === 'tracking' && canManage && (
             <button
               type="button"
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-cyan-600 px-4 py-2.5 font-semibold text-white disabled:opacity-50"

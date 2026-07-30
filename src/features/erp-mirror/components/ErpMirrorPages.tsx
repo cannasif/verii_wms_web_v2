@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import { Eye, SlidersHorizontal } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
@@ -73,12 +73,14 @@ function MirrorPage<T extends AuditableGridRow>({
   description,
   dataColumns,
   extraActions,
+  onView,
 }: {
   pageKey: string;
   title: string;
   description: string;
   dataColumns: GridColumn<T>[];
   extraActions?: (row: T) => ReactNode;
+  onView?: (row: T) => void;
 }) {
   const { t, i18n } = useTranslation('common');
   const language = i18n.resolvedLanguage ?? i18n.language;
@@ -96,7 +98,7 @@ function MirrorPage<T extends AuditableGridRow>({
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
-            onClick={() => setDetail(row)}
+            onClick={() => onView ? onView(row) : setDetail(row)}
             className="inline-flex items-center gap-1 rounded-lg border px-3 py-1.5 text-xs font-semibold text-cyan-600"
           >
             <Eye className="size-3.5" />
@@ -106,7 +108,7 @@ function MirrorPage<T extends AuditableGridRow>({
         </div>
       ),
     },
-  ], [dataColumns, extraActions, language, t]);
+  ], [dataColumns, extraActions, language, onView, t]);
 
   return (
     <>
@@ -157,14 +159,20 @@ export function WarehouseMirrorPage() {
 export function StockMirrorPage() {
   const { t, i18n } = useTranslation('common');
   const { can } = usePermissionAccess();
-  const [trackingStock, setTrackingStock] = useState<StockMirror | null>(null);
+  const [selectedStock, setSelectedStock] = useState<StockMirror | null>(null);
+  const [selectedTab, setSelectedTab] = useState<'details' | 'tracking'>('details');
   const dataColumns = useMemo(() => buildStockColumns(t), [i18n.resolvedLanguage ?? i18n.language, t]);
+  const openStock = useCallback((stock: StockMirror, tab: 'details' | 'tracking') => {
+    setSelectedTab(tab);
+    setSelectedStock(stock);
+  }, []);
+  const viewStock = useCallback((stock: StockMirror) => openStock(stock, 'details'), [openStock]);
   const trackingAction = useMemo(
     () => can('WMS.SERIAL_RULES.VIEW')
       ? (row: StockMirror) => (
           <button
             type="button"
-            onClick={() => setTrackingStock(row)}
+            onClick={() => openStock(row, 'tracking')}
             className="inline-flex items-center gap-1 rounded-lg border border-violet-500/30 px-3 py-1.5 text-xs font-semibold text-violet-500"
           >
             <SlidersHorizontal className="size-3.5" />
@@ -172,7 +180,7 @@ export function StockMirrorPage() {
           </button>
         )
       : undefined,
-    [can, t],
+    [can, openStock, t],
   );
 
   return (
@@ -183,8 +191,13 @@ export function StockMirrorPage() {
         description={t(`${M}.pages.stocks.description`)}
         dataColumns={dataColumns}
         extraActions={trackingAction}
+        onView={viewStock}
       />
-      <StockTrackingSettingsDialog stock={trackingStock} onClose={() => setTrackingStock(null)} />
+      <StockTrackingSettingsDialog
+        stock={selectedStock}
+        initialTab={selectedTab}
+        onClose={() => setSelectedStock(null)}
+      />
     </>
   );
 }
