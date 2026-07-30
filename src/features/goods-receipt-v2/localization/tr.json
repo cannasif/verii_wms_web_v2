@@ -192,6 +192,8 @@
       "newRecord": "Yeni kayıt",
       "qualityList": "Kalite listesi",
       "receiptList": "Mal kabul listesi",
+      "routeTransfer": "Depo Transferi",
+      "routeOutbound": "Ambar Çıkış",
       "orderEyebrow": "Mal kabul sonrası",
       "orderCreatedTitle": "Mal kabul emri oluşturuldu",
       "orderSubtitleWithSupplier": "{{code}} tedarikçisi için belge hazır.",

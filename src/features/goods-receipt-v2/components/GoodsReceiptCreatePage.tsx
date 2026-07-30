@@ -81,6 +81,7 @@ import {
   isValidGoodsReceiptDocumentNo,
   normalizeGoodsReceiptDocumentNo,
 } from "../utils/goods-receipt-document-reference";
+import { GoodsReceiptPostCreateRoutingActions } from "./GoodsReceiptPostCreateRoutingActions";
 
 const toPagedResponse = <T,>(page: DropdownPage<T>): PagedResponse<T> => ({
   data: page.items,
@@ -3484,22 +3485,25 @@ function DirectCreateSuccessPanel({
       ) : null}
 
       <footer className="wms-ops-gr-success__actions">
+        {!hasQuality ? (
+          <GoodsReceiptPostCreateRoutingActions
+            goodsReceiptId={result.id}
+            transferLabel={t("createFlow.success.routeTransfer")}
+            outboundLabel={t("createFlow.success.routeOutbound")}
+          />
+        ) : null}
         <OpsActionButton type="button" variant="primary" onClick={onNew}>
           {t("createFlow.success.newRecord")}
         </OpsActionButton>
-        <OpsActionButton
-          type="button"
-          variant="secondary"
-          onClick={() =>
-            navigate(
-              hasQuality
-                ? "/warehouse/quality/inspections"
-                : "/warehouse/goods-receipts/list",
-            )
-          }
-        >
-          {hasQuality ? t("createFlow.success.qualityList") : t("createFlow.success.receiptList")}
-        </OpsActionButton>
+        {hasQuality ? (
+          <OpsActionButton
+            type="button"
+            variant="secondary"
+            onClick={() => navigate("/warehouse/quality/inspections")}
+          >
+            {t("createFlow.success.qualityList")}
+          </OpsActionButton>
+        ) : null}
       </footer>
 
       <QualityLinesDialog

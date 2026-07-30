@@ -29,6 +29,7 @@ import { buildOrderlessLinePayload, validateManualLineTracking } from '../goods-
 import type { ActiveUserOption, CustomerOption, ManualGoodsReceiptResult, ManualReceiptLine, PutawayLocationSuggestion, SeriesOption } from '../types/goods-receipt.types';
 import { printReceiptLabels } from '../utils/goods-receipt-label-output';
 import { GoodsReceiptCreatePage } from './GoodsReceiptCreatePage';
+import { GoodsReceiptPostCreateRoutingActions } from './GoodsReceiptPostCreateRoutingActions';
 
 const today = (): string => new Date().toLocaleDateString('en-CA');
 const split = (value: string | null): string[] => value?.split('|') ?? [];
@@ -633,29 +634,26 @@ function Result({result,direct,reset,t}:{result:ManualGoodsReceiptResult;direct:
           </strong>
         </div>
       </div>
-      <div className="border-t border-emerald-500/20 px-8 py-5 text-center">
+      <div className="flex flex-wrap items-center justify-center gap-3 border-t border-emerald-500/20 px-8 py-5">
         {direct && (result.generatedLabelIds?.length ?? 0) > 0 && (
-          <button disabled={printing} onClick={()=>void printGenerated()} className="mr-3 inline-flex items-center gap-2 rounded-xl border border-violet-500/40 px-5 py-2.5 font-semibold text-violet-500 disabled:opacity-40">
+          <button disabled={printing} onClick={()=>void printGenerated()} className="inline-flex items-center gap-2 rounded-xl border border-violet-500/40 px-5 py-2.5 font-semibold text-violet-500 disabled:opacity-40">
             {printing?<Loader2 className="size-4 animate-spin"/>:<Printer className="size-4"/>}
             Kabul Etiketlerini Yazdır
           </button>
         )}
+        {direct && !hasQuality ? (
+          <GoodsReceiptPostCreateRoutingActions goodsReceiptId={result.id} />
+        ) : null}
         <button onClick={reset} className="rounded-xl bg-emerald-600 px-5 py-2.5 font-semibold text-white">{t('manual.newRecord')}</button>
-        {direct && (
+        {direct && hasQuality ? (
           <button
             type="button"
-            onClick={() =>
-              navigate(
-                hasQuality
-                  ? "/warehouse/quality/inspections"
-                  : "/warehouse/goods-receipts/list",
-              )
-            }
-            className="ml-3 rounded-xl border border-emerald-500/40 px-5 py-2.5 font-semibold text-emerald-700 dark:text-emerald-300"
+            onClick={() => navigate('/warehouse/quality/inspections')}
+            className="rounded-xl border border-emerald-500/40 px-5 py-2.5 font-semibold text-emerald-700 dark:text-emerald-300"
           >
-            {hasQuality ? "Kalite listesi" : "Mal kabul listesi"}
+            Kalite listesi
           </button>
-        )}
+        ) : null}
       </div>
     </section>
   );
