@@ -199,7 +199,7 @@ export function Navbar({ navItems = [] }: NavbarProps): ReactElement {
   };
 
   const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>): void => {
-    if (e.key === 'Enter' && quickResults.length > 0) {
+    if (isPremium && e.key === 'Enter' && quickResults.length > 0) {
       e.preventDefault();
       handleSearchNavigate(quickResults[0]);
     }
@@ -214,17 +214,11 @@ export function Navbar({ navItems = [] }: NavbarProps): ReactElement {
       : '';
 
   const renderSearchResults = (): ReactElement | null => {
-    if (!isSearchFocus || !searchQuery.trim().length) return null;
+    // Terminal mode filters the sidebar; dropdown is premium-only.
+    if (!isPremium || !isSearchFocus || !searchQuery.trim().length) return null;
 
     return (
-      <div
-        className={cn(
-          'absolute left-0 right-0 top-[calc(100%+0.5rem)] z-50 overflow-hidden p-2 shadow-xl backdrop-blur-xl',
-          isPremium
-            ? 'wms-premium-navbar-search__results rounded-xl border border-[color-mix(in_oklab,var(--wms-brand-primary)_28%,transparent)]'
-            : 'rounded-md border border-[color-mix(in_oklab,var(--wms-brand-primary)_28%,transparent)] bg-white/95 dark:bg-[#0a121a]/95',
-        )}
-      >
+      <div className="wms-premium-navbar-search__results absolute left-0 right-0 top-[calc(100%+0.5rem)] z-50 overflow-hidden rounded-xl border border-[color-mix(in_oklab,var(--wms-brand-primary)_28%,transparent)] p-2 shadow-xl backdrop-blur-xl">
         {quickResults.length > 0 ? (
           quickResults.map((item) => (
             <button
@@ -232,20 +226,12 @@ export function Navbar({ navItems = [] }: NavbarProps): ReactElement {
               type="button"
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => handleSearchNavigate(item)}
-              className={cn(
-                'flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left transition hover:bg-[var(--wms-brand-soft)]',
-                isPremium && 'wms-premium-navbar-search__result-item',
-              )}
+              className="wms-premium-navbar-search__result-item flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left transition hover:bg-[var(--wms-brand-soft)]"
             >
               <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-700 dark:text-slate-100">
                 {item.title}
               </span>
-              <span
-                className={cn(
-                  'ml-3 max-w-[48%] truncate text-[11px] text-slate-400',
-                  isPremium ? 'font-medium tracking-wide' : 'font-mono',
-                )}
-              >
+              <span className="ml-3 max-w-[48%] truncate text-[11px] font-medium tracking-wide text-slate-400">
                 {item.subtitle}
               </span>
             </button>
@@ -414,7 +400,6 @@ export function Navbar({ navItems = [] }: NavbarProps): ReactElement {
             </button>
           )}
         </div>
-        {renderSearchResults()}
       </div>
 
       {isSupported && (

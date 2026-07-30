@@ -13,6 +13,7 @@ import {
   buildNavIndex,
   collectActiveAncestorKeys,
   collectSubtreeExpandKeys,
+  nodeMatchesSearch,
   resolveExpandedKeysAfterToggle,
 } from './sidebar/sidebar-utils';
 import { sidebarMotionClassName, sidebarShellClassName } from './sidebar/sidebar-styles';
@@ -30,10 +31,15 @@ export function Sidebar({ items }: SidebarProps): ReactElement {
   const location = useLocation();
   const [expandedItemKeys, setExpandedItemKeys] = useState<string[]>([]);
   const collapsedByUserRef = useRef<Set<string>>(new Set());
+  const navScrollRef = useRef<HTMLElement | null>(null);
   const resolveTitle = useCallback(
     (item: NavItem): string => resolveNavItemTitle(t, i18n.resolvedLanguage ?? i18n.language, item),
     [i18n.language, i18n.resolvedLanguage, t],
   );
+
+  useEffect(() => {
+    navScrollRef.current?.scrollTo({ top: 0 });
+  }, [searchQuery]);
 
   useEffect(() => {
     const desktopQuery = window.matchMedia(DESKTOP_SIDEBAR_QUERY);
@@ -108,6 +114,7 @@ export function Sidebar({ items }: SidebarProps): ReactElement {
   );
 
   const closeLabel = t('common.close', { defaultValue: 'Kapat' });
+  const visibleItems = items.filter((item) => nodeMatchesSearch(item, searchQuery, resolveTitle));
 
   return (
     <>
@@ -185,6 +192,7 @@ export function Sidebar({ items }: SidebarProps): ReactElement {
 
         <TooltipProvider delayDuration={400}>
           <nav
+            ref={navScrollRef}
             className="custom-scrollbar flex min-h-0 flex-1 flex-col gap-0.5 overflow-x-hidden overflow-y-auto overscroll-contain p-3 touch-pan-y"
             aria-label={t('sidebar.mainNavigation', { defaultValue: 'Ana menü' })}
           >
@@ -193,7 +201,7 @@ export function Sidebar({ items }: SidebarProps): ReactElement {
                 {t('sidebar.filterLabel')}: {searchQuery}
               </div>
             ) : null}
-            {items.map((item, index) => (
+            {visibleItems.map((item, index) => (
               <div
                 key={item.href || item.title || index}
                 className={cn(index > 0 && 'mt-2 border-t border-slate-200/50 pt-2 dark:border-white/5')}
