@@ -107,6 +107,7 @@ export function GoodsReceiptManualPage({
   const submitIdempotencyKey = useRef(crypto.randomUUID());
   const qualityRequirementCache = useRef(new Map<string, boolean>());
   const warehouseId = Number(split(warehouse)[0] || 0);
+  const warehouseDefaultLocationId = Number(split(warehouse)[4] || 0);
   const policyBranchCode = split(customer)[1] || branchCode;
   const total = useMemo(() => lines.reduce((sum, line) => sum + line.quantity, 0), [lines]);
   const receiptNoValid = validReceiptNo(receiptNo);
@@ -137,10 +138,13 @@ export function GoodsReceiptManualPage({
     void goodsReceiptV2Api.locations({
       pageNumber: 1, pageSize: 100, search: undefined, filterLogic: 'and', filters: [], sortBy: 'code', sortDirection: 'asc', signal: new AbortController().signal,
     }, warehouseId).then((page) => {
-      const preferred = page.items.find((item) => item.locationType === 'Receiving') ?? page.items[0];
+      const preferred =
+        page.items.find((item) => item.id === warehouseDefaultLocationId) ??
+        page.items.find((item) => item.locationType === 'Receiving') ??
+        page.items[0];
       if (preferred) setLocationId(String(preferred.id));
     }).catch(() => undefined);
-  }, [allowAnyActiveLocation, warehouseId]);
+  }, [allowAnyActiveLocation, warehouseDefaultLocationId, warehouseId]);
 
   useEffect(() => {
     const stockId = Number(split(stock)[0] || 0);
@@ -194,6 +198,39 @@ export function GoodsReceiptManualPage({
       .finally(() => { if (!cancelled) setTrackingPolicyBusy(false); });
     return () => { cancelled = true; };
   }, [stock, policyBranchCode]);
+
+  useEffect(() => {
+    setLineLocation(null);
+    if (!warehouseId) return;
+    const canUseAnyActiveLocation =
+      allowAnyActiveLocation || selectedRequiresQuality === false;
+    const locationQuery = canUseAnyActiveLocation
+      ? goodsReceiptV2Api.locations
+      : goodsReceiptV2Api.receivingLocations;
+    let cancelled = false;
+    void locationQuery({
+      pageNumber: 1,
+      pageSize: 100,
+      search: undefined,
+      filterLogic: 'and',
+      filters: [],
+      sortBy: 'code',
+      sortDirection: 'asc',
+      signal: new AbortController().signal,
+    }, warehouseId).then((page) => {
+      if (cancelled) return;
+      const preferred =
+        page.items.find((item) => item.id === warehouseDefaultLocationId) ??
+        page.items[0];
+      if (preferred) setLineLocation(`${preferred.id}|${preferred.code}`);
+    }).catch(() => undefined);
+    return () => { cancelled = true; };
+  }, [
+    allowAnyActiveLocation,
+    selectedRequiresQuality,
+    warehouseDefaultLocationId,
+    warehouseId,
+  ]);
 
   const showError = (message: string): false => { setError(message); toast.error(message); return false; };
   const canLeaveStep = (): boolean => {
@@ -410,7 +447,7 @@ export function GoodsReceiptManualPage({
     </div></Panel>}
 
     {step === 1 && <Panel title={t('manual.operation.title')} description={t('manual.operation.description')} icon={<Building2/>}><div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-      <Field label={t('manual.warehouse')} required><PagedAppDropdown queryKey={['gr-manual-warehouses', branchCode]} fetchPage={(request) => goodsReceiptV2Api.warehouses(request, branchCode)} toOption={(x) => ({ value: `${x.id}|${x.branchCode}|${x.warehouseCode}|${encodeURIComponent(x.warehouseName)}`, label: `${x.warehouseCode} · ${x.warehouseName}` })} value={warehouse} onValueChange={setWarehouse} searchable/></Field>
+      <Field label={t('manual.warehouse')} required><PagedAppDropdown queryKey={['gr-manual-warehouses', branchCode]} fetchPage={(request) => goodsReceiptV2Api.warehouses(request, branchCode)} toOption={(x) => ({ value: `${x.id}|${x.branchCode}|${x.warehouseCode}|${encodeURIComponent(x.warehouseName)}|${x.defaultGoodsReceiptLocationId ?? ''}`, label: `${x.warehouseCode} · ${x.warehouseName}` })} value={warehouse} onValueChange={setWarehouse} searchable/></Field>
       <Field label="Varsayılan hedef raf" required><PagedAppDropdown queryKey={['gr-manual-locations', 'all-active', warehouseId]} fetchPage={(request) => goodsReceiptV2Api.locations(request, warehouseId)} toOption={(x) => ({ value: String(x.id), label: `${x.code} · ${x.name}`, description: x.locationType })} enabled={warehouseId > 0} dependencies={[warehouseId]} value={locationId} onValueChange={setLocationId} searchable placeholder="Aktif raf seçin"/></Field>
       <Field label={t('manual.labelStrategy')}><AppDropdown value={labelStrategy} onValueChange={(value)=>{setLabelStrategy(value);if(direct)setExecutionMode(value==='SupplierLabel'?'SupplierLabel':'Manual')}} options={[{value:'None',label:t('manual.options.noLabel')},...(!direct?[{value:'PreGenerate',label:t('manual.options.preGenerate')}]:[]),{value:'SupplierLabel',label:t('manual.options.supplierLabel')},{value:'GenerateOnReceipt',label:t('manual.options.generateOnReceipt')}]}/></Field>
       {direct && <Field label={t('manual.executionMode')}><AppDropdown value={executionMode} onValueChange={setExecutionMode} options={[{value:'Manual',label:t('manual.options.manual')},{value:'BarcodeScan',label:t('manual.options.barcode')},{value:'SupplierLabel',label:t('manual.options.supplierLabel')}]}/></Field>}

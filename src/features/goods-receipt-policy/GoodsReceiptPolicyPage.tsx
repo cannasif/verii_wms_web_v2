@@ -1,9 +1,13 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { Loader2, PlugZap, Save, SlidersHorizontal, UsersRound, Warehouse } from 'lucide-react';
+import { Loader2, MapPin, PlugZap, Save, SlidersHorizontal, UsersRound, Warehouse } from 'lucide-react';
 import { toast } from 'sonner';
 import { AppDropdown } from '@/components/shared/AppDropdown';
 import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
 import { goodsReceiptV2Api } from '@/features/goods-receipt-v2/api/goods-receipt.api';
+import type {
+  LocationOption,
+  WarehouseOption as GoodsReceiptWarehouseOption,
+} from '@/features/goods-receipt-v2/types/goods-receipt.types';
 import { userManagementApi } from '@/features/user-management/api/user-management.api';
 import type { UserDetail, UserRow, WarehouseOption } from '@/features/user-management/types/user-management.types';
 import { api } from '@/lib/axios';
@@ -41,7 +45,7 @@ export function GoodsReceiptPolicyPage() {
   const [form, setForm] = useState<Policy | null>(null);
   const [saving, setSaving] = useState(false);
   const [testingErp, setTestingErp] = useState(false);
-  const [tab, setTab] = useState<'policy' | 'warehouses'>('policy');
+  const [tab, setTab] = useState<'policy' | 'defaults' | 'warehouses'>('policy');
 
   useEffect(() => {
     api.get<Envelope<Policy>>(`/api/goods-receipt-policy?branchCode=${encodeURIComponent(branch)}`)
@@ -107,10 +111,18 @@ export function GoodsReceiptPolicyPage() {
         <TabButton active={tab === 'warehouses'} onClick={() => setTab('warehouses')} icon={<UsersRound className="size-4" />}>
           Kullanıcı Depo Yetkileri
         </TabButton>
+        <TabButton active={tab === 'defaults'} onClick={() => setTab('defaults')} icon={<MapPin className="size-4" />}>
+          Depo Varsayılan Rafları
+        </TabButton>
       </div>
 
       {tab === 'warehouses' ? (
         <UserWarehouseAssignmentsPanel branch={branch} canManage={can('WMS.GOODS_RECEIPT.SETTINGS.MANAGE')} />
+      ) : tab === 'defaults' ? (
+        <WarehouseDefaultLocationsPanel
+          branch={branch}
+          canManage={can('WMS.GOODS_RECEIPT.SETTINGS.MANAGE')}
+        />
       ) : <div className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5">
         <div className="grid gap-4 md:grid-cols-2">
           <Field label="Fazla kabul">
@@ -219,6 +231,160 @@ export function GoodsReceiptPolicyPage() {
         </div>
       </div>}
     </section>
+  );
+}
+
+function WarehouseDefaultLocationsPanel({
+  branch,
+  canManage,
+}: {
+  branch: string;
+  canManage: boolean;
+}) {
+  const [warehouses, setWarehouses] = useState<GoodsReceiptWarehouseOption[]>([]);
+  const [locations, setLocations] = useState<LocationOption[]>([]);
+  const [warehouseId, setWarehouseId] = useState<string | null>(null);
+  const [locationId, setLocationId] = useState<string>('none');
+  const [loading, setLoading] = useState(true);
+  const [locationsLoading, setLocationsLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    void goodsReceiptV2Api.warehouses({
+      pageNumber: 1,
+      pageSize: 500,
+      search: undefined,
+      filterLogic: 'and',
+      filters: [],
+      sortBy: 'warehouseCode',
+      sortDirection: 'asc',
+      signal: new AbortController().signal,
+    }, branch).then((page) => {
+      if (!active) return;
+      setWarehouses(page.items);
+      const first = page.items[0];
+      setWarehouseId(first ? String(first.id) : null);
+    }).catch((error) => {
+      if (active) toast.error(error instanceof Error ? error.message : 'Depolar yüklenemedi.');
+    }).finally(() => {
+      if (active) setLoading(false);
+    });
+    return () => { active = false; };
+  }, [branch]);
+
+  useEffect(() => {
+    const selectedWarehouseId = Number(warehouseId || 0);
+    const selectedWarehouse = warehouses.find((item) => item.id === selectedWarehouseId);
+    setLocationId(selectedWarehouse?.defaultGoodsReceiptLocationId
+      ? String(selectedWarehouse.defaultGoodsReceiptLocationId)
+      : 'none');
+    setLocations([]);
+    if (!selectedWarehouseId) return;
+    let active = true;
+    setLocationsLoading(true);
+    void goodsReceiptV2Api.locations({
+      pageNumber: 1,
+      pageSize: 500,
+      search: undefined,
+      filterLogic: 'and',
+      filters: [],
+      sortBy: 'code',
+      sortDirection: 'asc',
+      signal: new AbortController().signal,
+    }, selectedWarehouseId).then((page) => {
+      if (active) setLocations(page.items);
+    }).catch((error) => {
+      if (active) toast.error(error instanceof Error ? error.message : 'Aktif raflar yüklenemedi.');
+    }).finally(() => {
+      if (active) setLocationsLoading(false);
+    });
+    return () => { active = false; };
+  }, [warehouseId, warehouses]);
+
+  const save = async (): Promise<void> => {
+    const selectedWarehouseId = Number(warehouseId || 0);
+    if (!selectedWarehouseId || !canManage) return;
+    setSaving(true);
+    try {
+      const result = await goodsReceiptV2Api.updateWarehouseDefaultLocation({
+        branchCode: branch,
+        warehouseId: selectedWarehouseId,
+        defaultLocationId: locationId === 'none' ? undefined : Number(locationId),
+      });
+      setWarehouses((current) => current.map((item) => item.id === result.warehouseId
+        ? { ...item, defaultGoodsReceiptLocationId: result.defaultLocationId }
+        : item));
+      toast.success(result.defaultLocationCode
+        ? `${result.warehouseCode} numaralı depo için ${result.defaultLocationCode} varsayılan raf oldu.`
+        : `${result.warehouseCode} numaralı deponun varsayılan rafı kaldırıldı.`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Varsayılan raf kaydedilemedi.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return <div className="grid min-h-72 place-items-center"><Loader2 className="animate-spin" /></div>;
+  }
+
+  return (
+    <div className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5">
+      <div className="mb-5 flex items-start gap-3">
+        <span className="rounded-xl bg-cyan-500/10 p-2 text-cyan-600"><MapPin className="size-5" /></span>
+        <div>
+          <h2 className="font-bold">Depoya göre varsayılan mal kabul rafı</h2>
+          <p className="text-sm text-slate-500">
+            Doğrudan mal kabulde depo seçildiğinde bu aktif raf kalemlere otomatik gelir.
+            Kullanıcı gerekirse işlem sırasında başka bir uygun raf seçebilir.
+          </p>
+        </div>
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        <Field label="Depo">
+          <AppDropdown
+            value={warehouseId}
+            onValueChange={setWarehouseId}
+            options={warehouses.map((item) => ({
+              value: String(item.id),
+              label: `${item.warehouseCode} · ${item.warehouseName}`,
+            }))}
+          />
+        </Field>
+        <Field label="Varsayılan raf">
+          <AppDropdown
+            value={locationId}
+            onValueChange={setLocationId}
+            disabled={!warehouseId || locationsLoading}
+            options={[
+              { value: 'none', label: 'Varsayılan raf kullanma' },
+              ...locations.map((item) => ({
+                value: String(item.id),
+                label: `${item.code} · ${item.name}`,
+                description: item.locationType,
+              })),
+            ]}
+          />
+        </Field>
+      </div>
+      <div className="mt-4 rounded-xl border border-cyan-500/30 bg-cyan-500/10 p-4 text-sm">
+        Kalite/raf politikası yalnızca Receiving veya Staging alanına izin veriyorsa varsayılan raf da
+        bu kurala uymalıdır; aksi durumda ekranda ilk uygun kabul alanı seçilir.
+      </div>
+      <div className="mt-5 flex justify-end">
+        <button
+          type="button"
+          onClick={() => void save()}
+          disabled={!canManage || saving || !warehouseId || locationsLoading}
+          className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-5 py-2.5 font-semibold text-white disabled:opacity-50"
+        >
+          {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+          Varsayılan rafı kaydet
+        </button>
+      </div>
+    </div>
   );
 }
 

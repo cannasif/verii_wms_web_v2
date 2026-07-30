@@ -659,7 +659,11 @@ export function GoodsReceiptCreatePage({
                 ? warehouseOption(warehouse).value
                 : null,
               targetWarehouseName: warehouse?.warehouseName,
-              receivingLocationValue: null,
+              warehouseDefaultLocationId: warehouse?.defaultGoodsReceiptLocationId,
+              receivingLocationId: warehouse?.defaultGoodsReceiptLocationId,
+              receivingLocationValue: warehouse?.defaultGoodsReceiptLocationId
+                ? String(warehouse.defaultGoodsReceiptLocationId)
+                : null,
               trackingType: trackingPolicy.trackingType,
               trackingPolicy,
               trackings: [],
@@ -2420,10 +2424,14 @@ function ReceiptEntryRow({
       )
       .then((page) => {
         if (cancelled) return;
-        const preferred = allowAnyActiveLocation
-          ? page.items.find((item) => item.id === line.putawayLocationId)
-          : page.items.find((item) => item.locationType === "Receiving") ??
-            page.items[0];
+        const configuredDefault = page.items.find(
+          (item) => item.id === line.warehouseDefaultLocationId,
+        );
+        const preferred = configuredDefault ??
+          (allowAnyActiveLocation
+            ? page.items.find((item) => item.id === line.putawayLocationId)
+            : page.items.find((item) => item.locationType === "Receiving") ??
+              page.items[0]);
         if (!preferred) return;
 
         if (line.receivingLocationId == null) {
@@ -2431,6 +2439,12 @@ function ReceiptEntryRow({
             receivingLocationId: preferred.id,
             receivingLocationValue: String(preferred.id),
             receivingLocationCode: preferred.code,
+            ...(configuredDefault && allowAnyActiveLocation
+              ? {
+                  putawayLocationId: preferred.id,
+                  putawayLocationCode: preferred.code,
+                }
+              : {}),
           });
           return;
         }
@@ -2444,7 +2458,15 @@ function ReceiptEntryRow({
               (item) => item.id === line.receivingLocationId,
             );
             if (current) {
-              updateLine(key, { receivingLocationCode: current.code });
+              updateLine(key, {
+                receivingLocationCode: current.code,
+                ...(configuredDefault && allowAnyActiveLocation
+                  ? {
+                      putawayLocationId: current.id,
+                      putawayLocationCode: current.code,
+                    }
+                  : {}),
+              });
             }
           }
           return;
@@ -2480,6 +2502,7 @@ function ReceiptEntryRow({
     line.receivingLocationCode,
     line.receivingLocationId,
     line.targetWarehouseId,
+    line.warehouseDefaultLocationId,
     updateLine,
   ]);
 
@@ -2512,6 +2535,7 @@ function ReceiptEntryRow({
             return;
           }
           setSuggestions(items);
+          if (line.warehouseDefaultLocationId != null) return;
           const top = items[0];
           if (!top) return;
           const stillValid = items.some(
@@ -2552,6 +2576,7 @@ function ReceiptEntryRow({
     line.stockCode,
     line.stockId,
     line.targetWarehouseId,
+    line.warehouseDefaultLocationId,
     line.yapCodeId,
   ]);
 
