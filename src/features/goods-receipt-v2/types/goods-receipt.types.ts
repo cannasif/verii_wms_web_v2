@@ -1,7 +1,21 @@
 import type { EffectiveStockTrackingPolicy } from '@/features/stock-tracking/effective-stock-tracking.service';
 
 export interface CustomerOption { id: number; branchCode: string; customerCode: string; customerName: string }
-export interface WarehouseOption { id: number; branchCode: string; warehouseCode: number; warehouseName: string }
+export interface WarehouseOption {
+  id: number;
+  branchCode: string;
+  warehouseCode: number;
+  warehouseName: string;
+  defaultGoodsReceiptLocationId?: number;
+}
+export interface GoodsReceiptWarehouseDefault {
+  warehouseId: number;
+  warehouseCode: number;
+  warehouseName: string;
+  defaultLocationId?: number;
+  defaultLocationCode?: string;
+  defaultLocationName?: string;
+}
 export interface UserWarehouseAccess { isRestricted: boolean; warehouseIds: number[]; warehouseCodes: number[] }
 export interface GoodsReceiptPolicy {
   id: number;
@@ -46,6 +60,7 @@ export interface SelectedReceiptLine extends OpenOrderLine {
   targetWarehouseId?: number;
   targetWarehouseValue?: string | null;
   targetWarehouseName?: string;
+  warehouseDefaultLocationId?: number;
   receivingLocationId?: number;
   receivingLocationValue?: string | null;
   receivingLocationCode?: string;
