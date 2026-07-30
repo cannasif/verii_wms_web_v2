@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactElement, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, ClipboardPen, Loader2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
@@ -33,6 +34,7 @@ import {
   formatProjectDateTime,
   formatProjectNumber,
 } from "@/lib/project-format";
+import { goodsReceiptV2Api } from "@/features/goods-receipt-v2/api/goods-receipt.api";
 import {
   qualityApi,
   type QualityInspection,
@@ -71,6 +73,94 @@ function actionableQuantity(line: QualityInspectionLine): number {
       line.rejectedQuantity -
       line.quarantineQuantity,
   );
+}
+
+async function notifyGoodsReceiptAfterDecision(
+  detail: QualityInspectionDetail,
+  openGoodsReceiptList: () => void,
+): Promise<void> {
+  const docNo = detail.header.sourceDocumentNo?.trim();
+  const isGoodsReceipt =
+    detail.header.sourceDocumentType === "GR" ||
+    detail.header.sourceDocumentType === "GoodsReceipt";
+
+  toast.success("Kalite kararı ve stok hareketi kaydedildi.", {
+    description: docNo
+      ? `Kaynak belge ${docNo}. Mal kabul listesinden kontrol edebilirsiniz.`
+      : "Mal kabul listesinden ilgili belgeyi kontrol edebilirsiniz.",
+    action: {
+      label: "Mal kabul listesi",
+      onClick: openGoodsReceiptList,
+    },
+  });
+
+  if (!isGoodsReceipt || !docNo) return;
+
+  try {
+    const page = await goodsReceiptV2Api.paged({
+      pageNumber: 1,
+      pageSize: 20,
+      search: docNo,
+      searchFields: ["documentNo"],
+      filterLogic: "and",
+      filters: [],
+    });
+    const rows = page.items ?? page.data ?? [];
+    const row =
+      rows.find((item) => item.documentNo === docNo) ??
+      rows.find((item) =>
+        item.documentNo.toLocaleUpperCase("tr-TR").includes(
+          docNo.toLocaleUpperCase("tr-TR"),
+        ),
+      );
+    if (!row) {
+      toast.message(
+        "Mal kabul kaydı listede aranabilir; belge no ile kontrol edin.",
+        {
+          description: docNo,
+          action: { label: "Mal kabul listesi", onClick: openGoodsReceiptList },
+        },
+      );
+      return;
+    }
+
+    const erp = row.erpIntegrationStatus;
+    const erpLabel = localizeEnumValue(erp);
+    if (erp === "Succeeded") {
+      toast.success("Netsis irsaliyesi aktarıldı.", {
+        description: `${docNo} — Mal kabul listesinden kontrol edebilirsiniz.`,
+        action: { label: "Mal kabul listesi", onClick: openGoodsReceiptList },
+      });
+    } else if (erp === "Pending" || erp === "Processing") {
+      toast.message("Netsis irsaliyesi henüz tamamlanmadı.", {
+        description: `${docNo} · ${erpLabel}. Mal kabul detayından ERP durumunu kontrol edin.`,
+        action: { label: "Mal kabul listesi", onClick: openGoodsReceiptList },
+      });
+    } else if (erp === "Failed" || erp === "CommitUncertain") {
+      toast.warning("Netsis irsaliyesi tamamlanamadı veya belirsiz.", {
+        description: `${docNo} · ${erpLabel}. Mal kabul detayından ERP tekrar gönderimini kontrol edin.`,
+        action: { label: "Mal kabul listesi", onClick: openGoodsReceiptList },
+      });
+    } else if (erp === "NotRequired") {
+      toast.message("Bu mal kabul için ERP / Netsis aktarımı gerekmiyor.", {
+        description: docNo,
+        action: { label: "Mal kabul listesi", onClick: openGoodsReceiptList },
+      });
+    } else {
+      toast.message("Mal kabul kaydı güncellendi.", {
+        description: `${docNo}${erp ? ` · ERP: ${erpLabel}` : ""}. Listeden kontrol edebilirsiniz.`,
+        action: { label: "Mal kabul listesi", onClick: openGoodsReceiptList },
+      });
+    }
+  } catch {
+    toast.message(
+      "Netsis durumu şu an doğrulanamadı; mal kabul listesinden kontrol edin.",
+      {
+        description: docNo,
+        action: { label: "Mal kabul listesi", onClick: openGoodsReceiptList },
+      },
+    );
+  }
 }
 
 function emptyDraft(
@@ -254,6 +344,9 @@ function buildApplySummary(
   }
   bullets.push(
     "Gerekirse DAT ve ERP / irsaliye gönderimi politikalara göre tetiklenir.",
+  );
+  bullets.push(
+    "Sonuç sonrası mal kabul listesinden belgeyi ve Netsis durumunu kontrol edebilirsiniz.",
   );
 
   return { title: "Uygulama özeti", bullets };
@@ -490,6 +583,7 @@ function InspectionDetailPanel({
   close: () => void;
   decided: () => void;
 }): ReactElement {
+  const navigate = useNavigate();
   const actionable = useMemo(
     () => detail.lines.filter(isActionableLine),
     [detail.lines],
@@ -563,6 +657,7 @@ function InspectionDetailPanel({
   const allSelected =
     actionable.length > 0 && selected.length === actionable.length;
   const someSelected = selected.length > 0 && !allSelected;
+  const canApplyDecision = !final && actionable.length > 0 && decidedCount > 0;
   const bulkRemainderOptions = remainderOptionsFor(
     bulkDecision,
     allowQuarantineRemainder,
@@ -821,7 +916,9 @@ function InspectionDetailPanel({
           rowVersion = fresh.rowVersion;
         }
       }
-      toast.success("Kalite kararı ve stok hareketi kaydedildi.");
+      await notifyGoodsReceiptAfterDecision(detail, () =>
+        navigate("/warehouse/goods-receipts/list"),
+      );
       decided();
     } catch (error) {
       toast.error(message(error, "Kalite kararı kaydedilemedi."));
@@ -1204,6 +1301,27 @@ function InspectionDetailPanel({
         </table>
       </div>
 
+      {final ? (
+        <section className="rounded-xl border border-[var(--wms-app-border)] bg-[color-mix(in_oklab,var(--wms-brand-primary)_5%,transparent)] px-4 py-3 text-sm">
+          <p className="font-semibold">Kalite kontrolü tamamlandı.</p>
+          <p className="mt-1 text-xs text-slate-500">
+            {detail.header.sourceDocumentNo
+              ? `Kaynak belge ${detail.header.sourceDocumentNo}. `
+              : ""}
+            Mal kabul listesinden kaydı ve Netsis / ERP durumunu kontrol
+            edebilirsiniz.
+          </p>
+          <OpsActionButton
+            type="button"
+            variant="secondary"
+            className="mt-3 !min-h-8 !px-3 !text-[0.65rem]"
+            onClick={() => navigate("/warehouse/goods-receipts/list")}
+          >
+            Mal kabul listesi
+          </OpsActionButton>
+        </section>
+      ) : null}
+
       {!final && actionable.length > 0 && (
         <section className="flex flex-col gap-3 rounded-xl border border-[color-mix(in_oklab,var(--wms-brand-primary)_22%,var(--wms-app-border))] bg-[color-mix(in_oklab,var(--wms-brand-primary)_5%,transparent)] p-4 sm:flex-row sm:items-end sm:justify-between">
           <label className="min-w-0 flex-1 space-y-1.5 text-sm">
@@ -1223,6 +1341,15 @@ function InspectionDetailPanel({
                 ? " · Kısmi karar açık"
                 : " · Tüm satırlar zorunlu"}
             </span>
+            <span className="block text-xs text-slate-500">
+              Uygulama sonrası stok hareketi kaydedilir; Netsis irsaliyesi
+              politikalara göre gidebilir. Sonucu mal kabul listesinden
+              kontrol edin
+              {detail.header.sourceDocumentNo
+                ? ` (${detail.header.sourceDocumentNo})`
+                : ""}
+              .
+            </span>
           </label>
           <TooltipProvider delayDuration={180}>
             <Tooltip>
@@ -1230,7 +1357,7 @@ function InspectionDetailPanel({
                 <span className="inline-flex shrink-0">
                   <OpsActionButton
                     type="button"
-                    disabled={saving || decidedCount === 0}
+                    disabled={saving || !canApplyDecision}
                     onClick={() => void save()}
                     className="wms-ops-quality-decide-btn !min-h-8 !px-4 !text-[0.65rem]"
                   >
