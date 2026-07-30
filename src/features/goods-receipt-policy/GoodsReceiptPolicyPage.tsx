@@ -26,7 +26,6 @@ type Policy = {
   allowOrderlessReceipt: boolean;
   allowUnplannedReceipt: boolean;
   showAllocatedOpenOrderLines: boolean;
-  locationSelectionPolicy: 'ReceivingOrStagingOnly' | 'AnyActiveWarehouseLocation';
 };
 
 type Envelope<T> = { success: boolean; data: T; message?: string };
@@ -51,10 +50,6 @@ export function GoodsReceiptPolicyPage() {
         setForm({
           ...policy,
           showAllocatedOpenOrderLines: Boolean(policy.showAllocatedOpenOrderLines),
-          locationSelectionPolicy:
-            policy.locationSelectionPolicy === 'AnyActiveWarehouseLocation'
-              ? 'AnyActiveWarehouseLocation'
-              : 'ReceivingOrStagingOnly',
         });
       })
       .catch((error) => toast.error(error instanceof Error ? error.message : 'Politika yüklenemedi.'));
@@ -168,30 +163,6 @@ export function GoodsReceiptPolicyPage() {
               ].map(([value, label]) => ({ value, label }))}
             />
           </Field>
-          <Field label="Kalite bekleyen üründe hangi raflar seçilebilir?">
-            <AppDropdown
-              value={form.locationSelectionPolicy}
-              onValueChange={(value) => set(
-                'locationSelectionPolicy',
-                value === 'AnyActiveWarehouseLocation'
-                  ? 'AnyActiveWarehouseLocation'
-                  : 'ReceivingOrStagingOnly',
-              )}
-              options={[
-                {
-                  value: 'ReceivingOrStagingOnly',
-                  label: 'Yalnızca kabul / staging alanları (önerilen)',
-                },
-                {
-                  value: 'AnyActiveWarehouseLocation',
-                  label: 'Seçilen depodaki tüm aktif raflar',
-                },
-              ]}
-            />
-            <p className="mt-1 text-xs text-slate-500">
-              Kalite kuralı olmayan ürünler ve kalite raf blokajı kapalı işlemler her zaman depodaki aktif raflara alınabilir.
-            </p>
-          </Field>
         </div>
 
         <div className="mt-5 grid gap-3 md:grid-cols-2">
@@ -201,7 +172,16 @@ export function GoodsReceiptPolicyPage() {
           <Toggle label="Kalite onayı iste" value={form.requireQualityApproval} set={(value) => set('requireQualityApproval', value)} />
           <Toggle label="ERP onayı iste" value={form.requireErpApproval} set={(value) => set('requireErpApproval', value)} />
           <Toggle label="Kalite kararına kadar stoğu beklet" value={form.holdInventoryUntilQualityDecision} set={(value) => set('holdInventoryUntilQualityDecision', value)} />
-          <Toggle label="Kalite kararına kadar rafa kaldırmayı beklet" value={form.blockPutawayUntilQualityDecision} set={(value) => set('blockPutawayUntilQualityDecision', value)} />
+          <div>
+            <Toggle
+              label="Kalite kararı verilmeden depolama rafına yerleştirmeyi engelle"
+              value={form.blockPutawayUntilQualityDecision}
+              set={(value) => set('blockPutawayUntilQualityDecision', value)}
+            />
+            <p className="mt-1 px-3 text-xs text-slate-500">
+              Açıkken kalite bekleyen ürünler yalnızca kabul veya staging alanına alınır; kapalıyken hedef depodaki tüm aktif raflar seçilebilir.
+            </p>
+          </div>
           <Toggle label="Emirsiz kabule izin ver" value={form.allowOrderlessReceipt} set={(value) => set('allowOrderlessReceipt', value)} />
           <Toggle label="Plansız kabule izin ver" value={form.allowUnplannedReceipt} set={(value) => set('allowUnplannedReceipt', value)} />
           <Toggle

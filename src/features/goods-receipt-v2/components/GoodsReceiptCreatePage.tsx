@@ -314,10 +314,7 @@ export function GoodsReceiptCreatePage({
       .then((policy) => {
         if (active) {
           setShowAllocatedOpenOrderLines(policy.showAllocatedOpenOrderLines);
-          setAllowAnyActiveLocation(
-            policy.locationSelectionPolicy === "AnyActiveWarehouseLocation"
-              || !policy.blockPutawayUntilQualityDecision,
-          );
+          setAllowAnyActiveLocation(!policy.blockPutawayUntilQualityDecision);
         }
       })
       .catch(() => {
