@@ -977,10 +977,7 @@ export function GoodsReceiptCreatePage({
   };
 
   const goToConfirmation = async (): Promise<void> => {
-    const confirmedLines = confirmedLineOrder
-      .map((key) => lines.find((line) => lineKey(line) === key))
-      .filter((line): line is SelectedReceiptLine => line != null);
-    if (confirmedLines.length === 0) {
+    if (plannedLines.length === 0) {
       surfaceValidationError(t("createFlow.validation.confirmedLinesRequired"));
       return;
     }
@@ -1003,12 +1000,17 @@ export function GoodsReceiptCreatePage({
           stock.requiresQualityControl,
         ]),
       );
-      const readyLines = confirmedLines.map((line) => ({
-        ...line,
-        requireQualityControl: qualityByStockId.get(line.stockId) === true,
-      }));
-      setLines(readyLines);
-      setConfirmedLineOrder(readyLines.map((line) => lineKey(line)));
+      const confirmedKeys = new Set(confirmedLineOrder);
+      setLines((current) =>
+        current.map((line) => {
+          const key = lineKey(line);
+          if (!confirmedKeys.has(key)) return line;
+          return {
+            ...line,
+            requireQualityControl: qualityByStockId.get(line.stockId) === true,
+          };
+        }),
+      );
       setStep(1);
     } catch (cause) {
       report(cause, "Kalite kontrol kuralları doğrulanamadı.");
