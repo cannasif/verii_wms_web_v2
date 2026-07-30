@@ -23,6 +23,11 @@ import { parseLocalizedNumber } from '@/lib/project-format';
 import { useAuthStore } from '@/stores/auth-store';
 import type { PagedResponse } from '@/types/api';
 import { StockTrackingPolicyField } from '@/features/stock-tracking/StockTrackingPolicyField';
+import {
+  completeGoodsReceiptDocumentNo,
+  isValidGoodsReceiptDocumentNo,
+  normalizeGoodsReceiptDocumentNo,
+} from '../utils/goods-receipt-document-reference';
 import type { EffectiveStockTrackingPolicy } from '@/features/stock-tracking/effective-stock-tracking.service';
 import { goodsReceiptV2Api } from '../api/goods-receipt.api';
 import { buildOrderlessLinePayload, validateManualLineTracking } from '../goods-receipt-manual.utils';
@@ -49,10 +54,6 @@ const customerDisplayFromValue = (value: string | null): string => {
   if (!parts[2]) return '';
   return `${decodeURIComponent(parts[3] || '')} (${parts[2]})`.trim();
 };
-const normalizeReceiptNo = (value: string): string =>
-  value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 15);
-const validReceiptNo = (value: string): boolean =>
-  /^[A-Z0-9]{15}$/.test(value);
 const userLabel = (user: ActiveUserOption): string => `${user.firstName} ${user.lastName}`.trim() || user.username;
 const encodeUser = (user: ActiveUserOption): string => encodeURIComponent(JSON.stringify(user));
 const decodeUser = (value: string): ActiveUserOption => JSON.parse(decodeURIComponent(value)) as ActiveUserOption;
@@ -110,7 +111,7 @@ export function GoodsReceiptManualPage({
   const warehouseDefaultLocationId = Number(split(warehouse)[4] || 0);
   const policyBranchCode = split(customer)[1] || branchCode;
   const total = useMemo(() => lines.reduce((sum, line) => sum + line.quantity, 0), [lines]);
-  const receiptNoValid = validReceiptNo(receiptNo);
+  const receiptNoValid = isValidGoodsReceiptDocumentNo(receiptNo);
   const receiptNoInvalid = showFieldErrors && !receiptNoValid;
   const steps = [
     { label: t('manual.steps.document'), icon: FileText },
@@ -442,7 +443,7 @@ export function GoodsReceiptManualPage({
         className="lg:col-span-2 rounded-2xl border border-[var(--wms-app-border)] bg-black/[.025] p-4 dark:bg-white/[.025]"
         data-wms-error-target="receiptNo"
         data-wms-error-keys="irsaliye numarası|e-irsaliye numarası|normal irsaliye|mal kabul no|gib numarası|15 alfanümerik|e-dispatch|dispatch number"
-      ><div className="mb-4 flex flex-wrap items-center justify-between gap-3"><div><h3 className="font-bold">{t('manual.receiptNo')}</h3><p className="text-xs text-slate-500">{isElectronic ? t('manual.eReceiptHint') : t('manual.receiptHint')}</p></div><label className="flex items-center gap-3 rounded-xl border border-[var(--wms-app-border)] px-4 py-2"><OpsSkinCheckbox checked={isElectronic} onCheckedChange={setIsElectronic} aria-label={t('manual.isElectronic')} /><span className="text-sm font-semibold">{t('manual.isElectronic')}</span></label></div><AppInput autoFocus className="font-mono tracking-wider" inputMode="text" maxLength={15} placeholder={isElectronic ? 'GIB2026AB000000' : 'IRS202600000001'} value={receiptNo} invalid={receiptNoInvalid} onChange={(e) => { setReceiptNo(normalizeReceiptNo(e.target.value)); setError(null); }} trailingContent={<span className={`pr-1 text-xs font-bold ${receiptNoValid ? 'text-emerald-500' : 'text-[var(--wms-ops-field-placeholder-fg)]'}`}>{receiptNo.length}/15</span>}/>{receiptNoInvalid ? <p className="mt-2 flex items-center gap-1.5 text-xs text-red-500">{isElectronic ? t('manual.validation.eReceiptNo') : t('manual.validation.receiptNo')}</p> : receiptNoValid ? <p className="mt-2 flex items-center gap-1.5 text-xs text-emerald-500"><Check className="size-3.5"/>{t('manual.validNumber')}</p> : null}</div>
+      ><div className="mb-4 flex flex-wrap items-center justify-between gap-3"><div><h3 className="font-bold">{t('manual.receiptNo')}</h3><p className="text-xs text-slate-500">{isElectronic ? t('manual.eReceiptHint') : t('manual.receiptHint')}</p></div><label className="flex items-center gap-3 rounded-xl border border-[var(--wms-app-border)] px-4 py-2"><OpsSkinCheckbox checked={isElectronic} onCheckedChange={setIsElectronic} aria-label={t('manual.isElectronic')} /><span className="text-sm font-semibold">{t('manual.isElectronic')}</span></label></div><AppInput autoFocus className="font-mono tracking-wider" inputMode="text" maxLength={15} placeholder={isElectronic ? 'GIB2026AB000000' : 'IRS202600000001'} value={receiptNo} invalid={receiptNoInvalid} onChange={(e) => { setReceiptNo(normalizeGoodsReceiptDocumentNo(e.target.value)); setError(null); }} onBlur={() => setReceiptNo(completeGoodsReceiptDocumentNo(receiptNo))} trailingContent={<span className={`pr-1 text-xs font-bold ${receiptNoValid ? 'text-emerald-500' : 'text-[var(--wms-ops-field-placeholder-fg)]'}`}>{receiptNo.length}/15</span>}/>{receiptNoInvalid ? <p className="mt-2 flex items-center gap-1.5 text-xs text-red-500">{isElectronic ? t('manual.validation.eReceiptNo') : t('manual.validation.receiptNo')}</p> : receiptNoValid ? <p className="mt-2 flex items-center gap-1.5 text-xs text-emerald-500"><Check className="size-3.5"/>{t('manual.validNumber')}</p> : null}</div>
       {!direct && <Field label={t('manual.plannedArrival')}><AppDateInput type="datetime-local" value={plannedArrival} onChange={(e) => setPlannedArrival(e.target.value)}/></Field>}
     </div></Panel>}
 

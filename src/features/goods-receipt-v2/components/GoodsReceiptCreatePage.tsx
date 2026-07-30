@@ -80,6 +80,7 @@ import type {
   WarehouseOption,
 } from "../types/goods-receipt.types";
 import {
+  completeGoodsReceiptDocumentNo,
   isValidGoodsReceiptDocumentNo,
   normalizeGoodsReceiptDocumentNo,
 } from "../utils/goods-receipt-document-reference";
@@ -332,7 +333,7 @@ export function GoodsReceiptCreatePage({
     setSeriesValue(draft.seriesValue ?? null);
     setDocumentDate(draft.documentDate || today());
     setWaybillDate(draft.waybillDate || today());
-    setReceiptNo(draft.receiptNo ?? "");
+    setReceiptNo(completeGoodsReceiptDocumentNo(draft.receiptNo ?? ""));
     setIsElectronicReceipt(draft.isElectronicReceipt ?? true);
     setPlannedArrival(draft.plannedArrival ?? "");
     setPriority(draft.priority ?? "3");
@@ -1562,6 +1563,9 @@ export function GoodsReceiptCreatePage({
                         );
                         setError(null);
                       }}
+                      onBlur={() =>
+                        setReceiptNo(completeGoodsReceiptDocumentNo(receiptNo))
+                      }
                       trailingContent={
                         <span className="pr-1 text-xs font-bold text-[var(--wms-ops-field-placeholder-fg)]">
                           {receiptNo.length}/15
@@ -2019,6 +2023,9 @@ export function GoodsReceiptCreatePage({
                             );
                             setError(null);
                           }}
+                          onBlur={() =>
+                            setReceiptNo(completeGoodsReceiptDocumentNo(receiptNo))
+                          }
                           trailingContent={
                             <span className="pr-1 text-xs font-bold text-[var(--wms-ops-field-placeholder-fg)]">
                               {receiptNo.length}/15

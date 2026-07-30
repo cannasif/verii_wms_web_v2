@@ -191,8 +191,8 @@
       "goToTaskManagement": "Go to task management"
     },
     "validation": {
-      "eReceiptNo": "e-Dispatch / GIB number must be exactly 15 alphanumeric characters.",
-      "receiptNo": "Dispatch number must be exactly 15 alphanumeric characters.",
+      "eReceiptNo": "e-Dispatch / GIB number must be exactly 15 printable characters, including symbols.",
+      "receiptNo": "Dispatch number must be exactly 15 printable characters, including symbols.",
       "waybillDate": "Dispatch date is required.",
       "singleWarehouse": "Only one warehouse can be used per goods receipt. Create separate receipts for different warehouses.",
       "warehouseNotAllowed": "The selected warehouse is not assigned to you; goods receipt cannot be processed in this warehouse.",

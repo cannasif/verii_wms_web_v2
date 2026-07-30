@@ -151,7 +151,7 @@
     "validation": {
       "supplier": "ERP cari kartını seçin.",
       "waybill": "Normal irsaliye numarası tam 15 rakam olmalıdır.",
-      "eWaybill": "E-irsaliye / GİB numarası tam 15 alfanümerik karakter olmalıdır.",
+      "eWaybill": "E-irsaliye / GİB numarası semboller dahil tam 15 karakter olmalıdır.",
       "operation": "Depo, kabul rafı ve belge serisini seçin.",
       "assignee": "Emir için en az bir operasyon kullanıcısı atayın.",
       "lines": "En az bir fatura kalemi seçin.",

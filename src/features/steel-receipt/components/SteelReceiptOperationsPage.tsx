@@ -7,7 +7,7 @@ import {AppDateInput} from '@/components/shared/AppInput';
 import {PagedAppDropdown} from '@/components/shared/PagedAppDropdown';
 import {goodsReceiptV2Api} from '@/features/goods-receipt-v2/api/goods-receipt.api';
 import {printReceiptLabels} from '@/features/goods-receipt-v2/utils/goods-receipt-label-output';
-import {isValidGoodsReceiptDocumentNo,normalizeGoodsReceiptDocumentNo} from '@/features/goods-receipt-v2/utils/goods-receipt-document-reference';
+import {completeGoodsReceiptDocumentNo,isValidGoodsReceiptDocumentNo,normalizeGoodsReceiptDocumentNo} from '@/features/goods-receipt-v2/utils/goods-receipt-document-reference';
 import {localizeEnumValue} from '@/lib/enum-localization';
 import {formatProjectNumber} from '@/lib/project-format';
 import {useAuthStore} from '@/stores/auth-store';
@@ -75,7 +75,7 @@ function ReceiptPanel(){
       const result=await steelReceiptApi.receiptSource(normalized);
       setSource(result);setSelectedSourceReference(result.importReferenceNo);setSelected({});
       const sourceReceipt=(result.waybillNo??'').trim();
-      setReceiptNo(normalizeGoodsReceiptDocumentNo(sourceReceipt));
+      setReceiptNo(completeGoodsReceiptDocumentNo(sourceReceipt));
       setDocumentDate(result.waybillDate?.slice(0,10)||today());
       toast.success(`${result.importReferenceNo} aktarımı getirildi.`);
     }catch(error){
@@ -85,7 +85,7 @@ function ReceiptPanel(){
   };
   const convert=async()=>{
     if(!selectedRows.length||!source)return;
-    if(!receiptNoValid||!documentDate){toast.error(isElectronic?'E-irsaliye / GİB numarası tam 15 alfanümerik karakter olmalı ve irsaliye tarihi girilmelidir.':'İrsaliye numarası tam 15 alfanümerik karakter olmalı ve irsaliye tarihi girilmelidir.');return}
+    if(!receiptNoValid||!documentDate){toast.error(isElectronic?'E-irsaliye / GİB numarası semboller dahil tam 15 karakter olmalı ve irsaliye tarihi girilmelidir.':'İrsaliye numarası semboller dahil tam 15 karakter olmalı ve irsaliye tarihi girilmelidir.');return}
     setBusy(true);
     try{
       const result=await steelReceiptApi.convert(source.planId,selectedRows.map(x=>x.id),{
@@ -186,7 +186,7 @@ function ReceiptPanel(){
       <section className="space-y-3 rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3">
         <div className="flex items-start gap-2"><FileText className="mt-0.5 size-5 text-cyan-500"/><div><strong className="text-sm">İrsaliye bilgisi</strong><p className="text-xs text-slate-500">Excel aktarımında girilmiş irsaliye otomatik gelir; gerekirse bu kabul için değiştirebilirsiniz.</p></div></div>
         <label className="flex cursor-pointer items-center gap-3 rounded-xl border bg-[var(--wms-app-panel)] p-3"><input type="checkbox" checked={isElectronic} onChange={event=>setIsElectronic(event.target.checked)} className="size-4 accent-cyan-500"/><span className="text-sm font-bold">E-irsaliye / GİB</span></label>
-        <Field label={isElectronic?'GİB e-irsaliye no':'İrsaliye numarası'}><div className="relative"><input className={`input pr-16 font-mono ${receiptNo&&!receiptNoValid?'!border-red-500':receiptNoValid?'!border-emerald-500':''}`} inputMode="text" maxLength={15} value={receiptNo} onChange={event=>setReceiptNo(normalizeGoodsReceiptDocumentNo(event.target.value))} placeholder={isElectronic?'GIB2026AB000000':'IRS202600000001'}/><span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500">{receiptNo.length}/15</span></div></Field>
+        <Field label={isElectronic?'GİB e-irsaliye no':'İrsaliye numarası'}><div className="relative"><input className={`input pr-16 font-mono ${receiptNo&&!receiptNoValid?'!border-red-500':receiptNoValid?'!border-emerald-500':''}`} inputMode="text" maxLength={15} value={receiptNo} onChange={event=>setReceiptNo(normalizeGoodsReceiptDocumentNo(event.target.value))} onBlur={()=>setReceiptNo(completeGoodsReceiptDocumentNo(receiptNo))} placeholder={isElectronic?'GIB2026AB000000':'IRS202600000001'}/><span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500">{receiptNo.length}/15</span></div></Field>
         <Field label="İrsaliye tarihi"><AppDateInput value={documentDate} onChange={event=>setDocumentDate(event.target.value)}/></Field>
       </section>
       <Field label={t(`${R}.orderNote`)}><textarea className="input min-h-24" value={note} onChange={e=>setNote(e.target.value)} placeholder={t(`${R}.orderNotePlaceholder`)}/></Field>

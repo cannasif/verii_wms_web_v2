@@ -151,7 +151,7 @@
     "validation": {
       "supplier": "Select an ERP supplier card.",
       "waybill": "A normal despatch number must contain exactly 15 digits.",
-      "eWaybill": "The e-dispatch/GIB number must contain exactly 15 alphanumeric characters.",
+      "eWaybill": "The e-dispatch/GIB number must contain exactly 15 printable characters, including symbols.",
       "operation": "Select warehouse, receiving location and number series.",
       "assignee": "Assign at least one operation user.",
       "lines": "Select at least one invoice line.",

@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { AppDropdown } from '@/components/shared/AppDropdown';
 import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
 import { WarehouseBarcodeScanner } from '@/features/barcode-resolution/WarehouseBarcodeScanner';
+import { completeGoodsReceiptDocumentNo, normalizeGoodsReceiptDocumentNo } from '@/features/goods-receipt-v2/utils/goods-receipt-document-reference';
 import { localizeEnumValue } from '@/lib/enum-localization';
 import { formatProjectNumber } from '@/lib/project-format';
 import { transferApiFor, warehouseTransferApi, type TransferApiVariant, type WarehouseTransferOperationLinePayload } from './api/warehouse-transfer.api';
@@ -168,7 +169,7 @@ export function WarehouseTransferOperationPage({ variant = 'warehouse' }: { vari
         <Field label="Operasyon"><AppDropdown value={phase} onValueChange={(value) => setPhase(value as Phase)} options={phaseOptions} /></Field>
         <Field label="Araç plakası"><input className="input" value={vehiclePlate} onChange={(e) => setVehiclePlate(e.target.value)} /></Field>
         <Field label="Şoför"><input className="input" value={driverName} onChange={(e) => setDriverName(e.target.value)} /></Field>
-        <Field label="İrsaliye"><input className="input" value={waybillNo} onChange={(e) => setWaybillNo(e.target.value)} /></Field>
+        <Field label="İrsaliye"><input className="input" maxLength={15} value={waybillNo} onChange={(e) => setWaybillNo(normalizeGoodsReceiptDocumentNo(e.target.value))} onBlur={() => setWaybillNo(completeGoodsReceiptDocumentNo(waybillNo))} /></Field>
       </div>
       <Field label="İşlem notu"><input className="input mt-3" value={reason} onChange={(e) => setReason(e.target.value)} /></Field>
 

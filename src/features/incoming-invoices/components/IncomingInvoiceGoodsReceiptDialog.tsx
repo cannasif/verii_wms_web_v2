@@ -11,6 +11,7 @@ import type {
   SeriesOption,
 } from '@/features/goods-receipt-v2/types/goods-receipt.types';
 import {
+  completeGoodsReceiptDocumentNo,
   isValidGoodsReceiptDocumentNo,
   normalizeGoodsReceiptDocumentNo,
 } from '@/features/goods-receipt-v2/utils/goods-receipt-document-reference';
@@ -43,7 +44,7 @@ export function IncomingInvoiceGoodsReceiptDialog({
   onCreated,
 }: Props): ReactElement {
   const { t } = useModuleTranslation('incoming-invoices');
-  const sourceWaybill = (detail.despatchReferenceNo ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const sourceWaybill = completeGoodsReceiptDocumentNo(detail.despatchReferenceNo ?? '');
   const sourceIsValid = isValidGoodsReceiptDocumentNo(sourceWaybill);
   const eligibleLines = useMemo(
     () => detail.lines.filter((line) => line.stockId && line.remainingQuantity > 0),
@@ -116,8 +117,8 @@ export function IncomingInvoiceGoodsReceiptDialog({
     if (!supplierId) { toast.error(t('receiptDialog.validation.supplier')); return; }
     if (!isValidGoodsReceiptDocumentNo(waybillNo) || !waybillDate) {
       toast.error(isElectronic
-        ? 'E-irsaliye / GİB numarası tam 15 alfanümerik karakter olmalıdır.'
-        : 'İrsaliye numarası tam 15 alfanümerik karakter olmalıdır.');
+        ? 'E-irsaliye / GİB numarası semboller dahil tam 15 karakter olmalıdır.'
+        : 'İrsaliye numarası semboller dahil tam 15 karakter olmalıdır.');
       return;
     }
     if (!warehouseId || !locationId || !seriesId) {
@@ -238,6 +239,7 @@ export function IncomingInvoiceGoodsReceiptDialog({
           <AppInput
             value={waybillNo}
             onChange={(event) => setWaybillNo(normalizeGoodsReceiptDocumentNo(event.target.value))}
+            onBlur={() => setWaybillNo(completeGoodsReceiptDocumentNo(waybillNo))}
             inputMode="text"
             maxLength={15}
             placeholder={isElectronic ? 'GIB2026AB000000' : 'IRS202600000001'}
