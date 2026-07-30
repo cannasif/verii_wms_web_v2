@@ -145,6 +145,19 @@ export function GoodsReceiptListPage(): ReactElement {
         ),
       },
       {
+        key: 'erpIntegrationStatus',
+        label: t('list.erpPosting'),
+        sortable: true,
+        filterable: true,
+        render: (r) => (
+          <div className="flex justify-center">
+            <OpsStatusBadge tone={inferOpsStatusTone(r.erpIntegrationStatus)}>
+              {goodsReceiptEnumLabel(t, 'erpStatus', r.erpIntegrationStatus)}
+            </OpsStatusBadge>
+          </div>
+        ),
+      },
+      {
         key: 'waybillNo',
         label: t('list.waybill'),
         sortable: true,

@@ -64,16 +64,11 @@ export function GoodsReceiptRoutingDialog({
 
   const qualityReady =
     detail.header.qualityStatus === "NotRequired" ||
-    detail.header.qualityStatus === "Passed";
+    detail.header.qualityStatus === "Passed" ||
+    detail.header.qualityStatus === "Failed";
   const approvalReady =
     detail.header.approvalStatus === "NotRequired" ||
     detail.header.approvalStatus === "Approved";
-  const hasWaybill = Boolean(
-    detail.header.waybillNo?.trim() ||
-      detail.sourceDocuments.some((doc) =>
-        /^(SupplierWaybill|ElectronicWaybill):.+/i.test(doc.trim()),
-      ),
-  );
   const routableLines = useMemo(
     () => detail.lines.filter((line) => line.routableQuantity > 0),
     [detail.lines],
@@ -117,12 +112,14 @@ export function GoodsReceiptRoutingDialog({
     );
 
   const submit = async () => {
+    if (detail.header.status !== "Completed")
+      return toast.error("Mal kabul tamamlanmadan DAT veya ambar çıkış oluşturulamaz.");
     if (!qualityReady)
       return toast.error("Kalite/GKK kararı tamamlanmadan yönlendirme yapılamaz.");
     if (!approvalReady)
       return toast.error("Mal kabul onayı tamamlanmadan yönlendirme yapılamaz.");
-    if (!hasWaybill)
-      return toast.error("İrsaliye oluşturulmadan yönlendirme yapılamaz.");
+    if (detail.header.erpIntegrationStatus !== "Succeeded")
+      return toast.error("ERP irsaliyesi başarıyla oluşmadan DAT veya ambar çıkış oluşturulamaz.");
     if (transferTotal <= 0 && outboundTotal <= 0)
       return toast.error("En az bir kaleme transfer veya ambar çıkış miktarı girin.");
     if (transferTotal > 0 && (!transferSeriesId || !targetWarehouseId))
@@ -496,9 +493,10 @@ export function GoodsReceiptRoutingDialog({
               type="button"
               disabled={
                 saving ||
+                detail.header.status !== "Completed" ||
                 !qualityReady ||
                 !approvalReady ||
-                !hasWaybill ||
+                detail.header.erpIntegrationStatus !== "Succeeded" ||
                 !routableLines.length ||
                 transferTotal + outboundTotal <= 0
               }

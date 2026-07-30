@@ -844,7 +844,8 @@ function InspectionDetailPanel({
     setSaving(true);
     try {
       let rowVersion = detail.rowVersion;
-      const calls: Array<() => Promise<void>> = [];
+      const calls: Array<() => ReturnType<typeof qualityApi.decide>> = [];
+      let completionMessage = "";
 
       if (quantityDecisions.length > 0) {
         const notes = quantityRows
@@ -863,7 +864,7 @@ function InspectionDetailPanel({
           quantityRows[0]?.draft.decision ??
           "Accepted";
         calls.push(async () => {
-          await qualityApi.decide(detail.header.id, {
+          return await qualityApi.decide(detail.header.id, {
             idempotencyKey: crypto.randomUUID(),
             decision: primaryDecision,
             note:
@@ -896,7 +897,7 @@ function InspectionDetailPanel({
       }
       for (const group of returnedGroups.values()) {
         calls.push(async () => {
-          await qualityApi.decide(detail.header.id, {
+          return await qualityApi.decide(detail.header.id, {
             idempotencyKey: crypto.randomUUID(),
             decision: "Returned",
             note:
@@ -910,14 +911,20 @@ function InspectionDetailPanel({
       }
 
       for (let i = 0; i < calls.length; i += 1) {
-        await calls[i]();
+        const result = await calls[i]();
+        completionMessage = result.message;
         if (i < calls.length - 1) {
           const fresh = await qualityApi.inspection(detail.header.id);
           rowVersion = fresh.rowVersion;
         }
       }
       await notifyGoodsReceiptAfterDecision(detail, () =>
-        navigate("/warehouse/goods-receipts/list"),
+        navigate("/warehouse/goods-receipts/list")
+      );
+      toast.success(
+        completionMessage || "Kalite kararı ve stok hareketi kaydedildi.",
+        { duration: 7000 }
+      );
       );
       decided();
     } catch (error) {

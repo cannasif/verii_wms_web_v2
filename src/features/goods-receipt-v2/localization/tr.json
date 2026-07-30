@@ -418,7 +418,7 @@
     },
     "erpStatus": {
       "NotRequired": "ERP Aktarımı Gerekmiyor", "Pending": "ERP Aktarımı Bekliyor", "Processing": "ERP'ye Aktarılıyor",
-      "Succeeded": "ERP'ye Aktarıldı", "Failed": "ERP Aktarımı Başarısız", "CommitUncertain": "ERP Sonucu Belirsiz"
+      "Succeeded": "ERP Kaydı Atıldı", "Failed": "ERP Aktarımı Başarısız", "CommitUncertain": "ERP Sonucu Belirsiz"
     },
     "lineStatus": {
       "Open": "Açık", "PartiallyReceived": "Kısmen Kabul Edildi", "Received": "Kabul Edildi",

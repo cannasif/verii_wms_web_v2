@@ -36,10 +36,6 @@ export const goodsReceiptV2Api = {
     return {
       ...value,
       showAllocatedOpenOrderLines: Boolean(value.showAllocatedOpenOrderLines),
-      locationSelectionPolicy:
-        value.locationSelectionPolicy === 'AnyActiveWarehouseLocation'
-          ? 'AnyActiveWarehouseLocation'
-          : 'ReceivingOrStagingOnly',
     };
   },
   customers: async (request: DropdownPageRequest, branchCode: string): Promise<GridPage<CustomerOption>> => unwrap(await api.post<Envelope<GridPage<CustomerOption>>>('/api/erp-mirror/customers/paged', pagedBody({ ...request, sortBy: request.sortBy ?? 'customerCode' }, [{ column: 'branchCode', operator: 'equals', value: branchCode }]), { signal: request.signal })),
