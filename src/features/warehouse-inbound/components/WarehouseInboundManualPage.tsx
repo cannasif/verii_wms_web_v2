@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactElement, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactElement, type ReactNode } from 'react';
 import { Building2, Check, CheckCircle2, ChevronLeft, ChevronRight, ClipboardCheck, FileText, Loader2, PackagePlus, Plus, ScanBarcode, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AppDropdown } from '@/components/shared/AppDropdown';
@@ -6,6 +6,8 @@ import { AppDateInput } from '@/components/shared/AppInput';
 import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { useAuthStore } from '@/stores/auth-store';
+import { OperationDraftRestoreDialog } from '@/features/operation-drafts/OperationDraftRestoreDialog';
+import { useOperationDraft } from '@/features/operation-drafts/useOperationDraft';
 import { isValidGoodsReceiptDocumentNo, normalizeGoodsReceiptDocumentNo } from '@/features/goods-receipt-v2/utils/goods-receipt-document-reference';
 import { warehouseInboundV2Api } from '../api/warehouse-inbound.api';
 import type { ActiveUserOption, ManualWarehouseInboundResult, ManualReceiptLine, PutawayLocationSuggestion, SeriesOption } from '../types/warehouse-inbound.types';
@@ -16,9 +18,38 @@ const userLabel = (user: ActiveUserOption): string => `${user.firstName} ${user.
 const encodeUser = (user: ActiveUserOption): string => encodeURIComponent(JSON.stringify(user));
 const decodeUser = (value: string): ActiveUserOption => JSON.parse(decodeURIComponent(value)) as ActiveUserOption;
 
+interface WarehouseInboundDraft {
+  step: number;
+  customer: string | null;
+  receiptNo: string;
+  isElectronic: boolean;
+  documentDate: string;
+  plannedArrival: string;
+  warehouse: string | null;
+  locationId: string | null;
+  seriesId: string | null;
+  priority: string;
+  labelStrategy: string;
+  executionMode: string;
+  description: string;
+  assignees: ActiveUserOption[];
+  lines: ManualReceiptLine[];
+}
+
+const hasWarehouseInboundDraft = (draft: WarehouseInboundDraft): boolean =>
+  Boolean(
+    draft.customer ||
+    draft.receiptNo ||
+    draft.warehouse ||
+    draft.description.trim() ||
+    draft.lines.length ||
+    draft.assignees.length,
+  );
+
 export function WarehouseInboundManualPage({ direct }: { direct: boolean }): ReactElement {
   const { t, moduleReady } = useModuleTranslation('warehouse-inbound');
   const branchCode = useAuthStore((state) => state.branch?.code ?? '0');
+  const userId = useAuthStore((state) => state.user?.id);
   const [step, setStep] = useState(0);
   const [customer, setCustomer] = useState<string | null>(null);
   const [receiptNo, setReceiptNo] = useState('');
@@ -60,12 +91,52 @@ export function WarehouseInboundManualPage({ direct }: { direct: boolean }): Rea
     { label: t('manual.steps.lines'), icon: PackagePlus },
     { label: t('manual.steps.review'), icon: ClipboardCheck },
   ];
+  const draftPayload = useMemo<WarehouseInboundDraft>(() => ({
+    step, customer, receiptNo, isElectronic, documentDate, plannedArrival,
+    warehouse, locationId, seriesId, priority, labelStrategy, executionMode,
+    description, assignees, lines,
+  }), [
+    assignees, customer, description, documentDate, executionMode, isElectronic,
+    labelStrategy, lines, locationId, plannedArrival, priority, receiptNo, seriesId,
+    step, warehouse,
+  ]);
+  const restoreDraftPayload = useCallback((draft: WarehouseInboundDraft): void => {
+    setStep(Math.min(3, Math.max(0, draft.step ?? 0)));
+    setCustomer(draft.customer ?? null);
+    setReceiptNo(draft.receiptNo ?? '');
+    setIsElectronic(draft.isElectronic ?? true);
+    setDocumentDate(draft.documentDate || today());
+    setPlannedArrival(draft.plannedArrival ?? '');
+    setWarehouse(draft.warehouse ?? null);
+    setLocationId(draft.locationId ?? null);
+    setSeriesId(draft.seriesId ?? null);
+    setPriority(draft.priority ?? '3');
+    setLabelStrategy(draft.labelStrategy ?? 'None');
+    setExecutionMode(draft.executionMode ?? 'Manual');
+    setDescription(draft.description ?? '');
+    setAssignees(draft.assignees ?? []);
+    setLines(draft.lines ?? []);
+  }, []);
+  const operationDraft = useOperationDraft({
+    operationType: 'warehouse-inbound-direct',
+    userId,
+    branchCode,
+    payload: draftPayload,
+    isMeaningful: hasWarehouseInboundDraft,
+    onRestore: restoreDraftPayload,
+    enabled: direct && !busy && !result,
+  });
 
   useEffect(() => {
-    setLocationId(null); setLineLocation(null); setLocationSuggestions([]); setSeries([]); setSeriesId(null);
+    setLineLocation(null); setLocationSuggestions([]); setSeries([]);
     if (!warehouseId) return;
     void warehouseInboundV2Api.series().then((items) => {
-      setSeries(items); const preferred = items.find((item) => item.isDefault) ?? items[0]; setSeriesId(preferred ? String(preferred.id) : null);
+      setSeries(items);
+      const preferred = items.find((item) => item.isDefault) ?? items[0];
+      setSeriesId((current) =>
+        current && items.some((item) => String(item.id) === current)
+          ? current
+          : preferred ? String(preferred.id) : null);
     }).catch((cause: Error) => setError(cause.message));
   }, [warehouseId]);
 
@@ -153,7 +224,9 @@ export function WarehouseInboundManualPage({ direct }: { direct: boolean }): Rea
           expirationDate: line.expirationDate ?? null, scannedBarcode: line.scannedBarcode ?? null, warehouseInboundLabelId: null,
           description: line.description ?? null, targetWarehouseId: line.targetWarehouseId, receivingLocationId: line.receivingLocationId })) };
       const created = direct ? await warehouseInboundV2Api.createDirect(payload) : await warehouseInboundV2Api.createOrderless(payload);
-      setResult(created); toast.success(t('manual.success'));
+      setResult(created);
+      await operationDraft.clearDraft();
+      toast.success(t('manual.success'));
     } catch (cause) { const message = cause instanceof Error ? cause.message : t('manual.validation.submit'); setError(message); toast.error(message); }
     finally { setBusy(false); }
   };
@@ -161,6 +234,13 @@ export function WarehouseInboundManualPage({ direct }: { direct: boolean }): Rea
   if (!moduleReady) return <div className="grid min-h-80 place-items-center"><Loader2 className="size-7 animate-spin text-cyan-500"/></div>;
   if (result) return <Result result={result} direct={direct} reset={() => { setResult(null); setLines([]); setStep(0); setReceiptNo(''); }} t={t}/>;
   return <section className="mx-auto max-w-7xl space-y-5">
+    <OperationDraftRestoreDialog
+      open={operationDraft.restoreDialogOpen}
+      operationName="doğrudan ambar giriş"
+      updatedAt={operationDraft.pendingDraft?.updatedAt}
+      onRestore={operationDraft.restoreDraft}
+      onDiscard={operationDraft.discardDraft}
+    />
     <header className="overflow-hidden rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] shadow-sm"><div className="h-1 bg-gradient-to-r from-cyan-500 via-blue-500 to-violet-500"/><div className="flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between"><div className="flex gap-3"><div className="grid size-12 shrink-0 place-items-center rounded-xl bg-cyan-500/15 text-cyan-500"><PackagePlus/></div><div><div className="text-xs font-bold uppercase tracking-[.18em] text-cyan-500">{t('manual.eyebrow')}</div><h1 className="mt-1 text-2xl font-bold">{direct ? t('manual.directTitle') : t('manual.orderlessTitle')}</h1><p className="mt-1 text-sm text-slate-500">{direct ? t('manual.directSubtitle') : t('manual.orderlessSubtitle')}</p></div></div><div className="rounded-xl border border-[var(--wms-app-border)] bg-black/5 px-4 py-2 text-sm dark:bg-white/5"><span className="text-slate-500">{t('manual.currentStep')}</span><strong className="ml-2">{step + 1}/4</strong></div></div></header>
     <Stepper steps={steps} current={step}/>
     {error && <div role="alert" className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm font-medium text-red-500">{error}</div>}
@@ -173,7 +253,7 @@ export function WarehouseInboundManualPage({ direct }: { direct: boolean }): Rea
     </div></Panel>}
 
     {step === 1 && <Panel title={t('manual.operation.title')} description={t('manual.operation.description')} icon={<Building2/>}><div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-      <Field label={t('manual.warehouse')} required><PagedAppDropdown queryKey={['gr-manual-warehouses', branchCode]} fetchPage={(request) => warehouseInboundV2Api.warehouses(request, branchCode)} toOption={(x) => ({ value: `${x.id}|${x.branchCode}|${x.warehouseCode}|${encodeURIComponent(x.warehouseName)}`, label: `${x.warehouseCode} · ${x.warehouseName}` })} value={warehouse} onValueChange={setWarehouse} searchable/></Field>
+      <Field label={t('manual.warehouse')} required><PagedAppDropdown queryKey={['gr-manual-warehouses', branchCode]} fetchPage={(request) => warehouseInboundV2Api.warehouses(request, branchCode)} toOption={(x) => ({ value: `${x.id}|${x.branchCode}|${x.warehouseCode}|${encodeURIComponent(x.warehouseName)}`, label: `${x.warehouseCode} · ${x.warehouseName}` })} value={warehouse} onValueChange={(value) => { setWarehouse(value); setLocationId(null); setLineLocation(null); setSeriesId(null); }} searchable/></Field>
       <Field label={t('manual.location')} required><PagedAppDropdown queryKey={['gr-manual-locations', warehouseId]} fetchPage={(request) => warehouseInboundV2Api.locations(request, warehouseId)} toOption={(x) => ({ value: String(x.id), label: `${x.code} · ${x.name}`, description: x.locationType })} enabled={warehouseId > 0} dependencies={[warehouseId]} value={locationId} onValueChange={setLocationId} searchable/></Field>
       <Field label={t('manual.series')} required><AppDropdown value={seriesId} onValueChange={setSeriesId} options={series.map((x) => ({ value: String(x.id), label: `${x.code} · ${x.name}`, description: x.previewDocumentNumber }))}/></Field>
       <Field label={t('manual.priority')}><AppDropdown value={priority} onValueChange={setPriority} options={[1,2,3,4,5].map((value) => ({ value: String(value), label: String(value) }))}/></Field>

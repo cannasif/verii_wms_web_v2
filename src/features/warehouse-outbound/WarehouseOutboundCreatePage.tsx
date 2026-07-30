@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { CheckCircle2, Loader2, Plus, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -15,6 +15,8 @@ import type {
   StockTrackingType,
 } from '@/features/stock-tracking/effective-stock-tracking.service';
 import { useAuthStore } from '@/stores/auth-store';
+import { OperationDraftRestoreDialog } from '@/features/operation-drafts/OperationDraftRestoreDialog';
+import { useOperationDraft } from '@/features/operation-drafts/useOperationDraft';
 import type {
   ActiveUserOption,
   CustomerOption,
@@ -71,8 +73,42 @@ const blankLine = (): ShipmentLine => ({
 const today = () => new Date().toLocaleDateString('en-CA');
 const encoded = (value: unknown) => encodeURIComponent(JSON.stringify(value));
 
+type WarehouseOutboundDirectDraft = {
+  source: 'Order' | 'Stock';
+  customer?: CustomerOption;
+  customerValue: string | null;
+  orders: ShipmentOrderHeader[];
+  selectedOrders: string[];
+  warehouseValue: string | null;
+  seriesId: string | null;
+  documentDate: string;
+  plannedAt: string;
+  priority: string;
+  stagingLocationId: string | null;
+  loadingLocationId: string | null;
+  vehiclePlate: string;
+  carrierCode: string;
+  isEDispatch: boolean;
+  externalReference: string;
+  description: string;
+  lines: ShipmentLine[];
+};
+
+const hasWarehouseOutboundDirectDraft = (draft: WarehouseOutboundDirectDraft) =>
+  Boolean(
+    draft.customer ||
+    draft.warehouseValue ||
+    draft.selectedOrders.length ||
+    draft.externalReference.trim() ||
+    draft.description.trim() ||
+    draft.vehiclePlate.trim() ||
+    draft.carrierCode.trim() ||
+    draft.lines.some((line) => line.stockId || line.source),
+  );
+
 export function WarehouseOutboundCreatePage() {
   const branch = useAuthStore((x) => x.branch?.code ?? '0');
+  const userId = useAuthStore((x) => x.user?.id);
   const [policy, setPolicy] = useState<ShipmentPolicy | null>(null);
   const [source, setSource] = useState<'Order' | 'Stock'>('Stock');
   const [execution, setExecution] = useState<'Task' | 'Direct'>('Task');
@@ -99,6 +135,59 @@ export function WarehouseOutboundCreatePage() {
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<ShipmentResult>();
   const orderLineRequest = useRef(0);
+  const operationDraftPayload = useMemo<WarehouseOutboundDirectDraft>(() => ({
+    source,
+    customer,
+    customerValue,
+    orders,
+    selectedOrders,
+    warehouseValue,
+    seriesId,
+    documentDate,
+    plannedAt,
+    priority,
+    stagingLocationId,
+    loadingLocationId,
+    vehiclePlate,
+    carrierCode,
+    isEDispatch,
+    externalReference,
+    description,
+    lines,
+  }), [
+    carrierCode, customer, customerValue, description, documentDate, externalReference,
+    isEDispatch, lines, loadingLocationId, orders, plannedAt, priority, selectedOrders,
+    seriesId, source, stagingLocationId, vehiclePlate, warehouseValue,
+  ]);
+  const restoreOperationDraft = useCallback((draft: WarehouseOutboundDirectDraft) => {
+    setSource(draft.source);
+    setCustomer(draft.customer);
+    setCustomerValue(draft.customerValue);
+    setOrders(draft.orders);
+    setSelectedOrders(draft.selectedOrders);
+    setWarehouseValue(draft.warehouseValue);
+    setSeriesId(draft.seriesId);
+    setDocumentDate(draft.documentDate);
+    setPlannedAt(draft.plannedAt);
+    setPriority(draft.priority);
+    setStagingLocationId(draft.stagingLocationId);
+    setLoadingLocationId(draft.loadingLocationId);
+    setVehiclePlate(draft.vehiclePlate);
+    setCarrierCode(draft.carrierCode);
+    setIsEDispatch(draft.isEDispatch);
+    setExternalReference(draft.externalReference);
+    setDescription(draft.description);
+    setLines(draft.lines);
+  }, []);
+  const operationDraft = useOperationDraft({
+    operationType: 'warehouse-outbound-create',
+    userId,
+    branchCode: branch,
+    payload: operationDraftPayload,
+    isMeaningful: hasWarehouseOutboundDirectDraft,
+    onRestore: restoreOperationDraft,
+    enabled: execution === 'Direct' && !busy && !result,
+  });
 
   useEffect(() => {
     void warehouseOutboundApi.policy(branch).then(setPolicy).catch((error: Error) => toast.error(error.message));
@@ -106,20 +195,15 @@ export function WarehouseOutboundCreatePage() {
 
   useEffect(() => {
     setSeries([]);
-    setSeriesId(null);
-    setStagingLocationId(null);
-    setLoadingLocationId(null);
-    setLines((current) => current.map((line) => ({
-      ...line,
-      sourceLocationId: undefined,
-      sourceLocationValue: null,
-    })));
     if (!warehouseId) return;
     void warehouseOutboundApi.series()
       .then((items) => {
         setSeries(items);
         const preferred = items.find((x) => x.isDefault) ?? items[0];
-        setSeriesId(preferred ? String(preferred.id) : null);
+        setSeriesId((current) =>
+          current && items.some((item) => String(item.id) === current)
+            ? current
+            : preferred ? String(preferred.id) : null);
       })
       .catch((error: Error) => toast.error(error.message));
   }, [warehouseId]);
@@ -354,6 +438,7 @@ export function WarehouseOutboundCreatePage() {
           source: line.source ?? null,
         })),
       });
+      await operationDraft.clearDraft();
       setResult(created);
       toast.success(`${created.documentNo} sevk taslağı oluşturuldu.`);
     } catch (error) {
@@ -379,6 +464,13 @@ export function WarehouseOutboundCreatePage() {
 
   return (
     <section className="space-y-5">
+      <OperationDraftRestoreDialog
+        open={operationDraft.restoreDialogOpen}
+        operationName="doğrudan ambar çıkış / sevk"
+        updatedAt={operationDraft.pendingDraft?.updatedAt}
+        onRestore={operationDraft.restoreDraft}
+        onDiscard={operationDraft.discardDraft}
+      />
       <header className="rounded-2xl border bg-gradient-to-r from-cyan-500/10 via-[var(--wms-app-panel)] to-violet-500/10 p-6">
         <p className="text-xs font-bold uppercase tracking-widest text-cyan-500">Sevk</p>
         <h1 className="mt-1 text-2xl font-black">Esnek Sevk Oluşturma</h1>
@@ -416,7 +508,17 @@ export function WarehouseOutboundCreatePage() {
           <Field label="Kaynak depo *">
             <PagedAppDropdown queryKey={['sh-warehouse', branch]} fetchPage={(request) => warehouseOutboundApi.warehouses(request, branch)}
               toOption={(item) => ({ value: `${item.id}|${item.warehouseCode}`, label: `${item.warehouseCode} · ${item.warehouseName}` })}
-              value={warehouseValue} onValueChange={setWarehouseValue} searchable />
+              value={warehouseValue} onValueChange={(value) => {
+                setWarehouseValue(value);
+                setSeriesId(null);
+                setStagingLocationId(null);
+                setLoadingLocationId(null);
+                setLines((current) => current.map((line) => ({
+                  ...line,
+                  sourceLocationId: undefined,
+                  sourceLocationValue: null,
+                })));
+              }} searchable />
           </Field>
           <Field label="Belge serisi *">
             <AppDropdown value={seriesId} onValueChange={setSeriesId}

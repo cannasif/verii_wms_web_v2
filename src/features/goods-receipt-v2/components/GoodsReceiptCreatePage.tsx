@@ -60,6 +60,8 @@ import { cn } from "@/lib/utils";
 import { getWorkspacePortalRoot } from "@/lib/workspace-portal";
 import { navigateToErrorTarget } from "@/lib/toast-error-navigation";
 import { useAuthStore } from "@/stores/auth-store";
+import { OperationDraftRestoreDialog } from "@/features/operation-drafts/OperationDraftRestoreDialog";
+import { useOperationDraft } from "@/features/operation-drafts/useOperationDraft";
 import type { PagedResponse } from "@/types/api";
 import { goodsReceiptV2Api } from "../api/goods-receipt.api";
 import type {
@@ -143,6 +145,36 @@ const groupOrderLines = (rows: OpenOrderLine[]): OpenOrderHeader[] => {
   return [...grouped.values()];
 };
 
+interface GoodsReceiptDirectDraft {
+  step: number;
+  selectedCustomer: CustomerOption | null;
+  projectCodeFilter: string;
+  orderNumberSearch: string;
+  orders: OpenOrderHeader[];
+  directOrderLines: OpenOrderLine[];
+  selectedDirectLineKeys: string[];
+  selectedOrders: string[];
+  lines: SelectedReceiptLine[];
+  confirmedLineOrder: string[];
+  seriesValue: string | null;
+  documentDate: string;
+  waybillDate: string;
+  receiptNo: string;
+  isElectronicReceipt: boolean;
+  plannedArrival: string;
+  priority: string;
+  labelStrategy: string;
+}
+
+const hasGoodsReceiptDirectDraft = (draft: GoodsReceiptDirectDraft): boolean =>
+  Boolean(
+    draft.selectedCustomer ||
+    draft.receiptNo ||
+    draft.orderNumberSearch.trim() ||
+    draft.selectedOrders.length ||
+    draft.lines.length,
+  );
+
 function putawayLocationPatch(location: {
   id: number;
   code: string;
@@ -167,6 +199,7 @@ export function GoodsReceiptCreatePage({
   const { skin } = useTheme();
   const isPremium = skin === "premium";
   const branchCode = useAuthStore((state) => state.branch?.code ?? "0");
+  const userId = useAuthStore((state) => state.user?.id);
   const createEyebrow = `${t("list.eyebrowParent")} / ${t("list.eyebrowModule")}`;
   const [step, setStep] = useState(0);
   const [busy, setBusy] = useState(false);
@@ -260,6 +293,61 @@ export function GoodsReceiptCreatePage({
       : selectedOrders;
     return [...new Set(source)];
   }, [direct, plannedLines, selectedOrders]);
+  const draftPayload = useMemo<GoodsReceiptDirectDraft>(() => ({
+    step,
+    selectedCustomer,
+    projectCodeFilter,
+    orderNumberSearch,
+    orders,
+    directOrderLines,
+    selectedDirectLineKeys,
+    selectedOrders,
+    lines,
+    confirmedLineOrder,
+    seriesValue,
+    documentDate,
+    waybillDate,
+    receiptNo,
+    isElectronicReceipt,
+    plannedArrival,
+    priority,
+    labelStrategy,
+  }), [
+    confirmedLineOrder, directOrderLines, documentDate, isElectronicReceipt,
+    labelStrategy, lines, orderNumberSearch, orders, plannedArrival, priority,
+    projectCodeFilter, receiptNo, selectedCustomer, selectedDirectLineKeys,
+    selectedOrders, seriesValue, step, waybillDate,
+  ]);
+  const restoreDraftPayload = useCallback((draft: GoodsReceiptDirectDraft): void => {
+    setStep(Math.min(1, Math.max(0, draft.step ?? 0)));
+    setSelectedCustomer(draft.selectedCustomer ?? null);
+    setProjectCodeFilter(draft.projectCodeFilter ?? "");
+    setOrderNumberSearch(draft.orderNumberSearch ?? "");
+    setOrders(draft.orders ?? []);
+    setDirectOrderLines(draft.directOrderLines ?? []);
+    setSelectedDirectLineKeys(draft.selectedDirectLineKeys ?? []);
+    setSelectedOrders(draft.selectedOrders ?? []);
+    setLines(draft.lines ?? []);
+    setConfirmedLineOrder(draft.confirmedLineOrder ?? []);
+    setSeriesValue(draft.seriesValue ?? null);
+    setDocumentDate(draft.documentDate || today());
+    setWaybillDate(draft.waybillDate || today());
+    setReceiptNo(draft.receiptNo ?? "");
+    setIsElectronicReceipt(draft.isElectronicReceipt ?? true);
+    setPlannedArrival(draft.plannedArrival ?? "");
+    setPriority(draft.priority ?? "3");
+    setLabelStrategy(draft.labelStrategy ?? "None");
+    setError(null);
+  }, []);
+  const operationDraft = useOperationDraft({
+    operationType: "goods-receipt-direct",
+    userId,
+    branchCode,
+    payload: draftPayload,
+    isMeaningful: hasGoodsReceiptDirectDraft,
+    onRestore: restoreDraftPayload,
+    enabled: direct && !busy && !result,
+  });
   const selectedProjectCodesForReview = [
     ...new Set(plannedLines.map((line) => line.projectCode?.trim()).filter(Boolean)),
   ].join(", ");
@@ -1125,6 +1213,7 @@ export function GoodsReceiptCreatePage({
           })),
         });
       setResult(created);
+      await operationDraft.clearDraft();
       toast.success(`${t("created")}: ${created.documentNo}`);
     } catch (cause) {
       report(cause, direct ? "Doğrudan mal kabul tamamlanamadı." : "Mal kabul emri oluşturulamadı.");
@@ -1251,6 +1340,13 @@ export function GoodsReceiptCreatePage({
 
   return (
     <section className="wms-ops-form space-y-5">
+      <OperationDraftRestoreDialog
+        open={operationDraft.restoreDialogOpen}
+        operationName="doğrudan mal kabul"
+        updatedAt={operationDraft.pendingDraft?.updatedAt}
+        onRestore={operationDraft.restoreDraft}
+        onDiscard={operationDraft.discardDraft}
+      />
       {!embedded ? (
         <header className="space-y-2">
           {isPremium ? (

@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useEffect,
   useMemo,
   useState,
@@ -25,6 +26,8 @@ import { PagedAppDropdown } from "@/components/shared/PagedAppDropdown";
 import { TrackingPlanEditor } from "@/components/shared/TrackingPlanEditor";
 import { StockTrackingPolicyField } from "@/features/stock-tracking/effective-stock-tracking";
 import { useAuthStore } from "@/stores/auth-store";
+import { OperationDraftRestoreDialog } from "@/features/operation-drafts/OperationDraftRestoreDialog";
+import { useOperationDraft } from "@/features/operation-drafts/useOperationDraft";
 import type {
   ActiveUserOption,
   CustomerOption,
@@ -90,6 +93,35 @@ const blankLine = (): TransferDraftLine => ({
   trackings: [],
 });
 
+type WarehouseTransferDirectDraft = {
+  sourceKind: TransferSourceKind;
+  customerValue: string | null;
+  orders: TransferOrderHeader[];
+  selectedOrders: string[];
+  sourceValue: string | null;
+  targetValue: string | null;
+  sourceStaging: string | null;
+  targetReceiving: string | null;
+  seriesId: string | null;
+  documentDate: string;
+  dispatchAt: string;
+  arrivalAt: string;
+  priority: string;
+  externalReference: string;
+  description: string;
+  lines: TransferDraftLine[];
+};
+
+const hasWarehouseTransferDirectDraft = (draft: WarehouseTransferDirectDraft) =>
+  Boolean(
+    draft.sourceValue ||
+    draft.targetValue ||
+    draft.selectedOrders.length ||
+    draft.externalReference.trim() ||
+    draft.description.trim() ||
+    draft.lines.some((line) => line.stockId || line.source),
+  );
+
 export type TransferDraftVariant = "warehouse" | "production" | "subcontracting";
 export type SubcontractingTransferDirection =
   | "IssueToSupplier"
@@ -105,6 +137,7 @@ export function WarehouseTransferDraftPage({
 }): ReactElement {
   const { t } = useTranslation("common");
   const branchCode = useAuthStore((x) => x.branch?.code ?? "0");
+  const userId = useAuthStore((x) => x.user?.id);
   const [policy, setPolicy] = useState<WarehouseTransferPolicy | null>(null);
   const [sourceKind, setSourceKind] =
     useState<TransferSourceKind>("StockBased");
@@ -147,6 +180,55 @@ export function WarehouseTransferDraftPage({
   const [lines, setLines] = useState<TransferDraftLine[]>([blankLine()]);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<CreateTransferDraftResult | null>(null);
+  const operationDraftPayload = useMemo<WarehouseTransferDirectDraft>(() => ({
+    sourceKind,
+    customerValue,
+    orders,
+    selectedOrders,
+    sourceValue,
+    targetValue,
+    sourceStaging,
+    targetReceiving,
+    seriesId,
+    documentDate,
+    dispatchAt,
+    arrivalAt,
+    priority,
+    externalReference,
+    description,
+    lines,
+  }), [
+    arrivalAt, customerValue, description, dispatchAt, documentDate, externalReference,
+    lines, orders, priority, selectedOrders, seriesId, sourceKind, sourceStaging,
+    sourceValue, targetReceiving, targetValue,
+  ]);
+  const restoreOperationDraft = useCallback((draft: WarehouseTransferDirectDraft) => {
+    setSourceKind(draft.sourceKind);
+    setCustomerValue(draft.customerValue);
+    setOrders(draft.orders);
+    setSelectedOrders(draft.selectedOrders);
+    setSourceValue(draft.sourceValue);
+    setTargetValue(draft.targetValue);
+    setSourceStaging(draft.sourceStaging);
+    setTargetReceiving(draft.targetReceiving);
+    setSeriesId(draft.seriesId);
+    setDocumentDate(draft.documentDate);
+    setDispatchAt(draft.dispatchAt);
+    setArrivalAt(draft.arrivalAt);
+    setPriority(draft.priority);
+    setExternalReference(draft.externalReference);
+    setDescription(draft.description);
+    setLines(draft.lines);
+  }, []);
+  const operationDraft = useOperationDraft({
+    operationType: "warehouse-transfer-direct",
+    userId,
+    branchCode,
+    payload: operationDraftPayload,
+    isMeaningful: hasWarehouseTransferDirectDraft,
+    onRestore: restoreOperationDraft,
+    enabled: variant === "warehouse" && executionKind === "Direct" && !busy && !result,
+  });
 
   useEffect(() => {
     if (fixedSubcontractingDirection) {
@@ -162,7 +244,6 @@ export function WarehouseTransferDraftPage({
   }, [branchCode]);
   useEffect(() => {
     setSeries([]);
-    setSeriesId(null);
     if (!sourceId) return;
     const documentType = variant === "production"
       ? "ProductionTransfer"
@@ -174,7 +255,10 @@ export function WarehouseTransferDraftPage({
       .then((rows) => {
         setSeries(rows);
         const preferred = rows.find((x) => x.isDefault) ?? rows[0];
-        setSeriesId(preferred ? String(preferred.id) : null);
+        setSeriesId((current) =>
+          current && rows.some((row) => String(row.id) === current)
+            ? current
+            : preferred ? String(preferred.id) : null);
       })
       .catch((error: Error) => toast.error(error.message));
   }, [sourceId, subcontractDirection, variant]);
@@ -524,6 +608,7 @@ export function WarehouseTransferDraftPage({
               })),
             })
           : await warehouseTransferApi.createDraft(transfer);
+      await operationDraft.clearDraft();
       setResult(created);
       toast.success(t(`${D}.toast.created`, { documentNo: created.documentNo }));
     } catch (error) {
@@ -602,6 +687,13 @@ export function WarehouseTransferDraftPage({
 
   return (
     <section className="space-y-5" data-no-auto-localize="true">
+      <OperationDraftRestoreDialog
+        open={operationDraft.restoreDialogOpen}
+        operationName="doğrudan depolar arası transfer (DAT)"
+        updatedAt={operationDraft.pendingDraft?.updatedAt}
+        onRestore={operationDraft.restoreDraft}
+        onDiscard={operationDraft.discardDraft}
+      />
       <header className="rounded-2xl border border-[var(--wms-app-border)] bg-[image:var(--wms-brand-gradient-soft)] p-6">
         <p className="text-xs font-bold uppercase tracking-[.18em] text-[var(--wms-brand-primary)]">
           {title}
@@ -696,6 +788,12 @@ export function WarehouseTransferDraftPage({
               onValueChange={(value) => {
                 setSourceValue(value);
                 setSourceStaging(null);
+                setSeriesId(null);
+                setLines((current) => current.map((line) => ({
+                  ...line,
+                  sourceLocationId: undefined,
+                  sourceLocationValue: null,
+                })));
               }}
               searchable
               placeholder={t(`${D}.document.sourceWarehousePlaceholder`)}
