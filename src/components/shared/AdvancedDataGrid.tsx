@@ -154,8 +154,13 @@ const gridScrollPositions = new Map<string, number>();
 function resolveColumnWidth<T>(columnOrKey: GridColumn<T> | string, widths: Record<string, number>, fallbackWidth?: number): number {
   const column = typeof columnOrKey === 'string' ? undefined : columnOrKey;
   const key = typeof columnOrKey === 'string' ? columnOrKey : columnOrKey.key;
-  if (widths[key] != null) return widths[key];
-  if (typeof column?.width === 'number' && Number.isFinite(column.width)) return Math.max(MIN_COLUMN_WIDTH, column.width);
+  const declaredWidth = typeof column?.width === 'number' && Number.isFinite(column.width)
+    ? Math.max(MIN_COLUMN_WIDTH, column.width)
+    : undefined;
+  if (widths[key] != null) {
+    return declaredWidth != null ? Math.max(widths[key], declaredWidth) : widths[key];
+  }
+  if (declaredWidth != null) return declaredWidth;
   if (typeof fallbackWidth === 'number' && Number.isFinite(fallbackWidth)) return Math.max(MIN_COLUMN_WIDTH, fallbackWidth);
   if (key === 'id') return DEFAULT_ID_COLUMN_WIDTH;
   if (key === 'actions') return DEFAULT_ACTIONS_COLUMN_WIDTH;

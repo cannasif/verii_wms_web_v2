@@ -1074,11 +1074,26 @@
     "completedQualitySuffix": ".",
     "footerReady": "{{selected}}/{{total}} Bleche bereit",
     "footerHint": "Fahrzeug + Feldannahme + Bilder + Ort in einer Transaktion.",
+    "footerIncomplete": "Jede Blechplatte benötigt einen Ort und ein Bild; für das Fahrzeug ist mindestens ein Bild erforderlich.",
+    "vehicleImageMissing": "Mindestens ein Fahrzeugbild ist erforderlich.",
+    "sheetImageMissing": "Mindestens ein Blechbild ist erforderlich.",
+    "completeBlockers": {
+      "title": "Fehlende Angaben zum Speichern"
+    },
+    "blocker": {
+      "towingPlate": "Zugfahrzeug-Kennzeichen muss eingegeben werden.",
+      "missingSheets": "Noch {{missing}} Blech(e) auswählen (insgesamt {{total}}).",
+      "location": "Annahmeort für {{dCode}} auswählen.",
+      "vehicleImage": "Mindestens ein Fahrzeugbild hinzufügen.",
+      "sheetImage": "Bild für Blech {{dCode}} hinzufügen.",
+      "saving": "Wird gespeichert..."
+    },
     "excelImportLabel": "Excel/Import",
     "sheetImageInfo": "Vorhanden {{current}} · Neu {{next}} Bilder",
     "section": {
       "vehicleInfo": "1 · Fahrzeug- und Fahrerdaten",
       "vehicleImages": "2 · Fahrzeugbilder",
+      "vehicleImagesRequired": "2 · Fahrzeugbilder *",
       "findSheet": "3 · Stahlblech per Seriennr. / DCode finden",
       "selectedSheets": "4 · Ausgewählte Bleche ({{selected}}/{{total}})",
       "savedAcceptedSheets": "Gespeicherte angenommene Bleche ({{count}})"
@@ -1096,7 +1111,8 @@
       "acceptanceNote": "Feld- / Annahmenotiz",
       "serialSearch": "Seriennummer eingeben — passende Blechinfos werden automatisch gefüllt",
       "acceptanceRack": "Annahme- / Staging-Regal *",
-      "sheetNote": "Blechannahme-Notiz"
+      "sheetNote": "Blechannahme-Notiz",
+      "sheetImages": "Blechbilder *"
     },
     "placeholder": {
       "selectCustomer": "Kunde auswählen",
@@ -4061,6 +4077,7 @@
       "importReferenceNo": "Transferreferenz",
       "vehicleDriver": "Fahrzeug / Fahrer",
       "vehicleNotLinked": "Fahrzeugeingang nicht verknüpft",
+      "driverNotProvided": "Fahrername nicht angegeben",
       "supplierCode": "Lieferantencode",
       "supplierName": "Lieferantenname",
       "warehouseCode": "Lagercode",
@@ -4076,6 +4093,8 @@
       "detailLoading": "Zeilen werden geladen...",
       "detailFailed": "Planzeilen konnten nicht geladen werden.",
       "detailEmpty": "Keine Zeilen für diesen Plan gefunden.",
+      "detailPendingVehicle": "Noch kein Fahrzeug zugeordnet",
+      "detailVehicleGroup": "{{plateNo}} · {{count}} Bleche",
       "lineNo": "Zeile",
       "dCode": "DCode",
       "supplierSerialNo": "Serie (Blech-Nr.)",

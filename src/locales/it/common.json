@@ -2542,6 +2542,7 @@
       "importReferenceNo": "Riferimento trasferimento",
       "vehicleDriver": "Veicolo / Autista",
       "vehicleNotLinked": "Ingresso veicolo non collegato",
+      "driverNotProvided": "Nome conducente non indicato",
       "supplierCode": "Codice fornitore",
       "supplierName": "Nome fornitore",
       "warehouseCode": "Codice magazzino",
@@ -2557,6 +2558,8 @@
       "detailLoading": "Caricamento righe...",
       "detailFailed": "Impossibile caricare le righe del piano.",
       "detailEmpty": "Nessuna riga per questo piano.",
+      "detailPendingVehicle": "Nessun veicolo assegnato",
+      "detailVehicleGroup": "{{plateNo}} · {{count}} lamiere",
       "lineNo": "Riga",
       "dCode": "DCode",
       "supplierSerialNo": "Serie (N° lastra)",
@@ -5099,11 +5102,26 @@
     "completedQualitySuffix": ".",
     "footerReady": "{{selected}}/{{total}} lamiere pronte",
     "footerHint": "Veicolo + accettazione in campo + immagini + ubicazione in un'unica transazione.",
+    "footerIncomplete": "Ogni lamiera richiede ubicazione e immagine; il veicolo richiede almeno un'immagine.",
+    "vehicleImageMissing": "È richiesta almeno un'immagine del veicolo.",
+    "sheetImageMissing": "È richiesta almeno un'immagine della lamiera.",
+    "completeBlockers": {
+      "title": "Elementi mancanti per salvare"
+    },
+    "blocker": {
+      "towingPlate": "La targa del veicolo trattore deve essere inserita.",
+      "missingSheets": "Seleziona altre {{missing}} lamiera/e (totale {{total}}).",
+      "location": "Seleziona l'ubicazione di accettazione per {{dCode}}.",
+      "vehicleImage": "Aggiungi almeno un'immagine del veicolo.",
+      "sheetImage": "Aggiungi un'immagine per la lamiera {{dCode}}.",
+      "saving": "Salvataggio..."
+    },
     "excelImportLabel": "Excel/importazione",
     "sheetImageInfo": "Esistenti {{current}} · Nuove {{next}} immagini",
     "section": {
       "vehicleInfo": "1 · Informazioni veicolo e conducente",
       "vehicleImages": "2 · Immagini del veicolo",
+      "vehicleImagesRequired": "2 · Immagini del veicolo *",
       "findSheet": "3 · Trova lamiera d'acciaio per serie / DCode",
       "selectedSheets": "4 · Lamiere selezionate ({{selected}}/{{total}})",
       "savedAcceptedSheets": "Lamiere accettate salvate ({{count}})"
@@ -5121,7 +5139,8 @@
       "acceptanceNote": "Nota di campo / accettazione",
       "serialSearch": "Inserisci il n. di serie — le informazioni della lamiera corrispondente verranno compilate automaticamente",
       "acceptanceRack": "Scaffale di accettazione / staging *",
-      "sheetNote": "Nota di accettazione della lamiera"
+      "sheetNote": "Nota di accettazione della lamiera",
+      "sheetImages": "Immagini della lamiera *"
     },
     "placeholder": {
       "selectCustomer": "Seleziona cliente",

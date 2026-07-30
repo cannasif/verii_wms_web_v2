@@ -2542,6 +2542,7 @@
       "importReferenceNo": "Référence de transfert",
       "vehicleDriver": "Véhicule / Chauffeur",
       "vehicleNotLinked": "Entrée véhicule non liée",
+      "driverNotProvided": "Nom du chauffeur non renseigné",
       "supplierCode": "Code fournisseur",
       "supplierName": "Nom fournisseur",
       "warehouseCode": "Code entrepôt",
@@ -2557,6 +2558,8 @@
       "detailLoading": "Chargement des lignes...",
       "detailFailed": "Impossible de charger les lignes du plan.",
       "detailEmpty": "Aucune ligne pour ce plan.",
+      "detailPendingVehicle": "Aucun véhicule assigné",
+      "detailVehicleGroup": "{{plateNo}} · {{count}} tôles",
       "lineNo": "Ligne",
       "dCode": "DCode",
       "supplierSerialNo": "Série (N° tôle)",
@@ -5099,11 +5102,26 @@
     "completedQualitySuffix": ".",
     "footerReady": "{{selected}}/{{total}} tôles prêtes",
     "footerHint": "Véhicule + acceptation terrain + images + emplacement en une seule transaction.",
+    "footerIncomplete": "Chaque tôle nécessite un emplacement et une image ; le véhicule nécessite au moins une image.",
+    "vehicleImageMissing": "Au moins une image du véhicule est obligatoire.",
+    "sheetImageMissing": "Au moins une image de tôle est obligatoire.",
+    "completeBlockers": {
+      "title": "Éléments manquants pour enregistrer"
+    },
+    "blocker": {
+      "towingPlate": "La plaque du véhicule tracteur doit être saisie.",
+      "missingSheets": "Sélectionnez encore {{missing}} tôle(s) (total {{total}}).",
+      "location": "Sélectionnez l'emplacement d'acceptation pour {{dCode}}.",
+      "vehicleImage": "Ajoutez au moins une image du véhicule.",
+      "sheetImage": "Ajoutez une image pour la tôle {{dCode}}.",
+      "saving": "Enregistrement..."
+    },
     "excelImportLabel": "Excel/import",
     "sheetImageInfo": "Existantes {{current}} · Nouvelles {{next}} images",
     "section": {
       "vehicleInfo": "1 · Informations véhicule et chauffeur",
       "vehicleImages": "2 · Images du véhicule",
+      "vehicleImagesRequired": "2 · Images du véhicule *",
       "findSheet": "3 · Trouver une tôle d'acier par série / DCode",
       "selectedSheets": "4 · Tôles sélectionnées ({{selected}}/{{total}})",
       "savedAcceptedSheets": "Tôles acceptées enregistrées ({{count}})"
@@ -5121,7 +5139,8 @@
       "acceptanceNote": "Note terrain / acceptation",
       "serialSearch": "Saisissez le n° de série — les infos de tôle correspondantes seront remplies automatiquement",
       "acceptanceRack": "Rayon d'acceptation / staging *",
-      "sheetNote": "Note d'acceptation de tôle"
+      "sheetNote": "Note d'acceptation de tôle",
+      "sheetImages": "Images de tôle *"
     },
     "placeholder": {
       "selectCustomer": "Sélectionner un client",

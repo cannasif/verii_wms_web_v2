@@ -1130,7 +1130,7 @@
       "towingPlateRequired": "Çekici plakası zorunludur.",
       "exactSheetCount": "Girilen levha adedi {{count}}; tam olarak {{count}} levha seçilmelidir.",
       "locationRequired": "Her levha için kabul konumu seçilmelidir.",
-      "sheetImageRequired": "{{dCode}} için en az bir levha görseli zorunludur.",
+      "sheetImageRequired": "{{dCode}} levhası için en az bir görsel zorunludur.",
       "vehicleImageRequired": "Araç kabulü için en az bir araç görseli zorunludur.",
       "alreadyCompleted": "Bu araç ve SAC kabulü daha önce tamamlandı.",
       "completed": "Araç giriş ve SAC kabulü başarıyla tamamlandı.",
@@ -1152,11 +1152,26 @@
     "completedQualitySuffix": "ekranını kullanın.",
     "footerReady": "{{selected}}/{{total}} levha hazır",
     "footerHint": "Araç + saha kabul + görseller + konum tek transaction.",
+    "footerIncomplete": "Her levha için konum ve görsel, araç için en az bir görsel zorunludur.",
+    "vehicleImageMissing": "En az bir araç görseli zorunludur.",
+    "sheetImageMissing": "En az bir levha görseli zorunludur.",
+    "completeBlockers": {
+      "title": "Kaydetmek için eksikler"
+    },
+    "blocker": {
+      "towingPlate": "Çekici plakası girilmeli.",
+      "missingSheets": "{{missing}} levha daha seçilmeli (toplam {{total}}).",
+      "location": "{{dCode}} için kabul konumu seçilmeli.",
+      "vehicleImage": "En az bir araç görseli eklenmeli.",
+      "sheetImage": "{{dCode}} levhası için görsel eklenmeli.",
+      "saving": "Kaydediliyor..."
+    },
     "excelImportLabel": "Excel/aktarım",
     "sheetImageInfo": "Mevcut {{current}} · Yeni {{next}} görsel",
     "section": {
       "vehicleInfo": "1 · Araç ve sürücü bilgileri",
       "vehicleImages": "2 · Araç görselleri",
+      "vehicleImagesRequired": "2 · Araç görselleri *",
       "findSheet": "3 · Seri / DCode ile SAC levha bul",
       "selectedSheets": "4 · Seçilen levhalar ({{selected}}/{{total}})",
       "savedAcceptedSheets": "Kayıtlı kabul levhaları ({{count}})"
@@ -1174,7 +1189,8 @@
       "acceptanceNote": "Saha / kabul notu",
       "serialSearch": "Seri no yazın — eşleşen levha bilgisi otomatik gelir",
       "acceptanceRack": "Kabul / staging rafı *",
-      "sheetNote": "Levha kabul notu"
+      "sheetNote": "Levha kabul notu",
+      "sheetImages": "Levha görselleri *"
     },
     "placeholder": {
       "selectCustomer": "Cari seçin",
@@ -4207,6 +4223,7 @@
       "importReferenceNo": "Aktarım Referansı",
       "vehicleDriver": "Araç / Şoför",
       "vehicleNotLinked": "Araç girişi bağlanmadı",
+      "driverNotProvided": "Şoför bilgisi girilmedi",
       "supplierCode": "Tedarikçi Kodu",
       "supplierName": "Tedarikçi Adı",
       "warehouseCode": "Depo Kodu",
@@ -4222,6 +4239,8 @@
       "detailLoading": "Satırlar yükleniyor...",
       "detailFailed": "Plan satırları alınamadı.",
       "detailEmpty": "Bu plana ait satır bulunamadı.",
+      "detailPendingVehicle": "Henüz araç atanmadı",
+      "detailVehicleGroup": "{{plateNo}} · {{count}} levha",
       "lineNo": "Satır",
       "dCode": "DCode",
       "supplierSerialNo": "Seri No (Levha No)",

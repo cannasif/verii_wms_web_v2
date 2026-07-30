@@ -2542,6 +2542,7 @@
       "importReferenceNo": "Referencia de transferencia",
       "vehicleDriver": "Vehículo / Conductor",
       "vehicleNotLinked": "Entrada de vehículo no vinculada",
+      "driverNotProvided": "Nombre del conductor no indicado",
       "supplierCode": "Código proveedor",
       "supplierName": "Nombre proveedor",
       "warehouseCode": "Código almacén",
@@ -2557,6 +2558,8 @@
       "detailLoading": "Cargando líneas...",
       "detailFailed": "No se pudieron cargar las líneas del plan.",
       "detailEmpty": "No hay líneas para este plan.",
+      "detailPendingVehicle": "Sin vehículo asignado",
+      "detailVehicleGroup": "{{plateNo}} · {{count}} chapas",
       "lineNo": "Línea",
       "dCode": "DCode",
       "supplierSerialNo": "Serie (Nº chapa)",
@@ -5099,11 +5102,26 @@
     "completedQualitySuffix": ".",
     "footerReady": "{{selected}}/{{total}} chapas listas",
     "footerHint": "Vehículo + aceptación en campo + imágenes + ubicación en una sola transacción.",
+    "footerIncomplete": "Cada chapa requiere ubicación e imagen; el vehículo requiere al menos una imagen.",
+    "vehicleImageMissing": "Se requiere al menos una imagen del vehículo.",
+    "sheetImageMissing": "Se requiere al menos una imagen de chapa.",
+    "completeBlockers": {
+      "title": "Elementos faltantes para guardar"
+    },
+    "blocker": {
+      "towingPlate": "Debe introducirse la matrícula del vehículo tractor.",
+      "missingSheets": "Seleccione {{missing}} chapa(s) más (total {{total}}).",
+      "location": "Seleccione la ubicación de aceptación para {{dCode}}.",
+      "vehicleImage": "Añada al menos una imagen del vehículo.",
+      "sheetImage": "Añada una imagen para la chapa {{dCode}}.",
+      "saving": "Guardando..."
+    },
     "excelImportLabel": "Excel/importación",
     "sheetImageInfo": "Existentes {{current}} · Nuevas {{next}} imágenes",
     "section": {
       "vehicleInfo": "1 · Información del vehículo y del conductor",
       "vehicleImages": "2 · Imágenes del vehículo",
+      "vehicleImagesRequired": "2 · Imágenes del vehículo *",
       "findSheet": "3 · Buscar chapa de acero por serie / DCode",
       "selectedSheets": "4 · Chapas seleccionadas ({{selected}}/{{total}})",
       "savedAcceptedSheets": "Chapas aceptadas guardadas ({{count}})"
@@ -5121,7 +5139,8 @@
       "acceptanceNote": "Nota de campo / aceptación",
       "serialSearch": "Escriba el n.º de serie — la información de la chapa coincidente se completará automáticamente",
       "acceptanceRack": "Estantería de aceptación / staging *",
-      "sheetNote": "Nota de aceptación de chapa"
+      "sheetNote": "Nota de aceptación de chapa",
+      "sheetImages": "Imágenes de chapa *"
     },
     "placeholder": {
       "selectCustomer": "Seleccionar cliente",

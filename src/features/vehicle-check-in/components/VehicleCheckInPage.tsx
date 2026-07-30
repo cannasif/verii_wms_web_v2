@@ -15,6 +15,7 @@ import {
   X,
 } from 'lucide-react';
 import {toast} from 'sonner';
+import {Tooltip,TooltipContent,TooltipProvider,TooltipTrigger} from '@/components/ui/tooltip';
 import {PagedAppDropdown} from '@/components/shared/PagedAppDropdown';
 import {goodsReceiptV2Api} from '@/features/goods-receipt-v2/api/goods-receipt.api';
 import {steelReceiptApi} from '@/features/steel-receipt/api/steel-receipt.api';
@@ -88,6 +89,42 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
   const selectedPlates=useMemo(()=>Object.values(selected),[selected]);
   const selectedCount=selectedPlates.length;
   const totalQuantity=selectedPlates.reduce((sum,item)=>sum+item.row.expectedQuantity,0);
+  const vehicleImageCount=(record?.images.length??0)+vehicleFiles.length;
+  const plateHasImages=(row:SteelVehicleAcceptanceCandidate,lineId:number)=>
+    row.attachmentCount+(plateFiles[lineId]?.length??0)>0;
+  const platesWithoutImages=selectedPlates.filter(item=>!plateHasImages(item.row,item.row.id));
+  const platesWithoutLocation=selectedPlates.filter(item=>!item.locationId);
+  const readyToComplete=
+    form.plateNo.trim().length>0&&
+    selectedCount===form.steelSheetCount&&
+    vehicleImageCount>0&&
+    platesWithoutImages.length===0&&
+    platesWithoutLocation.length===0;
+  const completeBlockers=useMemo(()=>{
+    const items:string[]=[];
+    if(!form.plateNo.trim())items.push(t('vehicleCheckIn.blocker.towingPlate',{defaultValue:'Çekici plakası girilmeli.'}));
+    if(selectedCount<form.steelSheetCount){
+      items.push(t('vehicleCheckIn.blocker.missingSheets',{
+        missing:form.steelSheetCount-selectedCount,
+        total:form.steelSheetCount,
+        defaultValue:`${form.steelSheetCount-selectedCount} levha daha seçilmeli (toplam ${form.steelSheetCount}).`,
+      }));
+    }
+    platesWithoutLocation.forEach(item=>{
+      items.push(t('vehicleCheckIn.blocker.location',{
+        dCode:item.row.dCode,
+        defaultValue:`${item.row.dCode} için kabul konumu seçilmeli.`,
+      }));
+    });
+    if(vehicleImageCount===0)items.push(t('vehicleCheckIn.blocker.vehicleImage',{defaultValue:'En az bir araç görseli eklenmeli.'}));
+    platesWithoutImages.forEach(item=>{
+      items.push(t('vehicleCheckIn.blocker.sheetImage',{
+        dCode:item.row.dCode,
+        defaultValue:`${item.row.dCode} levhası için görsel eklenmeli.`,
+      }));
+    });
+    return items;
+  },[form.plateNo,form.steelSheetCount,platesWithoutImages,platesWithoutLocation,selectedCount,t,vehicleImageCount]);
   const acceptedPlates=completed?.plates??[];
   const acceptedPlateDetails=useQuery({
     queryKey:['steel-vehicle-accepted-plate-details',acceptedPlates],
@@ -291,7 +328,15 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
     if(!form.plateNo.trim()){toast.error(t('vehicleCheckIn.toast.towingPlateRequired',{defaultValue:'Çekici plakası zorunludur.'}));return}
     if(selectedCount!==form.steelSheetCount){toast.error(t('vehicleCheckIn.toast.exactSheetCount',{defaultValue:'Girilen levha adedi {{count}}; tam olarak {{count}} levha seçilmelidir.',count:form.steelSheetCount}));return}
     if(selectedPlates.some(item=>!item.locationId)){toast.error(t('vehicleCheckIn.toast.locationRequired',{defaultValue:'Her levha için kabul konumu seçilmelidir.'}));return}
-    if((record?.images.length??0)+vehicleFiles.length===0){toast.error(t('vehicleCheckIn.toast.vehicleImageRequired',{defaultValue:'Araç kabulü için en az bir araç görseli zorunludur.'}));return}
+    if(vehicleImageCount===0){toast.error(t('vehicleCheckIn.toast.vehicleImageRequired',{defaultValue:'Araç kabulü için en az bir araç görseli zorunludur.'}));return}
+    const missingImages=selectedPlates.find(item=>!plateHasImages(item.row,item.row.id));
+    if(missingImages){
+      toast.error(t('vehicleCheckIn.toast.sheetImageRequired',{
+        dCode:missingImages.row.dCode,
+        defaultValue:`${missingImages.row.dCode} levhası için en az bir görsel zorunludur.`,
+      }));
+      return;
+    }
 
     setBusy(true);
     try{
@@ -344,8 +389,9 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
       </div>
     </Panel>
 
-    <Panel title={t('vehicleCheckIn.section.vehicleImages',{defaultValue:'2 · Araç görselleri'})} icon={<Camera className="size-5"/>}>
+    <Panel title={t('vehicleCheckIn.section.vehicleImagesRequired',{defaultValue:'2 · Araç görselleri *'})} icon={<Camera className="size-5"/>}>
       <p className="mb-4 text-sm text-slate-500">{t('vehicleCheckIn.vehicleImagesHelp',{defaultValue:'Plaka, dorse, yük güvenliği ve kapı kabul kanıtlarını seçin. Yeni görseller SAC kabulüyle aynı işlemde yüklenecektir.'})}</p>
+      {vehicleImageCount===0&&<p className="mb-4 text-sm font-semibold text-amber-600">{t('vehicleCheckIn.vehicleImageMissing',{defaultValue:'En az bir araç görseli zorunludur.'})}</p>}
       <ImageInputActions
         selectLabel={t('vehicleCheckIn.action.pickVehicleImage',{defaultValue:'Araç görseli seç'})}
         captureLabel={t('vehicleCheckIn.action.captureVehicleImage',{defaultValue:'Araç fotoğrafı çek'})}
@@ -392,6 +438,7 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
         key={item.row.id}
         item={item}
         files={plateFiles[item.row.id]??[]}
+        missingImages={!plateHasImages(item.row,item.row.id)}
         onChange={changes=>updateSelected(item.row.id,changes)}
         onFiles={files=>onPlateFiles(item.row.id,files)}
         onRemoveFile={index=>setPlateFiles(current=>({...current,[item.row.id]:(current[item.row.id]??[]).filter((_,i)=>i!==index)}))}
@@ -428,10 +475,36 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
     </section>}
 
     <div className="sticky bottom-4 z-10 flex flex-col gap-3 rounded-2xl border bg-[var(--wms-app-panel)] p-4 shadow-xl sm:flex-row sm:items-center sm:justify-between">
-      <div><strong>{t('vehicleCheckIn.footerReady',{defaultValue:'{{selected}}/{{total}} levha hazır',selected:selectedCount,total:form.steelSheetCount})}</strong><p className="text-xs text-slate-500">{t('vehicleCheckIn.footerHint',{defaultValue:'Araç + saha kabul + görseller + konum tek transaction.'})}</p></div>
-      <button type="button" onClick={()=>void complete()} disabled={busy||selectedCount!==form.steelSheetCount} className="rounded-xl bg-cyan-600 px-6 py-3 font-black text-white disabled:cursor-not-allowed disabled:opacity-40">{busy?<Loader2 className="mr-2 inline size-4 animate-spin"/>:<CheckCircle2 className="mr-2 inline size-4"/>}{t('vehicleCheckIn.action.complete',{defaultValue:'Araç Giriş ve SAC Kabul'})}</button>
+      <div><strong>{t('vehicleCheckIn.footerReady',{defaultValue:'{{selected}}/{{total}} levha hazır',selected:selectedCount,total:form.steelSheetCount})}</strong><p className="text-xs text-slate-500">{readyToComplete?t('vehicleCheckIn.footerHint',{defaultValue:'Araç + saha kabul + görseller + konum tek transaction.'}):t('vehicleCheckIn.footerIncomplete',{defaultValue:'Her levha için konum ve görsel, araç için en az bir görsel zorunludur.'})}</p></div>
+      <CompleteAcceptanceButton
+        busy={busy}
+        ready={readyToComplete}
+        blockers={completeBlockers}
+        label={t('vehicleCheckIn.action.complete',{defaultValue:'Araç Giriş ve SAC Kabul'})}
+        savingLabel={t('vehicleCheckIn.blocker.saving',{defaultValue:'Kaydediliyor...'})}
+        title={t('vehicleCheckIn.completeBlockers.title',{defaultValue:'Kaydetmek için eksikler'})}
+        onComplete={()=>void complete()}
+      />
     </div>
   </section>;
+}
+
+function CompleteAcceptanceButton({busy,ready,blockers,label,savingLabel,title,onComplete}:{busy:boolean;ready:boolean;blockers:string[];label:string;savingLabel:string;title:string;onComplete:()=>void}){
+  const button=<button type="button" onClick={onComplete} disabled={busy||!ready} className="rounded-xl bg-cyan-600 px-6 py-3 font-black text-white disabled:cursor-not-allowed disabled:opacity-40">{busy?<Loader2 className="mr-2 inline size-4 animate-spin"/>:<CheckCircle2 className="mr-2 inline size-4"/>}{label}</button>;
+  if(ready&&!busy)return button;
+  return <TooltipProvider delayDuration={200}>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="inline-flex shrink-0">{button}</span>
+      </TooltipTrigger>
+      <TooltipContent side="top" align="end" sideOffset={8} className="max-w-[22rem] overflow-hidden rounded-xl border border-[var(--wms-app-border)] !bg-[var(--wms-app-panel)] p-0 text-left !text-[var(--wms-app-text)] shadow-xl [&>svg]:!fill-[var(--wms-app-panel)] [&>svg]:!bg-[var(--wms-app-panel)]">
+        <div className="border-b border-[var(--wms-app-border)] bg-slate-100 px-3.5 py-2 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-cyan-600 dark:bg-slate-800">{title}</div>
+        <ul className="space-y-1.5 bg-[var(--wms-app-panel)] px-3.5 py-3 text-[0.78rem] leading-5 text-[var(--wms-app-text)]">
+          {(busy?[savingLabel]:blockers).map(item=><li key={item} className="flex gap-2"><span className="mt-1.5 size-1 shrink-0 rounded-full bg-cyan-500" aria-hidden/>{item}</li>)}
+        </ul>
+      </TooltipContent>
+    </Tooltip>
+  </TooltipProvider>;
 }
 
 function CandidateTable({rows,loading,selected,onToggle,onToggleAll}:{rows:SteelVehicleAcceptanceCandidate[];loading:boolean;selected:Record<number,SelectedPlate>;onToggle:(row:SteelVehicleAcceptanceCandidate)=>void;onToggleAll:(rows:SteelVehicleAcceptanceCandidate[],select:boolean)=>void}){
@@ -462,7 +535,7 @@ function CandidateTable({rows,loading,selected,onToggle,onToggleAll}:{rows:Steel
   </div>;
 }
 
-function SelectedPlateCard({item,files,onChange,onFiles,onRemoveFile,onRemove}:{item:SelectedPlate;files:File[];onChange:(changes:Partial<SelectedPlate>)=>void;onFiles:(files:FileList|null)=>void;onRemoveFile:(index:number)=>void;onRemove:()=>void}){
+function SelectedPlateCard({item,files,missingImages,onChange,onFiles,onRemoveFile,onRemove}:{item:SelectedPlate;files:File[];missingImages:boolean;onChange:(changes:Partial<SelectedPlate>)=>void;onFiles:(files:FileList|null)=>void;onRemoveFile:(index:number)=>void;onRemove:()=>void}){
   const {t}=useTranslation('common');
   const row=item.row;
   return <article className="rounded-2xl border bg-[var(--wms-app-surface)] p-4">
@@ -474,14 +547,18 @@ function SelectedPlateCard({item,files,onChange,onFiles,onRemoveFile,onRemove}:{
       <Field label={t('vehicleCheckIn.field.acceptanceRack',{defaultValue:'Kabul / staging rafı *'})}><PagedAppDropdown portalContainer={null} queryKey={['steel-acceptance-location',row.id,row.targetWarehouseId]} fetchPage={request=>goodsReceiptV2Api.locations(request,row.targetWarehouseId)} toOption={location=>({value:String(location.id),label:`${location.code} · ${location.name}`,description:location.locationType})} selectedOption={{value:String(row.receivingLocationId),label:`${row.receivingLocationCode} · ${row.receivingLocationName}`}} value={item.locationValue} onValueChange={value=>onChange({locationId:Number(value),locationValue:value||''})} searchable enabled={row.targetWarehouseId>0} dependencies={[row.targetWarehouseId]}/></Field>
       <Field label={t('vehicleCheckIn.field.sheetNote',{defaultValue:'Levha kabul notu'})}><input className="input" value={item.note} onChange={event=>onChange({note:event.target.value})} maxLength={1000}/></Field>
     </div>
-    <div className="mt-4 flex flex-wrap items-center gap-3">
-      <ImageInputActions
-        compact
-        selectLabel={t('vehicleCheckIn.action.addSheetImage',{defaultValue:'Levha görseli ekle'})}
-        captureLabel={t('vehicleCheckIn.action.captureSheetImage',{defaultValue:'Levha fotoğrafı çek'})}
-        onFiles={onFiles}
-      />
-      <span className="text-xs text-slate-500">{t('vehicleCheckIn.sheetImageInfo',{defaultValue:'Mevcut {{current}} · Yeni {{next}} görsel',current:row.attachmentCount,next:files.length})}</span>
+    <div className="mt-4 space-y-2">
+      <strong className="text-sm">{t('vehicleCheckIn.field.sheetImages',{defaultValue:'Levha görselleri *'})}</strong>
+      <div className="flex flex-wrap items-center gap-3">
+        <ImageInputActions
+          compact
+          selectLabel={t('vehicleCheckIn.action.addSheetImage',{defaultValue:'Levha görseli ekle'})}
+          captureLabel={t('vehicleCheckIn.action.captureSheetImage',{defaultValue:'Levha fotoğrafı çek'})}
+          onFiles={onFiles}
+        />
+        <span className={`text-xs ${missingImages?'font-semibold text-amber-600':'text-slate-500'}`}>{t('vehicleCheckIn.sheetImageInfo',{defaultValue:'Mevcut {{current}} · Yeni {{next}} görsel',current:row.attachmentCount,next:files.length})}</span>
+      </div>
+      {missingImages&&<p className="text-xs font-semibold text-amber-600">{t('vehicleCheckIn.sheetImageMissing',{defaultValue:'En az bir levha görseli zorunludur.'})}</p>}
     </div>
     {files.length>0&&<div className="mt-3 grid gap-3 sm:grid-cols-3 lg:grid-cols-5">{files.map((file,index)=><PendingImage key={`${file.name}-${file.lastModified}-${index}`} file={file} onRemove={()=>onRemoveFile(index)}/>)}</div>}
   </article>;

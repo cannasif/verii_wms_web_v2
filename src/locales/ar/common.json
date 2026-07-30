@@ -2542,6 +2542,7 @@
       "importReferenceNo": "مرجع النقل",
       "vehicleDriver": "المركبة / السائق",
       "vehicleNotLinked": "لم يتم ربط دخول المركبة",
+      "driverNotProvided": "لم يتم إدخال اسم السائق",
       "supplierCode": "رمز المورد",
       "supplierName": "اسم المورد",
       "warehouseCode": "رمز المستودع",
@@ -2557,6 +2558,8 @@
       "detailLoading": "جاري تحميل الصفوف...",
       "detailFailed": "تعذر تحميل صفوف الخطة.",
       "detailEmpty": "لا توجد صفوف لهذه الخطة.",
+      "detailPendingVehicle": "لم يتم تعيين مركبة بعد",
+      "detailVehicleGroup": "{{plateNo}} · {{count}} ألواح",
       "lineNo": "الصف",
       "dCode": "DCode",
       "supplierSerialNo": "التسلسل (رقم اللوح)",
@@ -5099,11 +5102,26 @@
     "completedQualitySuffix": ".",
     "footerReady": "{{selected}}/{{total}} ألواح جاهزة",
     "footerHint": "مركبة + قبول ميداني + صور + موقع في معاملة واحدة.",
+    "footerIncomplete": "كل لوح يحتاج موقعًا وصورة؛ المركبة تحتاج صورة واحدة على الأقل.",
+    "vehicleImageMissing": "مطلوب صورة مركبة واحدة على الأقل.",
+    "sheetImageMissing": "مطلوب صورة لوح واحدة على الأقل.",
+    "completeBlockers": {
+      "title": "عناصر ناقصة للحفظ"
+    },
+    "blocker": {
+      "towingPlate": "يجب إدخال لوحة مركبة القطر.",
+      "missingSheets": "حدد {{missing}} لوحًا إضافيًا (الإجمالي {{total}}).",
+      "location": "حدد موقع القبول لـ {{dCode}}.",
+      "vehicleImage": "أضف صورة مركبة واحدة على الأقل.",
+      "sheetImage": "أضف صورة للوح {{dCode}}.",
+      "saving": "جاري الحفظ..."
+    },
     "excelImportLabel": "Excel/استيراد",
     "sheetImageInfo": "موجودة {{current}} · جديدة {{next}} صور",
     "section": {
       "vehicleInfo": "1 · معلومات المركبة والسائق",
       "vehicleImages": "2 · صور المركبة",
+      "vehicleImagesRequired": "2 · صور المركبة *",
       "findSheet": "3 · البحث عن لوح صلب بالرقم التسلسلي / DCode",
       "selectedSheets": "4 · الألواح المحددة ({{selected}}/{{total}})",
       "savedAcceptedSheets": "الألواح المقبولة المحفوظة ({{count}})"
@@ -5121,7 +5139,8 @@
       "acceptanceNote": "ملاحظة الميدان / القبول",
       "serialSearch": "أدخل الرقم التسلسلي — ستُملأ معلومات اللوح المطابق تلقائيًا",
       "acceptanceRack": "رف القبول / التدريج *",
-      "sheetNote": "ملاحظة قبول اللوح"
+      "sheetNote": "ملاحظة قبول اللوح",
+      "sheetImages": "صور اللوح *"
     },
     "placeholder": {
       "selectCustomer": "اختر العميل",

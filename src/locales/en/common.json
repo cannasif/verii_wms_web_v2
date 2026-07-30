@@ -1130,7 +1130,7 @@
       "towingPlateRequired": "Towing vehicle plate is required.",
       "exactSheetCount": "Entered sheet count is {{count}}; you must select exactly {{count}} sheets.",
       "locationRequired": "Acceptance location must be selected for each sheet.",
-      "sheetImageRequired": "At least one sheet image is required for {{dCode}}.",
+      "sheetImageRequired": "At least one image is required for sheet {{dCode}}.",
       "vehicleImageRequired": "At least one vehicle image is required for acceptance.",
       "alreadyCompleted": "This vehicle and steel acceptance were already completed before.",
       "completed": "Vehicle check-in and steel acceptance completed successfully.",
@@ -1152,11 +1152,26 @@
     "completedQualitySuffix": "screen.",
     "footerReady": "{{selected}}/{{total}} sheets ready",
     "footerHint": "Vehicle + field acceptance + images + location in one transaction.",
+    "footerIncomplete": "Each sheet requires a location and image; the vehicle requires at least one image.",
+    "vehicleImageMissing": "At least one vehicle image is required.",
+    "sheetImageMissing": "At least one sheet image is required.",
+    "completeBlockers": {
+      "title": "Missing items to save"
+    },
+    "blocker": {
+      "towingPlate": "Towing vehicle plate must be entered.",
+      "missingSheets": "Select {{missing}} more sheet(s) (total {{total}}).",
+      "location": "Select acceptance location for {{dCode}}.",
+      "vehicleImage": "Add at least one vehicle image.",
+      "sheetImage": "Add an image for sheet {{dCode}}.",
+      "saving": "Saving..."
+    },
     "excelImportLabel": "Excel/import",
     "sheetImageInfo": "Existing {{current}} · New {{next}} images",
     "section": {
       "vehicleInfo": "1 · Vehicle and driver information",
       "vehicleImages": "2 · Vehicle images",
+      "vehicleImagesRequired": "2 · Vehicle images *",
       "findSheet": "3 · Find steel sheet by Serial / DCode",
       "selectedSheets": "4 · Selected sheets ({{selected}}/{{total}})",
       "savedAcceptedSheets": "Saved accepted sheets ({{count}})"
@@ -1174,7 +1189,8 @@
       "acceptanceNote": "Field / acceptance note",
       "serialSearch": "Enter serial number — matching sheet info will be auto-filled",
       "acceptanceRack": "Acceptance / staging rack *",
-      "sheetNote": "Sheet acceptance note"
+      "sheetNote": "Sheet acceptance note",
+      "sheetImages": "Sheet images *"
     },
     "placeholder": {
       "selectCustomer": "Select customer",
@@ -4186,6 +4202,7 @@
       "importReferenceNo": "Transfer Reference",
       "vehicleDriver": "Vehicle / Driver",
       "vehicleNotLinked": "Vehicle entry not linked",
+      "driverNotProvided": "Driver name not provided",
       "supplierCode": "Supplier Code",
       "supplierName": "Supplier Name",
       "warehouseCode": "Warehouse Code",
@@ -4201,6 +4218,8 @@
       "detailLoading": "Loading lines...",
       "detailFailed": "Could not load plan lines.",
       "detailEmpty": "No lines found for this plan.",
+      "detailPendingVehicle": "No vehicle assigned yet",
+      "detailVehicleGroup": "{{plateNo}} · {{count}} sheets",
       "lineNo": "Line",
       "dCode": "DCode",
       "supplierSerialNo": "Serial (Sheet No)",
