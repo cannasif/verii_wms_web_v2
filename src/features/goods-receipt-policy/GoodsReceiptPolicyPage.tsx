@@ -168,7 +168,7 @@ export function GoodsReceiptPolicyPage() {
               ].map(([value, label]) => ({ value, label }))}
             />
           </Field>
-          <Field label="Mal kabulde hangi raflar seçilebilir?">
+          <Field label="Kalite bekleyen üründe hangi raflar seçilebilir?">
             <AppDropdown
               value={form.locationSelectionPolicy}
               onValueChange={(value) => set(
@@ -180,7 +180,7 @@ export function GoodsReceiptPolicyPage() {
               options={[
                 {
                   value: 'ReceivingOrStagingOnly',
-                  label: 'Yalnızca kabul / staging alanları',
+                  label: 'Yalnızca kabul / staging alanları (önerilen)',
                 },
                 {
                   value: 'AnyActiveWarehouseLocation',
@@ -188,6 +188,9 @@ export function GoodsReceiptPolicyPage() {
                 },
               ]}
             />
+            <p className="mt-1 text-xs text-slate-500">
+              Kalite kuralı olmayan ürünler ve kalite raf blokajı kapalı işlemler her zaman depodaki aktif raflara alınabilir.
+            </p>
           </Field>
         </div>
 

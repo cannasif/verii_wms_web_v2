@@ -310,12 +310,13 @@ export function GoodsReceiptCreatePage({
     void goodsReceiptV2Api.warehouseAccess()
       .then((access) => { if (active) setWarehouseAccess(access); })
       .catch((cause: Error) => { if (active) report(cause, "Depo yetkileri alınamadı."); });
-    void goodsReceiptV2Api.policy(branchCode)
+    void goodsReceiptV2Api.policy(customer?.branch ?? branchCode)
       .then((policy) => {
         if (active) {
           setShowAllocatedOpenOrderLines(policy.showAllocatedOpenOrderLines);
           setAllowAnyActiveLocation(
-            policy.locationSelectionPolicy === "AnyActiveWarehouseLocation",
+            policy.locationSelectionPolicy === "AnyActiveWarehouseLocation"
+              || !policy.blockPutawayUntilQualityDecision,
           );
         }
       })
@@ -326,7 +327,7 @@ export function GoodsReceiptCreatePage({
         }
       });
     return () => { active = false; };
-  }, [branchCode]);
+  }, [branchCode, customer?.branch]);
 
   useEffect(() => {
     const keys = new Set(lines.map((line) => lineKey(line)));
@@ -1841,7 +1842,9 @@ export function GoodsReceiptCreatePage({
                   return (
                   <ReceiptEntryRow
                     key={key}
-                    allowAnyActiveLocation={allowAnyActiveLocation}
+                    allowAnyActiveLocation={
+                      allowAnyActiveLocation || !line.requireQualityControl
+                    }
                     dataLineKey={key}
                     sortOrder={lineSortOrder.get(key) ?? 0}
                     line={line}
