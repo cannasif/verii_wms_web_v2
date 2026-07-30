@@ -3,6 +3,16 @@
   "hub": {
     "title": "Warehouse Outbound Process Center",
     "description": "Manage request, reservation, picking, verification, loading and ERP finalisation on one document.",
+    "phases": {
+      "start": {
+        "title": "Start Outbound",
+        "description": "Pick the right outbound scenario by order source and execution mode."
+      },
+      "manage": {
+        "title": "Monitor & Manage",
+        "description": "Track records and manage the warehouse outbound process policy."
+      }
+    },
     "cards": {
       "orderedAssigned": { "title": "Order-Based · Assigned", "description": "Allocate order lines and assign the picking task to warehouse operators." },
       "stockAssigned": { "title": "Free Stock · Assigned", "description": "Create a planned outbound order and operator task from available stock." },

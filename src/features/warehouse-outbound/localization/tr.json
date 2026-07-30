@@ -3,6 +3,16 @@
   "hub": {
     "title": "Ambar Çıkış Süreç Merkezi",
     "description": "Talep, rezervasyon, toplama, doğrulama, yükleme ve ERP kesinleştirme adımlarını tek belge üzerinden yönetin.",
+    "phases": {
+      "start": {
+        "title": "Çıkışı Başlat",
+        "description": "Sipariş kaynağı ve emir yürütme biçimine göre doğru çıkış senaryosunu seçin."
+      },
+      "manage": {
+        "title": "İzle ve Yönet",
+        "description": "Kayıtları izleyin ve ambar çıkış süreç politikasını yönetin."
+      }
+    },
     "cards": {
       "orderedAssigned": { "title": "Siparişli · Emirli", "description": "Sipariş kalemlerini ayırın ve toplama görevini depo personeline atayın." },
       "stockAssigned": { "title": "Serbest Stok · Emirli", "description": "Kullanılabilir stoktan planlı çıkış emri ve kullanıcı görevi oluşturun." },

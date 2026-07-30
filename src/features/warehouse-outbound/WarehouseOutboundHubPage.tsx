@@ -1,49 +1,49 @@
-import { ArrowRight, ClipboardList, Loader2, PackageCheck, Settings2, ShoppingCart, Truck, UserRoundCog } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { ClipboardList, PackageCheck, Settings2, ShoppingCart, Truck, UserRoundCog } from 'lucide-react';
+import { OpsProcessHub, type OpsProcessHubPhase } from '@/components/shared/OpsProcessHub';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
-
-const cards = [
-  { key: 'orderedAssigned', icon: ClipboardList },
-  { key: 'stockAssigned', icon: UserRoundCog },
-  { key: 'orderedDirect', icon: ShoppingCart },
-  { key: 'stockDirect', icon: Truck },
-] as const;
 
 export function WarehouseOutboundHubPage() {
   const { t, moduleReady } = useModuleTranslation('warehouse-outbound');
-  if (!moduleReady) {
-    return <section className="grid min-h-[50vh] place-items-center"><Loader2 className="size-7 animate-spin text-[var(--wms-brand-primary)]" /></section>;
-  }
+
+  const phases: OpsProcessHubPhase[] = [
+    {
+      key: 'start',
+      number: '01',
+      title: t('hub.phases.start.title', { defaultValue: 'Çıkışı Başlat' }),
+      description: t('hub.phases.start.description', {
+        defaultValue: 'Sipariş kaynağı ve emir yürütme biçimine göre doğru çıkış senaryosunu seçin.',
+      }),
+      sectionCode: 'WO-START',
+      items: [
+        { key: 'orderedAssigned', code: 'WO.OA', href: '/warehouse/warehouse-outbounds/new', icon: ClipboardList, title: t('hub.cards.orderedAssigned.title'), description: t('hub.cards.orderedAssigned.description') },
+        { key: 'stockAssigned', code: 'WO.SA', href: '/warehouse/warehouse-outbounds/new', icon: UserRoundCog, title: t('hub.cards.stockAssigned.title'), description: t('hub.cards.stockAssigned.description') },
+        { key: 'orderedDirect', code: 'WO.OD', href: '/warehouse/warehouse-outbounds/new', icon: ShoppingCart, title: t('hub.cards.orderedDirect.title'), description: t('hub.cards.orderedDirect.description') },
+        { key: 'stockDirect', code: 'WO.SD', href: '/warehouse/warehouse-outbounds/new', icon: Truck, title: t('hub.cards.stockDirect.title'), description: t('hub.cards.stockDirect.description') },
+      ],
+    },
+    {
+      key: 'manage',
+      number: '02',
+      title: t('hub.phases.manage.title', { defaultValue: 'İzle ve Yönet' }),
+      description: t('hub.phases.manage.description', {
+        defaultValue: 'Kayıtları izleyin ve ambar çıkış süreç politikasını yönetin.',
+      }),
+      sectionCode: 'WO-MGMT',
+      items: [
+        { key: 'records', code: 'WO.REC', href: '/warehouse/warehouse-outbounds/list', icon: PackageCheck, title: t('hub.records.title'), description: t('hub.records.description') },
+        { key: 'settings', code: 'WO.SET', href: '/warehouse/warehouse-outbounds/settings', icon: Settings2, title: t('hub.settings.title'), description: t('hub.settings.description'), featured: true },
+      ],
+    },
+  ];
 
   return (
-    <section className="space-y-6">
-      <header className="rounded-2xl border border-[var(--wms-app-border)] bg-[image:var(--wms-brand-gradient-soft)] p-6">
-        <p className="text-xs font-bold uppercase tracking-[.18em] text-[var(--wms-brand-primary)]">{t('title')}</p>
-        <h1 className="mt-1 text-3xl font-black">{t('hub.title')}</h1>
-        <p className="mt-2 max-w-4xl text-sm leading-6 text-[var(--wms-app-text-muted)]">{t('hub.description')}</p>
-      </header>
-      <div className="grid gap-3 md:grid-cols-2">
-        {cards.map(({ key, icon: Icon }) => (
-          <Link key={key} to="/warehouse/warehouse-outbounds/new" className="group rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5 transition hover:-translate-y-0.5 hover:border-[var(--wms-brand-primary)]">
-            <Icon className="size-6 text-[var(--wms-brand-primary)]" />
-            <h2 className="mt-3 font-black">{t(`hub.cards.${key}.title`)}</h2>
-            <p className="mt-1 text-sm text-[var(--wms-app-text-muted)]">{t(`hub.cards.${key}.description`)}</p>
-            <ArrowRight className="ml-auto mt-3 size-4 text-[var(--wms-app-text-muted)] transition group-hover:translate-x-1 group-hover:text-[var(--wms-brand-primary)]" />
-          </Link>
-        ))}
-      </div>
-      <div className="grid gap-3 md:grid-cols-2">
-        <Link to="/warehouse/warehouse-outbounds/list" className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5">
-          <PackageCheck className="text-[var(--wms-brand-primary)]" />
-          <h3 className="mt-2 font-black">{t('hub.records.title')}</h3>
-          <p className="text-sm text-[var(--wms-app-text-muted)]">{t('hub.records.description')}</p>
-        </Link>
-        <Link to="/warehouse/warehouse-outbounds/settings" className="rounded-2xl border border-[var(--wms-brand-ring)] bg-[var(--wms-brand-soft)] p-5">
-          <Settings2 className="text-[var(--wms-brand-primary)]" />
-          <h3 className="mt-2 font-black">{t('hub.settings.title')}</h3>
-          <p className="text-sm text-[var(--wms-app-text-muted)]">{t('hub.settings.description')}</p>
-        </Link>
-      </div>
-    </section>
+    <OpsProcessHub
+      loading={!moduleReady}
+      eyebrow={t('title')}
+      title={t('hub.title')}
+      description={t('hub.description')}
+      path="/warehouse/warehouse-outbounds"
+      phases={phases}
+    />
   );
 }

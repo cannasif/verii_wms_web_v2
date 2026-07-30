@@ -3,6 +3,16 @@
   "hub": {
     "title": "Shipping Process Center",
     "description": "Manage order source, tasks, picking, packing, loading, approval and ERP finalisation in one place.",
+    "phases": {
+      "start": {
+        "title": "Start Shipping",
+        "description": "Pick the right shipping scenario by order source and execution mode."
+      },
+      "manage": {
+        "title": "Monitor & Manage",
+        "description": "Track records and manage the shipping process policy."
+      }
+    },
     "cards": {
       "orderedAssigned": { "title": "Order-Based · Assigned", "description": "Select open sales orders, allocate lines and assign the shipping task." },
       "stockAssigned": { "title": "Free Stock · Assigned", "description": "Create a planned shipment and operator task without an order reference." },

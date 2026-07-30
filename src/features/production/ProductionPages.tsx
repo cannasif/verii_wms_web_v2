@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type ReactElement, type ReactNode } from 'react';
 import {
-  ArrowRight,
   Boxes,
   CheckCircle2,
   Eye,
@@ -18,6 +17,7 @@ import { AdvancedDataGrid, type GridColumn } from '@/components/shared/AdvancedD
 import { AppDateInput } from '@/components/shared/AppInput';
 import { AppDropdown } from '@/components/shared/AppDropdown';
 import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
+import { OpsProcessHub, type OpsProcessHubPhase } from '@/components/shared/OpsProcessHub';
 import { ResponsiveDialog } from '@/components/shared/ResponsiveDialog';
 import { requiredActionColumn, systemColumns } from '@/components/shared/GridSystemColumns';
 import { formatProjectDate, formatProjectDateTime, formatProjectNumber } from '@/lib/project-format';
@@ -71,22 +71,48 @@ const blankMaterial = (): MaterialForm => ({
 
 export function ProductionHubPage(): ReactElement {
   const { t, moduleReady } = useModuleTranslation('production');
-  if (!moduleReady) return <ModuleLoading />;
-  return <section className="space-y-5">
-    <header className="rounded-2xl border border-[var(--wms-app-border)] bg-[image:var(--wms-brand-gradient-soft)] p-6">
-      <p className="text-xs font-bold uppercase tracking-[.18em] text-[var(--wms-brand-primary)]">{t('hub.eyebrow')}</p>
-      <h1 className="mt-1 text-2xl font-black">{t('hub.title')}</h1>
-      <p className="mt-2 max-w-4xl text-sm text-[var(--wms-app-text-muted)]">{t('hub.description')}</p>
-    </header>
-    <div className="grid gap-4 md:grid-cols-2">
-      <HubCard href="/warehouse/production/new" icon={<Factory />} title={t('hub.create.title')} text={t('hub.create.text')} />
-      <HubCard href="/warehouse/production/list" icon={<ListChecks />} title={t('hub.list.title')} text={t('hub.list.text')} />
-    </div>
-    <section className="rounded-2xl border border-[var(--wms-brand-ring)] bg-[var(--wms-brand-soft)] p-5">
-      <h2 className="font-black text-[var(--wms-brand-primary)]">{t('hub.boundary.title')}</h2>
-      <p className="mt-1 text-sm text-[var(--wms-app-text-muted)]">{t('hub.boundary.text')}</p>
-    </section>
-  </section>;
+
+  const phases: OpsProcessHubPhase[] = [
+    {
+      key: 'start',
+      number: '01',
+      title: t('hub.phases.start.title', { defaultValue: 'Planı Başlat' }),
+      description: t('hub.phases.start.description', {
+        defaultValue: 'Üretim planı ve emri oluşturun veya mevcut planları yönetin.',
+      }),
+      sectionCode: 'PRD-START',
+      items: [
+        {
+          key: 'create',
+          code: 'PRD.NEW',
+          href: '/warehouse/production/new',
+          icon: Factory,
+          title: t('hub.create.title'),
+          description: t('hub.create.text'),
+        },
+        {
+          key: 'list',
+          code: 'PRD.LST',
+          href: '/warehouse/production/list',
+          icon: ListChecks,
+          title: t('hub.list.title'),
+          description: t('hub.list.text'),
+        },
+      ],
+    },
+  ];
+
+  return (
+    <OpsProcessHub
+      loading={!moduleReady}
+      eyebrow={t('hub.eyebrow')}
+      title={t('hub.title')}
+      description={t('hub.description')}
+      path="/warehouse/production"
+      phases={phases}
+      callout={{ title: t('hub.boundary.title'), text: t('hub.boundary.text') }}
+    />
+  );
 }
 
 export function ProductionCreatePage(): ReactElement {
@@ -398,9 +424,6 @@ function ProductionLifecycleDialog({ value, close, completed }: { value: { row: 
   </ResponsiveDialog>;
 }
 
-function HubCard({ href, icon, title, text }: { href: string; icon: ReactNode; title: string; text: string }) {
-  return <Link to={href} className="group rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--wms-brand-primary)]"><div className="flex items-center justify-between text-[var(--wms-brand-primary)]">{icon}<ArrowRight className="size-5 transition group-hover:translate-x-1" /></div><h2 className="mt-4 font-black">{title}</h2><p className="mt-1 text-sm text-[var(--wms-app-text-muted)]">{text}</p></Link>;
-}
 function Panel({ title, icon, children }: { title: string; icon: ReactNode; children: ReactNode }) {
   return <section className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5"><h2 className="mb-4 flex items-center gap-2 font-black text-[var(--wms-brand-primary)]">{icon}{title}</h2>{children}</section>;
 }

@@ -1,46 +1,55 @@
-import { ArrowRight, ClipboardList, Loader2, PackageCheck, PackagePlus, Rows3, Settings2, UserCheck, UsersRound } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { ClipboardList, PackageCheck, PackagePlus, Rows3, Settings2, UserCheck, UsersRound } from 'lucide-react';
+import { OpsProcessHub, type OpsProcessHubPhase } from '@/components/shared/OpsProcessHub';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
-
-const phases = [
-  { key: 'start', number: '01', items: [
-    { key: 'ordered', href: '/warehouse/goods-receipts/new', icon: ClipboardList },
-    { key: 'orderless', href: '/warehouse/goods-receipts/orderless', icon: PackagePlus },
-    { key: 'direct', href: '/warehouse/goods-receipts/direct', icon: PackageCheck },
-  ] },
-  { key: 'execute', number: '02', items: [
-    { key: 'tasks', href: '/warehouse/goods-receipts/tasks', icon: UsersRound },
-    { key: 'assigned', href: '/warehouse/goods-receipts/assigned', icon: UserCheck },
-  ] },
-  { key: 'manage', number: '03', items: [
-    { key: 'records', href: '/warehouse/goods-receipts/list', icon: Rows3 },
-    { key: 'settings', href: '/warehouse/goods-receipt-settings', icon: Settings2 },
-  ] },
-] as const;
 
 export function GoodsReceiptHubPage() {
   const { t, moduleReady } = useModuleTranslation('goods-receipt-v2');
-  if (!moduleReady) {
-    return <section className="grid min-h-[50vh] place-items-center"><Loader2 className="size-7 animate-spin text-[var(--wms-brand-primary)]" /></section>;
-  }
 
-  return <section className="wms-ops-form space-y-6">
-    <header className="wms-ops-form-card rounded-2xl border border-[var(--wms-app-border)] bg-[image:var(--wms-brand-gradient-soft)] p-6">
-      <p className="wms-ops-eyebrow text-xs font-bold uppercase tracking-[.18em] text-[var(--wms-brand-primary)]">{t('hub.eyebrow')}</p>
-      <h1 className="wms-ops-title-main mt-1 text-3xl font-black">{t('hub.title')}</h1>
-      <p className="wms-ops-subtitle mt-2 max-w-4xl text-sm leading-6 text-[var(--wms-app-text-muted)]"><span className="wms-ops-subtitle-prefix" aria-hidden>&gt; </span>{t('hub.description')}</p>
-    </header>
-    {phases.map((phase) => <section key={phase.key} className="space-y-3">
-      <div className="flex items-start gap-3">
-        <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[var(--wms-brand-soft)] font-black text-[var(--wms-brand-primary)]">{phase.number}</span>
-        <div><h2 className="text-lg font-black">{t(`hub.phases.${phase.key}.title`)}</h2><p className="text-sm text-[var(--wms-app-text-muted)]">{t(`hub.phases.${phase.key}.description`)}</p></div>
-      </div>
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        {phase.items.map(({ key, href, icon: Icon }) => <Link key={href} to={href} className="group rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-4 transition hover:-translate-y-0.5 hover:border-[var(--wms-brand-primary)]">
-          <div className="flex items-start justify-between"><div className="grid size-10 place-items-center rounded-xl bg-[var(--wms-brand-soft)] text-[var(--wms-brand-primary)]"><Icon className="size-5" /></div><ArrowRight className="size-5 text-[var(--wms-app-text-muted)] transition group-hover:translate-x-1 group-hover:text-[var(--wms-brand-primary)]" /></div>
-          <h3 className="mt-3 font-black">{t(`hub.cards.${key}.title`)}</h3><p className="mt-1 text-xs leading-5 text-[var(--wms-app-text-muted)]">{t(`hub.cards.${key}.description`)}</p>
-        </Link>)}
-      </div>
-    </section>)}
-  </section>;
+  const phases: OpsProcessHubPhase[] = [
+    {
+      key: 'start',
+      number: '01',
+      title: t('hub.phases.start.title'),
+      description: t('hub.phases.start.description'),
+      sectionCode: 'GR-START',
+      items: [
+        { key: 'ordered', code: 'GR.ORD', href: '/warehouse/goods-receipts/new', icon: ClipboardList, title: t('hub.cards.ordered.title'), description: t('hub.cards.ordered.description') },
+        { key: 'orderless', code: 'GR.OLS', href: '/warehouse/goods-receipts/orderless', icon: PackagePlus, title: t('hub.cards.orderless.title'), description: t('hub.cards.orderless.description') },
+        { key: 'direct', code: 'GR.DIR', href: '/warehouse/goods-receipts/direct', icon: PackageCheck, title: t('hub.cards.direct.title'), description: t('hub.cards.direct.description') },
+      ],
+    },
+    {
+      key: 'execute',
+      number: '02',
+      title: t('hub.phases.execute.title'),
+      description: t('hub.phases.execute.description'),
+      sectionCode: 'GR-EXEC',
+      items: [
+        { key: 'tasks', code: 'GR.TSK', href: '/warehouse/goods-receipts/tasks', icon: UsersRound, title: t('hub.cards.tasks.title'), description: t('hub.cards.tasks.description') },
+        { key: 'assigned', code: 'GR.ASN', href: '/warehouse/goods-receipts/assigned', icon: UserCheck, title: t('hub.cards.assigned.title'), description: t('hub.cards.assigned.description') },
+      ],
+    },
+    {
+      key: 'manage',
+      number: '03',
+      title: t('hub.phases.manage.title'),
+      description: t('hub.phases.manage.description'),
+      sectionCode: 'GR-MGMT',
+      items: [
+        { key: 'records', code: 'GR.REC', href: '/warehouse/goods-receipts/list', icon: Rows3, title: t('hub.cards.records.title'), description: t('hub.cards.records.description') },
+        { key: 'settings', code: 'GR.SET', href: '/warehouse/goods-receipt-settings', icon: Settings2, title: t('hub.cards.settings.title'), description: t('hub.cards.settings.description'), featured: true },
+      ],
+    },
+  ];
+
+  return (
+    <OpsProcessHub
+      loading={!moduleReady}
+      eyebrow={t('hub.eyebrow')}
+      title={t('hub.title')}
+      description={t('hub.description')}
+      path="/warehouse/goods-receipts"
+      phases={phases}
+    />
+  );
 }

@@ -3,6 +3,16 @@
   "hub": {
     "title": "Sevk Süreç Merkezi",
     "description": "Sipariş kaynağı, görev, toplama, paketleme, yükleme, onay ve ERP kesinleştirmeyi tek çatıdan yönetin.",
+    "phases": {
+      "start": {
+        "title": "Sevki Başlat",
+        "description": "Sipariş kaynağı ve emir yürütme biçimine göre doğru sevk senaryosunu seçin."
+      },
+      "manage": {
+        "title": "İzle ve Yönet",
+        "description": "Kayıtları izleyin ve sevk süreç politikasını yönetin."
+      }
+    },
     "cards": {
       "orderedAssigned": { "title": "Siparişli · Emirli", "description": "Açık satış siparişlerini seçin, kalemleri ayırın ve sevk görevini atayın." },
       "stockAssigned": { "title": "Serbest Stok · Emirli", "description": "Sipariş bağlantısı olmadan planlı sevk ve kullanıcı görevi oluşturun." },
