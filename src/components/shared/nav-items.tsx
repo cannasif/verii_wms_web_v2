@@ -95,6 +95,7 @@ export const WMS_NAV_ITEMS: NavItem[] = [
       { title: 'sidebar.goodsReceiptSettings', titleFallback: 'Süreç Ayarları', href: '/warehouse/goods-receipt-settings', searchAliases: ['fazla kabul', 'onay', 'erp', 'kalite', 'politika'], requiredPermission: 'WMS.GOODS_RECEIPT.SETTINGS.VIEW' },
     ] },
     { title: 'sidebar.incomingInvoiceArchive', titleFallback: 'Gelen e-Belgeler', children: [
+      { title: 'sidebar.supplierStockMappings', titleFallback: 'Tedarikçi Stok Eşleme', href: '/warehouse/goods-receipts/supplier-stock-mappings', searchAliases: ['tedarikçi', 'stok', 'eşleme', 'e-fatura', 'ocr', 'ürün kodu'], requiredPermission: 'WMS.GOODS_RECEIPT.SUPPLIER_STOCK_MAPPING.VIEW' },
       { title: 'sidebar.incomingInvoiceArchiveLookup', titleFallback: 'e-Fatura / e-Arşiv Sorgula', href: '/warehouse/incoming-invoices', searchAliases: ['e-fatura', 'e-arşiv', 'fatura', 'ubl', 'pdf', 'uuid'], requiredPermission: 'WMS.INCOMING_INVOICE.VIEW' },
       { title: 'sidebar.incomingInvoiceArchiveConnections', titleFallback: 'eLogo Bağlantıları', href: '/warehouse/incoming-invoices/connections', searchAliases: ['elogo', 'fatura', 'bağlantı', 'entegratör'], requiredPermission: 'WMS.INCOMING_INVOICE.CONNECTIONS.MANAGE' },
     ] },

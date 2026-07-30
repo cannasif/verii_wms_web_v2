@@ -50,7 +50,9 @@ export function IncomingInvoiceGoodsReceiptDialog({
     [detail.lines],
   );
   const [idempotencyKey] = useState(() => crypto.randomUUID());
-  const [supplier, setSupplier] = useState<string | null>(null);
+  const [supplier, setSupplier] = useState<string | null>(
+    detail.supplierCustomerId ? String(detail.supplierCustomerId) : null,
+  );
   const [warehouse, setWarehouse] = useState<string | null>(null);
   const [locationId, setLocationId] = useState<string | null>(null);
   const [series, setSeries] = useState<SeriesOption[]>([]);
@@ -207,9 +209,13 @@ export function IncomingInvoiceGoodsReceiptDialog({
             queryKey={['invoice-gr-customers', branchCode]}
             fetchPage={(request) => goodsReceiptV2Api.customers(request, branchCode)}
             toOption={(item) => ({
-              value: `${item.id}|${item.customerCode}|${encodeURIComponent(item.customerName)}`,
+              value: String(item.id),
               label: `${item.customerCode} · ${item.customerName}`,
             })}
+            selectedOption={detail.supplierCustomerId ? {
+              value: String(detail.supplierCustomerId),
+              label: `Onaylı ERP tedarikçisi #${detail.supplierCustomerId}`,
+            } : undefined}
             value={supplier}
             onValueChange={setSupplier}
             searchable

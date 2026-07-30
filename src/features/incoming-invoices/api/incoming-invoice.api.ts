@@ -8,6 +8,8 @@ import type {
   IncomingInvoiceGoodsReceiptResult,
   IncomingInvoiceImportResult,
   IncomingInvoiceLookupKind,
+  IncomingInvoiceMatchResult,
+  IncomingInvoiceOcrStatus,
   SaveELogoConnectionInput,
 } from '../types/incoming-invoice.types';
 
@@ -62,6 +64,30 @@ export const incomingInvoiceApi = {
   }): Promise<IncomingInvoiceImportResult> =>
     unwrap(await api.post<Envelope<IncomingInvoiceImportResult>>(
       '/api/incoming-invoices/import', input)),
+
+  match: async (
+    id: number,
+    input: { branchCode: string; supplierId: number; allowBuyerStockCodeFallback: boolean },
+  ): Promise<IncomingInvoiceMatchResult> =>
+    unwrap(await api.post<Envelope<IncomingInvoiceMatchResult>>(
+      `/api/incoming-invoices/${id}/match`, input)),
+
+  ocrStatus: async (): Promise<IncomingInvoiceOcrStatus> =>
+    unwrap(await api.get<Envelope<IncomingInvoiceOcrStatus>>(
+      '/api/incoming-invoices/ocr/status')),
+
+  importOcr: async (input: {
+    branchCode: string;
+    supplierId: number;
+    file: File;
+  }): Promise<IncomingInvoiceImportResult> => {
+    const form = new FormData();
+    form.append('branchCode', input.branchCode);
+    form.append('supplierId', String(input.supplierId));
+    form.append('file', input.file);
+    return unwrap(await api.post<Envelope<IncomingInvoiceImportResult>>(
+      '/api/incoming-invoices/ocr/import', form));
+  },
 
   document: async (
     id: number, format: IncomingInvoiceDocumentFormat, branchCode: string,

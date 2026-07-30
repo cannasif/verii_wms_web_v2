@@ -1,10 +1,11 @@
 export type IncomingInvoiceKind = 'EInvoice' | 'EArchive';
+export type IncomingInvoiceCaptureSource = 'ELogo' | 'Ocr';
 export type IncomingInvoiceLookupKind = 'Automatic' | 'EInvoice' | 'EArchive';
 export type IncomingInvoiceArchiveStatus =
   | 'Imported' | 'NeedsReview' | 'ReadyForReceipt' | 'PartiallyLinked' | 'Linked' | 'Rejected';
 export type IncomingInvoiceValidationStatus = 'Parsed' | 'Warning' | 'Invalid';
 export type IncomingInvoiceLineMatchStatus = 'Unmatched' | 'StockMatched' | 'Ready' | 'Ignored';
-export type IncomingInvoiceDocumentFormat = 'UblXml' | 'Pdf';
+export type IncomingInvoiceDocumentFormat = 'UblXml' | 'Pdf' | 'SourceImage';
 
 export interface ELogoConnectionRow {
   id: number;
@@ -52,6 +53,7 @@ export interface IncomingInvoiceGridRow {
   branchCode: string;
   uuid: string;
   documentKind: IncomingInvoiceKind;
+  captureSource: IncomingInvoiceCaptureSource;
   invoiceNo: string;
   issueDate: string;
   supplierVknOrTckn: string;
@@ -88,6 +90,13 @@ export interface IncomingInvoiceLineRow {
   taxRate: number;
   taxAmount: number;
   stockId?: number | null;
+  supplierStockMappingId?: number | null;
+  conversionFactor: number;
+  systemQuantity: number;
+  systemStockCode?: string | null;
+  systemStockName?: string | null;
+  systemUnitCode?: string | null;
+  recognitionConfidence?: number | null;
   matchStatus: IncomingInvoiceLineMatchStatus;
   matchMessage?: string | null;
   linkedQuantity: number;
@@ -124,17 +133,37 @@ export interface IncomingInvoiceDetail {
   customerName: string;
   supplierTaxOffice?: string | null;
   supplierCustomerId?: number | null;
+  supplierCustomerCode?: string | null;
+  supplierCustomerName?: string | null;
   lineExtensionAmount: number;
   taxExclusiveAmount: number;
   taxAmount: number;
   taxInclusiveAmount: number;
   allowanceTotalAmount: number;
   validationMessage?: string | null;
+  recognitionConfidence?: number | null;
   sourceHash: string;
   lastSynchronizedAtUtc: string;
   lines: IncomingInvoiceLineRow[];
   documents: IncomingInvoiceDocumentRow[];
   goodsReceipts: IncomingInvoiceGoodsReceiptLinkRow[];
+}
+
+export interface IncomingInvoiceMatchResult {
+  incomingInvoiceId: number;
+  supplierId: number;
+  lineCount: number;
+  matchedLineCount: number;
+  unmatchedLineCount: number;
+  archiveStatus: IncomingInvoiceArchiveStatus;
+}
+
+export interface IncomingInvoiceOcrStatus {
+  isConfigured: boolean;
+  provider: string;
+  message: string;
+  supportedContentTypes: string[];
+  maximumFileSizeBytes: number;
 }
 
 export interface IncomingInvoiceImportResult {

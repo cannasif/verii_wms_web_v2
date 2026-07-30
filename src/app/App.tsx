@@ -15,6 +15,7 @@ import {
   loadProductionPages, loadProductionTransferPages, loadSubcontractingTransferPages,
   loadSerialNumberRulesPage, loadShippingCreatePage, loadShippingHubPage, loadShippingListPage,
   loadShippingOperationPage, loadShippingPolicyPage, loadSmtpSettingsPage, loadSteelReceiptHubPage,
+  loadSupplierStockMappingsPage,
   loadSteelReceiptImportPage, loadSteelReceiptInspectionPage, loadSteelReceiptOperationsPage,
   loadSteelReceiptPlansPage, loadSteelReceiptReportsPage, loadStockBalancePages, loadStockMovementsPage, loadUserManagementPage,
   loadVehicleCheckInListPage, loadVehicleCheckInPage, loadWarehouseTransferDraftPage,
@@ -52,6 +53,7 @@ const BarcodeDesignerPage = lazy(() => loadBarcodeDesignerPage().then((m) => ({ 
 const BarcodePolicyPage = lazy(() => loadBarcodePolicyPage().then((m) => ({ default: m.BarcodePolicyPage })));
 const IncomingInvoiceArchivePage = lazy(() => loadIncomingInvoiceArchivePage().then((m) => ({ default: m.IncomingInvoiceArchivePage })));
 const ELogoConnectionsPage = lazy(() => loadELogoConnectionsPage().then((m) => ({ default: m.ELogoConnectionsPage })));
+const SupplierStockMappingsPage = lazy(() => loadSupplierStockMappingsPage().then((m) => ({ default: m.SupplierStockMappingsPage })));
 const GoodsReceiptAssignedTasksPage = lazy(() => loadGoodsReceiptAssignedTasksPage().then((m) => ({ default: m.GoodsReceiptAssignedTasksPage })));
 const GoodsReceiptTasksPage = lazy(() => loadGoodsReceiptAssignedTasksPage().then((m) => ({ default: m.GoodsReceiptTasksPage })));
 const GoodsReceiptCreatePage = lazy(() => loadGoodsReceiptCreatePage().then((m) => ({ default: m.GoodsReceiptCreatePage })));
@@ -204,6 +206,7 @@ export function App(): ReactElement {
           <Route path="warehouse/goods-receipts/list" element={<GoodsReceiptListPage />} />
           <Route path="warehouse/incoming-invoices" element={<IncomingInvoiceArchivePage />} />
           <Route path="warehouse/incoming-invoices/connections" element={<ELogoConnectionsPage />} />
+          <Route path="warehouse/goods-receipts/supplier-stock-mappings" element={<SupplierStockMappingsPage />} />
           <Route path="warehouse/goods-receipts/tasks" element={<GoodsReceiptTasksPage />} />
           <Route path="warehouse/goods-receipts/assigned" element={<GoodsReceiptAssignedTasksPage />} />
           <Route path="warehouse/goods-receipts/labels" element={<GoodsReceiptLabelsPage />} />
