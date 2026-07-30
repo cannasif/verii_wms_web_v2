@@ -1,4 +1,4 @@
-import {useCallback,useEffect,useMemo,useRef,useState,type ChangeEvent,type ReactNode} from 'react';
+import {useCallback,useEffect,useMemo,useRef,useState,type ReactNode} from 'react';
 import {useQuery} from '@tanstack/react-query';
 import {useTranslation} from 'react-i18next';
 import {Link,useSearchParams} from 'react-router-dom';
@@ -53,8 +53,20 @@ const customerOption=(x:{id:number;customerCode:string;customerName:string})=>({
   label:`${x.customerCode} · ${x.customerName}`,
 });
 const imageExtension=/\.(jpe?g|png|webp)$/i;
-const isImageFile=(file:File)=>file.type.startsWith('image/')||(!file.type&&imageExtension.test(file.name));
+const allowedImageTypes=new Set(['image/jpeg','image/png','image/webp']);
+const isImageFile=(file:File)=>allowedImageTypes.has(file.type.toLowerCase())||(!file.type&&imageExtension.test(file.name));
 const validImage=(file:File)=>isImageFile(file)&&file.size<=8*1024*1024;
+const imageKey=(file:File)=>`${file.name}:${file.size}:${file.lastModified}:${file.type}`;
+const mergeImages=(current:File[],incoming:File[],limit:number)=>{
+  const keys=new Set(current.map(imageKey));
+  const unique=incoming.filter(file=>{
+    const key=imageKey(file);
+    if(keys.has(key))return false;
+    keys.add(key);
+    return true;
+  });
+  return [...current,...unique].slice(0,limit);
+};
 const norm=(v?:string|null)=>(v??'').trim().toLocaleLowerCase('tr-TR');
 
 export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embedded?:boolean;initialId?:number;onCompleted?:()=>void}={}){
@@ -263,16 +275,15 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
   const updateSelected=(lineId:number,changes:Partial<SelectedPlate>)=>
     setSelected(current=>current[lineId]?{...current,[lineId]:{...current[lineId],...changes}}:current);
 
-  const onVehicleFiles=(event:ChangeEvent<HTMLInputElement>)=>{
-    const files=Array.from(event.target.files??[]).filter(validImage);
-    setVehicleFiles(current=>[...current,...files].slice(0,10));
-    if(files.length!==(event.target.files?.length??0))toast.error(t('vehicleCheckIn.toast.imageValidation',{defaultValue:'Yalnız JPG, PNG veya WEBP ve en fazla 8 MB görsel yüklenebilir.'}));
-    event.currentTarget.value='';
+  const onVehicleFiles=(list:FileList|null)=>{
+    const files=Array.from(list??[]).filter(validImage);
+    setVehicleFiles(current=>mergeImages(current,files,10));
+    if(files.length!==(list?.length??0))toast.error(t('vehicleCheckIn.toast.imageValidation',{defaultValue:'Yalnız JPG, PNG veya WEBP ve en fazla 8 MB görsel yüklenebilir.'}));
   };
 
   const onPlateFiles=(lineId:number,list:FileList|null)=>{
     const files=Array.from(list??[]).filter(validImage);
-    setPlateFiles(current=>({...current,[lineId]:[...(current[lineId]??[]),...files].slice(0,5)}));
+    setPlateFiles(current=>({...current,[lineId]:mergeImages(current[lineId]??[],files,5)}));
     if(files.length!==(list?.length??0))toast.error(t('vehicleCheckIn.toast.imageValidation',{defaultValue:'Yalnız JPG, PNG veya WEBP ve en fazla 8 MB görsel yüklenebilir.'}));
   };
 
@@ -335,7 +346,11 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
 
     <Panel title={t('vehicleCheckIn.section.vehicleImages',{defaultValue:'2 · Araç görselleri'})} icon={<Camera className="size-5"/>}>
       <p className="mb-4 text-sm text-slate-500">{t('vehicleCheckIn.vehicleImagesHelp',{defaultValue:'Plaka, dorse, yük güvenliği ve kapı kabul kanıtlarını seçin. Yeni görseller SAC kabulüyle aynı işlemde yüklenecektir.'})}</p>
-      <label className="inline-flex cursor-pointer items-center rounded-xl border border-dashed border-cyan-500/50 px-4 py-3 text-sm font-bold text-cyan-500"><ImagePlus className="mr-2 size-4"/>{t('vehicleCheckIn.action.pickVehicleImage',{defaultValue:'Araç görseli seç'})}<input type="file" accept="image/jpeg,image/png,image/webp" multiple className="hidden" onChange={onVehicleFiles}/></label>
+      <ImageInputActions
+        selectLabel={t('vehicleCheckIn.action.pickVehicleImage',{defaultValue:'Araç görseli seç'})}
+        captureLabel={t('vehicleCheckIn.action.captureVehicleImage',{defaultValue:'Araç fotoğrafı çek'})}
+        onFiles={onVehicleFiles}
+      />
       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {record?.images.map(image=><ExistingVehicleImage key={image.id} image={image}/>)}
         {vehicleFiles.map((file,index)=><PendingImage key={`${file.name}-${file.lastModified}-${index}`} file={file} onRemove={()=>setVehicleFiles(current=>current.filter((_,i)=>i!==index))}/>)}
@@ -460,7 +475,12 @@ function SelectedPlateCard({item,files,onChange,onFiles,onRemoveFile,onRemove}:{
       <Field label={t('vehicleCheckIn.field.sheetNote',{defaultValue:'Levha kabul notu'})}><input className="input" value={item.note} onChange={event=>onChange({note:event.target.value})} maxLength={1000}/></Field>
     </div>
     <div className="mt-4 flex flex-wrap items-center gap-3">
-      <label className="cursor-pointer rounded-xl border border-dashed border-cyan-500/50 px-4 py-2.5 text-sm font-bold text-cyan-600"><FileImage className="mr-2 inline size-4"/>{t('vehicleCheckIn.action.addSheetImage',{defaultValue:'Levha görseli ekle'})}<input type="file" accept="image/jpeg,image/png,image/webp" multiple className="hidden" onChange={event=>{onFiles(event.target.files);event.currentTarget.value=''}}/></label>
+      <ImageInputActions
+        compact
+        selectLabel={t('vehicleCheckIn.action.addSheetImage',{defaultValue:'Levha görseli ekle'})}
+        captureLabel={t('vehicleCheckIn.action.captureSheetImage',{defaultValue:'Levha fotoğrafı çek'})}
+        onFiles={onFiles}
+      />
       <span className="text-xs text-slate-500">{t('vehicleCheckIn.sheetImageInfo',{defaultValue:'Mevcut {{current}} · Yeni {{next}} görsel',current:row.attachmentCount,next:files.length})}</span>
     </div>
     {files.length>0&&<div className="mt-3 grid gap-3 sm:grid-cols-3 lg:grid-cols-5">{files.map((file,index)=><PendingImage key={`${file.name}-${file.lastModified}-${index}`} file={file} onRemove={()=>onRemoveFile(index)}/>)}</div>}
@@ -483,6 +503,29 @@ function PendingImage({file,onRemove}:{file:File;onRemove:()=>void}){
   const [url,setUrl]=useState('');
   useEffect(()=>{const objectUrl=URL.createObjectURL(file);setUrl(objectUrl);return()=>URL.revokeObjectURL(objectUrl)},[file]);
   return <figure className="overflow-hidden rounded-xl border"><div className="relative h-28 bg-slate-950/5">{url&&<img src={url} alt={file.name} className="h-full w-full object-cover"/>}<button type="button" onClick={onRemove} className="absolute right-1 top-1 rounded-full bg-black/70 p-1 text-white"><X className="size-3"/></button></div><figcaption className="truncate p-2 text-xs font-bold">{file.name}</figcaption></figure>;
+}
+
+function ImageInputActions({selectLabel,captureLabel,onFiles,compact=false}:{selectLabel:string;captureLabel:string;onFiles:(files:FileList|null)=>void;compact?:boolean}){
+  const inputClass='hidden';
+  const buttonClass=compact
+    ?'inline-flex cursor-pointer items-center rounded-xl border border-dashed border-cyan-500/50 px-4 py-2.5 text-sm font-bold text-cyan-600'
+    :'inline-flex cursor-pointer items-center rounded-xl border border-dashed border-cyan-500/50 px-4 py-3 text-sm font-bold text-cyan-500';
+  const handleFiles=(input:HTMLInputElement)=>{
+    onFiles(input.files);
+    input.value='';
+  };
+  return <div className="flex flex-wrap items-center gap-3">
+    <label className={buttonClass}>
+      <ImagePlus className="mr-2 size-4" aria-hidden="true"/>
+      {selectLabel}
+      <input type="file" accept="image/jpeg,image/png,image/webp" multiple className={inputClass} onChange={event=>handleFiles(event.currentTarget)}/>
+    </label>
+    <label className={`${buttonClass} border-solid bg-cyan-500/10`}>
+      <Camera className="mr-2 size-4" aria-hidden="true"/>
+      {captureLabel}
+      <input type="file" accept="image/jpeg,image/png,image/webp" capture="environment" className={inputClass} onChange={event=>handleFiles(event.currentTarget)}/>
+    </label>
+  </div>;
 }
 
 function Summary({label,value}:{label:string;value:string}){return <div className="rounded-xl border bg-[var(--wms-app-surface)] p-3"><small className="block text-slate-500">{label}</small><strong className="text-lg">{value}</strong></div>}

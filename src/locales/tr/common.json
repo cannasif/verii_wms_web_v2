@@ -1183,11 +1183,13 @@
     "action": {
       "findToday": "Bugünkü aracı bul",
       "pickVehicleImage": "Araç görseli seç",
+      "captureVehicleImage": "Araç fotoğrafı çek",
       "findSheet": "SAC Bul",
       "removeSelection": "Seçimden çıkar",
       "addSelection": "Seçime ekle",
       "complete": "Araç Giriş ve SAC Kabul",
-      "addSheetImage": "Levha görseli ekle"
+      "addSheetImage": "Levha görseli ekle",
+      "captureSheetImage": "Levha fotoğrafı çek"
     },
     "summary": {
       "selectedSheets": "Seçilen levha",

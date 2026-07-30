@@ -1183,11 +1183,13 @@
     "action": {
       "findToday": "Find today's vehicle",
       "pickVehicleImage": "Pick vehicle image",
+      "captureVehicleImage": "Take vehicle photo",
       "findSheet": "Find steel sheet",
       "removeSelection": "Remove from selection",
       "addSelection": "Add to selection",
       "complete": "Vehicle Check-In and Steel Acceptance",
-      "addSheetImage": "Add sheet image"
+      "addSheetImage": "Add sheet image",
+      "captureSheetImage": "Take sheet photo"
     },
     "summary": {
       "selectedSheets": "Selected sheets",
