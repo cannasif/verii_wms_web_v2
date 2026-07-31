@@ -14241,6 +14241,16 @@ html[data-brand-theme]:not(.skin-premium) .wms-ops-dashboard-page {
   }
 }
 
+/* Tablet genisliginde (768-1279px) terminal skin'de kartlar 2 sutuna gectigi
+   icin bolumler kisaliyor ve sayfa altinda bosluk kaliyor; premium'da zaten
+   sabit min-height oldugu icin bu sorun yok. Sadece terminal + tablet icin
+   makul bir taban yukseklik veriyoruz. */
+@media (min-width: 768px) and (max-width: 1279px) {
+  html:not(.skin-premium) .wms-ops-process-hub .wms-ops-dashboard-section {
+    min-height: 15rem;
+  }
+}
+
 @media (min-width: 1280px) {
   .wms-ops-process-hub__grid--multi {
     grid-template-columns: repeat(3, minmax(0, 1fr));
