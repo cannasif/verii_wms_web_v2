@@ -5,6 +5,7 @@ import { ResponsiveDialog } from '@/components/shared/ResponsiveDialog';
 import { formatProjectNumber } from '@/lib/project-format';
 import { goodsReceiptV2Api } from '../api/goods-receipt.api';
 import { requireCompletedCancellation } from '@/features/shared/api/operation-cancellation';
+import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import type {
   GoodsReceiptDetail,
   GoodsReceiptLifecycleResult,
@@ -27,41 +28,41 @@ interface PutawayFormLine extends GoodsReceiptPutawayCandidate {
   targetLocationId: string;
 }
 
-const actionContent: Record<GoodsReceiptLifecycleAction, {
-  title: string;
-  description: string;
-  submit: string;
-  icon: ReactElement;
-  destructive?: boolean;
-}> = {
-  approve: {
-    title: 'Mal Kabulü Onayla',
-    description: 'Kayıt operasyon onayına alınır. Aynı istek güvenli biçimde yalnızca bir kez uygulanır.',
-    submit: 'Onayla',
-    icon: <CheckCircle2 className="size-5" />,
-  },
-  shortClose: {
-    title: 'Eksik Miktarı Kısa Kapat',
-    description: 'Seçilen açık miktarlar artık beklenmez. Raporlama için gerekçe zorunludur.',
-    submit: 'Kısa Kapat',
-    icon: <PackageCheck className="size-5" />,
-  },
-  putaway: {
-    title: 'Rafa Yerleştir',
-    description: 'Kabul alanındaki kullanılabilir stok seçilen rafa transfer edilir; raf ve depo bakiyeleri aynı işlemde güncellenir.',
-    submit: 'Rafa Yerleştir',
-    icon: <Warehouse className="size-5" />,
-  },
-  cancel: {
-    title: 'Mal Kabulü İptal Et',
-    description: 'Bağlı stok ve kalite hareketleri ters kayıtla geri alınır. Kullanılmış stok varsa sistem iptali güvenli biçimde engeller.',
-    submit: 'İptal Et',
-    icon: <ShieldAlert className="size-5" />,
-    destructive: true,
-  },
-};
-
 export function GoodsReceiptLifecycleDialog({ action, detail, onClose, onCompleted }: Props): ReactElement {
+  const { t } = useModuleTranslation('goods-receipt-v2');
+  const actionContent: Record<GoodsReceiptLifecycleAction, {
+    title: string;
+    description: string;
+    submit: string;
+    icon: ReactElement;
+    destructive?: boolean;
+  }> = useMemo(() => ({
+    approve: {
+      title: t('list.lifecycleDialog.approve.title'),
+      description: t('list.lifecycleDialog.approve.description'),
+      submit: t('list.lifecycleDialog.approve.submit'),
+      icon: <CheckCircle2 className="size-5" />,
+    },
+    shortClose: {
+      title: t('list.lifecycleDialog.shortClose.title'),
+      description: t('list.lifecycleDialog.shortClose.description'),
+      submit: t('list.lifecycleDialog.shortClose.submit'),
+      icon: <PackageCheck className="size-5" />,
+    },
+    putaway: {
+      title: t('list.lifecycleDialog.putaway.title'),
+      description: t('list.lifecycleDialog.putaway.description'),
+      submit: t('list.lifecycleDialog.putaway.submit'),
+      icon: <Warehouse className="size-5" />,
+    },
+    cancel: {
+      title: t('list.lifecycleDialog.cancel.title'),
+      description: t('list.lifecycleDialog.cancel.description'),
+      submit: t('list.lifecycleDialog.cancel.submit'),
+      icon: <ShieldAlert className="size-5" />,
+      destructive: true,
+    },
+  }), [t]);
   const content = actionContent[action];
   const idempotencyKey = useRef(crypto.randomUUID());
   const [reason, setReason] = useState('');
@@ -91,7 +92,7 @@ export function GoodsReceiptLifecycleDialog({ action, detail, onClose, onComplet
     event.preventDefault();
     setError('');
     if ((action === 'cancel' || action === 'shortClose') && !reason.trim()) {
-      setError('Bu işlem için açıklayıcı bir gerekçe zorunludur.');
+      setError(t('list.lifecycleDialog.reasonRequired'));
       return;
     }
     try {
@@ -104,7 +105,7 @@ export function GoodsReceiptLifecycleDialog({ action, detail, onClose, onComplet
           reason: reason.trim() || undefined,
         });
       } else if (action === 'shortClose') {
-        if (!shortCloseLines.length) throw new Error('Kısa kapatılabilecek açık miktar bulunmuyor.');
+        if (!shortCloseLines.length) throw new Error(t('list.lifecycleDialog.noShortCloseQuantity'));
         result = await goodsReceiptV2Api.shortClose(detail.header.id, {
           idempotencyKey: idempotencyKey.current,
           rowVersion: detail.header.rowVersion,
@@ -113,12 +114,12 @@ export function GoodsReceiptLifecycleDialog({ action, detail, onClose, onComplet
         });
       } else if (action === 'putaway') {
         const selected = putawayLines.filter((line) => line.selected);
-        if (!selected.length) throw new Error('En az bir stok boyutu seçmelisiniz.');
+        if (!selected.length) throw new Error(t('list.lifecycleDialog.selectAtLeastOneLine'));
         const invalid = selected.find((line) => {
           const quantity = Number(line.requestedQuantity);
           return !line.targetLocationId || !Number.isFinite(quantity) || quantity <= 0 || quantity > line.quantity;
         });
-        if (invalid) throw new Error(`${invalid.stockCode} için miktar ve hedef raf bilgisini kontrol edin.`);
+        if (invalid) throw new Error(t('list.lifecycleDialog.checkQuantityAndTarget', { code: invalid.stockCode }));
         result = await goodsReceiptV2Api.putaway(detail.header.id, {
           idempotencyKey: idempotencyKey.current,
           rowVersion: detail.header.rowVersion,
@@ -143,7 +144,7 @@ export function GoodsReceiptLifecycleDialog({ action, detail, onClose, onComplet
       }
       await onCompleted(result);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'İşlem tamamlanamadı.');
+      setError(caught instanceof Error ? caught.message : t('tasks.modal.errors.actionFailed'));
     } finally {
       setBusy(false);
     }
@@ -165,7 +166,7 @@ export function GoodsReceiptLifecycleDialog({ action, detail, onClose, onComplet
         {action === 'shortClose' && (
           <div className="mt-5 overflow-x-auto rounded-xl border border-[var(--wms-app-border)]">
             <table className="w-full text-sm">
-              <thead className="bg-black/5 text-left dark:bg-white/5"><tr><th className="p-3">Kalem</th><th className="p-3">Stok</th><th className="p-3 text-right">Kapatılacak Miktar</th></tr></thead>
+              <thead className="bg-black/5 text-left dark:bg-white/5"><tr><th className="p-3">{t('list.lifecycleDialog.lineNo')}</th><th className="p-3">{t('list.stock')}</th><th className="p-3 text-right">{t('list.lifecycleDialog.closingQuantity')}</th></tr></thead>
               <tbody>{shortCloseLines.map((line) => <tr key={line.lineId} className="border-t border-[var(--wms-app-border)]"><td className="p-3">{line.lineNo}</td><td className="p-3 font-semibold">{line.stockCode}</td><td className="p-3 text-right">{formatProjectNumber(line.quantity)} {line.unitCode}</td></tr>)}</tbody>
             </table>
           </div>
@@ -173,25 +174,25 @@ export function GoodsReceiptLifecycleDialog({ action, detail, onClose, onComplet
 
         {action === 'putaway' && (
           <div className="mt-5 space-y-3">
-            {!putawayLines.length && <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-600">Kabul alanında rafa yerleştirilebilecek kullanılabilir stok bulunamadı.</div>}
+            {!putawayLines.length && <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-600">{t('list.lifecycleDialog.putawayEmpty')}</div>}
             {putawayLines.map((line, index) => (
               <section key={`${line.lineId}:${line.sourceLocationId}:${line.lotNo ?? ''}:${line.serialNo ?? ''}`} className="grid items-end gap-3 rounded-xl border border-[var(--wms-app-border)] p-4 md:grid-cols-[auto_1.4fr_.7fr_1.5fr]">
-                <label className="flex h-11 items-center"><input type="checkbox" checked={line.selected} onChange={(event) => updatePutaway(index, { selected: event.target.checked })} aria-label={`${line.stockCode} seç`} /></label>
-                <div><span className="text-xs text-slate-500">Stok / Lot / Seri</span><strong className="block">{line.stockCode} {line.yapCode && `· ${line.yapCode}`}</strong><small className="text-slate-500">{line.lotNo || 'Lot yok'} · {line.serialNo || 'Seri yok'} · Kaynak raf #{line.sourceLocationId}</small></div>
-                <label className="space-y-1 text-sm"><span className="font-semibold">Miktar</span><input disabled={!line.selected} type="number" min="0.000001" max={line.quantity} step="0.000001" value={line.requestedQuantity} onChange={(event) => updatePutaway(index, { requestedQuantity: event.target.value })} className="input" /></label>
-                <label className="space-y-1 text-sm"><span className="font-semibold">Hedef raf</span><PagedAppDropdown<LocationOption> disabled={!line.selected} enabled={line.selected} value={line.targetLocationId} onValueChange={(value) => updatePutaway(index, { targetLocationId: value })} queryKey={['gr-putaway-locations', line.warehouseId]} dependencies={[line.warehouseId]} fetchPage={(request) => goodsReceiptV2Api.locations(request, line.warehouseId)} toOption={(item) => ({ value: String(item.id), label: `${item.code} - ${item.name}`, description: item.locationType })} selectedOption={line.defaultTargetLocationId ? { value: String(line.defaultTargetLocationId), label: `Önerilen raf #${line.defaultTargetLocationId}` } : undefined} placeholder="Hedef raf seçin" searchable minSearchLength={1} /></label>
+                <label className="flex h-11 items-center"><input type="checkbox" checked={line.selected} onChange={(event) => updatePutaway(index, { selected: event.target.checked })} aria-label={t('list.lifecycleDialog.selectLineAria', { code: line.stockCode })} /></label>
+                <div><span className="text-xs text-slate-500">{t('list.lifecycleDialog.stockLotSerial')}</span><strong className="block">{line.stockCode} {line.yapCode && `· ${line.yapCode}`}</strong><small className="text-slate-500">{line.lotNo || t('list.lifecycleDialog.noLot')} · {line.serialNo || t('list.lifecycleDialog.noSerial')} · {t('list.lifecycleDialog.sourceLocation', { id: line.sourceLocationId })}</small></div>
+                <label className="space-y-1 text-sm"><span className="font-semibold">{t('manual.quantity')}</span><input disabled={!line.selected} type="number" min="0.000001" max={line.quantity} step="0.000001" value={line.requestedQuantity} onChange={(event) => updatePutaway(index, { requestedQuantity: event.target.value })} className="input" /></label>
+                <label className="space-y-1 text-sm"><span className="font-semibold">{t('list.lifecycleDialog.targetLocation')}</span><PagedAppDropdown<LocationOption> disabled={!line.selected} enabled={line.selected} value={line.targetLocationId} onValueChange={(value) => updatePutaway(index, { targetLocationId: value })} queryKey={['gr-putaway-locations', line.warehouseId]} dependencies={[line.warehouseId]} fetchPage={(request) => goodsReceiptV2Api.locations(request, line.warehouseId)} toOption={(item) => ({ value: String(item.id), label: `${item.code} - ${item.name}`, description: item.locationType })} selectedOption={line.defaultTargetLocationId ? { value: String(line.defaultTargetLocationId), label: t('list.lifecycleDialog.suggestedLocation', { id: line.defaultTargetLocationId }) } : undefined} placeholder={t('list.lifecycleDialog.selectTargetLocationPlaceholder')} searchable minSearchLength={1} /></label>
               </section>
             ))}
           </div>
         )}
 
         <label className="mt-5 block space-y-1 text-sm">
-          <span className="font-semibold">{action === 'cancel' || action === 'shortClose' ? 'Gerekçe *' : 'Açıklama'}</span>
-          <textarea autoFocus={action !== 'putaway'} rows={3} maxLength={1000} value={reason} onChange={(event) => setReason(event.target.value)} className="input h-auto py-3" placeholder="Operasyon notunu yazın..." />
+          <span className="font-semibold">{action === 'cancel' || action === 'shortClose' ? t('list.lifecycleDialog.reasonLabelRequired') : t('list.lifecycleDialog.descriptionLabel')}</span>
+          <textarea autoFocus={action !== 'putaway'} rows={3} maxLength={1000} value={reason} onChange={(event) => setReason(event.target.value)} className="input h-auto py-3" placeholder={t('list.lifecycleDialog.reasonPlaceholder')} />
         </label>
 
         <footer className="mt-6 flex flex-col-reverse gap-2 border-t border-[var(--wms-app-border)] pt-4 sm:flex-row sm:justify-end">
-          <button type="button" disabled={busy} onClick={onClose} className="min-h-11 rounded-xl border px-4 py-2 disabled:opacity-50">Vazgeç</button>
+          <button type="button" disabled={busy} onClick={onClose} className="min-h-11 rounded-xl border px-4 py-2 disabled:opacity-50">{t('list.erpRetryDialog.cancel')}</button>
           <button type="submit" disabled={busy || (action === 'putaway' && !putawayLines.length)} className={content.destructive ? 'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-rose-600 px-5 py-2 font-semibold text-white disabled:opacity-40' : 'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-cyan-600 px-5 py-2 font-semibold text-white disabled:opacity-40'}>
             {busy ? <Loader2 className="size-4 animate-spin" /> : content.icon}{content.submit}
           </button>

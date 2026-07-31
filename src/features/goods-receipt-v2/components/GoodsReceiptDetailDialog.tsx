@@ -147,7 +147,7 @@ export function GoodsReceiptDetailDialog({
             </DialogTitle>
             <DialogDescription className="wms-ops-detail-dialog__description">
               {header
-                ? `${header.supplierName || header.supplierCode || '—'} · ${header.waybillNo || 'İrsaliye yok'} · ${goodsReceiptEnumLabel(t, 'operationStatus', header.status)}`
+                ? `${header.supplierName || header.supplierCode || '—'} · ${header.waybillNo || t('list.noWaybillShort')} · ${goodsReceiptEnumLabel(t, 'operationStatus', header.status)}`
                 : t('list.detailDescription')}
             </DialogDescription>
             {header ? (
@@ -164,7 +164,7 @@ export function GoodsReceiptDetailDialog({
                 <OpsCodeBadge>{header.receiptType || '—'}</OpsCodeBadge>
                 {header.waybillNo ? (
                   <span className="inline-flex items-center rounded-lg border border-[var(--wms-app-border)] bg-black/[.03] px-2.5 py-1 font-mono text-xs dark:bg-white/[.04]">
-                    İrsaliye {header.waybillNo}
+                    {t('list.waybillBadge', { no: header.waybillNo })}
                   </span>
                 ) : null}
               </div>
@@ -212,8 +212,8 @@ export function GoodsReceiptDetailDialog({
                   {erpRetryAvailable ? (
                     <LifecycleButton
                       label={header.erpIntegrationStatus === 'CommitUncertain'
-                        ? 'ERP Mutabakat / Yeniden Gönder'
-                        : 'ERP’ye Gönder'}
+                        ? t('list.erpReconcileResend')
+                        : t('list.erpSendToErp')}
                       icon={<RefreshCw className="size-4" />}
                       onClick={() => setErpRetryOpen(true)}
                     />
@@ -782,7 +782,7 @@ function QualitySummaryPanel({
         </OpsStatusBadge>
         <strong className="text-sm">{t('list.qcSummaryTitle')}</strong>
         <span className="text-xs text-slate-400">
-          {lines.length} kalem (yalnız kaliteye tabi)
+          {t('list.qcLinesSuffix', { count: lines.length })}
         </span>
       </div>
       <p className="mt-1 text-xs text-slate-400">{t('list.qcSummaryHint')}</p>

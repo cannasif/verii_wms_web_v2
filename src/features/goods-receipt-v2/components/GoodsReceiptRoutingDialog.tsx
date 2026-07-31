@@ -114,28 +114,31 @@ export function GoodsReceiptRoutingDialog({
 
   const submit = async () => {
     if (detail.header.status !== "Completed")
-      return toast.error("Mal kabul tamamlanmadan DAT veya ambar çıkış oluşturulamaz.");
+      return toast.error(t("list.routingDialog.errors.receiptNotCompleted"));
     if (!qualityReady)
-      return toast.error("Kalite/GKK kararı tamamlanmadan yönlendirme yapılamaz.");
+      return toast.error(t("list.routingDialog.errors.qualityNotReady"));
     if (!approvalReady)
-      return toast.error("Mal kabul onayı tamamlanmadan yönlendirme yapılamaz.");
+      return toast.error(t("list.routingDialog.errors.approvalNotReady"));
     if (detail.header.erpIntegrationStatus !== "Succeeded")
-      return toast.error("ERP irsaliyesi başarıyla oluşmadan DAT veya ambar çıkış oluşturulamaz.");
+      return toast.error(t("list.routingDialog.errors.erpNotSucceeded"));
     if (transferTotal <= 0 && outboundTotal <= 0)
-      return toast.error("En az bir kaleme transfer veya ambar çıkış miktarı girin.");
+      return toast.error(t("list.routingDialog.errors.noQuantityEntered"));
     if (transferTotal > 0 && (!transferSeriesId || !targetWarehouseId))
-      return toast.error("Transfer belge serisi ve hedef deposu zorunludur.");
+      return toast.error(t("list.routingDialog.errors.transferSeriesAndWarehouseRequired"));
     if (transferTotal > 0 && targetWarehouseId === detail.header.targetWarehouseId)
-      return toast.error("Kaynak ve hedef depo aynı olamaz.");
+      return toast.error(t("list.routingDialog.errors.sourceTargetSame"));
     if (outboundTotal > 0 && (!outboundSeriesId || !customerId))
-      return toast.error("Ambar çıkış belge serisi ve carisi zorunludur.");
+      return toast.error(t("list.routingDialog.errors.outboundSeriesAndCustomerRequired"));
     for (const draft of lines) {
       const source = detail.lines.find((line) => line.id === draft.lineId)!;
       if (draft.transferQuantity < 0 || draft.outboundQuantity < 0)
-        return toast.error(`${source.stockCode} için miktarlar negatif olamaz.`);
+        return toast.error(t("list.routingDialog.errors.negativeQuantity", { code: source.stockCode }));
       if (draft.transferQuantity + draft.outboundQuantity > source.routableQuantity)
         return toast.error(
-          `${source.stockCode} için toplam en fazla ${formatProjectNumber(source.routableQuantity)} yönlendirilebilir.`,
+          t("list.routingDialog.errors.exceedsRoutable", {
+            code: source.stockCode,
+            max: formatProjectNumber(source.routableQuantity),
+          }),
         );
     }
 
@@ -178,12 +181,17 @@ export function GoodsReceiptRoutingDialog({
             : null,
       });
       toast.success(
-        `${result.routes.map((route) => route.targetDocumentNo).join(" ve ")} oluşturuldu; toplam ${formatProjectNumber(result.routedQuantity)} yönlendirildi.`,
+        t("list.routingDialog.successToast", {
+          documents: result.routes
+            .map((route) => route.targetDocumentNo)
+            .join(` ${t("list.routingDialog.and")} `),
+          quantity: formatProjectNumber(result.routedQuantity),
+        }),
       );
       await onCompleted(result);
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Yönlendirme oluşturulamadı.",
+        error instanceof Error ? error.message : t("list.routingDialog.createFailed"),
       );
     } finally {
       setSaving(false);
@@ -205,14 +213,13 @@ export function GoodsReceiptRoutingDialog({
           <div>
             <p className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-cyan-500">
               <SplitSquareHorizontal className="size-3.5" />
-              Mal Kabul Sonrası · Çift Kondisyonlu Dağıtım
+              {t("list.routingDialog.eyebrow")}
             </p>
             <DialogTitle className="mt-1 text-xl font-bold">
               {detail.header.documentNo}
             </DialogTitle>
             <p className="text-sm text-slate-500">
-              Sol kondisyon depolar arası transfer, sağ kondisyon ambar çıkış.
-              Her kalemin kalan miktarını aynı listede ikiye bölebilirsiniz.
+              {t("list.routingDialog.subtitle")}
             </p>
           </div>
         </header>
@@ -224,11 +231,11 @@ export function GoodsReceiptRoutingDialog({
               : "border-amber-500/30 bg-amber-500/5 text-amber-600"
           }`}
         >
-          Kalite/GKK:{" "}
+          {t("list.routingDialog.qualityGkk")}:{" "}
           <strong>
             {goodsReceiptEnumLabel(t, "qualityStatus", detail.header.qualityStatus)}
           </strong>{" "}
-          · Mal kabul onayı:{" "}
+          · {t("list.routingDialog.receiptApproval")}:{" "}
           <strong>
             {goodsReceiptEnumLabel(
               t,
@@ -241,23 +248,23 @@ export function GoodsReceiptRoutingDialog({
         <div className="mt-4 grid gap-4 xl:grid-cols-2">
           <ConditionLane
             tone="transfer"
-            title="Kondisyon 1 · Depolar Arası Transfer"
+            title={t("list.routingDialog.transferConditionTitle")}
             icon={<ArrowRightLeft className="size-5" />}
             total={transferTotal}
             active={transferTotal > 0}
           >
-            <Field label="Belge serisi">
+            <Field label={t("list.routingDialog.documentSeries")}>
               <AppDropdown
                 value={transferSeriesId}
                 onValueChange={setTransferSeriesId}
-                placeholder="Seri seçin"
+                placeholder={t("list.routingDialog.selectSeriesPlaceholder")}
                 options={transferSeries.map((item) => ({
                   value: String(item.id),
                   label: `${item.code} · ${item.previewDocumentNumber}`,
                 }))}
               />
             </Field>
-            <Field label="Hedef depo">
+            <Field label={t("list.routingDialog.targetWarehouse")}>
               <PagedAppDropdown<WarehouseOption>
                 queryKey={["gr-route-target-warehouse", detail.header.branchCode]}
                 fetchPage={(request) =>
@@ -277,7 +284,7 @@ export function GoodsReceiptRoutingDialog({
                 searchable
               />
             </Field>
-            <Field label="Hedef raf">
+            <Field label={t("list.routingDialog.targetShelf")}>
               <PagedAppDropdown<LocationOption>
                 queryKey={["gr-route-target-location", targetWarehouseId]}
                 enabled={Boolean(targetWarehouseId)}
@@ -300,23 +307,23 @@ export function GoodsReceiptRoutingDialog({
 
           <ConditionLane
             tone="outbound"
-            title="Kondisyon 2 · Ambar Çıkış"
+            title={t("list.routingDialog.outboundConditionTitle")}
             icon={<PackageMinus className="size-5" />}
             total={outboundTotal}
             active={outboundTotal > 0}
           >
-            <Field label="Belge serisi">
+            <Field label={t("list.routingDialog.documentSeries")}>
               <AppDropdown
                 value={outboundSeriesId}
                 onValueChange={setOutboundSeriesId}
-                placeholder="Seri seçin"
+                placeholder={t("list.routingDialog.selectSeriesPlaceholder")}
                 options={outboundSeries.map((item) => ({
                   value: String(item.id),
                   label: `${item.code} · ${item.previewDocumentNumber}`,
                 }))}
               />
             </Field>
-            <Field label="Çıkış carisi">
+            <Field label={t("list.routingDialog.outboundCustomer")}>
               <PagedAppDropdown<CustomerOption>
                 queryKey={["gr-route-customer", detail.header.branchCode]}
                 fetchPage={(request) =>
@@ -339,27 +346,26 @@ export function GoodsReceiptRoutingDialog({
 
         <section className="mt-5 overflow-hidden rounded-2xl border border-[var(--wms-app-border)]">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--wms-app-border)] bg-black/[.03] px-4 py-3 dark:bg-white/[.03]">
-            <strong className="text-sm">Kalem dağıtım listesi</strong>
+            <strong className="text-sm">{t("list.routingDialog.lineDistributionList")}</strong>
             <span className="text-xs text-slate-500">
-              {routableLines.length} yönlendirilebilir kalem · kalan = kabul −
-              önceki − transfer − ambar çıkış
+              {t("list.routingDialog.routableLinesSummary", { count: routableLines.length })}
             </span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[980px] text-sm">
               <thead className="bg-black/5 text-left text-xs uppercase tracking-wide text-slate-500 dark:bg-white/5">
                 <tr>
-                  <th className="p-3">Stok</th>
-                  <th className="p-3 text-right">Kabul</th>
-                  <th className="p-3 text-right">Önceki</th>
-                  <th className="p-3 text-right">Kalan</th>
+                  <th className="p-3">{t("list.stock")}</th>
+                  <th className="p-3 text-right">{t("list.routingDialog.accepted")}</th>
+                  <th className="p-3 text-right">{t("list.routingDialog.previous")}</th>
+                  <th className="p-3 text-right">{t("list.remaining")}</th>
                   <th className="p-3 bg-sky-500/10 text-sky-700 dark:text-sky-300">
-                    Transfer
+                    {t("list.routingDialog.transfer")}
                   </th>
                   <th className="p-3 bg-amber-500/10 text-amber-700 dark:text-amber-300">
-                    Ambar Çıkış
+                    {t("list.routingDialog.outbound")}
                   </th>
-                  <th className="p-3">Kaynak Raf</th>
+                  <th className="p-3">{t("list.routingDialog.sourceShelf")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -446,7 +452,7 @@ export function GoodsReceiptRoutingDialog({
                             draft.sourceLocationValue
                               ? {
                                   value: draft.sourceLocationValue,
-                                  label: `Raf #${draft.sourceLocationValue}`,
+                                  label: t("list.routingDialog.shelfNumber", { id: draft.sourceLocationValue }),
                                 }
                               : undefined
                           }
@@ -468,7 +474,7 @@ export function GoodsReceiptRoutingDialog({
           </div>
         </section>
 
-        <Field label="Operasyon notu">
+        <Field label={t("list.routingDialog.operationNote")}>
           <textarea
             className="input mt-5 min-h-20"
             value={description}
@@ -480,10 +486,10 @@ export function GoodsReceiptRoutingDialog({
         <footer className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--wms-app-border)] pt-4">
           <div className="flex flex-wrap gap-4 text-sm">
             <strong className="text-sky-600 dark:text-sky-300">
-              Transfer: {formatProjectNumber(transferTotal)}
+              {t("list.routingDialog.transferTotalLabel", { value: formatProjectNumber(transferTotal) })}
             </strong>
             <strong className="text-amber-600 dark:text-amber-300">
-              Ambar çıkış: {formatProjectNumber(outboundTotal)}
+              {t("list.routingDialog.outboundTotalLabel", { value: formatProjectNumber(outboundTotal) })}
             </strong>
           </div>
           <div className="flex gap-2">
@@ -492,7 +498,7 @@ export function GoodsReceiptRoutingDialog({
               onClick={onClose}
               className="rounded-xl border px-4 py-2 font-semibold"
             >
-              Vazgeç
+              {t("list.erpRetryDialog.cancel")}
             </button>
             <button
               type="button"
@@ -513,7 +519,7 @@ export function GoodsReceiptRoutingDialog({
               ) : (
                 <ArrowRightLeft className="size-4" />
               )}
-              Dağıtımı Oluştur
+              {t("list.routingDialog.createDistribution")}
             </button>
           </div>
         </footer>

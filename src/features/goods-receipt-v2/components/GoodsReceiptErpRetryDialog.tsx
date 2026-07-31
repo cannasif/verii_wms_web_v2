@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactElement } from 'react';
 import { AlertTriangle, Loader2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { goodsReceiptV2Api } from '../api/goods-receipt.api';
 import type { ErpPostingResult, GoodsReceiptGridRow } from '../types/goods-receipt.types';
 
@@ -14,6 +15,7 @@ export function GoodsReceiptErpRetryDialog({
   close: () => void;
   completed: (result: ErpPostingResult) => Promise<void>;
 }): ReactElement {
+  const { t } = useModuleTranslation('goods-receipt-v2');
   const [posting, setPosting] = useState<ErpPostingResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState(false);
@@ -28,7 +30,7 @@ export function GoodsReceiptErpRetryDialog({
       })
       .catch((error) => {
         if (active && header.erpIntegrationStatus !== 'Pending') {
-          toast.error(message(error, 'ERP gönderim kaydı alınamadı.'));
+          toast.error(message(error, t('list.erpRetryDialog.fetchFailed')));
         }
       })
       .finally(() => {
@@ -37,7 +39,7 @@ export function GoodsReceiptErpRetryDialog({
     return () => {
       active = false;
     };
-  }, [header.erpIntegrationStatus, header.id]);
+  }, [header.erpIntegrationStatus, header.id, t]);
 
   const uncertain = posting?.status === 'CommitUncertain'
     || header.erpIntegrationStatus === 'CommitUncertain';
@@ -45,10 +47,10 @@ export function GoodsReceiptErpRetryDialog({
     && !working
     && (!uncertain || (confirmedNotFound && reason.trim().length >= 5));
   const submitLabel = uncertain
-    ? 'Mutabakatı kaydet ve yeniden gönder'
+    ? t('list.erpRetryDialog.submitReconcileAndResend')
     : posting?.status === 'Failed'
-      ? 'ERP’ye yeniden gönder'
-      : 'ERP’ye gönder';
+      ? t('list.erpRetryDialog.submitResend')
+      : t('list.erpSendToErp');
 
   const retry = async () => {
     if (!canSubmit) return;
@@ -59,15 +61,19 @@ export function GoodsReceiptErpRetryDialog({
       }
       const result = await goodsReceiptV2Api.postErp(header.id);
       if (result.status === 'Succeeded') {
-        toast.success(`Netsis irsaliyesi oluşturuldu: ${result.erpDocumentNo || result.sourceDocumentNo}`);
+        toast.success(
+          t('list.erpRetryDialog.successToast', {
+            documentNo: result.erpDocumentNo || result.sourceDocumentNo,
+          }),
+        );
       } else if (result.status === 'CommitUncertain') {
-        toast.warning('Netsis yanıtı yine kesinleşmedi. Mükerrer belgeyi önlemek için tekrar gönderim durduruldu.');
+        toast.warning(t('list.erpRetryDialog.uncertainToast'));
       } else {
-        toast.error(result.errorMessage || 'ERP gönderimi tamamlanamadı.');
+        toast.error(result.errorMessage || t('list.erpRetryDialog.failedToast'));
       }
       await completed(result);
     } catch (error) {
-      toast.error(message(error, 'ERP gönderimi yeniden başlatılamadı.'));
+      toast.error(message(error, t('list.erpRetryDialog.retryFailed')));
     } finally {
       setWorking(false);
     }
@@ -76,9 +82,9 @@ export function GoodsReceiptErpRetryDialog({
   return (
     <Dialog open onOpenChange={(open) => { if (!open && !working) close(); }}>
       <DialogContent className="max-w-xl">
-        <DialogTitle>ERP aktarımını yeniden gönder</DialogTitle>
+        <DialogTitle>{t('list.erpRetryDialog.title')}</DialogTitle>
         <DialogDescription>
-          {header.documentNo} numaralı mal kabul Netsis alış irsaliyesine yeniden gönderilecektir.
+          {t('list.erpRetryDialog.description', { documentNo: header.documentNo })}
         </DialogDescription>
 
         {loading ? (
@@ -86,9 +92,9 @@ export function GoodsReceiptErpRetryDialog({
         ) : (
           <div className="space-y-4">
             <div className="rounded-xl border border-[var(--wms-app-border)] p-4 text-sm">
-              <div><strong>Yerel durum:</strong> {header.erpIntegrationStatus}</div>
-              <div><strong>Gönderim durumu:</strong> {posting?.status || 'Kayıt bulunamadı'}</div>
-              <div><strong>Deneme:</strong> {posting?.attemptCount ?? 0}</div>
+              <div><strong>{t('list.erpRetryDialog.localStatus')}:</strong> {header.erpIntegrationStatus}</div>
+              <div><strong>{t('list.erpRetryDialog.submissionStatus')}:</strong> {posting?.status || t('list.erpRetryDialog.recordNotFound')}</div>
+              <div><strong>{t('list.erpRetryDialog.attempt')}:</strong> {posting?.attemptCount ?? 0}</div>
               {posting?.errorMessage ? <div className="mt-2 text-rose-600">{posting.errorMessage}</div> : null}
             </div>
 
@@ -97,8 +103,8 @@ export function GoodsReceiptErpRetryDialog({
                 <div className="flex gap-2 text-sm text-amber-800 dark:text-amber-200">
                   <AlertTriangle className="mt-0.5 size-4 shrink-0" />
                   <p>
-                    Önceki isteğin sonucu belirsizdir. Netsis’te <strong>{header.documentNo}</strong>
-                    {' '}ve <strong>{header.waybillNo || 'irsaliye numarası'}</strong> ile arama yapmadan yeniden göndermeyin.
+                    {t('list.erpRetryDialog.uncertainWarningPrefix')} <strong>{header.documentNo}</strong>
+                    {' '}{t('list.erpRetryDialog.uncertainWarningAnd')} <strong>{header.waybillNo || t('list.erpRetryDialog.waybillNumberFallback')}</strong> {t('list.erpRetryDialog.uncertainWarningSuffix')}
                   </p>
                 </div>
                 <label className="flex items-start gap-2 text-sm">
@@ -108,25 +114,25 @@ export function GoodsReceiptErpRetryDialog({
                     checked={confirmedNotFound}
                     onChange={(event) => setConfirmedNotFound(event.target.checked)}
                   />
-                  <span>Netsis’te belgeyi kontrol ettim ve bulunmadığını doğruladım.</span>
+                  <span>{t('list.erpRetryDialog.confirmedCheckbox')}</span>
                 </label>
                 <label className="block space-y-1 text-sm">
-                  <span className="font-semibold">Mutabakat açıklaması</span>
+                  <span className="font-semibold">{t('list.erpRetryDialog.reconciliationNoteLabel')}</span>
                   <textarea
                     className="input min-h-24 w-full resize-y"
                     value={reason}
                     maxLength={1000}
                     onChange={(event) => setReason(event.target.value)}
-                    placeholder="Örn. Netsis TBLFATUIRS ve irsaliye numarası üzerinden kontrol edildi; belge bulunamadı."
+                    placeholder={t('list.erpRetryDialog.reconciliationPlaceholder')}
                   />
-                  <span className="text-xs text-slate-500">En az 5 karakter; denetim kaydına yazılır.</span>
+                  <span className="text-xs text-slate-500">{t('list.erpRetryDialog.reconciliationHint')}</span>
                 </label>
               </div>
             ) : null}
 
             <div className="flex justify-end gap-2">
               <button type="button" className="rounded-xl border px-4 py-2" disabled={working} onClick={close}>
-                Vazgeç
+                {t('list.erpRetryDialog.cancel')}
               </button>
               <button
                 type="button"
