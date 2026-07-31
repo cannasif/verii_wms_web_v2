@@ -1,0 +1,37 @@
+{
+  "eyebrow": "Lager und Fremdbearbeitung",
+  "title": "Fremdbearbeitungstransfer-Prozesszentrum",
+  "description": "Verwalten Sie Lieferantenausgaben, Lieferantenrücknahmen und Lieferant-zu-Lieferant-Bewegungen mit Auftragsverknüpfung, Aufgaben, Serien-/Losverfolgung, Qualität und vollständiger Nachverfolgbarkeit.",
+  "cards": {
+    "create": { "title": "Fremdbearbeitungstransfer erstellen", "text": "Erstellen Sie einen Ausgabe-, Rücknahme- oder Lieferant-zu-Lieferant-Transferentwurf." },
+    "list": { "title": "Fremdbearbeitungsdatensätze", "text": "Verfolgen Sie Lieferantenbestand, erwartete Rückgabe, Versand, Annahme und Einlagerungsfortschritt." },
+    "settings": { "title": "Prozesseinstellungen", "text": "Verwalten Sie Auftragsverknüpfungen, Ausgabe-/Rücknahmeketten, Qualität, Teilausführung und Toleranzregeln." }
+  },
+  "policy": {
+    "loading": "Fremdbearbeitungstransfer-Einstellungen werden geladen…",
+    "saved": "Fremdbearbeitungstransfer-Richtlinie gespeichert.",
+    "saveFailed": "Einstellungen konnten nicht gespeichert werden.",
+    "saving": "Wird gespeichert…",
+    "save": "Einstellungen speichern",
+    "eyebrow": "Fremdbearbeitungsvorgänge",
+    "title": "Fremdbearbeitungstransfer-Richtlinie",
+    "description": "Verwalten Sie Beleg-, Zuweisungs-, Qualitäts- und Toleranzregeln für Lieferantenausgabe-, Rücknahme- und Lieferant-zu-Lieferant-Abläufe.",
+    "sections": { "document": "Beleg- und Kettenregeln", "execution": "Physische Ausführung, Qualität und Toleranz" },
+    "fields": {
+      "requireSupplier": "Lieferant erforderlich",
+      "requireSubcontractOrderForReceipt": "Fremdbearbeitungsauftrag bei Rücknahme erforderlich",
+      "requireIssueBeforeReceipt": "Ausgabe vor Rücknahme erforderlich",
+      "allowOrderlessIssue": "Auftragslose Lieferantenausgabe zulassen",
+      "allowOrderlessReceipt": "Auftragslose Lieferantenrücknahme zulassen",
+      "allowSupplierToSupplier": "Lieferant-zu-Lieferant-Transfer zulassen",
+      "allowPartialIssue": "Teilausgabe zulassen",
+      "allowPartialReceipt": "Teilrücknahme zulassen",
+      "requireQualityOnReceipt": "Qualitätsprüfung bei Rücknahme erforderlich",
+      "requireTaskAssignment": "Benutzerzuweisung erforderlich",
+      "requireApproval": "Genehmigung erforderlich",
+      "allowOverReceipt": "Mehrrücknahme zulassen",
+      "overReceiptTolerancePercent": "Mehrrücknahme-Toleranz (%)",
+      "defaultLeadTimeDays": "Standard-Vorlaufzeit (Tage)"
+    }
+  }
+}

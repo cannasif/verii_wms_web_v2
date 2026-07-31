@@ -1,0 +1,37 @@
+{
+  "eyebrow": "Magazzino e conto lavoro",
+  "title": "Centro processi di trasferimento conto lavoro",
+  "description": "Gestisci uscite verso fornitore, rientri da fornitore e movimenti fornitore-fornitore con collegamento ordine, attività, tracciabilità serie/lotto, qualità e piena tracciabilità.",
+  "cards": {
+    "create": { "title": "Crea trasferimento conto lavoro", "text": "Crea una bozza di uscita, rientro o trasferimento fornitore-fornitore." },
+    "list": { "title": "Registri conto lavoro", "text": "Traccia lo stock presso il fornitore, il rientro previsto, la spedizione, il ricevimento e l'avanzamento di stoccaggio." },
+    "settings": { "title": "Impostazioni processo", "text": "Gestisci i collegamenti d'ordine, le catene uscita/rientro, la qualità, l'esecuzione parziale e le regole di tolleranza." }
+  },
+  "policy": {
+    "loading": "Caricamento impostazioni trasferimento conto lavoro…",
+    "saved": "Politica di trasferimento conto lavoro salvata.",
+    "saveFailed": "Impossibile salvare le impostazioni.",
+    "saving": "Salvataggio…",
+    "save": "Salva impostazioni",
+    "eyebrow": "Operazioni conto lavoro",
+    "title": "Politica di trasferimento conto lavoro",
+    "description": "Gestisci le regole di documento, assegnazione, qualità e tolleranza per i flussi di uscita, rientro e fornitore-fornitore.",
+    "sections": { "document": "Regole di documento e catena", "execution": "Esecuzione fisica, qualità e tolleranza" },
+    "fields": {
+      "requireSupplier": "Fornitore obbligatorio",
+      "requireSubcontractOrderForReceipt": "Ordine conto lavoro obbligatorio al rientro",
+      "requireIssueBeforeReceipt": "Uscita obbligatoria prima del rientro",
+      "allowOrderlessIssue": "Consenti uscita fornitore senza ordine",
+      "allowOrderlessReceipt": "Consenti rientro fornitore senza ordine",
+      "allowSupplierToSupplier": "Consenti trasferimento fornitore-fornitore",
+      "allowPartialIssue": "Consenti uscita parziale",
+      "allowPartialReceipt": "Consenti rientro parziale",
+      "requireQualityOnReceipt": "Controllo qualità obbligatorio al rientro",
+      "requireTaskAssignment": "Assegnazione utente obbligatoria",
+      "requireApproval": "Approvazione obbligatoria",
+      "allowOverReceipt": "Consenti rientro in eccesso",
+      "overReceiptTolerancePercent": "Tolleranza rientro in eccesso (%)",
+      "defaultLeadTimeDays": "Tempo di consegna predefinito (giorni)"
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "eyebrow": "Almacén y subcontratación",
+  "title": "Centro de proceso de transferencia de subcontratación",
+  "description": "Gestione las salidas a proveedor, los retornos de proveedor y los movimientos de proveedor a proveedor con vínculo de pedido, tareas, seguimiento de serie/lote, calidad y trazabilidad completa.",
+  "cards": {
+    "create": { "title": "Crear transferencia de subcontratación", "text": "Cree un borrador de salida, retorno o transferencia de proveedor a proveedor." },
+    "list": { "title": "Registros de subcontratación", "text": "Siga el stock del proveedor, el retorno esperado, el envío, la recepción y el progreso de ubicación." },
+    "settings": { "title": "Configuración del proceso", "text": "Gestione los vínculos de pedido, las cadenas de salida/retorno, la calidad, la ejecución parcial y las reglas de tolerancia." }
+  },
+  "policy": {
+    "loading": "Cargando configuración de transferencia de subcontratación…",
+    "saved": "Política de transferencia de subcontratación guardada.",
+    "saveFailed": "No se pudo guardar la configuración.",
+    "saving": "Guardando…",
+    "save": "Guardar configuración",
+    "eyebrow": "Operaciones de subcontratación",
+    "title": "Política de transferencia de subcontratación",
+    "description": "Gestione las reglas de documento, asignación, calidad y tolerancia para los flujos de salida, retorno y proveedor a proveedor.",
+    "sections": { "document": "Reglas de documento y cadena", "execution": "Ejecución física, calidad y tolerancia" },
+    "fields": {
+      "requireSupplier": "Proveedor obligatorio",
+      "requireSubcontractOrderForReceipt": "Pedido de subcontratación obligatorio al retorno",
+      "requireIssueBeforeReceipt": "Salida obligatoria antes del retorno",
+      "allowOrderlessIssue": "Permitir salida a proveedor sin pedido",
+      "allowOrderlessReceipt": "Permitir retorno de proveedor sin pedido",
+      "allowSupplierToSupplier": "Permitir transferencia de proveedor a proveedor",
+      "allowPartialIssue": "Permitir salida parcial",
+      "allowPartialReceipt": "Permitir retorno parcial",
+      "requireQualityOnReceipt": "Inspección de calidad obligatoria al retorno",
+      "requireTaskAssignment": "Asignación de usuario obligatoria",
+      "requireApproval": "Aprobación obligatoria",
+      "allowOverReceipt": "Permitir exceso de retorno",
+      "overReceiptTolerancePercent": "Tolerancia de exceso de retorno (%)",
+      "defaultLeadTimeDays": "Plazo predeterminado (días)"
+    }
+  }
+}

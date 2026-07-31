@@ -1,0 +1,37 @@
+{
+  "eyebrow": "Entrepôt et sous-traitance",
+  "title": "Centre de processus de transfert de sous-traitance",
+  "description": "Gérez les sorties fournisseur, les retours fournisseur et les mouvements fournisseur à fournisseur avec liens de commande, tâches, suivi série/lot, qualité et traçabilité complète.",
+  "cards": {
+    "create": { "title": "Créer un transfert de sous-traitance", "text": "Créez un brouillon de sortie, de retour ou de transfert fournisseur à fournisseur." },
+    "list": { "title": "Registres de sous-traitance", "text": "Suivez le stock fournisseur, le retour prévu, l'expédition, la réception et la progression du rangement." },
+    "settings": { "title": "Paramètres du processus", "text": "Gérez les liens de commande, les chaînes sortie/retour, la qualité, l'exécution partielle et les règles de tolérance." }
+  },
+  "policy": {
+    "loading": "Chargement des paramètres de transfert de sous-traitance…",
+    "saved": "Politique de transfert de sous-traitance enregistrée.",
+    "saveFailed": "Les paramètres n'ont pas pu être enregistrés.",
+    "saving": "Enregistrement…",
+    "save": "Enregistrer les paramètres",
+    "eyebrow": "Opérations de sous-traitance",
+    "title": "Politique de transfert de sous-traitance",
+    "description": "Gérez les règles de document, d'affectation, de qualité et de tolérance pour les flux de sortie, de retour et de fournisseur à fournisseur.",
+    "sections": { "document": "Règles de document et de chaîne", "execution": "Exécution physique, qualité et tolérance" },
+    "fields": {
+      "requireSupplier": "Fournisseur obligatoire",
+      "requireSubcontractOrderForReceipt": "Commande de sous-traitance obligatoire au retour",
+      "requireIssueBeforeReceipt": "Sortie obligatoire avant retour",
+      "allowOrderlessIssue": "Autoriser la sortie fournisseur sans commande",
+      "allowOrderlessReceipt": "Autoriser le retour fournisseur sans commande",
+      "allowSupplierToSupplier": "Autoriser le transfert fournisseur à fournisseur",
+      "allowPartialIssue": "Autoriser la sortie partielle",
+      "allowPartialReceipt": "Autoriser le retour partiel",
+      "requireQualityOnReceipt": "Contrôle qualité obligatoire au retour",
+      "requireTaskAssignment": "Affectation d'utilisateur obligatoire",
+      "requireApproval": "Approbation obligatoire",
+      "allowOverReceipt": "Autoriser le sur-retour",
+      "overReceiptTolerancePercent": "Tolérance de sur-retour (%)",
+      "defaultLeadTimeDays": "Délai par défaut (jours)"
+    }
+  }
+}
