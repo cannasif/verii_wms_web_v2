@@ -2380,8 +2380,8 @@
     }
   },
   "advancedFilter": {
-    "true": "True",
-    "false": "False",
+    "true": "Vero",
+    "false": "Falso",
     "title": "Filtro avanzato",
     "add": "Aggiungi filtro",
     "clear": "Cancella",
@@ -2394,14 +2394,14 @@
     "operator": "Operatore",
     "value": "Valore",
     "remove": "Rimuovi",
-    "operatorContains": "Contains",
-    "operatorStartsWith": "Starts with",
-    "operatorEndsWith": "Ends with",
-    "operatorEquals": "Equals",
-    "operator>": "Greater than",
-    "operator>=": "Greater than or equal",
-    "operator<": "Less than",
-    "operator<=": "Less than or equal"
+    "operatorContains": "Contiene",
+    "operatorStartsWith": "Inizia con",
+    "operatorEndsWith": "Termina con",
+    "operatorEquals": "Uguale a",
+    "operator>": "Maggiore di",
+    "operator>=": "Maggiore o uguale",
+    "operator<": "Minore di",
+    "operator<=": "Minore o uguale"
   },
   "dateInput": {
     "openDate": "Apri selettore data",
@@ -2428,6 +2428,25 @@
       "actions": "Azioni"
     },
     "goodsReceiptTasks": {
+      "title": "Gestione attività di ricevimento",
+      "assignedTitle": "Le mie attività di ricevimento assegnate",
+      "description": "Gestisci le attività di ricevimento, i responsabili e le etichette pre-generate.",
+      "assignedDescription": "Accetta le attività assegnate, avviale e processa il ricevimento fisico tramite codice a barre.",
+      "taskNo": "N. attività",
+      "documentNo": "N. ricevimento",
+      "processType": "Tipo di processo",
+      "supplierCode": "Codice fornitore",
+      "supplierName": "Nome fornitore",
+      "warehouseCode": "Codice magazzino",
+      "warehouseName": "Nome magazzino",
+      "status": "Stato attività",
+      "myAssignmentStatus": "Il mio stato di assegnazione",
+      "plannedQuantity": "Pianificato",
+      "processedQuantity": "Ricevuto",
+      "actions": "Azioni",
+      "viewTask": "Visualizza attività"
+    },
+    "warehouseInboundTasks": {
       "title": "Gestione attività di ricevimento",
       "assignedTitle": "Le mie attività di ricevimento assegnate",
       "description": "Gestisci le attività di ricevimento, i responsabili e le etichette pre-generate.",

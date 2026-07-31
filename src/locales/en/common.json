@@ -4068,6 +4068,25 @@
       "actions": "Actions",
       "viewTask": "View task"
     },
+    "warehouseInboundTasks": {
+      "title": "Goods Receipt Task Management",
+      "assignedTitle": "My Assigned Goods Receipt Tasks",
+      "description": "Manage goods receipt tasks, assignees and pre-generated labels.",
+      "assignedDescription": "Accept assigned tasks, start them and process physical receipt by barcode.",
+      "taskNo": "Task No",
+      "documentNo": "Goods Receipt No",
+      "processType": "Operation Type",
+      "supplierCode": "Supplier Code",
+      "supplierName": "Supplier Name",
+      "warehouseCode": "Warehouse Code",
+      "warehouseName": "Warehouse Name",
+      "status": "Task Status",
+      "myAssignmentStatus": "My Assignment Status",
+      "plannedQuantity": "Planned",
+      "processedQuantity": "Received",
+      "actions": "Actions",
+      "viewTask": "View task"
+    },
     "goodsReceiptPreLabels": {
       "title": "Goods Receipt Pre-Labels",
       "description": "Track, print and manage the lifecycle of labels generated from tasks.",

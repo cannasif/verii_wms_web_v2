@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState, type ReactElement } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import {
   Barcode,
   Check,
@@ -42,6 +43,7 @@ export function WarehouseInboundTasksPage({
 }: {
   assignedOnly?: boolean;
 }): ReactElement {
+  const { t: tGrid } = useTranslation("common");
   const queryClient = useQueryClient();
   const [detail, setDetail] = useState<WarehouseInboundTaskDetail | null>(null);
   const [users, setUsers] = useState<ActiveUserOption[]>([]);
@@ -123,7 +125,7 @@ export function WarehouseInboundTasksPage({
       ...systemColumns<WarehouseInboundTaskGridRow>(),
       {
         key: "taskNo",
-        label: "Emir No",
+        label: tGrid("dataGrid.warehouseInboundTasks.taskNo"),
         sortable: true,
         filterable: true,
         render: (row) => (
@@ -132,77 +134,77 @@ export function WarehouseInboundTasksPage({
       },
       {
         key: "documentNo",
-        label: "Mal Kabul No",
+        label: tGrid("dataGrid.warehouseInboundTasks.documentNo"),
         sortable: true,
         filterable: true,
         render: (row) => row.documentNo,
       },
       {
         key: "processType",
-        label: "İşlem Tipi",
+        label: tGrid("dataGrid.warehouseInboundTasks.processType"),
         sortable: true,
         filterable: true,
         render: (row) => processTypeLabel(row.processType),
       },
       {
         key: "supplierCode",
-        label: "Tedarikçi Kodu",
+        label: tGrid("dataGrid.warehouseInboundTasks.supplierCode"),
         sortable: true,
         filterable: true,
         render: (row) => row.supplierCode || "—",
       },
       {
         key: "supplierName",
-        label: "Tedarikçi Adı",
+        label: tGrid("dataGrid.warehouseInboundTasks.supplierName"),
         sortable: true,
         filterable: true,
         render: (row) => row.supplierName || "—",
       },
       {
         key: "warehouseCode",
-        label: "Depo Kodu",
+        label: tGrid("dataGrid.warehouseInboundTasks.warehouseCode"),
         sortable: true,
         filterable: true,
         render: (row) => row.warehouseCode,
       },
       {
         key: "warehouseName",
-        label: "Depo Adı",
+        label: tGrid("dataGrid.warehouseInboundTasks.warehouseName"),
         sortable: true,
         filterable: true,
         render: (row) => row.warehouseName,
       },
       {
         key: "status",
-        label: "Emir Durumu",
+        label: tGrid("dataGrid.warehouseInboundTasks.status"),
         sortable: true,
         filterable: true,
         render: (row) => row.status,
       },
       {
         key: "myAssignmentStatus",
-        label: "Atama Durumum",
+        label: tGrid("dataGrid.warehouseInboundTasks.myAssignmentStatus"),
         sortable: true,
         filterable: true,
         render: (row) => row.myAssignmentStatus || "—",
       },
       {
         key: "plannedQuantity",
-        label: "Planlanan",
+        label: tGrid("dataGrid.warehouseInboundTasks.plannedQuantity"),
         sortable: true,
         filterable: true,
         render: (row) => formatProjectNumber(row.plannedQuantity),
       },
       {
         key: "processedQuantity",
-        label: "Toplanan",
+        label: tGrid("dataGrid.warehouseInboundTasks.processedQuantity"),
         sortable: true,
         filterable: true,
         render: (row) => formatProjectNumber(row.processedQuantity),
       },
       {
         key: "actions",
-        label: "İşlemler",
+        label: tGrid("dataGrid.warehouseInboundTasks.actions"),
         ...requiredActionColumn,
         render: (row) => (
           <button
@@ -210,7 +212,7 @@ export function WarehouseInboundTasksPage({
             disabled={busy === row.id}
             onClick={() => void open(row)}
             className="rounded-lg p-2 text-cyan-500 hover:bg-cyan-500/10"
-            aria-label="Emri görüntüle"
+            aria-label={tGrid("dataGrid.warehouseInboundTasks.viewTask")}
           >
             {busy === row.id ? (
               <Loader2 className="size-4 animate-spin" />
@@ -221,7 +223,7 @@ export function WarehouseInboundTasksPage({
         ),
       },
     ],
-    [busy, open],
+    [busy, open, tGrid],
   );
   return (
     <>
@@ -229,13 +231,13 @@ export function WarehouseInboundTasksPage({
         pageKey={pageKey}
         title={
           assignedOnly
-            ? "Bana Atanan Mal Kabul Emirleri"
-            : "Mal Kabul Emir Yönetimi"
+            ? tGrid("dataGrid.warehouseInboundTasks.assignedTitle")
+            : tGrid("dataGrid.warehouseInboundTasks.title")
         }
         description={
           assignedOnly
-            ? "Atanmış emirleri kabul edin, başlatın ve barkodla fiziksel kabulü işleyin."
-            : "Mal kabul emirlerini, sorumlularını ve ön etiketlerini yönetin."
+            ? tGrid("dataGrid.warehouseInboundTasks.assignedDescription")
+            : tGrid("dataGrid.warehouseInboundTasks.description")
         }
         columns={columns}
         fetchPage={

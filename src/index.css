@@ -6568,7 +6568,8 @@ html:not(.dark) .wms-ops-list .wms-ops-data-grid tbody tr:hover .wms-ops-table-i
 }
 
 .wms-ops-list .wms-ops-data-grid-toolbar__start {
-  flex: 1 1 12rem;
+  flex: 0 1 auto;
+  flex-wrap: nowrap;
   min-width: 0;
 }
 
@@ -6579,28 +6580,6 @@ html:not(.dark) .wms-ops-list .wms-ops-data-grid tbody tr:hover .wms-ops-table-i
 }
 
 @media (max-width: 639px) {
-  .wms-ops-list .wms-ops-list-search {
-    max-width: 100%;
-    flex: 1 1 100%;
-  }
-
-  .wms-ops-list .wms-ops-data-grid-toolbar__start {
-    flex: 1 1 100%;
-    width: 100%;
-  }
-
-  .wms-ops-list .wms-ops-data-grid-toolbar__end {
-    flex: 1 1 100%;
-    width: 100%;
-    justify-content: stretch;
-  }
-
-  .wms-ops-list .wms-ops-data-grid-toolbar__end .wms-ops-list-toolbar-btn {
-    flex: 1 1 calc(33.333% - 0.35rem);
-    min-width: 0;
-    padding-inline: 0.5rem !important;
-  }
-
   .wms-ops-list .wms-ops-grid-pagination__nav-btn {
     flex: 1 1 auto;
     min-width: 0;
@@ -6609,6 +6588,27 @@ html:not(.dark) .wms-ops-list .wms-ops-data-grid tbody tr:hover .wms-ops-table-i
 
   .wms-ops-list .wms-ops-grid-pagination__info {
     width: 100%;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .wms-ops-list .wms-ops-data-grid-toolbar__start,
+  .wms-ops-list .wms-ops-data-grid-toolbar__end {
+    display: contents;
+  }
+
+  .wms-ops-list .wms-ops-data-grid-toolbar {
+    justify-content: center;
+  }
+
+  .wms-ops-list .wms-ops-list-search {
+    flex: 1 1 100%;
+    min-width: 7rem;
+    max-width: 100% !important;
+  }
+
+  html.skin-premium .wms-ops-list .wms-ops-list-search {
+    max-width: 100% !important;
   }
 }
 
@@ -9033,6 +9033,16 @@ html:not(.skin-premium) .wms-ops-advanced-filter .wms-ops-field-shell {
 
 .wms-ops-list-dropdown [data-slot="dropdown-menu-item"] svg {
   color: color-mix(in oklab, var(--wms-ops-accent) 65%, #64748b);
+}
+
+.wms-ops-list-popover--columns {
+  max-height: min(
+    32rem,
+    calc(100dvh - 2rem),
+    var(--radix-popover-content-available-height, calc(100dvh - 2rem))
+  );
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .wms-ops-list-popover--columns .wms-ops-list-popover__section-title {

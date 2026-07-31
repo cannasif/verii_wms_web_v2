@@ -56,7 +56,7 @@ export function GridExportMenu({ fileName, columns, rows, getExportData }: GridE
       <DropdownMenuTrigger asChild>
         <OpsActionButton type="button" variant="secondary" className="wms-ops-list-toolbar-btn wms-ops-grid-export-trigger">
           <Download className="size-3.5" aria-hidden />
-          {t('common.export')}
+          <span className="hidden md:inline">{t('common.export')}</span>
         </OpsActionButton>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className={cn('wms-ops-list-dropdown w-52 min-w-[11rem]')}>

@@ -1008,8 +1008,11 @@ export function AdvancedDataGrid<T extends { id: number }>({
             disabled={query.isFetching}
           >
             <RefreshCw className={cn('size-3.5', query.isFetching && 'animate-spin')} aria-hidden />
-            {t('common.refresh')}
+            <span className="hidden md:inline">{t('common.refresh')}</span>
           </OpsActionButton>
+        </div>
+
+        <div className="wms-ops-data-grid-toolbar__end flex flex-wrap items-center gap-2">
           {visibleSearchableColumns.length > 0 ? (
             <PopoverPrimitive.Root open={showSearchFields} onOpenChange={(open) => { setShowSearchFields(open); if (!open) setSearchFieldMenuSearch(''); }}>
               <PopoverPrimitive.Trigger asChild>
@@ -1022,7 +1025,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
                   title={t('dataGrid.searchFields')}
                 >
                   <ListFilter className="size-3.5" aria-hidden />
-                  <span className="hidden lg:inline">{t('dataGrid.searchFields')}</span>
+                  <span className="hidden md:inline">{t('dataGrid.searchFields')}</span>
                   <span className="ml-1 inline-flex min-w-5 items-center justify-center rounded-none bg-white/20 px-1.5 py-0.5 text-[10px] font-semibold leading-none">
                     {effectiveSearchFields.length}
                   </span>
@@ -1060,9 +1063,6 @@ export function AdvancedDataGrid<T extends { id: number }>({
               </PopoverPrimitive.Portal>
             </PopoverPrimitive.Root>
           ) : null}
-        </div>
-
-        <div className="wms-ops-data-grid-toolbar__end flex flex-wrap items-center gap-2">
           <PopoverPrimitive.Root
             open={showFilters}
             modal={false}
@@ -1080,7 +1080,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
                 aria-haspopup="dialog"
               >
                 <Filter className="size-3.5" aria-hidden />
-                {t('common.filters')}
+                <span className="hidden md:inline">{t('common.filters')}</span>
                 {filters.length > 0 ? (
                   <span className="ml-1 inline-flex min-w-5 items-center justify-center rounded-none bg-white/20 px-1.5 py-0.5 text-[10px] font-semibold leading-none">
                     {filters.length}
@@ -1263,7 +1263,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
             <PopoverPrimitive.Trigger asChild>
               <OpsActionButton type="button" variant="secondary" className="wms-ops-list-toolbar-btn" aria-expanded={showColumns} aria-haspopup="menu">
                 <Columns3 className="size-3.5" aria-hidden />
-                {t('common.columns')}
+                <span className="hidden md:inline">{t('common.columns')}</span>
               </OpsActionButton>
             </PopoverPrimitive.Trigger>
             <PopoverPrimitive.Portal container={typeof document !== 'undefined' ? document.body : undefined}>
@@ -1332,7 +1332,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
                     <>
                       <div className="wms-ops-list-popover__divider" />
                       <div className="wms-ops-list-popover__section-title">{t('common.hiddenColumns')}</div>
-                      <div className="space-y-0.5">
+                      <div className="wms-ops-list-popover__scroll space-y-0.5">
                         {columnMenuColumns.filter((column) => hiddenColumns.includes(column.key)).map((column) => (
                           <div key={column.key} className="wms-ops-list-popover__row">
                             <span className="wms-ops-list-popover__move-slot" aria-hidden />
