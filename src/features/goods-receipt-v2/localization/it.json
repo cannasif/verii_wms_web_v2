@@ -51,6 +51,9 @@
     "prepareSelectedLines": "Prepara le righe selezionate",
     "selectedDirectLinesCount": "{{count}} righe d'ordine selezionate",
     "selectedOrdersCount": "{{count}} ordini selezionati",
+    "selectLineAria": "Seleziona {{orderNumber}} {{stockCode}}",
+    "selectOrderAria": "Seleziona {{orderNumber}}",
+    "reservedBadge": "Prenotato",
     "waybill": {
       "sectionTitle": "Dettagli documento di trasporto",
       "sectionHint": "Il tipo di documento, il numero e le date vengono inseriti prima della selezione dell'ordine.",
@@ -90,7 +93,8 @@
       "title": "Assegnatari attività",
       "hint": "Gli utenti selezionati vengono assegnati a tutte le attività di magazzino create; vedranno l'attività nella loro schermata Le mie attività assegnate.",
       "addPlaceholder": "Aggiungi utente operativo",
-      "empty": "Nessun utente ancora assegnato."
+      "empty": "Nessun utente ancora assegnato.",
+      "removeAria": "Rimuovi l'assegnazione di {{name}}"
     },
     "entryRow": {
       "quantity": "Quantità",
@@ -233,7 +237,65 @@
       "warehouseOrderNotAllowed": "Non puoi selezionare questo ordine perché il magazzino {{code}} non è assegnato all'utente.",
       "unknownWarehouse": "sconosciuto",
       "linesRequired": "Prepara almeno una riga d'ordine per continuare.",
-      "confirmLinesRequired": "Conferma almeno una riga con OK per continuare."
+      "confirmLinesRequired": "Conferma almeno una riga con OK per continuare.",
+      "directLinesMixedWarehouses": "Le righe d'ordine per magazzini di destinazione diversi non possono essere preparate in un unico ricevimento merci. Crea un ricevimento separato per ogni magazzino.",
+      "ordersMixedWarehouses": "Non è possibile selezionare ordini per magazzini diversi in un unico ordine di ricevimento merci. Cancella prima la selezione attuale o crea un ordine separato.",
+      "directLinesMixedWarehousesAutoSelected": "Non è possibile selezionare righe per magazzini di destinazione diversi nello stesso ricevimento merci. Sono state selezionate le righe idonee dello stesso magazzino.",
+      "directLinesMixedWarehousesRemoveFirst": "Non è possibile selezionare righe per magazzini di destinazione diversi nello stesso ricevimento merci. Cancella prima la selezione attuale o crea un ricevimento separato.",
+      "lineAvailableQuantityReserved": "La quantità disponibile di questa riga d'ordine è prenotata su un ordine di ricevimento merci attivo.",
+      "lineWarehouseNotAssigned": "Il magazzino di questa riga d'ordine non è assegnato all'utente.",
+      "reservedForActiveOrder": "Prenotato su un ordine di ricevimento merci attivo.",
+      "warehouseNotAssignedToUser": "Questo magazzino non è assegnato all'utente."
+    },
+    "errors": {
+      "warehouseAccessLoadFailed": "Impossibile caricare i permessi di magazzino.",
+      "customerMirrorNotFound": "Il codice conto fornitore {{customerCode}} non è stato trovato nella tabella mirror fornitori ERP.",
+      "openOrderNotFound": "L'ordine aperto {{orderNumber}} non è stato trovato.",
+      "orderCustomerCodeNotFound": "Non è stato possibile determinare un unico codice conto per l'ordine {{orderNumber}}.",
+      "orderNumberSearchFailed": "La ricerca per numero ordine non è riuscita.",
+      "ordersLoadFailed": "Impossibile caricare gli ordini.",
+      "stockMirrorNotFound": "{{code}} non è stato trovato nella tabella mirror articoli ERP.",
+      "yapMirrorNotFound": "Il codice di configurazione {{code}} non è stato trovato nella tabella mirror ERP.",
+      "orderLineStockCodeNotFound": "{{orderNumber}}/{{orderId}}: codice articolo non trovato.",
+      "orderLinesLoadFailed": "Impossibile caricare le righe d'ordine.",
+      "serialsGenerationFailed": "Impossibile generare i seriali.",
+      "serialsCancellationFailed": "Impossibile annullare i seriali generati.",
+      "directReceiptFailed": "Impossibile completare il ricevimento merci diretto.",
+      "receiptOrderCreationFailed": "Impossibile creare l'ordine di ricevimento merci."
+    },
+    "toast": {
+      "orderAndSupplierFetched": "L'ordine {{orderNumber}} e il fornitore {{customerCode}} sono stati recuperati.",
+      "serialsGeneratedFromRule": "{{count}} seriali sono stati generati in base alla regola dell'articolo.",
+      "generatedSerialsCancelled": "I seriali generati sono stati annullati e resi nuovamente disponibili.",
+      "serialsSplitIntoRows": "{{count}} seriali sono stati suddivisi in righe."
+    },
+    "audit": {
+      "quantityOrSerialPlanChanged": "La quantità o il piano seriale sono stati modificati nella bozza di ricevimento merci.",
+      "autoSerialGenerationCancelled": "L'utente ha annullato la generazione automatica dei seriali nella bozza di ricevimento merci."
+    },
+    "serialLotDialog": {
+      "title": "Gestione seriale / lotto",
+      "traceability": "Tracciabilità",
+      "subtitle": "Suggerimento di sistema, suddivisione per quantità o inserimento singolo.",
+      "close": "Chiudi",
+      "autoSuggestSerial": "Suggerisci seriale automaticamente",
+      "autoSuggestSerialHint": "Genera i seriali dalla regola dell'articolo in base alla quantità",
+      "addSingleRow": "Aggiungi riga singola",
+      "addSingleRowHint": "Inserimento manuale di lotto / seriale",
+      "cancelAutoSerials": "Annulla seriali generati automaticamente",
+      "cancelAutoSerialsHint": "Rilascia i seriali prenotati",
+      "bulkPasteLabel": "Suddividi seriale esistente / incolla in blocco",
+      "applyBulkSerials": "Applica seriali in blocco",
+      "lotAria": "Lotto",
+      "lotPlaceholder": "N. lotto",
+      "serialAria": "Seriale",
+      "serialPlaceholder": "N. seriale",
+      "manufacturingDateAria": "Data di produzione",
+      "expirationDateAria": "Data di scadenza",
+      "removeTrackingRow": "Rimuovi riga di tracciabilità",
+      "quantityAria": "Quantità",
+      "empty": "Nessuna riga lotto/seriale ancora presente. Suggerisci automaticamente o aggiungi una riga singola.",
+      "done": "Fatto"
     }
   },
   "manual": {
@@ -413,7 +475,67 @@
     "plannedQuantity": "Pianificato",
     "processedQuantity": "Ricevuto",
     "actions": "Azioni",
-    "viewTask": "Visualizza attività"
+    "viewTask": "Visualizza attività",
+    "modal": {
+      "title": "Attività di ricevimento merci {{taskNo}}",
+      "description": "Righe attività, assegnazioni e operazioni di ricevimento fisico.",
+      "eyebrow": "Attività di ricevimento merci",
+      "info": { "status": "Stato", "warehouse": "Magazzino", "priority": "Priorità", "planned": "Pianificato", "started": "Avviato" },
+      "table": { "stock": "Articolo", "received": "Ricevuto" },
+      "line": { "qualityRequired": "Controllo qualità richiesto", "directDispatch": "Documento di trasporto diretto" },
+      "actions": { "acceptAssignment": "Accetta assegnazione", "startTask": "Avvia attività", "saveAssignments": "Salva assegnazioni" },
+      "errors": {
+        "detailFetchFailed": "Impossibile caricare i dettagli dell'attività.",
+        "actionFailed": "Impossibile completare l'azione.",
+        "selectAtLeastOneUser": "Seleziona almeno un utente.",
+        "assignmentsUpdateFailed": "Impossibile aggiornare le assegnazioni."
+      },
+      "toast": { "accepted": "Attività accettata.", "started": "Attività avviata.", "assignmentsUpdated": "Assegnazioni attività aggiornate." },
+      "receiptLabels": {
+        "title": "Etichette generate al ricevimento",
+        "hint": "Create automaticamente dopo ogni movimento di ricevimento con la quantità effettiva e le informazioni su seriale/lotto.",
+        "noneYet": "Nessuna etichetta di ricevimento ancora",
+        "printButton": "Stampa {{count}} etichette",
+        "fetchFailed": "Impossibile caricare le etichette di ricevimento.",
+        "printFailed": "Impossibile stampare le etichette di ricevimento."
+      },
+      "preLabel": {
+        "title": "Stampa anticipata codice a barre",
+        "hint": "Crea un'etichetta univoca collegata all'attività per le righe aperte. Un'etichetta non può essere utilizzata al ricevimento finché non viene stampata.",
+        "activeExists": "Etichetta attiva esistente",
+        "createButton": "Crea etichetta anticipata",
+        "noOpenLines": "Nessuna riga aperta",
+        "statusLine": "{{count}} etichetta attiva · {{printed}} stampata",
+        "reprintButton": "Ristampa etichette",
+        "printButton": "Stampa etichette",
+        "existingFetchFailed": "Impossibile caricare le etichette anticipate esistenti.",
+        "noOpenLinesError": "Non ci sono righe attività aperte per cui generare etichette.",
+        "batchName": "Lotto etichette anticipate attività",
+        "generatedToast": "{{count}} etichette anticipate generate. Ora stampa le etichette.",
+        "createFailed": "Impossibile generare l'etichetta anticipata.",
+        "noPrintableLabels": "Nessuna etichetta stampabile trovata.",
+        "printTitleSuffix": "etichette anticipate",
+        "markedPrintedToast": "Le etichette sono state contrassegnate come stampate. Ora puoi effettuare il ricevimento scansionando il codice a barre."
+      },
+      "scan": {
+        "printedLabelsFetchFailed": "Impossibile caricare le etichette anticipate stampate.",
+        "validateFirst": "Risolvi prima il codice a barre e conferma la riga dell'attività.",
+        "sentToQualityToast": "Ricevimento merci elaborato; trasferito nell'elenco ispezioni qualità.",
+        "replayedToast": "Questa scansione era già stata elaborata.",
+        "processedToast": "Codice a barre verificato; seriale/lotto, movimento di magazzino, saldo e qualità sono stati elaborati in un'unica transazione.",
+        "labelGeneratedToast": "Etichetta prodotto generata automaticamente; puoi stamparla dalla sezione etichette di ricevimento.",
+        "acceptFailed": "Impossibile accettare il codice a barre.",
+        "preLabelReadyBanner": "{{count}} etichetta anticipata stampata pronta per la scansione. Scansiona una di queste etichette invece del codice a barre prodotto/fornitore.",
+        "preLabelRequiredBanner": "Questa attività è pre-etichettata. Genera e stampa un'etichetta dalla sezione sopra prima di effettuare il ricevimento.",
+        "scannerTitle": "Scansiona il codice a barre del ricevimento merci",
+        "scannerDescriptionPreLabel": "Viene accettato solo il codice a barre dell'etichetta anticipata generata e stampata per questa attività.",
+        "scannerDescriptionGeneral": "Viene risolta l'etichetta di sistema, il codice GS1, il codice a barre articolo fornitore o un codice a barre seriale per l'articolo selezionato.",
+        "wrongBarcodeError": "Questa attività è pre-etichettata. Scansiona il codice a barre sull'etichetta anticipata che hai generato e stampato, non il codice a barre prodotto/fornitore.",
+        "resolvedTitle": "Record di ricevimento risolto",
+        "resolvedHint": "Alla conferma finale, il movimento di magazzino, il saldo scaffale/seriale e, se richiesto, il record di qualità vengono creati nella stessa transazione.",
+        "remainingLabel": "Rimanenti {{quantity}} {{unit}}"
+      }
+    }
   },
   "enums": {
     "operationStatus": {

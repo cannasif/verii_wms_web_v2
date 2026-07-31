@@ -51,6 +51,9 @@
     "prepareSelectedLines": "Préparer les lignes sélectionnées",
     "selectedDirectLinesCount": "{{count}} lignes de commande sélectionnées",
     "selectedOrdersCount": "{{count}} commandes sélectionnées",
+    "selectLineAria": "Sélectionner {{orderNumber}} {{stockCode}}",
+    "selectOrderAria": "Sélectionner {{orderNumber}}",
+    "reservedBadge": "Réservé",
     "waybill": {
       "sectionTitle": "Détails du bon de livraison",
       "sectionHint": "Le type de document, le numéro et les dates sont saisis avant la sélection des commandes.",
@@ -90,7 +93,8 @@
       "title": "Responsables de la tâche",
       "hint": "Les utilisateurs sélectionnés sont assignés à toutes les tâches d'entrepôt créées ; ils voient la tâche sur leur écran Mes tâches assignées.",
       "addPlaceholder": "Ajouter un utilisateur d'opération",
-      "empty": "Aucun utilisateur assigné pour le moment."
+      "empty": "Aucun utilisateur assigné pour le moment.",
+      "removeAria": "Retirer l'affectation de {{name}}"
     },
     "entryRow": {
       "quantity": "Quantité",
@@ -233,7 +237,65 @@
       "warehouseOrderNotAllowed": "Vous ne pouvez pas sélectionner cette commande car l'entrepôt {{code}} ne vous est pas assigné.",
       "unknownWarehouse": "inconnu",
       "linesRequired": "Préparez au moins une ligne de commande pour continuer.",
-      "confirmLinesRequired": "Confirmez au moins une ligne à l'aide du bouton Confirmer pour continuer."
+      "confirmLinesRequired": "Confirmez au moins une ligne à l'aide du bouton Confirmer pour continuer.",
+      "directLinesMixedWarehouses": "Les lignes de commande destinées à des entrepôts cibles différents ne peuvent pas être préparées dans une même réception. Créez une réception distincte pour chaque entrepôt.",
+      "ordersMixedWarehouses": "Des commandes destinées à des entrepôts différents ne peuvent pas être sélectionnées dans une même commande de réception. Videz d'abord la sélection actuelle ou créez une commande distincte.",
+      "directLinesMixedWarehousesAutoSelected": "Les lignes destinées à des entrepôts cibles différents ne peuvent pas être sélectionnées dans la même réception. Les lignes éligibles du même entrepôt ont été sélectionnées.",
+      "directLinesMixedWarehousesRemoveFirst": "Les lignes destinées à des entrepôts cibles différents ne peuvent pas être sélectionnées dans la même réception. Videz d'abord la sélection actuelle ou créez une réception distincte.",
+      "lineAvailableQuantityReserved": "La quantité disponible de cette ligne de commande est réservée sur une commande de réception active.",
+      "lineWarehouseNotAssigned": "L'entrepôt de cette ligne de commande ne vous est pas assigné.",
+      "reservedForActiveOrder": "Réservé sur une commande de réception active.",
+      "warehouseNotAssignedToUser": "Cet entrepôt ne vous est pas assigné."
+    },
+    "errors": {
+      "warehouseAccessLoadFailed": "Les droits d'accès à l'entrepôt n'ont pas pu être chargés.",
+      "customerMirrorNotFound": "Le code compte fournisseur {{customerCode}} n'a pas été trouvé dans la table miroir fournisseur de l'ERP.",
+      "openOrderNotFound": "La commande ouverte {{orderNumber}} n'a pas été trouvée.",
+      "orderCustomerCodeNotFound": "Un code compte unique n'a pas pu être déterminé pour la commande {{orderNumber}}.",
+      "orderNumberSearchFailed": "La recherche par numéro de commande a échoué.",
+      "ordersLoadFailed": "Les commandes n'ont pas pu être chargées.",
+      "stockMirrorNotFound": "{{code}} n'a pas été trouvé dans la table miroir stock de l'ERP.",
+      "yapMirrorNotFound": "Le code de configuration {{code}} n'a pas été trouvé dans la table miroir de l'ERP.",
+      "orderLineStockCodeNotFound": "{{orderNumber}}/{{orderId}} : le code stock n'a pas été trouvé.",
+      "orderLinesLoadFailed": "Les lignes de commande n'ont pas pu être chargées.",
+      "serialsGenerationFailed": "Les numéros de série n'ont pas pu être générés.",
+      "serialsCancellationFailed": "Les numéros de série générés n'ont pas pu être annulés.",
+      "directReceiptFailed": "La réception directe n'a pas pu être finalisée.",
+      "receiptOrderCreationFailed": "La commande de réception n'a pas pu être créée."
+    },
+    "toast": {
+      "orderAndSupplierFetched": "La commande {{orderNumber}} et le fournisseur {{customerCode}} ont été récupérés.",
+      "serialsGeneratedFromRule": "{{count}} numéros de série ont été générés selon la règle du stock.",
+      "generatedSerialsCancelled": "Les numéros de série générés ont été annulés et libérés pour réutilisation.",
+      "serialsSplitIntoRows": "{{count}} numéros de série ont été répartis en lignes."
+    },
+    "audit": {
+      "quantityOrSerialPlanChanged": "La quantité ou le plan de série a été modifié dans le brouillon de réception.",
+      "autoSerialGenerationCancelled": "L'utilisateur a annulé la génération automatique de numéros de série dans le brouillon de réception."
+    },
+    "serialLotDialog": {
+      "title": "Gestion des numéros de série / lots",
+      "traceability": "Traçabilité",
+      "subtitle": "Suggestion système, répartition par quantité ou saisie unitaire.",
+      "close": "Fermer",
+      "autoSuggestSerial": "Suggérer automatiquement un numéro de série",
+      "autoSuggestSerialHint": "Générer des numéros de série à partir de la règle du stock selon la quantité",
+      "addSingleRow": "Ajouter une ligne unique",
+      "addSingleRowHint": "Saisie manuelle de lot / numéro de série",
+      "cancelAutoSerials": "Annuler les numéros de série générés automatiquement",
+      "cancelAutoSerialsHint": "Libérer les numéros de série réservés",
+      "bulkPasteLabel": "Répartir un numéro de série existant / collage groupé",
+      "applyBulkSerials": "Appliquer les numéros de série groupés",
+      "lotAria": "Lot",
+      "lotPlaceholder": "N° de lot",
+      "serialAria": "Numéro de série",
+      "serialPlaceholder": "N° de série",
+      "manufacturingDateAria": "Date de fabrication",
+      "expirationDateAria": "Date d'expiration",
+      "removeTrackingRow": "Supprimer la ligne de suivi",
+      "quantityAria": "Quantité",
+      "empty": "Aucune ligne de lot/série pour le moment. Utilisez la suggestion automatique ou ajoutez une ligne unique.",
+      "done": "Terminé"
     }
   },
   "manual": {
@@ -413,7 +475,67 @@
     "plannedQuantity": "Prévu",
     "processedQuantity": "Reçu",
     "actions": "Actions",
-    "viewTask": "Voir la tâche"
+    "viewTask": "Voir la tâche",
+    "modal": {
+      "title": "Tâche de réception {{taskNo}}",
+      "description": "Lignes de tâche, affectations et opérations de réception physique.",
+      "eyebrow": "Tâche de réception",
+      "info": { "status": "Statut", "warehouse": "Entrepôt", "priority": "Priorité", "planned": "Prévu", "started": "Démarré" },
+      "table": { "stock": "Stock", "received": "Reçu" },
+      "line": { "qualityRequired": "Contrôle qualité requis", "directDispatch": "Bon de livraison direct" },
+      "actions": { "acceptAssignment": "Accepter l'affectation", "startTask": "Démarrer la tâche", "saveAssignments": "Enregistrer les affectations" },
+      "errors": {
+        "detailFetchFailed": "Les détails de la tâche n'ont pas pu être chargés.",
+        "actionFailed": "L'action n'a pas pu être effectuée.",
+        "selectAtLeastOneUser": "Sélectionnez au moins un utilisateur.",
+        "assignmentsUpdateFailed": "Les affectations n'ont pas pu être mises à jour."
+      },
+      "toast": { "accepted": "Tâche acceptée.", "started": "Tâche démarrée.", "assignmentsUpdated": "Affectations de la tâche mises à jour." },
+      "receiptLabels": {
+        "title": "Étiquettes générées à la réception",
+        "hint": "Créées automatiquement après chaque mouvement de réception avec la quantité réelle et les informations de série/lot.",
+        "noneYet": "Aucune étiquette de réception pour le moment",
+        "printButton": "Imprimer {{count}} étiquettes",
+        "fetchFailed": "Les étiquettes de réception n'ont pas pu être chargées.",
+        "printFailed": "Les étiquettes de réception n'ont pas pu être imprimées."
+      },
+      "preLabel": {
+        "title": "Impression anticipée du code-barres",
+        "hint": "Crée une étiquette unique liée à la tâche pour les lignes ouvertes. Une étiquette ne peut pas être utilisée à la réception tant qu'elle n'est pas imprimée.",
+        "activeExists": "Étiquette active existante",
+        "createButton": "Créer une étiquette anticipée",
+        "noOpenLines": "Aucune ligne ouverte",
+        "statusLine": "{{count}} étiquette active · {{printed}} imprimée(s)",
+        "reprintButton": "Réimprimer les étiquettes",
+        "printButton": "Imprimer les étiquettes",
+        "existingFetchFailed": "Les étiquettes anticipées existantes n'ont pas pu être chargées.",
+        "noOpenLinesError": "Il n'y a aucune ligne de tâche ouverte pour laquelle générer des étiquettes.",
+        "batchName": "Lot d'étiquettes anticipées de la tâche",
+        "generatedToast": "{{count}} étiquettes anticipées générées. Imprimez maintenant les étiquettes.",
+        "createFailed": "L'étiquette anticipée n'a pas pu être générée.",
+        "noPrintableLabels": "Aucune étiquette imprimable trouvée.",
+        "printTitleSuffix": "étiquettes anticipées",
+        "markedPrintedToast": "Les étiquettes ont été marquées comme imprimées. Vous pouvez maintenant recevoir en scannant le code-barres."
+      },
+      "scan": {
+        "printedLabelsFetchFailed": "Les étiquettes anticipées imprimées n'ont pas pu être chargées.",
+        "validateFirst": "Résolvez d'abord le code-barres et confirmez la ligne de tâche.",
+        "sentToQualityToast": "Réception de marchandises traitée ; transférée vers la liste d'inspection qualité.",
+        "replayedToast": "Ce scan a déjà été traité.",
+        "processedToast": "Code-barres vérifié ; série/lot, mouvement de stock, solde et qualité ont été traités en une seule transaction.",
+        "labelGeneratedToast": "Étiquette produit générée automatiquement ; vous pouvez l'imprimer depuis la section des étiquettes de réception.",
+        "acceptFailed": "Le code-barres n'a pas pu être accepté.",
+        "preLabelReadyBanner": "{{count}} étiquette(s) anticipée(s) imprimée(s) prête(s) à scanner. Scannez l'une de ces étiquettes au lieu du code-barres produit/fournisseur.",
+        "preLabelRequiredBanner": "Cette tâche est pré-étiquetée. Générez et imprimez une étiquette depuis la section ci-dessus avant de recevoir.",
+        "scannerTitle": "Scanner le code-barres de réception",
+        "scannerDescriptionPreLabel": "Seul le code-barres de l'étiquette anticipée générée et imprimée pour cette tâche est accepté.",
+        "scannerDescriptionGeneral": "L'étiquette système, le GS1, le code-barres stock fournisseur ou un code-barres de série pour le stock sélectionné est résolu.",
+        "wrongBarcodeError": "Cette tâche est pré-étiquetée. Scannez le code-barres figurant sur l'étiquette anticipée que vous avez générée et imprimée, et non le code-barres produit/fournisseur.",
+        "resolvedTitle": "Enregistrement de réception résolu",
+        "resolvedHint": "Lors de la confirmation finale, le mouvement de stock, le solde emplacement/série et, si nécessaire, l'enregistrement qualité sont créés dans la même transaction.",
+        "remainingLabel": "Restant {{quantity}} {{unit}}"
+      }
+    }
   },
   "enums": {
     "operationStatus": {

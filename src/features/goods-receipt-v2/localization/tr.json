@@ -69,6 +69,9 @@
     "prepareSelectedLines": "Seçili kalemleri hazırla",
     "selectedDirectLinesCount": "{{count}} sipariş kalemi seçildi",
     "selectedOrdersCount": "{{count}} sipariş seçildi",
+    "selectLineAria": "{{orderNumber}} {{stockCode}} seç",
+    "selectOrderAria": "{{orderNumber}} seç",
+    "reservedBadge": "Ayrılmış",
     "waybill": {
       "sectionTitle": "İrsaliye bilgileri",
       "sectionHint": "Belge türü, numarası ve tarihleri sipariş seçiminden önce girilir.",
@@ -108,7 +111,8 @@
       "title": "Emir sorumluları",
       "hint": "Seçilen kullanıcılar oluşturulan tüm depo görevlerine atanır; kullanıcılar kendi “Bana Atanan Emirler” ekranında görevi görür.",
       "addPlaceholder": "Operasyon kullanıcısı ekle",
-      "empty": "Henüz kullanıcı atanmadı."
+      "empty": "Henüz kullanıcı atanmadı.",
+      "removeAria": "{{name}} atamasını kaldır"
     },
     "entryRow": {
       "quantity": "Miktar",
@@ -251,7 +255,65 @@
       "warehouseOrderNotAllowed": "Depo {{code}} kullanıcınıza tanımlı olmadığı için bu siparişi seçemezsiniz.",
       "unknownWarehouse": "belirsiz",
       "linesRequired": "Devam etmek için en az bir sipariş kalemi hazırlayın.",
-      "confirmLinesRequired": "Devam etmek için en az bir kalemi ONAY ile seçin."
+      "confirmLinesRequired": "Devam etmek için en az bir kalemi ONAY ile seçin.",
+      "directLinesMixedWarehouses": "Farklı hedef depolara ait sipariş kalemleri tek mal kabulde hazırlanamaz. Her depo için ayrı kabul oluşturun.",
+      "ordersMixedWarehouses": "Bir mal kabul emrinde farklı depolara ait siparişler seçilemez. Önce mevcut seçimi kaldırın veya ayrı emir oluşturun.",
+      "directLinesMixedWarehousesAutoSelected": "Farklı hedef depolara ait kalemler aynı mal kabulde seçilemez. Aynı depodaki uygun kalemler seçildi.",
+      "directLinesMixedWarehousesRemoveFirst": "Farklı hedef depolara ait kalemler aynı mal kabulde seçilemez. Önce mevcut seçimi kaldırın veya ayrı kabul oluşturun.",
+      "lineAvailableQuantityReserved": "Bu sipariş kaleminin açık miktarı aktif bir mal kabul emrine ayrılmış.",
+      "lineWarehouseNotAssigned": "Bu sipariş kaleminin deposu kullanıcınıza tanımlı değil.",
+      "reservedForActiveOrder": "Aktif bir mal kabul emrine ayrılmış.",
+      "warehouseNotAssignedToUser": "Bu depo kullanıcınıza tanımlı değil."
+    },
+    "errors": {
+      "warehouseAccessLoadFailed": "Depo yetkileri alınamadı.",
+      "customerMirrorNotFound": "{{customerCode}} cari kodu ERP tedarikçi mirror tablosunda bulunamadı.",
+      "openOrderNotFound": "{{orderNumber}} numaralı açık sipariş bulunamadı.",
+      "orderCustomerCodeNotFound": "{{orderNumber}} siparişinin tek bir cari kodu bulunamadı.",
+      "orderNumberSearchFailed": "Sipariş numarasıyla arama başarısız.",
+      "ordersLoadFailed": "Siparişler alınamadı.",
+      "stockMirrorNotFound": "{{code}} ERP stok mirror tablosunda bulunamadı.",
+      "yapMirrorNotFound": "{{code}} YAP kodu ERP mirror tablosunda bulunamadı.",
+      "orderLineStockCodeNotFound": "{{orderNumber}}/{{orderId}}: stok kodu bulunamadı.",
+      "orderLinesLoadFailed": "Sipariş satırları alınamadı.",
+      "serialsGenerationFailed": "Seriler üretilemedi.",
+      "serialsCancellationFailed": "Üretilen seriler iptal edilemedi.",
+      "directReceiptFailed": "Doğrudan mal kabul tamamlanamadı.",
+      "receiptOrderCreationFailed": "Mal kabul emri oluşturulamadı."
+    },
+    "toast": {
+      "orderAndSupplierFetched": "{{orderNumber}} siparişi ve {{customerCode}} tedarikçisi getirildi.",
+      "serialsGeneratedFromRule": "{{count}} seri stok kuralına göre üretildi.",
+      "generatedSerialsCancelled": "Üretilen seriler iptal edildi ve tekrar kullanıma kapatıldı.",
+      "serialsSplitIntoRows": "{{count}} seri satıra bölündü."
+    },
+    "audit": {
+      "quantityOrSerialPlanChanged": "Mal kabul taslağında miktar veya seri planı değiştirildi.",
+      "autoSerialGenerationCancelled": "Kullanıcı mal kabul taslağındaki otomatik seri üretimini iptal etti."
+    },
+    "serialLotDialog": {
+      "title": "Seri / lot yönetimi",
+      "traceability": "İzlenebilirlik",
+      "subtitle": "Sistem önerisi, miktardan bölme veya tekli giriş.",
+      "close": "Kapat",
+      "autoSuggestSerial": "Otomatik seri öner",
+      "autoSuggestSerialHint": "Miktardan stok kuralına göre seri üret",
+      "addSingleRow": "Tekli satır ekle",
+      "addSingleRowHint": "Manuel lot / seri girişi",
+      "cancelAutoSerials": "Otomatik serileri iptal",
+      "cancelAutoSerialsHint": "Rezerve serileri bırak",
+      "bulkPasteLabel": "Mevcut seriyi böl / toplu yapıştır",
+      "applyBulkSerials": "Toplu serileri uygula",
+      "lotAria": "Lot",
+      "lotPlaceholder": "Lot no",
+      "serialAria": "Seri",
+      "serialPlaceholder": "Seri no",
+      "manufacturingDateAria": "Üretim tarihi",
+      "expirationDateAria": "Son kullanma tarihi",
+      "removeTrackingRow": "Takip satırını sil",
+      "quantityAria": "Miktar",
+      "empty": "Henüz lot/seri satırı yok. Otomatik öner veya tekli satır ekleyin.",
+      "done": "Tamam"
     }
   },
   "manual": {
@@ -432,7 +494,67 @@
     "plannedQuantity": "Planlanan",
     "processedQuantity": "Toplanan",
     "actions": "İşlemler",
-    "viewTask": "Emri görüntüle"
+    "viewTask": "Emri görüntüle",
+    "modal": {
+      "title": "Mal kabul emri {{taskNo}}",
+      "description": "Emir kalemleri, atamaları ve fiziksel kabul işlemleri.",
+      "eyebrow": "Mal Kabul Emri",
+      "info": { "status": "Durum", "warehouse": "Depo", "priority": "Öncelik", "planned": "Planlanan", "started": "Başlama" },
+      "table": { "stock": "Stok", "received": "Toplanan" },
+      "line": { "qualityRequired": "Kalite kontrol gerekli", "directDispatch": "Doğrudan irsaliye" },
+      "actions": { "acceptAssignment": "Atamayı Kabul Et", "startTask": "Emri Başlat", "saveAssignments": "Atamaları Kaydet" },
+      "errors": {
+        "detailFetchFailed": "Emir detayı alınamadı.",
+        "actionFailed": "İşlem tamamlanamadı.",
+        "selectAtLeastOneUser": "En az bir kullanıcı seçin.",
+        "assignmentsUpdateFailed": "Atamalar güncellenemedi."
+      },
+      "toast": { "accepted": "Emir kabul edildi.", "started": "Emir başlatıldı.", "assignmentsUpdated": "Emir atamaları güncellendi." },
+      "receiptLabels": {
+        "title": "Mal kabulde oluşan etiketler",
+        "hint": "Her kabul hareketinden sonra gerçek miktar ve seri/lot bilgisiyle otomatik oluşur.",
+        "noneYet": "Henüz kabul etiketi yok",
+        "printButton": "{{count}} Etiketi Yazdır",
+        "fetchFailed": "Kabul etiketleri alınamadı.",
+        "printFailed": "Kabul etiketleri yazdırılamadı."
+      },
+      "preLabel": {
+        "title": "Önceden barkod basma",
+        "hint": "Açık satırlar için emir bağlantılı benzersiz etiket oluşturur. Etiket yazdırılmadan kabulde kullanılamaz.",
+        "activeExists": "Aktif Etiket Mevcut",
+        "createButton": "Ön Etiket Oluştur",
+        "noOpenLines": "Açık Satır Yok",
+        "statusLine": "{{count}} aktif etiket · {{printed}} yazdırılmış",
+        "reprintButton": "Etiketleri Yeniden Yazdır",
+        "printButton": "Etiketleri Yazdır",
+        "existingFetchFailed": "Mevcut ön etiketler alınamadı.",
+        "noOpenLinesError": "Etiket üretilecek açık emir satırı yok.",
+        "batchName": "Emir ön etiket paketi",
+        "generatedToast": "{{count}} ön etiket üretildi. Şimdi etiketleri yazdırın.",
+        "createFailed": "Ön etiket üretilemedi.",
+        "noPrintableLabels": "Yazdırılabilir etiket bulunamadı.",
+        "printTitleSuffix": "ön etiketleri",
+        "markedPrintedToast": "Etiketler yazdırıldı olarak kaydedildi. Artık barkodu okutarak kabul yapabilirsiniz."
+      },
+      "scan": {
+        "printedLabelsFetchFailed": "Basılmış ön etiketler alınamadı.",
+        "validateFirst": "Önce barkodu çözümleyin ve emir satırını doğrulayın.",
+        "sentToQualityToast": "Mal kabul işlendi; kalite inceleme listesine aktarıldı.",
+        "replayedToast": "Okutma daha önce işlenmişti.",
+        "processedToast": "Barkod doğrulandı; seri/lot, stok hareketi, bakiye ve kalite tek işlemde işlendi.",
+        "labelGeneratedToast": "Ürün etiketi otomatik oluşturuldu; kabul etiketleri bölümünden yazdırabilirsiniz.",
+        "acceptFailed": "Barkod kabul edilemedi.",
+        "preLabelReadyBanner": "{{count}} basılmış ön etiket okutmaya hazır. Ürün/tedarikçi barkodu yerine bu etiketlerden birini okutun.",
+        "preLabelRequiredBanner": "Bu emir ön etiketlidir. Kabulden önce yukarıdaki bölümden etiket oluşturup yazdırın.",
+        "scannerTitle": "Mal kabul barkodunu okut",
+        "scannerDescriptionPreLabel": "Bu emir için yalnız oluşturulup yazdırılan ön etiket barkodu kabul edilir.",
+        "scannerDescriptionGeneral": "Sistem etiketi, GS1, tedarikçi stok barkodu veya seçili stok için seri barkodu çözümlenir.",
+        "wrongBarcodeError": "Bu emir ön etiketlidir. Ürün/tedarikçi barkodu değil, oluşturup yazdırdığınız ön etiketin üzerindeki barkodu okutun.",
+        "resolvedTitle": "Çözümlenen kabul kaydı",
+        "resolvedHint": "Son onayda stok hareketi, raf/seri bakiyesi ve gerekiyorsa kalite kaydı aynı transaction içinde oluşur.",
+        "remainingLabel": "Kalan {{quantity}} {{unit}}"
+      }
+    }
   },
   "enums": {
     "operationStatus": {

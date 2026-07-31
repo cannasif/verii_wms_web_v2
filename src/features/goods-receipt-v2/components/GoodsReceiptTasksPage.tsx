@@ -81,12 +81,12 @@ export function GoodsReceiptTasksPage({
         if (!assignedOnly && users.length === 0)
           setUsers(await goodsReceiptV2Api.activeUsers());
       } catch (error) {
-        toast.error(message(error, "Emir detayı alınamadı."));
+        toast.error(message(error, t("tasks.modal.errors.detailFetchFailed")));
       } finally {
         setBusy(null);
       }
     },
-    [assignedOnly, users.length],
+    [assignedOnly, users.length, t],
   );
   const act = async (kind: "accept" | "start") => {
     if (!detail) return;
@@ -98,18 +98,18 @@ export function GoodsReceiptTasksPage({
           : await goodsReceiptV2Api.startTask(detail.task.id),
       );
       toast.success(
-        kind === "accept" ? "Emir kabul edildi." : "Emir başlatıldı.",
+        kind === "accept" ? t("tasks.modal.toast.accepted") : t("tasks.modal.toast.started"),
       );
       await refresh();
     } catch (error) {
-      toast.error(message(error, "İşlem tamamlanamadı."));
+      toast.error(message(error, t("tasks.modal.errors.actionFailed")));
     } finally {
       setBusy(null);
     }
   };
   const saveAssignments = async () => {
     if (!detail || selectedUsers.length === 0) {
-      toast.error("En az bir kullanıcı seçin.");
+      toast.error(t("tasks.modal.errors.selectAtLeastOneUser"));
       return;
     }
     setBusy(detail.task.id);
@@ -121,10 +121,10 @@ export function GoodsReceiptTasksPage({
           detail.task.rowVersion,
         ),
       );
-      toast.success("Emir atamaları güncellendi.");
+      toast.success(t("tasks.modal.toast.assignmentsUpdated"));
       await refresh();
     } catch (error) {
-      toast.error(message(error, "Atamalar güncellenemedi."));
+      toast.error(message(error, t("tasks.modal.errors.assignmentsUpdateFailed")));
     } finally {
       setBusy(null);
     }
@@ -317,14 +317,14 @@ function TaskModal({
   return (
     <ResponsiveDialog
       onClose={close}
-      title={`Mal kabul emri ${detail.task.taskNo}`}
-      description="Emir kalemleri, atamaları ve fiziksel kabul işlemleri."
+      title={t("tasks.modal.title", { taskNo: detail.task.taskNo })}
+      description={t("tasks.modal.description")}
       className="!max-w-6xl"
     >
       <header className="flex items-start justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-cyan-500">
-            Mal Kabul Emri
+            {t("tasks.modal.eyebrow")}
           </p>
           <h2 className="text-xl font-bold">{detail.task.taskNo}</h2>
           <p className="text-sm text-slate-500">
@@ -335,7 +335,7 @@ function TaskModal({
         <button
           type="button"
           onClick={close}
-          aria-label="Pencereyi kapat"
+          aria-label={t("close")}
           className="grid size-11 shrink-0 place-items-center rounded-xl hover:bg-black/5 dark:hover:bg-white/10"
         >
           <X className="size-5" />
@@ -343,20 +343,20 @@ function TaskModal({
       </header>
       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <Info
-          label="Durum"
+          label={t("tasks.modal.info.status")}
           value={goodsReceiptEnumLabel(t, "taskStatus", detail.task.status)}
         />
         <Info
-          label="Depo"
+          label={t("tasks.modal.info.warehouse")}
           value={`${detail.task.warehouseCode} · ${detail.task.warehouseName}`}
         />
-        <Info label="Öncelik" value={String(detail.task.priority)} />
+        <Info label={t("tasks.modal.info.priority")} value={String(detail.task.priority)} />
         <Info
-          label="Planlanan"
+          label={t("tasks.modal.info.planned")}
           value={formatProjectNumber(detail.task.plannedQuantity)}
         />
         <Info
-          label="Başlama"
+          label={t("tasks.modal.info.started")}
           value={
             detail.task.startedAtUtc
               ? formatProjectDateTime(detail.task.startedAtUtc)
@@ -369,11 +369,11 @@ function TaskModal({
           <thead className="bg-black/5 text-left dark:bg-white/5">
             <tr>
               <th className="p-3">#</th>
-              <th className="p-3">Stok</th>
-              <th className="p-3">Yapı</th>
-              <th className="p-3 text-right">Planlanan</th>
-              <th className="p-3 text-right">Toplanan</th>
-              <th className="p-3">Durum</th>
+              <th className="p-3">{t("tasks.modal.table.stock")}</th>
+              <th className="p-3">{t("list.yap")}</th>
+              <th className="p-3 text-right">{t("tasks.modal.info.planned")}</th>
+              <th className="p-3 text-right">{t("tasks.modal.table.received")}</th>
+              <th className="p-3">{t("tasks.modal.info.status")}</th>
             </tr>
           </thead>
           <tbody>
@@ -398,8 +398,8 @@ function TaskModal({
                     }`}
                   >
                     {line.requireQualityControl
-                      ? "Kalite kontrol gerekli"
-                      : "Doğrudan irsaliye"}
+                      ? t("tasks.modal.line.qualityRequired")
+                      : t("tasks.modal.line.directDispatch")}
                   </div>
                 </td>
                 <td className="p-3">{line.yapCode || "—"}</td>
@@ -427,7 +427,7 @@ function TaskModal({
               className="inline-flex items-center gap-2 rounded-xl border border-cyan-500/40 px-4 py-2 font-semibold text-cyan-500 disabled:opacity-40"
             >
               <Check className="size-4" />
-              Atamayı Kabul Et
+              {t("tasks.modal.actions.acceptAssignment")}
             </button>
             <button
               type="button"
@@ -441,7 +441,7 @@ function TaskModal({
               className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-4 py-2 font-semibold text-white disabled:opacity-40"
             >
               <Play className="size-4" />
-              Emri Başlat
+              {t("tasks.modal.actions.startTask")}
             </button>
           </div>
           {detail.task.labelStrategy === "PreGenerate" && (
@@ -466,7 +466,7 @@ function TaskModal({
           <section className="mt-5 rounded-xl border border-[var(--wms-app-border)] p-4">
             <div className="mb-3 flex items-center gap-2">
               <UserRoundCog className="size-5 text-cyan-500" />
-              <h3 className="font-bold">Emir Sorumluları</h3>
+              <h3 className="font-bold">{t("createFlow.assignees.title")}</h3>
             </div>
             <div className="grid max-h-56 gap-2 overflow-auto sm:grid-cols-2 lg:grid-cols-3">
               {users.map((user) => (
@@ -503,7 +503,7 @@ function TaskModal({
                 ) : (
                   <Save className="size-4" />
                 )}
-                Atamaları Kaydet
+                {t("tasks.modal.actions.saveAssignments")}
               </button>
             </div>
           </section>
@@ -527,6 +527,7 @@ function ReceiptGeneratedLabelsPanel({
 }: {
   detail: GoodsReceiptTaskDetail;
 }): ReactElement {
+  const { t } = useModuleTranslation("goods-receipt-v2");
   const [labels, setLabels] = useState<GoodsReceiptLabelRow[]>([]);
   const [busy, setBusy] = useState(false);
   const processedKey = detail.lines.map((x) => x.processedQuantity).join("|");
@@ -540,7 +541,7 @@ function ReceiptGeneratedLabelsPanel({
         if (active) setLabels(items.filter((x) => x.status !== "Consumed"));
       })
       .catch((error) => {
-        if (active) toast.error(message(error, "Kabul etiketleri alınamadı."));
+        if (active) toast.error(message(error, t("tasks.modal.receiptLabels.fetchFailed")));
       })
       .finally(() => {
         if (active) setBusy(false);
@@ -548,22 +549,22 @@ function ReceiptGeneratedLabelsPanel({
     return () => {
       active = false;
     };
-  }, [detail.task.goodsReceiptId, processedKey]);
+  }, [detail.task.goodsReceiptId, processedKey, t]);
 
   const unprinted = labels.filter((x) => x.printCount === 0);
   const print = async () => {
     if (labels.length === 0) return;
     setBusy(true);
     try {
-      printReceiptLabels(labels, `${detail.task.documentNo} kabul etiketleri`);
+      printReceiptLabels(labels, `${detail.task.documentNo} ${t("tasks.modal.receiptLabels.title").toLowerCase()}`);
       if (unprinted.length > 0)
         await goodsReceiptV2Api.markLabelsPrinted(unprinted.map((x) => x.id));
       setLabels((current) =>
         current.map((x) => ({ ...x, printCount: Math.max(1, x.printCount) })),
       );
-      toast.success("Mal kabulde oluşan etiketler yazdırıldı.");
+      toast.success(t("manual.result.labelsPrintedToast"));
     } catch (error) {
-      toast.error(message(error, "Kabul etiketleri yazdırılamadı."));
+      toast.error(message(error, t("tasks.modal.receiptLabels.printFailed")));
     } finally {
       setBusy(false);
     }
@@ -575,10 +576,9 @@ function ReceiptGeneratedLabelsPanel({
         <div className="flex items-start gap-3">
           <Tags className="mt-0.5 size-5 text-violet-500" />
           <div>
-            <h3 className="font-bold">Mal kabulde oluşan etiketler</h3>
+            <h3 className="font-bold">{t("tasks.modal.receiptLabels.title")}</h3>
             <p className="text-xs text-slate-500">
-              Her kabul hareketinden sonra gerçek miktar ve seri/lot bilgisiyle
-              otomatik oluşur.
+              {t("tasks.modal.receiptLabels.hint")}
             </p>
           </div>
         </div>
@@ -594,8 +594,8 @@ function ReceiptGeneratedLabelsPanel({
             <Printer className="size-4" />
           )}
           {labels.length === 0
-            ? "Henüz kabul etiketi yok"
-            : `${labels.length} Etiketi Yazdır`}
+            ? t("tasks.modal.receiptLabels.noneYet")
+            : t("tasks.modal.receiptLabels.printButton", { count: labels.length })}
         </button>
       </div>
     </section>
@@ -609,6 +609,7 @@ function PreLabelPanel({
   detail: GoodsReceiptTaskDetail;
   onLabelsChanged: () => void;
 }): ReactElement {
+  const { t } = useModuleTranslation("goods-receipt-v2");
   const [busy, setBusy] = useState(false);
   const [generated, setGenerated] =
     useState<GoodsReceiptLabelBatchDetail | null>(null);
@@ -642,7 +643,7 @@ function PreLabelPanel({
           setExistingLabels(activePreLabelsForTask(labels, openTaskLineIds));
       })
       .catch((error) => {
-        if (active) toast.error(message(error, "Mevcut ön etiketler alınamadı."));
+        if (active) toast.error(message(error, t("tasks.modal.preLabel.existingFetchFailed")));
       })
       .finally(() => {
         if (active) setBusy(false);
@@ -650,14 +651,14 @@ function PreLabelPanel({
     return () => {
       active = false;
     };
-  }, [detail.task.goodsReceiptId, openLineKey, openTaskLineIds]);
+  }, [detail.task.goodsReceiptId, openLineKey, openTaskLineIds, t]);
 
   const create = async () => {
     const lines = detail.lines
       .filter((x) => x.processedQuantity < x.plannedQuantity)
       .map((x) => ({ taskLineId: x.id, labelCount: 1 }));
     if (lines.length === 0) {
-      toast.error("Etiket üretilecek açık emir satırı yok.");
+      toast.error(t("tasks.modal.preLabel.noOpenLinesError"));
       return;
     }
     setBusy(true);
@@ -666,17 +667,17 @@ function PreLabelPanel({
         detail.task.goodsReceiptId,
         detail.task.id,
         lines,
-        "Emir ön etiket paketi",
+        t("tasks.modal.preLabel.batchName"),
         generationIdempotencyKey.current,
       );
       setGenerated(result);
       setExistingLabels(result.labels);
       onLabelsChanged();
       toast.success(
-        `${result.batch.totalLabelCount} ön etiket üretildi. Şimdi etiketleri yazdırın.`,
+        t("tasks.modal.preLabel.generatedToast", { count: result.batch.totalLabelCount }),
       );
     } catch (error) {
-      toast.error(message(error, "Ön etiket üretilemedi."));
+      toast.error(message(error, t("tasks.modal.preLabel.createFailed")));
     } finally {
       setBusy(false);
     }
@@ -684,14 +685,14 @@ function PreLabelPanel({
   const print = async () => {
     const labelIds = availableLabels.map((x) => x.id);
     if (labelIds.length === 0) {
-      toast.error("Yazdırılabilir etiket bulunamadı.");
+      toast.error(t("tasks.modal.preLabel.noPrintableLabels"));
       return;
     }
     setBusy(true);
     try {
       printReceiptLabels(
         availableLabels,
-        generated?.batch.batchNo ?? `${detail.task.taskNo} ön etiketleri`,
+        generated?.batch.batchNo ?? `${detail.task.taskNo} ${t("tasks.modal.preLabel.printTitleSuffix")}`,
       );
       await goodsReceiptV2Api.markLabelsPrinted(labelIds);
       setExistingLabels((current) =>
@@ -714,11 +715,9 @@ function PreLabelPanel({
           : current,
       );
       onLabelsChanged();
-      toast.success(
-        "Etiketler yazdırıldı olarak kaydedildi. Artık barkodu okutarak kabul yapabilirsiniz.",
-      );
+      toast.success(t("tasks.modal.preLabel.markedPrintedToast"));
     } catch (error) {
-      toast.error(message(error, "Etiketler yazdırılamadı."));
+      toast.error(message(error, t("manual.result.labelsPrintFailed")));
     } finally {
       setBusy(false);
     }
@@ -729,10 +728,9 @@ function PreLabelPanel({
         <div className="flex items-start gap-3">
           <Tags className="mt-0.5 size-5 text-cyan-500" />
           <div>
-            <h3 className="font-bold">Önceden barkod basma</h3>
+            <h3 className="font-bold">{t("tasks.modal.preLabel.title")}</h3>
             <p className="text-xs text-slate-500">
-              Açık satırlar için emir bağlantılı benzersiz etiket oluşturur.
-              Etiket yazdırılmadan kabulde kullanılamaz.
+              {t("tasks.modal.preLabel.hint")}
             </p>
           </div>
         </div>
@@ -748,10 +746,10 @@ function PreLabelPanel({
             <Barcode className="size-4" />
           )}
           {availableLabels.length > 0
-            ? "Aktif Etiket Mevcut"
+            ? t("tasks.modal.preLabel.activeExists")
             : hasOpenLines
-              ? "Ön Etiket Oluştur"
-              : "Açık Satır Yok"}
+              ? t("tasks.modal.preLabel.createButton")
+              : t("tasks.modal.preLabel.noOpenLines")}
         </button>
       </div>
       {availableLabels.length > 0 && (
@@ -761,7 +759,7 @@ function PreLabelPanel({
               {generated?.batch.batchNo ?? detail.task.taskNo}
             </strong>
             <span className="text-xs text-slate-500">
-              {availableLabels.length} aktif etiket · {printedCount} yazdırılmış
+              {t("tasks.modal.preLabel.statusLine", { count: availableLabels.length, printed: printedCount })}
             </span>
           </div>
           <button
@@ -776,8 +774,8 @@ function PreLabelPanel({
               <Printer className="size-4" />
             )}
             {printedCount === availableLabels.length
-              ? "Etiketleri Yeniden Yazdır"
-              : "Etiketleri Yazdır"}
+              ? t("tasks.modal.preLabel.reprintButton")
+              : t("tasks.modal.preLabel.printButton")}
           </button>
         </div>
       )}
@@ -794,6 +792,7 @@ function TaskScanPanel({
   labelsRevision: number;
   reload: () => void;
 }): ReactElement {
+  const { t } = useModuleTranslation("goods-receipt-v2");
   const openLines = useMemo(
     () =>
       detail.lines.filter(
@@ -835,7 +834,7 @@ function TaskScanPanel({
           );
       })
       .catch((error) => {
-        if (active) toast.error(message(error, "Basılmış ön etiketler alınamadı."));
+        if (active) toast.error(message(error, t("tasks.modal.scan.printedLabelsFetchFailed")));
       });
     return () => {
       active = false;
@@ -846,11 +845,12 @@ function TaskScanPanel({
     openLineKey,
     openLines,
     requiresPreLabel,
+    t,
   ]);
 
   const submit = async () => {
     if (!lineId || !hasValidBarcode) {
-      toast.error("Önce barkodu çözümleyin ve emir satırını doğrulayın.");
+      toast.error(t("tasks.modal.scan.validateFirst"));
       return;
     }
     setBusy(true);
@@ -867,21 +867,21 @@ function TaskScanPanel({
         deviceId: navigator.userAgent.slice(0, 100),
       });
       if (result.qualityInspectionId) {
-        toast.success("Mal kabul işlendi; kalite inceleme listesine aktarıldı.", {
+        toast.success(t("tasks.modal.scan.sentToQualityToast"), {
           action: {
-            label: "Kalite listesi",
+            label: t("manual.result.qualityListButton"),
             onClick: () => navigate("/warehouse/quality/inspections"),
           },
         });
       } else {
         toast.success(
           result.replayed
-            ? "Okutma daha önce işlenmişti."
-            : "Barkod doğrulandı; seri/lot, stok hareketi, bakiye ve kalite tek işlemde işlendi.",
+            ? t("tasks.modal.scan.replayedToast")
+            : t("tasks.modal.scan.processedToast"),
         );
       }
       if (result.generatedLabelId)
-        toast.success("Ürün etiketi otomatik oluşturuldu; kabul etiketleri bölümünden yazdırabilirsiniz.");
+        toast.success(t("tasks.modal.scan.labelGeneratedToast"));
       setBarcode("");
       setBarcodeSource("");
       setQuantity("");
@@ -892,7 +892,7 @@ function TaskScanPanel({
       scanIdempotencyKey.current = crypto.randomUUID();
       reload();
     } catch (error) {
-      toast.error(message(error, "Barkod kabul edilemedi."));
+      toast.error(message(error, t("tasks.modal.scan.acceptFailed")));
     } finally {
       setBusy(false);
     }
@@ -908,8 +908,8 @@ function TaskScanPanel({
           }`}
         >
           {printedLabels.length > 0
-            ? `${printedLabels.length} basılmış ön etiket okutmaya hazır. Ürün/tedarikçi barkodu yerine bu etiketlerden birini okutun.`
-            : "Bu emir ön etiketlidir. Kabulden önce yukarıdaki bölümden etiket oluşturup yazdırın."}
+            ? t("tasks.modal.scan.preLabelReadyBanner", { count: printedLabels.length })
+            : t("tasks.modal.scan.preLabelRequiredBanner")}
         </div>
       )}
       <WarehouseBarcodeScanner
@@ -918,19 +918,17 @@ function TaskScanPanel({
         warehouseId={detail.task.warehouseId}
         expectedStockId={selectedLine?.stockId}
         disabled={busy}
-        title="Mal kabul barkodunu okut"
+        title={t("tasks.modal.scan.scannerTitle")}
         description={
           requiresPreLabel
-            ? "Bu emir için yalnız oluşturulup yazdırılan ön etiket barkodu kabul edilir."
-            : "Sistem etiketi, GS1, tedarikçi stok barkodu veya seçili stok için seri barkodu çözümlenir."
+            ? t("tasks.modal.scan.scannerDescriptionPreLabel")
+            : t("tasks.modal.scan.scannerDescriptionGeneral")
         }
         onResolved={(value) => {
           if (requiresPreLabel && !isGoodsReceiptLabelBarcode(value.source)) {
             setBarcode("");
             setBarcodeSource("");
-            toast.error(
-              "Bu emir ön etiketlidir. Ürün/tedarikçi barkodu değil, oluşturup yazdırdığınız ön etiketin üzerindeki barkodu okutun.",
-            );
+            toast.error(t("tasks.modal.scan.wrongBarcodeError"));
             return;
           }
           const matched = openLines.find(
@@ -952,10 +950,9 @@ function TaskScanPanel({
         <div className="mb-4 flex items-start gap-3">
           <ScanLine className="mt-0.5 size-5 text-emerald-500" />
           <div>
-            <h3 className="font-bold">Çözümlenen kabul kaydı</h3>
+            <h3 className="font-bold">{t("tasks.modal.scan.resolvedTitle")}</h3>
             <p className="text-xs text-slate-500">
-              Son onayda stok hareketi, raf/seri bakiyesi ve gerekiyorsa kalite
-              kaydı aynı transaction içinde oluşur.
+              {t("tasks.modal.scan.resolvedHint")}
             </p>
           </div>
         </div>
@@ -966,7 +963,10 @@ function TaskScanPanel({
             options={openLines.map((x) => ({
               value: String(x.id),
               label: `${x.sequenceNo} · ${x.stockCode}`,
-              description: `Kalan ${formatProjectNumber(x.plannedQuantity - x.processedQuantity)} ${x.unitCode}`,
+              description: t("tasks.modal.scan.remainingLabel", {
+                quantity: formatProjectNumber(x.plannedQuantity - x.processedQuantity),
+                unit: x.unitCode,
+              }),
             }))}
           />
           <input
@@ -976,29 +976,29 @@ function TaskScanPanel({
             step="0.000001"
             value={quantity}
             onChange={(e) => setQuantity(e.target.value)}
-            placeholder="Miktar"
+            placeholder={t("manual.quantity")}
           />
           <input
             className="input"
             value={lot}
             onChange={(e) => setLot(e.target.value)}
-            placeholder="Lot"
+            placeholder={t("manual.lot")}
           />
           <input
             className="input"
             value={serial}
             onChange={(e) => setSerial(e.target.value)}
-            placeholder="Seri"
+            placeholder={t("manual.serial")}
           />
           <AppDateInput
             value={manufacturingDate}
             onChange={(e) => setManufacturingDate(e.target.value)}
-            aria-label="Üretim tarihi"
+            aria-label={t("manual.manufacturingDate")}
           />
           <AppDateInput
             value={expirationDate}
             onChange={(e) => setExpirationDate(e.target.value)}
-            aria-label="Son kullanma tarihi"
+            aria-label={t("manual.expirationDate")}
           />
           <button
             type="button"
@@ -1012,8 +1012,8 @@ function TaskScanPanel({
               <Check className="size-4" />
             )}
             {selectedLine?.requireQualityControl
-              ? "Kaliteye Gönder"
-              : "İrsaliye Oluştur"}
+              ? t("createFlow.sendToQuality")
+              : t("createFlow.createDirect")}
           </button>
         </div>
       </section>

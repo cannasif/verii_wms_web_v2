@@ -1558,7 +1558,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
             {activeColumns.map((column) => (
               <div key={column.key} className={`grid min-w-0 grid-cols-[minmax(0,7rem)_minmax(0,1fr)] gap-3 border-b border-[var(--wms-app-border)] px-3 py-3 last:border-b-0 ${column.key === 'actions' ? 'items-center bg-[var(--wms-brand-soft)]' : 'items-start'}`}>
                 <span className="text-[0.68rem] font-semibold uppercase tracking-wide text-slate-500">{column.label}</span>
-                <div className="min-w-0 break-words text-right text-sm [&_button]:min-h-11 [&_button]:min-w-11 [&_button]:touch-manipulation [&>div]:justify-end">{renderGridCell(column, row, enumLanguage)}</div>
+                <div className="min-w-0 break-words text-right text-sm [&_button]:inline-flex [&_button]:min-h-11 [&_button]:min-w-11 [&_button]:items-center [&_button]:justify-center [&_button]:touch-manipulation [&>div]:justify-end">{renderGridCell(column, row, enumLanguage)}</div>
               </div>
             ))}
           </article>

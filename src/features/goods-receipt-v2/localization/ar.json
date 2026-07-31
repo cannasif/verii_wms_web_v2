@@ -51,6 +51,9 @@
     "prepareSelectedLines": "تجهيز السطور المحددة",
     "selectedDirectLinesCount": "تم تحديد {{count}} سطر طلب",
     "selectedOrdersCount": "تم تحديد {{count}} طلب",
+    "selectLineAria": "تحديد {{orderNumber}} {{stockCode}}",
+    "selectOrderAria": "تحديد {{orderNumber}}",
+    "reservedBadge": "محجوز",
     "waybill": {
       "sectionTitle": "تفاصيل إشعار التسليم",
       "sectionHint": "يتم إدخال نوع المستند ورقمه وتواريخه قبل اختيار الطلب.",
@@ -90,7 +93,8 @@
       "title": "المسؤولون عن المهمة",
       "hint": "يتم تعيين المستخدمين المحددين لجميع مهام المستودع التي تُنشأ؛ ويرون المهمة في شاشة «مهامي المعيّنة» الخاصة بهم.",
       "addPlaceholder": "إضافة مستخدم للعملية",
-      "empty": "لم يتم تعيين أي مستخدمين بعد."
+      "empty": "لم يتم تعيين أي مستخدمين بعد.",
+      "removeAria": "إزالة تعيين {{name}}"
     },
     "entryRow": {
       "quantity": "الكمية",
@@ -233,7 +237,65 @@
       "warehouseOrderNotAllowed": "لا يمكنك تحديد هذا الطلب لأن المستودع {{code}} غير معيّن لك.",
       "unknownWarehouse": "غير معروف",
       "linesRequired": "جهّز سطر طلب واحدًا على الأقل للمتابعة.",
-      "confirmLinesRequired": "أكّد سطرًا واحدًا على الأقل بالضغط على «تأكيد» للمتابعة."
+      "confirmLinesRequired": "أكّد سطرًا واحدًا على الأقل بالضغط على «تأكيد» للمتابعة.",
+      "directLinesMixedWarehouses": "لا يمكن تجهيز سطور طلبات لمستودعات هدف مختلفة في عملية استلام بضائع واحدة. أنشئ عملية استلام منفصلة لكل مستودع.",
+      "ordersMixedWarehouses": "لا يمكن تحديد طلبات لمستودعات مختلفة في أمر استلام بضائع واحد. امسح التحديد الحالي أولاً أو أنشئ أمرًا منفصلاً.",
+      "directLinesMixedWarehousesAutoSelected": "لا يمكن تحديد سطور لمستودعات هدف مختلفة في نفس عملية استلام البضائع. تم تحديد السطور المؤهلة في نفس المستودع.",
+      "directLinesMixedWarehousesRemoveFirst": "لا يمكن تحديد سطور لمستودعات هدف مختلفة في نفس عملية استلام البضائع. امسح التحديد الحالي أولاً أو أنشئ عملية استلام منفصلة.",
+      "lineAvailableQuantityReserved": "الكمية المتاحة لسطر الطلب هذا محجوزة في أمر استلام بضائع نشط.",
+      "lineWarehouseNotAssigned": "مستودع سطر الطلب هذا غير معيّن لك.",
+      "reservedForActiveOrder": "محجوز في أمر استلام بضائع نشط.",
+      "warehouseNotAssignedToUser": "هذا المستودع غير معيّن لك."
+    },
+    "errors": {
+      "warehouseAccessLoadFailed": "تعذر تحميل صلاحيات المستودع.",
+      "customerMirrorNotFound": "لم يتم العثور على رمز حساب المورد {{customerCode}} في جدول مرآة الموردين في نظام ERP.",
+      "openOrderNotFound": "لم يتم العثور على الطلب المفتوح {{orderNumber}}.",
+      "orderCustomerCodeNotFound": "تعذر تحديد رمز حساب واحد للطلب {{orderNumber}}.",
+      "orderNumberSearchFailed": "فشل البحث برقم الطلب.",
+      "ordersLoadFailed": "تعذر تحميل الطلبات.",
+      "stockMirrorNotFound": "لم يتم العثور على {{code}} في جدول مرآة المخزون في نظام ERP.",
+      "yapMirrorNotFound": "لم يتم العثور على رمز التكوين {{code}} في جدول المرآة في نظام ERP.",
+      "orderLineStockCodeNotFound": "{{orderNumber}}/{{orderId}}: لم يتم العثور على رمز المخزون.",
+      "orderLinesLoadFailed": "تعذر تحميل سطور الطلب.",
+      "serialsGenerationFailed": "تعذر إنشاء الأرقام التسلسلية.",
+      "serialsCancellationFailed": "تعذر إلغاء الأرقام التسلسلية المُنشأة.",
+      "directReceiptFailed": "تعذر إكمال استلام البضائع المباشر.",
+      "receiptOrderCreationFailed": "تعذر إنشاء أمر استلام البضائع."
+    },
+    "toast": {
+      "orderAndSupplierFetched": "تم جلب الطلب {{orderNumber}} والمورد {{customerCode}}.",
+      "serialsGeneratedFromRule": "تم إنشاء {{count}} رقم تسلسلي بناءً على قاعدة المخزون.",
+      "generatedSerialsCancelled": "تم إلغاء الأرقام التسلسلية المُنشأة وإتاحتها لإعادة الاستخدام.",
+      "serialsSplitIntoRows": "تم تقسيم {{count}} رقم تسلسلي إلى سطور."
+    },
+    "audit": {
+      "quantityOrSerialPlanChanged": "تم تغيير الكمية أو خطة الأرقام التسلسلية في مسودة استلام البضائع.",
+      "autoSerialGenerationCancelled": "ألغى المستخدم الإنشاء التلقائي للأرقام التسلسلية في مسودة استلام البضائع."
+    },
+    "serialLotDialog": {
+      "title": "إدارة الرقم التسلسلي / الدفعة",
+      "traceability": "إمكانية التتبع",
+      "subtitle": "اقتراح النظام، أو التقسيم حسب الكمية، أو الإدخال الفردي.",
+      "close": "إغلاق",
+      "autoSuggestSerial": "اقتراح رقم تسلسلي تلقائيًا",
+      "autoSuggestSerialHint": "إنشاء أرقام تسلسلية من قاعدة المخزون بناءً على الكمية",
+      "addSingleRow": "إضافة سطر فردي",
+      "addSingleRowHint": "إدخال دفعة / رقم تسلسلي يدويًا",
+      "cancelAutoSerials": "إلغاء الأرقام التسلسلية المُنشأة تلقائيًا",
+      "cancelAutoSerialsHint": "تحرير الأرقام التسلسلية المحجوزة",
+      "bulkPasteLabel": "تقسيم رقم تسلسلي حالي / لصق بالجملة",
+      "applyBulkSerials": "تطبيق الأرقام التسلسلية بالجملة",
+      "lotAria": "الدفعة",
+      "lotPlaceholder": "رقم الدفعة",
+      "serialAria": "الرقم التسلسلي",
+      "serialPlaceholder": "الرقم التسلسلي",
+      "manufacturingDateAria": "تاريخ التصنيع",
+      "expirationDateAria": "تاريخ انتهاء الصلاحية",
+      "removeTrackingRow": "حذف سطر التتبع",
+      "quantityAria": "الكمية",
+      "empty": "لا توجد سطور دفعة/رقم تسلسلي بعد. استخدم الاقتراح التلقائي أو أضف سطرًا فرديًا.",
+      "done": "تم"
     }
   },
   "manual": {
@@ -380,7 +442,67 @@
     "plannedQuantity": "المخطط",
     "processedQuantity": "المستلم",
     "actions": "الإجراءات",
-    "viewTask": "عرض المهمة"
+    "viewTask": "عرض المهمة",
+    "modal": {
+      "title": "مهمة استلام البضائع {{taskNo}}",
+      "description": "سطور المهمة والتعيينات وعمليات الاستلام الفعلي.",
+      "eyebrow": "مهمة استلام البضائع",
+      "info": { "status": "الحالة", "warehouse": "المستودع", "priority": "الأولوية", "planned": "المخطط", "started": "البدء" },
+      "table": { "stock": "المخزون", "received": "المستلم" },
+      "line": { "qualityRequired": "مراقبة الجودة مطلوبة", "directDispatch": "إشعار تسليم مباشر" },
+      "actions": { "acceptAssignment": "قبول التعيين", "startTask": "بدء المهمة", "saveAssignments": "حفظ التعيينات" },
+      "errors": {
+        "detailFetchFailed": "تعذر تحميل تفاصيل المهمة.",
+        "actionFailed": "تعذر إتمام الإجراء.",
+        "selectAtLeastOneUser": "حدد مستخدمًا واحدًا على الأقل.",
+        "assignmentsUpdateFailed": "تعذر تحديث التعيينات."
+      },
+      "toast": { "accepted": "تم قبول المهمة.", "started": "تم بدء المهمة.", "assignmentsUpdated": "تم تحديث تعيينات المهمة." },
+      "receiptLabels": {
+        "title": "الملصقات المُنشأة عند الاستلام",
+        "hint": "تُنشأ تلقائيًا بعد كل حركة استلام مع الكمية الفعلية ومعلومات الرقم التسلسلي/الدفعة.",
+        "noneYet": "لا توجد ملصقات استلام بعد",
+        "printButton": "طباعة {{count}} ملصق",
+        "fetchFailed": "تعذر تحميل ملصقات الاستلام.",
+        "printFailed": "تعذرت طباعة ملصقات الاستلام."
+      },
+      "preLabel": {
+        "title": "طباعة الباركود مسبقًا",
+        "hint": "ينشئ ملصقًا فريدًا مرتبطًا بالمهمة للسطور المفتوحة. لا يمكن استخدام الملصق عند الاستلام حتى تتم طباعته.",
+        "activeExists": "يوجد ملصق نشط",
+        "createButton": "إنشاء ملصق مسبق",
+        "noOpenLines": "لا توجد سطور مفتوحة",
+        "statusLine": "{{count}} ملصق نشط · {{printed}} مطبوع",
+        "reprintButton": "إعادة طباعة الملصقات",
+        "printButton": "طباعة الملصقات",
+        "existingFetchFailed": "تعذر تحميل الملصقات المسبقة الحالية.",
+        "noOpenLinesError": "لا توجد سطور مهام مفتوحة لإنشاء ملصقات لها.",
+        "batchName": "دفعة الملصقات المسبقة للمهمة",
+        "generatedToast": "تم إنشاء {{count}} ملصق مسبق. اطبع الملصقات الآن.",
+        "createFailed": "تعذر إنشاء الملصق المسبق.",
+        "noPrintableLabels": "لم يتم العثور على ملصقات قابلة للطباعة.",
+        "printTitleSuffix": "ملصقات مسبقة",
+        "markedPrintedToast": "تم وضع علامة على الملصقات كمطبوعة. يمكنك الآن الاستلام عبر مسح الباركود."
+      },
+      "scan": {
+        "printedLabelsFetchFailed": "تعذر تحميل الملصقات المسبقة المطبوعة.",
+        "validateFirst": "حلّل الباركود وأكّد سطر المهمة أولاً.",
+        "sentToQualityToast": "تمت معالجة استلام البضائع؛ ونُقل إلى قائمة فحص الجودة.",
+        "replayedToast": "تمت معالجة هذا المسح بالفعل.",
+        "processedToast": "تم التحقق من الباركود؛ وتمت معالجة الرقم التسلسلي/الدفعة وحركة المخزون والرصيد والجودة في معاملة واحدة.",
+        "labelGeneratedToast": "تم إنشاء ملصق المنتج تلقائيًا؛ يمكنك طباعته من قسم ملصقات الاستلام.",
+        "acceptFailed": "تعذر قبول الباركود.",
+        "preLabelReadyBanner": "{{count}} ملصق مسبق مطبوع جاهز للمسح. امسح أحد هذه الملصقات بدلاً من باركود المنتج/المورد.",
+        "preLabelRequiredBanner": "هذه المهمة مُعدّة بملصقات مسبقة. أنشئ واطبع ملصقًا من القسم أعلاه قبل الاستلام.",
+        "scannerTitle": "امسح باركود استلام البضائع",
+        "scannerDescriptionPreLabel": "يُقبل فقط باركود الملصق المسبق الذي تم إنشاؤه وطباعته لهذه المهمة.",
+        "scannerDescriptionGeneral": "يتم التعرف على ملصق النظام أو GS1 أو باركود مخزون المورد أو باركود الرقم التسلسلي للمخزون المحدد.",
+        "wrongBarcodeError": "هذه المهمة مُعدّة بملصقات مسبقة. امسح الباركود الموجود على الملصق المسبق الذي أنشأته وطبعته، وليس باركود المنتج/المورد.",
+        "resolvedTitle": "سجل الاستلام المُحلَّل",
+        "resolvedHint": "عند التأكيد النهائي، تُنشأ حركة المخزون ورصيد الرف/الرقم التسلسلي، وسجل الجودة إذا لزم الأمر، في نفس المعاملة.",
+        "remainingLabel": "المتبقي {{quantity}} {{unit}}"
+      }
+    }
   },
   "enums": {
     "operationStatus": {

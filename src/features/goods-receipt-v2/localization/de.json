@@ -51,6 +51,9 @@
     "prepareSelectedLines": "Ausgewählte Positionen vorbereiten",
     "selectedDirectLinesCount": "{{count}} Bestellpositionen ausgewählt",
     "selectedOrdersCount": "{{count}} Bestellungen ausgewählt",
+    "selectLineAria": "{{orderNumber}} {{stockCode}} auswählen",
+    "selectOrderAria": "{{orderNumber}} auswählen",
+    "reservedBadge": "Reserviert",
     "waybill": {
       "sectionTitle": "Lieferscheindetails",
       "sectionHint": "Belegtyp, Nummer und Daten werden vor der Bestellauswahl eingegeben.",
@@ -90,7 +93,8 @@
       "title": "Auftragsverantwortliche",
       "hint": "Ausgewählte Benutzer werden allen erstellten Lageraufträgen zugewiesen; sie sehen den Auftrag auf ihrem Bildschirm „Meine zugewiesenen Aufträge“.",
       "addPlaceholder": "Vorgangsbenutzer hinzufügen",
-      "empty": "Noch keine Benutzer zugewiesen."
+      "empty": "Noch keine Benutzer zugewiesen.",
+      "removeAria": "Zuweisung für {{name}} entfernen"
     },
     "entryRow": {
       "quantity": "Menge",
@@ -233,7 +237,65 @@
       "warehouseOrderNotAllowed": "Sie können diese Bestellung nicht auswählen, da Ihnen das Lager {{code}} nicht zugewiesen ist.",
       "unknownWarehouse": "unbekannt",
       "linesRequired": "Bereiten Sie mindestens eine Bestellposition vor, um fortzufahren.",
-      "confirmLinesRequired": "Bestätigen Sie mindestens eine Position mit ONAY, um fortzufahren."
+      "confirmLinesRequired": "Bestätigen Sie mindestens eine Position mit ONAY, um fortzufahren.",
+      "directLinesMixedWarehouses": "Bestellpositionen für unterschiedliche Ziellager können nicht in einem einzigen Wareneingang vorbereitet werden. Erstellen Sie für jedes Lager einen separaten Wareneingang.",
+      "ordersMixedWarehouses": "Bestellungen für unterschiedliche Lager können nicht in einem einzigen Wareneingangsauftrag ausgewählt werden. Heben Sie zunächst die aktuelle Auswahl auf oder erstellen Sie einen separaten Auftrag.",
+      "directLinesMixedWarehousesAutoSelected": "Positionen für unterschiedliche Ziellager können nicht im selben Wareneingang ausgewählt werden. Es wurden geeignete Positionen im selben Lager ausgewählt.",
+      "directLinesMixedWarehousesRemoveFirst": "Positionen für unterschiedliche Ziellager können nicht im selben Wareneingang ausgewählt werden. Heben Sie zunächst die aktuelle Auswahl auf oder erstellen Sie einen separaten Wareneingang.",
+      "lineAvailableQuantityReserved": "Die verfügbare Menge dieser Bestellposition ist für einen aktiven Wareneingangsauftrag reserviert.",
+      "lineWarehouseNotAssigned": "Das Lager dieser Bestellposition ist Ihnen nicht zugewiesen.",
+      "reservedForActiveOrder": "Für einen aktiven Wareneingangsauftrag reserviert.",
+      "warehouseNotAssignedToUser": "Dieses Lager ist Ihnen nicht zugewiesen."
+    },
+    "errors": {
+      "warehouseAccessLoadFailed": "Die Lagerberechtigungen konnten nicht geladen werden.",
+      "customerMirrorNotFound": "Der Lieferantenkontocode {{customerCode}} wurde in der ERP-Lieferanten-Mirror-Tabelle nicht gefunden.",
+      "openOrderNotFound": "Die offene Bestellung {{orderNumber}} wurde nicht gefunden.",
+      "orderCustomerCodeNotFound": "Für die Bestellung {{orderNumber}} konnte kein eindeutiger Kontocode ermittelt werden.",
+      "orderNumberSearchFailed": "Die Suche nach Bestellnummer ist fehlgeschlagen.",
+      "ordersLoadFailed": "Die Bestellungen konnten nicht geladen werden.",
+      "stockMirrorNotFound": "{{code}} wurde in der ERP-Bestands-Mirror-Tabelle nicht gefunden.",
+      "yapMirrorNotFound": "Der Konfigurationscode {{code}} wurde in der ERP-Mirror-Tabelle nicht gefunden.",
+      "orderLineStockCodeNotFound": "{{orderNumber}}/{{orderId}}: Der Bestandscode wurde nicht gefunden.",
+      "orderLinesLoadFailed": "Die Bestellpositionen konnten nicht geladen werden.",
+      "serialsGenerationFailed": "Die Seriennummern konnten nicht generiert werden.",
+      "serialsCancellationFailed": "Die generierten Seriennummern konnten nicht storniert werden.",
+      "directReceiptFailed": "Der direkte Wareneingang konnte nicht abgeschlossen werden.",
+      "receiptOrderCreationFailed": "Der Wareneingangsauftrag konnte nicht erstellt werden."
+    },
+    "toast": {
+      "orderAndSupplierFetched": "Bestellung {{orderNumber}} und Lieferant {{customerCode}} wurden abgerufen.",
+      "serialsGeneratedFromRule": "{{count}} Seriennummern wurden auf Basis der Bestandsregel generiert.",
+      "generatedSerialsCancelled": "Die generierten Seriennummern wurden storniert und zur erneuten Verwendung freigegeben.",
+      "serialsSplitIntoRows": "{{count}} Seriennummern wurden auf Zeilen aufgeteilt."
+    },
+    "audit": {
+      "quantityOrSerialPlanChanged": "Die Menge oder der Seriennummernplan wurde im Wareneingangsentwurf geändert.",
+      "autoSerialGenerationCancelled": "Der Benutzer hat die automatische Seriennummerngenerierung im Wareneingangsentwurf storniert."
+    },
+    "serialLotDialog": {
+      "title": "Seriennummern-/Losverwaltung",
+      "traceability": "Rückverfolgbarkeit",
+      "subtitle": "Systemvorschlag, Aufteilung nach Menge oder Einzeleingabe.",
+      "close": "Schließen",
+      "autoSuggestSerial": "Seriennummer automatisch vorschlagen",
+      "autoSuggestSerialHint": "Seriennummern basierend auf der Bestandsregel und Menge generieren",
+      "addSingleRow": "Einzelne Zeile hinzufügen",
+      "addSingleRowHint": "Manuelle Los-/Seriennummerneingabe",
+      "cancelAutoSerials": "Automatisch generierte Seriennummern stornieren",
+      "cancelAutoSerialsHint": "Die reservierten Seriennummern freigeben",
+      "bulkPasteLabel": "Vorhandene Seriennummer aufteilen / Massen-Einfügen",
+      "applyBulkSerials": "Massen-Seriennummern anwenden",
+      "lotAria": "Los",
+      "lotPlaceholder": "Losnummer",
+      "serialAria": "Seriennummer",
+      "serialPlaceholder": "Seriennummer",
+      "manufacturingDateAria": "Herstellungsdatum",
+      "expirationDateAria": "Verfallsdatum",
+      "removeTrackingRow": "Verfolgungszeile entfernen",
+      "quantityAria": "Menge",
+      "empty": "Noch keine Los-/Seriennummernzeilen vorhanden. Automatisch vorschlagen oder eine einzelne Zeile hinzufügen.",
+      "done": "Fertig"
     }
   },
   "manual": {
@@ -413,7 +475,67 @@
     "plannedQuantity": "Geplant",
     "processedQuantity": "Empfangen",
     "actions": "Aktionen",
-    "viewTask": "Auftrag anzeigen"
+    "viewTask": "Auftrag anzeigen",
+    "modal": {
+      "title": "Wareneingangsauftrag {{taskNo}}",
+      "description": "Auftragspositionen, Zuweisungen und Vorgänge des physischen Wareneingangs.",
+      "eyebrow": "Wareneingangsauftrag",
+      "info": { "status": "Status", "warehouse": "Lager", "priority": "Priorität", "planned": "Geplant", "started": "Gestartet" },
+      "table": { "stock": "Bestand", "received": "Empfangen" },
+      "line": { "qualityRequired": "Qualitätskontrolle erforderlich", "directDispatch": "Direkter Lieferschein" },
+      "actions": { "acceptAssignment": "Zuweisung annehmen", "startTask": "Auftrag starten", "saveAssignments": "Zuweisungen speichern" },
+      "errors": {
+        "detailFetchFailed": "Die Auftragsdetails konnten nicht geladen werden.",
+        "actionFailed": "Die Aktion konnte nicht abgeschlossen werden.",
+        "selectAtLeastOneUser": "Wählen Sie mindestens einen Benutzer aus.",
+        "assignmentsUpdateFailed": "Die Zuweisungen konnten nicht aktualisiert werden."
+      },
+      "toast": { "accepted": "Auftrag akzeptiert.", "started": "Auftrag gestartet.", "assignmentsUpdated": "Auftragszuweisungen aktualisiert." },
+      "receiptLabels": {
+        "title": "Beim Wareneingang generierte Etiketten",
+        "hint": "Wird nach jeder Wareneingangsbewegung automatisch mit tatsächlicher Menge sowie Seriennummern-/Losinformationen erstellt.",
+        "noneYet": "Noch keine Wareneingangsetiketten",
+        "printButton": "{{count}} Etiketten drucken",
+        "fetchFailed": "Die Wareneingangsetiketten konnten nicht geladen werden.",
+        "printFailed": "Die Wareneingangsetiketten konnten nicht gedruckt werden."
+      },
+      "preLabel": {
+        "title": "Barcode vorab drucken",
+        "hint": "Erstellt für offene Positionen ein eindeutiges, auftragsgebundenes Etikett. Ein Etikett kann erst nach dem Drucken beim Wareneingang verwendet werden.",
+        "activeExists": "Aktives Etikett vorhanden",
+        "createButton": "Vor-Etikett erstellen",
+        "noOpenLines": "Keine offenen Positionen",
+        "statusLine": "{{count}} aktive Etiketten · {{printed}} gedruckt",
+        "reprintButton": "Etiketten erneut drucken",
+        "printButton": "Etiketten drucken",
+        "existingFetchFailed": "Die vorhandenen Vor-Etiketten konnten nicht geladen werden.",
+        "noOpenLinesError": "Es gibt keine offenen Auftragspositionen, für die Etiketten generiert werden können.",
+        "batchName": "Auftrags-Vor-Etikettenpaket",
+        "generatedToast": "{{count}} Vor-Etiketten generiert. Drucken Sie die Etiketten jetzt.",
+        "createFailed": "Das Vor-Etikett konnte nicht generiert werden.",
+        "noPrintableLabels": "Es wurden keine druckbaren Etiketten gefunden.",
+        "printTitleSuffix": "Vor-Etiketten",
+        "markedPrintedToast": "Die Etiketten wurden als gedruckt markiert. Sie können jetzt durch Scannen des Barcodes empfangen."
+      },
+      "scan": {
+        "printedLabelsFetchFailed": "Die gedruckten Vor-Etiketten konnten nicht geladen werden.",
+        "validateFirst": "Lösen Sie zuerst den Barcode auf und bestätigen Sie die Auftragsposition.",
+        "sentToQualityToast": "Der Wareneingang wurde verarbeitet und an die Qualitätsprüfliste übergeben.",
+        "replayedToast": "Dieser Scan wurde bereits verarbeitet.",
+        "processedToast": "Der Barcode wurde verifiziert; Seriennummer/Los, Bestandsbewegung, Bestand und Qualität wurden in einer Transaktion verarbeitet.",
+        "labelGeneratedToast": "Das Produktetikett wurde automatisch generiert; Sie können es im Bereich Wareneingangsetiketten drucken.",
+        "acceptFailed": "Der Barcode konnte nicht akzeptiert werden.",
+        "preLabelReadyBanner": "{{count}} gedrucktes Vor-Etikett ist scanbereit. Scannen Sie eines dieser Etiketten anstelle des Produkt-/Lieferantenbarcodes.",
+        "preLabelRequiredBanner": "Dieser Auftrag ist vor-etikettiert. Generieren und drucken Sie ein Etikett aus dem obigen Bereich, bevor Sie den Wareneingang durchführen.",
+        "scannerTitle": "Wareneingangsbarcode scannen",
+        "scannerDescriptionPreLabel": "Nur der für diesen Auftrag generierte und gedruckte Vor-Etikettbarcode wird akzeptiert.",
+        "scannerDescriptionGeneral": "Systemetikett, GS1, Lieferantenbestandsbarcode oder ein Seriennummernbarcode für den ausgewählten Bestand wird aufgelöst.",
+        "wrongBarcodeError": "Dieser Auftrag ist vor-etikettiert. Scannen Sie den Barcode auf dem generierten und gedruckten Vor-Etikett, nicht den Produkt-/Lieferantenbarcode.",
+        "resolvedTitle": "Aufgelöster Wareneingangsdatensatz",
+        "resolvedHint": "Bei der endgültigen Bestätigung werden die Bestandsbewegung, der Regal-/Seriennummernbestand und, falls erforderlich, der Qualitätsdatensatz in derselben Transaktion erstellt.",
+        "remainingLabel": "Verbleibend {{quantity}} {{unit}}"
+      }
+    }
   },
   "enums": {
     "operationStatus": {

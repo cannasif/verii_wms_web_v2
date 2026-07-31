@@ -51,6 +51,9 @@
     "prepareSelectedLines": "Prepare selected lines",
     "selectedDirectLinesCount": "{{count}} order lines selected",
     "selectedOrdersCount": "{{count}} orders selected",
+    "selectLineAria": "Select {{orderNumber}} {{stockCode}}",
+    "selectOrderAria": "Select {{orderNumber}}",
+    "reservedBadge": "Reserved",
     "waybill": {
       "sectionTitle": "Dispatch note details",
       "sectionHint": "Document type, number and dates are entered before order selection.",
@@ -90,7 +93,8 @@
       "title": "Task assignees",
       "hint": "Selected users are assigned to all warehouse tasks created; they see the task on their My Assigned Tasks screen.",
       "addPlaceholder": "Add operation user",
-      "empty": "No users assigned yet."
+      "empty": "No users assigned yet.",
+      "removeAria": "Remove assignment for {{name}}"
     },
     "entryRow": {
       "quantity": "Quantity",
@@ -233,7 +237,65 @@
       "warehouseOrderNotAllowed": "You cannot select this order because warehouse {{code}} is not assigned to you.",
       "unknownWarehouse": "unknown",
       "linesRequired": "Prepare at least one order line to continue.",
-      "confirmLinesRequired": "Confirm at least one line with ONAY to continue."
+      "confirmLinesRequired": "Confirm at least one line with ONAY to continue.",
+      "directLinesMixedWarehouses": "Order lines for different target warehouses cannot be prepared in a single goods receipt. Create a separate receipt for each warehouse.",
+      "ordersMixedWarehouses": "Orders for different warehouses cannot be selected in a single goods receipt order. Clear the current selection first or create a separate order.",
+      "directLinesMixedWarehousesAutoSelected": "Lines for different target warehouses cannot be selected in the same goods receipt. Eligible lines in the same warehouse were selected.",
+      "directLinesMixedWarehousesRemoveFirst": "Lines for different target warehouses cannot be selected in the same goods receipt. Clear the current selection first or create a separate receipt.",
+      "lineAvailableQuantityReserved": "The available quantity of this order line is reserved on an active goods receipt order.",
+      "lineWarehouseNotAssigned": "The warehouse for this order line is not assigned to you.",
+      "reservedForActiveOrder": "Reserved on an active goods receipt order.",
+      "warehouseNotAssignedToUser": "This warehouse is not assigned to you."
+    },
+    "errors": {
+      "warehouseAccessLoadFailed": "Warehouse permissions could not be loaded.",
+      "customerMirrorNotFound": "Supplier account code {{customerCode}} was not found in the ERP supplier mirror table.",
+      "openOrderNotFound": "Open order {{orderNumber}} was not found.",
+      "orderCustomerCodeNotFound": "A single account code could not be determined for order {{orderNumber}}.",
+      "orderNumberSearchFailed": "Search by order number failed.",
+      "ordersLoadFailed": "Orders could not be loaded.",
+      "stockMirrorNotFound": "{{code}} was not found in the ERP stock mirror table.",
+      "yapMirrorNotFound": "Configuration code {{code}} was not found in the ERP mirror table.",
+      "orderLineStockCodeNotFound": "{{orderNumber}}/{{orderId}}: stock code was not found.",
+      "orderLinesLoadFailed": "Order lines could not be loaded.",
+      "serialsGenerationFailed": "Serials could not be generated.",
+      "serialsCancellationFailed": "Generated serials could not be cancelled.",
+      "directReceiptFailed": "The direct goods receipt could not be completed.",
+      "receiptOrderCreationFailed": "The goods receipt order could not be created."
+    },
+    "toast": {
+      "orderAndSupplierFetched": "Order {{orderNumber}} and supplier {{customerCode}} were fetched.",
+      "serialsGeneratedFromRule": "{{count}} serials were generated based on the stock rule.",
+      "generatedSerialsCancelled": "Generated serials were cancelled and released for reuse.",
+      "serialsSplitIntoRows": "{{count}} serials were split into rows."
+    },
+    "audit": {
+      "quantityOrSerialPlanChanged": "The quantity or serial plan was changed in the goods receipt draft.",
+      "autoSerialGenerationCancelled": "The user cancelled automatic serial generation in the goods receipt draft."
+    },
+    "serialLotDialog": {
+      "title": "Serial / lot management",
+      "traceability": "Traceability",
+      "subtitle": "System suggestion, split by quantity, or single entry.",
+      "close": "Close",
+      "autoSuggestSerial": "Auto-suggest serial",
+      "autoSuggestSerialHint": "Generate serials from the stock rule based on quantity",
+      "addSingleRow": "Add single row",
+      "addSingleRowHint": "Manual lot / serial entry",
+      "cancelAutoSerials": "Cancel auto-generated serials",
+      "cancelAutoSerialsHint": "Release the reserved serials",
+      "bulkPasteLabel": "Split existing serial / bulk paste",
+      "applyBulkSerials": "Apply bulk serials",
+      "lotAria": "Lot",
+      "lotPlaceholder": "Lot no",
+      "serialAria": "Serial",
+      "serialPlaceholder": "Serial no",
+      "manufacturingDateAria": "Manufacturing date",
+      "expirationDateAria": "Expiration date",
+      "removeTrackingRow": "Remove tracking row",
+      "quantityAria": "Quantity",
+      "empty": "No lot/serial rows yet. Auto-suggest or add a single row.",
+      "done": "Done"
     }
   },
   "manual": {
@@ -413,7 +475,67 @@
     "plannedQuantity": "Planned",
     "processedQuantity": "Received",
     "actions": "Actions",
-    "viewTask": "View task"
+    "viewTask": "View task",
+    "modal": {
+      "title": "Goods Receipt Task {{taskNo}}",
+      "description": "Task lines, assignments and physical receipt operations.",
+      "eyebrow": "Goods Receipt Task",
+      "info": { "status": "Status", "warehouse": "Warehouse", "priority": "Priority", "planned": "Planned", "started": "Started" },
+      "table": { "stock": "Stock", "received": "Received" },
+      "line": { "qualityRequired": "Quality control required", "directDispatch": "Direct dispatch" },
+      "actions": { "acceptAssignment": "Accept Assignment", "startTask": "Start Task", "saveAssignments": "Save Assignments" },
+      "errors": {
+        "detailFetchFailed": "Task details could not be loaded.",
+        "actionFailed": "The action could not be completed.",
+        "selectAtLeastOneUser": "Select at least one user.",
+        "assignmentsUpdateFailed": "Assignments could not be updated."
+      },
+      "toast": { "accepted": "Task accepted.", "started": "Task started.", "assignmentsUpdated": "Task assignments updated." },
+      "receiptLabels": {
+        "title": "Labels generated at receipt",
+        "hint": "Automatically created after each receipt movement with actual quantity and serial/lot info.",
+        "noneYet": "No receipt labels yet",
+        "printButton": "Print {{count}} Labels",
+        "fetchFailed": "Receipt labels could not be loaded.",
+        "printFailed": "Receipt labels could not be printed."
+      },
+      "preLabel": {
+        "title": "Pre-print barcode",
+        "hint": "Creates a task-linked unique label for open lines. A label cannot be used at receipt until it is printed.",
+        "activeExists": "Active Label Exists",
+        "createButton": "Create Pre-Label",
+        "noOpenLines": "No Open Lines",
+        "statusLine": "{{count}} active label · {{printed}} printed",
+        "reprintButton": "Reprint Labels",
+        "printButton": "Print Labels",
+        "existingFetchFailed": "Existing pre-labels could not be loaded.",
+        "noOpenLinesError": "There are no open task lines to generate labels for.",
+        "batchName": "Task pre-label batch",
+        "generatedToast": "{{count}} pre-labels generated. Now print the labels.",
+        "createFailed": "Pre-label could not be generated.",
+        "noPrintableLabels": "No printable labels found.",
+        "printTitleSuffix": "pre-labels",
+        "markedPrintedToast": "Labels marked as printed. You can now receive by scanning the barcode."
+      },
+      "scan": {
+        "printedLabelsFetchFailed": "Printed pre-labels could not be loaded.",
+        "validateFirst": "Resolve the barcode and confirm the task line first.",
+        "sentToQualityToast": "Goods receipt processed; transferred to the quality inspection list.",
+        "replayedToast": "This scan was already processed.",
+        "processedToast": "Barcode verified; serial/lot, stock movement, balance and quality were processed in one transaction.",
+        "labelGeneratedToast": "Product label generated automatically; you can print it from the receipt labels section.",
+        "acceptFailed": "Barcode could not be accepted.",
+        "preLabelReadyBanner": "{{count}} printed pre-label ready to scan. Scan one of these labels instead of the product/supplier barcode.",
+        "preLabelRequiredBanner": "This task is pre-labeled. Generate and print a label from the section above before receiving.",
+        "scannerTitle": "Scan the goods receipt barcode",
+        "scannerDescriptionPreLabel": "Only the pre-label barcode generated and printed for this task is accepted.",
+        "scannerDescriptionGeneral": "System label, GS1, supplier stock barcode or a serial barcode for the selected stock is resolved.",
+        "wrongBarcodeError": "This task is pre-labeled. Scan the barcode on the pre-label you generated and printed, not the product/supplier barcode.",
+        "resolvedTitle": "Resolved receipt record",
+        "resolvedHint": "On final confirmation, the stock movement, shelf/serial balance and, if required, the quality record are created in the same transaction.",
+        "remainingLabel": "Remaining {{quantity}} {{unit}}"
+      }
+    }
   },
   "enums": {
     "operationStatus": {

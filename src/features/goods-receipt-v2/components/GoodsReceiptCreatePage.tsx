@@ -614,7 +614,7 @@ export function GoodsReceiptCreatePage({
     let active = true;
     void goodsReceiptV2Api.warehouseAccess()
       .then((access) => { if (active) setWarehouseAccess(access); })
-      .catch((cause: Error) => { if (active) report(cause, "Depo yetkileri alınamadı."); });
+      .catch((cause: Error) => { if (active) report(cause, t("createFlow.errors.warehouseAccessLoadFailed")); });
     void goodsReceiptV2Api.policy(customer?.branch ?? branchCode)
       .then((policy) => {
         if (active) {
@@ -672,7 +672,7 @@ export function GoodsReceiptCreatePage({
     );
     if (!match)
       throw new Error(
-        `${customerCode} cari kodu ERP tedarikçi mirror tablosunda bulunamadı.`,
+        t("createFlow.errors.customerMirrorNotFound", { customerCode }),
       );
     return match;
   };
@@ -697,7 +697,7 @@ export function GoodsReceiptCreatePage({
           line.siparisNo.trim().toLocaleUpperCase("tr-TR") === orderNumber,
       );
       if (rows.length === 0)
-        throw new Error(`${orderNumber} numaralı açık sipariş bulunamadı.`);
+        throw new Error(t("createFlow.errors.openOrderNotFound", { orderNumber }));
 
       const customerCodes = [
         ...new Set(
@@ -708,7 +708,7 @@ export function GoodsReceiptCreatePage({
       ];
       if (customerCodes.length !== 1)
         throw new Error(
-          `${orderNumber} siparişinin tek bir cari kodu bulunamadı.`,
+          t("createFlow.errors.orderCustomerCodeNotFound", { orderNumber }),
         );
 
       const resolvedCustomer = await findCustomerByCode(customerCodes[0]);
@@ -739,10 +739,13 @@ export function GoodsReceiptCreatePage({
         setWarehouseNameByCode(new Map());
       }
       toast.success(
-        `${orderNumber} siparişi ve ${resolvedCustomer.customerCode} tedarikçisi getirildi.`,
+        t("createFlow.toast.orderAndSupplierFetched", {
+          orderNumber,
+          customerCode: resolvedCustomer.customerCode,
+        }),
       );
     } catch (cause) {
-      report(cause, "Sipariş numarasıyla arama başarısız.");
+      report(cause, t("createFlow.errors.orderNumberSearchFailed"));
     } finally {
       setBusyAction(null);
     }
@@ -810,7 +813,7 @@ export function GoodsReceiptCreatePage({
       if (filtered.length === 1 && canUseOrderWarehouse(filtered[0].targetWarehouseCode))
         setSelectedOrders([filtered[0].siparisNo]);
     } catch (cause) {
-      report(cause, "Siparişler alınamadı.");
+      report(cause, t("createFlow.errors.ordersLoadFailed"));
     } finally {
       setBusyAction(null);
     }
@@ -842,7 +845,7 @@ export function GoodsReceiptCreatePage({
         new Set(rows.map((line) => line.targetWarehouseCode).filter((code) => code != null)).size > 1
       ) {
         toast.warning(
-          "Farklı hedef depolara ait sipariş kalemleri tek mal kabulde hazırlanamaz. Her depo için ayrı kabul oluşturun.",
+          t("createFlow.validation.directLinesMixedWarehouses"),
         );
         return;
       }
@@ -899,7 +902,7 @@ export function GoodsReceiptCreatePage({
               code.toLocaleUpperCase("tr-TR"),
           );
           if (!stock)
-            throw new Error(`${code} ERP stok mirror tablosunda bulunamadı.`);
+            throw new Error(t("createFlow.errors.stockMirrorNotFound", { code }));
           return [code.toLocaleUpperCase("tr-TR"), stock] as const;
         }),
       );
@@ -930,7 +933,7 @@ export function GoodsReceiptCreatePage({
               code.toLocaleUpperCase("tr-TR"),
           );
           if (!item)
-            throw new Error(`${code} YAP kodu ERP mirror tablosunda bulunamadı.`);
+            throw new Error(t("createFlow.errors.yapMirrorNotFound", { code }));
           return [code.toLocaleUpperCase("tr-TR"), item.id] as const;
         }),
       );
@@ -957,18 +960,21 @@ export function GoodsReceiptCreatePage({
                 : warehouseByCode.get(x.targetWarehouseCode);
             if (!x.stockCode)
               throw new Error(
-                `${x.siparisNo}/${x.orderId}: stok kodu bulunamadı.`,
+                t("createFlow.errors.orderLineStockCodeNotFound", {
+                  orderNumber: x.siparisNo,
+                  orderId: x.orderId,
+                }),
               );
             const stock = stockByCode.get(
               x.stockCode.toLocaleUpperCase("tr-TR"),
             );
             if (!stock)
               throw new Error(
-                `${x.stockCode} ERP stok mirror tablosunda bulunamadı.`,
+                t("createFlow.errors.stockMirrorNotFound", { code: x.stockCode }),
               );
             if (!stock.unitCode)
               throw new Error(
-                `${x.stockCode} stok kartının ölçü birimi tanımlı değil.`,
+                t("manual.validation.unitCodeMissing", { code: x.stockCode }),
               );
             if (!trackingPolicies.has(stock.id))
               trackingPolicies.set(
@@ -1009,7 +1015,7 @@ export function GoodsReceiptCreatePage({
           ?.scrollIntoView({ behavior: "smooth", block: "start" }),
       );
     } catch (cause) {
-      report(cause, "Sipariş satırları alınamadı.");
+      report(cause, t("createFlow.errors.orderLinesLoadFailed"));
     } finally {
       setBusyAction(null);
     }
@@ -1180,7 +1186,7 @@ export function GoodsReceiptCreatePage({
           branchCode: customer?.branch ?? branchCode,
           stockId: line.stockId,
           idempotencyKey,
-          reason: "Mal kabul taslağında miktar veya seri planı değiştirildi.",
+          reason: t("createFlow.audit.quantityOrSerialPlanChanged"),
         });
         idempotencyKey = undefined;
       }
@@ -1200,9 +1206,9 @@ export function GoodsReceiptCreatePage({
           serialNo: item.serialNo,
         })),
       });
-      toast.success(`${serials.length} seri stok kuralına göre üretildi.`);
+      toast.success(t("createFlow.toast.serialsGeneratedFromRule", { count: serials.length }));
     } catch (cause) {
-      report(cause, "Seriler üretilemedi.");
+      report(cause, t("createFlow.errors.serialsGenerationFailed"));
     }
   };
   const cancelGeneratedSerials = async (key: string): Promise<void> => {
@@ -1213,15 +1219,14 @@ export function GoodsReceiptCreatePage({
         branchCode: customer?.branch ?? branchCode,
         stockId: line.stockId,
         idempotencyKey: line.serialGenerationKey,
-        reason:
-          "Kullanıcı mal kabul taslağındaki otomatik seri üretimini iptal etti.",
+        reason: t("createFlow.audit.autoSerialGenerationCancelled"),
       });
       updateLine(key, { serialGenerationKey: undefined, trackings: [] });
       toast.success(
-        "Üretilen seriler iptal edildi ve tekrar kullanıma kapatıldı.",
+        t("createFlow.toast.generatedSerialsCancelled"),
       );
     } catch (cause) {
-      report(cause, "Üretilen seriler iptal edilemedi.");
+      report(cause, t("createFlow.errors.serialsCancellationFailed"));
     }
   };
 
@@ -1349,7 +1354,7 @@ export function GoodsReceiptCreatePage({
       );
       setStep(1);
     } catch (cause) {
-      report(cause, "Kalite kontrol kuralları doğrulanamadı.");
+      report(cause, t("manual.validation.qualityRulesCheckFailed"));
     } finally {
       setBusyAction(null);
     }
@@ -1461,7 +1466,12 @@ export function GoodsReceiptCreatePage({
       await operationDraft.clearDraft();
       toast.success(`${t("created")}: ${created.documentNo}`);
     } catch (cause) {
-      report(cause, direct ? "Doğrudan mal kabul tamamlanamadı." : "Mal kabul emri oluşturulamadı.");
+      report(
+        cause,
+        direct
+          ? t("createFlow.errors.directReceiptFailed")
+          : t("createFlow.errors.receiptOrderCreationFailed"),
+      );
     } finally {
       setBusyAction(null);
     }
@@ -1486,7 +1496,7 @@ export function GoodsReceiptCreatePage({
     if (!selectedOrders.includes(siparisNo)
       && selectedOrderWarehouseCode != null
       && targetWarehouseCode !== selectedOrderWarehouseCode) {
-      toast.warning("Bir mal kabul emrinde farklı depolara ait siparişler seçilemez. Önce mevcut seçimi kaldırın veya ayrı emir oluşturun.");
+      toast.warning(t("createFlow.validation.ordersMixedWarehouses"));
       return;
     }
     setSelectedOrders((current) =>
@@ -1533,7 +1543,7 @@ export function GoodsReceiptCreatePage({
       selectableDirectOrderLines.length > directSelectAllTargets.length
     ) {
       toast.warning(
-        "Farklı hedef depolara ait kalemler aynı mal kabulde seçilemez. Aynı depodaki uygun kalemler seçildi.",
+        t("createFlow.validation.directLinesMixedWarehousesAutoSelected"),
       );
     }
     setSelectedDirectLineKeys(directSelectAllKeys);
@@ -2057,13 +2067,13 @@ export function GoodsReceiptCreatePage({
                         const toggle = (): void => {
                           if (unavailable) {
                             toast.error(
-                              "Bu sipariş kaleminin açık miktarı aktif bir mal kabul emrine ayrılmış.",
+                              t("createFlow.validation.lineAvailableQuantityReserved"),
                             );
                             return;
                           }
                           if (warehouseDenied) {
                             toast.error(
-                              "Bu sipariş kaleminin deposu kullanıcınıza tanımlı değil.",
+                              t("createFlow.validation.lineWarehouseNotAssigned"),
                             );
                             return;
                           }
@@ -2073,7 +2083,7 @@ export function GoodsReceiptCreatePage({
                             line.targetWarehouseCode !== selectedDirectWarehouseCode
                           ) {
                             toast.warning(
-                              "Farklı hedef depolara ait kalemler aynı mal kabulde seçilemez. Önce mevcut seçimi kaldırın veya ayrı kabul oluşturun.",
+                              t("createFlow.validation.directLinesMixedWarehousesRemoveFirst"),
                             );
                             return;
                           }
@@ -2102,12 +2112,15 @@ export function GoodsReceiptCreatePage({
                                 checked={checked}
                                 disabled={warehouseDenied || unavailable}
                                 onCheckedChange={() => toggle()}
-                                aria-label={`${line.siparisNo} ${line.stockCode ?? ""} seç`}
+                                aria-label={t("createFlow.selectLineAria", {
+                                  orderNumber: line.siparisNo,
+                                  stockCode: line.stockCode ?? "",
+                                })}
                                 title={
                                   unavailable
-                                    ? "Aktif bir mal kabul emrine ayrılmış."
+                                    ? t("createFlow.validation.reservedForActiveOrder")
                                     : warehouseDenied
-                                      ? "Bu depo kullanıcınıza tanımlı değil."
+                                      ? t("createFlow.validation.warehouseNotAssignedToUser")
                                       : undefined
                                 }
                               />
@@ -2152,7 +2165,7 @@ export function GoodsReceiptCreatePage({
                               )}
                               {unavailable ? (
                                 <span className="ml-2 whitespace-nowrap text-[10px] text-amber-600">
-                                  Ayrılmış
+                                  {t("createFlow.reservedBadge")}
                                 </span>
                               ) : null}
                             </td>
@@ -2219,8 +2232,14 @@ export function GoodsReceiptCreatePage({
                                 checked={checked}
                                 disabled={warehouseDenied}
                                 onCheckedChange={() => toggleOrder(order)}
-                                aria-label={`${order.siparisNo} seç`}
-                                title={warehouseDenied ? "Bu depo kullanıcınıza tanımlı değil." : undefined}
+                                aria-label={t("createFlow.selectOrderAria", {
+                                  orderNumber: order.siparisNo,
+                                })}
+                                title={
+                                  warehouseDenied
+                                    ? t("createFlow.validation.warehouseNotAssignedToUser")
+                                    : undefined
+                                }
                               />
                             </td>
                             <td className="font-mono font-semibold">
@@ -2564,7 +2583,9 @@ export function GoodsReceiptCreatePage({
                             )
                           }
                           className="rounded-full p-0.5 text-slate-500 hover:bg-red-500/15 hover:text-red-500"
-                          aria-label={`${userLabel(user)} atamasını kaldır`}
+                          aria-label={t("createFlow.assignees.removeAria", {
+                            name: userLabel(user),
+                          })}
                         >
                           <X className="size-3.5" />
                         </button>
@@ -3582,30 +3603,30 @@ function SerialTrackingDialog({
       })),
     });
     setBulkText("");
-    toast.success(`${serials.length} seri satıra bölündü.`);
+    toast.success(t("createFlow.toast.serialsSplitIntoRows", { count: serials.length }));
   };
   return (
     <ResponsiveDialog
       onClose={onClose}
-      title="Seri / lot yönetimi"
+      title={t("createFlow.serialLotDialog.title")}
       className="!max-w-5xl"
     >
       <header className="mb-4 flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-cyan-500">
-            İzlenebilirlik
+            {t("createFlow.serialLotDialog.traceability")}
           </p>
           <h2 className="text-xl font-bold">
             {line.stockCode} · {formatProjectNumber(line.quantity)}{" "}
             {line.unitCode}
           </h2>
           <p className="text-sm text-slate-500">
-            Sistem önerisi, miktardan bölme veya tekli giriş.
+            {t("createFlow.serialLotDialog.subtitle")}
           </p>
         </div>
         <button
           type="button"
-          aria-label="Kapat"
+          aria-label={t("createFlow.serialLotDialog.close")}
           onClick={onClose}
           className="grid size-10 place-items-center rounded-xl hover:bg-[var(--wms-brand-soft)]"
         >
@@ -3619,9 +3640,9 @@ function SerialTrackingDialog({
             onClick={() => void createSerialRows(key)}
             className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-3 text-left text-sm font-semibold text-cyan-700 dark:text-cyan-300"
           >
-            Otomatik seri öner
+            {t("createFlow.serialLotDialog.autoSuggestSerial")}
             <span className="mt-1 block text-xs font-normal opacity-80">
-              Miktardan stok kuralına göre seri üret
+              {t("createFlow.serialLotDialog.autoSuggestSerialHint")}
             </span>
           </button>
         )}
@@ -3630,9 +3651,9 @@ function SerialTrackingDialog({
           onClick={() => addTracking(key)}
           className="rounded-xl border border-[var(--wms-app-border)] px-4 py-3 text-left text-sm font-semibold"
         >
-          Tekli satır ekle
+          {t("createFlow.serialLotDialog.addSingleRow")}
           <span className="mt-1 block text-xs font-normal text-slate-500">
-            Manuel lot / seri girişi
+            {t("createFlow.serialLotDialog.addSingleRowHint")}
           </span>
         </button>
         {serialMode && line.serialGenerationKey && (
@@ -3641,9 +3662,9 @@ function SerialTrackingDialog({
             onClick={() => void cancelGeneratedSerials(key)}
             className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-left text-sm font-semibold text-amber-700 dark:text-amber-300"
           >
-            Otomatik serileri iptal
+            {t("createFlow.serialLotDialog.cancelAutoSerials")}
             <span className="mt-1 block text-xs font-normal opacity-80">
-              Rezerve serileri bırak
+              {t("createFlow.serialLotDialog.cancelAutoSerialsHint")}
             </span>
           </button>
         )}
@@ -3651,7 +3672,7 @@ function SerialTrackingDialog({
       {serialMode && (
         <div className="mb-4 rounded-xl border border-[var(--wms-app-border)] p-3">
           <label className="text-sm font-semibold">
-            Mevcut seriyi böl / toplu yapıştır
+            {t("createFlow.serialLotDialog.bulkPasteLabel")}
           </label>
           <textarea
             className="input mt-2 min-h-24 font-mono text-sm"
@@ -3664,7 +3685,7 @@ function SerialTrackingDialog({
             onClick={applyBulk}
             className="mt-2 rounded-lg border px-3 py-2 text-xs font-semibold"
           >
-            Toplu serileri uygula
+            {t("createFlow.serialLotDialog.applyBulkSerials")}
           </button>
         </div>
       )}
@@ -3687,8 +3708,8 @@ function SerialTrackingDialog({
             {lotMode ? (
               <input
                 className="input"
-                aria-label="Lot"
-                placeholder="Lot no"
+                aria-label={t("createFlow.serialLotDialog.lotAria")}
+                placeholder={t("createFlow.serialLotDialog.lotPlaceholder")}
                 value={tracking.lotNo ?? ""}
                 onChange={(event) =>
                   updateTracking(key, tracking.localId, {
@@ -3702,8 +3723,8 @@ function SerialTrackingDialog({
             {serialMode ? (
               <input
                 className="input"
-                aria-label="Seri"
-                placeholder="Seri no"
+                aria-label={t("createFlow.serialLotDialog.serialAria")}
+                placeholder={t("createFlow.serialLotDialog.serialPlaceholder")}
                 value={tracking.serialNo ?? ""}
                 onChange={(event) =>
                   updateTracking(key, tracking.localId, {
@@ -3715,7 +3736,7 @@ function SerialTrackingDialog({
               <span />
             )}
             <AppDateInput
-              aria-label="Üretim tarihi"
+              aria-label={t("createFlow.serialLotDialog.manufacturingDateAria")}
               value={tracking.manufacturingDate ?? ""}
               onChange={(event) =>
                 updateTracking(key, tracking.localId, {
@@ -3724,7 +3745,7 @@ function SerialTrackingDialog({
               }
             />
             <AppDateInput
-              aria-label="Son kullanma tarihi"
+              aria-label={t("createFlow.serialLotDialog.expirationDateAria")}
               value={tracking.expirationDate ?? ""}
               onChange={(event) =>
                 updateTracking(key, tracking.localId, {
@@ -3734,7 +3755,7 @@ function SerialTrackingDialog({
             />
             <button
               type="button"
-              aria-label="Takip satırını sil"
+              aria-label={t("createFlow.serialLotDialog.removeTrackingRow")}
               onClick={() => removeTracking(key, tracking.localId)}
               className="grid size-10 place-items-center rounded-lg text-red-500 hover:bg-red-500/10"
             >
@@ -3744,7 +3765,7 @@ function SerialTrackingDialog({
         ))}
         {line.trackings.length === 0 && (
           <p className="rounded-xl border border-dashed p-6 text-center text-sm text-slate-500">
-            Henüz lot/seri satırı yok. Otomatik öner veya tekli satır ekleyin.
+            {t("createFlow.serialLotDialog.empty")}
           </p>
         )}
       </div>
@@ -3754,7 +3775,7 @@ function SerialTrackingDialog({
           onClick={onClose}
           className="rounded-xl bg-[var(--wms-brand-primary)] px-5 py-2.5 font-semibold text-white"
         >
-          Tamam
+          {t("createFlow.serialLotDialog.done")}
         </button>
       </div>
     </ResponsiveDialog>
@@ -3770,6 +3791,7 @@ function QuantityInput({
   disabled?: boolean;
   onCommit: (value: number) => void;
 }): ReactElement {
+  const { t } = useModuleTranslation("goods-receipt-v2");
   const [text, setText] = useState(
     formatProjectNumber(value, {
       minimumFractionDigits: 0,
@@ -3787,7 +3809,7 @@ function QuantityInput({
   return (
     <input
       className="input font-mono"
-      aria-label="Miktar"
+      aria-label={t("createFlow.serialLotDialog.quantityAria")}
       inputMode="decimal"
       disabled={disabled}
       value={text}

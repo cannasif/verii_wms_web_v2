@@ -51,6 +51,9 @@
     "prepareSelectedLines": "Preparar líneas seleccionadas",
     "selectedDirectLinesCount": "{{count}} líneas de pedido seleccionadas",
     "selectedOrdersCount": "{{count}} pedidos seleccionados",
+    "selectLineAria": "Seleccionar {{orderNumber}} {{stockCode}}",
+    "selectOrderAria": "Seleccionar {{orderNumber}}",
+    "reservedBadge": "Reservado",
     "waybill": {
       "sectionTitle": "Datos del albarán",
       "sectionHint": "El tipo de documento, el número y las fechas se introducen antes de seleccionar el pedido.",
@@ -90,7 +93,8 @@
       "title": "Responsables de la tarea",
       "hint": "Los usuarios seleccionados se asignan a todas las tareas de almacén creadas; verán la tarea en su pantalla Mis tareas asignadas.",
       "addPlaceholder": "Añadir usuario de operación",
-      "empty": "Aún no hay usuarios asignados."
+      "empty": "Aún no hay usuarios asignados.",
+      "removeAria": "Quitar la asignación de {{name}}"
     },
     "entryRow": {
       "quantity": "Cantidad",
@@ -233,7 +237,65 @@
       "warehouseOrderNotAllowed": "No puede seleccionar este pedido porque el almacén {{code}} no está asignado a usted.",
       "unknownWarehouse": "desconocido",
       "linesRequired": "Prepare al menos una línea de pedido para continuar.",
-      "confirmLinesRequired": "Confirme al menos una línea con ONAY para continuar."
+      "confirmLinesRequired": "Confirme al menos una línea con ONAY para continuar.",
+      "directLinesMixedWarehouses": "No se pueden preparar en una sola recepción de mercancía líneas de pedido con distintos almacenes de destino. Cree una recepción separada para cada almacén.",
+      "ordersMixedWarehouses": "No se pueden seleccionar pedidos de distintos almacenes en una sola orden de recepción de mercancía. Borre primero la selección actual o cree una orden separada.",
+      "directLinesMixedWarehousesAutoSelected": "No se pueden seleccionar en la misma recepción de mercancía líneas con distintos almacenes de destino. Se seleccionaron las líneas elegibles del mismo almacén.",
+      "directLinesMixedWarehousesRemoveFirst": "No se pueden seleccionar en la misma recepción de mercancía líneas con distintos almacenes de destino. Borre primero la selección actual o cree una recepción separada.",
+      "lineAvailableQuantityReserved": "La cantidad disponible de esta línea de pedido está reservada en una orden de recepción de mercancía activa.",
+      "lineWarehouseNotAssigned": "El almacén de esta línea de pedido no está asignado a usted.",
+      "reservedForActiveOrder": "Reservado en una orden de recepción de mercancía activa.",
+      "warehouseNotAssignedToUser": "Este almacén no está asignado a usted."
+    },
+    "errors": {
+      "warehouseAccessLoadFailed": "No se pudieron cargar los permisos de almacén.",
+      "customerMirrorNotFound": "El código de cuenta de proveedor {{customerCode}} no se encontró en la tabla espejo de proveedores del ERP.",
+      "openOrderNotFound": "No se encontró el pedido abierto {{orderNumber}}.",
+      "orderCustomerCodeNotFound": "No se pudo determinar un único código de cuenta para el pedido {{orderNumber}}.",
+      "orderNumberSearchFailed": "Error al buscar por número de pedido.",
+      "ordersLoadFailed": "No se pudieron cargar los pedidos.",
+      "stockMirrorNotFound": "{{code}} no se encontró en la tabla espejo de stock del ERP.",
+      "yapMirrorNotFound": "El código de configuración {{code}} no se encontró en la tabla espejo del ERP.",
+      "orderLineStockCodeNotFound": "{{orderNumber}}/{{orderId}}: no se encontró el código de stock.",
+      "orderLinesLoadFailed": "No se pudieron cargar las líneas del pedido.",
+      "serialsGenerationFailed": "No se pudieron generar las series.",
+      "serialsCancellationFailed": "No se pudieron cancelar las series generadas.",
+      "directReceiptFailed": "No se pudo completar la recepción directa de mercancía.",
+      "receiptOrderCreationFailed": "No se pudo crear la orden de recepción de mercancía."
+    },
+    "toast": {
+      "orderAndSupplierFetched": "Se obtuvieron el pedido {{orderNumber}} y el proveedor {{customerCode}}.",
+      "serialsGeneratedFromRule": "Se generaron {{count}} series según la regla de stock.",
+      "generatedSerialsCancelled": "Las series generadas se cancelaron y quedaron liberadas para su reutilización.",
+      "serialsSplitIntoRows": "Se dividieron {{count}} series en filas."
+    },
+    "audit": {
+      "quantityOrSerialPlanChanged": "Se modificó la cantidad o el plan de series en el borrador de recepción de mercancía.",
+      "autoSerialGenerationCancelled": "El usuario canceló la generación automática de series en el borrador de recepción de mercancía."
+    },
+    "serialLotDialog": {
+      "title": "Gestión de series / lotes",
+      "traceability": "Trazabilidad",
+      "subtitle": "Sugerencia del sistema, división por cantidad o entrada individual.",
+      "close": "Cerrar",
+      "autoSuggestSerial": "Sugerir serie automáticamente",
+      "autoSuggestSerialHint": "Genera series a partir de la regla de stock según la cantidad",
+      "addSingleRow": "Añadir fila individual",
+      "addSingleRowHint": "Entrada manual de lote / serie",
+      "cancelAutoSerials": "Cancelar series generadas automáticamente",
+      "cancelAutoSerialsHint": "Libera las series reservadas",
+      "bulkPasteLabel": "Dividir serie existente / pegado masivo",
+      "applyBulkSerials": "Aplicar series masivas",
+      "lotAria": "Lote",
+      "lotPlaceholder": "N.º de lote",
+      "serialAria": "Serie",
+      "serialPlaceholder": "N.º de serie",
+      "manufacturingDateAria": "Fecha de fabricación",
+      "expirationDateAria": "Fecha de caducidad",
+      "removeTrackingRow": "Eliminar fila de seguimiento",
+      "quantityAria": "Cantidad",
+      "empty": "Aún no hay filas de lote/serie. Sugiera automáticamente o añada una fila individual.",
+      "done": "Hecho"
     }
   },
   "manual": {
@@ -413,7 +475,67 @@
     "plannedQuantity": "Planificado",
     "processedQuantity": "Recibido",
     "actions": "Acciones",
-    "viewTask": "Ver tarea"
+    "viewTask": "Ver tarea",
+    "modal": {
+      "title": "Tarea de recepción de mercancía {{taskNo}}",
+      "description": "Líneas de la tarea, asignaciones y operaciones de recepción física.",
+      "eyebrow": "Tarea de recepción de mercancía",
+      "info": { "status": "Estado", "warehouse": "Almacén", "priority": "Prioridad", "planned": "Planificado", "started": "Iniciada" },
+      "table": { "stock": "Stock", "received": "Recibido" },
+      "line": { "qualityRequired": "Control de calidad requerido", "directDispatch": "Albarán directo" },
+      "actions": { "acceptAssignment": "Aceptar asignación", "startTask": "Iniciar tarea", "saveAssignments": "Guardar asignaciones" },
+      "errors": {
+        "detailFetchFailed": "No se pudieron cargar los detalles de la tarea.",
+        "actionFailed": "No se pudo completar la acción.",
+        "selectAtLeastOneUser": "Seleccione al menos un usuario.",
+        "assignmentsUpdateFailed": "No se pudieron actualizar las asignaciones."
+      },
+      "toast": { "accepted": "Tarea aceptada.", "started": "Tarea iniciada.", "assignmentsUpdated": "Se actualizaron las asignaciones de la tarea." },
+      "receiptLabels": {
+        "title": "Etiquetas generadas en la recepción",
+        "hint": "Se crean automáticamente después de cada movimiento de recepción con la cantidad real y la información de serie/lote.",
+        "noneYet": "Aún no hay etiquetas de recepción",
+        "printButton": "Imprimir {{count}} etiquetas",
+        "fetchFailed": "No se pudieron cargar las etiquetas de recepción.",
+        "printFailed": "No se pudieron imprimir las etiquetas de recepción."
+      },
+      "preLabel": {
+        "title": "Impresión previa de código de barras",
+        "hint": "Crea una etiqueta única vinculada a la tarea para las líneas abiertas. Una etiqueta no se puede usar en la recepción hasta que se imprima.",
+        "activeExists": "Ya existe una etiqueta activa",
+        "createButton": "Crear etiqueta previa",
+        "noOpenLines": "No hay líneas abiertas",
+        "statusLine": "{{count}} etiqueta activa · {{printed}} impresas",
+        "reprintButton": "Reimprimir etiquetas",
+        "printButton": "Imprimir etiquetas",
+        "existingFetchFailed": "No se pudieron cargar las etiquetas previas existentes.",
+        "noOpenLinesError": "No hay líneas de tarea abiertas para las que generar etiquetas.",
+        "batchName": "Lote de etiquetas previas de la tarea",
+        "generatedToast": "Se generaron {{count}} etiquetas previas. Ahora imprima las etiquetas.",
+        "createFailed": "No se pudo generar la etiqueta previa.",
+        "noPrintableLabels": "No se encontraron etiquetas imprimibles.",
+        "printTitleSuffix": "etiquetas previas",
+        "markedPrintedToast": "Las etiquetas se marcaron como impresas. Ya puede recibir escaneando el código de barras."
+      },
+      "scan": {
+        "printedLabelsFetchFailed": "No se pudieron cargar las etiquetas previas impresas.",
+        "validateFirst": "Resuelva primero el código de barras y confirme la línea de la tarea.",
+        "sentToQualityToast": "Recepción de mercancía procesada; transferida a la lista de inspección de calidad.",
+        "replayedToast": "Este escaneo ya se había procesado.",
+        "processedToast": "Código de barras verificado; la serie/lote, el movimiento de stock, el saldo y la calidad se procesaron en una sola transacción.",
+        "labelGeneratedToast": "Etiqueta de producto generada automáticamente; puede imprimirla desde la sección de etiquetas de recepción.",
+        "acceptFailed": "No se pudo aceptar el código de barras.",
+        "preLabelReadyBanner": "{{count}} etiqueta previa impresa lista para escanear. Escanee una de estas etiquetas en lugar del código de barras del producto/proveedor.",
+        "preLabelRequiredBanner": "Esta tarea usa etiquetas previas. Genere e imprima una etiqueta desde la sección anterior antes de recibir.",
+        "scannerTitle": "Escanee el código de barras de recepción de mercancía",
+        "scannerDescriptionPreLabel": "Solo se acepta el código de barras de la etiqueta previa generada e impresa para esta tarea.",
+        "scannerDescriptionGeneral": "Se resuelve la etiqueta del sistema, GS1, el código de barras de stock del proveedor o un código de barras de serie para el stock seleccionado.",
+        "wrongBarcodeError": "Esta tarea usa etiquetas previas. Escanee el código de barras de la etiqueta previa que generó e imprimió, no el código de barras del producto/proveedor.",
+        "resolvedTitle": "Registro de recepción resuelto",
+        "resolvedHint": "En la confirmación final, el movimiento de stock, el saldo de estantería/serie y, si es necesario, el registro de calidad se crean en la misma transacción.",
+        "remainingLabel": "Restante {{quantity}} {{unit}}"
+      }
+    }
   },
   "enums": {
     "operationStatus": {
