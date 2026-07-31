@@ -158,5 +158,48 @@
       "noOpenLine": "{{stockCode}} için bu sevkte açık kalem bulunamadı.",
       "operationFailed": "Operasyon tamamlanamadı."
     }
+  },
+  "settings": {
+    "eyebrow": "Sevk",
+    "title": "Sevk Süreç Politikası",
+    "description": "Kurallar taslak oluşturulurken başlığa snapshot alınır; açık sevkler sonraki ayar değişikliklerinden etkilenmez.",
+    "sections": {
+      "flowMatrix": "İzin verilen akış matrisi",
+      "reservationPickingQuantity": "Rezervasyon, toplama ve miktar",
+      "operationGates": "Operasyon kapıları"
+    },
+    "flowToggles": {
+      "orderTask": "Siparişten + emirli",
+      "stockTask": "Siparişsiz + emirli",
+      "orderDirect": "Siparişten + doğrudan",
+      "stockDirect": "Siparişsiz + doğrudan"
+    },
+    "fields": {
+      "reservation": "Rezervasyon",
+      "shortage": "Eksik sevk",
+      "overPick": "Fazla toplama",
+      "packing": "Paketleme",
+      "minimumFulfillment": "Minimum karşılama %",
+      "overPickTolerance": "Fazla toplama toleransı %"
+    },
+    "reservationOptions": { "none": "Yok", "onCreate": "Oluştururken", "onRelease": "Serbest bırakırken" },
+    "shortageOptions": { "block": "Bloke et", "allowPartial": "Kısmi izin ver", "requireApproval": "Onaya gönder" },
+    "overPickOptions": { "block": "Bloke et", "allowWithinTolerance": "Tolerans içinde", "requireApproval": "Onaya gönder" },
+    "packingOptions": { "notRequired": "Gerekli değil", "optional": "Opsiyonel", "required": "Zorunlu" },
+    "gateToggles": {
+      "requireApproval": "Sevk onayı zorunlu",
+      "requireAssigneeForTask": "Emirli sevkte kullanıcı zorunlu",
+      "allowMultipleAssignees": "Çoklu kullanıcı ataması",
+      "autoReleaseTaskBased": "Emri otomatik serbest bırak",
+      "allowPartialPicking": "Kısmi toplama",
+      "allowPartialShipment": "Kısmi sevk",
+      "requireSourceLocation": "Kaynak raf zorunlu",
+      "requireShipmentInformation": "Araç/taşıyıcı zorunlu",
+      "requireLoadingConfirmation": "Yükleme teyidi zorunlu",
+      "autoPostErpAfterApproval": "Onaydan sonra ERP'ye otomatik aktar"
+    },
+    "save": "Kaydet",
+    "saved": "Sevk politikası kaydedildi.",
+    "saveError": "Kaydedilemedi."
   }
 }

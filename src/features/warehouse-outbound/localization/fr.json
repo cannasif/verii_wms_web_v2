@@ -166,5 +166,48 @@
       "noOpenLine": "Aucune ligne ouverte trouvée dans cette expédition pour {{stockCode}}.",
       "operationFailed": "Impossible de terminer l'opération."
     }
+  },
+  "settings": {
+    "eyebrow": "Expédition",
+    "title": "Politique de processus d'expédition",
+    "description": "Les règles sont figées sur l'en-tête à la création d'un brouillon ; les expéditions ouvertes ne sont pas affectées par les modifications de paramètres ultérieures.",
+    "sections": {
+      "flowMatrix": "Matrice des flux autorisés",
+      "reservationPickingQuantity": "Réservation, préparation et quantité",
+      "operationGates": "Portes d'opération"
+    },
+    "flowToggles": {
+      "orderTask": "Basé sur commande + tâche",
+      "stockTask": "Sans commande + tâche",
+      "orderDirect": "Basé sur commande + direct",
+      "stockDirect": "Sans commande + direct"
+    },
+    "fields": {
+      "reservation": "Réservation",
+      "shortage": "Manquant",
+      "overPick": "Sur-prélèvement",
+      "packing": "Emballage",
+      "minimumFulfillment": "Taux de service minimum %",
+      "overPickTolerance": "Tolérance de sur-prélèvement %"
+    },
+    "reservationOptions": { "none": "Aucune", "onCreate": "À la création", "onRelease": "À la libération" },
+    "shortageOptions": { "block": "Bloquer", "allowPartial": "Autoriser partiellement", "requireApproval": "Approbation requise" },
+    "overPickOptions": { "block": "Bloquer", "allowWithinTolerance": "Autoriser dans la tolérance", "requireApproval": "Approbation requise" },
+    "packingOptions": { "notRequired": "Non requis", "optional": "Facultatif", "required": "Obligatoire" },
+    "gateToggles": {
+      "requireApproval": "Approbation d'expédition requise",
+      "requireAssigneeForTask": "Utilisateur requis pour l'expédition basée sur tâche",
+      "allowMultipleAssignees": "Affectation multi-utilisateurs",
+      "autoReleaseTaskBased": "Libérer automatiquement la tâche",
+      "allowPartialPicking": "Préparation partielle",
+      "allowPartialShipment": "Expédition partielle",
+      "requireSourceLocation": "Emplacement source requis",
+      "requireShipmentInformation": "Véhicule/transporteur requis",
+      "requireLoadingConfirmation": "Confirmation de chargement requise",
+      "autoPostErpAfterApproval": "Publier automatiquement dans l'ERP après approbation"
+    },
+    "save": "Enregistrer",
+    "saved": "Politique d'expédition enregistrée.",
+    "saveError": "Impossible d'enregistrer."
   }
 }

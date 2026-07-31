@@ -166,5 +166,48 @@
       "noOpenLine": "لم يتم العثور على بند مفتوح في هذه الشحنة لـ {{stockCode}}.",
       "operationFailed": "تعذر إكمال العملية."
     }
+  },
+  "settings": {
+    "eyebrow": "الشحن",
+    "title": "سياسة عملية الشحن",
+    "description": "يتم تثبيت القواعد في المستند عند إنشاء المسودة؛ لا تتأثر الشحنات المفتوحة بتغييرات الإعدادات اللاحقة.",
+    "sections": {
+      "flowMatrix": "مصفوفة التدفقات المسموح بها",
+      "reservationPickingQuantity": "الحجز والانتقاء والكمية",
+      "operationGates": "بوابات العملية"
+    },
+    "flowToggles": {
+      "orderTask": "قائم على الطلب + مهمة",
+      "stockTask": "بدون طلب + مهمة",
+      "orderDirect": "قائم على الطلب + مباشر",
+      "stockDirect": "بدون طلب + مباشر"
+    },
+    "fields": {
+      "reservation": "الحجز",
+      "shortage": "النقص",
+      "overPick": "الانتقاء الزائد",
+      "packing": "التعبئة",
+      "minimumFulfillment": "الحد الأدنى للتلبية %",
+      "overPickTolerance": "نسبة تحمل الانتقاء الزائد %"
+    },
+    "reservationOptions": { "none": "بدون", "onCreate": "عند الإنشاء", "onRelease": "عند الإفراج" },
+    "shortageOptions": { "block": "حظر", "allowPartial": "السماح جزئيًا", "requireApproval": "يتطلب الموافقة" },
+    "overPickOptions": { "block": "حظر", "allowWithinTolerance": "السماح ضمن النسبة المسموحة", "requireApproval": "يتطلب الموافقة" },
+    "packingOptions": { "notRequired": "غير مطلوب", "optional": "اختياري", "required": "مطلوب" },
+    "gateToggles": {
+      "requireApproval": "موافقة الشحن مطلوبة",
+      "requireAssigneeForTask": "مستخدم مطلوب للشحن القائم على المهمة",
+      "allowMultipleAssignees": "تعيين عدة مستخدمين",
+      "autoReleaseTaskBased": "الإفراج التلقائي عن المهمة",
+      "allowPartialPicking": "انتقاء جزئي",
+      "allowPartialShipment": "شحن جزئي",
+      "requireSourceLocation": "الموقع المصدر مطلوب",
+      "requireShipmentInformation": "المركبة/الناقل مطلوب",
+      "requireLoadingConfirmation": "تأكيد التحميل مطلوب",
+      "autoPostErpAfterApproval": "النشر التلقائي إلى ERP بعد الموافقة"
+    },
+    "save": "حفظ",
+    "saved": "تم حفظ سياسة الشحن.",
+    "saveError": "تعذر الحفظ."
   }
 }

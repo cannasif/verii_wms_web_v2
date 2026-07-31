@@ -166,5 +166,48 @@
       "noOpenLine": "Für {{stockCode}} wurde in diesem Versand keine offene Position gefunden.",
       "operationFailed": "Vorgang konnte nicht abgeschlossen werden."
     }
+  },
+  "settings": {
+    "eyebrow": "Versand",
+    "title": "Versandprozessrichtlinie",
+    "description": "Regeln werden beim Erstellen eines Entwurfs auf den Beleg übernommen; offene Versände sind von späteren Einstellungsänderungen nicht betroffen.",
+    "sections": {
+      "flowMatrix": "Zulässige Ablaufmatrix",
+      "reservationPickingQuantity": "Reservierung, Kommissionierung und Menge",
+      "operationGates": "Vorgangsfreigaben"
+    },
+    "flowToggles": {
+      "orderTask": "Auftragsbasiert + Auftrag",
+      "stockTask": "Auftragslos + Auftrag",
+      "orderDirect": "Auftragsbasiert + Direkt",
+      "stockDirect": "Auftragslos + Direkt"
+    },
+    "fields": {
+      "reservation": "Reservierung",
+      "shortage": "Fehlmenge",
+      "overPick": "Überkommissionierung",
+      "packing": "Verpackung",
+      "minimumFulfillment": "Mindesterfüllung %",
+      "overPickTolerance": "Toleranz für Überkommissionierung %"
+    },
+    "reservationOptions": { "none": "Keine", "onCreate": "Beim Erstellen", "onRelease": "Bei Freigabe" },
+    "shortageOptions": { "block": "Blockieren", "allowPartial": "Teilweise zulassen", "requireApproval": "Genehmigung erforderlich" },
+    "overPickOptions": { "block": "Blockieren", "allowWithinTolerance": "Innerhalb der Toleranz zulassen", "requireApproval": "Genehmigung erforderlich" },
+    "packingOptions": { "notRequired": "Nicht erforderlich", "optional": "Optional", "required": "Erforderlich" },
+    "gateToggles": {
+      "requireApproval": "Versandgenehmigung erforderlich",
+      "requireAssigneeForTask": "Benutzer bei auftragsbasiertem Versand erforderlich",
+      "allowMultipleAssignees": "Mehrfache Benutzerzuweisung",
+      "autoReleaseTaskBased": "Auftrag automatisch freigeben",
+      "allowPartialPicking": "Teilkommissionierung",
+      "allowPartialShipment": "Teilversand",
+      "requireSourceLocation": "Quelllagerplatz erforderlich",
+      "requireShipmentInformation": "Fahrzeug/Spediteur erforderlich",
+      "requireLoadingConfirmation": "Ladebestätigung erforderlich",
+      "autoPostErpAfterApproval": "Nach Genehmigung automatisch an ERP übertragen"
+    },
+    "save": "Speichern",
+    "saved": "Versandrichtlinie gespeichert.",
+    "saveError": "Konnte nicht gespeichert werden."
   }
 }

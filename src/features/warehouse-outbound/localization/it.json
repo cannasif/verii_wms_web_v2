@@ -166,5 +166,48 @@
       "noOpenLine": "Nessuna riga aperta trovata in questa spedizione per {{stockCode}}.",
       "operationFailed": "Impossibile completare l'operazione."
     }
+  },
+  "settings": {
+    "eyebrow": "Spedizione",
+    "title": "Politica del processo di spedizione",
+    "description": "Le regole vengono fissate sull'intestazione alla creazione di una bozza; le spedizioni aperte non sono influenzate dalle successive modifiche alle impostazioni.",
+    "sections": {
+      "flowMatrix": "Matrice dei flussi consentiti",
+      "reservationPickingQuantity": "Prenotazione, prelievo e quantità",
+      "operationGates": "Cancelli operativi"
+    },
+    "flowToggles": {
+      "orderTask": "Basato su ordine + attività",
+      "stockTask": "Senza ordine + attività",
+      "orderDirect": "Basato su ordine + diretto",
+      "stockDirect": "Senza ordine + diretto"
+    },
+    "fields": {
+      "reservation": "Prenotazione",
+      "shortage": "Carenza",
+      "overPick": "Sovra-prelievo",
+      "packing": "Imballaggio",
+      "minimumFulfillment": "Evasione minima %",
+      "overPickTolerance": "Tolleranza di sovra-prelievo %"
+    },
+    "reservationOptions": { "none": "Nessuna", "onCreate": "Alla creazione", "onRelease": "Al rilascio" },
+    "shortageOptions": { "block": "Blocca", "allowPartial": "Consenti parziale", "requireApproval": "Richiede approvazione" },
+    "overPickOptions": { "block": "Blocca", "allowWithinTolerance": "Consenti entro tolleranza", "requireApproval": "Richiede approvazione" },
+    "packingOptions": { "notRequired": "Non richiesto", "optional": "Opzionale", "required": "Obbligatorio" },
+    "gateToggles": {
+      "requireApproval": "Approvazione spedizione richiesta",
+      "requireAssigneeForTask": "Utente richiesto per spedizione basata su attività",
+      "allowMultipleAssignees": "Assegnazione a più utenti",
+      "autoReleaseTaskBased": "Rilascia automaticamente l'attività",
+      "allowPartialPicking": "Prelievo parziale",
+      "allowPartialShipment": "Spedizione parziale",
+      "requireSourceLocation": "Ubicazione di origine richiesta",
+      "requireShipmentInformation": "Veicolo/vettore richiesto",
+      "requireLoadingConfirmation": "Conferma di carico richiesta",
+      "autoPostErpAfterApproval": "Pubblica automaticamente su ERP dopo l'approvazione"
+    },
+    "save": "Salva",
+    "saved": "Politica di spedizione salvata.",
+    "saveError": "Impossibile salvare."
   }
 }

@@ -166,5 +166,48 @@
       "noOpenLine": "No se encontró una línea abierta en este envío para {{stockCode}}.",
       "operationFailed": "No se pudo completar la operación."
     }
+  },
+  "settings": {
+    "eyebrow": "Envío",
+    "title": "Política de proceso de envío",
+    "description": "Las reglas se registran en el encabezado al crear un borrador; los envíos abiertos no se ven afectados por cambios de configuración posteriores.",
+    "sections": {
+      "flowMatrix": "Matriz de flujos permitidos",
+      "reservationPickingQuantity": "Reserva, recolección y cantidad",
+      "operationGates": "Puertas de operación"
+    },
+    "flowToggles": {
+      "orderTask": "Basado en pedido + tarea",
+      "stockTask": "Sin pedido + tarea",
+      "orderDirect": "Basado en pedido + directo",
+      "stockDirect": "Sin pedido + directo"
+    },
+    "fields": {
+      "reservation": "Reserva",
+      "shortage": "Faltante",
+      "overPick": "Sobre-recolección",
+      "packing": "Empaque",
+      "minimumFulfillment": "Cumplimiento mínimo %",
+      "overPickTolerance": "Tolerancia de sobre-recolección %"
+    },
+    "reservationOptions": { "none": "Ninguna", "onCreate": "Al crear", "onRelease": "Al liberar" },
+    "shortageOptions": { "block": "Bloquear", "allowPartial": "Permitir parcial", "requireApproval": "Requiere aprobación" },
+    "overPickOptions": { "block": "Bloquear", "allowWithinTolerance": "Permitir dentro de tolerancia", "requireApproval": "Requiere aprobación" },
+    "packingOptions": { "notRequired": "No requerido", "optional": "Opcional", "required": "Obligatorio" },
+    "gateToggles": {
+      "requireApproval": "Aprobación de envío requerida",
+      "requireAssigneeForTask": "Usuario requerido para envío basado en tarea",
+      "allowMultipleAssignees": "Asignación de múltiples usuarios",
+      "autoReleaseTaskBased": "Liberar tarea automáticamente",
+      "allowPartialPicking": "Recolección parcial",
+      "allowPartialShipment": "Envío parcial",
+      "requireSourceLocation": "Ubicación de origen requerida",
+      "requireShipmentInformation": "Vehículo/transportista requerido",
+      "requireLoadingConfirmation": "Confirmación de carga requerida",
+      "autoPostErpAfterApproval": "Publicar automáticamente en ERP tras la aprobación"
+    },
+    "save": "Guardar",
+    "saved": "Política de envío guardada.",
+    "saveError": "No se pudo guardar."
   }
 }

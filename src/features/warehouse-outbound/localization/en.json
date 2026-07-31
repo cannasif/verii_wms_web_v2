@@ -158,5 +158,48 @@
       "noOpenLine": "No open line found in this shipment for {{stockCode}}.",
       "operationFailed": "Could not complete the operation."
     }
+  },
+  "settings": {
+    "eyebrow": "Shipment",
+    "title": "Shipment Process Policy",
+    "description": "Rules are snapshotted onto the header when a draft is created; open shipments are not affected by later setting changes.",
+    "sections": {
+      "flowMatrix": "Allowed flow matrix",
+      "reservationPickingQuantity": "Reservation, picking and quantity",
+      "operationGates": "Operation gates"
+    },
+    "flowToggles": {
+      "orderTask": "Order-based + task",
+      "stockTask": "Orderless + task",
+      "orderDirect": "Order-based + direct",
+      "stockDirect": "Orderless + direct"
+    },
+    "fields": {
+      "reservation": "Reservation",
+      "shortage": "Shortage",
+      "overPick": "Over-picking",
+      "packing": "Packing",
+      "minimumFulfillment": "Minimum fulfilment %",
+      "overPickTolerance": "Over-picking tolerance %"
+    },
+    "reservationOptions": { "none": "None", "onCreate": "On create", "onRelease": "On release" },
+    "shortageOptions": { "block": "Block", "allowPartial": "Allow partial", "requireApproval": "Require approval" },
+    "overPickOptions": { "block": "Block", "allowWithinTolerance": "Allow within tolerance", "requireApproval": "Require approval" },
+    "packingOptions": { "notRequired": "Not required", "optional": "Optional", "required": "Required" },
+    "gateToggles": {
+      "requireApproval": "Shipment approval required",
+      "requireAssigneeForTask": "User required for task-based shipment",
+      "allowMultipleAssignees": "Multiple user assignment",
+      "autoReleaseTaskBased": "Auto-release task",
+      "allowPartialPicking": "Partial picking",
+      "allowPartialShipment": "Partial shipment",
+      "requireSourceLocation": "Source location required",
+      "requireShipmentInformation": "Vehicle/carrier required",
+      "requireLoadingConfirmation": "Loading confirmation required",
+      "autoPostErpAfterApproval": "Auto-post to ERP after approval"
+    },
+    "save": "Save",
+    "saved": "Shipment policy saved.",
+    "saveError": "Could not save."
   }
 }
