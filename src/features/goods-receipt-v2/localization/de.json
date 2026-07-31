@@ -257,8 +257,41 @@
     "operationType": "Vorgangstyp", "direct": "Direkter Wareneingang", "orderless": "Auftrag ohne Bestellung", "postReceipt": "Wareneingang buchen",
     "createTask": "Auftrag erstellen", "success": "Der Wareneingang wurde erfolgreich erstellt.", "resultDirect": "Wareneingang gebucht",
     "resultOrderless": "Wareneingangsauftrag erstellt", "linesText": "Positionen", "newRecord": "Neuer Datensatz",
+    "defaultTargetLocation": "Standard-Ziellagerplatz", "selectActiveLocation": "Aktiven Lagerplatz auswählen",
+    "unitLabelWithValue": "Einheit: {{unit}}", "unitUndefined": "Einheit nicht definiert", "selectStockFirst": "Zuerst einen Bestand auswählen",
     "options": { "noLabel": "Kein Etikett", "preGenerate": "Vorab erzeugen", "supplierLabel": "Lieferantenetikett", "generateOnReceipt": "Bei Wareneingang erzeugen", "manual": "Manuell", "barcode": "Barcode-Scan", "preLabel": "Vorgeneriertes Etikett" },
-    "validation": { "customer": "Der Lieferant ist erforderlich.", "receiptNo": "Die Standardlieferschein-Belegnummer muss genau 15 Ziffern enthalten.", "eReceiptNo": "Die E-Lieferschein-/GIB-Nummer muss genau 15 alphanumerische Zeichen umfassen.", "date": "Das Lieferscheindatum ist erforderlich.", "operation": "Lager, Wareneingangsbereich und Belegserie sind erforderlich.", "lines": "Mindestens eine Bestandsposition ist erforderlich.", "stock": "Bestand und eine Menge größer als null sind erforderlich.", "serialQuantity": "Eine seriennummernverfolgte Position muss die Menge 1 haben.", "expiry": "Das Verfallsdatum darf nicht vor dem Herstellungsdatum liegen.", "incomplete": "Das Formular enthält fehlende oder ungültige Felder.", "submit": "Der Wareneingang konnte nicht erstellt werden." }
+    "bulkSerial": {
+      "title": "Massen-Seriennummern- und Barcode-Scan",
+      "hint": "Beträgt die Menge 13, scannen Sie mit dem Lesegerät nacheinander 13 verschiedene Seriennummern. Jede Seriennummer wird als separate rückverfolgbare Position mit Menge 1 an die API gesendet.",
+      "textareaAriaLabel": "Massen-Seriennummern-Barcodes",
+      "scannedLabel": "Gescannt:",
+      "quantityLabel": "Menge:",
+      "clearList": "Liste leeren"
+    },
+    "suggestions": {
+      "title": "Vorgeschlagene Einlagerungsplätze",
+      "hintActive": "Sie können einen der vorgeschlagenen Lagerplätze als Ziellagerplatz auswählen.",
+      "hintReceiving": "Während die Qualitätsentscheidung aussteht, kann nur Wareneingang/Staging ausgewählt werden.",
+      "remainingLabel": "Verbleibend:"
+    },
+    "table": { "warehouseLocation": "Lager / Lagerplatz" },
+    "result": {
+      "eyebrow": "Nach dem Wareneingang",
+      "qualitySentTitle": "An Qualität gesendet",
+      "receiptCreatedTitle": "Lieferschein erstellt",
+      "qualitySubtitle": "Für an die Qualität gesendete Artikel wird nach der Qualitätsfreigabe ein Lieferschein erstellt.",
+      "receiptSubtitle": "Die Lieferscheinerstellung wurde abgeschlossen.",
+      "orderlessSubtitle": "Der Wareneingangsauftrag ohne Bestellung wurde erstellt und zur Verarbeitung eingereiht.",
+      "documentNoLabel": "Belegnummer",
+      "quantityLabel": "Menge",
+      "statusLabel": "Status",
+      "printLabelsButton": "Wareneingangsetiketten drucken",
+      "qualityListButton": "Qualitätsliste",
+      "labelsPrintedToast": "Die Wareneingangsetiketten wurden gedruckt.",
+      "labelsPrintFailed": "Die Etiketten konnten nicht gedruckt werden.",
+      "printTitleSuffix": "Wareneingangsetiketten"
+    },
+    "validation": { "customer": "Der Lieferant ist erforderlich.", "receiptNo": "Die Standardlieferschein-Belegnummer muss genau 15 Ziffern enthalten.", "eReceiptNo": "Die E-Lieferschein-/GIB-Nummer muss genau 15 alphanumerische Zeichen umfassen.", "date": "Das Lieferscheindatum ist erforderlich.", "operation": "Lager, Wareneingangsbereich und Belegserie sind erforderlich.", "lines": "Mindestens eine Bestandsposition ist erforderlich.", "stock": "Bestand und eine Menge größer als null sind erforderlich.", "serialQuantity": "Eine seriennummernverfolgte Position muss die Menge 1 haben.", "expiry": "Das Verfallsdatum darf nicht vor dem Herstellungsdatum liegen.", "incomplete": "Das Formular enthält fehlende oder ungültige Felder.", "submit": "Der Wareneingang konnte nicht erstellt werden.", "activeSeriesRequired": "Für diesen Vorgang muss eine aktive Belegserie ausgewählt werden.", "assigneesRequired": "Dem Auftrag muss mindestens ein Vorgangsbenutzer zugewiesen werden.", "qualityRulesCheckFailed": "Die Qualitätskontrollregeln konnten nicht überprüft werden.", "trackingPolicyLoadFailed": "Die Bestandsverfolgungsrichtlinie für {{code}} konnte nicht geladen werden.", "unitCodeMissing": "Für den Bestand {{code}} ist keine Maßeinheit definiert.", "lineLocationRequired": "Für die Position müssen ein Ziellager und ein Lagerplatz ausgewählt werden.", "serialFieldsConflict": "Das Einzelseriennummernfeld und das Massen-Seriennummernfeld können nicht gemeinsam verwendet werden.", "serialBatchCountMismatch": "Die Anzahl der Massen-Seriennummern ({{count}}) muss der Wareneingangsmenge ({{quantity}}) entsprechen.", "duplicateSerialInBatch": "Dieselbe Seriennummer darf in der Massen-Seriennummernliste nicht mehrfach verwendet werden.", "serialAlreadyUsed": "Eine der Seriennummern wurde in dieser Wareneingangsliste bereits verwendet.", "qualityRuleCheckFailedForStock": "Die Qualitätsregel konnte für {{code}} nicht überprüft werden." }
   },
   "list": {
     "eyebrowParent": "INBOUND_OP",

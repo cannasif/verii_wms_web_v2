@@ -257,8 +257,41 @@
     "operationType": "Operation Type", "direct": "Direct Receipt", "orderless": "Orderless Task", "postReceipt": "Post Receipt",
     "createTask": "Create Task", "success": "Goods receipt was created successfully.", "resultDirect": "Goods Receipt Posted",
     "resultOrderless": "Receipt Task Created", "linesText": "lines", "newRecord": "New Record",
+    "defaultTargetLocation": "Default target shelf", "selectActiveLocation": "Select active shelf",
+    "unitLabelWithValue": "Unit: {{unit}}", "unitUndefined": "Unit undefined", "selectStockFirst": "Select a stock first",
     "options": { "noLabel": "No Label", "preGenerate": "Pre-generate", "supplierLabel": "Supplier Label", "generateOnReceipt": "Generate on Receipt", "manual": "Manual", "barcode": "Barcode Scan", "preLabel": "Pre-generated Label" },
-    "validation": { "customer": "Supplier is required.", "receiptNo": "Standard dispatch receipt number must contain exactly 15 digits.", "eReceiptNo": "e-Dispatch / GIB number must be exactly 15 alphanumeric characters.", "date": "Dispatch date is required.", "operation": "Warehouse, receiving location and document series are required.", "lines": "At least one stock line is required.", "stock": "Stock and a quantity greater than zero are required.", "serialQuantity": "A serial-tracked line must have quantity 1.", "expiry": "Expiration date cannot precede manufacturing date.", "incomplete": "The form contains missing or invalid fields.", "submit": "Goods receipt could not be created." }
+    "bulkSerial": {
+      "title": "Bulk serial and barcode scanning",
+      "hint": "If quantity is 13, scan 13 different serials one by one with the reader. Each serial is sent to the API as a separate trackable line with quantity 1.",
+      "textareaAriaLabel": "Bulk serial barcodes",
+      "scannedLabel": "Scanned:",
+      "quantityLabel": "Quantity:",
+      "clearList": "Clear list"
+    },
+    "suggestions": {
+      "title": "Suggested putaway shelves",
+      "hintActive": "You can select one of the suggested shelves as the target shelf.",
+      "hintReceiving": "Only Receiving/Staging can be selected while awaiting quality decision.",
+      "remainingLabel": "Remaining:"
+    },
+    "table": { "warehouseLocation": "Warehouse / Shelf" },
+    "result": {
+      "eyebrow": "After goods receipt",
+      "qualitySentTitle": "Sent to quality",
+      "receiptCreatedTitle": "Dispatch note created",
+      "qualitySubtitle": "a dispatch note will be created after quality approval for items sent to quality.",
+      "receiptSubtitle": "dispatch note creation completed.",
+      "orderlessSubtitle": "Orderless goods receipt task was created and queued for processing.",
+      "documentNoLabel": "Document No",
+      "quantityLabel": "Quantity",
+      "statusLabel": "Status",
+      "printLabelsButton": "Print Receipt Labels",
+      "qualityListButton": "Quality list",
+      "labelsPrintedToast": "Goods receipt labels were printed.",
+      "labelsPrintFailed": "Labels could not be printed.",
+      "printTitleSuffix": "receipt labels"
+    },
+    "validation": { "customer": "Supplier is required.", "receiptNo": "Standard dispatch receipt number must contain exactly 15 digits.", "eReceiptNo": "e-Dispatch / GIB number must be exactly 15 alphanumeric characters.", "date": "Dispatch date is required.", "operation": "Warehouse, receiving location and document series are required.", "lines": "At least one stock line is required.", "stock": "Stock and a quantity greater than zero are required.", "serialQuantity": "A serial-tracked line must have quantity 1.", "expiry": "Expiration date cannot precede manufacturing date.", "incomplete": "The form contains missing or invalid fields.", "submit": "Goods receipt could not be created.", "activeSeriesRequired": "An active document series must be selected for this operation.", "assigneesRequired": "At least one operation user must be assigned to the task.", "qualityRulesCheckFailed": "Quality control rules could not be verified.", "trackingPolicyLoadFailed": "Stock tracking policy could not be loaded for {{code}}.", "unitCodeMissing": "The unit of measure is not defined for stock {{code}}.", "lineLocationRequired": "A target warehouse and shelf must be selected for the line.", "serialFieldsConflict": "The single serial field and the bulk serial field cannot be used together.", "serialBatchCountMismatch": "The bulk serial count ({{count}}) must equal the receipt quantity ({{quantity}}).", "duplicateSerialInBatch": "The same serial cannot be used more than once in the bulk serial list.", "serialAlreadyUsed": "One of the serials has already been used in this receipt list.", "qualityRuleCheckFailedForStock": "The quality rule could not be verified for {{code}}." }
   },
   "list": {
     "eyebrowParent": "INBOUND_OP",

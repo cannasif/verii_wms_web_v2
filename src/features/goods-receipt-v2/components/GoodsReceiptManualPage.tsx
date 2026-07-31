@@ -242,9 +242,9 @@ export function GoodsReceiptManualPage({
       return showError(isElectronic ? t('manual.validation.eReceiptNo') : t('manual.validation.receiptNo'));
     }
     if (step === 0 && !documentDate) return showError(t('manual.validation.date'));
-    if (step === 0 && !seriesId) return showError('Bu işlem için aktif bir belge serisi seçilmelidir.');
+    if (step === 0 && !seriesId) return showError(t('manual.validation.activeSeriesRequired'));
     if (step === 1 && (!warehouseId || !locationId)) return showError(t('manual.validation.operation'));
-    if (step === 1 && !direct && assignees.length === 0) return showError('Emir için en az bir operasyon kullanıcısı atanmalıdır.');
+    if (step === 1 && !direct && assignees.length === 0) return showError(t('manual.validation.assigneesRequired'));
     if (step === 2 && lines.length === 0) return showError(t('manual.validation.lines'));
     setError(null);
     setShowFieldErrors(false);
@@ -272,7 +272,7 @@ export function GoodsReceiptManualPage({
       } catch (cause) {
         showError(cause instanceof Error
           ? cause.message
-          : 'Kalite kontrol kuralları doğrulanamadı.');
+          : t('manual.validation.qualityRulesCheckFailed'));
         return;
       } finally {
         setQualityCheckBusy(false);
@@ -284,17 +284,17 @@ export function GoodsReceiptManualPage({
   const addLine = async (): Promise<void> => {
     const [stockId, stockCode, encodedName, encodedUnit] = split(stock); const numericQuantity = parseLocalizedNumber(quantity);
     if (!stockId || !Number.isFinite(numericQuantity) || numericQuantity <= 0) { showError(t('manual.validation.stock')); return; }
-    if (!trackingPolicy) { showError(`${stockCode} için stok takip politikası yüklenemedi.`); return; }
+    if (!trackingPolicy) { showError(t('manual.validation.trackingPolicyLoadFailed', { code: stockCode })); return; }
     const stockUnitCode = encodedUnit ? decodeURIComponent(encodedUnit) : '';
-    if (!stockUnitCode) { showError(`${stockCode} stok kartının ölçü birimi tanımlı değil.`); return; }
-    if (!warehouseId || !lineLocation) { showError('Kalem için hedef depo ve raf seçilmelidir.'); return; }
+    if (!stockUnitCode) { showError(t('manual.validation.unitCodeMissing', { code: stockCode })); return; }
+    if (!warehouseId || !lineLocation) { showError(t('manual.validation.lineLocationRequired')); return; }
     const serials = serialBatch.split(/[\n,;]+/).map((value) => value.trim()).filter(Boolean);
-    if (serialNo.trim() && serials.length) { showError('Tek seri alanı ile toplu seri alanı birlikte kullanılamaz.'); return; }
+    if (serialNo.trim() && serials.length) { showError(t('manual.validation.serialFieldsConflict')); return; }
     if (serialNo.trim() && numericQuantity !== 1) { showError(t('manual.validation.serialQuantity')); return; }
-    if (serials.length && (!Number.isInteger(numericQuantity) || serials.length !== numericQuantity)) { showError(`Toplu seri sayısı (${serials.length}) kabul miktarına (${numericQuantity}) eşit olmalıdır.`); return; }
+    if (serials.length && (!Number.isInteger(numericQuantity) || serials.length !== numericQuantity)) { showError(t('manual.validation.serialBatchCountMismatch', { count: serials.length, quantity: numericQuantity })); return; }
     const normalizedSerials = serials.map((value) => value.toLocaleUpperCase('tr-TR'));
-    if (new Set(normalizedSerials).size !== normalizedSerials.length) { showError('Toplu seri listesinde aynı seri birden fazla kullanılamaz.'); return; }
-    if (serials.some((value) => lines.some((line) => line.serialNo?.trim().toLocaleUpperCase('tr-TR') === value.toLocaleUpperCase('tr-TR')))) { showError('Serilerden biri bu kabul listesinde daha önce kullanılmış.'); return; }
+    if (new Set(normalizedSerials).size !== normalizedSerials.length) { showError(t('manual.validation.duplicateSerialInBatch')); return; }
+    if (serials.some((value) => lines.some((line) => line.serialNo?.trim().toLocaleUpperCase('tr-TR') === value.toLocaleUpperCase('tr-TR')))) { showError(t('manual.validation.serialAlreadyUsed')); return; }
     if (manufacturingDate && expirationDate && expirationDate < manufacturingDate) { showError(t('manual.validation.expiry')); return; }
     const trackingType = trackingPolicy.trackingType;
     const draftLine = {
@@ -329,7 +329,7 @@ export function GoodsReceiptManualPage({
       } catch (cause) {
         showError(cause instanceof Error
           ? cause.message
-          : `${stockCode} için kalite kuralı kontrol edilemedi.`);
+          : t('manual.validation.qualityRuleCheckFailedForStock', { code: stockCode }));
         return;
       } finally {
         setQualityCheckBusy(false);
@@ -381,7 +381,7 @@ export function GoodsReceiptManualPage({
   if (!moduleReady) return <div className="grid min-h-80 place-items-center"><Loader2 className="size-7 animate-spin text-cyan-500"/></div>;
   if (result) return <Result result={result} direct={direct} reset={() => { submitIdempotencyKey.current = crypto.randomUUID(); setResult(null); setLines([]); setStep(0); setReceiptNo(''); }} t={t}/>;
   return <section className={cn('wms-ops-form space-y-5', !embedded && 'mx-auto max-w-7xl')}>
-    <Stepper steps={steps} current={step}/>
+    <Stepper steps={steps} current={step} ariaLabel={t('createFlow.stepsAriaLabel')}/>
     {error && <div role="alert" className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm font-medium text-red-500">{error}</div>}
 
     {step === 0 && <Panel title={t('manual.document.title')} description={t('manual.document.description')} icon={<FileText/>}><div className="grid gap-5 lg:grid-cols-2">
@@ -438,7 +438,7 @@ export function GoodsReceiptManualPage({
         errorTarget="documentSeries"
         errorKeys="belge serisi|document series|aktif bir belge serisi"
       >
-        <AppDropdown value={seriesId} onValueChange={setSeriesId} options={series.map((x) => ({ value: String(x.id), label: `${x.code} · ${x.name}`, description: x.previewDocumentNumber }))} placeholder="Belge serisi seçin"/>
+        <AppDropdown value={seriesId} onValueChange={setSeriesId} options={series.map((x) => ({ value: String(x.id), label: `${x.code} · ${x.name}`, description: x.previewDocumentNumber }))} placeholder={t('createFlow.selectDocumentSeries')}/>
       </Field>
       <div
         className="lg:col-span-2 rounded-2xl border border-[var(--wms-app-border)] bg-black/[.025] p-4 dark:bg-white/[.025]"
@@ -450,28 +450,28 @@ export function GoodsReceiptManualPage({
 
     {step === 1 && <Panel title={t('manual.operation.title')} description={t('manual.operation.description')} icon={<Building2/>}><div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
       <Field label={t('manual.warehouse')} required><PagedAppDropdown queryKey={['gr-manual-warehouses', branchCode]} fetchPage={(request) => goodsReceiptV2Api.warehouses(request, branchCode)} toOption={(x) => ({ value: `${x.id}|${x.branchCode}|${x.warehouseCode}|${encodeURIComponent(x.warehouseName)}|${x.defaultGoodsReceiptLocationId ?? ''}`, label: `${x.warehouseCode} · ${x.warehouseName}` })} value={warehouse} onValueChange={setWarehouse} searchable/></Field>
-      <Field label="Varsayılan hedef raf" required><PagedAppDropdown queryKey={['gr-manual-locations', 'all-active', warehouseId]} fetchPage={(request) => goodsReceiptV2Api.locations(request, warehouseId)} toOption={(x) => ({ value: String(x.id), label: `${x.code} · ${x.name}`, description: x.locationType })} enabled={warehouseId > 0} dependencies={[warehouseId]} value={locationId} onValueChange={setLocationId} searchable placeholder="Aktif raf seçin"/></Field>
+      <Field label={t('manual.defaultTargetLocation')} required><PagedAppDropdown queryKey={['gr-manual-locations', 'all-active', warehouseId]} fetchPage={(request) => goodsReceiptV2Api.locations(request, warehouseId)} toOption={(x) => ({ value: String(x.id), label: `${x.code} · ${x.name}`, description: x.locationType })} enabled={warehouseId > 0} dependencies={[warehouseId]} value={locationId} onValueChange={setLocationId} searchable placeholder={t('manual.selectActiveLocation')}/></Field>
       <Field label={t('manual.labelStrategy')}><AppDropdown value={labelStrategy} onValueChange={(value)=>{setLabelStrategy(value);if(direct)setExecutionMode(value==='SupplierLabel'?'SupplierLabel':'Manual')}} options={[{value:'None',label:t('manual.options.noLabel')},...(!direct?[{value:'PreGenerate',label:t('manual.options.preGenerate')}]:[]),{value:'SupplierLabel',label:t('manual.options.supplierLabel')},{value:'GenerateOnReceipt',label:t('manual.options.generateOnReceipt')}]}/></Field>
       {direct && <Field label={t('manual.executionMode')}><AppDropdown value={executionMode} onValueChange={setExecutionMode} options={[{value:'Manual',label:t('manual.options.manual')},{value:'BarcodeScan',label:t('manual.options.barcode')},{value:'SupplierLabel',label:t('manual.options.supplierLabel')}]}/></Field>}
-    </div>{!direct&&<section className="mt-5 rounded-xl border border-[var(--wms-app-border)] p-4"><h3 className="font-bold">Emir sorumluları <span className="text-red-500">*</span></h3><p className="mb-3 text-xs text-slate-500">Siparişsiz emir seçilen kullanıcılara atanır ve “Bana Atanan Emirler” kuyruğuna düşer.</p><PagedAppDropdown queryKey={['gr-manual-active-users']} fetchPage={goodsReceiptV2Api.activeUsersPaged} toOption={user=>({value:encodeUser(user),label:userLabel(user),description:`${user.username} · ${user.email}`,disabled:assignees.some(selected=>selected.id===user.id)})} value={null} onValueChange={value=>{const user=decodeUser(value);setAssignees(current=>current.some(x=>x.id===user.id)?current:[...current,user])}} placeholder="Operasyon kullanıcısı ekle" searchable minSearchLength={2}/><div className="mt-3 flex flex-wrap gap-2">{assignees.map(user=><span key={user.id} className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 text-sm"><strong>{userLabel(user)}</strong><button type="button" onClick={()=>setAssignees(current=>current.filter(x=>x.id!==user.id))} className="text-red-500">×</button></span>)}</div></section>}</Panel>}
+    </div>{!direct&&<section className="mt-5 rounded-xl border border-[var(--wms-app-border)] p-4"><h3 className="font-bold">{t('createFlow.assignees.title')} <span className="text-red-500">*</span></h3><p className="mb-3 text-xs text-slate-500">{t('createFlow.assignees.hint')}</p><PagedAppDropdown queryKey={['gr-manual-active-users']} fetchPage={goodsReceiptV2Api.activeUsersPaged} toOption={user=>({value:encodeUser(user),label:userLabel(user),description:`${user.username} · ${user.email}`,disabled:assignees.some(selected=>selected.id===user.id)})} value={null} onValueChange={value=>{const user=decodeUser(value);setAssignees(current=>current.some(x=>x.id===user.id)?current:[...current,user])}} placeholder={t('createFlow.assignees.addPlaceholder')} searchable minSearchLength={2}/><div className="mt-3 flex flex-wrap gap-2">{assignees.map(user=><span key={user.id} className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 text-sm"><strong>{userLabel(user)}</strong><button type="button" onClick={()=>setAssignees(current=>current.filter(x=>x.id!==user.id))} className="text-red-500">×</button></span>)}</div></section>}</Panel>}
 
     {step === 2 && <Panel title={t('manual.lines.title')} description={t('manual.lines.description')} icon={<ScanBarcode/>}><div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-      <Field label={t('manual.stock')} required><PagedAppDropdown queryKey={['gr-manual-stocks', branchCode]} fetchPage={(request) => goodsReceiptV2Api.stocks(request, branchCode)} toOption={(x) => ({ value: `${x.id}|${x.erpStockCode}|${encodeURIComponent(x.stockName || '')}|${encodeURIComponent(x.unitCode || '')}`, label: `${x.erpStockCode} · ${x.stockName || ''}`, description: x.unitCode ? `Birim: ${x.unitCode}` : 'Birim tanımsız' })} value={stock} onValueChange={(value) => { setStock(value); setUnitCode(decodeURIComponent(split(value)[3] || '')); }} searchable minSearchLength={2}/></Field>
+      <Field label={t('manual.stock')} required><PagedAppDropdown queryKey={['gr-manual-stocks', branchCode]} fetchPage={(request) => goodsReceiptV2Api.stocks(request, branchCode)} toOption={(x) => ({ value: `${x.id}|${x.erpStockCode}|${encodeURIComponent(x.stockName || '')}|${encodeURIComponent(x.unitCode || '')}`, label: `${x.erpStockCode} · ${x.stockName || ''}`, description: x.unitCode ? t('manual.unitLabelWithValue', { unit: x.unitCode }) : t('manual.unitUndefined') })} value={stock} onValueChange={(value) => { setStock(value); setUnitCode(decodeURIComponent(split(value)[3] || '')); }} searchable minSearchLength={2}/></Field>
       {stock && <div className="md:col-span-2 xl:col-span-4"><StockTrackingPolicyField policy={trackingPolicy ?? undefined} loading={trackingPolicyBusy} compact /></div>}
       <Field label={t('manual.yap')}><PagedAppDropdown queryKey={['gr-manual-yaps', branchCode]} fetchPage={(request) => goodsReceiptV2Api.yapCodes(request, branchCode)} toOption={(x) => ({ value: `${x.id}|${x.configurationCode}`, label: `${x.configurationCode} · ${x.description || ''}` })} value={yap} onValueChange={setYap} searchable minSearchLength={1}/></Field>
-      <Field label={t('manual.quantity')} required errorTarget="quantity" errorKeys="stok ve sıfırdan|seri takipli satırın miktarı|toplu seri sayısı|quantity"><AppInput className="font-mono" inputMode="decimal" value={quantity} onChange={(e) => setQuantity(e.target.value)}/></Field><Field label={t('manual.unit')}><div className={cn(OPS_FIELD_CLASS, 'flex items-center font-bold', unitCode ? 'text-cyan-600' : 'text-amber-600')}>{unitCode || 'Önce stok seçin'}</div></Field>
-      <Field label={(allowAnyActiveLocation || selectedRequiresQuality === false) ? 'Hedef raf' : 'Kabul rafı (Receiving / Staging)'} required errorTarget="lineLocation" errorKeys="hedef depo ve raf|kabul rafı|target warehouse"><PagedAppDropdown queryKey={['gr-manual-line-locations', (allowAnyActiveLocation || selectedRequiresQuality === false) ? 'all-active' : 'receiving', warehouseId]} fetchPage={(request) => ((allowAnyActiveLocation || selectedRequiresQuality === false) ? goodsReceiptV2Api.locations : goodsReceiptV2Api.receivingLocations)(request, warehouseId)} toOption={(x) => ({ value: `${x.id}|${x.code}`, label: `${x.code} · ${x.name}`, description: x.locationType })} enabled={warehouseId > 0} dependencies={[allowAnyActiveLocation, selectedRequiresQuality, warehouseId]} value={lineLocation} onValueChange={setLineLocation} searchable/></Field>
+      <Field label={t('manual.quantity')} required errorTarget="quantity" errorKeys="stok ve sıfırdan|seri takipli satırın miktarı|toplu seri sayısı|quantity"><AppInput className="font-mono" inputMode="decimal" value={quantity} onChange={(e) => setQuantity(e.target.value)}/></Field><Field label={t('manual.unit')}><div className={cn(OPS_FIELD_CLASS, 'input flex items-center overflow-hidden font-bold text-ellipsis whitespace-nowrap', unitCode ? 'text-cyan-600' : 'text-amber-600')}>{unitCode || t('manual.selectStockFirst')}</div></Field>
+      <Field label={(allowAnyActiveLocation || selectedRequiresQuality === false) ? t('createFlow.entryRow.activeLocationLookupTitle') : t('createFlow.entryRow.receivingLookupTitle')} required errorTarget="lineLocation" errorKeys="hedef depo ve raf|kabul rafı|target warehouse"><PagedAppDropdown queryKey={['gr-manual-line-locations', (allowAnyActiveLocation || selectedRequiresQuality === false) ? 'all-active' : 'receiving', warehouseId]} fetchPage={(request) => ((allowAnyActiveLocation || selectedRequiresQuality === false) ? goodsReceiptV2Api.locations : goodsReceiptV2Api.receivingLocations)(request, warehouseId)} toOption={(x) => ({ value: `${x.id}|${x.code}`, label: `${x.code} · ${x.name}`, description: x.locationType })} enabled={warehouseId > 0} dependencies={[allowAnyActiveLocation, selectedRequiresQuality, warehouseId]} value={lineLocation} onValueChange={setLineLocation} searchable/></Field>
       <Field label={t('manual.lot')} errorTarget="lot" errorKeys="lot numarası|lot zorunludur"><AppInput maxLength={100} value={lotNo} onChange={(e) => setLotNo(e.target.value)}/></Field><Field label={t('manual.serial')} errorTarget="serial" errorKeys="seri numarası|seri takipli|toplu seri|tek seri alanı|serial"><AppInput maxLength={100} value={serialNo} onChange={(e) => setSerialNo(e.target.value)}/></Field>
       <Field label={t('manual.manufacturingDate')}><AppDateInput value={manufacturingDate} onChange={(e) => setManufacturingDate(e.target.value)}/></Field><Field label={t('manual.expirationDate')}><AppDateInput value={expirationDate} onChange={(e) => setExpirationDate(e.target.value)}/></Field>
       {direct && <Field label={t('manual.scannedBarcode')}><AppInput maxLength={250} value={scannedBarcode} onChange={(e) => setScannedBarcode(e.target.value)}/></Field>}
       <div className="flex items-end"><OpsActionButton type="button" variant="primary" disabled={qualityCheckBusy} onClick={() => void addLine()} className="w-full">{qualityCheckBusy?<Loader2 className="size-3.5 shrink-0 animate-spin"/>:<Plus className="size-3.5 shrink-0"/>}{t('manual.addLine')}</OpsActionButton></div>
-    </div><section className="mt-4 rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-4"><div className="flex items-start gap-3"><ScanBarcode className="mt-0.5 size-5 shrink-0 text-cyan-500"/><div><h3 className="font-bold">Toplu seri ve barkod okutma</h3><p className="text-xs leading-5 text-slate-500">Miktar 13 ise okuyucuyla 13 farklı seriyi satır satır okutun. Her seri API’ye 1 miktarlı ayrı izlenebilir kalem olarak gönderilir.</p></div></div><textarea className={cn(OPS_FIELD_CLASS, 'mt-3 min-h-28 w-full font-mono')} value={serialBatch} onChange={(event) => setSerialBatch(event.target.value)} placeholder={'SN-000001\\nSN-000002\\nSN-000003'} aria-label="Toplu seri barkodları"/><div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs"><span>Okutulan: <strong>{serialBatch.split(/[\n,;]+/).map((value) => value.trim()).filter(Boolean).length}</strong> / Miktar: <strong>{Number(quantity) || 0}</strong></span><button type="button" onClick={() => setSerialBatch('')} disabled={!serialBatch} className="rounded-lg border px-3 py-1.5 font-semibold disabled:opacity-40">Listeyi temizle</button></div></section>
-      {(suggestionsBusy || locationSuggestions.length > 0) && <div className="mt-4 rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3"><div className="mb-2 flex items-center gap-2 text-sm font-bold text-cyan-500">{suggestionsBusy && <Loader2 className="size-4 animate-spin"/>}Önerilen putaway rafları</div><p className="mb-2 text-xs text-slate-500">{(allowAnyActiveLocation || selectedRequiresQuality === false) ? 'Önerilen raflardan birini hedef raf olarak seçebilirsiniz.' : 'Kalite kararı beklenirken yalnızca Receiving/Staging seçilebilir.'}</p><div className="flex flex-wrap gap-2">{locationSuggestions.map((item, index) => <div key={item.id} className="rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] px-3 py-2 text-left text-xs"><strong>{index + 1}. {item.code}</strong><span className="ml-2 text-slate-500">{item.reason}</span>{item.remainingCapacity != null && <span className="ml-2 font-mono text-slate-500">Kalan: {item.remainingCapacity}</span>}</div>)}</div></div>}
+    </div><section className="mt-4 rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-4"><div className="flex items-start gap-3"><ScanBarcode className="mt-0.5 size-5 shrink-0 text-cyan-500"/><div><h3 className="font-bold">{t('manual.bulkSerial.title')}</h3><p className="text-xs leading-5 text-slate-500">{t('manual.bulkSerial.hint')}</p></div></div><textarea className={cn(OPS_FIELD_CLASS, 'mt-3 min-h-28 w-full font-mono')} value={serialBatch} onChange={(event) => setSerialBatch(event.target.value)} placeholder={'SN-000001\\nSN-000002\\nSN-000003'} aria-label={t('manual.bulkSerial.textareaAriaLabel')}/><div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs"><span>{t('manual.bulkSerial.scannedLabel')} <strong>{serialBatch.split(/[\n,;]+/).map((value) => value.trim()).filter(Boolean).length}</strong> / {t('manual.bulkSerial.quantityLabel')} <strong>{Number(quantity) || 0}</strong></span><button type="button" onClick={() => setSerialBatch('')} disabled={!serialBatch} className="rounded-lg border px-3 py-1.5 font-semibold disabled:opacity-40">{t('manual.bulkSerial.clearList')}</button></div></section>
+      {(suggestionsBusy || locationSuggestions.length > 0) && <div className="mt-4 rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3"><div className="mb-2 flex items-center gap-2 text-sm font-bold text-cyan-500">{suggestionsBusy && <Loader2 className="size-4 animate-spin"/>}{t('manual.suggestions.title')}</div><p className="mb-2 text-xs text-slate-500">{(allowAnyActiveLocation || selectedRequiresQuality === false) ? t('manual.suggestions.hintActive') : t('manual.suggestions.hintReceiving')}</p><div className="flex flex-wrap gap-2">{locationSuggestions.map((item, index) => <div key={item.id} className="rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] px-3 py-2 text-left text-xs"><strong>{index + 1}. {item.code}</strong><span className="ml-2 text-slate-500">{item.reason}</span>{item.remainingCapacity != null && <span className="ml-2 font-mono text-slate-500">{t('manual.suggestions.remainingLabel')} {item.remainingCapacity}</span>}</div>)}</div></div>}
       <LineTable lines={lines} branchCode={branchCode} remove={(id) => setLines((current) => current.filter((line) => line.localId !== id))} t={t}/></Panel>}
 
-    {step === 3 && <Panel title={t('manual.review.title')} description={t('manual.review.description')} icon={<ClipboardCheck/>}><div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4"><Summary label={t('manual.customer')} value={`${decodeURIComponent(split(customer)[3] || '') || '—'} · ${split(customer)[2] || '—'}`}/><Summary label={t('manual.receiptNo')} value={receiptNo}/><Summary label={t('manual.documentType')} value={isElectronic ? t('manual.eReceipt') : t('manual.normalReceipt')}/><Summary label={t('manual.documentDate')} value={documentDate}/><Summary label={t('manual.warehouse')} value={`${split(warehouse)[2] || '—'} · ${decodeURIComponent(split(warehouse)[3] || '')}`}/><Summary label={t('manual.lineCount')} value={String(lines.length)}/><Summary label={t('manual.totalQuantity')} value={String(total)}/><Summary label={t('manual.operationType')} value={direct ? t('manual.direct') : t('manual.orderless')}/>{!direct&&<Summary label="Emir sorumluları" value={assignees.map(userLabel).join(', ')||'—'}/>}</div><Field label={t('manual.description')}><textarea className={cn(OPS_FIELD_CLASS, 'mt-2 min-h-24 w-full')} maxLength={1000} value={description} onChange={(e) => setDescription(e.target.value)}/></Field></Panel>}
+    {step === 3 && <Panel title={t('manual.review.title')} description={t('manual.review.description')} icon={<ClipboardCheck/>}><div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4"><Summary label={t('manual.customer')} value={`${decodeURIComponent(split(customer)[3] || '') || '—'} · ${split(customer)[2] || '—'}`}/><Summary label={t('manual.receiptNo')} value={receiptNo}/><Summary label={t('manual.documentType')} value={isElectronic ? t('manual.eReceipt') : t('manual.normalReceipt')}/><Summary label={t('manual.documentDate')} value={documentDate}/><Summary label={t('manual.warehouse')} value={`${split(warehouse)[2] || '—'} · ${decodeURIComponent(split(warehouse)[3] || '')}`}/><Summary label={t('manual.lineCount')} value={String(lines.length)}/><Summary label={t('manual.totalQuantity')} value={String(total)}/><Summary label={t('manual.operationType')} value={direct ? t('manual.direct') : t('manual.orderless')}/>{!direct&&<Summary label={t('createFlow.assignees.title')} value={assignees.map(userLabel).join(', ')||'—'}/>}</div><Field label={t('manual.description')}><textarea className={cn(OPS_FIELD_CLASS, 'mt-2 min-h-24 w-full')} maxLength={1000} value={description} onChange={(e) => setDescription(e.target.value)}/></Field></Panel>}
 
-    <footer className="sticky bottom-3 z-20 flex items-center justify-between rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)]/95 p-3 shadow-xl backdrop-blur"><OpsActionButton type="button" variant="secondary" disabled={step === 0 || busy || qualityCheckBusy} onClick={() => { setError(null); setStep((current) => Math.max(0, current - 1)); }}><ChevronLeft className="size-3.5 shrink-0"/>{t('back')}</OpsActionButton><div className="hidden text-xs text-slate-500 sm:block">{steps[step]?.label}</div>{step < 3 ? <OpsActionButton type="button" variant="primary" disabled={qualityCheckBusy} onClick={() => void next()}>{qualityCheckBusy?<Loader2 className="size-3.5 shrink-0 animate-spin"/>:null}{t('continue')}<ChevronRight className="size-3.5 shrink-0"/></OpsActionButton> : <OpsActionButton type="button" variant="primary" disabled={busy} onClick={() => void submit()}>{busy ? <Loader2 className="size-3.5 shrink-0 animate-spin"/> : <CheckCircle2 className="size-3.5 shrink-0"/>}{direct ? (lines.some((line)=>line.requireQualityControl)?'Kaliteye Gönder':'İrsaliye Oluştur') : t('manual.createTask')}</OpsActionButton>}</footer>
+    <footer className="sticky bottom-3 z-20 flex items-center justify-between rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)]/95 p-3 shadow-xl backdrop-blur"><OpsActionButton type="button" variant="secondary" disabled={step === 0 || busy || qualityCheckBusy} onClick={() => { setError(null); setStep((current) => Math.max(0, current - 1)); }}><ChevronLeft className="size-3.5 shrink-0"/>{t('back')}</OpsActionButton><div className="hidden text-xs text-slate-500 sm:block">{steps[step]?.label}</div>{step < 3 ? <OpsActionButton type="button" variant="primary" disabled={qualityCheckBusy} onClick={() => void next()}>{qualityCheckBusy?<Loader2 className="size-3.5 shrink-0 animate-spin"/>:null}{t('continue')}<ChevronRight className="size-3.5 shrink-0"/></OpsActionButton> : <OpsActionButton type="button" variant="primary" disabled={busy} onClick={() => void submit()}>{busy ? <Loader2 className="size-3.5 shrink-0 animate-spin"/> : <CheckCircle2 className="size-3.5 shrink-0"/>}{direct ? (lines.some((line)=>line.requireQualityControl)?t('createFlow.sendToQuality'):t('createFlow.createDirect')) : t('manual.createTask')}</OpsActionButton>}</footer>
   </section>;
 }
 
@@ -579,9 +579,9 @@ export function GoodsReceiptDirectPage(): ReactElement {
     </GoodsReceiptOpsPageShell>
   );
 }
-function Stepper({ steps, current }: { steps: Array<{label:string;icon:typeof FileText}>; current:number }): ReactElement {
+function Stepper({ steps, current, ariaLabel }: { steps: Array<{label:string;icon:typeof FileText}>; current:number; ariaLabel:string }): ReactElement {
   return (
-    <nav className="wms-ops-create-steps wms-ops-create-steps--four" aria-label="Oluşturma adımları">
+    <nav className="wms-ops-create-steps wms-ops-create-steps--four" aria-label={ariaLabel}>
       {steps.map(({ label, icon: Icon }, index) => {
         const active = index === current;
         const done = index < current;
@@ -612,7 +612,7 @@ function Stepper({ steps, current }: { steps: Array<{label:string;icon:typeof Fi
 function Panel({title,description,icon,children}:{title:string;description:string;icon:ReactElement;children:ReactNode}):ReactElement{return <section className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] shadow-sm"><header className="flex gap-3 border-b border-[var(--wms-app-border)] p-5"><span className="text-cyan-500">{icon}</span><div><h2 className="text-lg font-bold">{title}</h2><p className="text-sm text-slate-500">{description}</p></div></header><div className="p-5">{children}</div></section>;}
 function Field({label,required,children,errorTarget,errorKeys}:{label:string;required?:boolean;children:ReactNode;errorTarget?:string;errorKeys?:string}):ReactElement{return <label className="block space-y-1.5 text-sm" data-wms-error-target={errorTarget || undefined} data-wms-error-keys={errorKeys || undefined}><span className="font-semibold">{label}{required&&<span className="text-red-500"> *</span>}</span>{children}</label>;}
 function Summary({label,value}:{label:string;value:string}):ReactElement{return <div className="rounded-xl border border-[var(--wms-app-border)] bg-black/[.025] p-4 dark:bg-white/[.025]"><div className="text-xs text-slate-500">{label}</div><strong className="mt-1 block break-words text-sm">{value}</strong></div>;}
-function LineTable({lines,branchCode,remove,t}:{lines:ManualReceiptLine[];branchCode:string;remove:(id:string)=>void;t:(key:string)=>string}):ReactElement{return <div className="mt-5 overflow-x-auto rounded-xl border border-[var(--wms-app-border)]"><table className="w-full text-sm"><thead className="bg-black/5 text-left dark:bg-white/5"><tr><th className="p-3">{t('manual.stock')}</th><th className="p-3">{t('manual.yap')}</th><th className="p-3">Depo / Raf</th><th className="p-3">{t('manual.lot')} / {t('manual.serial')}</th><th className="p-3 text-right">{t('manual.quantity')}</th><th className="p-3">{t('manual.actions')}</th></tr></thead><tbody>{lines.map((line)=><tr key={line.localId} className="border-t border-[var(--wms-app-border)]"><td className="p-3"><StockIdentityCell stockId={line.stockId} stockCode={line.stockCode} stockName={line.stockName} branchCode={branchCode} /></td><td className="p-3">{line.yapCode||'—'}</td><td className="p-3"><strong>{line.targetWarehouseCode ?? '—'}</strong><div className="text-xs text-cyan-500">{line.receivingLocationCode}</div></td><td className="p-3">{line.lotNo||'—'} / {line.serialNo||'—'}</td><td className="p-3 text-right font-mono">{line.quantity} {line.unitCode}</td><td className="p-3"><button aria-label={t('manual.removeLine')} onClick={()=>remove(line.localId)} className="rounded-lg p-2 text-red-500 hover:bg-red-500/10"><Trash2 className="size-4"/></button></td></tr>)}</tbody></table>{lines.length===0&&<p className="p-6 text-center text-sm text-slate-500">{t('manual.noLines')}</p>}</div>;}
+function LineTable({lines,branchCode,remove,t}:{lines:ManualReceiptLine[];branchCode:string;remove:(id:string)=>void;t:(key:string)=>string}):ReactElement{return <div className="mt-5 max-w-full overflow-x-auto rounded-xl border border-[var(--wms-app-border)]"><table className="w-full min-w-[42rem] text-sm"><thead className="bg-black/5 text-left dark:bg-white/5"><tr><th className="p-3">{t('manual.stock')}</th><th className="p-3">{t('manual.yap')}</th><th className="p-3">{t('manual.table.warehouseLocation')}</th><th className="p-3">{t('manual.lot')} / {t('manual.serial')}</th><th className="p-3 text-right">{t('manual.quantity')}</th><th className="p-3">{t('manual.actions')}</th></tr></thead><tbody>{lines.map((line)=><tr key={line.localId} className="border-t border-[var(--wms-app-border)]"><td className="p-3"><StockIdentityCell stockId={line.stockId} stockCode={line.stockCode} stockName={line.stockName} branchCode={branchCode} /></td><td className="p-3">{line.yapCode||'—'}</td><td className="p-3"><strong>{line.targetWarehouseCode ?? '—'}</strong><div className="text-xs text-cyan-500">{line.receivingLocationCode}</div></td><td className="p-3">{line.lotNo||'—'} / {line.serialNo||'—'}</td><td className="p-3 text-right font-mono">{line.quantity} {line.unitCode}</td><td className="p-3"><button aria-label={t('manual.removeLine')} onClick={()=>remove(line.localId)} className="rounded-lg p-2 text-red-500 hover:bg-red-500/10"><Trash2 className="size-4"/></button></td></tr>)}</tbody></table>{lines.length===0&&<p className="p-6 text-center text-sm text-slate-500">{t('manual.noLines')}</p>}</div>;}
 function Result({result,direct,reset,t}:{result:ManualGoodsReceiptResult;direct:boolean;reset:()=>void;t:(key:string)=>string}):ReactElement{
   const navigate = useNavigate();
   const [printing,setPrinting]=useState(false);
@@ -621,11 +621,11 @@ function Result({result,direct,reset,t}:{result:ManualGoodsReceiptResult;direct:
     setPrinting(true);
     try{
       const labels=await goodsReceiptV2Api.receiptLabels(result.id);
-      printReceiptLabels(labels,`${result.documentNo} kabul etiketleri`);
+      printReceiptLabels(labels,`${result.documentNo} ${t('manual.result.printTitleSuffix')}`);
       const unprinted=labels.filter(label=>label.printCount===0).map(label=>label.id);
       if(unprinted.length)await goodsReceiptV2Api.markLabelsPrinted(unprinted);
-      toast.success('Mal kabulde oluşan etiketler yazdırıldı.');
-    }catch(error){toast.error(error instanceof Error?error.message:'Etiketler yazdırılamadı.');}
+      toast.success(t('manual.result.labelsPrintedToast'));
+    }catch(error){toast.error(error instanceof Error?error.message:t('manual.result.labelsPrintFailed'));}
     finally{setPrinting(false);}
   };
   return (
@@ -635,21 +635,21 @@ function Result({result,direct,reset,t}:{result:ManualGoodsReceiptResult;direct:
           <CheckCircle2 className="size-9"/>
         </div>
         <p className="mt-5 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-300">
-          Mal kabul sonrası
+          {t('manual.result.eyebrow')}
         </p>
         <h1 className="mt-2 text-2xl font-black tracking-tight">
-          {direct ? (hasQuality ? 'Kaliteye gönderildi' : 'İrsaliye oluştu') : t('manual.resultOrderless')}
+          {direct ? (hasQuality ? t('manual.result.qualitySentTitle') : t('manual.result.receiptCreatedTitle')) : t('manual.resultOrderless')}
         </h1>
         <p className="mx-auto mt-3 max-w-md text-sm text-slate-600 dark:text-slate-300">
           {direct
             ? (hasQuality
-              ? 'Kaliteye gönderilen ürünler için kalite onayından sonra irsaliye oluşturulacaktır.'
-              : 'İrsaliye oluşturma işlemi tamamlandı.')
-            : 'Siparişsiz mal kabul emri oluşturuldu ve operasyon kuyruğuna düştü.'}
+              ? t('manual.result.qualitySubtitle')
+              : t('manual.result.receiptSubtitle'))
+            : t('manual.result.orderlessSubtitle')}
         </p>
         <div className="mx-auto mt-5 inline-flex rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-5 py-3">
           <div>
-            <div className="text-[11px] uppercase tracking-wider text-slate-500">Belge No</div>
+            <div className="text-[11px] uppercase tracking-wider text-slate-500">{t('manual.result.documentNoLabel')}</div>
             <div className="mt-1 font-mono text-xl font-bold text-emerald-700 dark:text-emerald-300">{result.documentNo}</div>
           </div>
         </div>
@@ -660,13 +660,13 @@ function Result({result,direct,reset,t}:{result:ManualGoodsReceiptResult;direct:
           <strong className="mt-1 block text-lg">{result.lineCount}</strong>
         </div>
         <div className="rounded-xl border border-[var(--wms-app-border)] p-3 text-center">
-          <div className="text-xs text-slate-500">Miktar</div>
+          <div className="text-xs text-slate-500">{t('manual.result.quantityLabel')}</div>
           <strong className="mt-1 block text-lg">{result.quantity}</strong>
         </div>
         <div className="rounded-xl border border-[var(--wms-app-border)] p-3 text-center">
-          <div className="text-xs text-slate-500">Durum</div>
+          <div className="text-xs text-slate-500">{t('manual.result.statusLabel')}</div>
           <strong className="mt-1 block text-sm">
-            {hasQuality ? 'Kaliteye gönderildi' : 'İrsaliye oluştu'}
+            {hasQuality ? t('manual.result.qualitySentTitle') : t('manual.result.receiptCreatedTitle')}
           </strong>
         </div>
       </div>
@@ -674,7 +674,7 @@ function Result({result,direct,reset,t}:{result:ManualGoodsReceiptResult;direct:
         {direct && (result.generatedLabelIds?.length ?? 0) > 0 && (
           <button disabled={printing} onClick={()=>void printGenerated()} className="inline-flex items-center gap-2 rounded-xl border border-violet-500/40 px-5 py-2.5 font-semibold text-violet-500 disabled:opacity-40">
             {printing?<Loader2 className="size-4 animate-spin"/>:<Printer className="size-4"/>}
-            Kabul Etiketlerini Yazdır
+            {t('manual.result.printLabelsButton')}
           </button>
         )}
         {direct && !hasQuality ? (
@@ -687,7 +687,7 @@ function Result({result,direct,reset,t}:{result:ManualGoodsReceiptResult;direct:
             onClick={() => navigate('/warehouse/quality/inspections')}
             className="rounded-xl border border-emerald-500/40 px-5 py-2.5 font-semibold text-emerald-700 dark:text-emerald-300"
           >
-            Kalite listesi
+            {t('manual.result.qualityListButton')}
           </button>
         ) : null}
       </div>

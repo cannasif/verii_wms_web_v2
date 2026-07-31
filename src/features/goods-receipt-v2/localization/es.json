@@ -257,8 +257,41 @@
     "operationType": "Tipo de operación", "direct": "Recepción directa", "orderless": "Tarea sin pedido", "postReceipt": "Registrar recepción",
     "createTask": "Crear tarea", "success": "La recepción de mercancía se creó correctamente.", "resultDirect": "Recepción de mercancía registrada",
     "resultOrderless": "Tarea de recepción creada", "linesText": "líneas", "newRecord": "Nuevo registro",
+    "defaultTargetLocation": "Estantería de destino predeterminada", "selectActiveLocation": "Seleccionar estantería activa",
+    "unitLabelWithValue": "Unidad: {{unit}}", "unitUndefined": "Unidad no definida", "selectStockFirst": "Seleccione primero un stock",
     "options": { "noLabel": "Sin etiqueta", "preGenerate": "Generar previamente", "supplierLabel": "Etiqueta del proveedor", "generateOnReceipt": "Generar en la recepción", "manual": "Manual", "barcode": "Escaneo de código de barras", "preLabel": "Etiqueta pregenerada" },
-    "validation": { "customer": "El proveedor es obligatorio.", "receiptNo": "El número de recepción del albarán estándar debe contener exactamente 15 dígitos.", "eReceiptNo": "El número de albarán electrónico / GIB debe tener exactamente 15 caracteres alfanuméricos.", "date": "La fecha del albarán es obligatoria.", "operation": "Son obligatorios el almacén, la ubicación de recepción y la serie de documento.", "lines": "Se requiere al menos una línea de stock.", "stock": "Son obligatorios el stock y una cantidad mayor que cero.", "serialQuantity": "Una línea con seguimiento por serie debe tener cantidad 1.", "expiry": "La fecha de caducidad no puede ser anterior a la fecha de fabricación.", "incomplete": "El formulario contiene campos incompletos o no válidos.", "submit": "No se pudo crear la recepción de mercancía." }
+    "bulkSerial": {
+      "title": "Escaneo masivo de series y códigos de barras",
+      "hint": "Si la cantidad es 13, escanee 13 series diferentes una por una con el lector. Cada serie se envía a la API como una línea trazable independiente con cantidad 1.",
+      "textareaAriaLabel": "Códigos de barras de series masivas",
+      "scannedLabel": "Escaneado:",
+      "quantityLabel": "Cantidad:",
+      "clearList": "Borrar lista"
+    },
+    "suggestions": {
+      "title": "Estanterías de ubicación sugeridas",
+      "hintActive": "Puede seleccionar una de las estanterías sugeridas como estantería de destino.",
+      "hintReceiving": "Solo se puede seleccionar Receiving/Staging mientras se espera la decisión de calidad.",
+      "remainingLabel": "Restante:"
+    },
+    "table": { "warehouseLocation": "Almacén / Estantería" },
+    "result": {
+      "eyebrow": "Después de la recepción de mercancía",
+      "qualitySentTitle": "Enviado a calidad",
+      "receiptCreatedTitle": "Albarán creado",
+      "qualitySubtitle": "se creará un albarán tras la aprobación de calidad para los artículos enviados a calidad.",
+      "receiptSubtitle": "la creación del albarán se ha completado.",
+      "orderlessSubtitle": "Se creó la tarea de recepción de mercancía sin pedido y quedó en cola para su procesamiento.",
+      "documentNoLabel": "N.º de documento",
+      "quantityLabel": "Cantidad",
+      "statusLabel": "Estado",
+      "printLabelsButton": "Imprimir etiquetas de recepción",
+      "qualityListButton": "Lista de calidad",
+      "labelsPrintedToast": "Se imprimieron las etiquetas de la recepción de mercancía.",
+      "labelsPrintFailed": "No se pudieron imprimir las etiquetas.",
+      "printTitleSuffix": "etiquetas de recepción"
+    },
+    "validation": { "customer": "El proveedor es obligatorio.", "receiptNo": "El número de recepción del albarán estándar debe contener exactamente 15 dígitos.", "eReceiptNo": "El número de albarán electrónico / GIB debe tener exactamente 15 caracteres alfanuméricos.", "date": "La fecha del albarán es obligatoria.", "operation": "Son obligatorios el almacén, la ubicación de recepción y la serie de documento.", "lines": "Se requiere al menos una línea de stock.", "stock": "Son obligatorios el stock y una cantidad mayor que cero.", "serialQuantity": "Una línea con seguimiento por serie debe tener cantidad 1.", "expiry": "La fecha de caducidad no puede ser anterior a la fecha de fabricación.", "incomplete": "El formulario contiene campos incompletos o no válidos.", "submit": "No se pudo crear la recepción de mercancía.", "activeSeriesRequired": "Debe seleccionarse una serie de documento activa para esta operación.", "assigneesRequired": "Debe asignarse al menos un usuario de operación a la tarea.", "qualityRulesCheckFailed": "No se pudieron verificar las reglas de control de calidad.", "trackingPolicyLoadFailed": "No se pudo cargar la política de seguimiento de stock para {{code}}.", "unitCodeMissing": "La unidad de medida no está definida para el stock {{code}}.", "lineLocationRequired": "Debe seleccionarse un almacén y una estantería de destino para la línea.", "serialFieldsConflict": "El campo de serie única y el campo de series masivas no se pueden usar juntos.", "serialBatchCountMismatch": "El número de series masivas ({{count}}) debe ser igual a la cantidad de recepción ({{quantity}}).", "duplicateSerialInBatch": "La misma serie no se puede usar más de una vez en la lista de series masivas.", "serialAlreadyUsed": "Una de las series ya se ha utilizado en esta lista de recepción.", "qualityRuleCheckFailedForStock": "No se pudo verificar la regla de calidad para {{code}}." }
   },
   "list": {
     "eyebrowParent": "INBOUND_OP",

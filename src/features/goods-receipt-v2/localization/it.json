@@ -257,8 +257,41 @@
     "operationType": "Tipo operazione", "direct": "Ricevimento diretto", "orderless": "Attività senza ordine", "postReceipt": "Registra ricevimento",
     "createTask": "Crea attività", "success": "Il ricevimento merci è stato creato correttamente.", "resultDirect": "Ricevimento merci registrato",
     "resultOrderless": "Attività di ricevimento creata", "linesText": "righe", "newRecord": "Nuovo record",
+    "defaultTargetLocation": "Scaffale di destinazione predefinito", "selectActiveLocation": "Seleziona scaffale attivo",
+    "unitLabelWithValue": "Unità: {{unit}}", "unitUndefined": "Unità non definita", "selectStockFirst": "Seleziona prima un articolo",
     "options": { "noLabel": "Nessuna etichetta", "preGenerate": "Pre-generazione", "supplierLabel": "Etichetta fornitore", "generateOnReceipt": "Genera al ricevimento", "manual": "Manuale", "barcode": "Scansione codice a barre", "preLabel": "Etichetta pre-generata" },
-    "validation": { "customer": "Il fornitore è obbligatorio.", "receiptNo": "Il numero del documento di trasporto standard deve contenere esattamente 15 cifre.", "eReceiptNo": "Il numero E-DDT / SDI deve essere di esattamente 15 caratteri alfanumerici.", "date": "La data del documento di trasporto è obbligatoria.", "operation": "Sono obbligatori magazzino, area di ricevimento e serie documento.", "lines": "È obbligatoria almeno una riga articolo.", "stock": "Sono obbligatori articolo e una quantità maggiore di zero.", "serialQuantity": "Una riga tracciata a seriale deve avere quantità 1.", "expiry": "La data di scadenza non può precedere la data di produzione.", "incomplete": "Il modulo contiene campi mancanti o non validi.", "submit": "Impossibile creare il ricevimento merci." }
+    "bulkSerial": {
+      "title": "Scansione seriale e codice a barre in blocco",
+      "hint": "Se la quantità è 13, scansiona uno per uno 13 seriali diversi con il lettore. Ogni seriale viene inviato all'API come riga tracciabile separata con quantità 1.",
+      "textareaAriaLabel": "Codici a barre seriali in blocco",
+      "scannedLabel": "Scansionati:",
+      "quantityLabel": "Quantità:",
+      "clearList": "Cancella elenco"
+    },
+    "suggestions": {
+      "title": "Scaffali di ubicazione suggeriti",
+      "hintActive": "Puoi selezionare uno degli scaffali suggeriti come scaffale di destinazione.",
+      "hintReceiving": "Durante l'attesa della decisione di qualità è possibile selezionare solo Receiving/Staging.",
+      "remainingLabel": "Rimanente:"
+    },
+    "table": { "warehouseLocation": "Magazzino / Scaffale" },
+    "result": {
+      "eyebrow": "Dopo il ricevimento merci",
+      "qualitySentTitle": "Inviato in qualità",
+      "receiptCreatedTitle": "Documento di trasporto creato",
+      "qualitySubtitle": "verrà creato un documento di trasporto dopo l'approvazione qualità per gli articoli inviati in qualità.",
+      "receiptSubtitle": "creazione del documento di trasporto completata.",
+      "orderlessSubtitle": "L'attività di ricevimento merci senza ordine è stata creata e messa in coda per l'elaborazione.",
+      "documentNoLabel": "N. documento",
+      "quantityLabel": "Quantità",
+      "statusLabel": "Stato",
+      "printLabelsButton": "Stampa etichette ricevimento",
+      "qualityListButton": "Elenco qualità",
+      "labelsPrintedToast": "Le etichette del ricevimento merci sono state stampate.",
+      "labelsPrintFailed": "Impossibile stampare le etichette.",
+      "printTitleSuffix": "etichette ricevimento"
+    },
+    "validation": { "customer": "Il fornitore è obbligatorio.", "receiptNo": "Il numero del documento di trasporto standard deve contenere esattamente 15 cifre.", "eReceiptNo": "Il numero E-DDT / SDI deve essere di esattamente 15 caratteri alfanumerici.", "date": "La data del documento di trasporto è obbligatoria.", "operation": "Sono obbligatori magazzino, area di ricevimento e serie documento.", "lines": "È obbligatoria almeno una riga articolo.", "stock": "Sono obbligatori articolo e una quantità maggiore di zero.", "serialQuantity": "Una riga tracciata a seriale deve avere quantità 1.", "expiry": "La data di scadenza non può precedere la data di produzione.", "incomplete": "Il modulo contiene campi mancanti o non validi.", "submit": "Impossibile creare il ricevimento merci.", "activeSeriesRequired": "Per questa operazione deve essere selezionata una serie documento attiva.", "assigneesRequired": "Almeno un utente operativo deve essere assegnato all'attività.", "qualityRulesCheckFailed": "Impossibile verificare le regole di controllo qualità.", "trackingPolicyLoadFailed": "Impossibile caricare la politica di tracciabilità per l'articolo {{code}}.", "unitCodeMissing": "L'unità di misura non è definita per l'articolo {{code}}.", "lineLocationRequired": "Per la riga devono essere selezionati un magazzino di destinazione e uno scaffale.", "serialFieldsConflict": "Il campo seriale singolo e il campo seriale in blocco non possono essere utilizzati insieme.", "serialBatchCountMismatch": "Il numero di seriali in blocco ({{count}}) deve essere uguale alla quantità di ricevimento ({{quantity}}).", "duplicateSerialInBatch": "Lo stesso seriale non può essere utilizzato più di una volta nell'elenco seriali in blocco.", "serialAlreadyUsed": "Uno dei seriali è già stato utilizzato in questo elenco di ricevimento.", "qualityRuleCheckFailedForStock": "Impossibile verificare la regola di qualità per l'articolo {{code}}." }
   },
   "list": {
     "eyebrowParent": "INBOUND_OP",

@@ -257,8 +257,41 @@
     "operationType": "Type d'opération", "direct": "Réception directe", "orderless": "Tâche sans commande", "postReceipt": "Enregistrer la réception",
     "createTask": "Créer la tâche", "success": "La réception de marchandises a été créée avec succès.", "resultDirect": "Réception enregistrée",
     "resultOrderless": "Tâche de réception créée", "linesText": "lignes", "newRecord": "Nouvel enregistrement",
+    "defaultTargetLocation": "Emplacement cible par défaut", "selectActiveLocation": "Sélectionner un emplacement actif",
+    "unitLabelWithValue": "Unité : {{unit}}", "unitUndefined": "Unité non définie", "selectStockFirst": "Sélectionnez d'abord un stock",
     "options": { "noLabel": "Aucune étiquette", "preGenerate": "Pré-générer", "supplierLabel": "Étiquette fournisseur", "generateOnReceipt": "Générer à la réception", "manual": "Manuel", "barcode": "Scan code-barres", "preLabel": "Étiquette pré-générée" },
-    "validation": { "customer": "Le fournisseur est obligatoire.", "receiptNo": "Le numéro de bon de livraison standard doit contenir exactement 15 chiffres.", "eReceiptNo": "Le numéro e-bon de livraison / GIB doit contenir exactement 15 caractères alphanumériques.", "date": "La date du bon de livraison est obligatoire.", "operation": "L'entrepôt, l'emplacement de réception et la série de document sont obligatoires.", "lines": "Au moins une ligne de stock est obligatoire.", "stock": "Le stock et une quantité supérieure à zéro sont obligatoires.", "serialQuantity": "Une ligne suivie par numéro de série doit avoir une quantité de 1.", "expiry": "La date d'expiration ne peut pas précéder la date de fabrication.", "incomplete": "Le formulaire contient des champs manquants ou invalides.", "submit": "La réception de marchandises n'a pas pu être créée." }
+    "bulkSerial": {
+      "title": "Scan groupé de numéros de série et de codes-barres",
+      "hint": "Si la quantité est de 13, scannez 13 numéros de série différents un par un avec le lecteur. Chaque série est envoyée à l'API comme une ligne traçable distincte avec une quantité de 1.",
+      "textareaAriaLabel": "Codes-barres de séries groupées",
+      "scannedLabel": "Scannés :",
+      "quantityLabel": "Quantité :",
+      "clearList": "Effacer la liste"
+    },
+    "suggestions": {
+      "title": "Emplacements de rangement suggérés",
+      "hintActive": "Vous pouvez sélectionner l'un des emplacements suggérés comme emplacement cible.",
+      "hintReceiving": "Seul Réception/Zone tampon peut être sélectionné en attendant la décision qualité.",
+      "remainingLabel": "Restant :"
+    },
+    "table": { "warehouseLocation": "Entrepôt / Emplacement" },
+    "result": {
+      "eyebrow": "Après la réception de marchandises",
+      "qualitySentTitle": "Envoyé en qualité",
+      "receiptCreatedTitle": "Bon de livraison créé",
+      "qualitySubtitle": "un bon de livraison sera créé après l'approbation qualité pour les articles envoyés en qualité.",
+      "receiptSubtitle": "la création du bon de livraison est terminée.",
+      "orderlessSubtitle": "La tâche de réception de marchandises sans commande a été créée et mise en file d'attente pour traitement.",
+      "documentNoLabel": "N° de document",
+      "quantityLabel": "Quantité",
+      "statusLabel": "Statut",
+      "printLabelsButton": "Imprimer les étiquettes de réception",
+      "qualityListButton": "Liste qualité",
+      "labelsPrintedToast": "Les étiquettes de réception de marchandises ont été imprimées.",
+      "labelsPrintFailed": "Les étiquettes n'ont pas pu être imprimées.",
+      "printTitleSuffix": "étiquettes de réception"
+    },
+    "validation": { "customer": "Le fournisseur est obligatoire.", "receiptNo": "Le numéro de bon de livraison standard doit contenir exactement 15 chiffres.", "eReceiptNo": "Le numéro e-bon de livraison / GIB doit contenir exactement 15 caractères alphanumériques.", "date": "La date du bon de livraison est obligatoire.", "operation": "L'entrepôt, l'emplacement de réception et la série de document sont obligatoires.", "lines": "Au moins une ligne de stock est obligatoire.", "stock": "Le stock et une quantité supérieure à zéro sont obligatoires.", "serialQuantity": "Une ligne suivie par numéro de série doit avoir une quantité de 1.", "expiry": "La date d'expiration ne peut pas précéder la date de fabrication.", "incomplete": "Le formulaire contient des champs manquants ou invalides.", "submit": "La réception de marchandises n'a pas pu être créée.", "activeSeriesRequired": "Une série de document active doit être sélectionnée pour cette opération.", "assigneesRequired": "Au moins un utilisateur d'opération doit être affecté à la tâche.", "qualityRulesCheckFailed": "Les règles de contrôle qualité n'ont pas pu être vérifiées.", "trackingPolicyLoadFailed": "La politique de suivi de stock n'a pas pu être chargée pour {{code}}.", "unitCodeMissing": "L'unité de mesure n'est pas définie pour le stock {{code}}.", "lineLocationRequired": "Un entrepôt et un emplacement cibles doivent être sélectionnés pour la ligne.", "serialFieldsConflict": "Le champ de série unique et le champ de série groupée ne peuvent pas être utilisés ensemble.", "serialBatchCountMismatch": "Le nombre de séries groupées ({{count}}) doit être égal à la quantité reçue ({{quantity}}).", "duplicateSerialInBatch": "Le même numéro de série ne peut pas être utilisé plusieurs fois dans la liste de séries groupées.", "serialAlreadyUsed": "L'un des numéros de série a déjà été utilisé dans cette liste de réception.", "qualityRuleCheckFailedForStock": "La règle de qualité n'a pas pu être vérifiée pour {{code}}." }
   },
   "list": {
     "eyebrowParent": "INBOUND_OP",

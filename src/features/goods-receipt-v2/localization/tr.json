@@ -276,8 +276,41 @@
     "totalQuantity": "Toplam Miktar", "operationType": "Operasyon Türü", "direct": "Doğrudan Kabul", "orderless": "Siparişsiz Emir",
     "postReceipt": "Kabulü İşle", "createTask": "Emri Oluştur", "success": "Mal kabul başarıyla oluşturuldu.",
     "resultDirect": "Mal Kabul İşlendi", "resultOrderless": "Mal Kabul Emri Oluşturuldu", "linesText": "satır", "newRecord": "Yeni Kayıt",
+    "defaultTargetLocation": "Varsayılan hedef raf", "selectActiveLocation": "Aktif raf seçin",
+    "unitLabelWithValue": "Birim: {{unit}}", "unitUndefined": "Birim tanımsız", "selectStockFirst": "Önce stok seçin",
     "options": { "noLabel": "Etiket Yok", "preGenerate": "Önceden Üret", "supplierLabel": "Tedarikçi Etiketi", "generateOnReceipt": "Kabulde Üret", "manual": "Manuel", "barcode": "Barkod Okutma", "preLabel": "Ön Etiket" },
-    "validation": { "customer": "Tedarikçi cari seçimi zorunludur.", "receiptNo": "Normal irsaliye numarası semboller dahil tam 15 karakter olmalıdır.", "eReceiptNo": "E-irsaliye / GİB numarası semboller dahil tam 15 karakter olmalıdır.", "date": "İrsaliye tarihi zorunludur.", "operation": "Depo, kabul alanı ve belge serisi seçilmelidir.", "lines": "En az bir stok satırı eklenmelidir.", "stock": "Stok ve sıfırdan büyük miktar zorunludur.", "serialQuantity": "Seri numaralı satırın miktarı 1 olmalıdır.", "expiry": "Son kullanma tarihi üretim tarihinden önce olamaz.", "incomplete": "Formda eksik veya geçersiz alan bulunuyor.", "submit": "Mal kabul oluşturulamadı." }
+    "bulkSerial": {
+      "title": "Toplu seri ve barkod okutma",
+      "hint": "Miktar 13 ise okuyucuyla 13 farklı seriyi satır satır okutun. Her seri API'ye 1 miktarlı ayrı izlenebilir kalem olarak gönderilir.",
+      "textareaAriaLabel": "Toplu seri barkodları",
+      "scannedLabel": "Okutulan:",
+      "quantityLabel": "Miktar:",
+      "clearList": "Listeyi temizle"
+    },
+    "suggestions": {
+      "title": "Önerilen putaway rafları",
+      "hintActive": "Önerilen raflardan birini hedef raf olarak seçebilirsiniz.",
+      "hintReceiving": "Kalite kararı beklenirken yalnızca Receiving/Staging seçilebilir.",
+      "remainingLabel": "Kalan:"
+    },
+    "table": { "warehouseLocation": "Depo / Raf" },
+    "result": {
+      "eyebrow": "Mal kabul sonrası",
+      "qualitySentTitle": "Kaliteye gönderildi",
+      "receiptCreatedTitle": "İrsaliye oluştu",
+      "qualitySubtitle": "Kaliteye gönderilen ürünler için kalite onayından sonra irsaliye oluşturulacaktır.",
+      "receiptSubtitle": "İrsaliye oluşturma işlemi tamamlandı.",
+      "orderlessSubtitle": "Siparişsiz mal kabul emri oluşturuldu ve operasyon kuyruğuna düştü.",
+      "documentNoLabel": "Belge No",
+      "quantityLabel": "Miktar",
+      "statusLabel": "Durum",
+      "printLabelsButton": "Kabul Etiketlerini Yazdır",
+      "qualityListButton": "Kalite listesi",
+      "labelsPrintedToast": "Mal kabulde oluşan etiketler yazdırıldı.",
+      "labelsPrintFailed": "Etiketler yazdırılamadı.",
+      "printTitleSuffix": "kabul etiketleri"
+    },
+    "validation": { "customer": "Tedarikçi cari seçimi zorunludur.", "receiptNo": "Normal irsaliye numarası semboller dahil tam 15 karakter olmalıdır.", "eReceiptNo": "E-irsaliye / GİB numarası semboller dahil tam 15 karakter olmalıdır.", "date": "İrsaliye tarihi zorunludur.", "operation": "Depo, kabul alanı ve belge serisi seçilmelidir.", "lines": "En az bir stok satırı eklenmelidir.", "stock": "Stok ve sıfırdan büyük miktar zorunludur.", "serialQuantity": "Seri numaralı satırın miktarı 1 olmalıdır.", "expiry": "Son kullanma tarihi üretim tarihinden önce olamaz.", "incomplete": "Formda eksik veya geçersiz alan bulunuyor.", "submit": "Mal kabul oluşturulamadı.", "activeSeriesRequired": "Bu işlem için aktif bir belge serisi seçilmelidir.", "assigneesRequired": "Emir için en az bir operasyon kullanıcısı atanmalıdır.", "qualityRulesCheckFailed": "Kalite kontrol kuralları doğrulanamadı.", "trackingPolicyLoadFailed": "{{code}} için stok takip politikası yüklenemedi.", "unitCodeMissing": "{{code}} stok kartının ölçü birimi tanımlı değil.", "lineLocationRequired": "Kalem için hedef depo ve raf seçilmelidir.", "serialFieldsConflict": "Tek seri alanı ile toplu seri alanı birlikte kullanılamaz.", "serialBatchCountMismatch": "Toplu seri sayısı ({{count}}) kabul miktarına ({{quantity}}) eşit olmalıdır.", "duplicateSerialInBatch": "Toplu seri listesinde aynı seri birden fazla kullanılamaz.", "serialAlreadyUsed": "Serilerden biri bu kabul listesinde daha önce kullanılmış.", "qualityRuleCheckFailedForStock": "{{code}} için kalite kuralı kontrol edilemedi." }
   },
   "list": {
     "eyebrowParent": "GİRİŞ_OP",
