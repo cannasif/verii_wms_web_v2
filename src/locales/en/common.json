@@ -4036,9 +4036,9 @@
     "minute": "Minute",
     "prevMonth": "Previous month",
     "nextMonth": "Next month",
-    "placeholderDate": "YYYY-MM-DD",
+    "placeholderDate": "YYYY.MM.DD",
     "placeholderTime": "HH:mm",
-    "placeholderDateTime": "YYYY-MM-DD HH:mm"
+    "placeholderDateTime": "YYYY.MM.DD HH:mm"
   },
   "dataGrid": {
     "systemColumns": {
@@ -4423,6 +4423,18 @@
       "reverseAction": "Create reversal"
     }
   },
+  "stockCard": {
+    "menuLabel": "Stock",
+    "contextHint": "Right-click: stock detail",
+    "openDetail": "Stock detail",
+    "copyCode": "Copy stock code",
+    "codeCopied": "Stock code copied.",
+    "codeCopyFailed": "Could not copy stock code.",
+    "opening": "Opening stock card…",
+    "opened": "Stock card opened.",
+    "notFound": "Stock card not found.",
+    "openMissingIdentity": "No stock identity; detail cannot be opened."
+  },
   "stockTrackingPolicyField": {
     "loading": "Loading tracking policy…",
     "selectStockFirst": "Select stock first",
@@ -4444,21 +4456,69 @@
   "erpMirror": {
     "recordDetail": "{{title}} Record Detail #{{id}}",
     "syncNow": "Sync Now",
+    "syncWithErp": "ERP Sync",
+    "syncWithErpTooltip": "Sync these records with ERP (Netsis).",
+    "syncSuccess": "ERP sync completed successfully.",
+    "syncFailed": "ERP sync failed.",
+    "codeFilters": {
+      "button": "Code filters",
+      "panelTitle": "Code filters",
+      "panelHint": "Group and special codes",
+      "searchPlaceholder": "Search codes…",
+      "loading": "Loading code options…",
+      "loadFailed": "Code options could not be loaded.",
+      "noOptions": "No codes found for this field.",
+      "noFilledValues": "Stocks loaded, but this field has no filled codes.",
+      "searchEmpty": "No codes match your search.",
+      "selectedCount": "{{count}} selected",
+      "pickHint": "Select Group Code or Code 1–5 values to filter.",
+      "clearDraft": "Clear selection",
+      "clearAll": "Clear",
+      "apply": "Apply"
+    },
     "view": "View",
     "details": "Details",
     "stockCard": "Stock Card",
+    "stockCardUi": {
+      "eyebrow": "ERP Stock Card",
+      "untitled": "Untitled stock",
+      "identitySection": "Identity",
+      "codesSection": "Special codes",
+      "codesHint": "Code filters use these fields",
+      "orgSection": "Organization",
+      "auditSection": "Audit"
+    },
+    "customerCardUi": {
+      "eyebrow": "ERP Customer Card",
+      "title": "Customer Card",
+      "untitled": "Untitled customer",
+      "identitySection": "Identity",
+      "orgSection": "Organization",
+      "auditSection": "Audit"
+    },
+    "warehouseCardUi": {
+      "eyebrow": "ERP Warehouse Card",
+      "title": "Warehouse Card",
+      "untitled": "Untitled warehouse",
+      "identitySection": "Identity",
+      "orgSection": "Organization",
+      "auditSection": "Audit"
+    },
     "trackingSettings": "Tracking Settings",
     "actions": "Actions",
     "undefinedUnit": "Undefined",
     "pages": {
       "warehouses": {
-        "description": "Mirrored view of Netsis warehouse cards."
+        "description": "Mirrored view of Netsis warehouse cards.",
+        "titleHint": "These records are warehouse cards mirrored from Netsis. You do not create warehouses in WMS; keep them current by syncing with ERP."
       },
       "stocks": {
-        "description": "Netsis stock cards and WMS tracking requirements per stock."
+        "description": "Netsis stock cards and WMS tracking requirements per stock.",
+        "titleHint": "These records are stock cards mirrored from Netsis. You do not create stocks in WMS; manage stock-specific tracking settings in the card detail. Search and filter by stock code, name, and Code 1–3."
       },
       "customers": {
-        "description": "Mirrored view of Netsis customer cards."
+        "description": "Mirrored view of Netsis customer cards.",
+        "titleHint": "These records are customer cards mirrored from Netsis. You do not create customers in WMS; keep them current by syncing with ERP."
       },
       "configurationCodes": {
         "description": "WMS mirror view of stock variants from the Netsis product configurator."

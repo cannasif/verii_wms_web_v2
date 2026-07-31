@@ -4351,21 +4351,67 @@
   "erpMirror": {
     "recordDetail": "{{title}} Datensatzdetail #{{id}}",
     "syncNow": "Jetzt synchronisieren",
+    "syncWithErp": "ERP-Sync",
+    "syncWithErpTooltip": "Diese Datensätze mit ERP (Netsis) synchronisieren.",
+    "syncSuccess": "ERP-Synchronisierung erfolgreich abgeschlossen.",
+    "syncFailed": "ERP-Synchronisierung fehlgeschlagen.",
+    "codeFilters": {
+      "button": "Codefilter",
+      "panelTitle": "Codefilter",
+      "panelHint": "Gruppen- und Sondercodes",
+      "searchPlaceholder": "Codes suchen…",
+      "loading": "Codeoptionen werden geladen…",
+      "noOptions": "Keine Codes für dieses Feld.",
+      "searchEmpty": "Keine Codes passend zur Suche.",
+      "selectedCount": "{{count}} ausgewählt",
+      "pickHint": "Wählen Sie Gruppen- oder Code 1–5-Werte zum Filtern.",
+      "clearDraft": "Auswahl löschen",
+      "clearAll": "Leeren",
+      "apply": "Anwenden"
+    },
     "view": "Anzeigen",
     "details": "Details",
     "stockCard": "Bestandskarte",
+    "stockCardUi": {
+      "eyebrow": "ERP-Bestandskarte",
+      "untitled": "Unbenannter Artikel",
+      "identitySection": "Identität",
+      "codesSection": "Sondercodes",
+      "codesHint": "Codefilter nutzen diese Felder",
+      "orgSection": "Organisation",
+      "auditSection": "Protokoll"
+    },
+    "customerCardUi": {
+      "eyebrow": "ERP-Kundenkarte",
+      "title": "Kundenkarte",
+      "untitled": "Unbenannter Kunde",
+      "identitySection": "Identität",
+      "orgSection": "Organisation",
+      "auditSection": "Protokoll"
+    },
+    "warehouseCardUi": {
+      "eyebrow": "ERP-Lagerkarte",
+      "title": "Lagerkarte",
+      "untitled": "Unbenanntes Lager",
+      "identitySection": "Identität",
+      "orgSection": "Organisation",
+      "auditSection": "Protokoll"
+    },
     "trackingSettings": "Tracking-Einstellungen",
     "actions": "Aktionen",
     "undefinedUnit": "Undefiniert",
     "pages": {
       "warehouses": {
-        "description": "Gespiegelte Ansicht der Netsis-Lagerkarten."
+        "description": "Gespiegelte Ansicht der Netsis-Lagerkarten.",
+        "titleHint": "Diese Einträge sind aus Netsis gespiegelte Lagerkarten. Lager werden im WMS nicht angelegt; halten Sie sie durch ERP-Sync aktuell."
       },
       "stocks": {
-        "description": "Netsis-Artikelkarten und WMS-Tracking-Anforderungen pro Artikel."
+        "description": "Netsis-Artikelkarten und WMS-Tracking-Anforderungen pro Artikel.",
+        "titleHint": "Diese Einträge sind aus Netsis gespiegelte Artikelkarten. Bestände werden im WMS nicht angelegt; Tracking-Einstellungen verwalten Sie in der Kartendetailansicht. Suche und Filter nach Artikelcode, Name und Code 1–3."
       },
       "customers": {
-        "description": "Gespiegelte Ansicht der Netsis-Kundenkarten."
+        "description": "Gespiegelte Ansicht der Netsis-Kundenkarten.",
+        "titleHint": "Diese Einträge sind aus Netsis gespiegelte Kundenkarten. Kunden werden im WMS nicht angelegt; halten Sie sie durch ERP-Sync aktuell."
       },
       "configurationCodes": {
         "description": "WMS-Spiegelansicht der Artikelvarianten aus dem Netsis-Produktkonfigurator."
