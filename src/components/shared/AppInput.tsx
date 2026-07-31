@@ -312,7 +312,8 @@ export const AppDateInput = forwardRef<HTMLInputElement, AppDateInputProps>(func
           align="start"
           side="bottom"
           sideOffset={6}
-          avoidCollisions={false}
+          collisionPadding={16}
+          avoidCollisions
           onOpenAutoFocus={(event) => event.preventDefault()}
           className={cn(
             'wms-floating-surface wms-date-picker-popover z-[2000] rounded-xl text-[var(--wms-app-text)] outline-none',
