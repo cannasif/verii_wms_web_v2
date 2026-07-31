@@ -4787,6 +4787,8 @@
       "direct": "Direct operation",
       "taskDescription": "An operation task is created, users are assigned and field progress is tracked.",
       "directDescription": "Processed directly by an authorised user without creating a task.",
+      "shipmentTaskDescription": "A picking task and user assignment are created.",
+      "shipmentDirectDescription": "An authorised user proceeds directly to the shipment flow.",
       "orderSourceDescription": "Creates a traceable link with ERP document and open quantities.",
       "stockSourceDescription": "Stock, quantity, warehouse and location are defined by the user.",
       "combinationDisabled": "This combination is disabled in process policy.",
@@ -4810,6 +4812,7 @@
     "sourceLabels": {
       "warehouseOrder": "From Netsis transfer order",
       "warehouseStock": "Orderless / from free stock",
+      "salesOrder": "From Netsis sales order",
       "productionOrder": "From production order",
       "productionStock": "Unplanned / manual production need",
       "subcontractingOrder": "From subcontract order",

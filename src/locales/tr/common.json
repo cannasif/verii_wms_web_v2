@@ -4808,6 +4808,8 @@
       "direct": "Emirsiz işlem",
       "taskDescription": "Operasyon emri oluşturulur, kullanıcı atanır ve saha ilerlemesi izlenir.",
       "directDescription": "Görev oluşturmadan yetkili kullanıcı tarafından doğrudan işlenir.",
+      "shipmentTaskDescription": "Toplama emri ve kullanıcı ataması oluşturulur.",
+      "shipmentDirectDescription": "Yetkili kullanıcı doğrudan sevk akışına ilerler.",
       "orderSourceDescription": "ERP belgesi ve açık miktarlar ile izlenebilir bağlantı kurar.",
       "stockSourceDescription": "Stok, miktar, depo ve raf bilgileri kullanıcı tarafından belirlenir.",
       "combinationDisabled": "Bu kombinasyon süreç politikasında kapalı.",
@@ -4831,6 +4833,7 @@
     "sourceLabels": {
       "warehouseOrder": "Netsis transfer emrine istinaden",
       "warehouseStock": "Siparişsiz / serbest stoktan",
+      "salesOrder": "Netsis satış siparişine istinaden",
       "productionOrder": "Üretim emrine istinaden",
       "productionStock": "Plansız / manuel üretim ihtiyacı",
       "subcontractingOrder": "Fason siparişe istinaden",

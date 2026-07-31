@@ -1,0 +1,12 @@
+{
+  "dropdown": {
+    "select": "Sélectionner",
+    "search": "Rechercher...",
+    "noResults": "Aucun résultat trouvé.",
+    "loading": "Chargement...",
+    "loadingMore": "Chargement d'autres enregistrements...",
+    "retry": "Réessayer",
+    "loadError": "Les options n'ont pas pu être chargées.",
+    "minSearchCharacters": "Saisissez au moins {{count}} caractères pour rechercher."
+  }
+}

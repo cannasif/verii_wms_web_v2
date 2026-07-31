@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { CheckCircle2, Loader2, Plus, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { AppDropdown } from '@/components/shared/AppDropdown';
 import { AppDateInput } from '@/components/shared/AppInput';
@@ -107,6 +108,7 @@ const hasWarehouseOutboundDirectDraft = (draft: WarehouseOutboundDirectDraft) =>
   );
 
 export function WarehouseOutboundCreatePage() {
+  const { t } = useTranslation('common');
   const branch = useAuthStore((x) => x.branch?.code ?? '0');
   const userId = useAuthStore((x) => x.user?.id);
   const [policy, setPolicy] = useState<ShipmentPolicy | null>(null);
@@ -482,14 +484,14 @@ export function WarehouseOutboundCreatePage() {
       <OperationFlowTabs source={source === 'Order' ? 'order' : 'stock'} execution={execution === 'Task' ? 'task' : 'direct'}
         onSourceChange={(value) => changeSource(value === 'order' ? 'Order' : 'Stock')}
         onExecutionChange={(value) => { setExecution(value === 'task' ? 'Task' : 'Direct'); if (value === 'direct') setAssignees([]); }}
-        orderLabel="Netsis satış siparişine istinaden" stockLabel="Siparişsiz / serbest stoktan"
+        orderLabel={t('transferDraft.sourceLabels.salesOrder')} stockLabel={t('transferDraft.sourceLabels.warehouseStock')}
         isAllowed={(sourceMode, executionMode) => {
           if (!policy) return false;
           return sourceMode === 'order'
             ? (executionMode === 'task' ? policy.allowOrderBasedTask : policy.allowOrderBasedDirect)
             : (executionMode === 'task' ? policy.allowStockBasedTask : policy.allowStockBasedDirect);
         }}>
-        {execution === 'Task' ? 'Toplama emri ve kullanıcı ataması oluşturulur.' : 'Yetkili kullanıcı doğrudan sevk akışına ilerler.'}
+        {execution === 'Task' ? t('transferDraft.operationFlow.shipmentTaskDescription') : t('transferDraft.operationFlow.shipmentDirectDescription')}
       </OperationFlowTabs>
 
       <Panel title="Cari, belge ve depo">

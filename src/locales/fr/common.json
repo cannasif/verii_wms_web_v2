@@ -3145,6 +3145,8 @@
       "direct": "Opération directe",
       "taskDescription": "Une tâche est créée, des utilisateurs assignés et la progression suivie.",
       "directDescription": "Traitée directement par un utilisateur autorisé sans créer de tâche.",
+      "shipmentTaskDescription": "Une tâche de préparation et une affectation d'utilisateur sont créées.",
+      "shipmentDirectDescription": "Un utilisateur autorisé passe directement au flux d'expédition.",
       "orderSourceDescription": "Crée un lien traçable avec document ERP et quantités ouvertes.",
       "stockSourceDescription": "Stock, quantité, entrepôt et emplacement définis par l'utilisateur.",
       "combinationDisabled": "Cette combinaison est désactivée dans la politique de processus.",
@@ -3168,6 +3170,7 @@
     "sourceLabels": {
       "warehouseOrder": "Selon commande transfert Netsis",
       "warehouseStock": "Sans commande / stock libre",
+      "salesOrder": "Selon commande de vente Netsis",
       "productionOrder": "Selon ordre de production",
       "productionStock": "Non planifié / besoin manuel",
       "subcontractingOrder": "Selon commande sous-traitance",

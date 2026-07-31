@@ -3145,6 +3145,8 @@
       "direct": "عملية مباشرة",
       "taskDescription": "يتم إنشاء مهمة وتعيين المستخدمين وتتبع التقدم.",
       "directDescription": "تُعالج مباشرة بواسطة مستخدم مخول دون إنشاء مهمة.",
+      "shipmentTaskDescription": "يتم إنشاء مهمة تجميع وتعيين مستخدم.",
+      "shipmentDirectDescription": "يتابع المستخدم المخول مباشرة إلى مسار الشحن.",
       "orderSourceDescription": "ينشئ رابطاً قابلاً للتتبع مع مستند ERP والكميات المفتوحة.",
       "stockSourceDescription": "المخزون والكمية والمستودع والموقع يحددها المستخدم.",
       "combinationDisabled": "هذا المزيج معطل في سياسة العملية.",
@@ -3168,6 +3170,7 @@
     "sourceLabels": {
       "warehouseOrder": "بناءً على أمر نقل Netsis",
       "warehouseStock": "بدون أمر / من مخزون حر",
+      "salesOrder": "بناءً على أمر بيع Netsis",
       "productionOrder": "بناءً على أمر إنتاج",
       "productionStock": "غير مخطط / حاجة يدوية",
       "subcontractingOrder": "بناءً على أمر مقاول",

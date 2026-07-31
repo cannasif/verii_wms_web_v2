@@ -4680,6 +4680,8 @@
       "direct": "Direkte Operation",
       "taskDescription": "Ein Operationsauftrag wird erstellt, Benutzer zugewiesen und der Fortschritt verfolgt.",
       "directDescription": "Direkt durch berechtigten Benutzer ohne Auftragserstellung verarbeitet.",
+      "shipmentTaskDescription": "Ein Kommissionierauftrag und eine Benutzerzuweisung werden erstellt.",
+      "shipmentDirectDescription": "Ein berechtigter Benutzer fährt direkt mit dem Versandablauf fort.",
       "orderSourceDescription": "Erstellt nachvollziehbare Verknüpfung mit ERP-Beleg und offenen Mengen.",
       "stockSourceDescription": "Bestand, Menge, Lager und Platz werden vom Benutzer festgelegt.",
       "combinationDisabled": "Diese Kombination ist in der Prozessrichtlinie deaktiviert.",
@@ -4703,6 +4705,7 @@
     "sourceLabels": {
       "warehouseOrder": "Aus Netsis-Transferauftrag",
       "warehouseStock": "Auftragslos / aus freiem Bestand",
+      "salesOrder": "Aus Netsis-Verkaufsauftrag",
       "productionOrder": "Aus Produktionsauftrag",
       "productionStock": "Ungeplant / manueller Produktionsbedarf",
       "subcontractingOrder": "Aus Fremdbearbeitungsauftrag",
