@@ -4668,6 +4668,94 @@
         "Manual": "Manuell",
         "OnClose": "Beim Schließen"
       }
+    },
+    "goodsReceipt": {
+      "eyebrow": "Wareneingang",
+      "title": "Wareneingangs-Prozessrichtlinie",
+      "description": "Verwalten Sie zentral Über-/Unterannahme, Operationsfreigabe, Qualitätsgates, Bestandsverfügbarkeit und ERP-Buchungszeitpunkt.",
+      "tabs": {
+        "policy": "Prozessrichtlinie",
+        "warehouses": "Benutzer-Lagerberechtigungen",
+        "defaults": "Standard-Lagerplätze"
+      },
+      "save": "Richtlinie speichern",
+      "saveSuccess": "Wareneingangsrichtlinie gespeichert.",
+      "saveError": "Speichern fehlgeschlagen.",
+      "loadError": "Richtlinie konnte nicht geladen werden.",
+      "operationFailed": "Vorgang fehlgeschlagen.",
+      "snapshotNote": "Diese Einstellungen werden beim Erstellen eines Auftrags als Snapshot im Kopf gespeichert. Laufende Aufträge behalten dieselben Regeln, auch wenn sich Einstellungen später ändern.",
+      "testErpLogin": "Netsis REST-Login-Test",
+      "testErpLoginSuccess": "Netsis REST-Login erfolgreich. Token wurde sicher abgerufen.",
+      "testErpLoginError": "Netsis REST-Login fehlgeschlagen.",
+      "fields": {
+        "overReceipt": "Überannahme",
+        "overReceiptTolerance": "Überannahmetoleranz (%)",
+        "inventoryAvailability": "Wann ist der Bestand verfügbar?",
+        "erpPosting": "Wann ERP buchen?",
+        "warehouse": "Lager",
+        "defaultLocation": "Standard-Lagerplatz",
+        "user": "Benutzer"
+      },
+      "overReceiptPolicy": {
+        "NotAllowed": "Nicht erlauben",
+        "WithinTolerance": "Innerhalb Toleranz erlauben",
+        "ApprovalRequired": "Innerhalb Toleranz zur Genehmigung senden"
+      },
+      "inventoryAvailabilityPolicy": {
+        "Immediate": "Sofort bei Annahme",
+        "AfterReceiptApproval": "Nach Wareneingangsfreigabe",
+        "AfterQualityApproval": "Nach Qualitätsfreigabe",
+        "AfterAllApprovals": "Nach allen Freigaben"
+      },
+      "erpPostingPolicy": {
+        "AfterReceipt": "Nach Abschluss der Annahme",
+        "AfterReceiptApproval": "Nach Wareneingangsfreigabe",
+        "AfterQualityApproval": "Nach Qualitätsfreigabe",
+        "AfterAllApprovals": "Nach allen Freigaben"
+      },
+      "toggles": {
+        "allowUnderReceipt": "Unterannahme erlauben",
+        "requireShortCloseApproval": "Freigabe bei Kurzschluss erforderlich",
+        "requireReceiptApproval": "Operationsfreigabe nach Annahme erforderlich",
+        "requireQualityApproval": "Qualitätsfreigabe erforderlich",
+        "requireErpApproval": "ERP-Freigabe erforderlich",
+        "holdInventoryUntilQualityDecision": "Bestand bis Qualitätsentscheidung zurückhalten",
+        "blockPutawayUntilQualityDecision": "Welche Lagerplätze können für qualitätsausstehende Produkte gewählt werden?",
+        "blockPutawayHint": "Wenn aktiv, dürfen qualitätsausstehende Produkte nur in Annahme- oder Staging-Bereiche; wenn inaktiv, sind alle aktiven Lagerplätze im Ziellager wählbar.",
+        "allowOrderlessReceipt": "Annahme ohne Auftrag erlauben",
+        "allowUnplannedReceipt": "Ungeplante Annahme erlauben",
+        "showAllocatedOpenOrderLines": "Reservierte / versendete Auftragspositionen anzeigen"
+      },
+      "defaults": {
+        "title": "Standard-Wareneingangslagerplatz je Lager",
+        "description": "Bei direktem Wareneingang wird dieser aktive Lagerplatz automatisch auf Positionen angewendet. Benutzer können bei Bedarf einen anderen geeigneten Platz wählen.",
+        "noDefaultLocation": "Keinen Standard-Lagerplatz verwenden",
+        "policyNote": "Erlaubt die Qualitäts-/Platzrichtlinie nur Annahme- oder Staging-Bereiche, muss der Standardplatz dieser Regel entsprechen; sonst wird der erste geeignete Annahmebereich gewählt.",
+        "save": "Standard-Lagerplatz speichern",
+        "saveSuccessWithLocation": "{{locationCode}} ist jetzt der Standard-Lagerplatz für Lager {{warehouseCode}}.",
+        "saveSuccessRemoved": "Standard-Lagerplatz für Lager {{warehouseCode}} entfernt.",
+        "saveError": "Standard-Lagerplatz konnte nicht gespeichert werden.",
+        "warehousesLoadError": "Lager konnten nicht geladen werden.",
+        "locationsLoadError": "Aktive Lagerplätze konnten nicht geladen werden."
+      },
+      "warehouses": {
+        "title": "Wareneingangslager je Benutzer",
+        "description": "Ohne Zuweisung kann der Benutzer in allen Lagern arbeiten. Mit mindestens einem gewählten Lager ist Wareneingang auf diese Lager beschränkt.",
+        "selectUserPlaceholder": "Aktiven Benutzer wählen",
+        "statusAllByRole": "Alle Lager aufgrund der Rolle offen",
+        "statusAllOpen": "Keine Zuweisung: alle Lager offen",
+        "statusRestricted": "Auf {{count}} Lager beschränkt",
+        "hintAllByRole": "Admin- und SuperAdmin-Benutzer sehen alle Lager unabhängig von Lagerzuweisungen.",
+        "hintRestricted": "Diese Regel wird auch bei Auftragsauswahl, Lager-Dropdowns und Wareneingangserfassung per API geprüft.",
+        "warehouseLabel": "Lager {{code}}",
+        "clearRestriction": "Einschränkung aufheben (alle Lager)",
+        "save": "Lagerberechtigungen speichern",
+        "saveSuccessAssigned": "Wareneingangslager des Benutzers aktualisiert.",
+        "saveSuccessUnrestricted": "Lagereinschränkung aufgehoben; Benutzer kann in allen Lagern arbeiten.",
+        "saveError": "Lagerberechtigungen konnten nicht gespeichert werden.",
+        "loadError": "Benutzer- und Lagerliste konnten nicht geladen werden.",
+        "userLoadError": "Benutzerdetails konnten nicht geladen werden."
+      }
     }
   },
   "transferDraft": {

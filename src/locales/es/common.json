@@ -3133,6 +3133,94 @@
         "Manual": "Manual",
         "OnClose": "Al cerrar"
       }
+    },
+    "goodsReceipt": {
+      "eyebrow": "Recepción de mercancías",
+      "title": "Política de proceso de recepción",
+      "description": "Gestione centralmente sobre/sub recepción, aprobación operativa, controles de calidad, disponibilidad de stock y momento de envío ERP.",
+      "tabs": {
+        "policy": "Política de proceso",
+        "warehouses": "Permisos de almacén por usuario",
+        "defaults": "Ubicaciones predeterminadas"
+      },
+      "save": "Guardar política",
+      "saveSuccess": "Política de recepción guardada.",
+      "saveError": "No se pudo guardar.",
+      "loadError": "No se pudo cargar la política.",
+      "operationFailed": "Operación fallida.",
+      "snapshotNote": "Estos ajustes se guardan como snapshot en la cabecera al crear el pedido. Los pedidos en curso mantienen las mismas reglas aunque cambien los ajustes después.",
+      "testErpLogin": "Prueba de inicio de sesión REST Netsis",
+      "testErpLoginSuccess": "Inicio de sesión REST Netsis correcto. Token obtenido de forma segura.",
+      "testErpLoginError": "Error en el inicio de sesión REST Netsis.",
+      "fields": {
+        "overReceipt": "Sobre-recepción",
+        "overReceiptTolerance": "Tolerancia de sobre-recepción (%)",
+        "inventoryAvailability": "¿Cuándo está disponible el stock?",
+        "erpPosting": "¿Cuándo enviar al ERP?",
+        "warehouse": "Almacén",
+        "defaultLocation": "Ubicación predeterminada",
+        "user": "Usuario"
+      },
+      "overReceiptPolicy": {
+        "NotAllowed": "No permitir",
+        "WithinTolerance": "Permitir dentro de tolerancia",
+        "ApprovalRequired": "Enviar a aprobación dentro de tolerancia"
+      },
+      "inventoryAvailabilityPolicy": {
+        "Immediate": "Inmediatamente al recibir",
+        "AfterReceiptApproval": "Tras aprobación de recepción",
+        "AfterQualityApproval": "Tras aprobación de calidad",
+        "AfterAllApprovals": "Tras todas las aprobaciones"
+      },
+      "erpPostingPolicy": {
+        "AfterReceipt": "Al completar la recepción",
+        "AfterReceiptApproval": "Tras aprobación de recepción",
+        "AfterQualityApproval": "Tras aprobación de calidad",
+        "AfterAllApprovals": "Tras todas las aprobaciones"
+      },
+      "toggles": {
+        "allowUnderReceipt": "Permitir sub-recepción",
+        "requireShortCloseApproval": "Exigir aprobación en cierre parcial",
+        "requireReceiptApproval": "Exigir aprobación operativa tras recepción",
+        "requireQualityApproval": "Exigir aprobación de calidad",
+        "requireErpApproval": "Exigir aprobación ERP",
+        "holdInventoryUntilQualityDecision": "Retener stock hasta decisión de calidad",
+        "blockPutawayUntilQualityDecision": "¿Qué estanterías se pueden seleccionar para productos pendientes de calidad?",
+        "blockPutawayHint": "Si está activo, los productos pendientes de calidad solo pueden ir a recepción o staging; si está inactivo, se pueden seleccionar todas las estanterías activas del almacén destino.",
+        "allowOrderlessReceipt": "Permitir recepción sin pedido",
+        "allowUnplannedReceipt": "Permitir recepción no planificada",
+        "showAllocatedOpenOrderLines": "Mostrar líneas de pedido reservadas / enviadas"
+      },
+      "defaults": {
+        "title": "Ubicación de recepción predeterminada por almacén",
+        "description": "Al seleccionar un almacén en recepción directa, esta ubicación activa se aplica automáticamente a las líneas. El usuario puede elegir otra ubicación adecuada durante la operación si es necesario.",
+        "noDefaultLocation": "No usar ubicación predeterminada",
+        "policyNote": "Si la política de calidad/ubicación solo permite recepción o staging, la ubicación predeterminada debe cumplirla; de lo contrario se selecciona la primera área de recepción adecuada.",
+        "save": "Guardar ubicación predeterminada",
+        "saveSuccessWithLocation": "{{locationCode}} es ahora la ubicación predeterminada del almacén {{warehouseCode}}.",
+        "saveSuccessRemoved": "Ubicación predeterminada eliminada del almacén {{warehouseCode}}.",
+        "saveError": "No se pudo guardar la ubicación predeterminada.",
+        "warehousesLoadError": "No se pudieron cargar los almacenes.",
+        "locationsLoadError": "No se pudieron cargar las ubicaciones activas."
+      },
+      "warehouses": {
+        "title": "Almacenes de recepción por usuario",
+        "description": "Sin asignación, el usuario puede trabajar en todos los almacenes. Con al menos un almacén seleccionado, la recepción se limita a esos almacenes.",
+        "selectUserPlaceholder": "Seleccionar usuario activo",
+        "statusAllByRole": "Todos los almacenes abiertos por rol",
+        "statusAllOpen": "Sin asignación: todos los almacenes abiertos",
+        "statusRestricted": "Restringido a {{count}} almacén(es)",
+        "hintAllByRole": "Los usuarios Admin y SuperAdmin ven todos los almacenes independientemente de las asignaciones.",
+        "hintRestricted": "Esta regla también se valida por la API durante la selección de pedidos, listas de almacenes y el registro de recepción.",
+        "warehouseLabel": "Almacén {{code}}",
+        "clearRestriction": "Quitar restricción (todos los almacenes)",
+        "save": "Guardar permisos de almacén",
+        "saveSuccessAssigned": "Almacenes de recepción del usuario actualizados.",
+        "saveSuccessUnrestricted": "Restricción de almacén eliminada; el usuario puede trabajar en todos los almacenes.",
+        "saveError": "No se pudieron guardar los permisos de almacén.",
+        "loadError": "No se pudo cargar la lista de usuarios y almacenes.",
+        "userLoadError": "No se pudo cargar la información del usuario."
+      }
     }
   },
   "transferDraft": {

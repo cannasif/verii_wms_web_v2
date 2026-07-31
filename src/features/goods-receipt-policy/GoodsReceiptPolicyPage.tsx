@@ -1,5 +1,6 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Loader2, MapPin, PlugZap, Save, SlidersHorizontal, UsersRound, Warehouse } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { AppDropdown } from '@/components/shared/AppDropdown';
 import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
@@ -34,18 +35,57 @@ type Policy = {
 
 type Envelope<T> = { success: boolean; data: T; message?: string };
 
-const unwrap = <T,>(value: Envelope<T>): T => {
-  if (!value.success) throw new Error(value.message || 'İşlem başarısız.');
-  return value.data;
-};
+const POLICY = 'processPolicy.goodsReceipt';
 
 export function GoodsReceiptPolicyPage() {
+  const { t, i18n } = useTranslation('common');
+  const language = i18n.resolvedLanguage ?? i18n.language;
   const branch = useAuthStore((state) => state.branch?.code ?? '0');
   const { can } = usePermissionAccess();
   const [form, setForm] = useState<Policy | null>(null);
   const [saving, setSaving] = useState(false);
   const [testingErp, setTestingErp] = useState(false);
   const [tab, setTab] = useState<'policy' | 'defaults' | 'warehouses'>('policy');
+
+  const unwrap = <T,>(value: Envelope<T>): T => {
+    if (!value.success) throw new Error(value.message || t(`${POLICY}.operationFailed`));
+    return value.data;
+  };
+
+  const overReceiptOptions = useMemo(
+    () => ([
+      { value: 'NotAllowed', label: t(`${POLICY}.overReceiptPolicy.NotAllowed`) },
+      { value: 'WithinTolerance', label: t(`${POLICY}.overReceiptPolicy.WithinTolerance`) },
+      { value: 'ApprovalRequired', label: t(`${POLICY}.overReceiptPolicy.ApprovalRequired`) },
+    ] as const),
+    [language, t],
+  );
+
+  const inventoryAvailabilityOptions = useMemo(
+    () => ([
+      'Immediate',
+      'AfterReceiptApproval',
+      'AfterQualityApproval',
+      'AfterAllApprovals',
+    ] as const).map((value) => ({
+      value,
+      label: t(`${POLICY}.inventoryAvailabilityPolicy.${value}`),
+    })),
+    [language, t],
+  );
+
+  const erpPostingOptions = useMemo(
+    () => ([
+      'AfterReceipt',
+      'AfterReceiptApproval',
+      'AfterQualityApproval',
+      'AfterAllApprovals',
+    ] as const).map((value) => ({
+      value,
+      label: t(`${POLICY}.erpPostingPolicy.${value}`),
+    })),
+    [language, t],
+  );
 
   useEffect(() => {
     api.get<Envelope<Policy>>(`/api/goods-receipt-policy?branchCode=${encodeURIComponent(branch)}`)
@@ -56,8 +96,8 @@ export function GoodsReceiptPolicyPage() {
           showAllocatedOpenOrderLines: Boolean(policy.showAllocatedOpenOrderLines),
         });
       })
-      .catch((error) => toast.error(error instanceof Error ? error.message : 'Politika yüklenemedi.'));
-  }, [branch]);
+      .catch((error) => toast.error(error instanceof Error ? error.message : t(`${POLICY}.loadError`)));
+  }, [branch, t]);
 
   const set = <K extends keyof Policy>(key: K, value: Policy[K]) =>
     setForm((current) => current ? { ...current, [key]: value } : current);
@@ -67,9 +107,9 @@ export function GoodsReceiptPolicyPage() {
     setSaving(true);
     try {
       setForm(unwrap(await api.put<Envelope<Policy>>('/api/goods-receipt-policy', form)));
-      toast.success('Mal kabul politikası kaydedildi.');
+      toast.success(t(`${POLICY}.saveSuccess`));
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Kaydedilemedi.');
+      toast.error(error instanceof Error ? error.message : t(`${POLICY}.saveError`));
     } finally {
       setSaving(false);
     }
@@ -79,9 +119,9 @@ export function GoodsReceiptPolicyPage() {
     setTestingErp(true);
     try {
       await goodsReceiptV2Api.testErpLogin();
-      toast.success('Netsis REST login başarılı. Token güvenli biçimde alındı.');
+      toast.success(t(`${POLICY}.testErpLoginSuccess`));
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Netsis REST login başarısız.');
+      toast.error(error instanceof Error ? error.message : t(`${POLICY}.testErpLoginError`));
     } finally {
       setTestingErp(false);
     }
@@ -96,23 +136,21 @@ export function GoodsReceiptPolicyPage() {
       <header>
         <div className="flex items-center gap-2 text-cyan-500">
           <SlidersHorizontal />
-          <span className="text-xs font-bold uppercase tracking-widest">Mal Kabul</span>
+          <span className="text-xs font-bold uppercase tracking-widest">{t(`${POLICY}.eyebrow`)}</span>
         </div>
-        <h1 className="mt-2 text-2xl font-bold">Mal Kabul Süreç Politikası</h1>
-        <p className="text-sm text-slate-500">
-          Fazla/eksik kabul, operasyon onayı, kalite kapısı, stok kullanılabilirliği ve ERP gönderim zamanını merkezi yönetin.
-        </p>
+        <h1 className="mt-2 text-2xl font-bold">{t(`${POLICY}.title`)}</h1>
+        <p className="text-sm text-slate-500">{t(`${POLICY}.description`)}</p>
       </header>
 
       <div className="flex flex-wrap gap-2 rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-2">
         <TabButton active={tab === 'policy'} onClick={() => setTab('policy')} icon={<SlidersHorizontal className="size-4" />}>
-          Süreç Politikası
+          {t(`${POLICY}.tabs.policy`)}
         </TabButton>
         <TabButton active={tab === 'warehouses'} onClick={() => setTab('warehouses')} icon={<UsersRound className="size-4" />}>
-          Kullanıcı Depo Yetkileri
+          {t(`${POLICY}.tabs.warehouses`)}
         </TabButton>
         <TabButton active={tab === 'defaults'} onClick={() => setTab('defaults')} icon={<MapPin className="size-4" />}>
-          Depo Varsayılan Rafları
+          {t(`${POLICY}.tabs.defaults`)}
         </TabButton>
       </div>
 
@@ -125,21 +163,17 @@ export function GoodsReceiptPolicyPage() {
         />
       ) : <div className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5">
         <div className="grid gap-4 md:grid-cols-2">
-          <Field label="Fazla kabul">
+          <Field label={t(`${POLICY}.fields.overReceipt`)}>
             <AppDropdown
               value={form.overReceiptPolicy}
               onValueChange={(value) => {
                 set('overReceiptPolicy', value);
                 if (value === 'NotAllowed') set('overReceiptTolerancePercent', 0);
               }}
-              options={[
-                { value: 'NotAllowed', label: 'İzin verme' },
-                { value: 'WithinTolerance', label: 'Tolerans içinde izin ver' },
-                { value: 'ApprovalRequired', label: 'Tolerans içinde onaya gönder' },
-              ]}
+              options={[...overReceiptOptions]}
             />
           </Field>
-          <Field label="Fazla kabul toleransı (%)">
+          <Field label={t(`${POLICY}.fields.overReceiptTolerance`)}>
             <input
               className="input"
               type="number"
@@ -151,60 +185,50 @@ export function GoodsReceiptPolicyPage() {
               onChange={(event) => set('overReceiptTolerancePercent', Number(event.target.value))}
             />
           </Field>
-          <Field label="Stok ne zaman kullanılabilir?">
+          <Field label={t(`${POLICY}.fields.inventoryAvailability`)}>
             <AppDropdown
               value={form.inventoryAvailabilityPolicy}
               onValueChange={(value) => set('inventoryAvailabilityPolicy', value)}
-              options={[
-                ['Immediate', 'Kabulde hemen'],
-                ['AfterReceiptApproval', 'Mal kabul onayından sonra'],
-                ['AfterQualityApproval', 'Kalite onayından sonra'],
-                ['AfterAllApprovals', 'Tüm onaylardan sonra'],
-              ].map(([value, label]) => ({ value, label }))}
+              options={inventoryAvailabilityOptions}
             />
           </Field>
-          <Field label="ERP kaydı ne zaman?">
+          <Field label={t(`${POLICY}.fields.erpPosting`)}>
             <AppDropdown
               value={form.erpPostingPolicy}
               onValueChange={(value) => set('erpPostingPolicy', value)}
-              options={[
-                ['AfterReceipt', 'Kabul tamamlanınca'],
-                ['AfterReceiptApproval', 'Mal kabul onayından sonra'],
-                ['AfterQualityApproval', 'Kalite onayından sonra'],
-                ['AfterAllApprovals', 'Tüm onaylardan sonra'],
-              ].map(([value, label]) => ({ value, label }))}
+              options={erpPostingOptions}
             />
           </Field>
         </div>
 
         <div className="mt-5 grid gap-3 md:grid-cols-2">
-          <Toggle label="Eksik kabule izin ver" value={form.allowUnderReceipt} set={(value) => set('allowUnderReceipt', value)} />
-          <Toggle label="Eksik kapatmada onay iste" value={form.requireShortCloseApproval} set={(value) => set('requireShortCloseApproval', value)} />
-          <Toggle label="Kabul sonrası operasyon onayı iste" value={form.requireReceiptApproval} set={(value) => set('requireReceiptApproval', value)} />
-          <Toggle label="Kalite onayı iste" value={form.requireQualityApproval} set={(value) => set('requireQualityApproval', value)} />
-          <Toggle label="ERP onayı iste" value={form.requireErpApproval} set={(value) => set('requireErpApproval', value)} />
-          <Toggle label="Kalite kararına kadar stoğu beklet" value={form.holdInventoryUntilQualityDecision} set={(value) => set('holdInventoryUntilQualityDecision', value)} />
+          <Toggle label={t(`${POLICY}.toggles.allowUnderReceipt`)} value={form.allowUnderReceipt} set={(value) => set('allowUnderReceipt', value)} />
+          <Toggle label={t(`${POLICY}.toggles.requireShortCloseApproval`)} value={form.requireShortCloseApproval} set={(value) => set('requireShortCloseApproval', value)} />
+          <Toggle label={t(`${POLICY}.toggles.requireReceiptApproval`)} value={form.requireReceiptApproval} set={(value) => set('requireReceiptApproval', value)} />
+          <Toggle label={t(`${POLICY}.toggles.requireQualityApproval`)} value={form.requireQualityApproval} set={(value) => set('requireQualityApproval', value)} />
+          <Toggle label={t(`${POLICY}.toggles.requireErpApproval`)} value={form.requireErpApproval} set={(value) => set('requireErpApproval', value)} />
+          <Toggle label={t(`${POLICY}.toggles.holdInventoryUntilQualityDecision`)} value={form.holdInventoryUntilQualityDecision} set={(value) => set('holdInventoryUntilQualityDecision', value)} />
           <div>
             <Toggle
-              label="Kalite kararı verilmeden depolama rafına yerleştirmeyi engelle"
+              label={t(`${POLICY}.toggles.blockPutawayUntilQualityDecision`)}
               value={form.blockPutawayUntilQualityDecision}
               set={(value) => set('blockPutawayUntilQualityDecision', value)}
             />
             <p className="mt-1 px-3 text-xs text-slate-500">
-              Açıkken kalite bekleyen ürünler yalnızca kabul veya staging alanına alınır; kapalıyken hedef depodaki tüm aktif raflar seçilebilir.
+              {t(`${POLICY}.toggles.blockPutawayHint`)}
             </p>
           </div>
-          <Toggle label="Emirsiz kabule izin ver" value={form.allowOrderlessReceipt} set={(value) => set('allowOrderlessReceipt', value)} />
-          <Toggle label="Plansız kabule izin ver" value={form.allowUnplannedReceipt} set={(value) => set('allowUnplannedReceipt', value)} />
+          <Toggle label={t(`${POLICY}.toggles.allowOrderlessReceipt`)} value={form.allowOrderlessReceipt} set={(value) => set('allowOrderlessReceipt', value)} />
+          <Toggle label={t(`${POLICY}.toggles.allowUnplannedReceipt`)} value={form.allowUnplannedReceipt} set={(value) => set('allowUnplannedReceipt', value)} />
           <Toggle
-            label="Ayrılmış / gönderilmiş sipariş kalemlerini göster"
+            label={t(`${POLICY}.toggles.showAllocatedOpenOrderLines`)}
             value={form.showAllocatedOpenOrderLines}
             set={(value) => set('showAllocatedOpenOrderLines', value)}
           />
         </div>
 
         <div className="mt-5 rounded-xl border border-cyan-500/30 bg-cyan-500/10 p-4 text-sm">
-          Bu ayarlar emir oluşturulurken başlığa snapshot olarak yazılır. Sonradan ayar değişse bile devam eden emir aynı kurallarla tamamlanır.
+          {t(`${POLICY}.snapshotNote`)}
         </div>
 
         <div className="mt-5 flex flex-wrap justify-end gap-3">
@@ -216,7 +240,7 @@ export function GoodsReceiptPolicyPage() {
               className="inline-flex items-center gap-2 rounded-xl border border-cyan-500/50 px-5 py-2.5 font-semibold text-cyan-700 disabled:opacity-50 dark:text-cyan-300"
             >
               {testingErp ? <Loader2 className="size-4 animate-spin" /> : <PlugZap className="size-4" />}
-              Netsis REST Login Testi
+              {t(`${POLICY}.testErpLogin`)}
             </button>
           ) : null}
           <button
@@ -226,7 +250,7 @@ export function GoodsReceiptPolicyPage() {
             className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-5 py-2.5 font-semibold text-white disabled:opacity-50"
           >
             {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-            Politikayı kaydet
+            {t(`${POLICY}.save`)}
           </button>
         </div>
       </div>}
@@ -241,6 +265,7 @@ function WarehouseDefaultLocationsPanel({
   branch: string;
   canManage: boolean;
 }) {
+  const { t } = useTranslation('common');
   const [warehouses, setWarehouses] = useState<GoodsReceiptWarehouseOption[]>([]);
   const [locations, setLocations] = useState<LocationOption[]>([]);
   const [warehouseId, setWarehouseId] = useState<string | null>(null);
@@ -267,12 +292,12 @@ function WarehouseDefaultLocationsPanel({
       const first = page.items[0];
       setWarehouseId(first ? String(first.id) : null);
     }).catch((error) => {
-      if (active) toast.error(error instanceof Error ? error.message : 'Depolar yüklenemedi.');
+      if (active) toast.error(error instanceof Error ? error.message : t(`${POLICY}.defaults.warehousesLoadError`));
     }).finally(() => {
       if (active) setLoading(false);
     });
     return () => { active = false; };
-  }, [branch]);
+  }, [branch, t]);
 
   useEffect(() => {
     const selectedWarehouseId = Number(warehouseId || 0);
@@ -296,12 +321,12 @@ function WarehouseDefaultLocationsPanel({
     }, selectedWarehouseId).then((page) => {
       if (active) setLocations(page.items);
     }).catch((error) => {
-      if (active) toast.error(error instanceof Error ? error.message : 'Aktif raflar yüklenemedi.');
+      if (active) toast.error(error instanceof Error ? error.message : t(`${POLICY}.defaults.locationsLoadError`));
     }).finally(() => {
       if (active) setLocationsLoading(false);
     });
     return () => { active = false; };
-  }, [warehouseId, warehouses]);
+  }, [warehouseId, warehouses, t]);
 
   const save = async (): Promise<void> => {
     const selectedWarehouseId = Number(warehouseId || 0);
@@ -317,10 +342,13 @@ function WarehouseDefaultLocationsPanel({
         ? { ...item, defaultGoodsReceiptLocationId: result.defaultLocationId }
         : item));
       toast.success(result.defaultLocationCode
-        ? `${result.warehouseCode} numaralı depo için ${result.defaultLocationCode} varsayılan raf oldu.`
-        : `${result.warehouseCode} numaralı deponun varsayılan rafı kaldırıldı.`);
+        ? t(`${POLICY}.defaults.saveSuccessWithLocation`, {
+          warehouseCode: result.warehouseCode,
+          locationCode: result.defaultLocationCode,
+        })
+        : t(`${POLICY}.defaults.saveSuccessRemoved`, { warehouseCode: result.warehouseCode }));
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Varsayılan raf kaydedilemedi.');
+      toast.error(error instanceof Error ? error.message : t(`${POLICY}.defaults.saveError`));
     } finally {
       setSaving(false);
     }
@@ -335,15 +363,12 @@ function WarehouseDefaultLocationsPanel({
       <div className="mb-5 flex items-start gap-3">
         <span className="rounded-xl bg-cyan-500/10 p-2 text-cyan-600"><MapPin className="size-5" /></span>
         <div>
-          <h2 className="font-bold">Depoya göre varsayılan mal kabul rafı</h2>
-          <p className="text-sm text-slate-500">
-            Doğrudan mal kabulde depo seçildiğinde bu aktif raf kalemlere otomatik gelir.
-            Kullanıcı gerekirse işlem sırasında başka bir uygun raf seçebilir.
-          </p>
+          <h2 className="font-bold">{t(`${POLICY}.defaults.title`)}</h2>
+          <p className="text-sm text-slate-500">{t(`${POLICY}.defaults.description`)}</p>
         </div>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
-        <Field label="Depo">
+        <Field label={t(`${POLICY}.fields.warehouse`)}>
           <AppDropdown
             value={warehouseId}
             onValueChange={setWarehouseId}
@@ -353,13 +378,13 @@ function WarehouseDefaultLocationsPanel({
             }))}
           />
         </Field>
-        <Field label="Varsayılan raf">
+        <Field label={t(`${POLICY}.fields.defaultLocation`)}>
           <AppDropdown
             value={locationId}
             onValueChange={setLocationId}
             disabled={!warehouseId || locationsLoading}
             options={[
-              { value: 'none', label: 'Varsayılan raf kullanma' },
+              { value: 'none', label: t(`${POLICY}.defaults.noDefaultLocation`) },
               ...locations.map((item) => ({
                 value: String(item.id),
                 label: `${item.code} · ${item.name}`,
@@ -370,8 +395,7 @@ function WarehouseDefaultLocationsPanel({
         </Field>
       </div>
       <div className="mt-4 rounded-xl border border-cyan-500/30 bg-cyan-500/10 p-4 text-sm">
-        Kalite/raf politikası yalnızca Receiving veya Staging alanına izin veriyorsa varsayılan raf da
-        bu kurala uymalıdır; aksi durumda ekranda ilk uygun kabul alanı seçilir.
+        {t(`${POLICY}.defaults.policyNote`)}
       </div>
       <div className="mt-5 flex justify-end">
         <button
@@ -381,7 +405,7 @@ function WarehouseDefaultLocationsPanel({
           className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-5 py-2.5 font-semibold text-white disabled:opacity-50"
         >
           {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-          Varsayılan rafı kaydet
+          {t(`${POLICY}.defaults.save`)}
         </button>
       </div>
     </div>
@@ -389,6 +413,7 @@ function WarehouseDefaultLocationsPanel({
 }
 
 function UserWarehouseAssignmentsPanel({ branch, canManage }: { branch: string; canManage: boolean }) {
+  const { t } = useTranslation('common');
   const [users, setUsers] = useState<UserRow[]>([]);
   const [warehouses, setWarehouses] = useState<WarehouseOption[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -417,12 +442,12 @@ function UserWarehouseAssignmentsPanel({ branch, canManage }: { branch: string; 
       setUsers(userPage.items);
       setWarehouses(warehouseRows);
     }).catch((error) => {
-      if (active) toast.error(error instanceof Error ? error.message : 'Kullanıcı ve depo listesi yüklenemedi.');
+      if (active) toast.error(error instanceof Error ? error.message : t(`${POLICY}.warehouses.loadError`));
     }).finally(() => {
       if (active) setLoading(false);
     });
     return () => { active = false; };
-  }, [branch]);
+  }, [branch, t]);
 
   useEffect(() => {
     const userId = Number(selectedUserId || 0);
@@ -440,13 +465,13 @@ function UserWarehouseAssignmentsPanel({ branch, canManage }: { branch: string; 
         setWarehouseIds(value.warehouseIds);
       })
       .catch((error) => {
-        if (active) toast.error(error instanceof Error ? error.message : 'Kullanıcı bilgisi yüklenemedi.');
+        if (active) toast.error(error instanceof Error ? error.message : t(`${POLICY}.warehouses.userLoadError`));
       })
       .finally(() => {
         if (active) setLoadingUser(false);
       });
     return () => { active = false; };
-  }, [selectedUserId]);
+  }, [selectedUserId, t]);
 
   const unrestrictedByRole = detail?.role === 'Admin' || detail?.role === 'superadmin';
   const save = async (): Promise<void> => {
@@ -457,10 +482,10 @@ function UserWarehouseAssignmentsPanel({ branch, canManage }: { branch: string; 
       setWarehouseIds(savedWarehouseIds);
       setDetail({ ...detail, warehouseIds: savedWarehouseIds });
       toast.success(warehouseIds.length
-        ? 'Kullanıcının mal kabul depoları güncellendi.'
-        : 'Depo kısıtı kaldırıldı; kullanıcı tüm depolarda çalışabilir.');
+        ? t(`${POLICY}.warehouses.saveSuccessAssigned`)
+        : t(`${POLICY}.warehouses.saveSuccessUnrestricted`));
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Depo yetkileri kaydedilemedi.');
+      toast.error(error instanceof Error ? error.message : t(`${POLICY}.warehouses.saveError`));
     } finally {
       setSaving(false);
     }
@@ -471,16 +496,14 @@ function UserWarehouseAssignmentsPanel({ branch, canManage }: { branch: string; 
       <div className="mb-5 flex items-start gap-3">
         <span className="rounded-xl bg-cyan-500/10 p-2 text-cyan-600"><Warehouse className="size-5" /></span>
         <div>
-          <h2 className="font-bold">Kullanıcıya göre mal kabul depoları</h2>
-          <p className="text-sm text-slate-500">
-            Tanım yoksa kullanıcı tüm depolarda çalışır. En az bir depo seçilirse yalnızca seçilen depolarda mal kabul yapabilir.
-          </p>
+          <h2 className="font-bold">{t(`${POLICY}.warehouses.title`)}</h2>
+          <p className="text-sm text-slate-500">{t(`${POLICY}.warehouses.description`)}</p>
         </div>
       </div>
 
       {loading ? <div className="grid min-h-44 place-items-center"><Loader2 className="animate-spin" /></div> : (
         <>
-          <Field label="Kullanıcı">
+          <Field label={t(`${POLICY}.fields.user`)}>
             <AppDropdown
               value={selectedUserId}
               onValueChange={setSelectedUserId}
@@ -489,7 +512,7 @@ function UserWarehouseAssignmentsPanel({ branch, canManage }: { branch: string; 
                 label: `${`${user.firstName} ${user.lastName}`.trim() || user.username} · ${user.username}`,
                 description: `${user.email} · ${user.role}`,
               }))}
-              placeholder="Aktif kullanıcı seçin"
+              placeholder={t(`${POLICY}.warehouses.selectUserPlaceholder`)}
               searchable
             />
           </Field>
@@ -497,11 +520,17 @@ function UserWarehouseAssignmentsPanel({ branch, canManage }: { branch: string; 
           {loadingUser ? <div className="grid min-h-40 place-items-center"><Loader2 className="animate-spin" /></div> : detail ? (
             <div className="mt-5 space-y-4">
               <div className={`rounded-xl border p-4 text-sm ${unrestrictedByRole || warehouseIds.length === 0 ? 'border-emerald-500/30 bg-emerald-500/10' : 'border-cyan-500/30 bg-cyan-500/10'}`}>
-                <strong>{unrestrictedByRole ? 'Rol nedeniyle tüm depolar açık' : warehouseIds.length === 0 ? 'Tanım yok: tüm depolar açık' : `${warehouseIds.length} depo ile kısıtlı`}</strong>
+                <strong>
+                  {unrestrictedByRole
+                    ? t(`${POLICY}.warehouses.statusAllByRole`)
+                    : warehouseIds.length === 0
+                      ? t(`${POLICY}.warehouses.statusAllOpen`)
+                      : t(`${POLICY}.warehouses.statusRestricted`, { count: warehouseIds.length })}
+                </strong>
                 <p className="mt-1 text-xs text-slate-500">
                   {unrestrictedByRole
-                    ? 'Admin ve SuperAdmin kullanıcıları depo atamalarından bağımsız olarak tüm depoları görür.'
-                    : 'Bu kural sipariş seçimi, depo dropdownları ve mal kabul kaydı sırasında API tarafından da doğrulanır.'}
+                    ? t(`${POLICY}.warehouses.hintAllByRole`)
+                    : t(`${POLICY}.warehouses.hintRestricted`)}
                 </p>
               </div>
 
@@ -518,7 +547,7 @@ function UserWarehouseAssignmentsPanel({ branch, canManage }: { branch: string; 
                       className="mt-1 size-4"
                     />
                     <span>
-                      <strong className="block text-sm">Depo {warehouse.warehouseCode}</strong>
+                      <strong className="block text-sm">{t(`${POLICY}.warehouses.warehouseLabel`, { code: warehouse.warehouseCode })}</strong>
                       <small className="text-slate-500">{warehouse.warehouseName}</small>
                     </span>
                   </label>
@@ -532,7 +561,7 @@ function UserWarehouseAssignmentsPanel({ branch, canManage }: { branch: string; 
                   onClick={() => setWarehouseIds([])}
                   className="rounded-xl border border-[var(--wms-app-border)] px-4 py-2.5 text-sm font-semibold disabled:opacity-50"
                 >
-                  Kısıtı kaldır (tüm depolar)
+                  {t(`${POLICY}.warehouses.clearRestriction`)}
                 </button>
                 <button
                   type="button"
@@ -541,7 +570,7 @@ function UserWarehouseAssignmentsPanel({ branch, canManage }: { branch: string; 
                   className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-5 py-2.5 font-semibold text-white disabled:opacity-50"
                 >
                   {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-                  Depo yetkilerini kaydet
+                  {t(`${POLICY}.warehouses.save`)}
                 </button>
               </div>
             </div>

@@ -4775,6 +4775,94 @@
         "Manual": "Manual",
         "OnClose": "On close"
       }
+    },
+    "goodsReceipt": {
+      "eyebrow": "Goods Receipt",
+      "title": "Goods Receipt Process Policy",
+      "description": "Centrally manage over/under receipt, operation approval, quality gates, stock availability and ERP posting timing.",
+      "tabs": {
+        "policy": "Process Policy",
+        "warehouses": "User Warehouse Permissions",
+        "defaults": "Warehouse Default Shelves"
+      },
+      "save": "Save policy",
+      "saveSuccess": "Goods receipt policy saved.",
+      "saveError": "Could not save.",
+      "loadError": "Policy could not be loaded.",
+      "operationFailed": "Operation failed.",
+      "snapshotNote": "These settings are snapshotted onto the header when an order is created. Ongoing orders keep the same rules even if settings change later.",
+      "testErpLogin": "Netsis REST Login Test",
+      "testErpLoginSuccess": "Netsis REST login succeeded. Token was retrieved securely.",
+      "testErpLoginError": "Netsis REST login failed.",
+      "fields": {
+        "overReceipt": "Over-receipt",
+        "overReceiptTolerance": "Over-receipt tolerance (%)",
+        "inventoryAvailability": "When is stock available?",
+        "erpPosting": "When to post to ERP?",
+        "warehouse": "Warehouse",
+        "defaultLocation": "Default shelf",
+        "user": "User"
+      },
+      "overReceiptPolicy": {
+        "NotAllowed": "Do not allow",
+        "WithinTolerance": "Allow within tolerance",
+        "ApprovalRequired": "Send for approval within tolerance"
+      },
+      "inventoryAvailabilityPolicy": {
+        "Immediate": "Immediately on receipt",
+        "AfterReceiptApproval": "After goods receipt approval",
+        "AfterQualityApproval": "After quality approval",
+        "AfterAllApprovals": "After all approvals"
+      },
+      "erpPostingPolicy": {
+        "AfterReceipt": "When receipt is completed",
+        "AfterReceiptApproval": "After goods receipt approval",
+        "AfterQualityApproval": "After quality approval",
+        "AfterAllApprovals": "After all approvals"
+      },
+      "toggles": {
+        "allowUnderReceipt": "Allow under-receipt",
+        "requireShortCloseApproval": "Require approval for short close",
+        "requireReceiptApproval": "Require operation approval after receipt",
+        "requireQualityApproval": "Require quality approval",
+        "requireErpApproval": "Require ERP approval",
+        "holdInventoryUntilQualityDecision": "Hold stock until quality decision",
+        "blockPutawayUntilQualityDecision": "Which shelves can be selected for quality-pending products?",
+        "blockPutawayHint": "When enabled, quality-pending products can only go to receiving or staging areas; when disabled, all active shelves in the target warehouse are selectable.",
+        "allowOrderlessReceipt": "Allow receipt without order",
+        "allowUnplannedReceipt": "Allow unplanned receipt",
+        "showAllocatedOpenOrderLines": "Show allocated / shipped order lines"
+      },
+      "defaults": {
+        "title": "Default goods receipt shelf by warehouse",
+        "description": "When a warehouse is selected during direct goods receipt, this active shelf is applied automatically to lines. Users can choose another suitable shelf during the operation if needed.",
+        "noDefaultLocation": "Do not use a default shelf",
+        "policyNote": "If the quality/shelf policy only allows Receiving or Staging areas, the default shelf must comply; otherwise the first suitable receiving area is selected on screen.",
+        "save": "Save default shelf",
+        "saveSuccessWithLocation": "{{locationCode}} is now the default shelf for warehouse {{warehouseCode}}.",
+        "saveSuccessRemoved": "Default shelf removed for warehouse {{warehouseCode}}.",
+        "saveError": "Default shelf could not be saved.",
+        "warehousesLoadError": "Warehouses could not be loaded.",
+        "locationsLoadError": "Active shelves could not be loaded."
+      },
+      "warehouses": {
+        "title": "Goods receipt warehouses by user",
+        "description": "If no assignment exists, the user can work in all warehouses. If at least one warehouse is selected, goods receipt is limited to those warehouses.",
+        "selectUserPlaceholder": "Select active user",
+        "statusAllByRole": "All warehouses open due to role",
+        "statusAllOpen": "No assignment: all warehouses open",
+        "statusRestricted": "Restricted to {{count}} warehouse(s)",
+        "hintAllByRole": "Admin and SuperAdmin users see all warehouses regardless of warehouse assignments.",
+        "hintRestricted": "This rule is also validated by the API during order selection, warehouse dropdowns and goods receipt recording.",
+        "warehouseLabel": "Warehouse {{code}}",
+        "clearRestriction": "Remove restriction (all warehouses)",
+        "save": "Save warehouse permissions",
+        "saveSuccessAssigned": "User goods receipt warehouses updated.",
+        "saveSuccessUnrestricted": "Warehouse restriction removed; user can work in all warehouses.",
+        "saveError": "Warehouse permissions could not be saved.",
+        "loadError": "User and warehouse list could not be loaded.",
+        "userLoadError": "User details could not be loaded."
+      }
     }
   },
   "transferDraft": {

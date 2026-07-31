@@ -3133,6 +3133,94 @@
         "Manual": "يدوي",
         "OnClose": "عند الإغلاق"
       }
+    },
+    "goodsReceipt": {
+      "eyebrow": "استلام البضائع",
+      "title": "سياسة عملية استلام البضائع",
+      "description": "إدارة مركزية للاستلام الزائد/الناقص، وموافقة العمليات، وبوابات الجودة، وتوفر المخزون، وتوقيت الإرسال إلى ERP.",
+      "tabs": {
+        "policy": "سياسة العملية",
+        "warehouses": "صلاحيات مستودع المستخدم",
+        "defaults": "الرفوف الافتراضية للمستودع"
+      },
+      "save": "حفظ السياسة",
+      "saveSuccess": "تم حفظ سياسة استلام البضائع.",
+      "saveError": "تعذر الحفظ.",
+      "loadError": "تعذر تحميل السياسة.",
+      "operationFailed": "فشلت العملية.",
+      "snapshotNote": "تُحفظ هذه الإعدادات كنسخة على الرأس عند إنشاء الأمر. الأوامر الجارية تحتفظ بنفس القواعد حتى لو تغيرت الإعدادات لاحقاً.",
+      "testErpLogin": "اختبار تسجيل دخول Netsis REST",
+      "testErpLoginSuccess": "نجح تسجيل دخول Netsis REST. تم الحصول على الرمز بشكل آمن.",
+      "testErpLoginError": "فشل تسجيل دخول Netsis REST.",
+      "fields": {
+        "overReceipt": "الاستلام الزائد",
+        "overReceiptTolerance": "تسامح الاستلام الزائد (%)",
+        "inventoryAvailability": "متى يكون المخزون متاحاً؟",
+        "erpPosting": "متى الإرسال إلى ERP؟",
+        "warehouse": "المستودع",
+        "defaultLocation": "الرف الافتراضي",
+        "user": "المستخدم"
+      },
+      "overReceiptPolicy": {
+        "NotAllowed": "عدم السماح",
+        "WithinTolerance": "السماح ضمن التسامح",
+        "ApprovalRequired": "إرسال للموافقة ضمن التسامح"
+      },
+      "inventoryAvailabilityPolicy": {
+        "Immediate": "فور الاستلام",
+        "AfterReceiptApproval": "بعد موافقة الاستلام",
+        "AfterQualityApproval": "بعد موافقة الجودة",
+        "AfterAllApprovals": "بعد جميع الموافقات"
+      },
+      "erpPostingPolicy": {
+        "AfterReceipt": "عند اكتمال الاستلام",
+        "AfterReceiptApproval": "بعد موافقة الاستلام",
+        "AfterQualityApproval": "بعد موافقة الجودة",
+        "AfterAllApprovals": "بعد جميع الموافقات"
+      },
+      "toggles": {
+        "allowUnderReceipt": "السماح بالاستلام الناقص",
+        "requireShortCloseApproval": "طلب موافقة عند الإغلاق الجزئي",
+        "requireReceiptApproval": "طلب موافقة العملية بعد الاستلام",
+        "requireQualityApproval": "طلب موافقة الجودة",
+        "requireErpApproval": "طلب موافقة ERP",
+        "holdInventoryUntilQualityDecision": "تعليق المخزون حتى قرار الجودة",
+        "blockPutawayUntilQualityDecision": "ما الرفوف التي يمكن اختيارها للمنتجات المعلقة للجودة؟",
+        "blockPutawayHint": "عند التفعيل، المنتجات المعلقة للجودة تذهب فقط لمناطق الاستلام أو التجهيز؛ عند التعطيل، يمكن اختيار جميع الرفوف النشطة في المستودع الهدف.",
+        "allowOrderlessReceipt": "السماح بالاستلام بدون أمر",
+        "allowUnplannedReceipt": "السماح بالاستلام غير المخطط",
+        "showAllocatedOpenOrderLines": "عرض بنود الطلب المخصصة / المشحونة"
+      },
+      "defaults": {
+        "title": "رف استلام افتراضي حسب المستودع",
+        "description": "عند اختيار مستودع في الاستلام المباشر، يُطبَّق هذا الرف النشط تلقائياً على البنود. يمكن للمستخدم اختيار رف آخر مناسب أثناء العملية إذا لزم.",
+        "noDefaultLocation": "عدم استخدام رف افتراضي",
+        "policyNote": "إذا كانت سياسة الجودة/الرف تسمح فقط بمناطق الاستلام أو التجهيز، يجب أن يلتزم الرف الافتراضي؛ وإلا يُختار أول منطقة استلام مناسبة.",
+        "save": "حفظ الرف الافتراضي",
+        "saveSuccessWithLocation": "{{locationCode}} أصبح الرف الافتراضي للمستودع {{warehouseCode}}.",
+        "saveSuccessRemoved": "تمت إزالة الرف الافتراضي للمستودع {{warehouseCode}}.",
+        "saveError": "تعذر حفظ الرف الافتراضي.",
+        "warehousesLoadError": "تعذر تحميل المستودعات.",
+        "locationsLoadError": "تعذر تحميل الرفوف النشطة."
+      },
+      "warehouses": {
+        "title": "مستودعات الاستلام حسب المستخدم",
+        "description": "بدون تعيين، يمكن للمستخدم العمل في جميع المستودعات. عند اختيار مستودع واحد على الأقل، يقتصر الاستلام على تلك المستودعات.",
+        "selectUserPlaceholder": "اختر مستخدماً نشطاً",
+        "statusAllByRole": "جميع المستودعات مفتوحة بسبب الدور",
+        "statusAllOpen": "لا يوجد تعيين: جميع المستودعات مفتوحة",
+        "statusRestricted": "مقيد بـ {{count}} مستودع",
+        "hintAllByRole": "مستخدمو Admin و SuperAdmin يرون جميع المستودعات بغض النظر عن التعيينات.",
+        "hintRestricted": "تُتحقق هذه القاعدة أيضاً عبر API أثناء اختيار الطلب وقوائم المستودعات وتسجيل الاستلام.",
+        "warehouseLabel": "المستودع {{code}}",
+        "clearRestriction": "إزالة القيد (جميع المستودعات)",
+        "save": "حفظ صلاحيات المستودع",
+        "saveSuccessAssigned": "تم تحديث مستودعات استلام المستخدم.",
+        "saveSuccessUnrestricted": "تمت إزالة قيد المستودع؛ يمكن للمستخدم العمل في جميع المستودعات.",
+        "saveError": "تعذر حفظ صلاحيات المستودع.",
+        "loadError": "تعذر تحميل قائمة المستخدمين والمستودعات.",
+        "userLoadError": "تعذر تحميل معلومات المستخدم."
+      }
     }
   },
   "transferDraft": {

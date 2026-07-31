@@ -3133,6 +3133,94 @@
         "Manual": "Manuale",
         "OnClose": "Alla chiusura"
       }
+    },
+    "goodsReceipt": {
+      "eyebrow": "Ricevimento merci",
+      "title": "Politica di processo di ricevimento",
+      "description": "Gestisci centralmente sovra/sotto ricevimento, approvazione operativa, controlli qualità, disponibilità stock e momento invio ERP.",
+      "tabs": {
+        "policy": "Politica di processo",
+        "warehouses": "Permessi magazzino utente",
+        "defaults": "Ubicazioni predefinite"
+      },
+      "save": "Salva politica",
+      "saveSuccess": "Politica di ricevimento salvata.",
+      "saveError": "Salvataggio non riuscito.",
+      "loadError": "Impossibile caricare la politica.",
+      "operationFailed": "Operazione non riuscita.",
+      "snapshotNote": "Queste impostazioni vengono salvate come snapshot sull'intestazione alla creazione dell'ordine. Gli ordini in corso mantengono le stesse regole anche se le impostazioni cambiano in seguito.",
+      "testErpLogin": "Test login REST Netsis",
+      "testErpLoginSuccess": "Login REST Netsis riuscito. Token recuperato in modo sicuro.",
+      "testErpLoginError": "Login REST Netsis non riuscito.",
+      "fields": {
+        "overReceipt": "Sovra-ricevimento",
+        "overReceiptTolerance": "Tolleranza sovra-ricevimento (%)",
+        "inventoryAvailability": "Quando lo stock è disponibile?",
+        "erpPosting": "Quando inviare all'ERP?",
+        "warehouse": "Magazzino",
+        "defaultLocation": "Ubicazione predefinita",
+        "user": "Utente"
+      },
+      "overReceiptPolicy": {
+        "NotAllowed": "Non consentire",
+        "WithinTolerance": "Consentire entro tolleranza",
+        "ApprovalRequired": "Inviare ad approvazione entro tolleranza"
+      },
+      "inventoryAvailabilityPolicy": {
+        "Immediate": "Subito al ricevimento",
+        "AfterReceiptApproval": "Dopo approvazione ricevimento",
+        "AfterQualityApproval": "Dopo approvazione qualità",
+        "AfterAllApprovals": "Dopo tutte le approvazioni"
+      },
+      "erpPostingPolicy": {
+        "AfterReceipt": "Al completamento del ricevimento",
+        "AfterReceiptApproval": "Dopo approvazione ricevimento",
+        "AfterQualityApproval": "Dopo approvazione qualità",
+        "AfterAllApprovals": "Dopo tutte le approvazioni"
+      },
+      "toggles": {
+        "allowUnderReceipt": "Consenti sotto-ricevimento",
+        "requireShortCloseApproval": "Richiedi approvazione per chiusura parziale",
+        "requireReceiptApproval": "Richiedi approvazione operativa dopo ricevimento",
+        "requireQualityApproval": "Richiedi approvazione qualità",
+        "requireErpApproval": "Richiedi approvazione ERP",
+        "holdInventoryUntilQualityDecision": "Trattieni stock fino a decisione qualità",
+        "blockPutawayUntilQualityDecision": "Quali scaffali possono essere selezionati per prodotti in attesa qualità?",
+        "blockPutawayHint": "Se attivo, i prodotti in attesa qualità possono andare solo in ricevimento o staging; se disattivo, tutti gli scaffali attivi del magazzino destinazione sono selezionabili.",
+        "allowOrderlessReceipt": "Consenti ricevimento senza ordine",
+        "allowUnplannedReceipt": "Consenti ricevimento non pianificato",
+        "showAllocatedOpenOrderLines": "Mostra righe ordine allocate / spedite"
+      },
+      "defaults": {
+        "title": "Ubicazione ricevimento predefinita per magazzino",
+        "description": "Quando si seleziona un magazzino nel ricevimento diretto, questa ubicazione attiva viene applicata automaticamente alle righe. L'utente può scegliere un'altra ubicazione adatta durante l'operazione se necessario.",
+        "noDefaultLocation": "Non usare ubicazione predefinita",
+        "policyNote": "Se la politica qualità/ubicazione consente solo ricevimento o staging, l'ubicazione predefinita deve rispettarla; altrimenti viene selezionata la prima area di ricevimento adatta.",
+        "save": "Salva ubicazione predefinita",
+        "saveSuccessWithLocation": "{{locationCode}} è ora l'ubicazione predefinita per il magazzino {{warehouseCode}}.",
+        "saveSuccessRemoved": "Ubicazione predefinita rimossa per il magazzino {{warehouseCode}}.",
+        "saveError": "Impossibile salvare l'ubicazione predefinita.",
+        "warehousesLoadError": "Impossibile caricare i magazzini.",
+        "locationsLoadError": "Impossibile caricare le ubicazioni attive."
+      },
+      "warehouses": {
+        "title": "Magazzini di ricevimento per utente",
+        "description": "Senza assegnazione, l'utente può lavorare in tutti i magazzini. Con almeno un magazzino selezionato, il ricevimento è limitato a quei magazzini.",
+        "selectUserPlaceholder": "Seleziona utente attivo",
+        "statusAllByRole": "Tutti i magazzini aperti per ruolo",
+        "statusAllOpen": "Nessuna assegnazione: tutti i magazzini aperti",
+        "statusRestricted": "Limitato a {{count}} magazzino/i",
+        "hintAllByRole": "Gli utenti Admin e SuperAdmin vedono tutti i magazzini indipendentemente dalle assegnazioni.",
+        "hintRestricted": "Questa regola è validata anche dall'API durante selezione ordine, elenchi magazzino e registrazione ricevimento.",
+        "warehouseLabel": "Magazzino {{code}}",
+        "clearRestriction": "Rimuovi restrizione (tutti i magazzini)",
+        "save": "Salva permessi magazzino",
+        "saveSuccessAssigned": "Magazzini di ricevimento dell'utente aggiornati.",
+        "saveSuccessUnrestricted": "Restrizione magazzino rimossa; l'utente può lavorare in tutti i magazzini.",
+        "saveError": "Impossibile salvare i permessi magazzino.",
+        "loadError": "Impossibile caricare l'elenco utenti e magazzini.",
+        "userLoadError": "Impossibile caricare le informazioni utente."
+      }
     }
   },
   "transferDraft": {

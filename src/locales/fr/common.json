@@ -3133,6 +3133,94 @@
         "Manual": "Manuel",
         "OnClose": "À la clôture"
       }
+    },
+    "goodsReceipt": {
+      "eyebrow": "Réception de marchandises",
+      "title": "Politique de processus de réception",
+      "description": "Gérez centralement le sur/sous-réception, l'approbation opérationnelle, les contrôles qualité, la disponibilité stock et le moment de l'envoi ERP.",
+      "tabs": {
+        "policy": "Politique de processus",
+        "warehouses": "Permissions entrepôt utilisateur",
+        "defaults": "Emplacements par défaut"
+      },
+      "save": "Enregistrer la politique",
+      "saveSuccess": "Politique de réception enregistrée.",
+      "saveError": "Enregistrement impossible.",
+      "loadError": "Impossible de charger la politique.",
+      "operationFailed": "Opération échouée.",
+      "snapshotNote": "Ces paramètres sont enregistrés en snapshot sur l'en-tête à la création de la commande. Les commandes en cours conservent les mêmes règles même si les paramètres changent ensuite.",
+      "testErpLogin": "Test de connexion REST Netsis",
+      "testErpLoginSuccess": "Connexion REST Netsis réussie. Jeton récupéré en toute sécurité.",
+      "testErpLoginError": "Échec de la connexion REST Netsis.",
+      "fields": {
+        "overReceipt": "Sur-réception",
+        "overReceiptTolerance": "Tolérance de sur-réception (%)",
+        "inventoryAvailability": "Quand le stock est-il disponible ?",
+        "erpPosting": "Quand envoyer à l'ERP ?",
+        "warehouse": "Entrepôt",
+        "defaultLocation": "Emplacement par défaut",
+        "user": "Utilisateur"
+      },
+      "overReceiptPolicy": {
+        "NotAllowed": "Ne pas autoriser",
+        "WithinTolerance": "Autoriser dans la tolérance",
+        "ApprovalRequired": "Envoyer pour approbation dans la tolérance"
+      },
+      "inventoryAvailabilityPolicy": {
+        "Immediate": "Immédiatement à la réception",
+        "AfterReceiptApproval": "Après approbation réception",
+        "AfterQualityApproval": "Après approbation qualité",
+        "AfterAllApprovals": "Après toutes les approbations"
+      },
+      "erpPostingPolicy": {
+        "AfterReceipt": "À la fin de la réception",
+        "AfterReceiptApproval": "Après approbation réception",
+        "AfterQualityApproval": "Après approbation qualité",
+        "AfterAllApprovals": "Après toutes les approbations"
+      },
+      "toggles": {
+        "allowUnderReceipt": "Autoriser sous-réception",
+        "requireShortCloseApproval": "Exiger approbation pour clôture partielle",
+        "requireReceiptApproval": "Exiger approbation opération après réception",
+        "requireQualityApproval": "Exiger approbation qualité",
+        "requireErpApproval": "Exiger approbation ERP",
+        "holdInventoryUntilQualityDecision": "Retenir le stock jusqu'à décision qualité",
+        "blockPutawayUntilQualityDecision": "Quels emplacements peuvent être choisis pour les produits en attente qualité ?",
+        "blockPutawayHint": "Si activé, les produits en attente qualité vont uniquement en réception ou staging ; si désactivé, tous les emplacements actifs de l'entrepôt cible sont sélectionnables.",
+        "allowOrderlessReceipt": "Autoriser réception sans commande",
+        "allowUnplannedReceipt": "Autoriser réception non planifiée",
+        "showAllocatedOpenOrderLines": "Afficher les lignes de commande réservées / expédiées"
+      },
+      "defaults": {
+        "title": "Emplacement de réception par défaut par entrepôt",
+        "description": "Lors de la sélection d'un entrepôt en réception directe, cet emplacement actif est appliqué automatiquement aux lignes. L'utilisateur peut choisir un autre emplacement adapté si nécessaire.",
+        "noDefaultLocation": "Ne pas utiliser d'emplacement par défaut",
+        "policyNote": "Si la politique qualité/emplacement n'autorise que réception ou staging, l'emplacement par défaut doit respecter cette règle ; sinon le premier emplacement de réception adapté est sélectionné.",
+        "save": "Enregistrer l'emplacement par défaut",
+        "saveSuccessWithLocation": "{{locationCode}} est maintenant l'emplacement par défaut pour l'entrepôt {{warehouseCode}}.",
+        "saveSuccessRemoved": "Emplacement par défaut supprimé pour l'entrepôt {{warehouseCode}}.",
+        "saveError": "Impossible d'enregistrer l'emplacement par défaut.",
+        "warehousesLoadError": "Impossible de charger les entrepôts.",
+        "locationsLoadError": "Impossible de charger les emplacements actifs."
+      },
+      "warehouses": {
+        "title": "Entrepôts de réception par utilisateur",
+        "description": "Sans affectation, l'utilisateur peut travailler dans tous les entrepôts. Avec au moins un entrepôt sélectionné, la réception est limitée à ces entrepôts.",
+        "selectUserPlaceholder": "Sélectionner un utilisateur actif",
+        "statusAllByRole": "Tous les entrepôts ouverts grâce au rôle",
+        "statusAllOpen": "Aucune affectation : tous les entrepôts ouverts",
+        "statusRestricted": "Limité à {{count}} entrepôt(s)",
+        "hintAllByRole": "Les utilisateurs Admin et SuperAdmin voient tous les entrepôts indépendamment des affectations.",
+        "hintRestricted": "Cette règle est aussi validée par l'API lors de la sélection de commande, des listes d'entrepôts et de l'enregistrement de réception.",
+        "warehouseLabel": "Entrepôt {{code}}",
+        "clearRestriction": "Supprimer la restriction (tous les entrepôts)",
+        "save": "Enregistrer les permissions entrepôt",
+        "saveSuccessAssigned": "Entrepôts de réception de l'utilisateur mis à jour.",
+        "saveSuccessUnrestricted": "Restriction entrepôt supprimée ; l'utilisateur peut travailler dans tous les entrepôts.",
+        "saveError": "Impossible d'enregistrer les permissions entrepôt.",
+        "loadError": "Impossible de charger la liste utilisateurs et entrepôts.",
+        "userLoadError": "Impossible de charger les informations utilisateur."
+      }
     }
   },
   "transferDraft": {

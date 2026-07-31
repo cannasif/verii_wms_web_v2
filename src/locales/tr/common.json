@@ -4796,6 +4796,94 @@
         "Manual": "Manuel",
         "OnClose": "Kapatınca"
       }
+    },
+    "goodsReceipt": {
+      "eyebrow": "Mal Kabul",
+      "title": "Mal Kabul Süreç Politikası",
+      "description": "Fazla/eksik kabul, operasyon onayı, kalite kapısı, stok kullanılabilirliği ve ERP gönderim zamanını merkezi yönetin.",
+      "tabs": {
+        "policy": "Süreç Politikası",
+        "warehouses": "Kullanıcı Depo Yetkileri",
+        "defaults": "Depo Varsayılan Rafları"
+      },
+      "save": "Politikayı kaydet",
+      "saveSuccess": "Mal kabul politikası kaydedildi.",
+      "saveError": "Kaydedilemedi.",
+      "loadError": "Politika yüklenemedi.",
+      "operationFailed": "İşlem başarısız.",
+      "snapshotNote": "Bu ayarlar emir oluşturulurken başlığa snapshot olarak yazılır. Sonradan ayar değişse bile devam eden emir aynı kurallarla tamamlanır.",
+      "testErpLogin": "Netsis REST Login Testi",
+      "testErpLoginSuccess": "Netsis REST login başarılı. Token güvenli biçimde alındı.",
+      "testErpLoginError": "Netsis REST login başarısız.",
+      "fields": {
+        "overReceipt": "Fazla kabul",
+        "overReceiptTolerance": "Fazla kabul toleransı (%)",
+        "inventoryAvailability": "Stok ne zaman kullanılabilir?",
+        "erpPosting": "ERP kaydı ne zaman?",
+        "warehouse": "Depo",
+        "defaultLocation": "Varsayılan raf",
+        "user": "Kullanıcı"
+      },
+      "overReceiptPolicy": {
+        "NotAllowed": "İzin verme",
+        "WithinTolerance": "Tolerans içinde izin ver",
+        "ApprovalRequired": "Tolerans içinde onaya gönder"
+      },
+      "inventoryAvailabilityPolicy": {
+        "Immediate": "Kabulde hemen",
+        "AfterReceiptApproval": "Mal kabul onayından sonra",
+        "AfterQualityApproval": "Kalite onayından sonra",
+        "AfterAllApprovals": "Tüm onaylardan sonra"
+      },
+      "erpPostingPolicy": {
+        "AfterReceipt": "Kabul tamamlanınca",
+        "AfterReceiptApproval": "Mal kabul onayından sonra",
+        "AfterQualityApproval": "Kalite onayından sonra",
+        "AfterAllApprovals": "Tüm onaylardan sonra"
+      },
+      "toggles": {
+        "allowUnderReceipt": "Eksik kabule izin ver",
+        "requireShortCloseApproval": "Eksik kapatmada onay iste",
+        "requireReceiptApproval": "Kabul sonrası operasyon onayı iste",
+        "requireQualityApproval": "Kalite onayı iste",
+        "requireErpApproval": "ERP onayı iste",
+        "holdInventoryUntilQualityDecision": "Kalite kararına kadar stoğu beklet",
+        "blockPutawayUntilQualityDecision": "Kalite bekleyen üründe hangi raflar seçilebilir?",
+        "blockPutawayHint": "Açıkken kalite bekleyen ürünler yalnızca kabul veya staging alanına alınır; kapalıyken hedef depodaki tüm aktif raflar seçilebilir.",
+        "allowOrderlessReceipt": "Emirsiz kabule izin ver",
+        "allowUnplannedReceipt": "Plansız kabule izin ver",
+        "showAllocatedOpenOrderLines": "Ayrılmış / gönderilmiş sipariş kalemlerini göster"
+      },
+      "defaults": {
+        "title": "Depoya göre varsayılan mal kabul rafı",
+        "description": "Doğrudan mal kabulde depo seçildiğinde bu aktif raf kalemlere otomatik gelir. Kullanıcı gerekirse işlem sırasında başka bir uygun raf seçebilir.",
+        "noDefaultLocation": "Varsayılan raf kullanma",
+        "policyNote": "Kalite/raf politikası yalnızca Receiving veya Staging alanına izin veriyorsa varsayılan raf da bu kurala uymalıdır; aksi durumda ekranda ilk uygun kabul alanı seçilir.",
+        "save": "Varsayılan rafı kaydet",
+        "saveSuccessWithLocation": "{{warehouseCode}} numaralı depo için {{locationCode}} varsayılan raf oldu.",
+        "saveSuccessRemoved": "{{warehouseCode}} numaralı deponun varsayılan rafı kaldırıldı.",
+        "saveError": "Varsayılan raf kaydedilemedi.",
+        "warehousesLoadError": "Depolar yüklenemedi.",
+        "locationsLoadError": "Aktif raflar yüklenemedi."
+      },
+      "warehouses": {
+        "title": "Kullanıcıya göre mal kabul depoları",
+        "description": "Tanım yoksa kullanıcı tüm depolarda çalışır. En az bir depo seçilirse yalnızca seçilen depolarda mal kabul yapabilir.",
+        "selectUserPlaceholder": "Aktif kullanıcı seçin",
+        "statusAllByRole": "Rol nedeniyle tüm depolar açık",
+        "statusAllOpen": "Tanım yok: tüm depolar açık",
+        "statusRestricted": "{{count}} depo ile kısıtlı",
+        "hintAllByRole": "Admin ve SuperAdmin kullanıcıları depo atamalarından bağımsız olarak tüm depoları görür.",
+        "hintRestricted": "Bu kural sipariş seçimi, depo dropdownları ve mal kabul kaydı sırasında API tarafından da doğrulanır.",
+        "warehouseLabel": "Depo {{code}}",
+        "clearRestriction": "Kısıtı kaldır (tüm depolar)",
+        "save": "Depo yetkilerini kaydet",
+        "saveSuccessAssigned": "Kullanıcının mal kabul depoları güncellendi.",
+        "saveSuccessUnrestricted": "Depo kısıtı kaldırıldı; kullanıcı tüm depolarda çalışabilir.",
+        "saveError": "Depo yetkileri kaydedilemedi.",
+        "loadError": "Kullanıcı ve depo listesi yüklenemedi.",
+        "userLoadError": "Kullanıcı bilgisi yüklenemedi."
+      }
     }
   },
   "transferDraft": {
