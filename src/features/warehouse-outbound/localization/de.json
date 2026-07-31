@@ -29,5 +29,142 @@
       "title": "Lagerausgangseinstellungen",
       "description": "Verwalten Sie Ablaufvarianten, Reservierungen, Teilausführungen, Genehmigungen und ERP Buchungsregeln."
     }
+  },
+  "list": {
+    "title": "Versanddatensätze",
+    "description": "Verfolgen Sie Plan-, Kommissionier-, Verpackungs-, Lade- und Versandmengen serverseitig.",
+    "columns": {
+      "documentNo": "Versand-Nr.",
+      "documentDate": "Datum",
+      "customerCode": "Kundencode",
+      "customerName": "Kundenname",
+      "sourceWarehouseCode": "Lagercode",
+      "sourceWarehouseName": "Lagername",
+      "initiationMode": "Ablauf",
+      "status": "Status",
+      "requestedQuantity": "Plan",
+      "pickedQuantity": "Kommissioniert",
+      "packedQuantity": "Verpackt",
+      "loadedQuantity": "Geladen",
+      "shippedQuantity": "Versendet",
+      "actions": "Aktionen"
+    },
+    "actionTitles": {
+      "runOperation": "Vorgang ausführen",
+      "editDraft": "Entwurf bearbeiten",
+      "deleteDraft": "Entwurf löschen",
+      "cancelShipment": "Versand stornieren",
+      "showDetail": "Details anzeigen"
+    },
+    "errors": {
+      "openFailed": "Versand konnte nicht geöffnet werden.",
+      "updateFailed": "Versand konnte nicht aktualisiert werden.",
+      "cancelReasonRequired": "Stornierungsgrund ist erforderlich.",
+      "actionFailed": "Aktion konnte nicht abgeschlossen werden."
+    },
+    "toasts": {
+      "updated": "Versandentwurf aktualisiert.",
+      "deleted": "Versandentwurf gelöscht.",
+      "cancelled": "Versand storniert; Bestandsbewegungen wurden rückgängig gemacht."
+    },
+    "editDialog": {
+      "title": "Lagerausgangsentwurf bearbeiten",
+      "description": "Bearbeiten Sie den Lagerausgangsentwurf mit der Nummer {{documentNo}}.",
+      "closeAria": "Fenster schließen",
+      "fields": {
+        "documentDate": "Belegdatum",
+        "plannedShipment": "Geplanter Versand",
+        "priority": "Priorität",
+        "externalReference": "Externe Referenz",
+        "carrierCode": "Spediteurcode",
+        "carrierName": "Spediteurname",
+        "vehiclePlate": "Fahrzeugkennzeichen",
+        "trailerPlate": "Anhängerkennzeichen",
+        "driverName": "Fahrer",
+        "sealNo": "Plombennummer",
+        "description": "Beschreibung"
+      },
+      "eDispatch": "E-Lieferschein",
+      "lockedNotice": "Kunde, Lager, Lagerplatz, Bestand und Mengenfelder können hier zur Wahrung der Vorgangsintegrität nicht geändert werden.",
+      "cancel": "Abbrechen",
+      "save": "Speichern"
+    },
+    "lifecycleDialog": {
+      "deleteTitle": "Entwurf löschen",
+      "cancelTitle": "Lagerausgang stornieren",
+      "description": "Bestätigung einer unwiderruflichen Aktion für {{documentNo}}.",
+      "irreversibleNotice": "Diese Aktion kann für {{documentNo}} nicht rückgängig gemacht werden. Bestandsbewegungen werden in umgekehrter Reihenfolge in einer einzigen Transaktion rückgängig gemacht.",
+      "cancelReasonPlaceholder": "Geben Sie den Stornierungsgrund ein",
+      "cancel": "Abbrechen",
+      "processing": "Wird verarbeitet…",
+      "confirmDelete": "Entwurf löschen",
+      "confirmCancel": "Stornieren"
+    },
+    "detailDialog": {
+      "title": "Lagerausgang {{documentNo}}",
+      "description": "Lagerausgangspositionen und Vorgangsfortschritt.",
+      "openOperation": "Vorgang öffnen",
+      "closeAria": "Fenster schließen",
+      "columns": {
+        "line": "#",
+        "stock": "Bestand",
+        "plan": "Plan",
+        "reserved": "Reserviert",
+        "picked": "Kommissioniert",
+        "packed": "Verpackt",
+        "loaded": "Geladen",
+        "shipped": "Versendet"
+      }
+    }
+  },
+  "operation": {
+    "eyebrow": "Versand-Vorgangszentrum",
+    "backToRecords": "Zurück zu den Datensätzen",
+    "backToList": "Zurück zur Versandliste",
+    "loadErrorTitle": "Versandvorgang konnte nicht geöffnet werden",
+    "loadError": "Versanddatensatz konnte nicht geöffnet werden.",
+    "metrics": { "plan": "Plan", "picked": "Kommissioniert", "packed": "Verpackt", "loaded": "Geladen", "shipped": "Versendet" },
+    "phases": {
+      "pick": "01 · Kommissionierung",
+      "pack": "02 · Verpackung",
+      "load": "03 · Beladung",
+      "ship": "04 · Versandabschluss"
+    },
+    "documentGates": {
+      "title": "Belegfreigaben",
+      "status": "Status",
+      "approval": "Genehmigung",
+      "approve": "Genehmigen",
+      "release": "Freigeben"
+    },
+    "fields": {
+      "operation": "Vorgang",
+      "vehiclePlate": "Fahrzeugkennzeichen",
+      "driver": "Fahrer",
+      "waybill": "Lieferschein",
+      "trackingNo": "Sendungsnummer",
+      "note": "Notiz",
+      "quantity": "Menge",
+      "sourceLocation": "Quellplatz",
+      "targetLocation": "Zielplatz",
+      "lot": "Charge",
+      "serial": "Seriennummer",
+      "handlingUnit": "Palette/Kiste"
+    },
+    "scanner": {
+      "titleSuffix": "Barcode scannen",
+      "packDescription": "Beim Verpackungsschritt wird das Paletten-/Kistenetikett verwendet. Die Bestandsserien-/Chargenprüfung erfolgt bei Kommissionierung, Beladung und Versand.",
+      "defaultDescription": "Der gescannte Barcode wird anhand von Bestand, Seriennummer, Charge, Menge und aktuellem Lagerplatzsaldo überprüft; die zugehörige Versandposition wird automatisch ausgefüllt."
+    },
+    "lineAvailable": "Verfügbar",
+    "processOperation": "Vorgang verarbeiten",
+    "errors": {
+      "detailNotLoaded": "Versanddetails wurden noch nicht geladen.",
+      "atLeastOneLine": "Mindestens eine Position muss verarbeitet werden.",
+      "locationsRequired": "Vervollständigen Sie die Auswahl von Quell- und Ziellagerplatz.",
+      "trackingInvalid": "Füllen Sie Serie, Charge, Palette/Kiste und Mengenangaben gemäß der Bestandsverfolgungsregel aus.",
+      "noOpenLine": "Für {{stockCode}} wurde in diesem Versand keine offene Position gefunden.",
+      "operationFailed": "Vorgang konnte nicht abgeschlossen werden."
+    }
   }
 }

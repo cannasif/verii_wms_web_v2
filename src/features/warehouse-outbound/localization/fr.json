@@ -29,5 +29,142 @@
       "title": "Paramètres sortants de l'entrepôt",
       "description": "Gérez les variantes de flux, la réservation, l'exécution partielle, l'approbation et les règles de publication ERP."
     }
+  },
+  "list": {
+    "title": "Enregistrements d'expédition",
+    "description": "Suivez côté serveur les quantités planifiées, préparées, emballées, chargées et expédiées.",
+    "columns": {
+      "documentNo": "N° d'expédition",
+      "documentDate": "Date",
+      "customerCode": "Code client",
+      "customerName": "Nom du client",
+      "sourceWarehouseCode": "Code entrepôt",
+      "sourceWarehouseName": "Nom de l'entrepôt",
+      "initiationMode": "Flux",
+      "status": "Statut",
+      "requestedQuantity": "Plan",
+      "pickedQuantity": "Préparé",
+      "packedQuantity": "Emballé",
+      "loadedQuantity": "Chargé",
+      "shippedQuantity": "Expédié",
+      "actions": "Actions"
+    },
+    "actionTitles": {
+      "runOperation": "Exécuter l'opération",
+      "editDraft": "Modifier le brouillon",
+      "deleteDraft": "Supprimer le brouillon",
+      "cancelShipment": "Annuler l'expédition",
+      "showDetail": "Afficher les détails"
+    },
+    "errors": {
+      "openFailed": "Impossible d'ouvrir l'expédition.",
+      "updateFailed": "Impossible de mettre à jour l'expédition.",
+      "cancelReasonRequired": "Le motif d'annulation est obligatoire.",
+      "actionFailed": "Impossible de terminer l'action."
+    },
+    "toasts": {
+      "updated": "Brouillon d'expédition mis à jour.",
+      "deleted": "Brouillon d'expédition supprimé.",
+      "cancelled": "Expédition annulée ; les mouvements de stock ont été inversés."
+    },
+    "editDialog": {
+      "title": "Modifier le brouillon de sortie d'entrepôt",
+      "description": "Modifiez le brouillon de sortie d'entrepôt numéro {{documentNo}}.",
+      "closeAria": "Fermer la fenêtre",
+      "fields": {
+        "documentDate": "Date du document",
+        "plannedShipment": "Expédition planifiée",
+        "priority": "Priorité",
+        "externalReference": "Référence externe",
+        "carrierCode": "Code transporteur",
+        "carrierName": "Nom du transporteur",
+        "vehiclePlate": "Plaque du véhicule",
+        "trailerPlate": "Plaque de la remorque",
+        "driverName": "Chauffeur",
+        "sealNo": "N° de scellé",
+        "description": "Description"
+      },
+      "eDispatch": "E-bordereau",
+      "lockedNotice": "Les champs client, entrepôt, emplacement, stock et quantité ne peuvent pas être modifiés ici afin de préserver l'intégrité de l'opération.",
+      "cancel": "Annuler",
+      "save": "Enregistrer"
+    },
+    "lifecycleDialog": {
+      "deleteTitle": "Supprimer le brouillon",
+      "cancelTitle": "Annuler la sortie d'entrepôt",
+      "description": "Confirmation d'une action irréversible pour {{documentNo}}.",
+      "irreversibleNotice": "Cette action est irréversible pour {{documentNo}}. Les mouvements de stock seront inversés dans l'ordre au sein d'une seule transaction.",
+      "cancelReasonPlaceholder": "Saisissez le motif d'annulation",
+      "cancel": "Annuler",
+      "processing": "Traitement en cours…",
+      "confirmDelete": "Supprimer le brouillon",
+      "confirmCancel": "Annuler l'expédition"
+    },
+    "detailDialog": {
+      "title": "Sortie d'entrepôt {{documentNo}}",
+      "description": "Lignes de sortie d'entrepôt et progression de l'opération.",
+      "openOperation": "Ouvrir l'opération",
+      "closeAria": "Fermer la fenêtre",
+      "columns": {
+        "line": "#",
+        "stock": "Stock",
+        "plan": "Plan",
+        "reserved": "Réservé",
+        "picked": "Préparé",
+        "packed": "Emballé",
+        "loaded": "Chargé",
+        "shipped": "Expédié"
+      }
+    }
+  },
+  "operation": {
+    "eyebrow": "Centre d'opérations d'expédition",
+    "backToRecords": "Retour aux enregistrements",
+    "backToList": "Retour à la liste des expéditions",
+    "loadErrorTitle": "Impossible d'ouvrir l'opération d'expédition",
+    "loadError": "Impossible d'ouvrir l'enregistrement d'expédition.",
+    "metrics": { "plan": "Plan", "picked": "Préparé", "packed": "Emballé", "loaded": "Chargé", "shipped": "Expédié" },
+    "phases": {
+      "pick": "01 · Préparation",
+      "pack": "02 · Emballage",
+      "load": "03 · Chargement",
+      "ship": "04 · Finalisation de l'expédition"
+    },
+    "documentGates": {
+      "title": "Portes du document",
+      "status": "Statut",
+      "approval": "Approbation",
+      "approve": "Approuver",
+      "release": "Libérer"
+    },
+    "fields": {
+      "operation": "Opération",
+      "vehiclePlate": "Plaque du véhicule",
+      "driver": "Chauffeur",
+      "waybill": "Bordereau",
+      "trackingNo": "N° de suivi",
+      "note": "Remarque",
+      "quantity": "Quantité",
+      "sourceLocation": "Emplacement source",
+      "targetLocation": "Emplacement cible",
+      "lot": "Lot",
+      "serial": "Série",
+      "handlingUnit": "Palette/Caisse"
+    },
+    "scanner": {
+      "titleSuffix": "scanner le code-barres",
+      "packDescription": "L'étiquette palette/caisse est utilisée à l'étape d'emballage. La vérification série/lot du stock est effectuée aux étapes de préparation, chargement et expédition.",
+      "defaultDescription": "Le code-barres scanné est vérifié par rapport au stock, à la série, au lot, à la quantité et au solde d'emplacement actuel ; la ligne d'expédition correspondante est renseignée automatiquement."
+    },
+    "lineAvailable": "Disponible",
+    "processOperation": "Traiter l'opération",
+    "errors": {
+      "detailNotLoaded": "Les détails de l'expédition ne sont pas encore chargés.",
+      "atLeastOneLine": "Au moins une ligne doit être traitée.",
+      "locationsRequired": "Complétez les sélections d'emplacement source et cible.",
+      "trackingInvalid": "Renseignez les informations de série, lot, palette/caisse et quantité conformément à la règle de suivi de stock.",
+      "noOpenLine": "Aucune ligne ouverte trouvée dans cette expédition pour {{stockCode}}.",
+      "operationFailed": "Impossible de terminer l'opération."
+    }
   }
 }

@@ -21,5 +21,142 @@
     },
     "records": { "title": "Ambar Çıkış Kayıtları", "description": "Planlanan, ayrılan, toplanan ve çıkışı tamamlanan miktarları izleyin." },
     "settings": { "title": "Ambar Çıkış Ayarları", "description": "Akış türleri, rezervasyon, kısmi işlem, onay ve ERP aktarım kurallarını yönetin." }
+  },
+  "list": {
+    "title": "Sevk Kayıtları",
+    "description": "Plan, toplama, paketleme, yükleme ve sevk miktarlarını sunucu taraflı izleyin.",
+    "columns": {
+      "documentNo": "Sevk No",
+      "documentDate": "Tarih",
+      "customerCode": "Cari Kodu",
+      "customerName": "Cari Adı",
+      "sourceWarehouseCode": "Depo Kodu",
+      "sourceWarehouseName": "Depo Adı",
+      "initiationMode": "Akış",
+      "status": "Durum",
+      "requestedQuantity": "Plan",
+      "pickedQuantity": "Toplandı",
+      "packedQuantity": "Paketlendi",
+      "loadedQuantity": "Yüklendi",
+      "shippedQuantity": "Sevk",
+      "actions": "İşlemler"
+    },
+    "actionTitles": {
+      "runOperation": "Operasyonu yürüt",
+      "editDraft": "Taslağı düzenle",
+      "deleteDraft": "Taslağı sil",
+      "cancelShipment": "Sevki iptal et",
+      "showDetail": "Detayı göster"
+    },
+    "errors": {
+      "openFailed": "Sevk açılamadı.",
+      "updateFailed": "Sevk güncellenemedi.",
+      "cancelReasonRequired": "İptal nedeni zorunludur.",
+      "actionFailed": "İşlem tamamlanamadı."
+    },
+    "toasts": {
+      "updated": "Sevk taslağı güncellendi.",
+      "deleted": "Sevk taslağı silindi.",
+      "cancelled": "Sevk iptal edildi; stok hareketleri ters çevrildi."
+    },
+    "editDialog": {
+      "title": "Ambar çıkış taslağını düzenle",
+      "description": "{{documentNo}} numaralı ambar çıkış taslağını düzenleyin.",
+      "closeAria": "Pencereyi kapat",
+      "fields": {
+        "documentDate": "Belge tarihi",
+        "plannedShipment": "Planlanan sevk",
+        "priority": "Öncelik",
+        "externalReference": "Dış referans",
+        "carrierCode": "Taşıyıcı kodu",
+        "carrierName": "Taşıyıcı adı",
+        "vehiclePlate": "Araç plakası",
+        "trailerPlate": "Dorse plakası",
+        "driverName": "Sürücü",
+        "sealNo": "Mühür no",
+        "description": "Açıklama"
+      },
+      "eDispatch": "E-irsaliye",
+      "lockedNotice": "Cari, depo, raf, stok ve miktar alanları operasyon bütünlüğü için bu ekranda değiştirilemez.",
+      "cancel": "Vazgeç",
+      "save": "Kaydet"
+    },
+    "lifecycleDialog": {
+      "deleteTitle": "Taslağı sil",
+      "cancelTitle": "Ambar çıkışını iptal et",
+      "description": "{{documentNo}} için geri alınamaz işlem onayı.",
+      "irreversibleNotice": "{{documentNo}} için işlem geri alınamaz. İptal sırasında stok hareketleri ters sırada ve tek transaction içinde çevrilir.",
+      "cancelReasonPlaceholder": "İptal nedenini yazın",
+      "cancel": "Vazgeç",
+      "processing": "İşleniyor…",
+      "confirmDelete": "Taslağı Sil",
+      "confirmCancel": "İptal Et"
+    },
+    "detailDialog": {
+      "title": "Ambar çıkış {{documentNo}}",
+      "description": "Ambar çıkış kalemleri ve operasyon ilerlemesi.",
+      "openOperation": "Operasyonu aç",
+      "closeAria": "Pencereyi kapat",
+      "columns": {
+        "line": "#",
+        "stock": "Stok",
+        "plan": "Plan",
+        "reserved": "Rezerve",
+        "picked": "Toplanan",
+        "packed": "Paket",
+        "loaded": "Yüklenen",
+        "shipped": "Sevk"
+      }
+    }
+  },
+  "operation": {
+    "eyebrow": "Sevk Operasyon Merkezi",
+    "backToRecords": "Kayıtlara dön",
+    "backToList": "Sevk listesine dön",
+    "loadErrorTitle": "Sevk operasyonu açılamadı",
+    "loadError": "Sevk kaydı açılamadı.",
+    "metrics": { "plan": "Plan", "picked": "Toplanan", "packed": "Paket", "loaded": "Yüklenen", "shipped": "Sevk" },
+    "phases": {
+      "pick": "01 · Toplama",
+      "pack": "02 · Paketleme",
+      "load": "03 · Yükleme",
+      "ship": "04 · Sevk kesinleştirme"
+    },
+    "documentGates": {
+      "title": "Belge kapıları",
+      "status": "Durum",
+      "approval": "Onay",
+      "approve": "Onayla",
+      "release": "Serbest bırak"
+    },
+    "fields": {
+      "operation": "Operasyon",
+      "vehiclePlate": "Araç plakası",
+      "driver": "Şoför",
+      "waybill": "İrsaliye",
+      "trackingNo": "Takip no",
+      "note": "Not",
+      "quantity": "Miktar",
+      "sourceLocation": "Kaynak raf",
+      "targetLocation": "Hedef raf",
+      "lot": "Lot",
+      "serial": "Seri",
+      "handlingUnit": "Palet/Kasa"
+    },
+    "scanner": {
+      "titleSuffix": "barkodunu okut",
+      "packDescription": "Paketleme adımında palet/kasa etiketi kullanılır. Stok seri/lot doğrulaması toplama, yükleme ve sevk adımlarında yapılır.",
+      "defaultDescription": "Okutulan barkod stok, seri, lot, miktar ve mevcut raf bakiyesiyle doğrulanır; ilgili sevk kalemi otomatik doldurulur."
+    },
+    "lineAvailable": "Kullanılabilir",
+    "processOperation": "Operasyonu işle",
+    "errors": {
+      "detailNotLoaded": "Sevk detayı henüz yüklenmedi.",
+      "atLeastOneLine": "İşlenecek en az bir satır olmalıdır.",
+      "locationsRequired": "Kaynak ve hedef raf seçimlerini tamamlayın.",
+      "trackingInvalid": "Seri, lot, palet/kasa ve miktar bilgilerini stok takip kuralına uygun doldurun.",
+      "noOpenLine": "{{stockCode}} için bu sevkte açık kalem bulunamadı.",
+      "operationFailed": "Operasyon tamamlanamadı."
+    }
   }
 }

@@ -29,5 +29,142 @@
       "title": "إعدادات المستودعات الصادرة",
       "description": "إدارة متغيرات التدفق والحجز والتنفيذ الجزئي والموافقة وقواعد النشر ERP."
     }
+  },
+  "list": {
+    "title": "سجلات الشحن",
+    "description": "تتبّع كميات الخطة والانتقاء والتعبئة والتحميل والشحن من جانب الخادم.",
+    "columns": {
+      "documentNo": "رقم الشحنة",
+      "documentDate": "التاريخ",
+      "customerCode": "كود العميل",
+      "customerName": "اسم العميل",
+      "sourceWarehouseCode": "كود المستودع",
+      "sourceWarehouseName": "اسم المستودع",
+      "initiationMode": "التدفق",
+      "status": "الحالة",
+      "requestedQuantity": "الخطة",
+      "pickedQuantity": "تم الانتقاء",
+      "packedQuantity": "تم التعبئة",
+      "loadedQuantity": "تم التحميل",
+      "shippedQuantity": "تم الشحن",
+      "actions": "الإجراءات"
+    },
+    "actionTitles": {
+      "runOperation": "تشغيل العملية",
+      "editDraft": "تعديل المسودة",
+      "deleteDraft": "حذف المسودة",
+      "cancelShipment": "إلغاء الشحنة",
+      "showDetail": "عرض التفاصيل"
+    },
+    "errors": {
+      "openFailed": "تعذر فتح الشحنة.",
+      "updateFailed": "تعذر تحديث الشحنة.",
+      "cancelReasonRequired": "سبب الإلغاء مطلوب.",
+      "actionFailed": "تعذر إكمال الإجراء."
+    },
+    "toasts": {
+      "updated": "تم تحديث مسودة الشحنة.",
+      "deleted": "تم حذف مسودة الشحنة.",
+      "cancelled": "تم إلغاء الشحنة؛ تم عكس حركات المخزون."
+    },
+    "editDialog": {
+      "title": "تعديل مسودة صادر المستودع",
+      "description": "تعديل مسودة صادر المستودع رقم {{documentNo}}.",
+      "closeAria": "إغلاق النافذة",
+      "fields": {
+        "documentDate": "تاريخ المستند",
+        "plannedShipment": "الشحن المخطط",
+        "priority": "الأولوية",
+        "externalReference": "المرجع الخارجي",
+        "carrierCode": "كود الناقل",
+        "carrierName": "اسم الناقل",
+        "vehiclePlate": "لوحة المركبة",
+        "trailerPlate": "لوحة المقطورة",
+        "driverName": "السائق",
+        "sealNo": "رقم الختم",
+        "description": "الوصف"
+      },
+      "eDispatch": "الإرسالية الإلكترونية",
+      "lockedNotice": "لا يمكن تغيير حقول العميل والمستودع والموقع والمخزون والكمية هنا للحفاظ على سلامة العملية.",
+      "cancel": "تراجع",
+      "save": "حفظ"
+    },
+    "lifecycleDialog": {
+      "deleteTitle": "حذف المسودة",
+      "cancelTitle": "إلغاء صادر المستودع",
+      "description": "تأكيد إجراء لا رجعة فيه لـ {{documentNo}}.",
+      "irreversibleNotice": "لا يمكن التراجع عن هذا الإجراء لـ {{documentNo}}. سيتم عكس حركات المخزون بالترتيب ضمن معاملة واحدة.",
+      "cancelReasonPlaceholder": "اكتب سبب الإلغاء",
+      "cancel": "تراجع",
+      "processing": "جارٍ المعالجة…",
+      "confirmDelete": "حذف المسودة",
+      "confirmCancel": "إلغاء الشحنة"
+    },
+    "detailDialog": {
+      "title": "صادر المستودع {{documentNo}}",
+      "description": "بنود صادر المستودع وتقدم العملية.",
+      "openOperation": "فتح العملية",
+      "closeAria": "إغلاق النافذة",
+      "columns": {
+        "line": "#",
+        "stock": "المخزون",
+        "plan": "الخطة",
+        "reserved": "محجوز",
+        "picked": "تم الانتقاء",
+        "packed": "تم التعبئة",
+        "loaded": "تم التحميل",
+        "shipped": "تم الشحن"
+      }
+    }
+  },
+  "operation": {
+    "eyebrow": "مركز عمليات الشحن",
+    "backToRecords": "العودة إلى السجلات",
+    "backToList": "العودة إلى قائمة الشحنات",
+    "loadErrorTitle": "تعذر فتح عملية الشحن",
+    "loadError": "تعذر فتح سجل الشحنة.",
+    "metrics": { "plan": "الخطة", "picked": "تم الانتقاء", "packed": "تم التعبئة", "loaded": "تم التحميل", "shipped": "تم الشحن" },
+    "phases": {
+      "pick": "01 · الانتقاء",
+      "pack": "02 · التعبئة",
+      "load": "03 · التحميل",
+      "ship": "04 · إنهاء الشحن"
+    },
+    "documentGates": {
+      "title": "بوابات المستند",
+      "status": "الحالة",
+      "approval": "الموافقة",
+      "approve": "الموافقة",
+      "release": "الإفراج"
+    },
+    "fields": {
+      "operation": "العملية",
+      "vehiclePlate": "لوحة المركبة",
+      "driver": "السائق",
+      "waybill": "الإرسالية",
+      "trackingNo": "رقم التتبع",
+      "note": "ملاحظة",
+      "quantity": "الكمية",
+      "sourceLocation": "الموقع المصدر",
+      "targetLocation": "الموقع الهدف",
+      "lot": "الدفعة",
+      "serial": "الرقم التسلسلي",
+      "handlingUnit": "منصة/صندوق"
+    },
+    "scanner": {
+      "titleSuffix": "مسح الباركود",
+      "packDescription": "يُستخدم ملصق المنصة/الصندوق أثناء خطوة التعبئة. يتم إجراء التحقق من الرقم التسلسلي/الدفعة في خطوات الانتقاء والتحميل والشحن.",
+      "defaultDescription": "يتم التحقق من الباركود الممسوح مقابل المخزون والرقم التسلسلي والدفعة والكمية ورصيد الموقع الحالي؛ ويتم تعبئة بند الشحن المرتبط تلقائيًا."
+    },
+    "lineAvailable": "متاح",
+    "processOperation": "معالجة العملية",
+    "errors": {
+      "detailNotLoaded": "لم يتم تحميل تفاصيل الشحنة بعد.",
+      "atLeastOneLine": "يجب معالجة بند واحد على الأقل.",
+      "locationsRequired": "أكمل اختيارات الموقع المصدر والهدف.",
+      "trackingInvalid": "املأ معلومات الرقم التسلسلي والدفعة والمنصة/الصندوق والكمية وفقًا لقاعدة تتبع المخزون.",
+      "noOpenLine": "لم يتم العثور على بند مفتوح في هذه الشحنة لـ {{stockCode}}.",
+      "operationFailed": "تعذر إكمال العملية."
+    }
   }
 }

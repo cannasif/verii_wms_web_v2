@@ -21,5 +21,142 @@
     },
     "records": { "title": "Warehouse Outbound Records", "description": "Track planned, reserved, picked and completed outbound quantities." },
     "settings": { "title": "Warehouse Outbound Settings", "description": "Manage flow variants, reservation, partial execution, approval and ERP posting rules." }
+  },
+  "list": {
+    "title": "Shipment Records",
+    "description": "Track plan, picking, packing, loading and shipped quantities server-side.",
+    "columns": {
+      "documentNo": "Shipment No",
+      "documentDate": "Date",
+      "customerCode": "Customer Code",
+      "customerName": "Customer Name",
+      "sourceWarehouseCode": "Warehouse Code",
+      "sourceWarehouseName": "Warehouse Name",
+      "initiationMode": "Flow",
+      "status": "Status",
+      "requestedQuantity": "Plan",
+      "pickedQuantity": "Picked",
+      "packedQuantity": "Packed",
+      "loadedQuantity": "Loaded",
+      "shippedQuantity": "Shipped",
+      "actions": "Actions"
+    },
+    "actionTitles": {
+      "runOperation": "Run operation",
+      "editDraft": "Edit draft",
+      "deleteDraft": "Delete draft",
+      "cancelShipment": "Cancel shipment",
+      "showDetail": "Show detail"
+    },
+    "errors": {
+      "openFailed": "Could not open the shipment.",
+      "updateFailed": "Could not update the shipment.",
+      "cancelReasonRequired": "Cancellation reason is required.",
+      "actionFailed": "Could not complete the action."
+    },
+    "toasts": {
+      "updated": "Shipment draft updated.",
+      "deleted": "Shipment draft deleted.",
+      "cancelled": "Shipment cancelled; stock movements were reversed."
+    },
+    "editDialog": {
+      "title": "Edit warehouse outbound draft",
+      "description": "Edit the warehouse outbound draft numbered {{documentNo}}.",
+      "closeAria": "Close window",
+      "fields": {
+        "documentDate": "Document date",
+        "plannedShipment": "Planned shipment",
+        "priority": "Priority",
+        "externalReference": "External reference",
+        "carrierCode": "Carrier code",
+        "carrierName": "Carrier name",
+        "vehiclePlate": "Vehicle plate",
+        "trailerPlate": "Trailer plate",
+        "driverName": "Driver",
+        "sealNo": "Seal no",
+        "description": "Description"
+      },
+      "eDispatch": "E-dispatch",
+      "lockedNotice": "Customer, warehouse, location, stock and quantity fields cannot be changed here to preserve operation integrity.",
+      "cancel": "Cancel",
+      "save": "Save"
+    },
+    "lifecycleDialog": {
+      "deleteTitle": "Delete draft",
+      "cancelTitle": "Cancel warehouse outbound",
+      "description": "Irreversible action confirmation for {{documentNo}}.",
+      "irreversibleNotice": "This action cannot be undone for {{documentNo}}. Stock movements will be reversed in order within a single transaction.",
+      "cancelReasonPlaceholder": "Enter the cancellation reason",
+      "cancel": "Cancel",
+      "processing": "Processing…",
+      "confirmDelete": "Delete Draft",
+      "confirmCancel": "Cancel Shipment"
+    },
+    "detailDialog": {
+      "title": "Warehouse outbound {{documentNo}}",
+      "description": "Warehouse outbound lines and operation progress.",
+      "openOperation": "Open operation",
+      "closeAria": "Close window",
+      "columns": {
+        "line": "#",
+        "stock": "Stock",
+        "plan": "Plan",
+        "reserved": "Reserved",
+        "picked": "Picked",
+        "packed": "Packed",
+        "loaded": "Loaded",
+        "shipped": "Shipped"
+      }
+    }
+  },
+  "operation": {
+    "eyebrow": "Shipment Operation Center",
+    "backToRecords": "Back to records",
+    "backToList": "Back to shipment list",
+    "loadErrorTitle": "Could not open the shipment operation",
+    "loadError": "Could not open the shipment record.",
+    "metrics": { "plan": "Plan", "picked": "Picked", "packed": "Packed", "loaded": "Loaded", "shipped": "Shipped" },
+    "phases": {
+      "pick": "01 · Picking",
+      "pack": "02 · Packing",
+      "load": "03 · Loading",
+      "ship": "04 · Shipment finalisation"
+    },
+    "documentGates": {
+      "title": "Document gates",
+      "status": "Status",
+      "approval": "Approval",
+      "approve": "Approve",
+      "release": "Release"
+    },
+    "fields": {
+      "operation": "Operation",
+      "vehiclePlate": "Vehicle plate",
+      "driver": "Driver",
+      "waybill": "Waybill",
+      "trackingNo": "Tracking no",
+      "note": "Note",
+      "quantity": "Quantity",
+      "sourceLocation": "Source location",
+      "targetLocation": "Target location",
+      "lot": "Lot",
+      "serial": "Serial",
+      "handlingUnit": "Pallet/Box"
+    },
+    "scanner": {
+      "titleSuffix": "scan barcode",
+      "packDescription": "The pallet/box label is used during the packing step. Stock serial/lot verification is performed during picking, loading and shipment steps.",
+      "defaultDescription": "The scanned barcode is verified against stock, serial, lot, quantity and current location balance; the related shipment line is filled in automatically."
+    },
+    "lineAvailable": "Available",
+    "processOperation": "Process operation",
+    "errors": {
+      "detailNotLoaded": "Shipment detail has not loaded yet.",
+      "atLeastOneLine": "At least one line must be processed.",
+      "locationsRequired": "Complete the source and target location selections.",
+      "trackingInvalid": "Fill in serial, lot, pallet/box and quantity information according to the stock tracking rule.",
+      "noOpenLine": "No open line found in this shipment for {{stockCode}}.",
+      "operationFailed": "Could not complete the operation."
+    }
   }
 }

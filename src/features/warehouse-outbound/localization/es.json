@@ -29,5 +29,142 @@
       "title": "Configuración de salida del almacén",
       "description": "Gestionar variantes de flujo, reserva, ejecución parcial, aprobación y reglas de contabilización ERP."
     }
+  },
+  "list": {
+    "title": "Registros de envío",
+    "description": "Realice un seguimiento del lado del servidor de las cantidades de plan, recolección, empaque, carga y envío.",
+    "columns": {
+      "documentNo": "N.º de envío",
+      "documentDate": "Fecha",
+      "customerCode": "Código de cliente",
+      "customerName": "Nombre de cliente",
+      "sourceWarehouseCode": "Código de almacén",
+      "sourceWarehouseName": "Nombre de almacén",
+      "initiationMode": "Flujo",
+      "status": "Estado",
+      "requestedQuantity": "Plan",
+      "pickedQuantity": "Recolectado",
+      "packedQuantity": "Empacado",
+      "loadedQuantity": "Cargado",
+      "shippedQuantity": "Enviado",
+      "actions": "Acciones"
+    },
+    "actionTitles": {
+      "runOperation": "Ejecutar operación",
+      "editDraft": "Editar borrador",
+      "deleteDraft": "Eliminar borrador",
+      "cancelShipment": "Cancelar envío",
+      "showDetail": "Mostrar detalle"
+    },
+    "errors": {
+      "openFailed": "No se pudo abrir el envío.",
+      "updateFailed": "No se pudo actualizar el envío.",
+      "cancelReasonRequired": "El motivo de cancelación es obligatorio.",
+      "actionFailed": "No se pudo completar la acción."
+    },
+    "toasts": {
+      "updated": "Borrador de envío actualizado.",
+      "deleted": "Borrador de envío eliminado.",
+      "cancelled": "Envío cancelado; los movimientos de stock fueron revertidos."
+    },
+    "editDialog": {
+      "title": "Editar borrador de salida de almacén",
+      "description": "Edite el borrador de salida de almacén número {{documentNo}}.",
+      "closeAria": "Cerrar ventana",
+      "fields": {
+        "documentDate": "Fecha del documento",
+        "plannedShipment": "Envío planificado",
+        "priority": "Prioridad",
+        "externalReference": "Referencia externa",
+        "carrierCode": "Código de transportista",
+        "carrierName": "Nombre del transportista",
+        "vehiclePlate": "Placa del vehículo",
+        "trailerPlate": "Placa del remolque",
+        "driverName": "Conductor",
+        "sealNo": "N.º de precinto",
+        "description": "Descripción"
+      },
+      "eDispatch": "E-albarán",
+      "lockedNotice": "Los campos de cliente, almacén, ubicación, stock y cantidad no se pueden modificar aquí para preservar la integridad de la operación.",
+      "cancel": "Cancelar",
+      "save": "Guardar"
+    },
+    "lifecycleDialog": {
+      "deleteTitle": "Eliminar borrador",
+      "cancelTitle": "Cancelar salida de almacén",
+      "description": "Confirmación de una acción irreversible para {{documentNo}}.",
+      "irreversibleNotice": "Esta acción no se puede deshacer para {{documentNo}}. Los movimientos de stock se revertirán en orden dentro de una sola transacción.",
+      "cancelReasonPlaceholder": "Escriba el motivo de la cancelación",
+      "cancel": "Cancelar",
+      "processing": "Procesando…",
+      "confirmDelete": "Eliminar borrador",
+      "confirmCancel": "Cancelar envío"
+    },
+    "detailDialog": {
+      "title": "Salida de almacén {{documentNo}}",
+      "description": "Líneas de salida de almacén y progreso de la operación.",
+      "openOperation": "Abrir operación",
+      "closeAria": "Cerrar ventana",
+      "columns": {
+        "line": "N.º",
+        "stock": "Stock",
+        "plan": "Plan",
+        "reserved": "Reservado",
+        "picked": "Recolectado",
+        "packed": "Empacado",
+        "loaded": "Cargado",
+        "shipped": "Enviado"
+      }
+    }
+  },
+  "operation": {
+    "eyebrow": "Centro de operaciones de envío",
+    "backToRecords": "Volver a los registros",
+    "backToList": "Volver a la lista de envíos",
+    "loadErrorTitle": "No se pudo abrir la operación de envío",
+    "loadError": "No se pudo abrir el registro de envío.",
+    "metrics": { "plan": "Plan", "picked": "Recolectado", "packed": "Empacado", "loaded": "Cargado", "shipped": "Enviado" },
+    "phases": {
+      "pick": "01 · Recolección",
+      "pack": "02 · Empaque",
+      "load": "03 · Carga",
+      "ship": "04 · Finalización del envío"
+    },
+    "documentGates": {
+      "title": "Puertas del documento",
+      "status": "Estado",
+      "approval": "Aprobación",
+      "approve": "Aprobar",
+      "release": "Liberar"
+    },
+    "fields": {
+      "operation": "Operación",
+      "vehiclePlate": "Placa del vehículo",
+      "driver": "Conductor",
+      "waybill": "Albarán",
+      "trackingNo": "N.º de seguimiento",
+      "note": "Nota",
+      "quantity": "Cantidad",
+      "sourceLocation": "Ubicación de origen",
+      "targetLocation": "Ubicación de destino",
+      "lot": "Lote",
+      "serial": "Serie",
+      "handlingUnit": "Palet/Caja"
+    },
+    "scanner": {
+      "titleSuffix": "escanear código de barras",
+      "packDescription": "La etiqueta de palet/caja se usa durante el paso de empaque. La verificación de serie/lote de stock se realiza en los pasos de recolección, carga y envío.",
+      "defaultDescription": "El código de barras escaneado se verifica frente al stock, serie, lote, cantidad y saldo de ubicación actual; la línea de envío correspondiente se completa automáticamente."
+    },
+    "lineAvailable": "Disponible",
+    "processOperation": "Procesar operación",
+    "errors": {
+      "detailNotLoaded": "El detalle del envío aún no se ha cargado.",
+      "atLeastOneLine": "Debe procesarse al menos una línea.",
+      "locationsRequired": "Complete las selecciones de ubicación de origen y destino.",
+      "trackingInvalid": "Complete la información de serie, lote, palet/caja y cantidad según la regla de seguimiento de stock.",
+      "noOpenLine": "No se encontró una línea abierta en este envío para {{stockCode}}.",
+      "operationFailed": "No se pudo completar la operación."
+    }
   }
 }

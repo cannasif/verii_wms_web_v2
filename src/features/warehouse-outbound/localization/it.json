@@ -29,5 +29,142 @@
       "title": "Impostazioni in uscita dal magazzino",
       "description": "Gestisci varianti di flusso, prenotazione, esecuzione parziale, approvazione e regole di pubblicazione ERP."
     }
+  },
+  "list": {
+    "title": "Registri di spedizione",
+    "description": "Monitora lato server le quantità di piano, prelievo, imballaggio, carico e spedizione.",
+    "columns": {
+      "documentNo": "N. spedizione",
+      "documentDate": "Data",
+      "customerCode": "Codice cliente",
+      "customerName": "Nome cliente",
+      "sourceWarehouseCode": "Codice magazzino",
+      "sourceWarehouseName": "Nome magazzino",
+      "initiationMode": "Flusso",
+      "status": "Stato",
+      "requestedQuantity": "Piano",
+      "pickedQuantity": "Prelevato",
+      "packedQuantity": "Imballato",
+      "loadedQuantity": "Caricato",
+      "shippedQuantity": "Spedito",
+      "actions": "Azioni"
+    },
+    "actionTitles": {
+      "runOperation": "Esegui operazione",
+      "editDraft": "Modifica bozza",
+      "deleteDraft": "Elimina bozza",
+      "cancelShipment": "Annulla spedizione",
+      "showDetail": "Mostra dettaglio"
+    },
+    "errors": {
+      "openFailed": "Impossibile aprire la spedizione.",
+      "updateFailed": "Impossibile aggiornare la spedizione.",
+      "cancelReasonRequired": "Il motivo dell'annullamento è obbligatorio.",
+      "actionFailed": "Impossibile completare l'azione."
+    },
+    "toasts": {
+      "updated": "Bozza di spedizione aggiornata.",
+      "deleted": "Bozza di spedizione eliminata.",
+      "cancelled": "Spedizione annullata; i movimenti di stock sono stati invertiti."
+    },
+    "editDialog": {
+      "title": "Modifica bozza di uscita dal magazzino",
+      "description": "Modifica la bozza di uscita dal magazzino numero {{documentNo}}.",
+      "closeAria": "Chiudi finestra",
+      "fields": {
+        "documentDate": "Data documento",
+        "plannedShipment": "Spedizione pianificata",
+        "priority": "Priorità",
+        "externalReference": "Riferimento esterno",
+        "carrierCode": "Codice vettore",
+        "carrierName": "Nome vettore",
+        "vehiclePlate": "Targa veicolo",
+        "trailerPlate": "Targa rimorchio",
+        "driverName": "Autista",
+        "sealNo": "N. sigillo",
+        "description": "Descrizione"
+      },
+      "eDispatch": "E-DDT",
+      "lockedNotice": "I campi cliente, magazzino, ubicazione, stock e quantità non possono essere modificati qui per preservare l'integrità dell'operazione.",
+      "cancel": "Annulla",
+      "save": "Salva"
+    },
+    "lifecycleDialog": {
+      "deleteTitle": "Elimina bozza",
+      "cancelTitle": "Annulla uscita dal magazzino",
+      "description": "Conferma di un'azione irreversibile per {{documentNo}}.",
+      "irreversibleNotice": "Questa azione non può essere annullata per {{documentNo}}. I movimenti di stock verranno invertiti in ordine all'interno di un'unica transazione.",
+      "cancelReasonPlaceholder": "Inserisci il motivo dell'annullamento",
+      "cancel": "Annulla",
+      "processing": "Elaborazione in corso…",
+      "confirmDelete": "Elimina bozza",
+      "confirmCancel": "Annulla spedizione"
+    },
+    "detailDialog": {
+      "title": "Uscita dal magazzino {{documentNo}}",
+      "description": "Righe di uscita dal magazzino e avanzamento dell'operazione.",
+      "openOperation": "Apri operazione",
+      "closeAria": "Chiudi finestra",
+      "columns": {
+        "line": "N.",
+        "stock": "Stock",
+        "plan": "Piano",
+        "reserved": "Prenotato",
+        "picked": "Prelevato",
+        "packed": "Imballato",
+        "loaded": "Caricato",
+        "shipped": "Spedito"
+      }
+    }
+  },
+  "operation": {
+    "eyebrow": "Centro operazioni di spedizione",
+    "backToRecords": "Torna ai record",
+    "backToList": "Torna all'elenco spedizioni",
+    "loadErrorTitle": "Impossibile aprire l'operazione di spedizione",
+    "loadError": "Impossibile aprire il record di spedizione.",
+    "metrics": { "plan": "Piano", "picked": "Prelevato", "packed": "Imballato", "loaded": "Caricato", "shipped": "Spedito" },
+    "phases": {
+      "pick": "01 · Prelievo",
+      "pack": "02 · Imballaggio",
+      "load": "03 · Carico",
+      "ship": "04 · Finalizzazione spedizione"
+    },
+    "documentGates": {
+      "title": "Cancelli documento",
+      "status": "Stato",
+      "approval": "Approvazione",
+      "approve": "Approva",
+      "release": "Rilascia"
+    },
+    "fields": {
+      "operation": "Operazione",
+      "vehiclePlate": "Targa veicolo",
+      "driver": "Autista",
+      "waybill": "DDT",
+      "trackingNo": "N. tracciamento",
+      "note": "Nota",
+      "quantity": "Quantità",
+      "sourceLocation": "Ubicazione di origine",
+      "targetLocation": "Ubicazione di destinazione",
+      "lot": "Lotto",
+      "serial": "Serie",
+      "handlingUnit": "Pallet/Cassa"
+    },
+    "scanner": {
+      "titleSuffix": "scansiona codice a barre",
+      "packDescription": "L'etichetta pallet/cassa viene utilizzata durante la fase di imballaggio. La verifica serie/lotto dello stock viene eseguita durante le fasi di prelievo, carico e spedizione.",
+      "defaultDescription": "Il codice a barre scansionato viene verificato rispetto a stock, serie, lotto, quantità e saldo di ubicazione corrente; la relativa riga di spedizione viene compilata automaticamente."
+    },
+    "lineAvailable": "Disponibile",
+    "processOperation": "Elabora operazione",
+    "errors": {
+      "detailNotLoaded": "Il dettaglio della spedizione non è ancora stato caricato.",
+      "atLeastOneLine": "È necessario elaborare almeno una riga.",
+      "locationsRequired": "Completa le selezioni di ubicazione di origine e destinazione.",
+      "trackingInvalid": "Compila le informazioni di serie, lotto, pallet/cassa e quantità secondo la regola di tracciabilità dello stock.",
+      "noOpenLine": "Nessuna riga aperta trovata in questa spedizione per {{stockCode}}.",
+      "operationFailed": "Impossibile completare l'operazione."
+    }
   }
 }
