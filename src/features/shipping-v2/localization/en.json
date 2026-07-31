@@ -62,5 +62,201 @@
     "shortagePolicy": { "Block": "Block", "AllowPartial": "Allow partial", "RequireApproval": "Send for approval" },
     "overPickPolicy": { "Block": "Block", "AllowWithinTolerance": "Within tolerance", "RequireApproval": "Send for approval" },
     "packingPolicy": { "NotRequired": "Not required", "Optional": "Optional", "Required": "Required" }
+  },
+  "create": {
+    "eyebrow": "Shipping",
+    "title": "Flexible Shipment Creation",
+    "description": "Choose order source and task execution independently; all variants share the same shipment header and line structure.",
+    "sections": {
+      "customerDocument": "Customer, document and warehouse",
+      "orderSelection": "Netsis order selection",
+      "assignees": "Picking task assignees",
+      "lines": "Shipment items"
+    },
+    "fields": {
+      "customer": "Customer *",
+      "sourceWarehouse": "Source warehouse *",
+      "series": "Document series *",
+      "documentDate": "Document date",
+      "plannedShipment": "Planned shipment",
+      "stagingLocation": "Staging area",
+      "loadingLocation": "Loading area",
+      "priority": "Priority",
+      "vehiclePlate": "Vehicle plate",
+      "carrierCode": "Carrier code",
+      "externalReference": "External reference",
+      "description": "Description",
+      "eDispatch": "E-Dispatch",
+      "stock": "Stock *",
+      "configurationCode": "Configuration code",
+      "quantity": "Quantity *",
+      "unit": "Unit",
+      "unitPlaceholder": "Select a stock first",
+      "sourceLocation": "Source location",
+      "trackingPolicy": "Stock tracking policy",
+      "requireHandlingUnit": "Handling unit required"
+    },
+    "loadOrders": "Fetch Open Orders",
+    "ordersSummary": "{{count}} order(s) · {{lineCount}} open line(s)",
+    "ordersHint": "Lines below are prepared with stock name, open quantity and an editable shipment quantity. Rows refresh automatically when the selection changes.",
+    "linesTitle": "Shipment items · {{count}} · {{quantity}}",
+    "lineStockUnselected": "No stock selected",
+    "lineOrderShortfall": "Order shortfall: {{quantity}} {{unit}}",
+    "addLine": "Add item",
+    "submit": "Create Shipment Draft",
+    "resultTitle": "Shipment created",
+    "resultTask": "Picking task: {{taskNo}}",
+    "resultLink": "Go to Records",
+    "success": "{{documentNo}} shipment draft created.",
+    "errors": {
+      "policyLoadFailed": "Could not load the shipping policy.",
+      "orderLoadFailed": "Could not fetch open Netsis orders.",
+      "orderLinesFailed": "Could not prepare order lines.",
+      "stockNotFound": "{{order}}: stock code not found.",
+      "stockMirrorNotFound": "{{stockCode}} was not found in the ERP mirror table.",
+      "yapNotFound": "Configuration code {{yapCode}} was not found in the ERP mirror table.",
+      "trackingPolicyFailed": "Could not fetch the stock tracking policy.",
+      "createFailed": "Could not create the shipment draft.",
+      "requiredHeader": "Customer, source warehouse and document series are required.",
+      "requiredLines": "At least one shipment item is required.",
+      "flowNotAllowed": "The selected shipping flow is disabled in the policy.",
+      "assigneeRequired": "At least one user must be assigned for a task-based shipment.",
+      "singleAssigneeOnly": "The policy does not allow multiple user assignments.",
+      "shipmentInfoRequired": "Vehicle plate or carrier code is required.",
+      "lineRequiredFields": "Item {{line}}: stock, positive quantity and unit are required.",
+      "lineTrackingPolicyMissing": "Item {{line}}: could not load the central stock tracking policy.",
+      "lineOrderLinkMissing": "Item {{line}}: no Netsis order link found.",
+      "lineExceedsOrder": "Item {{line}}: exceeds the current open order quantity.",
+      "lineSourceLocationRequired": "Item {{line}}: source location is required.",
+      "lineTrackingPlanRequired": "Item {{line}}: serial/lot plan is required.",
+      "lineTrackingSumMismatch": "Item {{line}}: serial/lot total must equal the shipment quantity.",
+      "lineSerialInvalid": "Item {{line}}: each serial must be unique with a quantity of 1.",
+      "lineLotRequired": "Item {{line}}: lot is required.",
+      "lineHandlingUnitRequired": "Item {{line}}: handling unit is required.",
+      "lineDuplicateSerial": "Item {{line}}: the same serial cannot repeat."
+    }
+  },
+  "list": {
+    "loadFailed": "Could not open the shipment.",
+    "actions": {
+      "operate": "Run operation",
+      "editDraft": "Edit draft",
+      "deleteDraft": "Delete draft",
+      "cancelShipment": "Cancel shipment",
+      "showDetail": "Show detail"
+    },
+    "edit": {
+      "title": "Edit shipment draft",
+      "description": "Edit shipment draft {{documentNo}}.",
+      "closeAriaLabel": "Close window",
+      "fields": {
+        "documentDate": "Document date",
+        "plannedShipment": "Planned shipment",
+        "priority": "Priority",
+        "externalReference": "External reference",
+        "carrierCode": "Carrier code",
+        "carrierName": "Carrier name",
+        "vehiclePlate": "Vehicle plate",
+        "trailerPlate": "Trailer plate",
+        "driverName": "Driver",
+        "sealNo": "Seal no",
+        "eDispatch": "E-Dispatch",
+        "description": "Description"
+      },
+      "immutableNote": "Customer, warehouse, location, stock and quantity fields cannot be changed on this screen to preserve operation integrity.",
+      "cancel": "Cancel",
+      "save": "Save",
+      "success": "Shipment draft updated.",
+      "error": "Could not update the shipment."
+    },
+    "lifecycle": {
+      "cancelReasonRequired": "Cancellation reason is required.",
+      "deleteSuccess": "Shipment draft deleted.",
+      "cancelSuccess": "Shipment cancelled; stock movements were reversed.",
+      "failed": "The operation could not be completed.",
+      "deleteTitle": "Delete draft",
+      "cancelTitle": "Cancel shipment",
+      "confirmDescription": "Irreversible action confirmation for {{documentNo}}.",
+      "confirmText": "This action for {{documentNo}} cannot be undone. Stock movements are reversed in a single transaction during cancellation.",
+      "reasonPlaceholder": "Enter the cancellation reason",
+      "cancel": "Cancel",
+      "processing": "Processing…",
+      "deleteAction": "Delete Draft",
+      "cancelAction": "Cancel"
+    },
+    "detail": {
+      "title": "Shipment {{documentNo}}",
+      "description": "Shipment items and operation progress.",
+      "openOperation": "Open operation",
+      "closeAriaLabel": "Close window",
+      "columns": {
+        "line": "#",
+        "stock": "Stock",
+        "planned": "Planned",
+        "reserved": "Reserved",
+        "picked": "Picked",
+        "packed": "Packed",
+        "loaded": "Loaded",
+        "shipped": "Shipped"
+      }
+    }
+  },
+  "operation": {
+    "eyebrow": "Shipping Operation Center",
+    "backToRecords": "Back to records",
+    "phases": {
+      "pick": "01 · Picking",
+      "pack": "02 · Packing",
+      "load": "03 · Loading",
+      "ship": "04 · Shipment finalisation"
+    },
+    "metrics": {
+      "planned": "Planned",
+      "picked": "Picked",
+      "packed": "Packed",
+      "loaded": "Loaded",
+      "shipped": "Shipped"
+    },
+    "gates": {
+      "title": "Document gates",
+      "status": "Status: {{status}} · Approval: {{approval}}",
+      "approve": "Approve",
+      "release": "Release"
+    },
+    "fields": {
+      "phase": "Operation",
+      "vehiclePlate": "Vehicle plate",
+      "driverName": "Driver",
+      "waybillNo": "Waybill",
+      "trackingNo": "Tracking no",
+      "note": "Note",
+      "quantity": "Quantity",
+      "sourceLocation": "Source location",
+      "targetLocation": "Target location",
+      "lot": "Lot",
+      "serial": "Serial",
+      "handlingUnit": "Handling unit"
+    },
+    "scanner": {
+      "title": "Scan {{phase}} barcode",
+      "packDescription": "The packing step uses handling unit labels. Stock serial/lot verification happens during picking, loading and shipment steps.",
+      "defaultDescription": "The scanned barcode is validated against stock, serial, lot, quantity and the current location balance; the matching shipment item is filled in automatically."
+    },
+    "lineAvailable": "Available {{quantity}}",
+    "execute": "Process operation",
+    "errors": {
+      "loadFailed": "Could not open the shipment record.",
+      "transitionFailed": "The operation could not be completed.",
+      "detailNotLoaded": "The shipment details have not loaded yet.",
+      "atLeastOneLine": "At least one line must be processed.",
+      "locationsRequired": "Complete the source and target location selections.",
+      "trackingInvalid": "Fill in serial, lot, handling unit and quantity information according to the stock tracking rule.",
+      "lineStockNotFound": "No open item was found for {{stockCode}} in this shipment.",
+      "executeFailed": "The operation could not be processed."
+    },
+    "loadError": {
+      "title": "Could not open the shipping operation",
+      "backToList": "Back to shipment list"
+    }
   }
 }

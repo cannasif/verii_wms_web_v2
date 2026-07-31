@@ -70,5 +70,201 @@
     "shortagePolicy": { "Block": "Blocca", "AllowPartial": "Consenti parziale", "RequireApproval": "Invia per approvazione" },
     "overPickPolicy": { "Block": "Blocca", "AllowWithinTolerance": "Entro tolleranza", "RequireApproval": "Invia per approvazione" },
     "packingPolicy": { "NotRequired": "Non richiesto", "Optional": "Opzionale", "Required": "Obbligatorio" }
+  },
+  "create": {
+    "eyebrow": "Spedizione",
+    "title": "Creazione spedizione flessibile",
+    "description": "Scegli l'origine dell'ordine e la modalità di esecuzione in modo indipendente; tutte le varianti utilizzano la stessa struttura di intestazione e righe di spedizione.",
+    "sections": {
+      "customerDocument": "Cliente, documento e magazzino",
+      "orderSelection": "Selezione ordine Netsis",
+      "assignees": "Utenti dell'attività di prelievo",
+      "lines": "Articoli di spedizione"
+    },
+    "fields": {
+      "customer": "Cliente *",
+      "sourceWarehouse": "Magazzino di origine *",
+      "series": "Serie documento *",
+      "documentDate": "Data documento",
+      "plannedShipment": "Spedizione pianificata",
+      "stagingLocation": "Area di preparazione",
+      "loadingLocation": "Area di carico",
+      "priority": "Priorità",
+      "vehiclePlate": "Targa veicolo",
+      "carrierCode": "Codice vettore",
+      "externalReference": "Riferimento esterno",
+      "description": "Descrizione",
+      "eDispatch": "Fattura elettronica",
+      "stock": "Articolo *",
+      "configurationCode": "Codice configurazione",
+      "quantity": "Quantità *",
+      "unit": "Unità",
+      "unitPlaceholder": "Seleziona prima un articolo",
+      "sourceLocation": "Ubicazione di origine",
+      "trackingPolicy": "Politica di tracciabilità stock",
+      "requireHandlingUnit": "Pallet/cassa obbligatorio"
+    },
+    "loadOrders": "Recupera ordini aperti",
+    "ordersSummary": "{{count}} ordine/i · {{lineCount}} riga/righe aperta/e",
+    "ordersHint": "Le righe sottostanti vengono preparate con nome dell'articolo, quantità aperta e una quantità di spedizione modificabile. Le righe si aggiornano automaticamente quando cambia la selezione.",
+    "linesTitle": "Articoli di spedizione · {{count}} · {{quantity}}",
+    "lineStockUnselected": "Nessun articolo selezionato",
+    "lineOrderShortfall": "Mancante rispetto all'ordine: {{quantity}} {{unit}}",
+    "addLine": "Aggiungi articolo",
+    "submit": "Crea bozza di spedizione",
+    "resultTitle": "Spedizione creata",
+    "resultTask": "Attività di prelievo: {{taskNo}}",
+    "resultLink": "Vai ai documenti",
+    "success": "Bozza di spedizione {{documentNo}} creata.",
+    "errors": {
+      "policyLoadFailed": "Impossibile caricare la politica di spedizione.",
+      "orderLoadFailed": "Impossibile recuperare gli ordini Netsis aperti.",
+      "orderLinesFailed": "Impossibile preparare le righe dell'ordine.",
+      "stockNotFound": "{{order}}: codice articolo non trovato.",
+      "stockMirrorNotFound": "{{stockCode}} non trovato nella tabella mirror ERP.",
+      "yapNotFound": "Il codice di configurazione {{yapCode}} non è stato trovato nella tabella mirror ERP.",
+      "trackingPolicyFailed": "Impossibile recuperare la politica di tracciabilità stock.",
+      "createFailed": "Impossibile creare la bozza di spedizione.",
+      "requiredHeader": "Cliente, magazzino di origine e serie documento sono obbligatori.",
+      "requiredLines": "È richiesto almeno un articolo di spedizione.",
+      "flowNotAllowed": "Il flusso di spedizione selezionato è disabilitato nella politica.",
+      "assigneeRequired": "Deve essere assegnato almeno un utente per una spedizione con attività.",
+      "singleAssigneeOnly": "La politica non consente l'assegnazione di più utenti.",
+      "shipmentInfoRequired": "È richiesta la targa del veicolo o il codice vettore.",
+      "lineRequiredFields": "Articolo {{line}}: sono richiesti articolo, quantità positiva e unità.",
+      "lineTrackingPolicyMissing": "Articolo {{line}}: impossibile caricare la politica centrale di tracciabilità stock.",
+      "lineOrderLinkMissing": "Articolo {{line}}: nessun collegamento all'ordine Netsis trovato.",
+      "lineExceedsOrder": "Articolo {{line}}: supera la quantità corrente dell'ordine aperto.",
+      "lineSourceLocationRequired": "Articolo {{line}}: è richiesta l'ubicazione di origine.",
+      "lineTrackingPlanRequired": "Articolo {{line}}: è richiesto il piano seriale/lotto.",
+      "lineTrackingSumMismatch": "Articolo {{line}}: il totale seriale/lotto deve essere uguale alla quantità di spedizione.",
+      "lineSerialInvalid": "Articolo {{line}}: ogni numero di serie deve essere univoco con quantità 1.",
+      "lineLotRequired": "Articolo {{line}}: è richiesto il lotto.",
+      "lineHandlingUnitRequired": "Articolo {{line}}: è richiesto il pallet/cassa.",
+      "lineDuplicateSerial": "Articolo {{line}}: lo stesso numero di serie non può ripetersi."
+    }
+  },
+  "list": {
+    "loadFailed": "Impossibile aprire la spedizione.",
+    "actions": {
+      "operate": "Esegui operazione",
+      "editDraft": "Modifica bozza",
+      "deleteDraft": "Elimina bozza",
+      "cancelShipment": "Annulla spedizione",
+      "showDetail": "Mostra dettaglio"
+    },
+    "edit": {
+      "title": "Modifica bozza di spedizione",
+      "description": "Modifica la bozza di spedizione {{documentNo}}.",
+      "closeAriaLabel": "Chiudi finestra",
+      "fields": {
+        "documentDate": "Data documento",
+        "plannedShipment": "Spedizione pianificata",
+        "priority": "Priorità",
+        "externalReference": "Riferimento esterno",
+        "carrierCode": "Codice vettore",
+        "carrierName": "Nome vettore",
+        "vehiclePlate": "Targa veicolo",
+        "trailerPlate": "Targa rimorchio",
+        "driverName": "Autista",
+        "sealNo": "N. sigillo",
+        "eDispatch": "Fattura elettronica",
+        "description": "Descrizione"
+      },
+      "immutableNote": "I campi cliente, magazzino, ubicazione, articolo e quantità non possono essere modificati in questa schermata per preservare l'integrità dell'operazione.",
+      "cancel": "Annulla",
+      "save": "Salva",
+      "success": "Bozza di spedizione aggiornata.",
+      "error": "Impossibile aggiornare la spedizione."
+    },
+    "lifecycle": {
+      "cancelReasonRequired": "Il motivo dell'annullamento è obbligatorio.",
+      "deleteSuccess": "Bozza di spedizione eliminata.",
+      "cancelSuccess": "Spedizione annullata; i movimenti di stock sono stati invertiti.",
+      "failed": "Impossibile completare l'operazione.",
+      "deleteTitle": "Elimina bozza",
+      "cancelTitle": "Annulla spedizione",
+      "confirmDescription": "Conferma di un'azione irreversibile per {{documentNo}}.",
+      "confirmText": "Questa azione per {{documentNo}} non può essere annullata. I movimenti di stock vengono invertiti in un'unica transazione durante l'annullamento.",
+      "reasonPlaceholder": "Inserisci il motivo dell'annullamento",
+      "cancel": "Annulla",
+      "processing": "Elaborazione…",
+      "deleteAction": "Elimina bozza",
+      "cancelAction": "Annulla"
+    },
+    "detail": {
+      "title": "Spedizione {{documentNo}}",
+      "description": "Articoli di spedizione e avanzamento dell'operazione.",
+      "openOperation": "Apri operazione",
+      "closeAriaLabel": "Chiudi finestra",
+      "columns": {
+        "line": "#",
+        "stock": "Articolo",
+        "planned": "Pianificato",
+        "reserved": "Riservato",
+        "picked": "Prelevato",
+        "packed": "Imballato",
+        "loaded": "Caricato",
+        "shipped": "Spedito"
+      }
+    }
+  },
+  "operation": {
+    "eyebrow": "Centro operazioni di spedizione",
+    "backToRecords": "Torna ai documenti",
+    "phases": {
+      "pick": "01 · Prelievo",
+      "pack": "02 · Imballaggio",
+      "load": "03 · Carico",
+      "ship": "04 · Finalizzazione spedizione"
+    },
+    "metrics": {
+      "planned": "Pianificato",
+      "picked": "Prelevato",
+      "packed": "Imballato",
+      "loaded": "Caricato",
+      "shipped": "Spedito"
+    },
+    "gates": {
+      "title": "Gate documento",
+      "status": "Stato: {{status}} · Approvazione: {{approval}}",
+      "approve": "Approva",
+      "release": "Rilascia"
+    },
+    "fields": {
+      "phase": "Operazione",
+      "vehiclePlate": "Targa veicolo",
+      "driverName": "Autista",
+      "waybillNo": "Documento di trasporto",
+      "trackingNo": "N. tracciamento",
+      "note": "Nota",
+      "quantity": "Quantità",
+      "sourceLocation": "Ubicazione di origine",
+      "targetLocation": "Ubicazione di destinazione",
+      "lot": "Lotto",
+      "serial": "Serie",
+      "handlingUnit": "Pallet/cassa"
+    },
+    "scanner": {
+      "title": "Scansiona il codice a barre {{phase}}",
+      "packDescription": "Nella fase di imballaggio vengono utilizzate le etichette dell'unità di movimentazione. La verifica del numero di serie/lotto dello stock avviene durante prelievo, carico e spedizione.",
+      "defaultDescription": "Il codice a barre scansionato viene convalidato rispetto a stock, numero di serie, lotto, quantità e saldo attuale dell'ubicazione; l'articolo di spedizione corrispondente viene compilato automaticamente."
+    },
+    "lineAvailable": "Disponibile {{quantity}}",
+    "execute": "Elabora operazione",
+    "errors": {
+      "loadFailed": "Impossibile aprire il documento di spedizione.",
+      "transitionFailed": "Impossibile completare l'operazione.",
+      "detailNotLoaded": "I dettagli della spedizione non sono ancora stati caricati.",
+      "atLeastOneLine": "È necessario elaborare almeno una riga.",
+      "locationsRequired": "Completa la selezione dell'ubicazione di origine e destinazione.",
+      "trackingInvalid": "Compila numero di serie, lotto, unità di movimentazione e quantità in base alla regola di tracciabilità dello stock.",
+      "lineStockNotFound": "Nessun articolo aperto trovato per {{stockCode}} in questa spedizione.",
+      "executeFailed": "Impossibile elaborare l'operazione."
+    },
+    "loadError": {
+      "title": "Impossibile aprire l'operazione di spedizione",
+      "backToList": "Torna all'elenco spedizioni"
+    }
   }
 }

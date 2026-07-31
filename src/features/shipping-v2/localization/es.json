@@ -70,5 +70,201 @@
     "shortagePolicy": { "Block": "Bloquear", "AllowPartial": "Permitir parcial", "RequireApproval": "Enviar a aprobación" },
     "overPickPolicy": { "Block": "Bloquear", "AllowWithinTolerance": "Dentro de tolerancia", "RequireApproval": "Enviar a aprobación" },
     "packingPolicy": { "NotRequired": "No requerido", "Optional": "Opcional", "Required": "Obligatorio" }
+  },
+  "create": {
+    "eyebrow": "Envío",
+    "title": "Creación flexible de envío",
+    "description": "Elija el origen del pedido y el modo de ejecución de forma independiente; todas las variantes utilizan la misma estructura de encabezado y líneas de envío.",
+    "sections": {
+      "customerDocument": "Cliente, documento y almacén",
+      "orderSelection": "Selección de pedido Netsis",
+      "assignees": "Usuarios de la tarea de preparación",
+      "lines": "Artículos de envío"
+    },
+    "fields": {
+      "customer": "Cliente *",
+      "sourceWarehouse": "Almacén origen *",
+      "series": "Serie de documento *",
+      "documentDate": "Fecha de documento",
+      "plannedShipment": "Envío planificado",
+      "stagingLocation": "Zona de preparación",
+      "loadingLocation": "Zona de carga",
+      "priority": "Prioridad",
+      "vehiclePlate": "Matrícula del vehículo",
+      "carrierCode": "Código de transportista",
+      "externalReference": "Referencia externa",
+      "description": "Descripción",
+      "eDispatch": "Factura electrónica",
+      "stock": "Artículo *",
+      "configurationCode": "Código de configuración",
+      "quantity": "Cantidad *",
+      "unit": "Unidad",
+      "unitPlaceholder": "Seleccione primero un artículo",
+      "sourceLocation": "Ubicación de origen",
+      "trackingPolicy": "Política de seguimiento de stock",
+      "requireHandlingUnit": "Palet/caja obligatorio"
+    },
+    "loadOrders": "Obtener pedidos abiertos",
+    "ordersSummary": "{{count}} pedido(s) · {{lineCount}} línea(s) abierta(s)",
+    "ordersHint": "Las líneas siguientes se preparan con el nombre del artículo, la cantidad abierta y una cantidad de envío editable. Las filas se actualizan automáticamente al cambiar la selección.",
+    "linesTitle": "Artículos de envío · {{count}} · {{quantity}}",
+    "lineStockUnselected": "Ningún artículo seleccionado",
+    "lineOrderShortfall": "Faltante de pedido: {{quantity}} {{unit}}",
+    "addLine": "Añadir artículo",
+    "submit": "Crear borrador de envío",
+    "resultTitle": "Envío creado",
+    "resultTask": "Tarea de preparación: {{taskNo}}",
+    "resultLink": "Ir a registros",
+    "success": "Borrador de envío {{documentNo}} creado.",
+    "errors": {
+      "policyLoadFailed": "No se pudo cargar la política de envío.",
+      "orderLoadFailed": "No se pudieron obtener los pedidos abiertos de Netsis.",
+      "orderLinesFailed": "No se pudieron preparar las líneas del pedido.",
+      "stockNotFound": "{{order}}: código de artículo no encontrado.",
+      "stockMirrorNotFound": "{{stockCode}} no se encontró en la tabla espejo de ERP.",
+      "yapNotFound": "El código de configuración {{yapCode}} no se encontró en la tabla espejo de ERP.",
+      "trackingPolicyFailed": "No se pudo obtener la política de seguimiento de stock.",
+      "createFailed": "No se pudo crear el borrador de envío.",
+      "requiredHeader": "El cliente, el almacén origen y la serie de documento son obligatorios.",
+      "requiredLines": "Se requiere al menos un artículo de envío.",
+      "flowNotAllowed": "El flujo de envío seleccionado está desactivado en la política.",
+      "assigneeRequired": "Se debe asignar al menos un usuario para un envío con tarea.",
+      "singleAssigneeOnly": "La política no permite la asignación de varios usuarios.",
+      "shipmentInfoRequired": "Se requiere la matrícula del vehículo o el código de transportista.",
+      "lineRequiredFields": "Artículo {{line}}: se requiere artículo, cantidad positiva y unidad.",
+      "lineTrackingPolicyMissing": "Artículo {{line}}: no se pudo cargar la política central de seguimiento de stock.",
+      "lineOrderLinkMissing": "Artículo {{line}}: no se encontró vínculo con pedido Netsis.",
+      "lineExceedsOrder": "Artículo {{line}}: supera la cantidad actual del pedido abierto.",
+      "lineSourceLocationRequired": "Artículo {{line}}: se requiere ubicación de origen.",
+      "lineTrackingPlanRequired": "Artículo {{line}}: se requiere plan de serie/lote.",
+      "lineTrackingSumMismatch": "Artículo {{line}}: el total de serie/lote debe ser igual a la cantidad de envío.",
+      "lineSerialInvalid": "Artículo {{line}}: cada serie debe ser única y con cantidad 1.",
+      "lineLotRequired": "Artículo {{line}}: se requiere lote.",
+      "lineHandlingUnitRequired": "Artículo {{line}}: se requiere palet/caja.",
+      "lineDuplicateSerial": "Artículo {{line}}: la misma serie no puede repetirse."
+    }
+  },
+  "list": {
+    "loadFailed": "No se pudo abrir el envío.",
+    "actions": {
+      "operate": "Ejecutar operación",
+      "editDraft": "Editar borrador",
+      "deleteDraft": "Eliminar borrador",
+      "cancelShipment": "Cancelar envío",
+      "showDetail": "Mostrar detalle"
+    },
+    "edit": {
+      "title": "Editar borrador de envío",
+      "description": "Editar el borrador de envío {{documentNo}}.",
+      "closeAriaLabel": "Cerrar ventana",
+      "fields": {
+        "documentDate": "Fecha de documento",
+        "plannedShipment": "Envío planificado",
+        "priority": "Prioridad",
+        "externalReference": "Referencia externa",
+        "carrierCode": "Código de transportista",
+        "carrierName": "Nombre del transportista",
+        "vehiclePlate": "Matrícula del vehículo",
+        "trailerPlate": "Matrícula del remolque",
+        "driverName": "Conductor",
+        "sealNo": "N.º de precinto",
+        "eDispatch": "Factura electrónica",
+        "description": "Descripción"
+      },
+      "immutableNote": "Los campos de cliente, almacén, ubicación, artículo y cantidad no se pueden modificar en esta pantalla para preservar la integridad de la operación.",
+      "cancel": "Cancelar",
+      "save": "Guardar",
+      "success": "Borrador de envío actualizado.",
+      "error": "No se pudo actualizar el envío."
+    },
+    "lifecycle": {
+      "cancelReasonRequired": "El motivo de cancelación es obligatorio.",
+      "deleteSuccess": "Borrador de envío eliminado.",
+      "cancelSuccess": "Envío cancelado; los movimientos de stock fueron revertidos.",
+      "failed": "No se pudo completar la operación.",
+      "deleteTitle": "Eliminar borrador",
+      "cancelTitle": "Cancelar envío",
+      "confirmDescription": "Confirmación de una acción irreversible para {{documentNo}}.",
+      "confirmText": "Esta acción para {{documentNo}} no se puede deshacer. Los movimientos de stock se revierten en una sola transacción durante la cancelación.",
+      "reasonPlaceholder": "Escriba el motivo de cancelación",
+      "cancel": "Cancelar",
+      "processing": "Procesando…",
+      "deleteAction": "Eliminar borrador",
+      "cancelAction": "Cancelar"
+    },
+    "detail": {
+      "title": "Envío {{documentNo}}",
+      "description": "Artículos de envío y progreso de la operación.",
+      "openOperation": "Abrir operación",
+      "closeAriaLabel": "Cerrar ventana",
+      "columns": {
+        "line": "#",
+        "stock": "Artículo",
+        "planned": "Planificado",
+        "reserved": "Reservado",
+        "picked": "Preparado",
+        "packed": "Embalado",
+        "loaded": "Cargado",
+        "shipped": "Enviado"
+      }
+    }
+  },
+  "operation": {
+    "eyebrow": "Centro de operaciones de envío",
+    "backToRecords": "Volver a registros",
+    "phases": {
+      "pick": "01 · Preparación",
+      "pack": "02 · Embalaje",
+      "load": "03 · Carga",
+      "ship": "04 · Finalización de envío"
+    },
+    "metrics": {
+      "planned": "Planificado",
+      "picked": "Preparado",
+      "packed": "Embalado",
+      "loaded": "Cargado",
+      "shipped": "Enviado"
+    },
+    "gates": {
+      "title": "Puertas del documento",
+      "status": "Estado: {{status}} · Aprobación: {{approval}}",
+      "approve": "Aprobar",
+      "release": "Liberar"
+    },
+    "fields": {
+      "phase": "Operación",
+      "vehiclePlate": "Matrícula del vehículo",
+      "driverName": "Conductor",
+      "waybillNo": "Albarán",
+      "trackingNo": "N.º de seguimiento",
+      "note": "Nota",
+      "quantity": "Cantidad",
+      "sourceLocation": "Ubicación de origen",
+      "targetLocation": "Ubicación de destino",
+      "lot": "Lote",
+      "serial": "Serie",
+      "handlingUnit": "Palet/caja"
+    },
+    "scanner": {
+      "title": "Escanear código de barras de {{phase}}",
+      "packDescription": "En el paso de embalaje se utilizan etiquetas de palet/caja. La verificación de serie/lote del stock se realiza en los pasos de preparación, carga y envío.",
+      "defaultDescription": "El código de barras escaneado se valida con el artículo, la serie, el lote, la cantidad y el saldo actual de la ubicación; el artículo de envío correspondiente se completa automáticamente."
+    },
+    "lineAvailable": "Disponible {{quantity}}",
+    "execute": "Procesar operación",
+    "errors": {
+      "loadFailed": "No se pudo abrir el registro de envío.",
+      "transitionFailed": "No se pudo completar la operación.",
+      "detailNotLoaded": "Los detalles del envío aún no se han cargado.",
+      "atLeastOneLine": "Se debe procesar al menos una línea.",
+      "locationsRequired": "Complete la selección de ubicación de origen y destino.",
+      "trackingInvalid": "Complete la serie, el lote, el palet/caja y la cantidad según la regla de seguimiento de stock.",
+      "lineStockNotFound": "No se encontró ningún artículo abierto para {{stockCode}} en este envío.",
+      "executeFailed": "No se pudo procesar la operación."
+    },
+    "loadError": {
+      "title": "No se pudo abrir la operación de envío",
+      "backToList": "Volver a la lista de envíos"
+    }
   }
 }

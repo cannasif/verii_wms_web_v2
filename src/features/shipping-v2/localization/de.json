@@ -70,5 +70,201 @@
     "shortagePolicy": { "Block": "Blockieren", "AllowPartial": "Teilweise erlauben", "RequireApproval": "Zur Genehmigung senden" },
     "overPickPolicy": { "Block": "Blockieren", "AllowWithinTolerance": "Innerhalb Toleranz", "RequireApproval": "Zur Genehmigung senden" },
     "packingPolicy": { "NotRequired": "Nicht erforderlich", "Optional": "Optional", "Required": "Erforderlich" }
+  },
+  "create": {
+    "eyebrow": "Versand",
+    "title": "Flexible Sendungserstellung",
+    "description": "Wählen Sie Auftragsquelle und Aufgabenausführung unabhängig voneinander aus; alle Varianten verwenden dieselbe Sendungskopf- und Positionsstruktur.",
+    "sections": {
+      "customerDocument": "Kunde, Beleg und Lager",
+      "orderSelection": "Netsis-Auftragsauswahl",
+      "assignees": "Kommissionierauftrag-Benutzer",
+      "lines": "Sendungspositionen"
+    },
+    "fields": {
+      "customer": "Kunde *",
+      "sourceWarehouse": "Quelllager *",
+      "series": "Belegserie *",
+      "documentDate": "Belegdatum",
+      "plannedShipment": "Geplanter Versand",
+      "stagingLocation": "Bereitstellungsbereich",
+      "loadingLocation": "Verladebereich",
+      "priority": "Priorität",
+      "vehiclePlate": "Fahrzeugkennzeichen",
+      "carrierCode": "Spediteurcode",
+      "externalReference": "Externe Referenz",
+      "description": "Beschreibung",
+      "eDispatch": "E-Versand",
+      "stock": "Bestand *",
+      "configurationCode": "Konfigurationscode",
+      "quantity": "Menge *",
+      "unit": "Einheit",
+      "unitPlaceholder": "Zuerst Bestand auswählen",
+      "sourceLocation": "Quellplatz",
+      "trackingPolicy": "Bestandsverfolgungsrichtlinie",
+      "requireHandlingUnit": "Palette/Kiste erforderlich"
+    },
+    "loadOrders": "Offene Aufträge abrufen",
+    "ordersSummary": "{{count}} Auftrag/Aufträge · {{lineCount}} offene Position(en)",
+    "ordersHint": "Positionen werden unten mit Bestandsname, offener Menge und einer bearbeitbaren Versandmenge vorbereitet. Zeilen werden bei Änderung der Auswahl automatisch aktualisiert.",
+    "linesTitle": "Sendungspositionen · {{count}} · {{quantity}}",
+    "lineStockUnselected": "Kein Bestand ausgewählt",
+    "lineOrderShortfall": "Auftragsfehlmenge: {{quantity}} {{unit}}",
+    "addLine": "Position hinzufügen",
+    "submit": "Sendungsentwurf erstellen",
+    "resultTitle": "Sendung erstellt",
+    "resultTask": "Kommissionierauftrag: {{taskNo}}",
+    "resultLink": "Zu den Datensätzen",
+    "success": "Sendungsentwurf {{documentNo}} erstellt.",
+    "errors": {
+      "policyLoadFailed": "Versandrichtlinie konnte nicht geladen werden.",
+      "orderLoadFailed": "Offene Netsis-Aufträge konnten nicht abgerufen werden.",
+      "orderLinesFailed": "Auftragspositionen konnten nicht vorbereitet werden.",
+      "stockNotFound": "{{order}}: Bestandscode nicht gefunden.",
+      "stockMirrorNotFound": "{{stockCode}} wurde in der ERP-Spiegeltabelle nicht gefunden.",
+      "yapNotFound": "Konfigurationscode {{yapCode}} wurde in der ERP-Spiegeltabelle nicht gefunden.",
+      "trackingPolicyFailed": "Bestandsverfolgungsrichtlinie konnte nicht abgerufen werden.",
+      "createFailed": "Sendungsentwurf konnte nicht erstellt werden.",
+      "requiredHeader": "Kunde, Quelllager und Belegserie sind erforderlich.",
+      "requiredLines": "Mindestens eine Sendungsposition ist erforderlich.",
+      "flowNotAllowed": "Der ausgewählte Versandablauf ist in der Richtlinie deaktiviert.",
+      "assigneeRequired": "Für einen auftragsbasierten Versand muss mindestens ein Benutzer zugewiesen werden.",
+      "singleAssigneeOnly": "Die Richtlinie erlaubt keine Mehrfachzuweisung von Benutzern.",
+      "shipmentInfoRequired": "Fahrzeugkennzeichen oder Spediteurcode ist erforderlich.",
+      "lineRequiredFields": "Position {{line}}: Bestand, positive Menge und Einheit sind erforderlich.",
+      "lineTrackingPolicyMissing": "Position {{line}}: zentrale Bestandsverfolgungsrichtlinie konnte nicht geladen werden.",
+      "lineOrderLinkMissing": "Position {{line}}: keine Netsis-Auftragsverknüpfung gefunden.",
+      "lineExceedsOrder": "Position {{line}}: überschreitet die aktuelle offene Auftragsmenge.",
+      "lineSourceLocationRequired": "Position {{line}}: Quellplatz ist erforderlich.",
+      "lineTrackingPlanRequired": "Position {{line}}: Serien-/Chargenplan ist erforderlich.",
+      "lineTrackingSumMismatch": "Position {{line}}: Serien-/Chargensumme muss der Versandmenge entsprechen.",
+      "lineSerialInvalid": "Position {{line}}: jede Seriennummer muss eindeutig sein und die Menge 1 haben.",
+      "lineLotRequired": "Position {{line}}: Charge ist erforderlich.",
+      "lineHandlingUnitRequired": "Position {{line}}: Palette/Kiste ist erforderlich.",
+      "lineDuplicateSerial": "Position {{line}}: dieselbe Seriennummer darf nicht wiederholt werden."
+    }
+  },
+  "list": {
+    "loadFailed": "Sendung konnte nicht geöffnet werden.",
+    "actions": {
+      "operate": "Vorgang ausführen",
+      "editDraft": "Entwurf bearbeiten",
+      "deleteDraft": "Entwurf löschen",
+      "cancelShipment": "Sendung stornieren",
+      "showDetail": "Details anzeigen"
+    },
+    "edit": {
+      "title": "Sendungsentwurf bearbeiten",
+      "description": "Sendungsentwurf {{documentNo}} bearbeiten.",
+      "closeAriaLabel": "Fenster schließen",
+      "fields": {
+        "documentDate": "Belegdatum",
+        "plannedShipment": "Geplanter Versand",
+        "priority": "Priorität",
+        "externalReference": "Externe Referenz",
+        "carrierCode": "Spediteurcode",
+        "carrierName": "Spediteurname",
+        "vehiclePlate": "Fahrzeugkennzeichen",
+        "trailerPlate": "Anhängerkennzeichen",
+        "driverName": "Fahrer",
+        "sealNo": "Plombennummer",
+        "eDispatch": "E-Versand",
+        "description": "Beschreibung"
+      },
+      "immutableNote": "Kunde, Lager, Standort, Bestand und Mengenfelder können auf diesem Bildschirm zur Wahrung der Vorgangsintegrität nicht geändert werden.",
+      "cancel": "Abbrechen",
+      "save": "Speichern",
+      "success": "Sendungsentwurf aktualisiert.",
+      "error": "Sendung konnte nicht aktualisiert werden."
+    },
+    "lifecycle": {
+      "cancelReasonRequired": "Stornierungsgrund ist erforderlich.",
+      "deleteSuccess": "Sendungsentwurf gelöscht.",
+      "cancelSuccess": "Sendung storniert; Bestandsbewegungen wurden rückgängig gemacht.",
+      "failed": "Der Vorgang konnte nicht abgeschlossen werden.",
+      "deleteTitle": "Entwurf löschen",
+      "cancelTitle": "Sendung stornieren",
+      "confirmDescription": "Bestätigung einer unwiderruflichen Aktion für {{documentNo}}.",
+      "confirmText": "Diese Aktion für {{documentNo}} kann nicht rückgängig gemacht werden. Bestandsbewegungen werden bei der Stornierung in einer einzigen Transaktion umgekehrt.",
+      "reasonPlaceholder": "Stornierungsgrund eingeben",
+      "cancel": "Abbrechen",
+      "processing": "Wird verarbeitet…",
+      "deleteAction": "Entwurf löschen",
+      "cancelAction": "Stornieren"
+    },
+    "detail": {
+      "title": "Sendung {{documentNo}}",
+      "description": "Sendungspositionen und Vorgangsfortschritt.",
+      "openOperation": "Vorgang öffnen",
+      "closeAriaLabel": "Fenster schließen",
+      "columns": {
+        "line": "#",
+        "stock": "Bestand",
+        "planned": "Geplant",
+        "reserved": "Reserviert",
+        "picked": "Kommissioniert",
+        "packed": "Verpackt",
+        "loaded": "Geladen",
+        "shipped": "Versandt"
+      }
+    }
+  },
+  "operation": {
+    "eyebrow": "Versandbetriebszentrum",
+    "backToRecords": "Zurück zu den Datensätzen",
+    "phases": {
+      "pick": "01 · Kommissionierung",
+      "pack": "02 · Verpackung",
+      "load": "03 · Verladung",
+      "ship": "04 · Versandabschluss"
+    },
+    "metrics": {
+      "planned": "Geplant",
+      "picked": "Kommissioniert",
+      "packed": "Verpackt",
+      "loaded": "Geladen",
+      "shipped": "Versandt"
+    },
+    "gates": {
+      "title": "Beleg-Gates",
+      "status": "Status: {{status}} · Genehmigung: {{approval}}",
+      "approve": "Genehmigen",
+      "release": "Freigeben"
+    },
+    "fields": {
+      "phase": "Vorgang",
+      "vehiclePlate": "Fahrzeugkennzeichen",
+      "driverName": "Fahrer",
+      "waybillNo": "Lieferschein",
+      "trackingNo": "Sendungsverfolgungsnr.",
+      "note": "Notiz",
+      "quantity": "Menge",
+      "sourceLocation": "Quellplatz",
+      "targetLocation": "Zielplatz",
+      "lot": "Charge",
+      "serial": "Seriennummer",
+      "handlingUnit": "Palette/Kiste"
+    },
+    "scanner": {
+      "title": "{{phase}}-Barcode scannen",
+      "packDescription": "Im Verpackungsschritt werden Handling-Unit-Etiketten verwendet. Die Bestands-Serien-/Chargenprüfung erfolgt bei Kommissionierung, Verladung und Versand.",
+      "defaultDescription": "Der gescannte Barcode wird gegen Bestand, Seriennummer, Charge, Menge und den aktuellen Lagerplatzbestand geprüft; die zugehörige Sendungsposition wird automatisch ausgefüllt."
+    },
+    "lineAvailable": "Verfügbar {{quantity}}",
+    "execute": "Vorgang verarbeiten",
+    "errors": {
+      "loadFailed": "Sendungsdatensatz konnte nicht geöffnet werden.",
+      "transitionFailed": "Der Vorgang konnte nicht abgeschlossen werden.",
+      "detailNotLoaded": "Die Sendungsdetails wurden noch nicht geladen.",
+      "atLeastOneLine": "Mindestens eine Zeile muss verarbeitet werden.",
+      "locationsRequired": "Vervollständigen Sie die Quell- und Zielplatzauswahl.",
+      "trackingInvalid": "Füllen Sie Serie, Charge, Handling-Unit und Menge gemäß der Bestandsverfolgungsregel aus.",
+      "lineStockNotFound": "Für {{stockCode}} wurde in dieser Sendung keine offene Position gefunden.",
+      "executeFailed": "Der Vorgang konnte nicht verarbeitet werden."
+    },
+    "loadError": {
+      "title": "Versandvorgang konnte nicht geöffnet werden",
+      "backToList": "Zurück zur Sendungsliste"
+    }
   }
 }

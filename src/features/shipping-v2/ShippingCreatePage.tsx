@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { CheckCircle2, Loader2, Plus, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { AppDropdown } from '@/components/shared/AppDropdown';
 import { AppDateInput } from '@/components/shared/AppInput';
@@ -14,6 +15,7 @@ import type {
   EffectiveStockTrackingPolicy,
   StockTrackingType,
 } from '@/features/stock-tracking/effective-stock-tracking.service';
+import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { useAuthStore } from '@/stores/auth-store';
 import type {
   ActiveUserOption,
@@ -72,6 +74,8 @@ const today = () => new Date().toLocaleDateString('en-CA');
 const encoded = (value: unknown) => encodeURIComponent(JSON.stringify(value));
 
 export function ShippingCreatePage() {
+  const { t } = useModuleTranslation('shipping-v2');
+  const { t: tCommon } = useTranslation('common');
   const branch = useAuthStore((x) => x.branch?.code ?? '0');
   const [policy, setPolicy] = useState<ShipmentPolicy | null>(null);
   const [source, setSource] = useState<'Order' | 'Stock'>('Stock');
@@ -149,7 +153,7 @@ export function ShippingCreatePage() {
       setSelectedOrders([]);
       setLines([]);
     } catch (error) {
-      toast.error(message(error, 'Netsis açık siparişleri alınamadı.'));
+      toast.error(message(error, t('create.errors.orderLoadFailed')));
     } finally {
       setBusy(false);
     }
@@ -168,7 +172,7 @@ export function ShippingCreatePage() {
       const policyRequests = new Map<number, Promise<EffectiveStockTrackingPolicy>>();
       const mapped = await Promise.all(rows.map(async (row): Promise<ShipmentLine> => {
         if (!row.stockCode)
-          throw new Error(`${row.orderNumber}/${row.orderId}: stok kodu bulunamadı.`);
+          throw new Error(t('create.errors.stockNotFound', { order: `${row.orderNumber}/${row.orderId}` }));
 
         const stockCode = row.stockCode.toUpperCase();
         if (!stockRequests.has(stockCode)) {
@@ -184,7 +188,7 @@ export function ShippingCreatePage() {
             const stock = stockPage.items.find(
               (x) => x.erpStockCode.toUpperCase() === stockCode,
             );
-            if (!stock) throw new Error(`${row.stockCode} ERP mirror tablosunda bulunamadı.`);
+            if (!stock) throw new Error(t('create.errors.stockMirrorNotFound', { stockCode: row.stockCode }));
             return stock;
           })());
         }
@@ -207,7 +211,7 @@ export function ShippingCreatePage() {
             (x) => x.configurationCode.toUpperCase() === row.yapCode!.toUpperCase(),
           );
           if (!yap)
-            throw new Error(`${row.yapCode} yapılandırma kodu ERP ayna tablosunda bulunamadı.`);
+            throw new Error(t('create.errors.yapNotFound', { yapCode: row.yapCode }));
         }
 
         return {
@@ -238,7 +242,7 @@ export function ShippingCreatePage() {
       }));
       if (requestId === orderLineRequest.current) setLines(mapped);
     } catch (error) {
-      toast.error(message(error, 'Sipariş kalemleri hazırlanamadı.'));
+      toast.error(message(error, t('create.errors.orderLinesFailed')));
     } finally {
       if (requestId === orderLineRequest.current) setBusy(false);
     }
@@ -253,10 +257,10 @@ export function ShippingCreatePage() {
   };
 
   const validate = (): string | null => {
-    if (!policy) return 'Sevk politikası yüklenemedi.';
+    if (!policy) return t('create.errors.policyLoadFailed');
     if (!customer || !warehouseId || !seriesId)
-      return 'Cari, kaynak depo ve belge serisi zorunludur.';
-    if (!lines.length) return 'En az bir sevk kalemi zorunludur.';
+      return t('create.errors.requiredHeader');
+    if (!lines.length) return t('create.errors.requiredLines');
     const selectedMode = mode();
     const allowed = selectedMode === 'OrderBasedTask'
       ? policy.allowOrderBasedTask
@@ -265,37 +269,38 @@ export function ShippingCreatePage() {
         : selectedMode === 'StockBasedTask'
           ? policy.allowStockBasedTask
           : policy.allowStockBasedDirect;
-    if (!allowed) return 'Seçilen sevk akışı politikada kapalıdır.';
+    if (!allowed) return t('create.errors.flowNotAllowed');
     if (execution === 'Task' && policy.requireAssigneeForTask && !assignees.length)
-      return 'Emirli sevkte en az bir kullanıcı atanmalıdır.';
+      return t('create.errors.assigneeRequired');
     if (!policy.allowMultipleAssignees && assignees.length > 1)
-      return 'Politika birden fazla kullanıcı atamasına izin vermiyor.';
+      return t('create.errors.singleAssigneeOnly');
     if (policy.requireShipmentInformation && !vehiclePlate.trim() && !carrierCode.trim())
-      return 'Araç plakası veya taşıyıcı kodu zorunludur.';
+      return t('create.errors.shipmentInfoRequired');
 
     for (const [index, line] of lines.entries()) {
+      const lineNo = index + 1;
       if (!line.stockId || line.quantity <= 0 || !line.unitCode.trim())
-        return `${index + 1}. kalemde stok, pozitif miktar ve birim zorunludur.`;
+        return t('create.errors.lineRequiredFields', { line: lineNo });
       if (!line.trackingPolicy)
-        return `${index + 1}. kalemin merkezî stok takip politikası yüklenemedi.`;
+        return t('create.errors.lineTrackingPolicyMissing', { line: lineNo });
       if (source === 'Order' && !line.source)
-        return `${index + 1}. kalemin Netsis sipariş bağlantısı bulunmuyor.`;
+        return t('create.errors.lineOrderLinkMissing', { line: lineNo });
       if (line.source && line.quantity > line.source.availableQuantity)
-        return `${index + 1}. kalem güncel açık sipariş miktarını aşıyor.`;
+        return t('create.errors.lineExceedsOrder', { line: lineNo });
       if (policy.requireSourceLocation && !line.sourceLocationId)
-        return `${index + 1}. kalemde kaynak raf zorunludur.`;
+        return t('create.errors.lineSourceLocationRequired', { line: lineNo });
       if (line.trackingType !== 'None') {
-        if (!line.trackings.length) return `${index + 1}. kalemde seri/lot planı zorunludur.`;
+        if (!line.trackings.length) return t('create.errors.lineTrackingPlanRequired', { line: lineNo });
         const tracked = line.trackings.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
-        if (Math.abs(tracked - line.quantity) > 0.000001) return `${index + 1}. kalemde seri/lot toplamı sevk miktarına eşit olmalıdır.`;
+        if (Math.abs(tracked - line.quantity) > 0.000001) return t('create.errors.lineTrackingSumMismatch', { line: lineNo });
         if ((line.trackingType === 'Serial' || line.trackingType === 'LotAndSerial') && line.trackings.some((item) => !item.serialNo?.trim() || item.quantity !== 1))
-          return `${index + 1}. kalemde her seri benzersiz ve 1 miktarlı olmalıdır.`;
+          return t('create.errors.lineSerialInvalid', { line: lineNo });
         if ((line.trackingType === 'Lot' || line.trackingType === 'LotAndSerial') && line.trackings.some((item) => !item.lotNo?.trim()))
-          return `${index + 1}. kalemde lot zorunludur.`;
+          return t('create.errors.lineLotRequired', { line: lineNo });
         if (line.requireHandlingUnit && line.trackings.some((item) => !item.handlingUnitNo?.trim()))
-          return `${index + 1}. kalemde palet/kasa zorunludur.`;
+          return t('create.errors.lineHandlingUnitRequired', { line: lineNo });
         const serials = line.trackings.map((item) => item.serialNo?.trim().toLocaleUpperCase('tr-TR')).filter(Boolean);
-        if (new Set(serials).size !== serials.length) return `${index + 1}. kalemde aynı seri tekrar edemez.`;
+        if (new Set(serials).size !== serials.length) return t('create.errors.lineDuplicateSerial', { line: lineNo });
       }
     }
     return null;
@@ -355,9 +360,9 @@ export function ShippingCreatePage() {
         })),
       });
       setResult(created);
-      toast.success(`${created.documentNo} sevk taslağı oluşturuldu.`);
+      toast.success(t('create.success', { documentNo: created.documentNo }));
     } catch (error) {
-      toast.error(message(error, 'Sevk taslağı oluşturulamadı.'));
+      toast.error(message(error, t('create.errors.createFailed')));
     } finally {
       setBusy(false);
     }
@@ -367,11 +372,11 @@ export function ShippingCreatePage() {
     return (
       <section className="mx-auto max-w-2xl rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-8 text-center">
         <CheckCircle2 className="mx-auto size-12 text-emerald-500" />
-        <h1 className="mt-3 text-2xl font-black">Sevk oluşturuldu</h1>
+        <h1 className="mt-3 text-2xl font-black">{t('create.resultTitle')}</h1>
         <p className="font-mono text-xl">{result.documentNo}</p>
-        {result.taskNo && <p>Toplama emri: {result.taskNo}</p>}
+        {result.taskNo && <p>{t('create.resultTask', { taskNo: result.taskNo })}</p>}
         <Link to="/warehouse/shipments/list" className="mt-5 inline-block rounded-xl bg-emerald-600 px-5 py-2.5 text-white">
-          Kayıtlara Git
+          {t('create.resultLink')}
         </Link>
       </section>
     );
@@ -380,29 +385,29 @@ export function ShippingCreatePage() {
   return (
     <section className="space-y-5">
       <header className="rounded-2xl border bg-gradient-to-r from-cyan-500/10 via-[var(--wms-app-panel)] to-violet-500/10 p-6">
-        <p className="text-xs font-bold uppercase tracking-widest text-cyan-500">Sevk</p>
-        <h1 className="mt-1 text-2xl font-black">Esnek Sevk Oluşturma</h1>
+        <p className="text-xs font-bold uppercase tracking-widest text-cyan-500">{t('create.eyebrow')}</p>
+        <h1 className="mt-1 text-2xl font-black">{t('create.title')}</h1>
         <p className="text-sm text-slate-500">
-          Sipariş kaynağı ve görev yürütmesini bağımsız seçin; tüm varyantlar aynı sevk başlık ve kalem yapısını kullanır.
+          {t('create.description')}
         </p>
       </header>
 
       <OperationFlowTabs source={source === 'Order' ? 'order' : 'stock'} execution={execution === 'Task' ? 'task' : 'direct'}
         onSourceChange={(value) => changeSource(value === 'order' ? 'Order' : 'Stock')}
         onExecutionChange={(value) => { setExecution(value === 'task' ? 'Task' : 'Direct'); if (value === 'direct') setAssignees([]); }}
-        orderLabel="Netsis satış siparişine istinaden" stockLabel="Siparişsiz / serbest stoktan"
+        orderLabel={tCommon('transferDraft.sourceLabels.salesOrder')} stockLabel={tCommon('transferDraft.sourceLabels.warehouseStock')}
         isAllowed={(sourceMode, executionMode) => {
           if (!policy) return false;
           return sourceMode === 'order'
             ? (executionMode === 'task' ? policy.allowOrderBasedTask : policy.allowOrderBasedDirect)
             : (executionMode === 'task' ? policy.allowStockBasedTask : policy.allowStockBasedDirect);
         }}>
-        {execution === 'Task' ? 'Toplama emri ve kullanıcı ataması oluşturulur.' : 'Yetkili kullanıcı doğrudan sevk akışına ilerler.'}
+        {execution === 'Task' ? tCommon('transferDraft.operationFlow.shipmentTaskDescription') : tCommon('transferDraft.operationFlow.shipmentDirectDescription')}
       </OperationFlowTabs>
 
-      <Panel title="Cari, belge ve depo">
+      <Panel title={t('create.sections.customerDocument')}>
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <Field label="Cari *">
+          <Field label={t('create.fields.customer')}>
             <PagedAppDropdown queryKey={['sh-customer', branch]} fetchPage={(request) => shippingApi.customers(request, branch)}
               toOption={(item) => ({ value: encoded(item), label: `${item.customerCode} · ${item.customerName}` })}
               value={customerValue} onValueChange={(value) => {
@@ -413,43 +418,43 @@ export function ShippingCreatePage() {
                 if (source === 'Order') setLines([]);
               }} searchable minSearchLength={2} />
           </Field>
-          <Field label="Kaynak depo *">
+          <Field label={t('create.fields.sourceWarehouse')}>
             <PagedAppDropdown queryKey={['sh-warehouse', branch]} fetchPage={(request) => shippingApi.warehouses(request, branch)}
               toOption={(item) => ({ value: `${item.id}|${item.warehouseCode}`, label: `${item.warehouseCode} · ${item.warehouseName}` })}
               value={warehouseValue} onValueChange={setWarehouseValue} searchable />
           </Field>
-          <Field label="Belge serisi *">
+          <Field label={t('create.fields.series')}>
             <AppDropdown value={seriesId} onValueChange={setSeriesId}
               options={series.map((item) => ({ value: String(item.id), label: `${item.code} · ${item.previewDocumentNumber}` }))} />
           </Field>
-          <Field label="Belge tarihi"><AppDateInput value={documentDate} onChange={(e) => setDocumentDate(e.target.value)} /></Field>
-          <Field label="Planlanan sevk"><AppDateInput type="datetime-local" value={plannedAt} onChange={(e) => setPlannedAt(e.target.value)} /></Field>
-          <Field label="Hazırlama alanı">
+          <Field label={t('create.fields.documentDate')}><AppDateInput value={documentDate} onChange={(e) => setDocumentDate(e.target.value)} /></Field>
+          <Field label={t('create.fields.plannedShipment')}><AppDateInput type="datetime-local" value={plannedAt} onChange={(e) => setPlannedAt(e.target.value)} /></Field>
+          <Field label={t('create.fields.stagingLocation')}>
             <PagedAppDropdown queryKey={['sh-stage', warehouseId]} fetchPage={(request) => shippingApi.locations(request, warehouseId)}
               toOption={(item) => ({ value: String(item.id), label: `${item.code} · ${item.name}` })}
               enabled={Boolean(warehouseId)} value={stagingLocationId} onValueChange={setStagingLocationId} searchable />
           </Field>
-          <Field label="Yükleme alanı">
+          <Field label={t('create.fields.loadingLocation')}>
             <PagedAppDropdown queryKey={['sh-load', warehouseId]} fetchPage={(request) => shippingApi.locations(request, warehouseId)}
               toOption={(item) => ({ value: String(item.id), label: `${item.code} · ${item.name}` })}
               enabled={Boolean(warehouseId)} value={loadingLocationId} onValueChange={setLoadingLocationId} searchable />
           </Field>
-          <Field label="Öncelik">
+          <Field label={t('create.fields.priority')}>
             <AppDropdown value={priority} onValueChange={setPriority}
               options={[1, 2, 3, 4, 5, 6, 7, 8, 9].map((x) => ({ value: String(x), label: String(x) }))} />
           </Field>
-          <Field label="Araç plakası"><input className="input" value={vehiclePlate} onChange={(e) => setVehiclePlate(e.target.value)} /></Field>
-          <Field label="Taşıyıcı kodu"><input className="input" value={carrierCode} onChange={(e) => setCarrierCode(e.target.value)} /></Field>
-          <Field label="Harici referans"><input className="input" value={externalReference} onChange={(e) => setExternalReference(e.target.value)} /></Field>
-          <Field label="Açıklama"><input className="input" value={description} onChange={(e) => setDescription(e.target.value)} /></Field>
-          <label className="flex items-center gap-2"><input type="checkbox" checked={isEDispatch} onChange={(e) => setIsEDispatch(e.target.checked)} />E-İrsaliye</label>
+          <Field label={t('create.fields.vehiclePlate')}><input className="input" value={vehiclePlate} onChange={(e) => setVehiclePlate(e.target.value)} /></Field>
+          <Field label={t('create.fields.carrierCode')}><input className="input" value={carrierCode} onChange={(e) => setCarrierCode(e.target.value)} /></Field>
+          <Field label={t('create.fields.externalReference')}><input className="input" value={externalReference} onChange={(e) => setExternalReference(e.target.value)} /></Field>
+          <Field label={t('create.fields.description')}><input className="input" value={description} onChange={(e) => setDescription(e.target.value)} /></Field>
+          <label className="flex items-center gap-2"><input type="checkbox" checked={isEDispatch} onChange={(e) => setIsEDispatch(e.target.checked)} />{t('create.fields.eDispatch')}</label>
         </div>
       </Panel>
 
       {source === 'Order' && (
-        <Panel title="Netsis sipariş seçimi">
+        <Panel title={t('create.sections.orderSelection')}>
           <button disabled={!customer || busy} onClick={() => void loadOrders()} className="rounded-xl bg-cyan-600 px-4 py-2 text-white disabled:opacity-50">
-            Açık Siparişleri Getir
+            {t('create.loadOrders')}
           </button>
           <div className="mt-3 space-y-2">
             {orders.map((order) => (
@@ -465,10 +470,9 @@ export function ShippingCreatePage() {
           </div>
           {selectedOrders.length > 0 && (
             <div className="mt-3 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-3 text-sm">
-              <b>{selectedOrders.length} sipariş · {lines.length} açık kalem</b>
+              <b>{t('create.ordersSummary', { count: selectedOrders.length, lineCount: lines.length })}</b>
               <p className="mt-1 text-xs text-slate-500">
-                Kalemler aşağıda stok adı, açık miktar ve düzenlenebilir sevk miktarıyla hazırlandı.
-                Seçimi değiştirdiğinizde satırlar otomatik yenilenir.
+                {t('create.ordersHint')}
               </p>
             </div>
           )}
@@ -476,7 +480,7 @@ export function ShippingCreatePage() {
       )}
 
       {execution === 'Task' && (
-        <Panel title="Toplama emri kullanıcıları">
+        <Panel title={t('create.sections.assignees')}>
           <PagedAppDropdown queryKey={['sh-users']} fetchPage={shippingApi.users}
             toOption={(item) => ({
               value: encoded(item),
@@ -498,22 +502,22 @@ export function ShippingCreatePage() {
         </Panel>
       )}
 
-      <Panel title={`Sevk kalemleri · ${lines.length} · ${totalQuantity}`}>
+      <Panel title={t('create.linesTitle', { count: lines.length, quantity: totalQuantity })}>
         <div className="space-y-3">
           {lines.map((line, index) => (
             <div key={line.key} className="rounded-xl border p-4">
               <div className="mb-3 flex items-center justify-between">
                 <div>
                   <strong>#{index + 1} {line.source && <span className="font-mono text-cyan-500">{line.source.orderNumber}</span>}</strong>
-                  <p className="mt-1 text-sm font-semibold">{line.stockCode ?? 'Stok seçilmedi'} · {line.stockName ?? '—'}</p>
-                  {line.source && <p className="text-xs text-slate-500">Sipariş açığı: {line.source.availableQuantity} {line.unitCode}</p>}
+                  <p className="mt-1 text-sm font-semibold">{line.stockCode ?? t('create.lineStockUnselected')} · {line.stockName ?? '—'}</p>
+                  {line.source && <p className="text-xs text-slate-500">{t('create.lineOrderShortfall', { quantity: line.source.availableQuantity, unit: line.unitCode })}</p>}
                 </div>
                 <button type="button" onClick={() => setLines((current) => current.filter((x) => x.key !== line.key))} className="text-red-500">
                   <Trash2 className="size-4" />
                 </button>
               </div>
               <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                <Field label="Stok *">
+                <Field label={t('create.fields.stock')}>
                   <PagedAppDropdown queryKey={['sh-stock', line.key, branch]} fetchPage={(request) => shippingApi.stocks(request, branch)}
                     toOption={(item) => ({ value: encoded(item), label: `${item.erpStockCode} · ${item.stockName}` })}
                     selectedOption={line.stockId ? { value: String(line.stockId), label: `${line.stockCode} · ${line.stockName}` } : undefined}
@@ -539,12 +543,12 @@ export function ShippingCreatePage() {
                           });
                         } catch (error) {
                           patchLine(line.key, { trackingPolicyLoading: false });
-                          toast.error(message(error, 'Stok takip politikası alınamadı.'));
+                          toast.error(message(error, t('create.errors.trackingPolicyFailed')));
                         }
                       })();
                     }} searchable minSearchLength={2} />
                 </Field>
-                <Field label="Yapılandırma kodu">
+                <Field label={t('create.fields.configurationCode')}>
                   <PagedAppDropdown queryKey={['sh-yap', line.key, branch]} fetchPage={(request) => shippingApi.yaps(request, branch)}
                     toOption={(item) => ({ value: encoded(item), label: `${item.configurationCode} · ${item.description ?? ''}` })}
                     selectedOption={line.yapCodeId ? { value: String(line.yapCodeId), label: line.yapCode ?? '' } : undefined}
@@ -553,25 +557,25 @@ export function ShippingCreatePage() {
                       patchLine(line.key, { yapCodeId: yap.id, yapCode: yap.configurationCode });
                     }} searchable />
                 </Field>
-                <Field label="Miktar *">
+                <Field label={t('create.fields.quantity')}>
                   <input className="input" type="number" min="0.000001" step="0.000001"
                     max={line.source?.availableQuantity} value={line.quantity}
                     onChange={(e) => patchLine(line.key, { quantity: Number(e.target.value) })} />
                 </Field>
-                <Field label="Birim"><div className={`input flex items-center font-bold ${line.unitCode ? 'text-cyan-600' : 'text-amber-600'}`}>{line.unitCode || 'Önce stok seçin'}</div></Field>
-                <Field label="Kaynak raf">
+                <Field label={t('create.fields.unit')}><div className={`input flex items-center font-bold ${line.unitCode ? 'text-cyan-600' : 'text-amber-600'}`}>{line.unitCode || t('create.fields.unitPlaceholder')}</div></Field>
+                <Field label={t('create.fields.sourceLocation')}>
                   <PagedAppDropdown queryKey={['sh-location', line.key, warehouseId]} fetchPage={(request) => shippingApi.locations(request, warehouseId)}
                     toOption={(item: LocationOption) => ({ value: String(item.id), label: `${item.code} · ${item.name}` })}
                     enabled={Boolean(warehouseId)} value={line.sourceLocationValue ?? null}
                     onValueChange={(value) => patchLine(line.key, { sourceLocationId: Number(value), sourceLocationValue: value })} searchable />
                 </Field>
-                <Field label="Stok takip politikası">
+                <Field label={t('create.fields.trackingPolicy')}>
                   <StockTrackingPolicyField policy={line.trackingPolicy} loading={line.trackingPolicyLoading} />
                 </Field>
                 <label className="flex h-11 items-center gap-2 self-end rounded-xl border px-3 text-sm">
                   <input type="checkbox" checked={line.requireHandlingUnit}
                     onChange={(e) => patchLine(line.key, { requireHandlingUnit: e.target.checked })} />
-                  Palet / kasa zorunlu
+                  {t('create.fields.requireHandlingUnit')}
                 </label>
               </div>
               <TrackingPlanEditor mode={line.trackingType} quantity={line.quantity} value={line.trackings}
@@ -582,14 +586,14 @@ export function ShippingCreatePage() {
         </div>
         {source === 'Stock' && (
           <button onClick={() => setLines((current) => [...current, blankLine()])} className="mt-3 inline-flex items-center gap-2 rounded-xl border px-4 py-2">
-            <Plus className="size-4" />Kalem ekle
+            <Plus className="size-4" />{t('create.addLine')}
           </button>
         )}
       </Panel>
 
       <div className="flex justify-end">
         <button disabled={busy} onClick={() => void create()} className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-6 py-3 font-bold text-white disabled:opacity-50">
-          {busy && <Loader2 className="size-4 animate-spin" />}Sevk Taslağı Oluştur
+          {busy && <Loader2 className="size-4 animate-spin" />}{t('create.submit')}
         </button>
       </div>
     </section>

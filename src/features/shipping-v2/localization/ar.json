@@ -70,5 +70,201 @@
     "shortagePolicy": { "Block": "حظر", "AllowPartial": "السماح بالجزئي", "RequireApproval": "إرسال للموافقة" },
     "overPickPolicy": { "Block": "حظر", "AllowWithinTolerance": "ضمن التسامح", "RequireApproval": "إرسال للموافقة" },
     "packingPolicy": { "NotRequired": "غير مطلوب", "Optional": "اختياري", "Required": "إلزامي" }
+  },
+  "create": {
+    "eyebrow": "الشحن",
+    "title": "إنشاء شحنة مرنة",
+    "description": "اختر مصدر الطلب وطريقة تنفيذ المهمة بشكل مستقل؛ تستخدم جميع الأنواع نفس بنية رأس وبنود الشحنة.",
+    "sections": {
+      "customerDocument": "العميل والمستند والمستودع",
+      "orderSelection": "اختيار طلب نتسيس",
+      "assignees": "مستخدمو مهمة الانتقاء",
+      "lines": "بنود الشحنة"
+    },
+    "fields": {
+      "customer": "العميل *",
+      "sourceWarehouse": "المستودع المصدر *",
+      "series": "سلسلة المستند *",
+      "documentDate": "تاريخ المستند",
+      "plannedShipment": "الشحن المخطط",
+      "stagingLocation": "منطقة التجهيز",
+      "loadingLocation": "منطقة التحميل",
+      "priority": "الأولوية",
+      "vehiclePlate": "لوحة المركبة",
+      "carrierCode": "رمز الناقل",
+      "externalReference": "المرجع الخارجي",
+      "description": "الوصف",
+      "eDispatch": "الفاتورة الإلكترونية",
+      "stock": "الصنف *",
+      "configurationCode": "رمز التكوين",
+      "quantity": "الكمية *",
+      "unit": "الوحدة",
+      "unitPlaceholder": "اختر الصنف أولاً",
+      "sourceLocation": "موقع المصدر",
+      "trackingPolicy": "سياسة تتبع المخزون",
+      "requireHandlingUnit": "منصة/صندوق إلزامي"
+    },
+    "loadOrders": "جلب الطلبات المفتوحة",
+    "ordersSummary": "{{count}} طلب · {{lineCount}} بند مفتوح",
+    "ordersHint": "يتم تجهيز البنود أدناه باسم الصنف والكمية المفتوحة وكمية شحن قابلة للتعديل. يتم تحديث الصفوف تلقائيًا عند تغيير التحديد.",
+    "linesTitle": "بنود الشحنة · {{count}} · {{quantity}}",
+    "lineStockUnselected": "لم يتم اختيار صنف",
+    "lineOrderShortfall": "نقص الطلب: {{quantity}} {{unit}}",
+    "addLine": "إضافة بند",
+    "submit": "إنشاء مسودة الشحنة",
+    "resultTitle": "تم إنشاء الشحنة",
+    "resultTask": "مهمة الانتقاء: {{taskNo}}",
+    "resultLink": "الذهاب إلى السجلات",
+    "success": "تم إنشاء مسودة الشحنة {{documentNo}}.",
+    "errors": {
+      "policyLoadFailed": "تعذر تحميل سياسة الشحن.",
+      "orderLoadFailed": "تعذر جلب طلبات نتسيس المفتوحة.",
+      "orderLinesFailed": "تعذر تجهيز بنود الطلب.",
+      "stockNotFound": "{{order}}: رمز الصنف غير موجود.",
+      "stockMirrorNotFound": "{{stockCode}} غير موجود في جدول مرآة ERP.",
+      "yapNotFound": "رمز التكوين {{yapCode}} غير موجود في جدول مرآة ERP.",
+      "trackingPolicyFailed": "تعذر جلب سياسة تتبع المخزون.",
+      "createFailed": "تعذر إنشاء مسودة الشحنة.",
+      "requiredHeader": "العميل والمستودع المصدر وسلسلة المستند إلزامية.",
+      "requiredLines": "مطلوب بند شحن واحد على الأقل.",
+      "flowNotAllowed": "تدفق الشحن المحدد معطل في السياسة.",
+      "assigneeRequired": "يجب تعيين مستخدم واحد على الأقل للشحن بمهمة.",
+      "singleAssigneeOnly": "لا تسمح السياسة بتعيين عدة مستخدمين.",
+      "shipmentInfoRequired": "لوحة المركبة أو رمز الناقل إلزامي.",
+      "lineRequiredFields": "البند {{line}}: الصنف والكمية الموجبة والوحدة إلزامية.",
+      "lineTrackingPolicyMissing": "البند {{line}}: تعذر تحميل سياسة تتبع المخزون المركزية.",
+      "lineOrderLinkMissing": "البند {{line}}: لا يوجد ارتباط بطلب نتسيس.",
+      "lineExceedsOrder": "البند {{line}}: يتجاوز كمية الطلب المفتوح الحالية.",
+      "lineSourceLocationRequired": "البند {{line}}: موقع المصدر إلزامي.",
+      "lineTrackingPlanRequired": "البند {{line}}: خطة التسلسل/الدفعة إلزامية.",
+      "lineTrackingSumMismatch": "البند {{line}}: يجب أن يساوي إجمالي التسلسل/الدفعة كمية الشحن.",
+      "lineSerialInvalid": "البند {{line}}: يجب أن يكون كل رقم تسلسلي فريدًا وبكمية 1.",
+      "lineLotRequired": "البند {{line}}: رقم الدفعة إلزامي.",
+      "lineHandlingUnitRequired": "البند {{line}}: المنصة/الصندوق إلزامي.",
+      "lineDuplicateSerial": "البند {{line}}: لا يمكن تكرار نفس الرقم التسلسلي."
+    }
+  },
+  "list": {
+    "loadFailed": "تعذر فتح الشحنة.",
+    "actions": {
+      "operate": "تنفيذ العملية",
+      "editDraft": "تعديل المسودة",
+      "deleteDraft": "حذف المسودة",
+      "cancelShipment": "إلغاء الشحنة",
+      "showDetail": "عرض التفاصيل"
+    },
+    "edit": {
+      "title": "تعديل مسودة الشحنة",
+      "description": "تعديل مسودة الشحنة {{documentNo}}.",
+      "closeAriaLabel": "إغلاق النافذة",
+      "fields": {
+        "documentDate": "تاريخ المستند",
+        "plannedShipment": "الشحن المخطط",
+        "priority": "الأولوية",
+        "externalReference": "المرجع الخارجي",
+        "carrierCode": "رمز الناقل",
+        "carrierName": "اسم الناقل",
+        "vehiclePlate": "لوحة المركبة",
+        "trailerPlate": "لوحة المقطورة",
+        "driverName": "السائق",
+        "sealNo": "رقم الختم",
+        "eDispatch": "الفاتورة الإلكترونية",
+        "description": "الوصف"
+      },
+      "immutableNote": "لا يمكن تغيير حقول العميل والمستودع والموقع والصنف والكمية في هذه الشاشة للحفاظ على سلامة العملية.",
+      "cancel": "إلغاء",
+      "save": "حفظ",
+      "success": "تم تحديث مسودة الشحنة.",
+      "error": "تعذر تحديث الشحنة."
+    },
+    "lifecycle": {
+      "cancelReasonRequired": "سبب الإلغاء إلزامي.",
+      "deleteSuccess": "تم حذف مسودة الشحنة.",
+      "cancelSuccess": "تم إلغاء الشحنة؛ تم عكس حركات المخزون.",
+      "failed": "تعذر إكمال العملية.",
+      "deleteTitle": "حذف المسودة",
+      "cancelTitle": "إلغاء الشحنة",
+      "confirmDescription": "تأكيد إجراء لا يمكن التراجع عنه لـ {{documentNo}}.",
+      "confirmText": "لا يمكن التراجع عن هذا الإجراء لـ {{documentNo}}. يتم عكس حركات المخزون في معاملة واحدة أثناء الإلغاء.",
+      "reasonPlaceholder": "اكتب سبب الإلغاء",
+      "cancel": "إلغاء",
+      "processing": "قيد المعالجة…",
+      "deleteAction": "حذف المسودة",
+      "cancelAction": "إلغاء"
+    },
+    "detail": {
+      "title": "الشحنة {{documentNo}}",
+      "description": "بنود الشحنة وتقدم العملية.",
+      "openOperation": "فتح العملية",
+      "closeAriaLabel": "إغلاق النافذة",
+      "columns": {
+        "line": "#",
+        "stock": "الصنف",
+        "planned": "مخطط",
+        "reserved": "محجوز",
+        "picked": "منتقى",
+        "packed": "معبأ",
+        "loaded": "محمّل",
+        "shipped": "مشحون"
+      }
+    }
+  },
+  "operation": {
+    "eyebrow": "مركز عمليات الشحن",
+    "backToRecords": "العودة إلى السجلات",
+    "phases": {
+      "pick": "01 · الانتقاء",
+      "pack": "02 · التعبئة",
+      "load": "03 · التحميل",
+      "ship": "04 · إنهاء الشحن"
+    },
+    "metrics": {
+      "planned": "مخطط",
+      "picked": "منتقى",
+      "packed": "معبأ",
+      "loaded": "محمّل",
+      "shipped": "مشحون"
+    },
+    "gates": {
+      "title": "بوابات المستند",
+      "status": "الحالة: {{status}} · الموافقة: {{approval}}",
+      "approve": "موافقة",
+      "release": "تحرير"
+    },
+    "fields": {
+      "phase": "العملية",
+      "vehiclePlate": "لوحة المركبة",
+      "driverName": "السائق",
+      "waybillNo": "بوليصة الشحن",
+      "trackingNo": "رقم التتبع",
+      "note": "ملاحظة",
+      "quantity": "الكمية",
+      "sourceLocation": "موقع المصدر",
+      "targetLocation": "موقع الهدف",
+      "lot": "الدفعة",
+      "serial": "التسلسلي",
+      "handlingUnit": "منصة/صندوق"
+    },
+    "scanner": {
+      "title": "مسح باركود {{phase}}",
+      "packDescription": "تُستخدم ملصقات وحدة المناولة في خطوة التعبئة. يتم التحقق من التسلسل/الدفعة للمخزون أثناء خطوات الانتقاء والتحميل والشحن.",
+      "defaultDescription": "يتم التحقق من الباركود الممسوح مقابل الصنف والتسلسل والدفعة والكمية ورصيد الموقع الحالي؛ ويتم ملء بند الشحنة المطابق تلقائيًا."
+    },
+    "lineAvailable": "المتاح {{quantity}}",
+    "execute": "معالجة العملية",
+    "errors": {
+      "loadFailed": "تعذر فتح سجل الشحنة.",
+      "transitionFailed": "تعذر إكمال العملية.",
+      "detailNotLoaded": "لم يتم تحميل تفاصيل الشحنة بعد.",
+      "atLeastOneLine": "يجب معالجة سطر واحد على الأقل.",
+      "locationsRequired": "أكمل اختيار موقعي المصدر والهدف.",
+      "trackingInvalid": "املأ معلومات التسلسل والدفعة ووحدة المناولة والكمية وفقًا لقاعدة تتبع المخزون.",
+      "lineStockNotFound": "لم يتم العثور على بند مفتوح لـ {{stockCode}} في هذه الشحنة.",
+      "executeFailed": "تعذر معالجة العملية."
+    },
+    "loadError": {
+      "title": "تعذر فتح عملية الشحن",
+      "backToList": "العودة إلى قائمة الشحنات"
+    }
   }
 }

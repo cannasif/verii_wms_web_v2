@@ -245,7 +245,7 @@ function GridMenuSearch({
   return <div className="wms-ops-list-popover__search relative mb-2">
     <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-[var(--wms-ops-field-placeholder-fg)]"/>
     <input
-      type="search"
+      type="text"
       value={value}
       onChange={(event) => onChange(event.target.value)}
       placeholder={placeholder}

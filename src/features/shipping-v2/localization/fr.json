@@ -70,5 +70,201 @@
     "shortagePolicy": { "Block": "Bloquer", "AllowPartial": "Autoriser partiel", "RequireApproval": "Envoyer pour approbation" },
     "overPickPolicy": { "Block": "Bloquer", "AllowWithinTolerance": "Dans la tolérance", "RequireApproval": "Envoyer pour approbation" },
     "packingPolicy": { "NotRequired": "Non requis", "Optional": "Optionnel", "Required": "Obligatoire" }
+  },
+  "create": {
+    "eyebrow": "Expédition",
+    "title": "Création d'expédition flexible",
+    "description": "Choisissez indépendamment la source de la commande et le mode d'exécution ; toutes les variantes utilisent la même structure d'en-tête et de lignes d'expédition.",
+    "sections": {
+      "customerDocument": "Client, document et entrepôt",
+      "orderSelection": "Sélection de commande Netsis",
+      "assignees": "Utilisateurs de la tâche de préparation",
+      "lines": "Articles d'expédition"
+    },
+    "fields": {
+      "customer": "Client *",
+      "sourceWarehouse": "Entrepôt source *",
+      "series": "Série de document *",
+      "documentDate": "Date du document",
+      "plannedShipment": "Expédition planifiée",
+      "stagingLocation": "Zone de préparation",
+      "loadingLocation": "Zone de chargement",
+      "priority": "Priorité",
+      "vehiclePlate": "Immatriculation du véhicule",
+      "carrierCode": "Code transporteur",
+      "externalReference": "Référence externe",
+      "description": "Description",
+      "eDispatch": "E-Expédition",
+      "stock": "Stock *",
+      "configurationCode": "Code de configuration",
+      "quantity": "Quantité *",
+      "unit": "Unité",
+      "unitPlaceholder": "Sélectionnez d'abord un stock",
+      "sourceLocation": "Emplacement source",
+      "trackingPolicy": "Politique de suivi du stock",
+      "requireHandlingUnit": "Palette/caisse obligatoire"
+    },
+    "loadOrders": "Récupérer les commandes ouvertes",
+    "ordersSummary": "{{count}} commande(s) · {{lineCount}} ligne(s) ouverte(s)",
+    "ordersHint": "Les lignes ci-dessous sont préparées avec le nom du stock, la quantité ouverte et une quantité d'expédition modifiable. Les lignes se rafraîchissent automatiquement lorsque la sélection change.",
+    "linesTitle": "Articles d'expédition · {{count}} · {{quantity}}",
+    "lineStockUnselected": "Aucun stock sélectionné",
+    "lineOrderShortfall": "Manque sur commande : {{quantity}} {{unit}}",
+    "addLine": "Ajouter un article",
+    "submit": "Créer le brouillon d'expédition",
+    "resultTitle": "Expédition créée",
+    "resultTask": "Tâche de préparation : {{taskNo}}",
+    "resultLink": "Aller aux dossiers",
+    "success": "Brouillon d'expédition {{documentNo}} créé.",
+    "errors": {
+      "policyLoadFailed": "Impossible de charger la politique d'expédition.",
+      "orderLoadFailed": "Impossible de récupérer les commandes Netsis ouvertes.",
+      "orderLinesFailed": "Impossible de préparer les lignes de commande.",
+      "stockNotFound": "{{order}} : code de stock introuvable.",
+      "stockMirrorNotFound": "{{stockCode}} introuvable dans la table miroir ERP.",
+      "yapNotFound": "Le code de configuration {{yapCode}} est introuvable dans la table miroir ERP.",
+      "trackingPolicyFailed": "Impossible de récupérer la politique de suivi du stock.",
+      "createFailed": "Impossible de créer le brouillon d'expédition.",
+      "requiredHeader": "Le client, l'entrepôt source et la série de document sont obligatoires.",
+      "requiredLines": "Au moins un article d'expédition est requis.",
+      "flowNotAllowed": "Le flux d'expédition sélectionné est désactivé dans la politique.",
+      "assigneeRequired": "Au moins un utilisateur doit être affecté pour une expédition avec tâche.",
+      "singleAssigneeOnly": "La politique n'autorise pas l'affectation de plusieurs utilisateurs.",
+      "shipmentInfoRequired": "L'immatriculation du véhicule ou le code transporteur est requis.",
+      "lineRequiredFields": "Article {{line}} : stock, quantité positive et unité sont requis.",
+      "lineTrackingPolicyMissing": "Article {{line}} : impossible de charger la politique centrale de suivi du stock.",
+      "lineOrderLinkMissing": "Article {{line}} : aucun lien de commande Netsis trouvé.",
+      "lineExceedsOrder": "Article {{line}} : dépasse la quantité de commande ouverte actuelle.",
+      "lineSourceLocationRequired": "Article {{line}} : l'emplacement source est requis.",
+      "lineTrackingPlanRequired": "Article {{line}} : le plan de série/lot est requis.",
+      "lineTrackingSumMismatch": "Article {{line}} : le total série/lot doit être égal à la quantité expédiée.",
+      "lineSerialInvalid": "Article {{line}} : chaque série doit être unique avec une quantité de 1.",
+      "lineLotRequired": "Article {{line}} : le lot est requis.",
+      "lineHandlingUnitRequired": "Article {{line}} : la palette/caisse est requise.",
+      "lineDuplicateSerial": "Article {{line}} : la même série ne peut pas se répéter."
+    }
+  },
+  "list": {
+    "loadFailed": "Impossible d'ouvrir l'expédition.",
+    "actions": {
+      "operate": "Exécuter l'opération",
+      "editDraft": "Modifier le brouillon",
+      "deleteDraft": "Supprimer le brouillon",
+      "cancelShipment": "Annuler l'expédition",
+      "showDetail": "Afficher le détail"
+    },
+    "edit": {
+      "title": "Modifier le brouillon d'expédition",
+      "description": "Modifier le brouillon d'expédition {{documentNo}}.",
+      "closeAriaLabel": "Fermer la fenêtre",
+      "fields": {
+        "documentDate": "Date du document",
+        "plannedShipment": "Expédition planifiée",
+        "priority": "Priorité",
+        "externalReference": "Référence externe",
+        "carrierCode": "Code transporteur",
+        "carrierName": "Nom du transporteur",
+        "vehiclePlate": "Immatriculation du véhicule",
+        "trailerPlate": "Immatriculation de la remorque",
+        "driverName": "Chauffeur",
+        "sealNo": "N° de scellé",
+        "eDispatch": "E-Expédition",
+        "description": "Description"
+      },
+      "immutableNote": "Les champs client, entrepôt, emplacement, stock et quantité ne peuvent pas être modifiés sur cet écran afin de préserver l'intégrité de l'opération.",
+      "cancel": "Annuler",
+      "save": "Enregistrer",
+      "success": "Brouillon d'expédition mis à jour.",
+      "error": "Impossible de mettre à jour l'expédition."
+    },
+    "lifecycle": {
+      "cancelReasonRequired": "Le motif d'annulation est requis.",
+      "deleteSuccess": "Brouillon d'expédition supprimé.",
+      "cancelSuccess": "Expédition annulée ; les mouvements de stock ont été inversés.",
+      "failed": "L'opération n'a pas pu être terminée.",
+      "deleteTitle": "Supprimer le brouillon",
+      "cancelTitle": "Annuler l'expédition",
+      "confirmDescription": "Confirmation d'une action irréversible pour {{documentNo}}.",
+      "confirmText": "Cette action pour {{documentNo}} est irréversible. Les mouvements de stock sont inversés en une seule transaction lors de l'annulation.",
+      "reasonPlaceholder": "Saisissez le motif d'annulation",
+      "cancel": "Annuler",
+      "processing": "Traitement en cours…",
+      "deleteAction": "Supprimer le brouillon",
+      "cancelAction": "Annuler"
+    },
+    "detail": {
+      "title": "Expédition {{documentNo}}",
+      "description": "Articles d'expédition et progression de l'opération.",
+      "openOperation": "Ouvrir l'opération",
+      "closeAriaLabel": "Fermer la fenêtre",
+      "columns": {
+        "line": "#",
+        "stock": "Stock",
+        "planned": "Planifié",
+        "reserved": "Réservé",
+        "picked": "Prélevé",
+        "packed": "Emballé",
+        "loaded": "Chargé",
+        "shipped": "Expédié"
+      }
+    }
+  },
+  "operation": {
+    "eyebrow": "Centre d'opérations d'expédition",
+    "backToRecords": "Retour aux dossiers",
+    "phases": {
+      "pick": "01 · Préparation",
+      "pack": "02 · Emballage",
+      "load": "03 · Chargement",
+      "ship": "04 · Finalisation de l'expédition"
+    },
+    "metrics": {
+      "planned": "Planifié",
+      "picked": "Prélevé",
+      "packed": "Emballé",
+      "loaded": "Chargé",
+      "shipped": "Expédié"
+    },
+    "gates": {
+      "title": "Portes du document",
+      "status": "Statut : {{status}} · Approbation : {{approval}}",
+      "approve": "Approuver",
+      "release": "Libérer"
+    },
+    "fields": {
+      "phase": "Opération",
+      "vehiclePlate": "Immatriculation du véhicule",
+      "driverName": "Chauffeur",
+      "waybillNo": "Bon de livraison",
+      "trackingNo": "N° de suivi",
+      "note": "Note",
+      "quantity": "Quantité",
+      "sourceLocation": "Emplacement source",
+      "targetLocation": "Emplacement cible",
+      "lot": "Lot",
+      "serial": "Série",
+      "handlingUnit": "Palette/caisse"
+    },
+    "scanner": {
+      "title": "Scanner le code-barres {{phase}}",
+      "packDescription": "L'étape d'emballage utilise des étiquettes de palette/caisse. La vérification série/lot du stock se fait lors de la préparation, du chargement et de l'expédition.",
+      "defaultDescription": "Le code-barres scanné est validé par rapport au stock, à la série, au lot, à la quantité et au solde d'emplacement actuel ; l'article d'expédition correspondant est rempli automatiquement."
+    },
+    "lineAvailable": "Disponible {{quantity}}",
+    "execute": "Traiter l'opération",
+    "errors": {
+      "loadFailed": "Impossible d'ouvrir le dossier d'expédition.",
+      "transitionFailed": "L'opération n'a pas pu être terminée.",
+      "detailNotLoaded": "Les détails de l'expédition ne sont pas encore chargés.",
+      "atLeastOneLine": "Au moins une ligne doit être traitée.",
+      "locationsRequired": "Complétez la sélection des emplacements source et cible.",
+      "trackingInvalid": "Renseignez la série, le lot, la palette/caisse et la quantité conformément à la règle de suivi du stock.",
+      "lineStockNotFound": "Aucun article ouvert trouvé pour {{stockCode}} dans cette expédition.",
+      "executeFailed": "L'opération n'a pas pu être traitée."
+    },
+    "loadError": {
+      "title": "Impossible d'ouvrir l'opération d'expédition",
+      "backToList": "Retour à la liste des expéditions"
+    }
   }
 }

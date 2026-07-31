@@ -62,5 +62,201 @@
     "shortagePolicy": { "Block": "Bloke et", "AllowPartial": "Kısmi izin ver", "RequireApproval": "Onaya gönder" },
     "overPickPolicy": { "Block": "Bloke et", "AllowWithinTolerance": "Tolerans içinde", "RequireApproval": "Onaya gönder" },
     "packingPolicy": { "NotRequired": "Gerekli değil", "Optional": "Opsiyonel", "Required": "Zorunlu" }
+  },
+  "create": {
+    "eyebrow": "Sevk",
+    "title": "Esnek Sevk Oluşturma",
+    "description": "Sipariş kaynağı ve görev yürütmesini bağımsız seçin; tüm varyantlar aynı sevk başlık ve kalem yapısını kullanır.",
+    "sections": {
+      "customerDocument": "Cari, belge ve depo",
+      "orderSelection": "Netsis sipariş seçimi",
+      "assignees": "Toplama emri kullanıcıları",
+      "lines": "Sevk kalemleri"
+    },
+    "fields": {
+      "customer": "Cari *",
+      "sourceWarehouse": "Kaynak depo *",
+      "series": "Belge serisi *",
+      "documentDate": "Belge tarihi",
+      "plannedShipment": "Planlanan sevk",
+      "stagingLocation": "Hazırlama alanı",
+      "loadingLocation": "Yükleme alanı",
+      "priority": "Öncelik",
+      "vehiclePlate": "Araç plakası",
+      "carrierCode": "Taşıyıcı kodu",
+      "externalReference": "Harici referans",
+      "description": "Açıklama",
+      "eDispatch": "E-İrsaliye",
+      "stock": "Stok *",
+      "configurationCode": "Yapılandırma kodu",
+      "quantity": "Miktar *",
+      "unit": "Birim",
+      "unitPlaceholder": "Önce stok seçin",
+      "sourceLocation": "Kaynak raf",
+      "trackingPolicy": "Stok takip politikası",
+      "requireHandlingUnit": "Palet / kasa zorunlu"
+    },
+    "loadOrders": "Açık Siparişleri Getir",
+    "ordersSummary": "{{count}} sipariş · {{lineCount}} açık kalem",
+    "ordersHint": "Kalemler aşağıda stok adı, açık miktar ve düzenlenebilir sevk miktarıyla hazırlandı. Seçimi değiştirdiğinizde satırlar otomatik yenilenir.",
+    "linesTitle": "Sevk kalemleri · {{count}} · {{quantity}}",
+    "lineStockUnselected": "Stok seçilmedi",
+    "lineOrderShortfall": "Sipariş açığı: {{quantity}} {{unit}}",
+    "addLine": "Kalem ekle",
+    "submit": "Sevk Taslağı Oluştur",
+    "resultTitle": "Sevk oluşturuldu",
+    "resultTask": "Toplama emri: {{taskNo}}",
+    "resultLink": "Kayıtlara Git",
+    "success": "{{documentNo}} sevk taslağı oluşturuldu.",
+    "errors": {
+      "policyLoadFailed": "Sevk politikası yüklenemedi.",
+      "orderLoadFailed": "Netsis açık siparişleri alınamadı.",
+      "orderLinesFailed": "Sipariş kalemleri hazırlanamadı.",
+      "stockNotFound": "{{order}}: stok kodu bulunamadı.",
+      "stockMirrorNotFound": "{{stockCode}} ERP mirror tablosunda bulunamadı.",
+      "yapNotFound": "{{yapCode}} yapılandırma kodu ERP ayna tablosunda bulunamadı.",
+      "trackingPolicyFailed": "Stok takip politikası alınamadı.",
+      "createFailed": "Sevk taslağı oluşturulamadı.",
+      "requiredHeader": "Cari, kaynak depo ve belge serisi zorunludur.",
+      "requiredLines": "En az bir sevk kalemi zorunludur.",
+      "flowNotAllowed": "Seçilen sevk akışı politikada kapalıdır.",
+      "assigneeRequired": "Emirli sevkte en az bir kullanıcı atanmalıdır.",
+      "singleAssigneeOnly": "Politika birden fazla kullanıcı atamasına izin vermiyor.",
+      "shipmentInfoRequired": "Araç plakası veya taşıyıcı kodu zorunludur.",
+      "lineRequiredFields": "{{line}}. kalemde stok, pozitif miktar ve birim zorunludur.",
+      "lineTrackingPolicyMissing": "{{line}}. kalemin merkezî stok takip politikası yüklenemedi.",
+      "lineOrderLinkMissing": "{{line}}. kalemin Netsis sipariş bağlantısı bulunmuyor.",
+      "lineExceedsOrder": "{{line}}. kalem güncel açık sipariş miktarını aşıyor.",
+      "lineSourceLocationRequired": "{{line}}. kalemde kaynak raf zorunludur.",
+      "lineTrackingPlanRequired": "{{line}}. kalemde seri/lot planı zorunludur.",
+      "lineTrackingSumMismatch": "{{line}}. kalemde seri/lot toplamı sevk miktarına eşit olmalıdır.",
+      "lineSerialInvalid": "{{line}}. kalemde her seri benzersiz ve 1 miktarlı olmalıdır.",
+      "lineLotRequired": "{{line}}. kalemde lot zorunludur.",
+      "lineHandlingUnitRequired": "{{line}}. kalemde palet/kasa zorunludur.",
+      "lineDuplicateSerial": "{{line}}. kalemde aynı seri tekrar edemez."
+    }
+  },
+  "list": {
+    "loadFailed": "Sevk açılamadı.",
+    "actions": {
+      "operate": "Operasyonu yürüt",
+      "editDraft": "Taslağı düzenle",
+      "deleteDraft": "Taslağı sil",
+      "cancelShipment": "Sevki iptal et",
+      "showDetail": "Detayı göster"
+    },
+    "edit": {
+      "title": "Sevk taslağını düzenle",
+      "description": "{{documentNo}} numaralı sevk taslağını düzenleyin.",
+      "closeAriaLabel": "Pencereyi kapat",
+      "fields": {
+        "documentDate": "Belge tarihi",
+        "plannedShipment": "Planlanan sevk",
+        "priority": "Öncelik",
+        "externalReference": "Dış referans",
+        "carrierCode": "Taşıyıcı kodu",
+        "carrierName": "Taşıyıcı adı",
+        "vehiclePlate": "Araç plakası",
+        "trailerPlate": "Dorse plakası",
+        "driverName": "Sürücü",
+        "sealNo": "Mühür no",
+        "eDispatch": "E-irsaliye",
+        "description": "Açıklama"
+      },
+      "immutableNote": "Cari, depo, raf, stok ve miktar alanları operasyon bütünlüğü için bu ekranda değiştirilemez.",
+      "cancel": "Vazgeç",
+      "save": "Kaydet",
+      "success": "Sevk taslağı güncellendi.",
+      "error": "Sevk güncellenemedi."
+    },
+    "lifecycle": {
+      "cancelReasonRequired": "İptal nedeni zorunludur.",
+      "deleteSuccess": "Sevk taslağı silindi.",
+      "cancelSuccess": "Sevk iptal edildi; stok hareketleri ters çevrildi.",
+      "failed": "İşlem tamamlanamadı.",
+      "deleteTitle": "Taslağı sil",
+      "cancelTitle": "Sevki iptal et",
+      "confirmDescription": "{{documentNo}} için geri alınamaz işlem onayı.",
+      "confirmText": "{{documentNo}} için işlem geri alınamaz. İptal sırasında stok hareketleri ters sırada ve tek transaction içinde çevrilir.",
+      "reasonPlaceholder": "İptal nedenini yazın",
+      "cancel": "Vazgeç",
+      "processing": "İşleniyor…",
+      "deleteAction": "Taslağı Sil",
+      "cancelAction": "İptal Et"
+    },
+    "detail": {
+      "title": "Sevk {{documentNo}}",
+      "description": "Sevk kalemleri ve operasyon ilerlemesi.",
+      "openOperation": "Operasyonu aç",
+      "closeAriaLabel": "Pencereyi kapat",
+      "columns": {
+        "line": "#",
+        "stock": "Stok",
+        "planned": "Plan",
+        "reserved": "Rezerve",
+        "picked": "Toplanan",
+        "packed": "Paket",
+        "loaded": "Yüklenen",
+        "shipped": "Sevk"
+      }
+    }
+  },
+  "operation": {
+    "eyebrow": "Sevk Operasyon Merkezi",
+    "backToRecords": "Kayıtlara dön",
+    "phases": {
+      "pick": "01 · Toplama",
+      "pack": "02 · Paketleme",
+      "load": "03 · Yükleme",
+      "ship": "04 · Sevk kesinleştirme"
+    },
+    "metrics": {
+      "planned": "Plan",
+      "picked": "Toplanan",
+      "packed": "Paket",
+      "loaded": "Yüklenen",
+      "shipped": "Sevk"
+    },
+    "gates": {
+      "title": "Belge kapıları",
+      "status": "Durum: {{status}} · Onay: {{approval}}",
+      "approve": "Onayla",
+      "release": "Serbest bırak"
+    },
+    "fields": {
+      "phase": "Operasyon",
+      "vehiclePlate": "Araç plakası",
+      "driverName": "Şoför",
+      "waybillNo": "İrsaliye",
+      "trackingNo": "Takip no",
+      "note": "Not",
+      "quantity": "Miktar",
+      "sourceLocation": "Kaynak raf",
+      "targetLocation": "Hedef raf",
+      "lot": "Lot",
+      "serial": "Seri",
+      "handlingUnit": "Palet/Kasa"
+    },
+    "scanner": {
+      "title": "{{phase}} barkodunu okut",
+      "packDescription": "Paketleme adımında palet/kasa etiketi kullanılır. Stok seri/lot doğrulaması toplama, yükleme ve sevk adımlarında yapılır.",
+      "defaultDescription": "Okutulan barkod stok, seri, lot, miktar ve mevcut raf bakiyesiyle doğrulanır; ilgili sevk kalemi otomatik doldurulur."
+    },
+    "lineAvailable": "Kullanılabilir {{quantity}}",
+    "execute": "Operasyonu işle",
+    "errors": {
+      "loadFailed": "Sevk kaydı açılamadı.",
+      "transitionFailed": "İşlem tamamlanamadı.",
+      "detailNotLoaded": "Sevk detayı henüz yüklenmedi.",
+      "atLeastOneLine": "İşlenecek en az bir satır olmalıdır.",
+      "locationsRequired": "Kaynak ve hedef raf seçimlerini tamamlayın.",
+      "trackingInvalid": "Seri, lot, palet/kasa ve miktar bilgilerini stok takip kuralına uygun doldurun.",
+      "lineStockNotFound": "{{stockCode}} için bu sevkte açık kalem bulunamadı.",
+      "executeFailed": "Operasyon tamamlanamadı."
+    },
+    "loadError": {
+      "title": "Sevk operasyonu açılamadı",
+      "backToList": "Sevk listesine dön"
+    }
   }
 }
