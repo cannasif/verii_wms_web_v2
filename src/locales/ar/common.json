@@ -2835,21 +2835,67 @@
   "erpMirror": {
     "recordDetail": "{{title}} تفاصيل السجل #{{id}}",
     "syncNow": "مزامنة الآن",
+    "syncWithErp": "مزامنة ERP",
+    "syncWithErpTooltip": "قم بمزامنة هذه السجلات مع ERP (Netsis).",
+    "syncSuccess": "اكتملت مزامنة ERP بنجاح.",
+    "syncFailed": "فشلت مزامنة ERP.",
+    "codeFilters": {
+      "button": "فلاتر الرمز",
+      "panelTitle": "فلاتر الرمز",
+      "panelHint": "المجموعة والرموز الخاصة",
+      "searchPlaceholder": "ابحث في الرموز…",
+      "loading": "جاري تحميل الخيارات…",
+      "noOptions": "لا توجد رموز لهذا الحقل.",
+      "searchEmpty": "لا توجد رموز مطابقة.",
+      "selectedCount": "{{count}} محدد",
+      "pickHint": "اختر رمز المجموعة أو الرمز 1–5 للتصفية.",
+      "clearDraft": "مسح التحديد",
+      "clearAll": "مسح",
+      "apply": "تطبيق"
+    },
     "view": "عرض",
     "details": "التفاصيل",
     "stockCard": "بطاقة المخزون",
+    "stockCardUi": {
+      "eyebrow": "بطاقة مخزون ERP",
+      "untitled": "مخزون بلا اسم",
+      "identitySection": "الهوية",
+      "codesSection": "رموز خاصة",
+      "codesHint": "فلاتر الرمز تعتمد على هذه الحقول",
+      "orgSection": "التنظيم",
+      "auditSection": "سجل التدقيق"
+    },
+    "customerCardUi": {
+      "eyebrow": "بطاقة عميل ERP",
+      "title": "بطاقة العميل",
+      "untitled": "عميل بلا اسم",
+      "identitySection": "الهوية",
+      "orgSection": "التنظيم",
+      "auditSection": "سجل التدقيق"
+    },
+    "warehouseCardUi": {
+      "eyebrow": "بطاقة مستودع ERP",
+      "title": "بطاقة المستودع",
+      "untitled": "مستودع بلا اسم",
+      "identitySection": "الهوية",
+      "orgSection": "التنظيم",
+      "auditSection": "سجل التدقيق"
+    },
     "trackingSettings": "إعدادات التتبع",
     "actions": "الإجراءات",
     "undefinedUnit": "غير محدد",
     "pages": {
       "warehouses": {
-        "description": "عرض مرآة لبطاقات مستودعات Netsis."
+        "description": "عرض مرآة لبطاقات مستودعات Netsis.",
+        "titleHint": "هذه السجلات بطاقات مستودع معكوسة من Netsis. لا تُنشئ المستودعات في WMS؛ حافظ على تحديثها بالمزامنة مع ERP."
       },
       "stocks": {
-        "description": "بطاقات مخزون Netsis ومتطلبات التتبع WMS لكل صنف."
+        "description": "بطاقات مخزون Netsis ومتطلبات التتبع WMS لكل صنف.",
+        "titleHint": "هذه السجلات بطاقات مخزون معكوسة من Netsis. لا تُنشئ المخزون في WMS؛ أدر إعدادات التتبع من تفاصيل البطاقة. ابحث وصفِّ حسب الرمز والاسم والكود 1–3."
       },
       "customers": {
-        "description": "عرض مرآة لبطاقات عملاء Netsis."
+        "description": "عرض مرآة لبطاقات عملاء Netsis.",
+        "titleHint": "هذه السجلات بطاقات عملاء معكوسة من Netsis. لا تُنشئ العملاء في WMS؛ حافظ على تحديثها بالمزامنة مع ERP."
       },
       "configurationCodes": {
         "description": "عرض مرآة WMS لمتغيرات المخزون من مُكوّن المنتج Netsis."

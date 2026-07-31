@@ -10,6 +10,7 @@ import {Dialog,DialogTitle} from '@/components/ui/dialog';
 import {localizeEnumValue} from '@/lib/enum-localization';
 import {formatProjectDateTime,formatProjectNumber} from '@/lib/project-format';
 import {cn} from '@/lib/utils';
+import {StockIdentityCell} from '@/components/shared/StockIdentityCell';
 import {steelReceiptApi} from '../api/steel-receipt.api';
 import type {SteelLineRow,SteelPlanRow} from '../types/steel-receipt.types';
 
@@ -148,13 +149,13 @@ function PlanLinesDialog({plan,onClose}:{plan:SteelPlanRow;onClose:()=>void}){
         {lines.isLoading?<div className="grid min-h-48 place-items-center text-sm text-slate-500"><Loader2 className="mr-2 size-4 animate-spin"/>{t(`${G}.detailLoading`)}</div>
           :lines.isError?<div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-500">{lines.error instanceof Error?lines.error.message:t(`${G}.detailFailed`)}</div>
           :!rows.length?<div className="grid min-h-48 place-items-center text-sm text-slate-500">{t(`${G}.detailEmpty`)}</div>
-          :<div className="space-y-6">{groupedRows.map(group=><PlanVehicleLinesSection key={group.key} groupKey={group.key} rows={group.rows} lineNoBase={lineNoBase} showHeading={groupedRows.length>1}/>)}</div>}
+          :<div className="space-y-6">{groupedRows.map(group=><PlanVehicleLinesSection key={group.key} groupKey={group.key} rows={group.rows} lineNoBase={lineNoBase} showHeading={groupedRows.length>1} branchCode={plan.branchCode}/>)}</div>}
       </OpsDialogBody>
     </OpsDialogContent>
   </Dialog>;
 }
 
-function PlanVehicleLinesSection({groupKey,rows,lineNoBase,showHeading}:{groupKey:string;rows:SteelLineRow[];lineNoBase:number;showHeading:boolean}){
+function PlanVehicleLinesSection({groupKey,rows,lineNoBase,showHeading,branchCode}:{groupKey:string;rows:SteelLineRow[];lineNoBase:number;showHeading:boolean;branchCode:string}){
   const {t}=useTranslation('common');
   const isPending=groupKey===PENDING_VEHICLE_KEY;
   const plateNo=isPending?null:groupKey;
@@ -199,7 +200,14 @@ function PlanVehicleLinesSection({groupKey,rows,lineNoBase,showHeading}:{groupKe
       <td className="border-r border-[var(--wms-app-border)] p-3 font-mono font-bold text-cyan-500 last:border-r-0">{row.dCode}</td>
       <td className="border-r border-[var(--wms-app-border)] p-3 last:border-r-0">{row.supplierSerialNo}</td>
       <td className="border-r border-[var(--wms-app-border)] p-3 last:border-r-0">{row.secondarySerialNo||'-'}</td>
-      <td className="border-r border-[var(--wms-app-border)] p-3 last:border-r-0"><strong>{row.stockCode}</strong><small className="block text-slate-500">{row.stockName||'-'}</small></td>
+      <td className="border-r border-[var(--wms-app-border)] p-3 last:border-r-0">
+        <StockIdentityCell
+          stockCode={row.stockCode}
+          stockName={row.stockName}
+          branchCode={branchCode}
+          nameClassName="block text-slate-500"
+        />
+      </td>
       <td className="border-r border-[var(--wms-app-border)] p-3 last:border-r-0">{row.netsisOrderNo||'-'}</td>
       <td className="border-r border-[var(--wms-app-border)] p-3 font-bold last:border-r-0">{formatProjectNumber(row.expectedQuantity)} {row.unitCode}</td>
       <td className="border-r border-[var(--wms-app-border)] p-3 last:border-r-0">{row.combinedSize||'-'}</td>

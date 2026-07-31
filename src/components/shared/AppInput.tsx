@@ -6,6 +6,7 @@ import {
   type ChangeEvent,
   type ComponentPropsWithoutRef,
   type FocusEvent,
+  type MouseEvent,
   type ReactElement,
   type ReactNode,
 } from 'react';
@@ -14,7 +15,11 @@ import { CalendarDays, Clock3 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { AppDatePickerPanel } from '@/components/shared/AppDatePickerPanel';
-import { normalizeManualDateInput } from '@/components/shared/app-date-input.utils';
+import {
+  maskManualDateTyping,
+  normalizeManualDateInput,
+  toDisplayDateValue,
+} from '@/components/shared/app-date-input.utils';
 import { cn } from '@/lib/utils';
 
 const MOBILE_DATE_PICKER_QUERY = '(max-width: 767px)';
@@ -128,10 +133,14 @@ export const AppDateInput = forwardRef<HTMLInputElement, AppDateInputProps>(func
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [useMobilePicker, setUseMobilePicker] = useState(prefersMobileDatePicker);
+  const [draft, setDraft] = useState<string | null>(null);
   const lastValidValue = useRef('');
+  const inputRef = useRef<HTMLInputElement | null>(null);
   const stringValue = typeof value === 'string' ? value : value == null ? '' : String(value);
   const inputReadOnly = Boolean(readOnly);
   const pickerDisabled = disabled || inputReadOnly;
+  const isDateMode = type === 'date';
+  const displayValue = draft ?? (isDateMode ? toDisplayDateValue(stringValue) : stringValue);
 
   useEffect(() => {
     lastValidValue.current = stringValue;
@@ -144,6 +153,12 @@ export const AppDateInput = forwardRef<HTMLInputElement, AppDateInputProps>(func
     media.addEventListener('change', sync);
     return () => media.removeEventListener('change', sync);
   }, []);
+
+  const setRefs = (node: HTMLInputElement | null): void => {
+    inputRef.current = node;
+    if (typeof forwardedRef === 'function') forwardedRef(node);
+    else if (forwardedRef) forwardedRef.current = node;
+  };
 
   const emitChange = (nextValue: string): void => {
     onChange?.({
@@ -158,13 +173,25 @@ export const AppDateInput = forwardRef<HTMLInputElement, AppDateInputProps>(func
   };
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>): void => {
+    if (isDateMode) {
+      const masked = maskManualDateTyping(event.target.value);
+      setDraft(masked);
+      const iso = normalizeManualDateInput(masked, 'date');
+      if (iso) emitChange(iso);
+      return;
+    }
     emitChange(event.target.value);
   };
 
   const handleInputBlur = (event: FocusEvent<HTMLInputElement>): void => {
     onBlur?.(event);
-    if (inputReadOnly || disabled) return;
-    const normalized = normalizeManualDateInput(stringValue, type);
+    if (inputReadOnly || disabled) {
+      setDraft(null);
+      return;
+    }
+    const source = draft ?? (isDateMode ? toDisplayDateValue(stringValue) : stringValue);
+    const normalized = normalizeManualDateInput(source, type);
+    setDraft(null);
     if (normalized === null) {
       emitChange(lastValidValue.current);
       return;
@@ -174,6 +201,19 @@ export const AppDateInput = forwardRef<HTMLInputElement, AppDateInputProps>(func
 
   const handleInputFocus = (event: FocusEvent<HTMLInputElement>): void => {
     onFocus?.(event);
+    if (isDateMode && !inputReadOnly && !disabled) {
+      setDraft(toDisplayDateValue(stringValue));
+    }
+    requestAnimationFrame(() => {
+      event.currentTarget.select();
+    });
+  };
+
+  const handleInputClick = (event: MouseEvent<HTMLInputElement>): void => {
+    onClick?.(event);
+    if (!inputReadOnly && !disabled) {
+      event.currentTarget.select();
+    }
   };
 
   const Icon = type === 'time' ? Clock3 : CalendarDays;
@@ -191,7 +231,10 @@ export const AppDateInput = forwardRef<HTMLInputElement, AppDateInputProps>(func
       value={stringValue}
       min={typeof min === 'string' ? min : undefined}
       max={typeof max === 'string' ? max : undefined}
-      onChange={emitChange}
+      onChange={(next) => {
+        setDraft(null);
+        emitChange(next);
+      }}
       onClose={() => setOpen(false)}
     />
   );
@@ -199,14 +242,14 @@ export const AppDateInput = forwardRef<HTMLInputElement, AppDateInputProps>(func
   const inputShell = (
     <AppInput
       {...props}
-      ref={forwardedRef}
+      ref={setRefs}
       type="text"
-      inputMode="text"
+      inputMode={isDateMode ? 'numeric' : 'text'}
       autoComplete="off"
       spellCheck={false}
       readOnly={inputReadOnly}
       disabled={disabled}
-      value={stringValue}
+      value={displayValue}
       placeholder={resolvedPlaceholder}
       aria-haspopup="dialog"
       aria-expanded={open}
@@ -214,7 +257,7 @@ export const AppDateInput = forwardRef<HTMLInputElement, AppDateInputProps>(func
       onChange={handleInputChange}
       onBlur={handleInputBlur}
       onFocus={handleInputFocus}
-      onClick={onClick}
+      onClick={handleInputClick}
       trailingContent={(
         <button
           type="button"

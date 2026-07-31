@@ -2835,21 +2835,67 @@
   "erpMirror": {
     "recordDetail": "{{title}} Détail enregistrement #{{id}}",
     "syncNow": "Synchroniser maintenant",
+    "syncWithErp": "Sync ERP",
+    "syncWithErpTooltip": "Synchronisez ces enregistrements avec l’ERP (Netsis).",
+    "syncSuccess": "Synchronisation ERP terminée avec succès.",
+    "syncFailed": "Échec de la synchronisation ERP.",
+    "codeFilters": {
+      "button": "Filtres codes",
+      "panelTitle": "Filtres codes",
+      "panelHint": "Groupe et codes spéciaux",
+      "searchPlaceholder": "Rechercher des codes…",
+      "loading": "Chargement des options…",
+      "noOptions": "Aucun code pour ce champ.",
+      "searchEmpty": "Aucun code ne correspond.",
+      "selectedCount": "{{count}} sélectionné(s)",
+      "pickHint": "Sélectionnez Groupe ou Code 1–5 pour filtrer.",
+      "clearDraft": "Effacer la sélection",
+      "clearAll": "Effacer",
+      "apply": "Appliquer"
+    },
     "view": "Voir",
     "details": "Détails",
     "stockCard": "Fiche de stock",
+    "stockCardUi": {
+      "eyebrow": "Fiche stock ERP",
+      "untitled": "Stock sans nom",
+      "identitySection": "Identité",
+      "codesSection": "Codes spéciaux",
+      "codesHint": "Les filtres codes utilisent ces champs",
+      "orgSection": "Organisation",
+      "auditSection": "Audit"
+    },
+    "customerCardUi": {
+      "eyebrow": "Fiche client ERP",
+      "title": "Fiche client",
+      "untitled": "Client sans nom",
+      "identitySection": "Identité",
+      "orgSection": "Organisation",
+      "auditSection": "Audit"
+    },
+    "warehouseCardUi": {
+      "eyebrow": "Fiche entrepôt ERP",
+      "title": "Fiche entrepôt",
+      "untitled": "Entrepôt sans nom",
+      "identitySection": "Identité",
+      "orgSection": "Organisation",
+      "auditSection": "Audit"
+    },
     "trackingSettings": "Paramètres traçabilité",
     "actions": "Actions",
     "undefinedUnit": "Non défini",
     "pages": {
       "warehouses": {
-        "description": "Vue miroir des fiches entrepôt Netsis."
+        "description": "Vue miroir des fiches entrepôt Netsis.",
+        "titleHint": "Ces enregistrements sont des fiches entrepôt miroir depuis Netsis. Vous ne créez pas d’entrepôts dans le WMS ; maintenez-les à jour en synchronisant avec l’ERP."
       },
       "stocks": {
-        "description": "Fiches stock Netsis et exigences de traçabilité WMS par article."
+        "description": "Fiches stock Netsis et exigences de traçabilité WMS par article.",
+        "titleHint": "Ces enregistrements sont des fiches stock miroir depuis Netsis. Vous ne créez pas de stocks dans le WMS ; gérez les paramètres de traçabilité dans le détail de la fiche. Recherchez et filtrez par code, nom et Code 1–3."
       },
       "customers": {
-        "description": "Vue miroir des fiches client Netsis."
+        "description": "Vue miroir des fiches client Netsis.",
+        "titleHint": "Ces enregistrements sont des fiches client miroir depuis Netsis. Vous ne créez pas de clients dans le WMS ; maintenez-les à jour en synchronisant avec l’ERP."
       },
       "configurationCodes": {
         "description": "Vue miroir WMS des variantes stock du configurateur produit Netsis."

@@ -4057,9 +4057,9 @@
     "minute": "Dakika",
     "prevMonth": "Önceki ay",
     "nextMonth": "Sonraki ay",
-    "placeholderDate": "YYYY-MM-DD veya GG.AA.YYYY",
+    "placeholderDate": "YYYY.MM.DD veya GG.AA.YYYY",
     "placeholderTime": "SS:dd",
-    "placeholderDateTime": "YYYY-MM-DD SS:dd"
+    "placeholderDateTime": "YYYY.MM.DD SS:dd"
   },
   "dataGrid": {
     "systemColumns": {
@@ -4463,6 +4463,18 @@
       "reverseAction": "Ters kayıt oluştur"
     }
   },
+  "stockCard": {
+    "menuLabel": "Stok",
+    "contextHint": "Sağ tık: stok detayı",
+    "openDetail": "Stok detayı",
+    "copyCode": "Stok kodunu kopyala",
+    "codeCopied": "Stok kodu kopyalandı.",
+    "codeCopyFailed": "Stok kodu kopyalanamadı.",
+    "opening": "Stok kartı açılıyor…",
+    "opened": "Stok kartı açıldı.",
+    "notFound": "Stok kartı bulunamadı.",
+    "openMissingIdentity": "Stok kimliği yok; detay açılamaz."
+  },
   "stockTrackingPolicyField": {
     "loading": "Takip politikası yükleniyor…",
     "selectStockFirst": "Önce stok seçin",
@@ -4484,21 +4496,69 @@
   "erpMirror": {
     "recordDetail": "{{title}} Kayıt Detayı #{{id}}",
     "syncNow": "Şimdi Eşle",
+    "syncWithErp": "ERP Eşle",
+    "syncWithErpTooltip": "Bu kayıtları ERP (Netsis) ile eşlersiniz.",
+    "syncSuccess": "ERP eşlemesi başarıyla tamamlandı.",
+    "syncFailed": "ERP eşlemesi başarısız oldu.",
+    "codeFilters": {
+      "button": "Kod filtreleri",
+      "panelTitle": "Kod filtreleri",
+      "panelHint": "Grup ve özel kodlar",
+      "searchPlaceholder": "Kodlarda ara…",
+      "loading": "Kod seçenekleri yükleniyor…",
+      "loadFailed": "Kod seçenekleri yüklenemedi.",
+      "noOptions": "Bu alanda kod bulunamadı.",
+      "noFilledValues": "Stoklar yüklendi ama bu alanda dolu kod yok.",
+      "searchEmpty": "Aramanızla eşleşen kod yok.",
+      "selectedCount": "{{count}} seçili",
+      "pickHint": "Filtrelemek için Grup Kodu veya Kod 1–5 değerlerinden seçin.",
+      "clearDraft": "Seçimi temizle",
+      "clearAll": "Temizle",
+      "apply": "Uygula"
+    },
     "view": "Görüntüle",
     "details": "Detaylar",
     "stockCard": "Stok Kartı",
+    "stockCardUi": {
+      "eyebrow": "ERP Stok Kartı",
+      "untitled": "İsimsiz stok",
+      "identitySection": "Kimlik",
+      "codesSection": "Özel kodlar",
+      "codesHint": "Kod filtreleri bu alanlardan beslenir",
+      "orgSection": "Organizasyon",
+      "auditSection": "Kayıt bilgisi"
+    },
+    "customerCardUi": {
+      "eyebrow": "ERP Cari Kartı",
+      "title": "Cari Kartı",
+      "untitled": "İsimsiz cari",
+      "identitySection": "Kimlik",
+      "orgSection": "Organizasyon",
+      "auditSection": "Kayıt bilgisi"
+    },
+    "warehouseCardUi": {
+      "eyebrow": "ERP Depo Kartı",
+      "title": "Depo Kartı",
+      "untitled": "İsimsiz depo",
+      "identitySection": "Kimlik",
+      "orgSection": "Organizasyon",
+      "auditSection": "Kayıt bilgisi"
+    },
     "trackingSettings": "Takip Ayarları",
     "actions": "İşlemler",
     "undefinedUnit": "Tanımsız",
     "pages": {
       "warehouses": {
-        "description": "Netsis depo kartlarının eşlenmiş görünümü."
+        "description": "Netsis depo kartlarının eşlenmiş görünümü.",
+        "titleHint": "Bu listedeki kayıtlar Netsis’ten eşlenen depo kartlarıdır. WMS’te depo oluşturmazsınız; ERP ile eşleyerek güncel tutarsınız."
       },
       "stocks": {
-        "description": "Netsis stok kartları ve stoğa bağlı WMS takip zorunlulukları."
+        "description": "Netsis stok kartları ve stoğa bağlı WMS takip zorunlulukları.",
+        "titleHint": "Bu listedeki kayıtlar Netsis’ten eşlenen stok kartlarıdır. WMS’te stok oluşturmazsınız; kart detayında stoğa özel takip ayarlarını yönetebilirsiniz. Stok kodu, adı ve Kod 1–3 alanlarıyla arama/filtre yapabilirsiniz."
       },
       "customers": {
-        "description": "Netsis cari kartlarının eşlenmiş görünümü."
+        "description": "Netsis cari kartlarının eşlenmiş görünümü.",
+        "titleHint": "Bu listedeki kayıtlar Netsis’ten eşlenen cari kartlarıdır. WMS’te cari oluşturmazsınız; ERP ile eşleyerek güncel tutarsınız."
       },
       "configurationCodes": {
         "description": "Netsis ürün konfigüratöründeki stok varyantlarının WMS ayna görünümü."

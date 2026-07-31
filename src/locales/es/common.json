@@ -2835,21 +2835,67 @@
   "erpMirror": {
     "recordDetail": "{{title}} Detalle de registro #{{id}}",
     "syncNow": "Sincronizar ahora",
+    "syncWithErp": "Sincronizar ERP",
+    "syncWithErpTooltip": "Sincronice estos registros con el ERP (Netsis).",
+    "syncSuccess": "Sincronización ERP completada correctamente.",
+    "syncFailed": "Error en la sincronización ERP.",
+    "codeFilters": {
+      "button": "Filtros de código",
+      "panelTitle": "Filtros de código",
+      "panelHint": "Grupo y códigos especiales",
+      "searchPlaceholder": "Buscar códigos…",
+      "loading": "Cargando opciones…",
+      "noOptions": "No hay códigos en este campo.",
+      "searchEmpty": "Ningún código coincide.",
+      "selectedCount": "{{count}} seleccionados",
+      "pickHint": "Seleccione Grupo o Código 1–5 para filtrar.",
+      "clearDraft": "Limpiar selección",
+      "clearAll": "Limpiar",
+      "apply": "Aplicar"
+    },
     "view": "Ver",
     "details": "Detalles",
     "stockCard": "Ficha de existencias",
+    "stockCardUi": {
+      "eyebrow": "Ficha stock ERP",
+      "untitled": "Stock sin nombre",
+      "identitySection": "Identidad",
+      "codesSection": "Códigos especiales",
+      "codesHint": "Los filtros de código usan estos campos",
+      "orgSection": "Organización",
+      "auditSection": "Auditoría"
+    },
+    "customerCardUi": {
+      "eyebrow": "Ficha cliente ERP",
+      "title": "Ficha de cliente",
+      "untitled": "Cliente sin nombre",
+      "identitySection": "Identidad",
+      "orgSection": "Organización",
+      "auditSection": "Auditoría"
+    },
+    "warehouseCardUi": {
+      "eyebrow": "Ficha almacén ERP",
+      "title": "Ficha de almacén",
+      "untitled": "Almacén sin nombre",
+      "identitySection": "Identidad",
+      "orgSection": "Organización",
+      "auditSection": "Auditoría"
+    },
     "trackingSettings": "Ajustes de trazabilidad",
     "actions": "Acciones",
     "undefinedUnit": "Indefinido",
     "pages": {
       "warehouses": {
-        "description": "Vista reflejada de las fichas de almacén Netsis."
+        "description": "Vista reflejada de las fichas de almacén Netsis.",
+        "titleHint": "Estos registros son fichas de almacén reflejadas desde Netsis. No crea almacenes en WMS; manténgalos al día sincronizando con el ERP."
       },
       "stocks": {
-        "description": "Fichas de stock Netsis y requisitos de trazabilidad WMS por artículo."
+        "description": "Fichas de stock Netsis y requisitos de trazabilidad WMS por artículo.",
+        "titleHint": "Estos registros son fichas de stock reflejadas desde Netsis. No crea stocks en WMS; gestione el seguimiento en el detalle de la ficha. Busque y filtre por código, nombre y Código 1–3."
       },
       "customers": {
-        "description": "Vista reflejada de las fichas de cliente Netsis."
+        "description": "Vista reflejada de las fichas de cliente Netsis.",
+        "titleHint": "Estos registros son fichas de cliente reflejadas desde Netsis. No crea clientes en WMS; manténgalos al día sincronizando con el ERP."
       },
       "configurationCodes": {
         "description": "Vista espejo WMS de variantes de stock del configurador de producto Netsis."

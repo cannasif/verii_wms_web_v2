@@ -51,6 +51,12 @@ export function ResponsiveDialog({
         showCloseButton={showCloseButton}
         portalRoot={portalRoot}
         tone="ops"
+        onInteractOutside={(event) => {
+          if (!showCloseButton) event.preventDefault();
+        }}
+        onEscapeKeyDown={(event) => {
+          if (!showCloseButton) event.preventDefault();
+        }}
         className={cn(
           variant === 'lookup' ? 'wms-ops-lookup-dialog' : 'wms-ops-detail-dialog',
           'wms-ops-form flex !h-auto max-h-[min(90dvh,880px)] w-[calc(100%-1rem)] !max-w-4xl flex-col gap-0 overflow-hidden border-0 p-0 shadow-none',
@@ -62,7 +68,8 @@ export function ResponsiveDialog({
           <>
             <header className={cn(
               variant === 'lookup' ? 'wms-ops-lookup-dialog__header' : 'wms-ops-detail-dialog__header',
-              'shrink-0 px-5 py-4 pr-14',
+              'shrink-0 px-5 py-4',
+              showCloseButton && 'pr-14',
             )}>
               <DialogTitle
                 className={cn(

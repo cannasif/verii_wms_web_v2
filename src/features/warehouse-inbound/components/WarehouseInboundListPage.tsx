@@ -27,6 +27,7 @@ import {
   formatProjectNumber,
 } from "@/lib/project-format";
 import { warehouseInboundV2Api } from "../api/warehouse-inbound.api";
+import { StockIdentityCell } from "@/components/shared/StockIdentityCell";
 import type {
   WarehouseInboundDetail,
   WarehouseInboundGridRow,
@@ -423,8 +424,12 @@ function DetailModal({
               >
                 <td className="p-3">{line.lineNo}</td>
                 <td className="p-3">
-                  <strong>{line.stockCode}</strong>
-                  <div className="text-xs text-slate-500">{line.stockName}</div>
+                  <StockIdentityCell
+                    stockId={line.stockId}
+                    stockCode={line.stockCode}
+                    stockName={line.stockName}
+                    branchCode={detail.header.branchCode}
+                  />
                 </td>
                 <td className="p-3">{line.yapCode || "—"}</td>
                 <td className="p-3 text-right">

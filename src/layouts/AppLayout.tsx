@@ -17,6 +17,7 @@ import { canAccessPath } from '@/features/access-control/utils/hasPermission';
 import { SessionRecoveryPage } from '@/features/auth/components/SessionRecoveryPage';
 import { WarehouseAmbientBackground } from '@/components/shared/WarehouseAmbientBackground';
 import { OpsLoadingState } from '@/components/shared/OpsLoadingState';
+import { StockCardProvider } from '@/features/erp-mirror/components/StockCardProvider';
 import { useUserDetail } from '@/features/user-detail/hooks/useUserDetail';
 import {
   DEFAULT_WMS_BACKGROUND_MOTION,
@@ -150,7 +151,9 @@ export function AppLayout() {
               >
                 <Suspense fallback={<WorkspaceRouteLoader />}>
                   <LegacyLocalizationBoundary>
-                    <Outlet />
+                    <StockCardProvider>
+                      <Outlet />
+                    </StockCardProvider>
                   </LegacyLocalizationBoundary>
                 </Suspense>
               </div>

@@ -27,6 +27,7 @@ import type {
   GoodsReceiptLifecycleResult,
   GoodsReceiptSplitRoutingResult,
 } from '../types/goods-receipt.types';
+import { StockIdentityCell } from '@/components/shared/StockIdentityCell';
 import { GoodsReceiptLifecycleDialog, type GoodsReceiptLifecycleAction } from './GoodsReceiptLifecycleDialog';
 import { GoodsReceiptErpRetryDialog } from './GoodsReceiptErpRetryDialog';
 import { GoodsReceiptRoutingDialog } from './GoodsReceiptRoutingDialog';
@@ -498,8 +499,13 @@ export function GoodsReceiptDetailDialog({
                             <tr key={line.id}>
                               <td>{line.lineNo}</td>
                               <td>
-                                <strong>{line.stockCode}</strong>
-                                <div className="wms-ops-gr-detail-lines-table__muted">{line.stockName}</div>
+                                <StockIdentityCell
+                                  stockId={line.stockId}
+                                  stockCode={line.stockCode}
+                                  stockName={line.stockName}
+                                  branchCode={header?.branchCode}
+                                  nameClassName="wms-ops-gr-detail-lines-table__muted"
+                                />
                               </td>
                               <td>{line.yapCode || '—'}</td>
                               <td className="wms-ops-gr-detail-lines-table__num">

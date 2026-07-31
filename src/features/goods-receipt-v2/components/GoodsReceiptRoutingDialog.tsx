@@ -3,6 +3,7 @@ import { ArrowRightLeft, Loader2, PackageMinus, SplitSquareHorizontal } from "lu
 import { toast } from "sonner";
 import { AppDropdown } from "@/components/shared/AppDropdown";
 import { PagedAppDropdown } from "@/components/shared/PagedAppDropdown";
+import { StockIdentityCell } from "@/components/shared/StockIdentityCell";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useModuleTranslation } from "@/hooks/useModuleTranslation";
 import { formatProjectNumber } from "@/lib/project-format";
@@ -374,8 +375,12 @@ export function GoodsReceiptRoutingDialog({
                       className="border-t border-[var(--wms-app-border)]"
                     >
                       <td className="p-3">
-                        <strong>{line.stockCode}</strong>
-                        <div className="text-xs text-slate-500">{line.stockName}</div>
+                        <StockIdentityCell
+                          stockId={line.stockId}
+                          stockCode={line.stockCode}
+                          stockName={line.stockName}
+                          branchCode={detail.header.branchCode}
+                        />
                       </td>
                       <td className="p-3 text-right">
                         {formatProjectNumber(line.acceptedQuantity)}

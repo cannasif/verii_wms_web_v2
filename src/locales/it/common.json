@@ -2835,21 +2835,67 @@
   "erpMirror": {
     "recordDetail": "{{title}} Dettaglio record #{{id}}",
     "syncNow": "Sincronizza ora",
+    "syncWithErp": "Sincronizza ERP",
+    "syncWithErpTooltip": "Sincronizza questi record con l’ERP (Netsis).",
+    "syncSuccess": "Sincronizzazione ERP completata con successo.",
+    "syncFailed": "Sincronizzazione ERP non riuscita.",
+    "codeFilters": {
+      "button": "Filtri codice",
+      "panelTitle": "Filtri codice",
+      "panelHint": "Gruppo e codici speciali",
+      "searchPlaceholder": "Cerca codici…",
+      "loading": "Caricamento opzioni…",
+      "noOptions": "Nessun codice per questo campo.",
+      "searchEmpty": "Nessun codice corrisponde.",
+      "selectedCount": "{{count}} selezionati",
+      "pickHint": "Seleziona Gruppo o Codice 1–5 per filtrare.",
+      "clearDraft": "Pulisci selezione",
+      "clearAll": "Pulisci",
+      "apply": "Applica"
+    },
     "view": "Visualizza",
     "details": "Dettagli",
     "stockCard": "Scheda articolo",
+    "stockCardUi": {
+      "eyebrow": "Scheda stock ERP",
+      "untitled": "Stock senza nome",
+      "identitySection": "Identità",
+      "codesSection": "Codici speciali",
+      "codesHint": "I filtri codice usano questi campi",
+      "orgSection": "Organizzazione",
+      "auditSection": "Audit"
+    },
+    "customerCardUi": {
+      "eyebrow": "Scheda cliente ERP",
+      "title": "Scheda cliente",
+      "untitled": "Cliente senza nome",
+      "identitySection": "Identità",
+      "orgSection": "Organizzazione",
+      "auditSection": "Audit"
+    },
+    "warehouseCardUi": {
+      "eyebrow": "Scheda magazzino ERP",
+      "title": "Scheda magazzino",
+      "untitled": "Magazzino senza nome",
+      "identitySection": "Identità",
+      "orgSection": "Organizzazione",
+      "auditSection": "Audit"
+    },
     "trackingSettings": "Impostazioni tracciabilità",
     "actions": "Azioni",
     "undefinedUnit": "Non definito",
     "pages": {
       "warehouses": {
-        "description": "Vista mirror delle schede magazzino Netsis."
+        "description": "Vista mirror delle schede magazzino Netsis.",
+        "titleHint": "Questi record sono schede magazzino sincronizzate da Netsis. Non crei magazzini in WMS; tienili aggiornati sincronizzando con l’ERP."
       },
       "stocks": {
-        "description": "Schede stock Netsis e requisiti tracciabilità WMS per articolo."
+        "description": "Schede stock Netsis e requisiti tracciabilità WMS per articolo.",
+        "titleHint": "Questi record sono schede stock sincronizzate da Netsis. Non crei stock in WMS; gestisci il tracking nel dettaglio scheda. Cerca e filtra per codice, nome e Codice 1–3."
       },
       "customers": {
-        "description": "Vista mirror delle schede cliente Netsis."
+        "description": "Vista mirror delle schede cliente Netsis.",
+        "titleHint": "Questi record sono schede cliente sincronizzate da Netsis. Non crei clienti in WMS; tienili aggiornati sincronizzando con l’ERP."
       },
       "configurationCodes": {
         "description": "Vista mirror WMS delle varianti stock dal configuratore prodotto Netsis."

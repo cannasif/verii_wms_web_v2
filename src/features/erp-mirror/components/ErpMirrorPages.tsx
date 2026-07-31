@@ -1,20 +1,48 @@
 import { useCallback, useMemo, useState, type ReactNode } from 'react';
-import { Eye, SlidersHorizontal } from 'lucide-react';
+import { CircleAlert, Eye, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
-import { AdvancedDataGrid, type GridColumn } from '@/components/shared/AdvancedDataGrid';
+import { toast } from 'sonner';
+import { AdvancedDataGrid, type GridColumn, type GridPage, type GridRequest, type GridToolbarAction } from '@/components/shared/AdvancedDataGrid';
 import { systemColumns, type AuditableGridRow } from '@/components/shared/GridSystemColumns';
 import { OpsDialogBody, OpsDialogContent, OpsDialogHeader } from '@/components/shared/OpsDialogShell';
 import { Dialog, DialogTitle } from '@/components/ui/dialog';
-import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { useTheme } from '@/components/theme-provider';
 import { formatProjectDateTime } from '@/lib/project-format';
+import { normalizeGridPage } from '@/lib/paged';
+import { cn } from '@/lib/utils';
 import { getErpMirrorPage, syncErpMirror } from '../api/erp-mirror.api';
+import {
+  createEmptyStockCodeFilterSelections,
+  cloneStockCodeFilterSelections,
+  hasStockCodeFilterSelection,
+  stockMatchesCodeFilterSelections,
+  type StockCodeFilterSelections,
+} from '../stock-code-filter';
 import type { ConfigurationCodeMirror, CustomerMirror, StockMirror, WarehouseMirror } from '../types/erp-mirror.types';
+import { CustomerMirrorDetailDialog } from './CustomerMirrorDetailDialog';
+import { StockCodeFilterPopover } from './StockCodeFilterPopover';
 import { StockTrackingSettingsDialog } from './StockTrackingSettingsDialog';
+import { WarehouseMirrorDetailDialog } from './WarehouseMirrorDetailDialog';
 
 const M = 'erpMirror';
 const date = (value?: string) => formatProjectDateTime(value);
 const col = (t: TFunction, key: string) => t(`${M}.columns.${key}`);
+
+const gridViewButtonClassName = cn(
+  'inline-flex size-8 items-center justify-center rounded-lg border border-transparent',
+  'text-[var(--wms-ops-accent)] transition-all duration-200',
+  'hover:border-[color-mix(in_oklab,var(--wms-ops-accent)_35%,var(--wms-app-border))]',
+  'hover:bg-[color-mix(in_oklab,var(--wms-ops-accent)_12%,transparent)]',
+  'hover:shadow-[0_0_14px_color-mix(in_oklab,var(--wms-ops-accent)_18%,transparent)]',
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--wms-ops-accent)]',
+);
 
 function buildWarehouseColumns(t: TFunction): GridColumn<WarehouseMirror>[] {
   return [
@@ -27,19 +55,19 @@ function buildWarehouseColumns(t: TFunction): GridColumn<WarehouseMirror>[] {
 
 function buildStockColumns(t: TFunction): GridColumn<StockMirror>[] {
   return [
-    { key: 'unitCode', label: col(t, 'unitCode'), render: row => <span className="font-semibold text-cyan-600">{row.unitCode || t(`${M}.undefinedUnit`)}</span> },
-    { key: 'branchCode', label: col(t, 'branchCode'), render: row => row.branchCode },
-    { key: 'businessUnitCode', label: col(t, 'businessUnitCode'), render: row => row.businessUnitCode },
-    { key: 'erpStockCode', label: col(t, 'erpStockCode'), render: row => row.erpStockCode },
-    { key: 'stockName', label: col(t, 'stockName'), render: row => row.stockName },
-    { key: 'manufacturerCode', label: col(t, 'manufacturerCode'), render: row => row.manufacturerCode || '-' },
-    { key: 'groupCode', label: col(t, 'groupCode'), render: row => row.groupCode || '-' },
-    { key: 'code1', label: col(t, 'code1'), render: row => row.code1 || '-' },
-    { key: 'code2', label: col(t, 'code2'), render: row => row.code2 || '-' },
-    { key: 'code3', label: col(t, 'code3'), render: row => row.code3 || '-' },
-    { key: 'code4', label: col(t, 'code4'), render: row => row.code4 || '-' },
-    { key: 'code5', label: col(t, 'code5'), render: row => row.code5 || '-' },
-    { key: 'lastSyncDate', label: col(t, 'lastSyncDate'), render: row => date(row.lastSyncDate) },
+    { key: 'unitCode', label: col(t, 'unitCode'), searchable: true, defaultSearch: false, render: row => <span className="font-semibold text-cyan-600">{row.unitCode || t(`${M}.undefinedUnit`)}</span> },
+    { key: 'branchCode', label: col(t, 'branchCode'), searchable: true, defaultSearch: false, render: row => row.branchCode },
+    { key: 'businessUnitCode', label: col(t, 'businessUnitCode'), searchable: true, defaultSearch: false, render: row => row.businessUnitCode },
+    { key: 'erpStockCode', label: col(t, 'erpStockCode'), searchable: true, defaultSearch: true, filterType: 'text', render: row => row.erpStockCode },
+    { key: 'stockName', label: col(t, 'stockName'), searchable: true, defaultSearch: true, filterType: 'text', render: row => row.stockName },
+    { key: 'manufacturerCode', label: col(t, 'manufacturerCode'), searchable: true, defaultSearch: false, render: row => row.manufacturerCode || '-' },
+    { key: 'groupCode', label: col(t, 'groupCode'), searchable: true, defaultSearch: false, render: row => row.groupCode || '-' },
+    { key: 'code1', label: col(t, 'code1'), searchable: true, defaultSearch: true, filterable: true, filterType: 'text', render: row => row.code1 || '-' },
+    { key: 'code2', label: col(t, 'code2'), searchable: true, defaultSearch: true, filterable: true, filterType: 'text', render: row => row.code2 || '-' },
+    { key: 'code3', label: col(t, 'code3'), searchable: true, defaultSearch: true, filterable: true, filterType: 'text', render: row => row.code3 || '-' },
+    { key: 'code4', label: col(t, 'code4'), searchable: true, defaultSearch: false, filterable: true, filterType: 'text', render: row => row.code4 || '-' },
+    { key: 'code5', label: col(t, 'code5'), searchable: true, defaultSearch: false, filterable: true, filterType: 'text', render: row => row.code5 || '-' },
+    { key: 'lastSyncDate', label: col(t, 'lastSyncDate'), searchable: false, render: row => date(row.lastSyncDate) },
   ];
 }
 
@@ -67,24 +95,101 @@ function fieldLabel(t: TFunction, key: string) {
   return t(`${M}.fields.${key}`, { defaultValue: key });
 }
 
+function PageTitleWithHint({ title, hint }: { title: string; hint: string }) {
+  const { skin } = useTheme();
+  if (skin !== 'premium') return <>{title}</>;
+
+  return (
+    <span className="inline-flex items-center gap-2">
+      <span>{title}</span>
+      <TooltipProvider delayDuration={150}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              className="wms-ops-gr-page-hero__hint"
+              aria-label={hint}
+            >
+              <CircleAlert className="size-3.5" aria-hidden />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent
+            side="bottom"
+            align="start"
+            sideOffset={10}
+            className={cn(
+              'wms-ops-page-hint-tooltip max-w-[22rem] overflow-hidden rounded-xl border p-0 text-left shadow-[0_12px_40px_color-mix(in_oklab,black_45%,transparent),0_0_0_1px_color-mix(in_oklab,var(--wms-ops-accent)_18%,transparent)]',
+              '!bg-[color-mix(in_oklab,var(--wms-app-panel)_96%,black)]',
+              'border-[color-mix(in_oklab,var(--wms-ops-accent)_32%,var(--wms-app-border))]',
+              '!text-[var(--wms-app-text)]',
+            )}
+          >
+            <div className="border-b border-[color-mix(in_oklab,var(--wms-ops-accent)_18%,transparent)] bg-[color-mix(in_oklab,var(--wms-ops-accent)_8%,transparent)] px-3.5 py-2">
+              <span className="inline-flex items-center gap-1.5 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-[var(--wms-ops-accent)]">
+                <span
+                  className="size-1.5 rounded-full bg-[var(--wms-ops-accent)] shadow-[0_0_8px_var(--wms-ops-accent)]"
+                  aria-hidden
+                />
+                {title}
+              </span>
+            </div>
+            <p className="px-3.5 py-3 text-[0.78rem] leading-5 text-[var(--wms-app-text-muted)]">
+              {hint}
+            </p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    </span>
+  );
+}
+
+function useErpSyncToolbarAction(resource: string): GridToolbarAction {
+  const { t } = useTranslation('common');
+  return useMemo(() => ({
+    label: t(`${M}.syncWithErp`),
+    tooltip: t(`${M}.syncWithErpTooltip`),
+    icon: <RefreshCw className="size-3.5" aria-hidden />,
+    run: async () => {
+      try {
+        await syncErpMirror(resource);
+        toast.success(t(`${M}.syncSuccess`));
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : t(`${M}.syncFailed`));
+        throw error;
+      }
+    },
+  }), [resource, t]);
+}
+
 function MirrorPage<T extends AuditableGridRow>({
   pageKey,
+  gridPageKey,
   title,
   description,
   dataColumns,
-  extraActions,
   onView,
+  toolbarAction,
+  toolbarEndExtra,
+  fetchPage,
+  refreshKey,
+  iconOnlyView = false,
 }: {
   pageKey: string;
-  title: string;
+  gridPageKey?: string;
+  title: ReactNode;
   description: string;
   dataColumns: GridColumn<T>[];
-  extraActions?: (row: T) => ReactNode;
   onView?: (row: T) => void;
+  toolbarAction?: GridToolbarAction;
+  toolbarEndExtra?: ReactNode;
+  fetchPage?: (request: GridRequest) => Promise<GridPage<T>>;
+  refreshKey?: string | number;
+  iconOnlyView?: boolean;
 }) {
   const { t, i18n } = useTranslation('common');
   const language = i18n.resolvedLanguage ?? i18n.language;
   const [detail, setDetail] = useState<T | null>(null);
+  const titleText = typeof title === 'string' ? title : '';
   const columns = useMemo<GridColumn<T>[]>(() => [
     ...systemColumns<T>(),
     ...dataColumns,
@@ -94,37 +199,61 @@ function MirrorPage<T extends AuditableGridRow>({
       sortable: false,
       filterable: false,
       hideable: false,
+      width: iconOnlyView ? 88 : 160,
       render: row => (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-1">
           <button
             type="button"
+            title={t(`${M}.view`)}
+            aria-label={t(`${M}.view`)}
             onClick={() => onView ? onView(row) : setDetail(row)}
-            className="inline-flex items-center gap-1 rounded-lg border px-3 py-1.5 text-xs font-semibold text-cyan-600"
+            className={iconOnlyView
+              ? gridViewButtonClassName
+              : 'inline-flex items-center gap-1 rounded-lg border px-3 py-1.5 text-xs font-semibold text-cyan-600'}
           >
             <Eye className="size-3.5" />
-            {t(`${M}.view`)}
+            {!iconOnlyView && t(`${M}.view`)}
           </button>
-          {extraActions?.(row)}
         </div>
       ),
     },
-  ], [dataColumns, extraActions, language, onView, t]);
+  ], [dataColumns, iconOnlyView, language, onView, t]);
+
+  const resolvedToolbarAction = useMemo<GridToolbarAction>(() => {
+    if (toolbarAction) return toolbarAction;
+    return {
+      label: t(`${M}.syncWithErp`),
+      icon: <RefreshCw className="size-3.5" aria-hidden />,
+      tooltip: t(`${M}.syncWithErpTooltip`),
+      run: async () => {
+        try {
+          await syncErpMirror(pageKey);
+          toast.success(t(`${M}.syncSuccess`));
+        } catch (error) {
+          toast.error(error instanceof Error ? error.message : t(`${M}.syncFailed`));
+          throw error;
+        }
+      },
+    };
+  }, [pageKey, t, toolbarAction]);
 
   return (
     <>
       <AdvancedDataGrid<T>
-        pageKey={`erp-${pageKey}-v2`}
+        pageKey={gridPageKey ?? `erp-${pageKey}-v2`}
         title={title}
         description={description}
         columns={columns}
-        fetchPage={request => getErpMirrorPage<T>(pageKey, request)}
-        toolbarAction={{ label: t(`${M}.syncNow`), run: () => syncErpMirror(pageKey) }}
+        fetchPage={fetchPage ?? (request => getErpMirrorPage<T>(pageKey, request))}
+        toolbarAction={resolvedToolbarAction}
+        toolbarEndExtra={toolbarEndExtra}
+        refreshKey={refreshKey}
       />
       {detail && (
         <Dialog open onOpenChange={open => { if (!open) setDetail(null); }}>
           <OpsDialogContent size="xl" portalRoot="body" className="data-no-auto-localize">
             <OpsDialogHeader>
-              <DialogTitle className="wms-ops-detail-dialog__title">{t(`${M}.recordDetail`, { title, id: detail.id })}</DialogTitle>
+              <DialogTitle className="wms-ops-detail-dialog__title">{t(`${M}.recordDetail`, { title: titleText || pageKey, id: detail.id })}</DialogTitle>
             </OpsDialogHeader>
             <OpsDialogBody>
               <dl className="grid gap-3 sm:grid-cols-2">
@@ -145,57 +274,132 @@ function MirrorPage<T extends AuditableGridRow>({
 
 export function WarehouseMirrorPage() {
   const { t, i18n } = useTranslation('common');
+  const [selectedWarehouse, setSelectedWarehouse] = useState<WarehouseMirror | null>(null);
   const dataColumns = useMemo(() => buildWarehouseColumns(t), [i18n.resolvedLanguage ?? i18n.language, t]);
-  return (
-    <MirrorPage
-      pageKey="warehouses"
-      title={t('sidebar.erpWarehouses')}
-      description={t(`${M}.pages.warehouses.description`)}
-      dataColumns={dataColumns}
-    />
-  );
-}
-
-export function StockMirrorPage() {
-  const { t, i18n } = useTranslation('common');
-  const { can } = usePermissionAccess();
-  const [selectedStock, setSelectedStock] = useState<StockMirror | null>(null);
-  const [selectedTab, setSelectedTab] = useState<'details' | 'tracking'>('details');
-  const dataColumns = useMemo(() => buildStockColumns(t), [i18n.resolvedLanguage ?? i18n.language, t]);
-  const openStock = useCallback((stock: StockMirror, tab: 'details' | 'tracking') => {
-    setSelectedTab(tab);
-    setSelectedStock(stock);
+  const toolbarAction = useErpSyncToolbarAction('warehouses');
+  const viewWarehouse = useCallback((warehouse: WarehouseMirror) => {
+    setSelectedWarehouse(warehouse);
   }, []);
-  const viewStock = useCallback((stock: StockMirror) => openStock(stock, 'details'), [openStock]);
-  const trackingAction = useMemo(
-    () => can('WMS.SERIAL_RULES.VIEW')
-      ? (row: StockMirror) => (
-          <button
-            type="button"
-            onClick={() => openStock(row, 'tracking')}
-            className="inline-flex items-center gap-1 rounded-lg border border-violet-500/30 px-3 py-1.5 text-xs font-semibold text-violet-500"
-          >
-            <SlidersHorizontal className="size-3.5" />
-            {t(`${M}.trackingSettings`)}
-          </button>
-        )
-      : undefined,
-    [can, openStock, t],
+  const title = useMemo(
+    () => (
+      <PageTitleWithHint
+        title={t('sidebar.erpWarehouses')}
+        hint={t(`${M}.pages.warehouses.titleHint`)}
+      />
+    ),
+    [t, i18n.resolvedLanguage ?? i18n.language],
   );
 
   return (
     <>
       <MirrorPage
-        pageKey="stocks"
+        pageKey="warehouses"
+        title={title}
+        description={t(`${M}.pages.warehouses.description`)}
+        dataColumns={dataColumns}
+        onView={viewWarehouse}
+        toolbarAction={toolbarAction}
+        iconOnlyView
+      />
+      <WarehouseMirrorDetailDialog
+        warehouse={selectedWarehouse}
+        onClose={() => setSelectedWarehouse(null)}
+      />
+    </>
+  );
+}
+
+export function StockMirrorPage() {
+  const { t, i18n } = useTranslation('common');
+  const [selectedStock, setSelectedStock] = useState<StockMirror | null>(null);
+  const [draftCodeFilters, setDraftCodeFilters] = useState<StockCodeFilterSelections>(createEmptyStockCodeFilterSelections);
+  const [appliedCodeFilters, setAppliedCodeFilters] = useState<StockCodeFilterSelections>(createEmptyStockCodeFilterSelections);
+  const dataColumns = useMemo(() => buildStockColumns(t), [i18n.resolvedLanguage ?? i18n.language, t]);
+  const viewStock = useCallback((stock: StockMirror) => {
+    setSelectedStock(stock);
+  }, []);
+
+  const title = useMemo(
+    () => (
+      <PageTitleWithHint
         title={t('sidebar.erpStocks')}
+        hint={t(`${M}.pages.stocks.titleHint`)}
+      />
+    ),
+    [t, i18n.resolvedLanguage ?? i18n.language],
+  );
+
+  const toolbarAction = useErpSyncToolbarAction('stocks');
+
+  const codeFilterKey = useMemo(
+    () => JSON.stringify(appliedCodeFilters),
+    [appliedCodeFilters],
+  );
+
+  const fetchStocksPage = useCallback(async (request: GridRequest) => {
+    if (!hasStockCodeFilterSelection(appliedCodeFilters)) {
+      return getErpMirrorPage<StockMirror>('stocks', request);
+    }
+
+    const pool = normalizeGridPage<StockMirror>(
+      await getErpMirrorPage<StockMirror>('stocks', {
+        ...request,
+        pageNumber: 1,
+        pageSize: Math.max(request.pageSize * 50, 1000),
+      }),
+    );
+    const matched = pool.items.filter((row) =>
+      stockMatchesCodeFilterSelections(row as unknown as Record<string, unknown>, appliedCodeFilters),
+    );
+    const pageNumber = request.pageNumber ?? 1;
+    const start = (pageNumber - 1) * request.pageSize;
+    const items = matched.slice(start, start + request.pageSize);
+    const totalCount = matched.length;
+    const totalPages = Math.max(1, Math.ceil(totalCount / request.pageSize) || 1);
+
+    return {
+      items,
+      pageNumber,
+      pageSize: request.pageSize,
+      totalCount,
+      totalPages,
+      hasPreviousPage: pageNumber > 1,
+      hasNextPage: pageNumber < totalPages,
+    };
+  }, [appliedCodeFilters]);
+
+  const toolbarEndExtra = useMemo(() => (
+    <StockCodeFilterPopover
+      draftSelections={draftCodeFilters}
+      onDraftSelectionsChange={setDraftCodeFilters}
+      appliedSelections={appliedCodeFilters}
+      onApply={() => setAppliedCodeFilters(cloneStockCodeFilterSelections(draftCodeFilters))}
+      onClearApplied={() => {
+        const empty = createEmptyStockCodeFilterSelections();
+        setDraftCodeFilters(empty);
+        setAppliedCodeFilters(empty);
+      }}
+    />
+  ), [appliedCodeFilters, draftCodeFilters]);
+
+  return (
+    <>
+      <MirrorPage
+        pageKey="stocks"
+        gridPageKey="erp-stocks-v3"
+        title={title}
         description={t(`${M}.pages.stocks.description`)}
         dataColumns={dataColumns}
-        extraActions={trackingAction}
         onView={viewStock}
+        toolbarAction={toolbarAction}
+        toolbarEndExtra={toolbarEndExtra}
+        fetchPage={fetchStocksPage}
+        refreshKey={codeFilterKey}
+        iconOnlyView
       />
       <StockTrackingSettingsDialog
         stock={selectedStock}
-        initialTab={selectedTab}
+        initialTab="details"
         onClose={() => setSelectedStock(null)}
       />
     </>
@@ -204,14 +408,38 @@ export function StockMirrorPage() {
 
 export function CustomerMirrorPage() {
   const { t, i18n } = useTranslation('common');
+  const [selectedCustomer, setSelectedCustomer] = useState<CustomerMirror | null>(null);
   const dataColumns = useMemo(() => buildCustomerColumns(t), [i18n.resolvedLanguage ?? i18n.language, t]);
+  const toolbarAction = useErpSyncToolbarAction('customers');
+  const viewCustomer = useCallback((customer: CustomerMirror) => {
+    setSelectedCustomer(customer);
+  }, []);
+  const title = useMemo(
+    () => (
+      <PageTitleWithHint
+        title={t('sidebar.erpCustomers')}
+        hint={t(`${M}.pages.customers.titleHint`)}
+      />
+    ),
+    [t, i18n.resolvedLanguage ?? i18n.language],
+  );
+
   return (
-    <MirrorPage
-      pageKey="customers"
-      title={t('sidebar.erpCustomers')}
-      description={t(`${M}.pages.customers.description`)}
-      dataColumns={dataColumns}
-    />
+    <>
+      <MirrorPage
+        pageKey="customers"
+        title={title}
+        description={t(`${M}.pages.customers.description`)}
+        dataColumns={dataColumns}
+        onView={viewCustomer}
+        toolbarAction={toolbarAction}
+        iconOnlyView
+      />
+      <CustomerMirrorDetailDialog
+        customer={selectedCustomer}
+        onClose={() => setSelectedCustomer(null)}
+      />
+    </>
   );
 }
 
