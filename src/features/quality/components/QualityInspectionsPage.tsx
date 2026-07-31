@@ -925,7 +925,6 @@ function InspectionDetailPanel({
         completionMessage || "Kalite kararı ve stok hareketi kaydedildi.",
         { duration: 7000 }
       );
-      );
       decided();
     } catch (error) {
       toast.error(message(error, "Kalite kararı kaydedilemedi."));
