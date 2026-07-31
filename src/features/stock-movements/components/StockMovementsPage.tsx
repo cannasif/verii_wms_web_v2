@@ -10,6 +10,8 @@ import { OpsDialogBody, OpsDialogContent, OpsDialogFooter, OpsDialogHeader } fro
 import { Dialog, DialogTitle } from '@/components/ui/dialog';
 import { formatProjectDateTime, formatProjectNumber } from '@/lib/project-format';
 import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
+import { StockIdentityCell } from '@/components/shared/StockIdentityCell';
+import { useAuthStore } from '@/stores/auth-store';
 import { stockMovementsApi } from '../api/stock-movements.api';
 import type { LocationOption, PostStockMovementRequest, StockMovementDetail, StockMovementGridRow, StockOption, WarehouseOption } from '../types/stock-movement.types';
 
@@ -26,6 +28,7 @@ export function StockMovementsPage() {
   const { t, i18n } = useTranslation('common');
   const gridLanguage = i18n.resolvedLanguage ?? i18n.language;
   const queryClient = useQueryClient();
+  const branchCode = useAuthStore((state) => state.branch?.code ?? '0');
   const { can, isLoading, isError } = usePermissionAccess();
   const allow = useCallback((permission: string) => isLoading || isError || can(permission), [can, isError, isLoading]);
   const typeLabel = useCallback((type: string) => t(`${P}.operationTypes.${type}`, { defaultValue: type }), [t]);
@@ -122,7 +125,7 @@ export function StockMovementsPage() {
                 <div className="mt-5 overflow-x-auto rounded-xl border">
                   <table className="w-full min-w-[900px] text-sm">
                     <thead><tr className="bg-slate-100 dark:bg-white/[.05]"><th className="p-3 text-left">{t(`${P}.detailLine`)}</th><th className="p-3 text-left">{t(`${P}.detailStock`)}</th><th className="p-3 text-left">{t(`${P}.detailWarehouseLocation`)}</th><th className="p-3 text-left">{t(`${P}.detailLotSerial`)}</th><th className="p-3 text-right">{t(`${P}.detailQuantity`)}</th></tr></thead>
-                    <tbody>{detail.entries.map(e => <tr key={e.id} className="border-t"><td className="p-3">{e.lineNo}</td><td className="p-3"><strong>{e.stockCode}</strong><small className="block text-slate-500">{e.stockName}</small></td><td className="p-3">{e.warehouseCode} / {e.locationCode}</td><td className="p-3">{e.lotNo || '-'} / {e.serialNo || '-'}</td><td className={`p-3 text-right font-bold ${e.quantityDelta > 0 ? 'text-emerald-600' : 'text-red-600'}`}>{e.quantityDelta > 0 ? '+' : ''}{formatProjectNumber(e.quantityDelta)} {e.unitCode}</td></tr>)}</tbody>
+                    <tbody>{detail.entries.map(e => <tr key={e.id} className="border-t"><td className="p-3">{e.lineNo}</td><td className="p-3"><StockIdentityCell stockId={e.stockId} stockCode={e.stockCode} stockName={e.stockName} branchCode={branchCode} nameClassName="block text-slate-500" /></td><td className="p-3">{e.warehouseCode} / {e.locationCode}</td><td className="p-3">{e.lotNo || '-'} / {e.serialNo || '-'}</td><td className={`p-3 text-right font-bold ${e.quantityDelta > 0 ? 'text-emerald-600' : 'text-red-600'}`}>{e.quantityDelta > 0 ? '+' : ''}{formatProjectNumber(e.quantityDelta)} {e.unitCode}</td></tr>)}</tbody>
                   </table>
                 </div>
               </OpsDialogBody>

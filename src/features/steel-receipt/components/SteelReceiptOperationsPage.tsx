@@ -11,6 +11,7 @@ import {completeGoodsReceiptDocumentNo,isValidGoodsReceiptDocumentNo,normalizeGo
 import {localizeEnumValue} from '@/lib/enum-localization';
 import {formatProjectNumber} from '@/lib/project-format';
 import {useAuthStore} from '@/stores/auth-store';
+import {StockIdentityCell} from '@/components/shared/StockIdentityCell';
 import {steelReceiptApi} from '../api/steel-receipt.api';
 import type {ConvertResult,SteelLineRow,SteelPendingReceiptSource,SteelReceiptSource} from '../types/steel-receipt.types';
 import {SteelProcessHeader} from './SteelProcessHeader';
@@ -173,7 +174,7 @@ function ReceiptPanel(){
           <tbody>{source.lines.map(row=>{const canSelect=eligible(row);return <tr key={row.id} className={`border-t ${selected[row.id]?'bg-cyan-500/10':!canSelect?'opacity-65':''}`}>
             <td className="p-3"><input type="checkbox" checked={Boolean(selected[row.id])} disabled={!canSelect} onChange={()=>toggle(row)} className="size-4 accent-cyan-500" aria-label={`${row.dCode} seç`}/></td>
             <td className="p-3"><strong className="font-mono text-cyan-500">{row.dCode}</strong><small className="block text-slate-500">{row.supplierSerialNo}</small></td>
-            <td className="p-3"><strong>{row.stockCode}</strong><small className="block text-slate-500">{row.stockName||'—'}</small></td>
+            <td className="p-3"><StockIdentityCell stockCode={row.stockCode} stockName={row.stockName} branchCode={branchCode} nameClassName="block text-slate-500" /></td>
             <td className="p-3 font-mono">{formatProjectNumber(row.expectedQuantity)} {row.unitCode}</td>
             <td className="p-3 font-mono font-bold">{formatProjectNumber(row.approvedQuantity)} {row.unitCode}</td>
             <td className="p-3"><span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-bold ${canSelect?'border-emerald-500/30 bg-emerald-500/10 text-emerald-600':'border-amber-500/30 bg-amber-500/10 text-amber-600'}`}>{eligibilityText(row)}</span></td>

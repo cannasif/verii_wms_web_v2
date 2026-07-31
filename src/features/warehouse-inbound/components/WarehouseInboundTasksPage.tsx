@@ -24,6 +24,7 @@ import {
   requiredActionColumn,
   systemColumns,
 } from "@/components/shared/GridSystemColumns";
+import { StockIdentityCell } from "@/components/shared/StockIdentityCell";
 import { WarehouseBarcodeScanner } from "@/features/barcode-resolution/WarehouseBarcodeScanner";
 import { localizeEnumValue } from "@/lib/enum-localization";
 import {
@@ -361,8 +362,12 @@ function TaskModal({
               >
                 <td className="p-3">{line.sequenceNo}</td>
                 <td className="p-3">
-                  <strong>{line.stockCode}</strong>
-                  <div className="text-xs text-slate-500">{line.stockName}</div>
+                  <StockIdentityCell
+                    stockId={line.stockId}
+                    stockCode={line.stockCode}
+                    stockName={line.stockName}
+                    branchCode={detail.task.branchCode}
+                  />
                 </td>
                 <td className="p-3">{line.yapCode || "—"}</td>
                 <td className="p-3 text-right">
