@@ -3224,7 +3224,8 @@
       "panel": "Selección pedido transferencia Netsis",
       "customerSearch": "Buscar cliente",
       "loadOrders": "Cargar pedidos",
-      "loadLines": "Cargar líneas seleccionadas"
+      "loadLines": "Cargar líneas seleccionadas",
+      "warehouseLabel": "almacén"
     },
     "assignees": {
       "panel": "Responsables de tarea",
@@ -5286,5 +5287,18 @@
       "heat": "Heat",
       "imageCount": "{{count}} imágenes"
     }
+  },
+  "operationDraftRestore": {
+    "title": "Tiene una operación sin terminar",
+    "description": "Se encontró un borrador de {{operationName}} sin guardar para este usuario y sucursal.",
+    "lastAutoSave": "Último guardado automático: {{date}}",
+    "discard": "Descartar y empezar de nuevo",
+    "restore": "Cargar borrador"
+  },
+  "operationNames": {
+    "goodsReceiptDirect": "recepción directa",
+    "warehouseInboundDirect": "entrada de almacén directa",
+    "warehouseOutboundDirect": "salida de almacén directa / envío",
+    "warehouseTransferDirect": "transferencia directa entre almacenes (DAT)"
   }
 }

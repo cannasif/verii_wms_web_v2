@@ -1,6 +1,8 @@
 import { RotateCcw, Trash2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { OpsActionButton } from '@/components/shared/OpsActionButton';
 import { ResponsiveDialog } from '@/components/shared/ResponsiveDialog';
+import { getLocaleForFormatting } from '@/lib/i18n';
 
 interface Props {
   open: boolean;
@@ -10,12 +12,12 @@ interface Props {
   onDiscard: () => void | Promise<void>;
 }
 
-function formatDate(value?: string | null): string {
+function formatDate(value: string | null | undefined, locale: string): string {
   if (!value) return '';
   const date = new Date(value);
   return Number.isNaN(date.getTime())
     ? ''
-    : new Intl.DateTimeFormat('tr-TR', {
+    : new Intl.DateTimeFormat(locale, {
         dateStyle: 'medium',
         timeStyle: 'short',
       }).format(date);
@@ -28,29 +30,30 @@ export function OperationDraftRestoreDialog({
   onRestore,
   onDiscard,
 }: Props) {
+  const { t, i18n } = useTranslation('common');
   if (!open) return null;
-  const formattedDate = formatDate(updatedAt);
+  const formattedDate = formatDate(updatedAt, getLocaleForFormatting(i18n.language));
   return (
     <ResponsiveDialog
-      title="Yarım kalan işleminiz var"
-      description={`Bu kullanıcı ve şube için kaydedilmemiş bir ${operationName} taslağı bulundu.`}
+      title={t('operationDraftRestore.title')}
+      description={t('operationDraftRestore.description', { operationName })}
       onClose={() => undefined}
       showCloseButton={false}
       className="!max-w-lg"
     >
       {formattedDate ? (
         <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm font-medium">
-          Son otomatik kayıt: {formattedDate}
+          {t('operationDraftRestore.lastAutoSave', { date: formattedDate })}
         </div>
       ) : null}
       <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <OpsActionButton type="button" variant="secondary" onClick={() => void onDiscard()}>
           <Trash2 className="size-4" />
-          Sil ve yeni başla
+          {t('operationDraftRestore.discard')}
         </OpsActionButton>
         <OpsActionButton type="button" variant="primary" onClick={onRestore}>
           <RotateCcw className="size-4" />
-          Taslağı yükle
+          {t('operationDraftRestore.restore')}
         </OpsActionButton>
       </div>
     </ResponsiveDialog>

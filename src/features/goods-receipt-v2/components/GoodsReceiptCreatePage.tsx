@@ -1587,7 +1587,7 @@ export function GoodsReceiptCreatePage({
     <section className="wms-ops-form space-y-5">
       <OperationDraftRestoreDialog
         open={operationDraft.restoreDialogOpen}
-        operationName="doğrudan mal kabul"
+        operationName={t('operationNames.goodsReceiptDirect')}
         updatedAt={operationDraft.pendingDraft?.updatedAt}
         onRestore={operationDraft.restoreDraft}
         onDiscard={operationDraft.discardDraft}

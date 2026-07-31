@@ -237,7 +237,7 @@ export function WarehouseInboundManualPage({ direct }: { direct: boolean }): Rea
   return <section className="mx-auto max-w-7xl space-y-5">
     <OperationDraftRestoreDialog
       open={operationDraft.restoreDialogOpen}
-      operationName="doğrudan ambar giriş"
+      operationName={t('operationNames.warehouseInboundDirect')}
       updatedAt={operationDraft.pendingDraft?.updatedAt}
       onRestore={operationDraft.restoreDraft}
       onDiscard={operationDraft.discardDraft}

@@ -3224,7 +3224,8 @@
       "panel": "اختيار أمر نقل Netsis",
       "customerSearch": "بحث عميل",
       "loadOrders": "تحميل الأوامر",
-      "loadLines": "تحميل أسطر الأمر المحددة"
+      "loadLines": "تحميل أسطر الأمر المحددة",
+      "warehouseLabel": "مستودع"
     },
     "assignees": {
       "panel": "مسؤولو المهمة",
@@ -5286,5 +5287,18 @@
       "heat": "Heat",
       "imageCount": "{{count}} صور"
     }
+  },
+  "operationDraftRestore": {
+    "title": "لديك عملية غير مكتملة",
+    "description": "تم العثور على مسودة {{operationName}} غير محفوظة لهذا المستخدم والفرع.",
+    "lastAutoSave": "آخر حفظ تلقائي: {{date}}",
+    "discard": "حذف والبدء من جديد",
+    "restore": "تحميل المسودة"
+  },
+  "operationNames": {
+    "goodsReceiptDirect": "استلام بضائع مباشر",
+    "warehouseInboundDirect": "إدخال مستودع مباشر",
+    "warehouseOutboundDirect": "صرف مستودع مباشر / شحن",
+    "warehouseTransferDirect": "نقل مباشر بين المستودعات (DAT)"
   }
 }

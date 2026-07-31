@@ -3224,7 +3224,8 @@
       "panel": "Sélection commande transfert Netsis",
       "customerSearch": "Rechercher client",
       "loadOrders": "Charger commandes",
-      "loadLines": "Charger lignes sélectionnées"
+      "loadLines": "Charger lignes sélectionnées",
+      "warehouseLabel": "entrepôt"
     },
     "assignees": {
       "panel": "Responsables tâche",
@@ -5286,5 +5287,18 @@
       "heat": "Heat",
       "imageCount": "{{count}} images"
     }
+  },
+  "operationDraftRestore": {
+    "title": "Vous avez une opération inachevée",
+    "description": "Un brouillon {{operationName}} non enregistré a été trouvé pour cet utilisateur et cette agence.",
+    "lastAutoSave": "Dernière sauvegarde automatique : {{date}}",
+    "discard": "Supprimer et recommencer",
+    "restore": "Charger le brouillon"
+  },
+  "operationNames": {
+    "goodsReceiptDirect": "réception directe",
+    "warehouseInboundDirect": "entrée d'entrepôt directe",
+    "warehouseOutboundDirect": "sortie d'entrepôt directe / expédition",
+    "warehouseTransferDirect": "transfert direct inter-entrepôts (DAT)"
   }
 }

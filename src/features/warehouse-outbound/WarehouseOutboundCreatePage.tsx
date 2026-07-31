@@ -468,7 +468,7 @@ export function WarehouseOutboundCreatePage() {
     <section className="space-y-5">
       <OperationDraftRestoreDialog
         open={operationDraft.restoreDialogOpen}
-        operationName="doğrudan ambar çıkış / sevk"
+        operationName={t('operationNames.warehouseOutboundDirect')}
         updatedAt={operationDraft.pendingDraft?.updatedAt}
         onRestore={operationDraft.restoreDraft}
         onDiscard={operationDraft.discardDraft}

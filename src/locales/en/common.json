@@ -4866,7 +4866,8 @@
       "panel": "Netsis transfer order selection",
       "customerSearch": "Search customer",
       "loadOrders": "Load orders",
-      "loadLines": "Load selected order lines"
+      "loadLines": "Load selected order lines",
+      "warehouseLabel": "warehouse"
     },
     "assignees": {
       "panel": "Task Assignees",
@@ -6737,5 +6738,18 @@
       "reverseSuccess": "Reversal created; original movement was not changed.",
       "reverseFailed": "Could not create reversal."
     }
+  },
+  "operationDraftRestore": {
+    "title": "You have an unfinished operation",
+    "description": "An unsaved {{operationName}} draft was found for this user and branch.",
+    "lastAutoSave": "Last auto-save: {{date}}",
+    "discard": "Discard and start new",
+    "restore": "Load draft"
+  },
+  "operationNames": {
+    "goodsReceiptDirect": "direct goods receipt",
+    "warehouseInboundDirect": "direct warehouse inbound",
+    "warehouseOutboundDirect": "direct warehouse outbound / shipment",
+    "warehouseTransferDirect": "direct inter-warehouse transfer (DAT)"
   }
 }

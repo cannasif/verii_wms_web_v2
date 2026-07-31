@@ -4759,7 +4759,8 @@
       "panel": "Netsis-Transferauftragsauswahl",
       "customerSearch": "Kunde suchen",
       "loadOrders": "Aufträge laden",
-      "loadLines": "Ausgewählte Auftragspositionen laden"
+      "loadLines": "Ausgewählte Auftragspositionen laden",
+      "warehouseLabel": "Lager"
     },
     "assignees": {
       "panel": "Auftragsverantwortliche",
@@ -6582,5 +6583,18 @@
       "reverseSuccess": "Reversal created; original movement was not changed.",
       "reverseFailed": "Could not create reversal."
     }
+  },
+  "operationDraftRestore": {
+    "title": "Sie haben einen unvollständigen Vorgang",
+    "description": "Für diesen Benutzer und diese Filiale wurde ein nicht gespeicherter {{operationName}}-Entwurf gefunden.",
+    "lastAutoSave": "Letzte automatische Speicherung: {{date}}",
+    "discard": "Verwerfen und neu beginnen",
+    "restore": "Entwurf laden"
+  },
+  "operationNames": {
+    "goodsReceiptDirect": "direkter Wareneingang",
+    "warehouseInboundDirect": "direkter Lagerzugang",
+    "warehouseOutboundDirect": "direkter Lagerausgang / Versand",
+    "warehouseTransferDirect": "direkter Lager-zu-Lager-Transfer (DAT)"
   }
 }

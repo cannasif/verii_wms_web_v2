@@ -3224,7 +3224,8 @@
       "panel": "Selezione ordine trasferimento Netsis",
       "customerSearch": "Cerca cliente",
       "loadOrders": "Carica ordini",
-      "loadLines": "Carica righe ordine selezionate"
+      "loadLines": "Carica righe ordine selezionate",
+      "warehouseLabel": "magazzino"
     },
     "assignees": {
       "panel": "Responsabili attività",
@@ -5286,5 +5287,18 @@
       "heat": "Heat",
       "imageCount": "{{count}} immagini"
     }
+  },
+  "operationDraftRestore": {
+    "title": "Hai un'operazione incompleta",
+    "description": "È stata trovata una bozza di {{operationName}} non salvata per questo utente e filiale.",
+    "lastAutoSave": "Ultimo salvataggio automatico: {{date}}",
+    "discard": "Elimina e ricomincia",
+    "restore": "Carica bozza"
+  },
+  "operationNames": {
+    "goodsReceiptDirect": "ricevimento diretto",
+    "warehouseInboundDirect": "ingresso magazzino diretto",
+    "warehouseOutboundDirect": "uscita magazzino diretta / spedizione",
+    "warehouseTransferDirect": "trasferimento diretto tra magazzini (DAT)"
   }
 }

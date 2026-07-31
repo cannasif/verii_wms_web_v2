@@ -689,7 +689,7 @@ export function WarehouseTransferDraftPage({
     <section className="space-y-5" data-no-auto-localize="true">
       <OperationDraftRestoreDialog
         open={operationDraft.restoreDialogOpen}
-        operationName="doğrudan depolar arası transfer (DAT)"
+        operationName={t('operationNames.warehouseTransferDirect')}
         updatedAt={operationDraft.pendingDraft?.updatedAt}
         onRestore={operationDraft.restoreDraft}
         onDiscard={operationDraft.discardDraft}
@@ -1009,7 +1009,7 @@ function OrderSelection(p: {
             <span className="flex-1">
               <strong className="font-mono">{order.orderNumber}</strong>
               <small className="ml-2 text-[var(--wms-app-text-muted)]">
-                {order.projectCode} · depo {order.targetWarehouseCode ?? "—"}
+                {order.projectCode} · {t(`${D}.orderSelection.warehouseLabel`)} {order.targetWarehouseCode ?? "—"}
               </small>
             </span>
             <span>{order.availableQuantity ?? 0}</span>

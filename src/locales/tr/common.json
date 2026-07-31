@@ -4887,7 +4887,8 @@
       "panel": "Netsis transfer emri seçimi",
       "customerSearch": "Cari ara",
       "loadOrders": "Emirleri Getir",
-      "loadLines": "Seçili Emir Kalemlerini Al"
+      "loadLines": "Seçili Emir Kalemlerini Al",
+      "warehouseLabel": "depo"
     },
     "assignees": {
       "panel": "Emir sorumluları",
@@ -6772,5 +6773,18 @@
       "reverseSuccess": "Ters kayıt oluşturuldu; eski hareket değiştirilmedi.",
       "reverseFailed": "Ters kayıt oluşturulamadı."
     }
+  },
+  "operationDraftRestore": {
+    "title": "Yarım kalan işleminiz var",
+    "description": "Bu kullanıcı ve şube için kaydedilmemiş bir {{operationName}} taslağı bulundu.",
+    "lastAutoSave": "Son otomatik kayıt: {{date}}",
+    "discard": "Sil ve yeni başla",
+    "restore": "Taslağı yükle"
+  },
+  "operationNames": {
+    "goodsReceiptDirect": "doğrudan mal kabul",
+    "warehouseInboundDirect": "doğrudan ambar giriş",
+    "warehouseOutboundDirect": "doğrudan ambar çıkış / sevk",
+    "warehouseTransferDirect": "doğrudan depolar arası transfer (DAT)"
   }
 }
