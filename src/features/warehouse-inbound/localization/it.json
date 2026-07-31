@@ -186,5 +186,49 @@
       "incomplete": "Il modulo contiene campi mancanti o non validi.",
       "submit": "Impossibile creare l'entrata merci."
     }
+  },
+  "policy": {
+    "eyebrow": "Ricevimento merci",
+    "title": "Politica del processo di ricevimento merci",
+    "description": "Gestisci centralmente il ricevimento in eccesso/difetto, l'approvazione dell'operazione, il controllo qualità, la disponibilità delle scorte e il momento di registrazione ERP.",
+    "fields": {
+      "overReceipt": "Ricevimento in eccesso",
+      "overReceiptTolerance": "Tolleranza di ricevimento in eccesso (%)",
+      "inventoryAvailability": "Quando è disponibile lo stock?",
+      "erpPosting": "Quando viene registrato il record ERP?"
+    },
+    "overReceiptOptions": {
+      "notAllowed": "Non consentire",
+      "withinTolerance": "Consenti entro la tolleranza",
+      "approvalRequired": "Invia in approvazione entro la tolleranza"
+    },
+    "inventoryAvailabilityOptions": {
+      "immediate": "Immediatamente al ricevimento",
+      "afterReceiptApproval": "Dopo l'approvazione del ricevimento",
+      "afterQualityApproval": "Dopo l'approvazione qualità",
+      "afterAllApprovals": "Dopo tutte le approvazioni"
+    },
+    "erpPostingOptions": {
+      "afterReceipt": "Al completamento del ricevimento",
+      "afterReceiptApproval": "Dopo l'approvazione del ricevimento",
+      "afterQualityApproval": "Dopo l'approvazione qualità",
+      "afterAllApprovals": "Dopo tutte le approvazioni"
+    },
+    "toggles": {
+      "allowUnderReceipt": "Consenti ricevimento incompleto",
+      "requireShortCloseApproval": "Richiedi approvazione per la chiusura parziale",
+      "requireReceiptApproval": "Richiedi approvazione operativa dopo il ricevimento",
+      "requireQualityApproval": "Richiedi approvazione qualità",
+      "requireErpApproval": "Richiedi approvazione ERP",
+      "holdInventoryUntilQualityDecision": "Blocca lo stock fino alla decisione di qualità",
+      "blockPutawayUntilQualityDecision": "Blocca lo stoccaggio fino alla decisione di qualità",
+      "allowOrderlessReceipt": "Consenti ricevimento senza ordine",
+      "allowUnplannedReceipt": "Consenti ricevimento non pianificato"
+    },
+    "hint": "Queste impostazioni vengono scritte come istantanea nell'intestazione dell'attività alla creazione. Anche se l'impostazione cambia in seguito, un'attività in corso viene completata con le stesse regole.",
+    "save": "Salva politica",
+    "saved": "Politica di ricevimento merci salvata.",
+    "loadError": "Impossibile caricare la politica.",
+    "saveError": "Impossibile salvare."
   }
 }

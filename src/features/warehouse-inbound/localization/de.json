@@ -186,5 +186,49 @@
       "incomplete": "Das Formular enthält fehlende oder ungültige Felder.",
       "submit": "Der Wareneingang konnte nicht erstellt werden."
     }
+  },
+  "policy": {
+    "eyebrow": "Wareneingang",
+    "title": "Wareneingangsprozessrichtlinie",
+    "description": "Verwalten Sie Über-/Unterlieferung, Vorgangsgenehmigung, Qualitätsprüfung, Bestandsverfügbarkeit und ERP-Buchungszeitpunkt zentral.",
+    "fields": {
+      "overReceipt": "Überlieferung",
+      "overReceiptTolerance": "Toleranz für Überlieferung (%)",
+      "inventoryAvailability": "Wann ist der Bestand verfügbar?",
+      "erpPosting": "Wann wird der ERP-Datensatz gebucht?"
+    },
+    "overReceiptOptions": {
+      "notAllowed": "Nicht zulassen",
+      "withinTolerance": "Innerhalb der Toleranz zulassen",
+      "approvalRequired": "Innerhalb der Toleranz zur Genehmigung senden"
+    },
+    "inventoryAvailabilityOptions": {
+      "immediate": "Sofort bei Wareneingang",
+      "afterReceiptApproval": "Nach Wareneingangsgenehmigung",
+      "afterQualityApproval": "Nach Qualitätsfreigabe",
+      "afterAllApprovals": "Nach allen Genehmigungen"
+    },
+    "erpPostingOptions": {
+      "afterReceipt": "Bei Abschluss des Wareneingangs",
+      "afterReceiptApproval": "Nach Wareneingangsgenehmigung",
+      "afterQualityApproval": "Nach Qualitätsfreigabe",
+      "afterAllApprovals": "Nach allen Genehmigungen"
+    },
+    "toggles": {
+      "allowUnderReceipt": "Unterlieferung zulassen",
+      "requireShortCloseApproval": "Genehmigung für Kurzabschluss erforderlich",
+      "requireReceiptApproval": "Vorgangsgenehmigung nach Wareneingang erforderlich",
+      "requireQualityApproval": "Qualitätsfreigabe erforderlich",
+      "requireErpApproval": "ERP-Genehmigung erforderlich",
+      "holdInventoryUntilQualityDecision": "Bestand bis zur Qualitätsentscheidung zurückhalten",
+      "blockPutawayUntilQualityDecision": "Einlagerung bis zur Qualitätsentscheidung blockieren",
+      "allowOrderlessReceipt": "Auftragslosen Wareneingang zulassen",
+      "allowUnplannedReceipt": "Ungeplanten Wareneingang zulassen"
+    },
+    "hint": "Diese Einstellungen werden beim Erstellen als Snapshot in den Aufgabenkopf geschrieben. Auch wenn sich die Einstellung später ändert, wird eine laufende Aufgabe nach denselben Regeln abgeschlossen.",
+    "save": "Richtlinie speichern",
+    "saved": "Wareneingangsrichtlinie gespeichert.",
+    "loadError": "Richtlinie konnte nicht geladen werden.",
+    "saveError": "Konnte nicht gespeichert werden."
   }
 }

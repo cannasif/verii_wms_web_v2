@@ -186,5 +186,49 @@
       "incomplete": "El formulario contiene campos faltantes o no válidos.",
       "submit": "No se pudo crear la entrada de mercancías."
     }
+  },
+  "policy": {
+    "eyebrow": "Recepción de mercancías",
+    "title": "Política del proceso de recepción de mercancías",
+    "description": "Gestione de forma centralizada el exceso/defecto de recepción, la aprobación de operaciones, el control de calidad, la disponibilidad de stock y el momento de contabilización en el ERP.",
+    "fields": {
+      "overReceipt": "Exceso de recepción",
+      "overReceiptTolerance": "Tolerancia de exceso de recepción (%)",
+      "inventoryAvailability": "¿Cuándo está disponible el stock?",
+      "erpPosting": "¿Cuándo se contabiliza el registro en el ERP?"
+    },
+    "overReceiptOptions": {
+      "notAllowed": "No permitir",
+      "withinTolerance": "Permitir dentro de la tolerancia",
+      "approvalRequired": "Enviar a aprobación dentro de la tolerancia"
+    },
+    "inventoryAvailabilityOptions": {
+      "immediate": "Inmediatamente al recibir",
+      "afterReceiptApproval": "Después de la aprobación de recepción",
+      "afterQualityApproval": "Después de la aprobación de calidad",
+      "afterAllApprovals": "Después de todas las aprobaciones"
+    },
+    "erpPostingOptions": {
+      "afterReceipt": "Al completar la recepción",
+      "afterReceiptApproval": "Después de la aprobación de recepción",
+      "afterQualityApproval": "Después de la aprobación de calidad",
+      "afterAllApprovals": "Después de todas las aprobaciones"
+    },
+    "toggles": {
+      "allowUnderReceipt": "Permitir recepción incompleta",
+      "requireShortCloseApproval": "Requerir aprobación para el cierre parcial",
+      "requireReceiptApproval": "Requerir aprobación de operación tras la recepción",
+      "requireQualityApproval": "Requerir aprobación de calidad",
+      "requireErpApproval": "Requerir aprobación del ERP",
+      "holdInventoryUntilQualityDecision": "Retener el stock hasta la decisión de calidad",
+      "blockPutawayUntilQualityDecision": "Bloquear la ubicación hasta la decisión de calidad",
+      "allowOrderlessReceipt": "Permitir recepción sin pedido",
+      "allowUnplannedReceipt": "Permitir recepción no planificada"
+    },
+    "hint": "Estos ajustes se guardan como instantánea en el encabezado de la tarea al crearla. Aunque el ajuste cambie después, una tarea en curso se completa con las mismas reglas.",
+    "save": "Guardar política",
+    "saved": "Política de recepción de mercancías guardada.",
+    "loadError": "No se pudo cargar la política.",
+    "saveError": "No se pudo guardar."
   }
 }

@@ -90,5 +90,49 @@
     "resultOrderless": "Receipt Task Created", "linesText": "lines", "newRecord": "New Record",
     "options": { "noLabel": "No Label", "preGenerate": "Pre-generate", "supplierLabel": "Supplier Label", "generateOnReceipt": "Generate on Receipt", "manual": "Manual", "barcode": "Barcode Scan", "preLabel": "Pre-generated Label" },
     "validation": { "customer": "Supplier is required.", "receiptNo": "Standard dispatch receipt number must contain exactly 15 digits.", "eReceiptNo": "e-Dispatch number must contain a 3-character unit code followed by 13 digits.", "date": "Dispatch date is required.", "operation": "Warehouse, receiving location and document series are required.", "lines": "At least one stock line is required.", "stock": "Stock and a quantity greater than zero are required.", "serialQuantity": "A serial-tracked line must have quantity 1.", "expiry": "Expiration date cannot precede manufacturing date.", "incomplete": "The form contains missing or invalid fields.", "submit": "Goods receipt could not be created." }
+  },
+  "policy": {
+    "eyebrow": "Goods Receipt",
+    "title": "Goods Receipt Process Policy",
+    "description": "Centrally manage over/under receipt, operation approval, the quality gate, stock availability and ERP posting timing.",
+    "fields": {
+      "overReceipt": "Over-receipt",
+      "overReceiptTolerance": "Over-receipt tolerance (%)",
+      "inventoryAvailability": "When is stock available?",
+      "erpPosting": "When is the ERP record posted?"
+    },
+    "overReceiptOptions": {
+      "notAllowed": "Do not allow",
+      "withinTolerance": "Allow within tolerance",
+      "approvalRequired": "Send for approval within tolerance"
+    },
+    "inventoryAvailabilityOptions": {
+      "immediate": "Immediately on receipt",
+      "afterReceiptApproval": "After goods receipt approval",
+      "afterQualityApproval": "After quality approval",
+      "afterAllApprovals": "After all approvals"
+    },
+    "erpPostingOptions": {
+      "afterReceipt": "When receipt is completed",
+      "afterReceiptApproval": "After goods receipt approval",
+      "afterQualityApproval": "After quality approval",
+      "afterAllApprovals": "After all approvals"
+    },
+    "toggles": {
+      "allowUnderReceipt": "Allow under-receipt",
+      "requireShortCloseApproval": "Require approval for short close",
+      "requireReceiptApproval": "Require operation approval after receipt",
+      "requireQualityApproval": "Require quality approval",
+      "requireErpApproval": "Require ERP approval",
+      "holdInventoryUntilQualityDecision": "Hold stock until the quality decision",
+      "blockPutawayUntilQualityDecision": "Block putaway until the quality decision",
+      "allowOrderlessReceipt": "Allow orderless receipt",
+      "allowUnplannedReceipt": "Allow unplanned receipt"
+    },
+    "hint": "These settings are written to the task header as a snapshot when it is created. Even if the setting changes later, an in-progress task completes under the same rules.",
+    "save": "Save policy",
+    "saved": "Goods receipt policy saved.",
+    "loadError": "Policy could not be loaded.",
+    "saveError": "Could not be saved."
   }
 }

@@ -186,5 +186,49 @@
       "incomplete": "يحتوي النموذج على حقول مفقودة أو غير صالحة.",
       "submit": "لا يمكن إنشاء إيصال استلام البضائع."
     }
+  },
+  "policy": {
+    "eyebrow": "استلام البضائع",
+    "title": "سياسة عملية استلام البضائع",
+    "description": "إدارة مركزية للاستلام الزائد/الناقص، واعتماد العملية، وبوابة الجودة، وتوافر المخزون، وتوقيت الترحيل إلى ERP.",
+    "fields": {
+      "overReceipt": "الاستلام الزائد",
+      "overReceiptTolerance": "نسبة تفاوت الاستلام الزائد (%)",
+      "inventoryAvailability": "متى يصبح المخزون متاحًا؟",
+      "erpPosting": "متى يتم ترحيل سجل ERP؟"
+    },
+    "overReceiptOptions": {
+      "notAllowed": "غير مسموح",
+      "withinTolerance": "السماح ضمن نطاق التفاوت",
+      "approvalRequired": "الإرسال للاعتماد ضمن نطاق التفاوت"
+    },
+    "inventoryAvailabilityOptions": {
+      "immediate": "فورًا عند الاستلام",
+      "afterReceiptApproval": "بعد اعتماد الاستلام",
+      "afterQualityApproval": "بعد اعتماد الجودة",
+      "afterAllApprovals": "بعد جميع الاعتمادات"
+    },
+    "erpPostingOptions": {
+      "afterReceipt": "عند اكتمال الاستلام",
+      "afterReceiptApproval": "بعد اعتماد الاستلام",
+      "afterQualityApproval": "بعد اعتماد الجودة",
+      "afterAllApprovals": "بعد جميع الاعتمادات"
+    },
+    "toggles": {
+      "allowUnderReceipt": "السماح بالاستلام الناقص",
+      "requireShortCloseApproval": "طلب اعتماد للإغلاق الجزئي",
+      "requireReceiptApproval": "طلب اعتماد العملية بعد الاستلام",
+      "requireQualityApproval": "طلب اعتماد الجودة",
+      "requireErpApproval": "طلب اعتماد ERP",
+      "holdInventoryUntilQualityDecision": "تعليق المخزون حتى قرار الجودة",
+      "blockPutawayUntilQualityDecision": "منع التخزين حتى قرار الجودة",
+      "allowOrderlessReceipt": "السماح بالاستلام بدون أمر",
+      "allowUnplannedReceipt": "السماح بالاستلام غير المخطط له"
+    },
+    "hint": "تُكتب هذه الإعدادات كلقطة في رأس المهمة عند إنشائها. حتى لو تغير الإعداد لاحقًا، تكتمل المهمة الجارية وفق نفس القواعد.",
+    "save": "حفظ السياسة",
+    "saved": "تم حفظ سياسة استلام البضائع.",
+    "loadError": "تعذر تحميل السياسة.",
+    "saveError": "تعذر الحفظ."
   }
 }

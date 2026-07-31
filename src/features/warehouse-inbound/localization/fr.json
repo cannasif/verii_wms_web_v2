@@ -186,5 +186,49 @@
       "incomplete": "Le formulaire contient des champs manquants ou invalides.",
       "submit": "L'entrée de marchandises n'a pas pu être créée."
     }
+  },
+  "policy": {
+    "eyebrow": "Réception de marchandises",
+    "title": "Politique du processus de réception de marchandises",
+    "description": "Gérez de façon centralisée la sur-/sous-réception, l'approbation des opérations, le contrôle qualité, la disponibilité du stock et le moment de comptabilisation ERP.",
+    "fields": {
+      "overReceipt": "Sur-réception",
+      "overReceiptTolerance": "Tolérance de sur-réception (%)",
+      "inventoryAvailability": "Quand le stock est-il disponible ?",
+      "erpPosting": "Quand l'enregistrement ERP est-il comptabilisé ?"
+    },
+    "overReceiptOptions": {
+      "notAllowed": "Ne pas autoriser",
+      "withinTolerance": "Autoriser dans la tolérance",
+      "approvalRequired": "Envoyer pour approbation dans la tolérance"
+    },
+    "inventoryAvailabilityOptions": {
+      "immediate": "Immédiatement à la réception",
+      "afterReceiptApproval": "Après approbation de la réception",
+      "afterQualityApproval": "Après approbation qualité",
+      "afterAllApprovals": "Après toutes les approbations"
+    },
+    "erpPostingOptions": {
+      "afterReceipt": "Une fois la réception terminée",
+      "afterReceiptApproval": "Après approbation de la réception",
+      "afterQualityApproval": "Après approbation qualité",
+      "afterAllApprovals": "Après toutes les approbations"
+    },
+    "toggles": {
+      "allowUnderReceipt": "Autoriser la sous-réception",
+      "requireShortCloseApproval": "Exiger une approbation pour la clôture partielle",
+      "requireReceiptApproval": "Exiger une approbation d'opération après réception",
+      "requireQualityApproval": "Exiger une approbation qualité",
+      "requireErpApproval": "Exiger une approbation ERP",
+      "holdInventoryUntilQualityDecision": "Bloquer le stock jusqu'à la décision qualité",
+      "blockPutawayUntilQualityDecision": "Bloquer le rangement jusqu'à la décision qualité",
+      "allowOrderlessReceipt": "Autoriser la réception sans commande",
+      "allowUnplannedReceipt": "Autoriser la réception non planifiée"
+    },
+    "hint": "Ces paramètres sont enregistrés en tant qu'instantané dans l'en-tête de la tâche lors de sa création. Même si le paramètre change ensuite, une tâche en cours se termine selon les mêmes règles.",
+    "save": "Enregistrer la politique",
+    "saved": "Politique de réception de marchandises enregistrée.",
+    "loadError": "La politique n'a pas pu être chargée.",
+    "saveError": "Impossible d'enregistrer."
   }
 }

@@ -107,5 +107,49 @@
     "resultDirect": "Mal Kabul İşlendi", "resultOrderless": "Mal Kabul Emri Oluşturuldu", "linesText": "satır", "newRecord": "Yeni Kayıt",
     "options": { "noLabel": "Etiket Yok", "preGenerate": "Önceden Üret", "supplierLabel": "Tedarikçi Etiketi", "generateOnReceipt": "Kabulde Üret", "manual": "Manuel", "barcode": "Barkod Okutma", "preLabel": "Ön Etiket" },
     "validation": { "customer": "Tedarikçi cari seçimi zorunludur.", "receiptNo": "Normal irsaliye numarası semboller dahil tam 15 karakter olmalıdır.", "eReceiptNo": "E-irsaliye / GİB numarası semboller dahil tam 15 karakter olmalıdır.", "date": "İrsaliye tarihi zorunludur.", "operation": "Depo, kabul alanı ve belge serisi seçilmelidir.", "lines": "En az bir stok satırı eklenmelidir.", "stock": "Stok ve sıfırdan büyük miktar zorunludur.", "serialQuantity": "Seri numaralı satırın miktarı 1 olmalıdır.", "expiry": "Son kullanma tarihi üretim tarihinden önce olamaz.", "incomplete": "Formda eksik veya geçersiz alan bulunuyor.", "submit": "Mal kabul oluşturulamadı." }
+  },
+  "policy": {
+    "eyebrow": "Mal Kabul",
+    "title": "Mal Kabul Süreç Politikası",
+    "description": "Fazla/eksik kabul, operasyon onayı, kalite kapısı, stok kullanılabilirliği ve ERP gönderim zamanını merkezi yönetin.",
+    "fields": {
+      "overReceipt": "Fazla kabul",
+      "overReceiptTolerance": "Fazla kabul toleransı (%)",
+      "inventoryAvailability": "Stok ne zaman kullanılabilir?",
+      "erpPosting": "ERP kaydı ne zaman?"
+    },
+    "overReceiptOptions": {
+      "notAllowed": "İzin verme",
+      "withinTolerance": "Tolerans içinde izin ver",
+      "approvalRequired": "Tolerans içinde onaya gönder"
+    },
+    "inventoryAvailabilityOptions": {
+      "immediate": "Kabulde hemen",
+      "afterReceiptApproval": "Mal kabul onayından sonra",
+      "afterQualityApproval": "Kalite onayından sonra",
+      "afterAllApprovals": "Tüm onaylardan sonra"
+    },
+    "erpPostingOptions": {
+      "afterReceipt": "Kabul tamamlanınca",
+      "afterReceiptApproval": "Mal kabul onayından sonra",
+      "afterQualityApproval": "Kalite onayından sonra",
+      "afterAllApprovals": "Tüm onaylardan sonra"
+    },
+    "toggles": {
+      "allowUnderReceipt": "Eksik kabule izin ver",
+      "requireShortCloseApproval": "Eksik kapatmada onay iste",
+      "requireReceiptApproval": "Kabul sonrası operasyon onayı iste",
+      "requireQualityApproval": "Kalite onayı iste",
+      "requireErpApproval": "ERP onayı iste",
+      "holdInventoryUntilQualityDecision": "Kalite kararına kadar stoğu beklet",
+      "blockPutawayUntilQualityDecision": "Kalite kararına kadar rafa kaldırmayı beklet",
+      "allowOrderlessReceipt": "Emirsiz kabule izin ver",
+      "allowUnplannedReceipt": "Plansız kabule izin ver"
+    },
+    "hint": "Bu ayarlar emir oluşturulurken başlığa snapshot olarak yazılır. Sonradan ayar değişse bile devam eden emir aynı kurallarla tamamlanır.",
+    "save": "Politikayı kaydet",
+    "saved": "Mal kabul politikası kaydedildi.",
+    "loadError": "Politika yüklenemedi.",
+    "saveError": "Kaydedilemedi."
   }
 }
