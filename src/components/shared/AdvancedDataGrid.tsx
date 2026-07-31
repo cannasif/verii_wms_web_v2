@@ -1063,7 +1063,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
                 </OpsActionButton>
               </PopoverPrimitive.Trigger>
               <PopoverPrimitive.Portal container={typeof document !== 'undefined' ? document.body : undefined}>
-                <PopoverPrimitive.Content role="menu" align="start" sideOffset={8} collisionPadding={8} className="wms-ops-list-popover pointer-events-auto z-[4000] w-72 border-0 p-3 shadow-none outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95">
+                <PopoverPrimitive.Content role="menu" align="start" sideOffset={8} collisionPadding={8} className="wms-ops-list-popover wms-ops-list-popover--search-fields pointer-events-auto z-[4000] w-72 border-0 p-3 shadow-none outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95">
                   <div className="wms-ops-list-popover__section-title">{t('dataGrid.searchFields')}</div>
                   <p className="mb-2 px-2 text-xs text-[var(--wms-app-text-muted)]">{t('dataGrid.searchFieldsHelp')}</p>
                   <GridMenuSearch value={searchFieldMenuSearch} onChange={setSearchFieldMenuSearch} placeholder={t('dataGrid.menuSearchPlaceholder')} clearLabel={t('dataGrid.clearMenuSearch')}/>

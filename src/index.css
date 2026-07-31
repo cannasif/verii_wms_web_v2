@@ -6472,7 +6472,7 @@ html:not(.dark) .wms-ops-form .wms-ops-field-shell::before {
 
 .wms-ops-list .wms-ops-list-search {
   position: relative;
-  width: 100%;
+  width: 16rem;
   max-width: 16rem;
 }
 
@@ -9304,7 +9304,8 @@ html:not(.skin-premium) .wms-ops-advanced-filter .wms-ops-field-shell {
   color: color-mix(in oklab, var(--wms-ops-accent) 65%, #64748b);
 }
 
-.wms-ops-list-popover--columns {
+.wms-ops-list-popover--columns,
+.wms-ops-list-popover--search-fields {
   max-height: min(
     32rem,
     calc(100dvh - 2rem),
@@ -9312,6 +9313,12 @@ html:not(.skin-premium) .wms-ops-advanced-filter .wms-ops-field-shell {
   );
   overflow-y: auto;
   overscroll-behavior: contain;
+}
+
+.wms-ops-list-popover--search-fields .wms-ops-list-popover__scroll {
+  max-height: 14rem;
+  overflow-y: auto;
+  padding-right: 0.125rem;
 }
 
 .wms-ops-list-popover--columns .wms-ops-list-popover__section-title {
@@ -20161,6 +20168,7 @@ html.skin-premium .wms-ops-list .wms-ops-list-search.wms-ops-field-shell::before
 }
 
 html.skin-premium .wms-ops-list .wms-ops-list-search {
+  width: 18rem;
   max-width: 18rem;
   border-radius: 0.7rem;
   background: transparent;
