@@ -1,0 +1,49 @@
+{
+  "hub": {
+    "eyebrow": "Gestion de la production", "title": "Centre de planification et d'ordres de production",
+    "description": "Gérez l'article produit, la référence de nomenclature, le poste de charge, les besoins en matières, les sorties et les responsables sous un seul plan auditable.",
+    "create": { "title": "Créer un plan de production", "text": "Planifiez ensemble l'ordre, la sortie principale, les besoins en matières et l'affectation." },
+    "list": { "title": "Plans de production", "text": "Suivez les plans de production brouillon, publiés et en cours dans une liste côté serveur." },
+    "boundary": { "title": "Première tranche opérationnelle", "text": "Cette version enregistre et publie les plans et ordres en toute sécurité. La consommation physique, le reporting de production et les mouvements de stock de sortie seront liés à ces identités dans la tranche d'exécution." }
+  },
+  "create": {
+    "eyebrow": "Nouveau plan de production", "title": "Créer un plan de production et un ordre",
+    "description": "L'unité provient de la fiche de stock ; la sortie principale est validée par rapport à l'article produit et à la quantité.",
+    "sections": { "plan": "Plan et planification", "order": "Ordre de production et sortie principale", "materials": "Nomenclature / besoins en matières", "notes": "Notes d'opération" },
+    "fields": {
+      "sourceWarehouse": "Entrepôt source des matières *", "targetWarehouse": "Entrepôt cible de sortie *", "series": "Série de document de production *",
+      "documentDate": "Date du document *", "planType": "Type de plan *", "executionMode": "Mode d'exécution *", "priority": "Priorité *",
+      "plannedStart": "Début planifié", "plannedEnd": "Fin planifiée", "producedStock": "Article produit *", "configurationCode": "Code de configuration",
+      "quantity": "Quantité planifiée *", "unit": "Unité", "externalOrderNo": "N° d'ordre ERP / externe", "workCenter": "Poste de charge",
+      "bom": "Référence de nomenclature", "routing": "Référence de gamme", "assignee": "Responsable principal", "materialStock": "Article matière",
+      "requiredQuantity": "Quantité requise", "issueMode": "Mode de sortie", "mandatory": "Matière obligatoire"
+    },
+    "material": "Matière {{number}}", "addMaterial": "Ajouter une matière", "save": "Créer le plan de production", "saving": "Création…",
+    "success": "Plan de production créé.", "failed": "Le plan de production n'a pas pu être créé.",
+    "validation": {
+      "header": "L'entrepôt source, l'entrepôt cible, la série de documents et l'article produit sont obligatoires.",
+      "quantity": "La quantité de production planifiée doit être supérieure à zéro.",
+      "assignment": "L'ordre de production doit être affecté à un utilisateur ou à un poste de charge.",
+      "materialQuantity": "Les quantités de besoin en matières doivent être supérieures à zéro."
+    },
+    "result": { "title": "Plan de production créé", "summary": "{{orderCount}} ordre · {{materialCount}} matière · {{outputCount}} sortie", "new": "Créer un autre", "list": "Ouvrir les plans" }
+  },
+  "list": {
+    "title": "Plans de production", "description": "Suivez la progression des plans, ordres, matières et sorties avec recherche, filtrage et tri côté serveur.",
+    "create": "Nouveau plan de production", "loadFailed": "Le plan de production n'a pas pu être chargé.", "release": "Publier", "delete": "Supprimer le brouillon", "detail": "Afficher les détails",
+    "columns": { "documentNo": "N° de plan", "documentDate": "Date du document", "planType": "Type de plan", "executionMode": "Exécution", "status": "Statut", "orders": "Ordres", "materials": "Matières", "planned": "Planifié", "completed": "Terminé", "actions": "Actions" }
+  },
+  "detail": { "materials": "Besoins en matières", "outputs": "Sorties attendues", "assignees": "Responsables", "workCenter": "Poste de charge" },
+  "lifecycle": {
+    "release": { "title": "Publier le plan de production", "text": "Les ordres de {{documentNo}} seront ouverts pour exécution.", "action": "Publier", "success": "Plan de production publié." },
+    "delete": { "title": "Supprimer le plan de production brouillon", "text": "Le brouillon {{documentNo}} et ses lignes de planification seront supprimés.", "action": "Supprimer le brouillon", "success": "Plan de production supprimé." },
+    "failed": "L'opération n'a pas pu être terminée."
+  },
+  "enum": {
+    "planType": { "MakeToStock": "Fabrication sur stock", "MakeToOrder": "Fabrication sur commande", "Rework": "Retouche", "Disassembly": "Démontage" },
+    "executionMode": { "Serial": "Séquentiel", "Parallel": "Parallèle" },
+    "issueMode": { "Manual": "Sortie manuelle", "Backflush": "Décomptage automatique" },
+    "status": { "Draft": "Brouillon", "Released": "Publié", "InProgress": "En cours", "PartiallyCompleted": "Partiellement terminé", "Completed": "Terminé", "Cancelled": "Annulé" }
+  },
+  "common": { "close": "Fermer", "cancel": "Annuler", "processing": "Traitement en cours…" }
+}

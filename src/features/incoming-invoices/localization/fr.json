@@ -1,0 +1,205 @@
+{
+  "archive": {
+    "title": "e-Facture / e-Archive entrante",
+    "description": "Archivez en toute sécurité les documents entrants de l'intégrateur ERP par UUID, validez les lignes UBL et préparez-les pour la réception de marchandises."
+  },
+  "columns": {
+    "invoiceNo": "N° de facture",
+    "kind": "Type de document",
+    "issueDate": "Date d'émission",
+    "supplierTaxNo": "N° fiscal fournisseur",
+    "supplier": "Fournisseur",
+    "payable": "À payer",
+    "lines": "Rapprochées / Lignes",
+    "archiveStatus": "Statut d'archivage",
+    "validation": "Validation",
+    "importedAt": "Archivé le",
+    "actions": "Actions"
+  },
+  "actions": {
+    "detail": "Voir les détails",
+    "importByUuid": "Récupérer par UUID",
+    "cancel": "Annuler",
+    "import": "Archiver le document",
+    "showPdf": "Voir le PDF",
+    "downloadUbl": "Télécharger l'UBL",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "save": "Enregistrer"
+  },
+  "messages": {
+    "detailFailed": "Les détails de la facture n'ont pas pu être chargés.",
+    "connectionsFailed": "Les connexions eLogo n'ont pas pu être chargées.",
+    "alreadyArchived": "Le document était déjà archivé ; l'enregistrement existant a été ouvert.",
+    "imported": "Le document a été ajouté à l'archive sécurisée.",
+    "importFailed": "Le document n'a pas pu être récupéré depuis l'intégrateur.",
+    "documentFailed": "Le fichier du document n'a pas pu être ouvert.",
+    "connectionDeleted": "La connexion eLogo a été supprimée.",
+    "connectionDeleteFailed": "La connexion eLogo n'a pas pu être supprimée.",
+    "connectionUpdated": "La connexion eLogo a été mise à jour.",
+    "connectionCreated": "La connexion eLogo a été créée.",
+    "connectionSaveFailed": "La connexion eLogo n'a pas pu être enregistrée."
+  },
+  "import": {
+    "eyebrow": "Transfert sécurisé de documents",
+    "title": "Archiver un document entrant",
+    "description": "Interrogez l'intégrateur avec le numéro universel du document. Le mode automatique essaie d'abord l'e-Facture, puis l'e-Archive.",
+    "connection": "Société / connexion eLogo",
+    "documentKind": "Type de document",
+    "uuid": "UUID du document",
+    "noConnection": "Il n'y a aucune connexion eLogo active avec identifiants pour cette agence. Définissez d'abord une connexion.",
+    "includePdf": "Archiver également la copie PDF",
+    "includePdfDescription": "L'UBL est toujours récupéré ; si disponible, le PDF lisible est stocké dans un espace de fichiers privé.",
+    "securityNote": "Les identifiants de session sont utilisés uniquement par le serveur. Les mots de passe ne sont jamais renvoyés au client ; les fichiers UBL et PDF ne sont pas stockés en Base64 dans la base de données."
+  },
+  "kind": {
+    "automatic": "Détecter automatiquement",
+    "automaticDescription": "Interroge d'abord l'e-Facture, puis l'e-Archive si introuvable.",
+    "eInvoice": "e-Facture",
+    "eArchive": "Facture e-Archive"
+  },
+  "validation": {
+    "connectionRequired": "Sélectionnez une connexion eLogo.",
+    "uuid": "Saisissez un UUID de document valide.",
+    "requiredFields": "Le code, le nom, le n° fiscal, le nom d'utilisateur et la source sont obligatoires.",
+    "passwordRequired": "Un mot de passe est requis pour une nouvelle connexion."
+  },
+  "archiveStatus": {
+    "Imported": "Archivé",
+    "NeedsReview": "En attente de rapprochement",
+    "ReadyForReceipt": "Prêt pour réception",
+    "PartiallyLinked": "Partiellement lié",
+    "Linked": "Lié à la réception",
+    "Rejected": "Rejeté"
+  },
+  "validationStatus": {
+    "Parsed": "Validé",
+    "Warning": "Avertissement",
+    "Invalid": "Invalide"
+  },
+  "detail": {
+    "issueDate": "Date d'émission",
+    "supplier": "Fournisseur",
+    "customer": "Client",
+    "payable": "À payer",
+    "invoiceType": "Type de facture",
+    "profile": "Scénario / Profil",
+    "orderReference": "Référence de commande",
+    "despatchReference": "Référence de bon de livraison",
+    "reviewRequired": "{{count}} ligne(s) n'ont pas pu être rapprochées d'une fiche de stock ERP",
+    "stockMatchesReady": "Toutes les lignes sont rapprochées des fiches de stock ERP",
+    "lines": "Lignes de facture",
+    "lineSummary": "{{visible}} lignes affichées sur {{total}} ; {{matched}} lignes rapprochées.",
+    "searchLines": "Rechercher code stock, nom ou n° de ligne...",
+    "stock": "Stock",
+    "description": "Description",
+    "quantity": "Quantité",
+    "unitPrice": "Prix unitaire",
+    "tax": "TVA",
+    "total": "Montant de la ligne",
+    "match": "Rapprochement de stock"
+  },
+  "match": {
+    "stockMatched": "Stock rapproché",
+    "unmatched": "Non rapproché"
+  },
+  "receipt": {
+    "title": "Le lien avec la réception de marchandises est volontairement contrôlé",
+    "nextStep": "Une facture ne crée jamais de stock à elle seule. Une tâche est créée à partir des lignes rapprochées ; le moteur de réception existant ne comptabilise le stock qu'après validation de l'emplacement, du lot, du numéro de série et de la quantité physique.",
+    "createTask": "Créer une tâche de réception"
+  },
+  "receiptDialog": {
+    "eyebrow": "De la facture à l'opération contrôlée",
+    "title": "Créer une tâche de réception de marchandises",
+    "description": "Convertissez les lignes sélectionnées de la facture {{invoiceNo}} en une tâche physique de réception de marchandises.",
+    "supplier": "Fiche fournisseur ERP",
+    "waybillDate": "Date du bon de livraison",
+    "isElectronic": "Bon de livraison électronique",
+    "despatchReference": "Référence de bon de livraison UBL : {{value}}",
+    "noDespatchReference": "L'UBL ne contient aucune référence de bon de livraison. Saisissez le numéro figurant sur le document physique.",
+    "warehouse": "Entrepôt cible",
+    "location": "Emplacement de réception / préparation",
+    "series": "Série de numérotation de réception",
+    "priority": "Priorité",
+    "labelStrategy": "Stratégie d'étiquetage",
+    "plannedArrival": "Arrivée planifiée",
+    "descriptionLabel": "Note d'opération",
+    "create": "Créer la tâche",
+    "document": {
+      "title": "Document et fournisseur"
+    },
+    "operation": {
+      "title": "Opération d'entrepôt"
+    },
+    "assignment": {
+      "title": "Responsables de la tâche",
+      "placeholder": "Ajouter un utilisateur d'opération"
+    },
+    "lines": {
+      "title": "Lignes de facture à transférer",
+      "quantity": "Quantité de la tâche",
+      "summary": "Facture : {{invoice}} · Lié : {{linked}} · Restant : {{remaining}} {{unit}}",
+      "trackingNotice": "La facture UBL est la source du stock, de la quantité et du prix ; le lot/série/péremption constituent la preuve physique de réception. Ces valeurs ne sont jamais inventées lors de l'import de la facture et sont saisies par code-barres selon la politique de suivi de stock lors de l'exécution de la tâche assignée.",
+      "total": "Quantité totale sélectionnée"
+    },
+    "labels": {
+      "none": "Aucune étiquette",
+      "preGenerate": "Générer les étiquettes à l'avance",
+      "supplier": "Étiquette fournisseur",
+      "onReceipt": "Générer à la réception"
+    },
+    "validation": {
+      "supplier": "Sélectionnez une fiche fournisseur ERP.",
+      "waybill": "Un numéro de bon de livraison normal doit contenir exactement 15 chiffres.",
+      "eWaybill": "Le numéro e-bon de livraison/GIB doit contenir exactement 15 caractères imprimables, symboles inclus.",
+      "operation": "Sélectionnez l'entrepôt, l'emplacement de réception et la série de numérotation.",
+      "assignee": "Affectez au moins un utilisateur d'opération.",
+      "lines": "Sélectionnez au moins une ligne de facture.",
+      "quantity": "La quantité de la ligne {{line}} est invalide. Disponible : {{remaining}}."
+    },
+    "messages": {
+      "created": "La tâche de réception {{documentNo}} a été créée.",
+      "replayed": "La même requête avait déjà été traitée ; la tâche existante a été ouverte.",
+      "failed": "La tâche de réception n'a pas pu être créée à partir de la facture."
+    }
+  },
+  "connections": {
+    "title": "Connexions société eLogo",
+    "description": "Gérez les comptes société par agence utilisés pour récupérer les documents e-Facture et e-Archive entrants.",
+    "add": "Nouvelle connexion eLogo",
+    "edit": "Modifier la connexion eLogo",
+    "confirmDelete": "Voulez-vous vraiment supprimer la connexion {{name}} ?",
+    "formDescription": "Définissez les informations de session de la société et de l'intégrateur. Les mots de passe enregistrés ne sont jamais affichés.",
+    "securityNote": "Le mot de passe est protégé par la clé de protection des données de l'application. Un point de terminaison ne peut être utilisé que s'il respecte les politiques HTTPS et de liste blanche.",
+    "columns": {
+      "name": "Connexion",
+      "vkn": "N° fiscal",
+      "username": "Utilisateur",
+      "source": "Source",
+      "configured": "Identifiants définis",
+      "default": "Par défaut",
+      "active": "Actif"
+    },
+    "fields": {
+      "key": "Code de connexion",
+      "name": "Nom affiché",
+      "vkn": "N° fiscal",
+      "source": "Source / Code société",
+      "username": "Nom d'utilisateur",
+      "newPassword": "Nouveau mot de passe",
+      "password": "Mot de passe",
+      "keepPassword": "Laissez vide pour conserver le mot de passe existant",
+      "endpoint": "URL du service PostBox",
+      "application": "Nom de l'application",
+      "version": "Version du service",
+      "timeout": "Délai d'expiration (secondes)",
+      "description": "Description",
+      "active": "Connexion active",
+      "default": "Connexion par défaut pour cette agence"
+    }
+  },
+  "common": {
+    "yes": "Oui",
+    "no": "Non"
+  }
+}

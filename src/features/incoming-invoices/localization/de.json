@@ -1,0 +1,205 @@
+{
+  "archive": {
+    "title": "Eingehende e-Rechnung / e-Archiv",
+    "description": "Archivieren Sie eingehende Dokumente vom ERP-Integrator sicher per UUID, validieren Sie UBL-Positionen und bereiten Sie sie für den Wareneingang vor."
+  },
+  "columns": {
+    "invoiceNo": "Rechnungsnr.",
+    "kind": "Belegtyp",
+    "issueDate": "Belegdatum",
+    "supplierTaxNo": "Steuernummer Lieferant",
+    "supplier": "Lieferant",
+    "payable": "Zu zahlender Betrag",
+    "lines": "Zugeordnet / Positionen",
+    "archiveStatus": "Archivstatus",
+    "validation": "Validierung",
+    "importedAt": "Archiviert am",
+    "actions": "Aktionen"
+  },
+  "actions": {
+    "detail": "Details anzeigen",
+    "importByUuid": "Per UUID abrufen",
+    "cancel": "Abbrechen",
+    "import": "Dokument archivieren",
+    "showPdf": "PDF anzeigen",
+    "downloadUbl": "UBL herunterladen",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "save": "Speichern"
+  },
+  "messages": {
+    "detailFailed": "Rechnungsdetails konnten nicht geladen werden.",
+    "connectionsFailed": "eLogo-Verbindungen konnten nicht geladen werden.",
+    "alreadyArchived": "Das Dokument wurde bereits archiviert; der vorhandene Datensatz wurde geöffnet.",
+    "imported": "Das Dokument wurde im sicheren Archiv gespeichert.",
+    "importFailed": "Das Dokument konnte nicht vom Integrator abgerufen werden.",
+    "documentFailed": "Die Dokumentdatei konnte nicht geöffnet werden.",
+    "connectionDeleted": "Die eLogo-Verbindung wurde gelöscht.",
+    "connectionDeleteFailed": "Die eLogo-Verbindung konnte nicht gelöscht werden.",
+    "connectionUpdated": "Die eLogo-Verbindung wurde aktualisiert.",
+    "connectionCreated": "Die eLogo-Verbindung wurde erstellt.",
+    "connectionSaveFailed": "Die eLogo-Verbindung konnte nicht gespeichert werden."
+  },
+  "import": {
+    "eyebrow": "Sichere Dokumentübertragung",
+    "title": "Eingehendes Dokument archivieren",
+    "description": "Fragen Sie den Integrator mit der universellen Belegnummer ab. Im Automatikmodus wird zuerst e-Rechnung, dann e-Archiv versucht.",
+    "connection": "Firma / eLogo-Verbindung",
+    "documentKind": "Belegtyp",
+    "uuid": "Beleg-UUID",
+    "noConnection": "Für diese Filiale gibt es keine aktive eLogo-Verbindung mit Anmeldedaten. Definieren Sie zuerst eine Verbindung.",
+    "includePdf": "PDF-Kopie ebenfalls archivieren",
+    "includePdfDescription": "UBL wird immer abgerufen; falls verfügbar, wird das lesbare PDF im privaten Dateispeicher abgelegt.",
+    "securityNote": "Sitzungsanmeldedaten werden nur vom Server verwendet. Passwörter werden nie an den Client zurückgegeben; UBL- und PDF-Dateien werden nicht als Base64 in der Datenbank gespeichert."
+  },
+  "kind": {
+    "automatic": "Automatisch erkennen",
+    "automaticDescription": "Fragt zuerst e-Rechnung ab, dann e-Archiv, falls nicht gefunden.",
+    "eInvoice": "e-Rechnung",
+    "eArchive": "e-Archiv-Rechnung"
+  },
+  "validation": {
+    "connectionRequired": "Wählen Sie eine eLogo-Verbindung.",
+    "uuid": "Geben Sie eine gültige Beleg-UUID ein.",
+    "requiredFields": "Code, Name, Steuernummer, Benutzername und Quelle sind erforderlich.",
+    "passwordRequired": "Für eine neue Verbindung ist ein Passwort erforderlich."
+  },
+  "archiveStatus": {
+    "Imported": "Archiviert",
+    "NeedsReview": "Wartet auf Zuordnung",
+    "ReadyForReceipt": "Bereit für Wareneingang",
+    "PartiallyLinked": "Teilweise verknüpft",
+    "Linked": "Mit Wareneingang verknüpft",
+    "Rejected": "Abgelehnt"
+  },
+  "validationStatus": {
+    "Parsed": "Validiert",
+    "Warning": "Warnung",
+    "Invalid": "Ungültig"
+  },
+  "detail": {
+    "issueDate": "Belegdatum",
+    "supplier": "Lieferant",
+    "customer": "Kunde",
+    "payable": "Zu zahlender Betrag",
+    "invoiceType": "Rechnungstyp",
+    "profile": "Szenario / Profil",
+    "orderReference": "Auftragsreferenz",
+    "despatchReference": "Lieferscheinreferenz",
+    "reviewRequired": "{{count}} Position(en) konnten keiner ERP-Bestandskarte zugeordnet werden",
+    "stockMatchesReady": "Alle Positionen sind ERP-Bestandskarten zugeordnet",
+    "lines": "Rechnungspositionen",
+    "lineSummary": "{{visible}} von {{total}} Positionen angezeigt; {{matched}} Positionen zugeordnet.",
+    "searchLines": "Bestandscode, Name oder Positionsnr. suchen...",
+    "stock": "Bestand",
+    "description": "Beschreibung",
+    "quantity": "Menge",
+    "unitPrice": "Einzelpreis",
+    "tax": "MwSt.",
+    "total": "Positionsbetrag",
+    "match": "Bestandsabgleich"
+  },
+  "match": {
+    "stockMatched": "Bestand zugeordnet",
+    "unmatched": "Nicht zugeordnet"
+  },
+  "receipt": {
+    "title": "Wareneingangsverknüpfung ist bewusst kontrolliert",
+    "nextStep": "Eine Rechnung erzeugt niemals von sich aus Bestand. Aus zugeordneten Positionen wird ein Auftrag erstellt; die bestehende Wareneingangs-Engine bucht den Bestand erst nach Validierung von Lagerplatz, Los, Serie und physischer Menge.",
+    "createTask": "Wareneingangsauftrag erstellen"
+  },
+  "receiptDialog": {
+    "eyebrow": "Von der Rechnung zum kontrollierten Vorgang",
+    "title": "Wareneingangsauftrag erstellen",
+    "description": "Wandeln Sie ausgewählte Positionen der Rechnung {{invoiceNo}} in einen physischen Wareneingangsauftrag um.",
+    "supplier": "ERP-Lieferantenkarte",
+    "waybillDate": "Lieferscheindatum",
+    "isElectronic": "Elektronischer Lieferschein",
+    "despatchReference": "UBL-Lieferscheinreferenz: {{value}}",
+    "noDespatchReference": "Die UBL enthält keine Lieferscheinreferenz. Geben Sie die Nummer vom physischen Dokument ein.",
+    "warehouse": "Ziellager",
+    "location": "Annahme-/Bereitstellungsplatz",
+    "series": "Wareneingangs-Nummernserie",
+    "priority": "Priorität",
+    "labelStrategy": "Etikettenstrategie",
+    "plannedArrival": "Geplante Ankunft",
+    "descriptionLabel": "Betriebshinweis",
+    "create": "Auftrag erstellen",
+    "document": {
+      "title": "Beleg und Lieferant"
+    },
+    "operation": {
+      "title": "Lagervorgang"
+    },
+    "assignment": {
+      "title": "Auftragszuständige",
+      "placeholder": "Betriebsbenutzer hinzufügen"
+    },
+    "lines": {
+      "title": "Zu übertragende Rechnungspositionen",
+      "quantity": "Auftragsmenge",
+      "summary": "Rechnung: {{invoice}} · Verknüpft: {{linked}} · Verbleibend: {{remaining}} {{unit}}",
+      "trackingNotice": "Die UBL-Rechnung ist die Quelle für Bestand, Menge und Preis; Los/Serie/Verfall sind physische Wareneingangsnachweise. Diese Werte werden beim Rechnungsimport nie erfunden und während der Auftragsausführung gemäß der Bestandsverfolgungsrichtlinie per Barcode erfasst.",
+      "total": "Ausgewählte Gesamtmenge"
+    },
+    "labels": {
+      "none": "Kein Etikett",
+      "preGenerate": "Etiketten vorab erzeugen",
+      "supplier": "Lieferantenetikett",
+      "onReceipt": "Bei Wareneingang erzeugen"
+    },
+    "validation": {
+      "supplier": "Wählen Sie eine ERP-Lieferantenkarte.",
+      "waybill": "Eine normale Lieferscheinnummer muss genau 15 Ziffern enthalten.",
+      "eWaybill": "Die e-Lieferschein-/GIB-Nummer muss genau 15 druckbare Zeichen einschließlich Symbolen enthalten.",
+      "operation": "Wählen Sie Lager, Annahmeplatz und Nummernserie.",
+      "assignee": "Weisen Sie mindestens einen Betriebsbenutzer zu.",
+      "lines": "Wählen Sie mindestens eine Rechnungsposition.",
+      "quantity": "Die Menge in Position {{line}} ist ungültig. Verfügbar: {{remaining}}."
+    },
+    "messages": {
+      "created": "Wareneingangsauftrag {{documentNo}} wurde erstellt.",
+      "replayed": "Die gleiche Anfrage wurde bereits zuvor abgeschlossen; der vorhandene Auftrag wurde geöffnet.",
+      "failed": "Der Wareneingangsauftrag konnte nicht aus der Rechnung erstellt werden."
+    }
+  },
+  "connections": {
+    "title": "eLogo-Firmenverbindungen",
+    "description": "Verwalten Sie filialbezogene Firmenkonten für den Abruf eingehender e-Rechnungs- und e-Archiv-Dokumente.",
+    "add": "Neue eLogo-Verbindung",
+    "edit": "eLogo-Verbindung bearbeiten",
+    "confirmDelete": "Möchten Sie die Verbindung {{name}} wirklich löschen?",
+    "formDescription": "Definieren Sie Firmen- und Integrator-Sitzungsdaten. Gespeicherte Passwörter werden nie angezeigt.",
+    "securityNote": "Das Passwort wird mit dem Datenschutzschlüssel der Anwendung geschützt. Ein Endpunkt kann nur verwendet werden, wenn er die HTTPS- und Zulassungslisten-Richtlinien erfüllt.",
+    "columns": {
+      "name": "Verbindung",
+      "vkn": "Steuernummer",
+      "username": "Benutzername",
+      "source": "Quelle",
+      "configured": "Anmeldedaten hinterlegt",
+      "default": "Standard",
+      "active": "Aktiv"
+    },
+    "fields": {
+      "key": "Verbindungscode",
+      "name": "Anzeigename",
+      "vkn": "Steuernummer",
+      "source": "Quelle / Firmencode",
+      "username": "Benutzername",
+      "newPassword": "Neues Passwort",
+      "password": "Passwort",
+      "keepPassword": "Leer lassen, um das vorhandene Passwort beizubehalten",
+      "endpoint": "PostBox-Dienst-URL",
+      "application": "Anwendungsname",
+      "version": "Dienstversion",
+      "timeout": "Zeitüberschreitung (Sekunden)",
+      "description": "Beschreibung",
+      "active": "Verbindung aktiv",
+      "default": "Standardverbindung für diese Filiale"
+    }
+  },
+  "common": {
+    "yes": "Ja",
+    "no": "Nein"
+  }
+}

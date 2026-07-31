@@ -1,0 +1,49 @@
+{
+  "hub": {
+    "eyebrow": "Produktionsmanagement", "title": "Produktionsplanungs- und Auftragszentrum",
+    "description": "Verwalten Sie das produzierte Teil, die Stücklistenreferenz, den Arbeitsplatz, den Materialbedarf, die Ausgaben und die Zuständigen unter einem prüfbaren Plan.",
+    "create": { "title": "Produktionsplan erstellen", "text": "Planen Sie Auftrag, Hauptausgabe, Materialbedarf und Zuweisung gemeinsam." },
+    "list": { "title": "Produktionspläne", "text": "Verfolgen Sie Entwurfs-, freigegebene und laufende Produktionspläne in einer serverseitigen Liste." },
+    "boundary": { "title": "Erste operative Ausbaustufe", "text": "Diese Version speichert und gibt Pläne und Aufträge sicher frei. Physischer Verbrauch, Produktionsmeldung und Ausgabebestandsbewegungen werden in der Ausführungsstufe mit diesen Kennungen verknüpft." }
+  },
+  "create": {
+    "eyebrow": "Neuer Produktionsplan", "title": "Produktionsplan und Auftrag erstellen",
+    "description": "Die Einheit stammt aus der Bestandskarte; die Hauptausgabe wird gegen das produzierte Teil und die Menge validiert.",
+    "sections": { "plan": "Plan und Terminierung", "order": "Produktionsauftrag und Hauptausgabe", "materials": "Stückliste / Materialbedarf", "notes": "Betriebshinweise" },
+    "fields": {
+      "sourceWarehouse": "Materialquelllager *", "targetWarehouse": "Ausgabezellager *", "series": "Produktionsbelegserie *",
+      "documentDate": "Belegdatum *", "planType": "Plantyp *", "executionMode": "Ausführungsmodus *", "priority": "Priorität *",
+      "plannedStart": "Geplanter Beginn", "plannedEnd": "Geplantes Ende", "producedStock": "Produziertes Teil *", "configurationCode": "Konfigurationscode",
+      "quantity": "Geplante Menge *", "unit": "Einheit", "externalOrderNo": "ERP-/externe Auftragsnr.", "workCenter": "Arbeitsplatz",
+      "bom": "Stücklistenreferenz", "routing": "Arbeitsplanreferenz", "assignee": "Hauptverantwortlicher", "materialStock": "Materialartikel",
+      "requiredQuantity": "Benötigte Menge", "issueMode": "Entnahmemethode", "mandatory": "Pflichtmaterial"
+    },
+    "material": "Material {{number}}", "addMaterial": "Material hinzufügen", "save": "Produktionsplan erstellen", "saving": "Wird erstellt…",
+    "success": "Produktionsplan erstellt.", "failed": "Produktionsplan konnte nicht erstellt werden.",
+    "validation": {
+      "header": "Quelllager, Ziellager, Belegserie und produziertes Teil sind erforderlich.",
+      "quantity": "Die geplante Produktionsmenge muss größer als null sein.",
+      "assignment": "Der Produktionsauftrag muss einem Benutzer oder Arbeitsplatz zugewiesen werden.",
+      "materialQuantity": "Materialbedarfsmengen müssen größer als null sein."
+    },
+    "result": { "title": "Produktionsplan erstellt", "summary": "{{orderCount}} Auftrag · {{materialCount}} Material · {{outputCount}} Ausgabe", "new": "Weiteren erstellen", "list": "Pläne öffnen" }
+  },
+  "list": {
+    "title": "Produktionspläne", "description": "Verfolgen Sie Plan-, Auftrags-, Material- und Ausgabefortschritt mit serverseitiger Suche, Filterung und Sortierung.",
+    "create": "Neuer Produktionsplan", "loadFailed": "Produktionsplan konnte nicht geladen werden.", "release": "Freigeben", "delete": "Entwurf löschen", "detail": "Details anzeigen",
+    "columns": { "documentNo": "Plan-Nr.", "documentDate": "Belegdatum", "planType": "Plantyp", "executionMode": "Ausführung", "status": "Status", "orders": "Aufträge", "materials": "Materialien", "planned": "Geplant", "completed": "Abgeschlossen", "actions": "Aktionen" }
+  },
+  "detail": { "materials": "Materialbedarf", "outputs": "Erwartete Ausgaben", "assignees": "Zuständige", "workCenter": "Arbeitsplatz" },
+  "lifecycle": {
+    "release": { "title": "Produktionsplan freigeben", "text": "Aufträge in {{documentNo}} werden zur Ausführung geöffnet.", "action": "Freigeben", "success": "Produktionsplan freigegeben." },
+    "delete": { "title": "Entwurfs-Produktionsplan löschen", "text": "Entwurf {{documentNo}} und dessen Planungszeilen werden gelöscht.", "action": "Entwurf löschen", "success": "Produktionsplan gelöscht." },
+    "failed": "Der Vorgang konnte nicht abgeschlossen werden."
+  },
+  "enum": {
+    "planType": { "MakeToStock": "Lagerfertigung", "MakeToOrder": "Auftragsfertigung", "Rework": "Nacharbeit", "Disassembly": "Demontage" },
+    "executionMode": { "Serial": "Seriell", "Parallel": "Parallel" },
+    "issueMode": { "Manual": "Manuelle Entnahme", "Backflush": "Rückwärtsverbuchung" },
+    "status": { "Draft": "Entwurf", "Released": "Freigegeben", "InProgress": "In Bearbeitung", "PartiallyCompleted": "Teilweise abgeschlossen", "Completed": "Abgeschlossen", "Cancelled": "Storniert" }
+  },
+  "common": { "close": "Schließen", "cancel": "Abbrechen", "processing": "Wird verarbeitet…" }
+}

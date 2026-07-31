@@ -1,0 +1,49 @@
+{
+  "hub": {
+    "eyebrow": "Gestione della produzione", "title": "Centro di pianificazione e ordini di produzione",
+    "description": "Gestisci l'articolo prodotto, il riferimento alla distinta base, il centro di lavoro, il fabbisogno di materiali, le uscite e gli assegnatari in un unico piano verificabile.",
+    "create": { "title": "Crea piano di produzione", "text": "Pianifica insieme l'ordine, l'uscita principale, il fabbisogno di materiali e l'assegnazione." },
+    "list": { "title": "Piani di produzione", "text": "Traccia i piani di produzione in bozza, rilasciati e in corso in un elenco lato server." },
+    "boundary": { "title": "Prima fase operativa", "text": "Questa versione registra e rilascia piani e ordini in modo sicuro. Il consumo fisico, la rendicontazione di produzione e i movimenti di stock in uscita saranno collegati a queste identità nella fase di esecuzione." }
+  },
+  "create": {
+    "eyebrow": "Nuovo piano di produzione", "title": "Crea piano di produzione e ordine",
+    "description": "L'unità proviene dalla scheda di stock; l'uscita principale viene convalidata rispetto all'articolo prodotto e alla quantità.",
+    "sections": { "plan": "Piano e pianificazione temporale", "order": "Ordine di produzione e uscita principale", "materials": "Distinta base / fabbisogno materiali", "notes": "Note operative" },
+    "fields": {
+      "sourceWarehouse": "Magazzino origine materiali *", "targetWarehouse": "Magazzino destinazione uscita *", "series": "Serie documento di produzione *",
+      "documentDate": "Data documento *", "planType": "Tipo di piano *", "executionMode": "Modalità di esecuzione *", "priority": "Priorità *",
+      "plannedStart": "Inizio pianificato", "plannedEnd": "Fine pianificata", "producedStock": "Articolo prodotto *", "configurationCode": "Codice configurazione",
+      "quantity": "Quantità pianificata *", "unit": "Unità", "externalOrderNo": "N. ordine ERP / esterno", "workCenter": "Centro di lavoro",
+      "bom": "Riferimento distinta base", "routing": "Riferimento ciclo di lavorazione", "assignee": "Responsabile principale", "materialStock": "Articolo materiale",
+      "requiredQuantity": "Quantità richiesta", "issueMode": "Modalità di prelievo", "mandatory": "Materiale obbligatorio"
+    },
+    "material": "Materiale {{number}}", "addMaterial": "Aggiungi materiale", "save": "Crea piano di produzione", "saving": "Creazione…",
+    "success": "Piano di produzione creato.", "failed": "Impossibile creare il piano di produzione.",
+    "validation": {
+      "header": "Magazzino origine, magazzino destinazione, serie documento e articolo prodotto sono obbligatori.",
+      "quantity": "La quantità di produzione pianificata deve essere maggiore di zero.",
+      "assignment": "L'ordine di produzione deve essere assegnato a un utente o a un centro di lavoro.",
+      "materialQuantity": "Le quantità di fabbisogno materiali devono essere maggiori di zero."
+    },
+    "result": { "title": "Piano di produzione creato", "summary": "{{orderCount}} ordine · {{materialCount}} materiale · {{outputCount}} uscita", "new": "Creane un altro", "list": "Apri piani" }
+  },
+  "list": {
+    "title": "Piani di produzione", "description": "Traccia l'avanzamento di piani, ordini, materiali e uscite con ricerca, filtro e ordinamento lato server.",
+    "create": "Nuovo piano di produzione", "loadFailed": "Impossibile caricare il piano di produzione.", "release": "Rilascia", "delete": "Elimina bozza", "detail": "Mostra dettagli",
+    "columns": { "documentNo": "N. piano", "documentDate": "Data documento", "planType": "Tipo piano", "executionMode": "Esecuzione", "status": "Stato", "orders": "Ordini", "materials": "Materiali", "planned": "Pianificato", "completed": "Completato", "actions": "Azioni" }
+  },
+  "detail": { "materials": "Fabbisogno materiali", "outputs": "Uscite previste", "assignees": "Responsabili", "workCenter": "Centro di lavoro" },
+  "lifecycle": {
+    "release": { "title": "Rilascia piano di produzione", "text": "Gli ordini in {{documentNo}} saranno aperti per l'esecuzione.", "action": "Rilascia", "success": "Piano di produzione rilasciato." },
+    "delete": { "title": "Elimina piano di produzione in bozza", "text": "La bozza {{documentNo}} e le relative righe di pianificazione saranno eliminate.", "action": "Elimina bozza", "success": "Piano di produzione eliminato." },
+    "failed": "Impossibile completare l'operazione."
+  },
+  "enum": {
+    "planType": { "MakeToStock": "Produzione a magazzino", "MakeToOrder": "Produzione su ordine", "Rework": "Rilavorazione", "Disassembly": "Smontaggio" },
+    "executionMode": { "Serial": "Sequenziale", "Parallel": "Parallelo" },
+    "issueMode": { "Manual": "Prelievo manuale", "Backflush": "Scarico automatico" },
+    "status": { "Draft": "Bozza", "Released": "Rilasciato", "InProgress": "In corso", "PartiallyCompleted": "Parzialmente completato", "Completed": "Completato", "Cancelled": "Annullato" }
+  },
+  "common": { "close": "Chiudi", "cancel": "Annulla", "processing": "Elaborazione…" }
+}

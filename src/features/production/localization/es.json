@@ -1,0 +1,49 @@
+{
+  "hub": {
+    "eyebrow": "Gestión de producción", "title": "Centro de planificación y órdenes de producción",
+    "description": "Gestione el artículo producido, la referencia de lista de materiales, el centro de trabajo, las necesidades de material, las salidas y los responsables bajo un plan auditable.",
+    "create": { "title": "Crear plan de producción", "text": "Planifique juntos la orden, la salida principal, las necesidades de material y la asignación." },
+    "list": { "title": "Planes de producción", "text": "Siga los planes de producción en borrador, publicados y en curso en una lista del lado del servidor." },
+    "boundary": { "title": "Primera fase operativa", "text": "Esta versión registra y publica planes y órdenes de forma segura. El consumo físico, el reporte de producción y los movimientos de stock de salida se vincularán a estas identidades en la fase de ejecución." }
+  },
+  "create": {
+    "eyebrow": "Nuevo plan de producción", "title": "Crear plan de producción y orden",
+    "description": "La unidad proviene de la ficha de stock; la salida principal se valida contra el artículo producido y la cantidad.",
+    "sections": { "plan": "Plan y programación", "order": "Orden de producción y salida principal", "materials": "Lista de materiales / necesidades de material", "notes": "Notas de operación" },
+    "fields": {
+      "sourceWarehouse": "Almacén origen de material *", "targetWarehouse": "Almacén destino de salida *", "series": "Serie de documento de producción *",
+      "documentDate": "Fecha de documento *", "planType": "Tipo de plan *", "executionMode": "Modo de ejecución *", "priority": "Prioridad *",
+      "plannedStart": "Inicio planificado", "plannedEnd": "Fin planificado", "producedStock": "Artículo producido *", "configurationCode": "Código de configuración",
+      "quantity": "Cantidad planificada *", "unit": "Unidad", "externalOrderNo": "N.º de orden ERP / externa", "workCenter": "Centro de trabajo",
+      "bom": "Referencia de lista de materiales", "routing": "Referencia de ruta", "assignee": "Responsable principal", "materialStock": "Artículo de material",
+      "requiredQuantity": "Cantidad requerida", "issueMode": "Modo de salida", "mandatory": "Material obligatorio"
+    },
+    "material": "Material {{number}}", "addMaterial": "Añadir material", "save": "Crear plan de producción", "saving": "Creando…",
+    "success": "Plan de producción creado.", "failed": "No se pudo crear el plan de producción.",
+    "validation": {
+      "header": "Se requieren el almacén origen, el almacén destino, la serie de documento y el artículo producido.",
+      "quantity": "La cantidad de producción planificada debe ser mayor que cero.",
+      "assignment": "La orden de producción debe asignarse a un usuario o centro de trabajo.",
+      "materialQuantity": "Las cantidades de necesidad de material deben ser mayores que cero."
+    },
+    "result": { "title": "Plan de producción creado", "summary": "{{orderCount}} orden · {{materialCount}} material · {{outputCount}} salida", "new": "Crear otro", "list": "Abrir planes" }
+  },
+  "list": {
+    "title": "Planes de producción", "description": "Siga el progreso de planes, órdenes, materiales y salidas con búsqueda, filtrado y ordenación del lado del servidor.",
+    "create": "Nuevo plan de producción", "loadFailed": "No se pudo cargar el plan de producción.", "release": "Publicar", "delete": "Eliminar borrador", "detail": "Ver detalles",
+    "columns": { "documentNo": "N.º de plan", "documentDate": "Fecha de documento", "planType": "Tipo de plan", "executionMode": "Ejecución", "status": "Estado", "orders": "Órdenes", "materials": "Materiales", "planned": "Planificado", "completed": "Completado", "actions": "Acciones" }
+  },
+  "detail": { "materials": "Necesidades de material", "outputs": "Salidas esperadas", "assignees": "Responsables", "workCenter": "Centro de trabajo" },
+  "lifecycle": {
+    "release": { "title": "Publicar plan de producción", "text": "Las órdenes de {{documentNo}} se abrirán para ejecución.", "action": "Publicar", "success": "Plan de producción publicado." },
+    "delete": { "title": "Eliminar plan de producción en borrador", "text": "El borrador {{documentNo}} y sus líneas de planificación se eliminarán.", "action": "Eliminar borrador", "success": "Plan de producción eliminado." },
+    "failed": "No se pudo completar la operación."
+  },
+  "enum": {
+    "planType": { "MakeToStock": "Fabricación para stock", "MakeToOrder": "Fabricación bajo pedido", "Rework": "Reproceso", "Disassembly": "Desmontaje" },
+    "executionMode": { "Serial": "Secuencial", "Parallel": "Paralelo" },
+    "issueMode": { "Manual": "Salida manual", "Backflush": "Descuento automático" },
+    "status": { "Draft": "Borrador", "Released": "Publicado", "InProgress": "En curso", "PartiallyCompleted": "Parcialmente completado", "Completed": "Completado", "Cancelled": "Cancelado" }
+  },
+  "common": { "close": "Cerrar", "cancel": "Cancelar", "processing": "Procesando…" }
+}

@@ -1,0 +1,205 @@
+{
+  "archive": {
+    "title": "e-Fattura / e-Archivio in entrata",
+    "description": "Archivia in modo sicuro i documenti in entrata dall'integratore ERP tramite UUID, convalida le righe UBL e preparale per il ricevimento merci."
+  },
+  "columns": {
+    "invoiceNo": "N. fattura",
+    "kind": "Tipo documento",
+    "issueDate": "Data documento",
+    "supplierTaxNo": "P.IVA/CF fornitore",
+    "supplier": "Fornitore",
+    "payable": "Importo dovuto",
+    "lines": "Abbinate / Righe",
+    "archiveStatus": "Stato archivio",
+    "validation": "Convalida",
+    "importedAt": "Archiviato il",
+    "actions": "Azioni"
+  },
+  "actions": {
+    "detail": "Visualizza dettagli",
+    "importByUuid": "Recupera per UUID",
+    "cancel": "Annulla",
+    "import": "Archivia documento",
+    "showPdf": "Visualizza PDF",
+    "downloadUbl": "Scarica UBL",
+    "edit": "Modifica",
+    "delete": "Elimina",
+    "save": "Salva"
+  },
+  "messages": {
+    "detailFailed": "Impossibile caricare i dettagli della fattura.",
+    "connectionsFailed": "Impossibile caricare le connessioni eLogo.",
+    "alreadyArchived": "Il documento era già archiviato; è stato aperto il record esistente.",
+    "imported": "Il documento è stato aggiunto all'archivio sicuro.",
+    "importFailed": "Impossibile recuperare il documento dall'integratore.",
+    "documentFailed": "Impossibile aprire il file del documento.",
+    "connectionDeleted": "La connessione eLogo è stata eliminata.",
+    "connectionDeleteFailed": "Impossibile eliminare la connessione eLogo.",
+    "connectionUpdated": "La connessione eLogo è stata aggiornata.",
+    "connectionCreated": "La connessione eLogo è stata creata.",
+    "connectionSaveFailed": "Impossibile salvare la connessione eLogo."
+  },
+  "import": {
+    "eyebrow": "Trasferimento sicuro dei documenti",
+    "title": "Archivia documento in entrata",
+    "description": "Interroga l'integratore usando il numero universale del documento. La modalità automatica prova prima e-Fattura, poi e-Archivio.",
+    "connection": "Azienda / connessione eLogo",
+    "documentKind": "Tipo documento",
+    "uuid": "UUID documento",
+    "noConnection": "Non è presente alcuna connessione eLogo attiva con credenziali per questa filiale. Definisci prima una connessione.",
+    "includePdf": "Archivia anche la copia PDF",
+    "includePdfDescription": "L'UBL viene sempre recuperato; se disponibile, il PDF leggibile viene archiviato in uno spazio file privato.",
+    "securityNote": "Le credenziali di sessione sono usate solo dal server. Le password non vengono mai restituite al client; i file UBL e PDF non vengono memorizzati come Base64 nel database."
+  },
+  "kind": {
+    "automatic": "Rileva automaticamente",
+    "automaticDescription": "Interroga prima e-Fattura, poi e-Archivio se non trovato.",
+    "eInvoice": "e-Fattura",
+    "eArchive": "Fattura e-Archivio"
+  },
+  "validation": {
+    "connectionRequired": "Seleziona una connessione eLogo.",
+    "uuid": "Inserisci un UUID documento valido.",
+    "requiredFields": "Codice, nome, P.IVA/CF, nome utente e origine sono obbligatori.",
+    "passwordRequired": "Per una nuova connessione è richiesta una password."
+  },
+  "archiveStatus": {
+    "Imported": "Archiviato",
+    "NeedsReview": "In attesa di abbinamento",
+    "ReadyForReceipt": "Pronto per il ricevimento",
+    "PartiallyLinked": "Parzialmente collegato",
+    "Linked": "Collegato al ricevimento",
+    "Rejected": "Rifiutato"
+  },
+  "validationStatus": {
+    "Parsed": "Convalidato",
+    "Warning": "Avviso",
+    "Invalid": "Non valido"
+  },
+  "detail": {
+    "issueDate": "Data documento",
+    "supplier": "Fornitore",
+    "customer": "Cliente",
+    "payable": "Importo dovuto",
+    "invoiceType": "Tipo fattura",
+    "profile": "Scenario / Profilo",
+    "orderReference": "Riferimento ordine",
+    "despatchReference": "Riferimento DDT",
+    "reviewRequired": "{{count}} riga/e non è stato possibile abbinarle a una scheda di stock ERP",
+    "stockMatchesReady": "Tutte le righe sono abbinate a schede di stock ERP",
+    "lines": "Righe fattura",
+    "lineSummary": "Visualizzate {{visible}} di {{total}} righe; {{matched}} righe abbinate.",
+    "searchLines": "Cerca codice stock, nome o n. riga...",
+    "stock": "Stock",
+    "description": "Descrizione",
+    "quantity": "Quantità",
+    "unitPrice": "Prezzo unitario",
+    "tax": "IVA",
+    "total": "Importo riga",
+    "match": "Abbinamento stock"
+  },
+  "match": {
+    "stockMatched": "Stock abbinato",
+    "unmatched": "Non abbinato"
+  },
+  "receipt": {
+    "title": "Il collegamento al ricevimento merci è volutamente controllato",
+    "nextStep": "Una fattura non crea mai da sola il magazzino. Da righe abbinate viene creata un'attività; il motore di ricevimento esistente registra il magazzino solo dopo la convalida di ubicazione, lotto, seriale e quantità fisica.",
+    "createTask": "Crea attività di ricevimento"
+  },
+  "receiptDialog": {
+    "eyebrow": "Dalla fattura all'operazione controllata",
+    "title": "Crea attività di ricevimento merci",
+    "description": "Converti le righe selezionate della fattura {{invoiceNo}} in un'attività fisica di ricevimento merci.",
+    "supplier": "Scheda fornitore ERP",
+    "waybillDate": "Data DDT",
+    "isElectronic": "DDT elettronico",
+    "despatchReference": "Riferimento DDT UBL: {{value}}",
+    "noDespatchReference": "L'UBL non contiene un riferimento DDT. Inserisci il numero dal documento fisico.",
+    "warehouse": "Magazzino di destinazione",
+    "location": "Ubicazione di ricevimento / preparazione",
+    "series": "Serie numerazione ricevimento",
+    "priority": "Priorità",
+    "labelStrategy": "Strategia etichette",
+    "plannedArrival": "Arrivo pianificato",
+    "descriptionLabel": "Nota operativa",
+    "create": "Crea attività",
+    "document": {
+      "title": "Documento e fornitore"
+    },
+    "operation": {
+      "title": "Operazione di magazzino"
+    },
+    "assignment": {
+      "title": "Assegnatari attività",
+      "placeholder": "Aggiungi un utente operativo"
+    },
+    "lines": {
+      "title": "Righe fattura da trasferire",
+      "quantity": "Quantità attività",
+      "summary": "Fattura: {{invoice}} · Collegata: {{linked}} · Rimanente: {{remaining}} {{unit}}",
+      "trackingNotice": "La fattura UBL è la fonte di stock, quantità e prezzo; lotto/seriale/scadenza sono prove fisiche di ricevimento. Questi valori non vengono mai inventati durante l'importazione della fattura e vengono acquisiti tramite barcode secondo la politica di tracciabilità dello stock durante l'esecuzione dell'attività assegnata.",
+      "total": "Quantità totale selezionata"
+    },
+    "labels": {
+      "none": "Nessuna etichetta",
+      "preGenerate": "Genera etichette in anticipo",
+      "supplier": "Etichetta fornitore",
+      "onReceipt": "Genera al ricevimento"
+    },
+    "validation": {
+      "supplier": "Seleziona una scheda fornitore ERP.",
+      "waybill": "Un numero DDT normale deve contenere esattamente 15 cifre.",
+      "eWaybill": "Il numero e-DDT/GIB deve contenere esattamente 15 caratteri stampabili, simboli inclusi.",
+      "operation": "Seleziona magazzino, ubicazione di ricevimento e serie di numerazione.",
+      "assignee": "Assegna almeno un utente operativo.",
+      "lines": "Seleziona almeno una riga fattura.",
+      "quantity": "La quantità nella riga {{line}} non è valida. Disponibile: {{remaining}}."
+    },
+    "messages": {
+      "created": "L'attività di ricevimento {{documentNo}} è stata creata.",
+      "replayed": "La stessa richiesta era già stata completata in precedenza; è stata aperta l'attività esistente.",
+      "failed": "Impossibile creare l'attività di ricevimento dalla fattura."
+    }
+  },
+  "connections": {
+    "title": "Connessioni aziendali eLogo",
+    "description": "Gestisci gli account aziendali per filiale usati per recuperare i documenti e-Fattura ed e-Archivio in entrata.",
+    "add": "Nuova connessione eLogo",
+    "edit": "Modifica connessione eLogo",
+    "confirmDelete": "Sei sicuro di voler eliminare la connessione {{name}}?",
+    "formDescription": "Definisci i dati di sessione dell'azienda e dell'integratore. Le password salvate non vengono mai mostrate.",
+    "securityNote": "La password è protetta con la chiave di protezione dati dell'applicazione. Un endpoint non può essere utilizzato a meno che non soddisfi le politiche HTTPS e whitelist.",
+    "columns": {
+      "name": "Connessione",
+      "vkn": "P.IVA/CF",
+      "username": "Utente",
+      "source": "Origine",
+      "configured": "Credenziali impostate",
+      "default": "Predefinita",
+      "active": "Attiva"
+    },
+    "fields": {
+      "key": "Codice connessione",
+      "name": "Nome visualizzato",
+      "vkn": "P.IVA/CF",
+      "source": "Origine / Codice azienda",
+      "username": "Nome utente",
+      "newPassword": "Nuova password",
+      "password": "Password",
+      "keepPassword": "Lascia vuoto per mantenere la password esistente",
+      "endpoint": "URL servizio PostBox",
+      "application": "Nome applicazione",
+      "version": "Versione servizio",
+      "timeout": "Timeout (secondi)",
+      "description": "Descrizione",
+      "active": "Connessione attiva",
+      "default": "Connessione predefinita per questa filiale"
+    }
+  },
+  "common": {
+    "yes": "Sì",
+    "no": "No"
+  }
+}

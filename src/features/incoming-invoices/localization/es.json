@@ -1,0 +1,205 @@
+{
+  "archive": {
+    "title": "e-Factura / e-Archivo entrante",
+    "description": "Archive de forma segura los documentos entrantes del integrador ERP por UUID, valide las líneas UBL y prepárelas para la recepción de mercancías."
+  },
+  "columns": {
+    "invoiceNo": "N.º de factura",
+    "kind": "Tipo de documento",
+    "issueDate": "Fecha de emisión",
+    "supplierTaxNo": "NIF del proveedor",
+    "supplier": "Proveedor",
+    "payable": "A pagar",
+    "lines": "Conciliadas / Líneas",
+    "archiveStatus": "Estado de archivo",
+    "validation": "Validación",
+    "importedAt": "Archivado el",
+    "actions": "Acciones"
+  },
+  "actions": {
+    "detail": "Ver detalles",
+    "importByUuid": "Obtener por UUID",
+    "cancel": "Cancelar",
+    "import": "Archivar documento",
+    "showPdf": "Ver PDF",
+    "downloadUbl": "Descargar UBL",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "save": "Guardar"
+  },
+  "messages": {
+    "detailFailed": "No se pudieron cargar los detalles de la factura.",
+    "connectionsFailed": "No se pudieron cargar las conexiones eLogo.",
+    "alreadyArchived": "El documento ya estaba archivado; se abrió el registro existente.",
+    "imported": "El documento se añadió al archivo seguro.",
+    "importFailed": "No se pudo recuperar el documento del integrador.",
+    "documentFailed": "No se pudo abrir el archivo del documento.",
+    "connectionDeleted": "Se eliminó la conexión eLogo.",
+    "connectionDeleteFailed": "No se pudo eliminar la conexión eLogo.",
+    "connectionUpdated": "Se actualizó la conexión eLogo.",
+    "connectionCreated": "Se creó la conexión eLogo.",
+    "connectionSaveFailed": "No se pudo guardar la conexión eLogo."
+  },
+  "import": {
+    "eyebrow": "Transferencia segura de documentos",
+    "title": "Archivar documento entrante",
+    "description": "Consulte al integrador con el número universal del documento. El modo automático prueba primero e-Factura y luego e-Archivo.",
+    "connection": "Empresa / conexión eLogo",
+    "documentKind": "Tipo de documento",
+    "uuid": "UUID del documento",
+    "noConnection": "No hay ninguna conexión eLogo activa con credenciales para esta sucursal. Defina primero una conexión.",
+    "includePdf": "Archivar también la copia PDF",
+    "includePdfDescription": "El UBL siempre se recupera; si está disponible, el PDF legible se almacena en almacenamiento de archivos privado.",
+    "securityNote": "Las credenciales de sesión solo las usa el servidor. Las contraseñas nunca se devuelven al cliente; los archivos UBL y PDF no se almacenan en Base64 en la base de datos."
+  },
+  "kind": {
+    "automatic": "Detectar automáticamente",
+    "automaticDescription": "Consulta primero e-Factura, luego e-Archivo si no se encuentra.",
+    "eInvoice": "e-Factura",
+    "eArchive": "Factura e-Archivo"
+  },
+  "validation": {
+    "connectionRequired": "Seleccione una conexión eLogo.",
+    "uuid": "Introduzca un UUID de documento válido.",
+    "requiredFields": "El código, nombre, NIF, usuario y origen son obligatorios.",
+    "passwordRequired": "Se requiere una contraseña para una nueva conexión."
+  },
+  "archiveStatus": {
+    "Imported": "Archivado",
+    "NeedsReview": "Pendiente de conciliación",
+    "ReadyForReceipt": "Listo para recepción",
+    "PartiallyLinked": "Parcialmente vinculado",
+    "Linked": "Vinculado a recepción",
+    "Rejected": "Rechazado"
+  },
+  "validationStatus": {
+    "Parsed": "Validado",
+    "Warning": "Advertencia",
+    "Invalid": "No válido"
+  },
+  "detail": {
+    "issueDate": "Fecha de emisión",
+    "supplier": "Proveedor",
+    "customer": "Cliente",
+    "payable": "A pagar",
+    "invoiceType": "Tipo de factura",
+    "profile": "Escenario / Perfil",
+    "orderReference": "Referencia de pedido",
+    "despatchReference": "Referencia de albarán",
+    "reviewRequired": "{{count}} línea(s) no se pudieron conciliar con una ficha de stock ERP",
+    "stockMatchesReady": "Todas las líneas están conciliadas con fichas de stock ERP",
+    "lines": "Líneas de factura",
+    "lineSummary": "Mostrando {{visible}} de {{total}} líneas; {{matched}} líneas conciliadas.",
+    "searchLines": "Buscar código de stock, nombre o n.º de línea...",
+    "stock": "Stock",
+    "description": "Descripción",
+    "quantity": "Cantidad",
+    "unitPrice": "Precio unitario",
+    "tax": "IVA",
+    "total": "Importe de línea",
+    "match": "Conciliación de stock"
+  },
+  "match": {
+    "stockMatched": "Stock conciliado",
+    "unmatched": "No conciliado"
+  },
+  "receipt": {
+    "title": "El enlace con la recepción de mercancías está deliberadamente controlado",
+    "nextStep": "Una factura nunca crea inventario por sí sola. Se crea una tarea a partir de las líneas conciliadas; el motor de recepción existente registra el inventario solo después de validar la ubicación, el lote, el número de serie y la cantidad física.",
+    "createTask": "Crear tarea de recepción"
+  },
+  "receiptDialog": {
+    "eyebrow": "De la factura a la operación controlada",
+    "title": "Crear tarea de recepción de mercancías",
+    "description": "Convierta las líneas seleccionadas de la factura {{invoiceNo}} en una tarea física de recepción de mercancías.",
+    "supplier": "Ficha de proveedor ERP",
+    "waybillDate": "Fecha de albarán",
+    "isElectronic": "Albarán electrónico",
+    "despatchReference": "Referencia de albarán UBL: {{value}}",
+    "noDespatchReference": "El UBL no tiene referencia de albarán. Introduzca el número del documento físico.",
+    "warehouse": "Almacén destino",
+    "location": "Ubicación de recepción / preparación",
+    "series": "Serie de numeración de recepción",
+    "priority": "Prioridad",
+    "labelStrategy": "Estrategia de etiquetado",
+    "plannedArrival": "Llegada planificada",
+    "descriptionLabel": "Nota de operación",
+    "create": "Crear tarea",
+    "document": {
+      "title": "Documento y proveedor"
+    },
+    "operation": {
+      "title": "Operación de almacén"
+    },
+    "assignment": {
+      "title": "Responsables de la tarea",
+      "placeholder": "Añadir un usuario de operación"
+    },
+    "lines": {
+      "title": "Líneas de factura a transferir",
+      "quantity": "Cantidad de la tarea",
+      "summary": "Factura: {{invoice}} · Vinculado: {{linked}} · Restante: {{remaining}} {{unit}}",
+      "trackingNotice": "La factura UBL es la fuente del stock, la cantidad y el precio; el lote/serie/caducidad son evidencia física de recepción. Estos valores nunca se inventan durante la importación de la factura y se capturan por código de barras según la política de seguimiento de stock al ejecutar la tarea asignada.",
+      "total": "Cantidad total seleccionada"
+    },
+    "labels": {
+      "none": "Sin etiqueta",
+      "preGenerate": "Generar etiquetas por adelantado",
+      "supplier": "Etiqueta de proveedor",
+      "onReceipt": "Generar en la recepción"
+    },
+    "validation": {
+      "supplier": "Seleccione una ficha de proveedor ERP.",
+      "waybill": "Un número de albarán normal debe contener exactamente 15 dígitos.",
+      "eWaybill": "El número de e-albarán/GIB debe contener exactamente 15 caracteres imprimibles, incluidos símbolos.",
+      "operation": "Seleccione almacén, ubicación de recepción y serie de numeración.",
+      "assignee": "Asigne al menos un usuario de operación.",
+      "lines": "Seleccione al menos una línea de factura.",
+      "quantity": "La cantidad en la línea {{line}} no es válida. Disponible: {{remaining}}."
+    },
+    "messages": {
+      "created": "Se creó la tarea de recepción {{documentNo}}.",
+      "replayed": "La misma solicitud ya se había completado antes; se abrió la tarea existente.",
+      "failed": "No se pudo crear la tarea de recepción a partir de la factura."
+    }
+  },
+  "connections": {
+    "title": "Conexiones de empresa eLogo",
+    "description": "Gestione las cuentas de empresa por sucursal usadas para recuperar los documentos e-Factura y e-Archivo entrantes.",
+    "add": "Nueva conexión eLogo",
+    "edit": "Editar conexión eLogo",
+    "confirmDelete": "¿Está seguro de que desea eliminar la conexión {{name}}?",
+    "formDescription": "Defina los datos de sesión de la empresa y el integrador. Las contraseñas guardadas nunca se muestran.",
+    "securityNote": "La contraseña está protegida con la clave de protección de datos de la aplicación. Un endpoint no puede usarse a menos que cumpla las políticas de HTTPS y lista de permitidos.",
+    "columns": {
+      "name": "Conexión",
+      "vkn": "NIF",
+      "username": "Usuario",
+      "source": "Origen",
+      "configured": "Credenciales definidas",
+      "default": "Predeterminada",
+      "active": "Activa"
+    },
+    "fields": {
+      "key": "Código de conexión",
+      "name": "Nombre para mostrar",
+      "vkn": "NIF",
+      "source": "Origen / Código de empresa",
+      "username": "Usuario",
+      "newPassword": "Nueva contraseña",
+      "password": "Contraseña",
+      "keepPassword": "Deje en blanco para mantener la contraseña actual",
+      "endpoint": "URL del servicio PostBox",
+      "application": "Nombre de la aplicación",
+      "version": "Versión del servicio",
+      "timeout": "Tiempo de espera (segundos)",
+      "description": "Descripción",
+      "active": "Conexión activa",
+      "default": "Conexión predeterminada para esta sucursal"
+    }
+  },
+  "common": {
+    "yes": "Sí",
+    "no": "No"
+  }
+}
