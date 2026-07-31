@@ -1,0 +1,35 @@
+{
+  "eyebrow": "Almacén y producción",
+  "title": "Centro de proceso de transferencia de producción",
+  "description": "Gestione el suministro de material, los movimientos de producto en curso y las salidas de producto terminado con vínculos de producción, asignaciones, reservas, seguimiento de serie/lote y trazabilidad.",
+  "cards": {
+    "create": { "title": "Crear transferencia de producción", "text": "Cree tareas de suministro, entre operaciones o de salida a partir de una orden de producción o una necesidad manual." },
+    "list": { "title": "Registros de transferencia", "text": "Siga las cantidades planificadas, reservadas, recogidas, expedidas y ubicadas." },
+    "settings": { "title": "Configuración del proceso", "text": "Gestione las reglas de disponibilidad, escasez, asignación, ubicación y tolerancia." }
+  },
+  "policy": {
+    "loading": "Cargando configuración de transferencia de producción…",
+    "saved": "Política de transferencia de producción guardada.",
+    "saveFailed": "No se pudo guardar la configuración.",
+    "saving": "Guardando…",
+    "save": "Guardar configuración",
+    "eyebrow": "Transferencia de producción",
+    "title": "Política de suministro de producción",
+    "description": "Gestione de forma centralizada las reglas de orden de producción, disponibilidad de material, asignación, ubicación y tolerancia.",
+    "sections": { "order": "Orden de producción y disponibilidad de material", "execution": "Ejecución física y tolerancia" },
+    "fields": {
+      "requireProductionOrderReference": "Referencia de orden de producción obligatoria",
+      "allowManualTransfer": "Permitir transferencias manuales",
+      "allowAutomaticGeneration": "Permitir que la producción genere transferencias automáticamente",
+      "checkMaterialAvailability": "Comprobar disponibilidad de material",
+      "blockOnShortage": "Bloquear en caso de escasez",
+      "requireTaskAssignment": "Asignación de usuario obligatoria",
+      "requireSourceProductionLocation": "Ubicación de origen obligatoria",
+      "requireTargetProductionLocation": "Ubicación de suministro/destino obligatoria",
+      "allowPartialSupply": "Permitir suministro parcial",
+      "allowOverIssue": "Permitir exceso de salida",
+      "requireApproval": "Aprobación obligatoria",
+      "overIssueTolerancePercent": "Tolerancia de exceso de salida (%)"
+    }
+  }
+}

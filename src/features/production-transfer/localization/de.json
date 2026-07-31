@@ -1,0 +1,35 @@
+{
+  "eyebrow": "Lager und Produktion",
+  "title": "Produktionstransfer-Prozesszentrum",
+  "description": "Verwalten Sie Materialversorgung, Zwischenprodukttransporte und Fertigwarenausgänge mit Produktionsverknüpfungen, Zuweisungen, Reservierungen, Serien-/Losverfolgung und Nachverfolgbarkeit.",
+  "cards": {
+    "create": { "title": "Produktionstransfer erstellen", "text": "Erstellen Sie Materialversorgungs-, Zwischenprozess- oder Ausgabeaufträge aus einem Produktionsauftrag oder manuellem Bedarf." },
+    "list": { "title": "Transferdatensätze", "text": "Verfolgen Sie geplante, reservierte, kommissionierte, versandte und eingelagerte Mengen." },
+    "settings": { "title": "Prozesseinstellungen", "text": "Verwalten Sie Verfügbarkeits-, Fehlmengen-, Zuweisungs-, Standort- und Toleranzregeln." }
+  },
+  "policy": {
+    "loading": "Produktionstransfer-Einstellungen werden geladen…",
+    "saved": "Produktionstransfer-Richtlinie gespeichert.",
+    "saveFailed": "Einstellungen konnten nicht gespeichert werden.",
+    "saving": "Wird gespeichert…",
+    "save": "Einstellungen speichern",
+    "eyebrow": "Produktionstransfer",
+    "title": "Produktionsversorgungsrichtlinie",
+    "description": "Verwalten Sie zentral Produktionsauftrag-, Materialverfügbarkeits-, Zuweisungs-, Standort- und Toleranzregeln.",
+    "sections": { "order": "Produktionsauftrag und Materialverfügbarkeit", "execution": "Physische Ausführung und Toleranz" },
+    "fields": {
+      "requireProductionOrderReference": "Produktionsauftragsreferenz erforderlich",
+      "allowManualTransfer": "Manuelle Transfers zulassen",
+      "allowAutomaticGeneration": "Automatische Transfererzeugung durch Produktion zulassen",
+      "checkMaterialAvailability": "Materialverfügbarkeit prüfen",
+      "blockOnShortage": "Bei Fehlmenge blockieren",
+      "requireTaskAssignment": "Benutzerzuweisung erforderlich",
+      "requireSourceProductionLocation": "Quellplatz erforderlich",
+      "requireTargetProductionLocation": "Produktionsversorgungs-/Zielplatz erforderlich",
+      "allowPartialSupply": "Teilversorgung zulassen",
+      "allowOverIssue": "Mehrverbrauch zulassen",
+      "requireApproval": "Genehmigung erforderlich",
+      "overIssueTolerancePercent": "Mehrverbrauchstoleranz (%)"
+    }
+  }
+}

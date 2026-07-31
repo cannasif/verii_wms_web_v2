@@ -1,0 +1,35 @@
+{
+  "eyebrow": "Entrepôt et production",
+  "title": "Centre de processus de transfert de production",
+  "description": "Gérez l'approvisionnement en matières, les mouvements d'en-cours et les sorties de produits finis avec liens de production, affectations, réservations, suivi série/lot et traçabilité.",
+  "cards": {
+    "create": { "title": "Créer un transfert de production", "text": "Créez des tâches d'approvisionnement, inter-opérations ou de sortie à partir d'un ordre de production ou d'un besoin manuel." },
+    "list": { "title": "Registres de transfert", "text": "Suivez les quantités planifiées, réservées, prélevées, expédiées et mises en zone." },
+    "settings": { "title": "Paramètres du processus", "text": "Gérez les règles de disponibilité, de rupture, d'affectation, d'emplacement et de tolérance." }
+  },
+  "policy": {
+    "loading": "Chargement des paramètres de transfert de production…",
+    "saved": "Politique de transfert de production enregistrée.",
+    "saveFailed": "Les paramètres n'ont pas pu être enregistrés.",
+    "saving": "Enregistrement…",
+    "save": "Enregistrer les paramètres",
+    "eyebrow": "Transfert de production",
+    "title": "Politique d'approvisionnement de production",
+    "description": "Gérez de manière centralisée les règles d'ordre de production, de disponibilité des matières, d'affectation, d'emplacement et de tolérance.",
+    "sections": { "order": "Ordre de production et disponibilité des matières", "execution": "Exécution physique et tolérance" },
+    "fields": {
+      "requireProductionOrderReference": "Référence d'ordre de production obligatoire",
+      "allowManualTransfer": "Autoriser les transferts manuels",
+      "allowAutomaticGeneration": "Autoriser la génération automatique de transferts par la production",
+      "checkMaterialAvailability": "Vérifier la disponibilité des matières",
+      "blockOnShortage": "Bloquer en cas de rupture",
+      "requireTaskAssignment": "Affectation d'utilisateur obligatoire",
+      "requireSourceProductionLocation": "Emplacement source obligatoire",
+      "requireTargetProductionLocation": "Emplacement d'approvisionnement/cible obligatoire",
+      "allowPartialSupply": "Autoriser l'approvisionnement partiel",
+      "allowOverIssue": "Autoriser la sur-sortie",
+      "requireApproval": "Approbation obligatoire",
+      "overIssueTolerancePercent": "Tolérance de sur-sortie (%)"
+    }
+  }
+}

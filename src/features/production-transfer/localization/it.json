@@ -1,0 +1,35 @@
+{
+  "eyebrow": "Magazzino e produzione",
+  "title": "Centro processi di trasferimento produzione",
+  "description": "Gestisci l'approvvigionamento materiali, i movimenti di semilavorati e le uscite di prodotto finito con collegamenti di produzione, assegnazioni, riserve, tracciabilità serie/lotto e piena tracciabilità.",
+  "cards": {
+    "create": { "title": "Crea trasferimento di produzione", "text": "Crea attività di approvvigionamento, tra operazioni o di uscita da un ordine di produzione o un fabbisogno manuale." },
+    "list": { "title": "Registri di trasferimento", "text": "Traccia le quantità pianificate, riservate, prelevate, spedite e stoccate." },
+    "settings": { "title": "Impostazioni processo", "text": "Gestisci le regole di disponibilità, carenza, assegnazione, ubicazione e tolleranza." }
+  },
+  "policy": {
+    "loading": "Caricamento impostazioni trasferimento produzione…",
+    "saved": "Politica di trasferimento produzione salvata.",
+    "saveFailed": "Impossibile salvare le impostazioni.",
+    "saving": "Salvataggio…",
+    "save": "Salva impostazioni",
+    "eyebrow": "Trasferimento di produzione",
+    "title": "Politica di approvvigionamento produzione",
+    "description": "Gestisci centralmente le regole di ordine di produzione, disponibilità materiali, assegnazione, ubicazione e tolleranza.",
+    "sections": { "order": "Ordine di produzione e disponibilità materiali", "execution": "Esecuzione fisica e tolleranza" },
+    "fields": {
+      "requireProductionOrderReference": "Riferimento ordine di produzione obbligatorio",
+      "allowManualTransfer": "Consenti trasferimenti manuali",
+      "allowAutomaticGeneration": "Consenti alla produzione di generare trasferimenti automaticamente",
+      "checkMaterialAvailability": "Verifica disponibilità materiali",
+      "blockOnShortage": "Blocca in caso di carenza",
+      "requireTaskAssignment": "Assegnazione utente obbligatoria",
+      "requireSourceProductionLocation": "Ubicazione di origine obbligatoria",
+      "requireTargetProductionLocation": "Ubicazione di approvvigionamento/destinazione obbligatoria",
+      "allowPartialSupply": "Consenti approvvigionamento parziale",
+      "allowOverIssue": "Consenti uscita in eccesso",
+      "requireApproval": "Approvazione obbligatoria",
+      "overIssueTolerancePercent": "Tolleranza uscita in eccesso (%)"
+    }
+  }
+}
