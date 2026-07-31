@@ -3301,6 +3301,7 @@ html:not(.dark) .wms-ops-detail-dialog .wms-ops-flag-badge--off {
   overflow: hidden;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   font-size: 0.6875rem;
   line-height: 1.4;
   letter-spacing: 0.02em;
@@ -13410,6 +13411,16 @@ html:not(.dark) .wms-ops-dashboard-page {
   --cyb-text-dim: color-mix(in oklab, #0f172a 62%, transparent);
 }
 
+/* Ozel marka temasi secildiginde terminal gorunumu de temaya uysun */
+html[data-brand-theme]:not(.skin-premium) .wms-ops-dashboard-page {
+  --cyb-cyan: var(--wms-brand-primary);
+  --cyb-magenta: var(--wms-brand-accent);
+  --cyb-violet: var(--wms-brand-secondary);
+  --cyb-green: var(--wms-brand-secondary);
+  --cyb-amber: var(--wms-brand-accent);
+  --cyb-line: color-mix(in oklab, var(--wms-brand-primary) 36%, transparent);
+}
+
 .wms-ops-dashboard-page .wms-ops-dashboard-panel,
 .wms-ops-dashboard-page .wms-ops-dashboard-hero,
 .wms-ops-dashboard-page .wms-ops-dashboard-section,
@@ -18626,6 +18637,8 @@ html.skin-premium .wms-ops-dashboard-page {
   --cyb-cyan: var(--wms-brand-primary);
   --cyb-magenta: var(--wms-brand-accent);
   --cyb-violet: var(--wms-brand-secondary);
+  --cyb-green: var(--wms-brand-secondary);
+  --cyb-amber: var(--wms-brand-accent);
   --cyb-line: color-mix(in oklab, var(--wms-brand-primary) 16%, var(--wms-app-border));
   --cyb-text-dim: color-mix(in oklab, hsl(var(--foreground)) 55%, transparent);
 }
@@ -18634,6 +18647,8 @@ html.skin-premium:not(.dark) .wms-ops-dashboard-page {
   --cyb-cyan: var(--wms-brand-primary);
   --cyb-magenta: var(--wms-brand-accent);
   --cyb-violet: var(--wms-brand-secondary);
+  --cyb-green: var(--wms-brand-secondary);
+  --cyb-amber: var(--wms-brand-accent);
   --cyb-line: color-mix(in oklab, var(--wms-brand-primary) 22%, var(--wms-app-border));
   --cyb-text-dim: color-mix(in oklab, #0f172a 60%, transparent);
 }
@@ -21257,12 +21272,12 @@ html.skin-premium .wms-ops-dashboard-hero__clock-time {
 
 html.skin-premium .wms-ops-dashboard-status {
   border-radius: 1.05rem !important;
-  border: 1px solid color-mix(in oklab, #34d399 28%, var(--wms-app-border)) !important;
+  border: 1px solid color-mix(in oklab, var(--cyb-green) 28%, var(--wms-app-border)) !important;
   border-left-width: 1px !important;
   background:
     linear-gradient(
       110deg,
-      color-mix(in oklab, #34d399 12%, transparent),
+      color-mix(in oklab, var(--cyb-green) 12%, transparent),
       transparent 42%,
       color-mix(in oklab, var(--wms-brand-primary) 6%, transparent)
     ),
@@ -21282,7 +21297,7 @@ html.skin-premium .wms-ops-dashboard-status__ready {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  color: #6ee7b7;
+  color: var(--cyb-green);
 }
 
 html.skin-premium .wms-ops-dashboard-status__ready::before {
@@ -21290,8 +21305,8 @@ html.skin-premium .wms-ops-dashboard-status__ready::before {
   width: 0.5rem;
   height: 0.5rem;
   border-radius: 999px;
-  background: #34d399;
-  box-shadow: 0 0 0 4px color-mix(in oklab, #34d399 22%, transparent), 0 0 14px #34d399;
+  background: var(--cyb-green);
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--cyb-green) 22%, transparent), 0 0 14px var(--cyb-green);
   animation: wms-premium-status-pulse 2.2s ease-in-out infinite;
 }
 
