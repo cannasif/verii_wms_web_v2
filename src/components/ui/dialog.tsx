@@ -96,8 +96,6 @@ function DialogContent({
   const portalContainer = resolveDialogPortalContainer(portalRoot)
   const contained = portalRoot !== "body" && portalRoot !== "shell" && Boolean(portalContainer)
   const applyOps = shouldApplyOpsDialogDna(className, tone)
-  /* Ops DNA always exposes the v1 close control; CSS hides duplicate custom X buttons. */
-  const effectiveShowClose = applyOps ? true : showCloseButton
   return (
     <DialogPortal data-slot="dialog-portal" container={portalContainer}>
       <DialogOverlay contained={contained} />
@@ -115,7 +113,7 @@ function DialogContent({
         {...props}
       >
         {children}
-        {effectiveShowClose && (
+        {showCloseButton && (
           <DialogPrimitive.Close
             data-slot="dialog-close"
             className="absolute top-4 right-4 z-30 grid size-8 place-items-center text-[var(--wms-app-text-muted)] opacity-90 transition hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--wms-brand-ring)] disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"

@@ -84,6 +84,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 export interface GridFilter { column: string; operator: string; value: string }
 export interface GridRequest { pageNumber?: number; page?: number; pageSize: number; search: string | null; searchFields?: string[]; sortBy?: string | null; sortDirection?: 'asc' | 'desc'; filterLogic: 'and' | 'or'; filters: GridFilter[] }
@@ -111,10 +117,11 @@ export interface GridToolbarAction {
   label: string;
   run: () => Promise<void>;
   icon?: ReactNode;
+  tooltip?: string;
 }
 interface Props<T extends { id: number }> {
   pageKey: string;
-  title: string;
+  title: ReactNode;
   description?: string;
   /** Terminal: `GİRİŞ_OP / MAL_KABUL` chip. Premium: nav breadcrumb. */
   eyebrow?: ReactNode;
@@ -124,6 +131,8 @@ interface Props<T extends { id: number }> {
   fetchPage: (request: GridRequest) => Promise<GridPage<T>>;
   toolbarAction?: GridToolbarAction;
   toolbarActions?: GridToolbarAction[];
+  /** Filtreler butonunun soluna eklenen ekstra toolbar aksiyonları (ör. Kod Filtreleri). */
+  toolbarEndExtra?: ReactNode;
   /** Mutation sonrasında sunucu verisini yeniden okumak için artırılan sürüm anahtarı. */
   refreshKey?: string | number;
   /** Satıra çift tıklanınca çağrılır (aksiyon hücreleri hariç etkileşimleri engellemez). */
@@ -426,6 +435,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
   fetchPage,
   toolbarAction,
   toolbarActions,
+  toolbarEndExtra,
   refreshKey = 0,
   onRowDoubleClick,
   expandedRowId = null,
@@ -434,7 +444,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
   const { t, i18n } = useTranslation();
   const { pathname } = useLocation();
   const enumLanguage = i18n.resolvedLanguage ?? i18n.language;
-  const localizedTitle = localizeLegacyUiText(title, enumLanguage);
+  const localizedTitle = typeof title === 'string' ? localizeLegacyUiText(title, enumLanguage) : title;
   const localizedDescription = description ? localizeLegacyUiText(description, enumLanguage) : undefined;
   const resolvedEyebrow = eyebrow ?? buildTerminalEyebrowFromNav(pathname, t, enumLanguage) ?? 'VERII WMS';
   const resolvedEmptyMessage = emptyMessage ?? t('dataGrid.noRecords');
@@ -651,6 +661,8 @@ export function AdvancedDataGrid<T extends { id: number }>({
     try {
       await action.run();
       await query.refetch();
+    } catch {
+      // Toasts / error UX are owned by the action runner when provided.
     } finally {
       setRunningActionIndex(null);
     }
@@ -961,22 +973,41 @@ export function AdvancedDataGrid<T extends { id: number }>({
       title={localizedTitle}
       description={localizedDescription}
       actions={resolvedToolbarActions.length > 0 ? (
-        <div className="flex flex-wrap items-center justify-end gap-2">
-          {resolvedToolbarActions.map((action, index) => {
-            const isRunning = runningActionIndex === index;
-            return (
-              <OpsActionButton
-                key={`${action.label}-${index}`}
-                type="button"
-                onClick={() => void runAction(action, index)}
-                disabled={runningActionIndex !== null}
-              >
-                {action.icon ?? <Plus className={cn('size-3.5', isRunning && 'animate-spin')} aria-hidden />}
-                {action.label}
-              </OpsActionButton>
-            );
-          })}
-        </div>
+        <TooltipProvider delayDuration={200}>
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            {resolvedToolbarActions.map((action, index) => {
+              const isRunning = runningActionIndex === index;
+              const button = (
+                <OpsActionButton
+                  type="button"
+                  title={action.tooltip}
+                  onClick={() => void runAction(action, index)}
+                  disabled={runningActionIndex !== null}
+                >
+                  {action.icon ? (
+                    <span className={cn('inline-flex', isRunning && 'animate-spin')} aria-hidden>
+                      {action.icon}
+                    </span>
+                  ) : (
+                    <Plus className={cn('size-3.5', isRunning && 'animate-spin')} aria-hidden />
+                  )}
+                  {action.label}
+                </OpsActionButton>
+              );
+              if (!action.tooltip) {
+                return <Fragment key={`${action.label}-${index}`}>{button}</Fragment>;
+              }
+              return (
+                <Tooltip key={`${action.label}-${index}`}>
+                  <TooltipTrigger asChild>{button}</TooltipTrigger>
+                  <TooltipContent side="bottom" align="end" className="max-w-xs text-xs">
+                    {action.tooltip}
+                  </TooltipContent>
+                </Tooltip>
+              );
+            })}
+          </div>
+        </TooltipProvider>
       ) : undefined}
     >
       <div className="wms-ops-data-grid min-w-0 space-y-0">
@@ -1063,6 +1094,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
         </div>
 
         <div className="wms-ops-data-grid-toolbar__end flex flex-wrap items-center gap-2">
+          {toolbarEndExtra}
           <PopoverPrimitive.Root
             open={showFilters}
             modal={false}
