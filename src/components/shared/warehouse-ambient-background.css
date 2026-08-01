@@ -5,7 +5,7 @@
   contain: strict;
   pointer-events: none;
   color: var(--wms-brand-primary);
-  opacity: 0.2;
+  opacity: 0.22;
   isolation: isolate;
 }
 
@@ -31,7 +31,7 @@
   min-height: 4.5rem;
   width: 100%;
   border-radius: 0.75rem;
-  opacity: 0.72;
+  opacity: 0.78;
   background: color-mix(in oklab, var(--wms-app-background) 88%, var(--wms-brand-soft));
 }
 
@@ -45,11 +45,41 @@
   will-change: auto !important;
 }
 
-.wms-motion-racks {
+/* Shared geometry */
+.wms-motion-floor,
+.wms-motion-lane,
+.wms-motion-conveyor-rail,
+.wms-motion-conveyor-chevrons,
+.wms-motion-conveyor-gate,
+.wms-motion-waypoint,
+.wms-motion-agv-aisle,
+.wms-motion-pick-legend,
+.wms-motion-scan-readout,
+.wms-motion-scan-column {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  opacity: 0.22;
+}
+
+.wms-motion-lane__dash {
+  stroke-dasharray: 0;
+  opacity: 0.35;
+}
+
+.wms-motion-racks,
+.wms-motion-pick-rack {
   fill: color-mix(in oklab, var(--wms-brand-primary) 6%, transparent);
   stroke: currentColor;
   stroke-width: 1.5;
   opacity: 0.34;
+}
+
+.wms-motion-rack-bay rect {
+  fill: color-mix(in oklab, var(--wms-brand-secondary) 18%, transparent);
+  stroke: currentColor;
+  stroke-width: 1;
+  opacity: 0.55;
 }
 
 .wms-motion-scan-beam {
@@ -64,7 +94,8 @@
 }
 
 .wms-motion-scan-pulse,
-.wms-motion-route-marker {
+.wms-motion-route-marker,
+.wms-motion-pick-cursor {
   fill: none;
   stroke: currentColor;
   stroke-width: 2;
@@ -80,7 +111,9 @@
 }
 
 .wms-motion-scan-pulse__core,
-.wms-motion-route-marker__core {
+.wms-motion-route-marker__core,
+.wms-motion-pick-cursor__core,
+.wms-motion-pick-cell__lamp {
   fill: currentColor;
 }
 
@@ -111,10 +144,18 @@
   animation-delay: -12s;
 }
 
-.wms-motion-package__label {
+.wms-motion-package__label,
+.wms-motion-package__barcode {
   fill: none;
   stroke-width: 5;
   opacity: 0.7;
+}
+
+.wms-motion-package__barcode {
+  fill: color-mix(in oklab, currentColor 35%, transparent);
+  stroke: none;
+  stroke-width: 0;
+  opacity: 0.55;
 }
 
 .wms-motion-conveyor-signal {
@@ -141,7 +182,8 @@
   opacity: 0.18;
 }
 
-.wms-motion-forklift {
+.wms-motion-forklift,
+.wms-motion-agv {
   fill: color-mix(in oklab, var(--wms-brand-primary) 14%, transparent);
   stroke: currentColor;
   stroke-width: 3;
@@ -149,11 +191,19 @@
   will-change: transform, opacity;
 }
 
-.wms-motion-forklift__window {
+.wms-motion-agv--two {
+  animation-duration: 28s;
+  animation-delay: -14s;
+  opacity: 0.72;
+}
+
+.wms-motion-forklift__window,
+.wms-motion-agv__panel {
   fill: color-mix(in oklab, var(--wms-brand-secondary) 24%, transparent);
 }
 
-.wms-motion-forklift__wheel {
+.wms-motion-forklift__wheel,
+.wms-motion-agv__wheel {
   fill: color-mix(in oklab, var(--wms-app-background) 80%, black);
   transform-box: fill-box;
   transform-origin: center;
@@ -161,8 +211,355 @@
   will-change: transform;
 }
 
-.wms-motion-forklift__hub {
+.wms-motion-forklift__hub,
+.wms-motion-agv__hub,
+.wms-motion-agv__beacon {
   fill: currentColor;
+}
+
+.wms-motion-agv__beacon {
+  animation: wms-signal-pulse 2.4s ease-in-out infinite;
+}
+
+.wms-motion-agv__sensor,
+.wms-motion-agv-guide {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-dasharray: 12 10;
+  opacity: 0.35;
+}
+
+.wms-motion-agv-rack-hint {
+  stroke-dasharray: 6 14;
+  opacity: 0.28;
+}
+
+.wms-motion-agv-nodes circle {
+  fill: color-mix(in oklab, var(--wms-brand-accent) 30%, transparent);
+  stroke: currentColor;
+  stroke-width: 1.5;
+  opacity: 0.45;
+  animation: wms-signal-pulse 4s ease-in-out infinite;
+}
+
+.wms-motion-barcode-card,
+.wms-motion-handheld {
+  fill: color-mix(in oklab, var(--wms-brand-primary) 8%, transparent);
+  stroke: currentColor;
+  stroke-width: 2;
+  opacity: 0.4;
+}
+
+.wms-motion-barcode-stripes rect {
+  fill: currentColor;
+  opacity: 0.35;
+}
+
+.wms-motion-barcode-caption,
+.wms-motion-handheld__nose,
+.wms-motion-handheld__beam-stem {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  opacity: 0.4;
+}
+
+.wms-motion-handheld__screen {
+  fill: color-mix(in oklab, var(--wms-brand-secondary) 18%, transparent);
+  stroke: currentColor;
+  stroke-width: 1.5;
+}
+
+.wms-motion-handheld__nose {
+  fill: color-mix(in oklab, var(--wms-brand-accent) 16%, transparent);
+}
+
+.wms-motion-scan-laser {
+  fill: currentColor;
+  opacity: 0.5;
+  animation: wms-barcode-laser 3.6s ease-in-out infinite alternate;
+  will-change: transform, opacity;
+}
+
+.wms-motion-scan-laser__halo {
+  opacity: 0.1;
+}
+
+.wms-motion-pick-cell {
+  fill: color-mix(in oklab, var(--wms-brand-primary) 5%, transparent);
+  stroke: currentColor;
+  stroke-width: 1.5;
+  opacity: 0.28;
+}
+
+.wms-motion-pick-cell__lamp {
+  opacity: 0.15;
+  animation: wms-pick-lamp 7.2s ease-in-out infinite;
+}
+
+.wms-motion-pick-cell--1 .wms-motion-pick-cell__lamp { animation-delay: 0s; }
+.wms-motion-pick-cell--2 .wms-motion-pick-cell__lamp { animation-delay: -1.2s; }
+.wms-motion-pick-cell--3 .wms-motion-pick-cell__lamp { animation-delay: -2.4s; }
+.wms-motion-pick-cell--4 .wms-motion-pick-cell__lamp { animation-delay: -3.6s; }
+.wms-motion-pick-cell--5 .wms-motion-pick-cell__lamp { animation-delay: -4.8s; }
+.wms-motion-pick-cell--6 .wms-motion-pick-cell__lamp { animation-delay: -6s; }
+
+.wms-motion-pick-cell__code {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  opacity: 0.45;
+}
+
+.wms-motion-pick-cursor {
+  animation: wms-pick-cursor 7.2s ease-in-out infinite;
+}
+
+.wms-motion-hud {
+  display: none;
+  stroke-width: 1.5;
+  opacity: 0.28;
+}
+
+.wms-motion-hud__grid {
+  stroke-dasharray: 4 10;
+  opacity: 0.35;
+}
+
+.wms-motion-hud__ticks {
+  stroke-width: 1.25;
+  opacity: 0.5;
+}
+
+.wms-motion-premium-aura {
+  display: none;
+}
+
+.wms-motion-premium-aura__blob {
+  fill: color-mix(in oklab, var(--wms-brand-primary) 18%, transparent);
+  opacity: 0.35;
+  filter: blur(2px);
+}
+
+.wms-motion-premium-aura__blob--one {
+  animation: wms-premium-drift 16s ease-in-out infinite alternate;
+}
+
+.wms-motion-premium-aura__blob--two {
+  fill: color-mix(in oklab, var(--wms-brand-accent) 16%, transparent);
+  animation: wms-premium-drift 20s ease-in-out infinite alternate-reverse;
+}
+
+/* ========== TERMINAL skin: schematic / HUD ========== */
+html:not(.skin-premium) .wms-ambient-motion {
+  opacity: 0.26;
+  color: var(--wms-brand-primary);
+}
+
+/* Rare CRT-style glitch (~once per 60s), full background only */
+html:not(.skin-premium) .wms-ambient-motion[data-motion-state='running']:not(.wms-ambient-motion--preview)::after {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  content: '';
+  pointer-events: none;
+  opacity: 0;
+  background:
+    linear-gradient(90deg, rgb(0 255 255 / 0%) 0%, rgb(0 255 255 / 12%) 48%, rgb(255 40 80 / 10%) 52%, rgb(255 40 80 / 0%) 100%),
+    repeating-linear-gradient(
+      0deg,
+      transparent 0,
+      transparent 2px,
+      rgb(0 255 255 / 5%) 2px,
+      rgb(0 255 255 / 5%) 3px
+    );
+  mix-blend-mode: screen;
+  animation: wms-terminal-glitch-overlay 60s linear infinite;
+  will-change: opacity, transform;
+}
+
+html:not(.skin-premium) .wms-ambient-motion[data-motion-state='running']:not(.wms-ambient-motion--preview) > svg {
+  animation: wms-terminal-glitch-scene 60s linear infinite;
+  will-change: transform, filter, opacity;
+}
+
+html:not(.skin-premium) .wms-ambient-motion::before {
+  opacity: 0.35;
+  background-image:
+    linear-gradient(color-mix(in oklab, currentColor 8%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in oklab, currentColor 8%, transparent) 1px, transparent 1px),
+    radial-gradient(circle at 18% 20%, var(--wms-app-aura-start), transparent 34%),
+    radial-gradient(circle at 84% 78%, var(--wms-app-aura-end), transparent 40%);
+  background-size: 48px 48px, 48px 48px, auto, auto;
+}
+
+html:not(.skin-premium) .wms-motion-hud {
+  display: block;
+}
+
+html:not(.skin-premium) .wms-motion-premium-aura {
+  display: none !important;
+}
+
+html:not(.skin-premium) .wms-motion-racks,
+html:not(.skin-premium) .wms-motion-pick-rack,
+html:not(.skin-premium) .wms-motion-package,
+html:not(.skin-premium) .wms-motion-forklift,
+html:not(.skin-premium) .wms-motion-agv,
+html:not(.skin-premium) .wms-motion-barcode-card,
+html:not(.skin-premium) .wms-motion-handheld {
+  fill: transparent;
+  stroke-width: 1.35;
+  stroke-linejoin: miter;
+  stroke-linecap: square;
+}
+
+html:not(.skin-premium) .wms-motion-racks,
+html:not(.skin-premium) .wms-motion-pick-rack {
+  opacity: 0.42;
+}
+
+html:not(.skin-premium) .wms-motion-scan-beam,
+html:not(.skin-premium) .wms-motion-scan-laser,
+html:not(.skin-premium) .wms-motion-route,
+html:not(.skin-premium) .wms-motion-conveyor {
+  stroke-dasharray: 10 8;
+}
+
+html:not(.skin-premium) .wms-motion-scan-beam {
+  animation-timing-function: linear;
+  animation-duration: 8.5s;
+}
+
+html:not(.skin-premium) .wms-motion-scan-laser {
+  animation-timing-function: linear;
+  animation-duration: 3.4s;
+}
+
+html:not(.skin-premium) .wms-motion-scan-beam__halo,
+html:not(.skin-premium) .wms-motion-scan-laser__halo {
+  opacity: 0.03;
+}
+
+html:not(.skin-premium) .wms-motion-package,
+html:not(.skin-premium) .wms-motion-forklift,
+html:not(.skin-premium) .wms-motion-agv {
+  animation-timing-function: linear;
+}
+
+html:not(.skin-premium) .wms-motion-pick-cell__lamp {
+  animation-timing-function: ease-in-out;
+}
+
+html:not(.skin-premium) .wms-motion-pick-cursor {
+  animation-timing-function: ease-in-out;
+}
+
+html:not(.skin-premium) .wms-motion-waypoint path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  opacity: 0.55;
+}
+
+html:not(.skin-premium) .wms-ambient-motion--preview {
+  border-radius: 0.35rem;
+  background:
+    linear-gradient(color-mix(in oklab, currentColor 10%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in oklab, currentColor 10%, transparent) 1px, transparent 1px),
+    color-mix(in oklab, var(--wms-app-background) 90%, black);
+  background-size: 14px 14px, 14px 14px, auto;
+}
+
+/* ========== PREMIUM skin: soft / atmospheric ========== */
+html.skin-premium .wms-ambient-motion {
+  opacity: 0.2;
+  color: var(--wms-brand-secondary);
+}
+
+html.skin-premium .wms-ambient-motion::before {
+  opacity: 0.85;
+  background:
+    radial-gradient(circle at 18% 18%, color-mix(in oklab, var(--wms-brand-primary) 28%, transparent), transparent 42%),
+    radial-gradient(circle at 78% 72%, color-mix(in oklab, var(--wms-brand-accent) 22%, transparent), transparent 48%),
+    radial-gradient(circle at 50% 100%, color-mix(in oklab, var(--wms-brand-secondary) 12%, transparent), transparent 55%);
+}
+
+html.skin-premium .wms-motion-hud {
+  display: none !important;
+}
+
+html.skin-premium .wms-motion-premium-aura {
+  display: block;
+}
+
+html.skin-premium .wms-motion-racks,
+html.skin-premium .wms-motion-pick-rack,
+html.skin-premium .wms-motion-package,
+html.skin-premium .wms-motion-forklift,
+html.skin-premium .wms-motion-agv,
+html.skin-premium .wms-motion-pick-cell,
+html.skin-premium .wms-motion-barcode-card,
+html.skin-premium .wms-motion-handheld {
+  fill: color-mix(in oklab, var(--wms-brand-primary) 12%, transparent);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  opacity: 0.4;
+}
+
+html.skin-premium .wms-motion-scan-beam {
+  animation-duration: 12s;
+  animation-timing-function: cubic-bezier(0.45, 0.05, 0.25, 1);
+}
+
+html.skin-premium .wms-motion-scan-laser {
+  animation-duration: 4.8s;
+  animation-timing-function: cubic-bezier(0.45, 0.05, 0.25, 1);
+}
+
+html.skin-premium .wms-motion-scan-beam__halo,
+html.skin-premium .wms-motion-scan-laser__halo {
+  opacity: 0.16;
+  fill: color-mix(in oklab, var(--wms-brand-accent) 55%, var(--wms-brand-primary));
+}
+
+html.skin-premium .wms-motion-package,
+html.skin-premium .wms-motion-forklift,
+html.skin-premium .wms-motion-agv {
+  animation-duration: 26s;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html.skin-premium .wms-motion-pick-cell__lamp {
+  animation-timing-function: ease-in-out;
+  animation-duration: 9s;
+}
+
+html.skin-premium .wms-motion-pick-cursor {
+  animation-duration: 9s;
+  animation-timing-function: cubic-bezier(0.45, 0.05, 0.2, 1);
+}
+
+html.skin-premium .wms-motion-waypoint path {
+  fill: color-mix(in oklab, var(--wms-brand-accent) 35%, transparent);
+  stroke: none;
+  opacity: 0.55;
+}
+
+html.skin-premium .wms-motion-scan-pulse,
+html.skin-premium .wms-motion-route-marker {
+  stroke-width: 2.5;
+  filter: drop-shadow(0 0 6px color-mix(in oklab, var(--wms-brand-primary) 45%, transparent));
+}
+
+html.skin-premium .wms-ambient-motion--preview {
+  border-radius: 1rem;
+  background:
+    radial-gradient(circle at 30% 30%, color-mix(in oklab, var(--wms-brand-primary) 16%, transparent), transparent 55%),
+    color-mix(in oklab, var(--wms-app-background) 86%, var(--wms-brand-soft));
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--wms-brand-primary) 14%, transparent);
 }
 
 @keyframes wms-rack-scan {
@@ -173,6 +570,17 @@
   to {
     transform: translate3d(0, 190px, 0);
     opacity: 0.56;
+  }
+}
+
+@keyframes wms-barcode-laser {
+  from {
+    transform: translate3d(0, -56px, 0);
+    opacity: 0.28;
+  }
+  to {
+    transform: translate3d(0, 56px, 0);
+    opacity: 0.7;
   }
 }
 
@@ -235,6 +643,113 @@
 @keyframes wms-wheel-spin {
   to {
     transform: rotate(1turn);
+  }
+}
+
+@keyframes wms-pick-lamp {
+  0%,
+  14% {
+    opacity: 0.95;
+  }
+  15%,
+  100% {
+    opacity: 0.12;
+  }
+}
+
+@keyframes wms-pick-cursor {
+  0%,
+  14% { transform: translate(224px, 168px); }
+  15%,
+  28% { transform: translate(364px, 248px); }
+  29%,
+  42% { transform: translate(504px, 188px); }
+  43%,
+  56% { transform: translate(644px, 288px); }
+  57%,
+  70% { transform: translate(784px, 208px); }
+  71%,
+  84% { transform: translate(924px, 268px); }
+  85%,
+  100% { transform: translate(224px, 168px); }
+}
+
+@keyframes wms-premium-drift {
+  from {
+    transform: translate3d(-12px, 8px, 0) scale(0.96);
+    opacity: 0.28;
+  }
+  to {
+    transform: translate3d(18px, -10px, 0) scale(1.06);
+    opacity: 0.48;
+  }
+}
+
+@keyframes wms-terminal-glitch-scene {
+  0%,
+  97.4%,
+  100% {
+    transform: none;
+    filter: none;
+    opacity: 1;
+    clip-path: none;
+  }
+  97.55% {
+    transform: translate3d(-7px, 1px, 0) skewX(-1.2deg);
+    filter: hue-rotate(25deg) contrast(1.35);
+    opacity: 0.82;
+    clip-path: inset(8% 0 62% 0);
+  }
+  97.7% {
+    transform: translate3d(9px, -2px, 0) skewX(0.8deg);
+    filter: hue-rotate(-55deg) saturate(1.7);
+    opacity: 0.9;
+    clip-path: inset(48% 0 18% 0);
+  }
+  97.85% {
+    transform: translate3d(-4px, 3px, 0);
+    filter: none;
+    opacity: 0.55;
+    clip-path: inset(0 0 72% 0);
+  }
+  98% {
+    transform: translate3d(5px, -1px, 0) skewX(-0.6deg);
+    filter: hue-rotate(12deg);
+    opacity: 0.95;
+    clip-path: none;
+  }
+  98.2%,
+  100% {
+    transform: none;
+    filter: none;
+    opacity: 1;
+    clip-path: none;
+  }
+}
+
+@keyframes wms-terminal-glitch-overlay {
+  0%,
+  97.4%,
+  98.25%,
+  100% {
+    opacity: 0;
+    transform: none;
+  }
+  97.55% {
+    opacity: 0.85;
+    transform: translate3d(4px, 0, 0);
+  }
+  97.7% {
+    opacity: 0.55;
+    transform: translate3d(-6px, 2px, 0);
+  }
+  97.9% {
+    opacity: 0.7;
+    transform: translate3d(2px, -1px, 0);
+  }
+  98.1% {
+    opacity: 0.25;
+    transform: none;
   }
 }
 

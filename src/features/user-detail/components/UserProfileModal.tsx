@@ -16,8 +16,9 @@ import { Dialog, DialogContent, DialogTitle, DialogClose } from '@/components/ui
 import { AppDropdown, type AppDropdownOption } from '@/components/shared/AppDropdown';
 import { OpsCircuitToggle } from '@/components/shared/OpsCircuitToggle';
 import { OpsLightSwitch } from '@/components/shared/OpsLightSwitch';
+import { ThemeDayNightSwitch } from '@/components/shared/ThemeDayNightSwitch';
 import { useTheme } from '@/components/theme-provider';
-import { brandThemes } from '@/lib/brand-themes';
+import { getCustomBrandThemePickerItems } from '@/lib/brand-themes';
 import { useAuthStore } from '@/stores/auth-store';
 import { useUserDetail } from '../hooks/useUserDetail';
 import { getFullProfileImageUrl } from '../utils/profile-image';
@@ -351,14 +352,23 @@ export function UserProfileModal({
                 </div>
               </div>
               <div className="wms-ops-profile-modal__switch-slot shrink-0 self-center">
-                <OpsLightSwitch
-                  checked={isDark}
-                  disabled={useCustomBrandThemes}
-                  onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
-                  onLabel={t('profile.terminal.switchOn', { defaultValue: 'ON' })}
-                  offLabel={t('profile.terminal.switchOff', { defaultValue: 'OFF' })}
-                  aria-label={t('profile.settingsAppearance')}
-                />
+                {skin === 'premium' ? (
+                  <ThemeDayNightSwitch
+                    checked={isDark}
+                    disabled={useCustomBrandThemes}
+                    onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+                    aria-label={t('profile.settingsAppearance')}
+                  />
+                ) : (
+                  <OpsLightSwitch
+                    checked={isDark}
+                    disabled={useCustomBrandThemes}
+                    onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+                    onLabel={t('profile.terminal.switchOn', { defaultValue: 'ON' })}
+                    offLabel={t('profile.terminal.switchOff', { defaultValue: 'OFF' })}
+                    aria-label={t('profile.settingsAppearance')}
+                  />
+                )}
               </div>
             </div>
 
@@ -455,7 +465,7 @@ export function UserProfileModal({
                   ) : null}
 
                   <div
-                    className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3"
+                    className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3"
                     role="radiogroup"
                     aria-label={t('profile.settingsBackgroundMotion')}
                   >
@@ -528,8 +538,9 @@ export function UserProfileModal({
 
               {useCustomBrandThemes ? (
               <div className="wms-ops-profile-modal__theme-grid wms-ops-scrollbar grid max-h-[260px] grid-cols-1 gap-2 overflow-y-auto pr-1 sm:grid-cols-2 md:max-h-[300px] lg:max-h-[340px]">
-                {brandThemes.map((item) => {
+                {getCustomBrandThemePickerItems().map((item) => {
                   const isSelected = item.id === brandTheme;
+                  const appearanceLabel = item.appearance === 'light' ? t('theme.light') : t('theme.dark');
 
                   return (
                     <button
@@ -551,8 +562,20 @@ export function UserProfileModal({
                         ))}
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-xs font-bold text-slate-900 sm:text-sm dark:text-white">
-                          {localizeLegacyUiText(item.label, activeLanguage)}
+                        <span className="flex min-w-0 items-center gap-1.5">
+                          <span className="truncate text-xs font-bold text-slate-900 sm:text-sm dark:text-white">
+                            {localizeLegacyUiText(item.label, activeLanguage)}
+                          </span>
+                          <span
+                            className={cn(
+                              'shrink-0 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide',
+                              item.appearance === 'light'
+                                ? 'bg-sky-500/15 text-sky-700 dark:bg-sky-400/15 dark:text-sky-300'
+                                : 'bg-slate-500/15 text-slate-700 dark:bg-white/10 dark:text-slate-300',
+                            )}
+                          >
+                            {appearanceLabel}
+                          </span>
                         </span>
                         <span className="mt-0.5 line-clamp-1 text-[10px] font-medium text-[var(--wms-app-text-muted)] sm:text-[11px]">
                           {localizeLegacyUiText(item.description, activeLanguage)}

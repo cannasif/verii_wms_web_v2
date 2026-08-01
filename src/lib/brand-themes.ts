@@ -46,8 +46,8 @@ export const brandThemes: readonly BrandThemeDefinition[] = [
     label: 'Depo Mavisi',
     description: 'Yoğun operasyon ekranları için güvenli mavi ton',
     className: 'theme-warehouse-blue',
-    appearance: 'dark',
-    swatches: ['#1e40af', '#2563eb', '#06b6d4'],
+    appearance: 'light',
+    swatches: ['#eff6ff', '#2563eb', '#06b6d4'],
   },
   {
     id: 'industrialSteel',
@@ -70,16 +70,16 @@ export const brandThemes: readonly BrandThemeDefinition[] = [
     label: 'Forklift Amber',
     description: 'Saha uyarıları ve sevkiyat operasyonları için sıcak aksan',
     className: 'theme-forklift-amber',
-    appearance: 'dark',
-    swatches: ['#92400e', '#f59e0b', '#f97316'],
+    appearance: 'light',
+    swatches: ['#fffbeb', '#f59e0b', '#f97316'],
   },
   {
     id: 'graphite',
     label: 'Grafit Operasyon',
     description: 'Az dikkat dağıtan, sade ve kurumsal görünüm',
     className: 'theme-graphite',
-    appearance: 'dark',
-    swatches: ['#111827', '#475569', '#94a3b8'],
+    appearance: 'light',
+    swatches: ['#f8fafc', '#475569', '#94a3b8'],
   },
   {
     id: 'executive',
@@ -94,8 +94,8 @@ export const brandThemes: readonly BrandThemeDefinition[] = [
     label: 'Bordo Kurumsal',
     description: 'ERP ve yönetim ekranları için ağır, kurumsal kırmızı ton',
     className: 'theme-burgundy',
-    appearance: 'dark',
-    swatches: ['#7f1d1d', '#b91c1c', '#f97316'],
+    appearance: 'light',
+    swatches: ['#fef2f2', '#b91c1c', '#f97316'],
   },
   {
     id: 'cleanLight',
@@ -141,6 +141,23 @@ export const brandThemes: readonly BrandThemeDefinition[] = [
 
 const brandThemeIdSet = new Set<string>(brandThemeIds);
 
+/** Picker order: lights (left col) then used when zipping with darks (right col). */
+const customBrandThemePickerLightIds: readonly BrandTheme[] = [
+  'cleanLight',
+  'warehouseBlue',
+  'forkliftAmber',
+  'graphite',
+  'burgundy',
+];
+
+const customBrandThemePickerDarkIds: readonly BrandTheme[] = [
+  'v3rii',
+  'industrialSteel',
+  'safetyGreen',
+  'executive',
+  'highContrast',
+];
+
 export function isBrandTheme(value: string | null | undefined): value is BrandTheme {
   return Boolean(value && brandThemeIdSet.has(value));
 }
@@ -151,6 +168,28 @@ export function getBrandThemeClass(theme: BrandTheme): string {
 
 export function getBrandThemeAppearance(theme: BrandTheme): BrandThemeAppearance {
   return brandThemes.find((item) => item.id === theme)?.appearance ?? 'dark';
+}
+
+/** Custom-theme picker: light column left, dark column right (zipped for a 2-col grid). */
+export function getCustomBrandThemePickerItems(): BrandThemeDefinition[] {
+  const byId = new Map(brandThemes.map((item) => [item.id, item]));
+  const lightThemes = customBrandThemePickerLightIds
+    .map((id) => byId.get(id))
+    .filter((item): item is BrandThemeDefinition => Boolean(item));
+  const darkThemes = customBrandThemePickerDarkIds
+    .map((id) => byId.get(id))
+    .filter((item): item is BrandThemeDefinition => Boolean(item));
+  const rowCount = Math.max(lightThemes.length, darkThemes.length);
+  const items: BrandThemeDefinition[] = [];
+
+  for (let index = 0; index < rowCount; index += 1) {
+    const lightTheme = lightThemes[index];
+    const darkTheme = darkThemes[index];
+    if (lightTheme) items.push(lightTheme);
+    if (darkTheme) items.push(darkTheme);
+  }
+
+  return items;
 }
 
 export function readUseCustomBrandThemes(storageKey = USE_CUSTOM_BRAND_THEMES_STORAGE_KEY): boolean {

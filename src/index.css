@@ -199,6 +199,10 @@ html.theme-warehouse-blue {
   --wms-brand-shadow: rgb(37 99 235 / 22%);
   --wms-brand-gradient: linear-gradient(90deg, #1e3a8a 0%, #2563eb 52%, #06b6d4 100%);
   --wms-brand-gradient-soft: linear-gradient(135deg, rgb(30 64 175 / 16%) 0%, rgb(37 99 235 / 12%) 52%, rgb(6 182 212 / 12%) 100%);
+  --wms-app-background: #f8fafc;
+  --wms-app-panel: rgb(255 255 255 / 96%);
+  --wms-app-panel-muted: rgb(239 246 255 / 92%);
+  --wms-app-panel-strong: #ffffff;
 }
 
 html.theme-industrial-steel {
@@ -235,6 +239,10 @@ html.theme-forklift-amber {
   --wms-brand-shadow: rgb(217 119 6 / 24%);
   --wms-brand-gradient: linear-gradient(90deg, #92400e 0%, #f59e0b 56%, #f97316 100%);
   --wms-brand-gradient-soft: linear-gradient(135deg, rgb(146 64 14 / 15%) 0%, rgb(245 158 11 / 12%) 56%, rgb(249 115 22 / 12%) 100%);
+  --wms-app-background: #fffbeb;
+  --wms-app-panel: rgb(255 255 255 / 96%);
+  --wms-app-panel-muted: rgb(255 251 235 / 92%);
+  --wms-app-panel-strong: #ffffff;
 }
 
 html.theme-graphite {
@@ -247,6 +255,10 @@ html.theme-graphite {
   --wms-brand-shadow: rgb(15 23 42 / 22%);
   --wms-brand-gradient: linear-gradient(90deg, #111827 0%, #475569 56%, #94a3b8 100%);
   --wms-brand-gradient-soft: linear-gradient(135deg, rgb(15 23 42 / 15%) 0%, rgb(71 85 105 / 12%) 56%, rgb(148 163 184 / 12%) 100%);
+  --wms-app-background: #f8fafc;
+  --wms-app-panel: rgb(255 255 255 / 96%);
+  --wms-app-panel-muted: rgb(241 245 249 / 92%);
+  --wms-app-panel-strong: #ffffff;
 }
 
 html.theme-executive {
@@ -271,6 +283,10 @@ html.theme-burgundy {
   --wms-brand-shadow: rgb(153 27 27 / 24%);
   --wms-brand-gradient: linear-gradient(90deg, #7f1d1d 0%, #b91c1c 58%, #f97316 100%);
   --wms-brand-gradient-soft: linear-gradient(135deg, rgb(127 29 29 / 16%) 0%, rgb(185 28 28 / 12%) 58%, rgb(249 115 22 / 12%) 100%);
+  --wms-app-background: #fef2f2;
+  --wms-app-panel: rgb(255 255 255 / 96%);
+  --wms-app-panel-muted: rgb(254 242 242 / 92%);
+  --wms-app-panel-strong: #ffffff;
 }
 
 html.theme-clean-light {
@@ -26314,11 +26330,18 @@ html:not(.skin-premium) .wms-ops-form .wms-ops-order-line-filters__chip-remove {
   position: relative;
   width: 16px;
   height: 16px;
-  margin: 0 auto;
+  margin: 0;
+  flex-shrink: 0;
   cursor: pointer;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
   vertical-align: middle;
+}
+
+/* Centered only in table / ready-column contexts (goods-receipt DNA) */
+.wms-ops-form :is(td, th).text-center > .wms-ops-order-checkbox,
+.wms-ops-form .wms-ops-receipt-entry-row__ready > .wms-ops-order-checkbox {
+  margin-inline: auto;
 }
 .wms-ops-form .wms-ops-order-checkbox input {
   position: absolute;

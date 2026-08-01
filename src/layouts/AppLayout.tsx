@@ -21,7 +21,7 @@ import { StockCardProvider } from '@/features/erp-mirror/components/StockCardPro
 import { useUserDetail } from '@/features/user-detail/hooks/useUserDetail';
 import {
   DEFAULT_WMS_BACKGROUND_MOTION,
-  isWmsBackgroundMotionVariant,
+  normalizeBackgroundMotionVariant,
 } from '@/lib/background-motion';
 
 export function AppLayout() {
@@ -55,9 +55,8 @@ export function AppLayout() {
 
     setBackgroundMotionPreferences(
       detail.backgroundMotionEnabled === true,
-      isWmsBackgroundMotionVariant(detail.backgroundMotionVariant)
-        ? detail.backgroundMotionVariant
-        : DEFAULT_WMS_BACKGROUND_MOTION,
+      normalizeBackgroundMotionVariant(detail.backgroundMotionVariant)
+        ?? DEFAULT_WMS_BACKGROUND_MOTION,
     );
   }, [
     setBackgroundMotionPreferences,

@@ -785,28 +785,22 @@ html.skin-premium .wms-ops-form .wms-ops-code-badge {
   box-shadow: none;
 }
 
-/* Circuit toggle → modern pill switch under host/portal */
-html.skin-premium .wms-ops-workspace-host .wms-ops-circuit-toggle,
-html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .wms-ops-circuit-toggle {
+/* Circuit toggle → modern pill switch (host + portaled dialogs) */
+html.skin-premium :is(.wms-ops-workspace-host, .wms-ops-detail-dialog, .wms-ops-form, #wms-workspace-portal-root) .wms-ops-circuit-toggle {
   padding: 0;
   border: none !important;
   background: transparent !important;
   box-shadow: none !important;
 }
 
-html.skin-premium .wms-ops-workspace-host .wms-ops-circuit-toggle,
-html.skin-premium .wms-ops-workspace-host .wms-ops-circuit-toggle__housing,
-html.skin-premium .wms-ops-workspace-host .wms-ops-circuit-toggle__rail,
-html.skin-premium .wms-ops-workspace-host .wms-ops-circuit-toggle__lever,
-html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .wms-ops-circuit-toggle,
-html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .wms-ops-circuit-toggle__housing,
-html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .wms-ops-circuit-toggle__rail,
-html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .wms-ops-circuit-toggle__lever {
+html.skin-premium :is(.wms-ops-workspace-host, .wms-ops-detail-dialog, .wms-ops-form, #wms-workspace-portal-root) .wms-ops-circuit-toggle,
+html.skin-premium :is(.wms-ops-workspace-host, .wms-ops-detail-dialog, .wms-ops-form, #wms-workspace-portal-root) .wms-ops-circuit-toggle__housing,
+html.skin-premium :is(.wms-ops-workspace-host, .wms-ops-detail-dialog, .wms-ops-form, #wms-workspace-portal-root) .wms-ops-circuit-toggle__rail,
+html.skin-premium :is(.wms-ops-workspace-host, .wms-ops-detail-dialog, .wms-ops-form, #wms-workspace-portal-root) .wms-ops-circuit-toggle__lever {
   border-radius: 999px !important;
 }
 
-html.skin-premium .wms-ops-workspace-host .wms-ops-circuit-toggle__housing,
-html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .wms-ops-circuit-toggle__housing {
+html.skin-premium :is(.wms-ops-workspace-host, .wms-ops-detail-dialog, .wms-ops-form, #wms-workspace-portal-root) .wms-ops-circuit-toggle__housing {
   width: 2.6rem !important;
   height: 1.45rem !important;
   border: 1px solid var(--wms-ops-field-border) !important;
@@ -815,8 +809,7 @@ html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .wms-ops-cir
   transition: background 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
 }
 
-html.skin-premium .wms-ops-workspace-host .wms-ops-circuit-toggle--on .wms-ops-circuit-toggle__housing,
-html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .wms-ops-circuit-toggle--on .wms-ops-circuit-toggle__housing {
+html.skin-premium :is(.wms-ops-workspace-host, .wms-ops-detail-dialog, .wms-ops-form, #wms-workspace-portal-root) .wms-ops-circuit-toggle--on .wms-ops-circuit-toggle__housing {
   border-color: color-mix(in oklab, var(--wms-brand-primary) 60%, transparent) !important;
   background: linear-gradient(135deg, var(--wms-brand-primary), var(--wms-brand-accent)) !important;
   box-shadow:
@@ -824,13 +817,11 @@ html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .wms-ops-cir
     0 0 22px -2px color-mix(in oklab, var(--wms-brand-primary) 38%, transparent) !important;
 }
 
-html.skin-premium .wms-ops-workspace-host .wms-ops-circuit-toggle__rail,
-html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .wms-ops-circuit-toggle__rail {
+html.skin-premium :is(.wms-ops-workspace-host, .wms-ops-detail-dialog, .wms-ops-form, #wms-workspace-portal-root) .wms-ops-circuit-toggle__rail {
   display: none !important;
 }
 
-html.skin-premium .wms-ops-workspace-host .wms-ops-circuit-toggle__lever,
-html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .wms-ops-circuit-toggle__lever {
+html.skin-premium :is(.wms-ops-workspace-host, .wms-ops-detail-dialog, .wms-ops-form, #wms-workspace-portal-root) .wms-ops-circuit-toggle__lever {
   top: 50% !important;
   left: 0.05rem !important;
   width: 1.35rem !important;
@@ -848,8 +839,7 @@ html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .wms-ops-cir
     box-shadow 220ms ease;
 }
 
-html.skin-premium .wms-ops-workspace-host .wms-ops-circuit-toggle__lever::after,
-html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .wms-ops-circuit-toggle__lever::after {
+html.skin-premium :is(.wms-ops-workspace-host, .wms-ops-detail-dialog, .wms-ops-form, #wms-workspace-portal-root) .wms-ops-circuit-toggle__lever::after {
   content: '';
   position: absolute;
   inset: 26%;
@@ -863,25 +853,21 @@ html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .wms-ops-cir
     transform 260ms cubic-bezier(0.34, 1.5, 0.64, 1);
 }
 
-html.skin-premium .wms-ops-workspace-host .wms-ops-circuit-toggle--on .wms-ops-circuit-toggle__lever,
-html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .wms-ops-circuit-toggle--on .wms-ops-circuit-toggle__lever {
+html.skin-premium :is(.wms-ops-workspace-host, .wms-ops-detail-dialog, .wms-ops-form, #wms-workspace-portal-root) .wms-ops-circuit-toggle--on .wms-ops-circuit-toggle__lever {
   left: calc(100% - 1.4rem) !important;
   outline-color: color-mix(in oklab, var(--wms-brand-primary) 70%, transparent);
 }
 
-html.skin-premium .wms-ops-workspace-host .wms-ops-circuit-toggle--on .wms-ops-circuit-toggle__lever::after,
-html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .wms-ops-circuit-toggle--on .wms-ops-circuit-toggle__lever::after {
+html.skin-premium :is(.wms-ops-workspace-host, .wms-ops-detail-dialog, .wms-ops-form, #wms-workspace-portal-root) .wms-ops-circuit-toggle--on .wms-ops-circuit-toggle__lever::after {
   opacity: 1;
   transform: scale(1);
 }
 
-html.skin-premium .wms-ops-workspace-host .wms-ops-circuit-toggle-field,
-html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .wms-ops-circuit-toggle-field {
+html.skin-premium :is(.wms-ops-workspace-host, .wms-ops-detail-dialog, .wms-ops-form, #wms-workspace-portal-root) .wms-ops-circuit-toggle-field {
   border-radius: 0.8rem;
 }
 
-html.skin-premium .wms-ops-workspace-host .wms-ops-circuit-toggle--compact,
-html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .wms-ops-circuit-toggle--compact {
+html.skin-premium :is(.wms-ops-workspace-host, .wms-ops-detail-dialog, .wms-ops-form, #wms-workspace-portal-root) .wms-ops-circuit-toggle--compact {
   width: auto;
   height: auto;
   padding: 0.35rem;
@@ -1587,5 +1573,96 @@ html.skin-premium .wms-ops-list .input[aria-invalid='true'] {
     0 0 0 1px rgb(239 68 68 / 55%),
     0 0 0 3px rgb(239 68 68 / 22%) !important;
   outline: none !important;
+}
+
+/* Day/night appearance toggle (premium profile settings) */
+.wms-theme-day-night-switch {
+  position: relative;
+  display: inline-block;
+  width: 2.9rem;
+  font-size: inherit;
+  cursor: pointer;
+  line-height: 0;
+}
+
+.wms-theme-day-night-switch--disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.wms-theme-day-night-switch__input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  margin: 0;
+}
+
+.wms-theme-day-night-switch__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.wms-theme-day-night-switch__container,
+.wms-theme-day-night-switch__patches,
+.wms-theme-day-night-switch__stars,
+.wms-theme-day-night-switch__button,
+.wms-theme-day-night-switch__sun,
+.wms-theme-day-night-switch__moon,
+.wms-theme-day-night-switch__cloud {
+  transition-property: transform, opacity, fill;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 0.25s;
+}
+
+.wms-theme-day-night-switch__button {
+  transform: translate(2.333px, 2.333px);
+}
+
+.wms-theme-day-night-switch__input:checked + .wms-theme-day-night-switch__svg .wms-theme-day-night-switch__container {
+  fill: #2b4360;
+}
+
+.wms-theme-day-night-switch__input:checked + .wms-theme-day-night-switch__svg .wms-theme-day-night-switch__button {
+  transform: translate(28px, 2.333px);
+}
+
+.wms-theme-day-night-switch__sun {
+  opacity: 1;
+}
+
+.wms-theme-day-night-switch__input:checked + .wms-theme-day-night-switch__svg .wms-theme-day-night-switch__sun {
+  opacity: 0;
+}
+
+.wms-theme-day-night-switch__moon {
+  opacity: 0;
+}
+
+.wms-theme-day-night-switch__input:checked + .wms-theme-day-night-switch__svg .wms-theme-day-night-switch__moon {
+  opacity: 1;
+}
+
+.wms-theme-day-night-switch__cloud {
+  opacity: 1;
+}
+
+.wms-theme-day-night-switch__input:checked + .wms-theme-day-night-switch__svg .wms-theme-day-night-switch__cloud {
+  opacity: 0;
+}
+
+.wms-theme-day-night-switch__stars {
+  opacity: 0;
+}
+
+.wms-theme-day-night-switch__input:checked + .wms-theme-day-night-switch__svg .wms-theme-day-night-switch__stars {
+  opacity: 1;
+}
+
+.wms-theme-day-night-switch__input:focus-visible + .wms-theme-day-night-switch__svg {
+  outline: 2px solid var(--wms-brand-ring, rgb(14 165 233 / 40%));
+  outline-offset: 3px;
+  border-radius: 999px;
 }
 

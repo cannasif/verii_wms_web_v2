@@ -35,7 +35,7 @@ export function OpsSkinCheckbox({
     return (
       <label
         className={cn(
-          'wms-ops-order-checkbox',
+          'wms-ops-order-checkbox shrink-0',
           disabled && 'pointer-events-none opacity-50',
           className,
         )}
