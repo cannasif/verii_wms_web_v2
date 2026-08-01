@@ -2852,25 +2852,25 @@
     },
     "steelReportLines": {
       "dCode": "DCode",
-      "supplierSerialNo": "Supplier Serial",
-      "secondarySerialNo": "Secondary Serial",
-      "stockCode": "Stock Code",
-      "stockName": "Stock Name",
-      "importReferenceNo": "Excel / Import",
-      "netsisOrderNo": "Netsis Order",
-      "materialGrade": "Grade",
-      "combinedSize": "Size",
-      "heatNumber": "Heat No",
-      "certificateNumber": "Certificate",
-      "expectedQuantity": "Expected",
-      "arrivedQuantity": "Arrived",
-      "approvedQuantity": "Approved",
-      "rejectedQuantity": "Rejected",
-      "arrivalStatus": "Arrival",
-      "inspectionStatus": "Inspection",
-      "conversionStatus": "Goods Receipt",
-      "putawayStatus": "Placement",
-      "goodsReceiptNo": "Goods Receipt No"
+      "supplierSerialNo": "Serie proveedor",
+      "secondarySerialNo": "Serie secundaria",
+      "stockCode": "Código stock",
+      "stockName": "Nombre stock",
+      "importReferenceNo": "Excel / Importación",
+      "netsisOrderNo": "Pedido Netsis",
+      "materialGrade": "Calidad",
+      "combinedSize": "Medida",
+      "heatNumber": "Nº colada",
+      "certificateNumber": "Certificado",
+      "expectedQuantity": "Esperado",
+      "arrivedQuantity": "Recibido",
+      "approvedQuantity": "Aprobado",
+      "rejectedQuantity": "Rechazado",
+      "arrivalStatus": "Llegada",
+      "inspectionStatus": "Inspección",
+      "conversionStatus": "Recepción",
+      "putawayStatus": "Ubicación",
+      "goodsReceiptNo": "Nº recepción"
     },
     "stockMovements": {
       "title": "Stock Movement Ledger",
@@ -5082,11 +5082,11 @@
       }
     },
     "operations": {
-      "receiptTitle": "SAC Goods Receipt Order",
-      "receiptDescription": "Convert inspected sheets into a shared goods receipt order and assign operation users.",
-      "placementTitle": "SAC Shelf Placement",
-      "placementDescription": "Place physically accepted sheets to their final location with stock movement while viewing shelf occupancy.",
-      "receiptTab": "Orden de recepción",
+      "receiptTitle": "Albarán de compra y recepción SAC",
+      "receiptDescription": "Busque chapas por importación Excel o número de albarán; acepte directamente las filas aprobadas aún no enviadas al ERP.",
+      "placementTitle": "Ubicación en estantería SAC",
+      "placementDescription": "Ubique las chapas físicamente aceptadas en su ubicación final con movimiento de stock mientras ve la ocupación de la estantería.",
+      "receiptTab": "Recepción directa",
       "placementTab": "Ubicación en estantería",
       "searchPlaceholder": "Search DCode, serial, stock, order or plan...",
       "pageLabel": "Page {{page}} / {{totalPages}}",
@@ -5124,8 +5124,52 @@
         "createOrderButton": "Create Goods Receipt Order",
         "samePlanOnly": "Only sheets from the same SAC plan can be selected in one goods receipt order.",
         "assigneeRequired": "Select users for the goods receipt order or assign all active users.",
-        "convertSuccess": "{{documentNo}} · {{count}} sheets transferred to goods receipt order.",
-        "convertFailed": "Could not create goods receipt order."
+        "convertSuccess": "{{documentNo}} · {{count}} chapas aceptadas mediante recepción directa.",
+        "convertFailed": "No se pudo completar la recepción directa.",
+        "sourceTitle": "Buscar origen SAC por importación Excel o albarán",
+        "sourceText": "Todas las chapas vinculadas al origen se muestran juntas — aprobadas, no aprobadas y procesadas anteriormente. Solo se pueden seleccionar filas aprobadas aún no transferidas a recepción.",
+        "pendingImportLabel": "Importación Excel incompleta",
+        "pendingImportPlaceholder": "Seleccione importación con recepción incompleta",
+        "pendingImportEmpty": "No se encontró importación Excel pendiente",
+        "waybillPrefix": "Albarán {{no}} · ",
+        "pendingOptionDescription": "{{waybillPrefix}}{{pending}}/{{total}} chapas en espera",
+        "referenceLabel": "Ref. importación Excel / nº albarán",
+        "referencePlaceholder": "Ref. importación o nº albarán de compra",
+        "fetchSheetsButton": "Cargar chapas",
+        "metricImportRef": "Ref. importación Excel",
+        "metricSourceFile": "Archivo origen",
+        "metricSupplier": "Proveedor",
+        "metricTotalSheets": "Total chapas",
+        "linkedSheetsTitle": "Chapas vinculadas a la importación",
+        "linkedSheetsSummary": "{{total}} filas · {{ready}} filas listas para recepción directa",
+        "selectAllEligible": "Seleccionar todos los elegibles",
+        "expectedQty": "Esperado",
+        "approvalErpStatus": "Aprobación / estado ERP",
+        "selectRowAria": "Seleccionar {{dCode}}",
+        "directReceiptTitle": "Recepción SAC directa",
+        "directReceiptText": "Esta acción no crea tarea ni asignación de usuario; acepta directamente las chapas seleccionadas y ejecuta el envío ERP según la política de proceso.",
+        "waybillInfoTitle": "Información del albarán",
+        "waybillInfoText": "El albarán introducido en la importación Excel se rellena automáticamente; puede cambiarlo para esta recepción si es necesario.",
+        "electronicWaybill": "E-albarán / GIB",
+        "gibWaybillNo": "Nº e-albarán GIB",
+        "waybillNo": "Número de albarán",
+        "waybillDate": "Fecha del albarán",
+        "completeDirectReceipt": "Completar recepción directa",
+        "receiptCompletedNote": "Recepción completada; política ERP ejecutada.",
+        "printReceiptLabels": "Imprimir etiquetas de recepción",
+        "receiptCreatedErp": "Recepción creada · ERP {{status}}",
+        "receiptCreated": "Recepción creada",
+        "awaitingApproval": "Pendiente de aprobación · {{status}}",
+        "noApprovedQty": "Sin cantidad aprobada",
+        "readyForDirectReceipt": "Listo para recepción directa",
+        "referenceRequired": "Introduzca la referencia de importación Excel o el número de albarán.",
+        "sourceLoaded": "Importación {{reference}} cargada.",
+        "sourceLoadFailed": "No se pudo cargar el origen SAC.",
+        "waybillValidationElectronic": "El número e-albarán/GIB debe tener exactamente 15 caracteres incluidos símbolos, y la fecha del albarán es obligatoria.",
+        "waybillValidationPaper": "El número de albarán debe tener exactamente 15 caracteres incluidos símbolos, y la fecha del albarán es obligatoria.",
+        "noPrintableLabels": "No se encontraron etiquetas de recepción imprimibles.",
+        "printFailed": "No se pudieron imprimir las etiquetas.",
+        "printTitle": "{{documentNo}} etiquetas recepción SAC"
       },
       "placement": {
         "pendingTitle": "Sheets Waiting for Placement",
@@ -5151,56 +5195,56 @@
       }
     },
     "reportsPage": {
-      "eyebrow": "Goods Receipt · SAC Operations",
-      "title": "SAC Operations Reports",
-      "description": "Monitor live operation data with server-side search, filtering and sorting. Cards change the report scope.",
-      "summaryError": "Report summaries could not be loaded; you can continue working from the detail list.",
+      "eyebrow": "Recepción · Operaciones SAC",
+      "title": "Informes de operaciones SAC",
+      "description": "Supervise datos operativos en vivo con búsqueda, filtrado y ordenación en servidor. Las tarjetas cambian el alcance del informe.",
+      "summaryError": "No se pudieron cargar los resúmenes del informe; puede continuar con la lista detallada.",
       "views": {
         "all": {
-          "title": "Sheet Traceability Report",
-          "description": "Search all sheets by DCode, supplier serial, stock, quality, goods receipt and placement status."
+          "title": "Informe de trazabilidad de chapas",
+          "description": "Busque todas las chapas por DCode, serie proveedor, stock, calidad, recepción y estado de ubicación."
         },
         "expected": {
-          "title": "Expected Sheets",
-          "description": "Sheets not yet arrived on site or with incomplete vehicle acceptance."
+          "title": "Chapas esperadas",
+          "description": "Chapas que aún no han llegado al sitio o con aceptación de vehículo incompleta."
         },
         "inspection": {
-          "title": "Sheets Pending Inspection",
-          "description": "Sheets awaiting physical and quality decision."
+          "title": "Chapas pendientes de inspección",
+          "description": "Chapas en espera de decisión física y de calidad."
         },
         "rejected": {
-          "title": "Rejection and Exception Report",
-          "description": "Review rejected sheets with stock, serial and material details."
+          "title": "Informe de rechazo y excepción",
+          "description": "Revise chapas rechazadas con detalles de stock, serie y material."
         },
         "receiptReady": {
-          "title": "Sheets Ready for Goods Receipt",
-          "description": "Approved sheets not yet transferred to shared goods receipt document."
+          "title": "Chapas listas para recepción",
+          "description": "Chapas aprobadas aún no transferidas al documento de recepción."
         },
         "putaway": {
-          "title": "Sheets Pending Placement",
-          "description": "Sheets with goods receipt created but final yard or shelf location not completed."
+          "title": "Chapas pendientes de ubicación",
+          "description": "Chapas con recepción creada pero ubicación final en patio o estantería sin completar."
         }
       },
       "cards": {
-        "all": "Total Sheets",
-        "expected": "Awaiting Arrival",
-        "inspection": "Pending Inspection",
-        "receiptReady": "Ready for Receipt",
-        "putaway": "Pending Placement",
-        "rejected": "Rejected"
+        "all": "Total chapas",
+        "expected": "En espera de llegada",
+        "inspection": "Inspección pendiente",
+        "receiptReady": "Listas para recepción",
+        "putaway": "Ubicación pendiente",
+        "rejected": "Rechazadas"
       },
       "statusLabels": {
-        "Expected": "Expected",
-        "Arrived": "Arrived",
-        "Missing": "Missing",
-        "Pending": "Pending",
-        "Inspected": "Inspected",
-        "Approved": "Approved",
-        "PartiallyApproved": "Partially Approved",
-        "Rejected": "Rejected",
-        "NotCreated": "Not Created",
-        "Created": "Created",
-        "Placed": "Placed"
+        "Expected": "Esperado",
+        "Arrived": "Recibido",
+        "Missing": "Faltante",
+        "Pending": "Pendiente",
+        "Inspected": "Inspeccionado",
+        "Approved": "Aprobado",
+        "PartiallyApproved": "Parcialmente aprobado",
+        "Rejected": "Rechazado",
+        "NotCreated": "No creado",
+        "Created": "Creado",
+        "Placed": "Ubicado"
       }
     }
   },

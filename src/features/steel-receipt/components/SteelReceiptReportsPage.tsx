@@ -113,7 +113,7 @@ export function SteelReceiptReportsPage(): ReactElement {
 
     {summary.isError && <div role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-sm text-rose-600">{t(`${R}.summaryError`)}</div>}
 
-    <AdvancedDataGrid key={view} pageKey={`steel-reports-${view}`} title={t(`${R}.views.${view}.title`)} description={t(`${R}.views.${view}.description`)} columns={columns} fetchPage={fetchPage}/>
+    <AdvancedDataGrid key={`${view}-${gridLanguage}`} pageKey={`steel-reports-${view}`} title={t(`${R}.views.${view}.title`)} description={t(`${R}.views.${view}.description`)} columns={columns} fetchPage={fetchPage}/>
   </section>;
 }
 

@@ -2852,25 +2852,25 @@
     },
     "steelReportLines": {
       "dCode": "DCode",
-      "supplierSerialNo": "Supplier Serial",
-      "secondarySerialNo": "Secondary Serial",
-      "stockCode": "Stock Code",
-      "stockName": "Stock Name",
+      "supplierSerialNo": "Serie fornitore",
+      "secondarySerialNo": "Serie secondaria",
+      "stockCode": "Codice stock",
+      "stockName": "Nome stock",
       "importReferenceNo": "Excel / Import",
-      "netsisOrderNo": "Netsis Order",
-      "materialGrade": "Grade",
-      "combinedSize": "Size",
-      "heatNumber": "Heat No",
-      "certificateNumber": "Certificate",
-      "expectedQuantity": "Expected",
-      "arrivedQuantity": "Arrived",
-      "approvedQuantity": "Approved",
-      "rejectedQuantity": "Rejected",
-      "arrivalStatus": "Arrival",
-      "inspectionStatus": "Inspection",
-      "conversionStatus": "Goods Receipt",
-      "putawayStatus": "Placement",
-      "goodsReceiptNo": "Goods Receipt No"
+      "netsisOrderNo": "Ordine Netsis",
+      "materialGrade": "Qualità",
+      "combinedSize": "Dimensione",
+      "heatNumber": "N° colata",
+      "certificateNumber": "Certificato",
+      "expectedQuantity": "Atteso",
+      "arrivedQuantity": "Arrivato",
+      "approvedQuantity": "Approvato",
+      "rejectedQuantity": "Rifiutato",
+      "arrivalStatus": "Arrivo",
+      "inspectionStatus": "Controllo",
+      "conversionStatus": "Ricevimento",
+      "putawayStatus": "Collocazione",
+      "goodsReceiptNo": "N° ricevimento"
     },
     "stockMovements": {
       "title": "Stock Movement Ledger",
@@ -5082,11 +5082,11 @@
       }
     },
     "operations": {
-      "receiptTitle": "SAC Goods Receipt Order",
-      "receiptDescription": "Convert inspected sheets into a shared goods receipt order and assign operation users.",
-      "placementTitle": "SAC Shelf Placement",
-      "placementDescription": "Place physically accepted sheets to their final location with stock movement while viewing shelf occupancy.",
-      "receiptTab": "Ordine di ricevimento",
+      "receiptTitle": "Bolla d'acquisto e ricevimento SAC",
+      "receiptDescription": "Trova le lastre tramite import Excel o numero bolla; accetta direttamente le righe approvate non ancora inviate all'ERP.",
+      "placementTitle": "Collocazione scaffale SAC",
+      "placementDescription": "Colloca le lastre fisicamente accettate nella posizione finale con movimento stock visualizzando l'occupazione dello scaffale.",
+      "receiptTab": "Ricevimento diretto",
       "placementTab": "Collocazione a scaffale",
       "searchPlaceholder": "Search DCode, serial, stock, order or plan...",
       "pageLabel": "Page {{page}} / {{totalPages}}",
@@ -5124,8 +5124,52 @@
         "createOrderButton": "Create Goods Receipt Order",
         "samePlanOnly": "Only sheets from the same SAC plan can be selected in one goods receipt order.",
         "assigneeRequired": "Select users for the goods receipt order or assign all active users.",
-        "convertSuccess": "{{documentNo}} · {{count}} sheets transferred to goods receipt order.",
-        "convertFailed": "Could not create goods receipt order."
+        "convertSuccess": "{{documentNo}} · {{count}} lastre accettate tramite ricevimento diretto.",
+        "convertFailed": "Impossibile completare il ricevimento diretto.",
+        "sourceTitle": "Trova origine SAC tramite import Excel o bolla",
+        "sourceText": "Tutte le lastre collegate all'origine sono mostrate insieme — approvate, non approvate e già elaborate. Solo le righe approvate non ancora trasferite in ricevimento possono essere selezionate.",
+        "pendingImportLabel": "Import Excel incompleto",
+        "pendingImportPlaceholder": "Seleziona import con ricevimento incompleto",
+        "pendingImportEmpty": "Nessun import Excel in attesa trovato",
+        "waybillPrefix": "Bolla {{no}} · ",
+        "pendingOptionDescription": "{{waybillPrefix}}{{pending}}/{{total}} lastre in attesa",
+        "referenceLabel": "Rif. import Excel / n. bolla",
+        "referencePlaceholder": "Rif. import o n. bolla d'acquisto",
+        "fetchSheetsButton": "Carica lastre",
+        "metricImportRef": "Rif. import Excel",
+        "metricSourceFile": "File sorgente",
+        "metricSupplier": "Fornitore",
+        "metricTotalSheets": "Totale lastre",
+        "linkedSheetsTitle": "Lastre collegate all'import",
+        "linkedSheetsSummary": "{{total}} righe · {{ready}} righe pronte per ricevimento diretto",
+        "selectAllEligible": "Seleziona tutti gli idonei",
+        "expectedQty": "Atteso",
+        "approvalErpStatus": "Approvazione / stato ERP",
+        "selectRowAria": "Seleziona {{dCode}}",
+        "directReceiptTitle": "Ricevimento SAC diretto",
+        "directReceiptText": "Questa azione non crea attività né assegnazione utente; accetta direttamente le lastre selezionate ed esegue l'invio ERP secondo la policy di processo.",
+        "waybillInfoTitle": "Informazioni bolla",
+        "waybillInfoText": "La bolla inserita nell'import Excel viene compilata automaticamente; puoi modificarla per questo ricevimento se necessario.",
+        "electronicWaybill": "E-bolla / GIB",
+        "gibWaybillNo": "N. e-bolla GIB",
+        "waybillNo": "Numero bolla",
+        "waybillDate": "Data bolla",
+        "completeDirectReceipt": "Completa ricevimento diretto",
+        "receiptCompletedNote": "Ricevimento completato; policy ERP eseguita.",
+        "printReceiptLabels": "Stampa etichette ricevimento",
+        "receiptCreatedErp": "Ricevimento creato · ERP {{status}}",
+        "receiptCreated": "Ricevimento creato",
+        "awaitingApproval": "In attesa di approvazione · {{status}}",
+        "noApprovedQty": "Nessuna quantità approvata",
+        "readyForDirectReceipt": "Pronto per ricevimento diretto",
+        "referenceRequired": "Inserisci riferimento import Excel o numero bolla.",
+        "sourceLoaded": "Import {{reference}} caricato.",
+        "sourceLoadFailed": "Impossibile caricare l'origine SAC.",
+        "waybillValidationElectronic": "Il numero e-bolla/GIB deve essere esattamente di 15 caratteri inclusi i simboli, e la data bolla è obbligatoria.",
+        "waybillValidationPaper": "Il numero bolla deve essere esattamente di 15 caratteri inclusi i simboli, e la data bolla è obbligatoria.",
+        "noPrintableLabels": "Nessuna etichetta ricevimento stampabile trovata.",
+        "printFailed": "Impossibile stampare le etichette.",
+        "printTitle": "{{documentNo}} etichette ricevimento SAC"
       },
       "placement": {
         "pendingTitle": "Sheets Waiting for Placement",
@@ -5151,56 +5195,56 @@
       }
     },
     "reportsPage": {
-      "eyebrow": "Goods Receipt · SAC Operations",
-      "title": "SAC Operations Reports",
-      "description": "Monitor live operation data with server-side search, filtering and sorting. Cards change the report scope.",
-      "summaryError": "Report summaries could not be loaded; you can continue working from the detail list.",
+      "eyebrow": "Ricevimento · Operazioni SAC",
+      "title": "Report operazioni SAC",
+      "description": "Monitora i dati operativi live con ricerca, filtri e ordinamento lato server. Le schede cambiano l'ambito del report.",
+      "summaryError": "Impossibile caricare i riepiloghi del report; puoi continuare con l'elenco dettagliato.",
       "views": {
         "all": {
-          "title": "Sheet Traceability Report",
-          "description": "Search all sheets by DCode, supplier serial, stock, quality, goods receipt and placement status."
+          "title": "Report tracciabilità lastre",
+          "description": "Cerca tutte le lastre per DCode, serie fornitore, stock, qualità, ricevimento e stato collocazione."
         },
         "expected": {
-          "title": "Expected Sheets",
-          "description": "Sheets not yet arrived on site or with incomplete vehicle acceptance."
+          "title": "Lastre attese",
+          "description": "Lastre non ancora arrivate in sito o con accettazione veicolo incompleta."
         },
         "inspection": {
-          "title": "Sheets Pending Inspection",
-          "description": "Sheets awaiting physical and quality decision."
+          "title": "Lastre in attesa di controllo",
+          "description": "Lastre in attesa di decisione fisica e qualità."
         },
         "rejected": {
-          "title": "Rejection and Exception Report",
-          "description": "Review rejected sheets with stock, serial and material details."
+          "title": "Report rifiuti ed eccezioni",
+          "description": "Esamina le lastre rifiutate con dettagli stock, serie e materiale."
         },
         "receiptReady": {
-          "title": "Sheets Ready for Goods Receipt",
-          "description": "Approved sheets not yet transferred to shared goods receipt document."
+          "title": "Lastre pronte per ricevimento",
+          "description": "Lastre approvate non ancora trasferite al documento di ricevimento."
         },
         "putaway": {
-          "title": "Sheets Pending Placement",
-          "description": "Sheets with goods receipt created but final yard or shelf location not completed."
+          "title": "Lastre in attesa di collocazione",
+          "description": "Lastre con ricevimento creato ma posizione finale in cantiere o scaffale non completata."
         }
       },
       "cards": {
-        "all": "Total Sheets",
-        "expected": "Awaiting Arrival",
-        "inspection": "Pending Inspection",
-        "receiptReady": "Ready for Receipt",
-        "putaway": "Pending Placement",
-        "rejected": "Rejected"
+        "all": "Totale lastre",
+        "expected": "In attesa di arrivo",
+        "inspection": "Controllo in attesa",
+        "receiptReady": "Pronte per ricevimento",
+        "putaway": "Collocazione in attesa",
+        "rejected": "Rifiutate"
       },
       "statusLabels": {
-        "Expected": "Expected",
-        "Arrived": "Arrived",
-        "Missing": "Missing",
-        "Pending": "Pending",
-        "Inspected": "Inspected",
-        "Approved": "Approved",
-        "PartiallyApproved": "Partially Approved",
-        "Rejected": "Rejected",
-        "NotCreated": "Not Created",
-        "Created": "Created",
-        "Placed": "Placed"
+        "Expected": "Atteso",
+        "Arrived": "Arrivato",
+        "Missing": "Mancante",
+        "Pending": "In attesa",
+        "Inspected": "Ispezionato",
+        "Approved": "Approvato",
+        "PartiallyApproved": "Parzialmente approvato",
+        "Rejected": "Rifiutato",
+        "NotCreated": "Non creato",
+        "Created": "Creato",
+        "Placed": "Collocato"
       }
     }
   },

@@ -4387,25 +4387,25 @@
     },
     "steelReportLines": {
       "dCode": "DCode",
-      "supplierSerialNo": "Supplier Serial",
-      "secondarySerialNo": "Secondary Serial",
-      "stockCode": "Stock Code",
-      "stockName": "Stock Name",
+      "supplierSerialNo": "Lieferantenseriennummer",
+      "secondarySerialNo": "Sekundärserie",
+      "stockCode": "Artikelnummer",
+      "stockName": "Artikelname",
       "importReferenceNo": "Excel / Import",
-      "netsisOrderNo": "Netsis Order",
-      "materialGrade": "Grade",
-      "combinedSize": "Size",
-      "heatNumber": "Heat No",
-      "certificateNumber": "Certificate",
-      "expectedQuantity": "Expected",
-      "arrivedQuantity": "Arrived",
-      "approvedQuantity": "Approved",
-      "rejectedQuantity": "Rejected",
-      "arrivalStatus": "Arrival",
-      "inspectionStatus": "Inspection",
-      "conversionStatus": "Goods Receipt",
-      "putawayStatus": "Placement",
-      "goodsReceiptNo": "Goods Receipt No"
+      "netsisOrderNo": "Netsis-Auftrag",
+      "materialGrade": "Güte",
+      "combinedSize": "Abmessung",
+      "heatNumber": "Schmelznummer",
+      "certificateNumber": "Zertifikat",
+      "expectedQuantity": "Erwartet",
+      "arrivedQuantity": "Angekommen",
+      "approvedQuantity": "Genehmigt",
+      "rejectedQuantity": "Abgelehnt",
+      "arrivalStatus": "Ankunft",
+      "inspectionStatus": "Kontrolle",
+      "conversionStatus": "Wareneingang",
+      "putawayStatus": "Einlagerung",
+      "goodsReceiptNo": "Wareneingangs-Nr."
     },
     "stockMovements": {
       "title": "Stock Movement Ledger",
@@ -6396,11 +6396,11 @@
       }
     },
     "operations": {
-      "receiptTitle": "SAC Goods Receipt Order",
-      "receiptDescription": "Convert inspected sheets into a shared goods receipt order and assign operation users.",
-      "placementTitle": "SAC Shelf Placement",
-      "placementDescription": "Place physically accepted sheets to their final location with stock movement while viewing shelf occupancy.",
-      "receiptTab": "Wareneingangsauftrag",
+      "receiptTitle": "SAC Einkaufs-Lieferschein und Wareneingang",
+      "receiptDescription": "Bleche per Excel-Import oder Lieferscheinnummer finden; genehmigte, noch nicht an ERP übertragene Zeilen direkt annehmen.",
+      "placementTitle": "SAC Regaleinlagerung",
+      "placementDescription": "Physisch angenommene Bleche mit Bestandsbewegung an den endgültigen Standort bringen und Regalbelegung anzeigen.",
+      "receiptTab": "Direkter Wareneingang",
       "placementTab": "Regalplatzierung",
       "searchPlaceholder": "Search DCode, serial, stock, order or plan...",
       "pageLabel": "Page {{page}} / {{totalPages}}",
@@ -6438,8 +6438,52 @@
         "createOrderButton": "Create Goods Receipt Order",
         "samePlanOnly": "Only sheets from the same SAC plan can be selected in one goods receipt order.",
         "assigneeRequired": "Select users for the goods receipt order or assign all active users.",
-        "convertSuccess": "{{documentNo}} · {{count}} sheets transferred to goods receipt order.",
-        "convertFailed": "Could not create goods receipt order."
+        "convertSuccess": "{{documentNo}} · {{count}} Bleche direkt im Wareneingang angenommen.",
+        "convertFailed": "Direkter Wareneingang konnte nicht abgeschlossen werden.",
+        "sourceTitle": "SAC-Quelle per Excel-Import oder Lieferschein finden",
+        "sourceText": "Alle mit der Quelle verknüpften Bleche werden gemeinsam angezeigt – genehmigt, nicht genehmigt und bereits verarbeitet. Nur genehmigte Zeilen, die noch nicht im Wareneingang erfasst wurden, können ausgewählt werden.",
+        "pendingImportLabel": "Unvollständiger Excel-Import",
+        "pendingImportPlaceholder": "Import mit unvollständigem Wareneingang auswählen",
+        "pendingImportEmpty": "Kein ausstehender Excel-Import gefunden",
+        "waybillPrefix": "Lieferschein {{no}} · ",
+        "pendingOptionDescription": "{{waybillPrefix}}{{pending}}/{{total}} Bleche warten",
+        "referenceLabel": "Excel-Importreferenz / Lieferschein-Nr.",
+        "referencePlaceholder": "Import-Ref. oder Einkaufs-Lieferschein-Nr.",
+        "fetchSheetsButton": "Bleche laden",
+        "metricImportRef": "Excel-Import-Ref.",
+        "metricSourceFile": "Quelldatei",
+        "metricSupplier": "Lieferant",
+        "metricTotalSheets": "Bleche gesamt",
+        "linkedSheetsTitle": "Mit Import verknüpfte Bleche",
+        "linkedSheetsSummary": "{{total}} Zeilen · {{ready}} Zeilen bereit für direkten Wareneingang",
+        "selectAllEligible": "Alle geeigneten auswählen",
+        "expectedQty": "Erwartet",
+        "approvalErpStatus": "Genehmigung / ERP-Status",
+        "selectRowAria": "{{dCode}} auswählen",
+        "directReceiptTitle": "Direkter SAC-Wareneingang",
+        "directReceiptText": "Diese Aktion erstellt keine Aufgabe oder Benutzerzuweisung; ausgewählte Bleche werden direkt angenommen und die ERP-Übertragung gemäß Prozessrichtlinie ausgeführt.",
+        "waybillInfoTitle": "Lieferscheininformationen",
+        "waybillInfoText": "Der im Excel-Import erfasste Lieferschein wird automatisch übernommen; Sie können ihn für diesen Wareneingang bei Bedarf ändern.",
+        "electronicWaybill": "E-Lieferschein / GIB",
+        "gibWaybillNo": "GIB E-Lieferschein-Nr.",
+        "waybillNo": "Lieferscheinnummer",
+        "waybillDate": "Lieferscheindatum",
+        "completeDirectReceipt": "Direkten Wareneingang abschließen",
+        "receiptCompletedNote": "Wareneingang abgeschlossen; ERP-Richtlinie ausgeführt.",
+        "printReceiptLabels": "Wareneingangsetiketten drucken",
+        "receiptCreatedErp": "Wareneingang erstellt · ERP {{status}}",
+        "receiptCreated": "Wareneingang erstellt",
+        "awaitingApproval": "Genehmigung ausstehend · {{status}}",
+        "noApprovedQty": "Keine genehmigte Menge",
+        "readyForDirectReceipt": "Bereit für direkten Wareneingang",
+        "referenceRequired": "Excel-Importreferenz oder Lieferscheinnummer eingeben.",
+        "sourceLoaded": "Import {{reference}} geladen.",
+        "sourceLoadFailed": "SAC-Quelle konnte nicht geladen werden.",
+        "waybillValidationElectronic": "E-Lieferschein-/GIB-Nummer muss inklusive Symbole genau 15 Zeichen haben; Lieferscheindatum ist erforderlich.",
+        "waybillValidationPaper": "Lieferscheinnummer muss inklusive Symbole genau 15 Zeichen haben; Lieferscheindatum ist erforderlich.",
+        "noPrintableLabels": "Keine druckbaren Wareneingangsetiketten gefunden.",
+        "printFailed": "Etiketten konnten nicht gedruckt werden.",
+        "printTitle": "{{documentNo}} SAC-Wareneingangsetiketten"
       },
       "placement": {
         "pendingTitle": "Sheets Waiting for Placement",
@@ -6465,56 +6509,56 @@
       }
     },
     "reportsPage": {
-      "eyebrow": "Goods Receipt · SAC Operations",
-      "title": "SAC Operations Reports",
-      "description": "Monitor live operation data with server-side search, filtering and sorting. Cards change the report scope.",
-      "summaryError": "Report summaries could not be loaded; you can continue working from the detail list.",
+      "eyebrow": "Wareneingang · SAC-Operationen",
+      "title": "SAC-Operationsberichte",
+      "description": "Überwachen Sie Live-Betriebsdaten mit serverseitiger Suche, Filterung und Sortierung. Karten ändern den Berichtsumfang.",
+      "summaryError": "Berichtszusammenfassungen konnten nicht geladen werden; Sie können mit der Detailliste weiterarbeiten.",
       "views": {
         "all": {
-          "title": "Sheet Traceability Report",
-          "description": "Search all sheets by DCode, supplier serial, stock, quality, goods receipt and placement status."
+          "title": "Blech-Rückverfolgbarkeitsbericht",
+          "description": "Alle Bleche nach DCode, Lieferantenseriennummer, Bestand, Qualität, Wareneingang und Einlagerungsstatus durchsuchen."
         },
         "expected": {
-          "title": "Expected Sheets",
-          "description": "Sheets not yet arrived on site or with incomplete vehicle acceptance."
+          "title": "Erwartete Bleche",
+          "description": "Bleche, die noch nicht am Standort angekommen sind oder deren Fahrzeugannahme unvollständig ist."
         },
         "inspection": {
-          "title": "Sheets Pending Inspection",
-          "description": "Sheets awaiting physical and quality decision."
+          "title": "Bleche mit ausstehender Kontrolle",
+          "description": "Bleche, die auf physische und Qualitätsentscheidung warten."
         },
         "rejected": {
-          "title": "Rejection and Exception Report",
-          "description": "Review rejected sheets with stock, serial and material details."
+          "title": "Ablehnungs- und Ausnahmebericht",
+          "description": "Abgelehnte Bleche mit Bestands-, Serien- und Materialdetails prüfen."
         },
         "receiptReady": {
-          "title": "Sheets Ready for Goods Receipt",
-          "description": "Approved sheets not yet transferred to shared goods receipt document."
+          "title": "Für Wareneingang bereite Bleche",
+          "description": "Genehmigte Bleche, die noch nicht in ein Wareneingangsdokument übertragen wurden."
         },
         "putaway": {
-          "title": "Sheets Pending Placement",
-          "description": "Sheets with goods receipt created but final yard or shelf location not completed."
+          "title": "Bleche mit ausstehender Einlagerung",
+          "description": "Bleche mit erstelltem Wareneingang, aber ohne abgeschlossene Hof- oder Regalposition."
         }
       },
       "cards": {
-        "all": "Total Sheets",
-        "expected": "Awaiting Arrival",
-        "inspection": "Pending Inspection",
-        "receiptReady": "Ready for Receipt",
-        "putaway": "Pending Placement",
-        "rejected": "Rejected"
+        "all": "Bleche gesamt",
+        "expected": "Ankunft ausstehend",
+        "inspection": "Kontrolle ausstehend",
+        "receiptReady": "Wareneingang bereit",
+        "putaway": "Einlagerung ausstehend",
+        "rejected": "Abgelehnt"
       },
       "statusLabels": {
-        "Expected": "Expected",
-        "Arrived": "Arrived",
-        "Missing": "Missing",
-        "Pending": "Pending",
-        "Inspected": "Inspected",
-        "Approved": "Approved",
-        "PartiallyApproved": "Partially Approved",
-        "Rejected": "Rejected",
-        "NotCreated": "Not Created",
-        "Created": "Created",
-        "Placed": "Placed"
+        "Expected": "Erwartet",
+        "Arrived": "Angekommen",
+        "Missing": "Fehlend",
+        "Pending": "Ausstehend",
+        "Inspected": "Geprüft",
+        "Approved": "Genehmigt",
+        "PartiallyApproved": "Teilweise genehmigt",
+        "Rejected": "Abgelehnt",
+        "NotCreated": "Nicht erstellt",
+        "Created": "Erstellt",
+        "Placed": "Eingelagert"
       }
     }
   },

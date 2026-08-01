@@ -2852,25 +2852,25 @@
     },
     "steelReportLines": {
       "dCode": "DCode",
-      "supplierSerialNo": "Supplier Serial",
-      "secondarySerialNo": "Secondary Serial",
-      "stockCode": "Stock Code",
-      "stockName": "Stock Name",
-      "importReferenceNo": "Excel / Import",
-      "netsisOrderNo": "Netsis Order",
-      "materialGrade": "Grade",
-      "combinedSize": "Size",
-      "heatNumber": "Heat No",
-      "certificateNumber": "Certificate",
-      "expectedQuantity": "Expected",
-      "arrivedQuantity": "Arrived",
-      "approvedQuantity": "Approved",
-      "rejectedQuantity": "Rejected",
-      "arrivalStatus": "Arrival",
-      "inspectionStatus": "Inspection",
-      "conversionStatus": "Goods Receipt",
-      "putawayStatus": "Placement",
-      "goodsReceiptNo": "Goods Receipt No"
+      "supplierSerialNo": "السلسلة من المورد",
+      "secondarySerialNo": "السلسلة الثانوية",
+      "stockCode": "رمز المخزون",
+      "stockName": "اسم المخزون",
+      "importReferenceNo": "Excel / استيراد",
+      "netsisOrderNo": "طلب Netsis",
+      "materialGrade": "الجودة",
+      "combinedSize": "المقاس",
+      "heatNumber": "رقم الصب",
+      "certificateNumber": "الشهادة",
+      "expectedQuantity": "متوقع",
+      "arrivedQuantity": "وصل",
+      "approvedQuantity": "معتمد",
+      "rejectedQuantity": "مرفوض",
+      "arrivalStatus": "الوصول",
+      "inspectionStatus": "الفحص",
+      "conversionStatus": "الاستلام",
+      "putawayStatus": "الوضع على الرف",
+      "goodsReceiptNo": "رقم الاستلام"
     },
     "stockMovements": {
       "title": "Stock Movement Ledger",
@@ -5082,11 +5082,11 @@
       }
     },
     "operations": {
-      "receiptTitle": "SAC Goods Receipt Order",
-      "receiptDescription": "Convert inspected sheets into a shared goods receipt order and assign operation users.",
-      "placementTitle": "SAC Shelf Placement",
-      "placementDescription": "Place physically accepted sheets to their final location with stock movement while viewing shelf occupancy.",
-      "receiptTab": "Goods Receipt Order",
+      "receiptTitle": "إذن تسليم الشراء واستلام SAC",
+      "receiptDescription": "ابحث عن الألواح عبر استيراد Excel أو رقم إذن التسليم؛ واقبل مباشرة الصفوف المعتمدة التي لم تُرسل بعد إلى ERP.",
+      "placementTitle": "وضع SAC على الرف",
+      "placementDescription": "ضع الألواح المقبولة فعلياً في موقعها النهائي مع حركة المخزون مع عرض إشغال الرف.",
+      "receiptTab": "استلام مباشر",
       "placementTab": "Shelf Placement",
       "searchPlaceholder": "Search DCode, serial, stock, order or plan...",
       "pageLabel": "Page {{page}} / {{totalPages}}",
@@ -5124,8 +5124,52 @@
         "createOrderButton": "Create Goods Receipt Order",
         "samePlanOnly": "Only sheets from the same SAC plan can be selected in one goods receipt order.",
         "assigneeRequired": "Select users for the goods receipt order or assign all active users.",
-        "convertSuccess": "{{documentNo}} · {{count}} sheets transferred to goods receipt order.",
-        "convertFailed": "Could not create goods receipt order."
+        "convertSuccess": "{{documentNo}} · {{count}} لوح مقبول عبر الاستلام المباشر.",
+        "convertFailed": "تعذر إكمال الاستلام المباشر.",
+        "sourceTitle": "البحث عن مصدر SAC عبر استيراد Excel أو إذن التسليم",
+        "sourceText": "تُعرض جميع الألواح المرتبطة بالمصدر معاً — المعتمدة وغير المعتمدة والمعالجة سابقاً. يمكن اختيار الصفوف المعتمدة فقط التي لم تُنقل بعد إلى الاستلام.",
+        "pendingImportLabel": "استيراد Excel غير مكتمل",
+        "pendingImportPlaceholder": "اختر استيراداً باستلام غير مكتمل",
+        "pendingImportEmpty": "لا يوجد استيراد Excel معلق",
+        "waybillPrefix": "إذن تسليم {{no}} · ",
+        "pendingOptionDescription": "{{waybillPrefix}}{{pending}}/{{total}} لوح في الانتظار",
+        "referenceLabel": "مرجع استيراد Excel / رقم إذن التسليم",
+        "referencePlaceholder": "مرجع الاستيراد أو رقم إذن الشراء",
+        "fetchSheetsButton": "جلب الألواح",
+        "metricImportRef": "مرجع استيراد Excel",
+        "metricSourceFile": "الملف المصدر",
+        "metricSupplier": "المورد",
+        "metricTotalSheets": "إجمالي الألواح",
+        "linkedSheetsTitle": "الألواح المرتبطة بالاستيراد",
+        "linkedSheetsSummary": "{{total}} صف · {{ready}} صف جاهز للاستلام المباشر",
+        "selectAllEligible": "تحديد جميع المؤهلين",
+        "expectedQty": "متوقع",
+        "approvalErpStatus": "الاعتماد / حالة ERP",
+        "selectRowAria": "تحديد {{dCode}}",
+        "directReceiptTitle": "استلام SAC مباشر",
+        "directReceiptText": "لا ينشئ هذا الإجراء مهمة أو تعيين مستخدم؛ يقبل الألواح المحددة مباشرة وينفذ الإرسال إلى ERP وفق سياسة العملية.",
+        "waybillInfoTitle": "معلومات إذن التسليم",
+        "waybillInfoText": "يُملأ إذن التسليم المدخل في استيراد Excel تلقائياً؛ يمكنك تغييره لهذا الاستلام عند الحاجة.",
+        "electronicWaybill": "إذن تسليم إلكتروني / GIB",
+        "gibWaybillNo": "رقم إذن GIB الإلكتروني",
+        "waybillNo": "رقم إذن التسليم",
+        "waybillDate": "تاريخ إذن التسليم",
+        "completeDirectReceipt": "إكمال الاستلام المباشر",
+        "receiptCompletedNote": "اكتمل الاستلام؛ نُفذت سياسة ERP.",
+        "printReceiptLabels": "طباعة ملصقات الاستلام",
+        "receiptCreatedErp": "تم إنشاء الاستلام · ERP {{status}}",
+        "receiptCreated": "تم إنشاء الاستلام",
+        "awaitingApproval": "في انتظار الاعتماد · {{status}}",
+        "noApprovedQty": "لا توجد كمية معتمدة",
+        "readyForDirectReceipt": "جاهز للاستلام المباشر",
+        "referenceRequired": "أدخل مرجع استيراد Excel أو رقم إذن التسليم.",
+        "sourceLoaded": "تم تحميل الاستيراد {{reference}}.",
+        "sourceLoadFailed": "تعذر تحميل مصدر SAC.",
+        "waybillValidationElectronic": "يجب أن يكون رقم إذن التسليم الإلكتروني/GIB 15 حرفاً بالضبط بما في ذلك الرموز، وتاريخ الإذن مطلوب.",
+        "waybillValidationPaper": "يجب أن يكون رقم إذن التسليم 15 حرفاً بالضبط بما في ذلك الرموز، وتاريخ الإذن مطلوب.",
+        "noPrintableLabels": "لم يُعثر على ملصقات استلام قابلة للطباعة.",
+        "printFailed": "تعذرت طباعة الملصقات.",
+        "printTitle": "{{documentNo}} ملصقات استلام SAC"
       },
       "placement": {
         "pendingTitle": "Sheets Waiting for Placement",
@@ -5151,56 +5195,56 @@
       }
     },
     "reportsPage": {
-      "eyebrow": "Goods Receipt · SAC Operations",
-      "title": "SAC Operations Reports",
-      "description": "Monitor live operation data with server-side search, filtering and sorting. Cards change the report scope.",
-      "summaryError": "Report summaries could not be loaded; you can continue working from the detail list.",
+      "eyebrow": "استلام البضائع · عمليات SAC",
+      "title": "تقارير عمليات SAC",
+      "description": "راقب بيانات العمليات المباشرة مع البحث والتصفية والفرز من الخادم. تغيّر البطاقات نطاق التقرير.",
+      "summaryError": "تعذر تحميل ملخصات التقرير؛ يمكنك المتابعة من القائمة التفصيلية.",
       "views": {
         "all": {
-          "title": "Sheet Traceability Report",
-          "description": "Search all sheets by DCode, supplier serial, stock, quality, goods receipt and placement status."
+          "title": "تقرير تتبع الألواح",
+          "description": "ابحث في جميع الألواح حسب DCode والسلسلة والمخزون والجودة والاستلام وحالة الوضع على الرف."
         },
         "expected": {
-          "title": "Expected Sheets",
-          "description": "Sheets not yet arrived on site or with incomplete vehicle acceptance."
+          "title": "الألواح المتوقعة",
+          "description": "ألواح لم تصل بعد إلى الموقع أو لم يكتمل قبول المركبة لها."
         },
         "inspection": {
-          "title": "Sheets Pending Inspection",
-          "description": "Sheets awaiting physical and quality decision."
+          "title": "ألواح في انتظار الفحص",
+          "description": "ألواح في انتظار القرار المادي وجودة القبول."
         },
         "rejected": {
-          "title": "Rejection and Exception Report",
-          "description": "Review rejected sheets with stock, serial and material details."
+          "title": "تقرير الرفض والاستثناء",
+          "description": "راجع الألواح المرفوضة مع تفاصيل المخزون والسلسلة والمادة."
         },
         "receiptReady": {
-          "title": "Sheets Ready for Goods Receipt",
-          "description": "Approved sheets not yet transferred to shared goods receipt document."
+          "title": "ألواح جاهزة للاستلام",
+          "description": "ألواح معتمدة لم تُنقل بعد إلى مستند الاستلام."
         },
         "putaway": {
-          "title": "Sheets Pending Placement",
-          "description": "Sheets with goods receipt created but final yard or shelf location not completed."
+          "title": "ألواح في انتظار الوضع على الرف",
+          "description": "ألواح باستلام مُنشأ لكن موقع الساحة أو الرف النهائي غير مكتمل."
         }
       },
       "cards": {
-        "all": "Total Sheets",
-        "expected": "Awaiting Arrival",
-        "inspection": "Pending Inspection",
-        "receiptReady": "Ready for Receipt",
-        "putaway": "Pending Placement",
-        "rejected": "Rejected"
+        "all": "إجمالي الألواح",
+        "expected": "في انتظار الوصول",
+        "inspection": "فحص معلّق",
+        "receiptReady": "جاهزة للاستلام",
+        "putaway": "وضع على الرف معلّق",
+        "rejected": "مرفوضة"
       },
       "statusLabels": {
-        "Expected": "Expected",
-        "Arrived": "Arrived",
-        "Missing": "Missing",
-        "Pending": "Pending",
-        "Inspected": "Inspected",
-        "Approved": "Approved",
-        "PartiallyApproved": "Partially Approved",
-        "Rejected": "Rejected",
-        "NotCreated": "Not Created",
-        "Created": "Created",
-        "Placed": "Placed"
+        "Expected": "متوقع",
+        "Arrived": "وصل",
+        "Missing": "ناقص",
+        "Pending": "معلّق",
+        "Inspected": "تم الفحص",
+        "Approved": "معتمد",
+        "PartiallyApproved": "معتمد جزئياً",
+        "Rejected": "مرفوض",
+        "NotCreated": "غير منشأ",
+        "Created": "منشأ",
+        "Placed": "موضوع"
       }
     }
   },
