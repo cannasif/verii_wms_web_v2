@@ -1,11 +1,12 @@
 import {api} from '@/lib/axios';
 import type {GridPage,GridRequest} from '@/components/shared/AdvancedDataGrid';
 import type {SteelAttachment,SteelImportPreview,SteelImportRequest,SteelLineRow,SteelPendingReceiptSource,SteelPlacementOccupancy,SteelPlanRow,SteelReceiptSource,ConvertResult,SteelReceiptConversionMode} from '../types/steel-receipt.types';
+import {createSteelImportCommitPayload} from '../steel-import-result';
 interface Envelope<T>{success:boolean;data:T;message?:string}
 const unwrap=<T,>(x:Envelope<T>):T=>{if(!x.success)throw new Error(x.message||'İşlem başarısız.');return x.data};
 export const steelReceiptApi={
   preview:async(importRequest:SteelImportRequest):Promise<SteelImportPreview>=>unwrap(await api.post<Envelope<SteelImportPreview>>('/api/steel-receipts/import/preview',importRequest)),
-  commit:async(importRequest:SteelImportRequest):Promise<number>=>unwrap(await api.post<Envelope<number>>('/api/steel-receipts/import/commit',{idempotencyKey:crypto.randomUUID(),import:importRequest})),
+  commit:async(importRequest:SteelImportRequest,idempotencyKey:string):Promise<number>=>unwrap(await api.post<Envelope<number>>('/api/steel-receipts/import/commit',createSteelImportCommitPayload(importRequest,idempotencyKey))),
   plansPaged:async(request:GridRequest):Promise<GridPage<SteelPlanRow>>=>unwrap(await api.post<Envelope<GridPage<SteelPlanRow>>>('/api/steel-receipts/paged',request)),
   linesPaged:async(request:GridRequest):Promise<GridPage<SteelLineRow>>=>unwrap(await api.post<Envelope<GridPage<SteelLineRow>>>('/api/steel-receipts/lines/paged',request)),
   receiptCandidatesPaged:async(request:GridRequest):Promise<GridPage<SteelLineRow>>=>unwrap(await api.post<Envelope<GridPage<SteelLineRow>>>('/api/steel-receipts/receipt/candidates/paged',request)),

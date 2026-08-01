@@ -2,11 +2,10 @@ import {useMemo} from 'react';
 import {useTranslation} from 'react-i18next';
 import {InboundProcessHeader} from '@/features/inbound-operations/components/InboundProcessHeader';
 
-const STEP_KEYS=['plan','gate','expected','receipt','placement'] as const;
+const STEP_KEYS=['plan','gate','receipt','placement'] as const;
 const STEP_HREFS={
   plan:'/warehouse/goods-receipts/steel/import',
   gate:'/warehouse/goods-receipts/steel/vehicle-check-ins',
-  expected:'/warehouse/goods-receipts/steel/plans',
   receipt:'/warehouse/goods-receipts/steel/receipt',
   placement:'/warehouse/goods-receipts/steel/placement',
 } as const;

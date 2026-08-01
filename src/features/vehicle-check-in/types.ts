@@ -19,23 +19,35 @@ export interface SteelVehicleAcceptanceCandidate {
   attachmentCount:number;rowVersion:string;
 }
 
-export interface AcceptSteelPlateRequest {
-  planLineId:number;
-  receivingLocationId:number;
-  rowVersion:string;
+export type SteelPlateIdentityStatus='Known'|'Unknown'|'Resolved';
+
+export interface AcceptSteelPlateSlot {
+  identityStatus:'Known'|'Unknown';
+  planLineId?:number;
+  receivingLocationId?:number;
+  rowVersion?:string;
   note?:string;
 }
 
 export interface CompleteSteelVehicleAcceptanceRequest {
   idempotencyKey:string;
   vehicle:SaveVehicleCheckInRequest;
-  plates:AcceptSteelPlateRequest[];
+  slots:AcceptSteelPlateSlot[];
   note?:string;
 }
 
 export interface AcceptedSteelPlate {
-  planLineId:number;planId:number;importReferenceNo:string;dCode:string;stockCode:string;supplierSerialNo:string;
-  acceptedQuantity:number;unitCode:string;receivingLocationId:number;acceptedAtUtc:string;
+  id:number;sequenceNo:number;identityStatus:SteelPlateIdentityStatus;planLineId?:number;planId?:number;importReferenceNo?:string;
+  dCode?:string;stockCode?:string;supplierSerialNo?:string;acceptedQuantity?:number;unitCode?:string;
+  receivingLocationId?:number;acceptedAtUtc:string;rowVersion:string;canResolve:boolean;
+}
+
+export interface ResolveUnknownPlateRequest {
+  planLineId:number;
+  receivingLocationId?:number;
+  rowVersion:string;
+  planLineRowVersion:string;
+  note?:string;
 }
 
 export interface CompleteSteelVehicleAcceptanceResult {
@@ -43,4 +55,7 @@ export interface CompleteSteelVehicleAcceptanceResult {
   replayed:boolean;
   vehicle:VehicleCheckInDetail;
   plates:AcceptedSteelPlate[];
+  unknownCount:number;
+  containsUnknownPlates:boolean;
+  canResolveUnknownPlates:boolean;
 }

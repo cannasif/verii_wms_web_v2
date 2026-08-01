@@ -2716,7 +2716,10 @@
       "status": "Estado",
       "imageCount": "Imágenes",
       "actions": "Acciones",
-      "viewUpdate": "Ver / Actualizar"
+      "viewUpdate": "Ver / Actualizar",
+      "statusTabs": "Pestañas de estado",
+      "tabAll": "Todos",
+      "tabUnknown": "Desconocido"
     },
     "sacReceiptPlans": {
       "title": "Planes de expectativa SAC",
@@ -5062,6 +5065,7 @@
       "importReference": "Referencia de transferencia",
       "exportReference": "Referencia de exportación",
       "waybillNo": "N.º albarán",
+      "gibWaybillNo": "Número de albarán electrónico / GİB",
       "waybillDate": "Fecha albarán",
       "plannedArrival": "Llegada planificada",
       "excelFile": "Archivo Excel",
@@ -5094,8 +5098,12 @@
       "errorDetailTitle": "Fila {{row}} — Detalle del error",
       "errorDetailHint": "Haga clic para ver el mensaje completo.",
       "rowsRead": "{{count}} filas leídas.",
+      "validationFieldRequired": "{{field}} es obligatorio.",
+      "validationFieldsRequired": "Los siguientes campos son obligatorios: {{fields}}.",
+      "validationWaybill": "El número de albarán electrónico / GİB debe tener exactamente 15 caracteres alfanuméricos y la fecha del albarán es obligatoria.",
       "validationError": "Proveedor, almacén, estantería de recepción, serie documental, referencia y Excel son obligatorios.",
       "saveSuccess": "Plan de expectativa SAC guardado.",
+      "commitResultLoadFailed": "El plan se guardó, pero no se pudieron cargar sus filas de resultado. Puede volver a abrirlo desde la lista de planes.",
       "previewReady": "Vista previa lista.",
       "operationFailed": "Operación fallida."
     },
@@ -5214,6 +5222,7 @@
         "selectAllEligible": "Seleccionar todos los elegibles",
         "expectedQty": "Esperado",
         "approvalErpStatus": "Aprobación / estado ERP",
+        "conversionDate": "Fecha de aprobación",
         "selectRowAria": "Seleccionar {{dCode}}",
         "directReceiptTitle": "Recepción SAC directa",
         "directReceiptText": "Esta acción no crea tarea ni asignación de usuario; acepta directamente las chapas seleccionadas y ejecuta el envío ERP según la política de proceso.",
@@ -5467,7 +5476,16 @@
       "vehicleImageRequired": "Se requiere al menos una imagen del vehículo para la aceptación.",
       "alreadyCompleted": "Esta aceptación de vehículo y acero ya se completó anteriormente.",
       "completed": "Entrada de vehículo y aceptación de acero completadas correctamente.",
-      "completeFailed": "No se pudo completar la entrada de vehículo y la aceptación de acero."
+      "completeFailed": "No se pudo completar la entrada de vehículo y la aceptación de acero.",
+      "unknownPlateResolved": "La chapa desconocida se vinculó con la línea de acero.",
+      "resolveUnknownPlateFailed": "No se pudo vincular la chapa desconocida.",
+      "sheetAlreadyAccepted": "Esta chapa ya fue aceptada.",
+      "noChangesToSave": "No hay cambios que guardar.",
+      "vehicleSaved": "Información del vehículo guardada.",
+      "saveVehicleFailed": "No se pudo guardar la información del vehículo.",
+      "noNewSheetsSelected": "Seleccione al menos una chapa nueva.",
+      "sheetCountBelowSaved": "El objetivo no puede ser inferior a las {{count}} chapas guardadas.",
+      "supplierRequiredForUnknown": "Seleccione un proveedor para una aceptación compuesta solo por chapas desconocidas."
     },
     "pageEyebrow": "Recepción · Operaciones de acero · Vehículo + Aceptación en campo",
     "pageTitle": "Entrada de vehículo y aceptación de acero",
@@ -5498,7 +5516,25 @@
       "location": "Seleccione la ubicación de aceptación para {{dCode}}.",
       "vehicleImage": "Añada al menos una imagen del vehículo.",
       "sheetImage": "Añada una imagen para la chapa {{dCode}}.",
+      "supplierRequiredForUnknown": "Debe seleccionar un proveedor cuando todas las chapas aceptadas sean desconocidas.",
+      "unknownPlatesPending": "Hay {{count}} chapa(s) desconocidas; vincúlelas antes de crear la recepción.",
       "saving": "Guardando..."
+    },
+    "resolveModeHint": "Seleccione abajo una línea de acero para vincular la chapa desconocida.",
+    "resolveUnavailable": "La vinculación no está disponible actualmente para esta chapa.",
+    "unknownBadge": "Desconocida",
+    "unknownSlotDescription": "La identidad de serie de la chapa {{sequence}} se vinculará más tarde.",
+    "unknownSequence": "Secuencia {{sequence}}",
+    "unknownAwaitingMatch": "Esperando vinculación con una línea de acero.",
+    "carrierLookup": {
+      "title": "Directorio de proveedores / clientes",
+      "searchPlaceholder": "Buscar por código o nombre",
+      "empty": "No se encontró ningún proveedor"
+    },
+    "saveVehicleBlockers": {"title": "Elementos faltantes para guardar"},
+    "confirm": {
+      "removeUnknownTitle": "Quitar chapa desconocida",
+      "removeUnknownDescription": "Va a quitar la chapa desconocida añadida para este vehículo. ¿Continuar?"
     },
     "excelImportLabel": "Excel/importación",
     "sheetImageInfo": "Existentes {{current}} · Nuevas {{next}} imágenes",
@@ -5508,7 +5544,8 @@
       "vehicleImagesRequired": "2 · Imágenes del vehículo *",
       "findSheet": "3 · Buscar chapa de acero por serie / DCode",
       "selectedSheets": "4 · Chapas seleccionadas ({{selected}}/{{total}})",
-      "savedAcceptedSheets": "Chapas aceptadas guardadas ({{count}})"
+      "savedAcceptedSheets": "Chapas aceptadas guardadas ({{count}})",
+      "unknownPlates": "Chapas desconocidas ({{count}})"
     },
     "field": {
       "towingPlate": "Matrícula del vehículo tractor *",
@@ -5533,11 +5570,17 @@
     "action": {
       "findToday": "Buscar el vehículo de hoy",
       "pickVehicleImage": "Seleccionar imagen del vehículo",
+      "captureVehicleImage": "Tomar foto del vehículo",
       "findSheet": "Buscar chapa",
       "removeSelection": "Quitar de la selección",
       "addSelection": "Añadir a la selección",
       "complete": "Entrada de vehículo y aceptación de acero",
-      "addSheetImage": "Añadir imagen de chapa"
+      "addSheetImage": "Añadir imagen de chapa",
+      "captureSheetImage": "Tomar foto de la chapa",
+      "addUnknownPlate": "Añadir chapa desconocida",
+      "resolveUnknownPlate": "Vincular con línea de acero",
+      "removeUnknownPlate": "Quitar chapa desconocida",
+      "saveVehicle": "Guardar"
     },
     "summary": {
       "selectedSheets": "Chapas seleccionadas",

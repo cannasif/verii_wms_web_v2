@@ -20,9 +20,9 @@ export interface SteelLineRow {id:number;planId:number;importReferenceNo:string;
   stockCode:string;stockName?:string;supplierSerialNo:string;secondarySerialNo?:string;combinedSize?:string;materialGrade?:string;
   heatNumber?:string;certificateNumber?:string;expectedQuantity:number;arrivedQuantity:number;approvedQuantity:number;
   rejectedQuantity:number;unitCode:string;arrivalStatus:string;inspectionStatus:string;conversionStatus:string;
-  putawayStatus:string;goodsReceiptNo?:string;goodsReceiptId?:number;targetWarehouseId:number;receivingLocationId:number;
+  putawayStatus:string;goodsReceiptNo?:string;goodsReceiptId?:number;targetWarehouseId:number;warehouseCode?:number;warehouseName?:string;receivingLocationId:number;receivingLocationCode?:string;receivingLocationName?:string;
   erpIntegrationStatus?:string;goodsReceiptLineId?:number;createdBy?:number;createdDate?:string;updatedBy?:number;updatedDate?:string;
-  vehiclePlateNo?:string;driverName?:string;rowVersion:string}
+  vehiclePlateNo?:string;driverName?:string;conversionWaybillNo?:string;convertedAtUtc?:string;rowVersion:string}
 export interface SteelReceiptSource {
   planId:number;importReferenceNo:string;sourceFileName:string;waybillNo?:string;waybillDate?:string;
   supplierId:number;supplierCode:string;supplierName:string;status:string;totalLineCount:number;

@@ -2716,7 +2716,10 @@
       "status": "Statut",
       "imageCount": "Images",
       "actions": "Actions",
-      "viewUpdate": "Voir / Mettre à jour"
+      "viewUpdate": "Voir / Mettre à jour",
+      "statusTabs": "Onglets de statut",
+      "tabAll": "Tous",
+      "tabUnknown": "Inconnu"
     },
     "sacReceiptPlans": {
       "title": "Plans d'attente SAC",
@@ -5062,6 +5065,7 @@
       "importReference": "Référence de transfert",
       "exportReference": "Référence export",
       "waybillNo": "N° bon de livraison",
+      "gibWaybillNo": "Numéro d'e-bon de livraison / GİB",
       "waybillDate": "Date bon de livraison",
       "plannedArrival": "Arrivée planifiée",
       "excelFile": "Fichier Excel",
@@ -5094,8 +5098,12 @@
       "errorDetailTitle": "Ligne {{row}} — Détail de l'erreur",
       "errorDetailHint": "Cliquez pour afficher le message complet.",
       "rowsRead": "{{count}} lignes lues.",
+      "validationFieldRequired": "{{field}} est obligatoire.",
+      "validationFieldsRequired": "Les champs suivants sont obligatoires : {{fields}}.",
+      "validationWaybill": "Le numéro d'e-bon de livraison / GİB doit contenir exactement 15 caractères alphanumériques et la date du bon est obligatoire.",
       "validationError": "Fournisseur, entrepôt, étagère de réception, série documentaire, référence et Excel sont obligatoires.",
       "saveSuccess": "Plan d'attente SAC enregistré.",
+      "commitResultLoadFailed": "Le plan a été enregistré, mais ses lignes de résultat n'ont pas pu être chargées. Vous pouvez le rouvrir depuis la liste des plans.",
       "previewReady": "Aperçu prêt.",
       "operationFailed": "Opération échouée."
     },
@@ -5214,6 +5222,7 @@
         "selectAllEligible": "Sélectionner tous les éligibles",
         "expectedQty": "Attendu",
         "approvalErpStatus": "Approbation / statut ERP",
+        "conversionDate": "Date d'approbation",
         "selectRowAria": "Sélectionner {{dCode}}",
         "directReceiptTitle": "Réception SAC directe",
         "directReceiptText": "Cette action ne crée ni tâche ni assignation utilisateur ; elle accepte directement les tôles sélectionnées et exécute l'envoi ERP selon la politique de processus.",
@@ -5467,7 +5476,16 @@
       "vehicleImageRequired": "Au moins une image du véhicule est obligatoire pour l'acceptation.",
       "alreadyCompleted": "Cette acceptation véhicule et acier a déjà été terminée auparavant.",
       "completed": "Entrée véhicule et acceptation acier terminées avec succès.",
-      "completeFailed": "Impossible de terminer l'entrée véhicule et l'acceptation acier."
+      "completeFailed": "Impossible de terminer l'entrée véhicule et l'acceptation acier.",
+      "unknownPlateResolved": "La tôle inconnue a été associée à la ligne acier.",
+      "resolveUnknownPlateFailed": "Impossible d'associer la tôle inconnue.",
+      "sheetAlreadyAccepted": "Cette tôle a déjà été acceptée.",
+      "noChangesToSave": "Aucune modification à enregistrer.",
+      "vehicleSaved": "Informations du véhicule enregistrées.",
+      "saveVehicleFailed": "Impossible d'enregistrer les informations du véhicule.",
+      "noNewSheetsSelected": "Sélectionnez au moins une nouvelle tôle.",
+      "sheetCountBelowSaved": "La cible ne peut pas être inférieure aux {{count}} tôles enregistrées.",
+      "supplierRequiredForUnknown": "Sélectionnez un fournisseur pour une acceptation composée uniquement de tôles inconnues."
     },
     "pageEyebrow": "Réception · Opérations acier · Véhicule + Acceptation terrain",
     "pageTitle": "Entrée véhicule et acceptation acier",
@@ -5498,7 +5516,25 @@
       "location": "Sélectionnez l'emplacement d'acceptation pour {{dCode}}.",
       "vehicleImage": "Ajoutez au moins une image du véhicule.",
       "sheetImage": "Ajoutez une image pour la tôle {{dCode}}.",
+      "supplierRequiredForUnknown": "Un fournisseur doit être sélectionné lorsque toutes les tôles acceptées sont inconnues.",
+      "unknownPlatesPending": "{{count}} tôle(s) sont inconnues ; associez-les avant de créer la réception.",
       "saving": "Enregistrement..."
+    },
+    "resolveModeHint": "Sélectionnez ci-dessous une ligne acier pour associer la tôle inconnue.",
+    "resolveUnavailable": "L'association est actuellement indisponible pour cette tôle.",
+    "unknownBadge": "Inconnue",
+    "unknownSlotDescription": "L'identité série de la tôle {{sequence}} sera associée ultérieurement.",
+    "unknownSequence": "Séquence {{sequence}}",
+    "unknownAwaitingMatch": "En attente d'association à une ligne acier.",
+    "carrierLookup": {
+      "title": "Répertoire fournisseurs / clients",
+      "searchPlaceholder": "Rechercher par code ou nom",
+      "empty": "Aucun fournisseur trouvé"
+    },
+    "saveVehicleBlockers": {"title": "Éléments manquants pour enregistrer"},
+    "confirm": {
+      "removeUnknownTitle": "Retirer la tôle inconnue",
+      "removeUnknownDescription": "Vous retirez la tôle inconnue ajoutée pour ce véhicule. Continuer ?"
     },
     "excelImportLabel": "Excel/import",
     "sheetImageInfo": "Existantes {{current}} · Nouvelles {{next}} images",
@@ -5508,7 +5544,8 @@
       "vehicleImagesRequired": "2 · Images du véhicule *",
       "findSheet": "3 · Trouver une tôle d'acier par série / DCode",
       "selectedSheets": "4 · Tôles sélectionnées ({{selected}}/{{total}})",
-      "savedAcceptedSheets": "Tôles acceptées enregistrées ({{count}})"
+      "savedAcceptedSheets": "Tôles acceptées enregistrées ({{count}})",
+      "unknownPlates": "Tôles inconnues ({{count}})"
     },
     "field": {
       "towingPlate": "Plaque du véhicule tracteur *",
@@ -5533,11 +5570,17 @@
     "action": {
       "findToday": "Trouver le véhicule d'aujourd'hui",
       "pickVehicleImage": "Choisir une image du véhicule",
+      "captureVehicleImage": "Prendre une photo du véhicule",
       "findSheet": "Trouver la tôle",
       "removeSelection": "Retirer de la sélection",
       "addSelection": "Ajouter à la sélection",
       "complete": "Entrée véhicule et acceptation acier",
-      "addSheetImage": "Ajouter une image de tôle"
+      "addSheetImage": "Ajouter une image de tôle",
+      "captureSheetImage": "Prendre une photo de la tôle",
+      "addUnknownPlate": "Ajouter une tôle inconnue",
+      "resolveUnknownPlate": "Associer à une ligne acier",
+      "removeUnknownPlate": "Retirer la tôle inconnue",
+      "saveVehicle": "Enregistrer"
     },
     "summary": {
       "selectedSheets": "Tôles sélectionnées",

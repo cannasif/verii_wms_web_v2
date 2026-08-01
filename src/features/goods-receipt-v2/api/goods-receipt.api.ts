@@ -78,7 +78,7 @@ export const goodsReceiptV2Api = {
   },
   stocks: async (request: DropdownPageRequest, branchCode: string): Promise<GridPage<StockOption>> => unwrap(await api.post<Envelope<GridPage<StockOption>>>('/api/erp-mirror/stocks/paged', pagedBody({ ...request, sortBy: request.sortBy ?? 'erpStockCode' }, [{ column: 'branchCode', operator: 'equals', value: branchCode }]), { signal: request.signal })),
   yapCodes: async (request: DropdownPageRequest, branchCode: string): Promise<GridPage<YapCodeOption>> => unwrap(await api.post<Envelope<GridPage<YapCodeOption>>>('/api/erp-mirror/yap-codes/paged', pagedBody({ ...request, sortBy: request.sortBy ?? 'configurationCode' }, [{ column: 'branchCode', operator: 'equals', value: branchCode }]), { signal: request.signal })),
-  locations: async (request: DropdownPageRequest, warehouseId: number): Promise<GridPage<LocationOption>> => unwrap(await api.post<Envelope<GridPage<LocationOption>>>('/api/locations/paged', pagedBody({ ...request, sortBy: request.sortBy ?? 'code' }, [
+  locations: async (request: DropdownPageRequest, warehouseId: number): Promise<GridPage<LocationOption>> => unwrap(await api.post<Envelope<GridPage<LocationOption>>>('/api/locations/paged', pagedBody({ ...request, sortBy: request.sortBy ?? 'code', filterLogic: 'and' }, [
     { column: 'warehouseId', operator: 'equals', value: String(warehouseId) }, { column: 'isActive', operator: 'equals', value: 'true' },
   ]), { signal: request.signal })),
   /** Mal kabul için yalnızca Receiving/Staging lokasyonları. */

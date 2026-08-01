@@ -3,6 +3,8 @@ import type {GridPage,GridRequest} from '@/components/shared/AdvancedDataGrid';
 import type {
   CompleteSteelVehicleAcceptanceRequest,
   CompleteSteelVehicleAcceptanceResult,
+  AcceptedSteelPlate,
+  ResolveUnknownPlateRequest,
   SaveVehicleCheckInRequest,
   SteelVehicleAcceptanceCandidate,
   VehicleCheckInDetail,
@@ -30,6 +32,19 @@ export const vehicleCheckInApi={
     vehicleImages.forEach(file=>body.append('vehicleImages',file));
     plateImages.forEach(item=>{body.append('plateImages',item.file);body.append('plateImageLineIds',String(item.lineId))});
     return unwrap(await api.post<Envelope<CompleteSteelVehicleAcceptanceResult>>('/api/steel-receipts/vehicle-acceptance/complete',body));
+  },
+  resolveUnknownPlate:async(
+    acceptedPlateId:number,
+    request:ResolveUnknownPlateRequest,
+    plateImages:File[],
+  ):Promise<AcceptedSteelPlate>=>{
+    const body=new FormData();
+    body.append('requestJson',JSON.stringify(request));
+    plateImages.forEach(file=>body.append('plateImages',file));
+    return unwrap(await api.post<Envelope<AcceptedSteelPlate>>(
+      `/api/steel-receipts/vehicle-acceptance/accepted-plates/${acceptedPlateId}/resolve`,
+      body,
+    ));
   },
   upload:async(id:number,files:File[]):Promise<VehicleCheckInImage[]>=>{const body=new FormData();files.forEach(file=>body.append('files',file));return unwrap(await api.post<Envelope<VehicleCheckInImage[]>>(`/api/vehicle-check-ins/${id}/images`,body))},
   download:async(id:number):Promise<Blob>=>await api.get<Blob>(`/api/vehicle-check-ins/images/${id}/file`,{responseType:'blob'}),

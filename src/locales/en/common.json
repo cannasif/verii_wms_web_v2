@@ -1250,7 +1250,16 @@
       "vehicleImageRequired": "At least one vehicle image is required for acceptance.",
       "alreadyCompleted": "This vehicle and steel acceptance were already completed before.",
       "completed": "Vehicle check-in and steel acceptance completed successfully.",
-      "completeFailed": "Vehicle check-in and steel acceptance could not be completed."
+      "completeFailed": "Vehicle check-in and steel acceptance could not be completed.",
+      "unknownPlateResolved": "The unknown plate was matched to the steel line.",
+      "resolveUnknownPlateFailed": "The unknown plate could not be matched.",
+      "sheetAlreadyAccepted": "This plate has already been accepted.",
+      "noChangesToSave": "There are no changes to save.",
+      "vehicleSaved": "Vehicle information saved.",
+      "saveVehicleFailed": "Vehicle information could not be saved.",
+      "noNewSheetsSelected": "Select at least one new plate to save.",
+      "sheetCountBelowSaved": "The target cannot be below the {{count}} saved plates.",
+      "supplierRequiredForUnknown": "Select a supplier for an acceptance containing only unknown plates."
     },
     "pageEyebrow": "Goods Receipt · Steel Operations · Vehicle + Field Acceptance",
     "pageDescription": "Vehicle info, field acceptance, selected sheets, images, and acceptance locations are saved in a single operation. Matching sheet info is auto-populated when serial is entered.",
@@ -1280,7 +1289,27 @@
       "location": "Select acceptance location for {{dCode}}.",
       "vehicleImage": "Add at least one vehicle image.",
       "sheetImage": "Add an image for sheet {{dCode}}.",
+      "supplierRequiredForUnknown": "A supplier must be selected when all accepted plates are unknown.",
+      "unknownPlatesPending": "{{count}} plate(s) are unknown; match them before creating the receipt.",
       "saving": "Saving..."
+    },
+    "resolveModeHint": "Select a steel line below to match the selected unknown plate.",
+    "resolveUnavailable": "Matching is currently unavailable for this plate.",
+    "unknownBadge": "Unknown",
+    "unknownSlotDescription": "The serial identity of plate {{sequence}} will be matched later.",
+    "unknownSequence": "Sequence {{sequence}}",
+    "unknownAwaitingMatch": "Waiting for steel-line matching.",
+    "carrierLookup": {
+      "title": "Supplier / customer directory",
+      "searchPlaceholder": "Search by customer code or name",
+      "empty": "No supplier record found"
+    },
+    "saveVehicleBlockers": {
+      "title": "Missing items required to save"
+    },
+    "confirm": {
+      "removeUnknownTitle": "Remove unknown plate",
+      "removeUnknownDescription": "You are removing the unknown plate added for this vehicle. Continue?"
     },
     "excelImportLabel": "Excel/import",
     "sheetImageInfo": "Existing {{current}} · New {{next}} images",
@@ -1290,7 +1319,8 @@
       "vehicleImagesRequired": "2 · Vehicle images *",
       "findSheet": "3 · Find steel sheet by Serial / DCode",
       "selectedSheets": "4 · Selected sheets ({{selected}}/{{total}})",
-      "savedAcceptedSheets": "Saved accepted sheets ({{count}})"
+      "savedAcceptedSheets": "Saved accepted sheets ({{count}})",
+      "unknownPlates": "Unknown plates ({{count}})"
     },
     "field": {
       "towingPlate": "Towing vehicle plate *",
@@ -1321,7 +1351,11 @@
       "addSelection": "Add to selection",
       "complete": "Vehicle Check-In and Steel Acceptance",
       "addSheetImage": "Add sheet image",
-      "captureSheetImage": "Take sheet photo"
+      "captureSheetImage": "Take sheet photo",
+      "addUnknownPlate": "Add unknown plate",
+      "resolveUnknownPlate": "Match with steel line",
+      "removeUnknownPlate": "Remove unknown plate",
+      "saveVehicle": "Save"
     },
     "summary": {
       "selectedSheets": "Selected sheets",
@@ -4501,7 +4535,10 @@
       "status": "Status",
       "imageCount": "Images",
       "actions": "Actions",
-      "viewUpdate": "View / Update"
+      "viewUpdate": "View / Update",
+      "statusTabs": "Status tabs",
+      "tabAll": "All",
+      "tabUnknown": "Unknown"
     },
     "sacReceiptPlans": {
       "title": "SAC Expectation Plans",
@@ -6814,6 +6851,7 @@
       "validationWaybill": "The e-dispatch / GIB number must be exactly 15 alphanumeric characters and the dispatch date is required.",
       "validationError": "Supplier, warehouse, receiving shelf, document series, reference and Excel are required.",
       "saveSuccess": "SAC expectation plan saved.",
+      "commitResultLoadFailed": "The plan was saved, but its result rows could not be loaded. You can reopen it from the plan list.",
       "previewReady": "Preview ready.",
       "operationFailed": "Operation failed."
     },
@@ -6893,6 +6931,7 @@
         "selectedSheets": "Selected sheets",
         "totalApprovedQty": "Total approved quantity",
         "sacPlan": "SAC plan",
+        "lastConversionWaybill": "Last used waybill no.",
         "priority": "Priority",
         "priorityLow": "Low",
         "priorityNormal": "Normal",
@@ -6932,6 +6971,7 @@
         "selectAllEligible": "Select all eligible",
         "expectedQty": "Expected",
         "approvalErpStatus": "Approval / ERP status",
+        "conversionDate": "Approval date",
         "selectRowAria": "Select {{dCode}}",
         "directReceiptTitle": "Direct SAC goods receipt",
         "directReceiptText": "This action does not create a task or user assignment; it accepts selected sheets directly and runs ERP dispatch per process policy.",

@@ -2716,7 +2716,10 @@
       "status": "الحالة",
       "imageCount": "الصور",
       "actions": "الإجراءات",
-      "viewUpdate": "عرض / تحديث"
+      "viewUpdate": "عرض / تحديث",
+      "statusTabs": "علامات تبويب الحالة",
+      "tabAll": "الكل",
+      "tabUnknown": "غير معروف"
     },
     "sacReceiptPlans": {
       "title": "خطط توقع SAC",
@@ -5062,6 +5065,7 @@
       "importReference": "مرجع النقل",
       "exportReference": "مرجع التصدير",
       "waybillNo": "رقم إشعار الشحن",
+      "gibWaybillNo": "رقم إشعار الشحن الإلكتروني / GİB",
       "waybillDate": "تاريخ إشعار الشحن",
       "plannedArrival": "الوصول المخطط",
       "excelFile": "ملف Excel",
@@ -5094,8 +5098,12 @@
       "errorDetailTitle": "صف {{row}} — تفاصيل الخطأ",
       "errorDetailHint": "انقر لعرض النص الكامل.",
       "rowsRead": "تمت قراءة {{count}} صف.",
+      "validationFieldRequired": "{{field}} مطلوب.",
+      "validationFieldsRequired": "الحقول التالية مطلوبة: {{fields}}.",
+      "validationWaybill": "يجب أن يتكون رقم إشعار الشحن الإلكتروني / GİB من 15 حرفًا أو رقمًا بالضبط، كما أن تاريخ الإشعار مطلوب.",
       "validationError": "المورد والمستودع ورف الاستلام وسلسلة المستندات والمرجع وExcel مطلوبة.",
       "saveSuccess": "تم حفظ خطة توقع SAC.",
+      "commitResultLoadFailed": "تم حفظ الخطة، ولكن تعذر تحميل صفوف النتيجة. يمكنك فتحها مجددًا من قائمة الخطط.",
       "previewReady": "المعاينة جاهزة.",
       "operationFailed": "فشلت العملية."
     },
@@ -5214,6 +5222,7 @@
         "selectAllEligible": "تحديد جميع المؤهلين",
         "expectedQty": "متوقع",
         "approvalErpStatus": "الاعتماد / حالة ERP",
+        "conversionDate": "تاريخ الاعتماد",
         "selectRowAria": "تحديد {{dCode}}",
         "directReceiptTitle": "استلام SAC مباشر",
         "directReceiptText": "لا ينشئ هذا الإجراء مهمة أو تعيين مستخدم؛ يقبل الألواح المحددة مباشرة وينفذ الإرسال إلى ERP وفق سياسة العملية.",
@@ -5467,7 +5476,16 @@
       "vehicleImageRequired": "مطلوب صورة مركبة واحدة على الأقل للقبول.",
       "alreadyCompleted": "تم إكمال قبول هذه المركبة والصلب مسبقًا.",
       "completed": "اكتمل تسجيل دخول المركبة وقبول الصلب بنجاح.",
-      "completeFailed": "تعذر إكمال تسجيل دخول المركبة وقبول الصلب."
+      "completeFailed": "تعذر إكمال تسجيل دخول المركبة وقبول الصلب.",
+      "unknownPlateResolved": "تم ربط اللوح المجهول بسطر الصلب.",
+      "resolveUnknownPlateFailed": "تعذر ربط اللوح المجهول.",
+      "sheetAlreadyAccepted": "تم قبول هذا اللوح مسبقًا.",
+      "noChangesToSave": "لا توجد تغييرات للحفظ.",
+      "vehicleSaved": "تم حفظ معلومات المركبة.",
+      "saveVehicleFailed": "تعذر حفظ معلومات المركبة.",
+      "noNewSheetsSelected": "حدد لوحًا جديدًا واحدًا على الأقل.",
+      "sheetCountBelowSaved": "لا يمكن أن يكون الهدف أقل من {{count}} لوحًا محفوظًا.",
+      "supplierRequiredForUnknown": "حدد موردًا لقبول يتكون بالكامل من ألواح مجهولة."
     },
     "pageEyebrow": "استلام البضائع · عمليات الصلب · مركبة + قبول ميداني",
     "pageTitle": "تسجيل دخول المركبة وقبول الصلب",
@@ -5498,7 +5516,25 @@
       "location": "حدد موقع القبول لـ {{dCode}}.",
       "vehicleImage": "أضف صورة مركبة واحدة على الأقل.",
       "sheetImage": "أضف صورة للوح {{dCode}}.",
+      "supplierRequiredForUnknown": "يجب تحديد مورد عندما تكون جميع الألواح المقبولة مجهولة.",
+      "unknownPlatesPending": "يوجد {{count}} لوحًا مجهولًا؛ اربطها قبل إنشاء الاستلام.",
       "saving": "جاري الحفظ..."
+    },
+    "resolveModeHint": "حدد سطر صلب أدناه لربط اللوح المجهول المحدد.",
+    "resolveUnavailable": "المطابقة غير متاحة حاليًا لهذا اللوح.",
+    "unknownBadge": "مجهول",
+    "unknownSlotDescription": "سيتم ربط هوية الرقم التسلسلي للوح {{sequence}} لاحقًا.",
+    "unknownSequence": "التسلسل {{sequence}}",
+    "unknownAwaitingMatch": "بانتظار الربط بسطر الصلب.",
+    "carrierLookup": {
+      "title": "دليل الموردين / العملاء",
+      "searchPlaceholder": "البحث بالرمز أو الاسم",
+      "empty": "لم يتم العثور على مورد"
+    },
+    "saveVehicleBlockers": {"title": "عناصر ناقصة للحفظ"},
+    "confirm": {
+      "removeUnknownTitle": "إزالة اللوح المجهول",
+      "removeUnknownDescription": "أنت تزيل اللوح المجهول المضاف لهذه المركبة. هل تريد المتابعة؟"
     },
     "excelImportLabel": "Excel/استيراد",
     "sheetImageInfo": "موجودة {{current}} · جديدة {{next}} صور",
@@ -5508,7 +5544,8 @@
       "vehicleImagesRequired": "2 · صور المركبة *",
       "findSheet": "3 · البحث عن لوح صلب بالرقم التسلسلي / DCode",
       "selectedSheets": "4 · الألواح المحددة ({{selected}}/{{total}})",
-      "savedAcceptedSheets": "الألواح المقبولة المحفوظة ({{count}})"
+      "savedAcceptedSheets": "الألواح المقبولة المحفوظة ({{count}})",
+      "unknownPlates": "الألواح المجهولة ({{count}})"
     },
     "field": {
       "towingPlate": "لوحة مركبة القطر *",
@@ -5533,11 +5570,17 @@
     "action": {
       "findToday": "البحث عن مركبة اليوم",
       "pickVehicleImage": "اختيار صورة المركبة",
+      "captureVehicleImage": "التقاط صورة للمركبة",
       "findSheet": "البحث عن اللوح",
       "removeSelection": "إزالة من التحديد",
       "addSelection": "إضافة إلى التحديد",
       "complete": "تسجيل دخول المركبة وقبول الصلب",
-      "addSheetImage": "إضافة صورة اللوح"
+      "addSheetImage": "إضافة صورة اللوح",
+      "captureSheetImage": "التقاط صورة للوح",
+      "addUnknownPlate": "إضافة لوح مجهول",
+      "resolveUnknownPlate": "الربط بسطر الصلب",
+      "removeUnknownPlate": "إزالة اللوح المجهول",
+      "saveVehicle": "حفظ"
     },
     "summary": {
       "selectedSheets": "الألواح المحددة",

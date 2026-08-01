@@ -59,7 +59,7 @@ function isContainerScope(el: HTMLElement): boolean {
   return el.getAttribute('data-wms-error-scope') === 'container';
 }
 
-function scoreLabelMatch(message: string, label: string): number {
+export function scoreLabelMatch(message: string, label: string): number {
   const msg = normalize(message);
   const lab = normalize(label);
   if (lab.length < 3) return 0;
@@ -82,6 +82,53 @@ function scoreLabelMatch(message: string, label: string): number {
   }
 
   return hits.join('').length + hits.length * 4;
+}
+
+const LABEL_CONTROL_SELECTOR =
+  'input, textarea, select, button, [role="combobox"], .wms-ops-field-shell, .app-input-shell';
+
+/** Label heading only — excludes placeholder / control text nested inside `<label>`. */
+export function extractLabelMatchText(el: HTMLElement): string {
+  if (el.matches('input, textarea, select, button, [role="combobox"]')) {
+    return '';
+  }
+
+  if (el.matches('.wms-ops-entry-label, [data-slot="form-label"], th')) {
+    return (el.textContent ?? '').trim();
+  }
+
+  if (el.matches('label')) {
+    const directHeading = el.querySelector<HTMLElement>(
+      ':scope > span.font-semibold, :scope > span.font-bold, :scope > [data-slot="form-label"]',
+    );
+    if (directHeading && !directHeading.querySelector(LABEL_CONTROL_SELECTOR)) {
+      return (directHeading.textContent ?? '').trim();
+    }
+
+    if (el.classList.contains('font-semibold') || el.classList.contains('font-bold')) {
+      return (el.textContent ?? '').trim();
+    }
+
+    const chunks: string[] = [];
+    for (const child of el.childNodes) {
+      if (child.nodeType === Node.TEXT_NODE) {
+        const text = (child.textContent ?? '').trim();
+        if (text) chunks.push(text);
+        continue;
+      }
+      if (child.nodeType !== Node.ELEMENT_NODE) continue;
+
+      const childEl = child as HTMLElement;
+      if (childEl.matches(LABEL_CONTROL_SELECTOR)) continue;
+      if (childEl.matches('span, [data-slot="form-label"]')) {
+        chunks.push((childEl.textContent ?? '').trim());
+      }
+    }
+
+    return chunks.join(' ').replace(/\s+/g, ' ').trim();
+  }
+
+  return (el.textContent ?? '').trim();
 }
 
 function resolveControlSurface(el: HTMLElement): HTMLElement {
@@ -220,8 +267,38 @@ function findReceiptEntryRow(message: string): HTMLElement | null {
   return null;
 }
 
+function findLineRowByRef(ref: string, root: ParentNode = document): HTMLElement | null {
+  const normalizedPrefix = normalize(ref);
+  for (const row of root.querySelectorAll<HTMLElement>('[data-wms-error-line-ref]')) {
+    if (!isVisible(row)) continue;
+    const rowRef = row.getAttribute('data-wms-error-line-ref') ?? '';
+    if (normalize(rowRef) === normalizedPrefix) return row;
+  }
+  return null;
+}
+
+function parseSheetLineRef(message: string): string | null {
+  const match = message.match(/^([^:\n]{3,120})\s+levhas[ıi]\s/i);
+  return match ? match[1].trim() : null;
+}
+
 function findLineRow(message: string): HTMLElement | null {
-  return findReceiptEntryRow(message);
+  const receiptRow = findReceiptEntryRow(message);
+  if (receiptRow) return receiptRow;
+
+  const colonPrefix = parseLineErrorPrefix(message);
+  if (colonPrefix) {
+    const row = findLineRowByRef(colonPrefix);
+    if (row) return row;
+  }
+
+  const sheetRef = parseSheetLineRef(message);
+  if (sheetRef) {
+    const row = findLineRowByRef(sheetRef);
+    if (row) return row;
+  }
+
+  return null;
 }
 
 function resolveFieldInRowByMessage(
@@ -257,6 +334,12 @@ function resolveFieldInRowByMessage(
     'available quantity',
   ];
   const locationKeywords = ['hedef depo', 'kabul rafi', 'target warehouse', 'receiving shelf'];
+  const sheetImageKeywords = [
+    'levhasi icin en az bir gorsel',
+    'levha gorseli',
+    'sheet image',
+    'en fazla 5 gorsel',
+  ];
 
   const pickLabel = (labelText: string): HTMLElement | null => {
     const label = [...row.querySelectorAll<HTMLElement>('.wms-ops-entry-label, label > span.font-semibold, label span')]
@@ -289,6 +372,9 @@ function resolveFieldInRowByMessage(
       pickLabel('Raf Kodu')
     );
   }
+  if (sheetImageKeywords.some((key) => msg.includes(key))) {
+    return row.querySelector<HTMLElement>('[data-wms-error-target="sheetImages"]');
+  }
 
   return null;
 }
@@ -311,8 +397,10 @@ function findByLabelText(message: string): HTMLElement | null {
     [
       '.wms-ops-entry-label',
       'label > span.font-semibold',
+      'label > span.font-bold',
+      'label.font-semibold',
+      'label.font-bold',
       'label span',
-      'label',
       '[data-slot="form-label"]',
       'th',
     ].join(', '),
@@ -322,7 +410,7 @@ function findByLabelText(message: string): HTMLElement | null {
 
   for (const label of labels) {
     if (!isVisible(label)) continue;
-    const text = (label.textContent ?? '').trim();
+    const text = extractLabelMatchText(label);
     if (text.length < 3 || text.length > 80) continue;
     const score = scoreLabelMatch(message, text);
     if (score < 8) continue;

@@ -7,6 +7,11 @@ import {
   type DialogPortalRoot,
 } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+import {
+  preventDialogDismissIfImageLightbox,
+  preventDialogEscapeIfImageLightbox,
+  shouldIgnoreDialogClose,
+} from '@/lib/wms-image-lightbox';
 
 type ResponsiveDialogVariant = 'detail' | 'lookup';
 
@@ -46,17 +51,34 @@ export function ResponsiveDialog({
   framed = true,
 }: ResponsiveDialogProps): ReactElement {
   return (
-    <Dialog open={open} onOpenChange={(nextOpen) => { if (!nextOpen) onClose(); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen && shouldIgnoreDialogClose()) return;
+        if (!nextOpen) onClose();
+      }}
+    >
       <DialogContent
         showCloseButton={showCloseButton}
         portalRoot={portalRoot}
         tone="ops"
+        onPointerDownOutside={(event) => {
+          preventDialogDismissIfImageLightbox(event);
+          if (!showCloseButton) event.preventDefault();
+        }}
         onInteractOutside={(event) => {
+          preventDialogDismissIfImageLightbox(event);
+          if (!showCloseButton) event.preventDefault();
+        }}
+        onFocusOutside={(event) => {
+          preventDialogDismissIfImageLightbox(event);
           if (!showCloseButton) event.preventDefault();
         }}
         onEscapeKeyDown={(event) => {
+          preventDialogEscapeIfImageLightbox(event);
           if (!showCloseButton) event.preventDefault();
         }}
+
         className={cn(
           variant === 'lookup' ? 'wms-ops-lookup-dialog' : 'wms-ops-detail-dialog',
           'wms-ops-form flex !h-auto max-h-[min(90dvh,880px)] w-[calc(100%-1rem)] !max-w-4xl flex-col gap-0 overflow-hidden border-0 p-0 shadow-none',

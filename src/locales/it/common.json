@@ -2716,7 +2716,10 @@
       "status": "Stato",
       "imageCount": "Immagini",
       "actions": "Azioni",
-      "viewUpdate": "Visualizza / Aggiorna"
+      "viewUpdate": "Visualizza / Aggiorna",
+      "statusTabs": "Schede stato",
+      "tabAll": "Tutti",
+      "tabUnknown": "Sconosciuto"
     },
     "sacReceiptPlans": {
       "title": "Piani attesa SAC",
@@ -5062,6 +5065,7 @@
       "importReference": "Riferimento trasferimento",
       "exportReference": "Riferimento export",
       "waybillNo": "N. DDT",
+      "gibWaybillNo": "Numero e-DDT / GİB",
       "waybillDate": "Data DDT",
       "plannedArrival": "Arrivo pianificato",
       "excelFile": "File Excel",
@@ -5094,8 +5098,12 @@
       "errorDetailTitle": "Riga {{row}} — Dettaglio errore",
       "errorDetailHint": "Clicca per visualizzare il messaggio completo.",
       "rowsRead": "{{count}} righe lette.",
+      "validationFieldRequired": "{{field}} è obbligatorio.",
+      "validationFieldsRequired": "I seguenti campi sono obbligatori: {{fields}}.",
+      "validationWaybill": "Il numero e-DDT / GİB deve contenere esattamente 15 caratteri alfanumerici e la data del documento è obbligatoria.",
       "validationError": "Fornitore, magazzino, scaffale ricevimento, serie documenti, riferimento ed Excel sono obbligatori.",
       "saveSuccess": "Piano attesa SAC salvato.",
+      "commitResultLoadFailed": "Il piano è stato salvato, ma non è stato possibile caricare le righe del risultato. Puoi riaprirlo dall'elenco dei piani.",
       "previewReady": "Anteprima pronta.",
       "operationFailed": "Operazione non riuscita."
     },
@@ -5214,6 +5222,7 @@
         "selectAllEligible": "Seleziona tutti gli idonei",
         "expectedQty": "Atteso",
         "approvalErpStatus": "Approvazione / stato ERP",
+        "conversionDate": "Data di approvazione",
         "selectRowAria": "Seleziona {{dCode}}",
         "directReceiptTitle": "Ricevimento SAC diretto",
         "directReceiptText": "Questa azione non crea attività né assegnazione utente; accetta direttamente le lastre selezionate ed esegue l'invio ERP secondo la policy di processo.",
@@ -5467,7 +5476,16 @@
       "vehicleImageRequired": "È richiesta almeno un'immagine del veicolo per l'accettazione.",
       "alreadyCompleted": "Questa accettazione veicolo e acciaio è già stata completata in precedenza.",
       "completed": "Check-in veicolo e accettazione acciaio completati correttamente.",
-      "completeFailed": "Impossibile completare il check-in veicolo e l'accettazione acciaio."
+      "completeFailed": "Impossibile completare il check-in veicolo e l'accettazione acciaio.",
+      "unknownPlateResolved": "La lamiera sconosciuta è stata associata alla riga acciaio.",
+      "resolveUnknownPlateFailed": "Impossibile associare la lamiera sconosciuta.",
+      "sheetAlreadyAccepted": "Questa lamiera è già stata accettata.",
+      "noChangesToSave": "Non ci sono modifiche da salvare.",
+      "vehicleSaved": "Informazioni del veicolo salvate.",
+      "saveVehicleFailed": "Impossibile salvare le informazioni del veicolo.",
+      "noNewSheetsSelected": "Seleziona almeno una nuova lamiera.",
+      "sheetCountBelowSaved": "L'obiettivo non può essere inferiore alle {{count}} lamiere salvate.",
+      "supplierRequiredForUnknown": "Seleziona un fornitore per un'accettazione composta solo da lamiere sconosciute."
     },
     "pageEyebrow": "Ricevimento · Operazioni acciaio · Veicolo + Accettazione in campo",
     "pageTitle": "Check-in veicolo e accettazione acciaio",
@@ -5498,7 +5516,25 @@
       "location": "Seleziona l'ubicazione di accettazione per {{dCode}}.",
       "vehicleImage": "Aggiungi almeno un'immagine del veicolo.",
       "sheetImage": "Aggiungi un'immagine per la lamiera {{dCode}}.",
+      "supplierRequiredForUnknown": "È necessario selezionare un fornitore quando tutte le lamiere accettate sono sconosciute.",
+      "unknownPlatesPending": "{{count}} lamiera/e sono sconosciute; associale prima di creare il ricevimento.",
       "saving": "Salvataggio..."
+    },
+    "resolveModeHint": "Seleziona sotto una riga acciaio per associare la lamiera sconosciuta.",
+    "resolveUnavailable": "L'associazione non è attualmente disponibile per questa lamiera.",
+    "unknownBadge": "Sconosciuta",
+    "unknownSlotDescription": "L'identità seriale della lamiera {{sequence}} verrà associata in seguito.",
+    "unknownSequence": "Sequenza {{sequence}}",
+    "unknownAwaitingMatch": "In attesa di associazione alla riga acciaio.",
+    "carrierLookup": {
+      "title": "Elenco fornitori / clienti",
+      "searchPlaceholder": "Cerca per codice o nome",
+      "empty": "Nessun fornitore trovato"
+    },
+    "saveVehicleBlockers": {"title": "Elementi mancanti per salvare"},
+    "confirm": {
+      "removeUnknownTitle": "Rimuovi lamiera sconosciuta",
+      "removeUnknownDescription": "Stai rimuovendo la lamiera sconosciuta aggiunta per questo veicolo. Continuare?"
     },
     "excelImportLabel": "Excel/importazione",
     "sheetImageInfo": "Esistenti {{current}} · Nuove {{next}} immagini",
@@ -5508,7 +5544,8 @@
       "vehicleImagesRequired": "2 · Immagini del veicolo *",
       "findSheet": "3 · Trova lamiera d'acciaio per serie / DCode",
       "selectedSheets": "4 · Lamiere selezionate ({{selected}}/{{total}})",
-      "savedAcceptedSheets": "Lamiere accettate salvate ({{count}})"
+      "savedAcceptedSheets": "Lamiere accettate salvate ({{count}})",
+      "unknownPlates": "Lamiere sconosciute ({{count}})"
     },
     "field": {
       "towingPlate": "Targa del veicolo trattore *",
@@ -5533,11 +5570,17 @@
     "action": {
       "findToday": "Trova il veicolo di oggi",
       "pickVehicleImage": "Seleziona immagine del veicolo",
+      "captureVehicleImage": "Scatta una foto del veicolo",
       "findSheet": "Trova lamiera",
       "removeSelection": "Rimuovi dalla selezione",
       "addSelection": "Aggiungi alla selezione",
       "complete": "Check-in veicolo e accettazione acciaio",
-      "addSheetImage": "Aggiungi immagine della lamiera"
+      "addSheetImage": "Aggiungi immagine della lamiera",
+      "captureSheetImage": "Scatta una foto della lamiera",
+      "addUnknownPlate": "Aggiungi lamiera sconosciuta",
+      "resolveUnknownPlate": "Associa a una riga acciaio",
+      "removeUnknownPlate": "Rimuovi lamiera sconosciuta",
+      "saveVehicle": "Salva"
     },
     "summary": {
       "selectedSheets": "Lamiere selezionate",

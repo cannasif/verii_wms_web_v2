@@ -1250,7 +1250,16 @@
       "vehicleImageRequired": "Araç kabulü için en az bir araç görseli zorunludur.",
       "alreadyCompleted": "Bu araç ve SAC kabulü daha önce tamamlandı.",
       "completed": "Araç giriş ve SAC kabulü başarıyla tamamlandı.",
-      "completeFailed": "Araç giriş ve SAC kabulü tamamlanamadı."
+      "completeFailed": "Araç giriş ve SAC kabulü tamamlanamadı.",
+      "unknownPlateResolved": "Bilinmeyen levha SAC satırıyla eşleştirildi.",
+      "resolveUnknownPlateFailed": "Bilinmeyen levha eşleştirilemedi.",
+      "sheetAlreadyAccepted": "Bu levha zaten kabul edilmiş.",
+      "noChangesToSave": "Kaydedilecek değişiklik yok.",
+      "vehicleSaved": "Araç bilgileri kaydedildi.",
+      "saveVehicleFailed": "Araç bilgileri kaydedilemedi.",
+      "noNewSheetsSelected": "Kaydetmek için en az bir levha seçilmelidir.",
+      "sheetCountBelowSaved": "Kayıtlı {{count}} levha varken hedef adet daha düşük olamaz.",
+      "supplierRequiredForUnknown": "Tamamı bilinmeyen levhalı kabul için tedarikçi seçin."
     },
     "pageEyebrow": "Mal Kabul · SAC İşlemleri · Araç + Saha Kabul",
     "pageDescription": "Araç bilgisi, saha kabul, seçilen levhalar, görseller ve kabul konumları tek işlemde kaydedilir. Seri yazınca eşleşen levha bilgisi otomatik gelir.",
@@ -1280,7 +1289,27 @@
       "location": "{{dCode}} için kabul konumu seçilmeli.",
       "vehicleImage": "En az bir araç görseli eklenmeli.",
       "sheetImage": "{{dCode}} levhası için görsel eklenmeli.",
+      "supplierRequiredForUnknown": "Tamamı bilinmeyen levhalı kabul için tedarikçi seçilmelidir.",
+      "unknownPlatesPending": "{{count}} levhanın kimliği bilinmiyor; irsaliye için önce eşleştirin.",
       "saving": "Kaydediliyor..."
+    },
+    "resolveModeHint": "Seçili bilinmeyen levhayı eşleştirmek için aşağıdan bir SAC satırı seçin.",
+    "resolveUnavailable": "Bu levha için eşleştirme işlemi şu anda kullanılamıyor.",
+    "unknownBadge": "Bilinmeyen",
+    "unknownSlotDescription": "{{sequence}}. levhanın seri bilgisi daha sonra SAC ile eşleştirilecek.",
+    "unknownSequence": "Sıra {{sequence}}",
+    "unknownAwaitingMatch": "SAC eşleştirmesi bekleniyor.",
+    "carrierLookup": {
+      "title": "Tedarikçi / cari rehberi",
+      "searchPlaceholder": "Cari kodu veya adı ile ara",
+      "empty": "Tedarikçi kaydı bulunamadı"
+    },
+    "saveVehicleBlockers": {
+      "title": "Kaydetmek için eksikler"
+    },
+    "confirm": {
+      "removeUnknownTitle": "Bilinmeyen levhayı kaldır",
+      "removeUnknownDescription": "Bu araç için eklediğiniz bilinmeyen levha kaydını kaldırıyorsunuz. Devam etmek istiyor musunuz?"
     },
     "excelImportLabel": "Excel/aktarım",
     "sheetImageInfo": "Mevcut {{current}} · Yeni {{next}} görsel",
@@ -1290,7 +1319,8 @@
       "vehicleImagesRequired": "2 · Araç görselleri *",
       "findSheet": "3 · Seri / DCode ile SAC levha bul",
       "selectedSheets": "4 · Seçilen levhalar ({{selected}}/{{total}})",
-      "savedAcceptedSheets": "Kayıtlı kabul levhaları ({{count}})"
+      "savedAcceptedSheets": "Kayıtlı kabul levhaları ({{count}})",
+      "unknownPlates": "Bilinmeyen levhalar ({{count}})"
     },
     "field": {
       "towingPlate": "Çekici plakası *",
@@ -1321,7 +1351,11 @@
       "addSelection": "Seçime ekle",
       "complete": "Araç Giriş ve SAC Kabul",
       "addSheetImage": "Levha görseli ekle",
-      "captureSheetImage": "Levha fotoğrafı çek"
+      "captureSheetImage": "Levha fotoğrafı çek",
+      "addUnknownPlate": "Bilinmeyen levha ekle",
+      "resolveUnknownPlate": "SAC ile eşleştir",
+      "removeUnknownPlate": "Bilinmeyen levhayı kaldır",
+      "saveVehicle": "Kaydet"
     },
     "summary": {
       "selectedSheets": "Seçilen levha",
@@ -4522,7 +4556,10 @@
       "status": "Durum",
       "imageCount": "Görsel",
       "actions": "İşlemler",
-      "viewUpdate": "Görüntüle / Güncelle"
+      "viewUpdate": "Görüntüle / Güncelle",
+      "statusTabs": "Durum sekmeleri",
+      "tabAll": "Tümü",
+      "tabUnknown": "Bilinmeyen"
     },
     "sacReceiptPlans": {
       "title": "SAC Beklenti Planları",
@@ -6845,6 +6882,7 @@
       "validationWaybill": "E-irsaliye / GİB numarası tam 15 alfanümerik karakter olmalı ve irsaliye tarihi girilmelidir.",
       "validationError": "Tedarikçi, depo, mal kabul belge serisi, referans ve Excel zorunludur.",
       "saveSuccess": "SAC beklenti planı kaydedildi.",
+      "commitResultLoadFailed": "Plan kaydedildi ancak sonuç satırları yüklenemedi. Plan listesinden yeniden açabilirsiniz.",
       "previewReady": "Önizleme hazır.",
       "operationFailed": "İşlem başarısız."
     },
@@ -6924,6 +6962,7 @@
         "selectedSheets": "Seçilen levha",
         "totalApprovedQty": "Toplam onaylı miktar",
         "sacPlan": "SAC planı",
+        "lastConversionWaybill": "Son kullanılan irsaliye",
         "priority": "Öncelik",
         "priorityLow": "Düşük",
         "priorityNormal": "Normal",
@@ -6963,6 +7002,7 @@
         "selectAllEligible": "Uygunların tümünü seç",
         "expectedQty": "Beklenen",
         "approvalErpStatus": "Onay / ERP durumu",
+        "conversionDate": "Onaylanma tarihi",
         "selectRowAria": "{{dCode}} seç",
         "directReceiptTitle": "Doğrudan SAC mal kabul",
         "directReceiptText": "Bu işlem görev veya kullanıcı ataması oluşturmaz; seçili levhaları doğrudan kabul eder ve süreç politikasına göre ERP gönderimini çalıştırır.",

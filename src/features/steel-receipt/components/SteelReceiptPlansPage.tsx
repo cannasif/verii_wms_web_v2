@@ -61,6 +61,13 @@ function groupLinesByVehicle(rows:SteelLineRow[]){
     .map(([key,groupRows])=>({key,rows:groupRows}));
 }
 
+function PlanStatBadge({label,value,tone,formatValue}:{label:string;value:number;tone:OpsStatusTone;formatValue?:(value:number)=>string}){
+  const display=formatValue?formatValue(value):String(value);
+  return <OpsStatusBadge tone={tone} className="!px-3 !py-1.5 !text-[11px] !normal-case !tracking-wide">
+    {label}: <span className="font-black tabular-nums">{display}</span>
+  </OpsStatusBadge>;
+}
+
 function renderVehicleDriver(row:SteelPlanRow,t:(key:string,options?:{defaultValue?:string})=>string){
   const hasVehicle=Boolean(row.vehiclePlateNo||row.vehicleCheckInId);
   return <>
@@ -131,6 +138,18 @@ function PlanLinesDialog({plan,onClose}:{plan:SteelPlanRow;onClose:()=>void}){
   const rows=lines.data?.items??[];
   const lineNoBase=useMemo(()=>rows.length?Math.min(...rows.map(row=>row.lineNo)):1,[rows]);
   const groupedRows=useMemo(()=>groupLinesByVehicle(rows),[rows]);
+  const detailStats=useMemo(()=>{
+    const lineCount=rows.length||plan.totalLineCount;
+    const expectedQty=rows.length?rows.reduce((sum,row)=>sum+row.expectedQuantity,0):plan.totalExpectedQuantity;
+    const arrivedQty=rows.reduce((sum,row)=>row.arrivalStatus==='Arrived'?sum+row.expectedQuantity:sum,0);
+    const notArrivedQty=rows.reduce((sum,row)=>row.arrivalStatus!=='Arrived'?sum+row.expectedQuantity:sum,0);
+    return [
+      {key:'total',label:t(`${G}.detailStatTotal`),value:lineCount,tone:'neutral' as const},
+      {key:'expected',label:t(`${G}.detailStatExpected`),value:expectedQty,tone:'active' as const,formatValue:formatProjectNumber},
+      {key:'arrived',label:t(`${G}.detailStatArrived`),value:arrivedQty,tone:'done' as const,formatValue:formatProjectNumber},
+      {key:'notArrived',label:t(`${G}.detailStatNotArrived`),value:notArrivedQty,tone:'pending' as const,formatValue:formatProjectNumber},
+    ] as const;
+  },[rows,plan,t]);
   return <Dialog open onOpenChange={open=>{if(!open)onClose()}}>
     <OpsDialogContent size="full" portalRoot="body" className="data-no-auto-localize !max-w-[min(96vw,75rem)] max-h-[min(94dvh,1100px)]">
       <OpsDialogHeader>
@@ -140,9 +159,10 @@ function PlanLinesDialog({plan,onClose}:{plan:SteelPlanRow;onClose:()=>void}){
             <span className="font-mono font-bold text-cyan-500">{plan.importReferenceNo}</span>
             <span className="mx-2">·</span>
             {plan.sourceFileName||'-'}
-            <span className="mx-2">·</span>
-            {t(`${G}.detailMeta`,{count:plan.totalLineCount,qty:formatProjectNumber(plan.totalExpectedQuantity)})}
           </p>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            {detailStats.map(stat=><PlanStatBadge key={stat.key} label={stat.label} value={stat.value} tone={stat.tone} formatValue={'formatValue' in stat?stat.formatValue:undefined}/>)}
+          </div>
         </div>
       </OpsDialogHeader>
       <OpsDialogBody>

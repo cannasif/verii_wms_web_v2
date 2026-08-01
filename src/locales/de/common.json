@@ -1211,7 +1211,16 @@
       "vehicleImageRequired": "Für die Annahme ist mindestens ein Fahrzeugbild erforderlich.",
       "alreadyCompleted": "Diese Fahrzeug- und Stahlannahme wurde bereits abgeschlossen.",
       "completed": "Fahrzeuganmeldung und Stahlannahme erfolgreich abgeschlossen.",
-      "completeFailed": "Fahrzeuganmeldung und Stahlannahme konnten nicht abgeschlossen werden."
+      "completeFailed": "Fahrzeuganmeldung und Stahlannahme konnten nicht abgeschlossen werden.",
+      "unknownPlateResolved": "Das unbekannte Blech wurde der Stahlzeile zugeordnet.",
+      "resolveUnknownPlateFailed": "Das unbekannte Blech konnte nicht zugeordnet werden.",
+      "sheetAlreadyAccepted": "Dieses Blech wurde bereits angenommen.",
+      "noChangesToSave": "Es gibt keine Änderungen zu speichern.",
+      "vehicleSaved": "Fahrzeuginformationen gespeichert.",
+      "saveVehicleFailed": "Fahrzeuginformationen konnten nicht gespeichert werden.",
+      "noNewSheetsSelected": "Wählen Sie mindestens ein neues Blech aus.",
+      "sheetCountBelowSaved": "Das Ziel darf nicht unter den {{count}} gespeicherten Blechen liegen.",
+      "supplierRequiredForUnknown": "Wählen Sie einen Lieferanten für eine Annahme ausschließlich unbekannter Bleche aus."
     },
     "pageEyebrow": "Wareneingang · Stahloperationen · Fahrzeug + Feldannahme",
     "pageDescription": "Fahrzeuginfo, Feldannahme, ausgewählte Bleche, Bilder und Annahmeorte werden in einem einzigen Vorgang gespeichert. Passende Blechinfos werden beim Eingeben der Seriennummer automatisch geladen.",
@@ -1241,7 +1250,25 @@
       "location": "Annahmeort für {{dCode}} auswählen.",
       "vehicleImage": "Mindestens ein Fahrzeugbild hinzufügen.",
       "sheetImage": "Bild für Blech {{dCode}} hinzufügen.",
+      "supplierRequiredForUnknown": "Bei ausschließlich unbekannten Blechen muss ein Lieferant ausgewählt werden.",
+      "unknownPlatesPending": "{{count}} Blech(e) sind unbekannt; ordnen Sie sie vor der Wareneingangserstellung zu.",
       "saving": "Wird gespeichert..."
+    },
+    "resolveModeHint": "Wählen Sie unten eine Stahlzeile für das ausgewählte unbekannte Blech aus.",
+    "resolveUnavailable": "Die Zuordnung ist für dieses Blech derzeit nicht verfügbar.",
+    "unknownBadge": "Unbekannt",
+    "unknownSlotDescription": "Die Serienidentität von Blech {{sequence}} wird später zugeordnet.",
+    "unknownSequence": "Reihenfolge {{sequence}}",
+    "unknownAwaitingMatch": "Wartet auf Stahlzeilenzuordnung.",
+    "carrierLookup": {
+      "title": "Lieferanten-/Kundenverzeichnis",
+      "searchPlaceholder": "Nach Kundencode oder Name suchen",
+      "empty": "Kein Lieferant gefunden"
+    },
+    "saveVehicleBlockers": {"title": "Fehlende Angaben zum Speichern"},
+    "confirm": {
+      "removeUnknownTitle": "Unbekanntes Blech entfernen",
+      "removeUnknownDescription": "Das für dieses Fahrzeug hinzugefügte unbekannte Blech wird entfernt. Fortfahren?"
     },
     "excelImportLabel": "Excel/Import",
     "sheetImageInfo": "Vorhanden {{current}} · Neu {{next}} Bilder",
@@ -1251,7 +1278,8 @@
       "vehicleImagesRequired": "2 · Fahrzeugbilder *",
       "findSheet": "3 · Stahlblech per Seriennr. / DCode finden",
       "selectedSheets": "4 · Ausgewählte Bleche ({{selected}}/{{total}})",
-      "savedAcceptedSheets": "Gespeicherte angenommene Bleche ({{count}})"
+      "savedAcceptedSheets": "Gespeicherte angenommene Bleche ({{count}})",
+      "unknownPlates": "Unbekannte Bleche ({{count}})"
     },
     "field": {
       "towingPlate": "Zugfahrzeug-Kennzeichen *",
@@ -1276,11 +1304,17 @@
     "action": {
       "findToday": "Heutiges Fahrzeug finden",
       "pickVehicleImage": "Fahrzeugbild auswählen",
+      "captureVehicleImage": "Fahrzeugfoto aufnehmen",
       "findSheet": "Blech finden",
       "removeSelection": "Aus Auswahl entfernen",
       "addSelection": "Zur Auswahl hinzufügen",
       "complete": "Fahrzeuganmeldung und Stahlannahme",
-      "addSheetImage": "Blechbild hinzufügen"
+      "addSheetImage": "Blechbild hinzufügen",
+      "captureSheetImage": "Blechfoto aufnehmen",
+      "addUnknownPlate": "Unbekanntes Blech hinzufügen",
+      "resolveUnknownPlate": "Mit Stahlzeile abgleichen",
+      "removeUnknownPlate": "Unbekanntes Blech entfernen",
+      "saveVehicle": "Speichern"
     },
     "summary": {
       "selectedSheets": "Ausgewählte Bleche",
@@ -4247,7 +4281,10 @@
       "status": "Status",
       "imageCount": "Bilder",
       "actions": "Aktionen",
-      "viewUpdate": "Anzeigen / Aktualisieren"
+      "viewUpdate": "Anzeigen / Aktualisieren",
+      "statusTabs": "Statusregisterkarten",
+      "tabAll": "Alle",
+      "tabUnknown": "Unbekannt"
     },
     "sacReceiptPlans": {
       "title": "SAC Erwartungspläne",
@@ -6372,6 +6409,7 @@
       "importReference": "Transferreferenz",
       "exportReference": "Exportreferenz",
       "waybillNo": "Lieferschein-Nr.",
+      "gibWaybillNo": "E-Lieferschein- / GİB-Nummer",
       "waybillDate": "Lieferscheindatum",
       "plannedArrival": "Geplante Ankunft",
       "excelFile": "Excel-Datei",
@@ -6404,8 +6442,12 @@
       "errorDetailTitle": "Zeile {{row}} — Fehlerdetails",
       "errorDetailHint": "Klicken Sie, um den vollständigen Text anzuzeigen.",
       "rowsRead": "{{count}} Zeilen gelesen.",
+      "validationFieldRequired": "{{field}} ist erforderlich.",
+      "validationFieldsRequired": "Folgende Felder sind erforderlich: {{fields}}.",
+      "validationWaybill": "Die E-Lieferschein- / GİB-Nummer muss genau 15 alphanumerische Zeichen enthalten und das Lieferscheindatum ist erforderlich.",
       "validationError": "Lieferant, Lager, Annahmeregal, Belegserie, Referenz und Excel sind erforderlich.",
       "saveSuccess": "SAC-Erwartungsplan gespeichert.",
+      "commitResultLoadFailed": "Der Plan wurde gespeichert, aber die Ergebniszeilen konnten nicht geladen werden. Sie können ihn über die Planliste erneut öffnen.",
       "previewReady": "Vorschau bereit.",
       "operationFailed": "Vorgang fehlgeschlagen."
     },
@@ -6485,6 +6527,7 @@
         "selectedSheets": "Selected sheets",
         "totalApprovedQty": "Total approved quantity",
         "sacPlan": "SAC plan",
+        "lastConversionWaybill": "Zuletzt verwendete Lieferschein-Nr.",
         "priority": "Priority",
         "priorityLow": "Low",
         "priorityNormal": "Normal",
@@ -6524,6 +6567,7 @@
         "selectAllEligible": "Alle geeigneten auswählen",
         "expectedQty": "Erwartet",
         "approvalErpStatus": "Genehmigung / ERP-Status",
+        "conversionDate": "Genehmigungsdatum",
         "selectRowAria": "{{dCode}} auswählen",
         "directReceiptTitle": "Direkter SAC-Wareneingang",
         "directReceiptText": "Diese Aktion erstellt keine Aufgabe oder Benutzerzuweisung; ausgewählte Bleche werden direkt angenommen und die ERP-Übertragung gemäß Prozessrichtlinie ausgeführt.",

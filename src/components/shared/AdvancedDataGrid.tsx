@@ -1,5 +1,6 @@
 import {
   Fragment,
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -137,6 +138,8 @@ interface Props<T extends { id: number }> {
   toolbarEndExtra?: ReactNode;
   /** Arama alanının yerine veya yanına eklenen özel başlangıç içeriği. */
   toolbarStartExtra?: ReactNode;
+  /** Yenile butonunun hemen sağına eklenen içerik. */
+  toolbarAfterRefreshExtra?: ReactNode;
   /** Varsayılan arama kutusunu gizler (özel arama toolbarStartExtra ile verilir). */
   hideSearch?: boolean;
   /** Toolbar altına ek satır (ör. durum dropdown filtreleri). */
@@ -149,6 +152,8 @@ interface Props<T extends { id: number }> {
   expandedRowId?: number | null;
   /** Özet satırın altına açılan detay içeriği. */
   renderExpandedRow?: (row: T) => ReactNode;
+  /** false ise sütun sırası/görünürlüğü localStorage'a yazılmaz ve kod tanımı kullanılır. */
+  persistPreferences?: boolean;
 }
 
 interface GridCellContext<T> {
@@ -445,12 +450,14 @@ export function AdvancedDataGrid<T extends { id: number }>({
   toolbarActions,
   toolbarEndExtra,
   toolbarStartExtra,
+  toolbarAfterRefreshExtra,
   hideSearch = false,
   toolbarBelowExtra,
   refreshKey = 0,
   onRowDoubleClick,
   expandedRowId = null,
   renderExpandedRow,
+  persistPreferences = true,
 }: Props<T>) {
   const { t, i18n } = useTranslation();
   const { pathname } = useLocation();
@@ -501,7 +508,11 @@ export function AdvancedDataGrid<T extends { id: number }>({
     [columns],
   );
   const storageKey = getGridPreferenceKey(pageKey, userId);
-  const initialPreferences = useMemo(() => loadGridPreferences(pageKey, userId, preferenceColumns), [pageKey, userId, preferenceColumns]);
+  const defaultPreferences = useMemo(() => getDefaultGridPreferences(preferenceColumns), [preferenceColumns]);
+  const initialPreferences = useMemo(
+    () => persistPreferences ? loadGridPreferences(pageKey, userId, preferenceColumns) : defaultPreferences,
+    [defaultPreferences, pageKey, persistPreferences, preferenceColumns, userId],
+  );
   const [loadedKey, setLoadedKey] = useState(storageKey);
   const [visible, setVisible] = useState<string[]>(initialPreferences.visible);
   const [order, setOrder] = useState<string[]>(initialPreferences.order);
@@ -536,7 +547,9 @@ export function AdvancedDataGrid<T extends { id: number }>({
 
   useEffect(() => {
     if (loadedKey === storageKey) return;
-    const preferences = loadGridPreferences(pageKey, userId, preferenceColumns);
+    const preferences = persistPreferences
+      ? loadGridPreferences(pageKey, userId, preferenceColumns)
+      : getDefaultGridPreferences(preferenceColumns);
     setVisible(preferences.visible);
     setOrder(preferences.order);
     setWidths(preferences.widths);
@@ -546,10 +559,23 @@ export function AdvancedDataGrid<T extends { id: number }>({
     setSortDirection(preferences.sortDirection);
     setPage(1);
     setLoadedKey(storageKey);
-  }, [loadedKey, pageKey, preferenceColumns, storageKey, userId]);
+  }, [loadedKey, pageKey, persistPreferences, preferenceColumns, storageKey, userId]);
 
   useEffect(() => {
-    if (loadedKey !== storageKey) return;
+    if (!persistPreferences) {
+      setVisible(defaultPreferences.visible);
+      setOrder(defaultPreferences.order);
+      setWidths(defaultPreferences.widths);
+      setSearchFields(defaultPreferences.searchFields);
+      setPageSize(defaultPreferences.pageSize);
+      setSortBy(defaultPreferences.sortBy);
+      setSortDirection(defaultPreferences.sortDirection);
+      setPage(1);
+    }
+  }, [defaultPreferences, persistPreferences]);
+
+  useEffect(() => {
+    if (!persistPreferences || loadedKey !== storageKey) return;
     const timer = window.setTimeout(() => {
       const preferences: GridPreferences = { version: 2, visible, order, widths, searchFields, sortBy, sortDirection, pageSize };
       saveGridPreferences(pageKey, userId, preferences);
@@ -956,15 +982,15 @@ export function AdvancedDataGrid<T extends { id: number }>({
       .map((column) => ({ key: column.key, label: column.label })),
     [activeColumns],
   );
-  const mapExportRows = (rows: T[]) => rows.map((row) => {
+  const mapExportRows = useCallback((rows: T[]) => rows.map((row) => {
     const mapped: Record<string, unknown> = {};
     for (const column of activeColumns) {
       if (column.key === 'actions') continue;
       mapped[column.key] = getContextValue(column, row, enumLanguage) ?? (row as Record<string, unknown>)[column.key] ?? '';
     }
     return mapped;
-  });
-  const exportRows = useMemo(() => mapExportRows(pageRows), [activeColumns, enumLanguage, pageRows]);
+  }), [activeColumns]);
+  const exportRows = useMemo(() => mapExportRows(pageRows), [mapExportRows, pageRows]);
   const getExportData = async () => {
     const exportPageSize = Math.min(Math.max(total, pageSize), 5000);
     const page = normalizeGridPage<T>(await fetchPage({
@@ -1086,6 +1112,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
             <RefreshCw className={cn('size-3.5', query.isFetching && 'animate-spin')} aria-hidden />
             <span className="hidden md:inline">{t('common.refresh')}</span>
           </OpsActionButton>
+          {toolbarAfterRefreshExtra}
         </div>
 
         <div className="wms-ops-data-grid-toolbar__end flex flex-wrap items-center gap-2">
