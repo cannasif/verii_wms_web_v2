@@ -4962,6 +4962,10 @@
           "label": "Plan d'attente",
           "description": "Aperçu et validation Excel"
         },
+        "expected": {
+          "label": "Tôles attendues",
+          "description": "Plan optionnel et contrôle des tôles"
+        },
         "inspection": {
           "label": "Contrôle qualité",
           "description": "Acceptation et rejet par tôle"

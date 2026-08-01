@@ -6276,6 +6276,10 @@
           "label": "Erwartungsplan",
           "description": "Excel-Vorschau und Validierung"
         },
+        "expected": {
+          "label": "Erwartete Bleche",
+          "description": "Optionale Plan- und Blechprüfung"
+        },
         "inspection": {
           "label": "Qualitätskontrolle",
           "description": "Annahme und Ablehnung pro Blech"

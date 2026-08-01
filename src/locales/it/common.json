@@ -4962,6 +4962,10 @@
           "label": "Piano attesa",
           "description": "Anteprima e validazione Excel"
         },
+        "expected": {
+          "label": "Lastre attese",
+          "description": "Piano opzionale e controllo lastre"
+        },
         "inspection": {
           "label": "Controllo qualità",
           "description": "Accettazione e rifiuto per lastra"

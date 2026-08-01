@@ -6513,6 +6513,10 @@
           "label": "Expectation Plan",
           "description": "Excel preview and validation"
         },
+        "expected": {
+          "label": "Expected Sheets",
+          "description": "Optional plan and sheet review"
+        },
         "inspection": {
           "label": "Quality Control",
           "description": "Accept and reject per sheet"

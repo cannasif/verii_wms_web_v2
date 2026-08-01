@@ -4962,6 +4962,10 @@
           "label": "خطة التوقع",
           "description": "معاينة Excel والتحقق"
         },
+        "expected": {
+          "label": "الألواح المتوقعة",
+          "description": "مراجعة اختيارية للخطة والألواح"
+        },
         "inspection": {
           "label": "مراقبة الجودة",
           "description": "قبول ورفض لكل لوح"

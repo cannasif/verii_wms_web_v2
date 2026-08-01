@@ -4962,6 +4962,10 @@
           "label": "Plan de expectativa",
           "description": "Vista previa y validación Excel"
         },
+        "expected": {
+          "label": "Chapas esperadas",
+          "description": "Plan opcional y revisión de chapas"
+        },
         "inspection": {
           "label": "Control de calidad",
           "description": "Aceptar y rechazar por chapa"
