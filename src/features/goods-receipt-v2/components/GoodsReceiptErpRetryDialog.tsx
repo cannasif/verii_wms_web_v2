@@ -104,7 +104,7 @@ export function GoodsReceiptErpRetryDialog({
                   <AlertTriangle className="mt-0.5 size-4 shrink-0" />
                   <p>
                     {t('list.erpRetryDialog.uncertainWarningPrefix')} <strong>{header.documentNo}</strong>
-                    {' '}{t('list.erpRetryDialog.uncertainWarningAnd')} <strong>{header.waybillNo || t('list.erpRetryDialog.waybillNumberFallback')}</strong> {t('list.erpRetryDialog.uncertainWarningSuffix')}
+                    {' '}{t('list.erpRetryDialog.uncertainWarningAnd')} <strong>{header.waybillNo || header.electronicWaybillNo || t('list.erpRetryDialog.waybillNumberFallback')}</strong> {t('list.erpRetryDialog.uncertainWarningSuffix')}
                   </p>
                 </div>
                 <label className="flex items-start gap-2 text-sm">

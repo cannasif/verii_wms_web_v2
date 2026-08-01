@@ -1,14 +1,37 @@
 {
   "title": "Recepción de mercancía desde pedidos",
   "subtitle": "Seleccione pedidos de Netsis, valide las cantidades y reserve una tarea de recepción de forma segura.",
-  "steps": ["Proveedor y pedidos", "Líneas y cantidades", "Ajustes de almacén", "Confirmación"],
-  "customer": "Cuenta de proveedor", "selectCustomer": "Seleccionar cuenta de proveedor...", "searchCustomer": "Buscar código / nombre de proveedor…", "customerEmpty": "No se encontró ninguna cuenta de proveedor.", "selectedCustomer": "Cuenta de proveedor seleccionada",
-  "loadOrders": "Cargar pedidos abiertos", "orders": "Pedidos abiertos",
-  "loadLines": "Cargar líneas de los pedidos seleccionados", "noOrders": "No se encontraron pedidos abiertos para este proveedor.", "noLines": "No se encontraron líneas disponibles.",
-  "warehouse": "Almacén de destino", "location": "Ubicación de recepción", "series": "Serie de documento", "documentDate": "Fecha del documento",
-  "plannedArrival": "Llegada planificada", "priority": "Prioridad", "labelStrategy": "Estrategia de etiquetado", "description": "Descripción",
-  "create": "Crear tarea y reservar", "created": "Tarea de recepción de mercancía creada", "assignedSelf": "La tarea se asignará al usuario que ha iniciado sesión.",
-  "quantity": "Cantidad reservada", "available": "Disponible", "back": "Atrás", "continue": "Continuar",
+  "steps": [
+    "Proveedor y pedidos",
+    "Líneas y cantidades",
+    "Ajustes de almacén",
+    "Confirmación"
+  ],
+  "customer": "Cuenta de proveedor",
+  "selectCustomer": "Seleccionar cuenta de proveedor...",
+  "searchCustomer": "Buscar código / nombre de proveedor…",
+  "customerEmpty": "No se encontró ninguna cuenta de proveedor.",
+  "selectedCustomer": "Cuenta de proveedor seleccionada",
+  "loadOrders": "Cargar pedidos abiertos",
+  "orders": "Pedidos abiertos",
+  "loadLines": "Cargar líneas de los pedidos seleccionados",
+  "noOrders": "No se encontraron pedidos abiertos para este proveedor.",
+  "noLines": "No se encontraron líneas disponibles.",
+  "warehouse": "Almacén de destino",
+  "location": "Ubicación de recepción",
+  "series": "Serie de documento",
+  "documentDate": "Fecha del documento",
+  "plannedArrival": "Llegada planificada",
+  "priority": "Prioridad",
+  "labelStrategy": "Estrategia de etiquetado",
+  "description": "Descripción",
+  "create": "Crear tarea y reservar",
+  "created": "Tarea de recepción de mercancía creada",
+  "assignedSelf": "La tarea se asignará al usuario que ha iniciado sesión.",
+  "quantity": "Cantidad reservada",
+  "available": "Disponible",
+  "back": "Atrás",
+  "continue": "Continuar",
   "configurationHint": "Seleccione un almacén de destino, una ubicación de recepción y una serie de documento para continuar.",
   "createFlow": {
     "subtitle": "Gestione la selección de pedidos junto con la planificación de cantidad, serie y estantería en una sola pantalla; revise y cree en el paso final.",
@@ -22,7 +45,10 @@
     "orderedBadge": "Con pedido",
     "stepsAriaLabel": "Pasos de creación",
     "orderSelection": "Selección de pedido",
-    "steps": { "0": "Pedidos y plan de líneas", "1": "Revisión y creación" },
+    "steps": {
+      "0": "Pedidos y plan de líneas",
+      "1": "Revisión y creación"
+    },
     "orderNo": "N.º de pedido",
     "orderNoHelpAria": "Acerca de la búsqueda por número de pedido",
     "orderNoTooltip": "El código de cuenta del pedido se lee de Netsis; el proveedor correspondiente se selecciona automáticamente y el saldo del pedido se abre a continuación.",
@@ -157,7 +183,15 @@
       "viewQualityList": "{{count}} líneas · Ver lista",
       "multipleOrders": "Más de un pedido",
       "multipleOrdersCount": "{{count}} pedidos",
-      "ordersTooltipHint": "Desplácese para ver todos los números de pedido"
+      "ordersTooltipHint": "Desplácese para ver todos los números de pedido",
+      "orderDate": "Fecha del pedido",
+      "multipleProjects": "Más de un proyecto",
+      "multipleProjectsCount": "{{count}} proyectos",
+      "projectsTooltipHint": "Desplácese para ver todos los códigos de proyecto",
+      "metricLinesHint": "Ver existencias",
+      "metricQualityLabel": "Calidad",
+      "metricQualityNone": "Ninguna",
+      "metricQualityHint": "Ver lista de calidad"
     },
     "qualityDialog": {
       "title": "Stocks que van a calidad",
@@ -205,7 +239,12 @@
       "noQualityLines": "Ninguna línea de esta tarea requiere control de calidad.",
       "createdTasks": "Tareas creadas",
       "taskMeta": "almacén n.º{{warehouseId}} · {{lineCount}} líneas · {{quantity}}",
-      "goToTaskManagement": "Ir a la gestión de tareas"
+      "goToTaskManagement": "Ir a la gestión de tareas",
+      "copyDocument": "Copiar número de albarán",
+      "documentCopied": "Número de albarán copiado",
+      "documentCopyFailed": "No se pudo copiar el número de albarán",
+      "statusCompleted": "Completado",
+      "statusAwaitingQuality": "Esperando calidad"
     },
     "validation": {
       "eReceiptNo": "El número de albarán electrónico / GIB debe tener exactamente 15 caracteres imprimibles, incluidos los símbolos.",
@@ -296,32 +335,117 @@
       "quantityAria": "Cantidad",
       "empty": "Aún no hay filas de lote/serie. Sugiera automáticamente o añada una fila individual.",
       "done": "Hecho"
+    },
+    "submit": {
+      "receiptEyebrow": "Recepción de mercancías / albarán",
+      "receiptTitle": "Creando albarán",
+      "receiptSubtitle": "{{name}} · procesando {{count}} líneas",
+      "qualityEyebrow": "Enrutamiento de calidad",
+      "qualityTitle": "Enviando a calidad",
+      "qualitySubtitle": "{{name}} · enrutando {{count}} líneas a calidad",
+      "documentLabel": "N.º de albarán",
+      "errorEyebrow": "Operación fallida",
+      "errorTitle": "No se pudo completar el envío",
+      "errorReturning": "Volviendo a la revisión…",
+      "errorFallback": "Se produjo un error inesperado.",
+      "receiptLog0": "Preparando líneas de albarán",
+      "receiptLog1": "Validando líneas de existencias",
+      "receiptLog2": "Registrando movimientos de almacén",
+      "receiptLog3": "Enviando albarán al ERP",
+      "receiptLog4": "Asignando número de documento",
+      "qualityLog0": "Dividiendo líneas de calidad",
+      "qualityLog1": "Aplicando reglas de calidad",
+      "qualityLog2": "Registrando en la lista de calidad",
+      "qualityLog3": "Creando tareas de calidad",
+      "qualityLog4": "Completando el enrutamiento"
     }
   },
   "manual": {
-    "eyebrow": "Operación de recepción de mercancía", "directTitle": "Recepción directa de mercancía", "orderlessTitle": "Tarea de recepción sin pedido",
+    "eyebrow": "Operación de recepción de mercancía",
+    "directTitle": "Recepción directa de mercancía",
+    "orderlessTitle": "Tarea de recepción sin pedido",
     "directSubtitle": "Valide el documento y registre la recepción, la calidad y el movimiento de stock en un flujo controlado.",
-    "orderlessSubtitle": "Cree una tarea de recepción planificada sin vínculo a un pedido.", "currentStep": "Paso",
-    "steps": { "document": "Documento", "operation": "Operación", "lines": "Líneas de stock", "review": "Revisión" },
-    "document": { "title": "Documento y proveedor", "description": "Valide el tipo de albarán, el número y el proveedor detrás de la recepción." },
-    "operation": { "title": "Almacén y proceso", "description": "Elija la ubicación de recepción, la serie, la prioridad y el método de etiquetado." },
-    "lines": { "title": "Stocks a recibir", "description": "Introduzca el stock, la configuración, la cantidad y la trazabilidad por línea." },
-    "review": { "title": "Revisión final", "description": "Verifique el documento y el resumen de cantidades antes de registrar." },
-    "customer": "Proveedor", "documentDate": "Fecha de albarán / recepción", "receiptNo": "Número de recepción", "isElectronic": "Albarán electrónico",
-    "receiptHint": "Introduzca exactamente 15 caracteres alfanuméricos.", "eReceiptHint": "Introduzca exactamente 15 caracteres alfanuméricos para el número de albarán electrónico / GIB.",
-    "validNumber": "El formato del número de documento es válido.", "plannedArrival": "Llegada planificada", "warehouse": "Almacén de destino",
-    "location": "Ubicación de recepción / Staging", "series": "Serie de documento WMS", "priority": "Prioridad", "labelStrategy": "Estrategia de etiquetado",
-    "executionMode": "Método de recepción", "stock": "Stock", "yap": "Código de configuración", "quantity": "Cantidad", "unit": "Unidad",
-    "lot": "Lote", "serial": "Serie", "manufacturingDate": "Fecha de fabricación", "expirationDate": "Fecha de caducidad",
-    "scannedBarcode": "Código de barras escaneado", "addLine": "Añadir línea", "actions": "Acciones", "removeLine": "Eliminar línea",
-    "noLines": "No se han añadido líneas de stock.", "description": "Descripción", "documentType": "Tipo de albarán",
-    "normalReceipt": "Albarán estándar", "eReceipt": "Albarán electrónico", "lineCount": "N.º de líneas", "totalQuantity": "Cantidad total",
-    "operationType": "Tipo de operación", "direct": "Recepción directa", "orderless": "Tarea sin pedido", "postReceipt": "Registrar recepción",
-    "createTask": "Crear tarea", "success": "La recepción de mercancía se creó correctamente.", "resultDirect": "Recepción de mercancía registrada",
-    "resultOrderless": "Tarea de recepción creada", "linesText": "líneas", "newRecord": "Nuevo registro",
-    "defaultTargetLocation": "Estantería de destino predeterminada", "selectActiveLocation": "Seleccionar estantería activa",
-    "unitLabelWithValue": "Unidad: {{unit}}", "unitUndefined": "Unidad no definida", "selectStockFirst": "Seleccione primero un stock",
-    "options": { "noLabel": "Sin etiqueta", "preGenerate": "Generar previamente", "supplierLabel": "Etiqueta del proveedor", "generateOnReceipt": "Generar en la recepción", "manual": "Manual", "barcode": "Escaneo de código de barras", "preLabel": "Etiqueta pregenerada" },
+    "orderlessSubtitle": "Cree una tarea de recepción planificada sin vínculo a un pedido.",
+    "currentStep": "Paso",
+    "steps": {
+      "document": "Documento",
+      "operation": "Operación",
+      "lines": "Líneas de stock",
+      "review": "Revisión"
+    },
+    "document": {
+      "title": "Documento y proveedor",
+      "description": "Valide el tipo de albarán, el número y el proveedor detrás de la recepción."
+    },
+    "operation": {
+      "title": "Almacén y proceso",
+      "description": "Elija la ubicación de recepción, la serie, la prioridad y el método de etiquetado."
+    },
+    "lines": {
+      "title": "Stocks a recibir",
+      "description": "Introduzca el stock, la configuración, la cantidad y la trazabilidad por línea."
+    },
+    "review": {
+      "title": "Revisión final",
+      "description": "Verifique el documento y el resumen de cantidades antes de registrar."
+    },
+    "customer": "Proveedor",
+    "documentDate": "Fecha de albarán / recepción",
+    "receiptNo": "Número de recepción",
+    "isElectronic": "Albarán electrónico",
+    "receiptHint": "Introduzca exactamente 15 caracteres alfanuméricos.",
+    "eReceiptHint": "Introduzca exactamente 15 caracteres alfanuméricos para el número de albarán electrónico / GIB.",
+    "validNumber": "El formato del número de documento es válido.",
+    "plannedArrival": "Llegada planificada",
+    "warehouse": "Almacén de destino",
+    "location": "Ubicación de recepción / Staging",
+    "series": "Serie de documento WMS",
+    "priority": "Prioridad",
+    "labelStrategy": "Estrategia de etiquetado",
+    "executionMode": "Método de recepción",
+    "stock": "Stock",
+    "yap": "Código de configuración",
+    "quantity": "Cantidad",
+    "unit": "Unidad",
+    "lot": "Lote",
+    "serial": "Serie",
+    "manufacturingDate": "Fecha de fabricación",
+    "expirationDate": "Fecha de caducidad",
+    "scannedBarcode": "Código de barras escaneado",
+    "addLine": "Añadir línea",
+    "actions": "Acciones",
+    "removeLine": "Eliminar línea",
+    "noLines": "No se han añadido líneas de stock.",
+    "description": "Descripción",
+    "documentType": "Tipo de albarán",
+    "normalReceipt": "Albarán estándar",
+    "eReceipt": "Albarán electrónico",
+    "lineCount": "N.º de líneas",
+    "totalQuantity": "Cantidad total",
+    "operationType": "Tipo de operación",
+    "direct": "Recepción directa",
+    "orderless": "Tarea sin pedido",
+    "postReceipt": "Registrar recepción",
+    "createTask": "Crear tarea",
+    "success": "La recepción de mercancía se creó correctamente.",
+    "resultDirect": "Recepción de mercancía registrada",
+    "resultOrderless": "Tarea de recepción creada",
+    "linesText": "líneas",
+    "newRecord": "Nuevo registro",
+    "defaultTargetLocation": "Estantería de destino predeterminada",
+    "selectActiveLocation": "Seleccionar estantería activa",
+    "unitLabelWithValue": "Unidad: {{unit}}",
+    "unitUndefined": "Unidad no definida",
+    "selectStockFirst": "Seleccione primero un stock",
+    "options": {
+      "noLabel": "Sin etiqueta",
+      "preGenerate": "Generar previamente",
+      "supplierLabel": "Etiqueta del proveedor",
+      "generateOnReceipt": "Generar en la recepción",
+      "manual": "Manual",
+      "barcode": "Escaneo de código de barras",
+      "preLabel": "Etiqueta pregenerada"
+    },
     "bulkSerial": {
       "title": "Escaneo masivo de series y códigos de barras",
       "hint": "Si la cantidad es 13, escanee 13 series diferentes una por una con el lector. Cada serie se envía a la API como una línea trazable independiente con cantidad 1.",
@@ -336,7 +460,9 @@
       "hintReceiving": "Solo se puede seleccionar Receiving/Staging mientras se espera la decisión de calidad.",
       "remainingLabel": "Restante:"
     },
-    "table": { "warehouseLocation": "Almacén / Estantería" },
+    "table": {
+      "warehouseLocation": "Almacén / Estantería"
+    },
     "result": {
       "eyebrow": "Después de la recepción de mercancía",
       "qualitySentTitle": "Enviado a calidad",
@@ -353,7 +479,30 @@
       "labelsPrintFailed": "No se pudieron imprimir las etiquetas.",
       "printTitleSuffix": "etiquetas de recepción"
     },
-    "validation": { "customer": "El proveedor es obligatorio.", "receiptNo": "El número de recepción del albarán estándar debe contener exactamente 15 dígitos.", "eReceiptNo": "El número de albarán electrónico / GIB debe tener exactamente 15 caracteres alfanuméricos.", "date": "La fecha del albarán es obligatoria.", "operation": "Son obligatorios el almacén, la ubicación de recepción y la serie de documento.", "lines": "Se requiere al menos una línea de stock.", "stock": "Son obligatorios el stock y una cantidad mayor que cero.", "serialQuantity": "Una línea con seguimiento por serie debe tener cantidad 1.", "expiry": "La fecha de caducidad no puede ser anterior a la fecha de fabricación.", "incomplete": "El formulario contiene campos incompletos o no válidos.", "submit": "No se pudo crear la recepción de mercancía.", "activeSeriesRequired": "Debe seleccionarse una serie de documento activa para esta operación.", "assigneesRequired": "Debe asignarse al menos un usuario de operación a la tarea.", "qualityRulesCheckFailed": "No se pudieron verificar las reglas de control de calidad.", "trackingPolicyLoadFailed": "No se pudo cargar la política de seguimiento de stock para {{code}}.", "unitCodeMissing": "La unidad de medida no está definida para el stock {{code}}.", "lineLocationRequired": "Debe seleccionarse un almacén y una estantería de destino para la línea.", "serialFieldsConflict": "El campo de serie única y el campo de series masivas no se pueden usar juntos.", "serialBatchCountMismatch": "El número de series masivas ({{count}}) debe ser igual a la cantidad de recepción ({{quantity}}).", "duplicateSerialInBatch": "La misma serie no se puede usar más de una vez en la lista de series masivas.", "serialAlreadyUsed": "Una de las series ya se ha utilizado en esta lista de recepción.", "qualityRuleCheckFailedForStock": "No se pudo verificar la regla de calidad para {{code}}." }
+    "validation": {
+      "customer": "El proveedor es obligatorio.",
+      "receiptNo": "El número de recepción del albarán estándar debe contener exactamente 15 dígitos.",
+      "eReceiptNo": "El número de albarán electrónico / GIB debe tener exactamente 15 caracteres alfanuméricos.",
+      "date": "La fecha del albarán es obligatoria.",
+      "operation": "Son obligatorios el almacén, la ubicación de recepción y la serie de documento.",
+      "lines": "Se requiere al menos una línea de stock.",
+      "stock": "Son obligatorios el stock y una cantidad mayor que cero.",
+      "serialQuantity": "Una línea con seguimiento por serie debe tener cantidad 1.",
+      "expiry": "La fecha de caducidad no puede ser anterior a la fecha de fabricación.",
+      "incomplete": "El formulario contiene campos incompletos o no válidos.",
+      "submit": "No se pudo crear la recepción de mercancía.",
+      "activeSeriesRequired": "Debe seleccionarse una serie de documento activa para esta operación.",
+      "assigneesRequired": "Debe asignarse al menos un usuario de operación a la tarea.",
+      "qualityRulesCheckFailed": "No se pudieron verificar las reglas de control de calidad.",
+      "trackingPolicyLoadFailed": "No se pudo cargar la política de seguimiento de stock para {{code}}.",
+      "unitCodeMissing": "La unidad de medida no está definida para el stock {{code}}.",
+      "lineLocationRequired": "Debe seleccionarse un almacén y una estantería de destino para la línea.",
+      "serialFieldsConflict": "El campo de serie única y el campo de series masivas no se pueden usar juntos.",
+      "serialBatchCountMismatch": "El número de series masivas ({{count}}) debe ser igual a la cantidad de recepción ({{quantity}}).",
+      "duplicateSerialInBatch": "La misma serie no se puede usar más de una vez en la lista de series masivas.",
+      "serialAlreadyUsed": "Una de las series ya se ha utilizado en esta lista de recepción.",
+      "qualityRuleCheckFailedForStock": "No se pudo verificar la regla de calidad para {{code}}."
+    }
   },
   "list": {
     "eyebrowParent": "INBOUND_OP",
@@ -397,99 +546,6 @@
     "approvalPending": "Pendiente de aprobación",
     "erpIntegrated": "Integrado con ERP",
     "erpReconcileResend": "Conciliación ERP / Reenviar",
-    "erpSendToErp": "Enviar al ERP",
-    "noWaybillShort": "Sin albarán",
-    "waybillBadge": "Albarán {{no}}",
-    "qcLinesSuffix": "{{count}} línea(s) (solo con control de calidad)",
-    "erpRetryDialog": {
-      "title": "Reenviar transferencia ERP",
-      "description": "La recepción {{documentNo}} se reenviará al albarán de compra de Netsis.",
-      "localStatus": "Estado local",
-      "submissionStatus": "Estado de envío",
-      "attempt": "Intento",
-      "recordNotFound": "Registro no encontrado",
-      "uncertainWarningPrefix": "El resultado de la solicitud anterior es incierto. No reenvíe sin antes buscar en Netsis",
-      "uncertainWarningAnd": "y",
-      "uncertainWarningSuffix": ".",
-      "waybillNumberFallback": "número de albarán",
-      "confirmedCheckbox": "He revisado el documento en Netsis y confirmado que no existe.",
-      "reconciliationNoteLabel": "Nota de conciliación",
-      "reconciliationPlaceholder": "Ej. Verificado mediante Netsis TBLFATUIRS y número de albarán; documento no encontrado.",
-      "reconciliationHint": "Al menos 5 caracteres; se registra en el registro de auditoría.",
-      "cancel": "Cancelar",
-      "submitReconcileAndResend": "Guardar conciliación y reenviar",
-      "submitResend": "Reenviar al ERP",
-      "fetchFailed": "No se pudo cargar el registro de envío ERP.",
-      "successToast": "Albarán de Netsis creado: {{documentNo}}",
-      "uncertainToast": "La respuesta de Netsis sigue sin ser concluyente. El reenvío se detuvo para evitar un documento duplicado.",
-      "failedToast": "No se pudo completar el envío ERP.",
-      "retryFailed": "No se pudo reiniciar el envío ERP."
-    },
-    "lifecycleDialog": {
-      "approve": { "title": "Aprobar recepción de mercancía", "description": "El registro pasará a aprobación operativa. La misma solicitud se aplica de forma segura solo una vez.", "submit": "Aprobar" },
-      "shortClose": { "title": "Cierre parcial de cantidad faltante", "description": "Las cantidades abiertas seleccionadas ya no se esperarán. Se requiere un motivo para el informe.", "submit": "Cierre parcial" },
-      "putaway": { "title": "Almacenar", "description": "El stock disponible en el área de recepción se transfiere a la ubicación seleccionada; los saldos de ubicación y almacén se actualizan en la misma transacción.", "submit": "Almacenar" },
-      "cancel": { "title": "Cancelar recepción de mercancía", "description": "Los movimientos de stock y calidad vinculados se revierten. Si el stock ya se ha utilizado, el sistema bloquea la cancelación de forma segura.", "submit": "Cancelar" },
-      "reasonRequired": "Se requiere un motivo descriptivo para esta acción.",
-      "noShortCloseQuantity": "No hay cantidad abierta disponible para cierre parcial.",
-      "selectAtLeastOneLine": "Seleccione al menos una línea de stock.",
-      "checkQuantityAndTarget": "Verifique la cantidad y la ubicación de destino para {{code}}.",
-      "lineNo": "Línea",
-      "closingQuantity": "Cantidad a cerrar",
-      "putawayEmpty": "No se encontró stock disponible en el área de recepción para almacenar.",
-      "selectLineAria": "Seleccionar {{code}}",
-      "stockLotSerial": "Stock / Lote / Serie",
-      "noLot": "Sin lote",
-      "noSerial": "Sin serie",
-      "sourceLocation": "Ubicación de origen #{{id}}",
-      "targetLocation": "Ubicación de destino",
-      "suggestedLocation": "Ubicación sugerida #{{id}}",
-      "selectTargetLocationPlaceholder": "Seleccionar ubicación de destino",
-      "reasonLabelRequired": "Motivo *",
-      "descriptionLabel": "Descripción",
-      "reasonPlaceholder": "Escriba una nota de operación..."
-    },
-    "routingDialog": {
-      "eyebrow": "Post-recepción · Distribución de doble condición",
-      "subtitle": "La condición izquierda es una transferencia entre almacenes, la condición derecha es un envío saliente. Puede dividir la cantidad restante de cada línea entre ambas en la misma lista.",
-      "qualityGkk": "Calidad/GKK",
-      "receiptApproval": "Aprobación de recepción",
-      "transferConditionTitle": "Condición 1 · Transferencia entre almacenes",
-      "outboundConditionTitle": "Condición 2 · Envío saliente",
-      "documentSeries": "Serie de documento",
-      "selectSeriesPlaceholder": "Seleccionar serie",
-      "targetWarehouse": "Almacén de destino",
-      "targetShelf": "Ubicación de destino",
-      "outboundCustomer": "Cliente de salida",
-      "lineDistributionList": "Lista de distribución de líneas",
-      "routableLinesSummary": "{{count}} línea(s) enrutable(s) · restante = aceptado − anterior − transferencia − salida",
-      "accepted": "Aceptado",
-      "previous": "Anterior",
-      "transfer": "Transferencia",
-      "outbound": "Salida",
-      "sourceShelf": "Ubicación de origen",
-      "shelfNumber": "Ubicación #{{id}}",
-      "operationNote": "Nota de operación",
-      "createDistribution": "Crear distribución",
-      "transferTotalLabel": "Transferencia: {{value}}",
-      "outboundTotalLabel": "Salida: {{value}}",
-      "errors": {
-        "receiptNotCompleted": "No se puede crear un DAT o envío saliente hasta que se complete la recepción.",
-        "qualityNotReady": "No se puede realizar el enrutamiento hasta que se complete la decisión de calidad/GKK.",
-        "approvalNotReady": "No se puede realizar el enrutamiento hasta que se complete la aprobación de la recepción.",
-        "erpNotSucceeded": "No se puede crear un DAT o envío saliente hasta que el albarán ERP se cree correctamente.",
-        "noQuantityEntered": "Ingrese una cantidad de transferencia o salida para al menos una línea.",
-        "transferSeriesAndWarehouseRequired": "Se requiere una serie de documentos de transferencia y un almacén de destino.",
-        "sourceTargetSame": "El almacén de origen y el de destino no pueden ser el mismo.",
-        "outboundSeriesAndCustomerRequired": "Se requiere una serie de documentos de salida y un cliente.",
-        "negativeQuantity": "Las cantidades para {{code}} no pueden ser negativas.",
-        "exceedsRoutable": "Como máximo se pueden enrutar {{max}} en total para {{code}}."
-      },
-      "and": "y",
-      "successToast": "{{documents}} creado(s); se enrutó un total de {{quantity}}.",
-      "createFailed": "No se pudo crear la distribución."
-    },
-    "erpReconcileResend": "Conciliación ERP / Reenviar",
     "erpSendToErp": "Enviar a ERP",
     "noWaybillShort": "Sin albarán",
     "waybillBadge": "Albarán {{no}}",
@@ -519,10 +575,26 @@
       "retryFailed": "No se pudo reiniciar el envío al ERP."
     },
     "lifecycleDialog": {
-      "approve": { "title": "Aprobar recepción de mercancía", "description": "El registro pasará a aprobación operativa. La misma solicitud se aplica de forma segura solo una vez.", "submit": "Aprobar" },
-      "shortClose": { "title": "Cerrar cantidad faltante", "description": "Las cantidades abiertas seleccionadas dejarán de esperarse. Se requiere un motivo para el informe.", "submit": "Cerrar faltante" },
-      "putaway": { "title": "Ubicar", "description": "El stock disponible en el área de recepción se transfiere a la estantería seleccionada; los saldos de estantería y almacén se actualizan en la misma transacción.", "submit": "Ubicar" },
-      "cancel": { "title": "Cancelar recepción de mercancía", "description": "Los movimientos de stock y calidad vinculados se revierten. Si el stock ya se ha utilizado, el sistema bloquea la cancelación de forma segura.", "submit": "Cancelar" },
+      "approve": {
+        "title": "Aprobar recepción de mercancía",
+        "description": "El registro pasará a aprobación operativa. La misma solicitud se aplica de forma segura solo una vez.",
+        "submit": "Aprobar"
+      },
+      "shortClose": {
+        "title": "Cerrar cantidad faltante",
+        "description": "Las cantidades abiertas seleccionadas dejarán de esperarse. Se requiere un motivo para el informe.",
+        "submit": "Cerrar faltante"
+      },
+      "putaway": {
+        "title": "Ubicar",
+        "description": "El stock disponible en el área de recepción se transfiere a la estantería seleccionada; los saldos de estantería y almacén se actualizan en la misma transacción.",
+        "submit": "Ubicar"
+      },
+      "cancel": {
+        "title": "Cancelar recepción de mercancía",
+        "description": "Los movimientos de stock y calidad vinculados se revierten. Si el stock ya se ha utilizado, el sistema bloquea la cancelación de forma segura.",
+        "submit": "Cancelar"
+      },
       "reasonRequired": "Se requiere un motivo descriptivo para esta acción.",
       "noShortCloseQuantity": "No hay cantidad abierta disponible para cerrar como faltante.",
       "selectAtLeastOneLine": "Seleccione al menos una línea de stock.",
@@ -580,7 +652,19 @@
       },
       "and": "y",
       "successToast": "{{documents}} creado(s); se enrutó un total de {{quantity}}.",
-      "createFailed": "No se pudo crear la distribución."
+      "createFailed": "No se pudo crear la distribución.",
+      "dialogTitle": "Distribución tras la recepción",
+      "tabsHint": "Las condiciones se gestionan en pestañas separadas",
+      "tabKickerTransfer": "Condición 1",
+      "tabKickerOutbound": "Condición 2",
+      "tabTitleTransfer": "Transferencia de almacén",
+      "tabTitleOutbound": "Envío saliente",
+      "transferPanelHint": "Seleccione la serie de documentos, el almacén destino y la ubicación para la transferencia entre almacenes; introduzca las cantidades de línea en la lista de abajo.",
+      "outboundPanelHint": "Seleccione la serie de documentos y el cliente de salida para el envío; introduzca las cantidades de línea en la lista de abajo.",
+      "linesHeadSummary": "{{count}} línea(s) · pestaña activa: {{tab}}",
+      "increaseQuantity": "Aumentar cantidad",
+      "decreaseQuantity": "Disminuir cantidad",
+      "notePlaceholder": "Nota opcional…"
     },
     "sourceDocuments": "Documentos de origen",
     "qcRequired": "Control de calidad requerido",
@@ -642,7 +726,22 @@
     "printLineLabel": "Imprimir etiqueta de línea",
     "showLineLabelPdf": "Mostrar etiqueta de línea en PDF",
     "lineNumber": "Línea #{{number}}",
-    "noStockName": "Sin nombre de stock"
+    "noStockName": "Sin nombre de stock",
+    "sendToErp": "Enviar a ERP",
+    "erpReconcile": "Conciliación ERP / Reenviar",
+    "searchPlaceholder": "N.º documento, proveedor, albarán, almacén, creador, actualizador…",
+    "searchTokenHint": "Escribir busca al instante. Enter filtra solo por chips.",
+    "searchActiveTokens": "Chips de búsqueda activos",
+    "searchRemoveToken": "Quitar chip {{token}}",
+    "searchClearTokens": "Borrar chips",
+    "facetFilters": "Filtros",
+    "facetFiltersTitle": "Filtros de lista",
+    "facetStatus": "Estado",
+    "facetQuality": "Calidad",
+    "facetErp": "Envío ERP",
+    "facetProcessType": "Tipo de proceso",
+    "facetAll": "Todos",
+    "facetClear": "Borrar"
   },
   "tasks": {
     "title": "Gestión de tareas de recepción",
@@ -666,17 +765,37 @@
       "title": "Tarea de recepción de mercancía {{taskNo}}",
       "description": "Líneas de la tarea, asignaciones y operaciones de recepción física.",
       "eyebrow": "Tarea de recepción de mercancía",
-      "info": { "status": "Estado", "warehouse": "Almacén", "priority": "Prioridad", "planned": "Planificado", "started": "Iniciada" },
-      "table": { "stock": "Stock", "received": "Recibido" },
-      "line": { "qualityRequired": "Control de calidad requerido", "directDispatch": "Albarán directo" },
-      "actions": { "acceptAssignment": "Aceptar asignación", "startTask": "Iniciar tarea", "saveAssignments": "Guardar asignaciones" },
+      "info": {
+        "status": "Estado",
+        "warehouse": "Almacén",
+        "priority": "Prioridad",
+        "planned": "Planificado",
+        "started": "Iniciada"
+      },
+      "table": {
+        "stock": "Stock",
+        "received": "Recibido"
+      },
+      "line": {
+        "qualityRequired": "Control de calidad requerido",
+        "directDispatch": "Albarán directo"
+      },
+      "actions": {
+        "acceptAssignment": "Aceptar asignación",
+        "startTask": "Iniciar tarea",
+        "saveAssignments": "Guardar asignaciones"
+      },
       "errors": {
         "detailFetchFailed": "No se pudieron cargar los detalles de la tarea.",
         "actionFailed": "No se pudo completar la acción.",
         "selectAtLeastOneUser": "Seleccione al menos un usuario.",
         "assignmentsUpdateFailed": "No se pudieron actualizar las asignaciones."
       },
-      "toast": { "accepted": "Tarea aceptada.", "started": "Tarea iniciada.", "assignmentsUpdated": "Se actualizaron las asignaciones de la tarea." },
+      "toast": {
+        "accepted": "Tarea aceptada.",
+        "started": "Tarea iniciada.",
+        "assignmentsUpdated": "Se actualizaron las asignaciones de la tarea."
+      },
       "receiptLabels": {
         "title": "Etiquetas generadas en la recepción",
         "hint": "Se crean automáticamente después de cada movimiento de recepción con la cantidad real y la información de serie/lote.",
@@ -725,10 +844,20 @@
   },
   "enums": {
     "operationStatus": {
-      "Draft": "Borrador", "Released": "Liberado", "InProgress": "En curso", "PartiallyProcessed": "Parcialmente procesado",
-      "Processed": "Procesado", "Completed": "Completado", "Cancelled": "Cancelado"
+      "Draft": "Borrador",
+      "Released": "Liberado",
+      "InProgress": "En curso",
+      "PartiallyProcessed": "Parcialmente procesado",
+      "Processed": "Procesado",
+      "Completed": "Completado",
+      "Cancelled": "Cancelado"
     },
-    "approvalStatus": { "NotRequired": "Aprobación no requerida", "Pending": "Pendiente de aprobación", "Approved": "Aprobado", "Rejected": "Rechazado" },
+    "approvalStatus": {
+      "NotRequired": "Aprobación no requerida",
+      "Pending": "Pendiente de aprobación",
+      "Approved": "Aprobado",
+      "Rejected": "Rechazado"
+    },
     "qualityStatus": {
       "NotRequired": "Sin control",
       "Pending": "Pendiente",
@@ -746,37 +875,78 @@
       "Failed": "El control de calidad fue rechazado"
     },
     "putawayStatus": {
-      "NotRequired": "Ubicación no requerida", "Pending": "Ubicación pendiente", "InProgress": "Ubicación en curso",
-      "PartiallyCompleted": "Parcialmente ubicado", "Completed": "Ubicación completada"
+      "NotRequired": "Ubicación no requerida",
+      "Pending": "Ubicación pendiente",
+      "InProgress": "Ubicación en curso",
+      "PartiallyCompleted": "Parcialmente ubicado",
+      "Completed": "Ubicación completada"
     },
     "erpStatus": {
-      "NotRequired": "Registro ERP no requerido", "Pending": "Registro ERP pendiente", "Processing": "Registrando en ERP",
-      "Succeeded": "Registrado en ERP", "Failed": "Error en el registro ERP", "CommitUncertain": "Resultado ERP incierto"
+      "NotRequired": "Registro ERP no requerido",
+      "Pending": "Registro ERP pendiente",
+      "Processing": "Registrando en ERP",
+      "Succeeded": "Registrado en ERP",
+      "Failed": "Error en el registro ERP",
+      "CommitUncertain": "Resultado ERP incierto"
     },
     "lineStatus": {
-      "Open": "Abierta", "PartiallyReceived": "Parcialmente recibida", "Received": "Recibida", "ShortClosed": "Cerrada por faltante", "Cancelled": "Cancelada"
+      "Open": "Abierta",
+      "PartiallyReceived": "Parcialmente recibida",
+      "Received": "Recibida",
+      "ShortClosed": "Cerrada por faltante",
+      "Cancelled": "Cancelada"
     },
     "taskStatus": {
-      "Draft": "Borrador", "Released": "Liberada", "Assigned": "Asignada", "InProgress": "En curso", "Paused": "Pausada",
-      "PartiallyCompleted": "Parcialmente completada", "Completed": "Completada", "Cancelled": "Cancelada"
+      "Draft": "Borrador",
+      "Released": "Liberada",
+      "Assigned": "Asignada",
+      "InProgress": "En curso",
+      "Paused": "Pausada",
+      "PartiallyCompleted": "Parcialmente completada",
+      "Completed": "Completada",
+      "Cancelled": "Cancelada"
     },
     "assignmentStatus": {
-      "Assigned": "Asignada", "Accepted": "Aceptada", "InProgress": "En curso", "Completed": "Completada",
-      "Unassigned": "Sin asignar", "Rejected": "Rechazada"
+      "Assigned": "Asignada",
+      "Accepted": "Aceptada",
+      "InProgress": "En curso",
+      "Completed": "Completada",
+      "Unassigned": "Sin asignar",
+      "Rejected": "Rechazada"
     },
     "labelBatchStatus": {
-      "Draft": "Borrador", "Generated": "Generado", "PartiallyPrinted": "Parcialmente impreso", "Printed": "Impreso",
-      "PartiallyConsumed": "Parcialmente consumido", "Consumed": "Consumido", "Cancelled": "Cancelado"
+      "Draft": "Borrador",
+      "Generated": "Generado",
+      "PartiallyPrinted": "Parcialmente impreso",
+      "Printed": "Impreso",
+      "PartiallyConsumed": "Parcialmente consumido",
+      "Consumed": "Consumido",
+      "Cancelled": "Cancelado"
     },
-    "labelStatus": { "Generated": "Generada", "Printed": "Impresa", "Assigned": "Asignada", "Consumed": "Consumida", "Void": "Anulada" },
+    "labelStatus": {
+      "Generated": "Generada",
+      "Printed": "Impresa",
+      "Assigned": "Asignada",
+      "Consumed": "Consumida",
+      "Void": "Anulada"
+    },
     "processType": {
-      "OrderBasedTask": "Tarea basada en pedido", "OrderlessTask": "Tarea sin pedido",
-      "OrderBasedDirectReceipt": "Recepción directa basada en pedido", "OrderlessDirectReceipt": "Recepción directa sin pedido"
+      "OrderBasedTask": "Tarea basada en pedido",
+      "OrderlessTask": "Tarea sin pedido",
+      "OrderBasedDirectReceipt": "Recepción directa basada en pedido",
+      "OrderlessDirectReceipt": "Recepción directa sin pedido"
     },
-    "initiationMode": { "OrderBasedTask": "Tarea basada en pedido", "UnplannedTask": "Tarea no planificada", "DirectReceipt": "Recepción directa" },
+    "initiationMode": {
+      "OrderBasedTask": "Tarea basada en pedido",
+      "UnplannedTask": "Tarea no planificada",
+      "DirectReceipt": "Recepción directa"
+    },
     "executionMode": {
-      "Manual": "Manual", "BarcodeScan": "Escaneo de código de barras", "PreGeneratedLabel": "Etiqueta pregenerada",
-      "SupplierLabel": "Etiqueta del proveedor", "Import": "Importación"
+      "Manual": "Manual",
+      "BarcodeScan": "Escaneo de código de barras",
+      "PreGeneratedLabel": "Etiqueta pregenerada",
+      "SupplierLabel": "Etiqueta del proveedor",
+      "Import": "Importación"
     }
   },
   "hub": {
@@ -784,18 +954,48 @@
     "title": "Centro de procesos de recepción de mercancía",
     "description": "Inicie recepciones basadas en pedido, sin pedido y directas bajo las mismas reglas de dominio; siga cada paso, desde la asignación hasta la calidad y el registro de inventario.",
     "phases": {
-      "start": { "title": "Iniciar recepción", "description": "Elija el punto de partida correcto según el origen del documento y el modo de ejecución." },
-      "execute": { "title": "Ejecutar asignación", "description": "Defina los responsables, acepte el trabajo asignado y gestione el progreso físico." },
-      "manage": { "title": "Supervisar y gestionar", "description": "Use los registros y las políticas para una trazabilidad completa y un control de proceso configurable." }
+      "start": {
+        "title": "Iniciar recepción",
+        "description": "Elija el punto de partida correcto según el origen del documento y el modo de ejecución."
+      },
+      "execute": {
+        "title": "Ejecutar asignación",
+        "description": "Defina los responsables, acepte el trabajo asignado y gestione el progreso físico."
+      },
+      "manage": {
+        "title": "Supervisar y gestionar",
+        "description": "Use los registros y las políticas para una trazabilidad completa y un control de proceso configurable."
+      }
     },
     "cards": {
-      "ordered": { "title": "Tarea basada en pedido", "description": "Seleccione pedidos de compra de Netsis, reserve cantidades abiertas y cree tareas de recepción." },
-      "orderless": { "title": "Tarea sin pedido", "description": "Cree una tarea de recepción planificada con líneas de albarán y stock, sin vínculo a un pedido." },
-      "direct": { "title": "Recepción directa de mercancía", "description": "Registre una recepción sin tarea de forma atómica junto con la calidad, la cuarentena y el movimiento de inventario." },
-      "tasks": { "title": "Gestión de tareas", "description": "Asigne tareas abiertas a uno o varios usuarios y siga su progreso." },
-      "assigned": { "title": "Mis tareas asignadas", "description": "Acepte, inicie y complete las tareas de recepción de mercancía que se le hayan asignado." },
-      "records": { "title": "Registros de recepción de mercancía", "description": "Revise todos los tipos de recepción en la cuadrícula de datos compartida del lado del servidor." },
-      "settings": { "title": "Ajustes de proceso", "description": "Gestione las políticas de recepción de más/menos, retención de calidad, aprobación y registro ERP." }
+      "ordered": {
+        "title": "Tarea basada en pedido",
+        "description": "Seleccione pedidos de compra de Netsis, reserve cantidades abiertas y cree tareas de recepción."
+      },
+      "orderless": {
+        "title": "Tarea sin pedido",
+        "description": "Cree una tarea de recepción planificada con líneas de albarán y stock, sin vínculo a un pedido."
+      },
+      "direct": {
+        "title": "Recepción directa de mercancía",
+        "description": "Registre una recepción sin tarea de forma atómica junto con la calidad, la cuarentena y el movimiento de inventario."
+      },
+      "tasks": {
+        "title": "Gestión de tareas",
+        "description": "Asigne tareas abiertas a uno o varios usuarios y siga su progreso."
+      },
+      "assigned": {
+        "title": "Mis tareas asignadas",
+        "description": "Acepte, inicie y complete las tareas de recepción de mercancía que se le hayan asignado."
+      },
+      "records": {
+        "title": "Registros de recepción de mercancía",
+        "description": "Revise todos los tipos de recepción en la cuadrícula de datos compartida del lado del servidor."
+      },
+      "settings": {
+        "title": "Ajustes de proceso",
+        "description": "Gestione las políticas de recepción de más/menos, retención de calidad, aprobación y registro ERP."
+      }
     }
   }
 }

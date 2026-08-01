@@ -1,14 +1,37 @@
 {
   "title": "Réception de marchandises depuis les commandes",
   "subtitle": "Sélectionnez les commandes Netsis, validez les quantités et réservez une tâche de réception en toute sécurité.",
-  "steps": ["Fournisseur et commandes", "Lignes et quantités", "Paramètres d'entrepôt", "Confirmation"],
-  "customer": "Compte fournisseur", "selectCustomer": "Sélectionner un compte fournisseur...", "searchCustomer": "Rechercher un code / nom de fournisseur…", "customerEmpty": "Aucun compte fournisseur trouvé.", "selectedCustomer": "Compte fournisseur sélectionné",
-  "loadOrders": "Charger les commandes ouvertes", "orders": "Commandes ouvertes",
-  "loadLines": "Charger les lignes des commandes sélectionnées", "noOrders": "Aucune commande ouverte n'a été trouvée pour ce fournisseur.", "noLines": "Aucune ligne disponible n'a été trouvée.",
-  "warehouse": "Entrepôt cible", "location": "Emplacement de réception", "series": "Série de document", "documentDate": "Date du document",
-  "plannedArrival": "Arrivée prévue", "priority": "Priorité", "labelStrategy": "Stratégie d'étiquetage", "description": "Description",
-  "create": "Créer la tâche et réserver", "created": "Tâche de réception créée", "assignedSelf": "La tâche sera assignée à l'utilisateur connecté.",
-  "quantity": "Quantité réservée", "available": "Disponible", "back": "Retour", "continue": "Continuer",
+  "steps": [
+    "Fournisseur et commandes",
+    "Lignes et quantités",
+    "Paramètres d'entrepôt",
+    "Confirmation"
+  ],
+  "customer": "Compte fournisseur",
+  "selectCustomer": "Sélectionner un compte fournisseur...",
+  "searchCustomer": "Rechercher un code / nom de fournisseur…",
+  "customerEmpty": "Aucun compte fournisseur trouvé.",
+  "selectedCustomer": "Compte fournisseur sélectionné",
+  "loadOrders": "Charger les commandes ouvertes",
+  "orders": "Commandes ouvertes",
+  "loadLines": "Charger les lignes des commandes sélectionnées",
+  "noOrders": "Aucune commande ouverte n'a été trouvée pour ce fournisseur.",
+  "noLines": "Aucune ligne disponible n'a été trouvée.",
+  "warehouse": "Entrepôt cible",
+  "location": "Emplacement de réception",
+  "series": "Série de document",
+  "documentDate": "Date du document",
+  "plannedArrival": "Arrivée prévue",
+  "priority": "Priorité",
+  "labelStrategy": "Stratégie d'étiquetage",
+  "description": "Description",
+  "create": "Créer la tâche et réserver",
+  "created": "Tâche de réception créée",
+  "assignedSelf": "La tâche sera assignée à l'utilisateur connecté.",
+  "quantity": "Quantité réservée",
+  "available": "Disponible",
+  "back": "Retour",
+  "continue": "Continuer",
   "configurationHint": "Sélectionnez un entrepôt cible, un emplacement de réception et une série de document pour continuer.",
   "createFlow": {
     "subtitle": "Gérez la sélection des commandes ainsi que la planification des quantités, numéros de série et emplacements sur un seul écran ; vérifiez et créez à l'étape finale.",
@@ -22,7 +45,10 @@
     "orderedBadge": "Commandé",
     "stepsAriaLabel": "Étapes de création",
     "orderSelection": "Sélection des commandes",
-    "steps": { "0": "Commandes et plan des lignes", "1": "Vérification et création" },
+    "steps": {
+      "0": "Commandes et plan des lignes",
+      "1": "Vérification et création"
+    },
     "orderNo": "N° de commande",
     "orderNoHelpAria": "À propos de la récupération par numéro de commande",
     "orderNoTooltip": "Le code du compte de la commande est lu depuis Netsis ; le fournisseur correspondant est sélectionné automatiquement et le solde de la commande s'affiche ci-dessous.",
@@ -157,7 +183,15 @@
       "viewQualityList": "{{count}} lignes · Voir la liste",
       "multipleOrders": "Plusieurs commandes",
       "multipleOrdersCount": "{{count}} commandes",
-      "ordersTooltipHint": "Faites défiler pour voir tous les numéros de commande"
+      "ordersTooltipHint": "Faites défiler pour voir tous les numéros de commande",
+      "orderDate": "Date de commande",
+      "multipleProjects": "Plus d'un projet",
+      "multipleProjectsCount": "{{count}} projets",
+      "projectsTooltipHint": "Faites défiler pour voir tous les codes de projet",
+      "metricLinesHint": "Voir les stocks",
+      "metricQualityLabel": "Qualité",
+      "metricQualityNone": "Aucune",
+      "metricQualityHint": "Voir la liste qualité"
     },
     "qualityDialog": {
       "title": "Stocks envoyés à la qualité",
@@ -205,7 +239,12 @@
       "noQualityLines": "Aucune ligne de cette tâche ne nécessite de contrôle qualité.",
       "createdTasks": "Tâches créées",
       "taskMeta": "entrepôt n°{{warehouseId}} · {{lineCount}} lignes · {{quantity}}",
-      "goToTaskManagement": "Aller à la gestion des tâches"
+      "goToTaskManagement": "Aller à la gestion des tâches",
+      "copyDocument": "Copier le numéro de bon de livraison",
+      "documentCopied": "Numéro de bon de livraison copié",
+      "documentCopyFailed": "Impossible de copier le numéro de bon de livraison",
+      "statusCompleted": "Terminé",
+      "statusAwaitingQuality": "En attente de qualité"
     },
     "validation": {
       "eReceiptNo": "Le numéro e-bon de livraison / GIB doit contenir exactement 15 caractères imprimables, symboles inclus.",
@@ -296,32 +335,117 @@
       "quantityAria": "Quantité",
       "empty": "Aucune ligne de lot/série pour le moment. Utilisez la suggestion automatique ou ajoutez une ligne unique.",
       "done": "Terminé"
+    },
+    "submit": {
+      "receiptEyebrow": "Réception de marchandises / bon de livraison",
+      "receiptTitle": "Création du bon de livraison",
+      "receiptSubtitle": "{{name}} · traitement de {{count}} lignes",
+      "qualityEyebrow": "Acheminement qualité",
+      "qualityTitle": "Envoi vers la qualité",
+      "qualitySubtitle": "{{name}} · acheminement de {{count}} lignes vers la qualité",
+      "documentLabel": "N° de bon de livraison",
+      "errorEyebrow": "Opération échouée",
+      "errorTitle": "Impossible de terminer l'envoi",
+      "errorReturning": "Retour à la vérification…",
+      "errorFallback": "Une erreur inattendue s'est produite.",
+      "receiptLog0": "Préparation des lignes du bon de livraison",
+      "receiptLog1": "Validation des lignes de stock",
+      "receiptLog2": "Écriture des mouvements d'entrepôt",
+      "receiptLog3": "Envoi du bon de livraison à l'ERP",
+      "receiptLog4": "Attribution du numéro de document",
+      "qualityLog0": "Répartition des lignes qualité",
+      "qualityLog1": "Application des règles qualité",
+      "qualityLog2": "Envoi vers la liste qualité",
+      "qualityLog3": "Création des tâches qualité",
+      "qualityLog4": "Finalisation de l'acheminement"
     }
   },
   "manual": {
-    "eyebrow": "Opération de réception de marchandises", "directTitle": "Réception directe de marchandises", "orderlessTitle": "Tâche de réception sans commande",
+    "eyebrow": "Opération de réception de marchandises",
+    "directTitle": "Réception directe de marchandises",
+    "orderlessTitle": "Tâche de réception sans commande",
     "directSubtitle": "Validez le document et enregistrez la réception, la qualité et le mouvement de stock dans un flux contrôlé.",
-    "orderlessSubtitle": "Créez une tâche de réception planifiée sans lien avec une commande.", "currentStep": "Étape",
-    "steps": { "document": "Document", "operation": "Opération", "lines": "Lignes de stock", "review": "Vérification" },
-    "document": { "title": "Document et fournisseur", "description": "Validez le type de bon de livraison, le numéro et le fournisseur liés à la réception." },
-    "operation": { "title": "Entrepôt et processus", "description": "Choisissez l'emplacement de réception, la série, la priorité et la méthode d'étiquetage." },
-    "lines": { "title": "Stocks à recevoir", "description": "Saisissez le stock, la configuration, la quantité et la traçabilité par ligne." },
-    "review": { "title": "Vérification finale", "description": "Vérifiez le récapitulatif du document et des quantités avant l'enregistrement." },
-    "customer": "Fournisseur", "documentDate": "Date du bon de livraison / réception", "receiptNo": "Numéro de réception", "isElectronic": "e-Bon de livraison",
-    "receiptHint": "Saisissez exactement 15 caractères alphanumériques.", "eReceiptHint": "Saisissez exactement 15 caractères alphanumériques pour le numéro e-bon de livraison/GIB.",
-    "validNumber": "Le format du numéro de document est valide.", "plannedArrival": "Arrivée prévue", "warehouse": "Entrepôt cible",
-    "location": "Emplacement de réception / zone tampon", "series": "Série de document WMS", "priority": "Priorité", "labelStrategy": "Stratégie d'étiquetage",
-    "executionMode": "Méthode de réception", "stock": "Stock", "yap": "Code de configuration", "quantity": "Quantité", "unit": "Unité",
-    "lot": "Lot", "serial": "Série", "manufacturingDate": "Date de fabrication", "expirationDate": "Date d'expiration",
-    "scannedBarcode": "Code-barres scanné", "addLine": "Ajouter une ligne", "actions": "Actions", "removeLine": "Supprimer la ligne",
-    "noLines": "Aucune ligne de stock n'a été ajoutée.", "description": "Description", "documentType": "Type de bon de livraison",
-    "normalReceipt": "Bon de livraison standard", "eReceipt": "e-Bon de livraison", "lineCount": "Nombre de lignes", "totalQuantity": "Quantité totale",
-    "operationType": "Type d'opération", "direct": "Réception directe", "orderless": "Tâche sans commande", "postReceipt": "Enregistrer la réception",
-    "createTask": "Créer la tâche", "success": "La réception de marchandises a été créée avec succès.", "resultDirect": "Réception enregistrée",
-    "resultOrderless": "Tâche de réception créée", "linesText": "lignes", "newRecord": "Nouvel enregistrement",
-    "defaultTargetLocation": "Emplacement cible par défaut", "selectActiveLocation": "Sélectionner un emplacement actif",
-    "unitLabelWithValue": "Unité : {{unit}}", "unitUndefined": "Unité non définie", "selectStockFirst": "Sélectionnez d'abord un stock",
-    "options": { "noLabel": "Aucune étiquette", "preGenerate": "Pré-générer", "supplierLabel": "Étiquette fournisseur", "generateOnReceipt": "Générer à la réception", "manual": "Manuel", "barcode": "Scan code-barres", "preLabel": "Étiquette pré-générée" },
+    "orderlessSubtitle": "Créez une tâche de réception planifiée sans lien avec une commande.",
+    "currentStep": "Étape",
+    "steps": {
+      "document": "Document",
+      "operation": "Opération",
+      "lines": "Lignes de stock",
+      "review": "Vérification"
+    },
+    "document": {
+      "title": "Document et fournisseur",
+      "description": "Validez le type de bon de livraison, le numéro et le fournisseur liés à la réception."
+    },
+    "operation": {
+      "title": "Entrepôt et processus",
+      "description": "Choisissez l'emplacement de réception, la série, la priorité et la méthode d'étiquetage."
+    },
+    "lines": {
+      "title": "Stocks à recevoir",
+      "description": "Saisissez le stock, la configuration, la quantité et la traçabilité par ligne."
+    },
+    "review": {
+      "title": "Vérification finale",
+      "description": "Vérifiez le récapitulatif du document et des quantités avant l'enregistrement."
+    },
+    "customer": "Fournisseur",
+    "documentDate": "Date du bon de livraison / réception",
+    "receiptNo": "Numéro de réception",
+    "isElectronic": "e-Bon de livraison",
+    "receiptHint": "Saisissez exactement 15 caractères alphanumériques.",
+    "eReceiptHint": "Saisissez exactement 15 caractères alphanumériques pour le numéro e-bon de livraison/GIB.",
+    "validNumber": "Le format du numéro de document est valide.",
+    "plannedArrival": "Arrivée prévue",
+    "warehouse": "Entrepôt cible",
+    "location": "Emplacement de réception / zone tampon",
+    "series": "Série de document WMS",
+    "priority": "Priorité",
+    "labelStrategy": "Stratégie d'étiquetage",
+    "executionMode": "Méthode de réception",
+    "stock": "Stock",
+    "yap": "Code de configuration",
+    "quantity": "Quantité",
+    "unit": "Unité",
+    "lot": "Lot",
+    "serial": "Série",
+    "manufacturingDate": "Date de fabrication",
+    "expirationDate": "Date d'expiration",
+    "scannedBarcode": "Code-barres scanné",
+    "addLine": "Ajouter une ligne",
+    "actions": "Actions",
+    "removeLine": "Supprimer la ligne",
+    "noLines": "Aucune ligne de stock n'a été ajoutée.",
+    "description": "Description",
+    "documentType": "Type de bon de livraison",
+    "normalReceipt": "Bon de livraison standard",
+    "eReceipt": "e-Bon de livraison",
+    "lineCount": "Nombre de lignes",
+    "totalQuantity": "Quantité totale",
+    "operationType": "Type d'opération",
+    "direct": "Réception directe",
+    "orderless": "Tâche sans commande",
+    "postReceipt": "Enregistrer la réception",
+    "createTask": "Créer la tâche",
+    "success": "La réception de marchandises a été créée avec succès.",
+    "resultDirect": "Réception enregistrée",
+    "resultOrderless": "Tâche de réception créée",
+    "linesText": "lignes",
+    "newRecord": "Nouvel enregistrement",
+    "defaultTargetLocation": "Emplacement cible par défaut",
+    "selectActiveLocation": "Sélectionner un emplacement actif",
+    "unitLabelWithValue": "Unité : {{unit}}",
+    "unitUndefined": "Unité non définie",
+    "selectStockFirst": "Sélectionnez d'abord un stock",
+    "options": {
+      "noLabel": "Aucune étiquette",
+      "preGenerate": "Pré-générer",
+      "supplierLabel": "Étiquette fournisseur",
+      "generateOnReceipt": "Générer à la réception",
+      "manual": "Manuel",
+      "barcode": "Scan code-barres",
+      "preLabel": "Étiquette pré-générée"
+    },
     "bulkSerial": {
       "title": "Scan groupé de numéros de série et de codes-barres",
       "hint": "Si la quantité est de 13, scannez 13 numéros de série différents un par un avec le lecteur. Chaque série est envoyée à l'API comme une ligne traçable distincte avec une quantité de 1.",
@@ -336,7 +460,9 @@
       "hintReceiving": "Seul Réception/Zone tampon peut être sélectionné en attendant la décision qualité.",
       "remainingLabel": "Restant :"
     },
-    "table": { "warehouseLocation": "Entrepôt / Emplacement" },
+    "table": {
+      "warehouseLocation": "Entrepôt / Emplacement"
+    },
     "result": {
       "eyebrow": "Après la réception de marchandises",
       "qualitySentTitle": "Envoyé en qualité",
@@ -353,7 +479,30 @@
       "labelsPrintFailed": "Les étiquettes n'ont pas pu être imprimées.",
       "printTitleSuffix": "étiquettes de réception"
     },
-    "validation": { "customer": "Le fournisseur est obligatoire.", "receiptNo": "Le numéro de bon de livraison standard doit contenir exactement 15 chiffres.", "eReceiptNo": "Le numéro e-bon de livraison / GIB doit contenir exactement 15 caractères alphanumériques.", "date": "La date du bon de livraison est obligatoire.", "operation": "L'entrepôt, l'emplacement de réception et la série de document sont obligatoires.", "lines": "Au moins une ligne de stock est obligatoire.", "stock": "Le stock et une quantité supérieure à zéro sont obligatoires.", "serialQuantity": "Une ligne suivie par numéro de série doit avoir une quantité de 1.", "expiry": "La date d'expiration ne peut pas précéder la date de fabrication.", "incomplete": "Le formulaire contient des champs manquants ou invalides.", "submit": "La réception de marchandises n'a pas pu être créée.", "activeSeriesRequired": "Une série de document active doit être sélectionnée pour cette opération.", "assigneesRequired": "Au moins un utilisateur d'opération doit être affecté à la tâche.", "qualityRulesCheckFailed": "Les règles de contrôle qualité n'ont pas pu être vérifiées.", "trackingPolicyLoadFailed": "La politique de suivi de stock n'a pas pu être chargée pour {{code}}.", "unitCodeMissing": "L'unité de mesure n'est pas définie pour le stock {{code}}.", "lineLocationRequired": "Un entrepôt et un emplacement cibles doivent être sélectionnés pour la ligne.", "serialFieldsConflict": "Le champ de série unique et le champ de série groupée ne peuvent pas être utilisés ensemble.", "serialBatchCountMismatch": "Le nombre de séries groupées ({{count}}) doit être égal à la quantité reçue ({{quantity}}).", "duplicateSerialInBatch": "Le même numéro de série ne peut pas être utilisé plusieurs fois dans la liste de séries groupées.", "serialAlreadyUsed": "L'un des numéros de série a déjà été utilisé dans cette liste de réception.", "qualityRuleCheckFailedForStock": "La règle de qualité n'a pas pu être vérifiée pour {{code}}." }
+    "validation": {
+      "customer": "Le fournisseur est obligatoire.",
+      "receiptNo": "Le numéro de bon de livraison standard doit contenir exactement 15 chiffres.",
+      "eReceiptNo": "Le numéro e-bon de livraison / GIB doit contenir exactement 15 caractères alphanumériques.",
+      "date": "La date du bon de livraison est obligatoire.",
+      "operation": "L'entrepôt, l'emplacement de réception et la série de document sont obligatoires.",
+      "lines": "Au moins une ligne de stock est obligatoire.",
+      "stock": "Le stock et une quantité supérieure à zéro sont obligatoires.",
+      "serialQuantity": "Une ligne suivie par numéro de série doit avoir une quantité de 1.",
+      "expiry": "La date d'expiration ne peut pas précéder la date de fabrication.",
+      "incomplete": "Le formulaire contient des champs manquants ou invalides.",
+      "submit": "La réception de marchandises n'a pas pu être créée.",
+      "activeSeriesRequired": "Une série de document active doit être sélectionnée pour cette opération.",
+      "assigneesRequired": "Au moins un utilisateur d'opération doit être affecté à la tâche.",
+      "qualityRulesCheckFailed": "Les règles de contrôle qualité n'ont pas pu être vérifiées.",
+      "trackingPolicyLoadFailed": "La politique de suivi de stock n'a pas pu être chargée pour {{code}}.",
+      "unitCodeMissing": "L'unité de mesure n'est pas définie pour le stock {{code}}.",
+      "lineLocationRequired": "Un entrepôt et un emplacement cibles doivent être sélectionnés pour la ligne.",
+      "serialFieldsConflict": "Le champ de série unique et le champ de série groupée ne peuvent pas être utilisés ensemble.",
+      "serialBatchCountMismatch": "Le nombre de séries groupées ({{count}}) doit être égal à la quantité reçue ({{quantity}}).",
+      "duplicateSerialInBatch": "Le même numéro de série ne peut pas être utilisé plusieurs fois dans la liste de séries groupées.",
+      "serialAlreadyUsed": "L'un des numéros de série a déjà été utilisé dans cette liste de réception.",
+      "qualityRuleCheckFailedForStock": "La règle de qualité n'a pas pu être vérifiée pour {{code}}."
+    }
   },
   "list": {
     "eyebrowParent": "INBOUND_OP",
@@ -396,99 +545,6 @@
     "completed": "Terminé",
     "approvalPending": "Approbation en attente",
     "erpIntegrated": "Intégré à l'ERP",
-    "erpReconcileResend": "Rapprochement ERP / Renvoyer",
-    "erpSendToErp": "Envoyer à l'ERP",
-    "noWaybillShort": "Aucun bon de livraison",
-    "waybillBadge": "Bon de livraison {{no}}",
-    "qcLinesSuffix": "{{count}} ligne(s) (contrôle qualité uniquement)",
-    "erpRetryDialog": {
-      "title": "Renvoyer le transfert ERP",
-      "description": "La réception {{documentNo}} sera renvoyée vers le bon de livraison d'achat Netsis.",
-      "localStatus": "Statut local",
-      "submissionStatus": "Statut d'envoi",
-      "attempt": "Tentative",
-      "recordNotFound": "Enregistrement introuvable",
-      "uncertainWarningPrefix": "Le résultat de la demande précédente est incertain. Ne renvoyez pas sans d'abord rechercher dans Netsis",
-      "uncertainWarningAnd": "et",
-      "uncertainWarningSuffix": ".",
-      "waybillNumberFallback": "numéro de bon de livraison",
-      "confirmedCheckbox": "J'ai vérifié le document dans Netsis et confirmé qu'il n'existe pas.",
-      "reconciliationNoteLabel": "Note de rapprochement",
-      "reconciliationPlaceholder": "Ex. Vérifié via Netsis TBLFATUIRS et le numéro de bon de livraison ; document introuvable.",
-      "reconciliationHint": "Au moins 5 caractères ; enregistré dans le journal d'audit.",
-      "cancel": "Annuler",
-      "submitReconcileAndResend": "Enregistrer le rapprochement et renvoyer",
-      "submitResend": "Renvoyer à l'ERP",
-      "fetchFailed": "L'enregistrement de soumission ERP n'a pas pu être chargé.",
-      "successToast": "Bon de livraison Netsis créé : {{documentNo}}",
-      "uncertainToast": "La réponse de Netsis reste incertaine. Le renvoi a été arrêté pour éviter un document en double.",
-      "failedToast": "La soumission ERP n'a pas pu être terminée.",
-      "retryFailed": "La soumission ERP n'a pas pu être redémarrée."
-    },
-    "lifecycleDialog": {
-      "approve": { "title": "Approuver la réception", "description": "L'enregistrement sera transféré pour approbation opérationnelle. La même demande est appliquée en toute sécurité une seule fois.", "submit": "Approuver" },
-      "shortClose": { "title": "Clôturer partiellement la quantité manquante", "description": "Les quantités ouvertes sélectionnées ne seront plus attendues. Un motif est requis pour le reporting.", "submit": "Clôture partielle" },
-      "putaway": { "title": "Rangement", "description": "Le stock disponible dans la zone de réception est transféré vers l'emplacement sélectionné ; les soldes d'emplacement et d'entrepôt sont mis à jour dans la même transaction.", "submit": "Ranger" },
-      "cancel": { "title": "Annuler la réception", "description": "Les mouvements de stock et de qualité liés sont contre-passés. Si le stock a déjà été utilisé, le système bloque l'annulation en toute sécurité.", "submit": "Annuler" },
-      "reasonRequired": "Un motif descriptif est requis pour cette action.",
-      "noShortCloseQuantity": "Aucune quantité ouverte disponible pour une clôture partielle.",
-      "selectAtLeastOneLine": "Sélectionnez au moins une ligne de stock.",
-      "checkQuantityAndTarget": "Vérifiez la quantité et l'emplacement cible pour {{code}}.",
-      "lineNo": "Ligne",
-      "closingQuantity": "Quantité à clôturer",
-      "putawayEmpty": "Aucun stock disponible n'a été trouvé dans la zone de réception pour le rangement.",
-      "selectLineAria": "Sélectionner {{code}}",
-      "stockLotSerial": "Stock / Lot / Série",
-      "noLot": "Aucun lot",
-      "noSerial": "Aucun numéro de série",
-      "sourceLocation": "Emplacement source #{{id}}",
-      "targetLocation": "Emplacement cible",
-      "suggestedLocation": "Emplacement suggéré #{{id}}",
-      "selectTargetLocationPlaceholder": "Sélectionner l'emplacement cible",
-      "reasonLabelRequired": "Motif *",
-      "descriptionLabel": "Description",
-      "reasonPlaceholder": "Rédigez une note d'opération..."
-    },
-    "routingDialog": {
-      "eyebrow": "Post-réception · Distribution à double condition",
-      "subtitle": "La condition de gauche est un transfert d'entrepôt à entrepôt, la condition de droite est une expédition sortante. Vous pouvez répartir la quantité restante de chaque ligne entre les deux dans la même liste.",
-      "qualityGkk": "Qualité/GKK",
-      "receiptApproval": "Approbation de la réception",
-      "transferConditionTitle": "Condition 1 · Transfert d'entrepôt à entrepôt",
-      "outboundConditionTitle": "Condition 2 · Expédition sortante",
-      "documentSeries": "Série de documents",
-      "selectSeriesPlaceholder": "Sélectionner une série",
-      "targetWarehouse": "Entrepôt cible",
-      "targetShelf": "Emplacement cible",
-      "outboundCustomer": "Client sortant",
-      "lineDistributionList": "Liste de distribution des lignes",
-      "routableLinesSummary": "{{count}} ligne(s) routable(s) · restant = accepté − précédent − transfert − sortie",
-      "accepted": "Accepté",
-      "previous": "Précédent",
-      "transfer": "Transfert",
-      "outbound": "Sortie",
-      "sourceShelf": "Emplacement source",
-      "shelfNumber": "Emplacement #{{id}}",
-      "operationNote": "Note d'opération",
-      "createDistribution": "Créer la distribution",
-      "transferTotalLabel": "Transfert : {{value}}",
-      "outboundTotalLabel": "Sortie : {{value}}",
-      "errors": {
-        "receiptNotCompleted": "Un DAT ou une expédition sortante ne peut pas être créé tant que la réception n'est pas terminée.",
-        "qualityNotReady": "Le routage ne peut pas être effectué tant que la décision qualité/GKK n'est pas terminée.",
-        "approvalNotReady": "Le routage ne peut pas être effectué tant que l'approbation de la réception n'est pas terminée.",
-        "erpNotSucceeded": "Un DAT ou une expédition sortante ne peut pas être créé tant que le bon de livraison ERP n'a pas été créé avec succès.",
-        "noQuantityEntered": "Saisissez une quantité de transfert ou de sortie pour au moins une ligne.",
-        "transferSeriesAndWarehouseRequired": "Une série de documents de transfert et un entrepôt cible sont requis.",
-        "sourceTargetSame": "L'entrepôt source et l'entrepôt cible ne peuvent pas être identiques.",
-        "outboundSeriesAndCustomerRequired": "Une série de documents de sortie et un client sont requis.",
-        "negativeQuantity": "Les quantités pour {{code}} ne peuvent pas être négatives.",
-        "exceedsRoutable": "Au maximum {{max}} peuvent être routés au total pour {{code}}."
-      },
-      "and": "et",
-      "successToast": "{{documents}} créé(s) ; un total de {{quantity}} a été routé.",
-      "createFailed": "La distribution n'a pas pu être créée."
-    },
     "erpReconcileResend": "Rapprochement ERP / Renvoi",
     "erpSendToErp": "Envoyer à l'ERP",
     "noWaybillShort": "Aucun bon de livraison",
@@ -519,10 +575,26 @@
       "retryFailed": "La soumission ERP n'a pas pu être relancée."
     },
     "lifecycleDialog": {
-      "approve": { "title": "Approuver la réception", "description": "L'enregistrement passera en approbation opérationnelle. La même demande est appliquée en toute sécurité une seule fois.", "submit": "Approuver" },
-      "shortClose": { "title": "Clôturer partiellement la quantité manquante", "description": "Les quantités ouvertes sélectionnées ne seront plus attendues. Un motif est requis à des fins de reporting.", "submit": "Clôturer partiellement" },
-      "putaway": { "title": "Mise en stock", "description": "Le stock disponible dans la zone de réception est transféré vers l'emplacement sélectionné ; les soldes de l'emplacement et de l'entrepôt sont mis à jour dans la même transaction.", "submit": "Mettre en stock" },
-      "cancel": { "title": "Annuler la réception", "description": "Les mouvements de stock et de qualité liés sont extournés. Si le stock a déjà été utilisé, le système bloque l'annulation en toute sécurité.", "submit": "Annuler" },
+      "approve": {
+        "title": "Approuver la réception",
+        "description": "L'enregistrement passera en approbation opérationnelle. La même demande est appliquée en toute sécurité une seule fois.",
+        "submit": "Approuver"
+      },
+      "shortClose": {
+        "title": "Clôturer partiellement la quantité manquante",
+        "description": "Les quantités ouvertes sélectionnées ne seront plus attendues. Un motif est requis à des fins de reporting.",
+        "submit": "Clôturer partiellement"
+      },
+      "putaway": {
+        "title": "Mise en stock",
+        "description": "Le stock disponible dans la zone de réception est transféré vers l'emplacement sélectionné ; les soldes de l'emplacement et de l'entrepôt sont mis à jour dans la même transaction.",
+        "submit": "Mettre en stock"
+      },
+      "cancel": {
+        "title": "Annuler la réception",
+        "description": "Les mouvements de stock et de qualité liés sont extournés. Si le stock a déjà été utilisé, le système bloque l'annulation en toute sécurité.",
+        "submit": "Annuler"
+      },
       "reasonRequired": "Un motif descriptif est requis pour cette action.",
       "noShortCloseQuantity": "Aucune quantité ouverte disponible pour une clôture partielle.",
       "selectAtLeastOneLine": "Sélectionnez au moins une ligne de stock.",
@@ -580,7 +652,19 @@
       },
       "and": "et",
       "successToast": "{{documents}} créé(s) ; un total de {{quantity}} a été réparti.",
-      "createFailed": "La répartition n'a pas pu être créée."
+      "createFailed": "La répartition n'a pas pu être créée.",
+      "dialogTitle": "Répartition après réception",
+      "tabsHint": "Les conditions sont gérées dans des onglets séparés",
+      "tabKickerTransfer": "Condition 1",
+      "tabKickerOutbound": "Condition 2",
+      "tabTitleTransfer": "Transfert d'entrepôt",
+      "tabTitleOutbound": "Expédition sortante",
+      "transferPanelHint": "Sélectionnez la série de documents, l'entrepôt cible et l'emplacement pour le transfert entre entrepôts ; saisissez les quantités des lignes dans la liste ci-dessous.",
+      "outboundPanelHint": "Sélectionnez la série de documents et le client sortant pour l'expédition ; saisissez les quantités des lignes dans la liste ci-dessous.",
+      "linesHeadSummary": "{{count}} ligne(s) · onglet actif : {{tab}}",
+      "increaseQuantity": "Augmenter la quantité",
+      "decreaseQuantity": "Diminuer la quantité",
+      "notePlaceholder": "Note facultative…"
     },
     "sourceDocuments": "Documents source",
     "qcRequired": "Contrôle qualité requis",
@@ -642,7 +726,22 @@
     "printLineLabel": "Imprimer l'étiquette de ligne",
     "showLineLabelPdf": "Afficher l'étiquette de ligne en PDF",
     "lineNumber": "Ligne #{{number}}",
-    "noStockName": "Nom du stock indisponible"
+    "noStockName": "Nom du stock indisponible",
+    "sendToErp": "Envoyer à l’ERP",
+    "erpReconcile": "Réconciliation ERP / Renvoyer",
+    "searchPlaceholder": "N° document, fournisseur, BL, entrepôt, créateur, modificateur…",
+    "searchTokenHint": "La saisie recherche aussitôt. Entrée filtre uniquement par pastilles.",
+    "searchActiveTokens": "Pastilles de recherche actives",
+    "searchRemoveToken": "Retirer la pastille {{token}}",
+    "searchClearTokens": "Effacer les pastilles",
+    "facetFilters": "Filtres",
+    "facetFiltersTitle": "Filtres de liste",
+    "facetStatus": "Statut",
+    "facetQuality": "Qualité",
+    "facetErp": "Transfert ERP",
+    "facetProcessType": "Type de processus",
+    "facetAll": "Tous",
+    "facetClear": "Effacer"
   },
   "tasks": {
     "title": "Gestion des tâches de réception",
@@ -666,17 +765,37 @@
       "title": "Tâche de réception {{taskNo}}",
       "description": "Lignes de tâche, affectations et opérations de réception physique.",
       "eyebrow": "Tâche de réception",
-      "info": { "status": "Statut", "warehouse": "Entrepôt", "priority": "Priorité", "planned": "Prévu", "started": "Démarré" },
-      "table": { "stock": "Stock", "received": "Reçu" },
-      "line": { "qualityRequired": "Contrôle qualité requis", "directDispatch": "Bon de livraison direct" },
-      "actions": { "acceptAssignment": "Accepter l'affectation", "startTask": "Démarrer la tâche", "saveAssignments": "Enregistrer les affectations" },
+      "info": {
+        "status": "Statut",
+        "warehouse": "Entrepôt",
+        "priority": "Priorité",
+        "planned": "Prévu",
+        "started": "Démarré"
+      },
+      "table": {
+        "stock": "Stock",
+        "received": "Reçu"
+      },
+      "line": {
+        "qualityRequired": "Contrôle qualité requis",
+        "directDispatch": "Bon de livraison direct"
+      },
+      "actions": {
+        "acceptAssignment": "Accepter l'affectation",
+        "startTask": "Démarrer la tâche",
+        "saveAssignments": "Enregistrer les affectations"
+      },
       "errors": {
         "detailFetchFailed": "Les détails de la tâche n'ont pas pu être chargés.",
         "actionFailed": "L'action n'a pas pu être effectuée.",
         "selectAtLeastOneUser": "Sélectionnez au moins un utilisateur.",
         "assignmentsUpdateFailed": "Les affectations n'ont pas pu être mises à jour."
       },
-      "toast": { "accepted": "Tâche acceptée.", "started": "Tâche démarrée.", "assignmentsUpdated": "Affectations de la tâche mises à jour." },
+      "toast": {
+        "accepted": "Tâche acceptée.",
+        "started": "Tâche démarrée.",
+        "assignmentsUpdated": "Affectations de la tâche mises à jour."
+      },
       "receiptLabels": {
         "title": "Étiquettes générées à la réception",
         "hint": "Créées automatiquement après chaque mouvement de réception avec la quantité réelle et les informations de série/lot.",
@@ -725,10 +844,20 @@
   },
   "enums": {
     "operationStatus": {
-      "Draft": "Brouillon", "Released": "Publié", "InProgress": "En cours", "PartiallyProcessed": "Partiellement traité",
-      "Processed": "Traité", "Completed": "Terminé", "Cancelled": "Annulé"
+      "Draft": "Brouillon",
+      "Released": "Publié",
+      "InProgress": "En cours",
+      "PartiallyProcessed": "Partiellement traité",
+      "Processed": "Traité",
+      "Completed": "Terminé",
+      "Cancelled": "Annulé"
     },
-    "approvalStatus": { "NotRequired": "Approbation non requise", "Pending": "Approbation en attente", "Approved": "Approuvé", "Rejected": "Rejeté" },
+    "approvalStatus": {
+      "NotRequired": "Approbation non requise",
+      "Pending": "Approbation en attente",
+      "Approved": "Approuvé",
+      "Rejected": "Rejeté"
+    },
     "qualityStatus": {
       "NotRequired": "Aucun CQ",
       "Pending": "En attente",
@@ -746,37 +875,78 @@
       "Failed": "Le contrôle qualité a été rejeté"
     },
     "putawayStatus": {
-      "NotRequired": "Mise en stock non requise", "Pending": "Mise en stock en attente", "InProgress": "Mise en stock en cours",
-      "PartiallyCompleted": "Partiellement mis en stock", "Completed": "Mise en stock terminée"
+      "NotRequired": "Mise en stock non requise",
+      "Pending": "Mise en stock en attente",
+      "InProgress": "Mise en stock en cours",
+      "PartiallyCompleted": "Partiellement mis en stock",
+      "Completed": "Mise en stock terminée"
     },
     "erpStatus": {
-      "NotRequired": "Envoi ERP non requis", "Pending": "Envoi ERP en attente", "Processing": "Envoi vers l'ERP en cours",
-      "Succeeded": "Envoyé à l'ERP", "Failed": "Échec de l'envoi ERP", "CommitUncertain": "Résultat ERP incertain"
+      "NotRequired": "Envoi ERP non requis",
+      "Pending": "Envoi ERP en attente",
+      "Processing": "Envoi vers l'ERP en cours",
+      "Succeeded": "Envoyé à l'ERP",
+      "Failed": "Échec de l'envoi ERP",
+      "CommitUncertain": "Résultat ERP incertain"
     },
     "lineStatus": {
-      "Open": "Ouvert", "PartiallyReceived": "Partiellement reçu", "Received": "Reçu", "ShortClosed": "Clôturé partiellement", "Cancelled": "Annulé"
+      "Open": "Ouvert",
+      "PartiallyReceived": "Partiellement reçu",
+      "Received": "Reçu",
+      "ShortClosed": "Clôturé partiellement",
+      "Cancelled": "Annulé"
     },
     "taskStatus": {
-      "Draft": "Brouillon", "Released": "Publié", "Assigned": "Assigné", "InProgress": "En cours", "Paused": "En pause",
-      "PartiallyCompleted": "Partiellement terminé", "Completed": "Terminé", "Cancelled": "Annulé"
+      "Draft": "Brouillon",
+      "Released": "Publié",
+      "Assigned": "Assigné",
+      "InProgress": "En cours",
+      "Paused": "En pause",
+      "PartiallyCompleted": "Partiellement terminé",
+      "Completed": "Terminé",
+      "Cancelled": "Annulé"
     },
     "assignmentStatus": {
-      "Assigned": "Assigné", "Accepted": "Accepté", "InProgress": "En cours", "Completed": "Terminé",
-      "Unassigned": "Non assigné", "Rejected": "Rejeté"
+      "Assigned": "Assigné",
+      "Accepted": "Accepté",
+      "InProgress": "En cours",
+      "Completed": "Terminé",
+      "Unassigned": "Non assigné",
+      "Rejected": "Rejeté"
     },
     "labelBatchStatus": {
-      "Draft": "Brouillon", "Generated": "Généré", "PartiallyPrinted": "Partiellement imprimé", "Printed": "Imprimé",
-      "PartiallyConsumed": "Partiellement consommé", "Consumed": "Consommé", "Cancelled": "Annulé"
+      "Draft": "Brouillon",
+      "Generated": "Généré",
+      "PartiallyPrinted": "Partiellement imprimé",
+      "Printed": "Imprimé",
+      "PartiallyConsumed": "Partiellement consommé",
+      "Consumed": "Consommé",
+      "Cancelled": "Annulé"
     },
-    "labelStatus": { "Generated": "Généré", "Printed": "Imprimé", "Assigned": "Assigné", "Consumed": "Consommé", "Void": "Annulé" },
+    "labelStatus": {
+      "Generated": "Généré",
+      "Printed": "Imprimé",
+      "Assigned": "Assigné",
+      "Consumed": "Consommé",
+      "Void": "Annulé"
+    },
     "processType": {
-      "OrderBasedTask": "Tâche basée sur commande", "OrderlessTask": "Tâche sans commande",
-      "OrderBasedDirectReceipt": "Réception directe basée sur commande", "OrderlessDirectReceipt": "Réception directe sans commande"
+      "OrderBasedTask": "Tâche basée sur commande",
+      "OrderlessTask": "Tâche sans commande",
+      "OrderBasedDirectReceipt": "Réception directe basée sur commande",
+      "OrderlessDirectReceipt": "Réception directe sans commande"
     },
-    "initiationMode": { "OrderBasedTask": "Tâche basée sur commande", "UnplannedTask": "Tâche imprévue", "DirectReceipt": "Réception directe" },
+    "initiationMode": {
+      "OrderBasedTask": "Tâche basée sur commande",
+      "UnplannedTask": "Tâche imprévue",
+      "DirectReceipt": "Réception directe"
+    },
     "executionMode": {
-      "Manual": "Manuel", "BarcodeScan": "Scan code-barres", "PreGeneratedLabel": "Étiquette pré-générée",
-      "SupplierLabel": "Étiquette fournisseur", "Import": "Import"
+      "Manual": "Manuel",
+      "BarcodeScan": "Scan code-barres",
+      "PreGeneratedLabel": "Étiquette pré-générée",
+      "SupplierLabel": "Étiquette fournisseur",
+      "Import": "Import"
     }
   },
   "hub": {
@@ -784,18 +954,48 @@
     "title": "Centre de processus de réception de marchandises",
     "description": "Démarrez les réceptions basées sur commande, sans commande et directes sous les mêmes règles métier ; suivez chaque étape, de l'affectation jusqu'au contrôle qualité et à l'enregistrement des stocks.",
     "phases": {
-      "start": { "title": "Démarrer la réception", "description": "Choisissez le point de départ adapté à la source du document et au mode d'exécution." },
-      "execute": { "title": "Exécuter l'affectation", "description": "Définissez les responsables, acceptez le travail assigné et gérez l'avancement physique." },
-      "manage": { "title": "Suivre et gérer", "description": "Utilisez les enregistrements et les politiques pour une traçabilité complète et un contrôle de processus configurable." }
+      "start": {
+        "title": "Démarrer la réception",
+        "description": "Choisissez le point de départ adapté à la source du document et au mode d'exécution."
+      },
+      "execute": {
+        "title": "Exécuter l'affectation",
+        "description": "Définissez les responsables, acceptez le travail assigné et gérez l'avancement physique."
+      },
+      "manage": {
+        "title": "Suivre et gérer",
+        "description": "Utilisez les enregistrements et les politiques pour une traçabilité complète et un contrôle de processus configurable."
+      }
     },
     "cards": {
-      "ordered": { "title": "Tâche basée sur commande", "description": "Sélectionnez les commandes d'achat Netsis, réservez les quantités ouvertes et créez des tâches de réception." },
-      "orderless": { "title": "Tâche sans commande", "description": "Créez une tâche de réception planifiée avec un bon de livraison et des lignes de stock, sans lien avec une commande." },
-      "direct": { "title": "Réception directe de marchandises", "description": "Enregistrez une réception sans tâche de façon atomique, avec qualité, quarantaine et mouvement de stock." },
-      "tasks": { "title": "Gestion des tâches", "description": "Assignez les tâches ouvertes à un ou plusieurs utilisateurs et suivez leur avancement." },
-      "assigned": { "title": "Mes tâches assignées", "description": "Acceptez, démarrez et terminez les tâches de réception qui vous sont assignées." },
-      "records": { "title": "Enregistrements de réception", "description": "Consultez tous les types de réception dans la grille de données côté serveur partagée." },
-      "settings": { "title": "Paramètres du processus", "description": "Gérez les politiques de sur/sous-réception, de blocage qualité, d'approbation et d'envoi ERP." }
+      "ordered": {
+        "title": "Tâche basée sur commande",
+        "description": "Sélectionnez les commandes d'achat Netsis, réservez les quantités ouvertes et créez des tâches de réception."
+      },
+      "orderless": {
+        "title": "Tâche sans commande",
+        "description": "Créez une tâche de réception planifiée avec un bon de livraison et des lignes de stock, sans lien avec une commande."
+      },
+      "direct": {
+        "title": "Réception directe de marchandises",
+        "description": "Enregistrez une réception sans tâche de façon atomique, avec qualité, quarantaine et mouvement de stock."
+      },
+      "tasks": {
+        "title": "Gestion des tâches",
+        "description": "Assignez les tâches ouvertes à un ou plusieurs utilisateurs et suivez leur avancement."
+      },
+      "assigned": {
+        "title": "Mes tâches assignées",
+        "description": "Acceptez, démarrez et terminez les tâches de réception qui vous sont assignées."
+      },
+      "records": {
+        "title": "Enregistrements de réception",
+        "description": "Consultez tous les types de réception dans la grille de données côté serveur partagée."
+      },
+      "settings": {
+        "title": "Paramètres du processus",
+        "description": "Gérez les politiques de sur/sous-réception, de blocage qualité, d'approbation et d'envoi ERP."
+      }
     }
   }
 }

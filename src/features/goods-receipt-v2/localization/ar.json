@@ -1,14 +1,37 @@
 {
   "title": "استلام البضائع من الطلبات",
   "subtitle": "حدد طلبات Netsis، وتحقق من الكميات، واحجز مهمة استلام بأمان.",
-  "steps": ["المورد والطلبات", "السطور والكميات", "إعدادات المستودع", "التأكيد"],
-  "customer": "حساب المورد", "selectCustomer": "اختر حساب المورد...", "searchCustomer": "ابحث برمز المورد / الاسم…", "customerEmpty": "لم يتم العثور على حساب مورد.", "selectedCustomer": "حساب المورد المحدد",
-  "loadOrders": "تحميل الطلبات المفتوحة", "orders": "الطلبات المفتوحة",
-  "loadLines": "تحميل سطور الطلبات المحددة", "noOrders": "لم يتم العثور على طلبات مفتوحة لهذا المورد.", "noLines": "لم يتم العثور على سطور متاحة.",
-  "warehouse": "المستودع الهدف", "location": "موقع الاستلام", "series": "سلسلة المستند", "documentDate": "تاريخ المستند",
-  "plannedArrival": "الوصول المخطط", "priority": "الأولوية", "labelStrategy": "استراتيجية الملصقات", "description": "الوصف",
-  "create": "إنشاء المهمة والحجز", "created": "تم إنشاء مهمة استلام البضائع", "assignedSelf": "سيتم تعيين المهمة للمستخدم الحالي.",
-  "quantity": "الكمية المحجوزة", "available": "المتاح", "back": "رجوع", "continue": "متابعة",
+  "steps": [
+    "المورد والطلبات",
+    "السطور والكميات",
+    "إعدادات المستودع",
+    "التأكيد"
+  ],
+  "customer": "حساب المورد",
+  "selectCustomer": "اختر حساب المورد...",
+  "searchCustomer": "ابحث برمز المورد / الاسم…",
+  "customerEmpty": "لم يتم العثور على حساب مورد.",
+  "selectedCustomer": "حساب المورد المحدد",
+  "loadOrders": "تحميل الطلبات المفتوحة",
+  "orders": "الطلبات المفتوحة",
+  "loadLines": "تحميل سطور الطلبات المحددة",
+  "noOrders": "لم يتم العثور على طلبات مفتوحة لهذا المورد.",
+  "noLines": "لم يتم العثور على سطور متاحة.",
+  "warehouse": "المستودع الهدف",
+  "location": "موقع الاستلام",
+  "series": "سلسلة المستند",
+  "documentDate": "تاريخ المستند",
+  "plannedArrival": "الوصول المخطط",
+  "priority": "الأولوية",
+  "labelStrategy": "استراتيجية الملصقات",
+  "description": "الوصف",
+  "create": "إنشاء المهمة والحجز",
+  "created": "تم إنشاء مهمة استلام البضائع",
+  "assignedSelf": "سيتم تعيين المهمة للمستخدم الحالي.",
+  "quantity": "الكمية المحجوزة",
+  "available": "المتاح",
+  "back": "رجوع",
+  "continue": "متابعة",
   "configurationHint": "حدد المستودع الهدف وموقع الاستلام وسلسلة المستند للمتابعة.",
   "createFlow": {
     "subtitle": "أدر اختيار الطلبات مع تخطيط الكمية والرقم التسلسلي والرف في شاشة واحدة؛ راجع وأنشئ في الخطوة الأخيرة.",
@@ -22,7 +45,10 @@
     "orderedBadge": "طلب",
     "stepsAriaLabel": "خطوات الإنشاء",
     "orderSelection": "اختيار الطلب",
-    "steps": { "0": "الطلبات وتخطيط السطور", "1": "المراجعة والإنشاء" },
+    "steps": {
+      "0": "الطلبات وتخطيط السطور",
+      "1": "المراجعة والإنشاء"
+    },
     "orderNo": "رقم الطلب",
     "orderNoHelpAria": "حول الجلب برقم الطلب",
     "orderNoTooltip": "تتم قراءة رمز حساب الطلب من Netsis؛ ويتم تحديد المورد المطابق تلقائيًا وفتح رصيد الطلب أدناه.",
@@ -157,7 +183,15 @@
       "viewQualityList": "{{count}} سطر · عرض القائمة",
       "multipleOrders": "أكثر من طلب واحد",
       "multipleOrdersCount": "{{count}} طلب",
-      "ordersTooltipHint": "مرّر لرؤية جميع أرقام الطلبات"
+      "ordersTooltipHint": "مرّر لرؤية جميع أرقام الطلبات",
+      "orderDate": "تاريخ الطلب",
+      "multipleProjects": "أكثر من مشروع واحد",
+      "multipleProjectsCount": "{{count}} مشروع",
+      "projectsTooltipHint": "مرّر لرؤية جميع رموز المشاريع",
+      "metricLinesHint": "عرض المخزون",
+      "metricQualityLabel": "الجودة",
+      "metricQualityNone": "بدون",
+      "metricQualityHint": "عرض قائمة الجودة"
     },
     "qualityDialog": {
       "title": "المخزون المتجه إلى الجودة",
@@ -205,7 +239,12 @@
       "noQualityLines": "لا توجد سطور تتطلب مراقبة الجودة في هذه المهمة.",
       "createdTasks": "المهام المُنشأة",
       "taskMeta": "المستودع #{{warehouseId}} · {{lineCount}} سطر · {{quantity}}",
-      "goToTaskManagement": "الانتقال إلى إدارة المهام"
+      "goToTaskManagement": "الانتقال إلى إدارة المهام",
+      "copyDocument": "نسخ رقم إشعار التسليم",
+      "documentCopied": "تم نسخ رقم إشعار التسليم",
+      "documentCopyFailed": "تعذر نسخ رقم إشعار التسليم",
+      "statusCompleted": "مكتمل",
+      "statusAwaitingQuality": "بانتظار الجودة"
     },
     "validation": {
       "eReceiptNo": "يجب أن يتكون رقم إشعار التسليم الإلكتروني / GIB من 15 حرفًا قابلاً للطباعة بالضبط، بما في ذلك الرموز.",
@@ -296,32 +335,117 @@
       "quantityAria": "الكمية",
       "empty": "لا توجد سطور دفعة/رقم تسلسلي بعد. استخدم الاقتراح التلقائي أو أضف سطرًا فرديًا.",
       "done": "تم"
+    },
+    "submit": {
+      "receiptEyebrow": "استلام البضائع / إشعار التسليم",
+      "receiptTitle": "جارٍ إنشاء إشعار التسليم",
+      "receiptSubtitle": "{{name}} · معالجة {{count}} سطر",
+      "qualityEyebrow": "توجيه الجودة",
+      "qualityTitle": "جارٍ الإرسال إلى الجودة",
+      "qualitySubtitle": "{{name}} · توجيه {{count}} سطر إلى الجودة",
+      "documentLabel": "رقم إشعار التسليم",
+      "errorEyebrow": "فشلت العملية",
+      "errorTitle": "تعذر إكمال الإرسال",
+      "errorReturning": "جارٍ العودة إلى المراجعة…",
+      "errorFallback": "حدث خطأ غير متوقع.",
+      "receiptLog0": "جارٍ تجهيز سطور إشعار التسليم",
+      "receiptLog1": "جارٍ التحقق من سطور المخزون",
+      "receiptLog2": "جارٍ تسجيل حركات المستودع",
+      "receiptLog3": "جارٍ ترحيل إشعار التسليم إلى ERP",
+      "receiptLog4": "جارٍ تخصيص رقم المستند",
+      "qualityLog0": "جارٍ تقسيم سطور الجودة",
+      "qualityLog1": "جارٍ تطبيق قواعد الجودة",
+      "qualityLog2": "جارٍ الترحيل إلى قائمة الجودة",
+      "qualityLog3": "جارٍ إنشاء مهام الجودة",
+      "qualityLog4": "جارٍ إكمال التوجيه"
     }
   },
   "manual": {
-    "eyebrow": "عملية استلام البضائع", "directTitle": "استلام بضائع مباشر", "orderlessTitle": "مهمة استلام بدون طلب",
+    "eyebrow": "عملية استلام البضائع",
+    "directTitle": "استلام بضائع مباشر",
+    "orderlessTitle": "مهمة استلام بدون طلب",
     "directSubtitle": "تحقق من المستند ورحّل الاستلام والجودة وحركة المخزون ضمن مسار مضبوط.",
-    "orderlessSubtitle": "أنشئ مهمة استلام مخططة دون ارتباط بطلب.", "currentStep": "الخطوة",
-    "steps": { "document": "المستند", "operation": "العملية", "lines": "سطور المخزون", "review": "المراجعة" },
-    "document": { "title": "المستند والمورد", "description": "تحقق من نوع إشعار التسليم ورقمه والمورد المرتبط بالاستلام." },
-    "operation": { "title": "المستودع والعملية", "description": "اختر موقع الاستلام والسلسلة والأولوية وطريقة الملصقات." },
-    "lines": { "title": "المخزون المطلوب استلامه", "description": "أدخل المخزون والتكوين والكمية وبيانات التتبع لكل سطر." },
-    "review": { "title": "المراجعة النهائية", "description": "تحقق من ملخص المستند والكمية قبل الترحيل." },
-    "customer": "المورد", "documentDate": "تاريخ إشعار التسليم / الاستلام", "receiptNo": "رقم الاستلام", "isElectronic": "إشعار تسليم إلكتروني",
-    "receiptHint": "أدخل 15 حرفًا أو رقمًا بالضبط.", "eReceiptHint": "أدخل 15 حرفًا أو رقمًا بالضبط لرقم إشعار التسليم الإلكتروني/GIB.",
-    "validNumber": "صيغة رقم المستند صحيحة.", "plannedArrival": "الوصول المخطط", "warehouse": "المستودع الهدف",
-    "location": "موقع الاستلام / التجميع", "series": "سلسلة مستند نظام إدارة المستودعات", "priority": "الأولوية", "labelStrategy": "استراتيجية الملصقات",
-    "executionMode": "طريقة الاستلام", "stock": "المخزون", "yap": "رمز التكوين", "quantity": "الكمية", "unit": "الوحدة",
-    "lot": "الدفعة", "serial": "الرقم التسلسلي", "manufacturingDate": "تاريخ التصنيع", "expirationDate": "تاريخ انتهاء الصلاحية",
-    "scannedBarcode": "الباركود الممسوح", "addLine": "إضافة سطر", "actions": "الإجراءات", "removeLine": "حذف السطر",
-    "noLines": "لم تتم إضافة أي سطور مخزون.", "description": "الوصف", "documentType": "نوع إشعار التسليم",
-    "normalReceipt": "إشعار تسليم قياسي", "eReceipt": "إشعار تسليم إلكتروني", "lineCount": "عدد السطور", "totalQuantity": "إجمالي الكمية",
-    "operationType": "نوع العملية", "direct": "استلام مباشر", "orderless": "مهمة بدون طلب", "postReceipt": "ترحيل الاستلام",
-    "createTask": "إنشاء المهمة", "success": "تم إنشاء استلام البضائع بنجاح.", "resultDirect": "تم ترحيل استلام البضائع",
-    "resultOrderless": "تم إنشاء مهمة الاستلام", "linesText": "سطر", "newRecord": "سجل جديد",
-    "defaultTargetLocation": "الرف الهدف الافتراضي", "selectActiveLocation": "اختر رفًا نشطًا",
-    "unitLabelWithValue": "الوحدة: {{unit}}", "unitUndefined": "الوحدة غير محددة", "selectStockFirst": "اختر مخزونًا أولاً",
-    "options": { "noLabel": "بدون ملصق", "preGenerate": "إنشاء مسبق", "supplierLabel": "ملصق المورد", "generateOnReceipt": "إنشاء عند الاستلام", "manual": "يدوي", "barcode": "مسح الباركود", "preLabel": "ملصق مُنشأ مسبقًا" },
+    "orderlessSubtitle": "أنشئ مهمة استلام مخططة دون ارتباط بطلب.",
+    "currentStep": "الخطوة",
+    "steps": {
+      "document": "المستند",
+      "operation": "العملية",
+      "lines": "سطور المخزون",
+      "review": "المراجعة"
+    },
+    "document": {
+      "title": "المستند والمورد",
+      "description": "تحقق من نوع إشعار التسليم ورقمه والمورد المرتبط بالاستلام."
+    },
+    "operation": {
+      "title": "المستودع والعملية",
+      "description": "اختر موقع الاستلام والسلسلة والأولوية وطريقة الملصقات."
+    },
+    "lines": {
+      "title": "المخزون المطلوب استلامه",
+      "description": "أدخل المخزون والتكوين والكمية وبيانات التتبع لكل سطر."
+    },
+    "review": {
+      "title": "المراجعة النهائية",
+      "description": "تحقق من ملخص المستند والكمية قبل الترحيل."
+    },
+    "customer": "المورد",
+    "documentDate": "تاريخ إشعار التسليم / الاستلام",
+    "receiptNo": "رقم الاستلام",
+    "isElectronic": "إشعار تسليم إلكتروني",
+    "receiptHint": "أدخل 15 حرفًا أو رقمًا بالضبط.",
+    "eReceiptHint": "أدخل 15 حرفًا أو رقمًا بالضبط لرقم إشعار التسليم الإلكتروني/GIB.",
+    "validNumber": "صيغة رقم المستند صحيحة.",
+    "plannedArrival": "الوصول المخطط",
+    "warehouse": "المستودع الهدف",
+    "location": "موقع الاستلام / التجميع",
+    "series": "سلسلة مستند نظام إدارة المستودعات",
+    "priority": "الأولوية",
+    "labelStrategy": "استراتيجية الملصقات",
+    "executionMode": "طريقة الاستلام",
+    "stock": "المخزون",
+    "yap": "رمز التكوين",
+    "quantity": "الكمية",
+    "unit": "الوحدة",
+    "lot": "الدفعة",
+    "serial": "الرقم التسلسلي",
+    "manufacturingDate": "تاريخ التصنيع",
+    "expirationDate": "تاريخ انتهاء الصلاحية",
+    "scannedBarcode": "الباركود الممسوح",
+    "addLine": "إضافة سطر",
+    "actions": "الإجراءات",
+    "removeLine": "حذف السطر",
+    "noLines": "لم تتم إضافة أي سطور مخزون.",
+    "description": "الوصف",
+    "documentType": "نوع إشعار التسليم",
+    "normalReceipt": "إشعار تسليم قياسي",
+    "eReceipt": "إشعار تسليم إلكتروني",
+    "lineCount": "عدد السطور",
+    "totalQuantity": "إجمالي الكمية",
+    "operationType": "نوع العملية",
+    "direct": "استلام مباشر",
+    "orderless": "مهمة بدون طلب",
+    "postReceipt": "ترحيل الاستلام",
+    "createTask": "إنشاء المهمة",
+    "success": "تم إنشاء استلام البضائع بنجاح.",
+    "resultDirect": "تم ترحيل استلام البضائع",
+    "resultOrderless": "تم إنشاء مهمة الاستلام",
+    "linesText": "سطر",
+    "newRecord": "سجل جديد",
+    "defaultTargetLocation": "الرف الهدف الافتراضي",
+    "selectActiveLocation": "اختر رفًا نشطًا",
+    "unitLabelWithValue": "الوحدة: {{unit}}",
+    "unitUndefined": "الوحدة غير محددة",
+    "selectStockFirst": "اختر مخزونًا أولاً",
+    "options": {
+      "noLabel": "بدون ملصق",
+      "preGenerate": "إنشاء مسبق",
+      "supplierLabel": "ملصق المورد",
+      "generateOnReceipt": "إنشاء عند الاستلام",
+      "manual": "يدوي",
+      "barcode": "مسح الباركود",
+      "preLabel": "ملصق مُنشأ مسبقًا"
+    },
     "bulkSerial": {
       "title": "مسح الأرقام التسلسلية والباركود بالجملة",
       "hint": "إذا كانت الكمية 13، فامسح 13 رقمًا تسلسليًا مختلفًا واحدًا تلو الآخر باستخدام القارئ. يُرسل كل رقم تسلسلي إلى واجهة البرمجة كسطر تتبع منفصل بكمية 1.",
@@ -336,7 +460,9 @@
       "hintReceiving": "يمكن اختيار موقع الاستلام / التجميع فقط أثناء انتظار قرار الجودة.",
       "remainingLabel": "المتبقي:"
     },
-    "table": { "warehouseLocation": "المستودع / الرف" },
+    "table": {
+      "warehouseLocation": "المستودع / الرف"
+    },
     "result": {
       "eyebrow": "بعد استلام البضائع",
       "qualitySentTitle": "تم الإرسال إلى الجودة",
@@ -353,7 +479,30 @@
       "labelsPrintFailed": "تعذرت طباعة الملصقات.",
       "printTitleSuffix": "ملصقات الاستلام"
     },
-    "validation": { "customer": "المورد مطلوب.", "receiptNo": "يجب أن يتكون رقم إشعار التسليم القياسي من 15 رقمًا بالضبط.", "eReceiptNo": "يجب أن يتكون رقم إشعار التسليم الإلكتروني / GIB من 15 حرفًا أو رقمًا بالضبط.", "date": "تاريخ إشعار التسليم مطلوب.", "operation": "المستودع وموقع الاستلام وسلسلة المستند مطلوبة.", "lines": "سطر مخزون واحد على الأقل مطلوب.", "stock": "المخزون وكمية أكبر من صفر مطلوبان.", "serialQuantity": "يجب أن تكون كمية السطر المتتبَّع بالرقم التسلسلي 1.", "expiry": "لا يمكن أن يسبق تاريخ انتهاء الصلاحية تاريخ التصنيع.", "incomplete": "يحتوي النموذج على حقول ناقصة أو غير صالحة.", "submit": "تعذر إنشاء استلام البضائع.", "activeSeriesRequired": "يجب اختيار سلسلة مستند نشطة لهذه العملية.", "assigneesRequired": "يجب تعيين مستخدم عملية واحد على الأقل للمهمة.", "qualityRulesCheckFailed": "تعذر التحقق من قواعد مراقبة الجودة.", "trackingPolicyLoadFailed": "تعذر تحميل سياسة تتبع المخزون لـ {{code}}.", "unitCodeMissing": "وحدة القياس غير محددة للمخزون {{code}}.", "lineLocationRequired": "يجب اختيار مستودع ورف هدف للسطر.", "serialFieldsConflict": "لا يمكن استخدام حقل الرقم التسلسلي المفرد وحقل الأرقام التسلسلية بالجملة معًا.", "serialBatchCountMismatch": "يجب أن يساوي عدد الأرقام التسلسلية بالجملة ({{count}}) كمية الاستلام ({{quantity}}).", "duplicateSerialInBatch": "لا يمكن استخدام نفس الرقم التسلسلي أكثر من مرة في قائمة الأرقام التسلسلية بالجملة.", "serialAlreadyUsed": "أحد الأرقام التسلسلية مستخدم بالفعل في قائمة الاستلام هذه.", "qualityRuleCheckFailedForStock": "تعذر التحقق من قاعدة الجودة لـ {{code}}." }
+    "validation": {
+      "customer": "المورد مطلوب.",
+      "receiptNo": "يجب أن يتكون رقم إشعار التسليم القياسي من 15 رقمًا بالضبط.",
+      "eReceiptNo": "يجب أن يتكون رقم إشعار التسليم الإلكتروني / GIB من 15 حرفًا أو رقمًا بالضبط.",
+      "date": "تاريخ إشعار التسليم مطلوب.",
+      "operation": "المستودع وموقع الاستلام وسلسلة المستند مطلوبة.",
+      "lines": "سطر مخزون واحد على الأقل مطلوب.",
+      "stock": "المخزون وكمية أكبر من صفر مطلوبان.",
+      "serialQuantity": "يجب أن تكون كمية السطر المتتبَّع بالرقم التسلسلي 1.",
+      "expiry": "لا يمكن أن يسبق تاريخ انتهاء الصلاحية تاريخ التصنيع.",
+      "incomplete": "يحتوي النموذج على حقول ناقصة أو غير صالحة.",
+      "submit": "تعذر إنشاء استلام البضائع.",
+      "activeSeriesRequired": "يجب اختيار سلسلة مستند نشطة لهذه العملية.",
+      "assigneesRequired": "يجب تعيين مستخدم عملية واحد على الأقل للمهمة.",
+      "qualityRulesCheckFailed": "تعذر التحقق من قواعد مراقبة الجودة.",
+      "trackingPolicyLoadFailed": "تعذر تحميل سياسة تتبع المخزون لـ {{code}}.",
+      "unitCodeMissing": "وحدة القياس غير محددة للمخزون {{code}}.",
+      "lineLocationRequired": "يجب اختيار مستودع ورف هدف للسطر.",
+      "serialFieldsConflict": "لا يمكن استخدام حقل الرقم التسلسلي المفرد وحقل الأرقام التسلسلية بالجملة معًا.",
+      "serialBatchCountMismatch": "يجب أن يساوي عدد الأرقام التسلسلية بالجملة ({{count}}) كمية الاستلام ({{quantity}}).",
+      "duplicateSerialInBatch": "لا يمكن استخدام نفس الرقم التسلسلي أكثر من مرة في قائمة الأرقام التسلسلية بالجملة.",
+      "serialAlreadyUsed": "أحد الأرقام التسلسلية مستخدم بالفعل في قائمة الاستلام هذه.",
+      "qualityRuleCheckFailedForStock": "تعذر التحقق من قاعدة الجودة لـ {{code}}."
+    }
   },
   "list": {
     "eyebrowParent": "INBOUND_OP",
@@ -361,10 +510,21 @@
     "title": "سجلات استلام البضائع",
     "description": "راجع عمليات الاستلام واطبع الملصقات حسب المستند أو السطر واعرض ملفات PDF.",
     "empty": "لم يتم العثور على سجلات استلام بضائع.",
-    "documentNo": "رقم المستند", "documentDate": "تاريخ المستند", "supplier": "المورد", "warehouse": "المستودع",
-    "processType": "نوع العملية", "status": "الحالة", "quality": "الجودة", "waybill": "إشعار التسليم",
-    "line": "السطر", "expected": "المتوقع", "received": "المستلم", "actions": "الإجراءات",
-    "showDetail": "عرض التفاصيل", "printAllLabels": "طباعة جميع الملصقات", "showAllLabelsPdf": "عرض جميع الملصقات بصيغة PDF",
+    "documentNo": "رقم المستند",
+    "documentDate": "تاريخ المستند",
+    "supplier": "المورد",
+    "warehouse": "المستودع",
+    "processType": "نوع العملية",
+    "status": "الحالة",
+    "quality": "الجودة",
+    "waybill": "إشعار التسليم",
+    "line": "السطر",
+    "expected": "المتوقع",
+    "received": "المستلم",
+    "actions": "الإجراءات",
+    "showDetail": "عرض التفاصيل",
+    "printAllLabels": "طباعة جميع الملصقات",
+    "showAllLabelsPdf": "عرض جميع الملصقات بصيغة PDF",
     "detailLoadError": "تعذر فتح تفاصيل الاستلام.",
     "detailLoading": "جارٍ تحميل تفاصيل استلام البضائع...",
     "detailLoadingShort": "جارٍ التحميل...",
@@ -415,10 +575,26 @@
       "retryFailed": "تعذر إعادة تشغيل إرسال ERP."
     },
     "lifecycleDialog": {
-      "approve": { "title": "الموافقة على استلام البضاعة", "description": "سيتم نقل السجل إلى الموافقة التشغيلية. يتم تطبيق نفس الطلب بأمان مرة واحدة فقط.", "submit": "موافقة" },
-      "shortClose": { "title": "إغلاق الكمية الناقصة جزئيًا", "description": "لن يتم توقع الكميات المفتوحة المحددة بعد الآن. يلزم تقديم سبب لأغراض إعداد التقارير.", "submit": "إغلاق جزئي" },
-      "putaway": { "title": "التخزين", "description": "يتم نقل المخزون المتاح في منطقة الاستلام إلى الرف المحدد؛ يتم تحديث أرصدة الرف والمستودع في نفس المعاملة.", "submit": "تخزين" },
-      "cancel": { "title": "إلغاء استلام البضاعة", "description": "يتم عكس حركات المخزون والجودة المرتبطة. إذا تم استخدام المخزون بالفعل، يمنع النظام الإلغاء بأمان.", "submit": "إلغاء" },
+      "approve": {
+        "title": "الموافقة على استلام البضاعة",
+        "description": "سيتم نقل السجل إلى الموافقة التشغيلية. يتم تطبيق نفس الطلب بأمان مرة واحدة فقط.",
+        "submit": "موافقة"
+      },
+      "shortClose": {
+        "title": "إغلاق الكمية الناقصة جزئيًا",
+        "description": "لن يتم توقع الكميات المفتوحة المحددة بعد الآن. يلزم تقديم سبب لأغراض إعداد التقارير.",
+        "submit": "إغلاق جزئي"
+      },
+      "putaway": {
+        "title": "التخزين",
+        "description": "يتم نقل المخزون المتاح في منطقة الاستلام إلى الرف المحدد؛ يتم تحديث أرصدة الرف والمستودع في نفس المعاملة.",
+        "submit": "تخزين"
+      },
+      "cancel": {
+        "title": "إلغاء استلام البضاعة",
+        "description": "يتم عكس حركات المخزون والجودة المرتبطة. إذا تم استخدام المخزون بالفعل، يمنع النظام الإلغاء بأمان.",
+        "submit": "إلغاء"
+      },
       "reasonRequired": "يلزم تقديم سبب وصفي لهذا الإجراء.",
       "noShortCloseQuantity": "لا توجد كمية مفتوحة متاحة للإغلاق الجزئي.",
       "selectAtLeastOneLine": "حدد سطر مخزون واحدًا على الأقل.",
@@ -476,7 +652,19 @@
       },
       "and": "و",
       "successToast": "تم إنشاء {{documents}}؛ تم توجيه إجمالي {{quantity}}.",
-      "createFailed": "تعذر إنشاء التوزيع."
+      "createFailed": "تعذر إنشاء التوزيع.",
+      "dialogTitle": "التوزيع بعد الاستلام",
+      "tabsHint": "تُدار الشروط في علامات تبويب منفصلة",
+      "tabKickerTransfer": "الشرط 1",
+      "tabKickerOutbound": "الشرط 2",
+      "tabTitleTransfer": "نقل بين المستودعات",
+      "tabTitleOutbound": "شحنة صادرة",
+      "transferPanelHint": "حدد سلسلة المستند والمستودع الهدف والرف لنقل المستودعات؛ أدخل كميات السطور في القائمة أدناه.",
+      "outboundPanelHint": "حدد سلسلة المستند وعميل الصادر للشحنة؛ أدخل كميات السطور في القائمة أدناه.",
+      "linesHeadSummary": "{{count}} سطر · علامة التبويب النشطة: {{tab}}",
+      "increaseQuantity": "زيادة الكمية",
+      "decreaseQuantity": "إنقاص الكمية",
+      "notePlaceholder": "ملاحظة اختيارية…"
     },
     "sourceDocuments": "المستندات المصدر",
     "qcRequired": "مراقبة الجودة مطلوبة",
@@ -504,19 +692,56 @@
     "yes": "نعم",
     "no": "لا",
     "noLineLabels": "لم يتم العثور على ملصقات صالحة لهذا السطر.",
-    "noReceiptLabels": "لم يتم العثور على ملصقات صالحة لهذا الاستلام.", "pdfReady": "{{count}} ملصق جاهز في معاينة PDF.",
-    "sentToPrinter": "تم إرسال {{count}} ملصق إلى نافذة الطباعة.", "outputError": "تعذر إنشاء مخرجات الملصقات.",
-    "replayed": "تم إرجاع النتيجة السابقة بأمان.", "operationCompleted": "اكتملت عملية الاستلام بنجاح.",
-    "printLabels": "طباعة الملصقات", "showPdf": "عرض PDF", "close": "إغلاق", "approve": "اعتماد",
-    "shortClose": "إغلاق الكمية الناقصة", "putaway": "تخزين ({{count}})", "route": "توزيع إلى النقل / خروج المستودع",
-    "cancel": "إلغاء", "approval": "الاعتماد", "putawayStatus": "التخزين", "erpPosting": "ترحيل ERP",
-    "task": "المهمة", "physicalReceipt": "الاستلام الفعلي", "receivedAt": "وقت الاستلام",
-    "receiptLines": "سطور الاستلام", "linesShown": "عرض {{visible}} من {{total}} سطر",
+    "noReceiptLabels": "لم يتم العثور على ملصقات صالحة لهذا الاستلام.",
+    "pdfReady": "{{count}} ملصق جاهز في معاينة PDF.",
+    "sentToPrinter": "تم إرسال {{count}} ملصق إلى نافذة الطباعة.",
+    "outputError": "تعذر إنشاء مخرجات الملصقات.",
+    "replayed": "تم إرجاع النتيجة السابقة بأمان.",
+    "operationCompleted": "اكتملت عملية الاستلام بنجاح.",
+    "printLabels": "طباعة الملصقات",
+    "showPdf": "عرض PDF",
+    "close": "إغلاق",
+    "approve": "اعتماد",
+    "shortClose": "إغلاق الكمية الناقصة",
+    "putaway": "تخزين ({{count}})",
+    "route": "توزيع إلى النقل / خروج المستودع",
+    "cancel": "إلغاء",
+    "approval": "الاعتماد",
+    "putawayStatus": "التخزين",
+    "erpPosting": "ترحيل ERP",
+    "task": "المهمة",
+    "physicalReceipt": "الاستلام الفعلي",
+    "receivedAt": "وقت الاستلام",
+    "receiptLines": "سطور الاستلام",
+    "linesShown": "عرض {{visible}} من {{total}} سطر",
     "lineSearchPlaceholder": "ابحث عن المخزون أو التكوين أو الحالة أو السطر...",
-    "lineSearchAria": "البحث في سطور الاستلام", "noMatchingLines": "لا توجد سطور استلام مطابقة لمعايير البحث.",
-    "stock": "المخزون", "yap": "التكوين", "accepted": "المقبول", "routed": "الموجّه", "remaining": "المتبقي",
-    "label": "الملصق", "printLineLabel": "طباعة ملصق السطر", "showLineLabelPdf": "عرض ملصق السطر بصيغة PDF",
-    "lineNumber": "السطر #{{number}}", "noStockName": "لا يوجد اسم للمخزون"
+    "lineSearchAria": "البحث في سطور الاستلام",
+    "noMatchingLines": "لا توجد سطور استلام مطابقة لمعايير البحث.",
+    "stock": "المخزون",
+    "yap": "التكوين",
+    "accepted": "المقبول",
+    "routed": "الموجّه",
+    "remaining": "المتبقي",
+    "label": "الملصق",
+    "printLineLabel": "طباعة ملصق السطر",
+    "showLineLabelPdf": "عرض ملصق السطر بصيغة PDF",
+    "lineNumber": "السطر #{{number}}",
+    "noStockName": "لا يوجد اسم للمخزون",
+    "sendToErp": "إرسال إلى ERP",
+    "erpReconcile": "مطابقة ERP / إعادة الإرسال",
+    "searchPlaceholder": "رقم المستند، المورد، الإشعار، المستودع، المنشئ، المعدّل…",
+    "searchTokenHint": "الكتابة تبحث فورًا. Enter يصفّي حسب الشارات فقط.",
+    "searchActiveTokens": "شارات البحث النشطة",
+    "searchRemoveToken": "إزالة شارة {{token}}",
+    "searchClearTokens": "مسح الشارات",
+    "facetFilters": "فلاتر",
+    "facetFiltersTitle": "فلاتر القائمة",
+    "facetStatus": "الحالة",
+    "facetQuality": "الجودة",
+    "facetErp": "ترحيل ERP",
+    "facetProcessType": "نوع العملية",
+    "facetAll": "الكل",
+    "facetClear": "مسح"
   },
   "tasks": {
     "title": "إدارة مهام استلام البضائع",
@@ -540,17 +765,37 @@
       "title": "مهمة استلام البضائع {{taskNo}}",
       "description": "سطور المهمة والتعيينات وعمليات الاستلام الفعلي.",
       "eyebrow": "مهمة استلام البضائع",
-      "info": { "status": "الحالة", "warehouse": "المستودع", "priority": "الأولوية", "planned": "المخطط", "started": "البدء" },
-      "table": { "stock": "المخزون", "received": "المستلم" },
-      "line": { "qualityRequired": "مراقبة الجودة مطلوبة", "directDispatch": "إشعار تسليم مباشر" },
-      "actions": { "acceptAssignment": "قبول التعيين", "startTask": "بدء المهمة", "saveAssignments": "حفظ التعيينات" },
+      "info": {
+        "status": "الحالة",
+        "warehouse": "المستودع",
+        "priority": "الأولوية",
+        "planned": "المخطط",
+        "started": "البدء"
+      },
+      "table": {
+        "stock": "المخزون",
+        "received": "المستلم"
+      },
+      "line": {
+        "qualityRequired": "مراقبة الجودة مطلوبة",
+        "directDispatch": "إشعار تسليم مباشر"
+      },
+      "actions": {
+        "acceptAssignment": "قبول التعيين",
+        "startTask": "بدء المهمة",
+        "saveAssignments": "حفظ التعيينات"
+      },
       "errors": {
         "detailFetchFailed": "تعذر تحميل تفاصيل المهمة.",
         "actionFailed": "تعذر إتمام الإجراء.",
         "selectAtLeastOneUser": "حدد مستخدمًا واحدًا على الأقل.",
         "assignmentsUpdateFailed": "تعذر تحديث التعيينات."
       },
-      "toast": { "accepted": "تم قبول المهمة.", "started": "تم بدء المهمة.", "assignmentsUpdated": "تم تحديث تعيينات المهمة." },
+      "toast": {
+        "accepted": "تم قبول المهمة.",
+        "started": "تم بدء المهمة.",
+        "assignmentsUpdated": "تم تحديث تعيينات المهمة."
+      },
       "receiptLabels": {
         "title": "الملصقات المُنشأة عند الاستلام",
         "hint": "تُنشأ تلقائيًا بعد كل حركة استلام مع الكمية الفعلية ومعلومات الرقم التسلسلي/الدفعة.",
@@ -599,10 +844,20 @@
   },
   "enums": {
     "operationStatus": {
-      "Draft": "مسودة", "Released": "تم الإصدار", "InProgress": "قيد التنفيذ", "PartiallyProcessed": "معالج جزئيًا",
-      "Processed": "تمت المعالجة", "Completed": "مكتمل", "Cancelled": "ملغى"
+      "Draft": "مسودة",
+      "Released": "تم الإصدار",
+      "InProgress": "قيد التنفيذ",
+      "PartiallyProcessed": "معالج جزئيًا",
+      "Processed": "تمت المعالجة",
+      "Completed": "مكتمل",
+      "Cancelled": "ملغى"
     },
-    "approvalStatus": { "NotRequired": "الاعتماد غير مطلوب", "Pending": "بانتظار الاعتماد", "Approved": "معتمد", "Rejected": "مرفوض" },
+    "approvalStatus": {
+      "NotRequired": "الاعتماد غير مطلوب",
+      "Pending": "بانتظار الاعتماد",
+      "Approved": "معتمد",
+      "Rejected": "مرفوض"
+    },
     "qualityStatus": {
       "NotRequired": "بدون مراقبة جودة",
       "Pending": "قيد الانتظار",
@@ -620,37 +875,78 @@
       "Failed": "تم رفض فحص الجودة"
     },
     "putawayStatus": {
-      "NotRequired": "التخزين غير مطلوب", "Pending": "بانتظار التخزين", "InProgress": "التخزين قيد التنفيذ",
-      "PartiallyCompleted": "تم التخزين جزئيًا", "Completed": "اكتمل التخزين"
+      "NotRequired": "التخزين غير مطلوب",
+      "Pending": "بانتظار التخزين",
+      "InProgress": "التخزين قيد التنفيذ",
+      "PartiallyCompleted": "تم التخزين جزئيًا",
+      "Completed": "اكتمل التخزين"
     },
     "erpStatus": {
-      "NotRequired": "ترحيل ERP غير مطلوب", "Pending": "بانتظار ترحيل ERP", "Processing": "جارٍ الترحيل إلى ERP",
-      "Succeeded": "تم الترحيل إلى ERP", "Failed": "فشل ترحيل ERP", "CommitUncertain": "نتيجة ERP غير مؤكدة"
+      "NotRequired": "ترحيل ERP غير مطلوب",
+      "Pending": "بانتظار ترحيل ERP",
+      "Processing": "جارٍ الترحيل إلى ERP",
+      "Succeeded": "تم الترحيل إلى ERP",
+      "Failed": "فشل ترحيل ERP",
+      "CommitUncertain": "نتيجة ERP غير مؤكدة"
     },
     "lineStatus": {
-      "Open": "مفتوح", "PartiallyReceived": "مستلم جزئيًا", "Received": "مستلم", "ShortClosed": "مُغلق بنقص", "Cancelled": "ملغى"
+      "Open": "مفتوح",
+      "PartiallyReceived": "مستلم جزئيًا",
+      "Received": "مستلم",
+      "ShortClosed": "مُغلق بنقص",
+      "Cancelled": "ملغى"
     },
     "taskStatus": {
-      "Draft": "مسودة", "Released": "تم الإصدار", "Assigned": "مُعيَّن", "InProgress": "قيد التنفيذ", "Paused": "متوقف مؤقتًا",
-      "PartiallyCompleted": "مكتمل جزئيًا", "Completed": "مكتمل", "Cancelled": "ملغى"
+      "Draft": "مسودة",
+      "Released": "تم الإصدار",
+      "Assigned": "مُعيَّن",
+      "InProgress": "قيد التنفيذ",
+      "Paused": "متوقف مؤقتًا",
+      "PartiallyCompleted": "مكتمل جزئيًا",
+      "Completed": "مكتمل",
+      "Cancelled": "ملغى"
     },
     "assignmentStatus": {
-      "Assigned": "مُعيَّن", "Accepted": "مقبول", "InProgress": "قيد التنفيذ", "Completed": "مكتمل",
-      "Unassigned": "غير مُعيَّن", "Rejected": "مرفوض"
+      "Assigned": "مُعيَّن",
+      "Accepted": "مقبول",
+      "InProgress": "قيد التنفيذ",
+      "Completed": "مكتمل",
+      "Unassigned": "غير مُعيَّن",
+      "Rejected": "مرفوض"
     },
     "labelBatchStatus": {
-      "Draft": "مسودة", "Generated": "تم الإنشاء", "PartiallyPrinted": "مطبوع جزئيًا", "Printed": "مطبوع",
-      "PartiallyConsumed": "مستهلك جزئيًا", "Consumed": "مستهلك", "Cancelled": "ملغى"
+      "Draft": "مسودة",
+      "Generated": "تم الإنشاء",
+      "PartiallyPrinted": "مطبوع جزئيًا",
+      "Printed": "مطبوع",
+      "PartiallyConsumed": "مستهلك جزئيًا",
+      "Consumed": "مستهلك",
+      "Cancelled": "ملغى"
     },
-    "labelStatus": { "Generated": "تم الإنشاء", "Printed": "مطبوع", "Assigned": "مُعيَّن", "Consumed": "مستهلك", "Void": "ملغى" },
+    "labelStatus": {
+      "Generated": "تم الإنشاء",
+      "Printed": "مطبوع",
+      "Assigned": "مُعيَّن",
+      "Consumed": "مستهلك",
+      "Void": "ملغى"
+    },
     "processType": {
-      "OrderBasedTask": "مهمة قائمة على طلب", "OrderlessTask": "مهمة بدون طلب",
-      "OrderBasedDirectReceipt": "استلام مباشر قائم على طلب", "OrderlessDirectReceipt": "استلام مباشر بدون طلب"
+      "OrderBasedTask": "مهمة قائمة على طلب",
+      "OrderlessTask": "مهمة بدون طلب",
+      "OrderBasedDirectReceipt": "استلام مباشر قائم على طلب",
+      "OrderlessDirectReceipt": "استلام مباشر بدون طلب"
     },
-    "initiationMode": { "OrderBasedTask": "مهمة قائمة على طلب", "UnplannedTask": "مهمة غير مخططة", "DirectReceipt": "استلام مباشر" },
+    "initiationMode": {
+      "OrderBasedTask": "مهمة قائمة على طلب",
+      "UnplannedTask": "مهمة غير مخططة",
+      "DirectReceipt": "استلام مباشر"
+    },
     "executionMode": {
-      "Manual": "يدوي", "BarcodeScan": "مسح الباركود", "PreGeneratedLabel": "ملصق مُنشأ مسبقًا",
-      "SupplierLabel": "ملصق المورد", "Import": "استيراد"
+      "Manual": "يدوي",
+      "BarcodeScan": "مسح الباركود",
+      "PreGeneratedLabel": "ملصق مُنشأ مسبقًا",
+      "SupplierLabel": "ملصق المورد",
+      "Import": "استيراد"
     }
   },
   "hub": {
@@ -658,18 +954,48 @@
     "title": "مركز عمليات استلام البضائع",
     "description": "ابدأ عمليات الاستلام القائمة على الطلب وغير القائمة عليه والمباشرة ضمن نفس قواعد النطاق؛ وتتبّع كل خطوة من التعيين وحتى الجودة وترحيل المخزون.",
     "phases": {
-      "start": { "title": "بدء الاستلام", "description": "اختر نقطة البداية الصحيحة حسب مصدر المستند وطريقة التنفيذ." },
-      "execute": { "title": "تنفيذ التعيين", "description": "حدد المسؤولين، واقبل الأعمال المعيّنة، وأدر التقدم الفعلي." },
-      "manage": { "title": "المراقبة والإدارة", "description": "استخدم السجلات والسياسات لتتبع كامل وضبط قابل للتخصيص للعملية." }
+      "start": {
+        "title": "بدء الاستلام",
+        "description": "اختر نقطة البداية الصحيحة حسب مصدر المستند وطريقة التنفيذ."
+      },
+      "execute": {
+        "title": "تنفيذ التعيين",
+        "description": "حدد المسؤولين، واقبل الأعمال المعيّنة، وأدر التقدم الفعلي."
+      },
+      "manage": {
+        "title": "المراقبة والإدارة",
+        "description": "استخدم السجلات والسياسات لتتبع كامل وضبط قابل للتخصيص للعملية."
+      }
     },
     "cards": {
-      "ordered": { "title": "مهمة قائمة على طلب", "description": "حدد طلبات شراء Netsis، واحجز الكميات المفتوحة، وأنشئ مهام الاستلام." },
-      "orderless": { "title": "مهمة بدون طلب", "description": "أنشئ مهمة استلام مخططة بسطور إشعار تسليم ومخزون، دون ارتباط بطلب." },
-      "direct": { "title": "استلام بضائع مباشر", "description": "رحّل استلامًا بلا مهمة بشكل ذري مع الجودة والحجر والحركة المخزنية." },
-      "tasks": { "title": "إدارة المهام", "description": "عيّن المهام المفتوحة لمستخدم واحد أو أكثر وتتبّع تقدمها." },
-      "assigned": { "title": "مهامي المعيّنة", "description": "اقبل مهام استلام البضائع المعيّنة لك، وابدأها، وأكملها." },
-      "records": { "title": "سجلات استلام البضائع", "description": "راجع كل أنواع الاستلام في جدول البيانات المشترك من جانب الخادم." },
-      "settings": { "title": "إعدادات العملية", "description": "أدر سياسات الاستلام الزائد/الناقص وتعليق الجودة والاعتماد وترحيل ERP." }
+      "ordered": {
+        "title": "مهمة قائمة على طلب",
+        "description": "حدد طلبات شراء Netsis، واحجز الكميات المفتوحة، وأنشئ مهام الاستلام."
+      },
+      "orderless": {
+        "title": "مهمة بدون طلب",
+        "description": "أنشئ مهمة استلام مخططة بسطور إشعار تسليم ومخزون، دون ارتباط بطلب."
+      },
+      "direct": {
+        "title": "استلام بضائع مباشر",
+        "description": "رحّل استلامًا بلا مهمة بشكل ذري مع الجودة والحجر والحركة المخزنية."
+      },
+      "tasks": {
+        "title": "إدارة المهام",
+        "description": "عيّن المهام المفتوحة لمستخدم واحد أو أكثر وتتبّع تقدمها."
+      },
+      "assigned": {
+        "title": "مهامي المعيّنة",
+        "description": "اقبل مهام استلام البضائع المعيّنة لك، وابدأها، وأكملها."
+      },
+      "records": {
+        "title": "سجلات استلام البضائع",
+        "description": "راجع كل أنواع الاستلام في جدول البيانات المشترك من جانب الخادم."
+      },
+      "settings": {
+        "title": "إعدادات العملية",
+        "description": "أدر سياسات الاستلام الزائد/الناقص وتعليق الجودة والاعتماد وترحيل ERP."
+      }
     }
   }
 }

@@ -1135,3 +1135,203 @@ html:not(.skin-premium) .wms-ops-list :is(.wms-ops-table-h-scroll, .wms-ops-tabl
 html:not(.skin-premium) .wms-ops-list :is(.wms-ops-table-h-scroll, .wms-ops-table-wrap, .wms-ops-data-grid-wrap)::-webkit-scrollbar-corner {
   background: color-mix(in oklab, var(--wms-ops-field-bg) 86%, #020617) !important;
 }
+
+/* ?? Goods receipt review (terminal DNA) ?? */
+html:not(.skin-premium) .wms-ops-form .wms-ops-gr-review__list,
+html:not(.skin-premium) .wms-ops-form .wms-ops-gr-review__hero-card,
+html:not(.skin-premium) .wms-ops-form .wms-ops-gr-review__metric-card,
+html:not(.skin-premium) .wms-ops-form .wms-ops-gr-review__hero-icon,
+html:not(.skin-premium) .wms-ops-form .wms-ops-gr-review__metric-card-icon {
+  border-radius: 0 !important;
+}
+
+html:not(.skin-premium) .wms-ops-form .wms-ops-gr-review__list {
+  background:
+    linear-gradient(rgba(6, 182, 212, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(6, 182, 212, 0.035) 1px, transparent 1px),
+    color-mix(in oklab, var(--wms-ops-card-bg) 94%, transparent);
+  background-size: 16px 16px, 16px 16px, auto;
+  border-color: color-mix(in oklab, var(--wms-ops-accent) 28%, var(--wms-ops-card-border));
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--wms-ops-accent) 8%, transparent);
+}
+
+html:not(.skin-premium) .wms-ops-form .wms-ops-gr-review__hero {
+  background:
+    linear-gradient(180deg, color-mix(in oklab, var(--wms-ops-accent) 7%, transparent), transparent 72%);
+}
+
+html:not(.skin-premium) .wms-ops-form .wms-ops-gr-review__hero-card {
+  background: color-mix(in oklab, var(--wms-ops-field-bg) 90%, transparent);
+  border-color: color-mix(in oklab, var(--wms-ops-accent) 26%, var(--wms-ops-card-border));
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+html:not(.skin-premium) .wms-ops-form .wms-ops-gr-review__hero-title,
+html:not(.skin-premium) .wms-ops-form .wms-ops-gr-review__hero-label,
+html:not(.skin-premium) .wms-ops-form .wms-ops-gr-review__section-title,
+html:not(.skin-premium) .wms-ops-form .wms-ops-gr-review__metric-card-label,
+html:not(.skin-premium) .wms-ops-form .wms-ops-gr-review__metric-card-value,
+html:not(.skin-premium) .wms-ops-form .wms-ops-gr-review__meta-label,
+html:not(.skin-premium) .wms-ops-form .wms-ops-gr-review__meta-value {
+  font-family: var(--wms-terminal-mono);
+}
+
+html:not(.skin-premium) .wms-ops-form .wms-ops-gr-review__hero-title {
+  font-size: 1.15rem;
+  letter-spacing: -0.02em;
+}
+
+html:not(.skin-premium) .wms-ops-form .wms-ops-gr-review__hero-label,
+html:not(.skin-premium) .wms-ops-form .wms-ops-gr-review__section-title,
+html:not(.skin-premium) .wms-ops-form .wms-ops-gr-review__metric-card-label {
+  letter-spacing: 0.14em;
+}
+
+html:not(.skin-premium) .wms-ops-form .wms-ops-gr-review__metric-card {
+  min-height: 8.25rem;
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, white 4%, transparent);
+  transition: border-color 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+}
+
+html:not(.skin-premium) .wms-ops-form .wms-ops-gr-review__metric-card--interactive:hover,
+html:not(.skin-premium) .wms-ops-form .wms-ops-gr-review__metric-card--interactive:focus-visible {
+  transform: none;
+}
+
+html:not(.skin-premium) .wms-ops-form .wms-ops-gr-review__metric-card--lines {
+  border: 2px solid #22d3ee;
+  background:
+    linear-gradient(90deg, color-mix(in oklab, #22d3ee 16%, transparent), transparent 42%),
+    color-mix(in oklab, var(--wms-ops-field-bg) 92%, #083344);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, #22d3ee 18%, transparent);
+}
+
+html:not(.skin-premium) .wms-ops-form .wms-ops-gr-review__metric-card--available {
+  border: 2px solid #34d399;
+  background:
+    linear-gradient(90deg, color-mix(in oklab, #34d399 15%, transparent), transparent 42%),
+    color-mix(in oklab, var(--wms-ops-field-bg) 92%, #064e3b);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, #34d399 16%, transparent);
+}
+
+html:not(.skin-premium) .wms-ops-form .wms-ops-gr-review__metric-card--quality {
+  border: 2px solid #f59e0b;
+  background:
+    linear-gradient(90deg, color-mix(in oklab, #f59e0b 18%, transparent), transparent 42%),
+    color-mix(in oklab, var(--wms-ops-field-bg) 92%, #451a03);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, #f59e0b 20%, transparent);
+}
+
+html:not(.skin-premium) .wms-ops-form .wms-ops-gr-review__metric-card--quality-none {
+  border: 2px solid #64748b;
+  background:
+    linear-gradient(90deg, color-mix(in oklab, #64748b 14%, transparent), transparent 42%),
+    color-mix(in oklab, var(--wms-ops-field-bg) 92%, #1e293b);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, #94a3b8 14%, transparent);
+}
+
+html:not(.skin-premium) .wms-ops-form .wms-ops-gr-review__metric-card--lines.wms-ops-gr-review__metric-card--interactive:hover,
+html:not(.skin-premium) .wms-ops-form .wms-ops-gr-review__metric-card--lines.wms-ops-gr-review__metric-card--interactive:focus-visible {
+  border-color: #67e8f9;
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, #22d3ee 55%, transparent),
+    0 0 18px color-mix(in oklab, #22d3ee 28%, transparent);
+}
+
+html:not(.skin-premium) .wms-ops-form .wms-ops-gr-review__metric-card--quality.wms-ops-gr-review__metric-card--interactive:hover,
+html:not(.skin-premium) .wms-ops-form .wms-ops-gr-review__metric-card--quality.wms-ops-gr-review__metric-card--interactive:focus-visible {
+  border-color: #fbbf24;
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, #f59e0b 60%, transparent),
+    0 0 18px color-mix(in oklab, #f59e0b 30%, transparent);
+}
+
+html:not(.skin-premium) .wms-ops-form .wms-ops-gr-review__metric-card-icon {
+  border-radius: 0 !important;
+}
+
+html:not(.skin-premium) .wms-ops-form .wms-ops-gr-review__metric-card-hint {
+  font-family: var(--wms-terminal-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 0.64rem;
+}
+
+/* Review stock / quality dialogs */
+html:not(.skin-premium) .wms-ops-lookup-dialog .wms-ops-gr-review__quality-dialog-body {
+  padding: 0.85rem 1.1rem 1rem;
+  font-family: var(--wms-terminal-mono);
+}
+
+html:not(.skin-premium) .wms-ops-lookup-dialog .wms-ops-gr-review__quality-dialog-meta {
+  font-family: var(--wms-terminal-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.68rem;
+  border: 1px solid color-mix(in oklab, var(--wms-ops-accent) 18%, transparent);
+  background: color-mix(in oklab, var(--wms-ops-accent) 6%, transparent);
+  padding: 0.45rem 0.65rem;
+}
+
+html:not(.skin-premium) .wms-ops-lookup-dialog .wms-ops-gr-review__quality-dialog-list li {
+  border-radius: 0 !important;
+  border-color: color-mix(in oklab, var(--wms-ops-accent) 26%, var(--wms-ops-card-border));
+  background: color-mix(in oklab, var(--wms-ops-field-bg) 88%, transparent);
+  box-shadow: inset 2px 0 0 color-mix(in oklab, var(--wms-ops-accent) 70%, transparent);
+}
+
+html:not(.skin-premium) .wms-ops-lookup-dialog .wms-ops-gr-review__quality-dialog-body--receipt .wms-ops-gr-review__quality-dialog-list li {
+  border-color: color-mix(in oklab, #22d3ee 28%, var(--wms-ops-card-border));
+  background: color-mix(in oklab, #083344 22%, var(--wms-ops-field-bg));
+  box-shadow: inset 2px 0 0 #22d3ee;
+}
+
+html:not(.skin-premium) .wms-ops-lookup-dialog .wms-ops-gr-review__quality-dialog-body--quality .wms-ops-gr-review__quality-dialog-list li {
+  border-color: color-mix(in oklab, #f59e0b 30%, var(--wms-ops-card-border));
+  background: color-mix(in oklab, #451a03 24%, var(--wms-ops-field-bg));
+  box-shadow: inset 2px 0 0 #f59e0b;
+}
+
+html:not(.skin-premium) .wms-ops-lookup-dialog .wms-ops-gr-review__quality-dialog-code,
+html:not(.skin-premium) .wms-ops-lookup-dialog .wms-ops-gr-review__quality-dialog-qty {
+  font-family: var(--wms-terminal-mono);
+  letter-spacing: 0.02em;
+}
+
+html:not(.skin-premium) .wms-ops-lookup-dialog .wms-ops-gr-review__quality-dialog-badge {
+  border-radius: 0 !important;
+  font-family: var(--wms-terminal-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+html:not(.skin-premium) .wms-ops-lookup-dialog .wms-ops-gr-review__quality-dialog-empty {
+  font-family: var(--wms-terminal-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px dashed color-mix(in oklab, var(--wms-ops-accent) 28%, transparent);
+  border-radius: 0;
+  padding: 1rem;
+}
+
+/* Multi-value hover tooltip (orders / projects) */
+html:not(.skin-premium) .wms-ops-gr-review__multi-tooltip {
+  border-radius: 0 !important;
+  font-family: var(--wms-terminal-mono) !important;
+  background:
+    linear-gradient(rgba(6, 182, 212, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(6, 182, 212, 0.05) 1px, transparent 1px),
+    color-mix(in oklab, #020617 94%, #083344) !important;
+  background-size: 14px 14px, 14px 14px, auto !important;
+  border-color: color-mix(in oklab, var(--wms-ops-accent) 42%, transparent) !important;
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--wms-ops-accent) 16%, transparent),
+    0 0 28px color-mix(in oklab, var(--wms-ops-accent) 16%, transparent) !important;
+}
+
+html:not(.skin-premium) .wms-ops-gr-review__multi-tooltip .sticky {
+  border-radius: 0 !important;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}

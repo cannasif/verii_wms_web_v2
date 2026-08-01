@@ -1,35 +1,17 @@
 import { formatProjectNumber } from '@/lib/project-format';
+import { appendFoldedSearchToken, foldTurkishSearch } from '@/lib/turkish-search';
 import type { OpenOrderLine } from '../types/goods-receipt.types';
 
 /** Küçük/büyük + Türkçe karakter katlama: "is" ↔ "İŞ", "genel" ↔ "GENEL". */
 export function normalizeDirectLineSearchToken(value: string): string {
-  return value
-    .trim()
-    .toLocaleLowerCase('tr-TR')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/ı/g, 'i')
-    .replace(/ş/g, 's')
-    .replace(/ğ/g, 'g')
-    .replace(/ü/g, 'u')
-    .replace(/ö/g, 'o')
-    .replace(/ç/g, 'c');
+  return foldTurkishSearch(value);
 }
 
 export function appendDirectLineSearchToken(
   tokens: string[],
   raw: string,
 ): string[] {
-  const normalized = normalizeDirectLineSearchToken(raw);
-  if (!normalized) return tokens;
-  if (
-    tokens.some(
-      (token) => normalizeDirectLineSearchToken(token) === normalized,
-    )
-  ) {
-    return tokens;
-  }
-  return [...tokens, raw.trim()];
+  return appendFoldedSearchToken(tokens, raw);
 }
 
 export function buildDirectOrderLineSearchHaystack(

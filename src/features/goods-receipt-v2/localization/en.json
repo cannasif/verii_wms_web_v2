@@ -1,14 +1,37 @@
 {
   "title": "Goods Receipt from Orders",
   "subtitle": "Select Netsis orders, validate quantities, and reserve a receiving task safely.",
-  "steps": ["Supplier and orders", "Lines and quantities", "Warehouse settings", "Confirmation"],
-  "customer": "Supplier Account", "selectCustomer": "Select supplier account...", "searchCustomer": "Search supplier code / name…", "customerEmpty": "No supplier account found.", "selectedCustomer": "Selected supplier account",
-  "loadOrders": "Load open orders", "orders": "Open orders",
-  "loadLines": "Load selected order lines", "noOrders": "No open orders were found for this supplier.", "noLines": "No available lines were found.",
-  "warehouse": "Target warehouse", "location": "Receiving location", "series": "Document series", "documentDate": "Document date",
-  "plannedArrival": "Planned arrival", "priority": "Priority", "labelStrategy": "Label strategy", "description": "Description",
-  "create": "Create task and reserve", "created": "Goods receipt task created", "assignedSelf": "The task will be assigned to the signed-in user.",
-  "quantity": "Reserved quantity", "available": "Available", "back": "Back", "continue": "Continue",
+  "steps": [
+    "Supplier and orders",
+    "Lines and quantities",
+    "Warehouse settings",
+    "Confirmation"
+  ],
+  "customer": "Supplier Account",
+  "selectCustomer": "Select supplier account...",
+  "searchCustomer": "Search supplier code / name…",
+  "customerEmpty": "No supplier account found.",
+  "selectedCustomer": "Selected supplier account",
+  "loadOrders": "Load open orders",
+  "orders": "Open orders",
+  "loadLines": "Load selected order lines",
+  "noOrders": "No open orders were found for this supplier.",
+  "noLines": "No available lines were found.",
+  "warehouse": "Target warehouse",
+  "location": "Receiving location",
+  "series": "Document series",
+  "documentDate": "Document date",
+  "plannedArrival": "Planned arrival",
+  "priority": "Priority",
+  "labelStrategy": "Label strategy",
+  "description": "Description",
+  "create": "Create task and reserve",
+  "created": "Goods receipt task created",
+  "assignedSelf": "The task will be assigned to the signed-in user.",
+  "quantity": "Reserved quantity",
+  "available": "Available",
+  "back": "Back",
+  "continue": "Continue",
   "configurationHint": "Select a target warehouse, receiving location, and document series to continue.",
   "createFlow": {
     "subtitle": "Manage order selection with quantity, serial and shelf planning on one screen; review and create in the final step.",
@@ -22,7 +45,10 @@
     "orderedBadge": "Ordered",
     "stepsAriaLabel": "Creation steps",
     "orderSelection": "Order selection",
-    "steps": { "0": "Orders and line plan", "1": "Review and create" },
+    "steps": {
+      "0": "Orders and line plan",
+      "1": "Review and create"
+    },
     "orderNo": "Order No",
     "orderNoHelpAria": "About fetching by order number",
     "orderNoTooltip": "The order's account code is read from Netsis; the matching supplier is selected automatically and the order balance opens below.",
@@ -38,7 +64,7 @@
     "warehouseFilter": "Warehouse filter",
     "allWarehouses": "All warehouses",
     "lineSearch": {
-      "label": "Search lines",
+      "label": "Search order",
       "placeholder": "Order no, stock, project, warehouse… press Enter to add a chip",
       "hint": "Press Enter to add a chip. The list filters only by chips.",
       "activeTokens": "Active search chips",
@@ -145,6 +171,7 @@
       "documentSeries": "Document series",
       "waybill": "Dispatch note",
       "projectAndOrderDate": "Project / order date",
+      "orderDate": "Order date",
       "summaryTitle": "Review summary",
       "linesAndQuantity": "Lines / quantity",
       "orderAvailableQuantity": "Order available quantity",
@@ -157,7 +184,37 @@
       "viewQualityList": "{{count}} lines · View list",
       "multipleOrders": "More than one order",
       "multipleOrdersCount": "{{count}} orders",
-      "ordersTooltipHint": "Scroll to see all order numbers"
+      "ordersTooltipHint": "Scroll to see all order numbers",
+      "multipleProjects": "More than one project",
+      "multipleProjectsCount": "{{count}} projects",
+      "projectsTooltipHint": "Scroll to see all project codes",
+      "metricLinesHint": "View stocks",
+      "metricQualityLabel": "Quality",
+      "metricQualityNone": "None",
+      "metricQualityHint": "View quality list"
+    },
+    "submit": {
+      "receiptEyebrow": "Goods receipt / dispatch",
+      "receiptTitle": "Creating dispatch note",
+      "receiptSubtitle": "{{name}} · processing {{count}} lines",
+      "qualityEyebrow": "Quality routing",
+      "qualityTitle": "Sending to quality",
+      "qualitySubtitle": "{{name}} · routing {{count}} lines to quality",
+      "documentLabel": "Dispatch no",
+      "errorEyebrow": "Operation failed",
+      "errorTitle": "Could not complete submit",
+      "errorReturning": "Returning to review…",
+      "errorFallback": "An unexpected error occurred.",
+      "receiptLog0": "Preparing dispatch lines",
+      "receiptLog1": "Validating stock rows",
+      "receiptLog2": "Writing warehouse movements",
+      "receiptLog3": "Posting dispatch to ERP",
+      "receiptLog4": "Allocating document number",
+      "qualityLog0": "Splitting quality lines",
+      "qualityLog1": "Applying quality rules",
+      "qualityLog2": "Posting to quality list",
+      "qualityLog3": "Creating quality tasks",
+      "qualityLog4": "Completing routing"
     },
     "qualityDialog": {
       "title": "Stocks going to quality",
@@ -180,7 +237,12 @@
       "subtitleForSupplier": "For {{name}} ",
       "qualityPendingSubtitle": "a dispatch note will be created after quality approval for items sent to quality.",
       "receiptDoneSubtitle": "dispatch note creation completed.",
-      "documentNo": "Document No",
+      "documentNo": "Dispatch no",
+      "copyDocument": "Copy dispatch number",
+      "documentCopied": "Dispatch number copied",
+      "documentCopyFailed": "Dispatch number could not be copied",
+      "statusCompleted": "Completed",
+      "statusAwaitingQuality": "Awaiting quality",
       "line": "Lines",
       "quantity": "Quantity",
       "status": "Status",
@@ -299,29 +361,91 @@
     }
   },
   "manual": {
-    "eyebrow": "Goods Receipt Operation", "directTitle": "Direct Goods Receipt", "orderlessTitle": "Orderless Receipt Task",
+    "eyebrow": "Goods Receipt Operation",
+    "directTitle": "Direct Goods Receipt",
+    "orderlessTitle": "Orderless Receipt Task",
     "directSubtitle": "Validate the document and post receipt, quality and stock movement in a controlled flow.",
-    "orderlessSubtitle": "Create a planned receipt task without an order link.", "currentStep": "Step",
-    "steps": { "document": "Document", "operation": "Operation", "lines": "Stock Lines", "review": "Review" },
-    "document": { "title": "Document and Supplier", "description": "Validate the dispatch type, number and supplier behind the receipt." },
-    "operation": { "title": "Warehouse and Process", "description": "Choose receiving location, series, priority and label method." },
-    "lines": { "title": "Stocks to Receive", "description": "Enter stock, configuration, quantity and traceability by line." },
-    "review": { "title": "Final Review", "description": "Verify document and quantity summary before posting." },
-    "customer": "Supplier", "documentDate": "Dispatch / Receipt Date", "receiptNo": "Receipt Number", "isElectronic": "e-Dispatch",
-    "receiptHint": "Enter exactly 15 alphanumeric characters.", "eReceiptHint": "Enter exactly 15 alphanumeric characters for the e-dispatch/GIB number.",
-    "validNumber": "Document number format is valid.", "plannedArrival": "Planned Arrival", "warehouse": "Target Warehouse",
-    "location": "Receiving / Staging Location", "series": "WMS Document Series", "priority": "Priority", "labelStrategy": "Label Strategy",
-    "executionMode": "Receiving Method", "stock": "Stock", "yap": "Configuration Code", "quantity": "Quantity", "unit": "Unit",
-    "lot": "Lot", "serial": "Serial", "manufacturingDate": "Manufacturing Date", "expirationDate": "Expiration Date",
-    "scannedBarcode": "Scanned Barcode", "addLine": "Add Line", "actions": "Actions", "removeLine": "Remove line",
-    "noLines": "No stock lines have been added.", "description": "Description", "documentType": "Dispatch Type",
-    "normalReceipt": "Standard Dispatch", "eReceipt": "e-Dispatch", "lineCount": "Line Count", "totalQuantity": "Total Quantity",
-    "operationType": "Operation Type", "direct": "Direct Receipt", "orderless": "Orderless Task", "postReceipt": "Post Receipt",
-    "createTask": "Create Task", "success": "Goods receipt was created successfully.", "resultDirect": "Goods Receipt Posted",
-    "resultOrderless": "Receipt Task Created", "linesText": "lines", "newRecord": "New Record",
-    "defaultTargetLocation": "Default target shelf", "selectActiveLocation": "Select active shelf",
-    "unitLabelWithValue": "Unit: {{unit}}", "unitUndefined": "Unit undefined", "selectStockFirst": "Select a stock first",
-    "options": { "noLabel": "No Label", "preGenerate": "Pre-generate", "supplierLabel": "Supplier Label", "generateOnReceipt": "Generate on Receipt", "manual": "Manual", "barcode": "Barcode Scan", "preLabel": "Pre-generated Label" },
+    "orderlessSubtitle": "Create a planned receipt task without an order link.",
+    "currentStep": "Step",
+    "steps": {
+      "document": "Document",
+      "operation": "Operation",
+      "lines": "Stock Lines",
+      "review": "Review"
+    },
+    "document": {
+      "title": "Document and Supplier",
+      "description": "Validate the dispatch type, number and supplier behind the receipt."
+    },
+    "operation": {
+      "title": "Warehouse and Process",
+      "description": "Choose receiving location, series, priority and label method."
+    },
+    "lines": {
+      "title": "Stocks to Receive",
+      "description": "Enter stock, configuration, quantity and traceability by line."
+    },
+    "review": {
+      "title": "Final Review",
+      "description": "Verify document and quantity summary before posting."
+    },
+    "customer": "Supplier",
+    "documentDate": "Dispatch / Receipt Date",
+    "receiptNo": "Receipt Number",
+    "isElectronic": "e-Dispatch",
+    "receiptHint": "Enter exactly 15 alphanumeric characters.",
+    "eReceiptHint": "Enter exactly 15 alphanumeric characters for the e-dispatch/GIB number.",
+    "validNumber": "Document number format is valid.",
+    "plannedArrival": "Planned Arrival",
+    "warehouse": "Target Warehouse",
+    "location": "Receiving / Staging Location",
+    "series": "WMS Document Series",
+    "priority": "Priority",
+    "labelStrategy": "Label Strategy",
+    "executionMode": "Receiving Method",
+    "stock": "Stock",
+    "yap": "Configuration Code",
+    "quantity": "Quantity",
+    "unit": "Unit",
+    "lot": "Lot",
+    "serial": "Serial",
+    "manufacturingDate": "Manufacturing Date",
+    "expirationDate": "Expiration Date",
+    "scannedBarcode": "Scanned Barcode",
+    "addLine": "Add Line",
+    "actions": "Actions",
+    "removeLine": "Remove line",
+    "noLines": "No stock lines have been added.",
+    "description": "Description",
+    "documentType": "Dispatch Type",
+    "normalReceipt": "Standard Dispatch",
+    "eReceipt": "e-Dispatch",
+    "lineCount": "Line Count",
+    "totalQuantity": "Total Quantity",
+    "operationType": "Operation Type",
+    "direct": "Direct Receipt",
+    "orderless": "Orderless Task",
+    "postReceipt": "Post Receipt",
+    "createTask": "Create Task",
+    "success": "Goods receipt was created successfully.",
+    "resultDirect": "Goods Receipt Posted",
+    "resultOrderless": "Receipt Task Created",
+    "linesText": "lines",
+    "newRecord": "New Record",
+    "defaultTargetLocation": "Default target shelf",
+    "selectActiveLocation": "Select active shelf",
+    "unitLabelWithValue": "Unit: {{unit}}",
+    "unitUndefined": "Unit undefined",
+    "selectStockFirst": "Select a stock first",
+    "options": {
+      "noLabel": "No Label",
+      "preGenerate": "Pre-generate",
+      "supplierLabel": "Supplier Label",
+      "generateOnReceipt": "Generate on Receipt",
+      "manual": "Manual",
+      "barcode": "Barcode Scan",
+      "preLabel": "Pre-generated Label"
+    },
     "bulkSerial": {
       "title": "Bulk serial and barcode scanning",
       "hint": "If quantity is 13, scan 13 different serials one by one with the reader. Each serial is sent to the API as a separate trackable line with quantity 1.",
@@ -336,7 +460,9 @@
       "hintReceiving": "Only Receiving/Staging can be selected while awaiting quality decision.",
       "remainingLabel": "Remaining:"
     },
-    "table": { "warehouseLocation": "Warehouse / Shelf" },
+    "table": {
+      "warehouseLocation": "Warehouse / Shelf"
+    },
     "result": {
       "eyebrow": "After goods receipt",
       "qualitySentTitle": "Sent to quality",
@@ -353,7 +479,30 @@
       "labelsPrintFailed": "Labels could not be printed.",
       "printTitleSuffix": "receipt labels"
     },
-    "validation": { "customer": "Supplier is required.", "receiptNo": "Standard dispatch receipt number must contain exactly 15 digits.", "eReceiptNo": "e-Dispatch / GIB number must be exactly 15 alphanumeric characters.", "date": "Dispatch date is required.", "operation": "Warehouse, receiving location and document series are required.", "lines": "At least one stock line is required.", "stock": "Stock and a quantity greater than zero are required.", "serialQuantity": "A serial-tracked line must have quantity 1.", "expiry": "Expiration date cannot precede manufacturing date.", "incomplete": "The form contains missing or invalid fields.", "submit": "Goods receipt could not be created.", "activeSeriesRequired": "An active document series must be selected for this operation.", "assigneesRequired": "At least one operation user must be assigned to the task.", "qualityRulesCheckFailed": "Quality control rules could not be verified.", "trackingPolicyLoadFailed": "Stock tracking policy could not be loaded for {{code}}.", "unitCodeMissing": "The unit of measure is not defined for stock {{code}}.", "lineLocationRequired": "A target warehouse and shelf must be selected for the line.", "serialFieldsConflict": "The single serial field and the bulk serial field cannot be used together.", "serialBatchCountMismatch": "The bulk serial count ({{count}}) must equal the receipt quantity ({{quantity}}).", "duplicateSerialInBatch": "The same serial cannot be used more than once in the bulk serial list.", "serialAlreadyUsed": "One of the serials has already been used in this receipt list.", "qualityRuleCheckFailedForStock": "The quality rule could not be verified for {{code}}." }
+    "validation": {
+      "customer": "Supplier is required.",
+      "receiptNo": "Standard dispatch receipt number must contain exactly 15 digits.",
+      "eReceiptNo": "e-Dispatch / GIB number must be exactly 15 alphanumeric characters.",
+      "date": "Dispatch date is required.",
+      "operation": "Warehouse, receiving location and document series are required.",
+      "lines": "At least one stock line is required.",
+      "stock": "Stock and a quantity greater than zero are required.",
+      "serialQuantity": "A serial-tracked line must have quantity 1.",
+      "expiry": "Expiration date cannot precede manufacturing date.",
+      "incomplete": "The form contains missing or invalid fields.",
+      "submit": "Goods receipt could not be created.",
+      "activeSeriesRequired": "An active document series must be selected for this operation.",
+      "assigneesRequired": "At least one operation user must be assigned to the task.",
+      "qualityRulesCheckFailed": "Quality control rules could not be verified.",
+      "trackingPolicyLoadFailed": "Stock tracking policy could not be loaded for {{code}}.",
+      "unitCodeMissing": "The unit of measure is not defined for stock {{code}}.",
+      "lineLocationRequired": "A target warehouse and shelf must be selected for the line.",
+      "serialFieldsConflict": "The single serial field and the bulk serial field cannot be used together.",
+      "serialBatchCountMismatch": "The bulk serial count ({{count}}) must equal the receipt quantity ({{quantity}}).",
+      "duplicateSerialInBatch": "The same serial cannot be used more than once in the bulk serial list.",
+      "serialAlreadyUsed": "One of the serials has already been used in this receipt list.",
+      "qualityRuleCheckFailedForStock": "The quality rule could not be verified for {{code}}."
+    }
   },
   "list": {
     "eyebrowParent": "INBOUND_OP",
@@ -374,6 +523,21 @@
     "received": "Received",
     "actions": "Actions",
     "showDetail": "Show details",
+    "sendToErp": "Send to ERP",
+    "erpReconcile": "ERP Reconcile / Resend",
+    "searchPlaceholder": "Document no, supplier, waybill, warehouse, created by, updated by…",
+    "searchTokenHint": "Typing searches immediately. Press Enter to filter only by chips.",
+    "searchActiveTokens": "Active search chips",
+    "searchRemoveToken": "Remove {{token}} chip",
+    "searchClearTokens": "Clear chips",
+    "facetFilters": "Filters",
+    "facetFiltersTitle": "List filters",
+    "facetStatus": "Status",
+    "facetQuality": "Quality",
+    "facetErp": "ERP posting",
+    "facetProcessType": "Process type",
+    "facetAll": "All",
+    "facetClear": "Clear",
     "printAllLabels": "Print all labels",
     "showAllLabelsPdf": "Show all labels as PDF",
     "detailLoadError": "Goods receipt details could not be opened.",
@@ -426,10 +590,26 @@
       "retryFailed": "The ERP submission could not be restarted."
     },
     "lifecycleDialog": {
-      "approve": { "title": "Approve Goods Receipt", "description": "The record will be moved to operational approval. The same request is applied safely only once.", "submit": "Approve" },
-      "shortClose": { "title": "Short Close Missing Quantity", "description": "The selected open quantities will no longer be expected. A reason is required for reporting.", "submit": "Short Close" },
-      "putaway": { "title": "Putaway", "description": "Available stock in the receiving area is transferred to the selected shelf; shelf and warehouse balances are updated in the same transaction.", "submit": "Putaway" },
-      "cancel": { "title": "Cancel Goods Receipt", "description": "Linked stock and quality movements are reversed. If stock has already been used, the system safely blocks cancellation.", "submit": "Cancel" },
+      "approve": {
+        "title": "Approve Goods Receipt",
+        "description": "The record will be moved to operational approval. The same request is applied safely only once.",
+        "submit": "Approve"
+      },
+      "shortClose": {
+        "title": "Short Close Missing Quantity",
+        "description": "The selected open quantities will no longer be expected. A reason is required for reporting.",
+        "submit": "Short Close"
+      },
+      "putaway": {
+        "title": "Putaway",
+        "description": "Available stock in the receiving area is transferred to the selected shelf; shelf and warehouse balances are updated in the same transaction.",
+        "submit": "Putaway"
+      },
+      "cancel": {
+        "title": "Cancel Goods Receipt",
+        "description": "Linked stock and quality movements are reversed. If stock has already been used, the system safely blocks cancellation.",
+        "submit": "Cancel"
+      },
       "reasonRequired": "A descriptive reason is required for this action.",
       "noShortCloseQuantity": "There is no open quantity available to short close.",
       "selectAtLeastOneLine": "Select at least one stock line.",
@@ -487,7 +667,19 @@
       },
       "and": "and",
       "successToast": "{{documents}} created; a total of {{quantity}} was routed.",
-      "createFailed": "The distribution could not be created."
+      "createFailed": "The distribution could not be created.",
+      "dialogTitle": "Post-receipt distribution",
+      "tabsHint": "Conditions are managed in separate tabs",
+      "tabKickerTransfer": "Condition 1",
+      "tabKickerOutbound": "Condition 2",
+      "tabTitleTransfer": "Warehouse Transfer",
+      "tabTitleOutbound": "Outbound Shipment",
+      "transferPanelHint": "Select the document series, target warehouse and shelf for the warehouse-to-warehouse transfer; enter line quantities in the list below.",
+      "outboundPanelHint": "Select the document series and outbound customer for the outbound shipment; enter line quantities in the list below.",
+      "linesHeadSummary": "{{count}} line(s) · active tab: {{tab}}",
+      "increaseQuantity": "Increase quantity",
+      "decreaseQuantity": "Decrease quantity",
+      "notePlaceholder": "Optional note…"
     },
     "sourceDocuments": "Source Documents",
     "qcRequired": "Quality Control Required",
@@ -573,17 +765,37 @@
       "title": "Goods Receipt Task {{taskNo}}",
       "description": "Task lines, assignments and physical receipt operations.",
       "eyebrow": "Goods Receipt Task",
-      "info": { "status": "Status", "warehouse": "Warehouse", "priority": "Priority", "planned": "Planned", "started": "Started" },
-      "table": { "stock": "Stock", "received": "Received" },
-      "line": { "qualityRequired": "Quality control required", "directDispatch": "Direct dispatch" },
-      "actions": { "acceptAssignment": "Accept Assignment", "startTask": "Start Task", "saveAssignments": "Save Assignments" },
+      "info": {
+        "status": "Status",
+        "warehouse": "Warehouse",
+        "priority": "Priority",
+        "planned": "Planned",
+        "started": "Started"
+      },
+      "table": {
+        "stock": "Stock",
+        "received": "Received"
+      },
+      "line": {
+        "qualityRequired": "Quality control required",
+        "directDispatch": "Direct dispatch"
+      },
+      "actions": {
+        "acceptAssignment": "Accept Assignment",
+        "startTask": "Start Task",
+        "saveAssignments": "Save Assignments"
+      },
       "errors": {
         "detailFetchFailed": "Task details could not be loaded.",
         "actionFailed": "The action could not be completed.",
         "selectAtLeastOneUser": "Select at least one user.",
         "assignmentsUpdateFailed": "Assignments could not be updated."
       },
-      "toast": { "accepted": "Task accepted.", "started": "Task started.", "assignmentsUpdated": "Task assignments updated." },
+      "toast": {
+        "accepted": "Task accepted.",
+        "started": "Task started.",
+        "assignmentsUpdated": "Task assignments updated."
+      },
       "receiptLabels": {
         "title": "Labels generated at receipt",
         "hint": "Automatically created after each receipt movement with actual quantity and serial/lot info.",
@@ -632,10 +844,20 @@
   },
   "enums": {
     "operationStatus": {
-      "Draft": "Draft", "Released": "Released", "InProgress": "In Progress", "PartiallyProcessed": "Partially Processed",
-      "Processed": "Processed", "Completed": "Completed", "Cancelled": "Cancelled"
+      "Draft": "Draft",
+      "Released": "Released",
+      "InProgress": "In Progress",
+      "PartiallyProcessed": "Partially Processed",
+      "Processed": "Processed",
+      "Completed": "Completed",
+      "Cancelled": "Cancelled"
     },
-    "approvalStatus": { "NotRequired": "Approval Not Required", "Pending": "Pending Approval", "Approved": "Approved", "Rejected": "Rejected" },
+    "approvalStatus": {
+      "NotRequired": "Approval Not Required",
+      "Pending": "Pending Approval",
+      "Approved": "Approved",
+      "Rejected": "Rejected"
+    },
     "qualityStatus": {
       "NotRequired": "No QC",
       "Pending": "Pending",
@@ -653,37 +875,78 @@
       "Failed": "Quality check was rejected"
     },
     "putawayStatus": {
-      "NotRequired": "Putaway Not Required", "Pending": "Pending Putaway", "InProgress": "Putaway In Progress",
-      "PartiallyCompleted": "Partially Put Away", "Completed": "Putaway Completed"
+      "NotRequired": "Putaway Not Required",
+      "Pending": "Pending Putaway",
+      "InProgress": "Putaway In Progress",
+      "PartiallyCompleted": "Partially Put Away",
+      "Completed": "Putaway Completed"
     },
     "erpStatus": {
-      "NotRequired": "ERP Posting Not Required", "Pending": "Pending ERP Posting", "Processing": "Posting to ERP",
-      "Succeeded": "Posted to ERP", "Failed": "ERP Posting Failed", "CommitUncertain": "ERP Result Uncertain"
+      "NotRequired": "ERP Posting Not Required",
+      "Pending": "Pending ERP Posting",
+      "Processing": "Posting to ERP",
+      "Succeeded": "Posted to ERP",
+      "Failed": "ERP Posting Failed",
+      "CommitUncertain": "ERP Result Uncertain"
     },
     "lineStatus": {
-      "Open": "Open", "PartiallyReceived": "Partially Received", "Received": "Received", "ShortClosed": "Short Closed", "Cancelled": "Cancelled"
+      "Open": "Open",
+      "PartiallyReceived": "Partially Received",
+      "Received": "Received",
+      "ShortClosed": "Short Closed",
+      "Cancelled": "Cancelled"
     },
     "taskStatus": {
-      "Draft": "Draft", "Released": "Released", "Assigned": "Assigned", "InProgress": "In Progress", "Paused": "Paused",
-      "PartiallyCompleted": "Partially Completed", "Completed": "Completed", "Cancelled": "Cancelled"
+      "Draft": "Draft",
+      "Released": "Released",
+      "Assigned": "Assigned",
+      "InProgress": "In Progress",
+      "Paused": "Paused",
+      "PartiallyCompleted": "Partially Completed",
+      "Completed": "Completed",
+      "Cancelled": "Cancelled"
     },
     "assignmentStatus": {
-      "Assigned": "Assigned", "Accepted": "Accepted", "InProgress": "In Progress", "Completed": "Completed",
-      "Unassigned": "Unassigned", "Rejected": "Rejected"
+      "Assigned": "Assigned",
+      "Accepted": "Accepted",
+      "InProgress": "In Progress",
+      "Completed": "Completed",
+      "Unassigned": "Unassigned",
+      "Rejected": "Rejected"
     },
     "labelBatchStatus": {
-      "Draft": "Draft", "Generated": "Generated", "PartiallyPrinted": "Partially Printed", "Printed": "Printed",
-      "PartiallyConsumed": "Partially Consumed", "Consumed": "Consumed", "Cancelled": "Cancelled"
+      "Draft": "Draft",
+      "Generated": "Generated",
+      "PartiallyPrinted": "Partially Printed",
+      "Printed": "Printed",
+      "PartiallyConsumed": "Partially Consumed",
+      "Consumed": "Consumed",
+      "Cancelled": "Cancelled"
     },
-    "labelStatus": { "Generated": "Generated", "Printed": "Printed", "Assigned": "Assigned", "Consumed": "Consumed", "Void": "Voided" },
+    "labelStatus": {
+      "Generated": "Generated",
+      "Printed": "Printed",
+      "Assigned": "Assigned",
+      "Consumed": "Consumed",
+      "Void": "Voided"
+    },
     "processType": {
-      "OrderBasedTask": "Order-based Task", "OrderlessTask": "Orderless Task",
-      "OrderBasedDirectReceipt": "Order-based Direct Receipt", "OrderlessDirectReceipt": "Orderless Direct Receipt"
+      "OrderBasedTask": "Order-based Task",
+      "OrderlessTask": "Orderless Task",
+      "OrderBasedDirectReceipt": "Order-based Direct Receipt",
+      "OrderlessDirectReceipt": "Orderless Direct Receipt"
     },
-    "initiationMode": { "OrderBasedTask": "Order-based Task", "UnplannedTask": "Unplanned Task", "DirectReceipt": "Direct Receipt" },
+    "initiationMode": {
+      "OrderBasedTask": "Order-based Task",
+      "UnplannedTask": "Unplanned Task",
+      "DirectReceipt": "Direct Receipt"
+    },
     "executionMode": {
-      "Manual": "Manual", "BarcodeScan": "Barcode Scan", "PreGeneratedLabel": "Pre-generated Label",
-      "SupplierLabel": "Supplier Label", "Import": "Import"
+      "Manual": "Manual",
+      "BarcodeScan": "Barcode Scan",
+      "PreGeneratedLabel": "Pre-generated Label",
+      "SupplierLabel": "Supplier Label",
+      "Import": "Import"
     }
   },
   "hub": {
@@ -691,18 +954,48 @@
     "title": "Goods Receipt Process Center",
     "description": "Start order-based, orderless and direct receipts under the same domain rules; track every step from assignment through quality and inventory posting.",
     "phases": {
-      "start": { "title": "Start Receipt", "description": "Choose the correct starting point for the document source and execution mode." },
-      "execute": { "title": "Execute Assignment", "description": "Define assignees, accept assigned work and manage physical progress." },
-      "manage": { "title": "Monitor and Manage", "description": "Use records and policies for complete traceability and configurable process control." }
+      "start": {
+        "title": "Start Receipt",
+        "description": "Choose the correct starting point for the document source and execution mode."
+      },
+      "execute": {
+        "title": "Execute Assignment",
+        "description": "Define assignees, accept assigned work and manage physical progress."
+      },
+      "manage": {
+        "title": "Monitor and Manage",
+        "description": "Use records and policies for complete traceability and configurable process control."
+      }
     },
     "cards": {
-      "ordered": { "title": "Order-Based Task", "description": "Select Netsis purchase orders, reserve open quantities and create receiving tasks." },
-      "orderless": { "title": "Orderless Task", "description": "Create a planned receipt task with dispatch and stock lines, without an order link." },
-      "direct": { "title": "Direct Goods Receipt", "description": "Post a taskless receipt atomically with quality, quarantine and inventory movement." },
-      "tasks": { "title": "Task Management", "description": "Assign open tasks to one or more users and track their progress." },
-      "assigned": { "title": "My Assigned Tasks", "description": "Accept, start and complete goods receipt tasks assigned to you." },
-      "records": { "title": "Goods Receipt Records", "description": "Review every receipt type in the shared server-side data grid." },
-      "settings": { "title": "Process Settings", "description": "Manage over/under receipt, quality hold, approval and ERP posting policies." }
+      "ordered": {
+        "title": "Order-Based Task",
+        "description": "Select Netsis purchase orders, reserve open quantities and create receiving tasks."
+      },
+      "orderless": {
+        "title": "Orderless Task",
+        "description": "Create a planned receipt task with dispatch and stock lines, without an order link."
+      },
+      "direct": {
+        "title": "Direct Goods Receipt",
+        "description": "Post a taskless receipt atomically with quality, quarantine and inventory movement."
+      },
+      "tasks": {
+        "title": "Task Management",
+        "description": "Assign open tasks to one or more users and track their progress."
+      },
+      "assigned": {
+        "title": "My Assigned Tasks",
+        "description": "Accept, start and complete goods receipt tasks assigned to you."
+      },
+      "records": {
+        "title": "Goods Receipt Records",
+        "description": "Review every receipt type in the shared server-side data grid."
+      },
+      "settings": {
+        "title": "Process Settings",
+        "description": "Manage over/under receipt, quality hold, approval and ERP posting policies."
+      }
     }
   }
 }

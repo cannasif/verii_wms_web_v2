@@ -1,14 +1,37 @@
 {
   "title": "Wareneingang aus Bestellungen",
   "subtitle": "Wählen Sie Netsis-Bestellungen aus, prüfen Sie die Mengen und reservieren Sie einen Wareneingangsauftrag sicher.",
-  "steps": ["Lieferant und Bestellungen", "Positionen und Mengen", "Lagereinstellungen", "Bestätigung"],
-  "customer": "Lieferantenkonto", "selectCustomer": "Lieferantenkonto auswählen...", "searchCustomer": "Lieferantencode / -name suchen…", "customerEmpty": "Kein Lieferantenkonto gefunden.", "selectedCustomer": "Ausgewähltes Lieferantenkonto",
-  "loadOrders": "Offene Bestellungen laden", "orders": "Offene Bestellungen",
-  "loadLines": "Positionen der ausgewählten Bestellung laden", "noOrders": "Für diesen Lieferanten wurden keine offenen Bestellungen gefunden.", "noLines": "Es wurden keine verfügbaren Positionen gefunden.",
-  "warehouse": "Ziellager", "location": "Wareneingangsbereich", "series": "Belegserie", "documentDate": "Belegdatum",
-  "plannedArrival": "Geplante Ankunft", "priority": "Priorität", "labelStrategy": "Etikettenstrategie", "description": "Beschreibung",
-  "create": "Auftrag erstellen und reservieren", "created": "Wareneingangsauftrag erstellt", "assignedSelf": "Der Auftrag wird dem angemeldeten Benutzer zugewiesen.",
-  "quantity": "Reservierte Menge", "available": "Verfügbar", "back": "Zurück", "continue": "Weiter",
+  "steps": [
+    "Lieferant und Bestellungen",
+    "Positionen und Mengen",
+    "Lagereinstellungen",
+    "Bestätigung"
+  ],
+  "customer": "Lieferantenkonto",
+  "selectCustomer": "Lieferantenkonto auswählen...",
+  "searchCustomer": "Lieferantencode / -name suchen…",
+  "customerEmpty": "Kein Lieferantenkonto gefunden.",
+  "selectedCustomer": "Ausgewähltes Lieferantenkonto",
+  "loadOrders": "Offene Bestellungen laden",
+  "orders": "Offene Bestellungen",
+  "loadLines": "Positionen der ausgewählten Bestellung laden",
+  "noOrders": "Für diesen Lieferanten wurden keine offenen Bestellungen gefunden.",
+  "noLines": "Es wurden keine verfügbaren Positionen gefunden.",
+  "warehouse": "Ziellager",
+  "location": "Wareneingangsbereich",
+  "series": "Belegserie",
+  "documentDate": "Belegdatum",
+  "plannedArrival": "Geplante Ankunft",
+  "priority": "Priorität",
+  "labelStrategy": "Etikettenstrategie",
+  "description": "Beschreibung",
+  "create": "Auftrag erstellen und reservieren",
+  "created": "Wareneingangsauftrag erstellt",
+  "assignedSelf": "Der Auftrag wird dem angemeldeten Benutzer zugewiesen.",
+  "quantity": "Reservierte Menge",
+  "available": "Verfügbar",
+  "back": "Zurück",
+  "continue": "Weiter",
   "configurationHint": "Wählen Sie ein Ziellager, einen Wareneingangsbereich und eine Belegserie, um fortzufahren.",
   "createFlow": {
     "subtitle": "Verwalten Sie die Bestellauswahl mit Mengen-, Serien- und Regalplanung auf einem Bildschirm; prüfen und erstellen Sie im letzten Schritt.",
@@ -22,7 +45,10 @@
     "orderedBadge": "Bestellt",
     "stepsAriaLabel": "Erstellungsschritte",
     "orderSelection": "Bestellauswahl",
-    "steps": { "0": "Bestellungen und Positionsplan", "1": "Prüfen und erstellen" },
+    "steps": {
+      "0": "Bestellungen und Positionsplan",
+      "1": "Prüfen und erstellen"
+    },
     "orderNo": "Bestellnummer",
     "orderNoHelpAria": "Über das Abrufen anhand der Bestellnummer",
     "orderNoTooltip": "Der Kontocode der Bestellung wird aus Netsis gelesen; der passende Lieferant wird automatisch ausgewählt und der Bestellsaldo öffnet sich unten.",
@@ -157,7 +183,15 @@
       "viewQualityList": "{{count}} Positionen · Liste anzeigen",
       "multipleOrders": "Mehr als eine Bestellung",
       "multipleOrdersCount": "{{count}} Bestellungen",
-      "ordersTooltipHint": "Scrollen Sie, um alle Bestellnummern zu sehen"
+      "ordersTooltipHint": "Scrollen Sie, um alle Bestellnummern zu sehen",
+      "orderDate": "Bestelldatum",
+      "multipleProjects": "Mehr als ein Projekt",
+      "multipleProjectsCount": "{{count}} Projekte",
+      "projectsTooltipHint": "Scrollen, um alle Projektcodes zu sehen",
+      "metricLinesHint": "Bestände anzeigen",
+      "metricQualityLabel": "Qualität",
+      "metricQualityNone": "Keine",
+      "metricQualityHint": "Qualitätsliste anzeigen"
     },
     "qualityDialog": {
       "title": "Bestände, die zur Qualitätskontrolle gehen",
@@ -205,7 +239,12 @@
       "noQualityLines": "In diesem Auftrag sind keine Positionen mit Qualitätskontrollpflicht vorhanden.",
       "createdTasks": "Erstellte Aufträge",
       "taskMeta": "Lager #{{warehouseId}} · {{lineCount}} Positionen · {{quantity}}",
-      "goToTaskManagement": "Zur Auftragsverwaltung"
+      "goToTaskManagement": "Zur Auftragsverwaltung",
+      "copyDocument": "Lieferscheinnummer kopieren",
+      "documentCopied": "Lieferscheinnummer kopiert",
+      "documentCopyFailed": "Lieferscheinnummer konnte nicht kopiert werden",
+      "statusCompleted": "Abgeschlossen",
+      "statusAwaitingQuality": "Wartet auf Qualität"
     },
     "validation": {
       "eReceiptNo": "Die E-Lieferschein-/GIB-Nummer muss genau 15 druckbare Zeichen einschließlich Symbolen umfassen.",
@@ -296,32 +335,117 @@
       "quantityAria": "Menge",
       "empty": "Noch keine Los-/Seriennummernzeilen vorhanden. Automatisch vorschlagen oder eine einzelne Zeile hinzufügen.",
       "done": "Fertig"
+    },
+    "submit": {
+      "receiptEyebrow": "Wareneingang / Lieferschein",
+      "receiptTitle": "Lieferschein wird erstellt",
+      "receiptSubtitle": "{{name}} · {{count}} Positionen werden verarbeitet",
+      "qualityEyebrow": "Qualitätsweiterleitung",
+      "qualityTitle": "Wird an Qualität gesendet",
+      "qualitySubtitle": "{{name}} · {{count}} Positionen werden an Qualität weitergeleitet",
+      "documentLabel": "Lieferschein-Nr.",
+      "errorEyebrow": "Vorgang fehlgeschlagen",
+      "errorTitle": "Übermittlung konnte nicht abgeschlossen werden",
+      "errorReturning": "Zurück zur Übersicht…",
+      "errorFallback": "Ein unerwarteter Fehler ist aufgetreten.",
+      "receiptLog0": "Lieferscheinpositionen werden vorbereitet",
+      "receiptLog1": "Bestandszeilen werden validiert",
+      "receiptLog2": "Lagerbewegungen werden geschrieben",
+      "receiptLog3": "Lieferschein wird an ERP gebucht",
+      "receiptLog4": "Belegnummer wird vergeben",
+      "qualityLog0": "Qualitätspositionen werden aufgeteilt",
+      "qualityLog1": "Qualitätsregeln werden angewendet",
+      "qualityLog2": "Wird in Qualitätsliste gebucht",
+      "qualityLog3": "Qualitätsaufträge werden erstellt",
+      "qualityLog4": "Weiterleitung wird abgeschlossen"
     }
   },
   "manual": {
-    "eyebrow": "Wareneingangsvorgang", "directTitle": "Direkter Wareneingang", "orderlessTitle": "Wareneingangsauftrag ohne Bestellung",
+    "eyebrow": "Wareneingangsvorgang",
+    "directTitle": "Direkter Wareneingang",
+    "orderlessTitle": "Wareneingangsauftrag ohne Bestellung",
     "directSubtitle": "Prüfen Sie den Beleg und buchen Sie Wareneingang, Qualität und Bestandsbewegung in einem kontrollierten Ablauf.",
-    "orderlessSubtitle": "Erstellen Sie einen geplanten Wareneingangsauftrag ohne Bestellverknüpfung.", "currentStep": "Schritt",
-    "steps": { "document": "Beleg", "operation": "Vorgang", "lines": "Bestandspositionen", "review": "Prüfung" },
-    "document": { "title": "Beleg und Lieferant", "description": "Prüfen Sie Lieferscheintyp, -nummer und den Lieferanten hinter dem Wareneingang." },
-    "operation": { "title": "Lager und Prozess", "description": "Wählen Sie Wareneingangsbereich, Serie, Priorität und Etikettenmethode." },
-    "lines": { "title": "Zu empfangende Bestände", "description": "Geben Sie Bestand, Konfiguration, Menge und Rückverfolgbarkeit pro Position ein." },
-    "review": { "title": "Abschließende Prüfung", "description": "Prüfen Sie Beleg- und Mengenzusammenfassung vor der Buchung." },
-    "customer": "Lieferant", "documentDate": "Lieferschein-/Eingangsdatum", "receiptNo": "Belegnummer", "isElectronic": "E-Lieferschein",
-    "receiptHint": "Geben Sie genau 15 alphanumerische Zeichen ein.", "eReceiptHint": "Geben Sie für die E-Lieferschein-/GIB-Nummer genau 15 alphanumerische Zeichen ein.",
-    "validNumber": "Das Belegnummernformat ist gültig.", "plannedArrival": "Geplante Ankunft", "warehouse": "Ziellager",
-    "location": "Wareneingangs-/Staging-Bereich", "series": "WMS-Belegserie", "priority": "Priorität", "labelStrategy": "Etikettenstrategie",
-    "executionMode": "Wareneingangsmethode", "stock": "Bestand", "yap": "Konfigurationscode", "quantity": "Menge", "unit": "Einheit",
-    "lot": "Los", "serial": "Seriennummer", "manufacturingDate": "Herstellungsdatum", "expirationDate": "Verfallsdatum",
-    "scannedBarcode": "Gescannter Barcode", "addLine": "Position hinzufügen", "actions": "Aktionen", "removeLine": "Position entfernen",
-    "noLines": "Es wurden keine Bestandspositionen hinzugefügt.", "description": "Beschreibung", "documentType": "Lieferscheintyp",
-    "normalReceipt": "Standardlieferschein", "eReceipt": "E-Lieferschein", "lineCount": "Positionsanzahl", "totalQuantity": "Gesamtmenge",
-    "operationType": "Vorgangstyp", "direct": "Direkter Wareneingang", "orderless": "Auftrag ohne Bestellung", "postReceipt": "Wareneingang buchen",
-    "createTask": "Auftrag erstellen", "success": "Der Wareneingang wurde erfolgreich erstellt.", "resultDirect": "Wareneingang gebucht",
-    "resultOrderless": "Wareneingangsauftrag erstellt", "linesText": "Positionen", "newRecord": "Neuer Datensatz",
-    "defaultTargetLocation": "Standard-Ziellagerplatz", "selectActiveLocation": "Aktiven Lagerplatz auswählen",
-    "unitLabelWithValue": "Einheit: {{unit}}", "unitUndefined": "Einheit nicht definiert", "selectStockFirst": "Zuerst einen Bestand auswählen",
-    "options": { "noLabel": "Kein Etikett", "preGenerate": "Vorab erzeugen", "supplierLabel": "Lieferantenetikett", "generateOnReceipt": "Bei Wareneingang erzeugen", "manual": "Manuell", "barcode": "Barcode-Scan", "preLabel": "Vorgeneriertes Etikett" },
+    "orderlessSubtitle": "Erstellen Sie einen geplanten Wareneingangsauftrag ohne Bestellverknüpfung.",
+    "currentStep": "Schritt",
+    "steps": {
+      "document": "Beleg",
+      "operation": "Vorgang",
+      "lines": "Bestandspositionen",
+      "review": "Prüfung"
+    },
+    "document": {
+      "title": "Beleg und Lieferant",
+      "description": "Prüfen Sie Lieferscheintyp, -nummer und den Lieferanten hinter dem Wareneingang."
+    },
+    "operation": {
+      "title": "Lager und Prozess",
+      "description": "Wählen Sie Wareneingangsbereich, Serie, Priorität und Etikettenmethode."
+    },
+    "lines": {
+      "title": "Zu empfangende Bestände",
+      "description": "Geben Sie Bestand, Konfiguration, Menge und Rückverfolgbarkeit pro Position ein."
+    },
+    "review": {
+      "title": "Abschließende Prüfung",
+      "description": "Prüfen Sie Beleg- und Mengenzusammenfassung vor der Buchung."
+    },
+    "customer": "Lieferant",
+    "documentDate": "Lieferschein-/Eingangsdatum",
+    "receiptNo": "Belegnummer",
+    "isElectronic": "E-Lieferschein",
+    "receiptHint": "Geben Sie genau 15 alphanumerische Zeichen ein.",
+    "eReceiptHint": "Geben Sie für die E-Lieferschein-/GIB-Nummer genau 15 alphanumerische Zeichen ein.",
+    "validNumber": "Das Belegnummernformat ist gültig.",
+    "plannedArrival": "Geplante Ankunft",
+    "warehouse": "Ziellager",
+    "location": "Wareneingangs-/Staging-Bereich",
+    "series": "WMS-Belegserie",
+    "priority": "Priorität",
+    "labelStrategy": "Etikettenstrategie",
+    "executionMode": "Wareneingangsmethode",
+    "stock": "Bestand",
+    "yap": "Konfigurationscode",
+    "quantity": "Menge",
+    "unit": "Einheit",
+    "lot": "Los",
+    "serial": "Seriennummer",
+    "manufacturingDate": "Herstellungsdatum",
+    "expirationDate": "Verfallsdatum",
+    "scannedBarcode": "Gescannter Barcode",
+    "addLine": "Position hinzufügen",
+    "actions": "Aktionen",
+    "removeLine": "Position entfernen",
+    "noLines": "Es wurden keine Bestandspositionen hinzugefügt.",
+    "description": "Beschreibung",
+    "documentType": "Lieferscheintyp",
+    "normalReceipt": "Standardlieferschein",
+    "eReceipt": "E-Lieferschein",
+    "lineCount": "Positionsanzahl",
+    "totalQuantity": "Gesamtmenge",
+    "operationType": "Vorgangstyp",
+    "direct": "Direkter Wareneingang",
+    "orderless": "Auftrag ohne Bestellung",
+    "postReceipt": "Wareneingang buchen",
+    "createTask": "Auftrag erstellen",
+    "success": "Der Wareneingang wurde erfolgreich erstellt.",
+    "resultDirect": "Wareneingang gebucht",
+    "resultOrderless": "Wareneingangsauftrag erstellt",
+    "linesText": "Positionen",
+    "newRecord": "Neuer Datensatz",
+    "defaultTargetLocation": "Standard-Ziellagerplatz",
+    "selectActiveLocation": "Aktiven Lagerplatz auswählen",
+    "unitLabelWithValue": "Einheit: {{unit}}",
+    "unitUndefined": "Einheit nicht definiert",
+    "selectStockFirst": "Zuerst einen Bestand auswählen",
+    "options": {
+      "noLabel": "Kein Etikett",
+      "preGenerate": "Vorab erzeugen",
+      "supplierLabel": "Lieferantenetikett",
+      "generateOnReceipt": "Bei Wareneingang erzeugen",
+      "manual": "Manuell",
+      "barcode": "Barcode-Scan",
+      "preLabel": "Vorgeneriertes Etikett"
+    },
     "bulkSerial": {
       "title": "Massen-Seriennummern- und Barcode-Scan",
       "hint": "Beträgt die Menge 13, scannen Sie mit dem Lesegerät nacheinander 13 verschiedene Seriennummern. Jede Seriennummer wird als separate rückverfolgbare Position mit Menge 1 an die API gesendet.",
@@ -336,7 +460,9 @@
       "hintReceiving": "Während die Qualitätsentscheidung aussteht, kann nur Wareneingang/Staging ausgewählt werden.",
       "remainingLabel": "Verbleibend:"
     },
-    "table": { "warehouseLocation": "Lager / Lagerplatz" },
+    "table": {
+      "warehouseLocation": "Lager / Lagerplatz"
+    },
     "result": {
       "eyebrow": "Nach dem Wareneingang",
       "qualitySentTitle": "An Qualität gesendet",
@@ -353,7 +479,30 @@
       "labelsPrintFailed": "Die Etiketten konnten nicht gedruckt werden.",
       "printTitleSuffix": "Wareneingangsetiketten"
     },
-    "validation": { "customer": "Der Lieferant ist erforderlich.", "receiptNo": "Die Standardlieferschein-Belegnummer muss genau 15 Ziffern enthalten.", "eReceiptNo": "Die E-Lieferschein-/GIB-Nummer muss genau 15 alphanumerische Zeichen umfassen.", "date": "Das Lieferscheindatum ist erforderlich.", "operation": "Lager, Wareneingangsbereich und Belegserie sind erforderlich.", "lines": "Mindestens eine Bestandsposition ist erforderlich.", "stock": "Bestand und eine Menge größer als null sind erforderlich.", "serialQuantity": "Eine seriennummernverfolgte Position muss die Menge 1 haben.", "expiry": "Das Verfallsdatum darf nicht vor dem Herstellungsdatum liegen.", "incomplete": "Das Formular enthält fehlende oder ungültige Felder.", "submit": "Der Wareneingang konnte nicht erstellt werden.", "activeSeriesRequired": "Für diesen Vorgang muss eine aktive Belegserie ausgewählt werden.", "assigneesRequired": "Dem Auftrag muss mindestens ein Vorgangsbenutzer zugewiesen werden.", "qualityRulesCheckFailed": "Die Qualitätskontrollregeln konnten nicht überprüft werden.", "trackingPolicyLoadFailed": "Die Bestandsverfolgungsrichtlinie für {{code}} konnte nicht geladen werden.", "unitCodeMissing": "Für den Bestand {{code}} ist keine Maßeinheit definiert.", "lineLocationRequired": "Für die Position müssen ein Ziellager und ein Lagerplatz ausgewählt werden.", "serialFieldsConflict": "Das Einzelseriennummernfeld und das Massen-Seriennummernfeld können nicht gemeinsam verwendet werden.", "serialBatchCountMismatch": "Die Anzahl der Massen-Seriennummern ({{count}}) muss der Wareneingangsmenge ({{quantity}}) entsprechen.", "duplicateSerialInBatch": "Dieselbe Seriennummer darf in der Massen-Seriennummernliste nicht mehrfach verwendet werden.", "serialAlreadyUsed": "Eine der Seriennummern wurde in dieser Wareneingangsliste bereits verwendet.", "qualityRuleCheckFailedForStock": "Die Qualitätsregel konnte für {{code}} nicht überprüft werden." }
+    "validation": {
+      "customer": "Der Lieferant ist erforderlich.",
+      "receiptNo": "Die Standardlieferschein-Belegnummer muss genau 15 Ziffern enthalten.",
+      "eReceiptNo": "Die E-Lieferschein-/GIB-Nummer muss genau 15 alphanumerische Zeichen umfassen.",
+      "date": "Das Lieferscheindatum ist erforderlich.",
+      "operation": "Lager, Wareneingangsbereich und Belegserie sind erforderlich.",
+      "lines": "Mindestens eine Bestandsposition ist erforderlich.",
+      "stock": "Bestand und eine Menge größer als null sind erforderlich.",
+      "serialQuantity": "Eine seriennummernverfolgte Position muss die Menge 1 haben.",
+      "expiry": "Das Verfallsdatum darf nicht vor dem Herstellungsdatum liegen.",
+      "incomplete": "Das Formular enthält fehlende oder ungültige Felder.",
+      "submit": "Der Wareneingang konnte nicht erstellt werden.",
+      "activeSeriesRequired": "Für diesen Vorgang muss eine aktive Belegserie ausgewählt werden.",
+      "assigneesRequired": "Dem Auftrag muss mindestens ein Vorgangsbenutzer zugewiesen werden.",
+      "qualityRulesCheckFailed": "Die Qualitätskontrollregeln konnten nicht überprüft werden.",
+      "trackingPolicyLoadFailed": "Die Bestandsverfolgungsrichtlinie für {{code}} konnte nicht geladen werden.",
+      "unitCodeMissing": "Für den Bestand {{code}} ist keine Maßeinheit definiert.",
+      "lineLocationRequired": "Für die Position müssen ein Ziellager und ein Lagerplatz ausgewählt werden.",
+      "serialFieldsConflict": "Das Einzelseriennummernfeld und das Massen-Seriennummernfeld können nicht gemeinsam verwendet werden.",
+      "serialBatchCountMismatch": "Die Anzahl der Massen-Seriennummern ({{count}}) muss der Wareneingangsmenge ({{quantity}}) entsprechen.",
+      "duplicateSerialInBatch": "Dieselbe Seriennummer darf in der Massen-Seriennummernliste nicht mehrfach verwendet werden.",
+      "serialAlreadyUsed": "Eine der Seriennummern wurde in dieser Wareneingangsliste bereits verwendet.",
+      "qualityRuleCheckFailedForStock": "Die Qualitätsregel konnte für {{code}} nicht überprüft werden."
+    }
   },
   "list": {
     "eyebrowParent": "INBOUND_OP",
@@ -396,99 +545,6 @@
     "completed": "Abgeschlossen",
     "approvalPending": "Genehmigung ausstehend",
     "erpIntegrated": "ERP integriert",
-    "erpReconcileResend": "ERP-Abgleich / Erneut senden",
-    "erpSendToErp": "An ERP senden",
-    "noWaybillShort": "Kein Lieferschein",
-    "waybillBadge": "Lieferschein {{no}}",
-    "qcLinesSuffix": "{{count}} Position(en) (nur qualitätskontrollierte)",
-    "erpRetryDialog": {
-      "title": "ERP-Übertragung erneut senden",
-      "description": "Der Wareneingang {{documentNo}} wird erneut an den Netsis-Einkaufslieferschein gesendet.",
-      "localStatus": "Lokaler Status",
-      "submissionStatus": "Übertragungsstatus",
-      "attempt": "Versuch",
-      "recordNotFound": "Kein Datensatz gefunden",
-      "uncertainWarningPrefix": "Das Ergebnis der vorherigen Anfrage ist unsicher. Senden Sie nicht erneut, ohne zuerst in Netsis nach",
-      "uncertainWarningAnd": "und",
-      "uncertainWarningSuffix": "zu suchen.",
-      "waybillNumberFallback": "Lieferscheinnummer",
-      "confirmedCheckbox": "Ich habe das Dokument in Netsis geprüft und bestätigt, dass es nicht existiert.",
-      "reconciliationNoteLabel": "Abgleichshinweis",
-      "reconciliationPlaceholder": "z. B. Über Netsis TBLFATUIRS und Lieferscheinnummer geprüft; Dokument nicht gefunden.",
-      "reconciliationHint": "Mindestens 5 Zeichen; wird im Prüfprotokoll gespeichert.",
-      "cancel": "Abbrechen",
-      "submitReconcileAndResend": "Abgleich speichern und erneut senden",
-      "submitResend": "Erneut an ERP senden",
-      "fetchFailed": "Der ERP-Übertragungsdatensatz konnte nicht geladen werden.",
-      "successToast": "Netsis-Lieferschein erstellt: {{documentNo}}",
-      "uncertainToast": "Die Netsis-Antwort ist weiterhin nicht eindeutig. Die erneute Übertragung wurde gestoppt, um ein doppeltes Dokument zu vermeiden.",
-      "failedToast": "Die ERP-Übertragung konnte nicht abgeschlossen werden.",
-      "retryFailed": "Die ERP-Übertragung konnte nicht neu gestartet werden."
-    },
-    "lifecycleDialog": {
-      "approve": { "title": "Wareneingang genehmigen", "description": "Der Datensatz wird zur operativen Genehmigung verschoben. Dieselbe Anfrage wird sicher nur einmal ausgeführt.", "submit": "Genehmigen" },
-      "shortClose": { "title": "Fehlmenge kurz schließen", "description": "Die ausgewählten offenen Mengen werden nicht mehr erwartet. Für die Berichterstattung ist ein Grund erforderlich.", "submit": "Kurz schließen" },
-      "putaway": { "title": "Einlagern", "description": "Verfügbarer Bestand im Wareneingangsbereich wird auf das ausgewählte Regal übertragen; Regal- und Lagerbestände werden in derselben Transaktion aktualisiert.", "submit": "Einlagern" },
-      "cancel": { "title": "Wareneingang stornieren", "description": "Verknüpfte Bestands- und Qualitätsbewegungen werden storniert. Wenn Bestand bereits verwendet wurde, blockiert das System die Stornierung sicher.", "submit": "Stornieren" },
-      "reasonRequired": "Für diese Aktion ist ein aussagekräftiger Grund erforderlich.",
-      "noShortCloseQuantity": "Es ist keine offene Menge zum Kurzschließen verfügbar.",
-      "selectAtLeastOneLine": "Wählen Sie mindestens eine Bestandsposition aus.",
-      "checkQuantityAndTarget": "Überprüfen Sie Menge und Zielregal für {{code}}.",
-      "lineNo": "Position",
-      "closingQuantity": "Zu schließende Menge",
-      "putawayEmpty": "Im Wareneingangsbereich wurde kein verfügbarer Bestand zum Einlagern gefunden.",
-      "selectLineAria": "{{code}} auswählen",
-      "stockLotSerial": "Bestand / Charge / Seriennummer",
-      "noLot": "Keine Charge",
-      "noSerial": "Keine Seriennummer",
-      "sourceLocation": "Quellregal #{{id}}",
-      "targetLocation": "Zielregal",
-      "suggestedLocation": "Vorgeschlagenes Regal #{{id}}",
-      "selectTargetLocationPlaceholder": "Zielregal auswählen",
-      "reasonLabelRequired": "Grund *",
-      "descriptionLabel": "Beschreibung",
-      "reasonPlaceholder": "Betriebsnotiz schreiben..."
-    },
-    "routingDialog": {
-      "eyebrow": "Nach Wareneingang · Zweikonditions-Verteilung",
-      "subtitle": "Die linke Bedingung ist ein Lager-zu-Lager-Transfer, die rechte Bedingung ist ein Warenausgang. Sie können die verbleibende Menge jeder Position in derselben Liste zwischen beiden aufteilen.",
-      "qualityGkk": "Qualität/GKK",
-      "receiptApproval": "Wareneingangsgenehmigung",
-      "transferConditionTitle": "Bedingung 1 · Lager-zu-Lager-Transfer",
-      "outboundConditionTitle": "Bedingung 2 · Warenausgang",
-      "documentSeries": "Belegserie",
-      "selectSeriesPlaceholder": "Serie auswählen",
-      "targetWarehouse": "Ziellager",
-      "targetShelf": "Zielregal",
-      "outboundCustomer": "Ausgangskunde",
-      "lineDistributionList": "Positionsverteilungsliste",
-      "routableLinesSummary": "{{count}} weiterleitbare Position(en) · verbleibend = angenommen − vorherige − Transfer − Warenausgang",
-      "accepted": "Angenommen",
-      "previous": "Vorherige",
-      "transfer": "Transfer",
-      "outbound": "Warenausgang",
-      "sourceShelf": "Quellregal",
-      "shelfNumber": "Regal #{{id}}",
-      "operationNote": "Betriebsnotiz",
-      "createDistribution": "Verteilung erstellen",
-      "transferTotalLabel": "Transfer: {{value}}",
-      "outboundTotalLabel": "Warenausgang: {{value}}",
-      "errors": {
-        "receiptNotCompleted": "Ein DAT oder Warenausgang kann erst erstellt werden, wenn der Wareneingang abgeschlossen ist.",
-        "qualityNotReady": "Die Weiterleitung kann erst erfolgen, wenn die Qualitäts-/GKK-Entscheidung abgeschlossen ist.",
-        "approvalNotReady": "Die Weiterleitung kann erst erfolgen, wenn die Wareneingangsgenehmigung abgeschlossen ist.",
-        "erpNotSucceeded": "Ein DAT oder Warenausgang kann erst erstellt werden, wenn der ERP-Lieferschein erfolgreich erstellt wurde.",
-        "noQuantityEntered": "Geben Sie für mindestens eine Position eine Transfer- oder Warenausgangsmenge ein.",
-        "transferSeriesAndWarehouseRequired": "Eine Transferbelegserie und ein Ziellager sind erforderlich.",
-        "sourceTargetSame": "Quell- und Ziellager dürfen nicht identisch sein.",
-        "outboundSeriesAndCustomerRequired": "Eine Warenausgangsbelegserie und ein Kunde sind erforderlich.",
-        "negativeQuantity": "Mengen für {{code}} dürfen nicht negativ sein.",
-        "exceedsRoutable": "Für {{code}} können insgesamt höchstens {{max}} weitergeleitet werden."
-      },
-      "and": "und",
-      "successToast": "{{documents}} erstellt; insgesamt {{quantity}} wurden weitergeleitet.",
-      "createFailed": "Die Verteilung konnte nicht erstellt werden."
-    },
     "erpReconcileResend": "ERP-Abstimmung / Erneut senden",
     "erpSendToErp": "An ERP senden",
     "noWaybillShort": "Kein Lieferschein",
@@ -519,10 +575,26 @@
       "retryFailed": "Die ERP-Übertragung konnte nicht neu gestartet werden."
     },
     "lifecycleDialog": {
-      "approve": { "title": "Wareneingang genehmigen", "description": "Der Datensatz wird zur operativen Genehmigung verschoben. Dieselbe Anfrage wird sicher nur einmal angewendet.", "submit": "Genehmigen" },
-      "shortClose": { "title": "Fehlende Menge als Untermenge schließen", "description": "Die ausgewählten offenen Mengen werden nicht mehr erwartet. Für die Berichterstattung ist eine Begründung erforderlich.", "submit": "Untermenge schließen" },
-      "putaway": { "title": "Einlagern", "description": "Der verfügbare Bestand im Wareneingangsbereich wird auf das ausgewählte Regal übertragen; Regal- und Lagerbestände werden in derselben Transaktion aktualisiert.", "submit": "Einlagern" },
-      "cancel": { "title": "Wareneingang stornieren", "description": "Verknüpfte Bestands- und Qualitätsbewegungen werden storniert. Wurde der Bestand bereits verwendet, blockiert das System die Stornierung sicher.", "submit": "Stornieren" },
+      "approve": {
+        "title": "Wareneingang genehmigen",
+        "description": "Der Datensatz wird zur operativen Genehmigung verschoben. Dieselbe Anfrage wird sicher nur einmal angewendet.",
+        "submit": "Genehmigen"
+      },
+      "shortClose": {
+        "title": "Fehlende Menge als Untermenge schließen",
+        "description": "Die ausgewählten offenen Mengen werden nicht mehr erwartet. Für die Berichterstattung ist eine Begründung erforderlich.",
+        "submit": "Untermenge schließen"
+      },
+      "putaway": {
+        "title": "Einlagern",
+        "description": "Der verfügbare Bestand im Wareneingangsbereich wird auf das ausgewählte Regal übertragen; Regal- und Lagerbestände werden in derselben Transaktion aktualisiert.",
+        "submit": "Einlagern"
+      },
+      "cancel": {
+        "title": "Wareneingang stornieren",
+        "description": "Verknüpfte Bestands- und Qualitätsbewegungen werden storniert. Wurde der Bestand bereits verwendet, blockiert das System die Stornierung sicher.",
+        "submit": "Stornieren"
+      },
       "reasonRequired": "Für diese Aktion ist eine aussagekräftige Begründung erforderlich.",
       "noShortCloseQuantity": "Es ist keine offene Menge zum kurzen Schließen verfügbar.",
       "selectAtLeastOneLine": "Wählen Sie mindestens eine Bestandsposition aus.",
@@ -580,7 +652,19 @@
       },
       "and": "und",
       "successToast": "{{documents}} erstellt; insgesamt {{quantity}} wurde verteilt.",
-      "createFailed": "Die Verteilung konnte nicht erstellt werden."
+      "createFailed": "Die Verteilung konnte nicht erstellt werden.",
+      "dialogTitle": "Verteilung nach Wareneingang",
+      "tabsHint": "Bedingungen werden in separaten Tabs verwaltet",
+      "tabKickerTransfer": "Bedingung 1",
+      "tabKickerOutbound": "Bedingung 2",
+      "tabTitleTransfer": "Lagertransfer",
+      "tabTitleOutbound": "Lagerausgang",
+      "transferPanelHint": "Wählen Sie Belegserie, Ziellager und Regal für den Transfer zwischen Lagern; geben Sie die Positionsmengen in der Liste unten ein.",
+      "outboundPanelHint": "Wählen Sie Belegserie und Ausgangskunden für den Lagerausgang; geben Sie die Positionsmengen in der Liste unten ein.",
+      "linesHeadSummary": "{{count}} Position(en) · aktiver Tab: {{tab}}",
+      "increaseQuantity": "Menge erhöhen",
+      "decreaseQuantity": "Menge verringern",
+      "notePlaceholder": "Optionale Notiz…"
     },
     "sourceDocuments": "Quellbelege",
     "qcRequired": "Qualitätskontrolle erforderlich",
@@ -642,7 +726,22 @@
     "printLineLabel": "Positionsetikett drucken",
     "showLineLabelPdf": "Positionsetikett als PDF anzeigen",
     "lineNumber": "Position #{{number}}",
-    "noStockName": "Kein Bestandsname"
+    "noStockName": "Kein Bestandsname",
+    "sendToErp": "An ERP senden",
+    "erpReconcile": "ERP Abgleich / Erneut senden",
+    "searchPlaceholder": "Belegnr., Lieferant, Lieferschein, Lager, Ersteller, Bearbeiter…",
+    "searchTokenHint": "Tippen sucht sofort. Enter filtert nur nach Chips.",
+    "searchActiveTokens": "Aktive Such-Chips",
+    "searchRemoveToken": "Chip {{token}} entfernen",
+    "searchClearTokens": "Chips löschen",
+    "facetFilters": "Filter",
+    "facetFiltersTitle": "Listenfilter",
+    "facetStatus": "Status",
+    "facetQuality": "Qualität",
+    "facetErp": "ERP-Buchung",
+    "facetProcessType": "Vorgangsart",
+    "facetAll": "Alle",
+    "facetClear": "Löschen"
   },
   "tasks": {
     "title": "Wareneingangsauftragsverwaltung",
@@ -666,17 +765,37 @@
       "title": "Wareneingangsauftrag {{taskNo}}",
       "description": "Auftragspositionen, Zuweisungen und Vorgänge des physischen Wareneingangs.",
       "eyebrow": "Wareneingangsauftrag",
-      "info": { "status": "Status", "warehouse": "Lager", "priority": "Priorität", "planned": "Geplant", "started": "Gestartet" },
-      "table": { "stock": "Bestand", "received": "Empfangen" },
-      "line": { "qualityRequired": "Qualitätskontrolle erforderlich", "directDispatch": "Direkter Lieferschein" },
-      "actions": { "acceptAssignment": "Zuweisung annehmen", "startTask": "Auftrag starten", "saveAssignments": "Zuweisungen speichern" },
+      "info": {
+        "status": "Status",
+        "warehouse": "Lager",
+        "priority": "Priorität",
+        "planned": "Geplant",
+        "started": "Gestartet"
+      },
+      "table": {
+        "stock": "Bestand",
+        "received": "Empfangen"
+      },
+      "line": {
+        "qualityRequired": "Qualitätskontrolle erforderlich",
+        "directDispatch": "Direkter Lieferschein"
+      },
+      "actions": {
+        "acceptAssignment": "Zuweisung annehmen",
+        "startTask": "Auftrag starten",
+        "saveAssignments": "Zuweisungen speichern"
+      },
       "errors": {
         "detailFetchFailed": "Die Auftragsdetails konnten nicht geladen werden.",
         "actionFailed": "Die Aktion konnte nicht abgeschlossen werden.",
         "selectAtLeastOneUser": "Wählen Sie mindestens einen Benutzer aus.",
         "assignmentsUpdateFailed": "Die Zuweisungen konnten nicht aktualisiert werden."
       },
-      "toast": { "accepted": "Auftrag akzeptiert.", "started": "Auftrag gestartet.", "assignmentsUpdated": "Auftragszuweisungen aktualisiert." },
+      "toast": {
+        "accepted": "Auftrag akzeptiert.",
+        "started": "Auftrag gestartet.",
+        "assignmentsUpdated": "Auftragszuweisungen aktualisiert."
+      },
       "receiptLabels": {
         "title": "Beim Wareneingang generierte Etiketten",
         "hint": "Wird nach jeder Wareneingangsbewegung automatisch mit tatsächlicher Menge sowie Seriennummern-/Losinformationen erstellt.",
@@ -725,10 +844,20 @@
   },
   "enums": {
     "operationStatus": {
-      "Draft": "Entwurf", "Released": "Freigegeben", "InProgress": "In Bearbeitung", "PartiallyProcessed": "Teilweise verarbeitet",
-      "Processed": "Verarbeitet", "Completed": "Abgeschlossen", "Cancelled": "Storniert"
+      "Draft": "Entwurf",
+      "Released": "Freigegeben",
+      "InProgress": "In Bearbeitung",
+      "PartiallyProcessed": "Teilweise verarbeitet",
+      "Processed": "Verarbeitet",
+      "Completed": "Abgeschlossen",
+      "Cancelled": "Storniert"
     },
-    "approvalStatus": { "NotRequired": "Genehmigung nicht erforderlich", "Pending": "Genehmigung ausstehend", "Approved": "Genehmigt", "Rejected": "Abgelehnt" },
+    "approvalStatus": {
+      "NotRequired": "Genehmigung nicht erforderlich",
+      "Pending": "Genehmigung ausstehend",
+      "Approved": "Genehmigt",
+      "Rejected": "Abgelehnt"
+    },
     "qualityStatus": {
       "NotRequired": "Keine QK",
       "Pending": "Ausstehend",
@@ -746,37 +875,78 @@
       "Failed": "Die Qualitätskontrolle wurde abgelehnt"
     },
     "putawayStatus": {
-      "NotRequired": "Einlagerung nicht erforderlich", "Pending": "Einlagerung ausstehend", "InProgress": "Einlagerung läuft",
-      "PartiallyCompleted": "Teilweise eingelagert", "Completed": "Einlagerung abgeschlossen"
+      "NotRequired": "Einlagerung nicht erforderlich",
+      "Pending": "Einlagerung ausstehend",
+      "InProgress": "Einlagerung läuft",
+      "PartiallyCompleted": "Teilweise eingelagert",
+      "Completed": "Einlagerung abgeschlossen"
     },
     "erpStatus": {
-      "NotRequired": "ERP-Buchung nicht erforderlich", "Pending": "ERP-Buchung ausstehend", "Processing": "Wird an ERP gebucht",
-      "Succeeded": "An ERP gebucht", "Failed": "ERP-Buchung fehlgeschlagen", "CommitUncertain": "ERP-Ergebnis unsicher"
+      "NotRequired": "ERP-Buchung nicht erforderlich",
+      "Pending": "ERP-Buchung ausstehend",
+      "Processing": "Wird an ERP gebucht",
+      "Succeeded": "An ERP gebucht",
+      "Failed": "ERP-Buchung fehlgeschlagen",
+      "CommitUncertain": "ERP-Ergebnis unsicher"
     },
     "lineStatus": {
-      "Open": "Offen", "PartiallyReceived": "Teilweise empfangen", "Received": "Empfangen", "ShortClosed": "Kurz geschlossen", "Cancelled": "Storniert"
+      "Open": "Offen",
+      "PartiallyReceived": "Teilweise empfangen",
+      "Received": "Empfangen",
+      "ShortClosed": "Kurz geschlossen",
+      "Cancelled": "Storniert"
     },
     "taskStatus": {
-      "Draft": "Entwurf", "Released": "Freigegeben", "Assigned": "Zugewiesen", "InProgress": "In Bearbeitung", "Paused": "Pausiert",
-      "PartiallyCompleted": "Teilweise abgeschlossen", "Completed": "Abgeschlossen", "Cancelled": "Storniert"
+      "Draft": "Entwurf",
+      "Released": "Freigegeben",
+      "Assigned": "Zugewiesen",
+      "InProgress": "In Bearbeitung",
+      "Paused": "Pausiert",
+      "PartiallyCompleted": "Teilweise abgeschlossen",
+      "Completed": "Abgeschlossen",
+      "Cancelled": "Storniert"
     },
     "assignmentStatus": {
-      "Assigned": "Zugewiesen", "Accepted": "Akzeptiert", "InProgress": "In Bearbeitung", "Completed": "Abgeschlossen",
-      "Unassigned": "Nicht zugewiesen", "Rejected": "Abgelehnt"
+      "Assigned": "Zugewiesen",
+      "Accepted": "Akzeptiert",
+      "InProgress": "In Bearbeitung",
+      "Completed": "Abgeschlossen",
+      "Unassigned": "Nicht zugewiesen",
+      "Rejected": "Abgelehnt"
     },
     "labelBatchStatus": {
-      "Draft": "Entwurf", "Generated": "Erstellt", "PartiallyPrinted": "Teilweise gedruckt", "Printed": "Gedruckt",
-      "PartiallyConsumed": "Teilweise verbraucht", "Consumed": "Verbraucht", "Cancelled": "Storniert"
+      "Draft": "Entwurf",
+      "Generated": "Erstellt",
+      "PartiallyPrinted": "Teilweise gedruckt",
+      "Printed": "Gedruckt",
+      "PartiallyConsumed": "Teilweise verbraucht",
+      "Consumed": "Verbraucht",
+      "Cancelled": "Storniert"
     },
-    "labelStatus": { "Generated": "Erstellt", "Printed": "Gedruckt", "Assigned": "Zugewiesen", "Consumed": "Verbraucht", "Void": "Ungültig" },
+    "labelStatus": {
+      "Generated": "Erstellt",
+      "Printed": "Gedruckt",
+      "Assigned": "Zugewiesen",
+      "Consumed": "Verbraucht",
+      "Void": "Ungültig"
+    },
     "processType": {
-      "OrderBasedTask": "Auftrag mit Bestellbezug", "OrderlessTask": "Auftrag ohne Bestellbezug",
-      "OrderBasedDirectReceipt": "Direkter Wareneingang mit Bestellbezug", "OrderlessDirectReceipt": "Direkter Wareneingang ohne Bestellbezug"
+      "OrderBasedTask": "Auftrag mit Bestellbezug",
+      "OrderlessTask": "Auftrag ohne Bestellbezug",
+      "OrderBasedDirectReceipt": "Direkter Wareneingang mit Bestellbezug",
+      "OrderlessDirectReceipt": "Direkter Wareneingang ohne Bestellbezug"
     },
-    "initiationMode": { "OrderBasedTask": "Auftrag mit Bestellbezug", "UnplannedTask": "Ungeplanter Auftrag", "DirectReceipt": "Direkter Wareneingang" },
+    "initiationMode": {
+      "OrderBasedTask": "Auftrag mit Bestellbezug",
+      "UnplannedTask": "Ungeplanter Auftrag",
+      "DirectReceipt": "Direkter Wareneingang"
+    },
     "executionMode": {
-      "Manual": "Manuell", "BarcodeScan": "Barcode-Scan", "PreGeneratedLabel": "Vorgeneriertes Etikett",
-      "SupplierLabel": "Lieferantenetikett", "Import": "Import"
+      "Manual": "Manuell",
+      "BarcodeScan": "Barcode-Scan",
+      "PreGeneratedLabel": "Vorgeneriertes Etikett",
+      "SupplierLabel": "Lieferantenetikett",
+      "Import": "Import"
     }
   },
   "hub": {
@@ -784,18 +954,48 @@
     "title": "Wareneingangs-Prozesszentrum",
     "description": "Starten Sie auftragsbasierte, auftragslose und direkte Wareneingänge nach denselben Domänenregeln; verfolgen Sie jeden Schritt von der Zuweisung bis zur Qualitäts- und Bestandsbuchung.",
     "phases": {
-      "start": { "title": "Wareneingang starten", "description": "Wählen Sie den richtigen Ausgangspunkt für Belegquelle und Ausführungsmodus." },
-      "execute": { "title": "Zuweisung ausführen", "description": "Legen Sie Verantwortliche fest, akzeptieren Sie zugewiesene Arbeiten und verwalten Sie den physischen Fortschritt." },
-      "manage": { "title": "Überwachen und verwalten", "description": "Nutzen Sie Aufzeichnungen und Richtlinien für vollständige Rückverfolgbarkeit und konfigurierbare Prozesssteuerung." }
+      "start": {
+        "title": "Wareneingang starten",
+        "description": "Wählen Sie den richtigen Ausgangspunkt für Belegquelle und Ausführungsmodus."
+      },
+      "execute": {
+        "title": "Zuweisung ausführen",
+        "description": "Legen Sie Verantwortliche fest, akzeptieren Sie zugewiesene Arbeiten und verwalten Sie den physischen Fortschritt."
+      },
+      "manage": {
+        "title": "Überwachen und verwalten",
+        "description": "Nutzen Sie Aufzeichnungen und Richtlinien für vollständige Rückverfolgbarkeit und konfigurierbare Prozesssteuerung."
+      }
     },
     "cards": {
-      "ordered": { "title": "Auftragsbasierter Auftrag", "description": "Wählen Sie Netsis-Bestellungen aus, reservieren Sie offene Mengen und erstellen Sie Wareneingangsaufträge." },
-      "orderless": { "title": "Auftrag ohne Bestellung", "description": "Erstellen Sie einen geplanten Wareneingangsauftrag mit Lieferschein- und Bestandspositionen ohne Bestellverknüpfung." },
-      "direct": { "title": "Direkter Wareneingang", "description": "Buchen Sie einen auftragslosen Wareneingang atomar mit Qualität, Quarantäne und Bestandsbewegung." },
-      "tasks": { "title": "Auftragsverwaltung", "description": "Weisen Sie offene Aufträge einem oder mehreren Benutzern zu und verfolgen Sie deren Fortschritt." },
-      "assigned": { "title": "Meine zugewiesenen Aufträge", "description": "Akzeptieren, starten und schließen Sie Ihnen zugewiesene Wareneingangsaufträge ab." },
-      "records": { "title": "Wareneingänge", "description": "Prüfen Sie jeden Wareneingangstyp im gemeinsamen serverseitigen Datenraster." },
-      "settings": { "title": "Prozesseinstellungen", "description": "Verwalten Sie Richtlinien für Über-/Unterlieferung, Qualitätssperre, Genehmigung und ERP-Buchung." }
+      "ordered": {
+        "title": "Auftragsbasierter Auftrag",
+        "description": "Wählen Sie Netsis-Bestellungen aus, reservieren Sie offene Mengen und erstellen Sie Wareneingangsaufträge."
+      },
+      "orderless": {
+        "title": "Auftrag ohne Bestellung",
+        "description": "Erstellen Sie einen geplanten Wareneingangsauftrag mit Lieferschein- und Bestandspositionen ohne Bestellverknüpfung."
+      },
+      "direct": {
+        "title": "Direkter Wareneingang",
+        "description": "Buchen Sie einen auftragslosen Wareneingang atomar mit Qualität, Quarantäne und Bestandsbewegung."
+      },
+      "tasks": {
+        "title": "Auftragsverwaltung",
+        "description": "Weisen Sie offene Aufträge einem oder mehreren Benutzern zu und verfolgen Sie deren Fortschritt."
+      },
+      "assigned": {
+        "title": "Meine zugewiesenen Aufträge",
+        "description": "Akzeptieren, starten und schließen Sie Ihnen zugewiesene Wareneingangsaufträge ab."
+      },
+      "records": {
+        "title": "Wareneingänge",
+        "description": "Prüfen Sie jeden Wareneingangstyp im gemeinsamen serverseitigen Datenraster."
+      },
+      "settings": {
+        "title": "Prozesseinstellungen",
+        "description": "Verwalten Sie Richtlinien für Über-/Unterlieferung, Qualitätssperre, Genehmigung und ERP-Buchung."
+      }
     }
   }
 }

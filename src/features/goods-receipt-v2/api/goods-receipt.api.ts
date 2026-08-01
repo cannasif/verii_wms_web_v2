@@ -2,9 +2,11 @@ import { api } from '@/lib/axios';
 import { resolveStockTrackingPolicy } from '@/features/stock-tracking/effective-stock-tracking.service';
 import type { DropdownPage, DropdownPageRequest } from '@/hooks/useDropdownInfiniteSearch';
 import type { GridPage as AdvancedGridPage, GridRequest } from '@/components/shared/AdvancedDataGrid';
+import { normalizeGridPage } from '@/lib/paged';
 import type { ActiveUserOption, CreateGoodsReceiptResult, CustomerOption, ErpPostingResult, GoodsReceiptDetail, GoodsReceiptGridRow, GoodsReceiptLabelBatchDetail, GoodsReceiptLabelBatchRow, GoodsReceiptLabelRow, GoodsReceiptLifecycleResult, GoodsReceiptPolicy, GoodsReceiptQualityRequirementResult, GoodsReceiptRoutingResult, GoodsReceiptSplitRoutingResult, GoodsReceiptTaskDetail, GoodsReceiptTaskGridRow, GoodsReceiptWarehouseDefault, LocationOption, ManualGoodsReceiptResult, OpenOrderHeader, OpenOrderLine, PutawayLocationSuggestion, ReceiveGoodsReceiptTaskResult, SeriesOption, StockOption, UserWarehouseAccess, WarehouseOption, YapCodeOption } from '../types/goods-receipt.types';
 import type { OperationCancellationResult } from '@/features/shared/api/operation-cancellation';
 import { buildDropdownPagedBody } from '@/lib/dropdown-paging';
+import { normalizeGoodsReceiptWaybillFields } from '../utils/goods-receipt-waybill';
 
 interface Envelope<T> { success: boolean; data: T; message?: string }
 type GridPage<T> = DropdownPage<T>;
@@ -122,8 +124,20 @@ export const goodsReceiptV2Api = {
   create: async (payload: unknown): Promise<CreateGoodsReceiptResult> => unwrap(await api.post<Envelope<CreateGoodsReceiptResult>>('/api/goods-receipts/from-orders', payload)),
   createOrderless: async (payload: unknown): Promise<ManualGoodsReceiptResult> => unwrap(await api.post<Envelope<ManualGoodsReceiptResult>>('/api/goods-receipts/orderless', payload)),
   createDirect: async (payload: unknown): Promise<ManualGoodsReceiptResult> => unwrap(await api.post<Envelope<ManualGoodsReceiptResult>>('/api/goods-receipts/direct', payload)),
-  paged: async (request: GridRequest): Promise<AdvancedGridPage<GoodsReceiptGridRow>> => unwrap(await api.post<Envelope<AdvancedGridPage<GoodsReceiptGridRow>>>('/api/goods-receipts/paged', request)),
-  detail: async (id: number): Promise<GoodsReceiptDetail> => unwrap(await api.get<Envelope<GoodsReceiptDetail>>(`/api/goods-receipts/${id}`)),
+  paged: async (request: GridRequest): Promise<AdvancedGridPage<GoodsReceiptGridRow>> => {
+    const page = normalizeGridPage<GoodsReceiptGridRow>(
+      unwrap(await api.post<Envelope<AdvancedGridPage<GoodsReceiptGridRow>>>('/api/goods-receipts/paged', request)),
+    );
+    const items = page.items.map((row) => normalizeGoodsReceiptWaybillFields(row));
+    return { ...page, items, data: items };
+  },
+  detail: async (id: number): Promise<GoodsReceiptDetail> => {
+    const detail = unwrap(await api.get<Envelope<GoodsReceiptDetail>>(`/api/goods-receipts/${id}`));
+    return {
+      ...detail,
+      header: normalizeGoodsReceiptWaybillFields(detail.header),
+    };
+  },
   erpPosting: async (id: number): Promise<ErpPostingResult> =>
     unwrap(await api.get<Envelope<ErpPostingResult>>(`/api/erp-postings/GoodsReceipt/${id}`)),
   testErpLogin: async (): Promise<boolean> =>

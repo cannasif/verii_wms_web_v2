@@ -1,12 +1,17 @@
-import { useEffect, useMemo, useState, type ReactElement } from "react";
-import { ArrowRightLeft, Loader2, PackageMinus, SplitSquareHorizontal } from "lucide-react";
+import { useEffect, useMemo, useState, type ReactElement, type ReactNode } from "react";
+import { ArrowRightLeft, ChevronDown, ChevronUp, PackageMinus } from "lucide-react";
 import { toast } from "sonner";
 import { AppDropdown } from "@/components/shared/AppDropdown";
+import { OpsActionButton } from "@/components/shared/OpsActionButton";
+import { OpsFieldShell } from "@/components/shared/OpsFieldShell";
+import { OPS_FIELD_CLASS } from "@/components/shared/ops-field-styles";
 import { PagedAppDropdown } from "@/components/shared/PagedAppDropdown";
+import { ResponsiveDialog } from "@/components/shared/ResponsiveDialog";
 import { StockIdentityCell } from "@/components/shared/StockIdentityCell";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useModuleTranslation } from "@/hooks/useModuleTranslation";
 import { formatProjectNumber } from "@/lib/project-format";
+import { cn } from "@/lib/utils";
 import { goodsReceiptV2Api } from "../api/goods-receipt.api";
 import { goodsReceiptEnumLabel } from "../localization/enum-labels";
 import type {
@@ -17,6 +22,8 @@ import type {
   SeriesOption,
   WarehouseOption,
 } from "../types/goods-receipt.types";
+
+type RouteKind = "transfer" | "outbound";
 
 interface LineDraft {
   lineId: number;
@@ -33,11 +40,12 @@ export function GoodsReceiptRoutingDialog({
   onCompleted,
 }: {
   detail: GoodsReceiptDetail;
-  initialKind: "transfer" | "outbound";
+  initialKind: RouteKind;
   onClose: () => void;
   onCompleted: (result: GoodsReceiptSplitRoutingResult) => Promise<void>;
 }): ReactElement {
   const { t } = useModuleTranslation("goods-receipt-v2");
+  const [activeTab, setActiveTab] = useState<RouteKind>(initialKind);
   const [transferSeries, setTransferSeries] = useState<SeriesOption[]>([]);
   const [outboundSeries, setOutboundSeries] = useState<SeriesOption[]>([]);
   const [transferSeriesId, setTransferSeriesId] = useState("");
@@ -82,6 +90,10 @@ export function GoodsReceiptRoutingDialog({
     (sum, line) => sum + Math.max(0, line.outboundQuantity),
     0,
   );
+
+  useEffect(() => {
+    setActiveTab(initialKind);
+  }, [initialKind]);
 
   useEffect(() => {
     void Promise.all([
@@ -198,73 +210,100 @@ export function GoodsReceiptRoutingDialog({
     }
   };
 
+  const canSubmit =
+    !saving &&
+    detail.header.status === "Completed" &&
+    qualityReady &&
+    approvalReady &&
+    detail.header.erpIntegrationStatus === "Succeeded" &&
+    routableLines.length > 0 &&
+    transferTotal + outboundTotal > 0;
+
+  const activeTabLabel =
+    activeTab === "transfer" ? t("list.routingDialog.transfer") : t("list.routingDialog.outbound");
+
   return (
-    <Dialog
-      open
-      onOpenChange={(open) => {
-        if (!open) onClose();
-      }}
+    <ResponsiveDialog
+      onClose={onClose}
+      title={t("list.routingDialog.dialogTitle")}
+      description={`${detail.header.documentNo} · ${t("list.routingDialog.tabsHint")}`}
+      className="wms-ops-gr-route-dialog !max-w-[min(96vw,72rem)]"
     >
-      <DialogContent
-        aria-describedby={undefined}
-        className="wms-ops-detail-dialog max-h-[calc(100%_-_1rem)] w-full overflow-auto rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-4 shadow-2xl sm:max-w-[min(96vw,80rem)] sm:p-6"
+      <div
+        className={cn(
+          "wms-ops-gr-route-dialog__status",
+          qualityReady && approvalReady
+            ? "wms-ops-gr-route-dialog__status--ok"
+            : "wms-ops-gr-route-dialog__status--warn",
+        )}
       >
-        <header className="flex items-start justify-between gap-3 pr-12">
-          <div>
-            <p className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-cyan-500">
-              <SplitSquareHorizontal className="size-3.5" />
-              {t("list.routingDialog.eyebrow")}
-            </p>
-            <DialogTitle className="mt-1 text-xl font-bold">
-              {detail.header.documentNo}
-            </DialogTitle>
-            <p className="text-sm text-slate-500">
-              {t("list.routingDialog.subtitle")}
-            </p>
-          </div>
-        </header>
+        {t("list.routingDialog.qualityGkk")}:{" "}
+        <strong>
+          {goodsReceiptEnumLabel(t, "qualityStatus", detail.header.qualityStatus)}
+        </strong>
+        {" · "}
+        {t("list.routingDialog.receiptApproval")}:{" "}
+        <strong>
+          {goodsReceiptEnumLabel(t, "approvalStatus", detail.header.approvalStatus)}
+        </strong>
+      </div>
 
-        <div
-          className={`mt-4 rounded-xl border p-3 text-sm ${
-            qualityReady && approvalReady
-              ? "border-emerald-500/30 bg-emerald-500/5 text-emerald-600"
-              : "border-amber-500/30 bg-amber-500/5 text-amber-600"
-          }`}
-        >
-          {t("list.routingDialog.qualityGkk")}:{" "}
-          <strong>
-            {goodsReceiptEnumLabel(t, "qualityStatus", detail.header.qualityStatus)}
-          </strong>{" "}
-          · {t("list.routingDialog.receiptApproval")}:{" "}
-          <strong>
-            {goodsReceiptEnumLabel(
-              t,
-              "approvalStatus",
-              detail.header.approvalStatus,
-            )}
-          </strong>
-        </div>
-
-        <div className="mt-4 grid gap-4 xl:grid-cols-2">
-          <ConditionLane
-            tone="transfer"
-            title={t("list.routingDialog.transferConditionTitle")}
-            icon={<ArrowRightLeft className="size-5" />}
-            total={transferTotal}
-            active={transferTotal > 0}
+      <Tabs
+        value={activeTab}
+        onValueChange={(value) => setActiveTab(value as RouteKind)}
+        className="wms-ops-gr-route-dialog__tabs mt-4"
+      >
+        <TabsList className="wms-ops-gr-route-dialog__tab-list">
+          <TabsTrigger
+            value="transfer"
+            className="wms-ops-gr-route-dialog__tab wms-ops-gr-route-dialog__tab--transfer"
           >
-            <Field label={t("list.routingDialog.documentSeries")}>
+            <ArrowRightLeft className="size-3.5 shrink-0" aria-hidden />
+            <span className="wms-ops-gr-route-dialog__tab-copy">
+              <span className="wms-ops-gr-route-dialog__tab-kicker">{t("list.routingDialog.tabKickerTransfer")}</span>
+              <span className="wms-ops-gr-route-dialog__tab-title">{t("list.routingDialog.tabTitleTransfer")}</span>
+            </span>
+            <span className="wms-ops-gr-route-dialog__tab-badge">
+              {formatProjectNumber(transferTotal)}
+            </span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="outbound"
+            className="wms-ops-gr-route-dialog__tab wms-ops-gr-route-dialog__tab--outbound"
+          >
+            <PackageMinus className="size-3.5 shrink-0" aria-hidden />
+            <span className="wms-ops-gr-route-dialog__tab-copy">
+              <span className="wms-ops-gr-route-dialog__tab-kicker">{t("list.routingDialog.tabKickerOutbound")}</span>
+              <span className="wms-ops-gr-route-dialog__tab-title">{t("list.routingDialog.tabTitleOutbound")}</span>
+            </span>
+            <span className="wms-ops-gr-route-dialog__tab-badge">
+              {formatProjectNumber(outboundTotal)}
+            </span>
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="transfer" className="wms-ops-gr-route-dialog__panel mt-0">
+          <p className="wms-ops-gr-route-dialog__panel-hint">
+            {t("list.routingDialog.transferPanelHint")}
+          </p>
+          <div className="wms-ops-gr-route-dialog__fields">
+            <RouteField label={t("list.routingDialog.documentSeries")}>
               <AppDropdown
                 value={transferSeriesId}
                 onValueChange={setTransferSeriesId}
                 placeholder={t("list.routingDialog.selectSeriesPlaceholder")}
+                portalContainer={null}
+                className={cn(
+                  OPS_FIELD_CLASS,
+                  !transferSeriesId && "wms-ops-field--placeholder",
+                )}
                 options={transferSeries.map((item) => ({
                   value: String(item.id),
                   label: `${item.code} · ${item.previewDocumentNumber}`,
                 }))}
               />
-            </Field>
-            <Field label={t("list.routingDialog.targetWarehouse")}>
+            </RouteField>
+            <RouteField label={t("list.routingDialog.targetWarehouse")}>
               <PagedAppDropdown<WarehouseOption>
                 queryKey={["gr-route-target-warehouse", detail.header.branchCode]}
                 fetchPage={(request) =>
@@ -281,10 +320,15 @@ export function GoodsReceiptRoutingDialog({
                   setTargetLocationValue(null);
                   setTargetLocationId(undefined);
                 }}
+                portalContainer={null}
                 searchable
+                className={cn(
+                  OPS_FIELD_CLASS,
+                  !targetWarehouseValue && "wms-ops-field--placeholder",
+                )}
               />
-            </Field>
-            <Field label={t("list.routingDialog.targetShelf")}>
+            </RouteField>
+            <RouteField label={t("list.routingDialog.targetShelf")}>
               <PagedAppDropdown<LocationOption>
                 queryKey={["gr-route-target-location", targetWarehouseId]}
                 enabled={Boolean(targetWarehouseId)}
@@ -300,30 +344,39 @@ export function GoodsReceiptRoutingDialog({
                   setTargetLocationValue(value);
                   setTargetLocationId(Number(value));
                 }}
+                portalContainer={null}
                 searchable
+                className={cn(
+                  OPS_FIELD_CLASS,
+                  !targetLocationValue && "wms-ops-field--placeholder",
+                )}
               />
-            </Field>
-          </ConditionLane>
+            </RouteField>
+          </div>
+        </TabsContent>
 
-          <ConditionLane
-            tone="outbound"
-            title={t("list.routingDialog.outboundConditionTitle")}
-            icon={<PackageMinus className="size-5" />}
-            total={outboundTotal}
-            active={outboundTotal > 0}
-          >
-            <Field label={t("list.routingDialog.documentSeries")}>
+        <TabsContent value="outbound" className="wms-ops-gr-route-dialog__panel mt-0">
+          <p className="wms-ops-gr-route-dialog__panel-hint">
+            {t("list.routingDialog.outboundPanelHint")}
+          </p>
+          <div className="wms-ops-gr-route-dialog__fields">
+            <RouteField label={t("list.routingDialog.documentSeries")}>
               <AppDropdown
                 value={outboundSeriesId}
                 onValueChange={setOutboundSeriesId}
                 placeholder={t("list.routingDialog.selectSeriesPlaceholder")}
+                portalContainer={null}
+                className={cn(
+                  OPS_FIELD_CLASS,
+                  !outboundSeriesId && "wms-ops-field--placeholder",
+                )}
                 options={outboundSeries.map((item) => ({
                   value: String(item.id),
                   label: `${item.code} · ${item.previewDocumentNumber}`,
                 }))}
               />
-            </Field>
-            <Field label={t("list.routingDialog.outboundCustomer")}>
+            </RouteField>
+            <RouteField label={t("list.routingDialog.outboundCustomer")}>
               <PagedAppDropdown<CustomerOption>
                 queryKey={["gr-route-customer", detail.header.branchCode]}
                 fetchPage={(request) =>
@@ -338,100 +391,169 @@ export function GoodsReceiptRoutingDialog({
                   setCustomerValue(value);
                   setCustomerId(Number(value));
                 }}
+                portalContainer={null}
                 searchable
+                className={cn(
+                  OPS_FIELD_CLASS,
+                  !customerValue && "wms-ops-field--placeholder",
+                )}
               />
-            </Field>
-          </ConditionLane>
-        </div>
-
-        <section className="mt-5 overflow-hidden rounded-2xl border border-[var(--wms-app-border)]">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--wms-app-border)] bg-black/[.03] px-4 py-3 dark:bg-white/[.03]">
-            <strong className="text-sm">{t("list.routingDialog.lineDistributionList")}</strong>
-            <span className="text-xs text-slate-500">
-              {t("list.routingDialog.routableLinesSummary", { count: routableLines.length })}
-            </span>
+            </RouteField>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[980px] text-sm">
-              <thead className="bg-black/5 text-left text-xs uppercase tracking-wide text-slate-500 dark:bg-white/5">
-                <tr>
-                  <th className="p-3">{t("list.stock")}</th>
-                  <th className="p-3 text-right">{t("list.routingDialog.accepted")}</th>
-                  <th className="p-3 text-right">{t("list.routingDialog.previous")}</th>
-                  <th className="p-3 text-right">{t("list.remaining")}</th>
-                  <th className="p-3 bg-sky-500/10 text-sky-700 dark:text-sky-300">
-                    {t("list.routingDialog.transfer")}
-                  </th>
-                  <th className="p-3 bg-amber-500/10 text-amber-700 dark:text-amber-300">
-                    {t("list.routingDialog.outbound")}
-                  </th>
-                  <th className="p-3">{t("list.routingDialog.sourceShelf")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {routableLines.map((line) => {
-                  const draft = lines.find((item) => item.lineId === line.id)!;
-                  const remaining =
-                    line.routableQuantity -
-                    draft.transferQuantity -
-                    draft.outboundQuantity;
-                  return (
-                    <tr
-                      key={line.id}
-                      className="border-t border-[var(--wms-app-border)]"
+        </TabsContent>
+      </Tabs>
+
+      <section className="wms-ops-gr-route-dialog__lines mt-4">
+        <header className="wms-ops-gr-route-dialog__lines-head">
+          <strong>{t("list.routingDialog.lineDistributionList")}</strong>
+          <span>
+            {t("list.routingDialog.linesHeadSummary", { count: routableLines.length, tab: activeTabLabel })}
+          </span>
+        </header>
+        <div className="wms-ops-gr-route-dialog__lines-scroll">
+          <table className="wms-ops-gr-route-dialog__table">
+            <thead>
+              <tr>
+                <th>{t("list.stock")}</th>
+                <th className="text-right">{t("list.routingDialog.accepted")}</th>
+                <th className="text-right">{t("list.routingDialog.previous")}</th>
+                <th className="text-right">{t("list.remaining")}</th>
+                <th
+                  className={cn(
+                    activeTab === "transfer"
+                      ? "wms-ops-gr-route-dialog__col--transfer"
+                      : "wms-ops-gr-route-dialog__col--outbound",
+                  )}
+                >
+                  {activeTabLabel}
+                </th>
+                <th>{t("list.routingDialog.sourceShelf")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {routableLines.map((line) => {
+                const draft = lines.find((item) => item.lineId === line.id)!;
+                const remaining =
+                  line.routableQuantity -
+                  draft.transferQuantity -
+                  draft.outboundQuantity;
+                const activeQty =
+                  activeTab === "transfer"
+                    ? draft.transferQuantity
+                    : draft.outboundQuantity;
+                return (
+                  <tr key={line.id}>
+                    <td>
+                      <StockIdentityCell
+                        stockId={line.stockId}
+                        stockCode={line.stockCode}
+                        stockName={line.stockName}
+                        branchCode={detail.header.branchCode}
+                      />
+                    </td>
+                    <td className="text-right font-mono">
+                      {formatProjectNumber(line.acceptedQuantity)}
+                    </td>
+                    <td className="text-right font-mono">
+                      {formatProjectNumber(line.routedQuantity)}
+                    </td>
+                    <td
+                      className={cn(
+                        "text-right font-mono font-bold",
+                        remaining < 0
+                          ? "text-rose-500"
+                          : "text-[color-mix(in_oklab,var(--wms-ops-accent)_70%,currentColor)]",
+                      )}
                     >
-                      <td className="p-3">
-                        <StockIdentityCell
-                          stockId={line.stockId}
-                          stockCode={line.stockCode}
-                          stockName={line.stockName}
-                          branchCode={detail.header.branchCode}
-                        />
-                      </td>
-                      <td className="p-3 text-right">
-                        {formatProjectNumber(line.acceptedQuantity)}
-                      </td>
-                      <td className="p-3 text-right">
-                        {formatProjectNumber(line.routedQuantity)}
-                      </td>
-                      <td
-                        className={`p-3 text-right font-bold ${
-                          remaining < 0 ? "text-rose-500" : "text-cyan-600"
-                        }`}
-                      >
-                        {formatProjectNumber(remaining)}
-                      </td>
-                      <td className="bg-sky-500/[.04] p-3">
-                        <input
-                          className="input min-w-28"
-                          type="number"
-                          min="0"
-                          max={line.routableQuantity}
-                          step="0.000001"
-                          value={draft.transferQuantity}
-                          onChange={(event) =>
-                            patchLine(line.id, {
-                              transferQuantity: Number(event.target.value),
-                            })
-                          }
-                        />
-                      </td>
-                      <td className="bg-amber-500/[.04] p-3">
-                        <input
-                          className="input min-w-28"
-                          type="number"
-                          min="0"
-                          max={line.routableQuantity}
-                          step="0.000001"
-                          value={draft.outboundQuantity}
-                          onChange={(event) =>
-                            patchLine(line.id, {
-                              outboundQuantity: Number(event.target.value),
-                            })
-                          }
-                        />
-                      </td>
-                      <td className="p-3">
+                      {formatProjectNumber(remaining)}
+                    </td>
+                    <td
+                      className={cn(
+                        activeTab === "transfer"
+                          ? "wms-ops-gr-route-dialog__col--transfer"
+                          : "wms-ops-gr-route-dialog__col--outbound",
+                      )}
+                    >
+                      <OpsFieldShell className="wms-ops-gr-route-dialog__cell-shell">
+                        <div className="wms-ops-qty-stepper relative">
+                          <input
+                            className={cn(
+                              OPS_FIELD_CLASS,
+                              "h-9 w-full pr-8 text-right font-mono text-sm",
+                            )}
+                            inputMode="decimal"
+                            value={String(activeQty)}
+                            onChange={(event) => {
+                              const next = Number(
+                                event.target.value.replace(",", "."),
+                              );
+                              patchLine(
+                                line.id,
+                                activeTab === "transfer"
+                                  ? {
+                                      transferQuantity: Number.isFinite(next)
+                                        ? Math.max(0, next)
+                                        : 0,
+                                    }
+                                  : {
+                                      outboundQuantity: Number.isFinite(next)
+                                        ? Math.max(0, next)
+                                        : 0,
+                                    },
+                              );
+                            }}
+                            onFocus={(event) => {
+                              event.currentTarget.select();
+                            }}
+                            onClick={(event) => {
+                              event.currentTarget.select();
+                            }}
+                          />
+                          <div className="wms-ops-qty-stepper__controls absolute inset-y-0 right-0 flex flex-col justify-center pr-0.5">
+                            <button
+                              type="button"
+                              className="wms-ops-qty-stepper__btn"
+                              aria-label={t("list.routingDialog.increaseQuantity")}
+                              onClick={() => {
+                                const next = Math.min(
+                                  line.routableQuantity,
+                                  Math.round((activeQty + 1) * 1e6) / 1e6,
+                                );
+                                patchLine(
+                                  line.id,
+                                  activeTab === "transfer"
+                                    ? { transferQuantity: next }
+                                    : { outboundQuantity: next },
+                                );
+                              }}
+                            >
+                              <ChevronUp className="size-3" aria-hidden />
+                            </button>
+                            <button
+                              type="button"
+                              className="wms-ops-qty-stepper__btn"
+                              aria-label={t("list.routingDialog.decreaseQuantity")}
+                              onClick={() => {
+                                const next = Math.max(
+                                  0,
+                                  Math.round((activeQty - 1) * 1e6) / 1e6,
+                                );
+                                patchLine(
+                                  line.id,
+                                  activeTab === "transfer"
+                                    ? { transferQuantity: next }
+                                    : { outboundQuantity: next },
+                                );
+                              }}
+                            >
+                              <ChevronDown className="size-3" aria-hidden />
+                            </button>
+                          </div>
+                        </div>
+                      </OpsFieldShell>
+                    </td>
+                    <td>
+                      <OpsFieldShell className="wms-ops-gr-route-dialog__cell-shell">
                         <PagedAppDropdown<LocationOption>
                           queryKey={[
                             "gr-route-source-location",
@@ -463,124 +585,80 @@ export function GoodsReceiptRoutingDialog({
                               sourceLocationId: Number(value),
                             })
                           }
+                          portalContainer={null}
                           searchable
+                          className={cn(
+                            OPS_FIELD_CLASS,
+                            "h-9",
+                            !draft.sourceLocationValue && "wms-ops-field--placeholder",
+                          )}
                         />
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </section>
+                      </OpsFieldShell>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-        <Field label={t("list.routingDialog.operationNote")}>
-          <textarea
-            className="input mt-5 min-h-20"
-            value={description}
-            onChange={(event) => setDescription(event.target.value)}
-            maxLength={500}
-          />
-        </Field>
+      <RouteField label={t("list.routingDialog.operationNote")} className="wms-ops-gr-route-dialog__note-field mt-4">
+        <textarea
+          className={cn(
+            OPS_FIELD_CLASS,
+            "wms-ops-gr-route-dialog__note min-h-[4.5rem] w-full resize-y",
+            !description && "wms-ops-field--placeholder",
+          )}
+          value={description}
+          onChange={(event) => setDescription(event.target.value)}
+          maxLength={500}
+          placeholder={t("list.routingDialog.notePlaceholder")}
+        />
+      </RouteField>
 
-        <footer className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--wms-app-border)] pt-4">
-          <div className="flex flex-wrap gap-4 text-sm">
-            <strong className="text-sky-600 dark:text-sky-300">
-              {t("list.routingDialog.transferTotalLabel", { value: formatProjectNumber(transferTotal) })}
-            </strong>
-            <strong className="text-amber-600 dark:text-amber-300">
-              {t("list.routingDialog.outboundTotalLabel", { value: formatProjectNumber(outboundTotal) })}
-            </strong>
-          </div>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-xl border px-4 py-2 font-semibold"
-            >
-              {t("list.erpRetryDialog.cancel")}
-            </button>
-            <button
-              type="button"
-              disabled={
-                saving ||
-                detail.header.status !== "Completed" ||
-                !qualityReady ||
-                !approvalReady ||
-                detail.header.erpIntegrationStatus !== "Succeeded" ||
-                !routableLines.length ||
-                transferTotal + outboundTotal <= 0
-              }
-              onClick={() => void submit()}
-              className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-4 py-2 font-semibold text-white disabled:opacity-40"
-            >
-              {saving ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <ArrowRightLeft className="size-4" />
-              )}
-              {t("list.routingDialog.createDistribution")}
-            </button>
-          </div>
-        </footer>
-      </DialogContent>
-    </Dialog>
+      <footer className="wms-ops-gr-route-dialog__footer">
+        <div className="wms-ops-gr-route-dialog__totals">
+          <span className="wms-ops-gr-route-dialog__total wms-ops-gr-route-dialog__total--transfer">
+            {t("list.routingDialog.transferTotalLabel", { value: formatProjectNumber(transferTotal) })}
+          </span>
+          <span className="wms-ops-gr-route-dialog__total wms-ops-gr-route-dialog__total--outbound">
+            {t("list.routingDialog.outboundTotalLabel", { value: formatProjectNumber(outboundTotal) })}
+          </span>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <OpsActionButton type="button" variant="secondary" onClick={onClose}>
+            {t("list.erpRetryDialog.cancel")}
+          </OpsActionButton>
+          <OpsActionButton
+            type="button"
+            variant="primary"
+            disabled={!canSubmit}
+            loading={saving}
+            onClick={() => void submit()}
+          >
+            <ArrowRightLeft className="size-3.5" aria-hidden />
+            {t("list.routingDialog.createDistribution")}
+          </OpsActionButton>
+        </div>
+      </footer>
+    </ResponsiveDialog>
   );
 }
 
-function ConditionLane({
-  title,
-  icon,
-  total,
-  active,
-  tone,
-  children,
-}: {
-  title: string;
-  icon: ReactElement;
-  total: number;
-  active: boolean;
-  tone: "transfer" | "outbound";
-  children: ReactElement | ReactElement[];
-}) {
-  const toneClass =
-    tone === "transfer"
-      ? "border-sky-500/35 bg-sky-500/[.06]"
-      : "border-amber-500/35 bg-amber-500/[.06]";
-  const badgeClass =
-    tone === "transfer"
-      ? "bg-sky-500/15 text-sky-700 dark:text-sky-300"
-      : "bg-amber-500/15 text-amber-700 dark:text-amber-300";
-  return (
-    <section
-      className={`rounded-2xl border p-4 ${toneClass} ${
-        active ? "ring-1 ring-inset ring-current/10" : "opacity-95"
-      }`}
-    >
-      <header className="mb-3 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 font-bold">{icon}{title}</div>
-        <span className={`rounded-full px-3 py-1 text-xs font-bold ${badgeClass}`}>
-          {formatProjectNumber(total)}
-        </span>
-      </header>
-      <div className="grid gap-3 md:grid-cols-2">{children}</div>
-    </section>
-  );
-}
-
-function Field({
+function RouteField({
   label,
   children,
+  className,
 }: {
   label: string;
-  children: ReactElement;
-}) {
+  children: ReactNode;
+  className?: string;
+}): ReactElement {
   return (
-    <label className="block">
-      <span className="mb-1 block text-xs font-semibold text-slate-500">
-        {label}
-      </span>
-      {children}
-    </label>
+    <div className={cn("wms-ops-gr-route-dialog__field", className)}>
+      <span className="wms-ops-entry-label mb-1.5 block">{label}</span>
+      <OpsFieldShell>{children}</OpsFieldShell>
+    </div>
   );
 }

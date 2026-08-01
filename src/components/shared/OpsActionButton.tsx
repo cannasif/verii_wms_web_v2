@@ -32,34 +32,54 @@ export const OpsActionButton = forwardRef<HTMLButtonElement, OpsActionButtonProp
   ref,
 ): ReactElement {
   const Comp = asChild ? Slot : 'button';
-  const content = loading ? (loadingLabel ?? children) : children;
+  const label = loadingLabel ?? children;
+  const classes = cn(
+    'wms-ops-action-btn',
+    variant === 'primary' ? 'wms-ops-action-btn--primary' : 'wms-ops-action-btn--secondary',
+    loading && 'wms-ops-action-btn--loading',
+    className,
+  );
+
+  // Slot requires a single child — keep asChild path unwrapped.
+  if (asChild) {
+    return (
+      <Comp
+        ref={ref}
+        aria-busy={loading || undefined}
+        className={classes}
+        {...props}
+      >
+        {children}
+      </Comp>
+    );
+  }
 
   return (
     <Comp
       ref={ref}
-      type={asChild ? undefined : type}
+      type={type}
       disabled={disabled || loading}
       aria-busy={loading || undefined}
-      className={cn(
-        'wms-ops-action-btn',
-        variant === 'primary' ? 'wms-ops-action-btn--primary' : 'wms-ops-action-btn--secondary',
-        loading && 'wms-ops-action-btn--loading',
-        className,
-      )}
+      className={classes}
       {...props}
     >
+      <span
+        className={cn(
+          'wms-ops-action-btn__content',
+          loading && 'wms-ops-action-btn__content--busy',
+        )}
+      >
+        {label}
+      </span>
       {loading ? (
-        <span className="wms-ops-action-btn__loading">
-          <span className="wms-ops-action-btn__spinner" aria-hidden>
+        <span className="wms-ops-action-btn__spinner-slot" aria-hidden>
+          <span className="wms-ops-action-btn__spinner">
             <span className="wms-ops-action-btn__spinner-ring" />
             <span className="wms-ops-action-btn__spinner-orbit" />
             <span className="wms-ops-action-btn__spinner-core" />
           </span>
-          <span className="wms-ops-action-btn__loading-label">{content}</span>
         </span>
-      ) : (
-        content
-      )}
+      ) : null}
     </Comp>
   );
 });

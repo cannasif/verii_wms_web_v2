@@ -1,7 +1,12 @@
 {
   "title": "Siparişten Mal Kabul Emri",
   "subtitle": "Netsis siparişini seçin, miktarları doğrulayın ve kabul emrini güvenli biçimde rezerve edin.",
-  "steps": ["Tedarikçi ve sipariş", "Satır ve miktar", "Depo ayarları", "Onay"],
+  "steps": [
+    "Tedarikçi ve sipariş",
+    "Satır ve miktar",
+    "Depo ayarları",
+    "Onay"
+  ],
   "customer": "Tedarik Carisi",
   "selectCustomer": "Tedarik carisi seçin...",
   "searchCustomer": "Tedarik cari kod / ad ara…",
@@ -40,7 +45,10 @@
     "orderedBadge": "Sipariş",
     "stepsAriaLabel": "Oluşturma adımları",
     "orderSelection": "Sipariş seçimi",
-    "steps": { "0": "Sipariş ve kalem planı", "1": "Kontrol ve oluşturma" },
+    "steps": {
+      "0": "Sipariş ve kalem planı",
+      "1": "Kontrol ve oluşturma"
+    },
     "orderNo": "Sipariş No",
     "orderNoHelpAria": "Sipariş numarasıyla getirme hakkında",
     "orderNoTooltip": "Siparişin cari kodu Netsis'ten okunur; eşleşen tedarikçi otomatik seçilir ve sipariş bakiyesi aşağıda açılır.",
@@ -56,7 +64,7 @@
     "warehouseFilter": "Depo filtresi",
     "allWarehouses": "Tüm depolar",
     "lineSearch": {
-      "label": "Kalem ara",
+      "label": "Sipariş ara",
       "placeholder": "Sipariş no, stok, proje, depo… Enter ile rozet ekle",
       "hint": "Enter ile rozet ekle. Liste yalnızca rozetlere göre süzülür.",
       "activeTokens": "Aktif arama rozetleri",
@@ -163,6 +171,7 @@
       "documentSeries": "Belge serisi",
       "waybill": "İrsaliye",
       "projectAndOrderDate": "Proje / sipariş tarihi",
+      "orderDate": "Sipariş tarihi",
       "summaryTitle": "Kontrol özeti",
       "linesAndQuantity": "Satır / miktar",
       "orderAvailableQuantity": "Sipariş uygun miktar",
@@ -175,7 +184,37 @@
       "viewQualityList": "{{count}} kalem · Listeyi gör",
       "multipleOrders": "1'den fazla sipariş",
       "multipleOrdersCount": "{{count}} sipariş",
-      "ordersTooltipHint": "Kaydırarak tüm sipariş numaralarını görebilirsiniz"
+      "ordersTooltipHint": "Kaydırarak tüm sipariş numaralarını görebilirsiniz",
+      "multipleProjects": "1'den fazla proje",
+      "multipleProjectsCount": "{{count}} proje",
+      "projectsTooltipHint": "Kaydırarak tüm proje kodlarını görebilirsiniz",
+      "metricLinesHint": "Stokları gör",
+      "metricQualityLabel": "Kalite",
+      "metricQualityNone": "Yok",
+      "metricQualityHint": "Kalite listesini gör"
+    },
+    "submit": {
+      "receiptEyebrow": "Mal kabul / irsaliye",
+      "receiptTitle": "İrsaliye oluşturuluyor",
+      "receiptSubtitle": "{{name}} · {{count}} kalem işleniyor",
+      "qualityEyebrow": "Kalite yönlendirme",
+      "qualityTitle": "Kaliteye gönderiliyor",
+      "qualitySubtitle": "{{name}} · {{count}} kalem kaliteye aktarılıyor",
+      "documentLabel": "İrsaliye no",
+      "errorEyebrow": "İşlem başarısız",
+      "errorTitle": "Gönderim tamamlanamadı",
+      "errorReturning": "Önizleme ekranına dönülüyor…",
+      "errorFallback": "Beklenmeyen bir hata oluştu.",
+      "receiptLog0": "İrsaliye kalemleri hazırlanıyor",
+      "receiptLog1": "Stok satırları doğrulanıyor",
+      "receiptLog2": "Depo hareketleri yazılıyor",
+      "receiptLog3": "İrsaliye ERP’ye gönderiliyor",
+      "receiptLog4": "Belge numarası alınıyor",
+      "qualityLog0": "Kalite satırları ayrıştırılıyor",
+      "qualityLog1": "Kalite kuralları uygulanıyor",
+      "qualityLog2": "Kalite listesine aktarılıyor",
+      "qualityLog3": "Kalite görevleri oluşturuluyor",
+      "qualityLog4": "Yönlendirme tamamlanıyor"
     },
     "qualityDialog": {
       "title": "Kaliteye gidecek stoklar",
@@ -198,7 +237,12 @@
       "subtitleForSupplier": "{{name}} için ",
       "qualityPendingSubtitle": "kaliteye gönderilen ürünler için kalite onayından sonra irsaliye oluşturulacaktır.",
       "receiptDoneSubtitle": "irsaliye oluşturma işlemi tamamlandı.",
-      "documentNo": "Belge No",
+      "documentNo": "İrsaliye no",
+      "copyDocument": "İrsaliye numarasını kopyala",
+      "documentCopied": "İrsaliye numarası kopyalandı",
+      "documentCopyFailed": "İrsaliye numarası kopyalanamadı",
+      "statusCompleted": "Tamamlandı",
+      "statusAwaitingQuality": "Kalite bekliyor",
       "line": "Satır",
       "quantity": "Miktar",
       "status": "Durum",
@@ -317,30 +361,91 @@
     }
   },
   "manual": {
-    "eyebrow": "Mal Kabul Operasyonu", "directTitle": "Doğrudan Mal Kabul", "orderlessTitle": "Siparişsiz Mal Kabul Emri",
+    "eyebrow": "Mal Kabul Operasyonu",
+    "directTitle": "Doğrudan Mal Kabul",
+    "orderlessTitle": "Siparişsiz Mal Kabul Emri",
     "directSubtitle": "Belgeyi doğrulayın; fiziksel kabul, kalite ve stok hareketini kontrollü biçimde oluşturun.",
-    "orderlessSubtitle": "Sipariş bağlantısı olmadan planlı kabul emri ve görev oluşturun.", "currentStep": "Adım",
-    "steps": { "document": "Belge", "operation": "Operasyon", "lines": "Stok Satırları", "review": "Kontrol" },
-    "document": { "title": "Belge ve Tedarikçi", "description": "Mal kabulün dayandığı irsaliye türünü, numarasını ve tedarikçiyi doğrulayın." },
-    "operation": { "title": "Depo ve Süreç", "description": "Kabul alanını, belge serisini, önceliği ve etiket yöntemini belirleyin." },
-    "lines": { "title": "Kabul Edilecek Stoklar", "description": "Stok, YAP, miktar ve izlenebilirlik bilgilerini satır bazında girin." },
-    "review": { "title": "Son Kontrol", "description": "Kaydetmeden önce belge ve miktar özetini doğrulayın." },
-    "customer": "Tedarik Carisi", "documentDate": "İrsaliye / Kabul Tarihi", "receiptNo": "Mal Kabul No",
-    "isElectronic": "E-İrsaliye", "receiptHint": "Normal irsaliye için tam 15 harf veya rakam girin.",
+    "orderlessSubtitle": "Sipariş bağlantısı olmadan planlı kabul emri ve görev oluşturun.",
+    "currentStep": "Adım",
+    "steps": {
+      "document": "Belge",
+      "operation": "Operasyon",
+      "lines": "Stok Satırları",
+      "review": "Kontrol"
+    },
+    "document": {
+      "title": "Belge ve Tedarikçi",
+      "description": "Mal kabulün dayandığı irsaliye türünü, numarasını ve tedarikçiyi doğrulayın."
+    },
+    "operation": {
+      "title": "Depo ve Süreç",
+      "description": "Kabul alanını, belge serisini, önceliği ve etiket yöntemini belirleyin."
+    },
+    "lines": {
+      "title": "Kabul Edilecek Stoklar",
+      "description": "Stok, YAP, miktar ve izlenebilirlik bilgilerini satır bazında girin."
+    },
+    "review": {
+      "title": "Son Kontrol",
+      "description": "Kaydetmeden önce belge ve miktar özetini doğrulayın."
+    },
+    "customer": "Tedarik Carisi",
+    "documentDate": "İrsaliye / Kabul Tarihi",
+    "receiptNo": "Mal Kabul No",
+    "isElectronic": "E-İrsaliye",
+    "receiptHint": "Normal irsaliye için tam 15 harf veya rakam girin.",
     "eReceiptHint": "E-irsaliye / GİB numarası için tam 15 harf veya rakam girin.",
-    "validNumber": "Belge numarası biçimi geçerli.", "plannedArrival": "Planlanan Geliş", "warehouse": "Hedef Depo",
-    "location": "Kabul / Staging Alanı", "series": "WMS Belge Serisi", "priority": "Öncelik",
-    "labelStrategy": "Etiket Stratejisi", "executionMode": "Kabul Yöntemi", "stock": "Stok", "yap": "Yapılandırma Kodu",
-    "quantity": "Miktar", "unit": "Birim", "lot": "Lot", "serial": "Seri", "manufacturingDate": "Üretim Tarihi",
-    "expirationDate": "Son Kullanma Tarihi", "scannedBarcode": "Okutulan Barkod", "addLine": "Satır Ekle",
-    "actions": "İşlemler", "removeLine": "Satırı sil", "noLines": "Henüz stok satırı eklenmedi.", "description": "Açıklama",
-    "documentType": "İrsaliye Türü", "normalReceipt": "Normal İrsaliye", "eReceipt": "E-İrsaliye", "lineCount": "Satır Sayısı",
-    "totalQuantity": "Toplam Miktar", "operationType": "Operasyon Türü", "direct": "Doğrudan Kabul", "orderless": "Siparişsiz Emir",
-    "postReceipt": "Kabulü İşle", "createTask": "Emri Oluştur", "success": "Mal kabul başarıyla oluşturuldu.",
-    "resultDirect": "Mal Kabul İşlendi", "resultOrderless": "Mal Kabul Emri Oluşturuldu", "linesText": "satır", "newRecord": "Yeni Kayıt",
-    "defaultTargetLocation": "Varsayılan hedef raf", "selectActiveLocation": "Aktif raf seçin",
-    "unitLabelWithValue": "Birim: {{unit}}", "unitUndefined": "Birim tanımsız", "selectStockFirst": "Önce stok seçin",
-    "options": { "noLabel": "Etiket Yok", "preGenerate": "Önceden Üret", "supplierLabel": "Tedarikçi Etiketi", "generateOnReceipt": "Kabulde Üret", "manual": "Manuel", "barcode": "Barkod Okutma", "preLabel": "Ön Etiket" },
+    "validNumber": "Belge numarası biçimi geçerli.",
+    "plannedArrival": "Planlanan Geliş",
+    "warehouse": "Hedef Depo",
+    "location": "Kabul / Staging Alanı",
+    "series": "WMS Belge Serisi",
+    "priority": "Öncelik",
+    "labelStrategy": "Etiket Stratejisi",
+    "executionMode": "Kabul Yöntemi",
+    "stock": "Stok",
+    "yap": "Yapılandırma Kodu",
+    "quantity": "Miktar",
+    "unit": "Birim",
+    "lot": "Lot",
+    "serial": "Seri",
+    "manufacturingDate": "Üretim Tarihi",
+    "expirationDate": "Son Kullanma Tarihi",
+    "scannedBarcode": "Okutulan Barkod",
+    "addLine": "Satır Ekle",
+    "actions": "İşlemler",
+    "removeLine": "Satırı sil",
+    "noLines": "Henüz stok satırı eklenmedi.",
+    "description": "Açıklama",
+    "documentType": "İrsaliye Türü",
+    "normalReceipt": "Normal İrsaliye",
+    "eReceipt": "E-İrsaliye",
+    "lineCount": "Satır Sayısı",
+    "totalQuantity": "Toplam Miktar",
+    "operationType": "Operasyon Türü",
+    "direct": "Doğrudan Kabul",
+    "orderless": "Siparişsiz Emir",
+    "postReceipt": "Kabulü İşle",
+    "createTask": "Emri Oluştur",
+    "success": "Mal kabul başarıyla oluşturuldu.",
+    "resultDirect": "Mal Kabul İşlendi",
+    "resultOrderless": "Mal Kabul Emri Oluşturuldu",
+    "linesText": "satır",
+    "newRecord": "Yeni Kayıt",
+    "defaultTargetLocation": "Varsayılan hedef raf",
+    "selectActiveLocation": "Aktif raf seçin",
+    "unitLabelWithValue": "Birim: {{unit}}",
+    "unitUndefined": "Birim tanımsız",
+    "selectStockFirst": "Önce stok seçin",
+    "options": {
+      "noLabel": "Etiket Yok",
+      "preGenerate": "Önceden Üret",
+      "supplierLabel": "Tedarikçi Etiketi",
+      "generateOnReceipt": "Kabulde Üret",
+      "manual": "Manuel",
+      "barcode": "Barkod Okutma",
+      "preLabel": "Ön Etiket"
+    },
     "bulkSerial": {
       "title": "Toplu seri ve barkod okutma",
       "hint": "Miktar 13 ise okuyucuyla 13 farklı seriyi satır satır okutun. Her seri API'ye 1 miktarlı ayrı izlenebilir kalem olarak gönderilir.",
@@ -355,7 +460,9 @@
       "hintReceiving": "Kalite kararı beklenirken yalnızca Receiving/Staging seçilebilir.",
       "remainingLabel": "Kalan:"
     },
-    "table": { "warehouseLocation": "Depo / Raf" },
+    "table": {
+      "warehouseLocation": "Depo / Raf"
+    },
     "result": {
       "eyebrow": "Mal kabul sonrası",
       "qualitySentTitle": "Kaliteye gönderildi",
@@ -372,7 +479,30 @@
       "labelsPrintFailed": "Etiketler yazdırılamadı.",
       "printTitleSuffix": "kabul etiketleri"
     },
-    "validation": { "customer": "Tedarikçi cari seçimi zorunludur.", "receiptNo": "Normal irsaliye numarası semboller dahil tam 15 karakter olmalıdır.", "eReceiptNo": "E-irsaliye / GİB numarası semboller dahil tam 15 karakter olmalıdır.", "date": "İrsaliye tarihi zorunludur.", "operation": "Depo, kabul alanı ve belge serisi seçilmelidir.", "lines": "En az bir stok satırı eklenmelidir.", "stock": "Stok ve sıfırdan büyük miktar zorunludur.", "serialQuantity": "Seri numaralı satırın miktarı 1 olmalıdır.", "expiry": "Son kullanma tarihi üretim tarihinden önce olamaz.", "incomplete": "Formda eksik veya geçersiz alan bulunuyor.", "submit": "Mal kabul oluşturulamadı.", "activeSeriesRequired": "Bu işlem için aktif bir belge serisi seçilmelidir.", "assigneesRequired": "Emir için en az bir operasyon kullanıcısı atanmalıdır.", "qualityRulesCheckFailed": "Kalite kontrol kuralları doğrulanamadı.", "trackingPolicyLoadFailed": "{{code}} için stok takip politikası yüklenemedi.", "unitCodeMissing": "{{code}} stok kartının ölçü birimi tanımlı değil.", "lineLocationRequired": "Kalem için hedef depo ve raf seçilmelidir.", "serialFieldsConflict": "Tek seri alanı ile toplu seri alanı birlikte kullanılamaz.", "serialBatchCountMismatch": "Toplu seri sayısı ({{count}}) kabul miktarına ({{quantity}}) eşit olmalıdır.", "duplicateSerialInBatch": "Toplu seri listesinde aynı seri birden fazla kullanılamaz.", "serialAlreadyUsed": "Serilerden biri bu kabul listesinde daha önce kullanılmış.", "qualityRuleCheckFailedForStock": "{{code}} için kalite kuralı kontrol edilemedi." }
+    "validation": {
+      "customer": "Tedarikçi cari seçimi zorunludur.",
+      "receiptNo": "Normal irsaliye numarası semboller dahil tam 15 karakter olmalıdır.",
+      "eReceiptNo": "E-irsaliye / GİB numarası semboller dahil tam 15 karakter olmalıdır.",
+      "date": "İrsaliye tarihi zorunludur.",
+      "operation": "Depo, kabul alanı ve belge serisi seçilmelidir.",
+      "lines": "En az bir stok satırı eklenmelidir.",
+      "stock": "Stok ve sıfırdan büyük miktar zorunludur.",
+      "serialQuantity": "Seri numaralı satırın miktarı 1 olmalıdır.",
+      "expiry": "Son kullanma tarihi üretim tarihinden önce olamaz.",
+      "incomplete": "Formda eksik veya geçersiz alan bulunuyor.",
+      "submit": "Mal kabul oluşturulamadı.",
+      "activeSeriesRequired": "Bu işlem için aktif bir belge serisi seçilmelidir.",
+      "assigneesRequired": "Emir için en az bir operasyon kullanıcısı atanmalıdır.",
+      "qualityRulesCheckFailed": "Kalite kontrol kuralları doğrulanamadı.",
+      "trackingPolicyLoadFailed": "{{code}} için stok takip politikası yüklenemedi.",
+      "unitCodeMissing": "{{code}} stok kartının ölçü birimi tanımlı değil.",
+      "lineLocationRequired": "Kalem için hedef depo ve raf seçilmelidir.",
+      "serialFieldsConflict": "Tek seri alanı ile toplu seri alanı birlikte kullanılamaz.",
+      "serialBatchCountMismatch": "Toplu seri sayısı ({{count}}) kabul miktarına ({{quantity}}) eşit olmalıdır.",
+      "duplicateSerialInBatch": "Toplu seri listesinde aynı seri birden fazla kullanılamaz.",
+      "serialAlreadyUsed": "Serilerden biri bu kabul listesinde daha önce kullanılmış.",
+      "qualityRuleCheckFailedForStock": "{{code}} için kalite kuralı kontrol edilemedi."
+    }
   },
   "list": {
     "eyebrowParent": "GİRİŞ_OP",
@@ -393,6 +523,21 @@
     "received": "Alınan",
     "actions": "İşlemler",
     "showDetail": "Detayı göster",
+    "sendToErp": "ERP’ye Gönder",
+    "erpReconcile": "ERP Mutabakat / Yeniden Gönder",
+    "searchPlaceholder": "Belge no, tedarikçi, irsaliye, depo, kayıt eden, güncelleyen…",
+    "searchTokenHint": "Yazınca anında arar. Enter ile rozet ekleyince yalnızca rozetlere göre süzülür.",
+    "searchActiveTokens": "Aktif arama rozetleri",
+    "searchRemoveToken": "{{token}} rozetini kaldır",
+    "searchClearTokens": "Rozetleri temizle",
+    "facetFilters": "Filtreler",
+    "facetFiltersTitle": "Liste filtreleri",
+    "facetStatus": "Durum",
+    "facetQuality": "Kalite",
+    "facetErp": "ERP aktarımı",
+    "facetProcessType": "İşlem tipi",
+    "facetAll": "Tümü",
+    "facetClear": "Temizle",
     "printAllLabels": "Tüm etiketleri yazdır",
     "showAllLabelsPdf": "Tüm etiketleri PDF göster",
     "detailLoadError": "Mal kabul detayı açılamadı.",
@@ -445,10 +590,26 @@
       "retryFailed": "ERP gönderimi yeniden başlatılamadı."
     },
     "lifecycleDialog": {
-      "approve": { "title": "Mal Kabulü Onayla", "description": "Kayıt operasyon onayına alınır. Aynı istek güvenli biçimde yalnızca bir kez uygulanır.", "submit": "Onayla" },
-      "shortClose": { "title": "Eksik Miktarı Kısa Kapat", "description": "Seçilen açık miktarlar artık beklenmez. Raporlama için gerekçe zorunludur.", "submit": "Kısa Kapat" },
-      "putaway": { "title": "Rafa Yerleştir", "description": "Kabul alanındaki kullanılabilir stok seçilen rafa transfer edilir; raf ve depo bakiyeleri aynı işlemde güncellenir.", "submit": "Rafa Yerleştir" },
-      "cancel": { "title": "Mal Kabulü İptal Et", "description": "Bağlı stok ve kalite hareketleri ters kayıtla geri alınır. Kullanılmış stok varsa sistem iptali güvenli biçimde engeller.", "submit": "İptal Et" },
+      "approve": {
+        "title": "Mal Kabulü Onayla",
+        "description": "Kayıt operasyon onayına alınır. Aynı istek güvenli biçimde yalnızca bir kez uygulanır.",
+        "submit": "Onayla"
+      },
+      "shortClose": {
+        "title": "Eksik Miktarı Kısa Kapat",
+        "description": "Seçilen açık miktarlar artık beklenmez. Raporlama için gerekçe zorunludur.",
+        "submit": "Kısa Kapat"
+      },
+      "putaway": {
+        "title": "Rafa Yerleştir",
+        "description": "Kabul alanındaki kullanılabilir stok seçilen rafa transfer edilir; raf ve depo bakiyeleri aynı işlemde güncellenir.",
+        "submit": "Rafa Yerleştir"
+      },
+      "cancel": {
+        "title": "Mal Kabulü İptal Et",
+        "description": "Bağlı stok ve kalite hareketleri ters kayıtla geri alınır. Kullanılmış stok varsa sistem iptali güvenli biçimde engeller.",
+        "submit": "İptal Et"
+      },
       "reasonRequired": "Bu işlem için açıklayıcı bir gerekçe zorunludur.",
       "noShortCloseQuantity": "Kısa kapatılabilecek açık miktar bulunmuyor.",
       "selectAtLeastOneLine": "En az bir stok boyutu seçmelisiniz.",
@@ -506,7 +667,19 @@
       },
       "and": "ve",
       "successToast": "{{documents}} oluşturuldu; toplam {{quantity}} yönlendirildi.",
-      "createFailed": "Yönlendirme oluşturulamadı."
+      "createFailed": "Yönlendirme oluşturulamadı.",
+      "dialogTitle": "Mal kabul sonrası dağıtım",
+      "tabsHint": "Kondisyonlar ayrı sekmelerde yönetilir",
+      "tabKickerTransfer": "Kondisyon 1",
+      "tabKickerOutbound": "Kondisyon 2",
+      "tabTitleTransfer": "Depo Transferi",
+      "tabTitleOutbound": "Ambar Çıkış",
+      "transferPanelHint": "Depolar arası transfer için belge serisi, hedef depo ve raf seçin; kalem miktarlarını aşağıdaki listeden girin.",
+      "outboundPanelHint": "Ambar çıkış için belge serisi ve çıkış carisini seçin; kalem miktarlarını aşağıdaki listeden girin.",
+      "linesHeadSummary": "{{count}} kalem · aktif sekme: {{tab}}",
+      "increaseQuantity": "Miktarı artır",
+      "decreaseQuantity": "Miktarı azalt",
+      "notePlaceholder": "İsteğe bağlı not…"
     },
     "sourceDocuments": "Kaynak Belgeler",
     "qcRequired": "Kalite Kontrolü Gerekli",
@@ -592,17 +765,37 @@
       "title": "Mal kabul emri {{taskNo}}",
       "description": "Emir kalemleri, atamaları ve fiziksel kabul işlemleri.",
       "eyebrow": "Mal Kabul Emri",
-      "info": { "status": "Durum", "warehouse": "Depo", "priority": "Öncelik", "planned": "Planlanan", "started": "Başlama" },
-      "table": { "stock": "Stok", "received": "Toplanan" },
-      "line": { "qualityRequired": "Kalite kontrol gerekli", "directDispatch": "Doğrudan irsaliye" },
-      "actions": { "acceptAssignment": "Atamayı Kabul Et", "startTask": "Emri Başlat", "saveAssignments": "Atamaları Kaydet" },
+      "info": {
+        "status": "Durum",
+        "warehouse": "Depo",
+        "priority": "Öncelik",
+        "planned": "Planlanan",
+        "started": "Başlama"
+      },
+      "table": {
+        "stock": "Stok",
+        "received": "Toplanan"
+      },
+      "line": {
+        "qualityRequired": "Kalite kontrol gerekli",
+        "directDispatch": "Doğrudan irsaliye"
+      },
+      "actions": {
+        "acceptAssignment": "Atamayı Kabul Et",
+        "startTask": "Emri Başlat",
+        "saveAssignments": "Atamaları Kaydet"
+      },
       "errors": {
         "detailFetchFailed": "Emir detayı alınamadı.",
         "actionFailed": "İşlem tamamlanamadı.",
         "selectAtLeastOneUser": "En az bir kullanıcı seçin.",
         "assignmentsUpdateFailed": "Atamalar güncellenemedi."
       },
-      "toast": { "accepted": "Emir kabul edildi.", "started": "Emir başlatıldı.", "assignmentsUpdated": "Emir atamaları güncellendi." },
+      "toast": {
+        "accepted": "Emir kabul edildi.",
+        "started": "Emir başlatıldı.",
+        "assignmentsUpdated": "Emir atamaları güncellendi."
+      },
       "receiptLabels": {
         "title": "Mal kabulde oluşan etiketler",
         "hint": "Her kabul hareketinden sonra gerçek miktar ve seri/lot bilgisiyle otomatik oluşur.",
@@ -651,11 +844,19 @@
   },
   "enums": {
     "operationStatus": {
-      "Draft": "Taslak", "Released": "Serbest Bırakıldı", "InProgress": "Devam Ediyor",
-      "PartiallyProcessed": "Kısmen İşlendi", "Processed": "İşlendi", "Completed": "Tamamlandı", "Cancelled": "İptal Edildi"
+      "Draft": "Taslak",
+      "Released": "Serbest Bırakıldı",
+      "InProgress": "Devam Ediyor",
+      "PartiallyProcessed": "Kısmen İşlendi",
+      "Processed": "İşlendi",
+      "Completed": "Tamamlandı",
+      "Cancelled": "İptal Edildi"
     },
     "approvalStatus": {
-      "NotRequired": "Onay Gerekmiyor", "Pending": "Onay Bekliyor", "Approved": "Onaylandı", "Rejected": "Reddedildi"
+      "NotRequired": "Onay Gerekmiyor",
+      "Pending": "Onay Bekliyor",
+      "Approved": "Onaylandı",
+      "Rejected": "Reddedildi"
     },
     "qualityStatus": {
       "NotRequired": "Kontrol yok",
@@ -674,42 +875,78 @@
       "Failed": "Kalite kontrolü reddedildi"
     },
     "putawayStatus": {
-      "NotRequired": "Raflama Gerekmiyor", "Pending": "Raflama Bekliyor", "InProgress": "Raflama Devam Ediyor",
-      "PartiallyCompleted": "Kısmen Raflandı", "Completed": "Raflama Tamamlandı"
+      "NotRequired": "Raflama Gerekmiyor",
+      "Pending": "Raflama Bekliyor",
+      "InProgress": "Raflama Devam Ediyor",
+      "PartiallyCompleted": "Kısmen Raflandı",
+      "Completed": "Raflama Tamamlandı"
     },
     "erpStatus": {
-      "NotRequired": "ERP Aktarımı Gerekmiyor", "Pending": "ERP Aktarımı Bekliyor", "Processing": "ERP'ye Aktarılıyor",
-      "Succeeded": "ERP Kaydı Atıldı", "Failed": "ERP Aktarımı Başarısız", "CommitUncertain": "ERP Sonucu Belirsiz"
+      "NotRequired": "ERP Aktarımı Gerekmiyor",
+      "Pending": "ERP Aktarımı Bekliyor",
+      "Processing": "ERP'ye Aktarılıyor",
+      "Succeeded": "ERP Kaydı Atıldı",
+      "Failed": "ERP Aktarımı Başarısız",
+      "CommitUncertain": "ERP Sonucu Belirsiz"
     },
     "lineStatus": {
-      "Open": "Açık", "PartiallyReceived": "Kısmen Kabul Edildi", "Received": "Kabul Edildi",
-      "ShortClosed": "Eksik Kapatıldı", "Cancelled": "İptal Edildi"
+      "Open": "Açık",
+      "PartiallyReceived": "Kısmen Kabul Edildi",
+      "Received": "Kabul Edildi",
+      "ShortClosed": "Eksik Kapatıldı",
+      "Cancelled": "İptal Edildi"
     },
     "taskStatus": {
-      "Draft": "Taslak", "Released": "Serbest Bırakıldı", "Assigned": "Atandı", "InProgress": "Devam Ediyor",
-      "Paused": "Duraklatıldı", "PartiallyCompleted": "Kısmen Tamamlandı", "Completed": "Tamamlandı", "Cancelled": "İptal Edildi"
+      "Draft": "Taslak",
+      "Released": "Serbest Bırakıldı",
+      "Assigned": "Atandı",
+      "InProgress": "Devam Ediyor",
+      "Paused": "Duraklatıldı",
+      "PartiallyCompleted": "Kısmen Tamamlandı",
+      "Completed": "Tamamlandı",
+      "Cancelled": "İptal Edildi"
     },
     "assignmentStatus": {
-      "Assigned": "Atandı", "Accepted": "Kabul Edildi", "InProgress": "Devam Ediyor", "Completed": "Tamamlandı",
-      "Unassigned": "Atama Kaldırıldı", "Rejected": "Reddedildi"
+      "Assigned": "Atandı",
+      "Accepted": "Kabul Edildi",
+      "InProgress": "Devam Ediyor",
+      "Completed": "Tamamlandı",
+      "Unassigned": "Atama Kaldırıldı",
+      "Rejected": "Reddedildi"
     },
     "labelBatchStatus": {
-      "Draft": "Taslak", "Generated": "Oluşturuldu", "PartiallyPrinted": "Kısmen Yazdırıldı", "Printed": "Yazdırıldı",
-      "PartiallyConsumed": "Kısmen Kullanıldı", "Consumed": "Kullanıldı", "Cancelled": "İptal Edildi"
+      "Draft": "Taslak",
+      "Generated": "Oluşturuldu",
+      "PartiallyPrinted": "Kısmen Yazdırıldı",
+      "Printed": "Yazdırıldı",
+      "PartiallyConsumed": "Kısmen Kullanıldı",
+      "Consumed": "Kullanıldı",
+      "Cancelled": "İptal Edildi"
     },
     "labelStatus": {
-      "Generated": "Oluşturuldu", "Printed": "Yazdırıldı", "Assigned": "Atandı", "Consumed": "Kullanıldı", "Void": "Geçersiz Kılındı"
+      "Generated": "Oluşturuldu",
+      "Printed": "Yazdırıldı",
+      "Assigned": "Atandı",
+      "Consumed": "Kullanıldı",
+      "Void": "Geçersiz Kılındı"
     },
     "processType": {
-      "OrderBasedTask": "Siparişe İstinaden Emirli", "OrderlessTask": "Siparişsiz Emirli",
-      "OrderBasedDirectReceipt": "Siparişe İstinaden Doğrudan", "OrderlessDirectReceipt": "Siparişsiz Doğrudan"
+      "OrderBasedTask": "Siparişe İstinaden Emirli",
+      "OrderlessTask": "Siparişsiz Emirli",
+      "OrderBasedDirectReceipt": "Siparişe İstinaden Doğrudan",
+      "OrderlessDirectReceipt": "Siparişsiz Doğrudan"
     },
     "initiationMode": {
-      "OrderBasedTask": "Siparişe İstinaden Emirli", "UnplannedTask": "Plansız Emir", "DirectReceipt": "Doğrudan Mal Kabul"
+      "OrderBasedTask": "Siparişe İstinaden Emirli",
+      "UnplannedTask": "Plansız Emir",
+      "DirectReceipt": "Doğrudan Mal Kabul"
     },
     "executionMode": {
-      "Manual": "Manuel", "BarcodeScan": "Barkod Okutma", "PreGeneratedLabel": "Önceden Üretilmiş Etiket",
-      "SupplierLabel": "Tedarikçi Etiketi", "Import": "İçe Aktarım"
+      "Manual": "Manuel",
+      "BarcodeScan": "Barkod Okutma",
+      "PreGeneratedLabel": "Önceden Üretilmiş Etiket",
+      "SupplierLabel": "Tedarikçi Etiketi",
+      "Import": "İçe Aktarım"
     }
   },
   "hub": {
@@ -717,18 +954,48 @@
     "title": "Mal Kabul Süreç Merkezi",
     "description": "Siparişli, siparişsiz ve doğrudan kabulü aynı domain kurallarıyla başlatın; atamadan kalite ve stok hareketine kadar her adımı izleyin.",
     "phases": {
-      "start": { "title": "Kabulü Başlat", "description": "Belgenin kaynağına ve operasyon şekline göre doğru başlangıcı seçin." },
-      "execute": { "title": "Emri Yürüt", "description": "Sorumluları belirleyin, atanan işleri alın ve fiziksel ilerlemeyi yönetin." },
-      "manage": { "title": "İzle ve Yönet", "description": "Tam izlenebilirlik ve parametrik süreç yönetimi için kayıtları ve kuralları kullanın." }
+      "start": {
+        "title": "Kabulü Başlat",
+        "description": "Belgenin kaynağına ve operasyon şekline göre doğru başlangıcı seçin."
+      },
+      "execute": {
+        "title": "Emri Yürüt",
+        "description": "Sorumluları belirleyin, atanan işleri alın ve fiziksel ilerlemeyi yönetin."
+      },
+      "manage": {
+        "title": "İzle ve Yönet",
+        "description": "Tam izlenebilirlik ve parametrik süreç yönetimi için kayıtları ve kuralları kullanın."
+      }
     },
     "cards": {
-      "ordered": { "title": "Siparişten Emir", "description": "Netsis satın alma siparişlerini seçin, açık miktarları rezerve edip görev oluşturun." },
-      "orderless": { "title": "Siparişsiz Emir", "description": "İrsaliye ve stok satırlarıyla sipariş bağlantısız planlı görev açın." },
-      "direct": { "title": "Doğrudan Mal Kabul", "description": "Emirsiz kabulü kalite, karantina ve stok hareketiyle atomik kaydedin." },
-      "tasks": { "title": "Emir Yönetimi", "description": "Açık emirleri bir veya birden çok kullanıcıya atayın ve ilerlemeyi izleyin." },
-      "assigned": { "title": "Bana Atanan Emirler", "description": "Size atanmış emirleri kabul edin, başlatın ve operasyonu tamamlayın." },
-      "records": { "title": "Mal Kabul Kayıtları", "description": "Tüm işlem tiplerini ortak sunucu taraflı veri tablosunda izleyin." },
-      "settings": { "title": "Süreç Ayarları", "description": "Fazla/eksik kabul, kalite bekletme, onay ve ERP aktarım politikalarını yönetin." }
+      "ordered": {
+        "title": "Siparişten Emir",
+        "description": "Netsis satın alma siparişlerini seçin, açık miktarları rezerve edip görev oluşturun."
+      },
+      "orderless": {
+        "title": "Siparişsiz Emir",
+        "description": "İrsaliye ve stok satırlarıyla sipariş bağlantısız planlı görev açın."
+      },
+      "direct": {
+        "title": "Doğrudan Mal Kabul",
+        "description": "Emirsiz kabulü kalite, karantina ve stok hareketiyle atomik kaydedin."
+      },
+      "tasks": {
+        "title": "Emir Yönetimi",
+        "description": "Açık emirleri bir veya birden çok kullanıcıya atayın ve ilerlemeyi izleyin."
+      },
+      "assigned": {
+        "title": "Bana Atanan Emirler",
+        "description": "Size atanmış emirleri kabul edin, başlatın ve operasyonu tamamlayın."
+      },
+      "records": {
+        "title": "Mal Kabul Kayıtları",
+        "description": "Tüm işlem tiplerini ortak sunucu taraflı veri tablosunda izleyin."
+      },
+      "settings": {
+        "title": "Süreç Ayarları",
+        "description": "Fazla/eksik kabul, kalite bekletme, onay ve ERP aktarım politikalarını yönetin."
+      }
     }
   }
 }

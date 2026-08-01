@@ -366,7 +366,7 @@ export function GoodsReceiptManualPage({
     try {
       const payload = { idempotencyKey: submitIdempotencyKey.current, branchCode: supplierBranch || branchCode, documentSeriesId: Number(seriesId), supplierId: Number(supplierId),
         targetWarehouseId: warehouseId, receivingLocationId: Number(locationId), documentDate,
-        waybillNo: isElectronic ? null : receiptNo, waybillDate: documentDate, electronicWaybillNo: isElectronic ? receiptNo : null,
+        waybillNo: receiptNo, waybillDate: documentDate, electronicWaybillNo: isElectronic ? receiptNo : null,
         shipmentReferenceNo: null, carrierCode: null, carrierName: null, vehiclePlate: null, trailerPlate: null, driverName: null, sealNo: null,
         plannedArrivalAtUtc: plannedArrival ? new Date(plannedArrival).toISOString() : null, occurredAtUtc: direct ? new Date().toISOString() : null,
         labelStrategy, executionMode, priority: 1, deviceId: null, description: description.trim() || null,

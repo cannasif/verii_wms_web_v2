@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import { toTurkishApiSearch } from '@/lib/turkish-search';
 import { getWorkspacePortalRoot } from '@/lib/workspace-portal';
 import { OpsActionButton } from './OpsActionButton';
 import { OpsFieldShell } from './OpsFieldShell';
@@ -99,15 +100,17 @@ export function PagedLookupDialog<T>({
   const isCombobox = triggerMode === 'combobox';
   const minLen = autoSearchMinLength ?? 1;
 
+  const apiSearch = toTurkishApiSearch(search);
+
   const query = useInfiniteQuery({
-    queryKey: [...queryKey, search],
+    queryKey: [...queryKey, apiSearch],
     enabled: open,
     initialPageParam: 1,
     queryFn: ({ pageParam, signal }) =>
       fetchPage({
         pageNumber: pageParam,
         pageSize: 20,
-        search,
+        search: apiSearch,
         signal,
       }),
     getNextPageParam: (lastPage) => (lastPage.hasNextPage ? lastPage.pageNumber + 1 : undefined),
@@ -130,16 +133,17 @@ export function PagedLookupDialog<T>({
   const effectiveDraft = editing && !isSameAsSelected ? trimmedDraft : '';
   const isThresholdMode = effectiveDraft.length > 0 && effectiveDraft.length < minLen;
   const activeComboboxSearch = effectiveDraft.length >= minLen ? comboboxSearch : '';
+  const apiComboboxSearch = toTurkishApiSearch(activeComboboxSearch);
 
   const comboboxQuery = useInfiniteQuery({
-    queryKey: [...queryKey, 'combobox', activeComboboxSearch],
+    queryKey: [...queryKey, 'combobox', apiComboboxSearch],
     enabled: isCombobox && comboboxOpen && !isThresholdMode,
     initialPageParam: 1,
     queryFn: ({ pageParam, signal }) =>
       fetchPage({
         pageNumber: pageParam,
         pageSize: 20,
-        search: activeComboboxSearch,
+        search: apiComboboxSearch,
         signal,
       }),
     getNextPageParam: (lastPage) => (lastPage.hasNextPage ? lastPage.pageNumber + 1 : undefined),

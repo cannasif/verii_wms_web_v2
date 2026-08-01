@@ -1,14 +1,37 @@
 {
   "title": "Ricevimento merci da ordine",
   "subtitle": "Seleziona gli ordini Netsis, convalida le quantità e prenota in sicurezza un'attività di ricevimento.",
-  "steps": ["Fornitore e ordini", "Righe e quantità", "Impostazioni magazzino", "Conferma"],
-  "customer": "Conto fornitore", "selectCustomer": "Seleziona conto fornitore...", "searchCustomer": "Cerca codice / nome fornitore…", "customerEmpty": "Nessun conto fornitore trovato.", "selectedCustomer": "Conto fornitore selezionato",
-  "loadOrders": "Carica ordini aperti", "orders": "Ordini aperti",
-  "loadLines": "Carica le righe degli ordini selezionati", "noOrders": "Nessun ordine aperto trovato per questo fornitore.", "noLines": "Nessuna riga disponibile trovata.",
-  "warehouse": "Magazzino di destinazione", "location": "Area di ricevimento", "series": "Serie documento", "documentDate": "Data documento",
-  "plannedArrival": "Arrivo previsto", "priority": "Priorità", "labelStrategy": "Strategia etichette", "description": "Descrizione",
-  "create": "Crea attività e prenota", "created": "Attività di ricevimento merci creata", "assignedSelf": "L'attività verrà assegnata all'utente collegato.",
-  "quantity": "Quantità prenotata", "available": "Disponibile", "back": "Indietro", "continue": "Continua",
+  "steps": [
+    "Fornitore e ordini",
+    "Righe e quantità",
+    "Impostazioni magazzino",
+    "Conferma"
+  ],
+  "customer": "Conto fornitore",
+  "selectCustomer": "Seleziona conto fornitore...",
+  "searchCustomer": "Cerca codice / nome fornitore…",
+  "customerEmpty": "Nessun conto fornitore trovato.",
+  "selectedCustomer": "Conto fornitore selezionato",
+  "loadOrders": "Carica ordini aperti",
+  "orders": "Ordini aperti",
+  "loadLines": "Carica le righe degli ordini selezionati",
+  "noOrders": "Nessun ordine aperto trovato per questo fornitore.",
+  "noLines": "Nessuna riga disponibile trovata.",
+  "warehouse": "Magazzino di destinazione",
+  "location": "Area di ricevimento",
+  "series": "Serie documento",
+  "documentDate": "Data documento",
+  "plannedArrival": "Arrivo previsto",
+  "priority": "Priorità",
+  "labelStrategy": "Strategia etichette",
+  "description": "Descrizione",
+  "create": "Crea attività e prenota",
+  "created": "Attività di ricevimento merci creata",
+  "assignedSelf": "L'attività verrà assegnata all'utente collegato.",
+  "quantity": "Quantità prenotata",
+  "available": "Disponibile",
+  "back": "Indietro",
+  "continue": "Continua",
   "configurationHint": "Seleziona un magazzino di destinazione, un'area di ricevimento e una serie documento per continuare.",
   "createFlow": {
     "subtitle": "Gestisci la selezione degli ordini con pianificazione di quantità, seriali e scaffali in un'unica schermata; controlla e crea nell'ultimo passaggio.",
@@ -22,7 +45,10 @@
     "orderedBadge": "Con ordine",
     "stepsAriaLabel": "Passaggi di creazione",
     "orderSelection": "Selezione ordine",
-    "steps": { "0": "Ordini e piano righe", "1": "Controllo e creazione" },
+    "steps": {
+      "0": "Ordini e piano righe",
+      "1": "Controllo e creazione"
+    },
     "orderNo": "N. ordine",
     "orderNoHelpAria": "Informazioni sul recupero tramite numero ordine",
     "orderNoTooltip": "Il codice cliente dell'ordine viene letto da Netsis; il fornitore corrispondente viene selezionato automaticamente e il saldo dell'ordine si apre sotto.",
@@ -157,7 +183,15 @@
       "viewQualityList": "{{count}} righe · Visualizza elenco",
       "multipleOrders": "Più di un ordine",
       "multipleOrdersCount": "{{count}} ordini",
-      "ordersTooltipHint": "Scorri per vedere tutti i numeri d'ordine"
+      "ordersTooltipHint": "Scorri per vedere tutti i numeri d'ordine",
+      "orderDate": "Data ordine",
+      "multipleProjects": "Più di un progetto",
+      "multipleProjectsCount": "{{count}} progetti",
+      "projectsTooltipHint": "Scorri per vedere tutti i codici progetto",
+      "metricLinesHint": "Visualizza giacenze",
+      "metricQualityLabel": "Qualità",
+      "metricQualityNone": "Nessuna",
+      "metricQualityHint": "Visualizza elenco qualità"
     },
     "qualityDialog": {
       "title": "Articoli destinati alla qualità",
@@ -205,7 +239,12 @@
       "noQualityLines": "Nessuna riga richiede il controllo qualità in questa attività.",
       "createdTasks": "Attività create",
       "taskMeta": "magazzino #{{warehouseId}} · {{lineCount}} righe · {{quantity}}",
-      "goToTaskManagement": "Vai alla gestione attività"
+      "goToTaskManagement": "Vai alla gestione attività",
+      "copyDocument": "Copia numero documento di trasporto",
+      "documentCopied": "Numero documento di trasporto copiato",
+      "documentCopyFailed": "Impossibile copiare il numero documento di trasporto",
+      "statusCompleted": "Completato",
+      "statusAwaitingQuality": "In attesa di qualità"
     },
     "validation": {
       "eReceiptNo": "Il numero E-DDT / SDI deve essere di esattamente 15 caratteri stampabili, simboli inclusi.",
@@ -296,32 +335,117 @@
       "quantityAria": "Quantità",
       "empty": "Nessuna riga lotto/seriale ancora presente. Suggerisci automaticamente o aggiungi una riga singola.",
       "done": "Fatto"
+    },
+    "submit": {
+      "receiptEyebrow": "Ricezione merci / documento di trasporto",
+      "receiptTitle": "Creazione documento di trasporto",
+      "receiptSubtitle": "{{name}} · elaborazione di {{count}} righe",
+      "qualityEyebrow": "Instradamento qualità",
+      "qualityTitle": "Invio alla qualità",
+      "qualitySubtitle": "{{name}} · instradamento di {{count}} righe alla qualità",
+      "documentLabel": "N. documento di trasporto",
+      "errorEyebrow": "Operazione non riuscita",
+      "errorTitle": "Impossibile completare l'invio",
+      "errorReturning": "Ritorno alla revisione…",
+      "errorFallback": "Si è verificato un errore imprevisto.",
+      "receiptLog0": "Preparazione righe documento di trasporto",
+      "receiptLog1": "Validazione righe di giacenza",
+      "receiptLog2": "Registrazione movimenti di magazzino",
+      "receiptLog3": "Invio documento di trasporto all'ERP",
+      "receiptLog4": "Assegnazione numero documento",
+      "qualityLog0": "Suddivisione righe qualità",
+      "qualityLog1": "Applicazione regole di qualità",
+      "qualityLog2": "Registrazione nell'elenco qualità",
+      "qualityLog3": "Creazione attività di qualità",
+      "qualityLog4": "Completamento instradamento"
     }
   },
   "manual": {
-    "eyebrow": "Operazione di ricevimento merci", "directTitle": "Ricevimento merci diretto", "orderlessTitle": "Attività di ricevimento senza ordine",
+    "eyebrow": "Operazione di ricevimento merci",
+    "directTitle": "Ricevimento merci diretto",
+    "orderlessTitle": "Attività di ricevimento senza ordine",
     "directSubtitle": "Convalida il documento e registra ricevimento, qualità e movimento di magazzino in un flusso controllato.",
-    "orderlessSubtitle": "Crea un'attività di ricevimento pianificata senza collegamento a un ordine.", "currentStep": "Passaggio",
-    "steps": { "document": "Documento", "operation": "Operazione", "lines": "Righe articolo", "review": "Controllo" },
-    "document": { "title": "Documento e fornitore", "description": "Convalida il tipo, il numero e il fornitore del documento di trasporto alla base del ricevimento." },
-    "operation": { "title": "Magazzino e processo", "description": "Scegli l'area di ricevimento, la serie, la priorità e il metodo etichetta." },
-    "lines": { "title": "Articoli da ricevere", "description": "Inserisci articolo, configurazione, quantità e tracciabilità per ogni riga." },
-    "review": { "title": "Controllo finale", "description": "Verifica il riepilogo di documento e quantità prima della registrazione." },
-    "customer": "Fornitore", "documentDate": "Data documento di trasporto / ricevimento", "receiptNo": "Numero ricevimento", "isElectronic": "E-DDT",
-    "receiptHint": "Inserisci esattamente 15 caratteri alfanumerici.", "eReceiptHint": "Inserisci esattamente 15 caratteri alfanumerici per il numero E-DDT/SDI.",
-    "validNumber": "Il formato del numero documento è valido.", "plannedArrival": "Arrivo previsto", "warehouse": "Magazzino di destinazione",
-    "location": "Area di ricevimento / staging", "series": "Serie documento WMS", "priority": "Priorità", "labelStrategy": "Strategia etichette",
-    "executionMode": "Metodo di ricevimento", "stock": "Articolo", "yap": "Codice di configurazione", "quantity": "Quantità", "unit": "Unità",
-    "lot": "Lotto", "serial": "Seriale", "manufacturingDate": "Data di produzione", "expirationDate": "Data di scadenza",
-    "scannedBarcode": "Codice a barre scansionato", "addLine": "Aggiungi riga", "actions": "Azioni", "removeLine": "Rimuovi riga",
-    "noLines": "Nessuna riga articolo aggiunta.", "description": "Descrizione", "documentType": "Tipo documento di trasporto",
-    "normalReceipt": "Documento di trasporto standard", "eReceipt": "E-DDT", "lineCount": "N. righe", "totalQuantity": "Quantità totale",
-    "operationType": "Tipo operazione", "direct": "Ricevimento diretto", "orderless": "Attività senza ordine", "postReceipt": "Registra ricevimento",
-    "createTask": "Crea attività", "success": "Il ricevimento merci è stato creato correttamente.", "resultDirect": "Ricevimento merci registrato",
-    "resultOrderless": "Attività di ricevimento creata", "linesText": "righe", "newRecord": "Nuovo record",
-    "defaultTargetLocation": "Scaffale di destinazione predefinito", "selectActiveLocation": "Seleziona scaffale attivo",
-    "unitLabelWithValue": "Unità: {{unit}}", "unitUndefined": "Unità non definita", "selectStockFirst": "Seleziona prima un articolo",
-    "options": { "noLabel": "Nessuna etichetta", "preGenerate": "Pre-generazione", "supplierLabel": "Etichetta fornitore", "generateOnReceipt": "Genera al ricevimento", "manual": "Manuale", "barcode": "Scansione codice a barre", "preLabel": "Etichetta pre-generata" },
+    "orderlessSubtitle": "Crea un'attività di ricevimento pianificata senza collegamento a un ordine.",
+    "currentStep": "Passaggio",
+    "steps": {
+      "document": "Documento",
+      "operation": "Operazione",
+      "lines": "Righe articolo",
+      "review": "Controllo"
+    },
+    "document": {
+      "title": "Documento e fornitore",
+      "description": "Convalida il tipo, il numero e il fornitore del documento di trasporto alla base del ricevimento."
+    },
+    "operation": {
+      "title": "Magazzino e processo",
+      "description": "Scegli l'area di ricevimento, la serie, la priorità e il metodo etichetta."
+    },
+    "lines": {
+      "title": "Articoli da ricevere",
+      "description": "Inserisci articolo, configurazione, quantità e tracciabilità per ogni riga."
+    },
+    "review": {
+      "title": "Controllo finale",
+      "description": "Verifica il riepilogo di documento e quantità prima della registrazione."
+    },
+    "customer": "Fornitore",
+    "documentDate": "Data documento di trasporto / ricevimento",
+    "receiptNo": "Numero ricevimento",
+    "isElectronic": "E-DDT",
+    "receiptHint": "Inserisci esattamente 15 caratteri alfanumerici.",
+    "eReceiptHint": "Inserisci esattamente 15 caratteri alfanumerici per il numero E-DDT/SDI.",
+    "validNumber": "Il formato del numero documento è valido.",
+    "plannedArrival": "Arrivo previsto",
+    "warehouse": "Magazzino di destinazione",
+    "location": "Area di ricevimento / staging",
+    "series": "Serie documento WMS",
+    "priority": "Priorità",
+    "labelStrategy": "Strategia etichette",
+    "executionMode": "Metodo di ricevimento",
+    "stock": "Articolo",
+    "yap": "Codice di configurazione",
+    "quantity": "Quantità",
+    "unit": "Unità",
+    "lot": "Lotto",
+    "serial": "Seriale",
+    "manufacturingDate": "Data di produzione",
+    "expirationDate": "Data di scadenza",
+    "scannedBarcode": "Codice a barre scansionato",
+    "addLine": "Aggiungi riga",
+    "actions": "Azioni",
+    "removeLine": "Rimuovi riga",
+    "noLines": "Nessuna riga articolo aggiunta.",
+    "description": "Descrizione",
+    "documentType": "Tipo documento di trasporto",
+    "normalReceipt": "Documento di trasporto standard",
+    "eReceipt": "E-DDT",
+    "lineCount": "N. righe",
+    "totalQuantity": "Quantità totale",
+    "operationType": "Tipo operazione",
+    "direct": "Ricevimento diretto",
+    "orderless": "Attività senza ordine",
+    "postReceipt": "Registra ricevimento",
+    "createTask": "Crea attività",
+    "success": "Il ricevimento merci è stato creato correttamente.",
+    "resultDirect": "Ricevimento merci registrato",
+    "resultOrderless": "Attività di ricevimento creata",
+    "linesText": "righe",
+    "newRecord": "Nuovo record",
+    "defaultTargetLocation": "Scaffale di destinazione predefinito",
+    "selectActiveLocation": "Seleziona scaffale attivo",
+    "unitLabelWithValue": "Unità: {{unit}}",
+    "unitUndefined": "Unità non definita",
+    "selectStockFirst": "Seleziona prima un articolo",
+    "options": {
+      "noLabel": "Nessuna etichetta",
+      "preGenerate": "Pre-generazione",
+      "supplierLabel": "Etichetta fornitore",
+      "generateOnReceipt": "Genera al ricevimento",
+      "manual": "Manuale",
+      "barcode": "Scansione codice a barre",
+      "preLabel": "Etichetta pre-generata"
+    },
     "bulkSerial": {
       "title": "Scansione seriale e codice a barre in blocco",
       "hint": "Se la quantità è 13, scansiona uno per uno 13 seriali diversi con il lettore. Ogni seriale viene inviato all'API come riga tracciabile separata con quantità 1.",
@@ -336,7 +460,9 @@
       "hintReceiving": "Durante l'attesa della decisione di qualità è possibile selezionare solo Receiving/Staging.",
       "remainingLabel": "Rimanente:"
     },
-    "table": { "warehouseLocation": "Magazzino / Scaffale" },
+    "table": {
+      "warehouseLocation": "Magazzino / Scaffale"
+    },
     "result": {
       "eyebrow": "Dopo il ricevimento merci",
       "qualitySentTitle": "Inviato in qualità",
@@ -353,7 +479,30 @@
       "labelsPrintFailed": "Impossibile stampare le etichette.",
       "printTitleSuffix": "etichette ricevimento"
     },
-    "validation": { "customer": "Il fornitore è obbligatorio.", "receiptNo": "Il numero del documento di trasporto standard deve contenere esattamente 15 cifre.", "eReceiptNo": "Il numero E-DDT / SDI deve essere di esattamente 15 caratteri alfanumerici.", "date": "La data del documento di trasporto è obbligatoria.", "operation": "Sono obbligatori magazzino, area di ricevimento e serie documento.", "lines": "È obbligatoria almeno una riga articolo.", "stock": "Sono obbligatori articolo e una quantità maggiore di zero.", "serialQuantity": "Una riga tracciata a seriale deve avere quantità 1.", "expiry": "La data di scadenza non può precedere la data di produzione.", "incomplete": "Il modulo contiene campi mancanti o non validi.", "submit": "Impossibile creare il ricevimento merci.", "activeSeriesRequired": "Per questa operazione deve essere selezionata una serie documento attiva.", "assigneesRequired": "Almeno un utente operativo deve essere assegnato all'attività.", "qualityRulesCheckFailed": "Impossibile verificare le regole di controllo qualità.", "trackingPolicyLoadFailed": "Impossibile caricare la politica di tracciabilità per l'articolo {{code}}.", "unitCodeMissing": "L'unità di misura non è definita per l'articolo {{code}}.", "lineLocationRequired": "Per la riga devono essere selezionati un magazzino di destinazione e uno scaffale.", "serialFieldsConflict": "Il campo seriale singolo e il campo seriale in blocco non possono essere utilizzati insieme.", "serialBatchCountMismatch": "Il numero di seriali in blocco ({{count}}) deve essere uguale alla quantità di ricevimento ({{quantity}}).", "duplicateSerialInBatch": "Lo stesso seriale non può essere utilizzato più di una volta nell'elenco seriali in blocco.", "serialAlreadyUsed": "Uno dei seriali è già stato utilizzato in questo elenco di ricevimento.", "qualityRuleCheckFailedForStock": "Impossibile verificare la regola di qualità per l'articolo {{code}}." }
+    "validation": {
+      "customer": "Il fornitore è obbligatorio.",
+      "receiptNo": "Il numero del documento di trasporto standard deve contenere esattamente 15 cifre.",
+      "eReceiptNo": "Il numero E-DDT / SDI deve essere di esattamente 15 caratteri alfanumerici.",
+      "date": "La data del documento di trasporto è obbligatoria.",
+      "operation": "Sono obbligatori magazzino, area di ricevimento e serie documento.",
+      "lines": "È obbligatoria almeno una riga articolo.",
+      "stock": "Sono obbligatori articolo e una quantità maggiore di zero.",
+      "serialQuantity": "Una riga tracciata a seriale deve avere quantità 1.",
+      "expiry": "La data di scadenza non può precedere la data di produzione.",
+      "incomplete": "Il modulo contiene campi mancanti o non validi.",
+      "submit": "Impossibile creare il ricevimento merci.",
+      "activeSeriesRequired": "Per questa operazione deve essere selezionata una serie documento attiva.",
+      "assigneesRequired": "Almeno un utente operativo deve essere assegnato all'attività.",
+      "qualityRulesCheckFailed": "Impossibile verificare le regole di controllo qualità.",
+      "trackingPolicyLoadFailed": "Impossibile caricare la politica di tracciabilità per l'articolo {{code}}.",
+      "unitCodeMissing": "L'unità di misura non è definita per l'articolo {{code}}.",
+      "lineLocationRequired": "Per la riga devono essere selezionati un magazzino di destinazione e uno scaffale.",
+      "serialFieldsConflict": "Il campo seriale singolo e il campo seriale in blocco non possono essere utilizzati insieme.",
+      "serialBatchCountMismatch": "Il numero di seriali in blocco ({{count}}) deve essere uguale alla quantità di ricevimento ({{quantity}}).",
+      "duplicateSerialInBatch": "Lo stesso seriale non può essere utilizzato più di una volta nell'elenco seriali in blocco.",
+      "serialAlreadyUsed": "Uno dei seriali è già stato utilizzato in questo elenco di ricevimento.",
+      "qualityRuleCheckFailedForStock": "Impossibile verificare la regola di qualità per l'articolo {{code}}."
+    }
   },
   "list": {
     "eyebrowParent": "INBOUND_OP",
@@ -426,10 +575,26 @@
       "retryFailed": "Impossibile riavviare l'invio ERP."
     },
     "lifecycleDialog": {
-      "approve": { "title": "Approva ricevimento merci", "description": "Il record verrà spostato in approvazione operativa. La stessa richiesta viene applicata in modo sicuro una sola volta.", "submit": "Approva" },
-      "shortClose": { "title": "Chiusura parziale quantità mancante", "description": "Le quantità aperte selezionate non saranno più previste. È richiesto un motivo per la reportistica.", "submit": "Chiusura parziale" },
-      "putaway": { "title": "Stoccaggio", "description": "Lo stock disponibile nell'area di ricevimento viene trasferito nell'ubicazione selezionata; i saldi di ubicazione e magazzino vengono aggiornati nella stessa transazione.", "submit": "Stocca" },
-      "cancel": { "title": "Annulla ricevimento merci", "description": "I movimenti di stock e qualità collegati vengono stornati. Se lo stock è già stato utilizzato, il sistema blocca in modo sicuro l'annullamento.", "submit": "Annulla" },
+      "approve": {
+        "title": "Approva ricevimento merci",
+        "description": "Il record verrà spostato in approvazione operativa. La stessa richiesta viene applicata in modo sicuro una sola volta.",
+        "submit": "Approva"
+      },
+      "shortClose": {
+        "title": "Chiusura parziale quantità mancante",
+        "description": "Le quantità aperte selezionate non saranno più previste. È richiesto un motivo per la reportistica.",
+        "submit": "Chiusura parziale"
+      },
+      "putaway": {
+        "title": "Stoccaggio",
+        "description": "Lo stock disponibile nell'area di ricevimento viene trasferito nell'ubicazione selezionata; i saldi di ubicazione e magazzino vengono aggiornati nella stessa transazione.",
+        "submit": "Stocca"
+      },
+      "cancel": {
+        "title": "Annulla ricevimento merci",
+        "description": "I movimenti di stock e qualità collegati vengono stornati. Se lo stock è già stato utilizzato, il sistema blocca in modo sicuro l'annullamento.",
+        "submit": "Annulla"
+      },
       "reasonRequired": "È richiesto un motivo descrittivo per questa azione.",
       "noShortCloseQuantity": "Non è disponibile alcuna quantità aperta per la chiusura parziale.",
       "selectAtLeastOneLine": "Selezionare almeno una riga di stock.",
@@ -487,7 +652,19 @@
       },
       "and": "e",
       "successToast": "{{documents}} creato/i; instradata una quantità totale di {{quantity}}.",
-      "createFailed": "Impossibile creare la distribuzione."
+      "createFailed": "Impossibile creare la distribuzione.",
+      "dialogTitle": "Distribuzione post-ricezione",
+      "tabsHint": "Le condizioni sono gestite in schede separate",
+      "tabKickerTransfer": "Condizione 1",
+      "tabKickerOutbound": "Condizione 2",
+      "tabTitleTransfer": "Trasferimento di magazzino",
+      "tabTitleOutbound": "Spedizione in uscita",
+      "transferPanelHint": "Seleziona la serie documento, il magazzino di destinazione e l'ubicazione per il trasferimento tra magazzini; inserisci le quantità delle righe nell'elenco sotto.",
+      "outboundPanelHint": "Seleziona la serie documento e il cliente in uscita per la spedizione; inserisci le quantità delle righe nell'elenco sotto.",
+      "linesHeadSummary": "{{count}} riga/righe · scheda attiva: {{tab}}",
+      "increaseQuantity": "Aumenta quantità",
+      "decreaseQuantity": "Diminuisci quantità",
+      "notePlaceholder": "Nota facoltativa…"
     },
     "sourceDocuments": "Documenti di origine",
     "qcRequired": "Controllo qualità richiesto",
@@ -549,7 +726,22 @@
     "printLineLabel": "Stampa etichetta riga",
     "showLineLabelPdf": "Mostra etichetta riga in PDF",
     "lineNumber": "Riga #{{number}}",
-    "noStockName": "Nome articolo assente"
+    "noStockName": "Nome articolo assente",
+    "sendToErp": "Invia a ERP",
+    "erpReconcile": "Riconciliazione ERP / Reinvia",
+    "searchPlaceholder": "N. documento, fornitore, DDT, magazzino, creatore, aggiornato da…",
+    "searchTokenHint": "Digitare cerca subito. Invio filtra solo per chip.",
+    "searchActiveTokens": "Chip di ricerca attivi",
+    "searchRemoveToken": "Rimuovi chip {{token}}",
+    "searchClearTokens": "Cancella chip",
+    "facetFilters": "Filtri",
+    "facetFiltersTitle": "Filtri elenco",
+    "facetStatus": "Stato",
+    "facetQuality": "Qualità",
+    "facetErp": "Invio ERP",
+    "facetProcessType": "Tipo processo",
+    "facetAll": "Tutti",
+    "facetClear": "Cancella"
   },
   "tasks": {
     "title": "Gestione attività di ricevimento",
@@ -573,17 +765,37 @@
       "title": "Attività di ricevimento merci {{taskNo}}",
       "description": "Righe attività, assegnazioni e operazioni di ricevimento fisico.",
       "eyebrow": "Attività di ricevimento merci",
-      "info": { "status": "Stato", "warehouse": "Magazzino", "priority": "Priorità", "planned": "Pianificato", "started": "Avviato" },
-      "table": { "stock": "Articolo", "received": "Ricevuto" },
-      "line": { "qualityRequired": "Controllo qualità richiesto", "directDispatch": "Documento di trasporto diretto" },
-      "actions": { "acceptAssignment": "Accetta assegnazione", "startTask": "Avvia attività", "saveAssignments": "Salva assegnazioni" },
+      "info": {
+        "status": "Stato",
+        "warehouse": "Magazzino",
+        "priority": "Priorità",
+        "planned": "Pianificato",
+        "started": "Avviato"
+      },
+      "table": {
+        "stock": "Articolo",
+        "received": "Ricevuto"
+      },
+      "line": {
+        "qualityRequired": "Controllo qualità richiesto",
+        "directDispatch": "Documento di trasporto diretto"
+      },
+      "actions": {
+        "acceptAssignment": "Accetta assegnazione",
+        "startTask": "Avvia attività",
+        "saveAssignments": "Salva assegnazioni"
+      },
       "errors": {
         "detailFetchFailed": "Impossibile caricare i dettagli dell'attività.",
         "actionFailed": "Impossibile completare l'azione.",
         "selectAtLeastOneUser": "Seleziona almeno un utente.",
         "assignmentsUpdateFailed": "Impossibile aggiornare le assegnazioni."
       },
-      "toast": { "accepted": "Attività accettata.", "started": "Attività avviata.", "assignmentsUpdated": "Assegnazioni attività aggiornate." },
+      "toast": {
+        "accepted": "Attività accettata.",
+        "started": "Attività avviata.",
+        "assignmentsUpdated": "Assegnazioni attività aggiornate."
+      },
       "receiptLabels": {
         "title": "Etichette generate al ricevimento",
         "hint": "Create automaticamente dopo ogni movimento di ricevimento con la quantità effettiva e le informazioni su seriale/lotto.",
@@ -632,10 +844,20 @@
   },
   "enums": {
     "operationStatus": {
-      "Draft": "Bozza", "Released": "Rilasciato", "InProgress": "In corso", "PartiallyProcessed": "Parzialmente elaborato",
-      "Processed": "Elaborato", "Completed": "Completato", "Cancelled": "Annullato"
+      "Draft": "Bozza",
+      "Released": "Rilasciato",
+      "InProgress": "In corso",
+      "PartiallyProcessed": "Parzialmente elaborato",
+      "Processed": "Elaborato",
+      "Completed": "Completato",
+      "Cancelled": "Annullato"
     },
-    "approvalStatus": { "NotRequired": "Approvazione non richiesta", "Pending": "In attesa di approvazione", "Approved": "Approvato", "Rejected": "Rifiutato" },
+    "approvalStatus": {
+      "NotRequired": "Approvazione non richiesta",
+      "Pending": "In attesa di approvazione",
+      "Approved": "Approvato",
+      "Rejected": "Rifiutato"
+    },
     "qualityStatus": {
       "NotRequired": "Nessun controllo qualità",
       "Pending": "In attesa",
@@ -653,37 +875,78 @@
       "Failed": "Il controllo qualità è stato rifiutato"
     },
     "putawayStatus": {
-      "NotRequired": "Ubicazione non richiesta", "Pending": "In attesa di ubicazione", "InProgress": "Ubicazione in corso",
-      "PartiallyCompleted": "Parzialmente ubicato", "Completed": "Ubicazione completata"
+      "NotRequired": "Ubicazione non richiesta",
+      "Pending": "In attesa di ubicazione",
+      "InProgress": "Ubicazione in corso",
+      "PartiallyCompleted": "Parzialmente ubicato",
+      "Completed": "Ubicazione completata"
     },
     "erpStatus": {
-      "NotRequired": "Registrazione ERP non richiesta", "Pending": "In attesa di registrazione ERP", "Processing": "Registrazione su ERP in corso",
-      "Succeeded": "Registrato su ERP", "Failed": "Registrazione ERP non riuscita", "CommitUncertain": "Esito ERP incerto"
+      "NotRequired": "Registrazione ERP non richiesta",
+      "Pending": "In attesa di registrazione ERP",
+      "Processing": "Registrazione su ERP in corso",
+      "Succeeded": "Registrato su ERP",
+      "Failed": "Registrazione ERP non riuscita",
+      "CommitUncertain": "Esito ERP incerto"
     },
     "lineStatus": {
-      "Open": "Aperta", "PartiallyReceived": "Parzialmente ricevuta", "Received": "Ricevuta", "ShortClosed": "Chiusa parzialmente", "Cancelled": "Annullata"
+      "Open": "Aperta",
+      "PartiallyReceived": "Parzialmente ricevuta",
+      "Received": "Ricevuta",
+      "ShortClosed": "Chiusa parzialmente",
+      "Cancelled": "Annullata"
     },
     "taskStatus": {
-      "Draft": "Bozza", "Released": "Rilasciata", "Assigned": "Assegnata", "InProgress": "In corso", "Paused": "In pausa",
-      "PartiallyCompleted": "Parzialmente completata", "Completed": "Completata", "Cancelled": "Annullata"
+      "Draft": "Bozza",
+      "Released": "Rilasciata",
+      "Assigned": "Assegnata",
+      "InProgress": "In corso",
+      "Paused": "In pausa",
+      "PartiallyCompleted": "Parzialmente completata",
+      "Completed": "Completata",
+      "Cancelled": "Annullata"
     },
     "assignmentStatus": {
-      "Assigned": "Assegnato", "Accepted": "Accettato", "InProgress": "In corso", "Completed": "Completato",
-      "Unassigned": "Non assegnato", "Rejected": "Rifiutato"
+      "Assigned": "Assegnato",
+      "Accepted": "Accettato",
+      "InProgress": "In corso",
+      "Completed": "Completato",
+      "Unassigned": "Non assegnato",
+      "Rejected": "Rifiutato"
     },
     "labelBatchStatus": {
-      "Draft": "Bozza", "Generated": "Generato", "PartiallyPrinted": "Parzialmente stampato", "Printed": "Stampato",
-      "PartiallyConsumed": "Parzialmente utilizzato", "Consumed": "Utilizzato", "Cancelled": "Annullato"
+      "Draft": "Bozza",
+      "Generated": "Generato",
+      "PartiallyPrinted": "Parzialmente stampato",
+      "Printed": "Stampato",
+      "PartiallyConsumed": "Parzialmente utilizzato",
+      "Consumed": "Utilizzato",
+      "Cancelled": "Annullato"
     },
-    "labelStatus": { "Generated": "Generata", "Printed": "Stampata", "Assigned": "Assegnata", "Consumed": "Utilizzata", "Void": "Annullata" },
+    "labelStatus": {
+      "Generated": "Generata",
+      "Printed": "Stampata",
+      "Assigned": "Assegnata",
+      "Consumed": "Utilizzata",
+      "Void": "Annullata"
+    },
     "processType": {
-      "OrderBasedTask": "Attività basata su ordine", "OrderlessTask": "Attività senza ordine",
-      "OrderBasedDirectReceipt": "Ricevimento diretto basato su ordine", "OrderlessDirectReceipt": "Ricevimento diretto senza ordine"
+      "OrderBasedTask": "Attività basata su ordine",
+      "OrderlessTask": "Attività senza ordine",
+      "OrderBasedDirectReceipt": "Ricevimento diretto basato su ordine",
+      "OrderlessDirectReceipt": "Ricevimento diretto senza ordine"
     },
-    "initiationMode": { "OrderBasedTask": "Attività basata su ordine", "UnplannedTask": "Attività non pianificata", "DirectReceipt": "Ricevimento diretto" },
+    "initiationMode": {
+      "OrderBasedTask": "Attività basata su ordine",
+      "UnplannedTask": "Attività non pianificata",
+      "DirectReceipt": "Ricevimento diretto"
+    },
     "executionMode": {
-      "Manual": "Manuale", "BarcodeScan": "Scansione codice a barre", "PreGeneratedLabel": "Etichetta pre-generata",
-      "SupplierLabel": "Etichetta fornitore", "Import": "Importazione"
+      "Manual": "Manuale",
+      "BarcodeScan": "Scansione codice a barre",
+      "PreGeneratedLabel": "Etichetta pre-generata",
+      "SupplierLabel": "Etichetta fornitore",
+      "Import": "Importazione"
     }
   },
   "hub": {
@@ -691,18 +954,48 @@
     "title": "Centro processi ricevimento merci",
     "description": "Avvia ricevimenti basati su ordine, senza ordine e diretti seguendo le stesse regole di dominio; monitora ogni fase dall'assegnazione alla qualità fino alla registrazione di magazzino.",
     "phases": {
-      "start": { "title": "Avvia ricevimento", "description": "Scegli il punto di partenza corretto in base alla fonte del documento e alla modalità di esecuzione." },
-      "execute": { "title": "Esegui assegnazione", "description": "Definisci gli assegnatari, accetta il lavoro assegnato e gestisci l'avanzamento fisico." },
-      "manage": { "title": "Monitora e gestisci", "description": "Utilizza i registri e le policy per una tracciabilità completa e un controllo configurabile del processo." }
+      "start": {
+        "title": "Avvia ricevimento",
+        "description": "Scegli il punto di partenza corretto in base alla fonte del documento e alla modalità di esecuzione."
+      },
+      "execute": {
+        "title": "Esegui assegnazione",
+        "description": "Definisci gli assegnatari, accetta il lavoro assegnato e gestisci l'avanzamento fisico."
+      },
+      "manage": {
+        "title": "Monitora e gestisci",
+        "description": "Utilizza i registri e le policy per una tracciabilità completa e un controllo configurabile del processo."
+      }
     },
     "cards": {
-      "ordered": { "title": "Attività basata su ordine", "description": "Seleziona gli ordini di acquisto Netsis, prenota le quantità aperte e crea le attività di ricevimento." },
-      "orderless": { "title": "Attività senza ordine", "description": "Crea un'attività di ricevimento pianificata con documento di trasporto e righe articolo, senza collegamento a un ordine." },
-      "direct": { "title": "Ricevimento merci diretto", "description": "Registra un ricevimento senza attività in modo atomico con qualità, quarantena e movimento di magazzino." },
-      "tasks": { "title": "Gestione attività", "description": "Assegna le attività aperte a uno o più utenti e monitora il loro avanzamento." },
-      "assigned": { "title": "Le mie attività assegnate", "description": "Accetta, avvia e completa le attività di ricevimento merci a te assegnate." },
-      "records": { "title": "Registri di ricevimento merci", "description": "Controlla ogni tipo di ricevimento nella griglia dati condivisa lato server." },
-      "settings": { "title": "Impostazioni processo", "description": "Gestisci le policy di ricevimento in eccesso/difetto, blocco qualità, approvazione e registrazione ERP." }
+      "ordered": {
+        "title": "Attività basata su ordine",
+        "description": "Seleziona gli ordini di acquisto Netsis, prenota le quantità aperte e crea le attività di ricevimento."
+      },
+      "orderless": {
+        "title": "Attività senza ordine",
+        "description": "Crea un'attività di ricevimento pianificata con documento di trasporto e righe articolo, senza collegamento a un ordine."
+      },
+      "direct": {
+        "title": "Ricevimento merci diretto",
+        "description": "Registra un ricevimento senza attività in modo atomico con qualità, quarantena e movimento di magazzino."
+      },
+      "tasks": {
+        "title": "Gestione attività",
+        "description": "Assegna le attività aperte a uno o più utenti e monitora il loro avanzamento."
+      },
+      "assigned": {
+        "title": "Le mie attività assegnate",
+        "description": "Accetta, avvia e completa le attività di ricevimento merci a te assegnate."
+      },
+      "records": {
+        "title": "Registri di ricevimento merci",
+        "description": "Controlla ogni tipo di ricevimento nella griglia dati condivisa lato server."
+      },
+      "settings": {
+        "title": "Impostazioni processo",
+        "description": "Gestisci le policy di ricevimento in eccesso/difetto, blocco qualità, approvazione e registrazione ERP."
+      }
     }
   }
 }

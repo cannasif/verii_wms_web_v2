@@ -1,27 +1,98 @@
 import { useCallback, useMemo, useState, type ReactElement } from 'react';
-import { Eye, FileText, Loader2, Printer } from 'lucide-react';
+import { Eye, FileText, Loader2, Printer, RefreshCw, Scale } from 'lucide-react';
 import { toast } from 'sonner';
-import { AdvancedDataGrid, type GridColumn } from '@/components/shared/AdvancedDataGrid';
+import {
+  AdvancedDataGrid,
+  type GridColumn,
+  type GridRequest,
+} from '@/components/shared/AdvancedDataGrid';
 import { requiredActionColumn, systemColumns } from '@/components/shared/GridSystemColumns';
 import { OpsStatusBadge, inferOpsStatusTone, inferQualityStatusTone } from '@/components/shared/OpsStatusBadge';
+import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
-import { formatProjectDate, formatProjectNumber } from '@/lib/project-format';
+import { formatProjectDate } from '@/lib/project-format';
+import { toTurkishApiSearch } from '@/lib/turkish-search';
 import { goodsReceiptV2Api } from '../api/goods-receipt.api';
 import { goodsReceiptEnumLabel, goodsReceiptEnumHint } from '../localization/enum-labels';
 import type { GoodsReceiptGridRow } from '../types/goods-receipt.types';
 import { previewReceiptLabelsPdf, printableLabels, printReceiptLabels } from '../utils/goods-receipt-label-output';
 import {
+  buildGoodsReceiptListFacetFilters,
+  EMPTY_GOODS_RECEIPT_LIST_FACETS,
+  type GoodsReceiptListFacets,
+} from '../utils/goods-receipt-list-filters';
+import { resolveGoodsReceiptWaybillNo } from '../utils/goods-receipt-waybill';
+import { enrichGoodsReceiptListWaybills } from '../utils/enrich-goods-receipt-list-waybills';
+import {
   GoodsReceiptDetailDialog,
   type GoodsReceiptDetailViewState,
 } from './GoodsReceiptDetailDialog';
+import { GoodsReceiptErpRetryDialog } from './GoodsReceiptErpRetryDialog';
+import { GoodsReceiptListFiltersPopover } from './GoodsReceiptListFiltersPopover';
+import { GoodsReceiptListSearch } from './GoodsReceiptListSearch';
 
 type OutputMode = 'print' | 'pdf';
 
+const ERP_RETRY_STATUSES = ['Pending', 'Failed', 'CommitUncertain'] as const;
+
+/** Belge no / tedarikçi / irsaliye / depo / kayıt eden / güncelleyen — tarih yok. */
+const LIST_SEARCH_FIELDS = [
+  'documentNo',
+  'supplierCode',
+  'supplierName',
+  'waybillNo',
+  'electronicWaybillNo',
+  'warehouseName',
+  'createdBy',
+  'createdByName',
+  'updatedBy',
+  'updatedByName',
+] as const;
+
 export function GoodsReceiptListPage(): ReactElement {
   const { t, moduleReady } = useModuleTranslation('goods-receipt-v2');
+  const { can } = usePermissionAccess();
   const [detailView, setDetailView] = useState<GoodsReceiptDetailViewState | null>(null);
+  const [erpRetryRow, setErpRetryRow] = useState<GoodsReceiptGridRow | null>(null);
+  const [listFacets, setListFacets] = useState<GoodsReceiptListFacets>(EMPTY_GOODS_RECEIPT_LIST_FACETS);
+  const [listSearch, setListSearch] = useState('');
   const [outputBusy, setOutputBusy] = useState('');
   const [gridVersion, setGridVersion] = useState(0);
+
+  const facetFilters = useMemo(
+    () => buildGoodsReceiptListFacetFilters(listFacets),
+    [listFacets],
+  );
+
+  const onListSearchChange = useCallback((value: string) => {
+    setListSearch((current) => (current === value ? current : value));
+  }, []);
+
+  const fetchPage = useCallback(
+    async (request: GridRequest) => {
+      const apiSearch = toTurkishApiSearch(listSearch);
+      const page = await goodsReceiptV2Api.paged({
+        ...request,
+        search: apiSearch || null,
+        searchFields: apiSearch ? [...LIST_SEARCH_FIELDS] : undefined,
+        filterLogic: 'and',
+        filters: [...facetFilters, ...request.filters],
+      });
+      return {
+        ...page,
+        items: await enrichGoodsReceiptListWaybills(page.items),
+      };
+    },
+    [facetFilters, listSearch],
+  );
+
+  const canRetryErp = useCallback(
+    (row: GoodsReceiptGridRow) =>
+      can('WMS.GOODS_RECEIPT.ERP_RETRY')
+      && row.status !== 'Cancelled'
+      && ERP_RETRY_STATUSES.includes(row.erpIntegrationStatus as (typeof ERP_RETRY_STATUSES)[number]),
+    [can],
+  );
 
   const openDetail = useCallback(
     async (id: number) => {
@@ -70,6 +141,8 @@ export function GoodsReceiptListPage(): ReactElement {
         label: t('list.documentNo'),
         sortable: true,
         filterable: true,
+        searchable: true,
+        defaultSearch: true,
         render: (r) => <span className="font-mono text-xs font-semibold">{r.documentNo}</span>,
       },
       {
@@ -77,13 +150,28 @@ export function GoodsReceiptListPage(): ReactElement {
         label: t('list.documentDate'),
         sortable: true,
         filterable: true,
+        searchable: false,
         render: (r) => formatProjectDate(r.documentDate),
       },
       {
-        key: 'supplierCode',
+        key: 'waybillNo',
+        label: t('list.waybill'),
+        sortable: true,
+        filterable: true,
+        searchable: true,
+        defaultSearch: true,
+        render: (r) => {
+          const waybill = resolveGoodsReceiptWaybillNo(r);
+          return waybill ? <span className="font-mono text-xs font-semibold">{waybill}</span> : '—';
+        },
+      },
+      {
+        key: 'supplierName',
         label: t('list.supplier'),
         sortable: true,
         filterable: true,
+        searchable: true,
+        defaultSearch: true,
         render: (r) => (
           <div className="min-w-0 text-left">
             <div className="truncate font-medium">{r.supplierName || r.supplierCode || '—'}</div>
@@ -94,10 +182,12 @@ export function GoodsReceiptListPage(): ReactElement {
         ),
       },
       {
-        key: 'warehouseCode',
+        key: 'warehouseName',
         label: t('list.warehouse'),
         sortable: true,
         filterable: true,
+        searchable: true,
+        defaultSearch: true,
         render: (r) => (
           <div className="min-w-0 text-left">
             <div className="truncate font-medium">{r.warehouseName}</div>
@@ -158,32 +248,11 @@ export function GoodsReceiptListPage(): ReactElement {
         ),
       },
       {
-        key: 'waybillNo',
-        label: t('list.waybill'),
-        sortable: true,
-        filterable: true,
-        render: (r) => r.waybillNo || '—',
-      },
-      {
         key: 'lineCount',
         label: t('list.line'),
         sortable: true,
         filterable: true,
         render: (r) => r.lineCount,
-      },
-      {
-        key: 'expectedQuantity',
-        label: t('list.expected'),
-        sortable: true,
-        filterable: true,
-        render: (r) => formatProjectNumber(r.expectedQuantity),
-      },
-      {
-        key: 'receivedQuantity',
-        label: t('list.received'),
-        sortable: true,
-        filterable: true,
-        render: (r) => formatProjectNumber(r.receivedQuantity),
       },
       {
         key: 'actions',
@@ -197,6 +266,22 @@ export function GoodsReceiptListPage(): ReactElement {
               onClick={() => void openDetail(r.id)}
               icon={<Eye className="size-3.5" />}
             />
+            {canRetryErp(r) ? (
+              <ActionButton
+                title={
+                  r.erpIntegrationStatus === 'CommitUncertain'
+                    ? t('list.erpReconcile')
+                    : t('list.sendToErp')
+                }
+                busy={false}
+                onClick={() => setErpRetryRow(r)}
+                icon={
+                  r.erpIntegrationStatus === 'CommitUncertain'
+                    ? <Scale className="size-3.5" />
+                    : <RefreshCw className="size-3.5" />
+                }
+              />
+            ) : null}
             <ActionButton
               title={t('list.printAllLabels')}
               busy={outputBusy === `${r.id}:all:print`}
@@ -213,7 +298,7 @@ export function GoodsReceiptListPage(): ReactElement {
         ),
       },
     ];
-  }, [detailView?.id, detailView?.loading, moduleReady, openDetail, output, outputBusy, t]);
+  }, [canRetryErp, detailView?.id, detailView?.loading, moduleReady, openDetail, output, outputBusy, t]);
 
   const lifecycleCompleted = useCallback(
     async () => {
@@ -238,8 +323,8 @@ export function GoodsReceiptListPage(): ReactElement {
   return (
     <>
       <AdvancedDataGrid<GoodsReceiptGridRow>
-        pageKey="goods-receipts"
-        refreshKey={gridVersion}
+        pageKey="goods-receipts-list-v4"
+        refreshKey={`${gridVersion}:${listSearch}:${JSON.stringify(listFacets)}`}
         eyebrow={
           <>
             <span>{t('list.eyebrowParent')}</span>
@@ -251,7 +336,12 @@ export function GoodsReceiptListPage(): ReactElement {
         title={t('list.title')}
         description={t('list.description')}
         columns={columns}
-        fetchPage={goodsReceiptV2Api.paged}
+        fetchPage={fetchPage}
+        hideSearch
+        toolbarStartExtra={<GoodsReceiptListSearch onSearchChange={onListSearchChange} />}
+        toolbarBelowExtra={
+          <GoodsReceiptListFiltersPopover facets={listFacets} onFacetsChange={setListFacets} />
+        }
       />
       {detailView ? (
         <GoodsReceiptDetailDialog
@@ -261,6 +351,16 @@ export function GoodsReceiptListPage(): ReactElement {
           busyKey={outputBusy}
           onLifecycleCompleted={lifecycleCompleted}
           onRoutingCompleted={routingCompleted}
+        />
+      ) : null}
+      {erpRetryRow ? (
+        <GoodsReceiptErpRetryDialog
+          header={erpRetryRow}
+          close={() => setErpRetryRow(null)}
+          completed={async () => {
+            setErpRetryRow(null);
+            setGridVersion((value) => value + 1);
+          }}
         />
       ) : null}
     </>
