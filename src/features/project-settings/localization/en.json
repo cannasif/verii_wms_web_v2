@@ -50,6 +50,10 @@
   "passwordMaxLength": {
     "label": "Maximum password length"
   },
+  "sendSerialsToErp": {
+    "label": "Send serials to ERP",
+    "description": "Transmit serial numbers to the ERP system during goods receipt and related operations."
+  },
   "passwordSecurityNotice": {
     "label": "Password security:",
     "text": "The minimum value can be between 5-{{max}}. A value higher than the current shortest password cannot be selected; this limit can be safely raised as users renew their passwords."

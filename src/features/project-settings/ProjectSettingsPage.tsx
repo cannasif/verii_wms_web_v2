@@ -2,6 +2,9 @@ import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 're
 import { CalendarDays, Clock3, Hash, Loader2, LockKeyhole, Save, TimerReset } from 'lucide-react';
 import { toast } from 'sonner';
 import { AppDropdown, type AppDropdownOption } from '@/components/shared/AppDropdown';
+import { AppInput } from '@/components/shared/AppInput';
+import { OpsActionButton } from '@/components/shared/OpsActionButton';
+import { OpsCircuitToggleField } from '@/components/shared/OpsCircuitToggle';
 import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import {
@@ -108,7 +111,7 @@ export function ProjectSettingsPage() {
   const canManage = !isPermissionLoading && can('SYSTEM.PROJECT_SETTINGS.MANAGE');
 
   return (
-    <section className="mx-auto max-w-6xl space-y-5">
+    <section className="wms-ops-form mx-auto max-w-6xl space-y-5">
       <div>
         <p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--wms-brand-primary)]">{t('eyebrow')}</p>
         <h1 className="mt-1 text-2xl font-bold">{t('title')}</h1>
@@ -132,22 +135,35 @@ export function ProjectSettingsPage() {
           <Field label={t('yearFormat.label')}><AppDropdown value={form.yearFormat} onValueChange={(value) => set('yearFormat', value)} options={yearOptions} ariaLabel={t('yearFormat.label')} testId="year-format-dropdown" /></Field>
           <Field label={t('timeZone.label')}><AppDropdown value={form.timeZoneId} onValueChange={(value) => set('timeZoneId', value)} options={timeZoneOptions} ariaLabel={t('timeZone.label')} searchable searchPlaceholder={t('timeZone.searchPlaceholder')} testId="timezone-dropdown" /></Field>
           <Field label={t('passwordMinLength.label')}>
-            <div className="relative">
-              <LockKeyhole className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--wms-brand-primary)]" />
-              <input
-                type="number"
-                min={5}
-                max={form.passwordMaximumLength}
-                value={form.passwordMinimumLength}
-                onChange={(event) => set('passwordMinimumLength', Number(event.target.value))}
-                className="input pl-10"
-                aria-label={t('passwordMinLength.label')}
-              />
-            </div>
+            <AppInput
+              type="number"
+              min={5}
+              max={form.passwordMaximumLength}
+              value={form.passwordMinimumLength}
+              onChange={(event) => set('passwordMinimumLength', Number(event.target.value))}
+              leadingIcon={<LockKeyhole className="size-4 text-[var(--wms-brand-primary)]" />}
+              aria-label={t('passwordMinLength.label')}
+              disabled={!canManage}
+            />
           </Field>
           <Field label={t('passwordMaxLength.label')}>
-            <input type="number" value={form.passwordMaximumLength} disabled className="input disabled:cursor-not-allowed disabled:opacity-60" aria-label={t('passwordMaxLength.label')} />
+            <AppInput
+              type="number"
+              value={form.passwordMaximumLength}
+              disabled
+              aria-label={t('passwordMaxLength.label')}
+            />
           </Field>
+          <div className="md:col-span-2">
+            <OpsCircuitToggleField
+              checked={form.sendSerialsToErp}
+              onCheckedChange={(checked) => set('sendSerialsToErp', checked)}
+              disabled={!canManage}
+              title={t('sendSerialsToErp.label')}
+              description={t('sendSerialsToErp.description')}
+              className="rounded-xl border"
+            />
+          </div>
         </div>
 
         <div className="mt-5 rounded-xl border border-[var(--wms-app-border)] bg-slate-50/70 p-4 text-sm dark:bg-white/[.03]">
@@ -158,14 +174,10 @@ export function ProjectSettingsPage() {
           <p className="mt-4 text-right text-sm text-amber-600 dark:text-amber-300">{t('permissionRequiredNotice')}</p>
         )}
         <div className="mt-5 flex justify-end">
-          <button
-            type="submit"
-            disabled={!canManage || saving}
-            className="inline-flex items-center gap-2 rounded-xl bg-[var(--wms-brand-primary)] px-5 py-2.5 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+          <OpsActionButton type="submit" variant="primary" disabled={!canManage || saving}>
+            {saving ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Save className="size-4" aria-hidden />}
             {t('saveButton')}
-          </button>
+          </OpsActionButton>
         </div>
       </form>
     </section>

@@ -50,6 +50,10 @@
   "passwordMaxLength": {
     "label": "Maximale Passwortlänge"
   },
+  "sendSerialsToErp": {
+    "label": "Seriennummern an ERP senden",
+    "description": "Seriennummern bei Wareneingang und verwandten Vorgängen an das ERP-System übertragen."
+  },
   "passwordSecurityNotice": {
     "label": "Passwortsicherheit:",
     "text": "Der Mindestwert kann zwischen 5 und {{max}} liegen. Es kann kein Wert höher als das aktuell kürzeste Passwort ausgewählt werden; diese Grenze kann sicher erhöht werden, sobald Benutzer ihre Passwörter erneuern."

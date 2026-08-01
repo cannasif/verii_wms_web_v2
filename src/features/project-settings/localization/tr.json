@@ -50,6 +50,10 @@
   "passwordMaxLength": {
     "label": "Maksimum şifre uzunluğu"
   },
+  "sendSerialsToErp": {
+    "label": "Serileri ERP'ye gönder",
+    "description": "Mal kabul ve ilgili işlemlerde seri numaralarını ERP sistemine ilet."
+  },
   "passwordSecurityNotice": {
     "label": "Parola güvenliği:",
     "text": "Minimum değer 5-{{max}} arasında olabilir. Mevcut en kısa paroladan daha yüksek bir değer seçilemez; kullanıcılar parolalarını yeniledikçe bu sınır güvenli biçimde yükseltilebilir."

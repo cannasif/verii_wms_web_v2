@@ -50,6 +50,10 @@
   "passwordMaxLength": {
     "label": "Longueur maximale du mot de passe"
   },
+  "sendSerialsToErp": {
+    "label": "Envoyer les numéros de série à l'ERP",
+    "description": "Transmettre les numéros de série au système ERP lors de la réception et des opérations associées."
+  },
   "passwordSecurityNotice": {
     "label": "Sécurité du mot de passe :",
     "text": "La valeur minimale peut être comprise entre 5 et {{max}}. Une valeur supérieure au mot de passe le plus court actuellement utilisé ne peut pas être sélectionnée ; cette limite peut être augmentée en toute sécurité au fur et à mesure que les utilisateurs renouvellent leurs mots de passe."

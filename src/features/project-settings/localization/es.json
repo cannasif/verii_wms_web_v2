@@ -50,6 +50,10 @@
   "passwordMaxLength": {
     "label": "Longitud máxima de contraseña"
   },
+  "sendSerialsToErp": {
+    "label": "Enviar series al ERP",
+    "description": "Transmitir números de serie al sistema ERP durante la recepción de mercancías y operaciones relacionadas."
+  },
   "passwordSecurityNotice": {
     "label": "Seguridad de contraseña:",
     "text": "El valor mínimo puede estar entre 5 y {{max}}. No se puede seleccionar un valor superior a la contraseña más corta actual; este límite se puede aumentar de forma segura a medida que los usuarios renuevan sus contraseñas."
