@@ -8,16 +8,23 @@ type FlatResource = Map<string, string>;
 const SOURCE_LANGUAGES = ['tr', 'en'] as const;
 const SKIPPED_ELEMENTS = new Set(['INPUT', 'TEXTAREA', 'OPTION', 'SCRIPT', 'STYLE', 'CODE', 'PRE']);
 
-function flattenResource(value: unknown, prefix = '', output: FlatResource = new Map()): FlatResource {
+function flattenResource(
+  value: unknown,
+  prefix = '',
+  output: FlatResource = new Map(),
+  seen: Set<object> = new Set(),
+): FlatResource {
   if (typeof value === 'string') {
     if (prefix) output.set(prefix, value);
     return output;
   }
 
   if (!value || typeof value !== 'object' || Array.isArray(value)) return output;
+  if (seen.has(value)) return output;
+  seen.add(value);
 
   for (const [key, child] of Object.entries(value as Record<string, unknown>)) {
-    flattenResource(child, prefix ? `${prefix}.${key}` : key, output);
+    flattenResource(child, prefix ? `${prefix}.${key}` : key, output, seen);
   }
 
   return output;
@@ -29,6 +36,20 @@ function shouldSkip(textNode: Text): boolean {
     || SKIPPED_ELEMENTS.has(parent.tagName)
     || parent.isContentEditable
     || Boolean(parent.closest('[data-no-auto-localize="true"]'));
+}
+
+/**
+ * Drop reverse edges of 2-cycles (A→B and B→A). Incomplete FR/AR/ES/IT bundles
+ * often fall back to EN for TR sources while leftover TR values remain for EN
+ * sources, which previously made the MutationObserver flip text forever.
+ */
+function breakTranslationCycles(translated: Map<string, string>): void {
+  for (const [source, target] of [...translated.entries()]) {
+    if (!translated.has(source)) continue;
+    if (translated.get(target) === source) {
+      translated.delete(target);
+    }
+  }
 }
 
 function buildStaticTextMap(
@@ -62,13 +83,29 @@ function buildStaticTextMap(
     }
   }
 
+  breakTranslationCycles(translated);
   return translated;
+}
+
+function resolveLocalizedText(
+  trimmed: string,
+  translations: Map<string, string>,
+  language: string,
+): string | null {
+  const fromMap = translations.get(trimmed);
+  if (fromMap && fromMap !== trimmed) return fromMap;
+
+  const fromLegacy = localizeLegacyUiText(trimmed, language);
+  if (fromLegacy && fromLegacy !== trimmed) return fromLegacy;
+
+  return null;
 }
 
 function localizeTextNode(
   textNode: Text,
   translations: Map<string, string>,
   language: string,
+  appliedTexts: WeakMap<Text, string>,
 ): void {
   if (shouldSkip(textNode)) return;
 
@@ -76,16 +113,29 @@ function localizeTextNode(
   const trimmed = current.trim();
   if (!trimmed) return;
 
-  const next = translations.get(trimmed) ?? localizeLegacyUiText(trimmed, language);
+  // Stop observer ping-pong: we already wrote this exact localized value.
+  if (appliedTexts.get(textNode) === trimmed) return;
+
+  const next = resolveLocalizedText(trimmed, translations, language);
   if (!next || next === trimmed) return;
 
+  // Refuse reverse edge application if the map somehow still contains a 2-cycle.
+  if (translations.get(next) === trimmed) return;
+
   const start = current.indexOf(trimmed);
-  textNode.data = `${current.slice(0, start)}${next}${current.slice(start + trimmed.length)}`;
+  const updated = `${current.slice(0, start)}${next}${current.slice(start + trimmed.length)}`;
+  appliedTexts.set(textNode, next);
+  textNode.data = updated;
 }
 
-function walkTextNodes(root: Node, translations: Map<string, string>, language: string): void {
+function walkTextNodes(
+  root: Node,
+  translations: Map<string, string>,
+  language: string,
+  appliedTexts: WeakMap<Text, string>,
+): void {
   if (root.nodeType === Node.TEXT_NODE) {
-    localizeTextNode(root as Text, translations, language);
+    localizeTextNode(root as Text, translations, language, appliedTexts);
     return;
   }
 
@@ -94,7 +144,7 @@ function walkTextNodes(root: Node, translations: Map<string, string>, language: 
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
   let current = walker.nextNode();
   while (current) {
-    localizeTextNode(current as Text, translations, language);
+    localizeTextNode(current as Text, translations, language, appliedTexts);
     current = walker.nextNode();
   }
 }
@@ -113,20 +163,44 @@ export function LegacyLocalizationBoundary({ children }: { children: ReactNode }
     const root = rootRef.current;
     if (!root) return undefined;
 
+    // Turkish is the source language for legacy labels — nothing to rewrite.
+    if (language === 'tr') return undefined;
+
+    const appliedTexts = new WeakMap<Text, string>();
     let translations = buildStaticTextMap(i18n, language);
-    walkTextNodes(root, translations, language);
+    let applying = false;
+
+    const runWalk = (node: Node) => {
+      applying = true;
+      try {
+        walkTextNodes(node, translations, language, appliedTexts);
+      } finally {
+        applying = false;
+      }
+    };
+
+    runWalk(root);
 
     const rebuild = () => {
       translations = buildStaticTextMap(i18n, language);
-      walkTextNodes(root, translations, language);
+      runWalk(root);
     };
+
     const observer = new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
-        if (mutation.type === 'characterData') {
-          localizeTextNode(mutation.target as Text, translations, language);
-          continue;
+      if (applying) return;
+      applying = true;
+      try {
+        for (const mutation of mutations) {
+          if (mutation.type === 'characterData') {
+            localizeTextNode(mutation.target as Text, translations, language, appliedTexts);
+            continue;
+          }
+          mutation.addedNodes.forEach((node) => {
+            walkTextNodes(node, translations, language, appliedTexts);
+          });
         }
-        mutation.addedNodes.forEach((node) => walkTextNodes(node, translations, language));
+      } finally {
+        applying = false;
       }
     });
 
