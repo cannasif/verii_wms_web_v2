@@ -5,6 +5,7 @@ import { CheckCircle2, Clock3, Eye, Play, RefreshCw, XCircle } from 'lucide-reac
 import { toast } from 'sonner';
 import { AdvancedDataGrid, type GridColumn } from '@/components/shared/AdvancedDataGrid';
 import { systemColumns } from '@/components/shared/GridSystemColumns';
+import { OpsActionButton } from '@/components/shared/OpsActionButton';
 import { OpsStatusBadge, inferOpsStatusTone } from '@/components/shared/OpsStatusBadge';
 import { OpsDialogBody, OpsDialogContent, OpsDialogFooter, OpsDialogHeader } from '@/components/shared/OpsDialogShell';
 import { Dialog, DialogTitle } from '@/components/ui/dialog';
@@ -60,7 +61,14 @@ export function HangfirePage() {
     { key: 'errorMessage', label: t(`${G}.errorMessage`), render: row => <span className={row.errorMessage ? 'text-red-600' : 'text-slate-400'}>{row.errorMessage ?? '-'}</span> },
     {
       key: 'actions', label: t(`${G}.actions`), sortable: false, filterable: false,
-      render: row => <button type="button" onClick={() => setDetail(row)} className="inline-flex items-center gap-1 rounded-lg border px-3 py-1.5 text-xs font-semibold"><Eye className="size-3.5" />{t(`${G}.view`)}</button>,
+      render: row => (
+        <div className="wms-ops-row-actions flex items-center justify-center">
+          <button type="button" onClick={() => setDetail(row)} className="wms-ops-grid-icon-btn inline-flex h-8 items-center gap-1 px-2.5 text-xs font-semibold" title={t(`${G}.view`)}>
+            <Eye className="size-3.5" />
+            {t(`${G}.view`)}
+          </button>
+        </div>
+      ),
     },
   ], [t, gridLanguage]);
 
@@ -72,14 +80,16 @@ export function HangfirePage() {
   ] as const;
 
   return (
-    <div className="space-y-5" data-no-auto-localize="true">
+    <div className="wms-ops-form space-y-5" data-no-auto-localize="true">
       <section className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold">{t(`${H}.title`)}</h1>
             <p className="text-sm text-slate-500">{t(`${H}.description`)}</p>
           </div>
-          <a href="http://localhost:5099/hangfire" target="_blank" rel="noreferrer" className="rounded-xl border px-4 py-2 text-center text-sm">{t(`${H}.dashboard`)}</a>
+          <OpsActionButton asChild variant="secondary">
+            <a href="http://localhost:5099/hangfire" target="_blank" rel="noreferrer">{t(`${H}.dashboard`)}</a>
+          </OpsActionButton>
         </div>
         <div className="my-5 grid gap-3 sm:grid-cols-4">
           {statCards.map(({ key, label, icon: Icon, color }) => (
@@ -111,10 +121,10 @@ export function HangfirePage() {
                   <td className="p-3">{job.cron || '-'}</td>
                   <td className="p-3">{formatProjectDateTime(job.lastExecution)}</td>
                   <td className="p-3 text-center">
-                    <button type="button" disabled={triggering !== null} onClick={() => void trigger(job.id)} className="inline-flex items-center gap-1 rounded-lg border px-3 py-1.5 disabled:opacity-50">
-                      {triggering === job.id ? <RefreshCw className="size-3 animate-spin" /> : <Play className="size-3" />}
+                    <OpsActionButton type="button" variant="secondary" disabled={triggering !== null} onClick={() => void trigger(job.id)}>
+                      {triggering === job.id ? <RefreshCw className="size-3.5 animate-spin" aria-hidden /> : <Play className="size-3.5" aria-hidden />}
                       {t(`${H}.recurring.trigger`)}
-                    </button>
+                    </OpsActionButton>
                   </td>
                 </tr>
               ))}
@@ -134,7 +144,7 @@ export function HangfirePage() {
 
       {detail && (
         <Dialog open onOpenChange={open => { if (!open) setDetail(null); }}>
-          <OpsDialogContent size="lg">
+          <OpsDialogContent size="lg" className="wms-ops-access-control-dialog">
             <OpsDialogHeader>
               <div>
                 <DialogTitle className="wms-ops-detail-dialog__title text-xl font-bold">{t(`${H}.detail.title`)}</DialogTitle>
@@ -153,8 +163,10 @@ export function HangfirePage() {
                 {detail.stackTrace && <Detail label={t(`${H}.detail.stackTrace`)} wide><pre className="max-h-64 overflow-auto whitespace-pre-wrap rounded-xl bg-slate-950 p-4 text-xs text-slate-100">{detail.stackTrace}</pre></Detail>}
               </div>
             </OpsDialogBody>
-            <OpsDialogFooter>
-              <button type="button" onClick={() => setDetail(null)} className="rounded-xl bg-[var(--wms-brand-primary)] px-4 py-2 text-white">{t(`${H}.detail.close`)}</button>
+            <OpsDialogFooter className="flex flex-wrap items-center justify-end gap-2">
+              <OpsActionButton type="button" variant="primary" onClick={() => setDetail(null)}>
+                {t(`${H}.detail.close`)}
+              </OpsActionButton>
             </OpsDialogFooter>
           </OpsDialogContent>
         </Dialog>

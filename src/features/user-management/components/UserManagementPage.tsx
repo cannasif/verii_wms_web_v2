@@ -8,6 +8,7 @@ import { AppInput } from '@/components/shared/AppInput';
 import { systemColumns } from '@/components/shared/GridSystemColumns';
 import { OpsActionButton } from '@/components/shared/OpsActionButton';
 import { OpsCircuitToggleInline } from '@/components/shared/OpsCircuitToggle';
+import { OpsSkinCheckbox } from '@/components/shared/OpsSkinCheckbox';
 import { OpsCodeBadge, OpsStatusBadge } from '@/components/shared/OpsStatusBadge';
 import { DeleteConfirmDialog } from '@/components/shared/DeleteConfirmDialog';
 import { OpsDialogBody, OpsDialogContent, OpsDialogFooter, OpsDialogHeader } from '@/components/shared/OpsDialogShell';
@@ -15,6 +16,7 @@ import { Dialog, DialogTitle } from '@/components/ui/dialog';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { localizeEnumValue } from '@/lib/enum-localization';
 import { formatProjectDateTime } from '@/lib/project-format';
+import { cn } from '@/lib/utils';
 import { useProjectSettingsStore } from '@/stores/project-settings-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { userManagementApi } from '../api/user-management.api';
@@ -243,7 +245,7 @@ export function UserManagementPage() {
 
       {mode && (
         <Dialog open onOpenChange={(open) => { if (!open) closeForm(); }}>
-          <OpsDialogContent size="lg">
+          <OpsDialogContent size="lg" className="wms-ops-access-control-dialog">
             <OpsDialogHeader>
               <div className="flex items-center gap-3">
                 <div className="grid size-11 place-items-center rounded-xl bg-[var(--wms-brand-primary)] text-white">
@@ -317,15 +319,42 @@ export function UserManagementPage() {
                       <span className="text-xs text-slate-500">{t('dialog.groupsSelectedCount', { count: form.permissionGroupIds.length })}</span>
                     </div>
                     <div className="grid max-h-56 gap-2 overflow-auto sm:grid-cols-2">
-                      {groups.map((group) => (
-                        <label key={group.id} className="flex cursor-pointer items-start gap-3 rounded-xl border p-3 hover:bg-[var(--wms-brand-soft)]">
-                          <input type="checkbox" checked={form.permissionGroupIds.includes(group.id)} onChange={() => updateForm('permissionGroupIds', form.permissionGroupIds.includes(group.id) ? form.permissionGroupIds.filter((id) => id !== group.id) : [...form.permissionGroupIds, group.id])} />
-                          <span>
-                            <strong className="block text-sm">{group.name}</strong>
-                            <small className="text-slate-500">{t('dialog.permissionCountSuffix', { count: group.permissionCount })}{group.isSystemAdmin ? t('dialog.systemGroupSuffix') : ''}</small>
-                          </span>
-                        </label>
-                      ))}
+                      {groups.map((group) => {
+                        const checked = form.permissionGroupIds.includes(group.id);
+                        const toggle = () =>
+                          updateForm(
+                            'permissionGroupIds',
+                            checked
+                              ? form.permissionGroupIds.filter((id) => id !== group.id)
+                              : [...form.permissionGroupIds, group.id],
+                          );
+                        return (
+                          <div
+                            key={group.id}
+                            role="button"
+                            tabIndex={0}
+                            onClick={toggle}
+                            onKeyDown={(event) => {
+                              if (event.key === 'Enter' || event.key === ' ') {
+                                event.preventDefault();
+                                toggle();
+                              }
+                            }}
+                            className="flex cursor-pointer items-start gap-3 rounded-xl border p-3 hover:bg-[var(--wms-brand-soft)]"
+                          >
+                            <OpsSkinCheckbox
+                              checked={checked}
+                              onCheckedChange={toggle}
+                              aria-label={group.name}
+                              className="mt-0.5"
+                            />
+                            <span>
+                              <strong className="block text-sm">{group.name}</strong>
+                              <small className="text-slate-500">{t('dialog.permissionCountSuffix', { count: group.permissionCount })}{group.isSystemAdmin ? t('dialog.systemGroupSuffix') : ''}</small>
+                            </span>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                   <div>
@@ -337,20 +366,50 @@ export function UserManagementPage() {
                       {t('dialog.warehousesHint')}
                     </p>
                     <div className="grid max-h-56 gap-2 overflow-auto sm:grid-cols-2">
-                      {warehouses.map((warehouse) => (
-                        <label key={warehouse.id} className="flex cursor-pointer items-start gap-3 rounded-xl border p-3 hover:bg-[var(--wms-brand-soft)]">
-                          <input
-                            type="checkbox"
-                            disabled={form.role === 'Admin' || isPrimaryAdministrator}
-                            checked={form.warehouseIds.includes(warehouse.id)}
-                            onChange={() => updateForm('warehouseIds', form.warehouseIds.includes(warehouse.id) ? form.warehouseIds.filter((id) => id !== warehouse.id) : [...form.warehouseIds, warehouse.id])}
-                          />
-                          <span>
-                            <strong className="block text-sm">{t('dialog.warehouseLabel', { code: warehouse.warehouseCode })}</strong>
-                            <small className="text-slate-500">{warehouse.warehouseName}</small>
-                          </span>
-                        </label>
-                      ))}
+                      {warehouses.map((warehouse) => {
+                        const disabled = form.role === 'Admin' || isPrimaryAdministrator;
+                        const checked = form.warehouseIds.includes(warehouse.id);
+                        const toggle = () => {
+                          if (disabled) return;
+                          updateForm(
+                            'warehouseIds',
+                            checked
+                              ? form.warehouseIds.filter((id) => id !== warehouse.id)
+                              : [...form.warehouseIds, warehouse.id],
+                          );
+                        };
+                        return (
+                          <div
+                            key={warehouse.id}
+                            role="button"
+                            tabIndex={disabled ? -1 : 0}
+                            onClick={toggle}
+                            onKeyDown={(event) => {
+                              if (disabled) return;
+                              if (event.key === 'Enter' || event.key === ' ') {
+                                event.preventDefault();
+                                toggle();
+                              }
+                            }}
+                            className={cn(
+                              'flex items-start gap-3 rounded-xl border p-3',
+                              disabled ? 'cursor-not-allowed opacity-55' : 'cursor-pointer hover:bg-[var(--wms-brand-soft)]',
+                            )}
+                          >
+                            <OpsSkinCheckbox
+                              checked={checked}
+                              disabled={disabled}
+                              onCheckedChange={toggle}
+                              aria-label={t('dialog.warehouseLabel', { code: warehouse.warehouseCode })}
+                              className="mt-0.5"
+                            />
+                            <span>
+                              <strong className="block text-sm">{t('dialog.warehouseLabel', { code: warehouse.warehouseCode })}</strong>
+                              <small className="text-slate-500">{warehouse.warehouseName}</small>
+                            </span>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                   {isPrimaryAdministrator && (
@@ -358,13 +417,35 @@ export function UserManagementPage() {
                       {t('dialog.superadminNotice')}
                     </div>
                   )}
-                  <label className="flex items-center justify-between rounded-xl border p-4">
+                  <div
+                    role="button"
+                    tabIndex={isPrimaryAdministrator ? -1 : 0}
+                    onClick={() => {
+                      if (!isPrimaryAdministrator) updateForm('isActive', !form.isActive);
+                    }}
+                    onKeyDown={(event) => {
+                      if (isPrimaryAdministrator) return;
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        updateForm('isActive', !form.isActive);
+                      }
+                    }}
+                    className={cn(
+                      'flex items-center justify-between rounded-xl border p-4',
+                      isPrimaryAdministrator ? 'cursor-not-allowed opacity-55' : 'cursor-pointer',
+                    )}
+                  >
                     <span>
                       <strong className="block text-sm">{t('dialog.activeUserLabel')}</strong>
                       <small className="text-slate-500">{t('dialog.activeUserHint')}</small>
                     </span>
-                    <input type="checkbox" disabled={isPrimaryAdministrator} checked={form.isActive} onChange={(event) => updateForm('isActive', event.target.checked)} className="size-4" />
-                  </label>
+                    <OpsSkinCheckbox
+                      disabled={isPrimaryAdministrator}
+                      checked={form.isActive}
+                      onCheckedChange={(checked) => updateForm('isActive', checked)}
+                      aria-label={t('dialog.activeUserLabel')}
+                    />
+                  </div>
                 </OpsDialogBody>
                 <OpsDialogFooter className="flex flex-wrap items-center justify-end gap-2">
                   <OpsActionButton type="button" variant="secondary" disabled={saving} onClick={closeForm}>

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { AlertTriangle, CheckCircle2, Download, FileSpreadsheet, Loader2, Upload, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogTitle } from '@/components/ui/dialog';
+import { OpsActionButton } from '@/components/shared/OpsActionButton';
 import { OpsDialogBody, OpsDialogContent, OpsDialogFooter, OpsDialogHeader } from '@/components/shared/OpsDialogShell';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { userManagementApi } from '../api/user-management.api';
@@ -124,15 +125,15 @@ export function UserImportDialog({ open, onOpenChange, onImported }: UserImportD
                   <h3 className="font-semibold">{t('import.step1Title')}</h3>
                   <p className="text-sm text-slate-500">{t('import.step1Description')}</p>
                 </div>
-                <button
+                <OpsActionButton
                   type="button"
+                  variant="secondary"
                   disabled={downloading}
                   onClick={() => void downloadTemplate()}
-                  className="inline-flex items-center gap-2 rounded-xl border border-[var(--wms-brand-primary)] px-4 py-2 text-sm font-semibold text-[var(--wms-brand-primary)] disabled:opacity-50"
                 >
-                  {downloading ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}
+                  {downloading ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Download className="size-4" aria-hidden />}
                   {downloading ? t('import.downloadPreparing') : t('import.downloadButton')}
-                </button>
+                </OpsActionButton>
               </div>
 
               <label className="block rounded-xl border border-dashed p-6 text-center transition hover:border-[var(--wms-brand-primary)]">
@@ -208,12 +209,14 @@ export function UserImportDialog({ open, onOpenChange, onImported }: UserImportD
           )}
         </OpsDialogBody>
 
-        <OpsDialogFooter>
-          <button type="button" disabled={uploading} onClick={() => onOpenChange(false)} className="rounded-xl border px-5 py-2.5 disabled:opacity-50">{t('import.closeButton')}</button>
-          <button type="button" disabled={!file || uploading} onClick={() => void upload()} className="inline-flex items-center gap-2 rounded-xl bg-[var(--wms-brand-primary)] px-5 py-2.5 font-semibold text-white disabled:opacity-50">
-            {uploading ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
+        <OpsDialogFooter className="flex flex-wrap items-center justify-end gap-2">
+          <OpsActionButton type="button" variant="secondary" disabled={uploading} onClick={() => onOpenChange(false)}>
+            {t('import.closeButton')}
+          </OpsActionButton>
+          <OpsActionButton type="button" variant="primary" disabled={!file || uploading} onClick={() => void upload()}>
+            {uploading ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Upload className="size-4" aria-hidden />}
             {uploading ? t('import.creatingButton') : t('import.createUsersButton')}
-          </button>
+          </OpsActionButton>
         </OpsDialogFooter>
       </OpsDialogContent>
     </Dialog>

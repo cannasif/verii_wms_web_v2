@@ -4,11 +4,16 @@ import { useTranslation } from 'react-i18next';
 import { Eye, KeyRound, Loader2, Pencil, Plus, Search, ShieldCheck, Trash2, Users2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdvancedDataGrid, type GridColumn } from '@/components/shared/AdvancedDataGrid';
+import { AppInput } from '@/components/shared/AppInput';
 import { systemColumns } from '@/components/shared/GridSystemColumns';
+import { OpsActionButton } from '@/components/shared/OpsActionButton';
+import { OpsCircuitToggleField } from '@/components/shared/OpsCircuitToggle';
+import { OpsSkinCheckbox } from '@/components/shared/OpsSkinCheckbox';
 import { OpsStatusBadge } from '@/components/shared/OpsStatusBadge';
 import { DeleteConfirmDialog } from '@/components/shared/DeleteConfirmDialog';
 import { OpsDialogBody, OpsDialogContent, OpsDialogFooter, OpsDialogHeader } from '@/components/shared/OpsDialogShell';
 import { Dialog, DialogTitle } from '@/components/ui/dialog';
+import { cn } from '@/lib/utils';
 import { permissionGroupsApi } from '../api/permission-groups.api';
 import type { PermissionGroupDetail, PermissionGroupRow, PermissionRow } from '../types/permission-groups.types';
 
@@ -90,7 +95,16 @@ export function PermissionGroupsPage() {
 
   const columns = useMemo<GridColumn<PermissionGroupRow>[]>(() => [
     ...systemColumns<PermissionGroupRow>(),
-    { key: 'name', label: t(`${P}.columns.name`), render: row => <div><strong className="block">{row.name}</strong>{row.description && <small className="text-slate-500">{row.description}</small>}</div> },
+    {
+      key: 'name',
+      label: t(`${P}.columns.name`),
+      render: (row) => (
+        <div>
+          <strong className="block">{row.name}</strong>
+          {row.description ? <small className="text-slate-500">{row.description}</small> : null}
+        </div>
+      ),
+    },
     {
       key: 'isSystemAdmin', label: t(`${P}.columns.isSystemAdmin`),
       render: row => row.isSystemAdmin
@@ -105,10 +119,16 @@ export function PermissionGroupsPage() {
     {
       key: 'actions', label: t(`${P}.columns.actions`), sortable: false, filterable: false,
       render: row => (
-        <div className="flex items-center gap-1">
-          <button type="button" title={t(`${P}.view`)} onClick={() => void open(row, 'view')} className="rounded-lg border p-2 text-cyan-600 hover:bg-cyan-50"><Eye className="size-4" /></button>
-          <button type="button" title={t(`${P}.edit`)} disabled={row.isSystemAdmin} onClick={() => void open(row, 'edit')} className="rounded-lg border p-2 text-blue-600 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-35"><Pencil className="size-4" /></button>
-          <button type="button" title={t(`${P}.delete`)} disabled={row.isSystemAdmin} onClick={() => setDeleteTarget(row)} className="rounded-lg border p-2 text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-35"><Trash2 className="size-4" /></button>
+        <div className="wms-ops-row-actions flex items-center gap-1">
+          <button type="button" title={t(`${P}.view`)} onClick={() => void open(row, 'view')} className="wms-ops-grid-icon-btn grid size-8 place-items-center">
+            <Eye className="size-3.5" />
+          </button>
+          <button type="button" title={t(`${P}.edit`)} disabled={row.isSystemAdmin} onClick={() => void open(row, 'edit')} className="wms-ops-grid-icon-btn grid size-8 place-items-center disabled:cursor-not-allowed disabled:opacity-35">
+            <Pencil className="size-3.5" />
+          </button>
+          <button type="button" title={t(`${P}.delete`)} disabled={row.isSystemAdmin} onClick={() => setDeleteTarget(row)} className="wms-ops-grid-icon-btn grid size-8 place-items-center disabled:cursor-not-allowed disabled:opacity-35">
+            <Trash2 className="size-3.5" />
+          </button>
         </div>
       ),
     },
@@ -123,7 +143,7 @@ export function PermissionGroupsPage() {
   const modalTitle = mode === 'create' ? t(`${P}.modal.createTitle`) : mode === 'edit' ? t(`${P}.modal.editTitle`) : t(`${P}.modal.viewTitle`);
 
   return (
-    <div className="space-y-4" data-no-auto-localize="true">
+    <div className="wms-ops-form space-y-4" data-no-auto-localize="true">
       <section className="grid gap-3 sm:grid-cols-3">
         <StatCard label={t(`${P}.stats.total`)} value={stats.data?.total ?? 0} icon={Users2} />
         <StatCard label={t(`${P}.stats.active`)} value={stats.data?.active ?? 0} icon={ShieldCheck} tone="emerald" />
@@ -140,7 +160,7 @@ export function PermissionGroupsPage() {
 
       {mode && (
         <Dialog open onOpenChange={openState => { if (!openState) close(); }}>
-          <OpsDialogContent size="xl">
+          <OpsDialogContent size="xl" className="wms-ops-access-control-dialog">
             <OpsDialogHeader>
               <div>
                 <DialogTitle className="wms-ops-detail-dialog__title text-xl font-bold">{modalTitle}</DialogTitle>
@@ -154,36 +174,113 @@ export function PermissionGroupsPage() {
             ) : (
               <div className="flex min-h-0 flex-1 flex-col">
                 <OpsDialogBody className="space-y-5">
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <label className="space-y-1.5 text-sm"><span className="font-medium">{t(`${P}.modal.groupName`)}</span><input disabled={readOnly} value={name} maxLength={150} onChange={e => setName(e.target.value)} className="input disabled:opacity-60" /></label>
-                    <label className="flex items-center justify-between rounded-xl border p-3"><span><strong className="block text-sm">{t(`${P}.modal.activeGroup`)}</strong><small className="text-slate-500">{t(`${P}.modal.activeGroupHint`)}</small></span><input type="checkbox" disabled={readOnly} checked={isActive} onChange={e => setIsActive(e.target.checked)} /></label>
-                    <label className="space-y-1.5 text-sm sm:col-span-2"><span className="font-medium">{t(`${P}.modal.description`)}</span><textarea disabled={readOnly} value={description} maxLength={500} rows={3} onChange={e => setDescription(e.target.value)} className="input min-h-[5rem] resize-y disabled:opacity-60" /></label>
+                  <div className="grid gap-4 sm:grid-cols-2 sm:items-end">
+                    <div className="space-y-1.5 text-sm">
+                      <label className="font-medium">{t(`${P}.modal.groupName`)}</label>
+                      <AppInput disabled={readOnly} value={name} maxLength={150} onChange={e => setName(e.target.value)} />
+                    </div>
+                    <OpsCircuitToggleField
+                      checked={isActive}
+                      onCheckedChange={setIsActive}
+                      disabled={readOnly}
+                      title={t(`${P}.modal.activeGroup`)}
+                      description={t(`${P}.modal.activeGroupHint`)}
+                      className="rounded-xl border"
+                    />
+                    <div className="space-y-1.5 text-sm sm:col-span-2">
+                      <label className="font-medium">{t(`${P}.modal.description`)}</label>
+                      <textarea
+                        disabled={readOnly}
+                        value={description}
+                        maxLength={500}
+                        rows={3}
+                        onChange={e => setDescription(e.target.value)}
+                        className="input wms-ops-field min-h-[5rem] w-full resize-y disabled:opacity-60"
+                      />
+                    </div>
                   </div>
                   {detail?.isSystemAdmin && <div className="flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800"><ShieldCheck className="size-4" />{t(`${P}.modal.systemAdminNotice`)}</div>}
                   <div className="rounded-2xl border border-[var(--wms-app-border)]">
                     <div className="flex flex-col gap-3 border-b border-[var(--wms-app-border)] p-4 sm:flex-row sm:items-center sm:justify-between">
-                      <div><strong className="text-sm">{t(`${P}.modal.permissionsTitle`)}</strong><p className="text-xs text-slate-500">{t(`${P}.modal.selectedSummary`, { selected: selected.length, visible: visiblePermissions.length })}</p></div>
-                      <div className="flex flex-wrap gap-2">
-                        <label className="relative"><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" /><input value={permissionSearch} onChange={e => setPermissionSearch(e.target.value)} placeholder={t(`${P}.modal.searchPlaceholder`)} className="input h-9 w-56 pl-9 text-sm" /></label>
+                      <div>
+                        <strong className="text-sm">{t(`${P}.modal.permissionsTitle`)}</strong>
+                        <p className="text-xs text-slate-500">{t(`${P}.modal.selectedSummary`, { selected: selected.length, visible: visiblePermissions.length })}</p>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <div className="min-w-[12rem] flex-1 sm:max-w-56 sm:flex-none">
+                          <AppInput
+                            value={permissionSearch}
+                            onChange={e => setPermissionSearch(e.target.value)}
+                            placeholder={t(`${P}.modal.searchPlaceholder`)}
+                            leadingIcon={<Search className="size-4" />}
+                          />
+                        </div>
                         {!readOnly && <>
-                          <button type="button" onClick={() => setSelected(current => [...new Set([...current, ...visiblePermissions.map(item => item.id)])])} className="rounded-xl border px-3 py-2 text-xs">{t(`${P}.modal.selectVisible`)}</button>
-                          <button type="button" onClick={() => setSelected([])} className="rounded-xl border px-3 py-2 text-xs">{t(`${P}.modal.clear`)}</button>
+                          <OpsActionButton type="button" variant="secondary" onClick={() => setSelected(current => [...new Set([...current, ...visiblePermissions.map(item => item.id)])])}>
+                            {t(`${P}.modal.selectVisible`)}
+                          </OpsActionButton>
+                          <OpsActionButton type="button" variant="secondary" onClick={() => setSelected([])}>
+                            {t(`${P}.modal.clear`)}
+                          </OpsActionButton>
                         </>}
                       </div>
                     </div>
                     <div className="grid max-h-80 gap-2 overflow-auto p-4 sm:grid-cols-2">
-                      {visiblePermissions.map(permission => (
-                        <label key={permission.id} className={`flex items-start gap-3 rounded-xl border p-3 ${readOnly ? '' : 'cursor-pointer hover:bg-[var(--wms-brand-soft)]'}`}>
-                          <input type="checkbox" disabled={readOnly} checked={selected.includes(permission.id)} onChange={() => setSelected(current => current.includes(permission.id) ? current.filter(id => id !== permission.id) : [...current, permission.id])} />
-                          <span><strong className="block text-xs">{permission.code}</strong><small className="text-slate-500">{permission.name}</small></span>
-                        </label>
-                      ))}
+                      {visiblePermissions.map(permission => {
+                        const checked = selected.includes(permission.id);
+                        const toggle = () => {
+                          if (readOnly) return;
+                          setSelected(current =>
+                            current.includes(permission.id)
+                              ? current.filter(id => id !== permission.id)
+                              : [...current, permission.id],
+                          );
+                        };
+                        return (
+                          <div
+                            key={permission.id}
+                            role="button"
+                            tabIndex={readOnly ? -1 : 0}
+                            onClick={toggle}
+                            onKeyDown={(event) => {
+                              if (readOnly) return;
+                              if (event.key === 'Enter' || event.key === ' ') {
+                                event.preventDefault();
+                                toggle();
+                              }
+                            }}
+                            className={cn(
+                              'flex items-start gap-2.5 rounded-xl border p-3',
+                              readOnly ? 'cursor-default opacity-90' : 'cursor-pointer hover:bg-[var(--wms-brand-soft)]',
+                            )}
+                          >
+                            <OpsSkinCheckbox
+                              checked={checked}
+                              disabled={readOnly}
+                              onCheckedChange={toggle}
+                              aria-label={permission.code}
+                              className="mt-0.5 shrink-0"
+                            />
+                            <span className="min-w-0 flex-1">
+                              <strong className="block text-xs leading-4">{permission.code}</strong>
+                              <small className="mt-0.5 block text-slate-500 leading-4">{permission.name}</small>
+                            </span>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </OpsDialogBody>
-                <OpsDialogFooter>
-                  <button type="button" onClick={close} className="rounded-xl border px-4 py-2">{readOnly ? t(`${P}.modal.close`) : t(`${P}.modal.cancel`)}</button>
-                  {!readOnly && <button type="button" disabled={saving || name.trim().length < 2} onClick={() => void save()} className="inline-flex items-center gap-2 rounded-xl bg-[var(--wms-brand-primary)] px-4 py-2 font-semibold text-white disabled:opacity-50">{saving ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}{t(`${P}.modal.save`)}</button>}
+                <OpsDialogFooter className="flex flex-wrap items-center justify-end gap-2">
+                  <OpsActionButton type="button" variant="secondary" onClick={close}>
+                    {readOnly ? t(`${P}.modal.close`) : t(`${P}.modal.cancel`)}
+                  </OpsActionButton>
+                  {!readOnly && (
+                    <OpsActionButton type="button" variant="primary" disabled={saving || name.trim().length < 2} onClick={() => void save()}>
+                      {saving ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Plus className="size-4" aria-hidden />}
+                      {t(`${P}.modal.save`)}
+                    </OpsActionButton>
+                  )}
                 </OpsDialogFooter>
               </div>
             )}

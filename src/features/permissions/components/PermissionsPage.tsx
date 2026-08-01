@@ -3,9 +3,12 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Loader2, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdvancedDataGrid, type GridColumn } from '@/components/shared/AdvancedDataGrid';
+import { AppInput } from '@/components/shared/AppInput';
 import { DeleteConfirmDialog } from '@/components/shared/DeleteConfirmDialog';
+import { OpsActionButton } from '@/components/shared/OpsActionButton';
 import { OpsDialogBody, OpsDialogContent, OpsDialogFooter, OpsDialogHeader } from '@/components/shared/OpsDialogShell';
 import { systemColumns } from '@/components/shared/GridSystemColumns';
+import { OpsSkinCheckbox } from '@/components/shared/OpsSkinCheckbox';
 import { OpsStatusBadge } from '@/components/shared/OpsStatusBadge';
 import { Dialog, DialogTitle } from '@/components/ui/dialog';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
@@ -47,13 +50,36 @@ export function PermissionsPage() {
     { key: 'availableOnWeb', label: t('grid.columns.web'), render: row => <OpsStatusBadge tone={row.availableOnWeb ? 'done' : 'pending'}>{row.availableOnWeb ? t('grid.yes') : t('grid.no')}</OpsStatusBadge> },
     { key: 'availableOnMobile', label: t('grid.columns.mobile'), render: row => <OpsStatusBadge tone={row.availableOnMobile ? 'done' : 'pending'}>{row.availableOnMobile ? t('grid.yes') : t('grid.no')}</OpsStatusBadge> },
     { key: 'isActive', label: t('grid.columns.status'), render: row => <OpsStatusBadge tone={row.isActive ? 'done' : 'pending'}>{row.isActive ? t('grid.statusActive') : t('grid.statusInactive')}</OpsStatusBadge> },
-    { key: 'actions', label: t('grid.columns.actions'), sortable: false, filterable: false, hideable: false, render: row => <div className="flex gap-1"><button type="button" title={t('grid.editTitle')} onClick={() => openEdit(row)} className="rounded-lg border p-2 text-blue-600"><Pencil className="size-4" /></button><button type="button" title={t('grid.deleteTitle')} onClick={() => setDeleteTarget(row)} className="rounded-lg border p-2 text-red-600"><Trash2 className="size-4" /></button></div> },
+    {
+      key: 'actions',
+      label: t('grid.columns.actions'),
+      sortable: false,
+      filterable: false,
+      hideable: false,
+      render: row => (
+        <div className="wms-ops-row-actions flex items-center justify-center gap-1">
+          <button type="button" title={t('grid.editTitle')} onClick={() => openEdit(row)} className="wms-ops-grid-icon-btn grid size-8 place-items-center">
+            <Pencil className="size-3.5" />
+          </button>
+          <button type="button" title={t('grid.deleteTitle')} onClick={() => setDeleteTarget(row)} className="wms-ops-grid-icon-btn grid size-8 place-items-center">
+            <Trash2 className="size-3.5" />
+          </button>
+        </div>
+      ),
+    },
   ], [t]);
+
+  const flagRows: { key: 'isActive' | 'availableOnWeb' | 'availableOnMobile'; label: string }[] = [
+    { key: 'isActive', label: t('dialog.activeLabel') },
+    { key: 'availableOnWeb', label: t('dialog.webLabel') },
+    { key: 'availableOnMobile', label: t('dialog.mobileLabel') },
+  ];
+
   return <>
     <AdvancedDataGrid pageKey="system-permissions-v2" title={t('grid.title')} description={t('grid.description')} columns={columns} fetchPage={systemApi.permissions} toolbarAction={{ label: t('grid.createAction'), run: openCreate }} />
     {editing !== undefined && (
       <Dialog open onOpenChange={open => { if (!open && !saving) setEditing(undefined); }}>
-        <OpsDialogContent size="md">
+        <OpsDialogContent size="md" className="wms-ops-access-control-dialog">
           <OpsDialogHeader>
             <div>
               <DialogTitle className="wms-ops-detail-dialog__title text-xl font-bold">{editing ? t('dialog.editTitle') : t('dialog.createTitle')}</DialogTitle>
@@ -62,19 +88,58 @@ export function PermissionsPage() {
           </OpsDialogHeader>
           <OpsDialogBody className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
-              <label className="space-y-1 text-sm"><span>{t('dialog.codeLabel')}</span><input value={form.code} maxLength={150} onChange={event => setForm(value => ({ ...value, code: event.target.value.toUpperCase() }))} className="input" /></label>
-              <label className="space-y-1 text-sm"><span>{t('dialog.nameLabel')}</span><input value={form.name} maxLength={200} onChange={event => setForm(value => ({ ...value, name: event.target.value }))} className="input" /></label>
-              <label className="space-y-1 text-sm sm:col-span-2"><span>{t('dialog.descriptionLabel')}</span><textarea value={form.description} maxLength={500} rows={3} onChange={event => setForm(value => ({ ...value, description: event.target.value }))} className="input min-h-[5rem] resize-y" /></label>
+              <div className="space-y-1.5 text-sm">
+                <label className="font-medium">{t('dialog.codeLabel')}</label>
+                <AppInput value={form.code} maxLength={150} onChange={event => setForm(value => ({ ...value, code: event.target.value.toUpperCase() }))} />
+              </div>
+              <div className="space-y-1.5 text-sm">
+                <label className="font-medium">{t('dialog.nameLabel')}</label>
+                <AppInput value={form.name} maxLength={200} onChange={event => setForm(value => ({ ...value, name: event.target.value }))} />
+              </div>
+              <div className="space-y-1.5 text-sm sm:col-span-2">
+                <label className="font-medium">{t('dialog.descriptionLabel')}</label>
+                <textarea
+                  value={form.description}
+                  maxLength={500}
+                  rows={3}
+                  onChange={event => setForm(value => ({ ...value, description: event.target.value }))}
+                  className="input wms-ops-field min-h-[5rem] w-full resize-y"
+                />
+              </div>
             </div>
-            <div className="flex flex-wrap gap-4 text-sm">
-              <label><input type="checkbox" checked={form.isActive} onChange={event => setForm(value => ({ ...value, isActive: event.target.checked }))} /> {t('dialog.activeLabel')}</label>
-              <label><input type="checkbox" checked={form.availableOnWeb} onChange={event => setForm(value => ({ ...value, availableOnWeb: event.target.checked }))} /> {t('dialog.webLabel')}</label>
-              <label><input type="checkbox" checked={form.availableOnMobile} onChange={event => setForm(value => ({ ...value, availableOnMobile: event.target.checked }))} /> {t('dialog.mobileLabel')}</label>
+            <div className="flex flex-wrap gap-4">
+              {flagRows.map(({ key, label }) => (
+                <div
+                  key={key}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setForm(value => ({ ...value, [key]: !value[key] }))}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      setForm(value => ({ ...value, [key]: !value[key] }));
+                    }
+                  }}
+                  className="flex cursor-pointer items-center gap-2.5 text-sm"
+                >
+                  <OpsSkinCheckbox
+                    checked={form[key]}
+                    onCheckedChange={(checked) => setForm(value => ({ ...value, [key]: checked }))}
+                    aria-label={label}
+                  />
+                  <span>{label}</span>
+                </div>
+              ))}
             </div>
           </OpsDialogBody>
-          <OpsDialogFooter>
-            <button type="button" onClick={() => setEditing(undefined)} className="rounded-xl border px-4 py-2">{t('dialog.cancelButton')}</button>
-            <button type="button" disabled={saving} onClick={save} className="inline-flex items-center gap-2 rounded-xl bg-[var(--wms-brand-primary)] px-4 py-2 text-white disabled:opacity-50">{saving && <Loader2 className="size-4 animate-spin" />}{t('dialog.saveButton')}</button>
+          <OpsDialogFooter className="flex flex-wrap items-center justify-end gap-2">
+            <OpsActionButton type="button" variant="secondary" disabled={saving} onClick={() => setEditing(undefined)}>
+              {t('dialog.cancelButton')}
+            </OpsActionButton>
+            <OpsActionButton type="button" variant="primary" disabled={saving} onClick={() => void save()}>
+              {saving ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
+              {t('dialog.saveButton')}
+            </OpsActionButton>
           </OpsDialogFooter>
         </OpsDialogContent>
       </Dialog>
