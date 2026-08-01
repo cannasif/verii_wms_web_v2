@@ -8,7 +8,6 @@ import {
   PackageCheck,
   PackageOpen,
   Printer,
-  RefreshCw,
   Search,
   Warehouse,
 } from 'lucide-react';
@@ -16,10 +15,11 @@ import { OpsLoadingState } from '@/components/shared/OpsLoadingState';
 import { OpsCodeBadge, OpsStatusBadge, inferOpsStatusTone, inferQualityStatusTone } from '@/components/shared/OpsStatusBadge';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
+import { useUserDisplayNameDirectory } from '@/hooks/useUserDisplayNameDirectory';
 import { formatProjectDate, formatProjectDateTime, formatProjectNumber } from '@/lib/project-format';
 import { cn } from '@/lib/utils';
+import i18n from '@/lib/i18n';
 import { goodsReceiptEnumLabel, goodsReceiptEnumHint } from '../localization/enum-labels';
 import type {
   GoodsReceiptDetail,
@@ -28,8 +28,8 @@ import type {
   GoodsReceiptSplitRoutingResult,
 } from '../types/goods-receipt.types';
 import { StockIdentityCell } from '@/components/shared/StockIdentityCell';
+import { resolveGoodsReceiptWaybillNo } from '../utils/goods-receipt-waybill';
 import { GoodsReceiptLifecycleDialog, type GoodsReceiptLifecycleAction } from './GoodsReceiptLifecycleDialog';
-import { GoodsReceiptErpRetryDialog } from './GoodsReceiptErpRetryDialog';
 import { GoodsReceiptRoutingDialog } from './GoodsReceiptRoutingDialog';
 
 type OutputMode = 'print' | 'pdf';
@@ -58,15 +58,21 @@ export function GoodsReceiptDetailDialog({
   onRoutingCompleted: (result: GoodsReceiptSplitRoutingResult) => Promise<void>;
 }): ReactElement {
   const { t } = useModuleTranslation('goods-receipt-v2');
-  const { can } = usePermissionAccess();
+  const userNames = useUserDisplayNameDirectory();
   const [mainTab, setMainTab] = useState<MainTab>('content');
   const [infoSubTab, setInfoSubTab] = useState<InfoSubTab>('status');
   const [action, setAction] = useState<GoodsReceiptLifecycleAction | null>(null);
   const [routeKind, setRouteKind] = useState<'transfer' | 'outbound' | null>(null);
-  const [erpRetryOpen, setErpRetryOpen] = useState(false);
   const [lineSearch, setLineSearch] = useState('');
   const detail = state.detail;
   const header = detail?.header;
+
+  const actorLabel = (userId?: number | null, name?: string | null) => {
+    const resolved = name?.trim() || (userId != null ? userNames.get(userId) : undefined);
+    if (resolved) return resolved;
+    if (userId != null) return i18n.t('dataGrid.userNumber', { number: userId });
+    return i18n.t('dataGrid.systemActor');
+  };
 
   const shortCloseAvailable = detail?.lines.some(
     (line) => line.expectedQuantity - line.receivedQuantity - line.shortClosedQuantity > 0,
@@ -108,11 +114,6 @@ export function GoodsReceiptDetailDialog({
 
   const printBusy = Boolean(header && busyKey === `${header.id}:all:print`);
   const pdfBusy = Boolean(header && busyKey === `${header.id}:all:pdf`);
-  const erpRetryAvailable = Boolean(
-    header
-      && can('WMS.GOODS_RECEIPT.ERP_RETRY')
-      && ['Pending', 'Failed', 'CommitUncertain'].includes(header.erpIntegrationStatus),
-  );
 
   return (
     <Dialog
@@ -147,7 +148,7 @@ export function GoodsReceiptDetailDialog({
             </DialogTitle>
             <DialogDescription className="wms-ops-detail-dialog__description">
               {header
-                ? `${header.supplierName || header.supplierCode || '—'} · ${header.waybillNo || 'İrsaliye yok'} · ${goodsReceiptEnumLabel(t, 'operationStatus', header.status)}`
+                ? `${header.supplierName || header.supplierCode || '—'} · ${resolveGoodsReceiptWaybillNo(header) || 'İrsaliye yok'} · ${goodsReceiptEnumLabel(t, 'operationStatus', header.status)}`
                 : t('list.detailDescription')}
             </DialogDescription>
             {header ? (
@@ -162,9 +163,9 @@ export function GoodsReceiptDetailDialog({
                   {goodsReceiptEnumLabel(t, 'qualityStatus', header.qualityStatus)}
                 </OpsStatusBadge>
                 <OpsCodeBadge>{header.receiptType || '—'}</OpsCodeBadge>
-                {header.waybillNo ? (
+                {resolveGoodsReceiptWaybillNo(header) ? (
                   <span className="inline-flex items-center rounded-lg border border-[var(--wms-app-border)] bg-black/[.03] px-2.5 py-1 font-mono text-xs dark:bg-white/[.04]">
-                    İrsaliye {header.waybillNo}
+                    İrsaliye {resolveGoodsReceiptWaybillNo(header)}
                   </span>
                 ) : null}
               </div>
@@ -207,15 +208,6 @@ export function GoodsReceiptDetailDialog({
                       label={t('list.route')}
                       icon={<ArrowRightLeft className="size-4" />}
                       onClick={() => setRouteKind('transfer')}
-                    />
-                  ) : null}
-                  {erpRetryAvailable ? (
-                    <LifecycleButton
-                      label={header.erpIntegrationStatus === 'CommitUncertain'
-                        ? 'ERP Mutabakat / Yeniden Gönder'
-                        : 'ERP’ye Gönder'}
-                      icon={<RefreshCw className="size-4" />}
-                      onClick={() => setErpRetryOpen(true)}
                     />
                   ) : null}
                   <LifecycleButton
@@ -269,7 +261,7 @@ export function GoodsReceiptDetailDialog({
                   <div className="wms-ops-detail-panel">
                     <div className="wms-ops-detail-grid">
                       <OpsDetailField label={t('list.documentNo')}>{header.documentNo}</OpsDetailField>
-                      <OpsDetailField label={t('list.waybill')}>{header.waybillNo || '—'}</OpsDetailField>
+                      <OpsDetailField label={t('list.waybill')}>{resolveGoodsReceiptWaybillNo(header) || '—'}</OpsDetailField>
                       <OpsDetailField label={t('list.supplier')}>
                         {header.supplierName && header.supplierCode
                           ? `${header.supplierName} (${header.supplierCode})`
@@ -429,13 +421,17 @@ export function GoodsReceiptDetailDialog({
                     <TabsContent value="audit" className="mt-4">
                       <div className="wms-ops-detail-panel wms-ops-detail-panel--rows">
                         <OpsDetailRow label={t('list.createdBy')}>
-                          {header.createdBy != null ? String(header.createdBy) : '—'}
+                          {header.createdBy != null || header.createdByName
+                            ? actorLabel(header.createdBy, header.createdByName)
+                            : '—'}
                         </OpsDetailRow>
                         <OpsDetailRow label={t('list.createdDate')}>
                           {header.createdDate ? formatProjectDateTime(header.createdDate) : '—'}
                         </OpsDetailRow>
                         <OpsDetailRow label={t('list.updatedBy')}>
-                          {header.updatedBy != null ? String(header.updatedBy) : '—'}
+                          {header.updatedDate
+                            ? actorLabel(header.updatedBy, header.updatedByName)
+                            : '—'}
                         </OpsDetailRow>
                         <OpsDetailRow label={t('list.updatedDate')}>
                           {header.updatedDate ? formatProjectDateTime(header.updatedDate) : '—'}
@@ -601,16 +597,6 @@ export function GoodsReceiptDetailDialog({
                 onCompleted={async (result) => {
                   setRouteKind(null);
                   await onRoutingCompleted(result);
-                }}
-              />
-            ) : null}
-            {erpRetryOpen ? (
-              <GoodsReceiptErpRetryDialog
-                header={header}
-                close={() => setErpRetryOpen(false)}
-                completed={async () => {
-                  setErpRetryOpen(false);
-                  await onLifecycleCompleted(null);
                 }}
               />
             ) : null}
