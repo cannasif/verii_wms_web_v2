@@ -4371,7 +4371,21 @@
       "rebuildSuccess": "{{locationRows}} raf ve {{warehouseRows}} depo bakiyesi yeniden oluşturuldu.",
       "reconcileOk": "Hareket defteri ve raf bakiyeleri tamamen uyumlu.",
       "reconcileFailed": "Uzlaştırma başarısız.",
-      "readOnly": "Salt okunur"
+      "readOnly": "Salt okunur",
+      "openingImportAction": "Excel ile İlk Bakiye",
+      "openingImport": {
+        "title": "Excel ile İlk Raf Bakiyesi",
+        "description": "Yeni başlangıç stoklarını hareket defteri ve raf bakiyesiyle birlikte oluşturun.",
+        "warning": "Aktarım yapılacak depoda daha önce hiçbir stok hareketi bulunmamalıdır. Mevcut bakiyeler değiştirilmez; seri, lot, YAP ve birim kuralları aynen uygulanır.",
+        "limitText": "En fazla 5 MB ve 200 bakiye satırı",
+        "submitLabel": "İlk bakiyeyi kaydet",
+        "summaryRows": "Satır",
+        "summaryTotalQuantity": "Toplam miktar",
+        "summaryOperation": "Operasyon",
+        "summaryStatus": "Durum",
+        "summaryStatusReplay": "Tekrar",
+        "summaryStatusSaved": "Kaydedildi"
+      }
     },
     "warehouseBalances": {
       "warehouseCode": "Depo Kodu",

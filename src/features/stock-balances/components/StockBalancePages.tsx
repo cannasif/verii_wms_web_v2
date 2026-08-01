@@ -95,26 +95,26 @@ export function LocationBalancesPage() {
         columns={columns}
         fetchPage={stockBalancesApi.getLocations}
         toolbarActions={[
-          ...(allowOpeningImport ? [{ label: 'Excel ile İlk Bakiye', icon: <FileSpreadsheet className="size-4"/>, run: async () => setImportOpen(true) }] : []),
+          ...(allowOpeningImport ? [{ label: t(`${L}.openingImportAction`), icon: <FileSpreadsheet className="size-4"/>, run: async () => setImportOpen(true) }] : []),
           ...(allow ? [{ label: working ? t(`${L}.reconciling`) : t(`${L}.reconcile`), run: reconcile }] : []),
         ]}
       />
       <InitialExcelImportDialog
         open={importOpen}
-        title="Excel ile İlk Raf Bakiyesi"
-        description="Yeni başlangıç stoklarını hareket defteri ve raf bakiyesiyle birlikte oluşturun."
-        warning="Aktarım yapılacak depoda daha önce hiçbir stok hareketi bulunmamalıdır. Mevcut bakiyeler değiştirilmez; seri, lot, YAP ve birim kuralları aynen uygulanır."
+        title={t(`${L}.openingImport.title`)}
+        description={t(`${L}.openingImport.description`)}
+        warning={t(`${L}.openingImport.warning`)}
         templateFileName="wms-v2-ilk-raf-bakiyesi-sablonu.xlsx"
-        limitText="En fazla 5 MB ve 200 bakiye satırı"
-        submitLabel="İlk bakiyeyi kaydet"
+        limitText={t(`${L}.openingImport.limitText`)}
+        submitLabel={t(`${L}.openingImport.submitLabel`)}
         onOpenChange={setImportOpen}
         downloadTemplate={() => stockBalancesApi.downloadOpeningTemplate(branchCode)}
         importFile={(file, idempotencyKey) => stockBalancesApi.importOpeningBalance(file, branchCode, idempotencyKey)}
         summarize={(result) => [
-          { label: 'Satır', value: result.totalRows },
-          { label: 'Toplam miktar', value: formatProjectNumber(result.totalQuantity) },
-          { label: 'Operasyon', value: `#${result.operationId}` },
-          { label: 'Durum', value: result.isReplay ? 'Tekrar' : 'Kaydedildi' },
+          { label: t(`${L}.openingImport.summaryRows`), value: result.totalRows },
+          { label: t(`${L}.openingImport.summaryTotalQuantity`), value: formatProjectNumber(result.totalQuantity) },
+          { label: t(`${L}.openingImport.summaryOperation`), value: `#${result.operationId}` },
+          { label: t(`${L}.openingImport.summaryStatus`), value: result.isReplay ? t(`${L}.openingImport.summaryStatusReplay`) : t(`${L}.openingImport.summaryStatusSaved`) },
         ]}
         onImported={async () => queryClient.invalidateQueries({ queryKey: ['advanced-grid'] })}
       />

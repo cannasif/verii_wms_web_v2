@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, typ
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
+import type { TFunction } from "i18next";
 import { ChevronDown, ClipboardPen, Loader2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -34,6 +35,7 @@ import {
   formatProjectDateTime,
   formatProjectNumber,
 } from "@/lib/project-format";
+import { useModuleTranslation } from "@/hooks/useModuleTranslation";
 import { goodsReceiptV2Api } from "@/features/goods-receipt-v2/api/goods-receipt.api";
 import {
   qualityApi,
@@ -78,18 +80,20 @@ function actionableQuantity(line: QualityInspectionLine): number {
 async function notifyGoodsReceiptAfterDecision(
   detail: QualityInspectionDetail,
   openGoodsReceiptList: () => void,
+  t: TFunction,
 ): Promise<void> {
   const docNo = detail.header.sourceDocumentNo?.trim();
   const isGoodsReceipt =
     detail.header.sourceDocumentType === "GR" ||
     detail.header.sourceDocumentType === "GoodsReceipt";
+  const actionLabel = t("goodsReceiptNotice.actionLabel");
 
-  toast.success("Kalite kararı ve stok hareketi kaydedildi.", {
+  toast.success(t("goodsReceiptNotice.decidedToastTitle"), {
     description: docNo
-      ? `Kaynak belge ${docNo}. Mal kabul listesinden kontrol edebilirsiniz.`
-      : "Mal kabul listesinden ilgili belgeyi kontrol edebilirsiniz.",
+      ? t("goodsReceiptNotice.withDoc", { docNo })
+      : t("goodsReceiptNotice.withoutDoc"),
     action: {
-      label: "Mal kabul listesi",
+      label: actionLabel,
       onClick: openGoodsReceiptList,
     },
   });
@@ -114,52 +118,48 @@ async function notifyGoodsReceiptAfterDecision(
         ),
       );
     if (!row) {
-      toast.message(
-        "Mal kabul kaydı listede aranabilir; belge no ile kontrol edin.",
-        {
-          description: docNo,
-          action: { label: "Mal kabul listesi", onClick: openGoodsReceiptList },
-        },
-      );
+      toast.message(t("goodsReceiptNotice.searchable"), {
+        description: docNo,
+        action: { label: actionLabel, onClick: openGoodsReceiptList },
+      });
       return;
     }
 
     const erp = row.erpIntegrationStatus;
     const erpLabel = localizeEnumValue(erp);
     if (erp === "Succeeded") {
-      toast.success("Netsis irsaliyesi aktarıldı.", {
-        description: `${docNo} — Mal kabul listesinden kontrol edebilirsiniz.`,
-        action: { label: "Mal kabul listesi", onClick: openGoodsReceiptList },
+      toast.success(t("goodsReceiptNotice.erpTransferredTitle"), {
+        description: t("goodsReceiptNotice.erpTransferredDesc", { docNo }),
+        action: { label: actionLabel, onClick: openGoodsReceiptList },
       });
     } else if (erp === "Pending" || erp === "Processing") {
-      toast.message("Netsis irsaliyesi henüz tamamlanmadı.", {
-        description: `${docNo} · ${erpLabel}. Mal kabul detayından ERP durumunu kontrol edin.`,
-        action: { label: "Mal kabul listesi", onClick: openGoodsReceiptList },
+      toast.message(t("goodsReceiptNotice.erpPendingTitle"), {
+        description: t("goodsReceiptNotice.erpPendingDesc", { docNo, erpLabel }),
+        action: { label: actionLabel, onClick: openGoodsReceiptList },
       });
     } else if (erp === "Failed" || erp === "CommitUncertain") {
-      toast.warning("Netsis irsaliyesi tamamlanamadı veya belirsiz.", {
-        description: `${docNo} · ${erpLabel}. Mal kabul detayından ERP tekrar gönderimini kontrol edin.`,
-        action: { label: "Mal kabul listesi", onClick: openGoodsReceiptList },
+      toast.warning(t("goodsReceiptNotice.erpFailedTitle"), {
+        description: t("goodsReceiptNotice.erpFailedDesc", { docNo, erpLabel }),
+        action: { label: actionLabel, onClick: openGoodsReceiptList },
       });
     } else if (erp === "NotRequired") {
-      toast.message("Bu mal kabul için ERP / Netsis aktarımı gerekmiyor.", {
+      toast.message(t("goodsReceiptNotice.erpNotRequiredTitle"), {
         description: docNo,
-        action: { label: "Mal kabul listesi", onClick: openGoodsReceiptList },
+        action: { label: actionLabel, onClick: openGoodsReceiptList },
       });
     } else {
-      toast.message("Mal kabul kaydı güncellendi.", {
-        description: `${docNo}${erp ? ` · ERP: ${erpLabel}` : ""}. Listeden kontrol edebilirsiniz.`,
-        action: { label: "Mal kabul listesi", onClick: openGoodsReceiptList },
+      toast.message(t("goodsReceiptNotice.updatedTitle"), {
+        description: erp
+          ? t("goodsReceiptNotice.updatedDescWithErp", { docNo, erpLabel })
+          : t("goodsReceiptNotice.updatedDescNoErp", { docNo }),
+        action: { label: actionLabel, onClick: openGoodsReceiptList },
       });
     }
   } catch {
-    toast.message(
-      "Netsis durumu şu an doğrulanamadı; mal kabul listesinden kontrol edin.",
-      {
-        description: docNo,
-        action: { label: "Mal kabul listesi", onClick: openGoodsReceiptList },
-      },
-    );
+    toast.message(t("goodsReceiptNotice.unresolvedTitle"), {
+      description: docNo,
+      action: { label: actionLabel, onClick: openGoodsReceiptList },
+    });
   }
 }
 
@@ -194,11 +194,12 @@ function roundQty(value: number): number {
 function remainderOptionsFor(
   decision: string,
   quarantineAvailable: boolean,
+  t: TFunction,
 ): Array<{ value: string; label: string }> {
   const all = [
-    { value: "Accepted", label: "Kabul" },
-    { value: "Quarantined", label: "Karantina" },
-    { value: "Rejected", label: "Ret" },
+    { value: "Accepted", label: t("decisionOptions.acceptedShort") },
+    { value: "Quarantined", label: t("decisionOptions.quarantinedShort") },
+    { value: "Rejected", label: t("decisionOptions.rejectedShort") },
   ].filter((option) => option.value !== decision);
   return quarantineAvailable
     ? all
@@ -208,6 +209,7 @@ function remainderOptionsFor(
 function buildQuantityDecision(
   line: QualityInspectionLine,
   draft: LineDraft,
+  t: TFunction,
 ): {
   lineId: number;
   acceptedQuantity: number;
@@ -217,18 +219,23 @@ function buildQuantityDecision(
   const remaining = actionableQuantity(line);
   const qty = roundQty(parseQty(draft.quantity));
   if (!Number.isFinite(qty) || qty <= 0) {
-    throw new Error(`‘${line.stockCode}’ için miktar 0’dan büyük olmalıdır.`);
+    throw new Error(
+      t("errors.qtyMustBePositive", { stockCode: line.stockCode }),
+    );
   }
   if (qty - remaining > QTY_EPS) {
     throw new Error(
-      `‘${line.stockCode}’ için miktar kalan ${formatProjectNumber(remaining)} değerini aşamaz.`,
+      t("errors.qtyExceedsRemaining", {
+        stockCode: line.stockCode,
+        remaining: formatProjectNumber(remaining),
+      }),
     );
   }
 
   const primary = draft.decision;
   if (primary === "Returned") {
     throw new Error(
-      `‘${line.stockCode}’ iade kararı miktar bölünmeden tam satır olarak kaydedilir.`,
+      t("errors.returnedFullLineOnly", { stockCode: line.stockCode }),
     );
   }
 
@@ -238,19 +245,24 @@ function buildQuantityDecision(
   if (primary === "Accepted") accepted = qty;
   else if (primary === "Rejected") rejected = qty;
   else if (primary === "Quarantined") quarantine = qty;
-  else throw new Error(`‘${line.stockCode}’ için geçerli bir karar seçin.`);
+  else throw new Error(t("errors.selectValidDecision", { stockCode: line.stockCode }));
 
   const rest = roundQty(remaining - qty);
   if (rest > QTY_EPS) {
     if (isSerialTracked(line)) {
       throw new Error(
-        `‘${line.serialNo || line.stockCode}’ seri takipli satır miktara bölünemez.`,
+        t("errors.serialCannotSplit", {
+          label: line.serialNo || line.stockCode,
+        }),
       );
     }
     const remainder = draft.remainderDecision;
     if (!remainder || remainder === primary) {
       throw new Error(
-        `‘${line.stockCode}’ için kalan ${formatProjectNumber(rest)} miktarın kararını seçin.`,
+        t("errors.selectRemainderDecision", {
+          stockCode: line.stockCode,
+          rest: formatProjectNumber(rest),
+        }),
       );
     }
     if (remainder === "Accepted") accepted += rest;
@@ -258,7 +270,9 @@ function buildQuantityDecision(
     else if (remainder === "Quarantined") quarantine += rest;
     else {
       throw new Error(
-        `‘${line.stockCode}’ kalan miktarı için kabul, ret veya karantina seçin.`,
+        t("errors.selectRemainderAcceptRejectQuarantine", {
+          stockCode: line.stockCode,
+        }),
       );
     }
   }
@@ -278,12 +292,14 @@ function message(error: unknown, fallback: string): string {
 function buildApplySummary(
   lines: QualityInspectionLine[],
   drafts: Record<number, LineDraft>,
+  t: TFunction,
 ): { title: string; bullets: string[] } {
   const pending = lines.filter((line) => drafts[line.id]?.decision);
+  const title = t("applySummary.title");
   if (pending.length === 0) {
     return {
-      title: "Uygulama özeti",
-      bullets: ["Önce en az bir satır için karar seçin."],
+      title,
+      bullets: [t("applySummary.selectAtLeastOneDecision")],
     };
   }
 
@@ -300,7 +316,7 @@ function buildApplySummary(
       continue;
     }
     try {
-      const allocation = buildQuantityDecision(line, draft);
+      const allocation = buildQuantityDecision(line, draft, t);
       accepted += allocation.acceptedQuantity;
       rejected += allocation.rejectedQuantity;
       quarantine += allocation.quarantineQuantity;
@@ -311,45 +327,41 @@ function buildApplySummary(
 
   const qtyParts: string[] = [];
   if (accepted > QTY_EPS) {
-    qtyParts.push(`${formatProjectNumber(accepted)} kabul`);
+    qtyParts.push(t("applySummary.unitAccepted", { value: formatProjectNumber(accepted) }));
   }
   if (quarantine > QTY_EPS) {
-    qtyParts.push(`${formatProjectNumber(quarantine)} karantina`);
+    qtyParts.push(t("applySummary.unitQuarantine", { value: formatProjectNumber(quarantine) }));
   }
   if (rejected > QTY_EPS) {
-    qtyParts.push(`${formatProjectNumber(rejected)} ret`);
+    qtyParts.push(t("applySummary.unitRejected", { value: formatProjectNumber(rejected) }));
   }
   if (returned > QTY_EPS) {
-    qtyParts.push(`${formatProjectNumber(returned)} iade`);
+    qtyParts.push(t("applySummary.unitReturned", { value: formatProjectNumber(returned) }));
   }
 
   const bullets: string[] = [
-    `${pending.length} satır kararı uygulanacak.`,
+    t("applySummary.linesWillApply", { count: pending.length }),
   ];
   if (qtyParts.length > 0) {
-    bullets.push(`Miktar: ${qtyParts.join(" · ")}.`);
+    bullets.push(t("applySummary.quantityLabel", { parts: qtyParts.join(" · ") }));
   }
   if (invalid > 0) {
-    bullets.push(`${invalid} satırda miktar dağılımı henüz geçersiz.`);
+    bullets.push(t("applySummary.invalidLines", { count: invalid }));
   }
-  bullets.push("Stok hareketi ve hedef raf yönlendirmesi oluşur.");
+  bullets.push(t("applySummary.stockMovementNote"));
   if (quarantine > QTY_EPS) {
-    bullets.push("Karantina miktarı karantina rafına alınır.");
+    bullets.push(t("applySummary.quarantineNote"));
   }
   if (rejected > QTY_EPS || returned > QTY_EPS) {
-    bullets.push("Ret / iade miktarı ilgili süreç ve raflara işlenir.");
+    bullets.push(t("applySummary.rejectReturnNote"));
   }
   if (accepted > QTY_EPS) {
-    bullets.push("Kabul edilen miktar kullanılabilir stoğa geçer.");
+    bullets.push(t("applySummary.acceptedNote"));
   }
-  bullets.push(
-    "Gerekirse DAT ve ERP / irsaliye gönderimi politikalara göre tetiklenir.",
-  );
-  bullets.push(
-    "Sonuç sonrası mal kabul listesinden belgeyi ve Netsis durumunu kontrol edebilirsiniz.",
-  );
+  bullets.push(t("applySummary.datErpNote"));
+  bullets.push(t("applySummary.checkResultNote"));
 
-  return { title: "Uygulama özeti", bullets };
+  return { title, bullets };
 }
 
 export function QualityInspectionsPage({
@@ -357,6 +369,7 @@ export function QualityInspectionsPage({
 }: {
   quarantineOnly?: boolean;
 }): ReactElement {
+  const { t } = useModuleTranslation("quality");
   const queryClient = useQueryClient();
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [detail, setDetail] = useState<QualityInspectionDetail | null>(null);
@@ -389,18 +402,18 @@ export function QualityInspectionsPage({
         setDetail(await qualityApi.inspection(id));
         setExpandedId(id);
       } catch (error) {
-        toast.error(message(error, "Kalite detayı alınamadı."));
+        toast.error(message(error, t("list.detailFetchFailed")));
       } finally {
         setLoading(null);
       }
     },
-    [expandedId],
+    [expandedId, t],
   );
   const columns = useMemo<GridColumn<QualityInspection>[]>(
     () => [
       {
         key: "inspectionNo",
-        label: "Kontrol No",
+        label: t("list.columns.inspectionNo"),
         sortable: true,
         filterable: true,
         render: (r) => (
@@ -421,14 +434,14 @@ export function QualityInspectionsPage({
       },
       {
         key: "sourceWaybillNo",
-        label: "İrsaliye No",
+        label: t("list.columns.waybillNo"),
         sortable: true,
         filterable: true,
         render: (r) => r.sourceWaybillNo || "—",
       },
       {
         key: "sourceDocumentNo",
-        label: "Kaynak Belge",
+        label: t("list.columns.sourceDocument"),
         sortable: true,
         filterable: true,
         render: (r) => (
@@ -437,7 +450,7 @@ export function QualityInspectionsPage({
       },
       {
         key: "sourceDocumentType",
-        label: "Evrak Tipi",
+        label: t("list.columns.documentType"),
         sortable: true,
         filterable: true,
         render: (r) => {
@@ -454,14 +467,15 @@ export function QualityInspectionsPage({
       },
       {
         key: "createdByName",
-        label: "İşlemi Yapan",
+        label: t("list.columns.processedBy"),
         sortable: true,
         filterable: true,
-        render: (r) => r.createdByName || `Kullanıcı #${r.createdBy ?? "—"}`,
+        render: (r) =>
+          r.createdByName || t("list.unknownUser", { id: r.createdBy ?? "—" }),
       },
       {
         key: "lineCount",
-        label: "Kalem",
+        label: t("list.columns.lineCount"),
         sortable: true,
         filterable: true,
         render: (r) => (
@@ -472,7 +486,7 @@ export function QualityInspectionsPage({
       },
       {
         key: "status",
-        label: "Durum",
+        label: t("list.columns.status"),
         sortable: true,
         filterable: true,
         render: (r) => (
@@ -485,14 +499,14 @@ export function QualityInspectionsPage({
       },
       {
         key: "createdAtUtc",
-        label: "Oluşturma",
+        label: t("list.columns.createdAt"),
         sortable: true,
         filterable: true,
         render: (r) => formatProjectDateTime(r.createdAtUtc),
       },
       {
         key: "decidedAtUtc",
-        label: "Kalite Onay",
+        label: t("list.columns.decidedAt"),
         sortable: true,
         filterable: true,
         render: (r) =>
@@ -500,7 +514,7 @@ export function QualityInspectionsPage({
       },
       {
         key: "actions",
-        label: "Detay",
+        label: t("list.columns.detail"),
         ...requiredActionColumn,
         render: (r) => (
           <button
@@ -508,7 +522,7 @@ export function QualityInspectionsPage({
             onClick={() => void toggle(r.id)}
             disabled={loading === r.id}
             className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-cyan-500 hover:bg-cyan-500/10"
-            aria-label="Kalite satır detayını aç"
+            aria-label={t("list.openAria")}
             aria-expanded={expandedId === r.id}
           >
             {loading === r.id ? (
@@ -519,13 +533,13 @@ export function QualityInspectionsPage({
               />
             )}
             <span className="text-xs font-semibold">
-              {expandedId === r.id ? "Gizle" : "Aç"}
+              {expandedId === r.id ? t("list.hide") : t("list.open")}
             </span>
           </button>
         ),
       },
     ],
-    [expandedId, loading, toggle],
+    [expandedId, loading, t, toggle],
   );
   const decided = async () => {
     setExpandedId(null);
@@ -538,17 +552,15 @@ export function QualityInspectionsPage({
     <AdvancedDataGrid<QualityInspection>
       pageKey={pageKey}
       title={
-        quarantineOnly ? "Karantina Karar Kuyruğu" : "Kalite İnceleme Listesi"
+        quarantineOnly ? t("list.titleQuarantine") : t("list.titleDefault")
       }
       description={
         quarantineOnly
-          ? "Karantinadaki ürünleri yetkili biçimde serbest bırakın, reddedin veya iade edin."
-          : "Özet satırda irsaliye ve işlemi yapan görünür; satırı açınca stok / lot / seri ve karar detayı accordion içinde gelir."
+          ? t("list.descriptionQuarantine")
+          : t("list.descriptionDefault")
       }
       emptyMessage={
-        quarantineOnly
-          ? "Karantinada kayıt yok."
-          : "Henüz kuyrukta kalite kaydı yok. Siparişli emir oluşturmak yetmez — Emir Yönetimi veya Bana Atanan Emirler’den fiziksel kabulü bitirince bu listeye düşer."
+        quarantineOnly ? t("list.emptyQuarantine") : t("list.emptyDefault")
       }
       columns={columns}
       fetchPage={fetchPage}
@@ -566,7 +578,7 @@ export function QualityInspectionsPage({
           />
         ) : (
           <div className="flex items-center gap-2 text-sm text-slate-500">
-            <Loader2 className="size-4 animate-spin" /> Detay yükleniyor...
+            <Loader2 className="size-4 animate-spin" /> {t("list.detailLoading")}
           </div>
         )
       }
@@ -583,6 +595,7 @@ function InspectionDetailPanel({
   close: () => void;
   decided: () => void;
 }): ReactElement {
+  const { t } = useModuleTranslation("quality");
   const navigate = useNavigate();
   const actionable = useMemo(
     () => detail.lines.filter(isActionableLine),
@@ -600,15 +613,15 @@ function InspectionDetailPanel({
   const options =
     detail.header.status === "Quarantined"
       ? [
-          { value: "Accepted", label: "Serbest Bırak / Kabul" },
-          { value: "Rejected", label: "Reddet" },
-          { value: "Returned", label: "Tedarikçiye İade" },
+          { value: "Accepted", label: t("decisionOptions.releaseAccept") },
+          { value: "Rejected", label: t("decisionOptions.reject") },
+          { value: "Returned", label: t("decisionOptions.returnToSupplier") },
         ]
       : [
-          { value: "Accepted", label: "Kabul" },
-          { value: "Quarantined", label: "Karantinaya Al" },
-          { value: "Rejected", label: "Reddet" },
-          { value: "Returned", label: "Tedarikçiye İade" },
+          { value: "Accepted", label: t("decisionOptions.accept") },
+          { value: "Quarantined", label: t("decisionOptions.quarantine") },
+          { value: "Rejected", label: t("decisionOptions.reject") },
+          { value: "Returned", label: t("decisionOptions.returnToSupplier") },
         ];
 
   const defaultDecision = "Accepted";
@@ -661,10 +674,11 @@ function InspectionDetailPanel({
   const bulkRemainderOptions = remainderOptionsFor(
     bulkDecision,
     allowQuarantineRemainder,
+    t,
   );
   const applySummary = useMemo(
-    () => buildApplySummary(actionable, drafts),
-    [actionable, drafts],
+    () => buildApplySummary(actionable, drafts, t),
+    [actionable, drafts, t],
   );
 
   const toggle = (id: number) =>
@@ -691,20 +705,20 @@ function InspectionDetailPanel({
 
   const applyBulkToSelected = () => {
     if (!bulkDecision) {
-      toast.error("Toplu karar seçin.");
+      toast.error(t("errors.bulkSelectDecision"));
       return;
     }
     if (selected.length === 0) {
-      toast.error("Önce en az bir kontrole tabi satır seçin.");
+      toast.error(t("errors.bulkSelectAtLeastOneLine"));
       return;
     }
     if (bulkDecision !== "Accepted" && !bulkReasonCode.trim()) {
-      toast.error("Ret, karantina ve iade için karar kodu zorunludur.");
+      toast.error(t("errors.bulkReasonCodeRequired"));
       return;
     }
     const bulkQty = bulkQuantity.trim() ? parseQty(bulkQuantity) : null;
     if (bulkQty != null && (!Number.isFinite(bulkQty) || bulkQty <= 0)) {
-      toast.error("Toplu miktar geçersiz.");
+      toast.error(t("errors.bulkQuantityInvalid"));
       return;
     }
 
@@ -715,7 +729,10 @@ function InspectionDetailPanel({
       const remaining = actionableQuantity(line);
       if (bulkQty != null && bulkQty - remaining > QTY_EPS) {
         toast.error(
-          `‘${line.stockCode}’ kalan miktarı ${formatProjectNumber(remaining)}; toplu miktar daha büyük olamaz.`,
+          t("errors.bulkExceedsRemaining", {
+            stockCode: line.stockCode,
+            remaining: formatProjectNumber(remaining),
+          }),
         );
         return;
       }
@@ -726,7 +743,9 @@ function InspectionDetailPanel({
       ) {
         if (isSerialTracked(line)) {
           toast.error(
-            `‘${line.serialNo || line.stockCode}’ seri satırı bölünemez; miktarı tam bırakın.`,
+            t("errors.bulkSerialCannotSplit", {
+              label: line.serialNo || line.stockCode,
+            }),
           );
           return;
         }
@@ -734,7 +753,7 @@ function InspectionDetailPanel({
           !bulkRemainderDecision ||
           bulkRemainderDecision === bulkDecision
         ) {
-          toast.error("Kısmi miktar için kalan miktarın kararını seçin.");
+          toast.error(t("errors.bulkSelectRemainderDecision"));
           return;
         }
       }
@@ -766,7 +785,10 @@ function InspectionDetailPanel({
       return next;
     });
     toast.success(
-      `${selected.length} satıra “${options.find((o) => o.value === bulkDecision)?.label ?? bulkDecision}” uygulandı.`,
+      t("bulkApplySuccess", {
+        count: selected.length,
+        label: options.find((o) => o.value === bulkDecision)?.label ?? bulkDecision,
+      }),
     );
   };
 
@@ -779,13 +801,11 @@ function InspectionDetailPanel({
       .filter((row) => row.draft.decision);
 
     if (pending.length === 0) {
-      toast.error("En az bir satır için karar seçin.");
+      toast.error(t("errors.selectAtLeastOneLineDecision"));
       return;
     }
     if (!detail.allowPartialDecision && pending.length !== actionable.length) {
-      toast.error(
-        "Bu şubede kısmi kalite kararı kapalıdır. Tüm kontrole tabi satırlara karar verin.",
-      );
+      toast.error(t("errors.partialDecisionDisabled"));
       return;
     }
     for (const { line, draft } of pending) {
@@ -801,9 +821,7 @@ function InspectionDetailPanel({
           );
         })();
       if (needsReason && !draft.reasonCode.trim()) {
-        toast.error(
-          "Ret, karantina ve iade kararlarında her satır için karar kodu zorunludur.",
-        );
+        toast.error(t("errors.reasonCodeRequiredAllRows"));
         return;
       }
     }
@@ -823,10 +841,10 @@ function InspectionDetailPanel({
     }> = [];
     try {
       quantityDecisions = quantityRows.map(({ line, draft }) =>
-        buildQuantityDecision(line, draft),
+        buildQuantityDecision(line, draft, t),
       );
     } catch (error) {
-      toast.error(message(error, "Miktar dağılımı geçersiz."));
+      toast.error(message(error, t("errors.quantityDistributionInvalid")));
       return;
     }
 
@@ -835,7 +853,10 @@ function InspectionDetailPanel({
       const qty = roundQty(parseQty(draft.quantity));
       if (!Number.isFinite(qty) || Math.abs(qty - remaining) > QTY_EPS) {
         toast.error(
-          `‘${line.stockCode}’ iade için miktar kalanın tamamı (${formatProjectNumber(remaining)}) olmalıdır.`,
+          t("errors.returnedQuantityMustEqualRemaining", {
+            stockCode: line.stockCode,
+            remaining: formatProjectNumber(remaining),
+          }),
         );
         return;
       }
@@ -918,16 +939,18 @@ function InspectionDetailPanel({
           rowVersion = fresh.rowVersion;
         }
       }
-      await notifyGoodsReceiptAfterDecision(detail, () =>
-        navigate("/warehouse/goods-receipts/list")
+      await notifyGoodsReceiptAfterDecision(
+        detail,
+        () => navigate("/warehouse/goods-receipts/list"),
+        t,
       );
       toast.success(
-        completionMessage || "Kalite kararı ve stok hareketi kaydedildi.",
+        completionMessage || t("decisionSaved"),
         { duration: 7000 }
       );
       decided();
     } catch (error) {
-      toast.error(message(error, "Kalite kararı kaydedilemedi."));
+      toast.error(message(error, t("errors.decisionSaveFailed")));
     } finally {
       setSaving(false);
     }
@@ -943,7 +966,7 @@ function InspectionDetailPanel({
       <div className="wms-ops-quality-detail__head">
         <div className="wms-ops-quality-detail__identity min-w-0">
           <p className="text-[0.6rem] font-semibold uppercase tracking-[0.16em] text-[var(--wms-brand-primary)]">
-            Kalite satır detayı
+            {t("detail.eyebrow")}
           </p>
           <div className="mt-0.5 flex flex-wrap items-center gap-2">
             <h3 className="text-base font-bold tracking-tight">
@@ -970,29 +993,29 @@ function InspectionDetailPanel({
 
         <div className="wms-ops-quality-detail__meta">
           <MetaChip
-            label="İrsaliye"
+            label={t("detail.meta.waybill")}
             value={detail.header.sourceWaybillNo || "—"}
             mono
           />
           <MetaChip
-            label="İşlemi yapan"
+            label={t("detail.meta.processedBy")}
             value={
               detail.header.createdByName ||
-              `Kullanıcı #${detail.header.createdBy ?? "—"}`
+              t("list.unknownUser", { id: detail.header.createdBy ?? "—" })
             }
           />
           <MetaChip
-            label="Oluşturma"
+            label={t("detail.meta.createdAt")}
             value={formatProjectDateTime(detail.header.createdAtUtc)}
           />
           <MetaChip
-            label="Kaliteye gönderilme"
+            label={t("detail.meta.queuedAt")}
             value={formatProjectDateTime(
               detail.header.queuedAtUtc ?? detail.header.createdAtUtc,
             )}
           />
           <MetaChip
-            label="Onay tarihi"
+            label={t("detail.meta.decidedAt")}
             value={
               detail.header.decidedAtUtc
                 ? formatProjectDateTime(detail.header.decidedAtUtc)
@@ -1000,7 +1023,7 @@ function InspectionDetailPanel({
             }
           />
           <MetaChip
-            label="Toplam"
+            label={t("detail.meta.total")}
             value={formatProjectNumber(detail.header.totalQuantity)}
             mono
             accent
@@ -1012,25 +1035,27 @@ function InspectionDetailPanel({
           onClick={close}
           className="wms-ops-quality-detail__close shrink-0 rounded-lg border border-[var(--wms-app-border)] px-2.5 py-1 text-[0.65rem] font-semibold"
         >
-          Kapat
+          {t("detail.close")}
         </button>
       </div>
 
       {detail.requireManagerApprovalForRelease &&
         detail.header.status === "Quarantined" && (
           <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-600">
-            Karantinadan serbest bırakma işlemi ayrı yönetici yetkisi
-            gerektirir.
+            {t("detail.managerApprovalNotice")}
           </div>
         )}
 
       {!final && actionable.length > 0 && (
         <section className="wms-ops-quality-bulk">
           <div className="wms-ops-quality-bulk__top">
-            <p className="wms-ops-quality-bulk__title">Seçilenlere karar</p>
+            <p className="wms-ops-quality-bulk__title">{t("detail.bulk.title")}</p>
             <span className="wms-ops-quality-bulk__count">
-              {selected.length}/{actionable.length} seçili · {decidedCount}{" "}
-              satırda karar
+              {t("detail.bulk.countLabel", {
+                selected: selected.length,
+                total: actionable.length,
+                decided: decidedCount,
+              })}
             </span>
             <div className="wms-ops-quality-bulk__selects">
               <OpsActionButton
@@ -1039,7 +1064,7 @@ function InspectionDetailPanel({
                 onClick={selectAll}
                 className="wms-ops-quality-decide-btn wms-ops-quality-bulk__btn"
               >
-                Tümünü seç
+                {t("detail.bulk.selectAll")}
               </OpsActionButton>
               <OpsActionButton
                 type="button"
@@ -1048,13 +1073,13 @@ function InspectionDetailPanel({
                 disabled={selected.length === 0}
                 className="wms-ops-quality-decide-btn wms-ops-quality-bulk__btn"
               >
-                Seçimi kaldır
+                {t("detail.bulk.clearSelection")}
               </OpsActionButton>
             </div>
           </div>
           <div className="wms-ops-quality-bulk__fields">
             <label className="wms-ops-quality-bulk__field">
-              <span>Karar</span>
+              <span>{t("detail.bulk.decisionLabel")}</span>
               <AppDropdown
                 value={bulkDecision || null}
                 onValueChange={(value) => {
@@ -1063,33 +1088,34 @@ function InspectionDetailPanel({
                     const next = remainderOptionsFor(
                       value,
                       allowQuarantineRemainder,
+                      t,
                     )[0]?.value;
                     if (next) setBulkRemainderDecision(next);
                   }
                 }}
                 options={options}
-                placeholder="Karar seçin"
+                placeholder={t("detail.bulk.decisionPlaceholder")}
                 className="wms-ops-quality-field wms-ops-quality-bulk__control"
                 portalContainer={null}
               />
             </label>
             <label className="wms-ops-quality-bulk__field">
-              <span>Miktar</span>
+              <span>{t("detail.bulk.quantityLabel")}</span>
               <AppInput
                 value={bulkQuantity}
                 onChange={(e) => setBulkQuantity(e.target.value)}
-                placeholder="Boş = kalanın tamamı"
+                placeholder={t("detail.bulk.quantityPlaceholder")}
                 inputMode="decimal"
                 className="wms-ops-quality-field wms-ops-quality-bulk__control"
               />
             </label>
             <label className="wms-ops-quality-bulk__field">
-              <span>Kalan karar</span>
+              <span>{t("detail.bulk.remainderLabel")}</span>
               <AppDropdown
                 value={bulkRemainderDecision || null}
                 onValueChange={setBulkRemainderDecision}
                 options={bulkRemainderOptions}
-                placeholder="Kalan için"
+                placeholder={t("detail.bulk.remainderPlaceholder")}
                 disabled={
                   bulkDecision === "Returned" || !bulkQuantity.trim()
                 }
@@ -1098,20 +1124,20 @@ function InspectionDetailPanel({
               />
             </label>
             <label className="wms-ops-quality-bulk__field">
-              <span>Karar kodu</span>
+              <span>{t("detail.bulk.reasonCodeLabel")}</span>
               <AppInput
                 value={bulkReasonCode}
                 onChange={(e) => setBulkReasonCode(e.target.value)}
-                placeholder="Ret / karantina / iade"
+                placeholder={t("detail.bulk.reasonCodePlaceholder")}
                 className="wms-ops-quality-field wms-ops-quality-bulk__control"
               />
             </label>
             <label className="wms-ops-quality-bulk__field">
-              <span>Neden</span>
+              <span>{t("detail.bulk.reasonLabel")}</span>
               <AppInput
                 value={bulkReasonNote}
                 onChange={(e) => setBulkReasonNote(e.target.value)}
-                placeholder="Kısa neden"
+                placeholder={t("detail.bulk.reasonPlaceholder")}
                 className="wms-ops-quality-field wms-ops-quality-bulk__control"
               />
             </label>
@@ -1121,7 +1147,7 @@ function InspectionDetailPanel({
               onClick={applyBulkToSelected}
               className="wms-ops-quality-decide-btn wms-ops-quality-bulk__apply"
             >
-              Uygula
+              {t("detail.bulk.applyButton")}
             </OpsActionButton>
           </div>
         </section>
@@ -1139,33 +1165,33 @@ function InspectionDetailPanel({
                     onCheckedChange={(next) =>
                       next ? selectAll() : clearSelection()
                     }
-                    aria-label="Tüm kontrole tabi satırları seç"
+                    aria-label={t("detail.table.selectAllAria")}
                   />
                 ) : null}
               </th>
               <th className="wms-ops-quality-lines__cell p-2.5 text-[0.65rem] font-semibold uppercase tracking-wider">
-                Stok
+                {t("detail.table.stock")}
               </th>
               <th className="wms-ops-quality-lines__cell p-2.5 text-[0.65rem] font-semibold uppercase tracking-wider">
-                Lot / Seri
+                {t("detail.table.lotSerial")}
               </th>
               <th className="wms-ops-quality-lines__cell p-2.5 text-[0.65rem] font-semibold uppercase tracking-wider">
-                SKT
+                {t("detail.table.expiry")}
               </th>
               <th className="wms-ops-quality-lines__cell p-2.5 text-right text-[0.65rem] font-semibold uppercase tracking-wider">
-                Miktar / Kalan
+                {t("detail.table.quantityRemaining")}
               </th>
               <th className="wms-ops-quality-lines__cell p-2.5 text-right text-[0.65rem] font-semibold uppercase tracking-wider">
-                Numune
+                {t("detail.table.sample")}
               </th>
               <th className="wms-ops-quality-lines__cell p-2.5 text-[0.65rem] font-semibold uppercase tracking-wider">
-                Durum
+                {t("detail.table.status")}
               </th>
               <th className="wms-ops-quality-lines__cell p-2.5 text-[0.65rem] font-semibold uppercase tracking-wider">
-                Karar
+                {t("detail.table.decision")}
               </th>
               <th className="wms-ops-quality-lines__cell w-28 p-2.5 text-center text-[0.65rem] font-semibold uppercase tracking-wider">
-                İşlemler
+                {t("detail.table.actions")}
               </th>
             </tr>
           </thead>
@@ -1187,7 +1213,7 @@ function InspectionDetailPanel({
                       <OpsSkinCheckbox
                         checked={selected.includes(line.id)}
                         onCheckedChange={() => toggle(line.id)}
-                        aria-label={`${line.stockCode} satırını seç`}
+                        aria-label={t("detail.table.selectRowAria", { stockCode: line.stockCode })}
                       />
                     ) : (
                       <span className="text-xs text-slate-400">—</span>
@@ -1213,7 +1239,9 @@ function InspectionDetailPanel({
                     </span>
                     {active ? (
                       <span className="block text-[0.65rem] text-slate-500">
-                        kalan {formatProjectNumber(actionableQuantity(line))}
+                        {t("detail.table.remainingPrefix", {
+                          value: formatProjectNumber(actionableQuantity(line)),
+                        })}
                       </span>
                     ) : null}
                   </td>
@@ -1222,10 +1250,10 @@ function InspectionDetailPanel({
                   </td>
                   <td className="wms-ops-quality-lines__cell p-2.5 align-middle">
                     {active ? (
-                      <OpsStatusBadge tone="pending">Kontrole tabi</OpsStatusBadge>
+                      <OpsStatusBadge tone="pending">{t("detail.table.subjectToControl")}</OpsStatusBadge>
                     ) : (
                       <OpsStatusBadge tone="neutral">
-                        Kontrole tabi değil
+                        {t("detail.table.notSubjectToControl")}
                       </OpsStatusBadge>
                     )}
                   </td>
@@ -1269,7 +1297,7 @@ function InspectionDetailPanel({
                           ) : null}
                         </div>
                       ) : (
-                        <span className="text-xs text-slate-400">Bekliyor</span>
+                        <span className="text-xs text-slate-400">{t("detail.table.waitingBadge")}</span>
                       )
                     ) : (
                       <OpsStatusBadge tone={inferOpsStatusTone(line.decision)}>
@@ -1309,13 +1337,13 @@ function InspectionDetailPanel({
 
       {final ? (
         <section className="rounded-xl border border-[var(--wms-app-border)] bg-[color-mix(in_oklab,var(--wms-brand-primary)_5%,transparent)] px-4 py-3 text-sm">
-          <p className="font-semibold">Kalite kontrolü tamamlandı.</p>
+          <p className="font-semibold">{t("detail.completed.title")}</p>
           <p className="mt-1 text-xs text-slate-500">
             {detail.header.sourceDocumentNo
-              ? `Kaynak belge ${detail.header.sourceDocumentNo}. `
-              : ""}
-            Mal kabul listesinden kaydı ve Netsis / ERP durumunu kontrol
-            edebilirsiniz.
+              ? t("detail.completed.descriptionWithDoc", {
+                  docNo: detail.header.sourceDocumentNo,
+                })
+              : t("detail.completed.descriptionWithoutDoc")}
           </p>
           <OpsActionButton
             type="button"
@@ -1323,7 +1351,7 @@ function InspectionDetailPanel({
             className="mt-3 !min-h-8 !px-3 !text-[0.65rem]"
             onClick={() => navigate("/warehouse/goods-receipts/list")}
           >
-            Mal kabul listesi
+            {t("detail.completed.goodsReceiptListButton")}
           </OpsActionButton>
         </section>
       ) : null}
@@ -1332,29 +1360,29 @@ function InspectionDetailPanel({
         <section className="flex flex-col gap-3 rounded-xl border border-[color-mix(in_oklab,var(--wms-brand-primary)_22%,var(--wms-app-border))] bg-[color-mix(in_oklab,var(--wms-brand-primary)_5%,transparent)] p-4 sm:flex-row sm:items-end sm:justify-between">
           <label className="min-w-0 flex-1 space-y-1.5 text-sm">
             <span className="text-xs font-semibold text-slate-500">
-              Genel not
+              {t("detail.footer.generalNoteLabel")}
             </span>
             <AppInput
               value={headerNote}
               onChange={(e) => setHeaderNote(e.target.value)}
-              placeholder="Opsiyonel genel not"
+              placeholder={t("detail.footer.generalNotePlaceholder")}
               className="wms-ops-quality-field h-8 text-xs"
             />
             <span className="block text-xs text-slate-500">
-              {decidedCount}/{actionable.length} kontrole tabi satırda karar
-              hazır
+              {t("detail.footer.readyCount", {
+                decided: decidedCount,
+                total: actionable.length,
+              })}
               {detail.allowPartialDecision
-                ? " · Kısmi karar açık"
-                : " · Tüm satırlar zorunlu"}
+                ? t("detail.footer.partialAllowed")
+                : t("detail.footer.allRequired")}
             </span>
             <span className="block text-xs text-slate-500">
-              Uygulama sonrası stok hareketi kaydedilir; Netsis irsaliyesi
-              politikalara göre gidebilir. Sonucu mal kabul listesinden
-              kontrol edin
               {detail.header.sourceDocumentNo
-                ? ` (${detail.header.sourceDocumentNo})`
-                : ""}
-              .
+                ? t("detail.footer.helperNoteWithDoc", {
+                    docNo: detail.header.sourceDocumentNo,
+                  })
+                : t("detail.footer.helperNoteWithoutDoc")}
             </span>
           </label>
           <TooltipProvider delayDuration={180}>
@@ -1372,7 +1400,7 @@ function InspectionDetailPanel({
                     ) : (
                       <ShieldCheck className="size-4" />
                     )}
-                    Kararı uygula
+                    {t("detail.footer.applyButton")}
                   </OpsActionButton>
                 </span>
               </TooltipTrigger>
@@ -1427,6 +1455,7 @@ function LineDecisionPopover({
   draft: LineDraft;
   onChange: (patch: Partial<LineDraft>) => void;
 }): ReactElement {
+  const { t } = useModuleTranslation("quality");
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const [coords, setCoords] = useState<{ top: number; left: number } | null>(
@@ -1444,6 +1473,7 @@ function LineDecisionPopover({
     draft.decision,
     options.some((o) => o.value === "Quarantined") ||
       line.decision === "Quarantined",
+    t,
   );
 
   const updatePosition = useCallback(() => {
@@ -1511,7 +1541,7 @@ function LineDecisionPopover({
         ref={triggerRef}
         type="button"
         variant="secondary"
-        title="Karar vermek için tıklayın"
+        title={t("linePopover.triggerTitle")}
         aria-expanded={open}
         onClick={(event) => {
           event.stopPropagation();
@@ -1523,7 +1553,7 @@ function LineDecisionPopover({
         )}
       >
         <ClipboardPen className="size-3.5 shrink-0" aria-hidden />
-        <span>{draft.decision ? "Düzenle" : "Karar ver"}</span>
+        <span>{draft.decision ? t("linePopover.editLabel") : t("linePopover.decideLabel")}</span>
       </OpsActionButton>
 
       {open && coords
@@ -1531,23 +1561,23 @@ function LineDecisionPopover({
             <div
               ref={panelRef}
               role="dialog"
-              aria-label="Satır kararı"
+              aria-label={t("linePopover.ariaLabel")}
               style={{ top: coords.top, left: coords.left }}
               className="wms-ops-quality-decision-popover wms-ops-list-popover fixed z-[5000] max-h-[min(26rem,calc(100vh-1rem))] w-[18.75rem] space-y-2.5 overflow-y-auto border-0 p-3 shadow-none outline-none"
             >
               <div className="wms-ops-list-popover__section-title">
-                Satır kararı
+                {t("linePopover.sectionTitle")}
               </div>
               <p className="text-[0.65rem] text-slate-500">
-                Kalan miktar:{" "}
+                {t("linePopover.remainingPrefix")}{" "}
                 <span className="font-mono font-semibold text-foreground">
                   {formatProjectNumber(remaining)}
                 </span>
-                {serial ? " · seri — bölünemez" : null}
+                {serial ? t("linePopover.serialNoSplit") : null}
               </p>
               <label className="block space-y-1 text-sm">
                 <span className="text-xs font-semibold text-slate-500">
-                  Karar
+                  {t("linePopover.decisionLabel")}
                 </span>
                 <AppDropdown
                   value={draft.decision || null}
@@ -1556,6 +1586,7 @@ function LineDecisionPopover({
                       value,
                       options.some((o) => o.value === "Quarantined") ||
                         line.decision === "Quarantined",
+                      t,
                     )[0]?.value;
                     onChange({
                       decision: value,
@@ -1570,7 +1601,7 @@ function LineDecisionPopover({
                     });
                   }}
                   options={options}
-                  placeholder="Karar seçin"
+                  placeholder={t("linePopover.decisionPlaceholder")}
                   className="wms-ops-quality-field !h-10 !min-h-10 !text-sm"
                   portalContainer={null}
                   contentClassName="!z-[5100]"
@@ -1578,7 +1609,7 @@ function LineDecisionPopover({
               </label>
               <label className="block space-y-1 text-sm">
                 <span className="text-xs font-semibold text-slate-500">
-                  Bu karar miktarı
+                  {t("linePopover.thisDecisionQuantityLabel")}
                 </span>
                 <AppInput
                   value={draft.quantity}
@@ -1592,7 +1623,9 @@ function LineDecisionPopover({
               {hasRemainder ? (
                 <label className="block space-y-1 text-sm">
                   <span className="text-xs font-semibold text-slate-500">
-                    Kalan ({formatProjectNumber(roundQty(remaining - qty))})
+                    {t("linePopover.remainderLabel", {
+                      value: formatProjectNumber(roundQty(remaining - qty)),
+                    })}
                   </span>
                   <AppDropdown
                     value={draft.remainderDecision || null}
@@ -1600,7 +1633,7 @@ function LineDecisionPopover({
                       onChange({ remainderDecision: value })
                     }
                     options={remainderChoices}
-                    placeholder="Kalan karar"
+                    placeholder={t("linePopover.remainderPlaceholder")}
                     className="wms-ops-quality-field !h-10 !min-h-10 !text-sm"
                     portalContainer={null}
                     contentClassName="!z-[5100]"
@@ -1609,18 +1642,18 @@ function LineDecisionPopover({
               ) : null}
               <label className="block space-y-1 text-sm">
                 <span className="text-xs font-semibold text-slate-500">
-                  Karar kodu
+                  {t("linePopover.reasonCodeLabel")}
                 </span>
                 <AppInput
                   value={draft.reasonCode}
                   onChange={(e) => onChange({ reasonCode: e.target.value })}
-                  placeholder="Ret / karantina / iade"
+                  placeholder={t("linePopover.reasonCodePlaceholder")}
                   className="wms-ops-quality-field h-10 text-sm"
                 />
               </label>
               <label className="block space-y-1 text-sm">
                 <span className="text-xs font-semibold text-slate-500">
-                  Neden
+                  {t("linePopover.reasonLabel")}
                 </span>
                 <OpsFieldShell className="wms-ops-quality-field-shell">
                   <textarea
@@ -1630,7 +1663,7 @@ function LineDecisionPopover({
                     )}
                     value={draft.reasonNote}
                     onChange={(e) => onChange({ reasonNote: e.target.value })}
-                    placeholder="Açıklama (opsiyonel)"
+                    placeholder={t("linePopover.reasonPlaceholder")}
                     maxLength={500}
                   />
                 </OpsFieldShell>
@@ -1640,7 +1673,7 @@ function LineDecisionPopover({
                 onClick={() => onOpenChange(false)}
                 className="wms-ops-quality-decide-btn w-full !min-h-9 !text-xs"
               >
-                Tamam
+                {t("linePopover.confirmButton")}
               </OpsActionButton>
             </div>,
             document.body,

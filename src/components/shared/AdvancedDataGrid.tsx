@@ -1561,6 +1561,11 @@ export function AdvancedDataGrid<T extends { id: number }>({
                 <div className="min-w-0 break-words text-right text-sm [&_button]:inline-flex [&_button]:min-h-11 [&_button]:min-w-11 [&_button]:items-center [&_button]:justify-center [&_button]:touch-manipulation [&>div]:justify-end">{renderGridCell(column, row, enumLanguage)}</div>
               </div>
             ))}
+            {expandedRowId === row.id && renderExpandedRow ? (
+              <div className="border-t border-[var(--wms-app-border)] bg-[color-mix(in_oklab,var(--wms-brand-soft)_55%,transparent)] p-3">
+                {renderExpandedRow(row)}
+              </div>
+            ) : null}
           </article>
         ))}
       </div>
