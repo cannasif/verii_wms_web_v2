@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
@@ -70,6 +71,7 @@ import { AppDateInput } from './AppInput';
 import { getWorkspacePortalRoot } from '@/lib/workspace-portal';
 import { localizeLegacyUiText } from '@/lib/legacy-ui-localization';
 import { normalizeGridPage } from '@/lib/paged';
+import { appendFoldedSearchToken, toTurkishApiSearch } from '@/lib/turkish-search';
 import { OpsActionButton } from './OpsActionButton';
 import { OpsListPageShell } from './OpsListPageShell';
 import { OpsListSearchField } from './OpsListSearchField';
@@ -508,6 +510,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(initialPreferences.pageSize);
   const [searchInput, setSearchInput] = useState('');
+  const [searchTokens, setSearchTokens] = useState<string[]>([]);
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState<string | null>(initialPreferences.sortBy);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>(initialPreferences.sortDirection);
@@ -555,9 +558,29 @@ export function AdvancedDataGrid<T extends { id: number }>({
   }, [loadedKey, order, pageKey, pageSize, searchFields, sortBy, sortDirection, storageKey, userId, visible, widths]);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => { setSearch(searchInput.trim()); setPage(1); }, 350);
+    if (searchTokens.length > 0) {
+      setSearch(searchTokens.join(' '));
+      setPage(1);
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      setSearch(searchInput.trim());
+      setPage(1);
+    }, 350);
     return () => window.clearTimeout(timer);
-  }, [searchInput]);
+  }, [searchInput, searchTokens]);
+
+  const commitSearchToken = () => {
+    setSearchTokens((current) => appendFoldedSearchToken(current, searchInput));
+    if (searchInput.trim()) setSearchInput('');
+  };
+
+  const clearSearch = () => {
+    setSearchInput('');
+    setSearchTokens([]);
+    setSearch('');
+    setPage(1);
+  };
 
   useEffect(() => {
     if (!cellContext) return;
@@ -614,16 +637,19 @@ export function AdvancedDataGrid<T extends { id: number }>({
       : visibleSearchableColumns.slice(0, 1).map((column) => column.key);
   }, [searchFields, visibleSearchableColumns]);
   const request = useMemo<GridRequest>(
-    () => ({
-      pageNumber: page,
-      pageSize,
-      search: search || null,
-      searchFields: search && effectiveSearchFields.length > 0 ? effectiveSearchFields : undefined,
-      sortBy,
-      sortDirection,
-      filterLogic,
-      filters,
-    }),
+    () => {
+      const apiSearch = search ? toTurkishApiSearch(search) : '';
+      return {
+        pageNumber: page,
+        pageSize,
+        search: apiSearch || null,
+        searchFields: apiSearch && effectiveSearchFields.length > 0 ? effectiveSearchFields : undefined,
+        sortBy,
+        sortDirection,
+        filterLogic,
+        filters,
+      };
+    },
     [page, pageSize, search, effectiveSearchFields, sortBy, sortDirection, filterLogic, filters],
   );
   const query = useQuery({
@@ -998,24 +1024,57 @@ export function AdvancedDataGrid<T extends { id: number }>({
         <div className="wms-ops-data-grid-toolbar__start flex min-w-0 flex-wrap items-center gap-2">
           {toolbarStartExtra}
           {!hideSearch ? (
-            <OpsListSearchField
-              value={searchInput}
-              placeholder={t('dataGrid.searchPlaceholder')}
-              onValueChange={setSearchInput}
-              className="md:w-64"
-              rightSlot={searchInput ? (
-                <button
-                  type="button"
-                  aria-label={t('dataGrid.clearSearch')}
-                  onClick={() => setSearchInput('')}
-                  className="wms-ops-voice-btn grid place-items-center"
-                >
-                  <X className="size-3.5" />
-                </button>
-              ) : (
-                <VoiceSearchButton onResult={(text) => { setSearchInput(text); setPage(1); }} />
-              )}
-            />
+            <div className="wms-ops-grid-search wms-ops-grid-search--tokens" data-no-auto-localize="true">
+              <OpsListSearchField
+                value={searchInput}
+                placeholder={t('dataGrid.searchPlaceholder')}
+                title={t('dataGrid.searchTokenHint')}
+                onValueChange={setSearchInput}
+                onKeyDown={(event: ReactKeyboardEvent<HTMLInputElement>) => {
+                  if (event.key !== 'Enter') return;
+                  event.preventDefault();
+                  commitSearchToken();
+                }}
+                className="md:w-64"
+                rightSlot={searchInput || searchTokens.length > 0 ? (
+                  <button
+                    type="button"
+                    aria-label={t('dataGrid.clearSearchTokens')}
+                    onClick={clearSearch}
+                    className="wms-ops-voice-btn grid place-items-center"
+                  >
+                    <X className="size-3.5" />
+                  </button>
+                ) : (
+                  <VoiceSearchButton
+                    onResult={(text) => {
+                      setSearchTokens((current) => appendFoldedSearchToken(current, text));
+                      setSearchInput('');
+                    }}
+                  />
+                )}
+              />
+              {searchTokens.length > 0 ? (
+                <div className="wms-ops-grid-search__chips" aria-label={t('dataGrid.activeSearchTokens')}>
+                  {searchTokens.map((token) => (
+                    <span key={token} className="wms-ops-grid-search__chip">
+                      <span className="wms-ops-grid-search__chip-text">{token}</span>
+                      <button
+                        type="button"
+                        className="wms-ops-grid-search__chip-remove"
+                        onClick={() => setSearchTokens((current) => current.filter((item) => item !== token))}
+                        aria-label={t('dataGrid.removeSearchToken', { token })}
+                      >
+                        <X className="size-3" aria-hidden />
+                      </button>
+                    </span>
+                  ))}
+                  <button type="button" className="wms-ops-grid-search__clear" onClick={clearSearch}>
+                    {t('dataGrid.clearSearchTokens')}
+                  </button>
+                </div>
+              ) : null}
+            </div>
           ) : null}
           <OpsActionButton
             type="button"
