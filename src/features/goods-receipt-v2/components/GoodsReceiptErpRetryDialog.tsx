@@ -98,7 +98,7 @@ export function GoodsReceiptErpRetryDialog({
                   <AlertTriangle className="mt-0.5 size-4 shrink-0" />
                   <p>
                     Önceki isteğin sonucu belirsizdir. Netsis’te <strong>{header.documentNo}</strong>
-                    {' '}ve <strong>{header.waybillNo || 'irsaliye numarası'}</strong> ile arama yapmadan yeniden göndermeyin.
+                    {' '}ve <strong>{header.waybillNo || header.electronicWaybillNo || 'irsaliye numarası'}</strong> ile arama yapmadan yeniden göndermeyin.
                   </p>
                 </div>
                 <label className="flex items-start gap-2 text-sm">

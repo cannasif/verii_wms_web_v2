@@ -20,12 +20,14 @@ import {
   ChevronUp,
   CircleHelp,
   ClipboardList,
+  Copy,
   Hash,
   Loader2,
   PackageCheck,
   PackageOpen,
   ScanBarcode,
   Search,
+  ShieldAlert,
   ShieldCheck,
   Trash2,
   UserRoundCog,
@@ -63,6 +65,7 @@ import { cn } from "@/lib/utils";
 import { getWorkspacePortalRoot } from "@/lib/workspace-portal";
 import { navigateToErrorTarget } from "@/lib/toast-error-navigation";
 import { useAuthStore } from "@/stores/auth-store";
+import { useProjectSettingsStore } from "@/stores/project-settings-store";
 import { OperationDraftRestoreDialog } from "@/features/operation-drafts/OperationDraftRestoreDialog";
 import { useOperationDraft } from "@/features/operation-drafts/useOperationDraft";
 import type { PagedResponse } from "@/types/api";
@@ -253,6 +256,11 @@ export function GoodsReceiptCreatePage({
   >(null);
   const busy = busyAction != null;
   const [error, setError] = useState<string | null>(null);
+  const [submitOverlay, setSubmitOverlay] = useState<{
+    mode: "receipt" | "quality";
+    phase: "running" | "error";
+    message?: string;
+  } | null>(null);
   const [showFieldErrors, setShowFieldErrors] = useState(false);
   const [selectedCustomer, setSelectedCustomer] =
     useState<CustomerOption | null>(null);
@@ -359,6 +367,9 @@ export function GoodsReceiptCreatePage({
   const [plannedArrival, setPlannedArrival] = useState("");
   const [priority, setPriority] = useState("3");
   const [labelStrategy, setLabelStrategy] = useState("None");
+  const [reviewLinesDialog, setReviewLinesDialog] = useState<
+    null | "receipt" | "quality"
+  >(null);
   const [result, setResult] = useState<CreateGoodsReceiptResult | ManualGoodsReceiptResult | null>(null);
 
   const customer = useMemo(() => {
@@ -540,9 +551,17 @@ export function GoodsReceiptCreatePage({
     onRestore: restoreDraftPayload,
     enabled: direct && !busy && !result,
   });
-  const selectedProjectCodesForReview = [
-    ...new Set(plannedLines.map((line) => line.projectCode?.trim()).filter(Boolean)),
-  ].join(", ");
+  const reviewProjectCodes = useMemo(
+    () =>
+      [
+        ...new Set(
+          plannedLines
+            .map((line) => line.projectCode?.trim())
+            .filter((code): code is string => Boolean(code)),
+        ),
+      ],
+    [plannedLines],
+  );
   const selectedOrderDatesForReview = useMemo(
     () =>
       [...new Set(plannedLines.map((line) => line.orderDate).filter(Boolean))]
@@ -1235,7 +1254,7 @@ export function GoodsReceiptCreatePage({
     if (!waybillDate) return t("createFlow.validation.waybillDate");
     if (lines.length === 0) return t("createFlow.validation.linesRequired");
     if (plannedLines.length === 0)
-      return t("createFlow.validation.confirmLinesRequired");
+      return t("createFlow.validation.confirmedLinesRequired");
     const warehouseIds = [...new Set(plannedLines.map((line) => line.targetWarehouseId).filter(Boolean))];
     if (warehouseIds.length > 1)
       return t("createFlow.validation.singleWarehouse");
@@ -1367,9 +1386,13 @@ export function GoodsReceiptCreatePage({
       surfaceValidationError(validation);
       return;
     }
+    const mode: "receipt" | "quality" =
+      direct && hasQualityLines ? "quality" : "receipt";
     setBusyAction("create");
     setError(null);
     setShowFieldErrors(false);
+    setSubmitOverlay({ mode, phase: "running" });
+    const startedAt = Date.now();
     try {
       const commonPayload = {
         idempotencyKey: crypto.randomUUID(),
@@ -1379,7 +1402,8 @@ export function GoodsReceiptCreatePage({
         targetWarehouseId: primaryLine.targetWarehouseId,
         receivingLocationId: primaryLine.receivingLocationId,
         documentDate,
-        waybillNo: isElectronicReceipt ? null : receiptNo,
+        // Liste DTO çoğu zaman waybillNo bekler; e-irsaliyede sadece electronic yazılırsa kolon boş kalır.
+        waybillNo: receiptNo,
         waybillDate,
         electronicWaybillNo: isElectronicReceipt ? receiptNo : null,
         plannedArrivalAtUtc: !direct && plannedArrival
@@ -1457,11 +1481,26 @@ export function GoodsReceiptCreatePage({
           })),
           })),
         });
+      const elapsed = Date.now() - startedAt;
+      if (elapsed < 1400) {
+        await new Promise((resolve) => window.setTimeout(resolve, 1400 - elapsed));
+      }
+      setSubmitOverlay(null);
       setResult(created);
       await operationDraft.clearDraft();
       toast.success(`${t("created")}: ${created.documentNo}`);
     } catch (cause) {
-      report(cause, direct ? "Doğrudan mal kabul tamamlanamadı." : "Mal kabul emri oluşturulamadı.");
+      const message =
+        cause instanceof Error
+          ? cause.message
+          : direct
+            ? "Doğrudan mal kabul tamamlanamadı."
+            : "Mal kabul emri oluşturulamadı.";
+      setError(message);
+      toast.error(message);
+      setSubmitOverlay({ mode, phase: "error", message });
+      await new Promise((resolve) => window.setTimeout(resolve, 2600));
+      setSubmitOverlay(null);
     } finally {
       setBusyAction(null);
     }
@@ -1609,35 +1648,38 @@ export function GoodsReceiptCreatePage({
         </header>
       ) : null}
 
-      <nav className="wms-ops-create-steps" aria-label={t("createFlow.stepsAriaLabel")}>
-        {steps.map((value) => {
-          const active = value === step;
-          const done = value < step;
-          return (
-            <div
-              key={value}
-              role="tab"
-              aria-selected={active}
-              className={cn(
-                "wms-ops-create-steps__tab",
-                active && "wms-ops-create-steps__tab--active",
-                done && "wms-ops-create-steps__tab--done",
-              )}
-            >
-              <span className="wms-ops-create-steps__index">{value + 1}</span>
-              <span className="wms-ops-create-steps__label">
-                {t(`createFlow.steps.${value}`)}
-              </span>
-            </div>
-          );
-        })}
-      </nav>
+      {!result ? (
+        <nav className="wms-ops-create-steps" aria-label={t("createFlow.stepsAriaLabel")}>
+          {steps.map((value) => {
+            const active = value === step;
+            const done = value < step;
+            return (
+              <div
+                key={value}
+                role="tab"
+                aria-selected={active}
+                className={cn(
+                  "wms-ops-create-steps__tab",
+                  active && "wms-ops-create-steps__tab--active",
+                  done && "wms-ops-create-steps__tab--done",
+                )}
+              >
+                <span className="wms-ops-create-steps__index">{value + 1}</span>
+                <span className="wms-ops-create-steps__label">
+                  {t(`createFlow.steps.${value}`)}
+                </span>
+              </div>
+            );
+          })}
+        </nav>
+      ) : null}
 
-      {error && (
-        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-500">
-          {error}
+      {error && !submitOverlay ? (
+        <div className="wms-ops-gr-error" role="alert">
+          <span className="wms-ops-gr-error__tag">ERR</span>
+          <span className="wms-ops-gr-error__message">{error}</span>
         </div>
-      )}
+      ) : null}
 
       {step === 0 && (
         <>
@@ -2286,7 +2328,7 @@ export function GoodsReceiptCreatePage({
               className="wms-ops-receipt-selected-lines scroll-mt-5 overflow-visible rounded-2xl"
               data-wms-error-target="selectedLines"
               data-wms-error-scope="container"
-              data-wms-error-keys="tek depo|seçilen depo|single warehouse|selected warehouse"
+              data-wms-error-keys="tek depo|seçilen depo|single warehouse|selected warehouse|kalem hazır|hazır olarak işaretlen|en az bir kalem|onay ile seç|mark at least one line|as ready before|confirm at least one line|with onay"
             >
                   <header className="wms-ops-receipt-selected-lines__header px-5 py-4">
                     <div className="wms-ops-receipt-selected-lines__title-row">
@@ -2652,28 +2694,30 @@ export function GoodsReceiptCreatePage({
                 setError(null);
               }}
             />)
+          ) : submitOverlay ? (
+            <CreateSubmitScreen
+              mode={submitOverlay.mode}
+              phase={submitOverlay.phase}
+              errorMessage={submitOverlay.message}
+              lineCount={plannedLines.length}
+              supplierName={selectedCustomer?.customerName}
+              receiptNo={receiptNo}
+            />
           ) : (
             <div className="wms-ops-gr-review">
               <div className="wms-ops-gr-review__list">
                 <div className="wms-ops-gr-review__hero">
                   <section className="wms-ops-gr-review__hero-card wms-ops-gr-review__hero-card--supplier">
-                    <div className="wms-ops-gr-review__hero-head">
-                      <span className="wms-ops-gr-review__hero-icon">
-                        <Building2 className="size-4" />
-                      </span>
-                      <span className="wms-ops-gr-review__hero-label">{t("createFlow.review.supplierCard")}</span>
-                    </div>
-                    <div className="wms-ops-gr-review__hero-title">
-                      {selectedCustomer?.customerName || "—"}
-                    </div>
-                    <div className="wms-ops-gr-review__hero-meta">
-                      {t("createFlow.review.customerCode")}:{" "}
-                      <strong className="wms-ops-gr-review__hero-meta-code">
-                        {selectedCustomer?.customerCode || customer?.code || "—"}
-                      </strong>
-                    </div>
-                    <div className="wms-ops-gr-review__hero-meta wms-ops-gr-review__hero-meta--muted">
-                      {t("createFlow.review.branch")}: {selectedCustomer?.branchCode ?? branchCode}
+                    <div className="wms-ops-gr-review__hero-supplier-body">
+                      <div className="wms-ops-gr-review__hero-title">
+                        {selectedCustomer?.customerName || "—"}
+                      </div>
+                      <div className="wms-ops-gr-review__hero-meta">
+                        {t("createFlow.review.customerCode")}:{" "}
+                        <strong className="wms-ops-gr-review__hero-meta-code">
+                          {selectedCustomer?.customerCode || customer?.code || "—"}
+                        </strong>
+                      </div>
                     </div>
                   </section>
 
@@ -2705,88 +2749,126 @@ export function GoodsReceiptCreatePage({
                         <span className="wms-ops-gr-review__meta-label">
                           <PackageOpen className="size-3.5" /> {t("createFlow.table.orderNo")}
                         </span>
-                        <ReviewOrderNumbersValue
-                          orderNumbers={reviewOrderNumbers}
+                        <ReviewMultiListValue
+                          values={reviewOrderNumbers}
                           t={t}
+                          valueClassName="wms-ops-gr-review__meta-value--order"
+                          multipleLabelKey="createFlow.review.multipleOrders"
+                          multipleCountKey="createFlow.review.multipleOrdersCount"
+                          tooltipHintKey="createFlow.review.ordersTooltipHint"
                         />
                       </div>
                       {direct ? (
-                        <div className="wms-ops-gr-review__meta-item">
-                          <span className="wms-ops-gr-review__meta-label">
-                            <Building2 className="size-3.5" /> {t("createFlow.review.projectAndOrderDate")}
-                          </span>
-                          <strong className="wms-ops-gr-review__meta-value wms-ops-gr-review__meta-value--project">
-                            {`${selectedProjectCodesForReview || "—"} · ${selectedOrderDatesForReview || "—"}`}
-                          </strong>
-                        </div>
+                        <>
+                          <div className="wms-ops-gr-review__meta-item">
+                            <span className="wms-ops-gr-review__meta-label">
+                              <Building2 className="size-3.5" /> {t("createFlow.entryRow.project")}
+                            </span>
+                            <ReviewMultiListValue
+                              values={reviewProjectCodes}
+                              t={t}
+                              valueClassName="wms-ops-gr-review__meta-value--project"
+                              multipleLabelKey="createFlow.review.multipleProjects"
+                              multipleCountKey="createFlow.review.multipleProjectsCount"
+                              tooltipHintKey="createFlow.review.projectsTooltipHint"
+                            />
+                          </div>
+                          <div className="wms-ops-gr-review__meta-item">
+                            <span className="wms-ops-gr-review__meta-label">
+                              <CalendarDays className="size-3.5" /> {t("createFlow.review.orderDate")}
+                            </span>
+                            <strong className="wms-ops-gr-review__meta-value wms-ops-gr-review__meta-value--date">
+                              {selectedOrderDatesForReview || "—"}
+                            </strong>
+                          </div>
+                        </>
                       ) : null}
                     </div>
                   </section>
                 </div>
 
-                <div className="wms-ops-gr-review__section-title">{t("createFlow.review.summaryTitle")}</div>
-                <ReviewRow
-                  label={t("createFlow.review.linesAndQuantity")}
-                  value={`${plannedLines.length} / ${formatProjectNumber(selectedQuantity, {
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 6,
-                  })}`}
-                  emphasis
-                />
-                {direct ? (
-                  <ReviewRow
-                    label={t("createFlow.review.orderAvailableQuantity")}
-                    value={formatProjectNumber(selectedAvailableQuantity, {
-                      minimumFractionDigits: 0,
-                      maximumFractionDigits: 6,
-                    })}
-                  />
-                ) : null}
-                <ReviewRow
-                  label={t("createFlow.review.warehouseCount")}
-                  value={String(new Set(plannedLines.map((x) => x.targetWarehouseId)).size)}
-                />
-                {!direct && (
-                  <ReviewRow
-                    label={t("createFlow.assignees.title")}
-                    value={assignees.map(userLabel).join(", ") || "—"}
-                  />
-                )}
-                <ReviewRow
-                  label={t("createFlow.review.trackingLineCount")}
-                  value={String(
-                    plannedLines.reduce((sum, x) => sum + x.trackings.length, 0),
-                  )}
-                />
+                <div className="wms-ops-gr-review__metrics">
+                  <div className="wms-ops-gr-review__section-title">{t("createFlow.review.summaryTitle")}</div>
+                  <div className="wms-ops-gr-review__metric-grid">
+                    <ReviewMetricCard
+                      variant="lines"
+                      icon={<PackageOpen className="size-4" />}
+                      label={t("createFlow.review.linesAndQuantity")}
+                      value={`${plannedLines.length} / ${formatProjectNumber(selectedQuantity, {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 6,
+                      })}`}
+                      hint={t("createFlow.review.metricLinesHint")}
+                      onClick={() => setReviewLinesDialog("receipt")}
+                    />
+                    {direct ? (
+                      <ReviewMetricCard
+                        variant="available"
+                        icon={<Hash className="size-4" />}
+                        label={t("createFlow.review.orderAvailableQuantity")}
+                        value={formatProjectNumber(selectedAvailableQuantity, {
+                          minimumFractionDigits: 0,
+                          maximumFractionDigits: 6,
+                        })}
+                      />
+                    ) : (
+                      <ReviewMetricCard
+                        variant="available"
+                        icon={<ClipboardList className="size-4" />}
+                        label={t("createFlow.assignees.title")}
+                        value={
+                          assignees.length > 0
+                            ? String(assignees.length)
+                            : "—"
+                        }
+                        hint={
+                          assignees.length > 0
+                            ? assignees.map(userLabel).join(", ")
+                            : undefined
+                        }
+                      />
+                    )}
+                    <ReviewMetricCard
+                      variant={hasQualityLines ? "quality" : "quality-none"}
+                      icon={<ShieldCheck className="size-4" />}
+                      label={t("createFlow.review.metricQualityLabel")}
+                      value={
+                        hasQualityLines
+                          ? String(qualityLines.length)
+                          : t("createFlow.review.metricQualityNone")
+                      }
+                      hint={
+                        hasQualityLines
+                          ? t("createFlow.review.metricQualityHint")
+                          : undefined
+                      }
+                      onClick={
+                        hasQualityLines
+                          ? () => setReviewLinesDialog("quality")
+                          : undefined
+                      }
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div
-                className={cn(
-                  "wms-ops-gr-review__quality",
-                  hasQualityLines
-                    ? "wms-ops-gr-review__quality--active"
-                    : "wms-ops-gr-review__quality--none",
-                )}
-              >
-                <span className="wms-ops-gr-review__quality-icon">
-                  <ShieldCheck className="size-5" />
-                </span>
-                <span className="wms-ops-gr-review__quality-text">
-                  <strong>{t("createFlow.review.qualityRoutingTitle")}</strong>
-                  <small>
-                    {hasQualityLines
-                      ? t("createFlow.review.qualityRoutingActiveHint")
-                      : t("createFlow.review.qualityRoutingNoneHint")}
-                  </small>
-                </span>
-                {hasQualityLines ? (
-                  <QualityLinesReviewTrigger lines={qualityLines} />
-                ) : (
-                  <span className="wms-ops-gr-review__quality-pill wms-ops-gr-review__quality-pill--muted">
-                    {t("createFlow.review.qualityNone")}
-                  </span>
-                )}
-              </div>
+              <QualityLinesDialog
+                lines={receiptLines}
+                open={reviewLinesDialog === "receipt"}
+                onClose={() => setReviewLinesDialog(null)}
+                tone="receipt"
+                title={t("createFlow.qualityDialog.receiptLinesTitle")}
+                description={t("createFlow.qualityDialog.receiptLinesDescription")}
+                searchAriaLabel={t("createFlow.qualityDialog.receiptLinesSearchAria")}
+              />
+              <QualityLinesDialog
+                lines={qualityLines}
+                open={reviewLinesDialog === "quality"}
+                onClose={() => setReviewLinesDialog(null)}
+                tone="quality"
+                title={t("createFlow.qualityDialog.title")}
+                description={t("createFlow.qualityDialog.description")}
+              />
               <div className="wms-ops-gr-review__actions">
                 <OpsActionButton
                   type="button"
@@ -2829,13 +2911,79 @@ function isPieceUnit(unitCode?: string | null): boolean {
   );
 }
 
+/** Count significant fractional digits from a numeric value (e.g. 4.499 → 3). */
+function countFractionDigits(value: number): number {
+  if (!Number.isFinite(value) || Number.isInteger(value)) return 0;
+  const fixed = Math.abs(value).toFixed(6).replace(/0+$/, "");
+  const dot = fixed.indexOf(".");
+  return dot < 0 ? 0 : fixed.length - dot - 1;
+}
+
+/**
+ * Step for qty spinner:
+ * - AD/adet → 1
+ * - GR/KG/etc → always decimal (default 0.001), never +1 even if kalan looks whole
+ *   (tr-TR "4.499" is thousands for 4499 — still step by project/unit precision)
+ */
+function receiptQuantityStep(
+  unitCode: string | null | undefined,
+  ...values: Array<number | null | undefined>
+): { step: number; places: number } {
+  if (isPieceUnit(unitCode)) return { step: 1, places: 0 };
+
+  let places = 0;
+  for (const value of values) {
+    if (value == null || !Number.isFinite(value)) continue;
+    places = Math.max(places, countFractionDigits(value));
+  }
+
+  const settingsPlaces =
+    useProjectSettingsStore.getState().settings?.decimalPlaces ?? 2;
+  const normalized = (unitCode ?? "").trim().toLocaleUpperCase("tr-TR");
+  const weightLike =
+    normalized === "GR" ||
+    normalized === "G" ||
+    normalized === "KG" ||
+    normalized === "MG" ||
+    normalized === "TON" ||
+    normalized === "TN" ||
+    normalized === "LT" ||
+    normalized === "L" ||
+    normalized === "ML";
+  // GR etc. always at least 3 decimals (0.001); other non-piece use project settings.
+  const fallback = weightLike ? Math.max(3, settingsPlaces) : Math.max(1, settingsPlaces);
+  places = Math.min(6, Math.max(places, fallback));
+
+  return { step: 10 ** -places, places };
+}
+
+function roundReceiptQuantity(value: number, places: number): number {
+  if (places <= 0) return Math.round(value);
+  const factor = 10 ** places;
+  return Math.round(value * factor) / factor;
+}
+
 function formatReceiptQuantity(
   value: number,
   unitCode?: string | null,
+  fractionDigits?: number,
 ): string {
+  if (isPieceUnit(unitCode)) {
+    return formatProjectNumber(value, {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    });
+  }
+  if (fractionDigits != null) {
+    const places = Math.min(6, Math.max(0, fractionDigits));
+    return formatProjectNumber(value, {
+      minimumFractionDigits: places,
+      maximumFractionDigits: places,
+    });
+  }
   return formatProjectNumber(value, {
     minimumFractionDigits: 0,
-    maximumFractionDigits: isPieceUnit(unitCode) ? 0 : 6,
+    maximumFractionDigits: 6,
   });
 }
 
@@ -2899,10 +3047,16 @@ function ReceiptEntryRow({
     line.quantity > 0;
   const [serialOpen, setSerialOpen] = useState(false);
   const [locationLookupOpen, setLocationLookupOpen] = useState(false);
-  const [quantityText, setQuantityText] = useState(() =>
-    formatReceiptQuantity(line.quantity, line.unitCode),
-  );
   const pieceUnit = isPieceUnit(line.unitCode);
+  const { step: qtyStep, places: qtyPlaces } = receiptQuantityStep(
+    line.unitCode,
+    line.availableQuantity,
+    line.remainingQuantity,
+    line.quantity,
+  );
+  const [quantityText, setQuantityText] = useState(() =>
+    formatReceiptQuantity(line.quantity, line.unitCode, qtyPlaces),
+  );
 
   const warehouseCode =
     line.targetWarehouseCode ??
@@ -2933,8 +3087,10 @@ function ReceiptEntryRow({
     : "—";
 
   useEffect(() => {
-    setQuantityText(formatReceiptQuantity(line.quantity, line.unitCode));
-  }, [line.quantity, line.unitCode]);
+    setQuantityText(
+      formatReceiptQuantity(line.quantity, line.unitCode, qtyPlaces),
+    );
+  }, [line.quantity, line.unitCode, qtyPlaces]);
 
   useEffect(() => {
     if (!line.targetWarehouseId) return;
@@ -3211,16 +3367,24 @@ function ReceiptEntryRow({
                         const parsed = parseLocalizedNumber(quantityText);
                         if (!Number.isFinite(parsed) || parsed <= 0) {
                           setQuantityText(
-                            formatReceiptQuantity(line.quantity, line.unitCode),
+                            formatReceiptQuantity(
+                              line.quantity,
+                              line.unitCode,
+                              qtyPlaces,
+                            ),
                           );
                           return;
                         }
                         const normalized = pieceUnit
                           ? Math.round(parsed)
-                          : parsed;
+                          : roundReceiptQuantity(parsed, qtyPlaces);
                         if (pieceUnit && normalized < 1) {
                           setQuantityText(
-                            formatReceiptQuantity(line.quantity, line.unitCode),
+                            formatReceiptQuantity(
+                              line.quantity,
+                              line.unitCode,
+                              qtyPlaces,
+                            ),
                           );
                           return;
                         }
@@ -3230,10 +3394,14 @@ function ReceiptEntryRow({
                         );
                         const finalQty = pieceUnit
                           ? Math.max(1, Math.round(capped))
-                          : capped;
+                          : roundReceiptQuantity(capped, qtyPlaces);
                         updateLine(key, { quantity: finalQty });
                         setQuantityText(
-                          formatReceiptQuantity(finalQty, line.unitCode),
+                          formatReceiptQuantity(
+                            finalQty,
+                            line.unitCode,
+                            qtyPlaces,
+                          ),
                         );
                       }}
                     />
@@ -3245,19 +3413,24 @@ function ReceiptEntryRow({
                         onClick={() => {
                           const base =
                             parseLocalizedNumber(quantityText) || line.quantity;
-                          const stepped = pieceUnit
-                            ? Math.round(base) + 1
-                            : base + 1;
+                          const stepped = roundReceiptQuantity(
+                            (pieceUnit ? Math.round(base) : base) + qtyStep,
+                            qtyPlaces,
+                          );
                           const next = Math.min(
                             stepped,
                             line.availableQuantity ?? stepped,
                           );
                           const finalQty = pieceUnit
                             ? Math.max(1, Math.round(next))
-                            : next;
+                            : roundReceiptQuantity(next, qtyPlaces);
                           updateLine(key, { quantity: finalQty });
                           setQuantityText(
-                            formatReceiptQuantity(finalQty, line.unitCode),
+                            formatReceiptQuantity(
+                              finalQty,
+                              line.unitCode,
+                              qtyPlaces,
+                            ),
                           );
                         }}
                       >
@@ -3270,16 +3443,22 @@ function ReceiptEntryRow({
                         onClick={() => {
                           const base =
                             parseLocalizedNumber(quantityText) || line.quantity;
-                          const stepped = pieceUnit
-                            ? Math.round(base) - 1
-                            : base - 1;
-                          if (stepped < 1) return;
+                          const stepped = roundReceiptQuantity(
+                            (pieceUnit ? Math.round(base) : base) - qtyStep,
+                            qtyPlaces,
+                          );
+                          const minQty = pieceUnit ? 1 : qtyStep;
+                          if (stepped < minQty) return;
                           const finalQty = pieceUnit
                             ? Math.round(stepped)
                             : stepped;
                           updateLine(key, { quantity: finalQty });
                           setQuantityText(
-                            formatReceiptQuantity(finalQty, line.unitCode),
+                            formatReceiptQuantity(
+                              finalQty,
+                              line.unitCode,
+                              qtyPlaces,
+                            ),
                           );
                         }}
                       >
@@ -3306,16 +3485,19 @@ function ReceiptEntryRow({
                       )}
                       onClick={() => setSerialOpen(true)}
                     >
-                      <span className="truncate font-mono text-sm">
+                      <span className="truncate font-mono text-xs leading-none">
                         {serialSummary}
                       </span>
-                      <ScanBarcode className="size-3.5 shrink-0 opacity-60" />
+                      <ScanBarcode className="size-3 shrink-0 opacity-60" aria-hidden />
                     </button>
                   </OpsFieldShell>
                 ) : (
                   <OpsFieldShell>
                     <input
-                      className={cn(OPS_FIELD_CLASS, "h-7 w-full cursor-not-allowed opacity-55")}
+                      className={cn(
+                        OPS_FIELD_CLASS,
+                        "wms-ops-receipt-entry-row__field-passive h-7 w-full",
+                      )}
                       disabled
                       readOnly
                       value=""
@@ -3550,6 +3732,8 @@ function SerialTrackingDialog({
   cancelGeneratedSerials: (key: string) => Promise<void>;
 }): ReactElement {
   const { t } = useModuleTranslation("goods-receipt-v2");
+  const { skin } = useTheme();
+  const isPremium = skin === "premium";
   const key = lineKey(line);
   const serialMode =
     line.trackingType === "Serial" || line.trackingType === "LotAndSerial";
@@ -3584,97 +3768,99 @@ function SerialTrackingDialog({
     setBulkText("");
     toast.success(`${serials.length} seri satıra bölündü.`);
   };
+
   return (
     <ResponsiveDialog
       onClose={onClose}
       title="Seri / lot yönetimi"
-      className="!max-w-5xl"
+      description={`${line.stockCode} · ${formatProjectNumber(line.quantity)} ${line.unitCode}`}
+      className="wms-ops-serial-dialog !max-w-5xl"
     >
-      <header className="mb-4 flex items-start justify-between gap-3">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-cyan-500">
-            İzlenebilirlik
-          </p>
-          <h2 className="text-xl font-bold">
-            {line.stockCode} · {formatProjectNumber(line.quantity)}{" "}
-            {line.unitCode}
-          </h2>
-          <p className="text-sm text-slate-500">
-            Sistem önerisi, miktardan bölme veya tekli giriş.
-          </p>
-        </div>
-        <button
-          type="button"
-          aria-label="Kapat"
-          onClick={onClose}
-          className="grid size-10 place-items-center rounded-xl hover:bg-[var(--wms-brand-soft)]"
-        >
-          <X className="size-5" />
-        </button>
-      </header>
-      <div className="mb-4 grid gap-2 sm:grid-cols-3">
-        {serialMode && (
+      <div className="wms-ops-serial-dialog__intro mb-4">
+        <p className="wms-ops-serial-dialog__eyebrow">İzlenebilirlik</p>
+        <p className="wms-ops-serial-dialog__hint">
+          Sistem önerisi, miktardan bölme veya tekli giriş.
+        </p>
+      </div>
+
+      <div className="wms-ops-serial-dialog__tiles mb-4">
+        {serialMode ? (
           <button
             type="button"
             onClick={() => void createSerialRows(key)}
-            className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-3 text-left text-sm font-semibold text-cyan-700 dark:text-cyan-300"
+            className="wms-ops-serial-dialog__tile wms-ops-serial-dialog__tile--accent"
           >
-            Otomatik seri öner
-            <span className="mt-1 block text-xs font-normal opacity-80">
+            <span className="wms-ops-serial-dialog__tile-title">
+              Otomatik seri öner
+            </span>
+            <span className="wms-ops-serial-dialog__tile-hint">
               Miktardan stok kuralına göre seri üret
             </span>
           </button>
-        )}
+        ) : null}
         <button
           type="button"
           onClick={() => addTracking(key)}
-          className="rounded-xl border border-[var(--wms-app-border)] px-4 py-3 text-left text-sm font-semibold"
+          className="wms-ops-serial-dialog__tile"
         >
-          Tekli satır ekle
-          <span className="mt-1 block text-xs font-normal text-slate-500">
+          <span className="wms-ops-serial-dialog__tile-title">
+            Tekli satır ekle
+          </span>
+          <span className="wms-ops-serial-dialog__tile-hint">
             Manuel lot / seri girişi
           </span>
         </button>
-        {serialMode && line.serialGenerationKey && (
+        {serialMode && line.serialGenerationKey ? (
           <button
             type="button"
             onClick={() => void cancelGeneratedSerials(key)}
-            className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-left text-sm font-semibold text-amber-700 dark:text-amber-300"
+            className="wms-ops-serial-dialog__tile wms-ops-serial-dialog__tile--warn"
           >
-            Otomatik serileri iptal
-            <span className="mt-1 block text-xs font-normal opacity-80">
+            <span className="wms-ops-serial-dialog__tile-title">
+              Otomatik serileri iptal
+            </span>
+            <span className="wms-ops-serial-dialog__tile-hint">
               Rezerve serileri bırak
             </span>
           </button>
-        )}
+        ) : null}
       </div>
-      {serialMode && (
-        <div className="mb-4 rounded-xl border border-[var(--wms-app-border)] p-3">
-          <label className="text-sm font-semibold">
+
+      {serialMode ? (
+        <div className="wms-ops-serial-dialog__bulk mb-4">
+          <label className="wms-ops-entry-label mb-1.5 block">
             Mevcut seriyi böl / toplu yapıştır
           </label>
-          <textarea
-            className="input mt-2 min-h-24 font-mono text-sm"
-            value={bulkText}
-            onChange={(event) => setBulkText(event.target.value)}
-            placeholder={"SN-0001\nSN-0002\nSN-0003"}
-          />
-          <button
+          <OpsFieldShell className="wms-ops-serial-dialog__bulk-shell">
+            <textarea
+              className={cn(
+                OPS_FIELD_CLASS,
+                "wms-ops-serial-dialog__bulk-input w-full resize-y font-mono text-sm",
+              )}
+              value={bulkText}
+              onChange={(event) => setBulkText(event.target.value)}
+              placeholder={"SN-0001\nSN-0002\nSN-0003"}
+              rows={4}
+            />
+          </OpsFieldShell>
+          <OpsActionButton
             type="button"
+            variant="secondary"
             onClick={applyBulk}
-            className="mt-2 rounded-lg border px-3 py-2 text-xs font-semibold"
+            className="mt-2.5"
           >
             Toplu serileri uygula
-          </button>
+          </OpsActionButton>
         </div>
-      )}
-      <div className="space-y-2">
+      ) : null}
+
+      <div className="wms-ops-serial-dialog__rows space-y-2">
         {line.trackings.map((tracking, index) => (
           <div
             key={tracking.localId}
-            className="grid gap-2 rounded-lg bg-black/5 p-2 dark:bg-white/5 md:grid-cols-[4rem_8rem_1fr_1fr_9rem_9rem_auto]"
+            className="wms-ops-serial-dialog__row grid gap-2 md:grid-cols-[3.5rem_7.5rem_1fr_1fr_9rem_9rem_auto]"
           >
-            <span className="self-center text-center text-xs font-semibold">
+            <span className="wms-ops-serial-dialog__row-index self-center text-center text-xs font-semibold">
               #{index + 1}
             </span>
             <QuantityInput
@@ -3685,8 +3871,7 @@ function SerialTrackingDialog({
               }
             />
             {lotMode ? (
-              <input
-                className="input"
+              <AppInput
                 aria-label="Lot"
                 placeholder="Lot no"
                 value={tracking.lotNo ?? ""}
@@ -3700,10 +3885,10 @@ function SerialTrackingDialog({
               <span />
             )}
             {serialMode ? (
-              <input
-                className="input"
+              <AppInput
                 aria-label="Seri"
                 placeholder="Seri no"
+                className="font-mono"
                 value={tracking.serialNo ?? ""}
                 onChange={(event) =>
                   updateTracking(key, tracking.localId, {
@@ -3736,26 +3921,31 @@ function SerialTrackingDialog({
               type="button"
               aria-label="Takip satırını sil"
               onClick={() => removeTracking(key, tracking.localId)}
-              className="grid size-10 place-items-center rounded-lg text-red-500 hover:bg-red-500/10"
+              className="wms-ops-serial-dialog__row-delete grid size-10 place-items-center"
             >
               <Trash2 className="size-4" />
             </button>
           </div>
         ))}
-        {line.trackings.length === 0 && (
-          <p className="rounded-xl border border-dashed p-6 text-center text-sm text-slate-500">
+        {line.trackings.length === 0 ? (
+          <p className="wms-ops-serial-dialog__empty">
             Henüz lot/seri satırı yok. Otomatik öner veya tekli satır ekleyin.
           </p>
-        )}
+        ) : null}
       </div>
-      <div className="mt-4 flex justify-end">
-        <button
-          type="button"
-          onClick={onClose}
-          className="rounded-xl bg-[var(--wms-brand-primary)] px-5 py-2.5 font-semibold text-white"
-        >
+
+      <div
+        className={cn(
+          "mt-4 flex justify-end gap-2 border-t border-[var(--wms-app-border)] pt-4",
+          isPremium ? "pt-4" : "pt-3",
+        )}
+      >
+        <OpsActionButton type="button" variant="secondary" onClick={onClose}>
+          Kapat
+        </OpsActionButton>
+        <OpsActionButton type="button" variant="primary" onClick={onClose}>
           Tamam
-        </button>
+        </OpsActionButton>
       </div>
     </ResponsiveDialog>
   );
@@ -3785,8 +3975,8 @@ function QuantityInput({
     );
   }, [value]);
   return (
-    <input
-      className="input font-mono"
+    <AppInput
+      className="font-mono"
       aria-label="Miktar"
       inputMode="decimal"
       disabled={disabled}
@@ -3809,6 +3999,52 @@ function QuantityInput({
   );
 }
 
+function ReviewMetricCard({
+  variant,
+  icon,
+  label,
+  value,
+  hint,
+  onClick,
+}: {
+  variant: "lines" | "available" | "quality" | "quality-none";
+  icon: ReactNode;
+  label: string;
+  value: string;
+  hint?: string;
+  onClick?: () => void;
+}): ReactElement {
+  const interactive = typeof onClick === "function";
+  const className = cn(
+    "wms-ops-gr-review__metric-card",
+    `wms-ops-gr-review__metric-card--${variant}`,
+    interactive && "wms-ops-gr-review__metric-card--interactive",
+  );
+
+  const content = (
+    <>
+      <span className="wms-ops-gr-review__metric-card-icon" aria-hidden>
+        {icon}
+      </span>
+      <span className="wms-ops-gr-review__metric-card-label">{label}</span>
+      <strong className="wms-ops-gr-review__metric-card-value">{value}</strong>
+      {hint ? (
+        <span className="wms-ops-gr-review__metric-card-hint">{hint}</span>
+      ) : null}
+    </>
+  );
+
+  if (interactive) {
+    return (
+      <button type="button" className={className} onClick={onClick}>
+        {content}
+      </button>
+    );
+  }
+
+  return <div className={className}>{content}</div>;
+}
+
 function QualityLinesDialog({
   lines,
   open,
@@ -3816,6 +4052,7 @@ function QualityLinesDialog({
   title,
   description,
   searchAriaLabel,
+  tone = "quality",
 }: {
   lines: Array<{
     stockCode: string;
@@ -3829,6 +4066,7 @@ function QualityLinesDialog({
   title?: string;
   description?: string;
   searchAriaLabel?: string;
+  tone?: "receipt" | "quality";
 }): ReactElement {
   const { t } = useTranslation("goods-receipt-v2");
   const [search, setSearch] = useState("");
@@ -3854,7 +4092,14 @@ function QualityLinesDialog({
       variant="lookup"
       className="!max-w-2xl"
     >
-      <div className="wms-ops-gr-review__quality-dialog-body">
+      <div
+        className={cn(
+          "wms-ops-gr-review__quality-dialog-body",
+          tone === "receipt"
+            ? "wms-ops-gr-review__quality-dialog-body--receipt"
+            : "wms-ops-gr-review__quality-dialog-body--quality",
+        )}
+      >
         {lines.length > 8 ? (
           <div className="wms-ops-gr-review__quality-dialog-search">
             <Search aria-hidden />
@@ -3908,34 +4153,209 @@ function QualityLinesDialog({
   );
 }
 
-function QualityLinesReviewTrigger({
-  lines,
-  label,
-  className,
+function CreateSubmitScreen({
+  mode,
+  phase,
+  errorMessage,
+  lineCount,
+  supplierName,
+  receiptNo,
 }: {
-  lines: Array<{
-    stockCode: string;
-    stockName?: string;
-    quantity: number;
-    unitCode?: string;
-  }>;
-  label?: string;
-  className?: string;
+  mode: "receipt" | "quality";
+  phase: "running" | "error";
+  errorMessage?: string;
+  lineCount: number;
+  supplierName?: string;
+  receiptNo?: string;
 }): ReactElement {
   const { t } = useTranslation("goods-receipt-v2");
-  const [open, setOpen] = useState(false);
+  const { skin } = useTheme();
+  const isPremium = skin === "premium";
+  const isQuality = mode === "quality";
+  const isError = phase === "error";
+  const logKeys = isQuality
+    ? [
+        "createFlow.submit.qualityLog0",
+        "createFlow.submit.qualityLog1",
+        "createFlow.submit.qualityLog2",
+        "createFlow.submit.qualityLog3",
+        "createFlow.submit.qualityLog4",
+      ]
+    : [
+        "createFlow.submit.receiptLog0",
+        "createFlow.submit.receiptLog1",
+        "createFlow.submit.receiptLog2",
+        "createFlow.submit.receiptLog3",
+        "createFlow.submit.receiptLog4",
+      ];
+  const [logIndex, setLogIndex] = useState(0);
+
+  useEffect(() => {
+    if (isError) return;
+    const timer = window.setInterval(() => {
+      setLogIndex((current) => (current + 1) % logKeys.length);
+    }, isPremium ? 1100 : 850);
+    return () => window.clearInterval(timer);
+  }, [isError, isPremium, logKeys.length]);
+
+  const eyebrow = isError
+    ? t("createFlow.submit.errorEyebrow")
+    : isQuality
+      ? t("createFlow.submit.qualityEyebrow")
+      : t("createFlow.submit.receiptEyebrow");
+  const title = isError
+    ? t("createFlow.submit.errorTitle")
+    : isQuality
+      ? t("createFlow.submit.qualityTitle")
+      : t("createFlow.submit.receiptTitle");
+  const subtitle = isError
+    ? t("createFlow.submit.errorReturning")
+    : isQuality
+      ? t("createFlow.submit.qualitySubtitle", {
+          count: lineCount,
+          name: supplierName || "—",
+        })
+      : t("createFlow.submit.receiptSubtitle", {
+          count: lineCount,
+          name: supplierName || "—",
+        });
 
   return (
-    <>
-      <button
-        type="button"
-        className={cn("wms-ops-gr-review__quality-pill", className)}
-        onClick={() => setOpen(true)}
-      >
-        {label ?? t("createFlow.review.viewQualityList", { count: lines.length })}
-      </button>
-      <QualityLinesDialog lines={lines} open={open} onClose={() => setOpen(false)} />
-    </>
+    <div
+      className={cn(
+        "wms-ops-gr-submit",
+        isQuality ? "wms-ops-gr-submit--quality" : "wms-ops-gr-submit--receipt",
+        isError && "wms-ops-gr-submit--error",
+        isPremium ? "wms-ops-gr-submit--premium" : "wms-ops-gr-submit--terminal",
+      )}
+      role="status"
+      aria-live="polite"
+    >
+      <div className="wms-ops-gr-submit__glow" aria-hidden />
+      <div className="wms-ops-gr-submit__grid" aria-hidden />
+      <div className="wms-ops-gr-submit__scanline" aria-hidden />
+
+      <header className="wms-ops-gr-submit__chrome">
+        <span className="wms-ops-gr-submit__chrome-traffic" aria-hidden>
+          <i />
+          <i />
+          <i />
+        </span>
+        <span className="wms-ops-gr-submit__chrome-path">
+          {isError
+            ? "wms://submit/error"
+            : isQuality
+              ? "wms://submit/quality"
+              : "wms://submit/receipt"}
+        </span>
+        <span className="wms-ops-gr-submit__chrome-status">
+          {isError ? "FAIL" : "RUN"}
+        </span>
+      </header>
+
+      <div className="wms-ops-gr-submit__inner">
+        <div className="wms-ops-gr-submit__icon" aria-hidden>
+          {isError ? (
+            <ShieldAlert className="size-7" />
+          ) : isQuality ? (
+            <ShieldCheck className="size-7" />
+          ) : (
+            <PackageCheck className="size-7" />
+          )}
+          {!isError ? (
+            <span className="wms-ops-gr-submit__spinner">
+              <Loader2 className="size-4 animate-spin" />
+            </span>
+          ) : null}
+        </div>
+
+        <p className="wms-ops-gr-submit__eyebrow">
+          <span className="wms-ops-gr-submit__eyebrow-prompt" aria-hidden>
+            {isError ? "!" : ">"}
+          </span>
+          {eyebrow}
+        </p>
+        <h2 className="wms-ops-gr-submit__title">{title}</h2>
+        <p className="wms-ops-gr-submit__subtitle">{subtitle}</p>
+
+        {receiptNo ? (
+          <div className="wms-ops-gr-submit__doc">
+            <span>{t("createFlow.submit.documentLabel")}</span>
+            <strong>{receiptNo}</strong>
+          </div>
+        ) : null}
+
+        {isError ? (
+          <div className="wms-ops-gr-submit__error" role="alert">
+            <span className="wms-ops-gr-submit__error-tag">ERR</span>
+            <span>{errorMessage || t("createFlow.submit.errorFallback")}</span>
+          </div>
+        ) : (
+          <>
+            <div className="wms-ops-gr-submit__progress" aria-hidden>
+              <span className="wms-ops-gr-submit__progress-bar" />
+            </div>
+            <ul className="wms-ops-gr-submit__log">
+              {logKeys.map((key, index) => (
+                <li
+                  key={key}
+                  className={cn(
+                    index === logIndex && "wms-ops-gr-submit__log-item--active",
+                    index < logIndex && "wms-ops-gr-submit__log-item--done",
+                  )}
+                >
+                  <span className="wms-ops-gr-submit__log-index" aria-hidden>
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <span className="wms-ops-gr-submit__log-prompt" aria-hidden>
+                    {index === logIndex ? ">" : index < logIndex ? "ok" : "·"}
+                  </span>
+                  <span className="wms-ops-gr-submit__log-text">{t(key)}</span>
+                  {index === logIndex && !isError ? (
+                    <span className="wms-ops-gr-submit__cursor" aria-hidden />
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function SuccessDocumentChip({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}): ReactElement {
+  const { t } = useTranslation("goods-receipt-v2");
+
+  const copyValue = async () => {
+    try {
+      await navigator.clipboard.writeText(value);
+      toast.success(t("createFlow.success.documentCopied"));
+    } catch {
+      toast.error(t("createFlow.success.documentCopyFailed"));
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      className="wms-ops-gr-success__doc wms-ops-gr-success__doc--copyable"
+      onClick={() => void copyValue()}
+      title={t("createFlow.success.copyDocument")}
+      aria-label={t("createFlow.success.copyDocument")}
+    >
+      <span className="wms-ops-gr-success__doc-label">{label}</span>
+      <span className="wms-ops-gr-success__doc-row">
+        <strong className="wms-ops-gr-success__doc-value">{value}</strong>
+        <Copy className="wms-ops-gr-success__doc-copy-icon size-3.5" aria-hidden />
+      </span>
+    </button>
   );
 }
 
@@ -3974,9 +4394,13 @@ function DirectCreateSuccessPanel({
   const [linesOpen, setLinesOpen] = useState(false);
   const [qualityOpen, setQualityOpen] = useState(false);
   const hasQuality = qualityLines.length > 0;
-  const statusLabel = hasQuality
+  const titleLabel = hasQuality
     ? t("createFlow.success.sentToQuality")
     : t("createFlow.success.receiptCreated");
+  const statusValue = hasQuality
+    ? t("createFlow.success.statusAwaitingQuality")
+    : t("createFlow.success.statusCompleted");
+  const documentValue = (receiptNo || result.documentNo || "").trim();
 
   return (
     <div className="wms-ops-gr-success wms-ops-gr-success--done">
@@ -3986,7 +4410,7 @@ function DirectCreateSuccessPanel({
           <CheckCircle2 className="size-9" />
         </div>
         <p className="wms-ops-gr-success__eyebrow">{t("createFlow.success.directEyebrow")}</p>
-        <h2 className="wms-ops-gr-success__title">{statusLabel}</h2>
+        <h2 className="wms-ops-gr-success__title">{titleLabel}</h2>
         <p className="wms-ops-gr-success__subtitle">
           {supplierName || supplierCode
             ? t("createFlow.success.subtitleForSupplier", {
@@ -3997,13 +4421,11 @@ function DirectCreateSuccessPanel({
             ? t("createFlow.success.qualityPendingSubtitle")
             : t("createFlow.success.receiptDoneSubtitle")}
         </p>
-{(receiptNo || result?.documentNo) ? (
-          <div className="wms-ops-gr-success__doc">
-            <span className="wms-ops-gr-success__doc-label">
-              {isElectronicReceipt ? t("createFlow.waybill.eReceipt") : t("createFlow.success.documentNo")}
-            </span>
-            <strong className="wms-ops-gr-success__doc-value">{receiptNo ?? result?.documentNo}</strong>
-          </div>
+        {documentValue ? (
+          <SuccessDocumentChip
+            label={isElectronicReceipt ? t("createFlow.waybill.eReceipt") : t("createFlow.submit.documentLabel")}
+            value={documentValue}
+          />
         ) : null}
       </header>
 
@@ -4034,7 +4456,7 @@ function DirectCreateSuccessPanel({
         <div className="wms-ops-gr-success__stat">
           <span className="wms-ops-gr-success__stat-label">{t("createFlow.success.status")}</span>
           <strong className="wms-ops-gr-success__stat-value wms-ops-gr-success__stat-value--status">
-            {statusLabel}
+            {statusValue}
           </strong>
         </div>
       </div>
@@ -4059,13 +4481,6 @@ function DirectCreateSuccessPanel({
       ) : null}
 
       <footer className="wms-ops-gr-success__actions">
-        {!hasQuality ? (
-          <GoodsReceiptPostCreateRoutingActions
-            goodsReceiptId={result.id}
-            transferLabel={t("createFlow.success.routeTransfer")}
-            outboundLabel={t("createFlow.success.routeOutbound")}
-          />
-        ) : null}
         <OpsActionButton type="button" variant="primary" onClick={onNew}>
           {t("createFlow.success.newRecord")}
         </OpsActionButton>
@@ -4077,7 +4492,20 @@ function DirectCreateSuccessPanel({
           >
             {t("createFlow.success.qualityList")}
           </OpsActionButton>
-        ) : null}
+        ) : (
+          <>
+            <OpsActionButton type="button" variant="secondary" asChild>
+              <Link to="/warehouse/goods-receipts/list">
+                {t("createFlow.success.receiptList")}
+              </Link>
+            </OpsActionButton>
+            <GoodsReceiptPostCreateRoutingActions
+              goodsReceiptId={result.id}
+              transferLabel={t("createFlow.success.routeTransfer")}
+              outboundLabel={t("createFlow.success.routeOutbound")}
+            />
+          </>
+        )}
       </footer>
 
       <QualityLinesDialog
@@ -4149,13 +4577,11 @@ function CreateSuccessPanel({
             : t("createFlow.success.orderSubtitleGeneric")}{" "}
           {t("createFlow.success.orderSubtitleTail")}
         </p>
-{(receiptNo || result?.documentNo) ? (
-          <div className="wms-ops-gr-success__doc">
-            <span className="wms-ops-gr-success__doc-label">
-              {isElectronicReceipt ? t("createFlow.waybill.eReceipt") : t("createFlow.success.documentNo")}
-            </span>
-            <strong className="wms-ops-gr-success__doc-value">{receiptNo ?? result?.documentNo}</strong>
-          </div>
+        {(receiptNo || result.documentNo) ? (
+          <SuccessDocumentChip
+            label={isElectronicReceipt ? t("createFlow.waybill.eReceipt") : t("createFlow.submit.documentLabel")}
+            value={(receiptNo || result.documentNo || "").trim()}
+          />
         ) : null}
       </header>
 
@@ -4286,25 +4712,33 @@ function Panel({
     </div>
   );
 }
-function ReviewOrderNumbersValue({
-  orderNumbers,
+function ReviewMultiListValue({
+  values,
   t,
+  valueClassName,
+  multipleLabelKey,
+  multipleCountKey,
+  tooltipHintKey,
 }: {
-  orderNumbers: string[];
+  values: string[];
   t: (key: string, options?: Record<string, unknown>) => string;
+  valueClassName: string;
+  multipleLabelKey: string;
+  multipleCountKey: string;
+  tooltipHintKey: string;
 }): ReactElement {
-  if (orderNumbers.length === 0) {
+  if (values.length === 0) {
     return (
-      <strong className="wms-ops-gr-review__meta-value wms-ops-gr-review__meta-value--order">
+      <strong className={cn("wms-ops-gr-review__meta-value", valueClassName)}>
         —
       </strong>
     );
   }
 
-  if (orderNumbers.length === 1) {
+  if (values.length === 1) {
     return (
-      <strong className="wms-ops-gr-review__meta-value wms-ops-gr-review__meta-value--order">
-        {orderNumbers[0]}
+      <strong className={cn("wms-ops-gr-review__meta-value", valueClassName)}>
+        {values[0]}
       </strong>
     );
   }
@@ -4315,11 +4749,14 @@ function ReviewOrderNumbersValue({
         <TooltipTrigger asChild>
           <button
             type="button"
-            className="wms-ops-gr-review__meta-value wms-ops-gr-review__meta-value--order cursor-help border-b border-dotted border-[color-mix(in_oklab,var(--wms-ops-accent)_45%,transparent)] bg-transparent p-0 text-left font-bold"
+            className={cn(
+              "wms-ops-gr-review__meta-value cursor-help border-b border-dotted border-[color-mix(in_oklab,var(--wms-ops-accent)_45%,transparent)] bg-transparent p-0 text-left font-bold",
+              valueClassName,
+            )}
           >
-            {t("createFlow.review.multipleOrders")}
+            {t(multipleLabelKey)}
             <span className="ml-1 text-xs font-semibold text-[var(--wms-app-text-muted)]">
-              ({orderNumbers.length})
+              ({values.length})
             </span>
           </button>
         </TooltipTrigger>
@@ -4328,7 +4765,7 @@ function ReviewOrderNumbersValue({
           align="start"
           sideOffset={8}
           className={cn(
-            "wms-ops-page-hint-tooltip max-h-64 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-xl border p-0 text-left shadow-[0_12px_40px_color-mix(in_oklab,black_45%,transparent)]",
+            "wms-ops-page-hint-tooltip wms-ops-gr-review__multi-tooltip max-h-64 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-xl border p-0 text-left shadow-[0_12px_40px_color-mix(in_oklab,black_45%,transparent)]",
             "!bg-[color-mix(in_oklab,var(--wms-app-panel)_96%,black)]",
             "border-[color-mix(in_oklab,var(--wms-ops-accent)_32%,var(--wms-app-border))]",
             "!text-[var(--wms-app-text)]",
@@ -4336,23 +4773,23 @@ function ReviewOrderNumbersValue({
         >
           <div className="sticky top-0 z-10 border-b border-[color-mix(in_oklab,var(--wms-ops-accent)_18%,transparent)] bg-[color-mix(in_oklab,var(--wms-ops-accent)_8%,transparent)] px-3 py-2">
             <div className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-[var(--wms-ops-accent)]">
-              {t("createFlow.review.multipleOrdersCount", {
-                count: orderNumbers.length,
+              {t(multipleCountKey, {
+                count: values.length,
               })}
             </div>
-            {orderNumbers.length > 12 ? (
+            {values.length > 12 ? (
               <p className="mt-0.5 text-[0.68rem] text-[var(--wms-app-text-muted)]">
-                {t("createFlow.review.ordersTooltipHint")}
+                {t(tooltipHintKey)}
               </p>
             ) : null}
           </div>
           <ul className="max-h-48 overflow-y-auto overscroll-contain px-2 py-1.5 font-mono text-[0.75rem] leading-5">
-            {orderNumbers.map((orderNo) => (
+            {values.map((value) => (
               <li
-                key={orderNo}
+                key={value}
                 className="rounded-md px-1.5 py-0.5 text-[var(--wms-app-text)] hover:bg-[color-mix(in_oklab,var(--wms-ops-accent)_10%,transparent)]"
               >
-                {orderNo}
+                {value}
               </li>
             ))}
           </ul>
@@ -4465,29 +4902,5 @@ function Footer({
         {t("continue")}
       </OpsActionButton>
     </footer>
-  );
-}
-function ReviewRow({
-  label,
-  value,
-  emphasis,
-  accent,
-}: {
-  label: string;
-  value: string;
-  emphasis?: boolean;
-  accent?: boolean;
-}): ReactElement {
-  return (
-    <div
-      className={cn(
-        "wms-ops-gr-review__row",
-        emphasis && "wms-ops-gr-review__row--emphasis",
-        accent && "wms-ops-gr-review__row--accent",
-      )}
-    >
-      <dt>{label}</dt>
-      <dd>{value}</dd>
-    </div>
   );
 }

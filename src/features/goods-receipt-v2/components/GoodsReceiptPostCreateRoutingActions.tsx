@@ -1,5 +1,5 @@
 import { useState, type ReactElement } from 'react';
-import { ArrowRightLeft, Loader2, PackageMinus } from 'lucide-react';
+import { ArrowRightLeft, PackageMinus } from 'lucide-react';
 import { toast } from 'sonner';
 import { OpsActionButton } from '@/components/shared/OpsActionButton';
 import { goodsReceiptV2Api } from '../api/goods-receipt.api';
@@ -43,27 +43,21 @@ export function GoodsReceiptPostCreateRoutingActions({
       <OpsActionButton
         type="button"
         variant="secondary"
+        loading={busyKind === 'transfer'}
         disabled={busyKind !== null}
         onClick={() => void openRoute('transfer')}
       >
-        {busyKind === 'transfer' ? (
-          <Loader2 className="size-3.5 shrink-0 animate-spin" />
-        ) : (
-          <ArrowRightLeft className="size-3.5 shrink-0" />
-        )}
+        <ArrowRightLeft className="size-3.5 shrink-0" aria-hidden />
         {transferLabel}
       </OpsActionButton>
       <OpsActionButton
         type="button"
         variant="secondary"
+        loading={busyKind === 'outbound'}
         disabled={busyKind !== null}
         onClick={() => void openRoute('outbound')}
       >
-        {busyKind === 'outbound' ? (
-          <Loader2 className="size-3.5 shrink-0 animate-spin" />
-        ) : (
-          <PackageMinus className="size-3.5 shrink-0" />
-        )}
+        <PackageMinus className="size-3.5 shrink-0" aria-hidden />
         {outboundLabel}
       </OpsActionButton>
 
