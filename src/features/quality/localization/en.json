@@ -174,5 +174,148 @@
     "reasonLabel": "Reason",
     "reasonPlaceholder": "Description (optional)",
     "confirmButton": "Done"
+  },
+  "rules": {
+    "title": "Quality Rules",
+    "description": "Manage inspection, sampling and fail-action settings per stock or stock group.",
+    "toolbar": {
+      "importAction": "Bulk add via Excel",
+      "createAction": "New quality rule"
+    },
+    "toast": {
+      "deleted": "Quality rule deleted.",
+      "deleteFailed": "Could not delete the quality rule.",
+      "updated": "Quality rule updated.",
+      "created": "Quality rule created.",
+      "saveFailed": "Could not save the quality rule."
+    },
+    "columns": {
+      "scope": "Scope",
+      "stockOrGroup": "Stock / Group",
+      "inspection": "Inspection",
+      "sampling": "Sampling",
+      "failAction": "Fail Action",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "scopeStockGroup": "Stock group",
+    "scopeStock": "Stock",
+    "statusActive": "Active",
+    "statusInactive": "Inactive",
+    "editTitle": "Edit",
+    "deleteTitle": "Delete",
+    "errors": {
+      "selectStock": "Select a stock.",
+      "selectStockGroup": "Select a stock group.",
+      "samplingValuePositive": "The sampling value must be greater than 0.",
+      "minimumShelfLifeInvalid": "The minimum shelf life must be 0 or a positive whole number."
+    },
+    "dialog": {
+      "editTitle": "Edit Quality Rule",
+      "createTitle": "New Quality Rule",
+      "scopeLabel": "Rule scope",
+      "scopeStockOption": "Stock",
+      "scopeStockGroupOption": "Stock group",
+      "stockField": "Stock",
+      "stockGroupField": "Stock group",
+      "stockLookupTitle": "Select stock",
+      "stockLookupPlaceholder": "Select a stock",
+      "stockLookupSearchPlaceholder": "Search by stock code or name…",
+      "stockLookupEmpty": "No stock found.",
+      "stockGroupLookupTitle": "Select stock group",
+      "stockGroupLookupPlaceholder": "Select a stock group",
+      "stockGroupLookupSearchPlaceholder": "Search by group code…",
+      "stockGroupLookupEmpty": "No stock group found.",
+      "stockGroupOptionSuffix": "{{count}} stock items",
+      "inspectionModeLabel": "Inspection mode",
+      "samplingModeLabel": "Sampling",
+      "samplingValueLabel": "Sampling value",
+      "failActionLabel": "Fail action",
+      "minimumShelfLifeLabel": "Minimum remaining shelf life (days)",
+      "descriptionLabel": "Description",
+      "autoQuarantineToggle": "Auto-quarantine",
+      "requireLotToggle": "Lot required",
+      "requireSerialToggle": "Serial required",
+      "requireExpiryToggle": "Expiry date required",
+      "activeToggle": "Rule active",
+      "cancelButton": "Cancel",
+      "savingButton": "Saving…",
+      "updateButton": "Update",
+      "createButton": "Create"
+    }
+  },
+  "ruleImport": {
+    "title": "Add Quality Rules via Excel",
+    "description": "Create stock and stock group rules in bulk in a controlled way.",
+    "warningTitle": "Existing rules are not modified",
+    "warningText": "If an active rule already exists for the same stock or stock group, the row is skipped. Updates and deactivation are done from the quality rules screen.",
+    "step1Title": "1. Download the current template",
+    "step1Description": "The \"Stock Groups\" sheet in the template contains the current, unique group codes for the selected branch.",
+    "downloadButton": "Download template",
+    "step2Title": "2. Select the filled-in file",
+    "step2Limit": "Maximum 5 MB and 1,000 data rows",
+    "summary": {
+      "total": "Total",
+      "created": "Created",
+      "skipped": "Skipped",
+      "failed": "Failed"
+    },
+    "table": {
+      "row": "Row",
+      "status": "Status",
+      "scope": "Scope",
+      "code": "Code",
+      "message": "Description"
+    },
+    "status": {
+      "created": "Created",
+      "skipped": "Skipped",
+      "failed": "Failed"
+    },
+    "closeButton": "Close",
+    "createRulesButton": "Create rules",
+    "errors": {
+      "invalidExtension": "Only Excel files with the .xlsx extension can be uploaded.",
+      "fileTooLarge": "The Excel file can be at most 5 MB.",
+      "templateDownloadFailed": "Could not download the template.",
+      "uploadFailed": "Could not import the Excel file."
+    },
+    "toast": {
+      "templateDownloaded": "Excel template downloaded with the current stock groups.",
+      "resultSummary": "{{created}} rules created; {{skipped}} skipped, {{failed}} failed."
+    }
+  },
+  "settings": {
+    "eyebrow": "Quality",
+    "title": "Quality Management Settings",
+    "description": "Centrally manage inspection, quarantine, stock release and ERP hold behaviors during goods receipt.",
+    "toast": {
+      "saved": "Quality parameters saved.",
+      "saveFailed": "Could not save."
+    },
+    "defaultInspectionModeLabel": "Default inspection mode",
+    "defaultFailActionLabel": "Fail action",
+    "locationsSection": {
+      "title": "Quality movement locations",
+      "description": "Set the physical destinations to use when a quality decision turns into a stock movement.",
+      "qualityLocationLabel": "Quality hold location",
+      "quarantineLocationLabel": "Quarantine location",
+      "rejectLocationLabel": "Reject location",
+      "locationPlaceholder": "Select a location"
+    },
+    "toggles": {
+      "autoCreateInspection": "Automatically create an inspection on goods receipt",
+      "holdInventory": "Keep stock unavailable until decision",
+      "blockPutaway": "Hold putaway until quality decision",
+      "blockErpPosting": "Hold ERP posting until quality decision",
+      "requireManagerApproval": "Require manager approval for release",
+      "allowPartialDecision": "Allow partial quality decisions",
+      "allowDirectReceipt": "Allow direct receipt when there is no rule",
+      "blockWhenLotMissing": "Block receipt when lot is missing",
+      "blockWhenSerialMissing": "Block receipt when serial is missing",
+      "blockWhenExpiryMissing": "Block receipt when expiry date is missing"
+    },
+    "holdNotice": "Held items can be physically present in the receiving area, but they are not included in available stock projection until a quality decision is made.",
+    "saveButton": "Save"
   }
 }

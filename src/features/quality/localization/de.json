@@ -174,5 +174,148 @@
     "reasonLabel": "Begründung",
     "reasonPlaceholder": "Beschreibung (optional)",
     "confirmButton": "Fertig"
+  },
+  "rules": {
+    "title": "Qualitätsregeln",
+    "description": "Verwalten Sie Prüf-, Stichproben- und Fehlerreaktionseinstellungen je Lagerartikel oder Lagerartikelgruppe.",
+    "toolbar": {
+      "importAction": "Massenerfassung via Excel",
+      "createAction": "Neue Qualitätsregel"
+    },
+    "toast": {
+      "deleted": "Qualitätsregel gelöscht.",
+      "deleteFailed": "Die Qualitätsregel konnte nicht gelöscht werden.",
+      "updated": "Qualitätsregel aktualisiert.",
+      "created": "Qualitätsregel erstellt.",
+      "saveFailed": "Die Qualitätsregel konnte nicht gespeichert werden."
+    },
+    "columns": {
+      "scope": "Geltungsbereich",
+      "stockOrGroup": "Lagerartikel / Gruppe",
+      "inspection": "Prüfung",
+      "sampling": "Stichprobe",
+      "failAction": "Fehlerreaktion",
+      "status": "Status",
+      "actions": "Aktionen"
+    },
+    "scopeStockGroup": "Lagerartikelgruppe",
+    "scopeStock": "Lagerartikel",
+    "statusActive": "Aktiv",
+    "statusInactive": "Inaktiv",
+    "editTitle": "Bearbeiten",
+    "deleteTitle": "Löschen",
+    "errors": {
+      "selectStock": "Wählen Sie einen Lagerartikel aus.",
+      "selectStockGroup": "Wählen Sie eine Lagerartikelgruppe aus.",
+      "samplingValuePositive": "Der Stichprobenwert muss größer als 0 sein.",
+      "minimumShelfLifeInvalid": "Die Mindesthaltbarkeit muss 0 oder eine positive ganze Zahl sein."
+    },
+    "dialog": {
+      "editTitle": "Qualitätsregel bearbeiten",
+      "createTitle": "Neue Qualitätsregel",
+      "scopeLabel": "Geltungsbereich der Regel",
+      "scopeStockOption": "Lagerartikel",
+      "scopeStockGroupOption": "Lagerartikelgruppe",
+      "stockField": "Lagerartikel",
+      "stockGroupField": "Lagerartikelgruppe",
+      "stockLookupTitle": "Lagerartikel auswählen",
+      "stockLookupPlaceholder": "Wählen Sie einen Lagerartikel aus",
+      "stockLookupSearchPlaceholder": "Nach Artikelnummer oder -bezeichnung suchen…",
+      "stockLookupEmpty": "Kein Lagerartikel gefunden.",
+      "stockGroupLookupTitle": "Lagerartikelgruppe auswählen",
+      "stockGroupLookupPlaceholder": "Wählen Sie eine Lagerartikelgruppe aus",
+      "stockGroupLookupSearchPlaceholder": "Nach Gruppencode suchen…",
+      "stockGroupLookupEmpty": "Keine Lagerartikelgruppe gefunden.",
+      "stockGroupOptionSuffix": "{{count}} Lagerartikel",
+      "inspectionModeLabel": "Prüfmodus",
+      "samplingModeLabel": "Stichprobenverfahren",
+      "samplingValueLabel": "Stichprobenwert",
+      "failActionLabel": "Fehlerreaktion",
+      "minimumShelfLifeLabel": "Mindestrestlaufzeit (Tage)",
+      "descriptionLabel": "Beschreibung",
+      "autoQuarantineToggle": "Automatische Quarantäne",
+      "requireLotToggle": "Charge erforderlich",
+      "requireSerialToggle": "Seriennummer erforderlich",
+      "requireExpiryToggle": "Verfallsdatum erforderlich",
+      "activeToggle": "Regel aktiv",
+      "cancelButton": "Abbrechen",
+      "savingButton": "Wird gespeichert…",
+      "updateButton": "Aktualisieren",
+      "createButton": "Erstellen"
+    }
+  },
+  "ruleImport": {
+    "title": "Qualitätsregeln via Excel hinzufügen",
+    "description": "Erstellen Sie Lagerartikel- und Lagerartikelgruppenregeln kontrolliert im Sammelverfahren.",
+    "warningTitle": "Bestehende Regeln werden nicht verändert",
+    "warningText": "Existiert für denselben Lagerartikel oder dieselbe Lagerartikelgruppe bereits eine aktive Regel, wird die Zeile übersprungen. Aktualisierungen und Deaktivierungen erfolgen über den Bildschirm Qualitätsregeln.",
+    "step1Title": "1. Aktuelle Vorlage herunterladen",
+    "step1Description": "Das Arbeitsblatt „Lagerartikelgruppen” in der Vorlage enthält die aktuellen, eindeutigen Gruppencodes für die ausgewählte Filiale.",
+    "downloadButton": "Vorlage herunterladen",
+    "step2Title": "2. Ausgefüllte Datei auswählen",
+    "step2Limit": "Maximal 5 MB und 1.000 Datenzeilen",
+    "summary": {
+      "total": "Gesamt",
+      "created": "Erstellt",
+      "skipped": "Übersprungen",
+      "failed": "Fehlgeschlagen"
+    },
+    "table": {
+      "row": "Zeile",
+      "status": "Status",
+      "scope": "Geltungsbereich",
+      "code": "Code",
+      "message": "Beschreibung"
+    },
+    "status": {
+      "created": "Erstellt",
+      "skipped": "Übersprungen",
+      "failed": "Fehlgeschlagen"
+    },
+    "closeButton": "Schließen",
+    "createRulesButton": "Regeln erstellen",
+    "errors": {
+      "invalidExtension": "Es können nur Excel-Dateien mit der Erweiterung .xlsx hochgeladen werden.",
+      "fileTooLarge": "Die Excel-Datei darf höchstens 5 MB groß sein.",
+      "templateDownloadFailed": "Die Vorlage konnte nicht heruntergeladen werden.",
+      "uploadFailed": "Die Excel-Datei konnte nicht importiert werden."
+    },
+    "toast": {
+      "templateDownloaded": "Excel-Vorlage mit den aktuellen Lagerartikelgruppen heruntergeladen.",
+      "resultSummary": "{{created}} Regeln erstellt; {{skipped}} übersprungen, {{failed}} fehlgeschlagen."
+    }
+  },
+  "settings": {
+    "eyebrow": "Qualität",
+    "title": "Qualitätsmanagement-Einstellungen",
+    "description": "Zentrale Verwaltung von Kontroll-, Quarantäne-, Freigabe- und ERP-Wartezeitverhalten beim Wareneingang.",
+    "toast": {
+      "saved": "Qualitätsparameter gespeichert.",
+      "saveFailed": "Konnte nicht gespeichert werden."
+    },
+    "defaultInspectionModeLabel": "Standardkontrollmodus",
+    "defaultFailActionLabel": "Fehleraktion",
+    "locationsSection": {
+      "title": "Qualitätsbewegungslagerplätze",
+      "description": "Legen Sie die physischen Zielorte fest, die verwendet werden, wenn eine Qualitätsentscheidung zu einer Lagerbewegung wird.",
+      "qualityLocationLabel": "Qualitätswartelagerplatz",
+      "quarantineLocationLabel": "Quarantänelagerplatz",
+      "rejectLocationLabel": "Ablehnungslagerplatz",
+      "locationPlaceholder": "Lagerplatz auswählen"
+    },
+    "toggles": {
+      "autoCreateInspection": "Kontrolle beim Wareneingang automatisch erstellen",
+      "holdInventory": "Bestand bis zur Entscheidung nicht verfügbar machen",
+      "blockPutaway": "Einlagerung bis zur Qualitätsentscheidung zurückhalten",
+      "blockErpPosting": "ERP-Buchung bis zur Qualitätsentscheidung zurückhalten",
+      "requireManagerApproval": "Managergenehmigung für Freigabe erforderlich",
+      "allowPartialDecision": "Teilweise Qualitätsentscheidungen zulassen",
+      "allowDirectReceipt": "Direkten Wareneingang ohne Regel zulassen",
+      "blockWhenLotMissing": "Wareneingang blockieren, wenn Chargennummer fehlt",
+      "blockWhenSerialMissing": "Wareneingang blockieren, wenn Seriennummer fehlt",
+      "blockWhenExpiryMissing": "Wareneingang blockieren, wenn Verfallsdatum fehlt"
+    },
+    "holdNotice": "Zurückgehaltene Artikel können sich physisch im Wareneingangsbereich befinden, werden jedoch erst nach einer Qualitätsentscheidung in die verfügbare Bestandsprojektion aufgenommen.",
+    "saveButton": "Speichern"
   }
 }

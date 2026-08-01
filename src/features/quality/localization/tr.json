@@ -174,5 +174,148 @@
     "reasonLabel": "Neden",
     "reasonPlaceholder": "Açıklama (opsiyonel)",
     "confirmButton": "Tamam"
+  },
+  "rules": {
+    "title": "Kalite Kuralları",
+    "description": "Stok veya stok grubu bazında kontrol, örnekleme ve başarısızlık aksiyonlarını yönetin.",
+    "toolbar": {
+      "importAction": "Excel ile toplu ekle",
+      "createAction": "Yeni kalite kuralı"
+    },
+    "toast": {
+      "deleted": "Kalite kuralı silindi.",
+      "deleteFailed": "Kalite kuralı silinemedi.",
+      "updated": "Kalite kuralı güncellendi.",
+      "created": "Kalite kuralı oluşturuldu.",
+      "saveFailed": "Kalite kuralı kaydedilemedi."
+    },
+    "columns": {
+      "scope": "Kapsam",
+      "stockOrGroup": "Stok / grup",
+      "inspection": "Kontrol",
+      "sampling": "Örnekleme",
+      "failAction": "Başarısızlık",
+      "status": "Durum",
+      "actions": "İşlemler"
+    },
+    "scopeStockGroup": "Stok grubu",
+    "scopeStock": "Stok",
+    "statusActive": "Aktif",
+    "statusInactive": "Pasif",
+    "editTitle": "Düzenle",
+    "deleteTitle": "Sil",
+    "errors": {
+      "selectStock": "Stok seçiniz.",
+      "selectStockGroup": "Stok grubu seçiniz.",
+      "samplingValuePositive": "Örnekleme değeri sıfırdan büyük olmalıdır.",
+      "minimumShelfLifeInvalid": "Minimum raf ömrü sıfır veya pozitif tam sayı olmalıdır."
+    },
+    "dialog": {
+      "editTitle": "Kalite Kuralını Düzenle",
+      "createTitle": "Yeni Kalite Kuralı",
+      "scopeLabel": "Kural kapsamı",
+      "scopeStockOption": "Stok",
+      "scopeStockGroupOption": "Stok grubu",
+      "stockField": "Stok",
+      "stockGroupField": "Stok grubu",
+      "stockLookupTitle": "Stok seçimi",
+      "stockLookupPlaceholder": "Stok seçiniz",
+      "stockLookupSearchPlaceholder": "Stok kodu veya adı ara…",
+      "stockLookupEmpty": "Stok bulunamadı.",
+      "stockGroupLookupTitle": "Stok grubu seçimi",
+      "stockGroupLookupPlaceholder": "Stok grubu seçiniz",
+      "stockGroupLookupSearchPlaceholder": "Grup kodu ara…",
+      "stockGroupLookupEmpty": "Stok grubu bulunamadı.",
+      "stockGroupOptionSuffix": "{{count}} stok",
+      "inspectionModeLabel": "Kontrol modu",
+      "samplingModeLabel": "Örnekleme",
+      "samplingValueLabel": "Örnekleme değeri",
+      "failActionLabel": "Başarısızlık aksiyonu",
+      "minimumShelfLifeLabel": "Minimum kalan raf ömrü (gün)",
+      "descriptionLabel": "Açıklama",
+      "autoQuarantineToggle": "Otomatik karantinaya al",
+      "requireLotToggle": "Lot zorunlu",
+      "requireSerialToggle": "Seri zorunlu",
+      "requireExpiryToggle": "Son kullanma tarihi zorunlu",
+      "activeToggle": "Kural aktif",
+      "cancelButton": "Vazgeç",
+      "savingButton": "Kaydediliyor…",
+      "updateButton": "Güncelle",
+      "createButton": "Oluştur"
+    }
+  },
+  "ruleImport": {
+    "title": "Excel ile Kalite Kuralı Ekle",
+    "description": "Stok ve stok grubu kurallarını kontrollü biçimde toplu oluşturun.",
+    "warningTitle": "Mevcut kurallar değiştirilmez",
+    "warningText": "Aynı stok veya stok grubu için aktif kural varsa satır atlanır. Güncelleme ve pasife alma işlemleri kalite kuralları ekranından yapılır.",
+    "step1Title": "1. Güncel şablonu indirin",
+    "step1Description": "Şablondaki \"Stok Grupları\" sayfası seçili şubenin güncel ve tekil grup kodlarını içerir.",
+    "downloadButton": "Şablonu indir",
+    "step2Title": "2. Doldurulan dosyayı seçin",
+    "step2Limit": "En fazla 5 MB ve 1.000 veri satırı",
+    "summary": {
+      "total": "Toplam",
+      "created": "Oluşturuldu",
+      "skipped": "Atlandı",
+      "failed": "Başarısız"
+    },
+    "table": {
+      "row": "Satır",
+      "status": "Durum",
+      "scope": "Kapsam",
+      "code": "Kod",
+      "message": "Açıklama"
+    },
+    "status": {
+      "created": "Oluşturuldu",
+      "skipped": "Atlandı",
+      "failed": "Başarısız"
+    },
+    "closeButton": "Kapat",
+    "createRulesButton": "Kuralları oluştur",
+    "errors": {
+      "invalidExtension": "Yalnızca .xlsx uzantılı Excel dosyaları yüklenebilir.",
+      "fileTooLarge": "Excel dosyası en fazla 5 MB olabilir.",
+      "templateDownloadFailed": "Şablon indirilemedi.",
+      "uploadFailed": "Excel dosyası aktarılamadı."
+    },
+    "toast": {
+      "templateDownloaded": "Güncel stok gruplarıyla Excel şablonu indirildi.",
+      "resultSummary": "{{created}} kural oluşturuldu; {{skipped}} atlandı, {{failed}} başarısız."
+    }
+  },
+  "settings": {
+    "eyebrow": "Kalite",
+    "title": "Kalite Yönetimi Ayarları",
+    "description": "Mal kabulde kontrol, karantina, stok serbest bırakma ve ERP bekleme davranışlarını merkezi yönetin.",
+    "toast": {
+      "saved": "Kalite parametreleri kaydedildi.",
+      "saveFailed": "Kaydedilemedi."
+    },
+    "defaultInspectionModeLabel": "Varsayılan kontrol modu",
+    "defaultFailActionLabel": "Başarısızlık aksiyonu",
+    "locationsSection": {
+      "title": "Kalite hareket rafları",
+      "description": "Kalite kararı stok hareketine dönüştüğünde kullanılacak fiziksel hedefleri belirleyin.",
+      "qualityLocationLabel": "Kalite bekleme rafı",
+      "quarantineLocationLabel": "Karantina rafı",
+      "rejectLocationLabel": "Ret rafı",
+      "locationPlaceholder": "Raf seçin"
+    },
+    "toggles": {
+      "autoCreateInspection": "Mal kabulde kontrolü otomatik oluştur",
+      "holdInventory": "Karara kadar stoğu kullanılabilir yapma",
+      "blockPutaway": "Kalite kararına kadar rafa kaldırmayı beklet",
+      "blockErpPosting": "Kalite kararına kadar ERP kaydını beklet",
+      "requireManagerApproval": "Serbest bırakmada yönetici onayı",
+      "allowPartialDecision": "Kısmi kalite kararına izin ver",
+      "allowDirectReceipt": "Kural yoksa doğrudan kabule izin ver",
+      "blockWhenLotMissing": "Lot eksikse kabulü engelle",
+      "blockWhenSerialMissing": "Seri eksikse kabulü engelle",
+      "blockWhenExpiryMissing": "SKT eksikse kabulü engelle"
+    },
+    "holdNotice": "Bekletilen ürünler fiziksel olarak kabul alanında bulunabilir; ancak kalite kararı verilene kadar kullanılabilir stok projection'ına alınmaz.",
+    "saveButton": "Kaydet"
   }
 }

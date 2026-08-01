@@ -174,5 +174,148 @@
     "reasonLabel": "السبب",
     "reasonPlaceholder": "وصف (اختياري)",
     "confirmButton": "تم"
+  },
+  "rules": {
+    "title": "قواعد الجودة",
+    "description": "إدارة إعدادات الفحص والمعاينة وإجراءات الفشل لكل مخزون أو مجموعة مخزون.",
+    "toolbar": {
+      "importAction": "إضافة جماعية عبر Excel",
+      "createAction": "قاعدة جودة جديدة"
+    },
+    "toast": {
+      "deleted": "تم حذف قاعدة الجودة.",
+      "deleteFailed": "تعذر حذف قاعدة الجودة.",
+      "updated": "تم تحديث قاعدة الجودة.",
+      "created": "تم إنشاء قاعدة الجودة.",
+      "saveFailed": "تعذر حفظ قاعدة الجودة."
+    },
+    "columns": {
+      "scope": "النطاق",
+      "stockOrGroup": "المخزون / المجموعة",
+      "inspection": "الفحص",
+      "sampling": "المعاينة",
+      "failAction": "إجراء الفشل",
+      "status": "الحالة",
+      "actions": "الإجراءات"
+    },
+    "scopeStockGroup": "مجموعة مخزون",
+    "scopeStock": "مخزون",
+    "statusActive": "نشط",
+    "statusInactive": "غير نشط",
+    "editTitle": "تعديل",
+    "deleteTitle": "حذف",
+    "errors": {
+      "selectStock": "اختر مخزونًا.",
+      "selectStockGroup": "اختر مجموعة مخزون.",
+      "samplingValuePositive": "يجب أن تكون قيمة المعاينة أكبر من 0.",
+      "minimumShelfLifeInvalid": "يجب أن يكون الحد الأدنى لمدة الصلاحية المتبقية 0 أو رقمًا صحيحًا موجبًا."
+    },
+    "dialog": {
+      "editTitle": "تعديل قاعدة الجودة",
+      "createTitle": "قاعدة جودة جديدة",
+      "scopeLabel": "نطاق القاعدة",
+      "scopeStockOption": "مخزون",
+      "scopeStockGroupOption": "مجموعة مخزون",
+      "stockField": "مخزون",
+      "stockGroupField": "مجموعة مخزون",
+      "stockLookupTitle": "اختيار المخزون",
+      "stockLookupPlaceholder": "اختر مخزونًا",
+      "stockLookupSearchPlaceholder": "البحث برمز أو اسم المخزون…",
+      "stockLookupEmpty": "لم يتم العثور على مخزون.",
+      "stockGroupLookupTitle": "اختيار مجموعة المخزون",
+      "stockGroupLookupPlaceholder": "اختر مجموعة مخزون",
+      "stockGroupLookupSearchPlaceholder": "البحث برمز المجموعة…",
+      "stockGroupLookupEmpty": "لم يتم العثور على مجموعة مخزون.",
+      "stockGroupOptionSuffix": "{{count}} عنصر مخزون",
+      "inspectionModeLabel": "نوع الفحص",
+      "samplingModeLabel": "المعاينة",
+      "samplingValueLabel": "قيمة المعاينة",
+      "failActionLabel": "إجراء الفشل",
+      "minimumShelfLifeLabel": "الحد الأدنى لمدة الصلاحية المتبقية (أيام)",
+      "descriptionLabel": "الوصف",
+      "autoQuarantineToggle": "حجر تلقائي",
+      "requireLotToggle": "الدفعة مطلوبة",
+      "requireSerialToggle": "الرقم التسلسلي مطلوب",
+      "requireExpiryToggle": "تاريخ الانتهاء مطلوب",
+      "activeToggle": "القاعدة نشطة",
+      "cancelButton": "إلغاء",
+      "savingButton": "جارٍ الحفظ…",
+      "updateButton": "تحديث",
+      "createButton": "إنشاء"
+    }
+  },
+  "ruleImport": {
+    "title": "إضافة قواعد الجودة عبر Excel",
+    "description": "إنشاء قواعد المخزون ومجموعات المخزون بشكل جماعي وبطريقة منضبطة.",
+    "warningTitle": "لا يتم تعديل القواعد الحالية",
+    "warningText": "إذا كانت هناك قاعدة نشطة بالفعل لنفس المخزون أو مجموعة المخزون، يتم تجاهل الصف. يتم إجراء التحديثات وإلغاء التنشيط من شاشة قواعد الجودة.",
+    "step1Title": "1. تنزيل القالب الحالي",
+    "step1Description": "تحتوي ورقة \"مجموعات المخزون\" في القالب على رموز المجموعات الحالية والفريدة للفرع المحدد.",
+    "downloadButton": "تنزيل القالب",
+    "step2Title": "2. اختر الملف المعبأ",
+    "step2Limit": "الحد الأقصى 5 ميغابايت و1000 صف بيانات",
+    "summary": {
+      "total": "الإجمالي",
+      "created": "تم الإنشاء",
+      "skipped": "تم التجاهل",
+      "failed": "فشل"
+    },
+    "table": {
+      "row": "الصف",
+      "status": "الحالة",
+      "scope": "النطاق",
+      "code": "الرمز",
+      "message": "الوصف"
+    },
+    "status": {
+      "created": "تم الإنشاء",
+      "skipped": "تم التجاهل",
+      "failed": "فشل"
+    },
+    "closeButton": "إغلاق",
+    "createRulesButton": "إنشاء القواعد",
+    "errors": {
+      "invalidExtension": "يمكن تحميل ملفات Excel بامتداد .xlsx فقط.",
+      "fileTooLarge": "يجب ألا يتجاوز حجم ملف Excel 5 ميغابايت.",
+      "templateDownloadFailed": "تعذر تنزيل القالب.",
+      "uploadFailed": "تعذر استيراد ملف Excel."
+    },
+    "toast": {
+      "templateDownloaded": "تم تنزيل قالب Excel بمجموعات المخزون الحالية.",
+      "resultSummary": "تم إنشاء {{created}} قاعدة؛ تم تجاهل {{skipped}}، وفشل {{failed}}."
+    }
+  },
+  "settings": {
+    "eyebrow": "الجودة",
+    "title": "إعدادات إدارة الجودة",
+    "description": "إدارة مركزية لسلوكيات الفحص والحجر وتحرير المخزون وانتظار ERP أثناء استلام البضائع.",
+    "toast": {
+      "saved": "تم حفظ معايير الجودة.",
+      "saveFailed": "تعذر الحفظ."
+    },
+    "defaultInspectionModeLabel": "نوع الفحص الافتراضي",
+    "defaultFailActionLabel": "إجراء الفشل",
+    "locationsSection": {
+      "title": "مواقع حركة الجودة",
+      "description": "حدد الوجهات الفعلية المستخدمة عند تحول قرار الجودة إلى حركة مخزون.",
+      "qualityLocationLabel": "موقع انتظار الجودة",
+      "quarantineLocationLabel": "موقع الحجر",
+      "rejectLocationLabel": "موقع الرفض",
+      "locationPlaceholder": "اختر موقعًا"
+    },
+    "toggles": {
+      "autoCreateInspection": "إنشاء فحص تلقائيًا عند الاستلام",
+      "holdInventory": "إبقاء المخزون غير متاح حتى القرار",
+      "blockPutaway": "تأجيل التخزين حتى قرار الجودة",
+      "blockErpPosting": "تأجيل ترحيل ERP حتى قرار الجودة",
+      "requireManagerApproval": "طلب موافقة المدير للتحرير",
+      "allowPartialDecision": "السماح بقرارات جودة جزئية",
+      "allowDirectReceipt": "السماح بالاستلام المباشر عند عدم وجود قاعدة",
+      "blockWhenLotMissing": "حظر الاستلام عند غياب رقم الدفعة",
+      "blockWhenSerialMissing": "حظر الاستلام عند غياب الرقم التسلسلي",
+      "blockWhenExpiryMissing": "حظر الاستلام عند غياب تاريخ الانتهاء"
+    },
+    "holdNotice": "قد تكون العناصر المعلقة موجودة فعليًا في منطقة الاستلام، ولكن لا يتم تضمينها في توقعات المخزون المتاح حتى يتم اتخاذ قرار الجودة.",
+    "saveButton": "حفظ"
   }
 }

@@ -174,5 +174,148 @@
     "reasonLabel": "Motivo",
     "reasonPlaceholder": "Descripción (opcional)",
     "confirmButton": "Listo"
+  },
+  "rules": {
+    "title": "Reglas de Calidad",
+    "description": "Gestione la configuración de inspección, muestreo y acción de fallo por stock o grupo de stock.",
+    "toolbar": {
+      "importAction": "Agregar en masa vía Excel",
+      "createAction": "Nueva regla de calidad"
+    },
+    "toast": {
+      "deleted": "Regla de calidad eliminada.",
+      "deleteFailed": "No se pudo eliminar la regla de calidad.",
+      "updated": "Regla de calidad actualizada.",
+      "created": "Regla de calidad creada.",
+      "saveFailed": "No se pudo guardar la regla de calidad."
+    },
+    "columns": {
+      "scope": "Ámbito",
+      "stockOrGroup": "Stock / Grupo",
+      "inspection": "Inspección",
+      "sampling": "Muestreo",
+      "failAction": "Acción de Fallo",
+      "status": "Estado",
+      "actions": "Acciones"
+    },
+    "scopeStockGroup": "Grupo de stock",
+    "scopeStock": "Stock",
+    "statusActive": "Activo",
+    "statusInactive": "Inactivo",
+    "editTitle": "Editar",
+    "deleteTitle": "Eliminar",
+    "errors": {
+      "selectStock": "Seleccione un stock.",
+      "selectStockGroup": "Seleccione un grupo de stock.",
+      "samplingValuePositive": "El valor de muestreo debe ser mayor que 0.",
+      "minimumShelfLifeInvalid": "La vida útil restante mínima debe ser 0 o un número entero positivo."
+    },
+    "dialog": {
+      "editTitle": "Editar Regla de Calidad",
+      "createTitle": "Nueva Regla de Calidad",
+      "scopeLabel": "Ámbito de la regla",
+      "scopeStockOption": "Stock",
+      "scopeStockGroupOption": "Grupo de stock",
+      "stockField": "Stock",
+      "stockGroupField": "Grupo de stock",
+      "stockLookupTitle": "Seleccionar stock",
+      "stockLookupPlaceholder": "Seleccione un stock",
+      "stockLookupSearchPlaceholder": "Buscar por código o nombre de stock…",
+      "stockLookupEmpty": "No se encontró ningún stock.",
+      "stockGroupLookupTitle": "Seleccionar grupo de stock",
+      "stockGroupLookupPlaceholder": "Seleccione un grupo de stock",
+      "stockGroupLookupSearchPlaceholder": "Buscar por código de grupo…",
+      "stockGroupLookupEmpty": "No se encontró ningún grupo de stock.",
+      "stockGroupOptionSuffix": "{{count}} artículos de stock",
+      "inspectionModeLabel": "Modo de inspección",
+      "samplingModeLabel": "Muestreo",
+      "samplingValueLabel": "Valor de muestreo",
+      "failActionLabel": "Acción de fallo",
+      "minimumShelfLifeLabel": "Vida útil restante mínima (días)",
+      "descriptionLabel": "Descripción",
+      "autoQuarantineToggle": "Cuarentena automática",
+      "requireLotToggle": "Lote obligatorio",
+      "requireSerialToggle": "Número de serie obligatorio",
+      "requireExpiryToggle": "Fecha de caducidad obligatoria",
+      "activeToggle": "Regla activa",
+      "cancelButton": "Cancelar",
+      "savingButton": "Guardando…",
+      "updateButton": "Actualizar",
+      "createButton": "Crear"
+    }
+  },
+  "ruleImport": {
+    "title": "Agregar Reglas de Calidad vía Excel",
+    "description": "Cree reglas de stock y grupo de stock en masa de forma controlada.",
+    "warningTitle": "Las reglas existentes no se modifican",
+    "warningText": "Si ya existe una regla activa para el mismo stock o grupo de stock, la fila se omite. Las actualizaciones y desactivaciones se realizan desde la pantalla de reglas de calidad.",
+    "step1Title": "1. Descargue la plantilla actual",
+    "step1Description": "La hoja \"Stock Groups\" de la plantilla contiene los códigos de grupo actuales y únicos para la sucursal seleccionada.",
+    "downloadButton": "Descargar plantilla",
+    "step2Title": "2. Seleccione el archivo completado",
+    "step2Limit": "Máximo 5 MB y 1.000 filas de datos",
+    "summary": {
+      "total": "Total",
+      "created": "Creadas",
+      "skipped": "Omitidas",
+      "failed": "Fallidas"
+    },
+    "table": {
+      "row": "Fila",
+      "status": "Estado",
+      "scope": "Ámbito",
+      "code": "Código",
+      "message": "Descripción"
+    },
+    "status": {
+      "created": "Creada",
+      "skipped": "Omitida",
+      "failed": "Fallida"
+    },
+    "closeButton": "Cerrar",
+    "createRulesButton": "Crear reglas",
+    "errors": {
+      "invalidExtension": "Solo se pueden cargar archivos de Excel con extensión .xlsx.",
+      "fileTooLarge": "El archivo de Excel puede tener como máximo 5 MB.",
+      "templateDownloadFailed": "No se pudo descargar la plantilla.",
+      "uploadFailed": "No se pudo importar el archivo de Excel."
+    },
+    "toast": {
+      "templateDownloaded": "Plantilla de Excel descargada con los grupos de stock actuales.",
+      "resultSummary": "{{created}} reglas creadas; {{skipped}} omitidas, {{failed}} fallidas."
+    }
+  },
+  "settings": {
+    "eyebrow": "Calidad",
+    "title": "Configuración de gestión de calidad",
+    "description": "Gestione de forma centralizada los comportamientos de control, cuarentena, liberación de stock y espera de ERP durante la recepción de mercancías.",
+    "toast": {
+      "saved": "Parámetros de calidad guardados.",
+      "saveFailed": "No se pudo guardar."
+    },
+    "defaultInspectionModeLabel": "Modo de control predeterminado",
+    "defaultFailActionLabel": "Acción de fallo",
+    "locationsSection": {
+      "title": "Ubicaciones de movimiento de calidad",
+      "description": "Defina los destinos físicos que se utilizarán cuando una decisión de calidad se convierta en un movimiento de stock.",
+      "qualityLocationLabel": "Ubicación de espera de calidad",
+      "quarantineLocationLabel": "Ubicación de cuarentena",
+      "rejectLocationLabel": "Ubicación de rechazo",
+      "locationPlaceholder": "Seleccionar una ubicación"
+    },
+    "toggles": {
+      "autoCreateInspection": "Crear automáticamente un control en la recepción",
+      "holdInventory": "Mantener el stock no disponible hasta la decisión",
+      "blockPutaway": "Retener la ubicación hasta la decisión de calidad",
+      "blockErpPosting": "Retener la contabilización ERP hasta la decisión de calidad",
+      "requireManagerApproval": "Requerir aprobación del gerente para la liberación",
+      "allowPartialDecision": "Permitir decisiones de calidad parciales",
+      "allowDirectReceipt": "Permitir recepción directa cuando no hay regla",
+      "blockWhenLotMissing": "Bloquear la recepción si falta el lote",
+      "blockWhenSerialMissing": "Bloquear la recepción si falta el número de serie",
+      "blockWhenExpiryMissing": "Bloquear la recepción si falta la fecha de caducidad"
+    },
+    "holdNotice": "Los artículos retenidos pueden estar físicamente presentes en el área de recepción, pero no se incluyen en la proyección de stock disponible hasta que se tome una decisión de calidad.",
+    "saveButton": "Guardar"
   }
 }

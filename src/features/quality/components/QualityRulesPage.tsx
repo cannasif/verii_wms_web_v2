@@ -17,6 +17,7 @@ import {
 } from "@/components/shared/GridSystemColumns";
 import { OpsStatusBadge } from "@/components/shared/OpsStatusBadge";
 import type { DropdownPage } from "@/hooks/useDropdownInfiniteSearch";
+import { useModuleTranslation } from "@/hooks/useModuleTranslation";
 import { localizeEnumValue } from "@/lib/enum-localization";
 import { useAuthStore } from "@/stores/auth-store";
 import type { PagedResponse } from "@/types/api";
@@ -77,6 +78,7 @@ const toPagedResponse = <T,>(page: DropdownPage<T>): PagedResponse<T> => ({
 });
 
 export function QualityRulesPage() {
+  const { t } = useModuleTranslation("quality");
   const branch = useAuthStore((state) => state.branch?.code ?? "0");
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -146,14 +148,14 @@ export function QualityRulesPage() {
       try {
         await qualityApi.deleteRule(id);
         await refreshGrid();
-        toast.success("Kalite kuralı silindi.");
+        toast.success(t("rules.toast.deleted"));
       } catch (error) {
         toast.error(
-          error instanceof Error ? error.message : "Kalite kuralı silinemedi.",
+          error instanceof Error ? error.message : t("rules.toast.deleteFailed"),
         );
       }
     },
-    [refreshGrid],
+    [refreshGrid, t],
   );
 
   const columns = useMemo<GridColumn<QualityRule>[]>(
@@ -161,13 +163,13 @@ export function QualityRulesPage() {
       ...systemColumns<QualityRule>(),
       {
         key: "scopeType",
-        label: "Kapsam",
+        label: t("rules.columns.scope"),
         render: (row) =>
-          row.scopeType === "StockGroup" ? "Stok grubu" : "Stok",
+          row.scopeType === "StockGroup" ? t("rules.scopeStockGroup") : t("rules.scopeStock"),
       },
       {
         key: "stockCode",
-        label: "Stok / grup",
+        label: t("rules.columns.stockOrGroup"),
         render: (row) =>
           row.stockCode
             ? `${row.stockCode} · ${row.stockName ?? ""}`
@@ -175,39 +177,39 @@ export function QualityRulesPage() {
       },
       {
         key: "inspectionMode",
-        label: "Kontrol",
+        label: t("rules.columns.inspection"),
         render: (row) => localizeEnumValue(row.inspectionMode),
       },
       {
         key: "samplingMode",
-        label: "Örnekleme",
+        label: t("rules.columns.sampling"),
         render: (row) =>
           `${localizeEnumValue(row.samplingMode)} / ${row.samplingValue}`,
       },
       {
         key: "failAction",
-        label: "Başarısızlık",
+        label: t("rules.columns.failAction"),
         render: (row) => localizeEnumValue(row.failAction),
       },
       {
         key: "isActive",
-        label: "Durum",
+        label: t("rules.columns.status"),
         render: (row) => (
           <OpsStatusBadge tone={row.isActive ? "done" : "pending"}>
-            {row.isActive ? "Aktif" : "Pasif"}
+            {row.isActive ? t("rules.statusActive") : t("rules.statusInactive")}
           </OpsStatusBadge>
         ),
       },
       {
         key: "actions",
-        label: "İşlemler",
+        label: t("rules.columns.actions"),
         ...requiredActionColumn,
         render: (row) => (
           <div className="flex items-center gap-1">
             <button
               type="button"
               onClick={() => openEdit(row)}
-              title="Düzenle"
+              title={t("rules.editTitle")}
               className="rounded-lg border p-2 text-cyan-500"
             >
               <Pencil className="size-4" />
@@ -215,7 +217,7 @@ export function QualityRulesPage() {
             <button
               type="button"
               onClick={() => void remove(row.id)}
-              title="Sil"
+              title={t("rules.deleteTitle")}
               className="rounded-lg border p-2 text-red-500"
             >
               <Trash2 className="size-4" />
@@ -224,21 +226,21 @@ export function QualityRulesPage() {
         ),
       },
     ],
-    [openEdit, remove],
+    [openEdit, remove, t],
   );
 
   const submit = async () => {
     if (form.scopeType === "Stock" && !selectedStock) {
-      toast.error("Stok seçiniz.");
+      toast.error(t("rules.errors.selectStock"));
       return;
     }
     if (form.scopeType === "StockGroup" && !selectedGroup) {
-      toast.error("Stok grubu seçiniz.");
+      toast.error(t("rules.errors.selectStockGroup"));
       return;
     }
     const samplingValue = Number(form.samplingValue);
     if (!Number.isFinite(samplingValue) || samplingValue <= 0) {
-      toast.error("Örnekleme değeri sıfırdan büyük olmalıdır.");
+      toast.error(t("rules.errors.samplingValuePositive"));
       return;
     }
     const minimumDays = form.minimumRemainingShelfLifeDays.trim();
@@ -246,7 +248,7 @@ export function QualityRulesPage() {
       minimumDays &&
       (!Number.isInteger(Number(minimumDays)) || Number(minimumDays) < 0)
     ) {
-      toast.error("Minimum raf ömrü sıfır veya pozitif tam sayı olmalıdır.");
+      toast.error(t("rules.errors.minimumShelfLifeInvalid"));
       return;
     }
 
@@ -279,12 +281,12 @@ export function QualityRulesPage() {
       await refreshGrid();
       toast.success(
         editingRule
-          ? "Kalite kuralı güncellendi."
-          : "Kalite kuralı oluşturuldu.",
+          ? t("rules.toast.updated")
+          : t("rules.toast.created"),
       );
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Kalite kuralı kaydedilemedi.",
+        error instanceof Error ? error.message : t("rules.toast.saveFailed"),
       );
     } finally {
       setSaving(false);
@@ -302,19 +304,19 @@ export function QualityRulesPage() {
     <section className="space-y-4">
       <AdvancedDataGrid<QualityRule>
         pageKey="quality-rules"
-        title="Kalite Kuralları"
-        description="Stok veya stok grubu bazında kontrol, örnekleme ve başarısızlık aksiyonlarını yönetin."
+        title={t("rules.title")}
+        description={t("rules.description")}
         columns={columns}
         fetchPage={qualityApi.rulesPaged}
         onRowDoubleClick={openEdit}
         toolbarActions={[
           {
-            label: "Excel ile toplu ekle",
+            label: t("rules.toolbar.importAction"),
             icon: <FileSpreadsheet className="size-3.5" />,
             run: async () => setImportOpen(true),
           },
           {
-            label: "Yeni kalite kuralı",
+            label: t("rules.toolbar.createAction"),
             icon: <Plus className="size-3.5" />,
             run: async () => openCreate(),
           },
@@ -331,38 +333,38 @@ export function QualityRulesPage() {
       {dialogOpen && (
         <ResponsiveDialog
           onClose={() => !saving && setDialogOpen(false)}
-          title={editingRule ? "Kalite Kuralını Düzenle" : "Yeni Kalite Kuralı"}
+          title={editingRule ? t("rules.dialog.editTitle") : t("rules.dialog.createTitle")}
           className="!max-w-4xl"
         >
           <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Kural kapsamı">
+            <Field label={t("rules.dialog.scopeLabel")}>
               <AppDropdown
                 value={form.scopeType}
                 onValueChange={setScope}
                 portalContainer={null}
                 options={[
-                  { value: "Stock", label: "Stok" },
-                  { value: "StockGroup", label: "Stok grubu" },
+                  { value: "Stock", label: t("rules.dialog.scopeStockOption") },
+                  { value: "StockGroup", label: t("rules.dialog.scopeStockGroupOption") },
                 ]}
               />
             </Field>
 
             {form.scopeType === "Stock" ? (
-              <Field label="Stok">
+              <Field label={t("rules.dialog.stockField")}>
                 <PagedLookupDialog<StockOption>
                   variant="ops"
                   autoSearchMinLength={2}
                   open={stockLookupOpen}
                   onOpenChange={setStockLookupOpen}
-                  title="Stok seçimi"
+                  title={t("rules.dialog.stockLookupTitle")}
                   value={
                     selectedStock
                       ? `${selectedStock.erpStockCode} · ${selectedStock.stockName}`
                       : ""
                   }
-                  placeholder="Stok seçiniz"
-                  searchPlaceholder="Stok kodu veya adı ara…"
-                  emptyText="Stok bulunamadı."
+                  placeholder={t("rules.dialog.stockLookupPlaceholder")}
+                  searchPlaceholder={t("rules.dialog.stockLookupSearchPlaceholder")}
+                  emptyText={t("rules.dialog.stockLookupEmpty")}
                   triggerClassName={OPS_FIELD_CLASS}
                   queryKey={["quality-stocks-lookup", branch]}
                   fetchPage={async ({
@@ -393,16 +395,16 @@ export function QualityRulesPage() {
                 />
               </Field>
             ) : (
-              <Field label="Stok grubu">
+              <Field label={t("rules.dialog.stockGroupField")}>
                 <PagedLookupDialog<QualityStockGroupOption>
                   variant="ops"
                   open={groupLookupOpen}
                   onOpenChange={setGroupLookupOpen}
-                  title="Stok grubu seçimi"
+                  title={t("rules.dialog.stockGroupLookupTitle")}
                   value={selectedGroup?.code ?? ""}
-                  placeholder="Stok grubu seçiniz"
-                  searchPlaceholder="Grup kodu ara…"
-                  emptyText="Stok grubu bulunamadı."
+                  placeholder={t("rules.dialog.stockGroupLookupPlaceholder")}
+                  searchPlaceholder={t("rules.dialog.stockGroupLookupSearchPlaceholder")}
+                  emptyText={t("rules.dialog.stockGroupLookupEmpty")}
                   triggerClassName={OPS_FIELD_CLASS}
                   queryKey={["quality-stock-groups-lookup", branch]}
                   fetchPage={async ({
@@ -427,7 +429,7 @@ export function QualityRulesPage() {
                   }
                   getKey={(item) => item.code}
                   getLabel={(item) =>
-                    `${item.code}${item.stockCount ? ` · ${item.stockCount} stok` : ""}`
+                    `${item.code}${item.stockCount ? ` · ${t("rules.dialog.stockGroupOptionSuffix", { count: item.stockCount })}` : ""}`
                   }
                   onSelect={setSelectedGroup}
                 />
@@ -435,7 +437,7 @@ export function QualityRulesPage() {
             )}
 
             <SelectField
-              label="Kontrol modu"
+              label={t("rules.dialog.inspectionModeLabel")}
               value={form.inspectionMode}
               setValue={(inspectionMode) =>
                 setForm((current) => ({ ...current, inspectionMode }))
@@ -443,7 +445,7 @@ export function QualityRulesPage() {
               values={["NoCheck", "QuickCheck", "InspectionRequired"]}
             />
             <SelectField
-              label="Örnekleme"
+              label={t("rules.dialog.samplingModeLabel")}
               value={form.samplingMode}
               setValue={(samplingMode) =>
                 setForm((current) => ({ ...current, samplingMode }))
@@ -455,7 +457,7 @@ export function QualityRulesPage() {
                 "EveryNthHandlingUnit",
               ]}
             />
-            <Field label="Örnekleme değeri">
+            <Field label={t("rules.dialog.samplingValueLabel")}>
               <input
                 className="input"
                 type="number"
@@ -472,7 +474,7 @@ export function QualityRulesPage() {
               />
             </Field>
             <SelectField
-              label="Başarısızlık aksiyonu"
+              label={t("rules.dialog.failActionLabel")}
               value={form.failAction}
               setValue={(failAction) =>
                 setForm((current) => ({ ...current, failAction }))
@@ -484,7 +486,7 @@ export function QualityRulesPage() {
                 "ManagerApproval",
               ]}
             />
-            <Field label="Minimum kalan raf ömrü (gün)">
+            <Field label={t("rules.dialog.minimumShelfLifeLabel")}>
               <input
                 className="input"
                 type="number"
@@ -499,7 +501,7 @@ export function QualityRulesPage() {
                 }
               />
             </Field>
-            <Field label="Açıklama">
+            <Field label={t("rules.dialog.descriptionLabel")}>
               <input
                 className="input"
                 maxLength={500}
@@ -515,20 +517,20 @@ export function QualityRulesPage() {
           </div>
 
           <div className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            <Toggle label="Otomatik karantinaya al" checked={form.autoQuarantine} onChange={(autoQuarantine) => setForm((current) => ({ ...current, autoQuarantine }))} />
-            <Toggle label="Lot zorunlu" checked={form.requireLot} onChange={(requireLot) => setForm((current) => ({ ...current, requireLot }))} />
-            <Toggle label="Seri zorunlu" checked={form.requireSerial} onChange={(requireSerial) => setForm((current) => ({ ...current, requireSerial }))} />
-            <Toggle label="Son kullanma tarihi zorunlu" checked={form.requireExpiryDate} onChange={(requireExpiryDate) => setForm((current) => ({ ...current, requireExpiryDate }))} />
-            <Toggle label="Kural aktif" checked={form.isActive} onChange={(isActive) => setForm((current) => ({ ...current, isActive }))} />
+            <Toggle label={t("rules.dialog.autoQuarantineToggle")} checked={form.autoQuarantine} onChange={(autoQuarantine) => setForm((current) => ({ ...current, autoQuarantine }))} />
+            <Toggle label={t("rules.dialog.requireLotToggle")} checked={form.requireLot} onChange={(requireLot) => setForm((current) => ({ ...current, requireLot }))} />
+            <Toggle label={t("rules.dialog.requireSerialToggle")} checked={form.requireSerial} onChange={(requireSerial) => setForm((current) => ({ ...current, requireSerial }))} />
+            <Toggle label={t("rules.dialog.requireExpiryToggle")} checked={form.requireExpiryDate} onChange={(requireExpiryDate) => setForm((current) => ({ ...current, requireExpiryDate }))} />
+            <Toggle label={t("rules.dialog.activeToggle")} checked={form.isActive} onChange={(isActive) => setForm((current) => ({ ...current, isActive }))} />
           </div>
 
           <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <OpsActionButton type="button" variant="secondary" disabled={saving} onClick={() => setDialogOpen(false)}>
-              Vazgeç
+              {t("rules.dialog.cancelButton")}
             </OpsActionButton>
             <OpsActionButton type="button" variant="primary" disabled={saving} onClick={() => void submit()}>
               {editingRule ? <Save className="size-4" /> : <Plus className="size-4" />}
-              {saving ? "Kaydediliyor…" : editingRule ? "Güncelle" : "Oluştur"}
+              {saving ? t("rules.dialog.savingButton") : editingRule ? t("rules.dialog.updateButton") : t("rules.dialog.createButton")}
             </OpsActionButton>
           </div>
         </ResponsiveDialog>
