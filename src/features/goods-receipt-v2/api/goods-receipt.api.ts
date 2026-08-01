@@ -7,12 +7,25 @@ import type { ActiveUserOption, CreateGoodsReceiptResult, CustomerOption, ErpPos
 import type { OperationCancellationResult } from '@/features/shared/api/operation-cancellation';
 import { buildDropdownPagedBody } from '@/lib/dropdown-paging';
 import { normalizeGoodsReceiptWaybillFields } from '../utils/goods-receipt-waybill';
+import { normalizeGoodsReceiptRoutes } from '../utils/goods-receipt-routes';
+import axios from 'axios';
 
 interface Envelope<T> { success: boolean; data: T; message?: string }
 type GridPage<T> = DropdownPage<T>;
 const unwrap = <T,>(value: Envelope<T>): T => { if (!value.success) throw new Error(value.message || 'İşlem başarısız.'); return value.data; };
 const pagedBody = (request: DropdownPageRequest, filters: unknown[] = []) =>
   buildDropdownPagedBody(request, { filters });
+
+function readDetailRoutes(detail: GoodsReceiptDetail & Record<string, unknown>): GoodsReceiptRoutingResult[] {
+  return normalizeGoodsReceiptRoutes(
+    detail.routes
+      ?? detail.Routes
+      ?? detail.routingResults
+      ?? detail.RoutingResults
+      ?? detail.routeHistory
+      ?? detail.RouteHistory,
+  );
+}
 
 export const goodsReceiptV2Api = {
   trackingPolicy: resolveStockTrackingPolicy,
@@ -132,11 +145,26 @@ export const goodsReceiptV2Api = {
     return { ...page, items, data: items };
   },
   detail: async (id: number): Promise<GoodsReceiptDetail> => {
-    const detail = unwrap(await api.get<Envelope<GoodsReceiptDetail>>(`/api/goods-receipts/${id}`));
+    const detail = unwrap(await api.get<Envelope<GoodsReceiptDetail & Record<string, unknown>>>(`/api/goods-receipts/${id}`));
     return {
       ...detail,
       header: normalizeGoodsReceiptWaybillFields(detail.header),
+      routes: readDetailRoutes(detail),
     };
+  },
+  listRoutes: async (id: number): Promise<GoodsReceiptRoutingResult[]> => {
+    try {
+      const data = unwrap(
+        await api.get<Envelope<unknown>>(`/api/goods-receipts/${id}/routes`),
+      );
+      return normalizeGoodsReceiptRoutes(data);
+    } catch (error) {
+      if (axios.isAxiosError(error) && (error.response?.status === 404 || error.response?.status === 405)) {
+        return [];
+      }
+      // Envelope success:false / network — yönlendirme özeti için sessiz fallback
+      return [];
+    }
   },
   erpPosting: async (id: number): Promise<ErpPostingResult> =>
     unwrap(await api.get<Envelope<ErpPostingResult>>(`/api/erp-postings/GoodsReceipt/${id}`)),

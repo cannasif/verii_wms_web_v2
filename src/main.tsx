@@ -13,6 +13,8 @@ import './index.css';
 import './styles/shared-input.css';
 import './styles/terminal-v2-bridge.css';
 import './styles/premium-v2-bridge.css';
+import './styles/goods-receipt-qc-summary-terminal.css';
+import './styles/goods-receipt-qc-summary-premium.css';
 
 installGlobalToastErrorNavigation();
 

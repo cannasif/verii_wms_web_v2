@@ -3091,7 +3091,7 @@ html:not(.dark) .wms-ops-lookup-dialog__description {
 
 .wms-ops-detail-dialog [data-slot="tabs-list"].wms-ops-detail-subtabs {
   display: grid !important;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   width: 100% !important;
   height: auto !important;
   gap: 0.25rem;
@@ -3108,16 +3108,18 @@ html:not(.dark) .wms-ops-lookup-dialog__description {
   min-height: 1.875rem;
   border-radius: 0;
   border: 1px solid transparent;
-  padding-inline: 0.5rem;
+  padding-inline: 0.3rem;
   padding-block: 0.35rem;
   justify-content: center;
   text-align: center;
-  line-height: 1.2;
-  white-space: normal;
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.625rem;
+  font-size: 0.58rem;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: color-mix(in oklab, hsl(var(--foreground)) 54%, transparent);
   background: transparent !important;
@@ -7698,6 +7700,115 @@ html.skin-premium .wms-ops-quality-decision-popover .wms-ops-quality-decide-btn 
   text-transform: none !important;
   letter-spacing: 0.02em !important;
   font-family: var(--wms-premium-font) !important;
+}
+
+/* Lot / seri özeti — hover tooltip (terminal vs premium) */
+.wms-ops-quality-lot-serial-trigger {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  border: 1px dashed color-mix(in oklab, var(--wms-brand-primary) 34%, var(--wms-app-border));
+  background: color-mix(in oklab, var(--wms-brand-primary) 8%, transparent);
+  padding: 0.15rem 0.4rem;
+  font: inherit;
+  color: var(--wms-app-text);
+  cursor: help;
+  text-align: left;
+}
+
+.wms-ops-quality-lot-serial-trigger:hover,
+.wms-ops-quality-lot-serial-trigger:focus-visible {
+  border-style: solid;
+  border-color: color-mix(in oklab, var(--wms-brand-primary) 55%, var(--wms-app-border));
+  background: color-mix(in oklab, var(--wms-brand-primary) 14%, transparent);
+  outline: none;
+}
+
+html:not(.skin-premium) .wms-ops-quality-lot-serial-trigger {
+  border-radius: 0;
+  clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+html.skin-premium .wms-ops-quality-lot-serial-trigger {
+  border-radius: 0.45rem;
+  font-family: var(--wms-premium-font);
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+
+.wms-ops-quality-lot-serial-tooltip {
+  z-index: 5200;
+  max-width: min(22rem, calc(100vw - 1.5rem));
+  overflow: hidden;
+  border: 1px solid color-mix(in oklab, var(--wms-brand-primary) 32%, var(--wms-app-border)) !important;
+  background: color-mix(in oklab, var(--wms-app-panel) 96%, black) !important;
+  padding: 0 !important;
+  color: var(--wms-app-text) !important;
+  box-shadow: 0 12px 40px color-mix(in oklab, black 45%, transparent);
+}
+
+html:not(.skin-premium) .wms-ops-quality-lot-serial-tooltip {
+  border-radius: 0 !important;
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+html.skin-premium .wms-ops-quality-lot-serial-tooltip {
+  border-radius: 0.75rem !important;
+  font-family: var(--wms-premium-font);
+}
+
+.wms-ops-quality-lot-serial-tooltip__head {
+  border-bottom: 1px solid color-mix(in oklab, var(--wms-brand-primary) 18%, transparent);
+  background: color-mix(in oklab, var(--wms-brand-primary) 8%, transparent);
+  padding: 0.45rem 0.75rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--wms-brand-primary);
+}
+
+html.skin-premium .wms-ops-quality-lot-serial-tooltip__head {
+  letter-spacing: 0.08em;
+}
+
+.wms-ops-quality-lot-serial-tooltip__list {
+  margin: 0;
+  max-height: 14rem;
+  list-style: none;
+  overflow: auto;
+  padding: 0.45rem 0.75rem 0.55rem;
+}
+
+.wms-ops-quality-lot-serial-tooltip__item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  padding: 0.2rem 0;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  font-variant-numeric: tabular-nums;
+}
+
+.wms-ops-quality-lot-serial-tooltip__item + .wms-ops-quality-lot-serial-tooltip__item {
+  border-top: 1px solid color-mix(in oklab, var(--wms-app-border) 70%, transparent);
+}
+
+.wms-ops-quality-lot-serial-tooltip__lot {
+  color: color-mix(in oklab, var(--wms-app-text) 72%, transparent);
+}
+
+.wms-ops-quality-lot-serial-tooltip__sep {
+  color: var(--wms-app-text-muted);
+}
+
+.wms-ops-quality-lot-serial-tooltip__serial {
+  font-weight: 600;
+  color: var(--wms-app-text);
 }
 
 .dark .wms-ops-list .wms-ops-status-badge--neutral {
@@ -21662,19 +21773,24 @@ html.skin-premium .wms-ops-detail-dialog [data-slot='dialog-close']:hover {
 }
 
 .wms-ops-detail-dialog [data-slot='tabs-list'].wms-ops-detail-subtabs .wms-ops-detail-tab-indicator {
-  width: calc((100% - 1.46rem) / 4);
+  /* 5 sekme: padding 0.25rem*2 + gap 0.25rem*4 = 1.5rem */
+  width: calc((100% - 1.5rem) / 5);
 }
 
 .wms-ops-detail-dialog [data-slot='tabs-list'].wms-ops-detail-subtabs--erp .wms-ops-detail-tab-indicator {
-  transform: translateX(calc(100% + 0.3rem));
+  transform: translateX(calc(100% + 0.25rem));
+}
+
+.wms-ops-detail-dialog [data-slot='tabs-list'].wms-ops-detail-subtabs--routing .wms-ops-detail-tab-indicator {
+  transform: translateX(calc(2 * (100% + 0.25rem)));
 }
 
 .wms-ops-detail-dialog [data-slot='tabs-list'].wms-ops-detail-subtabs--additional .wms-ops-detail-tab-indicator {
-  transform: translateX(calc(2 * (100% + 0.3rem)));
+  transform: translateX(calc(3 * (100% + 0.25rem)));
 }
 
 .wms-ops-detail-dialog [data-slot='tabs-list'].wms-ops-detail-subtabs--audit .wms-ops-detail-tab-indicator {
-  transform: translateX(calc(3 * (100% + 0.3rem)));
+  transform: translateX(calc(4 * (100% + 0.25rem)));
 }
 
 .wms-ops-detail-dialog [data-slot='tabs-trigger'].wms-ops-detail-main-tab,
@@ -21754,7 +21870,11 @@ html.skin-premium .wms-ops-detail-dialog [data-slot='tabs-trigger'].wms-ops-deta
 }
 
 html.skin-premium .wms-ops-detail-dialog [data-slot='tabs-trigger'].wms-ops-detail-subtab {
-  font-size: 0.72rem !important;
+  font-size: 0.68rem !important;
+  white-space: nowrap !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-inline: 0.35rem !important;
 }
 
 html.skin-premium .wms-ops-detail-dialog [data-slot='tabs-trigger'].wms-ops-detail-main-tab:hover:not([data-state='active']),

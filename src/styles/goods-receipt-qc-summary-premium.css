@@ -1,0 +1,351 @@
+/* Goods receipt detail: quality control summary (Premium) — compact */
+html.skin-premium .wms-ops-qc-summary {
+  --qc-accepted: #059669;
+  --qc-quarantine: #7c3aed;
+  --qc-rejected: #e11d48;
+  --qc-pending: #d97706;
+  margin-top: 0.55rem;
+  border: 1px solid color-mix(in oklab, #7c3aed 18%, var(--wms-ops-card-border, rgba(148, 163, 184, 0.28)));
+  border-radius: 0.85rem;
+  background:
+    linear-gradient(145deg, color-mix(in oklab, #7c3aed 7%, transparent), transparent 42%),
+    color-mix(in oklab, var(--wms-ops-card-bg, #fff) 92%, #ede9fe);
+  box-shadow: 0 1px 2px color-mix(in oklab, #0f172a 4%, transparent);
+  overflow: hidden;
+}
+
+html.dark.skin-premium .wms-ops-qc-summary {
+  background:
+    linear-gradient(145deg, color-mix(in oklab, #7c3aed 12%, transparent), transparent 45%),
+    color-mix(in oklab, #1e1b4b 35%, #0f172a);
+  border-color: color-mix(in oklab, #a78bfa 26%, transparent);
+}
+
+html.skin-premium .wms-ops-qc-summary__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.65rem;
+  padding: 0.45rem 0.7rem;
+}
+
+html.skin-premium .wms-ops-qc-summary__title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.45rem;
+  min-width: 0;
+}
+
+html.skin-premium .wms-ops-qc-summary__icon {
+  display: grid;
+  place-items: center;
+  width: 1.45rem;
+  height: 1.45rem;
+  border-radius: 0.5rem;
+  color: #6d28d9;
+  background: color-mix(in oklab, #7c3aed 14%, transparent);
+  flex-shrink: 0;
+}
+
+html.dark.skin-premium .wms-ops-qc-summary__icon {
+  color: #c4b5fd;
+  background: color-mix(in oklab, #a78bfa 18%, transparent);
+}
+
+html.skin-premium .wms-ops-qc-summary__title {
+  font-family: 'Outfit Variable', Outfit, Manrope, system-ui, sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: color-mix(in oklab, #312e81 70%, #0f172a);
+}
+
+html.dark.skin-premium .wms-ops-qc-summary__title {
+  color: #ede9fe;
+}
+
+html.skin-premium .wms-ops-qc-summary__count {
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 500;
+  color: #6d28d9;
+  background: color-mix(in oklab, #7c3aed 12%, transparent);
+  white-space: nowrap;
+}
+
+html.dark.skin-premium .wms-ops-qc-summary__count {
+  color: #ddd6fe;
+  background: color-mix(in oklab, #a78bfa 16%, transparent);
+}
+
+html.skin-premium .wms-ops-qc-summary__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem;
+  margin: 0;
+  margin-left: auto;
+}
+
+html.skin-premium .wms-ops-qc-summary__meta-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0.15rem 0.45rem;
+  border-radius: 0.55rem;
+  border: 1px solid color-mix(in oklab, #c4b5fd 35%, transparent);
+  background: color-mix(in oklab, #fff 70%, #f5f3ff);
+}
+
+html.dark.skin-premium .wms-ops-qc-summary__meta-item {
+  border-color: color-mix(in oklab, #a78bfa 22%, transparent);
+  background: color-mix(in oklab, #1e1b4b 40%, #0f172a);
+}
+
+html.skin-premium .wms-ops-qc-summary__meta-item--pending {
+  border-color: color-mix(in oklab, #f59e0b 35%, transparent);
+  background: color-mix(in oklab, #f59e0b 10%, #fff);
+}
+
+html.dark.skin-premium .wms-ops-qc-summary__meta-item--pending {
+  background: color-mix(in oklab, #f59e0b 12%, #0f172a);
+}
+
+html.skin-premium .wms-ops-qc-summary__meta-item dt {
+  font-size: 0.62rem;
+  font-weight: 500;
+  color: #64748b;
+}
+
+html.skin-premium .wms-ops-qc-summary__meta-item dt::after {
+  content: ':';
+}
+
+html.skin-premium .wms-ops-qc-summary__meta-item dd {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+html.dark.skin-premium .wms-ops-qc-summary__meta-item dd {
+  color: #f8fafc;
+}
+
+html.skin-premium .wms-ops-qc-summary__meta-item--pending dd {
+  color: #b45309;
+}
+
+html.dark.skin-premium .wms-ops-qc-summary__meta-item--pending dd {
+  color: #fcd34d;
+}
+
+html.skin-premium .wms-ops-qc-summary__lines {
+  list-style: none;
+  margin: 0;
+  padding: 0 0.55rem 0.55rem;
+  display: grid;
+  gap: 0.35rem;
+}
+
+html.skin-premium .wms-ops-qc-summary__line {
+  border: 1px solid color-mix(in oklab, #c4b5fd 28%, transparent);
+  border-radius: 0.7rem;
+  background: color-mix(in oklab, #fff 78%, #f5f3ff);
+  padding: 0.4rem 0.55rem;
+}
+
+html.dark.skin-premium .wms-ops-qc-summary__line {
+  border-color: color-mix(in oklab, #a78bfa 20%, transparent);
+  background: color-mix(in oklab, #1e1b4b 28%, #0f172a);
+}
+
+html.skin-premium .wms-ops-qc-summary__line-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.2rem 0.5rem;
+}
+
+html.skin-premium .wms-ops-qc-summary__stock {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+html.skin-premium .wms-ops-qc-summary__stock-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #6d28d9;
+}
+
+html.dark.skin-premium .wms-ops-qc-summary__stock-code {
+  color: #c4b5fd;
+}
+
+html.skin-premium .wms-ops-qc-summary__stock-name {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+html.dark.skin-premium .wms-ops-qc-summary__stock-name {
+  color: #f8fafc;
+}
+
+html.skin-premium .wms-ops-qc-summary__line-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 0.3rem;
+  font-size: 0.66rem;
+  color: #64748b;
+}
+
+html.skin-premium .wms-ops-qc-summary__qty {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: #334155;
+}
+
+html.dark.skin-premium .wms-ops-qc-summary__qty {
+  color: #e2e8f0;
+}
+
+html.skin-premium .wms-ops-qc-summary__awaiting {
+  margin: 0.3rem 0 0;
+  padding: 0.25rem 0.45rem;
+  border-radius: 0.5rem;
+  background: color-mix(in oklab, #f59e0b 12%, transparent);
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: #b45309;
+}
+
+html.dark.skin-premium .wms-ops-qc-summary__awaiting {
+  color: #fcd34d;
+}
+
+html.skin-premium .wms-ops-qc-summary__body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.5rem;
+  margin-top: 0.3rem;
+}
+
+html.skin-premium .wms-ops-qc-summary__bar {
+  flex: 1 1 6rem;
+  display: flex;
+  height: 0.32rem;
+  min-width: 5rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in oklab, #c4b5fd 16%, #e2e8f0);
+}
+
+html.dark.skin-premium .wms-ops-qc-summary__bar {
+  background: color-mix(in oklab, #a78bfa 14%, #1e293b);
+}
+
+html.skin-premium .wms-ops-qc-summary__bar-seg {
+  display: block;
+  height: 100%;
+  min-width: 2px;
+}
+
+html.skin-premium .wms-ops-qc-summary__bar-seg--accepted { background: linear-gradient(90deg, #34d399, var(--qc-accepted)); }
+html.skin-premium .wms-ops-qc-summary__bar-seg--quarantine { background: linear-gradient(90deg, #a78bfa, var(--qc-quarantine)); }
+html.skin-premium .wms-ops-qc-summary__bar-seg--rejected { background: linear-gradient(90deg, #fb7185, var(--qc-rejected)); }
+html.skin-premium .wms-ops-qc-summary__bar-seg--pending { background: linear-gradient(90deg, #fbbf24, var(--qc-pending)); }
+
+html.skin-premium .wms-ops-qc-summary__metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  flex: 2 1 14rem;
+}
+
+html.skin-premium .wms-ops-qc-summary__metric {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.25rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.5rem;
+  border: 1px solid color-mix(in oklab, #cbd5e1 55%, transparent);
+  background: color-mix(in oklab, #fff 85%, #f8fafc);
+  opacity: 0.75;
+  white-space: nowrap;
+}
+
+html.dark.skin-premium .wms-ops-qc-summary__metric {
+  border-color: color-mix(in oklab, #475569 50%, transparent);
+  background: color-mix(in oklab, #0f172a 70%, transparent);
+}
+
+html.skin-premium .wms-ops-qc-summary__metric--active { opacity: 1; }
+
+html.skin-premium .wms-ops-qc-summary__metric-label {
+  font-size: 0.6rem;
+  font-weight: 500;
+  color: #64748b;
+}
+
+html.skin-premium .wms-ops-qc-summary__metric-value {
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #0f172a;
+}
+
+html.dark.skin-premium .wms-ops-qc-summary__metric-value {
+  color: #f8fafc;
+}
+
+html.skin-premium .wms-ops-qc-summary__metric-pct {
+  font-size: 0.6rem;
+  font-weight: 500;
+  color: #64748b;
+}
+
+html.skin-premium .wms-ops-qc-summary__metric--accepted.wms-ops-qc-summary__metric--active {
+  border-color: color-mix(in oklab, var(--qc-accepted) 30%, transparent);
+  background: color-mix(in oklab, var(--qc-accepted) 8%, #fff);
+}
+html.dark.skin-premium .wms-ops-qc-summary__metric--accepted.wms-ops-qc-summary__metric--active {
+  background: color-mix(in oklab, var(--qc-accepted) 14%, #0f172a);
+}
+html.skin-premium .wms-ops-qc-summary__metric--accepted .wms-ops-qc-summary__metric-value { color: var(--qc-accepted); }
+
+html.skin-premium .wms-ops-qc-summary__metric--quarantine.wms-ops-qc-summary__metric--active {
+  border-color: color-mix(in oklab, var(--qc-quarantine) 28%, transparent);
+  background: color-mix(in oklab, var(--qc-quarantine) 7%, #fff);
+}
+html.dark.skin-premium .wms-ops-qc-summary__metric--quarantine.wms-ops-qc-summary__metric--active {
+  background: color-mix(in oklab, var(--qc-quarantine) 16%, #0f172a);
+}
+html.skin-premium .wms-ops-qc-summary__metric--quarantine .wms-ops-qc-summary__metric-value { color: var(--qc-quarantine); }
+
+html.skin-premium .wms-ops-qc-summary__metric--rejected.wms-ops-qc-summary__metric--active {
+  border-color: color-mix(in oklab, var(--qc-rejected) 28%, transparent);
+  background: color-mix(in oklab, var(--qc-rejected) 7%, #fff);
+}
+html.dark.skin-premium .wms-ops-qc-summary__metric--rejected.wms-ops-qc-summary__metric--active {
+  background: color-mix(in oklab, var(--qc-rejected) 14%, #0f172a);
+}
+html.skin-premium .wms-ops-qc-summary__metric--rejected .wms-ops-qc-summary__metric-value { color: var(--qc-rejected); }
+
+html.skin-premium .wms-ops-qc-summary__metric--pending.wms-ops-qc-summary__metric--active {
+  border-color: color-mix(in oklab, var(--qc-pending) 30%, transparent);
+  background: color-mix(in oklab, var(--qc-pending) 8%, #fff);
+}
+html.dark.skin-premium .wms-ops-qc-summary__metric--pending.wms-ops-qc-summary__metric--active {
+  background: color-mix(in oklab, var(--qc-pending) 14%, #0f172a);
+}
+html.skin-premium .wms-ops-qc-summary__metric--pending .wms-ops-qc-summary__metric-value { color: var(--qc-pending); }

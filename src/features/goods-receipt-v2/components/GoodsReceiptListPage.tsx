@@ -11,7 +11,6 @@ import { OpsStatusBadge, inferOpsStatusTone, inferQualityStatusTone } from '@/co
 import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { formatProjectDate } from '@/lib/project-format';
-import { toTurkishApiSearch } from '@/lib/turkish-search';
 import { goodsReceiptV2Api } from '../api/goods-receipt.api';
 import { goodsReceiptEnumLabel, goodsReceiptEnumHint } from '../localization/enum-labels';
 import type { GoodsReceiptGridRow } from '../types/goods-receipt.types';
@@ -29,25 +28,10 @@ import {
 } from './GoodsReceiptDetailDialog';
 import { GoodsReceiptErpRetryDialog } from './GoodsReceiptErpRetryDialog';
 import { GoodsReceiptListFiltersPopover } from './GoodsReceiptListFiltersPopover';
-import { GoodsReceiptListSearch } from './GoodsReceiptListSearch';
 
 type OutputMode = 'print' | 'pdf';
 
 const ERP_RETRY_STATUSES = ['Pending', 'Failed', 'CommitUncertain'] as const;
-
-/** Belge no / tedarikçi / irsaliye / depo / kayıt eden / güncelleyen — tarih yok. */
-const LIST_SEARCH_FIELDS = [
-  'documentNo',
-  'supplierCode',
-  'supplierName',
-  'waybillNo',
-  'electronicWaybillNo',
-  'warehouseName',
-  'createdBy',
-  'createdByName',
-  'updatedBy',
-  'updatedByName',
-] as const;
 
 export function GoodsReceiptListPage(): ReactElement {
   const { t, moduleReady } = useModuleTranslation('goods-receipt-v2');
@@ -55,7 +39,6 @@ export function GoodsReceiptListPage(): ReactElement {
   const [detailView, setDetailView] = useState<GoodsReceiptDetailViewState | null>(null);
   const [erpRetryRow, setErpRetryRow] = useState<GoodsReceiptGridRow | null>(null);
   const [listFacets, setListFacets] = useState<GoodsReceiptListFacets>(EMPTY_GOODS_RECEIPT_LIST_FACETS);
-  const [listSearch, setListSearch] = useState('');
   const [outputBusy, setOutputBusy] = useState('');
   const [gridVersion, setGridVersion] = useState(0);
 
@@ -64,17 +47,10 @@ export function GoodsReceiptListPage(): ReactElement {
     [listFacets],
   );
 
-  const onListSearchChange = useCallback((value: string) => {
-    setListSearch((current) => (current === value ? current : value));
-  }, []);
-
   const fetchPage = useCallback(
     async (request: GridRequest) => {
-      const apiSearch = toTurkishApiSearch(listSearch);
       const page = await goodsReceiptV2Api.paged({
         ...request,
-        search: apiSearch || null,
-        searchFields: apiSearch ? [...LIST_SEARCH_FIELDS] : undefined,
         filterLogic: 'and',
         filters: [...facetFilters, ...request.filters],
       });
@@ -83,7 +59,7 @@ export function GoodsReceiptListPage(): ReactElement {
         items: await enrichGoodsReceiptListWaybills(page.items),
       };
     },
-    [facetFilters, listSearch],
+    [facetFilters],
   );
 
   const canRetryErp = useCallback(
@@ -135,7 +111,7 @@ export function GoodsReceiptListPage(): ReactElement {
   const columns = useMemo<GridColumn<GoodsReceiptGridRow>[]>(() => {
     void moduleReady;
     return [
-      ...systemColumns<GoodsReceiptGridRow>(),
+      ...systemColumns<GoodsReceiptGridRow>({ searchable: ['createdBy', 'updatedBy'] }),
       {
         key: 'documentNo',
         label: t('list.documentNo'),
@@ -252,6 +228,7 @@ export function GoodsReceiptListPage(): ReactElement {
         label: t('list.line'),
         sortable: true,
         filterable: true,
+        searchable: false,
         render: (r) => r.lineCount,
       },
       {
@@ -323,8 +300,8 @@ export function GoodsReceiptListPage(): ReactElement {
   return (
     <>
       <AdvancedDataGrid<GoodsReceiptGridRow>
-        pageKey="goods-receipts-list-v4"
-        refreshKey={`${gridVersion}:${listSearch}:${JSON.stringify(listFacets)}`}
+        pageKey="goods-receipts-list-v5"
+        refreshKey={`${gridVersion}:${JSON.stringify(listFacets)}`}
         eyebrow={
           <>
             <span>{t('list.eyebrowParent')}</span>
@@ -337,8 +314,6 @@ export function GoodsReceiptListPage(): ReactElement {
         description={t('list.description')}
         columns={columns}
         fetchPage={fetchPage}
-        hideSearch
-        toolbarStartExtra={<GoodsReceiptListSearch onSearchChange={onListSearchChange} />}
         toolbarBelowExtra={
           <GoodsReceiptListFiltersPopover facets={listFacets} onFacetsChange={setListFacets} />
         }

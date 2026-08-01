@@ -3,14 +3,14 @@ import type { GoodsReceiptGridRow } from '../types/goods-receipt.types';
 type WaybillSource = object | null | undefined;
 
 const PREFERRED_KEYS = [
-  'waybillNo',
-  'WaybillNo',
   'electronicWaybillNo',
   'ElectronicWaybillNo',
-  'gibWaybillNo',
-  'GibWaybillNo',
   'eWaybillNo',
   'EWaybillNo',
+  'gibWaybillNo',
+  'GibWaybillNo',
+  'waybillNo',
+  'WaybillNo',
   'sourceWaybillNo',
   'SourceWaybillNo',
 ] as const;

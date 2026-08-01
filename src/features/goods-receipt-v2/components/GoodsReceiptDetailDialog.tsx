@@ -1,4 +1,5 @@
-import { useMemo, useState, type ReactElement, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactElement, type ReactNode } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowRightLeft,
   Ban,
@@ -8,36 +9,39 @@ import {
   PackageCheck,
   PackageOpen,
   Printer,
-  RefreshCw,
   Search,
+  ShieldCheck,
   Warehouse,
 } from 'lucide-react';
 import { OpsLoadingState } from '@/components/shared/OpsLoadingState';
 import { OpsCodeBadge, OpsStatusBadge, inferOpsStatusTone, inferQualityStatusTone } from '@/components/shared/OpsStatusBadge';
+import { useTheme } from '@/components/theme-provider';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
+import { qualityApi, type QualityInspectionDetail } from '@/features/quality/api/quality.api';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { useUserDisplayNameDirectory } from '@/hooks/useUserDisplayNameDirectory';
 import { formatProjectDate, formatProjectDateTime, formatProjectNumber } from '@/lib/project-format';
 import { cn } from '@/lib/utils';
 import i18n from '@/lib/i18n';
+import { goodsReceiptV2Api } from '../api/goods-receipt.api';
 import { goodsReceiptEnumLabel, goodsReceiptEnumHint } from '../localization/enum-labels';
 import type {
   GoodsReceiptDetail,
   GoodsReceiptDetailLine,
   GoodsReceiptLifecycleResult,
+  GoodsReceiptRoutingResult,
   GoodsReceiptSplitRoutingResult,
 } from '../types/goods-receipt.types';
 import { StockIdentityCell } from '@/components/shared/StockIdentityCell';
 import { resolveGoodsReceiptWaybillNo } from '../utils/goods-receipt-waybill';
+import { mergeGoodsReceiptRoutes } from '../utils/goods-receipt-routes';
 import { GoodsReceiptLifecycleDialog, type GoodsReceiptLifecycleAction } from './GoodsReceiptLifecycleDialog';
-import { GoodsReceiptErpRetryDialog } from './GoodsReceiptErpRetryDialog';
 import { GoodsReceiptRoutingDialog } from './GoodsReceiptRoutingDialog';
 
 type OutputMode = 'print' | 'pdf';
 type MainTab = 'info' | 'content';
-type InfoSubTab = 'status' | 'erp' | 'additional' | 'audit';
+type InfoSubTab = 'status' | 'erp' | 'routing' | 'additional' | 'audit';
 
 export type GoodsReceiptDetailViewState = {
   id: number;
@@ -61,16 +65,20 @@ export function GoodsReceiptDetailDialog({
   onRoutingCompleted: (result: GoodsReceiptSplitRoutingResult) => Promise<void>;
 }): ReactElement {
   const { t } = useModuleTranslation('goods-receipt-v2');
+  const queryClient = useQueryClient();
   const userNames = useUserDisplayNameDirectory();
-  const { can } = usePermissionAccess();
   const [mainTab, setMainTab] = useState<MainTab>('content');
   const [infoSubTab, setInfoSubTab] = useState<InfoSubTab>('status');
   const [action, setAction] = useState<GoodsReceiptLifecycleAction | null>(null);
   const [routeKind, setRouteKind] = useState<'transfer' | 'outbound' | null>(null);
-  const [erpRetryOpen, setErpRetryOpen] = useState(false);
+  const [sessionRoutes, setSessionRoutes] = useState<GoodsReceiptRoutingResult[]>([]);
   const [lineSearch, setLineSearch] = useState('');
   const detail = state.detail;
   const header = detail?.header;
+
+  useEffect(() => {
+    setSessionRoutes([]);
+  }, [state.id]);
 
   const actorLabel = (userId?: number | null, name?: string | null) => {
     const resolved = name?.trim() || (userId != null ? userNames.get(userId) : undefined);
@@ -117,13 +125,58 @@ export function GoodsReceiptDetailDialog({
     [detail],
   );
 
+  const qualityInspectionQuery = useQuery({
+    queryKey: ['goods-receipt-detail-quality-inspection', header?.documentNo],
+    enabled: Boolean(header?.documentNo && qualityLines.length > 0),
+    staleTime: 30_000,
+    queryFn: async (): Promise<QualityInspectionDetail | null> => {
+      const documentNo = header?.documentNo;
+      if (!documentNo) return null;
+      const page = await qualityApi.inspectionsPaged({
+        pageNumber: 1,
+        pageSize: 10,
+        search: null,
+        sortBy: 'id',
+        sortDirection: 'desc',
+        filterLogic: 'and',
+        filters: [{ column: 'sourceDocumentNo', operator: 'equals', value: documentNo }],
+      });
+      const match = page.items.find((item) => item.sourceDocumentNo === documentNo) ?? page.items[0];
+      if (!match) return null;
+      return qualityApi.inspection(match.id);
+    },
+  });
+
+  const routesQuery = useQuery({
+    queryKey: ['goods-receipt-detail-routes', state.id, header?.documentNo],
+    enabled: Boolean(state.id && detail && !state.loading),
+    staleTime: 15_000,
+    queryFn: () => goodsReceiptV2Api.listRoutes(state.id),
+  });
+
+  const routingRoutes = useMemo(
+    () => mergeGoodsReceiptRoutes(detail?.routes, routesQuery.data, sessionRoutes),
+    [detail?.routes, routesQuery.data, sessionRoutes],
+  );
+  const transferRoutes = useMemo(
+    () => routingRoutes.filter((route) => route.routeType === 'WarehouseTransfer'),
+    [routingRoutes],
+  );
+  const outboundRoutes = useMemo(
+    () => routingRoutes.filter((route) => route.routeType === 'WarehouseOutbound'),
+    [routingRoutes],
+  );
+  const routedTotal = useMemo(
+    () => (detail?.lines ?? []).reduce((sum, line) => sum + (line.routedQuantity || 0), 0),
+    [detail?.lines],
+  );
+  const routableRemaining = useMemo(
+    () => (detail?.lines ?? []).reduce((sum, line) => sum + (line.routableQuantity || 0), 0),
+    [detail?.lines],
+  );
+
   const printBusy = Boolean(header && busyKey === `${header.id}:all:print`);
   const pdfBusy = Boolean(header && busyKey === `${header.id}:all:pdf`);
-  const erpRetryAvailable = Boolean(
-    header
-      && can('WMS.GOODS_RECEIPT.ERP_RETRY')
-      && ['Pending', 'Failed', 'CommitUncertain'].includes(header.erpIntegrationStatus),
-  );
 
   return (
     <Dialog
@@ -220,15 +273,6 @@ export function GoodsReceiptDetailDialog({
                       onClick={() => setRouteKind('transfer')}
                     />
                   ) : null}
-                  {erpRetryAvailable ? (
-                    <LifecycleButton
-                      label={header.erpIntegrationStatus === 'CommitUncertain'
-                        ? t('list.erpReconcileResend')
-                        : t('list.erpSendToErp')}
-                      icon={<RefreshCw className="size-4" />}
-                      onClick={() => setErpRetryOpen(true)}
-                    />
-                  ) : null}
                   <LifecycleButton
                     label={t('list.printLabels')}
                     icon={printBusy ? <Loader2 className="size-4 animate-spin" /> : <Printer className="size-4" />}
@@ -301,7 +345,6 @@ export function GoodsReceiptDetailDialog({
                       <OpsDetailField label={t('list.initiationMode')}>
                         {goodsReceiptEnumLabel(t, 'initiationMode', header.initiationMode)}
                       </OpsDetailField>
-                      <OpsDetailField label={t('list.priority')}>{String(header.priority)}</OpsDetailField>
                       <OpsDetailField label={t('list.documentDate')}>
                         {formatProjectDate(header.documentDate)}
                       </OpsDetailField>
@@ -328,6 +371,9 @@ export function GoodsReceiptDetailDialog({
                       </TabsTrigger>
                       <TabsTrigger value="erp" className="wms-ops-detail-subtab">
                         {t('list.erpInfo')}
+                      </TabsTrigger>
+                      <TabsTrigger value="routing" className="wms-ops-detail-subtab">
+                        {t('list.routingInfo')}
                       </TabsTrigger>
                       <TabsTrigger value="additional" className="wms-ops-detail-subtab">
                         {t('list.additionalInfo')}
@@ -407,6 +453,68 @@ export function GoodsReceiptDetailDialog({
                           />
                         </OpsDetailRow>
                       </div>
+                    </TabsContent>
+
+                    <TabsContent value="routing" className="mt-4">
+                      <div className="wms-ops-detail-panel wms-ops-detail-panel--rows">
+                        <OpsDetailRow label={t('list.routedTotal')}>
+                          {formatProjectNumber(routedTotal)}
+                        </OpsDetailRow>
+                        <OpsDetailRow label={t('list.routableRemaining')}>
+                          {formatProjectNumber(routableRemaining)}
+                        </OpsDetailRow>
+                        <OpsDetailRow label={t('list.routeTransferDocs')}>
+                          {transferRoutes.length > 0
+                            ? transferRoutes
+                                .map((route) =>
+                                  `${route.targetDocumentNo} (${formatProjectNumber(route.routedQuantity)})`,
+                                )
+                                .join(', ')
+                            : '—'}
+                        </OpsDetailRow>
+                        <OpsDetailRow label={t('list.routeOutboundDocs')}>
+                          {outboundRoutes.length > 0
+                            ? outboundRoutes
+                                .map((route) =>
+                                  `${route.targetDocumentNo} (${formatProjectNumber(route.routedQuantity)})`,
+                                )
+                                .join(', ')
+                            : '—'}
+                        </OpsDetailRow>
+                      </div>
+
+                      {routesQuery.isFetching && routingRoutes.length === 0 ? (
+                        <p className="mt-3 text-xs text-slate-400">{t('list.routingLoading')}</p>
+                      ) : null}
+
+                      {routingRoutes.length > 0 ? (
+                        <ul className="mt-3 space-y-2">
+                          {routingRoutes.map((route) => (
+                            <li
+                              key={`${route.routeType}-${route.targetDocumentId}-${route.routingBatchId}-${route.targetDocumentNo}`}
+                              className="rounded-lg border border-[var(--wms-app-border)] bg-black/10 px-3 py-2 dark:bg-white/5"
+                            >
+                              <div className="flex flex-wrap items-center justify-between gap-2">
+                                <div className="min-w-0">
+                                  <span className="text-xs text-slate-400">
+                                    {route.routeType === 'WarehouseTransfer'
+                                      ? t('list.routeTypeTransfer')
+                                      : t('list.routeTypeOutbound')}
+                                  </span>
+                                  <div className="font-mono text-sm font-medium">
+                                    {route.targetDocumentNo}
+                                  </div>
+                                </div>
+                                <span className="font-mono text-sm">
+                                  {formatProjectNumber(route.routedQuantity)}
+                                </span>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : routedTotal <= 0 && !routesQuery.isFetching ? (
+                        <p className="mt-3 text-xs text-slate-400">{t('list.routingEmpty')}</p>
+                      ) : null}
                     </TabsContent>
 
                     <TabsContent value="additional" className="mt-4">
@@ -590,6 +698,9 @@ export function GoodsReceiptDetailDialog({
                     <QualitySummaryPanel
                       headerStatus={header.qualityStatus}
                       lines={qualityLines}
+                      inspection={qualityInspectionQuery.data ?? null}
+                      inspectionLoading={qualityInspectionQuery.isFetching}
+                      userNames={userNames}
                       t={t}
                     />
                   ) : null}
@@ -614,18 +725,12 @@ export function GoodsReceiptDetailDialog({
                 initialKind={routeKind}
                 onClose={() => setRouteKind(null)}
                 onCompleted={async (result) => {
+                  setSessionRoutes((prev) => mergeGoodsReceiptRoutes(prev, result.routes));
                   setRouteKind(null);
                   await onRoutingCompleted(result);
-                }}
-              />
-            ) : null}
-            {erpRetryOpen ? (
-              <GoodsReceiptErpRetryDialog
-                header={header}
-                close={() => setErpRetryOpen(false)}
-                completed={async () => {
-                  setErpRetryOpen(false);
-                  await onLifecycleCompleted(null);
+                  await queryClient.invalidateQueries({
+                    queryKey: ['goods-receipt-detail-routes', state.id],
+                  });
                 }}
               />
             ) : null}
@@ -777,73 +882,226 @@ function lineQualityMetrics(line: GoodsReceiptDetailLine) {
   };
 }
 
+function resolveQcActorName(
+  userId: number | null | undefined,
+  userNames: Map<number, string>,
+  t: (key: string, options?: Record<string, unknown>) => string,
+): string | undefined {
+  if (userId == null) return undefined;
+  return userNames.get(userId)?.trim() || t('list.qcApproverUnknown', { id: userId });
+}
+
 function QualitySummaryPanel({
   headerStatus,
   lines,
+  inspection,
+  inspectionLoading,
+  userNames,
   t,
 }: {
   headerStatus: string;
   lines: GoodsReceiptDetailLine[];
+  inspection: QualityInspectionDetail | null;
+  inspectionLoading: boolean;
+  userNames: Map<number, string>;
   t: (key: string, options?: Record<string, unknown>) => string;
 }): ReactElement {
+  const { skin } = useTheme();
+  const isPremium = skin === 'premium';
+  const inspectionLines = inspection?.lines ?? [];
+
+  const approverNames = Array.from(
+    new Set(
+      inspectionLines
+        .map((qcLine) => resolveQcActorName(qcLine.decisionBy, userNames, t))
+        .filter((name): name is string => Boolean(name)),
+    ),
+  );
+  const openedBy =
+    inspection?.header.createdByName?.trim() ||
+    resolveQcActorName(inspection?.header.createdBy, userNames, t);
+  const hasAnyDecision = inspectionLines.some((qcLine) => qcLine.decisionBy != null);
+  const approverValue =
+    approverNames.length > 0
+      ? approverNames.join(', ')
+      : hasAnyDecision
+        ? '—'
+        : t('list.qcApproverPending');
+
   return (
-    <div className="rounded-xl border border-violet-500/30 bg-violet-500/10 px-4 py-3">
-      <div className="flex flex-wrap items-center gap-2">
-        <OpsStatusBadge
-          tone={inferQualityStatusTone(headerStatus)}
-          title={goodsReceiptEnumHint(t as never, 'qualityStatus', headerStatus)}
-        >
-          {goodsReceiptEnumLabel(t as never, 'qualityStatus', headerStatus)}
-        </OpsStatusBadge>
-        <strong className="text-sm">{t('list.qcSummaryTitle')}</strong>
-        <span className="text-xs text-slate-400">
-          {t('list.qcLinesSuffix', { count: lines.length })}
-        </span>
-      </div>
-      <p className="mt-1 text-xs text-slate-400">{t('list.qcSummaryHint')}</p>
-      <ul className="mt-3 space-y-2">
+    <section
+      className={cn(
+        'wms-ops-qc-summary',
+        isPremium ? 'wms-ops-qc-summary--premium' : 'wms-ops-qc-summary--terminal',
+      )}
+      aria-label={t('list.qcSummaryTitle')}
+    >
+      <header className="wms-ops-qc-summary__header">
+        <div className="wms-ops-qc-summary__title-row">
+          {!isPremium ? (
+            <span className="wms-ops-qc-summary__prompt" aria-hidden>
+              {'>'}
+            </span>
+          ) : (
+            <span className="wms-ops-qc-summary__icon" aria-hidden>
+              <ShieldCheck className="size-3.5" />
+            </span>
+          )}
+          <strong className="wms-ops-qc-summary__title">{t('list.qcSummaryTitle')}</strong>
+          <OpsStatusBadge
+            tone={inferQualityStatusTone(headerStatus)}
+            title={goodsReceiptEnumHint(t as never, 'qualityStatus', headerStatus)}
+          >
+            {goodsReceiptEnumLabel(t as never, 'qualityStatus', headerStatus)}
+          </OpsStatusBadge>
+          <span className="wms-ops-qc-summary__count">
+            {t('list.qcLinesSuffix', { count: lines.length })}
+          </span>
+        </div>
+
+        <dl className="wms-ops-qc-summary__meta">
+          {inspectionLoading && !inspection ? (
+            <div className="wms-ops-qc-summary__meta-item wms-ops-qc-summary__meta-item--muted">
+              <dt>{t('list.qcApprover')}</dt>
+              <dd>{t('list.qcApproverLoading')}</dd>
+            </div>
+          ) : (
+            <>
+              <div
+                className={cn(
+                  'wms-ops-qc-summary__meta-item',
+                  approverNames.length === 0 && 'wms-ops-qc-summary__meta-item--pending',
+                )}
+              >
+                <dt>{t('list.qcApprover')}</dt>
+                <dd>{approverValue}</dd>
+              </div>
+              {openedBy ? (
+                <div className="wms-ops-qc-summary__meta-item">
+                  <dt>{t('list.qcOpenedBy')}</dt>
+                  <dd>{openedBy}</dd>
+                </div>
+              ) : null}
+            </>
+          )}
+        </dl>
+      </header>
+
+      <ul className="wms-ops-qc-summary__lines">
         {lines.map((line) => {
           const m = lineQualityMetrics(line);
+          const metrics = [
+            {
+              key: 'accepted',
+              label: t('list.qcAcceptedShare'),
+              qty: m.accepted,
+              pct: m.pctAccepted,
+              tone: 'accepted' as const,
+            },
+            {
+              key: 'quarantine',
+              label: t('list.qcQuarantineShare'),
+              qty: m.quarantine,
+              pct: m.pctQuarantine,
+              tone: 'quarantine' as const,
+            },
+            {
+              key: 'rejected',
+              label: t('list.qcRejectedShare'),
+              qty: m.rejected,
+              pct: m.pctRejected,
+              tone: 'rejected' as const,
+            },
+            ...(m.pendingDecision > 0
+              ? [
+                  {
+                    key: 'pending',
+                    label: t('list.qcPendingDecision'),
+                    qty: m.pendingDecision,
+                    pct: m.pctPending,
+                    tone: 'pending' as const,
+                  },
+                ]
+              : []),
+          ];
+
           return (
-            <li
-              key={line.id}
-              className="rounded-lg border border-violet-500/20 bg-black/20 px-3 py-2"
-            >
-              <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <div className="min-w-0">
-                  <span className="font-mono text-xs text-violet-300">{line.stockCode}</span>
-                  <span className="ml-2 text-sm font-medium">{line.stockName || '—'}</span>
+            <li key={line.id} className="wms-ops-qc-summary__line">
+              <div className="wms-ops-qc-summary__line-head">
+                <div className="wms-ops-qc-summary__stock">
+                  <span className="wms-ops-qc-summary__stock-code">{line.stockCode}</span>
+                  <span className="wms-ops-qc-summary__stock-name">{line.stockName || '—'}</span>
                 </div>
-                <span className="font-mono text-[0.7rem] text-slate-400">
-                  {formatProjectNumber(m.base)} {line.unitCode || ''} ·{' '}
-                  {m.baseKind === 'received' ? t('list.qcOfReceived') : t('list.qcOfExpected')}
-                </span>
+                <div className="wms-ops-qc-summary__line-meta">
+                  <span className="wms-ops-qc-summary__qty">
+                    {formatProjectNumber(m.base)} {line.unitCode || ''}
+                  </span>
+                  <span className="wms-ops-qc-summary__qty-kind">
+                    {m.baseKind === 'received' ? t('list.qcOfReceived') : t('list.qcOfExpected')}
+                  </span>
+                </div>
               </div>
+
               {m.awaitingReceipt ? (
-                <p className="mt-1 text-xs text-amber-300/90">{t('list.qcAwaitingReceipt')}</p>
+                <p className="wms-ops-qc-summary__awaiting">{t('list.qcAwaitingReceipt')}</p>
               ) : (
-                <div className="mt-2 flex flex-wrap gap-1.5 text-[0.7rem]">
-                  <span className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-emerald-300">
-                    {t('list.qcAcceptedShare')} {formatProjectNumber(m.accepted)} ({m.pctAccepted}%)
-                  </span>
-                  <span className="rounded-md border border-violet-500/30 bg-violet-500/10 px-2 py-0.5 text-violet-200">
-                    {t('list.qcQuarantineShare')} {formatProjectNumber(m.quarantine)} ({m.pctQuarantine}%)
-                  </span>
-                  <span className="rounded-md border border-rose-500/30 bg-rose-500/10 px-2 py-0.5 text-rose-300">
-                    {t('list.qcRejectedShare')} {formatProjectNumber(m.rejected)} ({m.pctRejected}%)
-                  </span>
-                  {m.pendingDecision > 0 ? (
-                    <span className="rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-amber-200">
-                      {t('list.qcPendingDecision')} {formatProjectNumber(m.pendingDecision)} ({m.pctPending}%)
-                    </span>
-                  ) : null}
+                <div className="wms-ops-qc-summary__body">
+                  <div
+                    className="wms-ops-qc-summary__bar"
+                    role="img"
+                    aria-label={`${t('list.qcAcceptedShare')} ${m.pctAccepted}%, ${t('list.qcQuarantineShare')} ${m.pctQuarantine}%, ${t('list.qcRejectedShare')} ${m.pctRejected}%`}
+                  >
+                    {m.pctAccepted > 0 ? (
+                      <span
+                        className="wms-ops-qc-summary__bar-seg wms-ops-qc-summary__bar-seg--accepted"
+                        style={{ width: `${m.pctAccepted}%` }}
+                      />
+                    ) : null}
+                    {m.pctQuarantine > 0 ? (
+                      <span
+                        className="wms-ops-qc-summary__bar-seg wms-ops-qc-summary__bar-seg--quarantine"
+                        style={{ width: `${m.pctQuarantine}%` }}
+                      />
+                    ) : null}
+                    {m.pctRejected > 0 ? (
+                      <span
+                        className="wms-ops-qc-summary__bar-seg wms-ops-qc-summary__bar-seg--rejected"
+                        style={{ width: `${m.pctRejected}%` }}
+                      />
+                    ) : null}
+                    {m.pctPending > 0 ? (
+                      <span
+                        className="wms-ops-qc-summary__bar-seg wms-ops-qc-summary__bar-seg--pending"
+                        style={{ width: `${m.pctPending}%` }}
+                      />
+                    ) : null}
+                  </div>
+
+                  <div className="wms-ops-qc-summary__metrics">
+                    {metrics.map((metric) => (
+                      <div
+                        key={metric.key}
+                        className={cn(
+                          'wms-ops-qc-summary__metric',
+                          `wms-ops-qc-summary__metric--${metric.tone}`,
+                          metric.qty > 0 && 'wms-ops-qc-summary__metric--active',
+                        )}
+                      >
+                        <span className="wms-ops-qc-summary__metric-label">{metric.label}</span>
+                        <span className="wms-ops-qc-summary__metric-value">
+                          {formatProjectNumber(metric.qty)}
+                        </span>
+                        <span className="wms-ops-qc-summary__metric-pct">{metric.pct}%</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </li>
           );
         })}
       </ul>
-    </div>
+    </section>
   );
 }
 

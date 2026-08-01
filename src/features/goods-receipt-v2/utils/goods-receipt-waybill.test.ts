@@ -6,17 +6,27 @@ import {
 } from './goods-receipt-waybill';
 
 describe('goods-receipt-waybill', () => {
-  it('prefers waybillNo over electronic', () => {
+  it('prefers electronicWaybillNo when both are filled', () => {
     assert.equal(
       resolveGoodsReceiptWaybillNo({
         waybillNo: 'IRS202600000001',
         electronicWaybillNo: 'GIB2026AB000000',
       }),
+      'GIB2026AB000000',
+    );
+  });
+
+  it('falls back to waybillNo when electronic is empty', () => {
+    assert.equal(
+      resolveGoodsReceiptWaybillNo({
+        waybillNo: 'IRS202600000001',
+        electronicWaybillNo: null,
+      }),
       'IRS202600000001',
     );
   });
 
-  it('falls back to electronicWaybillNo', () => {
+  it('falls back to electronicWaybillNo when waybill is empty', () => {
     assert.equal(
       resolveGoodsReceiptWaybillNo({
         waybillNo: null,
