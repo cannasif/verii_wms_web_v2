@@ -133,6 +133,12 @@ interface Props<T extends { id: number }> {
   toolbarActions?: GridToolbarAction[];
   /** Filtreler butonunun soluna eklenen ekstra toolbar aksiyonları (ör. Kod Filtreleri). */
   toolbarEndExtra?: ReactNode;
+  /** Arama alanının yerine veya yanına eklenen özel başlangıç içeriği. */
+  toolbarStartExtra?: ReactNode;
+  /** Varsayılan arama kutusunu gizler (özel arama toolbarStartExtra ile verilir). */
+  hideSearch?: boolean;
+  /** Toolbar altına ek satır (ör. durum dropdown filtreleri). */
+  toolbarBelowExtra?: ReactNode;
   /** Mutation sonrasında sunucu verisini yeniden okumak için artırılan sürüm anahtarı. */
   refreshKey?: string | number;
   /** Satıra çift tıklanınca çağrılır (aksiyon hücreleri hariç etkileşimleri engellemez). */
@@ -436,6 +442,9 @@ export function AdvancedDataGrid<T extends { id: number }>({
   toolbarAction,
   toolbarActions,
   toolbarEndExtra,
+  toolbarStartExtra,
+  hideSearch = false,
+  toolbarBelowExtra,
   refreshKey = 0,
   onRowDoubleClick,
   expandedRowId = null,
@@ -513,10 +522,8 @@ export function AdvancedDataGrid<T extends { id: number }>({
   const [runningActionIndex, setRunningActionIndex] = useState<number | null>(null);
   const [cellContext, setCellContext] = useState<GridCellContext<T> | null>(null);
   const cellMenuRef = useRef<HTMLDivElement>(null);
-  const [gridViewportHeight, setGridViewportHeight] = useState<number | null>(null);
   const resizeRef = useRef<{ key: string; startX: number; startWidth: number; pointerId: number } | null>(null);
   const tableScrollRef = useRef<HTMLDivElement | null>(null);
-  const paginationRef = useRef<HTMLDivElement | null>(null);
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
@@ -841,30 +848,6 @@ export function AdvancedDataGrid<T extends { id: number }>({
     };
   }, [pageKey, pageRows.length, activeColumns.length]);
 
-  useEffect(() => {
-    const grid = tableScrollRef.current;
-    if (!grid) return;
-    let frame = 0;
-    const updateHeight = () => {
-      window.cancelAnimationFrame(frame);
-      frame = window.requestAnimationFrame(() => {
-        const paginationHeight = paginationRef.current?.getBoundingClientRect().height ?? 52;
-        const top = grid.getBoundingClientRect().top;
-        const bottomSpace = paginationHeight + 32;
-        setGridViewportHeight(Math.max(240, Math.floor(window.innerHeight - top - bottomSpace)));
-      });
-    };
-    updateHeight();
-    const observer = new ResizeObserver(updateHeight);
-    observer.observe(grid.parentElement ?? grid);
-    if (paginationRef.current) observer.observe(paginationRef.current);
-    window.addEventListener('resize', updateHeight);
-    return () => {
-      window.cancelAnimationFrame(frame);
-      observer.disconnect();
-      window.removeEventListener('resize', updateHeight);
-    };
-  }, [pageRows.length, showFilters, showColumns, showSearchFields]);
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
     if (!over || active.id === over.id) return;
     setOrder((current) => {
@@ -1013,24 +996,27 @@ export function AdvancedDataGrid<T extends { id: number }>({
       <div className="wms-ops-data-grid min-w-0 space-y-0">
       <div className="wms-ops-data-grid-toolbar flex flex-wrap items-center justify-between gap-2">
         <div className="wms-ops-data-grid-toolbar__start flex min-w-0 flex-wrap items-center gap-2">
-          <OpsListSearchField
-            value={searchInput}
-            placeholder={t('dataGrid.searchPlaceholder')}
-            onValueChange={setSearchInput}
-            className="md:w-64"
-            rightSlot={searchInput ? (
-              <button
-                type="button"
-                aria-label={t('dataGrid.clearSearch')}
-                onClick={() => setSearchInput('')}
-                className="wms-ops-voice-btn grid place-items-center"
-              >
-                <X className="size-3.5" />
-              </button>
-            ) : (
-              <VoiceSearchButton onResult={(text) => { setSearchInput(text); setPage(1); }} />
-            )}
-          />
+          {toolbarStartExtra}
+          {!hideSearch ? (
+            <OpsListSearchField
+              value={searchInput}
+              placeholder={t('dataGrid.searchPlaceholder')}
+              onValueChange={setSearchInput}
+              className="md:w-64"
+              rightSlot={searchInput ? (
+                <button
+                  type="button"
+                  aria-label={t('dataGrid.clearSearch')}
+                  onClick={() => setSearchInput('')}
+                  className="wms-ops-voice-btn grid place-items-center"
+                >
+                  <X className="size-3.5" />
+                </button>
+              ) : (
+                <VoiceSearchButton onResult={(text) => { setSearchInput(text); setPage(1); }} />
+              )}
+            />
+          ) : null}
           <OpsActionButton
             type="button"
             variant="secondary"
@@ -1044,7 +1030,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
         </div>
 
         <div className="wms-ops-data-grid-toolbar__end flex flex-wrap items-center gap-2">
-          {visibleSearchableColumns.length > 0 ? (
+          {!hideSearch && visibleSearchableColumns.length > 0 ? (
             <PopoverPrimitive.Root open={showSearchFields} onOpenChange={(open) => { setShowSearchFields(open); if (!open) setSearchFieldMenuSearch(''); }}>
               <PopoverPrimitive.Trigger asChild>
                 <OpsActionButton
@@ -1401,9 +1387,14 @@ export function AdvancedDataGrid<T extends { id: number }>({
         </div>
       </div>
 
+      {toolbarBelowExtra ? (
+        <div className="wms-ops-data-grid-toolbar-below mt-2">
+          {toolbarBelowExtra}
+        </div>
+      ) : null}
+
       <div
         ref={tableScrollRef}
-        style={{ maxHeight: gridViewportHeight ?? undefined }}
         className={cn(
           'relative mt-4 block wms-ops-table-wrap wms-ops-data-grid-wrap wms-ops-scrollbar wms-ops-table-h-scroll overflow-auto border border-[var(--wms-ops-card-border)] max-sm:hidden',
           query.isLoading && 'cursor-wait',
@@ -1565,7 +1556,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
         ))}
       </div>
 
-      <div ref={paginationRef} className="wms-ops-grid-pagination mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="wms-ops-grid-pagination mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

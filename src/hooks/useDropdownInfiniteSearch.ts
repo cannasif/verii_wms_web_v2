@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { keepPreviousData, useInfiniteQuery, type InfiniteData } from '@tanstack/react-query';
 import type { PagedFilter } from '@/types/api';
+import { toTurkishApiSearch } from '@/lib/turkish-search';
 
 export interface DropdownPageRequest {
   pageNumber: number;
@@ -56,7 +57,7 @@ export function useDropdownInfiniteSearch<TItem>({
   const isBrowseMode = normalizedSearch.length === 0;
   const isSearchMode = normalizedSearch.length >= minSearchLength;
   const isThresholdMode = !isBrowseMode && !isSearchMode;
-  const activeSearch = isSearchMode ? normalizedSearch : '';
+  const activeSearch = isSearchMode ? toTurkishApiSearch(normalizedSearch) : '';
   const stableKey = Array.isArray(queryKey) ? queryKey : [queryKey];
 
   const query = useInfiniteQuery({

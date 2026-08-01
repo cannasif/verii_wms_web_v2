@@ -2060,11 +2060,25 @@ label[data-wms-error-target].wms-error-focus-flash-field .app-input-shell input 
   pointer-events: none;
 }
 
-.wms-ops-action-btn__loading {
+.wms-ops-action-btn__content {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: inherit;
+  min-width: 0;
+}
+
+.wms-ops-action-btn__content--busy {
+  opacity: 0.22;
+}
+
+.wms-ops-action-btn__spinner-slot {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
 }
 
 .wms-ops-action-btn__spinner {
@@ -2082,10 +2096,6 @@ label[data-wms-error-target].wms-error-focus-flash-field .app-input-shell input 
   inset: 0;
   box-sizing: border-box;
   pointer-events: none;
-}
-
-.wms-ops-action-btn__loading-label {
-  min-width: 0;
 }
 
 /* ——— Terminal: köşeli HUD tick + scan ——— */
@@ -2305,7 +2315,9 @@ html.skin-premium .wms-ops-action-btn__spinner-core {
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: color-mix(in oklab, var(--wms-ops-accent) 70%, hsl(var(--foreground)));
+  color: var(--wms-ops-shell-fg, #0f172a) !important;
+  -webkit-text-fill-color: var(--wms-ops-shell-fg, #0f172a) !important;
+  opacity: 1 !important;
 }
 
 .wms-ops-lookup-dialog__description {
@@ -2313,7 +2325,9 @@ html.skin-premium .wms-ops-action-btn__spinner-core {
   font-size: 0.72rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: color-mix(in oklab, hsl(var(--foreground)) 52%, transparent);
+  color: color-mix(in oklab, var(--wms-ops-shell-fg, #0f172a) 72%, #64748b) !important;
+  -webkit-text-fill-color: color-mix(in oklab, var(--wms-ops-shell-fg, #0f172a) 72%, #64748b) !important;
+  opacity: 1 !important;
 }
 
 .wms-ops-lookup-search-btn {
@@ -2991,7 +3005,20 @@ button.wms-ops-lookup-trigger--multi {
   line-height: 1.35;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: hsl(var(--foreground));
+  color: var(--wms-ops-shell-fg, #0f172a) !important;
+  -webkit-text-fill-color: var(--wms-ops-shell-fg, #0f172a) !important;
+  opacity: 1 !important;
+}
+
+html:not(.dark) .wms-ops-detail-dialog__title,
+html:not(.dark) .wms-ops-lookup-dialog__title {
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+}
+
+.dark .wms-ops-detail-dialog__title {
+  color: color-mix(in oklab, #f8fafc 92%, var(--wms-ops-accent)) !important;
+  -webkit-text-fill-color: color-mix(in oklab, #f8fafc 92%, var(--wms-ops-accent)) !important;
 }
 
 .wms-ops-detail-dialog__id {
@@ -3006,7 +3033,20 @@ button.wms-ops-lookup-trigger--multi {
   line-height: 1.35;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: color-mix(in oklab, hsl(var(--foreground)) 48%, transparent);
+  color: color-mix(in oklab, var(--wms-ops-shell-fg, #0f172a) 72%, #64748b) !important;
+  -webkit-text-fill-color: color-mix(in oklab, var(--wms-ops-shell-fg, #0f172a) 72%, #64748b) !important;
+  opacity: 1 !important;
+}
+
+html:not(.dark) .wms-ops-detail-dialog__description,
+html:not(.dark) .wms-ops-lookup-dialog__description {
+  color: #475569 !important;
+  -webkit-text-fill-color: #475569 !important;
+}
+
+.dark .wms-ops-detail-dialog__description {
+  color: color-mix(in oklab, #e2e8f0 78%, var(--wms-ops-accent)) !important;
+  -webkit-text-fill-color: color-mix(in oklab, #e2e8f0 78%, var(--wms-ops-accent)) !important;
 }
 
 .wms-ops-detail-dialog [data-slot="tabs-list"].wms-ops-detail-main-tabs {
@@ -6836,6 +6876,176 @@ html:not(.dark) .wms-ops-list .wms-ops-data-grid tbody tr:hover .wms-ops-table-i
   gap: 0.75rem;
 }
 
+.wms-ops-list .wms-ops-gr-list-facets {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.45rem 0.6rem;
+  border: 1px solid color-mix(in oklab, var(--wms-app-border) 88%, transparent);
+  background: color-mix(in oklab, var(--wms-ops-accent) 3%, var(--wms-app-panel));
+  padding: 0.45rem 0.55rem;
+}
+
+.wms-ops-list .wms-ops-gr-list-facets__field {
+  display: flex;
+  min-width: 8.25rem;
+  flex: 1 1 8.25rem;
+  max-width: 11.5rem;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.wms-ops-list .wms-ops-gr-list-facets__label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--wms-app-text-muted);
+}
+
+.wms-ops-list .wms-ops-gr-list-facets__shell {
+  min-height: 0;
+}
+
+.wms-ops-list .wms-ops-gr-list-facets button.wms-ops-lookup-trigger.wms-ops-gr-list-facets__control,
+.wms-ops-list .wms-ops-gr-list-facets button.wms-ops-lookup-trigger {
+  height: 1.9rem !important;
+  min-height: 1.9rem !important;
+  padding: 0 0.5rem !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  font-size: 0.72rem !important;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-transform: none !important;
+  line-height: 1.2;
+}
+
+.wms-ops-list .wms-ops-gr-list-facets button.wms-ops-lookup-trigger svg {
+  width: 0.85rem;
+  height: 0.85rem;
+}
+
+.wms-ops-list .wms-ops-gr-list-facets__clear {
+  align-self: flex-end;
+  border: 0;
+  background: transparent;
+  padding: 0.2rem 0.15rem;
+  font-size: 0.7rem;
+  font-weight: 650;
+  color: var(--wms-ops-accent);
+  cursor: pointer;
+}
+
+.wms-ops-list .wms-ops-gr-list-facets__clear:hover,
+.wms-ops-list .wms-ops-gr-list-facets__clear:focus-visible {
+  text-decoration: underline;
+}
+
+html.skin-premium .wms-ops-list .wms-ops-gr-list-facets {
+  border-radius: 0.5rem;
+}
+
+html.skin-premium .wms-ops-list .wms-ops-gr-list-facets button.wms-ops-lookup-trigger {
+  border-radius: 0.4rem !important;
+}
+
+.wms-ops-list .wms-ops-grid-search {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 16rem;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.wms-ops-list .wms-ops-grid-search .wms-ops-list-search {
+  width: 100%;
+  max-width: 22rem;
+}
+
+.wms-ops-list .wms-ops-grid-search .wms-ops-list-search .wms-ops-field {
+  text-transform: none !important;
+  letter-spacing: normal;
+}
+
+.wms-ops-list .wms-ops-grid-search .wms-ops-list-search .wms-ops-field::placeholder {
+  text-transform: none !important;
+  letter-spacing: 0.02em;
+}
+
+.wms-ops-list .wms-ops-grid-search__hint {
+  margin: 0;
+  max-width: 22rem;
+  font-size: 0.68rem;
+  line-height: 1.35;
+  color: var(--wms-app-text-muted);
+}
+
+.wms-ops-list .wms-ops-grid-search__chips {
+  display: flex;
+  max-width: min(36rem, 100%);
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.wms-ops-list .wms-ops-grid-search__chip {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  gap: 0.25rem;
+  border: 1px solid color-mix(in oklab, var(--wms-ops-accent) 28%, var(--wms-app-border));
+  background: color-mix(in oklab, var(--wms-ops-accent) 10%, transparent);
+  padding: 0.15rem 0.35rem 0.15rem 0.5rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--wms-app-text);
+}
+
+.wms-ops-list .wms-ops-grid-search__chip-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wms-ops-list .wms-ops-grid-search__chip-remove {
+  display: grid;
+  width: 1.1rem;
+  height: 1.1rem;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: var(--wms-app-text-muted);
+  cursor: pointer;
+}
+
+.wms-ops-list .wms-ops-grid-search__chip-remove:hover,
+.wms-ops-list .wms-ops-grid-search__chip-remove:focus-visible {
+  color: var(--wms-app-text);
+}
+
+.wms-ops-list .wms-ops-grid-search__clear {
+  border: 0;
+  background: transparent;
+  padding: 0.1rem 0.25rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--wms-ops-accent);
+  cursor: pointer;
+}
+
+.wms-ops-list .wms-ops-grid-search__clear:hover,
+.wms-ops-list .wms-ops-grid-search__clear:focus-visible {
+  text-decoration: underline;
+}
+
+html.skin-premium .wms-ops-list .wms-ops-grid-search__chip,
+html.skin-premium .wms-ops-list .wms-ops-grid-search__clear {
+  border-radius: 0.45rem;
+}
+
 .wms-ops-list .wms-ops-data-grid-toolbar__start {
   flex: 0 1 auto;
   flex-wrap: nowrap;
@@ -6874,6 +7084,16 @@ html:not(.dark) .wms-ops-list .wms-ops-data-grid tbody tr:hover .wms-ops-table-i
     flex: 1 1 100%;
     min-width: 7rem;
     max-width: 100% !important;
+  }
+
+  .wms-ops-list .wms-ops-grid-search {
+    flex: 1 1 100%;
+  }
+
+  .wms-ops-list .wms-ops-grid-search .wms-ops-list-search,
+  .wms-ops-list .wms-ops-grid-search__hint,
+  .wms-ops-list .wms-ops-grid-search__chips {
+    max-width: 100%;
   }
 
   html.skin-premium .wms-ops-list .wms-ops-list-search {
@@ -20196,6 +20416,10 @@ html.skin-premium .wms-ops-list .wms-ops-list-search .wms-ops-field {
     background-color 300ms ease;
 }
 
+html.skin-premium .wms-ops-list .wms-ops-list-search:has(.wms-ops-list-search__voice) .wms-ops-field {
+  padding-right: 2.25rem !important;
+}
+
 html.skin-premium .wms-ops-list .wms-ops-list-search .wms-ops-field::placeholder {
   color: color-mix(in oklab, var(--wms-app-text-muted) 78%, transparent);
   letter-spacing: 0.02em;
@@ -20681,7 +20905,12 @@ html.skin-premium .wms-ops-detail-dialog__title {
   font-weight: 700 !important;
   letter-spacing: 0.01em !important;
   text-transform: none !important;
-  color: hsl(var(--foreground)) !important;
+  color: var(--wms-ops-shell-fg, #0f172a) !important;
+  -webkit-text-fill-color: var(--wms-ops-shell-fg, #0f172a) !important;
+}
+
+html.skin-premium.dark .wms-ops-detail-dialog__title {
+  color: color-mix(in oklab, #f8fafc 90%, var(--wms-brand-primary)) !important;
 }
 
 html.skin-premium .wms-ops-detail-dialog__id {
@@ -20695,6 +20924,690 @@ html.skin-premium .wms-ops-detail-dialog__description {
   letter-spacing: 0.01em !important;
   text-transform: none !important;
   color: var(--wms-app-text-muted) !important;
+}
+
+/* —— Seri / lot yönetimi dialog (skin-aware) —— */
+.wms-ops-serial-dialog__eyebrow {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--wms-ops-accent) 55%, #0f172a);
+}
+
+.dark .wms-ops-serial-dialog__eyebrow {
+  color: color-mix(in oklab, var(--wms-ops-accent) 78%, #f8fafc);
+}
+
+.wms-ops-serial-dialog__hint {
+  margin: 0.4rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--wms-app-text-muted);
+}
+
+.wms-ops-serial-dialog__tiles {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: stretch;
+  gap: 0.75rem;
+}
+
+.wms-ops-serial-dialog__tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  flex: 1 1 13.5rem;
+  max-width: 17rem;
+  min-height: 5.25rem;
+  padding: 1.05rem 1.15rem;
+  text-align: center;
+  border: 1px solid color-mix(in oklab, var(--wms-ops-accent) 30%, var(--wms-ops-card-border));
+  border-radius: 0.2rem;
+  background:
+    linear-gradient(180deg, color-mix(in oklab, var(--wms-ops-accent) 6%, transparent), transparent 70%),
+    color-mix(in oklab, var(--wms-ops-field-bg) 94%, transparent);
+  color: color-mix(in oklab, var(--wms-ops-accent) 28%, #0f172a);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklab, var(--wms-ops-accent) 8%, transparent),
+    0 1px 0 color-mix(in oklab, white 55%, transparent);
+  cursor: pointer;
+  transition:
+    border-color 0.22s ease,
+    background 0.22s ease,
+    box-shadow 0.22s ease,
+    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    color 0.22s ease;
+}
+
+.dark .wms-ops-serial-dialog__tile {
+  color: color-mix(in oklab, var(--wms-ops-accent) 45%, #f8fafc);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--wms-ops-accent) 10%, transparent);
+}
+
+.wms-ops-serial-dialog__tile:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in oklab, var(--wms-ops-accent) 58%, var(--wms-ops-card-border));
+  background:
+    linear-gradient(180deg, color-mix(in oklab, var(--wms-ops-accent) 14%, transparent), transparent 72%),
+    color-mix(in oklab, var(--wms-ops-field-bg) 96%, transparent);
+  box-shadow:
+    0 10px 22px -14px color-mix(in oklab, var(--wms-ops-accent) 45%, transparent),
+    0 0 0 1px color-mix(in oklab, var(--wms-ops-accent) 22%, transparent),
+    inset 0 1px 0 color-mix(in oklab, white 40%, transparent);
+}
+
+.wms-ops-serial-dialog__tile:active {
+  transform: translateY(0);
+}
+
+.wms-ops-serial-dialog__tile--accent {
+  border-color: color-mix(in oklab, var(--wms-ops-accent) 48%, transparent);
+  background:
+    linear-gradient(145deg, color-mix(in oklab, var(--wms-ops-accent) 18%, transparent), transparent 68%),
+    color-mix(in oklab, var(--wms-ops-field-bg) 94%, transparent);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklab, var(--wms-ops-accent) 20%, transparent),
+    0 0 18px color-mix(in oklab, var(--wms-ops-accent) 12%, transparent);
+}
+
+.wms-ops-serial-dialog__tile--accent:hover {
+  border-color: color-mix(in oklab, var(--wms-ops-accent) 68%, transparent);
+  box-shadow:
+    0 12px 26px -12px color-mix(in oklab, var(--wms-ops-accent) 55%, transparent),
+    0 0 28px color-mix(in oklab, var(--wms-ops-accent) 18%, transparent),
+    inset 0 1px 0 color-mix(in oklab, white 45%, transparent);
+}
+
+.wms-ops-serial-dialog__tile--warn {
+  border-color: color-mix(in oklab, #f59e0b 42%, var(--wms-ops-card-border));
+  background: color-mix(in oklab, #f59e0b 10%, var(--wms-ops-field-bg));
+  color: color-mix(in oklab, #b45309 70%, #0f172a);
+}
+
+.dark .wms-ops-serial-dialog__tile--warn {
+  color: color-mix(in oklab, #fbbf24 70%, #fff);
+}
+
+.wms-ops-serial-dialog__tile--warn:hover {
+  border-color: color-mix(in oklab, #f59e0b 62%, transparent);
+  box-shadow:
+    0 10px 22px -12px color-mix(in oklab, #f59e0b 50%, transparent),
+    0 0 0 1px color-mix(in oklab, #f59e0b 28%, transparent);
+}
+
+.wms-ops-serial-dialog__tile-title {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.wms-ops-serial-dialog__tile-hint {
+  max-width: 14rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--wms-app-text-muted);
+  text-transform: none;
+  letter-spacing: 0;
+  font-family: inherit;
+}
+
+.wms-ops-serial-dialog__bulk {
+  padding: 1rem 1.05rem 1.05rem;
+  border: 1px solid color-mix(in oklab, var(--wms-ops-accent) 22%, var(--wms-ops-card-border));
+  border-radius: 0.2rem;
+  background:
+    linear-gradient(rgba(6, 182, 212, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(6, 182, 212, 0.035) 1px, transparent 1px),
+    color-mix(in oklab, var(--wms-ops-field-bg) 86%, transparent);
+  background-size: 16px 16px, 16px 16px, auto;
+}
+
+.wms-ops-serial-dialog__bulk-input.wms-ops-field,
+.wms-ops-serial-dialog .wms-ops-serial-dialog__bulk-input {
+  display: block;
+  width: 100%;
+  min-height: 7.25rem !important;
+  height: auto !important;
+  padding: 0.95rem 1.05rem !important;
+  line-height: 1.55 !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+  border-color: var(--wms-ops-field-border) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--wms-ops-field-border) 40%, transparent) !important;
+  resize: vertical;
+}
+
+.wms-ops-serial-dialog__bulk-input.wms-ops-field::placeholder {
+  line-height: 1.55;
+  letter-spacing: 0.04em;
+}
+
+.wms-ops-serial-dialog__bulk-shell::before,
+.wms-ops-serial-dialog__bulk-shell::after {
+  display: none !important;
+}
+
+.wms-ops-serial-dialog__row {
+  padding: 0.7rem;
+  border: 1px solid color-mix(in oklab, var(--wms-ops-accent) 16%, var(--wms-ops-card-border));
+  border-radius: 0.2rem;
+  background: color-mix(in oklab, var(--wms-ops-field-bg) 78%, transparent);
+}
+
+.wms-ops-serial-dialog__row-index {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: color-mix(in oklab, var(--wms-ops-accent) 55%, #0f172a);
+}
+
+.dark .wms-ops-serial-dialog__row-index {
+  color: color-mix(in oklab, var(--wms-ops-accent) 70%, #f8fafc);
+}
+
+.wms-ops-serial-dialog__row-delete {
+  border-radius: 0.2rem;
+  color: #ef4444;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.wms-ops-serial-dialog__row-delete:hover {
+  background: color-mix(in oklab, #ef4444 12%, transparent);
+  transform: scale(1.04);
+}
+
+.wms-ops-serial-dialog__empty {
+  margin: 0;
+  padding: 1.65rem 1.15rem;
+  border: 1px dashed color-mix(in oklab, var(--wms-ops-accent) 28%, var(--wms-ops-card-border));
+  border-radius: 0.2rem;
+  text-align: center;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--wms-app-text-muted);
+  background: color-mix(in oklab, var(--wms-ops-accent) 4%, transparent);
+}
+
+html.skin-premium .wms-ops-serial-dialog__eyebrow {
+  font-family: var(--wms-premium-font, inherit);
+  letter-spacing: 0.1em;
+  color: var(--wms-brand-primary);
+}
+
+html.skin-premium .wms-ops-serial-dialog__tile {
+  border-radius: 1rem;
+  border-color: color-mix(in oklab, var(--wms-brand-primary) 18%, var(--wms-ops-card-border));
+  background:
+    linear-gradient(165deg, color-mix(in oklab, var(--wms-brand-primary) 8%, transparent), transparent 62%),
+    color-mix(in oklab, white 78%, var(--wms-ops-field-bg));
+  color: color-mix(in oklab, var(--wms-brand-primary) 28%, #0f172a);
+  box-shadow:
+    0 1px 2px rgb(15 23 42 / 4%),
+    inset 0 1px 0 rgb(255 255 255 / 70%);
+}
+
+html.skin-premium.dark .wms-ops-serial-dialog__tile {
+  background:
+    linear-gradient(165deg, color-mix(in oklab, var(--wms-brand-primary) 12%, transparent), transparent 62%),
+    color-mix(in oklab, var(--wms-ops-field-bg) 90%, transparent);
+  color: color-mix(in oklab, var(--wms-brand-primary) 45%, white);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 6%);
+}
+
+html.skin-premium .wms-ops-serial-dialog__tile:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in oklab, var(--wms-brand-primary) 40%, var(--wms-ops-card-border));
+  box-shadow:
+    0 14px 28px -16px color-mix(in oklab, var(--wms-brand-primary) 48%, transparent),
+    0 0 0 1px color-mix(in oklab, var(--wms-brand-primary) 18%, transparent),
+    inset 0 1px 0 rgb(255 255 255 / 75%);
+}
+
+html.skin-premium .wms-ops-serial-dialog__tile--accent {
+  border-color: color-mix(in oklab, var(--wms-brand-primary) 36%, transparent);
+  background:
+    linear-gradient(
+      145deg,
+      color-mix(in oklab, var(--wms-brand-primary) 16%, transparent),
+      color-mix(in oklab, var(--wms-brand-accent) 8%, transparent) 100%
+    ),
+    color-mix(in oklab, white 82%, transparent);
+  box-shadow:
+    0 8px 20px -14px color-mix(in oklab, var(--wms-brand-primary) 45%, transparent),
+    inset 0 1px 0 rgb(255 255 255 / 70%);
+}
+
+html.skin-premium.dark .wms-ops-serial-dialog__tile--accent {
+  background:
+    linear-gradient(
+      145deg,
+      color-mix(in oklab, var(--wms-brand-primary) 20%, transparent),
+      color-mix(in oklab, var(--wms-brand-accent) 10%, transparent) 100%
+    ),
+    color-mix(in oklab, var(--wms-ops-field-bg) 92%, transparent);
+}
+
+html.skin-premium .wms-ops-serial-dialog__tile--warn {
+  border-radius: 1rem;
+  border-color: color-mix(in oklab, #f59e0b 36%, var(--wms-ops-card-border));
+}
+
+html.skin-premium .wms-ops-serial-dialog__tile-title {
+  font-family: var(--wms-premium-font, inherit);
+  font-size: 0.9rem;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+
+html.skin-premium .wms-ops-serial-dialog__bulk {
+  border-radius: 1.05rem;
+  padding: 1.1rem 1.15rem 1.15rem;
+  border-color: color-mix(in oklab, var(--wms-brand-primary) 16%, var(--wms-ops-card-border));
+  background:
+    linear-gradient(
+      165deg,
+      color-mix(in oklab, var(--wms-brand-primary) 6%, transparent),
+      transparent 55%
+    ),
+    color-mix(in oklab, white 74%, var(--wms-ops-field-bg));
+  background-size: auto;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 50%);
+}
+
+html.skin-premium.dark .wms-ops-serial-dialog__bulk {
+  background:
+    linear-gradient(
+      165deg,
+      color-mix(in oklab, var(--wms-brand-primary) 8%, transparent),
+      transparent 55%
+    ),
+    color-mix(in oklab, var(--wms-ops-field-bg) 90%, transparent);
+  background-size: auto;
+}
+
+html.skin-premium .wms-ops-serial-dialog__bulk-input.wms-ops-field {
+  border-radius: 0.85rem !important;
+  padding: 1rem 1.1rem !important;
+  min-height: 7.5rem !important;
+}
+
+html.skin-premium .wms-ops-serial-dialog__row {
+  border-radius: 0.9rem;
+  padding: 0.8rem;
+  border-color: color-mix(in oklab, var(--wms-brand-primary) 12%, var(--wms-ops-card-border));
+  background: color-mix(in oklab, white 58%, var(--wms-ops-field-bg));
+}
+
+html.skin-premium.dark .wms-ops-serial-dialog__row {
+  background: color-mix(in oklab, var(--wms-ops-field-bg) 84%, transparent);
+}
+
+html.skin-premium .wms-ops-serial-dialog__row-index {
+  font-family: var(--wms-premium-font, inherit);
+  color: var(--wms-brand-primary);
+}
+
+html.skin-premium .wms-ops-serial-dialog__row-delete {
+  border-radius: 0.75rem;
+}
+
+html.skin-premium .wms-ops-serial-dialog__empty {
+  border-radius: 1rem;
+  border-color: color-mix(in oklab, var(--wms-brand-primary) 22%, var(--wms-ops-card-border));
+  background: color-mix(in oklab, var(--wms-brand-primary) 5%, transparent);
+}
+
+/* —— Mal kabul sonrası dağıtım (routing) dialog —— */
+.wms-ops-gr-route-dialog__status {
+  margin: 0;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid color-mix(in oklab, var(--wms-ops-accent) 22%, var(--wms-ops-card-border));
+  border-radius: 0.2rem;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.wms-ops-gr-route-dialog__status--ok {
+  border-color: color-mix(in oklab, #10b981 35%, var(--wms-ops-card-border));
+  background: color-mix(in oklab, #10b981 8%, transparent);
+  color: color-mix(in oklab, #059669 55%, #0f172a);
+}
+
+.dark .wms-ops-gr-route-dialog__status--ok {
+  color: color-mix(in oklab, #34d399 70%, white);
+}
+
+.wms-ops-gr-route-dialog__status--warn {
+  border-color: color-mix(in oklab, #f59e0b 40%, var(--wms-ops-card-border));
+  background: color-mix(in oklab, #f59e0b 9%, transparent);
+  color: color-mix(in oklab, #b45309 60%, #0f172a);
+}
+
+.wms-ops-gr-route-dialog__tab-list {
+  display: flex !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0;
+  gap: 0;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  border: 0 !important;
+  border-bottom: 1px solid color-mix(in oklab, var(--wms-ops-accent) 22%, var(--wms-ops-card-border)) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.wms-ops-gr-route-dialog__tab {
+  position: relative;
+  display: inline-flex !important;
+  flex: 1 1 0;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.45rem;
+  min-height: 2.55rem;
+  height: 2.55rem;
+  margin-bottom: -1px;
+  padding: 0.35rem 0.85rem !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  border-bottom: 2px solid transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--wms-app-text-muted) !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.7rem !important;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: none;
+  white-space: nowrap !important;
+  line-height: 1.1;
+  opacity: 0.78;
+  transition:
+    color 0.15s ease,
+    opacity 0.15s ease,
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.wms-ops-gr-route-dialog__tab > svg {
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.wms-ops-gr-route-dialog__tab-copy {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.05rem;
+  min-width: 0;
+  line-height: 1.05;
+}
+
+.wms-ops-gr-route-dialog__tab-kicker {
+  display: block;
+  height: 0.7rem;
+  font-size: 0.58rem;
+  line-height: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.72;
+}
+
+.wms-ops-gr-route-dialog__tab-title {
+  display: block;
+  height: 0.95rem;
+  font-size: 0.78rem;
+  line-height: 0.95rem;
+  letter-spacing: 0.02em;
+}
+
+.wms-ops-gr-route-dialog__tab-badge {
+  margin-left: auto;
+  padding: 0.1rem 0.4rem;
+  border-radius: 0.1rem;
+  font-size: 0.65rem;
+  font-variant-numeric: tabular-nums;
+  background: color-mix(in oklab, currentColor 12%, transparent);
+}
+
+.wms-ops-gr-route-dialog__tab--transfer[data-state='active'] {
+  opacity: 1;
+  color: color-mix(in oklab, #0284c7 45%, #0f172a) !important;
+  border-bottom-color: color-mix(in oklab, #0ea5e9 85%, transparent) !important;
+  background: color-mix(in oklab, #0ea5e9 7%, transparent) !important;
+  box-shadow: none !important;
+}
+
+.wms-ops-gr-route-dialog__tab--outbound[data-state='active'] {
+  opacity: 1;
+  color: color-mix(in oklab, #b45309 50%, #0f172a) !important;
+  border-bottom-color: color-mix(in oklab, #f59e0b 85%, transparent) !important;
+  background: color-mix(in oklab, #f59e0b 7%, transparent) !important;
+  box-shadow: none !important;
+}
+
+.dark .wms-ops-gr-route-dialog__tab--transfer[data-state='active'] {
+  color: color-mix(in oklab, #7dd3fc 75%, white) !important;
+}
+
+.dark .wms-ops-gr-route-dialog__tab--outbound[data-state='active'] {
+  color: color-mix(in oklab, #fbbf24 75%, white) !important;
+}
+
+.wms-ops-gr-route-dialog__panel {
+  margin-top: 0;
+  padding: 1rem 0 0.15rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.wms-ops-gr-route-dialog__panel-hint {
+  margin: 0 0 0.95rem;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--wms-app-text-muted);
+}
+
+.wms-ops-gr-route-dialog__fields {
+  display: grid;
+  gap: 1rem 1.15rem;
+  grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr));
+}
+
+.wms-ops-gr-route-dialog__field {
+  min-width: 0;
+}
+
+.wms-ops-gr-route-dialog__field .wms-ops-entry-label {
+  margin-bottom: 0.45rem;
+}
+
+.wms-ops-gr-route-dialog__note-field .wms-ops-field-shell {
+  width: 100%;
+}
+
+.wms-ops-gr-route-dialog__note {
+  display: block;
+  width: 100%;
+  min-height: 4.5rem !important;
+  padding: 0.7rem 0.85rem !important;
+  line-height: 1.5 !important;
+  box-sizing: border-box;
+}
+
+.wms-ops-gr-route-dialog__cell-shell {
+  width: 100%;
+  min-width: 6.5rem;
+}
+
+.wms-ops-gr-route-dialog__table .app-input-shell,
+.wms-ops-gr-route-dialog__cell-shell {
+  width: 100%;
+}
+
+.wms-ops-gr-route-dialog__cell-shell button.wms-ops-lookup-trigger,
+.wms-ops-gr-route-dialog__cell-shell .wms-ops-field,
+.wms-ops-gr-route-dialog__table .app-input-shell .wms-ops-field {
+  min-height: 2.25rem !important;
+}
+
+.wms-ops-gr-route-dialog__lines {
+  border: 1px solid color-mix(in oklab, var(--wms-ops-accent) 18%, var(--wms-ops-card-border));
+  border-radius: 0.2rem;
+  overflow: hidden;
+}
+
+.wms-ops-gr-route-dialog__lines-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.35rem 0.75rem;
+  padding: 0.7rem 0.95rem;
+  border-bottom: 1px solid color-mix(in oklab, var(--wms-ops-accent) 14%, var(--wms-ops-card-border));
+  background: color-mix(in oklab, var(--wms-ops-accent) 5%, var(--wms-ops-field-bg));
+}
+
+.wms-ops-gr-route-dialog__lines-head strong {
+  font-size: 0.8125rem;
+}
+
+.wms-ops-gr-route-dialog__lines-head span {
+  font-size: 0.72rem;
+  color: var(--wms-app-text-muted);
+}
+
+.wms-ops-gr-route-dialog__lines-scroll {
+  overflow-x: auto;
+  max-height: min(38vh, 22rem);
+  overflow-y: auto;
+}
+
+.wms-ops-gr-route-dialog__table {
+  width: 100%;
+  min-width: 52rem;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.wms-ops-gr-route-dialog__table th,
+.wms-ops-gr-route-dialog__table td {
+  padding: 0.65rem 0.75rem;
+  border-top: 1px solid color-mix(in oklab, var(--wms-ops-card-border) 80%, transparent);
+  border-right: 1px solid color-mix(in oklab, var(--wms-ops-accent) 28%, var(--wms-ops-card-border)) !important;
+  vertical-align: middle;
+  box-shadow: inset -1px 0 0 color-mix(in oklab, var(--wms-ops-accent) 12%, transparent);
+}
+
+.wms-ops-gr-route-dialog__table th:last-child,
+.wms-ops-gr-route-dialog__table td:last-child {
+  border-right: 0 !important;
+  box-shadow: none;
+}
+
+.wms-ops-gr-route-dialog__table th {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: left;
+  color: var(--wms-app-text-muted);
+  background: color-mix(in oklab, var(--wms-ops-field-bg) 92%, transparent);
+}
+
+.wms-ops-gr-route-dialog__col--transfer {
+  background: color-mix(in oklab, #0ea5e9 7%, transparent);
+}
+
+.wms-ops-gr-route-dialog__col--outbound {
+  background: color-mix(in oklab, #f59e0b 7%, transparent);
+}
+
+.wms-ops-gr-route-dialog__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid color-mix(in oklab, var(--wms-ops-accent) 16%, var(--wms-ops-card-border));
+}
+
+.wms-ops-gr-route-dialog__totals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem 1.15rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.wms-ops-gr-route-dialog__total--transfer {
+  color: color-mix(in oklab, #0284c7 55%, #0f172a);
+}
+
+.wms-ops-gr-route-dialog__total--outbound {
+  color: color-mix(in oklab, #b45309 55%, #0f172a);
+}
+
+.dark .wms-ops-gr-route-dialog__total--transfer {
+  color: #7dd3fc;
+}
+
+.dark .wms-ops-gr-route-dialog__total--outbound {
+  color: #fbbf24;
+}
+
+html.skin-premium .wms-ops-gr-route-dialog__status,
+html.skin-premium .wms-ops-gr-route-dialog__lines {
+  border-radius: 0.95rem;
+}
+
+html.skin-premium .wms-ops-gr-route-dialog__tab-list {
+  border-radius: 0 !important;
+  padding: 0 !important;
+}
+
+html.skin-premium .wms-ops-gr-route-dialog__tab {
+  border-radius: 0.55rem 0.55rem 0 0 !important;
+  font-family: var(--wms-premium-font, inherit);
+  letter-spacing: 0.01em;
+  text-transform: none;
+  font-size: 0.8125rem !important;
+}
+
+html.skin-premium .wms-ops-gr-route-dialog__tab-kicker {
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+}
+
+html.skin-premium .wms-ops-gr-route-dialog__tab-title {
+  font-size: 0.84rem;
+  font-weight: 650;
+}
+
+html.skin-premium .wms-ops-gr-route-dialog__tab-badge {
+  border-radius: 999px;
+}
+
+html.skin-premium .wms-ops-gr-route-dialog__table th {
+  font-family: var(--wms-premium-font, inherit);
+  letter-spacing: 0.04em;
+}
+
+html.skin-premium .wms-ops-gr-route-dialog__note {
+  border-radius: 0 !important;
+  padding: 0.8rem 0.95rem !important;
 }
 
 html.skin-premium .wms-ops-detail-dialog [data-slot='dialog-close'] {
@@ -24511,7 +25424,52 @@ html.skin-premium .wms-ops-form .wms-ops-receipt-selected-lines__stat {
 .wms-ops-form .wms-ops-receipt-entry-row .wms-ops-field,
 .wms-ops-form .wms-ops-receipt-entry-row input.wms-ops-field,
 .wms-ops-form .wms-ops-receipt-entry-row button.wms-ops-lookup-trigger {
-  min-height: 1.75rem;
+  height: 1.75rem !important;
+  min-height: 1.75rem !important;
+  max-height: 1.75rem !important;
+  box-sizing: border-box;
+}
+
+.wms-ops-form .wms-ops-receipt-entry-row button.wms-ops-lookup-trigger {
+  padding: 0 0.5rem !important;
+  gap: 0.35rem;
+  overflow: hidden;
+  line-height: 1 !important;
+  font-size: 0.75rem !important;
+}
+
+.wms-ops-form .wms-ops-receipt-entry-row button.wms-ops-lookup-trigger > span {
+  min-width: 0;
+  line-height: 1.1;
+}
+
+.wms-ops-form .wms-ops-receipt-entry-row input.wms-ops-field:disabled,
+.wms-ops-form .wms-ops-receipt-entry-row input.wms-ops-field:read-only:disabled,
+.wms-ops-form .wms-ops-receipt-entry-row .wms-ops-receipt-entry-row__field-passive {
+  cursor: not-allowed !important;
+  opacity: 1 !important;
+  color: color-mix(in oklab, var(--wms-ops-field-placeholder-fg) 88%, #64748b) !important;
+  background: color-mix(in oklab, #94a3b8 16%, var(--wms-ops-field-bg)) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, #94a3b8 28%, transparent) !important;
+  border-color: color-mix(in oklab, #94a3b8 35%, var(--wms-ops-field-border)) !important;
+}
+
+.dark .wms-ops-form .wms-ops-receipt-entry-row input.wms-ops-field:disabled,
+.dark .wms-ops-form .wms-ops-receipt-entry-row input.wms-ops-field:read-only:disabled,
+.dark .wms-ops-form .wms-ops-receipt-entry-row .wms-ops-receipt-entry-row__field-passive {
+  background: color-mix(in oklab, #64748b 28%, var(--wms-ops-field-bg)) !important;
+  color: color-mix(in oklab, #94a3b8 70%, transparent) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, #64748b 35%, transparent) !important;
+}
+
+html.skin-premium .wms-ops-form .wms-ops-receipt-entry-row input.wms-ops-field:disabled,
+html.skin-premium .wms-ops-form .wms-ops-receipt-entry-row .wms-ops-receipt-entry-row__field-passive {
+  background: color-mix(in oklab, #94a3b8 14%, #f1f5f9) !important;
+}
+
+html.skin-premium.dark .wms-ops-form .wms-ops-receipt-entry-row input.wms-ops-field:disabled,
+html.skin-premium.dark .wms-ops-form .wms-ops-receipt-entry-row .wms-ops-receipt-entry-row__field-passive {
+  background: color-mix(in oklab, #64748b 32%, var(--wms-ops-field-bg)) !important;
 }
 
 .wms-ops-form .wms-ops-receipt-entry-row .wms-ops-qty-stepper__btn {
@@ -25428,12 +26386,34 @@ html.skin-premium .wms-ops-lookup-dialog.wms-ops-detail-dialog > [data-slot='dia
   padding: 1rem 1.1rem;
 }
 .wms-ops-form .wms-ops-gr-review__hero-card--supplier {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
   background:
     linear-gradient(
       160deg,
       color-mix(in oklab, var(--wms-brand-primary) 8%, transparent) 0%,
       color-mix(in oklab, var(--wms-app-panel) 92%, transparent) 64%
     );
+}
+.wms-ops-form .wms-ops-gr-review__hero-supplier-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.45rem;
+  width: 100%;
+  min-width: 0;
+}
+.wms-ops-form .wms-ops-gr-review__hero-card--supplier .wms-ops-gr-review__hero-title {
+  margin-top: 0;
+  width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.wms-ops-form .wms-ops-gr-review__hero-card--supplier .wms-ops-gr-review__hero-meta {
+  margin-top: 0;
 }
 .wms-ops-form .wms-ops-gr-review__hero-label,
 .wms-ops-form .wms-ops-gr-review__section-title {
@@ -25448,11 +26428,17 @@ html.skin-premium .wms-ops-lookup-dialog.wms-ops-detail-dialog > [data-slot='dia
   align-items: center;
   gap: 0.55rem;
 }
+.wms-ops-form .wms-ops-gr-review__hero-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
 .wms-ops-form .wms-ops-gr-review__hero-icon {
   display: grid;
   place-items: center;
   width: 1.9rem;
   height: 1.9rem;
+  flex-shrink: 0;
   border-radius: 0.6rem;
   border: 1px solid color-mix(in oklab, var(--wms-brand-primary) 32%, var(--wms-app-border));
   background:
@@ -25470,6 +26456,10 @@ html.skin-premium .wms-ops-lookup-dialog.wms-ops-detail-dialog > [data-slot='dia
   line-height: 1.2;
   font-weight: 800;
   color: hsl(var(--foreground));
+}
+.wms-ops-form .wms-ops-gr-review__hero-title-row .wms-ops-gr-review__hero-title {
+  margin-top: 0;
+  min-width: 0;
 }
 .wms-ops-form .wms-ops-gr-review__hero-meta {
   margin-top: 0.45rem;
@@ -25703,6 +26693,156 @@ html.skin-premium .wms-ops-lookup-dialog.wms-ops-detail-dialog > [data-slot='dia
 .wms-ops-form .wms-ops-gr-review__section-title {
   padding: 1rem 1rem 0.5rem;
 }
+.wms-ops-form .wms-ops-gr-review__metrics {
+  padding: 0.85rem 1rem 1.15rem;
+}
+.wms-ops-form .wms-ops-gr-review__metrics .wms-ops-gr-review__section-title {
+  padding: 0 0 0.75rem;
+}
+.wms-ops-form .wms-ops-gr-review__metric-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+.wms-ops-form .wms-ops-gr-review__metric-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.35rem;
+  min-height: 8.75rem;
+  width: 100%;
+  padding: 1rem 1.05rem;
+  border-radius: 0.95rem;
+  border: 1px solid color-mix(in oklab, var(--wms-ops-accent) 16%, var(--wms-app-border));
+  background: color-mix(in oklab, var(--wms-app-panel) 88%, transparent);
+  color: inherit;
+  text-align: left;
+  font: inherit;
+  box-shadow: inset 0 1px 0 color-mix(in oklab, white 4%, transparent);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease, background 0.15s ease;
+}
+.wms-ops-form .wms-ops-gr-review__metric-card--lines {
+  border-color: color-mix(in oklab, #22d3ee 42%, var(--wms-app-border));
+  background:
+    linear-gradient(
+      160deg,
+      color-mix(in oklab, #22d3ee 18%, transparent) 0%,
+      color-mix(in oklab, #0891b2 8%, var(--wms-app-panel)) 100%
+    );
+}
+.wms-ops-form .wms-ops-gr-review__metric-card--available {
+  border-color: color-mix(in oklab, #34d399 40%, var(--wms-app-border));
+  background:
+    linear-gradient(
+      160deg,
+      color-mix(in oklab, #34d399 16%, transparent) 0%,
+      color-mix(in oklab, #059669 7%, var(--wms-app-panel)) 100%
+    );
+}
+.wms-ops-form .wms-ops-gr-review__metric-card--quality {
+  border-color: color-mix(in oklab, #f59e0b 52%, transparent);
+  background:
+    linear-gradient(
+      160deg,
+      color-mix(in oklab, #f59e0b 20%, transparent) 0%,
+      color-mix(in oklab, #f59e0b 7%, var(--wms-app-panel)) 100%
+    );
+}
+.wms-ops-form .wms-ops-gr-review__metric-card--quality-none {
+  border-color: color-mix(in oklab, #94a3b8 28%, var(--wms-app-border));
+  background:
+    linear-gradient(
+      160deg,
+      color-mix(in oklab, #64748b 14%, transparent) 0%,
+      color-mix(in oklab, #475569 8%, var(--wms-app-panel)) 100%
+    );
+  opacity: 1;
+}
+.wms-ops-form .wms-ops-gr-review__metric-card--interactive {
+  cursor: pointer;
+}
+.wms-ops-form .wms-ops-gr-review__metric-card--interactive:hover,
+.wms-ops-form .wms-ops-gr-review__metric-card--interactive:focus-visible {
+  transform: translateY(-2px);
+  outline: none;
+}
+.wms-ops-form .wms-ops-gr-review__metric-card--lines.wms-ops-gr-review__metric-card--interactive:hover,
+.wms-ops-form .wms-ops-gr-review__metric-card--lines.wms-ops-gr-review__metric-card--interactive:focus-visible {
+  border-color: color-mix(in oklab, #22d3ee 78%, transparent);
+  box-shadow: 0 10px 24px -14px color-mix(in oklab, #22d3ee 70%, transparent);
+}
+.wms-ops-form .wms-ops-gr-review__metric-card--quality.wms-ops-gr-review__metric-card--interactive:hover,
+.wms-ops-form .wms-ops-gr-review__metric-card--quality.wms-ops-gr-review__metric-card--interactive:focus-visible {
+  border-color: color-mix(in oklab, #f59e0b 80%, transparent);
+  box-shadow: 0 8px 22px -12px color-mix(in oklab, #f59e0b 72%, transparent);
+}
+.wms-ops-form .wms-ops-gr-review__metric-card-icon {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.65rem;
+  border: 1px solid color-mix(in oklab, #22d3ee 34%, transparent);
+  background: color-mix(in oklab, #22d3ee 12%, transparent);
+  color: color-mix(in oklab, #22d3ee 82%, hsl(var(--foreground)));
+}
+.wms-ops-form .wms-ops-gr-review__metric-card--available .wms-ops-gr-review__metric-card-icon {
+  border-color: color-mix(in oklab, #34d399 38%, transparent);
+  background: color-mix(in oklab, #34d399 14%, transparent);
+  color: color-mix(in oklab, #34d399 85%, hsl(var(--foreground)));
+}
+.wms-ops-form .wms-ops-gr-review__metric-card--quality .wms-ops-gr-review__metric-card-icon {
+  border-color: color-mix(in oklab, #f59e0b 48%, transparent);
+  background: color-mix(in oklab, #f59e0b 16%, transparent);
+  color: #f59e0b;
+}
+.wms-ops-form .wms-ops-gr-review__metric-card--quality-none .wms-ops-gr-review__metric-card-icon {
+  border-color: color-mix(in oklab, #94a3b8 32%, transparent);
+  background: color-mix(in oklab, #64748b 12%, transparent);
+  color: #94a3b8;
+}
+.wms-ops-form .wms-ops-gr-review__metric-card-label {
+  margin-top: 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, #22d3ee 48%, hsl(var(--muted-foreground)));
+}
+.wms-ops-form .wms-ops-gr-review__metric-card--available .wms-ops-gr-review__metric-card-label {
+  color: color-mix(in oklab, #34d399 48%, hsl(var(--muted-foreground)));
+}
+.wms-ops-form .wms-ops-gr-review__metric-card--quality .wms-ops-gr-review__metric-card-label {
+  color: color-mix(in oklab, #f59e0b 58%, hsl(var(--muted-foreground)));
+}
+.wms-ops-form .wms-ops-gr-review__metric-card--quality-none .wms-ops-gr-review__metric-card-label {
+  color: color-mix(in oklab, #94a3b8 55%, hsl(var(--muted-foreground)));
+}
+.wms-ops-form .wms-ops-gr-review__metric-card-value {
+  font-size: 1.35rem;
+  line-height: 1.15;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: hsl(var(--foreground));
+  word-break: break-word;
+}
+.wms-ops-form .wms-ops-gr-review__metric-card--quality-none .wms-ops-gr-review__metric-card-value {
+  color: hsl(var(--muted-foreground));
+  font-size: 1.2rem;
+}
+.wms-ops-form .wms-ops-gr-review__metric-card-hint {
+  margin-top: auto;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: hsl(var(--muted-foreground));
+}
+.wms-ops-form .wms-ops-gr-review__metric-card--interactive .wms-ops-gr-review__metric-card-hint {
+  color: color-mix(in oklab, #22d3ee 58%, hsl(var(--muted-foreground)));
+}
+.wms-ops-form .wms-ops-gr-review__metric-card--quality.wms-ops-gr-review__metric-card--interactive .wms-ops-gr-review__metric-card-hint {
+  color: color-mix(in oklab, #f59e0b 62%, hsl(var(--muted-foreground)));
+}
 .wms-ops-form .wms-ops-gr-review__row {
   display: grid;
   grid-template-columns: minmax(7.5rem, 38%) 1fr;
@@ -25874,6 +27014,13 @@ html.skin-premium .wms-ops-lookup-dialog.wms-ops-detail-dialog > [data-slot='dia
   border: 1px solid color-mix(in oklab, #f59e0b 18%, var(--wms-app-border));
   background: color-mix(in oklab, #f59e0b 5%, transparent);
 }
+.wms-ops-gr-review__quality-dialog-body--receipt .wms-ops-gr-review__quality-dialog-list li {
+  border-color: color-mix(in oklab, #22d3ee 22%, var(--wms-app-border));
+  background: color-mix(in oklab, #22d3ee 6%, transparent);
+}
+.wms-ops-gr-review__quality-dialog-body--receipt .wms-ops-gr-review__quality-dialog-code {
+  color: color-mix(in oklab, #22d3ee 82%, white);
+}
 .wms-ops-gr-review__quality-dialog-code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.75rem;
@@ -25922,6 +27069,615 @@ html.skin-premium .wms-ops-lookup-dialog.wms-ops-detail-dialog > [data-slot='dia
   margin-top: 1.1rem;
   padding-top: 1rem;
   border-top: 1px solid color-mix(in oklab, var(--wms-ops-accent) 12%, var(--wms-app-border));
+}
+
+/* ── Goods receipt error banner (base = terminal) ── */
+.wms-ops-form .wms-ops-gr-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid color-mix(in oklab, #f87171 42%, var(--wms-app-border));
+  border-radius: 0.2rem;
+  background:
+    linear-gradient(90deg, color-mix(in oklab, #f87171 14%, transparent), transparent 48%),
+    color-mix(in oklab, #7f1d1d 16%, var(--wms-app-panel));
+  color: color-mix(in oklab, #fecaca 88%, white);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+.wms-ops-form .wms-ops-gr-error__tag {
+  flex: none;
+  padding: 0.1rem 0.4rem;
+  border: 1px solid color-mix(in oklab, #f87171 55%, transparent);
+  background: color-mix(in oklab, #f87171 16%, transparent);
+  color: #fca5a5;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+.wms-ops-form .wms-ops-gr-error__message {
+  min-width: 0;
+  word-break: break-word;
+}
+html.light .wms-ops-form .wms-ops-gr-error,
+html:not(.dark) .wms-ops-form .wms-ops-gr-error {
+  background:
+    linear-gradient(90deg, color-mix(in oklab, #ef4444 10%, transparent), transparent 48%),
+    color-mix(in oklab, #fef2f2 92%, white);
+  color: #991b1b;
+}
+html.light .wms-ops-form .wms-ops-gr-error__tag,
+html:not(.dark) .wms-ops-form .wms-ops-gr-error__tag {
+  color: #b91c1c;
+  background: color-mix(in oklab, #ef4444 10%, white);
+}
+html.skin-premium .wms-ops-form .wms-ops-gr-error {
+  border-radius: 0.9rem;
+  font-family: var(--wms-premium-font, inherit);
+  box-shadow: 0 12px 28px -22px color-mix(in oklab, #ef4444 55%, transparent);
+}
+html.skin-premium .wms-ops-form .wms-ops-gr-error__tag {
+  border-radius: 999px;
+  letter-spacing: 0.08em;
+}
+
+/* ── Goods receipt submit / loading screen (base = terminal) ── */
+.wms-ops-form .wms-ops-gr-submit {
+  --gr-submit-tone: #22d3ee;
+  --gr-submit-mono: 'Cascadia Code', 'Cascadia Mono', 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 24rem;
+  border: 1px solid color-mix(in oklab, var(--gr-submit-tone) 42%, var(--wms-app-border));
+  border-radius: 0;
+  background:
+    linear-gradient(rgba(6, 182, 212, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(6, 182, 212, 0.045) 1px, transparent 1px),
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--gr-submit-tone) 10%, #050a0f) 0%,
+      color-mix(in oklab, var(--wms-app-panel) 92%, #020617) 100%
+    );
+  background-size: 18px 18px, 18px 18px, auto;
+  font-family: var(--gr-submit-mono);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklab, var(--gr-submit-tone) 14%, transparent),
+    0 0 40px color-mix(in oklab, var(--gr-submit-tone) 12%, transparent);
+}
+.wms-ops-form .wms-ops-gr-submit--quality {
+  --gr-submit-tone: #f59e0b;
+  background:
+    linear-gradient(rgba(245, 158, 11, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(245, 158, 11, 0.045) 1px, transparent 1px),
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--gr-submit-tone) 10%, #0a0702) 0%,
+      color-mix(in oklab, var(--wms-app-panel) 92%, #020617) 100%
+    );
+  background-size: 18px 18px, 18px 18px, auto;
+}
+.wms-ops-form .wms-ops-gr-submit--error {
+  --gr-submit-tone: #f87171;
+  background:
+    linear-gradient(rgba(248, 113, 113, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(248, 113, 113, 0.05) 1px, transparent 1px),
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--gr-submit-tone) 12%, #140606) 0%,
+      color-mix(in oklab, var(--wms-app-panel) 92%, #020617) 100%
+    );
+  background-size: 18px 18px, 18px 18px, auto;
+}
+html.light .wms-ops-form .wms-ops-gr-submit,
+html:not(.dark) .wms-ops-form .wms-ops-gr-submit {
+  background:
+    linear-gradient(rgba(6, 182, 212, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(6, 182, 212, 0.06) 1px, transparent 1px),
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--gr-submit-tone) 8%, #f8fafc) 0%,
+      #ffffff 100%
+    );
+  background-size: 18px 18px, 18px 18px, auto;
+}
+html.light .wms-ops-form .wms-ops-gr-submit--quality,
+html:not(.dark) .wms-ops-form .wms-ops-gr-submit--quality {
+  background:
+    linear-gradient(rgba(245, 158, 11, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(245, 158, 11, 0.07) 1px, transparent 1px),
+    linear-gradient(180deg, color-mix(in oklab, #f59e0b 8%, #fffbeb) 0%, #ffffff 100%);
+  background-size: 18px 18px, 18px 18px, auto;
+}
+html.light .wms-ops-form .wms-ops-gr-submit--error,
+html:not(.dark) .wms-ops-form .wms-ops-gr-submit--error {
+  background:
+    linear-gradient(rgba(248, 113, 113, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(248, 113, 113, 0.07) 1px, transparent 1px),
+    linear-gradient(180deg, color-mix(in oklab, #f87171 8%, #fef2f2) 0%, #ffffff 100%);
+  background-size: 18px 18px, 18px 18px, auto;
+}
+.wms-ops-form .wms-ops-gr-submit__glow {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.12;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent 0,
+      transparent 2px,
+      rgb(0 0 0 / 40%) 2px,
+      rgb(0 0 0 / 40%) 3px
+    );
+}
+.wms-ops-form .wms-ops-gr-submit__grid {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.35;
+  background:
+    radial-gradient(ellipse at 50% 0%, color-mix(in oklab, var(--gr-submit-tone) 18%, transparent), transparent 55%);
+}
+.wms-ops-form .wms-ops-gr-submit__scanline {
+  pointer-events: none;
+  position: absolute;
+  inset-inline: 0;
+  height: 28%;
+  z-index: 2;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    color-mix(in oklab, var(--gr-submit-tone) 10%, transparent),
+    transparent
+  );
+  animation: wms-ops-gr-submit-crt 3.2s linear infinite;
+  mix-blend-mode: soft-light;
+}
+@keyframes wms-ops-gr-submit-crt {
+  0% { top: -30%; }
+  100% { top: 110%; }
+}
+.wms-ops-form .wms-ops-gr-submit__chrome {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.55rem 0.85rem;
+  border-bottom: 1px solid color-mix(in oklab, var(--gr-submit-tone) 28%, var(--wms-app-border));
+  background: color-mix(in oklab, var(--gr-submit-tone) 8%, #020617);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--gr-submit-tone) 72%, #94a3b8);
+}
+html.light .wms-ops-form .wms-ops-gr-submit__chrome,
+html:not(.dark) .wms-ops-form .wms-ops-gr-submit__chrome {
+  background: color-mix(in oklab, var(--gr-submit-tone) 8%, #f1f5f9);
+  color: color-mix(in oklab, var(--gr-submit-tone) 55%, #334155);
+}
+.wms-ops-form .wms-ops-gr-submit__chrome-traffic {
+  display: inline-flex;
+  gap: 0.28rem;
+}
+.wms-ops-form .wms-ops-gr-submit__chrome-traffic i {
+  width: 0.55rem;
+  height: 0.55rem;
+  border: 1px solid color-mix(in oklab, var(--gr-submit-tone) 45%, transparent);
+  background: color-mix(in oklab, var(--gr-submit-tone) 25%, transparent);
+}
+.wms-ops-form .wms-ops-gr-submit__chrome-path {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wms-ops-form .wms-ops-gr-submit__chrome-status {
+  flex: none;
+  padding: 0.12rem 0.4rem;
+  border: 1px solid color-mix(in oklab, var(--gr-submit-tone) 50%, transparent);
+  background: color-mix(in oklab, var(--gr-submit-tone) 14%, transparent);
+  color: var(--gr-submit-tone);
+  font-weight: 800;
+  animation: wms-ops-gr-submit-blink 1.1s steps(2, end) infinite;
+}
+.wms-ops-form .wms-ops-gr-submit--error .wms-ops-gr-submit__chrome-status {
+  animation: none;
+}
+@keyframes wms-ops-gr-submit-blink {
+  50% { opacity: 0.35; }
+}
+.wms-ops-form .wms-ops-gr-submit__inner {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  justify-items: center;
+  gap: 0.7rem;
+  padding: 1.75rem 1.25rem 1.5rem;
+  text-align: center;
+}
+.wms-ops-form .wms-ops-gr-submit__icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  margin-bottom: 0.2rem;
+  border: 1px solid color-mix(in oklab, var(--gr-submit-tone) 55%, transparent);
+  border-radius: 0;
+  background: color-mix(in oklab, var(--gr-submit-tone) 12%, transparent);
+  color: var(--gr-submit-tone);
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--gr-submit-tone) 18%, transparent),
+    0 0 24px -6px color-mix(in oklab, var(--gr-submit-tone) 75%, transparent);
+}
+.wms-ops-form .wms-ops-gr-submit__spinner {
+  position: absolute;
+  right: -0.4rem;
+  bottom: -0.4rem;
+  display: grid;
+  place-items: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  border: 1px solid color-mix(in oklab, var(--gr-submit-tone) 45%, transparent);
+  border-radius: 0;
+  background: color-mix(in oklab, var(--wms-app-panel) 92%, #020617);
+  color: var(--gr-submit-tone);
+}
+.wms-ops-form .wms-ops-gr-submit__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--gr-submit-tone) 78%, hsl(var(--muted-foreground)));
+}
+.wms-ops-form .wms-ops-gr-submit__eyebrow-prompt {
+  color: var(--gr-submit-tone);
+  font-weight: 800;
+}
+.wms-ops-form .wms-ops-gr-submit__title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: hsl(var(--foreground));
+  text-shadow: 0 0 18px color-mix(in oklab, var(--gr-submit-tone) 28%, transparent);
+}
+.wms-ops-form .wms-ops-gr-submit__subtitle {
+  margin: 0;
+  max-width: 30rem;
+  font-size: 0.78rem;
+  line-height: 1.55;
+  letter-spacing: 0.02em;
+  color: hsl(var(--muted-foreground));
+}
+.wms-ops-form .wms-ops-gr-submit__doc {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 0.15rem;
+  padding: 0.4rem 0.7rem;
+  border: 1px dashed color-mix(in oklab, var(--gr-submit-tone) 40%, var(--wms-app-border));
+  border-radius: 0;
+  background: color-mix(in oklab, var(--gr-submit-tone) 8%, transparent);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: hsl(var(--muted-foreground));
+}
+.wms-ops-form .wms-ops-gr-submit__doc > span {
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--gr-submit-tone) 70%, hsl(var(--muted-foreground)));
+}
+.wms-ops-form .wms-ops-gr-submit__doc strong {
+  font-size: 0.88rem;
+  letter-spacing: 0.05em;
+  color: color-mix(in oklab, var(--gr-submit-tone) 82%, hsl(var(--foreground)));
+}
+.wms-ops-form .wms-ops-gr-submit__progress {
+  width: min(24rem, 100%);
+  height: 0.4rem;
+  margin-top: 0.45rem;
+  overflow: hidden;
+  border: 1px solid color-mix(in oklab, var(--gr-submit-tone) 36%, var(--wms-app-border));
+  border-radius: 0;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      color-mix(in oklab, var(--gr-submit-tone) 12%, transparent) 0 2px,
+      transparent 2px 6px
+    );
+}
+.wms-ops-form .wms-ops-gr-submit__progress-bar {
+  display: block;
+  height: 100%;
+  width: 38%;
+  background: var(--gr-submit-tone);
+  box-shadow: 0 0 12px color-mix(in oklab, var(--gr-submit-tone) 70%, transparent);
+  animation: wms-ops-gr-submit-scan 1.15s steps(18, end) infinite;
+}
+@keyframes wms-ops-gr-submit-scan {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(280%); }
+}
+.wms-ops-form .wms-ops-gr-submit__log {
+  width: min(30rem, 100%);
+  margin: 0.65rem 0 0;
+  padding: 0.55rem 0.7rem;
+  list-style: none;
+  text-align: left;
+  border: 1px solid color-mix(in oklab, var(--gr-submit-tone) 28%, var(--wms-app-border));
+  border-radius: 0;
+  background: color-mix(in oklab, #020617 55%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--gr-submit-tone) 10%, transparent);
+  font-size: 0.74rem;
+  line-height: 1.65;
+}
+html.light .wms-ops-form .wms-ops-gr-submit__log,
+html:not(.dark) .wms-ops-form .wms-ops-gr-submit__log {
+  background: color-mix(in oklab, #0f172a 4%, white);
+}
+.wms-ops-form .wms-ops-gr-submit__log li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  opacity: 0.38;
+  color: hsl(var(--muted-foreground));
+  transition: opacity 0.15s steps(2, end), color 0.15s steps(2, end);
+}
+.wms-ops-form .wms-ops-gr-submit__log-item--done {
+  opacity: 0.78;
+  color: color-mix(in oklab, var(--gr-submit-tone) 55%, hsl(var(--foreground)));
+}
+.wms-ops-form .wms-ops-gr-submit__log-item--active {
+  opacity: 1;
+  color: hsl(var(--foreground));
+  background: color-mix(in oklab, var(--gr-submit-tone) 8%, transparent);
+  margin-inline: -0.35rem;
+  padding-inline: 0.35rem;
+}
+.wms-ops-form .wms-ops-gr-submit__log-index {
+  display: none;
+}
+.wms-ops-form .wms-ops-gr-submit__log-prompt {
+  flex: none;
+  min-width: 1.1rem;
+  color: var(--gr-submit-tone);
+  font-weight: 800;
+  text-transform: lowercase;
+}
+.wms-ops-form .wms-ops-gr-submit__log-text {
+  min-width: 0;
+  flex: 1;
+}
+.wms-ops-form .wms-ops-gr-submit__cursor {
+  flex: none;
+  width: 0.45rem;
+  height: 0.95em;
+  background: var(--gr-submit-tone);
+  animation: wms-ops-gr-submit-blink 0.9s steps(2, end) infinite;
+}
+.wms-ops-form .wms-ops-gr-submit__error {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  width: min(32rem, 100%);
+  margin-top: 0.45rem;
+  padding: 0.85rem 0.95rem;
+  text-align: left;
+  border: 1px solid color-mix(in oklab, #f87171 55%, transparent);
+  border-radius: 0;
+  background: color-mix(in oklab, #7f1d1d 22%, transparent);
+  color: color-mix(in oklab, #fecaca 92%, white);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  box-shadow: inset 3px 0 0 #f87171;
+}
+.wms-ops-form .wms-ops-gr-submit__error-tag {
+  flex: none;
+  padding: 0.1rem 0.4rem;
+  border: 1px solid color-mix(in oklab, #f87171 55%, transparent);
+  background: color-mix(in oklab, #f87171 16%, transparent);
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+html.light .wms-ops-form .wms-ops-gr-submit__error,
+html:not(.dark) .wms-ops-form .wms-ops-gr-submit__error {
+  background: color-mix(in oklab, #fef2f2 94%, white);
+  color: #991b1b;
+}
+
+/* Premium submit — soft glass, no CRT / console chrome */
+html.skin-premium .wms-ops-form .wms-ops-gr-submit,
+html.skin-premium .wms-ops-form .wms-ops-gr-submit--quality,
+html.skin-premium .wms-ops-form .wms-ops-gr-submit--error {
+  border-radius: 1.45rem;
+  font-family: var(--wms-premium-font, inherit);
+  background:
+    linear-gradient(
+      165deg,
+      color-mix(in oklab, var(--gr-submit-tone) 16%, transparent) 0%,
+      color-mix(in oklab, var(--wms-app-panel) 88%, transparent) 38%,
+      var(--wms-app-panel) 100%
+    );
+  background-size: auto;
+  border: 1px solid color-mix(in oklab, var(--gr-submit-tone) 22%, var(--wms-app-border));
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow:
+    0 32px 64px -30px rgb(0 0 0 / 48%),
+    0 0 0 1px color-mix(in oklab, var(--gr-submit-tone) 12%, transparent),
+    inset 0 1px 0 rgb(255 255 255 / 10%);
+}
+html.skin-premium .wms-ops-form .wms-ops-gr-submit__grid,
+html.skin-premium .wms-ops-form .wms-ops-gr-submit__scanline,
+html.skin-premium .wms-ops-form .wms-ops-gr-submit__chrome,
+html.skin-premium .wms-ops-form .wms-ops-gr-submit__eyebrow-prompt,
+html.skin-premium .wms-ops-form .wms-ops-gr-submit__log-prompt,
+html.skin-premium .wms-ops-form .wms-ops-gr-submit__cursor {
+  display: none !important;
+}
+html.skin-premium .wms-ops-form .wms-ops-gr-submit__glow {
+  inset: -25% -15% auto;
+  height: 60%;
+  opacity: 1;
+  background:
+    radial-gradient(
+      55% 80% at 50% 0%,
+      color-mix(in oklab, var(--gr-submit-tone) 22%, transparent) 0%,
+      transparent 70%
+    );
+}
+html.skin-premium .wms-ops-form .wms-ops-gr-submit__inner {
+  gap: 0.85rem;
+  padding: 2.4rem 1.75rem 2rem;
+}
+html.skin-premium .wms-ops-form .wms-ops-gr-submit__icon {
+  width: 4.25rem;
+  height: 4.25rem;
+  border-radius: 1.25rem;
+  border-width: 0;
+  background:
+    linear-gradient(
+      145deg,
+      color-mix(in oklab, var(--gr-submit-tone) 28%, transparent),
+      color-mix(in oklab, var(--gr-submit-tone) 8%, transparent)
+    );
+  box-shadow:
+    0 16px 36px -18px color-mix(in oklab, var(--gr-submit-tone) 65%, transparent),
+    inset 0 1px 0 rgb(255 255 255 / 18%);
+}
+html.skin-premium .wms-ops-form .wms-ops-gr-submit__spinner {
+  right: -0.2rem;
+  bottom: -0.2rem;
+  width: 1.65rem;
+  height: 1.65rem;
+  border-radius: 999px;
+  border: 0;
+  background: var(--wms-app-panel);
+  box-shadow: 0 8px 18px -10px color-mix(in oklab, var(--gr-submit-tone) 55%, transparent);
+}
+html.skin-premium .wms-ops-form .wms-ops-gr-submit__eyebrow {
+  letter-spacing: 0.14em;
+  color: color-mix(in oklab, var(--gr-submit-tone) 55%, hsl(var(--muted-foreground)));
+}
+html.skin-premium .wms-ops-form .wms-ops-gr-submit__title {
+  font-family: var(--wms-premium-display, inherit);
+  font-size: 1.65rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  text-transform: none;
+  text-shadow: none;
+}
+html.skin-premium .wms-ops-form .wms-ops-gr-submit__subtitle {
+  font-size: 0.9rem;
+  letter-spacing: normal;
+  max-width: 26rem;
+}
+html.skin-premium .wms-ops-form .wms-ops-gr-submit__doc {
+  border-style: solid;
+  border-radius: 999px;
+  padding: 0.45rem 0.95rem;
+  background: color-mix(in oklab, var(--gr-submit-tone) 10%, var(--wms-app-panel));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 8%);
+}
+html.skin-premium .wms-ops-form .wms-ops-gr-submit__doc > span {
+  letter-spacing: 0.08em;
+}
+html.skin-premium .wms-ops-form .wms-ops-gr-submit__progress {
+  height: 0.45rem;
+  border: 0;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--gr-submit-tone) 12%, transparent);
+  overflow: hidden;
+}
+html.skin-premium .wms-ops-form .wms-ops-gr-submit__progress-bar {
+  width: 45%;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklab, var(--gr-submit-tone) 35%, transparent),
+    var(--gr-submit-tone),
+    color-mix(in oklab, var(--gr-submit-tone) 35%, transparent)
+  );
+  animation: wms-ops-gr-submit-scan-smooth 1.8s cubic-bezier(0.4, 0.1, 0.3, 1) infinite;
+  box-shadow: 0 0 16px color-mix(in oklab, var(--gr-submit-tone) 45%, transparent);
+}
+@keyframes wms-ops-gr-submit-scan-smooth {
+  0% { transform: translateX(-110%); }
+  100% { transform: translateX(240%); }
+}
+html.skin-premium .wms-ops-form .wms-ops-gr-submit__log {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.35rem;
+  border: 0;
+  border-radius: 1rem;
+  background: transparent;
+  box-shadow: none;
+  width: min(26rem, 100%);
+}
+html.skin-premium .wms-ops-form .wms-ops-gr-submit__log li {
+  align-items: center;
+  gap: 0.7rem;
+  margin: 0;
+  padding: 0.7rem 0.85rem;
+  border-radius: 0.85rem;
+  border: 1px solid color-mix(in oklab, var(--gr-submit-tone) 12%, var(--wms-app-border));
+  background: color-mix(in oklab, var(--wms-app-panel) 82%, transparent);
+  opacity: 0.55;
+  transition: opacity 0.35s ease, transform 0.35s ease, border-color 0.35s ease, background 0.35s ease;
+}
+html.skin-premium .wms-ops-form .wms-ops-gr-submit__log-item--done {
+  opacity: 0.8;
+}
+html.skin-premium .wms-ops-form .wms-ops-gr-submit__log-item--active {
+  opacity: 1;
+  margin: 0;
+  padding: 0.7rem 0.85rem;
+  border-color: color-mix(in oklab, var(--gr-submit-tone) 38%, transparent);
+  background: color-mix(in oklab, var(--gr-submit-tone) 10%, var(--wms-app-panel));
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px -20px color-mix(in oklab, var(--gr-submit-tone) 55%, transparent);
+}
+html.skin-premium .wms-ops-form .wms-ops-gr-submit__log-index {
+  display: grid;
+  place-items: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  flex: none;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--gr-submit-tone) 28%, transparent);
+  background: color-mix(in oklab, var(--gr-submit-tone) 12%, transparent);
+  color: var(--gr-submit-tone);
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+html.skin-premium .wms-ops-form .wms-ops-gr-submit__log-text {
+  font-family: var(--wms-premium-font, inherit);
+  font-size: 0.84rem;
+  text-align: left;
+}
+html.skin-premium .wms-ops-form .wms-ops-gr-submit__error {
+  border-radius: 1rem;
+  box-shadow: 0 16px 36px -24px color-mix(in oklab, #ef4444 50%, transparent);
+}
+html.skin-premium .wms-ops-form .wms-ops-gr-submit__error-tag {
+  border-radius: 999px;
 }
 
 /* ── Goods receipt success screen ── */
@@ -26037,12 +27793,32 @@ html.skin-premium .wms-ops-lookup-dialog.wms-ops-detail-dialog > [data-slot='dia
   background: color-mix(in oklab, var(--gr-success-tone) 6%, transparent);
   box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--gr-success-tone) 8%, transparent);
 }
+.wms-ops-form .wms-ops-gr-success__doc--copyable {
+  appearance: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.wms-ops-form .wms-ops-gr-success__doc--copyable:hover {
+  border-color: color-mix(in oklab, var(--gr-success-tone) 70%, var(--wms-app-border));
+  background: color-mix(in oklab, var(--gr-success-tone) 12%, transparent);
+}
+.wms-ops-form .wms-ops-gr-success__doc--copyable:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--gr-success-tone) 55%, transparent);
+  outline-offset: 2px;
+}
 .wms-ops-form .wms-ops-gr-success__doc-label {
   font-size: 0.62rem;
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: hsl(var(--muted-foreground));
+}
+.wms-ops-form .wms-ops-gr-success__doc-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
 }
 .wms-ops-form .wms-ops-gr-success__doc-value {
   font-family: inherit;
@@ -26054,10 +27830,14 @@ html.skin-premium .wms-ops-lookup-dialog.wms-ops-detail-dialog > [data-slot='dia
   background: none;
   -webkit-text-fill-color: currentColor;
 }
+.wms-ops-form .wms-ops-gr-success__doc-copy-icon {
+  color: color-mix(in oklab, var(--gr-success-tone) 80%, hsl(var(--muted-foreground)));
+  opacity: 0.85;
+}
 .wms-ops-form .wms-ops-gr-success__stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.45rem;
+  gap: 0;
   padding: 0.95rem 1.15rem 0.25rem;
 }
 .wms-ops-form .wms-ops-gr-success__stat {
@@ -26066,10 +27846,11 @@ html.skin-premium .wms-ops-lookup-dialog.wms-ops-detail-dialog > [data-slot='dia
   align-items: center;
   gap: 0.2rem;
   min-height: 4.4rem;
-  padding: 0.75rem 0.5rem;
-  border-radius: 0.15rem;
-  border: 1px solid color-mix(in oklab, var(--wms-app-border) 90%, transparent);
-  background: color-mix(in oklab, hsl(var(--foreground)) 2%, transparent);
+  padding: 0.75rem 0.65rem;
+  border-radius: 0;
+  border: 0;
+  border-right: 1px solid color-mix(in oklab, var(--gr-success-line) 75%, transparent);
+  background: transparent;
   text-align: center;
   color: inherit;
   transition:
@@ -26077,20 +27858,21 @@ html.skin-premium .wms-ops-lookup-dialog.wms-ops-detail-dialog > [data-slot='dia
     background 0.14s ease,
     box-shadow 0.14s ease;
 }
+.wms-ops-form .wms-ops-gr-success__stat:last-child {
+  border-right: 0;
+}
 .wms-ops-form .wms-ops-gr-success__stat:disabled {
   cursor: default;
   opacity: 1;
 }
 .wms-ops-form .wms-ops-gr-success__stat--action {
   cursor: pointer;
-  border-color: color-mix(in oklab, var(--gr-success-tone) 42%, var(--wms-app-border));
   background: color-mix(in oklab, var(--gr-success-tone) 6%, transparent);
 }
 .wms-ops-form .wms-ops-gr-success__stat--action:hover:not(:disabled),
 .wms-ops-form .wms-ops-gr-success__stat--action:focus-visible {
-  border-color: color-mix(in oklab, var(--gr-success-tone) 70%, var(--wms-app-border));
   background: color-mix(in oklab, var(--gr-success-tone) 12%, transparent);
-  box-shadow: 0 0 0 1px color-mix(in oklab, var(--gr-success-tone) 25%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--gr-success-tone) 35%, transparent);
   outline: none;
 }
 .wms-ops-form .wms-ops-gr-success__stat-label {
@@ -26229,16 +28011,18 @@ html.skin-premium .wms-ops-lookup-dialog.wms-ops-detail-dialog > [data-slot='dia
   color: hsl(var(--muted-foreground));
 }
 .wms-ops-form .wms-ops-gr-success__actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
   gap: 0.55rem;
   margin-top: 0.9rem;
   padding: 0.95rem 1.15rem 1.2rem;
   border-top: 1px dashed color-mix(in oklab, var(--gr-success-line) 70%, transparent);
 }
 .wms-ops-form .wms-ops-gr-success__actions .wms-ops-action-btn {
-  min-width: 8.5rem;
+  min-width: 0;
+  width: 100%;
+  justify-content: center;
   border-radius: 0.2rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -26345,8 +28129,11 @@ html.skin-premium .wms-ops-form .wms-ops-gr-success__actions .wms-ops-action-btn
   text-transform: none;
 }
 html.skin-premium .wms-ops-form .wms-ops-gr-success__stats {
-  gap: 0.65rem;
+  gap: 0;
   padding: 1.1rem 1.35rem 0.35rem;
+}
+html.skin-premium .wms-ops-form .wms-ops-gr-success__stat {
+  border-right-color: color-mix(in oklab, var(--gr-success-tone) 22%, var(--wms-app-border));
 }
 html.skin-premium .wms-ops-form .wms-ops-gr-success__quality {
   margin: 0.85rem 1.35rem 0;
@@ -26362,6 +28149,16 @@ html.skin-premium .wms-ops-form .wms-ops-gr-success__quality {
 
 @media (max-width: 640px) {
   .wms-ops-form .wms-ops-gr-success__stats {
+    grid-template-columns: 1fr;
+  }
+  .wms-ops-form .wms-ops-gr-success__stat {
+    border-right: 0;
+    border-bottom: 1px solid color-mix(in oklab, var(--gr-success-line) 75%, transparent);
+  }
+  .wms-ops-form .wms-ops-gr-success__stat:last-child {
+    border-bottom: 0;
+  }
+  .wms-ops-form .wms-ops-gr-success__actions {
     grid-template-columns: 1fr;
   }
   .wms-ops-form .wms-ops-gr-success__quality {
@@ -26457,8 +28254,23 @@ html.skin-premium .wms-ops-form .wms-ops-gr-review__quality--active {
 html.skin-premium .wms-ops-form .wms-ops-gr-review__quality-text strong {
   font-family: var(--wms-premium-display, inherit);
 }
+html.skin-premium .wms-ops-form .wms-ops-gr-review__metric-card {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+html.skin-premium .wms-ops-form .wms-ops-gr-review__metric-card-value {
+  font-family: var(--wms-premium-display, inherit);
+}
+html.skin-premium .wms-ops-form .wms-ops-gr-review__metric-card--quality {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 5%),
+    0 14px 28px -24px color-mix(in oklab, #f59e0b 55%, transparent);
+}
 @media (max-width: 900px) {
   .wms-ops-form .wms-ops-gr-review__hero {
+    grid-template-columns: 1fr;
+  }
+  .wms-ops-form .wms-ops-gr-review__metric-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -26471,6 +28283,9 @@ html.skin-premium .wms-ops-form .wms-ops-gr-review__quality-text strong {
   .wms-ops-form .wms-ops-gr-review__meta-item strong,
   .wms-ops-form .wms-ops-gr-review__row dd {
     text-align: left;
+  }
+  .wms-ops-form .wms-ops-gr-review__metric-card {
+    min-height: 7.5rem;
   }
 }
 html.skin-premium.dark .wms-ops-form .wms-ops-gr-panel {
