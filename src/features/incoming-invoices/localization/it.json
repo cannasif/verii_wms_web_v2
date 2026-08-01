@@ -18,6 +18,7 @@
   },
   "actions": {
     "detail": "Visualizza dettagli",
+    "fetchDocument": "Recupera documento",
     "importByUuid": "Recupera per UUID",
     "cancel": "Annulla",
     "import": "Archivia documento",
@@ -168,6 +169,7 @@
     "description": "Gestisci gli account aziendali per filiale usati per recuperare i documenti e-Fattura ed e-Archivio in entrata.",
     "add": "Nuova connessione eLogo",
     "edit": "Modifica connessione eLogo",
+    "dialogEyebrow": "eLogo PostBox",
     "confirmDelete": "Sei sicuro di voler eliminare la connessione {{name}}?",
     "formDescription": "Definisci i dati di sessione dell'azienda e dell'integratore. Le password salvate non vengono mai mostrate.",
     "securityNote": "La password è protetta con la chiave di protezione dati dell'applicazione. Un endpoint non può essere utilizzato a meno che non soddisfi le politiche HTTPS e whitelist.",

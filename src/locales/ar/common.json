@@ -323,9 +323,9 @@
     "goodsReceiptCreate": "Goods Receipt Entry",
     "goodsReceiptList": "Goods Receipt List",
     "goodsReceiptAssigned": "Assigned Goods Receipt Orders",
-    "incomingInvoiceArchive": "Incoming e-Documents",
-    "incomingInvoiceArchiveLookup": "e-Invoice / e-Archive Lookup",
-    "incomingInvoiceArchiveConnections": "eLogo Connections",
+    "incomingInvoiceArchive": "المستندات الإلكترونية الواردة",
+    "incomingInvoiceArchiveLookup": "استعلام e-Fatura / e-Arşiv",
+    "incomingInvoiceArchiveConnections": "اتصالات eLogo",
     "inventory": "Inventory",
     "warehouse3d": "3D Warehouse",
     "warehouse3dOutside": "3D Outside Warehouse",
@@ -778,6 +778,76 @@
       "subtitle": "Update goods receipt header information without changing line or collection flow",
       "success": "Goods receipt updated successfully",
       "error": "An error occurred while updating goods receipt"
+    },
+    "supplierStockMappings": {
+      "eyebrow": "استلام البضائع / تجهيز المستند الإلكتروني",
+      "title": "مطابقة مخزون المورد – النظام",
+      "description": "اربط رمز مخزون المورد في المستند بمخزون نظام WMS بشكل فريد لكل فرع.",
+      "newMapping": "مطابقة جديدة",
+      "columns": {
+        "supplier": "المورد",
+        "supplierStockCode": "رمز مخزون المورد",
+        "supplierStockName": "اسم مخزون المورد",
+        "supplierUnit": "وحدة المورد",
+        "systemStock": "مخزون النظام",
+        "systemUnit": "وحدة النظام",
+        "conversionFactor": "معامل التحويل",
+        "status": "الحالة",
+        "actions": "الإجراءات"
+      },
+      "status": {
+        "active": "نشط",
+        "inactive": "غير نشط"
+      },
+      "readOnly": "للقراءة فقط",
+      "editMapping": "تعديل المطابقة",
+      "deleteMapping": "حذف المطابقة",
+      "edit": "تعديل",
+      "delete": "حذف",
+      "confirmDelete": "حذف مطابقة {{supplierStockCode}} للمورد {{supplierCode}}؟",
+      "toast": {
+        "deleted": "تم حذف مطابقة مخزون المورد.",
+        "deleteFailed": "تعذر حذف المطابقة.",
+        "updated": "تم تحديث مطابقة مخزون المورد.",
+        "created": "تم إنشاء مطابقة مخزون المورد.",
+        "saveFailed": "تعذر حفظ المطابقة."
+      },
+      "validation": {
+        "supplierRequired": "يجب اختيار المورد.",
+        "supplierStockCodeRequired": "رمز مخزون المورد مطلوب.",
+        "systemStockRequired": "يجب اختيار مخزون النظام.",
+        "conversionFactorInvalid": "يجب أن يكون معامل التحويل أكبر من صفر."
+      },
+      "dialog": {
+        "editTitle": "تعديل مطابقة مخزون المورد",
+        "createTitle": "مطابقة مخزون مورد جديدة",
+        "stage": "المرحلة 1 / بيانات مرجعية",
+        "editHeading": "تعديل المطابقة",
+        "createHeading": "ربط رمز مخزون المورد",
+        "description": "تُستخدم هذه التعريفات في المراحل اللاحقة لربط بنود المستند الإلكتروني وOCR بمخزون النظام الصحيح.",
+        "fields": {
+          "supplier": "المورد",
+          "systemStock": "مخزون النظام",
+          "supplierStockCode": "رمز مخزون المورد",
+          "supplierStockName": "اسم مخزون المورد",
+          "supplierUnit": "وحدة المورد",
+          "conversionFactor": "معامل تحويل الوحدة",
+          "notes": "ملاحظات"
+        },
+        "placeholders": {
+          "searchSupplier": "ابحث واختر المورد",
+          "searchSystemStock": "ابحث واختر مخزون النظام",
+          "supplierStockCode": "رمز المخزون من المستند",
+          "supplierStockName": "وصف المنتج من المستند",
+          "supplierUnit": "قطعة، كجم، صندوق...",
+          "notes": "ملاحظة تشغيلية حول المطابقة"
+        },
+        "unitLabel": "الوحدة: {{unit}}",
+        "mappingActive": "المطابقة نشطة",
+        "mappingActiveHint": "لا تُستخدم المطابقات غير النشطة في حل المستندات تلقائياً.",
+        "cancel": "إلغاء",
+        "save": "حفظ"
+      }
     }
   },
   "shipment": {

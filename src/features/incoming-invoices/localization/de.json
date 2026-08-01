@@ -18,6 +18,7 @@
   },
   "actions": {
     "detail": "Details anzeigen",
+    "fetchDocument": "Dokument abrufen",
     "importByUuid": "Per UUID abrufen",
     "cancel": "Abbrechen",
     "import": "Dokument archivieren",
@@ -168,6 +169,7 @@
     "description": "Verwalten Sie filialbezogene Firmenkonten für den Abruf eingehender e-Rechnungs- und e-Archiv-Dokumente.",
     "add": "Neue eLogo-Verbindung",
     "edit": "eLogo-Verbindung bearbeiten",
+    "dialogEyebrow": "eLogo PostBox",
     "confirmDelete": "Möchten Sie die Verbindung {{name}} wirklich löschen?",
     "formDescription": "Definieren Sie Firmen- und Integrator-Sitzungsdaten. Gespeicherte Passwörter werden nie angezeigt.",
     "securityNote": "Das Passwort wird mit dem Datenschutzschlüssel der Anwendung geschützt. Ein Endpunkt kann nur verwendet werden, wenn er die HTTPS- und Zulassungslisten-Richtlinien erfüllt.",

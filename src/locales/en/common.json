@@ -1046,6 +1046,76 @@
       "subtitle": "Update goods receipt header information without changing line or collection flow",
       "success": "Goods receipt updated successfully",
       "error": "An error occurred while updating goods receipt"
+    },
+    "supplierStockMappings": {
+      "eyebrow": "GOODS RECEIPT / E-DOCUMENT PREP",
+      "title": "Supplier – System Stock Mapping",
+      "description": "Map the supplier's document stock code to the WMS system stock uniquely by branch.",
+      "newMapping": "New Mapping",
+      "columns": {
+        "supplier": "Supplier",
+        "supplierStockCode": "Supplier Stock Code",
+        "supplierStockName": "Supplier Stock Name",
+        "supplierUnit": "Supplier Unit",
+        "systemStock": "System Stock",
+        "systemUnit": "System Unit",
+        "conversionFactor": "Conversion Factor",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "readOnly": "Read only",
+      "editMapping": "Edit mapping",
+      "deleteMapping": "Delete mapping",
+      "edit": "Edit",
+      "delete": "Delete",
+      "confirmDelete": "Delete stock mapping {{supplierStockCode}} for supplier {{supplierCode}}?",
+      "toast": {
+        "deleted": "Supplier stock mapping deleted.",
+        "deleteFailed": "Mapping could not be deleted.",
+        "updated": "Supplier stock mapping updated.",
+        "created": "Supplier stock mapping created.",
+        "saveFailed": "Mapping could not be saved."
+      },
+      "validation": {
+        "supplierRequired": "Supplier must be selected.",
+        "supplierStockCodeRequired": "Supplier stock code is required.",
+        "systemStockRequired": "System stock must be selected.",
+        "conversionFactorInvalid": "Conversion factor must be greater than zero."
+      },
+      "dialog": {
+        "editTitle": "Edit supplier stock mapping",
+        "createTitle": "New supplier stock mapping",
+        "stage": "STAGE 1 / REFERENCE DATA",
+        "editHeading": "Edit mapping",
+        "createHeading": "Map supplier stock code",
+        "description": "This definition is used in later stages to link e-document and OCR lines to the correct system stock.",
+        "fields": {
+          "supplier": "Supplier",
+          "systemStock": "System stock",
+          "supplierStockCode": "Supplier stock code",
+          "supplierStockName": "Supplier stock name",
+          "supplierUnit": "Supplier unit",
+          "conversionFactor": "Unit conversion factor",
+          "notes": "Notes"
+        },
+        "placeholders": {
+          "searchSupplier": "Search and select supplier",
+          "searchSystemStock": "Search and select system stock",
+          "supplierStockCode": "Stock code from document",
+          "supplierStockName": "Product description from document",
+          "supplierUnit": "PCS, KG, CASE...",
+          "notes": "Operational note about the mapping"
+        },
+        "unitLabel": "Unit: {{unit}}",
+        "mappingActive": "Mapping active",
+        "mappingActiveHint": "Inactive mappings are not used in automatic document resolution.",
+        "cancel": "Cancel",
+        "save": "Save"
+      }
     }
   },
   "vehicleCheckIn": {

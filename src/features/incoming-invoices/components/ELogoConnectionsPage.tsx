@@ -12,7 +12,8 @@ import { incomingInvoiceApi } from '../api/incoming-invoice.api';
 import type { ELogoConnectionRow, SaveELogoConnectionInput } from '../types/incoming-invoice.types';
 
 export function ELogoConnectionsPage(): ReactElement {
-  const { t, moduleReady } = useModuleTranslation('incoming-invoices');
+  const { t, moduleReady, i18n } = useModuleTranslation('incoming-invoices');
+  const language = i18n.resolvedLanguage ?? i18n.language;
   const branchCode = useAuthStore((state) => state.branch?.code ?? '0');
   const [editing, setEditing] = useState<ELogoConnectionRow | 'new' | null>(null);
   const [gridVersion, setGridVersion] = useState(0);
@@ -48,11 +49,15 @@ export function ELogoConnectionsPage(): ReactElement {
         render: (row) => <div className="flex gap-1"><button type="button" aria-label={t('actions.edit')} title={t('actions.edit')} onClick={() => setEditing(row)} className="grid size-11 place-items-center rounded-xl text-cyan-600 hover:bg-cyan-500/10"><Edit3 className="size-4" /></button><button type="button" aria-label={t('actions.delete')} title={t('actions.delete')} disabled={deleting === row.id} onClick={() => void remove(row)} className="grid size-11 place-items-center rounded-xl text-rose-500 hover:bg-rose-500/10 disabled:opacity-50">{deleting === row.id ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}</button></div>,
       },
     ];
-  }, [deleting, moduleReady, remove, t]);
+  }, [deleting, language, moduleReady, remove, t]);
+
+  if (!moduleReady) {
+    return <div className="grid min-h-80 place-items-center"><Loader2 className="size-7 animate-spin text-cyan-500" /></div>;
+  }
 
   return <>
     <AdvancedDataGrid<ELogoConnectionRow>
-      key={`${gridVersion}-${branchCode}`}
+      key={`${gridVersion}-${branchCode}-${language}`}
       pageKey="elogo-connections"
       title={t('connections.title')}
       description={t('connections.description')}
@@ -96,7 +101,7 @@ function ConnectionDialog({ branchCode, value, onClose, onSaved }: { branchCode:
     }
   };
   return <ResponsiveDialog onClose={onClose} title={value ? t('connections.edit') : t('connections.add')} className="max-h-[calc(100dvh-1rem)]">
-    <header className="flex items-start justify-between gap-3"><div><p className="text-xs font-black uppercase tracking-[.18em] text-cyan-500">eLogo PostBox</p><h2 className="mt-1 text-xl font-black">{value ? t('connections.edit') : t('connections.add')}</h2><p className="mt-1 text-sm text-slate-500">{t('connections.formDescription')}</p></div><button type="button" onClick={onClose} className="grid size-11 place-items-center rounded-xl hover:bg-black/5 dark:hover:bg-white/10"><X className="size-5" /></button></header>
+    <header className="flex items-start justify-between gap-3"><div><p className="text-xs font-black uppercase tracking-[.18em] text-cyan-500">{t('connections.dialogEyebrow')}</p><h2 className="mt-1 text-xl font-black">{value ? t('connections.edit') : t('connections.add')}</h2><p className="mt-1 text-sm text-slate-500">{t('connections.formDescription')}</p></div><button type="button" onClick={onClose} className="grid size-11 place-items-center rounded-xl hover:bg-black/5 dark:hover:bg-white/10"><X className="size-5" /></button></header>
     <div className="mt-5 grid gap-4 sm:grid-cols-2">
       <Field label={t('connections.fields.key')} required><AppInput value={form.key} disabled={Boolean(value)} onChange={(event) => set('key', event.target.value)} /></Field>
       <Field label={t('connections.fields.name')} required><AppInput value={form.displayName} onChange={(event) => set('displayName', event.target.value)} /></Field>

@@ -18,6 +18,7 @@
   },
   "actions": {
     "detail": "Ver detalles",
+    "fetchDocument": "Obtener documento",
     "importByUuid": "Obtener por UUID",
     "cancel": "Cancelar",
     "import": "Archivar documento",
@@ -168,6 +169,7 @@
     "description": "Gestione las cuentas de empresa por sucursal usadas para recuperar los documentos e-Factura y e-Archivo entrantes.",
     "add": "Nueva conexión eLogo",
     "edit": "Editar conexión eLogo",
+    "dialogEyebrow": "eLogo PostBox",
     "confirmDelete": "¿Está seguro de que desea eliminar la conexión {{name}}?",
     "formDescription": "Defina los datos de sesión de la empresa y el integrador. Las contraseñas guardadas nunca se muestran.",
     "securityNote": "La contraseña está protegida con la clave de protección de datos de la aplicación. Un endpoint no puede usarse a menos que cumpla las políticas de HTTPS y lista de permitidos.",

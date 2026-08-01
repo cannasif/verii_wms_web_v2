@@ -18,6 +18,7 @@
   },
   "actions": {
     "detail": "View Details",
+    "fetchDocument": "Fetch Document",
     "importByUuid": "Fetch by UUID",
     "cancel": "Cancel",
     "import": "Archive Document",
@@ -168,6 +169,7 @@
     "description": "Manage branch-scoped company accounts used to retrieve incoming e-Invoice and e-Archive documents.",
     "add": "New eLogo Connection",
     "edit": "Edit eLogo Connection",
+    "dialogEyebrow": "eLogo PostBox",
     "confirmDelete": "Are you sure you want to delete {{name}}?",
     "formDescription": "Define company and integrator session details. Saved passwords are never displayed.",
     "securityNote": "The password is protected with the application data-protection key. An endpoint cannot be used unless it passes the HTTPS and allow-list policies.",

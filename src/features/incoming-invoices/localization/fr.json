@@ -18,6 +18,7 @@
   },
   "actions": {
     "detail": "Voir les détails",
+    "fetchDocument": "Récupérer le document",
     "importByUuid": "Récupérer par UUID",
     "cancel": "Annuler",
     "import": "Archiver le document",
@@ -168,6 +169,7 @@
     "description": "Gérez les comptes société par agence utilisés pour récupérer les documents e-Facture et e-Archive entrants.",
     "add": "Nouvelle connexion eLogo",
     "edit": "Modifier la connexion eLogo",
+    "dialogEyebrow": "eLogo PostBox",
     "confirmDelete": "Voulez-vous vraiment supprimer la connexion {{name}} ?",
     "formDescription": "Définissez les informations de session de la société et de l'intégrateur. Les mots de passe enregistrés ne sont jamais affichés.",
     "securityNote": "Le mot de passe est protégé par la clé de protection des données de l'application. Un point de terminaison ne peut être utilisé que s'il respecte les politiques HTTPS et de liste blanche.",

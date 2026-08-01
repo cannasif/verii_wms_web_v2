@@ -337,9 +337,9 @@
     "goodsReceiptList": "Wareneingang Liste",
     "goodsReceiptAssigned": "Zugewiesene Wareneingangsaufträge",
     "goodsReceiptApproval": "Wareneingangsbestellungen warten auf Genehmigung",
-    "incomingInvoiceArchive": "Incoming e-Documents",
-    "incomingInvoiceArchiveLookup": "e-Invoice / e-Archive Lookup",
-    "incomingInvoiceArchiveConnections": "eLogo Connections",
+    "incomingInvoiceArchive": "Eingehende e-Dokumente",
+    "incomingInvoiceArchiveLookup": "e-Rechnung / e-Archiv Abfrage",
+    "incomingInvoiceArchiveConnections": "eLogo-Verbindungen",
     "inventory": "Inventar",
     "warehouse3d": "3D-Lager",
     "warehouse3dOutside": "3D Außenlager",
@@ -1009,6 +1009,76 @@
       "subtitle": "Aktualisieren Sie die Informationen zum Wareneingangskopf, ohne die Zeile oder den Abholfluss zu",
       "success": "Wareneingang erfolgreich aktualisiert",
       "error": "Beim Aktualisieren des Wareneingangs ist ein Fehler aufgetreten"
+    },
+    "supplierStockMappings": {
+      "eyebrow": "WARENEINGANG / E-BELEG-VORBEREITUNG",
+      "title": "Lieferant – Systembestand-Zuordnung",
+      "description": "Ordnen Sie den Bestandscode des Lieferanten aus dem Beleg eindeutig pro Niederlassung dem WMS-Systembestand zu.",
+      "newMapping": "Neue Zuordnung",
+      "columns": {
+        "supplier": "Lieferant",
+        "supplierStockCode": "Lieferanten-Bestandscode",
+        "supplierStockName": "Lieferanten-Bestandsname",
+        "supplierUnit": "Lieferanteneinheit",
+        "systemStock": "Systembestand",
+        "systemUnit": "Systemeinheit",
+        "conversionFactor": "Umrechnungsfaktor",
+        "status": "Status",
+        "actions": "Aktionen"
+      },
+      "status": {
+        "active": "Aktiv",
+        "inactive": "Inaktiv"
+      },
+      "readOnly": "Nur Lesen",
+      "editMapping": "Zuordnung bearbeiten",
+      "deleteMapping": "Zuordnung löschen",
+      "edit": "Bearbeiten",
+      "delete": "Löschen",
+      "confirmDelete": "Bestandzuordnung {{supplierStockCode}} für Lieferant {{supplierCode}} löschen?",
+      "toast": {
+        "deleted": "Lieferanten-Bestandzuordnung gelöscht.",
+        "deleteFailed": "Zuordnung konnte nicht gelöscht werden.",
+        "updated": "Lieferanten-Bestandzuordnung aktualisiert.",
+        "created": "Lieferanten-Bestandzuordnung erstellt.",
+        "saveFailed": "Zuordnung konnte nicht gespeichert werden."
+      },
+      "validation": {
+        "supplierRequired": "Lieferant muss ausgewählt werden.",
+        "supplierStockCodeRequired": "Lieferanten-Bestandscode ist erforderlich.",
+        "systemStockRequired": "Systembestand muss ausgewählt werden.",
+        "conversionFactorInvalid": "Umrechnungsfaktor muss größer als null sein."
+      },
+      "dialog": {
+        "editTitle": "Lieferanten-Bestandzuordnung bearbeiten",
+        "createTitle": "Neue Lieferanten-Bestandzuordnung",
+        "stage": "STUFE 1 / REFERENZDATEN",
+        "editHeading": "Zuordnung bearbeiten",
+        "createHeading": "Lieferanten-Bestandscode zuordnen",
+        "description": "Diese Definition wird in späteren Phasen verwendet, um E-Beleg- und OCR-Zeilen dem richtigen Systembestand zuzuordnen.",
+        "fields": {
+          "supplier": "Lieferant",
+          "systemStock": "Systembestand",
+          "supplierStockCode": "Lieferanten-Bestandscode",
+          "supplierStockName": "Lieferanten-Bestandsname",
+          "supplierUnit": "Lieferanteneinheit",
+          "conversionFactor": "Einheitenumrechnungsfaktor",
+          "notes": "Notiz"
+        },
+        "placeholders": {
+          "searchSupplier": "Lieferant suchen und auswählen",
+          "searchSystemStock": "Systembestand suchen und auswählen",
+          "supplierStockCode": "Bestandscode aus Beleg",
+          "supplierStockName": "Produktbeschreibung aus Beleg",
+          "supplierUnit": "STK, KG, KARTON...",
+          "notes": "Operative Notiz zur Zuordnung"
+        },
+        "unitLabel": "Einheit: {{unit}}",
+        "mappingActive": "Zuordnung aktiv",
+        "mappingActiveHint": "Inaktive Zuordnungen werden bei der automatischen Belegauflösung nicht verwendet.",
+        "cancel": "Abbrechen",
+        "save": "Speichern"
+      }
     }
   },
   "vehicleCheckIn": {

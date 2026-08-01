@@ -75,7 +75,7 @@ export function IncomingInvoiceArchivePage(): ReactElement {
       description={t('archive.description')}
       columns={columns}
       fetchPage={(request) => incomingInvoiceApi.paged(branchCode, request)}
-      toolbarAction={{ label: 'Belge Al', run: async () => setImportOpen(true) }}
+      toolbarAction={{ label: t('actions.fetchDocument'), run: async () => setImportOpen(true) }}
     />
     {importOpen && <ImportDialog
       branchCode={branchCode}

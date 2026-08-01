@@ -323,9 +323,9 @@
     "goodsReceiptCreate": "Goods Receipt Entry",
     "goodsReceiptList": "Goods Receipt List",
     "goodsReceiptAssigned": "Assigned Goods Receipt Orders",
-    "incomingInvoiceArchive": "Incoming e-Documents",
-    "incomingInvoiceArchiveLookup": "e-Invoice / e-Archive Lookup",
-    "incomingInvoiceArchiveConnections": "eLogo Connections",
+    "incomingInvoiceArchive": "Documenti e in entrata",
+    "incomingInvoiceArchiveLookup": "Ricerca e-Fattura / e-Archivio",
+    "incomingInvoiceArchiveConnections": "Connessioni eLogo",
     "inventory": "Inventory",
     "warehouse3d": "3D Warehouse",
     "warehouse3dOutside": "3D Outside Warehouse",
@@ -778,6 +778,76 @@
       "subtitle": "Update goods receipt header information without changing line or collection flow",
       "success": "Goods receipt updated successfully",
       "error": "An error occurred while updating goods receipt"
+    },
+    "supplierStockMappings": {
+      "eyebrow": "RICEVIMENTO / PREPARAZIONE E-DOCUMENTO",
+      "title": "Corrispondenza stock fornitore – sistema",
+      "description": "Associa il codice stock del fornitore sul documento allo stock di sistema WMS in modo univoco per filiale.",
+      "newMapping": "Nuova corrispondenza",
+      "columns": {
+        "supplier": "Fornitore",
+        "supplierStockCode": "Codice stock fornitore",
+        "supplierStockName": "Nome stock fornitore",
+        "supplierUnit": "Unità fornitore",
+        "systemStock": "Stock sistema",
+        "systemUnit": "Unità sistema",
+        "conversionFactor": "Fattore di conversione",
+        "status": "Stato",
+        "actions": "Azioni"
+      },
+      "status": {
+        "active": "Attivo",
+        "inactive": "Inattivo"
+      },
+      "readOnly": "Sola lettura",
+      "editMapping": "Modifica corrispondenza",
+      "deleteMapping": "Elimina corrispondenza",
+      "edit": "Modifica",
+      "delete": "Elimina",
+      "confirmDelete": "Eliminare la corrispondenza {{supplierStockCode}} per il fornitore {{supplierCode}}?",
+      "toast": {
+        "deleted": "Corrispondenza stock fornitore eliminata.",
+        "deleteFailed": "Impossibile eliminare la corrispondenza.",
+        "updated": "Corrispondenza stock fornitore aggiornata.",
+        "created": "Corrispondenza stock fornitore creata.",
+        "saveFailed": "Impossibile salvare la corrispondenza."
+      },
+      "validation": {
+        "supplierRequired": "Il fornitore deve essere selezionato.",
+        "supplierStockCodeRequired": "Il codice stock fornitore è obbligatorio.",
+        "systemStockRequired": "Lo stock di sistema deve essere selezionato.",
+        "conversionFactorInvalid": "Il fattore di conversione deve essere maggiore di zero."
+      },
+      "dialog": {
+        "editTitle": "Modifica corrispondenza stock fornitore",
+        "createTitle": "Nuova corrispondenza stock fornitore",
+        "stage": "FASE 1 / DATI DI RIFERIMENTO",
+        "editHeading": "Modifica corrispondenza",
+        "createHeading": "Associa codice stock fornitore",
+        "description": "Questa definizione verrà usata nelle fasi successive per collegare le righe e-documento e OCR allo stock di sistema corretto.",
+        "fields": {
+          "supplier": "Fornitore",
+          "systemStock": "Stock sistema",
+          "supplierStockCode": "Codice stock fornitore",
+          "supplierStockName": "Nome stock fornitore",
+          "supplierUnit": "Unità fornitore",
+          "conversionFactor": "Fattore di conversione unità",
+          "notes": "Note"
+        },
+        "placeholders": {
+          "searchSupplier": "Cerca e seleziona fornitore",
+          "searchSystemStock": "Cerca e seleziona stock di sistema",
+          "supplierStockCode": "Codice stock dal documento",
+          "supplierStockName": "Descrizione prodotto dal documento",
+          "supplierUnit": "PZ, KG, COLLO...",
+          "notes": "Nota operativa sulla corrispondenza"
+        },
+        "unitLabel": "Unità: {{unit}}",
+        "mappingActive": "Corrispondenza attiva",
+        "mappingActiveHint": "Le corrispondenze inattive non vengono usate nella risoluzione automatica dei documenti.",
+        "cancel": "Annulla",
+        "save": "Salva"
+      }
     }
   },
   "shipment": {

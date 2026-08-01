@@ -18,6 +18,7 @@
   },
   "actions": {
     "detail": "Detayı Görüntüle",
+    "fetchDocument": "Belge Al",
     "importByUuid": "UUID ile Belge Getir",
     "cancel": "Vazgeç",
     "import": "Belgeyi Arşivle",
@@ -168,6 +169,7 @@
     "description": "Gelen e-Fatura ve e-Arşiv belgelerinin okunacağı şirket hesaplarını şube bazında yönetin.",
     "add": "Yeni eLogo Bağlantısı",
     "edit": "eLogo Bağlantısını Düzenle",
+    "dialogEyebrow": "eLogo PostBox",
     "confirmDelete": "{{name}} bağlantısını silmek istediğinize emin misiniz?",
     "formDescription": "Şirket ve entegratör oturum bilgilerini tanımlayın. Kaydedilen şifre geri gösterilmez.",
     "securityNote": "Şifre veri koruma anahtarıyla şifrelenerek saklanır. Uç nokta izin listesinden ve HTTPS zorunluluğundan geçmeden kullanılamaz.",

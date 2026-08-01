@@ -1046,6 +1046,76 @@
       "subtitle": "Mal kabul başlık bilgilerini satır/toplama akışını bozmadan güncelleyin",
       "success": "Mal kabul başarıyla güncellendi",
       "error": "Mal kabul güncellenirken bir hata oluştu"
+    },
+    "supplierStockMappings": {
+      "eyebrow": "MAL KABUL / E-BELGE HAZIRLIK",
+      "title": "Tedarikçi – Sistem Stok Eşleme",
+      "description": "Tedarikçinin belge üzerindeki stok kodunu WMS sistem stoğuyla şube bazında tekilleştirerek eşleyin.",
+      "newMapping": "Yeni Eşleme",
+      "columns": {
+        "supplier": "Tedarikçi",
+        "supplierStockCode": "Tedarikçi Stok Kodu",
+        "supplierStockName": "Tedarikçi Stok Adı",
+        "supplierUnit": "Tedarikçi Birimi",
+        "systemStock": "Sistem Stoğu",
+        "systemUnit": "Sistem Birimi",
+        "conversionFactor": "Dönüşüm Katsayısı",
+        "status": "Durum",
+        "actions": "İşlemler"
+      },
+      "status": {
+        "active": "Aktif",
+        "inactive": "Pasif"
+      },
+      "readOnly": "Salt okunur",
+      "editMapping": "Eşlemeyi düzenle",
+      "deleteMapping": "Eşlemeyi sil",
+      "edit": "Düzenle",
+      "delete": "Sil",
+      "confirmDelete": "{{supplierCode}} tedarikçisinin {{supplierStockCode}} stok eşlemesi silinsin mi?",
+      "toast": {
+        "deleted": "Tedarikçi stok eşlemesi silindi.",
+        "deleteFailed": "Eşleme silinemedi.",
+        "updated": "Tedarikçi stok eşlemesi güncellendi.",
+        "created": "Tedarikçi stok eşlemesi oluşturuldu.",
+        "saveFailed": "Eşleme kaydedilemedi."
+      },
+      "validation": {
+        "supplierRequired": "Tedarikçi seçilmelidir.",
+        "supplierStockCodeRequired": "Tedarikçi stok kodu zorunludur.",
+        "systemStockRequired": "Sistem stoğu seçilmelidir.",
+        "conversionFactorInvalid": "Dönüşüm katsayısı sıfırdan büyük olmalıdır."
+      },
+      "dialog": {
+        "editTitle": "Tedarikçi stok eşlemesini düzenle",
+        "createTitle": "Yeni tedarikçi stok eşlemesi",
+        "stage": "AŞAMA 1 / REFERANS VERİ",
+        "editHeading": "Eşlemeyi düzenle",
+        "createHeading": "Tedarikçi stok kodunu eşle",
+        "description": "Bu tanım sonraki aşamalarda e-belge ve OCR satırlarının doğru sistem stoğuna bağlanmasında kullanılacaktır.",
+        "fields": {
+          "supplier": "Tedarikçi",
+          "systemStock": "Sistem stoğu",
+          "supplierStockCode": "Tedarikçi stok kodu",
+          "supplierStockName": "Tedarikçi stok adı",
+          "supplierUnit": "Tedarikçi birimi",
+          "conversionFactor": "Birim dönüşüm katsayısı",
+          "notes": "Not"
+        },
+        "placeholders": {
+          "searchSupplier": "Tedarikçi ara ve seç",
+          "searchSystemStock": "Sistem stoğunu ara ve seç",
+          "supplierStockCode": "Belgede gelen stok kodu",
+          "supplierStockName": "Belgedeki ürün açıklaması",
+          "supplierUnit": "ADET, KG, KOLİ...",
+          "notes": "Eşleme hakkında operasyon notu"
+        },
+        "unitLabel": "Birim: {{unit}}",
+        "mappingActive": "Eşleme aktif",
+        "mappingActiveHint": "Pasif eşlemeler otomatik belge çözümlemesinde kullanılmaz.",
+        "cancel": "Vazgeç",
+        "save": "Kaydet"
+      }
     }
   },
   "vehicleCheckIn": {
