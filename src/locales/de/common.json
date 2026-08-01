@@ -6669,10 +6669,10 @@
     }
   },
   "userGroupAssignments": {
-    "noUserSelected": "Henüz kullanıcı seçilmedi",
-    "statusLabel": "Durum",
-    "statusPending": "Kaydedilmedi",
-    "statusCurrent": "Güncel",
+    "noUserSelected": "Noch kein Benutzer ausgewählt",
+    "statusLabel": "Status",
+    "statusPending": "Nicht gespeichert",
+    "statusCurrent": "Aktuell",
     "readOnlyInfo": "Sie können diesen Bildschirm anzeigen, benötigen jedoch Update-Berechtigung, um Gruppenzuweisungen zu ändern."
   },
   "smtpSettings": {

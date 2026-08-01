@@ -1,0 +1,146 @@
+{
+  "grid": {
+    "eyebrowGroup": "النظام_والصلاحيات",
+    "eyebrowPage": "إدارة_المستخدمين",
+    "title": "إدارة المستخدمين",
+    "description": "إدارة حسابات المستخدمين ومعلومات الملف الشخصي والأدوار ومجموعات الصلاحيات.",
+    "emptyMessage": "لم يتم العثور على مستخدمين مسجلين.",
+    "toolbar": {
+      "importAction": "إضافة مستخدمين عبر Excel",
+      "createAction": "مستخدم جديد"
+    },
+    "columns": {
+      "username": "اسم المستخدم",
+      "firstName": "الاسم",
+      "lastName": "اللقب",
+      "email": "البريد الإلكتروني",
+      "role": "الدور",
+      "status": "الحالة",
+      "lastLogin": "آخر تسجيل دخول",
+      "actions": "الإجراءات"
+    },
+    "statusActive": "نشط",
+    "statusInactive": "غير نشط",
+    "editAction": "تعديل",
+    "deactivateAction": "إلغاء التفعيل",
+    "editAriaLabel": "تعديل {{username}}",
+    "deactivateAriaLabel": "إلغاء تفعيل {{username}}"
+  },
+  "toast": {
+    "lookupsFailed": "تعذر الحصول على مجموعات الصلاحيات والمستودعات.",
+    "detailFailed": "تعذر الحصول على معلومات المستخدم.",
+    "activated": "تم تفعيل المستخدم.",
+    "deactivated": "تم إلغاء تفعيل المستخدم.",
+    "statusUpdateFailed": "تعذر تحديث الحالة.",
+    "created": "تم إنشاء المستخدم بنجاح.",
+    "updated": "تم تحديث معلومات المستخدم وصلاحياته.",
+    "saveFailed": "تعذر حفظ المستخدم.",
+    "deactivateSuccess": "تم إلغاء تفعيل المستخدم.",
+    "deactivateFailed": "تعذر إلغاء تفعيل المستخدم."
+  },
+  "validation": {
+    "username": "3-100 حرفًا؛ استخدم الأحرف والأرقام والنقاط والشرطات أو الشرطات السفلية.",
+    "email": "أدخل عنوان بريد إلكتروني صالحًا.",
+    "password": "يجب أن تتكون كلمة المرور من {{min}}-{{max}} حرفًا.",
+    "confirmPassword": "كلمتا المرور غير متطابقتين.",
+    "firstName": "يمكن أن يتكون الاسم من 100 حرف كحد أقصى.",
+    "lastName": "يمكن أن يتكون اللقب من 100 حرف كحد أقصى.",
+    "phoneNumber": "يمكن أن يتكون الهاتف من 40 حرفًا كحد أقصى.",
+    "superadminNotAllowed": "لا يمكن إنشاء مسؤول نظام عام من النموذج."
+  },
+  "dialog": {
+    "createTitle": "مستخدم جديد",
+    "editTitle": "تعديل المستخدم",
+    "subtitle": "إدارة معلومات الحساب والملف الشخصي والصلاحيات في عملية واحدة.",
+    "usernameLabel": "اسم المستخدم",
+    "emailLabel": "البريد الإلكتروني",
+    "firstNameLabel": "الاسم",
+    "lastNameLabel": "اللقب",
+    "phoneLabel": "الهاتف",
+    "roleLabel": "الدور",
+    "roleUser": "مستخدم",
+    "roleManager": "مدير",
+    "roleAdmin": "مسؤول التطبيق",
+    "roleSuperadmin": "مسؤول النظام",
+    "temporaryPasswordLabel": "كلمة مرور مؤقتة",
+    "newPasswordLabel": "كلمة مرور جديدة",
+    "passwordLengthHint": "({{min}}-{{max}} حرفًا)",
+    "passwordPlaceholderEdit": "اتركه فارغًا إذا لم يتغير",
+    "showPassword": "إظهار كلمة المرور",
+    "hidePassword": "إخفاء كلمة المرور",
+    "confirmPasswordLabel": "تأكيد كلمة المرور",
+    "permissionGroupsTitle": "مجموعات الصلاحيات",
+    "groupsSelectedCount": "{{count}} مجموعة محددة",
+    "permissionCountSuffix": "{{count}} صلاحية",
+    "systemGroupSuffix": " • مجموعة نظام",
+    "warehousesTitle": "المستودعات التي يمكنه العمل بها",
+    "warehousesSelectedCount": "{{count}} مستودع محدد",
+    "warehousesNoneSelected": "غير محدد: جميع المستودعات",
+    "warehousesHint": "إذا تم تحديد مستودعات، يمكن للمستخدم إجراء استلام البضائع فقط في المستودعات المحددة. إذا لم يتم تحديد أي مستودع، تكون جميع المستودعات متاحة. يرى دور المسؤول جميع المستودعات دائمًا.",
+    "warehouseLabel": "مستودع {{code}}",
+    "superadminNotice": "لا يمكن تغيير اسم المستخدم ودوره وحالته النشطة لمستخدم النظام الرئيسي لأسباب أمنية.",
+    "activeUserLabel": "مستخدم نشط",
+    "activeUserHint": "السماح للمستخدم بتسجيل الدخول إلى النظام.",
+    "cancelButton": "إلغاء",
+    "createButton": "إنشاء المستخدم",
+    "saveButton": "حفظ التغييرات"
+  },
+  "deactivateDialog": {
+    "title": "إلغاء تفعيل المستخدم",
+    "confirmLabel": "إلغاء التفعيل",
+    "description": "لن يتمكن {{username}} من تسجيل الدخول إلى النظام بعد الآن. سيتم الاحتفاظ بالسجلات التاريخية."
+  },
+  "import": {
+    "title": "إضافة مستخدمين عبر Excel",
+    "description": "قم بتحميل القالب المعتمد لإنشاء سجلات مستخدمين جديدة بشكل جماعي.",
+    "warningTitle": "يتم إنشاء سجلات جديدة فقط",
+    "warningText": "لا يتم تحديث المستخدمين الحاليين أو إلغاء تفعيلهم أو حذفهم. إذا كان اسم المستخدم أو البريد الإلكتروني موجودًا مسبقًا، يتم تجاهل الصف المعني دون تغيير.",
+    "step1Title": "1. تحضير القالب",
+    "step1Description": "قم بتعبئة ورقة \"المستخدمين\" دون تغيير العناوين أو ترتيب الأعمدة.",
+    "downloadPreparing": "جارٍ التحضير…",
+    "downloadButton": "تنزيل قالب Excel الحالي",
+    "step2Title": "2. اختر ملف .xlsx المعبأ",
+    "step2Limit": "الحد الأقصى 5 ميغابايت و500 صف بيانات",
+    "fileSizeKb": "{{size}} كيلوبايت",
+    "multiGroupTitle": "اختيار مجموعات صلاحيات متعددة",
+    "multiGroupDescriptionPrefix": "تتم قراءة مجموعات الصلاحيات النشطة وقت التنزيل من واجهة برمجة التطبيقات، وتُضاف كل واحدة كعمود اختيار",
+    "multiGroupDescriptionBold": "true / false",
+    "multiGroupDescriptionSuffix": "منسدل منفصل.",
+    "multiGroupHintPrefix": "لتعيين المستخدم نفسه لمجموعات متعددة، حدد",
+    "multiGroupHintBold": "true",
+    "multiGroupHintSuffix": "في كل عمود مجموعة معني. يمكنك ترك غير المحدد فارغًا أو false.",
+    "groupsSheetNote": "تحتوي ورقة \"مجموعات الصلاحيات\" أيضًا على رقم التعريف والاسم والوصف للمجموعات النشطة وقت التنزيل.",
+    "summary": {
+      "total": "الإجمالي",
+      "created": "تم الإنشاء",
+      "skipped": "تم التجاهل",
+      "failed": "فشل"
+    },
+    "table": {
+      "row": "الصف",
+      "status": "الحالة",
+      "username": "المستخدم",
+      "email": "البريد الإلكتروني",
+      "message": "الوصف"
+    },
+    "status": {
+      "created": "تم الإنشاء",
+      "skipped": "تم التجاهل",
+      "failed": "فشل"
+    },
+    "closeButton": "إغلاق",
+    "creatingButton": "جارٍ الاستيراد…",
+    "createUsersButton": "إنشاء المستخدمين الجدد",
+    "errors": {
+      "invalidExtension": "يمكن تحميل ملفات Excel بامتداد .xlsx فقط.",
+      "fileTooLarge": "يجب ألا يتجاوز حجم ملف Excel 5 ميغابايت.",
+      "uploadFailed": "تعذر تحميل ملف Excel.",
+      "templateDownloadFailed": "تعذر تنزيل قالب Excel."
+    },
+    "toast": {
+      "templateDownloaded": "تم تنزيل قالب Excel بمجموعات الصلاحيات الحالية.",
+      "createdWithFailures": "تم إنشاء {{created}} مستخدم؛ فشل {{failed}} صف.",
+      "createdSuccess": "تم إنشاء {{created}} مستخدم جديد."
+    }
+  }
+}

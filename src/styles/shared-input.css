@@ -240,6 +240,16 @@ html[class*='theme-'] :is(
   transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
 }
 
+/* `.input`'s shorthand `padding` above overrides Tailwind's `pl-*` utilities
+   (equal specificity, declared later in the cascade), which crushes any
+   leading icon into the input text. Restore the intended left padding. */
+.input.pl-7 { padding-left: 1.75rem !important; }
+.input.pl-8 { padding-left: 2rem !important; }
+.input.pl-9 { padding-left: 2.25rem !important; }
+.input.pl-10 { padding-left: 2.5rem !important; }
+.input.pl-11 { padding-left: 2.75rem !important; }
+.input.pl-12 { padding-left: 3rem !important; }
+
 .input::placeholder,
 [data-slot='input']::placeholder {
   color: color-mix(in oklab, var(--wms-app-text) 42%, transparent);

@@ -1,0 +1,59 @@
+{
+  "eyebrow": "Sistema",
+  "title": "Configuración general del proyecto",
+  "description": "Gestione de forma centralizada las políticas de visualización y seguridad para todos los usuarios.",
+  "errors": {
+    "loadFailed": "No se pudieron obtener los ajustes.",
+    "saveFailed": "No se pudieron guardar los ajustes."
+  },
+  "toast": {
+    "saved": "Configuración del proyecto guardada y aplicada."
+  },
+  "preview": {
+    "number": "Número",
+    "date": "Fecha",
+    "time": "Hora",
+    "dateTime": "Fecha / Hora",
+    "year": "Año"
+  },
+  "numberLocale": {
+    "label": "Formato numérico",
+    "trDescription": "Formato numérico turco",
+    "enDescription": "Formato numérico inglés",
+    "deDescription": "Formato numérico alemán"
+  },
+  "decimalPlaces": {
+    "label": "Decimales",
+    "optionLabel": "{{value}} decimales"
+  },
+  "dateFormat": {
+    "label": "Formato de fecha"
+  },
+  "timeFormat": {
+    "label": "Formato de hora"
+  },
+  "yearFormat": {
+    "label": "Formato de año",
+    "fourDigit": "4 dígitos (2026)",
+    "twoDigit": "2 dígitos (26)"
+  },
+  "timeZone": {
+    "label": "Zona horaria",
+    "searchPlaceholder": "Buscar zona horaria...",
+    "istanbul": "Istanbul (UTC+3)",
+    "berlin": "Berlín",
+    "newYork": "Nueva York"
+  },
+  "passwordMinLength": {
+    "label": "Longitud mínima de contraseña"
+  },
+  "passwordMaxLength": {
+    "label": "Longitud máxima de contraseña"
+  },
+  "passwordSecurityNotice": {
+    "label": "Seguridad de contraseña:",
+    "text": "El valor mínimo puede estar entre 5 y {{max}}. No se puede seleccionar un valor superior a la contraseña más corta actual; este límite se puede aumentar de forma segura a medida que los usuarios renuevan sus contraseñas."
+  },
+  "permissionRequiredNotice": "Se requiere el permiso de gestión de configuración del proyecto para guardar estos ajustes.",
+  "saveButton": "Guardar configuración"
+}

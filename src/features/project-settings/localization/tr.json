@@ -1,0 +1,59 @@
+{
+  "eyebrow": "Sistem",
+  "title": "Genel Proje Ayarları",
+  "description": "Tüm kullanıcılar için gösterim ve güvenlik politikalarını merkezi olarak yönetin.",
+  "errors": {
+    "loadFailed": "Ayarlar alınamadı.",
+    "saveFailed": "Ayarlar kaydedilemedi."
+  },
+  "toast": {
+    "saved": "Proje ayarları kaydedildi ve uygulandı."
+  },
+  "preview": {
+    "number": "Sayı",
+    "date": "Tarih",
+    "time": "Saat",
+    "dateTime": "Tarih / Saat",
+    "year": "Yıl"
+  },
+  "numberLocale": {
+    "label": "Sayı biçimi",
+    "trDescription": "Türkçe sayı biçimi",
+    "enDescription": "İngilizce sayı biçimi",
+    "deDescription": "Almanca sayı biçimi"
+  },
+  "decimalPlaces": {
+    "label": "Ondalık basamak",
+    "optionLabel": "{{value}} basamak"
+  },
+  "dateFormat": {
+    "label": "Tarih biçimi"
+  },
+  "timeFormat": {
+    "label": "Saat biçimi"
+  },
+  "yearFormat": {
+    "label": "Yıl biçimi",
+    "fourDigit": "4 haneli (2026)",
+    "twoDigit": "2 haneli (26)"
+  },
+  "timeZone": {
+    "label": "Zaman dilimi",
+    "searchPlaceholder": "Zaman dilimi ara...",
+    "istanbul": "İstanbul (UTC+3)",
+    "berlin": "Berlin",
+    "newYork": "New York"
+  },
+  "passwordMinLength": {
+    "label": "Minimum şifre uzunluğu"
+  },
+  "passwordMaxLength": {
+    "label": "Maksimum şifre uzunluğu"
+  },
+  "passwordSecurityNotice": {
+    "label": "Parola güvenliği:",
+    "text": "Minimum değer 5-{{max}} arasında olabilir. Mevcut en kısa paroladan daha yüksek bir değer seçilemez; kullanıcılar parolalarını yeniledikçe bu sınır güvenli biçimde yükseltilebilir."
+  },
+  "permissionRequiredNotice": "Bu ayarları kaydetmek için proje ayarları yönetme yetkisi gereklidir.",
+  "saveButton": "Ayarları Kaydet"
+}

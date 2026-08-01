@@ -1,0 +1,146 @@
+{
+  "grid": {
+    "eyebrowGroup": "SYSTÈME_ET_ACCÈS",
+    "eyebrowPage": "GESTION_DES_UTILISATEURS",
+    "title": "Gestion des utilisateurs",
+    "description": "Gérez les comptes utilisateurs, les informations de profil, les rôles et les groupes de permissions.",
+    "emptyMessage": "Aucun utilisateur enregistré trouvé.",
+    "toolbar": {
+      "importAction": "Ajouter des utilisateurs via Excel",
+      "createAction": "Nouvel utilisateur"
+    },
+    "columns": {
+      "username": "Nom d'utilisateur",
+      "firstName": "Prénom",
+      "lastName": "Nom",
+      "email": "E-mail",
+      "role": "Rôle",
+      "status": "Statut",
+      "lastLogin": "Dernière connexion",
+      "actions": "Actions"
+    },
+    "statusActive": "Actif",
+    "statusInactive": "Inactif",
+    "editAction": "Modifier",
+    "deactivateAction": "Désactiver",
+    "editAriaLabel": "Modifier {{username}}",
+    "deactivateAriaLabel": "Désactiver {{username}}"
+  },
+  "toast": {
+    "lookupsFailed": "Impossible de récupérer les groupes de permissions et les entrepôts.",
+    "detailFailed": "Impossible de récupérer les informations de l'utilisateur.",
+    "activated": "Utilisateur activé.",
+    "deactivated": "Utilisateur désactivé.",
+    "statusUpdateFailed": "Impossible de mettre à jour le statut.",
+    "created": "Utilisateur créé avec succès.",
+    "updated": "Informations et permissions de l'utilisateur mises à jour.",
+    "saveFailed": "Impossible d'enregistrer l'utilisateur.",
+    "deactivateSuccess": "Utilisateur désactivé.",
+    "deactivateFailed": "Impossible de désactiver l'utilisateur."
+  },
+  "validation": {
+    "username": "3 à 100 caractères ; utilisez des lettres, des chiffres, des points, des tirets ou des underscores.",
+    "email": "Entrez une adresse e-mail valide.",
+    "password": "Le mot de passe doit comporter {{min}} à {{max}} caractères.",
+    "confirmPassword": "Les mots de passe ne correspondent pas.",
+    "firstName": "Le prénom peut comporter au maximum 100 caractères.",
+    "lastName": "Le nom peut comporter au maximum 100 caractères.",
+    "phoneNumber": "Le téléphone peut comporter au maximum 40 caractères.",
+    "superadminNotAllowed": "Un superadmin ne peut pas être créé depuis le formulaire."
+  },
+  "dialog": {
+    "createTitle": "Nouvel utilisateur",
+    "editTitle": "Modifier l'utilisateur",
+    "subtitle": "Gérez les informations de compte, de profil et de permissions en une seule opération.",
+    "usernameLabel": "Nom d'utilisateur",
+    "emailLabel": "E-mail",
+    "firstNameLabel": "Prénom",
+    "lastNameLabel": "Nom",
+    "phoneLabel": "Téléphone",
+    "roleLabel": "Rôle",
+    "roleUser": "Utilisateur",
+    "roleManager": "Responsable",
+    "roleAdmin": "Administrateur d'application",
+    "roleSuperadmin": "Administrateur système",
+    "temporaryPasswordLabel": "Mot de passe temporaire",
+    "newPasswordLabel": "Nouveau mot de passe",
+    "passwordLengthHint": "({{min}}-{{max}} caractères)",
+    "passwordPlaceholderEdit": "Laisser vide pour ne pas changer",
+    "showPassword": "Afficher le mot de passe",
+    "hidePassword": "Masquer le mot de passe",
+    "confirmPasswordLabel": "Confirmer le mot de passe",
+    "permissionGroupsTitle": "Groupes de permissions",
+    "groupsSelectedCount": "{{count}} groupes sélectionnés",
+    "permissionCountSuffix": "{{count}} permissions",
+    "systemGroupSuffix": " • Groupe système",
+    "warehousesTitle": "Entrepôts où il peut travailler",
+    "warehousesSelectedCount": "{{count}} entrepôts sélectionnés",
+    "warehousesNoneSelected": "Non défini : tous les entrepôts",
+    "warehousesHint": "Si des entrepôts sont sélectionnés, l'utilisateur ne peut effectuer la réception des marchandises que dans les entrepôts sélectionnés. Si aucun n'est sélectionné, tous les entrepôts sont ouverts. Le rôle Admin voit toujours tous les entrepôts.",
+    "warehouseLabel": "Entrepôt {{code}}",
+    "superadminNotice": "Le nom d'utilisateur, le rôle et le statut actif de l'utilisateur système principal ne peuvent pas être modifiés pour des raisons de sécurité.",
+    "activeUserLabel": "Utilisateur actif",
+    "activeUserHint": "Autoriser l'utilisateur à se connecter au système.",
+    "cancelButton": "Annuler",
+    "createButton": "Créer l'utilisateur",
+    "saveButton": "Enregistrer les modifications"
+  },
+  "deactivateDialog": {
+    "title": "Désactiver l'utilisateur",
+    "confirmLabel": "Désactiver",
+    "description": "{{username}} ne pourra plus se connecter au système. Les enregistrements historiques seront conservés."
+  },
+  "import": {
+    "title": "Ajouter des utilisateurs via Excel",
+    "description": "Téléchargez le modèle approuvé pour créer des enregistrements d'utilisateurs en masse.",
+    "warningTitle": "Seuls de nouveaux enregistrements sont créés",
+    "warningText": "Les utilisateurs existants ne sont ni mis à jour, ni désactivés, ni supprimés. Si un nom d'utilisateur ou un e-mail existe déjà, la ligne correspondante est ignorée sans modification.",
+    "step1Title": "1. Préparer le modèle",
+    "step1Description": "Remplissez la feuille \"Utilisateurs\" sans modifier les en-têtes ni l'ordre des colonnes.",
+    "downloadPreparing": "Préparation…",
+    "downloadButton": "Télécharger le modèle Excel actuel",
+    "step2Title": "2. Sélectionner le fichier .xlsx rempli",
+    "step2Limit": "Maximum 5 Mo et 500 lignes de données",
+    "fileSizeKb": "{{size}} Ko",
+    "multiGroupTitle": "Sélection de plusieurs groupes de permissions",
+    "multiGroupDescriptionPrefix": "Les groupes de permissions actifs au moment du téléchargement sont lus depuis l'API et chacun est ajouté comme une colonne de sélection déroulante",
+    "multiGroupDescriptionBold": "true / false",
+    "multiGroupDescriptionSuffix": "distincte.",
+    "multiGroupHintPrefix": "Pour affecter le même utilisateur à plusieurs groupes, sélectionnez",
+    "multiGroupHintBold": "true",
+    "multiGroupHintSuffix": "dans chaque colonne de groupe concernée. Vous pouvez laisser vide ou mettre false pour celles non sélectionnées.",
+    "groupsSheetNote": "La feuille \"Groupes de permissions\" contient également l'ID, le nom et la description des groupes actifs au moment du téléchargement.",
+    "summary": {
+      "total": "Total",
+      "created": "Créés",
+      "skipped": "Ignorés",
+      "failed": "Échoués"
+    },
+    "table": {
+      "row": "Ligne",
+      "status": "Statut",
+      "username": "Utilisateur",
+      "email": "E-mail",
+      "message": "Description"
+    },
+    "status": {
+      "created": "Créé",
+      "skipped": "Ignoré",
+      "failed": "Échoué"
+    },
+    "closeButton": "Fermer",
+    "creatingButton": "Importation…",
+    "createUsersButton": "Créer les nouveaux utilisateurs",
+    "errors": {
+      "invalidExtension": "Seuls les fichiers Excel avec l'extension .xlsx peuvent être téléchargés.",
+      "fileTooLarge": "Le fichier Excel peut faire au maximum 5 Mo.",
+      "uploadFailed": "Impossible de télécharger le fichier Excel.",
+      "templateDownloadFailed": "Impossible de télécharger le modèle Excel."
+    },
+    "toast": {
+      "templateDownloaded": "Modèle Excel téléchargé avec les groupes de permissions actuels.",
+      "createdWithFailures": "{{created}} utilisateurs créés ; {{failed}} lignes échouées.",
+      "createdSuccess": "{{created}} nouveaux utilisateurs créés."
+    }
+  }
+}

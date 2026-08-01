@@ -1,0 +1,59 @@
+{
+  "eyebrow": "System",
+  "title": "General Project Settings",
+  "description": "Centrally manage display and security policies for all users.",
+  "errors": {
+    "loadFailed": "Could not load the settings.",
+    "saveFailed": "Could not save the settings."
+  },
+  "toast": {
+    "saved": "Project settings saved and applied."
+  },
+  "preview": {
+    "number": "Number",
+    "date": "Date",
+    "time": "Time",
+    "dateTime": "Date / Time",
+    "year": "Year"
+  },
+  "numberLocale": {
+    "label": "Number format",
+    "trDescription": "Turkish number format",
+    "enDescription": "English number format",
+    "deDescription": "German number format"
+  },
+  "decimalPlaces": {
+    "label": "Decimal places",
+    "optionLabel": "{{value}} digits"
+  },
+  "dateFormat": {
+    "label": "Date format"
+  },
+  "timeFormat": {
+    "label": "Time format"
+  },
+  "yearFormat": {
+    "label": "Year format",
+    "fourDigit": "4 digits (2026)",
+    "twoDigit": "2 digits (26)"
+  },
+  "timeZone": {
+    "label": "Time zone",
+    "searchPlaceholder": "Search time zone...",
+    "istanbul": "Istanbul (UTC+3)",
+    "berlin": "Berlin",
+    "newYork": "New York"
+  },
+  "passwordMinLength": {
+    "label": "Minimum password length"
+  },
+  "passwordMaxLength": {
+    "label": "Maximum password length"
+  },
+  "passwordSecurityNotice": {
+    "label": "Password security:",
+    "text": "The minimum value can be between 5-{{max}}. A value higher than the current shortest password cannot be selected; this limit can be safely raised as users renew their passwords."
+  },
+  "permissionRequiredNotice": "Managing project settings permission is required to save these settings.",
+  "saveButton": "Save Settings"
+}

@@ -1,0 +1,59 @@
+{
+  "eyebrow": "النظام",
+  "title": "إعدادات المشروع العامة",
+  "description": "إدارة سياسات العرض والأمان مركزيًا لجميع المستخدمين.",
+  "errors": {
+    "loadFailed": "تعذر الحصول على الإعدادات.",
+    "saveFailed": "تعذر حفظ الإعدادات."
+  },
+  "toast": {
+    "saved": "تم حفظ إعدادات المشروع وتطبيقها."
+  },
+  "preview": {
+    "number": "رقم",
+    "date": "تاريخ",
+    "time": "وقت",
+    "dateTime": "تاريخ / وقت",
+    "year": "سنة"
+  },
+  "numberLocale": {
+    "label": "تنسيق الأرقام",
+    "trDescription": "تنسيق الأرقام التركي",
+    "enDescription": "تنسيق الأرقام الإنجليزي",
+    "deDescription": "تنسيق الأرقام الألماني"
+  },
+  "decimalPlaces": {
+    "label": "الخانات العشرية",
+    "optionLabel": "{{value}} خانات"
+  },
+  "dateFormat": {
+    "label": "تنسيق التاريخ"
+  },
+  "timeFormat": {
+    "label": "تنسيق الوقت"
+  },
+  "yearFormat": {
+    "label": "تنسيق السنة",
+    "fourDigit": "4 أرقام (2026)",
+    "twoDigit": "رقمان (26)"
+  },
+  "timeZone": {
+    "label": "المنطقة الزمنية",
+    "searchPlaceholder": "البحث عن منطقة زمنية...",
+    "istanbul": "إسطنبول (UTC+3)",
+    "berlin": "برلين",
+    "newYork": "نيويورك"
+  },
+  "passwordMinLength": {
+    "label": "الحد الأدنى لطول كلمة المرور"
+  },
+  "passwordMaxLength": {
+    "label": "الحد الأقصى لطول كلمة المرور"
+  },
+  "passwordSecurityNotice": {
+    "label": "أمان كلمة المرور:",
+    "text": "يمكن أن تكون القيمة الدنيا بين 5 و{{max}}. لا يمكن اختيار قيمة أعلى من أقصر كلمة مرور حالية؛ يمكن رفع هذا الحد بأمان مع تجديد المستخدمين لكلمات مرورهم."
+  },
+  "permissionRequiredNotice": "يلزم إذن إدارة إعدادات المشروع لحفظ هذه الإعدادات.",
+  "saveButton": "حفظ الإعدادات"
+}

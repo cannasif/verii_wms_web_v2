@@ -1553,7 +1553,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
               </div>
             ))}
             {expandedRowId === row.id && renderExpandedRow ? (
-              <div className="border-t border-[var(--wms-app-border)] bg-[color-mix(in_oklab,var(--wms-brand-soft)_55%,transparent)] p-3">
+              <div className="border-t border-[var(--wms-app-border)] px-3 py-4">
                 {renderExpandedRow(row)}
               </div>
             ) : null}

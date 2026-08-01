@@ -1,0 +1,146 @@
+{
+  "grid": {
+    "eyebrowGroup": "SİSTEM_VE_YETKİ",
+    "eyebrowPage": "KULLANICI_YÖNETİMİ",
+    "title": "Kullanıcı Yönetimi",
+    "description": "Kullanıcı hesaplarını, profil bilgilerini, rolleri ve yetki gruplarını yönetin.",
+    "emptyMessage": "Kayıtlı kullanıcı bulunamadı.",
+    "toolbar": {
+      "importAction": "Excel ile Kullanıcı Ekle",
+      "createAction": "Yeni Kullanıcı"
+    },
+    "columns": {
+      "username": "Kullanıcı Adı",
+      "firstName": "Ad",
+      "lastName": "Soyad",
+      "email": "E-posta",
+      "role": "Rol",
+      "status": "Durum",
+      "lastLogin": "Son Giriş",
+      "actions": "İşlemler"
+    },
+    "statusActive": "Aktif",
+    "statusInactive": "Pasif",
+    "editAction": "Düzenle",
+    "deactivateAction": "Pasife al",
+    "editAriaLabel": "{{username}} düzenle",
+    "deactivateAriaLabel": "{{username}} pasife al"
+  },
+  "toast": {
+    "lookupsFailed": "Yetki grupları ve depolar alınamadı.",
+    "detailFailed": "Kullanıcı bilgileri alınamadı.",
+    "activated": "Kullanıcı aktifleştirildi.",
+    "deactivated": "Kullanıcı pasife alındı.",
+    "statusUpdateFailed": "Durum güncellenemedi.",
+    "created": "Kullanıcı başarıyla oluşturuldu.",
+    "updated": "Kullanıcı bilgileri ve yetkileri güncellendi.",
+    "saveFailed": "Kullanıcı kaydedilemedi.",
+    "deactivateSuccess": "Kullanıcı pasife alındı.",
+    "deactivateFailed": "Kullanıcı pasife alınamadı."
+  },
+  "validation": {
+    "username": "3-100 karakter; harf, rakam, nokta, tire veya alt çizgi kullanın.",
+    "email": "Geçerli bir e-posta adresi girin.",
+    "password": "Şifre {{min}}-{{max}} karakter olmalıdır.",
+    "confirmPassword": "Şifreler eşleşmiyor.",
+    "firstName": "Ad en fazla 100 karakter olabilir.",
+    "lastName": "Soyad en fazla 100 karakter olabilir.",
+    "phoneNumber": "Telefon en fazla 40 karakter olabilir.",
+    "superadminNotAllowed": "Form üzerinden superadmin oluşturulamaz."
+  },
+  "dialog": {
+    "createTitle": "Yeni Kullanıcı",
+    "editTitle": "Kullanıcıyı Düzenle",
+    "subtitle": "Hesap, profil ve yetki bilgilerini tek işlemde yönetin.",
+    "usernameLabel": "Kullanıcı adı",
+    "emailLabel": "E-posta",
+    "firstNameLabel": "Ad",
+    "lastNameLabel": "Soyad",
+    "phoneLabel": "Telefon",
+    "roleLabel": "Rol",
+    "roleUser": "Kullanıcı",
+    "roleManager": "Yönetici",
+    "roleAdmin": "Uygulama Yöneticisi",
+    "roleSuperadmin": "Sistem Yöneticisi",
+    "temporaryPasswordLabel": "Geçici şifre",
+    "newPasswordLabel": "Yeni şifre",
+    "passwordLengthHint": "({{min}}-{{max}} karakter)",
+    "passwordPlaceholderEdit": "Değişmeyecekse boş bırakın",
+    "showPassword": "Şifreyi göster",
+    "hidePassword": "Şifreyi gizle",
+    "confirmPasswordLabel": "Şifre tekrar",
+    "permissionGroupsTitle": "Yetki Grupları",
+    "groupsSelectedCount": "{{count}} grup seçili",
+    "permissionCountSuffix": "{{count}} izin",
+    "systemGroupSuffix": " • Sistem grubu",
+    "warehousesTitle": "Çalışabileceği Depolar",
+    "warehousesSelectedCount": "{{count}} depo seçili",
+    "warehousesNoneSelected": "Tanım yok: tüm depolar",
+    "warehousesHint": "Depo seçilirse kullanıcı yalnızca seçilen depolarda mal kabul yapabilir. Hiç depo seçilmezse tüm depolar açık olur. Admin rolü her zaman tüm depoları görür.",
+    "warehouseLabel": "Depo {{code}}",
+    "superadminNotice": "Ana sistem kullanıcısının kullanıcı adı, rolü ve aktiflik durumu güvenlik nedeniyle değiştirilemez.",
+    "activeUserLabel": "Aktif kullanıcı",
+    "activeUserHint": "Kullanıcı sisteme giriş yapabilsin.",
+    "cancelButton": "Vazgeç",
+    "createButton": "Kullanıcı Oluştur",
+    "saveButton": "Değişiklikleri Kaydet"
+  },
+  "deactivateDialog": {
+    "title": "Kullanıcıyı pasife al",
+    "confirmLabel": "Pasife Al",
+    "description": "{{username}} artık sisteme giriş yapamayacak. Geçmiş kayıtları korunacaktır."
+  },
+  "import": {
+    "title": "Excel ile Kullanıcı Ekle",
+    "description": "Onaylı şablonu yükleyerek toplu yeni kullanıcı kaydı oluşturun.",
+    "warningTitle": "Yalnızca yeni kayıt oluşturulur",
+    "warningText": "Mevcut kullanıcılar güncellenmez, pasife alınmaz veya silinmez. Kullanıcı adı ya da e-posta zaten mevcutsa ilgili satır değiştirilmeden atlanır.",
+    "step1Title": "1. Şablonu hazırlayın",
+    "step1Description": "Başlıkları ve sıralamayı değiştirmeden \"Kullanıcılar\" sayfasını doldurun.",
+    "downloadPreparing": "Hazırlanıyor…",
+    "downloadButton": "Güncel Excel Şablonunu İndir",
+    "step2Title": "2. Doldurulan .xlsx dosyasını seçin",
+    "step2Limit": "En fazla 5 MB ve 500 veri satırı",
+    "fileSizeKb": "{{size}} KB",
+    "multiGroupTitle": "Çoklu yetki grubu seçimi",
+    "multiGroupDescriptionPrefix": "Şablon indirilirken o anda aktif olan yetki grupları API'den okunur ve her biri ayrı bir",
+    "multiGroupDescriptionBold": "true / false",
+    "multiGroupDescriptionSuffix": "açılır seçim kolonu olarak eklenir.",
+    "multiGroupHintPrefix": "Aynı kullanıcıyı birden fazla gruba atamak için ilgili grup kolonlarının her birinde",
+    "multiGroupHintBold": "true",
+    "multiGroupHintSuffix": "seçin. Seçilmeyenleri boş veya false bırakabilirsiniz.",
+    "groupsSheetNote": "\"Yetki Grupları\" sayfası indirme anındaki aktif grupların ID, ad ve açıklamalarını da içerir.",
+    "summary": {
+      "total": "Toplam",
+      "created": "Oluşturuldu",
+      "skipped": "Atlandı",
+      "failed": "Başarısız"
+    },
+    "table": {
+      "row": "Satır",
+      "status": "Durum",
+      "username": "Kullanıcı",
+      "email": "E-posta",
+      "message": "Açıklama"
+    },
+    "status": {
+      "created": "Oluşturuldu",
+      "skipped": "Atlandı",
+      "failed": "Başarısız"
+    },
+    "closeButton": "Kapat",
+    "creatingButton": "Aktarılıyor…",
+    "createUsersButton": "Yeni Kullanıcıları Oluştur",
+    "errors": {
+      "invalidExtension": "Yalnızca .xlsx uzantılı Excel dosyaları yüklenebilir.",
+      "fileTooLarge": "Excel dosyası en fazla 5 MB olabilir.",
+      "uploadFailed": "Excel dosyası yüklenemedi.",
+      "templateDownloadFailed": "Excel şablonu indirilemedi."
+    },
+    "toast": {
+      "templateDownloaded": "Güncel yetki gruplarıyla Excel şablonu indirildi.",
+      "createdWithFailures": "{{created}} kullanıcı oluşturuldu; {{failed}} satır başarısız.",
+      "createdSuccess": "{{created}} yeni kullanıcı oluşturuldu."
+    }
+  }
+}

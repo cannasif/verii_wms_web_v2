@@ -1,0 +1,59 @@
+{
+  "eyebrow": "Sistema",
+  "title": "Impostazioni generali del progetto",
+  "description": "Gestisci centralmente le politiche di visualizzazione e sicurezza per tutti gli utenti.",
+  "errors": {
+    "loadFailed": "Impossibile recuperare le impostazioni.",
+    "saveFailed": "Impossibile salvare le impostazioni."
+  },
+  "toast": {
+    "saved": "Impostazioni del progetto salvate e applicate."
+  },
+  "preview": {
+    "number": "Numero",
+    "date": "Data",
+    "time": "Ora",
+    "dateTime": "Data / Ora",
+    "year": "Anno"
+  },
+  "numberLocale": {
+    "label": "Formato numerico",
+    "trDescription": "Formato numerico turco",
+    "enDescription": "Formato numerico inglese",
+    "deDescription": "Formato numerico tedesco"
+  },
+  "decimalPlaces": {
+    "label": "Cifre decimali",
+    "optionLabel": "{{value}} cifre"
+  },
+  "dateFormat": {
+    "label": "Formato data"
+  },
+  "timeFormat": {
+    "label": "Formato ora"
+  },
+  "yearFormat": {
+    "label": "Formato anno",
+    "fourDigit": "4 cifre (2026)",
+    "twoDigit": "2 cifre (26)"
+  },
+  "timeZone": {
+    "label": "Fuso orario",
+    "searchPlaceholder": "Cerca fuso orario...",
+    "istanbul": "Istanbul (UTC+3)",
+    "berlin": "Berlino",
+    "newYork": "New York"
+  },
+  "passwordMinLength": {
+    "label": "Lunghezza minima password"
+  },
+  "passwordMaxLength": {
+    "label": "Lunghezza massima password"
+  },
+  "passwordSecurityNotice": {
+    "label": "Sicurezza password:",
+    "text": "Il valore minimo può essere compreso tra 5 e {{max}}. Non è possibile selezionare un valore superiore alla password più corta attuale; questo limite può essere aumentato in sicurezza man mano che gli utenti rinnovano le proprie password."
+  },
+  "permissionRequiredNotice": "Per salvare queste impostazioni è necessaria l'autorizzazione di gestione delle impostazioni del progetto.",
+  "saveButton": "Salva impostazioni"
+}

@@ -1,0 +1,146 @@
+{
+  "grid": {
+    "eyebrowGroup": "SYSTEM_AND_ACCESS",
+    "eyebrowPage": "USER_MANAGEMENT",
+    "title": "User Management",
+    "description": "Manage user accounts, profile information, roles and permission groups.",
+    "emptyMessage": "No registered users found.",
+    "toolbar": {
+      "importAction": "Add Users via Excel",
+      "createAction": "New User"
+    },
+    "columns": {
+      "username": "Username",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "email": "Email",
+      "role": "Role",
+      "status": "Status",
+      "lastLogin": "Last Login",
+      "actions": "Actions"
+    },
+    "statusActive": "Active",
+    "statusInactive": "Inactive",
+    "editAction": "Edit",
+    "deactivateAction": "Deactivate",
+    "editAriaLabel": "Edit {{username}}",
+    "deactivateAriaLabel": "Deactivate {{username}}"
+  },
+  "toast": {
+    "lookupsFailed": "Could not fetch permission groups and warehouses.",
+    "detailFailed": "Could not fetch user information.",
+    "activated": "User activated.",
+    "deactivated": "User deactivated.",
+    "statusUpdateFailed": "Could not update status.",
+    "created": "User created successfully.",
+    "updated": "User information and permissions updated.",
+    "saveFailed": "Could not save the user.",
+    "deactivateSuccess": "User deactivated.",
+    "deactivateFailed": "Could not deactivate the user."
+  },
+  "validation": {
+    "username": "3-100 characters; use letters, numbers, dots, hyphens or underscores.",
+    "email": "Enter a valid email address.",
+    "password": "Password must be {{min}}-{{max}} characters.",
+    "confirmPassword": "Passwords do not match.",
+    "firstName": "First name can be at most 100 characters.",
+    "lastName": "Last name can be at most 100 characters.",
+    "phoneNumber": "Phone can be at most 40 characters.",
+    "superadminNotAllowed": "A superadmin cannot be created from the form."
+  },
+  "dialog": {
+    "createTitle": "New User",
+    "editTitle": "Edit User",
+    "subtitle": "Manage account, profile and permission information in a single step.",
+    "usernameLabel": "Username",
+    "emailLabel": "Email",
+    "firstNameLabel": "First Name",
+    "lastNameLabel": "Last Name",
+    "phoneLabel": "Phone",
+    "roleLabel": "Role",
+    "roleUser": "User",
+    "roleManager": "Manager",
+    "roleAdmin": "Application Administrator",
+    "roleSuperadmin": "System Administrator",
+    "temporaryPasswordLabel": "Temporary password",
+    "newPasswordLabel": "New password",
+    "passwordLengthHint": "({{min}}-{{max}} characters)",
+    "passwordPlaceholderEdit": "Leave blank to keep unchanged",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "confirmPasswordLabel": "Confirm password",
+    "permissionGroupsTitle": "Permission Groups",
+    "groupsSelectedCount": "{{count}} groups selected",
+    "permissionCountSuffix": "{{count}} permissions",
+    "systemGroupSuffix": " • System group",
+    "warehousesTitle": "Warehouses They Can Work In",
+    "warehousesSelectedCount": "{{count}} warehouses selected",
+    "warehousesNoneSelected": "Not set: all warehouses",
+    "warehousesHint": "If warehouses are selected, the user can only perform goods receipt in the selected warehouses. If none are selected, all warehouses are open. The Admin role always sees all warehouses.",
+    "warehouseLabel": "Warehouse {{code}}",
+    "superadminNotice": "The primary system user's username, role and active status cannot be changed for security reasons.",
+    "activeUserLabel": "Active user",
+    "activeUserHint": "Allow the user to sign in to the system.",
+    "cancelButton": "Cancel",
+    "createButton": "Create User",
+    "saveButton": "Save Changes"
+  },
+  "deactivateDialog": {
+    "title": "Deactivate user",
+    "confirmLabel": "Deactivate",
+    "description": "{{username}} will no longer be able to sign in. Historical records will be preserved."
+  },
+  "import": {
+    "title": "Add Users via Excel",
+    "description": "Upload the approved template to create new user records in bulk.",
+    "warningTitle": "Only new records are created",
+    "warningText": "Existing users are not updated, deactivated or deleted. If a username or email already exists, that row is skipped unchanged.",
+    "step1Title": "1. Prepare the template",
+    "step1Description": "Fill in the \"Users\" sheet without changing the headers or column order.",
+    "downloadPreparing": "Preparing…",
+    "downloadButton": "Download Current Excel Template",
+    "step2Title": "2. Select the filled-in .xlsx file",
+    "step2Limit": "Maximum 5 MB and 500 data rows",
+    "fileSizeKb": "{{size}} KB",
+    "multiGroupTitle": "Multiple permission group selection",
+    "multiGroupDescriptionPrefix": "The permission groups active at download time are read from the API and each is added as a separate",
+    "multiGroupDescriptionBold": "true / false",
+    "multiGroupDescriptionSuffix": "dropdown selection column.",
+    "multiGroupHintPrefix": "To assign the same user to multiple groups, select",
+    "multiGroupHintBold": "true",
+    "multiGroupHintSuffix": "in each relevant group column. You can leave unselected ones blank or false.",
+    "groupsSheetNote": "The \"Permission Groups\" sheet also contains the ID, name and description of the groups active at download time.",
+    "summary": {
+      "total": "Total",
+      "created": "Created",
+      "skipped": "Skipped",
+      "failed": "Failed"
+    },
+    "table": {
+      "row": "Row",
+      "status": "Status",
+      "username": "User",
+      "email": "Email",
+      "message": "Description"
+    },
+    "status": {
+      "created": "Created",
+      "skipped": "Skipped",
+      "failed": "Failed"
+    },
+    "closeButton": "Close",
+    "creatingButton": "Importing…",
+    "createUsersButton": "Create New Users",
+    "errors": {
+      "invalidExtension": "Only Excel files with the .xlsx extension can be uploaded.",
+      "fileTooLarge": "The Excel file can be at most 5 MB.",
+      "uploadFailed": "Could not upload the Excel file.",
+      "templateDownloadFailed": "Could not download the Excel template."
+    },
+    "toast": {
+      "templateDownloaded": "Excel template downloaded with the current permission groups.",
+      "createdWithFailures": "{{created}} users created; {{failed}} rows failed.",
+      "createdSuccess": "{{created}} new users created."
+    }
+  }
+}

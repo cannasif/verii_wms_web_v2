@@ -4754,11 +4754,11 @@
     }
   },
   "userGroupAssignments": {
-    "noUserSelected": "Henüz kullanıcı seçilmedi",
-    "statusLabel": "Durum",
-    "statusPending": "Kaydedilmedi",
-    "statusCurrent": "Güncel",
-    "readOnlyInfo": "Bu ekrani goruntuleyebilirsiniz ancak grup atamalarini guncellemek icin update yetkisi gerekir."
+    "noUserSelected": "Aucun utilisateur sélectionné",
+    "statusLabel": "Statut",
+    "statusPending": "Non enregistré",
+    "statusCurrent": "Actuel",
+    "readOnlyInfo": "Vous pouvez consulter cet écran, mais l'autorisation de mise à jour est requise pour modifier les affectations de groupe."
   },
   "barcodeFormat": "Active barcode format: {{format}}",
   "paged": {

@@ -4730,7 +4730,7 @@
         "createTitle": "مجموعة صلاحيات جديدة",
         "editTitle": "تعديل مجموعة الصلاحيات",
         "viewTitle": "تفاصيل مجموعة الصلاحيات",
-        "subtitle": "إدارة معلومات المجموعة وكتalog الصلاحيات معاً.",
+        "subtitle": "إدارة معلومات المجموعة وكتالوج الصلاحيات معًا.",
         "groupName": "اسم المجموعة *",
         "activeGroup": "مجموعة نشطة",
         "activeGroupHint": "متاحة للتعيينات.",
@@ -4754,11 +4754,11 @@
     }
   },
   "userGroupAssignments": {
-    "noUserSelected": "Henüz kullanıcı seçilmedi",
-    "statusLabel": "Durum",
-    "statusPending": "Kaydedilmedi",
-    "statusCurrent": "Güncel",
-    "readOnlyInfo": "Bu ekrani goruntuleyebilirsiniz ancak grup atamalarini guncellemek icin update yetkisi gerekir."
+    "noUserSelected": "لم يتم اختيار مستخدم بعد",
+    "statusLabel": "الحالة",
+    "statusPending": "غير محفوظ",
+    "statusCurrent": "حالي",
+    "readOnlyInfo": "يمكنك عرض هذه الشاشة، ولكن يلزم إذن التحديث لتغيير تعيينات المجموعة."
   },
   "barcodeFormat": "Active barcode format: {{format}}",
   "paged": {

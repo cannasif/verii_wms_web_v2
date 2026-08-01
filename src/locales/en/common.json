@@ -5822,11 +5822,11 @@
     }
   },
   "userGroupAssignments": {
-    "noUserSelected": "Henüz kullanıcı seçilmedi",
-    "statusLabel": "Durum",
-    "statusPending": "Kaydedilmedi",
-    "statusCurrent": "Güncel",
-    "readOnlyInfo": "Bu ekrani goruntuleyebilirsiniz ancak grup atamalarini guncellemek icin update yetkisi gerekir."
+    "noUserSelected": "No user selected yet",
+    "statusLabel": "Status",
+    "statusPending": "Not saved",
+    "statusCurrent": "Current",
+    "readOnlyInfo": "You can view this screen, but update permission is required to change group assignments."
   },
   "paged": {
     "search": "Search",

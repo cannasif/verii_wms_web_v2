@@ -3,6 +3,7 @@ import { CalendarDays, Clock3, Hash, Loader2, LockKeyhole, Save, TimerReset } fr
 import { toast } from 'sonner';
 import { AppDropdown, type AppDropdownOption } from '@/components/shared/AppDropdown';
 import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
+import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import {
   formatProjectDate,
   formatProjectDateTime,
@@ -16,34 +17,48 @@ import type { ProjectSettings, UpdateProjectSettings } from './project-settings.
 
 type ProjectSettingsForm = UpdateProjectSettings & Pick<ProjectSettings, 'passwordMaximumLength'>;
 
-const numberLocaleOptions: AppDropdownOption[] = [
-  { value: 'tr-TR', label: '1.234,50', description: 'Türkçe sayı biçimi' },
-  { value: 'en-US', label: '1,234.50', description: 'İngilizce sayı biçimi' },
-  { value: 'de-DE', label: '1.234,50', description: 'Almanca sayı biçimi' },
-];
-const decimalOptions: AppDropdownOption[] = Array.from({ length: 7 }, (_, value) => ({
-  value: String(value),
-  label: `${value} basamak`,
-}));
-const dateOptions: AppDropdownOption[] = ['dd.MM.yyyy', 'MM/dd/yyyy', 'yyyy-MM-dd'].map((value) => ({ value, label: value }));
-const timeOptions: AppDropdownOption[] = ['HH:mm', 'HH:mm:ss', 'hh:mm a', 'hh:mm:ss a'].map((value) => ({ value, label: value }));
-const yearOptions: AppDropdownOption[] = [
-  { value: 'yyyy', label: '4 haneli (2026)' },
-  { value: 'yy', label: '2 haneli (26)' },
-];
-const timeZoneOptions: AppDropdownOption[] = [
-  { value: 'Europe/Istanbul', label: 'İstanbul (UTC+3)' },
-  { value: 'UTC', label: 'UTC' },
-  { value: 'Europe/Berlin', label: 'Berlin' },
-  { value: 'America/New_York', label: 'New York' },
-];
-
 export function ProjectSettingsPage() {
+  const { t } = useModuleTranslation('project-settings');
   const [form, setForm] = useState<ProjectSettingsForm | null>(null);
   const [saving, setSaving] = useState(false);
   const { can, isLoading: isPermissionLoading, refetch: refreshPermissions } = usePermissionAccess();
   const setGlobal = useProjectSettingsStore((state) => state.setSettings);
   const preview = useMemo(() => new Date('2026-07-22T13:45:36Z'), []);
+
+  const numberLocaleOptions: AppDropdownOption[] = useMemo(
+    () => [
+      { value: 'tr-TR', label: '1.234,50', description: t('numberLocale.trDescription') },
+      { value: 'en-US', label: '1,234.50', description: t('numberLocale.enDescription') },
+      { value: 'de-DE', label: '1.234,50', description: t('numberLocale.deDescription') },
+    ],
+    [t],
+  );
+  const decimalOptions: AppDropdownOption[] = useMemo(
+    () =>
+      Array.from({ length: 7 }, (_, value) => ({
+        value: String(value),
+        label: t('decimalPlaces.optionLabel', { value }),
+      })),
+    [t],
+  );
+  const dateOptions: AppDropdownOption[] = ['dd.MM.yyyy', 'MM/dd/yyyy', 'yyyy-MM-dd'].map((value) => ({ value, label: value }));
+  const timeOptions: AppDropdownOption[] = ['HH:mm', 'HH:mm:ss', 'hh:mm a', 'hh:mm:ss a'].map((value) => ({ value, label: value }));
+  const yearOptions: AppDropdownOption[] = useMemo(
+    () => [
+      { value: 'yyyy', label: t('yearFormat.fourDigit') },
+      { value: 'yy', label: t('yearFormat.twoDigit') },
+    ],
+    [t],
+  );
+  const timeZoneOptions: AppDropdownOption[] = useMemo(
+    () => [
+      { value: 'Europe/Istanbul', label: t('timeZone.istanbul') },
+      { value: 'UTC', label: 'UTC' },
+      { value: 'Europe/Berlin', label: t('timeZone.berlin') },
+      { value: 'America/New_York', label: t('timeZone.newYork') },
+    ],
+    [t],
+  );
 
   useEffect(() => {
     void refreshPermissions();
@@ -53,8 +68,8 @@ export function ProjectSettingsPage() {
         setForm(toForm(settings));
         setGlobal(settings);
       })
-      .catch((error) => toast.error(error instanceof Error ? error.message : 'Ayarlar alınamadı.'));
-  }, [refreshPermissions, setGlobal]);
+      .catch((error) => toast.error(error instanceof Error ? error.message : t('errors.loadFailed')));
+  }, [refreshPermissions, setGlobal, t]);
 
   const set = <K extends keyof UpdateProjectSettings>(key: K, value: UpdateProjectSettings[K]): void => {
     setForm((current) => (current ? { ...current, [key]: value } : current));
@@ -78,9 +93,9 @@ export function ProjectSettingsPage() {
       const result = await projectSettingsApi.update(request);
       setForm(toForm(result));
       setGlobal(result);
-      toast.success('Proje ayarları kaydedildi ve uygulandı.');
+      toast.success(t('toast.saved'));
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Ayarlar kaydedilemedi.');
+      toast.error(error instanceof Error ? error.message : t('errors.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -95,28 +110,28 @@ export function ProjectSettingsPage() {
   return (
     <section className="mx-auto max-w-6xl space-y-5">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--wms-brand-primary)]">Sistem</p>
-        <h1 className="mt-1 text-2xl font-bold">Genel Proje Ayarları</h1>
-        <p className="mt-1 text-sm text-slate-500">Tüm kullanıcılar için gösterim ve güvenlik politikalarını merkezi olarak yönetin.</p>
+        <p className="text-xs font-semibold uppercase tracking-[.18em] text-[var(--wms-brand-primary)]">{t('eyebrow')}</p>
+        <h1 className="mt-1 text-2xl font-bold">{t('title')}</h1>
+        <p className="mt-1 text-sm text-slate-500">{t('description')}</p>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        <Preview icon={<Hash />} label="Sayı" value={formatProjectNumber(1234.5, undefined, form)} />
-        <Preview icon={<CalendarDays />} label="Tarih" value={formatProjectDate(preview, form)} />
-        <Preview icon={<Clock3 />} label="Saat" value={formatProjectTime(preview, form)} />
-        <Preview icon={<CalendarDays />} label="Tarih / Saat" value={formatProjectDateTime(preview, form)} />
-        <Preview icon={<TimerReset />} label="Yıl" value={formatProjectYear(preview, form)} />
+        <Preview icon={<Hash />} label={t('preview.number')} value={formatProjectNumber(1234.5, undefined, form)} />
+        <Preview icon={<CalendarDays />} label={t('preview.date')} value={formatProjectDate(preview, form)} />
+        <Preview icon={<Clock3 />} label={t('preview.time')} value={formatProjectTime(preview, form)} />
+        <Preview icon={<CalendarDays />} label={t('preview.dateTime')} value={formatProjectDateTime(preview, form)} />
+        <Preview icon={<TimerReset />} label={t('preview.year')} value={formatProjectYear(preview, form)} />
       </div>
 
       <form onSubmit={submit} className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5 shadow-sm">
         <div className="grid gap-5 md:grid-cols-2">
-          <Field label="Sayı biçimi"><AppDropdown value={form.numberLocale} onValueChange={(value) => set('numberLocale', value)} options={numberLocaleOptions} ariaLabel="Sayı biçimi" testId="number-locale-dropdown" /></Field>
-          <Field label="Ondalık basamak"><AppDropdown value={String(form.decimalPlaces)} onValueChange={(value) => set('decimalPlaces', Number(value))} options={decimalOptions} ariaLabel="Ondalık basamak" testId="decimal-places-dropdown" /></Field>
-          <Field label="Tarih biçimi"><AppDropdown value={form.dateFormat} onValueChange={(value) => set('dateFormat', value)} options={dateOptions} ariaLabel="Tarih biçimi" testId="date-format-dropdown" /></Field>
-          <Field label="Saat biçimi"><AppDropdown value={form.timeFormat} onValueChange={(value) => set('timeFormat', value)} options={timeOptions} ariaLabel="Saat biçimi" testId="time-format-dropdown" /></Field>
-          <Field label="Yıl biçimi"><AppDropdown value={form.yearFormat} onValueChange={(value) => set('yearFormat', value)} options={yearOptions} ariaLabel="Yıl biçimi" testId="year-format-dropdown" /></Field>
-          <Field label="Zaman dilimi"><AppDropdown value={form.timeZoneId} onValueChange={(value) => set('timeZoneId', value)} options={timeZoneOptions} ariaLabel="Zaman dilimi" searchable searchPlaceholder="Zaman dilimi ara..." testId="timezone-dropdown" /></Field>
-          <Field label="Minimum şifre uzunluğu">
+          <Field label={t('numberLocale.label')}><AppDropdown value={form.numberLocale} onValueChange={(value) => set('numberLocale', value)} options={numberLocaleOptions} ariaLabel={t('numberLocale.label')} testId="number-locale-dropdown" /></Field>
+          <Field label={t('decimalPlaces.label')}><AppDropdown value={String(form.decimalPlaces)} onValueChange={(value) => set('decimalPlaces', Number(value))} options={decimalOptions} ariaLabel={t('decimalPlaces.label')} testId="decimal-places-dropdown" /></Field>
+          <Field label={t('dateFormat.label')}><AppDropdown value={form.dateFormat} onValueChange={(value) => set('dateFormat', value)} options={dateOptions} ariaLabel={t('dateFormat.label')} testId="date-format-dropdown" /></Field>
+          <Field label={t('timeFormat.label')}><AppDropdown value={form.timeFormat} onValueChange={(value) => set('timeFormat', value)} options={timeOptions} ariaLabel={t('timeFormat.label')} testId="time-format-dropdown" /></Field>
+          <Field label={t('yearFormat.label')}><AppDropdown value={form.yearFormat} onValueChange={(value) => set('yearFormat', value)} options={yearOptions} ariaLabel={t('yearFormat.label')} testId="year-format-dropdown" /></Field>
+          <Field label={t('timeZone.label')}><AppDropdown value={form.timeZoneId} onValueChange={(value) => set('timeZoneId', value)} options={timeZoneOptions} ariaLabel={t('timeZone.label')} searchable searchPlaceholder={t('timeZone.searchPlaceholder')} testId="timezone-dropdown" /></Field>
+          <Field label={t('passwordMinLength.label')}>
             <div className="relative">
               <LockKeyhole className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--wms-brand-primary)]" />
               <input
@@ -126,21 +141,21 @@ export function ProjectSettingsPage() {
                 value={form.passwordMinimumLength}
                 onChange={(event) => set('passwordMinimumLength', Number(event.target.value))}
                 className="input pl-10"
-                aria-label="Minimum şifre uzunluğu"
+                aria-label={t('passwordMinLength.label')}
               />
             </div>
           </Field>
-          <Field label="Maksimum şifre uzunluğu">
-            <input type="number" value={form.passwordMaximumLength} disabled className="input disabled:cursor-not-allowed disabled:opacity-60" aria-label="Maksimum şifre uzunluğu" />
+          <Field label={t('passwordMaxLength.label')}>
+            <input type="number" value={form.passwordMaximumLength} disabled className="input disabled:cursor-not-allowed disabled:opacity-60" aria-label={t('passwordMaxLength.label')} />
           </Field>
         </div>
 
         <div className="mt-5 rounded-xl border border-[var(--wms-app-border)] bg-slate-50/70 p-4 text-sm dark:bg-white/[.03]">
-          <strong>Parola güvenliği:</strong> Minimum değer 5-{form.passwordMaximumLength} arasında olabilir. Mevcut en kısa paroladan daha yüksek bir değer seçilemez; kullanıcılar parolalarını yeniledikçe bu sınır güvenli biçimde yükseltilebilir.
+          <strong>{t('passwordSecurityNotice.label')}</strong> {t('passwordSecurityNotice.text', { max: form.passwordMaximumLength })}
         </div>
 
         {!isPermissionLoading && !canManage && (
-          <p className="mt-4 text-right text-sm text-amber-600 dark:text-amber-300">Bu ayarları kaydetmek için proje ayarları yönetme yetkisi gereklidir.</p>
+          <p className="mt-4 text-right text-sm text-amber-600 dark:text-amber-300">{t('permissionRequiredNotice')}</p>
         )}
         <div className="mt-5 flex justify-end">
           <button
@@ -149,7 +164,7 @@ export function ProjectSettingsPage() {
             className="inline-flex items-center gap-2 rounded-xl bg-[var(--wms-brand-primary)] px-5 py-2.5 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
             {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-            Ayarları Kaydet
+            {t('saveButton')}
           </button>
         </div>
       </form>

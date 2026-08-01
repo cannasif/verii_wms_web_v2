@@ -1,0 +1,59 @@
+{
+  "eyebrow": "System",
+  "title": "Allgemeine Projekteinstellungen",
+  "description": "Verwalten Sie zentral die Anzeige- und Sicherheitsrichtlinien für alle Benutzer.",
+  "errors": {
+    "loadFailed": "Einstellungen konnten nicht geladen werden.",
+    "saveFailed": "Einstellungen konnten nicht gespeichert werden."
+  },
+  "toast": {
+    "saved": "Projekteinstellungen gespeichert und angewendet."
+  },
+  "preview": {
+    "number": "Zahl",
+    "date": "Datum",
+    "time": "Uhrzeit",
+    "dateTime": "Datum / Uhrzeit",
+    "year": "Jahr"
+  },
+  "numberLocale": {
+    "label": "Zahlenformat",
+    "trDescription": "Türkisches Zahlenformat",
+    "enDescription": "Englisches Zahlenformat",
+    "deDescription": "Deutsches Zahlenformat"
+  },
+  "decimalPlaces": {
+    "label": "Dezimalstellen",
+    "optionLabel": "{{value}} Stellen"
+  },
+  "dateFormat": {
+    "label": "Datumsformat"
+  },
+  "timeFormat": {
+    "label": "Uhrzeitformat"
+  },
+  "yearFormat": {
+    "label": "Jahresformat",
+    "fourDigit": "4-stellig (2026)",
+    "twoDigit": "2-stellig (26)"
+  },
+  "timeZone": {
+    "label": "Zeitzone",
+    "searchPlaceholder": "Zeitzone suchen...",
+    "istanbul": "Istanbul (UTC+3)",
+    "berlin": "Berlin",
+    "newYork": "New York"
+  },
+  "passwordMinLength": {
+    "label": "Minimale Passwortlänge"
+  },
+  "passwordMaxLength": {
+    "label": "Maximale Passwortlänge"
+  },
+  "passwordSecurityNotice": {
+    "label": "Passwortsicherheit:",
+    "text": "Der Mindestwert kann zwischen 5 und {{max}} liegen. Es kann kein Wert höher als das aktuell kürzeste Passwort ausgewählt werden; diese Grenze kann sicher erhöht werden, sobald Benutzer ihre Passwörter erneuern."
+  },
+  "permissionRequiredNotice": "Zum Speichern dieser Einstellungen ist die Berechtigung zur Verwaltung der Projekteinstellungen erforderlich.",
+  "saveButton": "Einstellungen speichern"
+}

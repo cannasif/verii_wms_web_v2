@@ -1,0 +1,146 @@
+{
+  "grid": {
+    "eyebrowGroup": "SISTEMA_Y_ACCESO",
+    "eyebrowPage": "GESTIÓN_DE_USUARIOS",
+    "title": "Gestión de usuarios",
+    "description": "Gestione cuentas de usuario, información de perfil, roles y grupos de permisos.",
+    "emptyMessage": "No se encontraron usuarios registrados.",
+    "toolbar": {
+      "importAction": "Añadir usuarios vía Excel",
+      "createAction": "Nuevo usuario"
+    },
+    "columns": {
+      "username": "Nombre de usuario",
+      "firstName": "Nombre",
+      "lastName": "Apellido",
+      "email": "Correo electrónico",
+      "role": "Rol",
+      "status": "Estado",
+      "lastLogin": "Último inicio de sesión",
+      "actions": "Acciones"
+    },
+    "statusActive": "Activo",
+    "statusInactive": "Inactivo",
+    "editAction": "Editar",
+    "deactivateAction": "Desactivar",
+    "editAriaLabel": "Editar {{username}}",
+    "deactivateAriaLabel": "Desactivar {{username}}"
+  },
+  "toast": {
+    "lookupsFailed": "No se pudieron obtener los grupos de permisos y almacenes.",
+    "detailFailed": "No se pudo obtener la información del usuario.",
+    "activated": "Usuario activado.",
+    "deactivated": "Usuario desactivado.",
+    "statusUpdateFailed": "No se pudo actualizar el estado.",
+    "created": "Usuario creado correctamente.",
+    "updated": "Información y permisos del usuario actualizados.",
+    "saveFailed": "No se pudo guardar el usuario.",
+    "deactivateSuccess": "Usuario desactivado.",
+    "deactivateFailed": "No se pudo desactivar el usuario."
+  },
+  "validation": {
+    "username": "3-100 caracteres; use letras, números, puntos, guiones o guiones bajos.",
+    "email": "Introduzca una dirección de correo electrónico válida.",
+    "password": "La contraseña debe tener entre {{min}} y {{max}} caracteres.",
+    "confirmPassword": "Las contraseñas no coinciden.",
+    "firstName": "El nombre puede tener como máximo 100 caracteres.",
+    "lastName": "El apellido puede tener como máximo 100 caracteres.",
+    "phoneNumber": "El teléfono puede tener como máximo 40 caracteres.",
+    "superadminNotAllowed": "No se puede crear un superadmin desde el formulario."
+  },
+  "dialog": {
+    "createTitle": "Nuevo usuario",
+    "editTitle": "Editar usuario",
+    "subtitle": "Gestione la cuenta, el perfil y los permisos en una sola operación.",
+    "usernameLabel": "Nombre de usuario",
+    "emailLabel": "Correo electrónico",
+    "firstNameLabel": "Nombre",
+    "lastNameLabel": "Apellido",
+    "phoneLabel": "Teléfono",
+    "roleLabel": "Rol",
+    "roleUser": "Usuario",
+    "roleManager": "Gerente",
+    "roleAdmin": "Administrador de la aplicación",
+    "roleSuperadmin": "Administrador del sistema",
+    "temporaryPasswordLabel": "Contraseña temporal",
+    "newPasswordLabel": "Nueva contraseña",
+    "passwordLengthHint": "({{min}}-{{max}} caracteres)",
+    "passwordPlaceholderEdit": "Deje en blanco para no cambiar",
+    "showPassword": "Mostrar contraseña",
+    "hidePassword": "Ocultar contraseña",
+    "confirmPasswordLabel": "Confirmar contraseña",
+    "permissionGroupsTitle": "Grupos de permisos",
+    "groupsSelectedCount": "{{count}} grupos seleccionados",
+    "permissionCountSuffix": "{{count}} permisos",
+    "systemGroupSuffix": " • Grupo del sistema",
+    "warehousesTitle": "Almacenes en los que puede trabajar",
+    "warehousesSelectedCount": "{{count}} almacenes seleccionados",
+    "warehousesNoneSelected": "No definido: todos los almacenes",
+    "warehousesHint": "Si se seleccionan almacenes, el usuario solo podrá realizar la recepción de mercancías en los almacenes seleccionados. Si no se selecciona ninguno, todos los almacenes estarán disponibles. El rol Admin siempre ve todos los almacenes.",
+    "warehouseLabel": "Almacén {{code}}",
+    "superadminNotice": "El nombre de usuario, el rol y el estado activo del usuario principal del sistema no se pueden cambiar por motivos de seguridad.",
+    "activeUserLabel": "Usuario activo",
+    "activeUserHint": "Permitir que el usuario inicie sesión en el sistema.",
+    "cancelButton": "Cancelar",
+    "createButton": "Crear usuario",
+    "saveButton": "Guardar cambios"
+  },
+  "deactivateDialog": {
+    "title": "Desactivar usuario",
+    "confirmLabel": "Desactivar",
+    "description": "{{username}} ya no podrá iniciar sesión en el sistema. Los registros históricos se conservarán."
+  },
+  "import": {
+    "title": "Añadir usuarios vía Excel",
+    "description": "Cargue la plantilla aprobada para crear registros de usuario en masa.",
+    "warningTitle": "Solo se crean registros nuevos",
+    "warningText": "Los usuarios existentes no se actualizan, desactivan ni eliminan. Si un nombre de usuario o correo electrónico ya existe, esa fila se omite sin cambios.",
+    "step1Title": "1. Preparar la plantilla",
+    "step1Description": "Complete la hoja \"Usuarios\" sin cambiar los encabezados ni el orden de las columnas.",
+    "downloadPreparing": "Preparando…",
+    "downloadButton": "Descargar plantilla Excel actual",
+    "step2Title": "2. Seleccionar el archivo .xlsx completado",
+    "step2Limit": "Máximo 5 MB y 500 filas de datos",
+    "fileSizeKb": "{{size}} KB",
+    "multiGroupTitle": "Selección de múltiples grupos de permisos",
+    "multiGroupDescriptionPrefix": "Los grupos de permisos activos en el momento de la descarga se leen de la API y cada uno se añade como una columna de selección desplegable",
+    "multiGroupDescriptionBold": "true / false",
+    "multiGroupDescriptionSuffix": "independiente.",
+    "multiGroupHintPrefix": "Para asignar el mismo usuario a varios grupos, seleccione",
+    "multiGroupHintBold": "true",
+    "multiGroupHintSuffix": "en cada columna de grupo correspondiente. Puede dejar en blanco o poner false las que no seleccione.",
+    "groupsSheetNote": "La hoja \"Grupos de permisos\" también contiene el ID, el nombre y la descripción de los grupos activos en el momento de la descarga.",
+    "summary": {
+      "total": "Total",
+      "created": "Creados",
+      "skipped": "Omitidos",
+      "failed": "Fallidos"
+    },
+    "table": {
+      "row": "Fila",
+      "status": "Estado",
+      "username": "Usuario",
+      "email": "Correo electrónico",
+      "message": "Descripción"
+    },
+    "status": {
+      "created": "Creado",
+      "skipped": "Omitido",
+      "failed": "Fallido"
+    },
+    "closeButton": "Cerrar",
+    "creatingButton": "Importando…",
+    "createUsersButton": "Crear nuevos usuarios",
+    "errors": {
+      "invalidExtension": "Solo se pueden cargar archivos Excel con la extensión .xlsx.",
+      "fileTooLarge": "El archivo Excel puede tener como máximo 5 MB.",
+      "uploadFailed": "No se pudo cargar el archivo Excel.",
+      "templateDownloadFailed": "No se pudo descargar la plantilla Excel."
+    },
+    "toast": {
+      "templateDownloaded": "Plantilla Excel descargada con los grupos de permisos actuales.",
+      "createdWithFailures": "{{created}} usuarios creados; {{failed}} filas fallidas.",
+      "createdSuccess": "{{created}} nuevos usuarios creados."
+    }
+  }
+}

@@ -1,0 +1,146 @@
+{
+  "grid": {
+    "eyebrowGroup": "SYSTEM_UND_ZUGRIFF",
+    "eyebrowPage": "BENUTZERVERWALTUNG",
+    "title": "Benutzerverwaltung",
+    "description": "Verwalten Sie Benutzerkonten, Profilinformationen, Rollen und Berechtigungsgruppen.",
+    "emptyMessage": "Keine registrierten Benutzer gefunden.",
+    "toolbar": {
+      "importAction": "Benutzer per Excel hinzufügen",
+      "createAction": "Neuer Benutzer"
+    },
+    "columns": {
+      "username": "Benutzername",
+      "firstName": "Vorname",
+      "lastName": "Nachname",
+      "email": "E-Mail",
+      "role": "Rolle",
+      "status": "Status",
+      "lastLogin": "Letzte Anmeldung",
+      "actions": "Aktionen"
+    },
+    "statusActive": "Aktiv",
+    "statusInactive": "Inaktiv",
+    "editAction": "Bearbeiten",
+    "deactivateAction": "Deaktivieren",
+    "editAriaLabel": "{{username}} bearbeiten",
+    "deactivateAriaLabel": "{{username}} deaktivieren"
+  },
+  "toast": {
+    "lookupsFailed": "Berechtigungsgruppen und Lager konnten nicht abgerufen werden.",
+    "detailFailed": "Benutzerinformationen konnten nicht abgerufen werden.",
+    "activated": "Benutzer aktiviert.",
+    "deactivated": "Benutzer deaktiviert.",
+    "statusUpdateFailed": "Status konnte nicht aktualisiert werden.",
+    "created": "Benutzer erfolgreich erstellt.",
+    "updated": "Benutzerinformationen und Berechtigungen aktualisiert.",
+    "saveFailed": "Benutzer konnte nicht gespeichert werden.",
+    "deactivateSuccess": "Benutzer deaktiviert.",
+    "deactivateFailed": "Benutzer konnte nicht deaktiviert werden."
+  },
+  "validation": {
+    "username": "3-100 Zeichen; verwenden Sie Buchstaben, Zahlen, Punkte, Bindestriche oder Unterstriche.",
+    "email": "Geben Sie eine gültige E-Mail-Adresse ein.",
+    "password": "Das Passwort muss {{min}}-{{max}} Zeichen lang sein.",
+    "confirmPassword": "Die Passwörter stimmen nicht überein.",
+    "firstName": "Der Vorname darf höchstens 100 Zeichen umfassen.",
+    "lastName": "Der Nachname darf höchstens 100 Zeichen umfassen.",
+    "phoneNumber": "Die Telefonnummer darf höchstens 40 Zeichen umfassen.",
+    "superadminNotAllowed": "Über das Formular kann kein Superadmin erstellt werden."
+  },
+  "dialog": {
+    "createTitle": "Neuer Benutzer",
+    "editTitle": "Benutzer bearbeiten",
+    "subtitle": "Verwalten Sie Konto-, Profil- und Berechtigungsinformationen in einem Schritt.",
+    "usernameLabel": "Benutzername",
+    "emailLabel": "E-Mail",
+    "firstNameLabel": "Vorname",
+    "lastNameLabel": "Nachname",
+    "phoneLabel": "Telefon",
+    "roleLabel": "Rolle",
+    "roleUser": "Benutzer",
+    "roleManager": "Manager",
+    "roleAdmin": "Anwendungsadministrator",
+    "roleSuperadmin": "Systemadministrator",
+    "temporaryPasswordLabel": "Vorläufiges Passwort",
+    "newPasswordLabel": "Neues Passwort",
+    "passwordLengthHint": "({{min}}-{{max}} Zeichen)",
+    "passwordPlaceholderEdit": "Leer lassen, um unverändert zu bleiben",
+    "showPassword": "Passwort anzeigen",
+    "hidePassword": "Passwort ausblenden",
+    "confirmPasswordLabel": "Passwort wiederholen",
+    "permissionGroupsTitle": "Berechtigungsgruppen",
+    "groupsSelectedCount": "{{count}} Gruppen ausgewählt",
+    "permissionCountSuffix": "{{count}} Berechtigungen",
+    "systemGroupSuffix": " • Systemgruppe",
+    "warehousesTitle": "Lager, in denen der Benutzer arbeiten kann",
+    "warehousesSelectedCount": "{{count}} Lager ausgewählt",
+    "warehousesNoneSelected": "Nicht festgelegt: alle Lager",
+    "warehousesHint": "Wenn Lager ausgewählt werden, kann der Benutzer den Wareneingang nur in den ausgewählten Lagern durchführen. Wird kein Lager ausgewählt, sind alle Lager verfügbar. Die Rolle Admin sieht immer alle Lager.",
+    "warehouseLabel": "Lager {{code}}",
+    "superadminNotice": "Benutzername, Rolle und Aktivstatus des primären Systembenutzers können aus Sicherheitsgründen nicht geändert werden.",
+    "activeUserLabel": "Aktiver Benutzer",
+    "activeUserHint": "Der Benutzer kann sich im System anmelden.",
+    "cancelButton": "Abbrechen",
+    "createButton": "Benutzer erstellen",
+    "saveButton": "Änderungen speichern"
+  },
+  "deactivateDialog": {
+    "title": "Benutzer deaktivieren",
+    "confirmLabel": "Deaktivieren",
+    "description": "{{username}} kann sich nicht mehr im System anmelden. Historische Datensätze bleiben erhalten."
+  },
+  "import": {
+    "title": "Benutzer per Excel hinzufügen",
+    "description": "Laden Sie die genehmigte Vorlage hoch, um neue Benutzer in großer Zahl zu erstellen.",
+    "warningTitle": "Es werden nur neue Datensätze erstellt",
+    "warningText": "Bestehende Benutzer werden nicht aktualisiert, deaktiviert oder gelöscht. Existiert der Benutzername oder die E-Mail bereits, wird die betreffende Zeile unverändert übersprungen.",
+    "step1Title": "1. Vorlage vorbereiten",
+    "step1Description": "Füllen Sie das Blatt \"Benutzer\" aus, ohne Überschriften oder Spaltenreihenfolge zu ändern.",
+    "downloadPreparing": "Wird vorbereitet…",
+    "downloadButton": "Aktuelle Excel-Vorlage herunterladen",
+    "step2Title": "2. Ausgefüllte .xlsx-Datei auswählen",
+    "step2Limit": "Maximal 5 MB und 500 Datenzeilen",
+    "fileSizeKb": "{{size}} KB",
+    "multiGroupTitle": "Auswahl mehrerer Berechtigungsgruppen",
+    "multiGroupDescriptionPrefix": "Die zum Zeitpunkt des Downloads aktiven Berechtigungsgruppen werden aus der API gelesen und jede wird als separate",
+    "multiGroupDescriptionBold": "true / false",
+    "multiGroupDescriptionSuffix": "Auswahlspalte hinzugefügt.",
+    "multiGroupHintPrefix": "Um denselben Benutzer mehreren Gruppen zuzuweisen, wählen Sie in jeder betreffenden Gruppenspalte",
+    "multiGroupHintBold": "true",
+    "multiGroupHintSuffix": "aus. Nicht ausgewählte können Sie leer lassen oder mit false versehen.",
+    "groupsSheetNote": "Das Blatt \"Berechtigungsgruppen\" enthält außerdem ID, Name und Beschreibung der zum Zeitpunkt des Downloads aktiven Gruppen.",
+    "summary": {
+      "total": "Gesamt",
+      "created": "Erstellt",
+      "skipped": "Übersprungen",
+      "failed": "Fehlgeschlagen"
+    },
+    "table": {
+      "row": "Zeile",
+      "status": "Status",
+      "username": "Benutzer",
+      "email": "E-Mail",
+      "message": "Beschreibung"
+    },
+    "status": {
+      "created": "Erstellt",
+      "skipped": "Übersprungen",
+      "failed": "Fehlgeschlagen"
+    },
+    "closeButton": "Schließen",
+    "creatingButton": "Wird importiert…",
+    "createUsersButton": "Neue Benutzer erstellen",
+    "errors": {
+      "invalidExtension": "Es können nur Excel-Dateien mit der Endung .xlsx hochgeladen werden.",
+      "fileTooLarge": "Die Excel-Datei darf höchstens 5 MB groß sein.",
+      "uploadFailed": "Die Excel-Datei konnte nicht hochgeladen werden.",
+      "templateDownloadFailed": "Die Excel-Vorlage konnte nicht herunterladen werden."
+    },
+    "toast": {
+      "templateDownloaded": "Excel-Vorlage mit den aktuellen Berechtigungsgruppen heruntergeladen.",
+      "createdWithFailures": "{{created}} Benutzer erstellt; {{failed}} Zeilen fehlgeschlagen.",
+      "createdSuccess": "{{created}} neue Benutzer erstellt."
+    }
+  }
+}

@@ -12,6 +12,7 @@ import { OpsCodeBadge, OpsStatusBadge } from '@/components/shared/OpsStatusBadge
 import { DeleteConfirmDialog } from '@/components/shared/DeleteConfirmDialog';
 import { OpsDialogBody, OpsDialogContent, OpsDialogFooter, OpsDialogHeader } from '@/components/shared/OpsDialogShell';
 import { Dialog, DialogTitle } from '@/components/ui/dialog';
+import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { localizeEnumValue } from '@/lib/enum-localization';
 import { formatProjectDateTime } from '@/lib/project-format';
 import { useProjectSettingsStore } from '@/stores/project-settings-store';
@@ -28,19 +29,20 @@ interface UserFormState {
 
 const emptyForm: UserFormState = { username: '', email: '', firstName: '', lastName: '', phoneNumber: '', role: 'User', password: '', confirmPassword: '', isActive: true, permissionGroupIds: [], warehouseIds: [] };
 
-function validateForm(form: UserFormState, mode: FormMode, minimumPasswordLength: number, maximumPasswordLength: number): Record<string, string> {
+function validateForm(form: UserFormState, mode: FormMode, minimumPasswordLength: number, maximumPasswordLength: number, t: (key: string, options?: Record<string, unknown>) => string): Record<string, string> {
   const errors: Record<string, string> = {};
-  if (!/^[a-zA-Z0-9._-]{3,100}$/.test(form.username.trim())) errors.username = '3-100 karakter; harf, rakam, nokta, tire veya alt çizgi kullanın.';
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) errors.email = 'Geçerli bir e-posta adresi girin.';
-  if ((mode === 'create' || form.password.length > 0) && (form.password.length < minimumPasswordLength || form.password.length > maximumPasswordLength)) errors.password = `Şifre ${minimumPasswordLength}-${maximumPasswordLength} karakter olmalıdır.`;
-  if (form.password !== form.confirmPassword) errors.confirmPassword = 'Şifreler eşleşmiyor.';
-  if (form.firstName.length > 100) errors.firstName = 'Ad en fazla 100 karakter olabilir.';
-  if (form.lastName.length > 100) errors.lastName = 'Soyad en fazla 100 karakter olabilir.';
-  if (form.phoneNumber.length > 40) errors.phoneNumber = 'Telefon en fazla 40 karakter olabilir.';
+  if (!/^[a-zA-Z0-9._-]{3,100}$/.test(form.username.trim())) errors.username = t('validation.username');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) errors.email = t('validation.email');
+  if ((mode === 'create' || form.password.length > 0) && (form.password.length < minimumPasswordLength || form.password.length > maximumPasswordLength)) errors.password = t('validation.password', { min: minimumPasswordLength, max: maximumPasswordLength });
+  if (form.password !== form.confirmPassword) errors.confirmPassword = t('validation.confirmPassword');
+  if (form.firstName.length > 100) errors.firstName = t('validation.firstName');
+  if (form.lastName.length > 100) errors.lastName = t('validation.lastName');
+  if (form.phoneNumber.length > 40) errors.phoneNumber = t('validation.phoneNumber');
   return errors;
 }
 
 export function UserManagementPage() {
+  const { t } = useModuleTranslation('user-management');
   const queryClient = useQueryClient();
   const [mode, setMode] = useState<FormMode | null>(null);
   const [form, setForm] = useState<UserFormState>(emptyForm);
@@ -70,9 +72,9 @@ export function UserManagementPage() {
   const openCreate = useCallback(async () => {
     setMode('create'); setForm(emptyForm); setErrors({}); setShowPassword(false); setLoadingForm(true);
     try { await loadLookups(); }
-    catch (error) { toast.error(error instanceof Error ? error.message : 'Yetki grupları ve depolar alınamadı.'); setMode(null); }
+    catch (error) { toast.error(error instanceof Error ? error.message : t('toast.lookupsFailed')); setMode(null); }
     finally { setLoadingForm(false); }
-  }, [loadLookups]);
+  }, [loadLookups, t]);
 
   const openEdit = useCallback(async (row: UserRow) => {
     setMode('edit'); setForm({ ...emptyForm, id: row.id, username: row.username, email: row.email, firstName: row.firstName, lastName: row.lastName, role: row.role as UpdateUserPayload['role'], isActive: row.isActive });
@@ -80,9 +82,9 @@ export function UserManagementPage() {
     try {
       const [detail] = await Promise.all([userManagementApi.getById(row.id), loadLookups()]);
       setForm({ id: detail.id, username: detail.username, email: detail.email, firstName: detail.firstName || '', lastName: detail.lastName || '', phoneNumber: detail.phoneNumber || '', role: detail.role as UpdateUserPayload['role'], password: '', confirmPassword: '', isActive: detail.isActive, permissionGroupIds: detail.permissionGroupIds, warehouseIds: detail.warehouseIds });
-    } catch (error) { toast.error(error instanceof Error ? error.message : 'Kullanıcı bilgileri alınamadı.'); setMode(null); }
+    } catch (error) { toast.error(error instanceof Error ? error.message : t('toast.detailFailed')); setMode(null); }
     finally { setLoadingForm(false); }
-  }, [loadLookups]);
+  }, [loadLookups, t]);
 
   const closeForm = () => { if (!saving) { setMode(null); setErrors({}); } };
   const updateForm = <K extends keyof UserFormState>(key: K, value: UserFormState[K]) => {
@@ -111,54 +113,54 @@ export function UserManagementPage() {
         permissionGroupIds: detail.permissionGroupIds,
         warehouseIds: detail.warehouseIds,
       });
-      toast.success(checked ? 'Kullanıcı aktifleştirildi.' : 'Kullanıcı pasife alındı.');
+      toast.success(checked ? t('toast.activated') : t('toast.deactivated'));
       await refreshGrid();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Durum güncellenemedi.');
+      toast.error(error instanceof Error ? error.message : t('toast.statusUpdateFailed'));
     } finally {
       setStatusBusyId(null);
     }
-  }, [refreshGrid]);
+  }, [refreshGrid, t]);
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     if (!mode) return;
-    const nextErrors = validateForm(form, mode, minimumPasswordLength, maximumPasswordLength); setErrors(nextErrors);
+    const nextErrors = validateForm(form, mode, minimumPasswordLength, maximumPasswordLength, t); setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
     setSaving(true);
     try {
       const shared = { username: form.username.trim(), email: form.email.trim(), firstName: form.firstName.trim() || undefined, lastName: form.lastName.trim() || undefined, phoneNumber: form.phoneNumber.trim() || undefined, role: form.role, isActive: form.isActive, permissionGroupIds: form.permissionGroupIds, warehouseIds: form.warehouseIds };
       if (mode === 'create') {
-        if (form.role === 'superadmin') throw new Error('Form üzerinden superadmin oluşturulamaz.');
+        if (form.role === 'superadmin') throw new Error(t('validation.superadminNotAllowed'));
         await userManagementApi.create({ ...shared, password: form.password, role: form.role });
-        toast.success('Kullanıcı başarıyla oluşturuldu.');
+        toast.success(t('toast.created'));
       } else if (form.id) {
         await userManagementApi.update(form.id, { ...shared, password: form.password || undefined });
-        toast.success('Kullanıcı bilgileri ve yetkileri güncellendi.');
+        toast.success(t('toast.updated'));
       }
       setMode(null); setForm(emptyForm);
       await refreshGrid();
-    } catch (error) { toast.error(error instanceof Error ? error.message : 'Kullanıcı kaydedilemedi.'); }
+    } catch (error) { toast.error(error instanceof Error ? error.message : t('toast.saveFailed')); }
     finally { setSaving(false); }
   };
 
   const deactivate = async () => {
     if (!deactivateTarget) return;
     setSaving(true);
-    try { await userManagementApi.deactivate(deactivateTarget.id); toast.success('Kullanıcı pasife alındı.'); setDeactivateTarget(null); await refreshGrid(); }
-    catch (error) { toast.error(error instanceof Error ? error.message : 'Kullanıcı pasife alınamadı.'); }
+    try { await userManagementApi.deactivate(deactivateTarget.id); toast.success(t('toast.deactivateSuccess')); setDeactivateTarget(null); await refreshGrid(); }
+    catch (error) { toast.error(error instanceof Error ? error.message : t('toast.deactivateFailed')); }
     finally { setSaving(false); }
   };
 
   const columns = useMemo<GridColumn<UserRow>[]>(() => [
     ...systemColumns<UserRow>(),
-    { key: 'username', label: 'Kullanıcı Adı', searchable: true, defaultSearch: true, render: (row) => <span className="font-semibold">{row.username}</span> },
-    { key: 'firstName', label: 'Ad', searchable: true, render: (row) => row.firstName || '-' },
-    { key: 'lastName', label: 'Soyad', searchable: true, render: (row) => row.lastName || '-' },
-    { key: 'email', label: 'E-posta', searchable: true, defaultSearch: true, render: (row) => row.email },
+    { key: 'username', label: t('grid.columns.username'), searchable: true, defaultSearch: true, render: (row) => <span className="font-semibold">{row.username}</span> },
+    { key: 'firstName', label: t('grid.columns.firstName'), searchable: true, render: (row) => row.firstName || '-' },
+    { key: 'lastName', label: t('grid.columns.lastName'), searchable: true, render: (row) => row.lastName || '-' },
+    { key: 'email', label: t('grid.columns.email'), searchable: true, defaultSearch: true, render: (row) => row.email },
     {
       key: 'role',
-      label: 'Rol',
+      label: t('grid.columns.role'),
       filterable: true,
       filterType: 'enum',
       render: (row) => <OpsCodeBadge>{localizeEnumValue(row.role)}</OpsCodeBadge>,
@@ -166,12 +168,12 @@ export function UserManagementPage() {
     },
     {
       key: 'isActive',
-      label: 'Durum',
+      label: t('grid.columns.status'),
       filterable: true,
       filterType: 'boolean',
       filterOptions: [
-        { value: 'true', label: 'Aktif' },
-        { value: 'false', label: 'Pasif' },
+        { value: 'true', label: t('grid.statusActive') },
+        { value: 'false', label: t('grid.statusInactive') },
       ],
       render: (row) => (
         <div className="flex flex-wrap items-center justify-center gap-2">
@@ -179,31 +181,31 @@ export function UserManagementPage() {
             checked={row.isActive}
             disabled={statusBusyId === row.id || row.role.toLowerCase() === 'superadmin'}
             onCheckedChange={(checked) => void toggleStatus(row, checked)}
-            aria-label={row.isActive ? 'Aktif' : 'Pasif'}
+            aria-label={row.isActive ? t('grid.statusActive') : t('grid.statusInactive')}
           />
           <OpsStatusBadge tone={row.isActive ? 'done' : 'pending'}>
-            {row.isActive ? 'Aktif' : 'Pasif'}
+            {row.isActive ? t('grid.statusActive') : t('grid.statusInactive')}
           </OpsStatusBadge>
         </div>
       ),
-      contextValue: (row) => (row.isActive ? 'Aktif' : 'Pasif'),
+      contextValue: (row) => (row.isActive ? t('grid.statusActive') : t('grid.statusInactive')),
     },
-    { key: 'lastLoginAt', label: 'Son Giriş', render: (row) => formatProjectDateTime(row.lastLoginAt) },
+    { key: 'lastLoginAt', label: t('grid.columns.lastLogin'), render: (row) => formatProjectDateTime(row.lastLoginAt) },
     {
       key: 'actions',
-      label: 'İşlemler',
+      label: t('grid.columns.actions'),
       sortable: false,
       filterable: false,
       hideable: false,
       render: (row) => (
         <div className="wms-ops-row-actions flex items-center justify-center gap-1">
-          <button type="button" aria-label={`${row.username} düzenle`} title="Düzenle" onClick={() => openEdit(row)} className="wms-ops-grid-icon-btn grid size-8 place-items-center">
+          <button type="button" aria-label={t('grid.editAriaLabel', { username: row.username })} title={t('grid.editAction')} onClick={() => openEdit(row)} className="wms-ops-grid-icon-btn grid size-8 place-items-center">
             <Pencil className="size-3.5" />
           </button>
           <button
             type="button"
-            aria-label={`${row.username} pasife al`}
-            title="Pasife al"
+            aria-label={t('grid.deactivateAriaLabel', { username: row.username })}
+            title={t('grid.deactivateAction')}
             disabled={!row.isActive || row.role.toLowerCase() === 'superadmin'}
             onClick={() => setDeactivateTarget(row)}
             className="wms-ops-grid-icon-btn wms-ops-grid-icon-btn--danger grid size-8 place-items-center disabled:cursor-not-allowed disabled:opacity-35"
@@ -213,7 +215,7 @@ export function UserManagementPage() {
         </div>
       ),
     },
-  ], [openEdit, statusBusyId, toggleStatus]);
+  ], [openEdit, statusBusyId, t, toggleStatus]);
 
   const isPrimaryAdministrator = form.role.toLowerCase() === 'superadmin';
   return (
@@ -222,18 +224,18 @@ export function UserManagementPage() {
         pageKey="system-users"
         refreshKey={gridVersion}
         eyebrow={<>
-          <span>SİSTEM_VE_YETKİ</span>
+          <span>{t('grid.eyebrowGroup')}</span>
           <span className="mx-2 opacity-60">/</span>
-          <span>KULLANICI_YÖNETİMİ</span>
+          <span>{t('grid.eyebrowPage')}</span>
         </>}
-        title="Kullanıcı Yönetimi"
-        description="Kullanıcı hesaplarını, profil bilgilerini, rolleri ve yetki gruplarını yönetin."
-        emptyMessage="Kayıtlı kullanıcı bulunamadı."
+        title={t('grid.title')}
+        description={t('grid.description')}
+        emptyMessage={t('grid.emptyMessage')}
         columns={columns}
         fetchPage={userManagementApi.getPaged}
         toolbarActions={[
-          { label: 'Excel ile Kullanıcı Ekle', run: async () => setImportOpen(true), icon: <FileSpreadsheet className="size-3.5" aria-hidden /> },
-          { label: 'Yeni Kullanıcı', run: openCreate, icon: <Plus className="size-3.5" aria-hidden /> },
+          { label: t('grid.toolbar.importAction'), run: async () => setImportOpen(true), icon: <FileSpreadsheet className="size-3.5" aria-hidden /> },
+          { label: t('grid.toolbar.createAction'), run: openCreate, icon: <Plus className="size-3.5" aria-hidden /> },
         ]}
       />
 
@@ -249,9 +251,9 @@ export function UserManagementPage() {
                 </div>
                 <div>
                   <DialogTitle className="wms-ops-detail-dialog__title text-xl font-bold">
-                    {mode === 'create' ? 'Yeni Kullanıcı' : 'Kullanıcıyı Düzenle'}
+                    {mode === 'create' ? t('dialog.createTitle') : t('dialog.editTitle')}
                   </DialogTitle>
-                  <p className="text-sm text-slate-500">Hesap, profil ve yetki bilgilerini tek işlemde yönetin.</p>
+                  <p className="text-sm text-slate-500">{t('dialog.subtitle')}</p>
                 </div>
               </div>
             </OpsDialogHeader>
@@ -265,25 +267,25 @@ export function UserManagementPage() {
               <form onSubmit={submit} autoComplete="off" className="flex min-h-0 flex-1 flex-col">
                 <OpsDialogBody className="space-y-5">
                   <div className="grid gap-4 sm:grid-cols-2">
-                    <Field label="Kullanıcı adı" icon={Users} error={errors.username} required>
+                    <Field label={t('dialog.usernameLabel')} icon={Users} error={errors.username} required>
                       <AppInput autoFocus name="wms-user-username" autoComplete="off" disabled={isPrimaryAdministrator} invalid={Boolean(errors.username)} value={form.username} maxLength={100} onChange={(event) => updateForm('username', event.target.value)} />
                     </Field>
-                    <Field label="E-posta" icon={Mail} error={errors.email} required>
+                    <Field label={t('dialog.emailLabel')} icon={Mail} error={errors.email} required>
                       <AppInput type="email" name="wms-user-email" autoComplete="off" invalid={Boolean(errors.email)} value={form.email} maxLength={200} onChange={(event) => updateForm('email', event.target.value)} />
                     </Field>
-                    <Field label="Ad" icon={Users} error={errors.firstName}>
+                    <Field label={t('dialog.firstNameLabel')} icon={Users} error={errors.firstName}>
                       <AppInput invalid={Boolean(errors.firstName)} value={form.firstName} maxLength={100} onChange={(event) => updateForm('firstName', event.target.value)} />
                     </Field>
-                    <Field label="Soyad" icon={Users} error={errors.lastName}>
+                    <Field label={t('dialog.lastNameLabel')} icon={Users} error={errors.lastName}>
                       <AppInput invalid={Boolean(errors.lastName)} value={form.lastName} maxLength={100} onChange={(event) => updateForm('lastName', event.target.value)} />
                     </Field>
-                    <Field label="Telefon" icon={Phone} error={errors.phoneNumber}>
+                    <Field label={t('dialog.phoneLabel')} icon={Phone} error={errors.phoneNumber}>
                       <AppInput invalid={Boolean(errors.phoneNumber)} value={form.phoneNumber} maxLength={40} onChange={(event) => updateForm('phoneNumber', event.target.value)} placeholder="+90 ..." />
                     </Field>
-                    <Field label="Rol" icon={Shield} required>
-                      <AppDropdown disabled={isPrimaryAdministrator} value={form.role} onValueChange={(value) => updateForm('role', value as UpdateUserPayload['role'])} portalContainer={null} options={[{ value: 'User', label: 'Kullanıcı' }, { value: 'Manager', label: 'Yönetici' }, { value: 'Admin', label: 'Uygulama Yöneticisi' }, ...(isPrimaryAdministrator ? [{ value: 'superadmin', label: 'Sistem Yöneticisi' }] : [])]} ariaLabel="Rol" />
+                    <Field label={t('dialog.roleLabel')} icon={Shield} required>
+                      <AppDropdown disabled={isPrimaryAdministrator} value={form.role} onValueChange={(value) => updateForm('role', value as UpdateUserPayload['role'])} portalContainer={null} options={[{ value: 'User', label: t('dialog.roleUser') }, { value: 'Manager', label: t('dialog.roleManager') }, { value: 'Admin', label: t('dialog.roleAdmin') }, ...(isPrimaryAdministrator ? [{ value: 'superadmin', label: t('dialog.roleSuperadmin') }] : [])]} ariaLabel={t('dialog.roleLabel')} />
                     </Field>
-                    <Field label={`${mode === 'create' ? 'Geçici şifre' : 'Yeni şifre'} (${minimumPasswordLength}-${maximumPasswordLength} karakter)`} icon={LockKeyhole} error={errors.password} required={mode === 'create'}>
+                    <Field label={`${mode === 'create' ? t('dialog.temporaryPasswordLabel') : t('dialog.newPasswordLabel')} ${t('dialog.passwordLengthHint', { min: minimumPasswordLength, max: maximumPasswordLength })}`} icon={LockKeyhole} error={errors.password} required={mode === 'create'}>
                       <AppInput
                         type={showPassword ? 'text' : 'password'}
                         name="wms-user-new-password"
@@ -292,11 +294,11 @@ export function UserManagementPage() {
                         value={form.password}
                         maxLength={maximumPasswordLength}
                         onChange={(event) => updateForm('password', event.target.value)}
-                        placeholder={mode === 'edit' ? 'Değişmeyecekse boş bırakın' : ''}
+                        placeholder={mode === 'edit' ? t('dialog.passwordPlaceholderEdit') : ''}
                         trailingContent={(
                           <button
                             type="button"
-                            aria-label={showPassword ? 'Şifreyi gizle' : 'Şifreyi göster'}
+                            aria-label={showPassword ? t('dialog.hidePassword') : t('dialog.showPassword')}
                             onClick={() => setShowPassword((value) => !value)}
                             className="app-input-shell__picker"
                           >
@@ -305,14 +307,14 @@ export function UserManagementPage() {
                         )}
                       />
                     </Field>
-                    <Field label="Şifre tekrar" icon={LockKeyhole} error={errors.confirmPassword} required={mode === 'create'}>
+                    <Field label={t('dialog.confirmPasswordLabel')} icon={LockKeyhole} error={errors.confirmPassword} required={mode === 'create'}>
                       <AppInput type={showPassword ? 'text' : 'password'} name="wms-user-password-confirmation" autoComplete="new-password" invalid={Boolean(errors.confirmPassword)} value={form.confirmPassword} maxLength={maximumPasswordLength} onChange={(event) => updateForm('confirmPassword', event.target.value)} />
                     </Field>
                   </div>
                   <div>
                     <div className="mb-2 flex items-center justify-between">
-                      <p className="text-sm font-semibold">Yetki Grupları</p>
-                      <span className="text-xs text-slate-500">{form.permissionGroupIds.length} grup seçili</span>
+                      <p className="text-sm font-semibold">{t('dialog.permissionGroupsTitle')}</p>
+                      <span className="text-xs text-slate-500">{t('dialog.groupsSelectedCount', { count: form.permissionGroupIds.length })}</span>
                     </div>
                     <div className="grid max-h-56 gap-2 overflow-auto sm:grid-cols-2">
                       {groups.map((group) => (
@@ -320,7 +322,7 @@ export function UserManagementPage() {
                           <input type="checkbox" checked={form.permissionGroupIds.includes(group.id)} onChange={() => updateForm('permissionGroupIds', form.permissionGroupIds.includes(group.id) ? form.permissionGroupIds.filter((id) => id !== group.id) : [...form.permissionGroupIds, group.id])} />
                           <span>
                             <strong className="block text-sm">{group.name}</strong>
-                            <small className="text-slate-500">{group.permissionCount} izin{group.isSystemAdmin ? ' • Sistem grubu' : ''}</small>
+                            <small className="text-slate-500">{t('dialog.permissionCountSuffix', { count: group.permissionCount })}{group.isSystemAdmin ? t('dialog.systemGroupSuffix') : ''}</small>
                           </span>
                         </label>
                       ))}
@@ -328,11 +330,11 @@ export function UserManagementPage() {
                   </div>
                   <div>
                     <div className="mb-2 flex items-center justify-between">
-                      <p className="inline-flex items-center gap-2 text-sm font-semibold"><Warehouse className="size-4 text-[var(--wms-brand-primary)]" /> Çalışabileceği Depolar</p>
-                      <span className="text-xs text-slate-500">{form.warehouseIds.length ? `${form.warehouseIds.length} depo seçili` : 'Tanım yok: tüm depolar'}</span>
+                      <p className="inline-flex items-center gap-2 text-sm font-semibold"><Warehouse className="size-4 text-[var(--wms-brand-primary)]" /> {t('dialog.warehousesTitle')}</p>
+                      <span className="text-xs text-slate-500">{form.warehouseIds.length ? t('dialog.warehousesSelectedCount', { count: form.warehouseIds.length }) : t('dialog.warehousesNoneSelected')}</span>
                     </div>
                     <p className="mb-3 text-xs text-slate-500">
-                      Depo seçilirse kullanıcı yalnızca seçilen depolarda mal kabul yapabilir. Hiç depo seçilmezse tüm depolar açık olur. Admin rolü her zaman tüm depoları görür.
+                      {t('dialog.warehousesHint')}
                     </p>
                     <div className="grid max-h-56 gap-2 overflow-auto sm:grid-cols-2">
                       {warehouses.map((warehouse) => (
@@ -344,7 +346,7 @@ export function UserManagementPage() {
                             onChange={() => updateForm('warehouseIds', form.warehouseIds.includes(warehouse.id) ? form.warehouseIds.filter((id) => id !== warehouse.id) : [...form.warehouseIds, warehouse.id])}
                           />
                           <span>
-                            <strong className="block text-sm">Depo {warehouse.warehouseCode}</strong>
+                            <strong className="block text-sm">{t('dialog.warehouseLabel', { code: warehouse.warehouseCode })}</strong>
                             <small className="text-slate-500">{warehouse.warehouseName}</small>
                           </span>
                         </label>
@@ -353,24 +355,24 @@ export function UserManagementPage() {
                   </div>
                   {isPrimaryAdministrator && (
                     <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
-                      Ana sistem kullanıcısının kullanıcı adı, rolü ve aktiflik durumu güvenlik nedeniyle değiştirilemez.
+                      {t('dialog.superadminNotice')}
                     </div>
                   )}
                   <label className="flex items-center justify-between rounded-xl border p-4">
                     <span>
-                      <strong className="block text-sm">Aktif kullanıcı</strong>
-                      <small className="text-slate-500">Kullanıcı sisteme giriş yapabilsin.</small>
+                      <strong className="block text-sm">{t('dialog.activeUserLabel')}</strong>
+                      <small className="text-slate-500">{t('dialog.activeUserHint')}</small>
                     </span>
                     <input type="checkbox" disabled={isPrimaryAdministrator} checked={form.isActive} onChange={(event) => updateForm('isActive', event.target.checked)} className="size-4" />
                   </label>
                 </OpsDialogBody>
                 <OpsDialogFooter className="flex flex-wrap items-center justify-end gap-2">
                   <OpsActionButton type="button" variant="secondary" disabled={saving} onClick={closeForm}>
-                    Vazgeç
+                    {t('dialog.cancelButton')}
                   </OpsActionButton>
                   <OpsActionButton type="submit" variant="primary" disabled={saving}>
                     {saving ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
-                    {mode === 'create' ? 'Kullanıcı Oluştur' : 'Değişiklikleri Kaydet'}
+                    {mode === 'create' ? t('dialog.createButton') : t('dialog.saveButton')}
                   </OpsActionButton>
                 </OpsDialogFooter>
               </form>
@@ -382,10 +384,10 @@ export function UserManagementPage() {
       <DeleteConfirmDialog
         open={Boolean(deactivateTarget)}
         onOpenChange={(open) => { if (!open && !saving) setDeactivateTarget(null); }}
-        title="Kullanıcıyı pasife al"
+        title={t('deactivateDialog.title')}
         itemLabel={deactivateTarget?.username ?? null}
-        confirmLabel="Pasife Al"
-        description={deactivateTarget ? `${deactivateTarget.username} artık sisteme giriş yapamayacak. Geçmiş kayıtları korunacaktır.` : undefined}
+        confirmLabel={t('deactivateDialog.confirmLabel')}
+        description={deactivateTarget ? t('deactivateDialog.description', { username: deactivateTarget.username }) : undefined}
         isPending={saving}
         onConfirm={deactivate}
       />

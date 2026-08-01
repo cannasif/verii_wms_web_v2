@@ -4754,11 +4754,11 @@
     }
   },
   "userGroupAssignments": {
-    "noUserSelected": "Henüz kullanıcı seçilmedi",
-    "statusLabel": "Durum",
-    "statusPending": "Kaydedilmedi",
-    "statusCurrent": "Güncel",
-    "readOnlyInfo": "Bu ekrani goruntuleyebilirsiniz ancak grup atamalarini guncellemek icin update yetkisi gerekir."
+    "noUserSelected": "Ningún usuario seleccionado",
+    "statusLabel": "Estado",
+    "statusPending": "No guardado",
+    "statusCurrent": "Actual",
+    "readOnlyInfo": "Puede ver esta pantalla, pero se requiere permiso de actualización para modificar las asignaciones de grupo."
   },
   "barcodeFormat": "Active barcode format: {{format}}",
   "paged": {
