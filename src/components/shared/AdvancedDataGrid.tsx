@@ -989,7 +989,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
       mapped[column.key] = getContextValue(column, row, enumLanguage) ?? (row as Record<string, unknown>)[column.key] ?? '';
     }
     return mapped;
-  }), [activeColumns]);
+  }), [activeColumns, enumLanguage]);
   const exportRows = useMemo(() => mapExportRows(pageRows), [mapExportRows, pageRows]);
   const getExportData = async () => {
     const exportPageSize = Math.min(Math.max(total, pageSize), 5000);

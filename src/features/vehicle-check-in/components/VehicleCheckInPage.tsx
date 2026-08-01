@@ -29,7 +29,7 @@ import {goodsReceiptV2Api} from '@/features/goods-receipt-v2/api/goods-receipt.a
 import type {CustomerOption} from '@/features/goods-receipt-v2/types/goods-receipt.types';
 import {SteelProcessHeader} from '@/features/steel-receipt/components/SteelProcessHeader';
 import {steelReceiptApi} from '@/features/steel-receipt/api/steel-receipt.api';
-import type {SteelAttachment,SteelLineRow} from '@/features/steel-receipt/types/steel-receipt.types';
+import type {SteelAttachment} from '@/features/steel-receipt/types/steel-receipt.types';
 import {formatProjectDateTime,formatProjectNumber} from '@/lib/project-format';
 import {getNextLightboxFocusIndex} from '@/lib/wms-image-lightbox';
 import type {PagedResponse} from '@/types/api';
@@ -218,53 +218,6 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
     });
     return items;
   },[footerReadyCount,form.plateNo,form.steelSheetCount,platesWithoutImages,t,vehicleImageCount]);
-  const acceptedPlates=knownAcceptedPlates;
-  const acceptedPlateDetails=useQuery({
-    queryKey:['steel-vehicle-accepted-plate-details',acceptedPlates],
-    enabled:acceptedPlates.length>0,
-    queryFn:async()=>{
-      const resolveLineByPlate=async(plate:(typeof acceptedPlates)[number]):Promise<SteelLineRow|null>=>{
-        if(!plate.planLineId)return null;
-        try{
-          return await steelReceiptApi.line(plate.planLineId);
-        }catch{
-          try{
-            const page=await steelReceiptApi.linesPaged({
-              pageNumber:1,
-              pageSize:50,
-              search:plate.dCode||plate.supplierSerialNo||null,
-              filterLogic:'and',
-              filters:[],
-              sortBy:'lineNo',
-              sortDirection:'desc',
-            });
-            return page.items.find(item=>
-              item.planId===plate.planId
-              || (item.dCode===plate.dCode && item.supplierSerialNo===plate.supplierSerialNo),
-            )??null;
-          }catch{
-            return null;
-          }
-        }
-      };
-      const entries=await Promise.all(
-        acceptedPlates.map(async(plate)=>{
-          const line=await resolveLineByPlate(plate);
-          const lineId=line?.id??plate.planLineId;
-          let attachments:SteelAttachment[]=[];
-          try{
-            if(!lineId)return [plate.id,{line,attachments}] as const;
-            attachments=await steelReceiptApi.attachments(lineId);
-          }catch{
-            attachments=[];
-          }
-          return [plate.id,{line,attachments}] as const;
-        }),
-      );
-      return Object.fromEntries(entries) as Record<number,{line:SteelLineRow|null;attachments:SteelAttachment[]}>;
-    },
-  });
-
   const candidates=useQuery({
     queryKey:['steel-vehicle-acceptance-candidates',branch,candidateSearch?.value,candidateSearch?.run,form.steelSheetCount],
     enabled:Boolean(candidateSearch),
@@ -728,9 +681,8 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
       <p className="mb-4 text-sm text-slate-500">{t('vehicleCheckIn.savedAcceptedSheetsHelp',{defaultValue:'Bu araç için daha önce kaydedilmiş levha bilgileri ve mevcut levha ekleri aşağıda listelenir.'})}</p>
       <div className="space-y-4">
         {knownAcceptedPlates.map(plate=>{
-          const detail=acceptedPlateDetails.data?.[plate.id];
-          const line=detail?.line;
-          const attachments=detail?.attachments??[];
+          const line=plate.planLineSummary;
+          const attachments=plate.attachments??[];
           return <article key={plate.id} className="rounded-2xl border bg-[var(--wms-app-surface)] p-4">
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               <Summary label={t('vehicleCheckIn.summary.dCodeSerial',{defaultValue:'DCode / Seri'})} value={`${plate.dCode} · ${plate.supplierSerialNo}`}/>
@@ -739,7 +691,7 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
             </div>
             <div className="mt-4">
               <strong className="text-sm">{t('vehicleCheckIn.attachmentsTitle',{defaultValue:'Levha görselleri / ekleri ({{count}})',count:attachments.length})}</strong>
-              {acceptedPlateDetails.isLoading&&!detail?<p className="mt-2 text-xs text-slate-500">{t('vehicleCheckIn.loadingAttachments',{defaultValue:'Ekler yükleniyor...'})}</p>:attachments.length===0?<p className="mt-2 text-xs text-slate-500">{t('vehicleCheckIn.noSavedSheetImage',{defaultValue:'Kayıtlı levha görseli bulunamadı.'})}</p>:<div className="mt-3 grid gap-3 sm:grid-cols-3 lg:grid-cols-5">{attachments.map(attachment=><ExistingSteelAttachmentImage key={attachment.id} attachment={attachment} onPreview={openImagePreview}/>)}</div>}
+              {attachments.length===0?<p className="mt-2 text-xs text-slate-500">{t('vehicleCheckIn.noSavedSheetImage',{defaultValue:'Kayıtlı levha görseli bulunamadı.'})}</p>:<div className="mt-3 grid gap-3 sm:grid-cols-3 lg:grid-cols-5">{attachments.map(attachment=><ExistingSteelAttachmentImage key={attachment.id} attachment={attachment} onPreview={openImagePreview}/>)}</div>}
             </div>
           </article>;
         })}

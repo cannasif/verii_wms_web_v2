@@ -36,10 +36,31 @@ export interface CompleteSteelVehicleAcceptanceRequest {
   note?:string;
 }
 
+export interface AcceptedSteelPlatePlanLineSummary {
+  id:number;
+  planId:number;
+  stockCode:string;
+  stockName?:string;
+}
+
+export interface AcceptedSteelPlateAttachment {
+  id:number;
+  planLineId:number;
+  fileName:string;
+  contentType:string;
+  url:string;
+  caption?:string;
+  fileSize:number;
+  createdBy?:number;
+  createdDate?:string;
+}
+
 export interface AcceptedSteelPlate {
   id:number;sequenceNo:number;identityStatus:SteelPlateIdentityStatus;planLineId?:number;planId?:number;importReferenceNo?:string;
   dCode?:string;stockCode?:string;supplierSerialNo?:string;acceptedQuantity?:number;unitCode?:string;
   receivingLocationId?:number;acceptedAtUtc:string;rowVersion:string;canResolve:boolean;
+  planLineSummary?:AcceptedSteelPlatePlanLineSummary|null;
+  attachments:AcceptedSteelPlateAttachment[];
 }
 
 export interface ResolveUnknownPlateRequest {
