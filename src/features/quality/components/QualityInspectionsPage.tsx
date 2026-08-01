@@ -23,11 +23,23 @@ import { OpsSkinCheckbox } from "@/components/shared/OpsSkinCheckbox";
 import { OpsFieldShell } from "@/components/shared/OpsFieldShell";
 import { OPS_FIELD_CLASS } from "@/components/shared/ops-field-styles";
 import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { QualityInspectionStatusFilter } from "./QualityInspectionStatusFilter";
+import {
+  buildQualityInspectionStatusFilters,
+  QUALITY_INSPECTION_STATUS_EXCLUDE_PASSED,
+} from "../utils/quality-inspection-list-filters";
 import { cn } from "@/lib/utils";
 import { localizeEnumValue } from "@/lib/enum-localization";
 import {
@@ -61,6 +73,52 @@ function isActionableLine(line: QualityInspectionLine): boolean {
 
 function isSerialTracked(line: QualityInspectionLine): boolean {
   return Boolean(line.serialNo?.trim());
+}
+
+type QualityLineGroup = {
+  key: string;
+  lines: QualityInspectionLine[];
+  primary: QualityInspectionLine;
+};
+
+/** Aynı stok / mal kabul satırı altındaki serili kalemleri tek satırda toplar. */
+function groupQualityLines(lines: QualityInspectionLine[]): QualityLineGroup[] {
+  const groups = new Map<string, QualityInspectionLine[]>();
+  const order: string[] = [];
+
+  for (const line of lines) {
+    const key = isSerialTracked(line)
+      ? [
+          "serial",
+          line.stockId,
+          line.goodsReceiptLineId ?? "none",
+          line.yapCode ?? "",
+          isActionableLine(line) ? "actionable" : line.decision,
+        ].join("|")
+      : `line:${line.id}`;
+    if (!groups.has(key)) {
+      groups.set(key, []);
+      order.push(key);
+    }
+    groups.get(key)!.push(line);
+  }
+
+  return order.map((key) => {
+    const groupLines = groups.get(key)!;
+    return { key, lines: groupLines, primary: groupLines[0]! };
+  });
+}
+
+function sumLineQuantity(lines: QualityInspectionLine[]): number {
+  return roundQty(lines.reduce((sum, line) => sum + line.quantity, 0));
+}
+
+function sumActionableQuantity(lines: QualityInspectionLine[]): number {
+  return roundQty(lines.reduce((sum, line) => sum + actionableQuantity(line), 0));
+}
+
+function sumSampleQuantity(lines: QualityInspectionLine[]): number {
+  return roundQty(lines.reduce((sum, line) => sum + line.sampleQuantity, 0));
 }
 
 /** Backend ActionableQuantity ile aynı mantık. */
@@ -369,26 +427,36 @@ export function QualityInspectionsPage({
 }: {
   quarantineOnly?: boolean;
 }): ReactElement {
-  const { t } = useModuleTranslation("quality");
+  const { t, moduleReady } = useModuleTranslation("quality");
   const queryClient = useQueryClient();
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [detail, setDetail] = useState<QualityInspectionDetail | null>(null);
   const [loading, setLoading] = useState<number | null>(null);
-  const pageKey = quarantineOnly ? "quality-quarantine" : "quality-inspections";
+  const [statusFacet, setStatusFacet] = useState(QUALITY_INSPECTION_STATUS_EXCLUDE_PASSED);
+  const pageKey = quarantineOnly ? "quality-quarantine-v2" : "quality-inspections-v2";
+  const statusFilters = useMemo(
+    () => (quarantineOnly ? [] : buildQualityInspectionStatusFilters(statusFacet)),
+    [quarantineOnly, statusFacet],
+  );
   const fetchPage = useCallback(
     (request: GridRequest) =>
       qualityApi.inspectionsPaged(
         quarantineOnly
           ? {
               ...request,
+              filterLogic: "and",
               filters: [
                 ...request.filters,
                 { column: "status", operator: "equals", value: "Quarantined" },
               ],
             }
-          : request,
+          : {
+              ...request,
+              filterLogic: "and",
+              filters: [...statusFilters, ...request.filters],
+            },
       ),
-    [quarantineOnly],
+    [quarantineOnly, statusFilters],
   );
   const toggle = useCallback(
     async (id: number) => {
@@ -410,12 +478,16 @@ export function QualityInspectionsPage({
     [expandedId, t],
   );
   const columns = useMemo<GridColumn<QualityInspection>[]>(
-    () => [
+    () => {
+      void moduleReady;
+      return [
       {
         key: "inspectionNo",
         label: t("list.columns.inspectionNo"),
         sortable: true,
         filterable: true,
+        searchable: true,
+        defaultSearch: true,
         render: (r) => (
           <button
             type="button"
@@ -437,6 +509,8 @@ export function QualityInspectionsPage({
         label: t("list.columns.waybillNo"),
         sortable: true,
         filterable: true,
+        searchable: true,
+        defaultSearch: true,
         render: (r) => r.sourceWaybillNo || "—",
       },
       {
@@ -444,6 +518,8 @@ export function QualityInspectionsPage({
         label: t("list.columns.sourceDocument"),
         sortable: true,
         filterable: true,
+        searchable: true,
+        defaultSearch: true,
         render: (r) => (
           <span className="font-mono text-xs">{r.sourceDocumentNo || "—"}</span>
         ),
@@ -453,6 +529,7 @@ export function QualityInspectionsPage({
         label: t("list.columns.documentType"),
         sortable: true,
         filterable: true,
+        searchable: false,
         render: (r) => {
           const typeKey =
             r.sourceDocumentType === "GR" ? "GoodsReceipt" : r.sourceDocumentType;
@@ -470,6 +547,8 @@ export function QualityInspectionsPage({
         label: t("list.columns.processedBy"),
         sortable: true,
         filterable: true,
+        searchable: true,
+        defaultSearch: true,
         render: (r) =>
           r.createdByName || t("list.unknownUser", { id: r.createdBy ?? "—" }),
       },
@@ -478,6 +557,7 @@ export function QualityInspectionsPage({
         label: t("list.columns.lineCount"),
         sortable: true,
         filterable: true,
+        searchable: false,
         render: (r) => (
           <span className="font-mono text-xs">
             {r.lineCount} · {formatProjectNumber(r.totalQuantity)}
@@ -489,6 +569,7 @@ export function QualityInspectionsPage({
         label: t("list.columns.status"),
         sortable: true,
         filterable: true,
+        searchable: false,
         render: (r) => (
           <div className="flex justify-center">
             <OpsStatusBadge tone={inferOpsStatusTone(r.status)}>
@@ -502,6 +583,7 @@ export function QualityInspectionsPage({
         label: t("list.columns.createdAt"),
         sortable: true,
         filterable: true,
+        searchable: false,
         render: (r) => formatProjectDateTime(r.createdAtUtc),
       },
       {
@@ -509,6 +591,7 @@ export function QualityInspectionsPage({
         label: t("list.columns.decidedAt"),
         sortable: true,
         filterable: true,
+        searchable: false,
         render: (r) =>
           r.decidedAtUtc ? formatProjectDateTime(r.decidedAtUtc) : "—",
       },
@@ -538,8 +621,9 @@ export function QualityInspectionsPage({
           </button>
         ),
       },
-    ],
-    [expandedId, loading, t, toggle],
+    ];
+    },
+    [expandedId, loading, moduleReady, t, toggle],
   );
   const decided = async () => {
     setExpandedId(null);
@@ -551,6 +635,7 @@ export function QualityInspectionsPage({
   return (
     <AdvancedDataGrid<QualityInspection>
       pageKey={pageKey}
+      refreshKey={quarantineOnly ? 0 : statusFacet}
       title={
         quarantineOnly ? t("list.titleQuarantine") : t("list.titleDefault")
       }
@@ -564,6 +649,11 @@ export function QualityInspectionsPage({
       }
       columns={columns}
       fetchPage={fetchPage}
+      toolbarBelowExtra={
+        quarantineOnly ? undefined : (
+          <QualityInspectionStatusFilter value={statusFacet} onChange={setStatusFacet} />
+        )
+      }
       expandedRowId={expandedId}
       onRowDoubleClick={(row) => void toggle(row.id)}
       renderExpandedRow={(row) =>
@@ -608,6 +698,10 @@ function InspectionDetailPanel({
   const orderedLines = useMemo(
     () => [...actionable, ...passive],
     [actionable, passive],
+  );
+  const displayGroups = useMemo(
+    () => groupQualityLines(orderedLines),
+    [orderedLines],
   );
 
   const options =
@@ -657,6 +751,7 @@ function InspectionDetailPanel({
   const [bulkReasonNote, setBulkReasonNote] = useState("");
   const [headerNote, setHeaderNote] = useState(detail.note ?? "");
   const [saving, setSaving] = useState(false);
+  const [applyConfirmOpen, setApplyConfirmOpen] = useState(false);
   const [openLineId, setOpenLineId] = useState<number | null>(null);
 
   const final =
@@ -680,11 +775,6 @@ function InspectionDetailPanel({
     () => buildApplySummary(actionable, drafts, t),
     [actionable, drafts, t],
   );
-
-  const toggle = (id: number) =>
-    setSelected((value) =>
-      value.includes(id) ? value.filter((x) => x !== id) : [...value, id],
-    );
 
   const selectAll = () => setSelected(actionable.map((line) => line.id));
   const clearSelection = () => setSelected([]);
@@ -792,7 +882,7 @@ function InspectionDetailPanel({
     );
   };
 
-  const save = async () => {
+  const save = async (): Promise<boolean> => {
     const pending = actionable
       .map((line) => {
         const draft = drafts[line.id] ?? emptyDraft();
@@ -802,11 +892,11 @@ function InspectionDetailPanel({
 
     if (pending.length === 0) {
       toast.error(t("errors.selectAtLeastOneLineDecision"));
-      return;
+      return false;
     }
     if (!detail.allowPartialDecision && pending.length !== actionable.length) {
       toast.error(t("errors.partialDecisionDisabled"));
-      return;
+      return false;
     }
     for (const { line, draft } of pending) {
       const needsReason =
@@ -822,7 +912,7 @@ function InspectionDetailPanel({
         })();
       if (needsReason && !draft.reasonCode.trim()) {
         toast.error(t("errors.reasonCodeRequiredAllRows"));
-        return;
+        return false;
       }
     }
 
@@ -845,7 +935,7 @@ function InspectionDetailPanel({
       );
     } catch (error) {
       toast.error(message(error, t("errors.quantityDistributionInvalid")));
-      return;
+      return false;
     }
 
     for (const { line, draft } of returnedRows) {
@@ -858,7 +948,7 @@ function InspectionDetailPanel({
             remaining: formatProjectNumber(remaining),
           }),
         );
-        return;
+        return false;
       }
     }
 
@@ -949,8 +1039,10 @@ function InspectionDetailPanel({
         { duration: 7000 }
       );
       decided();
+      return true;
     } catch (error) {
       toast.error(message(error, t("errors.decisionSaveFailed")));
+      return false;
     } finally {
       setSaving(false);
     }
@@ -1196,12 +1288,31 @@ function InspectionDetailPanel({
             </tr>
           </thead>
           <tbody>
-            {orderedLines.map((line) => {
+            {displayGroups.map((group) => {
+              const line = group.primary;
+              const groupIds = group.lines.map((item) => item.id);
               const active = isActionableLine(line);
               const draft = drafts[line.id];
+              const groupSelected =
+                active && groupIds.every((id) => selected.includes(id));
+              const groupSome =
+                active &&
+                !groupSelected &&
+                groupIds.some((id) => selected.includes(id));
+              const totalQty = sumLineQuantity(group.lines);
+              const remainingQty = sumActionableQuantity(group.lines);
+              const sampleQty = sumSampleQuantity(group.lines);
+              const expiryDates = [
+                ...new Set(
+                  group.lines
+                    .map((item) => item.expiryDate?.trim())
+                    .filter(Boolean),
+                ),
+              ] as string[];
+
               return (
                 <tr
-                  key={line.id}
+                  key={group.key}
                   className={cn(
                     active
                       ? "bg-[color-mix(in_oklab,var(--wms-brand-primary)_6%,transparent)]"
@@ -1211,9 +1322,19 @@ function InspectionDetailPanel({
                   <td className="wms-ops-quality-lines__cell p-2.5 align-middle">
                     {active ? (
                       <OpsSkinCheckbox
-                        checked={selected.includes(line.id)}
-                        onCheckedChange={() => toggle(line.id)}
-                        aria-label={t("detail.table.selectRowAria", { stockCode: line.stockCode })}
+                        checked={groupSelected}
+                        indeterminate={groupSome}
+                        onCheckedChange={(next) => {
+                          setSelected((current) => {
+                            if (next) {
+                              return [...new Set([...current, ...groupIds])];
+                            }
+                            return current.filter((id) => !groupIds.includes(id));
+                          });
+                        }}
+                        aria-label={t("detail.table.selectRowAria", {
+                          stockCode: line.stockCode,
+                        })}
                       />
                     ) : (
                       <span className="text-xs text-slate-400">—</span>
@@ -1228,25 +1349,31 @@ function InspectionDetailPanel({
                     </span>
                   </td>
                   <td className="wms-ops-quality-lines__cell p-2.5 align-middle font-mono text-xs">
-                    {line.lotNo || "—"} / {line.serialNo || "—"}
+                    <LotSerialHoverCell lines={group.lines} />
                   </td>
                   <td className="wms-ops-quality-lines__cell p-2.5 align-middle">
-                    {line.expiryDate ? formatProjectDate(line.expiryDate) : "—"}
+                    {expiryDates.length === 1
+                      ? formatProjectDate(expiryDates[0]!)
+                      : expiryDates.length > 1
+                        ? t("detail.table.multipleExpiry", {
+                            count: expiryDates.length,
+                          })
+                        : "—"}
                   </td>
                   <td className="wms-ops-quality-lines__cell p-2.5 align-middle text-right font-mono">
                     <span className="block">
-                      {formatProjectNumber(line.quantity)}
+                      {formatProjectNumber(totalQty)}
                     </span>
                     {active ? (
                       <span className="block text-[0.65rem] text-slate-500">
                         {t("detail.table.remainingPrefix", {
-                          value: formatProjectNumber(actionableQuantity(line)),
+                          value: formatProjectNumber(remainingQty),
                         })}
                       </span>
                     ) : null}
                   </td>
                   <td className="wms-ops-quality-lines__cell p-2.5 align-middle text-right font-mono">
-                    {formatProjectNumber(line.sampleQuantity)}
+                    {formatProjectNumber(sampleQty)}
                   </td>
                   <td className="wms-ops-quality-lines__cell p-2.5 align-middle">
                     {active ? (
@@ -1266,10 +1393,15 @@ function InspectionDetailPanel({
                           >
                             {localizeEnumValue(draft.decision)}
                             {draft.quantity
-                              ? ` · ${formatProjectNumber(parseQty(draft.quantity) || 0)}`
+                              ? ` · ${formatProjectNumber(
+                                  group.lines.length > 1
+                                    ? remainingQty
+                                    : parseQty(draft.quantity) || 0,
+                                )}`
                               : ""}
                           </OpsStatusBadge>
                           {(() => {
+                            if (group.lines.length > 1) return null;
                             const remaining = actionableQuantity(line);
                             const qty = parseQty(draft.quantity);
                             const rest =
@@ -1313,16 +1445,54 @@ function InspectionDetailPanel({
                           setOpenLineId(open ? line.id : null)
                         }
                         options={options}
-                        line={line}
-                        draft={
-                          draft ??
-                          emptyDraft(
-                            defaultDecision,
-                            actionableQuantity(line),
-                            defaultRemainder,
-                          )
+                        line={
+                          group.lines.length > 1
+                            ? {
+                                ...line,
+                                quantity: remainingQty,
+                                sampleQuantity: sampleQty,
+                                acceptedQuantity: 0,
+                                rejectedQuantity: 0,
+                                quarantineQuantity:
+                                  line.decision === "Quarantined"
+                                    ? remainingQty
+                                    : 0,
+                              }
+                            : line
                         }
-                        onChange={(patch) => patchDraft(line.id, patch)}
+                        draft={
+                          group.lines.length > 1
+                            ? {
+                                ...(draft ??
+                                  emptyDraft(
+                                    defaultDecision,
+                                    remainingQty,
+                                    defaultRemainder,
+                                  )),
+                                quantity: String(remainingQty),
+                              }
+                            : draft ??
+                              emptyDraft(
+                                defaultDecision,
+                                remainingQty,
+                                defaultRemainder,
+                              )
+                        }
+                        onChange={(patch) => {
+                          for (const member of group.lines) {
+                            const memberPatch = { ...patch };
+                            if (
+                              group.lines.length > 1 &&
+                              patch.quantity != null &&
+                              isSerialTracked(member)
+                            ) {
+                              memberPatch.quantity = String(
+                                actionableQuantity(member) || 1,
+                              );
+                            }
+                            patchDraft(member.id, memberPatch);
+                          }
+                        }}
                       />
                     ) : (
                       <span className="text-xs text-slate-400">—</span>
@@ -1385,58 +1555,165 @@ function InspectionDetailPanel({
                 : t("detail.footer.helperNoteWithoutDoc")}
             </span>
           </label>
-          <TooltipProvider delayDuration={180}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="inline-flex shrink-0">
-                  <OpsActionButton
-                    type="button"
-                    disabled={saving || !canApplyDecision}
-                    onClick={() => void save()}
-                    className="wms-ops-quality-decide-btn !min-h-8 !px-4 !text-[0.65rem]"
-                  >
-                    {saving ? (
-                      <Loader2 className="size-4 animate-spin" />
-                    ) : (
-                      <ShieldCheck className="size-4" />
-                    )}
-                    {t("detail.footer.applyButton")}
-                  </OpsActionButton>
-                </span>
-              </TooltipTrigger>
-              <TooltipContent
-                side="top"
-                align="end"
-                sideOffset={10}
-                className={cn(
-                  "wms-ops-quality-apply-tooltip max-w-[22rem] overflow-hidden rounded-xl border p-0 text-left shadow-[0_12px_40px_color-mix(in_oklab,black_45%,transparent)]",
-                  "!bg-[color-mix(in_oklab,var(--wms-app-panel)_96%,black)]",
-                  "border-[color-mix(in_oklab,var(--wms-brand-primary)_32%,var(--wms-app-border))]",
-                  "!text-[var(--wms-app-text)]",
-                )}
-              >
-                <div className="border-b border-[color-mix(in_oklab,var(--wms-brand-primary)_18%,transparent)] bg-[color-mix(in_oklab,var(--wms-brand-primary)_8%,transparent)] px-3.5 py-2">
-                  <span className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-[var(--wms-brand-primary)]">
-                    {applySummary.title}
-                  </span>
-                </div>
-                <ul className="space-y-1.5 px-3.5 py-3 text-[0.78rem] leading-5 text-[color-mix(in_oklab,hsl(var(--foreground))_78%,transparent)]">
-                  {applySummary.bullets.map((bullet) => (
-                    <li key={bullet} className="flex gap-2">
-                      <span
-                        className="mt-1.5 size-1 shrink-0 rounded-full bg-[var(--wms-brand-primary)]"
-                        aria-hidden
-                      />
-                      <span>{bullet}</span>
-                    </li>
-                  ))}
-                </ul>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <OpsActionButton
+            type="button"
+            disabled={saving || !canApplyDecision}
+            onClick={() => setApplyConfirmOpen(true)}
+            className="wms-ops-quality-decide-btn !min-h-8 !px-4 !text-[0.65rem]"
+          >
+            {saving ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <ShieldCheck className="size-4" />
+            )}
+            {t("detail.footer.applyButton")}
+          </OpsActionButton>
         </section>
       )}
+
+      <Dialog
+        open={applyConfirmOpen}
+        onOpenChange={(open) => {
+          if (saving) return;
+          setApplyConfirmOpen(open);
+        }}
+      >
+        <DialogContent
+          showCloseButton
+          portalRoot="body"
+          tone="ops"
+          className="wms-ops-form wms-ops-detail-dialog wms-ops-quality-apply-confirm max-w-md gap-0 overflow-hidden border-0 p-0 shadow-none"
+        >
+          <DialogHeader className="wms-ops-detail-dialog__header relative border-b px-6 py-4 pr-14 text-left">
+            <DialogTitle className="wms-ops-detail-dialog__title min-w-0 pr-2">
+              {t("applyConfirm.title")}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="wms-ops-dialog__body px-6 py-5">
+            <p className="mb-3 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-[var(--wms-brand-primary)]">
+              {t("applyConfirm.infoLabel")}
+            </p>
+            <ul className="space-y-2 text-sm leading-5 text-[color-mix(in_oklab,var(--wms-app-text)_88%,transparent)]">
+              {applySummary.bullets.map((bullet) => (
+                <li key={bullet} className="flex gap-2">
+                  <span
+                    className="mt-2 size-1.5 shrink-0 rounded-full bg-[var(--wms-brand-primary)]"
+                    aria-hidden
+                  />
+                  <span>{bullet}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <DialogFooter className="wms-ops-detail-dialog__footer gap-2 border-t px-6 py-4 sm:justify-end sm:gap-2">
+            <OpsActionButton
+              type="button"
+              variant="secondary"
+              disabled={saving}
+              onClick={() => setApplyConfirmOpen(false)}
+            >
+              {t("applyConfirm.cancel")}
+            </OpsActionButton>
+            <OpsActionButton
+              type="button"
+              disabled={saving || !canApplyDecision}
+              className="wms-ops-quality-decide-btn"
+              onClick={() => {
+                void (async () => {
+                  if (await save()) setApplyConfirmOpen(false);
+                })();
+              }}
+            >
+              {saving ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <ShieldCheck className="size-4" />
+              )}
+              {t("applyConfirm.confirm")}
+            </OpsActionButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+  );
+}
+
+function LotSerialHoverCell({
+  lines,
+}: {
+  lines: QualityInspectionLine[];
+}): ReactElement {
+  const { t } = useModuleTranslation("quality");
+  const serials = [
+    ...new Set(
+      lines
+        .map((line) => line.serialNo?.trim())
+        .filter((value): value is string => Boolean(value)),
+    ),
+  ];
+  const lots = [
+    ...new Set(
+      lines
+        .map((line) => line.lotNo?.trim())
+        .filter((value): value is string => Boolean(value)),
+    ),
+  ];
+  const lotLabel = lots.length === 1 ? lots[0]! : lots.length > 1 ? t("detail.table.multipleLots", { count: lots.length }) : "—";
+  const summary =
+    serials.length > 1
+      ? `${lotLabel} · ${t("detail.table.serialCount", { count: serials.length })}`
+      : `${lotLabel} / ${serials[0] || "—"}`;
+
+  if (serials.length <= 1 && lots.length <= 1) {
+    return <span>{summary}</span>;
+  }
+
+  return (
+    <TooltipProvider delayDuration={160}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            className="wms-ops-quality-lot-serial-trigger"
+            title={t("detail.table.lotSerialHoverHint")}
+          >
+            <span>{summary}</span>
+          </button>
+        </TooltipTrigger>
+        <TooltipContent
+          side="top"
+          align="start"
+          sideOffset={8}
+          className="wms-ops-quality-lot-serial-tooltip"
+        >
+          <div className="wms-ops-quality-lot-serial-tooltip__head">
+            {t("detail.table.serialListLabel")}
+          </div>
+          <ul className="wms-ops-quality-lot-serial-tooltip__list">
+            {lines.map((line) => {
+              const serial = line.serialNo?.trim();
+              const lot = line.lotNo?.trim();
+              if (!serial && !lot) return null;
+              return (
+                <li key={line.id} className="wms-ops-quality-lot-serial-tooltip__item">
+                  <span className="wms-ops-quality-lot-serial-tooltip__lot">
+                    {lot || "—"}
+                  </span>
+                  <span className="wms-ops-quality-lot-serial-tooltip__sep" aria-hidden>
+                    /
+                  </span>
+                  <span className="wms-ops-quality-lot-serial-tooltip__serial">
+                    {serial || "—"}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
 

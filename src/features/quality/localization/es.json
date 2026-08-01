@@ -23,7 +23,12 @@
     "openAria": "Abrir detalle de línea de calidad",
     "hide": "Ocultar",
     "open": "Abrir",
-    "detailLoading": "Cargando detalle..."
+    "detailLoading": "Cargando detalle...",
+    "facetFiltersTitle": "Filtros de lista",
+    "facetStatus": "Estado",
+    "facetAll": "Todos",
+    "facetStatusExcludePassed": "No completados",
+    "facetClear": "Restablecer filtro"
   },
   "goodsReceiptNotice": {
     "decidedToastTitle": "Decisión de calidad y movimiento de stock registrados.",
@@ -92,6 +97,12 @@
     "unitRejected": "{{value}} rechazado",
     "unitReturned": "{{value}} devuelto"
   },
+  "applyConfirm": {
+    "title": "Aplicar decisión",
+    "infoLabel": "Información",
+    "confirm": "¿Estás seguro?",
+    "cancel": "Cancelar"
+  },
   "bulkApplySuccess": "\"{{label}}\" aplicado a {{count}} líneas.",
   "decisionSaved": "Decisión de calidad y movimiento de stock registrados.",
   "detail": {
@@ -128,6 +139,11 @@
       "selectRowAria": "Seleccionar la línea {{stockCode}}",
       "stock": "Stock",
       "lotSerial": "Lote / N.º de Serie",
+      "lotSerialHoverHint": "Pase el cursor para ver la lista de series",
+      "serialCount": "{{count}} series",
+      "serialListLabel": "Series",
+      "multipleLots": "{{count}} lotes",
+      "multipleExpiry": "{{count}} caducidades",
       "expiry": "Caducidad",
       "quantityRemaining": "Cantidad / Restante",
       "sample": "Muestra",

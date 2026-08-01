@@ -23,7 +23,12 @@
     "openAria": "Qualitätspositionsdetail öffnen",
     "hide": "Ausblenden",
     "open": "Öffnen",
-    "detailLoading": "Detail wird geladen..."
+    "detailLoading": "Detail wird geladen...",
+    "facetFiltersTitle": "Listenfilter",
+    "facetStatus": "Status",
+    "facetAll": "Alle",
+    "facetStatusExcludePassed": "Unvollständig",
+    "facetClear": "Filter zurücksetzen"
   },
   "goodsReceiptNotice": {
     "decidedToastTitle": "Qualitätsentscheidung und Lagerbewegung erfasst.",
@@ -92,6 +97,12 @@
     "unitRejected": "{{value}} abgelehnt",
     "unitReturned": "{{value}} zurückgesendet"
   },
+  "applyConfirm": {
+    "title": "Entscheidung anwenden",
+    "infoLabel": "Hinweis",
+    "confirm": "Bist du sicher",
+    "cancel": "Abbrechen"
+  },
   "bulkApplySuccess": "\"{{label}}\" auf {{count}} Positionen angewendet.",
   "decisionSaved": "Qualitätsentscheidung und Lagerbewegung erfasst.",
   "detail": {
@@ -128,6 +139,11 @@
       "selectRowAria": "Position {{stockCode}} auswählen",
       "stock": "Lagerartikel",
       "lotSerial": "Charge / Seriennummer",
+      "lotSerialHoverHint": "Serienliste per Hover anzeigen",
+      "serialCount": "{{count}} Serien",
+      "serialListLabel": "Seriennummern",
+      "multipleLots": "{{count}} Chargen",
+      "multipleExpiry": "{{count}} Verfallsdaten",
       "expiry": "Verfallsdatum",
       "quantityRemaining": "Menge / Verbleibend",
       "sample": "Probe",

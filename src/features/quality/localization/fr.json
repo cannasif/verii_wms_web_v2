@@ -23,7 +23,12 @@
     "openAria": "Ouvrir le détail de la ligne qualité",
     "hide": "Masquer",
     "open": "Ouvrir",
-    "detailLoading": "Chargement du détail..."
+    "detailLoading": "Chargement du détail...",
+    "facetFiltersTitle": "Filtres de liste",
+    "facetStatus": "Statut",
+    "facetAll": "Tous",
+    "facetStatusExcludePassed": "Non terminés",
+    "facetClear": "Réinitialiser le filtre"
   },
   "goodsReceiptNotice": {
     "decidedToastTitle": "Décision qualité et mouvement de stock enregistrés.",
@@ -92,6 +97,12 @@
     "unitRejected": "{{value}} refusé(s)",
     "unitReturned": "{{value}} retourné(s)"
   },
+  "applyConfirm": {
+    "title": "Appliquer la décision",
+    "infoLabel": "Information",
+    "confirm": "Êtes-vous sûr",
+    "cancel": "Annuler"
+  },
   "bulkApplySuccess": "\"{{label}}\" appliqué à {{count}} lignes.",
   "decisionSaved": "Décision qualité et mouvement de stock enregistrés.",
   "detail": {
@@ -128,6 +139,11 @@
       "selectRowAria": "Sélectionner la ligne {{stockCode}}",
       "stock": "Stock",
       "lotSerial": "Lot / Numéro de série",
+      "lotSerialHoverHint": "Survolez pour voir la liste des numéros de série",
+      "serialCount": "{{count}} séries",
+      "serialListLabel": "Numéros de série",
+      "multipleLots": "{{count}} lots",
+      "multipleExpiry": "{{count}} dates d'expiration",
       "expiry": "Date d'expiration",
       "quantityRemaining": "Quantité / Reste",
       "sample": "Échantillon",

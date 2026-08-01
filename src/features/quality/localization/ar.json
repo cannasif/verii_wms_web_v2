@@ -23,7 +23,12 @@
     "openAria": "فتح تفاصيل بند الجودة",
     "hide": "إخفاء",
     "open": "فتح",
-    "detailLoading": "جارٍ تحميل التفاصيل..."
+    "detailLoading": "جارٍ تحميل التفاصيل...",
+    "facetFiltersTitle": "مرشحات القائمة",
+    "facetStatus": "الحالة",
+    "facetAll": "الكل",
+    "facetStatusExcludePassed": "غير المكتملة",
+    "facetClear": "إعادة تعيين المرشح"
   },
   "goodsReceiptNotice": {
     "decidedToastTitle": "تم تسجيل قرار الجودة وحركة المخزون.",
@@ -92,6 +97,12 @@
     "unitRejected": "{{value}} مرفوض",
     "unitReturned": "{{value}} معاد"
   },
+  "applyConfirm": {
+    "title": "تطبيق القرار",
+    "infoLabel": "معلومات",
+    "confirm": "هل أنت متأكد",
+    "cancel": "إلغاء"
+  },
   "bulkApplySuccess": "تم تطبيق \"{{label}}\" على {{count}} بند.",
   "decisionSaved": "تم تسجيل قرار الجودة وحركة المخزون.",
   "detail": {
@@ -128,6 +139,11 @@
       "selectRowAria": "تحديد بند {{stockCode}}",
       "stock": "المخزون",
       "lotSerial": "الدفعة / الرقم التسلسلي",
+      "lotSerialHoverHint": "مرّر المؤشر لعرض قائمة الأرقام التسلسلية",
+      "serialCount": "{{count}} رقم تسلسلي",
+      "serialListLabel": "الأرقام التسلسلية",
+      "multipleLots": "{{count}} دفعة",
+      "multipleExpiry": "{{count}} تاريخ انتهاء",
       "expiry": "تاريخ الانتهاء",
       "quantityRemaining": "الكمية / المتبقي",
       "sample": "العينة",

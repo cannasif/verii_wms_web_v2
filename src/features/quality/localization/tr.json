@@ -23,7 +23,12 @@
     "openAria": "Kalite satır detayını aç",
     "hide": "Gizle",
     "open": "Aç",
-    "detailLoading": "Detay yükleniyor..."
+    "detailLoading": "Detay yükleniyor...",
+    "facetFiltersTitle": "Liste filtreleri",
+    "facetStatus": "Durum",
+    "facetAll": "Tümü",
+    "facetStatusExcludePassed": "Tamamlanmamışlar",
+    "facetClear": "Filtreyi sıfırla"
   },
   "goodsReceiptNotice": {
     "decidedToastTitle": "Kalite kararı ve stok hareketi kaydedildi.",
@@ -92,6 +97,12 @@
     "unitRejected": "{{value}} ret",
     "unitReturned": "{{value}} iade"
   },
+  "applyConfirm": {
+    "title": "Kararı uygula",
+    "infoLabel": "Bilgilendirme",
+    "confirm": "Emin misin",
+    "cancel": "Vazgeç"
+  },
   "bulkApplySuccess": "{{count}} satıra \"{{label}}\" uygulandı.",
   "decisionSaved": "Kalite kararı ve stok hareketi kaydedildi.",
   "detail": {
@@ -128,6 +139,11 @@
       "selectRowAria": "{{stockCode}} satırını seç",
       "stock": "Stok",
       "lotSerial": "Lot / Seri",
+      "lotSerialHoverHint": "Seri listesini görmek için üzerine gelin",
+      "serialCount": "{{count}} seri",
+      "serialListLabel": "Seriler",
+      "multipleLots": "{{count}} lot",
+      "multipleExpiry": "{{count}} SKT",
       "expiry": "SKT",
       "quantityRemaining": "Miktar / Kalan",
       "sample": "Numune",

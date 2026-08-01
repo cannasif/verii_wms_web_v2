@@ -23,7 +23,12 @@
     "openAria": "Open quality line detail",
     "hide": "Hide",
     "open": "Open",
-    "detailLoading": "Loading detail..."
+    "detailLoading": "Loading detail...",
+    "facetFiltersTitle": "List filters",
+    "facetStatus": "Status",
+    "facetAll": "All",
+    "facetStatusExcludePassed": "Incomplete",
+    "facetClear": "Reset filter"
   },
   "goodsReceiptNotice": {
     "decidedToastTitle": "Quality decision and stock movement recorded.",
@@ -92,6 +97,12 @@
     "unitRejected": "{{value}} rejected",
     "unitReturned": "{{value}} returned"
   },
+  "applyConfirm": {
+    "title": "Apply decision",
+    "infoLabel": "Information",
+    "confirm": "Are you sure",
+    "cancel": "Cancel"
+  },
   "bulkApplySuccess": "\"{{label}}\" applied to {{count}} lines.",
   "decisionSaved": "Quality decision and stock movement recorded.",
   "detail": {
@@ -128,6 +139,11 @@
       "selectRowAria": "Select the {{stockCode}} line",
       "stock": "Stock",
       "lotSerial": "Lot / Serial",
+      "lotSerialHoverHint": "Hover to see serial list",
+      "serialCount": "{{count}} serials",
+      "serialListLabel": "Serials",
+      "multipleLots": "{{count}} lots",
+      "multipleExpiry": "{{count}} expiry dates",
       "expiry": "Expiry",
       "quantityRemaining": "Quantity / Remaining",
       "sample": "Sample",

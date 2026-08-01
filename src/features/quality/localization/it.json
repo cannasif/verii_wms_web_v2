@@ -23,7 +23,12 @@
     "openAria": "Apri dettaglio riga qualità",
     "hide": "Nascondi",
     "open": "Apri",
-    "detailLoading": "Caricamento dettaglio..."
+    "detailLoading": "Caricamento dettaglio...",
+    "facetFiltersTitle": "Filtri elenco",
+    "facetStatus": "Stato",
+    "facetAll": "Tutti",
+    "facetStatusExcludePassed": "Non completati",
+    "facetClear": "Reimposta filtro"
   },
   "goodsReceiptNotice": {
     "decidedToastTitle": "Decisione di qualità e movimento di magazzino registrati.",
@@ -92,6 +97,12 @@
     "unitRejected": "{{value}} rifiutati",
     "unitReturned": "{{value}} restituiti"
   },
+  "applyConfirm": {
+    "title": "Applica decisione",
+    "infoLabel": "Informazioni",
+    "confirm": "Sei sicuro",
+    "cancel": "Annulla"
+  },
   "bulkApplySuccess": "\"{{label}}\" applicata a {{count}} righe.",
   "decisionSaved": "Decisione di qualità e movimento di magazzino registrati.",
   "detail": {
@@ -128,6 +139,11 @@
       "selectRowAria": "Seleziona la riga {{stockCode}}",
       "stock": "Stock",
       "lotSerial": "Lotto / N. Serie",
+      "lotSerialHoverHint": "Passa il mouse per vedere l'elenco dei seriali",
+      "serialCount": "{{count}} seriali",
+      "serialListLabel": "Seriali",
+      "multipleLots": "{{count}} lotti",
+      "multipleExpiry": "{{count}} scadenze",
       "expiry": "Scadenza",
       "quantityRemaining": "Quantità / Residuo",
       "sample": "Campione",

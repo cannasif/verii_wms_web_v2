@@ -78,7 +78,7 @@ const toPagedResponse = <T,>(page: DropdownPage<T>): PagedResponse<T> => ({
 });
 
 export function QualityRulesPage() {
-  const { t } = useModuleTranslation("quality");
+  const { t, moduleReady } = useModuleTranslation("quality");
   const branch = useAuthStore((state) => state.branch?.code ?? "0");
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -159,7 +159,9 @@ export function QualityRulesPage() {
   );
 
   const columns = useMemo<GridColumn<QualityRule>[]>(
-    () => [
+    () => {
+      void moduleReady;
+      return [
       ...systemColumns<QualityRule>(),
       {
         key: "scopeType",
@@ -225,8 +227,9 @@ export function QualityRulesPage() {
           </div>
         ),
       },
-    ],
-    [openEdit, remove, t],
+    ];
+    },
+    [moduleReady, openEdit, remove, t],
   );
 
   const submit = async () => {
