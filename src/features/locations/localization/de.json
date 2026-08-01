@@ -2,7 +2,56 @@
   "page": {
     "title": "Standortdefinitionen",
     "description": "Verwalten Sie die Lagerzone, den Gang, das Regal, die Ebene und die Lagerplatzhierarchie.",
-    "newAction": "Neuer Standort"
+    "newAction": "Neuer Standort",
+    "warehouseOpeningAction": "Lagereröffnung mit einer einzigen Excel-Datei",
+    "shelfImportAction": "Erster Regalimport mit Excel"
+  },
+  "shelfImport": {
+    "title": "Erster Import von Regaldefinitionen mit Excel",
+    "description": "Erstellen Sie die Regalhierarchie in einer einzigen Datei mit einem sicheren, nur erstellenden Import.",
+    "warning": "Bestehende Regale werden nicht aktualisiert oder gelöscht. Der gesamte Import wird gestoppt, wenn derselbe Lager-/Regalcode bereits existiert.",
+    "limitText": "Maximal 5 MB und 1.000 Regalzeilen",
+    "submitLabel": "Regale erstellen",
+    "summary": { "total": "Gesamt", "created": "Erstellt", "failed": "Fehlgeschlagen" }
+  },
+  "warehouseOpening": {
+    "title": "Lagereröffnung mit einer einzigen Excel-Datei",
+    "description": "Erstellen Sie die Regalhierarchie sowie die anfänglichen Bestands-, Chargen- und Seriennummernbestände in einem einzigen atomaren Vorgang.",
+    "atomicImportTitle": "Atomarer Import",
+    "atomicImportDescription": "Dasselbe Lager und Regal kann sich über Hunderte von Zeilen wiederholen. Das Regal wird einmal aufgelöst; jede Bestands-/Seriennummernzeile wird zu einer separaten Eröffnungsbewegung. Bei einem einzigen Fehler wird kein Datensatz gespeichert.",
+    "steps": { "template": "Vorlage", "preValidation": "Vorabprüfung", "confirmAndSave": "Bestätigen und speichern" },
+    "downloadTemplateTitle": "Aktuelle Vorlage herunterladen",
+    "downloadTemplateDescription": "Die Vorlage enthält Lager- und Regalreferenzen sowie die ersten 5.000 Bestands-/Konfigurationsdatensätze als Beispiele. Sie können auch gültige Codes, die nicht in der Liste angezeigt werden, direkt eingeben; die Vorabprüfung überprüft diese im System.",
+    "downloadTemplate": "Vorlage herunterladen",
+    "selectFileTitle": "Ausgefüllte Datei auswählen",
+    "selectFileLimit": "Maximal 8 MB und 2.000 Zeilen",
+    "preValidationSuccess": "Vorabprüfung erfolgreich",
+    "cards": {
+      "warehouse": "Lager",
+      "newShelf": "Neues Regal",
+      "existingShelf": "Vorhandenes Regal",
+      "balanceRow": "Bestandszeile",
+      "stock": "Bestand",
+      "serial": "Seriennummer",
+      "totalQuantity": "Gesamtmenge"
+    },
+    "importCompleteTitle": "Import abgeschlossen",
+    "importCompleteSummary": "{{created}} neue Regale und {{balances}} Bestandszeilen wurden verarbeitet.",
+    "close": "Schließen",
+    "confirmImport": "Import bestätigen",
+    "preValidate": "Vorab prüfen",
+    "errors": {
+      "invalidExtension": "Es können nur Excel-Dateien mit der Endung .xlsx hochgeladen werden.",
+      "tooLarge": "Die Excel-Datei darf höchstens 8 MB groß sein.",
+      "templateDownloadFailed": "Die Vorlage konnte nicht heruntergeladen werden.",
+      "preValidationFailed": "Die Vorabprüfung konnte nicht abgeschlossen werden.",
+      "importFailed": "Der Lagereröffnungsimport konnte nicht abgeschlossen werden."
+    },
+    "success": {
+      "templateDownloaded": "Die Einzeldatei-Vorlage für die Lagereröffnung wurde heruntergeladen.",
+      "preValidated": "Die Datei wurde erfolgreich validiert, ohne gespeichert zu werden.",
+      "imported": "Regale und anfängliche Bestands-/Seriennummernbestände wurden gemeinsam gespeichert."
+    }
   },
   "form": {
     "createTitle": "Neue Standortdefinition",

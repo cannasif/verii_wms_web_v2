@@ -6797,6 +6797,24 @@
     "discard": "Verwerfen und neu beginnen",
     "restore": "Entwurf laden"
   },
+  "initialExcelImport": {
+    "securityRuleTitle": "Sicherheitsregel für den Erstimport",
+    "downloadStepTitle": "1. Aktuelle Vorlage herunterladen",
+    "downloadStepDescription": "Lager-, Regal-, Bestands- und andere Referenzen werden aus den Systemdaten zum Zeitpunkt des Downloads erstellt.",
+    "downloadTemplate": "Vorlage herunterladen",
+    "selectFileStepTitle": "2. Ausgefüllte Datei auswählen",
+    "close": "Schließen",
+    "errors": {
+      "invalidExtension": "Es können nur Excel-Dateien mit der Endung .xlsx hochgeladen werden.",
+      "tooLarge": "Die Excel-Datei darf höchstens 5 MB groß sein.",
+      "templateDownloadFailed": "Die Vorlage konnte nicht heruntergeladen werden.",
+      "importFailed": "Die Excel-Datei konnte nicht importiert werden."
+    },
+    "success": {
+      "templateDownloaded": "Die Excel-Vorlage wurde mit aktuellen Systemdaten heruntergeladen.",
+      "imported": "Der Excel-Import wurde erfolgreich abgeschlossen."
+    }
+  },
   "operationNames": {
     "goodsReceiptDirect": "direkter Wareneingang",
     "warehouseInboundDirect": "direkter Lagerzugang",

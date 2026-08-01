@@ -6988,5 +6988,23 @@
     "warehouseInboundDirect": "doğrudan ambar giriş",
     "warehouseOutboundDirect": "doğrudan ambar çıkış / sevk",
     "warehouseTransferDirect": "doğrudan depolar arası transfer (DAT)"
+  },
+  "initialExcelImport": {
+    "securityRuleTitle": "İlk aktarım güvenlik kuralı",
+    "downloadStepTitle": "1. Güncel şablonu indirin",
+    "downloadStepDescription": "Depo, raf, stok ve diğer referanslar indirme anındaki sistem verilerinden hazırlanır.",
+    "downloadTemplate": "Şablonu indir",
+    "selectFileStepTitle": "2. Doldurulan dosyayı seçin",
+    "close": "Kapat",
+    "errors": {
+      "invalidExtension": "Yalnızca .xlsx uzantılı Excel dosyaları yüklenebilir.",
+      "tooLarge": "Excel dosyası en fazla 5 MB olabilir.",
+      "templateDownloadFailed": "Şablon indirilemedi.",
+      "importFailed": "Excel dosyası aktarılamadı."
+    },
+    "success": {
+      "templateDownloaded": "Güncel sistem verileriyle Excel şablonu indirildi.",
+      "imported": "Excel aktarımı başarıyla tamamlandı."
+    }
   }
 }

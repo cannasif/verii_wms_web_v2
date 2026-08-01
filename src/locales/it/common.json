@@ -5506,5 +5506,23 @@
     "warehouseInboundDirect": "ingresso magazzino diretto",
     "warehouseOutboundDirect": "uscita magazzino diretta / spedizione",
     "warehouseTransferDirect": "trasferimento diretto tra magazzini (DAT)"
+  },
+  "initialExcelImport": {
+    "securityRuleTitle": "Regola di sicurezza per l'importazione iniziale",
+    "downloadStepTitle": "1. Scarica il modello attuale",
+    "downloadStepDescription": "Magazzino, ubicazione, stock e altri riferimenti vengono preparati dai dati di sistema al momento del download.",
+    "downloadTemplate": "Scarica modello",
+    "selectFileStepTitle": "2. Seleziona il file compilato",
+    "close": "Chiudi",
+    "errors": {
+      "invalidExtension": "È possibile caricare solo file Excel con estensione .xlsx.",
+      "tooLarge": "Il file Excel può avere una dimensione massima di 5 MB.",
+      "templateDownloadFailed": "Impossibile scaricare il modello.",
+      "importFailed": "Impossibile importare il file Excel."
+    },
+    "success": {
+      "templateDownloaded": "Il modello Excel è stato scaricato con i dati di sistema attuali.",
+      "imported": "L'importazione Excel è stata completata con successo."
+    }
   }
 }

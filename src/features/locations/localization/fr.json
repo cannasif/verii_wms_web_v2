@@ -2,7 +2,56 @@
   "page": {
     "title": "Définitions d'emplacement",
     "description": "Gérez la hiérarchie des zones d'entrepôt, des allées, des racks, des niveaux et des bacs.",
-    "newAction": "Nouvel emplacement"
+    "newAction": "Nouvel emplacement",
+    "warehouseOpeningAction": "Ouverture d'entrepôt avec un seul fichier Excel",
+    "shelfImportAction": "Import initial des emplacements avec Excel"
+  },
+  "shelfImport": {
+    "title": "Import initial des définitions d'emplacement avec Excel",
+    "description": "Créez la hiérarchie des emplacements dans un seul fichier grâce à un import sécurisé, en création uniquement.",
+    "warning": "Les emplacements existants ne sont ni mis à jour ni supprimés. L'ensemble de l'import est arrêté si le même code entrepôt/emplacement existe déjà.",
+    "limitText": "Maximum 5 Mo et 1 000 lignes d'emplacement",
+    "submitLabel": "Créer les emplacements",
+    "summary": { "total": "Total", "created": "Créé", "failed": "Échoué" }
+  },
+  "warehouseOpening": {
+    "title": "Ouverture d'entrepôt avec un seul fichier Excel",
+    "description": "Créez la hiérarchie des emplacements ainsi que les soldes initiaux de stock, de lot et de série en une seule opération atomique.",
+    "atomicImportTitle": "Import atomique",
+    "atomicImportDescription": "Le même entrepôt et emplacement peuvent se répéter sur des centaines de lignes. L'emplacement est résolu une seule fois ; chaque ligne de stock/série devient un mouvement d'ouverture distinct. En cas d'erreur unique, aucun enregistrement n'est conservé.",
+    "steps": { "template": "Modèle", "preValidation": "Pré-validation", "confirmAndSave": "Confirmation et enregistrement" },
+    "downloadTemplateTitle": "Téléchargez le modèle actuel",
+    "downloadTemplateDescription": "Le modèle inclut les références d'entrepôt et d'emplacement, ainsi que les 5 000 premiers enregistrements de stock/configuration à titre d'exemple. Vous pouvez également saisir directement des codes valides non affichés dans la liste ; la pré-validation les vérifie auprès du système.",
+    "downloadTemplate": "Télécharger le modèle",
+    "selectFileTitle": "Sélectionnez le fichier rempli",
+    "selectFileLimit": "Maximum 8 Mo et 2 000 lignes",
+    "preValidationSuccess": "Pré-validation réussie",
+    "cards": {
+      "warehouse": "Entrepôt",
+      "newShelf": "Nouvel emplacement",
+      "existingShelf": "Emplacement existant",
+      "balanceRow": "Ligne de solde",
+      "stock": "Stock",
+      "serial": "Série",
+      "totalQuantity": "Quantité totale"
+    },
+    "importCompleteTitle": "Import terminé",
+    "importCompleteSummary": "{{created}} nouveaux emplacements et {{balances}} lignes de solde ont été traités.",
+    "close": "Fermer",
+    "confirmImport": "Confirmer l'import",
+    "preValidate": "Pré-valider",
+    "errors": {
+      "invalidExtension": "Seuls les fichiers Excel avec l'extension .xlsx peuvent être téléchargés.",
+      "tooLarge": "Le fichier Excel ne peut pas dépasser 8 Mo.",
+      "templateDownloadFailed": "Le modèle n'a pas pu être téléchargé.",
+      "preValidationFailed": "La pré-validation n'a pas pu être terminée.",
+      "importFailed": "L'import de l'ouverture d'entrepôt n'a pas pu être terminé."
+    },
+    "success": {
+      "templateDownloaded": "Le modèle d'ouverture d'entrepôt à fichier unique a été téléchargé.",
+      "preValidated": "Le fichier a été validé avec succès sans être enregistré.",
+      "imported": "Les emplacements et les soldes initiaux de stock/série ont été enregistrés ensemble."
+    }
   },
   "form": {
     "createTitle": "Nouvelle définition d'emplacement",

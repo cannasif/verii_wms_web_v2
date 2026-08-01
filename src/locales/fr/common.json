@@ -5506,5 +5506,23 @@
     "warehouseInboundDirect": "entrée d'entrepôt directe",
     "warehouseOutboundDirect": "sortie d'entrepôt directe / expédition",
     "warehouseTransferDirect": "transfert direct inter-entrepôts (DAT)"
+  },
+  "initialExcelImport": {
+    "securityRuleTitle": "Règle de sécurité pour l'import initial",
+    "downloadStepTitle": "1. Téléchargez le modèle actuel",
+    "downloadStepDescription": "L'entrepôt, l'emplacement, le stock et les autres références sont préparés à partir des données système au moment du téléchargement.",
+    "downloadTemplate": "Télécharger le modèle",
+    "selectFileStepTitle": "2. Sélectionnez le fichier rempli",
+    "close": "Fermer",
+    "errors": {
+      "invalidExtension": "Seuls les fichiers Excel avec l'extension .xlsx peuvent être téléchargés.",
+      "tooLarge": "Le fichier Excel ne peut pas dépasser 5 Mo.",
+      "templateDownloadFailed": "Le modèle n'a pas pu être téléchargé.",
+      "importFailed": "Le fichier Excel n'a pas pu être importé."
+    },
+    "success": {
+      "templateDownloaded": "Le modèle Excel a été téléchargé avec les données système actuelles.",
+      "imported": "L'import Excel s'est terminé avec succès."
+    }
   }
 }

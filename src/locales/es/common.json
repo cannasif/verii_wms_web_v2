@@ -5506,5 +5506,23 @@
     "warehouseInboundDirect": "entrada de almacén directa",
     "warehouseOutboundDirect": "salida de almacén directa / envío",
     "warehouseTransferDirect": "transferencia directa entre almacenes (DAT)"
+  },
+  "initialExcelImport": {
+    "securityRuleTitle": "Regla de seguridad de importación inicial",
+    "downloadStepTitle": "1. Descargue la plantilla actual",
+    "downloadStepDescription": "El almacén, la ubicación, el stock y otras referencias se preparan a partir de los datos del sistema en el momento de la descarga.",
+    "downloadTemplate": "Descargar plantilla",
+    "selectFileStepTitle": "2. Seleccione el archivo completado",
+    "close": "Cerrar",
+    "errors": {
+      "invalidExtension": "Solo se pueden cargar archivos Excel con la extensión .xlsx.",
+      "tooLarge": "El archivo Excel puede tener como máximo 5 MB.",
+      "templateDownloadFailed": "No se pudo descargar la plantilla.",
+      "importFailed": "No se pudo importar el archivo Excel."
+    },
+    "success": {
+      "templateDownloaded": "La plantilla de Excel se descargó con los datos actuales del sistema.",
+      "imported": "La importación de Excel se completó correctamente."
+    }
   }
 }

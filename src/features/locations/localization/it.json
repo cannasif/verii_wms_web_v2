@@ -2,7 +2,56 @@
   "page": {
     "title": "Definizioni di posizione",
     "description": "Gestisci la zona del magazzino, il corridoio, lo scaffale, il livello e la gerarchia dei contenitori.",
-    "newAction": "Nuova posizione"
+    "newAction": "Nuova posizione",
+    "warehouseOpeningAction": "Apertura magazzino con un unico file Excel",
+    "shelfImportAction": "Importazione iniziale scaffali con Excel"
+  },
+  "shelfImport": {
+    "title": "Importazione iniziale delle definizioni di scaffale con Excel",
+    "description": "Crea la gerarchia degli scaffali in un unico file con un'importazione sicura, solo in creazione.",
+    "warning": "Gli scaffali esistenti non vengono aggiornati né eliminati. L'intera importazione viene interrotta se esiste già lo stesso codice magazzino/scaffale.",
+    "limitText": "Massimo 5 MB e 1.000 righe di scaffale",
+    "submitLabel": "Crea scaffali",
+    "summary": { "total": "Totale", "created": "Creato", "failed": "Non riuscito" }
+  },
+  "warehouseOpening": {
+    "title": "Apertura magazzino con un unico file Excel",
+    "description": "Crea la gerarchia degli scaffali e i saldi iniziali di stock, lotto e serie in un'unica operazione atomica.",
+    "atomicImportTitle": "Importazione atomica",
+    "atomicImportDescription": "Lo stesso magazzino e scaffale possono ripetersi su centinaia di righe. Lo scaffale viene risolto una sola volta; ogni riga di stock/serie diventa un movimento di apertura separato. In caso di un singolo errore, nessun record viene salvato.",
+    "steps": { "template": "Modello", "preValidation": "Pre-validazione", "confirmAndSave": "Conferma e salva" },
+    "downloadTemplateTitle": "Scarica il modello attuale",
+    "downloadTemplateDescription": "Il modello include i riferimenti di magazzino e scaffale, oltre ai primi 5.000 record di stock/configurazione come esempi. È inoltre possibile digitare direttamente codici validi non visualizzati nell'elenco; la pre-validazione li verifica nel sistema.",
+    "downloadTemplate": "Scarica modello",
+    "selectFileTitle": "Seleziona il file compilato",
+    "selectFileLimit": "Massimo 8 MB e 2.000 righe",
+    "preValidationSuccess": "Pre-validazione riuscita",
+    "cards": {
+      "warehouse": "Magazzino",
+      "newShelf": "Nuovo scaffale",
+      "existingShelf": "Scaffale esistente",
+      "balanceRow": "Riga di saldo",
+      "stock": "Stock",
+      "serial": "Serie",
+      "totalQuantity": "Quantità totale"
+    },
+    "importCompleteTitle": "Importazione completata",
+    "importCompleteSummary": "Sono stati elaborati {{created}} nuovi scaffali e {{balances}} righe di saldo.",
+    "close": "Chiudi",
+    "confirmImport": "Conferma importazione",
+    "preValidate": "Pre-valida",
+    "errors": {
+      "invalidExtension": "È possibile caricare solo file Excel con estensione .xlsx.",
+      "tooLarge": "Il file Excel può avere una dimensione massima di 8 MB.",
+      "templateDownloadFailed": "Impossibile scaricare il modello.",
+      "preValidationFailed": "Impossibile completare la pre-validazione.",
+      "importFailed": "Impossibile completare l'importazione dell'apertura magazzino."
+    },
+    "success": {
+      "templateDownloaded": "È stato scaricato il modello di apertura magazzino a file unico.",
+      "preValidated": "Il file è stato validato correttamente senza essere salvato.",
+      "imported": "Scaffali e saldi iniziali di stock/serie sono stati salvati insieme."
+    }
   },
   "form": {
     "createTitle": "Nuova definizione di posizione",

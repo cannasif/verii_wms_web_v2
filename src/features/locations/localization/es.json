@@ -2,7 +2,56 @@
   "page": {
     "title": "Definiciones de ubicación",
     "description": "Administre la zona del almacén, pasillo, estante, nivel y jerarquía de contenedores.",
-    "newAction": "Nueva ubicación"
+    "newAction": "Nueva ubicación",
+    "warehouseOpeningAction": "Apertura de almacén con un solo archivo Excel",
+    "shelfImportAction": "Importación inicial de ubicaciones con Excel"
+  },
+  "shelfImport": {
+    "title": "Importación inicial de definiciones de ubicación con Excel",
+    "description": "Cree la jerarquía de ubicaciones en un solo archivo mediante una importación segura, solo de creación.",
+    "warning": "Las ubicaciones existentes no se actualizan ni se eliminan. Toda la importación se detiene si ya existe el mismo código de almacén/ubicación.",
+    "limitText": "Máximo 5 MB y 1.000 filas de ubicación",
+    "submitLabel": "Crear ubicaciones",
+    "summary": { "total": "Total", "created": "Creado", "failed": "Fallido" }
+  },
+  "warehouseOpening": {
+    "title": "Apertura de almacén con un solo archivo Excel",
+    "description": "Cree la jerarquía de ubicaciones y los saldos iniciales de stock, lote y serie en una única operación atómica.",
+    "atomicImportTitle": "Importación atómica",
+    "atomicImportDescription": "El mismo almacén y ubicación pueden repetirse en cientos de filas. La ubicación se resuelve una vez; cada fila de stock/serie se convierte en un movimiento de apertura independiente. Si ocurre un solo error, no se guarda ningún registro.",
+    "steps": { "template": "Plantilla", "preValidation": "Prevalidación", "confirmAndSave": "Confirmar y guardar" },
+    "downloadTemplateTitle": "Descargue la plantilla actual",
+    "downloadTemplateDescription": "La plantilla incluye referencias de almacén y ubicación, además de los primeros 5.000 registros de stock/configuración como ejemplos. También puede escribir directamente códigos válidos que no aparecen en la lista; la prevalidación los verifica en el sistema.",
+    "downloadTemplate": "Descargar plantilla",
+    "selectFileTitle": "Seleccione el archivo completado",
+    "selectFileLimit": "Máximo 8 MB y 2.000 filas",
+    "preValidationSuccess": "Prevalidación exitosa",
+    "cards": {
+      "warehouse": "Almacén",
+      "newShelf": "Nueva ubicación",
+      "existingShelf": "Ubicación existente",
+      "balanceRow": "Fila de saldo",
+      "stock": "Stock",
+      "serial": "Serie",
+      "totalQuantity": "Cantidad total"
+    },
+    "importCompleteTitle": "Importación completada",
+    "importCompleteSummary": "Se procesaron {{created}} nuevas ubicaciones y {{balances}} filas de saldo.",
+    "close": "Cerrar",
+    "confirmImport": "Confirmar importación",
+    "preValidate": "Prevalidar",
+    "errors": {
+      "invalidExtension": "Solo se pueden cargar archivos Excel con la extensión .xlsx.",
+      "tooLarge": "El archivo Excel puede tener como máximo 8 MB.",
+      "templateDownloadFailed": "No se pudo descargar la plantilla.",
+      "preValidationFailed": "No se pudo completar la prevalidación.",
+      "importFailed": "No se pudo completar la importación de apertura de almacén."
+    },
+    "success": {
+      "templateDownloaded": "Se descargó la plantilla de apertura de almacén de un solo archivo.",
+      "preValidated": "El archivo se validó correctamente sin guardarse.",
+      "imported": "Las ubicaciones y los saldos iniciales de stock/serie se guardaron juntos."
+    }
   },
   "form": {
     "createTitle": "Nueva definición de ubicación",

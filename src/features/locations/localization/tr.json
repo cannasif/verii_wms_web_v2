@@ -2,7 +2,56 @@
   "page": {
     "title": "Raf Tanımları",
     "description": "Depo içi bölge, koridor, raf, seviye ve göz hiyerarşisini yönetin.",
-    "newAction": "Yeni Raf"
+    "newAction": "Yeni Raf",
+    "warehouseOpeningAction": "Tek Excel ile Depo Açılışı",
+    "shelfImportAction": "Excel ile İlk Raf Aktarımı"
+  },
+  "shelfImport": {
+    "title": "Excel ile İlk Raf Tanımı Aktarımı",
+    "description": "Raf hiyerarşisini tek dosyada, create-only güvenli aktarım ile oluşturun.",
+    "warning": "Mevcut raflar güncellenmez veya silinmez. Aynı depo/raf kodu varsa aktarımın tamamı durdurulur.",
+    "limitText": "En fazla 5 MB ve 1.000 raf satırı",
+    "submitLabel": "Rafları oluştur",
+    "summary": { "total": "Toplam", "created": "Oluşturuldu", "failed": "Başarısız" }
+  },
+  "warehouseOpening": {
+    "title": "Tek Excel ile Depo Açılışı",
+    "description": "Raf hiyerarşisini ve ilk stok, lot ve seri bakiyelerini tek atomik işlemde oluşturun.",
+    "atomicImportTitle": "Atomik aktarım",
+    "atomicImportDescription": "Aynı depo ve raf yüzlerce satırda tekrarlanabilir. Raf bir kez çözülür; her stok/seri satırı ayrı açılış hareketine dönüşür. Tek bir hatada hiçbir kayıt kalıcı olmaz.",
+    "steps": { "template": "Şablon", "preValidation": "Ön doğrulama", "confirmAndSave": "Onay ve kayıt" },
+    "downloadTemplateTitle": "Güncel şablonu indirin",
+    "downloadTemplateDescription": "Şablon depo ve raf referanslarını, ayrıca ilk 5.000 stok/YAP kaydını örnek olarak içerir. Listede görünmeyen geçerli kodları da doğrudan yazabilirsiniz; ön doğrulama bunları sistemden kontrol eder.",
+    "downloadTemplate": "Şablonu indir",
+    "selectFileTitle": "Doldurulan dosyayı seçin",
+    "selectFileLimit": "En fazla 8 MB ve 2.000 satır",
+    "preValidationSuccess": "Ön doğrulama başarılı",
+    "cards": {
+      "warehouse": "Depo",
+      "newShelf": "Yeni raf",
+      "existingShelf": "Mevcut raf",
+      "balanceRow": "Bakiye satırı",
+      "stock": "Stok",
+      "serial": "Seri",
+      "totalQuantity": "Toplam miktar"
+    },
+    "importCompleteTitle": "Aktarım tamamlandı",
+    "importCompleteSummary": "{{created}} yeni raf ve {{balances}} bakiye satırı işlendi.",
+    "close": "Kapat",
+    "confirmImport": "Aktarımı onayla",
+    "preValidate": "Ön doğrula",
+    "errors": {
+      "invalidExtension": "Yalnızca .xlsx uzantılı Excel dosyaları yüklenebilir.",
+      "tooLarge": "Excel dosyası en fazla 8 MB olabilir.",
+      "templateDownloadFailed": "Şablon indirilemedi.",
+      "preValidationFailed": "Ön doğrulama tamamlanamadı.",
+      "importFailed": "Depo açılış aktarımı tamamlanamadı."
+    },
+    "success": {
+      "templateDownloaded": "Tek dosyalı depo açılış şablonu indirildi.",
+      "preValidated": "Dosya kayıt yapılmadan başarıyla doğrulandı.",
+      "imported": "Raflar ve ilk stok/seri bakiyeleri birlikte kaydedildi."
+    }
   },
   "form": {
     "createTitle": "Yeni Raf Tanımı",

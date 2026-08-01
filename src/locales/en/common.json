@@ -6957,5 +6957,23 @@
     "warehouseInboundDirect": "direct warehouse inbound",
     "warehouseOutboundDirect": "direct warehouse outbound / shipment",
     "warehouseTransferDirect": "direct inter-warehouse transfer (DAT)"
+  },
+  "initialExcelImport": {
+    "securityRuleTitle": "Initial import safety rule",
+    "downloadStepTitle": "1. Download the current template",
+    "downloadStepDescription": "Warehouse, shelf, stock and other references are prepared from the system data at the time of download.",
+    "downloadTemplate": "Download Template",
+    "selectFileStepTitle": "2. Select the completed file",
+    "close": "Close",
+    "errors": {
+      "invalidExtension": "Only Excel files with the .xlsx extension can be uploaded.",
+      "tooLarge": "The Excel file can be at most 5 MB.",
+      "templateDownloadFailed": "The template could not be downloaded.",
+      "importFailed": "The Excel file could not be imported."
+    },
+    "success": {
+      "templateDownloaded": "The Excel template was downloaded with current system data.",
+      "imported": "The Excel import completed successfully."
+    }
   }
 }

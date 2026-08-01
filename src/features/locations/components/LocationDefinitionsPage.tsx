@@ -183,8 +183,8 @@ export function LocationDefinitionsPage() {
     <AdvancedDataGrid<LocationRow> pageKey="warehouse-location-definitions-v2" title={t('page.title')} description={t('page.description')} columns={columns} fetchPage={locationsApi.getPaged}
       toolbarActions={canCreate ? [
         { label: t('page.newAction'), run: openCreate },
-        { label: 'Tek Excel ile Depo Açılışı', icon: <FileSpreadsheet className="size-4"/>, run: async () => setWarehouseOpeningImportOpen(true) },
-        { label: 'Excel ile İlk Raf Aktarımı', icon: <FileSpreadsheet className="size-4"/>, run: async () => setImportOpen(true) },
+        { label: t('page.warehouseOpeningAction'), icon: <FileSpreadsheet className="size-4"/>, run: async () => setWarehouseOpeningImportOpen(true) },
+        { label: t('page.shelfImportAction'), icon: <FileSpreadsheet className="size-4"/>, run: async () => setImportOpen(true) },
       ] : undefined}/>
 
     <WarehouseOpeningImportDialog
@@ -203,19 +203,19 @@ export function LocationDefinitionsPage() {
 
     <InitialExcelImportDialog
       open={importOpen}
-      title="Excel ile İlk Raf Tanımı Aktarımı"
-      description="Raf hiyerarşisini tek dosyada, create-only güvenli aktarım ile oluşturun."
-      warning="Mevcut raflar güncellenmez veya silinmez. Aynı depo/raf kodu varsa aktarımın tamamı durdurulur."
+      title={t('shelfImport.title')}
+      description={t('shelfImport.description')}
+      warning={t('shelfImport.warning')}
       templateFileName="wms-v2-raf-ilk-aktarim-sablonu.xlsx"
-      limitText="En fazla 5 MB ve 1.000 raf satırı"
-      submitLabel="Rafları oluştur"
+      limitText={t('shelfImport.limitText')}
+      submitLabel={t('shelfImport.submitLabel')}
       onOpenChange={setImportOpen}
       downloadTemplate={() => locationsApi.downloadImportTemplate(branchCode)}
       importFile={(file) => locationsApi.importLocations(file, branchCode)}
       summarize={(result) => [
-        { label: 'Toplam', value: result.totalRows },
-        { label: 'Oluşturuldu', value: result.createdRows },
-        { label: 'Başarısız', value: result.failedRows },
+        { label: t('shelfImport.summary.total'), value: result.totalRows },
+        { label: t('shelfImport.summary.created'), value: result.createdRows },
+        { label: t('shelfImport.summary.failed'), value: result.failedRows },
       ]}
       onImported={async () => queryClient.invalidateQueries({ queryKey: ['advanced-grid', 'warehouse-location-definitions-v2'] })}
     />

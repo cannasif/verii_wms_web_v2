@@ -5506,5 +5506,23 @@
     "warehouseInboundDirect": "إدخال مستودع مباشر",
     "warehouseOutboundDirect": "صرف مستودع مباشر / شحن",
     "warehouseTransferDirect": "نقل مباشر بين المستودعات (DAT)"
+  },
+  "initialExcelImport": {
+    "securityRuleTitle": "قاعدة أمان الاستيراد الأولي",
+    "downloadStepTitle": "1. تنزيل القالب الحالي",
+    "downloadStepDescription": "يتم تحضير المستودع والموقع والمخزون والمراجع الأخرى من بيانات النظام في وقت التنزيل.",
+    "downloadTemplate": "تنزيل القالب",
+    "selectFileStepTitle": "2. حدد الملف المعبأ",
+    "close": "إغلاق",
+    "errors": {
+      "invalidExtension": "يمكن تحميل ملفات Excel بامتداد .xlsx فقط.",
+      "tooLarge": "يمكن أن يكون حجم ملف Excel 5 ميغابايت كحد أقصى.",
+      "templateDownloadFailed": "تعذر تنزيل القالب.",
+      "importFailed": "تعذر استيراد ملف Excel."
+    },
+    "success": {
+      "templateDownloaded": "تم تنزيل قالب Excel ببيانات النظام الحالية.",
+      "imported": "تم إكمال استيراد Excel بنجاح."
+    }
   }
 }

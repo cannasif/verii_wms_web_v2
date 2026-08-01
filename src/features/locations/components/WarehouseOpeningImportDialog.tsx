@@ -3,6 +3,7 @@ import { AlertTriangle, CheckCircle2, Download, FileCheck2, FileSpreadsheet, Loa
 import { toast } from 'sonner';
 import { Dialog, DialogTitle } from '@/components/ui/dialog';
 import { OpsDialogBody, OpsDialogContent, OpsDialogFooter, OpsDialogHeader } from '@/components/shared/OpsDialogShell';
+import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import {
   warehouseOpeningImportApi,
   type WarehouseOpeningImportResult,
@@ -22,6 +23,7 @@ export function WarehouseOpeningImportDialog({
   onOpenChange: (open: boolean) => void;
   onImported: () => Promise<void>;
 }) {
+  const { t } = useModuleTranslation('locations');
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<WarehouseOpeningPreview | null>(null);
@@ -44,11 +46,11 @@ export function WarehouseOpeningImportDialog({
     setIdempotencyKey(crypto.randomUUID());
     if (!selected) return setFile(null);
     if (!selected.name.toLowerCase().endsWith('.xlsx')) {
-      toast.error('Yalnızca .xlsx uzantılı Excel dosyaları yüklenebilir.');
+      toast.error(t('warehouseOpening.errors.invalidExtension'));
       return setFile(null);
     }
     if (selected.size > MAX_FILE_SIZE) {
-      toast.error('Excel dosyası en fazla 8 MB olabilir.');
+      toast.error(t('warehouseOpening.errors.tooLarge'));
       return setFile(null);
     }
     setFile(selected);
@@ -66,9 +68,9 @@ export function WarehouseOpeningImportDialog({
       anchor.click();
       anchor.remove();
       window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
-      toast.success('Tek dosyalı depo açılış şablonu indirildi.');
+      toast.success(t('warehouseOpening.success.templateDownloaded'));
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Şablon indirilemedi.');
+      toast.error(error instanceof Error ? error.message : t('warehouseOpening.errors.templateDownloadFailed'));
     } finally {
       setBusy(null);
     }
@@ -81,10 +83,10 @@ export function WarehouseOpeningImportDialog({
       const value = await warehouseOpeningImportApi.preview(file, branchCode);
       setPreview(value);
       setResult(null);
-      toast.success('Dosya kayıt yapılmadan başarıyla doğrulandı.');
+      toast.success(t('warehouseOpening.success.preValidated'));
     } catch (error) {
       setPreview(null);
-      toast.error(error instanceof Error ? error.message : 'Ön doğrulama tamamlanamadı.');
+      toast.error(error instanceof Error ? error.message : t('warehouseOpening.errors.preValidationFailed'));
     } finally {
       setBusy(null);
     }
@@ -102,22 +104,22 @@ export function WarehouseOpeningImportDialog({
       );
       setResult(value);
       await onImported();
-      toast.success('Raflar ve ilk stok/seri bakiyeleri birlikte kaydedildi.');
+      toast.success(t('warehouseOpening.success.imported'));
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Depo açılış aktarımı tamamlanamadı.');
+      toast.error(error instanceof Error ? error.message : t('warehouseOpening.errors.importFailed'));
     } finally {
       setBusy(null);
     }
   };
 
   const cards = preview ? [
-    ['Depo', preview.warehouseCount],
-    ['Yeni raf', preview.newLocationCount],
-    ['Mevcut raf', preview.existingLocationCount],
-    ['Bakiye satırı', preview.balanceRowCount],
-    ['Stok', preview.distinctStockCount],
-    ['Seri', preview.serialCount],
-    ['Toplam miktar', preview.totalQuantity.toLocaleString('tr-TR')],
+    [t('warehouseOpening.cards.warehouse'), preview.warehouseCount],
+    [t('warehouseOpening.cards.newShelf'), preview.newLocationCount],
+    [t('warehouseOpening.cards.existingShelf'), preview.existingLocationCount],
+    [t('warehouseOpening.cards.balanceRow'), preview.balanceRowCount],
+    [t('warehouseOpening.cards.stock'), preview.distinctStockCount],
+    [t('warehouseOpening.cards.serial'), preview.serialCount],
+    [t('warehouseOpening.cards.totalQuantity'), preview.totalQuantity.toLocaleString('tr-TR')],
   ] : [];
 
   return (
@@ -129,8 +131,8 @@ export function WarehouseOpeningImportDialog({
               <FileSpreadsheet className="size-5" />
             </div>
             <div>
-              <DialogTitle className="text-xl font-bold">Tek Excel ile Depo Açılışı</DialogTitle>
-              <p className="text-sm text-slate-500">Raf hiyerarşisini ve ilk stok, lot ve seri bakiyelerini tek atomik işlemde oluşturun.</p>
+              <DialogTitle className="text-xl font-bold">{t('warehouseOpening.title')}</DialogTitle>
+              <p className="text-sm text-slate-500">{t('warehouseOpening.description')}</p>
             </div>
           </div>
         </OpsDialogHeader>
@@ -138,33 +140,32 @@ export function WarehouseOpeningImportDialog({
           <div className="flex gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-200">
             <AlertTriangle className="mt-0.5 size-5 shrink-0" />
             <div>
-              <strong className="block">Atomik aktarım</strong>
-              <p>Aynı depo ve raf yüzlerce satırda tekrarlanabilir. Raf bir kez çözülür; her stok/seri satırı ayrı açılış hareketine dönüşür. Tek bir hatada hiçbir kayıt kalıcı olmaz.</p>
+              <strong className="block">{t('warehouseOpening.atomicImportTitle')}</strong>
+              <p>{t('warehouseOpening.atomicImportDescription')}</p>
             </div>
           </div>
 
           <ol className="grid gap-3 md:grid-cols-3">
-            <Step number="1" title="Şablon" active={!file} complete={Boolean(file)} />
-            <Step number="2" title="Ön doğrulama" active={Boolean(file) && !preview} complete={Boolean(preview)} />
-            <Step number="3" title="Onay ve kayıt" active={Boolean(preview) && !result} complete={Boolean(result)} />
+            <Step number="1" title={t('warehouseOpening.steps.template')} active={!file} complete={Boolean(file)} />
+            <Step number="2" title={t('warehouseOpening.steps.preValidation')} active={Boolean(file) && !preview} complete={Boolean(preview)} />
+            <Step number="3" title={t('warehouseOpening.steps.confirmAndSave')} active={Boolean(preview) && !result} complete={Boolean(result)} />
           </ol>
 
           <div className="grid gap-4 md:grid-cols-2">
             <section className="rounded-xl border p-4">
-              <h3 className="font-semibold">Güncel şablonu indirin</h3>
+              <h3 className="font-semibold">{t('warehouseOpening.downloadTemplateTitle')}</h3>
               <p className="mt-1 text-sm text-slate-500">
-                Şablon depo ve raf referanslarını, ayrıca ilk 5.000 stok/YAP kaydını örnek olarak içerir.
-                Listede görünmeyen geçerli kodları da doğrudan yazabilirsiniz; ön doğrulama bunları sistemden kontrol eder.
+                {t('warehouseOpening.downloadTemplateDescription')}
               </p>
               <button type="button" disabled={Boolean(busy)} onClick={() => void download()} className="mt-4 inline-flex items-center gap-2 rounded-xl border border-[var(--wms-brand-primary)] px-4 py-2 text-sm font-semibold text-[var(--wms-brand-primary)] disabled:opacity-50">
                 {busy === 'download' ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}
-                Şablonu indir
+                {t('warehouseOpening.downloadTemplate')}
               </button>
             </section>
             <label className="rounded-xl border border-dashed p-4">
               <Upload className="mb-2 size-6 text-[var(--wms-brand-primary)]" />
-              <strong className="block">Doldurulan dosyayı seçin</strong>
-              <span className="text-xs text-slate-500">En fazla 8 MB ve 2.000 satır</span>
+              <strong className="block">{t('warehouseOpening.selectFileTitle')}</strong>
+              <span className="text-xs text-slate-500">{t('warehouseOpening.selectFileLimit')}</span>
               <input ref={inputRef} type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" disabled={Boolean(busy)} onChange={(event) => selectFile(event.target.files?.[0] ?? null)} className="mt-4 block w-full text-sm" />
               {file && <p className="mt-3 rounded-lg bg-slate-100 px-3 py-2 text-sm dark:bg-slate-900">{file.name}</p>}
             </label>
@@ -173,7 +174,7 @@ export function WarehouseOpeningImportDialog({
           {preview && (
             <section className="space-y-3 rounded-xl border border-emerald-300 bg-emerald-50/50 p-4 dark:border-emerald-900 dark:bg-emerald-950/20">
               <div className="flex items-center gap-2 font-semibold text-emerald-700 dark:text-emerald-300">
-                <FileCheck2 className="size-5" />Ön doğrulama başarılı
+                <FileCheck2 className="size-5" />{t('warehouseOpening.preValidationSuccess')}
               </div>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                 {cards.map(([label, value]) => (
@@ -190,22 +191,30 @@ export function WarehouseOpeningImportDialog({
           {result && (
             <div className="flex items-center gap-3 rounded-xl border border-emerald-400 bg-emerald-50 p-4 text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200">
               <CheckCircle2 className="size-6" />
-              <div><strong className="block">Aktarım tamamlandı</strong><span>{result.locations?.createdRows ?? 0} yeni raf ve {result.balances.totalRows} bakiye satırı işlendi.</span></div>
+              <div>
+                <strong className="block">{t('warehouseOpening.importCompleteTitle')}</strong>
+                <span>
+                  {t('warehouseOpening.importCompleteSummary', {
+                    created: result.locations?.createdRows ?? 0,
+                    balances: result.balances.totalRows,
+                  })}
+                </span>
+              </div>
             </div>
           )}
         </OpsDialogBody>
         <OpsDialogFooter>
-          <button type="button" disabled={Boolean(busy)} onClick={() => onOpenChange(false)} className="rounded-xl border px-5 py-2.5 disabled:opacity-50">Kapat</button>
+          <button type="button" disabled={Boolean(busy)} onClick={() => onOpenChange(false)} className="rounded-xl border px-5 py-2.5 disabled:opacity-50">{t('warehouseOpening.close')}</button>
           {!result && (
             preview ? (
               <button type="button" disabled={Boolean(busy)} onClick={() => void commit()} className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 font-semibold text-white disabled:opacity-50">
                 {busy === 'commit' ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />}
-                Aktarımı onayla
+                {t('warehouseOpening.confirmImport')}
               </button>
             ) : (
               <button type="button" disabled={!file || Boolean(busy)} onClick={() => void validate()} className="inline-flex items-center gap-2 rounded-xl bg-[var(--wms-brand-primary)] px-5 py-2.5 font-semibold text-white disabled:opacity-50">
                 {busy === 'preview' ? <Loader2 className="size-4 animate-spin" /> : <FileCheck2 className="size-4" />}
-                Ön doğrula
+                {t('warehouseOpening.preValidate')}
               </button>
             )
           )}
