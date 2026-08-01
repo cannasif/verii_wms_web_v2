@@ -1,0 +1,42 @@
+{
+  "page": {
+    "title": "سجلات التدقيق",
+    "description": "تتبّع التغييرات الحرجة للمستخدمين والصلاحيات مع قيمها القديمة والجديدة."
+  },
+  "columns": {
+    "id": "رقم السجل",
+    "createdBy": "أنشأه",
+    "updatedBy": "حدّثه",
+    "updatedDate": "تاريخ التحديث",
+    "createdDate": "التاريخ",
+    "actionType": "الإجراء",
+    "entityType": "الكيان",
+    "result": "النتيجة",
+    "source": "المصدر",
+    "performedBy": "نفّذه",
+    "request": "الطلب",
+    "traceId": "التتبع",
+    "actions": "التفاصيل"
+  },
+  "system": "النظام",
+  "userHash": "مستخدم #{{id}}",
+  "detailAria": "عرض تفاصيل السجل {{id}}",
+  "toast": {
+    "detailFetchFailed": "تعذر استرداد تفاصيل السجل."
+  },
+  "detail": {
+    "titlePrefix": "سجل التدقيق #{{id}}",
+    "date": "التاريخ",
+    "result": "النتيجة",
+    "source": "المصدر",
+    "branch": "الفرع",
+    "performedBy": "نفّذه",
+    "http": "HTTP",
+    "traceId": "معرّف التتبع",
+    "reason": "السبب / الخطأ",
+    "oldValues": "القيم القديمة",
+    "newValues": "القيم الجديدة",
+    "changedFields": "الحقول المتغيرة",
+    "noRecord": "لا يوجد سجل"
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "toast": {
+    "codeNameRequired": "İzin kodu ve adı zorunludur.",
+    "updated": "İzin tanımı güncellendi.",
+    "created": "İzin tanımı oluşturuldu.",
+    "saveFailed": "İzin tanımı kaydedilemedi.",
+    "deleted": "İzin tanımı silindi.",
+    "deleteFailed": "İzin tanımı silinemedi."
+  },
+  "grid": {
+    "title": "İzin Tanımları",
+    "description": "Uygulama izin kataloğunu oluşturun, güncelleyin ve güvenli biçimde pasife alın.",
+    "createAction": "Yeni İzin",
+    "columns": {
+      "code": "İzin Kodu",
+      "name": "Ad",
+      "description": "Açıklama",
+      "web": "Web",
+      "mobile": "Mobil",
+      "status": "Durum",
+      "actions": "İşlemler"
+    },
+    "yes": "Evet",
+    "no": "Hayır",
+    "statusActive": "Aktif",
+    "statusInactive": "Pasif",
+    "editTitle": "Düzenle",
+    "deleteTitle": "Sil"
+  },
+  "dialog": {
+    "editTitle": "İzin Tanımını Düzenle",
+    "createTitle": "Yeni İzin Tanımı",
+    "subtitle": "Tekil ve anlamlı bir izin kodu kullanın.",
+    "codeLabel": "İzin kodu *",
+    "nameLabel": "Ad *",
+    "descriptionLabel": "Açıklama",
+    "activeLabel": "Aktif",
+    "webLabel": "Web",
+    "mobileLabel": "Mobil",
+    "cancelButton": "Vazgeç",
+    "saveButton": "Kaydet"
+  },
+  "deleteDialog": {
+    "title": "İzin tanımını sil",
+    "description": "{{code}} soft-delete ile pasife alınacak ve grup bağlantılarından kaldırılacak."
+  }
+}

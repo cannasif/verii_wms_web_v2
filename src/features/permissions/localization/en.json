@@ -1,0 +1,47 @@
+{
+  "toast": {
+    "codeNameRequired": "Permission code and name are required.",
+    "updated": "Permission definition updated.",
+    "created": "Permission definition created.",
+    "saveFailed": "Could not save the permission definition.",
+    "deleted": "Permission definition deleted.",
+    "deleteFailed": "Could not delete the permission definition."
+  },
+  "grid": {
+    "title": "Permission Definitions",
+    "description": "Create, update and safely deactivate the application permission catalog.",
+    "createAction": "New Permission",
+    "columns": {
+      "code": "Permission Code",
+      "name": "Name",
+      "description": "Description",
+      "web": "Web",
+      "mobile": "Mobile",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "yes": "Yes",
+    "no": "No",
+    "statusActive": "Active",
+    "statusInactive": "Inactive",
+    "editTitle": "Edit",
+    "deleteTitle": "Delete"
+  },
+  "dialog": {
+    "editTitle": "Edit Permission Definition",
+    "createTitle": "New Permission Definition",
+    "subtitle": "Use a unique and meaningful permission code.",
+    "codeLabel": "Permission code *",
+    "nameLabel": "Name *",
+    "descriptionLabel": "Description",
+    "activeLabel": "Active",
+    "webLabel": "Web",
+    "mobileLabel": "Mobile",
+    "cancelButton": "Cancel",
+    "saveButton": "Save"
+  },
+  "deleteDialog": {
+    "title": "Delete permission definition",
+    "description": "{{code}} will be soft-deleted and removed from group associations."
+  }
+}

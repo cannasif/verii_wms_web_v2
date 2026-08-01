@@ -1,0 +1,47 @@
+{
+  "toast": {
+    "codeNameRequired": "كود الصلاحية والاسم مطلوبان.",
+    "updated": "تم تحديث تعريف الصلاحية.",
+    "created": "تم إنشاء تعريف الصلاحية.",
+    "saveFailed": "تعذر حفظ تعريف الصلاحية.",
+    "deleted": "تم حذف تعريف الصلاحية.",
+    "deleteFailed": "تعذر حذف تعريف الصلاحية."
+  },
+  "grid": {
+    "title": "تعريفات الصلاحيات",
+    "description": "أنشئ وحدّث وقم بإلغاء تنشيط كتالوج صلاحيات التطبيق بأمان.",
+    "createAction": "صلاحية جديدة",
+    "columns": {
+      "code": "كود الصلاحية",
+      "name": "الاسم",
+      "description": "الوصف",
+      "web": "الويب",
+      "mobile": "الهاتف",
+      "status": "الحالة",
+      "actions": "الإجراءات"
+    },
+    "yes": "نعم",
+    "no": "لا",
+    "statusActive": "نشط",
+    "statusInactive": "غير نشط",
+    "editTitle": "تعديل",
+    "deleteTitle": "حذف"
+  },
+  "dialog": {
+    "editTitle": "تعديل تعريف الصلاحية",
+    "createTitle": "تعريف صلاحية جديد",
+    "subtitle": "استخدم كود صلاحية فريدًا ومعبّرًا.",
+    "codeLabel": "كود الصلاحية *",
+    "nameLabel": "الاسم *",
+    "descriptionLabel": "الوصف",
+    "activeLabel": "نشط",
+    "webLabel": "الويب",
+    "mobileLabel": "الهاتف",
+    "cancelButton": "إلغاء",
+    "saveButton": "حفظ"
+  },
+  "deleteDialog": {
+    "title": "حذف تعريف الصلاحية",
+    "description": "سيتم إلغاء تنشيط {{code}} بالحذف الناعم وإزالته من ارتباطات المجموعات."
+  }
+}

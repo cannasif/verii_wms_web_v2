@@ -1,0 +1,42 @@
+{
+  "page": {
+    "title": "Registri di controllo",
+    "description": "Monitora le modifiche critiche di utenti e permessi con i relativi valori vecchi e nuovi."
+  },
+  "columns": {
+    "id": "ID record",
+    "createdBy": "Creato da",
+    "updatedBy": "Aggiornato da",
+    "updatedDate": "Aggiornato il",
+    "createdDate": "Data",
+    "actionType": "Azione",
+    "entityType": "Entità",
+    "result": "Risultato",
+    "source": "Origine",
+    "performedBy": "Eseguito da",
+    "request": "Richiesta",
+    "traceId": "Trace",
+    "actions": "Dettaglio"
+  },
+  "system": "Sistema",
+  "userHash": "Utente #{{id}}",
+  "detailAria": "Visualizza dettaglio audit {{id}}",
+  "toast": {
+    "detailFetchFailed": "Impossibile recuperare il dettaglio dell'audit."
+  },
+  "detail": {
+    "titlePrefix": "Record di audit #{{id}}",
+    "date": "Data",
+    "result": "Risultato",
+    "source": "Origine",
+    "branch": "Filiale",
+    "performedBy": "Eseguito da",
+    "http": "HTTP",
+    "traceId": "ID trace",
+    "reason": "Motivo / Errore",
+    "oldValues": "Valori precedenti",
+    "newValues": "Nuovi valori",
+    "changedFields": "Campi modificati",
+    "noRecord": "Nessun record"
+  }
+}

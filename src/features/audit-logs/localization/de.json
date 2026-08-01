@@ -1,0 +1,42 @@
+{
+  "page": {
+    "title": "Prüfprotokolle",
+    "description": "Verfolgen Sie kritische Benutzer- und Berechtigungsänderungen mit ihren alten und neuen Werten."
+  },
+  "columns": {
+    "id": "Datensatz-ID",
+    "createdBy": "Erstellt von",
+    "updatedBy": "Aktualisiert von",
+    "updatedDate": "Aktualisiert am",
+    "createdDate": "Datum",
+    "actionType": "Aktion",
+    "entityType": "Entität",
+    "result": "Ergebnis",
+    "source": "Quelle",
+    "performedBy": "Ausgeführt von",
+    "request": "Anfrage",
+    "traceId": "Trace",
+    "actions": "Details"
+  },
+  "system": "System",
+  "userHash": "Benutzer #{{id}}",
+  "detailAria": "Details von Audit {{id}} anzeigen",
+  "toast": {
+    "detailFetchFailed": "Audit-Details konnten nicht abgerufen werden."
+  },
+  "detail": {
+    "titlePrefix": "Audit-Datensatz #{{id}}",
+    "date": "Datum",
+    "result": "Ergebnis",
+    "source": "Quelle",
+    "branch": "Niederlassung",
+    "performedBy": "Ausgeführt von",
+    "http": "HTTP",
+    "traceId": "Trace-ID",
+    "reason": "Grund / Fehler",
+    "oldValues": "Alte Werte",
+    "newValues": "Neue Werte",
+    "changedFields": "Geänderte Felder",
+    "noRecord": "Kein Datensatz"
+  }
+}

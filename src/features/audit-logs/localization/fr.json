@@ -1,0 +1,42 @@
+{
+  "page": {
+    "title": "Journaux d'audit",
+    "description": "Suivez les modifications critiques des utilisateurs et des permissions avec leurs anciennes et nouvelles valeurs."
+  },
+  "columns": {
+    "id": "ID d'enregistrement",
+    "createdBy": "Créé par",
+    "updatedBy": "Mis à jour par",
+    "updatedDate": "Mis à jour le",
+    "createdDate": "Date",
+    "actionType": "Action",
+    "entityType": "Entité",
+    "result": "Résultat",
+    "source": "Source",
+    "performedBy": "Effectué par",
+    "request": "Requête",
+    "traceId": "Trace",
+    "actions": "Détail"
+  },
+  "system": "Système",
+  "userHash": "Utilisateur #{{id}}",
+  "detailAria": "Afficher le détail de l'audit {{id}}",
+  "toast": {
+    "detailFetchFailed": "Impossible de récupérer le détail de l'audit."
+  },
+  "detail": {
+    "titlePrefix": "Enregistrement d'audit #{{id}}",
+    "date": "Date",
+    "result": "Résultat",
+    "source": "Source",
+    "branch": "Filiale",
+    "performedBy": "Effectué par",
+    "http": "HTTP",
+    "traceId": "ID de trace",
+    "reason": "Motif / Erreur",
+    "oldValues": "Anciennes valeurs",
+    "newValues": "Nouvelles valeurs",
+    "changedFields": "Champs modifiés",
+    "noRecord": "Aucun enregistrement"
+  }
+}

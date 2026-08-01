@@ -1,0 +1,47 @@
+{
+  "toast": {
+    "codeNameRequired": "Le code et le nom de la permission sont obligatoires.",
+    "updated": "Définition de permission mise à jour.",
+    "created": "Définition de permission créée.",
+    "saveFailed": "Impossible d'enregistrer la définition de permission.",
+    "deleted": "Définition de permission supprimée.",
+    "deleteFailed": "Impossible de supprimer la définition de permission."
+  },
+  "grid": {
+    "title": "Définitions des permissions",
+    "description": "Créez, mettez à jour et désactivez en toute sécurité le catalogue des permissions de l'application.",
+    "createAction": "Nouvelle permission",
+    "columns": {
+      "code": "Code de permission",
+      "name": "Nom",
+      "description": "Description",
+      "web": "Web",
+      "mobile": "Mobile",
+      "status": "Statut",
+      "actions": "Actions"
+    },
+    "yes": "Oui",
+    "no": "Non",
+    "statusActive": "Actif",
+    "statusInactive": "Inactif",
+    "editTitle": "Modifier",
+    "deleteTitle": "Supprimer"
+  },
+  "dialog": {
+    "editTitle": "Modifier la définition de permission",
+    "createTitle": "Nouvelle définition de permission",
+    "subtitle": "Utilisez un code de permission unique et significatif.",
+    "codeLabel": "Code de permission *",
+    "nameLabel": "Nom *",
+    "descriptionLabel": "Description",
+    "activeLabel": "Actif",
+    "webLabel": "Web",
+    "mobileLabel": "Mobile",
+    "cancelButton": "Annuler",
+    "saveButton": "Enregistrer"
+  },
+  "deleteDialog": {
+    "title": "Supprimer la définition de permission",
+    "description": "{{code}} sera désactivé par suppression douce et retiré des associations de groupe."
+  }
+}

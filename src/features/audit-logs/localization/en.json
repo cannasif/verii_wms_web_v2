@@ -1,0 +1,42 @@
+{
+  "page": {
+    "title": "Audit Logs",
+    "description": "Track critical user and permission changes with their old and new values."
+  },
+  "columns": {
+    "id": "Record ID",
+    "createdBy": "Created By",
+    "updatedBy": "Updated By",
+    "updatedDate": "Updated At",
+    "createdDate": "Date",
+    "actionType": "Action",
+    "entityType": "Entity",
+    "result": "Result",
+    "source": "Source",
+    "performedBy": "Performed By",
+    "request": "Request",
+    "traceId": "Trace",
+    "actions": "Detail"
+  },
+  "system": "System",
+  "userHash": "User #{{id}}",
+  "detailAria": "View detail of audit {{id}}",
+  "toast": {
+    "detailFetchFailed": "Could not retrieve audit detail."
+  },
+  "detail": {
+    "titlePrefix": "Audit Record #{{id}}",
+    "date": "Date",
+    "result": "Result",
+    "source": "Source",
+    "branch": "Branch",
+    "performedBy": "Performed by",
+    "http": "HTTP",
+    "traceId": "Trace ID",
+    "reason": "Reason / Error",
+    "oldValues": "Old Values",
+    "newValues": "New Values",
+    "changedFields": "Changed Fields",
+    "noRecord": "No record"
+  }
+}

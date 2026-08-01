@@ -6,64 +6,69 @@ import { OpsDialogBody, OpsDialogContent, OpsDialogHeader } from '@/components/s
 import { WorkspaceOverlay } from '@/components/shared/WorkspaceOverlay';
 import { Dialog, DialogTitle } from '@/components/ui/dialog';
 import { formatProjectDateTime } from '@/lib/project-format';
+import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { auditLogsApi } from '../api/audit-logs.api';
 import type { AuditLogDetail, AuditLogRow } from '../types/audit-log.types';
 
 export function AuditLogsPage() {
+  const { t } = useModuleTranslation('audit-logs');
   const [detail, setDetail] = useState<AuditLogDetail | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const performedByLabel = (row: { performedByUserEmail?: string | null; performedByUserId?: number | string | null }) =>
+    row.performedByUserEmail || (row.performedByUserId ? t('userHash', { id: row.performedByUserId }) : t('system'));
 
   const openDetail = async (row: AuditLogRow) => {
     setLoading(true);
     try { setDetail(await auditLogsApi.getById(row.id)); }
-    catch (error) { toast.error(error instanceof Error ? error.message : 'Audit detayı alınamadı.'); }
+    catch (error) { toast.error(error instanceof Error ? error.message : t('toast.detailFetchFailed')); }
     finally { setLoading(false); }
   };
 
   const columns = useMemo<GridColumn<AuditLogRow>[]>(() => [
-    { key: 'id', label: 'Kayıt ID', hideable: false, render: (row) => <span className="font-mono text-xs font-semibold">#{row.id}</span> },
-    { key: 'createdBy', label: 'Kayıt Eden', sortable: false, filterable: false, render: (row) => row.performedByUserEmail || (row.performedByUserId ? `Kullanıcı #${row.performedByUserId}` : 'Sistem') },
-    { key: 'updatedBy', label: 'Güncelleyen', sortable: false, filterable: false, render: () => '-' },
-    { key: 'updatedDate', label: 'Güncelleme Zamanı', sortable: false, filterable: false, render: () => '-' },
-    { key: 'createdDate', label: 'Tarih', render: (row) => formatProjectDateTime(row.createdDate) },
-    { key: 'actionType', label: 'İşlem', render: (row) => <span className="font-semibold">{row.actionType}</span> },
-    { key: 'entityType', label: 'Varlık', render: (row) => <span>{row.entityType} <small className="text-slate-500">#{row.entityId}</small></span> },
-    { key: 'result', label: 'Sonuç', render: (row) => <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${row.result.toLowerCase() === 'succeeded' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>{row.result}</span> },
-    { key: 'source', label: 'Kaynak', render: (row) => row.source },
-    { key: 'performedByUserEmail', label: 'İşlemi Yapan', render: (row) => row.performedByUserEmail || (row.performedByUserId ? `Kullanıcı #${row.performedByUserId}` : 'Sistem') },
-    { key: 'requestMethod', label: 'İstek', render: (row) => <span className="text-xs"><strong>{row.requestMethod || '-'}</strong> {row.requestPath || ''}</span> },
-    { key: 'traceId', label: 'Trace', render: (row) => <code className="text-xs">{row.traceId}</code> },
-    { key: 'actions', label: 'Detay', sortable: false, filterable: false, render: (row) => <button type="button" aria-label={`Audit ${row.id} detayını görüntüle`} onClick={() => openDetail(row)} className="rounded-lg border p-2 text-cyan-600 hover:bg-cyan-50"><Eye className="size-4"/></button> },
-  ], []);
+    { key: 'id', label: t('columns.id'), hideable: false, render: (row) => <span className="font-mono text-xs font-semibold">#{row.id}</span> },
+    { key: 'createdBy', label: t('columns.createdBy'), sortable: false, filterable: false, render: (row) => performedByLabel(row) },
+    { key: 'updatedBy', label: t('columns.updatedBy'), sortable: false, filterable: false, render: () => '-' },
+    { key: 'updatedDate', label: t('columns.updatedDate'), sortable: false, filterable: false, render: () => '-' },
+    { key: 'createdDate', label: t('columns.createdDate'), render: (row) => formatProjectDateTime(row.createdDate) },
+    { key: 'actionType', label: t('columns.actionType'), render: (row) => <span className="font-semibold">{row.actionType}</span> },
+    { key: 'entityType', label: t('columns.entityType'), render: (row) => <span>{row.entityType} <small className="text-slate-500">#{row.entityId}</small></span> },
+    { key: 'result', label: t('columns.result'), render: (row) => <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${row.result.toLowerCase() === 'succeeded' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>{row.result}</span> },
+    { key: 'source', label: t('columns.source'), render: (row) => row.source },
+    { key: 'performedByUserEmail', label: t('columns.performedBy'), render: (row) => performedByLabel(row) },
+    { key: 'requestMethod', label: t('columns.request'), render: (row) => <span className="text-xs"><strong>{row.requestMethod || '-'}</strong> {row.requestPath || ''}</span> },
+    { key: 'traceId', label: t('columns.traceId'), render: (row) => <code className="text-xs">{row.traceId}</code> },
+    { key: 'actions', label: t('columns.actions'), sortable: false, filterable: false, render: (row) => <button type="button" aria-label={t('detailAria', { id: row.id })} onClick={() => openDetail(row)} className="rounded-lg border p-2 text-cyan-600 hover:bg-cyan-50"><Eye className="size-4"/></button> },
+  ], [t]);
 
   return <>
-    <AdvancedDataGrid pageKey="audit-logs" title="Audit Kayıtları" description="Kritik kullanıcı ve yetki değişikliklerini eski-yeni değerleriyle izleyin." columns={columns} fetchPage={auditLogsApi.getPaged}/>
+    <AdvancedDataGrid pageKey="audit-logs" title={t('page.title')} description={t('page.description')} columns={columns} fetchPage={auditLogsApi.getPaged}/>
     {loading && !detail && <WorkspaceOverlay><Loader2 className="size-8 animate-spin text-white"/></WorkspaceOverlay>}
     {detail && (
       <Dialog open onOpenChange={(open) => { if (!open) setDetail(null); }}>
         <OpsDialogContent size="xl">
           <OpsDialogHeader>
             <div>
-              <DialogTitle className="wms-ops-detail-dialog__title text-xl font-bold">Audit Kaydı #{detail.id}</DialogTitle>
+              <DialogTitle className="wms-ops-detail-dialog__title text-xl font-bold">{t('detail.titlePrefix', { id: detail.id })}</DialogTitle>
               <p className="mt-1 text-sm text-slate-500">{detail.actionType} • {detail.entityType} #{detail.entityId}</p>
             </div>
           </OpsDialogHeader>
           <OpsDialogBody className="space-y-5">
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <Info label="Tarih" value={formatProjectDateTime(detail.createdDate)}/>
-              <Info label="Sonuç" value={detail.result}/>
-              <Info label="Kaynak" value={detail.source}/>
-              <Info label="Şube" value={detail.branchCode || '-'}/>
-              <Info label="İşlemi yapan" value={detail.performedByUserEmail || (detail.performedByUserId ? `#${detail.performedByUserId}` : 'Sistem')}/>
-              <Info label="HTTP" value={`${detail.requestMethod || '-'} ${detail.requestPath || ''}`}/>
-              <Info label="Trace ID" value={detail.traceId} wide/>
-              <Info label="Neden / Hata" value={detail.failureReason || detail.reason || '-'} wide/>
+              <Info label={t('detail.date')} value={formatProjectDateTime(detail.createdDate)}/>
+              <Info label={t('detail.result')} value={detail.result}/>
+              <Info label={t('detail.source')} value={detail.source}/>
+              <Info label={t('detail.branch')} value={detail.branchCode || '-'}/>
+              <Info label={t('detail.performedBy')} value={detail.performedByUserEmail || (detail.performedByUserId ? `#${detail.performedByUserId}` : t('system'))}/>
+              <Info label={t('detail.http')} value={`${detail.requestMethod || '-'} ${detail.requestPath || ''}`}/>
+              <Info label={t('detail.traceId')} value={detail.traceId} wide/>
+              <Info label={t('detail.reason')} value={detail.failureReason || detail.reason || '-'} wide/>
             </div>
             <div className="grid gap-4 lg:grid-cols-2">
-              <JsonPanel title="Eski Değerler" value={detail.oldValues}/>
-              <JsonPanel title="Yeni Değerler" value={detail.newValues}/>
+              <JsonPanel title={t('detail.oldValues')} value={detail.oldValues} emptyLabel={t('detail.noRecord')}/>
+              <JsonPanel title={t('detail.newValues')} value={detail.newValues} emptyLabel={t('detail.noRecord')}/>
             </div>
-            <JsonPanel title="Değişen Alanlar" value={detail.changedFields}/>
+            <JsonPanel title={t('detail.changedFields')} value={detail.changedFields} emptyLabel={t('detail.noRecord')}/>
           </OpsDialogBody>
         </OpsDialogContent>
       </Dialog>
@@ -75,6 +80,6 @@ function Info({ label, value, wide = false }: { label: string; value: string; wi
   return <div className={`rounded-xl border border-[var(--wms-app-border)] p-3 ${wide ? 'lg:col-span-2' : ''}`}><p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">{label}</p><p className="mt-1 break-all text-sm font-medium">{value}</p></div>;
 }
 
-function JsonPanel({ title, value }: { title: string; value: unknown }) {
-  return <section className="overflow-hidden rounded-xl border border-[var(--wms-app-border)]"><h3 className="border-b border-[var(--wms-app-border)] bg-slate-50 px-4 py-2 text-sm font-semibold dark:bg-white/[.04]">{title}</h3><pre className="max-h-80 overflow-auto whitespace-pre-wrap break-words p-4 text-xs">{value == null ? 'Kayıt yok' : JSON.stringify(value, null, 2)}</pre></section>;
+function JsonPanel({ title, value, emptyLabel }: { title: string; value: unknown; emptyLabel: string }) {
+  return <section className="overflow-hidden rounded-xl border border-[var(--wms-app-border)]"><h3 className="border-b border-[var(--wms-app-border)] bg-slate-50 px-4 py-2 text-sm font-semibold dark:bg-white/[.04]">{title}</h3><pre className="max-h-80 overflow-auto whitespace-pre-wrap break-words p-4 text-xs">{value == null ? emptyLabel : JSON.stringify(value, null, 2)}</pre></section>;
 }

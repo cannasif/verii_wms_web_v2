@@ -1,0 +1,42 @@
+{
+  "page": {
+    "title": "Registros de auditoría",
+    "description": "Realice un seguimiento de los cambios críticos de usuarios y permisos con sus valores antiguos y nuevos."
+  },
+  "columns": {
+    "id": "ID de registro",
+    "createdBy": "Creado por",
+    "updatedBy": "Actualizado por",
+    "updatedDate": "Actualizado el",
+    "createdDate": "Fecha",
+    "actionType": "Acción",
+    "entityType": "Entidad",
+    "result": "Resultado",
+    "source": "Origen",
+    "performedBy": "Realizado por",
+    "request": "Solicitud",
+    "traceId": "Traza",
+    "actions": "Detalle"
+  },
+  "system": "Sistema",
+  "userHash": "Usuario #{{id}}",
+  "detailAria": "Ver detalle de auditoría {{id}}",
+  "toast": {
+    "detailFetchFailed": "No se pudo obtener el detalle de auditoría."
+  },
+  "detail": {
+    "titlePrefix": "Registro de auditoría #{{id}}",
+    "date": "Fecha",
+    "result": "Resultado",
+    "source": "Origen",
+    "branch": "Sucursal",
+    "performedBy": "Realizado por",
+    "http": "HTTP",
+    "traceId": "ID de traza",
+    "reason": "Motivo / Error",
+    "oldValues": "Valores anteriores",
+    "newValues": "Valores nuevos",
+    "changedFields": "Campos modificados",
+    "noRecord": "Sin registro"
+  }
+}

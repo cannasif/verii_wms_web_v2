@@ -1,0 +1,47 @@
+{
+  "toast": {
+    "codeNameRequired": "El código y el nombre del permiso son obligatorios.",
+    "updated": "Definición de permiso actualizada.",
+    "created": "Definición de permiso creada.",
+    "saveFailed": "No se pudo guardar la definición de permiso.",
+    "deleted": "Definición de permiso eliminada.",
+    "deleteFailed": "No se pudo eliminar la definición de permiso."
+  },
+  "grid": {
+    "title": "Definiciones de permisos",
+    "description": "Cree, actualice y desactive de forma segura el catálogo de permisos de la aplicación.",
+    "createAction": "Nuevo permiso",
+    "columns": {
+      "code": "Código de permiso",
+      "name": "Nombre",
+      "description": "Descripción",
+      "web": "Web",
+      "mobile": "Móvil",
+      "status": "Estado",
+      "actions": "Acciones"
+    },
+    "yes": "Sí",
+    "no": "No",
+    "statusActive": "Activo",
+    "statusInactive": "Inactivo",
+    "editTitle": "Editar",
+    "deleteTitle": "Eliminar"
+  },
+  "dialog": {
+    "editTitle": "Editar definición de permiso",
+    "createTitle": "Nueva definición de permiso",
+    "subtitle": "Utilice un código de permiso único y significativo.",
+    "codeLabel": "Código de permiso *",
+    "nameLabel": "Nombre *",
+    "descriptionLabel": "Descripción",
+    "activeLabel": "Activo",
+    "webLabel": "Web",
+    "mobileLabel": "Móvil",
+    "cancelButton": "Cancelar",
+    "saveButton": "Guardar"
+  },
+  "deleteDialog": {
+    "title": "Eliminar definición de permiso",
+    "description": "{{code}} se desactivará mediante eliminación suave y se quitará de las asociaciones de grupo."
+  }
+}

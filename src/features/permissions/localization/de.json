@@ -1,0 +1,47 @@
+{
+  "toast": {
+    "codeNameRequired": "Berechtigungscode und Name sind erforderlich.",
+    "updated": "Berechtigungsdefinition aktualisiert.",
+    "created": "Berechtigungsdefinition erstellt.",
+    "saveFailed": "Berechtigungsdefinition konnte nicht gespeichert werden.",
+    "deleted": "Berechtigungsdefinition gelöscht.",
+    "deleteFailed": "Berechtigungsdefinition konnte nicht gelöscht werden."
+  },
+  "grid": {
+    "title": "Berechtigungsdefinitionen",
+    "description": "Erstellen, aktualisieren und deaktivieren Sie den Anwendungsberechtigungskatalog sicher.",
+    "createAction": "Neue Berechtigung",
+    "columns": {
+      "code": "Berechtigungscode",
+      "name": "Name",
+      "description": "Beschreibung",
+      "web": "Web",
+      "mobile": "Mobil",
+      "status": "Status",
+      "actions": "Aktionen"
+    },
+    "yes": "Ja",
+    "no": "Nein",
+    "statusActive": "Aktiv",
+    "statusInactive": "Inaktiv",
+    "editTitle": "Bearbeiten",
+    "deleteTitle": "Löschen"
+  },
+  "dialog": {
+    "editTitle": "Berechtigungsdefinition bearbeiten",
+    "createTitle": "Neue Berechtigungsdefinition",
+    "subtitle": "Verwenden Sie einen eindeutigen und aussagekräftigen Berechtigungscode.",
+    "codeLabel": "Berechtigungscode *",
+    "nameLabel": "Name *",
+    "descriptionLabel": "Beschreibung",
+    "activeLabel": "Aktiv",
+    "webLabel": "Web",
+    "mobileLabel": "Mobil",
+    "cancelButton": "Abbrechen",
+    "saveButton": "Speichern"
+  },
+  "deleteDialog": {
+    "title": "Berechtigungsdefinition löschen",
+    "description": "{{code}} wird per Soft-Delete deaktiviert und aus den Gruppenzuordnungen entfernt."
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "page": {
+    "title": "Audit Kayıtları",
+    "description": "Kritik kullanıcı ve yetki değişikliklerini eski-yeni değerleriyle izleyin."
+  },
+  "columns": {
+    "id": "Kayıt ID",
+    "createdBy": "Kayıt Eden",
+    "updatedBy": "Güncelleyen",
+    "updatedDate": "Güncelleme Zamanı",
+    "createdDate": "Tarih",
+    "actionType": "İşlem",
+    "entityType": "Varlık",
+    "result": "Sonuç",
+    "source": "Kaynak",
+    "performedBy": "İşlemi Yapan",
+    "request": "İstek",
+    "traceId": "Trace",
+    "actions": "Detay"
+  },
+  "system": "Sistem",
+  "userHash": "Kullanıcı #{{id}}",
+  "detailAria": "Audit {{id}} detayını görüntüle",
+  "toast": {
+    "detailFetchFailed": "Audit detayı alınamadı."
+  },
+  "detail": {
+    "titlePrefix": "Audit Kaydı #{{id}}",
+    "date": "Tarih",
+    "result": "Sonuç",
+    "source": "Kaynak",
+    "branch": "Şube",
+    "performedBy": "İşlemi yapan",
+    "http": "HTTP",
+    "traceId": "Trace ID",
+    "reason": "Neden / Hata",
+    "oldValues": "Eski Değerler",
+    "newValues": "Yeni Değerler",
+    "changedFields": "Değişen Alanlar",
+    "noRecord": "Kayıt yok"
+  }
+}
