@@ -42,6 +42,12 @@ export interface ProductionTaskBoard {
   workloads: { userId: number; username: string; assignedTaskCount: number; completedTaskCount: number; completionPercent: number }[];
   eligibleAssignees: { userId: number; username: string; warehouseIds: number[] }[];
 }
+export interface ProductionTaskPoolRow {
+  transferId: number; documentNo: string; businessContext: string; transferStatus: string;
+  taskId: number; taskNo: string; taskType: string; warehouseId: number; taskStatus: string;
+  plannedQuantity: number; processedQuantity: number; remainingQuantity: number;
+  assignedUsers: string[]; createdDate?: string;
+}
 export interface WarehouseTransferReturnSetting { warehouseId: number; defaultTransferReturnLocationId?: number }
 
 export const productionTransferApi = {
@@ -51,6 +57,8 @@ export const productionTransferApi = {
     unwrap(await api.put<Envelope<ProductionTransferPolicy>>('/api/production-transfers/policy', payload)),
   taskBoard: async (id: number): Promise<ProductionTaskBoard> =>
     unwrap(await api.get<Envelope<ProductionTaskBoard>>(`/api/production-transfers/${id}/tasks`)),
+  taskPool: async (): Promise<ProductionTaskPoolRow[]> =>
+    unwrap(await api.get<Envelope<ProductionTaskPoolRow[]>>('/api/production-transfers/task-pool')),
   assignTask: async (id: number, taskId: number, userId: number): Promise<ProductionTaskBoard> =>
     unwrap(await api.post<Envelope<ProductionTaskBoard>>(`/api/production-transfers/${id}/tasks/${taskId}/assign`, { userId })),
   removeAssignment: async (id: number, taskId: number, userId: number): Promise<ProductionTaskBoard> =>
