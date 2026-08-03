@@ -19,17 +19,21 @@ export type KkdMatrix = {
 export type KkdDistribution = {
   id: number; documentNo: string; status: string; employeeId: number; employeeCode: string;
   employeeName: string; warehouseId: number; warehouseOutboundId?: number; totalQuantity: number;
-  entitledQuantity: number; excessQuantity: number; createdDate?: string; completedAtUtc?: string;
+  entitledQuantity: number; excessQuantity: number; excessApprovalStatus: string;
+  excessApprovalReason?: string; excessApprovedBy?: number; excessApprovedAtUtc?: string;
+  createdDate?: string; completedAtUtc?: string;
 };
 export type KkdDistributionContext = {
   employeeId: number; employeeCode: string; employeeName: string; branchCode: string;
   customerId: number; customerCode: string; customerName: string; policy: KkdPolicy;
   orders: Array<{ orderNumber: string; orderDate?: string; projectCode?: string; remainingQuantity: number }>;
+  preferredStocks: Array<{ groupCode: string; stockId: number; stockCode: string; stockName: string }>;
 };
 export type KkdPolicy = {
   id: number; branchCode: string; requireOpenOrder: boolean; allowOpenOrderExcess: boolean;
   allowMultipleOrdersPerDistribution: boolean; requireEmployeeUserLink: boolean;
-  allowFutureDatedDistribution: boolean; updatedBy?: number; updatedDate?: string;
+  allowFutureDatedDistribution: boolean; requireManagerApprovalForExcess: boolean;
+  updatedBy?: number; updatedDate?: string;
 };
 export type KkdOpenOrderLine = {
   orderNumber: string; orderLineId: number; orderLineSequence: number; stockId?: number;
@@ -39,7 +43,7 @@ export type KkdOpenOrderLine = {
 export type KkdDistributionCreateResult = {
   id: number; documentNo: string; status: string; warehouseOutboundId: number;
   warehouseOutboundDocumentNo: string; totalQuantity: number; entitledQuantity: number;
-  excessQuantity: number; replayed: boolean;
+  excessQuantity: number; excessApprovalStatus: string; replayed: boolean;
 };
 export type KkdUsageSummary = {
   code: string; name: string; distributionCount: number; employeeCount: number;
@@ -95,6 +99,10 @@ export const kkdApi = {
   check: async (payload: { employeeId: number; stockId: number; quantity: number; atDate?: string }) =>
     unwrap(await api.post<Envelope<KkdEntitlementResult>>('/api/kkd/entitlements/check', payload)),
   complete: async (id: number) => unwrap(await api.post<Envelope<unknown>>(`/api/kkd/distributions/${id}/complete`, { idempotencyKey: crypto.randomUUID() })),
+  decideExcessApproval: async (id: number, approve: boolean, reason: string) =>
+    unwrap(await api.post<Envelope<KkdDistribution>>(`/api/kkd/distributions/${id}/excess-approval`, {
+      idempotencyKey: crypto.randomUUID(), approve, reason,
+    })),
   usageReport: async (dimension: 'Department'|'Role'|'Group', from?: string, to?: string) =>
     unwrap(await api.get<Envelope<KkdUsageSummary[]>>('/api/kkd/reports/usage', { params: { dimension, from: from || undefined, to: to || undefined } })),
   validationLogs: async () =>
