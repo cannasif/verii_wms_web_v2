@@ -105,6 +105,7 @@ export interface WarehouseTransferPolicy {
   requireShipmentInformation: boolean;
   directPostingPolicy: 'OneStep' | 'TwoStepTransit';
   discrepancyPolicy: 'Block' | 'AllowWithReason' | 'RequireApproval';
+  cancellationReturnPolicy: 'OriginalSourceLocation' | 'WarehouseDefaultReturnLocation' | 'ManagerSelectionRequired';
 }
 
 export interface WarehouseTransferGridRow {

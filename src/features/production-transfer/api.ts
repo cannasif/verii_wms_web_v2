@@ -1,4 +1,5 @@
 import { api } from '@/lib/axios';
+import { requireCompletedCancellation, type OperationCancellationResult } from '@/features/shared/api/operation-cancellation';
 
 interface Envelope<T> { success: boolean; data: T; message?: string }
 const unwrap = <T,>(result: Envelope<T>) => {
@@ -22,11 +23,50 @@ export interface ProductionTransferPolicy {
   allowOverIssue: boolean;
   overIssueTolerancePercent: number;
   requireApproval: boolean;
+  cancellationReturnPolicy: 'OriginalSourceLocation' | 'WarehouseDefaultReturnLocation' | 'ManagerSelectionRequired';
 }
+
+export interface ProductionTaskAssignment { userId: number; username: string; isPrimary: boolean; assignedAtUtc: string; acceptedAtUtc?: string }
+export interface ProductionTaskLine {
+  taskLineId: number; transferLineId: number; stockCode: string; stockName?: string;
+  requestedQuantity: number; reservedQuantity: number; missingQuantity: number; processedQuantity: number;
+  sourceLocationId?: number; sourceLocationCode?: string; sourceLocationName?: string;
+}
+export interface ProductionTask {
+  taskId: number; taskNo: string; taskType: string; warehouseId: number; status: string; acceptedAtUtc?: string; acceptedBy?: number;
+  startedAtUtc?: string; startedBy?: number; assignments: ProductionTaskAssignment[]; lines: ProductionTaskLine[];
+}
+export interface ProductionTaskBoard {
+  transferId: number; documentNo: string; transferStatus: string; sourceWarehouseId: number;
+  tasks: ProductionTask[];
+  workloads: { userId: number; username: string; assignedTaskCount: number; completedTaskCount: number; completionPercent: number }[];
+  eligibleAssignees: { userId: number; username: string; warehouseIds: number[] }[];
+}
+export interface WarehouseTransferReturnSetting { warehouseId: number; defaultTransferReturnLocationId?: number }
 
 export const productionTransferApi = {
   policy: async (branchCode: string): Promise<ProductionTransferPolicy> =>
     unwrap(await api.get<Envelope<ProductionTransferPolicy>>('/api/production-transfers/policy', { params: { branchCode } })),
   updatePolicy: async (payload: ProductionTransferPolicy): Promise<ProductionTransferPolicy> =>
     unwrap(await api.put<Envelope<ProductionTransferPolicy>>('/api/production-transfers/policy', payload)),
+  taskBoard: async (id: number): Promise<ProductionTaskBoard> =>
+    unwrap(await api.get<Envelope<ProductionTaskBoard>>(`/api/production-transfers/${id}/tasks`)),
+  assignTask: async (id: number, taskId: number, userId: number): Promise<ProductionTaskBoard> =>
+    unwrap(await api.post<Envelope<ProductionTaskBoard>>(`/api/production-transfers/${id}/tasks/${taskId}/assign`, { userId })),
+  removeAssignment: async (id: number, taskId: number, userId: number): Promise<ProductionTaskBoard> =>
+    unwrap(await api.post<Envelope<ProductionTaskBoard>>(`/api/production-transfers/${id}/tasks/${taskId}/assignments/${userId}/remove`, {})),
+  startTask: async (id: number, taskId: number): Promise<ProductionTaskBoard> =>
+    unwrap(await api.post<Envelope<ProductionTaskBoard>>(`/api/production-transfers/${id}/tasks/${taskId}/start`, {})),
+  completeCancellationReturn: async (id: number, taskId: number): Promise<ProductionTaskBoard> =>
+    unwrap(await api.post<Envelope<ProductionTaskBoard>>(`/api/production-transfers/${id}/tasks/${taskId}/complete-cancellation-return`, { idempotencyKey: crypto.randomUUID() })),
+  returnSetting: async (warehouseId: number): Promise<WarehouseTransferReturnSetting> =>
+    unwrap(await api.get<Envelope<WarehouseTransferReturnSetting>>('/api/production-transfers/warehouse-return-setting', { params: { warehouseId } })),
+  updateReturnSetting: async (warehouseId: number, defaultTransferReturnLocationId?: number): Promise<WarehouseTransferReturnSetting> =>
+    unwrap(await api.put<Envelope<WarehouseTransferReturnSetting>>('/api/production-transfers/warehouse-return-setting', {
+      warehouseId, defaultTransferReturnLocationId: defaultTransferReturnLocationId || null,
+    })),
+  cancel: async (id: number, reason: string, returnLocationId?: number): Promise<OperationCancellationResult> =>
+    requireCompletedCancellation(unwrap(await api.post<Envelope<OperationCancellationResult>>(`/api/production-transfers/${id}/cancel`, {
+      idempotencyKey: crypto.randomUUID(), reason: reason.trim(), returnLocationId: returnLocationId || null,
+    }))),
 };
