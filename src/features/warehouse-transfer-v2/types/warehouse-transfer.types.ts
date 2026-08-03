@@ -168,6 +168,7 @@ export interface WarehouseTransferDetail {
     targetPutawayLocationId?: number;
     externalReferenceNo?: string;
     description?: string;
+    projectCode?: string;
   };
 }
 
@@ -182,6 +183,7 @@ export interface UpdateWarehouseTransferDraft {
   priority: number;
   externalReferenceNo: string | null;
   description: string | null;
+  projectCode?: string | null;
 }
 
 export interface CreateTransferDraftResult {

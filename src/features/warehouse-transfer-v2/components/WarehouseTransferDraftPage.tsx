@@ -107,6 +107,7 @@ type WarehouseTransferDirectDraft = {
   dispatchAt: string;
   arrivalAt: string;
   priority: string;
+  projectCode?: string;
   externalReference: string;
   description: string;
   lines: TransferDraftLine[];
@@ -118,6 +119,7 @@ const hasWarehouseTransferDirectDraft = (draft: WarehouseTransferDirectDraft) =>
     draft.targetValue ||
     draft.selectedOrders.length ||
     draft.externalReference.trim() ||
+    draft.projectCode?.trim() ||
     draft.description.trim() ||
     draft.lines.some((line) => line.stockId || line.source),
   );
@@ -159,6 +161,7 @@ export function WarehouseTransferDraftPage({
   const [dispatchAt, setDispatchAt] = useState("");
   const [arrivalAt, setArrivalAt] = useState("");
   const [priority, setPriority] = useState("3");
+  const [projectCode, setProjectCode] = useState("");
   const [externalReference, setExternalReference] = useState("");
   const [description, setDescription] = useState("");
   const [productionPurpose, setProductionPurpose] = useState<"MaterialSupply" | "WorkInProgressMove" | "OutputMove">("MaterialSupply");
@@ -180,6 +183,14 @@ export function WarehouseTransferDraftPage({
   const [lines, setLines] = useState<TransferDraftLine[]>([blankLine()]);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<CreateTransferDraftResult | null>(null);
+  useEffect(() => {
+    if (sourceKind !== "OrderBased" || selectedOrders.length === 0) return;
+    const projects = [...new Set(orders
+      .filter((order) => selectedOrders.includes(order.orderNumber))
+      .map((order) => order.projectCode?.trim())
+      .filter((value): value is string => Boolean(value)))];
+    if (projects.length === 1) setProjectCode(projects[0]);
+  }, [orders, selectedOrders, sourceKind]);
   const operationDraftPayload = useMemo<WarehouseTransferDirectDraft>(() => ({
     sourceKind,
     customerValue,
@@ -194,12 +205,13 @@ export function WarehouseTransferDraftPage({
     dispatchAt,
     arrivalAt,
     priority,
+    projectCode,
     externalReference,
     description,
     lines,
   }), [
     arrivalAt, customerValue, description, dispatchAt, documentDate, externalReference,
-    lines, orders, priority, selectedOrders, seriesId, sourceKind, sourceStaging,
+    lines, orders, priority, projectCode, selectedOrders, seriesId, sourceKind, sourceStaging,
     sourceValue, targetReceiving, targetValue,
   ]);
   const restoreOperationDraft = useCallback((draft: WarehouseTransferDirectDraft) => {
@@ -216,6 +228,7 @@ export function WarehouseTransferDraftPage({
     setDispatchAt(draft.dispatchAt);
     setArrivalAt(draft.arrivalAt);
     setPriority(draft.priority);
+    setProjectCode(draft.projectCode ?? "");
     setExternalReference(draft.externalReference);
     setDescription(draft.description);
     setLines(draft.lines);
@@ -532,6 +545,7 @@ export function WarehouseTransferDraftPage({
           ? new Date(arrivalAt).toISOString()
           : null,
         priority: Number(priority),
+        projectCode: projectCode.trim() || null,
         externalReferenceNo: externalReference.trim() || null,
         description: description.trim() || null,
         lines: lines.map((x) => ({
@@ -891,6 +905,15 @@ export function WarehouseTransferDraftPage({
               className="input"
               value={externalReference}
               onChange={(e) => setExternalReference(e.target.value)}
+            />
+          </Field>
+          <Field label="Proje kodu">
+            <input
+              className="input"
+              value={projectCode}
+              maxLength={50}
+              onChange={(e) => setProjectCode(e.target.value)}
+              placeholder="Netsis proje kodu (boşsa 0)"
             />
           </Field>
           <Field label={t(`${D}.document.description`)}>
