@@ -11,6 +11,7 @@ import {
   loadELogoConnectionsPage, loadErpMirrorPages, loadGoodsReceiptAssignedTasksPage, loadGoodsReceiptCreatePage, loadGoodsReceiptHubPage,
   loadGoodsReceiptLabelsPage, loadGoodsReceiptListPage, loadGoodsReceiptManualPage, loadGoodsReceiptPolicyPage,
   loadHangfirePage, loadIncomingInvoiceArchivePage, loadLocationDefinitionsPage, loadPermissionGroupsPage, loadPermissionsPage, loadProfilePage,
+  loadKkdPages,
   loadProjectSettingsPage, loadQualityInspectionsPage, loadQualityRulesPage, loadQualitySettingsPage,
   loadProductionPages, loadProductionTransferPages, loadSubcontractingTransferPages,
   loadSerialNumberRulesPage, loadShippingCreatePage, loadShippingHubPage, loadShippingListPage,
@@ -54,6 +55,13 @@ const BarcodePolicyPage = lazy(() => loadBarcodePolicyPage().then((m) => ({ defa
 const IncomingInvoiceArchivePage = lazy(() => loadIncomingInvoiceArchivePage().then((m) => ({ default: m.IncomingInvoiceArchivePage })));
 const ELogoConnectionsPage = lazy(() => loadELogoConnectionsPage().then((m) => ({ default: m.ELogoConnectionsPage })));
 const SupplierStockMappingsPage = lazy(() => loadSupplierStockMappingsPage().then((m) => ({ default: m.SupplierStockMappingsPage })));
+const KkdOverviewPage = lazy(() => loadKkdPages().then((m) => ({ default: m.KkdOverviewPage })));
+const KkdDefinitionsPage = lazy(() => loadKkdPages().then((m) => ({ default: m.KkdDefinitionsPage })));
+const KkdEntitlementPage = lazy(() => loadKkdPages().then((m) => ({ default: m.KkdEntitlementPage })));
+const KkdDistributionsPage = lazy(() => loadKkdPages().then((m) => ({ default: m.KkdDistributionsPage })));
+const KkdDistributionCreatePage = lazy(() => loadKkdPages().then((m) => ({ default: m.KkdDistributionCreatePage })));
+const KkdReportsPage = lazy(() => loadKkdPages().then((m) => ({ default: m.KkdReportsPage })));
+const KkdPolicyPage = lazy(() => loadKkdPages().then((m) => ({ default: m.KkdPolicyPage })));
 const GoodsReceiptAssignedTasksPage = lazy(() => loadGoodsReceiptAssignedTasksPage().then((m) => ({ default: m.GoodsReceiptAssignedTasksPage })));
 const GoodsReceiptTasksPage = lazy(() => loadGoodsReceiptAssignedTasksPage().then((m) => ({ default: m.GoodsReceiptTasksPage })));
 const GoodsReceiptCreatePage = lazy(() => loadGoodsReceiptCreatePage().then((m) => ({ default: m.GoodsReceiptCreatePage })));
@@ -169,6 +177,13 @@ export function App(): ReactElement {
           <Route path="warehouse/warehouse-outbounds/list" element={<WarehouseOutboundListPage />} />
           <Route path="warehouse/warehouse-outbounds/:id/operations" element={<WarehouseOutboundOperationPage />} />
           <Route path="warehouse/warehouse-outbounds/settings" element={<WarehouseOutboundPolicyPage />} />          <Route path="warehouse/locations" element={<LocationDefinitionsPage />} />
+          <Route path="warehouse/kkd" element={<KkdOverviewPage />} />
+          <Route path="warehouse/kkd/definitions" element={<KkdDefinitionsPage />} />
+          <Route path="warehouse/kkd/entitlement" element={<KkdEntitlementPage />} />
+          <Route path="warehouse/kkd/distributions" element={<KkdDistributionsPage />} />
+          <Route path="warehouse/kkd/distributions/new" element={<KkdDistributionCreatePage />} />
+          <Route path="warehouse/kkd/reports" element={<KkdReportsPage />} />
+          <Route path="warehouse/kkd/policy" element={<KkdPolicyPage />} />
           <Route path="warehouse/packing" element={<PackingWorkbenchPage />} />
           <Route path="warehouse/packing/definitions" element={<PackingDefinitionsPage />} />
           <Route path="warehouse/packing/settings" element={<PackingPolicyPage />} />

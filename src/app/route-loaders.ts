@@ -17,6 +17,7 @@ export const loadBarcodePolicyPage = () => import('@/features/barcode-policy');
 export const loadIncomingInvoiceArchivePage = () => import('@/features/incoming-invoices/components/IncomingInvoiceArchivePage');
 export const loadELogoConnectionsPage = () => import('@/features/incoming-invoices/components/ELogoConnectionsPage');
 export const loadSupplierStockMappingsPage = () => import('@/features/supplier-stock-mappings/SupplierStockMappingsPage');
+export const loadKkdPages = () => import('@/features/kkd');
 
 export const loadGoodsReceiptAssignedTasksPage = () => import('@/features/goods-receipt-v2/components/GoodsReceiptTasksPage');
 export const loadGoodsReceiptCreatePage = () => import('@/features/goods-receipt-v2/components/GoodsReceiptCreatePage');
@@ -69,6 +70,7 @@ export const loadWarehouseOutboundPolicyPage = () => import('@/features/warehous
 export const loadWarehouseOutboundOperationPage = () => import('@/features/warehouse-outbound/WarehouseOutboundOperationPage');
 export const loadPackingPages = () => import('@/features/packing');
 const routePreloaders: Array<[prefix: string, load: () => Promise<unknown>]> = [
+  ['/warehouse/kkd', loadKkdPages],
   ['/warehouse/goods-receipts/supplier-stock-mappings', loadSupplierStockMappingsPage],
   ['/warehouse/incoming-invoices/connections', loadELogoConnectionsPage],
   ['/warehouse/incoming-invoices', loadIncomingInvoiceArchivePage],

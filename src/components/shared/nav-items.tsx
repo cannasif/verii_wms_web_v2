@@ -70,6 +70,15 @@ export const WMS_NAV_ITEMS: NavItem[] = [
     { title: 'sidebar.productionCreate', titleFallback: 'Üretim Planı Oluştur', href: '/warehouse/production/new', searchAliases: ['üretim', 'plan', 'iş emri', 'bom', 'rota'], requiredPermission: 'WMS.PRODUCTION.CREATE' },
     { title: 'sidebar.productionList', titleFallback: 'Üretim Planları', href: '/warehouse/production/list', searchAliases: ['üretim', 'plan', 'emir', 'liste', 'serbest bırak'], requiredPermission: 'WMS.PRODUCTION.VIEW' },
   ] },
+  { title: 'sidebar.kkd', titleFallback: 'KKD', icon: inventoryIcon, children: [
+    { title: 'sidebar.kkdOverview', titleFallback: 'KKD Süreç Merkezi', href: '/warehouse/kkd', searchAliases: ['kkd', 'iş güvenliği', 'koruyucu donanım'], requiredPermission: 'WMS.KKD.DEFINITIONS.VIEW' },
+    { title: 'sidebar.kkdDefinitions', titleFallback: 'Tanımlar ve Hak Matrisi', href: '/warehouse/kkd/definitions', searchAliases: ['kkd', 'departman', 'rol', 'personel', 'hak'], requiredPermission: 'WMS.KKD.DEFINITIONS.VIEW' },
+    { title: 'sidebar.kkdEntitlement', titleFallback: 'Hak Sorgulama', href: '/warehouse/kkd/entitlement', searchAliases: ['kkd', 'hak', 'kontrol'], requiredPermission: 'WMS.KKD.ENTITLEMENT.CHECK' },
+    { title: 'sidebar.kkdDistributionNew', titleFallback: 'Yeni KKD Dağıtımı', href: '/warehouse/kkd/distributions/new', searchAliases: ['kkd', 'teslim', 'personel', 'sipariş'], requiredPermission: 'WMS.KKD.DISTRIBUTION.OPERATE' },
+    { title: 'sidebar.kkdDistributions', titleFallback: 'Dağıtım ve Ambar Çıkış', href: '/warehouse/kkd/distributions', searchAliases: ['kkd', 'dağıtım', 'ambar çıkış', 'teslim'], requiredPermission: 'WMS.KKD.DISTRIBUTION.OPERATE' },
+    { title: 'sidebar.kkdReports', titleFallback: 'KKD Raporları', href: '/warehouse/kkd/reports', searchAliases: ['kkd', 'rapor', 'kullanım', 'doğrulama'], requiredPermission: 'WMS.KKD.REPORTS.VIEW' },
+    { title: 'sidebar.kkdPolicy', titleFallback: 'KKD Süreç Politikası', href: '/warehouse/kkd/policy', searchAliases: ['kkd', 'politika', 'sipariş zorunlu', 'parametre'], requiredPermission: 'WMS.KKD.POLICY.VIEW' },
+  ] },
   { title: 'sidebar.shipping', titleFallback: 'Sevk', icon: operationsIcon, children: [
     { title: 'sidebar.shippingHub', titleFallback: 'Süreç Merkezi', href: '/warehouse/shipments', searchAliases: ['sevk', 'outbound', 'toplama', 'paketleme'], requiredPermission: 'WMS.SHIPPING.VIEW' },
     { title: 'sidebar.shippingCreate', titleFallback: 'Sevk Oluştur', href: '/warehouse/shipments/new', searchAliases: ['sevk', 'sipariş', 'emir', 'doğrudan'], requiredPermission: 'WMS.SHIPPING.CREATE' },
