@@ -15,5 +15,21 @@
   "reopen": "إعادة فتح",
   "addUnit": "فتح الصندوق / البليت",
   "pack": "إضافة عنصر",
-  "actions": "الإجراءات"
+  "actions": "الإجراءات",
+  "columns": {
+    "packingNo": "رقم التعبئة",
+    "sourceType": "نوع المصدر",
+    "sourceDocumentNo": "المستند المصدر",
+    "customerCode": "العميل",
+    "status": "الحالة",
+    "handlingUnitCount": "صناديق / منصات",
+    "totalQuantity": "الكمية",
+    "totalGrossWeight": "الإجمالي",
+    "openedAtUtc": "تاريخ الفتح"
+  },
+  "sourceTypes": {
+    "warehouseOutbound": "صادر المستودع",
+    "shipment": "الشحن",
+    "warehouseTransfer": "نقل بين المستودعات"
+  }
 }

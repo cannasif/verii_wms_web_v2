@@ -15,5 +15,21 @@
   "reopen": "Wieder öffnen",
   "addUnit": "Offener Karton/Palette",
   "pack": "Artikel hinzufügen",
-  "actions": "Aktionen"
+  "actions": "Aktionen",
+  "columns": {
+    "packingNo": "Verpackungsnummer",
+    "sourceType": "Quelltyp",
+    "sourceDocumentNo": "Quelldokument",
+    "customerCode": "Kunde",
+    "status": "Status",
+    "handlingUnitCount": "Kartons / Paletten",
+    "totalQuantity": "Menge",
+    "totalGrossWeight": "Brutto",
+    "openedAtUtc": "Geöffnet am"
+  },
+  "sourceTypes": {
+    "warehouseOutbound": "Lagerabgang",
+    "shipment": "Versand",
+    "warehouseTransfer": "Lagertransfer"
+  }
 }

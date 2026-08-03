@@ -44,7 +44,7 @@ function validateForm(form: UserFormState, mode: FormMode, minimumPasswordLength
 }
 
 export function UserManagementPage() {
-  const { t } = useModuleTranslation('user-management');
+  const { t, moduleReady } = useModuleTranslation('user-management');
   const queryClient = useQueryClient();
   const [mode, setMode] = useState<FormMode | null>(null);
   const [form, setForm] = useState<UserFormState>(emptyForm);
@@ -154,7 +154,9 @@ export function UserManagementPage() {
     finally { setSaving(false); }
   };
 
-  const columns = useMemo<GridColumn<UserRow>[]>(() => [
+  const columns = useMemo<GridColumn<UserRow>[]>(() => {
+    if (!moduleReady) return [];
+    return [
     ...systemColumns<UserRow>(),
     { key: 'username', label: t('grid.columns.username'), searchable: true, defaultSearch: true, render: (row) => <span className="font-semibold">{row.username}</span> },
     { key: 'firstName', label: t('grid.columns.firstName'), searchable: true, render: (row) => row.firstName || '-' },
@@ -217,9 +219,17 @@ export function UserManagementPage() {
         </div>
       ),
     },
-  ], [openEdit, statusBusyId, t, toggleStatus]);
+  ];
+  }, [moduleReady, openEdit, statusBusyId, t, toggleStatus]);
 
   const isPrimaryAdministrator = form.role.toLowerCase() === 'superadmin';
+  if (!moduleReady) {
+    return (
+      <div className="wms-ops-user-management-page wms-ops-access-control-page grid min-h-[50vh] place-items-center">
+        <Loader2 className="size-7 animate-spin text-[var(--wms-brand-primary)]" />
+      </div>
+    );
+  }
   return (
     <div className="wms-ops-user-management-page wms-ops-access-control-page">
       <AdvancedDataGrid

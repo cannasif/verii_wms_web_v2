@@ -49,14 +49,22 @@ import type {
 } from "./types";
 
 const page = { page: 1, pageSize: 100, search: "", sorts: [], filters: [] };
-const sourceLabels: Record<PackingSourceType, string> = {
-  WarehouseOutbound: "Ambar çıkış",
-  Shipment: "Sevk",
-  WarehouseTransfer: "Depolar arası transfer",
-};
+
+function usePackingSourceLabels() {
+  const { t } = useModuleTranslation("packing");
+  return useMemo<Record<PackingSourceType, string>>(
+    () => ({
+      WarehouseOutbound: t("sourceTypes.warehouseOutbound"),
+      Shipment: t("sourceTypes.shipment"),
+      WarehouseTransfer: t("sourceTypes.warehouseTransfer"),
+    }),
+    [t],
+  );
+}
 
 export function PackingWorkbenchPage() {
-  const { t } = useModuleTranslation("packing");
+  const { t, moduleReady } = useModuleTranslation("packing");
+  const sourceLabels = usePackingSourceLabels();
   const qc = useQueryClient();
   const [create, setCreate] = useState(false);
   const [detail, setDetail] = useState<SessionDetail | null>(null);
@@ -72,44 +80,54 @@ export function PackingWorkbenchPage() {
     }
   };
   const cols = useMemo<GridColumn<SessionRow>[]>(
-    () => [
+    () => {
+      if (!moduleReady) return [];
+      return [
       ...systemColumns<SessionRow>(),
-      { key: "packingNo", label: "Paketleme no", render: (r) => r.packingNo },
+      {
+        key: "packingNo",
+        label: t("columns.packingNo"),
+        render: (r) => r.packingNo,
+      },
       {
         key: "sourceType",
-        label: "Kaynak tipi",
+        label: t("columns.sourceType"),
         render: (r) =>
           sourceLabels[r.sourceType as PackingSourceType] ?? r.sourceType,
       },
       {
         key: "sourceDocumentNo",
-        label: "Kaynak belge",
+        label: t("columns.sourceDocumentNo"),
         render: (r) => r.sourceDocumentNo ?? "-",
       },
       {
         key: "customerCode",
-        label: "Müşteri",
+        label: t("columns.customerCode"),
         render: (r) => r.customerCode ?? "-",
       },
-      { key: "status", label: "Durum", render: (r) => r.status },
+      {
+        key: "status",
+        label: t("columns.status"),
+        render: (r) => localizeEnumValue(r.status),
+      },
       {
         key: "handlingUnitCount",
-        label: "Koli / Palet",
+        label: t("columns.handlingUnitCount"),
         render: (r) => r.handlingUnitCount,
       },
       {
         key: "totalQuantity",
-        label: "Miktar",
+        label: t("columns.totalQuantity"),
         render: (r) => formatProjectNumber(r.totalQuantity),
       },
       {
         key: "totalGrossWeight",
-        label: "Brüt",
+        label: t("columns.totalGrossWeight"),
         render: (r) => formatProjectNumber(r.totalGrossWeight),
       },
       {
         key: "openedAtUtc",
-        label: "Açılış",
+        label: t("columns.openedAtUtc"),
         render: (r) => formatProjectDateTime(r.openedAtUtc),
       },
       {
@@ -126,8 +144,9 @@ export function PackingWorkbenchPage() {
           </button>
         ),
       },
-    ],
-    [t],
+    ];
+    },
+    [moduleReady, sourceLabels, t],
   );
   const refresh = async () => {
     await qc.invalidateQueries({
@@ -135,6 +154,13 @@ export function PackingWorkbenchPage() {
     });
     if (detail) setDetail(await packingApi.detail(detail.header.id));
   };
+  if (!moduleReady) {
+    return (
+      <section className="grid min-h-[50vh] place-items-center">
+        <Loader2 className="size-7 animate-spin text-cyan-500" />
+      </section>
+    );
+  }
   return (
     <section className="relative space-y-4">
       <header className="rounded-2xl border bg-gradient-to-r from-cyan-500/10 via-[var(--wms-app-panel)] to-violet-500/10 p-4 sm:p-6">
@@ -197,6 +223,7 @@ function CreateSessionModal({
   close: () => void;
   done: (d: SessionDetail) => Promise<void>;
 }) {
+  const sourceLabels = usePackingSourceLabels();
   const [sourceType, setSourceType] =
     useState<PackingSourceType>("WarehouseOutbound");
   const [sources, setSources] = useState<PackingSourceDocumentOption[]>([]);
@@ -326,6 +353,7 @@ function SessionModal({
   close: () => void;
   refresh: () => Promise<void>;
 }) {
+  const sourceLabels = usePackingSourceLabels();
   const [add, setAdd] = useState(false);
   return (
     <Dialog open onOpenChange={(o) => !o && close()}>

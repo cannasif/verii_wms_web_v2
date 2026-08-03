@@ -15,5 +15,21 @@
   "reopen": "Riaprire",
   "addUnit": "Scatola/Pallet aperto",
   "pack": "Aggiungi articolo",
-  "actions": "Azioni"
+  "actions": "Azioni",
+  "columns": {
+    "packingNo": "N° imballaggio",
+    "sourceType": "Tipo origine",
+    "sourceDocumentNo": "Documento origine",
+    "customerCode": "Cliente",
+    "status": "Stato",
+    "handlingUnitCount": "Colli / Pallet",
+    "totalQuantity": "Quantità",
+    "totalGrossWeight": "Lordo",
+    "openedAtUtc": "Aperto il"
+  },
+  "sourceTypes": {
+    "warehouseOutbound": "Uscita magazzino",
+    "shipment": "Spedizione",
+    "warehouseTransfer": "Trasferimento tra magazzini"
+  }
 }

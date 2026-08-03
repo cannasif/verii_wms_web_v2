@@ -17,7 +17,7 @@ import { permissionsApi as systemApi, type CreatePermissionRequest, type Permiss
 const emptyForm: CreatePermissionRequest = { code: '', name: '', description: '', isActive: true, availableOnWeb: true, availableOnMobile: false };
 
 export function PermissionsPage() {
-  const { t } = useModuleTranslation('permissions');
+  const { t, moduleReady } = useModuleTranslation('permissions');
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState<PermissionRow | null | undefined>(undefined);
   const [deleteTarget, setDeleteTarget] = useState<PermissionRow | null>(null);
@@ -42,7 +42,9 @@ export function PermissionsPage() {
     catch (error) { toast.error(error instanceof Error ? error.message : t('toast.deleteFailed')); }
     finally { setSaving(false); }
   };
-  const columns = useMemo<GridColumn<PermissionRow>[]>(() => [
+  const columns = useMemo<GridColumn<PermissionRow>[]>(() => {
+    if (!moduleReady) return [];
+    return [
     ...systemColumns<PermissionRow>(),
     { key: 'code', label: t('grid.columns.code'), render: row => <code className="text-xs font-semibold">{row.code}</code> },
     { key: 'name', label: t('grid.columns.name'), render: row => row.name },
@@ -67,13 +69,22 @@ export function PermissionsPage() {
         </div>
       ),
     },
-  ], [t]);
+  ];
+  }, [moduleReady, t]);
 
   const flagRows: { key: 'isActive' | 'availableOnWeb' | 'availableOnMobile'; label: string }[] = [
     { key: 'isActive', label: t('dialog.activeLabel') },
     { key: 'availableOnWeb', label: t('dialog.webLabel') },
     { key: 'availableOnMobile', label: t('dialog.mobileLabel') },
   ];
+
+  if (!moduleReady) {
+    return (
+      <section className="grid min-h-[50vh] place-items-center">
+        <Loader2 className="size-7 animate-spin text-[var(--wms-brand-primary)]" />
+      </section>
+    );
+  }
 
   return <>
     <AdvancedDataGrid pageKey="system-permissions-v2" title={t('grid.title')} description={t('grid.description')} columns={columns} fetchPage={systemApi.permissions} toolbarAction={{ label: t('grid.createAction'), run: openCreate }} />

@@ -15,5 +15,21 @@
   "reopen": "Réouvrir",
   "addUnit": "Boîte ouverte/palette",
   "pack": "Ajouter un article",
-  "actions": "Actions"
+  "actions": "Actions",
+  "columns": {
+    "packingNo": "N° d'emballage",
+    "sourceType": "Type de source",
+    "sourceDocumentNo": "Document source",
+    "customerCode": "Client",
+    "status": "Statut",
+    "handlingUnitCount": "Colis / Palettes",
+    "totalQuantity": "Quantité",
+    "totalGrossWeight": "Brut",
+    "openedAtUtc": "Ouvert le"
+  },
+  "sourceTypes": {
+    "warehouseOutbound": "Sortie d'entrepôt",
+    "shipment": "Expédition",
+    "warehouseTransfer": "Transfert inter-entrepôts"
+  }
 }

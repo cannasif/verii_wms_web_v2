@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Eye, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -13,22 +13,27 @@ import { auditLogsApi } from '../api/audit-logs.api';
 import type { AuditLogDetail, AuditLogRow } from '../types/audit-log.types';
 
 export function AuditLogsPage() {
-  const { t } = useModuleTranslation('audit-logs');
+  const { t, moduleReady } = useModuleTranslation('audit-logs');
   const { t: tc } = useTranslation('common');
   const [detail, setDetail] = useState<AuditLogDetail | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const performedByLabel = (row: { performedByUserEmail?: string | null; performedByUserId?: number | string | null }) =>
-    row.performedByUserEmail || (row.performedByUserId ? t('userHash', { id: row.performedByUserId }) : t('system'));
+  const performedByLabel = useCallback(
+    (row: { performedByUserEmail?: string | null; performedByUserId?: number | string | null }) =>
+      row.performedByUserEmail || (row.performedByUserId ? t('userHash', { id: row.performedByUserId }) : t('system')),
+    [t],
+  );
 
-  const openDetail = async (row: AuditLogRow) => {
+  const openDetail = useCallback(async (row: AuditLogRow) => {
     setLoading(true);
     try { setDetail(await auditLogsApi.getById(row.id)); }
     catch (error) { toast.error(error instanceof Error ? error.message : t('toast.detailFetchFailed')); }
     finally { setLoading(false); }
-  };
+  }, [t]);
 
-  const columns = useMemo<GridColumn<AuditLogRow>[]>(() => [
+  const columns = useMemo<GridColumn<AuditLogRow>[]>(() => {
+    if (!moduleReady) return [];
+    return [
     { key: 'id', label: t('columns.id'), hideable: false, render: (row) => <span className="font-mono text-xs font-semibold">#{row.id}</span> },
     { key: 'createdBy', label: t('columns.createdBy'), sortable: false, filterable: false, render: (row) => performedByLabel(row) },
     { key: 'updatedBy', label: t('columns.updatedBy'), sortable: false, filterable: false, render: () => '-' },
@@ -59,7 +64,16 @@ export function AuditLogsPage() {
         </div>
       ),
     },
-  ], [t]);
+  ];
+  }, [moduleReady, openDetail, performedByLabel, t]);
+
+  if (!moduleReady) {
+    return (
+      <section className="grid min-h-[50vh] place-items-center">
+        <Loader2 className="size-7 animate-spin text-[var(--wms-brand-primary)]" />
+      </section>
+    );
+  }
 
   return <>
     <AdvancedDataGrid pageKey="audit-logs" title={t('page.title')} description={t('page.description')} columns={columns} fetchPage={auditLogsApi.getPaged}/>
