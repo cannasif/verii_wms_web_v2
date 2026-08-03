@@ -10,6 +10,7 @@ import {
   Save,
   ShieldCheck,
   SlidersHorizontal,
+  Images,
   Tag,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -34,10 +35,11 @@ import {
   type UpdateStockTrackingSettingsInput,
 } from '@/features/stock-tracking/api/stock-tracking.api';
 import type { StockMirror } from '../types/erp-mirror.types';
+import { StockImageManager } from './StockImageManager';
 
 interface Props {
   stock: StockMirror | null;
-  initialTab?: 'details' | 'tracking';
+  initialTab?: 'details' | 'tracking' | 'images';
   onClose: () => void;
 }
 
@@ -96,7 +98,7 @@ export function StockTrackingSettingsDialog({ stock, initialTab = 'details', onC
   const queryClient = useQueryClient();
   const { can, isLoading: permissionsLoading } = usePermissionAccess();
   const canViewTracking = can('WMS.SERIAL_RULES.VIEW');
-  const [activeTab, setActiveTab] = useState<'details' | 'tracking'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'details' | 'tracking' | 'images'>(initialTab);
   const [form, setForm] = useState<UpdateStockTrackingSettingsInput>(() => emptyForm(stock?.branchCode ?? '0'));
   const queryKey = useMemo(
     () => ['stock-tracking-settings', stock?.branchCode, stock?.id],
@@ -109,7 +111,7 @@ export function StockTrackingSettingsDialog({ stock, initialTab = 'details', onC
   });
 
   useEffect(() => {
-    setActiveTab(initialTab === 'tracking' && canViewTracking ? 'tracking' : 'details');
+    setActiveTab(initialTab === 'tracking' && canViewTracking ? 'tracking' : initialTab === 'images' ? 'images' : 'details');
   }, [canViewTracking, initialTab, stock?.id]);
 
   useEffect(() => {
@@ -239,15 +241,19 @@ export function StockTrackingSettingsDialog({ stock, initialTab = 'details', onC
 
         <Tabs
           value={activeTab}
-          onValueChange={value => setActiveTab(value as 'details' | 'tracking')}
+          onValueChange={value => setActiveTab(value as 'details' | 'tracking' | 'images')}
           className="flex min-h-0 flex-1 flex-col gap-0"
         >
           <div className="w-full shrink-0 border-b border-[var(--wms-app-border)] bg-[color-mix(in_oklab,var(--wms-ops-card-bg)_70%,transparent)]">
             <TabsList
               className={cn(
                 'wms-ops-tabs wms-ops-stock-card-tabs',
-                canViewTracking ? 'wms-ops-stock-card-tabs--dual' : 'wms-ops-stock-card-tabs--single',
-                canViewTracking && activeTab === 'tracking' ? 'wms-ops-tabs--stock' : '',
+                canViewTracking ? 'wms-ops-stock-card-tabs--triple' : 'wms-ops-stock-card-tabs--dual',
+                activeTab === 'tracking'
+                  ? 'wms-ops-tabs--stock'
+                  : activeTab === 'images'
+                    ? canViewTracking ? 'wms-ops-tabs--images' : 'wms-ops-tabs--stock'
+                    : '',
               )}
             >
               {canViewTracking ? <span className="wms-ops-tab-indicator" aria-hidden /> : null}
@@ -261,6 +267,10 @@ export function StockTrackingSettingsDialog({ stock, initialTab = 'details', onC
                   {t('erpMirror.trackingSettings')}
                 </TabsTrigger>
               ) : null}
+              <TabsTrigger value="images" className="wms-ops-tab gap-2">
+                <Images className="size-3.5" aria-hidden />
+                Görseller
+              </TabsTrigger>
             </TabsList>
           </div>
 
@@ -473,6 +483,9 @@ export function StockTrackingSettingsDialog({ stock, initialTab = 'details', onC
                 )}
               </TabsContent>
             ) : null}
+            <TabsContent value="images" className="m-0 outline-none">
+              {stock ? <StockImageManager stockId={stock.id} stockName={stock.stockName} canManage={can('ERP.MIRROR.SYNC')} /> : null}
+            </TabsContent>
           </OpsDialogBody>
         </Tabs>
 

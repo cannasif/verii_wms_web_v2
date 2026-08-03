@@ -1312,6 +1312,10 @@ html[dir='rtl'] .app-navbar-panel::after {
   grid-template-columns: 1fr !important;
 }
 
+.wms-ops-form [data-slot="tabs-list"].wms-ops-stock-card-tabs--triple {
+  grid-template-columns: 1fr 1fr 1fr !important;
+}
+
 .wms-ops-form [data-slot="tabs-list"].wms-ops-stock-card-tabs .wms-ops-tab-indicator {
   top: 0;
   right: auto;
@@ -1327,8 +1331,16 @@ html[dir='rtl'] .app-navbar-panel::after {
   );
 }
 
+.wms-ops-form [data-slot="tabs-list"].wms-ops-stock-card-tabs--triple .wms-ops-tab-indicator {
+  width: 33.333333%;
+}
+
 .wms-ops-form [data-slot="tabs-list"].wms-ops-stock-card-tabs.wms-ops-tabs--stock .wms-ops-tab-indicator {
   transform: translateX(100%);
+}
+
+.wms-ops-form [data-slot="tabs-list"].wms-ops-stock-card-tabs.wms-ops-tabs--images .wms-ops-tab-indicator {
+  transform: translateX(200%);
 }
 
 .wms-ops-form [data-slot="tabs-list"].wms-ops-stock-card-tabs [data-slot="tabs-trigger"].wms-ops-tab {
