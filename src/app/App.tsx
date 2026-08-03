@@ -94,6 +94,7 @@ const ProductionTransferDraftPage = lazy(() => loadProductionTransferPages().the
 const ProductionTransferListPage = lazy(() => loadProductionTransferPages().then((m) => ({ default: m.ProductionTransferListPage })));
 const ProductionTransferPolicyPage = lazy(() => loadProductionTransferPages().then((m) => ({ default: m.ProductionTransferPolicyPage })));
 const ProductionTransferOperationPage = lazy(() => loadProductionTransferPages().then((m) => ({ default: m.ProductionTransferOperationPage })));
+const ProductionTransferTaskPoolPage = lazy(() => loadProductionTransferPages().then((m) => ({ default: m.ProductionTransferTaskPoolPage })));
 const ProductionHubPage = lazy(() => loadProductionPages().then((m) => ({ default: m.ProductionHubPage })));
 const ProductionCreatePage = lazy(() => loadProductionPages().then((m) => ({ default: m.ProductionCreatePage })));
 const ProductionListPage = lazy(() => loadProductionPages().then((m) => ({ default: m.ProductionListPage })));
@@ -198,6 +199,7 @@ export function App(): ReactElement {
           <Route path="warehouse/production-transfers" element={<ProductionTransferHubPage />} />
           <Route path="warehouse/production-transfers/new" element={<ProductionTransferDraftPage />} />
           <Route path="warehouse/production-transfers/list" element={<ProductionTransferListPage />} />
+          <Route path="warehouse/production-transfers/task-pool" element={<ProductionTransferTaskPoolPage />} />
           <Route path="warehouse/production-transfers/:id/operations" element={<ProductionTransferOperationPage />} />
           <Route path="warehouse/production-transfers/settings" element={<ProductionTransferPolicyPage />} />
           <Route path="warehouse/subcontracting-transfers" element={<SubcontractingTransferHubPage />} />
