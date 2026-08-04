@@ -1046,8 +1046,8 @@ export function AdvancedDataGrid<T extends { id: number }>({
       ) : undefined}
     >
       <div className="wms-ops-data-grid min-w-0 space-y-0">
-      <div className="wms-ops-data-grid-toolbar flex flex-wrap items-center justify-between gap-2">
-        <div className="wms-ops-data-grid-toolbar__start flex min-w-0 flex-wrap items-center gap-2">
+      <div className="wms-ops-data-grid-toolbar flex flex-wrap items-start justify-between gap-2">
+        <div className="wms-ops-data-grid-toolbar__start flex min-w-0 flex-wrap items-start gap-2">
           {toolbarStartExtra}
           {!hideSearch ? (
             <div className="wms-ops-grid-search wms-ops-grid-search--tokens" data-no-auto-localize="true">
@@ -1270,8 +1270,8 @@ export function AdvancedDataGrid<T extends { id: number }>({
                         ariaLabel={t('dataGrid.filterMatchType')}
                         portalContainer={null}
                         matchTriggerWidth={false}
-                        contentClassName="z-[5000] min-w-[16rem] w-max max-w-[min(22rem,calc(100vw-1.5rem))]"
-                        className="wms-ops-list-field-trigger h-8 min-w-[14rem] rounded-none shadow-none sm:w-auto"
+                        contentClassName="z-[5000] min-w-[18rem] w-max max-w-[min(24rem,calc(100vw-1.5rem))]"
+                        className="wms-ops-list-field-trigger h-8 min-w-[16rem] rounded-none shadow-none sm:w-auto"
                       />
                     </div>
 
