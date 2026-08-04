@@ -508,21 +508,44 @@ export function navigateToErrorTarget(message: string): boolean {
   return true;
 }
 
+export type ToastErrorOptions = NonNullable<Parameters<typeof toast.error>[1]> & {
+  skipErrorNavigation?: boolean;
+};
+
+/** Typed wrapper so callers can pass `skipErrorNavigation` without fighting sonner's ExternalToast. */
+export function toastError(
+  message: Parameters<typeof toast.error>[0],
+  data?: ToastErrorOptions,
+): ReturnType<typeof toast.error> {
+  return toast.error(message, data as Parameters<typeof toast.error>[1]);
+}
+
 export function installGlobalToastErrorNavigation(): void {
   if (installed || typeof window === 'undefined') return;
   installed = true;
 
   const originalError = toast.error.bind(toast);
 
-  toast.error = ((message: Parameters<typeof toast.error>[0], data?: Parameters<typeof toast.error>[1]) => {
-    const id = originalError(message, data);
+  toast.error = ((message: Parameters<typeof toast.error>[0], data?: Parameters<typeof toast.error>[1] & {
+    skipErrorNavigation?: boolean;
+  }) => {
     const text = messageToText(message);
+    // Same message replaces the existing toast instead of stacking a twin
+    // (e.g. input blur + confirm both validating the same serial mask).
+    const { skipErrorNavigation, ...rest } = data ?? {};
+    const options =
+      rest.id != null || !text
+        ? rest
+        : { ...rest, id: `wms-error:${text}` };
+    const id = originalError(message, options);
 
-    window.requestAnimationFrame(() => {
-      window.setTimeout(() => {
-        navigateToErrorTarget(text);
-      }, 40);
-    });
+    if (!skipErrorNavigation) {
+      window.requestAnimationFrame(() => {
+        window.setTimeout(() => {
+          navigateToErrorTarget(text);
+        }, 40);
+      });
+    }
 
     return id;
   }) as typeof toast.error;
