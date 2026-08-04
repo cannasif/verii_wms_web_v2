@@ -1,10 +1,13 @@
-import {useMemo,useRef,useState} from 'react';
+import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import {useQuery,useQueryClient} from '@tanstack/react-query';
+import {Link} from 'react-router-dom';
 import {useTranslation} from 'react-i18next';
-import {ArrowRight,CheckCircle2,ChevronLeft,ChevronRight,FileText,Layers3,Loader2,Printer,Search} from 'lucide-react';
+import {ArrowRight,CheckCircle2,ExternalLink,FileText,Layers3,Loader2,Printer,Search} from 'lucide-react';
 import {toast} from 'sonner';
 import {AppDateInput} from '@/components/shared/AppInput';
 import {PagedAppDropdown} from '@/components/shared/PagedAppDropdown';
+import {OperationDraftRestoreDialog} from '@/features/operation-drafts/OperationDraftRestoreDialog';
+import {useOperationDraft} from '@/features/operation-drafts/useOperationDraft';
 import {goodsReceiptV2Api} from '@/features/goods-receipt-v2/api/goods-receipt.api';
 import {locationsApi} from '@/features/locations/api/locations.api';
 import {printReceiptLabels} from '@/features/goods-receipt-v2/utils/goods-receipt-label-output';
@@ -14,12 +17,31 @@ import {formatProjectDateTime,formatProjectNumber} from '@/lib/project-format';
 import {useAuthStore} from '@/stores/auth-store';
 import {StockIdentityCell} from '@/components/shared/StockIdentityCell';
 import {steelReceiptApi} from '../api/steel-receipt.api';
-import type {ConvertResult,SteelLineRow,SteelPendingReceiptSource,SteelReceiptSource} from '../types/steel-receipt.types';
+import type {ConvertResult,SteelLineRow,SteelPendingPlacementSource,SteelPendingReceiptSource,SteelReceiptSource} from '../types/steel-receipt.types';
+import {
+  fetchPlacementImportSourcesPage,
+  filterPlacementLinesBySearch,
+  loadPlacementSource,
+} from '../utils/steel-receipt-placement';
+import {
+  hasPendingPlacementLines,
+  hasSteelReceiptPlacementDraft,
+  isPlacementSourceStillPending,
+  restoreSelectedLine,
+  type LoadPlacementSourceOptions,
+  type SteelReceiptPlacementDraft,
+} from '../utils/steel-receipt-placement-draft';
+import {
+  hasPendingReceiptLines,
+  hasSteelReceiptReceiptDraft,
+  isReceiptSourceStillPending,
+  restoreSelectedLines,
+  type LoadReceiptSourceOptions,
+  type SteelReceiptReceiptDraft,
+} from '../utils/steel-receipt-receipt-draft';
 import {SteelProcessHeader} from './SteelProcessHeader';
 
 const O='steelGoodReceiptAcceptance.operations';
-const pageSize=20;
-const request=(page:number,search:string)=>({pageNumber:page,pageSize,search:search||null,filterLogic:'and' as const,filters:[],sortBy:'id',sortDirection:'desc' as const});
 const today=()=>new Date().toLocaleDateString('en-CA');
 export function SteelReceiptOperationsPage({initialTab='receipt'}:{initialTab?:'receipt'|'placement'}){
   const {t}=useTranslation('common');
@@ -34,6 +56,7 @@ function ReceiptPanel(){
   const {t}=useTranslation('common');
   const R=`${O}.receipt`;
   const branchCode=useAuthStore(state=>state.branch?.code??'0');
+  const userId=useAuthStore(state=>state.user?.id);
   const [reference,setReference]=useState('');
   const [selectedSourceReference,setSelectedSourceReference]=useState<string|null>(null);
   const [source,setSource]=useState<SteelReceiptSource|null>(null);
@@ -45,7 +68,11 @@ function ReceiptPanel(){
   const [lastResult,setLastResult]=useState<ConvertResult|null>(null);
   const [printing,setPrinting]=useState(false);
   const [busy,setBusy]=useState(false);
+  const [restoring,setRestoring]=useState(false);
+  const [restoreDialogOpen,setRestoreDialogOpen]=useState(false);
   const idempotencyKey=useRef(crypto.randomUUID());
+  const clearDraftRef=useRef<() => Promise<void>>(async()=>{});
+  const loadSourceRef=useRef<(value?:string,options?:LoadReceiptSourceOptions)=>Promise<SteelReceiptSource|null>>(async()=>null);
   const selectedRows=Object.values(selected);
   const total=selectedRows.reduce((sum,row)=>sum+row.approvedQuantity,0);
   const receiptNoValid=isValidGoodsReceiptDocumentNo(receiptNo);
@@ -64,6 +91,12 @@ function ReceiptPanel(){
     if(row.approvedQuantity<=0)return t(`${R}.noApprovedQty`);
     return t(`${R}.readyForDirectReceipt`);
   };
+  const eligibilityBadgeClass=(row:SteelLineRow)=>{
+    if(eligible(row))return 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600';
+    if(row.conversionStatus!=='NotCreated'&&(row.erpIntegrationStatus==='Failed'||row.erpIntegrationStatus==='Cancelled'))
+      return 'border-red-500/30 bg-red-500/10 text-red-600';
+    return 'border-amber-500/30 bg-amber-500/10 text-amber-600';
+  };
   const pendingDescription=(pending:number,total:number,waybillNo?:string|null)=>
     t(`${R}.pendingOptionDescription`,{
       waybillPrefix:waybillNo?.trim()?t(`${R}.waybillPrefix`,{no:waybillNo.trim()}):'',
@@ -75,22 +108,94 @@ function ReceiptPanel(){
     if(current[row.id]){const next={...current};delete next[row.id];return next}
     return {...current,[row.id]:row};
   });
-  const loadSource=async(value=reference,preserveResult=false)=>{
+  const loadSource=async(value=reference,options:LoadReceiptSourceOptions={}):Promise<SteelReceiptSource|null>=>{
     const normalized=value.trim();
-    if(!normalized){toast.error(t(`${R}.referenceRequired`));return}
-    setBusy(true);if(!preserveResult)setLastResult(null);
+    if(!normalized){
+      if(!options.silent)toast.error(t(`${R}.referenceRequired`));
+      return null;
+    }
+    setBusy(true);
+    if(!options.preserveResult)setLastResult(null);
     try{
       const result=await steelReceiptApi.receiptSource(normalized);
-      setSource(result);setSelectedSourceReference(result.importReferenceNo);setSelected({});
-      const sourceReceipt=(result.waybillNo??'').trim();
-      setReceiptNo(completeGoodsReceiptDocumentNo(sourceReceipt));
-      setDocumentDate(result.waybillDate?.slice(0,10)||today());
-      toast.success(t(`${R}.sourceLoaded`,{reference:result.importReferenceNo}));
+      setSource(result);
+      setSelectedSourceReference(result.importReferenceNo);
+      setReference(result.importReferenceNo);
+      setSelected(options.restoreSelectedIds?.length
+        ?restoreSelectedLines(result.lines,options.restoreSelectedIds,eligible)
+        :{});
+      if(!options.keepWaybillFields){
+        const sourceReceipt=(result.waybillNo??'').trim();
+        setReceiptNo(completeGoodsReceiptDocumentNo(sourceReceipt));
+        setDocumentDate(result.waybillDate?.slice(0,10)||today());
+      }
+      if(!hasPendingReceiptLines(result))void clearDraftRef.current();
+      if(!options.silent)toast.success(t(`${R}.sourceLoaded`,{reference:result.importReferenceNo}));
+      return result;
     }catch(error){
-      setSource(null);setSelectedSourceReference(null);setSelected({});setReceiptNo('');
-      toast.error(error instanceof Error?error.message:t(`${R}.sourceLoadFailed`));
+      setSource(null);
+      setSelectedSourceReference(null);
+      setSelected({});
+      if(!options.keepWaybillFields)setReceiptNo('');
+      if(options.silent)void clearDraftRef.current();
+      if(!options.silent)toast.error(error instanceof Error?error.message:t(`${R}.sourceLoadFailed`));
+      return null;
     }finally{setBusy(false)}
   };
+  loadSourceRef.current=loadSource;
+  const restoreDraftPayload=useCallback((draft:SteelReceiptReceiptDraft)=>{
+    setRestoring(true);
+    setReference(draft.reference);
+    setSelectedSourceReference(draft.importReferenceNo);
+    setNote(draft.note);
+    setIsElectronic(draft.isElectronic);
+    setReceiptNo(draft.receiptNo);
+    setDocumentDate(draft.documentDate);
+    void loadSourceRef.current(draft.importReferenceNo,{
+      silent:true,
+      preserveResult:true,
+      restoreSelectedIds:draft.selectedLineIds,
+      keepWaybillFields:true,
+    }).finally(()=>setRestoring(false));
+  },[]);
+  const draftPayload=useMemo<SteelReceiptReceiptDraft>(()=>({
+    importReferenceNo:source?.importReferenceNo??selectedSourceReference??'',
+    reference,
+    selectedLineIds:Object.keys(selected).map(Number),
+    note,
+    isElectronic,
+    receiptNo,
+    documentDate,
+  }),[documentDate,isElectronic,note,receiptNo,reference,selected,selectedSourceReference,source?.importReferenceNo]);
+  const operationDraft=useOperationDraft({
+    operationType:'steel-receipt-direct',
+    userId,
+    branchCode,
+    payload:draftPayload,
+    isMeaningful:hasSteelReceiptReceiptDraft,
+    onRestore:restoreDraftPayload,
+    enabled:!busy&&!lastResult&&!restoring,
+  });
+  const {pendingDraft,discardDraft,clearDraft,restoreDraft}=operationDraft;
+  clearDraftRef.current=clearDraft;
+  useEffect(()=>{
+    if(!pendingDraft||!operationDraft.restoreDialogOpen){
+      setRestoreDialogOpen(false);
+      return;
+    }
+    let active=true;
+    void (async()=>{
+      const stillPending=await isReceiptSourceStillPending(branchCode,pendingDraft.payload.importReferenceNo);
+      if(!active)return;
+      if(!stillPending){
+        await discardDraft();
+        setRestoreDialogOpen(false);
+        return;
+      }
+      setRestoreDialogOpen(true);
+    })();
+    return ()=>{active=false};
+  },[branchCode,discardDraft,operationDraft.restoreDialogOpen,pendingDraft]);
   const convert=async()=>{
     if(!selectedRows.length||!source)return;
     if(!receiptNoValid||!documentDate){toast.error(isElectronic?t(`${R}.waybillValidationElectronic`):t(`${R}.waybillValidationPaper`));return}
@@ -104,7 +209,8 @@ function ReceiptPanel(){
       toast.success(t(`${R}.convertSuccess`,{documentNo:result.documentNo,count:result.convertedLineCount}));
       setLastResult(result);idempotencyKey.current=crypto.randomUUID();
       setSelected({});setNote('');
-      await loadSource(source.importReferenceNo,true);
+      const refreshed=await loadSource(source.importReferenceNo,{preserveResult:true,silent:true});
+      if(refreshed&&!hasPendingReceiptLines(refreshed))void clearDraft();
     }catch(e){toast.error(e instanceof Error?e.message:t(`${R}.convertFailed`))}finally{setBusy(false)}
   };
   const printLabels=async()=>{
@@ -127,6 +233,20 @@ function ReceiptPanel(){
     [source?.lines],
   );
   return <div className="space-y-5">
+    <OperationDraftRestoreDialog
+      open={restoreDialogOpen&&Boolean(pendingDraft)}
+      operationName={t('operationNames.steelReceiptDirect')}
+      updatedAt={pendingDraft?.updatedAt}
+      onRestore={()=>{
+        restoreDraft();
+        setRestoreDialogOpen(false);
+      }}
+      onDiscard={async()=>{
+        await discardDraft();
+        setRestoreDialogOpen(false);
+      }}
+    />
+    {(busy||restoring)&&!source&&<div className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5 text-sm text-slate-500"><Loader2 className="mr-2 inline size-4 animate-spin"/>{t(`${R}.restoringDraft`)}</div>}
     <section className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5">
       <SectionHead title={t(`${R}.sourceTitle`)} text={t(`${R}.sourceText`)}/>
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
@@ -180,17 +300,28 @@ function ReceiptPanel(){
           <div><h2 className="font-black">{t(`${R}.linkedSheetsTitle`)}</h2><p className="text-xs text-slate-500">{t(`${R}.linkedSheetsSummary`,{total:source.lines.length,ready:selectable.length})}</p></div>
           <label className="flex items-center gap-2 text-sm font-bold"><input type="checkbox" checked={allSelectableSelected} disabled={!selectable.length} onChange={()=>setSelected(allSelectableSelected?{}:Object.fromEntries(selectable.map(row=>[row.id,row])))} className="size-4 accent-cyan-500"/>{t(`${R}.selectAllEligible`)}</label>
         </div>
-        <div className="overflow-x-auto"><table className="w-full min-w-[1180px] text-left text-sm">
-          <thead className="bg-black/[.03] text-xs uppercase text-slate-500 dark:bg-white/[.03]"><tr><th className="p-3">{t(`${R}.select`)}</th><th className="p-3">{t(`${R}.dCodeSerial`)}</th><th className="p-3">{t(`${R}.stock`)}</th><th className="p-3">{t(`${R}.expectedQty`)}</th><th className="p-3">{t(`${R}.approvedQty`)}</th><th className="p-3">{t(`${R}.approvalErpStatus`)}</th><th className="p-3">{t(`${R}.conversionDate`)}</th><th className="p-3">{t(`${R}.waybillNo`)}</th></tr></thead>
-          <tbody>{source.lines.map(row=>{const canSelect=eligible(row);return <tr key={row.id} className={`border-t ${selected[row.id]?'bg-cyan-500/10':!canSelect?'opacity-65':''}`}>
+        <div className="overflow-x-auto"><table className="w-full min-w-[1280px] text-left text-sm">
+          <thead className="bg-black/[.03] text-xs uppercase text-slate-500 dark:bg-white/[.03]"><tr><th className="p-3">{t(`${R}.select`)}</th><th className="p-3">{t(`${R}.dCodeSerial`)}</th><th className="p-3">{t(`${R}.stock`)}</th><th className="p-3">{t(`${R}.expectedQty`)}</th><th className="p-3">{t(`${R}.approvedQty`)}</th><th className="p-3">{t(`${R}.approvalErpStatus`)}</th><th className="p-3">{t(`${R}.conversionDate`)}</th><th className="p-3">{t(`${R}.waybillNo`)}</th><th className="p-3">{t('actions')}</th></tr></thead>
+          <tbody>{source.lines.map(row=>{const canSelect=eligible(row);const hasGoodsReceipt=row.conversionStatus!=='NotCreated'&&!!row.goodsReceiptId;return <tr key={row.id} className={`border-t ${selected[row.id]?'bg-cyan-500/10':!canSelect?'opacity-65':''}`}>
             <td className="p-3"><input type="checkbox" checked={Boolean(selected[row.id])} disabled={!canSelect} onChange={()=>toggle(row)} className="size-4 accent-cyan-500" aria-label={t(`${R}.selectRowAria`,{dCode:row.dCode})}/></td>
             <td className="p-3"><strong className="font-mono text-cyan-500">{row.dCode}</strong><small className="block text-slate-500">{row.supplierSerialNo}</small></td>
             <td className="p-3"><StockIdentityCell stockCode={row.stockCode} stockName={row.stockName} branchCode={branchCode} nameClassName="block text-slate-500" /></td>
             <td className="p-3 font-mono">{formatProjectNumber(row.expectedQuantity)} {row.unitCode}</td>
             <td className="p-3 font-mono font-bold">{formatProjectNumber(row.approvedQuantity)} {row.unitCode}</td>
-            <td className="p-3"><span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-bold ${canSelect?'border-emerald-500/30 bg-emerald-500/10 text-emerald-600':'border-amber-500/30 bg-amber-500/10 text-amber-600'}`}>{eligibilityText(row)}</span></td>
+            <td className="p-3"><span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-bold ${eligibilityBadgeClass(row)}`}>{eligibilityText(row)}</span></td>
             <td className="p-3 whitespace-nowrap">{row.convertedAtUtc?formatProjectDateTime(row.convertedAtUtc):'—'}</td>
             <td className="p-3 font-mono">{row.conversionWaybillNo||'—'}</td>
+            <td className="p-3 whitespace-nowrap">{hasGoodsReceipt
+              ?<Link
+                to="/warehouse/goods-receipts/list"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-cyan-500/30 px-2.5 py-1.5 text-xs font-bold text-cyan-600 transition hover:bg-cyan-500/10"
+                title={t(`${R}.openGoodsReceiptListAria`,{documentNo:row.goodsReceiptNo??row.goodsReceiptId})}
+              >
+                <ExternalLink className="size-3.5 shrink-0"/>
+                {t(`${R}.openGoodsReceiptList`)}
+              </Link>
+              :'—'}
+            </td>
           </tr>})}</tbody>
         </table></div>
       </section>
@@ -246,9 +377,123 @@ function resolveReceivingLocationLabel(row:SteelLineRow):string|null{
 function PlacementPanel(){
   const {t}=useTranslation('common');
   const P=`${O}.placement`;
-  const cache=useQueryClient();const [page,setPage]=useState(1);const [input,setInput]=useState('');const [search,setSearch]=useState('');const [selected,setSelected]=useState<SteelLineRow|null>(null);
-  const [location,setLocation]=useState<string|null>(null);const [busy,setBusy]=useState(false);
-  const query=useQuery({queryKey:['steel-placement-candidates',page,search],queryFn:()=>steelReceiptApi.placementCandidatesPaged(request(page,search))});
+  const R=`${O}.receipt`;
+  const branchCode=useAuthStore(state=>state.branch?.code??'0');
+  const userId=useAuthStore(state=>state.user?.id);
+  const cache=useQueryClient();
+  const [reference,setReference]=useState('');
+  const [selectedSourceReference,setSelectedSourceReference]=useState<string|null>(null);
+  const [source,setSource]=useState<SteelReceiptSource|null>(null);
+  const [pendingLines,setPendingLines]=useState<SteelLineRow[]>([]);
+  const [input,setInput]=useState('');
+  const [search,setSearch]=useState('');
+  const [selected,setSelected]=useState<SteelLineRow|null>(null);
+  const [location,setLocation]=useState<string|null>(null);
+  const [busy,setBusy]=useState(false);
+  const [restoring,setRestoring]=useState(false);
+  const [restoreDialogOpen,setRestoreDialogOpen]=useState(false);
+  const clearDraftRef=useRef<() => Promise<void>>(async()=>{});
+  const loadSourceRef=useRef<(value?:string,options?:LoadPlacementSourceOptions)=>Promise<boolean>>(async()=>false);
+  const importOptionDescription=(pendingLineCount:number,supplierCode?:string)=>
+    t(`${P}.importOptionDescription`,{
+      total:pendingLineCount,
+      supplier:supplierCode?.trim()||'—',
+    });
+  const loadSource=async(value=reference,options:LoadPlacementSourceOptions={}):Promise<boolean>=>{
+    const normalized=value.trim();
+    if(!normalized){
+      if(!options.silent)toast.error(t(`${R}.referenceRequired`));
+      return false;
+    }
+    setBusy(true);
+    try{
+      const result=await loadPlacementSource(normalized);
+      setSource(result.source);
+      setPendingLines(result.pendingLines);
+      setSelectedSourceReference(result.source.importReferenceNo);
+      setReference(result.source.importReferenceNo);
+      const restoredLine=options.restoreSelectedLineId!=null
+        ?restoreSelectedLine(result.pendingLines,options.restoreSelectedLineId)
+        :null;
+      setSelected(current=>{
+        if(options.restoreSelectedLineId!=null)return restoredLine;
+        return current&&result.pendingLines.some(line=>line.id===current.id)?current:null;
+      });
+      if(options.restoreSelectedLineId!=null){
+        setLocation(restoredLine&&options.restoreLocationId?options.restoreLocationId:null);
+      }
+      if(options.restoreSearch!=null){
+        setSearch(options.restoreSearch);
+        setInput(options.restoreSearch);
+      }
+      if(!hasPendingPlacementLines(result.pendingLines))void clearDraftRef.current();
+      if(!options.silent)toast.success(t(`${R}.sourceLoaded`,{reference:result.source.importReferenceNo}));
+      return true;
+    }catch(error){
+      setSource(null);
+      setPendingLines([]);
+      setSelectedSourceReference(null);
+      setSelected(null);
+      setLocation(null);
+      if(options.silent)void clearDraftRef.current();
+      if(!options.silent)toast.error(error instanceof Error?error.message:t(`${R}.sourceLoadFailed`));
+      return false;
+    }finally{setBusy(false)}
+  };
+  loadSourceRef.current=loadSource;
+  const restoreDraftPayload=useCallback((draft:SteelReceiptPlacementDraft)=>{
+    setRestoring(true);
+    setReference(draft.reference);
+    setSelectedSourceReference(draft.importReferenceNo);
+    setInput(draft.search);
+    setSearch(draft.search);
+    void loadSourceRef.current(draft.importReferenceNo,{
+      silent:true,
+      restoreSelectedLineId:draft.selectedLineId,
+      restoreLocationId:draft.locationId,
+      restoreSearch:draft.search,
+    }).finally(()=>setRestoring(false));
+  },[]);
+  const draftPayload=useMemo<SteelReceiptPlacementDraft>(()=>({
+    importReferenceNo:source?.importReferenceNo??selectedSourceReference??'',
+    reference,
+    selectedLineId:selected?.id??null,
+    locationId:location,
+    search,
+  }),[location,reference,search,selected,selectedSourceReference,source?.importReferenceNo]);
+  const operationDraft=useOperationDraft({
+    operationType:'steel-receipt-placement',
+    userId,
+    branchCode,
+    payload:draftPayload,
+    isMeaningful:hasSteelReceiptPlacementDraft,
+    onRestore:restoreDraftPayload,
+    enabled:!busy&&!restoring,
+  });
+  const {pendingDraft,discardDraft,clearDraft,restoreDraft}=operationDraft;
+  clearDraftRef.current=clearDraft;
+  useEffect(()=>{
+    if(!pendingDraft||!operationDraft.restoreDialogOpen){
+      setRestoreDialogOpen(false);
+      return;
+    }
+    let active=true;
+    void (async()=>{
+      const stillPending=await isPlacementSourceStillPending(pendingDraft.payload.importReferenceNo);
+      if(!active)return;
+      if(!stillPending){
+        await discardDraft();
+        setRestoreDialogOpen(false);
+        return;
+      }
+      setRestoreDialogOpen(true);
+    })();
+    return ()=>{active=false};
+  },[discardDraft,operationDraft.restoreDialogOpen,pendingDraft]);
+  const visibleLines=useMemo(
+    ()=>filterPlacementLinesBySearch(pendingLines,search),
+    [pendingLines,search],
+  );
   const selectedWarehouseId=selected?resolveTargetWarehouseId(selected):0;
   const lineFallback=useQuery({
     queryKey:['steel-placement-line-warehouse',selected?.id],
@@ -271,23 +516,115 @@ function PlacementPanel(){
     ??(sourceLocation.data?`${sourceLocation.data.code} · ${sourceLocation.data.name}${sourceLocation.data.locationType?` (${sourceLocation.data.locationType})`:''}`:null);
   const occupancy=useQuery({queryKey:['steel-occupancy',location],queryFn:()=>steelReceiptApi.occupancy(Number(location)),enabled:!!location});
   const nextStack=useMemo(()=>{const items=occupancy.data??[];return Math.max(items.length,...items.map(x=>x.stackOrderNo??0))+1},[occupancy.data]);
+  const fetchTargetLocations=useCallback(async(request:Parameters<typeof goodsReceiptV2Api.locations>[0])=>{
+    const page=await goodsReceiptV2Api.locations(request,targetWarehouseId);
+    if(receivingLocationId<=0)return page;
+    const items=page.items.filter(item=>item.id!==receivingLocationId);
+    return {...page,items};
+  },[targetWarehouseId,receivingLocationId]);
+  useEffect(()=>{
+    if(receivingLocationId>0&&location===String(receivingLocationId))setLocation(null);
+  },[receivingLocationId,location]);
   const choose=(row:SteelLineRow)=>{setSelected(row);setLocation(null)};
-  const place=async()=>{if(!selected||!location){toast.error(t(`${P}.sheetAndShelfRequired`));return}setBusy(true);try{const result=await steelReceiptApi.place(selected.id,{locationId:Number(location),rowVersion:selected.rowVersion});toast.success(t(`${P}.placeSuccess`,{dCode:selected.dCode,order:result.stackOrderNo}));setSelected(null);setLocation(null);await cache.invalidateQueries({queryKey:['steel-placement-candidates']});await cache.invalidateQueries({queryKey:['steel-occupancy']})}catch(e){toast.error(e instanceof Error?e.message:t(`${P}.placeFailed`))}finally{setBusy(false)}};
-  return <div className="grid gap-5 xl:grid-cols-[.8fr_1.2fr]"><section className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)]"><SectionHead title={t(`${P}.pendingTitle`)} text={t(`${P}.pendingText`)}/><SearchBar value={input} setValue={setInput} run={()=>{setSearch(input.trim());setPage(1)}}/><div className="space-y-2 p-4">{(query.data?.items??[]).map(row=><button key={row.id} onClick={()=>choose(row)} className={`w-full rounded-xl border p-3 text-left ${selected?.id===row.id?'border-cyan-500 bg-cyan-500/10':''}`}><strong className="font-mono text-cyan-500">{row.dCode}</strong><span className="ml-2">{row.stockCode}</span><small className="block text-slate-500">{row.supplierSerialNo} · {formatProjectNumber(row.approvedQuantity)} {row.unitCode}</small></button>)}</div>{!query.isLoading&&!query.data?.items.length&&<Empty text={t(`${P}.empty`)}/>}<Pager page={page} totalPages={query.data?.totalPages??1} setPage={setPage}/></section>
-    <section className="space-y-4 rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5"><SectionHead title={t(`${P}.occupancyTitle`)} text={selected?`${selected.dCode} · ${selected.stockCode}${warehouseCode?` · ${t(`${P}.warehouseLabel`,{code:warehouseCode,defaultValue:`Depo ${warehouseCode}`})}`:''}`:t(`${P}.occupancyTextSelect`)}/>
-      {selected&&<>{targetWarehouseId<=0&&!lineFallback.isLoading&&<p className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-700">{t(`${P}.warehouseMissing`)}</p>}
-      <Field label={t(`${P}.sourceShelf`)}><div className="input flex min-h-11 items-center bg-black/[.03] text-sm text-slate-700 dark:bg-white/[.03] dark:text-slate-200">{sourceLocation.isLoading?t(`${P}.sourceShelfLoading`):sourceShelfText??(receivingLocationId>0?`#${receivingLocationId}`:t(`${P}.sourceShelfMissing`))}</div><p className="text-xs text-slate-500">{t(`${P}.sourceShelfHint`)}</p></Field>
-      <Field label={t(`${P}.targetShelf`)}><PagedAppDropdown key={`${selected.id}-${targetWarehouseId}`} queryKey={['steel-putaway',selected.id,targetWarehouseId]} fetchPage={r=>goodsReceiptV2Api.locations(r,targetWarehouseId)} toOption={x=>({value:String(x.id),label:`${x.code} · ${x.name}`,description:x.locationType})} value={location} onValueChange={setLocation} searchable enabled={targetWarehouseId>0} dependencies={[targetWarehouseId]} disabled={targetWarehouseId<=0||lineFallback.isLoading} placeholder={lineFallback.isLoading?t(`${P}.warehouseLoading`):t(`${P}.targetShelfPlaceholder`,{defaultValue:'Hedef raf seçin'})}/></Field>
-      {location&&<><div className="grid gap-4 lg:grid-cols-[.8fr_1.2fr]">
-        <section className="overflow-hidden rounded-2xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/10 via-transparent to-violet-500/10 p-5">
-          <div className="flex items-center justify-between"><div><span className="text-xs font-bold uppercase tracking-widest text-cyan-500">{t(`${P}.autoPlacement`)}</span><h3 className="mt-1 text-xl font-black">{t(`${P}.stackOnTop`)}</h3></div><Layers3 className="size-10 text-cyan-500"/></div>
-          <div className="mt-5 grid grid-cols-2 gap-3"><Metric label={t(`${P}.sheetsOnShelf`)} value={String(occupancy.data?.length??0)}/><Metric label={t(`${P}.newStackOrder`)} value={String(nextStack)}/></div>
-          <p className="mt-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-xs text-emerald-600">{t(`${P}.stackOrderNote`)}</p>
-        </section>
-        <SteelStackVisual items={occupancy.data??[]} pendingCode={selected.dCode} nextStack={nextStack}/>
+  const place=async()=>{
+    if(!selected||!location||!source){toast.error(t(`${P}.sheetAndShelfRequired`));return}
+    setBusy(true);
+    try{
+      const result=await steelReceiptApi.place(selected.id,{locationId:Number(location),rowVersion:selected.rowVersion});
+      toast.success(t(`${P}.placeSuccess`,{dCode:selected.dCode,order:result.stackOrderNo}));
+      setSelected(null);
+      setLocation(null);
+      await loadSource(source.importReferenceNo,{silent:true});
+      await cache.invalidateQueries({queryKey:['steel-placement-import-sources']});
+      await cache.invalidateQueries({queryKey:['steel-occupancy']});
+    }catch(e){toast.error(e instanceof Error?e.message:t(`${P}.placeFailed`))}finally{setBusy(false)}
+  };
+  return <div className="space-y-5">
+    <OperationDraftRestoreDialog
+      open={restoreDialogOpen&&Boolean(pendingDraft)}
+      operationName={t('operationNames.steelReceiptPlacement')}
+      updatedAt={pendingDraft?.updatedAt}
+      onRestore={()=>{
+        restoreDraft();
+        setRestoreDialogOpen(false);
+      }}
+      onDiscard={async()=>{
+        await discardDraft();
+        setRestoreDialogOpen(false);
+      }}
+    />
+    {(busy||restoring)&&!source&&<div className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5 text-sm text-slate-500"><Loader2 className="mr-2 inline size-4 animate-spin"/>{t(`${R}.restoringDraft`)}</div>}
+    <section className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5">
+      <SectionHead title={t(`${P}.sourceTitle`)} text={t(`${P}.sourceText`)}/>
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        <Field label={t(`${P}.importLabel`)}>
+          <PagedAppDropdown<SteelPendingPlacementSource>
+            queryKey={['steel-placement-import-sources',branchCode]}
+            fetchPage={request=>fetchPlacementImportSourcesPage(branchCode,request)}
+            toOption={item=>({
+              value:item.importReferenceNo,
+              label:item.supplierCode
+                ?`${item.importReferenceNo} · ${item.supplierCode}`
+                :item.importReferenceNo,
+              description:importOptionDescription(item.pendingLineCount,item.supplierCode),
+            })}
+            value={selectedSourceReference}
+            onValueChange={value=>{setSelectedSourceReference(value);setReference(value);void loadSource(value)}}
+            selectedOption={source?{
+              value:source.importReferenceNo,
+              label:`${source.importReferenceNo} · ${source.supplierCode}`,
+              description:importOptionDescription(pendingLines.length,source.supplierCode),
+            }:undefined}
+            searchFields={['importReferenceNo','dCode','stockCode','supplierSerialNo']}
+            sortBy="importedAtUtc"
+            sortDirection="desc"
+            searchable
+            minSearchLength={0}
+            placeholder={t(`${P}.importPlaceholder`)}
+            emptyText={t(`${P}.importEmpty`)}
+          />
+        </Field>
       </div>
-      <div><strong className="text-sm">{t(`${P}.stackOrderList`,{count:occupancy.data?.length??0})}</strong><div className="mt-2 grid gap-2 md:grid-cols-2">{[...(occupancy.data??[])].sort((a,b)=>(b.stackOrderNo??0)-(a.stackOrderNo??0)).map(item=><div key={item.placementId} className="rounded-xl border p-3 text-xs"><strong>{t(`${P}.stackItem`,{order:item.stackOrderNo,dCode:item.dCode})}</strong><span className="block text-slate-500">{item.stockCode} · {item.supplierSerialNo}</span></div>)}</div>{!occupancy.isLoading&&!occupancy.data?.length&&<p className="mt-2 text-xs text-slate-500">{t(`${P}.emptyShelf`)}</p>}</div>
-      <button disabled={busy||occupancy.isLoading} onClick={()=>void place()} className="w-full rounded-xl bg-cyan-600 px-4 py-3 font-bold text-white disabled:opacity-40"><Layers3 className="mr-2 inline size-4"/>{t(`${P}.placeButton`,{order:nextStack})}</button></>}</>}</section></div>;
+      <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto]">
+        <Field label={t(`${R}.referenceLabel`)}>
+          <div className="relative"><Search className="pointer-events-none absolute left-3 top-1/2 z-10 size-4 -translate-y-1/2 text-slate-500"/><input className="input !pl-10 font-mono" value={reference} onChange={event=>setReference(event.target.value)} onKeyDown={event=>{if(event.key==='Enter'){event.preventDefault();void loadSource()}}} placeholder={t(`${R}.referencePlaceholder`)}/></div>
+        </Field>
+        <button type="button" disabled={busy||!reference.trim()} onClick={()=>void loadSource()} className="self-end rounded-xl bg-cyan-600 px-6 py-3 font-bold text-white disabled:opacity-40">{busy?<Loader2 className="size-4 animate-spin"/>:<><Search className="mr-2 inline size-4"/>{t(`${R}.fetchSheetsButton`)}</>}</button>
+      </div>
+      {source&&<div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><Metric label={t(`${R}.metricImportRef`)} value={source.importReferenceNo}/><Metric label={t(`${R}.metricSourceFile`)} value={source.sourceFileName}/><Metric label={t(`${R}.metricSupplier`)} value={`${source.supplierCode} · ${source.supplierName}`}/><Metric label={t(`${P}.metricPendingSheets`)} value={String(pendingLines.length)}/></div>}
+    </section>
+
+    {source&&<div className="grid gap-5 xl:grid-cols-[.8fr_1.2fr]">
+      <section className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)]">
+        <div className="border-b p-4">
+          <h2 className="text-lg font-black">{t(`${P}.pendingTitle`)}</h2>
+          <p className="text-xs text-slate-500">{t(`${P}.pendingText`)}</p>
+          <div className="mt-3 rounded-xl border border-cyan-500/20 bg-cyan-500/5 px-4 py-3">
+            <strong className="font-mono text-cyan-600">{source.importReferenceNo}</strong>
+            <p className="mt-1 text-xs text-slate-500">{t(`${P}.pendingSheetsSummary`,{count:pendingLines.length,file:source.sourceFileName,supplier:`${source.supplierCode} · ${source.supplierName}`})}</p>
+          </div>
+        </div>
+        <SearchBar value={input} setValue={setInput} run={()=>setSearch(input.trim())}/>
+        <div className="space-y-2 p-4">{visibleLines.map(row=><button key={row.id} onClick={()=>choose(row)} className={`w-full rounded-xl border p-3 text-left ${selected?.id===row.id?'border-cyan-500 bg-cyan-500/10':''}`}><strong className="font-mono text-cyan-500">{row.dCode}</strong><span className="ml-2">{row.stockCode}</span><small className="block text-slate-500">{row.supplierSerialNo} · {formatProjectNumber(row.approvedQuantity)} {row.unitCode}</small></button>)}</div>
+        {!busy&&!visibleLines.length&&<Empty text={search.trim()?t(`${P}.emptySearch`):t(`${P}.empty`)}/>}
+      </section>
+      <section className="space-y-4 rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5"><SectionHead title={t(`${P}.occupancyTitle`)} text={selected?`${selected.dCode} · ${selected.stockCode}${warehouseCode?` · ${t(`${P}.warehouseLabel`,{code:warehouseCode})}`:''}`:t(`${P}.occupancyTextSelect`)}/>
+        {selected&&<>{targetWarehouseId<=0&&!lineFallback.isLoading&&<p className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-700">{t(`${P}.warehouseMissing`)}</p>}
+        <Field label={t(`${P}.sourceShelf`)}><div className="input flex min-h-11 items-center bg-black/[.03] text-sm text-slate-700 dark:bg-white/[.03] dark:text-slate-200">{sourceLocation.isLoading?t(`${P}.sourceShelfLoading`):sourceShelfText??(receivingLocationId>0?`#${receivingLocationId}`:t(`${P}.sourceShelfMissing`))}</div><p className="text-xs text-slate-500">{t(`${P}.sourceShelfHint`)}</p></Field>
+        <Field label={t(`${P}.targetShelf`)}><PagedAppDropdown key={`${selected.id}-${targetWarehouseId}-${receivingLocationId}`} queryKey={['steel-putaway',selected.id,targetWarehouseId,receivingLocationId]} fetchPage={fetchTargetLocations} toOption={x=>({value:String(x.id),label:`${x.code} · ${x.name}`,description:x.locationType})} value={location} onValueChange={setLocation} searchable enabled={targetWarehouseId>0} dependencies={[targetWarehouseId,receivingLocationId]} disabled={targetWarehouseId<=0||lineFallback.isLoading} placeholder={lineFallback.isLoading?t(`${P}.warehouseLoading`):t(`${P}.targetShelfPlaceholder`)}/></Field>
+        {location&&<><div className="grid gap-4 lg:grid-cols-[.8fr_1.2fr]">
+          <section className="overflow-hidden rounded-2xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/10 via-transparent to-violet-500/10 p-5">
+            <div className="flex items-center justify-between"><div><span className="text-xs font-bold uppercase tracking-widest text-cyan-500">{t(`${P}.autoPlacement`)}</span><h3 className="mt-1 text-xl font-black">{t(`${P}.stackOnTop`)}</h3></div><Layers3 className="size-10 text-cyan-500"/></div>
+            <div className="mt-5 grid grid-cols-2 gap-3"><Metric label={t(`${P}.sheetsOnShelf`)} value={String(occupancy.data?.length??0)}/><Metric label={t(`${P}.newStackOrder`)} value={String(nextStack)}/></div>
+            <p className="mt-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-xs text-emerald-600">{t(`${P}.stackOrderNote`)}</p>
+          </section>
+          <SteelStackVisual items={occupancy.data??[]} pendingCode={selected.dCode} nextStack={nextStack}/>
+        </div>
+        <div><strong className="text-sm">{t(`${P}.stackOrderList`,{count:occupancy.data?.length??0})}</strong><div className="mt-2 grid gap-2 md:grid-cols-2">{[...(occupancy.data??[])].sort((a,b)=>(b.stackOrderNo??0)-(a.stackOrderNo??0)).map(item=><div key={item.placementId} className="rounded-xl border p-3 text-xs"><strong>{t(`${P}.stackItem`,{order:item.stackOrderNo,dCode:item.dCode})}</strong><span className="block text-slate-500">{item.stockCode} · {item.supplierSerialNo}</span></div>)}</div>{!occupancy.isLoading&&!occupancy.data?.length&&<p className="mt-2 text-xs text-slate-500">{t(`${P}.emptyShelf`)}</p>}</div>
+        <button disabled={busy||occupancy.isLoading} onClick={()=>void place()} className="w-full rounded-xl bg-cyan-600 px-4 py-3 font-bold text-white disabled:opacity-40"><Layers3 className="mr-2 inline size-4"/>{t(`${P}.placeButton`,{order:nextStack})}</button></>}</>}</section>
+    </div>}
+    {!source&&<div className="rounded-2xl border border-dashed border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-10 text-center text-sm text-slate-500">{t(`${P}.selectImportFirst`)}</div>}
+  </div>;
 }
 
 function SteelStackVisual({items,pendingCode,nextStack}:{items:Array<{placementId:number;dCode:string;stackOrderNo?:number}>;pendingCode:string;nextStack:number}){
@@ -305,10 +642,6 @@ function SectionHead({title,text}:{title:string;text:string}){return <div classN
 function SearchBar({value,setValue,run}:{value:string;setValue:(v:string)=>void;run:()=>void}){
   const {t}=useTranslation('common');
   return <div className="flex gap-2 px-4 pb-4"><input className="input" value={value} onChange={e=>setValue(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')run()}} placeholder={t(`${O}.searchPlaceholder`)}/><button onClick={run} className="rounded-xl border px-4"><Search className="size-4"/></button></div>;
-}
-function Pager({page,totalPages,setPage}:{page:number;totalPages:number;setPage:(v:number)=>void}){
-  const {t}=useTranslation('common');
-  return <div className="flex items-center justify-between border-t p-3 text-xs"><button disabled={page<=1} onClick={()=>setPage(page-1)} className="rounded-lg border p-2 disabled:opacity-30"><ChevronLeft className="size-4"/></button><span>{t(`${O}.pageLabel`,{page,totalPages:Math.max(1,totalPages)})}</span><button disabled={page>=totalPages} onClick={()=>setPage(page+1)} className="rounded-lg border p-2 disabled:opacity-30"><ChevronRight className="size-4"/></button></div>;
 }
 function Field({label,children}:{label:string;children:React.ReactNode}){return <label className="block space-y-1.5 text-sm"><span className="font-bold">{label}</span>{children}</label>}
 function Metric({label,value,valueClassName}:{label:string;value:string;valueClassName?:string}){return <div className="rounded-xl border p-3"><small className="text-slate-500">{label}</small><strong className={`block text-lg ${valueClassName??''}`}>{value}</strong></div>}

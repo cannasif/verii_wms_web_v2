@@ -1,5 +1,7 @@
 export type OperationDraftType =
   | 'goods-receipt-direct'
+  | 'steel-receipt-direct'
+  | 'steel-receipt-placement'
   | 'warehouse-inbound-direct'
   | 'warehouse-outbound-create'
   | 'warehouse-transfer-direct';

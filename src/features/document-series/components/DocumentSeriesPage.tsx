@@ -156,11 +156,11 @@ export function DocumentSeriesPage() {
             {formError && <div role="alert" className="rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">{formError}</div>}
             {locked && <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">{t('form.lockedNotice')}</div>}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              <Field label={t('form.documentType')} required><AppDropdown value={form.documentType} onValueChange={(value) => update('documentType', value)} options={documentTypes} searchable disabled={locked}/></Field>
+              <Field label={t('form.documentType')} required><AppDropdown value={form.documentType} onValueChange={(value) => update('documentType', value)} options={documentTypes} searchable disabled={locked} portalContainer={null}/></Field>
               <Field label={t('form.code')} required><input value={form.code} maxLength={20} disabled={locked} onChange={(event) => update('code', event.target.value.toUpperCase())} className="input disabled:opacity-50"/></Field>
               <Field label={t('form.name')} required><input value={form.name} maxLength={150} onChange={(event) => update('name', event.target.value)} className="input"/></Field>
               <Field label={t('form.prefix')} required><input value={form.prefix} maxLength={10} disabled={locked} onChange={(event) => update('prefix', event.target.value.toUpperCase())} className="input disabled:opacity-50"/></Field>
-              <Field label={t('form.yearFormat')}><AppDropdown value={form.yearFormat} onValueChange={(value) => update('yearFormat', value)} options={yearFormats} searchable disabled={locked}/></Field>
+              <Field label={t('form.yearFormat')}><AppDropdown value={form.yearFormat} onValueChange={(value) => update('yearFormat', value)} options={yearFormats} searchable disabled={locked} portalContainer={null}/></Field>
               <Field label={t('form.numberLength')}><NumberField value={form.numberLength} min={3} max={15} disabled={locked} onChange={(value) => update('numberLength', value)}/></Field>
               <Field label={t('form.startNumber')}><NumberField value={form.startNumber} min={1} disabled={locked} onChange={(value) => update('startNumber', value)}/></Field>
               <Field label={t('form.nextNumber')}><NumberField value={form.nextNumber} min={1} disabled={locked} onChange={(value) => update('nextNumber', value)}/></Field>

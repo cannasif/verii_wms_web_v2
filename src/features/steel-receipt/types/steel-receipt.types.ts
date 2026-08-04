@@ -33,6 +33,14 @@ export interface SteelPendingReceiptSource {
   waybillNo?:string;waybillDate?:string;supplierCode:string;supplierName:string;
   pendingLineCount:number;totalLineCount:number;importedAtUtc:string;
 }
+export interface SteelPendingPlacementSource {
+  importReferenceNo:string;
+  pendingLineCount:number;
+  importedAtUtc?:string;
+  supplierCode?:string;
+  supplierName?:string;
+  sourceFileName?:string;
+}
 export type SteelReceiptConversionMode='Task'|'Direct';
 export interface ConvertResult {
   goodsReceiptId:number;documentNo:string;taskId?:number;taskNo?:string;

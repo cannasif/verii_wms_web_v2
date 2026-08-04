@@ -1,4 +1,4 @@
-import {useCallback,useEffect,useMemo,useRef,useState,type ReactNode} from 'react';
+import {useCallback,useEffect,useMemo,useRef,useState,type FocusEvent,type MouseEvent,type ReactNode} from 'react';
 import {createPortal} from 'react-dom';
 import {useQuery} from '@tanstack/react-query';
 import {useTranslation} from 'react-i18next';
@@ -55,6 +55,13 @@ interface SelectedPlate {
 }
 
 interface UnknownPlateSlot {id:string}
+
+interface PendingUnknownPlateResolve {
+  acceptedPlateId:number;
+  rowVersion:string;
+  candidate:SteelVehicleAcceptanceCandidate;
+  files:File[];
+}
 
 interface ImagePreview {
   url:string;
@@ -121,6 +128,7 @@ const formatDriverName=(firstName?:string,lastName?:string)=>{
   return `${firstName} ${lastName}`;
 };
 const parseDriverName=(value:string)=>{if(!value)return{driverFirstName:'',driverLastName:''};const space=value.indexOf(' ');if(space===-1)return{driverFirstName:value,driverLastName:''};return{driverFirstName:value.slice(0,space),driverLastName:value.slice(space+1)}};
+const selectInputContents=(event:FocusEvent<HTMLInputElement>|MouseEvent<HTMLInputElement>)=>event.currentTarget.select();
 const toPagedResponse=<T,>(page:GridPage<T>):PagedResponse<T>=>({
   data:page.items,
   pageNumber:page.pageNumber,
@@ -145,6 +153,7 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
   const [resolvingPlateId,setResolvingPlateId]=useState<number|null>(null);
   const [resolveCandidate,setResolveCandidate]=useState<SteelVehicleAcceptanceCandidate|null>(null);
   const [resolveFiles,setResolveFiles]=useState<File[]>([]);
+  const [pendingResolves,setPendingResolves]=useState<PendingUnknownPlateResolve[]>([]);
   const [sheetInput,setSheetInput]=useState('');
   const [candidateSearch,setCandidateSearch]=useState<{value:string;run:number}|null>(null);
   const [busy,setBusy]=useState(false);
@@ -163,6 +172,15 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
     ()=>new Set(knownAcceptedPlates.flatMap(plate=>plate.planLineId?[plate.planLineId]:[])),
     [knownAcceptedPlates],
   );
+  const pendingResolveByPlateId=useMemo(
+    ()=>new Map(pendingResolves.map(item=>[item.acceptedPlateId,item])),
+    [pendingResolves],
+  );
+  const reservedPlanLineIds=useMemo(()=>{
+    const ids=new Set(acceptedPlanLineIds);
+    pendingResolves.forEach(item=>ids.add(item.candidate.id));
+    return ids;
+  },[acceptedPlanLineIds,pendingResolves]);
   const selectedPlates=useMemo(()=>Object.values(selected),[selected]);
   const selectedCount=selectedPlates.length+unknownSlots.length;
   const targetCountMatches=acceptanceTargetMatches(
@@ -175,7 +193,9 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
   const platesWithoutImages=selectedPlates.filter(item=>!plateHasImages(item.row,item.row.id));
   const hasFormChanges=savedFormBaseline!==null&&JSON.stringify(toVehicleFormSnapshot(form))!==JSON.stringify(savedFormBaseline);
   const hasVehicleFileChanges=vehicleFiles.length>0;
+  const hasPendingResolves=pendingResolves.length>0;
   const hasVehicleChanges=hasFormChanges||hasVehicleFileChanges;
+  const hasSaveableChanges=hasVehicleChanges||hasPendingResolves;
   const isAcceptanceComplete=savedAcceptedCount>=form.steelSheetCount&&selectedCount===0;
   const readyToComplete=
     form.plateNo.trim().length>0&&
@@ -187,18 +207,18 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
     Boolean(form.id)&&
     form.plateNo.trim().length>0&&
     vehicleImageCount>0&&
-    hasVehicleChanges;
+    hasSaveableChanges;
   const showSaveButton=Boolean(form.id);
   const showCompleteButton=!form.id||selectedCount>0;
   const saveVehicleBlockers=useMemo(()=>{
     const items:string[]=[];
-    if(!hasVehicleChanges&&savedFormBaseline){
+    if(!hasSaveableChanges&&savedFormBaseline){
       items.push(t('vehicleCheckIn.blocker.noChanges',{defaultValue:'Kaydedilecek değişiklik yok.'}));
     }
     if(!form.plateNo.trim())items.push(t('vehicleCheckIn.blocker.towingPlate',{defaultValue:'Çekici plakası girilmeli.'}));
     if(vehicleImageCount===0)items.push(t('vehicleCheckIn.blocker.vehicleImage',{defaultValue:'En az bir araç görseli eklenmeli.'}));
     return items;
-  },[form.plateNo,hasVehicleChanges,savedFormBaseline,t,vehicleImageCount]);
+  },[form.plateNo,hasSaveableChanges,savedFormBaseline,t,vehicleImageCount]);
   const completeBlockers=useMemo(()=>{
     const items:string[]=[];
     if(!form.plateNo.trim())items.push(t('vehicleCheckIn.blocker.towingPlate',{defaultValue:'Çekici plakası girilmeli.'}));
@@ -261,6 +281,10 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
   },[]);
   const hydrateWithAcceptance=useCallback(async(detail:VehicleCheckInDetail)=>{
     hydrate(detail);
+    setPendingResolves([]);
+    setResolvingPlateId(null);
+    setResolveCandidate(null);
+    setResolveFiles([]);
     setCompleted(await vehicleCheckInApi.steelAcceptanceByVehicle(detail.header.id));
   },[hydrate]);
 
@@ -310,7 +334,7 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
     }
     setUnknownSlots(current=>[...current,{id:crypto.randomUUID()}]);
   };
-  const resolveUnknownPlate=async()=>{
+  const stageUnknownPlateResolve=()=>{
     if(!resolvingPlateId||!completed||!resolveCandidate)return;
     const unknown=completed.plates.find(plate=>plate.id===resolvingPlateId&&plate.identityStatus==='Unknown');
     if(!unknown)return;
@@ -318,32 +342,33 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
       toast.error(t('vehicleCheckIn.sheetImageMissing',{defaultValue:'En az bir levha görseli zorunludur.'}));
       return;
     }
-    setBusy(true);
-    try{
-      await vehicleCheckInApi.resolveUnknownPlate(unknown.id,{
-        planLineId:resolveCandidate.id,
-        receivingLocationId:resolveCandidate.receivingLocationId,
-        rowVersion:unknown.rowVersion,
-        planLineRowVersion:resolveCandidate.rowVersion,
-      },resolveFiles);
-      const refreshed=await vehicleCheckInApi.steelAcceptanceByVehicle(completed.vehicle.header.id);
-      setCompleted(refreshed);
-      if(refreshed)hydrate(refreshed.vehicle);
-      setResolvingPlateId(null);
-      setResolveCandidate(null);
-      setResolveFiles([]);
-      setCandidateSearch(current=>current?{...current,run:current.run+1}:current);
-      onCompleted?.();
-      toast.success(t('vehicleCheckIn.toast.unknownPlateResolved',{defaultValue:'Bilinmeyen levha SAC satırıyla eşleştirildi.'}));
-    }catch(error){
-      toast.error(error instanceof Error?error.message:t('vehicleCheckIn.toast.resolveUnknownPlateFailed',{defaultValue:'Bilinmeyen levha eşleştirilemedi.'}));
-    }finally{
-      setBusy(false);
+    if(reservedPlanLineIds.has(resolveCandidate.id)&&!pendingResolveByPlateId.has(unknown.id)){
+      toast.error(t('vehicleCheckIn.toast.sheetAlreadyAccepted',{defaultValue:'Bu levha zaten kabul edilmiş.'}));
+      return;
     }
+    setPendingResolves(current=>{
+      const next=current.filter(item=>item.acceptedPlateId!==unknown.id);
+      next.push({
+        acceptedPlateId:unknown.id,
+        rowVersion:unknown.rowVersion,
+        candidate:resolveCandidate,
+        files:resolveFiles,
+      });
+      return next;
+    });
+    setResolvingPlateId(null);
+    setResolveCandidate(null);
+    setResolveFiles([]);
+    toast.success(t('vehicleCheckIn.toast.unknownPlateResolveStaged',{
+      defaultValue:'Eşleştirme hazır. Uygulamak için Kaydet\'e basın.',
+    }));
+  };
+  const removePendingResolve=(acceptedPlateId:number)=>{
+    setPendingResolves(current=>current.filter(item=>item.acceptedPlateId!==acceptedPlateId));
   };
   const togglePlate=(row:SteelVehicleAcceptanceCandidate)=>{
     if(resolvingPlateId){
-      if(acceptedPlanLineIds.has(row.id)){
+      if(reservedPlanLineIds.has(row.id)){
         toast.error(t('vehicleCheckIn.toast.sheetAlreadyAccepted',{defaultValue:'Bu levha zaten kabul edilmiş.'}));
         return;
       }
@@ -351,7 +376,7 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
       setResolveFiles([]);
       return;
     }
-    if(acceptedPlanLineIds.has(row.id)){
+    if(reservedPlanLineIds.has(row.id)){
       toast.error(t('vehicleCheckIn.toast.sheetAlreadyAccepted',{defaultValue:'Bu levha zaten kabul edilmiş.'}));
       return;
     }
@@ -381,7 +406,7 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
         setResolveFiles([]);
         return;
       }
-      const first=visibleRows.find(row=>!acceptedPlanLineIds.has(row.id));
+      const first=visibleRows.find(row=>!reservedPlanLineIds.has(row.id));
       if(first){
         setResolveCandidate(first);
         setResolveFiles([]);
@@ -394,7 +419,7 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
         let count=Object.keys(next).length+unknownSlots.length;
         let skipped=0;
         for(const row of visibleRows){
-          if(next[row.id]||acceptedPlanLineIds.has(row.id))continue;
+          if(next[row.id]||reservedPlanLineIds.has(row.id))continue;
           if(count>=remainingSelectionSlots){skipped++;continue}
           next[row.id]={row,note:''};
           count++;
@@ -433,27 +458,51 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
 
   const saveVehicle=async()=>{
     if(!form.id)return;
-    if(!hasVehicleChanges){toast.info(t('vehicleCheckIn.toast.noChangesToSave',{defaultValue:'Kaydedilecek değişiklik yok.'}));return}
+    if(!hasSaveableChanges){toast.info(t('vehicleCheckIn.toast.noChangesToSave',{defaultValue:'Kaydedilecek değişiklik yok.'}));return}
     if(!form.plateNo.trim()){toast.error(t('vehicleCheckIn.toast.towingPlateRequired',{defaultValue:'Çekici plakası zorunludur.'}));return}
     if(vehicleImageCount===0){toast.error(t('vehicleCheckIn.toast.vehicleImageRequired',{defaultValue:'Araç kabulü için en az bir araç görseli zorunludur.'}));return}
 
     setBusy(true);
+    const resolvesToSave=[...pendingResolves];
+    const savingVehicle=hasVehicleChanges;
+    const savingResolves=resolvesToSave.length>0;
     try{
-      let detail=await vehicleCheckInApi.save({
-        ...form,
-        branchCode:branch,
-        plateNo:form.plateNo.trim().toUpperCase(),
-      });
-      if(vehicleFiles.length>0){
-        const uploaded=await vehicleCheckInApi.upload(detail.header.id,vehicleFiles);
-        detail={...detail,images:[...detail.images,...uploaded]};
-        setVehicleFiles([]);
+      if(savingVehicle){
+        let detail=await vehicleCheckInApi.save({
+          ...form,
+          branchCode:branch,
+          plateNo:form.plateNo.trim().toUpperCase(),
+        });
+        if(vehicleFiles.length>0){
+          const uploaded=await vehicleCheckInApi.upload(detail.header.id,vehicleFiles);
+          detail={...detail,images:[...detail.images,...uploaded]};
+          setVehicleFiles([]);
+        }
+        hydrate(detail);
       }
-      hydrate(detail);
+      if(savingResolves){
+        for(const pending of resolvesToSave){
+          await vehicleCheckInApi.resolveUnknownPlate(pending.acceptedPlateId,{
+            planLineId:pending.candidate.id,
+            receivingLocationId:pending.candidate.receivingLocationId,
+            rowVersion:pending.rowVersion,
+            planLineRowVersion:pending.candidate.rowVersion,
+          },pending.files);
+        }
+        const refreshed=await vehicleCheckInApi.steelAcceptanceByVehicle(form.id);
+        setCompleted(refreshed);
+        if(refreshed)hydrate(refreshed.vehicle);
+        setPendingResolves([]);
+        setCandidateSearch(current=>current?{...current,run:current.run+1}:current);
+      }
       onCompleted?.();
-      toast.success(t('vehicleCheckIn.toast.vehicleSaved',{defaultValue:'Araç bilgileri kaydedildi.'}));
+      toast.success(savingResolves&&savingVehicle
+        ?t('vehicleCheckIn.toast.vehicleAndResolveSaved',{defaultValue:'Araç bilgileri ve eşleştirmeler kaydedildi.'})
+        :savingResolves
+          ?t('vehicleCheckIn.toast.unknownPlateResolved',{defaultValue:'Bilinmeyen levha SAC satırıyla eşleştirildi.'})
+          :t('vehicleCheckIn.toast.vehicleSaved',{defaultValue:'Araç bilgileri kaydedildi.'}));
     }catch(error){
-      toast.error(error instanceof Error?error.message:t('vehicleCheckIn.toast.saveVehicleFailed',{defaultValue:'Araç bilgileri kaydedilemedi.'}));
+      toast.error(error instanceof Error?error.message:t('vehicleCheckIn.toast.saveVehicleFailed',{defaultValue:'Kayıt tamamlanamadı.'}));
     }finally{
       setBusy(false);
     }
@@ -591,7 +640,7 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
           label={t('vehicleCheckIn.field.sheetCount',{defaultValue:'SAC levha adedi *'})}
           errorTarget="steelSheetCount"
           errorKeys="levha adedi|sac levha adedi|1-50|levha sayısı|seçilen levha sayısı|levha seçebilirsiniz|levha daha seçilmeli|levha seçilebilir"
-        ><input className="input" type="number" min={Math.max(1,savedAcceptedCount)} max="50" step="1" value={form.steelSheetCount} onChange={event=>{
+        ><input className="input" type="number" min={Math.max(1,savedAcceptedCount)} max="50" step="1" value={form.steelSheetCount} onFocus={selectInputContents} onClick={selectInputContents} onChange={event=>{
           const next=Number(event.target.value);
           if(next<savedAcceptedCount){
             toast.error(t('vehicleCheckIn.toast.sheetCountBelowSaved',{count:savedAcceptedCount,defaultValue:'Kayıtlı {{count}} levha varken hedef adet daha düşük olamaz.'}));
@@ -654,11 +703,11 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
       {candidateSearch&&<CandidateTable rows={candidateRows} loading={candidates.isFetching} selected={candidateTableSelected} onToggle={togglePlate} onToggleAll={toggleAllCandidates}/>}
     </Panel>
 
-    {selectedCount>0&&<Panel title={t('vehicleCheckIn.section.selectedSheets',{defaultValue:'4 · Seçilen levhalar ({{selected}}/{{total}})',selected:footerReadyCount,total:form.steelSheetCount})} icon={<MapPin className="size-5"/>}>
+    {selectedCount>0&&<Panel emphasized title={t('vehicleCheckIn.section.selectedSheets',{defaultValue:'4 · Seçilen levhalar ({{selected}}/{{total}})',selected:footerReadyCount,total:form.steelSheetCount})} icon={<MapPin className="size-5"/>}>
       <div className="mb-4 grid gap-3 sm:grid-cols-3">
-        <Summary label={t('vehicleCheckIn.summary.selectedSheets',{defaultValue:'Seçilen levha'})} value={String(footerReadyCount)}/>
-        <Summary label={t('vehicleCheckIn.summary.totalQuantity',{defaultValue:'Toplam kabul miktarı'})} value={formatProjectNumber(totalQuantity)}/>
-        <Summary label={t('vehicleCheckIn.summary.missingSelection',{defaultValue:'Eksik seçim'})} value={String(Math.max(0,form.steelSheetCount-footerReadyCount))}/>
+        <Summary emphasized label={t('vehicleCheckIn.summary.selectedSheets',{defaultValue:'Seçilen levha'})} value={String(footerReadyCount)}/>
+        <Summary emphasized label={t('vehicleCheckIn.summary.totalQuantity',{defaultValue:'Toplam kabul miktarı'})} value={formatProjectNumber(totalQuantity)}/>
+        <Summary emphasized label={t('vehicleCheckIn.summary.missingSelection',{defaultValue:'Eksik seçim'})} value={String(Math.max(0,form.steelSheetCount-footerReadyCount))}/>
       </div>
       <div className="space-y-4">{selectedPlates.map(item=><SelectedPlateCard
         key={item.row.id}
@@ -675,6 +724,37 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
         <div><span className="rounded-full bg-amber-500/20 px-2.5 py-1 text-xs font-bold text-amber-700 dark:text-amber-300">{t('vehicleCheckIn.unknownBadge',{defaultValue:'Bilinmeyen'})}</span><p className="mt-2 text-sm text-slate-500">{t('vehicleCheckIn.unknownSlotDescription',{sequence:selectedPlates.length+index+1,defaultValue:'{{sequence}}. levhanın seri bilgisi daha sonra SAC ile eşleştirilecek.'})}</p></div>
         <button type="button" onClick={()=>setRemoveUnknownId(slot.id)} className="rounded-lg border border-red-500/30 p-2 text-red-500" title={t('vehicleCheckIn.action.removeUnknownPlate',{defaultValue:'Bilinmeyen levhayı kaldır'})}><X className="size-4"/></button>
       </article>)}</div>
+    </Panel>}
+
+    {unknownAcceptedPlates.length>0&&<Panel title={t('vehicleCheckIn.section.unknownPlates',{count:unknownAcceptedPlates.length,defaultValue:'Bilinmeyen levhalar ({{count}})'})} icon={<AlertTriangle className="size-5 text-amber-500"/>}>
+      <p className="mb-4 text-sm font-semibold text-amber-600">{t('vehicleCheckIn.blocker.unknownPlatesPending',{count:unknownAcceptedPlates.length,defaultValue:'{{count}} levhanın kimliği bilinmiyor; irsaliye için önce eşleştirin.'})}</p>
+      {hasPendingResolves&&<p className="mb-4 text-sm font-semibold text-cyan-600">{t('vehicleCheckIn.pendingResolveHint',{count:pendingResolves.length,defaultValue:'{{count}} eşleştirme Kaydet ile uygulanmayı bekliyor.'})}</p>}
+      <div className="space-y-3">{unknownAcceptedPlates.map(plate=>{
+        const pending=pendingResolveByPlateId.get(plate.id);
+        if(pending){
+          return <StagedUnknownPlateResolveCard
+            key={plate.id}
+            plate={plate}
+            pending={pending}
+            onRemove={()=>removePendingResolve(plate.id)}
+            onPreview={openImagePreview}
+          />;
+        }
+        return <UnknownAcceptedPlateCard
+          key={plate.id}
+          plate={plate}
+          busy={busy}
+          isResolving={resolvingPlateId===plate.id}
+          resolveCandidate={resolvingPlateId===plate.id?resolveCandidate:null}
+          resolveFiles={resolvingPlateId===plate.id?resolveFiles:[]}
+          onStart={()=>startUnknownPlateResolve(plate.id)}
+          onCancel={cancelUnknownPlateResolve}
+          onResolveFiles={onResolveFiles}
+          onRemoveResolveFile={index=>setResolveFiles(current=>current.filter((_,fileIndex)=>fileIndex!==index))}
+          onConfirm={stageUnknownPlateResolve}
+          onPreview={openImagePreview}
+        />;
+      })}</div>
     </Panel>}
 
     {knownAcceptedPlates.length>0&&<Panel title={t('vehicleCheckIn.section.savedAcceptedSheets',{defaultValue:'Kayıtlı kabul levhaları ({{count}})',count:knownAcceptedPlates.length})} icon={<FileImage className="size-5"/>}>
@@ -696,24 +776,6 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
           </article>;
         })}
       </div>
-    </Panel>}
-
-    {unknownAcceptedPlates.length>0&&<Panel title={t('vehicleCheckIn.section.unknownPlates',{count:unknownAcceptedPlates.length,defaultValue:'Bilinmeyen levhalar ({{count}})'})} icon={<AlertTriangle className="size-5 text-amber-500"/>}>
-      <p className="mb-4 text-sm font-semibold text-amber-600">{t('vehicleCheckIn.blocker.unknownPlatesPending',{count:unknownAcceptedPlates.length,defaultValue:'{{count}} levhanın kimliği bilinmiyor; irsaliye için önce eşleştirin.'})}</p>
-      <div className="space-y-3">{unknownAcceptedPlates.map(plate=><UnknownAcceptedPlateCard
-        key={plate.id}
-        plate={plate}
-        busy={busy}
-        isResolving={resolvingPlateId===plate.id}
-        resolveCandidate={resolvingPlateId===plate.id?resolveCandidate:null}
-        resolveFiles={resolvingPlateId===plate.id?resolveFiles:[]}
-        onStart={()=>startUnknownPlateResolve(plate.id)}
-        onCancel={cancelUnknownPlateResolve}
-        onResolveFiles={onResolveFiles}
-        onRemoveResolveFile={index=>setResolveFiles(current=>current.filter((_,fileIndex)=>fileIndex!==index))}
-        onConfirm={()=>void resolveUnknownPlate()}
-        onPreview={openImagePreview}
-      />)}</div>
     </Panel>}
 
     {completed&&<section className={`rounded-2xl border p-5 ${completed.containsUnknownPlates?'border-amber-500/40 bg-amber-500/10':'border-emerald-500/40 bg-emerald-500/10'}`}>
@@ -778,6 +840,37 @@ function FooterActionButton({busy,ready,blockers,label,savingLabel,title,icon,ap
       </TooltipContent>
     </Tooltip>
   </TooltipProvider>;
+}
+
+function StagedUnknownPlateResolveCard({
+  plate,
+  pending,
+  onRemove,
+  onPreview,
+}:{
+  plate:AcceptedSteelPlate;
+  pending:PendingUnknownPlateResolve;
+  onRemove:()=>void;
+  onPreview:OpenImagePreview;
+}){
+  const {t}=useTranslation('common');
+  const candidate=pending.candidate;
+  return <article className="rounded-xl border border-cyan-500/45 bg-cyan-500/10 p-4">
+    <div className="flex flex-wrap items-start justify-between gap-3">
+      <div>
+        <span className="rounded-full bg-cyan-500/20 px-2.5 py-1 text-xs font-bold text-cyan-700 dark:text-cyan-300">{t('vehicleCheckIn.pendingResolveBadge',{defaultValue:'Kaydedilmeyi bekliyor'})}</span>
+        <strong className="mt-2 block">{t('vehicleCheckIn.unknownSequence',{sequence:plate.sequenceNo,defaultValue:'Sıra {{sequence}}'})}</strong>
+        <p className="text-xs text-slate-500">{t('vehicleCheckIn.pendingResolveDescription',{defaultValue:'Eşleştirme hazır; uygulamak için alttaki Kaydet\'e basın.'})}</p>
+      </div>
+      <button type="button" onClick={onRemove} className="rounded-lg border border-red-500/30 p-2 text-red-500" title={t('vehicleCheckIn.action.removePendingResolve',{defaultValue:'Eşleştirmeyi geri al'})}><X className="size-4"/></button>
+    </div>
+    <div className="mt-3 rounded-xl border bg-[var(--wms-app-surface)] p-3">
+      <p className="text-xs font-bold uppercase tracking-widest text-cyan-600">{t('vehicleCheckIn.matchedSheet',{defaultValue:'Eşleşen levha'})}</p>
+      <strong className="mt-1 block font-mono text-cyan-700 dark:text-cyan-300">{candidate.dCode} · {candidate.supplierSerialNo}</strong>
+      <p className="text-sm text-slate-500">{candidate.stockCode} · {candidate.stockName||'-'} · {formatProjectNumber(candidate.expectedQuantity)} {candidate.unitCode}</p>
+    </div>
+    {pending.files.length>0&&<div className="mt-3 grid gap-3 sm:grid-cols-3 lg:grid-cols-5">{pending.files.map((file,index)=><PendingImage key={`${file.name}-${file.lastModified}-${index}`} file={file} onRemove={()=>{}} onPreview={onPreview}/>)}</div>}
+  </article>;
 }
 
 function UnknownAcceptedPlateCard({
@@ -874,7 +967,7 @@ function SelectedPlateCard({item,files,missingImages,onChange,onFiles,onRemoveFi
   const {t}=useTranslation('common');
   const row=item.row;
   const sheetImageErrorKeys=`${row.dCode}|levhası için en az bir görsel|en fazla 5 görsel|görseli gönderilen sac levhası`;
-  return <article className="rounded-2xl border bg-[var(--wms-app-surface)] p-4" data-wms-error-line-ref={row.dCode}>
+  return <article className="rounded-2xl border-2 border-cyan-500/45 bg-[var(--wms-app-surface)] p-4 shadow-sm" data-wms-error-line-ref={row.dCode}>
     <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
       <div><strong className="font-mono text-cyan-600">{row.dCode} · {row.supplierSerialNo}</strong><p className="text-sm text-slate-500">{row.stockCode} · {row.stockName} · {formatProjectNumber(row.expectedQuantity)} {row.unitCode}</p><small className="text-slate-500">{t('vehicleCheckIn.excelImportLabel',{defaultValue:'Excel/aktarım'})}: {row.importReferenceNo}</small></div>
       <button type="button" onClick={onRemove} className="rounded-lg border border-red-500/30 p-2 text-red-500" title={t('vehicleCheckIn.action.removeSelection',{defaultValue:'Seçimden çıkar'})}><X className="size-4"/></button>
@@ -1037,6 +1130,6 @@ function ImageInputActions({selectLabel,captureLabel,onFiles,compact=false}:{sel
   </div>;
 }
 
-function Summary({label,value}:{label:string;value:string}){return <div className="rounded-xl border bg-[var(--wms-app-surface)] p-3"><small className="block text-slate-500">{label}</small><strong className="text-lg">{value}</strong></div>}
-function Panel({title,icon,children,errorTarget,errorKeys}:{title:string;icon:ReactNode;children:ReactNode;errorTarget?:string;errorKeys?:string}){return <section className="rounded-2xl border bg-[var(--wms-app-panel)] p-5" data-wms-error-target={errorTarget} data-wms-error-keys={errorKeys}><h2 className="mb-4 flex items-center gap-2 text-lg font-black text-cyan-600">{icon}{title}</h2>{children}</section>}
+function Summary({label,value,emphasized=false}:{label:string;value:string;emphasized?:boolean}){return <div className={`rounded-xl border bg-[var(--wms-app-surface)] p-3 ${emphasized?'border-2 border-cyan-500/45':''}`}><small className="block text-slate-500">{label}</small><strong className="text-lg">{value}</strong></div>}
+function Panel({title,icon,children,errorTarget,errorKeys,emphasized=false}:{title:string;icon:ReactNode;children:ReactNode;errorTarget?:string;errorKeys?:string;emphasized?:boolean}){return <section className={`rounded-2xl border bg-[var(--wms-app-panel)] p-5 ${emphasized?'border-2 border-cyan-500/45 shadow-sm':''}`} data-wms-error-target={errorTarget} data-wms-error-keys={errorKeys}><h2 className="mb-4 flex items-center gap-2 text-lg font-black text-cyan-600">{icon}{title}</h2>{children}</section>}
 function Field({label,children,errorTarget,errorKeys}:{label:string;children:ReactNode;errorTarget?:string;errorKeys?:string}){return <label className="space-y-1.5 text-sm" data-wms-error-target={errorTarget} data-wms-error-keys={errorKeys}><span className="font-bold">{label}</span>{children}</label>}
