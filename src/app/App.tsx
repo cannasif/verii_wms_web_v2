@@ -20,7 +20,7 @@ import {
   loadSteelReceiptImportPage, loadSteelReceiptInspectionPage, loadSteelReceiptOperationsPage,
   loadSteelReceiptPlansPage, loadSteelReceiptReportsPage, loadStockBalancePages, loadStockMovementsPage, loadUserManagementPage,
   loadVehicleCheckInListPage, loadVehicleCheckInPage, loadWarehouseTransferDraftPage,
-  loadWarehouseTransferHubPage, loadWarehouseTransferListPage, loadWarehouseTransferOperationPage,
+  loadWarehouseTransferCreateHubPage, loadWarehouseTransferHubPage, loadWarehouseTransferListPage, loadWarehouseTransferOperationPage,
   loadWarehouseTransferPolicyPage,
 } from './route-loaders';
 
@@ -60,6 +60,7 @@ const KkdDefinitionsPage = lazy(() => loadKkdPages().then((m) => ({ default: m.K
 const KkdEntitlementPage = lazy(() => loadKkdPages().then((m) => ({ default: m.KkdEntitlementPage })));
 const KkdDistributionsPage = lazy(() => loadKkdPages().then((m) => ({ default: m.KkdDistributionsPage })));
 const KkdDistributionCreatePage = lazy(() => loadKkdPages().then((m) => ({ default: m.KkdDistributionCreatePage })));
+const KkdMaterialRequestsPage = lazy(() => loadKkdPages().then((m) => ({ default: m.KkdMaterialRequestsPage })));
 const KkdReportsPage = lazy(() => loadKkdPages().then((m) => ({ default: m.KkdReportsPage })));
 const KkdPolicyPage = lazy(() => loadKkdPages().then((m) => ({ default: m.KkdPolicyPage })));
 const GoodsReceiptAssignedTasksPage = lazy(() => loadGoodsReceiptAssignedTasksPage().then((m) => ({ default: m.GoodsReceiptAssignedTasksPage })));
@@ -86,6 +87,7 @@ const VehicleCheckInListPage = lazy(() => loadVehicleCheckInListPage().then((m) 
 const VehicleCheckInPage = lazy(() => loadVehicleCheckInPage().then((m) => ({ default: m.VehicleCheckInPage })));
 const WarehouseTransferDraftPage = lazy(() => loadWarehouseTransferDraftPage().then((m) => ({ default: m.WarehouseTransferDraftPage })));
 const WarehouseTransferHubPage = lazy(() => loadWarehouseTransferHubPage().then((m) => ({ default: m.WarehouseTransferHubPage })));
+const WarehouseTransferCreateHubPage = lazy(() => loadWarehouseTransferCreateHubPage().then((m) => ({ default: m.WarehouseTransferCreateHubPage })));
 const WarehouseTransferListPage = lazy(() => loadWarehouseTransferListPage().then((m) => ({ default: m.WarehouseTransferListPage })));
 const WarehouseTransferPolicyPage = lazy(() => loadWarehouseTransferPolicyPage().then((m) => ({ default: m.WarehouseTransferPolicyPage })));
 const WarehouseTransferOperationPage = lazy(() => loadWarehouseTransferOperationPage().then((m) => ({ default: m.WarehouseTransferOperationPage })));
@@ -98,6 +100,7 @@ const ProductionTransferTaskPoolPage = lazy(() => loadProductionTransferPages().
 const ProductionHubPage = lazy(() => loadProductionPages().then((m) => ({ default: m.ProductionHubPage })));
 const ProductionCreatePage = lazy(() => loadProductionPages().then((m) => ({ default: m.ProductionCreatePage })));
 const ProductionListPage = lazy(() => loadProductionPages().then((m) => ({ default: m.ProductionListPage })));
+const ProductionWorkOrdersPage = lazy(() => loadProductionPages().then((m) => ({ default: m.ProductionWorkOrdersPage })));
 const SubcontractingTransferHubPage = lazy(() => loadSubcontractingTransferPages().then((m) => ({ default: m.SubcontractingTransferHubPage })));
 const SubcontractingTransferDraftPage = lazy(() => loadSubcontractingTransferPages().then((m) => ({ default: m.SubcontractingTransferDraftPage })));
 const SubcontractingTransferListPage = lazy(() => loadSubcontractingTransferPages().then((m) => ({ default: m.SubcontractingTransferListPage })));
@@ -183,6 +186,7 @@ export function App(): ReactElement {
           <Route path="warehouse/kkd/entitlement" element={<KkdEntitlementPage />} />
           <Route path="warehouse/kkd/distributions" element={<KkdDistributionsPage />} />
           <Route path="warehouse/kkd/distributions/new" element={<KkdDistributionCreatePage />} />
+          <Route path="warehouse/production-transfers/material-requests" element={<KkdMaterialRequestsPage />} />
           <Route path="warehouse/kkd/reports" element={<KkdReportsPage />} />
           <Route path="warehouse/kkd/policy" element={<KkdPolicyPage />} />
           <Route path="warehouse/packing" element={<PackingWorkbenchPage />} />
@@ -190,12 +194,14 @@ export function App(): ReactElement {
           <Route path="warehouse/packing/settings" element={<PackingPolicyPage />} />
           <Route path="warehouse/transfers" element={<WarehouseTransferHubPage />} />
           <Route path="warehouse/transfers/new" element={<WarehouseTransferDraftPage />} />
+          <Route path="warehouse/transfers/new-operation" element={<WarehouseTransferCreateHubPage />} />
           <Route path="warehouse/transfers/list" element={<WarehouseTransferListPage />} />
           <Route path="warehouse/transfers/:id/operations" element={<WarehouseTransferOperationPage />} />
           <Route path="warehouse/transfers/settings" element={<WarehouseTransferPolicyPage />} />
           <Route path="warehouse/production" element={<ProductionHubPage />} />
           <Route path="warehouse/production/new" element={<ProductionCreatePage />} />
           <Route path="warehouse/production/list" element={<ProductionListPage />} />
+          <Route path="warehouse/production/work-orders" element={<ProductionWorkOrdersPage />} />
           <Route path="warehouse/production-transfers" element={<ProductionTransferHubPage />} />
           <Route path="warehouse/production-transfers/new" element={<ProductionTransferDraftPage />} />
           <Route path="warehouse/production-transfers/list" element={<ProductionTransferListPage />} />

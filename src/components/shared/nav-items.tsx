@@ -62,11 +62,13 @@ export const WMS_NAV_ITEMS: NavItem[] = [
       { title: 'sidebar.productionTransferHub', titleFallback: 'Süreç Merkezi', href: '/warehouse/production-transfers', searchAliases: ['üretim', 'hammadde', 'besleme', 'yarı mamul', 'mamul'], requiredPermission: 'WMS.PRODUCTION_TRANSFER.VIEW' },
       { title: 'sidebar.productionTransferCreate', titleFallback: 'Üretim Transferi Oluştur', href: '/warehouse/production-transfers/new', searchAliases: ['üretim', 'transfer', 'emir', 'görev'], requiredPermission: 'WMS.PRODUCTION_TRANSFER.CREATE' },
       { title: 'sidebar.productionTransferList', titleFallback: 'Üretim Transfer Kayıtları', href: '/warehouse/production-transfers/list', searchAliases: ['üretim', 'transfer', 'liste'], requiredPermission: 'WMS.PRODUCTION_TRANSFER.VIEW' },
+      { title: 'sidebar.productionTransferTaskPool', titleFallback: 'Görev Havuzu', href: '/warehouse/production-transfers/task-pool', searchAliases: ['üretim', 'görev', 'atama', 'iş yükü'], requiredPermission: 'WMS.PRODUCTION_TRANSFER.ASSIGN' },
       { title: 'sidebar.productionTransferSettings', titleFallback: 'Üretim Transfer Ayarları', href: '/warehouse/production-transfers/settings', searchAliases: ['üretim', 'malzeme', 'uygunluk', 'tolerans'], requiredPermission: 'WMS.PRODUCTION_TRANSFER.SETTINGS.VIEW' },
     ] },
   ] },
   { title: 'sidebar.production', titleFallback: 'Üretim', icon: operationsIcon, children: [
     { title: 'sidebar.productionHub', titleFallback: 'Üretim Süreç Merkezi', href: '/warehouse/production', searchAliases: ['üretim', 'plan', 'iş emri', 'mamul', 'sarf'], requiredPermission: 'WMS.PRODUCTION.VIEW' },
+    { title: 'sidebar.productionWorkOrders', titleFallback: 'Netsis İş Emirleri', href: '/warehouse/production/work-orders', searchAliases: ['üretim', 'netsis', 'iş emri', 'reçete', 'bom'], requiredPermission: 'WMS.PRODUCTION.VIEW' },
     { title: 'sidebar.productionCreate', titleFallback: 'Üretim Planı Oluştur', href: '/warehouse/production/new', searchAliases: ['üretim', 'plan', 'iş emri', 'bom', 'rota'], requiredPermission: 'WMS.PRODUCTION.CREATE' },
     { title: 'sidebar.productionList', titleFallback: 'Üretim Planları', href: '/warehouse/production/list', searchAliases: ['üretim', 'plan', 'emir', 'liste', 'serbest bırak'], requiredPermission: 'WMS.PRODUCTION.VIEW' },
   ] },

@@ -42,6 +42,7 @@ export const loadVehicleCheckInPage = () => import('@/features/vehicle-check-in/
 export const loadVehicleCheckInListPage = () => import('@/features/vehicle-check-in/components/VehicleCheckInListPage');
 
 export const loadWarehouseTransferHubPage = () => import('@/features/warehouse-transfer-v2/components/WarehouseTransferHubPage');
+export const loadWarehouseTransferCreateHubPage = () => import('@/features/warehouse-transfer-v2/WarehouseTransferCreateHubPage');
 export const loadWarehouseTransferDraftPage = () => import('@/features/warehouse-transfer-v2/components/WarehouseTransferDraftPage');
 export const loadWarehouseTransferListPage = () => import('@/features/warehouse-transfer-v2/components/WarehouseTransferListPage');
 export const loadWarehouseTransferPolicyPage = () => import('@/features/warehouse-transfer-v2/components/WarehouseTransferPolicyPage');
