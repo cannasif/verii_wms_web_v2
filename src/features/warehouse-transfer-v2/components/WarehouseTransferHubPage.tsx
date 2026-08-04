@@ -1,4 +1,4 @@
-import { ClipboardList, PackageCheck, PackageOpen, Rows3, Settings2, Truck, UserRoundCog } from 'lucide-react';
+import { ArrowLeftRight, ClipboardList, PackageCheck, PackageOpen, Rows3, Settings2, Truck, UserRoundCog } from 'lucide-react';
 import { OpsProcessHub, type OpsProcessHubPhase } from '@/components/shared/OpsProcessHub';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 
@@ -13,6 +13,7 @@ export function WarehouseTransferHubPage() {
       description: t('hub.startDescription'),
       sectionCode: 'TR-START',
       items: [
+        { key: 'unifiedCreate', code: 'TR.NEW', href: '/warehouse/transfers/new-operation', icon: ArrowLeftRight, title: 'Yeni transfer / ambar çıkış', description: 'İşlem türünü seçin; depo transferini veya cari bazlı ambar çıkışını doğru domain akışında oluşturun.', featured: true },
         { key: 'orderedErp', code: 'TR.OE', href: '/warehouse/transfers/new', icon: ClipboardList, title: t('hub.cards.orderedErp.title'), description: t('hub.cards.orderedErp.description') },
         { key: 'orderedStock', code: 'TR.OS', href: '/warehouse/transfers/new', icon: UserRoundCog, title: t('hub.cards.orderedStock.title'), description: t('hub.cards.orderedStock.description') },
         { key: 'directErp', code: 'TR.DE', href: '/warehouse/transfers/new', icon: Truck, title: t('hub.cards.directErp.title'), description: t('hub.cards.directErp.description') },

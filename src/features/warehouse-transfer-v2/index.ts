@@ -3,3 +3,4 @@ export { WarehouseTransferDraftPage } from './components/WarehouseTransferDraftP
 export { WarehouseTransferListPage } from './components/WarehouseTransferListPage';
 export { WarehouseTransferPolicyPage } from './components/WarehouseTransferPolicyPage';
 export { WarehouseTransferOperationPage } from './WarehouseTransferOperationPage';
+export { WarehouseTransferCreateHubPage } from './WarehouseTransferCreateHubPage';
