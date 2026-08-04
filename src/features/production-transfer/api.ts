@@ -34,12 +34,12 @@ export interface ProductionTaskLine {
 }
 export interface ProductionTask {
   taskId: number; taskNo: string; taskType: string; warehouseId: number; status: string; acceptedAtUtc?: string; acceptedBy?: number;
-  startedAtUtc?: string; startedBy?: number; assignments: ProductionTaskAssignment[]; lines: ProductionTaskLine[];
+  startedAtUtc?: string; startedBy?: number; completedAtUtc?: string; completedBy?: number; assignments: ProductionTaskAssignment[]; lines: ProductionTaskLine[];
 }
 export interface ProductionTaskBoard {
   transferId: number; documentNo: string; transferStatus: string; sourceWarehouseId: number;
   tasks: ProductionTask[];
-  workloads: { userId: number; username: string; assignedTaskCount: number; completedTaskCount: number; completionPercent: number }[];
+  workloads: { userId: number; username: string; assignedTaskCount: number; completedTaskCount: number; plannedQuantity: number; processedQuantity: number; completionPercent: number }[];
   eligibleAssignees: { userId: number; username: string; warehouseIds: number[] }[];
 }
 export interface ProductionTaskPoolRow {
@@ -63,6 +63,10 @@ export const productionTransferApi = {
     unwrap(await api.post<Envelope<ProductionTaskBoard>>(`/api/production-transfers/${id}/tasks/${taskId}/assign`, { userId })),
   removeAssignment: async (id: number, taskId: number, userId: number): Promise<ProductionTaskBoard> =>
     unwrap(await api.post<Envelope<ProductionTaskBoard>>(`/api/production-transfers/${id}/tasks/${taskId}/assignments/${userId}/remove`, {})),
+  handoffTask: async (id: number, taskId: number, targetUserId: number, reason?: string): Promise<ProductionTaskBoard> =>
+    unwrap(await api.post<Envelope<ProductionTaskBoard>>(`/api/production-transfers/${id}/tasks/${taskId}/handoff`, { targetUserId, reason: reason?.trim() || null })),
+  refreshRoute: async (id: number, taskId: number): Promise<ProductionTaskBoard> =>
+    unwrap(await api.post<Envelope<ProductionTaskBoard>>(`/api/production-transfers/${id}/tasks/${taskId}/refresh-route`, {})),
   startTask: async (id: number, taskId: number): Promise<ProductionTaskBoard> =>
     unwrap(await api.post<Envelope<ProductionTaskBoard>>(`/api/production-transfers/${id}/tasks/${taskId}/start`, {})),
   completeCancellationReturn: async (id: number, taskId: number): Promise<ProductionTaskBoard> =>
