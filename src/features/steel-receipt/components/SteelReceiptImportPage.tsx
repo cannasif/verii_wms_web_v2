@@ -139,6 +139,7 @@ const filterLocalGrid=<T extends {id:number}>(items:T[],request:GridRequest,sear
 type SteelImportCommitResult={
   importReferenceNo:string;
   sourceFileName:string;
+  waybillNo?:string;
   planId:number;
   lines:SteelLineRow[];
 };
@@ -207,13 +208,14 @@ export function SteelReceiptImportPage(){
       if(commit){
         const savedReference=reference.trim();
         const savedFileName=fileName;
+        const savedWaybill=waybill.trim()||undefined;
         const lineCount=lines.length;
         const planId=await steelReceiptApi.commit(payload,commitIdempotencyKey);
         toast.success(t(`${I}.saveSuccess`));
         try{
           const savedLines=await fetchCommittedPlanLines(
             planId,lineCount,steelReceiptApi.linesPaged);
-          setCommitResult({importReferenceNo:savedReference,sourceFileName:savedFileName,planId,lines:savedLines});
+          setCommitResult({importReferenceNo:savedReference,sourceFileName:savedFileName,waybillNo:savedWaybill,planId,lines:savedLines});
         }catch{
           setCommitResult(null);
           toast.info(t(`${I}.commitResultLoadFailed`));
@@ -314,6 +316,15 @@ function SteelImportCommitResultGrid({result}:{result:SteelImportCommitResult}){
   // eslint-disable-next-line react-hooks/exhaustive-deps -- gridLanguage forces column label refresh
   ],[t,gridLanguage]);
   const fetchPage=useCallback(async(request:GridRequest)=>filterLocalGrid(rows,request,searchableKeys),[rows,searchableKeys]);
+  const gridTitle=<span className="inline-flex flex-wrap items-center gap-2.5">
+    <span>{result.importReferenceNo}</span>
+    {result.waybillNo?(
+      <OpsStatusBadge tone="active" className="!px-2.5 !py-1 !text-[11px] !normal-case !tracking-wide" title={t(`${I}.waybillNo`)}>
+        <span className="font-semibold">{t(`${I}.waybillNo`)}:</span>{' '}
+        <span className="font-mono font-black">{result.waybillNo}</span>
+      </OpsStatusBadge>
+    ):null}
+  </span>;
   return <>
     <style>{`
       html .steel-import-commit-grid .wms-ops-data-grid-shell {
@@ -335,7 +346,7 @@ function SteelImportCommitResultGrid({result}:{result:SteelImportCommitResult}){
         pageKey="steel-import-commit-result"
         persistPreferences={false}
         eyebrow=""
-        title={result.importReferenceNo}
+        title={gridTitle}
         description={t(`${I}.commitResultDescription`,{fileName:result.sourceFileName||'-',count:rows.length})}
         columns={columns}
         fetchPage={fetchPage}

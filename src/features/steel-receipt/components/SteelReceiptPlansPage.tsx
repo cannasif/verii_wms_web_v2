@@ -144,10 +144,10 @@ function PlanLinesDialog({plan,onClose}:{plan:SteelPlanRow;onClose:()=>void}){
     const arrivedQty=rows.reduce((sum,row)=>row.arrivalStatus==='Arrived'?sum+row.expectedQuantity:sum,0);
     const notArrivedQty=rows.reduce((sum,row)=>row.arrivalStatus!=='Arrived'?sum+row.expectedQuantity:sum,0);
     return [
-      {key:'total',label:t(`${G}.detailStatTotal`),value:lineCount,tone:'neutral' as const},
-      {key:'expected',label:t(`${G}.detailStatExpected`),value:expectedQty,tone:'active' as const,formatValue:formatProjectNumber},
-      {key:'arrived',label:t(`${G}.detailStatArrived`),value:arrivedQty,tone:'done' as const,formatValue:formatProjectNumber},
-      {key:'notArrived',label:t(`${G}.detailStatNotArrived`),value:notArrivedQty,tone:'pending' as const,formatValue:formatProjectNumber},
+      {key:'total',label:t(`${G}.detailStatTotal`,{defaultValue:'Toplam'}),value:lineCount,tone:'neutral' as const},
+      {key:'expected',label:t(`${G}.detailStatExpected`,{defaultValue:'Beklenen'}),value:expectedQty,tone:'active' as const,formatValue:formatProjectNumber},
+      {key:'arrived',label:t(`${G}.detailStatArrived`,{defaultValue:'Gelenler'}),value:arrivedQty,tone:'done' as const,formatValue:formatProjectNumber},
+      {key:'notArrived',label:t(`${G}.detailStatNotArrived`,{defaultValue:'Gelmeyenler'}),value:notArrivedQty,tone:'pending' as const,formatValue:formatProjectNumber},
     ] as const;
   },[rows,plan,t]);
   return <Dialog open onOpenChange={open=>{if(!open)onClose()}}>
