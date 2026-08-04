@@ -68,6 +68,67 @@ export interface CreateProductionPlanResult {
   replayed: boolean;
 }
 
+export interface NetsisProductionWorkOrder {
+  workOrderNumber: string;
+  branchCode: number;
+  stockCode: string;
+  stockName: string;
+  configurationCode?: string;
+  workOrderQuantity: number;
+  unitSequence: number;
+  unitCode?: string;
+  recipeTotal: number;
+  workOrderDate?: string;
+  deliveryDate?: string;
+  orderNumber?: string;
+  orderLineSequence: number;
+  projectCode?: string;
+  warehouseCode: number;
+  issueWarehouseCode: number;
+  isClosed: boolean;
+}
+
+export interface PreparedNetsisProductionMaterial {
+  stockId?: number;
+  stockCode: string;
+  stockName?: string;
+  unitCode: string;
+  yapCodeId?: number;
+  configurationCode?: string;
+  operationNumber: number;
+  recipeQuantity: number;
+  wasteQuantity: number;
+  requiredQuantity: number;
+  mappingError?: string;
+}
+
+export interface PreparedNetsisProductionWorkOrder {
+  workOrderNumber: string;
+  branchCode: number;
+  productCode: string;
+  productName: string;
+  unitCode: string;
+  plannedQuantity: number;
+  producedStockId?: number;
+  producedYapCodeId?: number;
+  configurationCode?: string;
+  sourceWarehouseId?: number;
+  sourceWarehouseCode: number;
+  sourceWarehouseName?: string;
+  targetWarehouseId?: number;
+  targetWarehouseCode: number;
+  targetWarehouseName?: string;
+  workOrderDate?: string;
+  deliveryDate?: string;
+  projectCode?: string;
+  isClosed: boolean;
+  existingProductionHeaderId?: number;
+  existingProductionOrderId?: number;
+  existingProductionDocumentNo?: string;
+  mappingErrors: string[];
+  materials: PreparedNetsisProductionMaterial[];
+}
+
 export interface ProductionPlanGridRow {
   id: number;
   branchCode: string;

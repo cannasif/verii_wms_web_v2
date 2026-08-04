@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type ReactElement, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement, type ReactNode } from 'react';
 import {
   Boxes,
   CheckCircle2,
@@ -11,7 +11,7 @@ import {
   Trash2,
   UserRoundCog,
 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { AdvancedDataGrid, type GridColumn } from '@/components/shared/AdvancedDataGrid';
 import { AppDateInput } from '@/components/shared/AppInput';
@@ -38,6 +38,7 @@ import type {
   ProductionPlanDetail,
   ProductionPlanGridRow,
   ProductionPlanType,
+  PreparedNetsisProductionWorkOrder,
 } from './types';
 
 const today = () => new Date().toLocaleDateString('en-CA');
@@ -83,6 +84,14 @@ export function ProductionHubPage(): ReactElement {
       sectionCode: 'PRD-START',
       items: [
         {
+          key: 'netsis-work-orders',
+          code: 'PRD.ERP',
+          href: '/warehouse/production/work-orders',
+          icon: Boxes,
+          title: 'Netsis iş emirleri',
+          description: 'Açık iş emirlerini ve reçetelerini inceleyip WMS emri veya üretim transferi hazırlayın.',
+        },
+        {
           key: 'create',
           code: 'PRD.NEW',
           href: '/warehouse/production/new',
@@ -118,6 +127,9 @@ export function ProductionHubPage(): ReactElement {
 export function ProductionCreatePage(): ReactElement {
   const { t, moduleReady } = useModuleTranslation('production');
   const branchCode = useAuthStore((x) => x.branch?.code ?? '0');
+  const location = useLocation();
+  const sourcePrefill = (location.state as { netsisProduction?: PreparedNetsisProductionWorkOrder } | null)?.netsisProduction;
+  const prefillApplied = useRef(false);
   const [sourceWarehouseValue, setSourceWarehouseValue] = useState<string | null>(null);
   const [targetWarehouseValue, setTargetWarehouseValue] = useState<string | null>(null);
   const sourceWarehouse = decode<WarehouseOption>(sourceWarehouseValue);
@@ -145,6 +157,35 @@ export function ProductionCreatePage(): ReactElement {
   const [materials, setMaterials] = useState<MaterialForm[]>([blankMaterial()]);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<CreateProductionPlanResult | null>(null);
+
+  useEffect(() => {
+    if (!sourcePrefill || prefillApplied.current) return;
+    prefillApplied.current = true;
+    if (!sourcePrefill.producedStockId || !sourcePrefill.sourceWarehouseId || !sourcePrefill.targetWarehouseId || sourcePrefill.mappingErrors.length) {
+      toast.error('Netsis iş emrinin WMS stok/depo eşlemeleri tamamlanmadan üretim emri hazırlanamaz.');
+      return;
+    }
+    setSourceWarehouseValue(encode({ id: sourcePrefill.sourceWarehouseId, branchCode, warehouseCode: sourcePrefill.sourceWarehouseCode, warehouseName: sourcePrefill.sourceWarehouseName ?? String(sourcePrefill.sourceWarehouseCode) } satisfies WarehouseOption));
+    setTargetWarehouseValue(encode({ id: sourcePrefill.targetWarehouseId, branchCode, warehouseCode: sourcePrefill.targetWarehouseCode, warehouseName: sourcePrefill.targetWarehouseName ?? String(sourcePrefill.targetWarehouseCode) } satisfies WarehouseOption));
+    setStockValue(encode({ id: sourcePrefill.producedStockId, branchCode, erpStockCode: sourcePrefill.productCode, stockName: sourcePrefill.productName, unitCode: sourcePrefill.unitCode } satisfies StockOption));
+    setYapValue(sourcePrefill.producedYapCodeId && sourcePrefill.configurationCode ? encode({ id: sourcePrefill.producedYapCodeId, branchCode, configurationCode: sourcePrefill.configurationCode, description: sourcePrefill.configurationCode } satisfies YapCodeOption) : null);
+    setPlannedQuantity(sourcePrefill.plannedQuantity);
+    setExternalOrderNo(sourcePrefill.workOrderNumber);
+    setBomReference(sourcePrefill.productCode);
+    setDocumentDate(sourcePrefill.workOrderDate?.slice(0, 10) || today());
+    setPlannedStart(sourcePrefill.workOrderDate?.slice(0, 16) || '');
+    setPlannedEnd(sourcePrefill.deliveryDate?.slice(0, 16) || '');
+    setDescription(`Netsis ${sourcePrefill.workOrderNumber} iş emrinden hazırlandı${sourcePrefill.projectCode ? ` · Proje: ${sourcePrefill.projectCode}` : ''}`);
+    setMaterials(sourcePrefill.materials.map(row => ({
+      localId: crypto.randomUUID(),
+      stockValue: encode({ id: row.stockId!, branchCode, erpStockCode: row.stockCode, stockName: row.stockName, unitCode: row.unitCode } satisfies StockOption),
+      yapValue: row.yapCodeId && row.configurationCode ? encode({ id: row.yapCodeId, branchCode, configurationCode: row.configurationCode, description: row.configurationCode } satisfies YapCodeOption) : null,
+      quantity: row.requiredQuantity,
+      issueMode: 'Manual',
+      isMandatory: true,
+    })));
+    toast.success(`${sourcePrefill.workOrderNumber} iş emri ve reçetesi forma aktarıldı.`);
+  }, [branchCode, sourcePrefill]);
 
   useEffect(() => {
     setSeries([]);
@@ -436,3 +477,5 @@ function Stat({ label, value }: { label: string; value: ReactNode }) {
 function DetailList({ title, rows }: { title: string; rows: string[] }) {
   return <div><h3 className="text-sm font-black">{title}</h3><ul className="mt-2 space-y-1 text-sm text-[var(--wms-app-text-muted)]">{rows.length ? rows.map((row) => <li key={row} className="rounded-lg border border-[var(--wms-app-border)] px-3 py-2">{row}</li>) : <li>—</li>}</ul></div>;
 }
+
+export { ProductionWorkOrdersPage } from './ProductionWorkOrdersPage';
