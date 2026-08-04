@@ -2,6 +2,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactElement,
   type ReactNode,
@@ -23,6 +24,7 @@ import { AppDropdown } from "@/components/shared/AppDropdown";
 import { AppDateInput } from "@/components/shared/AppInput";
 import { OperationFlowTabs } from "@/components/shared/OperationFlowTabs";
 import { PagedAppDropdown } from "@/components/shared/PagedAppDropdown";
+import { StockIdentityCell } from "@/components/shared/StockIdentityCell";
 import { TrackingPlanEditor } from "@/components/shared/TrackingPlanEditor";
 import { StockTrackingPolicyField } from "@/features/stock-tracking/effective-stock-tracking";
 import { useAuthStore } from "@/stores/auth-store";
@@ -125,6 +127,15 @@ const hasWarehouseTransferDirectDraft = (draft: WarehouseTransferDirectDraft) =>
   );
 
 export type TransferDraftVariant = "warehouse" | "production" | "subcontracting";
+export interface ProductionTransferInitialSource {
+  workOrderNumber: string;
+  projectCode?: string;
+  existingProductionHeaderId?: number;
+  existingProductionOrderId?: number;
+  sourceWarehouse: { id: number; code: number };
+  targetWarehouse: { id: number; code: number };
+  materials: Array<{ stockId: number; stockCode: string; stockName?: string; unitCode: string; yapCodeId?: number; configurationCode?: string; quantity: number }>;
+}
 export type SubcontractingTransferDirection =
   | "IssueToSupplier"
   | "ReceiptFromSupplier"
@@ -133,9 +144,11 @@ export type SubcontractingTransferDirection =
 export function WarehouseTransferDraftPage({
   variant = "warehouse",
   fixedSubcontractingDirection,
+  initialProductionSource,
 }: {
   variant?: TransferDraftVariant;
   fixedSubcontractingDirection?: SubcontractingTransferDirection;
+  initialProductionSource?: ProductionTransferInitialSource;
 }): ReactElement {
   const { t } = useTranslation("common");
   const branchCode = useAuthStore((x) => x.branch?.code ?? "0");
@@ -165,6 +178,8 @@ export function WarehouseTransferDraftPage({
   const [externalReference, setExternalReference] = useState("");
   const [description, setDescription] = useState("");
   const [productionPurpose, setProductionPurpose] = useState<"MaterialSupply" | "WorkInProgressMove" | "OutputMove">("MaterialSupply");
+  const [productionHeaderId, setProductionHeaderId] = useState<number | null>(null);
+  const [productionOrderId, setProductionOrderId] = useState<number | null>(null);
   const [productionPlanNo, setProductionPlanNo] = useState("");
   const [productionOrderNo, setProductionOrderNo] = useState("");
   const [productionOperationCode, setProductionOperationCode] = useState("");
@@ -183,6 +198,34 @@ export function WarehouseTransferDraftPage({
   const [lines, setLines] = useState<TransferDraftLine[]>([blankLine()]);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<CreateTransferDraftResult | null>(null);
+  const productionSourceApplied = useRef(false);
+  useEffect(() => {
+    if (variant !== "production" || !initialProductionSource || productionSourceApplied.current) return;
+    productionSourceApplied.current = true;
+    setSourceKind("OrderBased");
+    setExecutionKind("TaskBased");
+    setProductionPurpose("MaterialSupply");
+    setProductionHeaderId(initialProductionSource.existingProductionHeaderId ?? null);
+    setProductionOrderId(initialProductionSource.existingProductionOrderId ?? null);
+    setProductionOrderNo(initialProductionSource.workOrderNumber);
+    setProjectCode(initialProductionSource.projectCode ?? "");
+    setExternalReference(initialProductionSource.workOrderNumber);
+    setDescription(`Netsis ${initialProductionSource.workOrderNumber} iş emri reçetesinden hazırlandı.`);
+    setSourceValue(`${initialProductionSource.sourceWarehouse.id}|${initialProductionSource.sourceWarehouse.code}`);
+    setTargetValue(`${initialProductionSource.targetWarehouse.id}|${initialProductionSource.targetWarehouse.code}`);
+    void Promise.all(initialProductionSource.materials.map(async material => {
+      const trackingPolicy = await warehouseTransferApi.trackingPolicy(branchCode, material.stockId);
+      return {
+        localId: crypto.randomUUID(), stockId: material.stockId, stockCode: material.stockCode,
+        stockName: material.stockName, yapCodeId: material.yapCodeId, yapCode: material.configurationCode,
+        quantity: material.quantity, unitCode: material.unitCode, trackingType: trackingPolicy.trackingType,
+        trackingPolicy, requireHandlingUnit: false, trackings: [],
+      } satisfies TransferDraftLine;
+    })).then(preparedLines => {
+      setLines(preparedLines);
+      toast.success(`${initialProductionSource.workOrderNumber} reçetesi üretim transferine aktarıldı.`);
+    }).catch((error: Error) => toast.error(error.message || "Stok takip ayarları yüklenemedi."));
+  }, [branchCode, initialProductionSource, variant]);
   useEffect(() => {
     if (sourceKind !== "OrderBased" || selectedOrders.length === 0) return;
     const projects = [...new Set(orders
@@ -577,8 +620,8 @@ export function WarehouseTransferDraftPage({
         ? await warehouseTransferApi.createProductionDraft({
             transfer,
             purpose: productionPurpose,
-            productionHeaderId: null,
-            productionOrderId: null,
+            productionHeaderId,
+            productionOrderId,
             productionOperationId: null,
             productionPlanNo: productionPlanNo.trim() || null,
             productionOrderNo: productionOrderNo.trim() || null,
@@ -1143,15 +1186,29 @@ function LineCard({
   return (
     <div className="rounded-xl border border-[var(--wms-app-border)] p-4">
       <div className="mb-3 flex justify-between">
-        <strong>
-          #{index + 1}{" "}
-          {line.source && (
-            <span className="mr-2 font-mono text-[var(--wms-brand-primary)]">
-              {line.source.orderNumber}
-            </span>
+        <div>
+          <strong>
+            #{index + 1}{" "}
+            {line.source && (
+              <span className="mr-2 font-mono text-[var(--wms-brand-primary)]">
+                {line.source.orderNumber}
+              </span>
+            )}
+          </strong>
+          {line.stockId && line.stockCode ? (
+            <div className="mt-1">
+              <StockIdentityCell
+                layout="inline"
+                stockId={line.stockId}
+                stockCode={line.stockCode}
+                stockName={line.stockName}
+                branchCode={branchCode}
+              />
+            </div>
+          ) : (
+            <span className="text-sm font-semibold">{t(`${D}.lines.newLine`)}</span>
           )}
-          {line.stockCode ?? t(`${D}.lines.newLine`)}
-        </strong>
+        </div>
         <button type="button" onClick={remove} className="text-red-500">
           <Trash2 className="size-4" />
         </button>
