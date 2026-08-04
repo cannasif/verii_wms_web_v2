@@ -7,6 +7,7 @@ import { AppDropdown } from '@/components/shared/AppDropdown';
 import { AppDateInput } from '@/components/shared/AppInput';
 import { OperationFlowTabs } from '@/components/shared/OperationFlowTabs';
 import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
+import { StockIdentityCell } from '@/components/shared/StockIdentityCell';
 import { TrackingPlanEditor, type TrackingPlanRow } from '@/components/shared/TrackingPlanEditor';
 import {
   StockTrackingPolicyField,
@@ -50,6 +51,7 @@ type ShipmentLine = {
   sourceLocationId?: number;
   sourceLocationValue?: string | null;
   trackings: TrackingPlanRow[];
+  projectCode?: string;
   source?: {
     orderNumber: string;
     externalLineId: string;
@@ -92,6 +94,10 @@ type WarehouseOutboundDirectDraft = {
   isEDispatch: boolean;
   externalReference: string;
   description: string;
+  projectCode: string;
+  costCenterCode: string;
+  movementTypeCode: string;
+  exitLocationCode: string;
   lines: ShipmentLine[];
 };
 
@@ -102,6 +108,10 @@ const hasWarehouseOutboundDirectDraft = (draft: WarehouseOutboundDirectDraft) =>
     draft.selectedOrders.length ||
     draft.externalReference.trim() ||
     draft.description.trim() ||
+    draft.projectCode?.trim() ||
+    draft.costCenterCode?.trim() ||
+    draft.movementTypeCode?.trim() ||
+    draft.exitLocationCode?.trim() ||
     draft.vehiclePlate.trim() ||
     draft.carrierCode.trim() ||
     draft.lines.some((line) => line.stockId || line.source),
@@ -133,6 +143,10 @@ export function WarehouseOutboundCreatePage() {
   const [isEDispatch, setIsEDispatch] = useState(false);
   const [externalReference, setExternalReference] = useState('');
   const [description, setDescription] = useState('');
+  const [projectCode, setProjectCode] = useState('');
+  const [costCenterCode, setCostCenterCode] = useState('');
+  const [movementTypeCode, setMovementTypeCode] = useState('');
+  const [exitLocationCode, setExitLocationCode] = useState('');
   const [lines, setLines] = useState<ShipmentLine[]>([blankLine()]);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<ShipmentResult>();
@@ -155,11 +169,15 @@ export function WarehouseOutboundCreatePage() {
     isEDispatch,
     externalReference,
     description,
+    projectCode,
+    costCenterCode,
+    movementTypeCode,
+    exitLocationCode,
     lines,
   }), [
-    carrierCode, customer, customerValue, description, documentDate, externalReference,
+    carrierCode, costCenterCode, customer, customerValue, description, documentDate, exitLocationCode, externalReference,
     isEDispatch, lines, loadingLocationId, orders, plannedAt, priority, selectedOrders,
-    seriesId, source, stagingLocationId, vehiclePlate, warehouseValue,
+    movementTypeCode, projectCode, seriesId, source, stagingLocationId, vehiclePlate, warehouseValue,
   ]);
   const restoreOperationDraft = useCallback((draft: WarehouseOutboundDirectDraft) => {
     setSource(draft.source);
@@ -179,6 +197,10 @@ export function WarehouseOutboundCreatePage() {
     setIsEDispatch(draft.isEDispatch);
     setExternalReference(draft.externalReference);
     setDescription(draft.description);
+    setProjectCode(draft.projectCode ?? '');
+    setCostCenterCode(draft.costCenterCode ?? '');
+    setMovementTypeCode(draft.movementTypeCode ?? '');
+    setExitLocationCode(draft.exitLocationCode ?? '');
     setLines(draft.lines);
   }, []);
   const operationDraft = useOperationDraft({
@@ -308,6 +330,7 @@ export function WarehouseOutboundCreatePage() {
           trackingType: trackingPolicy.trackingType,
           trackingPolicy,
           requireHandlingUnit: false,
+          projectCode: row.projectCode,
           trackings: [],
           source: {
             orderNumber: row.orderNumber,
@@ -417,6 +440,10 @@ export function WarehouseOutboundCreatePage() {
         driverName: null,
         sealNo: null,
         description: description.trim() || null,
+        projectCode: projectCode.trim() || null,
+        costCenterCode: costCenterCode.trim() || null,
+        movementTypeCode: movementTypeCode.trim() || null,
+        exitLocationCode: exitLocationCode.trim() || null,
         assignedUserIds: execution === 'Task' ? assignees.map((x) => x.id) : [],
         lines: lines.map((line) => ({
           stockId: line.stockId,
@@ -427,6 +454,7 @@ export function WarehouseOutboundCreatePage() {
           requireHandlingUnit: line.requireHandlingUnit,
           sourceLocationId: line.sourceLocationId ?? null,
           description: null,
+          projectCode: line.projectCode?.trim() || projectCode.trim() || null,
           trackings: line.trackings.map((item) => ({
             quantity: item.quantity,
             handlingUnitNo: item.handlingUnitNo?.trim() || null,
@@ -545,6 +573,10 @@ export function WarehouseOutboundCreatePage() {
           <Field label="Araç plakası"><input className="input" value={vehiclePlate} onChange={(e) => setVehiclePlate(e.target.value)} /></Field>
           <Field label="Taşıyıcı kodu"><input className="input" value={carrierCode} onChange={(e) => setCarrierCode(e.target.value)} /></Field>
           <Field label="Harici referans"><input className="input" value={externalReference} onChange={(e) => setExternalReference(e.target.value)} /></Field>
+          <Field label="Proje kodu"><input className="input" maxLength={50} value={projectCode} onChange={(e) => setProjectCode(e.target.value)} /></Field>
+          <Field label="Masraf merkezi"><input className="input" maxLength={100} value={costCenterCode} onChange={(e) => setCostCenterCode(e.target.value)} /></Field>
+          <Field label="Hareket türü"><input className="input" maxLength={50} value={movementTypeCode} onChange={(e) => setMovementTypeCode(e.target.value)} /></Field>
+          <Field label="Çıkış yeri"><input className="input" maxLength={100} value={exitLocationCode} onChange={(e) => setExitLocationCode(e.target.value)} /></Field>
           <Field label="Açıklama"><input className="input" value={description} onChange={(e) => setDescription(e.target.value)} /></Field>
           <label className="flex items-center gap-2"><input type="checkbox" checked={isEDispatch} onChange={(e) => setIsEDispatch(e.target.checked)} />E-İrsaliye</label>
         </div>
@@ -609,7 +641,19 @@ export function WarehouseOutboundCreatePage() {
               <div className="mb-3 flex items-center justify-between">
                 <div>
                   <strong>#{index + 1} {line.source && <span className="font-mono text-cyan-500">{line.source.orderNumber}</span>}</strong>
-                  <p className="mt-1 text-sm font-semibold">{line.stockCode ?? 'Stok seçilmedi'} · {line.stockName ?? '—'}</p>
+                  {line.stockId && line.stockCode ? (
+                    <div className="mt-1">
+                      <StockIdentityCell
+                        layout="inline"
+                        stockId={line.stockId}
+                        stockCode={line.stockCode}
+                        stockName={line.stockName}
+                        branchCode={branch}
+                      />
+                    </div>
+                  ) : (
+                    <p className="mt-1 text-sm font-semibold">Stok seçilmedi</p>
+                  )}
                   {line.source && <p className="text-xs text-slate-500">Sipariş açığı: {line.source.availableQuantity} {line.unitCode}</p>}
                 </div>
                 <button type="button" onClick={() => setLines((current) => current.filter((x) => x.key !== line.key))} className="text-red-500">
@@ -663,6 +707,10 @@ export function WarehouseOutboundCreatePage() {
                     onChange={(e) => patchLine(line.key, { quantity: Number(e.target.value) })} />
                 </Field>
                 <Field label="Birim"><div className={`input flex items-center font-bold ${line.unitCode ? 'text-cyan-600' : 'text-amber-600'}`}>{line.unitCode || 'Önce stok seçin'}</div></Field>
+                <Field label="Kalem proje kodu">
+                  <input className="input" maxLength={50} value={line.projectCode ?? ''}
+                    placeholder={projectCode || 'Başlık projesi'} onChange={(e) => patchLine(line.key, { projectCode: e.target.value })} />
+                </Field>
                 <Field label="Kaynak raf">
                   <PagedAppDropdown queryKey={['sh-location', line.key, warehouseId]} fetchPage={(request) => warehouseOutboundApi.locations(request, warehouseId)}
                     toOption={(item: LocationOption) => ({ value: String(item.id), label: `${item.code} · ${item.name}` })}
