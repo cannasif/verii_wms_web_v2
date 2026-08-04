@@ -153,7 +153,11 @@
       "suggestion": "vorgeschlagen",
       "selected": "Ausgewählt",
       "autoSerialReserved": "Automatisch generierte Seriennummern wurden reserviert.",
-      "cancelAutoSerials": "Automatisch generierte Seriennummern stornieren"
+      "cancelAutoSerials": "Automatisch generierte Seriennummern stornieren",
+      "lotSerial": "Los / Serie",
+      "serialPreview": "{{first}} +{{count}}",
+      "serialFilledCount": "{{filled}}/{{total}} Seriennummern",
+      "serialHoverTitle": "Eingegebene Seriennummern ({{count}})"
     },
     "labelOptions": {
       "none": "Kein Etikett",
@@ -284,7 +288,9 @@
       "lineAvailableQuantityReserved": "Die verfügbare Menge dieser Bestellposition ist für einen aktiven Wareneingangsauftrag reserviert.",
       "lineWarehouseNotAssigned": "Das Lager dieser Bestellposition ist Ihnen nicht zugewiesen.",
       "reservedForActiveOrder": "Für einen aktiven Wareneingangsauftrag reserviert.",
-      "warehouseNotAssignedToUser": "Dieses Lager ist Ihnen nicht zugewiesen."
+      "warehouseNotAssignedToUser": "Dieses Lager ist Ihnen nicht zugewiesen.",
+      "serialMaskMismatch": "Seriennummer entspricht nicht der Maske: {{mask}}",
+      "lineSerialMaskMismatch": "{{name}}: Seriennummer entspricht nicht der Maske ({{mask}})."
     },
     "errors": {
       "warehouseAccessLoadFailed": "Die Lagerberechtigungen konnten nicht geladen werden.",
@@ -334,7 +340,10 @@
       "removeTrackingRow": "Verfolgungszeile entfernen",
       "quantityAria": "Menge",
       "empty": "Noch keine Los-/Seriennummernzeilen vorhanden. Automatisch vorschlagen oder eine einzelne Zeile hinzufügen.",
-      "done": "Fertig"
+      "done": "Fertig",
+      "addSingleRowLimitHint": "Höchstens {{count}} Serienzeilen möglich",
+      "rowLimitHint": "Serienzeilen: {{used}} / {{count}}",
+      "maskHint": "Maske {{mask}}"
     },
     "submit": {
       "receiptEyebrow": "Wareneingang / Lieferschein",

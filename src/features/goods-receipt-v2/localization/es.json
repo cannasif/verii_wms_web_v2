@@ -153,7 +153,11 @@
       "suggestion": "sugerido",
       "selected": "Seleccionado",
       "autoSerialReserved": "Se reservaron series generadas automáticamente.",
-      "cancelAutoSerials": "Cancelar series generadas automáticamente"
+      "cancelAutoSerials": "Cancelar series generadas automáticamente",
+      "lotSerial": "Lote / Serie",
+      "serialPreview": "{{first}} +{{count}}",
+      "serialFilledCount": "{{filled}}/{{total}} series",
+      "serialHoverTitle": "Series introducidas ({{count}})"
     },
     "labelOptions": {
       "none": "Sin etiqueta",
@@ -284,7 +288,9 @@
       "lineAvailableQuantityReserved": "La cantidad disponible de esta línea de pedido está reservada en una orden de recepción de mercancía activa.",
       "lineWarehouseNotAssigned": "El almacén de esta línea de pedido no está asignado a usted.",
       "reservedForActiveOrder": "Reservado en una orden de recepción de mercancía activa.",
-      "warehouseNotAssignedToUser": "Este almacén no está asignado a usted."
+      "warehouseNotAssignedToUser": "Este almacén no está asignado a usted.",
+      "serialMaskMismatch": "El número de serie no coincide con la máscara: {{mask}}",
+      "lineSerialMaskMismatch": "{{name}}: el número de serie no coincide con la máscara ({{mask}})."
     },
     "errors": {
       "warehouseAccessLoadFailed": "No se pudieron cargar los permisos de almacén.",
@@ -334,7 +340,10 @@
       "removeTrackingRow": "Eliminar fila de seguimiento",
       "quantityAria": "Cantidad",
       "empty": "Aún no hay filas de lote/serie. Sugiera automáticamente o añada una fila individual.",
-      "done": "Hecho"
+      "done": "Hecho",
+      "addSingleRowLimitHint": "Como máximo {{count}} filas de serie",
+      "rowLimitHint": "Filas de serie: {{used}} / {{count}}",
+      "maskHint": "Máscara {{mask}}"
     },
     "submit": {
       "receiptEyebrow": "Recepción de mercancías / albarán",

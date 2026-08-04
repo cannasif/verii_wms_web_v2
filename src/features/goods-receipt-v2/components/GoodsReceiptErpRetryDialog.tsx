@@ -1,8 +1,17 @@
 import { useEffect, useState, type ReactElement } from 'react';
 import { AlertTriangle, Loader2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { OpsActionButton } from '@/components/shared/OpsActionButton';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
+import { cn } from '@/lib/utils';
 import { goodsReceiptV2Api } from '../api/goods-receipt.api';
 import type { ErpPostingResult, GoodsReceiptGridRow } from '../types/goods-receipt.types';
 
@@ -51,6 +60,7 @@ export function GoodsReceiptErpRetryDialog({
     : posting?.status === 'Failed'
       ? t('list.erpRetryDialog.submitResend')
       : t('list.erpSendToErp');
+  const waybillRef = header.waybillNo || header.electronicWaybillNo || t('list.erpRetryDialog.waybillNumberFallback');
 
   const retry = async () => {
     if (!canSubmit) return;
@@ -81,71 +91,125 @@ export function GoodsReceiptErpRetryDialog({
 
   return (
     <Dialog open onOpenChange={(open) => { if (!open && !working) close(); }}>
-      <DialogContent className="max-w-xl">
-        <DialogTitle>{t('list.erpRetryDialog.title')}</DialogTitle>
-        <DialogDescription>
-          {t('list.erpRetryDialog.description', { documentNo: header.documentNo })}
-        </DialogDescription>
-
-        {loading ? (
-          <div className="grid min-h-28 place-items-center"><Loader2 className="animate-spin" /></div>
-        ) : (
-          <div className="space-y-4">
-            <div className="rounded-xl border border-[var(--wms-app-border)] p-4 text-sm">
-              <div><strong>{t('list.erpRetryDialog.localStatus')}:</strong> {header.erpIntegrationStatus}</div>
-              <div><strong>{t('list.erpRetryDialog.submissionStatus')}:</strong> {posting?.status || t('list.erpRetryDialog.recordNotFound')}</div>
-              <div><strong>{t('list.erpRetryDialog.attempt')}:</strong> {posting?.attemptCount ?? 0}</div>
-              {posting?.errorMessage ? <div className="mt-2 text-rose-600">{posting.errorMessage}</div> : null}
-            </div>
-
-            {uncertain ? (
-              <div className="space-y-3 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4">
-                <div className="flex gap-2 text-sm text-amber-800 dark:text-amber-200">
-                  <AlertTriangle className="mt-0.5 size-4 shrink-0" />
-                  <p>
-                    {t('list.erpRetryDialog.uncertainWarningPrefix')} <strong>{header.documentNo}</strong>
-                    {' '}{t('list.erpRetryDialog.uncertainWarningAnd')} <strong>{header.waybillNo || header.electronicWaybillNo || t('list.erpRetryDialog.waybillNumberFallback')}</strong> {t('list.erpRetryDialog.uncertainWarningSuffix')}
-                  </p>
-                </div>
-                <label className="flex items-start gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    className="mt-1 size-4"
-                    checked={confirmedNotFound}
-                    onChange={(event) => setConfirmedNotFound(event.target.checked)}
-                  />
-                  <span>{t('list.erpRetryDialog.confirmedCheckbox')}</span>
-                </label>
-                <label className="block space-y-1 text-sm">
-                  <span className="font-semibold">{t('list.erpRetryDialog.reconciliationNoteLabel')}</span>
-                  <textarea
-                    className="input min-h-24 w-full resize-y"
-                    value={reason}
-                    maxLength={1000}
-                    onChange={(event) => setReason(event.target.value)}
-                    placeholder={t('list.erpRetryDialog.reconciliationPlaceholder')}
-                  />
-                  <span className="text-xs text-slate-500">{t('list.erpRetryDialog.reconciliationHint')}</span>
-                </label>
-              </div>
-            ) : null}
-
-            <div className="flex justify-end gap-2">
-              <button type="button" className="rounded-xl border px-4 py-2" disabled={working} onClick={close}>
-                {t('list.erpRetryDialog.cancel')}
-              </button>
-              <button
-                type="button"
-                className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-4 py-2 font-semibold text-white disabled:opacity-50"
-                disabled={!canSubmit}
-                onClick={() => void retry()}
-              >
-                {working ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
-                {submitLabel}
-              </button>
-            </div>
-          </div>
+      <DialogContent
+        showCloseButton
+        portalRoot="body"
+        tone="ops"
+        className={cn(
+          'wms-ops-form wms-ops-detail-dialog wms-ops-erp-retry-dialog max-w-xl gap-0 overflow-hidden border-0 p-0 shadow-none',
+          uncertain && 'wms-ops-erp-retry-dialog--uncertain',
         )}
+      >
+        <DialogHeader className="wms-ops-erp-retry-dialog__header wms-ops-detail-dialog__header relative border-b px-6 py-4 pr-14 text-left">
+          <DialogTitle className="wms-ops-detail-dialog__title wms-ops-erp-retry-dialog__title min-w-0 pr-2">
+            {t('list.erpRetryDialog.title')}
+          </DialogTitle>
+          <DialogDescription className="wms-ops-detail-dialog__description wms-ops-erp-retry-dialog__description mt-1.5">
+            {t('list.erpRetryDialog.description', { documentNo: header.documentNo })}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="wms-ops-erp-retry-dialog__body wms-ops-dialog__body wms-ops-scrollbar min-h-0 flex-1 overflow-y-auto px-6 py-5">
+          {loading ? (
+            <div className="grid min-h-28 place-items-center text-[var(--wms-ops-accent,#06b6d4)]" aria-busy="true">
+              <Loader2 className="wms-ops-erp-retry-dialog__loading size-6 animate-spin" aria-hidden />
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <section className="wms-ops-erp-retry-dialog__status" aria-label={t('list.erpRetryDialog.submissionStatus')}>
+                <dl className="wms-ops-erp-retry-dialog__status-grid">
+                  <div className="wms-ops-erp-retry-dialog__status-row">
+                    <dt>{t('list.erpRetryDialog.localStatus')}</dt>
+                    <dd>
+                      <span className="wms-ops-erp-retry-dialog__code">{header.erpIntegrationStatus}</span>
+                    </dd>
+                  </div>
+                  <div className="wms-ops-erp-retry-dialog__status-row">
+                    <dt>{t('list.erpRetryDialog.submissionStatus')}</dt>
+                    <dd>
+                      <span className="wms-ops-erp-retry-dialog__code">
+                        {posting?.status || t('list.erpRetryDialog.recordNotFound')}
+                      </span>
+                    </dd>
+                  </div>
+                  <div className="wms-ops-erp-retry-dialog__status-row">
+                    <dt>{t('list.erpRetryDialog.attempt')}</dt>
+                    <dd>
+                      <span className="wms-ops-erp-retry-dialog__code">{posting?.attemptCount ?? 0}</span>
+                    </dd>
+                  </div>
+                </dl>
+                {posting?.errorMessage ? (
+                  <p className="wms-ops-erp-retry-dialog__error" role="alert">
+                    {posting.errorMessage}
+                  </p>
+                ) : null}
+              </section>
+
+              {uncertain ? (
+                <section className="wms-ops-erp-retry-dialog__reconcile" aria-live="polite">
+                  <div className="wms-ops-erp-retry-dialog__warn">
+                    <AlertTriangle className="wms-ops-erp-retry-dialog__warn-icon" aria-hidden />
+                    <p>
+                      {t('list.erpRetryDialog.uncertainWarningPrefix')}{' '}
+                      <strong className="wms-ops-erp-retry-dialog__ref">{header.documentNo}</strong>
+                      {' '}{t('list.erpRetryDialog.uncertainWarningAnd')}{' '}
+                      <strong className="wms-ops-erp-retry-dialog__ref">{waybillRef}</strong>{' '}
+                      {t('list.erpRetryDialog.uncertainWarningSuffix')}
+                    </p>
+                  </div>
+
+                  <label className="wms-ops-erp-retry-dialog__check">
+                    <input
+                      type="checkbox"
+                      className="wms-ops-erp-retry-dialog__checkbox"
+                      checked={confirmedNotFound}
+                      onChange={(event) => setConfirmedNotFound(event.target.checked)}
+                    />
+                    <span>{t('list.erpRetryDialog.confirmedCheckbox')}</span>
+                  </label>
+
+                  <label className="wms-ops-erp-retry-dialog__note">
+                    <span className="wms-ops-prelabel-form-label wms-ops-erp-retry-dialog__note-label">
+                      {t('list.erpRetryDialog.reconciliationNoteLabel')}
+                    </span>
+                    <textarea
+                      className="input wms-ops-field wms-ops-erp-retry-dialog__textarea min-h-24 w-full resize-y"
+                      value={reason}
+                      maxLength={1000}
+                      onChange={(event) => setReason(event.target.value)}
+                      placeholder={t('list.erpRetryDialog.reconciliationPlaceholder')}
+                    />
+                    <span className="wms-ops-erp-retry-dialog__hint">
+                      {t('list.erpRetryDialog.reconciliationHint')}
+                    </span>
+                  </label>
+                </section>
+              ) : null}
+            </div>
+          )}
+        </div>
+
+        <DialogFooter className="wms-ops-actions wms-ops-detail-dialog__footer wms-ops-erp-retry-dialog__footer gap-2 border-t px-6 py-4 sm:justify-end sm:gap-2">
+          <OpsActionButton
+            type="button"
+            variant="secondary"
+            disabled={working}
+            onClick={close}
+          >
+            {t('list.erpRetryDialog.cancel')}
+          </OpsActionButton>
+          <OpsActionButton
+            type="button"
+            variant="primary"
+            loading={working}
+            disabled={!canSubmit}
+            onClick={() => void retry()}
+          >
+            <RefreshCw className="size-4" aria-hidden />
+            {submitLabel}
+          </OpsActionButton>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

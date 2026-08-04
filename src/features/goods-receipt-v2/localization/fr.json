@@ -153,7 +153,11 @@
       "suggestion": "suggéré",
       "selected": "Sélectionné",
       "autoSerialReserved": "Les numéros de série générés automatiquement ont été réservés.",
-      "cancelAutoSerials": "Annuler les numéros de série générés automatiquement"
+      "cancelAutoSerials": "Annuler les numéros de série générés automatiquement",
+      "lotSerial": "Lot / Série",
+      "serialPreview": "{{first}} +{{count}}",
+      "serialFilledCount": "{{filled}}/{{total}} séries",
+      "serialHoverTitle": "Séries saisies ({{count}})"
     },
     "labelOptions": {
       "none": "Aucune étiquette",
@@ -284,7 +288,9 @@
       "lineAvailableQuantityReserved": "La quantité disponible de cette ligne de commande est réservée sur une commande de réception active.",
       "lineWarehouseNotAssigned": "L'entrepôt de cette ligne de commande ne vous est pas assigné.",
       "reservedForActiveOrder": "Réservé sur une commande de réception active.",
-      "warehouseNotAssignedToUser": "Cet entrepôt ne vous est pas assigné."
+      "warehouseNotAssignedToUser": "Cet entrepôt ne vous est pas assigné.",
+      "serialMaskMismatch": "Le numéro de série ne correspond pas au masque : {{mask}}",
+      "lineSerialMaskMismatch": "{{name}} : le numéro de série ne correspond pas au masque ({{mask}})."
     },
     "errors": {
       "warehouseAccessLoadFailed": "Les droits d'accès à l'entrepôt n'ont pas pu être chargés.",
@@ -334,7 +340,10 @@
       "removeTrackingRow": "Supprimer la ligne de suivi",
       "quantityAria": "Quantité",
       "empty": "Aucune ligne de lot/série pour le moment. Utilisez la suggestion automatique ou ajoutez une ligne unique.",
-      "done": "Terminé"
+      "done": "Terminé",
+      "addSingleRowLimitHint": "Au maximum {{count}} lignes de série",
+      "rowLimitHint": "Lignes série : {{used}} / {{count}}",
+      "maskHint": "Masque {{mask}}"
     },
     "submit": {
       "receiptEyebrow": "Réception de marchandises / bon de livraison",

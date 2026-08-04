@@ -153,7 +153,11 @@
       "suggestion": "مقترح",
       "selected": "محدد",
       "autoSerialReserved": "تم حجز الأرقام التسلسلية المُنشأة تلقائيًا.",
-      "cancelAutoSerials": "إلغاء الأرقام التسلسلية المُنشأة تلقائيًا"
+      "cancelAutoSerials": "إلغاء الأرقام التسلسلية المُنشأة تلقائيًا",
+      "lotSerial": "دفعة / تسلسل",
+      "serialPreview": "{{first}} +{{count}}",
+      "serialFilledCount": "{{filled}}/{{total}} رقم تسلسلي",
+      "serialHoverTitle": "الأرقام التسلسلية المدخلة ({{count}})"
     },
     "labelOptions": {
       "none": "بدون ملصق",
@@ -284,7 +288,9 @@
       "lineAvailableQuantityReserved": "الكمية المتاحة لسطر الطلب هذا محجوزة في أمر استلام بضائع نشط.",
       "lineWarehouseNotAssigned": "مستودع سطر الطلب هذا غير معيّن لك.",
       "reservedForActiveOrder": "محجوز في أمر استلام بضائع نشط.",
-      "warehouseNotAssignedToUser": "هذا المستودع غير معيّن لك."
+      "warehouseNotAssignedToUser": "هذا المستودع غير معيّن لك.",
+      "serialMaskMismatch": "رقم التسلسل لا يطابق القناع: {{mask}}",
+      "lineSerialMaskMismatch": "{{name}}: رقم التسلسل لا يطابق القناع ({{mask}})."
     },
     "errors": {
       "warehouseAccessLoadFailed": "تعذر تحميل صلاحيات المستودع.",
@@ -334,7 +340,10 @@
       "removeTrackingRow": "حذف سطر التتبع",
       "quantityAria": "الكمية",
       "empty": "لا توجد سطور دفعة/رقم تسلسلي بعد. استخدم الاقتراح التلقائي أو أضف سطرًا فرديًا.",
-      "done": "تم"
+      "done": "تم",
+      "addSingleRowLimitHint": "بحد أقصى {{count}} صفوف تسلسل",
+      "rowLimitHint": "صفوف التسلسل: {{used}} / {{count}}",
+      "maskHint": "القناع {{mask}}"
     },
     "submit": {
       "receiptEyebrow": "استلام البضائع / إشعار التسليم",

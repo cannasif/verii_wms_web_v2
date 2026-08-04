@@ -63,7 +63,7 @@ import {
 } from "@/lib/project-format";
 import { cn } from "@/lib/utils";
 import { getWorkspacePortalRoot } from "@/lib/workspace-portal";
-import { navigateToErrorTarget } from "@/lib/toast-error-navigation";
+import { navigateToErrorTarget, toastError } from "@/lib/toast-error-navigation";
 import { useAuthStore } from "@/stores/auth-store";
 import { useProjectSettingsStore } from "@/stores/project-settings-store";
 import { OperationDraftRestoreDialog } from "@/features/operation-drafts/OperationDraftRestoreDialog";
@@ -94,6 +94,10 @@ import {
   isValidGoodsReceiptDocumentNo,
   normalizeGoodsReceiptDocumentNo,
 } from "../utils/goods-receipt-document-reference";
+import {
+  matchesSerialMask,
+  maxSerialRowCount,
+} from "../utils/serial-mask";
 import { GoodsReceiptPostCreateRoutingActions } from "./GoodsReceiptPostCreateRoutingActions";
 
 const toPagedResponse = <T,>(page: DropdownPage<T>): PagedResponse<T> => ({
@@ -1001,9 +1005,25 @@ export function GoodsReceiptCreatePage({
                 goodsReceiptV2Api.trackingPolicy(customer.branch, stock.id),
               );
             const trackingPolicy = await trackingPolicies.get(stock.id)!;
+            const needsSerial =
+              trackingPolicy.trackingType === "Serial" ||
+              trackingPolicy.trackingType === "LotAndSerial";
+            let serialMaskTemplate: string | null = null;
+            if (needsSerial) {
+              try {
+                const settings = await stockTrackingApi.getStockSettings(
+                  stock.id,
+                  customer.branch,
+                );
+                serialMaskTemplate = settings.serialMaskTemplate ?? null;
+              } catch {
+                serialMaskTemplate = null;
+              }
+            }
             return {
               ...x,
               stockId: stock.id,
+              stockName: x.stockName || stock.stockName,
               yapCodeId: x.yapCode
                 ? yapIdByCode.get(x.yapCode.toLocaleUpperCase("tr-TR"))
                 : undefined,
@@ -1021,6 +1041,7 @@ export function GoodsReceiptCreatePage({
                 : null,
               trackingType: trackingPolicy.trackingType,
               trackingPolicy,
+              serialMaskTemplate,
               trackings: [],
               requireQualityControl: qualityByStockId.get(stock.id) === true,
             };
@@ -1141,42 +1162,65 @@ export function GoodsReceiptCreatePage({
     );
   const addTracking = (key: string): void =>
     setLines((current) =>
-      current.map((line) =>
-        lineKey(line) !== key
-          ? line
-          : {
-              ...line,
-              trackings: [
-                ...line.trackings,
-                {
-                  localId: crypto.randomUUID(),
-                  quantity:
-                    line.trackingType === "Serial" ||
-                    line.trackingType === "LotAndSerial"
-                      ? 1
-                      : Math.max(
-                          line.quantity -
-                            line.trackings.reduce(
-                              (sum, x) => sum + x.quantity,
-                              0,
-                            ),
-                          0,
-                        ),
-                },
-              ],
+      current.map((line) => {
+        if (lineKey(line) !== key) return line;
+        const serialMode =
+          line.trackingType === "Serial" ||
+          line.trackingType === "LotAndSerial";
+        if (serialMode) {
+          const maxRows = maxSerialRowCount(line.quantity);
+          if (maxRows <= 0 || line.trackings.length >= maxRows) {
+            toast.error(t("createFlow.validation.serialCountExceedsQuantity"));
+            return line;
+          }
+        }
+        return {
+          ...line,
+          trackings: [
+            ...line.trackings,
+            {
+              localId: crypto.randomUUID(),
+              quantity: serialMode
+                ? 1
+                : Math.max(
+                    line.quantity -
+                      line.trackings.reduce(
+                        (sum, x) => sum + x.quantity,
+                        0,
+                      ),
+                    0,
+                  ),
             },
-      ),
+          ],
+        };
+      }),
     );
   const removeTracking = (key: string, trackingId: string): void =>
     setLines((current) =>
-      current.map((line) =>
-        lineKey(line) !== key
-          ? line
-          : {
-              ...line,
-              trackings: line.trackings.filter((x) => x.localId !== trackingId),
-            },
-      ),
+      current.map((line) => {
+        if (lineKey(line) !== key) return line;
+        const trackings = line.trackings.filter((x) => x.localId !== trackingId);
+        const invalidSerialTrackingIds = (
+          line.invalidSerialTrackingIds ?? []
+        ).filter((id) => id !== trackingId);
+        if (trackings.length === 0 && line.serialGenerationKey) {
+          void stockTrackingApi
+            .voidGeneratedSerials({
+              branchCode: customer?.branch ?? branchCode,
+              stockId: line.stockId,
+              idempotencyKey: line.serialGenerationKey,
+              reason: t("createFlow.audit.autoSerialGenerationCancelled"),
+            })
+            .catch(() => undefined);
+          return {
+            ...line,
+            trackings,
+            invalidSerialTrackingIds,
+            serialGenerationKey: undefined,
+          };
+        }
+        return { ...line, trackings, invalidSerialTrackingIds };
+      }),
     );
   const createSerialRows = async (key: string): Promise<void> => {
     const line = lines.find((item) => lineKey(item) === key);
@@ -1320,6 +1364,22 @@ export function GoodsReceiptCreatePage({
         .filter(Boolean);
       if (new Set(serials).size !== serials.length)
         return t("createFlow.validation.lineDuplicateSerial", { name });
+      if (
+        (line.trackingType === "Serial" ||
+          line.trackingType === "LotAndSerial") &&
+        line.serialMaskTemplate &&
+        line.trackings.some(
+          (x) =>
+            x.serialNo?.trim() &&
+            !matchesSerialMask(x.serialNo, line.serialMaskTemplate, {
+              stockCode: line.stockCode,
+            }),
+        )
+      )
+        return t("createFlow.validation.lineSerialMaskMismatch", {
+          name,
+          mask: line.serialMaskTemplate,
+        });
     }
     if (!seriesValue) return t("createFlow.validation.documentSeries");
     if (!direct && assignees.length === 0)
@@ -1407,8 +1467,7 @@ export function GoodsReceiptCreatePage({
         targetWarehouseId: primaryLine.targetWarehouseId,
         receivingLocationId: primaryLine.receivingLocationId,
         documentDate,
-        // Liste DTO çoğu zaman waybillNo bekler; e-irsaliyede sadece electronic yazılırsa kolon boş kalır.
-        waybillNo: receiptNo,
+        waybillNo: isElectronicReceipt ? null : receiptNo,
         waybillDate,
         electronicWaybillNo: isElectronicReceipt ? receiptNo : null,
         plannedArrivalAtUtc: !direct && plannedArrival
@@ -3092,15 +3151,63 @@ function ReceiptEntryRow({
     (line.receivingLocationValue
       ? `Raf #${line.receivingLocationValue}`
       : "");
+  const filledSerials = useMemo(
+    () =>
+      line.trackings
+        .map((x) => x.serialNo?.trim())
+        .filter((value): value is string => Boolean(value)),
+    [line.trackings],
+  );
   const serialSummary = needsTracking
-    ? line.trackings.length > 0
-      ? serialMode
-        ? t("createFlow.entryRow.serialCount", {
-            count: line.trackings.filter((x) => x.serialNo).length,
-          })
-        : t("createFlow.entryRow.lotRowCount", { count: line.trackings.length })
-      : t("createFlow.entryRow.planSerial")
+    ? (() => {
+        if (line.trackings.length === 0) return t("createFlow.entryRow.planSerial");
+        if (!serialMode) {
+          return t("createFlow.entryRow.lotRowCount", {
+            count: line.trackings.length,
+          });
+        }
+        const total = Math.max(
+          maxSerialRowCount(line.quantity),
+          line.trackings.length,
+        );
+        // Sadece dolu seri numaralarını say; boş satırlar “2 seri” olmaz.
+        return t("createFlow.entryRow.serialFilledCount", {
+          filled: filledSerials.length,
+          total,
+        });
+      })()
     : "—";
+  const serialReady = !serialMode || line.quantity > 0;
+
+  const commitQuantity = (finalQty: number): void => {
+    const serialTracked =
+      line.trackingType === "Serial" || line.trackingType === "LotAndSerial";
+    const maxRows = maxSerialRowCount(finalQty);
+    const shouldTrim =
+      serialTracked && line.trackings.length > maxRows;
+    updateLine(key, {
+      quantity: finalQty,
+      ...(shouldTrim
+        ? {
+            trackings: line.trackings.slice(0, maxRows),
+            serialGenerationKey: undefined,
+          }
+        : {}),
+    });
+    if (shouldTrim && line.serialGenerationKey) {
+      void stockTrackingApi
+        .voidGeneratedSerials({
+          branchCode,
+          stockId: line.stockId,
+          idempotencyKey: line.serialGenerationKey,
+          reason: t("createFlow.audit.quantityOrSerialPlanChanged"),
+        })
+        .catch(() => undefined);
+    }
+    if (serialTracked && finalQty <= 0) {
+      setSerialOpen(false);
+    }
+  };
 
   useEffect(() => {
     setQuantityText(
@@ -3411,7 +3518,7 @@ function ReceiptEntryRow({
                         const finalQty = pieceUnit
                           ? Math.max(1, Math.round(capped))
                           : roundReceiptQuantity(capped, qtyPlaces);
-                        updateLine(key, { quantity: finalQty });
+                        commitQuantity(finalQty);
                         setQuantityText(
                           formatReceiptQuantity(
                             finalQty,
@@ -3440,7 +3547,7 @@ function ReceiptEntryRow({
                           const finalQty = pieceUnit
                             ? Math.max(1, Math.round(next))
                             : roundReceiptQuantity(next, qtyPlaces);
-                          updateLine(key, { quantity: finalQty });
+                          commitQuantity(finalQty);
                           setQuantityText(
                             formatReceiptQuantity(
                               finalQty,
@@ -3468,7 +3575,7 @@ function ReceiptEntryRow({
                           const finalQty = pieceUnit
                             ? Math.round(stepped)
                             : stepped;
-                          updateLine(key, { quantity: finalQty });
+                          commitQuantity(finalQty);
                           setQuantityText(
                             formatReceiptQuantity(
                               finalQty,
@@ -3488,25 +3595,101 @@ function ReceiptEntryRow({
               <div
                 className="wms-ops-receipt-entry-row__field wms-ops-receipt-entry-row__field--serial"
                 data-wms-error-target="serial"
-                data-wms-error-keys="lot/seri planı|lot/seri toplamı|seri satırı|benzersiz seri|aynı seri|miktar kadar benzersiz seri|takipsiz kalemde lot|lot zorunludur|üretim tarihi|son kullanma|lot/serial plan|serial row|duplicate serial|manufacturing date|expiration date"
+                data-wms-error-keys="lot/seri planı|lot/seri toplamı|seri satırı|benzersiz seri|aynı seri|miktar kadar benzersiz seri|takipsiz kalemde lot|lot zorunludur|üretim tarihi|son kullanma|lot/serial plan|serial row|duplicate serial|manufacturing date|expiration date|maske|mask"
               >
-                <label className="wms-ops-entry-label">{t("createFlow.entryRow.serialNo")}</label>
+                <label className="wms-ops-entry-label">
+                  {serialMode
+                    ? t("createFlow.entryRow.serialNo")
+                    : needsTracking
+                      ? t("createFlow.entryRow.lotSerial")
+                      : t("createFlow.entryRow.serialNo")}
+                </label>
                 {needsTracking ? (
-                  <OpsFieldShell>
-                    <button
-                      type="button"
-                      className={cn(
-                        "wms-ops-lookup-trigger wms-ops-field h-7",
-                        !line.trackings.length && "wms-ops-field--placeholder",
-                      )}
-                      onClick={() => setSerialOpen(true)}
-                    >
-                      <span className="truncate font-mono text-xs leading-none">
-                        {serialSummary}
-                      </span>
-                      <ScanBarcode className="size-3 shrink-0 opacity-60" aria-hidden />
-                    </button>
-                  </OpsFieldShell>
+                  <TooltipProvider delayDuration={180}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="block w-full min-w-0">
+                          <OpsFieldShell>
+                            <button
+                              type="button"
+                              disabled={!serialReady}
+                              title={
+                                serialReady
+                                  ? undefined
+                                  : t("createFlow.validation.enterQuantityFirst")
+                              }
+                              className={cn(
+                                "wms-ops-lookup-trigger wms-ops-field h-7",
+                                !line.trackings.length && "wms-ops-field--placeholder",
+                                !serialReady && "opacity-50",
+                              )}
+                              onClick={() => {
+                                if (!serialReady) {
+                                  toast.error(
+                                    t("createFlow.validation.enterQuantityFirst"),
+                                  );
+                                  return;
+                                }
+                                setSerialOpen(true);
+                              }}
+                            >
+                              <span className="truncate font-mono text-xs leading-none">
+                                {serialSummary}
+                              </span>
+                              <ScanBarcode
+                                className="size-3 shrink-0 opacity-60"
+                                aria-hidden
+                              />
+                            </button>
+                          </OpsFieldShell>
+                        </span>
+                      </TooltipTrigger>
+                      {filledSerials.length > 0 ? (
+                        <TooltipContent
+                          side="top"
+                          align="start"
+                          sideOffset={8}
+                          className={cn(
+                            "wms-ops-serial-hover-popover p-0 text-left",
+                            filledSerials.length > 80 &&
+                              "wms-ops-serial-hover-popover--wide",
+                            filledSerials.length > 40 &&
+                              filledSerials.length <= 80 &&
+                              "wms-ops-serial-hover-popover--dense",
+                          )}
+                        >
+                          <div className="wms-ops-serial-hover-popover__header">
+                            {t("createFlow.entryRow.serialHoverTitle", {
+                              count: filledSerials.length,
+                            })}
+                          </div>
+                          <ul
+                            className={cn(
+                              "wms-ops-serial-hover-popover__list",
+                              filledSerials.length > 40 &&
+                                "wms-ops-serial-hover-popover__list--dense",
+                              filledSerials.length > 80 &&
+                                "wms-ops-serial-hover-popover__list--wide",
+                            )}
+                          >
+                            {filledSerials.map((serial, index) => (
+                              <li
+                                key={`${serial}-${index}`}
+                                className="wms-ops-serial-hover-popover__item"
+                              >
+                                <span className="wms-ops-serial-hover-popover__index">
+                                  {String(index + 1).padStart(2, "0")}
+                                </span>
+                                <span className="wms-ops-serial-hover-popover__value">
+                                  {serial}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        </TooltipContent>
+                      ) : null}
+                    </Tooltip>
+                  </TooltipProvider>
                 ) : (
                   <OpsFieldShell>
                     <input
@@ -3693,7 +3876,7 @@ function ReceiptEntryRow({
         )}
       </div>
 
-      {serialMode && line.serialGenerationKey && (
+      {serialMode && line.serialGenerationKey && line.trackings.length > 0 && (
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-500/25 bg-amber-500/10 px-3 py-2">
           <span className="text-xs text-amber-700 dark:text-amber-300">
             {t("createFlow.entryRow.autoSerialReserved")}
@@ -3711,6 +3894,7 @@ function ReceiptEntryRow({
       {serialOpen && (
         <SerialTrackingDialog
           line={line}
+          branchCode={branchCode}
           onClose={() => setSerialOpen(false)}
           updateLine={updateLine}
           updateTracking={updateTracking}
@@ -3726,6 +3910,7 @@ function ReceiptEntryRow({
 
 function SerialTrackingDialog({
   line,
+  branchCode,
   onClose,
   updateLine,
   updateTracking,
@@ -3735,6 +3920,7 @@ function SerialTrackingDialog({
   cancelGeneratedSerials,
 }: {
   line: SelectedReceiptLine;
+  branchCode: string;
   onClose: () => void;
   updateLine: (key: string, patch: Partial<SelectedReceiptLine>) => void;
   updateTracking: (
@@ -3755,7 +3941,150 @@ function SerialTrackingDialog({
     line.trackingType === "Serial" || line.trackingType === "LotAndSerial";
   const lotMode =
     line.trackingType === "Lot" || line.trackingType === "LotAndSerial";
+  const maxRows = maxSerialRowCount(line.quantity);
+  const atSerialLimit = serialMode && line.trackings.length >= maxRows;
   const [bulkText, setBulkText] = useState("");
+  const [maskTemplate, setMaskTemplate] = useState<string | null>(
+    line.serialMaskTemplate ?? null,
+  );
+  const [serialFieldErrors, setSerialFieldErrors] = useState<
+    Record<string, boolean>
+  >(() =>
+    Object.fromEntries(
+      (line.invalidSerialTrackingIds ?? []).map((id) => [id, true]),
+    ),
+  );
+
+  useEffect(() => {
+    setMaskTemplate(line.serialMaskTemplate ?? null);
+  }, [line.serialMaskTemplate]);
+
+  useEffect(() => {
+    if (!serialMode || line.serialMaskTemplate) return;
+    let cancelled = false;
+    void stockTrackingApi
+      .getStockSettings(line.stockId, branchCode)
+      .then((settings) => {
+        if (cancelled) return;
+        const next = settings.serialMaskTemplate ?? null;
+        setMaskTemplate(next);
+        if (next !== line.serialMaskTemplate) {
+          updateLine(key, { serialMaskTemplate: next });
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    branchCode,
+    key,
+    line.serialMaskTemplate,
+    line.stockId,
+    serialMode,
+    updateLine,
+  ]);
+
+  const persistInvalidIds = (errors: Record<string, boolean>): void => {
+    const ids = Object.keys(errors).filter((id) => errors[id]);
+    const current = line.invalidSerialTrackingIds ?? [];
+    const same =
+      ids.length === current.length && ids.every((id) => current.includes(id));
+    if (!same) updateLine(key, { invalidSerialTrackingIds: ids });
+  };
+
+  const validateSerialValue = (trackingId: string, value: string): void => {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      // Boş: daha önce hatalıysa kırmızı kalsın, odak engellenmesin.
+      return;
+    }
+    if (
+      maskTemplate &&
+      !matchesSerialMask(trimmed, maskTemplate, { stockCode: line.stockCode })
+    ) {
+      setSerialFieldErrors((current) => ({ ...current, [trackingId]: true }));
+      toastError(
+        t("createFlow.validation.serialMaskMismatch", { mask: maskTemplate }),
+        { skipErrorNavigation: true },
+      );
+      return;
+    }
+    setSerialFieldErrors((current) => {
+      const next = { ...current };
+      delete next[trackingId];
+      return next;
+    });
+  };
+
+  const validateAllSerialsForConfirm = (): boolean => {
+    if (!serialMode || !maskTemplate) return true;
+    const errors: Record<string, boolean> = {};
+    const message = t("createFlow.validation.serialMaskMismatch", {
+      mask: maskTemplate,
+    });
+    for (const tracking of line.trackings) {
+      const value = tracking.serialNo?.trim() ?? "";
+      if (!value) {
+        if (serialFieldErrors[tracking.localId]) {
+          errors[tracking.localId] = true;
+        }
+        continue;
+      }
+      if (
+        !matchesSerialMask(value, maskTemplate, { stockCode: line.stockCode })
+      ) {
+        errors[tracking.localId] = true;
+      }
+    }
+    if (Object.keys(errors).length === 0) {
+      persistInvalidIds({});
+      return true;
+    }
+    setSerialFieldErrors(errors);
+    persistInvalidIds(errors);
+    toastError(message, { skipErrorNavigation: true });
+    return false;
+  };
+
+  const discardAndClose = (): void => {
+    if (!serialMode || !maskTemplate) {
+      onClose();
+      return;
+    }
+    const invalidIds: string[] = [];
+    const nextTrackings = line.trackings.map((tracking) => {
+      const value = tracking.serialNo?.trim() ?? "";
+      if (!value) {
+        if (
+          serialFieldErrors[tracking.localId] ||
+          (line.invalidSerialTrackingIds ?? []).includes(tracking.localId)
+        ) {
+          invalidIds.push(tracking.localId);
+        }
+        return tracking;
+      }
+      if (
+        matchesSerialMask(value, maskTemplate, { stockCode: line.stockCode })
+      ) {
+        return tracking;
+      }
+      invalidIds.push(tracking.localId);
+      return { ...tracking, serialNo: "" };
+    });
+    updateLine(key, {
+      trackings: nextTrackings,
+      invalidSerialTrackingIds: invalidIds,
+    });
+    onClose();
+  };
+
+  const confirmAndClose = (): void => {
+    if (!validateAllSerialsForConfirm()) return;
+    updateLine(key, { invalidSerialTrackingIds: [] });
+    onClose();
+  };
+
   const applyBulk = () => {
     const serials = [
       ...new Set(
@@ -3769,9 +4098,24 @@ function SerialTrackingDialog({
       toast.error(t("createFlow.validation.enterAtLeastOneSerial"));
       return;
     }
-    if (serials.length > Math.floor(line.quantity)) {
+    if (serials.length > maxRows) {
       toast.error(t("createFlow.validation.serialCountExceedsQuantity"));
       return;
+    }
+    if (maskTemplate) {
+      const invalid = serials.find(
+        (serial) =>
+          !matchesSerialMask(serial, maskTemplate, {
+            stockCode: line.stockCode,
+          }),
+      );
+      if (invalid) {
+        toastError(
+          t("createFlow.validation.serialMaskMismatch", { mask: maskTemplate }),
+          { skipErrorNavigation: true },
+        );
+        return;
+      }
     }
     updateLine(key, {
       serialGenerationKey: undefined,
@@ -3781,15 +4125,28 @@ function SerialTrackingDialog({
         serialNo,
       })),
     });
+    setSerialFieldErrors({});
     setBulkText("");
     toast.success(t("createFlow.toast.serialsSplitIntoRows", { count: serials.length }));
   };
 
+  const tryAddTracking = () => {
+    if (serialMode && maxRows <= 0) {
+      toast.error(t("createFlow.validation.enterQuantityFirst"));
+      return;
+    }
+    if (atSerialLimit) {
+      toast.error(t("createFlow.validation.serialCountExceedsQuantity"));
+      return;
+    }
+    addTracking(key);
+  };
+
   return (
     <ResponsiveDialog
-      onClose={onClose}
+      onClose={discardAndClose}
       title={t("createFlow.serialLotDialog.title")}
-      description={`${line.stockCode} · ${formatProjectNumber(line.quantity)} ${line.unitCode}`}
+      description={`${line.stockCode}${line.stockName ? ` · ${line.stockName}` : ""} · ${formatProjectNumber(line.quantity)} ${line.unitCode}`}
       className="wms-ops-serial-dialog !max-w-5xl"
     >
       <div className="wms-ops-serial-dialog__intro mb-4">
@@ -3797,6 +4154,17 @@ function SerialTrackingDialog({
         <p className="wms-ops-serial-dialog__hint">
           {t("createFlow.serialLotDialog.subtitle")}
         </p>
+        {serialMode ? (
+          <p className="mt-1 text-xs text-[var(--wms-app-text-muted)]">
+            {t("createFlow.serialLotDialog.rowLimitHint", {
+              count: maxRows,
+              used: line.trackings.length,
+            })}
+            {maskTemplate
+              ? ` · ${t("createFlow.serialLotDialog.maskHint", { mask: maskTemplate })}`
+              : ""}
+          </p>
+        ) : null}
       </div>
 
       <div className="wms-ops-serial-dialog__tiles mb-4">
@@ -3804,7 +4172,8 @@ function SerialTrackingDialog({
           <button
             type="button"
             onClick={() => void createSerialRows(key)}
-            className="wms-ops-serial-dialog__tile wms-ops-serial-dialog__tile--accent"
+            disabled={maxRows <= 0}
+            className="wms-ops-serial-dialog__tile wms-ops-serial-dialog__tile--accent disabled:opacity-50"
           >
             <span className="wms-ops-serial-dialog__tile-title">
               {t("createFlow.serialLotDialog.autoSuggestSerial")}
@@ -3816,17 +4185,22 @@ function SerialTrackingDialog({
         ) : null}
         <button
           type="button"
-          onClick={() => addTracking(key)}
-          className="wms-ops-serial-dialog__tile"
+          onClick={tryAddTracking}
+          disabled={serialMode && (maxRows <= 0 || atSerialLimit)}
+          className="wms-ops-serial-dialog__tile disabled:opacity-50"
         >
           <span className="wms-ops-serial-dialog__tile-title">
             {t("createFlow.serialLotDialog.addSingleRow")}
           </span>
           <span className="wms-ops-serial-dialog__tile-hint">
-            {t("createFlow.serialLotDialog.addSingleRowHint")}
+            {serialMode && atSerialLimit
+              ? t("createFlow.serialLotDialog.addSingleRowLimitHint", {
+                  count: maxRows,
+                })
+              : t("createFlow.serialLotDialog.addSingleRowHint")}
           </span>
         </button>
-        {serialMode && line.serialGenerationKey ? (
+        {serialMode && line.serialGenerationKey && line.trackings.length > 0 ? (
           <button
             type="button"
             onClick={() => void cancelGeneratedSerials(key)}
@@ -3876,71 +4250,90 @@ function SerialTrackingDialog({
             key={tracking.localId}
             className="wms-ops-serial-dialog__row grid gap-2 md:grid-cols-[3.5rem_7.5rem_1fr_1fr_9rem_9rem_auto]"
           >
-            <span className="wms-ops-serial-dialog__row-index self-center text-center text-xs font-semibold">
-              #{index + 1}
-            </span>
-            <QuantityInput
-              value={tracking.quantity}
-              disabled={serialMode}
-              onCommit={(quantity) =>
-                updateTracking(key, tracking.localId, { quantity })
-              }
-            />
-            {lotMode ? (
-              <AppInput
-                aria-label={t("createFlow.serialLotDialog.lotAria")}
-                placeholder={t("createFlow.serialLotDialog.lotPlaceholder")}
-                value={tracking.lotNo ?? ""}
+              <span className="wms-ops-serial-dialog__row-index self-center text-center text-xs font-semibold">
+                #{index + 1}
+              </span>
+              <QuantityInput
+                value={tracking.quantity}
+                disabled={serialMode}
+                onCommit={(quantity) =>
+                  updateTracking(key, tracking.localId, { quantity })
+                }
+              />
+              {lotMode ? (
+                <AppInput
+                  aria-label={t("createFlow.serialLotDialog.lotAria")}
+                  placeholder={t("createFlow.serialLotDialog.lotPlaceholder")}
+                  value={tracking.lotNo ?? ""}
+                  onChange={(event) =>
+                    updateTracking(key, tracking.localId, {
+                      lotNo: event.target.value,
+                    })
+                  }
+                />
+              ) : (
+                <span />
+              )}
+              {serialMode ? (
+                <AppInput
+                  aria-label={t("createFlow.serialLotDialog.serialAria")}
+                  placeholder={
+                    maskTemplate ||
+                    t("createFlow.serialLotDialog.serialPlaceholder")
+                  }
+                  className="font-mono"
+                  value={tracking.serialNo ?? ""}
+                  invalid={Boolean(serialFieldErrors[tracking.localId])}
+                  onChange={(event) => {
+                    updateTracking(key, tracking.localId, {
+                      serialNo: event.target.value,
+                    });
+                  }}
+                  onBlur={(event) => {
+                    const trackingId = tracking.localId;
+                    const value = event.target.value;
+                    // Odak bir sonraki alana geçsin; toast navigasyonu odak çalmasın.
+                    window.setTimeout(() => {
+                      validateSerialValue(trackingId, value);
+                    }, 0);
+                  }}
+                />
+              ) : (
+                <span />
+              )}
+              <AppDateInput
+                aria-label={t("createFlow.serialLotDialog.manufacturingDateAria")}
+                value={tracking.manufacturingDate ?? ""}
                 onChange={(event) =>
                   updateTracking(key, tracking.localId, {
-                    lotNo: event.target.value,
+                    manufacturingDate: event.target.value,
                   })
                 }
               />
-            ) : (
-              <span />
-            )}
-            {serialMode ? (
-              <AppInput
-                aria-label={t("createFlow.serialLotDialog.serialAria")}
-                placeholder={t("createFlow.serialLotDialog.serialPlaceholder")}
-                className="font-mono"
-                value={tracking.serialNo ?? ""}
+              <AppDateInput
+                aria-label={t("createFlow.serialLotDialog.expirationDateAria")}
+                value={tracking.expirationDate ?? ""}
                 onChange={(event) =>
                   updateTracking(key, tracking.localId, {
-                    serialNo: event.target.value,
+                    expirationDate: event.target.value,
                   })
                 }
               />
-            ) : (
-              <span />
-            )}
-            <AppDateInput
-              aria-label={t("createFlow.serialLotDialog.manufacturingDateAria")}
-              value={tracking.manufacturingDate ?? ""}
-              onChange={(event) =>
-                updateTracking(key, tracking.localId, {
-                  manufacturingDate: event.target.value,
-                })
-              }
-            />
-            <AppDateInput
-              aria-label={t("createFlow.serialLotDialog.expirationDateAria")}
-              value={tracking.expirationDate ?? ""}
-              onChange={(event) =>
-                updateTracking(key, tracking.localId, {
-                  expirationDate: event.target.value,
-                })
-              }
-            />
-            <button
-              type="button"
-              aria-label={t("createFlow.serialLotDialog.removeTrackingRow")}
-              onClick={() => removeTracking(key, tracking.localId)}
-              className="wms-ops-serial-dialog__row-delete grid size-10 place-items-center"
-            >
-              <Trash2 className="size-4" />
-            </button>
+              <button
+                type="button"
+                aria-label={t("createFlow.serialLotDialog.removeTrackingRow")}
+                onClick={() => {
+                  removeTracking(key, tracking.localId);
+                  setSerialFieldErrors((current) => {
+                    const next = { ...current };
+                    delete next[tracking.localId];
+                    return next;
+                  });
+                }}
+                className="wms-ops-serial-dialog__row-delete grid size-10 place-items-center"
+              >
+                <Trash2 className="size-4" />
+              </button>
           </div>
         ))}
         {line.trackings.length === 0 ? (
@@ -3956,10 +4349,10 @@ function SerialTrackingDialog({
           isPremium ? "pt-4" : "pt-3",
         )}
       >
-        <OpsActionButton type="button" variant="secondary" onClick={onClose}>
+        <OpsActionButton type="button" variant="secondary" onClick={discardAndClose}>
           {t("createFlow.serialLotDialog.close")}
         </OpsActionButton>
-        <OpsActionButton type="button" variant="primary" onClick={onClose}>
+        <OpsActionButton type="button" variant="primary" onClick={confirmAndClose}>
           {t("createFlow.serialLotDialog.done")}
         </OpsActionButton>
       </div>
@@ -4420,7 +4813,13 @@ function DirectCreateSuccessPanel({
   const documentValue = (receiptNo || result.documentNo || "").trim();
 
   return (
-    <div className="wms-ops-gr-success wms-ops-gr-success--done">
+    <div
+      className={
+        hasQuality
+          ? "wms-ops-gr-success wms-ops-gr-success--quality"
+          : "wms-ops-gr-success wms-ops-gr-success--done"
+      }
+    >
       <div className="wms-ops-gr-success__glow" aria-hidden />
       <header className="wms-ops-gr-success__header">
         <div className="wms-ops-gr-success__icon" aria-hidden>

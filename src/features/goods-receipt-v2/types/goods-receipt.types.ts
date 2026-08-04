@@ -69,7 +69,10 @@ export interface SelectedReceiptLine extends OpenOrderLine {
   trackingType: StockTrackingType;
   trackingPolicy: EffectiveStockTrackingPolicy;
   trackings: PlannedReceiptTracking[];
+  serialMaskTemplate?: string | null;
   serialGenerationKey?: string;
+  /** Maskeye uymayan / temizlenmesi gereken seri satır localId’leri (dialog yeniden açılınca kırmızı kalır). */
+  invalidSerialTrackingIds?: string[];
   requireQualityControl?: boolean;
 }
 export interface CreatedGoodsReceiptTaskResult { id: number; taskNo: string; warehouseId: number; lineCount: number; plannedQuantity: number }
