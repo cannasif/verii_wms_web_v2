@@ -20,10 +20,12 @@ function Page({ title, description, children }: { title: string; description: st
 }
 
 export function KkdOverviewPage() {
+  const {can}=usePermissionAccess();
   const departments = useQuery({ queryKey: ['kkd', 'departments'], queryFn: kkdApi.departments });
   const employees = useQuery({ queryKey: ['kkd', 'employees'], queryFn: kkdApi.employees });
   const matrices = useQuery({ queryKey: ['kkd', 'matrices'], queryFn: kkdApi.matrices });
   const distributions = useQuery({ queryKey: ['kkd', 'distributions'], queryFn: kkdApi.distributions });
+  const materialRequests = useQuery({ queryKey: ['kkd', 'material-requests', 'configuration'], queryFn: kkdApi.materialRequestConfiguration, enabled: can('WMS.KKD.DISTRIBUTION.OPERATE') });
   const metrics = [
     ['Personel', employees.data?.length ?? 0, Users], ['Departman', departments.data?.length ?? 0, Boxes],
     ['Hak matrisi', matrices.data?.length ?? 0, Grid3X3], ['Dağıtım', distributions.data?.length ?? 0, ClipboardCheck],
@@ -33,6 +35,7 @@ export function KkdOverviewPage() {
     <div className="grid gap-4 md:grid-cols-3">
       <Action href="/warehouse/kkd/definitions" title="Tanımlar ve hak matrisi" text="Departman, rol, personel ve tüm yaşam döngüsü kuralları." />
       <Action href="/warehouse/kkd/entitlement" title="Hak sorgulama" text="Stok özel/grup kuralı, dönem, sıklık ve ek hak sonucunu görün." />
+      {materialRequests.data?.isEnabled&&<Action href="/warehouse/production-transfers/material-requests" title="Malzeme talep siparişleri" text="Personel kartından bağlı carinin canlı Netsis açık siparişlerini getirip dağıtıma hazırlayın." />}
       <Action href="/warehouse/kkd/distributions/new" title="Dağıtım ve ambar çıkış" text="Açık Netsis siparişinden teslim ve fiziksel ambar çıkışı başlatın." />
       <Action href="/warehouse/kkd/policy" title="KKD süreç politikası" text="Sipariş zorunluluğu, hak üstü teslim ve operasyon güvenlik kuralları." />
     </div>
@@ -41,12 +44,13 @@ export function KkdOverviewPage() {
 
 export function KkdPolicyPage() {
   const query=useQuery({queryKey:['kkd','policy'],queryFn:kkdApi.policy});
-  const [form,setForm]=useState({requireOpenOrder:true,allowOpenOrderExcess:true,allowMultipleOrdersPerDistribution:true,requireEmployeeUserLink:false,allowFutureDatedDistribution:false,requireManagerApprovalForExcess:true});
-  useEffect(()=>{if(query.data)setForm({requireOpenOrder:query.data.requireOpenOrder,allowOpenOrderExcess:query.data.allowOpenOrderExcess,allowMultipleOrdersPerDistribution:query.data.allowMultipleOrdersPerDistribution,requireEmployeeUserLink:query.data.requireEmployeeUserLink,allowFutureDatedDistribution:query.data.allowFutureDatedDistribution,requireManagerApprovalForExcess:query.data.requireManagerApprovalForExcess});},[query.data]);
-  const mutation=useMutation({mutationFn:()=>kkdApi.savePolicy(form),onSuccess:value=>{setForm({requireOpenOrder:value.requireOpenOrder,allowOpenOrderExcess:value.allowOpenOrderExcess,allowMultipleOrdersPerDistribution:value.allowMultipleOrdersPerDistribution,requireEmployeeUserLink:value.requireEmployeeUserLink,allowFutureDatedDistribution:value.allowFutureDatedDistribution,requireManagerApprovalForExcess:value.requireManagerApprovalForExcess});toast.success('KKD süreç politikası kaydedildi.');},onError:e=>toast.error(message(e))});
+  const [form,setForm]=useState({enableMaterialRequestOrderFlow:true,requireOpenOrder:true,allowOpenOrderExcess:true,allowMultipleOrdersPerDistribution:true,requireEmployeeUserLink:false,allowFutureDatedDistribution:false,requireManagerApprovalForExcess:true});
+  useEffect(()=>{if(query.data)setForm({enableMaterialRequestOrderFlow:query.data.enableMaterialRequestOrderFlow,requireOpenOrder:query.data.requireOpenOrder,allowOpenOrderExcess:query.data.allowOpenOrderExcess,allowMultipleOrdersPerDistribution:query.data.allowMultipleOrdersPerDistribution,requireEmployeeUserLink:query.data.requireEmployeeUserLink,allowFutureDatedDistribution:query.data.allowFutureDatedDistribution,requireManagerApprovalForExcess:query.data.requireManagerApprovalForExcess});},[query.data]);
+  const mutation=useMutation({mutationFn:()=>kkdApi.savePolicy(form),onSuccess:value=>{setForm({enableMaterialRequestOrderFlow:value.enableMaterialRequestOrderFlow,requireOpenOrder:value.requireOpenOrder,allowOpenOrderExcess:value.allowOpenOrderExcess,allowMultipleOrdersPerDistribution:value.allowMultipleOrdersPerDistribution,requireEmployeeUserLink:value.requireEmployeeUserLink,allowFutureDatedDistribution:value.allowFutureDatedDistribution,requireManagerApprovalForExcess:value.requireManagerApprovalForExcess});toast.success('KKD süreç politikası kaydedildi.');},onError:e=>toast.error(message(e))});
   const toggle=(key:keyof typeof form)=><input type="checkbox" checked={form[key]} onChange={event=>setForm(current=>({...current,[key]:event.target.checked}))}/>;
   return <Page title="KKD Süreç Politikası" description="Şube bazında dağıtım ön koşullarını yönetin; değişiklikler yeni dağıtımlarda servis katmanında zorunlu uygulanır.">
     <div className={`${panel} space-y-3`}>
+      <PolicyRow icon={<ClipboardCheck className="size-5 text-cyan-500"/>} title="Malzeme talep siparişlerini etkinleştir" text="Açık olduğunda personel kartından bağlı carinin canlı Netsis açık siparişleri okunabilir." control={toggle('enableMaterialRequestOrderFlow')}/>
       <PolicyRow icon={<ClipboardCheck className="size-5 text-cyan-500"/>} title="Açık Netsis siparişi zorunlu" text="Açık olduğunda siparişsiz KKD dağıtımı oluşturulamaz." control={toggle('requireOpenOrder')}/>
       <PolicyRow icon={<ShieldCheck className="size-5 text-cyan-500"/>} title="Açık siparişle hak üstü teslime izin ver" text="Kapalı olduğunda yalnızca hesaplanan KKD hakkı kadar teslim yapılabilir." control={toggle('allowOpenOrderExcess')}/>
       <PolicyRow icon={<Boxes className="size-5 text-cyan-500"/>} title="Tek dağıtımda birden fazla sipariş" text="Kapalı olduğunda bütün kalemler aynı Netsis siparişine ait olmalıdır." control={toggle('allowMultipleOrdersPerDistribution')}/>

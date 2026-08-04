@@ -30,7 +30,8 @@ export type KkdDistributionContext = {
   preferredStocks: Array<{ groupCode: string; stockId: number; stockCode: string; stockName: string }>;
 };
 export type KkdPolicy = {
-  id: number; branchCode: string; requireOpenOrder: boolean; allowOpenOrderExcess: boolean;
+  id: number; branchCode: string; enableMaterialRequestOrderFlow: boolean;
+  requireOpenOrder: boolean; allowOpenOrderExcess: boolean;
   allowMultipleOrdersPerDistribution: boolean; requireEmployeeUserLink: boolean;
   allowFutureDatedDistribution: boolean; requireManagerApprovalForExcess: boolean;
   updatedBy?: number; updatedDate?: string;
@@ -57,7 +58,7 @@ export type KkdValidationLog = {
 export type KkdDistributionCreatePayload = {
   idempotencyKey: string; employeeId: number; warehouseId: number; documentSeriesId: number;
   documentDate: string; stagingLocationId: number | null; loadingLocationId: number | null;
-  description: string | null;
+  description: string | null; createWarehouseTask?: boolean; assignedUserIds?: number[] | null;
   lines: Array<{ stockId: number; yapCodeId: null; quantity: number; unitCode: string | null;
     sourceLocationId: number; orderNumber: string | null; orderLineId: number | null; requireHandlingUnit: boolean;
     description: string | null; trackings: Array<{ quantity: number; lotNo: string | null;
@@ -86,6 +87,12 @@ export const kkdApi = {
     unwrap(await api.get<Envelope<KkdDistributionContext>>(`/api/kkd/distributions/context/${employeeId}`)),
   distributionOrderLines: async (employeeId: number, orderNumbers: string[]) =>
     unwrap(await api.get<Envelope<KkdOpenOrderLine[]>>(`/api/kkd/distributions/context/${employeeId}/lines`, { params: { orderNumbersCsv: orderNumbers.join(',') } })),
+  materialRequestConfiguration: async () =>
+    unwrap(await api.get<Envelope<{ isEnabled: boolean }>>('/api/kkd/material-requests/configuration')),
+  materialRequestContext: async (employeeId: number) =>
+    unwrap(await api.get<Envelope<KkdDistributionContext>>(`/api/kkd/material-requests/context/${employeeId}`)),
+  materialRequestOrderLines: async (employeeId: number, orderNumbers: string[]) =>
+    unwrap(await api.get<Envelope<KkdOpenOrderLine[]>>(`/api/kkd/material-requests/context/${employeeId}/lines`, { params: { orderNumbersCsv: orderNumbers.join(',') } })),
   distributionSeries: async () =>
     unwrap(await api.get<Envelope<Array<{ id:number; code:string; name:string; previewDocumentNumber:string; isDefault:boolean }>>>('/api/document-series/lookup?documentType=WarehouseIssue')),
   createDistribution: async (payload: KkdDistributionCreatePayload) =>
