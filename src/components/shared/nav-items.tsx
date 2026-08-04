@@ -27,6 +27,9 @@ export function resolveNavItemTitle(
 
 export const WMS_NAV_ITEMS: NavItem[] = [
   { title: 'sidebar.dashboard', titleFallback: 'Dashboard', href: '/dashboard', icon: dashboardIcon },
+  { title: 'sidebar.procurement', titleFallback: 'Satınalma', icon: masterDataIcon, children: [
+    { title: 'sidebar.procurementWorkspace', titleFallback: 'Satınalma Çalışma Alanı', href: '/procurement', searchAliases: ['satınalma', 'talep', 'rfq', 'teklif', 'tedarikçi', 'sipariş'], requiredPermission: 'WMS.PROCUREMENT.VIEW' },
+  ] },
   { title: 'sidebar.warehouseOperations', titleFallback: 'Ambar İşlemleri', icon: operationsIcon, children: [
     { title: 'sidebar.warehouseInbound', titleFallback: 'Ambar Giriş', children: [
       { title: 'sidebar.warehouseInboundHub', titleFallback: 'Süreç Merkezi', href: '/warehouse/warehouse-inbounds', requiredPermission: 'WMS.WAREHOUSE_INBOUND.VIEW' },

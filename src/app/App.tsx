@@ -14,6 +14,7 @@ import {
   loadKkdPages,
   loadProjectSettingsPage, loadQualityInspectionsPage, loadQualityRulesPage, loadQualitySettingsPage,
   loadProductionPages, loadProductionTransferPages, loadSubcontractingTransferPages,
+  loadProcurementPage,
   loadSerialNumberRulesPage, loadShippingCreatePage, loadShippingHubPage, loadShippingListPage,
   loadShippingOperationPage, loadShippingPolicyPage, loadSmtpSettingsPage, loadSteelReceiptHubPage,
   loadSupplierStockMappingsPage,
@@ -98,6 +99,7 @@ const ProductionTransferPolicyPage = lazy(() => loadProductionTransferPages().th
 const ProductionTransferOperationPage = lazy(() => loadProductionTransferPages().then((m) => ({ default: m.ProductionTransferOperationPage })));
 const ProductionTransferTaskPoolPage = lazy(() => loadProductionTransferPages().then((m) => ({ default: m.ProductionTransferTaskPoolPage })));
 const ProductionHubPage = lazy(() => loadProductionPages().then((m) => ({ default: m.ProductionHubPage })));
+const ProcurementPage = lazy(() => loadProcurementPage().then((m) => ({ default: m.ProcurementPage })));
 const ProductionCreatePage = lazy(() => loadProductionPages().then((m) => ({ default: m.ProductionCreatePage })));
 const ProductionListPage = lazy(() => loadProductionPages().then((m) => ({ default: m.ProductionListPage })));
 const ProductionWorkOrdersPage = lazy(() => loadProductionPages().then((m) => ({ default: m.ProductionWorkOrdersPage })));
@@ -199,6 +201,7 @@ export function App(): ReactElement {
           <Route path="warehouse/transfers/:id/operations" element={<WarehouseTransferOperationPage />} />
           <Route path="warehouse/transfers/settings" element={<WarehouseTransferPolicyPage />} />
           <Route path="warehouse/production" element={<ProductionHubPage />} />
+          <Route path="procurement" element={<ProcurementPage />} />
           <Route path="warehouse/production/new" element={<ProductionCreatePage />} />
           <Route path="warehouse/production/list" element={<ProductionListPage />} />
           <Route path="warehouse/production/work-orders" element={<ProductionWorkOrdersPage />} />

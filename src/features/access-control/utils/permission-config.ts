@@ -1,4 +1,5 @@
 export const ROUTE_PERMISSION_MAP: Record<string, string> = {
+  '/procurement': 'WMS.PROCUREMENT.VIEW',
   '/erp/warehouses': 'ERP.MIRROR.VIEW',
   '/erp/stocks': 'ERP.MIRROR.VIEW',
   '/erp/customers': 'ERP.MIRROR.VIEW',
@@ -129,6 +130,7 @@ export const ROUTE_PERMISSION_MAP: Record<string, string> = {
 };
 
 export const PATH_TO_PERMISSION_PATTERNS: Array<{ pattern: RegExp; permission: string }> = [
+  { pattern: /^\/procurement(\/|$)/, permission: 'WMS.PROCUREMENT.VIEW' },
   { pattern: /^\/erp\/(warehouses|stocks|customers|configuration-codes|yapkodlar)(\/|$)/, permission: 'ERP.MIRROR.VIEW' },
   { pattern: /^\/system\/users(\/|$)/, permission: 'SYSTEM.USERS.VIEW' },
   { pattern: /^\/system\/(permissions|permission-groups)(\/|$)/, permission: 'SYSTEM.PERMISSIONS.VIEW' },

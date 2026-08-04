@@ -50,6 +50,7 @@ export const loadWarehouseTransferOperationPage = () => import('@/features/wareh
 export const loadProductionTransferPages = () => import('@/features/production-transfer/ProductionTransferPages');
 export const loadSubcontractingTransferPages = () => import('@/features/subcontracting-transfer/SubcontractingTransferPages');
 export const loadProductionPages = () => import('@/features/production/ProductionPages');
+export const loadProcurementPage = () => import('@/features/procurement/ProcurementPage');
 
 export const loadShippingHubPage = () => import('@/features/shipping-v2/ShippingHubPage');
 export const loadShippingCreatePage = () => import('@/features/shipping-v2/ShippingCreatePage');
@@ -71,6 +72,7 @@ export const loadWarehouseOutboundPolicyPage = () => import('@/features/warehous
 export const loadWarehouseOutboundOperationPage = () => import('@/features/warehouse-outbound/WarehouseOutboundOperationPage');
 export const loadPackingPages = () => import('@/features/packing');
 const routePreloaders: Array<[prefix: string, load: () => Promise<unknown>]> = [
+  ['/procurement', loadProcurementPage],
   ['/warehouse/kkd', loadKkdPages],
   ['/warehouse/goods-receipts/supplier-stock-mappings', loadSupplierStockMappingsPage],
   ['/warehouse/incoming-invoices/connections', loadELogoConnectionsPage],
