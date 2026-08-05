@@ -60,6 +60,7 @@ export function PermissionGroupsPage() {
   }, [t]);
 
   const save = async () => {
+    if (saving) return;
     const normalizedName = name.trim();
     if (normalizedName.length < 2) { toast.error(t(`${P}.nameMinLength`)); return; }
     if (!mode || mode === 'view') return;
@@ -70,7 +71,12 @@ export function PermissionGroupsPage() {
       else if (mode === 'copy' && detail) await permissionGroupsApi.copy(detail.id, { name: normalizedName, description: description.trim() || undefined });
       else await permissionGroupsApi.create(payload);
       toast.success(mode === 'edit' ? t(`${P}.saveSuccessUpdate`) : mode === 'copy' ? t(`${P}.copySuccess`) : t(`${P}.saveSuccessCreate`));
-      close();
+      // Do not call close() here: saving is true in the active render and its
+      // guard intentionally blocks user-triggered dismissal while the request
+      // is running. A successful request must always close the completed form.
+      setMode(null);
+      setDetail(null);
+      setPermissionSearch('');
       await Promise.all([queryClient.invalidateQueries({ queryKey: ['advanced-grid', 'permission-groups'] }), queryClient.invalidateQueries({ queryKey: ['system-group-stats'] })]);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : t(`${P}.saveFailed`));
