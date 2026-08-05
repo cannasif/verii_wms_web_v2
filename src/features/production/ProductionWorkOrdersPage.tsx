@@ -11,6 +11,7 @@ import { OpsListPageShell } from '@/components/shared/OpsListPageShell';
 import { OpsListSearchField } from '@/components/shared/OpsListSearchField';
 import { OpsLoadingState } from '@/components/shared/OpsLoadingState';
 import { OpsSkinCheckbox } from '@/components/shared/OpsSkinCheckbox';
+import { GridExportMenu } from '@/components/shared/GridExportMenu';
 import { OpsCodeBadge, OpsStatusBadge } from '@/components/shared/OpsStatusBadge';
 import { PagedLookupDialog } from '@/components/shared/PagedLookupDialog';
 import { buildTerminalEyebrowFromNav } from '@/components/shared/PremiumEyebrow';
@@ -47,6 +48,18 @@ type DateSort = 'asc' | 'desc';
 
 const CELL =
   'border-r border-[color-mix(in_oklab,var(--wms-ops-accent)_16%,var(--wms-ops-card-border))] px-2 py-2 text-center align-middle last:border-r-0';
+
+const RECIPE_EXPORT_COLUMNS = [
+  { key: 'lineNo', label: 'Sıra' },
+  { key: 'stockCode', label: 'Stok kodu' },
+  { key: 'stockName', label: 'Stok adı' },
+  { key: 'unitCode', label: 'Birim' },
+  { key: 'operationNumber', label: 'Operasyon no' },
+  { key: 'recipeQuantity', label: 'Reçete miktarı' },
+  { key: 'wasteQuantity', label: 'Fire miktarı' },
+  { key: 'requiredQuantity', label: 'Toplam ihtiyaç' },
+  { key: 'mappingStatus', label: 'Eşleme durumu' },
+];
 
 /**
  * Başlıktaki özet hücreleri, dialog panelinin skin DNA'sını kullanır:
@@ -457,6 +470,18 @@ function WorkOrderDrawer({
       : selectedCount === 0
         ? 'Devam etmek için en az bir reçete bileşeni seçin.'
         : null;
+  const recipeExportRows = value.materials.map((material, index) => ({
+    lineNo: index + 1,
+    stockCode: material.stockCode,
+    stockName: material.stockName ?? '',
+    unitCode: material.unitCode,
+    operationNumber: material.operationNumber,
+    recipeQuantity: material.recipeQuantity,
+    wasteQuantity: material.wasteQuantity,
+    requiredQuantity: material.requiredQuantity,
+    mappingStatus: material.mappingError ?? 'Hazır',
+  }));
+  const recipeExportFileName = `Recete_${value.workOrderNumber.replace(/[^\p{L}\p{N}._-]+/gu, '_')}`;
 
   return (
     <Dialog open onOpenChange={(open) => { if (!open) close(); }}>
@@ -604,11 +629,20 @@ function WorkOrderDrawer({
               </div>
             ) : null}
 
-            <div>
-              <h3 className="wms-ops-detail-section-title !border-0 !p-0">Reçete bileşenleri</h3>
-              <p className="mt-1 text-xs text-slate-500">
-                {value.materials.length} bileşen · <strong className="text-[var(--wms-brand-primary)]">{selectedCount}</strong> seçili
-              </p>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="wms-ops-detail-section-title !border-0 !p-0">Reçete bileşenleri</h3>
+                <p className="mt-1 text-xs text-slate-500">
+                  {value.materials.length} bileşen · <strong className="text-[var(--wms-brand-primary)]">{selectedCount}</strong> seçili
+                </p>
+              </div>
+              <GridExportMenu
+                fileName={recipeExportFileName}
+                columns={RECIPE_EXPORT_COLUMNS}
+                rows={recipeExportRows}
+                compactMobile
+                portalContainer={typeof document === 'undefined' ? undefined : document.body}
+              />
             </div>
 
             {value.materials.length === 0 ? (
