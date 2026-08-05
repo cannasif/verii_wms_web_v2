@@ -1,8 +1,19 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowRight, Ban, Boxes, ChevronDown, ChevronRight, Factory, ListChecks, Play, RefreshCw, Save, Settings2, Trash2, UserPlus } from 'lucide-react';
+import { ArrowRight, Ban, Boxes, ChevronDown, ChevronRight, CircleHelp, ClipboardList, Factory, ListChecks, PackageCheck, Play, RefreshCw, Save, Settings2, ShieldAlert, Trash2, UserPlus, Warehouse } from 'lucide-react';
 import { Link, useLocation, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import { useTheme } from '@/components/theme-provider';
+import { cn } from '@/lib/utils';
+import { AppInput } from '@/components/shared/AppInput';
+import { OpsActionButton } from '@/components/shared/OpsActionButton';
+import { OpsLoadingState } from '@/components/shared/OpsLoadingState';
+import { OpsSelect } from '@/components/shared/OpsSelect';
+import { OpsSkinCheckbox } from '@/components/shared/OpsSkinCheckbox';
+import { OPS_SELECT_TRIGGER_CLASS } from '@/components/shared/ops-field-styles';
+import { buildTerminalEyebrowFromNav, PremiumEyebrow } from '@/components/shared/PremiumEyebrow';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { WarehouseTransferDraftPage, type ProductionTransferInitialSource } from '@/features/warehouse-transfer-v2/components/WarehouseTransferDraftPage';
 import { WarehouseTransferListPage } from '@/features/warehouse-transfer-v2/components/WarehouseTransferListPage';
@@ -13,7 +24,6 @@ import { warehouseTransferApi } from '@/features/warehouse-transfer-v2/api/wareh
 import { productionTransferApi, type ProductionTaskBoard, type ProductionTransferPolicy } from './api';
 import type { ActiveUserOption, LocationOption, WarehouseOption } from '@/features/goods-receipt-v2/types/goods-receipt.types';
 import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
-import { AppDropdown } from '@/components/shared/AppDropdown';
 import type { PreparedNetsisProductionWorkOrder } from '@/features/production/types';
 import { kkdApi } from '@/features/kkd/kkd-api';
 
@@ -69,38 +79,147 @@ export function ProductionTransferPolicyPage(){
   const[form,setForm]=useState<ProductionTransferPolicy>();
   const[busy,setBusy]=useState(false);
   useEffect(()=>{void productionTransferApi.policy(branchCode).then(setForm).catch((e:Error)=>toast.error(e.message));},[branchCode]);
-  if(!moduleReady||!form)return <div className="p-8 text-center text-[var(--wms-app-text-muted)]">Yükleniyor...</div>;
+  if(!moduleReady||!form)return <section className="wms-ops-form wms-ops-pt-policy mx-auto max-w-6xl px-4 py-16"><OpsLoadingState code="POLICY" message={t('policy.loading',{defaultValue:'Politika yükleniyor…'})}/></section>;
   const set=<K extends keyof ProductionTransferPolicy>(key:K,value:ProductionTransferPolicy[K])=>setForm(x=>x?{...x,[key]:value}:x);
   const save=async()=>{setBusy(true);try{setForm(await productionTransferApi.updatePolicy(form));toast.success(t('policy.saved'));}catch(e){toast.error(e instanceof Error?e.message:t('policy.saveFailed'));}finally{setBusy(false);}};
-  return <section className="space-y-5">
-    <header><div className="flex items-center gap-2 text-[var(--wms-brand-primary)]"><Factory/><span className="text-xs font-bold uppercase tracking-widest">{t('policy.eyebrow')}</span></div><h1 className="mt-2 text-2xl font-black">{t('policy.title')}</h1><p className="text-sm text-[var(--wms-app-text-muted)]">{t('policy.description')}</p></header>
-    <Panel title={t('policy.sections.source',{defaultValue:'İş emri ve reçete kaynağı'})}>
+  const orderChecks:Array<[BooleanPolicyKey,string]>=[
+    ['requireProductionOrderReference',t('policy.fields.requireProductionOrderReference')],
+    ['allowManualTransfer',t('policy.fields.allowManualTransfer')],
+    ['requireErpMasterDataForManualTransfer',t('policy.fields.requireErpMasterDataForManualTransfer',{defaultValue:'Plansız/manüel transferde ERP ana verisini zorunlu doğrula'})],
+    ['allowAutomaticGeneration',t('policy.fields.allowAutomaticGeneration')],
+    ['checkMaterialAvailability',t('policy.fields.checkMaterialAvailability')],
+    ['blockOnShortage',t('policy.fields.blockOnShortage')],
+    ['requireTaskAssignment',t('policy.fields.requireTaskAssignment')],
+  ];
+  const executionChecks:Array<[BooleanPolicyKey,string]>=[
+    ['requireSourceProductionLocation',t('policy.fields.requireSourceProductionLocation')],
+    ['requireTargetProductionLocation',t('policy.fields.requireTargetProductionLocation')],
+    ['allowPartialSupply',t('policy.fields.allowPartialSupply')],
+    ['allowOverIssue',t('policy.fields.allowOverIssue')],
+    ['requireApproval',t('policy.fields.requireApproval')],
+  ];
+  const cancellationChoices:Array<{value:ProductionTransferPolicy['cancellationReturnPolicy'];title:string;text:string}>=[
+    {value:'OriginalSourceLocation',title:t('policy.cancellation.original',{defaultValue:'Özgün kaynak raf'}),text:t('policy.cancellation.originalHint',{defaultValue:'Hareket görmüş stok toplandığı rafa geri konur.'})},
+    {value:'WarehouseDefaultReturnLocation',title:t('policy.cancellation.warehouseDefault',{defaultValue:'Deponun varsayılan iade rafı'}),text:t('policy.cancellation.warehouseDefaultHint',{defaultValue:'Depo ayarındaki iade rafı kullanılır; raf tanımlı değilse iptal engellenir.'})},
+    {value:'ManagerSelectionRequired',title:t('policy.cancellation.managerSelection',{defaultValue:'Yönetici seçim yapmak zorunda'}),text:t('policy.cancellation.managerSelectionHint',{defaultValue:'İptal ekranında iade rafı elle seçilmeden işlem tamamlanmaz.'})},
+  ];
+  return <section className="wms-ops-form wms-ops-pt-policy mx-auto max-w-6xl space-y-4">
+    <PolicyPageHeader
+      title={t('policy.title')}
+      description={t('policy.description')}
+      hintLabel={t('policy.howItWorks',{defaultValue:'Bu sayfa ne yapar?'})}
+    />
+
+    <PolicySection
+      code="SRC_01"
+      icon={<Factory className="size-4" strokeWidth={1.75}/>}
+      title={t('policy.sections.source',{defaultValue:'İş emri ve reçete kaynağı'})}
+      description={t('policy.sections.sourceHint',{defaultValue:'Üretim emirlerinin hangi sistemden okunacağını ve dış sistem kodunu belirler.'})}
+    >
       <div className="grid gap-4 lg:grid-cols-2">
-        <label className="space-y-1.5 text-sm"><span className="font-semibold text-[var(--wms-app-text)]">{t('policy.fields.productionOrderSource',{defaultValue:'Üretim verisini nereden oku?'})}</span><AppDropdown value={form.productionOrderSource} onValueChange={value=>set('productionOrderSource',value as ProductionTransferPolicy['productionOrderSource'])} options={[{value:'NetsisErpFunctions',label:t('policy.source.netsis',{defaultValue:'Netsis ERP fonksiyonlarından oku'}),description:t('policy.source.netsisHint',{defaultValue:'İş emri ve reçete Netsis read fonksiyonlarından anlık hazırlanır.'})},{value:'WmsIntegrationTables',label:t('policy.source.wms',{defaultValue:'WMS entegrasyon tablolarından oku'}),description:t('policy.source.wmsHint',{defaultValue:'Windbox gibi onaylı bir planlama sistemi WMS kaynak tablolarını besler.'})},{value:'ErpAndWms',label:t('policy.source.combined',{defaultValue:'ERP ve WMS emirlerini birlikte listele'}),description:t('policy.source.combinedHint',{defaultValue:'Her iki kaynaktaki emirler kaynak etiketiyle gösterilir; aynı numaralı emirler karışmaz.'})}]}/></label>
-        <label className="space-y-1.5 text-sm"><span className="font-semibold text-[var(--wms-app-text)]">{t('policy.fields.wmsSourceSystemCode',{defaultValue:'Kaynak sistem kodu'})}</span><input className="input" maxLength={50} disabled={form.productionOrderSource==='NetsisErpFunctions'} value={form.wmsSourceSystemCode} onChange={e=>set('wmsSourceSystemCode',e.target.value.toUpperCase())} placeholder="WINDBOX"/><span className="block text-xs text-[var(--wms-app-text-muted)]">{t('policy.fields.wmsSourceSystemCodeHint',{defaultValue:'RII_PR_SOURCE_ORDER kayıtlarındaki SourceSystemCode ile birebir eşleşir.'})}</span></label>
+        <PolicyField label={t('policy.fields.productionOrderSource',{defaultValue:'Üretim verisini nereden oku?'})}>
+          <OpsSelect
+            value={form.productionOrderSource}
+            onValueChange={value=>set('productionOrderSource',value as ProductionTransferPolicy['productionOrderSource'])}
+            options={[
+              {value:'NetsisErpFunctions',label:t('policy.source.netsis',{defaultValue:'Netsis ERP fonksiyonlarından oku'}),description:t('policy.source.netsisHint',{defaultValue:'İş emri ve reçete Netsis read fonksiyonlarından anlık hazırlanır.'})},
+              {value:'WmsIntegrationTables',label:t('policy.source.wms',{defaultValue:'WMS entegrasyon tablolarından oku'}),description:t('policy.source.wmsHint',{defaultValue:'Windbox gibi onaylı bir planlama sistemi WMS kaynak tablolarını besler.'})},
+              {value:'ErpAndWms',label:t('policy.source.combined',{defaultValue:'ERP ve WMS emirlerini birlikte listele'}),description:t('policy.source.combinedHint',{defaultValue:'Her iki kaynaktaki emirler kaynak etiketiyle gösterilir; aynı numaralı emirler karışmaz.'})},
+            ]}
+          />
+        </PolicyField>
+        <PolicyField
+          htmlFor="pt-policy-source-system-code"
+          label={t('policy.fields.wmsSourceSystemCode',{defaultValue:'Kaynak sistem kodu'})}
+          hint={t('policy.fields.wmsSourceSystemCodeHint',{defaultValue:'RII_PR_SOURCE_ORDER kayıtlarındaki SourceSystemCode ile birebir eşleşir.'})}
+        >
+          <AppInput
+            id="pt-policy-source-system-code"
+            maxLength={50}
+            disabled={form.productionOrderSource==='NetsisErpFunctions'}
+            value={form.wmsSourceSystemCode}
+            onChange={e=>set('wmsSourceSystemCode',e.target.value.toUpperCase())}
+            placeholder="WINDBOX"
+          />
+        </PolicyField>
       </div>
-      <div className="mt-4 rounded-xl border border-amber-500/25 bg-amber-500/5 p-4 text-sm text-[var(--wms-app-text-muted)]"><strong className="text-amber-500">{t('policy.source.boundaryTitle',{defaultValue:'Entegrasyon sınırı'})}</strong><span className="ml-2">{t('policy.source.boundaryText',{defaultValue:'Dış sistem yalnızca sürümlü kaynak iş emri ve reçete tablolarını besler. WMS operasyon emri, transfer, rezervasyon ve stok hareketini kendi transaction sınırında oluşturur.'})}</span></div>
-    </Panel>
-    <Panel title={t('policy.sections.order')}><ToggleGrid>
-      <Toggle label={t('policy.fields.requireProductionOrderReference')} value={form.requireProductionOrderReference} set={v=>set('requireProductionOrderReference',v)}/>
-      <Toggle label={t('policy.fields.allowManualTransfer')} value={form.allowManualTransfer} set={v=>set('allowManualTransfer',v)}/>
-      <Toggle label={t('policy.fields.requireErpMasterDataForManualTransfer',{defaultValue:'Plansız/manüel transferde ERP ana verisini zorunlu doğrula'})} value={form.requireErpMasterDataForManualTransfer} set={v=>set('requireErpMasterDataForManualTransfer',v)}/>
-      <Toggle label={t('policy.fields.allowAutomaticGeneration')} value={form.allowAutomaticGeneration} set={v=>set('allowAutomaticGeneration',v)}/>
-      <Toggle label={t('policy.fields.checkMaterialAvailability')} value={form.checkMaterialAvailability} set={v=>set('checkMaterialAvailability',v)}/>
-      <Toggle label={t('policy.fields.blockOnShortage')} value={form.blockOnShortage} set={v=>set('blockOnShortage',v)}/>
-      <Toggle label={t('policy.fields.requireTaskAssignment')} value={form.requireTaskAssignment} set={v=>set('requireTaskAssignment',v)}/>
-    </ToggleGrid></Panel>
-    <Panel title={t('policy.sections.execution')}><ToggleGrid>
-      <Toggle label={t('policy.fields.requireSourceProductionLocation')} value={form.requireSourceProductionLocation} set={v=>set('requireSourceProductionLocation',v)}/>
-      <Toggle label={t('policy.fields.requireTargetProductionLocation')} value={form.requireTargetProductionLocation} set={v=>set('requireTargetProductionLocation',v)}/>
-      <Toggle label={t('policy.fields.allowPartialSupply')} value={form.allowPartialSupply} set={v=>set('allowPartialSupply',v)}/>
-      <Toggle label={t('policy.fields.allowOverIssue')} value={form.allowOverIssue} set={v=>set('allowOverIssue',v)}/>
-      <Toggle label={t('policy.fields.requireApproval')} value={form.requireApproval} set={v=>set('requireApproval',v)}/>
-      <label className="space-y-1.5 text-sm"><span className="font-semibold text-[var(--wms-app-text)]">{t('policy.fields.overIssueTolerancePercent')}</span><input className="input" type="number" min={0} max={100} step=".01" disabled={!form.allowOverIssue} value={form.overIssueTolerancePercent} onChange={e=>set('overIssueTolerancePercent',Number(e.target.value))}/></label>
-      <label className="space-y-1.5 text-sm"><span className="font-semibold text-[var(--wms-app-text)]">İptalde stok nereye dönsün?</span><select className="input" value={form.cancellationReturnPolicy} onChange={e=>set('cancellationReturnPolicy',e.target.value as ProductionTransferPolicy['cancellationReturnPolicy'])}><option value="OriginalSourceLocation">Özgün kaynak raf</option><option value="WarehouseDefaultReturnLocation">Deponun varsayılan iade rafı</option><option value="ManagerSelectionRequired">Yönetici seçim yapmak zorunda</option></select></label>
-    </ToggleGrid></Panel>
+      <PolicyCallout
+        title={t('policy.source.boundaryTitle',{defaultValue:'Entegrasyon sınırı'})}
+        text={t('policy.source.boundaryText',{defaultValue:'Dış sistem yalnızca sürümlü kaynak iş emri ve reçete tablolarını besler. WMS operasyon emri, transfer, rezervasyon ve stok hareketini kendi transaction sınırında oluşturur.'})}
+      />
+    </PolicySection>
+
+    <PolicySection
+      code="ORD_02"
+      icon={<ClipboardList className="size-4" strokeWidth={1.75}/>}
+      title={t('policy.sections.order')}
+      description={t('policy.sections.orderHint',{defaultValue:'Transfer emrinin nasıl açılacağını ve hangi kontrollerin zorunlu olduğunu belirler.'})}
+    >
+      <div className="wms-ops-pt-policy-check-grid">
+        {orderChecks.map(([key,label])=>(
+          <PolicyCheckRow key={key} checked={form[key]} onCheckedChange={value=>set(key,value)} label={label}/>
+        ))}
+      </div>
+    </PolicySection>
+
+    <PolicySection
+      code="EXE_03"
+      icon={<PackageCheck className="size-4" strokeWidth={1.75}/>}
+      title={t('policy.sections.execution')}
+      description={t('policy.sections.executionHint',{defaultValue:'Toplama ve teslim aşamasındaki raf, tolerans ve onay kurallarıdır.'})}
+    >
+      <div className="wms-ops-pt-policy-check-grid">
+        {executionChecks.map(([key,label])=>(
+          <PolicyCheckRow key={key} checked={form[key]} onCheckedChange={value=>set(key,value)} label={label}/>
+        ))}
+      </div>
+      <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,18rem)_1fr]">
+        <PolicyField
+          htmlFor="pt-policy-over-issue-tolerance"
+          label={t('policy.fields.overIssueTolerancePercent')}
+          hint={t('policy.fields.overIssueTolerancePercentHint',{defaultValue:'Fazla çıkışa izin verildiğinde uygulanacak üst sınır.'})}
+        >
+          <AppInput
+            id="pt-policy-over-issue-tolerance"
+            type="number"
+            min={0}
+            max={100}
+            step=".01"
+            disabled={!form.allowOverIssue}
+            value={form.overIssueTolerancePercent}
+            onChange={e=>set('overIssueTolerancePercent',Number(e.target.value))}
+            trailingContent={<span className="px-2 text-xs font-semibold opacity-70">%</span>}
+          />
+        </PolicyField>
+        <PolicyField label={t('policy.fields.cancellationReturnPolicy',{defaultValue:'İptalde stok nereye dönsün?'})}>
+          <div className="grid gap-2 md:grid-cols-3" role="radiogroup" aria-label={t('policy.fields.cancellationReturnPolicy',{defaultValue:'İptalde stok nereye dönsün?'})}>
+            {cancellationChoices.map(choice=>(
+              <PolicyChoice
+                key={choice.value}
+                checked={form.cancellationReturnPolicy===choice.value}
+                onSelect={()=>set('cancellationReturnPolicy',choice.value)}
+                title={choice.title}
+                text={choice.text}
+              />
+            ))}
+          </div>
+        </PolicyField>
+      </div>
+    </PolicySection>
+
     <TransferReturnLocationPanel branchCode={branchCode}/>
-    <div className="flex justify-end"><button type="button" disabled={busy} onClick={()=>void save()} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[var(--wms-brand-primary)] px-5 py-3 font-bold text-[var(--wms-brand-on-primary)] disabled:opacity-50"><Save className="size-4"/>{busy?t('policy.saving'):t('policy.save')}</button></div>
+
+    <div className="wms-ops-form-card wms-ops-pt-policy-card wms-ops-pt-policy-actionbar overflow-hidden rounded-none border border-[var(--wms-ops-card-border)]">
+      <p className="wms-ops-pt-policy-actionbar__note">{t('policy.saveHint',{defaultValue:'Değişiklikler yalnızca bu şube için geçerlidir ve kaydettiğiniz anda yeni transferlere uygulanır.'})}</p>
+      <OpsActionButton
+        variant="primary"
+        loading={busy}
+        loadingLabel={<><Save className="size-4"/>{t('policy.saving',{defaultValue:'Kaydediliyor…'})}</>}
+        onClick={()=>void save()}
+      >
+        <Save className="size-4"/>{t('policy.save',{defaultValue:'Kaydet'})}
+      </OpsActionButton>
+    </div>
   </section>;
 }
 
@@ -209,18 +328,167 @@ function TransferReturnLocationPanel({branchCode}:{branchCode:string}){
     }catch(e){toast.error(e instanceof Error?e.message:'Ayar kaydedilemedi.');}
     finally{setBusy(false);}
   };
-  return <Panel title="Depo varsayılan üretim transfer rafları">
-    <p className="mb-4 text-sm text-[var(--wms-app-text-muted)]">Hedef raf satırda seçilmemişse üretim transfer rafı otomatik kullanılır. İptal iade rafı yalnız geri dönüş operasyonlarında kullanılır.</p>
-    <div className="grid gap-3 xl:grid-cols-[1fr_1fr_1fr_auto]">
-      <PagedAppDropdown<WarehouseOption> queryKey={['production-location-warehouse',branchCode]} fetchPage={r=>warehouseTransferApi.warehouses(r,branchCode)} toOption={x=>({value:String(x.id),label:`${x.warehouseCode} · ${x.warehouseName}`})} value={warehouseValue} onValueChange={setWarehouseValue} placeholder="Depo seçin" searchable/>
-      <PagedAppDropdown<LocationOption> queryKey={['production-default-target-location',warehouseId]} fetchPage={r=>warehouseTransferApi.locations(r,warehouseId)} toOption={x=>({value:String(x.id),label:`${x.code} · ${x.name}`})} enabled={warehouseId>0} dependencies={[warehouseId]} value={productionLocationValue} onValueChange={setProductionLocationValue} placeholder="Varsayılan üretim transfer rafı" searchable/>
-      <PagedAppDropdown<LocationOption> queryKey={['production-return-location',warehouseId]} fetchPage={r=>warehouseTransferApi.locations(r,warehouseId)} toOption={x=>({value:String(x.id),label:`${x.code} · ${x.name}`})} enabled={warehouseId>0} dependencies={[warehouseId]} value={returnLocationValue} onValueChange={setReturnLocationValue} placeholder="Varsayılan iptal iade rafı" searchable/>
-      <button disabled={busy||warehouseId<=0} onClick={()=>void save()} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[var(--wms-brand-primary)] px-5 py-3 font-bold text-[var(--wms-brand-primary)] disabled:opacity-50"><Save className="size-4"/>Rafları kaydet</button>
+  return <PolicySection
+    code="LOC_04"
+    icon={<Warehouse className="size-4" strokeWidth={1.75}/>}
+    title="Depo varsayılan üretim transfer rafları"
+    description="Hedef raf satırda seçilmemişse üretim transfer rafı otomatik kullanılır. İptal iade rafı yalnız geri dönüş operasyonlarında kullanılır."
+  >
+    <div className="grid items-end gap-4 xl:grid-cols-[1fr_1fr_1fr_auto]">
+      <PolicyField label="Depo">
+        <div className="wms-ops-field-shell">
+          <PagedAppDropdown<WarehouseOption> queryKey={['production-location-warehouse',branchCode]} fetchPage={r=>warehouseTransferApi.warehouses(r,branchCode)} toOption={x=>({value:String(x.id),label:`${x.warehouseCode} · ${x.warehouseName}`})} value={warehouseValue} onValueChange={setWarehouseValue} placeholder="Depo seçin" searchable className={OPS_SELECT_TRIGGER_CLASS}/>
+        </div>
+      </PolicyField>
+      <PolicyField label="Varsayılan üretim transfer rafı">
+        <div className="wms-ops-field-shell">
+          <PagedAppDropdown<LocationOption> queryKey={['production-default-target-location',warehouseId]} fetchPage={r=>warehouseTransferApi.locations(r,warehouseId)} toOption={x=>({value:String(x.id),label:`${x.code} · ${x.name}`})} enabled={warehouseId>0} dependencies={[warehouseId]} value={productionLocationValue} onValueChange={setProductionLocationValue} placeholder="Raf seçin" searchable className={OPS_SELECT_TRIGGER_CLASS}/>
+        </div>
+      </PolicyField>
+      <PolicyField label="Varsayılan iptal iade rafı">
+        <div className="wms-ops-field-shell">
+          <PagedAppDropdown<LocationOption> queryKey={['production-return-location',warehouseId]} fetchPage={r=>warehouseTransferApi.locations(r,warehouseId)} toOption={x=>({value:String(x.id),label:`${x.code} · ${x.name}`})} enabled={warehouseId>0} dependencies={[warehouseId]} value={returnLocationValue} onValueChange={setReturnLocationValue} placeholder="Raf seçin" searchable className={OPS_SELECT_TRIGGER_CLASS}/>
+        </div>
+      </PolicyField>
+      <OpsActionButton
+        variant="secondary"
+        disabled={warehouseId<=0}
+        loading={busy}
+        loadingLabel={<><Save className="size-4"/>Kaydediliyor…</>}
+        onClick={()=>void save()}
+      >
+        <Save className="size-4"/>Rafları kaydet
+      </OpsActionButton>
     </div>
-  </Panel>;
+  </PolicySection>;
+}
+
+type BooleanPolicyKey={[K in keyof ProductionTransferPolicy]:ProductionTransferPolicy[K] extends boolean?K:never}[keyof ProductionTransferPolicy];
+
+/** Mal kabul listesiyle aynı başlık iskeleti: eyebrow kartın dışında, başlık toolbar içinde. */
+function PolicyPageHeader({title,description,hintLabel}:{title:ReactNode;description:string;hintLabel:string}){
+  const{skin}=useTheme();
+  const{t,i18n}=useTranslation();
+  const{pathname}=useLocation();
+  const isPremium=skin==='premium';
+  const eyebrow=buildTerminalEyebrowFromNav(pathname,t,i18n.resolvedLanguage??i18n.language)??'VERII WMS';
+  return <>
+    {isPremium
+      ?<PremiumEyebrow eyebrow={eyebrow}/>
+      :<div className="wms-ops-eyebrow font-mono text-[11px] font-semibold uppercase tracking-[0.18em]">{eyebrow}</div>}
+    <div className="wms-ops-form-card wms-ops-data-grid-shell overflow-hidden rounded-none border border-[var(--wms-ops-card-border)] py-0 shadow-none">
+      <div className="wms-ops-card-toolbar flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6">
+        <div className="wms-ops-card-heading min-w-0 space-y-1">
+          <h1 className="wms-ops-title flex flex-wrap items-center gap-2">
+            <span className="wms-ops-title-main wms-ops-title-main--toolbar">{title}</span>
+            {isPremium?<PolicyHeaderHint text={description} label={hintLabel}/>:null}
+          </h1>
+          {isPremium?null:(
+            <p className="wms-ops-subtitle font-mono text-sm">
+              <span className="wms-ops-subtitle-prefix" aria-hidden>{'> '}</span>{description}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  </>;
+}
+
+/** Premium'da sayfa açıklaması alt yazı yerine başlık yanındaki ipucu balonunda yaşar. */
+function PolicyHeaderHint({text,label}:{text:string;label:string}){
+  return <TooltipProvider delayDuration={160}>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button type="button" className="wms-ops-pt-policy-hint-btn" aria-label={label}>
+          <CircleHelp className="size-3.5" aria-hidden/>
+        </button>
+      </TooltipTrigger>
+      <TooltipContent
+        side="bottom"
+        align="start"
+        sideOffset={10}
+        className={cn(
+          'wms-ops-page-hint-tooltip max-w-[22rem] overflow-hidden rounded-xl border p-0 text-left',
+          '!bg-[color-mix(in_oklab,var(--wms-app-panel)_96%,black)]',
+          'border-[color-mix(in_oklab,var(--wms-ops-accent)_32%,var(--wms-app-border))]',
+          '!text-[var(--wms-app-text)]',
+        )}
+      >
+        <div className="border-b border-[color-mix(in_oklab,var(--wms-ops-accent)_18%,transparent)] bg-[color-mix(in_oklab,var(--wms-ops-accent)_8%,transparent)] px-3.5 py-2">
+          <span className="inline-flex items-center gap-1.5 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-[var(--wms-ops-accent)]">
+            <span className="size-1.5 rounded-full bg-[var(--wms-ops-accent)]" aria-hidden/>
+            {label}
+          </span>
+        </div>
+        <p className="px-3.5 py-3 text-[0.78rem] leading-5 text-[var(--wms-app-text-muted)]">{text}</p>
+      </TooltipContent>
+    </Tooltip>
+  </TooltipProvider>;
+}
+
+function PolicySection({code,icon,title,description,children}:{code:string;icon:ReactNode;title:ReactNode;description?:ReactNode;children:ReactNode}){
+  return <section className="wms-ops-form-card wms-ops-pt-policy-card overflow-hidden rounded-none border border-[var(--wms-ops-card-border)]">
+    <header className="wms-ops-pt-policy-card__head">
+      <span className="wms-ops-pt-policy-card__icon">{icon}</span>
+      <div className="wms-ops-pt-policy-card__heading">
+        <h2 className="wms-ops-pt-terminal__title">{title}</h2>
+        {description?<p className="wms-ops-pt-policy-hint mt-1">{description}</p>:null}
+      </div>
+      <span className="wms-ops-code-badge shrink-0">{code}</span>
+    </header>
+    <div className="wms-ops-pt-policy-card__body">{children}</div>
+  </section>;
+}
+
+function PolicyField({label,hint,htmlFor,className,children}:{label:ReactNode;hint?:ReactNode;htmlFor?:string;className?:string;children:ReactNode}){
+  return <div className={cn('min-w-0 space-y-1.5',className)}>
+    {htmlFor
+      ?<label className="wms-ops-pt-policy-label" htmlFor={htmlFor}>{label}</label>
+      :<span className="wms-ops-pt-policy-label">{label}</span>}
+    {children}
+    {hint?<span className="wms-ops-pt-policy-hint">{hint}</span>:null}
+  </div>;
+}
+
+function PolicyCheckRow({checked,onCheckedChange,label}:{checked:boolean;onCheckedChange:(value:boolean)=>void;label:string}){
+  return <div
+    role="checkbox"
+    aria-checked={checked}
+    tabIndex={0}
+    className={cn('wms-ops-pt-policy-check',checked&&'wms-ops-pt-policy-check--on')}
+    onClick={()=>onCheckedChange(!checked)}
+    onKeyDown={event=>{if(event.key===' '||event.key==='Enter'){event.preventDefault();onCheckedChange(!checked);}}}
+  >
+    <span className="wms-ops-pt-policy-check__label">{label}</span>
+    <OpsSkinCheckbox checked={checked} onCheckedChange={onCheckedChange} aria-label={label}/>
+  </div>;
+}
+
+function PolicyChoice({checked,onSelect,title,text}:{checked:boolean;onSelect:()=>void;title:string;text:string}){
+  return <div
+    role="radio"
+    aria-checked={checked}
+    tabIndex={0}
+    className={cn('wms-ops-pt-policy-choice',checked&&'wms-ops-pt-policy-choice--on')}
+    onClick={onSelect}
+    onKeyDown={event=>{if(event.key===' '||event.key==='Enter'){event.preventDefault();onSelect();}}}
+  >
+    <OpsSkinCheckbox checked={checked} onCheckedChange={onSelect} aria-label={title} className="mt-0.5"/>
+    <span className="min-w-0">
+      <span className="wms-ops-pt-policy-choice__title">{title}</span>
+      <span className="wms-ops-pt-policy-choice__text">{text}</span>
+    </span>
+  </div>;
+}
+
+function PolicyCallout({title,text}:{title:string;text:string}){
+  return <div className="wms-ops-pt-policy-callout mt-4">
+    <ShieldAlert className="wms-ops-pt-policy-callout__icon size-4" strokeWidth={1.75}/>
+    <span className="min-w-0">
+      <span className="wms-ops-pt-policy-callout__title">{title}</span>
+      <span className="wms-ops-pt-policy-callout__text">{text}</span>
+    </span>
+  </div>;
 }
 
 function Card({href,icon,title,text}:{href:string;icon:ReactNode;title:string;text:string}){return <Link to={href} className="group rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--wms-brand-primary)]"><div className="flex items-center justify-between text-[var(--wms-brand-primary)]">{icon}<ArrowRight className="size-5 transition group-hover:translate-x-1"/></div><h2 className="mt-4 font-black">{title}</h2><p className="mt-1 text-sm text-[var(--wms-app-text-muted)]">{text}</p></Link>;}
-function Panel({title,children}:{title:string;children:ReactNode}){return <section className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5"><h2 className="mb-4 flex items-center gap-2 font-black text-[var(--wms-brand-primary)]"><Boxes className="size-5"/>{title}</h2>{children}</section>;}
-function ToggleGrid({children}:{children:ReactNode}){return <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{children}</div>;}
-function Toggle({label,value,set}:{label:string;value:boolean;set:(v:boolean)=>void}){return <label className="flex min-h-12 items-center justify-between gap-3 rounded-xl border border-[var(--wms-app-border)] px-4 py-3 text-sm text-[var(--wms-app-text)]"><span className="font-semibold">{label}</span><input type="checkbox" checked={value} onChange={e=>set(e.target.checked)} className="size-4 accent-[var(--wms-brand-primary)]"/></label>;}
