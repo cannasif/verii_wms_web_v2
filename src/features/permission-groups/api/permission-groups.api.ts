@@ -10,5 +10,5 @@ export const permissionGroupsApi = {
   create: async (payload: PermissionGroupPayload) => unwrap(await api.post<Envelope<{ id: number }>>('/api/access-control/groups', payload)),
   update: async (id: number, payload: PermissionGroupPayload) => unwrap(await api.put<Envelope<boolean>>(`/api/access-control/groups/${id}`, payload)),
   delete: async (id: number) => unwrap(await api.delete<Envelope<boolean>>(`/api/access-control/groups/${id}`)),
-  getActivePermissions: async () => unwrap(await api.post<Envelope<GridPage<PermissionRow>>>('/api/access-control/permissions/paged', { pageNumber: 1, pageSize: 500, search: null, sortBy: 'code', sortDirection: 'asc', filterLogic: 'and', filters: [{ column: 'isActive', operator: 'equals', value: 'true' }] })),
+  getActivePermissions: async () => unwrap(await api.get<Envelope<PermissionRow[]>>('/api/access-control/permissions/catalog')),
 };

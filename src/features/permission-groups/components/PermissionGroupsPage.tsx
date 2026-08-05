@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Eye, KeyRound, Loader2, Pencil, Plus, Search, ShieldCheck, Trash2, Users2 } from 'lucide-react';
@@ -16,13 +16,13 @@ import { Dialog, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { permissionGroupsApi } from '../api/permission-groups.api';
 import type { PermissionGroupDetail, PermissionGroupRow, PermissionRow } from '../types/permission-groups.types';
+import { buildPermissionCatalog } from '../utils/permission-catalog';
 
 type Mode = 'create' | 'view' | 'edit';
 const P = 'permissionGroups.page';
 
 export function PermissionGroupsPage() {
-  const { t, i18n } = useTranslation('common');
-  const gridLanguage = i18n.resolvedLanguage ?? i18n.language;
+  const { t } = useTranslation('common');
   const queryClient = useQueryClient();
   const stats = useQuery({ queryKey: ['system-group-stats'], queryFn: permissionGroupsApi.getStats });
   const [mode, setMode] = useState<Mode | null>(null);
@@ -39,17 +39,17 @@ export function PermissionGroupsPage() {
 
   const close = () => { if (!saving) { setMode(null); setDetail(null); setPermissionSearch(''); } };
 
-  const open = async (group: PermissionGroupRow | null, nextMode: Mode) => {
+  const open = useCallback(async (group: PermissionGroupRow | null, nextMode: Mode) => {
     if (group?.isSystemAdmin && nextMode === 'edit') return;
     setMode(nextMode); setLoading(true); setPermissionSearch('');
     try {
       const permissionPromise = permissionGroupsApi.getActivePermissions();
       if (group) {
-        const [permissionPage, groupDetail] = await Promise.all([permissionPromise, permissionGroupsApi.getById(group.id)]);
-        setPermissions(permissionPage.items); setDetail(groupDetail); setName(groupDetail.name); setDescription(groupDetail.description || ''); setSelected(groupDetail.permissionIds); setIsActive(groupDetail.isActive);
+        const [permissionCatalog, groupDetail] = await Promise.all([permissionPromise, permissionGroupsApi.getById(group.id)]);
+        setPermissions(permissionCatalog); setDetail(groupDetail); setName(groupDetail.name); setDescription(groupDetail.description || ''); setSelected(groupDetail.permissionIds); setIsActive(groupDetail.isActive);
       } else {
-        const permissionPage = await permissionPromise;
-        setPermissions(permissionPage.items); setDetail(null); setName(''); setDescription(''); setSelected([]); setIsActive(true);
+        const permissionCatalog = await permissionPromise;
+        setPermissions(permissionCatalog); setDetail(null); setName(''); setDescription(''); setSelected([]); setIsActive(true);
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : t(`${P}.loadFailed`));
@@ -57,7 +57,7 @@ export function PermissionGroupsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
 
   const save = async () => {
     const normalizedName = name.trim();
@@ -132,12 +132,10 @@ export function PermissionGroupsPage() {
         </div>
       ),
     },
-  ], [t, gridLanguage]);
+  ], [t, open]);
 
-  const visiblePermissions = useMemo(() => {
-    const search = permissionSearch.trim().toLocaleLowerCase('tr-TR');
-    return search ? permissions.filter(permission => `${permission.code} ${permission.name} ${permission.description || ''}`.toLocaleLowerCase('tr-TR').includes(search)) : permissions;
-  }, [permissionSearch, permissions]);
+  const permissionGroups = useMemo(() => buildPermissionCatalog(permissions, permissionSearch), [permissionSearch, permissions]);
+  const visiblePermissions = useMemo(() => permissionGroups.flatMap(group => group.items), [permissionGroups]);
 
   const readOnly = mode === 'view';
   const modalTitle = mode === 'create' ? t(`${P}.modal.createTitle`) : mode === 'edit' ? t(`${P}.modal.editTitle`) : t(`${P}.modal.viewTitle`);
@@ -225,49 +223,74 @@ export function PermissionGroupsPage() {
                         </>}
                       </div>
                     </div>
-                    <div className="grid max-h-80 gap-2 overflow-auto p-4 sm:grid-cols-2">
-                      {visiblePermissions.map(permission => {
-                        const checked = selected.includes(permission.id);
-                        const toggle = () => {
-                          if (readOnly) return;
-                          setSelected(current =>
-                            current.includes(permission.id)
-                              ? current.filter(id => id !== permission.id)
-                              : [...current, permission.id],
-                          );
-                        };
+                    <div className="max-h-[28rem] space-y-4 overflow-auto p-4">
+                      {permissionGroups.map(group => {
+                        const groupIds = group.items.map(item => item.id);
+                        const selectedCount = groupIds.filter(id => selected.includes(id)).length;
                         return (
-                          <div
-                            key={permission.id}
-                            role="button"
-                            tabIndex={readOnly ? -1 : 0}
-                            onClick={toggle}
-                            onKeyDown={(event) => {
-                              if (readOnly) return;
-                              if (event.key === 'Enter' || event.key === ' ') {
-                                event.preventDefault();
-                                toggle();
-                              }
-                            }}
-                            className={cn(
-                              'flex items-start gap-2.5 rounded-xl border p-3',
-                              readOnly ? 'cursor-default opacity-90' : 'cursor-pointer hover:bg-[var(--wms-brand-soft)]',
-                            )}
-                          >
-                            <OpsSkinCheckbox
-                              checked={checked}
-                              disabled={readOnly}
-                              onCheckedChange={toggle}
-                              aria-label={permission.code}
-                              className="mt-0.5 shrink-0"
-                            />
-                            <span className="min-w-0 flex-1">
-                              <strong className="block text-xs leading-4">{permission.code}</strong>
-                              <small className="mt-0.5 block text-slate-500 leading-4">{permission.name}</small>
-                            </span>
-                          </div>
+                          <section key={group.key} className="overflow-hidden rounded-xl border border-[var(--wms-app-border)]">
+                            <header className="flex flex-wrap items-center justify-between gap-2 bg-[var(--wms-brand-soft)] px-3 py-2.5">
+                              <div>
+                                <strong className="block text-sm">{group.label}</strong>
+                                <small className="text-slate-500">{selectedCount} / {group.items.length} izin seçili</small>
+                              </div>
+                              {!readOnly && (
+                                <button
+                                  type="button"
+                                  className="rounded-lg border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] px-2.5 py-1.5 text-xs font-semibold"
+                                  onClick={() => setSelected(current => selectedCount === group.items.length
+                                    ? current.filter(id => !groupIds.includes(id))
+                                    : [...new Set([...current, ...groupIds])])}
+                                >
+                                  {selectedCount === group.items.length ? 'Modül seçimini kaldır' : 'Modülün tümünü seç'}
+                                </button>
+                              )}
+                            </header>
+                            <div className="grid gap-2 p-3 md:grid-cols-2">
+                              {group.items.map(permission => {
+                                const checked = selected.includes(permission.id);
+                                const toggle = () => {
+                                  if (readOnly) return;
+                                  setSelected(current => current.includes(permission.id)
+                                    ? current.filter(id => id !== permission.id)
+                                    : [...current, permission.id]);
+                                };
+                                return (
+                                  <div
+                                    key={permission.id}
+                                    role="button"
+                                    tabIndex={readOnly ? -1 : 0}
+                                    onClick={toggle}
+                                    onKeyDown={(event) => {
+                                      if (!readOnly && (event.key === 'Enter' || event.key === ' ')) {
+                                        event.preventDefault();
+                                        toggle();
+                                      }
+                                    }}
+                                    className={cn(
+                                      'flex items-start gap-2.5 rounded-xl border p-3',
+                                      checked && 'border-[var(--wms-brand-primary)] bg-[var(--wms-brand-soft)]',
+                                      readOnly ? 'cursor-default opacity-90' : 'cursor-pointer hover:border-[var(--wms-brand-primary)]',
+                                    )}
+                                  >
+                                    <OpsSkinCheckbox checked={checked} disabled={readOnly} onCheckedChange={toggle} aria-label={permission.name} className="mt-0.5 shrink-0" />
+                                    <span className="min-w-0 flex-1">
+                                      <span className="flex flex-wrap items-center gap-1.5">
+                                        <strong className="text-sm leading-4">{permission.name}</strong>
+                                        <small className="rounded-full bg-[var(--wms-app-panel)] px-2 py-0.5 text-[10px] font-semibold text-slate-500">{permission.actionLabel}</small>
+                                      </span>
+                                      {permission.scopeDetail ? <small className="mt-1 block text-xs text-slate-500">{permission.scopeDetail}</small> : null}
+                                      {permission.description ? <small className="mt-1 block text-xs text-slate-500">{permission.description}</small> : null}
+                                      <code className="mt-1.5 block break-all text-[10px] text-slate-400">{permission.code}</code>
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </section>
                         );
                       })}
+                      {!permissionGroups.length && <p className="py-10 text-center text-sm text-slate-500">Aramanızla eşleşen izin bulunamadı.</p>}
                     </div>
                   </div>
                 </OpsDialogBody>
