@@ -18,6 +18,8 @@ type Props = {
   stockLabel?: string;
   taskDescription?: string;
   directDescription?: string;
+  hiddenExecutions?: OperationExecutionMode[];
+  hideExecutionSection?: boolean;
   accent?: 'cyan' | 'violet';
   children?: ReactNode;
 };
@@ -32,13 +34,17 @@ export function OperationFlowTabs({
   stockLabel,
   taskDescription,
   directDescription,
+  hiddenExecutions = [],
+  hideExecutionSection = false,
   children,
 }: Props): ReactElement {
   const { t } = useTranslation('common');
-  const executions: Array<{ value: OperationExecutionMode; title: string; description: string; icon: typeof UserRoundCheck }> = [
+  const showExecutionSection = !hideExecutionSection;
+  const allExecutions: Array<{ value: OperationExecutionMode; title: string; description: string; icon: typeof UserRoundCheck }> = [
     { value: 'task', title: t(`${OF}.taskBased`), description: taskDescription ?? t(`${OF}.taskDescription`), icon: UserRoundCheck },
     { value: 'direct', title: t(`${OF}.direct`), description: directDescription ?? t(`${OF}.directDescription`), icon: Zap },
   ];
+  const executions = allExecutions.filter(({ value }) => !hiddenExecutions.includes(value));
   const sources: Array<{ value: OperationSourceMode; title: string; description: string; icon: typeof ClipboardList }> = [
     { value: 'order', title: orderLabel ?? t('transferDraft.sourceLabels.warehouseOrder'), description: t(`${OF}.orderSourceDescription`), icon: ClipboardList },
     { value: 'stock', title: stockLabel ?? t('transferDraft.sourceLabels.warehouseStock'), description: t(`${OF}.stockSourceDescription`), icon: PackageOpen },
@@ -46,38 +52,42 @@ export function OperationFlowTabs({
 
   return (
     <section className="overflow-hidden rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] shadow-sm" data-no-auto-localize="true">
-      <div className="border-b border-[var(--wms-app-border)] p-4 sm:p-5">
-        <p className="text-[0.68rem] font-black uppercase tracking-[.18em] text-[var(--wms-app-text-muted)]">{t(`${OF}.executionModel`)}</p>
-        <div className="mt-3 grid gap-2 sm:grid-cols-2" role="tablist" aria-label={t(`${OF}.executionAriaLabel`)}>
-          {executions.map(({ value, title, description, icon: Icon }) => {
-            const active = execution === value;
-            const hasAnyAllowedSource = isAllowed('order', value) || isAllowed('stock', value);
-            return (
-              <button
-                key={value}
-                type="button"
-                role="tab"
-                aria-selected={active}
-                disabled={!hasAnyAllowedSource}
-                onClick={() => onExecutionChange(value)}
-                className={cn(
-                  'min-h-24 rounded-xl border p-3 text-left transition sm:p-4',
-                  active
-                    ? 'border-[var(--wms-brand-primary)] bg-[var(--wms-brand-soft)] shadow-[0_0_0_1px_var(--wms-brand-ring)]'
-                    : 'border-[var(--wms-app-border)] hover:border-[color-mix(in_oklab,var(--wms-brand-primary)_45%,var(--wms-app-border))] hover:bg-[var(--wms-brand-soft)]',
-                  !hasAnyAllowedSource && 'cursor-not-allowed opacity-40',
-                )}
-              >
-                <span className="flex items-center gap-2 font-black"><Icon className="size-4.5"/>{title}</span>
-                <span className="mt-1.5 block text-xs leading-5 text-[var(--wms-app-text-muted)]">{description}</span>
-              </button>
-            );
-          })}
+      {showExecutionSection && (
+        <div className="border-b border-[var(--wms-app-border)] p-4 sm:p-5">
+          <p className="text-[0.68rem] font-black uppercase tracking-[.18em] text-[var(--wms-app-text-muted)]">{t(`${OF}.executionModel`)}</p>
+          <div className={cn('mt-3 grid gap-2', executions.length > 1 && 'sm:grid-cols-2')} role="tablist" aria-label={t(`${OF}.executionAriaLabel`)}>
+            {executions.map(({ value, title, description, icon: Icon }) => {
+              const active = execution === value;
+              const hasAnyAllowedSource = isAllowed('order', value) || isAllowed('stock', value);
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  disabled={!hasAnyAllowedSource}
+                  onClick={() => onExecutionChange(value)}
+                  className={cn(
+                    'min-h-24 rounded-xl border p-3 text-left transition sm:p-4',
+                    active
+                      ? 'border-[var(--wms-brand-primary)] bg-[var(--wms-brand-soft)] shadow-[0_0_0_1px_var(--wms-brand-ring)]'
+                      : 'border-[var(--wms-app-border)] hover:border-[color-mix(in_oklab,var(--wms-brand-primary)_45%,var(--wms-app-border))] hover:bg-[var(--wms-brand-soft)]',
+                    !hasAnyAllowedSource && 'cursor-not-allowed opacity-40',
+                  )}
+                >
+                  <span className="flex items-center gap-2 font-black"><Icon className="size-4.5"/>{title}</span>
+                  <span className="mt-1.5 block text-xs leading-5 text-[var(--wms-app-text-muted)]">{description}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="p-4 sm:p-5">
-        <p className="text-[0.68rem] font-black uppercase tracking-[.18em] text-[var(--wms-app-text-muted)]">{t(`${OF}.documentSource`)}</p>
+        <p className="text-[0.68rem] font-black uppercase tracking-[.18em] text-[var(--wms-app-text-muted)]">
+          {showExecutionSection ? t(`${OF}.documentSource`) : t(`${OF}.documentSourceStandalone`)}
+        </p>
         <div className="mt-3 grid gap-2 sm:grid-cols-2" role="tablist" aria-label={t(`${OF}.sourceAriaLabel`)}>
           {sources.map(({ value, title, description, icon: Icon }) => {
             const active = source === value;

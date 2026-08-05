@@ -10,6 +10,8 @@ import {
 import {
   ArrowLeftRight,
   CheckCircle2,
+  ChevronDown,
+  ChevronRight,
   ClipboardList,
   Loader2,
   Plus,
@@ -24,6 +26,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { AppDropdown } from "@/components/shared/AppDropdown";
 import { AppDateInput } from "@/components/shared/AppInput";
+import { autoSelectInputCaptureHandlers } from "@/lib/select-input-contents";
 import { OperationFlowTabs } from "@/components/shared/OperationFlowTabs";
 import { OpsActionButton } from "@/components/shared/OpsActionButton";
 import {
@@ -52,6 +55,7 @@ import type {
   YapCodeOption,
 } from "@/features/goods-receipt-v2/types/goods-receipt.types";
 import { warehouseTransferApi } from "../api/warehouse-transfer.api";
+import { productionTransferApi } from "@/features/production-transfer/api";
 import type {
   CreateTransferDraftResult,
   TransferDraftLine,
@@ -71,6 +75,12 @@ const locationOption = (x: LocationOption) => ({
   value: String(x.id),
   label: `${x.code} · ${x.name}`,
   description: x.locationType,
+});
+type SourceLocationRow = { id: number; code: string; name: string; locationType?: string; availableQuantity?: number };
+const sourceLocationOption = (x: SourceLocationRow) => ({
+  value: String(x.id),
+  label: `${x.code} · ${x.name}`,
+  description: x.availableQuantity !== undefined ? `Kullanılabilir: ${x.availableQuantity}` : x.locationType,
 });
 const customerOption = (x: CustomerOption) => ({
   value: `${x.id}|${x.customerCode}`,
@@ -131,6 +141,35 @@ const hasWarehouseTransferDirectDraft = (draft: WarehouseTransferDirectDraft) =>
     draft.lines.some((line) => line.stockId || line.source),
   );
 
+type TransferSourceSnapshot = {
+  lines: TransferDraftLine[];
+  sourceValue: string | null;
+  targetValue: string | null;
+  sourceStaging: string | null;
+  targetReceiving: string | null;
+  projectCode: string;
+  externalReference: string;
+  description: string;
+  productionHeaderId: number | null;
+  productionOrderId: number | null;
+  productionPlanNo: string;
+  productionOrderNo: string;
+  productionPurpose: "MaterialSupply" | "WorkInProgressMove" | "OutputMove";
+  productionOperationCode: string;
+  sourceWorkCenterCode: string;
+  targetWorkCenterCode: string;
+  supplierValue: string | null;
+  subcontractOrderNo: string;
+};
+
+const cloneTransferDraftLines = (items: TransferDraftLine[]): TransferDraftLine[] =>
+  items.map((line) => ({
+    ...line,
+    trackingPolicy: line.trackingPolicy ? { ...line.trackingPolicy } : undefined,
+    source: line.source ? { ...line.source } : undefined,
+    trackings: line.trackings.map((tracking) => ({ ...tracking })),
+  }));
+
 export type TransferDraftVariant = "warehouse" | "production" | "subcontracting";
 export interface ProductionTransferInitialSource {
   sourceSystemCode: string;
@@ -186,6 +225,8 @@ export function WarehouseTransferDraftPage({
   const [externalReference, setExternalReference] = useState("");
   const [description, setDescription] = useState("");
   const [productionPurpose, setProductionPurpose] = useState<"MaterialSupply" | "WorkInProgressMove" | "OutputMove">("MaterialSupply");
+  const [showProductionAdvanced, setShowProductionAdvanced] = useState(false);
+  const [showDocumentAdvanced, setShowDocumentAdvanced] = useState(false);
   const [productionHeaderId, setProductionHeaderId] = useState<number | null>(null);
   const [productionOrderId, setProductionOrderId] = useState<number | null>(null);
   const [productionPlanNo, setProductionPlanNo] = useState("");
@@ -207,6 +248,7 @@ export function WarehouseTransferDraftPage({
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<CreateTransferDraftResult | null>(null);
   const productionSourceApplied = useRef(false);
+  const sourceSnapshotsRef = useRef<Partial<Record<TransferSourceKind, TransferSourceSnapshot>>>({});
   useEffect(() => {
     if (variant !== "production" || !initialProductionSource || productionSourceApplied.current) return;
     productionSourceApplied.current = true;
@@ -230,7 +272,21 @@ export function WarehouseTransferDraftPage({
         quantity: material.quantity, unitCode: material.unitCode, trackingType: trackingPolicy.trackingType,
         trackingPolicy, requireHandlingUnit: false, trackings: [],
       } satisfies TransferDraftLine;
-    })).then(preparedLines => {
+    })).then(async preparedLines => {
+      try {
+        const defaultTarget = await productionTransferApi.defaultTargetLocation(initialProductionSource.targetWarehouse.id, branchCode);
+        if (defaultTarget.locationId) {
+          preparedLines = preparedLines.map((line) => ({
+            ...line,
+            targetLocationId: defaultTarget.locationId,
+            targetLocationValue: String(defaultTarget.locationId),
+            targetLocationCode: defaultTarget.locationCode,
+            targetLocationName: defaultTarget.locationName,
+          }));
+        }
+      } catch {
+        // Varsayılan raf çekilemezse satırlar boş hedef rafla devam eder — kullanıcı elle seçebilir.
+      }
       setLines(preparedLines);
       toast.success(`${initialProductionSource.workOrderNumber} reçetesi üretim transferine aktarıldı.`);
     }).catch((error: Error) => toast.error(error.message || "Stok takip ayarları yüklenemedi."));
@@ -337,8 +393,58 @@ export function WarehouseTransferDraftPage({
     );
 
   const setSource = (value: TransferSourceKind) => {
+    if (value === sourceKind) return;
+
+    if (variant !== "warehouse") {
+      sourceSnapshotsRef.current[sourceKind] = {
+        lines: cloneTransferDraftLines(lines),
+        sourceValue,
+        targetValue,
+        sourceStaging,
+        targetReceiving,
+        projectCode,
+        externalReference,
+        description,
+        productionHeaderId,
+        productionOrderId,
+        productionPlanNo,
+        productionOrderNo,
+        productionPurpose,
+        productionOperationCode,
+        sourceWorkCenterCode,
+        targetWorkCenterCode,
+        supplierValue,
+        subcontractOrderNo,
+      };
+      setSourceKind(value);
+      const snapshot = sourceSnapshotsRef.current[value];
+      if (snapshot) {
+        setLines(cloneTransferDraftLines(snapshot.lines));
+        setSourceValue(snapshot.sourceValue);
+        setTargetValue(snapshot.targetValue);
+        setSourceStaging(snapshot.sourceStaging);
+        setTargetReceiving(snapshot.targetReceiving);
+        setProjectCode(snapshot.projectCode);
+        setExternalReference(snapshot.externalReference);
+        setDescription(snapshot.description);
+        setProductionHeaderId(snapshot.productionHeaderId);
+        setProductionOrderId(snapshot.productionOrderId);
+        setProductionPlanNo(snapshot.productionPlanNo);
+        setProductionOrderNo(snapshot.productionOrderNo);
+        setProductionPurpose(snapshot.productionPurpose);
+        setProductionOperationCode(snapshot.productionOperationCode);
+        setSourceWorkCenterCode(snapshot.sourceWorkCenterCode);
+        setTargetWorkCenterCode(snapshot.targetWorkCenterCode);
+        setSupplierValue(snapshot.supplierValue);
+        setSubcontractOrderNo(snapshot.subcontractOrderNo);
+        return;
+      }
+      setLines([blankLine()]);
+      return;
+    }
+
     setSourceKind(value);
-    setLines(value === "StockBased" || variant !== "warehouse" ? [blankLine()] : []);
+    setLines(value === "StockBased" ? [blankLine()] : []);
     setOrders([]);
     setSelectedOrders([]);
     setCustomerValue(null);
@@ -752,7 +858,7 @@ export function WarehouseTransferDraftPage({
     );
 
   return (
-    <section className="space-y-5" data-no-auto-localize="true">
+    <section className="space-y-5" data-no-auto-localize="true" {...autoSelectInputCaptureHandlers}>
       <OperationDraftRestoreDialog
         open={operationDraft.restoreDialogOpen}
         operationName={t('operationNames.warehouseTransferDirect')}
@@ -778,6 +884,7 @@ export function WarehouseTransferDraftPage({
         onExecutionChange={(value) =>
           setExecution(value === "task" ? "TaskBased" : "Direct")
         }
+        hideExecutionSection={variant === "production"}
         accent="violet"
         orderLabel={orderLabel}
         stockLabel={stockLabel}
@@ -802,17 +909,29 @@ export function WarehouseTransferDraftPage({
       </OperationFlowTabs>
       {variant === "production" && (
         <Panel title={t(`${D}.production.panel`)} icon={<ClipboardList className="size-5" />}>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-2">
             <Field label={t(`${D}.production.purpose`)}><AppDropdown value={productionPurpose} onValueChange={(value) => setProductionPurpose(value as typeof productionPurpose)} options={[...productionPurposeOptions]}/></Field>
-            <Field label={t(`${D}.production.planNo`)}><input className="input" maxLength={100} value={productionPlanNo} onChange={(e)=>setProductionPlanNo(e.target.value)}/></Field>
             <Field label={`${t(`${D}.production.orderNo`)}${sourceKind === "OrderBased" ? " *" : ""}`}><input className="input" maxLength={100} value={productionOrderNo} onChange={(e)=>setProductionOrderNo(e.target.value)}/></Field>
-            <Field label={t(`${D}.production.operationCode`)}><input className="input" maxLength={100} value={productionOperationCode} onChange={(e)=>setProductionOperationCode(e.target.value)}/></Field>
-            <Field label={t(`${D}.production.sourceWorkCenter`)}><input className="input" maxLength={100} value={sourceWorkCenterCode} onChange={(e)=>setSourceWorkCenterCode(e.target.value)}/></Field>
-            <Field label={t(`${D}.production.targetWorkCenter`)}><input className="input" maxLength={100} value={targetWorkCenterCode} onChange={(e)=>setTargetWorkCenterCode(e.target.value)}/></Field>
           </div>
           <p className="mt-4 rounded-xl border border-[var(--wms-brand-ring)] bg-[var(--wms-brand-soft)] p-3 text-sm text-[var(--wms-app-text)]">
             {t(`${D}.production.note`)}
           </p>
+          <button
+            type="button"
+            onClick={() => setShowProductionAdvanced((value) => !value)}
+            className="mt-4 inline-flex items-center gap-1.5 text-sm font-bold text-[var(--wms-brand-primary)]"
+          >
+            {showProductionAdvanced ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
+            Diğer ayarlar
+          </button>
+          {showProductionAdvanced && (
+            <div className="mt-3 grid gap-4 border-t border-[var(--wms-app-border)] pt-4 md:grid-cols-2 xl:grid-cols-3">
+              <Field label={t(`${D}.production.planNo`)}><input className="input" maxLength={100} value={productionPlanNo} onChange={(e)=>setProductionPlanNo(e.target.value)}/></Field>
+              <Field label={t(`${D}.production.operationCode`)}><input className="input" maxLength={100} value={productionOperationCode} onChange={(e)=>setProductionOperationCode(e.target.value)}/></Field>
+              <Field label={t(`${D}.production.sourceWorkCenter`)}><input className="input" maxLength={100} value={sourceWorkCenterCode} onChange={(e)=>setSourceWorkCenterCode(e.target.value)}/></Field>
+              <Field label={t(`${D}.production.targetWorkCenter`)}><input className="input" maxLength={100} value={targetWorkCenterCode} onChange={(e)=>setTargetWorkCenterCode(e.target.value)}/></Field>
+            </div>
+          )}
         </Panel>
       )}
       {variant === "subcontracting" && (
@@ -883,38 +1002,27 @@ export function WarehouseTransferDraftPage({
                   ...line,
                   targetLocationId: undefined,
                   targetLocationValue: null,
+                  targetLocationCode: undefined,
+                  targetLocationName: undefined,
                 })));
+                if (variant === "production" && value) {
+                  const warehouseId = Number(value.split("|")[0]);
+                  void productionTransferApi.defaultTargetLocation(warehouseId, branchCode)
+                    .then((defaultTarget) => {
+                      if (!defaultTarget.locationId) return;
+                      setLines((current) => current.map((line) => ({
+                        ...line,
+                        targetLocationId: defaultTarget.locationId,
+                        targetLocationValue: String(defaultTarget.locationId),
+                        targetLocationCode: defaultTarget.locationCode,
+                        targetLocationName: defaultTarget.locationName,
+                      })));
+                    })
+                    .catch(() => {});
+                }
               }}
               searchable
               placeholder={t(`${D}.document.targetWarehousePlaceholder`)}
-            />
-          </Field>
-          <Field label={t(`${D}.document.sourceStaging`)}>
-            <PagedAppDropdown
-              queryKey={["wt-source-area", sourceId]}
-              fetchPage={(request) =>
-                warehouseTransferApi.locations(request, sourceId)
-              }
-              toOption={locationOption}
-              enabled={Boolean(sourceId)}
-              value={sourceStaging}
-              onValueChange={setSourceStaging}
-              searchable
-              placeholder={t(`${D}.document.optional`)}
-            />
-          </Field>
-          <Field label={t(`${D}.document.targetReceiving`)}>
-            <PagedAppDropdown
-              queryKey={["wt-target-area", targetId]}
-              fetchPage={(request) =>
-                warehouseTransferApi.locations(request, targetId)
-              }
-              toOption={locationOption}
-              enabled={Boolean(targetId)}
-              value={targetReceiving}
-              onValueChange={setTargetReceiving}
-              searchable
-              placeholder={t(`${D}.document.optional`)}
             />
           </Field>
           <Field label={t(`${D}.document.series`)}>
@@ -933,54 +1041,94 @@ export function WarehouseTransferDraftPage({
               onChange={(e) => setDocumentDate(e.target.value)}
             />
           </Field>
-          <Field label={t(`${D}.document.plannedDispatch`)}>
-            <AppDateInput
-              type="datetime-local"
-              value={dispatchAt}
-              onChange={(e) => setDispatchAt(e.target.value)}
-            />
-          </Field>
-          <Field label={t(`${D}.document.plannedArrival`)}>
-            <AppDateInput
-              type="datetime-local"
-              value={arrivalAt}
-              onChange={(e) => setArrivalAt(e.target.value)}
-            />
-          </Field>
-          <Field label={t(`${D}.document.priority`)}>
-            <AppDropdown
-              value={priority}
-              onValueChange={setPriority}
-              options={[1, 2, 3, 4, 5].map((x) => ({
-                value: String(x),
-                label: String(x),
-              }))}
-            />
-          </Field>
-          <Field label={t(`${D}.document.externalReference`)}>
-            <input
-              className="input"
-              value={externalReference}
-              onChange={(e) => setExternalReference(e.target.value)}
-            />
-          </Field>
-          <Field label="Proje kodu">
-            <input
-              className="input"
-              value={projectCode}
-              maxLength={50}
-              onChange={(e) => setProjectCode(e.target.value)}
-              placeholder="Netsis proje kodu (boşsa 0)"
-            />
-          </Field>
-          <Field label={t(`${D}.document.description`)}>
-            <input
-              className="input"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-          </Field>
         </div>
+        <button
+          type="button"
+          onClick={() => setShowDocumentAdvanced((value) => !value)}
+          className="mt-4 inline-flex items-center gap-1.5 text-sm font-bold text-[var(--wms-brand-primary)]"
+        >
+          {showDocumentAdvanced ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
+          Diğer ayarlar
+        </button>
+        {showDocumentAdvanced && (
+          <div className="mt-3 grid gap-4 border-t border-[var(--wms-app-border)] pt-4 md:grid-cols-2 xl:grid-cols-4">
+            <Field label={t(`${D}.document.sourceStaging`)}>
+              <PagedAppDropdown
+                queryKey={["wt-source-area", sourceId]}
+                fetchPage={(request) =>
+                  warehouseTransferApi.locations(request, sourceId)
+                }
+                toOption={locationOption}
+                enabled={Boolean(sourceId)}
+                value={sourceStaging}
+                onValueChange={setSourceStaging}
+                searchable
+                placeholder={t(`${D}.document.optional`)}
+              />
+            </Field>
+            <Field label={t(`${D}.document.targetReceiving`)}>
+              <PagedAppDropdown
+                queryKey={["wt-target-area", targetId]}
+                fetchPage={(request) =>
+                  warehouseTransferApi.locations(request, targetId)
+                }
+                toOption={locationOption}
+                enabled={Boolean(targetId)}
+                value={targetReceiving}
+                onValueChange={setTargetReceiving}
+                searchable
+                placeholder={t(`${D}.document.optional`)}
+              />
+            </Field>
+            <Field label={t(`${D}.document.plannedDispatch`)}>
+              <AppDateInput
+                type="datetime-local"
+                value={dispatchAt}
+                onChange={(e) => setDispatchAt(e.target.value)}
+              />
+            </Field>
+            <Field label={t(`${D}.document.plannedArrival`)}>
+              <AppDateInput
+                type="datetime-local"
+                value={arrivalAt}
+                onChange={(e) => setArrivalAt(e.target.value)}
+              />
+            </Field>
+            <Field label={t(`${D}.document.priority`)}>
+              <AppDropdown
+                value={priority}
+                onValueChange={setPriority}
+                options={[1, 2, 3, 4, 5].map((x) => ({
+                  value: String(x),
+                  label: String(x),
+                }))}
+              />
+            </Field>
+            <Field label={t(`${D}.document.externalReference`)}>
+              <input
+                className="input"
+                value={externalReference}
+                onChange={(e) => setExternalReference(e.target.value)}
+              />
+            </Field>
+            <Field label="Proje kodu">
+              <input
+                className="input"
+                value={projectCode}
+                maxLength={50}
+                onChange={(e) => setProjectCode(e.target.value)}
+                placeholder="Netsis proje kodu (boşsa 0)"
+              />
+            </Field>
+            <Field label={t(`${D}.document.description`)}>
+              <input
+                className="input"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+            </Field>
+          </div>
+        )}
       </Panel>
       {executionKind === "TaskBased" && (
         <Assignees
@@ -1267,7 +1415,7 @@ function AssigneePickerDialog({
             </p>
           </div>
         </OpsDialogHeader>
-        <OpsDialogBody className="space-y-4">
+        <OpsDialogBody className="space-y-4" {...autoSelectInputCaptureHandlers}>
           <div className="flex items-center gap-2 rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] px-3">
             <Search className="size-4 shrink-0 text-[var(--wms-app-text-muted)]" aria-hidden />
             <input
@@ -1396,6 +1544,67 @@ function LineCard({
         description: undefined,
       }
     : undefined;
+
+  const sourceAutoFillKey = useRef<string>("");
+  const applySourceLocation = (locationId: number, locationCode?: string, locationName?: string) =>
+    patch(line.localId, {
+      sourceLocationId: locationId,
+      sourceLocationValue: String(locationId),
+      sourceLocationCode: locationCode,
+      sourceLocationName: locationName,
+    });
+
+  // Serili/LotAndSerial: tüm seriler girilip planlanan miktar tamamlanınca, o serilerin
+  // gerçekte bulunduğu rafı (hepsi aynı raftaysa) kaynak rafına otomatik yazar.
+  useEffect(() => {
+    if (line.trackingType !== "Serial" && line.trackingType !== "LotAndSerial") return;
+    const stockId = line.stockId;
+    if (!stockId || !sourceId || line.sourceLocationId) return;
+    const serials = line.trackings.map((x) => x.serialNo?.trim() || "");
+    if (serials.length === 0 || serials.some((x) => !x)) return;
+    const totalEntered = line.trackings.reduce((sum, x) => sum + (x.quantity || 0), 0);
+    if (totalEntered < line.quantity) return;
+    const key = [...serials].sort().join("|");
+    if (sourceAutoFillKey.current === key) return;
+    // Kullanıcı hâlâ yazıyor olabilir; her tuş vuruşunda değil, yazma durduktan sonra sorgula.
+    const timer = setTimeout(() => {
+      sourceAutoFillKey.current = key;
+      void warehouseTransferApi.resolveSerialLocations(branchCode, sourceId, stockId, line.yapCodeId, serials)
+        .then((matches) => {
+          const missing = matches.filter((m) => !m.locationId).map((m) => m.serialNo);
+          if (missing.length > 0) {
+            toast.error(`${line.stockCode ?? ""}: ${missing.join(", ")} serisi için bu depoda bakiye bulunamadı — kaynak rafı otomatik doldurulamadı.`);
+            return;
+          }
+          const distinctLocationIds = [...new Set(matches.map((m) => m.locationId))];
+          if (distinctLocationIds.length > 1) {
+            toast.error(`${line.stockCode ?? ""}: girilen seriler ${distinctLocationIds.length} farklı rafta bulundu — kaynak rafı otomatik seçilemedi, lütfen elle seçin.`);
+            return;
+          }
+          const match = matches[0];
+          if (match?.locationId) applySourceLocation(match.locationId, match.locationCode, match.locationName);
+        })
+        .catch((error: Error) => toast.error(message(error, "Seri raf bilgisi sorgulanamadı.")));
+    }, 700);
+    return () => clearTimeout(timer);
+  }, [branchCode, line.localId, line.quantity, line.sourceLocationId, line.stockId, line.stockCode, line.trackingType, line.trackings, line.yapCodeId, sourceId]);
+
+  // Takipsiz (None) stoklar: stok+depo tek bir rafta bakiye buluyorsa kaynak rafına otomatik yazar.
+  useEffect(() => {
+    if (line.trackingType !== "None") return;
+    if (!line.stockId || !sourceId || line.sourceLocationId) return;
+    const key = `${sourceId}|${line.stockId}|${line.yapCodeId ?? ""}`;
+    if (sourceAutoFillKey.current === key) return;
+    sourceAutoFillKey.current = key;
+    void warehouseTransferApi.resolveStockLocations(branchCode, sourceId, line.stockId, line.yapCodeId)
+      .then((locations) => {
+        if (locations.length === 0) return; // bakiye yok, otomatik doldurma için bir şey yok
+        if (locations.length > 1) return; // birden fazla rafta bulundu, otomatik seçilemez — kullanıcı elle seçer
+        applySourceLocation(locations[0].locationId, locations[0].locationCode, locations[0].locationName);
+      })
+      .catch((error: Error) => toast.error(message(error, "Stok raf bilgisi sorgulanamadı.")));
+  }, [branchCode, line.localId, line.sourceLocationId, line.stockId, line.stockCode, line.trackingType, line.yapCodeId, sourceId]);
+
   return (
     <div className="rounded-xl border border-[var(--wms-app-border)] p-4">
       <div className="mb-3 flex justify-between">
@@ -1510,15 +1719,42 @@ function LineCard({
         </Field>
         <Field label={t(`${D}.lines.sourceLocation`)}>
           <PagedAppDropdown
-            queryKey={["wt-line-source", line.localId, sourceId]}
-            fetchPage={(r) => warehouseTransferApi.locations(r, sourceId)}
-            toOption={locationOption}
+            queryKey={["wt-line-source", line.localId, sourceId, line.stockId, line.yapCodeId]}
+            fetchPage={(r) =>
+              line.stockId
+                ? warehouseTransferApi
+                    .stockLocationsPage(r, branchCode, sourceId, line.stockId, line.yapCodeId)
+                    .then((p) => ({
+                      ...p,
+                      items: p.items.map((x) => ({
+                        id: x.locationId,
+                        code: x.locationCode,
+                        name: x.locationName,
+                        availableQuantity: x.availableQuantity,
+                      })),
+                    }))
+                : warehouseTransferApi.locations(r, sourceId).then((p) => ({
+                    ...p,
+                    items: p.items.map((x) => ({
+                      id: x.id,
+                      code: x.code,
+                      name: x.name,
+                      locationType: x.locationType,
+                    })),
+                  }))
+            }
+            toOption={sourceLocationOption}
             enabled={Boolean(sourceId)}
+            selectedOption={line.sourceLocationCode
+              ? { value: String(line.sourceLocationId), label: `${line.sourceLocationCode} · ${line.sourceLocationName}` }
+              : undefined}
             value={line.sourceLocationValue}
             onValueChange={(value) =>
               patch(line.localId, {
                 sourceLocationValue: value,
                 sourceLocationId: Number(value),
+                sourceLocationCode: undefined,
+                sourceLocationName: undefined,
               })
             }
             searchable
@@ -1530,11 +1766,16 @@ function LineCard({
             fetchPage={(r) => warehouseTransferApi.locations(r, targetId)}
             toOption={locationOption}
             enabled={Boolean(targetId)}
+            selectedOption={line.targetLocationCode
+              ? { value: String(line.targetLocationId), label: `${line.targetLocationCode} · ${line.targetLocationName}` }
+              : undefined}
             value={line.targetLocationValue}
             onValueChange={(value) =>
               patch(line.localId, {
                 targetLocationValue: value,
                 targetLocationId: Number(value),
+                targetLocationCode: undefined,
+                targetLocationName: undefined,
               })
             }
             searchable

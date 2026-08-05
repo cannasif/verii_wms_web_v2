@@ -24,6 +24,19 @@ import type {
 } from '../types/warehouse-transfer.types';
 
 interface Envelope<T> { success: boolean; data: T; message?: string }
+export interface SerialLocationMatch {
+  serialNo: string;
+  locationId?: number;
+  locationCode?: string;
+  locationName?: string;
+  availableQuantity: number;
+}
+export interface StockLocationBalance {
+  locationId: number;
+  locationCode: string;
+  locationName: string;
+  availableQuantity: number;
+}
 export interface WarehouseTransferOperationLinePayload {
   lineId: number;
   quantity: number;
@@ -83,6 +96,50 @@ export const warehouseTransferApi = {
       ]),
       { signal: request.signal },
     )),
+  resolveStockLocations: async (
+    branchCode: string,
+    warehouseId: number,
+    stockId: number,
+    yapCodeId: number | undefined,
+  ): Promise<StockLocationBalance[]> =>
+    unwrap(await api.get<Envelope<StockLocationBalance[]>>(
+      `/api/stock-balances/stocks/${stockId}/locations`,
+      { params: { warehouseId, branchCode, yapCodeId: yapCodeId ?? undefined } },
+    )),
+  stockLocationsPage: async (
+    request: DropdownPageRequest,
+    branchCode: string,
+    warehouseId: number,
+    stockId: number,
+    yapCodeId: number | undefined,
+  ): Promise<DropdownPage<StockLocationBalance>> => {
+    const all = await warehouseTransferApi.resolveStockLocations(branchCode, warehouseId, stockId, yapCodeId);
+    const search = (request.search ?? '').trim().toLowerCase();
+    const filtered = search
+      ? all.filter((x) => x.locationCode.toLowerCase().includes(search) || x.locationName.toLowerCase().includes(search))
+      : all;
+    const pageSize = request.pageSize || filtered.length || 1;
+    const pageNumber = request.pageNumber || 1;
+    const start = (pageNumber - 1) * pageSize;
+    return {
+      items: filtered.slice(start, start + pageSize),
+      pageNumber,
+      pageSize,
+      totalCount: filtered.length,
+      totalPages: Math.max(1, Math.ceil(filtered.length / pageSize)),
+      hasNextPage: start + pageSize < filtered.length,
+    };
+  },
+  resolveSerialLocations: async (
+    branchCode: string,
+    warehouseId: number,
+    stockId: number,
+    yapCodeId: number | undefined,
+    serialNumbers: string[],
+  ): Promise<SerialLocationMatch[]> =>
+    unwrap(await api.post<Envelope<SerialLocationMatch[]>>('/api/stock-balances/resolve-serial-locations', {
+      branchCode, warehouseId, stockId, yapCodeId: yapCodeId ?? null, serialNumbers,
+    })),
   locations: async (request: DropdownPageRequest, warehouseId: number): Promise<DropdownPage<LocationOption>> =>
     unwrap(await api.post<Envelope<DropdownPage<LocationOption>>>(
       '/api/locations/paged',

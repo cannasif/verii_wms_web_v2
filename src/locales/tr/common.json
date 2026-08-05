@@ -5241,6 +5241,7 @@
     "operationFlow": {
       "executionModel": "01 · Yürütme modeli",
       "documentSource": "02 · Belge kaynağı",
+      "documentSourceStandalone": "Belge kaynağı",
       "taskBased": "Emirli işlem",
       "direct": "Emirsiz işlem",
       "taskDescription": "Operasyon emri oluşturulur, kullanıcı atanır ve saha ilerlemesi izlenir.",

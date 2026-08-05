@@ -7,6 +7,7 @@ import {
   type ComponentPropsWithoutRef,
   type FocusEvent,
   type MouseEvent,
+  type PointerEvent,
   type ReactElement,
   type ReactNode,
 } from 'react';
@@ -20,6 +21,10 @@ import {
   normalizeManualDateInput,
   toDisplayDateValue,
 } from '@/components/shared/app-date-input.utils';
+import {
+  markEditableInputPointerDown,
+  selectInputContentsOnFocus,
+} from '@/lib/select-input-contents';
 import { cn } from '@/lib/utils';
 
 const MOBILE_DATE_PICKER_QUERY = '(max-width: 767px)';
@@ -204,16 +209,15 @@ export const AppDateInput = forwardRef<HTMLInputElement, AppDateInputProps>(func
     if (isDateMode && !inputReadOnly && !disabled) {
       setDraft(toDisplayDateValue(stringValue));
     }
-    requestAnimationFrame(() => {
-      event.currentTarget.select();
-    });
+    selectInputContentsOnFocus(event);
+  };
+
+  const handleInputPointerDown = (event: PointerEvent<HTMLInputElement>): void => {
+    markEditableInputPointerDown(event);
   };
 
   const handleInputClick = (event: MouseEvent<HTMLInputElement>): void => {
     onClick?.(event);
-    if (!inputReadOnly && !disabled) {
-      event.currentTarget.select();
-    }
   };
 
   const Icon = type === 'time' ? Clock3 : CalendarDays;
@@ -257,6 +261,7 @@ export const AppDateInput = forwardRef<HTMLInputElement, AppDateInputProps>(func
       onChange={handleInputChange}
       onBlur={handleInputBlur}
       onFocus={handleInputFocus}
+      onPointerDown={handleInputPointerDown}
       onClick={handleInputClick}
       trailingContent={(
         <button

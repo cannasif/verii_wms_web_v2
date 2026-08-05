@@ -65,8 +65,12 @@ export interface TransferDraftLine {
   requireHandlingUnit: boolean;
   sourceLocationId?: number;
   sourceLocationValue?: string | null;
+  sourceLocationCode?: string;
+  sourceLocationName?: string;
   targetLocationId?: number;
   targetLocationValue?: string | null;
+  targetLocationCode?: string;
+  targetLocationName?: string;
   trackings: TransferDraftTracking[];
   source?: TransferLineSource;
 }
