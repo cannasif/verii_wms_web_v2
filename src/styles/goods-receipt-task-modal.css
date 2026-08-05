@@ -1,0 +1,419 @@
+/* Mal kabul emri modalı (tasks / assigned tasks)
+   Liste detay modalı ile aynı ops DNA'sı: Terminal varsayılan, Premium override. */
+
+/* ── 3 sekmeli ana tab şeridi ─────────────────────────────────────────── */
+.wms-ops-detail-dialog [data-slot='tabs-list'].wms-ops-detail-main-tabs--cols-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.wms-ops-detail-dialog
+  [data-slot='tabs-list'].wms-ops-detail-main-tabs--cols-3
+  .wms-ops-detail-tab-indicator {
+  width: calc((100% - 1.11rem) / 3);
+}
+
+.wms-ops-detail-dialog
+  [data-slot='tabs-list'].wms-ops-detail-main-tabs--cols-3[data-active-index='1']
+  .wms-ops-detail-tab-indicator {
+  transform: translateX(calc(100% + 0.25rem));
+}
+
+.wms-ops-detail-dialog
+  [data-slot='tabs-list'].wms-ops-detail-main-tabs--cols-3[data-active-index='2']
+  .wms-ops-detail-tab-indicator {
+  transform: translateX(calc(2 * (100% + 0.25rem)));
+}
+
+html.skin-premium
+  .wms-ops-detail-dialog
+  [data-slot='tabs-list'].wms-ops-detail-main-tabs--cols-3
+  .wms-ops-detail-tab-indicator {
+  width: calc((100% - 1.24rem) / 3);
+}
+
+html.skin-premium
+  .wms-ops-detail-dialog
+  [data-slot='tabs-list'].wms-ops-detail-main-tabs--cols-3[data-active-index='1']
+  .wms-ops-detail-tab-indicator {
+  transform: translateX(calc(100% + 0.3rem));
+}
+
+html.skin-premium
+  .wms-ops-detail-dialog
+  [data-slot='tabs-list'].wms-ops-detail-main-tabs--cols-3[data-active-index='2']
+  .wms-ops-detail-tab-indicator {
+  transform: translateX(calc(2 * (100% + 0.3rem)));
+}
+
+/* ── Panel ────────────────────────────────────────────────────────────── */
+.wms-ops-detail-dialog .wms-ops-task-panel {
+  --task-tone: var(--wms-ops-accent);
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  border: 1px solid color-mix(in oklab, var(--task-tone) 24%, var(--wms-ops-card-border));
+  border-radius: 0;
+  background: color-mix(in oklab, var(--wms-ops-field-bg) 88%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--task-tone) 6%, transparent);
+}
+
+.wms-ops-detail-dialog .wms-ops-task-panel--violet {
+  --task-tone: #7c3aed;
+}
+
+.wms-ops-detail-dialog .wms-ops-task-panel--emerald {
+  --task-tone: #10b981;
+}
+
+.wms-ops-detail-dialog .wms-ops-task-panel__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid color-mix(in oklab, var(--task-tone) 14%, var(--wms-ops-card-border));
+}
+
+.wms-ops-detail-dialog .wms-ops-task-panel__title-row {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 16rem;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.wms-ops-detail-dialog .wms-ops-task-panel__icon {
+  display: grid;
+  width: 1.6rem;
+  height: 1.6rem;
+  flex-shrink: 0;
+  place-items: center;
+  border: 1px solid color-mix(in oklab, var(--task-tone) 32%, transparent);
+  color: color-mix(in oklab, var(--task-tone) 82%, hsl(var(--foreground)));
+  background: color-mix(in oklab, var(--task-tone) 12%, transparent);
+}
+
+.wms-ops-detail-dialog .wms-ops-task-panel__title {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--task-tone) 66%, hsl(var(--foreground)));
+}
+
+.wms-ops-detail-dialog .wms-ops-task-panel__hint {
+  margin: 0.15rem 0 0;
+  font-size: 0.66rem;
+  line-height: 1.35;
+  color: color-mix(in oklab, hsl(var(--foreground)) 52%, transparent);
+}
+
+.wms-ops-detail-dialog .wms-ops-task-panel__count {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  border: 1px solid color-mix(in oklab, var(--task-tone) 30%, transparent);
+  background: color-mix(in oklab, var(--task-tone) 10%, transparent);
+  padding: 0.1rem 0.4rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--task-tone) 78%, hsl(var(--foreground)));
+  white-space: nowrap;
+}
+
+.wms-ops-detail-dialog .wms-ops-task-panel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: auto;
+}
+
+.wms-ops-detail-dialog .wms-ops-task-panel__actions .wms-ops-action-btn {
+  min-height: 2.25rem;
+  padding: 0 0.9rem;
+  font-size: 0.66rem;
+}
+
+.wms-ops-detail-dialog .wms-ops-task-panel__actions .input {
+  min-height: 2.25rem;
+}
+
+.wms-ops-detail-dialog .wms-ops-task-panel__body {
+  padding: 0.75rem;
+}
+
+.wms-ops-detail-dialog .wms-ops-task-panel + .wms-ops-task-panel {
+  margin-top: 0.75rem;
+}
+
+/* ── Panel içi ince buton (temizle / tümünü seç) ──────────────────────── */
+.wms-ops-detail-dialog .wms-ops-task-chip-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 2rem;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid color-mix(in oklab, var(--task-tone, var(--wms-ops-accent)) 32%, transparent);
+  background: transparent;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--task-tone, var(--wms-ops-accent)) 78%, hsl(var(--foreground)));
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+
+.wms-ops-detail-dialog .wms-ops-task-chip-btn:hover:not(:disabled) {
+  border-color: color-mix(in oklab, var(--task-tone, var(--wms-ops-accent)) 55%, transparent);
+  background: color-mix(in oklab, var(--task-tone, var(--wms-ops-accent)) 10%, transparent);
+}
+
+.wms-ops-detail-dialog .wms-ops-task-chip-btn:disabled {
+  opacity: 0.45;
+}
+
+/* ── Sorumlu kartları ─────────────────────────────────────────────────── */
+.wms-ops-detail-dialog .wms-ops-task-assignees {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 0.45rem;
+  max-height: 17.5rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 0.2rem;
+}
+
+.wms-ops-detail-dialog .wms-ops-task-assignee {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid color-mix(in oklab, var(--task-tone) 16%, var(--wms-ops-card-border));
+  background: color-mix(in oklab, var(--wms-ops-field-bg) 72%, transparent);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+}
+
+.wms-ops-detail-dialog .wms-ops-task-assignee:hover {
+  border-color: color-mix(in oklab, var(--task-tone) 42%, transparent);
+  background: color-mix(in oklab, var(--task-tone) 6%, var(--wms-ops-field-bg));
+}
+
+.wms-ops-detail-dialog .wms-ops-task-assignee--selected {
+  border-color: color-mix(in oklab, var(--task-tone) 55%, transparent);
+  background: color-mix(in oklab, var(--task-tone) 12%, var(--wms-ops-field-bg));
+  box-shadow: inset 2px 0 0 var(--task-tone);
+}
+
+.wms-ops-detail-dialog .wms-ops-task-assignee--readonly {
+  cursor: default;
+}
+
+.wms-ops-detail-dialog .wms-ops-task-assignee__body {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.wms-ops-detail-dialog .wms-ops-task-assignee__name {
+  overflow: hidden;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: hsl(var(--foreground));
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wms-ops-detail-dialog .wms-ops-task-assignee__meta {
+  overflow: hidden;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.62rem;
+  line-height: 1.3;
+  color: color-mix(in oklab, hsl(var(--foreground)) 50%, transparent);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Boş durum & bilgi şeridi ─────────────────────────────────────────── */
+.wms-ops-detail-dialog .wms-ops-task-empty {
+  display: grid;
+  gap: 0.4rem;
+  justify-items: center;
+  border: 1px dashed color-mix(in oklab, var(--wms-ops-accent) 26%, var(--wms-ops-card-border));
+  padding: 1.5rem 1rem;
+  text-align: center;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, hsl(var(--foreground)) 50%, transparent);
+}
+
+.wms-ops-detail-dialog .wms-ops-task-note {
+  --task-tone: var(--wms-ops-accent);
+  border: 1px solid color-mix(in oklab, var(--task-tone) 30%, transparent);
+  background: color-mix(in oklab, var(--task-tone) 7%, transparent);
+  padding: 0.5rem 0.7rem;
+  font-size: 0.7rem;
+  line-height: 1.4;
+  color: color-mix(in oklab, var(--task-tone) 72%, hsl(var(--foreground)));
+}
+
+.wms-ops-detail-dialog .wms-ops-task-note--warn {
+  --task-tone: #f59e0b;
+}
+
+/* ── Okutma formu ─────────────────────────────────────────────────────── */
+.wms-ops-detail-dialog .wms-ops-task-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.6rem;
+}
+
+/* ── Kalem etiketleri (kalite / doğrudan irsaliye) ────────────────────── */
+.wms-ops-detail-dialog .wms-ops-task-line-flag {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid currentcolor;
+  padding: 0.05rem 0.35rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.wms-ops-detail-dialog .wms-ops-task-line-flag--quality {
+  color: #b45309;
+}
+
+.wms-ops-detail-dialog .wms-ops-task-line-flag--direct {
+  color: #047857;
+}
+
+html.dark .wms-ops-detail-dialog .wms-ops-task-line-flag--quality {
+  color: #fbbf24;
+}
+
+html.dark .wms-ops-detail-dialog .wms-ops-task-line-flag--direct {
+  color: #34d399;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   PREMIUM
+   ═══════════════════════════════════════════════════════════════════════ */
+html.skin-premium .wms-ops-detail-dialog .wms-ops-task-panel {
+  --task-tone: var(--wms-brand-primary);
+  border-radius: 0.9rem;
+  border-color: color-mix(in oklab, var(--task-tone) 18%, var(--wms-app-border));
+  background:
+    linear-gradient(145deg, color-mix(in oklab, var(--task-tone) 6%, transparent), transparent 46%),
+    color-mix(in oklab, var(--wms-app-panel) 92%, transparent);
+  box-shadow: 0 1px 2px color-mix(in oklab, #0f172a 5%, transparent);
+  overflow: hidden;
+}
+
+html.skin-premium .wms-ops-detail-dialog .wms-ops-task-panel__head {
+  border-bottom-color: color-mix(in oklab, var(--task-tone) 12%, var(--wms-app-border));
+  padding: 0.7rem 0.85rem;
+}
+
+html.skin-premium .wms-ops-detail-dialog .wms-ops-task-panel__icon {
+  border: 0;
+  border-radius: 0.55rem;
+  width: 1.75rem;
+  height: 1.75rem;
+  background: color-mix(in oklab, var(--task-tone) 14%, transparent);
+}
+
+html.skin-premium .wms-ops-detail-dialog .wms-ops-task-panel__title {
+  font-family: var(--wms-premium-font);
+  font-size: 0.86rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-transform: none;
+  color: hsl(var(--foreground));
+}
+
+html.skin-premium .wms-ops-detail-dialog .wms-ops-task-panel__count {
+  border: 0;
+  border-radius: 999px;
+  font-family: var(--wms-premium-font);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  padding: 0.15rem 0.55rem;
+}
+
+html.skin-premium .wms-ops-detail-dialog .wms-ops-task-panel__body {
+  padding: 0.85rem;
+}
+
+html.skin-premium .wms-ops-detail-dialog .wms-ops-task-chip-btn {
+  border-radius: 0.65rem;
+  font-family: var(--wms-premium-font);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+html.skin-premium .wms-ops-detail-dialog .wms-ops-task-assignee {
+  border-radius: 0.75rem;
+  border-color: color-mix(in oklab, var(--task-tone) 12%, var(--wms-app-border));
+  background: color-mix(in oklab, var(--wms-app-surface) 70%, transparent);
+}
+
+html.skin-premium .wms-ops-detail-dialog .wms-ops-task-assignee--selected {
+  border-color: color-mix(in oklab, var(--task-tone) 45%, transparent);
+  background: color-mix(in oklab, var(--task-tone) 10%, transparent);
+  box-shadow: 0 0 16px -6px var(--wms-brand-shadow);
+}
+
+html.skin-premium .wms-ops-detail-dialog .wms-ops-task-assignee__meta {
+  font-family: var(--wms-premium-font);
+  font-size: 0.68rem;
+}
+
+html.skin-premium .wms-ops-detail-dialog .wms-ops-task-empty {
+  border-radius: 0.9rem;
+  font-family: var(--wms-premium-font);
+  font-size: 0.8rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+html.skin-premium .wms-ops-detail-dialog .wms-ops-task-note {
+  --task-tone: var(--wms-brand-primary);
+  border-radius: 0.75rem;
+  font-size: 0.78rem;
+}
+
+html.skin-premium .wms-ops-detail-dialog .wms-ops-task-note--warn {
+  --task-tone: #f59e0b;
+}
+
+html.skin-premium .wms-ops-detail-dialog .wms-ops-task-line-flag {
+  border: 0;
+  border-radius: 999px;
+  background: color-mix(in oklab, currentcolor 14%, transparent);
+  font-family: var(--wms-premium-font);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  padding: 0.1rem 0.5rem;
+}

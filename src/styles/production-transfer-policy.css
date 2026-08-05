@@ -1,0 +1,354 @@
+/* ============================================================
+   Üretim transfer politika sayfası (/warehouse/production-transfers/settings)
+   Terminal ve premium skin'ler için ayrı yüzey DNA'sı.
+   ============================================================ */
+
+/* ---------- Ortak iskelet ---------- */
+
+.wms-ops-pt-policy {
+  --pt-policy-line: color-mix(in oklab, var(--wms-ops-card-border) 82%, transparent);
+  --pt-policy-muted: color-mix(in oklab, hsl(var(--foreground)) 52%, transparent);
+}
+
+.wms-ops-pt-policy .wms-ops-pt-policy-card {
+  position: relative;
+}
+
+.wms-ops-pt-policy .wms-ops-pt-policy-card__head {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.85rem 1.05rem;
+  border-bottom: 1px solid var(--pt-policy-line);
+}
+
+.wms-ops-pt-policy .wms-ops-pt-policy-card__icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2.1rem;
+  height: 2.1rem;
+  color: var(--wms-ops-accent);
+  border: 1px solid color-mix(in oklab, var(--wms-ops-accent) 30%, transparent);
+  background: color-mix(in oklab, var(--wms-ops-accent) 9%, transparent);
+}
+
+.wms-ops-pt-policy .wms-ops-pt-policy-card__heading {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.wms-ops-pt-policy .wms-ops-pt-policy-card__body {
+  padding: 1rem 1.05rem 1.1rem;
+}
+
+/* ---------- Başlık yanındaki ipucu butonu (premium) ---------- */
+
+.wms-ops-pt-policy .wms-ops-pt-policy-hint-btn {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--wms-ops-accent) 28%, var(--wms-app-border));
+  background: color-mix(in oklab, var(--wms-ops-accent) 8%, transparent);
+  color: var(--wms-ops-accent);
+  transition:
+    border-color 180ms ease,
+    background-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.wms-ops-pt-policy .wms-ops-pt-policy-hint-btn:hover {
+  border-color: color-mix(in oklab, var(--wms-ops-accent) 55%, var(--wms-app-border));
+  background: color-mix(in oklab, var(--wms-ops-accent) 14%, transparent);
+  box-shadow: 0 0 14px color-mix(in oklab, var(--wms-ops-accent) 18%, transparent);
+}
+
+/* ---------- Alan etiketi + ipucu ---------- */
+
+.wms-ops-pt-policy .wms-ops-pt-policy-label {
+  display: block;
+  font-weight: 700;
+  color: color-mix(in oklab, hsl(var(--foreground)) 66%, transparent);
+}
+
+.wms-ops-pt-policy .wms-ops-pt-policy-hint {
+  display: block;
+  font-size: 0.7rem;
+  line-height: 1.5;
+  color: var(--pt-policy-muted);
+}
+
+/* ---------- Seçim kartı (tekli seçim / radio) ---------- */
+
+.wms-ops-pt-policy .wms-ops-pt-policy-choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  width: 100%;
+  padding: 0.7rem 0.8rem;
+  text-align: left;
+  cursor: pointer;
+  border: 1px solid var(--wms-ops-card-border);
+  background: color-mix(in oklab, var(--wms-ops-field-bg) 86%, transparent);
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.wms-ops-pt-policy .wms-ops-pt-policy-choice:hover {
+  border-color: color-mix(in oklab, var(--wms-ops-accent) 42%, var(--wms-ops-card-border));
+}
+
+.wms-ops-pt-policy .wms-ops-pt-policy-choice:focus-visible {
+  outline: none;
+  border-color: var(--wms-ops-accent);
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--wms-ops-accent) 32%, transparent);
+}
+
+.wms-ops-pt-policy .wms-ops-pt-policy-choice--on {
+  border-color: color-mix(in oklab, var(--wms-ops-accent) 58%, transparent);
+  background: color-mix(in oklab, var(--wms-ops-accent) 10%, var(--wms-ops-field-bg));
+}
+
+.wms-ops-pt-policy .wms-ops-pt-policy-choice__title {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: hsl(var(--foreground));
+}
+
+.wms-ops-pt-policy .wms-ops-pt-policy-choice__text {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.7rem;
+  line-height: 1.45;
+  color: var(--pt-policy-muted);
+}
+
+/* ---------- Uyarı / sınır kutusu ---------- */
+
+.wms-ops-pt-policy .wms-ops-pt-policy-callout {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid color-mix(in oklab, var(--wms-ops-warm) 34%, transparent);
+  background: color-mix(in oklab, var(--wms-ops-warm) 8%, transparent);
+}
+
+.wms-ops-pt-policy .wms-ops-pt-policy-callout__icon {
+  flex: none;
+  margin-top: 0.05rem;
+  color: var(--wms-ops-warm);
+}
+
+.wms-ops-pt-policy .wms-ops-pt-policy-callout__title {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: color-mix(in oklab, var(--wms-ops-warm) 76%, hsl(var(--foreground)));
+}
+
+.wms-ops-pt-policy .wms-ops-pt-policy-callout__text {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.72rem;
+  line-height: 1.55;
+  color: var(--pt-policy-muted);
+}
+
+/* ---------- Kaydet çubuğu ---------- */
+
+.wms-ops-pt-policy .wms-ops-pt-policy-actionbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+  padding: 0.85rem 1.05rem;
+}
+
+.wms-ops-pt-policy .wms-ops-pt-policy-actionbar__note {
+  min-width: 0;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: var(--pt-policy-muted);
+}
+
+/* ---------- Checkbox ızgarası ---------- */
+
+.wms-ops-pt-policy .wms-ops-pt-policy-check-grid {
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+}
+
+.wms-ops-pt-policy .wms-ops-pt-policy-check {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 2.85rem;
+  padding: 0.7rem 0.85rem;
+  cursor: pointer;
+  border: 1px solid var(--wms-ops-card-border);
+  background: color-mix(in oklab, var(--wms-ops-field-bg) 82%, transparent);
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.wms-ops-pt-policy .wms-ops-pt-policy-check:hover {
+  border-color: color-mix(in oklab, var(--wms-ops-accent) 42%, var(--wms-ops-card-border));
+}
+
+.wms-ops-pt-policy .wms-ops-pt-policy-check--on {
+  border-color: color-mix(in oklab, var(--wms-ops-accent) 46%, var(--wms-ops-card-border));
+  background: color-mix(in oklab, var(--wms-ops-accent) 8%, var(--wms-ops-field-bg));
+}
+
+.wms-ops-pt-policy .wms-ops-pt-policy-check__label {
+  min-width: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: hsl(var(--foreground));
+}
+
+/* ============================================================
+   TERMINAL SKIN — köşeli, monospace, konsol jargonu
+   ============================================================ */
+
+html:not(.skin-premium) .wms-ops-pt-policy .wms-ops-pt-policy-card__icon,
+html:not(.skin-premium) .wms-ops-pt-policy .wms-ops-pt-policy-choice,
+html:not(.skin-premium) .wms-ops-pt-policy .wms-ops-pt-policy-callout,
+html:not(.skin-premium) .wms-ops-pt-policy .wms-ops-pt-policy-check {
+  border-radius: 0;
+}
+
+html:not(.skin-premium) .wms-ops-pt-policy .wms-ops-pt-policy-card__head {
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--wms-ops-accent) 7%, transparent),
+    transparent
+  );
+}
+
+/* Başlık şeridinin sol kenarına ince tarama çizgisi */
+html:not(.skin-premium) .wms-ops-pt-policy .wms-ops-pt-policy-card__head::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 2px;
+  height: 100%;
+  background: linear-gradient(
+    180deg,
+    var(--wms-ops-accent),
+    color-mix(in oklab, var(--wms-ops-accent) 10%, transparent)
+  );
+}
+
+html:not(.skin-premium) .wms-ops-pt-policy .wms-ops-pt-policy-label,
+html:not(.skin-premium) .wms-ops-pt-policy .wms-ops-pt-policy-choice__title,
+html:not(.skin-premium) .wms-ops-pt-policy .wms-ops-pt-policy-callout__title {
+  font-family: var(--wms-terminal-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
+  font-size: 0.625rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+html:not(.skin-premium) .wms-ops-pt-policy .wms-ops-pt-policy-label {
+  color: color-mix(in oklab, var(--wms-ops-accent) 66%, hsl(var(--foreground)));
+}
+
+html:not(.skin-premium) .wms-ops-pt-policy .wms-ops-pt-policy-hint,
+html:not(.skin-premium) .wms-ops-pt-policy .wms-ops-pt-policy-actionbar__note {
+  font-family: var(--wms-terminal-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
+  font-size: 0.65rem;
+  letter-spacing: 0.02em;
+}
+
+/* Etiket önüne konsol işareti */
+html:not(.skin-premium) .wms-ops-pt-policy .wms-ops-pt-policy-label::before {
+  content: '// ';
+  opacity: 0.55;
+}
+
+html:not(.skin-premium) .wms-ops-pt-policy .wms-ops-pt-policy-check__label {
+  font-family: var(--wms-terminal-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+}
+
+/* ============================================================
+   PREMIUM SKIN — yumuşak köşe, cam yüzey, sakin tipografi
+   ============================================================ */
+
+html.skin-premium .wms-ops-pt-policy .wms-ops-pt-policy-card__icon {
+  border-radius: 0.7rem;
+}
+
+html.skin-premium .wms-ops-pt-policy .wms-ops-pt-policy-choice,
+html.skin-premium .wms-ops-pt-policy .wms-ops-pt-policy-callout,
+html.skin-premium .wms-ops-pt-policy .wms-ops-pt-policy-check {
+  border-radius: 0.85rem;
+}
+
+html.skin-premium .wms-ops-pt-policy .wms-ops-pt-policy-choice--on {
+  box-shadow:
+    0 6px 18px color-mix(in oklab, var(--wms-brand-primary) 14%, transparent),
+    inset 0 1px 0 rgb(255 255 255 / 12%);
+}
+
+html.skin-premium .wms-ops-pt-policy .wms-ops-pt-policy-card__head {
+  padding: 1rem 1.35rem;
+  background: linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--wms-brand-primary) 7%, transparent) 0%,
+    transparent 62%
+  );
+}
+
+html.skin-premium .wms-ops-pt-policy .wms-ops-pt-policy-card__body {
+  padding: 1.15rem 1.35rem 1.3rem;
+}
+
+html.skin-premium .wms-ops-pt-policy .wms-ops-pt-policy-actionbar {
+  padding: 1rem 1.35rem;
+}
+
+html.skin-premium .wms-ops-pt-policy .wms-ops-pt-policy-label,
+html.skin-premium .wms-ops-pt-policy .wms-ops-pt-policy-choice__title,
+html.skin-premium .wms-ops-pt-policy .wms-ops-pt-policy-callout__title {
+  font-family: var(--wms-premium-font);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.005em;
+  text-transform: none;
+}
+
+html.skin-premium .wms-ops-pt-policy .wms-ops-pt-policy-hint,
+html.skin-premium .wms-ops-pt-policy .wms-ops-pt-policy-actionbar__note {
+  font-family: var(--wms-premium-font);
+  font-size: 0.74rem;
+  letter-spacing: 0;
+}
+
+html.skin-premium .wms-ops-pt-policy .wms-ops-pt-policy-check {
+  background: color-mix(in oklab, var(--wms-ops-field-bg) 74%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+html.skin-premium .wms-ops-pt-policy .wms-ops-pt-policy-check__label {
+  font-family: var(--wms-premium-font);
+  font-size: 0.8rem;
+  letter-spacing: 0;
+  text-transform: none;
+}

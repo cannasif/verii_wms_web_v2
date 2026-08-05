@@ -3100,10 +3100,14 @@ html:not(.dark) .wms-ops-lookup-dialog__description {
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: color-mix(in oklab, hsl(var(--foreground)) 58%, transparent);
+  color: color-mix(in oklab, hsl(var(--foreground)) 76%, transparent);
   background: transparent !important;
   box-shadow: none !important;
   transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.wms-ops-detail-dialog [data-slot="tabs-trigger"].wms-ops-detail-main-tab:hover:not([data-state="active"]) {
+  color: color-mix(in oklab, var(--wms-ops-accent) 65%, hsl(var(--foreground)));
 }
 
 .wms-ops-detail-dialog [data-slot="tabs-trigger"].wms-ops-detail-main-tab[data-state="active"] {
@@ -3145,20 +3149,24 @@ html:not(.dark) .wms-ops-lookup-dialog__description {
   overflow: hidden;
   text-overflow: ellipsis;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.58rem;
-  font-weight: 600;
+  font-size: 0.63rem;
+  font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: color-mix(in oklab, hsl(var(--foreground)) 54%, transparent);
+  color: color-mix(in oklab, hsl(var(--foreground)) 74%, transparent);
   background: transparent !important;
   box-shadow: none !important;
 }
 
+.wms-ops-detail-dialog [data-slot="tabs-trigger"].wms-ops-detail-subtab:hover:not([data-state="active"]) {
+  color: color-mix(in oklab, var(--wms-ops-accent) 65%, hsl(var(--foreground)));
+}
+
 .wms-ops-detail-dialog [data-slot="tabs-trigger"].wms-ops-detail-subtab[data-state="active"] {
-  border-color: color-mix(in oklab, var(--wms-ops-accent) 42%, transparent);
-  background: color-mix(in oklab, var(--wms-ops-accent) 12%, var(--wms-ops-field-bg)) !important;
-  color: color-mix(in oklab, var(--wms-ops-accent) 82%, hsl(var(--foreground)));
-  box-shadow: inset 2px 0 0 var(--wms-ops-accent) !important;
+  border-color: transparent;
+  background: transparent !important;
+  color: var(--wms-ops-tab-active-fg);
+  box-shadow: none !important;
 }
 
 .wms-ops-detail-dialog .wms-ops-detail-panel {
@@ -21927,7 +21935,7 @@ html.skin-premium .wms-ops-detail-dialog [data-slot='dialog-close']:hover {
   top: 0.28rem;
   bottom: 0.28rem;
   left: 0.28rem;
-  border-radius: 999px;
+  border-radius: 0;
   pointer-events: none;
   background: linear-gradient(
     135deg,
@@ -22000,6 +22008,7 @@ html.skin-premium .wms-ops-detail-dialog [data-slot='tabs-list'].wms-ops-detail-
 }
 
 html.skin-premium .wms-ops-detail-dialog .wms-ops-detail-tab-indicator {
+  border-radius: 999px;
   border: 1px solid color-mix(in oklab, var(--wms-brand-primary) 42%, transparent);
   background: linear-gradient(
     135deg,
