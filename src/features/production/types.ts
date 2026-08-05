@@ -17,6 +17,7 @@ export interface ProductionMaterialDraft {
 export interface ProductionOrderDraft {
   localKey: string;
   externalOrderNo: string | null;
+  externalSourceSystemCode: string | null;
   sequenceNo: number;
   parallelGroupNo: number | null;
   bomReference: string | null;
@@ -108,6 +109,8 @@ export interface PreparedNetsisProductionMaterial {
 }
 
 export interface PreparedNetsisProductionWorkOrder {
+  sourceType: 'NetsisErpFunctions' | 'WmsIntegrationTables';
+  sourceSystemCode: string;
   workOrderNumber: string;
   branchCode: number;
   productCode: string;
@@ -166,6 +169,7 @@ export interface ProductionPlanDetail {
     id: number;
     orderNo: string;
     externalOrderNo?: string;
+    externalSourceSystemCode?: string;
     status: string;
     sequenceNo: number;
     workCenterCode?: string;

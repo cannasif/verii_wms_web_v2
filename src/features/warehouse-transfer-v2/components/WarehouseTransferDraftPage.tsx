@@ -133,6 +133,7 @@ const hasWarehouseTransferDirectDraft = (draft: WarehouseTransferDirectDraft) =>
 
 export type TransferDraftVariant = "warehouse" | "production" | "subcontracting";
 export interface ProductionTransferInitialSource {
+  sourceSystemCode: string;
   workOrderNumber: string;
   projectCode?: string;
   existingProductionHeaderId?: number;
@@ -215,7 +216,7 @@ export function WarehouseTransferDraftPage({
     setProductionOrderNo(initialProductionSource.workOrderNumber);
     setProjectCode(initialProductionSource.projectCode ?? "");
     setExternalReference(initialProductionSource.workOrderNumber);
-    setDescription(`Netsis ${initialProductionSource.workOrderNumber} iş emri reçetesinden hazırlandı.`);
+    setDescription(`${initialProductionSource.sourceSystemCode} ${initialProductionSource.workOrderNumber} iş emri reçetesinden hazırlandı.`);
     setSourceValue(`${initialProductionSource.sourceWarehouse.id}|${initialProductionSource.sourceWarehouse.code}`);
     setTargetValue(`${initialProductionSource.targetWarehouse.id}|${initialProductionSource.targetWarehouse.code}`);
     void Promise.all(initialProductionSource.materials.map(async material => {

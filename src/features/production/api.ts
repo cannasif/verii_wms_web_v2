@@ -20,9 +20,10 @@ export const productionApi = {
     unwrap(await api.get<Envelope<ProductionSourceWorkOrder[]>>('/api/production/work-orders', {
       params: { search: search?.trim() || undefined, take: 200 },
     })),
-  prepareSourceWorkOrder: async (workOrderNumber: string): Promise<PreparedNetsisProductionWorkOrder> =>
+  prepareSourceWorkOrder: async (row: Pick<ProductionSourceWorkOrder, 'workOrderNumber' | 'sourceType' | 'sourceSystemCode'>): Promise<PreparedNetsisProductionWorkOrder> =>
     unwrap(await api.get<Envelope<PreparedNetsisProductionWorkOrder>>(
-      `/api/production/work-orders/${encodeURIComponent(workOrderNumber)}/prepare`,
+      `/api/production/work-orders/${encodeURIComponent(row.workOrderNumber)}/prepare`,
+      { params: { sourceType: row.sourceType, sourceSystemCode: row.sourceSystemCode } },
     )),
   create: async (payload: CreateProductionPlanRequest): Promise<CreateProductionPlanResult> =>
     unwrap(await api.post<Envelope<CreateProductionPlanResult>>('/api/production/plans', payload)),

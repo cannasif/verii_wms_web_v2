@@ -149,6 +149,7 @@ export function ProductionCreatePage(): ReactElement {
   const producedYap = decode<YapCodeOption>(yapValue);
   const [plannedQuantity, setPlannedQuantity] = useState(1);
   const [externalOrderNo, setExternalOrderNo] = useState('');
+  const [externalSourceSystemCode, setExternalSourceSystemCode] = useState<string | null>(null);
   const [workCenterCode, setWorkCenterCode] = useState('');
   const [bomReference, setBomReference] = useState('');
   const [routingReference, setRoutingReference] = useState('');
@@ -162,7 +163,7 @@ export function ProductionCreatePage(): ReactElement {
     if (!sourcePrefill || prefillApplied.current) return;
     prefillApplied.current = true;
     if (!sourcePrefill.producedStockId || !sourcePrefill.sourceWarehouseId || !sourcePrefill.targetWarehouseId || sourcePrefill.mappingErrors.length) {
-      toast.error('Netsis iş emrinin WMS stok/depo eşlemeleri tamamlanmadan üretim emri hazırlanamaz.');
+      toast.error(`${sourcePrefill.sourceSystemCode} iş emrinin WMS stok/depo eşlemeleri tamamlanmadan üretim emri hazırlanamaz.`);
       return;
     }
     setSourceWarehouseValue(encode({ id: sourcePrefill.sourceWarehouseId, branchCode, warehouseCode: sourcePrefill.sourceWarehouseCode, warehouseName: sourcePrefill.sourceWarehouseName ?? String(sourcePrefill.sourceWarehouseCode) } satisfies WarehouseOption));
@@ -171,6 +172,7 @@ export function ProductionCreatePage(): ReactElement {
     setYapValue(sourcePrefill.producedYapCodeId && sourcePrefill.configurationCode ? encode({ id: sourcePrefill.producedYapCodeId, branchCode, configurationCode: sourcePrefill.configurationCode, description: sourcePrefill.configurationCode } satisfies YapCodeOption) : null);
     setPlannedQuantity(sourcePrefill.plannedQuantity);
     setExternalOrderNo(sourcePrefill.workOrderNumber);
+    setExternalSourceSystemCode(sourcePrefill.sourceSystemCode);
     setBomReference(sourcePrefill.productCode);
     setDocumentDate(sourcePrefill.workOrderDate?.slice(0, 10) || today());
     setPlannedStart(sourcePrefill.workOrderDate?.slice(0, 16) || '');
@@ -250,6 +252,7 @@ export function ProductionCreatePage(): ReactElement {
         orders: [{
           localKey: crypto.randomUUID(),
           externalOrderNo: externalOrderNo.trim() || null,
+          externalSourceSystemCode: externalOrderNo.trim() ? externalSourceSystemCode : null,
           sequenceNo: 1,
           parallelGroupNo: null,
           bomReference: bomReference.trim() || null,
