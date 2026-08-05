@@ -8,6 +8,7 @@ export const permissionGroupsApi = {
   getStats: async () => unwrap(await api.get<Envelope<PermissionGroupStats>>('/api/access-control/groups/stats')),
   getById: async (id: number) => unwrap(await api.get<Envelope<PermissionGroupDetail>>(`/api/access-control/groups/${id}`)),
   create: async (payload: PermissionGroupPayload) => unwrap(await api.post<Envelope<{ id: number }>>('/api/access-control/groups', payload)),
+  copy: async (id: number, payload: { name: string; description?: string }) => unwrap(await api.post<Envelope<{ id: number }>>(`/api/access-control/groups/${id}/copy`, payload)),
   update: async (id: number, payload: PermissionGroupPayload) => unwrap(await api.put<Envelope<boolean>>(`/api/access-control/groups/${id}`, payload)),
   delete: async (id: number) => unwrap(await api.delete<Envelope<boolean>>(`/api/access-control/groups/${id}`)),
   getActivePermissions: async () => unwrap(await api.get<Envelope<PermissionRow[]>>('/api/access-control/permissions/catalog')),

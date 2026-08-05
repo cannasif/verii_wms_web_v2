@@ -5879,6 +5879,7 @@
       "columns": {
         "name": "Name",
         "isSystemAdmin": "System Admin",
+        "isProtected": "Group type",
         "isActive": "Active",
         "permissionCount": "Permissions",
         "actions": "Actions"
@@ -5890,6 +5891,10 @@
       "view": "View",
       "edit": "Edit",
       "delete": "Delete",
+      "copy": "Copy",
+      "copySuccess": "Permission group copied.",
+      "defaultTemplate": "Default template",
+      "customGroup": "Custom group",
       "loadFailed": "Could not load permission group details.",
       "nameMinLength": "Group name must be at least 2 characters.",
       "saveSuccessCreate": "Permission group created.",
@@ -5899,6 +5904,7 @@
       "deleteFailed": "Could not delete permission group.",
       "modal": {
         "createTitle": "New Permission Group",
+        "copyTitle": "Copy Permission Group",
         "editTitle": "Edit Permission Group",
         "viewTitle": "Permission Group Detail",
         "subtitle": "Manage group information and the permission catalog together.",
@@ -5912,6 +5918,7 @@
         "selectVisible": "Select Visible",
         "clear": "Clear",
         "systemAdminNotice": "System Administrator group is protected; it cannot be edited or deleted.",
+        "protectedNotice": "This default group is protected; it can only be viewed and copied as a new custom group.",
         "close": "Close",
         "cancel": "Cancel",
         "save": "Save"

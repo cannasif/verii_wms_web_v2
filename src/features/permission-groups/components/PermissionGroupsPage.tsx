@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Eye, KeyRound, Loader2, Pencil, Plus, Search, ShieldCheck, Trash2, Users2 } from 'lucide-react';
+import { Copy, Eye, KeyRound, Loader2, Pencil, Plus, Search, ShieldCheck, Trash2, Users2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdvancedDataGrid, type GridColumn } from '@/components/shared/AdvancedDataGrid';
 import { AppInput } from '@/components/shared/AppInput';
@@ -18,7 +18,7 @@ import { permissionGroupsApi } from '../api/permission-groups.api';
 import type { PermissionGroupDetail, PermissionGroupRow, PermissionRow } from '../types/permission-groups.types';
 import { buildPermissionCatalog } from '../utils/permission-catalog';
 
-type Mode = 'create' | 'view' | 'edit';
+type Mode = 'create' | 'copy' | 'view' | 'edit';
 const P = 'permissionGroups.page';
 
 export function PermissionGroupsPage() {
@@ -40,13 +40,13 @@ export function PermissionGroupsPage() {
   const close = () => { if (!saving) { setMode(null); setDetail(null); setPermissionSearch(''); } };
 
   const open = useCallback(async (group: PermissionGroupRow | null, nextMode: Mode) => {
-    if (group?.isSystemAdmin && nextMode === 'edit') return;
+    if (group?.isProtected && nextMode === 'edit') return;
     setMode(nextMode); setLoading(true); setPermissionSearch('');
     try {
       const permissionPromise = permissionGroupsApi.getActivePermissions();
       if (group) {
         const [permissionCatalog, groupDetail] = await Promise.all([permissionPromise, permissionGroupsApi.getById(group.id)]);
-        setPermissions(permissionCatalog); setDetail(groupDetail); setName(groupDetail.name); setDescription(groupDetail.description || ''); setSelected(groupDetail.permissionIds); setIsActive(groupDetail.isActive);
+        setPermissions(permissionCatalog); setDetail(groupDetail); setName(nextMode === 'copy' ? `${groupDetail.name} - Kopya` : groupDetail.name); setDescription(groupDetail.description || ''); setSelected(nextMode === 'copy' && groupDetail.isSystemAdmin ? permissionCatalog.map(permission => permission.id) : groupDetail.permissionIds); setIsActive(nextMode === 'copy' ? true : groupDetail.isActive);
       } else {
         const permissionCatalog = await permissionPromise;
         setPermissions(permissionCatalog); setDetail(null); setName(''); setDescription(''); setSelected([]); setIsActive(true);
@@ -67,8 +67,9 @@ export function PermissionGroupsPage() {
     try {
       const payload = { name: normalizedName, description: description.trim() || undefined, isSystemAdmin: false, isActive, permissionIds: selected };
       if (mode === 'edit' && detail) await permissionGroupsApi.update(detail.id, payload);
+      else if (mode === 'copy' && detail) await permissionGroupsApi.copy(detail.id, { name: normalizedName, description: description.trim() || undefined });
       else await permissionGroupsApi.create(payload);
-      toast.success(mode === 'edit' ? t(`${P}.saveSuccessUpdate`) : t(`${P}.saveSuccessCreate`));
+      toast.success(mode === 'edit' ? t(`${P}.saveSuccessUpdate`) : mode === 'copy' ? t(`${P}.copySuccess`) : t(`${P}.saveSuccessCreate`));
       close();
       await Promise.all([queryClient.invalidateQueries({ queryKey: ['advanced-grid', 'permission-groups'] }), queryClient.invalidateQueries({ queryKey: ['system-group-stats'] })]);
     } catch (error) {
@@ -79,7 +80,7 @@ export function PermissionGroupsPage() {
   };
 
   const remove = async () => {
-    if (!deleteTarget || deleteTarget.isSystemAdmin) return;
+    if (!deleteTarget || deleteTarget.isProtected) return;
     setSaving(true);
     try {
       await permissionGroupsApi.delete(deleteTarget.id);
@@ -112,6 +113,12 @@ export function PermissionGroupsPage() {
         : <OpsStatusBadge tone="active">{t(`${P}.no`)}</OpsStatusBadge>,
     },
     {
+      key: 'isProtected', label: t(`${P}.columns.isProtected`),
+      render: row => row.isProtected
+        ? <OpsStatusBadge tone="pending">{t(`${P}.defaultTemplate`)}</OpsStatusBadge>
+        : <OpsStatusBadge tone="active">{t(`${P}.customGroup`)}</OpsStatusBadge>,
+    },
+    {
       key: 'isActive', label: t(`${P}.columns.isActive`),
       render: row => <OpsStatusBadge tone={row.isActive ? 'done' : 'pending'}>{row.isActive ? t(`${P}.active`) : t(`${P}.inactive`)}</OpsStatusBadge>,
     },
@@ -123,10 +130,13 @@ export function PermissionGroupsPage() {
           <button type="button" title={t(`${P}.view`)} onClick={() => void open(row, 'view')} className="wms-ops-grid-icon-btn grid size-8 place-items-center">
             <Eye className="size-3.5" />
           </button>
-          <button type="button" title={t(`${P}.edit`)} disabled={row.isSystemAdmin} onClick={() => void open(row, 'edit')} className="wms-ops-grid-icon-btn grid size-8 place-items-center disabled:cursor-not-allowed disabled:opacity-35">
+          <button type="button" title={t(`${P}.copy`)} onClick={() => void open(row, 'copy')} className="wms-ops-grid-icon-btn grid size-8 place-items-center">
+            <Copy className="size-3.5" />
+          </button>
+          <button type="button" title={t(`${P}.edit`)} disabled={row.isProtected} onClick={() => void open(row, 'edit')} className="wms-ops-grid-icon-btn grid size-8 place-items-center disabled:cursor-not-allowed disabled:opacity-35">
             <Pencil className="size-3.5" />
           </button>
-          <button type="button" title={t(`${P}.delete`)} disabled={row.isSystemAdmin} onClick={() => setDeleteTarget(row)} className="wms-ops-grid-icon-btn grid size-8 place-items-center disabled:cursor-not-allowed disabled:opacity-35">
+          <button type="button" title={t(`${P}.delete`)} disabled={row.isProtected} onClick={() => setDeleteTarget(row)} className="wms-ops-grid-icon-btn grid size-8 place-items-center disabled:cursor-not-allowed disabled:opacity-35">
             <Trash2 className="size-3.5" />
           </button>
         </div>
@@ -138,7 +148,8 @@ export function PermissionGroupsPage() {
   const visiblePermissions = useMemo(() => permissionGroups.flatMap(group => group.items), [permissionGroups]);
 
   const readOnly = mode === 'view';
-  const modalTitle = mode === 'create' ? t(`${P}.modal.createTitle`) : mode === 'edit' ? t(`${P}.modal.editTitle`) : t(`${P}.modal.viewTitle`);
+  const permissionReadOnly = mode === 'view' || mode === 'copy';
+  const modalTitle = mode === 'create' ? t(`${P}.modal.createTitle`) : mode === 'copy' ? t(`${P}.modal.copyTitle`) : mode === 'edit' ? t(`${P}.modal.editTitle`) : t(`${P}.modal.viewTitle`);
 
   return (
     <div className="wms-ops-form space-y-4" data-no-auto-localize="true">
@@ -180,7 +191,7 @@ export function PermissionGroupsPage() {
                     <OpsCircuitToggleField
                       checked={isActive}
                       onCheckedChange={setIsActive}
-                      disabled={readOnly}
+                      disabled={readOnly || mode === 'copy'}
                       title={t(`${P}.modal.activeGroup`)}
                       description={t(`${P}.modal.activeGroupHint`)}
                       className="rounded-xl border"
@@ -197,7 +208,7 @@ export function PermissionGroupsPage() {
                       />
                     </div>
                   </div>
-                  {detail?.isSystemAdmin && <div className="flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800"><ShieldCheck className="size-4" />{t(`${P}.modal.systemAdminNotice`)}</div>}
+                  {detail?.isProtected && <div className="flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800"><ShieldCheck className="size-4" />{t(`${P}.modal.protectedNotice`)}</div>}
                   <div className="rounded-2xl border border-[var(--wms-app-border)]">
                     <div className="flex flex-col gap-3 border-b border-[var(--wms-app-border)] p-4 sm:flex-row sm:items-center sm:justify-between">
                       <div>
@@ -213,7 +224,7 @@ export function PermissionGroupsPage() {
                             leadingIcon={<Search className="size-4" />}
                           />
                         </div>
-                        {!readOnly && <>
+                        {!permissionReadOnly && <>
                           <OpsActionButton type="button" variant="secondary" onClick={() => setSelected(current => [...new Set([...current, ...visiblePermissions.map(item => item.id)])])}>
                             {t(`${P}.modal.selectVisible`)}
                           </OpsActionButton>
@@ -234,7 +245,7 @@ export function PermissionGroupsPage() {
                                 <strong className="block text-sm">{group.label}</strong>
                                 <small className="text-slate-500">{selectedCount} / {group.items.length} izin seçili</small>
                               </div>
-                              {!readOnly && (
+                              {!permissionReadOnly && (
                                 <button
                                   type="button"
                                   className="rounded-lg border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] px-2.5 py-1.5 text-xs font-semibold"
@@ -250,7 +261,7 @@ export function PermissionGroupsPage() {
                               {group.items.map(permission => {
                                 const checked = selected.includes(permission.id);
                                 const toggle = () => {
-                                  if (readOnly) return;
+                                  if (permissionReadOnly) return;
                                   setSelected(current => current.includes(permission.id)
                                     ? current.filter(id => id !== permission.id)
                                     : [...current, permission.id]);
@@ -259,10 +270,10 @@ export function PermissionGroupsPage() {
                                   <div
                                     key={permission.id}
                                     role="button"
-                                    tabIndex={readOnly ? -1 : 0}
+                                    tabIndex={permissionReadOnly ? -1 : 0}
                                     onClick={toggle}
                                     onKeyDown={(event) => {
-                                      if (!readOnly && (event.key === 'Enter' || event.key === ' ')) {
+                                      if (!permissionReadOnly && (event.key === 'Enter' || event.key === ' ')) {
                                         event.preventDefault();
                                         toggle();
                                       }
@@ -270,10 +281,10 @@ export function PermissionGroupsPage() {
                                     className={cn(
                                       'flex items-start gap-2.5 rounded-xl border p-3',
                                       checked && 'border-[var(--wms-brand-primary)] bg-[var(--wms-brand-soft)]',
-                                      readOnly ? 'cursor-default opacity-90' : 'cursor-pointer hover:border-[var(--wms-brand-primary)]',
+                                      permissionReadOnly ? 'cursor-default opacity-90' : 'cursor-pointer hover:border-[var(--wms-brand-primary)]',
                                     )}
                                   >
-                                    <OpsSkinCheckbox checked={checked} disabled={readOnly} onCheckedChange={toggle} aria-label={permission.name} className="mt-0.5 shrink-0" />
+                                    <OpsSkinCheckbox checked={checked} disabled={permissionReadOnly} onCheckedChange={toggle} aria-label={permission.name} className="mt-0.5 shrink-0" />
                                     <span className="min-w-0 flex-1">
                                       <span className="flex flex-wrap items-center gap-1.5">
                                         <strong className="text-sm leading-4">{permission.name}</strong>

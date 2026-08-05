@@ -6747,6 +6747,7 @@
       "columns": {
         "name": "Name",
         "isSystemAdmin": "Systemadministrator",
+        "isProtected": "Gruppentyp",
         "isActive": "Aktiv",
         "permissionCount": "Berechtigungen",
         "actions": "Aktionen"
@@ -6758,6 +6759,10 @@
       "view": "Anzeigen",
       "edit": "Bearbeiten",
       "delete": "Löschen",
+      "copy": "Kopieren",
+      "copySuccess": "Berechtigungsgruppe wurde kopiert.",
+      "defaultTemplate": "Standardvorlage",
+      "customGroup": "Benutzerdefinierte Gruppe",
       "loadFailed": "Berechtigungsgruppendetails konnten nicht geladen werden.",
       "nameMinLength": "Gruppenname muss mindestens 2 Zeichen haben.",
       "saveSuccessCreate": "Berechtigungsgruppe erstellt.",
@@ -6767,6 +6772,7 @@
       "deleteFailed": "Berechtigungsgruppe konnte nicht gelöscht werden.",
       "modal": {
         "createTitle": "Neue Berechtigungsgruppe",
+        "copyTitle": "Berechtigungsgruppe kopieren",
         "editTitle": "Berechtigungsgruppe bearbeiten",
         "viewTitle": "Berechtigungsgruppendetail",
         "subtitle": "Gruppeninformationen und Berechtigungskatalog gemeinsam verwalten.",
@@ -6780,6 +6786,7 @@
         "selectVisible": "Sichtbare auswählen",
         "clear": "Leeren",
         "systemAdminNotice": "Systemadministrator-Gruppe ist geschützt und kann nicht bearbeitet oder gelöscht werden.",
+        "protectedNotice": "Diese Standardgruppe ist geschützt; sie kann nur angezeigt und als neue benutzerdefinierte Gruppe kopiert werden.",
         "close": "Schließen",
         "cancel": "Abbrechen",
         "save": "Speichern"

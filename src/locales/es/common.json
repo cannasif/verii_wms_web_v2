@@ -4772,6 +4772,7 @@
       "columns": {
         "name": "Nombre",
         "isSystemAdmin": "Administrador del sistema",
+        "isProtected": "Tipo de grupo",
         "isActive": "Activo",
         "permissionCount": "Permisos",
         "actions": "Acciones"
@@ -4783,6 +4784,10 @@
       "view": "Ver",
       "edit": "Editar",
       "delete": "Eliminar",
+      "copy": "Copiar",
+      "copySuccess": "Grupo de permisos copiado.",
+      "defaultTemplate": "Plantilla predeterminada",
+      "customGroup": "Grupo personalizado",
       "loadFailed": "No se pudieron cargar los detalles del grupo.",
       "nameMinLength": "El nombre del grupo debe tener al menos 2 caracteres.",
       "saveSuccessCreate": "Grupo de permisos creado.",
@@ -4792,6 +4797,7 @@
       "deleteFailed": "No se pudo eliminar el grupo de permisos.",
       "modal": {
         "createTitle": "Nuevo grupo de permisos",
+        "copyTitle": "Copiar grupo de permisos",
         "editTitle": "Editar grupo de permisos",
         "viewTitle": "Detalle del grupo",
         "subtitle": "Gestione la información del grupo y el catálogo de permisos juntos.",
@@ -4805,6 +4811,7 @@
         "selectVisible": "Seleccionar visibles",
         "clear": "Limpiar",
         "systemAdminNotice": "El grupo System Administrator está protegido; no se puede editar ni eliminar.",
+        "protectedNotice": "Este grupo predeterminado está protegido; solo se puede ver y copiar como un nuevo grupo personalizado.",
         "close": "Cerrar",
         "cancel": "Cancelar",
         "save": "Guardar"

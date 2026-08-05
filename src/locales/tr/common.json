@@ -5900,6 +5900,7 @@
       "columns": {
         "name": "Ad",
         "isSystemAdmin": "Sistem Yöneticisi",
+        "isProtected": "Grup türü",
         "isActive": "Aktif",
         "permissionCount": "İzinler",
         "actions": "İşlemler"
@@ -5911,6 +5912,10 @@
       "view": "Görüntüle",
       "edit": "Düzenle",
       "delete": "Sil",
+      "copy": "Kopyala",
+      "copySuccess": "Yetki grubu kopyalandı.",
+      "defaultTemplate": "Varsayılan şablon",
+      "customGroup": "Özel grup",
       "loadFailed": "Yetki grubu bilgileri alınamadı.",
       "nameMinLength": "Grup adı en az 2 karakter olmalıdır.",
       "saveSuccessCreate": "Yetki grubu oluşturuldu.",
@@ -5920,6 +5925,7 @@
       "deleteFailed": "Yetki grubu silinemedi.",
       "modal": {
         "createTitle": "Yeni Yetki Grubu",
+        "copyTitle": "Yetki Grubunu Kopyala",
         "editTitle": "Yetki Grubunu Düzenle",
         "viewTitle": "Yetki Grubu Detayı",
         "subtitle": "Grup bilgilerini ve izin kataloğunu birlikte yönetin.",
@@ -5933,6 +5939,7 @@
         "selectVisible": "Görünenleri Seç",
         "clear": "Temizle",
         "systemAdminNotice": "System Administrator grubu korunur; düzenlenemez ve silinemez.",
+        "protectedNotice": "Bu varsayılan grup korunur; yalnızca görüntülenebilir ve yeni bir özel grup olarak kopyalanabilir.",
         "close": "Kapat",
         "cancel": "Vazgeç",
         "save": "Kaydet"
