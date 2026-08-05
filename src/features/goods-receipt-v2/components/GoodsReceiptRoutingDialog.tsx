@@ -14,6 +14,7 @@ import { formatProjectNumber } from "@/lib/project-format";
 import { cn } from "@/lib/utils";
 import { goodsReceiptV2Api } from "../api/goods-receipt.api";
 import { goodsReceiptEnumLabel } from "../localization/enum-labels";
+import { resolveGoodsReceiptWaybillNo } from "../utils/goods-receipt-waybill";
 import type {
   CustomerOption,
   GoodsReceiptDetail,
@@ -219,6 +220,7 @@ export function GoodsReceiptRoutingDialog({
     routableLines.length > 0 &&
     transferTotal + outboundTotal > 0;
 
+  const waybillNo = resolveGoodsReceiptWaybillNo(detail.header);
   const activeTabLabel =
     activeTab === "transfer" ? t("list.routingDialog.transfer") : t("list.routingDialog.outbound");
 
@@ -226,7 +228,7 @@ export function GoodsReceiptRoutingDialog({
     <ResponsiveDialog
       onClose={onClose}
       title={t("list.routingDialog.dialogTitle")}
-      description={`${detail.header.documentNo} · ${t("list.routingDialog.tabsHint")}`}
+      description={`${waybillNo || "—"} · ${t("list.routingDialog.tabsHint")}`}
       className="wms-ops-gr-route-dialog !max-w-[min(96vw,72rem)]"
     >
       <div
@@ -305,10 +307,28 @@ export function GoodsReceiptRoutingDialog({
             </RouteField>
             <RouteField label={t("list.routingDialog.targetWarehouse")}>
               <PagedAppDropdown<WarehouseOption>
-                queryKey={["gr-route-target-warehouse", detail.header.branchCode]}
-                fetchPage={(request) =>
-                  goodsReceiptV2Api.warehouses(request, detail.header.branchCode)
-                }
+                queryKey={[
+                  "gr-route-target-warehouse",
+                  detail.header.branchCode,
+                  detail.header.targetWarehouseId,
+                ]}
+                fetchPage={async (request) => {
+                  const page = await goodsReceiptV2Api.warehouses(
+                    request,
+                    detail.header.branchCode,
+                  );
+                  const items = page.items.filter(
+                    (item) => item.id !== detail.header.targetWarehouseId,
+                  );
+                  return {
+                    ...page,
+                    items,
+                    totalCount: items.length,
+                    totalPages: 1,
+                    pageNumber: 1,
+                    hasNextPage: false,
+                  };
+                }}
                 toOption={(item) => ({
                   value: String(item.id),
                   label: `${item.warehouseCode} · ${item.warehouseName}`,
@@ -554,45 +574,21 @@ export function GoodsReceiptRoutingDialog({
                     </td>
                     <td>
                       <OpsFieldShell className="wms-ops-gr-route-dialog__cell-shell">
-                        <PagedAppDropdown<LocationOption>
-                          queryKey={[
-                            "gr-route-source-location",
-                            line.id,
-                            line.targetWarehouseId,
-                          ]}
-                          fetchPage={(request) =>
-                            goodsReceiptV2Api.locations(
-                              request,
-                              line.targetWarehouseId,
-                            )
-                          }
-                          toOption={(item) => ({
-                            value: String(item.id),
-                            label: `${item.code} · ${item.name}`,
-                          })}
-                          selectedOption={
-                            draft.sourceLocationValue
-                              ? {
-                                  value: draft.sourceLocationValue,
-                                  label: t("list.routingDialog.shelfNumber", { id: draft.sourceLocationValue }),
-                                }
-                              : undefined
-                          }
-                          value={draft.sourceLocationValue}
-                          onValueChange={(value) =>
-                            patchLine(line.id, {
-                              sourceLocationValue: value,
-                              sourceLocationId: Number(value),
-                            })
-                          }
-                          portalContainer={null}
-                          searchable
+                        <div
                           className={cn(
                             OPS_FIELD_CLASS,
-                            "h-9",
+                            "h-9 flex items-center px-3 text-sm",
                             !draft.sourceLocationValue && "wms-ops-field--placeholder",
                           )}
-                        />
+                          title={t("list.routingDialog.sourceShelfFixedHint")}
+                          aria-label={t("list.routingDialog.sourceShelf")}
+                        >
+                          {draft.sourceLocationValue
+                            ? t("list.routingDialog.shelfNumber", {
+                                id: draft.sourceLocationValue,
+                              })
+                            : "—"}
+                        </div>
                       </OpsFieldShell>
                     </td>
                   </tr>

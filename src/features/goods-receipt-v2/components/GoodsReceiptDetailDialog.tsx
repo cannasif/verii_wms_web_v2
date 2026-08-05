@@ -18,6 +18,7 @@ import { OpsCodeBadge, OpsStatusBadge, inferOpsStatusTone, inferQualityStatusTon
 import { useTheme } from '@/components/theme-provider';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
 import { qualityApi, type QualityInspectionDetail } from '@/features/quality/api/quality.api';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { useUserDisplayNameDirectory } from '@/hooks/useUserDisplayNameDirectory';
@@ -34,6 +35,7 @@ import type {
   GoodsReceiptSplitRoutingResult,
 } from '../types/goods-receipt.types';
 import { StockIdentityCell } from '@/components/shared/StockIdentityCell';
+import { canCancelGoodsReceiptFromWms } from '../utils/goods-receipt-cancel';
 import { resolveGoodsReceiptWaybillNo } from '../utils/goods-receipt-waybill';
 import { mergeGoodsReceiptRoutes } from '../utils/goods-receipt-routes';
 import { GoodsReceiptLifecycleDialog, type GoodsReceiptLifecycleAction } from './GoodsReceiptLifecycleDialog';
@@ -47,6 +49,7 @@ export type GoodsReceiptDetailViewState = {
   id: number;
   loading: boolean;
   detail: GoodsReceiptDetail | null;
+  startAction?: GoodsReceiptLifecycleAction | null;
 };
 
 export function GoodsReceiptDetailDialog({
@@ -65,6 +68,7 @@ export function GoodsReceiptDetailDialog({
   onRoutingCompleted: (result: GoodsReceiptSplitRoutingResult) => Promise<void>;
 }): ReactElement {
   const { t } = useModuleTranslation('goods-receipt-v2');
+  const { can } = usePermissionAccess();
   const queryClient = useQueryClient();
   const userNames = useUserDisplayNameDirectory();
   const [mainTab, setMainTab] = useState<MainTab>('content');
@@ -91,6 +95,14 @@ export function GoodsReceiptDetailDialog({
     (line) => line.expectedQuantity - line.receivedQuantity - line.shortClosedQuantity > 0,
   );
   const cancelled = header?.status === 'Cancelled';
+  const cancelAvailable = Boolean(
+    header
+      && can('WMS.GOODS_RECEIPT.CANCEL')
+      && canCancelGoodsReceiptFromWms({
+        status: header.status,
+        erpIntegrationStatus: header.erpIntegrationStatus,
+      }),
+  );
   const qualityReady =
     header?.qualityStatus === 'NotRequired'
     || header?.qualityStatus === 'Passed'
@@ -106,6 +118,12 @@ export function GoodsReceiptDetailDialog({
       && header?.erpIntegrationStatus === 'Succeeded'
       && detail.lines.some((line) => line.routableQuantity > 0),
   );
+
+  useEffect(() => {
+    if (!header || cancelled || !state.startAction) return;
+    if (state.startAction === 'cancel' && !cancelAvailable) return;
+    setAction(state.startAction);
+  }, [cancelAvailable, cancelled, header, state.id, state.startAction]);
 
   const normalizedSearch = lineSearch.trim().toLocaleUpperCase('tr-TR');
   const visibleLines = useMemo(() => {
@@ -200,10 +218,10 @@ export function GoodsReceiptDetailDialog({
               {t('list.eyebrowModule')}
             </p>
             <DialogTitle className="wms-ops-detail-dialog__title">
-              {t('list.detailTitle')}
+              {t('list.detailWaybillTitle')}
               {header ? (
                 <span className="ml-2 font-mono text-base font-bold text-cyan-600 dark:text-cyan-300">
-                  {header.documentNo}
+                  {resolveGoodsReceiptWaybillNo(header) || t('list.noWaybillShort')}
                 </span>
               ) : (
                 <span className="wms-ops-detail-dialog__id"> #{state.id}</span>
@@ -211,7 +229,7 @@ export function GoodsReceiptDetailDialog({
             </DialogTitle>
             <DialogDescription className="wms-ops-detail-dialog__description">
               {header
-                ? `${header.supplierName || header.supplierCode || '—'} · ${resolveGoodsReceiptWaybillNo(header) || t('list.noWaybillShort')} · ${goodsReceiptEnumLabel(t, 'operationStatus', header.status)}`
+                ? `${header.supplierName || header.supplierCode || '—'} · ${goodsReceiptEnumLabel(t, 'operationStatus', header.status)}`
                 : t('list.detailDescription')}
             </DialogDescription>
             {header ? (
@@ -226,11 +244,6 @@ export function GoodsReceiptDetailDialog({
                   {goodsReceiptEnumLabel(t, 'qualityStatus', header.qualityStatus)}
                 </OpsStatusBadge>
                 <OpsCodeBadge>{header.receiptType || '—'}</OpsCodeBadge>
-                {resolveGoodsReceiptWaybillNo(header) ? (
-                  <span className="inline-flex items-center rounded-lg border border-[var(--wms-app-border)] bg-black/[.03] px-2.5 py-1 font-mono text-xs dark:bg-white/[.04]">
-                    {t('list.waybillBadge', { no: resolveGoodsReceiptWaybillNo(header) })}
-                  </span>
-                ) : null}
               </div>
             ) : null}
           </div>
@@ -276,21 +289,23 @@ export function GoodsReceiptDetailDialog({
                   <LifecycleButton
                     label={t('list.printLabels')}
                     icon={printBusy ? <Loader2 className="size-4 animate-spin" /> : <Printer className="size-4" />}
-                    onClick={() => void output(header.id, undefined, 'print', header.documentNo)}
+                    onClick={() => void output(header.id, undefined, 'print', resolveGoodsReceiptWaybillNo(header) || header.documentNo)}
                     disabled={printBusy}
                   />
                   <LifecycleButton
                     label={t('list.showPdf')}
                     icon={pdfBusy ? <Loader2 className="size-4 animate-spin" /> : <FileText className="size-4" />}
-                    onClick={() => void output(header.id, undefined, 'pdf', header.documentNo)}
+                    onClick={() => void output(header.id, undefined, 'pdf', resolveGoodsReceiptWaybillNo(header) || header.documentNo)}
                     disabled={pdfBusy}
                   />
-                  <LifecycleButton
-                    label={t('list.cancel')}
-                    danger
-                    icon={<Ban className="size-4" />}
-                    onClick={() => setAction('cancel')}
-                  />
+                  {cancelAvailable ? (
+                    <LifecycleButton
+                      label={t('list.cancel')}
+                      danger
+                      icon={<Ban className="size-4" />}
+                      onClick={() => setAction('cancel')}
+                    />
+                  ) : null}
                 </div>
               ) : (
                 <div className="wms-ops-detail-lifecycle__cancelled">
@@ -323,7 +338,6 @@ export function GoodsReceiptDetailDialog({
                 <div className="space-y-4">
                   <div className="wms-ops-detail-panel">
                     <div className="wms-ops-detail-grid">
-                      <OpsDetailField label={t('list.documentNo')}>{header.documentNo}</OpsDetailField>
                       <OpsDetailField label={t('list.waybill')}>{resolveGoodsReceiptWaybillNo(header) || '—'}</OpsDetailField>
                       <OpsDetailField label={t('list.supplier')}>
                         {header.supplierName && header.supplierCode
@@ -407,7 +421,39 @@ export function GoodsReceiptDetailDialog({
                           </OpsStatusBadge>
                         </OpsDetailRow>
                         <OpsDetailRow label={t('list.putawayStatus')}>
-                          {goodsReceiptEnumLabel(t, 'putawayStatus', header.putawayStatus)}
+                          <div className="flex flex-col gap-1">
+                            <StatusToneBadge
+                              label={goodsReceiptEnumLabel(t, 'putawayStatus', header.putawayStatus)}
+                              positive={header.putawayStatus === 'Completed' || header.putawayStatus === 'NotRequired'}
+                              warn={
+                                header.putawayStatus === 'Pending'
+                                || header.putawayStatus === 'InProgress'
+                                || header.putawayStatus === 'PartiallyCompleted'
+                              }
+                            />
+                            {header.putawayStatus !== 'NotRequired' ? (
+                              <span className="text-xs text-[var(--wms-app-text-muted)]">
+                                {t('list.putawayProgress', {
+                                  putaway: formatProjectNumber(
+                                    detail.lines.reduce((sum, line) => sum + line.putawayQuantity, 0),
+                                  ),
+                                  accepted: formatProjectNumber(
+                                    detail.lines.reduce((sum, line) => sum + line.acceptedQuantity, 0),
+                                  ),
+                                })}
+                                {detail.putawayCandidates.length > 0
+                                  ? ` · ${t('list.putawayCandidatesHint', { count: detail.putawayCandidates.length })}`
+                                  : ''}
+                              </span>
+                            ) : null}
+                            {header.erpIntegrationStatus === 'Succeeded'
+                              && header.putawayStatus !== 'Completed'
+                              && header.putawayStatus !== 'NotRequired' ? (
+                              <span className="text-xs text-amber-600 dark:text-amber-400">
+                                {t('list.putawayIndependentOfErp')}
+                              </span>
+                            ) : null}
+                          </div>
                         </OpsDetailRow>
                         <OpsDetailRow label={t('list.completed')}>
                           <OpsFlagBadge
