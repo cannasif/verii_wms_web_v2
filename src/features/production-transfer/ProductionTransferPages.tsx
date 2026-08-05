@@ -11,7 +11,7 @@ import { useAuthStore } from '@/stores/auth-store';
 import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
 import { warehouseTransferApi } from '@/features/warehouse-transfer-v2/api/warehouse-transfer.api';
 import { productionTransferApi, type ProductionTaskBoard, type ProductionTransferPolicy } from './api';
-import type { LocationOption, WarehouseOption } from '@/features/goods-receipt-v2/types/goods-receipt.types';
+import type { ActiveUserOption, LocationOption, WarehouseOption } from '@/features/goods-receipt-v2/types/goods-receipt.types';
 import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
 import { AppDropdown } from '@/components/shared/AppDropdown';
 import type { PreparedNetsisProductionWorkOrder } from '@/features/production/types';
@@ -44,7 +44,8 @@ export function ProductionTransferTaskPoolPage(){
 }
 export function ProductionTransferDraftPage(){
   const location=useLocation();
-  const source=(location.state as {netsisProduction?:PreparedNetsisProductionWorkOrder}|null)?.netsisProduction;
+  const navigationState=location.state as {netsisProduction?:PreparedNetsisProductionWorkOrder;assignees?:ActiveUserOption[]}|null;
+  const source=navigationState?.netsisProduction;
   const initial:ProductionTransferInitialSource|undefined=source?.sourceWarehouseId&&source.targetWarehouseId&&source.materials.every(x=>x.stockId)?{
     sourceSystemCode:source.sourceSystemCode,workOrderNumber:source.workOrderNumber,projectCode:source.projectCode,
     existingProductionHeaderId:source.existingProductionHeaderId,existingProductionOrderId:source.existingProductionOrderId,
@@ -52,7 +53,7 @@ export function ProductionTransferDraftPage(){
     targetWarehouse:{id:source.targetWarehouseId,code:source.targetWarehouseCode},
     materials:source.materials.map(x=>({stockId:x.stockId!,stockCode:x.stockCode,stockName:x.stockName,unitCode:x.unitCode,yapCodeId:x.yapCodeId,configurationCode:x.configurationCode,quantity:x.requiredQuantity})),
   }:undefined;
-  return <WarehouseTransferDraftPage variant="production" initialProductionSource={initial}/>;
+  return <WarehouseTransferDraftPage variant="production" initialProductionSource={initial} initialAssignees={navigationState?.assignees}/>;
 }
 export function ProductionTransferListPage(){return <WarehouseTransferListPage variant="production"/>;}
 export function ProductionTransferOperationPage(){
