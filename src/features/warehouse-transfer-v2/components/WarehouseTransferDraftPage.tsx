@@ -151,10 +151,12 @@ export function WarehouseTransferDraftPage({
   variant = "warehouse",
   fixedSubcontractingDirection,
   initialProductionSource,
+  initialAssignees,
 }: {
   variant?: TransferDraftVariant;
   fixedSubcontractingDirection?: SubcontractingTransferDirection;
   initialProductionSource?: ProductionTransferInitialSource;
+  initialAssignees?: ActiveUserOption[];
 }): ReactElement {
   const { t } = useTranslation("common");
   const branchCode = useAuthStore((x) => x.branch?.code ?? "0");
@@ -211,6 +213,7 @@ export function WarehouseTransferDraftPage({
     setSourceKind("OrderBased");
     setExecutionKind("TaskBased");
     setProductionPurpose("MaterialSupply");
+    if (initialAssignees?.length) setAssignees(initialAssignees);
     setProductionHeaderId(initialProductionSource.existingProductionHeaderId ?? null);
     setProductionOrderId(initialProductionSource.existingProductionOrderId ?? null);
     setProductionOrderNo(initialProductionSource.workOrderNumber);
@@ -231,7 +234,7 @@ export function WarehouseTransferDraftPage({
       setLines(preparedLines);
       toast.success(`${initialProductionSource.workOrderNumber} reçetesi üretim transferine aktarıldı.`);
     }).catch((error: Error) => toast.error(error.message || "Stok takip ayarları yüklenemedi."));
-  }, [branchCode, initialProductionSource, variant]);
+  }, [branchCode, initialAssignees, initialProductionSource, variant]);
   useEffect(() => {
     if (sourceKind !== "OrderBased" || selectedOrders.length === 0) return;
     const projects = [...new Set(orders
