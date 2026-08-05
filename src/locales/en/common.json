@@ -5220,6 +5220,7 @@
     "operationFlow": {
       "executionModel": "01 · Execution model",
       "documentSource": "02 · Document source",
+      "documentSourceStandalone": "Document source",
       "taskBased": "Task-based operation",
       "direct": "Direct operation",
       "taskDescription": "An operation task is created, users are assigned and field progress is tracked.",

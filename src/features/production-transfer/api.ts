@@ -56,6 +56,11 @@ export interface WarehouseTransferReturnSetting {
   defaultTransferReturnLocationId?: number;
   defaultProductionTransferLocationId?: number;
 }
+export interface DefaultProductionTargetLocation {
+  locationId?: number;
+  locationCode?: string;
+  locationName?: string;
+}
 
 export const productionTransferApi = {
   policy: async (branchCode: string): Promise<ProductionTransferPolicy> =>
@@ -78,6 +83,8 @@ export const productionTransferApi = {
     unwrap(await api.post<Envelope<ProductionTaskBoard>>(`/api/production-transfers/${id}/tasks/${taskId}/start`, {})),
   completeCancellationReturn: async (id: number, taskId: number): Promise<ProductionTaskBoard> =>
     unwrap(await api.post<Envelope<ProductionTaskBoard>>(`/api/production-transfers/${id}/tasks/${taskId}/complete-cancellation-return`, { idempotencyKey: crypto.randomUUID() })),
+  defaultTargetLocation: async (warehouseId: number, branchCode: string): Promise<DefaultProductionTargetLocation> =>
+    unwrap(await api.get<Envelope<DefaultProductionTargetLocation>>(`/api/production-transfers/warehouses/${warehouseId}/default-target-location`, { params: { branchCode } })),
   returnSetting: async (warehouseId: number): Promise<WarehouseTransferReturnSetting> =>
     unwrap(await api.get<Envelope<WarehouseTransferReturnSetting>>('/api/production-transfers/warehouse-return-setting', { params: { warehouseId } })),
   updateReturnSetting: async (

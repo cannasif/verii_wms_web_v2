@@ -286,8 +286,9 @@ export function ProductionWorkOrdersPage(): ReactElement {
           </div>
         </div>
 
-        <div className="wms-ops-table-wrap wms-ops-data-grid-wrap wms-ops-scrollbar wms-ops-table-h-scroll relative mt-4 block max-h-[max(20rem,calc(100dvh-26rem))] overflow-auto border border-[var(--wms-ops-card-border)] max-sm:hidden">
-          <table className="wms-ops-data-grid w-full min-w-[1050px] border-collapse text-sm">
+        {/* Skin'in tablo sarmalayıcı sınıfları yatay kaydırmayı zorunlu kıldığı için burada kullanılmaz; kolonlar sığıyor. */}
+        <div className="wms-ops-scrollbar relative mt-4 block max-h-[max(20rem,calc(100dvh-26rem))] overflow-x-auto overflow-y-auto border border-[var(--wms-ops-card-border)] max-sm:hidden">
+          <table className="wms-ops-data-grid w-full border-collapse text-sm">
             <thead className="sticky top-0 z-10">
               <tr>
                 <th className={CELL}>İş emri</th>
