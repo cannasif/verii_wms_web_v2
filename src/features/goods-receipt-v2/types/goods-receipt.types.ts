@@ -73,6 +73,10 @@ export interface SelectedReceiptLine extends OpenOrderLine {
   serialGenerationKey?: string;
   /** Maskeye uymayan / temizlenmesi gereken seri satır localId’leri (dialog yeniden açılınca kırmızı kalır). */
   invalidSerialTrackingIds?: string[];
+  /** Kalite kuralından gelen (kalıcı) zorunluluk. */
+  qualityRequiredByRule?: boolean;
+  /** Bu belge için kullanıcı tarafından zorlanan kalite (kural değil). */
+  forceQualityControl?: boolean;
   requireQualityControl?: boolean;
 }
 export interface CreatedGoodsReceiptTaskResult { id: number; taskNo: string; warehouseId: number; lineCount: number; plannedQuantity: number }

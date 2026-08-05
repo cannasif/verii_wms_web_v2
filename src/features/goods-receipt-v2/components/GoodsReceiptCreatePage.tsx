@@ -473,16 +473,25 @@ export function GoodsReceiptCreatePage({
   /** ONAY tick’li kalemler — önizleme ve kayıt yalnızca bunlar. */
   const plannedLines = confirmedLines;
   const primaryLine = plannedLines[0] ?? lines[0];
-  const hasQualityLines = plannedLines.some((line) => line.requireQualityControl);
+  const hasQualityLines = plannedLines.some(
+    (line) => line.qualityRequiredByRule || line.forceQualityControl || line.requireQualityControl,
+  );
   const receiptLines = plannedLines.flatMap((line) =>
     line.stockCode
       ? [
           {
+            lineKey: lineKey(line),
             stockCode: line.stockCode,
             stockName: line.stockName,
             quantity: line.quantity,
             unitCode: line.unitCode,
-            requireQualityControl: Boolean(line.requireQualityControl),
+            requireQualityControl:
+              Boolean(line.qualityRequiredByRule)
+              || Boolean(line.forceQualityControl)
+              || Boolean(line.requireQualityControl),
+            qualityRequiredByRule: Boolean(line.qualityRequiredByRule),
+            forcedQuality:
+              Boolean(line.forceQualityControl) && !line.qualityRequiredByRule,
           },
         ]
       : [],
@@ -1043,6 +1052,8 @@ export function GoodsReceiptCreatePage({
               trackingPolicy,
               serialMaskTemplate,
               trackings: [],
+              qualityRequiredByRule: qualityByStockId.get(stock.id) === true,
+              forceQualityControl: false,
               requireQualityControl: qualityByStockId.get(stock.id) === true,
             };
           }),
@@ -1425,9 +1436,11 @@ export function GoodsReceiptCreatePage({
         current.map((line) => {
           const key = lineKey(line);
           if (!confirmedKeys.has(key)) return line;
+          const byRule = qualityByStockId.get(line.stockId) === true;
           return {
             ...line,
-            requireQualityControl: qualityByStockId.get(line.stockId) === true,
+            qualityRequiredByRule: byRule,
+            requireQualityControl: byRule || Boolean(line.forceQualityControl),
           };
         }),
       );
@@ -1478,7 +1491,8 @@ export function GoodsReceiptCreatePage({
         allowOverReceipt: false,
         overReceiptTolerancePercent: 0,
         allowUnderReceipt: true,
-        requireQualityControl: plannedLines.some((line) => line.requireQualityControl),
+        requireQualityControl: hasQualityLines,
+        forceQualityControl: false,
         requirePutaway: true,
         priority: direct ? 1 : Number(priority),
         description: null,
@@ -1523,6 +1537,8 @@ export function GoodsReceiptCreatePage({
               receivingLocationId: line.receivingLocationId,
               sourceOrderNumber: line.siparisNo,
               sourceOrderId: line.orderId,
+              forceQualityControl:
+                Boolean(line.forceQualityControl) && !line.qualityRequiredByRule,
             }));
           }),
         })
@@ -1535,6 +1551,8 @@ export function GoodsReceiptCreatePage({
           targetWarehouseId: line.targetWarehouseId,
           receivingLocationId: line.receivingLocationId,
           trackingType: line.trackingType,
+          forceQualityControl:
+            Boolean(line.forceQualityControl) && !line.qualityRequiredByRule,
           trackings: line.trackings.map((x) => ({
             quantity: x.quantity,
             lotNo: x.lotNo?.trim() || null,
@@ -2935,6 +2953,30 @@ export function GoodsReceiptCreatePage({
                 title={t("createFlow.qualityDialog.receiptLinesTitle")}
                 description={t("createFlow.qualityDialog.receiptLinesDescription")}
                 searchAriaLabel={t("createFlow.qualityDialog.receiptLinesSearchAria")}
+                onConfirmForceQuality={(selectedKeys) => {
+                  const selected = new Set(selectedKeys);
+                  setLines((current) =>
+                    current.map((line) => {
+                      if (line.qualityRequiredByRule) {
+                        return {
+                          ...line,
+                          forceQualityControl: false,
+                          requireQualityControl: true,
+                        };
+                      }
+                      if (selected.has(lineKey(line))) {
+                        return {
+                          ...line,
+                          forceQualityControl: true,
+                          requireQualityControl: true,
+                        };
+                      }
+                      // Çıkarma yalnızca kalite listesindeki X ile; burada sadece ekleme.
+                      return line;
+                    }),
+                  );
+                  setReviewLinesDialog(null);
+                }}
               />
               <QualityLinesDialog
                 lines={qualityLines}
@@ -2943,6 +2985,19 @@ export function GoodsReceiptCreatePage({
                 tone="quality"
                 title={t("createFlow.qualityDialog.title")}
                 description={t("createFlow.qualityDialog.description")}
+                onRemoveForcedQuality={(key) => {
+                  setLines((current) =>
+                    current.map((line) => {
+                      if (lineKey(line) !== key) return line;
+                      if (line.qualityRequiredByRule) return line;
+                      return {
+                        ...line,
+                        forceQualityControl: false,
+                        requireQualityControl: false,
+                      };
+                    }),
+                  );
+                }}
               />
               <div className="wms-ops-gr-review__actions">
                 <OpsActionButton
@@ -4416,6 +4471,7 @@ function ReviewMetricCard({
   value,
   hint,
   onClick,
+  footer,
 }: {
   variant: "lines" | "available" | "quality" | "quality-none";
   icon: ReactNode;
@@ -4423,15 +4479,16 @@ function ReviewMetricCard({
   value: string;
   hint?: string;
   onClick?: () => void;
+  footer?: ReactNode;
 }): ReactElement {
-  const interactive = typeof onClick === "function";
+  const interactive = typeof onClick === "function" && !footer;
   const className = cn(
     "wms-ops-gr-review__metric-card",
     `wms-ops-gr-review__metric-card--${variant}`,
     interactive && "wms-ops-gr-review__metric-card--interactive",
   );
 
-  const content = (
+  const body = (
     <>
       <span className="wms-ops-gr-review__metric-card-icon" aria-hidden>
         {icon}
@@ -4439,20 +4496,31 @@ function ReviewMetricCard({
       <span className="wms-ops-gr-review__metric-card-label">{label}</span>
       <strong className="wms-ops-gr-review__metric-card-value">{value}</strong>
       {hint ? (
-        <span className="wms-ops-gr-review__metric-card-hint">{hint}</span>
+        onClick && footer ? (
+          <button
+            type="button"
+            className="wms-ops-gr-review__metric-card-hint wms-ops-gr-review__metric-card-hint--action"
+            onClick={onClick}
+          >
+            {hint}
+          </button>
+        ) : (
+          <span className="wms-ops-gr-review__metric-card-hint">{hint}</span>
+        )
       ) : null}
+      {footer}
     </>
   );
 
   if (interactive) {
     return (
       <button type="button" className={className} onClick={onClick}>
-        {content}
+        {body}
       </button>
     );
   }
 
-  return <div className={className}>{content}</div>;
+  return <div className={className}>{body}</div>;
 }
 
 function QualityLinesDialog({
@@ -4463,13 +4531,18 @@ function QualityLinesDialog({
   description,
   searchAriaLabel,
   tone = "quality",
+  onConfirmForceQuality,
+  onRemoveForcedQuality,
 }: {
   lines: Array<{
+    lineKey?: string;
     stockCode: string;
     stockName?: string;
     quantity: number;
     unitCode?: string;
     requireQualityControl?: boolean;
+    qualityRequiredByRule?: boolean;
+    forcedQuality?: boolean;
   }>;
   open: boolean;
   onClose: () => void;
@@ -4477,9 +4550,33 @@ function QualityLinesDialog({
   description?: string;
   searchAriaLabel?: string;
   tone?: "receipt" | "quality";
+  onConfirmForceQuality?: (selectedLineKeys: string[]) => void;
+  onRemoveForcedQuality?: (lineKey: string) => void;
 }): ReactElement {
   const { t } = useTranslation("goods-receipt-v2");
   const [search, setSearch] = useState("");
+  const [draftSelectedKeys, setDraftSelectedKeys] = useState<string[]>([]);
+  const linesRef = useRef(lines);
+  linesRef.current = lines;
+  const canForce = tone === "receipt" && typeof onConfirmForceQuality === "function";
+  const canRemoveForced =
+    tone === "quality" && typeof onRemoveForcedQuality === "function";
+
+  useEffect(() => {
+    if (!open) return;
+    setSearch("");
+    setDraftSelectedKeys(
+      linesRef.current
+        .filter((line) => line.lineKey && (line.forcedQuality || line.qualityRequiredByRule))
+        .map((line) => line.lineKey as string),
+    );
+  }, [open]);
+
+  useEffect(() => {
+    if (!open || !canRemoveForced) return;
+    if (lines.length === 0) onClose();
+  }, [open, canRemoveForced, lines.length, onClose]);
+
   const filtered = useMemo(() => {
     const query = search.trim().toLocaleLowerCase("tr-TR");
     if (!query) return lines;
@@ -4490,13 +4587,15 @@ function QualityLinesDialog({
     });
   }, [lines, search]);
 
+  const closeDialog = (): void => {
+    onClose();
+    setSearch("");
+  };
+
   return (
     <ResponsiveDialog
       open={open}
-      onClose={() => {
-        onClose();
-        setSearch("");
-      }}
+      onClose={closeDialog}
       title={title ?? t("createFlow.qualityDialog.title")}
       description={description ?? t("createFlow.qualityDialog.description")}
       variant="lookup"
@@ -4533,31 +4632,119 @@ function QualityLinesDialog({
           </div>
         ) : (
           <ul className="wms-ops-gr-review__quality-dialog-list">
-            {filtered.map((line, index) => (
-              <li key={`${line.stockCode}-${line.quantity}-${index}`}>
-                <span className="wms-ops-gr-review__quality-dialog-code">
-                  {line.stockCode}
-                </span>
-                <span
-                  className="wms-ops-gr-review__quality-dialog-name"
-                  title={line.stockName || undefined}
-                >
-                  {line.stockName || "—"}
-                </span>
-                {line.requireQualityControl ? (
-                  <span className="wms-ops-gr-review__quality-dialog-badge">{t("createFlow.qualityDialog.qualityBadge")}</span>
-                ) : null}
-                <span className="wms-ops-gr-review__quality-dialog-qty">
-                  {formatProjectNumber(line.quantity, {
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 6,
-                  })}{" "}
-                  {line.unitCode || ""}
-                </span>
-              </li>
-            ))}
+            {filtered.map((line, index) => {
+              const lockedByRule = Boolean(line.qualityRequiredByRule);
+              const alreadyForced = Boolean(line.forcedQuality) && !lockedByRule;
+              const lockedInReceipt = lockedByRule || alreadyForced;
+              const checked = Boolean(
+                line.lineKey && draftSelectedKeys.includes(line.lineKey),
+              );
+              const showForcedRemove =
+                canRemoveForced
+                && Boolean(line.forcedQuality)
+                && !lockedByRule
+                && Boolean(line.lineKey);
+              return (
+                <li key={line.lineKey ?? `${line.stockCode}-${line.quantity}-${index}`}>
+                  {canForce && line.lineKey ? (
+                    <OpsSkinCheckbox
+                      checked={checked || lockedInReceipt}
+                      disabled={lockedInReceipt}
+                      onCheckedChange={(next) => {
+                        if (lockedInReceipt || !line.lineKey) return;
+                        const key = line.lineKey;
+                        setDraftSelectedKeys((current) => {
+                          if (next === true) {
+                            return current.includes(key) ? current : [...current, key];
+                          }
+                          return current.filter((item) => item !== key);
+                        });
+                      }}
+                      aria-label={t("createFlow.qualityDialog.selectLineAria", {
+                        code: line.stockCode,
+                      })}
+                    />
+                  ) : null}
+                  <span className="wms-ops-gr-review__quality-dialog-code">
+                    {line.stockCode}
+                  </span>
+                  <span
+                    className="wms-ops-gr-review__quality-dialog-name"
+                    title={line.stockName || undefined}
+                  >
+                    {line.stockName || "—"}
+                  </span>
+                  {line.qualityRequiredByRule || line.forcedQuality ? (
+                    <span className="wms-ops-gr-review__quality-dialog-badge">
+                      {line.qualityRequiredByRule
+                        ? t("createFlow.qualityDialog.qualityBadge")
+                        : t("createFlow.qualityDialog.forcedQualityBadge")}
+                    </span>
+                  ) : null}
+                  <span className="wms-ops-gr-review__quality-dialog-qty">
+                    {formatProjectNumber(line.quantity, {
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 6,
+                    })}{" "}
+                    {line.unitCode || ""}
+                  </span>
+                  {showForcedRemove ? (
+                    <button
+                      type="button"
+                      className="wms-ops-gr-review__quality-dialog-remove"
+                      title={t("createFlow.qualityDialog.removeForcedTitle")}
+                      aria-label={t("createFlow.qualityDialog.removeForcedAria", {
+                        code: line.stockCode,
+                      })}
+                      onClick={() => {
+                        if (!line.lineKey) return;
+                        onRemoveForcedQuality?.(line.lineKey);
+                      }}
+                    >
+                      <X className="size-3.5" aria-hidden />
+                    </button>
+                  ) : null}
+                </li>
+              );
+            })}
           </ul>
         )}
+        {canForce ? (
+          <div className="wms-ops-gr-review__quality-dialog-actions">
+            <OpsActionButton type="button" variant="secondary" onClick={closeDialog}>
+              {t("createFlow.qualityDialog.forceQualityCancel")}
+            </OpsActionButton>
+            <OpsActionButton
+              type="button"
+              variant="primary"
+              disabled={
+                !draftSelectedKeys.some((key) => {
+                  const line = lines.find((item) => item.lineKey === key);
+                  return Boolean(
+                    line
+                    && !line.qualityRequiredByRule
+                    && !line.forcedQuality,
+                  );
+                })
+              }
+              title={t("createFlow.qualityDialog.forceQualitySubmitTitle")}
+              onClick={() => {
+                onConfirmForceQuality?.(
+                  draftSelectedKeys.filter((key) => {
+                    const line = lines.find((item) => item.lineKey === key);
+                    return Boolean(
+                      line
+                      && !line.qualityRequiredByRule
+                      && !line.forcedQuality,
+                    );
+                  }),
+                );
+              }}
+            >
+              {t("createFlow.qualityDialog.forceQualitySubmit")}
+            </OpsActionButton>
+          </div>
+        ) : null}
       </div>
     </ResponsiveDialog>
   );
