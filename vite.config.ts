@@ -1,7 +1,7 @@
 import path from "path"
 import tailwindcss from "@tailwindcss/vite"
 import react from "@vitejs/plugin-react"
-import { defineConfig } from "vite"
+import { defineConfig, loadEnv, type Plugin } from "vite"
 
 const allowedHosts = ["wms2.v3rii.com"];
 
@@ -9,9 +9,37 @@ function normalizeChunkId(id: string): string {
   return id.split(path.sep).join('/');
 }
 
+function localRuntimeSettings(apiUrl: string): Plugin {
+  return {
+    name: 'wms-local-runtime-settings',
+    apply: 'serve',
+    configureServer(server) {
+      server.middlewares.use((request, response, next) => {
+        if (request.url?.split('?', 1)[0] !== '/runtime-settings.json') {
+          next();
+          return;
+        }
+
+        response.statusCode = 200;
+        response.setHeader('Content-Type', 'application/json; charset=utf-8');
+        response.setHeader('Cache-Control', 'no-store');
+        response.end(JSON.stringify({
+          baseUrl: '/',
+          apiUrl,
+          realtimeNotificationsEnabled: false,
+        }));
+      });
+    },
+  };
+}
+
 // https://vite.dev/config/
-export default defineConfig({
-  plugins: [react(), tailwindcss()],
+export default defineConfig(({ mode }) => {
+  const environment = loadEnv(mode, process.cwd(), '');
+  const localApiUrl = environment.WMS_LOCAL_API_URL?.trim() || 'http://127.0.0.1:5099';
+
+  return {
+  plugins: [localRuntimeSettings(localApiUrl), react(), tailwindcss()],
   build: {
     // Heavy barcode/3D engines are intentionally lazy-loaded feature chunks.
     // Keep the limit tight enough to catch accidental route bloat without
@@ -134,4 +162,5 @@ export default defineConfig({
     allowedHosts: allowedHosts,
     host: "0.0.0.0",
   },
+  };
 })
