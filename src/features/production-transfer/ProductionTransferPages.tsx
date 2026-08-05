@@ -182,12 +182,41 @@ function ProductionTaskPanel(){
 
 function TransferReturnLocationPanel({branchCode}:{branchCode:string}){
   const[warehouseValue,setWarehouseValue]=useState<string|null>(null);
-  const[locationValue,setLocationValue]=useState<string|null>(null);
+  const[returnLocationValue,setReturnLocationValue]=useState<string|null>(null);
+  const[productionLocationValue,setProductionLocationValue]=useState<string|null>(null);
   const[busy,setBusy]=useState(false);
   const warehouseId=Number(warehouseValue||0);
-  useEffect(()=>{if(!warehouseId){setLocationValue(null);return;}void productionTransferApi.returnSetting(warehouseId).then(x=>setLocationValue(x.defaultTransferReturnLocationId?String(x.defaultTransferReturnLocationId):null)).catch((e:Error)=>toast.error(e.message));},[warehouseId]);
-  const save=async()=>{if(!warehouseId)return;setBusy(true);try{const result=await productionTransferApi.updateReturnSetting(warehouseId,locationValue?Number(locationValue):undefined);setLocationValue(result.defaultTransferReturnLocationId?String(result.defaultTransferReturnLocationId):null);toast.success('Varsayılan transfer iade rafı kaydedildi.');}catch(e){toast.error(e instanceof Error?e.message:'Ayar kaydedilemedi.');}finally{setBusy(false);}};
-  return <Panel title="Depo varsayılan transfer iade rafı"><p className="mb-4 text-sm text-[var(--wms-app-text-muted)]">Özgün raf kullanılamadığında veya politika varsayılan iade rafını istediğinde stok bu aktif yerleştirme rafına yönlendirilir.</p><div className="grid gap-3 md:grid-cols-[1fr_1fr_auto]"><PagedAppDropdown<WarehouseOption> queryKey={['production-return-warehouse',branchCode]} fetchPage={r=>warehouseTransferApi.warehouses(r,branchCode)} toOption={x=>({value:String(x.id),label:`${x.warehouseCode} · ${x.warehouseName}`})} value={warehouseValue} onValueChange={setWarehouseValue} placeholder="Depo seçin" searchable/><PagedAppDropdown<LocationOption> queryKey={['production-return-location',warehouseId]} fetchPage={r=>warehouseTransferApi.locations(r,warehouseId)} toOption={x=>({value:String(x.id),label:`${x.code} · ${x.name}`})} enabled={warehouseId>0} dependencies={[warehouseId]} value={locationValue} onValueChange={setLocationValue} placeholder="Varsayılan iade rafını seçin" searchable/><button disabled={busy||warehouseId<=0} onClick={()=>void save()} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[var(--wms-brand-primary)] px-5 py-3 font-bold text-[var(--wms-brand-primary)] disabled:opacity-50"><Save className="size-4"/>Rafı kaydet</button></div></Panel>;
+  useEffect(()=>{
+    if(!warehouseId){setReturnLocationValue(null);setProductionLocationValue(null);return;}
+    void productionTransferApi.returnSetting(warehouseId).then(x=>{
+      setReturnLocationValue(x.defaultTransferReturnLocationId?String(x.defaultTransferReturnLocationId):null);
+      setProductionLocationValue(x.defaultProductionTransferLocationId?String(x.defaultProductionTransferLocationId):null);
+    }).catch((e:Error)=>toast.error(e.message));
+  },[warehouseId]);
+  const save=async()=>{
+    if(!warehouseId)return;
+    setBusy(true);
+    try{
+      const result=await productionTransferApi.updateReturnSetting(
+        warehouseId,
+        returnLocationValue?Number(returnLocationValue):undefined,
+        productionLocationValue?Number(productionLocationValue):undefined,
+      );
+      setReturnLocationValue(result.defaultTransferReturnLocationId?String(result.defaultTransferReturnLocationId):null);
+      setProductionLocationValue(result.defaultProductionTransferLocationId?String(result.defaultProductionTransferLocationId):null);
+      toast.success('Depo üretim transfer ve iade rafı ayarları kaydedildi.');
+    }catch(e){toast.error(e instanceof Error?e.message:'Ayar kaydedilemedi.');}
+    finally{setBusy(false);}
+  };
+  return <Panel title="Depo varsayılan üretim transfer rafları">
+    <p className="mb-4 text-sm text-[var(--wms-app-text-muted)]">Hedef raf satırda seçilmemişse üretim transfer rafı otomatik kullanılır. İptal iade rafı yalnız geri dönüş operasyonlarında kullanılır.</p>
+    <div className="grid gap-3 xl:grid-cols-[1fr_1fr_1fr_auto]">
+      <PagedAppDropdown<WarehouseOption> queryKey={['production-location-warehouse',branchCode]} fetchPage={r=>warehouseTransferApi.warehouses(r,branchCode)} toOption={x=>({value:String(x.id),label:`${x.warehouseCode} · ${x.warehouseName}`})} value={warehouseValue} onValueChange={setWarehouseValue} placeholder="Depo seçin" searchable/>
+      <PagedAppDropdown<LocationOption> queryKey={['production-default-target-location',warehouseId]} fetchPage={r=>warehouseTransferApi.locations(r,warehouseId)} toOption={x=>({value:String(x.id),label:`${x.code} · ${x.name}`})} enabled={warehouseId>0} dependencies={[warehouseId]} value={productionLocationValue} onValueChange={setProductionLocationValue} placeholder="Varsayılan üretim transfer rafı" searchable/>
+      <PagedAppDropdown<LocationOption> queryKey={['production-return-location',warehouseId]} fetchPage={r=>warehouseTransferApi.locations(r,warehouseId)} toOption={x=>({value:String(x.id),label:`${x.code} · ${x.name}`})} enabled={warehouseId>0} dependencies={[warehouseId]} value={returnLocationValue} onValueChange={setReturnLocationValue} placeholder="Varsayılan iptal iade rafı" searchable/>
+      <button disabled={busy||warehouseId<=0} onClick={()=>void save()} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[var(--wms-brand-primary)] px-5 py-3 font-bold text-[var(--wms-brand-primary)] disabled:opacity-50"><Save className="size-4"/>Rafları kaydet</button>
+    </div>
+  </Panel>;
 }
 
 function Card({href,icon,title,text}:{href:string;icon:ReactNode;title:string;text:string}){return <Link to={href} className="group rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--wms-brand-primary)]"><div className="flex items-center justify-between text-[var(--wms-brand-primary)]">{icon}<ArrowRight className="size-5 transition group-hover:translate-x-1"/></div><h2 className="mt-4 font-black">{title}</h2><p className="mt-1 text-sm text-[var(--wms-app-text-muted)]">{text}</p></Link>;}

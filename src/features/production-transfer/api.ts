@@ -51,7 +51,11 @@ export interface ProductionTaskPoolRow {
   plannedQuantity: number; processedQuantity: number; remainingQuantity: number;
   assignedUsers: string[]; createdDate?: string;
 }
-export interface WarehouseTransferReturnSetting { warehouseId: number; defaultTransferReturnLocationId?: number }
+export interface WarehouseTransferReturnSetting {
+  warehouseId: number;
+  defaultTransferReturnLocationId?: number;
+  defaultProductionTransferLocationId?: number;
+}
 
 export const productionTransferApi = {
   policy: async (branchCode: string): Promise<ProductionTransferPolicy> =>
@@ -76,9 +80,14 @@ export const productionTransferApi = {
     unwrap(await api.post<Envelope<ProductionTaskBoard>>(`/api/production-transfers/${id}/tasks/${taskId}/complete-cancellation-return`, { idempotencyKey: crypto.randomUUID() })),
   returnSetting: async (warehouseId: number): Promise<WarehouseTransferReturnSetting> =>
     unwrap(await api.get<Envelope<WarehouseTransferReturnSetting>>('/api/production-transfers/warehouse-return-setting', { params: { warehouseId } })),
-  updateReturnSetting: async (warehouseId: number, defaultTransferReturnLocationId?: number): Promise<WarehouseTransferReturnSetting> =>
+  updateReturnSetting: async (
+    warehouseId: number,
+    defaultTransferReturnLocationId?: number,
+    defaultProductionTransferLocationId?: number,
+  ): Promise<WarehouseTransferReturnSetting> =>
     unwrap(await api.put<Envelope<WarehouseTransferReturnSetting>>('/api/production-transfers/warehouse-return-setting', {
       warehouseId, defaultTransferReturnLocationId: defaultTransferReturnLocationId || null,
+      defaultProductionTransferLocationId: defaultProductionTransferLocationId || null,
     })),
   cancel: async (id: number, reason: string, returnLocationId?: number): Promise<OperationCancellationResult> =>
     requireCompletedCancellation(unwrap(await api.post<Envelope<OperationCancellationResult>>(`/api/production-transfers/${id}/cancel`, {
