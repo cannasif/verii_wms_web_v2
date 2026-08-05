@@ -93,6 +93,37 @@ export function UserManagementPage() {
     setForm((current) => ({ ...current, [key]: value }));
     setErrors((current) => { const next = { ...current }; delete next[key]; return next; });
   };
+  const updateRole = (role: UpdateUserPayload['role']) => {
+    const systemAdminGroupId = groups.find((group) => group.isSystemAdmin)?.id;
+    setForm((current) => ({
+      ...current,
+      role,
+      permissionGroupIds: systemAdminGroupId
+        ? role === 'Admin'
+          ? [...new Set([...current.permissionGroupIds, systemAdminGroupId])]
+          : current.permissionGroupIds.filter((id) => id !== systemAdminGroupId)
+        : current.permissionGroupIds,
+      warehouseIds: role === 'Admin' ? [] : current.warehouseIds,
+    }));
+    setErrors((current) => { const next = { ...current }; delete next.role; return next; });
+  };
+
+  const togglePermissionGroup = (group: PermissionGroupOption) => {
+    setForm((current) => {
+      if (current.role.toLowerCase() === 'superadmin') return current;
+      const checked = current.permissionGroupIds.includes(group.id);
+      const permissionGroupIds = checked
+        ? current.permissionGroupIds.filter((id) => id !== group.id)
+        : [...current.permissionGroupIds, group.id];
+      if (!group.isSystemAdmin) return { ...current, permissionGroupIds };
+      return {
+        ...current,
+        permissionGroupIds,
+        role: checked ? 'User' : 'Admin',
+        warehouseIds: checked ? current.warehouseIds : [],
+      };
+    });
+  };
 
   const refreshGrid = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: ['advanced-grid', 'system-users'] });
@@ -295,7 +326,7 @@ export function UserManagementPage() {
                       <AppInput invalid={Boolean(errors.phoneNumber)} value={form.phoneNumber} maxLength={40} onChange={(event) => updateForm('phoneNumber', event.target.value)} placeholder="+90 ..." />
                     </Field>
                     <Field label={t('dialog.roleLabel')} icon={Shield} required>
-                      <AppDropdown disabled={isPrimaryAdministrator} value={form.role} onValueChange={(value) => updateForm('role', value as UpdateUserPayload['role'])} portalContainer={null} options={[{ value: 'User', label: t('dialog.roleUser') }, { value: 'Manager', label: t('dialog.roleManager') }, { value: 'Admin', label: t('dialog.roleAdmin') }, ...(isPrimaryAdministrator ? [{ value: 'superadmin', label: t('dialog.roleSuperadmin') }] : [])]} ariaLabel={t('dialog.roleLabel')} />
+                      <AppDropdown disabled={isPrimaryAdministrator} value={form.role} onValueChange={(value) => updateRole(value as UpdateUserPayload['role'])} portalContainer={null} options={[{ value: 'User', label: t('dialog.roleUser') }, { value: 'Manager', label: t('dialog.roleManager') }, { value: 'Admin', label: t('dialog.roleAdmin') }, ...(isPrimaryAdministrator ? [{ value: 'superadmin', label: t('dialog.roleSuperadmin') }] : [])]} ariaLabel={t('dialog.roleLabel')} />
                     </Field>
                     <Field label={`${mode === 'create' ? t('dialog.temporaryPasswordLabel') : t('dialog.newPasswordLabel')} ${t('dialog.passwordLengthHint', { min: minimumPasswordLength, max: maximumPasswordLength })}`} icon={LockKeyhole} error={errors.password} required={mode === 'create'}>
                       <AppInput
@@ -331,29 +362,25 @@ export function UserManagementPage() {
                     <div className="grid max-h-56 gap-2 overflow-auto sm:grid-cols-2">
                       {groups.map((group) => {
                         const checked = form.permissionGroupIds.includes(group.id);
-                        const toggle = () =>
-                          updateForm(
-                            'permissionGroupIds',
-                            checked
-                              ? form.permissionGroupIds.filter((id) => id !== group.id)
-                              : [...form.permissionGroupIds, group.id],
-                          );
+                        const disabled = isPrimaryAdministrator;
+                        const toggle = () => { if (!disabled) togglePermissionGroup(group); };
                         return (
                           <div
                             key={group.id}
                             role="button"
-                            tabIndex={0}
+                            tabIndex={disabled ? -1 : 0}
                             onClick={toggle}
                             onKeyDown={(event) => {
-                              if (event.key === 'Enter' || event.key === ' ') {
+                              if (!disabled && (event.key === 'Enter' || event.key === ' ')) {
                                 event.preventDefault();
                                 toggle();
                               }
                             }}
-                            className="flex cursor-pointer items-start gap-3 rounded-xl border p-3 hover:bg-[var(--wms-brand-soft)]"
+                            className={cn('flex items-start gap-3 rounded-xl border p-3', disabled ? 'cursor-not-allowed opacity-55' : 'cursor-pointer hover:bg-[var(--wms-brand-soft)]')}
                           >
                             <OpsSkinCheckbox
                               checked={checked}
+                              disabled={disabled}
                               onCheckedChange={toggle}
                               aria-label={group.name}
                               className="mt-0.5"
