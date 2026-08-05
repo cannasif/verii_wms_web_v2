@@ -195,7 +195,9 @@
       "metricLinesHint": "View stocks",
       "metricQualityLabel": "Quality",
       "metricQualityNone": "None",
-      "metricQualityHint": "View quality list"
+      "metricQualityHint": "View quality list",
+      "forceQualityLabel": "Send to quality",
+      "forceQualityAria": "Send stocks on this receipt to quality"
     },
     "submit": {
       "receiptEyebrow": "Goods receipt / dispatch",
@@ -222,17 +224,24 @@
     },
     "qualityDialog": {
       "title": "Stocks going to quality",
-      "description": "These lines will appear on the quality list when receipt completes.",
+      "description": "These lines will appear on the quality list when receipt completes. Receipt-only additions can be removed with X; rule-based stocks stay locked.",
       "searchPlaceholder": "Search stock code or name…",
       "searchAria": "Search stocks",
       "showing": "Showing",
       "scrollHint": "Scroll to review the full list",
       "empty": "No stocks match your search.",
       "qualityBadge": "Quality",
+      "forcedQualityBadge": "This receipt",
+      "removeForcedTitle": "Remove from quality for this receipt",
+      "removeForcedAria": "Remove {{code}} from quality for this receipt",
       "receiptLinesTitle": "Receipt lines",
-      "receiptLinesDescription": "All lines in this goods receipt.",
+      "receiptLinesDescription": "Select new lines and Send to quality to add them. Use the X on the quality list to remove; rule stocks stay locked.",
       "receiptLinesSearchAria": "Search receipt lines",
-      "orderLinesDescription": "All lines in this goods receipt task."
+      "orderLinesDescription": "All lines in this goods receipt task.",
+      "selectLineAria": "Select line {{code}}",
+      "forceQualitySubmit": "Send to quality",
+      "forceQualityCancel": "Cancel",
+      "forceQualitySubmitTitle": "Adds the selected stocks to quality for this receipt"
     },
     "success": {
       "directEyebrow": "Direct goods receipt from order",
@@ -553,6 +562,7 @@
     "detailLoading": "Loading goods receipt details...",
     "detailLoadingShort": "Loading...",
     "detailTitle": "Goods Receipt Detail",
+    "detailWaybillTitle": "Waybill Number",
     "detailDescription": "Goods receipt detail",
     "detailInfo": "Info",
     "detailContent": "Content",
@@ -625,7 +635,7 @@
       },
       "cancel": {
         "title": "Cancel Goods Receipt",
-        "description": "Linked stock and quality movements are reversed. If stock has already been used, the system safely blocks cancellation.",
+        "description": "Linked stock and quality movements are reversed. Receipts already posted to ERP cannot be cancelled from WMS. If stock has already been used, the system safely blocks cancellation.",
         "submit": "Cancel"
       },
       "reasonRequired": "A descriptive reason is required for this action.",
@@ -667,6 +677,7 @@
       "outbound": "Outbound",
       "sourceShelf": "Source Shelf",
       "shelfNumber": "Shelf #{{id}}",
+      "sourceShelfFixedHint": "Source shelf is fixed from the goods receipt line and cannot be changed.",
       "operationNote": "Operation note",
       "createDistribution": "Create Distribution",
       "transferTotalLabel": "Transfer: {{value}}",
@@ -746,6 +757,9 @@
     "cancel": "Cancel",
     "approval": "Approval",
     "putawayStatus": "Putaway",
+    "putawayProgress": "Put away {{putaway}} / accepted {{accepted}}",
+    "putawayCandidatesHint": "{{count}} candidate(s) waiting",
+    "putawayIndependentOfErp": "ERP posting can succeed while stock remains on the receiving location; putaway is a separate step.",
     "erpPosting": "ERP Posting",
     "task": "Task",
     "physicalReceipt": "Physical Receipt",

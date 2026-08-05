@@ -195,7 +195,9 @@
       "metricLinesHint": "Stokları gör",
       "metricQualityLabel": "Kalite",
       "metricQualityNone": "Yok",
-      "metricQualityHint": "Kalite listesini gör"
+      "metricQualityHint": "Kalite listesini gör",
+      "forceQualityLabel": "Kaliteye gönder",
+      "forceQualityAria": "Bu irsaliyedeki stokları kaliteye gönder"
     },
     "submit": {
       "receiptEyebrow": "Mal kabul / irsaliye",
@@ -222,17 +224,24 @@
     },
     "qualityDialog": {
       "title": "Kaliteye gidecek stoklar",
-      "description": "Mal kabul bitince bu kalemler kalite listesine düşer.",
+      "description": "Mal kabul bitince bu kalemler kalite listesine düşer. Bu irsaliyelik eklenenleri çarpı ile geri alabilirsin; kural stoklarına dokunulmaz.",
       "searchPlaceholder": "Stok kodu veya adı ara…",
       "searchAria": "Stoklarda ara",
       "showing": "Gösterilen",
       "scrollHint": "Kaydırarak tüm listeyi inceleyebilirsiniz",
       "empty": "Aramayla eşleşen stok bulunamadı.",
       "qualityBadge": "Kalite",
+      "forcedQualityBadge": "Bu irsaliye",
+      "removeForcedTitle": "Bu irsaliyelik kaliteden çıkar",
+      "removeForcedAria": "{{code}} stoğunu bu irsaliyelik kaliteden çıkar",
       "receiptLinesTitle": "Kabul satırları",
-      "receiptLinesDescription": "Bu mal kabulde yer alan tüm satırlar.",
+      "receiptLinesDescription": "Yeni satır seçip Kaliteye gönder ile ekle. Çıkarmak için Kalite listesindeki çarpıyı kullan; kural stokları kilitlidir.",
       "receiptLinesSearchAria": "Kabul satırlarında ara",
-      "orderLinesDescription": "Bu mal kabul emrinde yer alan tüm satırlar."
+      "orderLinesDescription": "Bu mal kabul emrinde yer alan tüm satırlar.",
+      "selectLineAria": "{{code}} satırını seç",
+      "forceQualitySubmit": "Kaliteye gönder",
+      "forceQualityCancel": "İptal",
+      "forceQualitySubmitTitle": "Seçili stokları bu irsaliyelik kaliteye ekler"
     },
     "success": {
       "directEyebrow": "Siparişten doğrudan mal kabul",
@@ -553,6 +562,7 @@
     "detailLoading": "Mal kabul detayı yükleniyor...",
     "detailLoadingShort": "Yükleniyor...",
     "detailTitle": "Mal Kabul Detayı",
+    "detailWaybillTitle": "İrsaliye Numarası",
     "detailDescription": "Mal kabul detayı",
     "detailInfo": "Bilgi",
     "detailContent": "İçerik",
@@ -625,7 +635,7 @@
       },
       "cancel": {
         "title": "Mal Kabulü İptal Et",
-        "description": "Bağlı stok ve kalite hareketleri ters kayıtla geri alınır. Kullanılmış stok varsa sistem iptali güvenli biçimde engeller.",
+        "description": "Bağlı stok ve kalite hareketleri ters kayıtla geri alınır. ERP'ye aktarılmış kayıtlar WMS üzerinden iptal edilemez. Kullanılmış stok varsa sistem iptali güvenli biçimde engeller.",
         "submit": "İptal Et"
       },
       "reasonRequired": "Bu işlem için açıklayıcı bir gerekçe zorunludur.",
@@ -667,6 +677,7 @@
       "outbound": "Ambar Çıkış",
       "sourceShelf": "Kaynak Raf",
       "shelfNumber": "Raf #{{id}}",
+      "sourceShelfFixedHint": "Kaynak raf mal kabul satırından sabit gelir; değiştirilemez.",
       "operationNote": "Operasyon notu",
       "createDistribution": "Dağıtımı Oluştur",
       "transferTotalLabel": "Transfer: {{value}}",
@@ -746,6 +757,9 @@
     "cancel": "İptal Et",
     "approval": "Onay",
     "putawayStatus": "Raflama",
+    "putawayProgress": "Raflanan {{putaway}} / kabul {{accepted}}",
+    "putawayCandidatesHint": "{{count}} aday bekliyor",
+    "putawayIndependentOfErp": "ERP aktarımı tamamlanmış olsa da stok kabul alanında kalmış olabilir; raflama ayrı adımdır.",
     "erpPosting": "ERP Aktarımı",
     "task": "Görev",
     "physicalReceipt": "Fiziksel Kabul",
