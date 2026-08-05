@@ -99,7 +99,11 @@ const ProductionTransferPolicyPage = lazy(() => loadProductionTransferPages().th
 const ProductionTransferOperationPage = lazy(() => loadProductionTransferPages().then((m) => ({ default: m.ProductionTransferOperationPage })));
 const ProductionTransferTaskPoolPage = lazy(() => loadProductionTransferPages().then((m) => ({ default: m.ProductionTransferTaskPoolPage })));
 const ProductionHubPage = lazy(() => loadProductionPages().then((m) => ({ default: m.ProductionHubPage })));
-const ProcurementPage = lazy(() => loadProcurementPage().then((m) => ({ default: m.ProcurementPage })));
+const ProcurementHubPage = lazy(() => loadProcurementPage().then((m) => ({ default: m.ProcurementHubPage })));
+const ProcurementRequestsPage = lazy(() => loadProcurementPage().then((m) => ({ default: m.ProcurementRequestsPage })));
+const ProcurementRfqsPage = lazy(() => loadProcurementPage().then((m) => ({ default: m.ProcurementRfqsPage })));
+const ProcurementQuotesPage = lazy(() => loadProcurementPage().then((m) => ({ default: m.ProcurementQuotesPage })));
+const ProcurementOrdersPage = lazy(() => loadProcurementPage().then((m) => ({ default: m.ProcurementOrdersPage })));
 const ProductionCreatePage = lazy(() => loadProductionPages().then((m) => ({ default: m.ProductionCreatePage })));
 const ProductionListPage = lazy(() => loadProductionPages().then((m) => ({ default: m.ProductionListPage })));
 const ProductionWorkOrdersPage = lazy(() => loadProductionPages().then((m) => ({ default: m.ProductionWorkOrdersPage })));
@@ -201,7 +205,11 @@ export function App(): ReactElement {
           <Route path="warehouse/transfers/:id/operations" element={<WarehouseTransferOperationPage />} />
           <Route path="warehouse/transfers/settings" element={<WarehouseTransferPolicyPage />} />
           <Route path="warehouse/production" element={<ProductionHubPage />} />
-          <Route path="procurement" element={<ProcurementPage />} />
+          <Route path="procurement" element={<ProcurementHubPage />} />
+          <Route path="procurement/requests" element={<ProcurementRequestsPage />} />
+          <Route path="procurement/rfqs" element={<ProcurementRfqsPage />} />
+          <Route path="procurement/quotes" element={<ProcurementQuotesPage />} />
+          <Route path="procurement/orders" element={<ProcurementOrdersPage />} />
           <Route path="warehouse/production/new" element={<ProductionCreatePage />} />
           <Route path="warehouse/production/list" element={<ProductionListPage />} />
           <Route path="warehouse/production/work-orders" element={<ProductionWorkOrdersPage />} />

@@ -28,7 +28,11 @@ export function resolveNavItemTitle(
 export const WMS_NAV_ITEMS: NavItem[] = [
   { title: 'sidebar.dashboard', titleFallback: 'Dashboard', href: '/dashboard', icon: dashboardIcon },
   { title: 'sidebar.procurement', titleFallback: 'Satınalma', icon: masterDataIcon, children: [
-    { title: 'sidebar.procurementWorkspace', titleFallback: 'Satınalma Çalışma Alanı', href: '/procurement', searchAliases: ['satınalma', 'talep', 'rfq', 'teklif', 'tedarikçi', 'sipariş'], requiredPermission: 'WMS.PROCUREMENT.VIEW' },
+    { title: 'sidebar.procurementWorkspace', titleFallback: 'Süreç Merkezi', href: '/procurement', searchAliases: ['satınalma', 'süreç', 'procure to pay'], requiredPermission: 'WMS.PROCUREMENT.VIEW' },
+    { title: 'sidebar.procurementRequests', titleFallback: 'Satınalma Talepleri', href: '/procurement/requests', searchAliases: ['ihtiyaç', 'talep'], requiredPermission: 'WMS.PROCUREMENT.VIEW' },
+    { title: 'sidebar.procurementRfqs', titleFallback: 'Teklif Talepleri', href: '/procurement/rfqs', searchAliases: ['rfq', 'fiyat toplama'], requiredPermission: 'WMS.PROCUREMENT.VIEW' },
+    { title: 'sidebar.procurementQuotes', titleFallback: 'Tedarikçi Teklifleri', href: '/procurement/quotes', searchAliases: ['teklif', 'tedarikçi'], requiredPermission: 'WMS.PROCUREMENT.VIEW' },
+    { title: 'sidebar.procurementOrders', titleFallback: 'Satınalma Siparişleri', href: '/procurement/orders', searchAliases: ['satınalma siparişi', 'sipariş'], requiredPermission: 'WMS.PROCUREMENT.VIEW' },
   ] },
   { title: 'sidebar.warehouseOperations', titleFallback: 'Ambar İşlemleri', icon: operationsIcon, children: [
     { title: 'sidebar.warehouseInbound', titleFallback: 'Ambar Giriş', children: [
