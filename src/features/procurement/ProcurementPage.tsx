@@ -1474,15 +1474,15 @@ function ProcurementPolicyDialog({
       open
       onClose={onClose}
       title="Satınalma süreç politikası"
-      description="Şubenin talep, teklif toplama ve sipariş bölme davranışını yönetin."
+      description="Bu şubede satınalma ekibinin ve tedarikçilerin nasıl çalışacağını basit seçeneklerle belirleyin."
       className="!max-w-3xl"
     >
       <div className="space-y-3">
         <section className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-4">
           <h3 className="font-bold">Tedarikçi teklif portalı</h3>
           <p className="mt-1 text-sm text-slate-500">
-            Teklifin hangi kanaldan toplanacağını ve portal güvenlik sınırlarını
-            şube bazında belirleyin.
+            Tedarikçinin fiyatı e-postayla açılan kolay ekrandan mı, satınalma
+            personelinin mi gireceğini seçin.
           </p>
           <div className="mt-4 grid gap-4 md:grid-cols-3">
             <Field label="Teklif toplama kanalı">
@@ -1548,27 +1548,63 @@ function ProcurementPolicyDialog({
               />
             </Field>
           </div>
+          <p className="mt-4 rounded-lg border border-cyan-500/20 bg-[var(--wms-app-panel)] p-3 text-sm">
+            <b>Bu seçimin sonucu: </b>
+            {policy.supplierQuoteChannelMode === "InternalOnly"
+              ? "Tedarikçiye bağlantı gönderilmez; teklifleri satınalma personeli sisteme girer."
+              : policy.supplierQuoteChannelMode === "PortalRequired"
+                ? "Teklif yalnızca tedarikçinin e-postadaki bağlantıyı açıp göndermesiyle alınır."
+                : "İsterseniz tedarikçiye bağlantı gönderir, isterseniz teklifi içeriden girersiniz."}
+          </p>
         </section>
-        {options.map((x) => (
-          <label
-            key={String(x.key)}
-            className="flex cursor-pointer items-start gap-3 rounded-xl border border-cyan-500/15 p-4"
+        {[
+          {
+            title: "Talep ve sipariş esnekliği",
+            description:
+              "Bir talebin nasıl fiyatlamaya ve siparişe dönüşeceğini belirler.",
+            items: options.slice(0, 6),
+          },
+          {
+            title: "Tedarikçinin göreceği teklif ekranı",
+            description:
+              "Tedarikçinin hangi bilgileri değiştirebileceğini ve göndermek için neleri tamamlaması gerektiğini belirler.",
+            items: options.slice(6),
+          },
+        ].map((group) => (
+          <section
+            key={group.title}
+            className="rounded-xl border border-cyan-500/15 p-4"
           >
-            <input
-              className="mt-1"
-              type="checkbox"
-              checked={Boolean(policy[x.key])}
-              onChange={() => toggle(x.key)}
-            />
-            <span>
-              <b>{x.title}</b>
-              <span className="mt-1 block text-sm text-slate-500">
-                {x.description}
-              </span>
-            </span>
-          </label>
+            <h3 className="font-bold">{group.title}</h3>
+            <p className="mt-1 text-sm text-slate-500">{group.description}</p>
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              {group.items.map((x) => (
+                <label
+                  key={String(x.key)}
+                  className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition ${
+                    policy[x.key]
+                      ? "border-cyan-400/40 bg-cyan-500/10"
+                      : "border-slate-700/60 bg-[var(--wms-app-panel)]"
+                  }`}
+                >
+                  <input
+                    className="mt-1 h-5 w-5 accent-cyan-500"
+                    type="checkbox"
+                    checked={Boolean(policy[x.key])}
+                    onChange={() => toggle(x.key)}
+                  />
+                  <span>
+                    <b>{x.title}</b>
+                    <span className="mt-1 block text-sm text-slate-500">
+                      {x.description}
+                    </span>
+                  </span>
+                </label>
+              ))}
+            </div>
+          </section>
         ))}
-        <div className="flex justify-end gap-2 pt-2">
+        <div className="sticky bottom-0 z-20 flex justify-end gap-2 border-t border-cyan-500/15 bg-[var(--wms-app-bg)]/95 py-3 backdrop-blur">
           <button className="btn btn-secondary" onClick={onClose}>
             Vazgeç
           </button>
