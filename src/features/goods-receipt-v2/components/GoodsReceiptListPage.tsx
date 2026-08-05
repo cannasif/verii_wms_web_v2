@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState, type ReactElement } from 'react';
-import { Eye, FileText, Loader2, Printer, RefreshCw, Scale } from 'lucide-react';
+import { Ban, Eye, FileText, Loader2, Printer, RefreshCw, Scale } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   AdvancedDataGrid,
@@ -14,6 +14,7 @@ import { formatProjectDate } from '@/lib/project-format';
 import { goodsReceiptV2Api } from '../api/goods-receipt.api';
 import { goodsReceiptEnumLabel, goodsReceiptEnumHint } from '../localization/enum-labels';
 import type { GoodsReceiptGridRow } from '../types/goods-receipt.types';
+import { canCancelGoodsReceiptFromWms } from '../utils/goods-receipt-cancel';
 import { previewReceiptLabelsPdf, printableLabels, printReceiptLabels } from '../utils/goods-receipt-label-output';
 import {
   buildGoodsReceiptListFacetFilters,
@@ -28,6 +29,7 @@ import {
 } from './GoodsReceiptDetailDialog';
 import { GoodsReceiptErpRetryDialog } from './GoodsReceiptErpRetryDialog';
 import { GoodsReceiptListFiltersPopover } from './GoodsReceiptListFiltersPopover';
+import type { GoodsReceiptLifecycleAction } from './GoodsReceiptLifecycleDialog';
 
 type OutputMode = 'print' | 'pdf';
 
@@ -70,12 +72,22 @@ export function GoodsReceiptListPage(): ReactElement {
     [can],
   );
 
+  const canCancelRow = useCallback(
+    (row: GoodsReceiptGridRow) =>
+      can('WMS.GOODS_RECEIPT.CANCEL')
+      && canCancelGoodsReceiptFromWms({
+        status: row.status,
+        erpIntegrationStatus: row.erpIntegrationStatus,
+      }),
+    [can],
+  );
+
   const openDetail = useCallback(
-    async (id: number) => {
-      setDetailView({ id, loading: true, detail: null });
+    async (id: number, startAction?: GoodsReceiptLifecycleAction | null) => {
+      setDetailView({ id, loading: true, detail: null, startAction });
       try {
         const detail = await goodsReceiptV2Api.detail(id);
-        setDetailView({ id, loading: false, detail });
+        setDetailView({ id, loading: false, detail, startAction });
       } catch (error) {
         setDetailView(null);
         toast.error(message(error, t('list.detailLoadError')));
@@ -259,6 +271,14 @@ export function GoodsReceiptListPage(): ReactElement {
                 }
               />
             ) : null}
+            {canCancelRow(r) ? (
+              <ActionButton
+                title={t('list.cancel')}
+                busy={detailView?.loading === true && detailView.id === r.id && detailView.startAction === 'cancel'}
+                onClick={() => void openDetail(r.id, 'cancel')}
+                icon={<Ban className="size-3.5" />}
+              />
+            ) : null}
             <ActionButton
               title={t('list.printAllLabels')}
               busy={outputBusy === `${r.id}:all:print`}
@@ -275,7 +295,7 @@ export function GoodsReceiptListPage(): ReactElement {
         ),
       },
     ];
-  }, [canRetryErp, detailView?.id, detailView?.loading, moduleReady, openDetail, output, outputBusy, t]);
+  }, [canCancelRow, canRetryErp, detailView?.id, detailView?.loading, detailView?.startAction, moduleReady, openDetail, output, outputBusy, t]);
 
   const lifecycleCompleted = useCallback(
     async () => {
