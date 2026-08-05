@@ -32,7 +32,7 @@ export const OpsActionButton = forwardRef<HTMLButtonElement, OpsActionButtonProp
   ref,
 ): ReactElement {
   const Comp = asChild ? Slot : 'button';
-  const label = loadingLabel ?? children;
+  const label = loading ? (loadingLabel ?? children) : children;
   const classes = cn(
     'wms-ops-action-btn',
     variant === 'primary' ? 'wms-ops-action-btn--primary' : 'wms-ops-action-btn--secondary',
