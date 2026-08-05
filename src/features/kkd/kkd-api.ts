@@ -1,4 +1,6 @@
 import { api } from '@/lib/axios';
+import type { DropdownPage, DropdownPageRequest } from '@/hooks/useDropdownInfiniteSearch';
+import { buildDropdownPagedBody } from '@/lib/dropdown-paging';
 
 type Envelope<T> = { success: boolean; data: T; message?: string };
 const unwrap = <T,>(response: Envelope<T>): T => {
@@ -7,6 +9,9 @@ const unwrap = <T,>(response: Envelope<T>): T => {
 };
 
 export type KkdLookup = { id: number; code: string; name: string; isActive: boolean };
+export type KkdCustomerLookup = { id: number; code: string; name: string };
+export type KkdStockLookup = { id: number; code: string; name: string; unitCode: string; groupCode?: string | null };
+export type KkdStockGroupLookup = { code: string; stockCount: number };
 export type KkdEmployee = {
   id: number; employeeCode: string; fullName: string; qrCode: string; customerId: number;
   departmentId: number; departmentName: string; roleId: number; roleName: string;
@@ -78,6 +83,24 @@ export const kkdApi = {
     unwrap(await api.put<Envelope<KkdPolicy>>('/api/kkd/policy', payload)),
   departments: async () => unwrap(await api.get<Envelope<KkdLookup[]>>('/api/kkd/departments')),
   roles: async (departmentId?: number) => unwrap(await api.get<Envelope<KkdLookup[]>>('/api/kkd/roles', { params: { departmentId } })),
+  customersPaged: async (request: DropdownPageRequest): Promise<DropdownPage<KkdCustomerLookup>> =>
+    unwrap(await api.post<Envelope<DropdownPage<KkdCustomerLookup>>>(
+      '/api/kkd/lookups/customers/paged',
+      buildDropdownPagedBody(request, { sortBy: 'code', searchFields: ['code', 'name'] }),
+      { signal: request.signal },
+    )),
+  stocksPaged: async (request: DropdownPageRequest, groupCode?: string): Promise<DropdownPage<KkdStockLookup>> =>
+    unwrap(await api.post<Envelope<DropdownPage<KkdStockLookup>>>(
+      '/api/kkd/lookups/stocks/paged',
+      buildDropdownPagedBody(request, { sortBy: 'code', searchFields: ['code', 'name'] }),
+      { params: { groupCode: groupCode || undefined }, signal: request.signal },
+    )),
+  stockGroupsPaged: async (request: DropdownPageRequest): Promise<DropdownPage<KkdStockGroupLookup>> =>
+    unwrap(await api.post<Envelope<DropdownPage<KkdStockGroupLookup>>>(
+      '/api/kkd/lookups/stock-groups/paged',
+      buildDropdownPagedBody(request, { sortBy: 'code', searchFields: ['code'] }),
+      { signal: request.signal },
+    )),
   employees: async () => unwrap(await api.get<Envelope<KkdEmployee[]>>('/api/kkd/employees')),
   resolveEmployeeQr: async (qrCode: string) =>
     unwrap(await api.post<Envelope<KkdEmployee>>('/api/kkd/employees/qr-resolve', { qrCode })),
