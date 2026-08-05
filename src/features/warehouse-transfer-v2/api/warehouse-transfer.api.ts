@@ -86,7 +86,7 @@ export const warehouseTransferApi = {
   locations: async (request: DropdownPageRequest, warehouseId: number): Promise<DropdownPage<LocationOption>> =>
     unwrap(await api.post<Envelope<DropdownPage<LocationOption>>>(
       '/api/locations/paged',
-      pagedBody({ ...request, sortBy: request.sortBy ?? 'code' }, [
+      pagedBody({ ...request, sortBy: request.sortBy ?? 'code', filterLogic: 'and' }, [
         { column: 'warehouseId', operator: 'equals', value: String(warehouseId) },
         { column: 'isActive', operator: 'equals', value: 'true' },
       ]),

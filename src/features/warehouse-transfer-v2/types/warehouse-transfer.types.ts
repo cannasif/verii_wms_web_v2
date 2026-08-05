@@ -140,6 +140,21 @@ export interface WarehouseTransferGridRow {
   updatedDate?: string;
 }
 
+export interface WarehouseTransferTrackingLine {
+  id: number;
+  handlingUnitNo?: string;
+  lotNo?: string;
+  serialNo?: string;
+  manufacturingDate?: string;
+  expirationDate?: string;
+  plannedQuantity: number;
+  pickedQuantity: number;
+  shippedQuantity: number;
+  receivedQuantity: number;
+  putawayQuantity: number;
+  status: string;
+}
+
 export interface WarehouseTransferDetailLine {
   id: number;
   lineNo: number;
@@ -156,6 +171,13 @@ export interface WarehouseTransferDetailLine {
   trackingType: StockTrackingType;
   status: string;
   trackingCount: number;
+  trackings: WarehouseTransferTrackingLine[];
+  defaultSourceLocationId?: number;
+  defaultSourceLocationCode?: string;
+  defaultSourceLocationName?: string;
+  defaultTargetLocationId?: number;
+  defaultTargetLocationCode?: string;
+  defaultTargetLocationName?: string;
 }
 
 export interface WarehouseTransferDetail {
