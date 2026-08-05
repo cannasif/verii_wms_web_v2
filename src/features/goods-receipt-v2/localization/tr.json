@@ -807,7 +807,8 @@
         "warehouse": "Depo",
         "priority": "Öncelik",
         "planned": "Planlanan",
-        "started": "Başlama"
+        "started": "Başlama",
+        "due": "Termin"
       },
       "table": {
         "stock": "Stok",
@@ -875,7 +876,24 @@
         "wrongBarcodeError": "Bu emir ön etiketlidir. Ürün/tedarikçi barkodu değil, oluşturup yazdırdığınız ön etiketin üzerindeki barkodu okutun.",
         "resolvedTitle": "Çözümlenen kabul kaydı",
         "resolvedHint": "Son onayda stok hareketi, raf/seri bakiyesi ve gerekiyorsa kalite kaydı aynı transaction içinde oluşur.",
-        "remainingLabel": "Kalan {{quantity}} {{unit}}"
+        "remainingLabel": "Kalan {{quantity}} {{unit}}",
+        "startFirst": "Fiziksel kabul için önce emri başlatın."
+      },
+      "tabs": {
+        "info": "Bilgi",
+        "lines": "Kalemler",
+        "assignments": "Atamalar",
+        "operation": "Operasyon"
+      },
+      "assignments": {
+        "currentTitle": "Atanmış sorumlular",
+        "hint": "Emri yürütecek operasyon kullanıcılarını seçin.",
+        "selectedCount": "{{count}} kullanıcı",
+        "noneAssigned": "Henüz sorumlu atanmadı",
+        "searchPlaceholder": "Kullanıcı ara...",
+        "selectVisible": "Tümünü Seç",
+        "clearVisible": "Seçimi Kaldır",
+        "noUsers": "Eşleşen kullanıcı bulunamadı"
       }
     }
   },
@@ -984,6 +1002,14 @@
       "PreGeneratedLabel": "Önceden Üretilmiş Etiket",
       "SupplierLabel": "Tedarikçi Etiketi",
       "Import": "İçe Aktarım"
+    },
+    "receiptType": {
+      "PurchaseOrder": "Satın Alma Siparişi",
+      "Direct": "Doğrudan",
+      "TransferIn": "Transfer Girişi",
+      "CustomerReturn": "Müşteri İadesi",
+      "ProductionReturn": "Üretim İadesi",
+      "SteelPlate": "SAC Levha"
     }
   },
   "hub": {

@@ -794,7 +794,8 @@
         "warehouse": "Lager",
         "priority": "Priorität",
         "planned": "Geplant",
-        "started": "Gestartet"
+        "started": "Gestartet",
+        "due": "Fällig"
       },
       "table": {
         "stock": "Bestand",
@@ -862,7 +863,24 @@
         "wrongBarcodeError": "Dieser Auftrag ist vor-etikettiert. Scannen Sie den Barcode auf dem generierten und gedruckten Vor-Etikett, nicht den Produkt-/Lieferantenbarcode.",
         "resolvedTitle": "Aufgelöster Wareneingangsdatensatz",
         "resolvedHint": "Bei der endgültigen Bestätigung werden die Bestandsbewegung, der Regal-/Seriennummernbestand und, falls erforderlich, der Qualitätsdatensatz in derselben Transaktion erstellt.",
-        "remainingLabel": "Verbleibend {{quantity}} {{unit}}"
+        "remainingLabel": "Verbleibend {{quantity}} {{unit}}",
+        "startFirst": "Starten Sie den Auftrag, um den physischen Wareneingang zu erfassen."
+      },
+      "tabs": {
+        "info": "Info",
+        "lines": "Positionen",
+        "assignments": "Zuweisungen",
+        "operation": "Betrieb"
+      },
+      "assignments": {
+        "currentTitle": "Zugewiesene Benutzer",
+        "hint": "Wählen Sie die Benutzer aus, die diesen Auftrag ausführen.",
+        "selectedCount": "{{count}} Benutzer",
+        "noneAssigned": "Noch keine Benutzer zugewiesen",
+        "searchPlaceholder": "Benutzer suchen...",
+        "selectVisible": "Alle auswählen",
+        "clearVisible": "Auswahl aufheben",
+        "noUsers": "Kein passender Benutzer gefunden"
       }
     }
   },
@@ -971,6 +989,14 @@
       "PreGeneratedLabel": "Vorgeneriertes Etikett",
       "SupplierLabel": "Lieferantenetikett",
       "Import": "Import"
+    },
+    "receiptType": {
+      "PurchaseOrder": "Bestellung",
+      "Direct": "Direkt",
+      "TransferIn": "Transfereingang",
+      "CustomerReturn": "Kundenretoure",
+      "ProductionReturn": "Produktionsrückgabe",
+      "SteelPlate": "Stahlblech"
     }
   },
   "hub": {

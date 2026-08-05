@@ -13,6 +13,7 @@ export type GoodsReceiptEnumGroup =
   | 'assignmentStatus'
   | 'labelBatchStatus'
   | 'labelStatus'
+  | 'receiptType'
   | 'processType'
   | 'initiationMode'
   | 'executionMode';

@@ -794,7 +794,8 @@
         "warehouse": "المستودع",
         "priority": "الأولوية",
         "planned": "المخطط",
-        "started": "البدء"
+        "started": "البدء",
+        "due": "الاستحقاق"
       },
       "table": {
         "stock": "المخزون",
@@ -862,7 +863,24 @@
         "wrongBarcodeError": "هذه المهمة مُعدّة بملصقات مسبقة. امسح الباركود الموجود على الملصق المسبق الذي أنشأته وطبعته، وليس باركود المنتج/المورد.",
         "resolvedTitle": "سجل الاستلام المُحلَّل",
         "resolvedHint": "عند التأكيد النهائي، تُنشأ حركة المخزون ورصيد الرف/الرقم التسلسلي، وسجل الجودة إذا لزم الأمر، في نفس المعاملة.",
-        "remainingLabel": "المتبقي {{quantity}} {{unit}}"
+        "remainingLabel": "المتبقي {{quantity}} {{unit}}",
+        "startFirst": "ابدأ الأمر أولاً لتنفيذ الاستلام الفعلي."
+      },
+      "tabs": {
+        "info": "معلومات",
+        "lines": "البنود",
+        "assignments": "التعيينات",
+        "operation": "العملية"
+      },
+      "assignments": {
+        "currentTitle": "المستخدمون المعينون",
+        "hint": "اختر مستخدمي العمليات الذين سينفذون هذا الأمر.",
+        "selectedCount": "{{count}} مستخدم",
+        "noneAssigned": "لم يتم تعيين مستخدمين بعد",
+        "searchPlaceholder": "ابحث عن مستخدم...",
+        "selectVisible": "تحديد الكل",
+        "clearVisible": "إلغاء التحديد",
+        "noUsers": "لم يتم العثور على مستخدم"
       }
     }
   },
@@ -971,6 +989,14 @@
       "PreGeneratedLabel": "ملصق مُنشأ مسبقًا",
       "SupplierLabel": "ملصق المورد",
       "Import": "استيراد"
+    },
+    "receiptType": {
+      "PurchaseOrder": "أمر شراء",
+      "Direct": "مباشر",
+      "TransferIn": "إدخال بالتحويل",
+      "CustomerReturn": "مرتجع عميل",
+      "ProductionReturn": "مرتجع إنتاج",
+      "SteelPlate": "ألواح صلب"
     }
   },
   "hub": {

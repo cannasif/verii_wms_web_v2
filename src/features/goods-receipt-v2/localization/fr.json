@@ -794,7 +794,8 @@
         "warehouse": "Entrepôt",
         "priority": "Priorité",
         "planned": "Prévu",
-        "started": "Démarré"
+        "started": "Démarré",
+        "due": "Échéance"
       },
       "table": {
         "stock": "Stock",
@@ -862,7 +863,24 @@
         "wrongBarcodeError": "Cette tâche est pré-étiquetée. Scannez le code-barres figurant sur l'étiquette anticipée que vous avez générée et imprimée, et non le code-barres produit/fournisseur.",
         "resolvedTitle": "Enregistrement de réception résolu",
         "resolvedHint": "Lors de la confirmation finale, le mouvement de stock, le solde emplacement/série et, si nécessaire, l'enregistrement qualité sont créés dans la même transaction.",
-        "remainingLabel": "Restant {{quantity}} {{unit}}"
+        "remainingLabel": "Restant {{quantity}} {{unit}}",
+        "startFirst": "Démarrez l'ordre pour traiter la réception physique."
+      },
+      "tabs": {
+        "info": "Informations",
+        "lines": "Lignes",
+        "assignments": "Affectations",
+        "operation": "Opération"
+      },
+      "assignments": {
+        "currentTitle": "Utilisateurs affectés",
+        "hint": "Sélectionnez les utilisateurs qui exécuteront cet ordre.",
+        "selectedCount": "{{count}} utilisateurs",
+        "noneAssigned": "Aucun utilisateur affecté",
+        "searchPlaceholder": "Rechercher un utilisateur...",
+        "selectVisible": "Tout sélectionner",
+        "clearVisible": "Effacer la sélection",
+        "noUsers": "Aucun utilisateur correspondant"
       }
     }
   },
@@ -971,6 +989,14 @@
       "PreGeneratedLabel": "Étiquette pré-générée",
       "SupplierLabel": "Étiquette fournisseur",
       "Import": "Import"
+    },
+    "receiptType": {
+      "PurchaseOrder": "Commande d'achat",
+      "Direct": "Direct",
+      "TransferIn": "Entrée par transfert",
+      "CustomerReturn": "Retour client",
+      "ProductionReturn": "Retour de production",
+      "SteelPlate": "Tôle d’acier"
     }
   },
   "hub": {

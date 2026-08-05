@@ -794,7 +794,8 @@
         "warehouse": "Almacén",
         "priority": "Prioridad",
         "planned": "Planificado",
-        "started": "Iniciada"
+        "started": "Iniciada",
+        "due": "Vencimiento"
       },
       "table": {
         "stock": "Stock",
@@ -862,7 +863,24 @@
         "wrongBarcodeError": "Esta tarea usa etiquetas previas. Escanee el código de barras de la etiqueta previa que generó e imprimió, no el código de barras del producto/proveedor.",
         "resolvedTitle": "Registro de recepción resuelto",
         "resolvedHint": "En la confirmación final, el movimiento de stock, el saldo de estantería/serie y, si es necesario, el registro de calidad se crean en la misma transacción.",
-        "remainingLabel": "Restante {{quantity}} {{unit}}"
+        "remainingLabel": "Restante {{quantity}} {{unit}}",
+        "startFirst": "Inicie la orden para registrar la recepción física."
+      },
+      "tabs": {
+        "info": "Información",
+        "lines": "Líneas",
+        "assignments": "Asignaciones",
+        "operation": "Operación"
+      },
+      "assignments": {
+        "currentTitle": "Usuarios asignados",
+        "hint": "Seleccione los usuarios de operación que ejecutarán esta orden.",
+        "selectedCount": "{{count}} usuarios",
+        "noneAssigned": "Aún no hay usuarios asignados",
+        "searchPlaceholder": "Buscar usuario...",
+        "selectVisible": "Seleccionar todo",
+        "clearVisible": "Quitar selección",
+        "noUsers": "No se encontró ningún usuario"
       }
     }
   },
@@ -971,6 +989,14 @@
       "PreGeneratedLabel": "Etiqueta pregenerada",
       "SupplierLabel": "Etiqueta del proveedor",
       "Import": "Importación"
+    },
+    "receiptType": {
+      "PurchaseOrder": "Orden de compra",
+      "Direct": "Directo",
+      "TransferIn": "Entrada por traslado",
+      "CustomerReturn": "Devolución de cliente",
+      "ProductionReturn": "Devolución de producción",
+      "SteelPlate": "Chapa de acero"
     }
   },
   "hub": {

@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactElement,
+  type ReactNode,
+} from "react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -6,14 +14,16 @@ import {
   Barcode,
   Check,
   Eye,
+  ListChecks,
   Loader2,
+  PackageOpen,
   Play,
   Printer,
   Save,
   ScanLine,
+  Search,
   Tags,
   UserRoundCog,
-  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -22,7 +32,20 @@ import {
 } from "@/components/shared/AdvancedDataGrid";
 import { AppDropdown } from "@/components/shared/AppDropdown";
 import { AppDateInput } from "@/components/shared/AppInput";
-import { ResponsiveDialog } from "@/components/shared/ResponsiveDialog";
+import { OpsActionButton } from "@/components/shared/OpsActionButton";
+import { OpsSkinCheckbox } from "@/components/shared/OpsSkinCheckbox";
+import {
+  OpsCodeBadge,
+  OpsStatusBadge,
+  inferOpsStatusTone,
+} from "@/components/shared/OpsStatusBadge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   requiredActionColumn,
   systemColumns,
@@ -33,6 +56,7 @@ import {
   formatProjectDateTime,
   formatProjectNumber,
 } from "@/lib/project-format";
+import { cn } from "@/lib/utils";
 import { goodsReceiptV2Api } from "../api/goods-receipt.api";
 import { goodsReceiptEnumLabel } from "../localization/enum-labels";
 import type {
@@ -227,7 +251,7 @@ export function GoodsReceiptTasksPage({
             type="button"
             disabled={busy === row.id}
             onClick={() => void open(row)}
-            className="rounded-lg p-2 text-cyan-500 hover:bg-cyan-500/10"
+            className="wms-ops-grid-icon-btn disabled:opacity-40"
             aria-label={tGrid("dataGrid.goodsReceiptTasks.viewTask")}
           >
             {busy === row.id ? (
@@ -281,6 +305,15 @@ export function GoodsReceiptTasksPage({
   );
 }
 
+const LABEL_STRATEGY_KEYS: Record<string, string> = {
+  None: "createFlow.labelOptions.none",
+  PreGenerate: "createFlow.labelOptions.preGenerate",
+  SupplierLabel: "createFlow.labelOptions.supplierLabel",
+  GenerateOnReceipt: "createFlow.labelOptions.generateOnReceipt",
+};
+
+type TaskModalTab = "info" | "lines" | "ops";
+
 function TaskModal({
   detail,
   assignedOnly,
@@ -307,218 +340,550 @@ function TaskModal({
   reload: () => void;
 }): ReactElement {
   const { t } = useModuleTranslation("goods-receipt-v2");
+  const [tab, setTab] = useState<TaskModalTab>("lines");
   const [labelsRevision, setLabelsRevision] = useState(0);
+  const [lineSearch, setLineSearch] = useState("");
+  const task = detail.task;
+  const supplier =
+    [task.supplierCode, task.supplierName].filter(Boolean).join(" · ") || "—";
+  const acceptAvailable = task.myAssignmentStatus === "Assigned";
+  const startAvailable = ["Assigned", "Accepted"].includes(
+    task.myAssignmentStatus || "",
+  );
+
+  const normalizedLineSearch = lineSearch.trim().toLocaleUpperCase("tr-TR");
+  const visibleLines = useMemo(() => {
+    if (!normalizedLineSearch) return detail.lines;
+    return detail.lines.filter((line) =>
+      [line.stockCode, line.stockName, line.yapCode, String(line.sequenceNo)].some(
+        (value) =>
+          String(value ?? "")
+            .toLocaleUpperCase("tr-TR")
+            .includes(normalizedLineSearch),
+      ),
+    );
+  }, [detail.lines, normalizedLineSearch]);
+
+  const tabIndex = tab === "info" ? 0 : tab === "lines" ? 1 : 2;
+
+  return (
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open) close();
+      }}
+    >
+      <DialogContent
+        portalRoot="body"
+        tone="ops"
+        aria-describedby={undefined}
+        className={cn(
+          "wms-ops-detail-dialog wms-ops-form flex !h-[min(90vh,880px)] !max-h-[calc(100dvh-2rem)] w-full !max-w-6xl flex-col !gap-0 overflow-hidden border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] !p-0",
+          "[scrollbar-gutter:auto]",
+        )}
+      >
+        <header className="wms-ops-detail-dialog__header shrink-0">
+          <div className="min-w-0 pr-2">
+            <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-600 dark:text-cyan-300">
+              {t("tasks.modal.eyebrow")}
+            </p>
+            <DialogTitle className="wms-ops-detail-dialog__title">
+              {t("tasks.taskNo")}
+              <span className="ml-2 font-mono text-base font-bold text-cyan-600 dark:text-cyan-300">
+                {task.taskNo}
+              </span>
+            </DialogTitle>
+            <DialogDescription className="wms-ops-detail-dialog__description">
+              {`${task.documentNo} · ${supplier}`}
+            </DialogDescription>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <OpsStatusBadge tone={inferOpsStatusTone(task.status)}>
+                {goodsReceiptEnumLabel(t, "taskStatus", task.status)}
+              </OpsStatusBadge>
+              {task.myAssignmentStatus ? (
+                <OpsStatusBadge tone={inferOpsStatusTone(task.myAssignmentStatus)}>
+                  {goodsReceiptEnumLabel(t, "assignmentStatus", task.myAssignmentStatus)}
+                </OpsStatusBadge>
+              ) : null}
+              <OpsCodeBadge>{`${task.warehouseCode} · ${task.warehouseName}`}</OpsCodeBadge>
+            </div>
+          </div>
+        </header>
+
+        {assignedOnly ? (
+          <div className="wms-ops-detail-lifecycle shrink-0 px-4 py-3 sm:px-6">
+            <div className="wms-ops-detail-lifecycle__bar">
+              <LifecycleButton
+                label={t("tasks.modal.actions.acceptAssignment")}
+                icon={<Check className="size-4" />}
+                onClick={accept}
+                disabled={busy || !acceptAvailable}
+              />
+              <LifecycleButton
+                label={t("tasks.modal.actions.startTask")}
+                icon={
+                  busy ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Play className="size-4" />
+                  )
+                }
+                onClick={start}
+                disabled={busy || !startAvailable}
+              />
+            </div>
+          </div>
+        ) : null}
+
+        <Tabs
+          value={tab}
+          onValueChange={(value) => setTab(value as TaskModalTab)}
+          className="flex min-h-0 flex-1 flex-col gap-0"
+        >
+          <div className="shrink-0 px-4 pt-4 sm:px-6">
+            <TabsList
+              className={cn(
+                "w-full",
+                "wms-ops-detail-main-tabs",
+                "wms-ops-detail-main-tabs--cols-3",
+              )}
+              data-active-index={tabIndex}
+            >
+              <span className="wms-ops-detail-tab-indicator" aria-hidden />
+              <TabsTrigger value="info" className="wms-ops-detail-main-tab">
+                {t("tasks.modal.tabs.info")}
+              </TabsTrigger>
+              <TabsTrigger value="lines" className="wms-ops-detail-main-tab">
+                {t("tasks.modal.tabs.lines")}
+              </TabsTrigger>
+              <TabsTrigger value="ops" className="wms-ops-detail-main-tab">
+                {assignedOnly
+                  ? t("tasks.modal.tabs.operation")
+                  : t("tasks.modal.tabs.assignments")}
+              </TabsTrigger>
+            </TabsList>
+          </div>
+
+          <TabsContent
+            value="info"
+            className="wms-ops-scrollbar mt-0 min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6"
+          >
+            <div className="space-y-4">
+              <div className="wms-ops-detail-panel">
+                <div className="wms-ops-detail-grid">
+                  <TaskField label={t("tasks.taskNo")}>{task.taskNo}</TaskField>
+                  <TaskField label={t("tasks.documentNo")}>{task.documentNo}</TaskField>
+                  <TaskField label={t("tasks.supplierName")}>{supplier}</TaskField>
+                  <TaskField label={t("tasks.modal.info.warehouse")}>
+                    {`${task.warehouseCode} · ${task.warehouseName}`}
+                  </TaskField>
+                  <TaskField label={t("tasks.processType")}>
+                    {goodsReceiptEnumLabel(t, "processType", task.processType)}
+                  </TaskField>
+                  <TaskField label={t("labelStrategy")}>
+                    {LABEL_STRATEGY_KEYS[task.labelStrategy]
+                      ? t(LABEL_STRATEGY_KEYS[task.labelStrategy])
+                      : task.labelStrategy || "—"}
+                  </TaskField>
+                  <TaskField label={t("tasks.modal.info.priority")}>
+                    {String(task.priority)}
+                  </TaskField>
+                  <TaskField label={t("tasks.modal.info.planned")}>
+                    {formatProjectNumber(task.plannedQuantity)}
+                  </TaskField>
+                  <TaskField label={t("tasks.modal.table.received")}>
+                    {formatProjectNumber(task.processedQuantity)}
+                  </TaskField>
+                  <TaskField label={t("tasks.modal.info.started")}>
+                    {task.startedAtUtc ? formatProjectDateTime(task.startedAtUtc) : "—"}
+                  </TaskField>
+                  <TaskField label={t("tasks.modal.info.due")}>
+                    {task.dueAtUtc ? formatProjectDateTime(task.dueAtUtc) : "—"}
+                  </TaskField>
+                  <TaskField label={t("list.line")}>{String(task.lineCount)}</TaskField>
+                </div>
+              </div>
+
+              <section className="wms-ops-task-panel">
+                <div className="wms-ops-task-panel__head">
+                  <div className="wms-ops-task-panel__title-row">
+                    <span className="wms-ops-task-panel__icon" aria-hidden>
+                      <UserRoundCog className="size-3.5" />
+                    </span>
+                    <h3 className="wms-ops-task-panel__title">
+                      {t("tasks.modal.assignments.currentTitle")}
+                    </h3>
+                  </div>
+                  <span className="wms-ops-task-panel__count">
+                    {t("tasks.modal.assignments.selectedCount", {
+                      count: detail.assignments.length,
+                    })}
+                  </span>
+                </div>
+                <div className="wms-ops-task-panel__body">
+                  {detail.assignments.length === 0 ? (
+                    <div className="wms-ops-task-empty">
+                      {t("tasks.modal.assignments.noneAssigned")}
+                    </div>
+                  ) : (
+                    <div className="wms-ops-task-assignees">
+                      {detail.assignments.map((assignment) => (
+                        <div
+                          key={assignment.id}
+                          className="wms-ops-task-assignee wms-ops-task-assignee--readonly"
+                        >
+                          <div className="wms-ops-task-assignee__body">
+                            <span className="wms-ops-task-assignee__name">
+                              {assignment.displayName || assignment.username}
+                            </span>
+                            <span className="wms-ops-task-assignee__meta">
+                              {assignment.username}
+                            </span>
+                          </div>
+                          <OpsStatusBadge tone={inferOpsStatusTone(assignment.status)}>
+                            {goodsReceiptEnumLabel(t, "assignmentStatus", assignment.status)}
+                          </OpsStatusBadge>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </section>
+            </div>
+          </TabsContent>
+
+          <TabsContent
+            value="lines"
+            className="wms-ops-scrollbar mt-0 min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6"
+          >
+            <section className="space-y-3">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h3 className="wms-ops-detail-section-title !border-0 !p-0">
+                    {t("tasks.modal.tabs.lines")}
+                  </h3>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {t("list.linesShown", {
+                      visible: visibleLines.length,
+                      total: detail.lines.length,
+                    })}
+                  </p>
+                </div>
+                <label className="relative block w-full sm:max-w-sm">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                  <input
+                    value={lineSearch}
+                    onChange={(event) => setLineSearch(event.target.value)}
+                    className="input wms-ops-detail-search min-h-11 !pl-10"
+                    placeholder={t("list.lineSearchPlaceholder")}
+                    aria-label={t("list.lineSearchAria")}
+                  />
+                </label>
+              </div>
+
+              {visibleLines.length === 0 ? (
+                <div className="wms-ops-task-empty">
+                  <PackageOpen className="size-7 opacity-40" aria-hidden />
+                  {t("list.noMatchingLines")}
+                </div>
+              ) : (
+                <div className="wms-ops-gr-detail-lines-wrap overflow-x-auto">
+                  <table className="wms-ops-gr-detail-lines-table w-full min-w-[880px] text-sm">
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>{t("list.stock")}</th>
+                        <th>{t("list.yap")}</th>
+                        <th className="wms-ops-gr-detail-lines-table__num">
+                          {t("tasks.modal.info.planned")}
+                        </th>
+                        <th className="wms-ops-gr-detail-lines-table__num">
+                          {t("tasks.modal.table.received")}
+                        </th>
+                        <th className="wms-ops-gr-detail-lines-table__num">
+                          {t("list.remaining")}
+                        </th>
+                        <th>{t("list.status")}</th>
+                        <th>{t("list.quality")}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {visibleLines.map((line) => (
+                        <tr key={line.id}>
+                          <td>{line.sequenceNo}</td>
+                          <td>
+                            <StockIdentityCell
+                              stockId={line.stockId}
+                              stockCode={line.stockCode}
+                              stockName={line.stockName}
+                              branchCode={task.branchCode}
+                              nameClassName="wms-ops-gr-detail-lines-table__muted"
+                            />
+                          </td>
+                          <td>{line.yapCode || "—"}</td>
+                          <td className="wms-ops-gr-detail-lines-table__num">
+                            {`${formatProjectNumber(line.plannedQuantity)} ${line.unitCode}`}
+                          </td>
+                          <td className="wms-ops-gr-detail-lines-table__num">
+                            {formatProjectNumber(line.processedQuantity)}
+                          </td>
+                          <td className="wms-ops-gr-detail-lines-table__num wms-ops-gr-detail-lines-table__accent">
+                            {formatProjectNumber(
+                              Math.max(0, line.plannedQuantity - line.processedQuantity),
+                            )}
+                          </td>
+                          <td>
+                            <OpsStatusBadge tone={inferOpsStatusTone(line.status)}>
+                              {goodsReceiptEnumLabel(t, "lineStatus", line.status)}
+                            </OpsStatusBadge>
+                          </td>
+                          <td>
+                            <span
+                              className={cn(
+                                "wms-ops-task-line-flag",
+                                line.requireQualityControl
+                                  ? "wms-ops-task-line-flag--quality"
+                                  : "wms-ops-task-line-flag--direct",
+                              )}
+                            >
+                              {line.requireQualityControl
+                                ? t("tasks.modal.line.qualityRequired")
+                                : t("tasks.modal.line.directDispatch")}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </section>
+          </TabsContent>
+
+          <TabsContent
+            value="ops"
+            className="wms-ops-scrollbar mt-0 min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6"
+          >
+            {assignedOnly ? (
+              <div className="space-y-3">
+                {task.labelStrategy === "PreGenerate" && (
+                  <PreLabelPanel
+                    detail={detail}
+                    onLabelsChanged={() => setLabelsRevision((value) => value + 1)}
+                  />
+                )}
+                {task.labelStrategy === "GenerateOnReceipt" && (
+                  <ReceiptGeneratedLabelsPanel detail={detail} />
+                )}
+                {task.status === "InProgress" ? (
+                  <TaskScanPanel
+                    detail={detail}
+                    labelsRevision={labelsRevision}
+                    reload={reload}
+                  />
+                ) : (
+                  <div className="wms-ops-task-note">
+                    {t("tasks.modal.scan.startFirst")}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <AssigneePickerPanel
+                  users={users}
+                  selectedUsers={selectedUsers}
+                  setSelectedUsers={setSelectedUsers}
+                  busy={busy}
+                  save={save}
+                />
+                {task.labelStrategy === "PreGenerate" && (
+                  <PreLabelPanel
+                    detail={detail}
+                    onLabelsChanged={() => setLabelsRevision((value) => value + 1)}
+                  />
+                )}
+                {task.labelStrategy === "GenerateOnReceipt" && (
+                  <ReceiptGeneratedLabelsPanel detail={detail} />
+                )}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function AssigneePickerPanel({
+  users,
+  selectedUsers,
+  setSelectedUsers,
+  busy,
+  save,
+}: {
+  users: ActiveUserOption[];
+  selectedUsers: number[];
+  setSelectedUsers: (ids: number[]) => void;
+  busy: boolean;
+  save: () => void;
+}): ReactElement {
+  const { t } = useModuleTranslation("goods-receipt-v2");
+  const [search, setSearch] = useState("");
+  const normalized = search.trim().toLocaleUpperCase("tr-TR");
+  const visibleUsers = useMemo(() => {
+    if (!normalized) return users;
+    return users.filter((user) =>
+      [user.firstName, user.lastName, user.username, user.email].some((value) =>
+        String(value ?? "")
+          .toLocaleUpperCase("tr-TR")
+          .includes(normalized),
+      ),
+    );
+  }, [normalized, users]);
+  const visibleIds = visibleUsers.map((user) => user.id);
+  const allVisibleSelected =
+    visibleIds.length > 0 && visibleIds.every((id) => selectedUsers.includes(id));
+
   const toggle = (id: number) =>
     setSelectedUsers(
       selectedUsers.includes(id)
         ? selectedUsers.filter((x) => x !== id)
         : [...selectedUsers, id],
     );
+  const toggleVisible = () =>
+    setSelectedUsers(
+      allVisibleSelected
+        ? selectedUsers.filter((id) => !visibleIds.includes(id))
+        : [...new Set([...selectedUsers, ...visibleIds])],
+    );
+
   return (
-    <ResponsiveDialog
-      onClose={close}
-      title={t("tasks.modal.title", { taskNo: detail.task.taskNo })}
-      description={t("tasks.modal.description")}
-      className="!max-w-6xl"
-    >
-      <header className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-cyan-500">
-            {t("tasks.modal.eyebrow")}
-          </p>
-          <h2 className="text-xl font-bold">{detail.task.taskNo}</h2>
-          <p className="text-sm text-slate-500">
-            {detail.task.documentNo} · {detail.task.supplierCode}{" "}
-            {detail.task.supplierName}
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={close}
-          aria-label={t("close")}
-          className="grid size-11 shrink-0 place-items-center rounded-xl hover:bg-black/5 dark:hover:bg-white/10"
-        >
-          <X className="size-5" />
-        </button>
-      </header>
-      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        <Info
-          label={t("tasks.modal.info.status")}
-          value={goodsReceiptEnumLabel(t, "taskStatus", detail.task.status)}
-        />
-        <Info
-          label={t("tasks.modal.info.warehouse")}
-          value={`${detail.task.warehouseCode} · ${detail.task.warehouseName}`}
-        />
-        <Info label={t("tasks.modal.info.priority")} value={String(detail.task.priority)} />
-        <Info
-          label={t("tasks.modal.info.planned")}
-          value={formatProjectNumber(detail.task.plannedQuantity)}
-        />
-        <Info
-          label={t("tasks.modal.info.started")}
-          value={
-            detail.task.startedAtUtc
-              ? formatProjectDateTime(detail.task.startedAtUtc)
-              : "—"
-          }
-        />
-      </div>
-      <div className="mt-5 overflow-x-auto rounded-xl border border-[var(--wms-app-border)]">
-        <table className="w-full text-sm">
-          <thead className="bg-black/5 text-left dark:bg-white/5">
-            <tr>
-              <th className="p-3">#</th>
-              <th className="p-3">{t("tasks.modal.table.stock")}</th>
-              <th className="p-3">{t("list.yap")}</th>
-              <th className="p-3 text-right">{t("tasks.modal.info.planned")}</th>
-              <th className="p-3 text-right">{t("tasks.modal.table.received")}</th>
-              <th className="p-3">{t("tasks.modal.info.status")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {detail.lines.map((line) => (
-              <tr
-                key={line.id}
-                className="border-t border-[var(--wms-app-border)]"
-              >
-                <td className="p-3">{line.sequenceNo}</td>
-                <td className="p-3">
-                  <StockIdentityCell
-                    stockId={line.stockId}
-                    stockCode={line.stockCode}
-                    stockName={line.stockName}
-                    branchCode={detail.task.branchCode}
-                  />
-                  <div
-                    className={`mt-1 text-[11px] font-semibold ${
-                      line.requireQualityControl
-                        ? "text-amber-500"
-                        : "text-emerald-500"
-                    }`}
-                  >
-                    {line.requireQualityControl
-                      ? t("tasks.modal.line.qualityRequired")
-                      : t("tasks.modal.line.directDispatch")}
-                  </div>
-                </td>
-                <td className="p-3">{line.yapCode || "—"}</td>
-                <td className="p-3 text-right">
-                  {formatProjectNumber(line.plannedQuantity)} {line.unitCode}
-                </td>
-                <td className="p-3 text-right">
-                  {formatProjectNumber(line.processedQuantity)}
-                </td>
-                <td className="p-3">
-                  {goodsReceiptEnumLabel(t, "lineStatus", line.status)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {assignedOnly ? (
-        <>
-          <div className="mt-5 flex flex-wrap justify-end gap-3">
-            <button
-              type="button"
-              disabled={busy || detail.task.myAssignmentStatus !== "Assigned"}
-              onClick={accept}
-              className="inline-flex items-center gap-2 rounded-xl border border-cyan-500/40 px-4 py-2 font-semibold text-cyan-500 disabled:opacity-40"
-            >
-              <Check className="size-4" />
-              {t("tasks.modal.actions.acceptAssignment")}
-            </button>
-            <button
-              type="button"
-              disabled={
-                busy ||
-                !["Assigned", "Accepted"].includes(
-                  detail.task.myAssignmentStatus || "",
-                )
-              }
-              onClick={start}
-              className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-4 py-2 font-semibold text-white disabled:opacity-40"
-            >
-              <Play className="size-4" />
-              {t("tasks.modal.actions.startTask")}
-            </button>
+    <section className="wms-ops-task-panel">
+      <div className="wms-ops-task-panel__head">
+        <div className="wms-ops-task-panel__title-row">
+          <span className="wms-ops-task-panel__icon" aria-hidden>
+            <UserRoundCog className="size-3.5" />
+          </span>
+          <div className="min-w-0">
+            <h3 className="wms-ops-task-panel__title">
+              {t("createFlow.assignees.title")}
+            </h3>
+            <p className="wms-ops-task-panel__hint">
+              {t("tasks.modal.assignments.hint")}
+            </p>
           </div>
-          {detail.task.labelStrategy === "PreGenerate" && (
-            <PreLabelPanel
-              detail={detail}
-              onLabelsChanged={() => setLabelsRevision((value) => value + 1)}
+        </div>
+        <span className="wms-ops-task-panel__count">
+          {t("tasks.modal.assignments.selectedCount", { count: selectedUsers.length })}
+        </span>
+        <div className="wms-ops-task-panel__actions">
+          <label className="relative block w-48">
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              className="input min-h-9 !pl-9 text-sm"
+              placeholder={t("tasks.modal.assignments.searchPlaceholder")}
+              aria-label={t("tasks.modal.assignments.searchPlaceholder")}
             />
-          )}
-          {detail.task.labelStrategy === "GenerateOnReceipt" && (
-            <ReceiptGeneratedLabelsPanel detail={detail} />
-          )}
-          {detail.task.status === "InProgress" && (
-            <TaskScanPanel
-              detail={detail}
-              labelsRevision={labelsRevision}
-              reload={reload}
-            />
-          )}
-        </>
-      ) : (
-        <>
-          <section className="mt-5 rounded-xl border border-[var(--wms-app-border)] p-4">
-            <div className="mb-3 flex items-center gap-2">
-              <UserRoundCog className="size-5 text-cyan-500" />
-              <h3 className="font-bold">{t("createFlow.assignees.title")}</h3>
-            </div>
-            <div className="grid max-h-56 gap-2 overflow-auto sm:grid-cols-2 lg:grid-cols-3">
-              {users.map((user) => (
-                <label
+          </label>
+          <button
+            type="button"
+            className="wms-ops-task-chip-btn"
+            disabled={visibleIds.length === 0}
+            onClick={toggleVisible}
+          >
+            <ListChecks className="size-3.5" />
+            {allVisibleSelected
+              ? t("tasks.modal.assignments.clearVisible")
+              : t("tasks.modal.assignments.selectVisible")}
+          </button>
+          <OpsActionButton
+            onClick={save}
+            loading={busy}
+            disabled={selectedUsers.length === 0}
+          >
+            <Save className="size-4" />
+            {t("tasks.modal.actions.saveAssignments")}
+          </OpsActionButton>
+        </div>
+      </div>
+      <div className="wms-ops-task-panel__body">
+        {visibleUsers.length === 0 ? (
+          <div className="wms-ops-task-empty">
+            {t("tasks.modal.assignments.noUsers")}
+          </div>
+        ) : (
+          <div className="wms-ops-task-assignees">
+            {visibleUsers.map((user) => {
+              const checked = selectedUsers.includes(user.id);
+              const name =
+                `${user.firstName} ${user.lastName}`.trim() || user.username;
+              return (
+                <div
                   key={user.id}
-                  className="flex cursor-pointer items-center gap-3 rounded-xl border border-[var(--wms-app-border)] p-3"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => toggle(user.id)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      toggle(user.id);
+                    }
+                  }}
+                  className={cn(
+                    "wms-ops-task-assignee",
+                    checked && "wms-ops-task-assignee--selected",
+                  )}
                 >
-                  <input
-                    type="checkbox"
-                    checked={selectedUsers.includes(user.id)}
-                    onChange={() => toggle(user.id)}
+                  <OpsSkinCheckbox
+                    checked={checked}
+                    onCheckedChange={() => toggle(user.id)}
+                    aria-label={name}
                   />
-                  <span>
-                    <strong className="block text-sm">
-                      {`${user.firstName} ${user.lastName}`.trim() ||
-                        user.username}
-                    </strong>
-                    <small className="text-slate-500">
-                      {user.username} · {user.email}
-                    </small>
+                  <span className="wms-ops-task-assignee__body">
+                    <span className="wms-ops-task-assignee__name">{name}</span>
+                    <span
+                      className="wms-ops-task-assignee__meta"
+                      title={`${user.username} · ${user.email}`}
+                    >
+                      {`${user.username} · ${user.email}`}
+                    </span>
                   </span>
-                </label>
-              ))}
-            </div>
-            <div className="mt-4 flex justify-end">
-              <button
-                type="button"
-                disabled={busy || selectedUsers.length === 0}
-                onClick={save}
-                className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-4 py-2 font-semibold text-white disabled:opacity-40"
-              >
-                {busy ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <Save className="size-4" />
-                )}
-                {t("tasks.modal.actions.saveAssignments")}
-              </button>
-            </div>
-          </section>
-          {detail.task.labelStrategy === "PreGenerate" && (
-            <PreLabelPanel
-              detail={detail}
-              onLabelsChanged={() => setLabelsRevision((value) => value + 1)}
-            />
-          )}
-          {detail.task.labelStrategy === "GenerateOnReceipt" && (
-            <ReceiptGeneratedLabelsPanel detail={detail} />
-          )}
-        </>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function LifecycleButton({
+  label,
+  icon,
+  onClick,
+  disabled = false,
+}: {
+  label: string;
+  icon: ReactElement;
+  onClick: () => void;
+  disabled?: boolean;
+}): ReactElement {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={cn(
+        "wms-ops-detail-lifecycle__btn",
+        disabled && "opacity-45",
       )}
-    </ResponsiveDialog>
+    >
+      {icon}
+      {label}
+    </button>
   );
 }
 
@@ -571,32 +936,34 @@ function ReceiptGeneratedLabelsPanel({
   };
 
   return (
-    <section className="mt-4 rounded-xl border border-violet-500/25 bg-violet-500/5 p-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-start gap-3">
-          <Tags className="mt-0.5 size-5 text-violet-500" />
-          <div>
-            <h3 className="font-bold">{t("tasks.modal.receiptLabels.title")}</h3>
-            <p className="text-xs text-slate-500">
+    <section className="wms-ops-task-panel wms-ops-task-panel--violet">
+      <div className="wms-ops-task-panel__head">
+        <div className="wms-ops-task-panel__title-row">
+          <span className="wms-ops-task-panel__icon" aria-hidden>
+            <Tags className="size-3.5" />
+          </span>
+          <div className="min-w-0">
+            <h3 className="wms-ops-task-panel__title">
+              {t("tasks.modal.receiptLabels.title")}
+            </h3>
+            <p className="wms-ops-task-panel__hint">
               {t("tasks.modal.receiptLabels.hint")}
             </p>
           </div>
         </div>
-        <button
-          type="button"
-          disabled={busy || labels.length === 0}
-          onClick={() => void print()}
-          className="inline-flex items-center gap-2 rounded-xl border border-violet-500/40 px-4 py-2 font-semibold text-violet-500 disabled:opacity-40"
-        >
-          {busy ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : (
+        <div className="wms-ops-task-panel__actions">
+          <OpsActionButton
+            variant="secondary"
+            disabled={labels.length === 0}
+            loading={busy}
+            onClick={() => void print()}
+          >
             <Printer className="size-4" />
-          )}
-          {labels.length === 0
-            ? t("tasks.modal.receiptLabels.noneYet")
-            : t("tasks.modal.receiptLabels.printButton", { count: labels.length })}
-        </button>
+            {labels.length === 0
+              ? t("tasks.modal.receiptLabels.noneYet")
+              : t("tasks.modal.receiptLabels.printButton", { count: labels.length })}
+          </OpsActionButton>
+        </div>
       </div>
     </section>
   );
@@ -723,60 +1090,61 @@ function PreLabelPanel({
     }
   };
   return (
-    <section className="mt-4 rounded-xl border border-cyan-500/25 bg-cyan-500/5 p-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-start gap-3">
-          <Tags className="mt-0.5 size-5 text-cyan-500" />
-          <div>
-            <h3 className="font-bold">{t("tasks.modal.preLabel.title")}</h3>
-            <p className="text-xs text-slate-500">
+    <section className="wms-ops-task-panel">
+      <div className="wms-ops-task-panel__head">
+        <div className="wms-ops-task-panel__title-row">
+          <span className="wms-ops-task-panel__icon" aria-hidden>
+            <Tags className="size-3.5" />
+          </span>
+          <div className="min-w-0">
+            <h3 className="wms-ops-task-panel__title">
+              {t("tasks.modal.preLabel.title")}
+            </h3>
+            <p className="wms-ops-task-panel__hint">
               {t("tasks.modal.preLabel.hint")}
             </p>
           </div>
         </div>
-        <button
-          type="button"
-          disabled={busy || availableLabels.length > 0 || !hasOpenLines}
-          onClick={() => void create()}
-          className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-4 py-2 font-semibold text-white disabled:opacity-40"
-        >
-          {busy ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : (
+        <div className="wms-ops-task-panel__actions">
+          <OpsActionButton
+            disabled={availableLabels.length > 0 || !hasOpenLines}
+            loading={busy}
+            onClick={() => void create()}
+          >
             <Barcode className="size-4" />
-          )}
-          {availableLabels.length > 0
-            ? t("tasks.modal.preLabel.activeExists")
-            : hasOpenLines
-              ? t("tasks.modal.preLabel.createButton")
-              : t("tasks.modal.preLabel.noOpenLines")}
-        </button>
+            {availableLabels.length > 0
+              ? t("tasks.modal.preLabel.activeExists")
+              : hasOpenLines
+                ? t("tasks.modal.preLabel.createButton")
+                : t("tasks.modal.preLabel.noOpenLines")}
+          </OpsActionButton>
+        </div>
       </div>
       {availableLabels.length > 0 && (
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-cyan-500/25 bg-[var(--wms-app-surface)] p-3">
-          <div className="text-sm">
-            <strong className="block">
-              {generated?.batch.batchNo ?? detail.task.taskNo}
-            </strong>
-            <span className="text-xs text-slate-500">
-              {t("tasks.modal.preLabel.statusLine", { count: availableLabels.length, printed: printedCount })}
-            </span>
-          </div>
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => void print()}
-            className="inline-flex items-center gap-2 rounded-xl border border-cyan-500/40 px-4 py-2 font-semibold text-cyan-500 disabled:opacity-40"
-          >
-            {busy ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
+        <div className="wms-ops-task-panel__body">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="min-w-0">
+              <strong className="block truncate font-mono text-sm">
+                {generated?.batch.batchNo ?? detail.task.taskNo}
+              </strong>
+              <span className="text-xs text-slate-500">
+                {t("tasks.modal.preLabel.statusLine", {
+                  count: availableLabels.length,
+                  printed: printedCount,
+                })}
+              </span>
+            </div>
+            <OpsActionButton
+              variant="secondary"
+              loading={busy}
+              onClick={() => void print()}
+            >
               <Printer className="size-4" />
-            )}
-            {printedCount === availableLabels.length
-              ? t("tasks.modal.preLabel.reprintButton")
-              : t("tasks.modal.preLabel.printButton")}
-          </button>
+              {printedCount === availableLabels.length
+                ? t("tasks.modal.preLabel.reprintButton")
+                : t("tasks.modal.preLabel.printButton")}
+            </OpsActionButton>
+          </div>
         </div>
       )}
     </section>
@@ -898,14 +1266,13 @@ function TaskScanPanel({
     }
   };
   return (
-    <section className="mt-5 space-y-4">
+    <section className="space-y-3">
       {requiresPreLabel && (
         <div
-          className={`rounded-xl border p-3 text-sm ${
-            printedLabels.length > 0
-              ? "border-cyan-500/30 bg-cyan-500/5"
-              : "border-amber-500/30 bg-amber-500/5"
-          }`}
+          className={cn(
+            "wms-ops-task-note",
+            printedLabels.length === 0 && "wms-ops-task-note--warn",
+          )}
         >
           {printedLabels.length > 0
             ? t("tasks.modal.scan.preLabelReadyBanner", { count: printedLabels.length })
@@ -946,17 +1313,23 @@ function TaskScanPanel({
           setExpirationDate(value.expirationDate ?? "");
         }}
       />
-      <section className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4">
-        <div className="mb-4 flex items-start gap-3">
-          <ScanLine className="mt-0.5 size-5 text-emerald-500" />
-          <div>
-            <h3 className="font-bold">{t("tasks.modal.scan.resolvedTitle")}</h3>
-            <p className="text-xs text-slate-500">
-              {t("tasks.modal.scan.resolvedHint")}
-            </p>
+      <section className="wms-ops-task-panel wms-ops-task-panel--emerald">
+        <div className="wms-ops-task-panel__head">
+          <div className="wms-ops-task-panel__title-row">
+            <span className="wms-ops-task-panel__icon" aria-hidden>
+              <ScanLine className="size-3.5" />
+            </span>
+            <div className="min-w-0">
+              <h3 className="wms-ops-task-panel__title">
+                {t("tasks.modal.scan.resolvedTitle")}
+              </h3>
+              <p className="wms-ops-task-panel__hint">
+                {t("tasks.modal.scan.resolvedHint")}
+              </p>
+            </div>
           </div>
         </div>
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <div className="wms-ops-task-panel__body wms-ops-task-form-grid">
           <AppDropdown
             value={lineId}
             onValueChange={setLineId}
@@ -1000,38 +1373,34 @@ function TaskScanPanel({
             onChange={(e) => setExpirationDate(e.target.value)}
             aria-label={t("manual.expirationDate")}
           />
-          <button
-            type="button"
-            disabled={busy || !hasValidBarcode}
+          <OpsActionButton
+            disabled={!hasValidBarcode}
+            loading={busy}
             onClick={() => void submit()}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 font-semibold text-white disabled:opacity-40"
+            className="justify-center"
           >
-            {busy ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              <Check className="size-4" />
-            )}
+            <Check className="size-4" />
             {selectedLine?.requireQualityControl
               ? t("createFlow.sendToQuality")
               : t("createFlow.createDirect")}
-          </button>
+          </OpsActionButton>
         </div>
       </section>
     </section>
   );
 }
 
-function Info({
+function TaskField({
   label,
-  value,
+  children,
 }: {
   label: string;
-  value: string;
+  children: ReactNode;
 }): ReactElement {
   return (
-    <div className="rounded-xl border border-[var(--wms-app-border)] p-3">
-      <div className="text-xs text-slate-500">{label}</div>
-      <strong className="mt-1 block text-sm">{value}</strong>
+    <div className="wms-ops-detail-field">
+      <span className="wms-ops-detail-field__label">{label}</span>
+      <span className="wms-ops-detail-field__value">{children}</span>
     </div>
   );
 }

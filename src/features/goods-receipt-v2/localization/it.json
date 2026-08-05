@@ -794,7 +794,8 @@
         "warehouse": "Magazzino",
         "priority": "Priorità",
         "planned": "Pianificato",
-        "started": "Avviato"
+        "started": "Avviato",
+        "due": "Scadenza"
       },
       "table": {
         "stock": "Articolo",
@@ -862,7 +863,24 @@
         "wrongBarcodeError": "Questa attività è pre-etichettata. Scansiona il codice a barre sull'etichetta anticipata che hai generato e stampato, non il codice a barre prodotto/fornitore.",
         "resolvedTitle": "Record di ricevimento risolto",
         "resolvedHint": "Alla conferma finale, il movimento di magazzino, il saldo scaffale/seriale e, se richiesto, il record di qualità vengono creati nella stessa transazione.",
-        "remainingLabel": "Rimanenti {{quantity}} {{unit}}"
+        "remainingLabel": "Rimanenti {{quantity}} {{unit}}",
+        "startFirst": "Avvia l’ordine per registrare la ricezione fisica."
+      },
+      "tabs": {
+        "info": "Informazioni",
+        "lines": "Righe",
+        "assignments": "Assegnazioni",
+        "operation": "Operazione"
+      },
+      "assignments": {
+        "currentTitle": "Utenti assegnati",
+        "hint": "Seleziona gli utenti che eseguiranno questo ordine.",
+        "selectedCount": "{{count}} utenti",
+        "noneAssigned": "Nessun utente assegnato",
+        "searchPlaceholder": "Cerca utente...",
+        "selectVisible": "Seleziona tutto",
+        "clearVisible": "Rimuovi selezione",
+        "noUsers": "Nessun utente trovato"
       }
     }
   },
@@ -971,6 +989,14 @@
       "PreGeneratedLabel": "Etichetta pre-generata",
       "SupplierLabel": "Etichetta fornitore",
       "Import": "Importazione"
+    },
+    "receiptType": {
+      "PurchaseOrder": "Ordine di acquisto",
+      "Direct": "Diretto",
+      "TransferIn": "Entrata da trasferimento",
+      "CustomerReturn": "Reso cliente",
+      "ProductionReturn": "Reso di produzione",
+      "SteelPlate": "Lamiera di acciaio"
     }
   },
   "hub": {

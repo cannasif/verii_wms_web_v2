@@ -807,7 +807,8 @@
         "warehouse": "Warehouse",
         "priority": "Priority",
         "planned": "Planned",
-        "started": "Started"
+        "started": "Started",
+        "due": "Due"
       },
       "table": {
         "stock": "Stock",
@@ -875,7 +876,24 @@
         "wrongBarcodeError": "This task is pre-labeled. Scan the barcode on the pre-label you generated and printed, not the product/supplier barcode.",
         "resolvedTitle": "Resolved receipt record",
         "resolvedHint": "On final confirmation, the stock movement, shelf/serial balance and, if required, the quality record are created in the same transaction.",
-        "remainingLabel": "Remaining {{quantity}} {{unit}}"
+        "remainingLabel": "Remaining {{quantity}} {{unit}}",
+        "startFirst": "Start the task first to process the physical receipt."
+      },
+      "tabs": {
+        "info": "Info",
+        "lines": "Lines",
+        "assignments": "Assignments",
+        "operation": "Operation"
+      },
+      "assignments": {
+        "currentTitle": "Assigned users",
+        "hint": "Select the operation users who will execute this task.",
+        "selectedCount": "{{count}} users",
+        "noneAssigned": "No users assigned yet",
+        "searchPlaceholder": "Search user...",
+        "selectVisible": "Select All",
+        "clearVisible": "Clear Selection",
+        "noUsers": "No matching user found"
       }
     }
   },
@@ -984,6 +1002,14 @@
       "PreGeneratedLabel": "Pre-generated Label",
       "SupplierLabel": "Supplier Label",
       "Import": "Import"
+    },
+    "receiptType": {
+      "PurchaseOrder": "Purchase Order",
+      "Direct": "Direct",
+      "TransferIn": "Transfer In",
+      "CustomerReturn": "Customer Return",
+      "ProductionReturn": "Production Return",
+      "SteelPlate": "Steel Plate"
     }
   },
   "hub": {

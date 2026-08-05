@@ -243,7 +243,9 @@ export function GoodsReceiptDetailDialog({
                 >
                   {goodsReceiptEnumLabel(t, 'qualityStatus', header.qualityStatus)}
                 </OpsStatusBadge>
-                <OpsCodeBadge>{header.receiptType || '—'}</OpsCodeBadge>
+                <OpsCodeBadge>
+                  {goodsReceiptEnumLabel(t, 'receiptType', header.receiptType)}
+                </OpsCodeBadge>
               </div>
             ) : null}
           </div>
@@ -354,7 +356,9 @@ export function GoodsReceiptDetailDialog({
                         {goodsReceiptEnumLabel(t, 'processType', header.processType)}
                       </OpsDetailField>
                       <OpsDetailField label={t('list.receiptType')}>
-                        <OpsCodeBadge>{header.receiptType || '—'}</OpsCodeBadge>
+                        <OpsCodeBadge>
+                          {goodsReceiptEnumLabel(t, 'receiptType', header.receiptType)}
+                        </OpsCodeBadge>
                       </OpsDetailField>
                       <OpsDetailField label={t('list.initiationMode')}>
                         {goodsReceiptEnumLabel(t, 'initiationMode', header.initiationMode)}
