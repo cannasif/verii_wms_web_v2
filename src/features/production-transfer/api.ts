@@ -33,6 +33,7 @@ export interface ProductionTaskAssignment { userId: number; username: string; is
 export interface ProductionTaskLine {
   taskLineId: number; transferLineId: number; stockCode: string; stockName?: string;
   requestedQuantity: number; reservedQuantity: number; missingQuantity: number; processedQuantity: number;
+  totalRequestedQuantity: number;
   sourceLocationId?: number; sourceLocationCode?: string; sourceLocationName?: string;
 }
 export interface ProductionTask {

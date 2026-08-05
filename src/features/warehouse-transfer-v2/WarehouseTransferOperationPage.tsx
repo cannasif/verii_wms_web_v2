@@ -82,17 +82,21 @@ export function WarehouseTransferOperationPage({ variant = 'warehouse' }: { vari
     }
   }, [phase]);
 
+  // Kaynak/hedef depo aynıysa satırın varsayılan kaynak/hedef rafı her fazda geçerlidir. Depolar
+  // farklıysa, toplama fazının hedefi kaynak depo içinde kalmak zorunda (backend:
+  // WarehouseTransferOperationService.BuildMovementRequest — Pick için targetWarehouse=SourceWarehouseId),
+  // bu yüzden o durumda satırın (hedef depodaki) nihai rafı toplamaya önceden doldurulmaz — boş gelir,
+  // kullanıcı elle seçer. Aynı mantık simetrik olarak kaynak raf için kabul/yerleştirme fazlarında geçerli.
+  const sameWarehouse = detail?.header.sourceWarehouseId === detail?.header.targetWarehouseId;
   useEffect(() => {
     if (!detail) return;
     setLines(detail.lines.filter((line) => remaining(line) > 0).map((line) => ({
       lineId: line.id,
       quantity: remaining(line),
-      // Üretime Transfer Oluştur ekranında satıra girilmiş varsayılan kaynak/hedef raf varsa,
-      // hangi operasyon fazında olursak olalım önceden doldur (toplama, sevk, kabul, yerleştirme).
-      sourceLocationId: line.defaultSourceLocationId ?? null,
-      targetLocationId: line.defaultTargetLocationId ?? null,
-      sourceValue: line.defaultSourceLocationId ? String(line.defaultSourceLocationId) : null,
-      targetValue: line.defaultTargetLocationId ? String(line.defaultTargetLocationId) : null,
+      sourceLocationId: (phase === 'pick' || phase === 'dispatch' || sameWarehouse) ? line.defaultSourceLocationId ?? null : null,
+      targetLocationId: (phase !== 'pick' || sameWarehouse) ? line.defaultTargetLocationId ?? null : null,
+      sourceValue: (phase === 'pick' || phase === 'dispatch' || sameWarehouse) && line.defaultSourceLocationId ? String(line.defaultSourceLocationId) : null,
+      targetValue: (phase !== 'pick' || sameWarehouse) && line.defaultTargetLocationId ? String(line.defaultTargetLocationId) : null,
       // Draft'ta zaten girilmiş planlı seri/lot kayıtları varsa önceden doldur — pick sırasında
       // bunlarla birebir aynı değer gönderilmesi backend'de zorunlu (aksi halde 409 Conflict).
       trackings: line.trackings
@@ -273,7 +277,7 @@ export function WarehouseTransferOperationPage({ variant = 'warehouse' }: { vari
                     queryKey={['wt-op-source', phase, line.id, sourceWarehouseId]}
                     fetchPage={(request) => warehouseTransferApi.locations(request, sourceWarehouseId)}
                     toOption={(x) => ({ value: String(x.id), label: `${x.code} · ${x.name}` })}
-                    selectedOption={line.defaultSourceLocationId ? { value: String(line.defaultSourceLocationId), label: `${line.defaultSourceLocationCode} · ${line.defaultSourceLocationName}` } : undefined}
+                    selectedOption={(phase === 'pick' || phase === 'dispatch' || sameWarehouse) && line.defaultSourceLocationId ? { value: String(line.defaultSourceLocationId), label: `${line.defaultSourceLocationCode} · ${line.defaultSourceLocationName}` } : undefined}
                     value={edit.sourceValue}
                     onValueChange={(value) => patch(line.id, { sourceValue: value, sourceLocationId: Number(value) })}
                     searchable
@@ -284,7 +288,7 @@ export function WarehouseTransferOperationPage({ variant = 'warehouse' }: { vari
                     queryKey={['wt-op-target', phase, line.id, targetWarehouseId]}
                     fetchPage={(request) => warehouseTransferApi.locations(request, targetWarehouseId)}
                     toOption={(x) => ({ value: String(x.id), label: `${x.code} · ${x.name}` })}
-                    selectedOption={line.defaultTargetLocationId ? { value: String(line.defaultTargetLocationId), label: `${line.defaultTargetLocationCode} · ${line.defaultTargetLocationName}` } : undefined}
+                    selectedOption={(phase !== 'pick' || sameWarehouse) && line.defaultTargetLocationId ? { value: String(line.defaultTargetLocationId), label: `${line.defaultTargetLocationCode} · ${line.defaultTargetLocationName}` } : undefined}
                     value={edit.targetValue}
                     onValueChange={(value) => patch(line.id, { targetValue: value, targetLocationId: Number(value) })}
                     searchable
