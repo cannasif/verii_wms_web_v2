@@ -11,10 +11,11 @@ export interface ProductionTransferPolicy {
   id: number;
   branchCode: string;
   rowVersion: string;
-  productionOrderSource: 'NetsisErpFunctions' | 'WmsIntegrationTables';
+  productionOrderSource: 'NetsisErpFunctions' | 'WmsIntegrationTables' | 'ErpAndWms';
   wmsSourceSystemCode: string;
   requireProductionOrderReference: boolean;
   allowManualTransfer: boolean;
+  requireErpMasterDataForManualTransfer: boolean;
   allowAutomaticGeneration: boolean;
   checkMaterialAvailability: boolean;
   blockOnShortage: boolean;
