@@ -68,7 +68,10 @@ export interface CreateProductionPlanResult {
   replayed: boolean;
 }
 
-export interface NetsisProductionWorkOrder {
+export interface ProductionSourceWorkOrder {
+  sourceType: 'NetsisErpFunctions' | 'WmsIntegrationTables';
+  sourceSystemCode: string;
+  revisionNumber: number;
   workOrderNumber: string;
   branchCode: number;
   stockCode: string;
@@ -87,6 +90,8 @@ export interface NetsisProductionWorkOrder {
   issueWarehouseCode: number;
   isClosed: boolean;
 }
+
+export type NetsisProductionWorkOrder = ProductionSourceWorkOrder;
 
 export interface PreparedNetsisProductionMaterial {
   stockId?: number;

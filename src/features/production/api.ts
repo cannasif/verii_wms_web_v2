@@ -5,7 +5,7 @@ import type {
   CreateProductionPlanResult,
   ProductionPlanDetail,
   ProductionPlanGridRow,
-  NetsisProductionWorkOrder,
+  ProductionSourceWorkOrder,
   PreparedNetsisProductionWorkOrder,
 } from './types';
 
@@ -16,13 +16,13 @@ const unwrap = <T,>(result: Envelope<T>): T => {
 };
 
 export const productionApi = {
-  netsisWorkOrders: async (workOrderNumber?: string): Promise<NetsisProductionWorkOrder[]> =>
-    unwrap(await api.get<Envelope<NetsisProductionWorkOrder[]>>('/api/netsis-read/production/work-orders', {
-      params: { workOrderNumber: workOrderNumber?.trim() || undefined, includeClosed: false, take: 200 },
+  sourceWorkOrders: async (search?: string): Promise<ProductionSourceWorkOrder[]> =>
+    unwrap(await api.get<Envelope<ProductionSourceWorkOrder[]>>('/api/production/work-orders', {
+      params: { search: search?.trim() || undefined, take: 200 },
     })),
-  prepareNetsisWorkOrder: async (workOrderNumber: string): Promise<PreparedNetsisProductionWorkOrder> =>
+  prepareSourceWorkOrder: async (workOrderNumber: string): Promise<PreparedNetsisProductionWorkOrder> =>
     unwrap(await api.get<Envelope<PreparedNetsisProductionWorkOrder>>(
-      `/api/production/netsis-work-orders/${encodeURIComponent(workOrderNumber)}/prepare`,
+      `/api/production/work-orders/${encodeURIComponent(workOrderNumber)}/prepare`,
     )),
   create: async (payload: CreateProductionPlanRequest): Promise<CreateProductionPlanResult> =>
     unwrap(await api.post<Envelope<CreateProductionPlanResult>>('/api/production/plans', payload)),

@@ -88,8 +88,8 @@ export function ProductionHubPage(): ReactElement {
           code: 'PRD.ERP',
           href: '/warehouse/production/work-orders',
           icon: Boxes,
-          title: 'Netsis iş emirleri',
-          description: 'Açık iş emirlerini ve reçetelerini inceleyip WMS emri veya üretim transferi hazırlayın.',
+          title: 'Üretim iş emirleri',
+          description: 'Parametrede seçilen ERP veya WMS kaynağındaki açık iş emirlerini ve reçetelerini inceleyin.',
         },
         {
           key: 'create',
@@ -175,7 +175,7 @@ export function ProductionCreatePage(): ReactElement {
     setDocumentDate(sourcePrefill.workOrderDate?.slice(0, 10) || today());
     setPlannedStart(sourcePrefill.workOrderDate?.slice(0, 16) || '');
     setPlannedEnd(sourcePrefill.deliveryDate?.slice(0, 16) || '');
-    setDescription(`Netsis ${sourcePrefill.workOrderNumber} iş emrinden hazırlandı${sourcePrefill.projectCode ? ` · Proje: ${sourcePrefill.projectCode}` : ''}`);
+    setDescription(`${sourcePrefill.workOrderNumber} kaynak iş emrinden hazırlandı${sourcePrefill.projectCode ? ` · Proje: ${sourcePrefill.projectCode}` : ''}`);
     setMaterials(sourcePrefill.materials.map(row => ({
       localId: crypto.randomUUID(),
       stockValue: encode({ id: row.stockId!, branchCode, erpStockCode: row.stockCode, stockName: row.stockName, unitCode: row.unitCode } satisfies StockOption),
