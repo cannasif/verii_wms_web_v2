@@ -13,6 +13,7 @@ import { warehouseTransferApi } from '@/features/warehouse-transfer-v2/api/wareh
 import { productionTransferApi, type ProductionTaskBoard, type ProductionTransferPolicy } from './api';
 import type { LocationOption, WarehouseOption } from '@/features/goods-receipt-v2/types/goods-receipt.types';
 import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
+import { AppDropdown } from '@/components/shared/AppDropdown';
 import type { PreparedNetsisProductionWorkOrder } from '@/features/production/types';
 import { kkdApi } from '@/features/kkd/kkd-api';
 
@@ -62,16 +63,23 @@ export function ProductionTransferOperationPage(){
 }
 
 export function ProductionTransferPolicyPage(){
-  const {t}=useModuleTranslation('production-transfer');
+  const {t,moduleReady}=useModuleTranslation('production-transfer');
   const branchCode=useAuthStore(x=>x.branch?.code??'0');
   const[form,setForm]=useState<ProductionTransferPolicy>();
   const[busy,setBusy]=useState(false);
   useEffect(()=>{void productionTransferApi.policy(branchCode).then(setForm).catch((e:Error)=>toast.error(e.message));},[branchCode]);
-  if(!form)return <div className="p-8 text-center text-[var(--wms-app-text-muted)]">{t('policy.loading')}</div>;
+  if(!moduleReady||!form)return <div className="p-8 text-center text-[var(--wms-app-text-muted)]">Yükleniyor...</div>;
   const set=<K extends keyof ProductionTransferPolicy>(key:K,value:ProductionTransferPolicy[K])=>setForm(x=>x?{...x,[key]:value}:x);
   const save=async()=>{setBusy(true);try{setForm(await productionTransferApi.updatePolicy(form));toast.success(t('policy.saved'));}catch(e){toast.error(e instanceof Error?e.message:t('policy.saveFailed'));}finally{setBusy(false);}};
   return <section className="space-y-5">
     <header><div className="flex items-center gap-2 text-[var(--wms-brand-primary)]"><Factory/><span className="text-xs font-bold uppercase tracking-widest">{t('policy.eyebrow')}</span></div><h1 className="mt-2 text-2xl font-black">{t('policy.title')}</h1><p className="text-sm text-[var(--wms-app-text-muted)]">{t('policy.description')}</p></header>
+    <Panel title={t('policy.sections.source',{defaultValue:'İş emri ve reçete kaynağı'})}>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <label className="space-y-1.5 text-sm"><span className="font-semibold text-[var(--wms-app-text)]">{t('policy.fields.productionOrderSource',{defaultValue:'Üretim verisini nereden oku?'})}</span><AppDropdown value={form.productionOrderSource} onValueChange={value=>set('productionOrderSource',value as ProductionTransferPolicy['productionOrderSource'])} options={[{value:'NetsisErpFunctions',label:t('policy.source.netsis',{defaultValue:'Netsis ERP fonksiyonlarından oku'}),description:t('policy.source.netsisHint',{defaultValue:'İş emri ve reçete Netsis read fonksiyonlarından anlık hazırlanır.'})},{value:'WmsIntegrationTables',label:t('policy.source.wms',{defaultValue:'WMS entegrasyon tablolarından oku'}),description:t('policy.source.wmsHint',{defaultValue:'Windbox gibi onaylı bir planlama sistemi WMS kaynak tablolarını besler.'})}]}/></label>
+        <label className="space-y-1.5 text-sm"><span className="font-semibold text-[var(--wms-app-text)]">{t('policy.fields.wmsSourceSystemCode',{defaultValue:'Kaynak sistem kodu'})}</span><input className="input" maxLength={50} disabled={form.productionOrderSource!=='WmsIntegrationTables'} value={form.wmsSourceSystemCode} onChange={e=>set('wmsSourceSystemCode',e.target.value.toUpperCase())} placeholder="WINDBOX"/><span className="block text-xs text-[var(--wms-app-text-muted)]">{t('policy.fields.wmsSourceSystemCodeHint',{defaultValue:'RII_PR_SOURCE_ORDER kayıtlarındaki SourceSystemCode ile birebir eşleşir.'})}</span></label>
+      </div>
+      <div className="mt-4 rounded-xl border border-amber-500/25 bg-amber-500/5 p-4 text-sm text-[var(--wms-app-text-muted)]"><strong className="text-amber-500">{t('policy.source.boundaryTitle',{defaultValue:'Entegrasyon sınırı'})}</strong><span className="ml-2">{t('policy.source.boundaryText',{defaultValue:'Dış sistem yalnızca sürümlü kaynak iş emri ve reçete tablolarını besler. WMS operasyon emri, transfer, rezervasyon ve stok hareketini kendi transaction sınırında oluşturur.'})}</span></div>
+    </Panel>
     <Panel title={t('policy.sections.order')}><ToggleGrid>
       <Toggle label={t('policy.fields.requireProductionOrderReference')} value={form.requireProductionOrderReference} set={v=>set('requireProductionOrderReference',v)}/>
       <Toggle label={t('policy.fields.allowManualTransfer')} value={form.allowManualTransfer} set={v=>set('allowManualTransfer',v)}/>

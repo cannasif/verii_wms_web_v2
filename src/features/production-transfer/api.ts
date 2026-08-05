@@ -11,6 +11,8 @@ export interface ProductionTransferPolicy {
   id: number;
   branchCode: string;
   rowVersion: string;
+  productionOrderSource: 'NetsisErpFunctions' | 'WmsIntegrationTables';
+  wmsSourceSystemCode: string;
   requireProductionOrderReference: boolean;
   allowManualTransfer: boolean;
   allowAutomaticGeneration: boolean;
@@ -54,7 +56,7 @@ export const productionTransferApi = {
   policy: async (branchCode: string): Promise<ProductionTransferPolicy> =>
     unwrap(await api.get<Envelope<ProductionTransferPolicy>>('/api/production-transfers/policy', { params: { branchCode } })),
   updatePolicy: async (payload: ProductionTransferPolicy): Promise<ProductionTransferPolicy> =>
-    unwrap(await api.put<Envelope<ProductionTransferPolicy>>('/api/production-transfers/policy', payload)),
+    unwrap(await api.put<Envelope<ProductionTransferPolicy>>('/api/production-transfers/policy', payload, { useNativeHttpMethod: true })),
   taskBoard: async (id: number): Promise<ProductionTaskBoard> =>
     unwrap(await api.get<Envelope<ProductionTaskBoard>>(`/api/production-transfers/${id}/tasks`)),
   taskPool: async (): Promise<ProductionTaskPoolRow[]> =>
