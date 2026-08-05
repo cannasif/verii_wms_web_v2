@@ -1,211 +1,2037 @@
-import { useCallback,useEffect,useMemo,useState,type ReactElement,type ReactNode } from 'react';
-import { ArrowRight,ClipboardList,FileCheck2,FileSearch,Mail,Plus,RefreshCw,Settings2,ShoppingCart,Trash2,X } from 'lucide-react';
-import { toast } from 'sonner';
-import { Link,useNavigate } from 'react-router-dom';
-import { AdvancedDataGrid,type GridColumn,type GridRequest } from '@/components/shared/AdvancedDataGrid';
-import { AppDateInput,AppInput } from '@/components/shared/AppInput';
-import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
-import { ResponsiveDialog } from '@/components/shared/ResponsiveDialog';
-import { warehouseTransferApi } from '@/features/warehouse-transfer-v2/api/warehouse-transfer.api';
-import { goodsReceiptV2Api } from '@/features/goods-receipt-v2/api/goods-receipt.api';
-import type { CustomerOption,StockOption } from '@/features/goods-receipt-v2/types/goods-receipt.types';
-import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
-import { useAuthStore } from '@/stores/auth-store';
-import { formatProjectDate,formatProjectDateTime,formatProjectNumber } from '@/lib/project-format';
-import { procurementApi } from './api';
-import type { ProcurementDocumentDetail,ProcurementDocumentType,ProcurementGridRow,ProcurementPolicy,ProcurementRequestLineInput,ProcurementSummary,QuoteOrderLineInput,RfqRequestLineInput,SupplierQuoteLineInput } from './types';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactElement,
+  type ReactNode,
+} from "react";
+import {
+  ArrowRight,
+  ClipboardList,
+  FileCheck2,
+  FileSearch,
+  Mail,
+  Plus,
+  RefreshCw,
+  Settings2,
+  ShoppingCart,
+  Trash2,
+  X,
+} from "lucide-react";
+import { toast } from "sonner";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  AdvancedDataGrid,
+  type GridColumn,
+  type GridRequest,
+} from "@/components/shared/AdvancedDataGrid";
+import { AppDateInput, AppInput } from "@/components/shared/AppInput";
+import { AppDropdown } from "@/components/shared/AppDropdown";
+import { PagedAppDropdown } from "@/components/shared/PagedAppDropdown";
+import { ResponsiveDialog } from "@/components/shared/ResponsiveDialog";
+import { warehouseTransferApi } from "@/features/warehouse-transfer-v2/api/warehouse-transfer.api";
+import { goodsReceiptV2Api } from "@/features/goods-receipt-v2/api/goods-receipt.api";
+import type {
+  CustomerOption,
+  StockOption,
+} from "@/features/goods-receipt-v2/types/goods-receipt.types";
+import { usePermissionAccess } from "@/features/access-control/hooks/usePermissionAccess";
+import { useAuthStore } from "@/stores/auth-store";
+import {
+  formatProjectDate,
+  formatProjectDateTime,
+  formatProjectNumber,
+} from "@/lib/project-format";
+import { procurementApi } from "./api";
+import type {
+  ProcurementDocumentDetail,
+  ProcurementDocumentType,
+  ProcurementGridRow,
+  ProcurementPolicy,
+  ProcurementRequestLineInput,
+  ProcurementSummary,
+  QuoteOrderLineInput,
+  RfqRequestLineInput,
+  SupplierQuoteLineInput,
+} from "./types";
 
-const today=()=>new Date().toLocaleDateString('en-CA');
-const tabs:Array<{key:ProcurementDocumentType;label:string;description:string;href:string;icon:typeof ClipboardList}>=[
-  {key:'request',label:'Satınalma Talepleri',description:'Yeni ihtiyaçları ve onay durumlarını yönetin.',href:'/procurement/requests',icon:ClipboardList},
-  {key:'rfq',label:'Teklif Talepleri',description:'Onaylanan talepler için tedarikçilerden fiyat toplayın.',href:'/procurement/rfqs',icon:FileSearch},
-  {key:'quote',label:'Tedarikçi Teklifleri',description:'Gelen fiyat ve terminleri inceleyip karar verin.',href:'/procurement/quotes',icon:FileCheck2},
-  {key:'order',label:'Satınalma Siparişleri',description:'Siparişleri onaylayın, tedarikçiye gönderin ve mal kabul kaynağına dönüştürün.',href:'/procurement/orders',icon:ShoppingCart},
+const today = () => new Date().toLocaleDateString("en-CA");
+const tabs: Array<{
+  key: ProcurementDocumentType;
+  label: string;
+  description: string;
+  href: string;
+  icon: typeof ClipboardList;
+}> = [
+  {
+    key: "request",
+    label: "Satınalma Talepleri",
+    description: "Yeni ihtiyaçları ve onay durumlarını yönetin.",
+    href: "/procurement/requests",
+    icon: ClipboardList,
+  },
+  {
+    key: "rfq",
+    label: "Teklif Talepleri",
+    description: "Onaylanan talepler için tedarikçilerden fiyat toplayın.",
+    href: "/procurement/rfqs",
+    icon: FileSearch,
+  },
+  {
+    key: "quote",
+    label: "Tedarikçi Teklifleri",
+    description: "Gelen fiyat ve terminleri inceleyip karar verin.",
+    href: "/procurement/quotes",
+    icon: FileCheck2,
+  },
+  {
+    key: "order",
+    label: "Satınalma Siparişleri",
+    description:
+      "Siparişleri onaylayın, tedarikçiye gönderin ve mal kabul kaynağına dönüştürün.",
+    href: "/procurement/orders",
+    icon: ShoppingCart,
+  },
 ];
-const statusLabel:Record<string,string>={Draft:'Taslak',PendingApproval:'Onay Bekliyor',Approved:'Onaylandı',Rejected:'Reddedildi',Converted:'Tamamı Sipariş Verildi',PartiallyConverted:'Kısmi Sipariş Verildi',Cancelled:'İptal',Sent:'Gönderildi',Quoted:'Teklif Geldi',Closed:'Kapandı',Submitted:'Sunuldu',SentToSupplier:'Tedarikçiye Gönderildi',PartiallyReceived:'Kısmi Kabul',Received:'Tamamlandı'};
-const blankLine=():ProcurementRequestLineInput&{key:string;stockValue:string|null}=>({key:crypto.randomUUID(),stockValue:null,stockName:'',unitCode:'ADET',quantity:1});
-export function ProcurementHubPage():ReactElement{
-  const {can}=usePermissionAccess();
-  const [summary,setSummary]=useState<ProcurementSummary>();
-  const [policyOpen,setPolicyOpen]=useState(false);
-  useEffect(()=>{void procurementApi.summary().then(setSummary).catch(e=>toast.error(e instanceof Error?e.message:'Satınalma özeti alınamadı.'));},[]);
-  const counters:Record<ProcurementDocumentType,number>={
-    request:(summary?.draftRequests??0)+(summary?.pendingRequests??0),
-    rfq:summary?.openRfqs??0,
-    quote:summary?.submittedQuotes??0,
-    order:(summary?.pendingOrders??0)+(summary?.approvedOpenOrders??0),
+const statusLabel: Record<string, string> = {
+  Draft: "Taslak",
+  PendingApproval: "Onay Bekliyor",
+  Approved: "Onaylandı",
+  Rejected: "Reddedildi",
+  Converted: "Tamamı Sipariş Verildi",
+  PartiallyConverted: "Kısmi Sipariş Verildi",
+  Cancelled: "İptal",
+  Sent: "Gönderildi",
+  Quoted: "Teklif Geldi",
+  Closed: "Kapandı",
+  Submitted: "Sunuldu",
+  SentToSupplier: "Tedarikçiye Gönderildi",
+  PartiallyReceived: "Kısmi Kabul",
+  Received: "Tamamlandı",
+};
+const blankLine = (): ProcurementRequestLineInput & {
+  key: string;
+  stockValue: string | null;
+} => ({
+  key: crypto.randomUUID(),
+  stockValue: null,
+  stockName: "",
+  unitCode: "ADET",
+  quantity: 1,
+});
+export function ProcurementHubPage(): ReactElement {
+  const { can } = usePermissionAccess();
+  const [summary, setSummary] = useState<ProcurementSummary>();
+  const [policyOpen, setPolicyOpen] = useState(false);
+  useEffect(() => {
+    void procurementApi
+      .summary()
+      .then(setSummary)
+      .catch((e) =>
+        toast.error(
+          e instanceof Error ? e.message : "Satınalma özeti alınamadı.",
+        ),
+      );
+  }, []);
+  const counters: Record<ProcurementDocumentType, number> = {
+    request: (summary?.draftRequests ?? 0) + (summary?.pendingRequests ?? 0),
+    rfq: summary?.openRfqs ?? 0,
+    quote: summary?.submittedQuotes ?? 0,
+    order: (summary?.pendingOrders ?? 0) + (summary?.approvedOpenOrders ?? 0),
   };
-  return <section className="space-y-5">
-    <header className="rounded-2xl border border-cyan-500/20 bg-[var(--wms-app-panel)] p-6">
-      <p className="text-xs font-semibold uppercase tracking-[.22em] text-cyan-500">PROCURE_TO_PAY / SATINALMA</p>
-      <div className="mt-2 flex flex-wrap items-end justify-between gap-4"><div><h1 className="text-3xl font-bold">Satınalma Süreç Merkezi</h1><p className="mt-2 max-w-3xl text-sm text-slate-500">İhtiyaç talebinden satınalma siparişine kadar her aşamayı ayrı iş kuyruğunda yönetin.</p></div>{can('WMS.PROCUREMENT.APPROVE')?<button className="btn btn-secondary" onClick={()=>setPolicyOpen(true)}><Settings2 size={16}/> Süreç politikası</button>:null}</div>
-    </header>
-    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">{tabs.map((step,index)=>{const Icon=step.icon;return <Link key={step.key} to={step.href} className="group rounded-2xl border border-cyan-500/15 bg-[var(--wms-app-panel)] p-5 transition hover:-translate-y-0.5 hover:border-cyan-500/40"><div className="flex items-start justify-between"><span className="rounded-xl bg-cyan-500/10 p-3 text-cyan-400"><Icon size={22}/></span><span className="rounded-full border border-cyan-500/20 px-2.5 py-1 text-xs font-semibold text-cyan-400">{counters[step.key]} açık</span></div><p className="mt-5 text-xs font-semibold uppercase tracking-wider text-slate-500">Aşama {index+1}</p><h2 className="mt-1 text-lg font-bold">{step.label}</h2><p className="mt-2 text-sm text-slate-500">{step.description}</p><span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-cyan-500">İş kuyruğunu aç <ArrowRight size={16} className="transition group-hover:translate-x-1"/></span></Link>})}</div>
-    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">{[
-      ['Taslak talep',summary?.draftRequests??0],['Onay bekleyen',summary?.pendingRequests??0],['Açık RFQ',summary?.openRfqs??0],['Gelen teklif',summary?.submittedQuotes??0],['Sipariş onayı',summary?.pendingOrders??0],['Mal kabule açık',summary?.approvedOpenOrders??0],
-    ].map(([label,value])=><div key={String(label)} className="rounded-xl border border-cyan-500/15 bg-[var(--wms-app-panel)] p-4"><p className="text-xs uppercase tracking-wider text-slate-500">{label}</p><p className="mt-2 text-2xl font-bold text-cyan-400">{value}</p></div>)}</div>
-    {policyOpen?<ProcurementPolicyDialog onClose={()=>setPolicyOpen(false)} onSaved={()=>{setPolicyOpen(false);toast.success('Satınalma politikası kaydedildi.');}}/>:null}
-  </section>;
+  return (
+    <section className="space-y-5">
+      <header className="rounded-2xl border border-cyan-500/20 bg-[var(--wms-app-panel)] p-6">
+        <p className="text-xs font-semibold uppercase tracking-[.22em] text-cyan-500">
+          PROCURE_TO_PAY / SATINALMA
+        </p>
+        <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold">Satınalma Süreç Merkezi</h1>
+            <p className="mt-2 max-w-3xl text-sm text-slate-500">
+              İhtiyaç talebinden satınalma siparişine kadar her aşamayı ayrı iş
+              kuyruğunda yönetin.
+            </p>
+          </div>
+          {can("WMS.PROCUREMENT.APPROVE") ? (
+            <button
+              className="btn btn-secondary"
+              onClick={() => setPolicyOpen(true)}
+            >
+              <Settings2 size={16} /> Süreç politikası
+            </button>
+          ) : null}
+        </div>
+      </header>
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {tabs.map((step, index) => {
+          const Icon = step.icon;
+          return (
+            <Link
+              key={step.key}
+              to={step.href}
+              className="group rounded-2xl border border-cyan-500/15 bg-[var(--wms-app-panel)] p-5 transition hover:-translate-y-0.5 hover:border-cyan-500/40"
+            >
+              <div className="flex items-start justify-between">
+                <span className="rounded-xl bg-cyan-500/10 p-3 text-cyan-400">
+                  <Icon size={22} />
+                </span>
+                <span className="rounded-full border border-cyan-500/20 px-2.5 py-1 text-xs font-semibold text-cyan-400">
+                  {counters[step.key]} açık
+                </span>
+              </div>
+              <p className="mt-5 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Aşama {index + 1}
+              </p>
+              <h2 className="mt-1 text-lg font-bold">{step.label}</h2>
+              <p className="mt-2 text-sm text-slate-500">{step.description}</p>
+              <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-cyan-500">
+                İş kuyruğunu aç{" "}
+                <ArrowRight
+                  size={16}
+                  className="transition group-hover:translate-x-1"
+                />
+              </span>
+            </Link>
+          );
+        })}
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+        {[
+          ["Taslak talep", summary?.draftRequests ?? 0],
+          ["Onay bekleyen", summary?.pendingRequests ?? 0],
+          ["Açık RFQ", summary?.openRfqs ?? 0],
+          ["Gelen teklif", summary?.submittedQuotes ?? 0],
+          ["Sipariş onayı", summary?.pendingOrders ?? 0],
+          ["Mal kabule açık", summary?.approvedOpenOrders ?? 0],
+        ].map(([label, value]) => (
+          <div
+            key={String(label)}
+            className="rounded-xl border border-cyan-500/15 bg-[var(--wms-app-panel)] p-4"
+          >
+            <p className="text-xs uppercase tracking-wider text-slate-500">
+              {label}
+            </p>
+            <p className="mt-2 text-2xl font-bold text-cyan-400">{value}</p>
+          </div>
+        ))}
+      </div>
+      {policyOpen ? (
+        <ProcurementPolicyDialog
+          onClose={() => setPolicyOpen(false)}
+          onSaved={() => {
+            setPolicyOpen(false);
+            toast.success("Satınalma politikası kaydedildi.");
+          }}
+        />
+      ) : null}
+    </section>
+  );
 }
 
-export function ProcurementPage({documentType}:{documentType:ProcurementDocumentType}):ReactElement{
-  const branch=useAuthStore(x=>x.branch?.code??'0');
-  const {can}=usePermissionAccess();
-  const navigate=useNavigate();
-  const type=documentType;
-  const [revision,setRevision]=useState(0);
-  const [detail,setDetail]=useState<ProcurementDocumentDetail>();
-  const [creating,setCreating]=useState(false);
-  const [rfqSource,setRfqSource]=useState<ProcurementDocumentDetail>();
-  const [quoteSource,setQuoteSource]=useState<ProcurementDocumentDetail>();
-  const [orderSource,setOrderSource]=useState<ProcurementDocumentDetail>();
-  const fetchPage=useCallback((request:GridRequest)=>procurementApi.paged(type,request),[type]);
-  const page=tabs.find(x=>x.key===type)??tabs[0];
-  const columns=useMemo<GridColumn<ProcurementGridRow>[]>(()=>[
-    {key:'documentNo',label:'Belge No',sortable:true,render:x=><button className="font-semibold text-cyan-500 hover:underline" onClick={()=>void procurementApi.detail(type,x.id).then(setDetail).catch(e=>toast.error(e.message))}>{x.documentNo}</button>},
-    {key:'documentDate',label:'Tarih',sortable:true,render:x=>formatProjectDate(x.documentDate)},
-    {key:'status',label:'Durum',sortable:true,render:x=><span className="rounded-full border border-cyan-500/25 px-2 py-1 text-xs text-cyan-400">{statusLabel[x.status]??x.status}</span>},
-    {key:'subject',label:'Konu',sortable:true,render:x=>x.subject},
-    {key:'counterparty',label:'Tedarikçi',render:x=>x.counterparty||'—'},
-    {key:'lineCount',label:'Satır',sortable:true,render:x=>formatProjectNumber(x.lineCount)},
-    {key:'totalAmount',label:'Toplam',render:x=>x.totalAmount?`${formatProjectNumber(x.totalAmount)} ${x.currencyCode}`:'—'},
-    {key:'dueDate',label:'Termin',render:x=>x.dueDate?formatProjectDate(x.dueDate):'—'},
-  ],[type]);
-  return <section className="space-y-5">
-    <header className="rounded-2xl border border-cyan-500/20 bg-[var(--wms-app-panel)] p-6">
-      <p className="text-xs font-semibold uppercase tracking-[.22em] text-cyan-500">PROCURE_TO_PAY / SATINALMA</p>
-      <div className="mt-2 flex flex-wrap items-end justify-between gap-4"><div><h1 className="text-3xl font-bold">{page.label}</h1><p className="mt-2 max-w-3xl text-sm text-slate-500">{page.description}</p></div>{type==='request'&&can('WMS.PROCUREMENT.REQUEST.MANAGE')?<button className="btn btn-primary" onClick={()=>setCreating(true)}><Plus size={16}/> Yeni ihtiyaç talebi</button>:null}</div>
-    </header>
-    <div className="flex flex-wrap items-center gap-2"><Link className="btn btn-secondary" to="/procurement"><ArrowRight size={16} className="rotate-180"/> Süreç merkezine dön</Link><button className="btn btn-secondary ml-auto" onClick={()=>setRevision(x=>x+1)}><RefreshCw size={16}/> Yenile</button></div>
-    <AdvancedDataGrid key={type} refreshKey={revision} pageKey={`procurement-${type}`} title={tabs.find(x=>x.key===type)?.label??'Satınalma'} description="Belgeye tıklayarak satırları ve karar geçmişini inceleyin." columns={columns} fetchPage={fetchPage}/>
-    {creating?<CreateRequestDialog branch={branch} onClose={()=>setCreating(false)} onSaved={()=>{setCreating(false);setRevision(x=>x+1);toast.success('Satınalma talebi oluşturuldu.');}}/>:null}
-    {detail?<DetailDialog detail={detail} can={can} onClose={()=>setDetail(undefined)} onCreateRfq={()=>{setRfqSource(detail);setDetail(undefined);}} onCreateQuote={()=>{setQuoteSource(detail);setDetail(undefined);}} onCreateOrder={()=>{setOrderSource(detail);setDetail(undefined);}} onChanged={async()=>{setDetail(await procurementApi.detail(detail.documentType,detail.id));setRevision(x=>x+1);}}/>:null}
-    {rfqSource?<CreateRfqDialog source={rfqSource} branch={branch} onClose={()=>setRfqSource(undefined)} onSaved={()=>{setRfqSource(undefined);toast.success('Teklif talebi oluşturuldu; göndermeden önce kontrol edebilirsiniz.');navigate('/procurement/rfqs');}}/>:null}
-    {quoteSource?<CreateQuoteDialog source={quoteSource} onClose={()=>setQuoteSource(undefined)} onSaved={()=>{setQuoteSource(undefined);toast.success('Tedarikçi teklifi kaydedildi.');navigate('/procurement/quotes');}}/>:null}
-    {orderSource?<CreateOrderFromQuoteDialog source={orderSource} onClose={()=>setOrderSource(undefined)} onSaved={()=>{setOrderSource(undefined);toast.success('Seçilen miktarlar için satınalma siparişi oluşturuldu.');navigate('/procurement/orders');}}/>:null}
-  </section>;
+export function ProcurementPage({
+  documentType,
+}: {
+  documentType: ProcurementDocumentType;
+}): ReactElement {
+  const branch = useAuthStore((x) => x.branch?.code ?? "0");
+  const { can } = usePermissionAccess();
+  const navigate = useNavigate();
+  const type = documentType;
+  const [revision, setRevision] = useState(0);
+  const [detail, setDetail] = useState<ProcurementDocumentDetail>();
+  const [policy, setPolicy] = useState<ProcurementPolicy>();
+  const [creating, setCreating] = useState(false);
+  const [rfqSource, setRfqSource] = useState<ProcurementDocumentDetail>();
+  const [quoteSource, setQuoteSource] = useState<ProcurementDocumentDetail>();
+  const [orderSource, setOrderSource] = useState<ProcurementDocumentDetail>();
+  useEffect(() => {
+    void procurementApi
+      .policy()
+      .then(setPolicy)
+      .catch((error) =>
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Satınalma politikası yüklenemedi.",
+        ),
+      );
+  }, [branch]);
+  const fetchPage = useCallback(
+    (request: GridRequest) => procurementApi.paged(type, request),
+    [type],
+  );
+  const page = tabs.find((x) => x.key === type) ?? tabs[0];
+  const columns = useMemo<GridColumn<ProcurementGridRow>[]>(
+    () => [
+      {
+        key: "documentNo",
+        label: "Belge No",
+        sortable: true,
+        render: (x) => (
+          <button
+            className="font-semibold text-cyan-500 hover:underline"
+            onClick={() =>
+              void procurementApi
+                .detail(type, x.id)
+                .then(setDetail)
+                .catch((e) => toast.error(e.message))
+            }
+          >
+            {x.documentNo}
+          </button>
+        ),
+      },
+      {
+        key: "documentDate",
+        label: "Tarih",
+        sortable: true,
+        render: (x) => formatProjectDate(x.documentDate),
+      },
+      {
+        key: "status",
+        label: "Durum",
+        sortable: true,
+        render: (x) => (
+          <span className="rounded-full border border-cyan-500/25 px-2 py-1 text-xs text-cyan-400">
+            {statusLabel[x.status] ?? x.status}
+          </span>
+        ),
+      },
+      {
+        key: "subject",
+        label: "Konu",
+        sortable: true,
+        render: (x) => x.subject,
+      },
+      {
+        key: "counterparty",
+        label: "Tedarikçi",
+        render: (x) => x.counterparty || "—",
+      },
+      {
+        key: "lineCount",
+        label: "Satır",
+        sortable: true,
+        render: (x) => formatProjectNumber(x.lineCount),
+      },
+      {
+        key: "totalAmount",
+        label: "Toplam",
+        render: (x) =>
+          x.totalAmount
+            ? `${formatProjectNumber(x.totalAmount)} ${x.currencyCode}`
+            : "—",
+      },
+      {
+        key: "dueDate",
+        label: "Termin",
+        render: (x) => (x.dueDate ? formatProjectDate(x.dueDate) : "—"),
+      },
+    ],
+    [type],
+  );
+  return (
+    <section className="space-y-5">
+      <header className="rounded-2xl border border-cyan-500/20 bg-[var(--wms-app-panel)] p-6">
+        <p className="text-xs font-semibold uppercase tracking-[.22em] text-cyan-500">
+          PROCURE_TO_PAY / SATINALMA
+        </p>
+        <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold">{page.label}</h1>
+            <p className="mt-2 max-w-3xl text-sm text-slate-500">
+              {page.description}
+            </p>
+          </div>
+          {type === "request" && can("WMS.PROCUREMENT.REQUEST.MANAGE") ? (
+            <button
+              className="btn btn-primary"
+              onClick={() => setCreating(true)}
+            >
+              <Plus size={16} /> Yeni ihtiyaç talebi
+            </button>
+          ) : null}
+        </div>
+      </header>
+      <div className="flex flex-wrap items-center gap-2">
+        <Link className="btn btn-secondary" to="/procurement">
+          <ArrowRight size={16} className="rotate-180" /> Süreç merkezine dön
+        </Link>
+        <button
+          className="btn btn-secondary ml-auto"
+          onClick={() => setRevision((x) => x + 1)}
+        >
+          <RefreshCw size={16} /> Yenile
+        </button>
+      </div>
+      <AdvancedDataGrid
+        key={type}
+        refreshKey={revision}
+        pageKey={`procurement-${type}`}
+        title={tabs.find((x) => x.key === type)?.label ?? "Satınalma"}
+        description="Belgeye tıklayarak satırları ve karar geçmişini inceleyin."
+        columns={columns}
+        fetchPage={fetchPage}
+      />
+      {creating ? (
+        <CreateRequestDialog
+          branch={branch}
+          onClose={() => setCreating(false)}
+          onSaved={() => {
+            setCreating(false);
+            setRevision((x) => x + 1);
+            toast.success("Satınalma talebi oluşturuldu.");
+          }}
+        />
+      ) : null}
+      {detail ? (
+        <DetailDialog
+          detail={detail}
+          policy={policy}
+          can={can}
+          onClose={() => setDetail(undefined)}
+          onCreateRfq={() => {
+            setRfqSource(detail);
+            setDetail(undefined);
+          }}
+          onCreateQuote={() => {
+            setQuoteSource(detail);
+            setDetail(undefined);
+          }}
+          onCreateOrder={() => {
+            setOrderSource(detail);
+            setDetail(undefined);
+          }}
+          onChanged={async () => {
+            setDetail(
+              await procurementApi.detail(detail.documentType, detail.id),
+            );
+            setRevision((x) => x + 1);
+          }}
+        />
+      ) : null}
+      {rfqSource ? (
+        <CreateRfqDialog
+          source={rfqSource}
+          branch={branch}
+          onClose={() => setRfqSource(undefined)}
+          onSaved={() => {
+            setRfqSource(undefined);
+            toast.success(
+              "Teklif talebi oluşturuldu; göndermeden önce kontrol edebilirsiniz.",
+            );
+            navigate("/procurement/rfqs");
+          }}
+        />
+      ) : null}
+      {quoteSource ? (
+        <CreateQuoteDialog
+          source={quoteSource}
+          onClose={() => setQuoteSource(undefined)}
+          onSaved={() => {
+            setQuoteSource(undefined);
+            toast.success("Tedarikçi teklifi kaydedildi.");
+            navigate("/procurement/quotes");
+          }}
+        />
+      ) : null}
+      {orderSource ? (
+        <CreateOrderFromQuoteDialog
+          source={orderSource}
+          onClose={() => setOrderSource(undefined)}
+          onSaved={() => {
+            setOrderSource(undefined);
+            toast.success(
+              "Seçilen miktarlar için satınalma siparişi oluşturuldu.",
+            );
+            navigate("/procurement/orders");
+          }}
+        />
+      ) : null}
+    </section>
+  );
 }
 
-export const ProcurementRequestsPage=():ReactElement=><ProcurementPage documentType="request"/>;
-export const ProcurementRfqsPage=():ReactElement=><ProcurementPage documentType="rfq"/>;
-export const ProcurementQuotesPage=():ReactElement=><ProcurementPage documentType="quote"/>;
-export const ProcurementOrdersPage=():ReactElement=><ProcurementPage documentType="order"/>;
+export const ProcurementRequestsPage = (): ReactElement => (
+  <ProcurementPage documentType="request" />
+);
+export const ProcurementRfqsPage = (): ReactElement => (
+  <ProcurementPage documentType="rfq" />
+);
+export const ProcurementQuotesPage = (): ReactElement => (
+  <ProcurementPage documentType="quote" />
+);
+export const ProcurementOrdersPage = (): ReactElement => (
+  <ProcurementPage documentType="order" />
+);
 
-function CreateRequestDialog({branch,onClose,onSaved}:{branch:string;onClose:()=>void;onSaved:()=>void}):ReactElement{
-  const [subject,setSubject]=useState('');const [requestDate,setRequestDate]=useState(today);const [requiredDate,setRequiredDate]=useState('');const [departmentCode,setDepartmentCode]=useState('');const [projectCode,setProjectCode]=useState('');const [description,setDescription]=useState('');const [lines,setLines]=useState([blankLine()]);const [busy,setBusy]=useState(false);
-  const patch=(key:string,next:Partial<(typeof lines)[number]>)=>setLines(xs=>xs.map(x=>x.key===key?{...x,...next}:x));
-  const save=async()=>{if(!subject.trim()||lines.some(x=>!x.stockName.trim()||x.quantity<=0)){toast.error('Konu ve geçerli stok satırları zorunludur.');return;}setBusy(true);try{await procurementApi.createRequest({requestDate,requiredDate:requiredDate||undefined,departmentCode:departmentCode||undefined,projectCode:projectCode||undefined,subject,description:description||undefined,lines:lines.map(x=>({stockId:x.stockId,stockCode:x.stockCode,stockName:x.stockName,unitCode:x.unitCode,quantity:x.quantity,requiredDate:x.requiredDate,projectCode:x.projectCode,description:x.description}))});onSaved();}catch(e){toast.error(e instanceof Error?e.message:'Talep oluşturulamadı.');}finally{setBusy(false);}};
-  return <ResponsiveDialog open onClose={onClose} title="Yeni satınalma talebi" description="İhtiyacı tanımlayın; tedarikçi ve fiyat süreci onaydan sonra RFQ aşamasında yürütülür." className="!max-w-6xl"><div className="space-y-5">
-    <div className="grid gap-4 md:grid-cols-2"><Field label="Talep konusu"><AppInput value={subject} onChange={e=>setSubject(e.target.value)} maxLength={250}/></Field><Field label="Departman"><AppInput value={departmentCode} onChange={e=>setDepartmentCode(e.target.value)}/></Field><Field label="Talep tarihi"><AppDateInput value={requestDate} onChange={e=>setRequestDate(e.target.value)}/></Field><Field label="İstenen tarih"><AppDateInput value={requiredDate} onChange={e=>setRequiredDate(e.target.value)}/></Field><Field label="Proje kodu"><AppInput value={projectCode} onChange={e=>setProjectCode(e.target.value)}/></Field><Field label="Açıklama"><AppInput value={description} onChange={e=>setDescription(e.target.value)}/></Field></div>
-    <div className="space-y-3"><div className="flex items-center justify-between"><h3 className="font-semibold">Talep satırları</h3><button className="btn btn-secondary" onClick={()=>setLines(x=>[...x,blankLine()])}><Plus size={15}/> Satır ekle</button></div>{lines.map((line,index)=><div key={line.key} className="grid gap-3 rounded-xl border border-cyan-500/15 p-4 md:grid-cols-[minmax(260px,2fr)_100px_120px_140px_42px]"><Field label={`Stok ${index+1}`}><PagedAppDropdown<StockOption> queryKey={['procurement-stock',branch]} fetchPage={r=>warehouseTransferApi.stocks(r,branch)} toOption={x=>({value:encodeURIComponent(JSON.stringify(x)),label:`${x.erpStockCode} · ${x.stockName}`,description:x.unitCode})} value={line.stockValue} onValueChange={value=>{const x=value?JSON.parse(decodeURIComponent(value)) as StockOption:null;patch(line.key,{stockValue:value,stockId:x?.id,stockCode:x?.erpStockCode,stockName:x?.stockName??'',unitCode:x?.unitCode??'ADET'});}} searchable minSearchLength={2}/></Field><Field label="Miktar"><AppInput type="number" min="0.000001" step="any" value={line.quantity} onChange={e=>patch(line.key,{quantity:Number(e.target.value)})}/></Field><Field label="Birim"><AppInput value={line.unitCode} onChange={e=>patch(line.key,{unitCode:e.target.value})}/></Field><Field label="Termin"><AppDateInput value={line.requiredDate??''} onChange={e=>patch(line.key,{requiredDate:e.target.value})}/></Field><button className="mt-6 text-rose-400" disabled={lines.length===1} onClick={()=>setLines(x=>x.filter(y=>y.key!==line.key))}><Trash2 size={18}/></button></div>)}</div>
-    <div className="flex justify-end gap-2"><button className="btn btn-secondary" onClick={onClose}>Vazgeç</button><button className="btn btn-primary" disabled={busy} onClick={()=>void save()}>{busy?'Kaydediliyor…':'Talebi oluştur'}</button></div>
-  </div></ResponsiveDialog>;
+function CreateRequestDialog({
+  branch,
+  onClose,
+  onSaved,
+}: {
+  branch: string;
+  onClose: () => void;
+  onSaved: () => void;
+}): ReactElement {
+  const [subject, setSubject] = useState("");
+  const [requestDate, setRequestDate] = useState(today);
+  const [requiredDate, setRequiredDate] = useState("");
+  const [departmentCode, setDepartmentCode] = useState("");
+  const [projectCode, setProjectCode] = useState("");
+  const [description, setDescription] = useState("");
+  const [lines, setLines] = useState([blankLine()]);
+  const [busy, setBusy] = useState(false);
+  const patch = (key: string, next: Partial<(typeof lines)[number]>) =>
+    setLines((xs) => xs.map((x) => (x.key === key ? { ...x, ...next } : x)));
+  const save = async () => {
+    if (
+      !subject.trim() ||
+      lines.some((x) => !x.stockName.trim() || x.quantity <= 0)
+    ) {
+      toast.error("Konu ve geçerli stok satırları zorunludur.");
+      return;
+    }
+    setBusy(true);
+    try {
+      await procurementApi.createRequest({
+        requestDate,
+        requiredDate: requiredDate || undefined,
+        departmentCode: departmentCode || undefined,
+        projectCode: projectCode || undefined,
+        subject,
+        description: description || undefined,
+        lines: lines.map((x) => ({
+          stockId: x.stockId,
+          stockCode: x.stockCode,
+          stockName: x.stockName,
+          unitCode: x.unitCode,
+          quantity: x.quantity,
+          requiredDate: x.requiredDate,
+          projectCode: x.projectCode,
+          description: x.description,
+        })),
+      });
+      onSaved();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Talep oluşturulamadı.");
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <ResponsiveDialog
+      open
+      onClose={onClose}
+      title="Yeni satınalma talebi"
+      description="İhtiyacı tanımlayın; tedarikçi ve fiyat süreci onaydan sonra RFQ aşamasında yürütülür."
+      className="!max-w-6xl"
+    >
+      <div className="space-y-5">
+        <div className="grid gap-4 md:grid-cols-2">
+          <Field label="Talep konusu">
+            <AppInput
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              maxLength={250}
+            />
+          </Field>
+          <Field label="Departman">
+            <AppInput
+              value={departmentCode}
+              onChange={(e) => setDepartmentCode(e.target.value)}
+            />
+          </Field>
+          <Field label="Talep tarihi">
+            <AppDateInput
+              value={requestDate}
+              onChange={(e) => setRequestDate(e.target.value)}
+            />
+          </Field>
+          <Field label="İstenen tarih">
+            <AppDateInput
+              value={requiredDate}
+              onChange={(e) => setRequiredDate(e.target.value)}
+            />
+          </Field>
+          <Field label="Proje kodu">
+            <AppInput
+              value={projectCode}
+              onChange={(e) => setProjectCode(e.target.value)}
+            />
+          </Field>
+          <Field label="Açıklama">
+            <AppInput
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </Field>
+        </div>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold">Talep satırları</h3>
+            <button
+              className="btn btn-secondary"
+              onClick={() => setLines((x) => [...x, blankLine()])}
+            >
+              <Plus size={15} /> Satır ekle
+            </button>
+          </div>
+          {lines.map((line, index) => (
+            <div
+              key={line.key}
+              className="grid gap-3 rounded-xl border border-cyan-500/15 p-4 md:grid-cols-[minmax(260px,2fr)_100px_120px_140px_42px]"
+            >
+              <Field label={`Stok ${index + 1}`}>
+                <PagedAppDropdown<StockOption>
+                  queryKey={["procurement-stock", branch]}
+                  fetchPage={(r) => warehouseTransferApi.stocks(r, branch)}
+                  toOption={(x) => ({
+                    value: encodeURIComponent(JSON.stringify(x)),
+                    label: `${x.erpStockCode} · ${x.stockName}`,
+                    description: x.unitCode,
+                  })}
+                  value={line.stockValue}
+                  onValueChange={(value) => {
+                    const x = value
+                      ? (JSON.parse(decodeURIComponent(value)) as StockOption)
+                      : null;
+                    patch(line.key, {
+                      stockValue: value,
+                      stockId: x?.id,
+                      stockCode: x?.erpStockCode,
+                      stockName: x?.stockName ?? "",
+                      unitCode: x?.unitCode ?? "ADET",
+                    });
+                  }}
+                  searchable
+                  minSearchLength={2}
+                />
+              </Field>
+              <Field label="Miktar">
+                <AppInput
+                  type="number"
+                  min="0.000001"
+                  step="any"
+                  value={line.quantity}
+                  onChange={(e) =>
+                    patch(line.key, { quantity: Number(e.target.value) })
+                  }
+                />
+              </Field>
+              <Field label="Birim">
+                <AppInput
+                  value={line.unitCode}
+                  onChange={(e) =>
+                    patch(line.key, { unitCode: e.target.value })
+                  }
+                />
+              </Field>
+              <Field label="Termin">
+                <AppDateInput
+                  value={line.requiredDate ?? ""}
+                  onChange={(e) =>
+                    patch(line.key, { requiredDate: e.target.value })
+                  }
+                />
+              </Field>
+              <button
+                className="mt-6 text-rose-400"
+                disabled={lines.length === 1}
+                onClick={() =>
+                  setLines((x) => x.filter((y) => y.key !== line.key))
+                }
+              >
+                <Trash2 size={18} />
+              </button>
+            </div>
+          ))}
+        </div>
+        <div className="flex justify-end gap-2">
+          <button className="btn btn-secondary" onClick={onClose}>
+            Vazgeç
+          </button>
+          <button
+            className="btn btn-primary"
+            disabled={busy}
+            onClick={() => void save()}
+          >
+            {busy ? "Kaydediliyor…" : "Talebi oluştur"}
+          </button>
+        </div>
+      </div>
+    </ResponsiveDialog>
+  );
 }
 
-function CreateRfqDialog({source,branch,onClose,onSaved}:{source:ProcurementDocumentDetail;branch:string;onClose:()=>void;onSaved:()=>void}):ReactElement{
-  const [dueDate,setDueDate]=useState(source.dueDate??'');
-  const [message,setMessage]=useState('');
-  const [suppliers,setSuppliers]=useState<CustomerOption[]>([]);
-  const [supplierValue,setSupplierValue]=useState<string|null>(null);
-  const [busy,setBusy]=useState(false);
-  const [lines,setLines]=useState<RfqRequestLineInput[]>(source.lines.filter(x=>x.openQuantity>0).map(x=>({requestLineId:x.id,quantity:x.openQuantity})));
-  const patchLine=(id:number,next:Partial<RfqRequestLineInput>)=>setLines(xs=>xs.map(x=>x.requestLineId===id?{...x,...next}:x));
-  const toggleLine=(id:number)=>setLines(xs=>xs.some(x=>x.requestLineId===id)?xs.filter(x=>x.requestLineId!==id):[...xs,{requestLineId:id,quantity:source.lines.find(x=>x.id===id)?.openQuantity??0}]);
-  const addSupplier=(value:string|null)=>{setSupplierValue(null);if(!value)return;const item=JSON.parse(decodeURIComponent(value)) as CustomerOption;setSuppliers(xs=>xs.some(x=>x.id===item.id)?xs:[...xs,item]);};
-  const save=async()=>{if(!dueDate||suppliers.length===0||lines.length===0||lines.some(x=>x.quantity<=0)){toast.error('Teklif son tarihi, en az bir tedarikçi ve geçerli bir kalem zorunludur.');return;}setBusy(true);try{await procurementApi.convertRequestToRfq(source.id,{responseDueDate:dueDate,supplierIds:suppliers.map(x=>x.id),buyerMessage:message||undefined,lines});onSaved();}catch(e){toast.error(e instanceof Error?e.message:'Teklif talebi oluşturulamadı.');}finally{setBusy(false);}};
-  return <ResponsiveDialog open onClose={onClose} title="Teklif talebi oluştur" description={`${source.documentNo} numaralı onaylı ihtiyaç için fiyat toplayın.`} className="!max-w-3xl"><div className="space-y-5">
-    <div className="rounded-xl border border-cyan-500/15 bg-cyan-500/5 p-4"><p className="text-xs uppercase text-slate-500">Kaynak ihtiyaç</p><p className="mt-1 font-semibold">{source.subject}</p><p className="mt-1 text-sm text-slate-500">{source.lines.length} kalem · toplam {formatProjectNumber(source.lines.reduce((sum,x)=>sum+x.quantity,0))} birim</p></div>
-    <Field label="Teklif cevap son tarihi *"><AppDateInput value={dueDate} min={today()} onChange={e=>setDueDate(e.target.value)}/></Field>
-    <Field label="Tedarikçi ekle *"><PagedAppDropdown<CustomerOption> queryKey={['procurement-suppliers',branch]} fetchPage={r=>goodsReceiptV2Api.customers(r,branch)} toOption={x=>({value:encodeURIComponent(JSON.stringify(x)),label:`${x.customerCode} · ${x.customerName}`})} value={supplierValue} onValueChange={addSupplier} searchable minSearchLength={2} placeholder="Kod veya unvan ile tedarikçi ara…"/></Field>
-    {suppliers.length?<div className="flex flex-wrap gap-2">{suppliers.map(x=><span key={x.id} className="inline-flex items-center gap-2 rounded-full border border-cyan-500/20 bg-cyan-500/5 px-3 py-1 text-sm">{x.customerCode} · {x.customerName}<button aria-label={`${x.customerName} tedarikçisini kaldır`} onClick={()=>setSuppliers(xs=>xs.filter(y=>y.id!==x.id))}><X size={14}/></button></span>)}</div>:<p className="rounded-lg border border-dashed border-cyan-500/20 p-3 text-sm text-slate-500">Henüz tedarikçi eklenmedi. Karşılaştırma için birden fazla tedarikçi seçebilirsiniz.</p>}
-    <div className="space-y-2"><div><h3 className="font-semibold">Fiyat istenecek kalemler</h3><p className="text-xs text-slate-500">Aynı talep için farklı kalem ve miktarlarla yeni teklif turları daha sonra da açılabilir.</p></div>{source.lines.filter(x=>x.openQuantity>0).map(line=>{const selected=lines.find(x=>x.requestLineId===line.id);return <div key={line.id} className={`grid items-center gap-3 rounded-xl border p-3 md:grid-cols-[32px_1fr_150px] ${selected?'border-cyan-500/35 bg-cyan-500/5':'border-cyan-500/10'}`}><input type="checkbox" checked={Boolean(selected)} onChange={()=>toggleLine(line.id)}/><div><b>{line.stockCode?`${line.stockCode} · `:''}{line.stockName}</b><p className="text-xs text-slate-500">Açık talep: {formatProjectNumber(line.openQuantity)} {line.unitCode}</p></div><Field label="Teklif miktarı"><AppInput type="number" min="0.000001" max={line.openQuantity} step="any" disabled={!selected} value={selected?.quantity??line.openQuantity} onChange={e=>patchLine(line.id,{quantity:Number(e.target.value)})}/></Field></div>})}</div>
-    <Field label="Tedarikçiye not"><AppInput value={message} onChange={e=>setMessage(e.target.value)} placeholder="Teslim, paketleme veya teklif koşulları…"/></Field>
-    <div className="flex justify-end gap-2"><button className="btn btn-secondary" onClick={onClose}>Vazgeç</button><button className="btn btn-primary" disabled={busy} onClick={()=>void save()}>{busy?'Oluşturuluyor…':'Teklif talebi oluştur'}</button></div>
-  </div></ResponsiveDialog>;
+function CreateRfqDialog({
+  source,
+  branch,
+  onClose,
+  onSaved,
+}: {
+  source: ProcurementDocumentDetail;
+  branch: string;
+  onClose: () => void;
+  onSaved: () => void;
+}): ReactElement {
+  const [dueDate, setDueDate] = useState(source.dueDate ?? "");
+  const [message, setMessage] = useState("");
+  const [suppliers, setSuppliers] = useState<CustomerOption[]>([]);
+  const [supplierValue, setSupplierValue] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [lines, setLines] = useState<RfqRequestLineInput[]>(
+    source.lines
+      .filter((x) => x.openQuantity > 0)
+      .map((x) => ({ requestLineId: x.id, quantity: x.openQuantity })),
+  );
+  const patchLine = (id: number, next: Partial<RfqRequestLineInput>) =>
+    setLines((xs) =>
+      xs.map((x) => (x.requestLineId === id ? { ...x, ...next } : x)),
+    );
+  const toggleLine = (id: number) =>
+    setLines((xs) =>
+      xs.some((x) => x.requestLineId === id)
+        ? xs.filter((x) => x.requestLineId !== id)
+        : [
+            ...xs,
+            {
+              requestLineId: id,
+              quantity:
+                source.lines.find((x) => x.id === id)?.openQuantity ?? 0,
+            },
+          ],
+    );
+  const addSupplier = (value: string | null) => {
+    setSupplierValue(null);
+    if (!value) return;
+    const item = JSON.parse(decodeURIComponent(value)) as CustomerOption;
+    setSuppliers((xs) =>
+      xs.some((x) => x.id === item.id) ? xs : [...xs, item],
+    );
+  };
+  const save = async () => {
+    if (
+      !dueDate ||
+      suppliers.length === 0 ||
+      lines.length === 0 ||
+      lines.some((x) => x.quantity <= 0)
+    ) {
+      toast.error(
+        "Teklif son tarihi, en az bir tedarikçi ve geçerli bir kalem zorunludur.",
+      );
+      return;
+    }
+    setBusy(true);
+    try {
+      await procurementApi.convertRequestToRfq(source.id, {
+        responseDueDate: dueDate,
+        supplierIds: suppliers.map((x) => x.id),
+        buyerMessage: message || undefined,
+        lines,
+      });
+      onSaved();
+    } catch (e) {
+      toast.error(
+        e instanceof Error ? e.message : "Teklif talebi oluşturulamadı.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <ResponsiveDialog
+      open
+      onClose={onClose}
+      title="Teklif talebi oluştur"
+      description={`${source.documentNo} numaralı onaylı ihtiyaç için fiyat toplayın.`}
+      className="!max-w-3xl"
+    >
+      <div className="space-y-5">
+        <div className="rounded-xl border border-cyan-500/15 bg-cyan-500/5 p-4">
+          <p className="text-xs uppercase text-slate-500">Kaynak ihtiyaç</p>
+          <p className="mt-1 font-semibold">{source.subject}</p>
+          <p className="mt-1 text-sm text-slate-500">
+            {source.lines.length} kalem · toplam{" "}
+            {formatProjectNumber(
+              source.lines.reduce((sum, x) => sum + x.quantity, 0),
+            )}{" "}
+            birim
+          </p>
+        </div>
+        <Field label="Teklif cevap son tarihi *">
+          <AppDateInput
+            value={dueDate}
+            min={today()}
+            onChange={(e) => setDueDate(e.target.value)}
+          />
+        </Field>
+        <Field label="Tedarikçi ekle *">
+          <PagedAppDropdown<CustomerOption>
+            queryKey={["procurement-suppliers", branch]}
+            fetchPage={(r) => goodsReceiptV2Api.customers(r, branch)}
+            toOption={(x) => ({
+              value: encodeURIComponent(JSON.stringify(x)),
+              label: `${x.customerCode} · ${x.customerName}`,
+            })}
+            value={supplierValue}
+            onValueChange={addSupplier}
+            searchable
+            minSearchLength={2}
+            placeholder="Kod veya unvan ile tedarikçi ara…"
+          />
+        </Field>
+        {suppliers.length ? (
+          <div className="flex flex-wrap gap-2">
+            {suppliers.map((x) => (
+              <span
+                key={x.id}
+                className="inline-flex items-center gap-2 rounded-full border border-cyan-500/20 bg-cyan-500/5 px-3 py-1 text-sm"
+              >
+                {x.customerCode} · {x.customerName}
+                <button
+                  aria-label={`${x.customerName} tedarikçisini kaldır`}
+                  onClick={() =>
+                    setSuppliers((xs) => xs.filter((y) => y.id !== x.id))
+                  }
+                >
+                  <X size={14} />
+                </button>
+              </span>
+            ))}
+          </div>
+        ) : (
+          <p className="rounded-lg border border-dashed border-cyan-500/20 p-3 text-sm text-slate-500">
+            Henüz tedarikçi eklenmedi. Karşılaştırma için birden fazla tedarikçi
+            seçebilirsiniz.
+          </p>
+        )}
+        <div className="space-y-2">
+          <div>
+            <h3 className="font-semibold">Fiyat istenecek kalemler</h3>
+            <p className="text-xs text-slate-500">
+              Aynı talep için farklı kalem ve miktarlarla yeni teklif turları
+              daha sonra da açılabilir.
+            </p>
+          </div>
+          {source.lines
+            .filter((x) => x.openQuantity > 0)
+            .map((line) => {
+              const selected = lines.find((x) => x.requestLineId === line.id);
+              return (
+                <div
+                  key={line.id}
+                  className={`grid items-center gap-3 rounded-xl border p-3 md:grid-cols-[32px_1fr_150px] ${selected ? "border-cyan-500/35 bg-cyan-500/5" : "border-cyan-500/10"}`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={Boolean(selected)}
+                    onChange={() => toggleLine(line.id)}
+                  />
+                  <div>
+                    <b>
+                      {line.stockCode ? `${line.stockCode} · ` : ""}
+                      {line.stockName}
+                    </b>
+                    <p className="text-xs text-slate-500">
+                      Açık talep: {formatProjectNumber(line.openQuantity)}{" "}
+                      {line.unitCode}
+                    </p>
+                  </div>
+                  <Field label="Teklif miktarı">
+                    <AppInput
+                      type="number"
+                      min="0.000001"
+                      max={line.openQuantity}
+                      step="any"
+                      disabled={!selected}
+                      value={selected?.quantity ?? line.openQuantity}
+                      onChange={(e) =>
+                        patchLine(line.id, { quantity: Number(e.target.value) })
+                      }
+                    />
+                  </Field>
+                </div>
+              );
+            })}
+        </div>
+        <Field label="Tedarikçiye not">
+          <AppInput
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder="Teslim, paketleme veya teklif koşulları…"
+          />
+        </Field>
+        <div className="flex justify-end gap-2">
+          <button className="btn btn-secondary" onClick={onClose}>
+            Vazgeç
+          </button>
+          <button
+            className="btn btn-primary"
+            disabled={busy}
+            onClick={() => void save()}
+          >
+            {busy ? "Oluşturuluyor…" : "Teklif talebi oluştur"}
+          </button>
+        </div>
+      </div>
+    </ResponsiveDialog>
+  );
 }
 
-function CreateQuoteDialog({source,onClose,onSaved}:{source:ProcurementDocumentDetail;onClose:()=>void;onSaved:()=>void}):ReactElement{
-  const suppliers=source.suppliers??[];
-  const [supplierId,setSupplierId]=useState(suppliers.length===1?String(suppliers[0].supplierId):'');
-  const [quoteNo,setQuoteNo]=useState('');
-  const [quoteDate,setQuoteDate]=useState(today);
-  const [validUntil,setValidUntil]=useState('');
-  const [currency,setCurrency]=useState('TRY');
-  const [exchangeRate,setExchangeRate]=useState(1);
-  const [note,setNote]=useState('');
-  const [busy,setBusy]=useState(false);
-  const [lines,setLines]=useState<SupplierQuoteLineInput[]>(source.lines.map(x=>({rfqLineId:x.id,quantity:x.quantity,unitPrice:0,discountRate:0,vatRate:20,deliveryDate:x.requiredDate})));
-  const patchLine=(id:number,next:Partial<SupplierQuoteLineInput>)=>setLines(xs=>xs.map(x=>x.rfqLineId===id?{...x,...next}:x));
-  const toggleLine=(lineId:number)=>setLines(xs=>xs.some(x=>x.rfqLineId===lineId)?xs.filter(x=>x.rfqLineId!==lineId):[...xs,{rfqLineId:lineId,quantity:source.lines.find(x=>x.id===lineId)?.quantity??0,unitPrice:0,discountRate:0,vatRate:20,deliveryDate:source.lines.find(x=>x.id===lineId)?.requiredDate}]);
-  const total=lines.reduce((sum,x)=>sum+x.quantity*x.unitPrice*(1-x.discountRate/100)*(1+x.vatRate/100),0);
-  const save=async()=>{if(!supplierId||!quoteNo.trim()||exchangeRate<=0||lines.some(x=>x.quantity<=0||x.unitPrice<0)){toast.error('Tedarikçi, teklif numarası, kur ve geçerli satırlar zorunludur.');return;}setBusy(true);try{await procurementApi.createQuote(source.id,{supplierId:Number(supplierId),quoteNo,quoteDate,validUntil:validUntil||undefined,currencyCode:currency,exchangeRate,note:note||undefined,lines});onSaved();}catch(e){toast.error(e instanceof Error?e.message:'Teklif kaydedilemedi.');}finally{setBusy(false);}};
-  return <ResponsiveDialog open onClose={onClose} title="Tedarikçi teklifini kaydet" description={`${source.documentNo} için gelen fiyat ve teslim koşullarını girin.`} className="!max-w-6xl"><div className="space-y-5">
-    <div className="grid gap-4 md:grid-cols-3"><Field label="Tedarikçi *"><select className="app-input w-full" value={supplierId} onChange={e=>setSupplierId(e.target.value)}><option value="">Tedarikçi seçin</option>{suppliers.map(x=><option key={x.supplierId} value={x.supplierId}>{x.supplierCode} · {x.supplierName}</option>)}</select></Field><Field label="Teklif numarası *"><AppInput value={quoteNo} onChange={e=>setQuoteNo(e.target.value)} maxLength={100}/></Field><Field label="Teklif tarihi"><AppDateInput value={quoteDate} onChange={e=>setQuoteDate(e.target.value)}/></Field><Field label="Geçerlilik tarihi"><AppDateInput value={validUntil} onChange={e=>setValidUntil(e.target.value)}/></Field><Field label="Para birimi"><AppInput value={currency} maxLength={3} onChange={e=>setCurrency(e.target.value.toUpperCase())}/></Field><Field label="Kur"><AppInput type="number" min="0.000001" step="any" value={exchangeRate} onChange={e=>setExchangeRate(Number(e.target.value))}/></Field></div>
-    <div className="space-y-3"><div className="flex items-end justify-between"><div><h3 className="font-semibold">Teklif kalemleri</h3><p className="text-xs text-slate-500">Tedarikçinin fiyat verdiği kalemleri seçin; fiyat vermediği kalemleri kapatabilirsiniz.</p></div><p className="text-right"><span className="block text-xs uppercase text-slate-500">Teklif toplamı</span><b className="text-lg text-cyan-400">{formatProjectNumber(total)} {currency}</b></p></div>{source.lines.map(line=>{const value=lines.find(x=>x.rfqLineId===line.id);return <div key={line.id} className={`grid items-center gap-3 rounded-xl border p-4 md:grid-cols-[32px_minmax(220px,2fr)_100px_130px_90px_90px_140px] ${value?'border-cyan-500/25':'border-cyan-500/10 opacity-70'}`}><input type="checkbox" checked={Boolean(value)} onChange={()=>toggleLine(line.id)}/><div><p className="text-xs uppercase text-slate-500">Stok</p><p className="mt-2 text-sm font-semibold">{line.stockCode?`${line.stockCode} · `:''}{line.stockName}</p></div><Field label="Miktar"><AppInput type="number" min="0.000001" max={line.quantity} step="any" disabled={!value} value={value?.quantity??line.quantity} onChange={e=>patchLine(line.id,{quantity:Number(e.target.value)})}/></Field><Field label="Birim fiyat"><AppInput type="number" min="0" step="any" disabled={!value} value={value?.unitPrice??0} onChange={e=>patchLine(line.id,{unitPrice:Number(e.target.value)})}/></Field><Field label="İskonto %"><AppInput type="number" min="0" max="100" disabled={!value} value={value?.discountRate??0} onChange={e=>patchLine(line.id,{discountRate:Number(e.target.value)})}/></Field><Field label="KDV %"><AppInput type="number" min="0" disabled={!value} value={value?.vatRate??20} onChange={e=>patchLine(line.id,{vatRate:Number(e.target.value)})}/></Field><Field label="Teslim"><AppDateInput disabled={!value} value={value?.deliveryDate??''} onChange={e=>patchLine(line.id,{deliveryDate:e.target.value||undefined})}/></Field></div>})}</div>
-    <Field label="Teklif notu"><AppInput value={note} onChange={e=>setNote(e.target.value)} placeholder="Ödeme, teslim veya teklif açıklaması…"/></Field>
-    <div className="flex justify-end gap-2"><button className="btn btn-secondary" onClick={onClose}>Vazgeç</button><button className="btn btn-primary" disabled={busy} onClick={()=>void save()}>{busy?'Kaydediliyor…':'Teklifi kaydet'}</button></div>
-  </div></ResponsiveDialog>;
+function CreateQuoteDialog({
+  source,
+  onClose,
+  onSaved,
+}: {
+  source: ProcurementDocumentDetail;
+  onClose: () => void;
+  onSaved: () => void;
+}): ReactElement {
+  const suppliers = source.suppliers ?? [];
+  const [supplierId, setSupplierId] = useState(
+    suppliers.length === 1 ? String(suppliers[0].supplierId) : "",
+  );
+  const [quoteNo, setQuoteNo] = useState("");
+  const [quoteDate, setQuoteDate] = useState(today);
+  const [validUntil, setValidUntil] = useState("");
+  const [currency, setCurrency] = useState("TRY");
+  const [exchangeRate, setExchangeRate] = useState(1);
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [lines, setLines] = useState<SupplierQuoteLineInput[]>(
+    source.lines.map((x) => ({
+      rfqLineId: x.id,
+      quantity: x.quantity,
+      unitPrice: 0,
+      discountRate: 0,
+      vatRate: 20,
+      deliveryDate: x.requiredDate,
+    })),
+  );
+  const patchLine = (id: number, next: Partial<SupplierQuoteLineInput>) =>
+    setLines((xs) =>
+      xs.map((x) => (x.rfqLineId === id ? { ...x, ...next } : x)),
+    );
+  const toggleLine = (lineId: number) =>
+    setLines((xs) =>
+      xs.some((x) => x.rfqLineId === lineId)
+        ? xs.filter((x) => x.rfqLineId !== lineId)
+        : [
+            ...xs,
+            {
+              rfqLineId: lineId,
+              quantity:
+                source.lines.find((x) => x.id === lineId)?.quantity ?? 0,
+              unitPrice: 0,
+              discountRate: 0,
+              vatRate: 20,
+              deliveryDate: source.lines.find((x) => x.id === lineId)
+                ?.requiredDate,
+            },
+          ],
+    );
+  const total = lines.reduce(
+    (sum, x) =>
+      sum +
+      x.quantity *
+        x.unitPrice *
+        (1 - x.discountRate / 100) *
+        (1 + x.vatRate / 100),
+    0,
+  );
+  const save = async () => {
+    if (
+      !supplierId ||
+      !quoteNo.trim() ||
+      exchangeRate <= 0 ||
+      lines.some((x) => x.quantity <= 0 || x.unitPrice < 0)
+    ) {
+      toast.error(
+        "Tedarikçi, teklif numarası, kur ve geçerli satırlar zorunludur.",
+      );
+      return;
+    }
+    setBusy(true);
+    try {
+      await procurementApi.createQuote(source.id, {
+        supplierId: Number(supplierId),
+        quoteNo,
+        quoteDate,
+        validUntil: validUntil || undefined,
+        currencyCode: currency,
+        exchangeRate,
+        note: note || undefined,
+        lines,
+      });
+      onSaved();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Teklif kaydedilemedi.");
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <ResponsiveDialog
+      open
+      onClose={onClose}
+      title="Tedarikçi teklifini kaydet"
+      description={`${source.documentNo} için gelen fiyat ve teslim koşullarını girin.`}
+      className="!max-w-6xl"
+    >
+      <div className="space-y-5">
+        <div className="grid gap-4 md:grid-cols-3">
+          <Field label="Tedarikçi *">
+            <select
+              className="app-input w-full"
+              value={supplierId}
+              onChange={(e) => setSupplierId(e.target.value)}
+            >
+              <option value="">Tedarikçi seçin</option>
+              {suppliers.map((x) => (
+                <option key={x.supplierId} value={x.supplierId}>
+                  {x.supplierCode} · {x.supplierName}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Teklif numarası *">
+            <AppInput
+              value={quoteNo}
+              onChange={(e) => setQuoteNo(e.target.value)}
+              maxLength={100}
+            />
+          </Field>
+          <Field label="Teklif tarihi">
+            <AppDateInput
+              value={quoteDate}
+              onChange={(e) => setQuoteDate(e.target.value)}
+            />
+          </Field>
+          <Field label="Geçerlilik tarihi">
+            <AppDateInput
+              value={validUntil}
+              onChange={(e) => setValidUntil(e.target.value)}
+            />
+          </Field>
+          <Field label="Para birimi">
+            <AppInput
+              value={currency}
+              maxLength={3}
+              onChange={(e) => setCurrency(e.target.value.toUpperCase())}
+            />
+          </Field>
+          <Field label="Kur">
+            <AppInput
+              type="number"
+              min="0.000001"
+              step="any"
+              value={exchangeRate}
+              onChange={(e) => setExchangeRate(Number(e.target.value))}
+            />
+          </Field>
+        </div>
+        <div className="space-y-3">
+          <div className="flex items-end justify-between">
+            <div>
+              <h3 className="font-semibold">Teklif kalemleri</h3>
+              <p className="text-xs text-slate-500">
+                Tedarikçinin fiyat verdiği kalemleri seçin; fiyat vermediği
+                kalemleri kapatabilirsiniz.
+              </p>
+            </div>
+            <p className="text-right">
+              <span className="block text-xs uppercase text-slate-500">
+                Teklif toplamı
+              </span>
+              <b className="text-lg text-cyan-400">
+                {formatProjectNumber(total)} {currency}
+              </b>
+            </p>
+          </div>
+          {source.lines.map((line) => {
+            const value = lines.find((x) => x.rfqLineId === line.id);
+            return (
+              <div
+                key={line.id}
+                className={`grid items-center gap-3 rounded-xl border p-4 md:grid-cols-[32px_minmax(220px,2fr)_100px_130px_90px_90px_140px] ${value ? "border-cyan-500/25" : "border-cyan-500/10 opacity-70"}`}
+              >
+                <input
+                  type="checkbox"
+                  checked={Boolean(value)}
+                  onChange={() => toggleLine(line.id)}
+                />
+                <div>
+                  <p className="text-xs uppercase text-slate-500">Stok</p>
+                  <p className="mt-2 text-sm font-semibold">
+                    {line.stockCode ? `${line.stockCode} · ` : ""}
+                    {line.stockName}
+                  </p>
+                </div>
+                <Field label="Miktar">
+                  <AppInput
+                    type="number"
+                    min="0.000001"
+                    max={line.quantity}
+                    step="any"
+                    disabled={!value}
+                    value={value?.quantity ?? line.quantity}
+                    onChange={(e) =>
+                      patchLine(line.id, { quantity: Number(e.target.value) })
+                    }
+                  />
+                </Field>
+                <Field label="Birim fiyat">
+                  <AppInput
+                    type="number"
+                    min="0"
+                    step="any"
+                    disabled={!value}
+                    value={value?.unitPrice ?? 0}
+                    onChange={(e) =>
+                      patchLine(line.id, { unitPrice: Number(e.target.value) })
+                    }
+                  />
+                </Field>
+                <Field label="İskonto %">
+                  <AppInput
+                    type="number"
+                    min="0"
+                    max="100"
+                    disabled={!value}
+                    value={value?.discountRate ?? 0}
+                    onChange={(e) =>
+                      patchLine(line.id, {
+                        discountRate: Number(e.target.value),
+                      })
+                    }
+                  />
+                </Field>
+                <Field label="KDV %">
+                  <AppInput
+                    type="number"
+                    min="0"
+                    disabled={!value}
+                    value={value?.vatRate ?? 20}
+                    onChange={(e) =>
+                      patchLine(line.id, { vatRate: Number(e.target.value) })
+                    }
+                  />
+                </Field>
+                <Field label="Teslim">
+                  <AppDateInput
+                    disabled={!value}
+                    value={value?.deliveryDate ?? ""}
+                    onChange={(e) =>
+                      patchLine(line.id, {
+                        deliveryDate: e.target.value || undefined,
+                      })
+                    }
+                  />
+                </Field>
+              </div>
+            );
+          })}
+        </div>
+        <Field label="Teklif notu">
+          <AppInput
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Ödeme, teslim veya teklif açıklaması…"
+          />
+        </Field>
+        <div className="flex justify-end gap-2">
+          <button className="btn btn-secondary" onClick={onClose}>
+            Vazgeç
+          </button>
+          <button
+            className="btn btn-primary"
+            disabled={busy}
+            onClick={() => void save()}
+          >
+            {busy ? "Kaydediliyor…" : "Teklifi kaydet"}
+          </button>
+        </div>
+      </div>
+    </ResponsiveDialog>
+  );
 }
 
-function CreateOrderFromQuoteDialog({source,onClose,onSaved}:{source:ProcurementDocumentDetail;onClose:()=>void;onSaved:()=>void}):ReactElement{
-  const available=source.lines.filter(x=>x.openQuantity>0);
-  const [lines,setLines]=useState<QuoteOrderLineInput[]>(available.map(x=>({quoteLineId:x.id,quantity:x.openQuantity})));
-  const [orderDate,setOrderDate]=useState(today);
-  const [deliveryDate,setDeliveryDate]=useState(source.dueDate??'');
-  const [projectCode,setProjectCode]=useState('');
-  const [description,setDescription]=useState('');
-  const [busy,setBusy]=useState(false);
-  const toggle=(id:number)=>setLines(xs=>xs.some(x=>x.quoteLineId===id)?xs.filter(x=>x.quoteLineId!==id):[...xs,{quoteLineId:id,quantity:available.find(x=>x.id===id)?.openQuantity??0}]);
-  const patch=(id:number,quantity:number)=>setLines(xs=>xs.map(x=>x.quoteLineId===id?{...x,quantity}:x));
-  const total=lines.reduce((sum,x)=>{const line=source.lines.find(y=>y.id===x.quoteLineId);return sum+(line?x.quantity*line.unitPrice*(1-line.discountRate/100)*(1+line.vatRate/100):0);},0);
-  const save=async()=>{if(lines.length===0||lines.some(x=>x.quantity<=0)){toast.error('Sipariş için en az bir geçerli teklif kalemi seçin.');return;}setBusy(true);try{await procurementApi.convertQuoteToOrder(source.id,{lines,orderDate,deliveryDate:deliveryDate||undefined,projectCode:projectCode||undefined,description:description||undefined});onSaved();}catch(e){toast.error(e instanceof Error?e.message:'Sipariş oluşturulamadı.');}finally{setBusy(false);}};
-  return <ResponsiveDialog open onClose={onClose} title="Tekliften sipariş oluştur" description="Teklif miktarının tamamını veya bir bölümünü bu siparişe ayırın; kalan miktar daha sonra başka siparişe dönüştürülebilir." className="!max-w-5xl"><div className="space-y-5">
-    <div className="grid gap-4 md:grid-cols-4"><Field label="Sipariş tarihi"><AppDateInput value={orderDate} onChange={e=>setOrderDate(e.target.value)}/></Field><Field label="Genel teslim tarihi"><AppDateInput value={deliveryDate} onChange={e=>setDeliveryDate(e.target.value)}/></Field><Field label="Proje kodu"><AppInput value={projectCode} onChange={e=>setProjectCode(e.target.value)}/></Field><Info label="Seçili sipariş toplamı" value={`${formatProjectNumber(total)} ${source.currencyCode}`}/></div>
-    <div className="space-y-2">{available.map(line=>{const selected=lines.find(x=>x.quoteLineId===line.id);return <div key={line.id} className={`grid items-center gap-3 rounded-xl border p-3 md:grid-cols-[32px_1fr_150px_150px] ${selected?'border-cyan-500/35 bg-cyan-500/5':'border-cyan-500/10'}`}><input type="checkbox" checked={Boolean(selected)} onChange={()=>toggle(line.id)}/><div><b>{line.stockCode?`${line.stockCode} · `:''}{line.stockName}</b><p className="text-xs text-slate-500">Teklif: {formatProjectNumber(line.quantity)} · Önceki siparişler: {formatProjectNumber(line.secondaryQuantity)}</p></div><Field label="Açık teklif"><AppInput readOnly value={`${formatProjectNumber(line.openQuantity)} ${line.unitCode}`}/></Field><Field label="Bu sipariş"><AppInput type="number" min="0.000001" max={line.openQuantity} step="any" disabled={!selected} value={selected?.quantity??line.openQuantity} onChange={e=>patch(line.id,Number(e.target.value))}/></Field></div>})}</div>
-    <Field label="Sipariş açıklaması"><AppInput value={description} onChange={e=>setDescription(e.target.value)} placeholder="Sipariş veya teslimat notu…"/></Field>
-    <div className="flex justify-end gap-2"><button className="btn btn-secondary" onClick={onClose}>Vazgeç</button><button className="btn btn-primary" disabled={busy} onClick={()=>void save()}>{busy?'Oluşturuluyor…':'Seçili miktarlardan sipariş oluştur'}</button></div>
-  </div></ResponsiveDialog>;
+function CreateOrderFromQuoteDialog({
+  source,
+  onClose,
+  onSaved,
+}: {
+  source: ProcurementDocumentDetail;
+  onClose: () => void;
+  onSaved: () => void;
+}): ReactElement {
+  const available = source.lines.filter((x) => x.openQuantity > 0);
+  const [lines, setLines] = useState<QuoteOrderLineInput[]>(
+    available.map((x) => ({ quoteLineId: x.id, quantity: x.openQuantity })),
+  );
+  const [orderDate, setOrderDate] = useState(today);
+  const [deliveryDate, setDeliveryDate] = useState(source.dueDate ?? "");
+  const [projectCode, setProjectCode] = useState("");
+  const [description, setDescription] = useState("");
+  const [busy, setBusy] = useState(false);
+  const toggle = (id: number) =>
+    setLines((xs) =>
+      xs.some((x) => x.quoteLineId === id)
+        ? xs.filter((x) => x.quoteLineId !== id)
+        : [
+            ...xs,
+            {
+              quoteLineId: id,
+              quantity: available.find((x) => x.id === id)?.openQuantity ?? 0,
+            },
+          ],
+    );
+  const patch = (id: number, quantity: number) =>
+    setLines((xs) =>
+      xs.map((x) => (x.quoteLineId === id ? { ...x, quantity } : x)),
+    );
+  const total = lines.reduce((sum, x) => {
+    const line = source.lines.find((y) => y.id === x.quoteLineId);
+    return (
+      sum +
+      (line
+        ? x.quantity *
+          line.unitPrice *
+          (1 - line.discountRate / 100) *
+          (1 + line.vatRate / 100)
+        : 0)
+    );
+  }, 0);
+  const save = async () => {
+    if (lines.length === 0 || lines.some((x) => x.quantity <= 0)) {
+      toast.error("Sipariş için en az bir geçerli teklif kalemi seçin.");
+      return;
+    }
+    setBusy(true);
+    try {
+      await procurementApi.convertQuoteToOrder(source.id, {
+        lines,
+        orderDate,
+        deliveryDate: deliveryDate || undefined,
+        projectCode: projectCode || undefined,
+        description: description || undefined,
+      });
+      onSaved();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Sipariş oluşturulamadı.");
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <ResponsiveDialog
+      open
+      onClose={onClose}
+      title="Tekliften sipariş oluştur"
+      description="Teklif miktarının tamamını veya bir bölümünü bu siparişe ayırın; kalan miktar daha sonra başka siparişe dönüştürülebilir."
+      className="!max-w-5xl"
+    >
+      <div className="space-y-5">
+        <div className="grid gap-4 md:grid-cols-4">
+          <Field label="Sipariş tarihi">
+            <AppDateInput
+              value={orderDate}
+              onChange={(e) => setOrderDate(e.target.value)}
+            />
+          </Field>
+          <Field label="Genel teslim tarihi">
+            <AppDateInput
+              value={deliveryDate}
+              onChange={(e) => setDeliveryDate(e.target.value)}
+            />
+          </Field>
+          <Field label="Proje kodu">
+            <AppInput
+              value={projectCode}
+              onChange={(e) => setProjectCode(e.target.value)}
+            />
+          </Field>
+          <Info
+            label="Seçili sipariş toplamı"
+            value={`${formatProjectNumber(total)} ${source.currencyCode}`}
+          />
+        </div>
+        <div className="space-y-2">
+          {available.map((line) => {
+            const selected = lines.find((x) => x.quoteLineId === line.id);
+            return (
+              <div
+                key={line.id}
+                className={`grid items-center gap-3 rounded-xl border p-3 md:grid-cols-[32px_1fr_150px_150px] ${selected ? "border-cyan-500/35 bg-cyan-500/5" : "border-cyan-500/10"}`}
+              >
+                <input
+                  type="checkbox"
+                  checked={Boolean(selected)}
+                  onChange={() => toggle(line.id)}
+                />
+                <div>
+                  <b>
+                    {line.stockCode ? `${line.stockCode} · ` : ""}
+                    {line.stockName}
+                  </b>
+                  <p className="text-xs text-slate-500">
+                    Teklif: {formatProjectNumber(line.quantity)} · Önceki
+                    siparişler: {formatProjectNumber(line.secondaryQuantity)}
+                  </p>
+                </div>
+                <Field label="Açık teklif">
+                  <AppInput
+                    readOnly
+                    value={`${formatProjectNumber(line.openQuantity)} ${line.unitCode}`}
+                  />
+                </Field>
+                <Field label="Bu sipariş">
+                  <AppInput
+                    type="number"
+                    min="0.000001"
+                    max={line.openQuantity}
+                    step="any"
+                    disabled={!selected}
+                    value={selected?.quantity ?? line.openQuantity}
+                    onChange={(e) => patch(line.id, Number(e.target.value))}
+                  />
+                </Field>
+              </div>
+            );
+          })}
+        </div>
+        <Field label="Sipariş açıklaması">
+          <AppInput
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Sipariş veya teslimat notu…"
+          />
+        </Field>
+        <div className="flex justify-end gap-2">
+          <button className="btn btn-secondary" onClick={onClose}>
+            Vazgeç
+          </button>
+          <button
+            className="btn btn-primary"
+            disabled={busy}
+            onClick={() => void save()}
+          >
+            {busy ? "Oluşturuluyor…" : "Seçili miktarlardan sipariş oluştur"}
+          </button>
+        </div>
+      </div>
+    </ResponsiveDialog>
+  );
 }
 
-function ProcurementPolicyDialog({onClose,onSaved}:{onClose:()=>void;onSaved:()=>void}):ReactElement{
-  const [policy,setPolicy]=useState<ProcurementPolicy>();const [busy,setBusy]=useState(false);
-  useEffect(()=>{procurementApi.policy().then(setPolicy).catch(e=>{toast.error(e instanceof Error?e.message:'Satınalma politikası alınamadı.');onClose();});},[onClose]);
-  if(!policy)return <ResponsiveDialog open onClose={onClose} title="Satınalma süreç politikası"><p className="p-5 text-sm text-slate-500">Politika yükleniyor…</p></ResponsiveDialog>;
-  type PolicyFlag='allowMultipleRfqsPerRequest'|'allowPartialRfqLines'|'allowMultipleQuotesPerSupplier'|'allowMultipleOrdersPerQuote'|'allowPartialOrderLines'|'allowSplitAwardsAcrossSuppliers';
-  const toggle=(key:PolicyFlag)=>setPolicy(x=>x?{...x,[key]:!x[key]}:x);
-  const options:Array<{key:PolicyFlag;title:string;description:string}>=[
-    {key:'allowMultipleRfqsPerRequest',title:'Bir talepten birden fazla teklif turu',description:'Aynı ihtiyaç için farklı zamanlarda veya farklı tedarikçi gruplarıyla yeni RFQ açılabilir.'},
-    {key:'allowPartialRfqLines',title:'Kısmi kalem ve miktarla fiyat toplama',description:'Talebin seçilen kalemleri ya da açık miktarın bir bölümü fiyatlamaya çıkarılabilir.'},
-    {key:'allowMultipleQuotesPerSupplier',title:'Tedarikçi revize teklifleri',description:'Aynı tedarikçi aynı RFQ için farklı teklif numaralarıyla birden fazla teklif verebilir.'},
-    {key:'allowMultipleOrdersPerQuote',title:'Bir tekliften birden fazla sipariş',description:'Teklif miktarı farklı tarihlerde birden fazla siparişe bölünebilir.'},
-    {key:'allowPartialOrderLines',title:'Kısmi teklif ödüllendirme',description:'Teklifin yalnızca seçilen kalem veya miktarı siparişe dönüştürülebilir.'},
-    {key:'allowSplitAwardsAcrossSuppliers',title:'Talebi tedarikçilere paylaştır',description:'Aynı talebin miktarları birden fazla tedarikçiye sipariş edilebilir.'},
+function ProcurementPolicyDialog({
+  onClose,
+  onSaved,
+}: {
+  onClose: () => void;
+  onSaved: () => void;
+}): ReactElement {
+  const [policy, setPolicy] = useState<ProcurementPolicy>();
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    procurementApi
+      .policy()
+      .then(setPolicy)
+      .catch((e) => {
+        toast.error(
+          e instanceof Error ? e.message : "Satınalma politikası alınamadı.",
+        );
+        onClose();
+      });
+  }, [onClose]);
+  if (!policy)
+    return (
+      <ResponsiveDialog
+        open
+        onClose={onClose}
+        title="Satınalma süreç politikası"
+      >
+        <p className="p-5 text-sm text-slate-500">Politika yükleniyor…</p>
+      </ResponsiveDialog>
+    );
+  type PolicyFlag =
+    | "allowMultipleRfqsPerRequest"
+    | "allowPartialRfqLines"
+    | "allowMultipleQuotesPerSupplier"
+    | "allowMultipleOrdersPerQuote"
+    | "allowPartialOrderLines"
+    | "allowSplitAwardsAcrossSuppliers"
+    | "allowSupplierDraftSave"
+    | "allowSupplierQuantityChange"
+    | "allowSupplierRevisions"
+    | "requireSupplierDeliveryDate"
+    | "allowZeroUnitPrice";
+  const toggle = (key: PolicyFlag) =>
+    setPolicy((x) => (x ? { ...x, [key]: !x[key] } : x));
+  const options: Array<{
+    key: PolicyFlag;
+    title: string;
+    description: string;
+  }> = [
+    {
+      key: "allowMultipleRfqsPerRequest",
+      title: "Bir talepten birden fazla teklif turu",
+      description:
+        "Aynı ihtiyaç için farklı zamanlarda veya farklı tedarikçi gruplarıyla yeni RFQ açılabilir.",
+    },
+    {
+      key: "allowPartialRfqLines",
+      title: "Kısmi kalem ve miktarla fiyat toplama",
+      description:
+        "Talebin seçilen kalemleri ya da açık miktarın bir bölümü fiyatlamaya çıkarılabilir.",
+    },
+    {
+      key: "allowMultipleQuotesPerSupplier",
+      title: "Tedarikçi revize teklifleri",
+      description:
+        "Aynı tedarikçi aynı RFQ için farklı teklif numaralarıyla birden fazla teklif verebilir.",
+    },
+    {
+      key: "allowMultipleOrdersPerQuote",
+      title: "Bir tekliften birden fazla sipariş",
+      description:
+        "Teklif miktarı farklı tarihlerde birden fazla siparişe bölünebilir.",
+    },
+    {
+      key: "allowPartialOrderLines",
+      title: "Kısmi teklif ödüllendirme",
+      description:
+        "Teklifin yalnızca seçilen kalem veya miktarı siparişe dönüştürülebilir.",
+    },
+    {
+      key: "allowSplitAwardsAcrossSuppliers",
+      title: "Talebi tedarikçilere paylaştır",
+      description:
+        "Aynı talebin miktarları birden fazla tedarikçiye sipariş edilebilir.",
+    },
+    {
+      key: "allowSupplierDraftSave",
+      title: "Tedarikçi taslak kaydedebilir",
+      description:
+        "Portal kullanıcısı teklifini göndermeden önce ara kayıt oluşturabilir.",
+    },
+    {
+      key: "allowSupplierQuantityChange",
+      title: "Tedarikçi miktarı değiştirebilir",
+      description:
+        "Kapalıysa tedarikçi yalnız istenen miktara fiyat verebilir.",
+    },
+    {
+      key: "allowSupplierRevisions",
+      title: "Teklif revizyonuna izin ver",
+      description:
+        "Satınalma sorumlusu gönderilmiş teklif için yeni bir revizyon açabilir.",
+    },
+    {
+      key: "requireSupplierDeliveryDate",
+      title: "Kalem termin tarihi zorunlu",
+      description:
+        "Her teklif kaleminde teslim tarihi girilmeden teklif gönderilemez.",
+    },
+    {
+      key: "allowZeroUnitPrice",
+      title: "Sıfır fiyatlı kaleme izin ver",
+      description:
+        "Numune veya bedelsiz kalemlerde sıfır birim fiyat kabul edilir.",
+    },
   ];
-  const save=async()=>{setBusy(true);try{await procurementApi.updatePolicy({allowMultipleRfqsPerRequest:policy.allowMultipleRfqsPerRequest,allowPartialRfqLines:policy.allowPartialRfqLines,allowMultipleQuotesPerSupplier:policy.allowMultipleQuotesPerSupplier,allowMultipleOrdersPerQuote:policy.allowMultipleOrdersPerQuote,allowPartialOrderLines:policy.allowPartialOrderLines,allowSplitAwardsAcrossSuppliers:policy.allowSplitAwardsAcrossSuppliers});onSaved();}catch(e){toast.error(e instanceof Error?e.message:'Politika kaydedilemedi.');}finally{setBusy(false);}};
-  return <ResponsiveDialog open onClose={onClose} title="Satınalma süreç politikası" description="Şubenin talep, teklif toplama ve sipariş bölme davranışını yönetin." className="!max-w-3xl"><div className="space-y-3">{options.map(x=><label key={String(x.key)} className="flex cursor-pointer items-start gap-3 rounded-xl border border-cyan-500/15 p-4"><input className="mt-1" type="checkbox" checked={Boolean(policy[x.key])} onChange={()=>toggle(x.key)}/><span><b>{x.title}</b><span className="mt-1 block text-sm text-slate-500">{x.description}</span></span></label>)}<div className="flex justify-end gap-2 pt-2"><button className="btn btn-secondary" onClick={onClose}>Vazgeç</button><button className="btn btn-primary" disabled={busy} onClick={()=>void save()}>{busy?'Kaydediliyor…':'Politikayı kaydet'}</button></div></div></ResponsiveDialog>;
+  const save = async () => {
+    setBusy(true);
+    try {
+      await procurementApi.updatePolicy({
+        allowMultipleRfqsPerRequest: policy.allowMultipleRfqsPerRequest,
+        allowPartialRfqLines: policy.allowPartialRfqLines,
+        allowMultipleQuotesPerSupplier: policy.allowMultipleQuotesPerSupplier,
+        allowMultipleOrdersPerQuote: policy.allowMultipleOrdersPerQuote,
+        allowPartialOrderLines: policy.allowPartialOrderLines,
+        allowSplitAwardsAcrossSuppliers: policy.allowSplitAwardsAcrossSuppliers,
+        supplierQuoteChannelMode: policy.supplierQuoteChannelMode,
+        invitationValidityDays: policy.invitationValidityDays,
+        allowSupplierDraftSave: policy.allowSupplierDraftSave,
+        allowSupplierQuantityChange: policy.allowSupplierQuantityChange,
+        allowSupplierRevisions: policy.allowSupplierRevisions,
+        maximumSupplierRevisionCount: policy.maximumSupplierRevisionCount,
+        requireSupplierDeliveryDate: policy.requireSupplierDeliveryDate,
+        allowZeroUnitPrice: policy.allowZeroUnitPrice,
+      });
+      onSaved();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Politika kaydedilemedi.");
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <ResponsiveDialog
+      open
+      onClose={onClose}
+      title="Satınalma süreç politikası"
+      description="Şubenin talep, teklif toplama ve sipariş bölme davranışını yönetin."
+      className="!max-w-3xl"
+    >
+      <div className="space-y-3">
+        <section className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-4">
+          <h3 className="font-bold">Tedarikçi teklif portalı</h3>
+          <p className="mt-1 text-sm text-slate-500">
+            Teklifin hangi kanaldan toplanacağını ve portal güvenlik sınırlarını
+            şube bazında belirleyin.
+          </p>
+          <div className="mt-4 grid gap-4 md:grid-cols-3">
+            <Field label="Teklif toplama kanalı">
+              <AppDropdown
+                value={policy.supplierQuoteChannelMode}
+                onValueChange={(value) =>
+                  setPolicy((x) =>
+                    x
+                      ? {
+                          ...x,
+                          supplierQuoteChannelMode:
+                            value as ProcurementPolicy["supplierQuoteChannelMode"],
+                        }
+                      : x,
+                  )
+                }
+                options={[
+                  { value: "InternalOnly", label: "Yalnız şirket içi giriş" },
+                  {
+                    value: "PortalOptional",
+                    label: "Portal veya şirket içi giriş",
+                  },
+                  {
+                    value: "PortalRequired",
+                    label: "Yalnız tedarikçi portalı",
+                  },
+                ]}
+                portalContainer={null}
+              />
+            </Field>
+            <Field label="Bağlantı süresi (gün)">
+              <AppInput
+                type="number"
+                min="1"
+                max="30"
+                value={policy.invitationValidityDays}
+                onChange={(e) =>
+                  setPolicy((x) =>
+                    x
+                      ? { ...x, invitationValidityDays: Number(e.target.value) }
+                      : x,
+                  )
+                }
+              />
+            </Field>
+            <Field label="Azami revizyon sayısı">
+              <AppInput
+                type="number"
+                min="0"
+                max="20"
+                disabled={!policy.allowSupplierRevisions}
+                value={policy.maximumSupplierRevisionCount}
+                onChange={(e) =>
+                  setPolicy((x) =>
+                    x
+                      ? {
+                          ...x,
+                          maximumSupplierRevisionCount: Number(e.target.value),
+                        }
+                      : x,
+                  )
+                }
+              />
+            </Field>
+          </div>
+        </section>
+        {options.map((x) => (
+          <label
+            key={String(x.key)}
+            className="flex cursor-pointer items-start gap-3 rounded-xl border border-cyan-500/15 p-4"
+          >
+            <input
+              className="mt-1"
+              type="checkbox"
+              checked={Boolean(policy[x.key])}
+              onChange={() => toggle(x.key)}
+            />
+            <span>
+              <b>{x.title}</b>
+              <span className="mt-1 block text-sm text-slate-500">
+                {x.description}
+              </span>
+            </span>
+          </label>
+        ))}
+        <div className="flex justify-end gap-2 pt-2">
+          <button className="btn btn-secondary" onClick={onClose}>
+            Vazgeç
+          </button>
+          <button
+            className="btn btn-primary"
+            disabled={busy}
+            onClick={() => void save()}
+          >
+            {busy ? "Kaydediliyor…" : "Politikayı kaydet"}
+          </button>
+        </div>
+      </div>
+    </ResponsiveDialog>
+  );
 }
 
-function DetailDialog({detail,can,onClose,onChanged,onCreateRfq,onCreateQuote,onCreateOrder}:{detail:ProcurementDocumentDetail;can:(permission:string)=>boolean;onClose:()=>void;onChanged:()=>Promise<void>;onCreateRfq:()=>void;onCreateQuote:()=>void;onCreateOrder:()=>void}):ReactElement{
-  const [busy,setBusy]=useState(false);const [inviteSupplierId,setInviteSupplierId]=useState<number>();const actions=[...(detail.documentType==='quote'&&detail.status==='Submitted'&&can('WMS.PROCUREMENT.QUOTE.MANAGE')?[{action:'request-revision',label:'Revizyon iste'}]:[]),...allowedActions(detail,can)];
-  const run=async(action:string)=>{setBusy(true);try{if(action==='request-revision')await procurementApi.requestRevision(detail.id,'Fiyat, termin veya ticari koşullar için revizyon istendi.');else await procurementApi.transition(detail.documentType,detail.id,action);toast.success(action==='request-revision'?'Tedarikçiye revizyon bağlantısı gönderildi.':'Belge durumu güncellendi.');await onChanged();}catch(e){toast.error(e instanceof Error?e.message:'İşlem tamamlanamadı.');}finally{setBusy(false);}};
-  const processedLabel=detail.documentType==='request'?'Sipariş verilen':detail.documentType==='order'?'Mal kabul edilen':detail.documentType==='quote'?'Sipariş verilen':'—';
-  return <ResponsiveDialog open onClose={onClose} title={`${detail.documentNo} · ${detail.subject}`} description={`${formatProjectDate(detail.documentDate)} · ${statusLabel[detail.status]??detail.status}`} className="!max-w-6xl"><div className="space-y-5">
-    <NextStepBanner detail={detail}/>
-    <div className="grid gap-3 sm:grid-cols-4"><Info label="Tedarikçi" value={detail.counterpartyName||'Henüz seçilmedi'}/><Info label="Para birimi" value={detail.currencyCode}/><Info label="Termin" value={detail.dueDate?formatProjectDate(detail.dueDate):'—'}/><Info label="Satır" value={String(detail.lines.length)}/></div>
-    {detail.suppliers?.length?<div><h3 className="mb-2 font-semibold">Davet edilen tedarikçiler</h3><div className="grid gap-2 md:grid-cols-2">{detail.suppliers.map(x=><div key={x.supplierId} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-cyan-500/15 p-3"><div><b>{x.supplierCode} · {x.supplierName}</b><p className="text-xs text-slate-500">{x.recipientEmail||'Henüz portal daveti gönderilmedi'}{x.invitationStatus?` · ${invitationLabel[x.invitationStatus]??x.invitationStatus}`:''}</p></div>{can('WMS.PROCUREMENT.RFQ.MANAGE')&&x.invitationStatus!=='Submitted'?<button className="btn btn-secondary" onClick={()=>setInviteSupplierId(x.supplierId)}><Mail size={15}/>{x.invitationStatus?'Yeniden gönder':'E-posta ile davet et'}</button>:null}</div>)}</div></div>:null}
-    <div className="overflow-x-auto rounded-xl border border-cyan-500/15"><table className="w-full min-w-[820px] text-sm"><thead className="bg-cyan-500/10 text-left text-xs uppercase text-cyan-400"><tr><th className="p-3">#</th><th>Stok</th><th>Miktar</th><th>{processedLabel}</th><th>Açık</th><th>Birim fiyat</th><th>Termin</th></tr></thead><tbody>{detail.lines.map(x=><tr key={x.id} className="border-t border-cyan-500/10"><td className="p-3">{x.lineNo}</td><td>{x.stockCode?`${x.stockCode} · `:''}{x.stockName}</td><td>{formatProjectNumber(x.quantity)} {x.unitCode}</td><td>{processedLabel==='—'?'—':formatProjectNumber(x.secondaryQuantity)}</td><td className="font-semibold text-cyan-400">{formatProjectNumber(x.openQuantity)}</td><td>{x.unitPrice>0?`${formatProjectNumber(x.unitPrice)} ${detail.currencyCode}`:'—'}</td><td>{x.requiredDate?formatProjectDate(x.requiredDate):'—'}</td></tr>)}</tbody></table></div>
-    <div><h3 className="mb-2 font-semibold">Karar geçmişi</h3><div className="space-y-2">{detail.history.length?detail.history.map((x,i)=><div key={`${x.changedAtUtc}-${i}`} className="rounded-lg border border-cyan-500/10 p-3 text-sm"><b>{(statusLabel[x.fromStatus]??x.fromStatus)||'Oluşturuldu'} → {statusLabel[x.toStatus]??x.toStatus}</b><span className="ml-3 text-slate-500">{formatProjectDateTime(x.changedAtUtc)} · Kullanıcı #{x.actorUserId}</span>{x.note?<p className="mt-1 text-slate-500">{x.note}</p>:null}</div>):<p className="text-sm text-slate-500">Henüz durum hareketi yok.</p>}</div></div>
-    <div className="flex flex-wrap justify-end gap-2">{detail.documentType==='request'&&(detail.status==='Approved'||detail.status==='PartiallyConverted')&&detail.lines.some(x=>x.openQuantity>0)&&can('WMS.PROCUREMENT.RFQ.MANAGE')?<button className="btn btn-primary" disabled={busy} onClick={onCreateRfq}>Yeni teklif turu oluştur <ArrowRight size={16}/></button>:null}{detail.documentType==='rfq'&&(detail.status==='Sent'||detail.status==='Quoted')&&can('WMS.PROCUREMENT.QUOTE.MANAGE')?<button className="btn btn-primary" disabled={busy} onClick={onCreateQuote}><Plus size={16}/> Tedarikçi teklifi gir</button>:null}{detail.documentType==='quote'&&(detail.status==='Approved'||detail.status==='PartiallyConverted')&&detail.lines.some(x=>x.openQuantity>0)&&can('WMS.PROCUREMENT.ORDER.MANAGE')?<button className="btn btn-primary" disabled={busy} onClick={onCreateOrder}>Sipariş paylaştır <ArrowRight size={16}/></button>:null}{actions.map(x=><button key={x.action} className={`btn ${x.action==='cancel'||x.action==='reject'?'btn-secondary':'btn-primary'}`} disabled={busy} onClick={()=>void run(x.action)}>{x.label}</button>)}</div>
-    {inviteSupplierId?<SupplierInvitationDialog rfq={detail} supplierId={inviteSupplierId} onClose={()=>setInviteSupplierId(undefined)} onSaved={async()=>{setInviteSupplierId(undefined);await onChanged();}}/>:null}
-  </div></ResponsiveDialog>;
+function DetailDialog({
+  detail,
+  policy,
+  can,
+  onClose,
+  onChanged,
+  onCreateRfq,
+  onCreateQuote,
+  onCreateOrder,
+}: {
+  detail: ProcurementDocumentDetail;
+  policy?: ProcurementPolicy;
+  can: (permission: string) => boolean;
+  onClose: () => void;
+  onChanged: () => Promise<void>;
+  onCreateRfq: () => void;
+  onCreateQuote: () => void;
+  onCreateOrder: () => void;
+}): ReactElement {
+  const [busy, setBusy] = useState(false);
+  const [inviteSupplierId, setInviteSupplierId] = useState<number>();
+  const actions = [
+    ...(detail.documentType === "quote" &&
+    detail.status === "Submitted" &&
+    policy?.allowSupplierRevisions !== false &&
+    (policy?.maximumSupplierRevisionCount ?? 1) > 0 &&
+    can("WMS.PROCUREMENT.QUOTE.MANAGE")
+      ? [{ action: "request-revision", label: "Revizyon iste" }]
+      : []),
+    ...allowedActions(detail, can).filter(
+      (item) =>
+        !(
+          detail.documentType === "rfq" &&
+          item.action === "send" &&
+          policy?.supplierQuoteChannelMode === "PortalRequired"
+        ),
+    ),
+  ];
+  const run = async (action: string) => {
+    setBusy(true);
+    try {
+      if (action === "request-revision")
+        await procurementApi.requestRevision(
+          detail.id,
+          "Fiyat, termin veya ticari koşullar için revizyon istendi.",
+        );
+      else
+        await procurementApi.transition(detail.documentType, detail.id, action);
+      toast.success(
+        action === "request-revision"
+          ? "Tedarikçiye revizyon bağlantısı gönderildi."
+          : "Belge durumu güncellendi.",
+      );
+      await onChanged();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "İşlem tamamlanamadı.");
+    } finally {
+      setBusy(false);
+    }
+  };
+  const processedLabel =
+    detail.documentType === "request"
+      ? "Sipariş verilen"
+      : detail.documentType === "order"
+        ? "Mal kabul edilen"
+        : detail.documentType === "quote"
+          ? "Sipariş verilen"
+          : "—";
+  return (
+    <ResponsiveDialog
+      open
+      onClose={onClose}
+      title={`${detail.documentNo} · ${detail.subject}`}
+      description={`${formatProjectDate(detail.documentDate)} · ${statusLabel[detail.status] ?? detail.status}`}
+      className="!max-w-6xl"
+    >
+      <div className="space-y-5">
+        <NextStepBanner detail={detail} />
+        <div className="grid gap-3 sm:grid-cols-4">
+          <Info
+            label="Tedarikçi"
+            value={detail.counterpartyName || "Henüz seçilmedi"}
+          />
+          <Info label="Para birimi" value={detail.currencyCode} />
+          <Info
+            label="Termin"
+            value={detail.dueDate ? formatProjectDate(detail.dueDate) : "—"}
+          />
+          <Info label="Satır" value={String(detail.lines.length)} />
+        </div>
+        {detail.suppliers?.length ? (
+          <div>
+            <h3 className="mb-2 font-semibold">Davet edilen tedarikçiler</h3>
+            <div className="grid gap-2 md:grid-cols-2">
+              {detail.suppliers.map((x) => (
+                <div
+                  key={x.supplierId}
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-cyan-500/15 p-3"
+                >
+                  <div>
+                    <b>
+                      {x.supplierCode} · {x.supplierName}
+                    </b>
+                    <p className="text-xs text-slate-500">
+                      {x.recipientEmail || "Henüz portal daveti gönderilmedi"}
+                      {x.invitationStatus
+                        ? ` · ${invitationLabel[x.invitationStatus] ?? x.invitationStatus}`
+                        : ""}
+                    </p>
+                  </div>
+                  {can("WMS.PROCUREMENT.RFQ.MANAGE") &&
+                  policy?.supplierQuoteChannelMode !== "InternalOnly" &&
+                  x.invitationStatus !== "Submitted" ? (
+                    <button
+                      className="btn btn-secondary"
+                      onClick={() => setInviteSupplierId(x.supplierId)}
+                    >
+                      <Mail size={15} />
+                      {x.invitationStatus
+                        ? "Yeniden gönder"
+                        : "E-posta ile davet et"}
+                    </button>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
+        <div className="overflow-x-auto rounded-xl border border-cyan-500/15">
+          <table className="w-full min-w-[820px] text-sm">
+            <thead className="bg-cyan-500/10 text-left text-xs uppercase text-cyan-400">
+              <tr>
+                <th className="p-3">#</th>
+                <th>Stok</th>
+                <th>Miktar</th>
+                <th>{processedLabel}</th>
+                <th>Açık</th>
+                <th>Birim fiyat</th>
+                <th>Termin</th>
+              </tr>
+            </thead>
+            <tbody>
+              {detail.lines.map((x) => (
+                <tr key={x.id} className="border-t border-cyan-500/10">
+                  <td className="p-3">{x.lineNo}</td>
+                  <td>
+                    {x.stockCode ? `${x.stockCode} · ` : ""}
+                    {x.stockName}
+                  </td>
+                  <td>
+                    {formatProjectNumber(x.quantity)} {x.unitCode}
+                  </td>
+                  <td>
+                    {processedLabel === "—"
+                      ? "—"
+                      : formatProjectNumber(x.secondaryQuantity)}
+                  </td>
+                  <td className="font-semibold text-cyan-400">
+                    {formatProjectNumber(x.openQuantity)}
+                  </td>
+                  <td>
+                    {x.unitPrice > 0
+                      ? `${formatProjectNumber(x.unitPrice)} ${detail.currencyCode}`
+                      : "—"}
+                  </td>
+                  <td>
+                    {x.requiredDate ? formatProjectDate(x.requiredDate) : "—"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <h3 className="mb-2 font-semibold">Karar geçmişi</h3>
+          <div className="space-y-2">
+            {detail.history.length ? (
+              detail.history.map((x, i) => (
+                <div
+                  key={`${x.changedAtUtc}-${i}`}
+                  className="rounded-lg border border-cyan-500/10 p-3 text-sm"
+                >
+                  <b>
+                    {(statusLabel[x.fromStatus] ?? x.fromStatus) ||
+                      "Oluşturuldu"}{" "}
+                    → {statusLabel[x.toStatus] ?? x.toStatus}
+                  </b>
+                  <span className="ml-3 text-slate-500">
+                    {formatProjectDateTime(x.changedAtUtc)} · Kullanıcı #
+                    {x.actorUserId}
+                  </span>
+                  {x.note ? (
+                    <p className="mt-1 text-slate-500">{x.note}</p>
+                  ) : null}
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-slate-500">
+                Henüz durum hareketi yok.
+              </p>
+            )}
+          </div>
+        </div>
+        <div className="flex flex-wrap justify-end gap-2">
+          {detail.documentType === "request" &&
+          (detail.status === "Approved" ||
+            detail.status === "PartiallyConverted") &&
+          detail.lines.some((x) => x.openQuantity > 0) &&
+          can("WMS.PROCUREMENT.RFQ.MANAGE") ? (
+            <button
+              className="btn btn-primary"
+              disabled={busy}
+              onClick={onCreateRfq}
+            >
+              Yeni teklif turu oluştur <ArrowRight size={16} />
+            </button>
+          ) : null}
+          {detail.documentType === "rfq" &&
+          (detail.status === "Sent" || detail.status === "Quoted") &&
+          policy?.supplierQuoteChannelMode !== "PortalRequired" &&
+          can("WMS.PROCUREMENT.QUOTE.MANAGE") ? (
+            <button
+              className="btn btn-primary"
+              disabled={busy}
+              onClick={onCreateQuote}
+            >
+              <Plus size={16} /> Tedarikçi teklifi gir
+            </button>
+          ) : null}
+          {detail.documentType === "quote" &&
+          (detail.status === "Approved" ||
+            detail.status === "PartiallyConverted") &&
+          detail.lines.some((x) => x.openQuantity > 0) &&
+          can("WMS.PROCUREMENT.ORDER.MANAGE") ? (
+            <button
+              className="btn btn-primary"
+              disabled={busy}
+              onClick={onCreateOrder}
+            >
+              Sipariş paylaştır <ArrowRight size={16} />
+            </button>
+          ) : null}
+          {actions.map((x) => (
+            <button
+              key={x.action}
+              className={`btn ${x.action === "cancel" || x.action === "reject" ? "btn-secondary" : "btn-primary"}`}
+              disabled={busy}
+              onClick={() => void run(x.action)}
+            >
+              {x.label}
+            </button>
+          ))}
+        </div>
+        {inviteSupplierId ? (
+          <SupplierInvitationDialog
+            rfq={detail}
+            supplierId={inviteSupplierId}
+            onClose={() => setInviteSupplierId(undefined)}
+            onSaved={async () => {
+              setInviteSupplierId(undefined);
+              await onChanged();
+            }}
+          />
+        ) : null}
+      </div>
+    </ResponsiveDialog>
+  );
 }
-const invitationLabel:Record<string,string>={Sent:'Gönderildi',Opened:'Açıldı',DraftSaved:'Taslak kaydedildi',Submitted:'Teklif gönderildi',RevisionRequested:'Revizyon istendi',Revoked:'İptal edildi',Expired:'Süresi doldu'};
-function SupplierInvitationDialog({rfq,supplierId,onClose,onSaved}:{rfq:ProcurementDocumentDetail;supplierId:number;onClose:()=>void;onSaved:()=>Promise<void>}):ReactElement{
-  const supplier=rfq.suppliers?.find(x=>x.supplierId===supplierId);const [email,setEmail]=useState(supplier?.recipientEmail??'');const [days,setDays]=useState(7);const [busy,setBusy]=useState(false);
-  const send=async()=>{if(!/^\S+@\S+\.\S+$/.test(email)){toast.error('Geçerli bir tedarikçi e-posta adresi girin.');return;}setBusy(true);try{await procurementApi.sendInvitation(rfq.id,{supplierId,recipientEmail:email,validForDays:days});toast.success('Güvenli teklif bağlantısı tedarikçiye gönderildi.');await onSaved();}catch(e){toast.error(e instanceof Error?e.message:'Davet gönderilemedi.');}finally{setBusy(false);}};
-  return <ResponsiveDialog open onClose={onClose} title="Tedarikçiye teklif bağlantısı gönder" description={`${supplier?.supplierCode??''} · ${supplier?.supplierName??''}`} className="!max-w-lg"><div className="space-y-4"><p className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3 text-sm text-slate-400">Tedarikçi kendisine özel, süreli bağlantıdan fiyat ve termin girer; taslak kaydedebilir ve teklifini nihai olarak gönderebilir.</p><Field label="Tedarikçi e-posta adresi *"><AppInput type="email" autoFocus value={email} onChange={e=>setEmail(e.target.value)}/></Field><Field label="Bağlantı geçerlilik süresi (gün)"><AppInput type="number" min="1" max="30" value={days} onChange={e=>setDays(Number(e.target.value))}/></Field><div className="flex justify-end gap-2"><button className="btn btn-secondary" onClick={onClose}>Vazgeç</button><button className="btn btn-primary" disabled={busy} onClick={()=>void send()}><Mail size={16}/>{busy?'Gönderiliyor…':'Bağlantıyı gönder'}</button></div></div></ResponsiveDialog>;
+const invitationLabel: Record<string, string> = {
+  Sent: "Gönderildi",
+  Opened: "Açıldı",
+  DraftSaved: "Taslak kaydedildi",
+  Submitted: "Teklif gönderildi",
+  RevisionRequested: "Revizyon istendi",
+  Revoked: "İptal edildi",
+  Expired: "Süresi doldu",
+};
+function SupplierInvitationDialog({
+  rfq,
+  supplierId,
+  onClose,
+  onSaved,
+}: {
+  rfq: ProcurementDocumentDetail;
+  supplierId: number;
+  onClose: () => void;
+  onSaved: () => Promise<void>;
+}): ReactElement {
+  const supplier = rfq.suppliers?.find((x) => x.supplierId === supplierId);
+  const [email, setEmail] = useState(supplier?.recipientEmail ?? "");
+  const [busy, setBusy] = useState(false);
+  const send = async () => {
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+      toast.error("Geçerli bir tedarikçi e-posta adresi girin.");
+      return;
+    }
+    setBusy(true);
+    try {
+      await procurementApi.sendInvitation(rfq.id, {
+        supplierId,
+        recipientEmail: email,
+      });
+      toast.success("Güvenli teklif bağlantısı tedarikçiye gönderildi.");
+      await onSaved();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Davet gönderilemedi.");
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <ResponsiveDialog
+      open
+      onClose={onClose}
+      title="Tedarikçiye teklif bağlantısı gönder"
+      description={`${supplier?.supplierCode ?? ""} · ${supplier?.supplierName ?? ""}`}
+      className="!max-w-lg"
+    >
+      <div className="space-y-4">
+        <p className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3 text-sm text-slate-400">
+          Tedarikçi kendisine özel, satınalma politikasında belirlenen süre
+          boyunca geçerli bağlantıdan fiyat ve termin girer.
+        </p>
+        <Field label="Tedarikçi e-posta adresi *">
+          <AppInput
+            type="email"
+            autoFocus
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </Field>
+        <div className="flex justify-end gap-2">
+          <button className="btn btn-secondary" onClick={onClose}>
+            Vazgeç
+          </button>
+          <button
+            className="btn btn-primary"
+            disabled={busy}
+            onClick={() => void send()}
+          >
+            <Mail size={16} />
+            {busy ? "Gönderiliyor…" : "Bağlantıyı gönder"}
+          </button>
+        </div>
+      </div>
+    </ResponsiveDialog>
+  );
 }
-const allowedActions=(d:ProcurementDocumentDetail,can:(permission:string)=>boolean):Array<{action:string;label:string}>=>d.documentType==='request'?(d.status==='Draft'&&can('WMS.PROCUREMENT.REQUEST.MANAGE')?[{action:'submit',label:'Onaya gönder'}]:d.status==='PendingApproval'&&can('WMS.PROCUREMENT.APPROVE')?[{action:'approve',label:'Onayla'},{action:'reject',label:'Reddet'}]:[]):d.documentType==='order'?(d.status==='Draft'&&can('WMS.PROCUREMENT.ORDER.MANAGE')?[{action:'submit',label:'Onaya gönder'}]:d.status==='PendingApproval'&&can('WMS.PROCUREMENT.APPROVE')?[{action:'approve',label:'Onayla'},{action:'reject',label:'Taslağa döndür'}]:d.status==='Approved'&&can('WMS.PROCUREMENT.ORDER.MANAGE')?[{action:'send',label:'Tedarikçiye gönder'}]:[]):d.documentType==='rfq'&&d.status==='Draft'&&can('WMS.PROCUREMENT.RFQ.MANAGE')?[{action:'send',label:'Tedarikçilere gönder'}]:d.documentType==='quote'&&d.status==='Submitted'&&can('WMS.PROCUREMENT.APPROVE')?[{action:'approve',label:'Teklifi onayla'},{action:'reject',label:'Reddet'}]:[];
-function NextStepBanner({detail}:{detail:ProcurementDocumentDetail}){const text=detail.documentType==='request'?(detail.status==='Draft'?'Sonraki adım: Talebi onaya gönderin.':detail.status==='PendingApproval'?'Onay kararı bekleniyor.':detail.status==='Approved'?'Talep hazır: Bir veya birden fazla teklif toplama turu oluşturabilirsiniz.':detail.status==='PartiallyConverted'?'Talebin bir bölümü sipariş edildi; açık miktar için yeni teklif turu veya sipariş oluşturabilirsiniz.':detail.status==='Converted'?'Talebin tüm miktarı satınalma siparişlerine bağlandı.':'Bu talep için işlem kapandı.'):detail.documentType==='rfq'?(detail.status==='Draft'?'Sonraki adım: Teklif talebini tedarikçilere gönderin.':detail.status==='Sent'?'Tedarikçi cevaplarını teklif olarak kaydedebilirsiniz.':detail.status==='Quoted'?'En az bir teklif geldi; diğer teklifleri de kaydedebilir veya süreci kapatabilirsiniz.':'Teklif toplama süreci kapandı.'):detail.documentType==='quote'?(detail.status==='Submitted'?'Teklifi inceleyip onaylayın veya reddedin.':detail.status==='Approved'?'Teklif hazır: Seçilen kalem ve miktarları siparişe dönüştürün.':detail.status==='PartiallyConverted'?'Teklifin bir bölümü sipariş edildi; kalan miktar için yeni sipariş oluşturabilirsiniz.':detail.status==='Converted'?'Teklifin tüm miktarı satınalma siparişlerine dönüştürüldü.':'Teklif için işlem kapandı.'):(detail.status==='Draft'?'Sonraki adım: Siparişi onaya gönderin.':detail.status==='PendingApproval'?'Sipariş onay kararı bekliyor.':detail.status==='Approved'?'Siparişi tedarikçiye gönderin.':detail.status==='SentToSupplier'?'Sipariş gönderildi; mal kabul için açık kaynak belgedir.':'Sipariş süreci devam ediyor.');return <div className="rounded-xl border border-cyan-500/25 bg-cyan-500/5 p-3 text-sm text-cyan-200"><b>Şimdi ne olacak?</b><span className="ml-2 text-slate-400">{text}</span></div>}
-function Field({label,children}:{label:string;children:ReactNode}){return <label className="block"><span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-500">{label}</span>{children}</label>;}
-function Info({label,value}:{label:string;value:string}){return <div className="rounded-xl border border-cyan-500/15 p-3"><p className="text-xs uppercase text-slate-500">{label}</p><p className="mt-1 font-semibold">{value}</p></div>;}
+const allowedActions = (
+  d: ProcurementDocumentDetail,
+  can: (permission: string) => boolean,
+): Array<{ action: string; label: string }> =>
+  d.documentType === "request"
+    ? d.status === "Draft" && can("WMS.PROCUREMENT.REQUEST.MANAGE")
+      ? [{ action: "submit", label: "Onaya gönder" }]
+      : d.status === "PendingApproval" && can("WMS.PROCUREMENT.APPROVE")
+        ? [
+            { action: "approve", label: "Onayla" },
+            { action: "reject", label: "Reddet" },
+          ]
+        : []
+    : d.documentType === "order"
+      ? d.status === "Draft" && can("WMS.PROCUREMENT.ORDER.MANAGE")
+        ? [{ action: "submit", label: "Onaya gönder" }]
+        : d.status === "PendingApproval" && can("WMS.PROCUREMENT.APPROVE")
+          ? [
+              { action: "approve", label: "Onayla" },
+              { action: "reject", label: "Taslağa döndür" },
+            ]
+          : d.status === "Approved" && can("WMS.PROCUREMENT.ORDER.MANAGE")
+            ? [{ action: "send", label: "Tedarikçiye gönder" }]
+            : []
+      : d.documentType === "rfq" &&
+          d.status === "Draft" &&
+          can("WMS.PROCUREMENT.RFQ.MANAGE")
+        ? [{ action: "send", label: "Tedarikçilere gönder" }]
+        : d.documentType === "quote" &&
+            d.status === "Submitted" &&
+            can("WMS.PROCUREMENT.APPROVE")
+          ? [
+              { action: "approve", label: "Teklifi onayla" },
+              { action: "reject", label: "Reddet" },
+            ]
+          : [];
+function NextStepBanner({ detail }: { detail: ProcurementDocumentDetail }) {
+  const text =
+    detail.documentType === "request"
+      ? detail.status === "Draft"
+        ? "Sonraki adım: Talebi onaya gönderin."
+        : detail.status === "PendingApproval"
+          ? "Onay kararı bekleniyor."
+          : detail.status === "Approved"
+            ? "Talep hazır: Bir veya birden fazla teklif toplama turu oluşturabilirsiniz."
+            : detail.status === "PartiallyConverted"
+              ? "Talebin bir bölümü sipariş edildi; açık miktar için yeni teklif turu veya sipariş oluşturabilirsiniz."
+              : detail.status === "Converted"
+                ? "Talebin tüm miktarı satınalma siparişlerine bağlandı."
+                : "Bu talep için işlem kapandı."
+      : detail.documentType === "rfq"
+        ? detail.status === "Draft"
+          ? "Sonraki adım: Teklif talebini tedarikçilere gönderin."
+          : detail.status === "Sent"
+            ? "Tedarikçi cevaplarını teklif olarak kaydedebilirsiniz."
+            : detail.status === "Quoted"
+              ? "En az bir teklif geldi; diğer teklifleri de kaydedebilir veya süreci kapatabilirsiniz."
+              : "Teklif toplama süreci kapandı."
+        : detail.documentType === "quote"
+          ? detail.status === "Submitted"
+            ? "Teklifi inceleyip onaylayın veya reddedin."
+            : detail.status === "Approved"
+              ? "Teklif hazır: Seçilen kalem ve miktarları siparişe dönüştürün."
+              : detail.status === "PartiallyConverted"
+                ? "Teklifin bir bölümü sipariş edildi; kalan miktar için yeni sipariş oluşturabilirsiniz."
+                : detail.status === "Converted"
+                  ? "Teklifin tüm miktarı satınalma siparişlerine dönüştürüldü."
+                  : "Teklif için işlem kapandı."
+          : detail.status === "Draft"
+            ? "Sonraki adım: Siparişi onaya gönderin."
+            : detail.status === "PendingApproval"
+              ? "Sipariş onay kararı bekliyor."
+              : detail.status === "Approved"
+                ? "Siparişi tedarikçiye gönderin."
+                : detail.status === "SentToSupplier"
+                  ? "Sipariş gönderildi; mal kabul için açık kaynak belgedir."
+                  : "Sipariş süreci devam ediyor.";
+  return (
+    <div className="rounded-xl border border-cyan-500/25 bg-cyan-500/5 p-3 text-sm text-cyan-200">
+      <b>Şimdi ne olacak?</b>
+      <span className="ml-2 text-slate-400">{text}</span>
+    </div>
+  );
+}
+function Field({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <label className="block">
+      <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-500">
+        {label}
+      </span>
+      {children}
+    </label>
+  );
+}
+function Info({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-cyan-500/15 p-3">
+      <p className="text-xs uppercase text-slate-500">{label}</p>
+      <p className="mt-1 font-semibold">{value}</p>
+    </div>
+  );
+}
