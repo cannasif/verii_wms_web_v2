@@ -1061,8 +1061,8 @@ function InspectionDetailPanel({
             {t("detail.eyebrow")}
           </p>
           <div className="mt-0.5 flex flex-wrap items-center gap-2">
-            <h3 className="text-base font-bold tracking-tight">
-              {detail.header.inspectionNo}
+            <h3 className="text-base font-bold tracking-tight font-mono">
+              {detail.header.sourceWaybillNo?.trim() || "—"}
             </h3>
             <OpsStatusBadge
               tone={inferOpsStatusTone(detail.header.status)}
@@ -1077,18 +1077,14 @@ function InspectionDetailPanel({
               {localizeEnumValue(docTypeKey)}
             </OpsStatusBadge>
           </div>
-          <p className="text-xs text-slate-500">
-            {detail.header.sourceDocumentNo} · {detail.header.warehouseCode}{" "}
-            {detail.header.warehouseName}
-          </p>
+          {(detail.header.warehouseCode != null || detail.header.warehouseName) ? (
+            <p className="text-xs text-slate-500">
+              {detail.header.warehouseCode} {detail.header.warehouseName}
+            </p>
+          ) : null}
         </div>
 
         <div className="wms-ops-quality-detail__meta">
-          <MetaChip
-            label={t("detail.meta.waybill")}
-            value={detail.header.sourceWaybillNo || "—"}
-            mono
-          />
           <MetaChip
             label={t("detail.meta.processedBy")}
             value={

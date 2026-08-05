@@ -1,20 +1,38 @@
-/* Goods receipt detail: quality control summary (Terminal) — compact */
+/* Goods receipt detail: quality control summary (Terminal) — compact
+   Light mode is default; dark mode keeps the terminal CRT look. */
+
 html:not(.skin-premium) .wms-ops-qc-summary {
+  --qc-accepted: #059669;
+  --qc-quarantine: #7c3aed;
+  --qc-rejected: #e11d48;
+  --qc-pending: #d97706;
+  margin-top: 0.5rem;
+  border: 1px solid color-mix(in oklab, #7c3aed 22%, var(--wms-ops-card-border, rgba(148, 163, 184, 0.35)));
+  border-radius: 0;
+  background:
+    linear-gradient(rgba(124, 58, 237, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(124, 58, 237, 0.045) 1px, transparent 1px),
+    color-mix(in oklab, var(--wms-ops-card-bg, #ffffff) 88%, #f5f3ff);
+  background-size: 16px 16px, 16px 16px, auto;
+  box-shadow: inset 0 0 14px color-mix(in oklab, #7c3aed 5%, transparent);
+  font-family: var(--wms-terminal-mono);
+  overflow: hidden;
+  color: #0f172a;
+}
+
+html.dark:not(.skin-premium) .wms-ops-qc-summary {
   --qc-accepted: #34d399;
   --qc-quarantine: #c4b5fd;
   --qc-rejected: #fb7185;
   --qc-pending: #fbbf24;
-  margin-top: 0.5rem;
-  border: 1px solid color-mix(in oklab, #a78bfa 36%, var(--wms-ops-card-border));
-  border-radius: 0;
+  border-color: color-mix(in oklab, #a78bfa 36%, var(--wms-ops-card-border));
   background:
     linear-gradient(rgba(167, 139, 250, 0.04) 1px, transparent 1px),
     linear-gradient(90deg, rgba(167, 139, 250, 0.04) 1px, transparent 1px),
     color-mix(in oklab, #1e1035 55%, #020617);
   background-size: 16px 16px, 16px 16px, auto;
   box-shadow: inset 0 0 18px color-mix(in oklab, #a78bfa 7%, transparent);
-  font-family: var(--wms-terminal-mono);
-  overflow: hidden;
+  color: #f8fafc;
 }
 
 html:not(.skin-premium) .wms-ops-qc-summary__header {
@@ -23,7 +41,11 @@ html:not(.skin-premium) .wms-ops-qc-summary__header {
   align-items: center;
   gap: 0.35rem 0.65rem;
   padding: 0.4rem 0.6rem;
-  border-bottom: 1px solid color-mix(in oklab, #a78bfa 20%, transparent);
+  border-bottom: 1px solid color-mix(in oklab, #7c3aed 16%, transparent);
+}
+
+html.dark:not(.skin-premium) .wms-ops-qc-summary__header {
+  border-bottom-color: color-mix(in oklab, #a78bfa 20%, transparent);
 }
 
 html:not(.skin-premium) .wms-ops-qc-summary__title-row {
@@ -35,15 +57,23 @@ html:not(.skin-premium) .wms-ops-qc-summary__title-row {
 }
 
 html:not(.skin-premium) .wms-ops-qc-summary__prompt {
-  color: #c4b5fd;
+  color: #6d28d9;
   font-weight: 700;
   line-height: 1;
+}
+
+html.dark:not(.skin-premium) .wms-ops-qc-summary__prompt {
+  color: #c4b5fd;
 }
 
 html:not(.skin-premium) .wms-ops-qc-summary__title {
   font-size: 0.7rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  color: #4c1d95;
+}
+
+html.dark:not(.skin-premium) .wms-ops-qc-summary__title {
   color: #e9d5ff;
 }
 
@@ -51,8 +81,12 @@ html:not(.skin-premium) .wms-ops-qc-summary__count {
   font-size: 0.6rem;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: #94a3b8;
+  color: #64748b;
   white-space: nowrap;
+}
+
+html.dark:not(.skin-premium) .wms-ops-qc-summary__count {
+  color: #94a3b8;
 }
 
 html:not(.skin-premium) .wms-ops-qc-summary__meta {
@@ -70,11 +104,21 @@ html:not(.skin-premium) .wms-ops-qc-summary__meta-item {
   gap: 0.3rem;
   margin: 0;
   padding: 0.15rem 0.4rem;
-  border: 1px solid color-mix(in oklab, #a78bfa 22%, transparent);
+  border: 1px solid color-mix(in oklab, #7c3aed 20%, transparent);
+  background: color-mix(in oklab, #ffffff 70%, #f5f3ff);
+}
+
+html.dark:not(.skin-premium) .wms-ops-qc-summary__meta-item {
+  border-color: color-mix(in oklab, #a78bfa 22%, transparent);
   background: color-mix(in oklab, #020617 55%, transparent);
 }
 
 html:not(.skin-premium) .wms-ops-qc-summary__meta-item--pending {
+  border-color: color-mix(in oklab, #d97706 35%, transparent);
+  background: color-mix(in oklab, #d97706 8%, #fffbeb);
+}
+
+html.dark:not(.skin-premium) .wms-ops-qc-summary__meta-item--pending {
   border-color: color-mix(in oklab, #fbbf24 35%, transparent);
   background: color-mix(in oklab, #fbbf24 8%, #020617);
 }
@@ -83,6 +127,10 @@ html:not(.skin-premium) .wms-ops-qc-summary__meta-item dt {
   font-size: 0.58rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  color: #64748b;
+}
+
+html.dark:not(.skin-premium) .wms-ops-qc-summary__meta-item dt {
   color: #94a3b8;
 }
 
@@ -93,10 +141,18 @@ html:not(.skin-premium) .wms-ops-qc-summary__meta-item dt::after {
 html:not(.skin-premium) .wms-ops-qc-summary__meta-item dd {
   margin: 0;
   font-size: 0.68rem;
+  color: #0f172a;
+}
+
+html.dark:not(.skin-premium) .wms-ops-qc-summary__meta-item dd {
   color: #f1f5f9;
 }
 
 html:not(.skin-premium) .wms-ops-qc-summary__meta-item--pending dd {
+  color: #b45309;
+}
+
+html.dark:not(.skin-premium) .wms-ops-qc-summary__meta-item--pending dd {
   color: #fde68a;
 }
 
@@ -109,9 +165,14 @@ html:not(.skin-premium) .wms-ops-qc-summary__lines {
 }
 
 html:not(.skin-premium) .wms-ops-qc-summary__line {
-  border: 1px solid color-mix(in oklab, #a78bfa 22%, transparent);
-  background: color-mix(in oklab, #020617 62%, transparent);
+  border: 1px solid color-mix(in oklab, #7c3aed 18%, transparent);
+  background: color-mix(in oklab, #ffffff 82%, #f5f3ff);
   padding: 0.35rem 0.45rem;
+}
+
+html.dark:not(.skin-premium) .wms-ops-qc-summary__line {
+  border-color: color-mix(in oklab, #a78bfa 22%, transparent);
+  background: color-mix(in oklab, #020617 62%, transparent);
 }
 
 html:not(.skin-premium) .wms-ops-qc-summary__line-head {
@@ -132,11 +193,19 @@ html:not(.skin-premium) .wms-ops-qc-summary__stock {
 
 html:not(.skin-premium) .wms-ops-qc-summary__stock-code {
   font-size: 0.65rem;
+  color: #6d28d9;
+}
+
+html.dark:not(.skin-premium) .wms-ops-qc-summary__stock-code {
   color: #c4b5fd;
 }
 
 html:not(.skin-premium) .wms-ops-qc-summary__stock-name {
   font-size: 0.72rem;
+  color: #0f172a;
+}
+
+html.dark:not(.skin-premium) .wms-ops-qc-summary__stock-name {
   color: #f8fafc;
 }
 
@@ -145,10 +214,18 @@ html:not(.skin-premium) .wms-ops-qc-summary__line-meta {
   align-items: baseline;
   gap: 0.3rem;
   font-size: 0.62rem;
+  color: #64748b;
+}
+
+html.dark:not(.skin-premium) .wms-ops-qc-summary__line-meta {
   color: #94a3b8;
 }
 
 html:not(.skin-premium) .wms-ops-qc-summary__qty {
+  color: #334155;
+}
+
+html.dark:not(.skin-premium) .wms-ops-qc-summary__qty {
   color: #e2e8f0;
 }
 
@@ -160,11 +237,18 @@ html:not(.skin-premium) .wms-ops-qc-summary__qty-kind {
 html:not(.skin-premium) .wms-ops-qc-summary__awaiting {
   margin: 0.3rem 0 0;
   padding: 0.2rem 0.35rem;
-  border: 1px dashed color-mix(in oklab, #fbbf24 40%, transparent);
+  border: 1px dashed color-mix(in oklab, #d97706 40%, transparent);
   font-size: 0.62rem;
   letter-spacing: 0.05em;
   text-transform: uppercase;
+  color: #b45309;
+  background: color-mix(in oklab, #d97706 6%, #fffbeb);
+}
+
+html.dark:not(.skin-premium) .wms-ops-qc-summary__awaiting {
+  border-color: color-mix(in oklab, #fbbf24 40%, transparent);
   color: #fde68a;
+  background: transparent;
 }
 
 html:not(.skin-premium) .wms-ops-qc-summary__body {
@@ -181,7 +265,12 @@ html:not(.skin-premium) .wms-ops-qc-summary__bar {
   height: 0.28rem;
   min-width: 5rem;
   overflow: hidden;
-  border: 1px solid color-mix(in oklab, #a78bfa 28%, transparent);
+  border: 1px solid color-mix(in oklab, #7c3aed 22%, transparent);
+  background: color-mix(in oklab, #e2e8f0 70%, #f5f3ff);
+}
+
+html.dark:not(.skin-premium) .wms-ops-qc-summary__bar {
+  border-color: color-mix(in oklab, #a78bfa 28%, transparent);
   background: color-mix(in oklab, #020617 80%, transparent);
 }
 
@@ -208,10 +297,16 @@ html:not(.skin-premium) .wms-ops-qc-summary__metric {
   align-items: baseline;
   gap: 0.25rem;
   padding: 0.12rem 0.35rem;
-  border: 1px solid color-mix(in oklab, #64748b 35%, transparent);
+  border: 1px solid color-mix(in oklab, #94a3b8 40%, transparent);
+  background: color-mix(in oklab, #ffffff 75%, #f8fafc);
+  opacity: 0.75;
+  white-space: nowrap;
+}
+
+html.dark:not(.skin-premium) .wms-ops-qc-summary__metric {
+  border-color: color-mix(in oklab, #64748b 35%, transparent);
   background: color-mix(in oklab, #020617 40%, transparent);
   opacity: 0.7;
-  white-space: nowrap;
 }
 
 html:not(.skin-premium) .wms-ops-qc-summary__metric--active { opacity: 1; }
@@ -220,40 +315,64 @@ html:not(.skin-premium) .wms-ops-qc-summary__metric-label {
   font-size: 0.55rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+  color: #64748b;
+}
+
+html.dark:not(.skin-premium) .wms-ops-qc-summary__metric-label {
   color: #94a3b8;
 }
 
 html:not(.skin-premium) .wms-ops-qc-summary__metric-value {
   font-size: 0.7rem;
   font-variant-numeric: tabular-nums;
+  color: #0f172a;
+}
+
+html.dark:not(.skin-premium) .wms-ops-qc-summary__metric-value {
   color: #f8fafc;
 }
 
 html:not(.skin-premium) .wms-ops-qc-summary__metric-pct {
   font-size: 0.55rem;
+  color: #64748b;
+}
+
+html.dark:not(.skin-premium) .wms-ops-qc-summary__metric-pct {
   color: #94a3b8;
 }
 
 html:not(.skin-premium) .wms-ops-qc-summary__metric--accepted.wms-ops-qc-summary__metric--active {
   border-color: color-mix(in oklab, var(--qc-accepted) 45%, transparent);
+  background: color-mix(in oklab, var(--qc-accepted) 10%, #ffffff);
+}
+html.dark:not(.skin-premium) .wms-ops-qc-summary__metric--accepted.wms-ops-qc-summary__metric--active {
   background: color-mix(in oklab, var(--qc-accepted) 10%, #020617);
 }
 html:not(.skin-premium) .wms-ops-qc-summary__metric--accepted .wms-ops-qc-summary__metric-value { color: var(--qc-accepted); }
 
 html:not(.skin-premium) .wms-ops-qc-summary__metric--quarantine.wms-ops-qc-summary__metric--active {
   border-color: color-mix(in oklab, var(--qc-quarantine) 45%, transparent);
+  background: color-mix(in oklab, var(--qc-quarantine) 10%, #ffffff);
+}
+html.dark:not(.skin-premium) .wms-ops-qc-summary__metric--quarantine.wms-ops-qc-summary__metric--active {
   background: color-mix(in oklab, var(--qc-quarantine) 10%, #020617);
 }
 html:not(.skin-premium) .wms-ops-qc-summary__metric--quarantine .wms-ops-qc-summary__metric-value { color: var(--qc-quarantine); }
 
 html:not(.skin-premium) .wms-ops-qc-summary__metric--rejected.wms-ops-qc-summary__metric--active {
   border-color: color-mix(in oklab, var(--qc-rejected) 45%, transparent);
+  background: color-mix(in oklab, var(--qc-rejected) 10%, #ffffff);
+}
+html.dark:not(.skin-premium) .wms-ops-qc-summary__metric--rejected.wms-ops-qc-summary__metric--active {
   background: color-mix(in oklab, var(--qc-rejected) 10%, #020617);
 }
 html:not(.skin-premium) .wms-ops-qc-summary__metric--rejected .wms-ops-qc-summary__metric-value { color: var(--qc-rejected); }
 
 html:not(.skin-premium) .wms-ops-qc-summary__metric--pending.wms-ops-qc-summary__metric--active {
   border-color: color-mix(in oklab, var(--qc-pending) 45%, transparent);
+  background: color-mix(in oklab, var(--qc-pending) 10%, #ffffff);
+}
+html.dark:not(.skin-premium) .wms-ops-qc-summary__metric--pending.wms-ops-qc-summary__metric--active {
   background: color-mix(in oklab, var(--qc-pending) 10%, #020617);
 }
 html:not(.skin-premium) .wms-ops-qc-summary__metric--pending .wms-ops-qc-summary__metric-value { color: var(--qc-pending); }
