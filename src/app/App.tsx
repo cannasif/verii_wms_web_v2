@@ -15,6 +15,7 @@ import {
   loadProjectSettingsPage, loadQualityInspectionsPage, loadQualityRulesPage, loadQualitySettingsPage,
   loadProductionPages, loadProductionTransferPages, loadSubcontractingTransferPages,
   loadProcurementPage,
+  loadSupplierQuotePortalPage,
   loadSerialNumberRulesPage, loadShippingCreatePage, loadShippingHubPage, loadShippingListPage,
   loadShippingOperationPage, loadShippingPolicyPage, loadSmtpSettingsPage, loadSteelReceiptHubPage,
   loadSupplierStockMappingsPage,
@@ -104,6 +105,7 @@ const ProcurementRequestsPage = lazy(() => loadProcurementPage().then((m) => ({ 
 const ProcurementRfqsPage = lazy(() => loadProcurementPage().then((m) => ({ default: m.ProcurementRfqsPage })));
 const ProcurementQuotesPage = lazy(() => loadProcurementPage().then((m) => ({ default: m.ProcurementQuotesPage })));
 const ProcurementOrdersPage = lazy(() => loadProcurementPage().then((m) => ({ default: m.ProcurementOrdersPage })));
+const SupplierQuotePortalPage = lazy(() => loadSupplierQuotePortalPage().then((m) => ({ default: m.SupplierQuotePortalPage })));
 const ProductionCreatePage = lazy(() => loadProductionPages().then((m) => ({ default: m.ProductionCreatePage })));
 const ProductionListPage = lazy(() => loadProductionPages().then((m) => ({ default: m.ProductionListPage })));
 const ProductionWorkOrdersPage = lazy(() => loadProductionPages().then((m) => ({ default: m.ProductionWorkOrdersPage })));
@@ -163,6 +165,7 @@ export function App(): ReactElement {
         <Route path="/auth/login" element={<LoginPage />} />
         <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/supplier/quotes/:token" element={<SupplierQuotePortalPage />} />
         <Route element={<AppLayout />}>
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />

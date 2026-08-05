@@ -51,6 +51,7 @@ export const loadProductionTransferPages = () => import('@/features/production-t
 export const loadSubcontractingTransferPages = () => import('@/features/subcontracting-transfer/SubcontractingTransferPages');
 export const loadProductionPages = () => import('@/features/production/ProductionPages');
 export const loadProcurementPage = () => import('@/features/procurement/ProcurementPage');
+export const loadSupplierQuotePortalPage = () => import('@/features/procurement/SupplierQuotePortalPage');
 
 export const loadShippingHubPage = () => import('@/features/shipping-v2/ShippingHubPage');
 export const loadShippingCreatePage = () => import('@/features/shipping-v2/ShippingCreatePage');
