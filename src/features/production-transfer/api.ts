@@ -39,6 +39,7 @@ export interface ProductionTaskLine {
 export interface ProductionTask {
   taskId: number; taskNo: string; taskType: string; warehouseId: number; status: string; acceptedAtUtc?: string; acceptedBy?: number;
   startedAtUtc?: string; startedBy?: number; completedAtUtc?: string; completedBy?: number; assignments: ProductionTaskAssignment[]; lines: ProductionTaskLine[];
+  originTaskId?: number; originUserId?: number; previousTaskId?: number;
 }
 export interface ProductionTaskBoard {
   transferId: number; documentNo: string; transferStatus: string; sourceWarehouseId: number;
@@ -76,6 +77,10 @@ export const productionTransferApi = {
     unwrap(await api.post<Envelope<ProductionTaskBoard>>(`/api/production-transfers/${id}/tasks/${taskId}/assign`, { userId })),
   removeAssignment: async (id: number, taskId: number, userId: number): Promise<ProductionTaskBoard> =>
     unwrap(await api.post<Envelope<ProductionTaskBoard>>(`/api/production-transfers/${id}/tasks/${taskId}/assignments/${userId}/remove`, {})),
+  requestAssignmentReturn: async (id: number, taskId: number, userId: number): Promise<ProductionTaskBoard> =>
+    unwrap(await api.post<Envelope<ProductionTaskBoard>>(`/api/production-transfers/${id}/tasks/${taskId}/assignments/${userId}/request-return`, {})),
+  completeAssignmentReturn: async (id: number, taskId: number): Promise<ProductionTaskBoard> =>
+    unwrap(await api.post<Envelope<ProductionTaskBoard>>(`/api/production-transfers/${id}/tasks/${taskId}/complete-assignment-return`, { idempotencyKey: crypto.randomUUID() })),
   handoffTask: async (id: number, taskId: number, targetUserId: number, reason?: string): Promise<ProductionTaskBoard> =>
     unwrap(await api.post<Envelope<ProductionTaskBoard>>(`/api/production-transfers/${id}/tasks/${taskId}/handoff`, { targetUserId, reason: reason?.trim() || null })),
   refreshRoute: async (id: number, taskId: number): Promise<ProductionTaskBoard> =>

@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowRight, Ban, Boxes, ChevronDown, ChevronRight, CircleHelp, ClipboardList, Factory, ListChecks, PackageCheck, Play, RefreshCw, Save, Settings2, ShieldAlert, Trash2, UserPlus, Warehouse } from 'lucide-react';
+import { ArrowRight, Ban, Boxes, ChevronDown, ChevronRight, CircleHelp, ClipboardList, Factory, ListChecks, PackageCheck, Play, RefreshCw, RotateCcw, Save, Settings2, ShieldAlert, Trash2, UserPlus, Warehouse } from 'lucide-react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -223,13 +223,23 @@ export function ProductionTransferPolicyPage(){
   </section>;
 }
 
+const TASK_TYPE_LABELS: Record<string, string> = {
+  Pick: 'Toplama', Dispatch: 'Sevk', Receive: 'Kabul', Putaway: 'Yerleştirme',
+  CancellationReturn: 'İptal İadesi', AssignmentReturn: 'İade',
+};
+const taskTypeLabel = (type: string): string => TASK_TYPE_LABELS[type] ?? type;
+
 // Devret sonrası, henüz işlenmemiş satırlar tamamen kaldırılıp yeni (çocuk) göreve taşınıyor —
 // üstteki görevde artık hiç görünmüyorlar (HandoffAsync: ProcessedQuantity<=0 olan satırlar
 // IsDeleted=true yapılıp çocuk göreve ekleniyor). Bu yüzden payda (toplam iş) sadece task.lines'tan
 // değil, aynı görev tipindeki (Cancelled hariç) TÜM görevlerin satırlarının transferLineId bazında
 // tekilleştirilmiş toplamından hesaplanmalı — aksi halde devreden kullanıcının payı 3/3 gibi yanlış
 // (yalnız kendi elinde kalan satırlara göre %100) görünür, gerçek 3/11 yerine.
-function computeTaskProgress(task: ProductionTask, allTasks: ProductionTask[]) {
+// Pay (işlenen) kısmı da tek göreve değil, kullanıcıya göre hesaplanmalı: devret sonrası aynı
+// kullanıcı tekrar (yeni bir alt) göreve atanırsa, önceki görevde yaptığı iş kaybolmamalı — o
+// kullanıcının StartedBy olduğu tüm görevlerdeki işlenen miktar toplanır (bir görevin işlenen
+// miktarı sadece onu fiilen başlatan kullanıcıya ait olabilir, UpdatePickTask ile eşleşme kuralı bu).
+function computeTaskProgress(task: ProductionTask, allTasks: ProductionTask[], userId: number) {
   const seenLineIds = new Set<number>();
   let planned = 0;
   for (const t of allTasks) {
@@ -240,7 +250,10 @@ function computeTaskProgress(task: ProductionTask, allTasks: ProductionTask[]) {
       planned += line.totalRequestedQuantity;
     }
   }
-  const processed = task.lines.reduce((sum, line) => sum + Math.min(line.totalRequestedQuantity, line.processedQuantity), 0);
+  const processed = allTasks
+    .filter(t => t.taskType === task.taskType && t.status !== 'Cancelled' && t.startedBy === userId)
+    .flatMap(t => t.lines)
+    .reduce((sum, line) => sum + Math.min(line.totalRequestedQuantity, line.processedQuantity), 0);
   return { planned, processed, percent: planned <= 0 ? 0 : Math.round(processed * 10000 / planned) / 100 };
 }
 
@@ -254,6 +267,7 @@ function ProductionTaskPanel(){
   const board=boardQuery.data;
   const[selectedUsers,setSelectedUsers]=useState<Record<number,number>>({});
   const[handoffReasons,setHandoffReasons]=useState<Record<number,string>>({});
+  const[assignmentTaskId,setAssignmentTaskId]=useState<number|''>('');
   const[expandedWorkloadUserIds,setExpandedWorkloadUserIds]=useState<Set<number>>(new Set());
   const toggleWorkloadExpanded=(userId:number)=>setExpandedWorkloadUserIds(current=>{
     const next=new Set(current);
@@ -277,13 +291,54 @@ function ProductionTaskPanel(){
   return <section className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5">
     <div className="mb-4 flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-widest text-[var(--wms-brand-primary)]">Üretim transfer görevi</p><h2 className="text-xl font-black">{board.documentNo}</h2></div><span className="rounded-full border border-[var(--wms-app-border)] px-3 py-1 text-xs font-bold">{board.transferStatus}</span></div>
     <div className="space-y-4">{board.tasks.map(task=><article key={task.taskId} className="rounded-xl border border-[var(--wms-app-border)] p-4">
-      <div className="flex flex-wrap items-center justify-between gap-3"><div><strong>{task.taskNo}</strong><span className="ml-2 text-xs text-[var(--wms-app-text-muted)]">{task.status}</span>{task.completedAtUtc&&<span className="ml-2 text-xs text-[var(--wms-app-text-muted)]">· {new Date(task.completedAtUtc).toLocaleString('tr-TR')}</span>}</div>
-        <div className="flex flex-wrap gap-2">{task.taskType!=='CancellationReturn'&&task.lines.some(x=>x.missingQuantity>0)&&!['Completed','Cancelled'].includes(task.status)&&<button disabled={busy} onClick={()=>void run(()=>productionTransferApi.refreshRoute(id,task.taskId))} className="inline-flex items-center gap-2 rounded-lg border border-amber-500 px-3 py-2 text-xs font-bold text-amber-500"><RefreshCw className="size-4"/>Rotayı güncelle</button>}{task.assignments.some(x=>x.userId===currentUserId)&&!['InProgress','PartiallyCompleted','Completed','Cancelled'].includes(task.status)&&<button disabled={busy} onClick={()=>void run(()=>productionTransferApi.startTask(id,task.taskId))} className="inline-flex items-center gap-2 rounded-lg bg-[var(--wms-brand-primary)] px-3 py-2 text-xs font-bold text-[var(--wms-brand-on-primary)]"><Play className="size-4"/>Bu işi yapıyorum</button>}{task.taskType==='CancellationReturn'&&task.startedBy===currentUserId&&task.status==='InProgress'&&<button disabled={busy} onClick={()=>void run(()=>productionTransferApi.completeCancellationReturn(id,task.taskId))} className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white"><Save className="size-4"/>Rafa geri koymayı tamamla</button>}</div></div>
+      <div className="flex flex-wrap items-center justify-between gap-3"><div><strong>{task.taskNo}</strong>{['AssignmentReturn','CancellationReturn'].includes(task.taskType)?<span className="ml-2 rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-bold text-amber-500">{taskTypeLabel(task.taskType)}</span>:<span className="ml-2 text-xs text-[var(--wms-app-text-muted)]">{taskTypeLabel(task.taskType)}</span>}<span className="ml-2 text-xs text-[var(--wms-app-text-muted)]">{task.status}</span>{task.completedAtUtc&&<span className="ml-2 text-xs text-[var(--wms-app-text-muted)]">· {new Date(task.completedAtUtc).toLocaleString('tr-TR')}</span>}</div>
+        <div className="flex flex-wrap gap-2">{!['CancellationReturn','AssignmentReturn'].includes(task.taskType)&&task.lines.some(x=>x.missingQuantity>0)&&!['Completed','Cancelled'].includes(task.status)&&<button disabled={busy} onClick={()=>void run(()=>productionTransferApi.refreshRoute(id,task.taskId))} className="inline-flex items-center gap-2 rounded-lg border border-amber-500 px-3 py-2 text-xs font-bold text-amber-500"><RefreshCw className="size-4"/>Rotayı güncelle</button>}{task.assignments.some(x=>x.userId===currentUserId)&&!['InProgress','PartiallyCompleted','Completed','Cancelled'].includes(task.status)&&<button disabled={busy} onClick={()=>void run(()=>productionTransferApi.startTask(id,task.taskId))} className="inline-flex items-center gap-2 rounded-lg bg-[var(--wms-brand-primary)] px-3 py-2 text-xs font-bold text-[var(--wms-brand-on-primary)]"><Play className="size-4"/>Bu işi yapıyorum</button>}{task.taskType==='CancellationReturn'&&task.startedBy===currentUserId&&task.status==='InProgress'&&<button disabled={busy} onClick={()=>void run(()=>productionTransferApi.completeCancellationReturn(id,task.taskId))} className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white"><Save className="size-4"/>Rafa geri koymayı tamamla</button>}{task.taskType==='AssignmentReturn'&&task.startedBy===currentUserId&&task.status==='InProgress'&&<button disabled={busy} onClick={()=>void run(()=>productionTransferApi.completeAssignmentReturn(id,task.taskId))} className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white"><Save className="size-4"/>İadeyi tamamla, atamayı kaldır</button>}</div></div>
       <div className="mt-3 overflow-x-auto"><table className="w-full min-w-[720px] text-left text-sm"><thead className="text-xs uppercase text-[var(--wms-app-text-muted)]"><tr><th className="p-2">Stok</th><th className="p-2">Kaynak raf</th><th className="p-2 text-right">İstenen</th><th className="p-2 text-right">Rezerve</th><th className="p-2 text-right">Eksik</th><th className="p-2 text-right">Toplanan</th></tr></thead><tbody>{task.lines.map(line=><tr key={line.taskLineId} className="border-t border-[var(--wms-app-border)]"><td className="p-2"><strong>{line.stockCode}</strong><div className="text-xs text-[var(--wms-app-text-muted)]">{line.stockName}</div></td><td className="p-2">{line.sourceLocationCode??'—'}<div className="text-xs text-[var(--wms-app-text-muted)]">{line.sourceLocationName}</div></td><td className="p-2 text-right">{line.requestedQuantity}</td><td className="p-2 text-right text-emerald-500">{line.reservedQuantity}</td><td className="p-2 text-right text-red-500">{line.missingQuantity}</td><td className="p-2 text-right">{line.processedQuantity}</td></tr>)}</tbody></table></div>
-      <div className="mt-3 flex flex-wrap items-center gap-2">{task.assignments.map(a=><span key={a.userId} className="inline-flex items-center gap-2 rounded-full border border-[var(--wms-app-border)] px-3 py-1 text-xs"><span>{a.username}{a.isPrimary?' · Birincil':''}</span>{canAssign&&<button title="Atamayı kaldır" disabled={busy} onClick={()=>void run(()=>productionTransferApi.removeAssignment(id,task.taskId,a.userId))}><Trash2 className="size-3.5 text-red-500"/></button>}</span>)}
-        {canAssign&&<><select className="input min-w-52" value={selectedUsers[task.taskId]??''} onChange={e=>setSelectedUsers(x=>({...x,[task.taskId]:Number(e.target.value)}))}><option value="">Depo çalışanı seçin</option>{board.eligibleAssignees.filter(u=>(u.warehouseIds.length===0||u.warehouseIds.includes(task.warehouseId))&&!task.assignments.some(a=>a.userId===u.userId)).map(u=><option key={u.userId} value={u.userId}>{u.username}</option>)}</select><button disabled={busy||!selectedUsers[task.taskId]} onClick={()=>void run(()=>productionTransferApi.assignTask(id,task.taskId,selectedUsers[task.taskId]))} className="inline-flex items-center gap-2 rounded-lg border border-[var(--wms-brand-primary)] px-3 py-2 text-xs font-bold text-[var(--wms-brand-primary)]"><UserPlus className="size-4"/>Ata</button>{task.assignments.length>0&&!['Completed','Cancelled'].includes(task.status)&&task.lines.some(line=>line.processedQuantity<line.requestedQuantity)&&<><input className="input min-w-56" value={handoffReasons[task.taskId]??''} onChange={e=>setHandoffReasons(x=>({...x,[task.taskId]:e.target.value}))} placeholder="Devir nedeni (opsiyonel)"/><button disabled={busy||!selectedUsers[task.taskId]} onClick={()=>void run(()=>productionTransferApi.handoffTask(id,task.taskId,selectedUsers[task.taskId],handoffReasons[task.taskId]))} className="inline-flex items-center gap-2 rounded-lg bg-amber-500 px-3 py-2 text-xs font-black text-slate-950 disabled:opacity-40"><UserPlus className="size-4"/>Kalan işi devret</button></>}</>}
-      </div>
+      {task.assignments.length>0&&<div className="mt-3 flex flex-wrap items-center gap-2">{task.assignments.map(a=><span key={a.userId} className="inline-flex items-center gap-2 rounded-full border border-[var(--wms-app-border)] px-3 py-1 text-xs">{a.username}{a.isPrimary?' · Birincil':''}</span>)}</div>}
     </article>)}</div>
+    {canAssign&&board.tasks.length>0&&(()=>{
+      const assignableTasks=board.tasks.filter(t=>!['Completed','Cancelled'].includes(t.status));
+      // ÖNEMLİ: arama sadece assignableTasks içinde yapılmalı — board.tasks içinde ararsak,
+      // önceki bir devir turunda seçilip artık Completed olmuş eski bir görevin id'si
+      // assignmentTaskId'de saklı kalmışsa (kullanıcı tekrar seçim yapmadıysa), o eski/kapanmış
+      // görev sessizce bulunup üzerinde işlem yapılır — tam da yaşanan "yanlış görevde sessizce
+      // silindi" sorununun nedeni budur. board.tasks Id'ye göre artan sırada (en eski önce)
+      // geldiği için, seçim yoksa/geçersizse en güncel (en son) atanabilir göreve odaklan.
+      const task=assignableTasks.find(t=>t.taskId===assignmentTaskId)??assignableTasks[assignableTasks.length-1];
+      // İş emri devirle bölünmüş olabilir (A kısmen yaptı, kalanı B'ye devretti) — iş emri henüz
+      // bitmediğinden A'nın topladığı stok da iade kapsamına girmeli. Bu yüzden "iade gerekir mi"
+      // sorusu tek görevin kendi satırlarına değil, previousTaskId zincirinin tamamına bakmalı.
+      const lineageHasProgress=(t?:typeof task):boolean=>{
+        let cursor=t;
+        while(cursor){
+          if(cursor.lines.some(line=>line.processedQuantity>0))return true;
+          cursor=board.tasks.find(x=>x.taskId===cursor?.previousTaskId);
+        }
+        return false;
+      };
+      return <div className="mt-4 rounded-xl border border-[var(--wms-app-border)] p-4">
+        <div className="mb-3 flex items-center gap-2 font-bold"><UserPlus className="size-4"/>Görev ataması</div>
+        <select className="input mb-3 w-full sm:max-w-md" value={task?.taskId??''} onChange={e=>setAssignmentTaskId(Number(e.target.value))}>
+          {assignableTasks.length===0&&<option value="">Atanabilir görev yok</option>}
+          {assignableTasks.map(t=><option key={t.taskId} value={t.taskId}>{t.taskNo} · {t.status}{lineageHasProgress(t)?' · toplanmış stok var':''}</option>)}
+        </select>
+        {task&&<div className="flex flex-wrap items-center gap-2">
+          {task.assignments.map(a=>{
+            const hasProgress=lineageHasProgress(task);
+            const returnTask=board.tasks.find(t=>t.originTaskId===task.taskId&&t.originUserId===a.userId&&t.status!=='Cancelled');
+            return <span key={a.userId} className="inline-flex items-center gap-2 rounded-full border border-[var(--wms-app-border)] px-3 py-1 text-xs">
+              <span>{a.username}{a.isPrimary?' · Birincil':''}</span>
+              {hasProgress&&returnTask&&returnTask.status!=='Completed'&&<span className="text-amber-500" title={`${returnTask.taskNo} tamamlanmadan atama kaldırılamaz`}>İade bekleniyor</span>}
+              {hasProgress&&!returnTask&&<button title="İade görevi oluştur — atamayı kaldırmadan önce toplanan stok eski rafına konmalı" disabled={busy} onClick={()=>void run(()=>productionTransferApi.requestAssignmentReturn(id,task.taskId,a.userId))}><RotateCcw className="size-3.5 text-amber-500"/></button>}
+              <button title="Atamayı kaldır" disabled={busy} onClick={()=>void run(()=>productionTransferApi.removeAssignment(id,task.taskId,a.userId))}><Trash2 className="size-3.5 text-red-500"/></button>
+            </span>;
+          })}
+          <select className="input min-w-52" value={selectedUsers[task.taskId]??''} onChange={e=>setSelectedUsers(x=>({...x,[task.taskId]:Number(e.target.value)}))}><option value="">Depo çalışanı seçin</option>{board.eligibleAssignees.filter(u=>(u.warehouseIds.length===0||u.warehouseIds.includes(task.warehouseId))&&!task.assignments.some(a=>a.userId===u.userId)).map(u=><option key={u.userId} value={u.userId}>{u.username}</option>)}</select>
+          <button disabled={busy||!selectedUsers[task.taskId]} onClick={()=>void run(()=>productionTransferApi.assignTask(id,task.taskId,selectedUsers[task.taskId]))} className="inline-flex items-center gap-2 rounded-lg border border-[var(--wms-brand-primary)] px-3 py-2 text-xs font-bold text-[var(--wms-brand-primary)]"><UserPlus className="size-4"/>Ata</button>
+          {task.assignments.length>0&&task.lines.some(line=>line.processedQuantity<line.requestedQuantity)&&<><input className="input min-w-56" value={handoffReasons[task.taskId]??''} onChange={e=>setHandoffReasons(x=>({...x,[task.taskId]:e.target.value}))} placeholder="Devir nedeni (opsiyonel)"/><button disabled={busy||!selectedUsers[task.taskId]} onClick={()=>void run(()=>productionTransferApi.handoffTask(id,task.taskId,selectedUsers[task.taskId],handoffReasons[task.taskId]))} className="inline-flex items-center gap-2 rounded-lg bg-amber-500 px-3 py-2 text-xs font-black text-slate-950 disabled:opacity-40"><UserPlus className="size-4"/>Kalan işi devret</button></>}
+        </div>}
+      </div>;
+    })()}
     {canAssign&&board.workloads.length>0&&(()=>{
       const startedWorkloads=board.workloads.filter(w=>board.tasks.some(t=>t.startedBy===w.userId));
       if(startedWorkloads.length===0)return null;
@@ -292,8 +347,12 @@ function ProductionTaskPanel(){
       const activeTask=myTasks.find(t=>t.status==='InProgress'&&t.startedBy===w.userId);
       const nonCancelledTasks=myTasks.filter(t=>t.status!=='Cancelled');
       const currentTask=activeTask??nonCancelledTasks[nonCancelledTasks.length-1];
-      const currentProgress=currentTask?computeTaskProgress(currentTask,board.tasks):null;
-      const currentLabel=activeTask?'Şu an yapıyor':currentTask?.status==='Completed'?'Tamamladı':'Bu transferdeki görev';
+      const currentProgress=currentTask?computeTaskProgress(currentTask,board.tasks,w.userId):null;
+      // Completed olsa da, eğer bu görev bir devirle başka bir göreve devam ediyorsa (başka bir
+      // görev bunu previousTaskId ile referans veriyorsa) iş emri gerçekte bitmedi — "Tamamladı"
+      // yerine "Devretti" göster, aksi halde işin bittiği yanlış izlenimi oluşur.
+      const wasHandedOff=currentTask?.status==='Completed'&&board.tasks.some(t=>t.previousTaskId===currentTask.taskId);
+      const currentLabel=activeTask?'Şu an yapıyor':wasHandedOff?'Devretti':currentTask?.status==='Completed'?'Tamamladı':'Bu transferdeki görev';
       const expanded=expandedWorkloadUserIds.has(w.userId);
       return <div key={w.userId} className="rounded-xl bg-[var(--wms-app-surface)] p-3 text-sm">
         <button type="button" onClick={()=>toggleWorkloadExpanded(w.userId)} className="flex w-full items-center justify-between gap-2 text-left">
