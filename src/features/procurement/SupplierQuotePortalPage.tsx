@@ -154,6 +154,27 @@ export function SupplierQuotePortalPage(): ReactElement {
       </PortalShell>
     );
   const locked = quote.status === "Submitted";
+  const completedLineCount = form.lines.filter(
+    (line) =>
+      (quote.allowZeroUnitPrice ? line.unitPrice >= 0 : line.unitPrice > 0) &&
+      (!quote.requireDeliveryDate || Boolean(line.deliveryDate)),
+  ).length;
+  const missingPriceCount = form.lines.filter((line) =>
+    quote.allowZeroUnitPrice ? line.unitPrice < 0 : line.unitPrice <= 0,
+  ).length;
+  const missingDeliveryCount = quote.requireDeliveryDate
+    ? form.lines.filter((line) => !line.deliveryDate).length
+    : 0;
+  const submissionIssues = [
+    !String(form.quoteNo ?? "").trim() ? "Teklif numarasını yazın" : null,
+    missingPriceCount > 0
+      ? `${missingPriceCount} kalemin fiyatını girin`
+      : null,
+    missingDeliveryCount > 0
+      ? `${missingDeliveryCount} kalemin teslim tarihini seçin`
+      : null,
+  ].filter(Boolean) as string[];
+  const readyToSubmit = submissionIssues.length === 0;
   return (
     <PortalShell>
       <main className="mx-auto max-w-7xl space-y-5">
@@ -164,10 +185,10 @@ export function SupplierQuotePortalPage(): ReactElement {
                 V3RII WMS · TEDARİKÇİ TEKLİF PORTALI
               </p>
               <h1 className="mt-2 text-2xl font-black text-white sm:text-3xl">
-                {quote.rfqNo} · {quote.subject}
+                Teklifinizi 3 kolay adımda gönderin
               </h1>
               <p className="mt-2 text-sm text-slate-400">
-                {quote.supplierCode} · {quote.supplierName}
+                {quote.rfqNo} · {quote.subject} · {quote.supplierName}
               </p>
             </div>
             <span className="rounded-full border border-cyan-400/30 bg-cyan-400/10 px-4 py-2 text-sm font-semibold text-cyan-300">
@@ -180,6 +201,33 @@ export function SupplierQuotePortalPage(): ReactElement {
             </p>
           ) : null}
         </header>
+        <section
+          className="grid gap-3 sm:grid-cols-3"
+          aria-label="Teklif adımları"
+        >
+          {[
+            ["1", "Belge bilgileri", "Teklif numarası ve tarihleri girin."],
+            ["2", "Fiyat ve teslimat", "Her ürün için fiyat ve termin yazın."],
+            [
+              "3",
+              "Kontrol ve gönder",
+              "Eksikleri kontrol edip tek tuşla gönderin.",
+            ],
+          ].map(([number, title, description]) => (
+            <div
+              key={number}
+              className="flex gap-3 rounded-xl border border-cyan-500/20 bg-slate-950/85 p-4"
+            >
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-cyan-500 font-black text-slate-950">
+                {number}
+              </span>
+              <span>
+                <b className="block text-white">{title}</b>
+                <small className="text-slate-400">{description}</small>
+              </span>
+            </div>
+          ))}
+        </section>
         <section className="grid gap-3 sm:grid-cols-3">
           <Metric
             icon={<Building2 />}
@@ -199,7 +247,7 @@ export function SupplierQuotePortalPage(): ReactElement {
         </section>
         <section className="rounded-2xl border border-slate-700 bg-slate-950/85 p-4 shadow-xl sm:p-6">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-            <Field label="Teklif numarası *">
+            <Field label="1. Teklif numaranız *">
               <AppInput
                 disabled={locked}
                 value={form.quoteNo ?? ""}
@@ -245,10 +293,12 @@ export function SupplierQuotePortalPage(): ReactElement {
         <section className="rounded-2xl border border-slate-700 bg-slate-950/85 p-4 shadow-xl sm:p-6">
           <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
             <div>
-              <h2 className="text-xl font-bold text-white">Teklif kalemleri</h2>
+              <h2 className="text-xl font-bold text-white">
+                2. Ürün fiyatları
+              </h2>
               <p className="text-sm text-slate-400">
-                Miktar, fiyat, iskonto, vergi ve teslim tarihini kalem bazında
-                girin.
+                Önce birim fiyatı, ardından teslim tarihini girin. Diğer alanlar
+                gerekliyse değiştirilebilir.
               </p>
             </div>
             <div className="text-right">
@@ -265,18 +315,40 @@ export function SupplierQuotePortalPage(): ReactElement {
                 className="rounded-xl border border-slate-700 p-4"
               >
                 <div className="mb-4">
-                  <p className="text-xs text-slate-500">Kalem {line.lineNo}</p>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-xs text-slate-500">
+                      Kalem {line.lineNo}
+                    </p>
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-bold ${
+                        (quote.allowZeroUnitPrice
+                          ? line.unitPrice >= 0
+                          : line.unitPrice > 0) &&
+                        (!quote.requireDeliveryDate || line.deliveryDate)
+                          ? "bg-emerald-500/15 text-emerald-300"
+                          : "bg-amber-500/15 text-amber-300"
+                      }`}
+                    >
+                      {(quote.allowZeroUnitPrice
+                        ? line.unitPrice >= 0
+                        : line.unitPrice > 0) &&
+                      (!quote.requireDeliveryDate || line.deliveryDate)
+                        ? "Hazır"
+                        : "Bilgi bekliyor"}
+                    </span>
+                  </div>
                   <h3 className="font-bold text-white">
                     {line.stockCode ? `${line.stockCode} · ` : ""}
                     {line.stockName}
                   </h3>
                   <p className="text-sm text-slate-400">
-                    İstenen: {formatProjectNumber(line.requestedQuantity)}{" "}
+                    İstenen miktar:{" "}
+                    {formatProjectNumber(line.requestedQuantity)}{" "}
                     {line.unitCode}
                   </p>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-                  <Field label="Teklif miktarı">
+                  <Field label="Verebileceğiniz miktar">
                     <AppInput
                       disabled={locked || !quote.allowQuantityChange}
                       type="number"
@@ -293,7 +365,7 @@ export function SupplierQuotePortalPage(): ReactElement {
                       }
                     />
                   </Field>
-                  <Field label="Birim fiyat">
+                  <Field label={`Bir adet fiyatı (${form.currencyCode}) *`}>
                     <AppInput
                       disabled={locked}
                       type="number"
@@ -309,7 +381,7 @@ export function SupplierQuotePortalPage(): ReactElement {
                       }
                     />
                   </Field>
-                  <Field label="İskonto %">
+                  <Field label="İndirim % (varsa)">
                     <AppInput
                       disabled={locked}
                       type="number"
@@ -379,32 +451,71 @@ export function SupplierQuotePortalPage(): ReactElement {
               {message}
             </p>
           ) : null}
-          <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            {!locked ? (
-              <>
-                {quote.allowDraftSave ? (
-                  <button
-                    className="btn btn-secondary"
-                    disabled={busy}
-                    onClick={() => void save(false)}
-                  >
-                    <Save size={16} /> Taslak kaydet
-                  </button>
-                ) : null}
-                <button
-                  className="btn btn-primary"
-                  disabled={busy}
-                  onClick={() => void save(true)}
-                >
-                  <Send size={16} /> Teklifi gönder
-                </button>
-              </>
-            ) : (
-              <p className="font-semibold text-emerald-400">
-                Teklifiniz alınmıştır. Revizyon için satınalma sorumlunuzla
-                iletişime geçin.
+          {!locked ? (
+            <div
+              className={`mt-4 rounded-xl border p-4 ${
+                readyToSubmit
+                  ? "border-emerald-500/30 bg-emerald-500/10"
+                  : "border-amber-500/30 bg-amber-500/10"
+              }`}
+              role="status"
+            >
+              <b
+                className={
+                  readyToSubmit ? "text-emerald-300" : "text-amber-300"
+                }
+              >
+                {readyToSubmit
+                  ? "Teklifiniz gönderime hazır"
+                  : "Göndermeden önce tamamlayın"}
+              </b>
+              <p className="mt-1 text-sm text-slate-300">
+                {completedLineCount}/{form.lines.length} kalem hazır.
+                {submissionIssues.length
+                  ? ` Eksik: ${submissionIssues.join(" · ")}.`
+                  : " Bilgileri son kez kontrol edip gönderebilirsiniz."}
               </p>
-            )}
+            </div>
+          ) : null}
+          <div className="sticky bottom-3 z-20 mt-5 flex flex-col-reverse gap-2 rounded-xl border border-slate-700 bg-slate-950/95 p-3 shadow-2xl backdrop-blur sm:flex-row sm:items-center sm:justify-between">
+            {!locked ? (
+              <p className="text-center text-xs text-slate-400 sm:text-left">
+                “Gönder” sonrası teklif kilitlenir. Değişiklik için satınalma
+                sorumlunuzdan revizyon isteyin.
+              </p>
+            ) : null}
+            <div className="flex flex-col-reverse gap-2 sm:flex-row">
+              {!locked ? (
+                <>
+                  {quote.allowDraftSave ? (
+                    <button
+                      className="btn btn-secondary"
+                      disabled={busy}
+                      onClick={() => void save(false)}
+                    >
+                      <Save size={16} /> Taslak kaydet
+                    </button>
+                  ) : null}
+                  <button
+                    className="btn btn-primary"
+                    disabled={busy || !readyToSubmit}
+                    title={
+                      readyToSubmit
+                        ? "Teklifi satınalma ekibine gönder"
+                        : submissionIssues.join(" · ")
+                    }
+                    onClick={() => void save(true)}
+                  >
+                    <Send size={16} /> 3. Kontrol et ve gönder
+                  </button>
+                </>
+              ) : (
+                <p className="font-semibold text-emerald-400">
+                  Teklifiniz alınmıştır. Revizyon için satınalma sorumlunuzla
+                  iletişime geçin.
+                </p>
+              )}
+            </div>
           </div>
         </section>
       </main>
