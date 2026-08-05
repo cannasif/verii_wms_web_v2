@@ -32,6 +32,9 @@ import { OPS_FIELD_CLASS } from './ops-field-styles';
 const SEARCH_DEBOUNCE_MS = 300;
 const LOAD_MORE_THRESHOLD = 0.82;
 
+const isCoarsePointer = (): boolean =>
+  typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches === true;
+
 interface PagedLookupDialogProps<T> {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -50,6 +53,10 @@ interface PagedLookupDialogProps<T> {
   triggerMode?: 'button' | 'combobox';
   autoSearchMinLength?: number;
   triggerClassName?: string;
+  /** `null`: popover portalsız, tetikleyicinin yanında render edilir. Dialog içinde kullanırken gerekir. */
+  popoverPortalContainer?: HTMLElement | null;
+  /** Dokunmatik cihazda çift tık mümkün olmadığı için tek dokunuş lookup dialog'unu açar. */
+  openDialogOnTouchTap?: boolean;
   queryKey: readonly unknown[];
   fetchPage: (args: {
     pageNumber: number;
@@ -76,6 +83,8 @@ export function PagedLookupDialog<T>({
   triggerMode = 'button',
   autoSearchMinLength,
   triggerClassName,
+  popoverPortalContainer,
+  openDialogOnTouchTap = false,
   queryKey,
   fetchPage,
   getKey,
@@ -92,6 +101,7 @@ export function PagedLookupDialog<T>({
   const [comboboxSearch, setComboboxSearch] = useState('');
   const [highlightIndex, setHighlightIndex] = useState(0);
   const [editing, setEditing] = useState(false);
+  const [anchorElement, setAnchorElement] = useState<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const dropdownListRef = useRef<HTMLDivElement | null>(null);
   const fetchLockRef = useRef(false);
@@ -330,7 +340,12 @@ export function PagedLookupDialog<T>({
     <Search className="size-4 shrink-0 opacity-60" aria-hidden />
   );
 
-  const portalContainer = getWorkspacePortalRoot() ?? undefined;
+  const skipPopoverPortal = popoverPortalContainer === null;
+  // Dialog içinde popover, workspace portal kökünde kalırsa dialog'un arkasında görünür;
+  // bu durumda dialog gövdesine portallanır.
+  const portalContainer = skipPopoverPortal
+    ? ((anchorElement?.closest('[data-slot="dialog-content"]') as HTMLElement | null) ?? undefined)
+    : (popoverPortalContainer ?? getWorkspacePortalRoot() ?? undefined);
   const displayValue = editing ? comboboxDraft : (value ?? '');
   const comboboxFetching = comboboxQuery.isFetching && !comboboxQuery.isFetchingNextPage;
   const comboboxLoading = (comboboxQuery.isLoading || comboboxFetching) && comboboxItems.length === 0 && !isThresholdMode;
@@ -389,7 +404,7 @@ export function PagedLookupDialog<T>({
       }}
     >
       <PopoverPrimitive.Anchor asChild>
-        <div className="relative w-full min-w-0">
+        <div className="relative w-full min-w-0" ref={setAnchorElement}>
           <input
             ref={inputRef}
             type="text"
@@ -421,6 +436,10 @@ export function PagedLookupDialog<T>({
             }}
             onClick={() => {
               if (disabled || open) return;
+              if (openDialogOnTouchTap && isCoarsePointer()) {
+                openDialog();
+                return;
+              }
               inputRef.current?.focus();
             }}
             onDoubleClick={(event) => {
@@ -450,10 +469,11 @@ export function PagedLookupDialog<T>({
             tabIndex={-1}
             disabled={disabled}
             aria-label={resolvedSearchPlaceholder}
-            className="absolute left-0.5 top-1/2 z-[1] inline-flex size-6 -translate-y-1/2 items-center justify-center rounded-md text-[var(--wms-app-text-muted)] transition hover:bg-[var(--wms-brand-soft)] hover:text-[var(--wms-brand-primary)] disabled:opacity-50"
-            onMouseDown={(event) => {
-              event.preventDefault();
+            className="absolute left-0.5 top-1/2 z-[1] inline-flex size-6 -translate-y-1/2 items-center justify-center rounded-md text-[var(--wms-app-text-muted)] transition hover:bg-[var(--wms-brand-soft)] hover:text-[var(--wms-brand-primary)] disabled:opacity-50 max-sm:size-8"
+            onPointerDown={(event) => {
               skipBlurCloseRef.current = true;
+              // Dokunmatikte preventDefault sonraki click'i bastırabildiği için yalnızca fareye uygulanır.
+              if (event.pointerType === 'mouse') event.preventDefault();
             }}
             onClick={() => {
               openDialog();
