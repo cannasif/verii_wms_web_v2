@@ -24,14 +24,15 @@ export const locationsApi = {
   getLookup: async (warehouseId: number): Promise<LocationLookupRow[]> =>
     unwrap(await api.get<ApiEnvelope<LocationLookupRow[]>>(`/api/locations/lookup?warehouseId=${warehouseId}&includeInactive=false`)),
   getLocationsPaged: async (request: DropdownPageRequest, warehouseId: number): Promise<DropdownPage<LocationLookupRow>> =>
-    unwrap(await api.post<ApiEnvelope<GridPage<LocationLookupRow>>>('/api/locations/paged', buildDropdownPagedBody(request, {
-      sortBy: 'code',
-      filters: [
-        ...(Array.isArray(request.filters) ? request.filters : []),
-        { column: 'warehouseId', operator: 'equals', value: String(warehouseId) },
-        { column: 'isActive', operator: 'equals', value: 'true' },
-      ],
-    }), { signal: request.signal })),
+    unwrap(await api.post<ApiEnvelope<GridPage<LocationLookupRow>>>('/api/locations/paged', buildDropdownPagedBody(
+      { ...request, sortBy: request.sortBy ?? 'code', filterLogic: 'and' },
+      {
+        filters: [
+          { column: 'warehouseId', operator: 'equals', value: String(warehouseId) },
+          { column: 'isActive', operator: 'equals', value: 'true' },
+        ],
+      },
+    ), { signal: request.signal })),
   getWarehousesPaged: async (request: DropdownPageRequest): Promise<DropdownPage<WarehouseOption>> =>
     unwrap(await api.post<ApiEnvelope<GridPage<WarehouseOption>>>(
       '/api/erp-mirror/warehouses/paged',

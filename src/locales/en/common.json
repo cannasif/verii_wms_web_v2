@@ -5308,7 +5308,17 @@
     },
     "assignees": {
       "panel": "Task Assignees",
-      "search": "Search active user"
+      "hint": "The transfer task appears in the selected operation users' work queue.",
+      "openDialog": "Select users",
+      "dialogTitle": "Select task assignees",
+      "dialogDescription": "Choose one or more active operation users.",
+      "search": "Search active user",
+      "selectedCount": "{{count}} user(s) selected",
+      "empty": "No assignees selected yet.",
+      "noResults": "No users found.",
+      "removeAria": "Remove {{name}}",
+      "cancel": "Cancel",
+      "confirm": "Apply selection"
     },
     "lines": {
       "panel": "Transfer lines · {{count}} · {{total}}",

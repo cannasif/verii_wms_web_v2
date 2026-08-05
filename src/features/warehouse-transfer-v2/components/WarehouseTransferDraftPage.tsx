@@ -13,7 +13,9 @@ import {
   ClipboardList,
   Loader2,
   Plus,
+  Search,
   Trash2,
+  UserPlus,
   UserRoundCog,
   X,
 } from "lucide-react";
@@ -23,11 +25,21 @@ import { toast } from "sonner";
 import { AppDropdown } from "@/components/shared/AppDropdown";
 import { AppDateInput } from "@/components/shared/AppInput";
 import { OperationFlowTabs } from "@/components/shared/OperationFlowTabs";
+import { OpsActionButton } from "@/components/shared/OpsActionButton";
+import {
+  OpsDialogBody,
+  OpsDialogContent,
+  OpsDialogFooter,
+  OpsDialogHeader,
+} from "@/components/shared/OpsDialogShell";
 import { PagedAppDropdown } from "@/components/shared/PagedAppDropdown";
+import { Dialog, DialogTitle } from "@/components/ui/dialog";
+import { useDropdownInfiniteSearch } from "@/hooks/useDropdownInfiniteSearch";
 import { StockIdentityCell } from "@/components/shared/StockIdentityCell";
 import { TrackingPlanEditor } from "@/components/shared/TrackingPlanEditor";
 import { StockTrackingPolicyField } from "@/features/stock-tracking/effective-stock-tracking";
 import { useAuthStore } from "@/stores/auth-store";
+import { cn } from "@/lib/utils";
 import { OperationDraftRestoreDialog } from "@/features/operation-drafts/OperationDraftRestoreDialog";
 import { useOperationDraft } from "@/features/operation-drafts/useOperationDraft";
 import type {
@@ -78,13 +90,6 @@ const yapValue = (
 const yapOption = (x: YapCodeOption) => ({
   value: yapValue(x),
   label: `${x.configurationCode} · ${x.description ?? ""}`,
-});
-const userValue = (x: ActiveUserOption) =>
-  encodeURIComponent(JSON.stringify(x));
-const userOption = (x: ActiveUserOption) => ({
-  value: userValue(x),
-  label: `${x.firstName} ${x.lastName}`.trim() || x.username,
-  description: `${x.username} · ${x.email}`,
 });
 const blankLine = (): TransferDraftLine => ({
   localId: crypto.randomUUID(),
@@ -870,6 +875,11 @@ export function WarehouseTransferDraftPage({
               onValueChange={(value) => {
                 setTargetValue(value);
                 setTargetReceiving(null);
+                setLines((current) => current.map((line) => ({
+                  ...line,
+                  targetLocationId: undefined,
+                  targetLocationValue: null,
+                })));
               }}
               searchable
               placeholder={t(`${D}.document.targetWarehousePlaceholder`)}
@@ -969,7 +979,11 @@ export function WarehouseTransferDraftPage({
         </div>
       </Panel>
       {executionKind === "TaskBased" && (
-        <Assignees assignees={assignees} setAssignees={setAssignees} />
+        <Assignees
+          assignees={assignees}
+          setAssignees={setAssignees}
+          allowMultiple={policy?.allowMultipleAssignees ?? true}
+        />
       )}
       <Panel
         title={t(`${D}.lines.panel`, { count: lines.length, total })}
@@ -1098,56 +1112,251 @@ function OrderSelection(p: {
 function Assignees({
   assignees,
   setAssignees,
+  allowMultiple = true,
 }: {
   assignees: ActiveUserOption[];
   setAssignees: React.Dispatch<React.SetStateAction<ActiveUserOption[]>>;
+  allowMultiple?: boolean;
 }): ReactElement {
   const { t } = useTranslation("common");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [draft, setDraft] = useState<ActiveUserOption[]>([]);
+  const userDisplayName = (user: ActiveUserOption) =>
+    `${user.firstName} ${user.lastName}`.trim() || user.username;
+
+  const openDialog = () => {
+    setDraft(assignees);
+    setDialogOpen(true);
+  };
+
+  const confirmSelection = () => {
+    setAssignees(draft);
+    setDialogOpen(false);
+  };
+
   return (
-    <Panel title={t(`${D}.assignees.panel`)} icon={<UserRoundCog className="size-5" />}>
-      <PagedAppDropdown
-        queryKey={["wt-assignees"]}
-        fetchPage={warehouseTransferApi.activeUsers}
-        toOption={(user) => ({
-          ...userOption(user),
-          disabled: assignees.some((x) => x.id === user.id),
-        })}
-        value={null}
-        onValueChange={(value) => {
-          const user = JSON.parse(
-            decodeURIComponent(value),
-          ) as ActiveUserOption;
-          setAssignees((current) =>
-            current.some((x) => x.id === user.id)
-              ? current
-              : [...current, user],
-          );
-        }}
-        searchable
-        minSearchLength={2}
-        placeholder={t(`${D}.assignees.search`)}
-      />
-      <div className="mt-3 flex flex-wrap gap-2">
-        {assignees.map((user) => (
-          <span
-            key={user.id}
-            className="inline-flex items-center gap-2 rounded-full border border-[var(--wms-brand-ring)] bg-[var(--wms-brand-soft)] px-3 py-1.5 text-sm"
+    <>
+      <Panel title={t(`${D}.assignees.panel`)} icon={<UserRoundCog className="size-5" />}>
+        <p className="mb-4 text-sm text-[var(--wms-app-text-muted)]">
+          {t(`${D}.assignees.hint`)}
+        </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <OpsActionButton
+            type="button"
+            variant="secondary"
+            onClick={openDialog}
+            className="inline-flex items-center gap-2"
           >
-            {`${user.firstName} ${user.lastName}`.trim() || user.username}
-            <button
-              type="button"
-              onClick={() =>
-                setAssignees((current) =>
-                  current.filter((x) => x.id !== user.id),
-                )
-              }
-            >
-              <X className="size-3.5" />
-            </button>
+            <UserPlus className="size-4" />
+            {t(`${D}.assignees.openDialog`)}
+          </OpsActionButton>
+          <span className="text-sm text-[var(--wms-app-text-muted)]">
+            {t(`${D}.assignees.selectedCount`, { count: assignees.length })}
           </span>
-        ))}
-      </div>
-    </Panel>
+        </div>
+        <div className="mt-3 flex flex-nowrap items-center gap-2 overflow-x-auto pb-1">
+          {assignees.length === 0 ? (
+            <span className="text-sm text-[var(--wms-app-text-muted)]">
+              {t(`${D}.assignees.empty`)}
+            </span>
+          ) : (
+            assignees.map((user) => (
+              <span
+                key={user.id}
+                className="inline-flex shrink-0 items-center gap-2 rounded-full border border-[var(--wms-brand-ring)] bg-[var(--wms-brand-soft)] px-3 py-1.5 text-sm"
+              >
+                <span>
+                  <strong>{userDisplayName(user)}</strong>
+                  <small className="ml-1 text-[var(--wms-app-text-muted)]">
+                    ({user.username})
+                  </small>
+                </span>
+                <button
+                  type="button"
+                  aria-label={t(`${D}.assignees.removeAria`, { name: userDisplayName(user) })}
+                  onClick={() =>
+                    setAssignees((current) => current.filter((x) => x.id !== user.id))
+                  }
+                  className="rounded-full p-0.5 text-[var(--wms-app-text-muted)] hover:bg-red-500/15 hover:text-red-500"
+                >
+                  <X className="size-3.5" />
+                </button>
+              </span>
+            ))
+          )}
+        </div>
+      </Panel>
+
+      {dialogOpen && (
+        <AssigneePickerDialog
+          draft={draft}
+          setDraft={setDraft}
+          allowMultiple={allowMultiple}
+          onClose={() => setDialogOpen(false)}
+          onConfirm={confirmSelection}
+        />
+      )}
+    </>
+  );
+}
+
+function AssigneePickerDialog({
+  draft,
+  setDraft,
+  allowMultiple,
+  onClose,
+  onConfirm,
+}: {
+  draft: ActiveUserOption[];
+  setDraft: React.Dispatch<React.SetStateAction<ActiveUserOption[]>>;
+  allowMultiple: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+}): ReactElement {
+  const { t } = useTranslation("common");
+  const [search, setSearch] = useState("");
+  const listRef = useRef<HTMLDivElement>(null);
+  const query = useDropdownInfiniteSearch({
+    queryKey: ["wt-assignees-picker"],
+    searchTerm: search,
+    fetchPage: warehouseTransferApi.activeUsers,
+    enabled: true,
+    minSearchLength: 0,
+    pageSize: 25,
+    searchFields: ["username", "email", "firstName", "lastName"],
+    sortBy: "username",
+  });
+
+  useEffect(() => {
+    const list = listRef.current;
+    if (!list) return;
+    const onScroll = () => {
+      if (list.scrollHeight - list.scrollTop - list.clientHeight > 80) return;
+      if (query.hasNextPage && !query.isFetchingNextPage) void query.fetchNextPage();
+    };
+    list.addEventListener("scroll", onScroll);
+    return () => list.removeEventListener("scroll", onScroll);
+  }, [query.fetchNextPage, query.hasNextPage, query.isFetchingNextPage]);
+
+  const userDisplayName = (user: ActiveUserOption) =>
+    `${user.firstName} ${user.lastName}`.trim() || user.username;
+
+  const toggleUser = (user: ActiveUserOption) => {
+    setDraft((current) => {
+      if (current.some((x) => x.id === user.id)) {
+        return current.filter((x) => x.id !== user.id);
+      }
+      return allowMultiple ? [...current, user] : [user];
+    });
+  };
+
+  return (
+    <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
+      <OpsDialogContent size="lg" className="data-no-auto-localize">
+        <OpsDialogHeader>
+          <div>
+            <DialogTitle className="wms-ops-detail-dialog__title text-xl font-bold">
+              {t(`${D}.assignees.dialogTitle`)}
+            </DialogTitle>
+            <p className="mt-1 text-sm text-[var(--wms-app-text-muted)]">
+              {t(`${D}.assignees.dialogDescription`)}
+            </p>
+          </div>
+        </OpsDialogHeader>
+        <OpsDialogBody className="space-y-4">
+          <div className="flex items-center gap-2 rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] px-3">
+            <Search className="size-4 shrink-0 text-[var(--wms-app-text-muted)]" aria-hidden />
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder={t(`${D}.assignees.search`)}
+              aria-label={t(`${D}.assignees.search`)}
+              className="h-11 min-w-0 flex-1 border-0 bg-transparent text-sm outline-none placeholder:text-[var(--wms-app-text-muted)]"
+            />
+          </div>
+          <div
+            ref={listRef}
+            className="wms-ops-scrollbar flex max-h-[min(420px,50dvh)] flex-col gap-2 overflow-y-auto overscroll-contain"
+          >
+            {query.isLoading && query.items.length === 0 ? (
+              <div className="grid min-h-40 place-items-center">
+                <Loader2 className="size-6 animate-spin text-[var(--wms-brand-primary)]" />
+              </div>
+            ) : query.items.length === 0 ? (
+              <p className="py-8 text-center text-sm text-[var(--wms-app-text-muted)]">
+                {t(`${D}.assignees.noResults`)}
+              </p>
+            ) : (
+              query.items.map((user) => {
+                const selected = draft.some((x) => x.id === user.id);
+                return (
+                  <label
+                    key={user.id}
+                    className={cn(
+                      "flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition-colors",
+                      selected
+                        ? "border-[var(--wms-brand-primary)] bg-[var(--wms-brand-soft)]"
+                        : "border-[var(--wms-app-border)] hover:border-[var(--wms-brand-primary)]/50",
+                    )}
+                  >
+                    <input
+                      type="checkbox"
+                      className="size-4 shrink-0 accent-[var(--wms-brand-primary)]"
+                      checked={selected}
+                      onChange={() => toggleUser(user)}
+                    />
+                    <span className="flex min-w-0 flex-1 items-center gap-2 truncate">
+                      <strong className="shrink-0 text-sm">{userDisplayName(user)}</strong>
+                      <small className="truncate text-[var(--wms-app-text-muted)]">
+                        {user.username} · {user.email}
+                      </small>
+                    </span>
+                  </label>
+                );
+              })
+            )}
+            {query.isFetchingNextPage && (
+              <div className="flex justify-center py-2">
+                <Loader2 className="size-5 animate-spin text-[var(--wms-brand-primary)]" />
+              </div>
+            )}
+          </div>
+          {draft.length > 0 && (
+            <div className="rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-surface)] p-3">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--wms-app-text-muted)]">
+                {t(`${D}.assignees.selectedCount`, { count: draft.length })}
+              </p>
+              <div className="flex flex-nowrap gap-2 overflow-x-auto pb-1">
+                {draft.map((user) => (
+                  <span
+                    key={user.id}
+                    className="inline-flex shrink-0 items-center gap-2 rounded-full border border-[var(--wms-brand-ring)] bg-[var(--wms-brand-soft)] px-3 py-1 text-sm"
+                  >
+                    {userDisplayName(user)}
+                    <button
+                      type="button"
+                      aria-label={t(`${D}.assignees.removeAria`, { name: userDisplayName(user) })}
+                      onClick={() => toggleUser(user)}
+                      className="rounded-full p-0.5 text-[var(--wms-app-text-muted)] hover:text-red-500"
+                    >
+                      <X className="size-3.5" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </OpsDialogBody>
+        <OpsDialogFooter>
+          <OpsActionButton type="button" variant="secondary" onClick={onClose}>
+            {t(`${D}.assignees.cancel`)}
+          </OpsActionButton>
+          <OpsActionButton type="button" variant="primary" onClick={onConfirm}>
+            {t(`${D}.assignees.confirm`)}
+          </OpsActionButton>
+        </OpsDialogFooter>
+      </OpsDialogContent>
+    </Dialog>
   );
 }
 function LineCard({

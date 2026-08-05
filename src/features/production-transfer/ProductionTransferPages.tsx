@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, Ban, Boxes, Factory, ListChecks, Play, RefreshCw, Save, Settings2, Trash2, UserPlus } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { ArrowRight, Ban, Boxes, ChevronDown, ChevronRight, Factory, ListChecks, Play, RefreshCw, Save, Settings2, Trash2, UserPlus } from 'lucide-react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
@@ -54,7 +54,12 @@ export function ProductionTransferDraftPage(){
   return <WarehouseTransferDraftPage variant="production" initialProductionSource={initial}/>;
 }
 export function ProductionTransferListPage(){return <WarehouseTransferListPage variant="production"/>;}
-export function ProductionTransferOperationPage(){return <div className="space-y-5"><ProductionTaskPanel/><WarehouseTransferOperationPage variant="production"/></div>;}
+export function ProductionTransferOperationPage(){
+  return <div className="space-y-5">
+    <ProductionTaskPanel/>
+    <WarehouseTransferOperationPage variant="production"/>
+  </div>;
+}
 
 export function ProductionTransferPolicyPage(){
   const {t}=useModuleTranslation('production-transfer');
@@ -93,9 +98,18 @@ function ProductionTaskPanel(){
   const id=Number(useParams().id);
   const currentUserId=useAuthStore(x=>x.user?.id);
   const{can}=usePermissionAccess();
-  const[board,setBoard]=useState<ProductionTaskBoard>();
+  const queryClient=useQueryClient();
+  const boardQueryKey=['production-transfer','board',id] as const;
+  const boardQuery=useQuery({queryKey:boardQueryKey,queryFn:()=>productionTransferApi.taskBoard(id),enabled:Number.isFinite(id)&&id>0});
+  const board=boardQuery.data;
   const[selectedUsers,setSelectedUsers]=useState<Record<number,number>>({});
   const[handoffReasons,setHandoffReasons]=useState<Record<number,string>>({});
+  const[expandedWorkloadUserIds,setExpandedWorkloadUserIds]=useState<Set<number>>(new Set());
+  const toggleWorkloadExpanded=(userId:number)=>setExpandedWorkloadUserIds(current=>{
+    const next=new Set(current);
+    if(next.has(userId))next.delete(userId);else next.add(userId);
+    return next;
+  });
   const[busy,setBusy]=useState(false);
   const canAssign=can('WMS.PRODUCTION_TRANSFER.ASSIGN');
   const canCancel=can('WMS.PRODUCTION_TRANSFER.CANCEL');
@@ -105,13 +119,11 @@ function ProductionTaskPanel(){
   const[cancelReason,setCancelReason]=useState('');
   useEffect(()=>{
     if(!Number.isFinite(id)||id<=0)return;
-    void Promise.all([
-      productionTransferApi.taskBoard(id),
-      productionTransferApi.policy(branchCode),
-    ]).then(([next,nextPolicy])=>{setBoard(next);setPolicy(nextPolicy);}).catch((e:Error)=>toast.error(e.message));
-  },[branchCode,canAssign,id]);
+    void productionTransferApi.policy(branchCode).then(setPolicy).catch((e:Error)=>toast.error(e.message));
+  },[branchCode,id]);
+  if(boardQuery.isLoading)return <section className="animate-pulse rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5"><div className="h-4 w-40 rounded bg-[var(--wms-app-border)]"/><div className="mt-3 h-24 rounded-xl bg-[var(--wms-app-border)]/60"/></section>;
   if(!board||board.tasks.length===0)return null;
-  const run=async(action:()=>Promise<ProductionTaskBoard>)=>{setBusy(true);try{setBoard(await action());}catch(e){toast.error(e instanceof Error?e.message:'İşlem başarısız.');}finally{setBusy(false);}};
+  const run=async(action:()=>Promise<ProductionTaskBoard>)=>{setBusy(true);try{queryClient.setQueryData(boardQueryKey,await action());}catch(e){toast.error(e instanceof Error?e.message:'İşlem başarısız.');}finally{setBusy(false);}};
   return <section className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5">
     <div className="mb-4 flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-widest text-[var(--wms-brand-primary)]">Üretim transfer görevi</p><h2 className="text-xl font-black">{board.documentNo}</h2></div><span className="rounded-full border border-[var(--wms-app-border)] px-3 py-1 text-xs font-bold">{board.transferStatus}</span></div>
     <div className="space-y-4">{board.tasks.map(task=><article key={task.taskId} className="rounded-xl border border-[var(--wms-app-border)] p-4">
@@ -122,8 +134,40 @@ function ProductionTaskPanel(){
         {canAssign&&<><select className="input min-w-52" value={selectedUsers[task.taskId]??''} onChange={e=>setSelectedUsers(x=>({...x,[task.taskId]:Number(e.target.value)}))}><option value="">Depo çalışanı seçin</option>{board.eligibleAssignees.filter(u=>(u.warehouseIds.length===0||u.warehouseIds.includes(task.warehouseId))&&!task.assignments.some(a=>a.userId===u.userId)).map(u=><option key={u.userId} value={u.userId}>{u.username}</option>)}</select><button disabled={busy||!selectedUsers[task.taskId]} onClick={()=>void run(()=>productionTransferApi.assignTask(id,task.taskId,selectedUsers[task.taskId]))} className="inline-flex items-center gap-2 rounded-lg border border-[var(--wms-brand-primary)] px-3 py-2 text-xs font-bold text-[var(--wms-brand-primary)]"><UserPlus className="size-4"/>Ata</button>{task.assignments.length>0&&!['Completed','Cancelled'].includes(task.status)&&task.lines.some(line=>line.processedQuantity<line.requestedQuantity)&&<><input className="input min-w-56" value={handoffReasons[task.taskId]??''} onChange={e=>setHandoffReasons(x=>({...x,[task.taskId]:e.target.value}))} placeholder="Devir nedeni (opsiyonel)"/><button disabled={busy||!selectedUsers[task.taskId]} onClick={()=>void run(()=>productionTransferApi.handoffTask(id,task.taskId,selectedUsers[task.taskId],handoffReasons[task.taskId]))} className="inline-flex items-center gap-2 rounded-lg bg-amber-500 px-3 py-2 text-xs font-black text-slate-950 disabled:opacity-40"><UserPlus className="size-4"/>Kalan işi devret</button></>}</>}
       </div>
     </article>)}</div>
-    {canAssign&&board.workloads.length>0&&<div className="mt-4 grid gap-2 md:grid-cols-3">{board.workloads.map(w=><div key={w.userId} className="rounded-xl bg-[var(--wms-app-surface)] p-3 text-sm"><strong>{w.username}</strong><div className="mt-1 text-xs text-[var(--wms-app-text-muted)]">Atanan {w.assignedTaskCount} · Tamamlanan {w.completedTaskCount}</div><div className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--wms-app-border)]"><span className="block h-full bg-emerald-500" style={{width:`${Math.min(100,Math.max(0,w.completionPercent))}%`}}/></div><div className="mt-1 text-xs font-bold">{w.processedQuantity} / {w.plannedQuantity} · %{w.completionPercent}</div></div>)}</div>}
-    {canCancel&&!['Cancelled','Completed'].includes(board.transferStatus)&&<div className="mt-5 rounded-xl border border-red-500/30 bg-red-500/5 p-4"><h3 className="flex items-center gap-2 font-black text-red-500"><Ban className="size-4"/>Transferi iptal et</h3><p className="mt-1 text-xs text-[var(--wms-app-text-muted)]">Toplanmamış rezervasyonlar çözülür; hareket görmüş stok politika uyarınca özgün veya iade rafına döner. ERP belgesi varsa önce doğrulanmış ERP iptali tamamlanır.</p><div className="mt-3 grid gap-3 lg:grid-cols-3">{policy?.cancellationReturnPolicy==='ManagerSelectionRequired'&&<PagedAppDropdown<LocationOption> queryKey={['production-cancel-return-location',board.sourceWarehouseId]} fetchPage={request=>warehouseTransferApi.locations(request,board.sourceWarehouseId)} toOption={x=>({value:String(x.id),label:`${x.code} · ${x.name}`})} value={returnLocationValue} onValueChange={setReturnLocationValue} placeholder="İade rafını seçin" searchable/>}<input className="input lg:col-span-2" value={cancelReason} onChange={e=>setCancelReason(e.target.value)} placeholder="İptal nedeni (en az 5 karakter)"/><button disabled={busy||cancelReason.trim().length<5||(policy?.cancellationReturnPolicy==='ManagerSelectionRequired'&&!returnLocationValue)} onClick={()=>void (async()=>{setBusy(true);try{await productionTransferApi.cancel(id,cancelReason,returnLocationValue?Number(returnLocationValue):undefined);toast.success('Transfer ve bağlı stok hareketleri güvenli biçimde iptal edildi.');setBoard(await productionTransferApi.taskBoard(id));}catch(e){toast.error(e instanceof Error?e.message:'İptal başarısız.');}finally{setBusy(false);}})()} className="rounded-lg border border-red-500 px-4 py-2 text-sm font-bold text-red-500 disabled:opacity-50">İptali uygula</button></div></div>}
+    {canAssign&&board.workloads.length>0&&<div className="mt-4 grid gap-2 md:grid-cols-3">{board.workloads.map(w=>{
+      const myTasks=board.tasks.filter(t=>t.assignments.some(a=>a.userId===w.userId));
+      const activeTask=myTasks.find(t=>t.status==='InProgress'&&t.startedBy===w.userId);
+      const activeProgress=activeTask?(()=>{
+        const planned=activeTask.lines.reduce((s,l)=>s+l.requestedQuantity,0);
+        const processed=activeTask.lines.reduce((s,l)=>s+Math.min(l.requestedQuantity,l.processedQuantity),0);
+        return{planned,processed,percent:planned<=0?0:Math.round(processed*10000/planned)/100};
+      })():null;
+      const expanded=expandedWorkloadUserIds.has(w.userId);
+      return <div key={w.userId} className="rounded-xl bg-[var(--wms-app-surface)] p-3 text-sm">
+        <button type="button" onClick={()=>toggleWorkloadExpanded(w.userId)} className="flex w-full items-center justify-between gap-2 text-left">
+          <strong>{w.username}</strong>
+          {expanded?<ChevronDown className="size-4 text-[var(--wms-app-text-muted)]"/>:<ChevronRight className="size-4 text-[var(--wms-app-text-muted)]"/>}
+        </button>
+        <div className="mt-1 text-xs text-[var(--wms-app-text-muted)]">Atanan {w.assignedTaskCount} · Tamamlanan {w.completedTaskCount}</div>
+        <div className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--wms-app-border)]"><span className="block h-full bg-emerald-500" style={{width:`${Math.min(100,Math.max(0,w.completionPercent))}%`}}/></div>
+        <div className="mt-1 text-xs font-bold">{w.processedQuantity} / {w.plannedQuantity} · %{w.completionPercent}</div>
+        {expanded&&<div className="mt-3 space-y-2 border-t border-[var(--wms-app-border)] pt-2">
+          {activeTask&&activeProgress&&<div className="rounded-lg bg-[var(--wms-brand-primary)]/10 p-2">
+            <div className="flex items-center justify-between text-xs font-bold"><span>Şu an yapıyor: {activeTask.taskNo}</span><span>%{activeProgress.percent}</span></div>
+            <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-[var(--wms-app-border)]"><span className="block h-full bg-[var(--wms-brand-primary)]" style={{width:`${Math.min(100,Math.max(0,activeProgress.percent))}%`}}/></div>
+            <div className="mt-1 text-[.7rem] text-[var(--wms-app-text-muted)]">{activeProgress.processed} / {activeProgress.planned}</div>
+          </div>}
+          <div className="space-y-1">
+            <div className="text-[.65rem] font-bold uppercase tracking-wide text-[var(--wms-app-text-muted)]">Atanmış İşler ({myTasks.length})</div>
+            {myTasks.length===0&&<p className="text-xs text-[var(--wms-app-text-muted)]">Atanmış görev yok.</p>}
+            {myTasks.map(t=><div key={t.taskId} className={`flex items-center justify-between rounded-md px-2 py-1 text-xs ${t.taskId===activeTask?.taskId?'bg-[var(--wms-brand-primary)]/10 font-bold':''}`}>
+              <span>{t.taskNo}</span><span className="text-[var(--wms-app-text-muted)]">{t.status}</span>
+            </div>)}
+          </div>
+        </div>}
+      </div>;
+    })}</div>}
+    {canCancel&&!['Cancelled','Completed'].includes(board.transferStatus)&&<div className="mt-5 rounded-xl border border-red-500/30 bg-red-500/5 p-4"><h3 className="flex items-center gap-2 font-black text-red-500"><Ban className="size-4"/>Transferi iptal et</h3><p className="mt-1 text-xs text-[var(--wms-app-text-muted)]">Toplanmamış rezervasyonlar çözülür; hareket görmüş stok politika uyarınca özgün veya iade rafına döner. ERP belgesi varsa önce doğrulanmış ERP iptali tamamlanır.</p><div className="mt-3 grid gap-3 lg:grid-cols-3">{policy?.cancellationReturnPolicy==='ManagerSelectionRequired'&&<PagedAppDropdown<LocationOption> queryKey={['production-cancel-return-location',board.sourceWarehouseId]} fetchPage={request=>warehouseTransferApi.locations(request,board.sourceWarehouseId)} toOption={x=>({value:String(x.id),label:`${x.code} · ${x.name}`})} value={returnLocationValue} onValueChange={setReturnLocationValue} placeholder="İade rafını seçin" searchable/>}<input className="input lg:col-span-2" value={cancelReason} onChange={e=>setCancelReason(e.target.value)} placeholder="İptal nedeni (en az 5 karakter)"/><button disabled={busy||cancelReason.trim().length<5||(policy?.cancellationReturnPolicy==='ManagerSelectionRequired'&&!returnLocationValue)} onClick={()=>void (async()=>{setBusy(true);try{await productionTransferApi.cancel(id,cancelReason,returnLocationValue?Number(returnLocationValue):undefined);toast.success('Transfer ve bağlı stok hareketleri güvenli biçimde iptal edildi.');queryClient.setQueryData(boardQueryKey,await productionTransferApi.taskBoard(id));}catch(e){toast.error(e instanceof Error?e.message:'İptal başarısız.');}finally{setBusy(false);}})()} className="rounded-lg border border-red-500 px-4 py-2 text-sm font-bold text-red-500 disabled:opacity-50">İptali uygula</button></div></div>}
   </section>;
 }
 

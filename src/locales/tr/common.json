@@ -5329,7 +5329,17 @@
     },
     "assignees": {
       "panel": "Emir sorumluları",
-      "search": "Aktif kullanıcı ara"
+      "hint": "Transfer emri, seçilen operasyon kullanıcılarının görev kuyruğuna düşer.",
+      "openDialog": "Kullanıcı seç",
+      "dialogTitle": "Emir sorumlularını seç",
+      "dialogDescription": "Aktif operasyon kullanıcılarından bir veya daha fazlasını işaretleyin.",
+      "search": "Aktif kullanıcı ara",
+      "selectedCount": "{{count}} kullanıcı seçildi",
+      "empty": "Henüz sorumlu atanmadı.",
+      "noResults": "Kullanıcı bulunamadı.",
+      "removeAria": "{{name}} kullanıcısını kaldır",
+      "cancel": "Vazgeç",
+      "confirm": "Seçimi uygula"
     },
     "lines": {
       "panel": "Transfer kalemleri · {{count}} · {{total}}",
@@ -7218,6 +7228,8 @@
     "targetWarehouse": "Hedef depo",
     "targetLocation": "Hedef raf",
     "unit": "Birim",
+    "yapCode": "Yapılandırma kodu",
+    "selectYapCodeOptional": "Yapılandırma kodu (varsa)",
     "selectStockFirst": "Önce stok seçin",
     "lot": "Lot",
     "serial": "Seri",

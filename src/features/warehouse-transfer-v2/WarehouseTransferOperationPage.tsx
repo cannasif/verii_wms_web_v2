@@ -1,18 +1,30 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { ArrowLeftRight, CheckCircle2, Loader2, PlayCircle, ShieldCheck } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { AppDropdown } from '@/components/shared/AppDropdown';
+import { OpsActionButton } from '@/components/shared/OpsActionButton';
 import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
+import { TrackingPlanEditor, type TrackingPlanRow } from '@/components/shared/TrackingPlanEditor';
 import { WarehouseBarcodeScanner } from '@/features/barcode-resolution/WarehouseBarcodeScanner';
 import { completeGoodsReceiptDocumentNo, normalizeGoodsReceiptDocumentNo } from '@/features/goods-receipt-v2/utils/goods-receipt-document-reference';
 import { localizeEnumValue } from '@/lib/enum-localization';
 import { formatProjectNumber } from '@/lib/project-format';
-import { transferApiFor, warehouseTransferApi, type TransferApiVariant, type WarehouseTransferOperationLinePayload } from './api/warehouse-transfer.api';
+import { cn } from '@/lib/utils';
+import { transferApiFor, warehouseTransferApi, type TransferApiVariant } from './api/warehouse-transfer.api';
 import type { WarehouseTransferDetail } from './types/warehouse-transfer.types';
 
 type Phase = 'pick' | 'dispatch' | 'receive' | 'putaway';
-type EditLine = WarehouseTransferOperationLinePayload & { sourceValue: string | null; targetValue: string | null };
+type EditLine = {
+  lineId: number;
+  quantity: number;
+  sourceLocationId: number | null;
+  targetLocationId: number | null;
+  sourceValue: string | null;
+  targetValue: string | null;
+  trackings: TrackingPlanRow[];
+};
 
 const phaseOptions = [
   { value: 'pick', label: '01 · Toplama' },
@@ -23,6 +35,7 @@ const phaseOptions = [
 
 export function WarehouseTransferOperationPage({ variant = 'warehouse' }: { variant?: TransferApiVariant }) {
   const id = Number(useParams().id);
+  const queryClient = useQueryClient();
   const transferApi = useMemo(() => transferApiFor(variant), [variant]);
   const listUrl = variant === 'production' ? '/warehouse/production-transfers/list'
     : variant === 'subcontracting' ? '/warehouse/subcontracting-transfers/list' : '/warehouse/transfers/list';
@@ -35,6 +48,7 @@ export function WarehouseTransferOperationPage({ variant = 'warehouse' }: { vari
   const [driverName, setDriverName] = useState('');
   const [waybillNo, setWaybillNo] = useState('');
   const [busy, setBusy] = useState(false);
+  const [submittingLineId, setSubmittingLineId] = useState<number>();
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -59,19 +73,42 @@ export function WarehouseTransferOperationPage({ variant = 'warehouse' }: { vari
     }
   }, [phase]);
 
+  const trackingRemaining = useCallback((tracking: WarehouseTransferDetail['lines'][number]['trackings'][number]) => {
+    switch (phase) {
+      case 'pick': return tracking.plannedQuantity - tracking.pickedQuantity;
+      case 'dispatch': return tracking.pickedQuantity - tracking.shippedQuantity;
+      case 'receive': return tracking.shippedQuantity - tracking.receivedQuantity;
+      case 'putaway': return tracking.receivedQuantity - tracking.putawayQuantity;
+    }
+  }, [phase]);
+
   useEffect(() => {
     if (!detail) return;
     setLines(detail.lines.filter((line) => remaining(line) > 0).map((line) => ({
       lineId: line.id,
-      quantity: line.trackingType === 'Serial' || line.trackingType === 'LotAndSerial' ? 1 : remaining(line),
-      sourceLocationId: null,
-      targetLocationId: null,
-      lotNo: null,
-      serialNo: null,
-      sourceValue: null,
-      targetValue: null,
+      quantity: remaining(line),
+      // Üretime Transfer Oluştur ekranında satıra girilmiş varsayılan kaynak/hedef raf varsa,
+      // hangi operasyon fazında olursak olalım önceden doldur (toplama, sevk, kabul, yerleştirme).
+      sourceLocationId: line.defaultSourceLocationId ?? null,
+      targetLocationId: line.defaultTargetLocationId ?? null,
+      sourceValue: line.defaultSourceLocationId ? String(line.defaultSourceLocationId) : null,
+      targetValue: line.defaultTargetLocationId ? String(line.defaultTargetLocationId) : null,
+      // Draft'ta zaten girilmiş planlı seri/lot kayıtları varsa önceden doldur — pick sırasında
+      // bunlarla birebir aynı değer gönderilmesi backend'de zorunlu (aksi halde 409 Conflict).
+      trackings: line.trackings
+        .map((t) => ({ tracking: t, qty: trackingRemaining(t) }))
+        .filter((x) => x.qty > 0)
+        .map(({ tracking: t, qty }) => ({
+          localId: String(t.id),
+          quantity: qty,
+          lotNo: t.lotNo ?? undefined,
+          serialNo: t.serialNo ?? undefined,
+          handlingUnitNo: t.handlingUnitNo ?? undefined,
+          manufacturingDate: t.manufacturingDate ?? undefined,
+          expirationDate: t.expirationDate ?? undefined,
+        })),
     })));
-  }, [detail, phase, remaining]);
+  }, [detail, phase, remaining, trackingRemaining]);
 
   const sourceWarehouseId = detail
     ? phase === 'pick' || phase === 'dispatch' ? detail.header.sourceWarehouseId : detail.header.targetWarehouseId
@@ -95,40 +132,51 @@ export function WarehouseTransferOperationPage({ variant = 'warehouse' }: { vari
     }
   };
 
-  const execute = async () => {
-    const selected = lines.filter((line) => line.quantity > 0);
-    if (!selected.length) return toast.error('İşlenecek en az bir satır olmalıdır.');
-    if (selected.some((line) => !line.sourceLocationId || !line.targetLocationId))
+  const completeLine = async (line: WarehouseTransferDetail['lines'][number]) => {
+    const edit = lines.find((x) => x.lineId === line.id);
+    if (!edit) return;
+    if (!edit.sourceLocationId || !edit.targetLocationId)
       return toast.error('Kaynak ve hedef raf seçimlerini tamamlayın.');
-    const invalidTracking = selected.find((edit) => {
-      const line = detail?.lines.find((item) => item.id === edit.lineId);
-      if (!line) return true;
-      if ((line.trackingType === 'Serial' || line.trackingType === 'LotAndSerial') && (!edit.serialNo?.trim() || edit.quantity !== 1)) return true;
-      return (line.trackingType === 'Lot' || line.trackingType === 'LotAndSerial') && !edit.lotNo?.trim();
-    });
-    if (invalidTracking) return toast.error('Seri, lot ve miktar bilgilerini stok takip kuralına uygun doldurun.');
-    setBusy(true);
-    try {
-      const result = await transferApi.operate(id, phase, {
-        lines: selected.map((line) => ({
-          lineId: line.lineId,
-          quantity: line.quantity,
-          sourceLocationId: line.sourceLocationId,
-          targetLocationId: line.targetLocationId,
-          lotNo: line.lotNo,
-          serialNo: line.serialNo,
-        })),
-        reason,
-        vehiclePlate,
-        driverName,
-        waybillNo,
+    const isTracked = line.trackingType !== 'None';
+    const submissions = isTracked
+      ? edit.trackings.filter((row) => row.quantity > 0)
+      : [{ localId: 'single', quantity: edit.quantity, lotNo: undefined, serialNo: undefined } satisfies TrackingPlanRow];
+    if (!submissions.length) return toast.error('İşlenecek miktar girilmedi.');
+    if (isTracked) {
+      const invalid = submissions.some((row) => {
+        if ((line.trackingType === 'Serial' || line.trackingType === 'LotAndSerial') && (!row.serialNo?.trim() || row.quantity !== 1)) return true;
+        return (line.trackingType === 'Lot' || line.trackingType === 'LotAndSerial') && !row.lotNo?.trim();
       });
-      toast.success(`${result.documentNo}: ${localizeEnumValue(result.status)}`);
+      if (invalid) return toast.error('Seri, lot ve miktar bilgilerini stok takip kuralına uygun doldurun.');
+    }
+    setSubmittingLineId(line.id);
+    try {
+      let result;
+      for (const row of submissions) {
+        result = await transferApi.operate(id, phase, {
+          lines: [{
+            lineId: line.id,
+            quantity: row.quantity,
+            sourceLocationId: edit.sourceLocationId,
+            targetLocationId: edit.targetLocationId,
+            lotNo: row.lotNo?.trim() || null,
+            serialNo: row.serialNo?.trim() || null,
+          }],
+          reason,
+          vehiclePlate,
+          driverName,
+          waybillNo,
+        });
+      }
+      if (result) toast.success(`#${line.lineNo} · ${line.stockCode}: ${localizeEnumValue(result.status)}`);
       await load();
+      if (variant === 'production') {
+        void queryClient.invalidateQueries({ queryKey: ['production-transfer', 'board', id] });
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Operasyon tamamlanamadı.');
     } finally {
-      setBusy(false);
+      setSubmittingLineId(undefined);
     }
   };
 
@@ -189,12 +237,14 @@ export function WarehouseTransferOperationPage({ variant = 'warehouse' }: { vari
             }
             const available = remaining(targetLine);
             const quantity = value.quantity ?? (value.serialNo ? 1 : Math.min(1, available));
+            const isTracked = targetLine.trackingType !== 'None';
+            const edit = lines.find((x) => x.lineId === targetLine.id);
             patch(targetLine.id, {
-              quantity: Math.min(quantity, available),
+              ...(isTracked
+                ? { trackings: [...(edit?.trackings ?? []), { localId: crypto.randomUUID(), quantity: Math.min(quantity, available), lotNo: value.lotNo ?? undefined, serialNo: value.serialNo ?? undefined }] }
+                : { quantity: Math.min(quantity, available) }),
               sourceLocationId: value.suggestedLocationId ?? null,
               sourceValue: value.suggestedLocationId ? String(value.suggestedLocationId) : null,
-              lotNo: value.lotNo ?? null,
-              serialNo: value.serialNo ?? null,
             });
           }}
         />
@@ -204,19 +254,66 @@ export function WarehouseTransferOperationPage({ variant = 'warehouse' }: { vari
         {detail.lines.map((line) => {
           const edit = lines.find((x) => x.lineId === line.id);
           const available = remaining(line);
-          return <div key={line.id} className={`rounded-xl border p-4 ${available <= 0 ? 'opacity-50' : ''}`}>
+          return <div
+            key={line.id}
+            className={cn(
+              'rounded-xl p-4',
+              variant === 'production'
+                ? 'border-2 border-[color-mix(in_oklab,var(--wms-brand-primary)_38%,var(--wms-app-border))] bg-[var(--wms-app-surface)] shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--wms-brand-primary)_10%,transparent)]'
+                : 'border border-[var(--wms-app-border)]',
+              available <= 0 && 'opacity-50',
+            )}
+          >
             <div className="mb-3 flex justify-between gap-3"><div><strong>#{line.lineNo} · {line.stockCode}</strong><p className="text-xs text-slate-500">{line.stockName} · {line.yapCode || 'YAP yok'} · Kullanılabilir {formatProjectNumber(Math.max(0, available))}</p></div><CheckCircle2 className={`size-5 ${available <= 0 ? 'text-emerald-500' : 'text-slate-500'}`} /></div>
-            {edit && <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-              <Field label="Miktar"><input className="input" type="number" min="0.000001" max={available} step="0.000001" value={edit.quantity} onChange={(e) => patch(line.id, { quantity: Number(e.target.value) })} /></Field>
-              <Field label="Kaynak raf"><PagedAppDropdown queryKey={['wt-op-source', phase, line.id, sourceWarehouseId]} fetchPage={(request) => warehouseTransferApi.locations(request, sourceWarehouseId)} toOption={(x) => ({ value: String(x.id), label: `${x.code} · ${x.name}` })} value={edit.sourceValue} onValueChange={(value) => patch(line.id, { sourceValue: value, sourceLocationId: Number(value) })} searchable /></Field>
-              <Field label="Hedef raf"><PagedAppDropdown queryKey={['wt-op-target', phase, line.id, targetWarehouseId]} fetchPage={(request) => warehouseTransferApi.locations(request, targetWarehouseId)} toOption={(x) => ({ value: String(x.id), label: `${x.code} · ${x.name}` })} value={edit.targetValue} onValueChange={(value) => patch(line.id, { targetValue: value, targetLocationId: Number(value) })} searchable /></Field>
-              <Field label="Lot"><input className="input" value={edit.lotNo ?? ''} onChange={(e) => patch(line.id, { lotNo: e.target.value || null })} /></Field>
-              <Field label="Seri"><input className="input" value={edit.serialNo ?? ''} onChange={(e) => patch(line.id, { serialNo: e.target.value || null })} /></Field>
-            </div>}
+            {edit && <>
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                {line.trackingType === 'None' && <Field label="Miktar"><input className="input" type="number" min="0.000001" max={available} step="0.000001" value={edit.quantity} onChange={(e) => patch(line.id, { quantity: Number(e.target.value) })} /></Field>}
+                <Field label="Kaynak raf">
+                  <PagedAppDropdown
+                    queryKey={['wt-op-source', phase, line.id, sourceWarehouseId]}
+                    fetchPage={(request) => warehouseTransferApi.locations(request, sourceWarehouseId)}
+                    toOption={(x) => ({ value: String(x.id), label: `${x.code} · ${x.name}` })}
+                    selectedOption={line.defaultSourceLocationId ? { value: String(line.defaultSourceLocationId), label: `${line.defaultSourceLocationCode} · ${line.defaultSourceLocationName}` } : undefined}
+                    value={edit.sourceValue}
+                    onValueChange={(value) => patch(line.id, { sourceValue: value, sourceLocationId: Number(value) })}
+                    searchable
+                  />
+                </Field>
+                <Field label="Hedef raf">
+                  <PagedAppDropdown
+                    queryKey={['wt-op-target', phase, line.id, targetWarehouseId]}
+                    fetchPage={(request) => warehouseTransferApi.locations(request, targetWarehouseId)}
+                    toOption={(x) => ({ value: String(x.id), label: `${x.code} · ${x.name}` })}
+                    selectedOption={line.defaultTargetLocationId ? { value: String(line.defaultTargetLocationId), label: `${line.defaultTargetLocationCode} · ${line.defaultTargetLocationName}` } : undefined}
+                    value={edit.targetValue}
+                    onValueChange={(value) => patch(line.id, { targetValue: value, targetLocationId: Number(value) })}
+                    searchable
+                  />
+                </Field>
+              </div>
+              {line.trackingType !== 'None' && <TrackingPlanEditor
+                mode={line.trackingType}
+                quantity={available}
+                value={edit.trackings}
+                onChange={(trackings) => patch(line.id, { trackings })}
+                accent="violet"
+                compact
+              />}
+              <div className="mt-3 flex justify-end">
+                <OpsActionButton
+                  variant="primary"
+                  loading={submittingLineId === line.id}
+                  onClick={() => void completeLine(line)}
+                  className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 font-bold"
+                >
+                  <ArrowLeftRight className="size-4" />
+                  Stoğu tamamla
+                </OpsActionButton>
+              </div>
+            </>}
           </div>;
         })}
       </div>
-      <div className="mt-5 flex justify-end"><button disabled={busy || !lines.length} onClick={() => void execute()} className="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-6 py-3 font-bold text-white disabled:opacity-50">{busy ? <Loader2 className="size-4 animate-spin" /> : <ArrowLeftRight className="size-4" />}Operasyonu işle</button></div>
     </section>
   </section>;
 }
