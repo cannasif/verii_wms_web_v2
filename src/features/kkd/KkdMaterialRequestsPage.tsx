@@ -1,29 +1,42 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactElement } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { ArrowRight, ClipboardList, ScanLine, ShieldAlert } from 'lucide-react';
+import { ArrowRight, ClipboardList, Factory, ScanLine, Settings2, ShieldAlert, UserRound } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { useUIStore } from '@/stores/ui-store';
+import type { AppDropdownOption } from '@/components/shared/AppDropdown';
+import { AppInput } from '@/components/shared/AppInput';
+import { OpsActionButton } from '@/components/shared/OpsActionButton';
+import { OpsGridEmptyState } from '@/components/shared/OpsGridEmptyState';
+import { OpsLoadingState } from '@/components/shared/OpsLoadingState';
+import { OpsSelect } from '@/components/shared/OpsSelect';
+import { OpsSkinCheckbox } from '@/components/shared/OpsSkinCheckbox';
+import { OpsStatusBadge } from '@/components/shared/OpsStatusBadge';
+import { cn } from '@/lib/utils';
+import {
+  KKD_CELL,
+  KKD_HEAD_CELL,
+  KkdCallout,
+  KkdField,
+  KkdMetric,
+  KkdPage,
+  KkdPanel,
+  KkdSelectableCard,
+  KkdTableShell,
+} from './kkd-ops-ui';
 import { kkdApi } from './kkd-api';
 
-const field = 'min-h-11 rounded-xl border border-[var(--wms-app-border)] bg-transparent px-3 text-sm outline-none focus:border-cyan-500';
-const panel = 'rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5 shadow-sm';
-
-export function KkdMaterialRequestsPage() {
+export function KkdMaterialRequestsPage(): ReactElement {
   const navigate = useNavigate();
-  const setPageTitle = useUIStore((state) => state.setPageTitle);
   const [employeeId, setEmployeeId] = useState('');
   const [employeeQr, setEmployeeQr] = useState('');
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
   const employeeNumber = Number(employeeId || 0);
   const sortedOrders = useMemo(() => [...selectedOrders].sort(), [selectedOrders]);
 
-  useEffect(() => {
-    setPageTitle('Malzeme Talep Siparişleri');
-    return () => setPageTitle(null);
-  }, [setPageTitle]);
-
-  const configuration = useQuery({ queryKey: ['kkd', 'material-requests', 'configuration'], queryFn: kkdApi.materialRequestConfiguration });
+  const configuration = useQuery({
+    queryKey: ['kkd', 'material-requests', 'configuration'],
+    queryFn: kkdApi.materialRequestConfiguration,
+  });
   const enabled = configuration.data?.isEnabled === true;
   const employees = useQuery({ queryKey: ['kkd', 'employees'], queryFn: kkdApi.employees, enabled });
   const context = useQuery({
@@ -47,101 +60,292 @@ export function KkdMaterialRequestsPage() {
 
   useEffect(() => setSelectedOrders([]), [employeeId]);
 
-  const toggleOrder = (orderNumber: string, checked: boolean) => {
+  const toggleOrder = (orderNumber: string): void => {
     setSelectedOrders((current) => {
-      if (!checked) return current.filter((item) => item !== orderNumber);
+      if (current.includes(orderNumber)) return current.filter((item) => item !== orderNumber);
       if (!context.data?.policy.allowMultipleOrdersPerDistribution) return [orderNumber];
       return [...new Set([...current, orderNumber])];
     });
   };
 
-  const prepareDistribution = () => {
+  const prepareDistribution = (): void => {
     if (!enabled || !employeeNumber || sortedOrders.length === 0) return;
-    const params = new URLSearchParams({ employeeId: String(employeeNumber), orders: sortedOrders.join(','), taskMode: '1' });
+    const params = new URLSearchParams({
+      employeeId: String(employeeNumber),
+      orders: sortedOrders.join(','),
+      taskMode: '1',
+    });
     navigate(`/warehouse/kkd/distributions/new?${params.toString()}`);
   };
 
-  return <section className="mx-auto w-full max-w-[1500px] space-y-5 p-4 lg:p-6">
-    <header>
-      <p className="text-xs font-black uppercase tracking-[.2em] text-cyan-500">Depo İş Merkezi / Malzeme Talebi</p>
-      <h1 className="mt-2 text-3xl font-black">Windbox malzeme talep siparişleri</h1>
-      <p className="mt-1 text-sm text-slate-500">WMS v1 ile aynı iş kaynağı kullanılır: personelin bağlı olduğu cari bulunur ve Netsis'teki açık siparişleri gerçek satır bakiyeleriyle getirilir.</p>
-      <div className="mt-4 flex flex-wrap gap-2">
-        <Link className="rounded-xl border border-[var(--wms-app-border)] px-4 py-2 text-sm font-bold hover:border-cyan-500" to="/warehouse/production-transfers/task-pool">Üretim transfer görevleri</Link>
-        <span className="rounded-xl bg-cyan-500 px-4 py-2 text-sm font-black text-slate-950">Malzeme talep siparişleri</span>
-      </div>
-    </header>
+  const employeeOptions: AppDropdownOption[] = (employees.data ?? []).map((employee) => ({
+    value: String(employee.id),
+    label: `${employee.employeeCode} · ${employee.fullName}`,
+  }));
+  const lineColumns = [
+    'Sipariş / sıra',
+    'Stok',
+    'Proje',
+    'Sipariş tarihi',
+    'Teslim tarihi',
+    'Kalan',
+    'WMS durumu',
+  ];
 
-    {configuration.isLoading && <div className={`${panel} text-sm text-slate-500`}>Şube malzeme talep politikası yükleniyor…</div>}
-    {configuration.isError && <div className="rounded-2xl border border-rose-500/50 bg-rose-500/10 p-4 text-sm text-rose-500">Malzeme talep süreç parametresi okunamadı.</div>}
-    {configuration.data && !enabled && <div className="rounded-2xl border border-amber-500/50 bg-amber-500/10 p-5 text-sm text-amber-600">
-      <strong className="block text-base">Malzeme talep siparişleri kapalı</strong>
-      <span>Bu kanal şubenin KKD süreç politikasından etkinleştirilmeden personel kartı veya Netsis açık siparişi okunmaz.</span>
-      <Link className="mt-3 block font-black underline" to="/warehouse/kkd/policy">KKD süreç politikasını aç →</Link>
-    </div>}
-
-    {enabled && <div className={`${panel} grid gap-4 lg:grid-cols-2`}>
-      <form className="flex items-end gap-2" onSubmit={(event) => { event.preventDefault(); if (employeeQr.trim()) resolveEmployee.mutate(); }}>
-        <label className="grid min-w-0 flex-1 gap-1 text-xs font-bold uppercase">Personel kartı / QR
-          <input autoFocus className={field} value={employeeQr} onChange={(event) => setEmployeeQr(event.target.value)} placeholder="Kartı okutun veya kodu yazın" />
-        </label>
-        <button disabled={!employeeQr.trim() || resolveEmployee.isPending} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-cyan-500 px-4 font-black text-cyan-500 disabled:opacity-50">
-          <ScanLine className="size-4" />{resolveEmployee.isPending ? 'Aranıyor…' : 'Talepleri getir'}
-        </button>
-      </form>
-      <label className="grid gap-1 text-xs font-bold uppercase">Personel
-        <select className={field} value={employeeId} onChange={(event) => setEmployeeId(event.target.value)}>
-          <option value="">Personel seçin</option>
-          {employees.data?.map((employee) => <option key={employee.id} value={employee.id}>{employee.employeeCode} · {employee.fullName}</option>)}
-        </select>
-      </label>
-    </div>}
-
-    {enabled && context.isError && <div className="rounded-2xl border border-rose-500/50 bg-rose-500/10 p-4 text-sm text-rose-500">
-      <strong className="block">Malzeme talepleri okunamadı</strong>
-      <span>{context.error instanceof Error ? context.error.message : 'Personel-cari bağlantısı veya Netsis erişimi kontrol edilmelidir.'}</span>
-    </div>}
-
-    {context.data && <>
-      <section className={`${panel} grid gap-4 md:grid-cols-3`}>
-        <Metric label="Personel" value={`${context.data.employeeCode} · ${context.data.employeeName}`} />
-        <Metric label="Netsis carisi" value={`${context.data.customerCode} · ${context.data.customerName}`} />
-        <Metric label="Açık talep" value={`${context.data.orders.length} sipariş`} />
-      </section>
-
-      <section className={panel}>
-        <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-          <div><h2 className="flex items-center gap-2 text-lg font-black"><ClipboardList className="size-5 text-cyan-500" />Açık siparişler</h2><p className="text-sm text-slate-500">Sipariş seçildiğinde kalan kalemler aşağıda açılır; WMS stoğuyla eşleşmeyen satırlar dağıtıma alınmaz.</p></div>
-          <button disabled={sortedOrders.length === 0} onClick={prepareDistribution} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-cyan-500 px-5 font-black text-slate-950 disabled:opacity-40">Seçilenleri dağıtıma hazırla <ArrowRight className="size-4" /></button>
+  return (
+    <KkdPage
+      title="Windbox Malzeme Talep Siparişleri"
+      description="WMS v1 ile aynı iş kaynağı kullanılır: personelin bağlı olduğu cari bulunur ve Netsis'teki açık siparişleri gerçek satır bakiyeleriyle getirilir."
+      actions={
+        <div className="flex flex-wrap gap-1.5">
+          <OpsActionButton variant="secondary" className="wms-ops-list-toolbar-btn" asChild>
+            <Link to="/warehouse/production-transfers/task-pool">
+              <Factory className="size-3.5 shrink-0" />
+              Üretim transfer görevleri
+            </Link>
+          </OpsActionButton>
+          <OpsActionButton variant="primary" className="wms-ops-list-toolbar-btn" asChild>
+            <Link to="/warehouse/production-transfers/material-requests" aria-current="page">
+              <ClipboardList className="size-3.5 shrink-0" />
+              Malzeme talep siparişleri
+            </Link>
+          </OpsActionButton>
         </div>
-        <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
-          {context.data.orders.map((order) => <label key={order.orderNumber} className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 ${selectedOrders.includes(order.orderNumber) ? 'border-cyan-500 bg-cyan-500/10' : 'border-[var(--wms-app-border)]'}`}>
-            <input type="checkbox" checked={selectedOrders.includes(order.orderNumber)} onChange={(event) => toggleOrder(order.orderNumber, event.target.checked)} />
-            <span className="min-w-0"><strong className="block">{order.orderNumber}</strong><small className="block text-slate-500">{order.projectCode || 'Projesiz'} · {order.orderDate ? new Date(order.orderDate).toLocaleDateString('tr-TR') : 'Tarih yok'} · Açık {order.remainingQuantity}</small></span>
-          </label>)}
-        </div>
-        {context.data.orders.length === 0 && <p className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-600">Bu personelin bağlı olduğu cari için açık Netsis siparişi bulunamadı.</p>}
-      </section>
-    </>}
+      }
+    >
+      {configuration.isLoading ? (
+        <KkdPanel
+          code="CFG"
+          icon={<Settings2 className="size-4" strokeWidth={1.75} />}
+          title="Şube politikası"
+          description="Malzeme talep kanalının açık olup olmadığı okunuyor."
+        >
+          <OpsLoadingState code="POLICY" message="Şube malzeme talep politikası yükleniyor…" />
+        </KkdPanel>
+      ) : null}
 
-    {lines.data && <section className={`${panel} overflow-auto`}>
-      <h2 className="mb-3 text-lg font-black">Talep kalemleri</h2>
-      <table className="w-full min-w-[1000px] text-left text-sm">
-        <thead><tr className="border-b border-[var(--wms-app-border)]">{['Sipariş / sıra', 'Stok', 'Proje', 'Sipariş tarihi', 'Teslim tarihi', 'Kalan', 'WMS durumu'].map((title) => <th className="p-3" key={title}>{title}</th>)}</tr></thead>
-        <tbody>{lines.data.map((line) => <tr key={`${line.orderNumber}|${line.orderLineId}`} className="border-b border-[var(--wms-app-border)]">
-          <td className="p-3 font-bold">{line.orderNumber} / {line.orderLineSequence}</td>
-          <td className="p-3">{line.stockCode}<small className="block text-slate-500">{line.stockName}</small></td>
-          <td className="p-3">{line.projectCode || '-'}</td>
-          <td className="p-3">{line.orderDate ? new Date(line.orderDate).toLocaleDateString('tr-TR') : '-'}</td>
-          <td className="p-3">{line.deliveryDate ? new Date(line.deliveryDate).toLocaleDateString('tr-TR') : '-'}</td>
-          <td className="p-3 font-bold">{line.remainingQuantity} {line.unitCode}</td>
-          <td className="p-3">{line.isMapped ? <span className="text-emerald-500">Dağıtıma uygun</span> : <span className="inline-flex items-start gap-2 text-rose-500"><ShieldAlert className="mt-0.5 size-4 shrink-0" />{line.mappingMessage || 'WMS stok eşlemesi eksik.'}</span>}</td>
-        </tr>)}</tbody>
-      </table>
-    </section>}
-  </section>;
-}
+      {configuration.isError ? (
+        <KkdCallout tone="danger" icon={<ShieldAlert className="size-4" strokeWidth={1.75} />} title="Politika okunamadı">
+          Malzeme talep süreç parametresi okunamadı.
+        </KkdCallout>
+      ) : null}
 
-function Metric({ label, value }: { label: string; value: string }) {
-  return <div><p className="text-xs font-bold uppercase text-slate-500">{label}</p><p className="mt-1 font-black">{value}</p></div>;
+      {configuration.data && !enabled ? (
+        <KkdCallout
+          tone="warn"
+          icon={<ShieldAlert className="size-4" strokeWidth={1.75} />}
+          title="Malzeme talep siparişleri kapalı"
+          actions={
+            <OpsActionButton variant="secondary" className="wms-ops-list-toolbar-btn" asChild>
+              <Link to="/warehouse/kkd/policy">
+                <Settings2 className="size-3.5 shrink-0" />
+                KKD süreç politikasını aç
+              </Link>
+            </OpsActionButton>
+          }
+        >
+          Bu kanal şubenin KKD süreç politikasından etkinleştirilmeden personel kartı veya Netsis açık siparişi
+          okunmaz.
+        </KkdCallout>
+      ) : null}
+
+      {enabled ? (
+        <KkdPanel
+          code="EMP_01"
+          icon={<UserRound className="size-4" strokeWidth={1.75} />}
+          title="Personel seçimi"
+          description="Kartı okutun veya listeden seçin; bağlı cari ve açık talepler otomatik getirilir."
+        >
+          <div className="grid gap-3 lg:grid-cols-2">
+            <form
+              className="flex items-end gap-2"
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (employeeQr.trim()) resolveEmployee.mutate();
+              }}
+            >
+              <KkdField label="Personel kartı / QR" className="flex-1">
+                <AppInput
+                  autoFocus
+                  value={employeeQr}
+                  onChange={(event) => setEmployeeQr(event.target.value)}
+                  placeholder="Kartı okutun veya kodu yazın"
+                />
+              </KkdField>
+              <OpsActionButton
+                type="submit"
+                variant="secondary"
+                disabled={!employeeQr.trim()}
+                loading={resolveEmployee.isPending}
+                loadingLabel={<>Aranıyor…</>}
+              >
+                <ScanLine className="size-3.5 shrink-0" />
+                Talepleri getir
+              </OpsActionButton>
+            </form>
+            <KkdField label="Personel">
+              <OpsSelect
+                value={employeeId}
+                onValueChange={setEmployeeId}
+                options={employeeOptions}
+                placeholder="Personel seçin"
+                searchable
+              />
+            </KkdField>
+          </div>
+
+          {context.isLoading ? (
+            <div className="mt-3">
+              <OpsLoadingState code="CTX" message="Personel carisi ve açık talepler okunuyor…" compact />
+            </div>
+          ) : null}
+
+          {context.data ? (
+            <div className="mt-3 grid gap-3 md:grid-cols-3">
+              <KkdMetric label="Personel" value={`${context.data.employeeCode} · ${context.data.employeeName}`} />
+              <KkdMetric
+                label="Netsis carisi"
+                value={`${context.data.customerCode} · ${context.data.customerName}`}
+              />
+              <KkdMetric label="Açık talep" value={`${context.data.orders.length} sipariş`} />
+            </div>
+          ) : null}
+        </KkdPanel>
+      ) : null}
+
+      {enabled && context.isError ? (
+        <KkdCallout
+          tone="danger"
+          icon={<ShieldAlert className="size-4" strokeWidth={1.75} />}
+          title="Malzeme talepleri okunamadı"
+        >
+          {context.error instanceof Error
+            ? context.error.message
+            : 'Personel-cari bağlantısı veya Netsis erişimi kontrol edilmelidir.'}
+        </KkdCallout>
+      ) : null}
+
+      {context.data ? (
+        <KkdPanel
+          code="ORD_02"
+          icon={<ClipboardList className="size-4" strokeWidth={1.75} />}
+          title="Açık siparişler"
+          description="Sipariş seçildiğinde kalan kalemler aşağıda açılır; WMS stoğuyla eşleşmeyen satırlar dağıtıma alınmaz."
+          actions={
+            <OpsActionButton
+              variant="primary"
+              className="wms-ops-list-toolbar-btn"
+              disabled={sortedOrders.length === 0}
+              onClick={prepareDistribution}
+            >
+              Seçilenleri dağıtıma hazırla
+              <ArrowRight className="size-3.5 shrink-0" />
+            </OpsActionButton>
+          }
+        >
+          {context.data.orders.length === 0 ? (
+            <KkdCallout tone="warn" icon={<ShieldAlert className="size-4" strokeWidth={1.75} />}>
+              Bu personelin bağlı olduğu cari için açık Netsis siparişi bulunamadı.
+            </KkdCallout>
+          ) : (
+            <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+              {context.data.orders.map((order) => {
+                const isSelected = selectedOrders.includes(order.orderNumber);
+                return (
+                  <KkdSelectableCard
+                    key={order.orderNumber}
+                    selected={isSelected}
+                    onToggle={() => toggleOrder(order.orderNumber)}
+                    control={
+                      <OpsSkinCheckbox
+                        checked={isSelected}
+                        onCheckedChange={() => toggleOrder(order.orderNumber)}
+                        aria-label={order.orderNumber}
+                      />
+                    }
+                  >
+                    <strong className="block font-mono">{order.orderNumber}</strong>
+                    <span className="block text-xs text-[var(--wms-app-text-muted)]">
+                      {order.projectCode || 'Projesiz'} ·{' '}
+                      {order.orderDate ? new Date(order.orderDate).toLocaleDateString('tr-TR') : 'Tarih yok'} · Açık{' '}
+                      {order.remainingQuantity}
+                    </span>
+                  </KkdSelectableCard>
+                );
+              })}
+            </div>
+          )}
+        </KkdPanel>
+      ) : null}
+
+      {sortedOrders.length > 0 ? (
+        <KkdPanel
+          code="LIN_03"
+          icon={<ClipboardList className="size-4" strokeWidth={1.75} />}
+          title="Talep kalemleri"
+          description="Kalan miktarlar Netsis satır bakiyesinden anlık okunur."
+          bodyClassName="px-0 py-0 sm:px-0 sm:py-0"
+        >
+          <KkdTableShell minWidthClass="min-w-[1000px]" className="border-x-0 border-b-0">
+            <thead className="sticky top-0 z-10">
+              <tr>
+                {lineColumns.map((column) => (
+                  <th key={column} className={KKD_HEAD_CELL}>
+                    {column}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {lines.isLoading ? (
+                <tr>
+                  <td colSpan={lineColumns.length} className="wms-ops-grid-state-cell">
+                    <OpsLoadingState code="FETCH" message="Talep kalemleri okunuyor…" compact />
+                  </td>
+                </tr>
+              ) : (lines.data?.length ?? 0) === 0 ? (
+                <tr>
+                  <td colSpan={lineColumns.length} className="wms-ops-grid-state-cell">
+                    <OpsGridEmptyState message="Seçilen siparişlerde açık kalem bulunamadı." />
+                  </td>
+                </tr>
+              ) : (
+                lines.data?.map((line) => (
+                  <tr key={`${line.orderNumber}|${line.orderLineId}`}>
+                    <td className={cn(KKD_CELL, 'font-mono font-black text-[var(--wms-brand-primary)]')}>
+                      {line.orderNumber} / {line.orderLineSequence}
+                    </td>
+                    <td className={KKD_CELL}>
+                      <strong className="block">{line.stockCode}</strong>
+                      <span className="text-xs text-[var(--wms-app-text-muted)]">{line.stockName}</span>
+                    </td>
+                    <td className={KKD_CELL}>{line.projectCode || '—'}</td>
+                    <td className={cn(KKD_CELL, 'whitespace-nowrap')}>
+                      {line.orderDate ? new Date(line.orderDate).toLocaleDateString('tr-TR') : '—'}
+                    </td>
+                    <td className={cn(KKD_CELL, 'whitespace-nowrap')}>
+                      {line.deliveryDate ? new Date(line.deliveryDate).toLocaleDateString('tr-TR') : '—'}
+                    </td>
+                    <td className={cn(KKD_CELL, 'text-right font-bold')}>
+                      {line.remainingQuantity} {line.unitCode}
+                    </td>
+                    <td className={KKD_CELL}>
+                      {line.isMapped ? (
+                        <OpsStatusBadge tone="done">Dağıtıma uygun</OpsStatusBadge>
+                      ) : (
+                        <span className="inline-flex items-start gap-2 text-rose-500">
+                          <ShieldAlert className="mt-0.5 size-4 shrink-0" />
+                          <span className="text-xs">{line.mappingMessage || 'WMS stok eşlemesi eksik.'}</span>
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </KkdTableShell>
+        </KkdPanel>
+      ) : null}
+    </KkdPage>
+  );
 }
