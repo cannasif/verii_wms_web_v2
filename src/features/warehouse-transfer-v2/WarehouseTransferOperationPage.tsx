@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeftRight, CheckCircle2, Loader2, PlayCircle, ShieldCheck } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -17,6 +17,7 @@ import {
   fetchStockSourceLocationsPage,
   stockSourceLocationOption,
 } from './utils/stock-source-location-options';
+import { transferDetailQueryKey } from './utils/transfer-detail-query-key';
 import type { WarehouseTransferDetail } from './types/warehouse-transfer.types';
 
 type Phase = 'pick' | 'dispatch' | 'receive' | 'putaway';
@@ -43,8 +44,19 @@ export function WarehouseTransferOperationPage({ variant = 'warehouse' }: { vari
   const transferApi = useMemo(() => transferApiFor(variant), [variant]);
   const listUrl = variant === 'production' ? '/warehouse/production-transfers/list'
     : variant === 'subcontracting' ? '/warehouse/subcontracting-transfers/list' : '/warehouse/transfers/list';
-  const [detail, setDetail] = useState<WarehouseTransferDetail>();
-  const [loadError, setLoadError] = useState<string>();
+  const detailQueryKey = useMemo(() => transferDetailQueryKey(variant, id), [id, variant]);
+  const detailQuery = useQuery({
+    queryKey: detailQueryKey,
+    queryFn: () => transferApi.detail(id),
+    enabled: Number.isFinite(id) && id > 0,
+  });
+  const detail = detailQuery.data;
+  const loadError = detailQuery.error instanceof Error
+    ? detailQuery.error.message
+    : detailQuery.isError ? 'Transfer kaydı açılamadı.' : undefined;
+  const reloadDetail = useCallback(async () => {
+    await detailQuery.refetch();
+  }, [detailQuery]);
   const [phase, setPhase] = useState<Phase>('pick');
   const [lines, setLines] = useState<EditLine[]>([]);
   const [reason, setReason] = useState('');
@@ -54,19 +66,11 @@ export function WarehouseTransferOperationPage({ variant = 'warehouse' }: { vari
   const [busy, setBusy] = useState(false);
   const [submittingLineId, setSubmittingLineId] = useState<number>();
 
-  const load = useCallback(async () => {
-    if (!id) return;
-    try {
-      setDetail(await transferApi.detail(id));
-      setLoadError(undefined);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Transfer kaydı açılamadı.';
-      setLoadError(message);
-      throw error;
+  useEffect(() => {
+    if (detailQuery.isError && detailQuery.error instanceof Error) {
+      toast.error(detailQuery.error.message);
     }
-  }, [id, transferApi]);
-
-  useEffect(() => { void load().catch((error: Error) => toast.error(error.message)); }, [load]);
+  }, [detailQuery.error, detailQuery.isError]);
 
   const remaining = useCallback((line: WarehouseTransferDetail['lines'][number]) => {
     switch (phase) {
@@ -132,7 +136,7 @@ export function WarehouseTransferOperationPage({ variant = 'warehouse' }: { vari
     try {
       const result = await transferApi.transition(id, action, reason);
       toast.success(`${result.documentNo}: ${localizeEnumValue(result.status)}`);
-      await load();
+      await reloadDetail();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'İşlem tamamlanamadı.');
     } finally {
@@ -177,9 +181,10 @@ export function WarehouseTransferOperationPage({ variant = 'warehouse' }: { vari
         });
       }
       if (result) toast.success(`#${line.lineNo} · ${line.stockCode}: ${localizeEnumValue(result.status)}`);
-      await load();
+      await reloadDetail();
       if (variant === 'production') {
         void queryClient.invalidateQueries({ queryKey: ['production-transfer', 'board', id] });
+        void queryClient.invalidateQueries({ queryKey: ['wt-op-source'] });
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Operasyon tamamlanamadı.');
@@ -197,7 +202,7 @@ export function WarehouseTransferOperationPage({ variant = 'warehouse' }: { vari
   } : null, [detail]);
 
   if (loadError) return <OperationLoadError message={loadError} listUrl={listUrl} />;
-  if (!detail || !totals) return <div className="grid min-h-80 place-items-center"><Loader2 className="size-7 animate-spin text-violet-500" /></div>;
+  if (detailQuery.isLoading || !detail || !totals) return <div className="grid min-h-80 place-items-center"><Loader2 className="size-7 animate-spin text-violet-500" /></div>;
 
   return <section className="space-y-5">
     <header className="rounded-2xl border bg-gradient-to-r from-violet-500/10 via-[var(--wms-app-panel)] to-cyan-500/10 p-6">
@@ -278,7 +283,7 @@ export function WarehouseTransferOperationPage({ variant = 'warehouse' }: { vari
                 {line.trackingType === 'None' && <Field label="Miktar"><input className="input" type="number" min="0.000001" max={available} step="0.000001" value={edit.quantity} onChange={(e) => patch(line.id, { quantity: Number(e.target.value) })} /></Field>}
                 <Field label="Kaynak raf">
                   <PagedAppDropdown
-                    queryKey={['wt-op-source', variant, phase, line.id, sourceWarehouseId, line.stockId, line.yapCodeId]}
+                    queryKey={['wt-op-source', variant, phase, line.id, sourceWarehouseId, line.stockId, line.yapCodeId, line.defaultSourceLocationId]}
                     fetchPage={(request) => variant === 'production' && phase === 'pick'
                       ? fetchStockSourceLocationsPage(
                         request,

@@ -5376,6 +5376,7 @@
       "lineQuantityExceeded": "Line {{index}}: exceeds open order quantity.",
       "lineSourceLocationRequired": "Line {{index}}: source location is required.",
       "lineTargetLocationRequired": "Line {{index}}: target location is required.",
+      "lineSameLocationInWarehouse": "Line {{index}}: source and target locations must differ.",
       "lineTrackingRequired": "Line {{index}}: serial/lot plan is required.",
       "lineTrackingTotalMismatch": "Line {{index}}: serial/lot total must equal transfer quantity.",
       "lineSerialInvalid": "Line {{index}}: each serial must be unique with quantity 1.",

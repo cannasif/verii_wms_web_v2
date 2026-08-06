@@ -1,10 +1,25 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { scoreLabelMatch } from './toast-error-navigation';
+import { parseIndexedLineRef, scoreLabelMatch } from './toast-error-navigation';
 
 const completedVehicleError =
   'Bu araç girişinin SAC kabul işlemi daha önce tamamlanmış veya iptal edilmiş.';
+
+test('indexed transfer line ref parses Turkish kalem prefix', () => {
+  assert.equal(
+    parseIndexedLineRef('2. kalemde kaynak raf zorunludur.'),
+    '2. kalem',
+  );
+  assert.equal(
+    parseIndexedLineRef('10. kalem · 01/022: v serisi için bu depoda bakiye bulunamadı.'),
+    '10. kalem',
+  );
+  assert.equal(
+    parseIndexedLineRef('Line 3: source location is required.'),
+    'Line 3',
+  );
+});
 
 test('vehicle completed error prefers entry time over rack label heading', () => {
   const rackHeadingScore = scoreLabelMatch(

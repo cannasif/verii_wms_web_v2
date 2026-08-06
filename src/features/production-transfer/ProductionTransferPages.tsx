@@ -14,6 +14,7 @@ import { OpsPageHeader } from '@/components/shared/OpsPageHeader';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { WarehouseTransferDraftPage, type ProductionTransferInitialSource } from '@/features/warehouse-transfer-v2/components/WarehouseTransferDraftPage';
 import { WarehouseTransferListPage } from '@/features/warehouse-transfer-v2/components/WarehouseTransferListPage';
+import { WarehouseTransferOperationPage } from '@/features/warehouse-transfer-v2/WarehouseTransferOperationPage';
 import { useAuthStore } from '@/stores/auth-store';
 import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
 import { warehouseTransferApi, transferApiFor } from '@/features/warehouse-transfer-v2/api/warehouse-transfer.api';
@@ -26,7 +27,6 @@ import {
   completeCancellationReturnAndRefresh,
 } from './production-transfer-route-refresh';
 import { ProductionTransferCancellationPanel } from './components/ProductionTransferCancellationPanel';
-import { ProductionTransferExecutionPage } from './components/ProductionTransferExecutionPage';
 import { ProductionTaskSourceLocationCell } from './components/ProductionTaskSourceLocationCell';
 import { useProductionTaskSourceAvailability } from './hooks/useProductionTaskSourceAvailability';
 import type { ActiveUserOption, LocationOption, WarehouseOption } from '@/features/goods-receipt-v2/types/goods-receipt.types';
@@ -76,7 +76,7 @@ export function ProductionTransferListPage(){return <WarehouseTransferListPage v
 export function ProductionTransferOperationPage(){
   return <div className="space-y-5">
     <ProductionTaskPanel/>
-    <ProductionTransferExecutionPage/>
+    <WarehouseTransferOperationPage variant="production"/>
   </div>;
 }
 
@@ -269,7 +269,7 @@ function ProductionTaskPanel(){
   if(!board||board.tasks.length===0)return null;
   const transferPickedQuantity=detailQuery.data?sumTransferPickedQuantity(detailQuery.data):0;
   const cancellationReadiness=analyzeProductionCancellationReadiness(board,{transferPickedQuantity});
-  const run=async(action:()=>Promise<ProductionTaskBoard>)=>{setBusy(true);try{queryClient.setQueryData(boardQueryKey,await action());void queryClient.invalidateQueries({queryKey:['production-task-source-locations']});void queryClient.invalidateQueries({queryKey:['production-transfer','detail',id]});}catch(e){toast.error(e instanceof Error?e.message:'İşlem başarısız.');}finally{setBusy(false);}};
+  const run=async(action:()=>Promise<ProductionTaskBoard>)=>{setBusy(true);try{queryClient.setQueryData(boardQueryKey,await action());void queryClient.invalidateQueries({queryKey:['production-task-source-locations']});await queryClient.refetchQueries({queryKey:['production-transfer','detail',id]});void queryClient.invalidateQueries({queryKey:['wt-op-source']});}catch(e){toast.error(e instanceof Error?e.message:'İşlem başarısız.');}finally{setBusy(false);}};
   const refreshBoard=()=>void queryClient.invalidateQueries({queryKey:boardQueryKey});
   return <section className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5">
     <div className="mb-4 flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-widest text-[var(--wms-brand-primary)]">Üretim transfer görevi</p><h2 className="text-xl font-black">{board.documentNo}</h2></div><span className="rounded-full border border-[var(--wms-app-border)] px-3 py-1 text-xs font-bold">{board.transferStatus}</span></div>

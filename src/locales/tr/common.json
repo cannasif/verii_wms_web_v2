@@ -5397,6 +5397,7 @@
       "lineQuantityExceeded": "{{index}}. kalem açık emir miktarını aşıyor.",
       "lineSourceLocationRequired": "{{index}}. kalemde kaynak raf zorunludur.",
       "lineTargetLocationRequired": "{{index}}. kalemde hedef raf zorunludur.",
+      "lineSameLocationInWarehouse": "{{index}}. kalemde kaynak ve hedef raf farklı olmalıdır.",
       "lineTrackingRequired": "{{index}}. kalemde seri/lot planı zorunludur.",
       "lineTrackingTotalMismatch": "{{index}}. kalemde seri/lot toplamı transfer miktarına eşit olmalıdır.",
       "lineSerialInvalid": "{{index}}. kalemde her seri benzersiz ve 1 miktarlı olmalıdır.",

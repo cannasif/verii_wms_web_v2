@@ -267,13 +267,31 @@ function findReceiptEntryRow(message: string): HTMLElement | null {
   return null;
 }
 
+function getLineRefs(el: HTMLElement): string[] {
+  return (el.getAttribute('data-wms-error-line-ref') ?? '')
+    .split('|')
+    .map((key) => key.trim())
+    .filter(Boolean);
+}
+
 function findLineRowByRef(ref: string, root: ParentNode = document): HTMLElement | null {
   const normalizedPrefix = normalize(ref);
   for (const row of root.querySelectorAll<HTMLElement>('[data-wms-error-line-ref]')) {
     if (!isVisible(row)) continue;
-    const rowRef = row.getAttribute('data-wms-error-line-ref') ?? '';
-    if (normalize(rowRef) === normalizedPrefix) return row;
+    for (const rowRef of getLineRefs(row)) {
+      if (normalize(rowRef) === normalizedPrefix) return row;
+    }
   }
+  return null;
+}
+
+export function parseIndexedLineRef(message: string): string | null {
+  const trMatch = message.match(/^(\d+)\.\s*kalem(?:de|i)?\b/i);
+  if (trMatch) return `${trMatch[1]}. kalem`;
+
+  const enMatch = message.match(/^line\s+(\d+)\s*:/i);
+  if (enMatch) return `Line ${enMatch[1]}`;
+
   return null;
 }
 
@@ -285,6 +303,12 @@ function parseSheetLineRef(message: string): string | null {
 function findLineRow(message: string): HTMLElement | null {
   const receiptRow = findReceiptEntryRow(message);
   if (receiptRow) return receiptRow;
+
+  const indexedRef = parseIndexedLineRef(message);
+  if (indexedRef) {
+    const indexedRow = findLineRowByRef(indexedRef);
+    if (indexedRow) return indexedRow;
+  }
 
   const colonPrefix = parseLineErrorPrefix(message);
   if (colonPrefix) {
@@ -323,6 +347,10 @@ function resolveFieldInRowByMessage(
     'uretim tarihi',
     'son kullanma',
     'seri numarasi',
+    'serisi icin bu depoda bakiye',
+    'kaynak rafi otomatik',
+    'farkli rafta bulundu',
+    'seri raf bilgisi',
     'lot/serial plan',
     'serial row',
     'duplicate serial',
@@ -334,6 +362,8 @@ function resolveFieldInRowByMessage(
     'available quantity',
   ];
   const locationKeywords = ['hedef depo', 'kabul rafi', 'target warehouse', 'receiving shelf'];
+  const sourceLocationKeywords = ['kaynak raf', 'source location'];
+  const targetLocationKeywords = ['hedef raf', 'target location'];
   const sheetImageKeywords = [
     'levhasi icin en az bir gorsel',
     'levha gorseli',
@@ -370,6 +400,20 @@ function resolveFieldInRowByMessage(
     return (
       row.querySelector<HTMLElement>('[data-wms-error-target="location"]') ??
       pickLabel('Raf Kodu')
+    );
+  }
+  if (sourceLocationKeywords.some((key) => msg.includes(key))) {
+    return (
+      row.querySelector<HTMLElement>('[data-wms-error-target="sourceLocation"]') ??
+      pickLabel('Kaynak raf') ??
+      pickLabel('Source location')
+    );
+  }
+  if (targetLocationKeywords.some((key) => msg.includes(key))) {
+    return (
+      row.querySelector<HTMLElement>('[data-wms-error-target="targetLocation"]') ??
+      pickLabel('Hedef raf') ??
+      pickLabel('Target location')
     );
   }
   if (sheetImageKeywords.some((key) => msg.includes(key))) {
