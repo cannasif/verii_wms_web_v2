@@ -18,6 +18,7 @@ import {
   stockSourceLocationOption,
 } from './utils/stock-source-location-options';
 import { transferDetailQueryKey } from './utils/transfer-detail-query-key';
+import { TransferLinePickedSources } from './components/TransferLinePickedSources';
 import type { WarehouseTransferDetail } from './types/warehouse-transfer.types';
 
 type Phase = 'pick' | 'dispatch' | 'receive' | 'putaway';
@@ -185,6 +186,7 @@ export function WarehouseTransferOperationPage({ variant = 'warehouse' }: { vari
       if (variant === 'production') {
         void queryClient.invalidateQueries({ queryKey: ['production-transfer', 'board', id] });
         void queryClient.invalidateQueries({ queryKey: ['wt-op-source'] });
+        void queryClient.invalidateQueries({ queryKey: ['production-transfer', 'picked-sources', id] });
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Operasyon tamamlanamadı.');
@@ -279,6 +281,15 @@ export function WarehouseTransferOperationPage({ variant = 'warehouse' }: { vari
           >
             <div className="mb-3 flex justify-between gap-3"><div><strong>#{line.lineNo} · {line.stockCode}</strong><p className="text-xs text-slate-500">{line.stockName} · {line.yapCode || 'YAP yok'} · Kullanılabilir {formatProjectNumber(Math.max(0, available))}</p></div><CheckCircle2 className={`size-5 ${available <= 0 ? 'text-emerald-500' : 'text-slate-500'}`} /></div>
             {edit && <>
+              {variant === 'production' && phase === 'pick' && line.pickedQuantity > 0 && (
+                <div className="mb-3">
+                  <TransferLinePickedSources
+                    transferId={id}
+                    lineId={line.id}
+                    inlineSources={line.pickedSourceLocations}
+                  />
+                </div>
+              )}
               <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                 {line.trackingType === 'None' && <Field label="Miktar"><input className="input" type="number" min="0.000001" max={available} step="0.000001" value={edit.quantity} onChange={(e) => patch(line.id, { quantity: Number(e.target.value) })} /></Field>}
                 <Field label="Kaynak raf">

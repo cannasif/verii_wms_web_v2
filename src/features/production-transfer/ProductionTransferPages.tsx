@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Boxes, ChevronDown, ChevronRight, ClipboardList, Factory, PackageCheck, Play, RefreshCw, RotateCcw, Rows3, Save, Settings2, ShieldAlert, Trash2, UserPlus, Warehouse } from 'lucide-react';
 import { Link, useLocation, useParams } from 'react-router-dom';
@@ -30,7 +30,9 @@ import {
 import { ProductionTransferCancellationPanel } from './components/ProductionTransferCancellationPanel';
 import { ProductionTransferExecutionPage } from './components/ProductionTransferExecutionPage';
 import { ProductionTaskSourceLocationCell } from './components/ProductionTaskSourceLocationCell';
+import { ProductionTaskStartShortageDialog } from './components/ProductionTaskStartShortageDialog';
 import { useProductionTaskSourceAvailability } from './hooks/useProductionTaskSourceAvailability';
+import { useProductionTaskStart } from './hooks/useProductionTaskStart';
 import type { ActiveUserOption, LocationOption, WarehouseOption } from '@/features/goods-receipt-v2/types/goods-receipt.types';
 import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
 import type { PreparedNetsisProductionWorkOrder } from '@/features/production/types';
@@ -350,17 +352,37 @@ function ProductionTaskPanel(){
     if(!Number.isFinite(id)||id<=0)return;
     void productionTransferApi.policy(branchCode).then(setPolicy).catch((e:Error)=>toast.error(e.message));
   },[branchCode,id]);
+  const run=useCallback(async(action:()=>Promise<ProductionTaskBoard>)=>{
+    setBusy(true);
+    try{
+      queryClient.setQueryData(boardQueryKey,await action());
+      void queryClient.invalidateQueries({queryKey:['production-task-source-locations']});
+      await queryClient.refetchQueries({queryKey:['production-transfer','detail',id]});
+      void queryClient.invalidateQueries({queryKey:['wt-op-source']});
+      void queryClient.invalidateQueries({queryKey:['production-transfer','picked-sources',id]});
+    }catch(e){
+      toast.error(e instanceof Error?e.message:'İşlem başarısız.');
+    }finally{
+      setBusy(false);
+    }
+  },[boardQueryKey,id,queryClient]);
+  const refreshBoard=useCallback(()=>void queryClient.invalidateQueries({queryKey:boardQueryKey}),[boardQueryKey,queryClient]);
+  const{
+    shortageDialog,
+    checkingTaskId,
+    requestStart,
+    confirmPartialStart,
+    cancelPartialStart,
+  }=useProductionTaskStart({transferId:id,run});
   if(boardQuery.isLoading||detailQuery.isLoading)return <section className="animate-pulse rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5"><div className="h-4 w-40 rounded bg-[var(--wms-app-border)]"/><div className="mt-3 h-24 rounded-xl bg-[var(--wms-app-border)]/60"/></section>;
   if(!board||board.tasks.length===0)return null;
   const transferPickedQuantity=detailQuery.data?sumTransferPickedQuantity(detailQuery.data):0;
   const cancellationReadiness=analyzeProductionCancellationReadiness(board,{transferPickedQuantity});
-  const run=async(action:()=>Promise<ProductionTaskBoard>)=>{setBusy(true);try{queryClient.setQueryData(boardQueryKey,await action());void queryClient.invalidateQueries({queryKey:['production-task-source-locations']});await queryClient.refetchQueries({queryKey:['production-transfer','detail',id]});void queryClient.invalidateQueries({queryKey:['wt-op-source']});}catch(e){toast.error(e instanceof Error?e.message:'İşlem başarısız.');}finally{setBusy(false);}};
-  const refreshBoard=()=>void queryClient.invalidateQueries({queryKey:boardQueryKey});
   return <section className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5">
     <div className="mb-4 flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-widest text-[var(--wms-brand-primary)]">Üretim transfer görevi</p><h2 className="text-xl font-black">{board.documentNo}</h2></div><span className="rounded-full border border-[var(--wms-app-border)] px-3 py-1 text-xs font-bold">{board.transferStatus}</span></div>
     <div className="space-y-4">{board.tasks.map(task=><article key={task.taskId} className="rounded-xl border border-[var(--wms-app-border)] p-4">
       <div className="flex flex-wrap items-center justify-between gap-3"><div><strong>{task.taskNo}</strong>{['AssignmentReturn','CancellationReturn'].includes(task.taskType)?<span className="ml-2 rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-bold text-amber-500">{taskTypeLabel(task.taskType)}</span>:<span className="ml-2 text-xs text-[var(--wms-app-text-muted)]">{taskTypeLabel(task.taskType)}</span>}<span className="ml-2 text-xs text-[var(--wms-app-text-muted)]">{task.status}</span>{task.completedAtUtc&&<span className="ml-2 text-xs text-[var(--wms-app-text-muted)]">· {new Date(task.completedAtUtc).toLocaleString('tr-TR')}</span>}</div>
-        <div className="flex flex-wrap gap-2">{!['CancellationReturn','AssignmentReturn'].includes(task.taskType)&&task.lines.some(x=>x.missingQuantity>0)&&!['Completed','Cancelled'].includes(task.status)&&<button disabled={busy} onClick={()=>void run(()=>productionTransferApi.refreshRoute(id,task.taskId))} className="inline-flex items-center gap-2 rounded-lg border border-amber-500 px-3 py-2 text-xs font-bold text-amber-500"><RefreshCw className="size-4"/>Rotayı güncelle</button>}{task.assignments.some(x=>x.userId===currentUserId)&&!['InProgress','PartiallyCompleted','Completed','Cancelled'].includes(task.status)&&<button disabled={busy} onClick={()=>void run(()=>productionTransferApi.startTask(id,task.taskId))} className="inline-flex items-center gap-2 rounded-lg bg-[var(--wms-brand-primary)] px-3 py-2 text-xs font-bold text-[var(--wms-brand-on-primary)]"><Play className="size-4"/>Bu işi yapıyorum</button>}{task.taskType==='CancellationReturn'&&task.startedBy===currentUserId&&task.status==='InProgress'&&<button disabled={busy} onClick={()=>void run(()=>completeCancellationReturnAndRefresh(id,task.taskId))} className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white"><Save className="size-4"/>Rafa geri koymayı tamamla</button>}{task.taskType==='AssignmentReturn'&&task.startedBy===currentUserId&&task.status==='InProgress'&&<button disabled={busy} onClick={()=>void run(()=>completeAssignmentReturnAndRefresh(id,task.taskId))} className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white"><Save className="size-4"/>İadeyi tamamla, atamayı kaldır</button>}</div></div>
+        <div className="flex flex-wrap gap-2">{!['CancellationReturn','AssignmentReturn'].includes(task.taskType)&&task.lines.some(x=>x.missingQuantity>0||x.processedQuantity>0&&x.processedQuantity<x.requestedQuantity)&&!['Completed','Cancelled'].includes(task.status)&&<button disabled={busy} onClick={()=>void run(()=>productionTransferApi.refreshRoute(id,task.taskId))} className="inline-flex items-center gap-2 rounded-lg border border-amber-500 px-3 py-2 text-xs font-bold text-amber-500"><RefreshCw className="size-4"/>Rotayı güncelle</button>}{task.assignments.some(x=>x.userId===currentUserId)&&!['InProgress','PartiallyCompleted','Completed','Cancelled'].includes(task.status)&&<button disabled={busy||checkingTaskId===task.taskId} onClick={()=>void requestStart(task.taskId,task.taskNo)} className="inline-flex items-center gap-2 rounded-lg bg-[var(--wms-brand-primary)] px-3 py-2 text-xs font-bold text-[var(--wms-brand-on-primary)]"><Play className="size-4"/>Bu işi yapıyorum</button>}{task.taskType==='CancellationReturn'&&task.startedBy===currentUserId&&task.status==='InProgress'&&<button disabled={busy} onClick={()=>void run(()=>completeCancellationReturnAndRefresh(id,task.taskId))} className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white"><Save className="size-4"/>Rafa geri koymayı tamamla</button>}{task.taskType==='AssignmentReturn'&&task.startedBy===currentUserId&&task.status==='InProgress'&&<button disabled={busy} onClick={()=>void run(()=>completeAssignmentReturnAndRefresh(id,task.taskId))} className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white"><Save className="size-4"/>İadeyi tamamla, atamayı kaldır</button>}</div></div>
       <div className="mt-3 overflow-x-auto"><table className="w-full min-w-[720px] text-left text-sm"><thead className="text-xs uppercase text-[var(--wms-app-text-muted)]"><tr><th className="p-2">Stok</th><th className="p-2">Kaynak raf</th><th className="p-2 text-right">İstenen</th><th className="p-2 text-right">Rezerve</th><th className="p-2 text-right">Eksik</th><th className="p-2 text-right">Toplanan</th></tr></thead><tbody>{task.lines.map(line=><tr key={line.taskLineId} className="border-t border-[var(--wms-app-border)]"><td className="p-2"><strong>{line.stockCode}</strong><div className="text-xs text-[var(--wms-app-text-muted)]">{line.stockName}</div></td><ProductionTaskSourceLocationCell line={line} getAvailable={sourceAvailable} loading={sourceAvailabilityLoading}/><td className="p-2 text-right">{line.requestedQuantity}</td><td className="p-2 text-right text-emerald-500">{line.reservedQuantity}</td><td className="p-2 text-right text-red-500">{line.missingQuantity}</td><td className="p-2 text-right">{line.processedQuantity}</td></tr>)}</tbody></table></div>
       {task.assignments.length>0&&<div className="mt-3 flex flex-wrap items-center gap-2">{task.assignments.map(a=><span key={a.userId} className="inline-flex items-center gap-2 rounded-full border border-[var(--wms-app-border)] px-3 py-1 text-xs">{a.username}{a.isPrimary?' · Birincil':''}</span>)}</div>}
     </article>)}</div>
@@ -454,6 +476,15 @@ function ProductionTaskPanel(){
       onRun={run}
       onCancelled={refreshBoard}
     />
+    {shortageDialog&&(
+      <ProductionTaskStartShortageDialog
+        taskNo={shortageDialog.taskNo}
+        shortages={shortageDialog.shortages}
+        busy={busy}
+        onConfirm={confirmPartialStart}
+        onCancel={cancelPartialStart}
+      />
+    )}
   </section>;
 }
 

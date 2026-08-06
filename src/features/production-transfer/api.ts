@@ -1,5 +1,6 @@
 import { api } from '@/lib/axios';
 import { requireCompletedCancellation, type OperationCancellationResult } from '@/features/shared/api/operation-cancellation';
+import type { WarehouseTransferPickedSourceLocation } from '@/features/warehouse-transfer-v2/types/warehouse-transfer.types';
 
 interface Envelope<T> { success: boolean; data: T; message?: string }
 const unwrap = <T,>(result: Envelope<T>) => {
@@ -52,6 +53,26 @@ export interface ProductionTaskPoolRow {
   taskId: number; taskNo: string; taskType: string; warehouseId: number; taskStatus: string;
   plannedQuantity: number; processedQuantity: number; remainingQuantity: number;
   assignedUsers: string[]; createdDate?: string;
+}
+
+/** Görev başlatmadan önce depo-geneli stok yeterlilik kontrolü sonucu. */
+export interface ProductionTaskStockShortage {
+  taskLineId: number;
+  transferLineId: number;
+  stockCode: string;
+  stockName?: string;
+  requestedQuantity: number;
+  availableQuantity: number;
+  shortageQuantity: number;
+}
+
+export interface ProductionTaskStartCheck {
+  canStartFully: boolean;
+  shortages: ProductionTaskStockShortage[];
+}
+
+export interface ProductionTaskStartOptions {
+  allowPartialStart?: boolean;
 }
 export interface WarehouseTransferReturnSetting {
   warehouseId: number;
@@ -133,8 +154,16 @@ export const productionTransferApi = {
     unwrap(await api.post<Envelope<ProductionTaskBoard>>(`${taskPath(id, taskId)}/handoff`, { targetUserId, reason: reason?.trim() || null })),
   refreshRoute: async (id: number, taskId: number): Promise<ProductionTaskBoard> =>
     unwrap(await api.post<Envelope<ProductionTaskBoard>>(`${taskPath(id, taskId)}/refresh-route`, {})),
-  startTask: async (id: number, taskId: number): Promise<ProductionTaskBoard> =>
-    unwrap(await api.post<Envelope<ProductionTaskBoard>>(`${taskPath(id, taskId)}/start`, {})),
+  checkTaskStart: async (id: number, taskId: number): Promise<ProductionTaskStartCheck> =>
+    unwrap(await api.get<Envelope<ProductionTaskStartCheck>>(`${taskPath(id, taskId)}/start-check`)),
+  startTask: async (id: number, taskId: number, options?: ProductionTaskStartOptions): Promise<ProductionTaskBoard> =>
+    unwrap(await api.post<Envelope<ProductionTaskBoard>>(`${taskPath(id, taskId)}/start`, {
+      allowPartialStart: options?.allowPartialStart ?? false,
+    })),
+  linePickedSources: async (id: number, lineId: number): Promise<WarehouseTransferPickedSourceLocation[]> =>
+    unwrap(await api.get<Envelope<WarehouseTransferPickedSourceLocation[]>>(
+      `/api/production-transfers/${id}/lines/${lineId}/picked-sources`,
+    )),
 
   // — İade görevleri (atama kaldırma / iptal) —
   requestAssignmentReturn: async (id: number, taskId: number, userId: number): Promise<ProductionTaskBoard> =>

@@ -159,6 +159,13 @@ export interface WarehouseTransferTrackingLine {
   status: string;
 }
 
+export interface WarehouseTransferPickedSourceLocation {
+  locationId: number;
+  locationCode: string;
+  locationName: string;
+  quantity: number;
+}
+
 export interface WarehouseTransferDetailLine {
   id: number;
   lineNo: number;
@@ -183,6 +190,8 @@ export interface WarehouseTransferDetailLine {
   defaultTargetLocationId?: number;
   defaultTargetLocationCode?: string;
   defaultTargetLocationName?: string;
+  /** Postlanmış toplama hareketlerinden türetilen kaynak raflar (parça parça toplama). */
+  pickedSourceLocations?: WarehouseTransferPickedSourceLocation[];
 }
 
 export interface WarehouseTransferDetail {
