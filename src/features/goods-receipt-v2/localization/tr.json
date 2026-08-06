@@ -223,6 +223,7 @@
       "qualityLog4": "Yönlendirme tamamlanıyor"
     },
     "qualityDialog": {
+      "manualQualityDisabledDescription": "Manuel kalite yönlendirmesi kapalıdır. Yalnız stok veya grup kalite kuralından gelen satırlar gösterilir.",
       "title": "Kaliteye gidecek stoklar",
       "description": "Mal kabul bitince bu kalemler kalite listesine düşer. Bu irsaliyelik eklenenleri çarpı ile geri alabilirsin; kural stoklarına dokunulmaz.",
       "searchPlaceholder": "Stok kodu veya adı ara…",

@@ -198,6 +198,7 @@
       "metricQualityHint": "Voir la liste qualité"
     },
     "qualityDialog": {
+      "manualQualityDisabledDescription": "L'orientation qualité manuelle est désactivée. Seules les lignes imposées par une règle article ou groupe sont affichées.",
       "title": "Stocks envoyés à la qualité",
       "description": "Ces lignes apparaîtront dans la liste qualité une fois la réception terminée.",
       "searchPlaceholder": "Rechercher un code ou nom de stock…",

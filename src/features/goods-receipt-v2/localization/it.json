@@ -198,6 +198,7 @@
       "metricQualityHint": "Visualizza elenco qualità"
     },
     "qualityDialog": {
+      "manualQualityDisabledDescription": "L'invio manuale alla qualità è disabilitato. Sono mostrate solo le righe richieste da regole articolo o gruppo.",
       "title": "Articoli destinati alla qualità",
       "description": "Queste righe compariranno nell'elenco qualità al completamento del ricevimento.",
       "searchPlaceholder": "Cerca codice o descrizione articolo…",

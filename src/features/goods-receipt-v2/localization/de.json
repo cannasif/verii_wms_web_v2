@@ -198,6 +198,7 @@
       "metricQualityHint": "Qualitätsliste anzeigen"
     },
     "qualityDialog": {
+      "manualQualityDisabledDescription": "Die manuelle Qualitätszuweisung ist deaktiviert. Angezeigt werden nur durch Artikel- oder Gruppenregeln erforderliche Zeilen.",
       "title": "Bestände, die zur Qualitätskontrolle gehen",
       "description": "Diese Positionen erscheinen nach Abschluss des Wareneingangs auf der Qualitätsliste.",
       "searchPlaceholder": "Bestandscode oder -name suchen…",

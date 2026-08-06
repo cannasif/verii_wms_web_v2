@@ -284,6 +284,7 @@ export function GoodsReceiptCreatePage({
   const [warehouseAccess, setWarehouseAccess] = useState<UserWarehouseAccess | null>(null);
   const [showAllocatedOpenOrderLines, setShowAllocatedOpenOrderLines] = useState(false);
   const [allowAnyActiveLocation, setAllowAnyActiveLocation] = useState(false);
+  const [allowManualQualityRouting, setAllowManualQualityRouting] = useState(false);
   const [lines, setLines] = useState<SelectedReceiptLine[]>([]);
   const linesRef = useRef(lines);
   linesRef.current = lines;
@@ -652,12 +653,24 @@ export function GoodsReceiptCreatePage({
         if (active) {
           setShowAllocatedOpenOrderLines(policy.showAllocatedOpenOrderLines);
           setAllowAnyActiveLocation(!policy.blockPutawayUntilQualityDecision);
+          const manualQualityAllowed = policy.erpQualityGatePolicy === "AnyQualityPlan";
+          setAllowManualQualityRouting(manualQualityAllowed);
+          if (!manualQualityAllowed) {
+            setLines((current) => current.map((line) => line.forceQualityControl
+              ? {
+                  ...line,
+                  forceQualityControl: false,
+                  requireQualityControl: Boolean(line.qualityRequiredByRule),
+                }
+              : line));
+          }
         }
       })
       .catch(() => {
         if (active) {
           setShowAllocatedOpenOrderLines(false);
           setAllowAnyActiveLocation(false);
+          setAllowManualQualityRouting(false);
         }
       });
     return () => { active = false; };
@@ -2951,9 +2964,11 @@ export function GoodsReceiptCreatePage({
                 onClose={() => setReviewLinesDialog(null)}
                 tone="receipt"
                 title={t("createFlow.qualityDialog.receiptLinesTitle")}
-                description={t("createFlow.qualityDialog.receiptLinesDescription")}
+                description={allowManualQualityRouting
+                  ? t("createFlow.qualityDialog.receiptLinesDescription")
+                  : t("createFlow.qualityDialog.manualQualityDisabledDescription")}
                 searchAriaLabel={t("createFlow.qualityDialog.receiptLinesSearchAria")}
-                onConfirmForceQuality={(selectedKeys) => {
+                onConfirmForceQuality={allowManualQualityRouting ? (selectedKeys) => {
                   const selected = new Set(selectedKeys);
                   setLines((current) =>
                     current.map((line) => {
@@ -2976,7 +2991,7 @@ export function GoodsReceiptCreatePage({
                     }),
                   );
                   setReviewLinesDialog(null);
-                }}
+                } : undefined}
               />
               <QualityLinesDialog
                 lines={qualityLines}

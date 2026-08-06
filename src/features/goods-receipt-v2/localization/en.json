@@ -223,6 +223,7 @@
       "qualityLog4": "Completing routing"
     },
     "qualityDialog": {
+      "manualQualityDisabledDescription": "Manual quality routing is disabled. Only lines required by stock or group quality rules are shown.",
       "title": "Stocks going to quality",
       "description": "These lines will appear on the quality list when receipt completes. Receipt-only additions can be removed with X; rule-based stocks stay locked.",
       "searchPlaceholder": "Search stock code or name…",

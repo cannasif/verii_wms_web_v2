@@ -198,6 +198,7 @@
       "metricQualityHint": "Ver lista de calidad"
     },
     "qualityDialog": {
+      "manualQualityDisabledDescription": "El envío manual a calidad está desactivado. Solo se muestran las líneas requeridas por reglas de artículo o grupo.",
       "title": "Stocks que van a calidad",
       "description": "Estas líneas aparecerán en la lista de calidad cuando finalice la recepción.",
       "searchPlaceholder": "Buscar código o nombre de stock…",
