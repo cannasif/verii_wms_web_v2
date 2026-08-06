@@ -1,0 +1,98 @@
+/* ============================================================
+   Operasyon formlarındaki satır içi bilgi notu ve
+   "diğer ayarlar" aç/kapa tetikleyicisi.
+   Terminal ve premium skin'ler için ayrı yüzey DNA'sı.
+   ============================================================ */
+
+/* ---------- Bilgi notu ---------- */
+
+/* Akış sekmelerinin altındaki bilgilendirme şeridiyle aynı görünüm */
+.wms-ops-inline-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.7rem 0.95rem;
+  border: 1px solid color-mix(in oklab, var(--wms-ops-accent) 16%, var(--wms-ops-card-border));
+  background: color-mix(in oklab, var(--wms-ops-accent) 6%, transparent);
+  color: color-mix(in oklab, var(--wms-ops-accent) 70%, hsl(var(--foreground)));
+}
+
+.wms-ops-inline-note__icon {
+  margin-top: 0.1rem;
+  flex: none;
+  color: var(--wms-ops-accent);
+}
+
+/* ---------- Aç/kapa tetikleyicisi ---------- */
+
+/* Metin bağlantısı gibi durur: alan/kutu görünümü yok */
+.wms-ops-inline-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--wms-ops-accent);
+  transition: color 160ms ease;
+}
+
+.wms-ops-inline-toggle:hover {
+  color: color-mix(in oklab, var(--wms-ops-accent) 72%, hsl(var(--foreground)));
+}
+
+.wms-ops-inline-toggle:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--wms-ops-accent) 62%, transparent);
+  outline-offset: 3px;
+}
+
+.wms-ops-inline-toggle__icon {
+  flex: none;
+}
+
+/* ============================================================
+   TERMINAL SKIN — köşeli, monospace
+   ============================================================ */
+
+html:not(.skin-premium) .wms-ops-inline-note,
+html:not(.skin-premium) .wms-ops-inline-toggle {
+  border-radius: 0;
+  font-family: var(--wms-terminal-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
+}
+
+html:not(.skin-premium) .wms-ops-inline-note {
+  font-size: 0.68rem;
+  line-height: 1.6;
+  letter-spacing: 0.02em;
+}
+
+html:not(.skin-premium) .wms-ops-inline-toggle {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* ============================================================
+   PREMIUM SKIN — yumuşak köşe, cam yüzey, sakin tipografi
+   ============================================================ */
+
+html.skin-premium .wms-ops-inline-note {
+  border-radius: 0.85rem;
+  padding: 0.8rem 1.1rem;
+  font-family: var(--wms-premium-font);
+  font-size: 0.78rem;
+  line-height: 1.6;
+  letter-spacing: 0;
+  background: color-mix(in oklab, var(--wms-brand-primary) 5%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+html.skin-premium .wms-ops-inline-toggle {
+  font-family: var(--wms-premium-font);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}

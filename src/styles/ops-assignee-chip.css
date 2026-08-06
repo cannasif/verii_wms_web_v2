@@ -1,0 +1,113 @@
+/* ============================================================
+   Emir sorumlusu rozeti — başlık kartının ikinci satırında yaşar.
+   Terminal: köşeli, monospace, aksan çizgili.
+   Premium: yumuşak köşe, cam yüzey, sakin tipografi.
+   ============================================================ */
+
+.wms-ops-assignee-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid color-mix(in oklab, var(--wms-ops-accent) 30%, var(--wms-ops-card-border));
+  background: color-mix(in oklab, var(--wms-ops-accent) 8%, transparent);
+  color: color-mix(in oklab, var(--wms-ops-accent) 78%, hsl(var(--foreground)));
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    color 160ms ease;
+}
+
+.wms-ops-assignee-chip--empty {
+  border-style: dashed;
+  border-color: color-mix(in oklab, var(--wms-ops-card-border) 82%, transparent);
+  background: transparent;
+  color: color-mix(in oklab, hsl(var(--foreground)) 46%, transparent);
+}
+
+.wms-ops-assignee-chip--summary:hover,
+.wms-ops-assignee-chip--summary[data-state='open'] {
+  border-color: color-mix(in oklab, var(--wms-ops-accent) 58%, transparent);
+  background: color-mix(in oklab, var(--wms-ops-accent) 14%, transparent);
+}
+
+.wms-ops-assignee-chip__remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.1rem;
+  border: 0;
+  background: transparent;
+  color: color-mix(in oklab, hsl(var(--foreground)) 52%, transparent);
+  transition: color 140ms ease, background 140ms ease;
+}
+
+.wms-ops-assignee-chip__remove:hover {
+  color: #ef4444;
+  background: color-mix(in oklab, #ef4444 14%, transparent);
+}
+
+.wms-ops-assignee-popover__row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem;
+}
+
+.wms-ops-assignee-popover__row:hover {
+  background: color-mix(in oklab, var(--wms-ops-accent) 8%, transparent);
+}
+
+/* ============================================================
+   TERMINAL SKIN
+   ============================================================ */
+
+html:not(.skin-premium) .wms-ops-assignee-chip {
+  border-radius: 0;
+  font-family: var(--wms-terminal-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+html:not(.skin-premium) .wms-ops-assignee-chip__remove,
+html:not(.skin-premium) .wms-ops-assignee-popover__row {
+  border-radius: 0;
+}
+
+html:not(.skin-premium) .wms-ops-assignee-popover__row {
+  font-family: var(--wms-terminal-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
+  letter-spacing: 0.02em;
+}
+
+/* ============================================================
+   PREMIUM SKIN
+   ============================================================ */
+
+html.skin-premium .wms-ops-assignee-chip {
+  border-radius: 999px;
+  padding: 0.32rem 0.7rem;
+  font-family: var(--wms-premium-font);
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  background: color-mix(in oklab, var(--wms-brand-primary) 8%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+html.skin-premium .wms-ops-assignee-chip--empty {
+  background: transparent;
+}
+
+html.skin-premium .wms-ops-assignee-chip__remove,
+html.skin-premium .wms-ops-assignee-popover__row {
+  border-radius: 999px;
+}
+
+html.skin-premium .wms-ops-assignee-popover__row {
+  border-radius: 0.7rem;
+  font-family: var(--wms-premium-font);
+}

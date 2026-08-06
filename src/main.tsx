@@ -17,6 +17,10 @@ import './styles/goods-receipt-qc-summary-terminal.css';
 import './styles/goods-receipt-qc-summary-premium.css';
 import './styles/goods-receipt-task-modal.css';
 import './styles/production-transfer-policy.css';
+import './styles/operation-flow-tabs.css';
+import './styles/ops-inline-note.css';
+import './styles/ops-assignee-chip.css';
+import './styles/ops-line-card.css';
 
 installGlobalToastErrorNavigation();
 
