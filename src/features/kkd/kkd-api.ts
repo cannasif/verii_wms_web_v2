@@ -95,6 +95,32 @@ export type KkdEntitlementResult = {
   overrideRemainingQuantity: number; totalRemainingQuantity: number; nextEligibleDate?: string;
   allocations: Array<{ sourceType: string; sourceId: number; quantity: number; periodStart: string; periodEnd?: string }>;
 };
+export type KkdDistributionDetail = {
+  id: number; correlationId: string; documentNo: string; status: string;
+  employeeId: number; employeeCode: string; employeeName: string; customerId: number; warehouseId: number;
+  warehouseOutboundId?: number | null; excessApprovalStatus: string; excessApprovalReason?: string | null;
+  failureReason?: string | null; createdDate?: string | null; completedAtUtc?: string | null;
+  lines: Array<{ id: number; lineNo: number; stockId: number; stockCode: string; stockName: string;
+    groupCode: string; quantity: number; entitledQuantity: number; excessQuantity: number;
+    sourceLocationId: number; lotNo?: string | null; serialNo?: string | null;
+    openOrderNo?: string | null; openOrderLineId?: string | null }>;
+};
+export type KkdRemainingEntitlement = {
+  employeeId: number; employeeCode: string; employeeName: string; groupCode: string; groupName: string;
+  stockId: number; stockCode: string; stockName: string; phaseType?: string | null;
+  matrixRemainingQuantity: number; overrideRemainingQuantity: number; totalRemainingQuantity: number;
+  lastUsageAtUtc?: string | null; nextEligibleDate?: string | null; reasonCode: string; message: string;
+};
+export type KkdOverride = {
+  id: number; employeeId: number; employeeCode: string; employeeName: string; ruleId?: number | null;
+  groupCode: string; quantity: number; consumedQuantity: number; remainingQuantity: number;
+  validFrom: string; validTo?: string | null; reason: string; approvedByUserId: number;
+  isActive: boolean; createdDate?: string | null; updatedDate?: string | null; rowVersion: string;
+};
+export type KkdPaged<T> = {
+  items: T[]; totalCount: number; pageNumber: number; pageSize: number; totalPages: number;
+  hasPreviousPage: boolean; hasNextPage: boolean;
+};
 
 export const kkdApi = {
   policy: async () => unwrap(await api.get<Envelope<KkdPolicy>>('/api/kkd/policy')),
@@ -134,6 +160,15 @@ export const kkdApi = {
   matrices: async () => unwrap(await api.get<Envelope<KkdMatrix[]>>('/api/kkd/matrices')),
   matrix: async (id: number) => unwrap(await api.get<Envelope<KkdMatrixDetail>>(`/api/kkd/matrices/${id}`)),
   distributions: async () => unwrap(await api.get<Envelope<KkdDistribution[]>>('/api/kkd/distributions')),
+  distributionsPaged: async (request: { pageNumber: number; pageSize: number; search?: string }) =>
+    unwrap(await api.post<Envelope<KkdPaged<KkdDistribution>>>('/api/kkd/distributions/paged', {
+      ...request,
+      sortBy: 'id',
+      sortDirection: 'desc',
+      searchFields: ['documentNo', 'employeeCode', 'employeeName'],
+    })),
+  distributionDetail: async (id: number) =>
+    unwrap(await api.get<Envelope<KkdDistributionDetail>>(`/api/kkd/distributions/${id}`)),
   distributionContext: async (employeeId: number) =>
     unwrap(await api.get<Envelope<KkdDistributionContext>>(`/api/kkd/distributions/context/${employeeId}`)),
   distributionOrderLines: async (employeeId: number, orderNumbers: string[]) =>
@@ -160,6 +195,22 @@ export const kkdApi = {
     id ? `/api/kkd/matrices/${id}/validate` : '/api/kkd/matrices/validate', payload)),
   check: async (payload: { employeeId: number; stockId: number; quantity: number; atDate?: string }) =>
     unwrap(await api.post<Envelope<KkdEntitlementResult>>('/api/kkd/entitlements/check', payload)),
+  remainingEntitlements: async (employeeId: number, atDate?: string) =>
+    unwrap(await api.get<Envelope<KkdRemainingEntitlement[]>>(
+      `/api/kkd/reports/remaining-entitlements/${employeeId}`,
+      { params: { atDate: atDate || undefined } },
+    )),
+  overridesPaged: async (request: { pageNumber: number; pageSize: number; search?: string }) =>
+    unwrap(await api.post<Envelope<KkdPaged<KkdOverride>>>('/api/kkd/overrides/paged', {
+      ...request,
+      sortBy: 'updatedDate',
+      sortDirection: 'desc',
+      searchFields: ['employeeCode', 'employeeName', 'groupCode', 'reason'],
+    })),
+  createOverride: async (payload: unknown) => unwrap(await api.post<Envelope<number>>('/api/kkd/overrides', payload)),
+  updateOverride: async (id: number, payload: unknown) =>
+    unwrap(await api.put<Envelope<number>>(`/api/kkd/overrides/${id}`, payload)),
+  deleteOverride: async (id: number) => unwrap(await api.delete<Envelope<null>>(`/api/kkd/overrides/${id}`)),
   complete: async (id: number) => unwrap(await api.post<Envelope<unknown>>(`/api/kkd/distributions/${id}/complete`, { idempotencyKey: crypto.randomUUID() })),
   decideExcessApproval: async (id: number, approve: boolean, reason: string) =>
     unwrap(await api.post<Envelope<KkdDistribution>>(`/api/kkd/distributions/${id}/excess-approval`, {

@@ -45,8 +45,9 @@ import {
   KkdPanel,
   KkdTableShell,
 } from './kkd-ops-ui';
-import { kkdApi, type KkdEntitlementResult, type KkdPolicy } from './kkd-api';
+import { kkdApi, type KkdEntitlementResult, type KkdPolicy, type KkdRemainingEntitlement } from './kkd-api';
 import { KkdMatrixManager } from './KkdMatrixManager';
+import { KkdOverrideManager } from './KkdOverrideManager';
 
 export function KkdOverviewPage(): ReactElement {
   const { can } = usePermissionAccess();
@@ -347,13 +348,14 @@ export function KkdPolicyPage(): ReactElement {
   );
 }
 
-type DefinitionTab = 'department' | 'role' | 'employee' | 'matrix';
+type DefinitionTab = 'department' | 'role' | 'employee' | 'matrix' | 'override';
 
 const DEFINITION_TABS: Array<[DefinitionTab, string]> = [
   ['department', 'Departman'],
   ['role', 'Rol'],
   ['employee', 'Personel'],
   ['matrix', 'Hak matrisi'],
+  ['override', 'Personel ek hakları'],
 ];
 
 export function KkdDefinitionsPage(): ReactElement {
@@ -515,6 +517,8 @@ export function KkdDefinitionsPage(): ReactElement {
     >
       {tab === 'matrix' ? (
         <KkdMatrixManager />
+      ) : tab === 'override' ? (
+        <KkdOverrideManager />
       ) : (
       <div className="grid gap-4 xl:grid-cols-[minmax(340px,.75fr)_1.25fr]">
         <KkdPanel
@@ -876,10 +880,20 @@ export function KkdEntitlementPage(): ReactElement {
   const [stockId, setStockId] = useState('');
   const [quantity, setQuantity] = useState('1');
   const [result, setResult] = useState<KkdEntitlementResult>();
+  const [atDate, setAtDate] = useState(new Date().toLocaleDateString('en-CA'));
+  const [remainingItems, setRemainingItems] = useState<KkdRemainingEntitlement[]>([]);
   const mutation = useMutation({
     mutationFn: () => kkdApi.check({ employeeId: n(employeeId), stockId: n(stockId), quantity: n(quantity) }),
     onSuccess: setResult,
     onError: (error) => toast.error(message(error)),
+  });
+  const remainingMutation = useMutation({
+    mutationFn: () => kkdApi.remainingEntitlements(n(employeeId), atDate),
+    onSuccess: setRemainingItems,
+    onError: (error) => {
+      setRemainingItems([]);
+      toast.error(message(error));
+    },
   });
 
   return (
@@ -954,6 +968,66 @@ export function KkdEntitlementPage(): ReactElement {
         </form>
       </KkdPanel>
 
+      <KkdPanel
+        code="ENT_ALL"
+        icon={<ClipboardList className="size-4" strokeWidth={1.75} />}
+        title="Personelin tüm kalan hakları"
+        description="V1'deki kalan hak görünümünü; stok, grup, dönem, ana hak, ek hak ve sonraki kullanım tarihiyle birlikte gösterir."
+        actions={
+          <OpsActionButton
+            variant="secondary"
+            className="wms-ops-list-toolbar-btn"
+            loading={remainingMutation.isPending}
+            disabled={!employeeId}
+            onClick={() => remainingMutation.mutate()}
+          >
+            <RefreshCw className={cn('size-3.5', remainingMutation.isPending && 'animate-spin')} />
+            Kalan hakları getir
+          </OpsActionButton>
+        }
+      >
+        <div className="mb-3 grid items-end gap-3 sm:grid-cols-[minmax(220px,360px)_auto]">
+          <KkdField label="Hesaplama tarihi">
+            <AppDateInput value={atDate} onChange={(event) => setAtDate(event.target.value)} />
+          </KkdField>
+          <p className="pb-2 text-xs text-[var(--wms-app-text-muted)]">
+            Üstte seçilen personelin geçerli matris ve personel ek hakları birlikte hesaplanır.
+          </p>
+        </div>
+        {remainingMutation.isPending ? (
+          <OpsLoadingState code="ENT" message="Kalan haklar hesaplanıyor…" compact />
+        ) : remainingItems.length ? (
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {remainingItems.map((item) => (
+              <div key={`${item.groupCode}-${item.stockId}`} className="rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-surface-muted)] p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <strong className="block font-mono text-[var(--wms-brand-primary)]">{item.groupCode}</strong>
+                    <span className="text-xs text-[var(--wms-app-text-muted)]">{item.groupName}</span>
+                  </div>
+                  <OpsStatusBadge tone={item.totalRemainingQuantity > 0 ? 'active' : 'neutral'}>
+                    {item.totalRemainingQuantity > 0 ? 'HAK VAR' : 'HAK YOK'}
+                  </OpsStatusBadge>
+                </div>
+                <p className="mt-3 text-sm font-semibold">{item.stockCode} · {item.stockName}</p>
+                <div className="mt-3 grid grid-cols-3 gap-2">
+                  <KkdMetric label="Ana hak" value={item.matrixRemainingQuantity} />
+                  <KkdMetric label="Ek hak" value={item.overrideRemainingQuantity} />
+                  <KkdMetric label="Toplam" value={item.totalRemainingQuantity} />
+                </div>
+                <div className="mt-3 text-xs text-[var(--wms-app-text-muted)]">
+                  <span>Dönem: {item.phaseType || '—'}</span>
+                  <span className="block">Son kullanım: {item.lastUsageAtUtc ? new Date(item.lastUsageAtUtc).toLocaleString('tr-TR') : '—'}</span>
+                  <span className="block">Sonraki hak: {item.nextEligibleDate ? new Date(item.nextEligibleDate).toLocaleDateString('tr-TR') : '—'}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <OpsGridEmptyState message={employeeId ? 'Kalan hakları görmek için “Kalan hakları getir” düğmesini kullanın.' : 'Önce üst bölümden personel seçin.'} />
+        )}
+      </KkdPanel>
+
       {result ? (
         <KkdPanel
           code={result.reasonCode || 'ENT_RES'}
@@ -990,7 +1064,26 @@ export function KkdEntitlementPage(): ReactElement {
 }
 
 export function KkdDistributionsPage(): ReactElement {
-  const query = useQuery({ queryKey: ['kkd', 'distributions'], queryFn: kkdApi.distributions });
+  const [page, setPage] = useState(1);
+  const [searchInput, setSearchInput] = useState('');
+  const [search, setSearch] = useState('');
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setSearch(searchInput.trim());
+      setPage(1);
+    }, 350);
+    return () => window.clearTimeout(timer);
+  }, [searchInput]);
+  const query = useQuery({
+    queryKey: ['kkd', 'distributions', 'paged', page, search],
+    queryFn: () => kkdApi.distributionsPaged({ pageNumber: page, pageSize: 25, search: search || undefined }),
+  });
+  const detail = useQuery({
+    queryKey: ['kkd', 'distributions', 'detail', selectedId],
+    queryFn: () => kkdApi.distributionDetail(selectedId!),
+    enabled: Boolean(selectedId),
+  });
   const qc = useQueryClient();
   const { can } = usePermissionAccess();
   const [reasons, setReasons] = useState<Record<number, string>>({});
@@ -1004,7 +1097,7 @@ export function KkdDistributionsPage(): ReactElement {
     onError: (error) => toast.error(message(error)),
   });
   const canManageOverrides = can('WMS.KKD.OVERRIDES.MANAGE');
-  const columns = ['Belge', 'Personel', 'Toplam', 'Hak', 'Fazla', 'Kota aşım onayı', 'Durum', 'Ambar çıkışı'];
+  const columns = ['Belge', 'Personel', 'Toplam', 'Hak', 'Fazla', 'Kota aşım onayı', 'Durum', 'Ambar çıkışı', 'İşlemler'];
 
   return (
     <KkdPage
@@ -1037,6 +1130,13 @@ export function KkdDistributionsPage(): ReactElement {
         description="Kota aşımı bekleyen belgeler fiziksel çıkış için yönetici onayı ister."
         bodyClassName="px-0 py-0 sm:px-0 sm:py-0"
       >
+        <div className="border-b border-[var(--wms-app-border)] p-3">
+          <AppInput
+            value={searchInput}
+            onChange={(event) => setSearchInput(event.target.value)}
+            placeholder="Belge no, personel kodu veya personel adı ara"
+          />
+        </div>
         <KkdTableShell minWidthClass="min-w-[1180px]" className="border-x-0 border-b-0">
           <thead className="sticky top-0 z-10">
             <tr>
@@ -1054,14 +1154,14 @@ export function KkdDistributionsPage(): ReactElement {
                   <OpsLoadingState code="FETCH" message="KKD dağıtımları yükleniyor…" compact />
                 </td>
               </tr>
-            ) : (query.data?.length ?? 0) === 0 ? (
+            ) : (query.data?.items.length ?? 0) === 0 ? (
               <tr>
                 <td colSpan={columns.length} className="wms-ops-grid-state-cell">
                   <OpsGridEmptyState message="Bu şubede kayıtlı KKD dağıtımı bulunamadı." />
                 </td>
               </tr>
             ) : (
-              query.data?.map((row) => {
+              query.data?.items.map((row) => {
                 const reason = reasons[row.id] || '';
                 const isPending = row.excessApprovalStatus === 'Pending';
                 return (
@@ -1131,13 +1231,73 @@ export function KkdDistributionsPage(): ReactElement {
                         <span className="text-[var(--wms-app-text-muted)]">—</span>
                       )}
                     </td>
+                    <td className={KKD_CELL}>
+                      <OpsActionButton
+                        variant="secondary"
+                        className="wms-ops-list-toolbar-btn"
+                        onClick={() => setSelectedId(row.id)}
+                      >
+                        <ClipboardCheck className="size-3.5" /> Detay
+                      </OpsActionButton>
+                    </td>
                   </tr>
                 );
               })
             )}
           </tbody>
         </KkdTableShell>
+        {query.data ? (
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--wms-app-border)] p-3 text-sm">
+            <span>{query.data.totalCount} kayıt · Sayfa {query.data.pageNumber}/{Math.max(1, query.data.totalPages)}</span>
+            <div className="flex gap-2">
+              <OpsActionButton variant="secondary" disabled={!query.data.hasPreviousPage} onClick={() => setPage((value) => value - 1)}>Önceki</OpsActionButton>
+              <OpsActionButton variant="secondary" disabled={!query.data.hasNextPage} onClick={() => setPage((value) => value + 1)}>Sonraki</OpsActionButton>
+            </div>
+          </div>
+        ) : null}
       </KkdPanel>
+
+      {selectedId ? (
+        <KkdPanel
+          code={`DST_${selectedId}`}
+          icon={<ClipboardCheck className="size-4" />}
+          title={detail.data?.documentNo || 'Dağıtım detayı'}
+          description="Belge özeti, stok kalemleri, hak/fazla ayrımı, sipariş ve izlenebilirlik bilgileri."
+          actions={<OpsActionButton variant="secondary" onClick={() => setSelectedId(null)}><X className="size-3.5" /> Kapat</OpsActionButton>}
+          bodyClassName="px-0 py-0 sm:px-0 sm:py-0"
+        >
+          {detail.isLoading ? <div className="p-4"><OpsLoadingState code="DETAIL" message="Dağıtım detayı yükleniyor…" compact /></div>
+            : detail.data ? (
+              <>
+                <div className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-5">
+                  <KkdMetric label="Personel" value={`${detail.data.employeeCode} · ${detail.data.employeeName}`} />
+                  <KkdMetric label="Durum" value={detail.data.status} />
+                  <KkdMetric label="Kota onayı" value={detail.data.excessApprovalStatus} />
+                  <KkdMetric label="Depo" value={detail.data.warehouseId} />
+                  <KkdMetric label="Ambar çıkışı" value={detail.data.warehouseOutboundId || '—'} />
+                </div>
+                {detail.data.failureReason ? <KkdCallout tone="danger" className="mx-4 mb-4">{detail.data.failureReason}</KkdCallout> : null}
+                <KkdTableShell minWidthClass="min-w-[980px]" className="border-x-0 border-b-0">
+                  <thead><tr>{['#', 'Stok kodu', 'Stok adı', 'Grup', 'Toplam', 'Hak', 'Fazla', 'Raf', 'Lot / seri', 'Sipariş'].map((column) => <th key={column} className={KKD_HEAD_CELL}>{column}</th>)}</tr></thead>
+                  <tbody>{detail.data.lines.map((line) => (
+                    <tr key={line.id}>
+                      <td className={KKD_CELL}>{line.lineNo}</td>
+                      <td className={cn(KKD_CELL, 'font-mono font-bold')}>{line.stockCode}</td>
+                      <td className={KKD_CELL}>{line.stockName}</td>
+                      <td className={KKD_CELL}>{line.groupCode}</td>
+                      <td className={KKD_CELL}>{line.quantity}</td>
+                      <td className={cn(KKD_CELL, 'text-emerald-500')}>{line.entitledQuantity}</td>
+                      <td className={cn(KKD_CELL, line.excessQuantity > 0 && 'text-amber-500')}>{line.excessQuantity}</td>
+                      <td className={KKD_CELL}>{line.sourceLocationId}</td>
+                      <td className={KKD_CELL}>{[line.lotNo, line.serialNo].filter(Boolean).join(' / ') || '—'}</td>
+                      <td className={KKD_CELL}>{line.openOrderNo || '—'}</td>
+                    </tr>
+                  ))}</tbody>
+                </KkdTableShell>
+              </>
+            ) : <div className="p-4"><OpsGridEmptyState message="Dağıtım detayı yüklenemedi." /></div>}
+        </KkdPanel>
+      ) : null}
     </KkdPage>
   );
 }
