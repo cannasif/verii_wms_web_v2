@@ -27,6 +27,7 @@ import {
   completeCancellationReturnAndRefresh,
 } from './production-transfer-route-refresh';
 import { ProductionTransferCancellationPanel } from './components/ProductionTransferCancellationPanel';
+import { ProductionTransferExecutionPage } from './components/ProductionTransferExecutionPage';
 import { ProductionTaskSourceLocationCell } from './components/ProductionTaskSourceLocationCell';
 import { useProductionTaskSourceAvailability } from './hooks/useProductionTaskSourceAvailability';
 import type { ActiveUserOption, LocationOption, WarehouseOption } from '@/features/goods-receipt-v2/types/goods-receipt.types';
@@ -76,6 +77,7 @@ export function ProductionTransferListPage(){return <WarehouseTransferListPage v
 export function ProductionTransferOperationPage(){
   return <div className="space-y-5">
     <ProductionTaskPanel/>
+    <ProductionTransferExecutionPage/>
     <WarehouseTransferOperationPage variant="production"/>
   </div>;
 }
