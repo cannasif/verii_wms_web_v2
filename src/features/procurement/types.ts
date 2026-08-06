@@ -59,6 +59,8 @@ export interface ProcurementLineDetail {
   openQuantity: number;
   sourceRequestLineId?: number | null;
   attachments?: ProcurementAttachment[];
+  /** Talep kalemi durumu (Draft / PendingApproval / Approved …). Diğer belgelerde yok. */
+  status?: string | null;
 }
 export interface ProcurementHistoryRow {
   fromStatus: string;

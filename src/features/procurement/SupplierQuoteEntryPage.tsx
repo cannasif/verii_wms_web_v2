@@ -11,7 +11,9 @@ import {
   CheckCircle2,
   ClipboardList,
   FileCheck2,
+  FileDown,
   Package,
+  Plus,
   Scale,
 } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
@@ -33,6 +35,7 @@ import {
 import { cn } from "@/lib/utils";
 import type { PagedResponse } from "@/types/api";
 import { procurementApi } from "./api";
+import { generateSupplierQuotePdf } from "./generateSupplierQuotePdf";
 import {
   LineAttachmentBadge,
   LineAttachmentsDialog,
@@ -79,6 +82,7 @@ async function fetchApprovedRequestsPage({
     filterLogic: "or",
     filters: [
       { column: "status", operator: "eq", value: "Approved" },
+      { column: "status", operator: "eq", value: "PartiallyApproved" },
       { column: "status", operator: "eq", value: "PartiallyConverted" },
     ],
   });
@@ -109,6 +113,7 @@ const statusLabel: Record<string, string> = {
   Rejected: "Reddedildi",
   Converted: "Siparişe Dönüştü",
   PartiallyConverted: "Kısmi Sipariş",
+  PartiallyApproved: "Kalem Bazlı İşlem",
   Cancelled: "İptal",
   Sent: "Gönderildi",
   Quoted: "Teklif Alındı",
@@ -128,6 +133,60 @@ type QuoteFormLine = {
   vatRate: number;
   deliveryDate?: string;
   included: boolean;
+};
+
+type QuoteDraft = {
+  key: string;
+  expanded: boolean;
+  supplierId: number | null;
+  supplierName: string;
+  supplierCode: string | null;
+  supplierLookupOpen: boolean;
+  quoteNo: string;
+  /** true: önizleme; kayıtta QuoteNo gönderilmez, backend üretir. */
+  quoteNoAuto: boolean;
+  quoteNoReady: boolean;
+  quoteDate: string;
+  validUntil: string;
+  deliveryDate: string;
+  currency: string;
+  exchangeRate: number;
+  note: string;
+  lines: QuoteFormLine[];
+  headerFiles: PendingAttachment[];
+  lineFiles: Record<number, PendingAttachment[]>;
+  lineAttachId: number | null;
+};
+
+/** Backend `Number(prefix, id)` formatı: QT-2026-00000042 */
+const QUOTE_NO_PATTERN = /^([A-Za-z]+)-(\d{4})-(\d+)$/;
+
+const parsePeekDocumentNo = (
+  documentNo: string,
+): { prefix: string; year: string; sequence: number } | null => {
+  const match = QUOTE_NO_PATTERN.exec(documentNo.trim());
+  if (!match) return null;
+  return {
+    prefix: match[1]!,
+    year: match[2]!,
+    sequence: Number(match[3]),
+  };
+};
+
+const formatPeekDocumentNo = (
+  prefix: string,
+  year: string,
+  sequence: number,
+) => `${prefix}-${year}-${String(sequence).padStart(8, "0")}`;
+
+const DUPLICATE_QUOTE_NO_MESSAGE =
+  "Teklif numaraları aynı olamaz. Her tedarikçi için farklı bir teklif numarası girin.";
+
+type SavedQuoteResult = {
+  id: number;
+  documentNo: string;
+  supplierName: string;
+  requestNo: string;
 };
 
 const lineTotal = (
@@ -322,6 +381,127 @@ function mapFormLinesToQuoteInputs(
   });
 }
 
+const normalizeSupplierName = (name: string) =>
+  name.trim().toLocaleLowerCase("tr-TR");
+
+const buildLinesFromRequest = (
+  detail: ProcurementDocumentDetail,
+): QuoteFormLine[] =>
+  detail.lines
+    .filter((x) => x.openQuantity > 0)
+    .map((x) => ({
+      requestLineId: x.id,
+      stockCode: x.stockCode,
+      stockName: x.stockName,
+      unitCode: x.unitCode,
+      requestedQuantity: x.quantity,
+      quantity: x.openQuantity,
+      unitPrice: 0,
+      discountRate: 0,
+      vatRate: 20,
+      deliveryDate: x.requiredDate ?? detail.dueDate,
+      included: true,
+    }));
+
+const newDraftKey = () =>
+  `draft-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+
+const createEmptyDraft = (
+  request: ProcurementDocumentDetail,
+  expanded = true,
+): QuoteDraft => ({
+  key: newDraftKey(),
+  expanded,
+  supplierId: null,
+  supplierName: "",
+  supplierCode: null,
+  supplierLookupOpen: false,
+  quoteNo: "",
+  quoteNoAuto: true,
+  quoteNoReady: false,
+  quoteDate: today(),
+  validUntil: "",
+  deliveryDate: request.dueDate ?? "",
+  currency: "TRY",
+  exchangeRate: 1,
+  note: "",
+  lines: buildLinesFromRequest(request),
+  headerFiles: [],
+  lineFiles: {},
+  lineAttachId: null,
+});
+
+const revokeDraftAttachments = (draft: QuoteDraft) => {
+  revokePendingAttachments(draft.headerFiles);
+  for (const files of Object.values(draft.lineFiles))
+    revokePendingAttachments(files);
+};
+
+const draftIncludedLines = (draft: QuoteDraft) =>
+  draft.lines.filter((x) => x.included);
+
+const draftQtySum = (draft: QuoteDraft) =>
+  draftIncludedLines(draft).reduce((sum, x) => sum + x.quantity, 0);
+
+const draftMoneySum = (draft: QuoteDraft) =>
+  draftIncludedLines(draft).reduce((sum, x) => sum + lineTotal(x), 0);
+
+const draftLineWarnings = (draft: QuoteDraft, index: number): string[] => {
+  const label = `Teklif ${index + 1}`;
+  const warnings: string[] = [];
+  if (!draft.supplierName.trim())
+    warnings.push(`${label}: Tedarikçi seçilmedi veya adı girilmedi.`);
+  if (!draft.quoteNoAuto && !draft.quoteNo.trim())
+    warnings.push(`${label}: Teklif numarası eksik.`);
+  if (draft.exchangeRate <= 0)
+    warnings.push(`${label}: Kur 0'dan büyük olmalıdır.`);
+  const included = draftIncludedLines(draft);
+  if (included.length === 0)
+    warnings.push(`${label}: En az bir teklif kalemi seçilmelidir.`);
+  for (const line of included) {
+    const lineLabel = line.stockCode
+      ? `${line.stockCode} · ${line.stockName}`
+      : line.stockName;
+    if (line.quantity <= 0)
+      warnings.push(`${label}: "${lineLabel}" için teklif miktarı 0 olamaz.`);
+    if (line.quantity > line.requestedQuantity)
+      warnings.push(
+        `${label}: "${lineLabel}" teklif miktarı talep miktarını aşıyor.`,
+      );
+    if (line.unitPrice < 0)
+      warnings.push(`${label}: "${lineLabel}" için birim fiyat geçersiz.`);
+    if (line.discountRate < 0 || line.discountRate > 100)
+      warnings.push(`${label}: "${lineLabel}" için iskonto oranı geçersiz.`);
+    if (line.vatRate < 0)
+      warnings.push(`${label}: "${lineLabel}" için KDV oranı geçersiz.`);
+  }
+  return warnings;
+};
+
+const isSupplierUsedElsewhere = (
+  supplierId: number | null,
+  supplierName: string,
+  drafts: QuoteDraft[],
+  excludeKey: string | null,
+  relatedQuotes: ProcurementDocumentDetail[],
+): boolean => {
+  const name = normalizeSupplierName(supplierName);
+  for (const draft of drafts) {
+    if (excludeKey != null && draft.key === excludeKey) continue;
+    if (supplierId != null && draft.supplierId === supplierId) return true;
+    if (
+      name &&
+      normalizeSupplierName(draft.supplierName) === name
+    )
+      return true;
+  }
+  for (const quote of relatedQuotes) {
+    const quoteName = normalizeSupplierName(quote.counterpartyName ?? "");
+    if (name && quoteName && quoteName === name) return true;
+  }
+  return false;
+};
+
 export function SupplierQuoteEntryPage(): ReactElement {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -340,32 +520,13 @@ export function SupplierQuoteEntryPage(): ReactElement {
   const [relatedBusy, setRelatedBusy] = useState(false);
   const [step, setStep] = useState<0 | 1>(0);
   const [requestLookupOpen, setRequestLookupOpen] = useState(false);
-  const [savedQuote, setSavedQuote] = useState<{
-    id: number;
-    documentNo: string;
-    supplierName: string;
-    requestNo: string;
-  } | null>(null);
-
-  const [supplierId, setSupplierId] = useState<number | null>(null);
-  const [supplierName, setSupplierName] = useState("");
-  const [supplierCode, setSupplierCode] = useState<string | null>(null);
-  const [supplierLookupOpen, setSupplierLookupOpen] = useState(false);
-  const [quoteNo, setQuoteNo] = useState("");
-  const [quoteNoReady, setQuoteNoReady] = useState(false);
-  const [quoteDate, setQuoteDate] = useState(today);
-  const [validUntil, setValidUntil] = useState("");
-  const [deliveryDate, setDeliveryDate] = useState("");
-  const [currency, setCurrency] = useState("TRY");
-  const [exchangeRate, setExchangeRate] = useState(1);
-  const [note, setNote] = useState("");
-  const [lines, setLines] = useState<QuoteFormLine[]>([]);
-  const [headerFiles, setHeaderFiles] = useState<PendingAttachment[]>([]);
-  const [lineFiles, setLineFiles] = useState<
-    Record<number, PendingAttachment[]>
-  >({});
-  const [lineAttachId, setLineAttachId] = useState<number | null>(null);
-  const hasSupplier = Boolean(supplierName.trim());
+  const [savedQuotes, setSavedQuotes] = useState<SavedQuoteResult[] | null>(
+    null,
+  );
+  const [pdfBusyId, setPdfBusyId] = useState<number | null>(null);
+  const [drafts, setDrafts] = useState<QuoteDraft[]>([]);
+  const [allowMultipleQuotesPerSupplier, setAllowMultipleQuotesPerSupplier] =
+    useState(true);
 
   const [relatedQuotes, setRelatedQuotes] = useState<
     ProcurementDocumentDetail[]
@@ -377,6 +538,15 @@ export function SupplierQuoteEntryPage(): ReactElement {
   const [confirmConvertOpen, setConfirmConvertOpen] = useState(false);
   const [selectBusy, setSelectBusy] = useState(false);
 
+  useEffect(() => {
+    void procurementApi
+      .policy()
+      .then((policy) =>
+        setAllowMultipleQuotesPerSupplier(policy.allowMultipleQuotesPerSupplier),
+      )
+      .catch(() => undefined);
+  }, []);
+
   const applyRequest = useCallback((detail: ProcurementDocumentDetail) => {
     if (detail.documentType !== "request") {
       toast.error("Seçilen belge bir satın alma talebi değil.");
@@ -384,6 +554,7 @@ export function SupplierQuoteEntryPage(): ReactElement {
     }
     if (
       detail.status !== "Approved" &&
+      detail.status !== "PartiallyApproved" &&
       detail.status !== "PartiallyConverted"
     ) {
       toast.error(
@@ -391,30 +562,22 @@ export function SupplierQuoteEntryPage(): ReactElement {
       );
       return;
     }
-    const openLines = detail.lines.filter((x) => x.openQuantity > 0);
+    const openLines = detail.lines.filter(
+      (x) =>
+        x.openQuantity > 0 &&
+        (!x.status || x.status === "Approved"),
+    );
     if (openLines.length === 0) {
       toast.error("Talebin teklif girilebilecek açık miktarı yok.");
       return;
     }
     setRequest(detail);
     setStep(0);
-    setSavedQuote(null);
-    setDeliveryDate(detail.dueDate ?? "");
-    setLines(
-      openLines.map((x) => ({
-        requestLineId: x.id,
-        stockCode: x.stockCode,
-        stockName: x.stockName,
-        unitCode: x.unitCode,
-        requestedQuantity: x.quantity,
-        quantity: x.openQuantity,
-        unitPrice: 0,
-        discountRate: 0,
-        vatRate: 20,
-        deliveryDate: x.requiredDate ?? detail.dueDate,
-        included: true,
-      })),
-    );
+    setSavedQuotes(null);
+    setDrafts((prev) => {
+      for (const draft of prev) revokeDraftAttachments(draft);
+      return [];
+    });
   }, []);
 
   const loadRequestById = useCallback(
@@ -506,209 +669,370 @@ export function SupplierQuoteEntryPage(): ReactElement {
     }
   }, [loadRelatedQuotes, request?.id]);
 
-  const patchLine = (id: number, next: Partial<QuoteFormLine>) =>
-    setLines((xs) =>
-      xs.map((x) => (x.requestLineId === id ? { ...x, ...next } : x)),
+  const patchDraft = useCallback(
+    (key: string, patch: Partial<QuoteDraft>) => {
+      setDrafts((xs) =>
+        xs.map((draft) =>
+          draft.key === key ? { ...draft, ...patch } : draft,
+        ),
+      );
+    },
+    [],
+  );
+
+  const patchDraftLine = (
+    draftKey: string,
+    requestLineId: number,
+    next: Partial<QuoteFormLine>,
+  ) => {
+    setDrafts((xs) =>
+      xs.map((draft) =>
+        draft.key === draftKey
+          ? {
+              ...draft,
+              lines: draft.lines.map((line) =>
+                line.requestLineId === requestLineId
+                  ? { ...line, ...next }
+                  : line,
+              ),
+            }
+          : draft,
+      ),
     );
+  };
 
-  const total = useMemo(
-    () =>
-      lines
-        .filter((x) => x.included)
-        .reduce((sum, x) => sum + lineTotal(x), 0),
-    [lines],
-  );
+  /**
+   * Peek tek sonraki numarayı döner (consume etmez).
+   * Çoklu taslakta aynı peek'i herkese basmamak için auto taslaklara
+   * sequence+offset önizlemesi verilir; kayıtta auto olanlar QuoteNo
+   * göndermez ve backend gerçek numarayı üretir.
+   */
+  const assignAutoQuoteNumbers = useCallback(async () => {
+    let peeked: string;
+    try {
+      peeked = await procurementApi.nextDocumentNo("quote");
+    } catch (e) {
+      setDrafts((xs) =>
+        xs.map((d) =>
+          d.quoteNoAuto
+            ? { ...d, quoteNo: "", quoteNoReady: true, quoteNoAuto: true }
+            : { ...d, quoteNoReady: true },
+        ),
+      );
+      toast.error(
+        e instanceof Error ? e.message : "Teklif numarası alınamadı.",
+      );
+      return;
+    }
 
-  const includedLines = useMemo(
-    () => lines.filter((x) => x.included),
-    [lines],
-  );
+    const parsed = parsePeekDocumentNo(peeked);
+    setDrafts((xs) => {
+      const autoCount = xs.filter((d) => d.quoteNoAuto).length;
+      if (autoCount === 0) {
+        return xs.map((d) => ({ ...d, quoteNoReady: true }));
+      }
+      const manualNos = new Set(
+        xs
+          .filter((d) => !d.quoteNoAuto && d.quoteNo.trim())
+          .map((d) => d.quoteNo.trim().toLocaleLowerCase("tr-TR")),
+      );
+      let offset = 0;
+      const nextUnique = (): string => {
+        if (!parsed) {
+          if (offset === 0) {
+            offset += 1;
+            return peeked;
+          }
+          return "";
+        }
+        while (true) {
+          const candidate = formatPeekDocumentNo(
+            parsed.prefix,
+            parsed.year,
+            parsed.sequence + offset,
+          );
+          offset += 1;
+          if (!manualNos.has(candidate.toLocaleLowerCase("tr-TR")))
+            return candidate;
+        }
+      };
+      return xs.map((draft) => {
+        if (!draft.quoteNoAuto) return { ...draft, quoteNoReady: true };
+        return {
+          ...draft,
+          quoteNo: nextUnique(),
+          quoteNoReady: true,
+          quoteNoAuto: true,
+        };
+      });
+    });
+  }, []);
 
-  const quoteQtySum = useMemo(
-    () => includedLines.reduce((sum, x) => sum + x.quantity, 0),
-    [includedLines],
-  );
+  const addDraft = () => {
+    if (!request) {
+      toast.error("Önce satın alma talebi seçin.");
+      return;
+    }
+    const draft = createEmptyDraft(request, true);
+    setDrafts((xs) => [
+      ...xs.map((d) => ({ ...d, expanded: false })),
+      draft,
+    ]);
+    void assignAutoQuoteNumbers();
+  };
+
+  const removeDraft = (key: string) => {
+    setDrafts((xs) => {
+      const target = xs.find((d) => d.key === key);
+      if (target) revokeDraftAttachments(target);
+      return xs.filter((d) => d.key !== key);
+    });
+  };
+
+  const expandDraft = (key: string) => {
+    setDrafts((xs) =>
+      xs.map((draft) => ({
+        ...draft,
+        expanded: draft.key === key,
+      })),
+    );
+  };
+
+  const collapseDraft = (key: string) => {
+    patchDraft(key, { expanded: false, supplierLookupOpen: false });
+  };
+
+  const trySetSupplier = (
+    draftKey: string,
+    next: {
+      supplierId: number | null;
+      supplierName: string;
+      supplierCode: string | null;
+    },
+  ): boolean => {
+    if (
+      !allowMultipleQuotesPerSupplier &&
+      isSupplierUsedElsewhere(
+        next.supplierId,
+        next.supplierName,
+        drafts,
+        draftKey,
+        relatedQuotes,
+      )
+    ) {
+      toast.error(
+        "Bu tedarikçi için bu talebe zaten teklif girilmiş veya başka bir taslakta seçili.",
+      );
+      return false;
+    }
+    patchDraft(draftKey, {
+      supplierId: next.supplierId,
+      supplierName: next.supplierName,
+      supplierCode: next.supplierCode,
+      supplierLookupOpen: false,
+    });
+    return true;
+  };
 
   const requestQtySum = useMemo(
     () =>
       request
         ? request.lines.reduce((sum, x) => sum + x.quantity, 0)
-        : lines.reduce((sum, x) => sum + x.requestedQuantity, 0),
-    [lines, request],
+        : 0,
+    [request],
   );
+
+  const draftsQuoteQtySum = useMemo(
+    () => drafts.reduce((sum, draft) => sum + draftQtySum(draft), 0),
+    [drafts],
+  );
+
+  const openRemainingQty = requestQtySum - draftsQuoteQtySum;
 
   const reviewWarnings = useMemo(() => {
     const warnings: string[] = [];
     if (!request) warnings.push("Satın alma talebi seçilmedi.");
-    if (!supplierName.trim()) warnings.push("Tedarikçi seçilmedi veya adı girilmedi.");
-    if (!quoteNo.trim()) warnings.push("Teklif numarası eksik.");
-    if (exchangeRate <= 0) warnings.push("Kur 0'dan büyük olmalıdır.");
-    if (includedLines.length === 0)
-      warnings.push("En az bir teklif kalemi seçilmelidir.");
-    for (const line of includedLines) {
-      const label = line.stockCode
-        ? `${line.stockCode} · ${line.stockName}`
-        : line.stockName;
-      if (line.quantity <= 0)
-        warnings.push(`"${label}" için teklif miktarı 0 olamaz.`);
-      if (line.quantity > line.requestedQuantity)
+    if (drafts.length === 0)
+      warnings.push("En az bir tedarikçi teklifi eklenmelidir.");
+    const quoteNos = new Map<string, number>();
+    drafts.forEach((draft, index) => {
+      warnings.push(...draftLineWarnings(draft, index));
+      const no = draft.quoteNo.trim().toLocaleLowerCase("tr-TR");
+      if (no) {
+        if (quoteNos.has(no)) {
+          warnings.push(DUPLICATE_QUOTE_NO_MESSAGE);
+        } else {
+          quoteNos.set(no, index);
+        }
+      }
+      if (
+        !allowMultipleQuotesPerSupplier &&
+        isSupplierUsedElsewhere(
+          draft.supplierId,
+          draft.supplierName,
+          drafts,
+          draft.key,
+          relatedQuotes,
+        )
+      ) {
         warnings.push(
-          `"${label}" teklif miktarı talep miktarını aşıyor.`,
+          `Teklif ${index + 1}: Aynı tedarikçi birden fazla teklifte kullanılamaz.`,
         );
-      if (line.unitPrice < 0)
-        warnings.push(`"${label}" için birim fiyat geçersiz.`);
-      if (line.discountRate < 0 || line.discountRate > 100)
-        warnings.push(`"${label}" için iskonto oranı geçersiz.`);
-      if (line.vatRate < 0)
-        warnings.push(`"${label}" için KDV oranı geçersiz.`);
-    }
-    return warnings;
-  }, [exchangeRate, includedLines, quoteNo, request, supplierName]);
+      }
+    });
+    return [...new Set(warnings)];
+  }, [
+    allowMultipleQuotesPerSupplier,
+    drafts,
+    relatedQuotes,
+    request,
+  ]);
 
-  const loadNextQuoteNo = useCallback(async () => {
-    setQuoteNoReady(false);
-    try {
-      setQuoteNo(await procurementApi.nextDocumentNo("quote"));
-      setQuoteNoReady(true);
-    } catch (e) {
-      toast.error(
-        e instanceof Error ? e.message : "Teklif numarası alınamadı.",
-      );
-    }
-  }, []);
-
-  useEffect(() => {
-    void loadNextQuoteNo();
-  }, [loadNextQuoteNo]);
-
-  const resetQuoteForm = () => {
-    setSupplierId(null);
-    setSupplierName("");
-    setSupplierCode(null);
-    setSupplierLookupOpen(false);
-    setQuoteDate(today());
-    setValidUntil("");
-    setNote("");
-    setExchangeRate(1);
-    setCurrency("TRY");
-    setStep(0);
-    revokePendingAttachments(headerFiles);
-    for (const files of Object.values(lineFiles))
-      revokePendingAttachments(files);
-    setHeaderFiles([]);
-    setLineFiles({});
-    setLineAttachId(null);
-    void loadNextQuoteNo();
-    if (request) {
-      setDeliveryDate(request.dueDate ?? "");
-      setLines(
-        request.lines
-          .filter((x) => x.openQuantity > 0)
-          .map((x) => ({
-            requestLineId: x.id,
-            stockCode: x.stockCode,
-            stockName: x.stockName,
-            unitCode: x.unitCode,
-            requestedQuantity: x.quantity,
-            quantity: x.openQuantity,
-            unitPrice: 0,
-            discountRate: 0,
-            vatRate: 20,
-            deliveryDate: x.requiredDate ?? request.dueDate,
-            included: true,
-          })),
-      );
-    }
-  };
-
-  const validateQuoteForm = (): boolean => {
+  const validateDrafts = (): boolean => {
     if (!request) {
       toast.error("Önce satın alma talebi seçin.");
       return false;
     }
-    if (!supplierName.trim()) {
-      toast.error("Tedarikçi adı girin veya sistemden tedarikçi seçin.");
+    if (drafts.length === 0) {
+      toast.error("En az bir tedarikçi teklifi ekleyin.");
       return false;
     }
-    if (!quoteNo.trim()) {
-      toast.error("Teklif numarası zorunludur.");
-      return false;
+    for (let i = 0; i < drafts.length; i += 1) {
+      const draft = drafts[i]!;
+      if (!draft.supplierName.trim()) {
+        toast.error(`Teklif ${i + 1}: Tedarikçi adı girin veya seçin.`);
+        return false;
+      }
+      if (!draft.quoteNoAuto && !draft.quoteNo.trim()) {
+        toast.error(`Teklif ${i + 1}: Teklif numarası zorunludur.`);
+        return false;
+      }
+      const included = draftIncludedLines(draft);
+      if (
+        draft.exchangeRate <= 0 ||
+        included.length === 0 ||
+        included.some(
+          (x) =>
+            x.quantity <= 0 ||
+            x.quantity > x.requestedQuantity ||
+            x.unitPrice < 0 ||
+            x.discountRate < 0 ||
+            x.discountRate > 100 ||
+            x.vatRate < 0,
+        )
+      ) {
+        toast.error(
+          `Teklif ${i + 1}: Geçerli teklif kalemleri, birim fiyat ve kur zorunludur. Miktar talep miktarını aşamaz.`,
+        );
+        return false;
+      }
+      if (
+        !allowMultipleQuotesPerSupplier &&
+        isSupplierUsedElsewhere(
+          draft.supplierId,
+          draft.supplierName,
+          drafts,
+          draft.key,
+          relatedQuotes,
+        )
+      ) {
+        toast.error(
+          `Teklif ${i + 1}: Aynı tedarikçi birden fazla teklifte kullanılamaz.`,
+        );
+        return false;
+      }
     }
-    const included = lines.filter((x) => x.included);
-    if (
-      exchangeRate <= 0 ||
-      included.length === 0 ||
-      included.some(
-        (x) =>
-          x.quantity <= 0 ||
-          x.quantity > x.requestedQuantity ||
-          x.unitPrice < 0 ||
-          x.discountRate < 0 ||
-          x.discountRate > 100 ||
-          x.vatRate < 0,
-      )
-    ) {
-      toast.error(
-        "Geçerli teklif kalemleri, birim fiyat ve kur zorunludur. Miktar talep miktarını aşamaz.",
-      );
-      return false;
+    const seen = new Set<string>();
+    for (const draft of drafts) {
+      const no = draft.quoteNo.trim().toLocaleLowerCase("tr-TR");
+      if (!no) continue;
+      if (seen.has(no)) {
+        toast.error(DUPLICATE_QUOTE_NO_MESSAGE);
+        return false;
+      }
+      seen.add(no);
     }
     return true;
   };
 
   const goToReview = () => {
-    if (!validateQuoteForm()) return;
+    if (!validateDrafts()) return;
     setStep(1);
   };
 
-  const save = async () => {
-    if (!validateQuoteForm() || !request) return;
-    const trimmedSupplierName = supplierName.trim();
-    const trimmedQuoteNo = quoteNo.trim();
-    const included = lines.filter((x) => x.included);
+  const saveAll = async () => {
+    if (!validateDrafts() || !request) return;
     setSaveBusy(true);
     try {
-      const rfq = await ensureRfqForRequest(request, supplierId);
-      const quoteLines = mapFormLinesToQuoteInputs(
-        included.map((x) => ({
-          ...x,
-          deliveryDate: x.deliveryDate || deliveryDate || undefined,
-        })),
-        rfq,
-      );
-      const quoteId = await procurementApi.createQuote(rfq.id, {
-        supplierId: supplierId ?? null,
-        supplierName: trimmedSupplierName,
-        quoteNo: trimmedQuoteNo,
-        quoteDate,
-        validUntil: validUntil || undefined,
-        currencyCode: currency,
-        exchangeRate,
-        note: note || undefined,
-        lines: quoteLines,
-      });
-      const quoteDetail = await procurementApi.detail("quote", quoteId);
-      await uploadPendingAttachments("quote", quoteId, headerFiles);
-      for (const formLine of included) {
-        const pending = lineFiles[formLine.requestLineId] ?? [];
-        if (pending.length === 0) continue;
-        const created = quoteDetail.lines.find(
-          (x) => x.sourceRequestLineId === formLine.requestLineId,
+      const firstSupplierId = drafts[0]?.supplierId ?? null;
+      const rfq = await ensureRfqForRequest(request, firstSupplierId);
+      const created: SavedQuoteResult[] = [];
+
+      for (const draft of drafts) {
+        const trimmedSupplierName = draft.supplierName.trim();
+        // Auto önizleme numarası backend'e gönderilmez; gerçek QuoteNo
+        // CreateQuoteAsync içinde Number("QT", id) ile üretilir.
+        const manualQuoteNo =
+          !draft.quoteNoAuto && draft.quoteNo.trim()
+            ? draft.quoteNo.trim()
+            : undefined;
+        const included = draftIncludedLines(draft);
+        const quoteLines = mapFormLinesToQuoteInputs(
+          included.map((x) => ({
+            ...x,
+            deliveryDate: x.deliveryDate || draft.deliveryDate || undefined,
+          })),
+          rfq,
         );
-        if (created)
-          await uploadPendingAttachments("quote-line", created.id, pending);
+        const quoteId = await procurementApi.createQuote(rfq.id, {
+          supplierId: draft.supplierId ?? null,
+          supplierName: trimmedSupplierName,
+          // Boş string → backend Norm null → Number("QT", id)
+          quoteNo: manualQuoteNo ?? "",
+          quoteDate: draft.quoteDate,
+          validUntil: draft.validUntil || undefined,
+          currencyCode: draft.currency,
+          exchangeRate: draft.exchangeRate,
+          note: draft.note || undefined,
+          lines: quoteLines,
+        });
+        const quoteDetail = await procurementApi.detail("quote", quoteId);
+        await uploadPendingAttachments("quote", quoteId, draft.headerFiles);
+        for (const formLine of included) {
+          const pending = draft.lineFiles[formLine.requestLineId] ?? [];
+          if (pending.length === 0) continue;
+          const createdLine = quoteDetail.lines.find(
+            (x) => x.sourceRequestLineId === formLine.requestLineId,
+          );
+          if (createdLine)
+            await uploadPendingAttachments(
+              "quote-line",
+              createdLine.id,
+              pending,
+            );
+        }
+        created.push({
+          id: quoteId,
+          documentNo: quoteDetail.documentNo,
+          supplierName: trimmedSupplierName,
+          requestNo: request.documentNo,
+        });
       }
-      toast.success("Tedarikçi teklifi kaydedildi.");
-      setSavedQuote({
-        id: quoteId,
-        documentNo: trimmedQuoteNo,
-        supplierName: trimmedSupplierName,
-        requestNo: request.documentNo,
+
+      toast.success(
+        created.length === 1
+          ? "Tedarikçi teklifi kaydedildi."
+          : `${created.length} tedarikçi teklifi kaydedildi.`,
+      );
+      setSavedQuotes(created);
+      setDrafts((prev) => {
+        for (const draft of prev) revokeDraftAttachments(draft);
+        return [];
       });
-      resetQuoteForm();
+      setStep(0);
       await loadRelatedQuotes(request.id);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Teklif kaydedilemedi.");
+      toast.error(e instanceof Error ? e.message : "Teklifler kaydedilemedi.");
     } finally {
       setSaveBusy(false);
     }
@@ -913,8 +1237,9 @@ export function SupplierQuoteEntryPage(): ReactElement {
               Tedarikçi teklifi gir
             </h1>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--wms-app-text-muted)]">
-              Onaylı satın alma talebini seçin, tedarikçi ve teklif kalemlerinin
-              fiyat/termin bilgilerini girerek teklifi kaydedin.
+              Onaylı satın alma talebini seçin; aynı ekranda birden fazla
+              tedarikçiden teklif taslağı girip toplu kaydedin ve
+              karşılaştırın.
             </p>
           </div>
           <OpsActionButton asChild variant="secondary">
@@ -926,7 +1251,7 @@ export function SupplierQuoteEntryPage(): ReactElement {
         </div>
       </header>
 
-      {!savedQuote ? (
+      {!savedQuotes ? (
         <nav className="wms-ops-create-steps" aria-label="Teklif giriş adımları">
           {[
             { value: 0 as const, label: "Teklif bilgileri" },
@@ -953,7 +1278,7 @@ export function SupplierQuoteEntryPage(): ReactElement {
         </nav>
       ) : null}
 
-      {savedQuote ? (
+      {savedQuotes ? (
         <div className="wms-ops-gr-success wms-ops-gr-success--done">
           <div className="wms-ops-gr-success__glow" aria-hidden />
           <header className="wms-ops-gr-success__header">
@@ -962,54 +1287,120 @@ export function SupplierQuoteEntryPage(): ReactElement {
             </div>
             <p className="wms-ops-gr-success__eyebrow">SATINALMA</p>
             <h2 className="wms-ops-gr-success__title">
-              Tedarikçi teklifi kaydedildi
+              {savedQuotes.length === 1
+                ? "Tedarikçi teklifi kaydedildi"
+                : `${savedQuotes.length} tedarikçi teklifi kaydedildi`}
             </h2>
             <p className="wms-ops-gr-success__subtitle">
-              Aynı talep için başka tedarikçiden teklif girebilir veya teklifleri
+              Aynı talep için yeni teklifler girebilir veya teklifleri
               karşılaştırabilirsiniz.
             </p>
           </header>
           <div className="wms-ops-gr-success__stats">
             <div className="wms-ops-gr-success__stat">
-              <span className="wms-ops-gr-success__stat-label">Teklif No</span>
-              <strong className="wms-ops-gr-success__stat-value">
-                {savedQuote.documentNo}
-              </strong>
-            </div>
-            <div className="wms-ops-gr-success__stat">
-              <span className="wms-ops-gr-success__stat-label">Tedarikçi</span>
-              <strong className="wms-ops-gr-success__stat-value">
-                {savedQuote.supplierName}
-              </strong>
-            </div>
-            <div className="wms-ops-gr-success__stat">
               <span className="wms-ops-gr-success__stat-label">Talep</span>
               <strong className="wms-ops-gr-success__stat-value">
-                {savedQuote.requestNo}
+                {savedQuotes[0]?.requestNo ?? "—"}
               </strong>
+            </div>
+            <div className="wms-ops-gr-success__stat sm:col-span-2">
+              <span className="wms-ops-gr-success__stat-label">
+                Kaydedilen teklifler
+              </span>
+              <ul className="mt-1 space-y-1 text-left">
+                {savedQuotes.map((quote) => (
+                  <li
+                    key={quote.id}
+                    className="flex flex-wrap items-center gap-2 text-sm font-semibold"
+                  >
+                    <span className="font-mono text-cyan-300">
+                      {quote.documentNo}
+                    </span>
+                    <span className="text-slate-500">·</span>
+                    <span>{quote.supplierName}</span>
+                    {savedQuotes.length > 1 ? (
+                      <OpsActionButton
+                        type="button"
+                        variant="secondary"
+                        className="!h-7 !px-2 !text-xs"
+                        loading={pdfBusyId === quote.id}
+                        loadingLabel="PDF hazırlanıyor..."
+                        disabled={pdfBusyId != null && pdfBusyId !== quote.id}
+                        onClick={() => {
+                          void (async () => {
+                            setPdfBusyId(quote.id);
+                            try {
+                              await generateSupplierQuotePdf(quote.id);
+                            } catch {
+                              toast.error(
+                                "PDF oluşturulamadı. Lütfen tekrar deneyin.",
+                              );
+                            } finally {
+                              setPdfBusyId(null);
+                            }
+                          })();
+                        }}
+                      >
+                        <FileDown size={14} /> PDF Al
+                      </OpsActionButton>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
           <footer className="wms-ops-gr-success__actions">
+            {savedQuotes.length === 1 ? (
+              <OpsActionButton
+                type="button"
+                variant="primary"
+                onClick={() => {
+                  void (async () => {
+                    try {
+                      setViewQuote(
+                        await procurementApi.detail(
+                          "quote",
+                          savedQuotes[0]!.id,
+                        ),
+                      );
+                    } catch (e) {
+                      toast.error(
+                        e instanceof Error
+                          ? e.message
+                          : "Teklif detayı yüklenemedi.",
+                      );
+                    }
+                  })();
+                }}
+              >
+                Teklif detayını görüntüle
+              </OpsActionButton>
+            ) : null}
             <OpsActionButton
               type="button"
-              variant="primary"
+              variant="secondary"
+              loading={pdfBusyId != null}
+              loadingLabel="PDF hazırlanıyor..."
+              disabled={savedQuotes.length === 0}
               onClick={() => {
                 void (async () => {
                   try {
-                    setViewQuote(
-                      await procurementApi.detail("quote", savedQuote.id),
-                    );
-                  } catch (e) {
+                    for (const quote of savedQuotes) {
+                      setPdfBusyId(quote.id);
+                      await generateSupplierQuotePdf(quote.id);
+                    }
+                  } catch {
                     toast.error(
-                      e instanceof Error
-                        ? e.message
-                        : "Teklif detayı yüklenemedi.",
+                      "PDF oluşturulamadı. Lütfen tekrar deneyin.",
                     );
+                  } finally {
+                    setPdfBusyId(null);
                   }
                 })();
               }}
             >
-              Teklif detayını görüntüle
+              <FileDown size={16} />
+              {savedQuotes.length > 1 ? "PDF Al (tümü)" : "PDF Al"}
             </OpsActionButton>
             <OpsActionButton asChild variant="secondary">
               <Link to="/procurement/quotes">Teklif listesine dön</Link>
@@ -1018,7 +1409,7 @@ export function SupplierQuoteEntryPage(): ReactElement {
               type="button"
               variant="secondary"
               onClick={() => {
-                setSavedQuote(null);
+                setSavedQuotes(null);
                 setStep(0);
               }}
             >
@@ -1028,10 +1419,10 @@ export function SupplierQuoteEntryPage(): ReactElement {
         </div>
       ) : null}
 
-      {!savedQuote && step === 0 ? (
+      {!savedQuotes && step === 0 ? (
         <>
           <Panel
-            title="1. Talep ve teklif bilgileri"
+            title="1. Satın alma talebi"
             icon={<ClipboardList className="size-5" />}
           >
             <div className="space-y-5">
@@ -1112,7 +1503,7 @@ export function SupplierQuoteEntryPage(): ReactElement {
                 {request ? (
                   <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                     <MetricCard label="Talep No" value={request.documentNo} />
-                    <MetricCard label="Konu" value={request.subject} />
+                    <MetricCard label="Talep Konusu" value={request.subject} />
                     <MetricCard
                       label="Talep Miktarı"
                       value={`${formatProjectNumber(requestQtySum)} ${
@@ -1120,370 +1511,627 @@ export function SupplierQuoteEntryPage(): ReactElement {
                       }`.trim()}
                     />
                     <MetricCard
-                      label="Termin"
-                      value={
-                        request.dueDate
-                          ? formatProjectDate(request.dueDate)
-                          : "—"
-                      }
+                      label="Durum"
+                      value={statusLabel[request.status] ?? request.status}
                     />
                   </div>
                 ) : (
                   <p className="text-sm text-[var(--wms-app-text-muted)]">
-                    Teklif kalemlerini doldurmak için önce bir satın alma talebi
+                    Teklif taslaklarını eklemek için önce bir satın alma talebi
                     seçin.
                   </p>
                 )}
               </section>
-
-              {request ? (
-                <section className="space-y-3 border-t border-[var(--wms-app-border)] pt-5">
-                  <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500">
-                    Tedarikçi Bilgileri
-                  </h3>
-                  <Field label="Tedarikçi *">
-                    <PagedLookupDialog<CustomerOption>
-                      variant="ops"
-                      triggerMode="combobox"
-                      autoSearchMinLength={0}
-                      popoverPortalContainer={null}
-                      open={supplierLookupOpen}
-                      onOpenChange={setSupplierLookupOpen}
-                      title="Tedarikçi seç"
-                      value={
-                        supplierId && supplierCode
-                          ? `${supplierCode} · ${supplierName}`
-                          : supplierName
-                      }
-                      placeholder="Kod, unvan veya kendi tedarikçi adınızı yazın…"
-                      searchPlaceholder="Kod veya unvan ile tedarikçi ara…"
-                      emptyText="Tedarikçi bulunamadı — yazdığınız metin tedarikçi adı olarak kullanılabilir"
-                      triggerClassName={OPS_FIELD_CLASS}
-                      queryKey={["procurement-quote-suppliers", branch]}
-                      fetchPage={async ({
-                        pageNumber,
-                        pageSize,
-                        search,
-                        signal,
-                      }) =>
-                        toPagedResponse(
-                          await goodsReceiptV2Api.customers(
-                            {
-                              pageNumber,
-                              pageSize,
-                              search,
-                              sortBy: "customerCode",
-                              sortDirection: "asc",
-                              signal: signal ?? new AbortController().signal,
-                            },
-                            branch,
-                          ),
-                        )
-                      }
-                      getKey={(item) => String(item.id)}
-                      getLabel={(item) =>
-                        `${item.customerCode} · ${item.customerName}`
-                      }
-                      onComboboxTextChange={(text) => {
-                        setSupplierId(null);
-                        setSupplierCode(null);
-                        setSupplierName(text);
-                      }}
-                      onSelect={(item) => {
-                        setSupplierId(item.id);
-                        setSupplierCode(item.customerCode);
-                        setSupplierName(item.customerName);
-                        setSupplierLookupOpen(false);
-                      }}
-                    />
-                  </Field>
-                  {hasSupplier ? (
-                    <div className="grid gap-3 sm:grid-cols-3">
-                      <MetricCard
-                        label="Cari Kodu"
-                        value={supplierCode || "—"}
-                      />
-                      <MetricCard label="Cari Adı" value={supplierName} />
-                      <MetricCard
-                        label="Kaynak"
-                        value={
-                          supplierId != null ? "Sistem carisi" : "Serbest metin"
-                        }
-                      />
-                    </div>
-                  ) : null}
-                </section>
-              ) : null}
-
-              {request && hasSupplier ? (
-                <section className="space-y-3 border-t border-[var(--wms-app-border)] pt-5">
-                  <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500">
-                    Teklif Bilgileri
-                  </h3>
-                  <div className="grid gap-4 md:grid-cols-3">
-                    <Field label="Teklif No *">
-                      <AppInput
-                        value={quoteNo}
-                        onChange={(e) => setQuoteNo(e.target.value)}
-                        maxLength={100}
-                        disabled={!quoteNoReady && !quoteNo}
-                      />
-                    </Field>
-                    <Field label="Teklif Tarihi">
-                      <AppDateInput
-                        value={quoteDate}
-                        onChange={(e) => setQuoteDate(e.target.value)}
-                      />
-                    </Field>
-                    <Field label="Geçerlilik Tarihi">
-                      <AppDateInput
-                        value={validUntil}
-                        onChange={(e) => setValidUntil(e.target.value)}
-                      />
-                    </Field>
-                    <Field label="Genel Termin">
-                      <AppDateInput
-                        value={deliveryDate}
-                        onChange={(e) => {
-                          setDeliveryDate(e.target.value);
-                          setLines((xs) =>
-                            xs.map((x) => ({
-                              ...x,
-                              deliveryDate: e.target.value || x.deliveryDate,
-                            })),
-                          );
-                        }}
-                      />
-                    </Field>
-                    <Field label="Para Birimi">
-                      <AppInput
-                        value={currency}
-                        maxLength={3}
-                        onChange={(e) =>
-                          setCurrency(e.target.value.toUpperCase())
-                        }
-                      />
-                    </Field>
-                    <Field label="Kur">
-                      <AppInput
-                        type="number"
-                        min="0.000001"
-                        step="any"
-                        value={exchangeRate}
-                        onChange={(e) =>
-                          setExchangeRate(Number(e.target.value))
-                        }
-                      />
-                    </Field>
-                  </div>
-                  <Field label="Açıklama / Not">
-                    <AppInput
-                      value={note}
-                      onChange={(e) => setNote(e.target.value)}
-                      placeholder="Ödeme, teslim veya teklif açıklaması…"
-                    />
-                  </Field>
-                  <PendingAttachmentsEditor
-                    title="Teklif Ekleri"
-                    hint="Tedarikçiden alınan teklif belgesi, fiyat listesi, PDF veya referans görsellerini ekleyebilirsiniz."
-                    files={headerFiles}
-                    onChange={setHeaderFiles}
-                  />
-                </section>
-              ) : null}
             </div>
           </Panel>
 
-          {request && hasSupplier ? (
+          {request ? (
             <Panel
-              title="Teklif Kalemleri"
+              title="Tedarikçi Teklifleri"
               icon={<Package className="size-5" />}
             >
-              <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                <MetricCard
-                  label="Kalem"
-                  value={String(includedLines.length)}
-                />
-                <MetricCard
-                  label="Talep"
-                  value={formatProjectNumber(requestQtySum)}
-                />
-                <MetricCard
-                  label="Teklif"
-                  value={formatProjectNumber(quoteQtySum)}
-                />
-                <MetricCard
-                  label="Toplam"
-                  value={`${formatProjectNumber(total)} ${currency}`}
-                />
-              </div>
-              <p className="mb-3 text-xs text-[var(--wms-app-text-muted)]">
-                Ürün ve talep miktarı talepten gelir. Teklif miktarı tedarikçinin
-                verdiği miktardır; aynı talep farklı tedarikçilere bölünebilir.
+              <p className="mb-4 text-sm text-[var(--wms-app-text-muted)]">
+                Bu talep için bir veya daha fazla tedarikçiden alınan teklifleri
+                ekleyebilirsiniz.
               </p>
-              <div className="overflow-x-auto rounded-xl border border-[var(--wms-app-border)]">
-                <table className="w-full min-w-[980px] text-left text-sm">
-                  <thead className="bg-cyan-500/5 text-xs uppercase text-slate-500">
-                    <tr>
-                      <th className="px-2 py-2" />
-                      <th className="px-2 py-2">Stok Kodu</th>
-                      <th className="px-2 py-2">Stok Adı</th>
-                      <th className="px-2 py-2">Talep Miktarı</th>
-                      <th className="px-2 py-2">Teklif Miktarı</th>
-                      <th className="px-2 py-2">Birim Fiyat</th>
-                      <th className="px-2 py-2">Termin</th>
-                      <th className="px-2 py-2">İskonto</th>
-                      <th className="px-2 py-2">KDV</th>
-                      <th className="px-2 py-2">Toplam</th>
-                      <th className="px-2 py-2">Ek</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {lines.map((line) => (
-                      <tr
-                        key={line.requestLineId}
-                        className={`border-t border-cyan-500/10 ${
-                          line.included ? "" : "opacity-60"
-                        }`}
+              <div className="mb-4 space-y-3">
+                {drafts.length === 0 ? (
+                  <p className="rounded-xl border border-dashed border-cyan-500/25 bg-cyan-500/5 px-4 py-3 text-sm text-[var(--wms-app-text-muted)]">
+                    Henüz tedarikçi teklifi eklenmedi.
+                  </p>
+                ) : null}
+
+                {drafts.map((draft, index) => {
+                  const included = draftIncludedLines(draft);
+                  const qty = draftQtySum(draft);
+                  const money = draftMoneySum(draft);
+                  const hasSupplier = Boolean(draft.supplierName.trim());
+
+                  if (!draft.expanded) {
+                    return (
+                      <div
+                        key={draft.key}
+                        className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--wms-app-border)] bg-cyan-500/5 px-4 py-3"
                       >
-                        <td className="px-2 py-2">
-                          <input
-                            type="checkbox"
-                            checked={line.included}
-                            onChange={(e) =>
-                              patchLine(line.requestLineId, {
-                                included: e.target.checked,
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                            Teklif {index + 1}
+                          </p>
+                          <p className="mt-1 font-semibold">
+                            {draft.supplierName.trim() || "Tedarikçi seçilmedi"}
+                          </p>
+                          <p className="mt-0.5 text-xs text-slate-500">
+                            <span className="font-mono">
+                              {draft.quoteNo ||
+                                (draft.quoteNoAuto
+                                  ? "Kayıtta otomatik"
+                                  : "—")}
+                            </span>
+                            <span className="mx-1.5">·</span>
+                            Miktar: {formatProjectNumber(qty)}
+                            <span className="mx-1.5">·</span>
+                            Tutar: {formatProjectNumber(money)}{" "}
+                            {draft.currency}
+                          </p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <OpsActionButton
+                            type="button"
+                            variant="secondary"
+                            onClick={() => expandDraft(draft.key)}
+                          >
+                            Düzenle
+                          </OpsActionButton>
+                          <OpsActionButton
+                            type="button"
+                            variant="secondary"
+                            onClick={() => removeDraft(draft.key)}
+                          >
+                            Sil
+                          </OpsActionButton>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div
+                      key={draft.key}
+                      className="space-y-4 rounded-xl border border-cyan-500/25 bg-[var(--wms-app-panel)] p-4"
+                    >
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                            Teklif {index + 1}
+                          </p>
+                          <h3 className="mt-1 text-base font-semibold">
+                            {draft.supplierName.trim() || "Yeni tedarikçi teklifi"}
+                          </h3>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <OpsActionButton
+                            type="button"
+                            variant="secondary"
+                            onClick={() => collapseDraft(draft.key)}
+                          >
+                            Daralt
+                          </OpsActionButton>
+                          <OpsActionButton
+                            type="button"
+                            variant="secondary"
+                            onClick={() => removeDraft(draft.key)}
+                          >
+                            Sil
+                          </OpsActionButton>
+                        </div>
+                      </div>
+
+                      <section className="space-y-3">
+                        <h4 className="text-sm font-semibold uppercase tracking-wider text-slate-500">
+                          Tedarikçi Bilgileri
+                        </h4>
+                        <Field label="Tedarikçi *">
+                          <PagedLookupDialog<CustomerOption>
+                            variant="ops"
+                            triggerMode="combobox"
+                            autoSearchMinLength={0}
+                            popoverPortalContainer={null}
+                            open={draft.supplierLookupOpen}
+                            onOpenChange={(open) =>
+                              patchDraft(draft.key, {
+                                supplierLookupOpen: open,
                               })
                             }
-                          />
-                        </td>
-                        <td className="px-2 py-2 font-mono text-xs">
-                          {line.stockCode || "—"}
-                        </td>
-                        <td className="px-2 py-2 font-medium">
-                          {line.stockName}
-                          <span className="mt-0.5 block text-xs text-slate-500">
-                            {line.unitCode}
-                          </span>
-                        </td>
-                        <td className="px-2 py-2">
-                          {formatProjectNumber(line.requestedQuantity)}
-                        </td>
-                        <td className="px-2 py-2">
-                          <AppInput
-                            type="number"
-                            min="0.000001"
-                            max={line.requestedQuantity}
-                            step="any"
-                            disabled={!line.included}
-                            value={line.quantity}
-                            onChange={(e) =>
-                              patchLine(line.requestLineId, {
-                                quantity: Number(e.target.value),
-                              })
+                            title="Tedarikçi seç"
+                            value={
+                              draft.supplierId && draft.supplierCode
+                                ? `${draft.supplierCode} · ${draft.supplierName}`
+                                : draft.supplierName
                             }
-                          />
-                        </td>
-                        <td className="px-2 py-2">
-                          <AppInput
-                            type="number"
-                            min="0"
-                            step="any"
-                            disabled={!line.included}
-                            value={line.unitPrice}
-                            onChange={(e) =>
-                              patchLine(line.requestLineId, {
-                                unitPrice: Number(e.target.value),
-                              })
+                            placeholder="Kod, unvan veya kendi tedarikçi adınızı yazın…"
+                            searchPlaceholder="Kod veya unvan ile tedarikçi ara…"
+                            emptyText="Tedarikçi bulunamadı — yazdığınız metin tedarikçi adı olarak kullanılabilir"
+                            triggerClassName={OPS_FIELD_CLASS}
+                            queryKey={[
+                              "procurement-quote-suppliers",
+                              branch,
+                              draft.key,
+                            ]}
+                            fetchPage={async ({
+                              pageNumber,
+                              pageSize,
+                              search,
+                              signal,
+                            }) =>
+                              toPagedResponse(
+                                await goodsReceiptV2Api.customers(
+                                  {
+                                    pageNumber,
+                                    pageSize,
+                                    search,
+                                    sortBy: "customerCode",
+                                    sortDirection: "asc",
+                                    signal:
+                                      signal ?? new AbortController().signal,
+                                  },
+                                  branch,
+                                ),
+                              )
                             }
-                          />
-                        </td>
-                        <td className="px-2 py-2">
-                          <AppDateInput
-                            disabled={!line.included}
-                            value={line.deliveryDate ?? ""}
-                            onChange={(e) =>
-                              patchLine(line.requestLineId, {
-                                deliveryDate: e.target.value,
-                              })
+                            getKey={(item) => String(item.id)}
+                            getLabel={(item) =>
+                              `${item.customerCode} · ${item.customerName}`
                             }
+                            onComboboxTextChange={(text) => {
+                              patchDraft(draft.key, {
+                                supplierId: null,
+                                supplierCode: null,
+                                supplierName: text,
+                              });
+                            }}
+                            onSelect={(item) => {
+                              trySetSupplier(draft.key, {
+                                supplierId: item.id,
+                                supplierName: item.customerName,
+                                supplierCode: item.customerCode,
+                              });
+                            }}
                           />
-                        </td>
-                        <td className="px-2 py-2">
-                          <AppInput
-                            type="number"
-                            min="0"
-                            max="100"
-                            disabled={!line.included}
-                            value={line.discountRate}
-                            onChange={(e) =>
-                              patchLine(line.requestLineId, {
-                                discountRate: Number(e.target.value),
-                              })
+                        </Field>
+                        {hasSupplier ? (
+                          <div className="grid gap-3 sm:grid-cols-3">
+                            <MetricCard
+                              label="Cari Kodu"
+                              value={draft.supplierCode || "—"}
+                            />
+                            <MetricCard
+                              label="Cari Adı"
+                              value={draft.supplierName}
+                            />
+                            <MetricCard
+                              label="Kaynak"
+                              value={
+                                draft.supplierId != null
+                                  ? "Sistem carisi"
+                                  : "Serbest metin"
+                              }
+                            />
+                          </div>
+                        ) : null}
+                      </section>
+
+                      {hasSupplier ? (
+                        <>
+                          <section className="space-y-3 border-t border-[var(--wms-app-border)] pt-4">
+                            <h4 className="text-sm font-semibold uppercase tracking-wider text-slate-500">
+                              Teklif Bilgileri
+                            </h4>
+                            <div className="grid gap-4 md:grid-cols-3">
+                              <Field
+                                label="Teklif No"
+                                hint={
+                                  draft.quoteNoAuto
+                                    ? "Önizleme — kayıtta sistem üretir. Manuel girmek için düzenleyin."
+                                    : undefined
+                                }
+                              >
+                                <AppInput
+                                  value={draft.quoteNo}
+                                  onChange={(e) =>
+                                    patchDraft(draft.key, {
+                                      quoteNo: e.target.value,
+                                      quoteNoAuto: false,
+                                    })
+                                  }
+                                  maxLength={100}
+                                  placeholder={
+                                    draft.quoteNoAuto
+                                      ? "Kayıtta otomatik"
+                                      : "Teklif no"
+                                  }
+                                  disabled={!draft.quoteNoReady && !draft.quoteNo}
+                                />
+                              </Field>
+                              <Field label="Teklif Tarihi">
+                                <AppDateInput
+                                  value={draft.quoteDate}
+                                  onChange={(e) =>
+                                    patchDraft(draft.key, {
+                                      quoteDate: e.target.value,
+                                    })
+                                  }
+                                />
+                              </Field>
+                              <Field label="Geçerlilik Tarihi">
+                                <AppDateInput
+                                  value={draft.validUntil}
+                                  onChange={(e) =>
+                                    patchDraft(draft.key, {
+                                      validUntil: e.target.value,
+                                    })
+                                  }
+                                />
+                              </Field>
+                              <Field label="Genel Termin">
+                                <AppDateInput
+                                  value={draft.deliveryDate}
+                                  onChange={(e) => {
+                                    const value = e.target.value;
+                                    setDrafts((xs) =>
+                                      xs.map((d) =>
+                                        d.key === draft.key
+                                          ? {
+                                              ...d,
+                                              deliveryDate: value,
+                                              lines: d.lines.map((line) => ({
+                                                ...line,
+                                                deliveryDate:
+                                                  value || line.deliveryDate,
+                                              })),
+                                            }
+                                          : d,
+                                      ),
+                                    );
+                                  }}
+                                />
+                              </Field>
+                              <Field label="Para Birimi">
+                                <AppInput
+                                  value={draft.currency}
+                                  maxLength={3}
+                                  onChange={(e) =>
+                                    patchDraft(draft.key, {
+                                      currency: e.target.value.toUpperCase(),
+                                    })
+                                  }
+                                />
+                              </Field>
+                              <Field label="Kur">
+                                <AppInput
+                                  type="number"
+                                  min="0.000001"
+                                  step="any"
+                                  value={draft.exchangeRate}
+                                  onChange={(e) =>
+                                    patchDraft(draft.key, {
+                                      exchangeRate: Number(e.target.value),
+                                    })
+                                  }
+                                />
+                              </Field>
+                            </div>
+                            <Field label="Açıklama / Not">
+                              <AppInput
+                                value={draft.note}
+                                onChange={(e) =>
+                                  patchDraft(draft.key, {
+                                    note: e.target.value,
+                                  })
+                                }
+                                placeholder="Ödeme, teslim veya teklif açıklaması…"
+                              />
+                            </Field>
+                            <PendingAttachmentsEditor
+                              title="Teklif Ekleri"
+                              hint="Tedarikçiden alınan teklif belgesi, fiyat listesi, PDF veya referans görsellerini ekleyebilirsiniz."
+                              files={draft.headerFiles}
+                              onChange={(files) =>
+                                patchDraft(draft.key, { headerFiles: files })
+                              }
+                            />
+                          </section>
+
+                          <section className="space-y-3 border-t border-[var(--wms-app-border)] pt-4">
+                            <h4 className="text-sm font-semibold uppercase tracking-wider text-slate-500">
+                              Teklif Kalemleri
+                            </h4>
+                            <div className="mb-2 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                              <MetricCard
+                                label="Kalem"
+                                value={String(included.length)}
+                              />
+                              <MetricCard
+                                label="Talep"
+                                value={formatProjectNumber(requestQtySum)}
+                              />
+                              <MetricCard
+                                label="Teklif"
+                                value={formatProjectNumber(qty)}
+                              />
+                              <MetricCard
+                                label="Toplam"
+                                value={`${formatProjectNumber(money)} ${draft.currency}`}
+                              />
+                            </div>
+                            <p className="text-xs text-[var(--wms-app-text-muted)]">
+                              Ürün ve talep miktarı talepten gelir. Teklif
+                              miktarı tedarikçinin verdiği miktardır; aynı talep
+                              farklı tedarikçilere bölünebilir.
+                            </p>
+                            <div className="overflow-x-auto rounded-xl border border-[var(--wms-app-border)]">
+                              <table className="w-full min-w-[980px] text-left text-sm">
+                                <thead className="bg-cyan-500/5 text-xs uppercase text-slate-500">
+                                  <tr>
+                                    <th className="px-2 py-2" />
+                                    <th className="px-2 py-2">Stok Kodu</th>
+                                    <th className="px-2 py-2">Stok Adı</th>
+                                    <th className="px-2 py-2">Talep Miktarı</th>
+                                    <th className="px-2 py-2">Teklif Miktarı</th>
+                                    <th className="px-2 py-2">Birim Fiyat</th>
+                                    <th className="px-2 py-2">Termin</th>
+                                    <th className="px-2 py-2">İskonto</th>
+                                    <th className="px-2 py-2">KDV</th>
+                                    <th className="px-2 py-2">Toplam</th>
+                                    <th className="px-2 py-2">Ek</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {draft.lines.map((line) => (
+                                    <tr
+                                      key={line.requestLineId}
+                                      className={`border-t border-cyan-500/10 ${
+                                        line.included ? "" : "opacity-60"
+                                      }`}
+                                    >
+                                      <td className="px-2 py-2">
+                                        <input
+                                          type="checkbox"
+                                          checked={line.included}
+                                          onChange={(e) =>
+                                            patchDraftLine(
+                                              draft.key,
+                                              line.requestLineId,
+                                              { included: e.target.checked },
+                                            )
+                                          }
+                                        />
+                                      </td>
+                                      <td className="px-2 py-2 font-mono text-xs">
+                                        {line.stockCode || "—"}
+                                      </td>
+                                      <td className="px-2 py-2 font-medium">
+                                        {line.stockName}
+                                        <span className="mt-0.5 block text-xs text-slate-500">
+                                          {line.unitCode}
+                                        </span>
+                                      </td>
+                                      <td className="px-2 py-2">
+                                        {formatProjectNumber(
+                                          line.requestedQuantity,
+                                        )}
+                                      </td>
+                                      <td className="px-2 py-2">
+                                        <AppInput
+                                          type="number"
+                                          min="0.000001"
+                                          max={line.requestedQuantity}
+                                          step="any"
+                                          disabled={!line.included}
+                                          value={line.quantity}
+                                          onChange={(e) =>
+                                            patchDraftLine(
+                                              draft.key,
+                                              line.requestLineId,
+                                              {
+                                                quantity: Number(
+                                                  e.target.value,
+                                                ),
+                                              },
+                                            )
+                                          }
+                                        />
+                                      </td>
+                                      <td className="px-2 py-2">
+                                        <AppInput
+                                          type="number"
+                                          min="0"
+                                          step="any"
+                                          disabled={!line.included}
+                                          value={line.unitPrice}
+                                          onChange={(e) =>
+                                            patchDraftLine(
+                                              draft.key,
+                                              line.requestLineId,
+                                              {
+                                                unitPrice: Number(
+                                                  e.target.value,
+                                                ),
+                                              },
+                                            )
+                                          }
+                                        />
+                                      </td>
+                                      <td className="px-2 py-2">
+                                        <AppDateInput
+                                          disabled={!line.included}
+                                          value={line.deliveryDate ?? ""}
+                                          onChange={(e) =>
+                                            patchDraftLine(
+                                              draft.key,
+                                              line.requestLineId,
+                                              {
+                                                deliveryDate: e.target.value,
+                                              },
+                                            )
+                                          }
+                                        />
+                                      </td>
+                                      <td className="px-2 py-2">
+                                        <AppInput
+                                          type="number"
+                                          min="0"
+                                          max="100"
+                                          disabled={!line.included}
+                                          value={line.discountRate}
+                                          onChange={(e) =>
+                                            patchDraftLine(
+                                              draft.key,
+                                              line.requestLineId,
+                                              {
+                                                discountRate: Number(
+                                                  e.target.value,
+                                                ),
+                                              },
+                                            )
+                                          }
+                                        />
+                                      </td>
+                                      <td className="px-2 py-2">
+                                        <AppInput
+                                          type="number"
+                                          min="0"
+                                          disabled={!line.included}
+                                          value={line.vatRate}
+                                          onChange={(e) =>
+                                            patchDraftLine(
+                                              draft.key,
+                                              line.requestLineId,
+                                              {
+                                                vatRate: Number(
+                                                  e.target.value,
+                                                ),
+                                              },
+                                            )
+                                          }
+                                        />
+                                      </td>
+                                      <td className="px-2 py-2 font-semibold text-cyan-400">
+                                        {line.included
+                                          ? `${formatProjectNumber(lineTotal(line))} ${draft.currency}`
+                                          : "—"}
+                                      </td>
+                                      <td className="px-2 py-2">
+                                        <LineAttachmentBadge
+                                          count={
+                                            (
+                                              draft.lineFiles[
+                                                line.requestLineId
+                                              ] ?? []
+                                            ).length
+                                          }
+                                          onClick={() =>
+                                            patchDraft(draft.key, {
+                                              lineAttachId: line.requestLineId,
+                                            })
+                                          }
+                                        />
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </section>
+                        </>
+                      ) : null}
+
+                      {draft.lineAttachId != null ? (
+                        <LineAttachmentsDialog
+                          open
+                          onClose={() =>
+                            patchDraft(draft.key, { lineAttachId: null })
+                          }
+                          title="Teklif kalemi ekleri"
+                          subtitle={
+                            draft.lines.find(
+                              (x) => x.requestLineId === draft.lineAttachId,
+                            )?.stockName
+                          }
+                        >
+                          <PendingAttachmentsEditor
+                            title="Kalem Ekleri"
+                            hint="Bu teklif kalemine özel fotoğraf veya dosya ekleyin."
+                            files={
+                              draft.lineFiles[draft.lineAttachId] ?? []
                             }
-                          />
-                        </td>
-                        <td className="px-2 py-2">
-                          <AppInput
-                            type="number"
-                            min="0"
-                            disabled={!line.included}
-                            value={line.vatRate}
-                            onChange={(e) =>
-                              patchLine(line.requestLineId, {
-                                vatRate: Number(e.target.value),
-                              })
+                            onChange={(next) =>
+                              setDrafts((xs) =>
+                                xs.map((d) =>
+                                  d.key === draft.key
+                                    ? {
+                                        ...d,
+                                        lineFiles: {
+                                          ...d.lineFiles,
+                                          [draft.lineAttachId!]: next,
+                                        },
+                                      }
+                                    : d,
+                                ),
+                              )
                             }
+                            compact
                           />
-                        </td>
-                        <td className="px-2 py-2 font-semibold text-cyan-400">
-                          {line.included
-                            ? `${formatProjectNumber(lineTotal(line))} ${currency}`
-                            : "—"}
-                        </td>
-                        <td className="px-2 py-2">
-                          <LineAttachmentBadge
-                            count={(lineFiles[line.requestLineId] ?? []).length}
-                            onClick={() => setLineAttachId(line.requestLineId)}
-                          />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                        </LineAttachmentsDialog>
+                      ) : null}
+                    </div>
+                  );
+                })}
+
+                <OpsActionButton
+                  type="button"
+                  variant="secondary"
+                  onClick={addDraft}
+                >
+                  <Plus size={16} /> Tedarikçi teklifi ekle
+                </OpsActionButton>
               </div>
             </Panel>
           ) : null}
 
-          {lineAttachId != null ? (
-            <LineAttachmentsDialog
-              open
-              onClose={() => setLineAttachId(null)}
-              title="Teklif kalemi ekleri"
-              subtitle={
-                lines.find((x) => x.requestLineId === lineAttachId)?.stockName
-              }
-            >
-              <PendingAttachmentsEditor
-                title="Kalem Ekleri"
-                hint="Bu teklif kalemine özel fotoğraf veya dosya ekleyin."
-                files={lineFiles[lineAttachId] ?? []}
-                onChange={(next) =>
-                  setLineFiles((prev) => ({ ...prev, [lineAttachId]: next }))
-                }
-                compact
-              />
-            </LineAttachmentsDialog>
-          ) : null}
-
-          <footer className="sticky bottom-3 z-20 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)]/95 p-3 shadow-xl backdrop-blur">
-            <OpsActionButton asChild variant="secondary">
-              <Link to="/procurement/quotes">Vazgeç</Link>
-            </OpsActionButton>
+          <footer className="sticky bottom-3 z-20 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)]/95 p-3 shadow-xl backdrop-blur">
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-3">
+              <OpsActionButton asChild variant="secondary">
+                <Link to="/procurement/quotes">Vazgeç</Link>
+              </OpsActionButton>
+              {request ? (
+                <div className="flex flex-wrap gap-2 text-xs text-slate-500">
+                  <span>
+                    Talep:{" "}
+                    <strong className="text-[var(--wms-app-text)]">
+                      {formatProjectNumber(requestQtySum)}
+                    </strong>
+                  </span>
+                  <span>·</span>
+                  <span>
+                    Teklif toplamı:{" "}
+                    <strong className="text-[var(--wms-app-text)]">
+                      {formatProjectNumber(draftsQuoteQtySum)}
+                    </strong>
+                  </span>
+                  <span>·</span>
+                  <span>
+                    Kalan (bilgi):{" "}
+                    <strong className="text-[var(--wms-app-text)]">
+                      {formatProjectNumber(openRemainingQty)}
+                    </strong>
+                  </span>
+                </div>
+              ) : null}
+            </div>
             <OpsActionButton
               type="button"
               variant="primary"
-              disabled={!request || !hasSupplier}
+              disabled={!request || drafts.length === 0}
               onClick={goToReview}
             >
               Kontrol et <ArrowRight size={16} />
@@ -1492,105 +2140,137 @@ export function SupplierQuoteEntryPage(): ReactElement {
         </>
       ) : null}
 
-      {!savedQuote && step === 1 ? (
+      {!savedQuotes && step === 1 ? (
         <>
           <Panel
-            title="Tedarikçi teklifi özeti"
+            title="Tedarikçi teklifleri özeti"
             icon={<FileCheck2 className="size-5" />}
           >
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <MetricCard label="Tedarikçi" value={supplierName || "—"} />
+            <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <MetricCard label="Talep" value={request?.documentNo ?? "—"} />
-              <MetricCard label="Teklif No" value={quoteNo || "—"} />
+              <MetricCard label="Teklif sayısı" value={String(drafts.length)} />
               <MetricCard
-                label="Teklif Tarihi"
-                value={quoteDate ? formatProjectDate(quoteDate) : "—"}
+                label="Toplam teklif miktarı"
+                value={formatProjectNumber(draftsQuoteQtySum)}
               />
               <MetricCard
-                label="Geçerlilik"
-                value={validUntil ? formatProjectDate(validUntil) : "—"}
-              />
-              <MetricCard
-                label="Genel Termin"
-                value={deliveryDate ? formatProjectDate(deliveryDate) : "—"}
-              />
-              <MetricCard label="Para Birimi" value={currency} />
-              <MetricCard
-                label="Toplam"
-                value={`${formatProjectNumber(total)} ${currency}`}
+                label="Kalan (bilgi)"
+                value={formatProjectNumber(openRemainingQty)}
               />
             </div>
-            {note ? (
-              <p className="mt-4 rounded-xl border border-[var(--wms-app-border)] bg-cyan-500/5 px-3 py-2 text-sm">
-                <span className="text-xs uppercase text-slate-500">Not · </span>
-                {note}
-              </p>
-            ) : null}
-            {(headerFiles.length > 0 ||
-              Object.values(lineFiles).some((x) => x.length > 0)) && (
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                <MetricCard
-                  label="Teklif ekleri"
-                  value={String(headerFiles.length)}
-                />
-                <MetricCard
-                  label="Kalem ekleri"
-                  value={String(
-                    Object.values(lineFiles).reduce(
-                      (sum, xs) => sum + xs.length,
-                      0,
-                    ),
-                  )}
-                />
-              </div>
-            )}
-          </Panel>
-
-          <Panel title="Teklif kalemleri" icon={<Package className="size-5" />}>
-            <div className="overflow-x-auto rounded-xl border border-[var(--wms-app-border)]">
-              <table className="w-full min-w-[800px] text-left text-sm">
-                <thead className="bg-cyan-500/5 text-xs uppercase text-slate-500">
-                  <tr>
-                    <th className="px-3 py-2">Stok</th>
-                    <th className="px-3 py-2">Talep</th>
-                    <th className="px-3 py-2">Teklif</th>
-                    <th className="px-3 py-2">Birim Fiyat</th>
-                    <th className="px-3 py-2">Termin</th>
-                    <th className="px-3 py-2">Toplam</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {includedLines.map((line) => (
-                    <tr
-                      key={line.requestLineId}
-                      className="border-t border-cyan-500/10"
-                    >
-                      <td className="px-3 py-2 font-medium">
-                        {line.stockCode ? `${line.stockCode} · ` : ""}
-                        {line.stockName}
-                      </td>
-                      <td className="px-3 py-2">
-                        {formatProjectNumber(line.requestedQuantity)}{" "}
-                        {line.unitCode}
-                      </td>
-                      <td className="px-3 py-2">
-                        {formatProjectNumber(line.quantity)} {line.unitCode}
-                      </td>
-                      <td className="px-3 py-2">
-                        {formatProjectNumber(line.unitPrice)} {currency}
-                      </td>
-                      <td className="px-3 py-2">
-                        {line.deliveryDate
-                          ? formatProjectDate(line.deliveryDate)
-                          : "—"}
-                      </td>
-                      <td className="px-3 py-2 font-semibold text-cyan-400">
-                        {formatProjectNumber(lineTotal(line))} {currency}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="space-y-4">
+              {drafts.map((draft, index) => {
+                const included = draftIncludedLines(draft);
+                return (
+                  <div
+                    key={draft.key}
+                    className="rounded-xl border border-[var(--wms-app-border)] p-4"
+                  >
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                      <MetricCard
+                        label={`Teklif ${index + 1} · Tedarikçi`}
+                        value={draft.supplierName || "—"}
+                      />
+                      <MetricCard
+                        label="Teklif No"
+                        value={
+                          draft.quoteNo ||
+                          (draft.quoteNoAuto ? "Kayıtta otomatik" : "—")
+                        }
+                      />
+                      <MetricCard
+                        label="Teklif Tarihi"
+                        value={
+                          draft.quoteDate
+                            ? formatProjectDate(draft.quoteDate)
+                            : "—"
+                        }
+                      />
+                      <MetricCard
+                        label="Toplam"
+                        value={`${formatProjectNumber(draftMoneySum(draft))} ${draft.currency}`}
+                      />
+                      <MetricCard
+                        label="Geçerlilik"
+                        value={
+                          draft.validUntil
+                            ? formatProjectDate(draft.validUntil)
+                            : "—"
+                        }
+                      />
+                      <MetricCard
+                        label="Genel Termin"
+                        value={
+                          draft.deliveryDate
+                            ? formatProjectDate(draft.deliveryDate)
+                            : "—"
+                        }
+                      />
+                      <MetricCard label="Para Birimi" value={draft.currency} />
+                      <MetricCard
+                        label="Miktar"
+                        value={formatProjectNumber(draftQtySum(draft))}
+                      />
+                    </div>
+                    {draft.note ? (
+                      <p className="mt-3 rounded-xl border border-[var(--wms-app-border)] bg-cyan-500/5 px-3 py-2 text-sm">
+                        <span className="text-xs uppercase text-slate-500">
+                          Not ·{" "}
+                        </span>
+                        {draft.note}
+                      </p>
+                    ) : null}
+                    <div className="mt-3 overflow-x-auto rounded-xl border border-[var(--wms-app-border)]">
+                      <table className="w-full min-w-[800px] text-left text-sm">
+                        <thead className="bg-cyan-500/5 text-xs uppercase text-slate-500">
+                          <tr>
+                            <th className="px-3 py-2">Stok</th>
+                            <th className="px-3 py-2">Talep</th>
+                            <th className="px-3 py-2">Teklif</th>
+                            <th className="px-3 py-2">Birim Fiyat</th>
+                            <th className="px-3 py-2">Termin</th>
+                            <th className="px-3 py-2">Toplam</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {included.map((line) => (
+                            <tr
+                              key={line.requestLineId}
+                              className="border-t border-cyan-500/10"
+                            >
+                              <td className="px-3 py-2 font-medium">
+                                {line.stockCode ? `${line.stockCode} · ` : ""}
+                                {line.stockName}
+                              </td>
+                              <td className="px-3 py-2">
+                                {formatProjectNumber(line.requestedQuantity)}{" "}
+                                {line.unitCode}
+                              </td>
+                              <td className="px-3 py-2">
+                                {formatProjectNumber(line.quantity)}{" "}
+                                {line.unitCode}
+                              </td>
+                              <td className="px-3 py-2">
+                                {formatProjectNumber(line.unitPrice)}{" "}
+                                {draft.currency}
+                              </td>
+                              <td className="px-3 py-2">
+                                {line.deliveryDate
+                                  ? formatProjectDate(line.deliveryDate)
+                                  : "—"}
+                              </td>
+                              <td className="px-3 py-2 font-semibold text-cyan-400">
+                                {formatProjectNumber(lineTotal(line))}{" "}
+                                {draft.currency}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </Panel>
 
@@ -1623,9 +2303,11 @@ export function SupplierQuoteEntryPage(): ReactElement {
               variant="primary"
               loading={saveBusy}
               disabled={reviewWarnings.length > 0}
-              onClick={() => void save()}
+              onClick={() => void saveAll()}
             >
-              Teklifi kaydet
+              {drafts.length > 1
+                ? `${drafts.length} teklifi kaydet`
+                : "Teklifi kaydet"}
             </OpsActionButton>
           </footer>
         </>
@@ -2012,13 +2694,24 @@ export function SupplierQuoteEntryPage(): ReactElement {
   );
 }
 
-function Field({ label, children }: { label: string; children: ReactNode }) {
+function Field({
+  label,
+  hint,
+  children,
+}: {
+  label: string;
+  hint?: string;
+  children: ReactNode;
+}) {
   return (
     <label className="block">
       <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-500">
         {label}
       </span>
       {children}
+      {hint ? (
+        <span className="mt-1 block text-[11px] text-slate-500">{hint}</span>
+      ) : null}
     </label>
   );
 }

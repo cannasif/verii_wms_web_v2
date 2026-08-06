@@ -113,7 +113,8 @@ export const procurementApi = {
     payload: {
       supplierId?: number | null;
       supplierName?: string;
-      quoteNo: string;
+      /** Boş/omit → backend `Number("QT", id)` ile üretir. */
+      quoteNo?: string | null;
       quoteDate?: string;
       validUntil?: string;
       currencyCode: string;
@@ -150,9 +151,12 @@ export const procurementApi = {
     id: number,
     action: string,
     note?: string,
+    requestLineIds?: number[],
   ): Promise<void> => {
     await api.post(`/api/procurement/${type}s/${id}/${action}`, {
       note: note?.trim() || null,
+      requestLineIds:
+        requestLineIds && requestLineIds.length > 0 ? requestLineIds : null,
     });
   },
   sendInvitation: async (

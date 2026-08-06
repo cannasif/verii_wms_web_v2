@@ -12,6 +12,7 @@ import {
   Eye,
   FileCheck2,
   FileSearch,
+  Loader2,
   Mail,
   Plus,
   Settings2,
@@ -21,15 +22,19 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
+import { cn } from "@/lib/utils";
 import {
   AdvancedDataGrid,
   type GridColumn,
   type GridRequest,
 } from "@/components/shared/AdvancedDataGrid";
 import { AppDateInput, AppInput } from "@/components/shared/AppInput";
-import { AppDropdown } from "@/components/shared/AppDropdown";
 import { requiredActionColumn } from "@/components/shared/GridSystemColumns";
 import { OpsActionButton } from "@/components/shared/OpsActionButton";
+import {
+  OpsStatusBadge,
+  type OpsStatusTone,
+} from "@/components/shared/OpsStatusBadge";
 import { OPS_FIELD_CLASS } from "@/components/shared/ops-field-styles";
 import { PagedAppDropdown } from "@/components/shared/PagedAppDropdown";
 import { PagedLookupDialog } from "@/components/shared/PagedLookupDialog";
@@ -127,6 +132,7 @@ const statusLabel: Record<string, string> = {
   Rejected: "Reddedildi",
   Converted: "Tamamı Sipariş Verildi",
   PartiallyConverted: "Kısmi Sipariş Verildi",
+  PartiallyApproved: "Kalem Bazlı İşlem Devam Ediyor",
   Cancelled: "İptal",
   Sent: "Gönderildi",
   Quoted: "Teklif Geldi",
@@ -146,104 +152,759 @@ const blankLine = (): ProcurementRequestLineInput & {
   unitCode: "ADET",
   quantity: 1,
 });
+type HubRecentItem = ProcurementGridRow & { href: string };
+
+const hubRecentQuery = (type: ProcurementDocumentType) =>
+  procurementApi.paged(type, {
+    pageNumber: 1,
+    pageSize: 4,
+    search: null,
+    searchFields: ["documentNo", "subject", "counterparty"],
+    sortBy: "createdDate",
+    sortDirection: "desc",
+    filterLogic: "and",
+    filters: [],
+  });
+
 export function ProcurementHubPage(): ReactElement {
   const { can } = usePermissionAccess();
   const [summary, setSummary] = useState<ProcurementSummary>();
+  const [summaryLoading, setSummaryLoading] = useState(true);
+  const [summaryError, setSummaryError] = useState<string | null>(null);
   const [policyOpen, setPolicyOpen] = useState(false);
+  const [recent, setRecent] = useState<HubRecentItem[]>([]);
+  const [recentLoading, setRecentLoading] = useState(true);
+  const [summaryTick, setSummaryTick] = useState(0);
+
   useEffect(() => {
+    setSummaryLoading(true);
+    setSummaryError(null);
     void procurementApi
       .summary()
-      .then(setSummary)
-      .catch((e) =>
-        toast.error(
-          e instanceof Error ? e.message : "Satınalma özeti alınamadı.",
-        ),
-      );
-  }, []);
-  const counters: Record<ProcurementDocumentType, number> = {
-    request: (summary?.draftRequests ?? 0) + (summary?.pendingRequests ?? 0),
-    rfq: summary?.openRfqs ?? 0,
-    quote: summary?.submittedQuotes ?? 0,
-    order: (summary?.pendingOrders ?? 0) + (summary?.approvedOpenOrders ?? 0),
+      .then((data) => {
+        setSummary(data);
+        setSummaryError(null);
+      })
+      .catch((e) => {
+        setSummary(undefined);
+        setSummaryError(
+          e instanceof Error ? e.message : "Satınalma özeti yüklenemedi.",
+        );
+      })
+      .finally(() => setSummaryLoading(false));
+  }, [summaryTick]);
+
+  useEffect(() => {
+    setRecentLoading(true);
+    void Promise.all([
+      hubRecentQuery("request"),
+      hubRecentQuery("rfq"),
+      hubRecentQuery("quote"),
+      hubRecentQuery("order"),
+    ])
+      .then(([requests, rfqs, quotes, orders]) => {
+        const map = (
+          page: Awaited<ReturnType<typeof procurementApi.paged>>,
+          hrefBase: string,
+        ): HubRecentItem[] =>
+          (page.data ?? page.items ?? []).map((row) => ({
+            ...row,
+            href: hrefBase,
+          }));
+        const merged = [
+          ...map(requests, "/procurement/requests"),
+          ...map(rfqs, "/procurement/rfqs"),
+          ...map(quotes, "/procurement/quotes"),
+          ...map(orders, "/procurement/orders"),
+        ].sort((a, b) => {
+          const da = a.createdDate ? new Date(a.createdDate).getTime() : 0;
+          const db = b.createdDate ? new Date(b.createdDate).getTime() : 0;
+          return db - da;
+        });
+        setRecent(merged.slice(0, 8));
+      })
+      .catch(() => setRecent([]))
+      .finally(() => setRecentLoading(false));
+  }, [summaryTick]);
+
+  const pendingRequests = summary?.pendingRequests ?? 0;
+  const draftRequests = summary?.draftRequests ?? 0;
+  const openRfqs = summary?.openRfqs ?? 0;
+  const submittedQuotes = summary?.submittedQuotes ?? 0;
+  const pendingOrders = summary?.pendingOrders ?? 0;
+  const approvedOpenOrders = summary?.approvedOpenOrders ?? 0;
+  const requestTotal = pendingRequests + draftRequests;
+  const orderTotal = pendingOrders + approvedOpenOrders;
+  const hasAnyWork =
+    requestTotal + openRfqs + submittedQuotes + orderTotal > 0;
+
+  const workflow = [
+    {
+      key: "request" as const,
+      step: "01",
+      short: "TALEP",
+      title: "Satınalma Talepleri",
+      blurb: "İç ihtiyaçlar ve onaylar",
+      href: "/procurement/requests",
+      icon: ClipboardList,
+      primary: requestTotal,
+      primaryLabel: "aktif talep",
+      secondary: pendingRequests,
+      secondaryLabel: "onay bekliyor",
+      tertiary: draftRequests,
+      tertiaryLabel: "taslak",
+      attention: pendingRequests > 0,
+      live: requestTotal > 0,
+    },
+    {
+      key: "rfq" as const,
+      step: "02",
+      short: "RFQ",
+      title: "Teklif Talepleri",
+      blurb: "Tedarikçilerden fiyat topla",
+      href: "/procurement/rfqs",
+      icon: FileSearch,
+      primary: openRfqs,
+      primaryLabel: "açık RFQ",
+      secondary: openRfqs,
+      secondaryLabel: "cevap bekliyor",
+      tertiary: 0,
+      tertiaryLabel: "",
+      attention: openRfqs > 0,
+      live: openRfqs > 0,
+    },
+    {
+      key: "quote" as const,
+      step: "03",
+      short: "TEKLİF",
+      title: "Tedarikçi Teklifleri",
+      blurb: "Fiyatları değerlendir",
+      href: "/procurement/quotes",
+      icon: FileCheck2,
+      primary: submittedQuotes,
+      primaryLabel: "gelen teklif",
+      secondary: submittedQuotes,
+      secondaryLabel: "değerlendirme",
+      tertiary: 0,
+      tertiaryLabel: "",
+      attention: submittedQuotes > 0,
+      live: submittedQuotes > 0,
+    },
+    {
+      key: "order" as const,
+      step: "04",
+      short: "SİPARİŞ",
+      title: "Satınalma Siparişleri",
+      blurb: "Onaylanan teklifleri siparişe dönüştür",
+      href: "/procurement/orders",
+      icon: ShoppingCart,
+      primary: orderTotal,
+      primaryLabel: "aktif sipariş",
+      secondary: pendingOrders,
+      secondaryLabel: "onay bekliyor",
+      tertiary: approvedOpenOrders,
+      tertiaryLabel: "mal kabule açık",
+      attention: pendingOrders > 0,
+      live: orderTotal > 0,
+    },
+  ];
+
+  const flowMax = Math.max(
+    1,
+    ...workflow.map((s) => s.primary),
+  );
+
+  const actionItems = [
+    pendingRequests > 0
+      ? {
+          key: "pending-requests",
+          eyebrow: "Onay bekliyor",
+          title: `${pendingRequests} satın alma talebi`,
+          detail: "Onayınız gerekiyor",
+          href: "/procurement/requests",
+          cta: "Taleplere Git",
+        }
+      : null,
+    submittedQuotes > 0
+      ? {
+          key: "submitted-quotes",
+          eyebrow: "Teklif değerlendir",
+          title: `${submittedQuotes} tedarikçi teklifi`,
+          detail: "Karar bekliyor",
+          href: "/procurement/quotes",
+          cta: "Tekliflere Git",
+        }
+      : null,
+    pendingOrders > 0
+      ? {
+          key: "pending-orders",
+          eyebrow: "Sipariş onayı",
+          title: `${pendingOrders} satınalma siparişi`,
+          detail: "Onay bekliyor",
+          href: "/procurement/orders",
+          cta: "Siparişlere Git",
+        }
+      : null,
+    openRfqs > 0
+      ? {
+          key: "open-rfqs",
+          eyebrow: "RFQ takibi",
+          title: `${openRfqs} açık teklif talebi`,
+          detail: "Cevap / teklif bekleniyor",
+          href: "/procurement/rfqs",
+          cta: "RFQ’lara Git",
+        }
+      : null,
+  ].filter(Boolean) as Array<{
+    key: string;
+    eyebrow: string;
+    title: string;
+    detail: string;
+    href: string;
+    cta: string;
+  }>;
+
+  const quickActions = [
+    can("WMS.PROCUREMENT.REQUEST.MANAGE")
+      ? { key: "new-request", label: "+ Yeni Talep", href: "/procurement/requests" }
+      : null,
+    can("WMS.PROCUREMENT.RFQ.MANAGE")
+      ? { key: "new-rfq", label: "+ RFQ Oluştur", href: "/procurement/rfqs" }
+      : null,
+    can("WMS.PROCUREMENT.QUOTE.MANAGE")
+      ? {
+          key: "new-quote",
+          label: "+ Teklif Gir",
+          href: "/procurement/quotes/new",
+        }
+      : null,
+    can("WMS.PROCUREMENT.ORDER.MANAGE")
+      ? {
+          key: "new-order",
+          label: "+ Sipariş Oluştur",
+          href: "/procurement/orders",
+        }
+      : null,
+  ].filter(Boolean) as Array<{ key: string; label: string; href: string }>;
+
+  const pipeline = [
+    {
+      key: "request",
+      title: "Talepler",
+      total: requestTotal,
+      href: "/procurement/requests",
+      segments: [
+        { label: "Onay bekliyor", value: pendingRequests, tone: "pending" },
+        { label: "Taslak", value: draftRequests, tone: "neutral" },
+      ],
+    },
+    {
+      key: "rfq",
+      title: "RFQ",
+      total: openRfqs,
+      href: "/procurement/rfqs",
+      segments: [
+        { label: "Açık / cevap bekliyor", value: openRfqs, tone: "active" },
+      ],
+    },
+    {
+      key: "quote",
+      title: "Teklifler",
+      total: submittedQuotes,
+      href: "/procurement/quotes",
+      segments: [
+        {
+          label: "Değerlendiriliyor",
+          value: submittedQuotes,
+          tone: "pending",
+        },
+      ],
+    },
+    {
+      key: "order",
+      title: "Siparişler",
+      total: orderTotal,
+      href: "/procurement/orders",
+      segments: [
+        { label: "Onay bekliyor", value: pendingOrders, tone: "pending" },
+        {
+          label: "Mal kabule açık",
+          value: approvedOpenOrders,
+          tone: "done",
+        },
+      ],
+    },
+  ] as const;
+
+  const activityMeta = (type: string) => {
+    if (type === "request")
+      return { icon: ClipboardList, label: "Satın alma talebi" };
+    if (type === "rfq") return { icon: FileSearch, label: "Teklif talebi" };
+    if (type === "quote")
+      return { icon: FileCheck2, label: "Tedarikçi teklifi" };
+    return { icon: ShoppingCart, label: "Satınalma siparişi" };
   };
+
   return (
-    <section className="space-y-5">
-      <header className="rounded-2xl border border-cyan-500/20 bg-[var(--wms-app-panel)] p-6">
-        <p className="text-xs font-semibold uppercase tracking-[.22em] text-cyan-500">
-          PROCURE_TO_PAY / SATINALMA
-        </p>
-        <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold">Satınalma Süreç Merkezi</h1>
-            <p className="mt-2 max-w-3xl text-sm text-slate-500">
-              İhtiyaç talebinden satınalma siparişine kadar her aşamayı ayrı iş
-              kuyruğunda yönetin.
-            </p>
-          </div>
-          {can("WMS.PROCUREMENT.APPROVE") ? (
-            <OpsActionButton
-              type="button"
-              variant="secondary"
-              onClick={() => setPolicyOpen(true)}
-            >
-              <Settings2 size={16} /> Süreç politikası
-            </OpsActionButton>
-          ) : null}
+    <section className="relative space-y-6 overflow-visible">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -left-6 -right-6 -top-8 h-72 opacity-80"
+        style={{
+          background:
+            "radial-gradient(ellipse 70% 65% at 12% 0%, color-mix(in oklab, var(--wms-brand-primary) 16%, transparent), transparent 72%)",
+        }}
+      />
+
+      <div className="relative flex flex-wrap items-start justify-between gap-4 overflow-visible pb-2 pt-1">
+        <div className="min-w-0 space-y-2.5 overflow-visible">
+          <p className="text-[11px] font-semibold uppercase leading-normal tracking-[0.22em] text-[var(--wms-brand-primary)]">
+            Satın Alma · Procurement Flow
+          </p>
+          <h1 className="text-2xl font-bold leading-[1.35] tracking-tight text-[var(--wms-app-text)]">
+            Süreç Merkezi
+          </h1>
+          <p className="max-w-2xl pb-0.5 text-sm leading-relaxed text-[var(--wms-app-text-muted)]">
+            Talepten siparişe kadar satın alma sürecini canlı olarak buradan
+            yönetin.
+          </p>
         </div>
-      </header>
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {tabs.map((step, index) => {
-          const Icon = step.icon;
-          return (
-            <Link
-              key={step.key}
-              to={step.href}
-              className="group rounded-2xl border border-cyan-500/15 bg-[var(--wms-app-panel)] p-5 transition hover:-translate-y-0.5 hover:border-cyan-500/40"
-            >
-              <div className="flex items-start justify-between">
-                <span className="rounded-xl bg-cyan-500/10 p-3 text-cyan-400">
-                  <Icon size={22} />
-                </span>
-                <span className="rounded-full border border-cyan-500/20 px-2.5 py-1 text-xs font-semibold text-cyan-400">
-                  {counters[step.key]} açık
-                </span>
-              </div>
-              <p className="mt-5 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Aşama {index + 1}
-              </p>
-              <h2 className="mt-1 text-lg font-bold">{step.label}</h2>
-              <p className="mt-2 text-sm text-slate-500">{step.description}</p>
-              <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-cyan-500">
-                İş kuyruğunu aç{" "}
-                <ArrowRight
-                  size={16}
-                  className="transition group-hover:translate-x-1"
-                />
-              </span>
-            </Link>
-          );
-        })}
-      </div>
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
-        {[
-          ["Taslak talep", summary?.draftRequests ?? 0],
-          ["Onay bekleyen", summary?.pendingRequests ?? 0],
-          ["Açık RFQ", summary?.openRfqs ?? 0],
-          ["Gelen teklif", summary?.submittedQuotes ?? 0],
-          ["Sipariş onayı", summary?.pendingOrders ?? 0],
-          ["Mal kabule açık", summary?.approvedOpenOrders ?? 0],
-        ].map(([label, value]) => (
-          <div
-            key={String(label)}
-            className="rounded-xl border border-cyan-500/15 bg-[var(--wms-app-panel)] p-4"
+        {can("WMS.PROCUREMENT.APPROVE") ? (
+          <OpsActionButton
+            type="button"
+            variant="secondary"
+            className="shrink-0 self-start"
+            onClick={() => setPolicyOpen(true)}
           >
-            <p className="text-xs uppercase tracking-wider text-slate-500">
-              {label}
-            </p>
-            <p className="mt-2 text-2xl font-bold text-cyan-400">{value}</p>
-          </div>
-        ))}
+            <Settings2 size={16} /> Süreç Politikası
+          </OpsActionButton>
+        ) : null}
       </div>
+
+      {summaryError ? (
+        <div className="relative rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] px-4 py-5">
+          <p className="text-sm font-semibold text-[var(--wms-app-text)]">
+            Satın alma özeti yüklenemedi.
+          </p>
+          <p className="mt-1 text-sm text-[var(--wms-app-text-muted)]">
+            {summaryError}
+          </p>
+          <OpsActionButton
+            type="button"
+            variant="secondary"
+            className="mt-3"
+            onClick={() => setSummaryTick((x) => x + 1)}
+          >
+            Tekrar Dene
+          </OpsActionButton>
+        </div>
+      ) : null}
+
+      {/* FLOW — visual backbone */}
+      <section
+        aria-label="Satın alma süreç akışı"
+        className="relative overflow-hidden rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)]"
+      >
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-[0.35]"
+          style={{
+            backgroundImage:
+              "linear-gradient(color-mix(in oklab, var(--wms-app-border) 55%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in oklab, var(--wms-app-border) 55%, transparent) 1px, transparent 1px)",
+            backgroundSize: "28px 28px",
+            maskImage:
+              "radial-gradient(ellipse 90% 80% at 50% 40%, black 20%, transparent 75%)",
+          }}
+        />
+        <div className="relative border-b border-[var(--wms-app-border)] px-4 py-3 sm:px-5">
+          <div className="flex flex-wrap items-end justify-between gap-2">
+            <div>
+              <h2 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--wms-brand-primary)]">
+                Procurement Flow
+              </h2>
+              <p className="mt-0.5 text-sm text-[var(--wms-app-text-muted)]">
+                Talep → RFQ → Teklif → Sipariş
+              </p>
+            </div>
+            {!summaryLoading && hasAnyWork ? (
+              <div className="flex flex-wrap items-center gap-2 font-mono text-xs text-[var(--wms-app-text-muted)]">
+                <span className="text-[var(--wms-app-text)]">{requestTotal}</span>
+                <span className="opacity-40">━━</span>
+                <span className="text-[var(--wms-app-text)]">{openRfqs}</span>
+                <span className="opacity-40">━━</span>
+                <span className="text-[var(--wms-app-text)]">
+                  {submittedQuotes}
+                </span>
+                <span className="opacity-40">━━</span>
+                <span className="text-[var(--wms-app-text)]">{orderTotal}</span>
+              </div>
+            ) : null}
+          </div>
+        </div>
+
+        {summaryLoading ? (
+          <div className="relative grid gap-4 p-5 sm:grid-cols-2 xl:grid-cols-4">
+            {[0, 1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="h-44 animate-pulse rounded-xl border border-[var(--wms-app-border)] bg-[color-mix(in_oklab,var(--wms-app-border)_35%,transparent)]"
+              />
+            ))}
+          </div>
+        ) : !hasAnyWork ? (
+          <div className="relative px-5 py-10 text-center">
+            <p className="text-base font-semibold text-[var(--wms-app-text)]">
+              Satın alma süreciniz burada görünecek.
+            </p>
+            <p className="mx-auto mt-1 max-w-md text-sm text-[var(--wms-app-text-muted)]">
+              Henüz aktif bir satın alma işlemi bulunmuyor. İlk talebi
+              oluşturarak süreci başlatın.
+            </p>
+            {can("WMS.PROCUREMENT.REQUEST.MANAGE") ? (
+              <OpsActionButton asChild variant="primary" className="mt-4">
+                <Link to="/procurement/requests">
+                  <Plus size={16} /> Yeni Talep Oluştur
+                </Link>
+              </OpsActionButton>
+            ) : null}
+          </div>
+        ) : (
+          <ol className="relative flex flex-col gap-0 px-3 py-5 sm:px-4 lg:flex-row lg:items-stretch lg:px-5">
+            {workflow.map((step, index) => {
+              const Icon = step.icon;
+              const next = workflow[index + 1];
+              const connectorLive = step.live && Boolean(next?.live);
+              const connectorAttention = step.attention || next?.attention;
+              return (
+                <li
+                  key={step.key}
+                  className="relative flex flex-1 flex-col lg:flex-row lg:items-stretch"
+                >
+                  <Link
+                    to={step.href}
+                    title={`${step.primary} ${step.primaryLabel}${step.secondary > 0 ? ` · ${step.secondary} ${step.secondaryLabel}` : ""}`}
+                    className={cn(
+                      "group relative flex min-h-[168px] flex-1 flex-col rounded-xl border px-4 py-4 transition duration-200",
+                      "bg-[color-mix(in_oklab,var(--wms-app-panel)_88%,transparent)]",
+                      "border-[var(--wms-app-border)] hover:border-[var(--wms-brand-primary)]/50",
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--wms-brand-ring)]",
+                      step.attention &&
+                        "border-[var(--wms-brand-primary)]/45 shadow-[0_0_0_1px_color-mix(in_oklab,var(--wms-brand-primary)_25%,transparent)]",
+                      !step.live && "opacity-75",
+                    )}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span
+                        className={cn(
+                          "inline-flex size-9 items-center justify-center rounded-full border transition duration-200",
+                          step.attention
+                            ? "border-[var(--wms-brand-primary)] bg-[var(--wms-brand-primary)] text-[var(--wms-brand-on-primary)]"
+                            : step.live
+                              ? "border-[var(--wms-brand-primary)]/50 text-[var(--wms-brand-primary)] group-hover:bg-[color-mix(in_oklab,var(--wms-brand-primary)_12%,transparent)]"
+                              : "border-[var(--wms-app-border)] text-[var(--wms-app-text-muted)]",
+                        )}
+                      >
+                        <Icon size={17} strokeWidth={1.75} />
+                      </span>
+                      <span className="font-mono text-[11px] font-semibold tracking-wider text-[var(--wms-app-text-muted)]">
+                        {step.step}
+                      </span>
+                    </div>
+
+                    <p className="mt-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--wms-brand-primary)]">
+                      {step.short}
+                    </p>
+                    <h3 className="mt-0.5 text-sm font-bold text-[var(--wms-app-text)]">
+                      {step.title}
+                    </h3>
+                    <p className="mt-1 text-xs text-[var(--wms-app-text-muted)]">
+                      {step.blurb}
+                    </p>
+
+                    <div className="mt-auto pt-4">
+                      <div className="flex items-end justify-between gap-2">
+                        <div>
+                          <p className="text-2xl font-bold tabular-nums tracking-tight text-[var(--wms-app-text)]">
+                            {step.primary}
+                          </p>
+                          <p className="text-[11px] text-[var(--wms-app-text-muted)]">
+                            {step.primaryLabel}
+                          </p>
+                        </div>
+                        {step.secondary > 0 ? (
+                          <OpsStatusBadge
+                            tone={step.attention ? "pending" : "neutral"}
+                          >
+                            {step.secondary} {step.secondaryLabel}
+                          </OpsStatusBadge>
+                        ) : (
+                          <OpsStatusBadge tone="neutral">Sakin</OpsStatusBadge>
+                        )}
+                      </div>
+                      <div className="mt-2 h-1 overflow-hidden rounded-full bg-[color-mix(in_oklab,var(--wms-app-border)_70%,transparent)]">
+                        <div
+                          className={cn(
+                            "h-full rounded-full transition-all duration-300",
+                            step.attention
+                              ? "bg-[var(--wms-brand-primary)]"
+                              : "bg-[color-mix(in_oklab,var(--wms-brand-primary)_55%,var(--wms-app-border))]",
+                          )}
+                          style={{
+                            width: `${Math.max(6, Math.round((step.primary / flowMax) * 100))}%`,
+                          }}
+                        />
+                      </div>
+                      {step.tertiary > 0 && step.tertiaryLabel ? (
+                        <p className="mt-1.5 text-[11px] text-[var(--wms-app-text-muted)]">
+                          {step.tertiary} {step.tertiaryLabel}
+                        </p>
+                      ) : null}
+                    </div>
+                  </Link>
+
+                  {index < workflow.length - 1 ? (
+                    <div
+                      className="flex items-center justify-center py-1 lg:w-10 lg:shrink-0 lg:px-1 lg:py-0"
+                      aria-hidden
+                    >
+                      <div
+                        className={cn(
+                          "hidden h-[2px] w-full rounded-full transition duration-200 lg:block",
+                          connectorLive
+                            ? connectorAttention
+                              ? "bg-[var(--wms-brand-primary)]"
+                              : "bg-[color-mix(in_oklab,var(--wms-brand-primary)_55%,var(--wms-app-border))]"
+                            : "bg-[var(--wms-app-border)]",
+                        )}
+                      />
+                      <div
+                        className={cn(
+                          "h-8 w-[2px] rounded-full lg:hidden",
+                          connectorLive
+                            ? "bg-[var(--wms-brand-primary)]"
+                            : "bg-[var(--wms-app-border)]",
+                        )}
+                      />
+                    </div>
+                  ) : null}
+                </li>
+              );
+            })}
+          </ol>
+        )}
+      </section>
+
+      {/* Pipeline + Actions */}
+      <div className="relative grid gap-5 xl:grid-cols-[1.15fr_1fr]">
+        <section>
+          <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--wms-app-text-muted)]">
+            Satın Alma Pipeline
+          </h2>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            {pipeline.map((col) => {
+              const segMax = Math.max(
+                1,
+                ...col.segments.map((s) => s.value),
+                col.total,
+              );
+              return (
+                <Link
+                  key={col.key}
+                  to={col.href}
+                  className="rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)]/70 px-3.5 py-3 transition duration-200 hover:border-[var(--wms-brand-primary)]/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--wms-brand-ring)]"
+                >
+                  <div className="flex items-baseline justify-between gap-2">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-[var(--wms-app-text-muted)]">
+                      {col.title}
+                    </p>
+                    <p className="text-lg font-bold tabular-nums text-[var(--wms-app-text)]">
+                      {summaryLoading ? "—" : col.total}
+                    </p>
+                  </div>
+                  <div className="mt-3 space-y-2">
+                    {col.segments.map((seg) => (
+                      <div key={seg.label}>
+                        <div className="mb-1 flex justify-between gap-2 text-[11px]">
+                          <span className="text-[var(--wms-app-text-muted)]">
+                            {seg.label}
+                          </span>
+                          <span className="font-semibold tabular-nums text-[var(--wms-app-text)]">
+                            {summaryLoading ? "—" : seg.value}
+                          </span>
+                        </div>
+                        <div className="h-1 overflow-hidden rounded-full bg-[color-mix(in_oklab,var(--wms-app-border)_65%,transparent)]">
+                          <div
+                            className={cn(
+                              "h-full rounded-full transition-all duration-300",
+                              seg.tone === "pending" &&
+                                "bg-[var(--wms-brand-primary)]",
+                              seg.tone === "done" && "bg-emerald-500/80",
+                              seg.tone === "active" &&
+                                "bg-[color-mix(in_oklab,var(--wms-brand-primary)_70%,white)]",
+                              seg.tone === "neutral" &&
+                                "bg-[var(--wms-app-text-muted)]/50",
+                            )}
+                            style={{
+                              width: summaryLoading
+                                ? "20%"
+                                : `${Math.max(seg.value > 0 ? 8 : 0, Math.round((seg.value / segMax) * 100))}%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+
+        <section>
+          <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--wms-app-text-muted)]">
+            Şimdi ilgilenmen gerekenler
+          </h2>
+          <div className="mt-3 space-y-2.5">
+            {summaryLoading ? (
+              <div className="h-24 animate-pulse rounded-xl border border-[var(--wms-app-border)] bg-[color-mix(in_oklab,var(--wms-app-border)_30%,transparent)]" />
+            ) : actionItems.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-[var(--wms-app-border)] px-4 py-5 text-sm text-[var(--wms-app-text-muted)]">
+                Şu an aksiyon gerektiren bekleyen iş yok. Süreç sakin.
+              </div>
+            ) : (
+              actionItems.map((item) => (
+                <Link
+                  key={item.key}
+                  to={item.href}
+                  className={cn(
+                    "group relative block overflow-hidden rounded-xl border border-l-[3px] px-4 py-3.5 transition duration-200",
+                    "border-[var(--wms-app-border)] border-l-[var(--wms-brand-primary)]",
+                    "bg-[color-mix(in_oklab,var(--wms-brand-primary)_7%,var(--wms-app-panel))]",
+                    "hover:border-[var(--wms-brand-primary)]/45",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--wms-brand-ring)]",
+                  )}
+                >
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--wms-brand-primary)]">
+                    ● {item.eyebrow}
+                  </p>
+                  <p className="mt-1.5 text-sm font-bold text-[var(--wms-app-text)]">
+                    {item.title}
+                  </p>
+                  <p className="mt-0.5 text-xs text-[var(--wms-app-text-muted)]">
+                    {item.detail}
+                  </p>
+                  <span className="mt-2.5 inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--wms-brand-primary)]">
+                    {item.cta}
+                    <ArrowRight
+                      size={13}
+                      className="transition duration-200 group-hover:translate-x-0.5"
+                    />
+                  </span>
+                </Link>
+              ))
+            )}
+          </div>
+
+          {quickActions.length > 0 ? (
+            <div className="mt-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--wms-app-text-muted)]">
+                Hızlı işlemler
+              </p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {quickActions.map((action) => (
+                  <Link
+                    key={action.key}
+                    to={action.href}
+                    className="inline-flex items-center rounded-lg border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] px-3 py-1.5 text-xs font-semibold text-[var(--wms-app-text)] transition duration-200 hover:border-[var(--wms-brand-primary)]/45 hover:text-[var(--wms-brand-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--wms-brand-ring)]"
+                  >
+                    {action.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </section>
+      </div>
+
+      {/* Recent activity timeline */}
+      <section className="relative">
+        <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--wms-app-text-muted)]">
+          Son işlemler
+        </h2>
+        <div className="mt-3">
+          {recentLoading ? (
+            <div className="space-y-2">
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  className="h-12 animate-pulse rounded-lg bg-[color-mix(in_oklab,var(--wms-app-border)_30%,transparent)]"
+                />
+              ))}
+            </div>
+          ) : recent.length === 0 ? (
+            <p className="text-sm text-[var(--wms-app-text-muted)]">
+              Henüz görüntülenecek işlem yok.
+            </p>
+          ) : (
+            <ol className="relative space-y-0 border-l border-[var(--wms-app-border)] pl-4">
+              {recent.map((row) => {
+                const meta = activityMeta(row.documentType);
+                const Icon = meta.icon;
+                return (
+                  <li key={`${row.documentType}-${row.id}`} className="relative pb-4 last:pb-0">
+                    <span className="absolute -left-[21px] top-1 flex size-6 items-center justify-center rounded-full border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] text-[var(--wms-brand-primary)]">
+                      <Icon size={12} strokeWidth={2} />
+                    </span>
+                    <Link
+                      to={row.href}
+                      className="block rounded-lg px-2 py-1.5 transition duration-200 hover:bg-[color-mix(in_oklab,var(--wms-brand-primary)_6%,transparent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--wms-brand-ring)]"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-xs text-[var(--wms-app-text-muted)]">
+                            {row.documentDate
+                              ? formatProjectDate(row.documentDate)
+                              : "—"}{" "}
+                            · {meta.label}
+                          </p>
+                          <p className="mt-0.5 text-sm">
+                            <span className="font-mono font-semibold text-[var(--wms-app-text)]">
+                              {row.documentNo}
+                            </span>
+                            <span className="mx-1.5 text-[var(--wms-app-text-muted)]">
+                              ·
+                            </span>
+                            <span className="text-[var(--wms-app-text-muted)]">
+                              {row.subject}
+                            </span>
+                          </p>
+                        </div>
+                        <OpsStatusBadge
+                          tone={
+                            row.status === "PendingApproval" ||
+                            row.status === "Submitted"
+                              ? "pending"
+                              : row.status === "Approved" ||
+                                  row.status === "Converted"
+                                ? "done"
+                                : row.status === "Rejected" ||
+                                    row.status === "Cancelled"
+                                  ? "danger"
+                                  : "neutral"
+                          }
+                        >
+                          {statusLabel[row.status] ?? row.status}
+                        </OpsStatusBadge>
+                      </div>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ol>
+          )}
+        </div>
+      </section>
+
       {policyOpen ? (
         <ProcurementPolicyDialog
           onClose={() => setPolicyOpen(false)}
@@ -1105,7 +1766,11 @@ function CreateRfqDialog({
   const [busy, setBusy] = useState(false);
   const [lines, setLines] = useState<RfqRequestLineInput[]>(
     source.lines
-      .filter((x) => x.openQuantity > 0)
+      .filter(
+        (x) =>
+          x.openQuantity > 0 &&
+          (!x.status || x.status === "Approved"),
+      )
       .map((x) => ({ requestLineId: x.id, quantity: x.openQuantity })),
   );
   useEffect(() => {
@@ -1257,7 +1922,11 @@ function CreateRfqDialog({
             </p>
           </div>
           {source.lines
-            .filter((x) => x.openQuantity > 0)
+            .filter(
+              (x) =>
+                x.openQuantity > 0 &&
+                (!x.status || x.status === "Approved"),
+            )
             .map((line) => {
               const selected = lines.find((x) => x.requestLineId === line.id);
               return (
@@ -1516,6 +2185,64 @@ function CreateOrderFromQuoteDialog({
   );
 }
 
+type PolicyFlag =
+  | "allowMultipleRfqsPerRequest"
+  | "allowPartialRfqLines"
+  | "allowMultipleQuotesPerSupplier"
+  | "allowMultipleOrdersPerQuote"
+  | "allowPartialOrderLines"
+  | "allowSplitAwardsAcrossSuppliers"
+  | "allowSupplierDraftSave"
+  | "allowSupplierQuantityChange"
+  | "allowSupplierRevisions"
+  | "requireSupplierDeliveryDate"
+  | "allowZeroUnitPrice";
+
+function PolicyToggleRow({
+  title,
+  description,
+  checked,
+  onChange,
+}: {
+  title: string;
+  description: string;
+  checked: boolean;
+  onChange: () => void;
+}): ReactElement {
+  return (
+    <div className="flex items-start justify-between gap-4 border-b border-[var(--wms-app-border)] py-3 last:border-b-0">
+      <div className="min-w-0">
+        <p className="text-sm font-semibold text-[var(--wms-app-text)]">
+          {title}
+        </p>
+        <p className="mt-0.5 text-xs leading-relaxed text-[var(--wms-app-text-muted)]">
+          {description}
+        </p>
+      </div>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        aria-label={title}
+        onClick={onChange}
+        className={cn(
+          "relative mt-0.5 h-6 w-11 shrink-0 rounded-full border transition",
+          checked
+            ? "border-[var(--wms-brand-primary)] bg-[var(--wms-brand-primary)]"
+            : "border-[var(--wms-app-border)] bg-[var(--wms-app-panel)]",
+        )}
+      >
+        <span
+          className={cn(
+            "absolute top-0.5 size-4 rounded-full bg-white shadow transition",
+            checked ? "left-[22px]" : "left-0.5",
+          )}
+        />
+      </button>
+    </div>
+  );
+}
+
 function ProcurementPolicyDialog({
   onClose,
   onSaved,
@@ -1525,6 +2252,9 @@ function ProcurementPolicyDialog({
 }): ReactElement {
   const [policy, setPolicy] = useState<ProcurementPolicy>();
   const [busy, setBusy] = useState(false);
+  const [section, setSection] = useState<
+    "general" | "suppliers" | "quotes" | "portal"
+  >("general");
   useEffect(() => {
     procurementApi
       .policy()
@@ -1536,103 +2266,12 @@ function ProcurementPolicyDialog({
         onClose();
       });
   }, [onClose]);
-  if (!policy)
-    return (
-      <ResponsiveDialog
-        open
-        onClose={onClose}
-        title="Satınalma süreç politikası"
-      >
-        <p className="p-5 text-sm text-slate-500">Politika yükleniyor…</p>
-      </ResponsiveDialog>
-    );
-  type PolicyFlag =
-    | "allowMultipleRfqsPerRequest"
-    | "allowPartialRfqLines"
-    | "allowMultipleQuotesPerSupplier"
-    | "allowMultipleOrdersPerQuote"
-    | "allowPartialOrderLines"
-    | "allowSplitAwardsAcrossSuppliers"
-    | "allowSupplierDraftSave"
-    | "allowSupplierQuantityChange"
-    | "allowSupplierRevisions"
-    | "requireSupplierDeliveryDate"
-    | "allowZeroUnitPrice";
+
   const toggle = (key: PolicyFlag) =>
     setPolicy((x) => (x ? { ...x, [key]: !x[key] } : x));
-  const options: Array<{
-    key: PolicyFlag;
-    title: string;
-    description: string;
-  }> = [
-    {
-      key: "allowMultipleRfqsPerRequest",
-      title: "Bir talepten birden fazla teklif turu",
-      description:
-        "Aynı ihtiyaç için farklı zamanlarda veya farklı tedarikçi gruplarıyla yeni RFQ açılabilir.",
-    },
-    {
-      key: "allowPartialRfqLines",
-      title: "Kısmi kalem ve miktarla fiyat toplama",
-      description:
-        "Talebin seçilen kalemleri ya da açık miktarın bir bölümü fiyatlamaya çıkarılabilir.",
-    },
-    {
-      key: "allowMultipleQuotesPerSupplier",
-      title: "Tedarikçi revize teklifleri",
-      description:
-        "Aynı tedarikçi aynı RFQ için farklı teklif numaralarıyla birden fazla teklif verebilir.",
-    },
-    {
-      key: "allowMultipleOrdersPerQuote",
-      title: "Bir tekliften birden fazla sipariş",
-      description:
-        "Teklif miktarı farklı tarihlerde birden fazla siparişe bölünebilir.",
-    },
-    {
-      key: "allowPartialOrderLines",
-      title: "Kısmi teklif ödüllendirme",
-      description:
-        "Teklifin yalnızca seçilen kalem veya miktarı siparişe dönüştürülebilir.",
-    },
-    {
-      key: "allowSplitAwardsAcrossSuppliers",
-      title: "Talebi tedarikçilere paylaştır",
-      description:
-        "Aynı talebin miktarları birden fazla tedarikçiye sipariş edilebilir.",
-    },
-    {
-      key: "allowSupplierDraftSave",
-      title: "Tedarikçi taslak kaydedebilir",
-      description:
-        "Portal kullanıcısı teklifini göndermeden önce ara kayıt oluşturabilir.",
-    },
-    {
-      key: "allowSupplierQuantityChange",
-      title: "Tedarikçi miktarı değiştirebilir",
-      description:
-        "Kapalıysa tedarikçi yalnız istenen miktara fiyat verebilir.",
-    },
-    {
-      key: "allowSupplierRevisions",
-      title: "Teklif revizyonuna izin ver",
-      description:
-        "Satınalma sorumlusu gönderilmiş teklif için yeni bir revizyon açabilir.",
-    },
-    {
-      key: "requireSupplierDeliveryDate",
-      title: "Kalem termin tarihi zorunlu",
-      description:
-        "Her teklif kaleminde teslim tarihi girilmeden teklif gönderilemez.",
-    },
-    {
-      key: "allowZeroUnitPrice",
-      title: "Sıfır fiyatlı kaleme izin ver",
-      description:
-        "Numune veya bedelsiz kalemlerde sıfır birim fiyat kabul edilir.",
-    },
-  ];
+
   const save = async () => {
+    if (!policy) return;
     setBusy(true);
     try {
       await procurementApi.updatePolicy({
@@ -1658,142 +2297,282 @@ function ProcurementPolicyDialog({
       setBusy(false);
     }
   };
+
+  if (!policy)
+    return (
+      <ResponsiveDialog open onClose={onClose} title="Süreç Politikası">
+        <p className="flex items-center gap-2 p-2 text-sm text-[var(--wms-app-text-muted)]">
+          <Loader2 className="size-4 animate-spin" /> Politika yükleniyor…
+        </p>
+      </ResponsiveDialog>
+    );
+
+  const groups: Record<
+    "general" | "suppliers" | "quotes",
+    {
+      title: string;
+      items: Array<{ key: PolicyFlag; title: string; description: string }>;
+    }
+  > = {
+    general: {
+      title: "Genel süreç",
+      items: [
+        {
+          key: "allowMultipleRfqsPerRequest",
+          title: "Bir talepten birden fazla RFQ",
+          description:
+            "Aynı satın alma talebi için farklı zamanlarda veya tedarikçi gruplarıyla yeni teklif turu açmaya izin verir.",
+        },
+        {
+          key: "allowPartialRfqLines",
+          title: "Bir talepten kısmi RFQ",
+          description:
+            "Talebin seçilen kalemlerini veya açık miktarın bir bölümünü fiyatlamaya çıkarmaya izin verir.",
+        },
+        {
+          key: "allowMultipleQuotesPerSupplier",
+          title: "Aynı tedarikçiden birden fazla teklif",
+          description:
+            "Aynı tedarikçinin aynı RFQ için birden fazla teklif kaydı oluşturmasına izin verir.",
+        },
+      ],
+    },
+    suppliers: {
+      title: "Tedarikçi & paylaşım",
+      items: [
+        {
+          key: "allowSplitAwardsAcrossSuppliers",
+          title: "Talebi tedarikçilere böl",
+          description:
+            "Bir satın alma talebinin farklı kalemlerini farklı tedarikçilerden karşılamaya izin verir.",
+        },
+        {
+          key: "allowPartialOrderLines",
+          title: "Kısmi tedarik",
+          description:
+            "Teklifin yalnızca seçilen kalem veya miktarını siparişe dönüştürmeye izin verir.",
+        },
+        {
+          key: "allowMultipleOrdersPerQuote",
+          title: "Birden fazla tedarikçiye / siparişe ödül",
+          description:
+            "Aynı tekliften farklı tarihlerde birden fazla sipariş oluşturmaya izin verir.",
+        },
+      ],
+    },
+    quotes: {
+      title: "Teklif",
+      items: [
+        {
+          key: "allowSupplierQuantityChange",
+          title: "Teklifte miktar değiştirme",
+          description:
+            "Tedarikçinin istenen miktardan farklı miktar teklif etmesine izin verir.",
+        },
+        {
+          key: "allowZeroUnitPrice",
+          title: "Sıfır fiyat",
+          description:
+            "Numune veya bedelsiz kalemlerde sıfır birim fiyat kabul edilir.",
+        },
+        {
+          key: "requireSupplierDeliveryDate",
+          title: "Termin zorunluluğu",
+          description:
+            "Her teklif kaleminde teslim tarihi girilmeden teklif gönderilemez.",
+        },
+        {
+          key: "allowSupplierRevisions",
+          title: "Revizyon",
+          description:
+            "Gönderilmiş teklif için satınalma ekibinin revizyon isteği açmasına izin verir.",
+        },
+      ],
+    },
+  };
+
+  const nav: Array<{
+    id: "general" | "suppliers" | "quotes" | "portal";
+    label: string;
+  }> = [
+    { id: "general", label: "Genel" },
+    { id: "suppliers", label: "Tedarikçiler" },
+    { id: "quotes", label: "Teklifler" },
+    { id: "portal", label: "Portal" },
+  ];
+
+  const portalModes: Array<{
+    value: ProcurementPolicy["supplierQuoteChannelMode"];
+    label: string;
+  }> = [
+    { value: "InternalOnly", label: "Internal Only" },
+    { value: "PortalOptional", label: "Optional" },
+    { value: "PortalRequired", label: "Required" },
+  ];
+
+  const activeGroup = section === "portal" ? null : groups[section];
+
   return (
     <ResponsiveDialog
       open
       onClose={onClose}
-      title="Satınalma süreç politikası"
-      description="Bu şubede satınalma ekibinin ve tedarikçilerin nasıl çalışacağını basit seçeneklerle belirleyin."
-      className="!max-w-3xl"
+      title="Süreç Politikası"
+      description="Satın alma sürecinin nasıl çalışacağını belirleyin."
+      className="!max-w-4xl"
     >
-      <div className="space-y-3">
-        <section className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-4">
-          <h3 className="font-bold">Tedarikçi teklif portalı</h3>
-          <p className="mt-1 text-sm text-slate-500">
-            Tedarikçinin fiyatı e-postayla açılan kolay ekrandan mı, satınalma
-            personelinin mi gireceğini seçin.
-          </p>
-          <div className="mt-4 grid gap-4 md:grid-cols-3">
-            <Field label="Teklif toplama kanalı">
-              <AppDropdown
-                value={policy.supplierQuoteChannelMode}
-                onValueChange={(value) =>
-                  setPolicy((x) =>
-                    x
-                      ? {
-                          ...x,
-                          supplierQuoteChannelMode:
-                            value as ProcurementPolicy["supplierQuoteChannelMode"],
-                        }
-                      : x,
-                  )
-                }
-                options={[
-                  { value: "InternalOnly", label: "Yalnız şirket içi giriş" },
-                  {
-                    value: "PortalOptional",
-                    label: "Portal veya şirket içi giriş",
-                  },
-                  {
-                    value: "PortalRequired",
-                    label: "Yalnız tedarikçi portalı",
-                  },
-                ]}
-                portalContainer={null}
-              />
-            </Field>
-            <Field label="Bağlantı süresi (gün)">
-              <AppInput
-                type="number"
-                min="1"
-                max="30"
-                value={policy.invitationValidityDays}
-                onChange={(e) =>
-                  setPolicy((x) =>
-                    x
-                      ? { ...x, invitationValidityDays: Number(e.target.value) }
-                      : x,
-                  )
-                }
-              />
-            </Field>
-            <Field label="Azami revizyon sayısı">
-              <AppInput
-                type="number"
-                min="0"
-                max="20"
-                disabled={!policy.allowSupplierRevisions}
-                value={policy.maximumSupplierRevisionCount}
-                onChange={(e) =>
-                  setPolicy((x) =>
-                    x
-                      ? {
-                          ...x,
-                          maximumSupplierRevisionCount: Number(e.target.value),
-                        }
-                      : x,
-                  )
-                }
-              />
-            </Field>
-          </div>
-          <p className="mt-4 rounded-lg border border-cyan-500/20 bg-[var(--wms-app-panel)] p-3 text-sm">
-            <b>Bu seçimin sonucu: </b>
-            {policy.supplierQuoteChannelMode === "InternalOnly"
-              ? "Tedarikçiye bağlantı gönderilmez; teklifleri satınalma personeli sisteme girer."
-              : policy.supplierQuoteChannelMode === "PortalRequired"
-                ? "Teklif yalnızca tedarikçinin e-postadaki bağlantıyı açıp göndermesiyle alınır."
-                : "İsterseniz tedarikçiye bağlantı gönderir, isterseniz teklifi içeriden girersiniz."}
-          </p>
-        </section>
-        {[
-          {
-            title: "Talep ve sipariş esnekliği",
-            description:
-              "Bir talebin nasıl fiyatlamaya ve siparişe dönüşeceğini belirler.",
-            items: options.slice(0, 6),
-          },
-          {
-            title: "Tedarikçinin göreceği teklif ekranı",
-            description:
-              "Tedarikçinin hangi bilgileri değiştirebileceğini ve göndermek için neleri tamamlaması gerektiğini belirler.",
-            items: options.slice(6),
-          },
-        ].map((group) => (
-          <section
-            key={group.title}
-            className="rounded-xl border border-cyan-500/15 p-4"
+      <div className="flex max-h-[min(74vh,760px)] flex-col">
+        <div className="min-h-0 flex-1 md:grid md:grid-cols-[160px_minmax(0,1fr)] md:gap-4">
+          <nav
+            className="mb-3 flex gap-1 overflow-x-auto border-b border-[var(--wms-app-border)] pb-2 md:mb-0 md:block md:overflow-visible md:border-b-0 md:border-r md:pb-0 md:pr-3"
+            aria-label="Politika bölümleri"
           >
-            <h3 className="font-bold">{group.title}</h3>
-            <p className="mt-1 text-sm text-slate-500">{group.description}</p>
-            <div className="mt-4 grid gap-3 md:grid-cols-2">
-              {group.items.map((x) => (
-                <label
-                  key={String(x.key)}
-                  className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition ${
-                    policy[x.key]
-                      ? "border-cyan-400/40 bg-cyan-500/10"
-                      : "border-slate-700/60 bg-[var(--wms-app-panel)]"
-                  }`}
-                >
-                  <input
-                    className="mt-1 h-5 w-5 accent-cyan-500"
-                    type="checkbox"
-                    checked={Boolean(policy[x.key])}
-                    onChange={() => toggle(x.key)}
+            {nav.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setSection(item.id)}
+                className={cn(
+                  "shrink-0 rounded-lg px-3 py-2 text-left text-xs font-semibold transition duration-200 md:w-full",
+                  section === item.id
+                    ? "bg-[color-mix(in_oklab,var(--wms-brand-primary)_14%,transparent)] text-[var(--wms-brand-primary)]"
+                    : "text-[var(--wms-app-text-muted)] hover:bg-[color-mix(in_oklab,var(--wms-brand-primary)_7%,transparent)] hover:text-[var(--wms-app-text)]",
+                )}
+              >
+                {item.label}
+              </button>
+            ))}
+          </nav>
+
+          <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+            {activeGroup ? (
+              <section>
+                <h3 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--wms-brand-primary)]">
+                  {activeGroup.title}
+                </h3>
+                <div className="mt-2 rounded-xl border border-[var(--wms-app-border)] px-3">
+                  {activeGroup.items.map((item) => (
+                    <PolicyToggleRow
+                      key={item.key}
+                      title={item.title}
+                      description={item.description}
+                      checked={Boolean(policy[item.key])}
+                      onChange={() => toggle(item.key)}
+                    />
+                  ))}
+                </div>
+              </section>
+            ) : (
+              <section>
+                <h3 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--wms-brand-primary)]">
+                  Tedarikçi portalı
+                </h3>
+                <div className="mt-2 space-y-4 rounded-xl border border-[var(--wms-app-border)] p-3">
+                  <div>
+                    <p className="text-sm font-semibold">Portal kullanım şekli</p>
+                    <p className="mt-0.5 text-xs text-[var(--wms-app-text-muted)]">
+                      Tekliflerin şirket içinden mi, tedarikçi portalından mı
+                      girileceğini seçin.
+                    </p>
+                    <div
+                      className="mt-3 grid grid-cols-3 gap-1 rounded-lg border border-[var(--wms-app-border)] p-1"
+                      role="radiogroup"
+                      aria-label="Portal kullanım şekli"
+                    >
+                      {portalModes.map((mode) => {
+                        const active =
+                          policy.supplierQuoteChannelMode === mode.value;
+                        return (
+                          <button
+                            key={mode.value}
+                            type="button"
+                            role="radio"
+                            aria-checked={active}
+                            onClick={() =>
+                              setPolicy((x) =>
+                                x
+                                  ? {
+                                      ...x,
+                                      supplierQuoteChannelMode: mode.value,
+                                    }
+                                  : x,
+                              )
+                            }
+                            className={cn(
+                              "rounded-md px-2 py-2 text-xs font-semibold transition",
+                              active
+                                ? "bg-[var(--wms-brand-primary)] text-[var(--wms-brand-on-primary)]"
+                                : "text-[var(--wms-app-text-muted)] hover:bg-[color-mix(in_oklab,var(--wms-brand-primary)_8%,transparent)]",
+                            )}
+                          >
+                            {mode.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="mt-2 text-xs text-[var(--wms-app-text-muted)]">
+                      {policy.supplierQuoteChannelMode === "InternalOnly"
+                        ? "Tedarikçiye bağlantı gönderilmez; teklifleri satınalma personeli girer."
+                        : policy.supplierQuoteChannelMode === "PortalRequired"
+                          ? "Teklif yalnızca tedarikçi portalından alınır."
+                          : "Portal veya şirket içi giriş birlikte kullanılabilir."}
+                    </p>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <Field label="Bağlantı süresi (gün)">
+                      <AppInput
+                        type="number"
+                        min="1"
+                        max="30"
+                        value={policy.invitationValidityDays}
+                        onChange={(e) =>
+                          setPolicy((x) =>
+                            x
+                              ? {
+                                  ...x,
+                                  invitationValidityDays: Number(e.target.value),
+                                }
+                              : x,
+                          )
+                        }
+                      />
+                    </Field>
+                    <Field label="Azami revizyon sayısı">
+                      <AppInput
+                        type="number"
+                        min="0"
+                        max="20"
+                        disabled={!policy.allowSupplierRevisions}
+                        value={policy.maximumSupplierRevisionCount}
+                        onChange={(e) =>
+                          setPolicy((x) =>
+                            x
+                              ? {
+                                  ...x,
+                                  maximumSupplierRevisionCount: Number(
+                                    e.target.value,
+                                  ),
+                                }
+                              : x,
+                          )
+                        }
+                      />
+                    </Field>
+                  </div>
+
+                  <PolicyToggleRow
+                    title="Tedarikçi taslak kaydedebilir"
+                    description="Portal kullanıcısı teklifini göndermeden önce ara kayıt oluşturabilir."
+                    checked={policy.allowSupplierDraftSave}
+                    onChange={() => toggle("allowSupplierDraftSave")}
                   />
-                  <span>
-                    <b>{x.title}</b>
-                    <span className="mt-1 block text-sm text-slate-500">
-                      {x.description}
-                    </span>
-                  </span>
-                </label>
-              ))}
-            </div>
-          </section>
-        ))}
-        <div className="sticky bottom-0 z-20 flex justify-end gap-2 border-t border-cyan-500/15 bg-[var(--wms-app-bg)]/95 py-3 backdrop-blur">
+                </div>
+              </section>
+            )}
+          </div>
+        </div>
+
+        <div className="sticky bottom-0 z-20 mt-3 flex justify-end gap-2 border-t border-[var(--wms-app-border)] bg-[var(--wms-app-panel)]/95 pt-3 backdrop-blur">
           <OpsActionButton type="button" variant="secondary" onClick={onClose}>
             Vazgeç
           </OpsActionButton>
@@ -1803,12 +2582,25 @@ function ProcurementPolicyDialog({
             loading={busy}
             onClick={() => void save()}
           >
-            Politikayı kaydet
+            Değişiklikleri Kaydet
           </OpsActionButton>
         </div>
       </div>
     </ResponsiveDialog>
   );
+}
+
+function requestLineStatus(line: { status?: string | null }) {
+  return line.status?.trim() || "Draft";
+}
+
+function requestLineStatusTone(status: string): OpsStatusTone {
+  if (status === "Approved" || status === "Converted") return "done";
+  if (status === "PendingApproval" || status === "PartiallyApproved")
+    return "pending";
+  if (status === "Rejected" || status === "Cancelled") return "danger";
+  if (status === "Draft") return "neutral";
+  return "active";
 }
 
 function DetailDialog({
@@ -1835,7 +2627,60 @@ function DetailDialog({
   const [busy, setBusy] = useState(false);
   const [inviteSupplierId, setInviteSupplierId] = useState<number>();
   const [lineAttachId, setLineAttachId] = useState<number | null>(null);
+  const [selectedLineIds, setSelectedLineIds] = useState<number[]>([]);
   const lineAttach = detail.lines.find((x) => x.id === lineAttachId);
+
+  const isRequest = detail.documentType === "request";
+  const canSubmitLines =
+    isRequest && can("WMS.PROCUREMENT.REQUEST.MANAGE");
+  const canApproveLines = isRequest && can("WMS.PROCUREMENT.APPROVE");
+
+  const selectableLineIds = useMemo(() => {
+    if (!isRequest) return [] as number[];
+    return detail.lines
+      .filter((line) => {
+        const status = requestLineStatus(line);
+        if (status === "Draft" && canSubmitLines) return true;
+        if (status === "PendingApproval" && canApproveLines) return true;
+        return false;
+      })
+      .map((line) => line.id);
+  }, [canApproveLines, canSubmitLines, detail.lines, isRequest]);
+
+  useEffect(() => {
+    setSelectedLineIds((prev) =>
+      prev.filter((id) => selectableLineIds.includes(id)),
+    );
+  }, [selectableLineIds]);
+
+  const selectedDraftIds = selectedLineIds.filter((id) => {
+    const line = detail.lines.find((x) => x.id === id);
+    return line && requestLineStatus(line) === "Draft";
+  });
+  const selectedPendingIds = selectedLineIds.filter((id) => {
+    const line = detail.lines.find((x) => x.id === id);
+    return line && requestLineStatus(line) === "PendingApproval";
+  });
+
+  const allSelectableChecked =
+    selectableLineIds.length > 0 &&
+    selectableLineIds.every((id) => selectedLineIds.includes(id));
+
+  const toggleLine = (id: number, checked: boolean) => {
+    if (!selectableLineIds.includes(id)) return;
+    setSelectedLineIds((prev) =>
+      checked
+        ? prev.includes(id)
+          ? prev
+          : [...prev, id]
+        : prev.filter((x) => x !== id),
+    );
+  };
+
+  const toggleAllSelectable = (checked: boolean) => {
+    setSelectedLineIds(checked ? [...selectableLineIds] : []);
+  };
+
   const actions = [
     ...(detail.documentType === "quote" &&
     detail.status === "Submitted" &&
@@ -1853,7 +2698,7 @@ function DetailDialog({
         ),
     ),
   ];
-  const run = async (action: string) => {
+  const run = async (action: string, requestLineIds?: number[]) => {
     setBusy(true);
     try {
       if (action === "request-revision")
@@ -1862,18 +2707,53 @@ function DetailDialog({
           "Fiyat, termin veya ticari koşullar için revizyon istendi.",
         );
       else
-        await procurementApi.transition(detail.documentType, detail.id, action);
+        await procurementApi.transition(
+          detail.documentType,
+          detail.id,
+          action,
+          undefined,
+          requestLineIds,
+        );
       toast.success(
         action === "request-revision"
           ? "Tedarikçiye revizyon bağlantısı gönderildi."
-          : "Belge durumu güncellendi.",
+          : action === "submit"
+            ? "Seçili kalemler onaya gönderildi."
+            : action === "approve"
+              ? "Seçili kalemler onaylandı."
+              : "Belge durumu güncellendi.",
       );
+      setSelectedLineIds([]);
       await onChanged();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "İşlem tamamlanamadı.");
     } finally {
       setBusy(false);
     }
+  };
+
+  const runSelectedSubmit = () => {
+    if (selectedDraftIds.length === 0) {
+      toast.error("Onaya göndermek için en az bir kalem seçin.");
+      return;
+    }
+    void run("submit", selectedDraftIds);
+  };
+
+  const runSelectedApprove = () => {
+    if (selectedPendingIds.length === 0) {
+      toast.error("Onaylamak için en az bir kalem seçin.");
+      return;
+    }
+    void run("approve", selectedPendingIds);
+  };
+
+  const runSelectedReject = () => {
+    if (selectedPendingIds.length === 0) {
+      toast.error("Reddetmek için en az bir kalem seçin.");
+      return;
+    }
+    void run("reject", selectedPendingIds);
   };
   const processedLabel =
     detail.documentType === "request"
@@ -1968,10 +2848,25 @@ function DetailDialog({
             </div>
           </div>
         ) : null}
+        {isRequest && selectableLineIds.length > 0 ? (
+          <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-[var(--wms-app-text-muted)]">
+            <input
+              type="checkbox"
+              className="size-4 rounded border-cyan-500/40 bg-transparent accent-cyan-500"
+              checked={allSelectableChecked}
+              onChange={(e) => toggleAllSelectable(e.target.checked)}
+            />
+            Tümünü seç
+            <span className="text-xs text-slate-500">
+              ({selectableLineIds.length} uygun kalem)
+            </span>
+          </label>
+        ) : null}
         <div className="overflow-x-auto rounded-xl border border-cyan-500/15">
           <table className="w-full min-w-[820px] text-sm">
             <thead className="bg-cyan-500/10 text-left text-xs uppercase text-cyan-400">
               <tr>
+                {isRequest ? <th className="p-3 w-10" /> : null}
                 <th className="p-3">#</th>
                 <th>Stok</th>
                 <th>Miktar</th>
@@ -1979,6 +2874,7 @@ function DetailDialog({
                 <th>Açık</th>
                 <th>Birim fiyat</th>
                 <th>Termin</th>
+                {isRequest ? <th>Durum</th> : null}
                 {detail.documentType === "request" ||
                 detail.documentType === "quote" ? (
                   <th>Ekler</th>
@@ -1986,46 +2882,118 @@ function DetailDialog({
               </tr>
             </thead>
             <tbody>
-              {detail.lines.map((x) => (
-                <tr key={x.id} className="border-t border-cyan-500/10">
-                  <td className="p-3">{x.lineNo}</td>
-                  <td>
-                    {x.stockCode ? `${x.stockCode} · ` : ""}
-                    {x.stockName}
-                  </td>
-                  <td>
-                    {formatProjectNumber(x.quantity)} {x.unitCode}
-                  </td>
-                  <td>
-                    {processedLabel === "—"
-                      ? "—"
-                      : formatProjectNumber(x.secondaryQuantity)}
-                  </td>
-                  <td className="font-semibold text-cyan-400">
-                    {formatProjectNumber(x.openQuantity)}
-                  </td>
-                  <td>
-                    {x.unitPrice > 0
-                      ? `${formatProjectNumber(x.unitPrice)} ${detail.currencyCode}`
-                      : "—"}
-                  </td>
-                  <td>
-                    {x.requiredDate ? formatProjectDate(x.requiredDate) : "—"}
-                  </td>
-                  {detail.documentType === "request" ||
-                  detail.documentType === "quote" ? (
-                    <td className="p-2">
-                      <LineAttachmentBadge
-                        count={x.attachments?.length ?? 0}
-                        onClick={() => setLineAttachId(x.id)}
-                      />
+              {detail.lines.map((x) => {
+                const lineStatus = requestLineStatus(x);
+                const selectable = selectableLineIds.includes(x.id);
+                return (
+                  <tr key={x.id} className="border-t border-cyan-500/10">
+                    {isRequest ? (
+                      <td className="p-3">
+                        <input
+                          type="checkbox"
+                          className="size-4 rounded border-cyan-500/40 bg-transparent accent-cyan-500 disabled:opacity-40"
+                          checked={selectedLineIds.includes(x.id)}
+                          disabled={!selectable}
+                          title={
+                            selectable
+                              ? "Kalemi seç"
+                              : `${statusLabel[lineStatus] ?? lineStatus} kalemler seçilemez`
+                          }
+                          onChange={(e) => toggleLine(x.id, e.target.checked)}
+                        />
+                      </td>
+                    ) : null}
+                    <td className="p-3">{x.lineNo}</td>
+                    <td>
+                      {x.stockCode ? `${x.stockCode} · ` : ""}
+                      {x.stockName}
                     </td>
-                  ) : null}
-                </tr>
-              ))}
+                    <td>
+                      {formatProjectNumber(x.quantity)} {x.unitCode}
+                    </td>
+                    <td>
+                      {processedLabel === "—"
+                        ? "—"
+                        : formatProjectNumber(x.secondaryQuantity)}
+                    </td>
+                    <td className="font-semibold text-cyan-400">
+                      {formatProjectNumber(x.openQuantity)}
+                    </td>
+                    <td>
+                      {x.unitPrice > 0
+                        ? `${formatProjectNumber(x.unitPrice)} ${detail.currencyCode}`
+                        : "—"}
+                    </td>
+                    <td>
+                      {x.requiredDate ? formatProjectDate(x.requiredDate) : "—"}
+                    </td>
+                    {isRequest ? (
+                      <td className="p-2">
+                        <OpsStatusBadge tone={requestLineStatusTone(lineStatus)}>
+                          {statusLabel[lineStatus] ?? lineStatus}
+                        </OpsStatusBadge>
+                      </td>
+                    ) : null}
+                    {detail.documentType === "request" ||
+                    detail.documentType === "quote" ? (
+                      <td className="p-2">
+                        <LineAttachmentBadge
+                          count={x.attachments?.length ?? 0}
+                          onClick={() => setLineAttachId(x.id)}
+                        />
+                      </td>
+                    ) : null}
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
+        {isRequest ? (
+          <div className="sticky bottom-0 z-10 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)]/95 p-3 shadow-lg backdrop-blur">
+            <p className="text-sm text-[var(--wms-app-text-muted)]">
+              <strong className="text-[var(--wms-app-text)]">
+                {selectedLineIds.length}
+              </strong>{" "}
+              kalem seçildi
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {canSubmitLines ? (
+                <OpsActionButton
+                  type="button"
+                  variant="primary"
+                  loading={busy}
+                  disabled={selectedDraftIds.length === 0}
+                  onClick={runSelectedSubmit}
+                >
+                  Seçili kalemleri onaya gönder
+                </OpsActionButton>
+              ) : null}
+              {canApproveLines ? (
+                <>
+                  <OpsActionButton
+                    type="button"
+                    variant="primary"
+                    loading={busy}
+                    disabled={selectedPendingIds.length === 0}
+                    onClick={runSelectedApprove}
+                  >
+                    Seçili kalemleri onayla
+                  </OpsActionButton>
+                  <OpsActionButton
+                    type="button"
+                    variant="secondary"
+                    loading={busy}
+                    disabled={selectedPendingIds.length === 0}
+                    onClick={runSelectedReject}
+                  >
+                    Seçili kalemleri reddet
+                  </OpsActionButton>
+                </>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
         {lineAttach ? (
           <LineAttachmentsDialog
             open
@@ -2079,8 +3047,12 @@ function DetailDialog({
         <div className="flex flex-wrap justify-end gap-2">
           {detail.documentType === "request" &&
           (detail.status === "Approved" ||
+            detail.status === "PartiallyApproved" ||
             detail.status === "PartiallyConverted") &&
-          detail.lines.some((x) => x.openQuantity > 0) &&
+          detail.lines.some(
+            (x) =>
+              requestLineStatus(x) === "Approved" && x.openQuantity > 0,
+          ) &&
           can("WMS.PROCUREMENT.QUOTE.MANAGE") ? (
             <OpsActionButton
               type="button"
@@ -2093,8 +3065,12 @@ function DetailDialog({
           ) : null}
           {detail.documentType === "request" &&
           (detail.status === "Approved" ||
+            detail.status === "PartiallyApproved" ||
             detail.status === "PartiallyConverted") &&
-          detail.lines.some((x) => x.openQuantity > 0) &&
+          detail.lines.some(
+            (x) =>
+              requestLineStatus(x) === "Approved" && x.openQuantity > 0,
+          ) &&
           can("WMS.PROCUREMENT.RFQ.MANAGE") ? (
             <OpsActionButton
               type="button"
@@ -2249,14 +3225,8 @@ const allowedActions = (
   can: (permission: string) => boolean,
 ): Array<{ action: string; label: string }> =>
   d.documentType === "request"
-    ? d.status === "Draft" && can("WMS.PROCUREMENT.REQUEST.MANAGE")
-      ? [{ action: "submit", label: "Onaya gönder" }]
-      : d.status === "PendingApproval" && can("WMS.PROCUREMENT.APPROVE")
-        ? [
-            { action: "approve", label: "Onayla" },
-            { action: "reject", label: "Reddet" },
-          ]
-        : []
+    ? // Talepte submit/approve kalem bazlı sticky footer üzerinden yapılır.
+      []
     : d.documentType === "order"
       ? d.status === "Draft" && can("WMS.PROCUREMENT.ORDER.MANAGE")
         ? [{ action: "submit", label: "Onaya gönder" }]
@@ -2284,16 +3254,18 @@ function NextStepBanner({ detail }: { detail: ProcurementDocumentDetail }) {
   const text =
     detail.documentType === "request"
       ? detail.status === "Draft"
-        ? "Sonraki adım: Talebi onaya gönderin."
+        ? "Sonraki adım: İstediğiniz kalemleri seçip onaya gönderin."
         : detail.status === "PendingApproval"
-          ? "Onay kararı bekleniyor."
-          : detail.status === "Approved"
-            ? "Talep hazır: Bir veya birden fazla teklif toplama turu oluşturabilirsiniz."
-            : detail.status === "PartiallyConverted"
-              ? "Talebin bir bölümü sipariş edildi; açık miktar için yeni teklif turu veya sipariş oluşturabilirsiniz."
-              : detail.status === "Converted"
-                ? "Talebin tüm miktarı satınalma siparişlerine bağlandı."
-                : "Bu talep için işlem kapandı."
+          ? "Onaya gönderilen kalemler için onay kararı bekleniyor."
+          : detail.status === "PartiallyApproved"
+            ? "Kalem bazlı işlem devam ediyor: bazı kalemler onaylı, bazıları henüz taslak veya onay bekliyor."
+            : detail.status === "Approved"
+              ? "Talep hazır: Bir veya birden fazla teklif toplama turu oluşturabilirsiniz."
+              : detail.status === "PartiallyConverted"
+                ? "Talebin bir bölümü sipariş edildi; açık miktar için yeni teklif turu veya sipariş oluşturabilirsiniz."
+                : detail.status === "Converted"
+                  ? "Talebin tüm miktarı satınalma siparişlerine bağlandı."
+                  : "Bu talep için işlem kapandı."
       : detail.documentType === "rfq"
         ? detail.status === "Draft"
           ? "Sonraki adım: Teklif talebini tedarikçilere gönderin."
