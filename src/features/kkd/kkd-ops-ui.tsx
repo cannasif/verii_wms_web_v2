@@ -1,4 +1,5 @@
 import { useEffect, type ReactElement, type ReactNode } from 'react';
+import { Link } from 'react-router-dom';
 import { useTheme } from '@/components/theme-provider';
 import { OpsCodeBadge } from '@/components/shared/OpsStatusBadge';
 import { OpsFieldShell } from '@/components/shared/OpsFieldShell';
@@ -79,33 +80,42 @@ export function KkdPanel({
       )}
     >
       <div className="wms-ops-card-toolbar flex flex-col gap-3 border-b border-[color-mix(in_oklab,var(--wms-ops-card-border)_80%,transparent)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6">
-        <div className="wms-ops-card-heading flex min-w-0 items-start gap-3">
-          {icon ? (
-            <span
-              aria-hidden
-              className={cn(
-                'grid size-8 shrink-0 place-items-center border border-[color-mix(in_oklab,var(--wms-ops-accent)_30%,transparent)] bg-[color-mix(in_oklab,var(--wms-ops-accent)_9%,transparent)] text-[var(--wms-ops-accent)]',
-                isPremium ? 'rounded-lg' : 'rounded-none',
-              )}
-            >
-              {icon}
-            </span>
-          ) : null}
-          <div className="min-w-0 space-y-1">
-            <h2 className="wms-ops-title">
+        <div className="wms-ops-card-heading min-w-0">
+          <div className="flex min-w-0 items-center gap-3">
+            {icon ? (
+              <span
+                aria-hidden
+                className={cn(
+                  'grid size-8 shrink-0 place-items-center border border-[color-mix(in_oklab,var(--wms-ops-accent)_30%,transparent)] bg-[color-mix(in_oklab,var(--wms-ops-accent)_9%,transparent)] text-[var(--wms-ops-accent)]',
+                  isPremium ? 'rounded-lg' : 'rounded-none',
+                )}
+              >
+                {icon}
+              </span>
+            ) : null}
+            <h2 className="wms-ops-title min-w-0">
               <span className="wms-ops-title-main wms-ops-title-main--toolbar">{title}</span>
             </h2>
-            {description ? (
-              <p className="wms-ops-subtitle font-mono text-sm">
-                {!isPremium ? (
-                  <span className="wms-ops-subtitle-prefix" aria-hidden>
-                    {'> '}
-                  </span>
-                ) : null}
+          </div>
+          {description ? (
+            isPremium ? (
+              <p
+                className={cn(
+                  'mt-1 text-sm leading-5 text-[var(--wms-app-text-muted)]',
+                  icon ? 'sm:pl-11' : null,
+                )}
+              >
                 {description}
               </p>
-            ) : null}
-          </div>
+            ) : (
+              <p className={cn('wms-ops-subtitle mt-1 font-mono text-sm', icon ? 'sm:pl-11' : null)}>
+                <span className="wms-ops-subtitle-prefix" aria-hidden>
+                  {'> '}
+                </span>
+                {description}
+              </p>
+            )
+          ) : null}
         </div>
         {actions || code ? (
           <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
@@ -177,11 +187,15 @@ export function KkdMetric({
   label,
   value,
   hint,
+  icon,
+  tone = 'neutral',
   className,
 }: {
   label: ReactNode;
   value: ReactNode;
   hint?: ReactNode;
+  icon?: ReactNode;
+  tone?: 'neutral' | 'person' | 'customer' | 'orders';
   className?: string;
 }): ReactElement {
   const { skin } = useTheme();
@@ -189,14 +203,20 @@ export function KkdMetric({
   return (
     <div
       className={cn(
-        'min-w-0 border border-[var(--wms-ops-card-border)] bg-[color-mix(in_oklab,var(--wms-ops-field-bg)_82%,transparent)] px-3 py-2.5',
-        skin === 'premium' ? 'rounded-xl' : 'rounded-none',
+        'wms-ops-kkd-metric',
+        `wms-ops-kkd-metric--${tone}`,
+        skin === 'premium' ? 'wms-ops-kkd-metric--premium' : 'wms-ops-kkd-metric--terminal',
         className,
       )}
     >
-      <span className="wms-ops-entry-label block">{label}</span>
-      <p className="mt-1 truncate text-sm font-black">{value}</p>
-      {hint ? <p className="mt-0.5 text-[0.68rem] text-[var(--wms-app-text-muted)]">{hint}</p> : null}
+      {icon ? (
+        <span className="wms-ops-kkd-metric__icon" aria-hidden>
+          {icon}
+        </span>
+      ) : null}
+      <span className="wms-ops-kkd-metric__label">{label}</span>
+      <p className="wms-ops-kkd-metric__value">{value}</p>
+      {hint ? <p className="wms-ops-kkd-metric__hint">{hint}</p> : null}
     </div>
   );
 }
@@ -235,17 +255,20 @@ export function KkdTextarea({
 export function KkdRowCheckbox({
   checked,
   disabled,
+  indeterminate = false,
   onCheckedChange,
   ariaLabel,
 }: {
   checked: boolean;
   disabled?: boolean;
+  indeterminate?: boolean;
   onCheckedChange: (checked: boolean) => void;
   ariaLabel: string;
 }): ReactElement {
   return (
     <OpsSkinCheckbox
       checked={checked}
+      indeterminate={indeterminate}
       disabled={disabled}
       onCheckedChange={onCheckedChange}
       aria-label={ariaLabel}
@@ -314,6 +337,93 @@ export function KkdCheckRow({
         className="mt-0.5"
       />
     </div>
+  );
+}
+
+export type KkdFlowStep = {
+  id: string;
+  label: string;
+  href?: string;
+};
+
+/** Malzeme talep → dağıtım gibi çok adımlı akışlarda yol + sekme hissi. */
+export function KkdFlowSteps({
+  steps,
+  currentId,
+  className,
+}: {
+  steps: KkdFlowStep[];
+  currentId: string;
+  className?: string;
+}): ReactElement {
+  const { skin } = useTheme();
+  const currentIndex = Math.max(
+    0,
+    steps.findIndex((step) => step.id === currentId),
+  );
+
+  return (
+    <nav
+      aria-label="İş akışı adımları"
+      className={cn(
+        'wms-ops-kkd-flow-steps',
+        skin === 'premium' ? 'wms-ops-kkd-flow-steps--premium' : 'wms-ops-kkd-flow-steps--terminal',
+        className,
+      )}
+    >
+      <ol className="wms-ops-kkd-flow-steps__list" role="tablist">
+        {steps.map((step, index) => {
+          const state = index < currentIndex ? 'done' : index === currentIndex ? 'current' : 'todo';
+          const clickable = Boolean(step.href) && state !== 'current';
+          const content = (
+            <>
+              <span className="wms-ops-kkd-flow-steps__index" aria-hidden>
+                {state === 'done' ? '✓' : index + 1}
+              </span>
+              <span className="wms-ops-kkd-flow-steps__meta">
+                <span className="wms-ops-kkd-flow-steps__eyebrow">
+                  {state === 'done' ? 'Tamam' : state === 'current' ? 'Şimdi' : 'Sırada'}
+                </span>
+                <span className="wms-ops-kkd-flow-steps__label">{step.label}</span>
+              </span>
+            </>
+          );
+
+          return (
+            <li
+              key={step.id}
+              role="presentation"
+              className={cn(
+                'wms-ops-kkd-flow-steps__item',
+                `wms-ops-kkd-flow-steps__item--${state}`,
+                clickable && 'wms-ops-kkd-flow-steps__item--clickable',
+              )}
+            >
+              {clickable && step.href ? (
+                <Link
+                  to={step.href}
+                  role="tab"
+                  aria-selected={false}
+                  className="wms-ops-kkd-flow-steps__tab"
+                  title={`${step.label} adımına dön`}
+                >
+                  {content}
+                </Link>
+              ) : (
+                <span
+                  role="tab"
+                  aria-selected={state === 'current'}
+                  aria-current={state === 'current' ? 'step' : undefined}
+                  className="wms-ops-kkd-flow-steps__tab"
+                >
+                  {content}
+                </span>
+              )}
+            </li>
+          );
+        })}
+      </ol>
+    </nav>
   );
 }
 

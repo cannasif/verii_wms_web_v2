@@ -1567,8 +1567,10 @@ label[data-wms-error-target].wms-error-focus-flash-field .app-input-shell input 
 /* Satır içi kontroller kabuğun altında taban çizgisi boşluğu bırakır; blok
    seviyesine alınca kabuk yüksekliği kontrolle eşitlenir ve alt çizgi dibe oturur. */
 .wms-ops-form .wms-ops-field-shell > input,
+.wms-ops-form .wms-ops-field-shell > textarea,
 .wms-ops-form .wms-ops-field-shell > .wms-ops-number-field > input,
-.wms-ops-lookup-dialog .wms-ops-field-shell > input {
+.wms-ops-lookup-dialog .wms-ops-field-shell > input,
+.wms-ops-lookup-dialog .wms-ops-field-shell > textarea {
   display: block;
 }
 
@@ -1630,26 +1632,38 @@ label[data-wms-error-target].wms-error-focus-flash-field .app-input-shell input 
   width: 100%;
 }
 
-/* Validation error: k?rm?z? alt ?izgi ? inputa t?klamadan, Sonraki sonras? g?r?n?r */
+/* Validation error: focus’taki gibi belirgin kırmızı alt çizgi + pulse (tıklamadan görünür) */
 .wms-ops-form .wms-ops-field-shell--error::before,
-.wms-ops-form .wms-ops-field-shell[aria-invalid="true"]::before {
+.wms-ops-form .wms-ops-field-shell[aria-invalid='true']::before,
+.wms-ops-lookup-dialog .wms-ops-field-shell--error::before,
+.wms-ops-lookup-dialog .wms-ops-field-shell[aria-invalid='true']::before {
   opacity: 0;
   transition: opacity 160ms ease;
 }
 
 .wms-ops-form .wms-ops-field-shell--error::after,
-.wms-ops-form .wms-ops-field-shell[aria-invalid="true"]::after {
-  opacity: 0;
-  width: 0;
-  animation: none;
+.wms-ops-form .wms-ops-field-shell[aria-invalid='true']::after,
+.wms-ops-lookup-dialog .wms-ops-field-shell--error::after,
+.wms-ops-lookup-dialog .wms-ops-field-shell[aria-invalid='true']::after {
+  width: 100%;
+  height: 2px;
+  opacity: 1;
+  background: #ef4444;
+  box-shadow:
+    0 0 10px color-mix(in oklab, #ef4444 48%, transparent),
+    0 0 20px color-mix(in oklab, #ef4444 24%, transparent);
+  animation: wms-ops-field-error-line-pulse 1.15s ease-in-out infinite;
+  transition: none;
 }
 
 .wms-ops-form .wms-ops-field-shell--error .wms-ops-field,
 .wms-ops-form .wms-ops-field-shell--error button.wms-ops-lookup-trigger,
-.wms-ops-form .wms-ops-field-shell[aria-invalid="true"] .wms-ops-field,
-.wms-ops-form .wms-ops-field-shell[aria-invalid="true"] button.wms-ops-lookup-trigger {
-  border-color: color-mix(in oklab, #ef4444 62%, var(--wms-ops-field-border)) !important;
-  background: color-mix(in oklab, #ef4444 6%, var(--wms-ops-field-bg)) !important;
+.wms-ops-form .wms-ops-field-shell[aria-invalid='true'] .wms-ops-field,
+.wms-ops-form .wms-ops-field-shell[aria-invalid='true'] button.wms-ops-lookup-trigger,
+.wms-ops-lookup-dialog .wms-ops-field-shell--error .wms-ops-field,
+.wms-ops-lookup-dialog .wms-ops-field-shell[aria-invalid='true'] .wms-ops-field {
+  border-color: color-mix(in oklab, #ef4444 72%, var(--wms-ops-field-border)) !important;
+  background: color-mix(in oklab, #ef4444 12%, var(--wms-ops-field-bg)) !important;
 }
 
 @keyframes wms-ops-field-error-box-pulse {
@@ -1681,6 +1695,7 @@ label[data-wms-error-target].wms-error-focus-flash-field .app-input-shell input 
   box-shadow:
     0 0 10px color-mix(in oklab, #ef4444 48%, transparent),
     0 0 20px color-mix(in oklab, #ef4444 24%, transparent);
+  animation: wms-ops-field-error-line-pulse 1.15s ease-in-out infinite;
 }
 
 .wms-ops-form .wms-ops-field-shell:focus-within svg,
@@ -2971,7 +2986,7 @@ button.wms-ops-lookup-trigger--multi {
     select.input,
     .input,
     input:not([type='checkbox']):not([type='radio']):not([type='hidden']):not([type='file']):not([type='submit']):not([type='button']):not([type='reset']):not([type='image']):not(.wms-ops-dropdown-search),
-    textarea,
+    textarea:not(.wms-ops-field),
     select
   ):focus,
 :is(.wms-ops-detail-dialog, .wms-ops-lookup-dialog, .wms-ops-form)
@@ -2981,7 +2996,7 @@ button.wms-ops-lookup-trigger--multi {
     select.input,
     .input,
     input:not([type='checkbox']):not([type='radio']):not([type='hidden']):not([type='file']):not([type='submit']):not([type='button']):not([type='reset']):not([type='image']):not(.wms-ops-dropdown-search),
-    textarea,
+    textarea:not(.wms-ops-field),
     select
   ):focus-visible {
   outline: none !important;
@@ -4793,6 +4808,259 @@ html.skin-premium .wms-ops-detail-dialog .wms-ops-gr-detail-lines-table__accent 
   animation: wms-ops-loading-pulse 1.8s ease-in-out infinite;
 }
 
+/* Full-page / route-transition terminal boot panel */
+.wms-ops-route-loading {
+  --ops-load-mono: 'Cascadia Code', 'Cascadia Mono', 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  width: 100%;
+  max-width: 24rem;
+  overflow: hidden;
+  padding: 0.85rem 0.95rem 0.95rem;
+  border: 1px solid color-mix(in oklab, var(--wms-ops-accent) 34%, var(--wms-ops-card-border));
+  background:
+    linear-gradient(rgba(6, 182, 212, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(6, 182, 212, 0.04) 1px, transparent 1px),
+    linear-gradient(
+      165deg,
+      color-mix(in oklab, var(--wms-ops-accent) 10%, transparent) 0%,
+      color-mix(in oklab, var(--wms-ops-field-bg) 88%, transparent) 48%,
+      color-mix(in oklab, var(--wms-ops-field-bg) 96%, transparent) 100%
+    );
+  background-size: 16px 16px, 16px 16px, auto;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklab, var(--wms-ops-accent) 10%, transparent),
+    0 0 28px color-mix(in oklab, var(--wms-ops-accent) 10%, transparent);
+  font-family: var(--ops-load-mono);
+}
+
+.wms-ops-route-loading::before {
+  content: '';
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: repeating-linear-gradient(
+    180deg,
+    transparent 0,
+    transparent 2px,
+    color-mix(in oklab, var(--wms-ops-accent) 3.5%, transparent) 2px,
+    color-mix(in oklab, var(--wms-ops-accent) 3.5%, transparent) 3px
+  );
+  opacity: 0.55;
+}
+
+.wms-ops-route-loading > * {
+  position: relative;
+  z-index: 1;
+}
+
+.wms-ops-route-loading__chrome {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 1.15rem;
+  margin: -0.15rem -0.15rem 0.1rem;
+  padding: 0.15rem 0.2rem 0.35rem;
+  border-bottom: 1px solid color-mix(in oklab, var(--wms-ops-accent) 18%, transparent);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--wms-ops-accent) 55%, hsl(var(--foreground)));
+}
+
+.wms-ops-route-loading__traffic {
+  display: inline-flex;
+  gap: 0.28rem;
+  flex-shrink: 0;
+}
+
+.wms-ops-route-loading__traffic i {
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 50%;
+  background: color-mix(in oklab, var(--wms-ops-accent) 28%, transparent);
+  box-shadow: 0 0 6px color-mix(in oklab, var(--wms-ops-accent) 22%, transparent);
+}
+
+.wms-ops-route-loading__traffic i:nth-child(1) {
+  background: #f87171;
+  box-shadow: 0 0 8px color-mix(in oklab, #f87171 45%, transparent);
+}
+
+.wms-ops-route-loading__traffic i:nth-child(2) {
+  background: #fbbf24;
+  box-shadow: 0 0 8px color-mix(in oklab, #fbbf24 40%, transparent);
+}
+
+.wms-ops-route-loading__traffic i:nth-child(3) {
+  background: #34d399;
+  box-shadow: 0 0 8px color-mix(in oklab, #34d399 40%, transparent);
+}
+
+.wms-ops-route-loading__path {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0.78;
+}
+
+.wms-ops-route-loading__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+  color: var(--wms-ops-accent);
+  font-weight: 700;
+}
+
+.wms-ops-route-loading__status em {
+  font-style: normal;
+  width: 0.7rem;
+  text-align: center;
+  color: color-mix(in oklab, #67e8f9 70%, var(--wms-ops-accent));
+}
+
+.wms-ops-route-loading__tag,
+.wms-ops-route-loading .wms-ops-terminal-state__code {
+  color: var(--wms-ops-accent);
+  text-shadow: 0 0 12px color-mix(in oklab, var(--wms-ops-accent) 35%, transparent);
+}
+
+.wms-ops-route-loading .wms-ops-terminal-state__prompt {
+  color: var(--wms-ops-accent);
+  font-weight: 700;
+}
+
+.wms-ops-route-loading__cursor {
+  display: inline-block;
+  width: 0.45rem;
+  height: 0.85em;
+  margin-left: 0.15rem;
+  vertical-align: text-bottom;
+  background: color-mix(in oklab, var(--wms-ops-accent) 88%, #67e8f9);
+  box-shadow: 0 0 8px color-mix(in oklab, var(--wms-ops-accent) 55%, transparent);
+  animation: wms-ops-loading-cursor 0.85s steps(1, end) infinite;
+}
+
+.wms-ops-route-loading__meter {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding-left: 1.1rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: color-mix(in oklab, var(--wms-ops-accent) 72%, hsl(var(--foreground)));
+}
+
+.wms-ops-route-loading__brackets {
+  color: color-mix(in oklab, var(--wms-ops-accent) 55%, hsl(var(--foreground)));
+}
+
+.wms-ops-route-loading__blocks {
+  font-variant-ligatures: none;
+  letter-spacing: 0.02em;
+  color: var(--wms-ops-accent);
+  text-shadow: 0 0 10px color-mix(in oklab, var(--wms-ops-accent) 35%, transparent);
+}
+
+.wms-ops-route-loading__blocks-empty {
+  color: color-mix(in oklab, var(--wms-ops-accent) 28%, transparent);
+  text-shadow: none;
+}
+
+.wms-ops-route-loading__pct {
+  margin-left: 0.15rem;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.85;
+}
+
+.wms-ops-route-loading__bar {
+  position: relative;
+  height: 3px;
+  margin: 0.05rem 0 0.1rem 1.1rem;
+  max-width: 16rem;
+  overflow: hidden;
+  background: color-mix(in oklab, var(--wms-ops-accent) 14%, transparent);
+  box-shadow: 0 0 10px color-mix(in oklab, var(--wms-ops-accent) 18%, transparent);
+}
+
+.wms-ops-route-loading__bar-scan {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 42%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in oklab, var(--wms-ops-accent) 35%, transparent) 42%,
+    color-mix(in oklab, #67e8f9 70%, var(--wms-ops-accent)) 50%,
+    color-mix(in oklab, var(--wms-ops-accent) 35%, transparent) 58%,
+    transparent 100%
+  );
+  animation: wms-ops-loading-scan 1.15s linear infinite;
+}
+
+.wms-ops-route-loading__log {
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+  margin: 0;
+  padding: 0.15rem 0 0.1rem 1.1rem;
+  list-style: none;
+}
+
+.wms-ops-route-loading__log-item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  font-size: 0.64rem;
+  letter-spacing: 0.06em;
+  text-transform: lowercase;
+  color: color-mix(in oklab, var(--wms-ops-accent) 28%, hsl(var(--foreground)));
+  opacity: 0.55;
+  transition: opacity 0.2s ease, color 0.2s ease;
+}
+
+.wms-ops-route-loading__log-item--done {
+  opacity: 0.78;
+  color: color-mix(in oklab, #34d399 55%, hsl(var(--foreground)));
+}
+
+.wms-ops-route-loading__log-item--active {
+  opacity: 1;
+  color: color-mix(in oklab, var(--wms-ops-accent) 70%, hsl(var(--foreground)));
+}
+
+.wms-ops-route-loading__log-mark {
+  flex-shrink: 0;
+  width: 1.1rem;
+  font-weight: 700;
+  text-align: left;
+  text-transform: lowercase;
+}
+
+.wms-ops-route-loading__log-item--done .wms-ops-route-loading__log-mark {
+  color: #34d399;
+}
+
+.wms-ops-route-loading__log-item--active .wms-ops-route-loading__log-mark {
+  color: var(--wms-ops-accent);
+}
+
+.wms-ops-route-loading__log-text {
+  min-width: 0;
+}
+
+.wms-ops-route-loading .wms-ops-terminal-state__detail {
+  color: color-mix(in oklab, var(--wms-ops-accent) 48%, hsl(var(--foreground)));
+  animation: wms-ops-loading-pulse 1.8s ease-in-out infinite;
+}
+
 .wms-ops-page-state {
   display: flex;
   flex-direction: column;
@@ -4852,6 +5120,32 @@ html.skin-premium .wms-ops-detail-dialog .wms-ops-gr-detail-lines-table__accent 
   }
 
   50% {
+    opacity: 1;
+  }
+}
+
+@keyframes wms-ops-loading-cursor {
+  0%,
+  49% {
+    opacity: 1;
+  }
+
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wms-ops-loading-state__bar-scan,
+  .wms-ops-loading-state .wms-ops-terminal-state__detail,
+  .wms-ops-route-loading__bar-scan,
+  .wms-ops-route-loading .wms-ops-terminal-state__detail,
+  .wms-ops-route-loading__cursor {
+    animation: none;
+  }
+
+  .wms-ops-route-loading__cursor {
     opacity: 1;
   }
 }
@@ -7245,6 +7539,17 @@ html.skin-premium .wms-ops-list .wms-ops-grid-search__clear {
   height: auto !important;
   padding-block: 0.25rem !important;
   max-width: 100%;
+}
+
+/* Başlıktaki “tümünü seç” kutusu sıralama butonu gibi esnemesin. */
+.wms-ops-list .wms-ops-table-head button.wms-ops-access-control-terminal-checkbox {
+  width: 1.125rem !important;
+  height: 1.125rem !important;
+  min-height: 1.125rem !important;
+  max-width: 1.125rem !important;
+  padding: 0 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
 }
 
 .wms-ops-list .wms-ops-table-head .wms-ops-col-resize-handle {
@@ -9892,7 +10197,12 @@ html:not(.dark) .wms-ops-list .wms-ops-data-grid .wms-ops-table-wrap {
     transform: none;
   }
 
-  .wms-ops-form .wms-ops-field-shell--error::after {
+  .wms-ops-form .wms-ops-field-shell--error::after,
+  .wms-ops-form .wms-ops-field-shell[aria-invalid='true']::after,
+  .wms-ops-lookup-dialog .wms-ops-field-shell--error::after,
+  .wms-ops-lookup-dialog .wms-ops-field-shell[aria-invalid='true']::after,
+  html.skin-premium .wms-ops-form .wms-ops-field-shell--error::after,
+  html.skin-premium .wms-ops-form .wms-ops-field-shell[aria-invalid='true']::after {
     animation: none;
   }
 
@@ -11023,6 +11333,576 @@ html:not(.dark) .wms-ops-list .wms-ops-data-grid .wms-ops-table-wrap {
   background: color-mix(in oklab, var(--wms-ops-accent) 8%, transparent);
   padding: 0.5rem;
   color: color-mix(in oklab, var(--wms-ops-accent) 78%, hsl(var(--foreground)));
+}
+
+/* KKD context / özet metrik kartları (personel · cari · talep) */
+.wms-ops-kkd-metric {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid color-mix(in oklab, var(--wms-ops-accent) 16%, var(--wms-ops-card-border));
+  background:
+    linear-gradient(
+      165deg,
+      color-mix(in oklab, var(--wms-ops-accent) 8%, transparent) 0%,
+      color-mix(in oklab, var(--wms-ops-field-bg) 92%, transparent) 100%
+    );
+  box-shadow: inset 0 1px 0 color-mix(in oklab, white 5%, transparent);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.wms-ops-kkd-metric--terminal {
+  border-radius: 0;
+}
+
+.wms-ops-kkd-metric--premium {
+  border-radius: 0.95rem;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.wms-ops-kkd-metric--person {
+  border-color: color-mix(in oklab, #38bdf8 42%, var(--wms-ops-card-border));
+  background:
+    linear-gradient(
+      160deg,
+      color-mix(in oklab, #38bdf8 16%, transparent) 0%,
+      color-mix(in oklab, #0284c7 6%, var(--wms-ops-field-bg)) 100%
+    );
+}
+
+.wms-ops-kkd-metric--customer {
+  border-color: color-mix(in oklab, #f59e0b 46%, var(--wms-ops-card-border));
+  background:
+    linear-gradient(
+      160deg,
+      color-mix(in oklab, #f59e0b 16%, transparent) 0%,
+      color-mix(in oklab, #d97706 6%, var(--wms-ops-field-bg)) 100%
+    );
+}
+
+.wms-ops-kkd-metric--orders {
+  border-color: color-mix(in oklab, #34d399 40%, var(--wms-ops-card-border));
+  background:
+    linear-gradient(
+      160deg,
+      color-mix(in oklab, #34d399 16%, transparent) 0%,
+      color-mix(in oklab, #059669 6%, var(--wms-ops-field-bg)) 100%
+    );
+}
+
+.wms-ops-kkd-metric__icon {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid color-mix(in oklab, var(--wms-ops-accent) 28%, transparent);
+  background: color-mix(in oklab, var(--wms-ops-accent) 12%, transparent);
+  color: color-mix(in oklab, var(--wms-ops-accent) 82%, hsl(var(--foreground)));
+}
+
+.wms-ops-kkd-metric--terminal .wms-ops-kkd-metric__icon {
+  border-radius: 0;
+}
+
+.wms-ops-kkd-metric--premium .wms-ops-kkd-metric__icon {
+  border-radius: 0.65rem;
+}
+
+.wms-ops-kkd-metric--person .wms-ops-kkd-metric__icon {
+  border-color: color-mix(in oklab, #38bdf8 40%, transparent);
+  background: color-mix(in oklab, #38bdf8 14%, transparent);
+  color: color-mix(in oklab, #38bdf8 88%, hsl(var(--foreground)));
+}
+
+.wms-ops-kkd-metric--customer .wms-ops-kkd-metric__icon {
+  border-color: color-mix(in oklab, #f59e0b 48%, transparent);
+  background: color-mix(in oklab, #f59e0b 14%, transparent);
+  color: #f59e0b;
+}
+
+.wms-ops-kkd-metric--orders .wms-ops-kkd-metric__icon {
+  border-color: color-mix(in oklab, #34d399 40%, transparent);
+  background: color-mix(in oklab, #34d399 14%, transparent);
+  color: color-mix(in oklab, #34d399 88%, hsl(var(--foreground)));
+}
+
+.wms-ops-kkd-metric__label {
+  display: block;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--wms-app-text-muted);
+}
+
+.wms-ops-kkd-metric__value {
+  margin: 0;
+  width: 100%;
+  font-size: 0.92rem;
+  font-weight: 800;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  color: hsl(var(--foreground));
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.wms-ops-kkd-metric__hint {
+  margin: 0;
+  font-size: 0.68rem;
+  line-height: 1.4;
+  color: var(--wms-app-text-muted);
+}
+
+html.skin-premium .wms-ops-kkd-metric__value {
+  font-family: var(--wms-premium-display, inherit);
+}
+
+html.skin-terminal .wms-ops-kkd-metric__label::before {
+  content: '> ';
+  opacity: 0.55;
+}
+
+.wms-ops-kkd-flow-steps {
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.wms-ops-kkd-flow-steps__list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 640px) {
+  .wms-ops-kkd-flow-steps__list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0;
+  }
+}
+
+.wms-ops-kkd-flow-steps__item {
+  position: relative;
+  min-width: 0;
+}
+
+.wms-ops-kkd-flow-steps__tab {
+  position: relative;
+  display: flex;
+  width: 100%;
+  min-height: 3.15rem;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.65rem 1.35rem 0.65rem 0.9rem;
+  border: 1px solid color-mix(in oklab, var(--wms-ops-card-border) 88%, transparent);
+  background:
+    linear-gradient(
+      105deg,
+      color-mix(in oklab, var(--wms-ops-field-bg) 92%, transparent) 0%,
+      color-mix(in oklab, var(--wms-ops-accent) 5%, var(--wms-ops-field-bg)) 100%
+    );
+  color: var(--wms-app-text-muted);
+  text-decoration: none;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
+
+.wms-ops-kkd-flow-steps--terminal .wms-ops-kkd-flow-steps__tab {
+  border-radius: 0;
+}
+
+.wms-ops-kkd-flow-steps--premium .wms-ops-kkd-flow-steps__tab {
+  border-radius: 0.85rem;
+}
+
+@media (min-width: 640px) {
+  .wms-ops-kkd-flow-steps__item:not(:last-child) .wms-ops-kkd-flow-steps__tab {
+    clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 0 100%);
+    padding-right: 1.7rem;
+  }
+
+  .wms-ops-kkd-flow-steps__item:not(:first-child) .wms-ops-kkd-flow-steps__tab {
+    margin-left: -10px;
+    padding-left: 1.35rem;
+    clip-path: polygon(14px 0, 100% 0, 100% 100%, 14px 100%, 0 50%);
+  }
+
+  .wms-ops-kkd-flow-steps__item:not(:first-child):not(:last-child) .wms-ops-kkd-flow-steps__tab {
+    clip-path: polygon(14px 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 14px 100%, 0 50%);
+  }
+
+  .wms-ops-kkd-flow-steps--premium .wms-ops-kkd-flow-steps__item:not(:last-child) .wms-ops-kkd-flow-steps__tab,
+  .wms-ops-kkd-flow-steps--premium .wms-ops-kkd-flow-steps__item:not(:first-child) .wms-ops-kkd-flow-steps__tab,
+  .wms-ops-kkd-flow-steps--premium .wms-ops-kkd-flow-steps__item:not(:first-child):not(:last-child) .wms-ops-kkd-flow-steps__tab {
+    border-radius: 0;
+  }
+}
+
+.wms-ops-kkd-flow-steps__index {
+  display: grid;
+  place-items: center;
+  width: 1.55rem;
+  height: 1.55rem;
+  flex-shrink: 0;
+  border: 1px solid color-mix(in oklab, currentColor 35%, transparent);
+  background: color-mix(in oklab, currentColor 10%, transparent);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.wms-ops-kkd-flow-steps--premium .wms-ops-kkd-flow-steps__index {
+  border-radius: 999px;
+}
+
+.wms-ops-kkd-flow-steps--terminal .wms-ops-kkd-flow-steps__index {
+  border-radius: 0;
+}
+
+.wms-ops-kkd-flow-steps__meta {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.wms-ops-kkd-flow-steps__eyebrow {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+
+.wms-ops-kkd-flow-steps__label {
+  font-size: 0.86rem;
+  font-weight: 800;
+  line-height: 1.2;
+  color: inherit;
+}
+
+.wms-ops-kkd-flow-steps__item--current .wms-ops-kkd-flow-steps__tab {
+  z-index: 2;
+  border-color: color-mix(in oklab, var(--wms-ops-accent) 55%, var(--wms-ops-card-border));
+  background:
+    linear-gradient(
+      105deg,
+      color-mix(in oklab, var(--wms-ops-accent) 16%, var(--wms-ops-field-bg)) 0%,
+      color-mix(in oklab, var(--wms-ops-accent) 7%, var(--wms-ops-field-bg)) 100%
+    );
+  color: var(--wms-ops-accent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, white 6%, transparent),
+    0 8px 18px -14px color-mix(in oklab, var(--wms-ops-accent) 55%, transparent);
+}
+
+.wms-ops-kkd-flow-steps__item--done .wms-ops-kkd-flow-steps__tab {
+  z-index: 1;
+  border-color: color-mix(in oklab, #34d399 42%, var(--wms-ops-card-border));
+  background:
+    linear-gradient(
+      105deg,
+      color-mix(in oklab, #34d399 14%, var(--wms-ops-field-bg)) 0%,
+      color-mix(in oklab, #34d399 5%, var(--wms-ops-field-bg)) 100%
+    );
+  color: color-mix(in oklab, #34d399 82%, hsl(var(--foreground)));
+}
+
+.wms-ops-kkd-flow-steps__item--todo .wms-ops-kkd-flow-steps__tab {
+  opacity: 0.72;
+}
+
+.wms-ops-kkd-flow-steps__item--clickable .wms-ops-kkd-flow-steps__tab {
+  cursor: pointer;
+}
+
+.wms-ops-kkd-flow-steps__item--clickable .wms-ops-kkd-flow-steps__tab:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in oklab, var(--wms-ops-accent) 48%, var(--wms-ops-card-border));
+  color: var(--wms-ops-accent);
+  box-shadow: 0 10px 20px -16px color-mix(in oklab, var(--wms-ops-accent) 60%, transparent);
+}
+
+.wms-ops-kkd-flow-steps__item--clickable .wms-ops-kkd-flow-steps__tab:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--wms-ops-accent) 55%, transparent);
+  outline-offset: 2px;
+}
+
+html.skin-premium .wms-ops-kkd-flow-steps__label {
+  font-family: var(--wms-premium-display, inherit);
+}
+
+/* KKD dağıtım: kompakt teslim satırları (mal kabul entry-row dili) */
+.wms-ops-form .wms-ops-kkd-delivery-row {
+  border: 1px solid color-mix(in oklab, var(--wms-ops-accent) 24%, var(--wms-ops-card-border));
+  background: color-mix(in oklab, var(--wms-ops-field-bg) 96%, transparent);
+  padding: 0.45rem 0.65rem 0.4rem;
+  box-shadow: inset 0 1px 0 color-mix(in oklab, white 4%, transparent);
+}
+
+.wms-ops-form .wms-ops-kkd-delivery-row--premium {
+  border-radius: 0.75rem;
+}
+
+.wms-ops-form .wms-ops-kkd-delivery-row--terminal {
+  border-radius: 0;
+}
+
+.wms-ops-form .wms-ops-kkd-delivery-row__head {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.3rem;
+}
+
+.wms-ops-form .wms-ops-kkd-delivery-row__title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.86rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.wms-ops-form .wms-ops-kkd-delivery-row__meta {
+  margin-top: 0.1rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.68rem;
+  line-height: 1.2;
+  color: var(--wms-app-text-muted);
+}
+
+.wms-ops-form .wms-ops-kkd-delivery-row__fields {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.35rem 0.65rem;
+  align-items: end;
+}
+
+@media (min-width: 768px) {
+  .wms-ops-form .wms-ops-kkd-delivery-row__fields {
+    grid-template-columns: minmax(5.5rem, 7rem) minmax(0, 1.2fr) minmax(5.5rem, 8rem) minmax(0, 1.2fr);
+  }
+}
+
+.wms-ops-form .wms-ops-kkd-delivery-row__field {
+  display: grid;
+  gap: 0.08rem;
+  min-width: 0;
+}
+
+.wms-ops-form .wms-ops-kkd-delivery-row__field .wms-ops-entry-label {
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  color: color-mix(in oklab, var(--wms-ops-accent) 62%, var(--wms-app-text-muted));
+}
+
+.wms-ops-form .wms-ops-kkd-delivery-row .wms-ops-field,
+.wms-ops-form .wms-ops-kkd-delivery-row input.wms-ops-field,
+.wms-ops-form .wms-ops-kkd-delivery-row button.wms-ops-lookup-trigger,
+.wms-ops-form .wms-ops-kkd-delivery-row .wms-ops-list-field-trigger {
+  height: 1.75rem !important;
+  min-height: 1.75rem !important;
+  max-height: 1.75rem !important;
+  box-sizing: border-box;
+}
+
+.wms-ops-form .wms-ops-kkd-delivery-row button.wms-ops-lookup-trigger,
+.wms-ops-form .wms-ops-kkd-delivery-row .wms-ops-list-field-trigger {
+  padding: 0 0.5rem !important;
+  font-size: 0.75rem !important;
+  line-height: 1 !important;
+}
+
+.wms-ops-form .wms-ops-kkd-header-fields {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+@media (min-width: 768px) {
+  .wms-ops-form .wms-ops-kkd-header-fields {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .wms-ops-form .wms-ops-kkd-header-fields--with-assignees {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1100px) {
+  .wms-ops-form .wms-ops-kkd-header-fields--with-assignees {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.wms-ops-form .wms-ops-kkd-header-fields > * {
+  min-width: 0;
+  width: 100%;
+}
+
+.wms-ops-kkd-receipt {
+  border: 1px solid color-mix(in oklab, var(--wms-ops-accent) 28%, var(--wms-ops-card-border));
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--wms-ops-accent) 7%, transparent),
+      transparent 7rem
+    ),
+    var(--wms-ops-field-bg, var(--wms-app-surface));
+  padding: 1.15rem 1.25rem 1.35rem;
+}
+
+.wms-ops-kkd-receipt__brand {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 2px solid color-mix(in oklab, var(--wms-ops-accent) 55%, transparent);
+}
+
+.wms-ops-kkd-receipt__eyebrow {
+  margin: 0;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--wms-ops-accent);
+}
+
+.wms-ops-kkd-receipt__title {
+  margin: 0.2rem 0 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.wms-ops-kkd-receipt__doc {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.95rem;
+  color: var(--wms-ops-accent);
+}
+
+.wms-ops-kkd-receipt__meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem 1rem;
+  margin: 1rem 0;
+  padding: 0.85rem;
+  border: 1px solid color-mix(in oklab, var(--wms-ops-accent) 18%, var(--wms-ops-card-border));
+  background: color-mix(in oklab, var(--wms-ops-accent) 5%, transparent);
+}
+
+@media (min-width: 768px) {
+  .wms-ops-kkd-receipt__meta {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.wms-ops-kkd-receipt__meta dt {
+  margin: 0;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--wms-app-text-muted);
+}
+
+.wms-ops-kkd-receipt__meta dd {
+  margin: 0.15rem 0 0;
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+
+.wms-ops-kkd-receipt__warn {
+  margin: 0 0 0.85rem;
+  padding: 0.65rem 0.75rem;
+  border-left: 3px solid color-mix(in oklab, var(--wms-ops-warm, #f59e0b) 80%, transparent);
+  background: color-mix(in oklab, var(--wms-ops-warm, #f59e0b) 12%, transparent);
+  font-size: 0.78rem;
+  font-weight: 650;
+  color: color-mix(in oklab, var(--wms-ops-warm, #b45309) 70%, var(--wms-app-text));
+}
+
+.wms-ops-kkd-receipt__table-wrap {
+  overflow-x: auto;
+}
+
+.wms-ops-kkd-receipt__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.75rem;
+}
+
+.wms-ops-kkd-receipt__table th,
+.wms-ops-kkd-receipt__table td {
+  border: 1px solid color-mix(in oklab, var(--wms-ops-accent) 16%, var(--wms-ops-card-border));
+  padding: 0.45rem 0.5rem;
+  vertical-align: top;
+}
+
+.wms-ops-kkd-receipt__table th {
+  background: color-mix(in oklab, var(--wms-ops-accent) 12%, transparent);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: left;
+  color: color-mix(in oklab, var(--wms-ops-accent) 55%, var(--wms-app-text));
+}
+
+.wms-ops-kkd-receipt__totals {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 0.85rem;
+  font-size: 0.78rem;
+  color: var(--wms-app-text-muted);
+}
+
+.wms-ops-kkd-receipt__totals strong {
+  color: var(--wms-ops-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.wms-ops-kkd-receipt__sign {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.wms-ops-kkd-receipt__sign > div {
+  border-top: 1px solid color-mix(in oklab, var(--wms-ops-accent) 28%, var(--wms-ops-card-border));
+  padding-top: 0.5rem;
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--wms-app-text-muted);
 }
 
 .wms-ops-kkd-quick-link {
@@ -19422,15 +20302,15 @@ html.skin-premium .wms-ops-lookup-dialog .wms-ops-field-shell:focus-within:not([
     0 14px 30px -10px var(--wms-brand-shadow) !important;
 }
 
-/* Hata: input, lookup trigger ve select trigger — sabit kırmızı çerçeve */
+/* Hata: input, lookup trigger ve select trigger — kırmızı çerçeve + hafif pulse */
 html.skin-premium .wms-ops-form :is(.wms-ops-field-shell--error, .wms-ops-field-shell[aria-invalid='true'])
   :is(.wms-ops-field, button.wms-ops-lookup-trigger, [data-slot='select-trigger']) {
   border-color: #ef4444 !important;
-  background-color: color-mix(in oklab, #ef4444 10%, var(--wms-ops-field-bg)) !important;
+  background-color: color-mix(in oklab, #ef4444 12%, var(--wms-ops-field-bg)) !important;
   box-shadow:
     0 0 0 1px rgb(239 68 68 / 45%),
     0 0 0 3px rgb(239 68 68 / 16%) !important;
-  animation: none;
+  animation: wms-premium-field-error-pulse 1.15s ease-in-out infinite;
 }
 
 @keyframes wms-premium-field-error-pulse {
@@ -22388,6 +23268,7 @@ html.skin-premium .wms-ops-loading-state__bar * {
 }
 
 /* ?? Premium y?kleme: orbit spinner (terminal scan bar yerine) ?? */
+/* Premium inline loading (modules / dialogs / grids) */
 .wms-premium-loading {
   display: flex;
   flex-direction: column;
@@ -22451,9 +23332,262 @@ html.skin-premium .wms-ops-loading-state__bar * {
   animation: wms-premium-loading-fade 1.8s ease-in-out infinite;
 }
 
+/* Premium full-page / route-transition loader */
+.wms-premium-route-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.95rem;
+  width: 100%;
+  max-width: 20rem;
+  margin-inline: auto;
+  padding: 1.1rem 1.15rem 1.2rem;
+  border: 1px solid color-mix(in oklab, var(--wms-brand-primary) 18%, hsl(var(--border)));
+  border-radius: 1.15rem;
+  background:
+    radial-gradient(
+      circle at 50% 18%,
+      color-mix(in oklab, var(--wms-brand-primary) 16%, transparent),
+      transparent 58%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--wms-brand-primary) 6%, hsl(var(--card))) 0%,
+      hsl(var(--card)) 100%
+    );
+  box-shadow:
+    0 18px 40px -24px var(--wms-brand-shadow),
+    inset 0 1px 0 color-mix(in oklab, white 8%, transparent);
+}
+
+.wms-premium-route-loading__stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 4.5rem;
+  height: 4.5rem;
+}
+
+.wms-premium-route-loading__glow {
+  position: absolute;
+  inset: 12%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    color-mix(in oklab, var(--wms-brand-primary) 35%, transparent) 0%,
+    transparent 70%
+  );
+  filter: blur(8px);
+  animation: wms-premium-loading-glow 2.2s ease-in-out infinite;
+}
+
+.wms-premium-route-loading__orbit {
+  position: relative;
+  width: 3.35rem;
+  height: 3.35rem;
+}
+
+.wms-premium-route-loading__ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid transparent;
+}
+
+.wms-premium-route-loading__ring--outer {
+  border-top-color: var(--wms-brand-primary);
+  border-right-color: color-mix(in oklab, var(--wms-brand-accent) 65%, var(--wms-brand-primary));
+  box-shadow: 0 0 16px -2px var(--wms-brand-shadow);
+  animation: wms-premium-loading-spin 1.05s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
+.wms-premium-route-loading__ring--mid {
+  inset: 12%;
+  border-bottom-color: color-mix(in oklab, var(--wms-brand-accent) 80%, transparent);
+  border-left-color: color-mix(in oklab, var(--wms-brand-primary) 45%, transparent);
+  animation: wms-premium-loading-spin-rev 1.55s linear infinite;
+  opacity: 0.85;
+}
+
+.wms-premium-route-loading__ring--inner {
+  inset: 28%;
+  border-top-color: color-mix(in oklab, var(--wms-brand-primary) 55%, transparent);
+  animation: wms-premium-loading-spin 0.85s linear infinite;
+  opacity: 0.7;
+}
+
+.wms-premium-route-loading__core {
+  position: absolute;
+  inset: 38%;
+  border-radius: 50%;
+  background: linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--wms-brand-primary) 70%, transparent),
+    color-mix(in oklab, var(--wms-brand-accent) 45%, transparent)
+  );
+  box-shadow: 0 0 14px -1px var(--wms-brand-shadow);
+  animation: wms-premium-loading-pulse 1.6s ease-in-out infinite;
+}
+
+.wms-premium-route-loading__spark {
+  position: absolute;
+  top: 2%;
+  left: 48%;
+  width: 0.35rem;
+  height: 0.35rem;
+  border-radius: 50%;
+  background: color-mix(in oklab, white 70%, var(--wms-brand-accent));
+  box-shadow: 0 0 10px color-mix(in oklab, var(--wms-brand-primary) 70%, transparent);
+  transform-origin: 50% 1.55rem;
+  animation: wms-premium-loading-spin 1.05s linear infinite;
+}
+
+.wms-premium-route-loading__copy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  text-align: center;
+}
+
+.wms-premium-route-loading__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--wms-premium-font);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--wms-brand-primary) 55%, hsl(var(--muted-foreground)));
+}
+
+.wms-premium-route-loading__code {
+  padding: 0.12rem 0.4rem;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--wms-brand-primary) 12%, transparent);
+  color: var(--wms-brand-primary);
+}
+
+.wms-premium-route-loading__pulse-dot {
+  width: 0.35rem;
+  height: 0.35rem;
+  border-radius: 50%;
+  background: var(--wms-brand-accent);
+  box-shadow: 0 0 8px color-mix(in oklab, var(--wms-brand-accent) 60%, transparent);
+  animation: wms-premium-loading-fade 1.2s ease-in-out infinite;
+}
+
+.wms-premium-route-loading__step-label {
+  opacity: 0.9;
+}
+
+.wms-premium-route-loading__message {
+  font-family: var(--wms-premium-font);
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-align: center;
+  color: color-mix(in oklab, var(--wms-brand-primary) 28%, hsl(var(--foreground)));
+  animation: wms-premium-loading-fade 1.8s ease-in-out infinite;
+}
+
+.wms-premium-route-loading__track {
+  position: relative;
+  width: 100%;
+  max-width: 14rem;
+  height: 0.28rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--wms-brand-primary) 12%, hsl(var(--muted)));
+}
+
+.wms-premium-route-loading__track-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 42%;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklab, var(--wms-brand-primary) 55%, transparent),
+    var(--wms-brand-primary),
+    color-mix(in oklab, var(--wms-brand-accent) 80%, var(--wms-brand-primary))
+  );
+  animation: wms-premium-loading-track 1.35s ease-in-out infinite;
+}
+
+.wms-premium-route-loading__track-shine {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in oklab, white 35%, transparent) 50%,
+    transparent 100%
+  );
+  mix-blend-mode: soft-light;
+  animation: wms-premium-loading-shine 1.8s linear infinite;
+}
+
+.wms-premium-route-loading__steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.35rem;
+  width: 100%;
+}
+
+.wms-premium-route-loading__step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.28rem;
+  font-family: var(--wms-premium-font);
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, hsl(var(--muted-foreground)) 80%, transparent);
+  opacity: 0.55;
+  transition: opacity 0.25s ease, color 0.25s ease;
+}
+
+.wms-premium-route-loading__step i {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: color-mix(in oklab, var(--wms-brand-primary) 25%, hsl(var(--muted)));
+}
+
+.wms-premium-route-loading__step--done {
+  opacity: 0.85;
+  color: color-mix(in oklab, var(--wms-brand-primary) 45%, hsl(var(--foreground)));
+}
+
+.wms-premium-route-loading__step--done i {
+  background: var(--wms-brand-primary);
+}
+
+.wms-premium-route-loading__step--active {
+  opacity: 1;
+  color: var(--wms-brand-primary);
+}
+
+.wms-premium-route-loading__step--active i {
+  background: var(--wms-brand-accent);
+  box-shadow: 0 0 10px color-mix(in oklab, var(--wms-brand-accent) 55%, transparent);
+  animation: wms-premium-loading-fade 1s ease-in-out infinite;
+}
+
 @keyframes wms-premium-loading-spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+@keyframes wms-premium-loading-spin-rev {
+  to {
+    transform: rotate(-360deg);
   }
 }
 
@@ -22479,10 +23613,49 @@ html.skin-premium .wms-ops-loading-state__bar * {
   }
 }
 
+@keyframes wms-premium-loading-glow {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(0.92);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes wms-premium-loading-track {
+  0% {
+    transform: translateX(-110%);
+  }
+  100% {
+    transform: translateX(260%);
+  }
+}
+
+@keyframes wms-premium-loading-shine {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .wms-premium-loading__ring,
   .wms-premium-loading__core,
-  .wms-premium-loading__message {
+  .wms-premium-loading__message,
+  .wms-premium-route-loading__ring,
+  .wms-premium-route-loading__core,
+  .wms-premium-route-loading__message,
+  .wms-premium-route-loading__glow,
+  .wms-premium-route-loading__spark,
+  .wms-premium-route-loading__pulse-dot,
+  .wms-premium-route-loading__track-fill,
+  .wms-premium-route-loading__track-shine,
+  .wms-premium-route-loading__step--active i {
     animation: none;
   }
 }
@@ -24018,8 +25191,12 @@ html.skin-premium .wms-ops-lookup-dialog .wms-ops-field-shell:focus-within::afte
 }
 
 html.skin-premium .wms-ops-form .wms-ops-field-shell--error::after,
-html.skin-premium .wms-ops-form .wms-ops-field-shell[aria-invalid='true']::after {
+html.skin-premium .wms-ops-form .wms-ops-field-shell[aria-invalid='true']::after,
+html.skin-premium .wms-ops-lookup-dialog .wms-ops-field-shell--error::after,
+html.skin-premium .wms-ops-lookup-dialog .wms-ops-field-shell[aria-invalid='true']::after {
+  display: block;
   width: 100%;
+  height: 2.5px;
   background: linear-gradient(
     90deg,
     transparent 0%,
@@ -24027,7 +25204,11 @@ html.skin-premium .wms-ops-form .wms-ops-field-shell[aria-invalid='true']::after
     #ef4444 84%,
     transparent 100%
   );
-  box-shadow: 0 0 10px rgb(239 68 68 / 35%);
+  box-shadow:
+    0 0 12px rgb(239 68 68 / 45%),
+    0 2px 18px rgb(239 68 68 / 28%);
+  animation: wms-ops-field-error-line-pulse 1.15s ease-in-out infinite;
+  transition: none;
 }
 
 /* Focus'ta içeriinin hafifçe dolması — hata durumunda brand fill yok */

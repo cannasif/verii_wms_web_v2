@@ -1,22 +1,31 @@
-import { useEffect, useMemo, useState, type ReactElement } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { ArrowRight, ClipboardList, Factory, ScanLine, Settings2, ShieldAlert, UserRound } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import {
+  ArrowRight,
+  Building2,
+  ClipboardList,
+  Factory,
+  ScanLine,
+  Settings2,
+  ShieldAlert,
+  UserRound,
+} from 'lucide-react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import type { AppDropdownOption } from '@/components/shared/AppDropdown';
-import { AppInput } from '@/components/shared/AppInput';
 import { OpsActionButton } from '@/components/shared/OpsActionButton';
 import { OpsGridEmptyState } from '@/components/shared/OpsGridEmptyState';
 import { OpsLoadingState } from '@/components/shared/OpsLoadingState';
-import { OpsSelect } from '@/components/shared/OpsSelect';
+import { OpsQrCaptureField } from '@/components/shared/OpsQrCaptureField';
 import { OpsSkinCheckbox } from '@/components/shared/OpsSkinCheckbox';
 import { OpsStatusBadge } from '@/components/shared/OpsStatusBadge';
 import { cn } from '@/lib/utils';
+import { KkdEmployeeLookupField } from './KkdEmployeeLookupField';
 import {
   KKD_CELL,
   KKD_HEAD_CELL,
   KkdCallout,
   KkdField,
+  KkdFlowSteps,
   KkdMetric,
   KkdPage,
   KkdPanel,
@@ -25,13 +34,59 @@ import {
 } from './kkd-ops-ui';
 import { kkdApi } from './kkd-api';
 
+const MATERIAL_FLOW_STEPS = [
+  { id: 'select', label: 'Sipariş seçimi' },
+  { id: 'distribute', label: 'Dağıtım görevi' },
+] as const;
+
+function parseResumeSelection(searchParams: URLSearchParams): { employeeId: string; orders: string[] } {
+  return {
+    employeeId: searchParams.get('employeeId')?.trim() || '',
+    orders: [
+      ...new Set(
+        (searchParams.get('orders') || '')
+          .split(',')
+          .map((value) => value.trim())
+          .filter(Boolean),
+      ),
+    ],
+  };
+}
+
+function flashInvalidFields(): void {
+  window.requestAnimationFrame(() => {
+    document
+      .querySelectorAll(
+        '.wms-ops-form [aria-invalid="true"], .wms-ops-form .wms-ops-field-shell--error, .wms-ops-form .app-input-shell[data-invalid="true"]',
+      )
+      .forEach((node) => {
+        const el = node as HTMLElement;
+        el.classList.remove('wms-error-focus-flash');
+        void el.offsetWidth;
+        el.classList.add('wms-error-focus-flash');
+        window.setTimeout(() => el.classList.remove('wms-error-focus-flash'), 2600);
+      });
+  });
+}
+
+function contextErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : 'Personel-cari bağlantısı veya Netsis erişimi kontrol edilmelidir.';
+}
+
 export function KkdMaterialRequestsPage(): ReactElement {
   const navigate = useNavigate();
-  const [employeeId, setEmployeeId] = useState('');
+  const [searchParams] = useSearchParams();
+  const [resume] = useState(() => parseResumeSelection(searchParams));
+  /** Listeden / QR çözümünden seçilen personel (henüz talepler yüklenmemiş olabilir). */
+  const [pickedEmployeeId, setPickedEmployeeId] = useState(resume.employeeId);
+  /** Talepleri getir ile sabitlenen personel — sorgular buna bağlı. */
+  const [activeEmployeeId, setActiveEmployeeId] = useState(resume.employeeId);
   const [employeeQr, setEmployeeQr] = useState('');
-  const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
-  const employeeNumber = Number(employeeId || 0);
+  const [selectedOrders, setSelectedOrders] = useState<string[]>(resume.orders);
+  const [fieldErrors, setFieldErrors] = useState<{ qr?: boolean; employee?: boolean }>({});
+  const activeEmployeeNumber = Number(activeEmployeeId || 0);
   const sortedOrders = useMemo(() => [...selectedOrders].sort(), [selectedOrders]);
+  const previousEmployeeIdRef = useRef(resume.employeeId);
 
   const configuration = useQuery({
     queryKey: ['kkd', 'material-requests', 'configuration'],
@@ -40,25 +95,93 @@ export function KkdMaterialRequestsPage(): ReactElement {
   const enabled = configuration.data?.isEnabled === true;
   const employees = useQuery({ queryKey: ['kkd', 'employees'], queryFn: kkdApi.employees, enabled });
   const context = useQuery({
-    queryKey: ['kkd', 'material-requests', 'context', employeeNumber],
-    queryFn: () => kkdApi.materialRequestContext(employeeNumber),
-    enabled: enabled && employeeNumber > 0,
+    queryKey: ['kkd', 'material-requests', 'context', activeEmployeeNumber],
+    queryFn: () => kkdApi.materialRequestContext(activeEmployeeNumber),
+    enabled: enabled && activeEmployeeNumber > 0,
+    retry: false,
   });
   const lines = useQuery({
-    queryKey: ['kkd', 'material-requests', 'lines', employeeNumber, sortedOrders.join('|')],
-    queryFn: () => kkdApi.materialRequestOrderLines(employeeNumber, sortedOrders),
-    enabled: enabled && employeeNumber > 0 && sortedOrders.length > 0,
+    queryKey: ['kkd', 'material-requests', 'lines', activeEmployeeNumber, sortedOrders.join('|')],
+    queryFn: () => kkdApi.materialRequestOrderLines(activeEmployeeNumber, sortedOrders),
+    enabled: enabled && activeEmployeeNumber > 0 && sortedOrders.length > 0,
   });
   const resolveEmployee = useMutation({
-    mutationFn: () => kkdApi.resolveEmployeeQr(employeeQr.trim()),
-    onSuccess: (employee) => {
-      setEmployeeId(String(employee.id));
-      toast.success(`${employee.employeeCode} · ${employee.fullName} bulundu.`);
-    },
-    onError: (error) => toast.error(error instanceof Error ? error.message : 'Personel kartı çözümlenemedi.'),
+    mutationFn: (qrCode: string) => kkdApi.resolveEmployeeQr(qrCode.trim()),
   });
+  const requestsBusy = resolveEmployee.isPending || context.isFetching;
 
-  useEffect(() => setSelectedOrders([]), [employeeId]);
+  useEffect(() => {
+    if (previousEmployeeIdRef.current === activeEmployeeId) return;
+    previousEmployeeIdRef.current = activeEmployeeId;
+    setSelectedOrders([]);
+  }, [activeEmployeeId]);
+
+  useEffect(() => {
+    if (!fieldErrors.qr && !fieldErrors.employee) return;
+    const timer = window.setTimeout(() => flashInvalidFields(), 40);
+    return () => window.clearTimeout(timer);
+  }, [fieldErrors]);
+
+  useEffect(() => {
+    if (!context.isError || !context.error) return;
+    toast.error(contextErrorMessage(context.error));
+  }, [context.isError, context.errorUpdatedAt, context.error]);
+
+  const pickEmployee = (employeeId: string): void => {
+    setPickedEmployeeId(employeeId);
+    setEmployeeQr('');
+    setActiveEmployeeId('');
+    setSelectedOrders([]);
+    setFieldErrors({});
+  };
+
+  const onQrChange = (value: string): void => {
+    setEmployeeQr(value);
+    setFieldErrors((current) => (current.qr || current.employee ? {} : current));
+    if (!value.trim()) return;
+    // Son dokunuş QR: listeden seçimi bırak, eski sonuçları temizle.
+    setPickedEmployeeId('');
+    setActiveEmployeeId('');
+    setSelectedOrders([]);
+  };
+
+  const loadEmployeeRequests = (employeeId: string): void => {
+    setFieldErrors({});
+    setPickedEmployeeId(employeeId);
+    if (activeEmployeeId === employeeId) {
+      void context.refetch();
+      return;
+    }
+    setActiveEmployeeId(employeeId);
+  };
+
+  const loadRequests = (qrOverride?: string): void => {
+    if (requestsBusy) return;
+    const qr = (qrOverride ?? employeeQr).trim();
+    if (qr) {
+      setFieldErrors({});
+      setEmployeeQr(qr);
+      resolveEmployee.mutate(qr, {
+        onSuccess: (employee) => {
+          const id = String(employee.id);
+          setEmployeeQr('');
+          toast.success(`${employee.employeeCode} · ${employee.fullName} bulundu.`);
+          loadEmployeeRequests(id);
+        },
+        onError: (error) => {
+          setFieldErrors({ qr: true });
+          toast.error(error instanceof Error ? error.message : 'Personel kartı çözümlenemedi.');
+        },
+      });
+      return;
+    }
+    if (pickedEmployeeId) {
+      loadEmployeeRequests(pickedEmployeeId);
+      return;
+    }
+    setFieldErrors({ qr: true, employee: true });
+    toast.error('Personel seçin veya kart / QR okutun.');
+  };
 
   const toggleOrder = (orderNumber: string): void => {
     setSelectedOrders((current) => {
@@ -69,19 +192,15 @@ export function KkdMaterialRequestsPage(): ReactElement {
   };
 
   const prepareDistribution = (): void => {
-    if (!enabled || !employeeNumber || sortedOrders.length === 0) return;
+    if (!enabled || !activeEmployeeNumber || sortedOrders.length === 0) return;
     const params = new URLSearchParams({
-      employeeId: String(employeeNumber),
+      employeeId: String(activeEmployeeNumber),
       orders: sortedOrders.join(','),
       taskMode: '1',
     });
     navigate(`/warehouse/kkd/distributions/new?${params.toString()}`);
   };
 
-  const employeeOptions: AppDropdownOption[] = (employees.data ?? []).map((employee) => ({
-    value: String(employee.id),
-    label: `${employee.employeeCode} · ${employee.fullName}`,
-  }));
   const lineColumns = [
     'Sipariş / sıra',
     'Stok',
@@ -97,22 +216,18 @@ export function KkdMaterialRequestsPage(): ReactElement {
       title="Windbox Malzeme Talep Siparişleri"
       description="WMS v1 ile aynı iş kaynağı kullanılır: personelin bağlı olduğu cari bulunur ve Netsis'teki açık siparişleri gerçek satır bakiyeleriyle getirilir."
       actions={
-        <div className="flex flex-wrap gap-1.5">
-          <OpsActionButton variant="secondary" className="wms-ops-list-toolbar-btn" asChild>
-            <Link to="/warehouse/production-transfers/task-pool">
-              <Factory className="size-3.5 shrink-0" />
-              Üretim transfer görevleri
-            </Link>
-          </OpsActionButton>
-          <OpsActionButton variant="primary" className="wms-ops-list-toolbar-btn" asChild>
-            <Link to="/warehouse/production-transfers/material-requests" aria-current="page">
-              <ClipboardList className="size-3.5 shrink-0" />
-              Malzeme talep siparişleri
-            </Link>
-          </OpsActionButton>
-        </div>
+        <OpsActionButton variant="secondary" className="wms-ops-list-toolbar-btn" asChild>
+          <Link to="/warehouse/production-transfers/task-pool">
+            <Factory className="size-3.5 shrink-0" />
+            Üretim transfer görevleri
+          </Link>
+        </OpsActionButton>
       }
     >
+      {enabled ? (
+        <KkdFlowSteps steps={[...MATERIAL_FLOW_STEPS]} currentId="select" className="mb-3" />
+      ) : null}
+
       {configuration.isLoading ? (
         <KkdPanel
           code="CFG"
@@ -154,126 +269,154 @@ export function KkdMaterialRequestsPage(): ReactElement {
           code="EMP_01"
           icon={<UserRound className="size-4" strokeWidth={1.75} />}
           title="Personel seçimi"
-          description="Kartı okutun veya listeden seçin; bağlı cari ve açık talepler otomatik getirilir."
+          description="Kart / QR okutunca (Enter, Tab veya kamera) personel seçilir ve talepler gelir. Listeden seçince Talepleri getir’e basın."
         >
-          <div className="grid gap-3 lg:grid-cols-2">
-            <form
-              className="flex items-end gap-2"
-              onSubmit={(event) => {
-                event.preventDefault();
-                if (employeeQr.trim()) resolveEmployee.mutate();
-              }}
-            >
-              <KkdField label="Personel kartı / QR" className="flex-1">
-                <AppInput
+          <form
+            className="space-y-3"
+            onSubmit={(event) => {
+              event.preventDefault();
+              loadRequests();
+            }}
+          >
+            <div className="grid gap-3 lg:grid-cols-2">
+              <KkdField label="Personel kartı / QR">
+                <OpsQrCaptureField
                   autoFocus
                   value={employeeQr}
-                  onChange={(event) => setEmployeeQr(event.target.value)}
+                  onChange={onQrChange}
+                  onCommit={(code) => loadRequests(code)}
+                  disabled={resolveEmployee.isPending}
+                  invalid={Boolean(fieldErrors.qr)}
                   placeholder="Kartı okutun veya kodu yazın"
                 />
               </KkdField>
+              <KkdEmployeeLookupField
+                value={pickedEmployeeId}
+                employees={employees.data}
+                onChange={pickEmployee}
+                disabled={resolveEmployee.isPending}
+                invalid={Boolean(fieldErrors.employee)}
+              />
+            </div>
+            <div className="flex justify-stretch sm:justify-end">
               <OpsActionButton
                 type="submit"
                 variant="secondary"
-                disabled={!employeeQr.trim()}
-                loading={resolveEmployee.isPending}
+                className="w-full sm:w-auto"
+                loading={requestsBusy}
                 loadingLabel={<>Aranıyor…</>}
               >
                 <ScanLine className="size-3.5 shrink-0" />
                 Talepleri getir
               </OpsActionButton>
-            </form>
-            <KkdField label="Personel">
-              <OpsSelect
-                value={employeeId}
-                onValueChange={setEmployeeId}
-                options={employeeOptions}
-                placeholder="Personel seçin"
-                searchable
-              />
-            </KkdField>
-          </div>
+            </div>
+          </form>
 
-          {context.isLoading ? (
+          {activeEmployeeNumber > 0 && context.isLoading ? (
             <div className="mt-3">
               <OpsLoadingState code="CTX" message="Personel carisi ve açık talepler okunuyor…" compact />
             </div>
           ) : null}
 
-          {context.data ? (
+          {activeEmployeeNumber > 0 && context.data ? (
             <div className="mt-3 grid gap-3 md:grid-cols-3">
-              <KkdMetric label="Personel" value={`${context.data.employeeCode} · ${context.data.employeeName}`} />
               <KkdMetric
+                tone="person"
+                icon={<UserRound className="size-4" strokeWidth={1.75} />}
+                label="Personel"
+                value={`${context.data.employeeCode} · ${context.data.employeeName}`}
+              />
+              <KkdMetric
+                tone="customer"
+                icon={<Building2 className="size-4" strokeWidth={1.75} />}
                 label="Netsis carisi"
                 value={`${context.data.customerCode} · ${context.data.customerName}`}
               />
-              <KkdMetric label="Açık talep" value={`${context.data.orders.length} sipariş`} />
+              <KkdMetric
+                tone="orders"
+                icon={<ClipboardList className="size-4" strokeWidth={1.75} />}
+                label="Açık talep"
+                value={`${context.data.orders.length} sipariş`}
+              />
             </div>
           ) : null}
         </KkdPanel>
       ) : null}
 
-      {enabled && context.isError ? (
+      {enabled && activeEmployeeNumber > 0 && context.isError ? (
         <KkdCallout
           tone="danger"
           icon={<ShieldAlert className="size-4" strokeWidth={1.75} />}
           title="Malzeme talepleri okunamadı"
         >
-          {context.error instanceof Error
-            ? context.error.message
-            : 'Personel-cari bağlantısı veya Netsis erişimi kontrol edilmelidir.'}
+          {contextErrorMessage(context.error)}
         </KkdCallout>
       ) : null}
 
-      {context.data ? (
+      {activeEmployeeNumber > 0 && context.data ? (
         <KkdPanel
           code="ORD_02"
           icon={<ClipboardList className="size-4" strokeWidth={1.75} />}
           title="Açık siparişler"
-          description="Sipariş seçildiğinde kalan kalemler aşağıda açılır; WMS stoğuyla eşleşmeyen satırlar dağıtıma alınmaz."
-          actions={
-            <OpsActionButton
-              variant="primary"
-              className="wms-ops-list-toolbar-btn"
-              disabled={sortedOrders.length === 0}
-              onClick={prepareDistribution}
-            >
-              Seçilenleri dağıtıma hazırla
-              <ArrowRight className="size-3.5 shrink-0" />
-            </OpsActionButton>
-          }
+          description="Sipariş seçilince kalemler aşağıda açılır. Dağıtıma hazırla ile 2. adıma (dağıtım görevi) geçilir."
         >
           {context.data.orders.length === 0 ? (
             <KkdCallout tone="warn" icon={<ShieldAlert className="size-4" strokeWidth={1.75} />}>
               Bu personelin bağlı olduğu cari için açık Netsis siparişi bulunamadı.
             </KkdCallout>
           ) : (
-            <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
-              {context.data.orders.map((order) => {
-                const isSelected = selectedOrders.includes(order.orderNumber);
-                return (
-                  <KkdSelectableCard
-                    key={order.orderNumber}
-                    selected={isSelected}
-                    onToggle={() => toggleOrder(order.orderNumber)}
-                    control={
-                      <OpsSkinCheckbox
-                        checked={isSelected}
-                        onCheckedChange={() => toggleOrder(order.orderNumber)}
-                        aria-label={order.orderNumber}
-                      />
-                    }
-                  >
-                    <strong className="block font-mono">{order.orderNumber}</strong>
-                    <span className="block text-xs text-[var(--wms-app-text-muted)]">
-                      {order.projectCode || 'Projesiz'} ·{' '}
-                      {order.orderDate ? new Date(order.orderDate).toLocaleDateString('tr-TR') : 'Tarih yok'} · Açık{' '}
-                      {order.remainingQuantity}
-                    </span>
-                  </KkdSelectableCard>
-                );
-              })}
-            </div>
+            <>
+              <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+                {context.data.orders.map((order) => {
+                  const isSelected = selectedOrders.includes(order.orderNumber);
+                  return (
+                    <KkdSelectableCard
+                      key={order.orderNumber}
+                      selected={isSelected}
+                      onToggle={() => toggleOrder(order.orderNumber)}
+                      control={
+                        <OpsSkinCheckbox
+                          checked={isSelected}
+                          onCheckedChange={() => toggleOrder(order.orderNumber)}
+                          aria-label={order.orderNumber}
+                        />
+                      }
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <strong className="block min-w-0 font-mono text-[0.92rem] leading-5">
+                          {order.orderNumber}
+                        </strong>
+                        <OpsStatusBadge tone={isSelected ? 'active' : 'neutral'}>
+                          Açık {order.remainingQuantity}
+                        </OpsStatusBadge>
+                      </div>
+                      <span className="mt-1 block text-xs text-[var(--wms-app-text-muted)]">
+                        {order.projectCode || 'Projesiz'} ·{' '}
+                        {order.orderDate ? new Date(order.orderDate).toLocaleDateString('tr-TR') : 'Tarih yok'}
+                      </span>
+                    </KkdSelectableCard>
+                  );
+                })}
+              </div>
+
+              <div className="mt-4 flex flex-col gap-3 border-t border-[color-mix(in_oklab,var(--wms-ops-card-border)_80%,transparent)] pt-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-[var(--wms-app-text-muted)]">
+                  {sortedOrders.length === 0
+                    ? 'Henüz sipariş seçilmedi.'
+                    : `${sortedOrders.length} sipariş seçildi — sonraki adım: dağıtım görevi.`}
+                </p>
+                <OpsActionButton
+                  type="button"
+                  variant="primary"
+                  className="w-full sm:w-auto sm:ml-auto"
+                  disabled={sortedOrders.length === 0}
+                  onClick={prepareDistribution}
+                >
+                  Seçilenleri dağıtıma hazırla
+                  <ArrowRight className="size-3.5 shrink-0" />
+                </OpsActionButton>
+              </div>
+            </>
           )}
         </KkdPanel>
       ) : null}
@@ -283,7 +426,7 @@ export function KkdMaterialRequestsPage(): ReactElement {
           code="LIN_03"
           icon={<ClipboardList className="size-4" strokeWidth={1.75} />}
           title="Talep kalemleri"
-          description="Kalan miktarlar Netsis satır bakiyesinden anlık okunur."
+          description="Kalan miktarlar Netsis satır bakiyesinden anlık okunur. WMS stoğuyla eşleşmeyen satırlar dağıtıma alınmaz."
           bodyClassName="px-0 py-0 sm:px-0 sm:py-0"
         >
           <KkdTableShell minWidthClass="min-w-[1000px]" className="border-x-0 border-b-0">
