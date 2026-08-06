@@ -1,5 +1,5 @@
-import type { ReactElement, ReactNode } from 'react';
-import { ClipboardList, PackageOpen, UserRoundCheck, Zap } from 'lucide-react';
+import { useCallback, useId, useRef, type CSSProperties, type ReactElement, type ReactNode } from 'react';
+import { ClipboardList, Info, Lock, PackageOpen, UserRoundCheck, Zap } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 
@@ -24,6 +24,14 @@ type Props = {
   children?: ReactNode;
 };
 
+type FlowTab<TValue extends string> = {
+  value: TValue;
+  title: string;
+  description: string;
+  icon: typeof ClipboardList;
+  allowed: boolean;
+};
+
 export function OperationFlowTabs({
   source,
   execution,
@@ -40,82 +48,153 @@ export function OperationFlowTabs({
 }: Props): ReactElement {
   const { t } = useTranslation('common');
   const showExecutionSection = !hideExecutionSection;
-  const allExecutions: Array<{ value: OperationExecutionMode; title: string; description: string; icon: typeof UserRoundCheck }> = [
-    { value: 'task', title: t(`${OF}.taskBased`), description: taskDescription ?? t(`${OF}.taskDescription`), icon: UserRoundCheck },
-    { value: 'direct', title: t(`${OF}.direct`), description: directDescription ?? t(`${OF}.directDescription`), icon: Zap },
+  const allExecutionTabs: Array<FlowTab<OperationExecutionMode>> = [
+    {
+      value: 'task',
+      title: t(`${OF}.taskBased`),
+      description: taskDescription ?? t(`${OF}.taskDescription`),
+      icon: UserRoundCheck,
+      allowed: isAllowed('order', 'task') || isAllowed('stock', 'task'),
+    },
+    {
+      value: 'direct',
+      title: t(`${OF}.direct`),
+      description: directDescription ?? t(`${OF}.directDescription`),
+      icon: Zap,
+      allowed: isAllowed('order', 'direct') || isAllowed('stock', 'direct'),
+    },
   ];
-  const executions = allExecutions.filter(({ value }) => !hiddenExecutions.includes(value));
-  const sources: Array<{ value: OperationSourceMode; title: string; description: string; icon: typeof ClipboardList }> = [
-    { value: 'order', title: orderLabel ?? t('transferDraft.sourceLabels.warehouseOrder'), description: t(`${OF}.orderSourceDescription`), icon: ClipboardList },
-    { value: 'stock', title: stockLabel ?? t('transferDraft.sourceLabels.warehouseStock'), description: t(`${OF}.stockSourceDescription`), icon: PackageOpen },
+  const executionTabs = allExecutionTabs.filter((tab) => !hiddenExecutions.includes(tab.value));
+  const sourceTabs: Array<FlowTab<OperationSourceMode>> = [
+    {
+      value: 'order',
+      title: orderLabel ?? t('transferDraft.sourceLabels.warehouseOrder'),
+      description: t(`${OF}.orderSourceDescription`),
+      icon: ClipboardList,
+      allowed: isAllowed('order', execution),
+    },
+    {
+      value: 'stock',
+      title: stockLabel ?? t('transferDraft.sourceLabels.warehouseStock'),
+      description: t(`${OF}.stockSourceDescription`),
+      icon: PackageOpen,
+      allowed: isAllowed('stock', execution),
+    },
   ];
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] shadow-sm" data-no-auto-localize="true">
-      {showExecutionSection && (
-        <div className="border-b border-[var(--wms-app-border)] p-4 sm:p-5">
-          <p className="text-[0.68rem] font-black uppercase tracking-[.18em] text-[var(--wms-app-text-muted)]">{t(`${OF}.executionModel`)}</p>
-          <div className={cn('mt-3 grid gap-2', executions.length > 1 && 'sm:grid-cols-2')} role="tablist" aria-label={t(`${OF}.executionAriaLabel`)}>
-            {executions.map(({ value, title, description, icon: Icon }) => {
-              const active = execution === value;
-              const hasAnyAllowedSource = isAllowed('order', value) || isAllowed('stock', value);
-              return (
-                <button
-                  key={value}
-                  type="button"
-                  role="tab"
-                  aria-selected={active}
-                  disabled={!hasAnyAllowedSource}
-                  onClick={() => onExecutionChange(value)}
-                  className={cn(
-                    'min-h-24 rounded-xl border p-3 text-left transition sm:p-4',
-                    active
-                      ? 'border-[var(--wms-brand-primary)] bg-[var(--wms-brand-soft)] shadow-[0_0_0_1px_var(--wms-brand-ring)]'
-                      : 'border-[var(--wms-app-border)] hover:border-[color-mix(in_oklab,var(--wms-brand-primary)_45%,var(--wms-app-border))] hover:bg-[var(--wms-brand-soft)]',
-                    !hasAnyAllowedSource && 'cursor-not-allowed opacity-40',
-                  )}
-                >
-                  <span className="flex items-center gap-2 font-black"><Icon className="size-4.5"/>{title}</span>
-                  <span className="mt-1.5 block text-xs leading-5 text-[var(--wms-app-text-muted)]">{description}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      <div className="p-4 sm:p-5">
-        <p className="text-[0.68rem] font-black uppercase tracking-[.18em] text-[var(--wms-app-text-muted)]">
-          {showExecutionSection ? t(`${OF}.documentSource`) : t(`${OF}.documentSourceStandalone`)}
+    <section className="wms-ops-flow" data-no-auto-localize="true">
+      {showExecutionSection ? (
+        <FlowTabGroup
+          label={t(`${OF}.executionModel`)}
+          ariaLabel={t(`${OF}.executionAriaLabel`)}
+          tabs={executionTabs}
+          value={execution}
+          onChange={onExecutionChange}
+          disabledHint={t(`${OF}.combinationDisabled`)}
+        />
+      ) : null}
+      <FlowTabGroup
+        label={showExecutionSection ? t(`${OF}.documentSource`) : t(`${OF}.documentSourceStandalone`)}
+        ariaLabel={t(`${OF}.sourceAriaLabel`)}
+        tabs={sourceTabs}
+        value={source}
+        onChange={onSourceChange}
+        disabledHint={t(`${OF}.combinationDisabled`)}
+      />
+      {children ? (
+        <p className="wms-ops-flow__note">
+          <Info className="wms-ops-flow__note-icon size-3.5" aria-hidden />
+          <span className="min-w-0">{children}</span>
         </p>
-        <div className="mt-3 grid gap-2 sm:grid-cols-2" role="tablist" aria-label={t(`${OF}.sourceAriaLabel`)}>
-          {sources.map(({ value, title, description, icon: Icon }) => {
-            const active = source === value;
-            const allowed = isAllowed(value, execution);
-            return (
-              <button
-                key={value}
-                type="button"
-                role="tab"
-                aria-selected={active}
-                disabled={!allowed}
-                onClick={() => onSourceChange(value)}
-                className={cn(
-                  'rounded-xl border p-3 text-left transition sm:p-4',
-                  active
-                    ? 'border-[var(--wms-brand-primary)] bg-[var(--wms-brand-soft)] shadow-[0_0_0_1px_var(--wms-brand-ring)]'
-                    : 'border-[var(--wms-app-border)] hover:border-[color-mix(in_oklab,var(--wms-brand-primary)_45%,var(--wms-app-border))] hover:bg-[var(--wms-brand-soft)]',
-                  !allowed && 'cursor-not-allowed opacity-40',
-                )}
-              >
-                <span className="flex items-center gap-2 font-bold"><Icon className="size-4"/>{title}</span>
-                <span className="mt-1 block text-xs leading-5 text-[var(--wms-app-text-muted)]">{allowed ? description : t(`${OF}.combinationDisabled`)}</span>
-              </button>
-            );
-          })}
-        </div>
-        {children && <div className="mt-4 rounded-xl border border-[var(--wms-brand-ring)] bg-[var(--wms-brand-soft)] p-3 text-xs leading-5 text-[var(--wms-brand-primary)]">{children}</div>}
-      </div>
+      ) : null}
     </section>
+  );
+}
+
+function FlowTabGroup<TValue extends string>({
+  label,
+  ariaLabel,
+  tabs,
+  value,
+  onChange,
+  disabledHint,
+}: {
+  label: string;
+  ariaLabel: string;
+  tabs: Array<FlowTab<TValue>>;
+  value: TValue;
+  onChange: (value: TValue) => void;
+  disabledHint: string;
+}): ReactElement {
+  const groupId = useId();
+  const buttonsRef = useRef<Array<HTMLButtonElement | null>>([]);
+  const activeIndex = Math.max(
+    0,
+    tabs.findIndex((tab) => tab.value === value),
+  );
+
+  /** Tablist klavye sözleşmesi: yön tuşları yalnızca seçilebilir sekmelerde dolaşır. */
+  const moveFocus = useCallback(
+    (from: number, step: 1 | -1) => {
+      for (let offset = 1; offset <= tabs.length; offset += 1) {
+        const next = (from + step * offset + tabs.length * offset) % tabs.length;
+        if (!tabs[next]?.allowed) continue;
+        buttonsRef.current[next]?.focus();
+        onChange(tabs[next].value);
+        return;
+      }
+    },
+    [onChange, tabs],
+  );
+
+  return (
+    <div className="wms-ops-flow__group">
+      <p className="wms-ops-flow__label">{label}</p>
+      <div
+        className="wms-ops-flow__tabs"
+        role="tablist"
+        aria-label={ariaLabel}
+        style={{ '--flow-tab-count': tabs.length, '--flow-tab-index': activeIndex } as CSSProperties}
+      >
+        <span className="wms-ops-flow__indicator" aria-hidden />
+        {tabs.map((tab, index) => {
+          const active = index === activeIndex;
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.value}
+              ref={(node) => {
+                buttonsRef.current[index] = node;
+              }}
+              type="button"
+              role="tab"
+              id={`${groupId}-tab-${tab.value}`}
+              aria-selected={active}
+              tabIndex={active ? 0 : -1}
+              disabled={!tab.allowed}
+              title={tab.allowed ? tab.title : `${tab.title} — ${disabledHint}`}
+              data-state={active ? 'active' : 'inactive'}
+              onClick={() => onChange(tab.value)}
+              onKeyDown={(event) => {
+                if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
+                event.preventDefault();
+                moveFocus(index, event.key === 'ArrowRight' ? 1 : -1);
+              }}
+              className={cn('wms-ops-flow__tab', !tab.allowed && 'wms-ops-flow__tab--locked')}
+            >
+              <span className="wms-ops-flow__tab-head">
+                <Icon className="wms-ops-flow__tab-icon size-4" aria-hidden />
+                <span className="wms-ops-flow__tab-title">{tab.title}</span>
+                {tab.allowed ? null : <Lock className="wms-ops-flow__tab-lock size-3" aria-hidden />}
+              </span>
+              <span className="wms-ops-flow__tab-desc">
+                {tab.allowed ? tab.description : disabledHint}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
