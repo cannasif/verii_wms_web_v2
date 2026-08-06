@@ -1,11 +1,44 @@
 {
-  "eyebrow": "Magazzino e produzione",
-  "title": "Centro processi di trasferimento produzione",
-  "description": "Gestisci l'approvvigionamento materiali, i movimenti di semilavorati e le uscite di prodotto finito con collegamenti di produzione, assegnazioni, riserve, tracciabilità serie/lotto e piena tracciabilità.",
-  "cards": {
-    "create": { "title": "Crea trasferimento di produzione", "text": "Crea attività di approvvigionamento, tra operazioni o di uscita da un ordine di produzione o un fabbisogno manuale." },
-    "list": { "title": "Registri di trasferimento", "text": "Traccia le quantità pianificate, riservate, prelevate, spedite e stoccate." },
-    "settings": { "title": "Impostazioni processo", "text": "Gestisci le regole di disponibilità, carenza, assegnazione, ubicazione e tolleranza." }
+  "hub": {
+    "eyebrow": "Magazzino e produzione",
+    "title": "Centro processi di trasferimento produzione",
+    "description": "Gestisci l'approvvigionamento materiali, i movimenti di semilavorati e le uscite di prodotto finito con collegamenti di produzione, assegnazioni, riserve, tracciabilità serie/lotto e piena tracciabilità.",
+    "phases": {
+      "start": {
+        "title": "Avvia trasferimento",
+        "description": "Apri l'attività di approvvigionamento o uscita corretta da un ordine di produzione o un fabbisogno manuale."
+      },
+      "execute": {
+        "title": "Esegui assegnazione",
+        "description": "Gestisci il pool attività, assegna il lavoro e fai avanzare le richieste materiali."
+      },
+      "manage": {
+        "title": "Monitora e gestisci",
+        "description": "Traccia i registri e gestisci le regole di disponibilità, ubicazione e tolleranza."
+      }
+    },
+    "cards": {
+      "create": {
+        "title": "Crea trasferimento di produzione",
+        "description": "Crea attività di approvvigionamento, tra operazioni o di uscita da un ordine di produzione o un fabbisogno manuale."
+      },
+      "taskPool": {
+        "title": "Pool attività manager",
+        "description": "Gestisci tutte le attività di trasferimento produzione, il lavoro rimanente e il carico magazzino in un unico posto."
+      },
+      "materialRequests": {
+        "title": "Ordini richiesta materiali",
+        "description": "Scansiona la tessera personale, carica gli ordini Netsis aperti del conto collegato e prepara la distribuzione KKD."
+      },
+      "list": {
+        "title": "Registri di trasferimento",
+        "description": "Traccia le quantità pianificate, riservate, prelevate, spedite e stoccate."
+      },
+      "settings": {
+        "title": "Impostazioni processo",
+        "description": "Gestisci le regole di disponibilità, carenza, assegnazione, ubicazione e tolleranza."
+      }
+    }
   },
   "policy": {
     "loading": "Caricamento impostazioni trasferimento produzione…",

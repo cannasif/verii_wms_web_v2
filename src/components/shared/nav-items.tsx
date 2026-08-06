@@ -3,7 +3,19 @@ import type { TFunction } from 'i18next';
 import type { MyPermissionsDto } from '@/features/access-control/types/access-control.types';
 import { hasPermission } from '@/features/access-control/utils/hasPermission';
 import { localizeLegacyUiText } from '@/lib/legacy-ui-localization';
-import { dashboardIcon, inventoryIcon, masterDataIcon, operationsIcon, systemIcon } from './sidebar/sidebar-icons';
+import {
+  dashboardIcon,
+  erpIcon,
+  goodsReceiptIcon,
+  kkdIcon,
+  procurementIcon,
+  productionIcon,
+  shippingIcon,
+  systemIcon,
+  warehouseManagementIcon,
+  warehouseOperationsIcon,
+  warehouseTransferIcon,
+} from './sidebar/sidebar-icons';
 
 export interface NavItem {
   title: string;
@@ -27,14 +39,14 @@ export function resolveNavItemTitle(
 
 export const WMS_NAV_ITEMS: NavItem[] = [
   { title: 'sidebar.dashboard', titleFallback: 'Dashboard', href: '/dashboard', icon: dashboardIcon },
-  { title: 'sidebar.procurement', titleFallback: 'Satınalma', icon: masterDataIcon, children: [
+  { title: 'sidebar.procurement', titleFallback: 'Satınalma', icon: procurementIcon, children: [
     { title: 'sidebar.procurementWorkspace', titleFallback: 'Süreç Merkezi', href: '/procurement', searchAliases: ['satınalma', 'süreç', 'procure to pay'], requiredPermission: 'WMS.PROCUREMENT.VIEW' },
     { title: 'sidebar.procurementRequests', titleFallback: 'Satınalma Talepleri', href: '/procurement/requests', searchAliases: ['ihtiyaç', 'talep'], requiredPermission: 'WMS.PROCUREMENT.VIEW' },
     { title: 'sidebar.procurementRfqs', titleFallback: 'Teklif Talepleri', href: '/procurement/rfqs', searchAliases: ['rfq', 'fiyat toplama'], requiredPermission: 'WMS.PROCUREMENT.VIEW' },
     { title: 'sidebar.procurementQuotes', titleFallback: 'Tedarikçi Teklifleri', href: '/procurement/quotes', searchAliases: ['teklif', 'tedarikçi'], requiredPermission: 'WMS.PROCUREMENT.VIEW' },
     { title: 'sidebar.procurementOrders', titleFallback: 'Satınalma Siparişleri', href: '/procurement/orders', searchAliases: ['satınalma siparişi', 'sipariş'], requiredPermission: 'WMS.PROCUREMENT.VIEW' },
   ] },
-  { title: 'sidebar.warehouseOperations', titleFallback: 'Ambar İşlemleri', icon: operationsIcon, children: [
+  { title: 'sidebar.warehouseOperations', titleFallback: 'Ambar İşlemleri', icon: warehouseOperationsIcon, children: [
     { title: 'sidebar.warehouseInbound', titleFallback: 'Ambar Giriş', children: [
       { title: 'sidebar.warehouseInboundHub', titleFallback: 'Süreç Merkezi', href: '/warehouse/warehouse-inbounds', requiredPermission: 'WMS.WAREHOUSE_INBOUND.VIEW' },
       { title: 'sidebar.warehouseInboundCreate', titleFallback: 'Giriş Emri Oluştur', href: '/warehouse/warehouse-inbounds/new', requiredPermission: 'WMS.WAREHOUSE_INBOUND.CREATE' },
@@ -49,7 +61,7 @@ export const WMS_NAV_ITEMS: NavItem[] = [
       { title: 'sidebar.warehouseOutboundList', titleFallback: 'Çıkış Kayıtları', href: '/warehouse/warehouse-outbounds/list', requiredPermission: 'WMS.WAREHOUSE_OUTBOUND.VIEW' },
       { title: 'sidebar.warehouseOutboundSettings', titleFallback: 'Çıkış Ayarları', href: '/warehouse/warehouse-outbounds/settings', requiredPermission: 'WMS.WAREHOUSE_OUTBOUND.SETTINGS.VIEW' },
     ] },
-  ] },  { title: 'sidebar.warehouseTransfer', titleFallback: 'Depolar Arası Transfer', icon: operationsIcon, children: [
+  ] },  { title: 'sidebar.warehouseTransfer', titleFallback: 'Depolar Arası Transfer', icon: warehouseTransferIcon, children: [
     { title: 'sidebar.normalTransferGroup', titleFallback: 'Normal Transfer', children: [
       { title: 'sidebar.warehouseTransferHub', titleFallback: 'Süreç Merkezi', href: '/warehouse/transfers', searchAliases: ['depo', 'transfer', 'süreç', 'transit'], requiredPermission: 'WMS.WAREHOUSE_TRANSFER.VIEW' },
       { title: 'sidebar.warehouseTransferCreate', titleFallback: 'Transfer Taslağı', href: '/warehouse/transfers/new', searchAliases: ['depo', 'transfer', 'emir', 'taslak'], requiredPermission: 'WMS.WAREHOUSE_TRANSFER.CREATE' },
@@ -70,16 +82,17 @@ export const WMS_NAV_ITEMS: NavItem[] = [
       { title: 'sidebar.productionTransferCreate', titleFallback: 'Üretim Transferi Oluştur', href: '/warehouse/production-transfers/new', searchAliases: ['üretim', 'transfer', 'emir', 'görev'], requiredPermission: 'WMS.PRODUCTION_TRANSFER.CREATE' },
       { title: 'sidebar.productionTransferList', titleFallback: 'Üretim Transfer Kayıtları', href: '/warehouse/production-transfers/list', searchAliases: ['üretim', 'transfer', 'liste'], requiredPermission: 'WMS.PRODUCTION_TRANSFER.VIEW' },
       { title: 'sidebar.productionTransferTaskPool', titleFallback: 'Görev Havuzu', href: '/warehouse/production-transfers/task-pool', searchAliases: ['üretim', 'görev', 'atama', 'iş yükü'], requiredPermission: 'WMS.PRODUCTION_TRANSFER.ASSIGN' },
+      { title: 'sidebar.productionTransferMaterialRequests', titleFallback: 'Malzeme Talep Siparişleri', href: '/warehouse/production-transfers/material-requests', searchAliases: ['malzeme', 'talep', 'windbox', 'sipariş', 'personel', 'kkd'], requiredPermission: 'WMS.KKD.DISTRIBUTION.OPERATE' },
       { title: 'sidebar.productionTransferSettings', titleFallback: 'Üretim Transfer Ayarları', href: '/warehouse/production-transfers/settings', searchAliases: ['üretim', 'malzeme', 'uygunluk', 'tolerans'], requiredPermission: 'WMS.PRODUCTION_TRANSFER.SETTINGS.VIEW' },
     ] },
   ] },
-  { title: 'sidebar.production', titleFallback: 'Üretim', icon: operationsIcon, children: [
+  { title: 'sidebar.production', titleFallback: 'Üretim', icon: productionIcon, children: [
     { title: 'sidebar.productionHub', titleFallback: 'Üretim Süreç Merkezi', href: '/warehouse/production', searchAliases: ['üretim', 'plan', 'iş emri', 'mamul', 'sarf'], requiredPermission: 'WMS.PRODUCTION.VIEW' },
     { title: 'sidebar.productionWorkOrders', titleFallback: 'Netsis İş Emirleri', href: '/warehouse/production/work-orders', searchAliases: ['üretim', 'netsis', 'iş emri', 'reçete', 'bom'], requiredPermission: 'WMS.PRODUCTION.VIEW' },
     { title: 'sidebar.productionCreate', titleFallback: 'Üretim Planı Oluştur', href: '/warehouse/production/new', searchAliases: ['üretim', 'plan', 'iş emri', 'bom', 'rota'], requiredPermission: 'WMS.PRODUCTION.CREATE' },
     { title: 'sidebar.productionList', titleFallback: 'Üretim Planları', href: '/warehouse/production/list', searchAliases: ['üretim', 'plan', 'emir', 'liste', 'serbest bırak'], requiredPermission: 'WMS.PRODUCTION.VIEW' },
   ] },
-  { title: 'sidebar.kkd', titleFallback: 'KKD', icon: inventoryIcon, children: [
+  { title: 'sidebar.kkd', titleFallback: 'KKD', icon: kkdIcon, children: [
     { title: 'sidebar.kkdOverview', titleFallback: 'KKD Süreç Merkezi', href: '/warehouse/kkd', searchAliases: ['kkd', 'iş güvenliği', 'koruyucu donanım'], requiredPermission: 'WMS.KKD.DEFINITIONS.VIEW' },
     { title: 'sidebar.kkdDefinitions', titleFallback: 'Tanımlar ve Hak Matrisi', href: '/warehouse/kkd/definitions', searchAliases: ['kkd', 'departman', 'rol', 'personel', 'hak'], requiredPermission: 'WMS.KKD.DEFINITIONS.VIEW' },
     { title: 'sidebar.kkdEntitlement', titleFallback: 'Hak Sorgulama', href: '/warehouse/kkd/entitlement', searchAliases: ['kkd', 'hak', 'kontrol'], requiredPermission: 'WMS.KKD.ENTITLEMENT.CHECK' },
@@ -88,19 +101,19 @@ export const WMS_NAV_ITEMS: NavItem[] = [
     { title: 'sidebar.kkdReports', titleFallback: 'KKD Raporları', href: '/warehouse/kkd/reports', searchAliases: ['kkd', 'rapor', 'kullanım', 'doğrulama'], requiredPermission: 'WMS.KKD.REPORTS.VIEW' },
     { title: 'sidebar.kkdPolicy', titleFallback: 'KKD Süreç Politikası', href: '/warehouse/kkd/policy', searchAliases: ['kkd', 'politika', 'sipariş zorunlu', 'parametre'], requiredPermission: 'WMS.KKD.POLICY.VIEW' },
   ] },
-  { title: 'sidebar.shipping', titleFallback: 'Sevk', icon: operationsIcon, children: [
+  { title: 'sidebar.shipping', titleFallback: 'Sevk', icon: shippingIcon, children: [
     { title: 'sidebar.shippingHub', titleFallback: 'Süreç Merkezi', href: '/warehouse/shipments', searchAliases: ['sevk', 'outbound', 'toplama', 'paketleme'], requiredPermission: 'WMS.SHIPPING.VIEW' },
     { title: 'sidebar.shippingCreate', titleFallback: 'Sevk Oluştur', href: '/warehouse/shipments/new', searchAliases: ['sevk', 'sipariş', 'emir', 'doğrudan'], requiredPermission: 'WMS.SHIPPING.CREATE' },
     { title: 'sidebar.shippingList', titleFallback: 'Sevk Kayıtları', href: '/warehouse/shipments/list', searchAliases: ['sevk', 'liste', 'yükleme', 'irsaliye'], requiredPermission: 'WMS.SHIPPING.VIEW' },
     { title: 'sidebar.shippingSettings', titleFallback: 'Süreç Ayarları', href: '/warehouse/shipments/settings', searchAliases: ['sevk', 'ayar', 'rezervasyon', 'paketleme'], requiredPermission: 'WMS.SHIPPING.SETTINGS.VIEW' },
   ] },
-  { title: 'sidebar.erp', titleFallback: 'ERP', icon: masterDataIcon, children: [
+  { title: 'sidebar.erp', titleFallback: 'ERP', icon: erpIcon, children: [
     { title: 'sidebar.erpWarehouses', titleFallback: 'Depolar', href: '/erp/warehouses', requiredPermission: 'ERP.MIRROR.VIEW' },
     { title: 'sidebar.erpStocks', titleFallback: 'Stoklar', href: '/erp/stocks', requiredPermission: 'ERP.MIRROR.VIEW' },
     { title: 'sidebar.erpCustomers', titleFallback: 'Cariler', href: '/erp/customers', requiredPermission: 'ERP.MIRROR.VIEW' },
     { title: 'sidebar.erpConfigurationCodes', titleFallback: 'Yapılandırma Kodları', href: '/erp/configuration-codes', searchAliases: ['yapılandırma', 'konfigürasyon', 'varyant', 'yapkod'], requiredPermission: 'ERP.MIRROR.VIEW' },
   ] },
-  { title: 'sidebar.goodsReceipt', titleFallback: 'Mal Kabul', icon: operationsIcon, children: [
+  { title: 'sidebar.goodsReceipt', titleFallback: 'Mal Kabul', icon: goodsReceiptIcon, children: [
     { title: 'sidebar.goodsReceiptOps', titleFallback: 'Operasyon', children: [
       { title: 'sidebar.goodsReceiptHub', titleFallback: 'Süreç Merkezi', href: '/warehouse/goods-receipts', searchAliases: ['mal kabul', 'süreç', 'başlangıç'], requiredPermission: 'WMS.GOODS_RECEIPT.VIEW' },
       { title: 'sidebar.goodsReceiptCreate', titleFallback: 'Siparişten Emir', href: '/warehouse/goods-receipts/new', searchAliases: ['mal kabul', 'sipariş', 'emir', 'rezervasyon', 'netsis'], requiredPermission: 'WMS.GOODS_RECEIPT.CREATE' },
@@ -127,7 +140,7 @@ export const WMS_NAV_ITEMS: NavItem[] = [
       { title: 'sidebar.steelReceiptReports', titleFallback: 'SAC Operasyon Raporları', href: '/warehouse/goods-receipts/steel/reports', searchAliases: ['sac', 'rapor', 'izlenebilirlik', 'istisna', 'bekleyen'], requiredPermission: 'WMS.STEEL_RECEIPT.VIEW' },
     ] },
   ] },
-  { title: 'sidebar.warehouseManagement', titleFallback: 'Depo Yönetimi', icon: inventoryIcon, children: [
+  { title: 'sidebar.warehouseManagement', titleFallback: 'Depo Yönetimi', icon: warehouseManagementIcon, children: [
     { title: 'sidebar.locationDefinitions', titleFallback: 'Raf Tanımları', href: '/warehouse/locations', searchAliases: ['lokasyon', 'raf', 'adres', 'göz'], requiredPermission: 'WMS.LOCATIONS.VIEW' },
     { title: 'sidebar.documentSeries', titleFallback: 'Belge Seri Tanımları', href: '/warehouse/document-series', searchAliases: ['belge', 'seri', 'numara', 'mal kabul', 'transfer', 'sevk', 'ambar'], requiredPermission: 'WMS.DOCUMENT_SERIES.VIEW' },
     { title: 'sidebar.barcodeDesigner', titleFallback: 'Barkod Tasarım ve Baskı', href: '/warehouse/barcode-designer', searchAliases: ['barkod', 'etiket', 'tasarım', 'pdf', 'yazıcı', 'gs1', 'sscc'], requiredPermission: 'WMS.BARCODE_DESIGNER.VIEW' },

@@ -1,11 +1,44 @@
 {
-  "eyebrow": "Lager und Produktion",
-  "title": "Produktionstransfer-Prozesszentrum",
-  "description": "Verwalten Sie Materialversorgung, Zwischenprodukttransporte und Fertigwarenausgänge mit Produktionsverknüpfungen, Zuweisungen, Reservierungen, Serien-/Losverfolgung und Nachverfolgbarkeit.",
-  "cards": {
-    "create": { "title": "Produktionstransfer erstellen", "text": "Erstellen Sie Materialversorgungs-, Zwischenprozess- oder Ausgabeaufträge aus einem Produktionsauftrag oder manuellem Bedarf." },
-    "list": { "title": "Transferdatensätze", "text": "Verfolgen Sie geplante, reservierte, kommissionierte, versandte und eingelagerte Mengen." },
-    "settings": { "title": "Prozesseinstellungen", "text": "Verwalten Sie Verfügbarkeits-, Fehlmengen-, Zuweisungs-, Standort- und Toleranzregeln." }
+  "hub": {
+    "eyebrow": "Lager und Produktion",
+    "title": "Produktionstransfer-Prozesszentrum",
+    "description": "Verwalten Sie Materialversorgung, Zwischenprodukttransporte und Fertigwarenausgänge mit Produktionsverknüpfungen, Zuweisungen, Reservierungen, Serien-/Losverfolgung und Nachverfolgbarkeit.",
+    "phases": {
+      "start": {
+        "title": "Transfer starten",
+        "description": "Öffnen Sie den richtigen Versorgungs- oder Ausgabeauftrag aus einem Produktionsauftrag oder manuellem Bedarf."
+      },
+      "execute": {
+        "title": "Auftrag ausführen",
+        "description": "Verwalten Sie den Aufgabenpool, weisen Sie Arbeit zu und treiben Sie Materialanforderungen voran."
+      },
+      "manage": {
+        "title": "Überwachen und verwalten",
+        "description": "Verfolgen Sie Datensätze und verwalten Sie Verfügbarkeits-, Standort- und Toleranzregeln."
+      }
+    },
+    "cards": {
+      "create": {
+        "title": "Produktionstransfer erstellen",
+        "description": "Erstellen Sie Materialversorgungs-, Zwischenprozess- oder Ausgabeaufträge aus einem Produktionsauftrag oder manuellem Bedarf."
+      },
+      "taskPool": {
+        "title": "Manager-Aufgabenpool",
+        "description": "Verwalten Sie alle Produktionstransfer-Aufgaben, Restarbeit und Lagerauslastung an einem Ort."
+      },
+      "materialRequests": {
+        "title": "Materialanforderungsaufträge",
+        "description": "Personalausweis scannen, offene Netsis-Aufträge des verknüpften Kontos laden und KKD-Verteilung vorbereiten."
+      },
+      "list": {
+        "title": "Transferdatensätze",
+        "description": "Verfolgen Sie geplante, reservierte, kommissionierte, versandte und eingelagerte Mengen."
+      },
+      "settings": {
+        "title": "Prozesseinstellungen",
+        "description": "Verwalten Sie Verfügbarkeits-, Fehlmengen-, Zuweisungs-, Standort- und Toleranzregeln."
+      }
+    }
   },
   "policy": {
     "loading": "Produktionstransfer-Einstellungen werden geladen…",

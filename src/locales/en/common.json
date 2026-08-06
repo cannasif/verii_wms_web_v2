@@ -329,6 +329,7 @@
     "productionTransferHub": "Production Transfer",
     "productionTransferCreate": "Create Production Transfer",
     "productionTransferList": "Production Transfer Records",
+    "productionTransferMaterialRequests": "Material Request Orders",
     "productionTransferSettings": "Production Transfer Settings",
     "production": "Production",
     "productionHub": "Production Process Center",

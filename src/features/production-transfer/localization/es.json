@@ -1,11 +1,44 @@
 {
-  "eyebrow": "Almacén y producción",
-  "title": "Centro de proceso de transferencia de producción",
-  "description": "Gestione el suministro de material, los movimientos de producto en curso y las salidas de producto terminado con vínculos de producción, asignaciones, reservas, seguimiento de serie/lote y trazabilidad.",
-  "cards": {
-    "create": { "title": "Crear transferencia de producción", "text": "Cree tareas de suministro, entre operaciones o de salida a partir de una orden de producción o una necesidad manual." },
-    "list": { "title": "Registros de transferencia", "text": "Siga las cantidades planificadas, reservadas, recogidas, expedidas y ubicadas." },
-    "settings": { "title": "Configuración del proceso", "text": "Gestione las reglas de disponibilidad, escasez, asignación, ubicación y tolerancia." }
+  "hub": {
+    "eyebrow": "Almacén y producción",
+    "title": "Centro de proceso de transferencia de producción",
+    "description": "Gestione el suministro de material, los movimientos de producto en curso y las salidas de producto terminado con vínculos de producción, asignaciones, reservas, seguimiento de serie/lote y trazabilidad.",
+    "phases": {
+      "start": {
+        "title": "Iniciar transferencia",
+        "description": "Abra la tarea de suministro o salida correcta desde una orden de producción o una necesidad manual."
+      },
+      "execute": {
+        "title": "Ejecutar asignación",
+        "description": "Gestione el pool de tareas, asigne trabajo y avance las solicitudes de material."
+      },
+      "manage": {
+        "title": "Supervisar y gestionar",
+        "description": "Siga los registros y gestione las reglas de disponibilidad, ubicación y tolerancia."
+      }
+    },
+    "cards": {
+      "create": {
+        "title": "Crear transferencia de producción",
+        "description": "Cree tareas de suministro, entre operaciones o de salida a partir de una orden de producción o una necesidad manual."
+      },
+      "taskPool": {
+        "title": "Pool de tareas del gestor",
+        "description": "Gestione todas las tareas de transferencia de producción, el trabajo restante y la carga del almacén en un solo lugar."
+      },
+      "materialRequests": {
+        "title": "Pedidos de solicitud de material",
+        "description": "Escanee la tarjeta de personal, cargue los pedidos Netsis abiertos de la cuenta vinculada y prepare la distribución KKD."
+      },
+      "list": {
+        "title": "Registros de transferencia",
+        "description": "Siga las cantidades planificadas, reservadas, recogidas, expedidas y ubicadas."
+      },
+      "settings": {
+        "title": "Configuración del proceso",
+        "description": "Gestione las reglas de disponibilidad, escasez, asignación, ubicación y tolerancia."
+      }
+    }
   },
   "policy": {
     "loading": "Cargando configuración de transferencia de producción…",

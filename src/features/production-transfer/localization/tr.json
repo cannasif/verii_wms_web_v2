@@ -1,11 +1,44 @@
 {
-  "eyebrow": "Depo ve Üretim",
-  "title": "Üretime Transfer Süreç Merkezi",
-  "description": "Hammadde besleme, yarı mamul taşıma ve mamul çıkışını üretim bağlantıları, görev, rezervasyon, seri/lot ve tam izlenebilirlikle yönetin.",
-  "cards": {
-    "create": { "title": "Üretim Transferi Oluştur", "text": "Üretim emrine bağlı veya manuel ihtiyaca göre besleme, proses arası ya da mamul çıkış emri açın." },
-    "list": { "title": "Transfer Kayıtları", "text": "Planlanan, rezerve edilen, toplanan, sevk edilen ve üretim alanına yerleşen miktarları izleyin." },
-    "settings": { "title": "Süreç Ayarları", "text": "Malzeme uygunluğu, eksik stok, kullanıcı ataması, raf ve tolerans kurallarını yönetin." }
+  "hub": {
+    "eyebrow": "Depo ve Üretim",
+    "title": "Üretime Transfer Süreç Merkezi",
+    "description": "Hammadde besleme, yarı mamul taşıma ve mamul çıkışını üretim bağlantıları, görev, rezervasyon, seri/lot ve tam izlenebilirlikle yönetin.",
+    "phases": {
+      "start": {
+        "title": "Transferi Başlat",
+        "description": "Üretim emrine veya manuel ihtiyaca göre doğru besleme/çıkış emrini açın."
+      },
+      "execute": {
+        "title": "Emri Yürüt",
+        "description": "Görev havuzunu yönetin, atamaları yapın ve malzeme taleplerini ilerletin."
+      },
+      "manage": {
+        "title": "İzle ve Yönet",
+        "description": "Kayıtları izleyin; malzeme uygunluğu, raf ve tolerans kurallarını yönetin."
+      }
+    },
+    "cards": {
+      "create": {
+        "title": "Üretim Transferi Oluştur",
+        "description": "Üretim emrine bağlı veya manuel ihtiyaca göre besleme, proses arası ya da mamul çıkış emri açın."
+      },
+      "taskPool": {
+        "title": "Yönetici Görev Havuzu",
+        "description": "Tüm üretim transferi görevlerini, kalan işi ve depo çalışanı yükünü tek ekranda yönetin."
+      },
+      "materialRequests": {
+        "title": "Malzeme Talep Siparişleri",
+        "description": "Personel kartını okutun; bağlı carinin Netsis açık siparişlerini getirip KKD dağıtımına hazırlayın."
+      },
+      "list": {
+        "title": "Transfer Kayıtları",
+        "description": "Planlanan, rezerve edilen, toplanan, sevk edilen ve üretim alanına yerleşen miktarları izleyin."
+      },
+      "settings": {
+        "title": "Süreç Ayarları",
+        "description": "Malzeme uygunluğu, eksik stok, kullanıcı ataması, raf ve tolerans kurallarını yönetin."
+      }
+    }
   },
   "policy": {
     "loading": "Üretim transfer ayarları yükleniyor…",

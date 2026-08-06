@@ -1,11 +1,44 @@
 {
-  "eyebrow": "Entrepôt et production",
-  "title": "Centre de processus de transfert de production",
-  "description": "Gérez l'approvisionnement en matières, les mouvements d'en-cours et les sorties de produits finis avec liens de production, affectations, réservations, suivi série/lot et traçabilité.",
-  "cards": {
-    "create": { "title": "Créer un transfert de production", "text": "Créez des tâches d'approvisionnement, inter-opérations ou de sortie à partir d'un ordre de production ou d'un besoin manuel." },
-    "list": { "title": "Registres de transfert", "text": "Suivez les quantités planifiées, réservées, prélevées, expédiées et mises en zone." },
-    "settings": { "title": "Paramètres du processus", "text": "Gérez les règles de disponibilité, de rupture, d'affectation, d'emplacement et de tolérance." }
+  "hub": {
+    "eyebrow": "Entrepôt et production",
+    "title": "Centre de processus de transfert de production",
+    "description": "Gérez l'approvisionnement en matières, les mouvements d'en-cours et les sorties de produits finis avec liens de production, affectations, réservations, suivi série/lot et traçabilité.",
+    "phases": {
+      "start": {
+        "title": "Démarrer le transfert",
+        "description": "Ouvrez la bonne tâche d'approvisionnement ou de sortie à partir d'un ordre de production ou d'un besoin manuel."
+      },
+      "execute": {
+        "title": "Exécuter l'affectation",
+        "description": "Gérez le pool de tâches, assignez le travail et faites avancer les demandes de matériel."
+      },
+      "manage": {
+        "title": "Surveiller et gérer",
+        "description": "Suivez les registres et gérez les règles de disponibilité, d'emplacement et de tolérance."
+      }
+    },
+    "cards": {
+      "create": {
+        "title": "Créer un transfert de production",
+        "description": "Créez des tâches d'approvisionnement, inter-opérations ou de sortie à partir d'un ordre de production ou d'un besoin manuel."
+      },
+      "taskPool": {
+        "title": "Pool de tâches manager",
+        "description": "Gérez toutes les tâches de transfert de production, le travail restant et la charge entrepôt au même endroit."
+      },
+      "materialRequests": {
+        "title": "Commandes de demande de matériel",
+        "description": "Scannez une carte personnel, chargez les commandes Netsis ouvertes du compte lié et préparez la distribution KKD."
+      },
+      "list": {
+        "title": "Registres de transfert",
+        "description": "Suivez les quantités planifiées, réservées, prélevées, expédiées et mises en zone."
+      },
+      "settings": {
+        "title": "Paramètres du processus",
+        "description": "Gérez les règles de disponibilité, de rupture, d'affectation, d'emplacement et de tolérance."
+      }
+    }
   },
   "policy": {
     "loading": "Chargement des paramètres de transfert de production…",

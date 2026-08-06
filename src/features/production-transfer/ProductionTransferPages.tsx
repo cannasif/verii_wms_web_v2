@@ -1,12 +1,13 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowRight, Boxes, ChevronDown, ChevronRight, ClipboardList, Factory, ListChecks, PackageCheck, Play, RefreshCw, RotateCcw, Save, Settings2, ShieldAlert, Trash2, UserPlus, Warehouse } from 'lucide-react';
+import { Boxes, ChevronDown, ChevronRight, ClipboardList, Factory, PackageCheck, Play, RefreshCw, RotateCcw, Rows3, Save, Settings2, ShieldAlert, Trash2, UserPlus, Warehouse } from 'lucide-react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { AppInput } from '@/components/shared/AppInput';
 import { OpsActionButton } from '@/components/shared/OpsActionButton';
 import { OpsLoadingState } from '@/components/shared/OpsLoadingState';
+import { OpsProcessHub, type OpsProcessHubCard, type OpsProcessHubPhase } from '@/components/shared/OpsProcessHub';
 import { OpsSelect } from '@/components/shared/OpsSelect';
 import { OpsSkinCheckbox } from '@/components/shared/OpsSkinCheckbox';
 import { OPS_SELECT_TRIGGER_CLASS } from '@/components/shared/ops-field-styles';
@@ -36,23 +37,105 @@ import type { PreparedNetsisProductionWorkOrder } from '@/features/production/ty
 import { kkdApi } from '@/features/kkd/kkd-api';
 
 export function ProductionTransferHubPage() {
-  const { t } = useModuleTranslation('production-transfer');
-  const {can}=usePermissionAccess();
-  const materialRequests=useQuery({queryKey:['kkd','material-requests','configuration'],queryFn:kkdApi.materialRequestConfiguration,enabled:can('WMS.KKD.DISTRIBUTION.OPERATE')});
-  return <section className="space-y-5">
-    <header className="rounded-2xl border border-[var(--wms-app-border)] bg-[image:var(--wms-brand-gradient-soft)] p-6">
-      <p className="text-xs font-bold uppercase tracking-[.18em] text-[var(--wms-brand-primary)]">{t('eyebrow')}</p>
-      <h1 className="mt-1 text-2xl font-black">{t('title')}</h1>
-      <p className="mt-2 max-w-4xl text-sm text-[var(--wms-app-text-muted)]">{t('description')}</p>
-    </header>
-    <div className="grid gap-4 md:grid-cols-3">
-      <Card href="/warehouse/production-transfers/new" icon={<Factory/>} title={t('cards.create.title')} text={t('cards.create.text')}/>
-      <Card href="/warehouse/production-transfers/list" icon={<ListChecks/>} title={t('cards.list.title')} text={t('cards.list.text')}/>
-      {can('WMS.PRODUCTION_TRANSFER.ASSIGN')&&<Card href="/warehouse/production-transfers/task-pool" icon={<UserPlus/>} title="Yönetici görev havuzu" text="Tüm üretim transferi görevlerini, kalan işi ve depo çalışanı yükünü tek ekranda yönetin."/>}
-      {can('WMS.KKD.DISTRIBUTION.OPERATE')&&materialRequests.data?.isEnabled&&<Card href="/warehouse/production-transfers/material-requests" icon={<Boxes/>} title="Malzeme talep siparişleri" text="Personel kartını okutun; bağlı carinin Netsis açık siparişlerini getirip KKD dağıtımına hazırlayın."/>}
-      <Card href="/warehouse/production-transfers/settings" icon={<Settings2/>} title={t('cards.settings.title')} text={t('cards.settings.text')}/>
-    </div>
-  </section>;
+  const { t, moduleReady } = useModuleTranslation('production-transfer');
+  const { can } = usePermissionAccess();
+  const materialRequests = useQuery({
+    queryKey: ['kkd', 'material-requests', 'configuration'],
+    queryFn: kkdApi.materialRequestConfiguration,
+    enabled: can('WMS.KKD.DISTRIBUTION.OPERATE'),
+  });
+
+  const executeItems: OpsProcessHubCard[] = [];
+  if (can('WMS.PRODUCTION_TRANSFER.ASSIGN')) {
+    executeItems.push({
+      key: 'taskPool',
+      code: 'PT.TSK',
+      href: '/warehouse/production-transfers/task-pool',
+      icon: UserPlus,
+      title: t('hub.cards.taskPool.title'),
+      description: t('hub.cards.taskPool.description'),
+    });
+  }
+  if (can('WMS.KKD.DISTRIBUTION.OPERATE') && materialRequests.data?.isEnabled) {
+    executeItems.push({
+      key: 'materialRequests',
+      code: 'PT.MRQ',
+      href: '/warehouse/production-transfers/material-requests',
+      icon: Boxes,
+      title: t('hub.cards.materialRequests.title'),
+      description: t('hub.cards.materialRequests.description'),
+    });
+  }
+
+  const phases: OpsProcessHubPhase[] = [
+    {
+      key: 'start',
+      number: '01',
+      title: t('hub.phases.start.title'),
+      description: t('hub.phases.start.description'),
+      sectionCode: 'PT-START',
+      items: [
+        {
+          key: 'create',
+          code: 'PT.NEW',
+          href: '/warehouse/production-transfers/new',
+          icon: Factory,
+          title: t('hub.cards.create.title'),
+          description: t('hub.cards.create.description'),
+          featured: true,
+        },
+      ],
+    },
+    ...(executeItems.length > 0
+      ? [
+          {
+            key: 'execute',
+            number: '02',
+            title: t('hub.phases.execute.title'),
+            description: t('hub.phases.execute.description'),
+            sectionCode: 'PT-EXEC',
+            items: executeItems,
+          } satisfies OpsProcessHubPhase,
+        ]
+      : []),
+    {
+      key: 'manage',
+      number: executeItems.length > 0 ? '03' : '02',
+      title: t('hub.phases.manage.title'),
+      description: t('hub.phases.manage.description'),
+      sectionCode: 'PT-MGMT',
+      items: [
+        {
+          key: 'list',
+          code: 'PT.REC',
+          href: '/warehouse/production-transfers/list',
+          icon: Rows3,
+          title: t('hub.cards.list.title'),
+          description: t('hub.cards.list.description'),
+        },
+        {
+          key: 'settings',
+          code: 'PT.SET',
+          href: '/warehouse/production-transfers/settings',
+          icon: Settings2,
+          title: t('hub.cards.settings.title'),
+          description: t('hub.cards.settings.description'),
+          featured: true,
+        },
+      ],
+    },
+  ];
+
+  return (
+    <OpsProcessHub
+      loading={!moduleReady}
+      eyebrow={t('hub.eyebrow')}
+      title={t('hub.title')}
+      description={t('hub.description')}
+      path="/warehouse/production-transfers"
+      phases={phases}
+    />
+  );
 }
 export function ProductionTransferTaskPoolPage(){
   const {can}=usePermissionAccess();
@@ -503,5 +586,3 @@ function PolicyCallout({title,text}:{title:string;text:string}){
     </span>
   </div>;
 }
-
-function Card({href,icon,title,text}:{href:string;icon:ReactNode;title:string;text:string}){return <Link to={href} className="group rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--wms-brand-primary)]"><div className="flex items-center justify-between text-[var(--wms-brand-primary)]">{icon}<ArrowRight className="size-5 transition group-hover:translate-x-1"/></div><h2 className="mt-4 font-black">{title}</h2><p className="mt-1 text-sm text-[var(--wms-app-text-muted)]">{text}</p></Link>;}

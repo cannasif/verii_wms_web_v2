@@ -1,11 +1,44 @@
 {
-  "eyebrow": "Warehouse and Production",
-  "title": "Production Transfer Process Center",
-  "description": "Manage material supply, WIP moves and output moves with production links, assignments, reservations, serial/lot tracking and traceability.",
-  "cards": {
-    "create": { "title": "Create Production Transfer", "text": "Create material supply, inter-operation or output tasks from a production order or a manual requirement." },
-    "list": { "title": "Transfer Records", "text": "Track planned, reserved, picked, dispatched and staged quantities." },
-    "settings": { "title": "Process Settings", "text": "Manage availability, shortage, assignment, location and tolerance rules." }
+  "hub": {
+    "eyebrow": "Warehouse and Production",
+    "title": "Production Transfer Process Center",
+    "description": "Manage material supply, WIP moves and output moves with production links, assignments, reservations, serial/lot tracking and traceability.",
+    "phases": {
+      "start": {
+        "title": "Start Transfer",
+        "description": "Open the right supply or output task from a production order or a manual requirement."
+      },
+      "execute": {
+        "title": "Execute Assignment",
+        "description": "Manage the task pool, assign work and advance material requests."
+      },
+      "manage": {
+        "title": "Monitor and Manage",
+        "description": "Track records and manage availability, location and tolerance rules."
+      }
+    },
+    "cards": {
+      "create": {
+        "title": "Create Production Transfer",
+        "description": "Create material supply, inter-operation or output tasks from a production order or a manual requirement."
+      },
+      "taskPool": {
+        "title": "Manager Task Pool",
+        "description": "Manage all production transfer tasks, remaining work and warehouse workload in one place."
+      },
+      "materialRequests": {
+        "title": "Material Request Orders",
+        "description": "Scan a personnel card, load the linked account's open Netsis orders and prepare KKD distribution."
+      },
+      "list": {
+        "title": "Transfer Records",
+        "description": "Track planned, reserved, picked, dispatched and staged quantities."
+      },
+      "settings": {
+        "title": "Process Settings",
+        "description": "Manage availability, shortage, assignment, location and tolerance rules."
+      }
+    }
   },
   "policy": {
     "loading": "Loading production transfer settings…",
