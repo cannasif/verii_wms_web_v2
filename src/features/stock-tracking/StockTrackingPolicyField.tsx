@@ -10,15 +10,26 @@ export function StockTrackingPolicyField({
   policy,
   loading = false,
   compact = false,
+  badge = false,
 }: {
   policy?: EffectiveStockTrackingPolicy;
   loading?: boolean;
   /** Inline under inputs — no heavy card chrome. */
   compact?: boolean;
+  /** Tek satırlık rozet — kart başlıklarında stok adının yanına sığar, detay tooltip'te. */
+  badge?: boolean;
 }): ReactElement {
   const { t } = useTranslation('common');
 
   if (loading) {
+    if (badge) {
+      return (
+        <span className="wms-ops-track-badge" data-tracking="loading" data-no-auto-localize="true">
+          <Loader2 className="size-3 shrink-0 animate-spin" aria-hidden />
+          <span>{t(`${ST}.loading`)}</span>
+        </span>
+      );
+    }
     if (compact) {
       return (
         <div className="flex items-center gap-1.5 text-[0.7rem] text-slate-500" data-no-auto-localize="true">
@@ -34,6 +45,14 @@ export function StockTrackingPolicyField({
   }
 
   if (!policy) {
+    if (badge) {
+      return (
+        <span className="wms-ops-track-badge" data-tracking="unknown" data-no-auto-localize="true">
+          <CircleSlash2 className="size-3 shrink-0" aria-hidden />
+          <span>{t(`${ST}.selectStockFirst`)}</span>
+        </span>
+      );
+    }
     if (compact) {
       return (
         <div className="flex items-center gap-1.5 text-[0.7rem] text-amber-600/90" data-no-auto-localize="true">
@@ -73,6 +92,22 @@ export function StockTrackingPolicyField({
   const detail = policy.hasPolicy
     ? `${policy.policyCode ?? t(`${ST}.activePolicy`)} · ${localizeEnumValue(policy.source)}`
     : t(`${ST}.noActiveRule`);
+
+  if (badge) {
+    return (
+      <span
+        className="wms-ops-track-badge"
+        data-tracking={policy.trackingType}
+        data-no-auto-localize="true"
+      >
+        <BadgeCheck className="size-3 shrink-0" aria-hidden />
+        <span className="wms-ops-track-badge__type">{trackingTypeText}</span>
+        <span className="wms-ops-track-badge__detail">
+          {[detail, ...requirements].join(' · ')}
+        </span>
+      </span>
+    );
+  }
 
   if (compact) {
     return (
