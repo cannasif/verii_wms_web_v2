@@ -146,6 +146,8 @@ interface Props<T extends { id: number }> {
   toolbarBelowExtra?: ReactNode;
   /** Mutation sonrasında sunucu verisini yeniden okumak için artırılan sürüm anahtarı. */
   refreshKey?: string | number;
+  /** true: sayfa başlığı/eyebrow gizlenir; sadece arama+tablo kartı kalır. */
+  compactShell?: boolean;
   /** Satıra çift tıklanınca çağrılır (aksiyon hücreleri hariç etkileşimleri engellemez). */
   onRowDoubleClick?: (row: T) => void;
   /** Açık satır detayı; `renderExpandedRow` ile birlikte kullanılır. */
@@ -454,6 +456,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
   hideSearch = false,
   toolbarBelowExtra,
   refreshKey = 0,
+  compactShell = false,
   onRowDoubleClick,
   expandedRowId = null,
   renderExpandedRow,
@@ -1004,10 +1007,11 @@ export function AdvancedDataGrid<T extends { id: number }>({
   return (
 
     <OpsListPageShell
+      compact={compactShell}
       eyebrow={resolvedEyebrow}
       title={localizedTitle}
       description={localizedDescription}
-      actions={resolvedToolbarActions.length > 0 ? (
+      actions={!compactShell && resolvedToolbarActions.length > 0 ? (
         <TooltipProvider delayDuration={200}>
           <div className="flex flex-wrap items-center justify-end gap-2">
             {resolvedToolbarActions.map((action, index) => {

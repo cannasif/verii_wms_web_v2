@@ -15,6 +15,7 @@ import {
   loadProjectSettingsPage, loadQualityInspectionsPage, loadQualityRulesPage, loadQualitySettingsPage,
   loadProductionPages, loadProductionTransferPages, loadSubcontractingTransferPages,
   loadProcurementPage,
+  loadSupplierQuoteEntryPage,
   loadSupplierQuotePortalPage,
   loadSerialNumberRulesPage, loadShippingCreatePage, loadShippingHubPage, loadShippingListPage,
   loadShippingOperationPage, loadShippingPolicyPage, loadSmtpSettingsPage, loadSteelReceiptHubPage,
@@ -105,6 +106,7 @@ const ProcurementRequestsPage = lazy(() => loadProcurementPage().then((m) => ({ 
 const ProcurementRfqsPage = lazy(() => loadProcurementPage().then((m) => ({ default: m.ProcurementRfqsPage })));
 const ProcurementQuotesPage = lazy(() => loadProcurementPage().then((m) => ({ default: m.ProcurementQuotesPage })));
 const ProcurementOrdersPage = lazy(() => loadProcurementPage().then((m) => ({ default: m.ProcurementOrdersPage })));
+const SupplierQuoteEntryPage = lazy(() => loadSupplierQuoteEntryPage().then((m) => ({ default: m.SupplierQuoteEntryPage })));
 const SupplierQuotePortalPage = lazy(() => loadSupplierQuotePortalPage().then((m) => ({ default: m.SupplierQuotePortalPage })));
 const ProductionCreatePage = lazy(() => loadProductionPages().then((m) => ({ default: m.ProductionCreatePage })));
 const ProductionListPage = lazy(() => loadProductionPages().then((m) => ({ default: m.ProductionListPage })));
@@ -212,6 +214,7 @@ export function App(): ReactElement {
           <Route path="procurement/requests" element={<ProcurementRequestsPage />} />
           <Route path="procurement/rfqs" element={<ProcurementRfqsPage />} />
           <Route path="procurement/quotes" element={<ProcurementQuotesPage />} />
+          <Route path="procurement/quotes/new" element={<SupplierQuoteEntryPage />} />
           <Route path="procurement/orders" element={<ProcurementOrdersPage />} />
           <Route path="warehouse/production/new" element={<ProductionCreatePage />} />
           <Route path="warehouse/production/list" element={<ProductionListPage />} />

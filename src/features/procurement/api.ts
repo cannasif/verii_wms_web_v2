@@ -4,6 +4,8 @@ import type {
 } from "@/components/shared/AdvancedDataGrid";
 import { api } from "@/lib/axios";
 import type {
+  ProcurementAttachment,
+  ProcurementAttachmentOwnerType,
   ProcurementDocumentDetail,
   ProcurementDocumentType,
   ProcurementGridRow,
@@ -30,6 +32,14 @@ export const procurementApi = {
     unwrap(
       await api.get<Envelope<ProcurementSummary>>("/api/procurement/summary"),
     ),
+  nextDocumentNo: async (
+    documentType: ProcurementDocumentType,
+  ): Promise<string> =>
+    unwrap<{ documentType: string; documentNo: string }>(
+      await api.get<Envelope<{ documentType: string; documentNo: string }>>(
+        `/api/procurement/next-document-no/${documentType}`,
+      ),
+    ).documentNo,
   paged: async (
     type: ProcurementDocumentType,
     request: GridRequest,
@@ -56,6 +66,7 @@ export const procurementApi = {
     projectCode?: string;
     subject: string;
     description?: string;
+    requestNo?: string;
     lines: ProcurementRequestLineInput[];
   }): Promise<number> =>
     unwrap<{ id: number }>(
@@ -87,6 +98,7 @@ export const procurementApi = {
       responseDueDate: string;
       supplierIds: number[];
       buyerMessage?: string;
+      rfqNo?: string;
       lines: RfqRequestLineInput[];
     },
   ): Promise<number> =>
@@ -99,7 +111,8 @@ export const procurementApi = {
   createQuote: async (
     rfqId: number,
     payload: {
-      supplierId: number;
+      supplierId?: number | null;
+      supplierName?: string;
       quoteNo: string;
       quoteDate?: string;
       validUntil?: string;
@@ -123,6 +136,7 @@ export const procurementApi = {
       deliveryDate?: string;
       projectCode?: string;
       description?: string;
+      orderNo?: string;
     },
   ): Promise<number> =>
     unwrap<{ orderId: number }>(
@@ -185,4 +199,40 @@ export const procurementApi = {
       { skipAuth: true, skipSessionExpiredOn401: true },
     );
   },
+  listAttachments: async (
+    ownerType: ProcurementAttachmentOwnerType,
+    ownerId: number,
+  ): Promise<ProcurementAttachment[]> =>
+    unwrap(
+      await api.get<Envelope<ProcurementAttachment[]>>(
+        "/api/procurement/attachments",
+        { params: { ownerType, ownerId } },
+      ),
+    ),
+  uploadAttachment: async (
+    ownerType: ProcurementAttachmentOwnerType,
+    ownerId: number,
+    file: File,
+    caption?: string,
+  ): Promise<ProcurementAttachment> => {
+    const body = new FormData();
+    body.append("file", file);
+    if (caption) body.append("caption", caption);
+    return unwrap(
+      await api.post<Envelope<ProcurementAttachment>>(
+        `/api/procurement/attachments?ownerType=${encodeURIComponent(ownerType)}&ownerId=${ownerId}`,
+        body,
+      ),
+    );
+  },
+  removeAttachment: async (id: number): Promise<boolean> =>
+    unwrap(
+      await api.delete<Envelope<boolean>>(
+        `/api/procurement/attachments/${id}`,
+      ),
+    ),
+  downloadAttachment: async (id: number): Promise<Blob> =>
+    await api.get<Blob>(`/api/procurement/attachments/${id}/file`, {
+      responseType: "blob",
+    }),
 };

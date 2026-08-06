@@ -69,6 +69,8 @@ interface PagedLookupDialogProps<T> {
   getKey: (item: T) => string;
   getLabel: (item: T) => string;
   onSelect: (item: T) => void;
+  /** Combobox modunda yazılan metni parent'a iletir (serbest metin / seçim dışı değer için). */
+  onComboboxTextChange?: (text: string) => void;
 }
 
 export function PagedLookupDialog<T>({
@@ -93,6 +95,7 @@ export function PagedLookupDialog<T>({
   getKey,
   getLabel,
   onSelect,
+  onComboboxTextChange,
 }: PagedLookupDialogProps<T>): ReactElement {
   const { t } = useTranslation(['common', 'shared']);
   const [searchInput, setSearchInput] = useState('');
@@ -457,6 +460,7 @@ export function PagedLookupDialog<T>({
               const next = event.target.value;
               setEditing(true);
               setComboboxDraft(next);
+              onComboboxTextChange?.(next);
               // Sadece yazmaya başlayınca aç; boşsa kapat.
               setComboboxOpen(next.trim().length > 0);
             }}

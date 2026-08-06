@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type ReactElement } from "react";
 import { Building2, CheckCircle2, Clock3, Save, Send } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { AppDateInput, AppInput } from "@/components/shared/AppInput";
+import { OpsActionButton } from "@/components/shared/OpsActionButton";
 import { formatProjectDate, formatProjectNumber } from "@/lib/project-format";
 import { procurementApi } from "./api";
 import type { SupplierPortalQuote } from "./types";
@@ -488,17 +489,20 @@ export function SupplierQuotePortalPage(): ReactElement {
               {!locked ? (
                 <>
                   {quote.allowDraftSave ? (
-                    <button
-                      className="btn btn-secondary"
+                    <OpsActionButton
+                      type="button"
+                      variant="secondary"
                       disabled={busy}
                       onClick={() => void save(false)}
                     >
                       <Save size={16} /> Taslak kaydet
-                    </button>
+                    </OpsActionButton>
                   ) : null}
-                  <button
-                    className="btn btn-primary"
-                    disabled={busy || !readyToSubmit}
+                  <OpsActionButton
+                    type="button"
+                    variant="primary"
+                    loading={busy}
+                    disabled={!readyToSubmit}
                     title={
                       readyToSubmit
                         ? "Teklifi satınalma ekibine gönder"
@@ -507,7 +511,7 @@ export function SupplierQuotePortalPage(): ReactElement {
                     onClick={() => void save(true)}
                   >
                     <Send size={16} /> 3. Kontrol et ve gönder
-                  </button>
+                  </OpsActionButton>
                 </>
               ) : (
                 <p className="font-semibold text-emerald-400">

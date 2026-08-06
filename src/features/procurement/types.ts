@@ -20,7 +20,28 @@ export interface ProcurementGridRow {
   currencyCode: string;
   dueDate?: string;
   createdDate?: string;
+  requestId?: number | null;
+  requestNo?: string | null;
+  rfqId?: number | null;
 }
+export type ProcurementAttachmentOwnerType =
+  | "request"
+  | "request-line"
+  | "quote"
+  | "quote-line";
+
+export interface ProcurementAttachment {
+  id: number;
+  ownerType: ProcurementAttachmentOwnerType | string;
+  ownerId: number;
+  fileName: string;
+  contentType: string;
+  url: string;
+  fileSize: number;
+  caption?: string | null;
+  createdDate?: string | null;
+}
+
 export interface ProcurementLineDetail {
   id: number;
   lineNo: number;
@@ -36,6 +57,8 @@ export interface ProcurementLineDetail {
   requiredDate?: string;
   projectCode?: string;
   openQuantity: number;
+  sourceRequestLineId?: number | null;
+  attachments?: ProcurementAttachment[];
 }
 export interface ProcurementHistoryRow {
   fromStatus: string;
@@ -45,7 +68,7 @@ export interface ProcurementHistoryRow {
   changedAtUtc: string;
 }
 export interface ProcurementSupplierParticipant {
-  supplierId: number;
+  supplierId?: number | null;
   supplierCode: string;
   supplierName: string;
   invitationStatus?: string;
@@ -68,6 +91,9 @@ export interface ProcurementDocumentDetail {
   lines: ProcurementLineDetail[];
   history: ProcurementHistoryRow[];
   suppliers?: ProcurementSupplierParticipant[];
+  requestId?: number | null;
+  requestNo?: string | null;
+  attachments?: ProcurementAttachment[];
 }
 export interface ProcurementRequestLineInput {
   stockId?: number;

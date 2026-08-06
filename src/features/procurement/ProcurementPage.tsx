@@ -9,11 +9,11 @@ import {
 import {
   ArrowRight,
   ClipboardList,
+  Eye,
   FileCheck2,
   FileSearch,
   Mail,
   Plus,
-  RefreshCw,
   Settings2,
   ShoppingCart,
   Trash2,
@@ -28,21 +28,35 @@ import {
 } from "@/components/shared/AdvancedDataGrid";
 import { AppDateInput, AppInput } from "@/components/shared/AppInput";
 import { AppDropdown } from "@/components/shared/AppDropdown";
+import { requiredActionColumn } from "@/components/shared/GridSystemColumns";
+import { OpsActionButton } from "@/components/shared/OpsActionButton";
+import { OPS_FIELD_CLASS } from "@/components/shared/ops-field-styles";
 import { PagedAppDropdown } from "@/components/shared/PagedAppDropdown";
+import { PagedLookupDialog } from "@/components/shared/PagedLookupDialog";
 import { ResponsiveDialog } from "@/components/shared/ResponsiveDialog";
-import { warehouseTransferApi } from "@/features/warehouse-transfer-v2/api/warehouse-transfer.api";
 import { goodsReceiptV2Api } from "@/features/goods-receipt-v2/api/goods-receipt.api";
 import type {
   CustomerOption,
   StockOption,
 } from "@/features/goods-receipt-v2/types/goods-receipt.types";
 import { usePermissionAccess } from "@/features/access-control/hooks/usePermissionAccess";
+import type { DropdownPage } from "@/hooks/useDropdownInfiniteSearch";
 import { useAuthStore } from "@/stores/auth-store";
 import {
   formatProjectDate,
   formatProjectDateTime,
   formatProjectNumber,
 } from "@/lib/project-format";
+import type { PagedResponse } from "@/types/api";
+import {
+  LineAttachmentBadge,
+  LineAttachmentsDialog,
+  PendingAttachmentsEditor,
+  SavedAttachmentsViewer,
+  revokePendingAttachments,
+  uploadPendingAttachments,
+  type PendingAttachment,
+} from "./ProcurementAttachments";
 import { procurementApi } from "./api";
 import type {
   ProcurementDocumentDetail,
@@ -53,8 +67,19 @@ import type {
   ProcurementSummary,
   QuoteOrderLineInput,
   RfqRequestLineInput,
-  SupplierQuoteLineInput,
 } from "./types";
+
+const toPagedResponse = <T,>(page: DropdownPage<T>): PagedResponse<T> => ({
+  data: page.items,
+  totalCount: page.totalCount,
+  pageNumber: page.pageNumber,
+  pageSize: page.pageSize,
+  totalPages:
+    page.totalPages ??
+    Math.max(1, Math.ceil(page.totalCount / Math.max(page.pageSize, 1))),
+  hasPreviousPage: page.pageNumber > 1,
+  hasNextPage: Boolean(page.hasNextPage),
+});
 
 const today = () => new Date().toLocaleDateString("en-CA");
 const tabs: Array<{
@@ -81,7 +106,8 @@ const tabs: Array<{
   {
     key: "quote",
     label: "Tedarikçi Teklifleri",
-    description: "Gelen fiyat ve terminleri inceleyip karar verin.",
+    description:
+      "Satın alma taleplerine gelen fiyat ve terminleri karşılaştırıp siparişe dönüştürün.",
     href: "/procurement/quotes",
     icon: FileCheck2,
   },
@@ -155,12 +181,13 @@ export function ProcurementHubPage(): ReactElement {
             </p>
           </div>
           {can("WMS.PROCUREMENT.APPROVE") ? (
-            <button
-              className="btn btn-secondary"
+            <OpsActionButton
+              type="button"
+              variant="secondary"
               onClick={() => setPolicyOpen(true)}
             >
               <Settings2 size={16} /> Süreç politikası
-            </button>
+            </OpsActionButton>
           ) : null}
         </div>
       </header>
@@ -244,8 +271,16 @@ export function ProcurementPage({
   const [policy, setPolicy] = useState<ProcurementPolicy>();
   const [creating, setCreating] = useState(false);
   const [rfqSource, setRfqSource] = useState<ProcurementDocumentDetail>();
-  const [quoteSource, setQuoteSource] = useState<ProcurementDocumentDetail>();
   const [orderSource, setOrderSource] = useState<ProcurementDocumentDetail>();
+  const [requestFilter, setRequestFilter] = useState<{
+    id: string;
+    documentNo: string;
+    subject: string;
+    documentDate: string;
+    status: string;
+  } | null>(null);
+  const [requestPickerOpen, setRequestPickerOpen] = useState(false);
+  const requestFilterId = requestFilter?.id ?? null;
   useEffect(() => {
     void procurementApi
       .policy()
@@ -259,10 +294,38 @@ export function ProcurementPage({
       );
   }, [branch]);
   const fetchPage = useCallback(
-    (request: GridRequest) => procurementApi.paged(type, request),
-    [type],
+    (request: GridRequest) => {
+      if (type !== "quote" || !requestFilterId) {
+        return procurementApi.paged(type, request);
+      }
+      return procurementApi.paged(type, {
+        ...request,
+        filters: [
+          ...(request.filters ?? []),
+          {
+            column: "requestId",
+            operator: "eq",
+            value: requestFilterId,
+          },
+        ],
+      });
+    },
+    [requestFilterId, type],
   );
   const page = tabs.find((x) => x.key === type) ?? tabs[0];
+  const openDetail = useCallback(
+    (id: number) => {
+      void procurementApi
+        .detail(type, id)
+        .then(setDetail)
+        .catch((e) =>
+          toast.error(
+            e instanceof Error ? e.message : "Belge detayı alınamadı.",
+          ),
+        );
+    },
+    [type],
+  );
   const columns = useMemo<GridColumn<ProcurementGridRow>[]>(
     () => [
       {
@@ -272,12 +335,7 @@ export function ProcurementPage({
         render: (x) => (
           <button
             className="font-semibold text-cyan-500 hover:underline"
-            onClick={() =>
-              void procurementApi
-                .detail(type, x.id)
-                .then(setDetail)
-                .catch((e) => toast.error(e.message))
-            }
+            onClick={() => openDetail(x.id)}
           >
             {x.documentNo}
           </button>
@@ -301,9 +359,19 @@ export function ProcurementPage({
       },
       {
         key: "subject",
-        label: "Konu",
+        label: type === "quote" ? "Konu / Talep" : "Konu",
         sortable: true,
-        render: (x) => x.subject,
+        render: (x) =>
+          type === "quote" ? (
+            <div>
+              <p>{x.subject}</p>
+              {x.requestNo ? (
+                <p className="mt-0.5 text-xs text-slate-500">{x.requestNo}</p>
+              ) : null}
+            </div>
+          ) : (
+            x.subject
+          ),
       },
       {
         key: "counterparty",
@@ -329,52 +397,137 @@ export function ProcurementPage({
         label: "Termin",
         render: (x) => (x.dueDate ? formatProjectDate(x.dueDate) : "—"),
       },
-    ],
-    [type],
-  );
-  return (
-    <section className="space-y-5">
-      <header className="rounded-2xl border border-cyan-500/20 bg-[var(--wms-app-panel)] p-6">
-        <p className="text-xs font-semibold uppercase tracking-[.22em] text-cyan-500">
-          PROCURE_TO_PAY / SATINALMA
-        </p>
-        <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold">{page.label}</h1>
-            <p className="mt-2 max-w-3xl text-sm text-slate-500">
-              {page.description}
-            </p>
-          </div>
-          {type === "request" && can("WMS.PROCUREMENT.REQUEST.MANAGE") ? (
+      {
+        key: "actions",
+        label: "Detay",
+        ...requiredActionColumn,
+        width: 72,
+        render: (x) => (
+          <div className="wms-ops-row-actions">
             <button
-              className="btn btn-primary"
-              onClick={() => setCreating(true)}
+              type="button"
+              title="Detay"
+              aria-label="Detay"
+              onClick={() => openDetail(x.id)}
+              className="wms-ops-grid-icon-btn"
             >
-              <Plus size={16} /> Yeni ihtiyaç talebi
+              <Eye className="size-3.5" aria-hidden />
             </button>
-          ) : null}
-        </div>
-      </header>
-      <div className="flex flex-wrap items-center gap-2">
-        <Link className="btn btn-secondary" to="/procurement">
-          <ArrowRight size={16} className="rotate-180" /> Süreç merkezine dön
-        </Link>
-        <button
-          className="btn btn-secondary ml-auto"
-          onClick={() => setRevision((x) => x + 1)}
-        >
-          <RefreshCw size={16} /> Yenile
-        </button>
+          </div>
+        ),
+      },
+    ],
+    [openDetail, type],
+  );
+  const headerToolbarActions =
+    type === "request" && can("WMS.PROCUREMENT.REQUEST.MANAGE")
+      ? [
+          {
+            label: "Yeni ihtiyaç talebi",
+            icon: <Plus size={16} />,
+            run: async () => {
+              setCreating(true);
+            },
+          },
+        ]
+      : type === "quote"
+        ? [
+            {
+              label: requestFilter ? "Talebi değiştir" : "Talep seç",
+              icon: <FileSearch size={15} />,
+              run: async () => {
+                setRequestPickerOpen(true);
+              },
+            },
+            ...(can("WMS.PROCUREMENT.QUOTE.MANAGE")
+              ? [
+                  {
+                    label: "Yeni teklif gir",
+                    icon: <Plus size={16} />,
+                    run: async () => {
+                      navigate("/procurement/quotes/new");
+                    },
+                  },
+                ]
+              : []),
+          ]
+        : undefined;
+
+  return (
+    <section className="space-y-4">
+      <div className="px-0.5">
+        <OpsActionButton asChild variant="secondary">
+          <Link to="/procurement">
+            <ArrowRight size={16} className="rotate-180" /> Süreç merkezine dön
+          </Link>
+        </OpsActionButton>
       </div>
+
       <AdvancedDataGrid
-        key={type}
+        key={`${type}-${requestFilterId ?? "all"}`}
         refreshKey={revision}
         pageKey={`procurement-${type}`}
-        title={tabs.find((x) => x.key === type)?.label ?? "Satınalma"}
-        description="Belgeye tıklayarak satırları ve karar geçmişini inceleyin."
+        eyebrow={
+          <>
+            <span>PROCURE_TO_PAY</span>
+            <span className="mx-2 opacity-60">/</span>
+            <span>SATINALMA</span>
+          </>
+        }
+        title={page.label}
+        description={page.description}
+        toolbarActions={headerToolbarActions}
+        toolbarBelowExtra={
+          type === "quote" && requestFilter ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex max-w-full items-center gap-2 rounded-md border border-cyan-500/25 bg-cyan-500/10 px-2.5 py-1.5 text-xs text-cyan-100">
+                <span className="min-w-0 truncate">
+                  <span className="font-semibold">{requestFilter.documentNo}</span>
+                  <span className="mx-1.5 opacity-50">·</span>
+                  <span className="text-[var(--wms-app-text-muted)]">
+                    {requestFilter.subject}
+                  </span>
+                </span>
+                <button
+                  type="button"
+                  title="Talebi temizle"
+                  aria-label="Talebi temizle"
+                  className="shrink-0 rounded p-0.5 text-cyan-300 transition hover:bg-cyan-500/20 hover:text-white"
+                  onClick={() => {
+                    setRequestFilter(null);
+                    setRevision((x) => x + 1);
+                  }}
+                >
+                  <X size={14} />
+                </button>
+              </span>
+            </div>
+          ) : undefined
+        }
         columns={columns}
         fetchPage={fetchPage}
       />
+      {type === "quote" && requestPickerOpen ? (
+        <RequestFilterPickerDialog
+          selectedId={requestFilterId}
+          onClose={() => setRequestPickerOpen(false)}
+          onSelect={(row) => {
+            setRequestFilter(
+              row
+                ? {
+                    id: String(row.id),
+                    documentNo: row.documentNo,
+                    subject: row.subject,
+                    documentDate: row.documentDate,
+                    status: row.status,
+                  }
+                : null,
+            );
+            setRequestPickerOpen(false);
+            setRevision((x) => x + 1);
+          }}
+        />
+      ) : null}
       {creating ? (
         <CreateRequestDialog
           branch={branch}
@@ -397,8 +550,19 @@ export function ProcurementPage({
             setDetail(undefined);
           }}
           onCreateQuote={() => {
-            setQuoteSource(detail);
+            const requestId = detail.requestId;
+            const id = detail.id;
             setDetail(undefined);
+            navigate(
+              requestId
+                ? `/procurement/quotes/new?requestId=${requestId}`
+                : `/procurement/quotes/new?rfqId=${id}`,
+            );
+          }}
+          onEnterQuoteFromRequest={() => {
+            const id = detail.id;
+            setDetail(undefined);
+            navigate(`/procurement/quotes/new?requestId=${id}`);
           }}
           onCreateOrder={() => {
             setOrderSource(detail);
@@ -423,17 +587,6 @@ export function ProcurementPage({
               "Teklif talebi oluşturuldu; göndermeden önce kontrol edebilirsiniz.",
             );
             navigate("/procurement/rfqs");
-          }}
-        />
-      ) : null}
-      {quoteSource ? (
-        <CreateQuoteDialog
-          source={quoteSource}
-          onClose={() => setQuoteSource(undefined)}
-          onSaved={() => {
-            setQuoteSource(undefined);
-            toast.success("Tedarikçi teklifi kaydedildi.");
-            navigate("/procurement/quotes");
           }}
         />
       ) : null}
@@ -467,6 +620,151 @@ export const ProcurementOrdersPage = (): ReactElement => (
   <ProcurementPage documentType="order" />
 );
 
+function RequestFilterPickerDialog({
+  selectedId,
+  onClose,
+  onSelect,
+}: {
+  selectedId: string | null;
+  onClose: () => void;
+  onSelect: (row: ProcurementGridRow | null) => void;
+}): ReactElement {
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [items, setItems] = useState<ProcurementGridRow[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [pickedId, setPickedId] = useState<string | null>(selectedId);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedSearch(search.trim()), 250);
+    return () => window.clearTimeout(timer);
+  }, [search]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setBusy(true);
+    void procurementApi
+      .paged("request", {
+        pageNumber: 1,
+        pageSize: 50,
+        search: debouncedSearch || null,
+        searchFields: ["documentNo", "subject"],
+        sortBy: "documentDate",
+        sortDirection: "desc",
+        filterLogic: "and",
+        filters: [],
+      })
+      .then((page) => {
+        if (!cancelled) setItems(page.data ?? page.items ?? []);
+      })
+      .catch((e) => {
+        if (!cancelled) {
+          toast.error(
+            e instanceof Error ? e.message : "Talepler yüklenemedi.",
+          );
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setBusy(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [debouncedSearch]);
+
+  const picked = items.find((x) => String(x.id) === pickedId) ?? null;
+
+  return (
+    <ResponsiveDialog
+      open
+      onClose={onClose}
+      title="Satın alma talebi seç"
+      description="Listelenen teklifleri bir talebe göre daraltmak için talep seçin."
+      variant="lookup"
+      className="!max-w-2xl"
+    >
+      <div className="space-y-4">
+        <AppInput
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Talep no veya konu ara…"
+        />
+        <div className="max-h-80 space-y-2 overflow-y-auto pr-1">
+          {busy ? (
+            <p className="py-8 text-center text-sm text-slate-500">
+              Talepler yükleniyor…
+            </p>
+          ) : items.length === 0 ? (
+            <p className="py-8 text-center text-sm text-slate-500">
+              Kayıt bulunamadı.
+            </p>
+          ) : (
+            items.map((row) => {
+              const active = String(row.id) === pickedId;
+              return (
+                <button
+                  key={row.id}
+                  type="button"
+                  onClick={() => setPickedId(String(row.id))}
+                  className={`w-full rounded-xl border px-3 py-3 text-left transition ${
+                    active
+                      ? "border-cyan-500/50 bg-cyan-500/10"
+                      : "border-cyan-500/15 hover:border-cyan-500/35 hover:bg-cyan-500/5"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-cyan-300">
+                        {row.documentNo}
+                      </p>
+                      <p className="mt-0.5 truncate text-sm">{row.subject}</p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        {formatProjectDate(row.documentDate)}
+                        {" · "}
+                        {statusLabel[row.status] ?? row.status}
+                      </p>
+                    </div>
+                    <span
+                      className={`mt-1 size-4 shrink-0 rounded-full border ${
+                        active
+                          ? "border-cyan-400 bg-cyan-400"
+                          : "border-cyan-500/40"
+                      }`}
+                      aria-hidden
+                    />
+                  </div>
+                </button>
+              );
+            })
+          )}
+        </div>
+        <div className="flex flex-wrap items-center justify-end gap-2 border-t border-cyan-500/15 pt-3">
+          <OpsActionButton
+            type="button"
+            variant="secondary"
+            onClick={() => onSelect(null)}
+          >
+            Tüm talepler
+          </OpsActionButton>
+          <OpsActionButton type="button" variant="secondary" onClick={onClose}>
+            İptal
+          </OpsActionButton>
+          <OpsActionButton
+            type="button"
+            variant="primary"
+            disabled={!picked}
+            onClick={() => {
+              if (picked) onSelect(picked);
+            }}
+          >
+            Seç
+          </OpsActionButton>
+        </div>
+      </div>
+    </ResponsiveDialog>
+  );
+}
+
 function CreateRequestDialog({
   branch,
   onClose,
@@ -476,6 +774,7 @@ function CreateRequestDialog({
   onClose: () => void;
   onSaved: () => void;
 }): ReactElement {
+  const [requestNo, setRequestNo] = useState("");
   const [subject, setSubject] = useState("");
   const [requestDate, setRequestDate] = useState(today);
   const [requiredDate, setRequiredDate] = useState("");
@@ -484,19 +783,48 @@ function CreateRequestDialog({
   const [description, setDescription] = useState("");
   const [lines, setLines] = useState([blankLine()]);
   const [busy, setBusy] = useState(false);
+  const [stockLookupKey, setStockLookupKey] = useState<string | null>(null);
+  const [headerFiles, setHeaderFiles] = useState<PendingAttachment[]>([]);
+  const [lineFiles, setLineFiles] = useState<Record<string, PendingAttachment[]>>(
+    {},
+  );
+  const [lineAttachKey, setLineAttachKey] = useState<string | null>(null);
+  useEffect(() => {
+    void procurementApi
+      .nextDocumentNo("request")
+      .then(setRequestNo)
+      .catch((e) =>
+        toast.error(
+          e instanceof Error ? e.message : "Talep numarası alınamadı.",
+        ),
+      );
+  }, []);
+  useEffect(
+    () => () => {
+      revokePendingAttachments(headerFiles);
+      for (const files of Object.values(lineFiles))
+        revokePendingAttachments(files);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- cleanup on unmount only
+    [],
+  );
   const patch = (key: string, next: Partial<(typeof lines)[number]>) =>
     setLines((xs) => xs.map((x) => (x.key === key ? { ...x, ...next } : x)));
   const save = async () => {
     if (
+      !requestNo.trim() ||
       !subject.trim() ||
       lines.some((x) => !x.stockName.trim() || x.quantity <= 0)
     ) {
-      toast.error("Konu ve geçerli stok satırları zorunludur.");
+      toast.error(
+        "Talep no, konu ve her satır için ürün/stok tanımı ile geçerli miktar zorunludur.",
+      );
       return;
     }
     setBusy(true);
     try {
-      await procurementApi.createRequest({
+      const id = await procurementApi.createRequest({
+        requestNo: requestNo.trim(),
         requestDate,
         requiredDate: requiredDate || undefined,
         departmentCode: departmentCode || undefined,
@@ -506,7 +834,7 @@ function CreateRequestDialog({
         lines: lines.map((x) => ({
           stockId: x.stockId,
           stockCode: x.stockCode,
-          stockName: x.stockName,
+          stockName: x.stockName.trim(),
           unitCode: x.unitCode,
           quantity: x.quantity,
           requiredDate: x.requiredDate,
@@ -514,6 +842,14 @@ function CreateRequestDialog({
           description: x.description,
         })),
       });
+      const detail = await procurementApi.detail("request", id);
+      await uploadPendingAttachments("request", id, headerFiles);
+      for (let i = 0; i < lines.length; i += 1) {
+        const pending = lineFiles[lines[i].key] ?? [];
+        const lineId = detail.lines[i]?.id;
+        if (lineId && pending.length > 0)
+          await uploadPendingAttachments("request-line", lineId, pending);
+      }
       onSaved();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Talep oluşturulamadı.");
@@ -531,6 +867,13 @@ function CreateRequestDialog({
     >
       <div className="space-y-5">
         <div className="grid gap-4 md:grid-cols-2">
+          <Field label="Talep No *">
+            <AppInput
+              value={requestNo}
+              onChange={(e) => setRequestNo(e.target.value)}
+              maxLength={50}
+            />
+          </Field>
           <Field label="Talep konusu">
             <AppInput
               value={subject}
@@ -569,45 +912,86 @@ function CreateRequestDialog({
             />
           </Field>
         </div>
+        <PendingAttachmentsEditor
+          title="Talep Ekleri"
+          hint="Talebe ait fotoğraf, teknik doküman veya dosyaları ekleyebilirsiniz."
+          files={headerFiles}
+          onChange={setHeaderFiles}
+        />
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold">Talep satırları</h3>
-            <button
-              className="btn btn-secondary"
+            <OpsActionButton
+              type="button"
+              variant="secondary"
               onClick={() => setLines((x) => [...x, blankLine()])}
             >
               <Plus size={15} /> Satır ekle
-            </button>
+            </OpsActionButton>
           </div>
           {lines.map((line, index) => (
             <div
               key={line.key}
-              className="grid gap-3 rounded-xl border border-cyan-500/15 p-4 md:grid-cols-[minmax(260px,2fr)_100px_120px_140px_42px]"
+              className="grid gap-3 rounded-xl border border-cyan-500/15 p-4 md:grid-cols-[minmax(260px,2fr)_100px_120px_140px_auto_42px]"
             >
               <Field label={`Stok ${index + 1}`}>
-                <PagedAppDropdown<StockOption>
-                  queryKey={["procurement-stock", branch]}
-                  fetchPage={(r) => warehouseTransferApi.stocks(r, branch)}
-                  toOption={(x) => ({
-                    value: encodeURIComponent(JSON.stringify(x)),
-                    label: `${x.erpStockCode} · ${x.stockName}`,
-                    description: x.unitCode,
-                  })}
-                  value={line.stockValue}
-                  onValueChange={(value) => {
-                    const x = value
-                      ? (JSON.parse(decodeURIComponent(value)) as StockOption)
-                      : null;
+                <PagedLookupDialog<StockOption>
+                  variant="ops"
+                  triggerMode="combobox"
+                  autoSearchMinLength={0}
+                  popoverPortalContainer={null}
+                  open={stockLookupKey === line.key}
+                  onOpenChange={(open) =>
+                    setStockLookupKey(open ? line.key : null)
+                  }
+                  title="Stok seç"
+                  value={
+                    line.stockId && line.stockCode
+                      ? `${line.stockCode} · ${line.stockName}`
+                      : line.stockName
+                  }
+                  placeholder="Stok kodu, adı veya kendi tanımınızı yazın…"
+                  searchPlaceholder="Stok kodu veya adı yazın…"
+                  emptyText="Stok bulunamadı — yazdığınız metin ürün tanımı olarak kullanılabilir"
+                  triggerClassName={OPS_FIELD_CLASS}
+                  queryKey={["procurement-stock-lookup", branch, line.key]}
+                  fetchPage={async ({ pageNumber, pageSize, search, signal }) =>
+                    toPagedResponse(
+                      await goodsReceiptV2Api.stocks(
+                        {
+                          pageNumber,
+                          pageSize,
+                          search,
+                          sortBy: "erpStockCode",
+                          sortDirection: "asc",
+                          signal: signal ?? new AbortController().signal,
+                        },
+                        branch,
+                      ),
+                    )
+                  }
+                  getKey={(item) => String(item.id)}
+                  getLabel={(item) =>
+                    `${item.erpStockCode} · ${item.stockName}${item.unitCode ? ` · ${item.unitCode}` : ""}`
+                  }
+                  onComboboxTextChange={(text) => {
                     patch(line.key, {
-                      stockValue: value,
-                      stockId: x?.id,
-                      stockCode: x?.erpStockCode,
-                      stockName: x?.stockName ?? "",
-                      unitCode: x?.unitCode ?? "ADET",
+                      stockId: undefined,
+                      stockCode: undefined,
+                      stockName: text,
+                      stockValue: text.trim() ? text : null,
                     });
                   }}
-                  searchable
-                  minSearchLength={2}
+                  onSelect={(item) => {
+                    patch(line.key, {
+                      stockValue: `${item.erpStockCode} · ${item.stockName}`,
+                      stockId: item.id,
+                      stockCode: item.erpStockCode,
+                      stockName: item.stockName,
+                      unitCode: item.unitCode || "ADET",
+                    });
+                    setStockLookupKey(null);
+                  }}
                 />
               </Field>
               <Field label="Miktar">
@@ -637,29 +1021,65 @@ function CreateRequestDialog({
                   }
                 />
               </Field>
+              <div className="mt-6">
+                <LineAttachmentBadge
+                  count={(lineFiles[line.key] ?? []).length}
+                  onClick={() => setLineAttachKey(line.key)}
+                />
+              </div>
               <button
+                type="button"
                 className="mt-6 text-rose-400"
                 disabled={lines.length === 1}
-                onClick={() =>
-                  setLines((x) => x.filter((y) => y.key !== line.key))
-                }
+                onClick={() => {
+                  setLines((x) => x.filter((y) => y.key !== line.key));
+                  setLineFiles((prev) => {
+                    const copy = { ...prev };
+                    const removed = copy[line.key] ?? [];
+                    revokePendingAttachments(removed);
+                    delete copy[line.key];
+                    return copy;
+                  });
+                }}
               >
                 <Trash2 size={18} />
               </button>
             </div>
           ))}
         </div>
+        {lineAttachKey ? (
+          <LineAttachmentsDialog
+            open
+            onClose={() => setLineAttachKey(null)}
+            title="Stok satırı ekleri"
+            subtitle={
+              lines.find((x) => x.key === lineAttachKey)?.stockName ||
+              "Seçili satır"
+            }
+          >
+            <PendingAttachmentsEditor
+              title="Kalem Ekleri"
+              hint="Bu stok satırına özel fotoğraf veya dosya ekleyin."
+              files={lineFiles[lineAttachKey] ?? []}
+              onChange={(next) =>
+                setLineFiles((prev) => ({ ...prev, [lineAttachKey]: next }))
+              }
+              compact
+            />
+          </LineAttachmentsDialog>
+        ) : null}
         <div className="flex justify-end gap-2">
-          <button className="btn btn-secondary" onClick={onClose}>
+          <OpsActionButton type="button" variant="secondary" onClick={onClose}>
             Vazgeç
-          </button>
-          <button
-            className="btn btn-primary"
-            disabled={busy}
+          </OpsActionButton>
+          <OpsActionButton
+            type="button"
+            variant="primary"
+            loading={busy}
             onClick={() => void save()}
           >
-            {busy ? "Kaydediliyor…" : "Talebi oluştur"}
-          </button>
+            Talebi oluştur
+          </OpsActionButton>
         </div>
       </div>
     </ResponsiveDialog>
@@ -677,6 +1097,7 @@ function CreateRfqDialog({
   onClose: () => void;
   onSaved: () => void;
 }): ReactElement {
+  const [rfqNo, setRfqNo] = useState("");
   const [dueDate, setDueDate] = useState(source.dueDate ?? "");
   const [message, setMessage] = useState("");
   const [suppliers, setSuppliers] = useState<CustomerOption[]>([]);
@@ -687,6 +1108,16 @@ function CreateRfqDialog({
       .filter((x) => x.openQuantity > 0)
       .map((x) => ({ requestLineId: x.id, quantity: x.openQuantity })),
   );
+  useEffect(() => {
+    void procurementApi
+      .nextDocumentNo("rfq")
+      .then(setRfqNo)
+      .catch((e) =>
+        toast.error(
+          e instanceof Error ? e.message : "Teklif talebi numarası alınamadı.",
+        ),
+      );
+  }, []);
   const patchLine = (id: number, next: Partial<RfqRequestLineInput>) =>
     setLines((xs) =>
       xs.map((x) => (x.requestLineId === id ? { ...x, ...next } : x)),
@@ -714,13 +1145,14 @@ function CreateRfqDialog({
   };
   const save = async () => {
     if (
+      !rfqNo.trim() ||
       !dueDate ||
       suppliers.length === 0 ||
       lines.length === 0 ||
       lines.some((x) => x.quantity <= 0)
     ) {
       toast.error(
-        "Teklif son tarihi, en az bir tedarikçi ve geçerli bir kalem zorunludur.",
+        "RFQ no, teklif son tarihi, en az bir tedarikçi ve geçerli bir kalem zorunludur.",
       );
       return;
     }
@@ -730,6 +1162,7 @@ function CreateRfqDialog({
         responseDueDate: dueDate,
         supplierIds: suppliers.map((x) => x.id),
         buyerMessage: message || undefined,
+        rfqNo: rfqNo.trim(),
         lines,
       });
       onSaved();
@@ -761,6 +1194,13 @@ function CreateRfqDialog({
             birim
           </p>
         </div>
+        <Field label="RFQ No *">
+          <AppInput
+            value={rfqNo}
+            onChange={(e) => setRfqNo(e.target.value)}
+            maxLength={50}
+          />
+        </Field>
         <Field label="Teklif cevap son tarihi *">
           <AppDateInput
             value={dueDate}
@@ -865,294 +1305,17 @@ function CreateRfqDialog({
           />
         </Field>
         <div className="flex justify-end gap-2">
-          <button className="btn btn-secondary" onClick={onClose}>
+          <OpsActionButton type="button" variant="secondary" onClick={onClose}>
             Vazgeç
-          </button>
-          <button
-            className="btn btn-primary"
-            disabled={busy}
+          </OpsActionButton>
+          <OpsActionButton
+            type="button"
+            variant="primary"
+            loading={busy}
             onClick={() => void save()}
           >
-            {busy ? "Oluşturuluyor…" : "Teklif talebi oluştur"}
-          </button>
-        </div>
-      </div>
-    </ResponsiveDialog>
-  );
-}
-
-function CreateQuoteDialog({
-  source,
-  onClose,
-  onSaved,
-}: {
-  source: ProcurementDocumentDetail;
-  onClose: () => void;
-  onSaved: () => void;
-}): ReactElement {
-  const suppliers = source.suppliers ?? [];
-  const [supplierId, setSupplierId] = useState(
-    suppliers.length === 1 ? String(suppliers[0].supplierId) : "",
-  );
-  const [quoteNo, setQuoteNo] = useState("");
-  const [quoteDate, setQuoteDate] = useState(today);
-  const [validUntil, setValidUntil] = useState("");
-  const [currency, setCurrency] = useState("TRY");
-  const [exchangeRate, setExchangeRate] = useState(1);
-  const [note, setNote] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [lines, setLines] = useState<SupplierQuoteLineInput[]>(
-    source.lines.map((x) => ({
-      rfqLineId: x.id,
-      quantity: x.quantity,
-      unitPrice: 0,
-      discountRate: 0,
-      vatRate: 20,
-      deliveryDate: x.requiredDate,
-    })),
-  );
-  const patchLine = (id: number, next: Partial<SupplierQuoteLineInput>) =>
-    setLines((xs) =>
-      xs.map((x) => (x.rfqLineId === id ? { ...x, ...next } : x)),
-    );
-  const toggleLine = (lineId: number) =>
-    setLines((xs) =>
-      xs.some((x) => x.rfqLineId === lineId)
-        ? xs.filter((x) => x.rfqLineId !== lineId)
-        : [
-            ...xs,
-            {
-              rfqLineId: lineId,
-              quantity:
-                source.lines.find((x) => x.id === lineId)?.quantity ?? 0,
-              unitPrice: 0,
-              discountRate: 0,
-              vatRate: 20,
-              deliveryDate: source.lines.find((x) => x.id === lineId)
-                ?.requiredDate,
-            },
-          ],
-    );
-  const total = lines.reduce(
-    (sum, x) =>
-      sum +
-      x.quantity *
-        x.unitPrice *
-        (1 - x.discountRate / 100) *
-        (1 + x.vatRate / 100),
-    0,
-  );
-  const save = async () => {
-    if (
-      !supplierId ||
-      !quoteNo.trim() ||
-      exchangeRate <= 0 ||
-      lines.some((x) => x.quantity <= 0 || x.unitPrice < 0)
-    ) {
-      toast.error(
-        "Tedarikçi, teklif numarası, kur ve geçerli satırlar zorunludur.",
-      );
-      return;
-    }
-    setBusy(true);
-    try {
-      await procurementApi.createQuote(source.id, {
-        supplierId: Number(supplierId),
-        quoteNo,
-        quoteDate,
-        validUntil: validUntil || undefined,
-        currencyCode: currency,
-        exchangeRate,
-        note: note || undefined,
-        lines,
-      });
-      onSaved();
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Teklif kaydedilemedi.");
-    } finally {
-      setBusy(false);
-    }
-  };
-  return (
-    <ResponsiveDialog
-      open
-      onClose={onClose}
-      title="Tedarikçi teklifini kaydet"
-      description={`${source.documentNo} için gelen fiyat ve teslim koşullarını girin.`}
-      className="!max-w-6xl"
-    >
-      <div className="space-y-5">
-        <div className="grid gap-4 md:grid-cols-3">
-          <Field label="Tedarikçi *">
-            <select
-              className="app-input w-full"
-              value={supplierId}
-              onChange={(e) => setSupplierId(e.target.value)}
-            >
-              <option value="">Tedarikçi seçin</option>
-              {suppliers.map((x) => (
-                <option key={x.supplierId} value={x.supplierId}>
-                  {x.supplierCode} · {x.supplierName}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label="Teklif numarası *">
-            <AppInput
-              value={quoteNo}
-              onChange={(e) => setQuoteNo(e.target.value)}
-              maxLength={100}
-            />
-          </Field>
-          <Field label="Teklif tarihi">
-            <AppDateInput
-              value={quoteDate}
-              onChange={(e) => setQuoteDate(e.target.value)}
-            />
-          </Field>
-          <Field label="Geçerlilik tarihi">
-            <AppDateInput
-              value={validUntil}
-              onChange={(e) => setValidUntil(e.target.value)}
-            />
-          </Field>
-          <Field label="Para birimi">
-            <AppInput
-              value={currency}
-              maxLength={3}
-              onChange={(e) => setCurrency(e.target.value.toUpperCase())}
-            />
-          </Field>
-          <Field label="Kur">
-            <AppInput
-              type="number"
-              min="0.000001"
-              step="any"
-              value={exchangeRate}
-              onChange={(e) => setExchangeRate(Number(e.target.value))}
-            />
-          </Field>
-        </div>
-        <div className="space-y-3">
-          <div className="flex items-end justify-between">
-            <div>
-              <h3 className="font-semibold">Teklif kalemleri</h3>
-              <p className="text-xs text-slate-500">
-                Tedarikçinin fiyat verdiği kalemleri seçin; fiyat vermediği
-                kalemleri kapatabilirsiniz.
-              </p>
-            </div>
-            <p className="text-right">
-              <span className="block text-xs uppercase text-slate-500">
-                Teklif toplamı
-              </span>
-              <b className="text-lg text-cyan-400">
-                {formatProjectNumber(total)} {currency}
-              </b>
-            </p>
-          </div>
-          {source.lines.map((line) => {
-            const value = lines.find((x) => x.rfqLineId === line.id);
-            return (
-              <div
-                key={line.id}
-                className={`grid items-center gap-3 rounded-xl border p-4 md:grid-cols-[32px_minmax(220px,2fr)_100px_130px_90px_90px_140px] ${value ? "border-cyan-500/25" : "border-cyan-500/10 opacity-70"}`}
-              >
-                <input
-                  type="checkbox"
-                  checked={Boolean(value)}
-                  onChange={() => toggleLine(line.id)}
-                />
-                <div>
-                  <p className="text-xs uppercase text-slate-500">Stok</p>
-                  <p className="mt-2 text-sm font-semibold">
-                    {line.stockCode ? `${line.stockCode} · ` : ""}
-                    {line.stockName}
-                  </p>
-                </div>
-                <Field label="Miktar">
-                  <AppInput
-                    type="number"
-                    min="0.000001"
-                    max={line.quantity}
-                    step="any"
-                    disabled={!value}
-                    value={value?.quantity ?? line.quantity}
-                    onChange={(e) =>
-                      patchLine(line.id, { quantity: Number(e.target.value) })
-                    }
-                  />
-                </Field>
-                <Field label="Birim fiyat">
-                  <AppInput
-                    type="number"
-                    min="0"
-                    step="any"
-                    disabled={!value}
-                    value={value?.unitPrice ?? 0}
-                    onChange={(e) =>
-                      patchLine(line.id, { unitPrice: Number(e.target.value) })
-                    }
-                  />
-                </Field>
-                <Field label="İskonto %">
-                  <AppInput
-                    type="number"
-                    min="0"
-                    max="100"
-                    disabled={!value}
-                    value={value?.discountRate ?? 0}
-                    onChange={(e) =>
-                      patchLine(line.id, {
-                        discountRate: Number(e.target.value),
-                      })
-                    }
-                  />
-                </Field>
-                <Field label="KDV %">
-                  <AppInput
-                    type="number"
-                    min="0"
-                    disabled={!value}
-                    value={value?.vatRate ?? 20}
-                    onChange={(e) =>
-                      patchLine(line.id, { vatRate: Number(e.target.value) })
-                    }
-                  />
-                </Field>
-                <Field label="Teslim">
-                  <AppDateInput
-                    disabled={!value}
-                    value={value?.deliveryDate ?? ""}
-                    onChange={(e) =>
-                      patchLine(line.id, {
-                        deliveryDate: e.target.value || undefined,
-                      })
-                    }
-                  />
-                </Field>
-              </div>
-            );
-          })}
-        </div>
-        <Field label="Teklif notu">
-          <AppInput
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="Ödeme, teslim veya teklif açıklaması…"
-          />
-        </Field>
-        <div className="flex justify-end gap-2">
-          <button className="btn btn-secondary" onClick={onClose}>
-            Vazgeç
-          </button>
-          <button
-            className="btn btn-primary"
-            disabled={busy}
-            onClick={() => void save()}
-          >
-            {busy ? "Kaydediliyor…" : "Teklifi kaydet"}
-          </button>
+            Teklif talebi oluştur
+          </OpsActionButton>
         </div>
       </div>
     </ResponsiveDialog>
@@ -1172,11 +1335,22 @@ function CreateOrderFromQuoteDialog({
   const [lines, setLines] = useState<QuoteOrderLineInput[]>(
     available.map((x) => ({ quoteLineId: x.id, quantity: x.openQuantity })),
   );
+  const [orderNo, setOrderNo] = useState("");
   const [orderDate, setOrderDate] = useState(today);
   const [deliveryDate, setDeliveryDate] = useState(source.dueDate ?? "");
   const [projectCode, setProjectCode] = useState("");
   const [description, setDescription] = useState("");
   const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    void procurementApi
+      .nextDocumentNo("order")
+      .then(setOrderNo)
+      .catch((e) =>
+        toast.error(
+          e instanceof Error ? e.message : "Sipariş numarası alınamadı.",
+        ),
+      );
+  }, []);
   const toggle = (id: number) =>
     setLines((xs) =>
       xs.some((x) => x.quoteLineId === id)
@@ -1206,14 +1380,21 @@ function CreateOrderFromQuoteDialog({
     );
   }, 0);
   const save = async () => {
-    if (lines.length === 0 || lines.some((x) => x.quantity <= 0)) {
-      toast.error("Sipariş için en az bir geçerli teklif kalemi seçin.");
+    if (
+      !orderNo.trim() ||
+      lines.length === 0 ||
+      lines.some((x) => x.quantity <= 0)
+    ) {
+      toast.error(
+        "Sipariş no ve en az bir geçerli teklif kalemi zorunludur.",
+      );
       return;
     }
     setBusy(true);
     try {
       await procurementApi.convertQuoteToOrder(source.id, {
         lines,
+        orderNo: orderNo.trim(),
         orderDate,
         deliveryDate: deliveryDate || undefined,
         projectCode: projectCode || undefined,
@@ -1236,6 +1417,13 @@ function CreateOrderFromQuoteDialog({
     >
       <div className="space-y-5">
         <div className="grid gap-4 md:grid-cols-4">
+          <Field label="Sipariş No *">
+            <AppInput
+              value={orderNo}
+              onChange={(e) => setOrderNo(e.target.value)}
+              maxLength={50}
+            />
+          </Field>
           <Field label="Sipariş tarihi">
             <AppDateInput
               value={orderDate}
@@ -1311,16 +1499,17 @@ function CreateOrderFromQuoteDialog({
           />
         </Field>
         <div className="flex justify-end gap-2">
-          <button className="btn btn-secondary" onClick={onClose}>
+          <OpsActionButton type="button" variant="secondary" onClick={onClose}>
             Vazgeç
-          </button>
-          <button
-            className="btn btn-primary"
-            disabled={busy}
+          </OpsActionButton>
+          <OpsActionButton
+            type="button"
+            variant="primary"
+            loading={busy}
             onClick={() => void save()}
           >
-            {busy ? "Oluşturuluyor…" : "Seçili miktarlardan sipariş oluştur"}
-          </button>
+            Seçili miktarlardan sipariş oluştur
+          </OpsActionButton>
         </div>
       </div>
     </ResponsiveDialog>
@@ -1605,16 +1794,17 @@ function ProcurementPolicyDialog({
           </section>
         ))}
         <div className="sticky bottom-0 z-20 flex justify-end gap-2 border-t border-cyan-500/15 bg-[var(--wms-app-bg)]/95 py-3 backdrop-blur">
-          <button className="btn btn-secondary" onClick={onClose}>
+          <OpsActionButton type="button" variant="secondary" onClick={onClose}>
             Vazgeç
-          </button>
-          <button
-            className="btn btn-primary"
-            disabled={busy}
+          </OpsActionButton>
+          <OpsActionButton
+            type="button"
+            variant="primary"
+            loading={busy}
             onClick={() => void save()}
           >
-            {busy ? "Kaydediliyor…" : "Politikayı kaydet"}
-          </button>
+            Politikayı kaydet
+          </OpsActionButton>
         </div>
       </div>
     </ResponsiveDialog>
@@ -1629,6 +1819,7 @@ function DetailDialog({
   onChanged,
   onCreateRfq,
   onCreateQuote,
+  onEnterQuoteFromRequest,
   onCreateOrder,
 }: {
   detail: ProcurementDocumentDetail;
@@ -1638,10 +1829,13 @@ function DetailDialog({
   onChanged: () => Promise<void>;
   onCreateRfq: () => void;
   onCreateQuote: () => void;
+  onEnterQuoteFromRequest: () => void;
   onCreateOrder: () => void;
 }): ReactElement {
   const [busy, setBusy] = useState(false);
   const [inviteSupplierId, setInviteSupplierId] = useState<number>();
+  const [lineAttachId, setLineAttachId] = useState<number | null>(null);
+  const lineAttach = detail.lines.find((x) => x.id === lineAttachId);
   const actions = [
     ...(detail.documentType === "quote" &&
     detail.status === "Submitted" &&
@@ -1711,21 +1905,44 @@ function DetailDialog({
           />
           <Info label="Satır" value={String(detail.lines.length)} />
         </div>
+        {detail.documentType === "request" ||
+        detail.documentType === "quote" ? (
+          <SavedAttachmentsViewer
+            title={
+              detail.documentType === "request"
+                ? "Talep Ekleri"
+                : "Teklif Ekleri"
+            }
+            attachments={detail.attachments ?? []}
+            canDelete={
+              detail.documentType === "request"
+                ? can("WMS.PROCUREMENT.REQUEST.MANAGE")
+                : can("WMS.PROCUREMENT.QUOTE.MANAGE")
+            }
+            onChanged={onChanged}
+            emptyText="Bu belgeye ait genel ek bulunmuyor."
+          />
+        ) : null}
         {detail.suppliers?.length ? (
           <div>
             <h3 className="mb-2 font-semibold">Davet edilen tedarikçiler</h3>
             <div className="grid gap-2 md:grid-cols-2">
               {detail.suppliers.map((x) => (
                 <div
-                  key={x.supplierId}
+                  key={`${x.supplierId ?? "manual"}-${x.supplierName}`}
                   className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-cyan-500/15 p-3"
                 >
                   <div>
                     <b>
-                      {x.supplierCode} · {x.supplierName}
+                      {x.supplierCode
+                        ? `${x.supplierCode} · ${x.supplierName}`
+                        : x.supplierName}
                     </b>
                     <p className="text-xs text-slate-500">
-                      {x.recipientEmail || "Henüz portal daveti gönderilmedi"}
+                      {x.supplierId
+                        ? x.recipientEmail ||
+                          "Henüz portal daveti gönderilmedi"
+                        : "Manuel tedarikçi"}
                       {x.invitationStatus
                         ? ` · ${invitationLabel[x.invitationStatus] ?? x.invitationStatus}`
                         : ""}
@@ -1733,16 +1950,18 @@ function DetailDialog({
                   </div>
                   {can("WMS.PROCUREMENT.RFQ.MANAGE") &&
                   policy?.supplierQuoteChannelMode !== "InternalOnly" &&
+                  x.supplierId != null &&
                   x.invitationStatus !== "Submitted" ? (
-                    <button
-                      className="btn btn-secondary"
-                      onClick={() => setInviteSupplierId(x.supplierId)}
+                    <OpsActionButton
+                      type="button"
+                      variant="secondary"
+                      onClick={() => setInviteSupplierId(x.supplierId!)}
                     >
                       <Mail size={15} />
                       {x.invitationStatus
                         ? "Yeniden gönder"
                         : "E-posta ile davet et"}
-                    </button>
+                    </OpsActionButton>
                   ) : null}
                 </div>
               ))}
@@ -1760,6 +1979,10 @@ function DetailDialog({
                 <th>Açık</th>
                 <th>Birim fiyat</th>
                 <th>Termin</th>
+                {detail.documentType === "request" ||
+                detail.documentType === "quote" ? (
+                  <th>Ekler</th>
+                ) : null}
               </tr>
             </thead>
             <tbody>
@@ -1789,11 +2012,40 @@ function DetailDialog({
                   <td>
                     {x.requiredDate ? formatProjectDate(x.requiredDate) : "—"}
                   </td>
+                  {detail.documentType === "request" ||
+                  detail.documentType === "quote" ? (
+                    <td className="p-2">
+                      <LineAttachmentBadge
+                        count={x.attachments?.length ?? 0}
+                        onClick={() => setLineAttachId(x.id)}
+                      />
+                    </td>
+                  ) : null}
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+        {lineAttach ? (
+          <LineAttachmentsDialog
+            open
+            onClose={() => setLineAttachId(null)}
+            title="Kalem Ekleri"
+            subtitle={`${lineAttach.stockCode ? `${lineAttach.stockCode} · ` : ""}${lineAttach.stockName}`}
+          >
+            <SavedAttachmentsViewer
+              title="Kalem Ekleri"
+              attachments={lineAttach.attachments ?? []}
+              canDelete={
+                detail.documentType === "request"
+                  ? can("WMS.PROCUREMENT.REQUEST.MANAGE")
+                  : can("WMS.PROCUREMENT.QUOTE.MANAGE")
+              }
+              onChanged={onChanged}
+              emptyText="Bu kaleme ait ek bulunmuyor."
+            />
+          </LineAttachmentsDialog>
+        ) : null}
         <div>
           <h3 className="mb-2 font-semibold">Karar geçmişi</h3>
           <div className="space-y-2">
@@ -1829,49 +2081,71 @@ function DetailDialog({
           (detail.status === "Approved" ||
             detail.status === "PartiallyConverted") &&
           detail.lines.some((x) => x.openQuantity > 0) &&
+          can("WMS.PROCUREMENT.QUOTE.MANAGE") ? (
+            <OpsActionButton
+              type="button"
+              variant="primary"
+              disabled={busy}
+              onClick={onEnterQuoteFromRequest}
+            >
+              <Plus size={16} /> Teklif gir
+            </OpsActionButton>
+          ) : null}
+          {detail.documentType === "request" &&
+          (detail.status === "Approved" ||
+            detail.status === "PartiallyConverted") &&
+          detail.lines.some((x) => x.openQuantity > 0) &&
           can("WMS.PROCUREMENT.RFQ.MANAGE") ? (
-            <button
-              className="btn btn-primary"
+            <OpsActionButton
+              type="button"
+              variant="secondary"
               disabled={busy}
               onClick={onCreateRfq}
             >
               Yeni teklif turu oluştur <ArrowRight size={16} />
-            </button>
+            </OpsActionButton>
           ) : null}
           {detail.documentType === "rfq" &&
           (detail.status === "Sent" || detail.status === "Quoted") &&
           policy?.supplierQuoteChannelMode !== "PortalRequired" &&
           can("WMS.PROCUREMENT.QUOTE.MANAGE") ? (
-            <button
-              className="btn btn-primary"
+            <OpsActionButton
+              type="button"
+              variant="primary"
               disabled={busy}
               onClick={onCreateQuote}
             >
               <Plus size={16} /> Tedarikçi teklifi gir
-            </button>
+            </OpsActionButton>
           ) : null}
           {detail.documentType === "quote" &&
           (detail.status === "Approved" ||
             detail.status === "PartiallyConverted") &&
           detail.lines.some((x) => x.openQuantity > 0) &&
           can("WMS.PROCUREMENT.ORDER.MANAGE") ? (
-            <button
-              className="btn btn-primary"
+            <OpsActionButton
+              type="button"
+              variant="primary"
               disabled={busy}
               onClick={onCreateOrder}
             >
               Sipariş paylaştır <ArrowRight size={16} />
-            </button>
+            </OpsActionButton>
           ) : null}
           {actions.map((x) => (
-            <button
+            <OpsActionButton
               key={x.action}
-              className={`btn ${x.action === "cancel" || x.action === "reject" ? "btn-secondary" : "btn-primary"}`}
+              type="button"
+              variant={
+                x.action === "cancel" || x.action === "reject"
+                  ? "secondary"
+                  : "primary"
+              }
               disabled={busy}
               onClick={() => void run(x.action)}
             >
               {x.label}
-            </button>
+            </OpsActionButton>
           ))}
         </div>
         {inviteSupplierId ? (
@@ -1953,17 +2227,18 @@ function SupplierInvitationDialog({
           />
         </Field>
         <div className="flex justify-end gap-2">
-          <button className="btn btn-secondary" onClick={onClose}>
+          <OpsActionButton type="button" variant="secondary" onClick={onClose}>
             Vazgeç
-          </button>
-          <button
-            className="btn btn-primary"
-            disabled={busy}
+          </OpsActionButton>
+          <OpsActionButton
+            type="button"
+            variant="primary"
+            loading={busy}
             onClick={() => void send()}
           >
             <Mail size={16} />
-            {busy ? "Gönderiliyor…" : "Bağlantıyı gönder"}
-          </button>
+            Bağlantıyı gönder
+          </OpsActionButton>
         </div>
       </div>
     </ResponsiveDialog>
