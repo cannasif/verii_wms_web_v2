@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactElement } from 'react';
 import { Barcode, Plus, ScanLine, Trash2, WandSparkles } from 'lucide-react';
-import { AppDateInput } from '@/components/shared/AppInput';
+import { AppDateInput, AppInput } from '@/components/shared/AppInput';
 import { cn } from '@/lib/utils';
 
 export type TrackingMode = 'None' | 'Lot' | 'Serial' | 'LotAndSerial';
@@ -88,19 +88,24 @@ export function TrackingPlanEditor({
           <p className="mt-1 text-xs text-slate-500">Okuyucu barkodu klavye gibi gönderir. Barkodu okutun veya yapıştırıp Enter’a basın.</p>
         </div>
         <div className="grid gap-2 sm:grid-cols-[minmax(12rem,1fr)_auto] xl:w-[34rem]">
-          {lotMode && serialMode && <input className="input sm:col-span-2" value={activeLot} onChange={(event) => setActiveLot(event.target.value)} placeholder="Aktif lot — seri okutmalarına uygulanır"/>}
-          <div className="relative">
-            <Barcode className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-500"/>
-            <input
-              className="input !pl-10 font-mono"
-              value={barcode}
-              onChange={(event) => setBarcode(event.target.value)}
-              onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); scan(); } }}
-              placeholder={serialMode ? 'Seri barkodunu okutun' : 'Lot barkodunu okutun'}
-              aria-label={serialMode ? 'Seri barkodu' : 'Lot barkodu'}
+          {lotMode && serialMode && (
+            <AppInput
+              className="sm:col-span-2"
+              value={activeLot}
+              onChange={(event) => setActiveLot(event.target.value)}
+              placeholder="Aktif lot — seri okutmalarına uygulanır"
             />
-          </div>
-          <button type="button" onClick={scan} disabled={!barcode.trim() || (serialMode && remaining < 1)} className={cn('inline-flex h-11 items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold text-white disabled:opacity-40', accent === 'violet' ? 'bg-violet-600' : 'bg-cyan-600')}><ScanLine className="size-4"/>Okut</button>
+          )}
+          <AppInput
+            className="font-mono"
+            leadingIcon={<Barcode className="size-4" />}
+            value={barcode}
+            onChange={(event) => setBarcode(event.target.value)}
+            onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); scan(); } }}
+            placeholder={serialMode ? 'Seri barkodunu okutun' : 'Lot barkodunu okutun'}
+            aria-label={serialMode ? 'Seri barkodu' : 'Lot barkodu'}
+          />
+          <button type="button" onClick={scan} disabled={!barcode.trim() || (serialMode && remaining < 1)} className={cn('inline-flex h-[2.625rem] items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold text-white disabled:opacity-40', accent === 'violet' ? 'bg-violet-600' : 'bg-cyan-600')}><ScanLine className="size-4"/>Okut</button>
         </div>
       </div>
 
@@ -118,10 +123,10 @@ export function TrackingPlanEditor({
           return (
             <div key={row.localId} className={cn('grid gap-2 rounded-xl border p-2', duplicate ? 'border-red-500/60 bg-red-500/5' : 'border-[var(--wms-app-border)]', 'sm:grid-cols-2 xl:grid-cols-[3rem_7rem_minmax(9rem,1fr)_minmax(10rem,1fr)_minmax(9rem,1fr)_9rem_9rem_auto]')}>
               <span className="self-center text-center text-xs font-black text-slate-500">#{index + 1}</span>
-              <input aria-label={`Takip ${index + 1} miktarı`} className="input" type="number" min="0.000001" step="0.000001" disabled={serialMode} value={row.quantity} onChange={(event) => patch(row.localId, { quantity: Number(event.target.value) })}/>
-              {lotMode ? <input aria-label={`Takip ${index + 1} lotu`} className="input font-mono" value={row.lotNo ?? ''} onChange={(event) => patch(row.localId, { lotNo: event.target.value })} placeholder="Lot no"/> : <span className="hidden xl:block"/>}
-              {serialMode ? <div><input aria-label={`Takip ${index + 1} serisi`} data-wms-error-target="serial" data-wms-error-keys={row.serialNo ?? ''} className={cn('input font-mono', duplicate && '!border-red-500')} value={row.serialNo ?? ''} onChange={(event) => patch(row.localId, { serialNo: event.target.value })} placeholder="Seri no"/>{duplicate && <span className="mt-1 block text-[.65rem] text-red-500">Tekrarlı seri</span>}</div> : <span className="hidden xl:block"/>}
-              {requireHandlingUnit ? <input aria-label={`Takip ${index + 1} paleti`} className="input font-mono" value={row.handlingUnitNo ?? ''} onChange={(event) => patch(row.localId, { handlingUnitNo: event.target.value })} placeholder="Palet / kasa"/> : <span className="hidden xl:block"/>}
+              <AppInput aria-label={`Takip ${index + 1} miktarı`} type="number" min="0.000001" step="0.000001" disabled={serialMode} value={row.quantity} onChange={(event) => patch(row.localId, { quantity: Number(event.target.value) })}/>
+              {lotMode ? <AppInput aria-label={`Takip ${index + 1} lotu`} className="font-mono" value={row.lotNo ?? ''} onChange={(event) => patch(row.localId, { lotNo: event.target.value })} placeholder="Lot no"/> : <span className="hidden xl:block"/>}
+              {serialMode ? <div><AppInput aria-label={`Takip ${index + 1} serisi`} data-wms-error-target="serial" data-wms-error-keys={row.serialNo ?? ''} className="font-mono" invalid={duplicate} value={row.serialNo ?? ''} onChange={(event) => patch(row.localId, { serialNo: event.target.value })} placeholder="Seri no"/>{duplicate && <span className="mt-1 block text-[.65rem] text-red-500">Tekrarlı seri</span>}</div> : <span className="hidden xl:block"/>}
+              {requireHandlingUnit ? <AppInput aria-label={`Takip ${index + 1} paleti`} className="font-mono" value={row.handlingUnitNo ?? ''} onChange={(event) => patch(row.localId, { handlingUnitNo: event.target.value })} placeholder="Palet / kasa"/> : <span className="hidden xl:block"/>}
               {showDates ? <AppDateInput aria-label={`Takip ${index + 1} üretim tarihi`} value={row.manufacturingDate ?? ''} onChange={(event) => patch(row.localId, { manufacturingDate: event.target.value })}/> : <span className="hidden xl:block"/>}
               {showDates ? <AppDateInput aria-label={`Takip ${index + 1} son kullanma tarihi`} value={row.expirationDate ?? ''} onChange={(event) => patch(row.localId, { expirationDate: event.target.value })}/> : <span className="hidden xl:block"/>}
               <button type="button" aria-label={`Takip ${index + 1} satırını sil`} onClick={() => onChange(value.filter((item) => item.localId !== row.localId))} className="grid size-10 place-items-center justify-self-end rounded-lg text-red-500 hover:bg-red-500/10"><Trash2 className="size-4"/></button>
