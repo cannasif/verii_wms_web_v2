@@ -16,7 +16,7 @@ import { useMyPermissionsQuery } from '@/features/access-control/hooks/useMyPerm
 import { canAccessPath } from '@/features/access-control/utils/hasPermission';
 import { SessionRecoveryPage } from '@/features/auth/components/SessionRecoveryPage';
 import { WarehouseAmbientBackground } from '@/components/shared/WarehouseAmbientBackground';
-import { OpsLoadingState } from '@/components/shared/OpsLoadingState';
+import { OpsRouteLoadingState } from '@/components/shared/OpsRouteLoadingState';
 import { StockCardProvider } from '@/features/erp-mirror/components/StockCardProvider';
 import { useUserDetail } from '@/features/user-detail/hooks/useUserDetail';
 import {
@@ -177,7 +177,7 @@ function WorkspaceRouteLoader() {
 
   return (
     <section className="grid min-h-[18rem] place-items-center p-6" aria-live="polite">
-      <OpsLoadingState
+      <OpsRouteLoadingState
         message={t('appLayout.pageLoading', { defaultValue: 'Loading page' })}
         code="FETCH"
       />

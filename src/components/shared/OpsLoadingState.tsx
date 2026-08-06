@@ -9,6 +9,7 @@ interface OpsLoadingStateProps {
   className?: string;
 }
 
+/** Inline / module loading — skin-aware but compact. Route transitions use OpsRouteLoadingState. */
 export function OpsLoadingState({
   message,
   compact = false,

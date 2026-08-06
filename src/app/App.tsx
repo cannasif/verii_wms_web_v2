@@ -5,7 +5,7 @@ import { LoginPage } from '@/features/auth/components/LoginPage';
 import { ForgotPasswordPage } from '@/features/auth/components/ForgotPasswordPage';
 import { ResetPasswordPage } from '@/features/auth/components/ResetPasswordPage';
 import { DashboardPage } from '@/features/dashboard/components/DashboardPage';
-import { OpsLoadingState } from '@/components/shared/OpsLoadingState';
+import { OpsRouteLoadingState } from '@/components/shared/OpsRouteLoadingState';
 import {
   loadAppLayout, loadAuditLogsPage, loadBarcodeDesignerPage, loadBarcodePolicyPage, loadDocumentSeriesPage,
   loadELogoConnectionsPage, loadErpMirrorPages, loadGoodsReceiptAssignedTasksPage, loadGoodsReceiptCreatePage, loadGoodsReceiptHubPage,
@@ -292,7 +292,7 @@ function RouteLoader(): ReactElement {
 
   return (
     <div className="grid min-h-screen place-items-center bg-[var(--wms-app-background)] p-6">
-      <OpsLoadingState message={t('common.loading')} code="BOOT" />
+      <OpsRouteLoadingState message={t('common.loading')} code="BOOT" />
     </div>
   );
 }

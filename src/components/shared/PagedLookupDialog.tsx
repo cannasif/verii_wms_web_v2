@@ -45,6 +45,8 @@ interface PagedLookupDialogProps<T> {
   searchPlaceholder?: string;
   emptyText?: string;
   disabled?: boolean;
+  /** Terminal/premium ops hata yüzeyi (kırmızı border + flash). */
+  invalid?: boolean;
   variant?: 'default' | 'ops';
   /**
    * `button`: sadece tıklanınca dialog açılır (mevcut davranış).
@@ -79,6 +81,7 @@ export function PagedLookupDialog<T>({
   searchPlaceholder,
   emptyText,
   disabled = false,
+  invalid = false,
   variant = 'default',
   triggerMode = 'button',
   autoSearchMinLength,
@@ -354,14 +357,16 @@ export function PagedLookupDialog<T>({
     : (emptyText ?? t('common.noResults'));
 
   const buttonTrigger = isOps ? (
-    <OpsFieldShell>
+    <OpsFieldShell aria-invalid={invalid || undefined}>
       <button
         type="button"
         className={cn(
           'wms-ops-lookup-trigger wms-ops-field',
           !value && 'wms-ops-field--placeholder',
+          invalid && 'wms-ops-field--invalid',
           triggerClassName,
         )}
+        aria-invalid={invalid || undefined}
         onClick={() => onOpenChange(true)}
         disabled={disabled}
       >
@@ -418,6 +423,7 @@ export function PagedLookupDialog<T>({
                 : undefined
             }
             disabled={disabled}
+            aria-invalid={invalid || undefined}
             value={displayValue}
             placeholder={placeholder}
             className={cn(
@@ -426,6 +432,7 @@ export function PagedLookupDialog<T>({
                 : 'flex h-11 w-full min-w-0 rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] py-2 pl-10 pr-3 text-sm text-[var(--wms-app-text)] shadow-sm outline-none transition hover:border-[var(--wms-brand-primary)]/60 focus:border-[var(--wms-brand-primary)] focus:ring-2 focus:ring-[var(--wms-brand-primary)]/25',
               disabled && 'cursor-not-allowed opacity-50',
               !displayValue && 'wms-ops-field--placeholder',
+              invalid && 'wms-ops-field--invalid',
               triggerClassName,
             )}
             title={displayValue || undefined}
@@ -563,7 +570,10 @@ export function PagedLookupDialog<T>({
   );
 
   const comboboxTrigger = isOps ? (
-    <OpsFieldShell className={cn(open && 'wms-ops-field-shell--active')}>
+    <OpsFieldShell
+      className={cn(open && 'wms-ops-field-shell--active')}
+      aria-invalid={invalid || undefined}
+    >
       {comboboxInner}
     </OpsFieldShell>
   ) : (
