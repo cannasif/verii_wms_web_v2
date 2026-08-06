@@ -11,6 +11,7 @@ import {
   ClipboardList,
   Eye,
   FileCheck2,
+  FileDown,
   FileSearch,
   Loader2,
   Mail,
@@ -66,6 +67,7 @@ import {
   type PendingAttachment,
 } from "./ProcurementAttachments";
 import { procurementApi } from "./api";
+import { generateProcurementPdf } from "./pdf/generateProcurementPdf";
 import type {
   ProcurementDocumentDetail,
   ProcurementDocumentType,
@@ -160,7 +162,7 @@ type HubRecentItem = ProcurementGridRow & { href: string };
 const hubRecentQuery = (type: ProcurementDocumentType) =>
   procurementApi.paged(type, {
     pageNumber: 1,
-    pageSize: 4,
+    pageSize: 12,
     search: null,
     searchFields: ["documentNo", "subject", "counterparty"],
     sortBy: "createdDate",
@@ -178,6 +180,13 @@ export function ProcurementHubPage(): ReactElement {
   const [recent, setRecent] = useState<HubRecentItem[]>([]);
   const [recentLoading, setRecentLoading] = useState(true);
   const [summaryTick, setSummaryTick] = useState(0);
+  const [typeTotals, setTypeTotals] = useState({
+    request: 0,
+    rfq: 0,
+    quote: 0,
+    order: 0,
+  });
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   useEffect(() => {
     setSummaryLoading(true);
@@ -224,9 +233,19 @@ export function ProcurementHubPage(): ReactElement {
           const db = b.createdDate ? new Date(b.createdDate).getTime() : 0;
           return db - da;
         });
-        setRecent(merged.slice(0, 8));
+        setTypeTotals({
+          request: requests.totalCount ?? 0,
+          rfq: rfqs.totalCount ?? 0,
+          quote: quotes.totalCount ?? 0,
+          order: orders.totalCount ?? 0,
+        });
+        setRecent(merged.slice(0, 24));
+        setLastUpdated(new Date());
       })
-      .catch(() => setRecent([]))
+      .catch(() => {
+        setRecent([]);
+        setTypeTotals({ request: 0, rfq: 0, quote: 0, order: 0 });
+      })
       .finally(() => setRecentLoading(false));
   }, [summaryTick]);
 
@@ -317,135 +336,68 @@ export function ProcurementHubPage(): ReactElement {
     ...workflow.map((s) => s.primary),
   );
 
-  const actionItems = [
-    pendingRequests > 0
-      ? {
-          key: "pending-requests",
-          eyebrow: "Onay bekliyor",
-          title: `${pendingRequests} satın alma talebi`,
-          detail: "Onayınız gerekiyor",
-          href: "/procurement/requests",
-          cta: "Taleplere Git",
-        }
-      : null,
-    submittedQuotes > 0
-      ? {
-          key: "submitted-quotes",
-          eyebrow: "Teklif değerlendir",
-          title: `${submittedQuotes} tedarikçi teklifi`,
-          detail: "Karar bekliyor",
-          href: "/procurement/quotes",
-          cta: "Tekliflere Git",
-        }
-      : null,
-    pendingOrders > 0
-      ? {
-          key: "pending-orders",
-          eyebrow: "Sipariş onayı",
-          title: `${pendingOrders} satınalma siparişi`,
-          detail: "Onay bekliyor",
-          href: "/procurement/orders",
-          cta: "Siparişlere Git",
-        }
-      : null,
-    openRfqs > 0
-      ? {
-          key: "open-rfqs",
-          eyebrow: "RFQ takibi",
-          title: `${openRfqs} açık teklif talebi`,
-          detail: "Cevap / teklif bekleniyor",
-          href: "/procurement/rfqs",
-          cta: "RFQ’lara Git",
-        }
-      : null,
-  ].filter(Boolean) as Array<{
-    key: string;
-    eyebrow: string;
-    title: string;
-    detail: string;
-    href: string;
-    cta: string;
-  }>;
+  /** Alt rapor — üst süreç UI’sını tekrar etmez; sadece sayısal özet */
+  const reportSummaryRows = [
+    { key: "request", label: "Toplam talep", value: typeTotals.request },
+    { key: "quote", label: "Toplam teklif", value: typeTotals.quote },
+    { key: "order", label: "Toplam sipariş", value: typeTotals.order },
+  ] as const;
 
-  const quickActions = [
-    can("WMS.PROCUREMENT.REQUEST.MANAGE")
-      ? { key: "new-request", label: "+ Yeni Talep", href: "/procurement/requests" }
-      : null,
-    can("WMS.PROCUREMENT.RFQ.MANAGE")
-      ? { key: "new-rfq", label: "+ RFQ Oluştur", href: "/procurement/rfqs" }
-      : null,
-    can("WMS.PROCUREMENT.QUOTE.MANAGE")
-      ? {
-          key: "new-quote",
-          label: "+ Teklif Gir",
-          href: "/procurement/quotes/new",
-        }
-      : null,
-    can("WMS.PROCUREMENT.ORDER.MANAGE")
-      ? {
-          key: "new-order",
-          label: "+ Sipariş Oluştur",
-          href: "/procurement/orders",
-        }
-      : null,
-  ].filter(Boolean) as Array<{ key: string; label: string; href: string }>;
-
-  const pipeline = [
+  const reportStatusRows = [
     {
-      key: "request",
-      title: "Talepler",
-      total: requestTotal,
-      href: "/procurement/requests",
-      segments: [
-        { label: "Onay bekliyor", value: pendingRequests, tone: "pending" },
-        { label: "Taslak", value: draftRequests, tone: "neutral" },
-      ],
+      key: "awaiting-approval",
+      label: "Onay bekleyen",
+      value: pendingRequests + pendingOrders,
     },
     {
-      key: "rfq",
-      title: "RFQ",
-      total: openRfqs,
-      href: "/procurement/rfqs",
-      segments: [
-        { label: "Açık / cevap bekliyor", value: openRfqs, tone: "active" },
-      ],
-    },
-    {
-      key: "quote",
-      title: "Teklifler",
-      total: submittedQuotes,
-      href: "/procurement/quotes",
-      segments: [
-        {
-          label: "Değerlendiriliyor",
-          value: submittedQuotes,
-          tone: "pending",
-        },
-      ],
-    },
-    {
-      key: "order",
-      title: "Siparişler",
-      total: orderTotal,
-      href: "/procurement/orders",
-      segments: [
-        { label: "Onay bekliyor", value: pendingOrders, tone: "pending" },
-        {
-          label: "Mal kabule açık",
-          value: approvedOpenOrders,
-          tone: "done",
-        },
-      ],
+      key: "in-progress",
+      label: "Devam eden",
+      value:
+        draftRequests + openRfqs + submittedQuotes + approvedOpenOrders,
     },
   ] as const;
 
-  const activityMeta = (type: string) => {
-    if (type === "request")
-      return { icon: ClipboardList, label: "Satın alma talebi" };
-    if (type === "rfq") return { icon: FileSearch, label: "Teklif talebi" };
-    if (type === "quote")
-      return { icon: FileCheck2, label: "Tedarikçi teklifi" };
-    return { icon: ShoppingCart, label: "Satınalma siparişi" };
+  const reportStatusMax = Math.max(
+    1,
+    ...reportStatusRows.map((r) => r.value),
+  );
+
+  const distributionBars = [
+    { key: "request", label: "Talep", value: typeTotals.request },
+    { key: "rfq", label: "RFQ", value: typeTotals.rfq },
+    { key: "quote", label: "Teklif", value: typeTotals.quote },
+    { key: "order", label: "Sipariş", value: typeTotals.order },
+  ] as const;
+
+  const distributionMax = Math.max(1, ...distributionBars.map((b) => b.value));
+
+  const supplierSummary = useMemo(() => {
+    const map = new Map<
+      string,
+      { name: string; quotes: number; orders: number }
+    >();
+    for (const row of recent) {
+      const name = row.counterparty?.trim();
+      if (!name) continue;
+      if (row.documentType !== "quote" && row.documentType !== "order") continue;
+      const key = name.toLocaleLowerCase("tr-TR");
+      const prev = map.get(key) ?? { name, quotes: 0, orders: 0 };
+      if (row.documentType === "quote") prev.quotes += 1;
+      else prev.orders += 1;
+      map.set(key, prev);
+    }
+    return [...map.values()]
+      .sort((a, b) => b.quotes + b.orders - (a.quotes + a.orders))
+      .slice(0, 5);
+  }, [recent]);
+
+  const recentReportRows = recent.slice(0, 8);
+
+  const reportDocLabel = (type: string) => {
+    if (type === "request") return "Talep";
+    if (type === "rfq") return "RFQ";
+    if (type === "quote") return "Teklif";
+    return "Sipariş";
   };
 
   return (
@@ -697,214 +649,240 @@ export function ProcurementHubPage(): ReactElement {
         )}
       </section>
 
-      {/* Pipeline + Actions */}
-      <div className="relative grid gap-5 xl:grid-cols-[1.15fr_1fr]">
-        <section>
-          <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--wms-app-text-muted)]">
-            Satın Alma Pipeline
+      {/* SATIN ALMA RAPORU — üst süreç UI’sının tekrarı değil */}
+      <section
+        aria-label="Satın alma raporu"
+        className="relative mt-2 border-t border-[var(--wms-app-border)] pt-8"
+      >
+        <header className="mb-6">
+          <h2 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--wms-brand-primary)]">
+            Satın Alma Raporu
           </h2>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            {pipeline.map((col) => {
-              const segMax = Math.max(
-                1,
-                ...col.segments.map((s) => s.value),
-                col.total,
-              );
-              return (
-                <Link
-                  key={col.key}
-                  to={col.href}
-                  className="rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)]/70 px-3.5 py-3 transition duration-200 hover:border-[var(--wms-brand-primary)]/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--wms-brand-ring)]"
-                >
-                  <div className="flex items-baseline justify-between gap-2">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-[var(--wms-app-text-muted)]">
-                      {col.title}
-                    </p>
-                    <p className="text-lg font-bold tabular-nums text-[var(--wms-app-text)]">
-                      {summaryLoading ? "—" : col.total}
-                    </p>
-                  </div>
-                  <div className="mt-3 space-y-2">
-                    {col.segments.map((seg) => (
-                      <div key={seg.label}>
-                        <div className="mb-1 flex justify-between gap-2 text-[11px]">
-                          <span className="text-[var(--wms-app-text-muted)]">
-                            {seg.label}
-                          </span>
-                          <span className="font-semibold tabular-nums text-[var(--wms-app-text)]">
-                            {summaryLoading ? "—" : seg.value}
-                          </span>
-                        </div>
-                        <div className="h-1 overflow-hidden rounded-full bg-[color-mix(in_oklab,var(--wms-app-border)_65%,transparent)]">
-                          <div
-                            className={cn(
-                              "h-full rounded-full transition-all duration-300",
-                              seg.tone === "pending" &&
-                                "bg-[var(--wms-brand-primary)]",
-                              seg.tone === "done" && "bg-emerald-500/80",
-                              seg.tone === "active" &&
-                                "bg-[color-mix(in_oklab,var(--wms-brand-primary)_70%,white)]",
-                              seg.tone === "neutral" &&
-                                "bg-[var(--wms-app-text-muted)]/50",
-                            )}
-                            style={{
-                              width: summaryLoading
-                                ? "20%"
-                                : `${Math.max(seg.value > 0 ? 8 : 0, Math.round((seg.value / segMax) * 100))}%`,
-                            }}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </section>
-
-        <section>
-          <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--wms-app-text-muted)]">
-            Şimdi ilgilenmen gerekenler
-          </h2>
-          <div className="mt-3 space-y-2.5">
-            {summaryLoading ? (
-              <div className="h-24 animate-pulse rounded-xl border border-[var(--wms-app-border)] bg-[color-mix(in_oklab,var(--wms-app-border)_30%,transparent)]" />
-            ) : actionItems.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-[var(--wms-app-border)] px-4 py-5 text-sm text-[var(--wms-app-text-muted)]">
-                Şu an aksiyon gerektiren bekleyen iş yok. Süreç sakin.
-              </div>
-            ) : (
-              actionItems.map((item) => (
-                <Link
-                  key={item.key}
-                  to={item.href}
-                  className={cn(
-                    "group relative block overflow-hidden rounded-xl border border-l-[3px] px-4 py-3.5 transition duration-200",
-                    "border-[var(--wms-app-border)] border-l-[var(--wms-brand-primary)]",
-                    "bg-[color-mix(in_oklab,var(--wms-brand-primary)_7%,var(--wms-app-panel))]",
-                    "hover:border-[var(--wms-brand-primary)]/45",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--wms-brand-ring)]",
-                  )}
-                >
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--wms-brand-primary)]">
-                    ● {item.eyebrow}
-                  </p>
-                  <p className="mt-1.5 text-sm font-bold text-[var(--wms-app-text)]">
-                    {item.title}
-                  </p>
-                  <p className="mt-0.5 text-xs text-[var(--wms-app-text-muted)]">
-                    {item.detail}
-                  </p>
-                  <span className="mt-2.5 inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--wms-brand-primary)]">
-                    {item.cta}
-                    <ArrowRight
-                      size={13}
-                      className="transition duration-200 group-hover:translate-x-0.5"
-                    />
-                  </span>
-                </Link>
-              ))
-            )}
-          </div>
-
-          {quickActions.length > 0 ? (
-            <div className="mt-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--wms-app-text-muted)]">
-                Hızlı işlemler
-              </p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {quickActions.map((action) => (
-                  <Link
-                    key={action.key}
-                    to={action.href}
-                    className="inline-flex items-center rounded-lg border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] px-3 py-1.5 text-xs font-semibold text-[var(--wms-app-text)] transition duration-200 hover:border-[var(--wms-brand-primary)]/45 hover:text-[var(--wms-brand-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--wms-brand-ring)]"
-                  >
-                    {action.label}
-                  </Link>
-                ))}
-              </div>
-            </div>
+          <p className="mt-1 text-sm text-[var(--wms-app-text-muted)]">
+            Satın alma hareketleri ve mevcut operasyon görünümü
+          </p>
+          {lastUpdated ? (
+            <p className="mt-1.5 text-[11px] tabular-nums text-[var(--wms-app-text-muted)]">
+              {formatProjectDateTime(lastUpdated.toISOString())}
+            </p>
           ) : null}
-        </section>
-      </div>
+        </header>
 
-      {/* Recent activity timeline */}
-      <section className="relative">
-        <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--wms-app-text-muted)]">
-          Son işlemler
-        </h2>
-        <div className="mt-3">
-          {recentLoading ? (
-            <div className="space-y-2">
-              {[0, 1, 2].map((i) => (
-                <div
-                  key={i}
-                  className="h-12 animate-pulse rounded-lg bg-[color-mix(in_oklab,var(--wms-app-border)_30%,transparent)]"
-                />
+        <div className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)]">
+          {/* Özet + Durum */}
+          <div className="grid gap-0 lg:grid-cols-2">
+            <div className="border-b border-[var(--wms-app-border)] px-5 py-5 lg:border-b-0 lg:border-r">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--wms-app-text-muted)]">
+                Satın alma özeti
+              </p>
+              <dl className="mt-4 space-y-0">
+                {reportSummaryRows.map((row, i) => (
+                  <div
+                    key={row.key}
+                    className={cn(
+                      "flex items-baseline justify-between gap-4 py-2.5",
+                      i > 0 && "border-t border-[var(--wms-app-border)]/80",
+                    )}
+                  >
+                    <dt className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--wms-app-text-muted)]">
+                      {row.label}
+                    </dt>
+                    <dd className="text-base font-semibold tabular-nums text-[var(--wms-app-text)]">
+                      {summaryLoading || recentLoading ? "—" : row.value}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+
+            <div className="border-b border-[var(--wms-app-border)] px-5 py-5">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--wms-app-text-muted)]">
+                Durum özeti
+              </p>
+              <ul className="mt-4 space-y-3.5">
+                {reportStatusRows.map((row) => (
+                  <li key={row.key}>
+                    <div className="mb-1.5 flex items-baseline justify-between gap-3">
+                      <span className="text-sm text-[var(--wms-app-text)]">
+                        {row.label}
+                      </span>
+                      <span className="text-sm font-semibold tabular-nums text-[var(--wms-app-text)]">
+                        {summaryLoading ? "—" : row.value}
+                      </span>
+                    </div>
+                    <div className="h-1 overflow-hidden rounded-full bg-[color-mix(in_oklab,var(--wms-app-border)_65%,transparent)]">
+                      <div
+                        className="h-full rounded-full bg-[var(--wms-brand-primary)]/65 transition-all duration-300"
+                        style={{
+                          width: summaryLoading
+                            ? "12%"
+                            : `${Math.max(
+                                row.value > 0 ? 6 : 0,
+                                Math.round(
+                                  (row.value / reportStatusMax) * 100,
+                                ),
+                              )}%`,
+                        }}
+                      />
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-3 text-[11px] text-[var(--wms-app-text-muted)]">
+                Summary API’deki açık / bekleyen kalemlere göre
+              </p>
+            </div>
+          </div>
+
+          {/* Tek görsel: dağılım */}
+          <div className="border-t border-[var(--wms-app-border)] px-5 py-5">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--wms-app-text-muted)]">
+              Satın alma dağılımı
+            </p>
+            <div className="mt-4 space-y-3">
+              {distributionBars.map((bar) => (
+                <div key={bar.key} className="grid grid-cols-[4.5rem_1fr_2.5rem] items-center gap-3">
+                  <span className="text-xs text-[var(--wms-app-text-muted)]">
+                    {bar.label}
+                  </span>
+                  <div className="h-2 overflow-hidden rounded-full bg-[color-mix(in_oklab,var(--wms-app-border)_60%,transparent)]">
+                    <div
+                      className="h-full rounded-full bg-[var(--wms-brand-primary)]/70 transition-all duration-300"
+                      style={{
+                        width:
+                          summaryLoading || recentLoading
+                            ? "10%"
+                            : `${Math.max(
+                                bar.value > 0 ? 4 : 0,
+                                Math.round(
+                                  (bar.value / distributionMax) * 100,
+                                ),
+                              )}%`,
+                      }}
+                    />
+                  </div>
+                  <span className="text-right text-xs font-semibold tabular-nums text-[var(--wms-app-text)]">
+                    {summaryLoading || recentLoading ? "—" : bar.value}
+                  </span>
+                </div>
               ))}
             </div>
-          ) : recent.length === 0 ? (
-            <p className="text-sm text-[var(--wms-app-text-muted)]">
-              Henüz görüntülenecek işlem yok.
-            </p>
-          ) : (
-            <ol className="relative space-y-0 border-l border-[var(--wms-app-border)] pl-4">
-              {recent.map((row) => {
-                const meta = activityMeta(row.documentType);
-                const Icon = meta.icon;
-                return (
-                  <li key={`${row.documentType}-${row.id}`} className="relative pb-4 last:pb-0">
-                    <span className="absolute -left-[21px] top-1 flex size-6 items-center justify-center rounded-full border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] text-[var(--wms-brand-primary)]">
-                      <Icon size={12} strokeWidth={2} />
-                    </span>
-                    <Link
-                      to={row.href}
-                      className="block rounded-lg px-2 py-1.5 transition duration-200 hover:bg-[color-mix(in_oklab,var(--wms-brand-primary)_6%,transparent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--wms-brand-ring)]"
+          </div>
+
+          {/* Tedarikçi — yalnızca yüklü son hareketlerden */}
+          {supplierSummary.length > 0 ? (
+            <div className="border-t border-[var(--wms-app-border)] px-5 py-5">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--wms-app-text-muted)]">
+                Tedarikçi özeti
+              </p>
+              <p className="mt-1 text-[11px] text-[var(--wms-app-text-muted)]">
+                Son hareketlerde görünen tedarikçiler
+              </p>
+              <table className="mt-3 w-full text-sm">
+                <thead>
+                  <tr className="border-b border-[var(--wms-app-border)] text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--wms-app-text-muted)]">
+                    <th className="py-2 text-left font-semibold">Tedarikçi</th>
+                    <th className="w-20 py-2 text-right font-semibold">
+                      Teklif
+                    </th>
+                    <th className="w-20 py-2 text-right font-semibold">
+                      Sipariş
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {supplierSummary.map((s) => (
+                    <tr
+                      key={s.name}
+                      className="border-b border-[var(--wms-app-border)]/70 last:border-b-0"
                     >
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div className="min-w-0">
-                          <p className="text-xs text-[var(--wms-app-text-muted)]">
-                            {row.documentDate
-                              ? formatProjectDate(row.documentDate)
-                              : "—"}{" "}
-                            · {meta.label}
-                          </p>
-                          <p className="mt-0.5 text-sm">
-                            <span className="font-mono font-semibold text-[var(--wms-app-text)]">
-                              {row.documentNo}
-                            </span>
-                            <span className="mx-1.5 text-[var(--wms-app-text-muted)]">
-                              ·
-                            </span>
-                            <span className="text-[var(--wms-app-text-muted)]">
-                              {row.subject}
-                            </span>
-                          </p>
-                        </div>
-                        <OpsStatusBadge
-                          tone={
-                            row.status === "PendingApproval" ||
-                            row.status === "Submitted"
-                              ? "pending"
-                              : row.status === "Approved" ||
-                                  row.status === "Converted"
-                                ? "done"
-                                : row.status === "Rejected" ||
-                                    row.status === "Cancelled"
-                                  ? "danger"
-                                  : "neutral"
-                          }
-                        >
+                      <td className="py-2.5 pr-3 text-[var(--wms-app-text)]">
+                        {s.name}
+                      </td>
+                      <td className="py-2.5 text-right tabular-nums">
+                        {s.quotes}
+                      </td>
+                      <td className="py-2.5 text-right tabular-nums">
+                        {s.orders}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : null}
+
+          {/* Son hareketler — compact tablo */}
+          <div className="border-t border-[var(--wms-app-border)] px-5 py-5">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--wms-app-text-muted)]">
+              Son satın alma hareketleri
+            </p>
+            <div className="mt-3 overflow-x-auto">
+              {recentLoading ? (
+                <div className="space-y-2 py-1">
+                  {[0, 1, 2].map((i) => (
+                    <div
+                      key={i}
+                      className="h-9 animate-pulse bg-[color-mix(in_oklab,var(--wms-app-border)_22%,transparent)]"
+                    />
+                  ))}
+                </div>
+              ) : recentReportRows.length === 0 ? (
+                <p className="py-4 text-sm text-[var(--wms-app-text-muted)]">
+                  Henüz görüntülenecek hareket yok.
+                </p>
+              ) : (
+                <table className="w-full min-w-[640px] text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-[var(--wms-app-border)] text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--wms-app-text-muted)]">
+                      <th className="py-2 pr-3 font-semibold">Belge</th>
+                      <th className="py-2 pr-3 font-semibold">Tür</th>
+                      <th className="py-2 pr-3 font-semibold">Tedarikçi</th>
+                      <th className="py-2 pr-3 font-semibold">Durum</th>
+                      <th className="py-2 pr-3 font-semibold">Tarih</th>
+                      <th className="py-2 text-right font-semibold">Tutar</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recentReportRows.map((row) => (
+                      <tr
+                        key={`${row.documentType}-${row.id}`}
+                        className="border-b border-[var(--wms-app-border)]/70 last:border-b-0"
+                      >
+                        <td className="py-2.5 pr-3">
+                          <Link
+                            to={row.href}
+                            className="font-mono text-sm font-medium text-[var(--wms-app-text)] hover:text-[var(--wms-brand-primary)]"
+                          >
+                            {row.documentNo}
+                          </Link>
+                        </td>
+                        <td className="py-2.5 pr-3 text-[var(--wms-app-text-muted)]">
+                          {reportDocLabel(row.documentType)}
+                        </td>
+                        <td className="py-2.5 pr-3">
+                          {row.counterparty?.trim() || "—"}
+                        </td>
+                        <td className="py-2.5 pr-3 text-xs text-[var(--wms-app-text-muted)]">
                           {statusLabel[row.status] ?? row.status}
-                        </OpsStatusBadge>
-                      </div>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ol>
-          )}
+                        </td>
+                        <td className="py-2.5 pr-3 tabular-nums text-[var(--wms-app-text-muted)]">
+                          {row.documentDate
+                            ? formatProjectDate(row.documentDate)
+                            : "—"}
+                        </td>
+                        <td className="py-2.5 text-right tabular-nums text-[var(--wms-app-text)]">
+                          {row.totalAmount > 0
+                            ? `${formatProjectNumber(row.totalAmount)} ${row.currencyCode || ""}`.trim()
+                            : "—"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
         </div>
       </section>
 
@@ -1522,6 +1500,7 @@ function CreateRequestDialog({
     {},
   );
   const [lineAttachKey, setLineAttachKey] = useState<string | null>(null);
+  const [showErrors, setShowErrors] = useState(false);
   useEffect(() => {
     void procurementApi
       .nextDocumentNo("request")
@@ -1543,7 +1522,23 @@ function CreateRequestDialog({
   );
   const patch = (key: string, next: Partial<(typeof lines)[number]>) =>
     setLines((xs) => xs.map((x) => (x.key === key ? { ...x, ...next } : x)));
+  const isBlankDate = (value?: string | null) =>
+    value == null || String(value).trim() === "";
+  const isValidTerminDate = (value?: string | null) => {
+    if (isBlankDate(value)) return false;
+    const trimmed = String(value).trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return false;
+    const [year, month, day] = trimmed.split("-").map(Number);
+    const parsed = new Date(year, month - 1, day);
+    return (
+      parsed.getFullYear() === year &&
+      parsed.getMonth() === month - 1 &&
+      parsed.getDate() === day
+    );
+  };
+  const headerTerminInvalid = !isValidTerminDate(requiredDate);
   const save = async () => {
+    setShowErrors(true);
     if (
       !requestNo.trim() ||
       !subject.trim() ||
@@ -1554,12 +1549,17 @@ function CreateRequestDialog({
       );
       return;
     }
+    const lineTerminInvalid = lines.some((x) => !isValidTerminDate(x.requiredDate));
+    if (headerTerminInvalid || lineTerminInvalid) {
+      toast.error("Termin tarihi zorunludur.");
+      return;
+    }
     setBusy(true);
     try {
       const id = await procurementApi.createRequest({
         requestNo: requestNo.trim(),
         requestDate,
-        requiredDate: requiredDate || undefined,
+        requiredDate: requiredDate.trim(),
         departmentCode: departmentCode || undefined,
         projectCode: projectCode || undefined,
         subject,
@@ -1570,7 +1570,7 @@ function CreateRequestDialog({
           stockName: x.stockName.trim(),
           unitCode: x.unitCode,
           quantity: x.quantity,
-          requiredDate: x.requiredDate,
+          requiredDate: String(x.requiredDate).trim(),
           projectCode: x.projectCode,
           description: x.description,
         })),
@@ -1626,9 +1626,17 @@ function CreateRequestDialog({
               onChange={(e) => setRequestDate(e.target.value)}
             />
           </Field>
-          <Field label="İstenen tarih">
+          <Field
+            label="Termin *"
+            error={
+              showErrors && headerTerminInvalid
+                ? "Termin tarihi zorunludur."
+                : undefined
+            }
+          >
             <AppDateInput
               value={requiredDate}
+              invalid={showErrors && headerTerminInvalid}
               onChange={(e) => setRequiredDate(e.target.value)}
             />
           </Field>
@@ -1662,10 +1670,17 @@ function CreateRequestDialog({
               <Plus size={15} /> Satır ekle
             </OpsActionButton>
           </div>
-          {lines.map((line, index) => (
+          {lines.map((line, index) => {
+            const lineTerminInvalid = !isValidTerminDate(line.requiredDate);
+            return (
             <div
               key={line.key}
-              className="grid gap-3 rounded-xl border border-cyan-500/15 p-4 md:grid-cols-[minmax(260px,2fr)_100px_120px_140px_auto_42px]"
+              className={cn(
+                "grid items-start gap-3 rounded-xl border p-4 md:grid-cols-[minmax(260px,2fr)_100px_120px_140px_auto_42px]",
+                showErrors && lineTerminInvalid
+                  ? "border-rose-500/45 bg-rose-500/5"
+                  : "border-cyan-500/15",
+              )}
             >
               <Field label={`Stok ${index + 1}`}>
                 <PagedLookupDialog<StockOption>
@@ -1746,15 +1761,23 @@ function CreateRequestDialog({
                   }
                 />
               </Field>
-              <Field label="Termin">
+              <Field
+                label="Termin *"
+                error={
+                  showErrors && lineTerminInvalid
+                    ? "Termin tarihi zorunludur."
+                    : undefined
+                }
+              >
                 <AppDateInput
                   value={line.requiredDate ?? ""}
+                  invalid={showErrors && lineTerminInvalid}
                   onChange={(e) =>
                     patch(line.key, { requiredDate: e.target.value })
                   }
                 />
               </Field>
-              <div className="mt-6">
+              <div className="flex h-10 items-center self-start md:mt-[1.375rem]">
                 <LineAttachmentBadge
                   count={(lineFiles[line.key] ?? []).length}
                   onClick={() => setLineAttachKey(line.key)}
@@ -1762,7 +1785,7 @@ function CreateRequestDialog({
               </div>
               <button
                 type="button"
-                className="mt-6 text-rose-400"
+                className="flex h-10 w-10 items-center justify-center self-start text-rose-400 disabled:opacity-40 md:mt-[1.375rem]"
                 disabled={lines.length === 1}
                 onClick={() => {
                   setLines((x) => x.filter((y) => y.key !== line.key));
@@ -1778,7 +1801,8 @@ function CreateRequestDialog({
                 <Trash2 size={18} />
               </button>
             </div>
-          ))}
+            );
+          })}
         </div>
         {lineAttachKey ? (
           <LineAttachmentsDialog
@@ -2702,6 +2726,7 @@ function DetailDialog({
   onCreateOrder: () => void;
 }): ReactElement {
   const [busy, setBusy] = useState(false);
+  const [pdfBusy, setPdfBusy] = useState(false);
   const [inviteSupplierId, setInviteSupplierId] = useState<number>();
   const [lineAttachId, setLineAttachId] = useState<number | null>(null);
   const [selectedLineIds, setSelectedLineIds] = useState<number[]>([]);
@@ -3228,6 +3253,32 @@ function DetailDialog({
           </div>
         </div>
         <div className="flex flex-wrap justify-end gap-2">
+          <OpsActionButton
+            type="button"
+            variant="secondary"
+            loading={pdfBusy}
+            disabled={busy || pdfBusy}
+            onClick={() => {
+              void (async () => {
+                setPdfBusy(true);
+                try {
+                  await generateProcurementPdf(
+                    detail.documentType,
+                    detail.id,
+                  );
+                  toast.success("PDF indirildi.");
+                } catch (e) {
+                  toast.error(
+                    e instanceof Error ? e.message : "PDF oluşturulamadı.",
+                  );
+                } finally {
+                  setPdfBusy(false);
+                }
+              })();
+            }}
+          >
+            <FileDown size={16} /> PDF Al
+          </OpsActionButton>
           {detail.documentType === "request" &&
           (detail.status === "Approved" ||
             detail.status === "PartiallyApproved" ||
@@ -3483,13 +3534,26 @@ function NextStepBanner({ detail }: { detail: ProcurementDocumentDetail }) {
     </div>
   );
 }
-function Field({ label, children }: { label: string; children: ReactNode }) {
+function Field({
+  label,
+  children,
+  error,
+}: {
+  label: string;
+  children: ReactNode;
+  error?: string;
+}) {
   return (
     <label className="block">
       <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-500">
         {label}
       </span>
       {children}
+      {error ? (
+        <span className="mt-1 block text-xs font-medium text-rose-400">
+          {error}
+        </span>
+      ) : null}
     </label>
   );
 }
