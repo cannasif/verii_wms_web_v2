@@ -12,7 +12,7 @@ import Mail02Icon from '@hugeicons/core-free-icons/Mail02Icon';
 import Moon02Icon from '@hugeicons/core-free-icons/Moon02Icon';
 import Sun02Icon from '@hugeicons/core-free-icons/Sun02Icon';
 import UserCircleIcon from '@hugeicons/core-free-icons/UserCircleIcon';
-import { Dialog, DialogContent, DialogTitle, DialogClose } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { AppDropdown, type AppDropdownOption } from '@/components/shared/AppDropdown';
 import { OpsCircuitToggle } from '@/components/shared/OpsCircuitToggle';
 import { OpsLightSwitch } from '@/components/shared/OpsLightSwitch';
@@ -182,12 +182,15 @@ export function UserProfileModal({
           'md:grid-cols-[320px_minmax(0,1fr)]',
           'lg:!max-w-[1100px] lg:grid-cols-[380px_minmax(0,1fr)]',
         )}
-        aria-describedby="user-profile-description"
       >
         <DialogTitle className="sr-only">{t('sidebar.settings')}</DialogTitle>
+        <DialogDescription className="sr-only">
+          {t('profile.settingsDescription', {
+            defaultValue: 'Profil, dil, görünüm ve depo arka planı tercihlerinizi yönetin.',
+          })}
+        </DialogDescription>
 
         <aside
-          id="user-profile-description"
           aria-label={t('profile.title')}
           className={cn(
             'wms-ops-profile-modal__aside relative flex flex-col items-center justify-center gap-5 border-b border-slate-200/70 px-6 py-8 sm:gap-6 sm:px-8 sm:py-9',

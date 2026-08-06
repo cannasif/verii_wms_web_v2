@@ -326,12 +326,13 @@ const initPromise = (async () => {
     fallbackNS: [COMMON_NAMESPACE, DEFAULT_NAMESPACE],
     initImmediate: false,
     interpolation: { escapeValue: false },
-    parseMissingKeyHandler: (key, defaultValue) => {
-      if (import.meta.env.DEV && (defaultValue === undefined || defaultValue === '')) {
-        console.warn(`[i18n] missing key: ${key} (lng=${i18n.language}, ns=${defaultNS})`);
-      }
-      return resolveMissingKey(key, defaultValue as string | undefined);
-    },
+    // Feature namespaces are loaded lazily after the first render. Reporting
+    // from this low-level fallback cannot distinguish that short loading state
+    // from a genuinely missing key and floods the console with false alarms.
+    // Translation completeness is verified by the locale validation tests;
+    // runtime fallback remains deterministic and silent for operators.
+    parseMissingKeyHandler: (key, defaultValue) =>
+      resolveMissingKey(key, defaultValue as string | undefined),
     returnEmptyString: false,
     detection: {
       order: [],
