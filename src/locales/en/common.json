@@ -5216,6 +5216,7 @@
   },
   "transferDraft": {
     "createSuffix": "Creation",
+    "howItWorks": "How it works",
     "headerDescription": "Choose source type and execution mode independently; stock, location, serial/lot, reservation and movements run on the shared physical transfer engine.",
     "operationFlow": {
       "executionModel": "01 · Execution model",
@@ -5276,6 +5277,7 @@
       "purposeMaterial": "Raw material / component supply",
       "purposeWip": "WIP / inter-process move",
       "purposeOutput": "Finished goods output",
+      "advanced": "Other settings",
       "planNo": "Production plan",
       "orderNo": "Production order",
       "operationCode": "Operation code",
@@ -5297,6 +5299,7 @@
       "externalReference": "External reference",
       "description": "Description",
       "optional": "Optional",
+      "advanced": "Other settings",
       "sourceWarehousePlaceholder": "Source warehouse",
       "targetWarehousePlaceholder": "Target warehouse"
     },
@@ -5333,7 +5336,8 @@
       "sourceLocation": "Source location",
       "targetLocation": "Target location",
       "trackingPolicy": "Stock tracking policy",
-      "handlingUnitRequired": "Handling unit required"
+      "handlingUnitRequired": "Handling unit required",
+      "removeLine": "Remove line"
     },
     "success": {
       "title": "Transfer created",

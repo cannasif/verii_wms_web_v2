@@ -3377,6 +3377,7 @@
   },
   "transferDraft": {
     "createSuffix": "إنشاء",
+    "howItWorks": "كيف يعمل",
     "headerDescription": "اختر نوع المصدر وطريقة التنفيذ بشكل مستقل؛ المخزون والموقع والتسلسل/الدفعة والحجز والحركات تعمل على محرك النقل الفيزيائي المشترك.",
     "operationFlow": {
       "executionModel": "01 · نموذج التنفيذ",
@@ -3436,6 +3437,7 @@
       "purposeMaterial": "توريد مواد خام / مكونات",
       "purposeWip": "WIP / نقل بين العمليات",
       "purposeOutput": "إخراج منتج نهائي",
+      "advanced": "إعدادات أخرى",
       "planNo": "خطة الإنتاج",
       "orderNo": "أمر الإنتاج",
       "operationCode": "رمز العملية",
@@ -3457,6 +3459,7 @@
       "externalReference": "مرجع خارجي",
       "description": "الوصف",
       "optional": "اختياري",
+      "advanced": "إعدادات أخرى",
       "sourceWarehousePlaceholder": "مستودع المصدر",
       "targetWarehousePlaceholder": "مستودع الوجهة"
     },
@@ -3483,7 +3486,8 @@
       "sourceLocation": "موقع المصدر",
       "targetLocation": "موقع الوجهة",
       "trackingPolicy": "سياسة تتبع المخزون",
-      "handlingUnitRequired": "وحدة المناولة مطلوبة"
+      "handlingUnitRequired": "وحدة المناولة مطلوبة",
+      "removeLine": "إزالة السطر"
     },
     "success": {
       "title": "تم إنشاء النقل",

@@ -13,6 +13,7 @@ import {
   ChevronDown,
   ChevronRight,
   ClipboardList,
+  Info,
   Loader2,
   Plus,
   Search,
@@ -21,11 +22,12 @@ import {
   UserRoundCog,
   X,
 } from "lucide-react";
+import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { AppDropdown } from "@/components/shared/AppDropdown";
-import { AppDateInput } from "@/components/shared/AppInput";
+import { AppDateInput, AppInput } from "@/components/shared/AppInput";
 import { autoSelectInputCaptureHandlers } from "@/lib/select-input-contents";
 import { OperationFlowTabs } from "@/components/shared/OperationFlowTabs";
 import { OpsActionButton } from "@/components/shared/OpsActionButton";
@@ -35,6 +37,9 @@ import {
   OpsDialogFooter,
   OpsDialogHeader,
 } from "@/components/shared/OpsDialogShell";
+import { OpsFieldShell } from "@/components/shared/OpsFieldShell";
+import { OpsPageHeader } from "@/components/shared/OpsPageHeader";
+import { OpsSkinCheckbox } from "@/components/shared/OpsSkinCheckbox";
 import { PagedAppDropdown } from "@/components/shared/PagedAppDropdown";
 import { Dialog, DialogTitle } from "@/components/ui/dialog";
 import { useDropdownInfiniteSearch } from "@/hooks/useDropdownInfiniteSearch";
@@ -857,6 +862,9 @@ export function WarehouseTransferDraftPage({
       </section>
     );
 
+  // Üretim varyantında bağlam paneli dar, belge paneli geniş olacak şekilde tek satırda durur.
+  const pairedContextPanel = variant === "production";
+
   return (
     <section className="space-y-5" data-no-auto-localize="true" {...autoSelectInputCaptureHandlers}>
       <OperationDraftRestoreDialog
@@ -866,15 +874,20 @@ export function WarehouseTransferDraftPage({
         onRestore={operationDraft.restoreDraft}
         onDiscard={operationDraft.discardDraft}
       />
-      <header className="rounded-2xl border border-[var(--wms-app-border)] bg-[image:var(--wms-brand-gradient-soft)] p-6">
-        <p className="text-xs font-bold uppercase tracking-[.18em] text-[var(--wms-brand-primary)]">
-          {title}
-        </p>
-        <h1 className="mt-1 text-2xl font-black">{title} {t(`${D}.createSuffix`)}</h1>
-        <p className="mt-2 text-sm text-[var(--wms-app-text-muted)]">
-          {t(`${D}.headerDescription`)}
-        </p>
-      </header>
+      <OpsPageHeader
+        title={`${title} ${t(`${D}.createSuffix`)}`}
+        description={t(`${D}.headerDescription`)}
+        hintLabel={t(`${D}.howItWorks`)}
+        subRow={
+          executionKind === "TaskBased" ? (
+            <Assignees
+              assignees={assignees}
+              setAssignees={setAssignees}
+              allowMultiple={policy?.allowMultipleAssignees ?? true}
+            />
+          ) : null
+        }
+      />
       <OperationFlowTabs
         source={sourceKind === "OrderBased" ? "order" : "stock"}
         execution={executionKind === "TaskBased" ? "task" : "direct"}
@@ -907,29 +920,44 @@ export function WarehouseTransferDraftPage({
           ? t(`${D}.flowHint.task`)
           : t(`${D}.flowHint.direct`)}
       </OperationFlowTabs>
+      <div
+        className={cn(
+          pairedContextPanel
+            ? "grid gap-5 xl:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]"
+            : "space-y-5",
+        )}
+      >
       {variant === "production" && (
         <Panel title={t(`${D}.production.panel`)} icon={<ClipboardList className="size-5" />}>
-          <div className="grid gap-4 md:grid-cols-2">
-            <Field label={t(`${D}.production.purpose`)}><AppDropdown value={productionPurpose} onValueChange={(value) => setProductionPurpose(value as typeof productionPurpose)} options={[...productionPurposeOptions]}/></Field>
-            <Field label={`${t(`${D}.production.orderNo`)}${sourceKind === "OrderBased" ? " *" : ""}`}><input className="input" maxLength={100} value={productionOrderNo} onChange={(e)=>setProductionOrderNo(e.target.value)}/></Field>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label={t(`${D}.production.purpose`)}>
+              <div className="wms-ops-field-shell">
+                <AppDropdown value={productionPurpose} onValueChange={(value) => setProductionPurpose(value as typeof productionPurpose)} options={[...productionPurposeOptions]}/>
+              </div>
+            </Field>
+            <Field label={`${t(`${D}.production.orderNo`)}${sourceKind === "OrderBased" ? " *" : ""}`}><AppInput maxLength={100} value={productionOrderNo} onChange={(e)=>setProductionOrderNo(e.target.value)}/></Field>
           </div>
-          <p className="mt-4 rounded-xl border border-[var(--wms-brand-ring)] bg-[var(--wms-brand-soft)] p-3 text-sm text-[var(--wms-app-text)]">
-            {t(`${D}.production.note`)}
+          <p className="wms-ops-inline-note mt-4">
+            <Info className="wms-ops-inline-note__icon size-3.5" aria-hidden />
+            <span className="min-w-0">{t(`${D}.production.note`)}</span>
           </p>
           <button
             type="button"
+            aria-expanded={showProductionAdvanced}
             onClick={() => setShowProductionAdvanced((value) => !value)}
-            className="mt-4 inline-flex items-center gap-1.5 text-sm font-bold text-[var(--wms-brand-primary)]"
+            className="wms-ops-inline-toggle mt-4"
           >
-            {showProductionAdvanced ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
-            Diğer ayarlar
+            {showProductionAdvanced
+              ? <ChevronDown className="wms-ops-inline-toggle__icon size-4" aria-hidden />
+              : <ChevronRight className="wms-ops-inline-toggle__icon size-4" aria-hidden />}
+            {t(`${D}.production.advanced`)}
           </button>
           {showProductionAdvanced && (
-            <div className="mt-3 grid gap-4 border-t border-[var(--wms-app-border)] pt-4 md:grid-cols-2 xl:grid-cols-3">
-              <Field label={t(`${D}.production.planNo`)}><input className="input" maxLength={100} value={productionPlanNo} onChange={(e)=>setProductionPlanNo(e.target.value)}/></Field>
-              <Field label={t(`${D}.production.operationCode`)}><input className="input" maxLength={100} value={productionOperationCode} onChange={(e)=>setProductionOperationCode(e.target.value)}/></Field>
-              <Field label={t(`${D}.production.sourceWorkCenter`)}><input className="input" maxLength={100} value={sourceWorkCenterCode} onChange={(e)=>setSourceWorkCenterCode(e.target.value)}/></Field>
-              <Field label={t(`${D}.production.targetWorkCenter`)}><input className="input" maxLength={100} value={targetWorkCenterCode} onChange={(e)=>setTargetWorkCenterCode(e.target.value)}/></Field>
+            <div className={cn("mt-4 grid gap-4 border-t border-[var(--wms-app-border)] pt-4 sm:grid-cols-2", !pairedContextPanel && "xl:grid-cols-4")}>
+              <Field label={t(`${D}.production.planNo`)}><AppInput maxLength={100} value={productionPlanNo} onChange={(e)=>setProductionPlanNo(e.target.value)}/></Field>
+              <Field label={t(`${D}.production.operationCode`)}><AppInput maxLength={100} value={productionOperationCode} onChange={(e)=>setProductionOperationCode(e.target.value)}/></Field>
+              <Field label={t(`${D}.production.sourceWorkCenter`)}><AppInput maxLength={100} value={sourceWorkCenterCode} onChange={(e)=>setSourceWorkCenterCode(e.target.value)}/></Field>
+              <Field label={t(`${D}.production.targetWorkCenter`)}><AppInput maxLength={100} value={targetWorkCenterCode} onChange={(e)=>setTargetWorkCenterCode(e.target.value)}/></Field>
             </div>
           )}
         </Panel>
@@ -937,12 +965,12 @@ export function WarehouseTransferDraftPage({
       {variant === "subcontracting" && (
         <Panel title={t(`${D}.subcontracting.supplierPanel`)} icon={<ClipboardList className="size-5" />}>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <Field label={t(`${D}.subcontracting.direction`)}><AppDropdown value={subcontractDirection} disabled={Boolean(fixedSubcontractingDirection)} onValueChange={(value)=>setSubcontractDirection(value as typeof subcontractDirection)} options={[...subcontractDirectionOptions]}/></Field>
-            <Field label={t(`${D}.subcontracting.supplier`)}><PagedAppDropdown queryKey={["subcontract-supplier",branchCode]} fetchPage={(r)=>warehouseTransferApi.customers(r,branchCode)} toOption={customerOption} value={supplierValue} onValueChange={setSupplierValue} searchable minSearchLength={2} placeholder={t(`${D}.subcontracting.supplierSearch`)}/></Field>
-            <Field label={`${t(`${D}.subcontracting.orderNo`)}${sourceKind === "OrderBased" ? " *" : ""}`}><input className="input" maxLength={100} value={subcontractOrderNo} onChange={(e)=>setSubcontractOrderNo(e.target.value)}/></Field>
+            <Field label={t(`${D}.subcontracting.direction`)}><OpsFieldShell><AppDropdown value={subcontractDirection} disabled={Boolean(fixedSubcontractingDirection)} onValueChange={(value)=>setSubcontractDirection(value as typeof subcontractDirection)} options={[...subcontractDirectionOptions]}/></OpsFieldShell></Field>
+            <Field label={t(`${D}.subcontracting.supplier`)}><OpsFieldShell><PagedAppDropdown queryKey={["subcontract-supplier",branchCode]} fetchPage={(r)=>warehouseTransferApi.customers(r,branchCode)} toOption={customerOption} value={supplierValue} onValueChange={setSupplierValue} searchable minSearchLength={2} placeholder={t(`${D}.subcontracting.supplierSearch`)}/></OpsFieldShell></Field>
+            <Field label={`${t(`${D}.subcontracting.orderNo`)}${sourceKind === "OrderBased" ? " *" : ""}`}><AppInput maxLength={100} value={subcontractOrderNo} onChange={(e)=>setSubcontractOrderNo(e.target.value)}/></Field>
             <Field label={t(`${D}.subcontracting.expectedReturn`)}><AppDateInput type="datetime-local" value={expectedReturnAt} onChange={(e)=>setExpectedReturnAt(e.target.value)}/></Field>
-            {subcontractDirection === "ReceiptFromSupplier" && <Field label={t(`${D}.subcontracting.parentIssueId`)}><input className="input" type="number" min={1} value={parentIssueTransferId} onChange={(e)=>setParentIssueTransferId(e.target.value)}/></Field>}
-            <Field label={t(`${D}.subcontracting.supplierDispatchNo`)}><input className="input" maxLength={100} value={supplierDispatchNo} onChange={(e)=>setSupplierDispatchNo(e.target.value)}/></Field>
+            {subcontractDirection === "ReceiptFromSupplier" && <Field label={t(`${D}.subcontracting.parentIssueId`)}><AppInput type="number" min={1} value={parentIssueTransferId} onChange={(e)=>setParentIssueTransferId(e.target.value)}/></Field>}
+            <Field label={t(`${D}.subcontracting.supplierDispatchNo`)}><AppInput maxLength={100} value={supplierDispatchNo} onChange={(e)=>setSupplierDispatchNo(e.target.value)}/></Field>
             {subcontractDirection === "ReceiptFromSupplier" && <label className="flex h-11 items-center gap-2 self-end rounded-xl border border-[var(--wms-app-border)] px-3 text-sm"><input type="checkbox" checked={qualityInspectionRequired} onChange={(e)=>setQualityInspectionRequired(e.target.checked)}/>{t(`${D}.subcontracting.qualityRequired`)}</label>}
           </div>
         </Panel>
@@ -961,8 +989,9 @@ export function WarehouseTransferDraftPage({
         />
       )}
       <Panel title={t(`${D}.document.panel`)} icon={<ArrowLeftRight className="size-5" />}>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className={cn("grid gap-4 md:grid-cols-2", !pairedContextPanel && "xl:grid-cols-4")}>
           <Field label={t(`${D}.document.sourceWarehouse`)}>
+            <OpsFieldShell>
             <PagedAppDropdown
               queryKey={["wt-source", branchCode]}
               fetchPage={(request) =>
@@ -983,8 +1012,10 @@ export function WarehouseTransferDraftPage({
               searchable
               placeholder={t(`${D}.document.sourceWarehousePlaceholder`)}
             />
+            </OpsFieldShell>
           </Field>
           <Field label={t(`${D}.document.targetWarehouse`)}>
+            <OpsFieldShell>
             <PagedAppDropdown
               queryKey={["wt-target", branchCode]}
               fetchPage={(request) =>
@@ -1024,16 +1055,19 @@ export function WarehouseTransferDraftPage({
               searchable
               placeholder={t(`${D}.document.targetWarehousePlaceholder`)}
             />
+            </OpsFieldShell>
           </Field>
           <Field label={t(`${D}.document.series`)}>
-            <AppDropdown
-              value={seriesId}
-              onValueChange={setSeriesId}
-              options={series.map((x) => ({
-                value: String(x.id),
-                label: `${x.code} · ${x.previewDocumentNumber}`,
-              }))}
-            />
+            <OpsFieldShell>
+              <AppDropdown
+                value={seriesId}
+                onValueChange={setSeriesId}
+                options={series.map((x) => ({
+                  value: String(x.id),
+                  label: `${x.code} · ${x.previewDocumentNumber}`,
+                }))}
+              />
+            </OpsFieldShell>
           </Field>
           <Field label={t(`${D}.document.documentDate`)}>
             <AppDateInput
@@ -1044,15 +1078,19 @@ export function WarehouseTransferDraftPage({
         </div>
         <button
           type="button"
+          aria-expanded={showDocumentAdvanced}
           onClick={() => setShowDocumentAdvanced((value) => !value)}
-          className="mt-4 inline-flex items-center gap-1.5 text-sm font-bold text-[var(--wms-brand-primary)]"
+          className="wms-ops-inline-toggle mt-4"
         >
-          {showDocumentAdvanced ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
-          Diğer ayarlar
+          {showDocumentAdvanced
+            ? <ChevronDown className="wms-ops-inline-toggle__icon size-4" aria-hidden />
+            : <ChevronRight className="wms-ops-inline-toggle__icon size-4" aria-hidden />}
+          {t(`${D}.document.advanced`)}
         </button>
         {showDocumentAdvanced && (
-          <div className="mt-3 grid gap-4 border-t border-[var(--wms-app-border)] pt-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className={cn("mt-3 grid gap-4 border-t border-[var(--wms-app-border)] pt-4 md:grid-cols-2", !pairedContextPanel && "xl:grid-cols-4")}>
             <Field label={t(`${D}.document.sourceStaging`)}>
+              <OpsFieldShell>
               <PagedAppDropdown
                 queryKey={["wt-source-area", sourceId]}
                 fetchPage={(request) =>
@@ -1065,8 +1103,10 @@ export function WarehouseTransferDraftPage({
                 searchable
                 placeholder={t(`${D}.document.optional`)}
               />
+              </OpsFieldShell>
             </Field>
             <Field label={t(`${D}.document.targetReceiving`)}>
+              <OpsFieldShell>
               <PagedAppDropdown
                 queryKey={["wt-target-area", targetId]}
                 fetchPage={(request) =>
@@ -1079,6 +1119,7 @@ export function WarehouseTransferDraftPage({
                 searchable
                 placeholder={t(`${D}.document.optional`)}
               />
+              </OpsFieldShell>
             </Field>
             <Field label={t(`${D}.document.plannedDispatch`)}>
               <AppDateInput
@@ -1095,25 +1136,25 @@ export function WarehouseTransferDraftPage({
               />
             </Field>
             <Field label={t(`${D}.document.priority`)}>
-              <AppDropdown
-                value={priority}
-                onValueChange={setPriority}
-                options={[1, 2, 3, 4, 5].map((x) => ({
-                  value: String(x),
-                  label: String(x),
-                }))}
-              />
+              <OpsFieldShell>
+                <AppDropdown
+                  value={priority}
+                  onValueChange={setPriority}
+                  options={[1, 2, 3, 4, 5].map((x) => ({
+                    value: String(x),
+                    label: String(x),
+                  }))}
+                />
+              </OpsFieldShell>
             </Field>
             <Field label={t(`${D}.document.externalReference`)}>
-              <input
-                className="input"
+              <AppInput
                 value={externalReference}
                 onChange={(e) => setExternalReference(e.target.value)}
               />
             </Field>
             <Field label="Proje kodu">
-              <input
-                className="input"
+              <AppInput
                 value={projectCode}
                 maxLength={50}
                 onChange={(e) => setProjectCode(e.target.value)}
@@ -1121,8 +1162,7 @@ export function WarehouseTransferDraftPage({
               />
             </Field>
             <Field label={t(`${D}.document.description`)}>
-              <input
-                className="input"
+              <AppInput
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
               />
@@ -1130,18 +1170,12 @@ export function WarehouseTransferDraftPage({
           </div>
         )}
       </Panel>
-      {executionKind === "TaskBased" && (
-        <Assignees
-          assignees={assignees}
-          setAssignees={setAssignees}
-          allowMultiple={policy?.allowMultipleAssignees ?? true}
-        />
-      )}
+      </div>
       <Panel
         title={t(`${D}.lines.panel`, { count: lines.length, total })}
         icon={<ArrowLeftRight className="size-5" />}
       >
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           {lines.map((line, index) => (
             <LineCard
               key={line.localId}
@@ -1163,7 +1197,7 @@ export function WarehouseTransferDraftPage({
           <button
             type="button"
             onClick={() => setLines((current) => [...current, blankLine()])}
-            className="mt-4 inline-flex items-center gap-2 rounded-xl border border-[var(--wms-brand-ring)] px-4 py-2.5 text-sm font-semibold text-[var(--wms-brand-primary)]"
+            className="wms-ops-line-add mt-3 inline-flex items-center gap-2 rounded-xl border border-[var(--wms-brand-ring)] px-3.5 py-2 text-sm font-semibold text-[var(--wms-brand-primary)]"
           >
             <Plus className="size-4" />
             {t(`${D}.lines.addLine`)}
@@ -1202,6 +1236,7 @@ function OrderSelection(p: {
       icon={<ClipboardList className="size-5" />}
     >
       <div className="grid gap-3 md:grid-cols-[1fr_auto]">
+        <OpsFieldShell>
         <PagedAppDropdown
           queryKey={["wt-customer", p.branchCode]}
           fetchPage={(r) => warehouseTransferApi.customers(r, p.branchCode)}
@@ -1212,6 +1247,7 @@ function OrderSelection(p: {
           minSearchLength={2}
           placeholder={t(`${D}.orderSelection.customerSearch`)}
         />
+        </OpsFieldShell>
         <button
           type="button"
           disabled={!p.customerValue || p.busy}
@@ -1273,8 +1309,29 @@ function Assignees({
   const { t } = useTranslation("common");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [draft, setDraft] = useState<ActiveUserOption[]>([]);
+  const [summaryOpen, setSummaryOpen] = useState(false);
+  const closeTimer = useRef<number | null>(null);
   const userDisplayName = (user: ActiveUserOption) =>
     `${user.firstName} ${user.lastName}`.trim() || user.username;
+
+  useEffect(() => {
+    if (assignees.length < 2) setSummaryOpen(false);
+  }, [assignees.length]);
+
+  useEffect(() => () => {
+    if (closeTimer.current) window.clearTimeout(closeTimer.current);
+  }, []);
+
+  const cancelClose = () => {
+    if (!closeTimer.current) return;
+    window.clearTimeout(closeTimer.current);
+    closeTimer.current = null;
+  };
+
+  const scheduleClose = () => {
+    cancelClose();
+    closeTimer.current = window.setTimeout(() => setSummaryOpen(false), 180);
+  };
 
   const openDialog = () => {
     setDraft(assignees);
@@ -1286,58 +1343,92 @@ function Assignees({
     setDialogOpen(false);
   };
 
+  const removeAssignee = (id: ActiveUserOption["id"]) =>
+    setAssignees((current) => current.filter((x) => x.id !== id));
+
+  const removeLabel = (user: ActiveUserOption) =>
+    t(`${D}.assignees.removeAria`, { name: userDisplayName(user) });
+
   return (
     <>
-      <Panel title={t(`${D}.assignees.panel`)} icon={<UserRoundCog className="size-5" />}>
-        <p className="mb-4 text-sm text-[var(--wms-app-text-muted)]">
-          {t(`${D}.assignees.hint`)}
-        </p>
-        <div className="flex flex-wrap items-center gap-3">
-          <OpsActionButton
-            type="button"
-            variant="secondary"
-            onClick={openDialog}
-            className="inline-flex items-center gap-2"
-          >
-            <UserPlus className="size-4" />
-            {t(`${D}.assignees.openDialog`)}
-          </OpsActionButton>
-          <span className="text-sm text-[var(--wms-app-text-muted)]">
-            {t(`${D}.assignees.selectedCount`, { count: assignees.length })}
+      <div className="flex flex-wrap items-center justify-end gap-2.5" title={t(`${D}.assignees.hint`)}>
+        {assignees.length === 0 ? (
+          <span className="wms-ops-assignee-chip wms-ops-assignee-chip--empty">
+            {t(`${D}.assignees.empty`)}
           </span>
-        </div>
-        <div className="mt-3 flex flex-nowrap items-center gap-2 overflow-x-auto pb-1">
-          {assignees.length === 0 ? (
-            <span className="text-sm text-[var(--wms-app-text-muted)]">
-              {t(`${D}.assignees.empty`)}
-            </span>
-          ) : (
-            assignees.map((user) => (
-              <span
-                key={user.id}
-                className="inline-flex shrink-0 items-center gap-2 rounded-full border border-[var(--wms-brand-ring)] bg-[var(--wms-brand-soft)] px-3 py-1.5 text-sm"
+        ) : assignees.length === 1 ? (
+          <span className="wms-ops-assignee-chip">
+            {userDisplayName(assignees[0])}
+            <button
+              type="button"
+              aria-label={removeLabel(assignees[0])}
+              onClick={() => removeAssignee(assignees[0].id)}
+              className="wms-ops-assignee-chip__remove"
+            >
+              <X className="size-3.5" />
+            </button>
+          </span>
+        ) : (
+          <PopoverPrimitive.Root open={summaryOpen} onOpenChange={setSummaryOpen}>
+            <PopoverPrimitive.Trigger asChild>
+              <button
+                type="button"
+                className="wms-ops-assignee-chip wms-ops-assignee-chip--summary"
+                onMouseEnter={() => {
+                  cancelClose();
+                  setSummaryOpen(true);
+                }}
+                onMouseLeave={scheduleClose}
               >
-                <span>
-                  <strong>{userDisplayName(user)}</strong>
-                  <small className="ml-1 text-[var(--wms-app-text-muted)]">
-                    ({user.username})
-                  </small>
-                </span>
-                <button
-                  type="button"
-                  aria-label={t(`${D}.assignees.removeAria`, { name: userDisplayName(user) })}
-                  onClick={() =>
-                    setAssignees((current) => current.filter((x) => x.id !== user.id))
-                  }
-                  className="rounded-full p-0.5 text-[var(--wms-app-text-muted)] hover:bg-red-500/15 hover:text-red-500"
-                >
-                  <X className="size-3.5" />
-                </button>
-              </span>
-            ))
-          )}
-        </div>
-      </Panel>
+                <UserRoundCog className="size-3.5" aria-hidden />
+                {t(`${D}.assignees.selectedCount`, { count: assignees.length })}
+              </button>
+            </PopoverPrimitive.Trigger>
+            <PopoverPrimitive.Portal>
+              <PopoverPrimitive.Content
+                align="end"
+                sideOffset={8}
+                onOpenAutoFocus={(event) => event.preventDefault()}
+                onMouseEnter={cancelClose}
+                onMouseLeave={scheduleClose}
+                className="wms-floating-surface wms-ops-assignee-popover z-[2000] w-[min(20rem,calc(100vw-2rem))] overflow-hidden rounded-xl p-1.5"
+              >
+                <div className="wms-ops-scrollbar max-h-64 space-y-1 overflow-y-auto overscroll-contain">
+                  {assignees.map((user) => (
+                    <div key={user.id} className="wms-ops-assignee-popover__row">
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-semibold">
+                          {userDisplayName(user)}
+                        </span>
+                        <span className="block truncate text-xs text-[var(--wms-app-text-muted)]">
+                          {user.username}
+                        </span>
+                      </span>
+                      <button
+                        type="button"
+                        aria-label={removeLabel(user)}
+                        onClick={() => removeAssignee(user.id)}
+                        className="wms-ops-assignee-chip__remove"
+                      >
+                        <X className="size-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </PopoverPrimitive.Content>
+            </PopoverPrimitive.Portal>
+          </PopoverPrimitive.Root>
+        )}
+        <OpsActionButton
+          type="button"
+          variant="secondary"
+          onClick={openDialog}
+          className="inline-flex items-center gap-2"
+        >
+          <UserPlus className="size-4" />
+          {t(`${D}.assignees.openDialog`)}
+        </OpsActionButton>
+      </div>
 
       {dialogOpen && (
         <AssigneePickerDialog
@@ -1416,16 +1507,13 @@ function AssigneePickerDialog({
           </div>
         </OpsDialogHeader>
         <OpsDialogBody className="space-y-4" {...autoSelectInputCaptureHandlers}>
-          <div className="flex items-center gap-2 rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] px-3">
-            <Search className="size-4 shrink-0 text-[var(--wms-app-text-muted)]" aria-hidden />
-            <input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder={t(`${D}.assignees.search`)}
-              aria-label={t(`${D}.assignees.search`)}
-              className="h-11 min-w-0 flex-1 border-0 bg-transparent text-sm outline-none placeholder:text-[var(--wms-app-text-muted)]"
-            />
-          </div>
+          <AppInput
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder={t(`${D}.assignees.search`)}
+            aria-label={t(`${D}.assignees.search`)}
+            leadingIcon={<Search className="size-4" aria-hidden />}
+          />
           <div
             ref={listRef}
             className="wms-ops-scrollbar flex max-h-[min(420px,50dvh)] flex-col gap-2 overflow-y-auto overscroll-contain"
@@ -1442,8 +1530,17 @@ function AssigneePickerDialog({
               query.items.map((user) => {
                 const selected = draft.some((x) => x.id === user.id);
                 return (
-                  <label
+                  <div
                     key={user.id}
+                    role="checkbox"
+                    aria-checked={selected}
+                    tabIndex={0}
+                    onClick={() => toggleUser(user)}
+                    onKeyDown={(event) => {
+                      if (event.key !== " " && event.key !== "Enter") return;
+                      event.preventDefault();
+                      toggleUser(user);
+                    }}
                     className={cn(
                       "flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition-colors",
                       selected
@@ -1451,11 +1548,10 @@ function AssigneePickerDialog({
                         : "border-[var(--wms-app-border)] hover:border-[var(--wms-brand-primary)]/50",
                     )}
                   >
-                    <input
-                      type="checkbox"
-                      className="size-4 shrink-0 accent-[var(--wms-brand-primary)]"
+                    <OpsSkinCheckbox
                       checked={selected}
-                      onChange={() => toggleUser(user)}
+                      onCheckedChange={() => toggleUser(user)}
+                      aria-label={userDisplayName(user)}
                     />
                     <span className="flex min-w-0 flex-1 items-center gap-2 truncate">
                       <strong className="shrink-0 text-sm">{userDisplayName(user)}</strong>
@@ -1463,7 +1559,7 @@ function AssigneePickerDialog({
                         {user.username} · {user.email}
                       </small>
                     </span>
-                  </label>
+                  </div>
                 );
               })
             )}
@@ -1606,37 +1702,41 @@ function LineCard({
   }, [branchCode, line.localId, line.sourceLocationId, line.stockId, line.stockCode, line.trackingType, line.yapCodeId, sourceId]);
 
   return (
-    <div className="rounded-xl border border-[var(--wms-app-border)] p-4">
-      <div className="mb-3 flex justify-between">
-        <div>
-          <strong>
-            #{index + 1}{" "}
-            {line.source && (
-              <span className="mr-2 font-mono text-[var(--wms-brand-primary)]">
-                {line.source.orderNumber}
-              </span>
-            )}
-          </strong>
+    <div className="wms-ops-line-card">
+      <div className="wms-ops-line-card__head">
+        <div className="wms-ops-line-card__identity">
+          <span className="wms-ops-line-card__index">#{index + 1}</span>
+          {line.source && (
+            <span className="wms-ops-line-card__order">{line.source.orderNumber}</span>
+          )}
           {line.stockId && line.stockCode ? (
-            <div className="mt-1">
-              <StockIdentityCell
-                layout="inline"
-                stockId={line.stockId}
-                stockCode={line.stockCode}
-                stockName={line.stockName}
-                branchCode={branchCode}
-              />
-            </div>
+            <StockIdentityCell
+              layout="inline"
+              stockId={line.stockId}
+              stockCode={line.stockCode}
+              stockName={line.stockName}
+              branchCode={branchCode}
+            />
           ) : (
             <span className="text-sm font-semibold">{t(`${D}.lines.newLine`)}</span>
           )}
+          {line.stockId && line.trackingPolicy && (
+            <StockTrackingPolicyField policy={line.trackingPolicy} badge />
+          )}
         </div>
-        <button type="button" onClick={remove} className="text-red-500">
+        <button
+          type="button"
+          onClick={remove}
+          aria-label={t(`${D}.lines.removeLine`)}
+          className="wms-ops-line-card__remove"
+        >
           <Trash2 className="size-4" />
         </button>
       </div>
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+      <div className="wms-ops-line-card__body">
+      <div className="grid gap-2.5 md:grid-cols-2 xl:grid-cols-4">
         <Field label={t(`${D}.lines.stock`)}>
+          <OpsFieldShell>
           <PagedAppDropdown
             queryKey={["wt-stock", line.localId, branchCode]}
             fetchPage={(r) => warehouseTransferApi.stocks(r, branchCode)}
@@ -1677,8 +1777,10 @@ function LineCard({
             searchable
             minSearchLength={2}
           />
+          </OpsFieldShell>
         </Field>
         <Field label={t(`${D}.lines.yapCode`)}>
+          <OpsFieldShell>
           <PagedAppDropdown
             queryKey={["wt-yap", line.localId, branchCode]}
             fetchPage={(r) => warehouseTransferApi.yapCodes(r, branchCode)}
@@ -1698,10 +1800,10 @@ function LineCard({
             }}
             searchable
           />
+          </OpsFieldShell>
         </Field>
         <Field label={t(`${D}.lines.quantity`)}>
-          <input
-            className="input"
+          <AppInput
             type="number"
             min="0.000001"
             step="0.000001"
@@ -1713,11 +1815,14 @@ function LineCard({
           />
         </Field>
         <Field label={t(`${D}.lines.unit`)}>
-          <div className={`input flex items-center font-bold ${line.unitCode ? "text-[var(--wms-brand-primary)]" : "text-[var(--wms-brand-accent)]"}`}>
-            {line.unitCode || t(`${D}.lines.selectStockFirst`)}
-          </div>
+          <span className="app-input-shell wms-ops-field-shell">
+            <span className={`input app-input-control wms-ops-field flex items-center font-bold ${line.unitCode ? "text-[var(--wms-brand-primary)]" : "text-[var(--wms-brand-accent)]"}`}>
+              {line.unitCode || t(`${D}.lines.selectStockFirst`)}
+            </span>
+          </span>
         </Field>
         <Field label={t(`${D}.lines.sourceLocation`)}>
+          <OpsFieldShell>
           <PagedAppDropdown
             queryKey={["wt-line-source", line.localId, sourceId, line.stockId, line.yapCodeId]}
             fetchPage={(r) =>
@@ -1759,8 +1864,10 @@ function LineCard({
             }
             searchable
           />
+          </OpsFieldShell>
         </Field>
         <Field label={t(`${D}.lines.targetLocation`)}>
+          <OpsFieldShell>
           <PagedAppDropdown
             queryKey={["wt-line-target", line.localId, targetId]}
             fetchPage={(r) => warehouseTransferApi.locations(r, targetId)}
@@ -1780,20 +1887,25 @@ function LineCard({
             }
             searchable
           />
+          </OpsFieldShell>
         </Field>
-        <Field label={t(`${D}.lines.trackingPolicy`)}>
-          <StockTrackingPolicyField policy={line.trackingPolicy} />
-        </Field>
-        <label className="flex h-11 items-center gap-2 self-end rounded-xl border border-[var(--wms-app-border)] px-3 text-sm">
-          <input
-            type="checkbox"
+        <div className="wms-ops-line-card__toggle">
+          <OpsSkinCheckbox
             checked={line.requireHandlingUnit}
-            onChange={(e) =>
-              patch(line.localId, { requireHandlingUnit: e.target.checked })
+            onCheckedChange={(checked) =>
+              patch(line.localId, { requireHandlingUnit: checked })
             }
+            aria-label={t(`${D}.lines.handlingUnitRequired`)}
           />
-          {t(`${D}.lines.handlingUnitRequired`)}
-        </label>
+          <span
+            className="min-w-0 cursor-pointer select-none truncate"
+            onClick={() =>
+              patch(line.localId, { requireHandlingUnit: !line.requireHandlingUnit })
+            }
+          >
+            {t(`${D}.lines.handlingUnitRequired`)}
+          </span>
+        </div>
       </div>
       <TrackingPlanEditor
         mode={line.trackingType}
@@ -1806,7 +1918,9 @@ function LineCard({
           line.trackingPolicy?.requireExpirationDate,
         )}
         accent="violet"
+        compact
       />
+      </div>
     </div>
   );
 }
@@ -1831,7 +1945,18 @@ function Panel({
 }
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <label className="space-y-1.5 text-sm">
+    <label
+      className="space-y-1.5 text-sm"
+      onClick={(event) => {
+        // Etikete tıklamak dropdown tetikleyicisine click iletir; açık bir liste
+        // dışarı tıklamayla kapanırken bu iletim onu anında yeniden açıyordu.
+        const target = event.target as HTMLElement;
+        if (target.closest("button, input, select, textarea")) return;
+        if (event.currentTarget.querySelector("button.wms-ops-lookup-trigger")) {
+          event.preventDefault();
+        }
+      }}
+    >
       <span className="font-semibold text-[var(--wms-app-text)]">{label}</span>
       {children}
     </label>

@@ -3377,6 +3377,7 @@
   },
   "transferDraft": {
     "createSuffix": "Création",
+    "howItWorks": "Comment ça marche",
     "headerDescription": "Choisissez indépendamment le type de source et le mode d'exécution ; stock, emplacement, série/lot, réservation et mouvements utilisent le moteur physique partagé.",
     "operationFlow": {
       "executionModel": "01 · Modèle d'exécution",
@@ -3436,6 +3437,7 @@
       "purposeMaterial": "Approvisionnement matières / composants",
       "purposeWip": "WIP / mouvement inter-processus",
       "purposeOutput": "Sortie produit fini",
+      "advanced": "Autres paramètres",
       "planNo": "Plan production",
       "orderNo": "Ordre production",
       "operationCode": "Code opération",
@@ -3457,6 +3459,7 @@
       "externalReference": "Référence externe",
       "description": "Description",
       "optional": "Optionnel",
+      "advanced": "Autres paramètres",
       "sourceWarehousePlaceholder": "Entrepôt source",
       "targetWarehousePlaceholder": "Entrepôt destination"
     },
@@ -3483,7 +3486,8 @@
       "sourceLocation": "Emplacement source",
       "targetLocation": "Emplacement destination",
       "trackingPolicy": "Politique traçabilité stock",
-      "handlingUnitRequired": "Unité manutention obligatoire"
+      "handlingUnitRequired": "Unité manutention obligatoire",
+      "removeLine": "Supprimer la ligne"
     },
     "success": {
       "title": "Transfert créé",

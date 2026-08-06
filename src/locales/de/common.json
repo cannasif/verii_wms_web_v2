@@ -4942,6 +4942,7 @@
   },
   "transferDraft": {
     "createSuffix": "Erstellung",
+    "howItWorks": "So funktioniert es",
     "headerDescription": "Wählen Sie Quelltyp und Ausführungsmodus unabhängig; Bestand, Platz, Serien/Los, Reservierung und Bewegungen laufen auf der gemeinsamen physischen Transfer-Engine.",
     "operationFlow": {
       "executionModel": "01 · Ausführungsmodell",
@@ -5001,6 +5002,7 @@
       "purposeMaterial": "Rohstoff- / Komponentenversorgung",
       "purposeWip": "Zwischenprodukt / Prozessübergang",
       "purposeOutput": "Fertigwarenausgang",
+      "advanced": "Weitere Einstellungen",
       "planNo": "Produktionsplan",
       "orderNo": "Produktionsauftrag",
       "operationCode": "Operationscode",
@@ -5022,6 +5024,7 @@
       "externalReference": "Externe Referenz",
       "description": "Beschreibung",
       "optional": "Optional",
+      "advanced": "Weitere Einstellungen",
       "sourceWarehousePlaceholder": "Quelllager",
       "targetWarehousePlaceholder": "Ziellager"
     },
@@ -5048,7 +5051,8 @@
       "sourceLocation": "Quellplatz",
       "targetLocation": "Zielplatz",
       "trackingPolicy": "Bestandsverfolgungsrichtlinie",
-      "handlingUnitRequired": "Handling Unit erforderlich"
+      "handlingUnitRequired": "Handling Unit erforderlich",
+      "removeLine": "Position entfernen"
     },
     "success": {
       "title": "Transfer erstellt",

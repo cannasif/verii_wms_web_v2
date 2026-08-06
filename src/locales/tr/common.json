@@ -5237,6 +5237,7 @@
   },
   "transferDraft": {
     "createSuffix": "Oluşturma",
+    "howItWorks": "Nasıl çalışır",
     "headerDescription": "Kaynak biçimi ile emir yürütmesini bağımsız seçin; stok, raf, seri/lot, rezervasyon ve hareketler ortak fiziksel transfer motorunda yürütülür.",
     "operationFlow": {
       "executionModel": "01 · Yürütme modeli",
@@ -5297,6 +5298,7 @@
       "purposeMaterial": "Hammadde / bileşen besleme",
       "purposeWip": "Yarı mamul / proses arası taşıma",
       "purposeOutput": "Mamul çıkışı",
+      "advanced": "Diğer ayarlar",
       "planNo": "Üretim planı",
       "orderNo": "Üretim emri",
       "operationCode": "Operasyon kodu",
@@ -5318,6 +5320,7 @@
       "externalReference": "Harici referans",
       "description": "Açıklama",
       "optional": "İsteğe bağlı",
+      "advanced": "Diğer ayarlar",
       "sourceWarehousePlaceholder": "Kaynak depo",
       "targetWarehousePlaceholder": "Hedef depo"
     },
@@ -5354,7 +5357,8 @@
       "sourceLocation": "Kaynak raf",
       "targetLocation": "Hedef raf",
       "trackingPolicy": "Stok takip politikası",
-      "handlingUnitRequired": "Palet zorunlu"
+      "handlingUnitRequired": "Palet zorunlu",
+      "removeLine": "Kalemi kaldır"
     },
     "success": {
       "title": "Transfer oluşturuldu",
