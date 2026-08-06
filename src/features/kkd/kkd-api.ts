@@ -11,6 +11,7 @@ const unwrap = <T,>(response: Envelope<T>): T => {
 export type KkdLookup = { id: number; code: string; name: string; isActive: boolean };
 export type KkdCustomerLookup = { id: number; code: string; name: string };
 export type KkdStockLookup = { id: number; code: string; name: string; unitCode: string; groupCode?: string | null };
+export type KkdStockBulkResolve = { requestedCode: string; id?: number | null; code?: string | null; name?: string | null; unitCode?: string | null; groupCode?: string | null; isFound: boolean };
 export type KkdStockGroupLookup = { code: string; stockCount: number };
 export type KkdEntitlementGroupLookup = { code: string; name: string; ruleCount: number };
 export type KkdEmployee = {
@@ -34,7 +35,11 @@ export type KkdMatrixRule = {
   allowBulkIssue: boolean; isMandatory: boolean; sortOrder: number; isActive: boolean;
   description?: string | null; phases: KkdMatrixPhase[];
 };
-export type KkdMatrixDetail = Omit<KkdMatrix, 'ruleCount'> & { description?: string | null; rules: KkdMatrixRule[] };
+export type KkdMatrixDetail = Omit<KkdMatrix, 'ruleCount'> & { description?: string | null; rules: KkdMatrixRule[]; rowVersion: string };
+export type KkdMatrixValidation = {
+  isValid: boolean; ruleCount: number; phaseCount: number; stockSpecificRuleCount: number; groupRuleCount: number;
+  issues: Array<{ rowNumber: number; field: string; code: string; message: string }>;
+};
 export type KkdDistribution = {
   id: number; documentNo: string; status: string; employeeId: number; employeeCode: string;
   employeeName: string; warehouseId: number; warehouseOutboundId?: number; totalQuantity: number;
@@ -109,6 +114,8 @@ export const kkdApi = {
       buildDropdownPagedBody(request, { sortBy: 'code', searchFields: ['code', 'name'] }),
       { params: { groupCode: groupCode || undefined }, signal: request.signal },
     )),
+  resolveStocks: async (codes: string[]) => unwrap(await api.post<Envelope<KkdStockBulkResolve[]>>(
+    '/api/kkd/lookups/stocks/resolve', { codes })),
   stockGroupsPaged: async (request: DropdownPageRequest): Promise<DropdownPage<KkdStockGroupLookup>> =>
     unwrap(await api.post<Envelope<DropdownPage<KkdStockGroupLookup>>>(
       '/api/kkd/lookups/stock-groups/paged',
@@ -149,6 +156,8 @@ export const kkdApi = {
   saveMatrix: async (payload: unknown, id?: number) => unwrap(id
     ? await api.put<Envelope<number>>(`/api/kkd/matrices/${id}`, payload)
     : await api.post<Envelope<number>>('/api/kkd/matrices', payload)),
+  validateMatrix: async (payload: unknown, id?: number) => unwrap(await api.post<Envelope<KkdMatrixValidation>>(
+    id ? `/api/kkd/matrices/${id}/validate` : '/api/kkd/matrices/validate', payload)),
   check: async (payload: { employeeId: number; stockId: number; quantity: number; atDate?: string }) =>
     unwrap(await api.post<Envelope<KkdEntitlementResult>>('/api/kkd/entitlements/check', payload)),
   complete: async (id: number) => unwrap(await api.post<Envelope<unknown>>(`/api/kkd/distributions/${id}/complete`, { idempotencyKey: crypto.randomUUID() })),

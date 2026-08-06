@@ -1,6 +1,6 @@
 import { useMemo, useState, type FormEvent, type ReactElement } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Copy, Pencil, Plus, RefreshCw, Save, Search, Trash2, X } from 'lucide-react';
+import { Copy, LayoutGrid, ListTree, Pencil, Plus, RefreshCw, Save, Search, Trash2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { AppDateInput, AppInput } from '@/components/shared/AppInput';
 import { OpsActionButton } from '@/components/shared/OpsActionButton';
@@ -13,8 +13,9 @@ import { OPS_SELECT_TRIGGER_CLASS } from '@/components/shared/ops-field-styles';
 import { cn } from '@/lib/utils';
 import { KKD_CELL, KKD_HEAD_CELL, KkdCheckRow, KkdField, KkdPanel, KkdTableShell } from './kkd-ops-ui';
 import { kkdApi, type KkdMatrixDetail, type KkdMatrixRule } from './kkd-api';
+import { KkdBulkMatrixEditor } from './KkdBulkMatrixEditor';
 
-type RuleForm = {
+export type RuleForm = {
   key: string; groupCode: string; groupName: string; stockId: string; stockLabel: string;
   standardCode: string; standardName: string; initialQuantity: string; afterMonths: string;
   afterQuantity: string; recurringQuantity: string; recurringInterval: string; periodType: string;
@@ -23,7 +24,7 @@ type RuleForm = {
 };
 type MatrixForm = {
   id?: number; customerId: string; departmentId: string; roleId: string; code: string; name: string;
-  effectiveFrom: string; effectiveTo: string; description: string; isActive: boolean; rules: RuleForm[];
+  effectiveFrom: string; effectiveTo: string; description: string; isActive: boolean; rules: RuleForm[]; rowVersion?: string;
 };
 
 const number = (value?: string | number | null): number => Number(value || 0);
@@ -64,6 +65,7 @@ export function KkdMatrixManager(): ReactElement {
   const qc = useQueryClient();
   const [form, setForm] = useState<MatrixForm>(emptyForm);
   const [search, setSearch] = useState('');
+  const [editorMode, setEditorMode] = useState<'detail'|'bulk'>('detail');
   const matrices = useQuery({ queryKey: ['kkd', 'matrices'], queryFn: kkdApi.matrices });
   const departments = useQuery({ queryKey: ['kkd', 'departments'], queryFn: kkdApi.departments });
   const roles = useQuery({
@@ -86,7 +88,7 @@ export function KkdMatrixManager(): ReactElement {
     onSuccess: (detail: KkdMatrixDetail, id: number) => setForm({
       id, customerId: String(detail.customerId), departmentId: String(detail.departmentId), roleId: String(detail.roleId),
       code: detail.code, name: detail.name, effectiveFrom: detail.effectiveFrom || '', effectiveTo: detail.effectiveTo || '',
-      description: detail.description || '', isActive: detail.isActive, rules: detail.rules.map(ruleFromDetail),
+      description: detail.description || '', isActive: detail.isActive, rules: detail.rules.map(ruleFromDetail), rowVersion: detail.rowVersion,
     }),
     onError: (error) => toast.error(error instanceof Error ? error.message : 'Matris yüklenemedi.'),
   });
@@ -95,7 +97,7 @@ export function KkdMatrixManager(): ReactElement {
     onSuccess: (detail) => setForm({
       customerId: String(detail.customerId), departmentId: String(detail.departmentId), roleId: String(detail.roleId),
       code: `${detail.code}-KOPYA`, name: `${detail.name} (Kopya)`, effectiveFrom: '', effectiveTo: '',
-      description: detail.description || '', isActive: false, rules: detail.rules.map(ruleFromDetail),
+      description: detail.description || '', isActive: false, rules: detail.rules.map(ruleFromDetail), rowVersion: undefined,
     }),
     onError: (error) => toast.error(error instanceof Error ? error.message : 'Matris kopyalanamadı.'),
   });
@@ -105,10 +107,10 @@ export function KkdMatrixManager(): ReactElement {
       if (!form.code.trim() || !form.name.trim()) throw new Error('Matris kodu ve adı zorunludur.');
       if (!form.rules.length) throw new Error('En az bir hakediş kuralı eklenmelidir.');
       if (form.rules.some((item) => !item.groupCode.trim())) throw new Error('Her kuralda hakediş grubu seçilmelidir.');
-      return kkdApi.saveMatrix({
+      const payload = {
         customerId: number(form.customerId), departmentId: number(form.departmentId), roleId: number(form.roleId),
         code: form.code, name: form.name, effectiveFrom: form.effectiveFrom || null, effectiveTo: form.effectiveTo || null,
-        isActive: form.isActive, description: form.description || null,
+        isActive: form.isActive, description: form.description || null, expectedRowVersion: form.rowVersion || null,
         rules: form.rules.map((item, index) => ({
           groupCode: item.groupCode, groupName: item.groupName || null, stockId: optionalNumber(item.stockId),
           standardCode: item.standardCode || null, standardName: item.standardName || null,
@@ -127,7 +129,13 @@ export function KkdMatrixManager(): ReactElement {
               periodType: item.periodType, periodInterval: Math.max(1, number(item.recurringInterval)), sortOrder: 3, isActive: true }] : []),
           ],
         })),
-      }, form.id);
+      };
+      const validation = await kkdApi.validateMatrix(payload, form.id);
+      if (!validation.isValid) {
+        const first = validation.issues[0];
+        throw new Error(`${first.rowNumber ? `${first.rowNumber}. satır: ` : ''}${first.message} (${validation.issues.length} hata)`);
+      }
+      return kkdApi.saveMatrix(payload, form.id);
     },
     onSuccess: async () => { toast.success(form.id ? 'Hak matrisi güncellendi.' : 'Hak matrisi oluşturuldu.'); setForm(emptyForm()); await qc.invalidateQueries({ queryKey: ['kkd', 'matrices'] }); },
     onError: (error) => toast.error(error instanceof Error ? error.message : 'Hak matrisi kaydedilemedi.'),
@@ -135,7 +143,7 @@ export function KkdMatrixManager(): ReactElement {
   const submit = (event: FormEvent): void => { event.preventDefault(); save.mutate(); };
 
   return (
-    <div className="grid gap-4 2xl:grid-cols-[minmax(420px,.8fr)_1.2fr]">
+    <div className={cn('grid gap-4', editorMode === 'detail' && '2xl:grid-cols-[minmax(420px,.8fr)_1.2fr]')}>
       <KkdPanel code="MTX_LST" title="Hak matrisi listesi" description="Arayın, düzenleyin veya mevcut matrisi yeni kapsam için kopyalayın."
         actions={<OpsActionButton variant="secondary" onClick={() => void matrices.refetch()}><RefreshCw className="size-3.5" />Yenile</OpsActionButton>}
         bodyClassName="px-0 py-0 sm:px-0 sm:py-0">
@@ -175,11 +183,14 @@ export function KkdMatrixManager(): ReactElement {
             <KkdField label="Açıklama"><AppInput value={form.description} onChange={(event) => setHeader('description', event.target.value)} /></KkdField>
           </section>
 
-          <div className="flex flex-wrap items-center justify-between gap-2"><div><strong>Hakediş kuralları</strong><p className="text-xs text-[var(--wms-app-text-muted)]">Stok-özel kural, grup kuralından önceliklidir.</p></div>
-            <OpsActionButton variant="secondary" type="button" onClick={() => setForm((current) => ({ ...current, rules: [...current.rules, newRule()] }))}><Plus className="size-3.5" />Kural ekle</OpsActionButton></div>
-          <div className="grid gap-3">{form.rules.map((item, index) => <RuleEditor key={item.key} item={item} index={index}
-            setRule={setRule} remove={() => setForm((current) => ({ ...current, rules: current.rules.filter((rule) => rule.key !== item.key) }))}
-            duplicate={() => setForm((current) => ({ ...current, rules: [...current.rules.slice(0,index+1), { ...item, key: crypto.randomUUID(), stockId: '', stockLabel: '' }, ...current.rules.slice(index+1)] }))} />)}</div>
+          <div className="flex flex-wrap items-center justify-between gap-2"><div><strong>Hakediş kuralları · {form.rules.length.toLocaleString('tr-TR')} satır</strong><p className="text-xs text-[var(--wms-app-text-muted)]">Detaylı kartlarla tekil çalışın veya binlerce satırı toplu çalışma alanında yönetin.</p></div>
+            <div className="flex flex-wrap gap-2"><OpsActionButton variant={editorMode === 'detail' ? 'primary' : 'secondary'} type="button" onClick={() => setEditorMode('detail')}><ListTree className="size-3.5" />Detaylı düzenleme</OpsActionButton>
+              <OpsActionButton variant={editorMode === 'bulk' ? 'primary' : 'secondary'} type="button" onClick={() => setEditorMode('bulk')}><LayoutGrid className="size-3.5" />Toplu düzenleme</OpsActionButton>
+              {editorMode === 'detail' ? <OpsActionButton variant="secondary" type="button" onClick={() => setForm((current) => ({ ...current, rules: [...current.rules, newRule()] }))}><Plus className="size-3.5" />Kural ekle</OpsActionButton> : null}</div></div>
+          {editorMode === 'bulk' ? <KkdBulkMatrixEditor rules={form.rules} createRule={newRule} onChange={(rules) => setForm((current) => ({ ...current, rules }))} />
+            : <div className="grid gap-3">{form.rules.map((item, index) => <RuleEditor key={item.key} item={item} index={index}
+              setRule={setRule} remove={() => setForm((current) => ({ ...current, rules: current.rules.filter((rule) => rule.key !== item.key) }))}
+              duplicate={() => setForm((current) => ({ ...current, rules: [...current.rules.slice(0,index+1), { ...item, key: crypto.randomUUID(), stockId: '', stockLabel: '' }, ...current.rules.slice(index+1)] }))} />)}</div>}
           <div className="sticky bottom-2 z-10 flex justify-end gap-2 rounded-xl border border-[var(--wms-ops-card-border)] bg-[var(--wms-app-surface)]/95 p-3 backdrop-blur">
             {form.id ? <OpsActionButton variant="secondary" type="button" onClick={() => setForm(emptyForm())}><X className="size-3.5" />Vazgeç</OpsActionButton> : null}
             <OpsActionButton variant="primary" type="submit" loading={save.isPending}><Save className="size-3.5" />{form.id ? 'Değişiklikleri kaydet' : 'Matrisi oluştur'}</OpsActionButton>
