@@ -87,7 +87,9 @@ export interface ProductionTransferExecution {
 
 export interface ProductionTransferScanPickResult {
   execution: ProductionTransferExecution; lineId: number; stockCode: string; acceptedQuantity: number;
-  serialNo?: string; lotNo?: string;
+  serialNo?: string; lotNo?: string; barcodeSource: string;
+  sourceLocationId: number; sourceLocationCode: string; sourceLocationName: string;
+  remainingBarcodeQuantity?: number;
 }
 
 const taskPath = (transferId: number, taskId: number) => `/api/production-transfers/${transferId}/tasks/${taskId}`;

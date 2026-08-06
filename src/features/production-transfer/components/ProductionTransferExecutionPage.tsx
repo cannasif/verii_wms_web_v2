@@ -1,14 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { AlertTriangle, ArrowLeft, Barcode, CheckCircle2, ClipboardCheck, Loader2, PackageCheck, RefreshCw } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Barcode, CheckCircle2, ClipboardCheck, Loader2, MapPin, PackageCheck, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { OpsActionButton } from '@/components/shared/OpsActionButton';
 import { OpsStatusBadge } from '@/components/shared/OpsStatusBadge';
+import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
 import { formatProjectNumber } from '@/lib/project-format';
 import { localizeEnumValue } from '@/lib/enum-localization';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
 import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
+import { warehouseTransferApi } from '@/features/warehouse-transfer-v2/api/warehouse-transfer.api';
+import type { LocationOption } from '@/features/goods-receipt-v2/types/goods-receipt.types';
 import { productionTransferApi, type ProductionTransferExecution } from '../api';
 
 export function ProductionTransferExecutionPage() {
@@ -20,6 +23,7 @@ export function ProductionTransferExecutionPage() {
   const [loadError, setLoadError] = useState<string>();
   const [activeLineId, setActiveLineId] = useState<number>();
   const [barcode, setBarcode] = useState('');
+  const [sourceLocationByLine, setSourceLocationByLine] = useState<Record<number, string>>({});
   const [partialConfirmed, setPartialConfirmed] = useState(false);
   const [partialReason, setPartialReason] = useState('');
   const [shortageConfirmed, setShortageConfirmed] = useState(false);
@@ -45,6 +49,9 @@ export function ProductionTransferExecutionPage() {
   useEffect(() => { if (execution?.workflowStatus === 'Picking' || execution?.workflowStatus === 'Planned') barcodeRef.current?.focus(); }, [execution?.workflowStatus, activeLineId]);
 
   const activeLine = execution?.lines.find((line) => line.lineId === activeLineId);
+  const selectedSourceLocation = activeLine
+    ? sourceLocationByLine[activeLine.lineId] ?? (activeLine.suggestedSourceLocationId ? String(activeLine.suggestedSourceLocationId) : '')
+    : '';
   const hasShortage = (execution?.shortageQuantity ?? 0) > 0;
   const canConfirmRequester = !execution?.requestedByUserId
     || execution.requestedByUserId === currentUserId
@@ -56,12 +63,20 @@ export function ProductionTransferExecutionPage() {
     if (!activeLine || !barcode.trim()) return;
     setBusy(true);
     try {
-      const result = await productionTransferApi.scanPick(id, activeLine.lineId, barcode);
+      const result = await productionTransferApi.scanPick(
+        id,
+        activeLine.lineId,
+        barcode,
+        selectedSourceLocation ? Number(selectedSourceLocation) : undefined,
+      );
       setExecution(result.execution);
       setBarcode('');
       const next = result.execution.lines.find((line) => line.remainingToPickQuantity > 0)?.lineId;
       setActiveLineId(next);
-      toast.success(`${result.stockCode}: ${formatProjectNumber(result.acceptedQuantity)} birim doğrulandı.`);
+      const labelRemaining = result.remainingBarcodeQuantity != null
+        ? ` Etikette kalan: ${formatProjectNumber(result.remainingBarcodeQuantity)}.`
+        : '';
+      toast.success(`${result.stockCode}: ${formatProjectNumber(result.acceptedQuantity)} ${activeLine.unitCode} ${result.sourceLocationCode} rafından doğrulandı.${labelRemaining}`);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Barkod doğrulanamadı.');
     } finally {
@@ -146,6 +161,24 @@ export function ProductionTransferExecutionPage() {
           <div className="flex items-center gap-2"><Barcode className="size-5 text-[var(--wms-brand-primary)]" /><h2 className="font-black">Barkod doğrulama</h2></div>
           {activeLine ? <>
             <div className="mt-4 rounded-xl bg-[var(--wms-app-surface)] p-4"><span className="text-xs text-[var(--wms-app-text-muted)]">Şimdi beklenen stok</span><strong className="mt-1 block text-lg">{activeLine.stockCode}</strong><span className="text-sm">{activeLine.stockName}</span></div>
+            <label className="mt-4 block text-xs font-bold"><span className="inline-flex items-center gap-1"><MapPin className="size-3.5" />Kaynak raf</span></label>
+            <div className="mt-1">
+              <PagedAppDropdown<LocationOption>
+                queryKey={['production-pick-source-location', execution.sourceWarehouseId, activeLine.lineId]}
+                fetchPage={(request) => warehouseTransferApi.locations(request, execution.sourceWarehouseId)}
+                toOption={(location) => ({ value: String(location.id), label: `${location.code} · ${location.name}`, description: location.locationType })}
+                value={selectedSourceLocation}
+                onValueChange={(value) => setSourceLocationByLine((current) => ({ ...current, [activeLine.lineId]: value }))}
+                selectedOption={activeLine.suggestedSourceLocationId ? {
+                  value: String(activeLine.suggestedSourceLocationId),
+                  label: `${activeLine.suggestedSourceLocationCode || `#${activeLine.suggestedSourceLocationId}`} · ${activeLine.suggestedSourceLocationName || 'Rota önerisi'}`,
+                  description: 'Toplama rotasının önerdiği kaynak raf',
+                } : undefined}
+                searchable
+                minSearchLength={1}
+                placeholder="Rafı okutun veya seçin"
+              />
+            </div>
             <label className="mt-4 block text-xs font-bold">Barkod / seri / etiket</label>
             <div className="mt-1 flex gap-2"><input ref={barcodeRef} className="input min-w-0 flex-1" value={barcode} onChange={(event) => setBarcode(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); void scan(); } }} placeholder="Barkodu okutun" autoComplete="off" /><OpsActionButton variant="primary" loading={busy} disabled={!barcode.trim()} onClick={() => void scan()}><Barcode className="size-4" />Onayla</OpsActionButton></div>
             <p className="mt-2 text-xs text-[var(--wms-app-text-muted)]">Doğru barkod stok hareketini tek transaction içinde kaynak raftan {execution.waitingLocationCode || 'bekleme rafına'} taşır.</p>
