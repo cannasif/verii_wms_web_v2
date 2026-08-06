@@ -46,6 +46,7 @@ import {
   KkdTableShell,
 } from './kkd-ops-ui';
 import { kkdApi, type KkdEntitlementResult, type KkdPolicy } from './kkd-api';
+import { KkdMatrixManager } from './KkdMatrixManager';
 
 export function KkdOverviewPage(): ReactElement {
   const { can } = usePermissionAccess();
@@ -512,19 +513,18 @@ export function KkdDefinitionsPage(): ReactElement {
         </div>
       }
     >
+      {tab === 'matrix' ? (
+        <KkdMatrixManager />
+      ) : (
       <div className="grid gap-4 xl:grid-cols-[minmax(340px,.75fr)_1.25fr]">
         <KkdPanel
-          code={tab === 'matrix' ? 'MTX_NEW' : 'DEF_NEW'}
+          code="DEF_NEW"
           icon={<Sparkles className="size-4" strokeWidth={1.75} />}
-          title={tab === 'matrix' ? 'Yeni hak matrisi' : 'Yeni tanım'}
-          description={
-            tab === 'matrix'
-              ? 'Kural, faz ve sıklık bilgisi tek kayıtta saklanır.'
-              : 'Kaydedilen tanım anında listeye ve hak motoruna yansır.'
-          }
+          title="Yeni tanım"
+          description="Kaydedilen tanım anında listeye ve hak motoruna yansır."
         >
           <form className="grid content-start gap-3" onSubmit={submit}>
-            {(tab === 'role' || tab === 'employee' || tab === 'matrix') && (
+            {(tab === 'role' || tab === 'employee') && (
               <KkdField label="Departman">
                 <OpsSelect
                   value={form.departmentId ?? ''}
@@ -535,7 +535,7 @@ export function KkdDefinitionsPage(): ReactElement {
                 />
               </KkdField>
             )}
-            {(tab === 'employee' || tab === 'matrix') && (
+            {tab === 'employee' && (
               <KkdField label="Rol">
                 <OpsSelect
                   value={form.roleId ?? ''}
@@ -584,7 +584,6 @@ export function KkdDefinitionsPage(): ReactElement {
                 </KkdField>
               </>
             )}
-            {tab === 'matrix' && <MatrixFields form={form} change={change} />}
             <OpsActionButton
               type="submit"
               variant="primary"
@@ -658,6 +657,7 @@ export function KkdDefinitionsPage(): ReactElement {
           </KkdTableShell>
         </KkdPanel>
       </div>
+      )}
     </KkdPage>
   );
 }
@@ -690,7 +690,7 @@ function CustomerLookupField({
   );
 }
 
-function MatrixFields({
+export function MatrixFields({
   form,
   change,
 }: {
