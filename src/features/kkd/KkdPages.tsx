@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent, type ReactElement } from 'react';
+import { useEffect, useMemo, useState, type FormEvent, type ReactElement } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   BadgeCheck,
@@ -10,6 +10,7 @@ import {
   Gauge,
   Grid3X3,
   PackageCheck,
+  Printer,
   RefreshCw,
   Save,
   ScrollText,
@@ -18,6 +19,7 @@ import {
   ShieldCheck,
   Sparkles,
   Users,
+  Warehouse,
   X,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -31,9 +33,12 @@ import { OpsProcessHub, type OpsProcessHubPhase } from '@/components/shared/OpsP
 import { OpsSelect } from '@/components/shared/OpsSelect';
 import { OpsStatusBadge, inferOpsStatusTone } from '@/components/shared/OpsStatusBadge';
 import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
+import { PagedLookupDialog } from '@/components/shared/PagedLookupDialog';
 import { OPS_SELECT_TRIGGER_CLASS } from '@/components/shared/ops-field-styles';
+import type { DropdownPage } from '@/hooks/useDropdownInfiniteSearch';
 import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
 import { cn } from '@/lib/utils';
+import type { PagedResponse } from '@/types/api';
 import {
   KKD_CELL,
   KKD_HEAD_CELL,
@@ -45,9 +50,60 @@ import {
   KkdPanel,
   KkdTableShell,
 } from './kkd-ops-ui';
-import { kkdApi, type KkdEntitlementResult, type KkdPolicy, type KkdRemainingEntitlement } from './kkd-api';
+import {
+  kkdApi,
+  type KkdCustomerLookup,
+  type KkdEntitlementResult,
+  type KkdLookup,
+  type KkdPolicy,
+  type KkdRemainingEntitlement,
+} from './kkd-api';
 import { KkdMatrixManager } from './KkdMatrixManager';
 import { KkdOverrideManager } from './KkdOverrideManager';
+import { KkdDistributionReceiptDialog } from './KkdDistributionReceiptDialog';
+import {
+  formatExcessApprovalStatus,
+  isExcessApprovalPending,
+  KKD_QUOTA_FREQUENCY_HINT,
+  KKD_QUOTA_FULL_MESSAGE,
+  KKD_QUOTA_FULL_TITLE,
+} from './kkd-quota-copy';
+
+const toPagedResponse = <T,>(page: DropdownPage<T>): PagedResponse<T> => ({
+  data: page.items,
+  totalCount: page.totalCount,
+  pageNumber: page.pageNumber,
+  pageSize: page.pageSize,
+  totalPages: page.totalPages ?? Math.max(1, Math.ceil(page.totalCount / Math.max(page.pageSize, 1))),
+  hasPreviousPage: page.pageNumber > 1,
+  hasNextPage: Boolean(page.hasNextPage),
+});
+
+const lookupLabel = (item: { code: string; name: string }): string => `${item.code} · ${item.name}`;
+
+function pageLocalLookups(
+  items: KkdLookup[],
+  search: string,
+  pageNumber: number,
+  pageSize: number,
+): PagedResponse<KkdLookup> {
+  const query = search.trim().toLocaleLowerCase('tr-TR');
+  const filtered = query
+    ? items.filter((item) => `${item.code} ${item.name}`.toLocaleLowerCase('tr-TR').includes(query))
+    : items;
+  const start = (pageNumber - 1) * pageSize;
+  const data = filtered.slice(start, start + pageSize);
+  const totalCount = filtered.length;
+  return {
+    data,
+    totalCount,
+    pageNumber,
+    pageSize,
+    totalPages: Math.max(1, Math.ceil(totalCount / Math.max(pageSize, 1))),
+    hasPreviousPage: pageNumber > 1,
+    hasNextPage: start + pageSize < totalCount,
+  };
+}
 
 export function KkdOverviewPage(): ReactElement {
   const { can } = usePermissionAccess();
@@ -361,6 +417,9 @@ const DEFINITION_TABS: Array<[DefinitionTab, string]> = [
 export function KkdDefinitionsPage(): ReactElement {
   const qc = useQueryClient();
   const [tab, setTab] = useState<DefinitionTab>('department');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, boolean>>({});
+  const [departmentLookupOpen, setDepartmentLookupOpen] = useState(false);
+  const [roleLookupOpen, setRoleLookupOpen] = useState(false);
   const departments = useQuery({ queryKey: ['kkd', 'departments'], queryFn: kkdApi.departments });
   const roles = useQuery({ queryKey: ['kkd', 'roles'], queryFn: () => kkdApi.roles() });
   const employees = useQuery({ queryKey: ['kkd', 'employees'], queryFn: kkdApi.employees });
@@ -372,7 +431,36 @@ export function KkdDefinitionsPage(): ReactElement {
     recurringQuantity: '1',
     recurringInterval: '1',
   });
-  const change = (key: string, value: string): void => setForm((current) => ({ ...current, [key]: value }));
+  const clearError = (key: string): void =>
+    setFieldErrors((current) => (current[key] ? { ...current, [key]: false } : current));
+  const change = (key: string, value: string): void => {
+    setForm((current) => ({ ...current, [key]: value }));
+    clearError(key);
+  };
+  const setDepartmentId = (value: string): void => {
+    setForm((current) => ({
+      ...current,
+      departmentId: value,
+      ...(tab === 'employee' ? { roleId: '' } : null),
+    }));
+    clearError('departmentId');
+    if (tab === 'employee') clearError('roleId');
+  };
+
+  const departmentRoles = useQuery({
+    queryKey: ['kkd', 'roles', form.departmentId || 'none'],
+    queryFn: () => kkdApi.roles(Number(form.departmentId)),
+    enabled: Boolean(form.departmentId) && tab === 'employee',
+  });
+
+  const selectedDepartment = useMemo(
+    () => departments.data?.find((item) => String(item.id) === form.departmentId),
+    [departments.data, form.departmentId],
+  );
+  const selectedRole = useMemo(
+    () => departmentRoles.data?.find((item) => String(item.id) === form.roleId),
+    [departmentRoles.data, form.roleId],
+  );
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -467,6 +555,7 @@ export function KkdDefinitionsPage(): ReactElement {
     },
     onSuccess: async () => {
       toast.success('KKD tanımı kaydedildi.');
+      setFieldErrors({});
       setForm({
         isActive: 'true',
         employmentStartDate: new Date().toLocaleDateString('en-CA'),
@@ -479,9 +568,50 @@ export function KkdDefinitionsPage(): ReactElement {
     onError: (error) => toast.error(message(error)),
   });
 
+  const validateForm = (): boolean => {
+    const next: Record<string, boolean> = {};
+    if (tab !== 'department' && !n(form.departmentId)) next.departmentId = true;
+    if (tab === 'employee' && !n(form.roleId)) next.roleId = true;
+    if (tab === 'employee' && !n(form.customerId)) next.customerId = true;
+    if (!form.code?.trim()) next.code = true;
+    if (tab === 'employee') {
+      if (!form.firstName?.trim()) next.firstName = true;
+      if (!form.lastName?.trim()) next.lastName = true;
+      if (!form.qrCode?.trim()) next.qrCode = true;
+      if (!form.employmentStartDate?.trim()) next.employmentStartDate = true;
+    } else if (!form.name?.trim()) {
+      next.name = true;
+    }
+    setFieldErrors(next);
+    if (Object.values(next).some(Boolean)) {
+      toast.error('Zorunlu alanları kontrol edin.');
+      window.requestAnimationFrame(() => {
+        document
+          .querySelectorAll(
+            '.wms-ops-form [aria-invalid="true"], .wms-ops-form .wms-ops-field-shell--error, .wms-ops-form .app-input-shell[data-invalid="true"]',
+          )
+          .forEach((node) => {
+            const el = node as HTMLElement;
+            el.classList.remove('wms-error-focus-flash');
+            void el.offsetWidth;
+            el.classList.add('wms-error-focus-flash');
+            window.setTimeout(() => el.classList.remove('wms-error-focus-flash'), 2600);
+          });
+      });
+      return false;
+    }
+    return true;
+  };
+
   const submit = (event: FormEvent): void => {
     event.preventDefault();
+    if (!validateForm()) return;
     mutation.mutate();
+  };
+
+  const switchTab = (key: DefinitionTab): void => {
+    setTab(key);
+    setFieldErrors({});
   };
 
   const listRows = rows(tab, {
@@ -507,7 +637,7 @@ export function KkdDefinitionsPage(): ReactElement {
               key={key}
               variant={tab === key ? 'primary' : 'secondary'}
               className="wms-ops-list-toolbar-btn"
-              onClick={() => setTab(key)}
+              onClick={() => switchTab(key)}
             >
               {label}
             </OpsActionButton>
@@ -527,48 +657,101 @@ export function KkdDefinitionsPage(): ReactElement {
           title="Yeni tanım"
           description="Kaydedilen tanım anında listeye ve hak motoruna yansır."
         >
-          <form className="grid content-start gap-3" onSubmit={submit}>
+          <form className="grid content-start gap-3" onSubmit={submit} noValidate>
             {(tab === 'role' || tab === 'employee') && (
               <KkdField label="Departman">
-                <OpsSelect
-                  value={form.departmentId ?? ''}
-                  onValueChange={(value) => change('departmentId', value)}
-                  options={lookupOptions(departments.data)}
-                  placeholder="Departman seçin"
-                  searchable
+                <PagedLookupDialog<KkdLookup>
+                  variant="ops"
+                  triggerMode="combobox"
+                  autoSearchMinLength={1}
+                  invalid={Boolean(fieldErrors.departmentId)}
+                  open={departmentLookupOpen}
+                  onOpenChange={setDepartmentLookupOpen}
+                  title="Departman seç"
+                  description="Kod veya ad yazarak arayın; arama ikonu veya çift tık ile liste penceresini açın."
+                  value={selectedDepartment ? lookupLabel(selectedDepartment) : ''}
+                  placeholder="Departman yazın veya seçin"
+                  searchPlaceholder="Departman ara"
+                  emptyText="Departman bulunamadı."
+                  queryKey={['kkd', 'department-lookup']}
+                  fetchPage={async ({ pageNumber, pageSize, search }) =>
+                    pageLocalLookups(departments.data ?? [], search, pageNumber, pageSize)
+                  }
+                  getKey={(item) => String(item.id)}
+                  getLabel={lookupLabel}
+                  onSelect={(item) => setDepartmentId(String(item.id))}
                 />
               </KkdField>
             )}
             {tab === 'employee' && (
-              <KkdField label="Rol">
-                <OpsSelect
-                  value={form.roleId ?? ''}
-                  onValueChange={(value) => change('roleId', value)}
-                  options={lookupOptions(roles.data)}
-                  placeholder="Rol seçin"
-                  searchable
+              <KkdField label="Rol" hint={!form.departmentId ? 'Önce departman seçin.' : undefined}>
+                <PagedLookupDialog<KkdLookup>
+                  variant="ops"
+                  triggerMode="combobox"
+                  autoSearchMinLength={1}
+                  invalid={Boolean(fieldErrors.roleId)}
+                  disabled={!form.departmentId}
+                  open={roleLookupOpen}
+                  onOpenChange={setRoleLookupOpen}
+                  title="Rol seç"
+                  description="Yalnızca seçilen departmana bağlı roller listelenir."
+                  value={selectedRole ? lookupLabel(selectedRole) : ''}
+                  placeholder={form.departmentId ? 'Rol yazın veya seçin' : 'Önce departman seçin'}
+                  searchPlaceholder="Rol ara"
+                  emptyText="Bu departmanda rol bulunamadı."
+                  queryKey={['kkd', 'role-lookup', form.departmentId || 'none']}
+                  fetchPage={async ({ pageNumber, pageSize, search }) =>
+                    pageLocalLookups(departmentRoles.data ?? [], search, pageNumber, pageSize)
+                  }
+                  getKey={(item) => String(item.id)}
+                  getLabel={lookupLabel}
+                  onSelect={(item) => change('roleId', String(item.id))}
                 />
               </KkdField>
             )}
             <KkdField label={tab === 'employee' ? 'Personel kodu' : 'Kod'}>
-              <AppInput value={form.code ?? ''} onChange={(event) => change('code', event.target.value)} required />
+              <AppInput
+                value={form.code ?? ''}
+                onChange={(event) => change('code', event.target.value)}
+                invalid={Boolean(fieldErrors.code)}
+              />
             </KkdField>
             {tab !== 'employee' && (
               <KkdField label="Ad">
-                <AppInput value={form.name ?? ''} onChange={(event) => change('name', event.target.value)} required />
+                <AppInput
+                  value={form.name ?? ''}
+                  onChange={(event) => change('name', event.target.value)}
+                  invalid={Boolean(fieldErrors.name)}
+                />
               </KkdField>
             )}
             {tab === 'employee' && (
               <>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <KkdField label="Ad">
-                    <AppInput value={form.firstName ?? ''} onChange={(event) => change('firstName', event.target.value)} required />
+                    <AppInput
+                      value={form.firstName ?? ''}
+                      onChange={(event) => change('firstName', event.target.value)}
+                      invalid={Boolean(fieldErrors.firstName)}
+                    />
                   </KkdField>
                   <KkdField label="Soyad">
-                    <AppInput value={form.lastName ?? ''} onChange={(event) => change('lastName', event.target.value)} required />
+                    <AppInput
+                      value={form.lastName ?? ''}
+                      onChange={(event) => change('lastName', event.target.value)}
+                      invalid={Boolean(fieldErrors.lastName)}
+                    />
                   </KkdField>
                 </div>
-                <CustomerLookupField value={form.customerId} onChange={(value) => change('customerId', value)} />
+                <CustomerLookupField
+                  value={form.customerId}
+                  displayValue={form.customerLabel}
+                  invalid={Boolean(fieldErrors.customerId)}
+                  onChange={(value, label) => {
+                    setForm((current) => ({ ...current, customerId: value, customerLabel: label }));
+                    clearError('customerId');
+                  }}
+                />
                 <KkdField label="Kullanıcı ID" hint="Opsiyonel; WMS kullanıcı hesabıyla eşleştirir.">
                   <AppInput
                     type="number"
@@ -577,13 +760,17 @@ export function KkdDefinitionsPage(): ReactElement {
                   />
                 </KkdField>
                 <KkdField label="QR kodu">
-                  <AppInput value={form.qrCode ?? ''} onChange={(event) => change('qrCode', event.target.value)} required />
+                  <AppInput
+                    value={form.qrCode ?? ''}
+                    onChange={(event) => change('qrCode', event.target.value)}
+                    invalid={Boolean(fieldErrors.qrCode)}
+                  />
                 </KkdField>
                 <KkdField label="İşe giriş tarihi">
                   <AppDateInput
                     value={form.employmentStartDate ?? ''}
                     onChange={(event) => change('employmentStartDate', event.target.value)}
-                    required
+                    invalid={Boolean(fieldErrors.employmentStartDate)}
                   />
                 </KkdField>
               </>
@@ -668,28 +855,63 @@ export function KkdDefinitionsPage(): ReactElement {
 
 function CustomerLookupField({
   value,
+  displayValue,
   onChange,
+  invalid,
 }: {
   value?: string;
-  onChange: (value: string) => void;
+  displayValue?: string;
+  onChange: (value: string, label: string) => void;
+  invalid?: boolean;
 }): ReactElement {
+  const [open, setOpen] = useState(false);
+  const [label, setLabel] = useState(displayValue ?? '');
+
+  useEffect(() => {
+    if (!value) {
+      setLabel('');
+      return;
+    }
+    if (displayValue) setLabel(displayValue);
+  }, [displayValue, value]);
+
   return (
     <KkdField label="Entegre cari">
-      <div className="wms-ops-field-shell">
-        <PagedAppDropdown
-          queryKey="kkd-customer-lookup"
-          fetchPage={kkdApi.customersPaged}
-          toOption={(item) => ({ value: String(item.id), label: `${item.code} · ${item.name}` })}
-          value={value || null}
-          onValueChange={onChange}
-          placeholder="Cari kodu veya adıyla seçin"
-          searchPlaceholder="Cari ara"
-          searchable
-          minSearchLength={1}
-          searchFields={['code', 'name']}
-          className={OPS_SELECT_TRIGGER_CLASS}
-        />
-      </div>
+      <PagedLookupDialog<KkdCustomerLookup>
+        variant="ops"
+        triggerMode="combobox"
+        autoSearchMinLength={1}
+        invalid={invalid}
+        open={open}
+        onOpenChange={setOpen}
+        title="Entegre cari seç"
+        description="Cari kodu veya adıyla arayın; arama ikonu veya çift tık ile liste penceresini açın."
+        value={label}
+        placeholder="Cari kodu veya adıyla yazın"
+        searchPlaceholder="Cari ara"
+        emptyText="Cari bulunamadı."
+        queryKey={['kkd', 'customer-lookup-dialog']}
+        fetchPage={async ({ pageNumber, pageSize, search, signal }) =>
+          toPagedResponse(
+            await kkdApi.customersPaged({
+              pageNumber,
+              pageSize,
+              search,
+              searchFields: ['code', 'name'],
+              sortBy: 'code',
+              sortDirection: 'asc',
+              signal: signal ?? new AbortController().signal,
+            }),
+          )
+        }
+        getKey={(item) => String(item.id)}
+        getLabel={lookupLabel}
+        onSelect={(item) => {
+          const nextLabel = lookupLabel(item);
+          setLabel(nextLabel);
+          onChange(String(item.id), nextLabel);
+        }}
+      />
     </KkdField>
   );
 }
@@ -703,7 +925,14 @@ export function MatrixFields({
 }): ReactElement {
   return (
     <>
-      <CustomerLookupField value={form.customerId} onChange={(value) => change('customerId', value)} />
+      <CustomerLookupField
+        value={form.customerId}
+        displayValue={form.customerLabel}
+        onChange={(value, label) => {
+          change('customerId', value);
+          change('customerLabel', label);
+        }}
+      />
       <KkdField label="Stok grubu">
         <div className="wms-ops-field-shell">
           <PagedAppDropdown
@@ -1005,11 +1234,16 @@ export function KkdEntitlementPage(): ReactElement {
                     <strong className="block font-mono text-[var(--wms-brand-primary)]">{item.groupCode}</strong>
                     <span className="text-xs text-[var(--wms-app-text-muted)]">{item.groupName}</span>
                   </div>
-                  <OpsStatusBadge tone={item.totalRemainingQuantity > 0 ? 'active' : 'neutral'}>
-                    {item.totalRemainingQuantity > 0 ? 'HAK VAR' : 'HAK YOK'}
+                  <OpsStatusBadge tone={item.totalRemainingQuantity > 0 ? 'active' : 'danger'}>
+                    {item.totalRemainingQuantity > 0 ? 'HAK VAR' : 'KOTA DOLU'}
                   </OpsStatusBadge>
                 </div>
                 <p className="mt-3 text-sm font-semibold">{item.stockCode} · {item.stockName}</p>
+                {item.totalRemainingQuantity <= 0 ? (
+                  <p className="mt-2 text-xs leading-5 text-amber-600 dark:text-amber-400">
+                    {KKD_QUOTA_FULL_TITLE}. {item.message || KKD_QUOTA_FULL_MESSAGE}
+                  </p>
+                ) : null}
                 <div className="mt-3 grid grid-cols-3 gap-2">
                   <KkdMetric label="Ana hak" value={item.matrixRemainingQuantity} />
                   <KkdMetric label="Ek hak" value={item.overrideRemainingQuantity} />
@@ -1038,21 +1272,36 @@ export function KkdEntitlementPage(): ReactElement {
               <ShieldAlert className="size-4" strokeWidth={1.75} />
             )
           }
-          title={result.isAllowed ? 'Teslime uygun' : 'Teslime uygun değil'}
-          description={result.message}
+          title={result.isAllowed ? 'Teslime uygun' : KKD_QUOTA_FULL_TITLE}
+          description={
+            result.isAllowed
+              ? result.message
+              : result.message || KKD_QUOTA_FULL_MESSAGE
+          }
           actions={
             <OpsStatusBadge tone={result.isAllowed ? 'done' : 'danger'}>
-              {result.isAllowed ? 'UYGUN' : 'ENGELLİ'}
+              {result.isAllowed ? 'UYGUN' : 'KOTA DOLU'}
             </OpsStatusBadge>
           }
         >
+          {!result.isAllowed ? (
+            <KkdCallout tone="warn" icon={<ShieldAlert className="size-4" strokeWidth={1.75} />} className="mb-3">
+              {KKD_QUOTA_FULL_MESSAGE}
+              {result.nextEligibleDate ? (
+                <span className="mt-1 block">
+                  {KKD_QUOTA_FREQUENCY_HINT} Sonraki hak:{' '}
+                  <strong>{new Date(result.nextEligibleDate).toLocaleDateString('tr-TR')}</strong>
+                </span>
+              ) : null}
+            </KkdCallout>
+          ) : null}
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <KkdMetric label="Grup" value={result.groupCode || '—'} />
             <KkdMetric label="Faz" value={result.phaseType || '—'} />
             <KkdMetric label="Ana hak" value={result.matrixRemainingQuantity} hint="Matristen kalan" />
             <KkdMetric label="Ek hak" value={result.overrideRemainingQuantity} hint="Ek tanımdan kalan" />
           </div>
-          {result.nextEligibleDate ? (
+          {result.isAllowed && result.nextEligibleDate ? (
             <KkdCallout tone="info" icon={<ClipboardCheck className="size-4" strokeWidth={1.75} />} className="mt-3">
               Sonraki hak tarihi: <strong>{new Date(result.nextEligibleDate).toLocaleDateString('tr-TR')}</strong>
             </KkdCallout>
@@ -1067,7 +1316,9 @@ export function KkdDistributionsPage(): ReactElement {
   const [page, setPage] = useState(1);
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
+  const [warehouseFilter, setWarehouseFilter] = useState('');
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [receiptOpen, setReceiptOpen] = useState(false);
   useEffect(() => {
     const timer = window.setTimeout(() => {
       setSearch(searchInput.trim());
@@ -1076,9 +1327,37 @@ export function KkdDistributionsPage(): ReactElement {
     return () => window.clearTimeout(timer);
   }, [searchInput]);
   const query = useQuery({
-    queryKey: ['kkd', 'distributions', 'paged', page, search],
-    queryFn: () => kkdApi.distributionsPaged({ pageNumber: page, pageSize: 25, search: search || undefined }),
+    queryKey: ['kkd', 'distributions', 'all'],
+    queryFn: () => kkdApi.distributions(),
   });
+  const filteredRows = useMemo(() => {
+    const needle = search.toLocaleLowerCase('tr-TR');
+    const warehouseId = Number(warehouseFilter || 0);
+    return (query.data ?? []).filter((row) => {
+      if (warehouseId > 0 && row.warehouseId !== warehouseId) return false;
+      if (!needle) return true;
+      return `${row.documentNo} ${row.employeeCode} ${row.employeeName}`
+        .toLocaleLowerCase('tr-TR')
+        .includes(needle);
+    });
+  }, [query.data, search, warehouseFilter]);
+  const pageSize = 25;
+  const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize));
+  const pageRows = useMemo(() => {
+    const safePage = Math.min(page, totalPages);
+    const startIndex = (safePage - 1) * pageSize;
+    return filteredRows.slice(startIndex, startIndex + pageSize);
+  }, [filteredRows, page, totalPages]);
+  const warehouseOptions = useMemo((): AppDropdownOption[] => {
+    const ids = [...new Set((query.data ?? []).map((row) => row.warehouseId))].sort((a, b) => a - b);
+    return [
+      { value: '', label: 'Tüm depolar' },
+      ...ids.map((id) => ({ value: String(id), label: `Depo #${id}` })),
+    ];
+  }, [query.data]);
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
   const detail = useQuery({
     queryKey: ['kkd', 'distributions', 'detail', selectedId],
     queryFn: () => kkdApi.distributionDetail(selectedId!),
@@ -1097,7 +1376,7 @@ export function KkdDistributionsPage(): ReactElement {
     onError: (error) => toast.error(message(error)),
   });
   const canManageOverrides = can('WMS.KKD.OVERRIDES.MANAGE');
-  const columns = ['Belge', 'Personel', 'Toplam', 'Hak', 'Fazla', 'Kota aşım onayı', 'Durum', 'Ambar çıkışı', 'İşlemler'];
+  const columns = ['Belge', 'Personel', 'Depo', 'Toplam', 'Hak', 'Fazla', 'Kota aşım onayı', 'Durum', 'Ambar çıkışı', 'İşlemler'];
 
   return (
     <KkdPage
@@ -1127,17 +1406,33 @@ export function KkdDistributionsPage(): ReactElement {
         code="KKD.DST"
         icon={<Boxes className="size-4" strokeWidth={1.75} />}
         title="Dağıtım kayıtları"
-        description="Kota aşımı bekleyen belgeler fiziksel çıkış için yönetici onayı ister."
+        description="Kota aşımı bekleyen belgelerde “barkod okutma kotası dolmuştur” uyarısı görünür; fiziksel kontrol sonrası müdür onaylar."
         bodyClassName="px-0 py-0 sm:px-0 sm:py-0"
       >
-        <div className="border-b border-[var(--wms-app-border)] p-3">
+        <div className="grid gap-2 border-b border-[var(--wms-app-border)] p-3 sm:grid-cols-[minmax(0,1fr)_minmax(180px,240px)]">
           <AppInput
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
             placeholder="Belge no, personel kodu veya personel adı ara"
           />
+          <OpsSelect
+            value={warehouseFilter}
+            onValueChange={(value) => {
+              setWarehouseFilter(value);
+              setPage(1);
+            }}
+            options={warehouseOptions}
+            placeholder="Depo filtrele"
+            searchable
+          />
         </div>
-        <KkdTableShell minWidthClass="min-w-[1180px]" className="border-x-0 border-b-0">
+        {warehouseFilter ? (
+          <div className="flex items-center gap-2 border-b border-[var(--wms-app-border)] bg-[color-mix(in_oklab,var(--wms-ops-accent)_6%,transparent)] px-3 py-2 text-[0.72rem] text-[var(--wms-app-text-muted)]">
+            <Warehouse className="size-3.5 shrink-0 text-[var(--wms-ops-accent)]" strokeWidth={1.75} />
+            Yalnızca depo #{warehouseFilter} kayıtları gösteriliyor.
+          </div>
+        ) : null}
+        <KkdTableShell minWidthClass="min-w-[1240px]" className="border-x-0 border-b-0">
           <thead className="sticky top-0 z-10">
             <tr>
               {columns.map((column) => (
@@ -1154,16 +1449,16 @@ export function KkdDistributionsPage(): ReactElement {
                   <OpsLoadingState code="FETCH" message="KKD dağıtımları yükleniyor…" compact />
                 </td>
               </tr>
-            ) : (query.data?.items.length ?? 0) === 0 ? (
+            ) : pageRows.length === 0 ? (
               <tr>
                 <td colSpan={columns.length} className="wms-ops-grid-state-cell">
-                  <OpsGridEmptyState message="Bu şubede kayıtlı KKD dağıtımı bulunamadı." />
+                  <OpsGridEmptyState message="Bu filtrelerle KKD dağıtımı bulunamadı." />
                 </td>
               </tr>
             ) : (
-              query.data?.items.map((row) => {
+              pageRows.map((row) => {
                 const reason = reasons[row.id] || '';
-                const isPending = row.excessApprovalStatus === 'Pending';
+                const isPending = isExcessApprovalPending(row.excessApprovalStatus);
                 return (
                   <tr key={row.id}>
                     <td className={cn(KKD_CELL, 'font-mono font-black text-[var(--wms-brand-primary)]')}>
@@ -1173,6 +1468,7 @@ export function KkdDistributionsPage(): ReactElement {
                       <strong className="block">{row.employeeCode}</strong>
                       <span className="text-xs text-[var(--wms-app-text-muted)]">{row.employeeName}</span>
                     </td>
+                    <td className={cn(KKD_CELL, 'font-mono')}>#{row.warehouseId}</td>
                     <td className={cn(KKD_CELL, 'text-right font-bold')}>{row.totalQuantity}</td>
                     <td className={cn(KKD_CELL, 'text-right text-emerald-500')}>{row.entitledQuantity}</td>
                     <td className={cn(KKD_CELL, 'text-right', row.excessQuantity > 0 && 'text-amber-500')}>
@@ -1180,8 +1476,14 @@ export function KkdDistributionsPage(): ReactElement {
                     </td>
                     <td className={KKD_CELL}>
                       <OpsStatusBadge tone={inferOpsStatusTone(row.excessApprovalStatus)}>
-                        {row.excessApprovalStatus}
+                        {formatExcessApprovalStatus(row.excessApprovalStatus)}
                       </OpsStatusBadge>
+                      {isPending ? (
+                        <div className="mt-1.5 max-w-sm text-xs leading-5 text-amber-600 dark:text-amber-400">
+                          <strong className="block">{KKD_QUOTA_FULL_TITLE}</strong>
+                          <span>{KKD_QUOTA_FULL_MESSAGE}</span>
+                        </div>
+                      ) : null}
                       {row.excessApprovalReason ? (
                         <div className="mt-1 text-xs text-[var(--wms-app-text-muted)]">{row.excessApprovalReason}</div>
                       ) : null}
@@ -1192,7 +1494,7 @@ export function KkdDistributionsPage(): ReactElement {
                             onChange={(event) =>
                               setReasons((current) => ({ ...current, [row.id]: event.target.value }))
                             }
-                            placeholder="Fiziksel kontrol notu"
+                            placeholder="Fiziksel kontrol notu (zorunlu)"
                             className="min-w-44"
                           />
                           <OpsActionButton
@@ -1223,8 +1525,8 @@ export function KkdDistributionsPage(): ReactElement {
                       {row.warehouseOutboundId ? (
                         <OpsActionButton variant="secondary" className="wms-ops-list-toolbar-btn" asChild>
                           <Link to={`/warehouse/warehouse-outbounds/${row.warehouseOutboundId}/operations`}>
-                            <PackageCheck className="size-3.5 shrink-0" />
-                            Operasyonu aç
+                            <PackageCheck className="size-3.5" />
+                            Operasyon
                           </Link>
                         </OpsActionButton>
                       ) : (
@@ -1232,13 +1534,25 @@ export function KkdDistributionsPage(): ReactElement {
                       )}
                     </td>
                     <td className={KKD_CELL}>
-                      <OpsActionButton
-                        variant="secondary"
-                        className="wms-ops-list-toolbar-btn"
-                        onClick={() => setSelectedId(row.id)}
-                      >
-                        <ClipboardCheck className="size-3.5" /> Detay
-                      </OpsActionButton>
+                      <div className="flex flex-wrap gap-1.5">
+                        <OpsActionButton
+                          variant="secondary"
+                          className="wms-ops-list-toolbar-btn"
+                          onClick={() => setSelectedId(row.id)}
+                        >
+                          <ClipboardCheck className="size-3.5" /> Detay
+                        </OpsActionButton>
+                        <OpsActionButton
+                          variant="secondary"
+                          className="wms-ops-list-toolbar-btn"
+                          onClick={() => {
+                            setSelectedId(row.id);
+                            setReceiptOpen(true);
+                          }}
+                        >
+                          <Printer className="size-3.5" /> Belge
+                        </OpsActionButton>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -1246,15 +1560,23 @@ export function KkdDistributionsPage(): ReactElement {
             )}
           </tbody>
         </KkdTableShell>
-        {query.data ? (
-          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--wms-app-border)] p-3 text-sm">
-            <span>{query.data.totalCount} kayıt · Sayfa {query.data.pageNumber}/{Math.max(1, query.data.totalPages)}</span>
-            <div className="flex gap-2">
-              <OpsActionButton variant="secondary" disabled={!query.data.hasPreviousPage} onClick={() => setPage((value) => value - 1)}>Önceki</OpsActionButton>
-              <OpsActionButton variant="secondary" disabled={!query.data.hasNextPage} onClick={() => setPage((value) => value + 1)}>Sonraki</OpsActionButton>
-            </div>
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--wms-app-border)] p-3 text-sm">
+          <span>
+            {filteredRows.length} kayıt · Sayfa {Math.min(page, totalPages)}/{totalPages}
+          </span>
+          <div className="flex gap-2">
+            <OpsActionButton variant="secondary" disabled={page <= 1} onClick={() => setPage((value) => value - 1)}>
+              Önceki
+            </OpsActionButton>
+            <OpsActionButton
+              variant="secondary"
+              disabled={page >= totalPages}
+              onClick={() => setPage((value) => value + 1)}
+            >
+              Sonraki
+            </OpsActionButton>
           </div>
-        ) : null}
+        </div>
       </KkdPanel>
 
       {selectedId ? (
@@ -1263,7 +1585,16 @@ export function KkdDistributionsPage(): ReactElement {
           icon={<ClipboardCheck className="size-4" />}
           title={detail.data?.documentNo || 'Dağıtım detayı'}
           description="Belge özeti, stok kalemleri, hak/fazla ayrımı, sipariş ve izlenebilirlik bilgileri."
-          actions={<OpsActionButton variant="secondary" onClick={() => setSelectedId(null)}><X className="size-3.5" /> Kapat</OpsActionButton>}
+          actions={
+            <div className="flex flex-wrap gap-1.5">
+              <OpsActionButton variant="secondary" disabled={!detail.data} onClick={() => setReceiptOpen(true)}>
+                <Printer className="size-3.5" /> Teslim belgesi
+              </OpsActionButton>
+              <OpsActionButton variant="secondary" onClick={() => setSelectedId(null)}>
+                <X className="size-3.5" /> Kapat
+              </OpsActionButton>
+            </div>
+          }
           bodyClassName="px-0 py-0 sm:px-0 sm:py-0"
         >
           {detail.isLoading ? <div className="p-4"><OpsLoadingState code="DETAIL" message="Dağıtım detayı yükleniyor…" compact /></div>
@@ -1272,10 +1603,26 @@ export function KkdDistributionsPage(): ReactElement {
                 <div className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-5">
                   <KkdMetric label="Personel" value={`${detail.data.employeeCode} · ${detail.data.employeeName}`} />
                   <KkdMetric label="Durum" value={detail.data.status} />
-                  <KkdMetric label="Kota onayı" value={detail.data.excessApprovalStatus} />
+                  <KkdMetric
+                    label="Kota onayı"
+                    value={formatExcessApprovalStatus(detail.data.excessApprovalStatus)}
+                  />
                   <KkdMetric label="Depo" value={detail.data.warehouseId} />
                   <KkdMetric label="Ambar çıkışı" value={detail.data.warehouseOutboundId || '—'} />
                 </div>
+                {isExcessApprovalPending(detail.data.excessApprovalStatus) ? (
+                  <KkdCallout
+                    tone="warn"
+                    className="mx-4 mb-4"
+                    icon={<ShieldAlert className="size-4" strokeWidth={1.75} />}
+                    title={KKD_QUOTA_FULL_TITLE}
+                  >
+                    {KKD_QUOTA_FULL_MESSAGE}
+                    {detail.data.excessApprovalReason ? (
+                      <p className="mt-2 text-[0.78rem]">Kontrol notu: {detail.data.excessApprovalReason}</p>
+                    ) : null}
+                  </KkdCallout>
+                ) : null}
                 {detail.data.failureReason ? <KkdCallout tone="danger" className="mx-4 mb-4">{detail.data.failureReason}</KkdCallout> : null}
                 <KkdTableShell minWidthClass="min-w-[980px]" className="border-x-0 border-b-0">
                   <thead><tr>{['#', 'Stok kodu', 'Stok adı', 'Grup', 'Toplam', 'Hak', 'Fazla', 'Raf', 'Lot / seri', 'Sipariş'].map((column) => <th key={column} className={KKD_HEAD_CELL}>{column}</th>)}</tr></thead>
@@ -1284,7 +1631,7 @@ export function KkdDistributionsPage(): ReactElement {
                       <td className={KKD_CELL}>{line.lineNo}</td>
                       <td className={cn(KKD_CELL, 'font-mono font-bold')}>{line.stockCode}</td>
                       <td className={KKD_CELL}>{line.stockName}</td>
-                      <td className={KKD_CELL}>{line.groupCode}</td>
+                      <td className={KKD_CELL}>{line.groupCode || '—'}</td>
                       <td className={KKD_CELL}>{line.quantity}</td>
                       <td className={cn(KKD_CELL, 'text-emerald-500')}>{line.entitledQuantity}</td>
                       <td className={cn(KKD_CELL, line.excessQuantity > 0 && 'text-amber-500')}>{line.excessQuantity}</td>
@@ -1298,6 +1645,12 @@ export function KkdDistributionsPage(): ReactElement {
             ) : <div className="p-4"><OpsGridEmptyState message="Dağıtım detayı yüklenemedi." /></div>}
         </KkdPanel>
       ) : null}
+
+      <KkdDistributionReceiptDialog
+        open={receiptOpen && Boolean(detail.data)}
+        onOpenChange={setReceiptOpen}
+        detail={detail.data ?? null}
+      />
     </KkdPage>
   );
 }
@@ -1460,10 +1813,6 @@ export function KkdReportsPage(): ReactElement {
       </KkdPanel>
     </KkdPage>
   );
-}
-
-function lookupOptions(items?: Array<{ id: number; code: string; name: string }>): AppDropdownOption[] {
-  return (items ?? []).map((item) => ({ value: String(item.id), label: `${item.code} · ${item.name}` }));
 }
 
 function employeeOptions(items?: Array<{ id: number; employeeCode: string; fullName: string }>): AppDropdownOption[] {
