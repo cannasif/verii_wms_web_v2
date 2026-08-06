@@ -14,7 +14,6 @@ import { OpsPageHeader } from '@/components/shared/OpsPageHeader';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { WarehouseTransferDraftPage, type ProductionTransferInitialSource } from '@/features/warehouse-transfer-v2/components/WarehouseTransferDraftPage';
 import { WarehouseTransferListPage } from '@/features/warehouse-transfer-v2/components/WarehouseTransferListPage';
-import { WarehouseTransferOperationPage } from '@/features/warehouse-transfer-v2/WarehouseTransferOperationPage';
 import { useAuthStore } from '@/stores/auth-store';
 import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
 import { warehouseTransferApi, transferApiFor } from '@/features/warehouse-transfer-v2/api/warehouse-transfer.api';
@@ -27,6 +26,7 @@ import {
   completeCancellationReturnAndRefresh,
 } from './production-transfer-route-refresh';
 import { ProductionTransferCancellationPanel } from './components/ProductionTransferCancellationPanel';
+import { ProductionTransferExecutionPage } from './components/ProductionTransferExecutionPage';
 import { ProductionTaskSourceLocationCell } from './components/ProductionTaskSourceLocationCell';
 import { useProductionTaskSourceAvailability } from './hooks/useProductionTaskSourceAvailability';
 import type { ActiveUserOption, LocationOption, WarehouseOption } from '@/features/goods-receipt-v2/types/goods-receipt.types';
@@ -76,7 +76,7 @@ export function ProductionTransferListPage(){return <WarehouseTransferListPage v
 export function ProductionTransferOperationPage(){
   return <div className="space-y-5">
     <ProductionTaskPanel/>
-    <WarehouseTransferOperationPage variant="production"/>
+    <ProductionTransferExecutionPage/>
   </div>;
 }
 

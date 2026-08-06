@@ -64,6 +64,32 @@ export interface DefaultProductionTargetLocation {
   locationName?: string;
 }
 
+export type ProductionTransferWorkflowStatus =
+  | 'Planned' | 'Picking' | 'AwaitingHandover' | 'Completed' | 'CompletedWithShortage' | 'Cancelled';
+
+export interface ProductionTransferExecutionLine {
+  lineId: number; lineNo: number; stockId: number; stockCode: string; stockName?: string; unitCode: string;
+  requestedQuantity: number; pickedQuantity: number; handedOverQuantity: number;
+  remainingToPickQuantity: number; shortageQuantity: number; trackingType: string;
+  suggestedSourceLocationId?: number; suggestedSourceLocationCode?: string; suggestedSourceLocationName?: string;
+}
+
+export interface ProductionTransferExecution {
+  transferId: number; documentNo: string; workflowStatus: ProductionTransferWorkflowStatus; transferStatus: string;
+  sourceWarehouseId: number; sourceWarehouseCode: number; sourceWarehouseName: string;
+  targetWarehouseId: number; targetWarehouseCode: number; targetWarehouseName: string;
+  waitingLocationId?: number; waitingLocationCode?: string; waitingLocationName?: string;
+  requestedByUserId?: number; requestedByName?: string; handoverConfirmedBy?: number; handoverConfirmedAtUtc?: string;
+  handoverShortageReason?: string; parentTransferId?: number; residualTransferId?: number; residualDocumentNo?: string;
+  requestedQuantity: number; pickedQuantity: number; handedOverQuantity: number; shortageQuantity: number;
+  canCompletePicking: boolean; canConfirmHandover: boolean; lines: ProductionTransferExecutionLine[];
+}
+
+export interface ProductionTransferScanPickResult {
+  execution: ProductionTransferExecution; lineId: number; stockCode: string; acceptedQuantity: number;
+  serialNo?: string; lotNo?: string;
+}
+
 const taskPath = (transferId: number, taskId: number) => `/api/production-transfers/${transferId}/tasks/${taskId}`;
 const assignmentPath = (transferId: number, taskId: number, userId: number) =>
   `${taskPath(transferId, taskId)}/assignments/${userId}`;
@@ -80,6 +106,21 @@ export const productionTransferApi = {
     unwrap(await api.get<Envelope<ProductionTaskBoard>>(`/api/production-transfers/${id}/tasks`)),
   taskPool: async (): Promise<ProductionTaskPoolRow[]> =>
     unwrap(await api.get<Envelope<ProductionTaskPoolRow[]>>('/api/production-transfers/task-pool')),
+
+  execution: async (id: number): Promise<ProductionTransferExecution> =>
+    unwrap(await api.get<Envelope<ProductionTransferExecution>>(`/api/production-transfers/${id}/execution`)),
+  scanPick: async (id: number, expectedLineId: number, barcode: string, sourceLocationId?: number): Promise<ProductionTransferScanPickResult> =>
+    unwrap(await api.post<Envelope<ProductionTransferScanPickResult>>(`/api/production-transfers/${id}/scan-pick`, {
+      idempotencyKey: crypto.randomUUID(), expectedLineId, barcode: barcode.trim(), sourceLocationId: sourceLocationId || null,
+    })),
+  completePicking: async (id: number, confirmPartialPicking: boolean, reason?: string): Promise<ProductionTransferExecution> =>
+    unwrap(await api.post<Envelope<ProductionTransferExecution>>(`/api/production-transfers/${id}/complete-picking`, {
+      idempotencyKey: crypto.randomUUID(), confirmPartialPicking, reason: reason?.trim() || null,
+    })),
+  confirmHandover: async (id: number, confirmShortage: boolean, shortageReason?: string): Promise<ProductionTransferExecution> =>
+    unwrap(await api.post<Envelope<ProductionTransferExecution>>(`/api/production-transfers/${id}/confirm-handover`, {
+      idempotencyKey: crypto.randomUUID(), confirmShortage, shortageReason: shortageReason?.trim() || null,
+    })),
 
   // — Atama ve devir —
   assignTask: async (id: number, taskId: number, userId: number): Promise<ProductionTaskBoard> =>

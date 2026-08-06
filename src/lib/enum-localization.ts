@@ -46,7 +46,7 @@ const KNOWN_ENUM_VALUES = new Set([
   'UpperAlphaNumeric', 'Void', 'Voided', 'WarehouseCode', 'WarehouseIssue',
   'WarehouseOutbound', 'WarehouseReceipt', 'WarehouseTransfer', 'WithinTolerance',
   'Worker', 'YapCode', 'User', 'Manager', 'Admin', 'superadmin', 'Running',
-  'TriggerFailed', 'QualityHold', 'InTransit',
+  'TriggerFailed', 'QualityHold', 'InTransit', 'AwaitingHandover', 'CompletedWithShortage',
 ]);
 
 const TR_ENUM_LABELS: Record<string, string> = {
@@ -71,6 +71,7 @@ const TR_ENUM_LABELS: Record<string, string> = {
   AutoWhenComplete: 'Tamamlanınca Otomatik',
   Available: 'Kullanılabilir',
   AwaitingApproval: 'Onay Bekliyor',
+  AwaitingHandover: 'Teslim Onayı Bekliyor',
   Bag: 'Torba',
   BarcodeScan: 'Barkod Okutma',
   Block: 'Engelle',
@@ -81,6 +82,7 @@ const TR_ENUM_LABELS: Record<string, string> = {
   Closed: 'Kapatıldı',
   CommitUncertain: 'Aktarım Sonucu Belirsiz',
   Completed: 'Tamamlandı',
+  CompletedWithShortage: 'Eksik Tamamlandı',
   Consumed: 'Kullanıldı',
   Contains: 'İçerir',
   Converted: 'Dönüştürüldü',
