@@ -1530,6 +1530,19 @@ label[data-wms-error-target].wms-error-focus-flash-field .app-input-shell input 
   width: 100%;
 }
 
+/* Satır içi kontroller kabuğun altında taban çizgisi boşluğu bırakır; blok
+   seviyesine alınca kabuk yüksekliği kontrolle eşitlenir ve alt çizgi dibe oturur. */
+.wms-ops-form .wms-ops-field-shell > input,
+.wms-ops-form .wms-ops-field-shell > .wms-ops-number-field > input,
+.wms-ops-lookup-dialog .wms-ops-field-shell > input {
+  display: block;
+}
+
+.wms-ops-form .wms-ops-field-shell > button.wms-ops-lookup-trigger,
+.wms-ops-lookup-dialog .wms-ops-field-shell > button.wms-ops-lookup-trigger {
+  display: flex;
+}
+
 /* Idle: hafif turkuaz alt ?izgi ? kenardan kenara */
 .wms-ops-form .wms-ops-field-shell::before,
 .wms-ops-lookup-dialog .wms-ops-field-shell::before {
@@ -1764,6 +1777,8 @@ label[data-wms-error-target].wms-error-focus-flash-field .app-input-shell input 
 .wms-ops-form button.wms-ops-lookup-trigger {
   display: inline-flex;
   width: 100%;
+  /* AppDropdown tetikleyicisi Tailwind `h-11` ile gelir; alan yüksekliğine eşitle */
+  height: auto;
   min-height: 2.625rem;
   align-items: center;
   justify-content: space-between;
