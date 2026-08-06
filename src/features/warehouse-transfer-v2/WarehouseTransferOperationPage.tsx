@@ -13,6 +13,10 @@ import { localizeEnumValue } from '@/lib/enum-localization';
 import { formatProjectNumber } from '@/lib/project-format';
 import { cn } from '@/lib/utils';
 import { transferApiFor, warehouseTransferApi, type TransferApiVariant } from './api/warehouse-transfer.api';
+import {
+  fetchStockSourceLocationsPage,
+  stockSourceLocationOption,
+} from './utils/stock-source-location-options';
 import type { WarehouseTransferDetail } from './types/warehouse-transfer.types';
 
 type Phase = 'pick' | 'dispatch' | 'receive' | 'putaway';
@@ -274,10 +278,27 @@ export function WarehouseTransferOperationPage({ variant = 'warehouse' }: { vari
                 {line.trackingType === 'None' && <Field label="Miktar"><input className="input" type="number" min="0.000001" max={available} step="0.000001" value={edit.quantity} onChange={(e) => patch(line.id, { quantity: Number(e.target.value) })} /></Field>}
                 <Field label="Kaynak raf">
                   <PagedAppDropdown
-                    queryKey={['wt-op-source', phase, line.id, sourceWarehouseId]}
-                    fetchPage={(request) => warehouseTransferApi.locations(request, sourceWarehouseId)}
-                    toOption={(x) => ({ value: String(x.id), label: `${x.code} · ${x.name}` })}
-                    selectedOption={(phase === 'pick' || phase === 'dispatch' || sameWarehouse) && line.defaultSourceLocationId ? { value: String(line.defaultSourceLocationId), label: `${line.defaultSourceLocationCode} · ${line.defaultSourceLocationName}` } : undefined}
+                    queryKey={['wt-op-source', variant, phase, line.id, sourceWarehouseId, line.stockId, line.yapCodeId]}
+                    fetchPage={(request) => variant === 'production' && phase === 'pick'
+                      ? fetchStockSourceLocationsPage(
+                        request,
+                        detail.header.branchCode,
+                        sourceWarehouseId,
+                        line.stockId,
+                        line.yapCodeId,
+                      )
+                      : warehouseTransferApi.locations(request, sourceWarehouseId).then((page) => ({
+                        ...page,
+                        items: page.items.map((row) => ({ id: row.id, code: row.code, name: row.name })),
+                      }))}
+                    toOption={stockSourceLocationOption}
+                    enabled={variant !== 'production' || phase !== 'pick' || sourceWarehouseId > 0}
+                    selectedOption={(phase === 'pick' || phase === 'dispatch' || sameWarehouse) && line.defaultSourceLocationId
+                      ? {
+                        value: String(line.defaultSourceLocationId),
+                        label: `${line.defaultSourceLocationCode} · ${line.defaultSourceLocationName}`,
+                      }
+                      : undefined}
                     value={edit.sourceValue}
                     onValueChange={(value) => patch(line.id, { sourceValue: value, sourceLocationId: Number(value) })}
                     searchable

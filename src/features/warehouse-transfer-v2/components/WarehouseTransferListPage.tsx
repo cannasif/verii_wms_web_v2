@@ -10,6 +10,11 @@ import { requiredActionColumn, systemColumns } from '@/components/shared/GridSys
 import { localizeEnumValue } from '@/lib/enum-localization';
 import { formatProjectDate, formatProjectDateTime, formatProjectNumber } from '@/lib/project-format';
 import { StockIdentityCell } from '@/components/shared/StockIdentityCell';
+import { useProductionTransferListCancel } from '@/features/production-transfer/hooks/useProductionTransferListCancel';
+import {
+  ProductionTransferCancelBlockedDialog,
+  ProductionTransferCancelConfirmDialog,
+} from '@/features/production-transfer/components/ProductionTransferCancelDialogs';
 import {
   transferApiFor,
   type SubcontractingTransferDirection,
@@ -46,6 +51,14 @@ export function WarehouseTransferListPage({
   const [detail, setDetail] = useState<WarehouseTransferDetail | null>(null);
   const [editDetail, setEditDetail] = useState<WarehouseTransferDetail | null>(null);
   const [lifecycle, setLifecycle] = useState<{ row: WarehouseTransferGridRow; kind: 'delete' | 'cancel' } | null>(null);
+  const {
+    precheckId: cancelPrecheckId,
+    blocked: productionCancelBlocked,
+    confirm: productionCancelConfirm,
+    beginCancel: beginProductionCancel,
+    closeBlocked,
+    closeConfirm,
+  } = useProductionTransferListCancel();
   const [loadingId, setLoadingId] = useState<number | null>(null);
   const [revision, setRevision] = useState(0);
 
@@ -60,6 +73,14 @@ export function WarehouseTransferListPage({
       setLoadingId(null);
     }
   }, [transferApi]);
+
+  const beginCancel = useCallback(async (row: WarehouseTransferGridRow) => {
+    if (variant !== 'production') {
+      setLifecycle({ row, kind: 'cancel' });
+      return;
+    }
+    await beginProductionCancel(row);
+  }, [beginProductionCancel, variant]);
 
   const columns = useMemo<GridColumn<WarehouseTransferGridRow>[]>(() => [
     ...systemColumns<WarehouseTransferGridRow>(),
@@ -83,11 +104,11 @@ export function WarehouseTransferListPage({
         {row.status !== 'Cancelled' && <Link to={`${baseUrl}/${row.id}/operations`} title="Operasyonu yürüt" className="rounded-lg p-2 text-cyan-500 hover:bg-cyan-500/10"><PlayCircle className="size-4" /></Link>}
         {row.status === 'Draft' && <button type="button" title="Taslağı düzenle" onClick={() => void load(row.id, 'edit')} className="rounded-lg p-2 text-amber-500 hover:bg-amber-500/10"><Pencil className="size-4" /></button>}
         {row.status === 'Draft' && <button type="button" title="Taslağı sil" onClick={() => setLifecycle({ row, kind: 'delete' })} className="rounded-lg p-2 text-rose-500 hover:bg-rose-500/10"><Trash2 className="size-4" /></button>}
-        {row.status !== 'Cancelled' && <button type="button" title="Transferi iptal et" onClick={() => setLifecycle({ row, kind: 'cancel' })} className="rounded-lg p-2 text-orange-500 hover:bg-orange-500/10"><Ban className="size-4" /></button>}
+        {row.status !== 'Cancelled' && <button type="button" title="Transferi iptal et" disabled={cancelPrecheckId === row.id} onClick={() => void beginCancel(row)} className="rounded-lg p-2 text-orange-500 hover:bg-orange-500/10 disabled:opacity-50">{cancelPrecheckId === row.id ? <Loader2 className="size-4 animate-spin" /> : <Ban className="size-4" />}</button>}
         <button type="button" title="Detayı göster" onClick={() => void load(row.id, 'detail')} className="rounded-lg p-2 text-violet-500 hover:bg-violet-500/10">{loadingId === row.id ? <Loader2 className="size-4 animate-spin" /> : <Eye className="size-4" />}</button>
       </div>,
     },
-  ], [baseUrl, gridLanguage, load, loadingId, t]);
+  ], [baseUrl, beginCancel, cancelPrecheckId, gridLanguage, load, loadingId, t]);
 
   const refreshed = () => setRevision((value) => value + 1);
   return (
@@ -98,6 +119,24 @@ export function WarehouseTransferListPage({
       {detail && <Detail detail={detail} baseUrl={baseUrl} close={() => setDetail(null)} />}
       {editDetail && <EditDraft api={transferApi} detail={editDetail} close={() => setEditDetail(null)} saved={() => { setEditDetail(null); refreshed(); }} />}
       {lifecycle && <LifecycleDialog api={transferApi} value={lifecycle} close={() => setLifecycle(null)} completed={() => { setLifecycle(null); refreshed(); }} />}
+      {productionCancelBlocked && (
+        <ProductionTransferCancelBlockedDialog
+          documentNo={productionCancelBlocked.row.documentNo}
+          transferId={productionCancelBlocked.row.id}
+          readiness={productionCancelBlocked.readiness}
+          onClose={closeBlocked}
+        />
+      )}
+      {productionCancelConfirm && (
+        <ProductionTransferCancelConfirmDialog
+          documentNo={productionCancelConfirm.row.documentNo}
+          transferId={productionCancelConfirm.row.id}
+          sourceWarehouseId={productionCancelConfirm.sourceWarehouseId}
+          policy={productionCancelConfirm.policy}
+          onClose={closeConfirm}
+          onCompleted={() => { closeConfirm(); refreshed(); }}
+        />
+      )}
     </div>
   );
 }

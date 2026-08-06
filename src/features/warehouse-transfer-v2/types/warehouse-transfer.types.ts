@@ -166,6 +166,7 @@ export interface WarehouseTransferDetailLine {
   stockCode: string;
   stockName?: string;
   yapCode?: string;
+  yapCodeId?: number;
   requestedQuantity: number;
   reservedQuantity: number;
   pickedQuantity: number;
