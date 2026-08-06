@@ -5171,7 +5171,7 @@
         "RuleBasedOnly": "Wait only for stock or group quality rules",
         "RuleBasedOnlyHint": "Permanent stock and group rules block ERP posting; manual quality plans do not add a gate.",
         "AnyQualityPlan": "Wait for every rule-based or manual quality plan",
-        "AnyQualityPlanHint": "Recommended: Netsis posting waits until every automatic or manual quality plan is accepted.",
+        "AnyQualityPlanHint": "Recommended: Netsis posting waits until every automatic or manual quality decision is completed, whether accepted or rejected.",
         "currentHint": "Active quality gate: {{value}}"
       },
       "erpPostingPolicy": {

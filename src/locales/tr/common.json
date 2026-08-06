@@ -5192,7 +5192,7 @@
         "RuleBasedOnly": "Yalnız stok veya grup kalite kuralını bekle",
         "RuleBasedOnlyHint": "Kalıcı stok ve grup kuralları ERP'yi bekletir; manuel kalite planı ayrıca kapı oluşturmaz.",
         "AnyQualityPlan": "Kural veya manuel tüm kalite planlarını bekle",
-        "AnyQualityPlanHint": "Önerilen: Otomatik ya da manuel aktif kalite planı sonuçlanmadan Netsis irsaliyesi oluşmaz.",
+        "AnyQualityPlanHint": "Önerilen: Otomatik ya da manuel kalite kararı tamamlanmadan Netsis irsaliyesi oluşmaz; kabul veya ret kararı sonrasında süreç devam eder.",
         "currentHint": "Etkin kalite kapısı: {{value}}"
       },
       "erpPostingPolicy": {

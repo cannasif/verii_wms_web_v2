@@ -3331,7 +3331,7 @@
         "RuleBasedOnly": "Attendre uniquement les règles qualité article ou groupe",
         "RuleBasedOnlyHint": "Les règles permanentes bloquent l'ERP; les plans qualité manuels n'ajoutent pas de blocage.",
         "AnyQualityPlan": "Attendre tous les plans qualité automatiques ou manuels",
-        "AnyQualityPlanHint": "Recommandé: Netsis attend l'acceptation de tout plan qualité automatique ou manuel.",
+        "AnyQualityPlanHint": "Recommandé: Netsis attend la fin de chaque décision qualité automatique ou manuelle, acceptée ou rejetée.",
         "currentHint": "Blocage qualité actif: {{value}}"
       },
       "erpPostingPolicy": {

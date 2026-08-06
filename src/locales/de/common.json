@@ -4896,7 +4896,7 @@
         "RuleBasedOnly": "Nur auf Lager- oder Gruppenregeln warten",
         "RuleBasedOnlyHint": "Dauerhafte Lager- und Gruppenregeln sperren ERP; manuelle Qualitätspläne nicht.",
         "AnyQualityPlan": "Auf alle regelbasierten oder manuellen Qualitätspläne warten",
-        "AnyQualityPlanHint": "Empfohlen: Netsis wartet, bis jeder automatische oder manuelle Qualitätsplan angenommen wurde.",
+        "AnyQualityPlanHint": "Empfohlen: Netsis wartet, bis jede automatische oder manuelle Qualitätsentscheidung abgeschlossen ist, unabhängig von Annahme oder Ablehnung.",
         "currentHint": "Aktive Qualitätssperre: {{value}}"
       },
       "erpPostingPolicy": {
