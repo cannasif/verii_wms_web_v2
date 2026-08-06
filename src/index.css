@@ -5,6 +5,40 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/*
+ * Shell performance surfaces
+ *
+ * Large CSS blur filters are rasterized again when an ancestor changes size.
+ * Static radial gradients provide the same ambient depth without allocating
+ * two viewport-sized filtered layers. This is particularly important on
+ * Windows systems using an integrated GPU, high DPI or software composition.
+ */
+.wms-shell-aura {
+  contain: strict;
+  opacity: 0.72;
+}
+
+.wms-shell-aura--start {
+  background: radial-gradient(circle at center, var(--wms-app-aura-start) 0%, transparent 68%);
+}
+
+.wms-shell-aura--end {
+  background: radial-gradient(circle at center, var(--wms-app-aura-end) 0%, transparent 68%);
+}
+
+@media (prefers-reduced-motion: reduce), (update: slow) {
+  .wms-shell-aura {
+    display: none;
+  }
+
+  .app-sidebar-panel,
+  .app-navbar-panel {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    transition: none !important;
+  }
+}
+
 .ProseMirror {
   outline: none;
 }

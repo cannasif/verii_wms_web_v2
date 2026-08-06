@@ -1,13 +1,17 @@
 import { cn } from '@/lib/utils';
 
 export const sidebarMotionClassName = cn(
-  'will-change-[width,transform]',
-  'transition-[width,transform] duration-[260ms] ease-[cubic-bezier(0.4,0,0.2,1)]',
+  // Width animation forces the whole workspace to reflow on every frame. It is
+  // especially expensive when the sidebar is a filtered/composited surface.
+  // Keep mobile movement on the compositor and switch desktop width instantly.
+  'transition-transform duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]',
   'motion-reduce:transition-none',
 );
 
 export const sidebarShellClassName = cn(
-  'border-[var(--wms-app-border)] bg-[color-mix(in_srgb,var(--wms-app-panel)_88%,transparent)] backdrop-blur-xl',
+  // An almost opaque panel preserves the glass-like hierarchy without forcing
+  // Chrome to continuously re-raster a full-height backdrop-filter layer.
+  'border-[var(--wms-app-border)] bg-[color-mix(in_srgb,var(--wms-app-panel)_97%,var(--wms-app-background))]',
   'shadow-[1px_0_0_rgba(15,23,42,0.04)] dark:shadow-[1px_0_0_rgba(255,255,255,0.04)]',
 );
 

@@ -118,7 +118,7 @@ export function DashboardPage(): ReactElement {
   const { t, i18n } = useTranslation('common');
   const { skin } = useTheme();
   const isPremium = skin === 'premium';
-  const { setPageTitle } = useUIStore();
+  const setPageTitle = useUIStore((state) => state.setPageTitle);
   const permissionAccess = usePermissionAccess();
   const { user, branch, metrics, isLoading, isError } = useDashboardMetrics();
   const [now, setNow] = useState(() => new Date());

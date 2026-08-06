@@ -109,8 +109,8 @@ export function AppLayout() {
         <WarehouseAmbientBackground />
         {!isPremium ? (
           <>
-            <div className="absolute -left-[5%] -top-[1%] h-[720px] w-[720px] rounded-full bg-[var(--wms-app-aura-start)] blur-[120px]" />
-            <div className="absolute -bottom-[7%] -right-[7%] h-[620px] w-[620px] rounded-full bg-[var(--wms-app-aura-end)] blur-[100px]" />
+            <div className="wms-shell-aura wms-shell-aura--start absolute -left-[5%] -top-[1%] h-[720px] w-[720px] rounded-full" />
+            <div className="wms-shell-aura wms-shell-aura--end absolute -bottom-[7%] -right-[7%] h-[620px] w-[620px] rounded-full" />
           </>
         ) : (
           <div aria-hidden className="absolute inset-0 wms-ops-main-glow wms-premium-shell-glow" />

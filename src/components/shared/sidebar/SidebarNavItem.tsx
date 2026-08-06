@@ -112,7 +112,8 @@ export function SidebarNavItem({
   level = 0,
 }: SidebarNavItemProps): ReactElement {
   const location = useLocation();
-  const { isSidebarOpen, setSidebarOpen } = useUIStore();
+  const isSidebarOpen = useUIStore((state) => state.isSidebarOpen);
+  const setSidebarOpen = useUIStore((state) => state.setSidebarOpen);
   const hasChildren = (item.children?.length ?? 0) > 0;
   const isActive = item.href ? location.pathname === item.href : false;
   const hasActiveChild = item.children?.some((child) => nodeHasActiveDescendant(child, location.pathname)) ?? false;

@@ -102,8 +102,12 @@ export function Navbar({ navItems = [] }: NavbarProps): ReactElement {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const { user, branch } = useAuthStore();
-  const { toggleSidebar, searchQuery, setSearchQuery, setSidebarOpen } = useUIStore();
+  const user = useAuthStore((state) => state.user);
+  const branch = useAuthStore((state) => state.branch);
+  const toggleSidebar = useUIStore((state) => state.toggleSidebar);
+  const searchQuery = useUIStore((state) => state.searchQuery);
+  const setSearchQuery = useUIStore((state) => state.setSearchQuery);
+  const setSidebarOpen = useUIStore((state) => state.setSidebarOpen);
   const { skin } = useTheme();
   const isPremium = skin === 'premium';
   const [userProfileModalOpen, setUserProfileModalOpen] = useState(false);
@@ -422,7 +426,7 @@ export function Navbar({ navItems = [] }: NavbarProps): ReactElement {
 
   return (
     <>
-      <header className="app-navbar-panel sticky top-0 z-40 border-b border-[var(--wms-app-border)] bg-[color-mix(in_srgb,var(--wms-app-panel)_88%,transparent)] px-3 pt-[max(0.5rem,env(safe-area-inset-top))] shadow-[0_1px_0_rgba(15,23,42,0.04)] backdrop-blur-xl transition-all duration-300 dark:shadow-[0_1px_0_rgba(255,255,255,0.04)] sm:px-6">
+      <header className="app-navbar-panel sticky top-0 z-40 border-b border-[var(--wms-app-border)] bg-[color-mix(in_srgb,var(--wms-app-panel)_97%,var(--wms-app-background))] px-3 pt-[max(0.5rem,env(safe-area-inset-top))] shadow-[0_1px_0_rgba(15,23,42,0.04)] transition-colors duration-200 dark:shadow-[0_1px_0_rgba(255,255,255,0.04)] sm:px-6">
         <NavbarIconGradientDefs />
         <div className="flex h-20 items-center justify-between gap-3 sm:gap-4">
           <div className="relative flex min-w-0 flex-1 items-center gap-2 sm:gap-3">

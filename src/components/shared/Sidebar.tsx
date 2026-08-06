@@ -26,7 +26,9 @@ interface SidebarProps {
 const DESKTOP_SIDEBAR_QUERY = '(min-width: 1024px)';
 
 export function Sidebar({ items }: SidebarProps): ReactElement {
-  const { isSidebarOpen, searchQuery, setSidebarOpen } = useUIStore();
+  const isSidebarOpen = useUIStore((state) => state.isSidebarOpen);
+  const searchQuery = useUIStore((state) => state.searchQuery);
+  const setSidebarOpen = useUIStore((state) => state.setSidebarOpen);
   const { t, i18n } = useTranslation();
   const location = useLocation();
   const [expandedItemKeys, setExpandedItemKeys] = useState<string[]>([]);
