@@ -5164,6 +5164,16 @@
         "AfterQualityApproval": "After quality approval",
         "AfterAllApprovals": "After all approvals"
       },
+      "erpQualityGatePolicy": {
+        "title": "ERP quality gate policy",
+        "None": "Do not wait for quality before ERP posting",
+        "NoneHint": "Only the ERP posting timing policy applies; an active quality plan adds no separate gate.",
+        "RuleBasedOnly": "Wait only for stock or group quality rules",
+        "RuleBasedOnlyHint": "Permanent stock and group rules block ERP posting; manual quality plans do not add a gate.",
+        "AnyQualityPlan": "Wait for every rule-based or manual quality plan",
+        "AnyQualityPlanHint": "Recommended: Netsis posting waits until every automatic or manual quality plan is accepted.",
+        "currentHint": "Active quality gate: {{value}}"
+      },
       "erpPostingPolicy": {
         "AfterReceipt": "When receipt is completed",
         "AfterReceiptApproval": "After goods receipt approval",

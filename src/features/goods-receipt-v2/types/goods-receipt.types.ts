@@ -31,6 +31,7 @@ export interface GoodsReceiptPolicy {
   blockPutawayUntilQualityDecision: boolean;
   inventoryAvailabilityPolicy: string;
   erpPostingPolicy: string;
+  erpQualityGatePolicy: string;
   allowOrderlessReceipt: boolean;
   allowUnplannedReceipt: boolean;
   showAllocatedOpenOrderLines: boolean;

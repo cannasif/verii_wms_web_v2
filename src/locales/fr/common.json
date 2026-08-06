@@ -3324,6 +3324,16 @@
         "AfterQualityApproval": "Après approbation qualité",
         "AfterAllApprovals": "Après toutes les approbations"
       },
+      "erpQualityGatePolicy": {
+        "title": "Politique de blocage qualité ERP",
+        "None": "Ne pas attendre la qualité avant l'envoi ERP",
+        "NoneHint": "Seule la politique de délai ERP s'applique; un plan qualité actif n'ajoute aucun blocage.",
+        "RuleBasedOnly": "Attendre uniquement les règles qualité article ou groupe",
+        "RuleBasedOnlyHint": "Les règles permanentes bloquent l'ERP; les plans qualité manuels n'ajoutent pas de blocage.",
+        "AnyQualityPlan": "Attendre tous les plans qualité automatiques ou manuels",
+        "AnyQualityPlanHint": "Recommandé: Netsis attend l'acceptation de tout plan qualité automatique ou manuel.",
+        "currentHint": "Blocage qualité actif: {{value}}"
+      },
       "erpPostingPolicy": {
         "AfterReceipt": "À la fin de la réception",
         "AfterReceiptApproval": "Après approbation réception",

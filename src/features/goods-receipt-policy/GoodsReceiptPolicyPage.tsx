@@ -28,6 +28,7 @@ type Policy = {
   blockPutawayUntilQualityDecision: boolean;
   inventoryAvailabilityPolicy: string;
   erpPostingPolicy: string;
+  erpQualityGatePolicy: string;
   allowOrderlessReceipt: boolean;
   allowUnplannedReceipt: boolean;
   showAllocatedOpenOrderLines: boolean;
@@ -83,6 +84,19 @@ export function GoodsReceiptPolicyPage() {
     ] as const).map((value) => ({
       value,
       label: t(`${POLICY}.erpPostingPolicy.${value}`),
+    })),
+    [language, t],
+  );
+
+  const erpQualityGateOptions = useMemo(
+    () => ([
+      'None',
+      'RuleBasedOnly',
+      'AnyQualityPlan',
+    ] as const).map((value) => ({
+      value,
+      label: t(`${POLICY}.erpQualityGatePolicy.${value}`),
+      description: t(`${POLICY}.erpQualityGatePolicy.${value}Hint`),
     })),
     [language, t],
   );
@@ -198,6 +212,18 @@ export function GoodsReceiptPolicyPage() {
               onValueChange={(value) => set('erpPostingPolicy', value)}
               options={erpPostingOptions}
             />
+          </Field>
+          <Field label={t(`${POLICY}.erpQualityGatePolicy.title`)}>
+            <AppDropdown
+              value={form.erpQualityGatePolicy}
+              onValueChange={(value) => set('erpQualityGatePolicy', value)}
+              options={erpQualityGateOptions}
+            />
+            <p className="mt-1 text-xs text-slate-500">
+              {t(`${POLICY}.erpQualityGatePolicy.currentHint`, {
+                value: t(`${POLICY}.erpQualityGatePolicy.${form.erpQualityGatePolicy}`),
+              })}
+            </p>
           </Field>
         </div>
 

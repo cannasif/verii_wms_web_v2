@@ -3324,6 +3324,16 @@
         "AfterQualityApproval": "بعد موافقة الجودة",
         "AfterAllApprovals": "بعد جميع الموافقات"
       },
+      "erpQualityGatePolicy": {
+        "title": "سياسة بوابة جودة ERP",
+        "None": "عدم انتظار الجودة قبل الإرسال إلى ERP",
+        "NoneHint": "تطبق سياسة توقيت ERP فقط؛ ولا تضيف خطة الجودة النشطة بوابة مستقلة.",
+        "RuleBasedOnly": "انتظار قواعد جودة الصنف أو المجموعة فقط",
+        "RuleBasedOnlyHint": "توقف قواعد الصنف والمجموعة الدائمة الإرسال؛ ولا توقفه خطط الجودة اليدوية.",
+        "AnyQualityPlan": "انتظار جميع خطط الجودة الآلية أو اليدوية",
+        "AnyQualityPlanHint": "موصى به: ينتظر Netsis قبول كل خطة جودة آلية أو يدوية.",
+        "currentHint": "بوابة الجودة النشطة: {{value}}"
+      },
       "erpPostingPolicy": {
         "AfterReceipt": "عند اكتمال الاستلام",
         "AfterReceiptApproval": "بعد موافقة الاستلام",

@@ -4889,6 +4889,16 @@
         "AfterQualityApproval": "Nach Qualitätsfreigabe",
         "AfterAllApprovals": "Nach allen Freigaben"
       },
+      "erpQualityGatePolicy": {
+        "title": "ERP-Qualitätssperre",
+        "None": "ERP-Buchung wartet nicht auf Qualität",
+        "NoneHint": "Nur die ERP-Zeitsteuerung gilt; ein aktiver Qualitätsplan erzeugt keine zusätzliche Sperre.",
+        "RuleBasedOnly": "Nur auf Lager- oder Gruppenregeln warten",
+        "RuleBasedOnlyHint": "Dauerhafte Lager- und Gruppenregeln sperren ERP; manuelle Qualitätspläne nicht.",
+        "AnyQualityPlan": "Auf alle regelbasierten oder manuellen Qualitätspläne warten",
+        "AnyQualityPlanHint": "Empfohlen: Netsis wartet, bis jeder automatische oder manuelle Qualitätsplan angenommen wurde.",
+        "currentHint": "Aktive Qualitätssperre: {{value}}"
+      },
       "erpPostingPolicy": {
         "AfterReceipt": "Nach Abschluss der Annahme",
         "AfterReceiptApproval": "Nach Wareneingangsfreigabe",

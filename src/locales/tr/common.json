@@ -5185,6 +5185,16 @@
         "AfterQualityApproval": "Kalite onayından sonra",
         "AfterAllApprovals": "Tüm onaylardan sonra"
       },
+      "erpQualityGatePolicy": {
+        "title": "ERP kalite bekleme politikası",
+        "None": "Kalite, ERP gönderimini bekletmez",
+        "NoneHint": "Yalnız ERP gönderim zamanı politikası uygulanır. Aktif kalite planı ERP'yi ayrıca durdurmaz.",
+        "RuleBasedOnly": "Yalnız stok veya grup kalite kuralını bekle",
+        "RuleBasedOnlyHint": "Kalıcı stok ve grup kuralları ERP'yi bekletir; manuel kalite planı ayrıca kapı oluşturmaz.",
+        "AnyQualityPlan": "Kural veya manuel tüm kalite planlarını bekle",
+        "AnyQualityPlanHint": "Önerilen: Otomatik ya da manuel aktif kalite planı sonuçlanmadan Netsis irsaliyesi oluşmaz.",
+        "currentHint": "Etkin kalite kapısı: {{value}}"
+      },
       "erpPostingPolicy": {
         "AfterReceipt": "Kabul tamamlanınca",
         "AfterReceiptApproval": "Mal kabul onayından sonra",
