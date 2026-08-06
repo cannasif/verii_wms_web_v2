@@ -20,9 +20,17 @@ export interface ProcurementGridRow {
   currencyCode: string;
   dueDate?: string;
   createdDate?: string;
+  createdBy?: number | null;
+  createdByName?: string | null;
+  updatedDate?: string | null;
+  updatedBy?: number | null;
+  updatedByName?: string | null;
   requestId?: number | null;
   requestNo?: string | null;
   rfqId?: number | null;
+  rfqNo?: string | null;
+  quoteId?: number | null;
+  quoteNo?: string | null;
 }
 export type ProcurementAttachmentOwnerType =
   | "request"
@@ -66,6 +74,7 @@ export interface ProcurementHistoryRow {
   fromStatus: string;
   toStatus: string;
   actorUserId: number;
+  actorUserName?: string | null;
   note?: string;
   changedAtUtc: string;
 }
@@ -95,6 +104,16 @@ export interface ProcurementDocumentDetail {
   suppliers?: ProcurementSupplierParticipant[];
   requestId?: number | null;
   requestNo?: string | null;
+  rfqId?: number | null;
+  rfqNo?: string | null;
+  quoteId?: number | null;
+  quoteNo?: string | null;
+  createdBy?: number | null;
+  createdByName?: string | null;
+  createdDate?: string | null;
+  updatedBy?: number | null;
+  updatedByName?: string | null;
+  updatedDate?: string | null;
   attachments?: ProcurementAttachment[];
 }
 export interface ProcurementRequestLineInput {

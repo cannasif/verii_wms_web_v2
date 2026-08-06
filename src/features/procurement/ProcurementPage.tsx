@@ -29,7 +29,10 @@ import {
   type GridRequest,
 } from "@/components/shared/AdvancedDataGrid";
 import { AppDateInput, AppInput } from "@/components/shared/AppInput";
-import { requiredActionColumn } from "@/components/shared/GridSystemColumns";
+import {
+  requiredActionColumn,
+  systemColumns,
+} from "@/components/shared/GridSystemColumns";
 import { OpsActionButton } from "@/components/shared/OpsActionButton";
 import {
   OpsStatusBadge,
@@ -974,10 +977,10 @@ export function ProcurementPage({
     [requestFilterId, type],
   );
   const page = tabs.find((x) => x.key === type) ?? tabs[0];
-  const openDetail = useCallback(
-    (id: number) => {
+  const openDocumentDetail = useCallback(
+    (documentType: ProcurementDocumentType, id: number) => {
       void procurementApi
-        .detail(type, id)
+        .detail(documentType, id)
         .then(setDetail)
         .catch((e) =>
           toast.error(
@@ -985,10 +988,76 @@ export function ProcurementPage({
           ),
         );
     },
-    [type],
+    [],
+  );
+  const openDetail = useCallback(
+    (id: number) => openDocumentDetail(type, id),
+    [openDocumentDetail, type],
   );
   const columns = useMemo<GridColumn<ProcurementGridRow>[]>(
-    () => [
+    () => {
+      const sourceColumns: GridColumn<ProcurementGridRow>[] = [];
+      const linkedColumn = (
+        key: "requestNo" | "rfqNo" | "quoteNo",
+        label: string,
+        documentType: ProcurementDocumentType,
+        idOf: (row: ProcurementGridRow) => number | null | undefined,
+        noOf: (row: ProcurementGridRow) => string | null | undefined,
+      ): GridColumn<ProcurementGridRow> => ({
+        key,
+        label,
+        sortable: true,
+        defaultSearch: true,
+        contextValue: noOf,
+        render: (row) => {
+          const id = idOf(row);
+          const no = noOf(row);
+          return id && no ? (
+            <button
+              type="button"
+              className="font-mono text-xs font-semibold text-cyan-500 hover:underline"
+              onClick={() => openDocumentDetail(documentType, id)}
+            >
+              {no}
+            </button>
+          ) : (
+            "—"
+          );
+        },
+      });
+      if (type !== "request")
+        sourceColumns.push(
+          linkedColumn(
+            "requestNo",
+            "Kaynak Talep",
+            "request",
+            (row) => row.requestId,
+            (row) => row.requestNo,
+          ),
+        );
+      if (type === "quote" || type === "order")
+        sourceColumns.push(
+          linkedColumn(
+            "rfqNo",
+            "Teklif Talebi",
+            "rfq",
+            (row) => row.rfqId,
+            (row) => row.rfqNo,
+          ),
+        );
+      if (type === "order")
+        sourceColumns.push(
+          linkedColumn(
+            "quoteNo",
+            "Kaynak Teklif",
+            "quote",
+            (row) => row.quoteId,
+            (row) => row.quoteNo,
+          ),
+        );
+
+      return [
+      ...systemColumns<ProcurementGridRow>(),
       {
         key: "documentNo",
         label: "Belge No",
@@ -1034,6 +1103,7 @@ export function ProcurementPage({
             x.subject
           ),
       },
+      ...sourceColumns,
       {
         key: "counterparty",
         label: "Tedarikçi",
@@ -1077,8 +1147,9 @@ export function ProcurementPage({
           </div>
         ),
       },
-    ],
-    [openDetail, type],
+    ];
+    },
+    [openDetail, openDocumentDetail, type],
   );
   const headerToolbarActions =
     type === "request" && can("WMS.PROCUREMENT.REQUEST.MANAGE")
@@ -1206,6 +1277,7 @@ export function ProcurementPage({
           policy={policy}
           can={can}
           onClose={() => setDetail(undefined)}
+          onOpenLinkedDocument={openDocumentDetail}
           onCreateRfq={() => {
             setRfqSource(detail);
             setDetail(undefined);
@@ -2608,6 +2680,7 @@ function DetailDialog({
   policy,
   can,
   onClose,
+  onOpenLinkedDocument,
   onChanged,
   onCreateRfq,
   onCreateQuote,
@@ -2618,6 +2691,10 @@ function DetailDialog({
   policy?: ProcurementPolicy;
   can: (permission: string) => boolean;
   onClose: () => void;
+  onOpenLinkedDocument: (
+    documentType: ProcurementDocumentType,
+    id: number,
+  ) => void;
   onChanged: () => Promise<void>;
   onCreateRfq: () => void;
   onCreateQuote: () => void;
@@ -2763,6 +2840,41 @@ function DetailDialog({
         : detail.documentType === "quote"
           ? "Sipariş verilen"
           : "—";
+  const sourceDocuments: Array<{
+    type: ProcurementDocumentType;
+    id: number;
+    no: string;
+    label: string;
+  }> = [];
+  if (
+    detail.documentType !== "request" &&
+    detail.requestId &&
+    detail.requestNo
+  )
+    sourceDocuments.push({
+      type: "request",
+      id: detail.requestId,
+      no: detail.requestNo,
+      label: "Satınalma Talebi",
+    });
+  if (
+    (detail.documentType === "quote" || detail.documentType === "order") &&
+    detail.rfqId &&
+    detail.rfqNo
+  )
+    sourceDocuments.push({
+      type: "rfq",
+      id: detail.rfqId,
+      no: detail.rfqNo,
+      label: "Teklif Talebi",
+    });
+  if (detail.documentType === "order" && detail.quoteId && detail.quoteNo)
+    sourceDocuments.push({
+      type: "quote",
+      id: detail.quoteId,
+      no: detail.quoteNo,
+      label: "Tedarikçi Teklifi",
+    });
   return (
     <ResponsiveDialog
       open
@@ -2773,6 +2885,40 @@ function DetailDialog({
     >
       <div className="space-y-5">
         <NextStepBanner detail={detail} />
+        {sourceDocuments.length ? (
+          <section className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-cyan-400">
+              Kaynak belge zinciri
+            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              {sourceDocuments.map((source, index) => (
+                <div key={`${source.type}-${source.id}`} className="contents">
+                  {index > 0 ? (
+                    <ArrowRight
+                      size={14}
+                      className="text-[var(--wms-app-text-muted)]"
+                      aria-hidden
+                    />
+                  ) : null}
+                  <button
+                    type="button"
+                    className="rounded-lg border border-cyan-500/25 bg-[var(--wms-app-panel)] px-3 py-2 text-left transition hover:border-cyan-400 hover:bg-cyan-500/10"
+                    onClick={() =>
+                      onOpenLinkedDocument(source.type, source.id)
+                    }
+                  >
+                    <span className="block text-[10px] uppercase tracking-wide text-[var(--wms-app-text-muted)]">
+                      {source.label}
+                    </span>
+                    <span className="font-mono text-xs font-semibold text-cyan-400">
+                      {source.no} · #{source.id}
+                    </span>
+                  </button>
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : null}
         <div className="grid gap-3 sm:grid-cols-4">
           <Info
             label="Tedarikçi"
@@ -2784,6 +2930,43 @@ function DetailDialog({
             value={detail.dueDate ? formatProjectDate(detail.dueDate) : "—"}
           />
           <Info label="Satır" value={String(detail.lines.length)} />
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          <Info label="Kayıt ID" value={`#${detail.id}`} />
+          <Info
+            label="Oluşturan"
+            value={
+              detail.createdByName ||
+              (detail.createdBy ? `Kullanıcı #${detail.createdBy}` : "Sistem")
+            }
+          />
+          <Info
+            label="Oluşturma zamanı"
+            value={
+              detail.createdDate
+                ? formatProjectDateTime(detail.createdDate)
+                : "—"
+            }
+          />
+          <Info
+            label="Güncelleyen"
+            value={
+              detail.updatedDate
+                ? detail.updatedByName ||
+                  (detail.updatedBy
+                    ? `Kullanıcı #${detail.updatedBy}`
+                    : "Sistem")
+                : "—"
+            }
+          />
+          <Info
+            label="Güncelleme zamanı"
+            value={
+              detail.updatedDate
+                ? formatProjectDateTime(detail.updatedDate)
+                : "—"
+            }
+          />
         </div>
         {detail.documentType === "request" ||
         detail.documentType === "quote" ? (
@@ -3029,8 +3212,8 @@ function DetailDialog({
                     → {statusLabel[x.toStatus] ?? x.toStatus}
                   </b>
                   <span className="ml-3 text-slate-500">
-                    {formatProjectDateTime(x.changedAtUtc)} · Kullanıcı #
-                    {x.actorUserId}
+                    {formatProjectDateTime(x.changedAtUtc)} ·{" "}
+                    {x.actorUserName || `Kullanıcı #${x.actorUserId}`}
                   </span>
                   {x.note ? (
                     <p className="mt-1 text-slate-500">{x.note}</p>
