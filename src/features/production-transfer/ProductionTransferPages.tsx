@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowRight, Ban, Boxes, ChevronDown, ChevronRight, ClipboardList, Factory, ListChecks, PackageCheck, Play, RefreshCw, RotateCcw, Save, Settings2, ShieldAlert, Trash2, UserPlus, Warehouse } from 'lucide-react';
+import { ArrowRight, Boxes, ChevronDown, ChevronRight, ClipboardList, Factory, ListChecks, PackageCheck, Play, RefreshCw, RotateCcw, Save, Settings2, ShieldAlert, Trash2, UserPlus, Warehouse } from 'lucide-react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -17,8 +17,18 @@ import { WarehouseTransferListPage } from '@/features/warehouse-transfer-v2/comp
 import { WarehouseTransferOperationPage } from '@/features/warehouse-transfer-v2/WarehouseTransferOperationPage';
 import { useAuthStore } from '@/stores/auth-store';
 import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
-import { warehouseTransferApi } from '@/features/warehouse-transfer-v2/api/warehouse-transfer.api';
+import { warehouseTransferApi, transferApiFor } from '@/features/warehouse-transfer-v2/api/warehouse-transfer.api';
 import { productionTransferApi, type ProductionTask, type ProductionTaskBoard, type ProductionTransferPolicy } from './api';
+import { analyzeProductionCancellationReadiness } from './production-transfer-cancellation';
+import { sumTransferPickedQuantity } from './production-transfer-cancellation-loader';
+import { computeProductionTaskProgress, taskLineageHasProgress } from './production-transfer-task-progress';
+import {
+  completeAssignmentReturnAndRefresh,
+  completeCancellationReturnAndRefresh,
+} from './production-transfer-route-refresh';
+import { ProductionTransferCancellationPanel } from './components/ProductionTransferCancellationPanel';
+import { ProductionTaskSourceLocationCell } from './components/ProductionTaskSourceLocationCell';
+import { useProductionTaskSourceAvailability } from './hooks/useProductionTaskSourceAvailability';
 import type { ActiveUserOption, LocationOption, WarehouseOption } from '@/features/goods-receipt-v2/types/goods-receipt.types';
 import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
 import type { PreparedNetsisProductionWorkOrder } from '@/features/production/types';
@@ -226,42 +236,18 @@ const TASK_TYPE_LABELS: Record<string, string> = {
 };
 const taskTypeLabel = (type: string): string => TASK_TYPE_LABELS[type] ?? type;
 
-// Devret sonrası, henüz işlenmemiş satırlar tamamen kaldırılıp yeni (çocuk) göreve taşınıyor —
-// üstteki görevde artık hiç görünmüyorlar (HandoffAsync: ProcessedQuantity<=0 olan satırlar
-// IsDeleted=true yapılıp çocuk göreve ekleniyor). Bu yüzden payda (toplam iş) sadece task.lines'tan
-// değil, aynı görev tipindeki (Cancelled hariç) TÜM görevlerin satırlarının transferLineId bazında
-// tekilleştirilmiş toplamından hesaplanmalı — aksi halde devreden kullanıcının payı 3/3 gibi yanlış
-// (yalnız kendi elinde kalan satırlara göre %100) görünür, gerçek 3/11 yerine.
-// Pay (işlenen) kısmı da tek göreve değil, kullanıcıya göre hesaplanmalı: devret sonrası aynı
-// kullanıcı tekrar (yeni bir alt) göreve atanırsa, önceki görevde yaptığı iş kaybolmamalı — o
-// kullanıcının StartedBy olduğu tüm görevlerdeki işlenen miktar toplanır (bir görevin işlenen
-// miktarı sadece onu fiilen başlatan kullanıcıya ait olabilir, UpdatePickTask ile eşleşme kuralı bu).
-function computeTaskProgress(task: ProductionTask, allTasks: ProductionTask[], userId: number) {
-  const seenLineIds = new Set<number>();
-  let planned = 0;
-  for (const t of allTasks) {
-    if (t.taskType !== task.taskType || t.status === 'Cancelled') continue;
-    for (const line of t.lines) {
-      if (seenLineIds.has(line.transferLineId)) continue;
-      seenLineIds.add(line.transferLineId);
-      planned += line.totalRequestedQuantity;
-    }
-  }
-  const processed = allTasks
-    .filter(t => t.taskType === task.taskType && t.status !== 'Cancelled' && t.startedBy === userId)
-    .flatMap(t => t.lines)
-    .reduce((sum, line) => sum + Math.min(line.totalRequestedQuantity, line.processedQuantity), 0);
-  return { planned, processed, percent: planned <= 0 ? 0 : Math.round(processed * 10000 / planned) / 100 };
-}
-
 function ProductionTaskPanel(){
   const id=Number(useParams().id);
   const currentUserId=useAuthStore(x=>x.user?.id);
+  const branchCode=useAuthStore(x=>x.branch?.code??'0');
   const{can}=usePermissionAccess();
   const queryClient=useQueryClient();
   const boardQueryKey=['production-transfer','board',id] as const;
   const boardQuery=useQuery({queryKey:boardQueryKey,queryFn:()=>productionTransferApi.taskBoard(id),enabled:Number.isFinite(id)&&id>0});
+  const detailQuery=useQuery({queryKey:['production-transfer','detail',id],queryFn:()=>transferApiFor('production').detail(id),enabled:Number.isFinite(id)&&id>0});
   const board=boardQuery.data;
+  const detail=detailQuery.data;
+  const{getAvailable:sourceAvailable,isLoading:sourceAvailabilityLoading}=useProductionTaskSourceAvailability(board,detail,branchCode);
   const[selectedUsers,setSelectedUsers]=useState<Record<number,number>>({});
   const[handoffReasons,setHandoffReasons]=useState<Record<number,string>>({});
   const[assignmentTaskId,setAssignmentTaskId]=useState<number|''>('');
@@ -274,23 +260,23 @@ function ProductionTaskPanel(){
   const[busy,setBusy]=useState(false);
   const canAssign=can('WMS.PRODUCTION_TRANSFER.ASSIGN');
   const canCancel=can('WMS.PRODUCTION_TRANSFER.CANCEL');
-  const branchCode=useAuthStore(x=>x.branch?.code??'0');
   const[policy,setPolicy]=useState<ProductionTransferPolicy>();
-  const[returnLocationValue,setReturnLocationValue]=useState<string|null>(null);
-  const[cancelReason,setCancelReason]=useState('');
   useEffect(()=>{
     if(!Number.isFinite(id)||id<=0)return;
     void productionTransferApi.policy(branchCode).then(setPolicy).catch((e:Error)=>toast.error(e.message));
   },[branchCode,id]);
-  if(boardQuery.isLoading)return <section className="animate-pulse rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5"><div className="h-4 w-40 rounded bg-[var(--wms-app-border)]"/><div className="mt-3 h-24 rounded-xl bg-[var(--wms-app-border)]/60"/></section>;
+  if(boardQuery.isLoading||detailQuery.isLoading)return <section className="animate-pulse rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5"><div className="h-4 w-40 rounded bg-[var(--wms-app-border)]"/><div className="mt-3 h-24 rounded-xl bg-[var(--wms-app-border)]/60"/></section>;
   if(!board||board.tasks.length===0)return null;
-  const run=async(action:()=>Promise<ProductionTaskBoard>)=>{setBusy(true);try{queryClient.setQueryData(boardQueryKey,await action());}catch(e){toast.error(e instanceof Error?e.message:'İşlem başarısız.');}finally{setBusy(false);}};
+  const transferPickedQuantity=detailQuery.data?sumTransferPickedQuantity(detailQuery.data):0;
+  const cancellationReadiness=analyzeProductionCancellationReadiness(board,{transferPickedQuantity});
+  const run=async(action:()=>Promise<ProductionTaskBoard>)=>{setBusy(true);try{queryClient.setQueryData(boardQueryKey,await action());void queryClient.invalidateQueries({queryKey:['production-task-source-locations']});void queryClient.invalidateQueries({queryKey:['production-transfer','detail',id]});}catch(e){toast.error(e instanceof Error?e.message:'İşlem başarısız.');}finally{setBusy(false);}};
+  const refreshBoard=()=>void queryClient.invalidateQueries({queryKey:boardQueryKey});
   return <section className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5">
     <div className="mb-4 flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-widest text-[var(--wms-brand-primary)]">Üretim transfer görevi</p><h2 className="text-xl font-black">{board.documentNo}</h2></div><span className="rounded-full border border-[var(--wms-app-border)] px-3 py-1 text-xs font-bold">{board.transferStatus}</span></div>
     <div className="space-y-4">{board.tasks.map(task=><article key={task.taskId} className="rounded-xl border border-[var(--wms-app-border)] p-4">
       <div className="flex flex-wrap items-center justify-between gap-3"><div><strong>{task.taskNo}</strong>{['AssignmentReturn','CancellationReturn'].includes(task.taskType)?<span className="ml-2 rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-bold text-amber-500">{taskTypeLabel(task.taskType)}</span>:<span className="ml-2 text-xs text-[var(--wms-app-text-muted)]">{taskTypeLabel(task.taskType)}</span>}<span className="ml-2 text-xs text-[var(--wms-app-text-muted)]">{task.status}</span>{task.completedAtUtc&&<span className="ml-2 text-xs text-[var(--wms-app-text-muted)]">· {new Date(task.completedAtUtc).toLocaleString('tr-TR')}</span>}</div>
-        <div className="flex flex-wrap gap-2">{!['CancellationReturn','AssignmentReturn'].includes(task.taskType)&&task.lines.some(x=>x.missingQuantity>0)&&!['Completed','Cancelled'].includes(task.status)&&<button disabled={busy} onClick={()=>void run(()=>productionTransferApi.refreshRoute(id,task.taskId))} className="inline-flex items-center gap-2 rounded-lg border border-amber-500 px-3 py-2 text-xs font-bold text-amber-500"><RefreshCw className="size-4"/>Rotayı güncelle</button>}{task.assignments.some(x=>x.userId===currentUserId)&&!['InProgress','PartiallyCompleted','Completed','Cancelled'].includes(task.status)&&<button disabled={busy} onClick={()=>void run(()=>productionTransferApi.startTask(id,task.taskId))} className="inline-flex items-center gap-2 rounded-lg bg-[var(--wms-brand-primary)] px-3 py-2 text-xs font-bold text-[var(--wms-brand-on-primary)]"><Play className="size-4"/>Bu işi yapıyorum</button>}{task.taskType==='CancellationReturn'&&task.startedBy===currentUserId&&task.status==='InProgress'&&<button disabled={busy} onClick={()=>void run(()=>productionTransferApi.completeCancellationReturn(id,task.taskId))} className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white"><Save className="size-4"/>Rafa geri koymayı tamamla</button>}{task.taskType==='AssignmentReturn'&&task.startedBy===currentUserId&&task.status==='InProgress'&&<button disabled={busy} onClick={()=>void run(()=>productionTransferApi.completeAssignmentReturn(id,task.taskId))} className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white"><Save className="size-4"/>İadeyi tamamla, atamayı kaldır</button>}</div></div>
-      <div className="mt-3 overflow-x-auto"><table className="w-full min-w-[720px] text-left text-sm"><thead className="text-xs uppercase text-[var(--wms-app-text-muted)]"><tr><th className="p-2">Stok</th><th className="p-2">Kaynak raf</th><th className="p-2 text-right">İstenen</th><th className="p-2 text-right">Rezerve</th><th className="p-2 text-right">Eksik</th><th className="p-2 text-right">Toplanan</th></tr></thead><tbody>{task.lines.map(line=><tr key={line.taskLineId} className="border-t border-[var(--wms-app-border)]"><td className="p-2"><strong>{line.stockCode}</strong><div className="text-xs text-[var(--wms-app-text-muted)]">{line.stockName}</div></td><td className="p-2">{line.sourceLocationCode??'—'}<div className="text-xs text-[var(--wms-app-text-muted)]">{line.sourceLocationName}</div></td><td className="p-2 text-right">{line.requestedQuantity}</td><td className="p-2 text-right text-emerald-500">{line.reservedQuantity}</td><td className="p-2 text-right text-red-500">{line.missingQuantity}</td><td className="p-2 text-right">{line.processedQuantity}</td></tr>)}</tbody></table></div>
+        <div className="flex flex-wrap gap-2">{!['CancellationReturn','AssignmentReturn'].includes(task.taskType)&&task.lines.some(x=>x.missingQuantity>0)&&!['Completed','Cancelled'].includes(task.status)&&<button disabled={busy} onClick={()=>void run(()=>productionTransferApi.refreshRoute(id,task.taskId))} className="inline-flex items-center gap-2 rounded-lg border border-amber-500 px-3 py-2 text-xs font-bold text-amber-500"><RefreshCw className="size-4"/>Rotayı güncelle</button>}{task.assignments.some(x=>x.userId===currentUserId)&&!['InProgress','PartiallyCompleted','Completed','Cancelled'].includes(task.status)&&<button disabled={busy} onClick={()=>void run(()=>productionTransferApi.startTask(id,task.taskId))} className="inline-flex items-center gap-2 rounded-lg bg-[var(--wms-brand-primary)] px-3 py-2 text-xs font-bold text-[var(--wms-brand-on-primary)]"><Play className="size-4"/>Bu işi yapıyorum</button>}{task.taskType==='CancellationReturn'&&task.startedBy===currentUserId&&task.status==='InProgress'&&<button disabled={busy} onClick={()=>void run(()=>completeCancellationReturnAndRefresh(id,task.taskId))} className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white"><Save className="size-4"/>Rafa geri koymayı tamamla</button>}{task.taskType==='AssignmentReturn'&&task.startedBy===currentUserId&&task.status==='InProgress'&&<button disabled={busy} onClick={()=>void run(()=>completeAssignmentReturnAndRefresh(id,task.taskId))} className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white"><Save className="size-4"/>İadeyi tamamla, atamayı kaldır</button>}</div></div>
+      <div className="mt-3 overflow-x-auto"><table className="w-full min-w-[720px] text-left text-sm"><thead className="text-xs uppercase text-[var(--wms-app-text-muted)]"><tr><th className="p-2">Stok</th><th className="p-2">Kaynak raf</th><th className="p-2 text-right">İstenen</th><th className="p-2 text-right">Rezerve</th><th className="p-2 text-right">Eksik</th><th className="p-2 text-right">Toplanan</th></tr></thead><tbody>{task.lines.map(line=><tr key={line.taskLineId} className="border-t border-[var(--wms-app-border)]"><td className="p-2"><strong>{line.stockCode}</strong><div className="text-xs text-[var(--wms-app-text-muted)]">{line.stockName}</div></td><ProductionTaskSourceLocationCell line={line} getAvailable={sourceAvailable} loading={sourceAvailabilityLoading}/><td className="p-2 text-right">{line.requestedQuantity}</td><td className="p-2 text-right text-emerald-500">{line.reservedQuantity}</td><td className="p-2 text-right text-red-500">{line.missingQuantity}</td><td className="p-2 text-right">{line.processedQuantity}</td></tr>)}</tbody></table></div>
       {task.assignments.length>0&&<div className="mt-3 flex flex-wrap items-center gap-2">{task.assignments.map(a=><span key={a.userId} className="inline-flex items-center gap-2 rounded-full border border-[var(--wms-app-border)] px-3 py-1 text-xs">{a.username}{a.isPrimary?' · Birincil':''}</span>)}</div>}
     </article>)}</div>
     {canAssign&&board.tasks.length>0&&(()=>{
@@ -305,14 +291,7 @@ function ProductionTaskPanel(){
       // İş emri devirle bölünmüş olabilir (A kısmen yaptı, kalanı B'ye devretti) — iş emri henüz
       // bitmediğinden A'nın topladığı stok da iade kapsamına girmeli. Bu yüzden "iade gerekir mi"
       // sorusu tek görevin kendi satırlarına değil, previousTaskId zincirinin tamamına bakmalı.
-      const lineageHasProgress=(t?:typeof task):boolean=>{
-        let cursor=t;
-        while(cursor){
-          if(cursor.lines.some(line=>line.processedQuantity>0))return true;
-          cursor=board.tasks.find(x=>x.taskId===cursor?.previousTaskId);
-        }
-        return false;
-      };
+      const lineageHasProgress=(t?:ProductionTask)=>t?taskLineageHasProgress(t,board.tasks):false;
       return <div className="mt-4 rounded-xl border border-[var(--wms-app-border)] p-4">
         <div className="mb-3 flex items-center gap-2 font-bold"><UserPlus className="size-4"/>Görev ataması</div>
         <select className="input mb-3 w-full sm:max-w-md" value={task?.taskId??''} onChange={e=>setAssignmentTaskId(Number(e.target.value))}>
@@ -344,7 +323,7 @@ function ProductionTaskPanel(){
       const activeTask=myTasks.find(t=>t.status==='InProgress'&&t.startedBy===w.userId);
       const nonCancelledTasks=myTasks.filter(t=>t.status!=='Cancelled');
       const currentTask=activeTask??nonCancelledTasks[nonCancelledTasks.length-1];
-      const currentProgress=currentTask?computeTaskProgress(currentTask,board.tasks,w.userId):null;
+      const currentProgress=currentTask?computeProductionTaskProgress(currentTask,board.tasks,w.userId):null;
       // Completed olsa da, eğer bu görev bir devirle başka bir göreve devam ediyorsa (başka bir
       // görev bunu previousTaskId ile referans veriyorsa) iş emri gerçekte bitmedi — "Tamamladı"
       // yerine "Devretti" göster, aksi halde işin bittiği yanlış izlenimi oluşur.
@@ -378,7 +357,18 @@ function ProductionTaskPanel(){
       </div>;
       })}</div>;
     })()}
-    {canCancel&&!['Cancelled','Completed'].includes(board.transferStatus)&&<div className="mt-5 rounded-xl border border-red-500/30 bg-red-500/5 p-4"><h3 className="flex items-center gap-2 font-black text-red-500"><Ban className="size-4"/>Transferi iptal et</h3><p className="mt-1 text-xs text-[var(--wms-app-text-muted)]">Toplanmamış rezervasyonlar çözülür; hareket görmüş stok politika uyarınca özgün veya iade rafına döner. ERP belgesi varsa önce doğrulanmış ERP iptali tamamlanır.</p><div className="mt-3 grid gap-3 lg:grid-cols-3">{policy?.cancellationReturnPolicy==='ManagerSelectionRequired'&&<PagedAppDropdown<LocationOption> queryKey={['production-cancel-return-location',board.sourceWarehouseId]} fetchPage={request=>warehouseTransferApi.locations(request,board.sourceWarehouseId)} toOption={x=>({value:String(x.id),label:`${x.code} · ${x.name}`})} value={returnLocationValue} onValueChange={setReturnLocationValue} placeholder="İade rafını seçin" searchable/>}<input className="input lg:col-span-2" value={cancelReason} onChange={e=>setCancelReason(e.target.value)} placeholder="İptal nedeni (en az 5 karakter)"/><button disabled={busy||cancelReason.trim().length<5||(policy?.cancellationReturnPolicy==='ManagerSelectionRequired'&&!returnLocationValue)} onClick={()=>void (async()=>{setBusy(true);try{await productionTransferApi.cancel(id,cancelReason,returnLocationValue?Number(returnLocationValue):undefined);toast.success('Transfer ve bağlı stok hareketleri güvenli biçimde iptal edildi.');queryClient.setQueryData(boardQueryKey,await productionTransferApi.taskBoard(id));}catch(e){toast.error(e instanceof Error?e.message:'İptal başarısız.');}finally{setBusy(false);}})()} className="rounded-lg border border-red-500 px-4 py-2 text-sm font-bold text-red-500 disabled:opacity-50">İptali uygula</button></div></div>}
+    <ProductionTransferCancellationPanel
+      transferId={id}
+      transferStatus={board.transferStatus}
+      sourceWarehouseId={board.sourceWarehouseId}
+      readiness={cancellationReadiness}
+      policy={policy}
+      canCancel={canCancel}
+      canAssign={canAssign}
+      busy={busy}
+      onRun={run}
+      onCancelled={refreshBoard}
+    />
   </section>;
 }
 

@@ -3,6 +3,7 @@ import type { DropdownPage, DropdownPageRequest } from '@/hooks/useDropdownInfin
 import { api } from '@/lib/axios';
 import { buildDropdownPagedBody } from '@/lib/dropdown-paging';
 import { requireCompletedCancellation, type OperationCancellationResult } from '@/features/shared/api/operation-cancellation';
+import { productionTransferApi } from '@/features/production-transfer/api';
 import type {
   LocationOption,
   ActiveUserOption,
@@ -259,11 +260,13 @@ export const transferApiFor = (
     },
     deleteDraft: async (id: number): Promise<boolean> =>
       unwrap(await api.post<Envelope<boolean>>(`${base}/${id}/delete`)),
-    cancel: async (id: number, reason: string): Promise<WarehouseTransferOperationResult> =>
-      unwrap(await api.post<Envelope<WarehouseTransferOperationResult>>(`${base}/${id}/cancel`, {
-        idempotencyKey: crypto.randomUUID(),
-        reason: reason.trim(),
-      })),
+    cancel: variant === 'production'
+      ? async (id: number, reason: string) => productionTransferApi.cancel(id, reason)
+      : async (id: number, reason: string): Promise<WarehouseTransferOperationResult> =>
+        unwrap(await api.post<Envelope<WarehouseTransferOperationResult>>(`${base}/${id}/cancel`, {
+          idempotencyKey: crypto.randomUUID(),
+          reason: reason.trim(),
+        })),
     transition: async (id: number, action: 'approve' | 'release', reason?: string): Promise<WarehouseTransferOperationResult> =>
       unwrap(await api.post<Envelope<WarehouseTransferOperationResult>>(`${base}/${id}/${action}`, {
         idempotencyKey: crypto.randomUUID(),

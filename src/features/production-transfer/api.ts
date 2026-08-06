@@ -64,31 +64,46 @@ export interface DefaultProductionTargetLocation {
   locationName?: string;
 }
 
+const taskPath = (transferId: number, taskId: number) => `/api/production-transfers/${transferId}/tasks/${taskId}`;
+const assignmentPath = (transferId: number, taskId: number, userId: number) =>
+  `${taskPath(transferId, taskId)}/assignments/${userId}`;
+
 export const productionTransferApi = {
+  // — Politika —
   policy: async (branchCode: string): Promise<ProductionTransferPolicy> =>
     unwrap(await api.get<Envelope<ProductionTransferPolicy>>('/api/production-transfers/policy', { params: { branchCode } })),
   updatePolicy: async (payload: ProductionTransferPolicy): Promise<ProductionTransferPolicy> =>
     unwrap(await api.put<Envelope<ProductionTransferPolicy>>('/api/production-transfers/policy', payload, { useNativeHttpMethod: true })),
+
+  // — Görev panosu —
   taskBoard: async (id: number): Promise<ProductionTaskBoard> =>
     unwrap(await api.get<Envelope<ProductionTaskBoard>>(`/api/production-transfers/${id}/tasks`)),
   taskPool: async (): Promise<ProductionTaskPoolRow[]> =>
     unwrap(await api.get<Envelope<ProductionTaskPoolRow[]>>('/api/production-transfers/task-pool')),
+
+  // — Atama ve devir —
   assignTask: async (id: number, taskId: number, userId: number): Promise<ProductionTaskBoard> =>
-    unwrap(await api.post<Envelope<ProductionTaskBoard>>(`/api/production-transfers/${id}/tasks/${taskId}/assign`, { userId })),
+    unwrap(await api.post<Envelope<ProductionTaskBoard>>(`${taskPath(id, taskId)}/assign`, { userId })),
   removeAssignment: async (id: number, taskId: number, userId: number): Promise<ProductionTaskBoard> =>
-    unwrap(await api.post<Envelope<ProductionTaskBoard>>(`/api/production-transfers/${id}/tasks/${taskId}/assignments/${userId}/remove`, {})),
-  requestAssignmentReturn: async (id: number, taskId: number, userId: number): Promise<ProductionTaskBoard> =>
-    unwrap(await api.post<Envelope<ProductionTaskBoard>>(`/api/production-transfers/${id}/tasks/${taskId}/assignments/${userId}/request-return`, {})),
-  completeAssignmentReturn: async (id: number, taskId: number): Promise<ProductionTaskBoard> =>
-    unwrap(await api.post<Envelope<ProductionTaskBoard>>(`/api/production-transfers/${id}/tasks/${taskId}/complete-assignment-return`, { idempotencyKey: crypto.randomUUID() })),
+    unwrap(await api.post<Envelope<ProductionTaskBoard>>(`${assignmentPath(id, taskId, userId)}/remove`, {})),
   handoffTask: async (id: number, taskId: number, targetUserId: number, reason?: string): Promise<ProductionTaskBoard> =>
-    unwrap(await api.post<Envelope<ProductionTaskBoard>>(`/api/production-transfers/${id}/tasks/${taskId}/handoff`, { targetUserId, reason: reason?.trim() || null })),
+    unwrap(await api.post<Envelope<ProductionTaskBoard>>(`${taskPath(id, taskId)}/handoff`, { targetUserId, reason: reason?.trim() || null })),
   refreshRoute: async (id: number, taskId: number): Promise<ProductionTaskBoard> =>
-    unwrap(await api.post<Envelope<ProductionTaskBoard>>(`/api/production-transfers/${id}/tasks/${taskId}/refresh-route`, {})),
+    unwrap(await api.post<Envelope<ProductionTaskBoard>>(`${taskPath(id, taskId)}/refresh-route`, {})),
   startTask: async (id: number, taskId: number): Promise<ProductionTaskBoard> =>
-    unwrap(await api.post<Envelope<ProductionTaskBoard>>(`/api/production-transfers/${id}/tasks/${taskId}/start`, {})),
+    unwrap(await api.post<Envelope<ProductionTaskBoard>>(`${taskPath(id, taskId)}/start`, {})),
+
+  // — İade görevleri (atama kaldırma / iptal) —
+  requestAssignmentReturn: async (id: number, taskId: number, userId: number): Promise<ProductionTaskBoard> =>
+    unwrap(await api.post<Envelope<ProductionTaskBoard>>(`${assignmentPath(id, taskId, userId)}/request-return`, {})),
+  requestCancellationReturn: async (id: number, taskId: number, userId: number): Promise<ProductionTaskBoard> =>
+    unwrap(await api.post<Envelope<ProductionTaskBoard>>(`${assignmentPath(id, taskId, userId)}/request-cancellation-return`, {})),
+  completeAssignmentReturn: async (id: number, taskId: number): Promise<ProductionTaskBoard> =>
+    unwrap(await api.post<Envelope<ProductionTaskBoard>>(`${taskPath(id, taskId)}/complete-assignment-return`, { idempotencyKey: crypto.randomUUID() })),
   completeCancellationReturn: async (id: number, taskId: number): Promise<ProductionTaskBoard> =>
-    unwrap(await api.post<Envelope<ProductionTaskBoard>>(`/api/production-transfers/${id}/tasks/${taskId}/complete-cancellation-return`, { idempotencyKey: crypto.randomUUID() })),
+    unwrap(await api.post<Envelope<ProductionTaskBoard>>(`${taskPath(id, taskId)}/complete-cancellation-return`, { idempotencyKey: crypto.randomUUID() })),
+
+  // — Depo raf ayarları —
   defaultTargetLocation: async (warehouseId: number, branchCode: string): Promise<DefaultProductionTargetLocation> =>
     unwrap(await api.get<Envelope<DefaultProductionTargetLocation>>(`/api/production-transfers/warehouses/${warehouseId}/default-target-location`, { params: { branchCode } })),
   returnSetting: async (warehouseId: number): Promise<WarehouseTransferReturnSetting> =>
@@ -102,6 +117,8 @@ export const productionTransferApi = {
       warehouseId, defaultTransferReturnLocationId: defaultTransferReturnLocationId || null,
       defaultProductionTransferLocationId: defaultProductionTransferLocationId || null,
     })),
+
+  // — İptal (toplanmış stok iadesi tamamlandıktan sonra) —
   cancel: async (id: number, reason: string, returnLocationId?: number): Promise<OperationCancellationResult> =>
     requireCompletedCancellation(unwrap(await api.post<Envelope<OperationCancellationResult>>(`/api/production-transfers/${id}/cancel`, {
       idempotencyKey: crypto.randomUUID(), reason: reason.trim(), returnLocationId: returnLocationId || null,
