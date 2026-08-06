@@ -581,7 +581,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
       saveGridPreferences(pageKey, userId, preferences);
     }, 150);
     return () => window.clearTimeout(timer);
-  }, [loadedKey, order, pageKey, pageSize, searchFields, sortBy, sortDirection, storageKey, userId, visible, widths]);
+  }, [loadedKey, order, pageKey, pageSize, persistPreferences, searchFields, sortBy, sortDirection, storageKey, userId, visible, widths]);
 
   useEffect(() => {
     if (searchTokens.length > 0) {
@@ -695,7 +695,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
     [activeColumns, widths],
   );
   const actionColumn = localizedColumns.find((column) => column.key === 'actions');
-  const pageRows = query.data?.items ?? [];
+  const pageRows = useMemo(() => query.data?.items ?? [], [query.data?.items]);
   const total = query.data?.totalCount ?? 0;
   const totalPages = Math.max(1, query.data?.totalPages ?? (Math.ceil(total / pageSize) || 1));
   const first = total ? ((page - 1) * pageSize) + 1 : 0;
