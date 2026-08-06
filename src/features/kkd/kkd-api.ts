@@ -12,6 +12,7 @@ export type KkdLookup = { id: number; code: string; name: string; isActive: bool
 export type KkdCustomerLookup = { id: number; code: string; name: string };
 export type KkdStockLookup = { id: number; code: string; name: string; unitCode: string; groupCode?: string | null };
 export type KkdStockGroupLookup = { code: string; stockCount: number };
+export type KkdEntitlementGroupLookup = { code: string; name: string; ruleCount: number };
 export type KkdEmployee = {
   id: number; employeeCode: string; fullName: string; qrCode: string; customerId: number;
   departmentId: number; departmentName: string; roleId: number; roleName: string;
@@ -21,6 +22,19 @@ export type KkdMatrix = {
   id: number; code: string; name: string; customerId: number; departmentId: number;
   roleId: number; effectiveFrom?: string; effectiveTo?: string; isActive: boolean; ruleCount: number;
 };
+export type KkdMatrixPhase = {
+  id: number; phaseType: string; offsetMonths: number; quantity: number; allowBulkIssue: boolean;
+  frequencyDays?: number | null; quantityPerFrequency?: number | null; periodType?: string | null;
+  periodInterval?: number | null; sortOrder: number; isActive: boolean; description?: string | null;
+};
+export type KkdMatrixRule = {
+  id: number; groupCode: string; groupName?: string | null; stockId?: number | null;
+  stockCode?: string | null; stockName?: string | null; standardCode?: string | null; standardName?: string | null;
+  annualIssueCount?: number | null; annualQuantity?: number | null; maxCarryQuantity?: number | null;
+  allowBulkIssue: boolean; isMandatory: boolean; sortOrder: number; isActive: boolean;
+  description?: string | null; phases: KkdMatrixPhase[];
+};
+export type KkdMatrixDetail = Omit<KkdMatrix, 'ruleCount'> & { description?: string | null; rules: KkdMatrixRule[] };
 export type KkdDistribution = {
   id: number; documentNo: string; status: string; employeeId: number; employeeCode: string;
   employeeName: string; warehouseId: number; warehouseOutboundId?: number; totalQuantity: number;
@@ -101,10 +115,17 @@ export const kkdApi = {
       buildDropdownPagedBody(request, { sortBy: 'code', searchFields: ['code'] }),
       { signal: request.signal },
     )),
+  entitlementGroupsPaged: async (request: DropdownPageRequest): Promise<DropdownPage<KkdEntitlementGroupLookup>> =>
+    unwrap(await api.post<Envelope<DropdownPage<KkdEntitlementGroupLookup>>>(
+      '/api/kkd/lookups/entitlement-groups/paged',
+      buildDropdownPagedBody(request, { sortBy: 'code', searchFields: ['code', 'name'] }),
+      { signal: request.signal },
+    )),
   employees: async () => unwrap(await api.get<Envelope<KkdEmployee[]>>('/api/kkd/employees')),
   resolveEmployeeQr: async (qrCode: string) =>
     unwrap(await api.post<Envelope<KkdEmployee>>('/api/kkd/employees/qr-resolve', { qrCode })),
   matrices: async () => unwrap(await api.get<Envelope<KkdMatrix[]>>('/api/kkd/matrices')),
+  matrix: async (id: number) => unwrap(await api.get<Envelope<KkdMatrixDetail>>(`/api/kkd/matrices/${id}`)),
   distributions: async () => unwrap(await api.get<Envelope<KkdDistribution[]>>('/api/kkd/distributions')),
   distributionContext: async (employeeId: number) =>
     unwrap(await api.get<Envelope<KkdDistributionContext>>(`/api/kkd/distributions/context/${employeeId}`)),
@@ -125,7 +146,9 @@ export const kkdApi = {
   saveRole: async (payload: { departmentId?: number; code: string; name: string; isActive: boolean }) =>
     unwrap(await api.post<Envelope<number>>('/api/kkd/roles', payload)),
   saveEmployee: async (payload: unknown) => unwrap(await api.post<Envelope<number>>('/api/kkd/employees', payload)),
-  saveMatrix: async (payload: unknown) => unwrap(await api.post<Envelope<number>>('/api/kkd/matrices', payload)),
+  saveMatrix: async (payload: unknown, id?: number) => unwrap(id
+    ? await api.put<Envelope<number>>(`/api/kkd/matrices/${id}`, payload)
+    : await api.post<Envelope<number>>('/api/kkd/matrices', payload)),
   check: async (payload: { employeeId: number; stockId: number; quantity: number; atDate?: string }) =>
     unwrap(await api.post<Envelope<KkdEntitlementResult>>('/api/kkd/entitlements/check', payload)),
   complete: async (id: number) => unwrap(await api.post<Envelope<unknown>>(`/api/kkd/distributions/${id}/complete`, { idempotencyKey: crypto.randomUUID() })),
