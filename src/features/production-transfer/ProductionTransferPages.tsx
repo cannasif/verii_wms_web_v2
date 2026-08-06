@@ -1,10 +1,8 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowRight, Ban, Boxes, ChevronDown, ChevronRight, CircleHelp, ClipboardList, Factory, ListChecks, PackageCheck, Play, RefreshCw, RotateCcw, Save, Settings2, ShieldAlert, Trash2, UserPlus, Warehouse } from 'lucide-react';
+import { ArrowRight, Ban, Boxes, ChevronDown, ChevronRight, ClipboardList, Factory, ListChecks, PackageCheck, Play, RefreshCw, RotateCcw, Save, Settings2, ShieldAlert, Trash2, UserPlus, Warehouse } from 'lucide-react';
 import { Link, useLocation, useParams } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { useTheme } from '@/components/theme-provider';
 import { cn } from '@/lib/utils';
 import { AppInput } from '@/components/shared/AppInput';
 import { OpsActionButton } from '@/components/shared/OpsActionButton';
@@ -12,8 +10,7 @@ import { OpsLoadingState } from '@/components/shared/OpsLoadingState';
 import { OpsSelect } from '@/components/shared/OpsSelect';
 import { OpsSkinCheckbox } from '@/components/shared/OpsSkinCheckbox';
 import { OPS_SELECT_TRIGGER_CLASS } from '@/components/shared/ops-field-styles';
-import { buildTerminalEyebrowFromNav, PremiumEyebrow } from '@/components/shared/PremiumEyebrow';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { OpsPageHeader } from '@/components/shared/OpsPageHeader';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { WarehouseTransferDraftPage, type ProductionTransferInitialSource } from '@/features/warehouse-transfer-v2/components/WarehouseTransferDraftPage';
 import { WarehouseTransferListPage } from '@/features/warehouse-transfer-v2/components/WarehouseTransferListPage';
@@ -104,7 +101,7 @@ export function ProductionTransferPolicyPage(){
     {value:'ManagerSelectionRequired',title:t('policy.cancellation.managerSelection',{defaultValue:'Yönetici seçim yapmak zorunda'}),text:t('policy.cancellation.managerSelectionHint',{defaultValue:'İptal ekranında iade rafı elle seçilmeden işlem tamamlanmaz.'})},
   ];
   return <section className="wms-ops-form wms-ops-pt-policy mx-auto max-w-6xl space-y-4">
-    <PolicyPageHeader
+    <OpsPageHeader
       title={t('policy.title')}
       description={t('policy.description')}
       hintLabel={t('policy.howItWorks',{defaultValue:'Bu sayfa ne yapar?'})}
@@ -449,67 +446,6 @@ function TransferReturnLocationPanel({branchCode}:{branchCode:string}){
 }
 
 type BooleanPolicyKey={[K in keyof ProductionTransferPolicy]:ProductionTransferPolicy[K] extends boolean?K:never}[keyof ProductionTransferPolicy];
-
-/** Mal kabul listesiyle aynı başlık iskeleti: eyebrow kartın dışında, başlık toolbar içinde. */
-function PolicyPageHeader({title,description,hintLabel}:{title:ReactNode;description:string;hintLabel:string}){
-  const{skin}=useTheme();
-  const{t,i18n}=useTranslation();
-  const{pathname}=useLocation();
-  const isPremium=skin==='premium';
-  const eyebrow=buildTerminalEyebrowFromNav(pathname,t,i18n.resolvedLanguage??i18n.language)??'VERII WMS';
-  return <>
-    {isPremium
-      ?<PremiumEyebrow eyebrow={eyebrow}/>
-      :<div className="wms-ops-eyebrow font-mono text-[11px] font-semibold uppercase tracking-[0.18em]">{eyebrow}</div>}
-    <div className="wms-ops-form-card wms-ops-data-grid-shell overflow-hidden rounded-none border border-[var(--wms-ops-card-border)] py-0 shadow-none">
-      <div className="wms-ops-card-toolbar flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6">
-        <div className="wms-ops-card-heading min-w-0 space-y-1">
-          <h1 className="wms-ops-title flex flex-wrap items-center gap-2">
-            <span className="wms-ops-title-main wms-ops-title-main--toolbar">{title}</span>
-            {isPremium?<PolicyHeaderHint text={description} label={hintLabel}/>:null}
-          </h1>
-          {isPremium?null:(
-            <p className="wms-ops-subtitle font-mono text-sm">
-              <span className="wms-ops-subtitle-prefix" aria-hidden>{'> '}</span>{description}
-            </p>
-          )}
-        </div>
-      </div>
-    </div>
-  </>;
-}
-
-/** Premium'da sayfa açıklaması alt yazı yerine başlık yanındaki ipucu balonunda yaşar. */
-function PolicyHeaderHint({text,label}:{text:string;label:string}){
-  return <TooltipProvider delayDuration={160}>
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <button type="button" className="wms-ops-pt-policy-hint-btn" aria-label={label}>
-          <CircleHelp className="size-3.5" aria-hidden/>
-        </button>
-      </TooltipTrigger>
-      <TooltipContent
-        side="bottom"
-        align="start"
-        sideOffset={10}
-        className={cn(
-          'wms-ops-page-hint-tooltip max-w-[22rem] overflow-hidden rounded-xl border p-0 text-left',
-          '!bg-[color-mix(in_oklab,var(--wms-app-panel)_96%,black)]',
-          'border-[color-mix(in_oklab,var(--wms-ops-accent)_32%,var(--wms-app-border))]',
-          '!text-[var(--wms-app-text)]',
-        )}
-      >
-        <div className="border-b border-[color-mix(in_oklab,var(--wms-ops-accent)_18%,transparent)] bg-[color-mix(in_oklab,var(--wms-ops-accent)_8%,transparent)] px-3.5 py-2">
-          <span className="inline-flex items-center gap-1.5 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-[var(--wms-ops-accent)]">
-            <span className="size-1.5 rounded-full bg-[var(--wms-ops-accent)]" aria-hidden/>
-            {label}
-          </span>
-        </div>
-        <p className="px-3.5 py-3 text-[0.78rem] leading-5 text-[var(--wms-app-text-muted)]">{text}</p>
-      </TooltipContent>
-    </Tooltip>
-  </TooltipProvider>;
-}
 
 function PolicySection({code,icon,title,description,children}:{code:string;icon:ReactNode;title:ReactNode;description?:ReactNode;children:ReactNode}){
   return <section className="wms-ops-form-card wms-ops-pt-policy-card overflow-hidden rounded-none border border-[var(--wms-ops-card-border)]">
