@@ -22,12 +22,12 @@ const onOff = (
   off: Omit<ParameterGuidanceContent, "summary"> & { summary?: string },
 ): Record<string, ParameterGuidanceContent> => ({
   true: {
-    summary: on.summary ?? "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
     ...on,
+    summary: on.summary ?? on.effect,
   },
   false: {
-    summary: off.summary ?? "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
     ...off,
+    summary: off.summary ?? off.effect,
   },
 });
 

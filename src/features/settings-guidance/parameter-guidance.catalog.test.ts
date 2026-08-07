@@ -31,6 +31,24 @@ describe("parameter guidance catalog", () => {
     expect(enabled.scenario).not.toBe(disabled.scenario);
   });
 
+  it("açık/kapalı alanlarda genel cümle yerine gerçek operasyon sonucunu gösterir", () => {
+    const enabled = parameterGuidance(
+      "shipping",
+      "allowOrderBasedTask",
+      true,
+    );
+    const disabled = parameterGuidance(
+      "shipping",
+      "allowOrderBasedTask",
+      false,
+    );
+
+    expect(enabled.summary).toBe(enabled.effect);
+    expect(enabled.summary).toContain("Siparişten");
+    expect(disabled.summary).toBe(disabled.effect);
+    expect(disabled.summary).toContain("kullanılamaz");
+  });
+
   it("kalite sonrası ERP kuralını başarısız karar dahil doğru açıklar", () => {
     const guide = parameterGuidance(
       "goodsReceipt",
