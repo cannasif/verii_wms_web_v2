@@ -89,5 +89,64 @@
     "document": "Documenter",
     "sequence": "Séquence",
     "generatedAt": "Généré à"
+  },
+  "guidance": {
+    "segment": {
+      "current": "Segment{{order}}?{{type}}",
+      "transform": {
+        "Upper": "converti en majuscules",
+        "Lower": "converti en minuscule",
+        "None": "sans modification"
+      },
+      "required": {
+        "required": "La génération de code-barres est bloquée lorsque la valeur est vide.",
+        "optional": "Lorsque la valeur est vide, ce segment est omis du code-barres."
+      },
+      "sequence": {
+        "summary": "Un unique{{length}}-le numéro de séquence numérique est généré atomiquement.",
+        "effect": "Chaque génération réelle ne réserve la valeur suivante qu'une seule fois. Preview ne consomme pas une séquence; la même clé d'idempotency ne génère pas une autre valeur.",
+        "affects": {
+          "uniqueness": "Unicité du code à barres",
+          "concurrency": "Génération simultanée",
+          "idempotency": "Demande de réessayer / idempotency"
+        },
+        "scenario": "Si la valeur suivante est 765,{{value}}est généré en utilisant{{length}}chiffres.",
+        "warning": "Le segment de séquence garantit un profil unique et ne peut donc pas être supprimé."
+      },
+      "date": {
+        "summary": "La date de génération est annexée au code-barres{{format}}modèle.",
+        "effect": "La date de génération est écrite{{transform}}.{{requiredText}}",
+        "affects": {
+          "pattern": "Modèle de code-barres",
+          "readability": "Lisibilité des étiquettes",
+          "tracking": "Traçabilité fondée sur la date"
+        },
+        "scenarioExact": "Le 8 août 2026, ce segment devient 20260808.",
+        "scenario": "8 août 2026 est converti en{{format}}format et écrit."
+      },
+      "literal": {
+        "empty": "vide",
+        "summary": "Le texte fixe ?{{value}}? est écrit de façon identique dans chaque code-barres.",
+        "effect": "La valeur fixe est ajoutée au modèle{{transform}}.{{requiredText}}",
+        "affects": {
+          "type": "Distinguer le type de code à barres",
+          "scanner": "Routage du scanner",
+          "pattern": "Modèle de code-barres"
+        },
+        "scenario": "Si la valeur fixe est SERI, chaque code-barres de ce profil contient le segment SERI.",
+        "warning": "Un code-barres ne peut pas être généré lorsqu'un segment fixe requis est vide."
+      },
+      "field": {
+        "summary": "Les{{source}}valeur ajoutée au code-barres{{transform}}.",
+        "effect": "{{source}}est lu à partir des données de l'opération.{{requiredText}}",
+        "affects": {
+          "resolution": "Résolution du code barre",
+          "matching": "Correspondance stock/série/lot/emplacement",
+          "validation": "Validation des opérations"
+        },
+        "scenario": "Si{{source}}est ?abc-01?, ce segment devient{{value}}.",
+        "warning": "Un code-barres ne peut être généré à partir de ce profil lorsque{{source}}il manque."
+      }
+    }
   }
 }

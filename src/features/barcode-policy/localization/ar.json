@@ -89,5 +89,64 @@
     "document": "وثيقة",
     "sequence": "تسلسل",
     "generatedAt": "تم إنشاؤها في"
+  },
+  "guidance": {
+    "segment": {
+      "current": "الجزء{{order}}؟{{type}}",
+      "transform": {
+        "Upper": "حوّلت إلى أعلى",
+        "Lower": "حوّلت إلى أسفل الحقيبة",
+        "None": "بدون تعديل"
+      },
+      "required": {
+        "required": "جيل الباركود مغلق عندما تكون القيمة فارغة",
+        "optional": "عندما تكون القيمة فارغة، يُحذف هذا الجزء من الشفرة."
+      },
+      "sequence": {
+        "summary": "فريد{{length}}-رقم تسلسل الأرقام متولد الذري",
+        "effect": "كل جيل حقيقي يحتفظ بالقيمة التالية مرة واحدة فقط ولا يستهلك ما قبل الاستعراض تسلسلاً؛ ولا يولّد نفس مفتاح الإيداع قيمة أخرى.",
+        "affects": {
+          "uniqueness": "الباركود الفريد",
+          "concurrency": "الجيل المشترك",
+          "idempotency": "طلب الاسترداد/الاحتياج"
+        },
+        "scenario": "إذا كانت القيمة التالية 765{{value}}تولد باستخدام{{length}}رقم",
+        "warning": "The sequence segment guarantees profile uniqueness and therefore cannot be removed."
+      },
+      "date": {
+        "summary": "تاريخ الجيل مذيع إلى الشاعر{{format}}شكل",
+        "effect": "تاريخ الجيل مكتوب{{transform}}.{{requiredText}}",
+        "affects": {
+          "pattern": "طراز Barcode",
+          "readability": "القابلية للقراءة",
+          "tracking": "إمكانية التعقب على أساس التاريخ"
+        },
+        "scenarioExact": "وفي 8 آب/أغسطس 2026 أصبح هذا الجزء 20260808.",
+        "scenario": "8 August 2026 is converted to{{format}}شكل وكتابة."
+      },
+      "literal": {
+        "empty": "فارغ",
+        "summary": "النص الثابت؟{{value}}مكتوبة بشكل متطابق في كل شفرة",
+        "effect": "تضاف القيمة الثابتة إلى النمط{{transform}}.{{requiredText}}",
+        "affects": {
+          "type": "تفريق نوع الشوكة",
+          "scanner": "Scanner routing",
+          "pattern": "طراز Barcode"
+        },
+        "scenario": "إذا كانت القيمة الثابتة هي (سيري)، فكلّ شفرة من هذه الصورة تحتوي على جزء (سيري).",
+        "warning": "ولا يمكن توليد شفرة عندما يكون الجزء الثابت المطلوب فارغا."
+      },
+      "field": {
+        "summary": "The{{source}}تُضاف قيمة إلى الشفرة{{transform}}.",
+        "effect": "{{source}}يُقرأ من بيانات العمليات.{{requiredText}}",
+        "affects": {
+          "resolution": "قرار المحكمة",
+          "matching": "المخزون/النقل/المكان/الموقع",
+          "validation": "عملية التحقق"
+        },
+        "scenario": "إذا{{source}}هل هذا الجزء يصبح{{value}}.",
+        "warning": "لا يمكن أن يولد شفرة من هذا الملف{{source}}مفقود"
+      }
+    }
   }
 }

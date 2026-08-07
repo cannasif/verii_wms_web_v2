@@ -1,1 +1,152 @@
-{"page":{"title":"Genel Barkod Politikası","description":"Tüm WMS modüllerinin kullandığı tek merkezî barkod üretim politikasını yönetin.","loading":"Barkod politikası yükleniyor...","version":"Politika sürümü","active":"Politika aktif","inactive":"Politika pasif","historyTitle":"Üretilen Barkodlar","historyDescription":"Politika sürümü ve kapsamıyla birlikte değiştirilemez barkod üretim geçmişi."},"scope":{"ProductSerial":"Ürün / Seri","ProductLot":"Ürün / Lot","Location":"Raf / Konum","Logistics":"Palet / Koli / Lojistik","Document":"Belge / Operasyon"},"scopeHelp":{"ProductSerial":"Tekil stok örneklerini stok kodu ve seri numarasıyla tanımlar.","ProductLot":"Parti bazlı stokları stok kodu ve lot numarasıyla tanımlar.","Location":"Depo içindeki raf ve konumları tanımlar.","Logistics":"Palet, koli ve lojistik birimleri tanımlar.","Document":"Mal kabul, transfer, sevk ve diğer operasyon belgelerini tanımlar."},"actions":{"edit":"Profili Düzenle","test":"Önizle / Üret","save":"Profili Kaydet","cancel":"Vazgeç","add":"Parça Ekle","remove":"Kaldır","preview":"Önizle","generate":"Benzersiz Üret","close":"Kapat"},"form":{"name":"Profil adı","prefix":"Önek","separator":"Ayraç","enabled":"Bu kapsamı etkinleştir","segments":"Barkod parçaları","segmentsHelp":"Parçaları oklarla sıralayın. Her profilde tam bir sıra parçası bulunmalıdır.","type":"Parça tipi","source":"Kaynak alan","transform":"Dönüşüm","required":"Zorunlu","sequenceLength":"Sıra uzunluğu","dateFormat":"Tarih biçimi","literal":"Sabit değer","idempotency":"İdempotency anahtarı"},"segmentType":{"Field":"Alan","Literal":"Sabit","Sequence":"Sıra","Date":"Tarih"},"field":{"StockCode":"Stok kodu","SerialNo":"Seri no","YapCode":"Yapılandırma kodu","LotNo":"Lot no","WarehouseCode":"Depo kodu","LocationCode":"Raf kodu","DocumentNo":"Belge no"},"transform":{"Upper":"BÜYÜK","Lower":"küçük","None":"Aynen"},"messages":{"saved":"Politika profili kaydedildi.","previewed":"Barkod önizlemesi oluşturuldu; sıra tüketilmedi.","generated":"Benzersiz barkod kalıcı olarak ayrıldı.","failed":"İşlem tamamlanamadı.","concurrency":"Profil başka bir kullanıcı tarafından değiştirildi; ekran yenilendi."},"history":{"id":"Kayıt ID","scope":"Kapsam","version":"Sürüm","barcode":"Barkod","stock":"Stok","serial":"Seri","lot":"Lot","location":"Raf","document":"Belge","sequence":"Sıra","generatedAt":"Üretim zamanı"}}
+{
+  "page": {
+    "title": "Genel Barkod Politikası",
+    "description": "Tüm WMS modüllerinin kullandığı tek merkezî barkod üretim politikasını yönetin.",
+    "loading": "Barkod politikası yükleniyor...",
+    "version": "Politika sürümü",
+    "active": "Politika aktif",
+    "inactive": "Politika pasif",
+    "historyTitle": "Üretilen Barkodlar",
+    "historyDescription": "Politika sürümü ve kapsamıyla birlikte değiştirilemez barkod üretim geçmişi."
+  },
+  "scope": {
+    "ProductSerial": "Ürün / Seri",
+    "ProductLot": "Ürün / Lot",
+    "Location": "Raf / Konum",
+    "Logistics": "Palet / Koli / Lojistik",
+    "Document": "Belge / Operasyon"
+  },
+  "scopeHelp": {
+    "ProductSerial": "Tekil stok örneklerini stok kodu ve seri numarasıyla tanımlar.",
+    "ProductLot": "Parti bazlı stokları stok kodu ve lot numarasıyla tanımlar.",
+    "Location": "Depo içindeki raf ve konumları tanımlar.",
+    "Logistics": "Palet, koli ve lojistik birimleri tanımlar.",
+    "Document": "Mal kabul, transfer, sevk ve diğer operasyon belgelerini tanımlar."
+  },
+  "actions": {
+    "edit": "Profili Düzenle",
+    "test": "Önizle / Üret",
+    "save": "Profili Kaydet",
+    "cancel": "Vazgeç",
+    "add": "Parça Ekle",
+    "remove": "Kaldır",
+    "preview": "Önizle",
+    "generate": "Benzersiz Üret",
+    "close": "Kapat"
+  },
+  "form": {
+    "name": "Profil adı",
+    "prefix": "Önek",
+    "separator": "Ayraç",
+    "enabled": "Bu kapsamı etkinleştir",
+    "segments": "Barkod parçaları",
+    "segmentsHelp": "Parçaları oklarla sıralayın. Her profilde tam bir sıra parçası bulunmalıdır.",
+    "type": "Parça tipi",
+    "source": "Kaynak alan",
+    "transform": "Dönüşüm",
+    "required": "Zorunlu",
+    "sequenceLength": "Sıra uzunluğu",
+    "dateFormat": "Tarih biçimi",
+    "literal": "Sabit değer",
+    "idempotency": "İdempotency anahtarı"
+  },
+  "segmentType": {
+    "Field": "Alan",
+    "Literal": "Sabit",
+    "Sequence": "Sıra",
+    "Date": "Tarih"
+  },
+  "field": {
+    "StockCode": "Stok kodu",
+    "SerialNo": "Seri no",
+    "YapCode": "Yapılandırma kodu",
+    "LotNo": "Lot no",
+    "WarehouseCode": "Depo kodu",
+    "LocationCode": "Raf kodu",
+    "DocumentNo": "Belge no"
+  },
+  "transform": {
+    "Upper": "BÜYÜK",
+    "Lower": "küçük",
+    "None": "Aynen"
+  },
+  "messages": {
+    "saved": "Politika profili kaydedildi.",
+    "previewed": "Barkod önizlemesi oluşturuldu; sıra tüketilmedi.",
+    "generated": "Benzersiz barkod kalıcı olarak ayrıldı.",
+    "failed": "İşlem tamamlanamadı.",
+    "concurrency": "Profil başka bir kullanıcı tarafından değiştirildi; ekran yenilendi."
+  },
+  "history": {
+    "id": "Kayıt ID",
+    "scope": "Kapsam",
+    "version": "Sürüm",
+    "barcode": "Barkod",
+    "stock": "Stok",
+    "serial": "Seri",
+    "lot": "Lot",
+    "location": "Raf",
+    "document": "Belge",
+    "sequence": "Sıra",
+    "generatedAt": "Üretim zamanı"
+  },
+  "guidance": {
+    "segment": {
+      "current": "{{order}}. par?a ? {{type}}",
+      "transform": {
+        "Upper": "b?y?k harfe ?evrilerek",
+        "Lower": "k???k harfe ?evrilerek",
+        "None": "de?i?tirilmeden"
+      },
+      "required": {
+        "required": "De?er bo?sa barkod ?retimi engellenir.",
+        "optional": "De?er bo?sa bu par?a barkoddan atlan?r."
+      },
+      "sequence": {
+        "summary": "{{length}} haneli benzersiz s?ra numaras? atomik olarak ?retilir.",
+        "effect": "Her ger?ek ?retimde s?radaki de?er yaln?z bir kez rezerve edilir. ?nizleme s?ra t?ketmez; ayn? idempotency anahtar? tekrar s?ra ?retmez.",
+        "affects": {
+          "uniqueness": "Barkod tekilli?i",
+          "concurrency": "E? zamanl? ?retim",
+          "idempotency": "??lem tekrar? / idempotency"
+        },
+        "scenario": "S?radaki de?er 765 ise {{length}} hanede {{value}} ?retilir.",
+        "warning": "S?ra par?as? profilin tekillik g?vencesidir; bu nedenle sat?rdan kald?r?lamaz."
+      },
+      "date": {
+        "summary": "?retim tarihi {{format}} bi?iminde barkoda eklenir.",
+        "effect": "Barkod ?retildi?i andaki tarih {{transform}} yaz?l?r. {{requiredText}}",
+        "affects": {
+          "pattern": "Barkod deseni",
+          "readability": "Etiket okunabilirli?i",
+          "tracking": "Tarih bazl? izleme"
+        },
+        "scenarioExact": "8 A?ustos 2026 tarihinde bu par?a 20260808 olur.",
+        "scenario": "8 A?ustos 2026 tarihi {{format}} bi?imine ?evrilerek yaz?l?r."
+      },
+      "literal": {
+        "empty": "bo?",
+        "summary": "Sabit ?{{value}}? metni barkodun her ?retiminde ayn? yaz?l?r.",
+        "effect": "Girilen sabit de?er {{transform}} desene eklenir. {{requiredText}}",
+        "affects": {
+          "type": "Barkod t?r?n? ay?rt etme",
+          "scanner": "Taray?c? y?nlendirmesi",
+          "pattern": "Barkod deseni"
+        },
+        "scenario": "Sabit de?er SERI ise bu profilin t?m barkodlar?nda SERI par?as? bulunur.",
+        "warning": "Zorunlu sabit par?a bo? b?rak?l?rsa barkod ?retilemez."
+      },
+      "field": {
+        "summary": "{{source}} de?eri {{transform}} barkoda eklenir.",
+        "effect": "Operasyon verisindeki {{source}} okunur. {{requiredText}}",
+        "affects": {
+          "resolution": "Barkod ??z?mleme",
+          "matching": "Stok/seri/lot/raf e?le?tirmesi",
+          "validation": "Operasyon do?rulamas?"
+        },
+        "scenario": "{{source}} de?eri ?abc-01? ise bu par?a {{value}} olur.",
+        "warning": "{{source}} olmayan bir kay?t i?in bu profilden barkod ?retilemez."
+      }
+    }
+  }
+}

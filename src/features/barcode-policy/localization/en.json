@@ -1,1 +1,152 @@
-{"page":{"title":"Global Barcode Policy","description":"Manage the single central barcode generation policy used by all WMS modules.","loading":"Loading barcode policy...","version":"Policy version","active":"Policy active","inactive":"Policy inactive","historyTitle":"Generated Barcodes","historyDescription":"Immutable barcode issue history with policy version and scope."},"scope":{"ProductSerial":"Product / Serial","ProductLot":"Product / Lot","Location":"Shelf / Location","Logistics":"Pallet / Parcel / Logistics","Document":"Document / Operation"},"scopeHelp":{"ProductSerial":"Identifies individual stock instances by stock code and serial number.","ProductLot":"Identifies lot-tracked stock by stock code and lot number.","Location":"Identifies warehouse shelves and locations.","Logistics":"Identifies pallets, parcels and logistics units.","Document":"Identifies receipt, transfer, shipment and other operation documents."},"actions":{"edit":"Edit Profile","test":"Preview / Generate","save":"Save Profile","cancel":"Cancel","add":"Add Segment","remove":"Remove","preview":"Preview","generate":"Generate Unique","close":"Close"},"form":{"name":"Profile name","prefix":"Prefix","separator":"Separator","enabled":"Enable this scope","segments":"Barcode segments","segmentsHelp":"Reorder segments with the arrows. Every profile must contain exactly one sequence segment.","type":"Segment type","source":"Source field","transform":"Transform","required":"Required","sequenceLength":"Sequence length","dateFormat":"Date format","literal":"Literal value","idempotency":"Idempotency key"},"segmentType":{"Field":"Field","Literal":"Literal","Sequence":"Sequence","Date":"Date"},"field":{"StockCode":"Stock code","SerialNo":"Serial no","YapCode":"Configuration code","LotNo":"Lot no","WarehouseCode":"Warehouse code","LocationCode":"Location code","DocumentNo":"Document no"},"transform":{"Upper":"UPPER","Lower":"lower","None":"Unchanged"},"messages":{"saved":"Policy profile saved.","previewed":"Barcode preview created without consuming a sequence.","generated":"Unique barcode permanently reserved.","failed":"Operation could not be completed.","concurrency":"The profile was changed by another user; the page was refreshed."},"history":{"id":"Record ID","scope":"Scope","version":"Version","barcode":"Barcode","stock":"Stock","serial":"Serial","lot":"Lot","location":"Location","document":"Document","sequence":"Sequence","generatedAt":"Generated at"}}
+{
+  "page": {
+    "title": "Global Barcode Policy",
+    "description": "Manage the single central barcode generation policy used by all WMS modules.",
+    "loading": "Loading barcode policy...",
+    "version": "Policy version",
+    "active": "Policy active",
+    "inactive": "Policy inactive",
+    "historyTitle": "Generated Barcodes",
+    "historyDescription": "Immutable barcode issue history with policy version and scope."
+  },
+  "scope": {
+    "ProductSerial": "Product / Serial",
+    "ProductLot": "Product / Lot",
+    "Location": "Shelf / Location",
+    "Logistics": "Pallet / Parcel / Logistics",
+    "Document": "Document / Operation"
+  },
+  "scopeHelp": {
+    "ProductSerial": "Identifies individual stock instances by stock code and serial number.",
+    "ProductLot": "Identifies lot-tracked stock by stock code and lot number.",
+    "Location": "Identifies warehouse shelves and locations.",
+    "Logistics": "Identifies pallets, parcels and logistics units.",
+    "Document": "Identifies receipt, transfer, shipment and other operation documents."
+  },
+  "actions": {
+    "edit": "Edit Profile",
+    "test": "Preview / Generate",
+    "save": "Save Profile",
+    "cancel": "Cancel",
+    "add": "Add Segment",
+    "remove": "Remove",
+    "preview": "Preview",
+    "generate": "Generate Unique",
+    "close": "Close"
+  },
+  "form": {
+    "name": "Profile name",
+    "prefix": "Prefix",
+    "separator": "Separator",
+    "enabled": "Enable this scope",
+    "segments": "Barcode segments",
+    "segmentsHelp": "Reorder segments with the arrows. Every profile must contain exactly one sequence segment.",
+    "type": "Segment type",
+    "source": "Source field",
+    "transform": "Transform",
+    "required": "Required",
+    "sequenceLength": "Sequence length",
+    "dateFormat": "Date format",
+    "literal": "Literal value",
+    "idempotency": "Idempotency key"
+  },
+  "segmentType": {
+    "Field": "Field",
+    "Literal": "Literal",
+    "Sequence": "Sequence",
+    "Date": "Date"
+  },
+  "field": {
+    "StockCode": "Stock code",
+    "SerialNo": "Serial no",
+    "YapCode": "Configuration code",
+    "LotNo": "Lot no",
+    "WarehouseCode": "Warehouse code",
+    "LocationCode": "Location code",
+    "DocumentNo": "Document no"
+  },
+  "transform": {
+    "Upper": "UPPER",
+    "Lower": "lower",
+    "None": "Unchanged"
+  },
+  "messages": {
+    "saved": "Policy profile saved.",
+    "previewed": "Barcode preview created without consuming a sequence.",
+    "generated": "Unique barcode permanently reserved.",
+    "failed": "Operation could not be completed.",
+    "concurrency": "The profile was changed by another user; the page was refreshed."
+  },
+  "history": {
+    "id": "Record ID",
+    "scope": "Scope",
+    "version": "Version",
+    "barcode": "Barcode",
+    "stock": "Stock",
+    "serial": "Serial",
+    "lot": "Lot",
+    "location": "Location",
+    "document": "Document",
+    "sequence": "Sequence",
+    "generatedAt": "Generated at"
+  },
+  "guidance": {
+    "segment": {
+      "current": "Segment {{order}} ? {{type}}",
+      "transform": {
+        "Upper": "converted to uppercase",
+        "Lower": "converted to lowercase",
+        "None": "without modification"
+      },
+      "required": {
+        "required": "Barcode generation is blocked when the value is empty.",
+        "optional": "When the value is empty, this segment is omitted from the barcode."
+      },
+      "sequence": {
+        "summary": "A unique {{length}}-digit sequence number is generated atomically.",
+        "effect": "Each real generation reserves the next value only once. Preview does not consume a sequence; the same idempotency key does not generate another value.",
+        "affects": {
+          "uniqueness": "Barcode uniqueness",
+          "concurrency": "Concurrent generation",
+          "idempotency": "Request retry / idempotency"
+        },
+        "scenario": "If the next value is 765, {{value}} is generated using {{length}} digits.",
+        "warning": "The sequence segment guarantees profile uniqueness and therefore cannot be removed."
+      },
+      "date": {
+        "summary": "The generation date is appended to the barcode in {{format}} format.",
+        "effect": "The generation date is written {{transform}}. {{requiredText}}",
+        "affects": {
+          "pattern": "Barcode pattern",
+          "readability": "Label readability",
+          "tracking": "Date-based traceability"
+        },
+        "scenarioExact": "On 8 August 2026 this segment becomes 20260808.",
+        "scenario": "8 August 2026 is converted to {{format}} format and written."
+      },
+      "literal": {
+        "empty": "empty",
+        "summary": "The fixed text ?{{value}}? is written identically in every barcode.",
+        "effect": "The fixed value is added to the pattern {{transform}}. {{requiredText}}",
+        "affects": {
+          "type": "Distinguishing the barcode type",
+          "scanner": "Scanner routing",
+          "pattern": "Barcode pattern"
+        },
+        "scenario": "If the fixed value is SERI, every barcode from this profile contains the SERI segment.",
+        "warning": "A barcode cannot be generated when a required fixed segment is empty."
+      },
+      "field": {
+        "summary": "The {{source}} value is added to the barcode {{transform}}.",
+        "effect": "{{source}} is read from the operation data. {{requiredText}}",
+        "affects": {
+          "resolution": "Barcode resolution",
+          "matching": "Stock/serial/lot/location matching",
+          "validation": "Operation validation"
+        },
+        "scenario": "If {{source}} is ?abc-01?, this segment becomes {{value}}.",
+        "warning": "A barcode cannot be generated from this profile when {{source}} is missing."
+      }
+    }
+  }
+}

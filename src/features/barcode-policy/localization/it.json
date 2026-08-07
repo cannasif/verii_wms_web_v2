@@ -89,5 +89,64 @@
     "document": "Documento",
     "sequence": "Sequenza",
     "generatedAt": "Generato a"
+  },
+  "guidance": {
+    "segment": {
+      "current": "Segmento{{order}}?{{type}}",
+      "transform": {
+        "Upper": "convertito in maiuscolo",
+        "Lower": "convertito in minuscolo",
+        "None": "senza modifiche"
+      },
+      "required": {
+        "required": "La generazione di codici a barre è bloccata quando il valore è vuoto.",
+        "optional": "Quando il valore è vuoto, questo segmento viene omesso dal codice a barre."
+      },
+      "sequence": {
+        "summary": "Unico{{length}}- il numero di sequenza digitale viene generato atomicamente.",
+        "effect": "Ogni vera generazione si riserva il prossimo valore solo una volta. L'anteprima non consuma una sequenza; la stessa chiave di idempotency non genera un altro valore.",
+        "affects": {
+          "uniqueness": "Codice a barre unicità",
+          "concurrency": "Generazione attuale",
+          "idempotency": "Richiesta retry / idempotency"
+        },
+        "scenario": "Se il valore successivo è 765,{{value}}viene generato utilizzando{{length}}cifre.",
+        "warning": "Il segmento di sequenza garantisce l'unicità del profilo e quindi non può essere rimosso."
+      },
+      "date": {
+        "summary": "La data di generazione viene aggiunta al codice a barre nel{{format}}formato.",
+        "effect": "La data di generazione è scritta{{transform}}.{{requiredText}}",
+        "affects": {
+          "pattern": "Modello di codice a barre",
+          "readability": "Lettura dell'etichetta",
+          "tracking": "Tracciabilità basata sulla data"
+        },
+        "scenarioExact": "L'8 agosto 2026 questo segmento diventa 20260808.",
+        "scenario": "8 agosto 2026 è convertito in{{format}}formato e scritto."
+      },
+      "literal": {
+        "empty": "vuoto",
+        "summary": "Il testo fisso?{{value}}? è scritto identicamente in ogni codice a barre.",
+        "effect": "Il valore fisso viene aggiunto al modello{{transform}}.{{requiredText}}",
+        "affects": {
+          "type": "Distinguere il tipo di codice a barre",
+          "scanner": "Routing Scanner",
+          "pattern": "Modello di codice a barre"
+        },
+        "scenario": "Se il valore fisso è SERI, ogni codice a barre di questo profilo contiene il segmento SERI.",
+        "warning": "Un codice a barre non può essere generato quando un segmento fisso richiesto è vuoto."
+      },
+      "field": {
+        "summary": "The{{source}}valore aggiunto al codice a barre{{transform}}.",
+        "effect": "{{source}}è letto dai dati di funzionamento.{{requiredText}}",
+        "affects": {
+          "resolution": "Risoluzione dei codici a barre",
+          "matching": "Abbinamento stock/serial/lot/location",
+          "validation": "Validazione dell'operazione"
+        },
+        "scenario": "Se{{source}}è ?abc-01?, questo segmento diventa{{value}}.",
+        "warning": "Un codice a barre non può essere generato da questo profilo quando{{source}}manca."
+      }
+    }
   }
 }

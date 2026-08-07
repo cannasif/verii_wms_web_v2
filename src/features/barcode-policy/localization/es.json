@@ -89,5 +89,64 @@
     "document": "Documento",
     "sequence": "secuencia",
     "generatedAt": "Generado en"
+  },
+  "guidance": {
+    "segment": {
+      "current": "Segmento{{order}}?{{type}}",
+      "transform": {
+        "Upper": "convertido en mayúscula",
+        "Lower": "convertido en minúscula",
+        "None": "sin modificación"
+      },
+      "required": {
+        "required": "La generación de código de barras se bloquea cuando el valor está vacío.",
+        "optional": "Cuando el valor está vacío, este segmento se omite del código de barras."
+      },
+      "sequence": {
+        "summary": "Una única{{length}}- el número de secuencia digital se genera atómico.",
+        "effect": "Cada generación real se reserva el siguiente valor sólo una vez. La vista previa no consume una secuencia; la misma clave de idempotencia no genera otro valor.",
+        "affects": {
+          "uniqueness": "Unicidad del código de barras",
+          "concurrency": "Generación concurrente",
+          "idempotency": "Solicitud de reingreso / idempotencia"
+        },
+        "scenario": "Si el siguiente valor es 765,{{value}}se genera utilizando{{length}}dígitos.",
+        "warning": "El segmento de secuencia garantiza la singularidad del perfil y por lo tanto no se puede eliminar."
+      },
+      "date": {
+        "summary": "La fecha de generación se adjunta al código de barras en{{format}}formato.",
+        "effect": "La fecha de generación está escrita{{transform}}.{{requiredText}}",
+        "affects": {
+          "pattern": "Patrón de código de barras",
+          "readability": "readability",
+          "tracking": "Trazabilidad basada en la fecha"
+        },
+        "scenarioExact": "El 8 de agosto de 2026 este segmento se convierte en 20260808.",
+        "scenario": "8 de agosto de 2026 se convierte a{{format}}formato y escrito."
+      },
+      "literal": {
+        "empty": "vacío",
+        "summary": "¿El texto fijo?{{value}}? está escrito idénticamente en cada código de barras.",
+        "effect": "El valor fijo se añade al patrón{{transform}}.{{requiredText}}",
+        "affects": {
+          "type": "Distinguiendo el tipo de código de barras",
+          "scanner": "Caída de escáner",
+          "pattern": "Patrón de código de barras"
+        },
+        "scenario": "Si el valor fijo es SERI, cada código de barras de este perfil contiene el segmento SERI.",
+        "warning": "Un código de barras no se puede generar cuando un segmento fijo requerido está vacío."
+      },
+      "field": {
+        "summary": "El{{source}}valor se añade al código de barras{{transform}}.",
+        "effect": "{{source}}se lee de los datos de operación.{{requiredText}}",
+        "affects": {
+          "resolution": "Resolución de código de barras",
+          "matching": "Stock/serial/lot/location matching",
+          "validation": "Validación de la operación"
+        },
+        "scenario": "Si{{source}}es ?abc-01?, este segmento se convierte{{value}}.",
+        "warning": "Un código de barras no se puede generar a partir de este perfil cuando{{source}}Está desaparecido."
+      }
+    }
   }
 }

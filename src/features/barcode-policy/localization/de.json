@@ -89,5 +89,64 @@
     "document": "Dokument",
     "sequence": "Reihenfolge",
     "generatedAt": "Erstellt am"
+  },
+  "guidance": {
+    "segment": {
+      "current": "Segment{{order}}?{{type}}",
+      "transform": {
+        "Upper": "Umgerechnet in Großbuchstaben",
+        "Lower": "Umwandlung in Kleinbuchstaben",
+        "None": "ohne Änderung"
+      },
+      "required": {
+        "required": "Die Barcode-Generierung wird blockiert, wenn der Wert leer ist.",
+        "optional": "Wenn der Wert leer ist, wird dieses Segment im Barcode weggelassen."
+      },
+      "sequence": {
+        "summary": "Eine einzigartige{{length}}-stellige Sequenznummer wird atomar erzeugt.",
+        "effect": "Jede reale Generation reserviert den nächsten Wert nur einmal. Preview verbraucht keine Sequenz; derselbe idempotency-Schlüssel generiert keinen anderen Wert.",
+        "affects": {
+          "uniqueness": "Eindeutigkeit des Barcodes",
+          "concurrency": "Stromerzeugung",
+          "idempotency": "Anfrage Retry / Idempotenz"
+        },
+        "scenario": "Wenn der nächste Wert 765 ist,{{value}}erzeugt wird mit{{length}}Ziffern.",
+        "warning": "Das Sequenzsegment garantiert Profileindeutigkeit und kann daher nicht entfernt werden."
+      },
+      "date": {
+        "summary": "Das Erzeugungsdatum wird dem Barcode in{{format}}Format.",
+        "effect": "Das Generationsdatum wird geschrieben{{transform}}.{{requiredText}}",
+        "affects": {
+          "pattern": "Barcodemuster",
+          "readability": "Etikettenlesbarkeit",
+          "tracking": "Datumsbasierte Rückverfolgbarkeit"
+        },
+        "scenarioExact": "Am 8. August 2026 wird aus diesem Segment 20260808.",
+        "scenario": "Der 8. August 2026 wird zu{{format}}Format und geschrieben."
+      },
+      "literal": {
+        "empty": "leer",
+        "summary": "Der feste Text?{{value}}? ist in jedem Barcode identisch geschrieben.",
+        "effect": "Der feste Wert wird dem Muster hinzugefügt{{transform}}.{{requiredText}}",
+        "affects": {
+          "type": "Unterscheidung des Barcodetyps",
+          "scanner": "Scanner-Routing",
+          "pattern": "Barcodemuster"
+        },
+        "scenario": "Wenn der feste Wert SERI ist, enthält jeder Barcode aus diesem Profil das SERI-Segment.",
+        "warning": "Ein Barcode kann nicht generiert werden, wenn ein erforderliches festes Segment leer ist."
+      },
+      "field": {
+        "summary": "Die{{source}}Der Wert wird dem Barcode hinzugefügt{{transform}}.",
+        "effect": "{{source}}aus den Betriebsdaten ausgelesen wird.{{requiredText}}",
+        "affects": {
+          "resolution": "Barcodeauflösung",
+          "matching": "Bestand/Serien/Los/Location Matching",
+          "validation": "Validierung des Betriebs"
+        },
+        "scenario": "Wenn{{source}}ist ?abc-01?, wird dieses Segment{{value}}.",
+        "warning": "Ein Barcode kann aus diesem Profil nicht generiert werden, wenn{{source}}fehlt."
+      }
+    }
   }
 }
