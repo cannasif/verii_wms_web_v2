@@ -102,10 +102,16 @@ export const warehouseTransferApi = {
     warehouseId: number,
     stockId: number,
     yapCodeId: number | undefined,
+    excludeLocationIds?: number[],
   ): Promise<StockLocationBalance[]> =>
     unwrap(await api.get<Envelope<StockLocationBalance[]>>(
       `/api/stock-balances/stocks/${stockId}/locations`,
-      { params: { warehouseId, branchCode, yapCodeId: yapCodeId ?? undefined } },
+      { params: {
+        warehouseId,
+        branchCode,
+        yapCodeId: yapCodeId ?? undefined,
+        excludeLocationIds: excludeLocationIds?.length ? excludeLocationIds.join(',') : undefined,
+      } },
     )),
   stockLocationsPage: async (
     request: DropdownPageRequest,
@@ -113,8 +119,9 @@ export const warehouseTransferApi = {
     warehouseId: number,
     stockId: number,
     yapCodeId: number | undefined,
+    excludeLocationIds?: number[],
   ): Promise<DropdownPage<StockLocationBalance>> => {
-    const all = await warehouseTransferApi.resolveStockLocations(branchCode, warehouseId, stockId, yapCodeId);
+    const all = await warehouseTransferApi.resolveStockLocations(branchCode, warehouseId, stockId, yapCodeId, excludeLocationIds);
     const search = (request.search ?? '').trim().toLowerCase();
     const filtered = search
       ? all.filter((x) => x.locationCode.toLowerCase().includes(search) || x.locationName.toLowerCase().includes(search))

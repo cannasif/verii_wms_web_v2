@@ -254,6 +254,41 @@ export function WarehouseTransferDraftPage({
   const [result, setResult] = useState<CreateTransferDraftResult | null>(null);
   const productionSourceApplied = useRef(false);
   const sourceSnapshotsRef = useRef<Partial<Record<TransferSourceKind, TransferSourceSnapshot>>>({});
+  const [sourceWarehouseProductionLocationId, setSourceWarehouseProductionLocationId] = useState<number | null>(null);
+  const [targetWarehouseProductionLocationId, setTargetWarehouseProductionLocationId] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (variant !== "production" || !sourceId) {
+      setSourceWarehouseProductionLocationId(null);
+      return;
+    }
+    void productionTransferApi.returnSetting(sourceId)
+      .then((setting) => setSourceWarehouseProductionLocationId(setting.defaultProductionTransferLocationId ?? null))
+      .catch(() => setSourceWarehouseProductionLocationId(null));
+  }, [branchCode, sourceId, variant]);
+
+  useEffect(() => {
+    if (variant !== "production" || !targetId) {
+      setTargetWarehouseProductionLocationId(null);
+      return;
+    }
+    void productionTransferApi.defaultTargetLocation(targetId, branchCode)
+      .then((location) => setTargetWarehouseProductionLocationId(location.locationId ?? null))
+      .catch(() => setTargetWarehouseProductionLocationId(null));
+  }, [branchCode, targetId, variant]);
+
+  const productionExcludedSourceLocationIds = useMemo(() => {
+    if (variant !== "production") return undefined;
+    const ids = new Set<number>();
+    if (sourceStaging) ids.add(Number(sourceStaging));
+    if (sourceWarehouseProductionLocationId) ids.add(sourceWarehouseProductionLocationId);
+    if (targetWarehouseProductionLocationId) ids.add(targetWarehouseProductionLocationId);
+    lines.forEach((line) => {
+      if (line.targetLocationId) ids.add(line.targetLocationId);
+      else if (line.targetLocationValue) ids.add(Number(line.targetLocationValue));
+    });
+    return ids.size > 0 ? [...ids] : undefined;
+  }, [lines, sourceStaging, sourceWarehouseProductionLocationId, targetWarehouseProductionLocationId, variant]);
   useEffect(() => {
     if (variant !== "production" || !initialProductionSource || productionSourceApplied.current) return;
     productionSourceApplied.current = true;
@@ -1189,6 +1224,7 @@ export function WarehouseTransferDraftPage({
               branchCode={branchCode}
               sourceId={sourceId}
               targetId={targetId}
+              excludeSourceLocationIds={productionExcludedSourceLocationIds}
               patch={patch}
               remove={() =>
                 setLines((current) =>
@@ -1618,6 +1654,7 @@ function LineCard({
   branchCode,
   sourceId,
   targetId,
+  excludeSourceLocationIds,
   patch,
   remove,
 }: {
@@ -1626,10 +1663,12 @@ function LineCard({
   branchCode: string;
   sourceId: number;
   targetId: number;
+  excludeSourceLocationIds?: number[];
   patch: (id: string, value: Partial<TransferDraftLine>) => void;
   remove: () => void;
 }): ReactElement {
   const { t } = useTranslation("common");
+  const excludedSourceLocationKey = (excludeSourceLocationIds ?? []).join(",");
   const stock = line.stockId
     ? {
         id: line.stockId,
@@ -1654,6 +1693,17 @@ function LineCard({
       sourceLocationCode: locationCode,
       sourceLocationName: locationName,
     });
+
+  useEffect(() => {
+    if (!line.sourceLocationId || !excludeSourceLocationIds?.includes(line.sourceLocationId)) return;
+    patch(line.localId, {
+      sourceLocationId: undefined,
+      sourceLocationValue: null,
+      sourceLocationCode: undefined,
+      sourceLocationName: undefined,
+    });
+    sourceAutoFillKey.current = "";
+  }, [excludeSourceLocationIds, line.localId, line.sourceLocationId, patch]);
 
   // Serili/LotAndSerial: tüm seriler girilip planlanan miktar tamamlanınca, o serilerin
   // gerçekte bulunduğu rafı (hepsi aynı raftaysa) kaynak rafına otomatik yazar.
@@ -1701,14 +1751,14 @@ function LineCard({
     const key = `${sourceId}|${line.stockId}|${line.yapCodeId ?? ""}`;
     if (sourceAutoFillKey.current === key) return;
     sourceAutoFillKey.current = key;
-    void warehouseTransferApi.resolveStockLocations(branchCode, sourceId, line.stockId, line.yapCodeId)
+    void warehouseTransferApi.resolveStockLocations(branchCode, sourceId, line.stockId, line.yapCodeId, excludeSourceLocationIds)
       .then((locations) => {
         if (locations.length === 0) return; // bakiye yok, otomatik doldurma için bir şey yok
         if (locations.length > 1) return; // birden fazla rafta bulundu, otomatik seçilemez — kullanıcı elle seçer
         applySourceLocation(locations[0].locationId, locations[0].locationCode, locations[0].locationName);
       })
       .catch((error: Error) => toast.error(message(error, "Stok raf bilgisi sorgulanamadı.")));
-  }, [branchCode, line.localId, line.sourceLocationId, line.stockId, line.stockCode, line.trackingType, line.yapCodeId, sourceId]);
+  }, [branchCode, excludeSourceLocationIds, line.localId, line.sourceLocationId, line.stockId, line.stockCode, line.trackingType, line.yapCodeId, sourceId]);
 
   return (
     <div
@@ -1839,14 +1889,16 @@ function LineCard({
             data-wms-error-keys="kaynak raf|source location"
           >
           <PagedAppDropdown
-            queryKey={["wt-line-source", line.localId, sourceId, line.stockId, line.yapCodeId]}
+            queryKey={["wt-line-source", line.localId, sourceId, line.stockId, line.yapCodeId, excludedSourceLocationKey]}
             fetchPage={(r) =>
               line.stockId
                 ? warehouseTransferApi
-                    .stockLocationsPage(r, branchCode, sourceId, line.stockId, line.yapCodeId)
+                    .stockLocationsPage(r, branchCode, sourceId, line.stockId, line.yapCodeId, excludeSourceLocationIds)
                     .then((p) => ({
                       ...p,
-                      items: p.items.map((x) => ({
+                      items: p.items
+                        .filter((x) => !excludeSourceLocationIds?.includes(x.locationId))
+                        .map((x) => ({
                         id: x.locationId,
                         code: x.locationCode,
                         name: x.locationName,
@@ -1855,7 +1907,9 @@ function LineCard({
                     }))
                 : warehouseTransferApi.locations(r, sourceId).then((p) => ({
                     ...p,
-                    items: p.items.map((x) => ({
+                    items: p.items
+                      .filter((x) => !excludeSourceLocationIds?.includes(x.id))
+                      .map((x) => ({
                       id: x.id,
                       code: x.code,
                       name: x.name,
@@ -1865,7 +1919,7 @@ function LineCard({
             }
             toOption={sourceLocationOption}
             enabled={Boolean(sourceId)}
-            selectedOption={line.sourceLocationCode
+            selectedOption={line.sourceLocationCode && line.sourceLocationId && !excludeSourceLocationIds?.includes(line.sourceLocationId)
               ? { value: String(line.sourceLocationId), label: `${line.sourceLocationCode} · ${line.sourceLocationName}` }
               : undefined}
             value={line.sourceLocationValue}

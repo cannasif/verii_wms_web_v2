@@ -23,8 +23,9 @@ export function fetchStockSourceLocationsPage(
   warehouseId: number,
   stockId: number,
   yapCodeId?: number,
+  excludeLocationIds?: number[],
 ) {
-  return warehouseTransferApi.stockLocationsPage(request, branchCode, warehouseId, stockId, yapCodeId).then((page) => ({
+  return warehouseTransferApi.stockLocationsPage(request, branchCode, warehouseId, stockId, yapCodeId, excludeLocationIds).then((page) => ({
     ...page,
     items: page.items.map((row) => ({
       id: row.locationId,

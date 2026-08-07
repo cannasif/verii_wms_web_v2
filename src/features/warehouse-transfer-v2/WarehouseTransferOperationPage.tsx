@@ -97,14 +97,31 @@ export function WarehouseTransferOperationPage({ variant = 'warehouse' }: { vari
   // bu yüzden o durumda satırın (hedef depodaki) nihai rafı toplamaya önceden doldurulmaz — boş gelir,
   // kullanıcı elle seçer. Aynı mantık simetrik olarak kaynak raf için kabul/yerleştirme fazlarında geçerli.
   const sameWarehouse = detail?.header.sourceWarehouseId === detail?.header.targetWarehouseId;
+  const productionExcludedSourceLocationIds = useMemo(() => {
+    if (!detail || variant !== 'production') return undefined;
+    const ids = new Set<number>();
+    if (detail.draft.sourceStagingLocationId) ids.add(detail.draft.sourceStagingLocationId);
+    if (detail.draft.targetPutawayLocationId) ids.add(detail.draft.targetPutawayLocationId);
+    detail.lines.forEach((row) => {
+      if (row.defaultTargetLocationId) ids.add(row.defaultTargetLocationId);
+    });
+    return ids.size > 0 ? [...ids] : undefined;
+  }, [detail, variant]);
+  const isExcludedSourceLocation = useCallback((locationId?: number | null) =>
+    Boolean(locationId && productionExcludedSourceLocationIds?.includes(locationId)),
+  [productionExcludedSourceLocationIds]);
   useEffect(() => {
     if (!detail) return;
     setLines(detail.lines.filter((line) => remaining(line) > 0).map((line) => ({
       lineId: line.id,
       quantity: remaining(line),
-      sourceLocationId: (phase === 'pick' || phase === 'dispatch' || sameWarehouse) ? line.defaultSourceLocationId ?? null : null,
+      sourceLocationId: (phase === 'pick' || phase === 'dispatch' || sameWarehouse) && line.defaultSourceLocationId && !isExcludedSourceLocation(line.defaultSourceLocationId)
+        ? line.defaultSourceLocationId
+        : null,
       targetLocationId: (phase !== 'pick' || sameWarehouse) ? line.defaultTargetLocationId ?? null : null,
-      sourceValue: (phase === 'pick' || phase === 'dispatch' || sameWarehouse) && line.defaultSourceLocationId ? String(line.defaultSourceLocationId) : null,
+      sourceValue: (phase === 'pick' || phase === 'dispatch' || sameWarehouse) && line.defaultSourceLocationId && !isExcludedSourceLocation(line.defaultSourceLocationId)
+        ? String(line.defaultSourceLocationId)
+        : null,
       targetValue: (phase !== 'pick' || sameWarehouse) && line.defaultTargetLocationId ? String(line.defaultTargetLocationId) : null,
       // Draft'ta zaten girilmiş planlı seri/lot kayıtları varsa önceden doldur — pick sırasında
       // bunlarla birebir aynı değer gönderilmesi backend'de zorunlu (aksi halde 409 Conflict).
@@ -121,7 +138,7 @@ export function WarehouseTransferOperationPage({ variant = 'warehouse' }: { vari
           expirationDate: t.expirationDate ?? undefined,
         })),
     })));
-  }, [detail, phase, remaining, trackingRemaining]);
+  }, [detail, phase, remaining, trackingRemaining, sameWarehouse, isExcludedSourceLocation]);
 
   const sourceWarehouseId = detail
     ? phase === 'pick' || phase === 'dispatch' ? detail.header.sourceWarehouseId : detail.header.targetWarehouseId
@@ -302,6 +319,7 @@ export function WarehouseTransferOperationPage({ variant = 'warehouse' }: { vari
                         sourceWarehouseId,
                         line.stockId,
                         line.yapCodeId,
+                        productionExcludedSourceLocationIds,
                       )
                       : warehouseTransferApi.locations(request, sourceWarehouseId).then((page) => ({
                         ...page,
@@ -309,7 +327,7 @@ export function WarehouseTransferOperationPage({ variant = 'warehouse' }: { vari
                       }))}
                     toOption={stockSourceLocationOption}
                     enabled={variant !== 'production' || phase !== 'pick' || sourceWarehouseId > 0}
-                    selectedOption={(phase === 'pick' || phase === 'dispatch' || sameWarehouse) && line.defaultSourceLocationId
+                    selectedOption={(phase === 'pick' || phase === 'dispatch' || sameWarehouse) && line.defaultSourceLocationId && !isExcludedSourceLocation(line.defaultSourceLocationId)
                       ? {
                         value: String(line.defaultSourceLocationId),
                         label: `${line.defaultSourceLocationCode} · ${line.defaultSourceLocationName}`,

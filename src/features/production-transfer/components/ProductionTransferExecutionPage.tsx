@@ -10,12 +10,12 @@ import { localizeEnumValue } from '@/lib/enum-localization';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
 import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
-import { warehouseTransferApi } from '@/features/warehouse-transfer-v2/api/warehouse-transfer.api';
-import type { LocationOption } from '@/features/goods-receipt-v2/types/goods-receipt.types';
+import { fetchStockSourceLocationsPage, stockSourceLocationOption } from '@/features/warehouse-transfer-v2/utils/stock-source-location-options';
 import { productionTransferApi, type ProductionTransferExecution } from '../api';
 
 export function ProductionTransferExecutionPage() {
   const id = Number(useParams().id);
+  const branchCode = useAuthStore((state) => state.branch?.code ?? '0');
   const currentUserId = useAuthStore((state) => state.user?.id);
   const { can } = usePermissionAccess();
   const [execution, setExecution] = useState<ProductionTransferExecution>();
@@ -163,10 +163,17 @@ export function ProductionTransferExecutionPage() {
             <div className="mt-4 rounded-xl bg-[var(--wms-app-surface)] p-4"><span className="text-xs text-[var(--wms-app-text-muted)]">Şimdi beklenen stok</span><strong className="mt-1 block text-lg">{activeLine.stockCode}</strong><span className="text-sm">{activeLine.stockName}</span></div>
             <label className="mt-4 block text-xs font-bold"><span className="inline-flex items-center gap-1"><MapPin className="size-3.5" />Kaynak raf</span></label>
             <div className="mt-1">
-              <PagedAppDropdown<LocationOption>
-                queryKey={['production-pick-source-location', execution.sourceWarehouseId, activeLine.lineId]}
-                fetchPage={(request) => warehouseTransferApi.locations(request, execution.sourceWarehouseId)}
-                toOption={(location) => ({ value: String(location.id), label: `${location.code} · ${location.name}`, description: location.locationType })}
+              <PagedAppDropdown
+                queryKey={['production-pick-source-location', execution.sourceWarehouseId, activeLine.lineId, activeLine.stockId, (execution.excludedSourceLocationIds ?? []).join(',')]}
+                fetchPage={(request) => fetchStockSourceLocationsPage(
+                  request,
+                  branchCode,
+                  execution.sourceWarehouseId,
+                  activeLine.stockId,
+                  undefined,
+                  execution.excludedSourceLocationIds ?? [],
+                )}
+                toOption={stockSourceLocationOption}
                 value={selectedSourceLocation}
                 onValueChange={(value) => setSourceLocationByLine((current) => ({ ...current, [activeLine.lineId]: value }))}
                 selectedOption={activeLine.suggestedSourceLocationId ? {

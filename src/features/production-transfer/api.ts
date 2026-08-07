@@ -103,7 +103,9 @@ export interface ProductionTransferExecution {
   requestedByUserId?: number; requestedByName?: string; handoverConfirmedBy?: number; handoverConfirmedAtUtc?: string;
   handoverShortageReason?: string; parentTransferId?: number; residualTransferId?: number; residualDocumentNo?: string;
   requestedQuantity: number; pickedQuantity: number; handedOverQuantity: number; shortageQuantity: number;
-  canCompletePicking: boolean; canConfirmHandover: boolean; lines: ProductionTransferExecutionLine[];
+  canCompletePicking: boolean; canConfirmHandover: boolean;
+  excludedSourceLocationIds: number[];
+  lines: ProductionTransferExecutionLine[];
 }
 
 export interface ProductionTransferScanPickResult {
