@@ -1,11 +1,12 @@
 {
   "labels": {
-    "current": "Şu anda: {{value}}.",
-    "details": "Etki, kapsam ve örnek",
-    "effect": "Bu seçimde sistem ne yapar?",
-    "affects": "Hangi ekran ve işlemleri etkiler?",
-    "scenario": "Gerçek kullanım senaryosu",
-    "warning": "Dikkat edilmesi gereken durum",
+    "current": "Seçili değer: {{value}}",
+    "shortResult": "Bu seçimde olacak:",
+    "details": "Basit açıklamayı ve örneği göster",
+    "effect": "1. Bu seçeneği seçerseniz ne olur?",
+    "affects": "3. Hangi ekranlar ve işlemler değişir?",
+    "scenario": "2. Gerçek örnek: işlem nasıl ilerler?",
+    "warning": "4. Dikkat: yanlış seçimde ne olabilir?",
     "enabled": "Açık",
     "disabled": "Kapalı",
     "noPrefix": "Ön ek yok"
@@ -15,6 +16,11 @@
     "days_other": "{{value}} gün",
     "revisions_one": "{{value}} revizyon",
     "revisions_other": "{{value}} revizyon"
+  },
+  "instructions": {
+    "checkValue": "Önce seçili değeri kontrol edin.",
+    "readResult": "Hemen altındaki ‘Bu seçimde olacak’ sonucunu okuyun.",
+    "openExample": "Emin değilseniz açıklamayı açıp gerçek örneğe bakın."
   },
   "pages": {
     "default": {
@@ -232,7 +238,7 @@
       },
       "allowUnderReceipt": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Sipariş miktarının bir kısmı kabul edilerek belge açık bırakılabilir.",
           "effect": "Sipariş miktarının bir kısmı kabul edilerek belge açık bırakılabilir.",
           "affects": [
             "Siparişli kabul",
@@ -241,7 +247,7 @@
           "scenario": "100 AD siparişten 60 AD gelir; 60 kabul edilir, 40 açık kalır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Sipariş satırı eksik miktarla normal tamamlanamaz.",
           "effect": "Sipariş satırı eksik miktarla normal tamamlanamaz.",
           "affects": [
             "Siparişli kabul"
@@ -251,7 +257,7 @@
       },
       "requireShortCloseApproval": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Eksik kalan sipariş miktarını kapatmak için yönetici onayı gerekir.",
           "effect": "Eksik kalan sipariş miktarını kapatmak için yönetici onayı gerekir.",
           "affects": [
             "Kısa kapama",
@@ -260,7 +266,7 @@
           "scenario": "60/100 kabul sonrası kalan 40 iptal edilecekse amir onayı istenir."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Yetkili operatör eksik satırı ek onay olmadan kapatabilir.",
           "effect": "Yetkili operatör eksik satırı ek onay olmadan kapatabilir.",
           "affects": [
             "Kısa kapama"
@@ -270,7 +276,7 @@
       },
       "requireReceiptApproval": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Fiziksel kabul sonrası ayrı mal kabul onayı oluşturulur.",
           "effect": "Fiziksel kabul sonrası ayrı mal kabul onayı oluşturulur.",
           "affects": [
             "Kabul durumu",
@@ -280,7 +286,7 @@
           "scenario": "Depocu kabulü bitirir; amir “Onayla” demeden süreç tamamlanmış sayılmaz."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Operatörün mal kabulü tamamlaması kabul onayı yerine geçer.",
           "effect": "Operatörün mal kabulü tamamlaması kabul onayı yerine geçer.",
           "affects": [
             "Kabul durumu"
@@ -290,7 +296,7 @@
       },
       "requireQualityApproval": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Kalite planı oluşan stoklarda karar tamamlanmadan süreç serbest bırakılmaz.",
           "effect": "Kalite planı oluşan stoklarda karar tamamlanmadan süreç serbest bırakılmaz.",
           "affects": [
             "Kalite inceleme",
@@ -299,7 +305,7 @@
           "scenario": "Kaliteye giden parti sonuçlanana kadar karantinada tutulur."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Kalite kuralı yoksa ayrı kalite onayı aranmaz.",
           "effect": "Kalite kuralı yoksa ayrı kalite onayı aranmaz.",
           "affects": [
             "Kalite kapısı"
@@ -309,7 +315,7 @@
       },
       "requireErpApproval": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "ERP gönderimi öncesinde yetkili kullanıcı onayı gerekir.",
           "effect": "ERP gönderimi öncesinde yetkili kullanıcı onayı gerekir.",
           "affects": [
             "ERP aktarım kuyruğu",
@@ -318,7 +324,7 @@
           "scenario": "İrsaliye hazırdır; ERP sorumlusu onaylayınca Netsis’e gönderilir."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Diğer kapılar tamamlanınca ERP gönderimi otomatik ilerleyebilir.",
           "effect": "Diğer kapılar tamamlanınca ERP gönderimi otomatik ilerleyebilir.",
           "affects": [
             "ERP aktarım kuyruğu"
@@ -328,7 +334,7 @@
       },
       "holdInventoryUntilQualityDecision": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Kalite bekleyen miktar kullanılabilir stoktan ayrılır.",
           "effect": "Kalite bekleyen miktar kullanılabilir stoktan ayrılır.",
           "affects": [
             "Raf bakiyesi statüsü",
@@ -337,7 +343,7 @@
           "scenario": "100 AD fiziksel raftadır fakat kalite bitene kadar sevk emrine ayrılamaz."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Kalite incelemesi stok kullanılabilirliğini tek başına bloke etmez.",
           "effect": "Kalite incelemesi stok kullanılabilirliğini tek başına bloke etmez.",
           "affects": [
             "Kullanılabilir bakiye"
@@ -347,7 +353,7 @@
       },
       "blockPutawayUntilQualityDecision": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Kalite bekleyen ürün nihai rafa yerleştirilemez.",
           "effect": "Kalite bekleyen ürün nihai rafa yerleştirilemez.",
           "affects": [
             "Raflama görevi",
@@ -356,7 +362,7 @@
           "scenario": "Ürün kabul/karantina rafında bekler; Passed sonrası hedef rafa alınır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Kalite sonucu beklenirken fiziksel raflama yapılabilir.",
           "effect": "Kalite sonucu beklenirken fiziksel raflama yapılabilir.",
           "affects": [
             "Raflama görevi"
@@ -366,7 +372,7 @@
       },
       "allowOrderlessReceipt": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Satınalma siparişi olmadan irsaliye ve stok kalemiyle kabul açılabilir.",
           "effect": "Satınalma siparişi olmadan irsaliye ve stok kalemiyle kabul açılabilir.",
           "affects": [
             "Siparişsiz mal kabul"
@@ -374,7 +380,7 @@
           "scenario": "Acil gelen malzeme sipariş bağlantısı olmadan kabul edilir."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Her mal kabul geçerli bir siparişe bağlanmalıdır.",
           "effect": "Her mal kabul geçerli bir siparişe bağlanmalıdır.",
           "affects": [
             "Yeni mal kabul başlangıcı"
@@ -384,7 +390,7 @@
       },
       "allowUnplannedReceipt": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Önceden emir açılmadan doğrudan fiziksel kabul yapılabilir.",
           "effect": "Önceden emir açılmadan doğrudan fiziksel kabul yapılabilir.",
           "affects": [
             "Doğrudan kabul",
@@ -393,7 +399,7 @@
           "scenario": "Kapıya gelen araç için anlık kabul başlatılır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Fiziksel kabulden önce mal kabul emri/görevi gerekir.",
           "effect": "Fiziksel kabulden önce mal kabul emri/görevi gerekir.",
           "affects": [
             "Mal kabul görevleri"
@@ -403,7 +409,7 @@
       },
       "showAllocatedOpenOrderLines": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Başka açık WMS kabulüne ayrılmış sipariş satırları uyarıyla birlikte listelenir.",
           "effect": "Başka açık WMS kabulüne ayrılmış sipariş satırları uyarıyla birlikte listelenir.",
           "affects": [
             "Netsis sipariş seçimi"
@@ -411,7 +417,7 @@
           "scenario": "Aynı sipariş kalemi başka emirdeyse kullanıcı bunu görür fakat mükerrer miktar kontrolü devam eder."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Başka WMS kabulüne ayrılmış satırlar sipariş seçiminde gizlenir.",
           "effect": "Başka WMS kabulüne ayrılmış satırlar sipariş seçiminde gizlenir.",
           "affects": [
             "Netsis sipariş seçimi"
@@ -604,7 +610,7 @@
       },
       "allowUnderReceipt": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Sipariş miktarının bir kısmı kabul edilerek belge açık bırakılabilir.",
           "effect": "Sipariş miktarının bir kısmı kabul edilerek belge açık bırakılabilir.",
           "affects": [
             "Siparişli kabul",
@@ -613,7 +619,7 @@
           "scenario": "100 AD siparişten 60 AD gelir; 60 kabul edilir, 40 açık kalır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Sipariş satırı eksik miktarla normal tamamlanamaz.",
           "effect": "Sipariş satırı eksik miktarla normal tamamlanamaz.",
           "affects": [
             "Siparişli kabul"
@@ -623,7 +629,7 @@
       },
       "requireShortCloseApproval": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Eksik kalan sipariş miktarını kapatmak için yönetici onayı gerekir.",
           "effect": "Eksik kalan sipariş miktarını kapatmak için yönetici onayı gerekir.",
           "affects": [
             "Kısa kapama",
@@ -632,7 +638,7 @@
           "scenario": "60/100 kabul sonrası kalan 40 iptal edilecekse amir onayı istenir."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Yetkili operatör eksik satırı ek onay olmadan kapatabilir.",
           "effect": "Yetkili operatör eksik satırı ek onay olmadan kapatabilir.",
           "affects": [
             "Kısa kapama"
@@ -642,7 +648,7 @@
       },
       "requireReceiptApproval": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Fiziksel kabul sonrası ayrı mal kabul onayı oluşturulur.",
           "effect": "Fiziksel kabul sonrası ayrı mal kabul onayı oluşturulur.",
           "affects": [
             "Kabul durumu",
@@ -652,7 +658,7 @@
           "scenario": "Depocu kabulü bitirir; amir “Onayla” demeden süreç tamamlanmış sayılmaz."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Operatörün mal kabulü tamamlaması kabul onayı yerine geçer.",
           "effect": "Operatörün mal kabulü tamamlaması kabul onayı yerine geçer.",
           "affects": [
             "Kabul durumu"
@@ -662,7 +668,7 @@
       },
       "requireQualityApproval": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Kalite planı oluşan stoklarda karar tamamlanmadan süreç serbest bırakılmaz.",
           "effect": "Kalite planı oluşan stoklarda karar tamamlanmadan süreç serbest bırakılmaz.",
           "affects": [
             "Kalite inceleme",
@@ -671,7 +677,7 @@
           "scenario": "Kaliteye giden parti sonuçlanana kadar karantinada tutulur."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Kalite kuralı yoksa ayrı kalite onayı aranmaz.",
           "effect": "Kalite kuralı yoksa ayrı kalite onayı aranmaz.",
           "affects": [
             "Kalite kapısı"
@@ -681,7 +687,7 @@
       },
       "requireErpApproval": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "ERP gönderimi öncesinde yetkili kullanıcı onayı gerekir.",
           "effect": "ERP gönderimi öncesinde yetkili kullanıcı onayı gerekir.",
           "affects": [
             "ERP aktarım kuyruğu",
@@ -690,7 +696,7 @@
           "scenario": "İrsaliye hazırdır; ERP sorumlusu onaylayınca Netsis’e gönderilir."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Diğer kapılar tamamlanınca ERP gönderimi otomatik ilerleyebilir.",
           "effect": "Diğer kapılar tamamlanınca ERP gönderimi otomatik ilerleyebilir.",
           "affects": [
             "ERP aktarım kuyruğu"
@@ -700,7 +706,7 @@
       },
       "holdInventoryUntilQualityDecision": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Kalite bekleyen miktar kullanılabilir stoktan ayrılır.",
           "effect": "Kalite bekleyen miktar kullanılabilir stoktan ayrılır.",
           "affects": [
             "Raf bakiyesi statüsü",
@@ -709,7 +715,7 @@
           "scenario": "100 AD fiziksel raftadır fakat kalite bitene kadar sevk emrine ayrılamaz."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Kalite incelemesi stok kullanılabilirliğini tek başına bloke etmez.",
           "effect": "Kalite incelemesi stok kullanılabilirliğini tek başına bloke etmez.",
           "affects": [
             "Kullanılabilir bakiye"
@@ -719,7 +725,7 @@
       },
       "blockPutawayUntilQualityDecision": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Kalite bekleyen ürün nihai rafa yerleştirilemez.",
           "effect": "Kalite bekleyen ürün nihai rafa yerleştirilemez.",
           "affects": [
             "Raflama görevi",
@@ -728,7 +734,7 @@
           "scenario": "Ürün kabul/karantina rafında bekler; Passed sonrası hedef rafa alınır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Kalite sonucu beklenirken fiziksel raflama yapılabilir.",
           "effect": "Kalite sonucu beklenirken fiziksel raflama yapılabilir.",
           "affects": [
             "Raflama görevi"
@@ -738,7 +744,7 @@
       },
       "allowOrderlessReceipt": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Satınalma siparişi olmadan irsaliye ve stok kalemiyle kabul açılabilir.",
           "effect": "Satınalma siparişi olmadan irsaliye ve stok kalemiyle kabul açılabilir.",
           "affects": [
             "Siparişsiz mal kabul"
@@ -746,7 +752,7 @@
           "scenario": "Acil gelen malzeme sipariş bağlantısı olmadan kabul edilir."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Her mal kabul geçerli bir siparişe bağlanmalıdır.",
           "effect": "Her mal kabul geçerli bir siparişe bağlanmalıdır.",
           "affects": [
             "Yeni mal kabul başlangıcı"
@@ -756,7 +762,7 @@
       },
       "allowUnplannedReceipt": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Önceden emir açılmadan doğrudan fiziksel kabul yapılabilir.",
           "effect": "Önceden emir açılmadan doğrudan fiziksel kabul yapılabilir.",
           "affects": [
             "Doğrudan kabul",
@@ -765,7 +771,7 @@
           "scenario": "Kapıya gelen araç için anlık kabul başlatılır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Fiziksel kabulden önce mal kabul emri/görevi gerekir.",
           "effect": "Fiziksel kabulden önce mal kabul emri/görevi gerekir.",
           "affects": [
             "Mal kabul görevleri"
@@ -775,7 +781,7 @@
       },
       "showAllocatedOpenOrderLines": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Başka açık WMS kabulüne ayrılmış sipariş satırları uyarıyla birlikte listelenir.",
           "effect": "Başka açık WMS kabulüne ayrılmış sipariş satırları uyarıyla birlikte listelenir.",
           "affects": [
             "Netsis sipariş seçimi"
@@ -783,7 +789,7 @@
           "scenario": "Aynı sipariş kalemi başka emirdeyse kullanıcı bunu görür fakat mükerrer miktar kontrolü devam eder."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Başka WMS kabulüne ayrılmış satırlar sipariş seçiminde gizlenir.",
           "effect": "Başka WMS kabulüne ayrılmış satırlar sipariş seçiminde gizlenir.",
           "affects": [
             "Netsis sipariş seçimi"
@@ -826,7 +832,7 @@
     "outbound": {
       "allowOrderBasedTask": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Siparişten görevli çıkış/sevk emri açılabilir.",
           "effect": "Siparişten görevli çıkış/sevk emri açılabilir.",
           "affects": [
             "Yeni emir",
@@ -835,7 +841,7 @@
           "scenario": "Satış siparişi seçilir ve toplama görevi personele atanır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Sipariş kaynaklı görevli akış menüde kullanılamaz.",
           "effect": "Sipariş kaynaklı görevli akış menüde kullanılamaz.",
           "affects": [
             "Yeni emir"
@@ -845,7 +851,7 @@
       },
       "allowStockBasedTask": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Sipariş olmadan stoktan görevli çıkış açılabilir.",
           "effect": "Sipariş olmadan stoktan görevli çıkış açılabilir.",
           "affects": [
             "Serbest stok çıkışı",
@@ -854,7 +860,7 @@
           "scenario": "Numune sevki için stok seçilip toplama emri atanır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Siparişsiz görevli çıkış engellenir.",
           "effect": "Siparişsiz görevli çıkış engellenir.",
           "affects": [
             "Yeni emir"
@@ -864,7 +870,7 @@
       },
       "allowOrderBasedDirect": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Siparişten, görev atamadan doğrudan işlem yapılabilir.",
           "effect": "Siparişten, görev atamadan doğrudan işlem yapılabilir.",
           "affects": [
             "Doğrudan çıkış/sevk"
@@ -872,7 +878,7 @@
           "scenario": "Küçük sipariş operatör tarafından aynı ekranda toplanıp tamamlanır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Siparişli işlemler görevli akıştan yürütülür.",
           "effect": "Siparişli işlemler görevli akıştan yürütülür.",
           "affects": [
             "Doğrudan işlem"
@@ -882,7 +888,7 @@
       },
       "allowStockBasedDirect": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Siparişsiz stok doğrudan çıkışa alınabilir.",
           "effect": "Siparişsiz stok doğrudan çıkışa alınabilir.",
           "affects": [
             "Doğrudan serbest çıkış"
@@ -890,7 +896,7 @@
           "scenario": "Hurda veya numune stok anlık çıkarılır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Siparişsiz doğrudan çıkış engellenir.",
           "effect": "Siparişsiz doğrudan çıkış engellenir.",
           "affects": [
             "Yeni çıkış"
@@ -1036,7 +1042,7 @@
       },
       "requireApproval": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Emir operasyona çıkmadan yetkili onayı gerekir.",
           "effect": "Emir operasyona çıkmadan yetkili onayı gerekir.",
           "affects": [
             "Emir durumu",
@@ -1045,7 +1051,7 @@
           "scenario": "Planlayıcı taslağı oluşturur; amir onayı sonrası depocu görür."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Emir uygun olduğunda doğrudan operasyona alınabilir.",
           "effect": "Emir uygun olduğunda doğrudan operasyona alınabilir.",
           "affects": [
             "Emir durumu"
@@ -1055,7 +1061,7 @@
       },
       "requireAssigneeForTask": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Görevli akışta en az bir kullanıcı atanmalıdır.",
           "effect": "Görevli akışta en az bir kullanıcı atanmalıdır.",
           "affects": [
             "Görev oluşturma",
@@ -1064,7 +1070,7 @@
           "scenario": "Personel seçilmeden emir serbest bırakılamaz."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Görev kullanıcı atanmadan havuza bırakılabilir.",
           "effect": "Görev kullanıcı atanmadan havuza bırakılabilir.",
           "affects": [
             "Görev havuzu"
@@ -1074,7 +1080,7 @@
       },
       "allowMultipleAssignees": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Aynı görev birden fazla kullanıcı/ekibe atanabilir.",
           "effect": "Aynı görev birden fazla kullanıcı/ekibe atanabilir.",
           "affects": [
             "Görev atama",
@@ -1083,7 +1089,7 @@
           "scenario": "Büyük sipariş iki depocu tarafından paralel toplanır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Görev yalnız tek sorumluya atanabilir.",
           "effect": "Görev yalnız tek sorumluya atanabilir.",
           "affects": [
             "Görev atama"
@@ -1093,7 +1099,7 @@
       },
       "autoReleaseTaskBased": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Geçerli görevli emir kaydedilince otomatik serbest bırakılır.",
           "effect": "Geçerli görevli emir kaydedilince otomatik serbest bırakılır.",
           "affects": [
             "Görev yayını"
@@ -1101,7 +1107,7 @@
           "scenario": "Atama tamamlanır tamamlanmaz görev personelin listesine düşer."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Görev ayrıca serbest bırakma işlemine ihtiyaç duyar.",
           "effect": "Görev ayrıca serbest bırakma işlemine ihtiyaç duyar.",
           "affects": [
             "Görev durumu"
@@ -1111,7 +1117,7 @@
       },
       "allowPartialPicking": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Toplama oturumu plan miktarının altında kapatılabilir.",
           "effect": "Toplama oturumu plan miktarının altında kapatılabilir.",
           "affects": [
             "Toplama",
@@ -1120,7 +1126,7 @@
           "scenario": "10 AD’den 6 AD toplanır ve oturum kısmi kapatılır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Toplama tamamlanmak için tüm miktarı bekler.",
           "effect": "Toplama tamamlanmak için tüm miktarı bekler.",
           "affects": [
             "Toplama tamamlama"
@@ -1130,7 +1136,7 @@
       },
       "allowPartialShipment": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Toplanan miktarın bir kısmı sevk/çıkış olarak tamamlanabilir.",
           "effect": "Toplanan miktarın bir kısmı sevk/çıkış olarak tamamlanabilir.",
           "affects": [
             "Sevk tamamlama",
@@ -1139,7 +1145,7 @@
           "scenario": "10 AD’nin 6’sı araçla çıkar, 4’ü açık kalır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Belge ancak bütün uygun miktar hazır olduğunda tamamlanır.",
           "effect": "Belge ancak bütün uygun miktar hazır olduğunda tamamlanır.",
           "affects": [
             "Sevk tamamlama"
@@ -1149,7 +1155,7 @@
       },
       "requireSourceLocation": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Her satırda kaynak raf seçimi veya barkod doğrulaması gerekir.",
           "effect": "Her satırda kaynak raf seçimi veya barkod doğrulaması gerekir.",
           "affects": [
             "Toplama",
@@ -1158,7 +1164,7 @@
           "scenario": "Stok doğru olsa bile yanlış raf barkodu reddedilir."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Kaynak raf satırda zorunlu değildir; sistem uygun bakiyeden çözebilir.",
           "effect": "Kaynak raf satırda zorunlu değildir; sistem uygun bakiyeden çözebilir.",
           "affects": [
             "Toplama"
@@ -1168,7 +1174,7 @@
       },
       "requireShipmentInformation": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Araç, sürücü veya taşıma bilgileri girilmeden çıkış tamamlanamaz.",
           "effect": "Araç, sürücü veya taşıma bilgileri girilmeden çıkış tamamlanamaz.",
           "affects": [
             "Yükleme",
@@ -1177,7 +1183,7 @@
           "scenario": "Plaka eksikken sevki tamamla işlemi engellenir."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Taşıma bilgileri isteğe bağlıdır.",
           "effect": "Taşıma bilgileri isteğe bağlıdır.",
           "affects": [
             "Yükleme"
@@ -1187,7 +1193,7 @@
       },
       "requireLoadingConfirmation": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Toplama sonrası ayrı yükleme onayı gerekir.",
           "effect": "Toplama sonrası ayrı yükleme onayı gerekir.",
           "affects": [
             "Yükleme kontrolü",
@@ -1196,7 +1202,7 @@
           "scenario": "Toplanan koli araçta barkodla doğrulandıktan sonra sevk edilir."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Toplama/paketleme tamamlanınca ayrı yükleme adımı aranmaz.",
           "effect": "Toplama/paketleme tamamlanınca ayrı yükleme adımı aranmaz.",
           "affects": [
             "Sevk durumu"
@@ -1206,7 +1212,7 @@
       },
       "autoPostErpAfterApproval": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Son operasyon onayından sonra ERP kaydı otomatik kuyruğa alınır.",
           "effect": "Son operasyon onayından sonra ERP kaydı otomatik kuyruğa alınır.",
           "affects": [
             "ERP sevk/ambar çıkışı"
@@ -1214,7 +1220,7 @@
           "scenario": "Yükleme onayı verilince Netsis kaydı otomatik gönderilir."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "ERP aktarımı kullanıcı veya entegrasyon görevi tarafından ayrıca başlatılır.",
           "effect": "ERP aktarımı kullanıcı veya entegrasyon görevi tarafından ayrıca başlatılır.",
           "affects": [
             "ERP kuyruğu"
@@ -1226,7 +1232,7 @@
     "shipping": {
       "allowOrderBasedTask": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Siparişten görevli çıkış/sevk emri açılabilir.",
           "effect": "Siparişten görevli çıkış/sevk emri açılabilir.",
           "affects": [
             "Yeni emir",
@@ -1235,7 +1241,7 @@
           "scenario": "Satış siparişi seçilir ve toplama görevi personele atanır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Sipariş kaynaklı görevli akış menüde kullanılamaz.",
           "effect": "Sipariş kaynaklı görevli akış menüde kullanılamaz.",
           "affects": [
             "Yeni emir"
@@ -1245,7 +1251,7 @@
       },
       "allowStockBasedTask": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Sipariş olmadan stoktan görevli çıkış açılabilir.",
           "effect": "Sipariş olmadan stoktan görevli çıkış açılabilir.",
           "affects": [
             "Serbest stok çıkışı",
@@ -1254,7 +1260,7 @@
           "scenario": "Numune sevki için stok seçilip toplama emri atanır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Siparişsiz görevli çıkış engellenir.",
           "effect": "Siparişsiz görevli çıkış engellenir.",
           "affects": [
             "Yeni emir"
@@ -1264,7 +1270,7 @@
       },
       "allowOrderBasedDirect": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Siparişten, görev atamadan doğrudan işlem yapılabilir.",
           "effect": "Siparişten, görev atamadan doğrudan işlem yapılabilir.",
           "affects": [
             "Doğrudan çıkış/sevk"
@@ -1272,7 +1278,7 @@
           "scenario": "Küçük sipariş operatör tarafından aynı ekranda toplanıp tamamlanır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Siparişli işlemler görevli akıştan yürütülür.",
           "effect": "Siparişli işlemler görevli akıştan yürütülür.",
           "affects": [
             "Doğrudan işlem"
@@ -1282,7 +1288,7 @@
       },
       "allowStockBasedDirect": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Siparişsiz stok doğrudan çıkışa alınabilir.",
           "effect": "Siparişsiz stok doğrudan çıkışa alınabilir.",
           "affects": [
             "Doğrudan serbest çıkış"
@@ -1290,7 +1296,7 @@
           "scenario": "Hurda veya numune stok anlık çıkarılır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Siparişsiz doğrudan çıkış engellenir.",
           "effect": "Siparişsiz doğrudan çıkış engellenir.",
           "affects": [
             "Yeni çıkış"
@@ -1436,7 +1442,7 @@
       },
       "requireApproval": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Emir operasyona çıkmadan yetkili onayı gerekir.",
           "effect": "Emir operasyona çıkmadan yetkili onayı gerekir.",
           "affects": [
             "Emir durumu",
@@ -1445,7 +1451,7 @@
           "scenario": "Planlayıcı taslağı oluşturur; amir onayı sonrası depocu görür."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Emir uygun olduğunda doğrudan operasyona alınabilir.",
           "effect": "Emir uygun olduğunda doğrudan operasyona alınabilir.",
           "affects": [
             "Emir durumu"
@@ -1455,7 +1461,7 @@
       },
       "requireAssigneeForTask": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Görevli akışta en az bir kullanıcı atanmalıdır.",
           "effect": "Görevli akışta en az bir kullanıcı atanmalıdır.",
           "affects": [
             "Görev oluşturma",
@@ -1464,7 +1470,7 @@
           "scenario": "Personel seçilmeden emir serbest bırakılamaz."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Görev kullanıcı atanmadan havuza bırakılabilir.",
           "effect": "Görev kullanıcı atanmadan havuza bırakılabilir.",
           "affects": [
             "Görev havuzu"
@@ -1474,7 +1480,7 @@
       },
       "allowMultipleAssignees": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Aynı görev birden fazla kullanıcı/ekibe atanabilir.",
           "effect": "Aynı görev birden fazla kullanıcı/ekibe atanabilir.",
           "affects": [
             "Görev atama",
@@ -1483,7 +1489,7 @@
           "scenario": "Büyük sipariş iki depocu tarafından paralel toplanır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Görev yalnız tek sorumluya atanabilir.",
           "effect": "Görev yalnız tek sorumluya atanabilir.",
           "affects": [
             "Görev atama"
@@ -1493,7 +1499,7 @@
       },
       "autoReleaseTaskBased": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Geçerli görevli emir kaydedilince otomatik serbest bırakılır.",
           "effect": "Geçerli görevli emir kaydedilince otomatik serbest bırakılır.",
           "affects": [
             "Görev yayını"
@@ -1501,7 +1507,7 @@
           "scenario": "Atama tamamlanır tamamlanmaz görev personelin listesine düşer."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Görev ayrıca serbest bırakma işlemine ihtiyaç duyar.",
           "effect": "Görev ayrıca serbest bırakma işlemine ihtiyaç duyar.",
           "affects": [
             "Görev durumu"
@@ -1511,7 +1517,7 @@
       },
       "allowPartialPicking": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Toplama oturumu plan miktarının altında kapatılabilir.",
           "effect": "Toplama oturumu plan miktarının altında kapatılabilir.",
           "affects": [
             "Toplama",
@@ -1520,7 +1526,7 @@
           "scenario": "10 AD’den 6 AD toplanır ve oturum kısmi kapatılır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Toplama tamamlanmak için tüm miktarı bekler.",
           "effect": "Toplama tamamlanmak için tüm miktarı bekler.",
           "affects": [
             "Toplama tamamlama"
@@ -1530,7 +1536,7 @@
       },
       "allowPartialShipment": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Toplanan miktarın bir kısmı sevk/çıkış olarak tamamlanabilir.",
           "effect": "Toplanan miktarın bir kısmı sevk/çıkış olarak tamamlanabilir.",
           "affects": [
             "Sevk tamamlama",
@@ -1539,7 +1545,7 @@
           "scenario": "10 AD’nin 6’sı araçla çıkar, 4’ü açık kalır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Belge ancak bütün uygun miktar hazır olduğunda tamamlanır.",
           "effect": "Belge ancak bütün uygun miktar hazır olduğunda tamamlanır.",
           "affects": [
             "Sevk tamamlama"
@@ -1549,7 +1555,7 @@
       },
       "requireSourceLocation": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Her satırda kaynak raf seçimi veya barkod doğrulaması gerekir.",
           "effect": "Her satırda kaynak raf seçimi veya barkod doğrulaması gerekir.",
           "affects": [
             "Toplama",
@@ -1558,7 +1564,7 @@
           "scenario": "Stok doğru olsa bile yanlış raf barkodu reddedilir."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Kaynak raf satırda zorunlu değildir; sistem uygun bakiyeden çözebilir.",
           "effect": "Kaynak raf satırda zorunlu değildir; sistem uygun bakiyeden çözebilir.",
           "affects": [
             "Toplama"
@@ -1568,7 +1574,7 @@
       },
       "requireShipmentInformation": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Araç, sürücü veya taşıma bilgileri girilmeden çıkış tamamlanamaz.",
           "effect": "Araç, sürücü veya taşıma bilgileri girilmeden çıkış tamamlanamaz.",
           "affects": [
             "Yükleme",
@@ -1577,7 +1583,7 @@
           "scenario": "Plaka eksikken sevki tamamla işlemi engellenir."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Taşıma bilgileri isteğe bağlıdır.",
           "effect": "Taşıma bilgileri isteğe bağlıdır.",
           "affects": [
             "Yükleme"
@@ -1587,7 +1593,7 @@
       },
       "requireLoadingConfirmation": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Toplama sonrası ayrı yükleme onayı gerekir.",
           "effect": "Toplama sonrası ayrı yükleme onayı gerekir.",
           "affects": [
             "Yükleme kontrolü",
@@ -1596,7 +1602,7 @@
           "scenario": "Toplanan koli araçta barkodla doğrulandıktan sonra sevk edilir."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Toplama/paketleme tamamlanınca ayrı yükleme adımı aranmaz.",
           "effect": "Toplama/paketleme tamamlanınca ayrı yükleme adımı aranmaz.",
           "affects": [
             "Sevk durumu"
@@ -1606,7 +1612,7 @@
       },
       "autoPostErpAfterApproval": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Son operasyon onayından sonra ERP kaydı otomatik kuyruğa alınır.",
           "effect": "Son operasyon onayından sonra ERP kaydı otomatik kuyruğa alınır.",
           "affects": [
             "ERP sevk/ambar çıkışı"
@@ -1614,7 +1620,7 @@
           "scenario": "Yükleme onayı verilince Netsis kaydı otomatik gönderilir."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "ERP aktarımı kullanıcı veya entegrasyon görevi tarafından ayrıca başlatılır.",
           "effect": "ERP aktarımı kullanıcı veya entegrasyon görevi tarafından ayrıca başlatılır.",
           "affects": [
             "ERP kuyruğu"
@@ -1626,7 +1632,7 @@
     "transfer": {
       "allowOrderBasedTask": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Siparişten görevli çıkış/sevk emri açılabilir.",
           "effect": "Siparişten görevli çıkış/sevk emri açılabilir.",
           "affects": [
             "Yeni emir",
@@ -1635,7 +1641,7 @@
           "scenario": "Satış siparişi seçilir ve toplama görevi personele atanır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Sipariş kaynaklı görevli akış menüde kullanılamaz.",
           "effect": "Sipariş kaynaklı görevli akış menüde kullanılamaz.",
           "affects": [
             "Yeni emir"
@@ -1645,7 +1651,7 @@
       },
       "allowStockBasedTask": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Sipariş olmadan stoktan görevli çıkış açılabilir.",
           "effect": "Sipariş olmadan stoktan görevli çıkış açılabilir.",
           "affects": [
             "Serbest stok çıkışı",
@@ -1654,7 +1660,7 @@
           "scenario": "Numune sevki için stok seçilip toplama emri atanır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Siparişsiz görevli çıkış engellenir.",
           "effect": "Siparişsiz görevli çıkış engellenir.",
           "affects": [
             "Yeni emir"
@@ -1664,7 +1670,7 @@
       },
       "allowOrderBasedDirect": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Siparişten, görev atamadan doğrudan işlem yapılabilir.",
           "effect": "Siparişten, görev atamadan doğrudan işlem yapılabilir.",
           "affects": [
             "Doğrudan çıkış/sevk"
@@ -1672,7 +1678,7 @@
           "scenario": "Küçük sipariş operatör tarafından aynı ekranda toplanıp tamamlanır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Siparişli işlemler görevli akıştan yürütülür.",
           "effect": "Siparişli işlemler görevli akıştan yürütülür.",
           "affects": [
             "Doğrudan işlem"
@@ -1682,7 +1688,7 @@
       },
       "allowStockBasedDirect": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Siparişsiz stok doğrudan çıkışa alınabilir.",
           "effect": "Siparişsiz stok doğrudan çıkışa alınabilir.",
           "affects": [
             "Doğrudan serbest çıkış"
@@ -1690,7 +1696,7 @@
           "scenario": "Hurda veya numune stok anlık çıkarılır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Siparişsiz doğrudan çıkış engellenir.",
           "effect": "Siparişsiz doğrudan çıkış engellenir.",
           "affects": [
             "Yeni çıkış"
@@ -1741,7 +1747,7 @@
       },
       "requireApproval": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Emir operasyona çıkmadan yetkili onayı gerekir.",
           "effect": "Emir operasyona çıkmadan yetkili onayı gerekir.",
           "affects": [
             "Emir durumu",
@@ -1750,7 +1756,7 @@
           "scenario": "Planlayıcı taslağı oluşturur; amir onayı sonrası depocu görür."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Emir uygun olduğunda doğrudan operasyona alınabilir.",
           "effect": "Emir uygun olduğunda doğrudan operasyona alınabilir.",
           "affects": [
             "Emir durumu"
@@ -1760,7 +1766,7 @@
       },
       "requireAssigneeForTask": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Görevli akışta en az bir kullanıcı atanmalıdır.",
           "effect": "Görevli akışta en az bir kullanıcı atanmalıdır.",
           "affects": [
             "Görev oluşturma",
@@ -1769,7 +1775,7 @@
           "scenario": "Personel seçilmeden emir serbest bırakılamaz."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Görev kullanıcı atanmadan havuza bırakılabilir.",
           "effect": "Görev kullanıcı atanmadan havuza bırakılabilir.",
           "affects": [
             "Görev havuzu"
@@ -1779,7 +1785,7 @@
       },
       "allowMultipleAssignees": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Aynı görev birden fazla kullanıcı/ekibe atanabilir.",
           "effect": "Aynı görev birden fazla kullanıcı/ekibe atanabilir.",
           "affects": [
             "Görev atama",
@@ -1788,7 +1794,7 @@
           "scenario": "Büyük sipariş iki depocu tarafından paralel toplanır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Görev yalnız tek sorumluya atanabilir.",
           "effect": "Görev yalnız tek sorumluya atanabilir.",
           "affects": [
             "Görev atama"
@@ -1798,7 +1804,7 @@
       },
       "autoReleaseTaskBased": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Geçerli görevli emir kaydedilince otomatik serbest bırakılır.",
           "effect": "Geçerli görevli emir kaydedilince otomatik serbest bırakılır.",
           "affects": [
             "Görev yayını"
@@ -1806,7 +1812,7 @@
           "scenario": "Atama tamamlanır tamamlanmaz görev personelin listesine düşer."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Görev ayrıca serbest bırakma işlemine ihtiyaç duyar.",
           "effect": "Görev ayrıca serbest bırakma işlemine ihtiyaç duyar.",
           "affects": [
             "Görev durumu"
@@ -1816,7 +1822,7 @@
       },
       "allowPartialPicking": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Toplama oturumu plan miktarının altında kapatılabilir.",
           "effect": "Toplama oturumu plan miktarının altında kapatılabilir.",
           "affects": [
             "Toplama",
@@ -1825,7 +1831,7 @@
           "scenario": "10 AD’den 6 AD toplanır ve oturum kısmi kapatılır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Toplama tamamlanmak için tüm miktarı bekler.",
           "effect": "Toplama tamamlanmak için tüm miktarı bekler.",
           "affects": [
             "Toplama tamamlama"
@@ -1835,7 +1841,7 @@
       },
       "requireSourceLocation": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Her satırda kaynak raf seçimi veya barkod doğrulaması gerekir.",
           "effect": "Her satırda kaynak raf seçimi veya barkod doğrulaması gerekir.",
           "affects": [
             "Toplama",
@@ -1844,7 +1850,7 @@
           "scenario": "Stok doğru olsa bile yanlış raf barkodu reddedilir."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Kaynak raf satırda zorunlu değildir; sistem uygun bakiyeden çözebilir.",
           "effect": "Kaynak raf satırda zorunlu değildir; sistem uygun bakiyeden çözebilir.",
           "affects": [
             "Toplama"
@@ -1854,7 +1860,7 @@
       },
       "requireShipmentInformation": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Araç, sürücü veya taşıma bilgileri girilmeden çıkış tamamlanamaz.",
           "effect": "Araç, sürücü veya taşıma bilgileri girilmeden çıkış tamamlanamaz.",
           "affects": [
             "Yükleme",
@@ -1863,7 +1869,7 @@
           "scenario": "Plaka eksikken sevki tamamla işlemi engellenir."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Taşıma bilgileri isteğe bağlıdır.",
           "effect": "Taşıma bilgileri isteğe bağlıdır.",
           "affects": [
             "Yükleme"
@@ -1901,7 +1907,7 @@
       },
       "allowPartialShipment": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Kaynak depodan emrin bir kısmı sevk edilebilir.",
           "effect": "Kaynak depodan emrin bir kısmı sevk edilebilir.",
           "affects": [
             "Transfer sevki",
@@ -1910,7 +1916,7 @@
           "scenario": "100 AD transferin 60 AD’si ilk araçla çıkar."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Kaynak sevki tüm plan miktarını bekler.",
           "effect": "Kaynak sevki tüm plan miktarını bekler.",
           "affects": [
             "Transfer sevki"
@@ -1920,7 +1926,7 @@
       },
       "allowPartialReceipt": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Hedef depo gelen miktarı kısmi kabul edebilir.",
           "effect": "Hedef depo gelen miktarı kısmi kabul edebilir.",
           "affects": [
             "Transfer kabulü"
@@ -1928,7 +1934,7 @@
           "scenario": "İlk araçtaki 60 AD kabul edilir, 40 AD transit kalır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Hedef kabul bütün sevk miktarını bekler.",
           "effect": "Hedef kabul bütün sevk miktarını bekler.",
           "affects": [
             "Transfer kabulü"
@@ -1938,7 +1944,7 @@
       },
       "requireDestinationAcceptance": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Kaynak çıkışından sonra hedef kullanıcının ayrı kabul onayı gerekir.",
           "effect": "Kaynak çıkışından sonra hedef kullanıcının ayrı kabul onayı gerekir.",
           "affects": [
             "Transit stok",
@@ -1947,7 +1953,7 @@
           "scenario": "Stok yoldadır; hedef depocu teslim al deyince hedef bakiyeye geçer."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Kaynak çıkışı hedef bakiyeyi doğrudan güncelleyebilir.",
           "effect": "Kaynak çıkışı hedef bakiyeyi doğrudan güncelleyebilir.",
           "affects": [
             "Transfer tamamlama"
@@ -1957,7 +1963,7 @@
       },
       "createTransitInventory": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Kaynak çıkış ve hedef kabul arasında transit bakiye tutulur.",
           "effect": "Kaynak çıkış ve hedef kabul arasında transit bakiye tutulur.",
           "affects": [
             "Transit stok",
@@ -1966,7 +1972,7 @@
           "scenario": "Araçtaki 100 AD kaynakta yok, hedefte yok; transit olarak görünür."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Ayrı transit stok statüsü oluşturulmaz.",
           "effect": "Ayrı transit stok statüsü oluşturulmaz.",
           "affects": [
             "Depo bakiyesi"
@@ -1976,7 +1982,7 @@
       },
       "requirePutaway": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Hedef kabul sonrası raflama görevi tamamlanmalıdır.",
           "effect": "Hedef kabul sonrası raflama görevi tamamlanmalıdır.",
           "affects": [
             "Raflama",
@@ -1985,7 +1991,7 @@
           "scenario": "Kabul alanındaki ürün hedef rafa okutulmadan süreç kapanmaz."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Hedef kabul seçilen rafa doğrudan bakiye yazabilir.",
           "effect": "Hedef kabul seçilen rafa doğrudan bakiye yazabilir.",
           "affects": [
             "Hedef raf bakiyesi"
@@ -1995,7 +2001,7 @@
       },
       "requireTargetLocation": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Transfer satırında hedef raf zorunludur.",
           "effect": "Transfer satırında hedef raf zorunludur.",
           "affects": [
             "Emir oluşturma",
@@ -2004,7 +2010,7 @@
           "scenario": "Hedef raf seçilmeden satır kaydedilemez."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Hedef raf kabul/raflama aşamasında belirlenebilir.",
           "effect": "Hedef raf kabul/raflama aşamasında belirlenebilir.",
           "affects": [
             "Hedef kabul"
@@ -2136,7 +2142,7 @@
       },
       "autoCreateInspectionOnReceipt": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Kalite kuralına uyan mal kabul satırı için inceleme otomatik açılır.",
           "effect": "Kalite kuralına uyan mal kabul satırı için inceleme otomatik açılır.",
           "affects": [
             "Mal kabul tamamlama",
@@ -2145,7 +2151,7 @@
           "scenario": "Kalite zorunlu stok kabul edilince operatör ayrıca kayıt açmaz."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "İnceleme yetkili kullanıcı tarafından manuel açılır.",
           "effect": "İnceleme yetkili kullanıcı tarafından manuel açılır.",
           "affects": [
             "Kalite listesi"
@@ -2155,7 +2161,7 @@
       },
       "holdInventoryUntilDecision": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Kalite kararı gelene kadar stok kullanılamaz.",
           "effect": "Kalite kararı gelene kadar stok kullanılamaz.",
           "affects": [
             "Kullanılabilir bakiye",
@@ -2164,7 +2170,7 @@
           "scenario": "Rafında görünen parti sevk emrine seçilemez."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Kalite kaydı stok kullanılabilirliğini tek başına bloke etmez.",
           "effect": "Kalite kaydı stok kullanılabilirliğini tek başına bloke etmez.",
           "affects": [
             "Kullanılabilir bakiye"
@@ -2174,7 +2180,7 @@
       },
       "blockPutawayUntilDecision": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Kalite bekleyen ürün nihai rafa taşınamaz.",
           "effect": "Kalite bekleyen ürün nihai rafa taşınamaz.",
           "affects": [
             "Raflama görevi"
@@ -2182,7 +2188,7 @@
           "scenario": "Ürün kalite alanında bekler; karar sonrası normal rafa gider."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Kalite beklerken fiziksel raflama yapılabilir.",
           "effect": "Kalite beklerken fiziksel raflama yapılabilir.",
           "affects": [
             "Raflama"
@@ -2192,7 +2198,7 @@
       },
       "blockErpPostingUntilDecision": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Kalite kararı tamamlanmadan ERP irsaliyesi gönderilmez.",
           "effect": "Kalite kararı tamamlanmadan ERP irsaliyesi gönderilmez.",
           "affects": [
             "ERP alış irsaliyesi"
@@ -2200,7 +2206,7 @@
           "scenario": "Passed veya Failed kararı verilince zorunlu irsaliye gönderilir."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Kalite sonucu ERP aktarımını bekletmez.",
           "effect": "Kalite sonucu ERP aktarımını bekletmez.",
           "affects": [
             "ERP aktarımı"
@@ -2210,7 +2216,7 @@
       },
       "requireManagerApprovalForRelease": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Karantinadan kullanılabilir stoğa dönüş için yönetici onayı gerekir.",
           "effect": "Karantinadan kullanılabilir stoğa dönüş için yönetici onayı gerekir.",
           "affects": [
             "Kalite serbest bırakma"
@@ -2218,7 +2224,7 @@
           "scenario": "Kalite Passed verir; müdür onaylayınca stok açılır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Yetkili kalite kullanıcısının kararı stoğu serbest bırakır.",
           "effect": "Yetkili kalite kullanıcısının kararı stoğu serbest bırakır.",
           "affects": [
             "Kalite kararı"
@@ -2228,7 +2234,7 @@
       },
       "allowPartialDecision": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Bir kalite partisinin miktarı farklı sonuçlara bölünebilir.",
           "effect": "Bir kalite partisinin miktarı farklı sonuçlara bölünebilir.",
           "affects": [
             "Kalite karar satırları",
@@ -2237,7 +2243,7 @@
           "scenario": "100 AD’nin 95’i kabul, 5’i red yapılır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Partinin tamamına tek kalite kararı verilir.",
           "effect": "Partinin tamamına tek kalite kararı verilir.",
           "affects": [
             "Kalite kararı"
@@ -2247,7 +2253,7 @@
       },
       "allowDirectReceiptWhenNoRule": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Kalite kuralı olmayan stok kalite beklemeden kabul edilir.",
           "effect": "Kalite kuralı olmayan stok kalite beklemeden kabul edilir.",
           "affects": [
             "Mal kabul",
@@ -2256,7 +2262,7 @@
           "scenario": "Kuralı olmayan sarf malzemesi doğrudan stok olur."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Kural olmasa da kalite kararı/manuel yönlendirme gerekir.",
           "effect": "Kural olmasa da kalite kararı/manuel yönlendirme gerekir.",
           "affects": [
             "Mal kabul tamamlama"
@@ -2266,7 +2272,7 @@
       },
       "blockReceiptWhenLotMissing": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Lot takipli stokta lot girilmeden kabul tamamlanamaz.",
           "effect": "Lot takipli stokta lot girilmeden kabul tamamlanamaz.",
           "affects": [
             "Mal kabul doğrulaması"
@@ -2274,7 +2280,7 @@
           "scenario": "Lot alanı boşsa kullanıcıya düzeltme hatası gösterilir."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Kalite modülü lot eksikliğini ayrıca engellemez.",
           "effect": "Kalite modülü lot eksikliğini ayrıca engellemez.",
           "affects": [
             "Mal kabul"
@@ -2284,7 +2290,7 @@
       },
       "blockReceiptWhenSerialMissing": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Seri takipli stokta gerekli seri sayısı girilmeden kabul tamamlanamaz.",
           "effect": "Seri takipli stokta gerekli seri sayısı girilmeden kabul tamamlanamaz.",
           "affects": [
             "Barkod/seri doğrulama"
@@ -2292,7 +2298,7 @@
           "scenario": "3 AD miktar kadar seri isteniyorsa üç seri okutulmalıdır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Kalite modülü seri eksikliğini ayrıca engellemez.",
           "effect": "Kalite modülü seri eksikliğini ayrıca engellemez.",
           "affects": [
             "Mal kabul"
@@ -2302,7 +2308,7 @@
       },
       "blockReceiptWhenExpiryMissing": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "SKT zorunlu stokta tarih girilmeden kabul tamamlanamaz.",
           "effect": "SKT zorunlu stokta tarih girilmeden kabul tamamlanamaz.",
           "affects": [
             "Mal kabul doğrulaması"
@@ -2310,7 +2316,7 @@
           "scenario": "Gıda lotunun son kullanma tarihi boşsa kayıt reddedilir."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Kalite modülü SKT eksikliğini ayrıca engellemez.",
           "effect": "Kalite modülü SKT eksikliğini ayrıca engellemez.",
           "affects": [
             "Mal kabul"
@@ -2322,7 +2328,7 @@
     "packing": {
       "requirePacking": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Sevk/çıkış öncesinde paket oluşturmak zorunludur.",
           "effect": "Sevk/çıkış öncesinde paket oluşturmak zorunludur.",
           "affects": [
             "Paketleme iş merkezi",
@@ -2331,7 +2337,7 @@
           "scenario": "Toplanan ürün koliye alınmadan sevk tamamlanamaz."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Paketleme adımı isteğe bağlıdır.",
           "effect": "Paketleme adımı isteğe bağlıdır.",
           "affects": [
             "Sevk tamamlama"
@@ -2341,7 +2347,7 @@
       },
       "allowPartialPacking": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Toplanan miktarın bir bölümü paketlenip açık bırakılabilir.",
           "effect": "Toplanan miktarın bir bölümü paketlenip açık bırakılabilir.",
           "affects": [
             "Paket satırları",
@@ -2350,7 +2356,7 @@
           "scenario": "100 AD’nin 60’ı ilk koli grubuna alınır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Uygun miktarın tamamı aynı paketleme oturumunda beklenir.",
           "effect": "Uygun miktarın tamamı aynı paketleme oturumunda beklenir.",
           "affects": [
             "Paket kapatma"
@@ -2360,7 +2366,7 @@
       },
       "allowMixedStock": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Aynı pakette farklı stok kodları bulunabilir.",
           "effect": "Aynı pakette farklı stok kodları bulunabilir.",
           "affects": [
             "Paket içerik doğrulaması"
@@ -2368,7 +2374,7 @@
           "scenario": "Aynı müşterinin üç farklı ürünü tek kolide toplanır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Her paket tek stok kodu taşır.",
           "effect": "Her paket tek stok kodu taşır.",
           "affects": [
             "Paket içerik doğrulaması"
@@ -2378,7 +2384,7 @@
       },
       "allowMixedLot": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Aynı stok için farklı lotlar aynı pakete alınabilir.",
           "effect": "Aynı stok için farklı lotlar aynı pakete alınabilir.",
           "affects": [
             "Lot izlenebilirliği",
@@ -2387,7 +2393,7 @@
           "scenario": "LOT-A ve LOT-B aynı palete konur."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Paket tek lotla sınırlıdır.",
           "effect": "Paket tek lotla sınırlıdır.",
           "affects": [
             "Paket içeriği"
@@ -2397,7 +2403,7 @@
       },
       "allowMixedCustomer": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Aynı paket farklı müşterilere ait satırları içerebilir.",
           "effect": "Aynı paket farklı müşterilere ait satırları içerebilir.",
           "affects": [
             "Müşteri ayrımı",
@@ -2406,7 +2412,7 @@
           "scenario": "İç transfer konsolidasyonunda çoklu müşteri paketi hazırlanır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Paket tek müşteriye ait olur.",
           "effect": "Paket tek müşteriye ait olur.",
           "affects": [
             "Paket doğrulama"
@@ -2416,7 +2422,7 @@
       },
       "requireSerialLotScan": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Seri/lot bilgisi barkodla doğrulanmadan ürün pakete eklenmez.",
           "effect": "Seri/lot bilgisi barkodla doğrulanmadan ürün pakete eklenmez.",
           "affects": [
             "Paketleme okutma",
@@ -2425,7 +2431,7 @@
           "scenario": "Serili cihazın seri barkodu okutularak kolideki kimliği doğrulanır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Takip bilgisi mevcut stok seçiminden alınabilir; ek okutma aranmaz.",
           "effect": "Takip bilgisi mevcut stok seçiminden alınabilir; ek okutma aranmaz.",
           "affects": [
             "Paketleme"
@@ -2435,7 +2441,7 @@
       },
       "requireWeight": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Paket kapanışında gerçek ağırlık zorunludur.",
           "effect": "Paket kapanışında gerçek ağırlık zorunludur.",
           "affects": [
             "Paket kapatma",
@@ -2444,7 +2450,7 @@
           "scenario": "Koli tartılmadan kapatılamaz."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Ağırlık isteğe bağlıdır.",
           "effect": "Ağırlık isteğe bağlıdır.",
           "affects": [
             "Paket kapatma"
@@ -2454,7 +2460,7 @@
       },
       "requireDimensions": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "En, boy ve yükseklik girilmeden paket kapanmaz.",
           "effect": "En, boy ve yükseklik girilmeden paket kapanmaz.",
           "affects": [
             "Paket kapatma",
@@ -2463,7 +2469,7 @@
           "scenario": "Kargo kolisinin üç ölçüsü kaydedilir."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Paket ölçüleri isteğe bağlıdır.",
           "effect": "Paket ölçüleri isteğe bağlıdır.",
           "affects": [
             "Paket kapatma"
@@ -2473,7 +2479,7 @@
       },
       "requireSscc": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Her lojistik birim geçerli SSCC taşımalıdır.",
           "effect": "Her lojistik birim geçerli SSCC taşımalıdır.",
           "affects": [
             "Paket etiketi",
@@ -2482,7 +2488,7 @@
           "scenario": "Palet kapanırken SSCC etiketi oluşturulur."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "SSCC olmadan paket kapatılabilir.",
           "effect": "SSCC olmadan paket kapatılabilir.",
           "affects": [
             "Paket etiketi"
@@ -2492,7 +2498,7 @@
       },
       "autoGenerateSscc": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "SSCC zorunluysa sistem sıradaki benzersiz numarayı üretir.",
           "effect": "SSCC zorunluysa sistem sıradaki benzersiz numarayı üretir.",
           "affects": [
             "Barkod kuralı",
@@ -2501,7 +2507,7 @@
           "scenario": "Yeni palet açıldığında kullanıcı numara yazmaz."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "SSCC kullanıcıdan/harici sistemden alınır.",
           "effect": "SSCC kullanıcıdan/harici sistemden alınır.",
           "affects": [
             "Paket oluşturma"
@@ -2511,7 +2517,7 @@
       },
       "autoPrintLabelOnClose": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Paket kapanınca etiket yazdırma işi otomatik açılır.",
           "effect": "Paket kapanınca etiket yazdırma işi otomatik açılır.",
           "affects": [
             "Yazıcı kuyruğu",
@@ -2520,7 +2526,7 @@
           "scenario": "Koli kapatılır kapatılmaz etiketi çıkar."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Etiket kullanıcı komutuyla yazdırılır.",
           "effect": "Etiket kullanıcı komutuyla yazdırılır.",
           "affects": [
             "Etiket ekranı"
@@ -2530,7 +2536,7 @@
       },
       "allowReopen": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Kapatılmış paket yetkili işlemle yeniden açılabilir.",
           "effect": "Kapatılmış paket yetkili işlemle yeniden açılabilir.",
           "affects": [
             "Paket durumu",
@@ -2539,7 +2545,7 @@
           "scenario": "Eksik ürün fark edilince paket yeniden açılır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Kapatılan paket değiştirilemez.",
           "effect": "Kapatılan paket değiştirilemez.",
           "affects": [
             "Paket durumu"
@@ -2549,7 +2555,7 @@
       },
       "allowRepack": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Paket içeriği başka pakete taşınabilir.",
           "effect": "Paket içeriği başka pakete taşınabilir.",
           "affects": [
             "Yeniden paketleme",
@@ -2558,7 +2564,7 @@
           "scenario": "Hasarlı koli içeriği yeni koliye aktarılır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Paketler arası içerik taşıma engellenir.",
           "effect": "Paketler arası içerik taşıma engellenir.",
           "affects": [
             "Paket işlemleri"
@@ -2721,7 +2727,7 @@
       },
       "sendSerialsToErp": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "WMS operasyonlarındaki seri bilgileri ERP belge satırlarına da gönderilir.",
           "effect": "WMS operasyonlarındaki seri bilgileri ERP belge satırlarına da gönderilir.",
           "affects": [
             "Mal kabul",
@@ -2731,7 +2737,7 @@
           "scenario": "Serili ürün kabulünde seri listesi Netsis irsaliyesine aktarılır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Seriler yalnız WMS içinde izlenir; ERP’ye belge miktarı gönderilir.",
           "effect": "Seriler yalnız WMS içinde izlenir; ERP’ye belge miktarı gönderilir.",
           "affects": [
             "ERP entegrasyonu",
@@ -2744,7 +2750,7 @@
     "subcontracting": {
       "requireSupplier": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Her fason giriş/çıkış belgesi bir tedarikçiye bağlanır.",
           "effect": "Her fason giriş/çıkış belgesi bir tedarikçiye bağlanır.",
           "affects": [
             "Fason emir oluşturma",
@@ -2753,7 +2759,7 @@
           "scenario": "Boyaya gönderilen malzeme seçilen fason carisiyle kaydedilir."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Tedarikçi seçimi zorunlu değildir.",
           "effect": "Tedarikçi seçimi zorunlu değildir.",
           "affects": [
             "Fason emir oluşturma"
@@ -2763,7 +2769,7 @@
       },
       "requireSubcontractOrderForReceipt": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Fason dönüş kabulü geçerli fason siparişine dayanmalıdır.",
           "effect": "Fason dönüş kabulü geçerli fason siparişine dayanmalıdır.",
           "affects": [
             "Fason giriş",
@@ -2772,7 +2778,7 @@
           "scenario": "Sipariş numarası olmayan dönüş kabul edilmez."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Siparişsiz fason dönüş kabulü mümkün olabilir.",
           "effect": "Siparişsiz fason dönüş kabulü mümkün olabilir.",
           "affects": [
             "Fason giriş"
@@ -2782,7 +2788,7 @@
       },
       "requireIssueBeforeReceipt": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Dönüş miktarı daha önce fasona gönderilmiş miktarı aşamaz.",
           "effect": "Dönüş miktarı daha önce fasona gönderilmiş miktarı aşamaz.",
           "affects": [
             "Fason giriş",
@@ -2791,7 +2797,7 @@
           "scenario": "10 AD gönderilmişse en fazla 10 AD dönüş alınır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Önceki fason çıkışı olmadan dönüş kaydı açılabilir.",
           "effect": "Önceki fason çıkışı olmadan dönüş kaydı açılabilir.",
           "affects": [
             "Fason giriş"
@@ -2801,7 +2807,7 @@
       },
       "allowOrderlessIssue": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Fason siparişi olmadan tedarikçiye malzeme çıkışı açılabilir.",
           "effect": "Fason siparişi olmadan tedarikçiye malzeme çıkışı açılabilir.",
           "affects": [
             "Fason çıkış"
@@ -2809,7 +2815,7 @@
           "scenario": "Numune işleme için siparişsiz malzeme gönderilir."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Her fason çıkışı siparişe bağlanır.",
           "effect": "Her fason çıkışı siparişe bağlanır.",
           "affects": [
             "Fason çıkış"
@@ -2819,7 +2825,7 @@
       },
       "allowOrderlessReceipt": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Sipariş olmadan fason dönüş kabulü yapılabilir.",
           "effect": "Sipariş olmadan fason dönüş kabulü yapılabilir.",
           "affects": [
             "Fason giriş"
@@ -2827,7 +2833,7 @@
           "scenario": "Eski dönem işi siparişsiz geri alınır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Fason dönüş için sipariş zorunludur.",
           "effect": "Fason dönüş için sipariş zorunludur.",
           "affects": [
             "Fason giriş"
@@ -2837,7 +2843,7 @@
       },
       "allowSupplierToSupplier": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Malzeme ana depoya dönmeden bir fasoncudan diğerine yönlendirilebilir.",
           "effect": "Malzeme ana depoya dönmeden bir fasoncudan diğerine yönlendirilebilir.",
           "affects": [
             "Fason transfer rotası"
@@ -2845,7 +2851,7 @@
           "scenario": "Boyacıdan çıkan ürün doğrudan galvanizciye gönderilir."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Fasonlar arası doğrudan transfer engellenir.",
           "effect": "Fasonlar arası doğrudan transfer engellenir.",
           "affects": [
             "Fason transfer rotası"
@@ -2855,7 +2861,7 @@
       },
       "allowPartialIssue": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Planlanan fason çıkışın bir kısmı sevk edilebilir.",
           "effect": "Planlanan fason çıkışın bir kısmı sevk edilebilir.",
           "affects": [
             "Fason çıkış",
@@ -2864,7 +2870,7 @@
           "scenario": "100 AD’nin 60 AD’si ilk araçla gönderilir."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Fason çıkış tüm miktarı bekler.",
           "effect": "Fason çıkış tüm miktarı bekler.",
           "affects": [
             "Fason çıkış"
@@ -2874,7 +2880,7 @@
       },
       "allowPartialReceipt": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Fason dönüşü parça parça kabul edilebilir.",
           "effect": "Fason dönüşü parça parça kabul edilebilir.",
           "affects": [
             "Fason giriş",
@@ -2883,7 +2889,7 @@
           "scenario": "100 AD işin 40 AD’si bugün kabul edilir."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Dönüş kabulü tüm miktarı bekler.",
           "effect": "Dönüş kabulü tüm miktarı bekler.",
           "affects": [
             "Fason giriş"
@@ -2893,7 +2899,7 @@
       },
       "requireQualityOnReceipt": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Fason dönüşü kalite kontrolüne yönlenir.",
           "effect": "Fason dönüşü kalite kontrolüne yönlenir.",
           "affects": [
             "Fason giriş",
@@ -2902,7 +2908,7 @@
           "scenario": "Kaplama dönüşü kalite onayı sonrası stoğa açılır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Fason dönüş için otomatik kalite kapısı aranmaz.",
           "effect": "Fason dönüş için otomatik kalite kapısı aranmaz.",
           "affects": [
             "Fason giriş"
@@ -2912,7 +2918,7 @@
       },
       "requireTaskAssignment": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Fason operasyon emri bir kullanıcıya atanmalıdır.",
           "effect": "Fason operasyon emri bir kullanıcıya atanmalıdır.",
           "affects": [
             "Görev havuzu",
@@ -2921,7 +2927,7 @@
           "scenario": "Depocu seçilmeden çıkış görevi yayımlanmaz."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Emir atamasız görev havuzunda ilerleyebilir.",
           "effect": "Emir atamasız görev havuzunda ilerleyebilir.",
           "affects": [
             "Görev havuzu"
@@ -2931,7 +2937,7 @@
       },
       "requireApproval": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Fason belge operasyona çıkmadan yetkili onayı gerekir.",
           "effect": "Fason belge operasyona çıkmadan yetkili onayı gerekir.",
           "affects": [
             "Emir onayı"
@@ -2939,7 +2945,7 @@
           "scenario": "Planlayıcı emri açar; amir onaylayınca depoya düşer."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Geçerli belge doğrudan operasyona alınabilir.",
           "effect": "Geçerli belge doğrudan operasyona alınabilir.",
           "affects": [
             "Emir durumu"
@@ -2949,7 +2955,7 @@
       },
       "allowOverReceipt": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Fason dönüş, tanımlı tolerans içinde gönderilenden fazla olabilir.",
           "effect": "Fason dönüş, tanımlı tolerans içinde gönderilenden fazla olabilir.",
           "affects": [
             "Fason giriş miktar kontrolü"
@@ -2957,7 +2963,7 @@
           "scenario": "Fire/ölçüm farkıyla 100 yerine 101 kg kabul edilir."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Gönderilen miktardan fazla dönüş engellenir.",
           "effect": "Gönderilen miktardan fazla dönüş engellenir.",
           "affects": [
             "Fason giriş"
@@ -3029,7 +3035,7 @@
       },
       "requireProductionOrderReference": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Transfer geçerli üretim iş emrine bağlanmalıdır.",
           "effect": "Transfer geçerli üretim iş emrine bağlanmalıdır.",
           "affects": [
             "Üretime transfer oluşturma"
@@ -3037,7 +3043,7 @@
           "scenario": "İş emri seçilmeden transfer kaydedilemez."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "İş emri olmadan plansız üretime transfer açılabilir.",
           "effect": "İş emri olmadan plansız üretime transfer açılabilir.",
           "affects": [
             "Manuel transfer"
@@ -3047,7 +3053,7 @@
       },
       "allowManualTransfer": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Plansız/manüel üretime transfer seçeneği kullanılabilir.",
           "effect": "Plansız/manüel üretime transfer seçeneği kullanılabilir.",
           "affects": [
             "Yeni üretime transfer"
@@ -3055,7 +3061,7 @@
           "scenario": "İş emri gelmeden acil malzeme üretime gönderilir."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Yalnız kaynak iş emrine dayalı transfer açılır.",
           "effect": "Yalnız kaynak iş emrine dayalı transfer açılır.",
           "affects": [
             "Yeni transfer"
@@ -3065,7 +3071,7 @@
       },
       "requireErpMasterDataForManualTransfer": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Manuel transferde stok/depo/yapı kodu ERP aynasından doğrulanır.",
           "effect": "Manuel transferde stok/depo/yapı kodu ERP aynasından doğrulanır.",
           "affects": [
             "Manuel transfer doğrulaması"
@@ -3073,7 +3079,7 @@
           "scenario": "ERP’de tanımsız stokla plansız transfer açılamaz."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Manuel transfer WMS ana verisiyle ilerleyebilir.",
           "effect": "Manuel transfer WMS ana verisiyle ilerleyebilir.",
           "affects": [
             "Manuel transfer"
@@ -3083,7 +3089,7 @@
       },
       "allowAutomaticGeneration": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Uygun kaynak emirlerden transfer otomatik üretilebilir.",
           "effect": "Uygun kaynak emirlerden transfer otomatik üretilebilir.",
           "affects": [
             "Entegrasyon işi",
@@ -3092,7 +3098,7 @@
           "scenario": "Onaylı üretim emri geldiğinde transfer taslağı oluşur."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Transfer kullanıcı tarafından başlatılır.",
           "effect": "Transfer kullanıcı tarafından başlatılır.",
           "affects": [
             "Yeni transfer"
@@ -3102,7 +3108,7 @@
       },
       "checkMaterialAvailability": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Emir açma/başlatmada kaynak stok uygunluğu kontrol edilir.",
           "effect": "Emir açma/başlatmada kaynak stok uygunluğu kontrol edilir.",
           "affects": [
             "Emir doğrulama",
@@ -3111,7 +3117,7 @@
           "scenario": "10 AD gerekli, 8 AD varsa eksik uyarısı gösterilir."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Ön stok uygunluğu kontrolü yapılmaz; kesin kontrol toplamaya kalır.",
           "effect": "Ön stok uygunluğu kontrolü yapılmaz; kesin kontrol toplamaya kalır.",
           "affects": [
             "Toplama"
@@ -3121,7 +3127,7 @@
       },
       "blockOnShortage": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Stok eksikse üretim transferi başlatılamaz.",
           "effect": "Stok eksikse üretim transferi başlatılamaz.",
           "affects": [
             "Görev başlatma"
@@ -3129,7 +3135,7 @@
           "scenario": "8/10 stokta görev bloke edilir."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Eksik stok uyarıyla kabul edilip kısmi akışa geçebilir.",
           "effect": "Eksik stok uyarıyla kabul edilip kısmi akışa geçebilir.",
           "affects": [
             "Görev başlatma",
@@ -3140,7 +3146,7 @@
       },
       "requireTaskAssignment": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Görevli akışta en az bir kullanıcı atanmalıdır.",
           "effect": "Görevli akışta en az bir kullanıcı atanmalıdır.",
           "affects": [
             "Görev oluşturma",
@@ -3149,7 +3155,7 @@
           "scenario": "Personel seçilmeden emir serbest bırakılamaz."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Görev kullanıcı atanmadan havuza bırakılabilir.",
           "effect": "Görev kullanıcı atanmadan havuza bırakılabilir.",
           "affects": [
             "Görev havuzu"
@@ -3159,7 +3165,7 @@
       },
       "requireSourceProductionLocation": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Toplamada üretim kaynak rafı barkodla doğrulanır.",
           "effect": "Toplamada üretim kaynak rafı barkodla doğrulanır.",
           "affects": [
             "Toplama",
@@ -3168,7 +3174,7 @@
           "scenario": "Doğru stok yanlış raftan okutulursa reddedilir."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Kaynak raf zorunluluğu uygulanmaz.",
           "effect": "Kaynak raf zorunluluğu uygulanmaz.",
           "affects": [
             "Toplama"
@@ -3178,7 +3184,7 @@
       },
       "requireTargetProductionLocation": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Üretim alanındaki hedef raf tanımlı olmalıdır.",
           "effect": "Üretim alanındaki hedef raf tanımlı olmalıdır.",
           "affects": [
             "Teslim/transfer onayı",
@@ -3187,7 +3193,7 @@
           "scenario": "Malzeme üretim staging rafına atanır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Hedef raf seçimi zorunlu değildir.",
           "effect": "Hedef raf seçimi zorunlu değildir.",
           "affects": [
             "Transfer tamamlama"
@@ -3197,7 +3203,7 @@
       },
       "allowPartialSupply": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Talebin bir kısmı üretime teslim edilip kalan için yeni iş emri açılabilir.",
           "effect": "Talebin bir kısmı üretime teslim edilip kalan için yeni iş emri açılabilir.",
           "affects": [
             "Transfer onayı",
@@ -3206,7 +3212,7 @@
           "scenario": "10 AD talebin 8 AD’si teslim edilir; 2 AD için devam emri oluşur."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Transfer onayı tüm talep miktarını bekler.",
           "effect": "Transfer onayı tüm talep miktarını bekler.",
           "affects": [
             "Transfer onayı"
@@ -3216,7 +3222,7 @@
       },
       "allowOverIssue": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Üretime plan üstü çıkış tolerans içinde yapılabilir.",
           "effect": "Üretime plan üstü çıkış tolerans içinde yapılabilir.",
           "affects": [
             "Toplama miktarı",
@@ -3225,7 +3231,7 @@
           "scenario": "100 kg talebe 101 kg toleransla verilir."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Talep miktarından fazla çıkış engellenir.",
           "effect": "Talep miktarından fazla çıkış engellenir.",
           "affects": [
             "Barkod okutma"
@@ -3245,7 +3251,7 @@
       },
       "requireApproval": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Üretime teslim alan kişi/amir son transfer onayı verir.",
           "effect": "Üretime teslim alan kişi/amir son transfer onayı verir.",
           "affects": [
             "İkinci adım transfer onayı"
@@ -3253,7 +3259,7 @@
           "scenario": "Depocu toplar; üretim sorumlusu fiziksel teslim alınca onaylar."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Toplama tamamlanınca transfer otomatik tamamlanabilir.",
           "effect": "Toplama tamamlanınca transfer otomatik tamamlanabilir.",
           "affects": [
             "Transfer durumu"
@@ -3294,7 +3300,7 @@
     "kkd": {
       "enableMaterialRequestOrderFlow": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Personel malzeme talepleri Netsis açık siparişleriyle çalışır.",
           "effect": "Personel malzeme talepleri Netsis açık siparişleriyle çalışır.",
           "affects": [
             "KKD dağıtım",
@@ -3303,7 +3309,7 @@
           "scenario": "Personelin carisine ait açık sipariş kalemleri seçilir."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Sipariş kaynaklı malzeme talep kanalı kapalıdır.",
           "effect": "Sipariş kaynaklı malzeme talep kanalı kapalıdır.",
           "affects": [
             "KKD dağıtım"
@@ -3313,7 +3319,7 @@
       },
       "requireOpenOrder": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Dağıtım için açık Netsis siparişi zorunludur.",
           "effect": "Dağıtım için açık Netsis siparişi zorunludur.",
           "affects": [
             "Yeni KKD dağıtımı"
@@ -3321,7 +3327,7 @@
           "scenario": "Açık siparişi olmayan personele belge açılamaz."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Hak varsa siparişsiz KKD dağıtımı yapılabilir.",
           "effect": "Hak varsa siparişsiz KKD dağıtımı yapılabilir.",
           "affects": [
             "Yeni dağıtım"
@@ -3331,7 +3337,7 @@
       },
       "allowMultipleOrdersPerDistribution": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Tek dağıtım farklı siparişlerden kalem içerebilir.",
           "effect": "Tek dağıtım farklı siparişlerden kalem içerebilir.",
           "affects": [
             "KKD dağıtım satırları"
@@ -3339,7 +3345,7 @@
           "scenario": "Ayakkabı ve baret iki siparişten aynı teslimde verilir."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Bir dağıtım tek siparişe bağlıdır.",
           "effect": "Bir dağıtım tek siparişe bağlıdır.",
           "affects": [
             "KKD dağıtımı"
@@ -3349,7 +3355,7 @@
       },
       "allowOpenOrderExcess": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Açık sipariş varsa hak matrisinin üstünde teslim mümkün olabilir.",
           "effect": "Açık sipariş varsa hak matrisinin üstünde teslim mümkün olabilir.",
           "affects": [
             "Hak kontrolü",
@@ -3358,7 +3364,7 @@
           "scenario": "Yıllık hakkı biten personele açık siparişten ek ürün verilir."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Teslim hesaplanan hak miktarını aşamaz.",
           "effect": "Teslim hesaplanan hak miktarını aşamaz.",
           "affects": [
             "Hak sorgulama"
@@ -3368,7 +3374,7 @@
       },
       "requireManagerApprovalForExcess": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Hak üstü teslim yönetici onayı olmadan ambar çıkışına dönüşmez.",
           "effect": "Hak üstü teslim yönetici onayı olmadan ambar çıkışına dönüşmez.",
           "affects": [
             "KKD onayı",
@@ -3377,7 +3383,7 @@
           "scenario": "Fazla baret talebi müdür onayına düşer."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Yetkili operatör izin verilen fazlayı ek onaysız tamamlayabilir.",
           "effect": "Yetkili operatör izin verilen fazlayı ek onaysız tamamlayabilir.",
           "affects": [
             "KKD dağıtımı"
@@ -3387,7 +3393,7 @@
       },
       "requireEmployeeUserLink": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Personel kartı aktif WMS kullanıcısına bağlı olmalıdır.",
           "effect": "Personel kartı aktif WMS kullanıcısına bağlı olmalıdır.",
           "affects": [
             "Personel doğrulama",
@@ -3396,7 +3402,7 @@
           "scenario": "Kullanıcı bağlantısı olmayan personele teslim engellenir."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "WMS hesabı olmayan personele de kayıt açılabilir.",
           "effect": "WMS hesabı olmayan personele de kayıt açılabilir.",
           "affects": [
             "KKD dağıtımı"
@@ -3406,7 +3412,7 @@
       },
       "allowFutureDatedDistribution": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "İleri tarihli planlı KKD dağıtımı kaydedilebilir.",
           "effect": "İleri tarihli planlı KKD dağıtımı kaydedilebilir.",
           "affects": [
             "Belge tarihi",
@@ -3415,7 +3421,7 @@
           "scenario": "Gelecek hafta başlayacak personelin teslimi planlanır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Belge tarihi bugünden ileri olamaz.",
           "effect": "Belge tarihi bugünden ileri olamaz.",
           "affects": [
             "Yeni dağıtım"
@@ -3427,7 +3433,7 @@
     "procurement": {
       "allowMultipleRfqsPerRequest": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Aynı talepten birden fazla teklif turu açılabilir.",
           "effect": "Aynı talepten birden fazla teklif turu açılabilir.",
           "affects": [
             "Teklif talebi oluşturma",
@@ -3436,7 +3442,7 @@
           "scenario": "İlk tur pahalı bulunur; aynı talep için ikinci tedarikçi turu açılır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Talep tek aktif teklif turuyla sınırlandırılır.",
           "effect": "Talep tek aktif teklif turuyla sınırlandırılır.",
           "affects": [
             "Teklif talebi"
@@ -3446,7 +3452,7 @@
       },
       "allowPartialRfqLines": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Talebin seçilen kalem/miktarı fiyatlamaya çıkarılabilir.",
           "effect": "Talebin seçilen kalem/miktarı fiyatlamaya çıkarılabilir.",
           "affects": [
             "RFQ satırları",
@@ -3455,7 +3461,7 @@
           "scenario": "10 kalemlik talebin yalnız acil 3 kalemi RFQ’ya alınır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Talebin tüm açık kalemleri birlikte RFQ’ya alınır.",
           "effect": "Talebin tüm açık kalemleri birlikte RFQ’ya alınır.",
           "affects": [
             "RFQ oluşturma"
@@ -3465,7 +3471,7 @@
       },
       "allowMultipleQuotesPerSupplier": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Aynı tedarikçi aynı tur için birden fazla teklif kaydı sunabilir.",
           "effect": "Aynı tedarikçi aynı tur için birden fazla teklif kaydı sunabilir.",
           "affects": [
             "Teklif kayıtları"
@@ -3473,7 +3479,7 @@
           "scenario": "Tedarikçi alternatif marka için ikinci teklif verir."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Tedarikçi başına tek teklif kaydı tutulur.",
           "effect": "Tedarikçi başına tek teklif kaydı tutulur.",
           "affects": [
             "Teklif girişi"
@@ -3483,7 +3489,7 @@
       },
       "allowSplitAwardsAcrossSuppliers": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Talep kalemleri/miktarları farklı tedarikçilere bölünebilir.",
           "effect": "Talep kalemleri/miktarları farklı tedarikçilere bölünebilir.",
           "affects": [
             "Teklif karşılaştırma",
@@ -3492,7 +3498,7 @@
           "scenario": "5 kalem A firmasına, 3 kalem B firmasına verilir."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Ödül tek tedarikçide bütün olarak sonuçlanır.",
           "effect": "Ödül tek tedarikçide bütün olarak sonuçlanır.",
           "affects": [
             "Teklif onayı"
@@ -3502,7 +3508,7 @@
       },
       "allowPartialOrderLines": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Teklifin seçilen miktarı siparişe dönüştürülebilir.",
           "effect": "Teklifin seçilen miktarı siparişe dönüştürülebilir.",
           "affects": [
             "Satınalma siparişi",
@@ -3511,7 +3517,7 @@
           "scenario": "100 AD teklifin 60 AD’si sipariş edilir."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Teklif satırı tam miktarla siparişe dönüşür.",
           "effect": "Teklif satırı tam miktarla siparişe dönüşür.",
           "affects": [
             "Sipariş oluşturma"
@@ -3521,7 +3527,7 @@
       },
       "allowMultipleOrdersPerQuote": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Aynı tekliften birden fazla sipariş oluşturulabilir.",
           "effect": "Aynı tekliften birden fazla sipariş oluşturulabilir.",
           "affects": [
             "Teklif-sipariş zinciri"
@@ -3529,7 +3535,7 @@
           "scenario": "60 AD bugün, kalan 40 AD sonraki siparişte açılır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Teklif tek siparişe dönüşür.",
           "effect": "Teklif tek siparişe dönüşür.",
           "affects": [
             "Sipariş oluşturma"
@@ -3539,7 +3545,7 @@
       },
       "allowSupplierQuantityChange": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Tedarikçi talep edilenden farklı miktar önerebilir.",
           "effect": "Tedarikçi talep edilenden farklı miktar önerebilir.",
           "affects": [
             "Portal teklif satırları"
@@ -3547,7 +3553,7 @@
           "scenario": "100 istenen ürün için minimum paket nedeniyle 120 teklif edilir."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Teklif miktarı talep miktarıyla aynı kalır.",
           "effect": "Teklif miktarı talep miktarıyla aynı kalır.",
           "affects": [
             "Teklif girişi"
@@ -3557,7 +3563,7 @@
       },
       "allowZeroUnitPrice": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Bedelsiz/numune kaleminde sıfır fiyat kabul edilir.",
           "effect": "Bedelsiz/numune kaleminde sıfır fiyat kabul edilir.",
           "affects": [
             "Teklif doğrulama"
@@ -3565,7 +3571,7 @@
           "scenario": "Numune ürün 0 TL ile gönderilir."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Her teklif kaleminde pozitif fiyat gerekir.",
           "effect": "Her teklif kaleminde pozitif fiyat gerekir.",
           "affects": [
             "Teklif gönderme"
@@ -3575,7 +3581,7 @@
       },
       "requireSupplierDeliveryDate": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Her teklif kaleminde termin tarihi zorunludur.",
           "effect": "Her teklif kaleminde termin tarihi zorunludur.",
           "affects": [
             "Teklif gönderme",
@@ -3584,7 +3590,7 @@
           "scenario": "Termin boşsa tedarikçi teklifi gönderemez."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Termin tarihi isteğe bağlıdır.",
           "effect": "Termin tarihi isteğe bağlıdır.",
           "affects": [
             "Teklif girişi"
@@ -3594,7 +3600,7 @@
       },
       "allowSupplierRevisions": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Gönderilmiş teklif için revizyon turu açılabilir.",
           "effect": "Gönderilmiş teklif için revizyon turu açılabilir.",
           "affects": [
             "Tedarikçi portalı",
@@ -3603,7 +3609,7 @@
           "scenario": "Satınalma fiyat revizyonu ister; tedarikçi yeni sürüm gönderir."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Gönderilen teklif değiştirilemez.",
           "effect": "Gönderilen teklif değiştirilemez.",
           "affects": [
             "Teklif durumu"
@@ -3661,7 +3667,7 @@
       },
       "allowSupplierDraftSave": {
         "true": {
-          "summary": "Bu kontrol etkin ve yeni işlemlerde uygulanır.",
+          "summary": "Tedarikçi teklifi göndermeden ara kayıt yapabilir.",
           "effect": "Tedarikçi teklifi göndermeden ara kayıt yapabilir.",
           "affects": [
             "Tedarikçi portalı"
@@ -3669,7 +3675,7 @@
           "scenario": "Çok kalemli teklif bugün kaydedilip yarın tamamlanır."
         },
         "false": {
-          "summary": "Bu kontrol kapalı; ilgili zorunluluk uygulanmaz.",
+          "summary": "Portal girişi tek oturumda gönderilmelidir.",
           "effect": "Portal girişi tek oturumda gönderilmelidir.",
           "affects": [
             "Tedarikçi portalı"

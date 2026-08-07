@@ -1,11 +1,12 @@
 {
   "labels": {
-    "current": "Derzeit: {{value}}.",
-    "details": "Wirkung, Umfang und Beispiel",
-    "effect": "Was bewirkt diese Auswahl im System?",
-    "affects": "Welche Ansichten und Vorgänge sind betroffen?",
-    "scenario": "Praxisbeispiel",
-    "warning": "Wichtiger Hinweis",
+    "current": "Ausgewählter Wert: {{value}}",
+    "shortResult": "Das geschieht:",
+    "details": "Einfache Erklärung und Beispiel anzeigen",
+    "effect": "1. Was geschieht, wenn Sie diese Option wählen?",
+    "affects": "3. Welche Ansichten und Vorgänge ändern sich?",
+    "scenario": "2. Praxisbeispiel: Wie läuft der Vorgang ab?",
+    "warning": "4. Achtung: Was kann bei einer falschen Auswahl passieren?",
     "enabled": "Aktiviert",
     "disabled": "Deaktiviert",
     "noPrefix": "Kein Präfix"
@@ -15,6 +16,11 @@
     "days_other": "{{value}} Tage",
     "revisions_one": "{{value}} Überarbeitung",
     "revisions_other": "{{value}} Überarbeitung"
+  },
+  "instructions": {
+    "checkValue": "Prüfen Sie zuerst den ausgewählten Wert.",
+    "readResult": "Lesen Sie direkt darunter das Ergebnis unter ‘Das geschieht’.",
+    "openExample": "Wenn Sie unsicher sind, öffnen Sie die Erklärung und lesen Sie das Praxisbeispiel."
   },
   "pages": {
     "default": {
@@ -232,7 +238,7 @@
       },
       "allowUnderReceipt": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Das Dokument kann durch Annahme eines Teils des Bestellbetrags offen gelassen werden.",
           "effect": "Das Dokument kann durch Annahme eines Teils des Bestellbetrags offen gelassen werden.",
           "affects": [
             "Bestellung angenommen",
@@ -241,7 +247,7 @@
           "scenario": "60 n. Chr. ab 100 n. Chr.-Reihenfolge; 60 wird angenommen, 40 bleibt offen."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Die Bestellposition kann mit der fehlenden Menge nicht normal vervollständigt werden.",
           "effect": "Die Bestellposition kann mit der fehlenden Menge nicht normal vervollständigt werden.",
           "affects": [
             "Bestellung angenommen"
@@ -251,7 +257,7 @@
       },
       "requireShortCloseApproval": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Zur Deckung der verbleibenden Bestellmenge ist die Genehmigung des Administrators erforderlich.",
           "effect": "Zur Deckung der verbleibenden Bestellmenge ist die Genehmigung des Administrators erforderlich.",
           "affects": [
             "Kurze Schließung",
@@ -260,7 +266,7 @@
           "scenario": "Wenn die restlichen 40 nach 60/100-Annahme gestrichen werden, ist die Zustimmung des Vorgesetzten einzuholen."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Der autorisierte Betreiber kann die fehlende Zeile ohne zusätzliche Genehmigung schließen.",
           "effect": "Der autorisierte Betreiber kann die fehlende Zeile ohne zusätzliche Genehmigung schließen.",
           "affects": [
             "Kurzschluss"
@@ -270,7 +276,7 @@
       },
       "requireReceiptApproval": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Nach der physischen Annahme wird eine separate Warenannahmebestätigung erstellt.",
           "effect": "Nach der physischen Annahme wird eine separate Warenannahmebestätigung erstellt.",
           "affects": [
             "Akzeptanzstatus",
@@ -280,7 +286,7 @@
           "scenario": "Der Lagerist beendet die Annahme; Der Vorgang ist erst abgeschlossen, wenn der Vorgesetzte „Genehmigen“ sagt."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Der Abschluss der Warenannahme durch den Betreiber stellt eine Annahmebestätigung dar.",
           "effect": "Der Abschluss der Warenannahme durch den Betreiber stellt eine Annahmebestätigung dar.",
           "affects": [
             "Akzeptanzstatus"
@@ -290,7 +296,7 @@
       },
       "requireQualityApproval": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Bei Beständen, für die ein Qualitätsplan erstellt wurde, wird der Prozess erst nach Abschluss der Entscheidung freigegeben.",
           "effect": "Bei Beständen, für die ein Qualitätsplan erstellt wurde, wird der Prozess erst nach Abschluss der Entscheidung freigegeben.",
           "affects": [
             "Qualitätsüberprüfung",
@@ -299,7 +305,7 @@
           "scenario": "Die Charge, die in die Qualität geht, wird bis zur Fertigstellung in Quarantäne gehalten."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Wenn es keine Qualitätsregel gibt, ist keine gesonderte Qualitätsgenehmigung erforderlich.",
           "effect": "Wenn es keine Qualitätsregel gibt, ist keine gesonderte Qualitätsgenehmigung erforderlich.",
           "affects": [
             "Tor der Qualität"
@@ -309,7 +315,7 @@
       },
       "requireErpApproval": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Vor der ERP-Übermittlung ist die Genehmigung eines autorisierten Benutzers erforderlich.",
           "effect": "Vor der ERP-Übermittlung ist die Genehmigung eines autorisierten Benutzers erforderlich.",
           "affects": [
             "ERP-Übertragungswarteschlange",
@@ -318,7 +324,7 @@
           "scenario": "Lieferschein ist fertig; Sobald der ERP-Verantwortliche die Genehmigung erteilt, wird es an Netsis gesendet."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Sobald die anderen Türen abgeschlossen sind, kann die ERP-Einreichung automatisch fortgesetzt werden.",
           "effect": "Sobald die anderen Türen abgeschlossen sind, kann die ERP-Einreichung automatisch fortgesetzt werden.",
           "affects": [
             "ERP-Übertragungswarteschlange"
@@ -328,7 +334,7 @@
       },
       "holdInventoryUntilQualityDecision": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Die noch ausstehende Qualitätsmenge wird aus dem verfügbaren Bestand zugewiesen.",
           "effect": "Die noch ausstehende Qualitätsmenge wird aus dem verfügbaren Bestand zugewiesen.",
           "affects": [
             "Regalbilanzstatus",
@@ -337,7 +343,7 @@
           "scenario": "100 AD befindet sich im physischen Regal, kann aber erst dann dem Versandauftrag zugeordnet werden, wenn die Qualität abgeschlossen ist."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Eine Qualitätsprüfung allein blockiert die Lagerverfügbarkeit nicht.",
           "effect": "Eine Qualitätsprüfung allein blockiert die Lagerverfügbarkeit nicht.",
           "affects": [
             "Verfügbares Guthaben"
@@ -347,7 +353,7 @@
       },
       "blockPutawayUntilQualityDecision": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Das Produkt wartet auf Qualität und kann nicht in das endgültige Regal gestellt werden.",
           "effect": "Das Produkt wartet auf Qualität und kann nicht in das endgültige Regal gestellt werden.",
           "affects": [
             "Regalaufgabe",
@@ -356,7 +362,7 @@
           "scenario": "Das Produkt wartet im Annahme-/Quarantäneregal; Nach bestanden wird das Ziel auf das Regal gelegt."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Das physische Regalieren kann durchgeführt werden, während auf das Qualitätsergebnis gewartet wird.",
           "effect": "Das physische Regalieren kann durchgeführt werden, während auf das Qualitätsergebnis gewartet wird.",
           "affects": [
             "Regalaufgabe"
@@ -366,7 +372,7 @@
       },
       "allowOrderlessReceipt": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Die Annahme kann mit Lieferschein und Lagerartikel ohne Bestellung eröffnet werden.",
           "effect": "Die Annahme kann mit Lieferschein und Lagerartikel ohne Bestellung eröffnet werden.",
           "affects": [
             "Warenannahme ohne Bestellung"
@@ -374,7 +380,7 @@
           "scenario": "Dringende Materialien werden ohne Bestelllink angenommen."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Jede Warenannahme muss mit einer gültigen Bestellung verbunden sein.",
           "effect": "Jede Warenannahme muss mit einer gültigen Bestellung verbunden sein.",
           "affects": [
             "Neue Warenannahme beginnt"
@@ -384,7 +390,7 @@
       },
       "allowUnplannedReceipt": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Eine direkte physische Annahme ist ohne vorherige Auftragseröffnung möglich.",
           "effect": "Eine direkte physische Annahme ist ohne vorherige Auftragseröffnung möglich.",
           "affects": [
             "Direktannahme",
@@ -393,7 +399,7 @@
           "scenario": "Für das an der Tür ankommende Fahrzeug wird ein sofortiger Einlass eingeleitet."
         },
         "false": {
-          "summary": "Diese Steuerung ist ausgeschaltet; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Vor der physischen Annahme ist ein Auftrag/Auftrag zur Warenannahme erforderlich.",
           "effect": "Vor der physischen Annahme ist ein Auftrag/Auftrag zur Warenannahme erforderlich.",
           "affects": [
             "Wareneingangszölle"
@@ -403,7 +409,7 @@
       },
       "showAllocatedOpenOrderLines": {
         "true": {
-          "summary": "Diese Kontrolle wird auf aktive und neue Transaktionen angewendet.",
+          "summary": "Auftragspositionen, die für andere offene WMS-Akzeptanz reserviert sind, werden mit der Warnung aufgeführt.",
           "effect": "Auftragspositionen, die für andere offene WMS-Akzeptanz reserviert sind, werden mit der Warnung aufgeführt.",
           "affects": [
             "Netsis-Auftragsauswahl"
@@ -411,7 +417,7 @@
           "scenario": "Befindet sich die gleiche Bestellposition in einer anderen Bestellung, sieht der Benutzer dies, die Duplikatmengenkontrolle läuft jedoch weiter."
         },
         "false": {
-          "summary": "Diese Steuerung ist ausgeschaltet; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Für die weitere WMS-Übernahme reservierte Zeilen werden in der Auftragsauswahl ausgeblendet.",
           "effect": "Für die weitere WMS-Übernahme reservierte Zeilen werden in der Auftragsauswahl ausgeblendet.",
           "affects": [
             "Netsis-Auftragsauswahl"
@@ -604,7 +610,7 @@
       },
       "allowUnderReceipt": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Das Dokument kann geöffnet bleiben, indem ein Teil des Bestellbetrags akzeptiert wird.",
           "effect": "Das Dokument kann geöffnet bleiben, indem ein Teil des Bestellbetrags akzeptiert wird.",
           "affects": [
             "Bestellung angenommen",
@@ -613,7 +619,7 @@
           "scenario": "60 n. Chr. stammt aus der 100 n. Chr.-Reihenfolge; 60 wird angenommen, 40 bleibt offen."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Die Bestellposition kann mit der fehlenden Menge nicht normal vervollständigt werden.",
           "effect": "Die Bestellposition kann mit der fehlenden Menge nicht normal vervollständigt werden.",
           "affects": [
             "Bestellung angenommen"
@@ -623,7 +629,7 @@
       },
       "requireShortCloseApproval": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Zur Deckung der verbleibenden Bestellmenge ist die Genehmigung des Administrators erforderlich.",
           "effect": "Zur Deckung der verbleibenden Bestellmenge ist die Genehmigung des Administrators erforderlich.",
           "affects": [
             "Kurze Schließung",
@@ -632,7 +638,7 @@
           "scenario": "Wenn die restlichen 40 nach 60/100-Annahme gestrichen werden, ist die Zustimmung des Vorgesetzten einzuholen."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Der autorisierte Bediener kann die fehlende Zeile ohne zusätzliche Bestätigung schließen.",
           "effect": "Der autorisierte Bediener kann die fehlende Zeile ohne zusätzliche Bestätigung schließen.",
           "affects": [
             "Kurzschluss"
@@ -642,7 +648,7 @@
       },
       "requireReceiptApproval": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Nach der physischen Annahme wird eine separate Warenannahmebestätigung erstellt.",
           "effect": "Nach der physischen Annahme wird eine separate Warenannahmebestätigung erstellt.",
           "affects": [
             "Akzeptanzstatus",
@@ -652,7 +658,7 @@
           "scenario": "Der Lagerist beendet die Annahme; Der Vorgang ist erst abgeschlossen, wenn der Vorgesetzte „Genehmigen“ sagt."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Der Abschluss der Warenannahme durch den Betreiber stellt eine Annahmebestätigung dar.",
           "effect": "Der Abschluss der Warenannahme durch den Betreiber stellt eine Annahmebestätigung dar.",
           "affects": [
             "Akzeptanzstatus"
@@ -662,7 +668,7 @@
       },
       "requireQualityApproval": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Bei Beständen, für die ein Qualitätsplan erstellt wurde, wird der Prozess erst nach Abschluss der Entscheidung freigegeben.",
           "effect": "Bei Beständen, für die ein Qualitätsplan erstellt wurde, wird der Prozess erst nach Abschluss der Entscheidung freigegeben.",
           "affects": [
             "Qualitätsüberprüfung",
@@ -671,7 +677,7 @@
           "scenario": "Die Charge, die in die Qualität geht, wird bis zur Fertigstellung in Quarantäne gehalten."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Wenn es keine Qualitätsregel gibt, ist keine gesonderte Qualitätsgenehmigung erforderlich.",
           "effect": "Wenn es keine Qualitätsregel gibt, ist keine gesonderte Qualitätsgenehmigung erforderlich.",
           "affects": [
             "Tor der Qualität"
@@ -681,7 +687,7 @@
       },
       "requireErpApproval": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Vor der ERP-Übermittlung ist die Genehmigung eines autorisierten Benutzers erforderlich.",
           "effect": "Vor der ERP-Übermittlung ist die Genehmigung eines autorisierten Benutzers erforderlich.",
           "affects": [
             "ERP-Übertragungswarteschlange",
@@ -690,7 +696,7 @@
           "scenario": "Lieferschein ist fertig; Sobald der ERP-Verantwortliche die Genehmigung erteilt, wird es an Netsis gesendet."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Sobald die anderen Türen abgeschlossen sind, kann die ERP-Einreichung automatisch fortgesetzt werden.",
           "effect": "Sobald die anderen Türen abgeschlossen sind, kann die ERP-Einreichung automatisch fortgesetzt werden.",
           "affects": [
             "ERP-Übertragungswarteschlange"
@@ -700,7 +706,7 @@
       },
       "holdInventoryUntilQualityDecision": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Die noch ausstehende Qualitätsmenge wird aus dem verfügbaren Bestand zugeordnet.",
           "effect": "Die noch ausstehende Qualitätsmenge wird aus dem verfügbaren Bestand zugeordnet.",
           "affects": [
             "Regalbilanzstatus",
@@ -709,7 +715,7 @@
           "scenario": "100 AD befindet sich im physischen Regal, kann aber erst dann dem Versandauftrag zugeordnet werden, wenn die Qualität abgeschlossen ist."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Eine Qualitätsprüfung allein blockiert nicht die Lagerverfügbarkeit.",
           "effect": "Eine Qualitätsprüfung allein blockiert nicht die Lagerverfügbarkeit.",
           "affects": [
             "Verfügbares Guthaben"
@@ -719,7 +725,7 @@
       },
       "blockPutawayUntilQualityDecision": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Das Produkt wartet auf Qualität und kann nicht in das endgültige Regal gestellt werden.",
           "effect": "Das Produkt wartet auf Qualität und kann nicht in das endgültige Regal gestellt werden.",
           "affects": [
             "Regalaufgabe",
@@ -728,7 +734,7 @@
           "scenario": "Das Produkt wartet im Annahme-/Quarantäneregal; Nach bestanden wird das Ziel auf das Regal gelegt."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Das physische Regalieren kann durchgeführt werden, während auf das Qualitätsergebnis gewartet wird.",
           "effect": "Das physische Regalieren kann durchgeführt werden, während auf das Qualitätsergebnis gewartet wird.",
           "affects": [
             "Regalaufgabe"
@@ -738,7 +744,7 @@
       },
       "allowOrderlessReceipt": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Die Annahme kann mit Lieferschein und Lagerartikel ohne Bestellung eröffnet werden.",
           "effect": "Die Annahme kann mit Lieferschein und Lagerartikel ohne Bestellung eröffnet werden.",
           "affects": [
             "Warenannahme ohne Bestellung"
@@ -746,7 +752,7 @@
           "scenario": "Dringende Materialien werden ohne Bestelllink angenommen."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Jede Warenannahme muss mit einer gültigen Bestellung verbunden sein.",
           "effect": "Jede Warenannahme muss mit einer gültigen Bestellung verbunden sein.",
           "affects": [
             "Neue Warenannahme beginnt"
@@ -756,7 +762,7 @@
       },
       "allowUnplannedReceipt": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Eine direkte physische Annahme ist ohne vorherige Auftragseröffnung möglich.",
           "effect": "Eine direkte physische Annahme ist ohne vorherige Auftragseröffnung möglich.",
           "affects": [
             "Direktannahme",
@@ -765,7 +771,7 @@
           "scenario": "Für das an der Tür ankommende Fahrzeug wird der sofortige Einlass eingeleitet."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Der Auftrag/die Aufgabe zur Warenannahme ist vor der physischen Annahme erforderlich.",
           "effect": "Der Auftrag/die Aufgabe zur Warenannahme ist vor der physischen Annahme erforderlich.",
           "affects": [
             "Wareneingangszölle"
@@ -775,7 +781,7 @@
       },
       "showAllocatedOpenOrderLines": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Auftragszeilen, die für andere offene WMS-Annahmen reserviert sind, werden mit der Warnung aufgeführt.",
           "effect": "Auftragszeilen, die für andere offene WMS-Annahmen reserviert sind, werden mit der Warnung aufgeführt.",
           "affects": [
             "Netsis-Auftragsauswahl"
@@ -783,7 +789,7 @@
           "scenario": "Wenn sich derselbe Bestellartikel in einer anderen Bestellung befindet, sieht der Benutzer dies, aber die Duplikatmengenkontrolle wird fortgesetzt."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Zeilen, die für andere WMS-Annahmen reserviert sind, werden in der Auftragsauswahl ausgeblendet.",
           "effect": "Zeilen, die für andere WMS-Annahmen reserviert sind, werden in der Auftragsauswahl ausgeblendet.",
           "affects": [
             "Netsis-Auftragsauswahl"
@@ -826,7 +832,7 @@
     "outbound": {
       "allowOrderBasedTask": {
         "true": {
-          "summary": "Diese Kontrolle wird auf aktive und neue Transaktionen angewendet.",
+          "summary": "Aus der Bestellung heraus kann ein Entlade-/Versandauftrag eröffnet werden.",
           "effect": "Aus der Bestellung heraus kann ein Entlade-/Versandauftrag eröffnet werden.",
           "affects": [
             "Neue Bestellung",
@@ -835,7 +841,7 @@
           "scenario": "Der Kundenauftrag wird ausgewählt und die Kommissionieraufgabe dem Personal zugewiesen."
         },
         "false": {
-          "summary": "Diese Steuerung ist ausgeschaltet; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Der auftragsbasierte Vermittlungsablauf kann im Menü nicht genutzt werden.",
           "effect": "Der auftragsbasierte Vermittlungsablauf kann im Menü nicht genutzt werden.",
           "affects": [
             "Neue Bestellung"
@@ -845,7 +851,7 @@
       },
       "allowStockBasedTask": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Ein Lagerverkauf kann ohne Bestellung eröffnet werden.",
           "effect": "Ein Lagerverkauf kann ohne Bestellung eröffnet werden.",
           "affects": [
             "Kostenlose Aktienausgabe",
@@ -854,7 +860,7 @@
           "scenario": "Der Lagerbestand wird für den Musterversand ausgewählt und ein Abholauftrag zugewiesen."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Der Ausgang ohne Bestellung wird gesperrt.",
           "effect": "Der Ausgang ohne Bestellung wird gesperrt.",
           "affects": [
             "Neue Bestellung"
@@ -864,7 +870,7 @@
       },
       "allowOrderBasedDirect": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Transaktionen können direkt aus der Bestellung heraus vorgenommen werden, ohne dass eine Aufgabe zugewiesen werden muss.",
           "effect": "Transaktionen können direkt aus der Bestellung heraus vorgenommen werden, ohne dass eine Aufgabe zugewiesen werden muss.",
           "affects": [
             "Direkter Ausgang/Versand"
@@ -872,7 +878,7 @@
           "scenario": "Die Kleinbestellung wird vom Bediener auf demselben Bildschirm gesammelt und abgeschlossen."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Geordnete Transaktionen werden aus dem zugehörigen Ablauf ausgeführt.",
           "effect": "Geordnete Transaktionen werden aus dem zugehörigen Ablauf ausgeführt.",
           "affects": [
             "Direkte Aktion"
@@ -882,7 +888,7 @@
       },
       "allowStockBasedDirect": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Lagerbestände ohne Bestellung können direkt in die Filiale gebracht werden.",
           "effect": "Lagerbestände ohne Bestellung können direkt in die Filiale gebracht werden.",
           "affects": [
             "Direkte kostenlose Ausgabe"
@@ -890,7 +896,7 @@
           "scenario": "Ausschuss oder Musterbestände werden sofort entfernt."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Der direkte Ausgang ohne Bestellung ist gesperrt.",
           "effect": "Der direkte Ausgang ohne Bestellung ist gesperrt.",
           "affects": [
             "Neue Veröffentlichung"
@@ -1036,7 +1042,7 @@
       },
       "requireApproval": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Bevor die Bestellung in Kraft tritt, ist eine autorisierte Genehmigung erforderlich.",
           "effect": "Bevor die Bestellung in Kraft tritt, ist eine autorisierte Genehmigung erforderlich.",
           "affects": [
             "Bestellstatus",
@@ -1045,7 +1051,7 @@
           "scenario": "Der Planer erstellt die Gliederung; Nach Zustimmung des Vorgesetzten sieht es der Lagerist."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Der Auftrag kann bei Bedarf direkt in die Tat umgesetzt werden.",
           "effect": "Der Auftrag kann bei Bedarf direkt in die Tat umgesetzt werden.",
           "affects": [
             "Bestellstatus"
@@ -1055,7 +1061,7 @@
       },
       "requireAssigneeForTask": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Dem Vermittlungsfluss muss mindestens ein Benutzer zugewiesen sein.",
           "effect": "Dem Vermittlungsfluss muss mindestens ein Benutzer zugewiesen sein.",
           "affects": [
             "Eine Aufgabe erstellen",
@@ -1064,7 +1070,7 @@
           "scenario": "Auftrag kann nicht freigegeben werden, ohne Personal auszuwählen."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Die Aufgabe kann ohne Zuweisung eines Benutzers in den Pool verschoben werden.",
           "effect": "Die Aufgabe kann ohne Zuweisung eines Benutzers in den Pool verschoben werden.",
           "affects": [
             "Aufgabenpool"
@@ -1074,7 +1080,7 @@
       },
       "allowMultipleAssignees": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Dieselbe Aufgabe kann mehreren Benutzern/Teams zugewiesen werden.",
           "effect": "Dieselbe Aufgabe kann mehreren Benutzern/Teams zugewiesen werden.",
           "affects": [
             "Aufgaben zuweisen",
@@ -1083,7 +1089,7 @@
           "scenario": "Große Bestellung wird parallel von zwei Lageristen abgeholt."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Die Aufgabe kann nur einer einzigen verantwortlichen Person zugewiesen werden.",
           "effect": "Die Aufgabe kann nur einer einzigen verantwortlichen Person zugewiesen werden.",
           "affects": [
             "Assign tasks"
@@ -1093,7 +1099,7 @@
       },
       "autoReleaseTaskBased": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Der aktuelle Beauftragte wird automatisch entlassen, wenn die Bestellung erfasst wird.",
           "effect": "Der aktuelle Beauftragte wird automatisch entlassen, wenn die Bestellung erfasst wird.",
           "affects": [
             "Aufgabenübertragung"
@@ -1101,7 +1107,7 @@
           "scenario": "Sobald der Auftrag erledigt ist, landet die Aufgabe auf der Mitarbeiterliste."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Die Aufgabe erfordert auch eine Freigabeverarbeitung.",
           "effect": "Die Aufgabe erfordert auch eine Freigabeverarbeitung.",
           "affects": [
             "Aufgabenstatus"
@@ -1111,7 +1117,7 @@
       },
       "allowPartialPicking": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Die Inkassositzung kann unter dem Planbetrag abgeschlossen werden.",
           "effect": "Die Inkassositzung kann unter dem Planbetrag abgeschlossen werden.",
           "affects": [
             "Collection",
@@ -1120,7 +1126,7 @@
           "scenario": "6 AD von 10 AD werden gesammelt und die Sitzung ist teilweise geschlossen."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Die Aggregation wartet darauf, dass der gesamte Betrag vervollständigt wird.",
           "effect": "Die Aggregation wartet darauf, dass der gesamte Betrag vervollständigt wird.",
           "affects": [
             "Ergänzung abgeschlossen"
@@ -1130,7 +1136,7 @@
       },
       "allowPartialShipment": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Ein Teil des gesammelten Betrags kann als Versand/Ausgabe abgeschlossen werden.",
           "effect": "Ein Teil des gesammelten Betrags kann als Versand/Ausgabe abgeschlossen werden.",
           "affects": [
             "Versandabschluss",
@@ -1139,7 +1145,7 @@
           "scenario": "6 von 10 AD fahren mit dem Fahrzeug ab, 4 bleiben geöffnet."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Das Dokument wird erst dann fertiggestellt, wenn der gesamte entsprechende Betrag vorhanden ist.",
           "effect": "Das Dokument wird erst dann fertiggestellt, wenn der gesamte entsprechende Betrag vorhanden ist.",
           "affects": [
             "Versandabschluss"
@@ -1149,7 +1155,7 @@
       },
       "requireSourceLocation": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Für jede Zeile ist eine Auswahl des Quellregals oder eine Barcode-Überprüfung erforderlich.",
           "effect": "Für jede Zeile ist eine Auswahl des Quellregals oder eine Barcode-Überprüfung erforderlich.",
           "affects": [
             "Ergänzung",
@@ -1158,7 +1164,7 @@
           "scenario": "Ein falscher Regalbarcode wird abgelehnt, auch wenn der Bestand korrekt ist."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Das Quellregal ist in der Zeile nicht erforderlich; Das System kann es aus dem entsprechenden Saldo auflösen.",
           "effect": "Das Quellregal ist in der Zeile nicht erforderlich; Das System kann es aus dem entsprechenden Saldo auflösen.",
           "affects": [
             "Ergänzung"
@@ -1168,7 +1174,7 @@
       },
       "requireShipmentInformation": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Der Check-out kann ohne Eingabe von Fahrzeug-, Fahrer- oder Transportinformationen nicht abgeschlossen werden.",
           "effect": "Der Check-out kann ohne Eingabe von Fahrzeug-, Fahrer- oder Transportinformationen nicht abgeschlossen werden.",
           "affects": [
             "Hochladen",
@@ -1177,7 +1183,7 @@
           "scenario": "Der gesamte Versandvorgang wird blockiert, wenn das Schild fehlt."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Transportinformationen sind optional.",
           "effect": "Transportinformationen sind optional.",
           "affects": [
             "Installation"
@@ -1187,7 +1193,7 @@
       },
       "requireLoadingConfirmation": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Nach der Abholung ist eine gesonderte Verladebestätigung erforderlich.",
           "effect": "Nach der Abholung ist eine gesonderte Verladebestätigung erforderlich.",
           "affects": [
             "Laststeuerung",
@@ -1196,7 +1202,7 @@
           "scenario": "Das abgeholte Paket wird nach Überprüfung mit dem Barcode im Fahrzeug versendet."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Sobald die Sammlung/Verpackung abgeschlossen ist, ist kein separater Ladeschritt erforderlich.",
           "effect": "Sobald die Sammlung/Verpackung abgeschlossen ist, ist kein separater Ladeschritt erforderlich.",
           "affects": [
             "Versandstatus"
@@ -1206,7 +1212,7 @@
       },
       "autoPostErpAfterApproval": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Nach der endgültigen Betriebsgenehmigung wird der ERP-Datensatz automatisch in die Warteschlange gestellt.",
           "effect": "Nach der endgültigen Betriebsgenehmigung wird der ERP-Datensatz automatisch in die Warteschlange gestellt.",
           "affects": [
             "ERP-Versand-/Lagerproblem"
@@ -1214,7 +1220,7 @@
           "scenario": "Sobald die Upload-Genehmigung erteilt wurde, wird der Netsis-Datensatz automatisch gesendet."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "ERP-Übertragung wird separat durch den Benutzer oder die Integrationsaufgabe initiiert.",
           "effect": "ERP-Übertragung wird separat durch den Benutzer oder die Integrationsaufgabe initiiert.",
           "affects": [
             "ERP-Warteschlange"
@@ -1226,7 +1232,7 @@
     "shipping": {
       "allowOrderBasedTask": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Aus dem Auftrag heraus kann ein Entlade-/Versandauftrag geöffnet werden.",
           "effect": "Aus dem Auftrag heraus kann ein Entlade-/Versandauftrag geöffnet werden.",
           "affects": [
             "Neue Bestellung",
@@ -1235,7 +1241,7 @@
           "scenario": "Der Kundenauftrag wird ausgewählt und die Kommissionieraufgabe wird dem Personal zugewiesen."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Der auftragsbasierte Vermittlungsablauf kann im Menü nicht verwendet werden.",
           "effect": "Der auftragsbasierte Vermittlungsablauf kann im Menü nicht verwendet werden.",
           "affects": [
             "Neue Bestellung"
@@ -1245,7 +1251,7 @@
       },
       "allowStockBasedTask": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Ein Lagerverkauf kann ohne Bestellung eröffnet werden.",
           "effect": "Ein Lagerverkauf kann ohne Bestellung eröffnet werden.",
           "affects": [
             "Kostenlose Aktienausgabe",
@@ -1254,7 +1260,7 @@
           "scenario": "Der Lagerbestand wird für den Musterversand ausgewählt und ein Abholauftrag zugewiesen."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Unbeaufsichtigter Ausgang ist blockiert.",
           "effect": "Unbeaufsichtigter Ausgang ist blockiert.",
           "affects": [
             "Neue Bestellung"
@@ -1264,7 +1270,7 @@
       },
       "allowOrderBasedDirect": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Transaktionen können direkt aus der Bestellung heraus getätigt werden, ohne dass eine Aufgabe zugewiesen werden muss.",
           "effect": "Transaktionen können direkt aus der Bestellung heraus getätigt werden, ohne dass eine Aufgabe zugewiesen werden muss.",
           "affects": [
             "Direkter Ausgang/Versand"
@@ -1272,7 +1278,7 @@
           "scenario": "Die Kleinbestellung wird vom Bediener auf demselben Bildschirm gesammelt und abgeschlossen."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Geordnete Transaktionen werden vom begleitenden Ablauf ausgeführt.",
           "effect": "Geordnete Transaktionen werden vom begleitenden Ablauf ausgeführt.",
           "affects": [
             "Direkte Aktion"
@@ -1282,7 +1288,7 @@
       },
       "allowStockBasedDirect": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Lagerbestände ohne Bestellung können direkt in die Filiale gebracht werden.",
           "effect": "Lagerbestände ohne Bestellung können direkt in die Filiale gebracht werden.",
           "affects": [
             "Direkte kostenlose Ausgabe"
@@ -1290,7 +1296,7 @@
           "scenario": "Ausschuss oder Musterbestände werden sofort entfernt."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Der direkte Ausgang ohne Bestellung ist gesperrt.",
           "effect": "Der direkte Ausgang ohne Bestellung ist gesperrt.",
           "affects": [
             "Neue Veröffentlichung"
@@ -1436,7 +1442,7 @@
       },
       "requireApproval": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Bevor die Bestellung in Kraft tritt, ist eine autorisierte Genehmigung erforderlich.",
           "effect": "Bevor die Bestellung in Kraft tritt, ist eine autorisierte Genehmigung erforderlich.",
           "affects": [
             "Bestellstatus",
@@ -1445,7 +1451,7 @@
           "scenario": "Planer erstellt Gliederung; Nach Zustimmung des Vorgesetzten sieht es der Lagerist."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Der Auftrag kann bei Bedarf direkt in die Tat umgesetzt werden.",
           "effect": "Der Auftrag kann bei Bedarf direkt in die Tat umgesetzt werden.",
           "affects": [
             "Bestellstatus"
@@ -1455,7 +1461,7 @@
       },
       "requireAssigneeForTask": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Dem Vermittlungsablauf muss mindestens ein Benutzer zugeordnet sein.",
           "effect": "Dem Vermittlungsablauf muss mindestens ein Benutzer zugeordnet sein.",
           "affects": [
             "Eine Aufgabe erstellen",
@@ -1464,7 +1470,7 @@
           "scenario": "Aufträge können ohne Auswahl von Personal nicht freigegeben werden."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Die Aufgabe kann ohne Zuweisung eines Benutzers in den Pool verschoben werden.",
           "effect": "Die Aufgabe kann ohne Zuweisung eines Benutzers in den Pool verschoben werden.",
           "affects": [
             "Aufgabenpool"
@@ -1474,7 +1480,7 @@
       },
       "allowMultipleAssignees": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Dieselbe Aufgabe kann mehreren Benutzern/Teams zugewiesen werden.",
           "effect": "Dieselbe Aufgabe kann mehreren Benutzern/Teams zugewiesen werden.",
           "affects": [
             "Aufgaben zuweisen",
@@ -1483,7 +1489,7 @@
           "scenario": "Der Großauftrag wird parallel von zwei Lageristen kommissioniert."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Die Aufgabe kann nur einer einzigen verantwortlichen Person zugewiesen werden.",
           "effect": "Die Aufgabe kann nur einer einzigen verantwortlichen Person zugewiesen werden.",
           "affects": [
             "Assign tasks"
@@ -1493,7 +1499,7 @@
       },
       "autoReleaseTaskBased": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Der aktuelle Beauftragte wird automatisch entlassen, wenn die Bestellung erfasst wird.",
           "effect": "Der aktuelle Beauftragte wird automatisch entlassen, wenn die Bestellung erfasst wird.",
           "affects": [
             "Aufgabenübertragung"
@@ -1501,7 +1507,7 @@
           "scenario": "Sobald der Auftrag erledigt ist, landet die Aufgabe auf der Mitarbeiterliste."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Die Aufgabe erfordert auch eine Freigabeverarbeitung.",
           "effect": "Die Aufgabe erfordert auch eine Freigabeverarbeitung.",
           "affects": [
             "Aufgabenstatus"
@@ -1511,7 +1517,7 @@
       },
       "allowPartialPicking": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Die Inkassositzung kann unter dem Planbetrag abgeschlossen werden.",
           "effect": "Die Inkassositzung kann unter dem Planbetrag abgeschlossen werden.",
           "affects": [
             "Collection",
@@ -1520,7 +1526,7 @@
           "scenario": "6 AD von 10 AD werden gesammelt und die Sitzung ist teilweise geschlossen."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Die Aggregation wartet darauf, dass der gesamte Betrag abgeschlossen ist.",
           "effect": "Die Aggregation wartet darauf, dass der gesamte Betrag abgeschlossen ist.",
           "affects": [
             "Ergänzung abgeschlossen"
@@ -1530,7 +1536,7 @@
       },
       "allowPartialShipment": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Ein Teil des gesammelten Betrags kann als Versand/Ausgabe abgeschlossen werden.",
           "effect": "Ein Teil des gesammelten Betrags kann als Versand/Ausgabe abgeschlossen werden.",
           "affects": [
             "Versandabschluss",
@@ -1539,7 +1545,7 @@
           "scenario": "6 von 10 AD fahren mit dem Fahrzeug ab, 4 bleiben geöffnet."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Das Dokument wird erst dann fertiggestellt, wenn der gesamte entsprechende Betrag verfügbar ist.",
           "effect": "Das Dokument wird erst dann fertiggestellt, wenn der gesamte entsprechende Betrag verfügbar ist.",
           "affects": [
             "Versandabschluss"
@@ -1549,7 +1555,7 @@
       },
       "requireSourceLocation": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Für jede Zeile ist eine Auswahl des Quellregals oder eine Barcode-Überprüfung erforderlich.",
           "effect": "Für jede Zeile ist eine Auswahl des Quellregals oder eine Barcode-Überprüfung erforderlich.",
           "affects": [
             "Ergänzung",
@@ -1558,7 +1564,7 @@
           "scenario": "Ein falscher Regalbarcode wird abgelehnt, auch wenn der Bestand korrekt ist."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Das Quellregal ist in der Zeile nicht erforderlich; Das System kann es aus dem entsprechenden Saldo auflösen.",
           "effect": "Das Quellregal ist in der Zeile nicht erforderlich; Das System kann es aus dem entsprechenden Saldo auflösen.",
           "affects": [
             "Ergänzung"
@@ -1568,7 +1574,7 @@
       },
       "requireShipmentInformation": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Der Checkout kann ohne Eingabe von Fahrzeug-, Fahrer- oder Transportinformationen nicht abgeschlossen werden.",
           "effect": "Der Checkout kann ohne Eingabe von Fahrzeug-, Fahrer- oder Transportinformationen nicht abgeschlossen werden.",
           "affects": [
             "Hochladen",
@@ -1577,7 +1583,7 @@
           "scenario": "Der gesamte Versandvorgang wird blockiert, wenn das Schild fehlt."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Transportinformationen sind optional.",
           "effect": "Transportinformationen sind optional.",
           "affects": [
             "Installation"
@@ -1587,7 +1593,7 @@
       },
       "requireLoadingConfirmation": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Nach der Abholung ist eine gesonderte Verladebestätigung erforderlich.",
           "effect": "Nach der Abholung ist eine gesonderte Verladebestätigung erforderlich.",
           "affects": [
             "Laststeuerung",
@@ -1596,7 +1602,7 @@
           "scenario": "Das abgeholte Paket wird nach Überprüfung mit dem Barcode im Fahrzeug versendet."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Sobald die Sammlung/Verpackung abgeschlossen ist, ist kein separater Ladeschritt erforderlich.",
           "effect": "Sobald die Sammlung/Verpackung abgeschlossen ist, ist kein separater Ladeschritt erforderlich.",
           "affects": [
             "Versandstatus"
@@ -1606,7 +1612,7 @@
       },
       "autoPostErpAfterApproval": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Nach der endgültigen Betriebsgenehmigung wird der ERP-Datensatz automatisch in die Warteschlange gestellt.",
           "effect": "Nach der endgültigen Betriebsgenehmigung wird der ERP-Datensatz automatisch in die Warteschlange gestellt.",
           "affects": [
             "ERP-Versand-/Lagerproblem"
@@ -1614,7 +1620,7 @@
           "scenario": "Sobald die Upload-Genehmigung erteilt wurde, wird der Netsis-Datensatz automatisch gesendet."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "ERP-Übertragung wird separat durch den Benutzer oder die Integrationsaufgabe initiiert.",
           "effect": "ERP-Übertragung wird separat durch den Benutzer oder die Integrationsaufgabe initiiert.",
           "affects": [
             "ERP-Warteschlange"
@@ -1626,7 +1632,7 @@
     "transfer": {
       "allowOrderBasedTask": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Aus dem Auftrag heraus kann ein Entlade-/Versandauftrag geöffnet werden.",
           "effect": "Aus dem Auftrag heraus kann ein Entlade-/Versandauftrag geöffnet werden.",
           "affects": [
             "Neue Bestellung",
@@ -1635,7 +1641,7 @@
           "scenario": "Der Kundenauftrag wird ausgewählt und die Kommissionieraufgabe wird dem Personal zugewiesen."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Der auftragsbasierte Vermittlungsablauf kann im Menü nicht verwendet werden.",
           "effect": "Der auftragsbasierte Vermittlungsablauf kann im Menü nicht verwendet werden.",
           "affects": [
             "Neue Bestellung"
@@ -1645,7 +1651,7 @@
       },
       "allowStockBasedTask": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Ein Lagerverkauf kann ohne Bestellung eröffnet werden.",
           "effect": "Ein Lagerverkauf kann ohne Bestellung eröffnet werden.",
           "affects": [
             "Kostenlose Aktienausgabe",
@@ -1654,7 +1660,7 @@
           "scenario": "Der Lagerbestand wird für den Musterversand ausgewählt und ein Abholauftrag zugewiesen."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Der Ausgang ohne Bestellung wird gesperrt.",
           "effect": "Der Ausgang ohne Bestellung wird gesperrt.",
           "affects": [
             "Neue Bestellung"
@@ -1664,7 +1670,7 @@
       },
       "allowOrderBasedDirect": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Transaktionen können direkt aus der Bestellung heraus vorgenommen werden, ohne dass eine Aufgabe zugewiesen werden muss.",
           "effect": "Transaktionen können direkt aus der Bestellung heraus vorgenommen werden, ohne dass eine Aufgabe zugewiesen werden muss.",
           "affects": [
             "Direkter Ausgang/Versand"
@@ -1672,7 +1678,7 @@
           "scenario": "Die Kleinbestellung wird vom Bediener auf demselben Bildschirm gesammelt und abgeschlossen."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Geordnete Transaktionen werden aus dem begleitenden Ablauf ausgeführt.",
           "effect": "Geordnete Transaktionen werden aus dem begleitenden Ablauf ausgeführt.",
           "affects": [
             "Direkte Aktion"
@@ -1682,7 +1688,7 @@
       },
       "allowStockBasedDirect": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Lagerbestände ohne Bestellung können direkt in die Filiale gebracht werden.",
           "effect": "Lagerbestände ohne Bestellung können direkt in die Filiale gebracht werden.",
           "affects": [
             "Direkte kostenlose Ausgabe"
@@ -1690,7 +1696,7 @@
           "scenario": "Ausschuss oder Mustermaterial wird sofort entfernt."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Der direkte Ausgang ohne Bestellung ist gesperrt.",
           "effect": "Der direkte Ausgang ohne Bestellung ist gesperrt.",
           "affects": [
             "Neue Veröffentlichung"
@@ -1741,7 +1747,7 @@
       },
       "requireApproval": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Bevor die Bestellung in Kraft tritt, ist eine autorisierte Genehmigung erforderlich.",
           "effect": "Bevor die Bestellung in Kraft tritt, ist eine autorisierte Genehmigung erforderlich.",
           "affects": [
             "Bestellstatus",
@@ -1750,7 +1756,7 @@
           "scenario": "Planer erstellt Entwurf; Nach Zustimmung des Vorgesetzten sieht es der Lagerist."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Der Auftrag kann bei Bedarf direkt in die Tat umgesetzt werden.",
           "effect": "Der Auftrag kann bei Bedarf direkt in die Tat umgesetzt werden.",
           "affects": [
             "Bestellstatus"
@@ -1760,7 +1766,7 @@
       },
       "requireAssigneeForTask": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Dem Vermittlungsablauf muss mindestens ein Benutzer zugeordnet sein.",
           "effect": "Dem Vermittlungsablauf muss mindestens ein Benutzer zugeordnet sein.",
           "affects": [
             "Eine Aufgabe erstellen",
@@ -1769,7 +1775,7 @@
           "scenario": "Aufträge können nicht ohne Personalauswahl freigegeben werden."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Die Aufgabe kann ohne Zuweisung eines Benutzers in den Pool verschoben werden.",
           "effect": "Die Aufgabe kann ohne Zuweisung eines Benutzers in den Pool verschoben werden.",
           "affects": [
             "Aufgabenpool"
@@ -1779,7 +1785,7 @@
       },
       "allowMultipleAssignees": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Dieselbe Aufgabe kann mehreren Benutzern/Teams zugewiesen werden.",
           "effect": "Dieselbe Aufgabe kann mehreren Benutzern/Teams zugewiesen werden.",
           "affects": [
             "Aufgaben zuweisen",
@@ -1788,7 +1794,7 @@
           "scenario": "Der Großauftrag wird parallel von zwei Lageristen kommissioniert."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Die Aufgabe kann nur einer einzigen verantwortlichen Person zugewiesen werden.",
           "effect": "Die Aufgabe kann nur einer einzigen verantwortlichen Person zugewiesen werden.",
           "affects": [
             "Assign tasks"
@@ -1798,7 +1804,7 @@
       },
       "autoReleaseTaskBased": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Der aktuelle Beamte wird automatisch entlassen, wenn die Bestellung erfasst wird.",
           "effect": "Der aktuelle Beamte wird automatisch entlassen, wenn die Bestellung erfasst wird.",
           "affects": [
             "Aufgabenübertragung"
@@ -1806,7 +1812,7 @@
           "scenario": "Sobald der Auftrag erledigt ist, landet die Aufgabe auf der Mitarbeiterliste."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Die Aufgabe erfordert auch eine Freigabeverarbeitung.",
           "effect": "Die Aufgabe erfordert auch eine Freigabeverarbeitung.",
           "affects": [
             "Aufgabenstatus"
@@ -1816,7 +1822,7 @@
       },
       "allowPartialPicking": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Die Inkassositzung kann unter dem Planbetrag abgeschlossen werden.",
           "effect": "Die Inkassositzung kann unter dem Planbetrag abgeschlossen werden.",
           "affects": [
             "Collection",
@@ -1825,7 +1831,7 @@
           "scenario": "6 AD von 10 AD werden gesammelt und die Sitzung ist teilweise geschlossen."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Die Aggregation wartet darauf, dass der gesamte Betrag abgeschlossen ist.",
           "effect": "Die Aggregation wartet darauf, dass der gesamte Betrag abgeschlossen ist.",
           "affects": [
             "Ergänzung abgeschlossen"
@@ -1835,7 +1841,7 @@
       },
       "requireSourceLocation": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Für jede Zeile ist eine Auswahl des Quellregals oder eine Barcode-Überprüfung erforderlich.",
           "effect": "Für jede Zeile ist eine Auswahl des Quellregals oder eine Barcode-Überprüfung erforderlich.",
           "affects": [
             "Ergänzung",
@@ -1844,7 +1850,7 @@
           "scenario": "Ein falscher Regalbarcode wird abgelehnt, auch wenn der Bestand korrekt ist."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Das Quellregal ist in der Zeile nicht erforderlich; Das System kann es aus dem entsprechenden Saldo auflösen.",
           "effect": "Das Quellregal ist in der Zeile nicht erforderlich; Das System kann es aus dem entsprechenden Saldo auflösen.",
           "affects": [
             "Ergänzung"
@@ -1854,7 +1860,7 @@
       },
       "requireShipmentInformation": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Der Check-out kann ohne Eingabe von Fahrzeug-, Fahrer- oder Transportinformationen nicht abgeschlossen werden.",
           "effect": "Der Check-out kann ohne Eingabe von Fahrzeug-, Fahrer- oder Transportinformationen nicht abgeschlossen werden.",
           "affects": [
             "Hochladen",
@@ -1863,7 +1869,7 @@
           "scenario": "Der gesamte Versandvorgang wird blockiert, wenn das Schild fehlt."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Transportinformationen sind optional.",
           "effect": "Transportinformationen sind optional.",
           "affects": [
             "Installation"
@@ -1901,7 +1907,7 @@
       },
       "allowPartialShipment": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Ein Teil der Bestellung kann vom Quelllager aus versandt werden.",
           "effect": "Ein Teil der Bestellung kann vom Quelllager aus versandt werden.",
           "affects": [
             "Versand übertragen",
@@ -1910,7 +1916,7 @@
           "scenario": "60 AD des 100 AD-Transfers werden mit dem ersten Fahrzeug freigegeben."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Der Ressourcenversand wartet auf den vollen Planbetrag.",
           "effect": "Der Ressourcenversand wartet auf den vollen Planbetrag.",
           "affects": [
             "Übergabeversand"
@@ -1920,7 +1926,7 @@
       },
       "allowPartialReceipt": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Das Ziellager kann die eingehende Menge teilweise übernehmen.",
           "effect": "Das Ziellager kann die eingehende Menge teilweise übernehmen.",
           "affects": [
             "Transferannahme"
@@ -1928,7 +1934,7 @@
           "scenario": "60 AD im ersten Fahrzeug wird akzeptiert, 40 AD verbleibt im Transit."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Zielannahme wartet auf die gesamte Sendungsmenge.",
           "effect": "Zielannahme wartet auf die gesamte Sendungsmenge.",
           "affects": [
             "Transferannahme"
@@ -1938,7 +1944,7 @@
       },
       "requireDestinationAcceptance": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Nach dem Beenden der Quelle ist eine separate Akzeptanzbestätigung des Zielbenutzers erforderlich.",
           "effect": "Nach dem Beenden der Quelle ist eine separate Akzeptanzbestätigung des Zielbenutzers erforderlich.",
           "affects": [
             "Transitbestand",
@@ -1947,7 +1953,7 @@
           "scenario": "Lagerbestand ist unterwegs; Wenn der Ziellagerist „Abholen“ sagt, wird der Zielsaldo übertragen."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Die Quellausgabe kann den Zielsaldo direkt aktualisieren.",
           "effect": "Die Quellausgabe kann den Zielsaldo direkt aktualisieren.",
           "affects": [
             "Übertragungsabschluss"
@@ -1957,7 +1963,7 @@
       },
       "createTransitInventory": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Das Transitgleichgewicht wird zwischen Quellausgang und Zielakzeptanz aufrechterhalten.",
           "effect": "Das Transitgleichgewicht wird zwischen Quellausgang und Zielakzeptanz aufrechterhalten.",
           "affects": [
             "Transitbestand",
@@ -1966,7 +1972,7 @@
           "scenario": "100 AD im Fahrzeug ist nicht in der Quelle, es ist nicht im Ziel; erscheint im Transit."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Es wird kein separater Transitbestandsstatus erstellt.",
           "effect": "Es wird kein separater Transitbestandsstatus erstellt.",
           "affects": [
             "Lagersaldo"
@@ -1976,7 +1982,7 @@
       },
       "requirePutaway": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Nach der Zielübernahme muss die Regalaufgabe abgeschlossen werden.",
           "effect": "Nach der Zielübernahme muss die Regalaufgabe abgeschlossen werden.",
           "affects": [
             "Regale",
@@ -1985,7 +1991,7 @@
           "scenario": "Der Prozess wird erst abgeschlossen, wenn das Produkt im Empfangsbereich zum Zielregal gelesen wurde."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Die Zielakzeptanz kann den Saldo direkt in das ausgewählte Regal schreiben.",
           "effect": "Die Zielakzeptanz kann den Saldo direkt in das ausgewählte Regal schreiben.",
           "affects": [
             "Zielregalbalance"
@@ -1995,7 +2001,7 @@
       },
       "requireTargetLocation": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Zielregal ist in der Transferlinie obligatorisch.",
           "effect": "Zielregal ist in der Transferlinie obligatorisch.",
           "affects": [
             "Erstellen Sie eine Bestellung",
@@ -2004,7 +2010,7 @@
           "scenario": "Eine Zeile kann nicht gespeichert werden, ohne das Zielregal auszuwählen."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Das Zielregal kann bei der Annahme/Einlagerung festgelegt werden.",
           "effect": "Das Zielregal kann bei der Annahme/Einlagerung festgelegt werden.",
           "affects": [
             "Zielakzeptanz"
@@ -2136,7 +2142,7 @@
       },
       "autoCreateInspectionOnReceipt": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Die Inspektion wird automatisch für die Warenannahmelinie geöffnet, die der Qualitätsregel entspricht.",
           "effect": "Die Inspektion wird automatisch für die Warenannahmelinie geöffnet, die der Qualitätsregel entspricht.",
           "affects": [
             "Warenannahme abgeschlossen",
@@ -2145,7 +2151,7 @@
           "scenario": "Wenn hochwertiger Pflichtbestand akzeptiert wird, öffnet der Bediener keinen separaten Datensatz."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Die Rezension wird vom autorisierten Benutzer manuell geöffnet.",
           "effect": "Die Rezension wird vom autorisierten Benutzer manuell geöffnet.",
           "affects": [
             "Qualitätsliste"
@@ -2155,7 +2161,7 @@
       },
       "holdInventoryUntilDecision": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Lagerbestände können erst verwendet werden, wenn eine Qualitätsentscheidung getroffen wurde.",
           "effect": "Lagerbestände können erst verwendet werden, wenn eine Qualitätsentscheidung getroffen wurde.",
           "affects": [
             "Verfügbares Guthaben",
@@ -2164,7 +2170,7 @@
           "scenario": "angezeigte Los kann nicht für den Versandauftrag ausgewählt werden."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Die Qualitätsregistrierung allein blockiert die Lagerverfügbarkeit nicht.",
           "effect": "Die Qualitätsregistrierung allein blockiert die Lagerverfügbarkeit nicht.",
           "affects": [
             "Verfügbares Guthaben"
@@ -2174,7 +2180,7 @@
       },
       "blockPutawayUntilDecision": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Das Produkt, dessen Qualität noch aussteht, kann nicht in das letzte Regal verschoben werden.",
           "effect": "Das Produkt, dessen Qualität noch aussteht, kann nicht in das letzte Regal verschoben werden.",
           "affects": [
             "Regalaufgabe"
@@ -2182,7 +2188,7 @@
           "scenario": "Das Produkt wartet im Qualitätsbereich; Nach der Entscheidung geht es ins normale Regal."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Das physische Regalieren kann erfolgen, während auf die Qualität gewartet wird.",
           "effect": "Das physische Regalieren kann erfolgen, während auf die Qualität gewartet wird.",
           "affects": [
             "Regale"
@@ -2192,7 +2198,7 @@
       },
       "blockErpPostingUntilDecision": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "ERP-Lieferschein wird erst versendet, wenn die Qualitätsentscheidung abgeschlossen ist.",
           "effect": "ERP-Lieferschein wird erst versendet, wenn die Qualitätsentscheidung abgeschlossen ist.",
           "affects": [
             "ERP-Beleg"
@@ -2200,7 +2206,7 @@
           "scenario": "Wenn die Entscheidung „Bestanden“ oder „Nicht bestanden“ getroffen wird, wird ein obligatorischer Lieferschein gesendet."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Das Qualitätsergebnis hält die ERP-Übertragung nicht auf.",
           "effect": "Das Qualitätsergebnis hält die ERP-Übertragung nicht auf.",
           "affects": [
             "ERP-Übertragung"
@@ -2210,7 +2216,7 @@
       },
       "requireManagerApprovalForRelease": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Die Rückkehr aus der Quarantäne in den nutzbaren Bestand erfordert die Genehmigung des Administrators.",
           "effect": "Die Rückkehr aus der Quarantäne in den nutzbaren Bestand erfordert die Genehmigung des Administrators.",
           "affects": [
             "Qualitätsfreigabe"
@@ -2218,7 +2224,7 @@
           "scenario": "Rückgabequalität bestanden; Sobald der Manager zustimmt, wird die Aktie geöffnet."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Die Entscheidung des autorisierten Qualitätsbenutzers gibt den Bestand frei.",
           "effect": "Die Entscheidung des autorisierten Qualitätsbenutzers gibt den Bestand frei.",
           "affects": [
             "Qualitätsbeurteilung"
@@ -2228,7 +2234,7 @@
       },
       "allowPartialDecision": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Die Menge einer Qualitätscharge kann in verschiedene Ergebnisse unterteilt werden.",
           "effect": "Die Menge einer Qualitätscharge kann in verschiedene Ergebnisse unterteilt werden.",
           "affects": [
             "Qualitätsentscheidungslinien",
@@ -2237,7 +2243,7 @@
           "scenario": "95 von 100 AD werden akzeptiert und 5 werden abgelehnt."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Eine einzige Qualitätsentscheidung wird für die gesamte Charge getroffen.",
           "effect": "Eine einzige Qualitätsentscheidung wird für die gesamte Charge getroffen.",
           "affects": [
             "Qualitätsbeurteilung"
@@ -2247,7 +2253,7 @@
       },
       "allowDirectReceiptWhenNoRule": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Lagerbestände ohne Qualitätsregeln werden angenommen, ohne auf die Qualität zu warten.",
           "effect": "Lagerbestände ohne Qualitätsregeln werden angenommen, ohne auf die Qualität zu warten.",
           "affects": [
             "Warenannahme",
@@ -2256,7 +2262,7 @@
           "scenario": "Verbrauchsmaterialien, für die diese Regel nicht gilt, werden direkt vorrätig."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Obwohl dies keine Regel ist, ist eine qualitative Beurteilung/manuelle Anleitung erforderlich.",
           "effect": "Obwohl dies keine Regel ist, ist eine qualitative Beurteilung/manuelle Anleitung erforderlich.",
           "affects": [
             "Warenannahme abgeschlossen"
@@ -2266,7 +2272,7 @@
       },
       "blockReceiptWhenLotMissing": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Im Lager mit Chargenverfolgung kann die Annahme nicht ohne Eingabe der Charge abgeschlossen werden.",
           "effect": "Im Lager mit Chargenverfolgung kann die Annahme nicht ohne Eingabe der Charge abgeschlossen werden.",
           "affects": [
             "Überprüfung der Warenannahme"
@@ -2274,7 +2280,7 @@
           "scenario": "Wenn das Feld „Los“ leer ist, wird dem Benutzer der Korrekturfehler angezeigt."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Das Qualitätsmodul verhindert nicht separat Chargenengpässe.",
           "effect": "Das Qualitätsmodul verhindert nicht separat Chargenengpässe.",
           "affects": [
             "Warenannahme"
@@ -2284,7 +2290,7 @@
       },
       "blockReceiptWhenSerialMissing": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Bei Lagerbeständen mit Serienverfolgung kann die Annahme ohne Eingabe der erforderlichen Seriennummer nicht abgeschlossen werden.",
           "effect": "Bei Lagerbeständen mit Serienverfolgung kann die Annahme ohne Eingabe der erforderlichen Seriennummer nicht abgeschlossen werden.",
           "affects": [
             "Barcode-/Serienprüfung"
@@ -2292,7 +2298,7 @@
           "scenario": "Wenn 3 AD-Serien erforderlich sind, müssen drei Serien gelesen werden."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Das Qualitätsmodul verhindert einen Serienausfall nicht separat.",
           "effect": "Das Qualitätsmodul verhindert einen Serienausfall nicht separat.",
           "affects": [
             "Warenannahme"
@@ -2302,7 +2308,7 @@
       },
       "blockReceiptWhenExpiryMissing": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Im SKT-Pflichtbestand kann die Annahme ohne Eingabe des Datums nicht abgeschlossen werden.",
           "effect": "Im SKT-Pflichtbestand kann die Annahme ohne Eingabe des Datums nicht abgeschlossen werden.",
           "affects": [
             "Überprüfung der Warenannahme"
@@ -2310,7 +2316,7 @@
           "scenario": "Wenn das Ablaufdatum der Lebensmittelcharge leer ist, wird die Registrierung abgelehnt."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Das Qualitätsmodul verhindert nicht zusätzlich einen SKT-Mangel.",
           "effect": "Das Qualitätsmodul verhindert nicht zusätzlich einen SKT-Mangel.",
           "affects": [
             "Warenannahme"
@@ -2322,7 +2328,7 @@
     "packing": {
       "requirePacking": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Es ist zwingend erforderlich, vor dem Versand/Abflug ein Paket zu erstellen.",
           "effect": "Es ist zwingend erforderlich, vor dem Versand/Abflug ein Paket zu erstellen.",
           "affects": [
             "Verpackungsgeschäftszentrum",
@@ -2331,7 +2337,7 @@
           "scenario": "Der Versand kann nicht abgeschlossen werden, ohne das abgeholte Produkt in das Paket aufzunehmen."
         },
         "false": {
-          "summary": "Diese Steuerung ist ausgeschaltet; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Der Verpackungsschritt ist optional.",
           "effect": "Der Verpackungsschritt ist optional.",
           "affects": [
             "Versandabschluss"
@@ -2341,7 +2347,7 @@
       },
       "allowPartialPacking": {
         "true": {
-          "summary": "Diese Kontrolle wird auf aktive und neue Transaktionen angewendet.",
+          "summary": "Ein Teil der gesammelten Menge kann verpackt und offen gelassen werden.",
           "effect": "Ein Teil der gesammelten Menge kann verpackt und offen gelassen werden.",
           "affects": [
             "Paketleitungen",
@@ -2350,7 +2356,7 @@
           "scenario": "60 von 100 n. Chr. werden in die erste Parzellengruppe aufgenommen."
         },
         "false": {
-          "summary": "Diese Steuerung ist ausgeschaltet; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Die gesamte entsprechende Menge wird im selben Verpackungsvorgang erwartet.",
           "effect": "Die gesamte entsprechende Menge wird im selben Verpackungsvorgang erwartet.",
           "affects": [
             "Paketverschluss"
@@ -2360,7 +2366,7 @@
       },
       "allowMixedStock": {
         "true": {
-          "summary": "Diese Kontrolle wird auf aktive und neue Transaktionen angewendet.",
+          "summary": "Das gleiche Paket kann unterschiedliche Lagercodes enthalten.",
           "effect": "Das gleiche Paket kann unterschiedliche Lagercodes enthalten.",
           "affects": [
             "Überprüfung des Paketinhalts"
@@ -2368,7 +2374,7 @@
           "scenario": "Drei verschiedene Produkte desselben Kunden werden in einer Box gesammelt."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Jedes Paket trägt einen einzelnen Lagerbestandscode.",
           "effect": "Jedes Paket trägt einen einzelnen Lagerbestandscode.",
           "affects": [
             "Überprüfung des Paketinhalts"
@@ -2378,7 +2384,7 @@
       },
       "allowMixedLot": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Unterschiedliche Chargen für denselben Bestand können in derselben Verpackung verpackt werden.",
           "effect": "Unterschiedliche Chargen für denselben Bestand können in derselben Verpackung verpackt werden.",
           "affects": [
             "Chargenrückverfolgbarkeit",
@@ -2387,7 +2393,7 @@
           "scenario": "LOT-A und LOT-B werden auf die gleiche Palette gelegt."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Das Paket ist auf ein Los beschränkt.",
           "effect": "Das Paket ist auf ein Los beschränkt.",
           "affects": [
             "Paketinhalt"
@@ -2397,7 +2403,7 @@
       },
       "allowMixedCustomer": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Das gleiche Paket kann Zeilen von verschiedenen Kunden enthalten.",
           "effect": "Das gleiche Paket kann Zeilen von verschiedenen Kunden enthalten.",
           "affects": [
             "Kundentrennung",
@@ -2406,7 +2412,7 @@
           "scenario": "In der internen Transferkonsolidierung wird ein Mehrkundenpaket vorbereitet."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Das Paket gehört einem einzelnen Kunden.",
           "effect": "Das Paket gehört einem einzelnen Kunden.",
           "affects": [
             "Paketüberprüfung"
@@ -2416,7 +2422,7 @@
       },
       "requireSerialLotScan": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Das Produkt wird der Verpackung erst hinzugefügt, wenn die Serien-/Chargeninformationen anhand des Barcodes überprüft wurden.",
           "effect": "Das Produkt wird der Verpackung erst hinzugefügt, wenn die Serien-/Chargeninformationen anhand des Barcodes überprüft wurden.",
           "affects": [
             "Scannen von Verpackungen",
@@ -2425,7 +2431,7 @@
           "scenario": "Die Identität des seriellen Geräts im Paket wird durch Scannen des seriellen Barcodes überprüft."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Tracking-Informationen können der aktuellen Aktienauswahl entnommen werden; Zusätzliche Lektüre ist nicht erforderlich.",
           "effect": "Tracking-Informationen können der aktuellen Aktienauswahl entnommen werden; Zusätzliche Lektüre ist nicht erforderlich.",
           "affects": [
             "Verpackung"
@@ -2435,7 +2441,7 @@
       },
       "requireWeight": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Das tatsächliche Gewicht ist beim Verschließen des Pakets obligatorisch.",
           "effect": "Das tatsächliche Gewicht ist beim Verschließen des Pakets obligatorisch.",
           "affects": [
             "Paket schließen",
@@ -2444,7 +2450,7 @@
           "scenario": "Das Paket kann nicht verschlossen werden, ohne es zu wiegen."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Gewicht ist optional.",
           "effect": "Gewicht ist optional.",
           "affects": [
             "Paket schließt"
@@ -2454,7 +2460,7 @@
       },
       "requireDimensions": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Das Paket wird erst geschlossen, wenn Breite, Länge und Höhe eingegeben werden.",
           "effect": "Das Paket wird erst geschlossen, wenn Breite, Länge und Höhe eingegeben werden.",
           "affects": [
             "Paket schließt",
@@ -2463,7 +2469,7 @@
           "scenario": "Drei Dimensionen der Frachtbox werden aufgezeichnet."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Paketabmessungen sind optional.",
           "effect": "Paketabmessungen sind optional.",
           "affects": [
             "Paket schließt"
@@ -2473,7 +2479,7 @@
       },
       "requireSscc": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Jede Logistikeinheit muss über ein gültiges SSCC verfügen.",
           "effect": "Jede Logistikeinheit muss über ein gültiges SSCC verfügen.",
           "affects": [
             "Paketetikett",
@@ -2482,7 +2488,7 @@
           "scenario": "Das SSCC-Tag wird beim Schließen der Palette erstellt."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Ohne SSCC kann das Paket geschlossen werden.",
           "effect": "Ohne SSCC kann das Paket geschlossen werden.",
           "affects": [
             "Paketetikett"
@@ -2492,7 +2498,7 @@
       },
       "autoGenerateSscc": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Wenn SSCC obligatorisch ist, generiert das System die nächste eindeutige Nummer.",
           "effect": "Wenn SSCC obligatorisch ist, generiert das System die nächste eindeutige Nummer.",
           "affects": [
             "Barcode-Regel",
@@ -2501,7 +2507,7 @@
           "scenario": "Wenn eine neue Palette geöffnet wird, gibt der Benutzer keine Zahl ein."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "SSCC wird vom Benutzer/externen System empfangen.",
           "effect": "SSCC wird vom Benutzer/externen System empfangen.",
           "affects": [
             "Ein Paket erstellen"
@@ -2511,7 +2517,7 @@
       },
       "autoPrintLabelOnClose": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Wenn das Paket geschlossen wird, wird der Etikettendruckauftrag automatisch geöffnet.",
           "effect": "Wenn das Paket geschlossen wird, wird der Etikettendruckauftrag automatisch geöffnet.",
           "affects": [
             "Druckerwarteschlange",
@@ -2520,7 +2526,7 @@
           "scenario": "Das Etikett wird entfernt, sobald die Box geschlossen wird."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Das Etikett wird per Benutzerbefehl gedruckt.",
           "effect": "Das Etikett wird per Benutzerbefehl gedruckt.",
           "affects": [
             "Etikettenanzeige"
@@ -2530,7 +2536,7 @@
       },
       "allowReopen": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Eine geschlossene Verpackung kann durch autorisierte Bedienung wieder geöffnet werden.",
           "effect": "Eine geschlossene Verpackung kann durch autorisierte Bedienung wieder geöffnet werden.",
           "affects": [
             "Paketstatus",
@@ -2539,7 +2545,7 @@
           "scenario": "Wenn das fehlende Produkt bemerkt wird, wird die Verpackung erneut geöffnet."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Ein geschlossenes Paket kann nicht geändert werden.",
           "effect": "Ein geschlossenes Paket kann nicht geändert werden.",
           "affects": [
             "Paketstatus"
@@ -2549,7 +2555,7 @@
       },
       "allowRepack": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Paketinhalt kann in ein anderes Paket verschoben werden.",
           "effect": "Paketinhalt kann in ein anderes Paket verschoben werden.",
           "affects": [
             "Umpacken",
@@ -2558,7 +2564,7 @@
           "scenario": "Der Inhalt des beschädigten Pakets wird auf das neue Paket übertragen."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Das Verschieben von Inhalten zwischen Paketen wird verhindert.",
           "effect": "Das Verschieben von Inhalten zwischen Paketen wird verhindert.",
           "affects": [
             "Paketoperationen"
@@ -2721,7 +2727,7 @@
       },
       "sendSerialsToErp": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Serieninformationen in WMS-Vorgängen werden auch an ERP-Dokumentzeilen gesendet.",
           "effect": "Serieninformationen in WMS-Vorgängen werden auch an ERP-Dokumentzeilen gesendet.",
           "affects": [
             "Warenannahme",
@@ -2731,7 +2737,7 @@
           "scenario": "Bei der Annahme eines Serienprodukts wird die Serienliste in den Netsis-Lieferschein übernommen."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Serien werden nur innerhalb von WMS angezeigt; Die Anzahl der Dokumente wird an ERP gesendet.",
           "effect": "Serien werden nur innerhalb von WMS angezeigt; Die Anzahl der Dokumente wird an ERP gesendet.",
           "affects": [
             "ERP-Integration",
@@ -2744,7 +2750,7 @@
     "subcontracting": {
       "requireSupplier": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Jedes Eingabe-/Ausgabedokument eines Subunternehmers ist mit einem Lieferanten verknüpft.",
           "effect": "Jedes Eingabe-/Ausgabedokument eines Subunternehmers ist mit einem Lieferanten verknüpft.",
           "affects": [
             "Erstellung von Unterauftragsaufträgen",
@@ -2753,7 +2759,7 @@
           "scenario": "Das an die Lackiererei gesendete Material wird beim ausgewählten Subunternehmer-Kunden erfasst."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Die Lieferantenauswahl ist nicht obligatorisch.",
           "effect": "Die Lieferantenauswahl ist nicht obligatorisch.",
           "affects": [
             "Erstellung von Unterauftragsaufträgen"
@@ -2763,7 +2769,7 @@
       },
       "requireSubcontractOrderForReceipt": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Die Annahme einer Unterauftragsrückgabe muss auf einer gültigen Unterauftragsbestellung basieren.",
           "effect": "Die Annahme einer Unterauftragsrückgabe muss auf einer gültigen Unterauftragsbestellung basieren.",
           "affects": [
             "Vertragsanmeldung",
@@ -2772,7 +2778,7 @@
           "scenario": "Rücksendungen ohne Bestellnummer werden nicht akzeptiert."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Unter Umständen können Rücksendungen von Subunternehmern auch ohne Auftrag angenommen werden.",
           "effect": "Unter Umständen können Rücksendungen von Subunternehmern auch ohne Auftrag angenommen werden.",
           "affects": [
             "Vertrags-Login"
@@ -2782,7 +2788,7 @@
       },
       "requireIssueBeforeReceipt": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Der Rückgabebetrag darf den zuvor an den Subunternehmer gesendeten Betrag nicht überschreiten.",
           "effect": "Der Rückgabebetrag darf den zuvor an den Subunternehmer gesendeten Betrag nicht überschreiten.",
           "affects": [
             "Vertrags-Login",
@@ -2791,7 +2797,7 @@
           "scenario": "Wenn 10 AD gesendet werden, werden maximal 10 AD zurückgegeben."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Ein Retourendatensatz kann ohne vorheriges Subunternehmerproblem geöffnet werden.",
           "effect": "Ein Retourendatensatz kann ohne vorheriges Subunternehmerproblem geöffnet werden.",
           "affects": [
             "Vertrags-Login"
@@ -2801,7 +2807,7 @@
       },
       "allowOrderlessIssue": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Material kann ohne Unterauftragsbestellung an den Lieferanten ausgegeben werden.",
           "effect": "Material kann ohne Unterauftragsbestellung an den Lieferanten ausgegeben werden.",
           "affects": [
             "Ausgelagert"
@@ -2809,7 +2815,7 @@
           "scenario": "Material wird ohne Auftrag zur Musterbearbeitung verschickt."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Jede Subunternehmerleistung ist mit der Bestellung verknüpft.",
           "effect": "Jede Subunternehmerleistung ist mit der Bestellung verknüpft.",
           "affects": [
             "Unterauftragsvergabe"
@@ -2819,7 +2825,7 @@
       },
       "allowOrderlessReceipt": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Rücksendungen von Subunternehmern können ohne Bestellung angenommen werden.",
           "effect": "Rücksendungen von Subunternehmern können ohne Bestellung angenommen werden.",
           "affects": [
             "Vertrags-Login"
@@ -2827,7 +2833,7 @@
           "scenario": "Altarbeiten werden ohne Bestellung zurückgenommen."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Die Bestellung ist für die Unterauftragsvergabe für die Rücksendung zwingend erforderlich.",
           "effect": "Die Bestellung ist für die Unterauftragsvergabe für die Rücksendung zwingend erforderlich.",
           "affects": [
             "Vertragsanmeldung"
@@ -2837,7 +2843,7 @@
       },
       "allowSupplierToSupplier": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Material kann von einem Subunternehmer zu einem anderen weitergeleitet werden, ohne dass es zum Hauptlager zurückkehren muss.",
           "effect": "Material kann von einem Subunternehmer zu einem anderen weitergeleitet werden, ohne dass es zum Hauptlager zurückkehren muss.",
           "affects": [
             "Vertragsübertragungsroute"
@@ -2845,7 +2851,7 @@
           "scenario": "Das Produkt vom Lackierer wird direkt an den Verzinker geschickt."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Eine direkte Weitergabe zwischen Subunternehmern wird verhindert.",
           "effect": "Eine direkte Weitergabe zwischen Subunternehmern wird verhindert.",
           "affects": [
             "Vertragsübertragungsroute"
@@ -2855,7 +2861,7 @@
       },
       "allowPartialIssue": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Ein Teil der geplanten Subunternehmerleistung kann versandt werden.",
           "effect": "Ein Teil der geplanten Subunternehmerleistung kann versandt werden.",
           "affects": [
             "Ausgelagert",
@@ -2864,7 +2870,7 @@
           "scenario": "60 AD von 100 AD werden mit dem ersten Fahrzeug verschickt."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Subunternehmer wartet auf die volle Menge.",
           "effect": "Subunternehmer wartet auf die volle Menge.",
           "affects": [
             "Ausgelagert"
@@ -2874,7 +2880,7 @@
       },
       "allowPartialReceipt": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Vertragsrückgaben können in Teilen angenommen werden.",
           "effect": "Vertragsrückgaben können in Teilen angenommen werden.",
           "affects": [
             "Vertrags-Login",
@@ -2883,7 +2889,7 @@
           "scenario": "40 AD von 100 AD-Jobs werden heute angenommen."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Bei der Rücknahme wird der volle Betrag erwartet.",
           "effect": "Bei der Rücknahme wird der volle Betrag erwartet.",
           "affects": [
             "Vertrags-Login"
@@ -2893,7 +2899,7 @@
       },
       "requireQualityOnReceipt": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Die Rückgabe von Subunternehmern erfolgt zur Qualitätskontrolle.",
           "effect": "Die Rückgabe von Subunternehmern erfolgt zur Qualitätskontrolle.",
           "affects": [
             "Vertrags-Login",
@@ -2902,7 +2908,7 @@
           "scenario": "Die Beschichtungsretoure wird nach Qualitätsfreigabe ins Lager eingelagert."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Für die Rücksendung von Unteraufträgen ist kein automatisches Qualitätstor erforderlich.",
           "effect": "Für die Rücksendung von Unteraufträgen ist kein automatisches Qualitätstor erforderlich.",
           "affects": [
             "Vertragsanmeldung"
@@ -2912,7 +2918,7 @@
       },
       "requireTaskAssignment": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Der Unterauftragsauftrag muss einem Benutzer zugewiesen werden.",
           "effect": "Der Unterauftragsauftrag muss einem Benutzer zugewiesen werden.",
           "affects": [
             "Aufgabenpool",
@@ -2921,7 +2927,7 @@
           "scenario": "Die Ausgabeaufgabe wird nur veröffentlicht, wenn der Lagerverwalter ausgewählt ist."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Der Auftrag kann ohne Zuweisung im Aufgabenpool fortgeführt werden.",
           "effect": "Der Auftrag kann ohne Zuweisung im Aufgabenpool fortgeführt werden.",
           "affects": [
             "Aufgabenpool"
@@ -2931,7 +2937,7 @@
       },
       "requireApproval": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Bevor das Vertragsdokument in Kraft tritt, ist eine autorisierte Genehmigung erforderlich.",
           "effect": "Bevor das Vertragsdokument in Kraft tritt, ist eine autorisierte Genehmigung erforderlich.",
           "affects": [
             "Auftragsbestätigung"
@@ -2939,7 +2945,7 @@
           "scenario": "Planner öffnet die Bestellung; Sobald der Vorgesetzte es genehmigt, wird es im Lager abgelegt."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Das aktuelle Dokument kann direkt in Betrieb genommen werden.",
           "effect": "Das aktuelle Dokument kann direkt in Betrieb genommen werden.",
           "affects": [
             "Bestellstatus"
@@ -2949,7 +2955,7 @@
       },
       "allowOverReceipt": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Die von Subunternehmern vergebene Rücksendung kann innerhalb der definierten Toleranz den Versandumfang überschreiten.",
           "effect": "Die von Subunternehmern vergebene Rücksendung kann innerhalb der definierten Toleranz den Versandumfang überschreiten.",
           "affects": [
             "Vertragseingangsmengenkontrolle"
@@ -2957,7 +2963,7 @@
           "scenario": "Mit dem Unterschied in Brand/Maß werden 101 kg statt 100 akzeptiert."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Mehr Retouren als der gesendete Betrag werden gesperrt.",
           "effect": "Mehr Retouren als der gesendete Betrag werden gesperrt.",
           "affects": [
             "Vertragsanmeldung"
@@ -3029,7 +3035,7 @@
       },
       "requireProductionOrderReference": {
         "true": {
-          "summary": "Diese Kontrolle wird auf aktive und neue Transaktionen angewendet.",
+          "summary": "Die Übertragung muss mit dem gültigen Produktionsauftrag verknüpft sein.",
           "effect": "Die Übertragung muss mit dem gültigen Produktionsauftrag verknüpft sein.",
           "affects": [
             "Erstellen einer Übergabe an die Produktion"
@@ -3037,7 +3043,7 @@
           "scenario": "Ohne Auswahl des Arbeitsauftrags kann die Übertragung nicht gespeichert werden."
         },
         "false": {
-          "summary": "Diese Steuerung ist ausgeschaltet; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Eine Übergabe an die ungeplante Produktion kann ohne Arbeitsauftrag eröffnet werden.",
           "effect": "Eine Übergabe an die ungeplante Produktion kann ohne Arbeitsauftrag eröffnet werden.",
           "affects": [
             "manuelle Übertragung"
@@ -3047,7 +3053,7 @@
       },
       "allowManualTransfer": {
         "true": {
-          "summary": "Diese Kontrolle wird auf aktive und neue Transaktionen angewendet.",
+          "summary": "Es besteht die Möglichkeit zur Umstellung auf Ad-hoc-/manuelle Produktion.",
           "effect": "Es besteht die Möglichkeit zur Umstellung auf Ad-hoc-/manuelle Produktion.",
           "affects": [
             "Überführung in neue Produktion"
@@ -3055,7 +3061,7 @@
           "scenario": "Dringendes Material wird an die Produktion gesendet, bevor der Arbeitsauftrag eintrifft."
         },
         "false": {
-          "summary": "Diese Steuerung ist ausgeschaltet; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Nur die Übertragung basierend auf dem Quellarbeitsauftrag wird geöffnet.",
           "effect": "Nur die Übertragung basierend auf dem Quellarbeitsauftrag wird geöffnet.",
           "affects": [
             "neuer Transfer"
@@ -3065,7 +3071,7 @@
       },
       "requireErpMasterDataForManualTransfer": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Bei der manuellen Übertragung wird der Bestands-/Lager-/Strukturcode vom ERP-Spiegel überprüft.",
           "effect": "Bei der manuellen Übertragung wird der Bestands-/Lager-/Strukturcode vom ERP-Spiegel überprüft.",
           "affects": [
             "Manuelle Übertragungsüberprüfung"
@@ -3073,7 +3079,7 @@
           "scenario": "Eine ungeplante Übertragung kann nicht mit undefiniertem Bestand im ERP geöffnet werden."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Die manuelle Übertragung kann mit WMS-Stammdaten erfolgen.",
           "effect": "Die manuelle Übertragung kann mit WMS-Stammdaten erfolgen.",
           "affects": [
             "Manuelle Übertragung"
@@ -3083,7 +3089,7 @@
       },
       "allowAutomaticGeneration": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Überweisungen können automatisch aus entsprechenden Quellaufträgen generiert werden.",
           "effect": "Überweisungen können automatisch aus entsprechenden Quellaufträgen generiert werden.",
           "affects": [
             "Integrationsjob",
@@ -3092,7 +3098,7 @@
           "scenario": "Wenn der genehmigte Produktionsauftrag eintrifft, wird ein Übertragungsentwurf erstellt."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Die Übertragung wird vom Benutzer initiiert.",
           "effect": "Die Übertragung wird vom Benutzer initiiert.",
           "affects": [
             "Neuer Transfer"
@@ -3102,7 +3108,7 @@
       },
       "checkMaterialAvailability": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Die Verfügbarkeit des Quellbestands wird beim Öffnen/Initiieren einer Bestellung überprüft.",
           "effect": "Die Verfügbarkeit des Quellbestands wird beim Öffnen/Initiieren einer Bestellung überprüft.",
           "affects": [
             "Bestellbestätigung",
@@ -3111,7 +3117,7 @@
           "scenario": "Es sind 10 ADs erforderlich. Bei 8 ADs wird eine fehlende Warnung angezeigt."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Keine vorläufige Prüfung der Lagerverfügbarkeit; Es bleibt die endgültige Kontrolle zu übernehmen.",
           "effect": "Keine vorläufige Prüfung der Lagerverfügbarkeit; Es bleibt die endgültige Kontrolle zu übernehmen.",
           "affects": [
             "Ergänzung"
@@ -3121,7 +3127,7 @@
       },
       "blockOnShortage": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Die Produktionsübertragung kann nicht gestartet werden, wenn Bestand fehlt.",
           "effect": "Die Produktionsübertragung kann nicht gestartet werden, wenn Bestand fehlt.",
           "affects": [
             "Eine Aufgabe starten"
@@ -3129,7 +3135,7 @@
           "scenario": "8/10 Aufgabe ist im Lager blockiert."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Unvollständiger Bestand kann mit Warnung übernommen und in den Teilstrom überführt werden.",
           "effect": "Unvollständiger Bestand kann mit Warnung übernommen und in den Teilstrom überführt werden.",
           "affects": [
             "Eine Aufgabe starten",
@@ -3140,7 +3146,7 @@
       },
       "requireTaskAssignment": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Dem Vermittlungsablauf muss mindestens ein Benutzer zugeordnet sein.",
           "effect": "Dem Vermittlungsablauf muss mindestens ein Benutzer zugeordnet sein.",
           "affects": [
             "Eine Aufgabe erstellen",
@@ -3149,7 +3155,7 @@
           "scenario": "Aufträge können nicht ohne Personalauswahl freigegeben werden."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Die Aufgabe kann ohne Zuweisung eines Benutzers in den Pool verschoben werden.",
           "effect": "Die Aufgabe kann ohne Zuweisung eines Benutzers in den Pool verschoben werden.",
           "affects": [
             "Aufgabenpool"
@@ -3159,7 +3165,7 @@
       },
       "requireSourceProductionLocation": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Bei der Kommissionierung wird das Produktionsherkunftsregal per Barcode überprüft.",
           "effect": "Bei der Kommissionierung wird das Produktionsherkunftsregal per Barcode überprüft.",
           "affects": [
             "Ergänzung",
@@ -3168,7 +3174,7 @@
           "scenario": "Wenn der richtige Bestand aus dem falschen Regal gescannt wird, wird er abgelehnt."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Ressourcen-Rack-Anforderung gilt nicht.",
           "effect": "Ressourcen-Rack-Anforderung gilt nicht.",
           "affects": [
             "Sammlung"
@@ -3178,7 +3184,7 @@
       },
       "requireTargetProductionLocation": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Das Zielregal im Produktionsbereich muss definiert werden.",
           "effect": "Das Zielregal im Produktionsbereich muss definiert werden.",
           "affects": [
             "Liefer-/Übertragungsbestätigung",
@@ -3187,7 +3193,7 @@
           "scenario": "Das Material wird dem Produktionsbereitstellungsregal zugeordnet."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Die Auswahl des Zielracks ist nicht obligatorisch.",
           "effect": "Die Auswahl des Zielracks ist nicht obligatorisch.",
           "affects": [
             "Übertragungsabschluss"
@@ -3197,7 +3203,7 @@
       },
       "allowPartialSupply": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Ein Teil der Anfrage kann an die Produktion übergeben werden und für den Rest kann ein neuer Arbeitsauftrag eröffnet werden.",
           "effect": "Ein Teil der Anfrage kann an die Produktion übergeben werden und für den Rest kann ein neuer Arbeitsauftrag eröffnet werden.",
           "affects": [
             "Übertragungsbestätigung",
@@ -3206,7 +3212,7 @@
           "scenario": "8 AD von 10 AD-Anfragen werden zugestellt; Für 2 AD wird ein Fortsetzungsauftrag erstellt."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Die Überweisungsbestätigung wartet auf den gesamten Anforderungsbetrag.",
           "effect": "Die Überweisungsbestätigung wartet auf den gesamten Anforderungsbetrag.",
           "affects": [
             "Übertragungsbestätigung"
@@ -3216,7 +3222,7 @@
       },
       "allowOverIssue": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Der termingerechte Übergang zur Produktion kann innerhalb der Toleranz erfolgen.",
           "effect": "Der termingerechte Übergang zur Produktion kann innerhalb der Toleranz erfolgen.",
           "affects": [
             "Inkassobetrag",
@@ -3225,7 +3231,7 @@
           "scenario": "Der Bedarf von 100 kg ist mit einer Toleranz von 101 kg angegeben."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Die Ausgabe, die die Bedarfsmenge übersteigt, wird gesperrt.",
           "effect": "Die Ausgabe, die die Bedarfsmenge übersteigt, wird gesperrt.",
           "affects": [
             "Barcode-Scannen"
@@ -3245,7 +3251,7 @@
       },
       "requireApproval": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Die Person/der Vorgesetzte, die das Produkt zur Produktion erhält, erteilt die endgültige Übertragungsgenehmigung.",
           "effect": "Die Person/der Vorgesetzte, die das Produkt zur Produktion erhält, erteilt die endgültige Übertragungsgenehmigung.",
           "affects": [
             "Bestätigung der Übertragung im zweiten Schritt"
@@ -3253,7 +3259,7 @@
           "scenario": "Der Lagerarbeiter sammelt; Der Produktionsleiter genehmigt es bei der physischen Lieferung."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Sobald die Sammlung abgeschlossen ist, kann die Übertragung automatisch abgeschlossen werden.",
           "effect": "Sobald die Sammlung abgeschlossen ist, kann die Übertragung automatisch abgeschlossen werden.",
           "affects": [
             "Übertragungsstatus"
@@ -3294,7 +3300,7 @@
     "kkd": {
       "enableMaterialRequestOrderFlow": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Personalmaterialanfragen funktionieren mit offenen Netsis-Bestellungen.",
           "effect": "Personalmaterialanfragen funktionieren mit offenen Netsis-Bestellungen.",
           "affects": [
             "PSA-Verteilung",
@@ -3303,7 +3309,7 @@
           "scenario": "Es werden offene Auftragspositionen ausgewählt, die zum Kunden des Mitarbeiters gehören."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Der auftragsbasierte Materialanforderungskanal ist geschlossen.",
           "effect": "Der auftragsbasierte Materialanforderungskanal ist geschlossen.",
           "affects": [
             "PSA-Verteilung"
@@ -3313,7 +3319,7 @@
       },
       "requireOpenOrder": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Eine klare Netsis-Bestellung ist für die Verteilung zwingend erforderlich.",
           "effect": "Eine klare Netsis-Bestellung ist für die Verteilung zwingend erforderlich.",
           "affects": [
             "Neue PSA-Verteilung"
@@ -3321,7 +3327,7 @@
           "scenario": "Dokumente können nicht für Mitarbeiter geöffnet werden, die keine offene Bestellung haben."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Bei Vorliegen eines Rechts kann die PSA-Verteilung ohne Anordnung erfolgen.",
           "effect": "Bei Vorliegen eines Rechts kann die PSA-Verteilung ohne Anordnung erfolgen.",
           "affects": [
             "Neue Distribution"
@@ -3331,7 +3337,7 @@
       },
       "allowMultipleOrdersPerDistribution": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Eine einzelne Verteilung kann Artikel aus verschiedenen Bestellungen enthalten.",
           "effect": "Eine einzelne Verteilung kann Artikel aus verschiedenen Bestellungen enthalten.",
           "affects": [
             "PSA-Verteilungslinien"
@@ -3339,7 +3345,7 @@
           "scenario": "Schuhe und Helme werden als zwei Bestellungen in derselben Lieferung geliefert."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Eine Verteilung basiert auf einer einzelnen Bestellung.",
           "effect": "Eine Verteilung basiert auf einer einzelnen Bestellung.",
           "affects": [
             "PSA-Verteilung"
@@ -3349,7 +3355,7 @@
       },
       "allowOpenOrderExcess": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Wenn eine offene Bestellung vorliegt, ist möglicherweise eine Lieferung oberhalb der Rechtematrix möglich.",
           "effect": "Wenn eine offene Bestellung vorliegt, ist möglicherweise eine Lieferung oberhalb der Rechtematrix möglich.",
           "affects": [
             "Rechteprüfung",
@@ -3358,7 +3364,7 @@
           "scenario": "Zusätzliche Produkte werden an das Personal ausgegeben, dessen Jahresvergütung aufgrund der offenen Bestellung abgelaufen ist."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Die Lieferung darf den berechneten Anspruchsbetrag nicht überschreiten.",
           "effect": "Die Lieferung darf den berechneten Anspruchsbetrag nicht überschreiten.",
           "affects": [
             "Rechteanfrage"
@@ -3368,7 +3374,7 @@
       },
       "requireManagerApprovalForExcess": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Eine unbefugte Lieferung wird ohne Zustimmung des Managers nicht zu einem Lagerproblem.",
           "effect": "Eine unbefugte Lieferung wird ohne Zustimmung des Managers nicht zu einem Lagerproblem.",
           "affects": [
             "PSA-Zulassung",
@@ -3377,7 +3383,7 @@
           "scenario": "Anfragen für zusätzliche Helme bedürfen der Genehmigung des Managers."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Der autorisierte Betreiber kann die zulässige Selbstbeteiligung ohne zusätzliche Genehmigung aufladen.",
           "effect": "Der autorisierte Betreiber kann die zulässige Selbstbeteiligung ohne zusätzliche Genehmigung aufladen.",
           "affects": [
             "PSA-Verteilung"
@@ -3387,7 +3393,7 @@
       },
       "requireEmployeeUserLink": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Die Personalkarte muss mit dem aktiven WMS-Benutzer verknüpft sein.",
           "effect": "Die Personalkarte muss mit dem aktiven WMS-Benutzer verknüpft sein.",
           "affects": [
             "Mitarbeiterüberprüfung",
@@ -3396,7 +3402,7 @@
           "scenario": "Die Zustellung an Personal ohne Benutzerverbindung ist gesperrt."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Es können sich auch Mitarbeiter registrieren, die über kein WMS-Konto verfügen.",
           "effect": "Es können sich auch Mitarbeiter registrieren, die über kein WMS-Konto verfügen.",
           "affects": [
             "PSA-Verteilung"
@@ -3406,7 +3412,7 @@
       },
       "allowFutureDatedDistribution": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Zukünftig geplante PSA-Verteilungen können erfasst werden.",
           "effect": "Zukünftig geplante PSA-Verteilungen können erfasst werden.",
           "affects": [
             "Dokumentdatum",
@@ -3415,7 +3421,7 @@
           "scenario": "Die Personalauslieferung soll nächste Woche beginnen."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Das Dokumentdatum darf nicht später als heute liegen.",
           "effect": "Das Dokumentdatum darf nicht später als heute liegen.",
           "affects": [
             "Neue Distribution"
@@ -3427,7 +3433,7 @@
     "procurement": {
       "allowMultipleRfqsPerRequest": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Aus derselben Anfrage können mehrere Ausschreibungsrunden eröffnet werden.",
           "effect": "Aus derselben Anfrage können mehrere Ausschreibungsrunden eröffnet werden.",
           "affects": [
             "Erstellen einer Angebotsanfrage",
@@ -3436,7 +3442,7 @@
           "scenario": "Die erste Runde gilt als teuer; Für den gleichen Bedarf wird eine zweite Lieferantenrunde eröffnet."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Die Anfrage ist auf eine aktive Gebotsrunde beschränkt.",
           "effect": "Die Anfrage ist auf eine aktive Gebotsrunde beschränkt.",
           "affects": [
             "Angebotsanfrage"
@@ -3446,7 +3452,7 @@
       },
       "allowPartialRfqLines": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Der ausgewählte Artikel/die Menge des Bedarfs kann bepreist werden.",
           "effect": "Der ausgewählte Artikel/die Menge des Bedarfs kann bepreist werden.",
           "affects": [
             "RFQ-Zeilen",
@@ -3455,7 +3461,7 @@
           "scenario": "Nur 3 dringende Artikel aus einer 10-Artikel-Anfrage werden in die Angebotsanfrage aufgenommen."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Alle offenen Punkte der Anfrage werden gemeinsam in die Ausschreibung aufgenommen.",
           "effect": "Alle offenen Punkte der Anfrage werden gemeinsam in die Ausschreibung aufgenommen.",
           "affects": [
             "RFQ-Erstellung"
@@ -3465,7 +3471,7 @@
       },
       "allowMultipleQuotesPerSupplier": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Derselbe Lieferant kann mehrere Gebotsdatensätze für dieselbe Tour einreichen.",
           "effect": "Derselbe Lieferant kann mehrere Gebotsdatensätze für dieselbe Tour einreichen.",
           "affects": [
             "Angebotsregistrierungen"
@@ -3473,7 +3479,7 @@
           "scenario": "Der Lieferant gibt ein zweites Angebot für die Alternativmarke ab."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Für jeden Lieferanten wird ein einziger Angebotsdatensatz geführt.",
           "effect": "Für jeden Lieferanten wird ein einziger Angebotsdatensatz geführt.",
           "affects": [
             "Angebotseintrag"
@@ -3483,7 +3489,7 @@
       },
       "allowSplitAwardsAcrossSuppliers": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Bedarfsartikel/Mengen können auf verschiedene Lieferanten aufgeteilt werden.",
           "effect": "Bedarfsartikel/Mengen können auf verschiedene Lieferanten aufgeteilt werden.",
           "affects": [
             "Angebotsvergleich",
@@ -3492,7 +3498,7 @@
           "scenario": "5 Artikel werden an Unternehmen A und 3 Artikel an Unternehmen B übergeben."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Die Belohnung ergibt einen einzelnen Lieferanten.",
           "effect": "Die Belohnung ergibt einen einzelnen Lieferanten.",
           "affects": [
             "Angebotsbestätigung"
@@ -3502,7 +3508,7 @@
       },
       "allowPartialOrderLines": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Die ausgewählte Menge des Angebots kann in eine Bestellung umgewandelt werden.",
           "effect": "Die ausgewählte Menge des Angebots kann in eine Bestellung umgewandelt werden.",
           "affects": [
             "Bestellung",
@@ -3511,7 +3517,7 @@
           "scenario": "60 AD von 100 AD-Geboten sind bestellt."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Aus der Angebotszeile wird eine Bestellung mit der vollen Menge.",
           "effect": "Aus der Angebotszeile wird eine Bestellung mit der vollen Menge.",
           "affects": [
             "Bestellung erstellen"
@@ -3521,7 +3527,7 @@
       },
       "allowMultipleOrdersPerQuote": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Aus demselben Angebot können mehrere Bestellungen erstellt werden.",
           "effect": "Aus demselben Angebot können mehrere Bestellungen erstellt werden.",
           "affects": [
             "Bid-Order-Kette"
@@ -3529,7 +3535,7 @@
           "scenario": "60 AD wird heute geöffnet, die restlichen 40 AD werden in der nächsten Reihenfolge geöffnet."
         },
         "false": {
-          "summary": "Diese Steuerung ist ausgeschaltet; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Das Angebot wird zu einer Einzelbestellung.",
           "effect": "Das Angebot wird zu einer Einzelbestellung.",
           "affects": [
             "Erstellen Sie eine Bestellung"
@@ -3539,7 +3545,7 @@
       },
       "allowSupplierQuantityChange": {
         "true": {
-          "summary": "Diese Kontrolle wird auf aktive und neue Transaktionen angewendet.",
+          "summary": "Der Lieferant kann eine andere Menge als die angeforderte anbieten.",
           "effect": "Der Lieferant kann eine andere Menge als die angeforderte anbieten.",
           "affects": [
             "Portal-Angebotszeilen"
@@ -3547,7 +3553,7 @@
           "scenario": "Aufgrund der Mindestverpackung von 100 angeforderten Artikeln wird 120 angeboten."
         },
         "false": {
-          "summary": "Diese Steuerung ist ausgeschaltet; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Die Geldmenge bleibt die gleiche wie die Briefmenge.",
           "effect": "Die Geldmenge bleibt die gleiche wie die Briefmenge.",
           "affects": [
             "Angebotseintrag"
@@ -3557,7 +3563,7 @@
       },
       "allowZeroUnitPrice": {
         "true": {
-          "summary": "Diese Kontrolle wird auf aktive und neue Transaktionen angewendet.",
+          "summary": "Für Gratis-/Probeartikel wird der Nullpreis akzeptiert.",
           "effect": "Für Gratis-/Probeartikel wird der Nullpreis akzeptiert.",
           "affects": [
             "Angebotsüberprüfung"
@@ -3565,7 +3571,7 @@
           "scenario": "Das Musterprodukt wird mit 0 TL versendet."
         },
         "false": {
-          "summary": "Diese Steuerung ist ausgeschaltet; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Für jeden Gebotsartikel ist ein positiver Preis erforderlich.",
           "effect": "Für jeden Gebotsartikel ist ein positiver Preis erforderlich.",
           "affects": [
             "Senden Sie ein Angebot"
@@ -3575,7 +3581,7 @@
       },
       "requireSupplierDeliveryDate": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Die Frist ist für jede Gebotsposition verbindlich.",
           "effect": "Die Frist ist für jede Gebotsposition verbindlich.",
           "affects": [
             "Senden Sie ein Angebot",
@@ -3584,7 +3590,7 @@
           "scenario": "Wenn die Frist leer ist, kann der Lieferant das Angebot nicht senden."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Die Frist ist optional.",
           "effect": "Die Frist ist optional.",
           "affects": [
             "Angebotseintrag"
@@ -3594,7 +3600,7 @@
       },
       "allowSupplierRevisions": {
         "true": {
-          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "summary": "Für den eingereichten Vorschlag kann eine Revisionsrunde eröffnet werden.",
           "effect": "Für den eingereichten Vorschlag kann eine Revisionsrunde eröffnet werden.",
           "affects": [
             "Lieferantenportal",
@@ -3603,7 +3609,7 @@
           "scenario": "Kauf fordert Preisänderung an; Lieferant sendet neue Version."
         },
         "false": {
-          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Das abgegebene Angebot kann nicht geändert werden.",
           "effect": "Das abgegebene Angebot kann nicht geändert werden.",
           "affects": [
             "Angebotsstatus"
@@ -3661,7 +3667,7 @@
       },
       "allowSupplierDraftSave": {
         "true": {
-          "summary": "Diese Kontrolle wird auf aktive und neue Transaktionen angewendet.",
+          "summary": "Der Anbieter kann eine Zwischenregistrierung ohne Angebotszusendung durchführen.",
           "effect": "Der Anbieter kann eine Zwischenregistrierung ohne Angebotszusendung durchführen.",
           "affects": [
             "Lieferantenportal"
@@ -3669,7 +3675,7 @@
           "scenario": "Das mehrteilige Angebot wird heute erfasst und morgen fertiggestellt."
         },
         "false": {
-          "summary": "Diese Steuerung ist ausgeschaltet; Die entsprechende Verpflichtung entfällt.",
+          "summary": "Der Portaleintrag muss in einer einzigen Sitzung eingereicht werden.",
           "effect": "Der Portaleintrag muss in einer einzigen Sitzung eingereicht werden.",
           "affects": [
             "Lieferantenportal"

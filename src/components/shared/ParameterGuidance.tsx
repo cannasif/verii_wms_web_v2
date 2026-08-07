@@ -59,6 +59,19 @@ export function ParameterPageGuide({
           <p className="mt-1 text-xs leading-5 text-[var(--wms-app-text-muted)]">
             {resolvedDescription}
           </p>
+          <ol className="mt-3 grid gap-2 text-[0.72rem] leading-5 text-[var(--wms-app-text-muted)] sm:grid-cols-3">
+            {["checkValue", "readResult", "openExample"].map((step, index) => (
+              <li
+                key={step}
+                className="flex items-start gap-2 rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] px-3 py-2"
+              >
+                <span className="grid size-5 shrink-0 place-items-center rounded-full bg-[var(--wms-brand-soft)] text-[0.65rem] font-black text-[var(--wms-brand-primary)]">
+                  {index + 1}
+                </span>
+                <span>{t(`instructions.${step}`)}</span>
+              </li>
+            ))}
+          </ol>
         </div>
       </div>
     </aside>
@@ -81,22 +94,27 @@ export function ParameterFieldGuide({
 
   return (
     <div className={cn("mt-2", className)}>
-      <div className="flex items-start gap-2 text-xs leading-5 text-[var(--wms-app-text-muted)]">
+      <div className="flex items-start gap-2 rounded-xl bg-[color-mix(in_oklab,var(--wms-brand-primary)_4%,transparent)] px-2.5 py-2 text-xs leading-5 text-[var(--wms-app-text-muted)]">
         <CircleHelp
           className="mt-0.5 size-3.5 shrink-0 text-[var(--wms-brand-primary)]"
           aria-hidden
         />
-        <p>
+        <div className="min-w-0">
           {localizedCurrentValue ? (
-            <span className="mr-1 font-bold text-[var(--wms-app-text)]">
+            <p className="font-black text-[var(--wms-brand-primary)]">
               {t("labels.current", {
                 value: localizedCurrentValue,
-                defaultValue: `Şu anda: ${localizedCurrentValue}.`,
+                defaultValue: `Seçili değer: ${localizedCurrentValue}`,
               })}
-            </span>
+            </p>
           ) : null}
-          {localizedGuidance.summary}
-        </p>
+          <p className={cn("text-[var(--wms-app-text)]", localizedCurrentValue && "mt-0.5")}>
+            <span className="font-black">
+              {t("labels.shortResult", { defaultValue: "Sonuç:" })}{" "}
+            </span>
+            {localizedGuidance.summary}
+          </p>
+        </div>
       </div>
 
       <details className="group mt-2 rounded-xl border border-[var(--wms-app-border)] bg-[color-mix(in_oklab,var(--wms-app-panel)_94%,var(--wms-brand-primary))]">
@@ -104,7 +122,11 @@ export function ParameterFieldGuide({
           aria-controls={contentId}
           className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2 text-xs font-bold text-[var(--wms-brand-primary)] marker:content-none"
         >
-          <span>{t("labels.details", { defaultValue: "Etki ve örnek" })}</span>
+          <span>
+            {t("labels.details", {
+              defaultValue: "Basit açıklamayı ve örneği göster",
+            })}
+          </span>
           <ChevronDown
             className="size-3.5 transition-transform group-open:rotate-180"
             aria-hidden
@@ -112,36 +134,44 @@ export function ParameterFieldGuide({
         </summary>
         <div
           id={contentId}
-          className="grid gap-3 border-t border-[var(--wms-app-border)] p-3 text-xs leading-5 sm:grid-cols-2"
+          className="grid gap-3 border-t border-[var(--wms-app-border)] p-3 text-xs leading-5"
         >
           <GuideBlock
             icon={<BookOpenCheck />}
-            title={t("labels.effect", { defaultValue: "Bu seçimde ne olur?" })}
+            title={t("labels.effect", {
+              defaultValue: "1. Bu seçeneği seçerseniz ne olur?",
+            })}
           >
             {localizedGuidance.effect}
           </GuideBlock>
           <GuideBlock
-            icon={<MapPinned />}
-            title={t("labels.affects", { defaultValue: "Nereleri etkiler?" })}
+            icon={<PlayCircle />}
+            title={t("labels.scenario", {
+              defaultValue: "2. Gerçek örnek: işlem nasıl ilerler?",
+            })}
+            className="border-[color-mix(in_oklab,var(--wms-brand-primary)_20%,var(--wms-app-border))] bg-[color-mix(in_oklab,var(--wms-brand-primary)_5%,var(--wms-app-panel))]"
           >
-            <ul className="space-y-1">
+            {localizedGuidance.scenario}
+          </GuideBlock>
+          <GuideBlock
+            icon={<MapPinned />}
+            title={t("labels.affects", {
+              defaultValue: "3. Hangi ekranlar ve işlemler değişir?",
+            })}
+          >
+            <ul className="grid gap-1 sm:grid-cols-2">
               {localizedGuidance.affects.map((item) => (
                 <li key={item}>• {item}</li>
               ))}
             </ul>
           </GuideBlock>
-          <GuideBlock
-            icon={<PlayCircle />}
-            title={t("labels.scenario", { defaultValue: "Örnek senaryo" })}
-            className="sm:col-span-2"
-          >
-            {localizedGuidance.scenario}
-          </GuideBlock>
           {localizedGuidance.warning ? (
             <GuideBlock
               icon={<TriangleAlert />}
-              title={t("labels.warning", { defaultValue: "Dikkat" })}
-              className="border-amber-500/25 bg-amber-500/8 text-amber-700 sm:col-span-2 dark:text-amber-300"
+              title={t("labels.warning", {
+                defaultValue: "4. Dikkat: yanlış seçimde ne olabilir?",
+              })}
+              className="border border-amber-500/25 bg-amber-500/8 text-amber-700 dark:text-amber-300"
             >
               {localizedGuidance.warning}
             </GuideBlock>

@@ -1,11 +1,12 @@
 {
   "labels": {
-    "current": "Attualmente: {{value}}.",
-    "details": "Impatto, portata ed esempio",
-    "effect": "Cosa fa il sistema con questa selezione?",
-    "affects": "Quali schermate e operazioni sono interessate?",
-    "scenario": "Scenario d’uso reale",
-    "warning": "Avvertenza importante",
+    "current": "Valore selezionato: {{value}}",
+    "shortResult": "Questo accadrà:",
+    "details": "Mostra la spiegazione semplice e l’esempio",
+    "effect": "1. Cosa succede se si seleziona questa opzione?",
+    "affects": "3. Quali schermate e operazioni cambiano?",
+    "scenario": "2. Esempio reale: come prosegue l’operazione?",
+    "warning": "4. Attenzione: cosa può accadere con una scelta errata?",
     "enabled": "Attivo",
     "disabled": "Disattivo",
     "noPrefix": "Nessun prefisso"
@@ -15,6 +16,11 @@
     "days_other": "{{value}} giorni",
     "revisions_one": "{{value}} revisione",
     "revisions_other": "{{value}} revisioni"
+  },
+  "instructions": {
+    "checkValue": "Controllare prima il valore selezionato.",
+    "readResult": "Leggere subito sotto il risultato ‘Questo accadrà’.",
+    "openExample": "In caso di dubbio, aprire la spiegazione e leggere l’esempio reale."
   },
   "pages": {
     "default": {
@@ -232,7 +238,7 @@
       },
       "allowUnderReceipt": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Il documento può essere lasciato aperto accettando una parte dell'importo dell'ordine.",
           "effect": "Il documento può essere lasciato aperto accettando una parte dell'importo dell'ordine.",
           "affects": [
             "Ordinanza accettata",
@@ -241,7 +247,7 @@
           "scenario": "60 dC da 100 dC; 60 è accettato, 40 rimane aperto."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "La linea d'ordine non può essere completata normalmente con la quantità mancante.",
           "effect": "La linea d'ordine non può essere completata normalmente con la quantità mancante.",
           "affects": [
             "Ordinanza accettata"
@@ -251,7 +257,7 @@
       },
       "requireShortCloseApproval": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "L'approvazione dell'amministratore è necessaria per coprire la quantità di ordine rimanente.",
           "effect": "L'approvazione dell'amministratore è necessaria per coprire la quantità di ordine rimanente.",
           "affects": [
             "Chiusura breve",
@@ -260,7 +266,7 @@
           "scenario": "Se i restanti 40 saranno annullati dopo l'accettazione di 60/100, è richiesta l'approvazione del supervisore."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "L'operatore autorizzato può chiudere la linea mancante senza ulteriore approvazione.",
           "effect": "L'operatore autorizzato può chiudere la linea mancante senza ulteriore approvazione.",
           "affects": [
             "Chiusura breve"
@@ -270,7 +276,7 @@
       },
       "requireReceiptApproval": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Una conferma di accettazione dei beni separati viene creata dopo l'accettazione fisica.",
           "effect": "Una conferma di accettazione dei beni separati viene creata dopo l'accettazione fisica.",
           "affects": [
             "Stato di accettazione",
@@ -280,7 +286,7 @@
           "scenario": "Il magazzino termina l'accettazione; Il processo non è completo fino a quando il supervisore dice “Approvare”."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Il completamento dell'accettazione da parte dell'operatore costituisce una conferma di accettazione.",
           "effect": "Il completamento dell'accettazione da parte dell'operatore costituisce una conferma di accettazione.",
           "affects": [
             "Stato di accettazione"
@@ -290,7 +296,7 @@
       },
       "requireQualityApproval": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Nelle scorte per le quali è stato creato un piano di qualità, il processo non viene rilasciato fino alla conclusione della decisione.",
           "effect": "Nelle scorte per le quali è stato creato un piano di qualità, il processo non viene rilasciato fino alla conclusione della decisione.",
           "affects": [
             "Recensione di qualità",
@@ -299,7 +305,7 @@
           "scenario": "Il lotto che va alla qualità è tenuto in quarantena fino a quando non è finito."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Se non c'è regola di qualità, l'approvazione di qualità separata non è richiesta.",
           "effect": "Se non c'è regola di qualità, l'approvazione di qualità separata non è richiesta.",
           "affects": [
             "Porta di qualità"
@@ -309,7 +315,7 @@
       },
       "requireErpApproval": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "L'approvazione autorizzata dell'utente è richiesta prima della presentazione di ERP.",
           "effect": "L'approvazione autorizzata dell'utente è richiesta prima della presentazione di ERP.",
           "affects": [
             "coda di trasferimento ERP",
@@ -318,7 +324,7 @@
           "scenario": "La nota di consegna è pronta; Una volta che il responsabile dell'ERP approva, viene inviato a Netsis."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Una volta completate le altre porte, la presentazione ERP può procedere automaticamente.",
           "effect": "Una volta completate le altre porte, la presentazione ERP può procedere automaticamente.",
           "affects": [
             "coda di trasferimento ERP"
@@ -328,7 +334,7 @@
       },
       "holdInventoryUntilQualityDecision": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "La quantità in attesa di qualità è assegnata da magazzino disponibile.",
           "effect": "La quantità in attesa di qualità è assegnata da magazzino disponibile.",
           "affects": [
             "Situazione del saldo",
@@ -337,7 +343,7 @@
           "scenario": "100 AD è sullo scaffale fisico ma non può essere assegnato all'ordine di spedizione fino a quando la qualità non è finita."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "La revisione di qualità da sola non blocca la disponibilità delle scorte.",
           "effect": "La revisione di qualità da sola non blocca la disponibilità delle scorte.",
           "affects": [
             "Bilancio disponibile"
@@ -347,7 +353,7 @@
       },
       "blockPutawayUntilQualityDecision": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Il prodotto in attesa di qualità non può essere posizionato sulla mensola finale.",
           "effect": "Il prodotto in attesa di qualità non può essere posizionato sulla mensola finale.",
           "affects": [
             "Attività di taglio",
@@ -356,7 +362,7 @@
           "scenario": "Il prodotto aspetta sullo scaffale di accettazione/quarantina; Dopo Passato, l'obiettivo è posto sullo scaffale."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Scaffalatura fisica può essere fatto durante l'attesa del risultato di qualità.",
           "effect": "Scaffalatura fisica può essere fatto durante l'attesa del risultato di qualità.",
           "affects": [
             "Attività di taglio"
@@ -366,7 +372,7 @@
       },
       "allowOrderlessReceipt": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "L'accettazione può essere aperta con la nota di consegna e la voce di magazzino senza un ordine di acquisto.",
           "effect": "L'accettazione può essere aperta con la nota di consegna e la voce di magazzino senza un ordine di acquisto.",
           "affects": [
             "Accettare beni senza ordine"
@@ -374,7 +380,7 @@
           "scenario": "Materiali urgenti sono accettati senza un link d'ordine."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Ogni accettazione delle merci deve essere collegata ad un ordine valido.",
           "effect": "Ogni accettazione delle merci deve essere collegata ad un ordine valido.",
           "affects": [
             "Inizio di accettazione delle merci"
@@ -384,7 +390,7 @@
       },
       "allowUnplannedReceipt": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "L'accettazione fisica diretta può essere effettuata senza aprire un ordine in anticipo.",
           "effect": "L'accettazione fisica diretta può essere effettuata senza aprire un ordine in anticipo.",
           "affects": [
             "Accettazione diretta",
@@ -393,7 +399,7 @@
           "scenario": "L'ammissione immediata è iniziata per il veicolo che arriva alla porta."
         },
         "false": {
-          "summary": "Questo controllo è spento; L'obbligo pertinente non si applica.",
+          "summary": "Prima dell'accettazione fisica è richiesto un ordine di accettazione della merce.",
           "effect": "Prima dell'accettazione fisica è richiesto un ordine di accettazione della merce.",
           "affects": [
             "Beni in servizio"
@@ -403,7 +409,7 @@
       },
       "showAllocatedOpenOrderLines": {
         "true": {
-          "summary": "Questo controllo viene applicato alle transazioni attive e nuove.",
+          "summary": "Le linee d'ordine riservate per altre accettazioni WMS aperte sono elencate con l'avvertimento.",
           "effect": "Le linee d'ordine riservate per altre accettazioni WMS aperte sono elencate con l'avvertimento.",
           "affects": [
             "Selezione ordine Netsis"
@@ -411,7 +417,7 @@
           "scenario": "Se la stessa voce di ordine è in un altro ordine, l'utente vede questo, ma il controllo della quantità duplicata continua."
         },
         "false": {
-          "summary": "Questo controllo è spento; L'obbligo pertinente non si applica.",
+          "summary": "Le righe riservate per l'ulteriore accettazione WMS sono nascoste nella selezione dell'ordine.",
           "effect": "Le righe riservate per l'ulteriore accettazione WMS sono nascoste nella selezione dell'ordine.",
           "affects": [
             "Selezione ordine Netsis"
@@ -604,7 +610,7 @@
       },
       "allowUnderReceipt": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Il documento può essere lasciato aperto accettando una parte dell'importo dell'ordine.",
           "effect": "Il documento può essere lasciato aperto accettando una parte dell'importo dell'ordine.",
           "affects": [
             "Ordinanza accettata",
@@ -613,7 +619,7 @@
           "scenario": "60 AD proviene da 100 AD ordine; 60 è accettato, 40 rimane aperto."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "La linea d'ordine non può essere completata normalmente con la quantità mancante.",
           "effect": "La linea d'ordine non può essere completata normalmente con la quantità mancante.",
           "affects": [
             "Ordinanza accettata"
@@ -623,7 +629,7 @@
       },
       "requireShortCloseApproval": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "L'approvazione dell'amministratore è necessaria per coprire la quantità di ordine rimanente.",
           "effect": "L'approvazione dell'amministratore è necessaria per coprire la quantità di ordine rimanente.",
           "affects": [
             "Chiusura breve",
@@ -632,7 +638,7 @@
           "scenario": "Se i restanti 40 saranno annullati dopo l'accettazione di 60/100, è richiesta l'approvazione del supervisore."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "L'operatore autorizzato può chiudere la linea mancante senza ulteriore conferma.",
           "effect": "L'operatore autorizzato può chiudere la linea mancante senza ulteriore conferma.",
           "affects": [
             "Chiusura breve"
@@ -642,7 +648,7 @@
       },
       "requireReceiptApproval": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Una conferma di accettazione dei beni separati viene creata dopo l'accettazione fisica.",
           "effect": "Una conferma di accettazione dei beni separati viene creata dopo l'accettazione fisica.",
           "affects": [
             "Stato di accettazione",
@@ -652,7 +658,7 @@
           "scenario": "Il magazzino termina l'accettazione; Il processo non è completo fino a quando il supervisore dice “Approvare”."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Il completamento dell'accettazione da parte dell'operatore costituisce una conferma di accettazione.",
           "effect": "Il completamento dell'accettazione da parte dell'operatore costituisce una conferma di accettazione.",
           "affects": [
             "Stato di accettazione"
@@ -662,7 +668,7 @@
       },
       "requireQualityApproval": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Nelle scorte per le quali è stato creato un piano di qualità, il processo non viene rilasciato fino alla conclusione della decisione.",
           "effect": "Nelle scorte per le quali è stato creato un piano di qualità, il processo non viene rilasciato fino alla conclusione della decisione.",
           "affects": [
             "Recensione di qualità",
@@ -671,7 +677,7 @@
           "scenario": "Il lotto che va alla qualità è tenuto in quarantena fino a quando non è finito."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Se non c'è regola di qualità, l'approvazione di qualità separata non è richiesta.",
           "effect": "Se non c'è regola di qualità, l'approvazione di qualità separata non è richiesta.",
           "affects": [
             "Porta di qualità"
@@ -681,7 +687,7 @@
       },
       "requireErpApproval": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "L'approvazione autorizzata dell'utente è richiesta prima della presentazione di ERP.",
           "effect": "L'approvazione autorizzata dell'utente è richiesta prima della presentazione di ERP.",
           "affects": [
             "coda di trasferimento ERP",
@@ -690,7 +696,7 @@
           "scenario": "La nota di consegna è pronta; Una volta che il responsabile dell'ERP approva, viene inviato a Netsis."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Una volta completate le altre porte, la presentazione ERP può procedere automaticamente.",
           "effect": "Una volta completate le altre porte, la presentazione ERP può procedere automaticamente.",
           "affects": [
             "coda di trasferimento ERP"
@@ -700,7 +706,7 @@
       },
       "holdInventoryUntilQualityDecision": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "La quantità in attesa di qualità è assegnata da magazzino disponibile.",
           "effect": "La quantità in attesa di qualità è assegnata da magazzino disponibile.",
           "affects": [
             "Situazione del saldo",
@@ -709,7 +715,7 @@
           "scenario": "100 AD è sullo scaffale fisico ma non può essere assegnato all'ordine di spedizione fino a quando la qualità non è finita."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "La revisione di qualità da sola non blocca la disponibilità delle scorte.",
           "effect": "La revisione di qualità da sola non blocca la disponibilità delle scorte.",
           "affects": [
             "Bilancio disponibile"
@@ -719,7 +725,7 @@
       },
       "blockPutawayUntilQualityDecision": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Il prodotto in attesa di qualità non può essere posizionato sulla mensola finale.",
           "effect": "Il prodotto in attesa di qualità non può essere posizionato sulla mensola finale.",
           "affects": [
             "Attività di taglio",
@@ -728,7 +734,7 @@
           "scenario": "Il prodotto aspetta sullo scaffale di accettazione/quarantina; Dopo Passato, l'obiettivo è posto sullo scaffale."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Scaffalatura fisica può essere fatto durante l'attesa del risultato di qualità.",
           "effect": "Scaffalatura fisica può essere fatto durante l'attesa del risultato di qualità.",
           "affects": [
             "Attività di taglio"
@@ -738,7 +744,7 @@
       },
       "allowOrderlessReceipt": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "L'accettazione può essere aperta con la nota di consegna e la voce di magazzino senza un ordine di acquisto.",
           "effect": "L'accettazione può essere aperta con la nota di consegna e la voce di magazzino senza un ordine di acquisto.",
           "affects": [
             "Accettare beni senza ordine"
@@ -746,7 +752,7 @@
           "scenario": "Materiali urgenti sono accettati senza un link d'ordine."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Ogni accettazione delle merci deve essere collegata ad un ordine valido.",
           "effect": "Ogni accettazione delle merci deve essere collegata ad un ordine valido.",
           "affects": [
             "Inizio di accettazione delle merci"
@@ -756,7 +762,7 @@
       },
       "allowUnplannedReceipt": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "L'accettazione fisica diretta può essere effettuata senza aprire un ordine in anticipo.",
           "effect": "L'accettazione fisica diretta può essere effettuata senza aprire un ordine in anticipo.",
           "affects": [
             "Accettazione diretta",
@@ -765,7 +771,7 @@
           "scenario": "L'ammissione immediata è iniziata per il veicolo che arriva alla porta."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "L'ordine di accettazione delle merci / il rischio è richiesto prima dell'accettazione fisica.",
           "effect": "L'ordine di accettazione delle merci / il rischio è richiesto prima dell'accettazione fisica.",
           "affects": [
             "Beni in servizio"
@@ -775,7 +781,7 @@
       },
       "showAllocatedOpenOrderLines": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Le linee d'ordine riservate per altre accettazioni WMS aperte sono elencate con l'avvertimento.",
           "effect": "Le linee d'ordine riservate per altre accettazioni WMS aperte sono elencate con l'avvertimento.",
           "affects": [
             "Selezione ordine Netsis"
@@ -783,7 +789,7 @@
           "scenario": "Se la stessa voce di ordine è in un altro ordine, l'utente vede questo, ma il controllo della quantità duplicata continua."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Le linee riservate per altre accettazioni WMS sono nascoste nella selezione dell'ordine.",
           "effect": "Le linee riservate per altre accettazioni WMS sono nascoste nella selezione dell'ordine.",
           "affects": [
             "Selezione ordine Netsis"
@@ -826,7 +832,7 @@
     "outbound": {
       "allowOrderBasedTask": {
         "true": {
-          "summary": "Questo controllo viene applicato alle transazioni attive e nuove.",
+          "summary": "Un ordine di scarico/dispatch può essere aperto dall'ordine.",
           "effect": "Un ordine di scarico/dispatch può essere aperto dall'ordine.",
           "affects": [
             "Nuovo ordine",
@@ -835,7 +841,7 @@
           "scenario": "L'ordine di vendita viene selezionato e il compito di prelievo viene assegnato al personale."
         },
         "false": {
-          "summary": "Questo controllo è spento; L'obbligo pertinente non si applica.",
+          "summary": "Nel menu non è possibile utilizzare il flusso di assistenza a base d'ordine.",
           "effect": "Nel menu non è possibile utilizzare il flusso di assistenza a base d'ordine.",
           "affects": [
             "Nuovo ordine"
@@ -845,7 +851,7 @@
       },
       "allowStockBasedTask": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Una presa di scorta può essere aperta senza un ordine.",
           "effect": "Una presa di scorta può essere aperta senza un ordine.",
           "affects": [
             "Numero di azioni",
@@ -854,7 +860,7 @@
           "scenario": "Le azioni sono selezionate per la spedizione dei campioni e viene assegnato un ordine di raccolta."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Uscire senza un ordine sarà bloccato.",
           "effect": "Uscire senza un ordine sarà bloccato.",
           "affects": [
             "Nuovo ordine"
@@ -864,7 +870,7 @@
       },
       "allowOrderBasedDirect": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Le transazioni possono essere effettuate direttamente dall'ordine senza assegnare un'attività.",
           "effect": "Le transazioni possono essere effettuate direttamente dall'ordine senza assegnare un'attività.",
           "affects": [
             "Uscita diretta/dispatch"
@@ -872,7 +878,7 @@
           "scenario": "Il piccolo ordine viene raccolto e completato dall'operatore sullo stesso schermo."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Le transazioni ordinate vengono eseguite dal flusso del partecipante.",
           "effect": "Le transazioni ordinate vengono eseguite dal flusso del partecipante.",
           "affects": [
             "Azione diretta"
@@ -882,7 +888,7 @@
       },
       "allowStockBasedDirect": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Le azioni senza ordine possono essere prese direttamente all'uscita.",
           "effect": "Le azioni senza ordine possono essere prese direttamente all'uscita.",
           "affects": [
             "Uscita libera diretta"
@@ -890,7 +896,7 @@
           "scenario": "Scrap o stock campione viene rimosso immediatamente."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "L'uscita diretta senza ordine è bloccata.",
           "effect": "L'uscita diretta senza ordine è bloccata.",
           "affects": [
             "Nuovo rilascio"
@@ -1036,7 +1042,7 @@
       },
       "requireApproval": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "L'approvazione autorizzata è richiesta prima che l'ordine entri in funzione.",
           "effect": "L'approvazione autorizzata è richiesta prima che l'ordine entri in funzione.",
           "affects": [
             "Stato dell'ordine",
@@ -1045,7 +1051,7 @@
           "scenario": "Il pianificatore crea il profilo; Dopo l'approvazione del supervisore, il magazziniere lo vede."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "L'ordine può essere messo in funzione direttamente quando necessario.",
           "effect": "L'ordine può essere messo in funzione direttamente quando necessario.",
           "affects": [
             "Stato dell'ordine"
@@ -1055,7 +1061,7 @@
       },
       "requireAssigneeForTask": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Almeno un utente deve essere assegnato al flusso del partecipante.",
           "effect": "Almeno un utente deve essere assegnato al flusso del partecipante.",
           "affects": [
             "Creazione di un compito",
@@ -1064,7 +1070,7 @@
           "scenario": "L'ordine non può essere rilasciato senza selezionare il personale."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "L'attività può essere ritirata in piscina senza assegnare un utente.",
           "effect": "L'attività può essere ritirata in piscina senza assegnare un utente.",
           "affects": [
             "Servizi"
@@ -1074,7 +1080,7 @@
       },
       "allowMultipleAssignees": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Lo stesso compito può essere assegnato a più utenti/team.",
           "effect": "Lo stesso compito può essere assegnato a più utenti/team.",
           "affects": [
             "Attività di assegna",
@@ -1083,7 +1089,7 @@
           "scenario": "Grande ordine è raccolto in parallelo da due magazzinieri."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Il compito può essere assegnato solo a una persona responsabile.",
           "effect": "Il compito può essere assegnato solo a una persona responsabile.",
           "affects": [
             "Attività di assegna"
@@ -1093,7 +1099,7 @@
       },
       "autoReleaseTaskBased": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "L'agente corrente viene rilasciato automaticamente quando l'ordine viene registrato.",
           "effect": "L'agente corrente viene rilasciato automaticamente quando l'ordine viene registrato.",
           "affects": [
             "Trasmissione delle attività"
@@ -1101,7 +1107,7 @@
           "scenario": "Non appena l'assegnazione è completata, il compito rientra nella lista del personale."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Il compito ha anche bisogno di elaborazione del rilascio.",
           "effect": "Il compito ha anche bisogno di elaborazione del rilascio.",
           "affects": [
             "Stato dell'attività"
@@ -1111,7 +1117,7 @@
       },
       "allowPartialPicking": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "La sessione di raccolta può essere chiusa sotto l'importo del piano.",
           "effect": "La sessione di raccolta può essere chiusa sotto l'importo del piano.",
           "affects": [
             "Collezione",
@@ -1120,7 +1126,7 @@
           "scenario": "6 AD dal 10 AD sono raccolti e la sessione è parzialmente chiusa."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "L'aggregazione attende che l'intero importo sia completato.",
           "effect": "L'aggregazione attende che l'intero importo sia completato.",
           "affects": [
             "Completamento delle aggiunte"
@@ -1130,7 +1136,7 @@
       },
       "allowPartialShipment": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Una parte dell'importo raccolto può essere completata come spedizione/uscita.",
           "effect": "Una parte dell'importo raccolto può essere completata come spedizione/uscita.",
           "affects": [
             "Completamento della spedizione",
@@ -1139,7 +1145,7 @@
           "scenario": "6 su 10 AD lasciare per veicolo, 4 rimangono aperti."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Il documento è completato solo quando è disponibile tutto l'importo appropriato.",
           "effect": "Il documento è completato solo quando è disponibile tutto l'importo appropriato.",
           "affects": [
             "Completamento della spedizione"
@@ -1149,7 +1155,7 @@
       },
       "requireSourceLocation": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Ogni riga richiede la selezione dello scaffale sorgente o la verifica del codice a barre.",
           "effect": "Ogni riga richiede la selezione dello scaffale sorgente o la verifica del codice a barre.",
           "affects": [
             "Aggiunta",
@@ -1158,7 +1164,7 @@
           "scenario": "Il codice a barre non corretto verrà respinto anche se lo stock è corretto."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "La mensola di origine non è richiesta sulla riga; Il sistema può risolverlo dal giusto equilibrio.",
           "effect": "La mensola di origine non è richiesta sulla riga; Il sistema può risolverlo dal giusto equilibrio.",
           "affects": [
             "Aggiunta"
@@ -1168,7 +1174,7 @@
       },
       "requireShipmentInformation": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Il check-out non può essere completato senza inserire informazioni sui veicoli, sui driver o sui trasporti.",
           "effect": "Il check-out non può essere completato senza inserire informazioni sui veicoli, sui driver o sui trasporti.",
           "affects": [
             "Caricamento",
@@ -1177,7 +1183,7 @@
           "scenario": "Il processo di spedizione completo viene bloccato quando la piastra manca."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Le informazioni di trasporto sono facoltative.",
           "effect": "Le informazioni di trasporto sono facoltative.",
           "affects": [
             "Installazione"
@@ -1187,7 +1193,7 @@
       },
       "requireLoadingConfirmation": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "La conferma di carico separata è richiesta dopo la raccolta.",
           "effect": "La conferma di carico separata è richiesta dopo la raccolta.",
           "affects": [
             "Controllo del carico",
@@ -1196,7 +1202,7 @@
           "scenario": "Il pacco raccolto viene spedito dopo essere stato verificato con il codice a barre nel veicolo."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Una volta completata la raccolta/confezione, non è richiesto alcun passaggio di carico separato.",
           "effect": "Una volta completata la raccolta/confezione, non è richiesto alcun passaggio di carico separato.",
           "affects": [
             "Stato della spedizione"
@@ -1206,7 +1212,7 @@
       },
       "autoPostErpAfterApproval": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Dopo l'approvazione finale dell'operazione, il record ERP viene automaticamente in coda.",
           "effect": "Dopo l'approvazione finale dell'operazione, il record ERP viene automaticamente in coda.",
           "affects": [
             "ERP spedizione / problemi di casa"
@@ -1214,7 +1220,7 @@
           "scenario": "Una volta che l'approvazione di upload viene data, il record Netsis viene inviato automaticamente."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Il trasferimento ERP viene avviato separatamente dall'utente o dall'attività di integrazione.",
           "effect": "Il trasferimento ERP viene avviato separatamente dall'utente o dall'attività di integrazione.",
           "affects": [
             "coda di ERP"
@@ -1226,7 +1232,7 @@
     "shipping": {
       "allowOrderBasedTask": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Un ordine di scarico/dispatch può essere aperto dall'ordine.",
           "effect": "Un ordine di scarico/dispatch può essere aperto dall'ordine.",
           "affects": [
             "Nuovo ordine",
@@ -1235,7 +1241,7 @@
           "scenario": "L'ordine di vendita viene selezionato e il compito di prelievo viene assegnato al personale."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Nel menu non è possibile utilizzare il flusso di assistenza a base d'ordine.",
           "effect": "Nel menu non è possibile utilizzare il flusso di assistenza a base d'ordine.",
           "affects": [
             "Nuovo ordine"
@@ -1245,7 +1251,7 @@
       },
       "allowStockBasedTask": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Una presa di scorta può essere aperta senza un ordine.",
           "effect": "Una presa di scorta può essere aperta senza un ordine.",
           "affects": [
             "Numero di azioni",
@@ -1254,7 +1260,7 @@
           "scenario": "Le azioni sono selezionate per la spedizione dei campioni e viene assegnato un ordine di raccolta."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "L'uscita incustodita è bloccata.",
           "effect": "L'uscita incustodita è bloccata.",
           "affects": [
             "Nuovo ordine"
@@ -1264,7 +1270,7 @@
       },
       "allowOrderBasedDirect": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Le transazioni possono essere effettuate direttamente dall'ordine senza assegnare un'attività.",
           "effect": "Le transazioni possono essere effettuate direttamente dall'ordine senza assegnare un'attività.",
           "affects": [
             "Uscita diretta/dispatch"
@@ -1272,7 +1278,7 @@
           "scenario": "Il piccolo ordine viene raccolto e completato dall'operatore sullo stesso schermo."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Le transazioni ordinate vengono eseguite dal flusso del partecipante.",
           "effect": "Le transazioni ordinate vengono eseguite dal flusso del partecipante.",
           "affects": [
             "Azione diretta"
@@ -1282,7 +1288,7 @@
       },
       "allowStockBasedDirect": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Le azioni senza ordine possono essere prese direttamente all'uscita.",
           "effect": "Le azioni senza ordine possono essere prese direttamente all'uscita.",
           "affects": [
             "Uscita libera diretta"
@@ -1290,7 +1296,7 @@
           "scenario": "Scrap o stock campione viene rimosso immediatamente."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "L'uscita diretta senza ordine è bloccata.",
           "effect": "L'uscita diretta senza ordine è bloccata.",
           "affects": [
             "Nuovo rilascio"
@@ -1436,7 +1442,7 @@
       },
       "requireApproval": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "L'approvazione autorizzata è richiesta prima che l'ordine entri in funzione.",
           "effect": "L'approvazione autorizzata è richiesta prima che l'ordine entri in funzione.",
           "affects": [
             "Stato dell'ordine",
@@ -1445,7 +1451,7 @@
           "scenario": "Planner crea contorni; Dopo l'approvazione del supervisore, il magazzino lo vede."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "L'ordine può essere messo in funzione direttamente quando necessario.",
           "effect": "L'ordine può essere messo in funzione direttamente quando necessario.",
           "affects": [
             "Stato dell'ordine"
@@ -1455,7 +1461,7 @@
       },
       "requireAssigneeForTask": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Almeno un utente deve essere assegnato al flusso del partecipante.",
           "effect": "Almeno un utente deve essere assegnato al flusso del partecipante.",
           "affects": [
             "Creazione di un compito",
@@ -1464,7 +1470,7 @@
           "scenario": "Gli ordini non possono essere rilasciati senza selezionare il personale."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "L'attività può essere ritirata in piscina senza assegnare un utente.",
           "effect": "L'attività può essere ritirata in piscina senza assegnare un utente.",
           "affects": [
             "Servizi"
@@ -1474,7 +1480,7 @@
       },
       "allowMultipleAssignees": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Lo stesso compito può essere assegnato a più utenti/team.",
           "effect": "Lo stesso compito può essere assegnato a più utenti/team.",
           "affects": [
             "Attività di assegna",
@@ -1483,7 +1489,7 @@
           "scenario": "Il grande ordine è scelto in parallelo da due magazzinieri."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Il compito può essere assegnato solo a una persona responsabile.",
           "effect": "Il compito può essere assegnato solo a una persona responsabile.",
           "affects": [
             "Attività di assegna"
@@ -1493,7 +1499,7 @@
       },
       "autoReleaseTaskBased": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "L'agente corrente viene rilasciato automaticamente quando l'ordine viene registrato.",
           "effect": "L'agente corrente viene rilasciato automaticamente quando l'ordine viene registrato.",
           "affects": [
             "Trasmissione delle attività"
@@ -1501,7 +1507,7 @@
           "scenario": "Non appena l'assegnazione è completata, il compito rientra nella lista del personale."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Il compito ha anche bisogno di elaborazione del rilascio.",
           "effect": "Il compito ha anche bisogno di elaborazione del rilascio.",
           "affects": [
             "Stato dell'attività"
@@ -1511,7 +1517,7 @@
       },
       "allowPartialPicking": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "La sessione di raccolta può essere chiusa sotto l'importo del piano.",
           "effect": "La sessione di raccolta può essere chiusa sotto l'importo del piano.",
           "affects": [
             "Collezione",
@@ -1520,7 +1526,7 @@
           "scenario": "6 AD dal 10 AD sono raccolti e la sessione è parzialmente chiusa."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "L'aggregazione attende che l'intero importo sia completato.",
           "effect": "L'aggregazione attende che l'intero importo sia completato.",
           "affects": [
             "Completamento delle aggiunte"
@@ -1530,7 +1536,7 @@
       },
       "allowPartialShipment": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Una parte dell'importo raccolto può essere completata come spedizione/uscita.",
           "effect": "Una parte dell'importo raccolto può essere completata come spedizione/uscita.",
           "affects": [
             "Completamento della spedizione",
@@ -1539,7 +1545,7 @@
           "scenario": "6 su 10 AD lasciare per veicolo, 4 rimangono aperti."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Il documento è completato solo quando è disponibile tutto l'importo appropriato.",
           "effect": "Il documento è completato solo quando è disponibile tutto l'importo appropriato.",
           "affects": [
             "Completamento della spedizione"
@@ -1549,7 +1555,7 @@
       },
       "requireSourceLocation": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Ogni riga richiede la selezione dello scaffale sorgente o la verifica del codice a barre.",
           "effect": "Ogni riga richiede la selezione dello scaffale sorgente o la verifica del codice a barre.",
           "affects": [
             "Aggiunta",
@@ -1558,7 +1564,7 @@
           "scenario": "Il codice a barre non corretto verrà respinto anche se lo stock è corretto."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "La mensola di origine non è richiesta sulla riga; Il sistema può risolverlo dal giusto equilibrio.",
           "effect": "La mensola di origine non è richiesta sulla riga; Il sistema può risolverlo dal giusto equilibrio.",
           "affects": [
             "Aggiunta"
@@ -1568,7 +1574,7 @@
       },
       "requireShipmentInformation": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Il checkout non può essere completato senza inserire informazioni sui veicoli, sui conducenti o sui trasporti.",
           "effect": "Il checkout non può essere completato senza inserire informazioni sui veicoli, sui conducenti o sui trasporti.",
           "affects": [
             "Caricamento",
@@ -1577,7 +1583,7 @@
           "scenario": "Il processo di spedizione completo viene bloccato quando la piastra manca."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Le informazioni di trasporto sono facoltative.",
           "effect": "Le informazioni di trasporto sono facoltative.",
           "affects": [
             "Installazione"
@@ -1587,7 +1593,7 @@
       },
       "requireLoadingConfirmation": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "La conferma di carico separata è richiesta dopo la raccolta.",
           "effect": "La conferma di carico separata è richiesta dopo la raccolta.",
           "affects": [
             "Controllo del carico",
@@ -1596,7 +1602,7 @@
           "scenario": "Il pacco raccolto viene spedito dopo essere stato verificato con il codice a barre nel veicolo."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Una volta completata la raccolta/confezione, non è richiesto alcun passaggio di carico separato.",
           "effect": "Una volta completata la raccolta/confezione, non è richiesto alcun passaggio di carico separato.",
           "affects": [
             "Stato della spedizione"
@@ -1606,7 +1612,7 @@
       },
       "autoPostErpAfterApproval": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Dopo l'approvazione finale dell'operazione, il record ERP viene automaticamente in coda.",
           "effect": "Dopo l'approvazione finale dell'operazione, il record ERP viene automaticamente in coda.",
           "affects": [
             "ERP spedizione / problemi di casa"
@@ -1614,7 +1620,7 @@
           "scenario": "Una volta che l'approvazione di upload viene data, il record Netsis viene inviato automaticamente."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Il trasferimento ERP viene avviato separatamente dall'utente o dall'attività di integrazione.",
           "effect": "Il trasferimento ERP viene avviato separatamente dall'utente o dall'attività di integrazione.",
           "affects": [
             "coda di ERP"
@@ -1626,7 +1632,7 @@
     "transfer": {
       "allowOrderBasedTask": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Un ordine di scarico/dispatch può essere aperto dall'ordine.",
           "effect": "Un ordine di scarico/dispatch può essere aperto dall'ordine.",
           "affects": [
             "Nuovo ordine",
@@ -1635,7 +1641,7 @@
           "scenario": "L'ordine di vendita viene selezionato e il compito di prelievo viene assegnato al personale."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Nel menu non è possibile utilizzare il flusso di assistenza a base d'ordine.",
           "effect": "Nel menu non è possibile utilizzare il flusso di assistenza a base d'ordine.",
           "affects": [
             "Nuovo ordine"
@@ -1645,7 +1651,7 @@
       },
       "allowStockBasedTask": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Una presa di scorta può essere aperta senza un ordine.",
           "effect": "Una presa di scorta può essere aperta senza un ordine.",
           "affects": [
             "Numero di azioni",
@@ -1654,7 +1660,7 @@
           "scenario": "Le azioni sono selezionate per la spedizione dei campioni e viene assegnato un ordine di raccolta."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Uscire senza un ordine sarà bloccato.",
           "effect": "Uscire senza un ordine sarà bloccato.",
           "affects": [
             "Nuovo ordine"
@@ -1664,7 +1670,7 @@
       },
       "allowOrderBasedDirect": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Le transazioni possono essere effettuate direttamente dall'ordine senza assegnare un'attività.",
           "effect": "Le transazioni possono essere effettuate direttamente dall'ordine senza assegnare un'attività.",
           "affects": [
             "Uscita diretta/dispatch"
@@ -1672,7 +1678,7 @@
           "scenario": "Il piccolo ordine viene raccolto e completato dall'operatore sullo stesso schermo."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Le transazioni ordinate vengono eseguite dal flusso del partecipante.",
           "effect": "Le transazioni ordinate vengono eseguite dal flusso del partecipante.",
           "affects": [
             "Azione diretta"
@@ -1682,7 +1688,7 @@
       },
       "allowStockBasedDirect": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Le azioni senza ordine possono essere prese direttamente all'uscita.",
           "effect": "Le azioni senza ordine possono essere prese direttamente all'uscita.",
           "affects": [
             "Uscita libera diretta"
@@ -1690,7 +1696,7 @@
           "scenario": "Scrap o stock campione viene rimosso immediatamente."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "L'uscita diretta senza ordine è bloccata.",
           "effect": "L'uscita diretta senza ordine è bloccata.",
           "affects": [
             "Nuovo rilascio"
@@ -1741,7 +1747,7 @@
       },
       "requireApproval": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "L'approvazione autorizzata è richiesta prima che l'ordine entri in funzione.",
           "effect": "L'approvazione autorizzata è richiesta prima che l'ordine entri in funzione.",
           "affects": [
             "Stato dell'ordine",
@@ -1750,7 +1756,7 @@
           "scenario": "Planner crea progetto; Dopo l'approvazione del supervisore, il magazziniere lo vede."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "L'ordine può essere messo in funzione direttamente quando necessario.",
           "effect": "L'ordine può essere messo in funzione direttamente quando necessario.",
           "affects": [
             "Stato dell'ordine"
@@ -1760,7 +1766,7 @@
       },
       "requireAssigneeForTask": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Almeno un utente deve essere assegnato al flusso del partecipante.",
           "effect": "Almeno un utente deve essere assegnato al flusso del partecipante.",
           "affects": [
             "Creazione di un compito",
@@ -1769,7 +1775,7 @@
           "scenario": "Gli ordini non possono essere rilasciati senza selezionare il personale."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "L'attività può essere ritirata in piscina senza assegnare un utente.",
           "effect": "L'attività può essere ritirata in piscina senza assegnare un utente.",
           "affects": [
             "Servizi"
@@ -1779,7 +1785,7 @@
       },
       "allowMultipleAssignees": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Lo stesso compito può essere assegnato a più utenti/team.",
           "effect": "Lo stesso compito può essere assegnato a più utenti/team.",
           "affects": [
             "Attività di assegna",
@@ -1788,7 +1794,7 @@
           "scenario": "Il grande ordine è scelto in parallelo da due magazzinieri."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Il compito può essere assegnato solo a una persona responsabile.",
           "effect": "Il compito può essere assegnato solo a una persona responsabile.",
           "affects": [
             "Attività di assegna"
@@ -1798,7 +1804,7 @@
       },
       "autoReleaseTaskBased": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "L'agente corrente viene rilasciato automaticamente quando l'ordine viene registrato.",
           "effect": "L'agente corrente viene rilasciato automaticamente quando l'ordine viene registrato.",
           "affects": [
             "Trasmissione delle attività"
@@ -1806,7 +1812,7 @@
           "scenario": "Non appena l'assegnazione è completata, il compito rientra nella lista del personale."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Il compito ha anche bisogno di elaborazione del rilascio.",
           "effect": "Il compito ha anche bisogno di elaborazione del rilascio.",
           "affects": [
             "Stato dell'attività"
@@ -1816,7 +1822,7 @@
       },
       "allowPartialPicking": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "La sessione di raccolta può essere chiusa sotto l'importo del piano.",
           "effect": "La sessione di raccolta può essere chiusa sotto l'importo del piano.",
           "affects": [
             "Collezione",
@@ -1825,7 +1831,7 @@
           "scenario": "6 AD dal 10 AD sono raccolti e la sessione è parzialmente chiusa."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "L'aggregazione attende che l'intero importo sia completato.",
           "effect": "L'aggregazione attende che l'intero importo sia completato.",
           "affects": [
             "Completamento delle aggiunte"
@@ -1835,7 +1841,7 @@
       },
       "requireSourceLocation": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Ogni riga richiede la selezione dello scaffale sorgente o la verifica del codice a barre.",
           "effect": "Ogni riga richiede la selezione dello scaffale sorgente o la verifica del codice a barre.",
           "affects": [
             "Aggiunta",
@@ -1844,7 +1850,7 @@
           "scenario": "Il codice a barre non corretto verrà respinto anche se lo stock è corretto."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "La mensola di origine non è richiesta sulla riga; Il sistema può risolverlo dal giusto equilibrio.",
           "effect": "La mensola di origine non è richiesta sulla riga; Il sistema può risolverlo dal giusto equilibrio.",
           "affects": [
             "Aggiunta"
@@ -1854,7 +1860,7 @@
       },
       "requireShipmentInformation": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Il check-out non può essere completato senza inserire informazioni sui veicoli, sui driver o sui trasporti.",
           "effect": "Il check-out non può essere completato senza inserire informazioni sui veicoli, sui driver o sui trasporti.",
           "affects": [
             "Caricamento",
@@ -1863,7 +1869,7 @@
           "scenario": "Il processo di spedizione completo viene bloccato quando la piastra manca."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Le informazioni di trasporto sono facoltative.",
           "effect": "Le informazioni di trasporto sono facoltative.",
           "affects": [
             "Installazione"
@@ -1901,7 +1907,7 @@
       },
       "allowPartialShipment": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Una parte dell'ordine può essere spedito dal magazzino di origine.",
           "effect": "Una parte dell'ordine può essere spedito dal magazzino di origine.",
           "affects": [
             "Trasmissione",
@@ -1910,7 +1916,7 @@
           "scenario": "60 AD del trasferimento 100 AD sarà rilasciato con il primo veicolo."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "La spedizione delle risorse attende l'intero importo del piano.",
           "effect": "La spedizione delle risorse attende l'intero importo del piano.",
           "affects": [
             "Trasmissione"
@@ -1920,7 +1926,7 @@
       },
       "allowPartialReceipt": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Il magazzino di destinazione può parzialmente accettare la quantità in arrivo.",
           "effect": "Il magazzino di destinazione può parzialmente accettare la quantità in arrivo.",
           "affects": [
             "Accettazione del trasferimento"
@@ -1928,7 +1934,7 @@
           "scenario": "60 AD nel primo veicolo è accettato, 40 AD rimane in transito."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "L'accettazione dell'obiettivo aspetta l'intero importo della spedizione.",
           "effect": "L'accettazione dell'obiettivo aspetta l'intero importo della spedizione.",
           "affects": [
             "Accettazione del trasferimento"
@@ -1938,7 +1944,7 @@
       },
       "requireDestinationAcceptance": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "La conferma di accettazione separata dall'utente di destinazione è richiesta dopo l'uscita della fonte.",
           "effect": "La conferma di accettazione separata dall'utente di destinazione è richiesta dopo l'uscita della fonte.",
           "affects": [
             "Regime di transito",
@@ -1947,7 +1953,7 @@
           "scenario": "Le azioni stanno arrivando; Quando il magazzino di destinazione dice di ritirarsi, il saldo di destinazione viene trasferito."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "L'output sorgente può aggiornare direttamente l'equilibrio target.",
           "effect": "L'output sorgente può aggiornare direttamente l'equilibrio target.",
           "affects": [
             "Completamento del trasferimento"
@@ -1957,7 +1963,7 @@
       },
       "createTransitInventory": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "L'equilibrio di transito viene mantenuto tra l'uscita di origine e l'accettazione di destinazione.",
           "effect": "L'equilibrio di transito viene mantenuto tra l'uscita di origine e l'accettazione di destinazione.",
           "affects": [
             "Regime di transito",
@@ -1966,7 +1972,7 @@
           "scenario": "100 AD nel veicolo non è nella fonte, non è nell'obiettivo; appare in transito."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Lo stato di transito separato non è creato.",
           "effect": "Lo stato di transito separato non è creato.",
           "affects": [
             "Bilancia del magazzino"
@@ -1976,7 +1982,7 @@
       },
       "requirePutaway": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Dopo l'accettazione del bersaglio, il compito di scaffalatura deve essere completato.",
           "effect": "Dopo l'accettazione del bersaglio, il compito di scaffalatura deve essere completato.",
           "affects": [
             "Shelling",
@@ -1985,7 +1991,7 @@
           "scenario": "Il processo non si chiude fino a quando il prodotto nella zona di ricezione viene letto alla mensola di destinazione."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "L'accettazione dell'obiettivo può scrivere l'equilibrio direttamente allo scaffale selezionato.",
           "effect": "L'accettazione dell'obiettivo può scrivere l'equilibrio direttamente allo scaffale selezionato.",
           "affects": [
             "Bilancio di destinazione"
@@ -1995,7 +2001,7 @@
       },
       "requireTargetLocation": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Lo scaffale di destinazione è obbligatorio nella linea di trasferimento.",
           "effect": "Lo scaffale di destinazione è obbligatorio nella linea di trasferimento.",
           "affects": [
             "Creare un ordine",
@@ -2004,7 +2010,7 @@
           "scenario": "Una riga non può essere salvata senza selezionare lo scaffale di destinazione."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Lo scaffale di destinazione può essere determinato alla fase di accettazione/shelving.",
           "effect": "Lo scaffale di destinazione può essere determinato alla fase di accettazione/shelving.",
           "affects": [
             "Accettazione dell'obiettivo"
@@ -2136,7 +2142,7 @@
       },
       "autoCreateInspectionOnReceipt": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "L'ispezione viene aperta automaticamente per la linea di accettazione merci che rispetta la regola di qualità.",
           "effect": "L'ispezione viene aperta automaticamente per la linea di accettazione merci che rispetta la regola di qualità.",
           "affects": [
             "Completamento di accettazione delle merci",
@@ -2145,7 +2151,7 @@
           "scenario": "Quando lo stock obbligatorio di qualità è accettato, l'operatore non apre un record separato."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "La recensione viene aperta manualmente dall'utente autorizzato.",
           "effect": "La recensione viene aperta manualmente dall'utente autorizzato.",
           "affects": [
             "Elenco di qualità"
@@ -2155,7 +2161,7 @@
       },
       "holdInventoryUntilDecision": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Le azioni non possono essere utilizzate fino a quando non viene presa una decisione di qualità.",
           "effect": "Le azioni non possono essere utilizzate fino a quando non viene presa una decisione di qualità.",
           "affects": [
             "Bilancio disponibile",
@@ -2164,7 +2170,7 @@
           "scenario": "lo scaffale non può essere selezionato per l'ordine di spedizione."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "La registrazione di qualità da sola non blocca la disponibilità delle scorte.",
           "effect": "La registrazione di qualità da sola non blocca la disponibilità delle scorte.",
           "affects": [
             "Bilancio disponibile"
@@ -2174,7 +2180,7 @@
       },
       "blockPutawayUntilDecision": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Il prodotto in attesa di qualità non può essere spostato alla mensola finale.",
           "effect": "Il prodotto in attesa di qualità non può essere spostato alla mensola finale.",
           "affects": [
             "Attività di taglio"
@@ -2182,7 +2188,7 @@
           "scenario": "Il prodotto aspetta nella zona di qualità; Dopo la decisione, va alla mensola normale."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Scaffalatura fisica può essere fatto durante l'attesa di qualità.",
           "effect": "Scaffalatura fisica può essere fatto durante l'attesa di qualità.",
           "affects": [
             "Shelling"
@@ -2192,7 +2198,7 @@
       },
       "blockErpPostingUntilDecision": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Nota di consegna ERP non verrà inviata fino a quando la decisione di qualità è completata.",
           "effect": "Nota di consegna ERP non verrà inviata fino a quando la decisione di qualità è completata.",
           "affects": [
             "Ricevuta ERP"
@@ -2200,7 +2206,7 @@
           "scenario": "Quando viene presa la decisione Passed o Failed, viene inviata una nota di consegna obbligatoria."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Il risultato di qualità non regge il trasferimento ERP.",
           "effect": "Il risultato di qualità non regge il trasferimento ERP.",
           "affects": [
             "Trasferimento ERP"
@@ -2210,7 +2216,7 @@
       },
       "requireManagerApprovalForRelease": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Il ritorno da quarantena a magazzino utilizzabile richiede l'approvazione dell'amministratore.",
           "effect": "Il ritorno da quarantena a magazzino utilizzabile richiede l'approvazione dell'amministratore.",
           "affects": [
             "Rilascio di qualità"
@@ -2218,7 +2224,7 @@
           "scenario": "Ritorna Qualità Passata; Una volta che il gestore approva, lo stock è aperto."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "La decisione dell'utente di qualità autorizzato rilascia lo stock.",
           "effect": "La decisione dell'utente di qualità autorizzato rilascia lo stock.",
           "affects": [
             "Giudizio di qualità"
@@ -2228,7 +2234,7 @@
       },
       "allowPartialDecision": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "La quantità di un lotto di qualità può essere suddivisa in diversi risultati.",
           "effect": "La quantità di un lotto di qualità può essere suddivisa in diversi risultati.",
           "affects": [
             "Linee di decisione di qualità",
@@ -2237,7 +2243,7 @@
           "scenario": "95 su 100 AD sono accettati e 5 sono respinti."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Un'unica decisione di qualità è data all'intero lotto.",
           "effect": "Un'unica decisione di qualità è data all'intero lotto.",
           "affects": [
             "Giudizio di qualità"
@@ -2247,7 +2253,7 @@
       },
       "allowDirectReceiptWhenNoRule": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Stock senza regole di qualità è accettato senza aspettare la qualità.",
           "effect": "Stock senza regole di qualità è accettato senza aspettare la qualità.",
           "affects": [
             "Accettazione delle merci",
@@ -2256,7 +2262,7 @@
           "scenario": "I consumabili che non hanno la regola diventano stock diretti."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Anche se non una regola, giudizio di qualità / guida manuale è richiesto.",
           "effect": "Anche se non una regola, giudizio di qualità / guida manuale è richiesto.",
           "affects": [
             "Completamento di accettazione delle merci"
@@ -2266,7 +2272,7 @@
       },
       "blockReceiptWhenLotMissing": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "In magazzino con il monitoraggio del lotto, l'accettazione non può essere completata senza entrare nel lotto.",
           "effect": "In magazzino con il monitoraggio del lotto, l'accettazione non può essere completata senza entrare nel lotto.",
           "affects": [
             "Verifica dell'accettazione dei beni"
@@ -2274,7 +2280,7 @@
           "scenario": "Se il campo Lot è vuoto, l'errore di correzione viene mostrato all'utente."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Il modulo di qualità non impedisce la carenza di lotti separatamente.",
           "effect": "Il modulo di qualità non impedisce la carenza di lotti separatamente.",
           "affects": [
             "Accettazione delle merci"
@@ -2284,7 +2290,7 @@
       },
       "blockReceiptWhenSerialMissing": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "In magazzino con monitoraggio seriale, l'accettazione non può essere completata senza inserire il numero di serie richiesto.",
           "effect": "In magazzino con monitoraggio seriale, l'accettazione non può essere completata senza inserire il numero di serie richiesto.",
           "affects": [
             "Codice a barre / verifica seriale"
@@ -2292,7 +2298,7 @@
           "scenario": "Se sono necessarie 3 serie AD, tre serie devono essere lette."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Il modulo di qualità non impedisce il fallimento seriale separatamente.",
           "effect": "Il modulo di qualità non impedisce il fallimento seriale separatamente.",
           "affects": [
             "Accettazione delle merci"
@@ -2302,7 +2308,7 @@
       },
       "blockReceiptWhenExpiryMissing": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "In SKT stock obbligatorio, l'accettazione non può essere completata senza entrare nella data.",
           "effect": "In SKT stock obbligatorio, l'accettazione non può essere completata senza entrare nella data.",
           "affects": [
             "Verifica dell'accettazione dei beni"
@@ -2310,7 +2316,7 @@
           "scenario": "Se la data di scadenza del lotto alimentare è vuota, la registrazione sarà rifiutata."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Il modulo di qualità non impedisce inoltre la carenza SKT.",
           "effect": "Il modulo di qualità non impedisce inoltre la carenza SKT.",
           "affects": [
             "Accettazione delle merci"
@@ -2322,7 +2328,7 @@
     "packing": {
       "requirePacking": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "È obbligatorio creare un pacchetto prima della spedizione/partenza.",
           "effect": "È obbligatorio creare un pacchetto prima della spedizione/partenza.",
           "affects": [
             "Centro commerciale di imballaggio",
@@ -2331,7 +2337,7 @@
           "scenario": "La spedizione non può essere completata senza portare il prodotto raccolto nel pacco."
         },
         "false": {
-          "summary": "Questo controllo è spento; L'obbligo pertinente non si applica.",
+          "summary": "La fase di confezionamento è facoltativa.",
           "effect": "La fase di confezionamento è facoltativa.",
           "affects": [
             "Completamento della spedizione"
@@ -2341,7 +2347,7 @@
       },
       "allowPartialPacking": {
         "true": {
-          "summary": "Questo controllo viene applicato alle transazioni attive e nuove.",
+          "summary": "Una parte dell'importo raccolto può essere imballata e lasciata aperta.",
           "effect": "Una parte dell'importo raccolto può essere imballata e lasciata aperta.",
           "affects": [
             "linee di pacchetti",
@@ -2350,7 +2356,7 @@
           "scenario": "60 di 100 AD sono presi nel primo gruppo di pacchi."
         },
         "false": {
-          "summary": "Questo controllo è spento; L'obbligo pertinente non si applica.",
+          "summary": "L'intera quantità appropriata è prevista nella stessa sessione di imballaggio.",
           "effect": "L'intera quantità appropriata è prevista nella stessa sessione di imballaggio.",
           "affects": [
             "chiusura del pacchetto"
@@ -2360,7 +2366,7 @@
       },
       "allowMixedStock": {
         "true": {
-          "summary": "Questo controllo viene applicato alle transazioni attive e nuove.",
+          "summary": "Lo stesso pacchetto può contenere diversi codici azionari.",
           "effect": "Lo stesso pacchetto può contenere diversi codici azionari.",
           "affects": [
             "Verifica del contenuto del pacchetto"
@@ -2368,7 +2374,7 @@
           "scenario": "Tre prodotti diversi dello stesso cliente sono raccolti in una scatola."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Ogni pacchetto porta un unico codice azionario.",
           "effect": "Ogni pacchetto porta un unico codice azionario.",
           "affects": [
             "Verifica del contenuto del pacchetto"
@@ -2378,7 +2384,7 @@
       },
       "allowMixedLot": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Diversi lotti per lo stesso stock possono essere confezionati nello stesso pacchetto.",
           "effect": "Diversi lotti per lo stesso stock possono essere confezionati nello stesso pacchetto.",
           "affects": [
             "Tracciabilità del lotto",
@@ -2387,7 +2393,7 @@
           "scenario": "LOT-A e LOT-B sono messi sullo stesso pallet."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Il pacchetto è limitato a un lotto.",
           "effect": "Il pacchetto è limitato a un lotto.",
           "affects": [
             "Contenuto del pacchetto"
@@ -2397,7 +2403,7 @@
       },
       "allowMixedCustomer": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Lo stesso pacchetto può contenere linee da diversi clienti.",
           "effect": "Lo stesso pacchetto può contenere linee da diversi clienti.",
           "affects": [
             "Separazione del cliente",
@@ -2406,7 +2412,7 @@
           "scenario": "Un pacchetto multi-cliente è preparato nel consolidamento del trasferimento interno."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Il pacchetto appartiene a un singolo cliente.",
           "effect": "Il pacchetto appartiene a un singolo cliente.",
           "affects": [
             "Verifica del pacchetto"
@@ -2416,7 +2422,7 @@
       },
       "requireSerialLotScan": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Il prodotto non viene aggiunto al pacchetto finché le informazioni seriali/lot non vengono verificate con il codice a barre.",
           "effect": "Il prodotto non viene aggiunto al pacchetto finché le informazioni seriali/lot non vengono verificate con il codice a barre.",
           "affects": [
             "Scansione di imballaggio",
@@ -2425,7 +2431,7 @@
           "scenario": "L'identità del dispositivo seriale nel pacco è verificata scansionando il codice a barre seriale."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Le informazioni di monitoraggio possono essere ottenute dalla selezione delle azioni corrente; non è richiesta una lettura aggiuntiva.",
           "effect": "Le informazioni di monitoraggio possono essere ottenute dalla selezione delle azioni corrente; non è richiesta una lettura aggiuntiva.",
           "affects": [
             "Imballaggio"
@@ -2435,7 +2441,7 @@
       },
       "requireWeight": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Il peso effettivo è obbligatorio alla chiusura del pacchetto.",
           "effect": "Il peso effettivo è obbligatorio alla chiusura del pacchetto.",
           "affects": [
             "Chiudi il pacchetto",
@@ -2444,7 +2450,7 @@
           "scenario": "Il pacco non può essere chiuso senza pesarlo."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Il peso è facoltativo.",
           "effect": "Il peso è facoltativo.",
           "affects": [
             "Chiusura del pacchetto"
@@ -2454,7 +2460,7 @@
       },
       "requireDimensions": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Il pacchetto non sarà chiuso a meno che la larghezza, la lunghezza e l'altezza non siano inserite.",
           "effect": "Il pacchetto non sarà chiuso a meno che la larghezza, la lunghezza e l'altezza non siano inserite.",
           "affects": [
             "Chiusura del pacchetto",
@@ -2463,7 +2469,7 @@
           "scenario": "Sono registrate tre dimensioni della scatola di carico."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Le dimensioni del pacchetto sono facoltative.",
           "effect": "Le dimensioni del pacchetto sono facoltative.",
           "affects": [
             "Chiusura del pacchetto"
@@ -2473,7 +2479,7 @@
       },
       "requireSscc": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Ogni unità logistica deve portare SSCC valido.",
           "effect": "Ogni unità logistica deve portare SSCC valido.",
           "affects": [
             "Etichetta del pacchetto",
@@ -2482,7 +2488,7 @@
           "scenario": "Il tag SSCC viene creato come il pallet si chiude."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Senza SSCC il pacchetto può essere chiuso.",
           "effect": "Senza SSCC il pacchetto può essere chiuso.",
           "affects": [
             "Etichetta del pacchetto"
@@ -2492,7 +2498,7 @@
       },
       "autoGenerateSscc": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Se SSCC è obbligatorio, il sistema genera il prossimo numero unico.",
           "effect": "Se SSCC è obbligatorio, il sistema genera il prossimo numero unico.",
           "affects": [
             "Regola del codice a barre",
@@ -2501,7 +2507,7 @@
           "scenario": "Quando viene aperta una nuova tavolozza, l'utente non digita un numero."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "SSCC viene ricevuto dall'utente/sistema esterno.",
           "effect": "SSCC viene ricevuto dall'utente/sistema esterno.",
           "affects": [
             "Creazione di un pacchetto"
@@ -2511,7 +2517,7 @@
       },
       "autoPrintLabelOnClose": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Quando il pacchetto è chiuso, il lavoro di stampa di etichette viene aperto automaticamente.",
           "effect": "Quando il pacchetto è chiuso, il lavoro di stampa di etichette viene aperto automaticamente.",
           "affects": [
             "coda di stampa",
@@ -2520,7 +2526,7 @@
           "scenario": "L'etichetta viene rimossa non appena la scatola è chiusa."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "L'etichetta è stampata dal comando dell'utente.",
           "effect": "L'etichetta è stampata dal comando dell'utente.",
           "affects": [
             "Display per etichette"
@@ -2530,7 +2536,7 @@
       },
       "allowReopen": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Un pacchetto chiuso può essere riaperto con l'operazione autorizzata.",
           "effect": "Un pacchetto chiuso può essere riaperto con l'operazione autorizzata.",
           "affects": [
             "Stato del pacchetto",
@@ -2539,7 +2545,7 @@
           "scenario": "Quando il prodotto mancante viene notato, il pacchetto viene aperto di nuovo."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Un pacchetto chiuso non può essere cambiato.",
           "effect": "Un pacchetto chiuso non può essere cambiato.",
           "affects": [
             "Stato del pacchetto"
@@ -2549,7 +2555,7 @@
       },
       "allowRepack": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Il contenuto del pacchetto può essere spostato in un altro pacchetto.",
           "effect": "Il contenuto del pacchetto può essere spostato in un altro pacchetto.",
           "affects": [
             "Repacking",
@@ -2558,7 +2564,7 @@
           "scenario": "Il contenuto del pacco danneggiato viene trasferito al nuovo pacco."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "È impedito lo spostamento dei contenuti tra i pacchetti.",
           "effect": "È impedito lo spostamento dei contenuti tra i pacchetti.",
           "affects": [
             "Operazioni del pacchetto"
@@ -2721,7 +2727,7 @@
       },
       "sendSerialsToErp": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Le informazioni seriali nelle operazioni WMS vengono inviate anche alle linee di documenti ERP.",
           "effect": "Le informazioni seriali nelle operazioni WMS vengono inviate anche alle linee di documenti ERP.",
           "affects": [
             "Accettazione delle merci",
@@ -2731,7 +2737,7 @@
           "scenario": "Quando il prodotto seriale viene accettato, l'elenco seriale viene trasferito alla nota di consegna Netsis."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Le serie sono visualizzate solo all'interno di WMS; L'importo dei documenti viene inviato all'ERP.",
           "effect": "Le serie sono visualizzate solo all'interno di WMS; L'importo dei documenti viene inviato all'ERP.",
           "affects": [
             "Integrazione ERP",
@@ -2744,7 +2750,7 @@
     "subcontracting": {
       "requireSupplier": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Ogni documento di input/output del subappaltatore è collegato a un fornitore.",
           "effect": "Ogni documento di input/output del subappaltatore è collegato a un fornitore.",
           "affects": [
             "Creazione di un ordine di subappalto",
@@ -2753,7 +2759,7 @@
           "scenario": "Il materiale inviato alla vernice viene registrato con il cliente subappaltatore selezionato."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "La selezione del fornitore non è obbligatoria.",
           "effect": "La selezione del fornitore non è obbligatoria.",
           "affects": [
             "Creazione di un ordine di subappalto"
@@ -2763,7 +2769,7 @@
       },
       "requireSubcontractOrderForReceipt": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "L'accettazione del subappalto deve essere basata su un valido ordine subappalto.",
           "effect": "L'accettazione del subappalto deve essere basata su un valido ordine subappalto.",
           "affects": [
             "Accesso al contratto",
@@ -2772,7 +2778,7 @@
           "scenario": "I ritorni senza numero di ordine non saranno accettati."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Può essere possibile accettare rendimenti subappaltatori senza un ordine.",
           "effect": "Può essere possibile accettare rendimenti subappaltatori senza un ordine.",
           "affects": [
             "Accesso al contratto"
@@ -2782,7 +2788,7 @@
       },
       "requireIssueBeforeReceipt": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "L'importo della restituzione non può superare l'importo precedentemente inviato al subappaltatore.",
           "effect": "L'importo della restituzione non può superare l'importo precedentemente inviato al subappaltatore.",
           "affects": [
             "Accesso al contratto",
@@ -2791,7 +2797,7 @@
           "scenario": "Se viene inviato 10 AD, verrà restituito un massimo di 10 AD."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Un record di ritorno può essere aperto senza il precedente numero di subappaltatori.",
           "effect": "Un record di ritorno può essere aperto senza il precedente numero di subappaltatori.",
           "affects": [
             "Accesso al contratto"
@@ -2801,7 +2807,7 @@
       },
       "allowOrderlessIssue": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Il materiale può essere rilasciato al fornitore senza un ordine di subappalto.",
           "effect": "Il materiale può essere rilasciato al fornitore senza un ordine di subappalto.",
           "affects": [
             "Risorse esterne"
@@ -2809,7 +2815,7 @@
           "scenario": "Il materiale viene inviato senza ordine per l'elaborazione del campione."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Ogni uscita subappaltatore è collegata all'ordine.",
           "effect": "Ogni uscita subappaltatore è collegata all'ordine.",
           "affects": [
             "Subappalto"
@@ -2819,7 +2825,7 @@
       },
       "allowOrderlessReceipt": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "I rendimenti subappaltatori possono essere accettati senza un ordine.",
           "effect": "I rendimenti subappaltatori possono essere accettati senza un ordine.",
           "affects": [
             "Accesso al contratto"
@@ -2827,7 +2833,7 @@
           "scenario": "Il vecchio lavoro di periodo è ripreso senza un ordine."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "L'ordine è obbligatorio per la restituzione subappalto.",
           "effect": "L'ordine è obbligatorio per la restituzione subappalto.",
           "affects": [
             "Accesso al contratto"
@@ -2837,7 +2843,7 @@
       },
       "allowSupplierToSupplier": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Il materiale può essere diretto da un subappaltatore all'altro senza tornare al magazzino principale.",
           "effect": "Il materiale può essere diretto da un subappaltatore all'altro senza tornare al magazzino principale.",
           "affects": [
             "Percorso di trasferimento"
@@ -2845,7 +2851,7 @@
           "scenario": "Il prodotto del pittore viene inviato direttamente al galvanizzatore."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "È vietato il trasferimento diretto tra subappaltatori.",
           "effect": "È vietato il trasferimento diretto tra subappaltatori.",
           "affects": [
             "Percorso di trasferimento"
@@ -2855,7 +2861,7 @@
       },
       "allowPartialIssue": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Una parte della produzione subappaltata prevista può essere spedita.",
           "effect": "Una parte della produzione subappaltata prevista può essere spedita.",
           "affects": [
             "Risorse esterne",
@@ -2864,7 +2870,7 @@
           "scenario": "60 AD del 100 AD sono inviati con il primo veicolo."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Il subappaltatore aspetta la quantità completa.",
           "effect": "Il subappaltatore aspetta la quantità completa.",
           "affects": [
             "Risorse esterne"
@@ -2874,7 +2880,7 @@
       },
       "allowPartialReceipt": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Il ritorno del contratto può essere accettato pezzomeal.",
           "effect": "Il ritorno del contratto può essere accettato pezzomeal.",
           "affects": [
             "Accesso al contratto",
@@ -2883,7 +2889,7 @@
           "scenario": "40 AD di 100 lavori AD sono accettati oggi."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "L'accettazione del ritorno prevede l'intero importo.",
           "effect": "L'accettazione del ritorno prevede l'intero importo.",
           "affects": [
             "Accesso al contratto"
@@ -2893,7 +2899,7 @@
       },
       "requireQualityOnReceipt": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Il ritorno del subappaltatore è diretto al controllo di qualità.",
           "effect": "Il ritorno del subappaltatore è diretto al controllo di qualità.",
           "affects": [
             "Accesso al contratto",
@@ -2902,7 +2908,7 @@
           "scenario": "Il ritorno del rivestimento viene messo in magazzino dopo l'approvazione di qualità."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Il cancello automatico di qualità non è richiesto per il ritorno subappalto.",
           "effect": "Il cancello automatico di qualità non è richiesto per il ritorno subappalto.",
           "affects": [
             "Accesso al contratto"
@@ -2912,7 +2918,7 @@
       },
       "requireTaskAssignment": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "L'ordine di operazione di subappalto deve essere assegnato a un utente.",
           "effect": "L'ordine di operazione di subappalto deve essere assegnato a un utente.",
           "affects": [
             "Servizi",
@@ -2921,7 +2927,7 @@
           "scenario": "L'attività di produzione non sarà pubblicata a meno che il magazzino non sia selezionato."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "L'ordine può procedere nel pool di attività senza incarico.",
           "effect": "L'ordine può procedere nel pool di attività senza incarico.",
           "affects": [
             "Servizi"
@@ -2931,7 +2937,7 @@
       },
       "requireApproval": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "L'approvazione autorizzata è richiesta prima dell'entrata in vigore del documento contrattuale.",
           "effect": "L'approvazione autorizzata è richiesta prima dell'entrata in vigore del documento contrattuale.",
           "affects": [
             "Conferma d'ordine"
@@ -2939,7 +2945,7 @@
           "scenario": "Planner apre l'ordine; Una volta che il supervisore lo approva, è collocato nel magazzino."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Il documento corrente può essere messo in funzione direttamente.",
           "effect": "Il documento corrente può essere messo in funzione direttamente.",
           "affects": [
             "Stato dell'ordine"
@@ -2949,7 +2955,7 @@
       },
       "allowOverReceipt": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Il ritorno subappaltato può superare quello che viene spedito all'interno della tolleranza definita.",
           "effect": "Il ritorno subappaltato può superare quello che viene spedito all'interno della tolleranza definita.",
           "affects": [
             "Controllo quantità di ingresso contratto"
@@ -2957,7 +2963,7 @@
           "scenario": "Con la differenza di fuoco/misurazione, 101 kg viene accettato invece di 100."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Più ritorni dell'importo inviato saranno bloccati.",
           "effect": "Più ritorni dell'importo inviato saranno bloccati.",
           "affects": [
             "Accesso al contratto"
@@ -3029,7 +3035,7 @@
       },
       "requireProductionOrderReference": {
         "true": {
-          "summary": "Questo controllo viene applicato alle transazioni attive e nuove.",
+          "summary": "Il trasferimento deve essere collegato al valido ordine di lavoro di produzione.",
           "effect": "Il trasferimento deve essere collegato al valido ordine di lavoro di produzione.",
           "affects": [
             "Creazione di un trasferimento alla produzione"
@@ -3037,7 +3043,7 @@
           "scenario": "Il trasferimento non può essere salvato senza selezionare l'ordine di lavoro."
         },
         "false": {
-          "summary": "Questo controllo è spento; L'obbligo pertinente non si applica.",
+          "summary": "Un trasferimento alla produzione non pianificata può essere aperto senza un ordine di lavoro.",
           "effect": "Un trasferimento alla produzione non pianificata può essere aperto senza un ordine di lavoro.",
           "affects": [
             "trasferimento manuale"
@@ -3047,7 +3053,7 @@
       },
       "allowManualTransfer": {
         "true": {
-          "summary": "Questo controllo viene applicato alle transazioni attive e nuove.",
+          "summary": "L'opzione di trasferimento alla produzione ad hoc/manual è disponibile.",
           "effect": "L'opzione di trasferimento alla produzione ad hoc/manual è disponibile.",
           "affects": [
             "Trasferimento alla nuova produzione"
@@ -3055,7 +3061,7 @@
           "scenario": "Il materiale urgente viene inviato alla produzione prima dell'arrivo dell'ordine di lavoro."
         },
         "false": {
-          "summary": "Questo controllo è spento; L'obbligo pertinente non si applica.",
+          "summary": "Viene aperto solo il trasferimento in base all'ordine di lavoro sorgente.",
           "effect": "Viene aperto solo il trasferimento in base all'ordine di lavoro sorgente.",
           "affects": [
             "nuovo trasferimento"
@@ -3065,7 +3071,7 @@
       },
       "requireErpMasterDataForManualTransfer": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Nel trasferimento manuale, il codice stock/warehouse/struttura viene verificato dallo specchio ERP.",
           "effect": "Nel trasferimento manuale, il codice stock/warehouse/struttura viene verificato dallo specchio ERP.",
           "affects": [
             "Verifica del trasferimento manuale"
@@ -3073,7 +3079,7 @@
           "scenario": "Il trasferimento non pianificato non può essere aperto con stock non definito in ERP."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Il trasferimento manuale può procedere con i dati master WMS.",
           "effect": "Il trasferimento manuale può procedere con i dati master WMS.",
           "affects": [
             "Trasferimento manuale"
@@ -3083,7 +3089,7 @@
       },
       "allowAutomaticGeneration": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "I trasferimenti possono essere generati automaticamente da appropriati ordini sorgente.",
           "effect": "I trasferimenti possono essere generati automaticamente da appropriati ordini sorgente.",
           "affects": [
             "Lavoro di integrazione",
@@ -3092,7 +3098,7 @@
           "scenario": "Quando arriva l'ordine di produzione approvato, viene creato un progetto di trasferimento."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Il trasferimento è iniziato dall'utente.",
           "effect": "Il trasferimento è iniziato dall'utente.",
           "affects": [
             "Nuovo trasferimento"
@@ -3102,7 +3108,7 @@
       },
       "checkMaterialAvailability": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "La disponibilità delle scorte di origine viene verificata quando si apre/inizia un ordine.",
           "effect": "La disponibilità delle scorte di origine viene verificata quando si apre/inizia un ordine.",
           "affects": [
             "Verifica dell'ordine",
@@ -3111,7 +3117,7 @@
           "scenario": "Sono necessari 10 AD, se ci sono 8 AD, viene visualizzato un avviso mancante."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Nessun controllo preliminare di disponibilità stock; Resta a raccogliere il controllo finale.",
           "effect": "Nessun controllo preliminare di disponibilità stock; Resta a raccogliere il controllo finale.",
           "affects": [
             "Aggiunta"
@@ -3121,7 +3127,7 @@
       },
       "blockOnShortage": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Il trasferimento di produzione non può essere avviato se manca lo stock.",
           "effect": "Il trasferimento di produzione non può essere avviato se manca lo stock.",
           "affects": [
             "Avviare un'attività"
@@ -3129,7 +3135,7 @@
           "scenario": "8/10 compito è bloccato in magazzino."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Lo stock incompleto può essere accettato con un avviso e trasferito al flusso parziale.",
           "effect": "Lo stock incompleto può essere accettato con un avviso e trasferito al flusso parziale.",
           "affects": [
             "Avviare un'attività",
@@ -3140,7 +3146,7 @@
       },
       "requireTaskAssignment": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Almeno un utente deve essere assegnato al flusso del partecipante.",
           "effect": "Almeno un utente deve essere assegnato al flusso del partecipante.",
           "affects": [
             "Creazione di un compito",
@@ -3149,7 +3155,7 @@
           "scenario": "Gli ordini non possono essere rilasciati senza selezionare il personale."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "L'attività può essere ritirata in piscina senza assegnare un utente.",
           "effect": "L'attività può essere ritirata in piscina senza assegnare un utente.",
           "affects": [
             "Servizi"
@@ -3159,7 +3165,7 @@
       },
       "requireSourceProductionLocation": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Nella raccolta, il rack sorgente di produzione viene verificato tramite codice a barre.",
           "effect": "Nella raccolta, il rack sorgente di produzione viene verificato tramite codice a barre.",
           "affects": [
             "Aggiunta",
@@ -3168,7 +3174,7 @@
           "scenario": "Se lo stock corretto viene scansionato dalla mensola sbagliata, sarà respinto."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Il requisito del rack di risorse non si applica.",
           "effect": "Il requisito del rack di risorse non si applica.",
           "affects": [
             "Collezione"
@@ -3178,7 +3184,7 @@
       },
       "requireTargetProductionLocation": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Lo scaffale di destinazione nell'area di produzione deve essere definito.",
           "effect": "Lo scaffale di destinazione nell'area di produzione deve essere definito.",
           "affects": [
             "Conferma di consegna/trasferimento",
@@ -3187,7 +3193,7 @@
           "scenario": "Il materiale viene assegnato al rack di allestimento di produzione."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "La selezione del rack di destinazione non è obbligatoria.",
           "effect": "La selezione del rack di destinazione non è obbligatoria.",
           "affects": [
             "Completamento del trasferimento"
@@ -3197,7 +3203,7 @@
       },
       "allowPartialSupply": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Una parte della richiesta può essere consegnata alla produzione e un nuovo ordine di lavoro può essere aperto per il resto.",
           "effect": "Una parte della richiesta può essere consegnata alla produzione e un nuovo ordine di lavoro può essere aperto per il resto.",
           "affects": [
             "Conferma del trasferimento",
@@ -3206,7 +3212,7 @@
           "scenario": "8 AD di 10 richieste di AD sono consegnate; Un ordine di prosecuzione è creato per 2 AD."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "La conferma del trasferimento attende l'intero importo della richiesta.",
           "effect": "La conferma del trasferimento attende l'intero importo della richiesta.",
           "affects": [
             "Conferma del trasferimento"
@@ -3216,7 +3222,7 @@
       },
       "allowOverIssue": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "L'uscita alla produzione in programma può essere effettuata entro tolleranza.",
           "effect": "L'uscita alla produzione in programma può essere effettuata entro tolleranza.",
           "affects": [
             "Importo della raccolta",
@@ -3225,7 +3231,7 @@
           "scenario": "La domanda di 100 kg è data con tolleranza di 101 kg."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "L'uscita superiore all'importo della domanda è bloccata.",
           "effect": "L'uscita superiore all'importo della domanda è bloccata.",
           "affects": [
             "Scansione del codice a barre"
@@ -3245,7 +3251,7 @@
       },
       "requireApproval": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "La persona/supervisore che riceve il prodotto per la produzione dà l'approvazione finale del trasferimento.",
           "effect": "La persona/supervisore che riceve il prodotto per la produzione dà l'approvazione finale del trasferimento.",
           "affects": [
             "Conferma del secondo passaggio"
@@ -3253,7 +3259,7 @@
           "scenario": "Il magazzino raccoglie; Il responsabile della produzione lo approva alla consegna fisica."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Una volta completata la raccolta, il trasferimento può essere completato automaticamente.",
           "effect": "Una volta completata la raccolta, il trasferimento può essere completato automaticamente.",
           "affects": [
             "Stato di trasferimento"
@@ -3294,7 +3300,7 @@
     "kkd": {
       "enableMaterialRequestOrderFlow": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Le richieste del materiale del personale funzionano con gli ordini aperti di Netsis.",
           "effect": "Le richieste del materiale del personale funzionano con gli ordini aperti di Netsis.",
           "affects": [
             "Distribuzione di DPI",
@@ -3303,7 +3309,7 @@
           "scenario": "Vengono selezionati articoli di ordine aperto appartenenti al cliente del dipendente."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Il canale di richiesta materiale ordinato è chiuso.",
           "effect": "Il canale di richiesta materiale ordinato è chiuso.",
           "affects": [
             "Distribuzione di DPI"
@@ -3313,7 +3319,7 @@
       },
       "requireOpenOrder": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Cancella ordine Netsis è obbligatorio per la distribuzione.",
           "effect": "Cancella ordine Netsis è obbligatorio per la distribuzione.",
           "affects": [
             "Nuova distribuzione PPE"
@@ -3321,7 +3327,7 @@
           "scenario": "I documenti non possono essere aperti per il personale che non ha un ordine aperto."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Se c'è un diritto, la distribuzione PPE può essere fatta senza un ordine.",
           "effect": "Se c'è un diritto, la distribuzione PPE può essere fatta senza un ordine.",
           "affects": [
             "Nuova distribuzione"
@@ -3331,7 +3337,7 @@
       },
       "allowMultipleOrdersPerDistribution": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Una singola distribuzione può contenere elementi da ordini diversi.",
           "effect": "Una singola distribuzione può contenere elementi da ordini diversi.",
           "affects": [
             "Linee di distribuzione DPI"
@@ -3339,7 +3345,7 @@
           "scenario": "Scarpe e caschi sono consegnati come due ordini nella stessa consegna."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Una distribuzione si basa su un unico ordine.",
           "effect": "Una distribuzione si basa su un unico ordine.",
           "affects": [
             "Distribuzione di DPI"
@@ -3349,7 +3355,7 @@
       },
       "allowOpenOrderExcess": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Se c'è un ordine aperto, la consegna sopra la matrice dei diritti può essere possibile.",
           "effect": "Se c'è un ordine aperto, la consegna sopra la matrice dei diritti può essere possibile.",
           "affects": [
             "Controllo dei diritti",
@@ -3358,7 +3364,7 @@
           "scenario": "I prodotti supplementari sono dati al personale il cui assegno annuale è scaduto dall'ordine aperto."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "La consegna non può superare l'importo calcolato del diritto.",
           "effect": "La consegna non può superare l'importo calcolato del diritto.",
           "affects": [
             "Richiesta diritti"
@@ -3368,7 +3374,7 @@
       },
       "requireManagerApprovalForExcess": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "La consegna non autorizzata non si trasforma in problema di magazzino senza l'approvazione del gestore.",
           "effect": "La consegna non autorizzata non si trasforma in problema di magazzino senza l'approvazione del gestore.",
           "affects": [
             "Approvazione del DPI",
@@ -3377,7 +3383,7 @@
           "scenario": "Le richieste di ulteriori caschi sono soggette all'approvazione del gestore."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "L'operatore autorizzato può aumentare l'eccesso consentito senza ulteriore approvazione.",
           "effect": "L'operatore autorizzato può aumentare l'eccesso consentito senza ulteriore approvazione.",
           "affects": [
             "Distribuzione di DPI"
@@ -3387,7 +3393,7 @@
       },
       "requireEmployeeUserLink": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "La scheda personale deve essere collegata all'utente WMS attivo.",
           "effect": "La scheda personale deve essere collegata all'utente WMS attivo.",
           "affects": [
             "Verifica personale",
@@ -3396,7 +3402,7 @@
           "scenario": "La consegna al personale senza connessione dell'utente è bloccata."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Il personale che non ha un account WMS può anche registrarsi.",
           "effect": "Il personale che non ha un account WMS può anche registrarsi.",
           "affects": [
             "Distribuzione di DPI"
@@ -3406,7 +3412,7 @@
       },
       "allowFutureDatedDistribution": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "È possibile registrare una futura distribuzione PPE pianificata.",
           "effect": "È possibile registrare una futura distribuzione PPE pianificata.",
           "affects": [
             "Data del documento",
@@ -3415,7 +3421,7 @@
           "scenario": "La consegna del personale è prevista per iniziare la prossima settimana."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "La data del documento non può essere più tardi di oggi.",
           "effect": "La data del documento non può essere più tardi di oggi.",
           "affects": [
             "Nuova distribuzione"
@@ -3427,7 +3433,7 @@
     "procurement": {
       "allowMultipleRfqsPerRequest": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Più di un giro di offerte può essere aperto dalla stessa richiesta.",
           "effect": "Più di un giro di offerte può essere aperto dalla stessa richiesta.",
           "affects": [
             "Creazione di una richiesta di quotazione",
@@ -3436,7 +3442,7 @@
           "scenario": "Il primo giro è considerato costoso; un secondo giro di fornitori è aperto per la stessa domanda."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "La richiesta è limitata ad un round di offerta attiva.",
           "effect": "La richiesta è limitata ad un round di offerta attiva.",
           "affects": [
             "Richiesta di preventivo"
@@ -3446,7 +3452,7 @@
       },
       "allowPartialRfqLines": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Il prodotto/quantità selezionato della domanda può essere valutato.",
           "effect": "Il prodotto/quantità selezionato della domanda può essere valutato.",
           "affects": [
             "Linee RFQ",
@@ -3455,7 +3461,7 @@
           "scenario": "Solo 3 articoli urgenti su una richiesta di 10 persone saranno inclusi nella RFQ."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Tutti gli elementi aperti della richiesta sono inclusi nella RFQ insieme.",
           "effect": "Tutti gli elementi aperti della richiesta sono inclusi nella RFQ insieme.",
           "affects": [
             "Creazione RFQ"
@@ -3465,7 +3471,7 @@
       },
       "allowMultipleQuotesPerSupplier": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Lo stesso fornitore può presentare più registri di offerta per lo stesso tour.",
           "effect": "Lo stesso fornitore può presentare più registri di offerta per lo stesso tour.",
           "affects": [
             "Registrazioni di offerta"
@@ -3473,7 +3479,7 @@
           "scenario": "Il fornitore presenta una seconda offerta per il marchio alternativo."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Un singolo record di quotazione viene mantenuto per fornitore.",
           "effect": "Un singolo record di quotazione viene mantenuto per fornitore.",
           "affects": [
             "Votazione"
@@ -3483,7 +3489,7 @@
       },
       "allowSplitAwardsAcrossSuppliers": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Elementi di domanda/quantità possono essere suddivisi tra diversi fornitori.",
           "effect": "Elementi di domanda/quantità possono essere suddivisi tra diversi fornitori.",
           "affects": [
             "Confronto delle offerte",
@@ -3492,7 +3498,7 @@
           "scenario": "5 articoli sono dati alla società A e 3 articoli sono dati alla società B."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "La ricompensa si traduce in un unico fornitore.",
           "effect": "La ricompensa si traduce in un unico fornitore.",
           "affects": [
             "Conferma del preventivo"
@@ -3502,7 +3508,7 @@
       },
       "allowPartialOrderLines": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "La quantità selezionata del preventivo può essere convertita in un ordine.",
           "effect": "La quantità selezionata del preventivo può essere convertita in un ordine.",
           "affects": [
             "Ordine di acquisto",
@@ -3511,7 +3517,7 @@
           "scenario": "60 AD di 100 AD offerta sono ordinati."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "La linea citazione si trasforma in un ordine con la quantità completa.",
           "effect": "La linea citazione si trasforma in un ordine con la quantità completa.",
           "affects": [
             "Creazione di un ordine"
@@ -3521,7 +3527,7 @@
       },
       "allowMultipleOrdersPerQuote": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Gli ordini multipli possono essere creati dalla stessa offerta.",
           "effect": "Gli ordini multipli possono essere creati dalla stessa offerta.",
           "affects": [
             "Catena d'ordine"
@@ -3529,7 +3535,7 @@
           "scenario": "60 AD sarà aperto oggi, il restante 40 AD sarà aperto nel prossimo ordine."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "L'offerta si trasforma in un unico ordine.",
           "effect": "L'offerta si trasforma in un unico ordine.",
           "affects": [
             "Creazione di un ordine"
@@ -3539,7 +3545,7 @@
       },
       "allowSupplierQuantityChange": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Il fornitore può offrire quantità diverse rispetto a richiesta.",
           "effect": "Il fornitore può offrire quantità diverse rispetto a richiesta.",
           "affects": [
             "Linee di offerta del portale"
@@ -3547,7 +3553,7 @@
           "scenario": "120 è offerto a causa di pacchetto minimo per 100 articoli richiesti."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "L'importo dell'offerta rimane lo stesso dell'importo della richiesta.",
           "effect": "L'importo dell'offerta rimane lo stesso dell'importo della richiesta.",
           "affects": [
             "Votazione"
@@ -3557,7 +3563,7 @@
       },
       "allowZeroUnitPrice": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Il prezzo zero è accettato gratuitamente/sample.",
           "effect": "Il prezzo zero è accettato gratuitamente/sample.",
           "affects": [
             "Verifica offerta"
@@ -3565,7 +3571,7 @@
           "scenario": "Il prodotto campione viene inviato con 0 TL."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "Il prezzo positivo è richiesto per ogni voce di offerta.",
           "effect": "Il prezzo positivo è richiesto per ogni voce di offerta.",
           "affects": [
             "Invia un'offerta"
@@ -3575,7 +3581,7 @@
       },
       "requireSupplierDeliveryDate": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "La scadenza è obbligatoria per ogni voce di offerta.",
           "effect": "La scadenza è obbligatoria per ogni voce di offerta.",
           "affects": [
             "Invia un'offerta",
@@ -3584,7 +3590,7 @@
           "scenario": "Se la scadenza è vuota, il fornitore non può inviare l'offerta."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "La scadenza è facoltativa.",
           "effect": "La scadenza è facoltativa.",
           "affects": [
             "Votazione"
@@ -3594,7 +3600,7 @@
       },
       "allowSupplierRevisions": {
         "true": {
-          "summary": "Questo controllo si applica alle transazioni attive e nuove.",
+          "summary": "Per la proposta presentata è possibile aprire un round di revisione.",
           "effect": "Per la proposta presentata è possibile aprire un round di revisione.",
           "affects": [
             "Portale del fornitore",
@@ -3603,7 +3609,7 @@
           "scenario": "Richiesta di acquisto revisione dei prezzi; fornitore invia nuova versione."
         },
         "false": {
-          "summary": "Questo controllo è chiuso; L'obbligo pertinente non si applica.",
+          "summary": "L'offerta presentata non può essere modificata.",
           "effect": "L'offerta presentata non può essere modificata.",
           "affects": [
             "Stato dell'offerta"
@@ -3661,7 +3667,7 @@
       },
       "allowSupplierDraftSave": {
         "true": {
-          "summary": "Questo controllo viene applicato alle transazioni attive e nuove.",
+          "summary": "Il fornitore può effettuare una registrazione provvisoria senza inviare l'offerta.",
           "effect": "Il fornitore può effettuare una registrazione provvisoria senza inviare l'offerta.",
           "affects": [
             "Portale del fornitore"
@@ -3669,7 +3675,7 @@
           "scenario": "Il preventivo multi-item è registrato oggi e completato domani."
         },
         "false": {
-          "summary": "Questo controllo è spento; L'obbligo pertinente non si applica.",
+          "summary": "L'ingresso del portale deve essere presentato in una singola sessione.",
           "effect": "L'ingresso del portale deve essere presentato in una singola sessione.",
           "affects": [
             "Portale del fornitore"

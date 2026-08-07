@@ -1,11 +1,12 @@
 {
   "labels": {
-    "current": "Currently: {{value}}.",
-    "details": "Impact, scope and example",
-    "effect": "What does the system do with this selection?",
-    "affects": "Which screens and operations are affected?",
-    "scenario": "Real usage scenario",
-    "warning": "Important warning",
+    "current": "Selected value: {{value}}",
+    "shortResult": "What will happen:",
+    "details": "Show the simple explanation and example",
+    "effect": "1. What happens if you select this option?",
+    "affects": "3. Which screens and operations change?",
+    "scenario": "2. Real example: how does the process continue?",
+    "warning": "4. Caution: what can happen with a wrong choice?",
     "enabled": "Enabled",
     "disabled": "Disabled",
     "noPrefix": "No prefix"
@@ -15,6 +16,11 @@
     "days_other": "{{value}} days",
     "revisions_one": "{{value}} revision",
     "revisions_other": "{{value}} revision"
+  },
+  "instructions": {
+    "checkValue": "First check the selected value.",
+    "readResult": "Read the ‘What will happen’ result directly below it.",
+    "openExample": "If you are unsure, open the explanation and read the real example."
   },
   "pages": {
     "default": {
@@ -232,7 +238,7 @@
       },
       "allowUnderReceipt": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "The document can be left open by accepting a portion of the order amount.",
           "effect": "The document can be left open by accepting a portion of the order amount.",
           "affects": [
             "Order accepted",
@@ -241,7 +247,7 @@
           "scenario": "60 AD from 100 AD order; 60 is accepted, 40 remains open."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The order line cannot be completed normally with the missing quantity.",
           "effect": "The order line cannot be completed normally with the missing quantity.",
           "affects": [
             "Order accepted"
@@ -251,7 +257,7 @@
       },
       "requireShortCloseApproval": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Administrator approval is required to cover the remaining order quantity.",
           "effect": "Administrator approval is required to cover the remaining order quantity.",
           "affects": [
             "Short closing",
@@ -260,7 +266,7 @@
           "scenario": "If the remaining 40 will be canceled after 60/100 acceptance, the approval of the supervisor is requested."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The authorized operator can close the missing line without additional approval.",
           "effect": "The authorized operator can close the missing line without additional approval.",
           "affects": [
             "Short closing"
@@ -270,7 +276,7 @@
       },
       "requireReceiptApproval": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "A separate goods acceptance confirmation is created after physical acceptance.",
           "effect": "A separate goods acceptance confirmation is created after physical acceptance.",
           "affects": [
             "Acceptance status",
@@ -280,7 +286,7 @@
           "scenario": "The warehouseman ends the acceptance; The process is not complete until the supervisor says “Approve”."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The operator's completion of goods acceptance constitutes acceptance confirmation.",
           "effect": "The operator's completion of goods acceptance constitutes acceptance confirmation.",
           "affects": [
             "Acceptance status"
@@ -290,7 +296,7 @@
       },
       "requireQualityApproval": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "In stocks for which a quality plan has been created, the process is not released until the decision is completed.",
           "effect": "In stocks for which a quality plan has been created, the process is not released until the decision is completed.",
           "affects": [
             "Quality review",
@@ -299,7 +305,7 @@
           "scenario": "The batch going to quality is kept in quarantine until it is finished."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "If there is no quality rule, separate quality approval is not required.",
           "effect": "If there is no quality rule, separate quality approval is not required.",
           "affects": [
             "Gate of quality"
@@ -309,7 +315,7 @@
       },
       "requireErpApproval": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Authorized user approval is required before ERP submission.",
           "effect": "Authorized user approval is required before ERP submission.",
           "affects": [
             "ERP transfer queue",
@@ -318,7 +324,7 @@
           "scenario": "Delivery note is ready; Once the ERP responsible approves, it is sent to Netsis."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Once the other doors are completed, ERP submission can proceed automatically.",
           "effect": "Once the other doors are completed, ERP submission can proceed automatically.",
           "affects": [
             "ERP transfer queue"
@@ -328,7 +334,7 @@
       },
       "holdInventoryUntilQualityDecision": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Quality pending quantity is allocated from available stock.",
           "effect": "Quality pending quantity is allocated from available stock.",
           "affects": [
             "Shelf balance status",
@@ -337,7 +343,7 @@
           "scenario": "100 AD is on the physical shelf but cannot be allocated to the shipping order until quality is finished."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Quality review alone does not block stock availability.",
           "effect": "Quality review alone does not block stock availability.",
           "affects": [
             "Available balance"
@@ -347,7 +353,7 @@
       },
       "blockPutawayUntilQualityDecision": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "The product awaiting quality cannot be placed on the final shelf.",
           "effect": "The product awaiting quality cannot be placed on the final shelf.",
           "affects": [
             "Shelving task",
@@ -356,7 +362,7 @@
           "scenario": "The product waits on the acceptance/quarantine shelf; After Passed, the target is placed on the shelf."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Physical shelving can be done while waiting for the quality result.",
           "effect": "Physical shelving can be done while waiting for the quality result.",
           "affects": [
             "Shelving task"
@@ -366,7 +372,7 @@
       },
       "allowOrderlessReceipt": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Acceptance can be opened with delivery note and stock item without a purchase order.",
           "effect": "Acceptance can be opened with delivery note and stock item without a purchase order.",
           "affects": [
             "Accepting goods without order"
@@ -374,7 +380,7 @@
           "scenario": "Urgent materials are accepted without an order link."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Every acceptance of goods must be linked to a valid order.",
           "effect": "Every acceptance of goods must be linked to a valid order.",
           "affects": [
             "New goods acceptance start"
@@ -384,7 +390,7 @@
       },
       "allowUnplannedReceipt": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Direct physical acceptance can be made without opening an order in advance.",
           "effect": "Direct physical acceptance can be made without opening an order in advance.",
           "affects": [
             "Direct acceptance",
@@ -393,7 +399,7 @@
           "scenario": "Instant admission is initiated for the vehicle arriving at the door."
         },
         "false": {
-          "summary": "This control is off; The relevant obligation does not apply.",
+          "summary": "A goods acceptance order/task is required prior to physical acceptance.",
           "effect": "A goods acceptance order/task is required prior to physical acceptance.",
           "affects": [
             "Goods receiving duties"
@@ -403,7 +409,7 @@
       },
       "showAllocatedOpenOrderLines": {
         "true": {
-          "summary": "This control is applied to active and new transactions.",
+          "summary": "Order lines reserved for other open WMS acceptance are listed with the warning.",
           "effect": "Order lines reserved for other open WMS acceptance are listed with the warning.",
           "affects": [
             "Netsis order selection"
@@ -411,7 +417,7 @@
           "scenario": "If the same order item is in another order, the user sees this, but the duplicate quantity control continues."
         },
         "false": {
-          "summary": "This control is off; The relevant obligation does not apply.",
+          "summary": "Rows reserved for further WMS acceptance are hidden in the order selection.",
           "effect": "Rows reserved for further WMS acceptance are hidden in the order selection.",
           "affects": [
             "Netsis order selection"
@@ -604,7 +610,7 @@
       },
       "allowUnderReceipt": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "The document can be left open by accepting a portion of the order amount.",
           "effect": "The document can be left open by accepting a portion of the order amount.",
           "affects": [
             "Order accepted",
@@ -613,7 +619,7 @@
           "scenario": "60 AD comes from 100 AD order; 60 is accepted, 40 remains open."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The order line cannot be completed normally with the missing quantity.",
           "effect": "The order line cannot be completed normally with the missing quantity.",
           "affects": [
             "Order accepted"
@@ -623,7 +629,7 @@
       },
       "requireShortCloseApproval": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Administrator approval is required to cover the remaining order quantity.",
           "effect": "Administrator approval is required to cover the remaining order quantity.",
           "affects": [
             "Short closing",
@@ -632,7 +638,7 @@
           "scenario": "If the remaining 40 will be canceled after 60/100 acceptance, the approval of the supervisor is requested."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The authorized operator can close the missing line without additional confirmation.",
           "effect": "The authorized operator can close the missing line without additional confirmation.",
           "affects": [
             "Short closing"
@@ -642,7 +648,7 @@
       },
       "requireReceiptApproval": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "A separate goods acceptance confirmation is created after physical acceptance.",
           "effect": "A separate goods acceptance confirmation is created after physical acceptance.",
           "affects": [
             "Acceptance status",
@@ -652,7 +658,7 @@
           "scenario": "The warehouseman ends the acceptance; The process is not complete until the supervisor says “Approve”."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The operator's completion of goods acceptance constitutes acceptance confirmation.",
           "effect": "The operator's completion of goods acceptance constitutes acceptance confirmation.",
           "affects": [
             "Acceptance status"
@@ -662,7 +668,7 @@
       },
       "requireQualityApproval": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "In stocks for which a quality plan has been created, the process is not released until the decision is completed.",
           "effect": "In stocks for which a quality plan has been created, the process is not released until the decision is completed.",
           "affects": [
             "Quality review",
@@ -671,7 +677,7 @@
           "scenario": "The batch going to quality is kept in quarantine until it is finished."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "If there is no quality rule, separate quality approval is not required.",
           "effect": "If there is no quality rule, separate quality approval is not required.",
           "affects": [
             "Gate of quality"
@@ -681,7 +687,7 @@
       },
       "requireErpApproval": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Authorized user approval is required before ERP submission.",
           "effect": "Authorized user approval is required before ERP submission.",
           "affects": [
             "ERP transfer queue",
@@ -690,7 +696,7 @@
           "scenario": "Delivery note is ready; Once the ERP responsible approves, it is sent to Netsis."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Once the other doors are completed, ERP submission can proceed automatically.",
           "effect": "Once the other doors are completed, ERP submission can proceed automatically.",
           "affects": [
             "ERP transfer queue"
@@ -700,7 +706,7 @@
       },
       "holdInventoryUntilQualityDecision": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Quality pending quantity is allocated from available stock.",
           "effect": "Quality pending quantity is allocated from available stock.",
           "affects": [
             "Shelf balance status",
@@ -709,7 +715,7 @@
           "scenario": "100 AD is on the physical shelf but cannot be allocated to the shipping order until quality is finished."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Quality review alone does not block stock availability.",
           "effect": "Quality review alone does not block stock availability.",
           "affects": [
             "Available balance"
@@ -719,7 +725,7 @@
       },
       "blockPutawayUntilQualityDecision": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "The product awaiting quality cannot be placed on the final shelf.",
           "effect": "The product awaiting quality cannot be placed on the final shelf.",
           "affects": [
             "Shelving task",
@@ -728,7 +734,7 @@
           "scenario": "The product waits on the acceptance/quarantine shelf; After Passed, the target is placed on the shelf."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Physical shelving can be done while waiting for the quality result.",
           "effect": "Physical shelving can be done while waiting for the quality result.",
           "affects": [
             "Shelving task"
@@ -738,7 +744,7 @@
       },
       "allowOrderlessReceipt": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Acceptance can be opened with delivery note and stock item without a purchase order.",
           "effect": "Acceptance can be opened with delivery note and stock item without a purchase order.",
           "affects": [
             "Accepting goods without order"
@@ -746,7 +752,7 @@
           "scenario": "Urgent materials are accepted without an order link."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Every acceptance of goods must be linked to a valid order.",
           "effect": "Every acceptance of goods must be linked to a valid order.",
           "affects": [
             "New goods acceptance start"
@@ -756,7 +762,7 @@
       },
       "allowUnplannedReceipt": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Direct physical acceptance can be made without opening an order in advance.",
           "effect": "Direct physical acceptance can be made without opening an order in advance.",
           "affects": [
             "Direct acceptance",
@@ -765,7 +771,7 @@
           "scenario": "Instant admission is initiated for the vehicle arriving at the door."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Goods acceptance order/task is required before physical acceptance.",
           "effect": "Goods acceptance order/task is required before physical acceptance.",
           "affects": [
             "Goods receiving duties"
@@ -775,7 +781,7 @@
       },
       "showAllocatedOpenOrderLines": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Order lines reserved for other open WMS acceptance are listed with the warning.",
           "effect": "Order lines reserved for other open WMS acceptance are listed with the warning.",
           "affects": [
             "Netsis order selection"
@@ -783,7 +789,7 @@
           "scenario": "If the same order item is in another order, the user sees this, but the duplicate quantity control continues."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Lines reserved for other WMS acceptances are hidden in the order selection.",
           "effect": "Lines reserved for other WMS acceptances are hidden in the order selection.",
           "affects": [
             "Netsis order selection"
@@ -826,7 +832,7 @@
     "outbound": {
       "allowOrderBasedTask": {
         "true": {
-          "summary": "This control is applied to active and new transactions.",
+          "summary": "A discharge/dispatch order can be opened from the order.",
           "effect": "A discharge/dispatch order can be opened from the order.",
           "affects": [
             "New order",
@@ -835,7 +841,7 @@
           "scenario": "The sales order is selected and the picking task is assigned to the staff."
         },
         "false": {
-          "summary": "This control is off; The relevant obligation does not apply.",
+          "summary": "Order-based attendant flow cannot be used in the menu.",
           "effect": "Order-based attendant flow cannot be used in the menu.",
           "affects": [
             "New order"
@@ -845,7 +851,7 @@
       },
       "allowStockBasedTask": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "A stock outlet can be opened without an order.",
           "effect": "A stock outlet can be opened without an order.",
           "affects": [
             "Free stock issue",
@@ -854,7 +860,7 @@
           "scenario": "Stock is selected for sample shipment and a collection order is assigned."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Exit without an order will be blocked.",
           "effect": "Exit without an order will be blocked.",
           "affects": [
             "New order"
@@ -864,7 +870,7 @@
       },
       "allowOrderBasedDirect": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Transactions can be made directly from the order without assigning a task.",
           "effect": "Transactions can be made directly from the order without assigning a task.",
           "affects": [
             "Direct exit/dispatch"
@@ -872,7 +878,7 @@
           "scenario": "The small order is collected and completed by the operator on the same screen."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Ordered transactions are executed from the attendant flow.",
           "effect": "Ordered transactions are executed from the attendant flow.",
           "affects": [
             "Direct action"
@@ -882,7 +888,7 @@
       },
       "allowStockBasedDirect": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Stock without an order can be taken directly to the outlet.",
           "effect": "Stock without an order can be taken directly to the outlet.",
           "affects": [
             "Direct free output"
@@ -890,7 +896,7 @@
           "scenario": "Scrap or sample stock is removed instantly."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Direct exit without order is blocked.",
           "effect": "Direct exit without order is blocked.",
           "affects": [
             "New release"
@@ -1036,7 +1042,7 @@
       },
       "requireApproval": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Authorized approval is required before the order goes into operation.",
           "effect": "Authorized approval is required before the order goes into operation.",
           "affects": [
             "Order status",
@@ -1045,7 +1051,7 @@
           "scenario": "The planner creates the outline; After the approval of the supervisor, the warehouseman sees it."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The order can be put into operation directly when appropriate.",
           "effect": "The order can be put into operation directly when appropriate.",
           "affects": [
             "Order status"
@@ -1055,7 +1061,7 @@
       },
       "requireAssigneeForTask": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "At least one user must be assigned to the attendant flow.",
           "effect": "At least one user must be assigned to the attendant flow.",
           "affects": [
             "Creating a task",
@@ -1064,7 +1070,7 @@
           "scenario": "Order cannot be released without selecting personnel."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The task can be dropped into the pool without assigning a user.",
           "effect": "The task can be dropped into the pool without assigning a user.",
           "affects": [
             "Task pool"
@@ -1074,7 +1080,7 @@
       },
       "allowMultipleAssignees": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "The same task can be assigned to multiple users/teams.",
           "effect": "The same task can be assigned to multiple users/teams.",
           "affects": [
             "Assign tasks",
@@ -1083,7 +1089,7 @@
           "scenario": "Large order is collected in parallel by two warehousemen."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The task can only be assigned to a single responsible person.",
           "effect": "The task can only be assigned to a single responsible person.",
           "affects": [
             "Assign tasks"
@@ -1093,7 +1099,7 @@
       },
       "autoReleaseTaskBased": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "The current officer is automatically released when the order is recorded.",
           "effect": "The current officer is automatically released when the order is recorded.",
           "affects": [
             "Task broadcast"
@@ -1101,7 +1107,7 @@
           "scenario": "As soon as the assignment is completed, the task falls on the staff list."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The task also needs release processing.",
           "effect": "The task also needs release processing.",
           "affects": [
             "Task status"
@@ -1111,7 +1117,7 @@
       },
       "allowPartialPicking": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "The collection session may be closed below the plan amount.",
           "effect": "The collection session may be closed below the plan amount.",
           "affects": [
             "Collection",
@@ -1120,7 +1126,7 @@
           "scenario": "6 AD from 10 AD are collected and the session is partially closed."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The aggregation waits for the entire amount to be completed.",
           "effect": "The aggregation waits for the entire amount to be completed.",
           "affects": [
             "Addition completion"
@@ -1130,7 +1136,7 @@
       },
       "allowPartialShipment": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "A portion of the collected amount can be completed as shipment/output.",
           "effect": "A portion of the collected amount can be completed as shipment/output.",
           "affects": [
             "Shipment completion",
@@ -1139,7 +1145,7 @@
           "scenario": "6 out of 10 AD leave by vehicle, 4 remain open."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The document is only completed when all the appropriate amount is available.",
           "effect": "The document is only completed when all the appropriate amount is available.",
           "affects": [
             "Shipment completion"
@@ -1149,7 +1155,7 @@
       },
       "requireSourceLocation": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Each row requires source shelf selection or barcode verification.",
           "effect": "Each row requires source shelf selection or barcode verification.",
           "affects": [
             "Addition",
@@ -1158,7 +1164,7 @@
           "scenario": "Incorrect shelf barcode will be rejected even if the stock is correct."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The source shelf is not required on the row; The system can resolve it from the appropriate balance.",
           "effect": "The source shelf is not required on the row; The system can resolve it from the appropriate balance.",
           "affects": [
             "Addition"
@@ -1168,7 +1174,7 @@
       },
       "requireShipmentInformation": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Check-out cannot be completed without entering vehicle, driver or transportation information.",
           "effect": "Check-out cannot be completed without entering vehicle, driver or transportation information.",
           "affects": [
             "Upload",
@@ -1177,7 +1183,7 @@
           "scenario": "Complete shipment process is blocked when the plate is missing."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Transport information is optional.",
           "effect": "Transport information is optional.",
           "affects": [
             "Installation"
@@ -1187,7 +1193,7 @@
       },
       "requireLoadingConfirmation": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Separate loading confirmation is required after collection.",
           "effect": "Separate loading confirmation is required after collection.",
           "affects": [
             "Load control",
@@ -1196,7 +1202,7 @@
           "scenario": "The collected parcel is shipped after being verified with the barcode in the vehicle."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Once the collection/packaging is completed, no separate loading step is required.",
           "effect": "Once the collection/packaging is completed, no separate loading step is required.",
           "affects": [
             "Shipment status"
@@ -1206,7 +1212,7 @@
       },
       "autoPostErpAfterApproval": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "After the final operation approval, the ERP record is automatically queued.",
           "effect": "After the final operation approval, the ERP record is automatically queued.",
           "affects": [
             "ERP shipping/warehouse issue"
@@ -1214,7 +1220,7 @@
           "scenario": "Once the upload approval is given, the Netsis record is sent automatically."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "ERP transfer is initiated separately by the user or integration task.",
           "effect": "ERP transfer is initiated separately by the user or integration task.",
           "affects": [
             "ERP queue"
@@ -1226,7 +1232,7 @@
     "shipping": {
       "allowOrderBasedTask": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "A discharge/dispatch order can be opened from the order.",
           "effect": "A discharge/dispatch order can be opened from the order.",
           "affects": [
             "New order",
@@ -1235,7 +1241,7 @@
           "scenario": "The sales order is selected and the picking task is assigned to the personnel."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Order-based attendant flow cannot be used in the menu.",
           "effect": "Order-based attendant flow cannot be used in the menu.",
           "affects": [
             "New order"
@@ -1245,7 +1251,7 @@
       },
       "allowStockBasedTask": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "A stock outlet can be opened without an order.",
           "effect": "A stock outlet can be opened without an order.",
           "affects": [
             "Free stock issue",
@@ -1254,7 +1260,7 @@
           "scenario": "Stock is selected for sample shipment and a collection order is assigned."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Unattended exit is blocked.",
           "effect": "Unattended exit is blocked.",
           "affects": [
             "New order"
@@ -1264,7 +1270,7 @@
       },
       "allowOrderBasedDirect": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Transactions can be made directly from the order without assigning a task.",
           "effect": "Transactions can be made directly from the order without assigning a task.",
           "affects": [
             "Direct exit/dispatch"
@@ -1272,7 +1278,7 @@
           "scenario": "The small order is collected and completed by the operator on the same screen."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Ordered transactions are executed from the attendant flow.",
           "effect": "Ordered transactions are executed from the attendant flow.",
           "affects": [
             "Direct action"
@@ -1282,7 +1288,7 @@
       },
       "allowStockBasedDirect": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Stock without an order can be taken directly to the outlet.",
           "effect": "Stock without an order can be taken directly to the outlet.",
           "affects": [
             "Direct free output"
@@ -1290,7 +1296,7 @@
           "scenario": "Scrap or sample stock is removed instantly."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Direct exit without order is blocked.",
           "effect": "Direct exit without order is blocked.",
           "affects": [
             "New release"
@@ -1436,7 +1442,7 @@
       },
       "requireApproval": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Authorized approval is required before the order goes into operation.",
           "effect": "Authorized approval is required before the order goes into operation.",
           "affects": [
             "Order status",
@@ -1445,7 +1451,7 @@
           "scenario": "Planner creates outline; After the approval of the supervisor, the warehouseman sees it."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The order can be put into operation directly when appropriate.",
           "effect": "The order can be put into operation directly when appropriate.",
           "affects": [
             "Order status"
@@ -1455,7 +1461,7 @@
       },
       "requireAssigneeForTask": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "At least one user must be assigned to the attendant flow.",
           "effect": "At least one user must be assigned to the attendant flow.",
           "affects": [
             "Creating a task",
@@ -1464,7 +1470,7 @@
           "scenario": "Orders cannot be released without selecting personnel."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The task can be dropped into the pool without assigning a user.",
           "effect": "The task can be dropped into the pool without assigning a user.",
           "affects": [
             "Task pool"
@@ -1474,7 +1480,7 @@
       },
       "allowMultipleAssignees": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "The same task can be assigned to multiple users/teams.",
           "effect": "The same task can be assigned to multiple users/teams.",
           "affects": [
             "Assign tasks",
@@ -1483,7 +1489,7 @@
           "scenario": "The large order is picked in parallel by two warehousemen."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The task can only be assigned to a single responsible person.",
           "effect": "The task can only be assigned to a single responsible person.",
           "affects": [
             "Assign tasks"
@@ -1493,7 +1499,7 @@
       },
       "autoReleaseTaskBased": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "The current officer is automatically released when the order is recorded.",
           "effect": "The current officer is automatically released when the order is recorded.",
           "affects": [
             "Task broadcast"
@@ -1501,7 +1507,7 @@
           "scenario": "As soon as the assignment is completed, the task falls on the staff list."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The task also needs release processing.",
           "effect": "The task also needs release processing.",
           "affects": [
             "Task status"
@@ -1511,7 +1517,7 @@
       },
       "allowPartialPicking": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "The collection session may be closed below the plan amount.",
           "effect": "The collection session may be closed below the plan amount.",
           "affects": [
             "Collection",
@@ -1520,7 +1526,7 @@
           "scenario": "6 AD from 10 AD are collected and the session is partially closed."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The aggregation waits for the entire amount to be completed.",
           "effect": "The aggregation waits for the entire amount to be completed.",
           "affects": [
             "Addition completion"
@@ -1530,7 +1536,7 @@
       },
       "allowPartialShipment": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "A portion of the collected amount can be completed as shipment/output.",
           "effect": "A portion of the collected amount can be completed as shipment/output.",
           "affects": [
             "Shipment completion",
@@ -1539,7 +1545,7 @@
           "scenario": "6 out of 10 AD leave by vehicle, 4 remain open."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The document is only completed when all the appropriate amount is available.",
           "effect": "The document is only completed when all the appropriate amount is available.",
           "affects": [
             "Shipment completion"
@@ -1549,7 +1555,7 @@
       },
       "requireSourceLocation": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Each row requires source shelf selection or barcode verification.",
           "effect": "Each row requires source shelf selection or barcode verification.",
           "affects": [
             "Addition",
@@ -1558,7 +1564,7 @@
           "scenario": "Incorrect shelf barcode will be rejected even if the stock is correct."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The source shelf is not required on the row; The system can resolve it from the appropriate balance.",
           "effect": "The source shelf is not required on the row; The system can resolve it from the appropriate balance.",
           "affects": [
             "Addition"
@@ -1568,7 +1574,7 @@
       },
       "requireShipmentInformation": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Checkout cannot be completed without entering vehicle, driver or transportation information.",
           "effect": "Checkout cannot be completed without entering vehicle, driver or transportation information.",
           "affects": [
             "Upload",
@@ -1577,7 +1583,7 @@
           "scenario": "Complete shipment process is blocked when the plate is missing."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Transport information is optional.",
           "effect": "Transport information is optional.",
           "affects": [
             "Installation"
@@ -1587,7 +1593,7 @@
       },
       "requireLoadingConfirmation": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Separate loading confirmation is required after collection.",
           "effect": "Separate loading confirmation is required after collection.",
           "affects": [
             "Load control",
@@ -1596,7 +1602,7 @@
           "scenario": "The collected parcel is shipped after being verified with the barcode in the vehicle."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Once the collection/packaging is completed, no separate loading step is required.",
           "effect": "Once the collection/packaging is completed, no separate loading step is required.",
           "affects": [
             "Shipment status"
@@ -1606,7 +1612,7 @@
       },
       "autoPostErpAfterApproval": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "After the final operation approval, the ERP record is automatically queued.",
           "effect": "After the final operation approval, the ERP record is automatically queued.",
           "affects": [
             "ERP shipping/warehouse issue"
@@ -1614,7 +1620,7 @@
           "scenario": "Once the upload approval is given, the Netsis record is sent automatically."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "ERP transfer is initiated separately by the user or integration task.",
           "effect": "ERP transfer is initiated separately by the user or integration task.",
           "affects": [
             "ERP queue"
@@ -1626,7 +1632,7 @@
     "transfer": {
       "allowOrderBasedTask": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "A discharge/dispatch order can be opened from the order.",
           "effect": "A discharge/dispatch order can be opened from the order.",
           "affects": [
             "New order",
@@ -1635,7 +1641,7 @@
           "scenario": "The sales order is selected and the picking task is assigned to the personnel."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Order-based attendant flow cannot be used in the menu.",
           "effect": "Order-based attendant flow cannot be used in the menu.",
           "affects": [
             "New order"
@@ -1645,7 +1651,7 @@
       },
       "allowStockBasedTask": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "A stock outlet can be opened without an order.",
           "effect": "A stock outlet can be opened without an order.",
           "affects": [
             "Free stock issue",
@@ -1654,7 +1660,7 @@
           "scenario": "Stock is selected for sample shipment and a collection order is assigned."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Exit without an order will be blocked.",
           "effect": "Exit without an order will be blocked.",
           "affects": [
             "New order"
@@ -1664,7 +1670,7 @@
       },
       "allowOrderBasedDirect": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Transactions can be made directly from the order without assigning a task.",
           "effect": "Transactions can be made directly from the order without assigning a task.",
           "affects": [
             "Direct exit/dispatch"
@@ -1672,7 +1678,7 @@
           "scenario": "The small order is collected and completed by the operator on the same screen."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Ordered transactions are executed from the attendant flow.",
           "effect": "Ordered transactions are executed from the attendant flow.",
           "affects": [
             "Direct action"
@@ -1682,7 +1688,7 @@
       },
       "allowStockBasedDirect": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Stock without an order can be taken directly to the outlet.",
           "effect": "Stock without an order can be taken directly to the outlet.",
           "affects": [
             "Direct free output"
@@ -1690,7 +1696,7 @@
           "scenario": "Scrap or sample stock is removed instantly."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Direct exit without order is blocked.",
           "effect": "Direct exit without order is blocked.",
           "affects": [
             "New release"
@@ -1741,7 +1747,7 @@
       },
       "requireApproval": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Authorized approval is required before the order goes into operation.",
           "effect": "Authorized approval is required before the order goes into operation.",
           "affects": [
             "Order status",
@@ -1750,7 +1756,7 @@
           "scenario": "Planner creates draft; After the approval of the supervisor, the warehouseman sees it."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The order can be put into operation directly when appropriate.",
           "effect": "The order can be put into operation directly when appropriate.",
           "affects": [
             "Order status"
@@ -1760,7 +1766,7 @@
       },
       "requireAssigneeForTask": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "At least one user must be assigned to the attendant flow.",
           "effect": "At least one user must be assigned to the attendant flow.",
           "affects": [
             "Creating a task",
@@ -1769,7 +1775,7 @@
           "scenario": "Orders cannot be released without selecting personnel."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The task can be dropped into the pool without assigning a user.",
           "effect": "The task can be dropped into the pool without assigning a user.",
           "affects": [
             "Task pool"
@@ -1779,7 +1785,7 @@
       },
       "allowMultipleAssignees": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "The same task can be assigned to multiple users/teams.",
           "effect": "The same task can be assigned to multiple users/teams.",
           "affects": [
             "Assign tasks",
@@ -1788,7 +1794,7 @@
           "scenario": "The large order is picked in parallel by two warehousemen."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The task can only be assigned to a single responsible person.",
           "effect": "The task can only be assigned to a single responsible person.",
           "affects": [
             "Assign tasks"
@@ -1798,7 +1804,7 @@
       },
       "autoReleaseTaskBased": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "The current officer is automatically released when the order is recorded.",
           "effect": "The current officer is automatically released when the order is recorded.",
           "affects": [
             "Task broadcast"
@@ -1806,7 +1812,7 @@
           "scenario": "As soon as the assignment is completed, the task falls on the staff list."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The task also needs release processing.",
           "effect": "The task also needs release processing.",
           "affects": [
             "Task status"
@@ -1816,7 +1822,7 @@
       },
       "allowPartialPicking": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "The collection session may be closed below the plan amount.",
           "effect": "The collection session may be closed below the plan amount.",
           "affects": [
             "Collection",
@@ -1825,7 +1831,7 @@
           "scenario": "6 AD from 10 AD are collected and the session is partially closed."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The aggregation waits for the entire amount to be completed.",
           "effect": "The aggregation waits for the entire amount to be completed.",
           "affects": [
             "Addition completion"
@@ -1835,7 +1841,7 @@
       },
       "requireSourceLocation": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Each row requires source shelf selection or barcode verification.",
           "effect": "Each row requires source shelf selection or barcode verification.",
           "affects": [
             "Addition",
@@ -1844,7 +1850,7 @@
           "scenario": "Incorrect shelf barcode will be rejected even if the stock is correct."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The source shelf is not required on the row; The system can resolve it from the appropriate balance.",
           "effect": "The source shelf is not required on the row; The system can resolve it from the appropriate balance.",
           "affects": [
             "Addition"
@@ -1854,7 +1860,7 @@
       },
       "requireShipmentInformation": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Check-out cannot be completed without entering vehicle, driver or transportation information.",
           "effect": "Check-out cannot be completed without entering vehicle, driver or transportation information.",
           "affects": [
             "Upload",
@@ -1863,7 +1869,7 @@
           "scenario": "Complete shipment process is blocked when the plate is missing."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Transport information is optional.",
           "effect": "Transport information is optional.",
           "affects": [
             "Installation"
@@ -1901,7 +1907,7 @@
       },
       "allowPartialShipment": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "A portion of the order can be shipped from the source warehouse.",
           "effect": "A portion of the order can be shipped from the source warehouse.",
           "affects": [
             "Transfer dispatch",
@@ -1910,7 +1916,7 @@
           "scenario": "60 AD of the 100 AD transfer will be released with the first vehicle."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Resource dispatch waits for the full plan amount.",
           "effect": "Resource dispatch waits for the full plan amount.",
           "affects": [
             "Transfer dispatch"
@@ -1920,7 +1926,7 @@
       },
       "allowPartialReceipt": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "The target warehouse can partially accept the incoming quantity.",
           "effect": "The target warehouse can partially accept the incoming quantity.",
           "affects": [
             "Transfer acceptance"
@@ -1928,7 +1934,7 @@
           "scenario": "60 AD in the first vehicle is accepted, 40 AD remains in transit."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Target acceptance waits for the entire shipment amount.",
           "effect": "Target acceptance waits for the entire shipment amount.",
           "affects": [
             "Transfer acceptance"
@@ -1938,7 +1944,7 @@
       },
       "requireDestinationAcceptance": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Separate acceptance confirmation from the target user is required after the source exits.",
           "effect": "Separate acceptance confirmation from the target user is required after the source exits.",
           "affects": [
             "Transit stock",
@@ -1947,7 +1953,7 @@
           "scenario": "Stock is on the way; When the target warehouseman says pick up, the target balance is transferred."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Source output can directly update target balance.",
           "effect": "Source output can directly update target balance.",
           "affects": [
             "Transfer completion"
@@ -1957,7 +1963,7 @@
       },
       "createTransitInventory": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Transit balance is kept between source exit and target acceptance.",
           "effect": "Transit balance is kept between source exit and target acceptance.",
           "affects": [
             "Transit stock",
@@ -1966,7 +1972,7 @@
           "scenario": "100 AD in the vehicle is not in the source, it is not in the target; appears in transit."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Separate transit stock status is not created.",
           "effect": "Separate transit stock status is not created.",
           "affects": [
             "Warehouse balance"
@@ -1976,7 +1982,7 @@
       },
       "requirePutaway": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "After target acceptance, the shelving task must be completed.",
           "effect": "After target acceptance, the shelving task must be completed.",
           "affects": [
             "Shelving",
@@ -1985,7 +1991,7 @@
           "scenario": "The process does not close until the product in the reception area is read to the target shelf."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Target acceptance can write balance directly to the selected shelf.",
           "effect": "Target acceptance can write balance directly to the selected shelf.",
           "affects": [
             "Target shelf balance"
@@ -1995,7 +2001,7 @@
       },
       "requireTargetLocation": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Target shelf is mandatory in the transfer line.",
           "effect": "Target shelf is mandatory in the transfer line.",
           "affects": [
             "Create an order",
@@ -2004,7 +2010,7 @@
           "scenario": "A row cannot be saved without selecting the target shelf."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The target shelf can be determined at the acceptance/shelving stage.",
           "effect": "The target shelf can be determined at the acceptance/shelving stage.",
           "affects": [
             "Target acceptance"
@@ -2136,7 +2142,7 @@
       },
       "autoCreateInspectionOnReceipt": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Inspection is opened automatically for the goods acceptance line that complies with the quality rule.",
           "effect": "Inspection is opened automatically for the goods acceptance line that complies with the quality rule.",
           "affects": [
             "Goods acceptance completion",
@@ -2145,7 +2151,7 @@
           "scenario": "When quality mandatory stock is accepted, the operator does not open a separate record."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The review is opened manually by the authorized user.",
           "effect": "The review is opened manually by the authorized user.",
           "affects": [
             "Quality list"
@@ -2155,7 +2161,7 @@
       },
       "holdInventoryUntilDecision": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Stock cannot be used until a quality decision is made.",
           "effect": "Stock cannot be used until a quality decision is made.",
           "affects": [
             "Available balance",
@@ -2164,7 +2170,7 @@
           "scenario": "shelf cannot be selected for the shipment order."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Quality registration alone does not block stock availability.",
           "effect": "Quality registration alone does not block stock availability.",
           "affects": [
             "Available balance"
@@ -2174,7 +2180,7 @@
       },
       "blockPutawayUntilDecision": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "The product awaiting quality cannot be moved to the final shelf.",
           "effect": "The product awaiting quality cannot be moved to the final shelf.",
           "affects": [
             "Shelving task"
@@ -2182,7 +2188,7 @@
           "scenario": "The product waits in the quality area; After the decision, it goes to the normal shelf."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Physical shelving can be done while waiting for quality.",
           "effect": "Physical shelving can be done while waiting for quality.",
           "affects": [
             "Shelving"
@@ -2192,7 +2198,7 @@
       },
       "blockErpPostingUntilDecision": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "ERP delivery note will not be sent until the quality decision is completed.",
           "effect": "ERP delivery note will not be sent until the quality decision is completed.",
           "affects": [
             "ERP receipt"
@@ -2200,7 +2206,7 @@
           "scenario": "When the Passed or Failed decision is made, a mandatory delivery note is sent."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The quality result does not hold up the ERP transfer.",
           "effect": "The quality result does not hold up the ERP transfer.",
           "affects": [
             "ERP transfer"
@@ -2210,7 +2216,7 @@
       },
       "requireManagerApprovalForRelease": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Returning from quarantine to usable stock requires administrator approval.",
           "effect": "Returning from quarantine to usable stock requires administrator approval.",
           "affects": [
             "Quality release"
@@ -2218,7 +2224,7 @@
           "scenario": "Returns Quality Passed; Once the manager approves, the stock is opened."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The authorized quality user's decision releases the stock.",
           "effect": "The authorized quality user's decision releases the stock.",
           "affects": [
             "Quality judgment"
@@ -2228,7 +2234,7 @@
       },
       "allowPartialDecision": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "The quantity of a quality batch can be divided into different results.",
           "effect": "The quantity of a quality batch can be divided into different results.",
           "affects": [
             "Quality decision lines",
@@ -2237,7 +2243,7 @@
           "scenario": "95 out of 100 AD are accepted and 5 are rejected."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "A single quality decision is given to the entire batch.",
           "effect": "A single quality decision is given to the entire batch.",
           "affects": [
             "Quality judgment"
@@ -2247,7 +2253,7 @@
       },
       "allowDirectReceiptWhenNoRule": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Stock without quality rules is accepted without waiting for quality.",
           "effect": "Stock without quality rules is accepted without waiting for quality.",
           "affects": [
             "Accepting goods",
@@ -2256,7 +2262,7 @@
           "scenario": "Consumables that do not have the rule become direct stock."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Although not a rule, quality judgment/manual guidance is required.",
           "effect": "Although not a rule, quality judgment/manual guidance is required.",
           "affects": [
             "Goods acceptance completion"
@@ -2266,7 +2272,7 @@
       },
       "blockReceiptWhenLotMissing": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "In stock with lot tracking, acceptance cannot be completed without entering the lot.",
           "effect": "In stock with lot tracking, acceptance cannot be completed without entering the lot.",
           "affects": [
             "Goods acceptance verification"
@@ -2274,7 +2280,7 @@
           "scenario": "If the Lot field is empty, the correction error is shown to the user."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The quality module does not prevent lot shortages separately.",
           "effect": "The quality module does not prevent lot shortages separately.",
           "affects": [
             "Acceptance of goods"
@@ -2284,7 +2290,7 @@
       },
       "blockReceiptWhenSerialMissing": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "In stock with serial tracking, acceptance cannot be completed without entering the required serial number.",
           "effect": "In stock with serial tracking, acceptance cannot be completed without entering the required serial number.",
           "affects": [
             "Barcode/serial verification"
@@ -2292,7 +2298,7 @@
           "scenario": "If 3 AD series are required, three series must be read."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The quality module does not prevent serial failure separately.",
           "effect": "The quality module does not prevent serial failure separately.",
           "affects": [
             "Accepting goods"
@@ -2302,7 +2308,7 @@
       },
       "blockReceiptWhenExpiryMissing": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "In SKT mandatory stock, acceptance cannot be completed without entering the date.",
           "effect": "In SKT mandatory stock, acceptance cannot be completed without entering the date.",
           "affects": [
             "Goods acceptance verification"
@@ -2310,7 +2316,7 @@
           "scenario": "If the expiration date of the food lot is blank, the registration will be rejected."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The quality module does not additionally prevent SKT deficiency.",
           "effect": "The quality module does not additionally prevent SKT deficiency.",
           "affects": [
             "Acceptance of goods"
@@ -2322,7 +2328,7 @@
     "packing": {
       "requirePacking": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "It is mandatory to create a package before shipment/departure.",
           "effect": "It is mandatory to create a package before shipment/departure.",
           "affects": [
             "Packaging business center",
@@ -2331,7 +2337,7 @@
           "scenario": "Shipment cannot be completed without taking the collected product into the parcel."
         },
         "false": {
-          "summary": "This control is off; The relevant obligation does not apply.",
+          "summary": "The packaging step is optional.",
           "effect": "The packaging step is optional.",
           "affects": [
             "Shipment completion"
@@ -2341,7 +2347,7 @@
       },
       "allowPartialPacking": {
         "true": {
-          "summary": "This control is applied to active and new transactions.",
+          "summary": "A portion of the collected amount may be packaged and left open.",
           "effect": "A portion of the collected amount may be packaged and left open.",
           "affects": [
             "packet lines",
@@ -2350,7 +2356,7 @@
           "scenario": "60 of 100 AD are taken into the first parcel group."
         },
         "false": {
-          "summary": "This control is off; The relevant obligation does not apply.",
+          "summary": "The entire appropriate quantity is expected in the same packaging session.",
           "effect": "The entire appropriate quantity is expected in the same packaging session.",
           "affects": [
             "package closure"
@@ -2360,7 +2366,7 @@
       },
       "allowMixedStock": {
         "true": {
-          "summary": "This control is applied to active and new transactions.",
+          "summary": "The same package may contain different stock codes.",
           "effect": "The same package may contain different stock codes.",
           "affects": [
             "Package content verification"
@@ -2368,7 +2374,7 @@
           "scenario": "Three different products of the same customer are collected in one box."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Each package carries a single stock code.",
           "effect": "Each package carries a single stock code.",
           "affects": [
             "Package content verification"
@@ -2378,7 +2384,7 @@
       },
       "allowMixedLot": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Different lots for the same stock can be packaged in the same package.",
           "effect": "Different lots for the same stock can be packaged in the same package.",
           "affects": [
             "Lot traceability",
@@ -2387,7 +2393,7 @@
           "scenario": "LOT-A and LOT-B are put on the same pallet."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Package is limited to one lot.",
           "effect": "Package is limited to one lot.",
           "affects": [
             "Package content"
@@ -2397,7 +2403,7 @@
       },
       "allowMixedCustomer": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "The same package may contain lines from different customers.",
           "effect": "The same package may contain lines from different customers.",
           "affects": [
             "Customer separation",
@@ -2406,7 +2412,7 @@
           "scenario": "A multi-customer package is prepared in internal transfer consolidation."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The package belongs to a single customer.",
           "effect": "The package belongs to a single customer.",
           "affects": [
             "Package verification"
@@ -2416,7 +2422,7 @@
       },
       "requireSerialLotScan": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "The product is not added to the package until the serial/lot information is verified with the barcode.",
           "effect": "The product is not added to the package until the serial/lot information is verified with the barcode.",
           "affects": [
             "Packaging scanning",
@@ -2425,7 +2431,7 @@
           "scenario": "The identity of the serial device in the parcel is verified by scanning the serial barcode."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Tracking information can be obtained from the current stock selection; Additional reading is not required.",
           "effect": "Tracking information can be obtained from the current stock selection; Additional reading is not required.",
           "affects": [
             "Packaging"
@@ -2435,7 +2441,7 @@
       },
       "requireWeight": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Actual weight is mandatory at package closing.",
           "effect": "Actual weight is mandatory at package closing.",
           "affects": [
             "Close package",
@@ -2444,7 +2450,7 @@
           "scenario": "The parcel cannot be closed without weighing it."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Weight is optional.",
           "effect": "Weight is optional.",
           "affects": [
             "Package closing"
@@ -2454,7 +2460,7 @@
       },
       "requireDimensions": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "The package will not be closed unless the width, length and height are entered.",
           "effect": "The package will not be closed unless the width, length and height are entered.",
           "affects": [
             "Package closing",
@@ -2463,7 +2469,7 @@
           "scenario": "Three dimensions of the cargo box are recorded."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Package dimensions are optional.",
           "effect": "Package dimensions are optional.",
           "affects": [
             "Package closing"
@@ -2473,7 +2479,7 @@
       },
       "requireSscc": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Each logistics unit must carry valid SSCC.",
           "effect": "Each logistics unit must carry valid SSCC.",
           "affects": [
             "Package label",
@@ -2482,7 +2488,7 @@
           "scenario": "The SSCC tag is created as the pallet closes."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Without SSCC the packet can be closed.",
           "effect": "Without SSCC the packet can be closed.",
           "affects": [
             "Package label"
@@ -2492,7 +2498,7 @@
       },
       "autoGenerateSscc": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "If SSCC is mandatory, the system generates the next unique number.",
           "effect": "If SSCC is mandatory, the system generates the next unique number.",
           "affects": [
             "Barcode rule",
@@ -2501,7 +2507,7 @@
           "scenario": "When a new palette is opened, the user does not type a number."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "SSCC is received from the user/external system.",
           "effect": "SSCC is received from the user/external system.",
           "affects": [
             "Creating a package"
@@ -2511,7 +2517,7 @@
       },
       "autoPrintLabelOnClose": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "When the package is closed, the label printing job is automatically opened.",
           "effect": "When the package is closed, the label printing job is automatically opened.",
           "affects": [
             "Printer queue",
@@ -2520,7 +2526,7 @@
           "scenario": "The label is removed as soon as the box is closed."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The label is printed by user command.",
           "effect": "The label is printed by user command.",
           "affects": [
             "Label display"
@@ -2530,7 +2536,7 @@
       },
       "allowReopen": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "A closed package can be reopened by authorized operation.",
           "effect": "A closed package can be reopened by authorized operation.",
           "affects": [
             "Package status",
@@ -2539,7 +2545,7 @@
           "scenario": "When the missing product is noticed, the package is opened again."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "A closed package cannot be changed.",
           "effect": "A closed package cannot be changed.",
           "affects": [
             "Package status"
@@ -2549,7 +2555,7 @@
       },
       "allowRepack": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Package content can be moved to another package.",
           "effect": "Package content can be moved to another package.",
           "affects": [
             "Repackaging",
@@ -2558,7 +2564,7 @@
           "scenario": "The contents of the damaged parcel are transferred to the new parcel."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Moving content between packages is prevented.",
           "effect": "Moving content between packages is prevented.",
           "affects": [
             "Package operations"
@@ -2721,7 +2727,7 @@
       },
       "sendSerialsToErp": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Serial information in WMS operations is also sent to ERP document lines.",
           "effect": "Serial information in WMS operations is also sent to ERP document lines.",
           "affects": [
             "Acceptance of goods",
@@ -2731,7 +2737,7 @@
           "scenario": "When serial product is accepted, the serial list is transferred to the Netsis delivery note."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Series are viewed only within WMS; The amount of documents is sent to ERP.",
           "effect": "Series are viewed only within WMS; The amount of documents is sent to ERP.",
           "affects": [
             "ERP integration",
@@ -2744,7 +2750,7 @@
     "subcontracting": {
       "requireSupplier": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Each subcontractor input/output document is linked to a supplier.",
           "effect": "Each subcontractor input/output document is linked to a supplier.",
           "affects": [
             "Subcontract order creation",
@@ -2753,7 +2759,7 @@
           "scenario": "The material sent to the paint is recorded with the selected subcontractor client."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Supplier selection is not mandatory.",
           "effect": "Supplier selection is not mandatory.",
           "affects": [
             "Subcontract order creation"
@@ -2763,7 +2769,7 @@
       },
       "requireSubcontractOrderForReceipt": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Subcontract return acceptance must be based on valid subcontract order.",
           "effect": "Subcontract return acceptance must be based on valid subcontract order.",
           "affects": [
             "Contract login",
@@ -2772,7 +2778,7 @@
           "scenario": "Returns without an order number will not be accepted."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "It may be possible to accept subcontractor returns without an order.",
           "effect": "It may be possible to accept subcontractor returns without an order.",
           "affects": [
             "Contract login"
@@ -2782,7 +2788,7 @@
       },
       "requireIssueBeforeReceipt": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "The return amount cannot exceed the amount previously sent to the subcontractor.",
           "effect": "The return amount cannot exceed the amount previously sent to the subcontractor.",
           "affects": [
             "Contract login",
@@ -2791,7 +2797,7 @@
           "scenario": "If 10 AD is sent, a maximum of 10 AD will be returned."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "A return record can be opened without the previous subcontractor issue.",
           "effect": "A return record can be opened without the previous subcontractor issue.",
           "affects": [
             "Contract login"
@@ -2801,7 +2807,7 @@
       },
       "allowOrderlessIssue": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Material can be issued to the supplier without a subcontracting order.",
           "effect": "Material can be issued to the supplier without a subcontracting order.",
           "affects": [
             "Outsourced"
@@ -2809,7 +2815,7 @@
           "scenario": "Material is sent without order for sample processing."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Every subcontractor output is linked to the order.",
           "effect": "Every subcontractor output is linked to the order.",
           "affects": [
             "Subcontracting"
@@ -2819,7 +2825,7 @@
       },
       "allowOrderlessReceipt": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Subcontractor returns can be accepted without an order.",
           "effect": "Subcontractor returns can be accepted without an order.",
           "affects": [
             "Contract login"
@@ -2827,7 +2833,7 @@
           "scenario": "Old period work is taken back without an order."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Order is mandatory for subcontracting return.",
           "effect": "Order is mandatory for subcontracting return.",
           "affects": [
             "Contract login"
@@ -2837,7 +2843,7 @@
       },
       "allowSupplierToSupplier": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Material can be directed from one subcontractor to another without returning to the main warehouse.",
           "effect": "Material can be directed from one subcontractor to another without returning to the main warehouse.",
           "affects": [
             "Contract transfer route"
@@ -2845,7 +2851,7 @@
           "scenario": "The product from the painter is sent directly to the galvanizer."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Direct transfer between subcontractors is prevented.",
           "effect": "Direct transfer between subcontractors is prevented.",
           "affects": [
             "Contract transfer route"
@@ -2855,7 +2861,7 @@
       },
       "allowPartialIssue": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "A portion of the planned subcontracted output may be shipped.",
           "effect": "A portion of the planned subcontracted output may be shipped.",
           "affects": [
             "Outsourced",
@@ -2864,7 +2870,7 @@
           "scenario": "60 AD of 100 AD are sent with the first vehicle."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Subcontractor waits for the full quantity.",
           "effect": "Subcontractor waits for the full quantity.",
           "affects": [
             "Outsourced"
@@ -2874,7 +2880,7 @@
       },
       "allowPartialReceipt": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Contract return can be accepted piecemeal.",
           "effect": "Contract return can be accepted piecemeal.",
           "affects": [
             "Contract login",
@@ -2883,7 +2889,7 @@
           "scenario": "40 AD of 100 AD jobs are accepted today."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Return acceptance expects full amount.",
           "effect": "Return acceptance expects full amount.",
           "affects": [
             "Contract login"
@@ -2893,7 +2899,7 @@
       },
       "requireQualityOnReceipt": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Subcontractor return is directed to quality control.",
           "effect": "Subcontractor return is directed to quality control.",
           "affects": [
             "Contract login",
@@ -2902,7 +2908,7 @@
           "scenario": "The coating return is put into stock after quality approval."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Automatic quality gate is not required for subcontracting return.",
           "effect": "Automatic quality gate is not required for subcontracting return.",
           "affects": [
             "Contract login"
@@ -2912,7 +2918,7 @@
       },
       "requireTaskAssignment": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "The subcontracting operation order must be assigned to a user.",
           "effect": "The subcontracting operation order must be assigned to a user.",
           "affects": [
             "Task pool",
@@ -2921,7 +2927,7 @@
           "scenario": "Output task will not be published unless the warehouseman is selected."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The order can proceed in the task pool without assignment.",
           "effect": "The order can proceed in the task pool without assignment.",
           "affects": [
             "Task pool"
@@ -2931,7 +2937,7 @@
       },
       "requireApproval": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Authorized approval is required before the contract document goes into operation.",
           "effect": "Authorized approval is required before the contract document goes into operation.",
           "affects": [
             "Order confirmation"
@@ -2939,7 +2945,7 @@
           "scenario": "Planner opens the order; Once the supervisor approves it, it is placed in the warehouse."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The current document can be put into operation directly.",
           "effect": "The current document can be put into operation directly.",
           "affects": [
             "Order status"
@@ -2949,7 +2955,7 @@
       },
       "allowOverReceipt": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Subcontracted return may exceed what is shipped within the defined tolerance.",
           "effect": "Subcontracted return may exceed what is shipped within the defined tolerance.",
           "affects": [
             "Contract input quantity control"
@@ -2957,7 +2963,7 @@
           "scenario": "With the difference in fire/measurement, 101 kg is accepted instead of 100."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "More returns than the amount sent will be blocked.",
           "effect": "More returns than the amount sent will be blocked.",
           "affects": [
             "Contract login"
@@ -3029,7 +3035,7 @@
       },
       "requireProductionOrderReference": {
         "true": {
-          "summary": "This control is applied to active and new transactions.",
+          "summary": "The transfer must be linked to the valid production work order.",
           "effect": "The transfer must be linked to the valid production work order.",
           "affects": [
             "Creating a transfer to production"
@@ -3037,7 +3043,7 @@
           "scenario": "The transfer cannot be saved without selecting the work order."
         },
         "false": {
-          "summary": "This control is off; The relevant obligation does not apply.",
+          "summary": "A transfer to unplanned production can be opened without a work order.",
           "effect": "A transfer to unplanned production can be opened without a work order.",
           "affects": [
             "manual transfer"
@@ -3047,7 +3053,7 @@
       },
       "allowManualTransfer": {
         "true": {
-          "summary": "This control is applied to active and new transactions.",
+          "summary": "The option to transfer to ad hoc/manual production is available.",
           "effect": "The option to transfer to ad hoc/manual production is available.",
           "affects": [
             "Transfer to new production"
@@ -3055,7 +3061,7 @@
           "scenario": "Urgent material is sent to production before the work order arrives."
         },
         "false": {
-          "summary": "This control is off; The relevant obligation does not apply.",
+          "summary": "Only the transfer based on the source work order is opened.",
           "effect": "Only the transfer based on the source work order is opened.",
           "affects": [
             "new transfer"
@@ -3065,7 +3071,7 @@
       },
       "requireErpMasterDataForManualTransfer": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "In manual transfer, the stock/warehouse/structure code is verified from the ERP mirror.",
           "effect": "In manual transfer, the stock/warehouse/structure code is verified from the ERP mirror.",
           "affects": [
             "Manual transfer verification"
@@ -3073,7 +3079,7 @@
           "scenario": "Unplanned transfer cannot be opened with undefined stock in ERP."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Manual transfer can proceed with WMS master data.",
           "effect": "Manual transfer can proceed with WMS master data.",
           "affects": [
             "Manual transfer"
@@ -3083,7 +3089,7 @@
       },
       "allowAutomaticGeneration": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Transfers can be generated automatically from appropriate source orders.",
           "effect": "Transfers can be generated automatically from appropriate source orders.",
           "affects": [
             "Integration job",
@@ -3092,7 +3098,7 @@
           "scenario": "When the approved production order arrives, a transfer draft is created."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Transfer is initiated by the user.",
           "effect": "Transfer is initiated by the user.",
           "affects": [
             "New transfer"
@@ -3102,7 +3108,7 @@
       },
       "checkMaterialAvailability": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Source stock availability is checked when opening/initiating an order.",
           "effect": "Source stock availability is checked when opening/initiating an order.",
           "affects": [
             "Order verification",
@@ -3111,7 +3117,7 @@
           "scenario": "10 ADs are required, if there are 8 ADs, a missing warning is displayed."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "No preliminary stock availability check; It remains to collect final control.",
           "effect": "No preliminary stock availability check; It remains to collect final control.",
           "affects": [
             "Addition"
@@ -3121,7 +3127,7 @@
       },
       "blockOnShortage": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Production transfer cannot be started if stock is missing.",
           "effect": "Production transfer cannot be started if stock is missing.",
           "affects": [
             "Start a task"
@@ -3129,7 +3135,7 @@
           "scenario": "8/10 task is blocked in stock."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Incomplete stock can be accepted with a warning and transferred to partial flow.",
           "effect": "Incomplete stock can be accepted with a warning and transferred to partial flow.",
           "affects": [
             "Start a task",
@@ -3140,7 +3146,7 @@
       },
       "requireTaskAssignment": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "At least one user must be assigned to the attendant flow.",
           "effect": "At least one user must be assigned to the attendant flow.",
           "affects": [
             "Creating a task",
@@ -3149,7 +3155,7 @@
           "scenario": "Orders cannot be released without selecting personnel."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The task can be dropped into the pool without assigning a user.",
           "effect": "The task can be dropped into the pool without assigning a user.",
           "affects": [
             "Task pool"
@@ -3159,7 +3165,7 @@
       },
       "requireSourceProductionLocation": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "At picking, the production source rack is verified by barcode.",
           "effect": "At picking, the production source rack is verified by barcode.",
           "affects": [
             "Addition",
@@ -3168,7 +3174,7 @@
           "scenario": "If the correct stock is scanned from the wrong shelf, it will be rejected."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Resource rack requirement does not apply.",
           "effect": "Resource rack requirement does not apply.",
           "affects": [
             "Collection"
@@ -3178,7 +3184,7 @@
       },
       "requireTargetProductionLocation": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "The target shelf in the production area must be defined.",
           "effect": "The target shelf in the production area must be defined.",
           "affects": [
             "Delivery/transfer confirmation",
@@ -3187,7 +3193,7 @@
           "scenario": "The material is assigned to the production staging rack."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Target rack selection is not mandatory.",
           "effect": "Target rack selection is not mandatory.",
           "affects": [
             "Transfer completion"
@@ -3197,7 +3203,7 @@
       },
       "allowPartialSupply": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "A part of the request can be delivered to production and a new work order can be opened for the remaining.",
           "effect": "A part of the request can be delivered to production and a new work order can be opened for the remaining.",
           "affects": [
             "Transfer confirmation",
@@ -3206,7 +3212,7 @@
           "scenario": "8 AD of 10 AD requests are delivered; A continuation order is created for 2 AD."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Transfer confirmation awaits the entire request amount.",
           "effect": "Transfer confirmation awaits the entire request amount.",
           "affects": [
             "Transfer confirmation"
@@ -3216,7 +3222,7 @@
       },
       "allowOverIssue": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Exit to production on schedule can be done within tolerance.",
           "effect": "Exit to production on schedule can be done within tolerance.",
           "affects": [
             "Collection amount",
@@ -3225,7 +3231,7 @@
           "scenario": "100 kg demand is given with 101 kg tolerance."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Output exceeding the demand amount is blocked.",
           "effect": "Output exceeding the demand amount is blocked.",
           "affects": [
             "Barcode scanning"
@@ -3245,7 +3251,7 @@
       },
       "requireApproval": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "The person/supervisor who receives the product for production gives final transfer approval.",
           "effect": "The person/supervisor who receives the product for production gives final transfer approval.",
           "affects": [
             "Second step transfer confirmation"
@@ -3253,7 +3259,7 @@
           "scenario": "The warehouseman collects; The production manager approves it upon physical delivery."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Once the collection is completed, the transfer can be completed automatically.",
           "effect": "Once the collection is completed, the transfer can be completed automatically.",
           "affects": [
             "Transfer status"
@@ -3294,7 +3300,7 @@
     "kkd": {
       "enableMaterialRequestOrderFlow": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Personnel material requests work with Netsis open orders.",
           "effect": "Personnel material requests work with Netsis open orders.",
           "affects": [
             "PPE distribution",
@@ -3303,7 +3309,7 @@
           "scenario": "Open order items belonging to the employee's client are selected."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The order-based material request channel is closed.",
           "effect": "The order-based material request channel is closed.",
           "affects": [
             "PPE distribution"
@@ -3313,7 +3319,7 @@
       },
       "requireOpenOrder": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Clear Netsis order is mandatory for distribution.",
           "effect": "Clear Netsis order is mandatory for distribution.",
           "affects": [
             "New PPE distribution"
@@ -3321,7 +3327,7 @@
           "scenario": "Documents cannot be opened for personnel who do not have an open order."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "If there is a right, PPE distribution can be made without an order.",
           "effect": "If there is a right, PPE distribution can be made without an order.",
           "affects": [
             "New distribution"
@@ -3331,7 +3337,7 @@
       },
       "allowMultipleOrdersPerDistribution": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "A single distribution may contain items from different orders.",
           "effect": "A single distribution may contain items from different orders.",
           "affects": [
             "PPE distribution lines"
@@ -3339,7 +3345,7 @@
           "scenario": "Shoes and helmets are delivered as two orders in the same delivery."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "A distribution is based on a single order.",
           "effect": "A distribution is based on a single order.",
           "affects": [
             "PPE distribution"
@@ -3349,7 +3355,7 @@
       },
       "allowOpenOrderExcess": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "If there is an open order, delivery above the rights matrix may be possible.",
           "effect": "If there is an open order, delivery above the rights matrix may be possible.",
           "affects": [
             "Rights check",
@@ -3358,7 +3364,7 @@
           "scenario": "Additional products are given to the personnel whose annual allowance has expired from the open order."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Delivery cannot exceed the calculated entitlement amount.",
           "effect": "Delivery cannot exceed the calculated entitlement amount.",
           "affects": [
             "Rights inquiry"
@@ -3368,7 +3374,7 @@
       },
       "requireManagerApprovalForExcess": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Unauthorized delivery does not turn into warehouse issue without the approval of the manager.",
           "effect": "Unauthorized delivery does not turn into warehouse issue without the approval of the manager.",
           "affects": [
             "PPE approval",
@@ -3377,7 +3383,7 @@
           "scenario": "Requests for additional helmets are subject to the approval of the manager."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The authorized operator can top up the allowed excess without additional approval.",
           "effect": "The authorized operator can top up the allowed excess without additional approval.",
           "affects": [
             "PPE distribution"
@@ -3387,7 +3393,7 @@
       },
       "requireEmployeeUserLink": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "The staff card must be linked to the active WMS user.",
           "effect": "The staff card must be linked to the active WMS user.",
           "affects": [
             "Staff verification",
@@ -3396,7 +3402,7 @@
           "scenario": "Delivery to personnel without user connection is blocked."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Personnel who do not have a WMS account can also register.",
           "effect": "Personnel who do not have a WMS account can also register.",
           "affects": [
             "PPE distribution"
@@ -3406,7 +3412,7 @@
       },
       "allowFutureDatedDistribution": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Future planned PPE distribution can be recorded.",
           "effect": "Future planned PPE distribution can be recorded.",
           "affects": [
             "Document date",
@@ -3415,7 +3421,7 @@
           "scenario": "Staff delivery is planned to start next week."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The document date cannot be later than today.",
           "effect": "The document date cannot be later than today.",
           "affects": [
             "New distribution"
@@ -3427,7 +3433,7 @@
     "procurement": {
       "allowMultipleRfqsPerRequest": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "More than one bidding round can be opened from the same request.",
           "effect": "More than one bidding round can be opened from the same request.",
           "affects": [
             "Creating a request for quotation",
@@ -3436,7 +3442,7 @@
           "scenario": "The first round is considered expensive; A second supplier round is opened for the same demand."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Request is limited to one active bidding round.",
           "effect": "Request is limited to one active bidding round.",
           "affects": [
             "Request for quote"
@@ -3446,7 +3452,7 @@
       },
       "allowPartialRfqLines": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "The selected item/quantity of the demand can be priced.",
           "effect": "The selected item/quantity of the demand can be priced.",
           "affects": [
             "RFQ lines",
@@ -3455,7 +3461,7 @@
           "scenario": "Only 3 urgent items out of a 10-item request will be included in the RFQ."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "All open items of the request are included in the RFQ together.",
           "effect": "All open items of the request are included in the RFQ together.",
           "affects": [
             "RFQ creation"
@@ -3465,7 +3471,7 @@
       },
       "allowMultipleQuotesPerSupplier": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "The same supplier may submit multiple bid records for the same tour.",
           "effect": "The same supplier may submit multiple bid records for the same tour.",
           "affects": [
             "Offer registrations"
@@ -3473,7 +3479,7 @@
           "scenario": "The supplier submits a second bid for the alternative brand."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "A single quote record is kept per supplier.",
           "effect": "A single quote record is kept per supplier.",
           "affects": [
             "Quote entry"
@@ -3483,7 +3489,7 @@
       },
       "allowSplitAwardsAcrossSuppliers": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Demand items/quantities can be split among different suppliers.",
           "effect": "Demand items/quantities can be split among different suppliers.",
           "affects": [
             "Offer comparison",
@@ -3492,7 +3498,7 @@
           "scenario": "5 items are given to company A and 3 items are given to company B."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The reward results in a single supplier.",
           "effect": "The reward results in a single supplier.",
           "affects": [
             "Quote confirmation"
@@ -3502,7 +3508,7 @@
       },
       "allowPartialOrderLines": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "The selected quantity of the quote can be converted into an order.",
           "effect": "The selected quantity of the quote can be converted into an order.",
           "affects": [
             "Purchase order",
@@ -3511,7 +3517,7 @@
           "scenario": "60 AD of 100 AD bid are ordered."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The quote line turns into an order with the full quantity.",
           "effect": "The quote line turns into an order with the full quantity.",
           "affects": [
             "Creating an order"
@@ -3521,7 +3527,7 @@
       },
       "allowMultipleOrdersPerQuote": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Multiple orders can be created from the same offer.",
           "effect": "Multiple orders can be created from the same offer.",
           "affects": [
             "Bid-order chain"
@@ -3529,7 +3535,7 @@
           "scenario": "60 AD will be opened today, the remaining 40 AD will be opened in the next order."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The offer turns into a single order.",
           "effect": "The offer turns into a single order.",
           "affects": [
             "Creating an order"
@@ -3539,7 +3545,7 @@
       },
       "allowSupplierQuantityChange": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Supplier may offer different quantity than requested.",
           "effect": "Supplier may offer different quantity than requested.",
           "affects": [
             "Portal offer lines"
@@ -3547,7 +3553,7 @@
           "scenario": "120 is offered due to minimum package for 100 requested items."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The bid amount remains the same as the ask amount.",
           "effect": "The bid amount remains the same as the ask amount.",
           "affects": [
             "Quote entry"
@@ -3557,7 +3563,7 @@
       },
       "allowZeroUnitPrice": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Zero price is accepted for free/sample item.",
           "effect": "Zero price is accepted for free/sample item.",
           "affects": [
             "Offer verification"
@@ -3565,7 +3571,7 @@
           "scenario": "Sample product is sent with 0 TL."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Positive price is required on every bid item.",
           "effect": "Positive price is required on every bid item.",
           "affects": [
             "Send an offer"
@@ -3575,7 +3581,7 @@
       },
       "requireSupplierDeliveryDate": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "Deadline is mandatory for every bid item.",
           "effect": "Deadline is mandatory for every bid item.",
           "affects": [
             "Send an offer",
@@ -3584,7 +3590,7 @@
           "scenario": "If the deadline is empty, the supplier cannot send the offer."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "Deadline is optional.",
           "effect": "Deadline is optional.",
           "affects": [
             "Quote entry"
@@ -3594,7 +3600,7 @@
       },
       "allowSupplierRevisions": {
         "true": {
-          "summary": "This check applies to active and new transactions.",
+          "summary": "A revision round can be opened for the submitted proposal.",
           "effect": "A revision round can be opened for the submitted proposal.",
           "affects": [
             "Supplier portal",
@@ -3603,7 +3609,7 @@
           "scenario": "Purchase requests price revision; supplier sends new version."
         },
         "false": {
-          "summary": "This control is closed; The relevant obligation does not apply.",
+          "summary": "The submitted offer cannot be changed.",
           "effect": "The submitted offer cannot be changed.",
           "affects": [
             "Offer status"
@@ -3661,7 +3667,7 @@
       },
       "allowSupplierDraftSave": {
         "true": {
-          "summary": "This control is applied to active and new transactions.",
+          "summary": "The supplier can make an interim registration without sending the offer.",
           "effect": "The supplier can make an interim registration without sending the offer.",
           "affects": [
             "Supplier portal"
@@ -3669,7 +3675,7 @@
           "scenario": "The multi-item quote is recorded today and completed tomorrow."
         },
         "false": {
-          "summary": "This control is off; The relevant obligation does not apply.",
+          "summary": "Portal entry must be submitted in a single session.",
           "effect": "Portal entry must be submitted in a single session.",
           "affects": [
             "Supplier portal"
