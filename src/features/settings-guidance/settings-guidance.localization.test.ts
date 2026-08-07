@@ -65,4 +65,36 @@ describe("settings guidance localization", () => {
       });
     },
   );
+
+  it.each(Object.entries(resources))(
+    "%s kaynağındaki her parametre karar desteği içerir",
+    (_language, resource) => {
+      const localized = flatten(resource);
+      const guideSummaries = [...localized.keys()].filter(
+        (key) => key.startsWith("guidance.") && key.endsWith(".summary"),
+      );
+
+      expect(guideSummaries.length).toBeGreaterThan(300);
+      guideSummaries.forEach((summaryKey) => {
+        const decisionKey = summaryKey.replace(/\.summary$/, ".decision");
+        expect(localized.get(decisionKey)?.trim().length).toBeGreaterThan(20);
+      });
+    },
+  );
+
+  it.each(Object.entries(resources))(
+    "%s kaynağındaki her modül üç maddelik kayıt öncesi kontrol listesi içerir",
+    (_language, resource) => {
+      const localized = flatten(resource);
+      const pageKeys = Object.keys(resource.pages);
+
+      pageKeys.forEach((pageKey) => {
+        const checklistItems = [...localized.keys()].filter((key) =>
+          key.startsWith(`pages.${pageKey}.checklist[`),
+        );
+
+        expect(checklistItems).toHaveLength(3);
+      });
+    },
+  );
 });

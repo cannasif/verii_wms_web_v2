@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { parameterGuidance } from "./parameter-guidance.catalog";
+import {
+  buildParameterGuidanceSourceResource,
+  parameterGuidance,
+} from "./parameter-guidance.catalog";
 
 describe("parameter guidance catalog", () => {
   it.each([
@@ -18,6 +21,8 @@ describe("parameter guidance catalog", () => {
 
       expect(guide.summary.length).toBeGreaterThan(12);
       expect(guide.effect.length).toBeGreaterThan(12);
+      expect(guide.decision?.length).toBeGreaterThan(20);
+      expect(guide.decision).toContain(guide.affects[0]);
       expect(guide.affects.length).toBeGreaterThan(0);
       expect(guide.scenario.length).toBeGreaterThan(12);
     },
@@ -58,5 +63,27 @@ describe("parameter guidance catalog", () => {
 
     expect(guide.effect).toContain("Passed veya Failed");
     expect(guide.scenario).toContain("irsaliye");
+  });
+
+  it("katalogdaki her seçenek karar desteği ve operasyon örneği içerir", () => {
+    const resource = buildParameterGuidanceSourceResource() as {
+      guidance: Record<
+        string,
+        Record<string, Record<string, Record<string, unknown>>>
+      >;
+    };
+
+    Object.values(resource.guidance).forEach((fields) => {
+      Object.values(fields).forEach((values) => {
+        Object.values(values).forEach((guide) => {
+          expect(String(guide.summary ?? "").trim().length).toBeGreaterThan(12);
+          expect(String(guide.effect ?? "").trim().length).toBeGreaterThan(12);
+          expect(String(guide.decision ?? "").trim().length).toBeGreaterThan(20);
+          expect(String(guide.scenario ?? "").trim().length).toBeGreaterThan(12);
+          expect(Array.isArray(guide.affects)).toBe(true);
+          expect((guide.affects as unknown[]).length).toBeGreaterThan(0);
+        });
+      });
+    });
   });
 });
