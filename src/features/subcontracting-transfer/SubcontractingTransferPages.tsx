@@ -7,6 +7,8 @@ import { WarehouseTransferDraftPage } from '@/features/warehouse-transfer-v2/com
 import { WarehouseTransferListPage } from '@/features/warehouse-transfer-v2/components/WarehouseTransferListPage';
 import { WarehouseTransferOperationPage } from '@/features/warehouse-transfer-v2/WarehouseTransferOperationPage';
 import { useAuthStore } from '@/stores/auth-store';
+import { ParameterFieldGuide, ParameterPageGuide, ParameterToggleCard } from '@/components/shared/ParameterGuidance';
+import { parameterGuidance } from '@/features/settings-guidance/parameter-guidance.catalog';
 import { subcontractingTransferApi, type SubcontractingTransferPolicy } from './api';
 
 export function SubcontractingTransferHubPage(){
@@ -39,23 +41,24 @@ export function SubcontractingTransferPolicyPage(){
   const save=async()=>{setBusy(true);try{setForm(await subcontractingTransferApi.updatePolicy(form));toast.success(t('policy.saved'));}catch(e){toast.error(e instanceof Error?e.message:t('policy.saveFailed'));}finally{setBusy(false);}};
   return <section className="space-y-5">
     <header><div className="flex items-center gap-2 text-[var(--wms-brand-primary)]"><BriefcaseBusiness/><span className="text-xs font-bold uppercase tracking-widest">{t('policy.eyebrow')}</span></div><h1 className="mt-2 text-2xl font-black">{t('policy.title')}</h1><p className="text-sm text-[var(--wms-app-text-muted)]">{t('policy.description')}</p></header>
+    <ParameterPageGuide translationKey="subcontracting" title="Fason transfer ayar rehberi" description="Sipariş ve tedarikçi bağından kısmi giriş/çıkış, kalite, onay, görev ve fazla dönüş toleransına kadar her alanın sonucunu açıklar."/>
     <Panel title={t('policy.sections.document')}><ToggleGrid>
-      <Toggle label={t('policy.fields.requireSupplier')} value={form.requireSupplier} set={v=>set('requireSupplier',v)}/>
-      <Toggle label={t('policy.fields.requireSubcontractOrderForReceipt')} value={form.requireSubcontractOrderForReceipt} set={v=>set('requireSubcontractOrderForReceipt',v)}/>
-      <Toggle label={t('policy.fields.requireIssueBeforeReceipt')} value={form.requireIssueBeforeReceipt} set={v=>set('requireIssueBeforeReceipt',v)}/>
-      <Toggle label={t('policy.fields.allowOrderlessIssue')} value={form.allowOrderlessIssue} set={v=>set('allowOrderlessIssue',v)}/>
-      <Toggle label={t('policy.fields.allowOrderlessReceipt')} value={form.allowOrderlessReceipt} set={v=>set('allowOrderlessReceipt',v)}/>
-      <Toggle label={t('policy.fields.allowSupplierToSupplier')} value={form.allowSupplierToSupplier} set={v=>set('allowSupplierToSupplier',v)}/>
+      <Toggle guideKey="requireSupplier" label={t('policy.fields.requireSupplier')} value={form.requireSupplier} set={v=>set('requireSupplier',v)}/>
+      <Toggle guideKey="requireSubcontractOrderForReceipt" label={t('policy.fields.requireSubcontractOrderForReceipt')} value={form.requireSubcontractOrderForReceipt} set={v=>set('requireSubcontractOrderForReceipt',v)}/>
+      <Toggle guideKey="requireIssueBeforeReceipt" label={t('policy.fields.requireIssueBeforeReceipt')} value={form.requireIssueBeforeReceipt} set={v=>set('requireIssueBeforeReceipt',v)}/>
+      <Toggle guideKey="allowOrderlessIssue" label={t('policy.fields.allowOrderlessIssue')} value={form.allowOrderlessIssue} set={v=>set('allowOrderlessIssue',v)}/>
+      <Toggle guideKey="allowOrderlessReceipt" label={t('policy.fields.allowOrderlessReceipt')} value={form.allowOrderlessReceipt} set={v=>set('allowOrderlessReceipt',v)}/>
+      <Toggle guideKey="allowSupplierToSupplier" label={t('policy.fields.allowSupplierToSupplier')} value={form.allowSupplierToSupplier} set={v=>set('allowSupplierToSupplier',v)}/>
     </ToggleGrid></Panel>
     <Panel title={t('policy.sections.execution')}><ToggleGrid>
-      <Toggle label={t('policy.fields.allowPartialIssue')} value={form.allowPartialIssue} set={v=>set('allowPartialIssue',v)}/>
-      <Toggle label={t('policy.fields.allowPartialReceipt')} value={form.allowPartialReceipt} set={v=>set('allowPartialReceipt',v)}/>
-      <Toggle label={t('policy.fields.requireQualityOnReceipt')} value={form.requireQualityOnReceipt} set={v=>set('requireQualityOnReceipt',v)}/>
-      <Toggle label={t('policy.fields.requireTaskAssignment')} value={form.requireTaskAssignment} set={v=>set('requireTaskAssignment',v)}/>
-      <Toggle label={t('policy.fields.requireApproval')} value={form.requireApproval} set={v=>set('requireApproval',v)}/>
-      <Toggle label={t('policy.fields.allowOverReceipt')} value={form.allowOverReceipt} set={v=>set('allowOverReceipt',v)}/>
-      <label className="space-y-1.5 text-sm"><span className="font-semibold text-[var(--wms-app-text)]">{t('policy.fields.overReceiptTolerancePercent')}</span><input className="input" type="number" min={0} max={100} step=".01" disabled={!form.allowOverReceipt} value={form.overReceiptTolerancePercent} onChange={e=>set('overReceiptTolerancePercent',Number(e.target.value))}/></label>
-      <label className="space-y-1.5 text-sm"><span className="font-semibold text-[var(--wms-app-text)]">{t('policy.fields.defaultLeadTimeDays')}</span><input className="input" type="number" min={0} max={3650} value={form.defaultLeadTimeDays} onChange={e=>set('defaultLeadTimeDays',Number(e.target.value))}/></label>
+      <Toggle guideKey="allowPartialIssue" label={t('policy.fields.allowPartialIssue')} value={form.allowPartialIssue} set={v=>set('allowPartialIssue',v)}/>
+      <Toggle guideKey="allowPartialReceipt" label={t('policy.fields.allowPartialReceipt')} value={form.allowPartialReceipt} set={v=>set('allowPartialReceipt',v)}/>
+      <Toggle guideKey="requireQualityOnReceipt" label={t('policy.fields.requireQualityOnReceipt')} value={form.requireQualityOnReceipt} set={v=>set('requireQualityOnReceipt',v)}/>
+      <Toggle guideKey="requireTaskAssignment" label={t('policy.fields.requireTaskAssignment')} value={form.requireTaskAssignment} set={v=>set('requireTaskAssignment',v)}/>
+      <Toggle guideKey="requireApproval" label={t('policy.fields.requireApproval')} value={form.requireApproval} set={v=>set('requireApproval',v)}/>
+      <Toggle guideKey="allowOverReceipt" label={t('policy.fields.allowOverReceipt')} value={form.allowOverReceipt} set={v=>set('allowOverReceipt',v)}/>
+      <div className="space-y-1.5 text-sm"><span className="font-semibold text-[var(--wms-app-text)]">{t('policy.fields.overReceiptTolerancePercent')}</span><input className="input" type="number" min={0} max={100} step=".01" disabled={!form.allowOverReceipt} value={form.overReceiptTolerancePercent} onChange={e=>set('overReceiptTolerancePercent',Number(e.target.value))}/><ParameterFieldGuide guidance={parameterGuidance('subcontracting','overReceiptTolerancePercent',form.overReceiptTolerancePercent)} currentValue={`%${form.overReceiptTolerancePercent}`}/></div>
+      <div className="space-y-1.5 text-sm"><span className="font-semibold text-[var(--wms-app-text)]">{t('policy.fields.defaultLeadTimeDays')}</span><input className="input" type="number" min={0} max={3650} value={form.defaultLeadTimeDays} onChange={e=>set('defaultLeadTimeDays',Number(e.target.value))}/><ParameterFieldGuide guidance={parameterGuidance('subcontracting','defaultLeadTimeDays',form.defaultLeadTimeDays)} currentValue={`${form.defaultLeadTimeDays} gün`}/></div>
     </ToggleGrid></Panel>
     <div className="flex justify-end"><button type="button" disabled={busy} onClick={()=>void save()} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[var(--wms-brand-primary)] px-5 py-3 font-bold text-[var(--wms-brand-on-primary)] disabled:opacity-50"><Save className="size-4"/>{busy?t('policy.saving'):t('policy.save')}</button></div>
   </section>;
@@ -64,4 +67,4 @@ export function SubcontractingTransferPolicyPage(){
 function Card({href,icon,title,text}:{href:string;icon:ReactNode;title:string;text:string}){return <Link to={href} className="group rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--wms-brand-primary)]"><div className="flex items-center justify-between text-[var(--wms-brand-primary)]">{icon}<ArrowRight className="size-5 transition group-hover:translate-x-1"/></div><h2 className="mt-4 font-black">{title}</h2><p className="mt-1 text-sm text-[var(--wms-app-text-muted)]">{text}</p></Link>;}
 function Panel({title,children}:{title:string;children:ReactNode}){return <section className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5"><h2 className="mb-4 flex items-center gap-2 font-black text-[var(--wms-brand-primary)]"><BriefcaseBusiness className="size-5"/>{title}</h2>{children}</section>;}
 function ToggleGrid({children}:{children:ReactNode}){return <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{children}</div>;}
-function Toggle({label,value,set}:{label:string;value:boolean;set:(v:boolean)=>void}){return <label className="flex min-h-12 items-center justify-between gap-3 rounded-xl border border-[var(--wms-app-border)] px-4 py-3 text-sm text-[var(--wms-app-text)]"><span className="font-semibold">{label}</span><input type="checkbox" checked={value} onChange={e=>set(e.target.checked)} className="size-4 accent-[var(--wms-brand-primary)]"/></label>;}
+function Toggle({label,value,set,guideKey}:{label:string;value:boolean;set:(v:boolean)=>void;guideKey:string}){return <ParameterToggleCard title={label} checked={value} onCheckedChange={set} guidance={parameterGuidance('subcontracting',guideKey,value)}/>;}

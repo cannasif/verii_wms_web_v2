@@ -43,11 +43,13 @@ import { OPS_FIELD_CLASS } from "@/components/shared/ops-field-styles";
 import { PagedAppDropdown } from "@/components/shared/PagedAppDropdown";
 import { PagedLookupDialog } from "@/components/shared/PagedLookupDialog";
 import { ResponsiveDialog } from "@/components/shared/ResponsiveDialog";
+import { ParameterFieldGuide, ParameterPageGuide } from "@/components/shared/ParameterGuidance";
 import { goodsReceiptV2Api } from "@/features/goods-receipt-v2/api/goods-receipt.api";
 import type {
   CustomerOption,
   StockOption,
 } from "@/features/goods-receipt-v2/types/goods-receipt.types";
+import { parameterGuidance } from "@/features/settings-guidance/parameter-guidance.catalog";
 import { usePermissionAccess } from "@/features/access-control/hooks/usePermissionAccess";
 import type { DropdownPage } from "@/hooks/useDropdownInfiniteSearch";
 import { useAuthStore } from "@/stores/auth-store";
@@ -2299,11 +2301,13 @@ function PolicyToggleRow({
   description,
   checked,
   onChange,
+  guideKey,
 }: {
   title: string;
   description: string;
   checked: boolean;
   onChange: () => void;
+  guideKey: string;
 }): ReactElement {
   return (
     <div className="flex items-start justify-between gap-4 border-b border-[var(--wms-app-border)] py-3 last:border-b-0">
@@ -2314,6 +2318,7 @@ function PolicyToggleRow({
         <p className="mt-0.5 text-xs leading-relaxed text-[var(--wms-app-text-muted)]">
           {description}
         </p>
+        <ParameterFieldGuide guidance={parameterGuidance('procurement', guideKey, checked)} currentValue={checked ? 'Açık' : 'Kapalı'} />
       </div>
       <button
         type="button"
@@ -2517,6 +2522,7 @@ function ProcurementPolicyDialog({
       className="!max-w-4xl"
     >
       <div className="flex max-h-[min(74vh,760px)] flex-col">
+        <ParameterPageGuide translationKey="procurement" className="mb-3" title="Satınalma politika rehberi" description="Her seçimin talep → teklif talebi → tedarikçi teklifi → sipariş zincirini ve tedarikçi portalını nasıl değiştirdiğini örneklerle açıklar." />
         <div className="min-h-0 flex-1 md:grid md:grid-cols-[160px_minmax(0,1fr)] md:gap-4">
           <nav
             className="mb-3 flex gap-1 overflow-x-auto border-b border-[var(--wms-app-border)] pb-2 md:mb-0 md:block md:overflow-visible md:border-b-0 md:border-r md:pb-0 md:pr-3"
@@ -2549,6 +2555,7 @@ function ProcurementPolicyDialog({
                   {activeGroup.items.map((item) => (
                     <PolicyToggleRow
                       key={item.key}
+                      guideKey={item.key}
                       title={item.title}
                       description={item.description}
                       checked={Boolean(policy[item.key])}
@@ -2612,6 +2619,7 @@ function ProcurementPolicyDialog({
                           ? "Teklif yalnızca tedarikçi portalından alınır."
                           : "Portal veya şirket içi giriş birlikte kullanılabilir."}
                     </p>
+                    <ParameterFieldGuide guidance={parameterGuidance('procurement', 'supplierQuoteChannelMode', policy.supplierQuoteChannelMode)} currentValue={portalModes.find((x) => x.value === policy.supplierQuoteChannelMode)?.label} />
                   </div>
 
                   <div className="grid gap-3 sm:grid-cols-2">
@@ -2632,6 +2640,7 @@ function ProcurementPolicyDialog({
                           )
                         }
                       />
+                      <ParameterFieldGuide guidance={parameterGuidance('procurement', 'invitationValidityDays', policy.invitationValidityDays)} currentValue={`${policy.invitationValidityDays} gün`} />
                     </Field>
                     <Field label="Azami revizyon sayısı">
                       <AppInput
@@ -2653,10 +2662,12 @@ function ProcurementPolicyDialog({
                           )
                         }
                       />
+                      <ParameterFieldGuide guidance={parameterGuidance('procurement', 'maximumSupplierRevisionCount', policy.maximumSupplierRevisionCount)} currentValue={`${policy.maximumSupplierRevisionCount} revizyon`} />
                     </Field>
                   </div>
 
                   <PolicyToggleRow
+                    guideKey="allowSupplierDraftSave"
                     title="Tedarikçi taslak kaydedebilir"
                     description="Portal kullanıcısı teklifini göndermeden önce ara kayıt oluşturabilir."
                     checked={policy.allowSupplierDraftSave}

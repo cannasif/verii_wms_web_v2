@@ -35,8 +35,10 @@ import { useProductionTaskSourceAvailability } from './hooks/useProductionTaskSo
 import { useProductionTaskStart } from './hooks/useProductionTaskStart';
 import type { ActiveUserOption, LocationOption, WarehouseOption } from '@/features/goods-receipt-v2/types/goods-receipt.types';
 import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
+import { ParameterFieldGuide, ParameterPageGuide, ParameterToggleCard } from '@/components/shared/ParameterGuidance';
 import type { PreparedNetsisProductionWorkOrder } from '@/features/production/types';
 import { kkdApi } from '@/features/kkd/kkd-api';
+import { parameterGuidance } from '@/features/settings-guidance/parameter-guidance.catalog';
 
 export function ProductionTransferHubPage() {
   const { t, moduleReady } = useModuleTranslation('production-transfer');
@@ -203,6 +205,7 @@ export function ProductionTransferPolicyPage(){
       description={t('policy.description')}
       hintLabel={t('policy.howItWorks',{defaultValue:'Bu sayfa ne yapar?'})}
     />
+    <ParameterPageGuide translationKey="production" title="Üretime transfer ayar rehberi" description="İş emri kaynağı, stok uygunluğu, görev, raf, kısmi/fazla teslim, ikinci adım onayı ve iptal iadesinin sonucunu gerçek senaryolarla açıklar." />
 
     <PolicySection
       code="SRC_01"
@@ -211,7 +214,7 @@ export function ProductionTransferPolicyPage(){
       description={t('policy.sections.sourceHint',{defaultValue:'Üretim emirlerinin hangi sistemden okunacağını ve dış sistem kodunu belirler.'})}
     >
       <div className="grid gap-4 lg:grid-cols-2">
-        <PolicyField label={t('policy.fields.productionOrderSource',{defaultValue:'Üretim verisini nereden oku?'})}>
+        <PolicyField label={t('policy.fields.productionOrderSource',{defaultValue:'Üretim verisini nereden oku?'})} guideKey="productionOrderSource" value={form.productionOrderSource}>
           <OpsSelect
             value={form.productionOrderSource}
             onValueChange={value=>set('productionOrderSource',value as ProductionTransferPolicy['productionOrderSource'])}
@@ -226,6 +229,9 @@ export function ProductionTransferPolicyPage(){
           htmlFor="pt-policy-source-system-code"
           label={t('policy.fields.wmsSourceSystemCode',{defaultValue:'Kaynak sistem kodu'})}
           hint={t('policy.fields.wmsSourceSystemCodeHint',{defaultValue:'RII_PR_SOURCE_ORDER kayıtlarındaki SourceSystemCode ile birebir eşleşir.'})}
+          guideKey="wmsSourceSystemCode"
+          value={form.wmsSourceSystemCode}
+          currentValue={form.wmsSourceSystemCode || 'Tanımlanmadı'}
         >
           <AppInput
             id="pt-policy-source-system-code"
@@ -251,7 +257,7 @@ export function ProductionTransferPolicyPage(){
     >
       <div className="wms-ops-pt-policy-check-grid">
         {orderChecks.map(([key,label])=>(
-          <PolicyCheckRow key={key} checked={form[key]} onCheckedChange={value=>set(key,value)} label={label}/>
+          <PolicyCheckRow key={key} guideKey={key} checked={form[key]} onCheckedChange={value=>set(key,value)} label={label}/>
         ))}
       </div>
     </PolicySection>
@@ -264,7 +270,7 @@ export function ProductionTransferPolicyPage(){
     >
       <div className="wms-ops-pt-policy-check-grid">
         {executionChecks.map(([key,label])=>(
-          <PolicyCheckRow key={key} checked={form[key]} onCheckedChange={value=>set(key,value)} label={label}/>
+          <PolicyCheckRow key={key} guideKey={key} checked={form[key]} onCheckedChange={value=>set(key,value)} label={label}/>
         ))}
       </div>
       <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,18rem)_1fr]">
@@ -272,6 +278,9 @@ export function ProductionTransferPolicyPage(){
           htmlFor="pt-policy-over-issue-tolerance"
           label={t('policy.fields.overIssueTolerancePercent')}
           hint={t('policy.fields.overIssueTolerancePercentHint',{defaultValue:'Fazla çıkışa izin verildiğinde uygulanacak üst sınır.'})}
+          guideKey="overIssueTolerancePercent"
+          value={form.overIssueTolerancePercent}
+          currentValue={`%${form.overIssueTolerancePercent}`}
         >
           <AppInput
             id="pt-policy-over-issue-tolerance"
@@ -285,7 +294,7 @@ export function ProductionTransferPolicyPage(){
             trailingContent={<span className="px-2 text-xs font-semibold opacity-70">%</span>}
           />
         </PolicyField>
-        <PolicyField label={t('policy.fields.cancellationReturnPolicy',{defaultValue:'İptalde stok nereye dönsün?'})}>
+        <PolicyField label={t('policy.fields.cancellationReturnPolicy',{defaultValue:'İptalde stok nereye dönsün?'})} guideKey="cancellationReturnPolicy" value={form.cancellationReturnPolicy}>
           <div className="grid gap-2 md:grid-cols-3" role="radiogroup" aria-label={t('policy.fields.cancellationReturnPolicy',{defaultValue:'İptalde stok nereye dönsün?'})}>
             {cancellationChoices.map(choice=>(
               <PolicyChoice
@@ -567,28 +576,19 @@ function PolicySection({code,icon,title,description,children}:{code:string;icon:
   </section>;
 }
 
-function PolicyField({label,hint,htmlFor,className,children}:{label:ReactNode;hint?:ReactNode;htmlFor?:string;className?:string;children:ReactNode}){
+function PolicyField({label,hint,htmlFor,className,children,guideKey,value,currentValue}:{label:ReactNode;hint?:ReactNode;htmlFor?:string;className?:string;children:ReactNode;guideKey?:string;value?:unknown;currentValue?:string}){
   return <div className={cn('min-w-0 space-y-1.5',className)}>
     {htmlFor
       ?<label className="wms-ops-pt-policy-label" htmlFor={htmlFor}>{label}</label>
       :<span className="wms-ops-pt-policy-label">{label}</span>}
     {children}
     {hint?<span className="wms-ops-pt-policy-hint">{hint}</span>:null}
+    {guideKey?<ParameterFieldGuide guidance={parameterGuidance('production',guideKey,value)} currentValue={currentValue??String(value)}/>:null}
   </div>;
 }
 
-function PolicyCheckRow({checked,onCheckedChange,label}:{checked:boolean;onCheckedChange:(value:boolean)=>void;label:string}){
-  return <div
-    role="checkbox"
-    aria-checked={checked}
-    tabIndex={0}
-    className={cn('wms-ops-pt-policy-check',checked&&'wms-ops-pt-policy-check--on')}
-    onClick={()=>onCheckedChange(!checked)}
-    onKeyDown={event=>{if(event.key===' '||event.key==='Enter'){event.preventDefault();onCheckedChange(!checked);}}}
-  >
-    <span className="wms-ops-pt-policy-check__label">{label}</span>
-    <OpsSkinCheckbox checked={checked} onCheckedChange={onCheckedChange} aria-label={label}/>
-  </div>;
+function PolicyCheckRow({checked,onCheckedChange,label,guideKey}:{checked:boolean;onCheckedChange:(value:boolean)=>void;label:string;guideKey:string}){
+  return <ParameterToggleCard title={label} checked={checked} onCheckedChange={onCheckedChange} guidance={parameterGuidance('production',guideKey,checked)}/>;
 }
 
 function PolicyChoice({checked,onSelect,title,text}:{checked:boolean;onSelect:()=>void;title:string;text:string}){

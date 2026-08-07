@@ -34,11 +34,13 @@ import { OpsSelect } from '@/components/shared/OpsSelect';
 import { OpsStatusBadge, inferOpsStatusTone } from '@/components/shared/OpsStatusBadge';
 import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
 import { PagedLookupDialog } from '@/components/shared/PagedLookupDialog';
+import { ParameterPageGuide, ParameterToggleCard } from '@/components/shared/ParameterGuidance';
 import { OPS_SELECT_TRIGGER_CLASS } from '@/components/shared/ops-field-styles';
 import type { DropdownPage } from '@/hooks/useDropdownInfiniteSearch';
 import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
 import { cn } from '@/lib/utils';
 import type { PagedResponse } from '@/types/api';
+import { parameterGuidance } from '@/features/settings-guidance/parameter-guidance.catalog';
 import {
   KKD_CELL,
   KKD_HEAD_CELL,
@@ -319,13 +321,13 @@ export function KkdPolicyPage(): ReactElement {
   const checkGrid = (rows: Array<[keyof PolicyForm, string, string]>): ReactElement => (
     <div className="grid gap-2.5 lg:grid-cols-2">
       {rows.map(([key, title, description]) => (
-        <KkdCheckRow
+        <ParameterToggleCard
           key={key}
           checked={form[key]}
           onCheckedChange={(checked) => set(key, checked)}
           disabled={query.isLoading || mutation.isPending}
           title={title}
-          description={description}
+          guidance={{ ...parameterGuidance('kkd', key, form[key]), summary: description }}
         />
       ))}
     </div>
@@ -337,6 +339,7 @@ export function KkdPolicyPage(): ReactElement {
       description="Şube bazında dağıtım ön koşullarını yönetin; değişiklikler yeni dağıtımlarda servis katmanında zorunlu uygulanır."
       className="max-w-6xl"
     >
+      <ParameterPageGuide translationKey="kkd" title="KKD süreç ayar rehberi" description="Sipariş kanalı, hak aşımı, yönetici onayı ve personel güvenlik kurallarının dağıtım ve ambar çıkışına etkisini örneklerle gösterir." />
       {query.isLoading ? (
         <KkdPanel title="Politika" code="KKD.POL" icon={<Settings2 className="size-4" strokeWidth={1.75} />}>
           <OpsLoadingState code="POLICY" message="Şube KKD süreç politikası yükleniyor…" />
