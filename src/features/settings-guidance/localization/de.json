@@ -1,0 +1,3743 @@
+{
+  "labels": {
+    "current": "Derzeit: {{value}}.",
+    "details": "Wirkung, Umfang und Beispiel",
+    "effect": "Was bewirkt diese Auswahl im System?",
+    "affects": "Welche Ansichten und Vorgänge sind betroffen?",
+    "scenario": "Praxisbeispiel",
+    "warning": "Wichtiger Hinweis",
+    "enabled": "Aktiviert",
+    "disabled": "Deaktiviert",
+    "noPrefix": "Kein Präfix"
+  },
+  "units": {
+    "days_one": "{{value}} Tage",
+    "days_other": "{{value}} Tage",
+    "revisions_one": "{{value}} Überarbeitung",
+    "revisions_other": "{{value}} Überarbeitung"
+  },
+  "pages": {
+    "default": {
+      "title": "Wie soll ich die Einstellungen verwenden?",
+      "description": "Unter jedem Feld befindet sich das Kurzergebnis der aktuellen Auswahl. Durch Öffnen des Abschnitts „Auswirkungen und Beispiele“ können Sie untersuchen, was das System tun wird, welche Vorgänge es beeinflusst und wie das tatsächliche Nutzungsszenario aussieht."
+    },
+    "goodsReceipt": {
+      "title": "Leitfaden für Warenannahme-Einstellungen",
+      "description": "Das aktuelle Ergebnis jedes Parameters; Untersuchen Sie es zusammen mit seinen Auswirkungen auf Bestellmenge, Lagerverfügbarkeit, Quality Gate und ERP-Eingang. Offene Aufträge behalten die Regelansicht zum Zeitpunkt der Einstellung bei."
+    },
+    "inbound": {
+      "title": "Leitfaden für Lagerzugang-Einstellungen",
+      "description": "Zeigt auf Feldbasis und anhand eines Beispielszenarios, wie sich durch die Auswahl die Eingabemenge, Genehmigungstore, Qualitätswartezeit, Regale und ERP-Übertragung ändern."
+    },
+    "outbound": {
+      "title": "Leitfaden für Lagerausgang-Einstellungen",
+      "description": "Auswirkungen auf Bestellquelle, Reservierung, Unter- oder Überkommissionierung, Verpackung, Verladung und ERP-Übertragung; Erklärt die Blockierungs- und Ausnahmebedingungen."
+    },
+    "shipping": {
+      "title": "Leitfaden für Versandeinstellungen",
+      "description": "Erklärt das Ergebnis jeder Auswahl, vom Anfang mit oder ohne Bestellung bis zur Reservierung, Barcode-Kommissionierung, Verpackung, Ladebestätigung und ERP-Versandprotokoll."
+    },
+    "transfer": {
+      "title": "Leitfaden für Transfers zwischen Lagern",
+      "description": "Reservierung, Quellausgabe, Transitbestand, Zielannahme, Regal- und Mengendifferenzverhalten; Erklärt anhand von ein- oder zweistufigen Übertragungsszenarien."
+    },
+    "quality": {
+      "title": "Leitfaden für Qualitätseinstellungen",
+      "description": "Erklären Sie anhand von Beispielen die Auswirkungen von Kontrolltyp, fehlgeschlagenem Qualitätsergebnis, Quarantäneregalen, Lagerfreigabe und ERP-Wartetor."
+    },
+    "packing": {
+      "title": "Leitfaden für Verpackungseinstellungen",
+      "description": "Erklärt Verpackungspflicht, gemischte Inhalte, Chargen- und Chargenüberprüfung, SSCC, Wiegetoleranz, Schließen, Wiederöffnen und Etikettieren anhand von Beispielen."
+    },
+    "project": {
+      "title": "Leitfaden für allgemeine Projekteinstellungen",
+      "description": "Formateinstellungen ändern nur die Anzeige; Es zeigt, wie sich Sicherheits-, Zeitzonen- und ERP-Serialisierungsoptionen auf das Transaktions- und Integrationsverhalten auswirken."
+    },
+    "subcontracting": {
+      "title": "Leitfaden für Lohnbearbeitungstransfers",
+      "description": "Erklärt das Ergebnis jeder Regel, von der Auftrags- und Lieferantenbindung bis zum teilweisen Ein- oder Ausstieg, von Qualitäts- und Genehmigungs-Gates bis hin zur Überschreitung der Retourentoleranz."
+    },
+    "production": {
+      "title": "Leitfaden für Produktionsübergaben",
+      "description": "Erklärt Arbeitsauftragsquelle, Lagerverfügbarkeit, Barcode-Kommissionierung, Aufgaben- und Regalverpflichtung, Teil- oder Überlieferung, Genehmigung im zweiten Schritt und Rückerstattung bei Stornierung anhand realer Szenarien."
+    },
+    "kkd": {
+      "title": "Leitfaden für PSA-Prozesseinstellungen",
+      "description": "Zeigt die Auswirkungen von Bestellkanal, Rechteüberschreitung, Managergenehmigung, Personalverbindung und zukünftigen Datumsregeln auf Verteilung, Lagerausgabe und Prüfdatensätze."
+    },
+    "procurement": {
+      "title": "Leitfaden für Beschaffungsrichtlinien",
+      "description": "Erklärt anhand von Beispielen, wie jede Auswahl die Anforderung, die Ausschreibung, das Lieferantenangebot, die Revision, das Lieferantenportal und die Bestellkette verändert."
+    },
+    "barcode": {
+      "title": "Leitfaden für Barcode-Richtlinien",
+      "description": "Gibt an, in welchem Vorgang jede Profilkarte verwendet wird. Segmente werden nacheinander kombiniert; Fehlen Pflichtdaten, wird die Produktion blockiert, das Sequenzsegment generiert den eindeutigen Wert atomic."
+    },
+    "barcodeProfile": {
+      "title": "Wie soll ich das Barcode-Profil bearbeiten?",
+      "description": "Bei jeder Änderung werden die Beschreibung und das Verhalten des Beispiel-Barcodes sofort aktualisiert. Die Teile sind von oben nach unten aufgelistet; Durch die Kombination von Präfix und Klammern wird ein einzelner Barcodewert erstellt."
+    }
+  },
+  "guidance": {
+    "inbound": {
+      "overReceiptPolicy": {
+        "NotAllowed": {
+          "summary": "Mehr als die in der Bestellung angegebene Menge ist nicht akzeptabel.",
+          "effect": "Wenn der Annahmebetrag den offenen Auftragssaldo übersteigt, wird die Position nicht erfasst.",
+          "affects": [
+            "Mengenkontrolle der bestellten Warenannahme",
+            "Fehlermeldung „Überakzeptieren“."
+          ],
+          "scenario": "Wenn 105 AD gelesen wird, während 100 AD in der Bestellung offen sind, wird die Transaktion über 100 AD gesperrt."
+        },
+        "WithinTolerance": {
+          "summary": "Eine Überabnahme kann nur innerhalb der definierten prozentualen Grenze erfolgen.",
+          "effect": "Der offene Betrag kann um den Toleranzprozentsatz überschritten werden; weitere sind gesperrt.",
+          "affects": [
+            "Annahme der bestellten Ware",
+            "Übermäßige Akzeptanztoleranz"
+          ],
+          "scenario": "100 AD-Bestellungen und 5 % Toleranz, maximal 105 ADs werden akzeptiert."
+        },
+        "ApprovalRequired": {
+          "summary": "Überschüssiger Betrag wird erfasst, der Vorgang wird jedoch nicht ohne autorisierte Genehmigung fortgesetzt.",
+          "effect": "Eine Überschreitung des Betrags wird als Ausnahme markiert, die auf die Genehmigung wartet.",
+          "affects": [
+            "Genehmigungswarteschlange für Warenannahme",
+            "ERP-Übertragungsport"
+          ],
+          "scenario": "Wenn 108 AD für eine 100 AD-Bestellung eingeht, wird die Registrierung geöffnet; Der Abschluss erfolgt nach Zustimmung des Betreuers."
+        }
+      },
+      "overReceiptTolerancePercent": {
+        "default": {
+          "summary": "ist die maximale Überakzeptanzrate für die Auswahl „Innerhalb der Toleranz“.",
+          "effect": "Der Prozentsatz wird anhand der offenen Menge der Bestellung berechnet.",
+          "affects": [
+            "Validierung der Bestellpositionsmenge"
+          ],
+          "scenario": "Wenn die offene Menge 200 beträgt und die Toleranz 2 % beträgt, sind bis zu 204 Annahmen möglich.",
+          "warning": "Wenn die Überakzeptanzrichtlinie „Verboten“ lautet, wird dieses Feld nicht verwendet."
+        }
+      },
+      "inventoryAvailabilityPolicy": {
+        "Immediate": {
+          "summary": "Der akzeptierte Bestand wird ohne Wartezeit auf den verfügbaren Bestand übertragen.",
+          "effect": "Lagerbestand; Es ist sofort für Überweisungs-, Versand- und Reservierungsvorgänge geöffnet.",
+          "affects": [
+            "Lager- und Regalbilanz",
+            "Reservierung",
+            "Versand/Übertragung"
+          ],
+          "scenario": "10 AD kann in einem anderen Überweisungsauftrag ausgewählt werden, sobald die Annahme endet."
+        },
+        "AfterReceiptApproval": {
+          "summary": "Der Bestand bleibt bis zur Warenannahmefreigabe gesperrt.",
+          "effect": "Die physische Registrierung wird erstellt, das verfügbare Guthaben wird jedoch nach der Bestätigung geöffnet.",
+          "affects": [
+            "Warenannahmebestätigung",
+            "Verfügbares Guthaben"
+          ],
+          "scenario": "Betreiber beendet Annahme; Sobald der Vorgesetzte zustimmt, wird der Lagerbestand zum Versand freigegeben."
+        },
+        "AfterQualityApproval": {
+          "summary": "Der im Qualitätsplan enthaltene Bestand kann erst verwendet werden, wenn die Qualitätsentscheidung getroffen wurde.",
+          "effect": "Bestände von schlechter Qualität sind nicht betroffen; diejenigen, die der Qualität zugeordnet sind, bleiben im Status „Ausstehend“.",
+          "affects": [
+            "Qualitätsüberprüfung",
+            "Quarantäne/verfügbares Guthaben"
+          ],
+          "scenario": "Bei der Probenkontrolle werden 20 AD-Bestände zur Verfügung gestellt."
+        },
+        "AfterAllApprovals": {
+          "summary": "Warenannahme, Qualität und alle notwendigen ERP-Freigaben werden erwartet.",
+          "effect": "Lagerbestände werden erst freigegeben, wenn alle definierten Genehmigungspunkte passiert sind.",
+          "affects": [
+            "Warenannahme",
+            "Qualität",
+            "ERP-Genehmigungen",
+            "Verfügbares Guthaben"
+          ],
+          "scenario": "Auch wenn eine Qualitätsfreigabe vorliegt und die Freigabe durch den Warenannahmeleiter fehlt, wartet der Bestand weiter."
+        }
+      },
+      "erpPostingPolicy": {
+        "AfterReceipt": {
+          "summary": "Sobald die Warenannahme abgeschlossen ist, ist der ERP-Lieferschein versandbereit.",
+          "effect": "Wenn kein anderes Genehmigungstor vorhanden ist, wird die ERP-Warteschlange sofort ausgelöst.",
+          "affects": [
+            "Warenannahme abgeschlossen",
+            "ERP-Beleg"
+          ],
+          "scenario": "Wenn die Abnahme, für die keine Qualität erforderlich ist, abgeschlossen ist, wird eine Netsis-Quittung erstellt."
+        },
+        "AfterReceiptApproval": {
+          "summary": "Für die ERP-Registrierung wird die Genehmigung des Warenannahmemanagers abgewartet.",
+          "effect": "Der Abschluss durch den Bediener allein löst keine ERP-Übertragung aus.",
+          "affects": [
+            "Warenannahmebestätigung",
+            "ERP-Warteschlange"
+          ],
+          "scenario": "Betreiber beendet Annahme; Sobald der Vorgesetzte zustimmt, wird der Lieferschein verschickt."
+        },
+        "AfterQualityApproval": {
+          "summary": "Bei der Abnahme mit einem Qualitätsplan wird der ERP-Datensatz erst erstellt, wenn die Qualitätsentscheidung abgeschlossen ist.",
+          "effect": "Qualitätsergebnis kann „Bestanden“ oder „Nicht bestanden“ sein; Die Entscheidung wird voraussichtlich abgeschlossen sein.",
+          "affects": [
+            "Ergebnis der Qualitätsüberprüfung",
+            "ERP-Beleg"
+          ],
+          "scenario": "Auch wenn das Produkt ein nicht erfolgreiches Qualitätsergebnis erhält, kann nach der Entscheidung eine obligatorische Kaufanzeige versandt werden."
+        },
+        "AfterAllApprovals": {
+          "summary": "Die ERP-Übertragung erfolgt, nachdem alle definierten Genehmigungen abgeschlossen sind.",
+          "effect": "Warenannahme, Qualität und ERP-Freigabetore werden gemeinsam ausgewertet.",
+          "affects": [
+            "Warenannahmebestätigung",
+            "Qualitätsentscheidung",
+            "ERP-Genehmigung"
+          ],
+          "scenario": "Selbst wenn die Qualitätsprüfung abgeschlossen ist und keine ERP-autorisierte Genehmigung vorliegt, wartet die Übertragung."
+        }
+      },
+      "erpQualityGatePolicy": {
+        "None": {
+          "summary": "Der Qualitätsplan verzögert die ERP-Übertragung nicht.",
+          "effect": "Auch wenn eine manuelle oder regelbasierte Qualitätsprüfung erfolgt, bestimmt allein die ERP-Übertragungsrichtlinie den ERP-Zeitplan.",
+          "affects": [
+            "ERP-Beleg",
+            "Qualitätsintegrationstor"
+          ],
+          "scenario": "Das Produkt wird an die Qualitätssicherung gesendet; Der Lieferschein kann übertragen werden, ohne das Qualitätsergebnis abzuwarten."
+        },
+        "RuleBasedOnly": {
+          "summary": "Nur Prüfungen, die sich aus der Bestands-/Qualitätsregel ergeben, führen zur ERP-Übertragung.",
+          "effect": "Das vom Bediener zur manuellen Qualität geschickte Produkt erstellt kein ERP-Gate.",
+          "affects": [
+            "Lagerqualitätsregel",
+            "ERP-Übertragungswarteschlange"
+          ],
+          "scenario": "Qualität erfordert Pflichtlager; Allerdings wird der Lagerlieferschein, der als verdächtig gilt und manuell versendet wird, nicht in der Schwebe gehalten."
+        },
+        "AnyQualityPlan": {
+          "summary": "Jeder Qualitätsplan, der regelbasiert oder manuell geöffnet wird, hält die ERP-Übertragung zurück.",
+          "effect": "Der Beleg wird nicht in die Warteschlange gestellt, bis die Qualitätsentscheidung abgeschlossen ist.",
+          "affects": [
+            "Manueller Qualitätsplan",
+            "Regelbasierte Qualität",
+            "ERP-Übertragung"
+          ],
+          "scenario": "Wenn der Bediener das verdächtige Produkt manuell an die Qualität schickt, wird der Lieferschein erst verworfen, wenn das Qualitätsergebnis vorliegt."
+        }
+      },
+      "allowUnderReceipt": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Das Dokument kann durch Annahme eines Teils des Bestellbetrags offen gelassen werden.",
+          "affects": [
+            "Bestellung angenommen",
+            "Verbleibender offener Betrag"
+          ],
+          "scenario": "60 n. Chr. ab 100 n. Chr.-Reihenfolge; 60 wird angenommen, 40 bleibt offen."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Die Bestellposition kann mit der fehlenden Menge nicht normal vervollständigt werden.",
+          "affects": [
+            "Bestellung angenommen"
+          ],
+          "scenario": "Wenn 60 AD für einen 100 AD-Auftrag gelesen wird, wird der Abschluss blockiert oder es ist ein kurzer Abschluss erforderlich."
+        }
+      },
+      "requireShortCloseApproval": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Zur Deckung der verbleibenden Bestellmenge ist die Genehmigung des Administrators erforderlich.",
+          "affects": [
+            "Kurze Schließung",
+            "Genehmigungswarteschlange"
+          ],
+          "scenario": "Wenn die restlichen 40 nach 60/100-Annahme gestrichen werden, ist die Zustimmung des Vorgesetzten einzuholen."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Der autorisierte Betreiber kann die fehlende Zeile ohne zusätzliche Genehmigung schließen.",
+          "affects": [
+            "Kurzschluss"
+          ],
+          "scenario": "Nach 60/100 Akzeptanz können die restlichen 40 direkt geschlossen werden."
+        }
+      },
+      "requireReceiptApproval": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Nach der physischen Annahme wird eine separate Warenannahmebestätigung erstellt.",
+          "affects": [
+            "Akzeptanzstatus",
+            "Lagerfreigabe",
+            "ERP-Übertragung"
+          ],
+          "scenario": "Der Lagerist beendet die Annahme; Der Vorgang ist erst abgeschlossen, wenn der Vorgesetzte „Genehmigen“ sagt."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Der Abschluss der Warenannahme durch den Betreiber stellt eine Annahmebestätigung dar.",
+          "affects": [
+            "Akzeptanzstatus"
+          ],
+          "scenario": "Wenn der Lagerarbeiter die Transaktion abschließt, geht der Datensatz zum nächsten geeigneten Schritt über."
+        }
+      },
+      "requireQualityApproval": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Bei Beständen, für die ein Qualitätsplan erstellt wurde, wird der Prozess erst nach Abschluss der Entscheidung freigegeben.",
+          "affects": [
+            "Qualitätsüberprüfung",
+            "Lagerstatus"
+          ],
+          "scenario": "Die Charge, die in die Qualität geht, wird bis zur Fertigstellung in Quarantäne gehalten."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Wenn es keine Qualitätsregel gibt, ist keine gesonderte Qualitätsgenehmigung erforderlich.",
+          "affects": [
+            "Tor der Qualität"
+          ],
+          "scenario": "Bestand ohne Qualitätsdefinition geht direkt zum nächsten Schritt."
+        }
+      },
+      "requireErpApproval": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Vor der ERP-Übermittlung ist die Genehmigung eines autorisierten Benutzers erforderlich.",
+          "affects": [
+            "ERP-Übertragungswarteschlange",
+            "Berechtigungsprüfung"
+          ],
+          "scenario": "Lieferschein ist fertig; Sobald der ERP-Verantwortliche die Genehmigung erteilt, wird es an Netsis gesendet."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Sobald die anderen Türen abgeschlossen sind, kann die ERP-Einreichung automatisch fortgesetzt werden.",
+          "affects": [
+            "ERP-Übertragungswarteschlange"
+          ],
+          "scenario": "Sobald die Qualität fertig ist, wird der Lieferschein automatisch versendet."
+        }
+      },
+      "holdInventoryUntilQualityDecision": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Die noch ausstehende Qualitätsmenge wird aus dem verfügbaren Bestand zugewiesen.",
+          "affects": [
+            "Regalbilanzstatus",
+            "Reservierung und Versand"
+          ],
+          "scenario": "100 AD befindet sich im physischen Regal, kann aber erst dann dem Versandauftrag zugeordnet werden, wenn die Qualität abgeschlossen ist."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Eine Qualitätsprüfung allein blockiert die Lagerverfügbarkeit nicht.",
+          "affects": [
+            "Verfügbares Guthaben"
+          ],
+          "scenario": "Auch wenn die Qualitätsregistrierung offen ist, kann der Bestand ausgewählt werden, wenn andere Richtlinien dies zulassen."
+        }
+      },
+      "blockPutawayUntilQualityDecision": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Das Produkt wartet auf Qualität und kann nicht in das endgültige Regal gestellt werden.",
+          "affects": [
+            "Regalaufgabe",
+            "Hochwertiges Warteregal"
+          ],
+          "scenario": "Das Produkt wartet im Annahme-/Quarantäneregal; Nach bestanden wird das Ziel auf das Regal gelegt."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Das physische Regalieren kann durchgeführt werden, während auf das Qualitätsergebnis gewartet wird.",
+          "affects": [
+            "Regalaufgabe"
+          ],
+          "scenario": "Das Produkt wird im Zielregal platziert, der Lagerstatus kann jedoch aus Qualitätsgründen gesperrt bleiben."
+        }
+      },
+      "allowOrderlessReceipt": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Die Annahme kann mit Lieferschein und Lagerartikel ohne Bestellung eröffnet werden.",
+          "affects": [
+            "Warenannahme ohne Bestellung"
+          ],
+          "scenario": "Dringende Materialien werden ohne Bestelllink angenommen."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Jede Warenannahme muss mit einer gültigen Bestellung verbunden sein.",
+          "affects": [
+            "Neue Warenannahme beginnt"
+          ],
+          "scenario": "Der Benutzer, der fortfahren möchte, ohne eine Bestellung auszuwählen, wird gesperrt."
+        }
+      },
+      "allowUnplannedReceipt": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Eine direkte physische Annahme ist ohne vorherige Auftragseröffnung möglich.",
+          "affects": [
+            "Direktannahme",
+            "Eine Aufgabe erstellen"
+          ],
+          "scenario": "Für das an der Tür ankommende Fahrzeug wird ein sofortiger Einlass eingeleitet."
+        },
+        "false": {
+          "summary": "Diese Steuerung ist ausgeschaltet; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Vor der physischen Annahme ist ein Auftrag/Auftrag zur Warenannahme erforderlich.",
+          "affects": [
+            "Wareneingangszölle"
+          ],
+          "scenario": "Der Lagerist kann nur den ihm zugewiesenen Annahmeauftrag ausführen."
+        }
+      },
+      "showAllocatedOpenOrderLines": {
+        "true": {
+          "summary": "Diese Kontrolle wird auf aktive und neue Transaktionen angewendet.",
+          "effect": "Auftragspositionen, die für andere offene WMS-Akzeptanz reserviert sind, werden mit der Warnung aufgeführt.",
+          "affects": [
+            "Netsis-Auftragsauswahl"
+          ],
+          "scenario": "Befindet sich die gleiche Bestellposition in einer anderen Bestellung, sieht der Benutzer dies, die Duplikatmengenkontrolle läuft jedoch weiter."
+        },
+        "false": {
+          "summary": "Diese Steuerung ist ausgeschaltet; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Für die weitere WMS-Übernahme reservierte Zeilen werden in der Auftragsauswahl ausgeblendet.",
+          "affects": [
+            "Netsis-Auftragsauswahl"
+          ],
+          "scenario": "Der Bediener sieht nur offene Zeilen, die noch nicht zugewiesen wurden."
+        }
+      },
+      "warehouseDefaultWarehouse": {
+        "default": {
+          "summary": "Das Lager, zu dem die Standardregalempfehlung gehört.",
+          "effect": "Bei Auswahl des Lagers zur Warenannahme kann das für dieses Lager definierte Standardregal verwendet werden.",
+          "affects": [
+            "Warenannahmelager/Regalauswahl"
+          ],
+          "scenario": "Für Produkte, die im Lager 01 eintreffen, kommt standardmäßig das Regal ACCEPT-01 an."
+        }
+      },
+      "warehouseDefaultLocation": {
+        "default": {
+          "summary": "Es ist das Standardregal, in dem die Waren zuerst im ausgewählten Lager platziert werden.",
+          "effect": "Dieses Rack wird für neue Annahmelinien empfohlen, sofern der Betreiber nicht wechselt.",
+          "affects": [
+            "Empfehlung Warenannahmeregal",
+            "Regalbalance"
+          ],
+          "scenario": "Wenn das Lager 01 ausgewählt wird, wird automatisch ACCEPT-01 ausgewählt."
+        }
+      },
+      "assignmentUser": {
+        "default": {
+          "summary": "Der WMS-Benutzer, dem die Lagerberechtigung zugewiesen wird.",
+          "effect": "Der ausgewählte Benutzer kann nur Waren in den ihm zugewiesenen Lagern annehmen.",
+          "affects": [
+            "Warenannahmebenutzer-Lagerbehörde"
+          ],
+          "scenario": "Lagerarbeiter A ist nur mit der Arbeit in den Lagern 01 und 02 beauftragt."
+        }
+      }
+    },
+    "goodsReceipt": {
+      "overReceiptPolicy": {
+        "NotAllowed": {
+          "summary": "Mehr als die in der Bestellung angegebene Menge ist nicht akzeptabel.",
+          "effect": "Wenn der Annahmebetrag den offenen Auftragssaldo übersteigt, wird die Position nicht erfasst.",
+          "affects": [
+            "Mengenkontrolle der bestellten Warenannahme",
+            "Fehlermeldung „Überakzeptieren“."
+          ],
+          "scenario": "Wenn 105 AD gelesen wird, während 100 AD in der Bestellung offen sind, wird die Transaktion oberhalb von 100 AD blockiert."
+        },
+        "WithinTolerance": {
+          "summary": "Eine Überabnahme kann nur innerhalb der definierten prozentualen Grenze erfolgen.",
+          "effect": "Der offene Betrag darf um den Toleranzprozentsatz überschritten werden; weitere sind gesperrt.",
+          "affects": [
+            "Annahme der bestellten Ware",
+            "Übermäßige Akzeptanztoleranz"
+          ],
+          "scenario": "100 AD-Bestellungen und 5 % Toleranz, maximal 105 ADs werden akzeptiert."
+        },
+        "ApprovalRequired": {
+          "summary": "Überschüssiger Betrag wird erfasst, der Vorgang wird jedoch nicht ohne autorisierte Genehmigung fortgesetzt.",
+          "effect": "Eine Überschreitung des Betrags wird als Ausnahme bis zur Genehmigung markiert.",
+          "affects": [
+            "Genehmigungswarteschlange für Warenannahme",
+            "ERP-Übertragungsport"
+          ],
+          "scenario": "Wenn 108 AD für die 100 AD-Bestellung eingegangen ist, wird die Registrierung geöffnet; Der Abschluss erfolgt nach Zustimmung des Betreuers."
+        }
+      },
+      "overReceiptTolerancePercent": {
+        "default": {
+          "summary": "ist die maximale Überakzeptanzrate für die Auswahl „Innerhalb der Toleranz“.",
+          "effect": "Der Prozentsatz wird anhand der offenen Menge der Bestellung berechnet.",
+          "affects": [
+            "Validierung der Bestellpositionsmenge"
+          ],
+          "scenario": "Wenn die offene Menge 200 beträgt und die Toleranz 2 % beträgt, sind bis zu 204 Annahmen möglich.",
+          "warning": "Wenn die Überakzeptanzrichtlinie „Verboten“ lautet, wird dieses Feld nicht verwendet."
+        }
+      },
+      "inventoryAvailabilityPolicy": {
+        "Immediate": {
+          "summary": "Der akzeptierte Bestand wird ohne Wartezeit auf den verfügbaren Bestand übertragen.",
+          "effect": "Lagerbestand; Es ist sofort für Überweisungs-, Versand- und Reservierungsvorgänge geöffnet.",
+          "affects": [
+            "Lager- und Regalbilanz",
+            "Reservierung",
+            "Versand/Übertragung"
+          ],
+          "scenario": "10 AD kann in einem anderen Überweisungsauftrag ausgewählt werden, sobald die Annahme endet."
+        },
+        "AfterReceiptApproval": {
+          "summary": "Der Bestand bleibt bis zur Warenannahmefreigabe gesperrt.",
+          "effect": "Ein physischer Datensatz wird erstellt, aber der verfügbare Saldo wird nach der Bestätigung geöffnet.",
+          "affects": [
+            "Warenannahmebestätigung",
+            "Verfügbares Guthaben"
+          ],
+          "scenario": "Betreiber beendet Annahme; Sobald der Vorgesetzte zustimmt, wird der Lagerbestand zum Versand freigegeben."
+        },
+        "AfterQualityApproval": {
+          "summary": "Der im Qualitätsplan enthaltene Bestand kann erst verwendet werden, wenn die Qualitätsentscheidung getroffen wurde.",
+          "effect": "Bestände von schlechter Qualität sind nicht betroffen; diejenigen, die der Qualität zugeordnet sind, bleiben im Status „Ausstehend“.",
+          "affects": [
+            "Qualitätsüberprüfung",
+            "Quarantäne/verfügbares Guthaben"
+          ],
+          "scenario": "Bei der Probenkontrolle werden 20 AD-Bestände zur Verfügung gestellt."
+        },
+        "AfterAllApprovals": {
+          "summary": "Warenannahme, Qualität und alle notwendigen ERP-Freigaben werden erwartet.",
+          "effect": "Lagerbestände werden erst freigegeben, wenn alle definierten Genehmigungspunkte passiert sind.",
+          "affects": [
+            "Warenannahme",
+            "Qualität",
+            "ERP-Genehmigungen",
+            "Verfügbares Guthaben"
+          ],
+          "scenario": "Auch wenn eine Qualitätsfreigabe vorliegt und die Freigabe des Warenannahmeleiters fehlt, wartet der Bestand weiter."
+        }
+      },
+      "erpPostingPolicy": {
+        "AfterReceipt": {
+          "summary": "Sobald die Warenannahme abgeschlossen ist, ist der ERP-Lieferschein versandbereit.",
+          "effect": "Wenn kein anderes Genehmigungstor vorhanden ist, wird die ERP-Warteschlange sofort ausgelöst.",
+          "affects": [
+            "Warenannahme abgeschlossen",
+            "ERP-Beleg"
+          ],
+          "scenario": "Wenn die Abnahme, für die keine Qualität erforderlich ist, abgeschlossen ist, wird eine Netsis-Quittung erstellt."
+        },
+        "AfterReceiptApproval": {
+          "summary": "Für die ERP-Registrierung wird die Genehmigung des Warenannahmemanagers abgewartet.",
+          "effect": "Der Abschluss durch den Bediener allein löst keine ERP-Übertragung aus.",
+          "affects": [
+            "Warenannahmebestätigung",
+            "ERP-Warteschlange"
+          ],
+          "scenario": "Betreiber beendet Annahme; Sobald der Vorgesetzte zustimmt, wird der Lieferschein verschickt."
+        },
+        "AfterQualityApproval": {
+          "summary": "Bei der Abnahme mit einem Qualitätsplan wird der ERP-Datensatz erst erstellt, wenn die Qualitätsentscheidung abgeschlossen ist.",
+          "effect": "Qualitätsergebnis kann „Bestanden“ oder „Nicht bestanden“ sein; Die Entscheidung wird voraussichtlich abgeschlossen sein.",
+          "affects": [
+            "Ergebnis der Qualitätsüberprüfung",
+            "ERP-Beleg"
+          ],
+          "scenario": "Auch wenn das Produkt ein nicht erfolgreiches Qualitätsergebnis erhält, kann nach der Entscheidung eine obligatorische Kaufanzeige versandt werden."
+        },
+        "AfterAllApprovals": {
+          "summary": "Die ERP-Übertragung erfolgt, nachdem alle definierten Genehmigungen abgeschlossen sind.",
+          "effect": "Warenannahme, Qualität und ERP-Freigabetore werden gemeinsam ausgewertet.",
+          "affects": [
+            "Warenannahmebestätigung",
+            "Qualitätsentscheidung",
+            "ERP-Genehmigung"
+          ],
+          "scenario": "Selbst wenn die Qualitätsprüfung abgeschlossen ist und keine ERP-autorisierte Genehmigung vorliegt, wartet die Übertragung."
+        }
+      },
+      "erpQualityGatePolicy": {
+        "None": {
+          "summary": "Der Qualitätsplan verzögert die ERP-Übertragung nicht.",
+          "effect": "Selbst wenn eine manuelle oder regelbasierte Qualitätsprüfung erfolgt, wird der ERP-Zeitpunkt nur durch die ERP-Übertragungsrichtlinie bestimmt.",
+          "affects": [
+            "ERP-Beleg",
+            "Qualitätsintegrationstor"
+          ],
+          "scenario": "Das Produkt wird an die Qualitätssicherung gesendet; Der Lieferschein kann übertragen werden, ohne das Qualitätsergebnis abzuwarten."
+        },
+        "RuleBasedOnly": {
+          "summary": "Nur Prüfungen, die sich aus der Bestands-/Qualitätsregel ergeben, führen zur ERP-Übertragung.",
+          "effect": "Das vom Bediener zur manuellen Qualität geschickte Produkt erstellt kein ERP-Gate.",
+          "affects": [
+            "Lagerqualitätsregel",
+            "ERP-Übertragungswarteschlange"
+          ],
+          "scenario": "Qualität erfordert Pflichtlager; Allerdings wird der Lagerlieferschein, der als verdächtig gilt und manuell versendet wird, nicht in der Schwebe gehalten."
+        },
+        "AnyQualityPlan": {
+          "summary": "Jeder Qualitätsplan, der regelbasiert oder manuell geöffnet wird, hält die ERP-Übertragung zurück.",
+          "effect": "Der Beleg wird nicht in die Warteschlange gestellt, bis die Qualitätsentscheidung abgeschlossen ist.",
+          "affects": [
+            "Manueller Qualitätsplan",
+            "Regelbasierte Qualität",
+            "ERP-Übertragung"
+          ],
+          "scenario": "Wenn der Bediener das verdächtige Produkt manuell an die Qualität schickt, wird der Lieferschein erst verworfen, wenn das Qualitätsergebnis vorliegt."
+        }
+      },
+      "allowUnderReceipt": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Das Dokument kann geöffnet bleiben, indem ein Teil des Bestellbetrags akzeptiert wird.",
+          "affects": [
+            "Bestellung angenommen",
+            "Verbleibender offener Betrag"
+          ],
+          "scenario": "60 n. Chr. stammt aus der 100 n. Chr.-Reihenfolge; 60 wird angenommen, 40 bleibt offen."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Die Bestellposition kann mit der fehlenden Menge nicht normal vervollständigt werden.",
+          "affects": [
+            "Bestellung angenommen"
+          ],
+          "scenario": "Wenn 60 AD für einen 100 AD-Auftrag gelesen wird, wird der Abschluss blockiert oder es ist ein kurzer Abschluss erforderlich."
+        }
+      },
+      "requireShortCloseApproval": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Zur Deckung der verbleibenden Bestellmenge ist die Genehmigung des Administrators erforderlich.",
+          "affects": [
+            "Kurze Schließung",
+            "Genehmigungswarteschlange"
+          ],
+          "scenario": "Wenn die restlichen 40 nach 60/100-Annahme gestrichen werden, ist die Zustimmung des Vorgesetzten einzuholen."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Der autorisierte Bediener kann die fehlende Zeile ohne zusätzliche Bestätigung schließen.",
+          "affects": [
+            "Kurzschluss"
+          ],
+          "scenario": "Nach 60/100 Akzeptanz können die restlichen 40 direkt geschlossen werden."
+        }
+      },
+      "requireReceiptApproval": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Nach der physischen Annahme wird eine separate Warenannahmebestätigung erstellt.",
+          "affects": [
+            "Akzeptanzstatus",
+            "Lagerfreigabe",
+            "ERP-Übertragung"
+          ],
+          "scenario": "Der Lagerist beendet die Annahme; Der Vorgang ist erst abgeschlossen, wenn der Vorgesetzte „Genehmigen“ sagt."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Der Abschluss der Warenannahme durch den Betreiber stellt eine Annahmebestätigung dar.",
+          "affects": [
+            "Akzeptanzstatus"
+          ],
+          "scenario": "Wenn der Lagerarbeiter die Transaktion abschließt, geht der Datensatz zum nächsten geeigneten Schritt über."
+        }
+      },
+      "requireQualityApproval": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Bei Beständen, für die ein Qualitätsplan erstellt wurde, wird der Prozess erst nach Abschluss der Entscheidung freigegeben.",
+          "affects": [
+            "Qualitätsüberprüfung",
+            "Lagerstatus"
+          ],
+          "scenario": "Die Charge, die in die Qualität geht, wird bis zur Fertigstellung in Quarantäne gehalten."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Wenn es keine Qualitätsregel gibt, ist keine gesonderte Qualitätsgenehmigung erforderlich.",
+          "affects": [
+            "Tor der Qualität"
+          ],
+          "scenario": "Bestand ohne Qualitätsdefinition geht direkt zum nächsten Schritt."
+        }
+      },
+      "requireErpApproval": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Vor der ERP-Übermittlung ist die Genehmigung eines autorisierten Benutzers erforderlich.",
+          "affects": [
+            "ERP-Übertragungswarteschlange",
+            "Berechtigungsprüfung"
+          ],
+          "scenario": "Lieferschein ist fertig; Sobald der ERP-Verantwortliche die Genehmigung erteilt, wird es an Netsis gesendet."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Sobald die anderen Türen abgeschlossen sind, kann die ERP-Einreichung automatisch fortgesetzt werden.",
+          "affects": [
+            "ERP-Übertragungswarteschlange"
+          ],
+          "scenario": "Sobald die Qualität fertig ist, wird der Lieferschein automatisch versendet."
+        }
+      },
+      "holdInventoryUntilQualityDecision": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Die noch ausstehende Qualitätsmenge wird aus dem verfügbaren Bestand zugeordnet.",
+          "affects": [
+            "Regalbilanzstatus",
+            "Reservierung und Versand"
+          ],
+          "scenario": "100 AD befindet sich im physischen Regal, kann aber erst dann dem Versandauftrag zugeordnet werden, wenn die Qualität abgeschlossen ist."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Eine Qualitätsprüfung allein blockiert nicht die Lagerverfügbarkeit.",
+          "affects": [
+            "Verfügbares Guthaben"
+          ],
+          "scenario": "Auch wenn die Qualitätsregistrierung offen ist, kann der Bestand ausgewählt werden, sofern andere Richtlinien dies zulassen."
+        }
+      },
+      "blockPutawayUntilQualityDecision": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Das Produkt wartet auf Qualität und kann nicht in das endgültige Regal gestellt werden.",
+          "affects": [
+            "Regalaufgabe",
+            "Hochwertiges Warteregal"
+          ],
+          "scenario": "Das Produkt wartet im Annahme-/Quarantäneregal; Nach bestanden wird das Ziel auf das Regal gelegt."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Das physische Regalieren kann durchgeführt werden, während auf das Qualitätsergebnis gewartet wird.",
+          "affects": [
+            "Regalaufgabe"
+          ],
+          "scenario": "Das Produkt wird im Zielregal platziert, der Lagerstatus kann jedoch aus Qualitätsgründen gesperrt bleiben."
+        }
+      },
+      "allowOrderlessReceipt": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Die Annahme kann mit Lieferschein und Lagerartikel ohne Bestellung eröffnet werden.",
+          "affects": [
+            "Warenannahme ohne Bestellung"
+          ],
+          "scenario": "Dringende Materialien werden ohne Bestelllink angenommen."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Jede Warenannahme muss mit einer gültigen Bestellung verbunden sein.",
+          "affects": [
+            "Neue Warenannahme beginnt"
+          ],
+          "scenario": "Der Benutzer, der fortfahren möchte, ohne eine Bestellung auszuwählen, wird gesperrt."
+        }
+      },
+      "allowUnplannedReceipt": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Eine direkte physische Annahme ist ohne vorherige Auftragseröffnung möglich.",
+          "affects": [
+            "Direktannahme",
+            "Eine Aufgabe erstellen"
+          ],
+          "scenario": "Für das an der Tür ankommende Fahrzeug wird der sofortige Einlass eingeleitet."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Der Auftrag/die Aufgabe zur Warenannahme ist vor der physischen Annahme erforderlich.",
+          "affects": [
+            "Wareneingangszölle"
+          ],
+          "scenario": "Der Lagerist kann nur den ihm zugewiesenen Annahmeauftrag ausführen."
+        }
+      },
+      "showAllocatedOpenOrderLines": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Auftragszeilen, die für andere offene WMS-Annahmen reserviert sind, werden mit der Warnung aufgeführt.",
+          "affects": [
+            "Netsis-Auftragsauswahl"
+          ],
+          "scenario": "Wenn sich derselbe Bestellartikel in einer anderen Bestellung befindet, sieht der Benutzer dies, aber die Duplikatmengenkontrolle wird fortgesetzt."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Zeilen, die für andere WMS-Annahmen reserviert sind, werden in der Auftragsauswahl ausgeblendet.",
+          "affects": [
+            "Netsis-Auftragsauswahl"
+          ],
+          "scenario": "Der Bediener sieht nur offene Zeilen, die noch nicht zugewiesen wurden."
+        }
+      },
+      "warehouseDefaultWarehouse": {
+        "default": {
+          "summary": "Dies ist das Lager, zu dem die Standardregalempfehlung gehört.",
+          "effect": "Wenn das Lager für die Warenannahme ausgewählt wird, kann das für dieses Lager definierte Standardregal verwendet werden.",
+          "affects": [
+            "Warenannahmelager/Regalauswahl"
+          ],
+          "scenario": "Für Produkte, die im Lager 01 eintreffen, kommt standardmäßig das Regal ACCEPT-01 an."
+        }
+      },
+      "warehouseDefaultLocation": {
+        "default": {
+          "summary": "Es ist das Standardregal, in dem die Waren zuerst im ausgewählten Lager platziert werden.",
+          "effect": "Dieses Rack wird für neue Annahmelinien empfohlen, sofern der Betreiber nicht wechselt.",
+          "affects": [
+            "Empfehlung Warenannahmeregal",
+            "Regalbalance"
+          ],
+          "scenario": "Wenn das Lager 01 ausgewählt wird, wird automatisch ACCEPT-01 ausgewählt."
+        }
+      },
+      "assignmentUser": {
+        "default": {
+          "summary": "Der WMS-Benutzer, dem die Lagerberechtigung zugewiesen wird.",
+          "effect": "Der ausgewählte Benutzer kann nur Waren in den ihm zugewiesenen Lagern annehmen.",
+          "affects": [
+            "Warenannahmebenutzer-Lagerbehörde"
+          ],
+          "scenario": "Lagerarbeiter A ist nur mit der Arbeit in den Lagern 01 und 02 beauftragt."
+        }
+      }
+    },
+    "outbound": {
+      "allowOrderBasedTask": {
+        "true": {
+          "summary": "Diese Kontrolle wird auf aktive und neue Transaktionen angewendet.",
+          "effect": "Aus der Bestellung heraus kann ein Entlade-/Versandauftrag eröffnet werden.",
+          "affects": [
+            "Neue Bestellung",
+            "Aufgaben zuweisen"
+          ],
+          "scenario": "Der Kundenauftrag wird ausgewählt und die Kommissionieraufgabe dem Personal zugewiesen."
+        },
+        "false": {
+          "summary": "Diese Steuerung ist ausgeschaltet; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Der auftragsbasierte Vermittlungsablauf kann im Menü nicht genutzt werden.",
+          "affects": [
+            "Neue Bestellung"
+          ],
+          "scenario": "Der Benutzer kann aus der Bestellung heraus keine Bestellung öffnen."
+        }
+      },
+      "allowStockBasedTask": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Ein Lagerverkauf kann ohne Bestellung eröffnet werden.",
+          "affects": [
+            "Kostenlose Aktienausgabe",
+            "Aufgaben zuweisen"
+          ],
+          "scenario": "Der Lagerbestand wird für den Musterversand ausgewählt und ein Abholauftrag zugewiesen."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Der Ausgang ohne Bestellung wird gesperrt.",
+          "affects": [
+            "Neue Bestellung"
+          ],
+          "scenario": "Die Option, eine Aufgabe aus dem freien Bestand zu öffnen, ist nicht verfügbar."
+        }
+      },
+      "allowOrderBasedDirect": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Transaktionen können direkt aus der Bestellung heraus vorgenommen werden, ohne dass eine Aufgabe zugewiesen werden muss.",
+          "affects": [
+            "Direkter Ausgang/Versand"
+          ],
+          "scenario": "Die Kleinbestellung wird vom Bediener auf demselben Bildschirm gesammelt und abgeschlossen."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Geordnete Transaktionen werden aus dem zugehörigen Ablauf ausgeführt.",
+          "affects": [
+            "Direkte Aktion"
+          ],
+          "scenario": "Auch wenn die Bestellung ausgewählt ist, muss zunächst eine Aufgabe erstellt werden."
+        }
+      },
+      "allowStockBasedDirect": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Lagerbestände ohne Bestellung können direkt in die Filiale gebracht werden.",
+          "affects": [
+            "Direkte kostenlose Ausgabe"
+          ],
+          "scenario": "Ausschuss oder Musterbestände werden sofort entfernt."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Der direkte Ausgang ohne Bestellung ist gesperrt.",
+          "affects": [
+            "Neue Veröffentlichung"
+          ],
+          "scenario": "Es ist nicht möglich, mit der undokumentierten Aktienauswahl fortzufahren."
+        }
+      },
+      "reservationPolicy": {
+        "None": {
+          "summary": "Für die Bestellmenge wird keine Lagerreservierung vorgenommen.",
+          "effect": "Bei anderen Jobs kann es zu demselben Gleichgewicht kommen; Die genaue Kontrolle erfolgt bei der Abholung.",
+          "affects": [
+            "Verfügbares Guthaben",
+            "Ergänzung"
+          ],
+          "scenario": "Zwei Bestellungen können denselben Bestand sehen; verwendet den zuerst gesammelten Betrag.",
+          "warning": "Bei hoher Auslastung kann es während des Betriebs zu Lagerengpässen kommen."
+        },
+        "OnCreate": {
+          "summary": "Der Lagerbestand wird reserviert, wenn die Bestellung als Entwurf erstellt wird.",
+          "effect": "Der Betrag ist für andere Bestellungen geschlossen.",
+          "affects": [
+            "Bestellung erstellen",
+            "Reservierungssaldo"
+          ],
+          "scenario": "Wenn eine Bestellung über 100 AD eröffnet wird, werden 100 AD sofort vom verfügbaren Guthaben abgezogen."
+        },
+        "OnRelease": {
+          "summary": "Eine Reservierung erfolgt, wenn der Auftrag freigegeben und in Betrieb genommen wird.",
+          "effect": "Entwürfe binden den Bestand nicht; Lagerhalterungen für den aktiven Einsatz.",
+          "affects": [
+            "Auftragsfreigabe",
+            "Reservierung"
+          ],
+          "scenario": "Planer bereitet Gliederung vor; Nach der Genehmigung und Veröffentlichung ist der Bestand reserviert."
+        }
+      },
+      "shortagePolicy": {
+        "Block": {
+          "summary": "Die Transaktion kann bei unvollständigem Bestand nicht abgeschlossen werden.",
+          "effect": "Der angeforderte Gesamtbetrag muss verfügbar sein.",
+          "affects": [
+            "Ergänzung abgeschlossen"
+          ],
+          "scenario": "10 AD wird angefordert, wenn es 8 AD sind, wird die Fertigstellung blockiert."
+        },
+        "AllowPartial": {
+          "summary": "Teiltransaktionen können bis zum gefundenen Betrag abgeschlossen werden.",
+          "effect": "Der verbleibende Betrag wird als offen/fehlend überwacht.",
+          "affects": [
+            "Teilweise Sammlung",
+            "Restbetrag"
+          ],
+          "scenario": "8 AD der 10 AD-Bestellung werden versendet, 2 AD bleiben offen."
+        },
+        "RequireApproval": {
+          "summary": "Der fehlende Betrag kann mit Zustimmung der bevollmächtigten Person ergänzt werden.",
+          "effect": "Der Bediener kann den Kurzschluss nicht alleine durchführen.",
+          "affects": [
+            "Ausnahmebestätigung",
+            "Kurzschluss"
+          ],
+          "scenario": "8/10 Bei der Abholung erfolgt der Versand nach Zustimmung des Vorgesetzten."
+        }
+      },
+      "overPickPolicy": {
+        "Block": {
+          "summary": "Der Einzug von mehr als dem Bestellbetrag ist gesperrt.",
+          "effect": "Es darf die Gesamtzahl der gelehrten Pläne nicht überschritten werden.",
+          "affects": [
+            "Barcode-Scannen",
+            "Sammlung"
+          ],
+          "scenario": "11. Lesevorgang für 10 AD-Auftrag wird abgelehnt."
+        },
+        "AllowWithinTolerance": {
+          "summary": "Eine Übersammlung wird nur innerhalb der prozentualen Toleranz akzeptiert.",
+          "effect": "Die Obergrenze wird anhand des Planbetrags berechnet.",
+          "affects": [
+            "Sammlungsmengenkontrolle"
+          ],
+          "scenario": "100 n. Chr. und 102 n. Chr. sind bei einer Toleranz von 2 % zulässig."
+        },
+        "RequireApproval": {
+          "summary": "Die Einziehung von Überschüssen bedarf einer autorisierten Genehmigung.",
+          "effect": "Überschreitungen können nicht ohne Genehmigung versendet werden.",
+          "affects": [
+            "Ausnahmebestätigung",
+            "Versandhafen"
+          ],
+          "scenario": "11/10 Die Abholung wartet auf die Genehmigung des Vorgesetzten."
+        }
+      },
+      "packingPolicy": {
+        "NotRequired": {
+          "summary": "Das Beenden kann abgeschlossen werden, ohne das Paket zu schließen.",
+          "effect": "Der Paket-/SSCC-Schritt ist nicht obligatorisch.",
+          "affects": [
+            "Verpackung",
+            "Versandabschluss"
+          ],
+          "scenario": "Das Produkt ohne Palette geht direkt zur Verladung."
+        },
+        "Optional": {
+          "summary": "Verpackungen können verwendet werden, sind aber nicht erforderlich.",
+          "effect": "Je nach Vorgang kann mit oder ohne Verpackung vorgegangen werden.",
+          "affects": [
+            "Verpackung"
+          ],
+          "scenario": "Das verpackte Produkt wird verpackt, das Massenprodukt wird direkt versendet."
+        },
+        "Required": {
+          "summary": "Der Checkout kann erst abgeschlossen werden, wenn alle entsprechenden Mengen verpackt sind.",
+          "effect": "Das Verschließen des Pakets ist das Versandtor.",
+          "affects": [
+            "Verpackung",
+            "SSCC/Label",
+            "Versandabschluss"
+          ],
+          "scenario": "Die Ladegenehmigung kann erst erteilt werden, wenn die gesammelten 20 AD in die Kartons gebracht wurden."
+        }
+      },
+      "minimumFulfillmentPercent": {
+        "default": {
+          "summary": "Dies ist die Mindestdeckungsrate, die für einen teilweisen Abschluss erforderlich ist.",
+          "effect": "Liegt der eingezogene Betrag unter diesem Satz, wird der Abschluss gesperrt.",
+          "affects": [
+            "Teilweise Sammlung",
+            "Kurzschluss"
+          ],
+          "scenario": "Wenn die Rate bei einer 100 AD-Bestellung 80 % beträgt, müssen mindestens 80 AD gesammelt werden."
+        }
+      },
+      "overPickTolerancePercent": {
+        "default": {
+          "summary": "Der maximale Prozentsatz der tolerierbaren Übersammlung.",
+          "effect": "Wird nur verwendet, wenn die Overcollection-Richtlinie tolerant ist.",
+          "affects": [
+            "Sammlungsmengenkontrolle"
+          ],
+          "scenario": "50 AD und maximal 52 AD können bei einer Toleranz von 4 % gesammelt werden."
+        }
+      },
+      "requireApproval": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Bevor die Bestellung in Kraft tritt, ist eine autorisierte Genehmigung erforderlich.",
+          "affects": [
+            "Bestellstatus",
+            "Aufgabenübertragung"
+          ],
+          "scenario": "Der Planer erstellt die Gliederung; Nach Zustimmung des Vorgesetzten sieht es der Lagerist."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Der Auftrag kann bei Bedarf direkt in die Tat umgesetzt werden.",
+          "affects": [
+            "Bestellstatus"
+          ],
+          "scenario": "Der Entwurf wird gespeichert und die Aufgabe wird sofort gestartet."
+        }
+      },
+      "requireAssigneeForTask": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Dem Vermittlungsfluss muss mindestens ein Benutzer zugewiesen sein.",
+          "affects": [
+            "Eine Aufgabe erstellen",
+            "Zugewiesene Aufträge"
+          ],
+          "scenario": "Auftrag kann nicht freigegeben werden, ohne Personal auszuwählen."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Die Aufgabe kann ohne Zuweisung eines Benutzers in den Pool verschoben werden.",
+          "affects": [
+            "Aufgabenpool"
+          ],
+          "scenario": "Die vakante Aufgabe wird dann von einem Mitarbeiter übernommen."
+        }
+      },
+      "allowMultipleAssignees": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Dieselbe Aufgabe kann mehreren Benutzern/Teams zugewiesen werden.",
+          "affects": [
+            "Aufgaben zuweisen",
+            "Fortschritt"
+          ],
+          "scenario": "Große Bestellung wird parallel von zwei Lageristen abgeholt."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Die Aufgabe kann nur einer einzigen verantwortlichen Person zugewiesen werden.",
+          "affects": [
+            "Assign tasks"
+          ],
+          "scenario": "Bei Auswahl des zweiten Benutzers wird die bisherige Zuordnung geändert."
+        }
+      },
+      "autoReleaseTaskBased": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Der aktuelle Beauftragte wird automatisch entlassen, wenn die Bestellung erfasst wird.",
+          "affects": [
+            "Aufgabenübertragung"
+          ],
+          "scenario": "Sobald der Auftrag erledigt ist, landet die Aufgabe auf der Mitarbeiterliste."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Die Aufgabe erfordert auch eine Freigabeverarbeitung.",
+          "affects": [
+            "Aufgabenstatus"
+          ],
+          "scenario": "Der Planer prüft den Entwurf und veröffentlicht ihn anschließend."
+        }
+      },
+      "allowPartialPicking": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Die Inkassositzung kann unter dem Planbetrag abgeschlossen werden.",
+          "affects": [
+            "Collection",
+            "Remaining amount"
+          ],
+          "scenario": "6 AD von 10 AD werden gesammelt und die Sitzung ist teilweise geschlossen."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Die Aggregation wartet darauf, dass der gesamte Betrag vervollständigt wird.",
+          "affects": [
+            "Ergänzung abgeschlossen"
+          ],
+          "scenario": "In 6/10 Fällen ist der Komplett-Button blockiert."
+        }
+      },
+      "allowPartialShipment": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Ein Teil des gesammelten Betrags kann als Versand/Ausgabe abgeschlossen werden.",
+          "affects": [
+            "Versandabschluss",
+            "Restbestellung"
+          ],
+          "scenario": "6 von 10 AD fahren mit dem Fahrzeug ab, 4 bleiben geöffnet."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Das Dokument wird erst dann fertiggestellt, wenn der gesamte entsprechende Betrag vorhanden ist.",
+          "affects": [
+            "Versandabschluss"
+          ],
+          "scenario": "Fahrzeugausfahrt kann nicht bestätigt werden, solange 6/10 bereit ist."
+        }
+      },
+      "requireSourceLocation": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Für jede Zeile ist eine Auswahl des Quellregals oder eine Barcode-Überprüfung erforderlich.",
+          "affects": [
+            "Ergänzung",
+            "Regalbalance"
+          ],
+          "scenario": "Ein falscher Regalbarcode wird abgelehnt, auch wenn der Bestand korrekt ist."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Das Quellregal ist in der Zeile nicht erforderlich; Das System kann es aus dem entsprechenden Saldo auflösen.",
+          "affects": [
+            "Ergänzung"
+          ],
+          "scenario": "Der Bediener kann nur mit dem Produktbarcode fortfahren."
+        }
+      },
+      "requireShipmentInformation": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Der Check-out kann ohne Eingabe von Fahrzeug-, Fahrer- oder Transportinformationen nicht abgeschlossen werden.",
+          "affects": [
+            "Hochladen",
+            "Vervollständigung des Dokuments"
+          ],
+          "scenario": "Der gesamte Versandvorgang wird blockiert, wenn das Schild fehlt."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Transportinformationen sind optional.",
+          "affects": [
+            "Installation"
+          ],
+          "scenario": "Der interne Lukenausgang kann ohne Platte fertiggestellt werden."
+        }
+      },
+      "requireLoadingConfirmation": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Nach der Abholung ist eine gesonderte Verladebestätigung erforderlich.",
+          "affects": [
+            "Laststeuerung",
+            "Versandstatus"
+          ],
+          "scenario": "Das abgeholte Paket wird nach Überprüfung mit dem Barcode im Fahrzeug versendet."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Sobald die Sammlung/Verpackung abgeschlossen ist, ist kein separater Ladeschritt erforderlich.",
+          "affects": [
+            "Versandstatus"
+          ],
+          "scenario": "Kleine Lieferung wird direkt abgeschlossen."
+        }
+      },
+      "autoPostErpAfterApproval": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Nach der endgültigen Betriebsgenehmigung wird der ERP-Datensatz automatisch in die Warteschlange gestellt.",
+          "affects": [
+            "ERP-Versand-/Lagerproblem"
+          ],
+          "scenario": "Sobald die Upload-Genehmigung erteilt wurde, wird der Netsis-Datensatz automatisch gesendet."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "ERP-Übertragung wird separat durch den Benutzer oder die Integrationsaufgabe initiiert.",
+          "affects": [
+            "ERP-Warteschlange"
+          ],
+          "scenario": "Der Vorgang ist abgeschlossen; Der ERP-Beauftragte sendet es später."
+        }
+      }
+    },
+    "shipping": {
+      "allowOrderBasedTask": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Aus dem Auftrag heraus kann ein Entlade-/Versandauftrag geöffnet werden.",
+          "affects": [
+            "Neue Bestellung",
+            "Aufgaben zuweisen"
+          ],
+          "scenario": "Der Kundenauftrag wird ausgewählt und die Kommissionieraufgabe wird dem Personal zugewiesen."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Der auftragsbasierte Vermittlungsablauf kann im Menü nicht verwendet werden.",
+          "affects": [
+            "Neue Bestellung"
+          ],
+          "scenario": "Benutzer kann aus der Bestellung heraus keine Bestellung öffnen."
+        }
+      },
+      "allowStockBasedTask": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Ein Lagerverkauf kann ohne Bestellung eröffnet werden.",
+          "affects": [
+            "Kostenlose Aktienausgabe",
+            "Aufgaben zuweisen"
+          ],
+          "scenario": "Der Lagerbestand wird für den Musterversand ausgewählt und ein Abholauftrag zugewiesen."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Unbeaufsichtigter Ausgang ist blockiert.",
+          "affects": [
+            "Neue Bestellung"
+          ],
+          "scenario": "Die Option, eine Mission aus dem freien Bestand zu eröffnen, ist nicht verfügbar."
+        }
+      },
+      "allowOrderBasedDirect": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Transaktionen können direkt aus der Bestellung heraus getätigt werden, ohne dass eine Aufgabe zugewiesen werden muss.",
+          "affects": [
+            "Direkter Ausgang/Versand"
+          ],
+          "scenario": "Die Kleinbestellung wird vom Bediener auf demselben Bildschirm gesammelt und abgeschlossen."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Geordnete Transaktionen werden vom begleitenden Ablauf ausgeführt.",
+          "affects": [
+            "Direkte Aktion"
+          ],
+          "scenario": "Auch wenn die Bestellung ausgewählt ist, muss zunächst eine Aufgabe erstellt werden."
+        }
+      },
+      "allowStockBasedDirect": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Lagerbestände ohne Bestellung können direkt in die Filiale gebracht werden.",
+          "affects": [
+            "Direkte kostenlose Ausgabe"
+          ],
+          "scenario": "Ausschuss oder Musterbestände werden sofort entfernt."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Der direkte Ausgang ohne Bestellung ist gesperrt.",
+          "affects": [
+            "Neue Veröffentlichung"
+          ],
+          "scenario": "Es ist nicht möglich, mit der undokumentierten Aktienauswahl fortzufahren."
+        }
+      },
+      "reservationPolicy": {
+        "None": {
+          "summary": "Für die Bestellmenge wird keine Lagerreservierung vorgenommen.",
+          "effect": "Bei anderen Jobs kann es zu demselben Gleichgewicht kommen. Die genaue Kontrolle erfolgt bei der Abholung.",
+          "affects": [
+            "Verfügbares Guthaben",
+            "Ergänzung"
+          ],
+          "scenario": "Zwei Bestellungen können denselben Bestand sehen; verwendet den zuerst gesammelten Betrag.",
+          "warning": "Bei hoher Auslastung kann es während des Betriebs zu Lagerengpässen kommen."
+        },
+        "OnCreate": {
+          "summary": "Der Lagerbestand ist reserviert, während die Bestellung als Entwurf erstellt wird.",
+          "effect": "Der Betrag ist für andere Bestellungen geschlossen.",
+          "affects": [
+            "Bestellung erstellen",
+            "Reservierungssaldo"
+          ],
+          "scenario": "Wenn eine Bestellung über 100 AD eröffnet wird, werden 100 AD sofort vom verfügbaren Guthaben abgezogen."
+        },
+        "OnRelease": {
+          "summary": "Eine Reservierung erfolgt, wenn der Auftrag freigegeben und in Betrieb genommen wird.",
+          "effect": "Entwürfe binden den Bestand nicht; Lagerhalterungen für den aktiven Einsatz.",
+          "affects": [
+            "Auftragsfreigabe",
+            "Reservierung"
+          ],
+          "scenario": "Planer bereitet Gliederung vor; Nach der Genehmigung und Veröffentlichung ist der Bestand reserviert."
+        }
+      },
+      "shortagePolicy": {
+        "Block": {
+          "summary": "Die Transaktion kann bei unvollständigem Bestand nicht abgeschlossen werden.",
+          "effect": "Der gesamte angeforderte Betrag muss verfügbar sein.",
+          "affects": [
+            "Ergänzung abgeschlossen"
+          ],
+          "scenario": "10 AD wird angefordert, die Fertigstellung wird blockiert, wenn 8 AD vorhanden sind."
+        },
+        "AllowPartial": {
+          "summary": "Teiltransaktionen können bis zum gefundenen Betrag abgeschlossen werden.",
+          "effect": "Der verbleibende Betrag wird als offen/fehlend überwacht.",
+          "affects": [
+            "Teilweise Sammlung",
+            "Restbetrag"
+          ],
+          "scenario": "8 AD von 10 AD-Bestellungen werden versendet, 2 AD bleiben offen."
+        },
+        "RequireApproval": {
+          "summary": "Der fehlende Betrag kann mit Zustimmung der bevollmächtigten Person ergänzt werden.",
+          "effect": "Der Bediener kann den Kurzschluss nicht alleine durchführen.",
+          "affects": [
+            "Ausnahmebestätigung",
+            "Kurzschluss"
+          ],
+          "scenario": "8/10 Bei der Abholung erfolgt der Versand nach Zustimmung des Vorgesetzten."
+        }
+      },
+      "overPickPolicy": {
+        "Block": {
+          "summary": "Der Einzug von mehr als dem Bestellbetrag ist gesperrt.",
+          "effect": "Es darf die Gesamtzahl der gelehrten Pläne nicht überschritten werden.",
+          "affects": [
+            "Barcode-Scannen",
+            "Sammlung"
+          ],
+          "scenario": "Die 11. Lesung des Beschlusses aus dem Jahr 10 n. Chr. wird abgelehnt."
+        },
+        "AllowWithinTolerance": {
+          "summary": "Eine Übersammlung wird nur innerhalb der prozentualen Toleranz akzeptiert.",
+          "effect": "Die Obergrenze wird anhand des Planbetrags berechnet.",
+          "affects": [
+            "Sammlungsmengenkontrolle"
+          ],
+          "scenario": "100 n. Chr. und 102 n. Chr. sind bei einer Toleranz von 2 % zulässig."
+        },
+        "RequireApproval": {
+          "summary": "Die Einziehung von Überschüssen bedarf einer autorisierten Genehmigung.",
+          "effect": "Überschüssige Mengen können nicht ohne Genehmigung versendet werden.",
+          "affects": [
+            "Ausnahmebestätigung",
+            "Versandhafen"
+          ],
+          "scenario": "11/10 Die Abholung wartet auf die Genehmigung des Vorgesetzten."
+        }
+      },
+      "packingPolicy": {
+        "NotRequired": {
+          "summary": "Das Beenden kann abgeschlossen werden, ohne das Paket zu schließen.",
+          "effect": "Der Paket-/SSCC-Schritt ist nicht obligatorisch.",
+          "affects": [
+            "Verpackung",
+            "Versandabschluss"
+          ],
+          "scenario": "Ohne Palette geht das Produkt direkt zur Verladung."
+        },
+        "Optional": {
+          "summary": "Verpackungen können verwendet werden, sind aber nicht erforderlich.",
+          "effect": "Je nach Vorgang kann mit oder ohne Verpackung vorgegangen werden.",
+          "affects": [
+            "Verpackung"
+          ],
+          "scenario": "Das verpackte Produkt wird verpackt, das Massenprodukt wird direkt versendet."
+        },
+        "Required": {
+          "summary": "Der Checkout kann erst abgeschlossen werden, wenn alle entsprechenden Mengen verpackt sind.",
+          "effect": "Der Paketverschluss ist das Versandtor.",
+          "affects": [
+            "Verpackung",
+            "SSCC/Label",
+            "Versandabschluss"
+          ],
+          "scenario": "Die Verladegenehmigung kann erst erteilt werden, wenn die gesammelten 20 AD in die Kartons gebracht wurden."
+        }
+      },
+      "minimumFulfillmentPercent": {
+        "default": {
+          "summary": "ist die Mindestdeckungsrate, die für einen Teilabschluss erforderlich ist.",
+          "effect": "Liegt der eingezogene Betrag unter diesem Satz, wird der Abschluss gesperrt.",
+          "affects": [
+            "Teilweise Sammlung",
+            "Kurzschluss"
+          ],
+          "scenario": "Wenn die Rate bei einer 100 AD-Bestellung 80 % beträgt, müssen mindestens 80 AD gesammelt werden."
+        }
+      },
+      "overPickTolerancePercent": {
+        "default": {
+          "summary": "Der maximale Prozentsatz der tolerierbaren Übersammlung.",
+          "effect": "Wird nur verwendet, wenn die Overcollection-Richtlinie tolerant ist.",
+          "affects": [
+            "Sammlungsmengenkontrolle"
+          ],
+          "scenario": "50 AD und maximal 52 AD können bei einer Toleranz von 4 % gesammelt werden."
+        }
+      },
+      "requireApproval": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Bevor die Bestellung in Kraft tritt, ist eine autorisierte Genehmigung erforderlich.",
+          "affects": [
+            "Bestellstatus",
+            "Aufgabenübertragung"
+          ],
+          "scenario": "Planer erstellt Gliederung; Nach Zustimmung des Vorgesetzten sieht es der Lagerist."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Der Auftrag kann bei Bedarf direkt in die Tat umgesetzt werden.",
+          "affects": [
+            "Bestellstatus"
+          ],
+          "scenario": "Der Entwurf wird gespeichert und die Aufgabe wird sofort gestartet."
+        }
+      },
+      "requireAssigneeForTask": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Dem Vermittlungsablauf muss mindestens ein Benutzer zugeordnet sein.",
+          "affects": [
+            "Eine Aufgabe erstellen",
+            "Zugewiesene Aufträge"
+          ],
+          "scenario": "Aufträge können ohne Auswahl von Personal nicht freigegeben werden."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Die Aufgabe kann ohne Zuweisung eines Benutzers in den Pool verschoben werden.",
+          "affects": [
+            "Aufgabenpool"
+          ],
+          "scenario": "Die freie Stelle wird dann von einem Mitarbeiter besetzt."
+        }
+      },
+      "allowMultipleAssignees": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Dieselbe Aufgabe kann mehreren Benutzern/Teams zugewiesen werden.",
+          "affects": [
+            "Aufgaben zuweisen",
+            "Fortschritt"
+          ],
+          "scenario": "Der Großauftrag wird parallel von zwei Lageristen kommissioniert."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Die Aufgabe kann nur einer einzigen verantwortlichen Person zugewiesen werden.",
+          "affects": [
+            "Assign tasks"
+          ],
+          "scenario": "Bei Auswahl des zweiten Benutzers wird die bisherige Zuordnung geändert."
+        }
+      },
+      "autoReleaseTaskBased": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Der aktuelle Beauftragte wird automatisch entlassen, wenn die Bestellung erfasst wird.",
+          "affects": [
+            "Aufgabenübertragung"
+          ],
+          "scenario": "Sobald der Auftrag erledigt ist, landet die Aufgabe auf der Mitarbeiterliste."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Die Aufgabe erfordert auch eine Freigabeverarbeitung.",
+          "affects": [
+            "Aufgabenstatus"
+          ],
+          "scenario": "Der Planer prüft den Entwurf und veröffentlicht ihn anschließend."
+        }
+      },
+      "allowPartialPicking": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Die Inkassositzung kann unter dem Planbetrag abgeschlossen werden.",
+          "affects": [
+            "Collection",
+            "Remaining amount"
+          ],
+          "scenario": "6 AD von 10 AD werden gesammelt und die Sitzung ist teilweise geschlossen."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Die Aggregation wartet darauf, dass der gesamte Betrag abgeschlossen ist.",
+          "affects": [
+            "Ergänzung abgeschlossen"
+          ],
+          "scenario": "In 6/10 Fällen ist der Komplett-Button blockiert."
+        }
+      },
+      "allowPartialShipment": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Ein Teil des gesammelten Betrags kann als Versand/Ausgabe abgeschlossen werden.",
+          "affects": [
+            "Versandabschluss",
+            "Restbestellung"
+          ],
+          "scenario": "6 von 10 AD fahren mit dem Fahrzeug ab, 4 bleiben geöffnet."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Das Dokument wird erst dann fertiggestellt, wenn der gesamte entsprechende Betrag verfügbar ist.",
+          "affects": [
+            "Versandabschluss"
+          ],
+          "scenario": "Fahrzeugausfahrt kann nicht bestätigt werden, solange 6/10 bereit ist."
+        }
+      },
+      "requireSourceLocation": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Für jede Zeile ist eine Auswahl des Quellregals oder eine Barcode-Überprüfung erforderlich.",
+          "affects": [
+            "Ergänzung",
+            "Regalbalance"
+          ],
+          "scenario": "Ein falscher Regalbarcode wird abgelehnt, auch wenn der Bestand korrekt ist."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Das Quellregal ist in der Zeile nicht erforderlich; Das System kann es aus dem entsprechenden Saldo auflösen.",
+          "affects": [
+            "Ergänzung"
+          ],
+          "scenario": "Der Bediener kann nur mit dem Produktbarcode fortfahren."
+        }
+      },
+      "requireShipmentInformation": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Der Checkout kann ohne Eingabe von Fahrzeug-, Fahrer- oder Transportinformationen nicht abgeschlossen werden.",
+          "affects": [
+            "Hochladen",
+            "Vervollständigung des Dokuments"
+          ],
+          "scenario": "Der gesamte Versandvorgang wird blockiert, wenn das Schild fehlt."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Transportinformationen sind optional.",
+          "affects": [
+            "Installation"
+          ],
+          "scenario": "Der interne Lukenausgang kann ohne Platte fertiggestellt werden."
+        }
+      },
+      "requireLoadingConfirmation": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Nach der Abholung ist eine gesonderte Verladebestätigung erforderlich.",
+          "affects": [
+            "Laststeuerung",
+            "Versandstatus"
+          ],
+          "scenario": "Das abgeholte Paket wird nach Überprüfung mit dem Barcode im Fahrzeug versendet."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Sobald die Sammlung/Verpackung abgeschlossen ist, ist kein separater Ladeschritt erforderlich.",
+          "affects": [
+            "Versandstatus"
+          ],
+          "scenario": "Kleine Lieferung wird direkt abgeschlossen."
+        }
+      },
+      "autoPostErpAfterApproval": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Nach der endgültigen Betriebsgenehmigung wird der ERP-Datensatz automatisch in die Warteschlange gestellt.",
+          "affects": [
+            "ERP-Versand-/Lagerproblem"
+          ],
+          "scenario": "Sobald die Upload-Genehmigung erteilt wurde, wird der Netsis-Datensatz automatisch gesendet."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "ERP-Übertragung wird separat durch den Benutzer oder die Integrationsaufgabe initiiert.",
+          "affects": [
+            "ERP-Warteschlange"
+          ],
+          "scenario": "Der Vorgang ist abgeschlossen; Der ERP-Beauftragte sendet es später."
+        }
+      }
+    },
+    "transfer": {
+      "allowOrderBasedTask": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Aus dem Auftrag heraus kann ein Entlade-/Versandauftrag geöffnet werden.",
+          "affects": [
+            "Neue Bestellung",
+            "Aufgaben zuweisen"
+          ],
+          "scenario": "Der Kundenauftrag wird ausgewählt und die Kommissionieraufgabe wird dem Personal zugewiesen."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Der auftragsbasierte Vermittlungsablauf kann im Menü nicht verwendet werden.",
+          "affects": [
+            "Neue Bestellung"
+          ],
+          "scenario": "Benutzer kann aus der Bestellung heraus keine Bestellung öffnen."
+        }
+      },
+      "allowStockBasedTask": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Ein Lagerverkauf kann ohne Bestellung eröffnet werden.",
+          "affects": [
+            "Kostenlose Aktienausgabe",
+            "Aufgaben zuweisen"
+          ],
+          "scenario": "Der Lagerbestand wird für den Musterversand ausgewählt und ein Abholauftrag zugewiesen."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Der Ausgang ohne Bestellung wird gesperrt.",
+          "affects": [
+            "Neue Bestellung"
+          ],
+          "scenario": "Die Option zum Öffnen einer Aufgabe aus dem freien Bestand ist nicht verfügbar."
+        }
+      },
+      "allowOrderBasedDirect": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Transaktionen können direkt aus der Bestellung heraus vorgenommen werden, ohne dass eine Aufgabe zugewiesen werden muss.",
+          "affects": [
+            "Direkter Ausgang/Versand"
+          ],
+          "scenario": "Die Kleinbestellung wird vom Bediener auf demselben Bildschirm gesammelt und abgeschlossen."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Geordnete Transaktionen werden aus dem begleitenden Ablauf ausgeführt.",
+          "affects": [
+            "Direkte Aktion"
+          ],
+          "scenario": "Auch wenn die Bestellung ausgewählt ist, muss zunächst eine Aufgabe erstellt werden."
+        }
+      },
+      "allowStockBasedDirect": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Lagerbestände ohne Bestellung können direkt in die Filiale gebracht werden.",
+          "affects": [
+            "Direkte kostenlose Ausgabe"
+          ],
+          "scenario": "Ausschuss oder Mustermaterial wird sofort entfernt."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Der direkte Ausgang ohne Bestellung ist gesperrt.",
+          "affects": [
+            "Neue Veröffentlichung"
+          ],
+          "scenario": "Es ist nicht möglich, mit der undokumentierten Aktienauswahl fortzufahren."
+        }
+      },
+      "reservationPolicy": {
+        "None": {
+          "summary": "Für die Bestellmenge wird keine Lagerreservierung vorgenommen.",
+          "effect": "Andere Jobs weisen möglicherweise die gleiche Bilanz auf; Die genaue Kontrolle erfolgt bei der Abholung.",
+          "affects": [
+            "Verfügbares Guthaben",
+            "Ergänzung"
+          ],
+          "scenario": "Zwei Bestellungen können denselben Bestand sehen; verwendet den zuerst gesammelten Betrag.",
+          "warning": "Bei hoher Auslastung kann es während des Betriebs zu Lagerengpässen kommen."
+        },
+        "OnCreate": {
+          "summary": "Der Lagerbestand wird reserviert, wenn die Bestellung als Entwurf erstellt wird.",
+          "effect": "Der Betrag ist für andere Bestellungen geschlossen.",
+          "affects": [
+            "Bestellung erstellen",
+            "Reservierungssaldo"
+          ],
+          "scenario": "Wenn eine Bestellung über 100 AD eröffnet wird, werden 100 AD sofort vom verfügbaren Guthaben abgezogen."
+        },
+        "OnRelease": {
+          "summary": "Eine Reservierung wird vorgenommen, wenn der Auftrag freigegeben und in Betrieb genommen wird.",
+          "effect": "Entwürfe binden den Bestand nicht; Lagerhalterungen für den aktiven Einsatz.",
+          "affects": [
+            "Auftragsfreigabe",
+            "Reservierung"
+          ],
+          "scenario": "Planer bereitet Gliederung vor; Nach der Genehmigung und Veröffentlichung ist der Bestand reserviert."
+        }
+      },
+      "minimumFulfillmentPercent": {
+        "default": {
+          "summary": "Dies ist die Mindestdeckungsquote, die für einen teilweisen Abschluss erforderlich ist.",
+          "effect": "Liegt der eingezogene Betrag unter diesem Satz, wird der Abschluss gesperrt.",
+          "affects": [
+            "Teilweise Sammlung",
+            "Kurzschluss"
+          ],
+          "scenario": "Wenn die Rate bei einer 100 AD-Bestellung 80 % beträgt, müssen mindestens 80 AD gesammelt werden."
+        }
+      },
+      "requireApproval": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Bevor die Bestellung in Kraft tritt, ist eine autorisierte Genehmigung erforderlich.",
+          "affects": [
+            "Bestellstatus",
+            "Aufgabenübertragung"
+          ],
+          "scenario": "Planer erstellt Entwurf; Nach Zustimmung des Vorgesetzten sieht es der Lagerist."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Der Auftrag kann bei Bedarf direkt in die Tat umgesetzt werden.",
+          "affects": [
+            "Bestellstatus"
+          ],
+          "scenario": "Der Entwurf wird gespeichert und die Aufgabe wird sofort gestartet."
+        }
+      },
+      "requireAssigneeForTask": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Dem Vermittlungsablauf muss mindestens ein Benutzer zugeordnet sein.",
+          "affects": [
+            "Eine Aufgabe erstellen",
+            "Zugewiesene Aufträge"
+          ],
+          "scenario": "Aufträge können nicht ohne Personalauswahl freigegeben werden."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Die Aufgabe kann ohne Zuweisung eines Benutzers in den Pool verschoben werden.",
+          "affects": [
+            "Aufgabenpool"
+          ],
+          "scenario": "Die freie Stelle wird dann von einem Mitarbeiter besetzt."
+        }
+      },
+      "allowMultipleAssignees": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Dieselbe Aufgabe kann mehreren Benutzern/Teams zugewiesen werden.",
+          "affects": [
+            "Aufgaben zuweisen",
+            "Fortschritt"
+          ],
+          "scenario": "Der Großauftrag wird parallel von zwei Lageristen kommissioniert."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Die Aufgabe kann nur einer einzigen verantwortlichen Person zugewiesen werden.",
+          "affects": [
+            "Assign tasks"
+          ],
+          "scenario": "Bei Auswahl des zweiten Benutzers wird die bisherige Zuordnung geändert."
+        }
+      },
+      "autoReleaseTaskBased": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Der aktuelle Beamte wird automatisch entlassen, wenn die Bestellung erfasst wird.",
+          "affects": [
+            "Aufgabenübertragung"
+          ],
+          "scenario": "Sobald der Auftrag erledigt ist, landet die Aufgabe auf der Mitarbeiterliste."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Die Aufgabe erfordert auch eine Freigabeverarbeitung.",
+          "affects": [
+            "Aufgabenstatus"
+          ],
+          "scenario": "Der Planer prüft den Entwurf und veröffentlicht ihn anschließend."
+        }
+      },
+      "allowPartialPicking": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Die Inkassositzung kann unter dem Planbetrag abgeschlossen werden.",
+          "affects": [
+            "Collection",
+            "Remaining amount"
+          ],
+          "scenario": "6 AD von 10 AD werden gesammelt und die Sitzung ist teilweise geschlossen."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Die Aggregation wartet darauf, dass der gesamte Betrag abgeschlossen ist.",
+          "affects": [
+            "Ergänzung abgeschlossen"
+          ],
+          "scenario": "In 6/10 Fällen ist der Komplett-Button blockiert."
+        }
+      },
+      "requireSourceLocation": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Für jede Zeile ist eine Auswahl des Quellregals oder eine Barcode-Überprüfung erforderlich.",
+          "affects": [
+            "Ergänzung",
+            "Regalbalance"
+          ],
+          "scenario": "Ein falscher Regalbarcode wird abgelehnt, auch wenn der Bestand korrekt ist."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Das Quellregal ist in der Zeile nicht erforderlich; Das System kann es aus dem entsprechenden Saldo auflösen.",
+          "affects": [
+            "Ergänzung"
+          ],
+          "scenario": "Der Bediener kann nur mit dem Produktbarcode fortfahren."
+        }
+      },
+      "requireShipmentInformation": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Der Check-out kann ohne Eingabe von Fahrzeug-, Fahrer- oder Transportinformationen nicht abgeschlossen werden.",
+          "affects": [
+            "Hochladen",
+            "Vervollständigung des Dokuments"
+          ],
+          "scenario": "Der gesamte Versandvorgang wird blockiert, wenn das Schild fehlt."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Transportinformationen sind optional.",
+          "affects": [
+            "Installation"
+          ],
+          "scenario": "Der interne Lukenausgang kann ohne Platte fertiggestellt werden."
+        }
+      },
+      "discrepancyPolicy": {
+        "Block": {
+          "summary": "Wenn die Quellleistung und die Ziel-Eintrittsmenge unterschiedlich sind, wird der Vorgang blockiert.",
+          "effect": "Unter-/Überlieferungen können nicht abgedeckt werden.",
+          "affects": [
+            "Transferannahme",
+            "Mengenabgleich"
+          ],
+          "scenario": "10 AD wird ausgegeben, bei Erreichen von 9 AD kann die Abnahme nicht abgeschlossen werden."
+        },
+        "AllowWithReason": {
+          "summary": "Mengendifferenzen können durch Eingabe der Begründung akzeptiert werden.",
+          "effect": "Der Unterschied und die Erklärung werden in den Prüfpfad geschrieben.",
+          "affects": [
+            "Transferannahme",
+            "Prüfung"
+          ],
+          "scenario": "Wenn 1 AD beschädigt ist, wird 9 AD wegen „Transportschaden“ akzeptiert."
+        },
+        "RequireApproval": {
+          "summary": "Mengendifferenz wird zur autorisierten Genehmigung gesendet.",
+          "effect": "Der Zielsaldo wird ohne Bestätigung nicht endgültig festgelegt.",
+          "affects": [
+            "Bestätigung der Übertragungsausnahme"
+          ],
+          "scenario": "9/10-Annahme endet nach Genehmigung durch den Vorgesetzten."
+        }
+      },
+      "allowPartialShipment": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Ein Teil der Bestellung kann vom Quelllager aus versandt werden.",
+          "affects": [
+            "Versand übertragen",
+            "Restbetrag"
+          ],
+          "scenario": "60 AD des 100 AD-Transfers werden mit dem ersten Fahrzeug freigegeben."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Der Ressourcenversand wartet auf den vollen Planbetrag.",
+          "affects": [
+            "Übergabeversand"
+          ],
+          "scenario": "Der Versand kann nicht abgeschlossen werden, solange 60/100 fertig ist."
+        }
+      },
+      "allowPartialReceipt": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Das Ziellager kann die eingehende Menge teilweise übernehmen.",
+          "affects": [
+            "Transferannahme"
+          ],
+          "scenario": "60 AD im ersten Fahrzeug wird akzeptiert, 40 AD verbleibt im Transit."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Zielannahme wartet auf die gesamte Sendungsmenge.",
+          "affects": [
+            "Transferannahme"
+          ],
+          "scenario": "Das Dokument wird bei Teillieferung nicht geschlossen."
+        }
+      },
+      "requireDestinationAcceptance": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Nach dem Beenden der Quelle ist eine separate Akzeptanzbestätigung des Zielbenutzers erforderlich.",
+          "affects": [
+            "Transitbestand",
+            "Ziel akzeptieren"
+          ],
+          "scenario": "Lagerbestand ist unterwegs; Wenn der Ziellagerist „Abholen“ sagt, wird der Zielsaldo übertragen."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Die Quellausgabe kann den Zielsaldo direkt aktualisieren.",
+          "affects": [
+            "Übertragungsabschluss"
+          ],
+          "scenario": "Die kurze Übertragung innerhalb desselben Feldes erfolgt in einem Schritt."
+        }
+      },
+      "createTransitInventory": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Das Transitgleichgewicht wird zwischen Quellausgang und Zielakzeptanz aufrechterhalten.",
+          "affects": [
+            "Transitbestand",
+            "Lagerbestand"
+          ],
+          "scenario": "100 AD im Fahrzeug ist nicht in der Quelle, es ist nicht im Ziel; erscheint im Transit."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Es wird kein separater Transitbestandsstatus erstellt.",
+          "affects": [
+            "Lagersaldo"
+          ],
+          "scenario": "Bei einer einstufigen Übertragung wird der Bestand direkt an den Zielort übertragen."
+        }
+      },
+      "requirePutaway": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Nach der Zielübernahme muss die Regalaufgabe abgeschlossen werden.",
+          "affects": [
+            "Regale",
+            "Zielregalbalance"
+          ],
+          "scenario": "Der Prozess wird erst abgeschlossen, wenn das Produkt im Empfangsbereich zum Zielregal gelesen wurde."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Die Zielakzeptanz kann den Saldo direkt in das ausgewählte Regal schreiben.",
+          "affects": [
+            "Zielregalbalance"
+          ],
+          "scenario": "Bei der Annahme wird das Zielregal ausgewählt und es wird keine separate Aufgabe geöffnet."
+        }
+      },
+      "requireTargetLocation": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Zielregal ist in der Transferlinie obligatorisch.",
+          "affects": [
+            "Erstellen Sie eine Bestellung",
+            "Zielregalbalance"
+          ],
+          "scenario": "Eine Zeile kann nicht gespeichert werden, ohne das Zielregal auszuwählen."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Das Zielregal kann bei der Annahme/Einlagerung festgelegt werden.",
+          "affects": [
+            "Zielakzeptanz"
+          ],
+          "scenario": "Die Bestellung wird nur mit dem Ziellager geöffnet; Der Lagerist wählt das passende Regal aus."
+        }
+      },
+      "directPostingPolicy": {
+        "OneStep": {
+          "summary": "Quellausgabe und Zieleingabe werden in einem einzigen Vorgang abgeschlossen.",
+          "effect": "Transit-Warte- und Zielannahmeschritte finden nicht statt.",
+          "affects": [
+            "Lagerbewegung",
+            "Quell-/Zielsaldo"
+          ],
+          "scenario": "Der Lagertransfer innerhalb derselben Einrichtung erfolgt sofort an den Bestimmungsort."
+        },
+        "TwoStepTransit": {
+          "summary": "Quellabfluss, Transit und Zielannahme werden in getrennten Fällen überwacht.",
+          "effect": "Der Lagerbestand bleibt bis zur physischen Lieferung im Transport.",
+          "affects": [
+            "Transitsaldo",
+            "Ziel akzeptieren"
+          ],
+          "scenario": "Im Fernverkehr ist die Fahrt mit der Abfahrt des Fahrzeugs abgeschlossen, wenn das Ziel bestätigt wird."
+        }
+      }
+    },
+    "quality": {
+      "defaultInspectionMode": {
+        "NoCheck": {
+          "summary": "Standardmäßig ist der Qualitätskontrollplan nicht geöffnet.",
+          "effect": "Wenn die Lagerregel keine zusätzliche Qualität erfordert, verbleibt das Produkt direkt im Annahmefluss.",
+          "affects": [
+            "Warenannahme",
+            "Erstellen eines Qualitätsplans"
+          ],
+          "scenario": "Standardverpackungsmaterial wird ohne Eröffnung eines Qualitätsprotokolls akzeptiert."
+        },
+        "QuickCheck": {
+          "summary": "Das Produkt ist auf kurze Kontrollschritte ausgerichtet.",
+          "effect": "Anstelle einer vollständigen Laboruntersuchung wird eine schnelle Sicht-/Messkontrolle eröffnet.",
+          "affects": [
+            "Qualitätsüberprüfung",
+            "Kontrollvorlage"
+          ],
+          "scenario": "Der Betreiber trifft die Entscheidung durch Prüfung der Verpackung und Menge."
+        },
+        "InspectionRequired": {
+          "summary": "Eine vollständige Qualitätsprüfung wird obligatorisch.",
+          "effect": "Der Qualitätsprozess ist erst abgeschlossen, wenn eine Entscheidung getroffen wurde.",
+          "affects": [
+            "Qualitätsplan",
+            "Quarantäne",
+            "Lagerfreigabe"
+          ],
+          "scenario": "Wartet, bis Rohmaterialprobe und Messergebnisse eingegeben werden."
+        }
+      },
+      "defaultFailAction": {
+        "Quarantine": {
+          "summary": "Das fehlerhafte Produkt wird in den Quarantänestatus versetzt.",
+          "effect": "Der Bestand wird vom verfügbaren Bestand getrennt und in das Quarantäneregal verschoben.",
+          "affects": [
+            "Qualitätsbeurteilung",
+            "Quarantäne-Guthaben"
+          ],
+          "scenario": "Die nicht gemessene Charge wird zur Inspektion in das Quarantäneregal verschoben."
+        },
+        "Reject": {
+          "summary": "Das fehlerhafte Produkt wird in den Status „Abgelehnt“ versetzt.",
+          "effect": "Das Produkt kann im Normalbetrieb nicht verwendet werden.",
+          "affects": [
+            "Qualitätsentscheidung",
+            "Rotes Regal"
+          ],
+          "scenario": "Beschädigtes Produkt wird in das Ausschussregal gebracht."
+        },
+        "ReturnToSupplier": {
+          "summary": "Das fehlerhafte Produkt wird für den Rücksendevorgang an den Lieferanten vorbereitet.",
+          "effect": "Rückgabestatus und Tracking-Datensatz werden erstellt.",
+          "affects": [
+            "Qualitätsbeurteilung",
+            "Lieferantenretouren"
+          ],
+          "scenario": "Die Charge mit der falschen Spezifikation landet auf der Retourenliste."
+        },
+        "ManagerApproval": {
+          "summary": "Fehlgeschlagenes Ergebnis geht zur endgültigen Entscheidung an den Administrator.",
+          "effect": "Quarantäne, bedingte Aufnahme oder Rückkehrentscheidung wird vom Beamten gewählt.",
+          "affects": [
+            "Qualitätsgenehmigungswarteschlange"
+          ],
+          "scenario": "Das Produkt mit dem Grenzwert wird zur Genehmigung an den Qualitätsmanager gesendet."
+        }
+      },
+      "defaultQualityLocationId": {
+        "default": {
+          "summary": "Das Standardregal für Produkte, die auf eine Qualitätsprüfung warten.",
+          "effect": "Dieses Rack wird für die automatische Qualitätsausrichtung empfohlen.",
+          "affects": [
+            "Routing nach Warenannahme",
+            "Qualitäts-Standby-Balance"
+          ],
+          "scenario": "Das an die Qualität gesendete Produkt wird im KLT-01-Regal platziert."
+        }
+      },
+      "defaultQuarantineLocationId": {
+        "default": {
+          "summary": "Dies ist das Standardregal für Produkte, die unter Quarantäne gestellt wurden.",
+          "effect": "Fehlgeschlagener/verdächtiger Bestand wird an diesen Speicherort weitergeleitet.",
+          "affects": [
+            "Quarantänebewegung",
+            "Regalbalance"
+          ],
+          "scenario": "Die Charge, die das fehlgeschlagene Ergebnis erhalten hat, wird auf das KRN-01-Regal gestellt."
+        }
+      },
+      "defaultRejectLocationId": {
+        "default": {
+          "summary": "Das Standardregal für abgelehnte Produkte.",
+          "effect": "Bestimmt den empfohlenen Zielort nach der Ablehnungsentscheidung.",
+          "affects": [
+            "Ablehnungsbewegung",
+            "Regalbalance"
+          ],
+          "scenario": "Das Produkt, das auf die Rückgabe wartet, wird im Regal RED-01 aufbewahrt."
+        }
+      },
+      "autoCreateInspectionOnReceipt": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Die Inspektion wird automatisch für die Warenannahmelinie geöffnet, die der Qualitätsregel entspricht.",
+          "affects": [
+            "Warenannahme abgeschlossen",
+            "Qualitätsliste"
+          ],
+          "scenario": "Wenn hochwertiger Pflichtbestand akzeptiert wird, öffnet der Bediener keinen separaten Datensatz."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Die Rezension wird vom autorisierten Benutzer manuell geöffnet.",
+          "affects": [
+            "Qualitätsliste"
+          ],
+          "scenario": "Annahme ist abgeschlossen; Der Qualitätsbeauftragte erstellt einen Plan, wenn er dies für erforderlich hält."
+        }
+      },
+      "holdInventoryUntilDecision": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Lagerbestände können erst verwendet werden, wenn eine Qualitätsentscheidung getroffen wurde.",
+          "affects": [
+            "Verfügbares Guthaben",
+            "Versand/Übertragung"
+          ],
+          "scenario": "angezeigte Los kann nicht für den Versandauftrag ausgewählt werden."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Die Qualitätsregistrierung allein blockiert die Lagerverfügbarkeit nicht.",
+          "affects": [
+            "Verfügbares Guthaben"
+          ],
+          "scenario": "Während die Kontrolle läuft, kann der Bestand verwendet werden, sofern andere Richtlinien dies zulassen."
+        }
+      },
+      "blockPutawayUntilDecision": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Das Produkt, dessen Qualität noch aussteht, kann nicht in das letzte Regal verschoben werden.",
+          "affects": [
+            "Regalaufgabe"
+          ],
+          "scenario": "Das Produkt wartet im Qualitätsbereich; Nach der Entscheidung geht es ins normale Regal."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Das physische Regalieren kann erfolgen, während auf die Qualität gewartet wird.",
+          "affects": [
+            "Regale"
+          ],
+          "scenario": "Das Produkt wird in das normale Regal gestellt, sein Qualitätsstatus bleibt jedoch erhalten."
+        }
+      },
+      "blockErpPostingUntilDecision": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "ERP-Lieferschein wird erst versendet, wenn die Qualitätsentscheidung abgeschlossen ist.",
+          "affects": [
+            "ERP-Beleg"
+          ],
+          "scenario": "Wenn die Entscheidung „Bestanden“ oder „Nicht bestanden“ getroffen wird, wird ein obligatorischer Lieferschein gesendet."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Das Qualitätsergebnis hält die ERP-Übertragung nicht auf.",
+          "affects": [
+            "ERP-Übertragung"
+          ],
+          "scenario": "Wenn die Überprüfung aktiviert ist, kann der Lieferschein an ERP gesendet werden."
+        }
+      },
+      "requireManagerApprovalForRelease": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Die Rückkehr aus der Quarantäne in den nutzbaren Bestand erfordert die Genehmigung des Administrators.",
+          "affects": [
+            "Qualitätsfreigabe"
+          ],
+          "scenario": "Rückgabequalität bestanden; Sobald der Manager zustimmt, wird die Aktie geöffnet."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Die Entscheidung des autorisierten Qualitätsbenutzers gibt den Bestand frei.",
+          "affects": [
+            "Qualitätsbeurteilung"
+          ],
+          "scenario": "Nach dem Ergebnis „Passed“ wird der Bestand sofort geöffnet."
+        }
+      },
+      "allowPartialDecision": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Die Menge einer Qualitätscharge kann in verschiedene Ergebnisse unterteilt werden.",
+          "affects": [
+            "Qualitätsentscheidungslinien",
+            "Lagerstatus"
+          ],
+          "scenario": "95 von 100 AD werden akzeptiert und 5 werden abgelehnt."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Eine einzige Qualitätsentscheidung wird für die gesamte Charge getroffen.",
+          "affects": [
+            "Qualitätsbeurteilung"
+          ],
+          "scenario": "Alle 100 AD werden bestanden oder nicht bestanden."
+        }
+      },
+      "allowDirectReceiptWhenNoRule": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Lagerbestände ohne Qualitätsregeln werden angenommen, ohne auf die Qualität zu warten.",
+          "affects": [
+            "Warenannahme",
+            "Qualitätsplan"
+          ],
+          "scenario": "Verbrauchsmaterialien, für die diese Regel nicht gilt, werden direkt vorrätig."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Obwohl dies keine Regel ist, ist eine qualitative Beurteilung/manuelle Anleitung erforderlich.",
+          "affects": [
+            "Warenannahme abgeschlossen"
+          ],
+          "scenario": "Nicht jedes Produkt kann ohne Weiterleitung an das Qualitätsteam fertiggestellt werden."
+        }
+      },
+      "blockReceiptWhenLotMissing": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Im Lager mit Chargenverfolgung kann die Annahme nicht ohne Eingabe der Charge abgeschlossen werden.",
+          "affects": [
+            "Überprüfung der Warenannahme"
+          ],
+          "scenario": "Wenn das Feld „Los“ leer ist, wird dem Benutzer der Korrekturfehler angezeigt."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Das Qualitätsmodul verhindert nicht separat Chargenengpässe.",
+          "affects": [
+            "Warenannahme"
+          ],
+          "scenario": "Wenn die Bestandsverfolgungsrichtlinie dies zulässt, erfolgt der Fortschritt ohne Lose."
+        }
+      },
+      "blockReceiptWhenSerialMissing": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Bei Lagerbeständen mit Serienverfolgung kann die Annahme ohne Eingabe der erforderlichen Seriennummer nicht abgeschlossen werden.",
+          "affects": [
+            "Barcode-/Serienprüfung"
+          ],
+          "scenario": "Wenn 3 AD-Serien erforderlich sind, müssen drei Serien gelesen werden."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Das Qualitätsmodul verhindert einen Serienausfall nicht separat.",
+          "affects": [
+            "Warenannahme"
+          ],
+          "scenario": "Wenn die Bestandsverfolgungspolitik angemessen ist, können Fortschritte ohne Serien erzielt werden."
+        }
+      },
+      "blockReceiptWhenExpiryMissing": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Im SKT-Pflichtbestand kann die Annahme ohne Eingabe des Datums nicht abgeschlossen werden.",
+          "affects": [
+            "Überprüfung der Warenannahme"
+          ],
+          "scenario": "Wenn das Ablaufdatum der Lebensmittelcharge leer ist, wird die Registrierung abgelehnt."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Das Qualitätsmodul verhindert nicht zusätzlich einen SKT-Mangel.",
+          "affects": [
+            "Warenannahme"
+          ],
+          "scenario": "Wenn die Lagerpolitik nicht verbindlich ist, fahren Sie ohne Datum fort."
+        }
+      }
+    },
+    "packing": {
+      "requirePacking": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Es ist zwingend erforderlich, vor dem Versand/Abflug ein Paket zu erstellen.",
+          "affects": [
+            "Verpackungsgeschäftszentrum",
+            "Versandtor"
+          ],
+          "scenario": "Der Versand kann nicht abgeschlossen werden, ohne das abgeholte Produkt in das Paket aufzunehmen."
+        },
+        "false": {
+          "summary": "Diese Steuerung ist ausgeschaltet; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Der Verpackungsschritt ist optional.",
+          "affects": [
+            "Versandabschluss"
+          ],
+          "scenario": "Das Schüttgut gelangt direkt zur Verladung."
+        }
+      },
+      "allowPartialPacking": {
+        "true": {
+          "summary": "Diese Kontrolle wird auf aktive und neue Transaktionen angewendet.",
+          "effect": "Ein Teil der gesammelten Menge kann verpackt und offen gelassen werden.",
+          "affects": [
+            "Paketleitungen",
+            "Restbetrag"
+          ],
+          "scenario": "60 von 100 n. Chr. werden in die erste Parzellengruppe aufgenommen."
+        },
+        "false": {
+          "summary": "Diese Steuerung ist ausgeschaltet; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Die gesamte entsprechende Menge wird im selben Verpackungsvorgang erwartet.",
+          "affects": [
+            "Paketverschluss"
+          ],
+          "scenario": "Der Prozess wird nicht abgeschlossen, wenn 60/100 gepackt sind."
+        }
+      },
+      "allowMixedStock": {
+        "true": {
+          "summary": "Diese Kontrolle wird auf aktive und neue Transaktionen angewendet.",
+          "effect": "Das gleiche Paket kann unterschiedliche Lagercodes enthalten.",
+          "affects": [
+            "Überprüfung des Paketinhalts"
+          ],
+          "scenario": "Drei verschiedene Produkte desselben Kunden werden in einer Box gesammelt."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Jedes Paket trägt einen einzelnen Lagerbestandscode.",
+          "affects": [
+            "Überprüfung des Paketinhalts"
+          ],
+          "scenario": "Wenn ein anderer Bestand gescannt wird, wird ein neues Paket angefordert."
+        }
+      },
+      "allowMixedLot": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Unterschiedliche Chargen für denselben Bestand können in derselben Verpackung verpackt werden.",
+          "affects": [
+            "Chargenrückverfolgbarkeit",
+            "Paketinhalt"
+          ],
+          "scenario": "LOT-A und LOT-B werden auf die gleiche Palette gelegt."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Das Paket ist auf ein Los beschränkt.",
+          "affects": [
+            "Paketinhalt"
+          ],
+          "scenario": "Für das zweite Los wird ein neuer Karton/eine neue Palette geöffnet."
+        }
+      },
+      "allowMixedCustomer": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Das gleiche Paket kann Zeilen von verschiedenen Kunden enthalten.",
+          "affects": [
+            "Kundentrennung",
+            "Paketetikett"
+          ],
+          "scenario": "In der internen Transferkonsolidierung wird ein Mehrkundenpaket vorbereitet."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Das Paket gehört einem einzelnen Kunden.",
+          "affects": [
+            "Paketüberprüfung"
+          ],
+          "scenario": "Wenn das Produkt eines anderen Kunden gescannt wird, wird es abgelehnt."
+        }
+      },
+      "requireSerialLotScan": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Das Produkt wird der Verpackung erst hinzugefügt, wenn die Serien-/Chargeninformationen anhand des Barcodes überprüft wurden.",
+          "affects": [
+            "Scannen von Verpackungen",
+            "Rückverfolgbarkeit"
+          ],
+          "scenario": "Die Identität des seriellen Geräts im Paket wird durch Scannen des seriellen Barcodes überprüft."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Tracking-Informationen können der aktuellen Aktienauswahl entnommen werden; Zusätzliche Lektüre ist nicht erforderlich.",
+          "affects": [
+            "Verpackung"
+          ],
+          "scenario": "Nicht serienmäßiges Produkt wird mit Mengenangabe verpackt."
+        }
+      },
+      "requireWeight": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Das tatsächliche Gewicht ist beim Verschließen des Pakets obligatorisch.",
+          "affects": [
+            "Paket schließen",
+            "Transportdokument"
+          ],
+          "scenario": "Das Paket kann nicht verschlossen werden, ohne es zu wiegen."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Gewicht ist optional.",
+          "affects": [
+            "Paket schließt"
+          ],
+          "scenario": "Mengenabhängige Kleinpackungen werden ohne Gewicht verschlossen."
+        }
+      },
+      "requireDimensions": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Das Paket wird erst geschlossen, wenn Breite, Länge und Höhe eingegeben werden.",
+          "affects": [
+            "Paket schließt",
+            "Volumenberechnung"
+          ],
+          "scenario": "Drei Dimensionen der Frachtbox werden aufgezeichnet."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Paketabmessungen sind optional.",
+          "affects": [
+            "Paket schließt"
+          ],
+          "scenario": "Der Standardfall wird ohne Eingabe weiterer Maße geschlossen."
+        }
+      },
+      "requireSscc": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Jede Logistikeinheit muss über ein gültiges SSCC verfügen.",
+          "affects": [
+            "Paketetikett",
+            "Barcode-Überprüfung"
+          ],
+          "scenario": "Das SSCC-Tag wird beim Schließen der Palette erstellt."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Ohne SSCC kann das Paket geschlossen werden.",
+          "affects": [
+            "Paketetikett"
+          ],
+          "scenario": "Die interne Verwendungsbox wird anhand der lokalen Paketnummer verfolgt."
+        }
+      },
+      "autoGenerateSscc": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Wenn SSCC obligatorisch ist, generiert das System die nächste eindeutige Nummer.",
+          "affects": [
+            "Barcode-Regel",
+            "Paketetikett"
+          ],
+          "scenario": "Wenn eine neue Palette geöffnet wird, gibt der Benutzer keine Zahl ein."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "SSCC wird vom Benutzer/externen System empfangen.",
+          "affects": [
+            "Ein Paket erstellen"
+          ],
+          "scenario": "Der SSCC-Barcode des Lieferanten wird gescannt."
+        }
+      },
+      "autoPrintLabelOnClose": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Wenn das Paket geschlossen wird, wird der Etikettendruckauftrag automatisch geöffnet.",
+          "affects": [
+            "Druckerwarteschlange",
+            "Paketetikett"
+          ],
+          "scenario": "Das Etikett wird entfernt, sobald die Box geschlossen wird."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Das Etikett wird per Benutzerbefehl gedruckt.",
+          "affects": [
+            "Etikettenanzeige"
+          ],
+          "scenario": "Der Bediener wählt „Etikett drucken“ aus der Paketliste."
+        }
+      },
+      "allowReopen": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Eine geschlossene Verpackung kann durch autorisierte Bedienung wieder geöffnet werden.",
+          "affects": [
+            "Paketstatus",
+            "Prüfung"
+          ],
+          "scenario": "Wenn das fehlende Produkt bemerkt wird, wird die Verpackung erneut geöffnet."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Ein geschlossenes Paket kann nicht geändert werden.",
+          "affects": [
+            "Paketstatus"
+          ],
+          "scenario": "Fix erfordert Stornierung/neues Paket."
+        }
+      },
+      "allowRepack": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Paketinhalt kann in ein anderes Paket verschoben werden.",
+          "affects": [
+            "Umpacken",
+            "Paketbewegung"
+          ],
+          "scenario": "Der Inhalt des beschädigten Pakets wird auf das neue Paket übertragen."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Das Verschieben von Inhalten zwischen Paketen wird verhindert.",
+          "affects": [
+            "Paketoperationen"
+          ],
+          "scenario": "Falsches Paket erfordert einen Stornierungsprozess."
+        }
+      },
+      "weightTolerancePercent": {
+        "default": {
+          "summary": "Die zulässige Differenz zwischen erwartetem und tatsächlichem Paketgewicht.",
+          "effect": "Wenn die Toleranz überschritten wird, wird das Schließen des Pakets gewarnt oder blockiert.",
+          "affects": [
+            "Paketwiegekontrolle"
+          ],
+          "scenario": "98–102 kg werden bei einem erwarteten Gewicht von 100 kg und einer Toleranz von 2 % akzeptiert."
+        }
+      },
+      "closePolicy": {
+        "Manual": {
+          "summary": "Das Paket wird geschlossen, wenn der Benutzer „Schließen“ sagt.",
+          "effect": "Benutzerkontrolle wird erwartet, auch wenn der Inhalt vollständig ist.",
+          "affects": [
+            "Paket schließt"
+          ],
+          "scenario": "Der Bediener schließt das Paket nach der letzten Kontrolle."
+        },
+        "AutoWhenComplete": {
+          "summary": "Das Paket wird automatisch geschlossen, wenn der geplante Inhalt abgeschlossen ist.",
+          "effect": "Kein zusätzlicher Schließen-Klick erforderlich.",
+          "affects": [
+            "Scannen von Verpackungen",
+            "Tag"
+          ],
+          "scenario": "Wenn das Endprodukt gescannt ist, wird die Box geschlossen und der Etikettiervorgang beginnt."
+        }
+      },
+      "releasePolicy": {
+        "Manual": {
+          "summary": "Das geschlossene Paket wird separat zum Versand freigegeben.",
+          "effect": "Der Verschluss der Verpackung allein macht sie nicht versandfähig.",
+          "affects": [
+            "Paketfreigabe"
+          ],
+          "scenario": "Nach der Qualitätskontrolle öffnet der Vorgesetzte das Paket für den Versand."
+        },
+        "OnClose": {
+          "summary": "Wenn das Paket geschlossen ist, ist es für den automatischen Versand bereit.",
+          "effect": "Der separate Freigabeschritt wird übersprungen.",
+          "affects": [
+            "Vorbereitung für den Versand"
+          ],
+          "scenario": "Es erscheint in der Ladeliste, sobald das Paket geschlossen ist."
+        }
+      }
+    },
+    "project": {
+      "numberLocale": {
+        "tr-TR": {
+          "summary": "Zahlen werden mit türkischen Trennzeichen angezeigt.",
+          "effect": "Das Tausendertrennzeichen ist ein Punkt, das Dezimaltrennzeichen ist ein Komma.",
+          "affects": [
+            "Alle Betrags-, Saldo-, Preis- und Berichtsbildschirme"
+          ],
+          "scenario": "1234,5 erscheint als 1234,50."
+        },
+        "en-US": {
+          "summary": "Zahlen werden mit englischen (US-)Trennzeichen angezeigt.",
+          "effect": "Das Tausendertrennzeichen ist ein Komma, das Dezimaltrennzeichen ist ein Punkt.",
+          "affects": [
+            "Alle numerischen Darstellungen"
+          ],
+          "scenario": "1234,5 erscheint als 1.234,50."
+        },
+        "de-DE": {
+          "summary": "Zahlen werden mit deutschen Trennzeichen dargestellt.",
+          "effect": "Das Tausendertrennzeichen ist ein Punkt, das Dezimaltrennzeichen ist ein Komma.",
+          "affects": [
+            "Alle numerischen Darstellungen"
+          ],
+          "scenario": "1234,5 erscheint als 1234,50."
+        }
+      },
+      "decimalPlaces": {
+        "default": {
+          "summary": "Die Anzahl der Dezimalstellen, die in Mengen und numerischen Werten angezeigt werden sollen.",
+          "effect": "Der berechnete Wert ändert sich nicht; Allerdings sind die Darstellung für den Benutzer und die Eingabeempfindlichkeit standardisiert.",
+          "affects": [
+            "Gitter",
+            "Formulare",
+            "PDF/Excel-Ausdrucke"
+          ],
+          "scenario": "Bei Auswahl von 3 Ziffern erscheint der Betrag 1,5 als 1.500."
+        }
+      },
+      "dateFormat": {
+        "default": {
+          "summary": "Legt die Reihenfolge fest, in der Datumsangaben auf dem Bildschirm angezeigt werden.",
+          "effect": "Das UTC-Datum in der Datenbank ändert sich nicht; Lediglich der Präsentationsstil ändert sich.",
+          "affects": [
+            "Alle Datumsfelder",
+            "Berichte und Dokumente"
+          ],
+          "scenario": "8. August 2026, 08.08.2026 erscheint in der Auswahl dd.MM.yyyy."
+        }
+      },
+      "timeFormat": {
+        "default": {
+          "summary": "Gibt das 24/12-Stunden- und Sekundenformat der Zeitanzeige an.",
+          "effect": "Die aufgezeichnete UTC-Zeit ändert sich nicht; Die Benutzeransicht ändert sich.",
+          "affects": [
+            "Alle Zeit- und Datums-/Uhrzeitfelder"
+          ],
+          "scenario": "Bei Auswahl von HH:mm:ss erscheint die Uhrzeit als 16:05:09."
+        }
+      },
+      "yearFormat": {
+        "default": {
+          "summary": "Gibt die zwei- oder vierstellige Darstellung des Jahres an.",
+          "effect": "Es wirkt sich nur auf das Erscheinungsbild aus, nicht auf die Dokumentdaten.",
+          "affects": [
+            "Jahresbeschriftungen und Berichte"
+          ],
+          "scenario": "2026 erscheint in der JJJJ-Auswahl, 26 erscheint in der JJJJ-Auswahl."
+        }
+      },
+      "timeZoneId": {
+        "default": {
+          "summary": "UTC ist die Standardzeitzone, in der Datensätze für den Benutzer übersetzt werden.",
+          "effect": "API-Daten bleiben UTC; wird auf dem Bildschirm in die ausgewählte Zonenzeit umgerechnet.",
+          "affects": [
+            "Auditzeiten",
+            "Operationstermine",
+            "Berichte"
+          ],
+          "scenario": "13:00 UTC, 16:00 wird in der Auswahl Europa/Istanbul angezeigt.",
+          "warning": "Eine Zeitzonenänderung ändert nicht den UTC-Wert alter Datensätze."
+        }
+      },
+      "passwordMinimumLength": {
+        "default": {
+          "summary": "Die Mindestanzahl von Zeichen für neue oder geänderte Passwörter.",
+          "effect": "Das Identitätsmodul lehnt kürzere Passwörter ab.",
+          "affects": [
+            "Einen Benutzer erstellen",
+            "Kennwort ändern",
+            "Passwort zurücksetzen"
+          ],
+          "scenario": "Wenn 8 ausgewählt ist, kann kein 7-stelliges Passwort gespeichert werden."
+        }
+      },
+      "passwordMaximumLength": {
+        "default": {
+          "summary": "Dies ist die vom System akzeptierte Obergrenze für Passwörter.",
+          "effect": "Dies ist die feste Obergrenze der Sicherheitsinfrastruktur und kann von diesem Bildschirm aus nicht geändert werden.",
+          "affects": [
+            "Authentifizierung"
+          ],
+          "scenario": "Der Benutzer legt das Passwort mit der maximalen Anzahl angezeigter Zeichen fest."
+        }
+      },
+      "sendSerialsToErp": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Serieninformationen in WMS-Vorgängen werden auch an ERP-Dokumentzeilen gesendet.",
+          "affects": [
+            "Warenannahme",
+            "Übertragen",
+            "ERP-Aufzeichnungen von Versand- und Lagertransaktionen"
+          ],
+          "scenario": "Bei der Annahme eines Serienprodukts wird die Serienliste in den Netsis-Lieferschein übernommen."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Serien werden nur innerhalb von WMS angezeigt; Die Anzahl der Dokumente wird an ERP gesendet.",
+          "affects": [
+            "ERP-Integration",
+            "WMS-Serienregister"
+          ],
+          "scenario": "WMS hält den Lagerbestand auf Serienbasis, nur 10 AD-Mengen gehen an Netsis."
+        }
+      }
+    },
+    "subcontracting": {
+      "requireSupplier": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Jedes Eingabe-/Ausgabedokument eines Subunternehmers ist mit einem Lieferanten verknüpft.",
+          "affects": [
+            "Erstellung von Unterauftragsaufträgen",
+            "ERP-Mandantenzuordnung"
+          ],
+          "scenario": "Das an die Lackiererei gesendete Material wird beim ausgewählten Subunternehmer-Kunden erfasst."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Die Lieferantenauswahl ist nicht obligatorisch.",
+          "affects": [
+            "Erstellung von Unterauftragsaufträgen"
+          ],
+          "scenario": "Interner Werkstatttransfer wird geöffnet, ohne den aktuellen auszuwählen."
+        }
+      },
+      "requireSubcontractOrderForReceipt": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Die Annahme einer Unterauftragsrückgabe muss auf einer gültigen Unterauftragsbestellung basieren.",
+          "affects": [
+            "Vertragsanmeldung",
+            "Bestellsaldo"
+          ],
+          "scenario": "Rücksendungen ohne Bestellnummer werden nicht akzeptiert."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Unter Umständen können Rücksendungen von Subunternehmern auch ohne Auftrag angenommen werden.",
+          "affects": [
+            "Vertrags-Login"
+          ],
+          "scenario": "Dringende Transaktionen werden ohne Bestelllink akzeptiert."
+        }
+      },
+      "requireIssueBeforeReceipt": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Der Rückgabebetrag darf den zuvor an den Subunternehmer gesendeten Betrag nicht überschreiten.",
+          "affects": [
+            "Vertrags-Login",
+            "Gesendeter/verbleibender Betrag"
+          ],
+          "scenario": "Wenn 10 AD gesendet werden, werden maximal 10 AD zurückgegeben."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Ein Retourendatensatz kann ohne vorheriges Subunternehmerproblem geöffnet werden.",
+          "affects": [
+            "Vertrags-Login"
+          ],
+          "scenario": "Das vor der Übertragung an das System gesendete Produkt wird direkt angenommen."
+        }
+      },
+      "allowOrderlessIssue": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Material kann ohne Unterauftragsbestellung an den Lieferanten ausgegeben werden.",
+          "affects": [
+            "Ausgelagert"
+          ],
+          "scenario": "Material wird ohne Auftrag zur Musterbearbeitung verschickt."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Jede Subunternehmerleistung ist mit der Bestellung verknüpft.",
+          "affects": [
+            "Unterauftragsvergabe"
+          ],
+          "scenario": "Eine Bestellung kann nicht gespeichert werden, ohne die Bestellung auszuwählen."
+        }
+      },
+      "allowOrderlessReceipt": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Rücksendungen von Subunternehmern können ohne Bestellung angenommen werden.",
+          "affects": [
+            "Vertrags-Login"
+          ],
+          "scenario": "Altarbeiten werden ohne Bestellung zurückgenommen."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Die Bestellung ist für die Unterauftragsvergabe für die Rücksendung zwingend erforderlich.",
+          "affects": [
+            "Vertragsanmeldung"
+          ],
+          "scenario": "Ohne Auftragsauswahl kann die Annahme nicht gestartet werden."
+        }
+      },
+      "allowSupplierToSupplier": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Material kann von einem Subunternehmer zu einem anderen weitergeleitet werden, ohne dass es zum Hauptlager zurückkehren muss.",
+          "affects": [
+            "Vertragsübertragungsroute"
+          ],
+          "scenario": "Das Produkt vom Lackierer wird direkt an den Verzinker geschickt."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Eine direkte Weitergabe zwischen Subunternehmern wird verhindert.",
+          "affects": [
+            "Vertragsübertragungsroute"
+          ],
+          "scenario": "Das Produkt muss zunächst im Firmenlager angenommen werden."
+        }
+      },
+      "allowPartialIssue": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Ein Teil der geplanten Subunternehmerleistung kann versandt werden.",
+          "affects": [
+            "Ausgelagert",
+            "Restbetrag"
+          ],
+          "scenario": "60 AD von 100 AD werden mit dem ersten Fahrzeug verschickt."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Subunternehmer wartet auf die volle Menge.",
+          "affects": [
+            "Ausgelagert"
+          ],
+          "scenario": "Die Ausgabe ist nicht abgeschlossen, während 60/100 bereit ist."
+        }
+      },
+      "allowPartialReceipt": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Vertragsrückgaben können in Teilen angenommen werden.",
+          "affects": [
+            "Vertrags-Login",
+            "Restbetrag"
+          ],
+          "scenario": "40 AD von 100 AD-Jobs werden heute angenommen."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Bei der Rücknahme wird der volle Betrag erwartet.",
+          "affects": [
+            "Vertrags-Login"
+          ],
+          "scenario": "Das Dokument wird bei einer 40/100-Rotation nicht geschlossen."
+        }
+      },
+      "requireQualityOnReceipt": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Die Rückgabe von Subunternehmern erfolgt zur Qualitätskontrolle.",
+          "affects": [
+            "Vertrags-Login",
+            "Qualitätsüberprüfung"
+          ],
+          "scenario": "Die Beschichtungsretoure wird nach Qualitätsfreigabe ins Lager eingelagert."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Für die Rücksendung von Unteraufträgen ist kein automatisches Qualitätstor erforderlich.",
+          "affects": [
+            "Vertragsanmeldung"
+          ],
+          "scenario": "Standardmäßig verarbeitetes Produkt wird direkt ins Lager übernommen."
+        }
+      },
+      "requireTaskAssignment": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Der Unterauftragsauftrag muss einem Benutzer zugewiesen werden.",
+          "affects": [
+            "Aufgabenpool",
+            "Zugewiesene Aufträge"
+          ],
+          "scenario": "Die Ausgabeaufgabe wird nur veröffentlicht, wenn der Lagerverwalter ausgewählt ist."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Der Auftrag kann ohne Zuweisung im Aufgabenpool fortgeführt werden.",
+          "affects": [
+            "Aufgabenpool"
+          ],
+          "scenario": "Der zuständige Bediener übernimmt die Aufgabe selbst."
+        }
+      },
+      "requireApproval": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Bevor das Vertragsdokument in Kraft tritt, ist eine autorisierte Genehmigung erforderlich.",
+          "affects": [
+            "Auftragsbestätigung"
+          ],
+          "scenario": "Planner öffnet die Bestellung; Sobald der Vorgesetzte es genehmigt, wird es im Lager abgelegt."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Das aktuelle Dokument kann direkt in Betrieb genommen werden.",
+          "affects": [
+            "Bestellstatus"
+          ],
+          "scenario": "Sobald der Auftrag erfasst ist, kann die Mission beginnen."
+        }
+      },
+      "allowOverReceipt": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Die von Subunternehmern vergebene Rücksendung kann innerhalb der definierten Toleranz den Versandumfang überschreiten.",
+          "affects": [
+            "Vertragseingangsmengenkontrolle"
+          ],
+          "scenario": "Mit dem Unterschied in Brand/Maß werden 101 kg statt 100 akzeptiert."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Mehr Retouren als der gesendete Betrag werden gesperrt.",
+          "affects": [
+            "Vertragsanmeldung"
+          ],
+          "scenario": "100 AD Exit 101 AD wird abgelehnt."
+        }
+      },
+      "overReceiptTolerancePercent": {
+        "default": {
+          "summary": "Der maximale Prozentsatz der Überschussrendite aus der Unterauftragsvergabe.",
+          "effect": "Wird nur verwendet, wenn Mehrfacheintritte zulässig sind.",
+          "affects": [
+            "Vertragseingangsmengenkontrolle"
+          ],
+          "scenario": "100 kg und 2 % Toleranz werden als maximal 102 kg akzeptiert."
+        }
+      },
+      "defaultLeadTimeDays": {
+        "default": {
+          "summary": "Dies ist die Standardanzahl von Fristen für neue Unterauftragsaufträge.",
+          "effect": "Das geplante Rückgabedatum wird vorgeschlagen, indem dieser Tag zum Belegdatum hinzugefügt wird.",
+          "affects": [
+            "Frist für die Vertragsbestellung",
+            "Latenzberichte"
+          ],
+          "scenario": "Wenn 5 Tage ausgewählt sind, wird der am 8. August geöffnete Job am 13. August geliefert."
+        }
+      }
+    },
+    "production": {
+      "productionOrderSource": {
+        "NetsisErpFunctions": {
+          "summary": "Arbeitsauftrag und Rezept werden aus sofortigen Netsis-Funktionen gelesen.",
+          "effect": "WMS-Integrationsquelltabellen werden in der Liste nicht verwendet.",
+          "affects": [
+            "Auswahl des Produktionsauftrags",
+            "Verschreibungspflichtige Stifte"
+          ],
+          "scenario": "Der Bediener wählt den offenen Arbeitsauftrag in Netsis aus und bringt die Materialzeilen."
+        },
+        "WmsIntegrationTables": {
+          "summary": "Arbeitsauftrag und Rezept werden aus WMS-Integrationstabellen gelesen.",
+          "effect": "Externes System wie Windbox speist RII_PR_SOURCE_ORDER und Leitungen ein.",
+          "affects": [
+            "Auswahl des Produktionsauftrags",
+            "Externe Systemintegration"
+          ],
+          "scenario": "Windbox schreibt Bestellungen mit WINDBOX-Quellcode; WMS listet diese Bestellung auf."
+        },
+        "ErpAndWms": {
+          "summary": "ERP- und WMS-bezogene Bestellungen werden zusammen aufgelistet.",
+          "effect": "Konflikte mit Quellsystem-Tag und eindeutigem Schlüssel werden vermieden.",
+          "affects": [
+            "Auswahl des Produktionsauftrags"
+          ],
+          "scenario": "ERP- und WINDBOX-Bestellungen mit derselben Nummer werden separat mit dem Quell-Tag angezeigt."
+        }
+      },
+      "wmsSourceSystemCode": {
+        "default": {
+          "summary": "ist der externe Systemcode, der in der WMS-Integrationstabelle gelesen werden soll.",
+          "effect": "Es werden nur aktive und versionierte Bestellungen aufgeführt, die zu diesem Code gehören.",
+          "affects": [
+            "RII_PR_SOURCE_ORDER",
+            "Auswahl des Produktionsauftrags"
+          ],
+          "scenario": "Wenn WINDBOX eingegeben wird, werden SourceSystemCode=WINDBOX-Datensätze angezeigt."
+        }
+      },
+      "requireProductionOrderReference": {
+        "true": {
+          "summary": "Diese Kontrolle wird auf aktive und neue Transaktionen angewendet.",
+          "effect": "Die Übertragung muss mit dem gültigen Produktionsauftrag verknüpft sein.",
+          "affects": [
+            "Erstellen einer Übergabe an die Produktion"
+          ],
+          "scenario": "Ohne Auswahl des Arbeitsauftrags kann die Übertragung nicht gespeichert werden."
+        },
+        "false": {
+          "summary": "Diese Steuerung ist ausgeschaltet; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Eine Übergabe an die ungeplante Produktion kann ohne Arbeitsauftrag eröffnet werden.",
+          "affects": [
+            "manuelle Übertragung"
+          ],
+          "scenario": "Durch die Auswahl von Bestand und Menge wird der Eilverbrauch eröffnet."
+        }
+      },
+      "allowManualTransfer": {
+        "true": {
+          "summary": "Diese Kontrolle wird auf aktive und neue Transaktionen angewendet.",
+          "effect": "Es besteht die Möglichkeit zur Umstellung auf Ad-hoc-/manuelle Produktion.",
+          "affects": [
+            "Überführung in neue Produktion"
+          ],
+          "scenario": "Dringendes Material wird an die Produktion gesendet, bevor der Arbeitsauftrag eintrifft."
+        },
+        "false": {
+          "summary": "Diese Steuerung ist ausgeschaltet; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Nur die Übertragung basierend auf dem Quellarbeitsauftrag wird geöffnet.",
+          "affects": [
+            "neuer Transfer"
+          ],
+          "scenario": "Die manuelle Aktienauswahl ist im Menü nicht verfügbar."
+        }
+      },
+      "requireErpMasterDataForManualTransfer": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Bei der manuellen Übertragung wird der Bestands-/Lager-/Strukturcode vom ERP-Spiegel überprüft.",
+          "affects": [
+            "Manuelle Übertragungsüberprüfung"
+          ],
+          "scenario": "Eine ungeplante Übertragung kann nicht mit undefiniertem Bestand im ERP geöffnet werden."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Die manuelle Übertragung kann mit WMS-Stammdaten erfolgen.",
+          "affects": [
+            "Manuelle Übertragung"
+          ],
+          "scenario": "Wenn im WMS ein aktiver Bestand vorhanden ist, kann dieser ohne ERP-Steuerung ausgewählt werden."
+        }
+      },
+      "allowAutomaticGeneration": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Überweisungen können automatisch aus entsprechenden Quellaufträgen generiert werden.",
+          "affects": [
+            "Integrationsjob",
+            "Transferentwurf"
+          ],
+          "scenario": "Wenn der genehmigte Produktionsauftrag eintrifft, wird ein Übertragungsentwurf erstellt."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Die Übertragung wird vom Benutzer initiiert.",
+          "affects": [
+            "Neuer Transfer"
+          ],
+          "scenario": "Der Arbeitsauftrag wird aus der Liste ausgewählt und eine manuelle Übertragung wird erstellt."
+        }
+      },
+      "checkMaterialAvailability": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Die Verfügbarkeit des Quellbestands wird beim Öffnen/Initiieren einer Bestellung überprüft.",
+          "affects": [
+            "Bestellbestätigung",
+            "Quellbilanz"
+          ],
+          "scenario": "Es sind 10 ADs erforderlich. Bei 8 ADs wird eine fehlende Warnung angezeigt."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Keine vorläufige Prüfung der Lagerverfügbarkeit; Es bleibt die endgültige Kontrolle zu übernehmen.",
+          "affects": [
+            "Ergänzung"
+          ],
+          "scenario": "Die Bestellung wurde geöffnet, aber der Mitarbeiter stellt möglicherweise fest, dass sie im Regal fehlt."
+        }
+      },
+      "blockOnShortage": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Die Produktionsübertragung kann nicht gestartet werden, wenn Bestand fehlt.",
+          "affects": [
+            "Eine Aufgabe starten"
+          ],
+          "scenario": "8/10 Aufgabe ist im Lager blockiert."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Unvollständiger Bestand kann mit Warnung übernommen und in den Teilstrom überführt werden.",
+          "affects": [
+            "Eine Aufgabe starten",
+            "Fehlende Menge"
+          ],
+          "scenario": "Die Mission beginnt mit 8/10 Lagerbeständen, 2 AD werden als verbleibend überwacht."
+        }
+      },
+      "requireTaskAssignment": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Dem Vermittlungsablauf muss mindestens ein Benutzer zugeordnet sein.",
+          "affects": [
+            "Eine Aufgabe erstellen",
+            "Zugewiesene Aufträge"
+          ],
+          "scenario": "Aufträge können nicht ohne Personalauswahl freigegeben werden."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Die Aufgabe kann ohne Zuweisung eines Benutzers in den Pool verschoben werden.",
+          "affects": [
+            "Aufgabenpool"
+          ],
+          "scenario": "Die vakante Aufgabe wird dann von einem Mitarbeiter übernommen."
+        }
+      },
+      "requireSourceProductionLocation": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Bei der Kommissionierung wird das Produktionsherkunftsregal per Barcode überprüft.",
+          "affects": [
+            "Ergänzung",
+            "Regalbalance"
+          ],
+          "scenario": "Wenn der richtige Bestand aus dem falschen Regal gescannt wird, wird er abgelehnt."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Ressourcen-Rack-Anforderung gilt nicht.",
+          "affects": [
+            "Sammlung"
+          ],
+          "scenario": "Das System kann Ressourcen aus dem entsprechenden Saldo auflösen."
+        }
+      },
+      "requireTargetProductionLocation": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Das Zielregal im Produktionsbereich muss definiert werden.",
+          "affects": [
+            "Liefer-/Übertragungsbestätigung",
+            "Zielregalbalance"
+          ],
+          "scenario": "Das Material wird dem Produktionsbereitstellungsregal zugeordnet."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Die Auswahl des Zielracks ist nicht obligatorisch.",
+          "affects": [
+            "Übertragungsabschluss"
+          ],
+          "scenario": "Das Material wird auf der Ziellagerebene geliefert."
+        }
+      },
+      "allowPartialSupply": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Ein Teil der Anfrage kann an die Produktion übergeben werden und für den Rest kann ein neuer Arbeitsauftrag eröffnet werden.",
+          "affects": [
+            "Übertragungsbestätigung",
+            "Restbestellung"
+          ],
+          "scenario": "8 AD von 10 AD-Anfragen werden zugestellt; Für 2 AD wird ein Fortsetzungsauftrag erstellt."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Die Überweisungsbestätigung wartet auf den gesamten Anforderungsbetrag.",
+          "affects": [
+            "Übertragungsbestätigung"
+          ],
+          "scenario": "Complete wird in 8/10 Fällen blockiert."
+        }
+      },
+      "allowOverIssue": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Der termingerechte Übergang zur Produktion kann innerhalb der Toleranz erfolgen.",
+          "affects": [
+            "Inkassobetrag",
+            "Übertragungsbestätigung"
+          ],
+          "scenario": "Der Bedarf von 100 kg ist mit einer Toleranz von 101 kg angegeben."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Die Ausgabe, die die Bedarfsmenge übersteigt, wird gesperrt.",
+          "affects": [
+            "Barcode-Scannen"
+          ],
+          "scenario": "10 AD-Anfrage lehnt den 11. Punkt ab."
+        }
+      },
+      "overIssueTolerancePercent": {
+        "default": {
+          "summary": "Der maximale Prozentsatz der überschüssigen Produktion für die Produktion.",
+          "effect": "Gilt nur, wenn die redundante Ausgabe aktiviert ist.",
+          "affects": [
+            "Sammlungsmengenkontrolle"
+          ],
+          "scenario": "100 kg und maximal 101 kg mit 1 % Toleranz."
+        }
+      },
+      "requireApproval": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Die Person/der Vorgesetzte, die das Produkt zur Produktion erhält, erteilt die endgültige Übertragungsgenehmigung.",
+          "affects": [
+            "Bestätigung der Übertragung im zweiten Schritt"
+          ],
+          "scenario": "Der Lagerarbeiter sammelt; Der Produktionsleiter genehmigt es bei der physischen Lieferung."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Sobald die Sammlung abgeschlossen ist, kann die Übertragung automatisch abgeschlossen werden.",
+          "affects": [
+            "Übertragungsstatus"
+          ],
+          "scenario": "Eine gesonderte Genehmigung des Empfängers ist nicht erforderlich."
+        }
+      },
+      "cancellationReturnPolicy": {
+        "OriginalSourceLocation": {
+          "summary": "Bei einer Stornierung kehrt der Bestand in das Regal zurück, in dem er ursprünglich abgeholt wurde.",
+          "effect": "Die Transaktionsaufzeichnung schützt das Quellregal.",
+          "affects": [
+            "Rückerstattung bei Stornierung",
+            "Regalbalance"
+          ],
+          "scenario": "Wenn die gesammelte Serie storniert wird, wird dieselbe Quelle in das Regal zurückgebracht."
+        },
+        "WarehouseDefaultReturnLocation": {
+          "summary": "Beim Stornieren wird das Standard-Rückgaberegal des Lagers verwendet.",
+          "effect": "Wenn kein Lagerrückgaberegal vorhanden ist, wird die Transaktion gesperrt.",
+          "affects": [
+            "Rückerstattung bei Stornierung",
+            "Lagerregalverstellung"
+          ],
+          "scenario": "Das stornierte Material landet im Regal RETURN-01."
+        },
+        "ManagerSelectionRequired": {
+          "summary": "Bei der Stornierung wählt der Administrator das Ziel-Retourenregal aus.",
+          "effect": "Die Rückwärtsbewegung kann ohne Auswahl des Regals nicht abgeschlossen werden.",
+          "affects": [
+            "Abbruchbildschirm",
+            "Autorität"
+          ],
+          "scenario": "Das beschädigte Produkt wird anstelle der Quelle für das Quarantäneregal ausgewählt."
+        }
+      }
+    },
+    "kkd": {
+      "enableMaterialRequestOrderFlow": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Personalmaterialanfragen funktionieren mit offenen Netsis-Bestellungen.",
+          "affects": [
+            "PSA-Verteilung",
+            "Produktionsaufgabenpool"
+          ],
+          "scenario": "Es werden offene Auftragspositionen ausgewählt, die zum Kunden des Mitarbeiters gehören."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Der auftragsbasierte Materialanforderungskanal ist geschlossen.",
+          "affects": [
+            "PSA-Verteilung"
+          ],
+          "scenario": "Die Verteilung wird nur über die Rechtematrix/den manuellen Prozess geöffnet."
+        }
+      },
+      "requireOpenOrder": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Eine klare Netsis-Bestellung ist für die Verteilung zwingend erforderlich.",
+          "affects": [
+            "Neue PSA-Verteilung"
+          ],
+          "scenario": "Dokumente können nicht für Mitarbeiter geöffnet werden, die keine offene Bestellung haben."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Bei Vorliegen eines Rechts kann die PSA-Verteilung ohne Anordnung erfolgen.",
+          "affects": [
+            "Neue Distribution"
+          ],
+          "scenario": "Regelmäßige Handschuhzugabe wird ohne Bestellung geliefert."
+        }
+      },
+      "allowMultipleOrdersPerDistribution": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Eine einzelne Verteilung kann Artikel aus verschiedenen Bestellungen enthalten.",
+          "affects": [
+            "PSA-Verteilungslinien"
+          ],
+          "scenario": "Schuhe und Helme werden als zwei Bestellungen in derselben Lieferung geliefert."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Eine Verteilung basiert auf einer einzelnen Bestellung.",
+          "affects": [
+            "PSA-Verteilung"
+          ],
+          "scenario": "Für eine andere Bestellposition wird ein separates Dokument geöffnet."
+        }
+      },
+      "allowOpenOrderExcess": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Wenn eine offene Bestellung vorliegt, ist möglicherweise eine Lieferung oberhalb der Rechtematrix möglich.",
+          "affects": [
+            "Rechteprüfung",
+            "Quote"
+          ],
+          "scenario": "Zusätzliche Produkte werden an das Personal ausgegeben, dessen Jahresvergütung aufgrund der offenen Bestellung abgelaufen ist."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Die Lieferung darf den berechneten Anspruchsbetrag nicht überschreiten.",
+          "affects": [
+            "Rechteanfrage"
+          ],
+          "scenario": "Das zweite Produkt ist für Mitarbeiter mit 1 Recht gesperrt."
+        }
+      },
+      "requireManagerApprovalForExcess": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Eine unbefugte Lieferung wird ohne Zustimmung des Managers nicht zu einem Lagerproblem.",
+          "affects": [
+            "PSA-Zulassung",
+            "Lagerausgang"
+          ],
+          "scenario": "Anfragen für zusätzliche Helme bedürfen der Genehmigung des Managers."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Der autorisierte Betreiber kann die zulässige Selbstbeteiligung ohne zusätzliche Genehmigung aufladen.",
+          "affects": [
+            "PSA-Verteilung"
+          ],
+          "scenario": "Die Nachlieferung bei offenen Bestellungen erfolgt direkt."
+        }
+      },
+      "requireEmployeeUserLink": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Die Personalkarte muss mit dem aktiven WMS-Benutzer verknüpft sein.",
+          "affects": [
+            "Mitarbeiterüberprüfung",
+            "Rückverfolgbarkeit"
+          ],
+          "scenario": "Die Zustellung an Personal ohne Benutzerverbindung ist gesperrt."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Es können sich auch Mitarbeiter registrieren, die über kein WMS-Konto verfügen.",
+          "affects": [
+            "PSA-Verteilung"
+          ],
+          "scenario": "Die Zustellung an den Außendienstmitarbeiter erfolgt über die Personalkarte."
+        }
+      },
+      "allowFutureDatedDistribution": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Zukünftig geplante PSA-Verteilungen können erfasst werden.",
+          "affects": [
+            "Dokumentdatum",
+            "Rechtezeitraum"
+          ],
+          "scenario": "Die Personalauslieferung soll nächste Woche beginnen."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Das Dokumentdatum darf nicht später als heute liegen.",
+          "affects": [
+            "Neue Distribution"
+          ],
+          "scenario": "Wenn das Datum „Morgen“ ausgewählt wird, tritt ein Validierungsfehler auf."
+        }
+      }
+    },
+    "procurement": {
+      "allowMultipleRfqsPerRequest": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Aus derselben Anfrage können mehrere Ausschreibungsrunden eröffnet werden.",
+          "affects": [
+            "Erstellen einer Angebotsanfrage",
+            "Dokumentenkette"
+          ],
+          "scenario": "Die erste Runde gilt als teuer; Für den gleichen Bedarf wird eine zweite Lieferantenrunde eröffnet."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Die Anfrage ist auf eine aktive Gebotsrunde beschränkt.",
+          "affects": [
+            "Angebotsanfrage"
+          ],
+          "scenario": "Um die zweite Ausschreibung zu öffnen, wird zuerst die aktuelle Runde geschlossen."
+        }
+      },
+      "allowPartialRfqLines": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Der ausgewählte Artikel/die Menge des Bedarfs kann bepreist werden.",
+          "affects": [
+            "RFQ-Zeilen",
+            "Offener Bedarfsbetrag"
+          ],
+          "scenario": "Nur 3 dringende Artikel aus einer 10-Artikel-Anfrage werden in die Angebotsanfrage aufgenommen."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Alle offenen Punkte der Anfrage werden gemeinsam in die Ausschreibung aufgenommen.",
+          "affects": [
+            "RFQ-Erstellung"
+          ],
+          "scenario": "Eine Teiltour kann nicht durch Auswahl eines Stifts geöffnet werden."
+        }
+      },
+      "allowMultipleQuotesPerSupplier": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Derselbe Lieferant kann mehrere Gebotsdatensätze für dieselbe Tour einreichen.",
+          "affects": [
+            "Angebotsregistrierungen"
+          ],
+          "scenario": "Der Lieferant gibt ein zweites Angebot für die Alternativmarke ab."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Für jeden Lieferanten wird ein einziger Angebotsdatensatz geführt.",
+          "affects": [
+            "Angebotseintrag"
+          ],
+          "scenario": "Der neue Preis wird mit der aktuellen Angebotsrevision aktualisiert."
+        }
+      },
+      "allowSplitAwardsAcrossSuppliers": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Bedarfsartikel/Mengen können auf verschiedene Lieferanten aufgeteilt werden.",
+          "affects": [
+            "Angebotsvergleich",
+            "Bestellung erstellen"
+          ],
+          "scenario": "5 Artikel werden an Unternehmen A und 3 Artikel an Unternehmen B übergeben."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Die Belohnung ergibt einen einzelnen Lieferanten.",
+          "affects": [
+            "Angebotsbestätigung"
+          ],
+          "scenario": "Die gesamte Anfrage wird an das ausgewählte Unternehmen weitergeleitet."
+        }
+      },
+      "allowPartialOrderLines": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Die ausgewählte Menge des Angebots kann in eine Bestellung umgewandelt werden.",
+          "affects": [
+            "Bestellung",
+            "Verbleibender Gebotsbetrag"
+          ],
+          "scenario": "60 AD von 100 AD-Geboten sind bestellt."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Aus der Angebotszeile wird eine Bestellung mit der vollen Menge.",
+          "affects": [
+            "Bestellung erstellen"
+          ],
+          "scenario": "60/100-Ordereingabe ist gesperrt."
+        }
+      },
+      "allowMultipleOrdersPerQuote": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Aus demselben Angebot können mehrere Bestellungen erstellt werden.",
+          "affects": [
+            "Bid-Order-Kette"
+          ],
+          "scenario": "60 AD wird heute geöffnet, die restlichen 40 AD werden in der nächsten Reihenfolge geöffnet."
+        },
+        "false": {
+          "summary": "Diese Steuerung ist ausgeschaltet; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Das Angebot wird zu einer Einzelbestellung.",
+          "affects": [
+            "Erstellen Sie eine Bestellung"
+          ],
+          "scenario": "Die Öffnung zweiter Ordnung ist blockiert."
+        }
+      },
+      "allowSupplierQuantityChange": {
+        "true": {
+          "summary": "Diese Kontrolle wird auf aktive und neue Transaktionen angewendet.",
+          "effect": "Der Lieferant kann eine andere Menge als die angeforderte anbieten.",
+          "affects": [
+            "Portal-Angebotszeilen"
+          ],
+          "scenario": "Aufgrund der Mindestverpackung von 100 angeforderten Artikeln wird 120 angeboten."
+        },
+        "false": {
+          "summary": "Diese Steuerung ist ausgeschaltet; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Die Geldmenge bleibt die gleiche wie die Briefmenge.",
+          "affects": [
+            "Angebotseintrag"
+          ],
+          "scenario": "Der Lieferant gibt lediglich den Preis und die Frist ein."
+        }
+      },
+      "allowZeroUnitPrice": {
+        "true": {
+          "summary": "Diese Kontrolle wird auf aktive und neue Transaktionen angewendet.",
+          "effect": "Für Gratis-/Probeartikel wird der Nullpreis akzeptiert.",
+          "affects": [
+            "Angebotsüberprüfung"
+          ],
+          "scenario": "Das Musterprodukt wird mit 0 TL versendet."
+        },
+        "false": {
+          "summary": "Diese Steuerung ist ausgeschaltet; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Für jeden Gebotsartikel ist ein positiver Preis erforderlich.",
+          "affects": [
+            "Senden Sie ein Angebot"
+          ],
+          "scenario": "0-Preisposition verhindert Gebotsabgabe."
+        }
+      },
+      "requireSupplierDeliveryDate": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Die Frist ist für jede Gebotsposition verbindlich.",
+          "affects": [
+            "Senden Sie ein Angebot",
+            "Vergleich"
+          ],
+          "scenario": "Wenn die Frist leer ist, kann der Lieferant das Angebot nicht senden."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Die Frist ist optional.",
+          "affects": [
+            "Angebotseintrag"
+          ],
+          "scenario": "Es können nur Preisgebote abgegeben werden."
+        }
+      },
+      "allowSupplierRevisions": {
+        "true": {
+          "summary": "Diese Prüfung gilt für aktive und neue Transaktionen.",
+          "effect": "Für den eingereichten Vorschlag kann eine Revisionsrunde eröffnet werden.",
+          "affects": [
+            "Lieferantenportal",
+            "Angebotshistorie"
+          ],
+          "scenario": "Kauf fordert Preisänderung an; Lieferant sendet neue Version."
+        },
+        "false": {
+          "summary": "Dieses Steuerelement ist geschlossen; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Das abgegebene Angebot kann nicht geändert werden.",
+          "affects": [
+            "Angebotsstatus"
+          ],
+          "scenario": "Änderung erfordert neuen Gebotsdatensatz/neue Gebotsrunde."
+        }
+      },
+      "supplierQuoteChannelMode": {
+        "InternalOnly": {
+          "summary": "Nur Einkaufsmitarbeiter geben Angebote in das System ein.",
+          "effect": "Es werden keine externen Links an den Anbieter gesendet.",
+          "affects": [
+            "Angebotseintrag"
+          ],
+          "scenario": "Der Einkaufssachbearbeiter speichert das E-Mail-Angebot im System."
+        },
+        "PortalOptional": {
+          "summary": "Das Angebot kann vom Portal- oder internen Benutzer eingegeben werden.",
+          "effect": "Beide Kanäle können gemeinsam genutzt werden.",
+          "affects": [
+            "Lieferantenportal",
+            "Interne Gebotseingabe"
+          ],
+          "scenario": "Ein Unternehmen gibt das Angebot über den Kontakt ein, das andere über das Personal."
+        },
+        "PortalRequired": {
+          "summary": "Das Angebot wird ausschließlich über die sichere Verbindung des Anbieters versendet.",
+          "effect": "Interner Benutzer kann das endgültige Angebot nicht im Namen des Lieferanten eingeben.",
+          "affects": [
+            "Lieferantenportal"
+          ],
+          "scenario": "Der Lieferant gibt den Preis und die Frist über den Link in der E-Mail ein."
+        }
+      },
+      "invitationValidityDays": {
+        "default": {
+          "summary": "Legt fest, wie viele Tage die Lieferantenverbindung gültig sein wird.",
+          "effect": "Am Ende des Zeitraums kann der Angebotsbildschirm mit dem Token nicht geöffnet werden.",
+          "affects": [
+            "Lieferanteneinladung",
+            "Portalsicherheit"
+          ],
+          "scenario": "Wenn 7 Tage ausgewählt sind, wird die Verbindung am achten Tag als abgelaufen angezeigt."
+        }
+      },
+      "maximumSupplierRevisionCount": {
+        "default": {
+          "summary": "Dies ist die maximale Anzahl an Überarbeitungen, die für einen Vorschlag zulässig sind.",
+          "effect": "Wenn das Limit erreicht ist, kann keine neue Revision angefordert werden.",
+          "affects": [
+            "Überarbeitungshistorie des Angebots"
+          ],
+          "scenario": "Bei Auswahl von 2 kann der Lieferant bis zu zwei neue Versionen liefern."
+        }
+      },
+      "allowSupplierDraftSave": {
+        "true": {
+          "summary": "Diese Kontrolle wird auf aktive und neue Transaktionen angewendet.",
+          "effect": "Der Anbieter kann eine Zwischenregistrierung ohne Angebotszusendung durchführen.",
+          "affects": [
+            "Lieferantenportal"
+          ],
+          "scenario": "Das mehrteilige Angebot wird heute erfasst und morgen fertiggestellt."
+        },
+        "false": {
+          "summary": "Diese Steuerung ist ausgeschaltet; Die entsprechende Verpflichtung entfällt.",
+          "effect": "Der Portaleintrag muss in einer einzigen Sitzung eingereicht werden.",
+          "affects": [
+            "Lieferantenportal"
+          ],
+          "scenario": "Beim Schließen der Seite wird der nicht übermittelte Eintrag nicht gespeichert."
+        }
+      }
+    },
+    "barcode": {
+      "displayName": {
+        "default": {
+          "summary": "Der Name des Profils, das dem Benutzer angezeigt wird; Der generierte Barcode-Wert wird dadurch nicht geändert.",
+          "effect": "Dieser beschreibende Name wird in der Karte, im Bearbeitungsfenster und in der Vorgangsauswahl angezeigt.",
+          "affects": [
+            "Barcode-Versicherungskarte",
+            "Benutzerauswahl",
+            "Betriebsbildschirme"
+          ],
+          "scenario": "Der Name „Produkt/Serie“ sagt dem Bediener, dass es sich bei dem Profil um Bestände mit Serienverfolgung handelt; Es wird nicht in den Barcodeinhalt geschrieben."
+        }
+      },
+      "prefix": {
+        "default": {
+          "summary": "Fügt am Anfang des Barcodes einen konstanten Typcode hinzu.",
+          "effect": "Der Scanner kann schneller erkennen, zu welchem ​​Profil der Barcode gehört; Bleibt das Feld leer, beginnt der Barcode mit dem ersten Segment.",
+          "affects": [
+            "Barcode-Muster",
+            "Browser-Umleitung",
+            "Etikettenausgabe"
+          ],
+          "scenario": "Wenn das Präfix WMS-S ist, beginnt der Barcode mit WMS-S/150-01/SN-1.",
+          "warning": "Durch das Ändern des Präfixes werden zuvor gedruckte Etiketten nicht geändert; Neu erstellte Barcodes verwenden das neue Präfix."
+        }
+      },
+      "separator": {
+        "default": {
+          "summary": "ist das Trennzeichen zwischen dem Präfix und den Segmenten.",
+          "effect": "Bei der Generierung des Barcodes werden alle Teile mit diesem Wert zusammengefasst; Parsing und menschliche Lesbarkeit variieren entsprechend.",
+          "affects": [
+            "Barcode-Muster",
+            "Barcode-Analyse",
+            "Etikettenausgabe"
+          ],
+          "scenario": "Wenn das Trennzeichen „/“ ist, werden die Werte von STK-1, SN-10 und LOT-A zu STK-1/SN-10/LOT-A.",
+          "warning": "Das Parsen kann unklar werden, wenn das ausgewählte Trennzeichen im Lagercode oder Serienwert verwendet wird."
+        }
+      },
+      "isEnabled": {
+        "true": {
+          "summary": "Profil kann in neuen Barcode-Generierungs- und Vorschauprozessen verwendet werden.",
+          "effect": "Vorgänge in diesem Bereich können Barcodes mit einem definierten Muster erzeugen.",
+          "affects": [
+            "Warenannahmeetikett",
+            "Barcode-Produktionsservice",
+            "Betriebsbildschirme"
+          ],
+          "scenario": "Bei geöffnetem Produkt-/Serienprofil wird bei Wareneingang ein Serienetikett erstellt."
+        },
+        "false": {
+          "summary": "Das Profil ist für die Generierung neuer Barcodes geschlossen; Frühere Barcodes bleiben erhalten.",
+          "effect": "In diesem Bereich wird die Anforderung zur Erstellung eines neuen Barcodes blockiert, bestehende Datensätze und gedruckte Etiketten werden nicht gelöscht.",
+          "affects": [
+            "Neue Barcode-Generierung",
+            "Etikettendruck"
+          ],
+          "scenario": "Sobald das Profil geschlossen ist, kann kein neues Serienetikett generiert werden; Das gestern gedruckte Etikett ist immer noch fraglich."
+        }
+      }
+    }
+  }
+}

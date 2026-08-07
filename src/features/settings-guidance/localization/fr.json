@@ -1,0 +1,3743 @@
+{
+  "labels": {
+    "current": "Actuellement : {{value}}.",
+    "details": "Impact, portée et exemple",
+    "effect": "Que fait le système avec cette sélection ?",
+    "affects": "Quels écrans et quelles opérations sont concernés ?",
+    "scenario": "Scénario d’utilisation réel",
+    "warning": "Point d’attention",
+    "enabled": "Activé",
+    "disabled": "Désactivé",
+    "noPrefix": "Pas de préfixe"
+  },
+  "units": {
+    "days_one": "{{value}} jour",
+    "days_other": "{{value}} jours",
+    "revisions_one": "{{value}} r?vision",
+    "revisions_other": "{{value}} r?visions"
+  },
+  "pages": {
+    "default": {
+      "title": "Comment utiliser les paramètres?",
+      "description": "Au-dessous de chaque champ est le résultat court de la sélection actuelle. En ouvrant la section impact et exemple, vous pouvez examiner ce que le système fera, quelles opérations il affectera, et le scénario d'utilisation réel."
+    },
+    "goodsReceipt": {
+      "title": "Guide des paramètres de réception de marchandises",
+      "description": "Le résultat actuel de chaque paramètre; Examinez-le avec son impact sur la quantité de commande, la disponibilité des stocks, le portail de qualité et le reçu ERP. Les ordres ouverts conservent la vue des règles au moment du réglage."
+    },
+    "inbound": {
+      "title": "Guide des paramètres d’entrée en stock",
+      "description": "Indique comment la sélection change la quantité d'entrée, les barrières d'approbation, l'attente de qualité, les rayonnages et le transfert ERP sur le terrain et avec un scénario exemple."
+    },
+    "outbound": {
+      "title": "Guide des paramètres de sortie de stock",
+      "description": "Effets sur la source de commande, la réservation, sous- ou sur-picking, l'emballage, le chargement et le transfert ERP; Explique avec les conditions de blocage et d'exception."
+    },
+    "shipping": {
+      "title": "Guide des paramètres d’expédition",
+      "description": "Explique le résultat de chaque sélection, du début avec ou sans commande à la réservation, à la cueillette à codes barres, à l'emballage, à la confirmation de chargement et à l'enregistrement d'expédition ERP."
+    },
+    "transfer": {
+      "title": "Guide des transferts inter-entrepôts",
+      "description": "Réserve, problème de source, stock de transit, acceptation de la cible, rayonnage et comportement de différence de quantité; Explique avec des scénarios de transfert en une ou deux étapes."
+    },
+    "quality": {
+      "title": "Guide des paramètres qualité",
+      "description": "Expliquez avec des exemples l'impact du type de contrôle, le résultat de qualité échoué, les étagères de quarantaine, la libération des stocks et la porte d'attente ERP."
+    },
+    "packing": {
+      "title": "Guide des paramètres d’emballage",
+      "description": "Explique l'obligation d'emballage, le contenu mixte, la vérification de lot et de lot, SSCC, la tolérance de pesée, fermer, rouvrir et label comportement avec des exemples."
+    },
+    "project": {
+      "title": "Guide des paramètres généraux du projet",
+      "description": "Les paramètres de format ne changent que l'affichage; Il montre comment la sécurité, le fuseau horaire et les choix de sérialisation ERP affectent le comportement de transaction et d'intégration."
+    },
+    "subcontracting": {
+      "title": "Guide des transferts de sous-traitance",
+      "description": "Explique le résultat de chaque règle, de l'ordre et du fournisseur contraignant à l'entrée ou à la sortie partielle, des barrières de qualité et d'approbation à la tolérance de retour excessive."
+    },
+    "production": {
+      "title": "Guide des transferts vers la production",
+      "description": "Explique la source de la commande de travail, la disponibilité des stocks, la cueillette codée à barres, l'obligation de tâche et d'étagère, la livraison partielle ou excessive, l'approbation de deuxième étape et le remboursement d'annulation avec des scénarios réels."
+    },
+    "kkd": {
+      "title": "Guide des paramètres du processus EPI",
+      "description": "Affiche les effets du canal de commande, de l'excédent de droits, de l'approbation du gestionnaire, de la connexion du personnel et des futures règles de date sur la distribution, la délivrance d'entrepôts et les dossiers de vérification."
+    },
+    "procurement": {
+      "title": "Guide de la politique d’approvisionnement",
+      "description": "Explique avec des exemples comment chaque sélection change la demande, la DP, le devis du fournisseur, la révision, le portail du fournisseur et la chaîne de commande d'achat."
+    },
+    "barcode": {
+      "title": "Guide des paramètres de la politique de codes-barres",
+      "description": "Indique dans quelle opération chaque carte de profil est utilisée. Les segments sont combinés successivement; Si des données obligatoires sont manquantes, la production est bloquée, le segment de séquence génère la valeur atomique unique."
+    },
+    "barcodeProfile": {
+      "title": "Comment modifier le profil du code-barres ?",
+      "description": "Chaque changement met instantanément à jour la description et le comportement du code-barres. Les parties sont listées de haut en bas; Une seule valeur de code-barres est créée en combinant le préfixe et les crochets."
+    }
+  },
+  "guidance": {
+    "inbound": {
+      "overReceiptPolicy": {
+        "NotAllowed": {
+          "summary": "Plus que la quantité claire dans l'ordre est inacceptable.",
+          "effect": "Si le montant d'acceptation dépasse le solde de commande ouvert, la ligne ne sera pas enregistrée.",
+          "affects": [
+            "Contrôle de la quantité des marchandises commandées",
+            "Message d'erreur Overaccept"
+          ],
+          "scenario": "Si 105 AD est lu alors que 100 AD est ouvert dans l'ordre, la transaction sera bloquée au-dessus de 100 AD."
+        },
+        "WithinTolerance": {
+          "summary": "La suracceptation ne peut être faite que dans la limite de pourcentage définie.",
+          "effect": "Le montant ouvert peut être dépassé par le pourcentage de tolérance; plus sont bloqués.",
+          "affects": [
+            "Accepter les marchandises commandées",
+            "Tolérance excessive d'acceptation"
+          ],
+          "scenario": "100 ordres AD et 5% de tolérance, maximum 105 AD sont acceptés."
+        },
+        "ApprovalRequired": {
+          "summary": "Le dépassement est enregistré, mais le processus ne se déroule pas sans autorisation.",
+          "effect": "Le dépassement est marqué comme une exception en attente d'approbation.",
+          "affects": [
+            "Dossier d ' acceptation des marchandises",
+            "Port de transfert PGI"
+          ],
+          "scenario": "Si 108 AD est reçu pour une commande de 100 AD, l'enregistrement sera ouvert; Il est complété après l'approbation du superviseur."
+        }
+      },
+      "overReceiptTolerancePercent": {
+        "default": {
+          "summary": "est le taux de suracceptation maximum pour la sélection -- dans la tolérance.",
+          "effect": "Pourcentage est calculé sur la quantité ouverte de la commande.",
+          "affects": [
+            "Validation de la quantité de la ligne de commande"
+          ],
+          "scenario": "Si la quantité ouverte est de 200 et que la tolérance est de 2 %, jusqu'à 204 acceptations sont possibles.",
+          "warning": "Si la politique d'acceptation excessive est « Interdite », ce champ n'est pas utilisé."
+        }
+      },
+      "inventoryAvailabilityPolicy": {
+        "Immediate": {
+          "summary": "Le stock accepté est transféré au solde disponible sans attendre.",
+          "effect": "Stock; Elle est immédiatement ouverte aux transactions de transfert, d'expédition et de réservation.",
+          "affects": [
+            "Entrepôt et balance des étagères",
+            "Réserve",
+            "Expédition/transfert"
+          ],
+          "scenario": "10 AD peut être sélectionné dans un autre ordre de transfert dès que l'acceptation prend fin."
+        },
+        "AfterReceiptApproval": {
+          "summary": "Le stock reste bloqué jusqu'à l'approbation de l'acceptation des marchandises.",
+          "effect": "L'enregistrement physique est créé, mais le solde disponible est ouvert après confirmation.",
+          "affects": [
+            "Confirmation d'acceptation des marchandises",
+            "Solde disponible"
+          ],
+          "scenario": "L'exploitant termine l'acceptation; Une fois que le superviseur approuve, le stock est ouvert à l'expédition."
+        },
+        "AfterQualityApproval": {
+          "summary": "Le stock inclus dans le plan qualité ne peut être utilisé tant que la décision de qualité n'est pas prise.",
+          "effect": "Les stocks de mauvaise qualité ne sont pas affectés; les stocks affectés à la qualité sont maintenus en attente.",
+          "affects": [
+            "Examen de la qualité",
+            "Solde de quarantaine/disponible"
+          ],
+          "scenario": "Lorsque l'échantillon est vérifié, 20 stocks AD sont disponibles."
+        },
+        "AfterAllApprovals": {
+          "summary": "L'acceptation des marchandises, la qualité et toutes les approbations nécessaires du PGI sont attendues.",
+          "effect": "Le stock ne sera pas libéré avant que toutes les portes d'approbation définies ne soient franchies.",
+          "affects": [
+            "Acceptation des marchandises",
+            "Qualité",
+            "Approbation des PGI",
+            "Solde disponible"
+          ],
+          "scenario": "Même si l'approbation de qualité est donnée, si l'approbation du superviseur de l'acceptation des marchandises est manquante, le stock continue d'attendre."
+        }
+      },
+      "erpPostingPolicy": {
+        "AfterReceipt": {
+          "summary": "Une fois l'acceptation des marchandises terminée, la lettre de livraison du PGI est prête à être envoyée.",
+          "effect": "S'il n'y a pas d'autre porte d'approbation, la file d'attente ERP est déclenchée immédiatement.",
+          "affects": [
+            "Achèvement de l ' acceptation des marchandises",
+            "Réception du PGI"
+          ],
+          "scenario": "Lorsque l'acceptation qui n'exige pas la qualité est terminée, un reçu Netsis est créé."
+        },
+        "AfterReceiptApproval": {
+          "summary": "Pour l'inscription du PGI, l'approbation du gestionnaire de l'acceptation des marchandises est attendue.",
+          "effect": "L'achèvement de l'opérateur à lui seul ne déclenche pas le transfert du PGI.",
+          "affects": [
+            "Confirmation d'acceptation des marchandises",
+            "Dossier ERP"
+          ],
+          "scenario": "L'opérateur termine l'acceptation; Une fois que le superviseur approuve, la lettre de livraison est envoyée."
+        },
+        "AfterQualityApproval": {
+          "summary": "En cas d'acceptation avec un plan de qualité, le PGI n'est pas enregistré tant que la décision sur la qualité n'est pas prise.",
+          "effect": "Le résultat de qualité peut être passé ou échoué; La décision devrait être prise.",
+          "affects": [
+            "Résultat de l'examen de la qualité",
+            "Réception du PGI"
+          ],
+          "scenario": "Même si le produit reçoit un résultat de qualité infructueuse, une note d'achat obligatoire peut être envoyée après la décision."
+        },
+        "AfterAllApprovals": {
+          "summary": "Le transfert du PGI est effectué une fois toutes les approbations définies terminées.",
+          "effect": "Les barrières d'acceptation, de qualité et d'approbation du PGI sont évaluées ensemble.",
+          "affects": [
+            "Confirmation d'acceptation des marchandises",
+            "Décision de qualité",
+            "Approbation du PGI"
+          ],
+          "scenario": "Même si la qualité est remplie, s'il n'y a pas d'approbation PGI autorisée, le transfert attendra."
+        }
+      },
+      "erpQualityGatePolicy": {
+        "None": {
+          "summary": "Le plan qualité ne bloque pas le transfert ERP.",
+          "effect": "Même s'il y a un examen manuel de la qualité fondé sur des règles, seule la politique de transfert du PGI détermine le calendrier du PGI.",
+          "affects": [
+            "Réception du PGI",
+            "Portail d'intégration de la qualité"
+          ],
+          "scenario": "Le produit est envoyé à la qualité; Le bon de livraison peut être transféré sans attendre le résultat de qualité."
+        },
+        "RuleBasedOnly": {
+          "summary": "Seules les inspections découlant de la règle stock/qualité permettront le transfert du PGI.",
+          "effect": "Le produit envoyé par l'opérateur à la qualité manuelle ne crée pas de porte ERP.",
+          "affects": [
+            "Règle de qualité des stocks",
+            "Dossier de transfert de PGI"
+          ],
+          "scenario": "La qualité s'attend à ce que les stocks soient obligatoires; Cependant, elle ne tient pas le bon de livraison des stocks, qui est jugé suspect et envoyé manuellement, en attente."
+        },
+        "AnyQualityPlan": {
+          "summary": "Chaque plan de qualité ouvert selon les règles ou manuellement tiendra le transfert ERP.",
+          "effect": "Le reçu ne sera pas en attente tant que la décision de qualité n'aura pas été prise.",
+          "affects": [
+            "Plan de qualité manuel",
+            "Qualité fondée sur des règles",
+            "Transfert de PGI"
+          ],
+          "scenario": "Si l'opérateur envoie manuellement le produit suspect à la qualité, la lettre de livraison ne sera pas jetée avant que le résultat de qualité soit reçu."
+        }
+      },
+      "allowUnderReceipt": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Le document peut être laissé ouvert en acceptant une partie du montant de la commande.",
+          "affects": [
+            "Ordre accepté",
+            "Montant restant ouvert"
+          ],
+          "scenario": "60 AD sur commande de 100 AD; 60 est accepté, 40 reste ouvert."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "La ligne de commande ne peut pas être remplie normalement avec la quantité manquante.",
+          "affects": [
+            "Ordre accepté"
+          ],
+          "scenario": "Lorsque 60 AD est lu pour une commande de 100 AD, l'achèvement est bloqué ou une fermeture courte est nécessaire."
+        }
+      },
+      "requireShortCloseApproval": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "L'approbation de l'administrateur est requise pour couvrir la quantité restante.",
+          "affects": [
+            "Fermeture courte",
+            "Dossier d'approbation"
+          ],
+          "scenario": "Si les 40 autres seront annulés après l'acceptation de 60/100, l'approbation du superviseur est demandée."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "L'exploitant autorisé peut fermer la ligne manquante sans autorisation supplémentaire.",
+          "affects": [
+            "Fermeture courte"
+          ],
+          "scenario": "Après l'acceptation 60/100, les 40 restants peuvent être fermés directement."
+        }
+      },
+      "requireReceiptApproval": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Une confirmation d'acceptation de marchandises distinctes est créée après acceptation physique.",
+          "affects": [
+            "État d ' acceptation",
+            "Libération des stocks",
+            "Transfert de PGI"
+          ],
+          "scenario": "L'entrepositaire met fin à l'acceptation; Le processus n'est pas terminé tant que le superviseur n'a pas dit :"
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "L'achèvement par l'exploitant de l'acceptation des marchandises constitue une confirmation d'acceptation.",
+          "affects": [
+            "État d ' acceptation"
+          ],
+          "scenario": "Lorsque l'entrepositaire termine la transaction, le dossier passe à la prochaine étape appropriée."
+        }
+      },
+      "requireQualityApproval": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Dans les stocks pour lesquels un plan de qualité a été créé, le processus n'est pas publié avant l'achèvement de la décision.",
+          "affects": [
+            "Examen de la qualité",
+            "État des stocks"
+          ],
+          "scenario": "Le lot allant à la qualité est maintenu en quarantaine jusqu'à ce qu'il soit fini."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "S'il n'y a pas de règle de qualité, il n'est pas nécessaire d'obtenir une approbation de qualité distincte.",
+          "affects": [
+            "Portail de qualité"
+          ],
+          "scenario": "Stock sans définition de qualité va directement à l'étape suivante."
+        }
+      },
+      "requireErpApproval": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "L'approbation de l'utilisateur autorisé est requise avant la soumission du PGI.",
+          "affects": [
+            "Dossier de transfert de PGI",
+            "Vérification de l'autorisation"
+          ],
+          "scenario": "La lettre de livraison est prête; Une fois que le PGI responsable approuve, il est envoyé à Netsis."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Une fois les autres portes terminées, la soumission du PGI peut se faire automatiquement.",
+          "affects": [
+            "Dossier de transfert de PGI"
+          ],
+          "scenario": "Dès que la qualité est terminée, le bon de livraison sera envoyé automatiquement."
+        }
+      },
+      "holdInventoryUntilQualityDecision": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "La qualité en attente est attribuée à partir des stocks disponibles.",
+          "affects": [
+            "État de la balance des stocks",
+            "Réservation et expédition"
+          ],
+          "scenario": "100 AD est sur l'étagère physique mais ne peut être attribué à la commande d'expédition jusqu'à ce que la qualité soit terminée."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "L'examen de la qualité à lui seul ne bloque pas la disponibilité des stocks.",
+          "affects": [
+            "Solde disponible"
+          ],
+          "scenario": "Même si l'enregistrement de qualité est ouvert, le stock peut être sélectionné si d'autres politiques le permettent."
+        }
+      },
+      "blockPutawayUntilQualityDecision": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Le produit en attente de qualité ne peut être placé sur l'étagère finale.",
+          "affects": [
+            "Tâche de rayonnage",
+            "Support d'attente de qualité"
+          ],
+          "scenario": "Le produit attend sur l'étagère d'acceptation / quarantaine; Après Passé, la cible est placée sur l'étagère."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Le rayonnage physique peut être fait en attendant le résultat de qualité.",
+          "affects": [
+            "Tâche de rayonnage"
+          ],
+          "scenario": "Le produit est placé sur l'étagère cible, mais l'état du stock peut rester bloqué en raison de la qualité."
+        }
+      },
+      "allowOrderlessReceipt": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "L'acceptation peut être ouverte avec une lettre de livraison et un article de stock sans commande d'achat.",
+          "affects": [
+            "Accepter des marchandises sans commande"
+          ],
+          "scenario": "Les matériaux urgents sont acceptés sans lien de commande."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Toute acceptation de marchandises doit être liée à une commande valide.",
+          "affects": [
+            "Début de l'acceptation des nouvelles marchandises"
+          ],
+          "scenario": "L'utilisateur qui veut continuer sans sélectionner une commande sera bloqué."
+        }
+      },
+      "allowUnplannedReceipt": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "L'acceptation physique directe peut être faite sans ouvrir une commande à l'avance.",
+          "affects": [
+            "Acceptation directe",
+            "Création d'une tâche"
+          ],
+          "scenario": "L'admission immédiate est amorcée pour le véhicule arrivant à la porte."
+        },
+        "false": {
+          "summary": "Ce contrôle est désactivé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Une commande/tâche d'acceptation de marchandises est requise avant l'acceptation physique.",
+          "affects": [
+            "Droits de perception"
+          ],
+          "scenario": "L'entrepositaire ne peut opérer que l'ordre d'acceptation qui lui est assigné."
+        }
+      },
+      "showAllocatedOpenOrderLines": {
+        "true": {
+          "summary": "Ce contrôle s'applique aux opérations actives et nouvelles.",
+          "effect": "Les lignes de commande réservées à d'autres acceptations WMS ouvertes sont énumérées avec l'avertissement.",
+          "affects": [
+            "Sélection de la commande Netsis"
+          ],
+          "scenario": "Si le même article de commande est dans un autre ordre, l'utilisateur le voit, mais le contrôle de quantité dupliqué continue."
+        },
+        "false": {
+          "summary": "Ce contrôle est désactivé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Les lignes réservées pour une nouvelle acceptation WMS sont cachées dans la sélection de commande.",
+          "affects": [
+            "Sélection de la commande Netsis"
+          ],
+          "scenario": "L'opérateur ne voit que des lignes ouvertes qui n'ont pas encore été attribuées."
+        }
+      },
+      "warehouseDefaultWarehouse": {
+        "default": {
+          "summary": "L'entrepôt auquel appartient la recommandation par défaut.",
+          "effect": "Lorsque l'entrepôt est sélectionné pour l'acceptation des marchandises, l'étagère par défaut définie pour cet entrepôt peut être utilisée.",
+          "affects": [
+            "Entrepôt d'acceptation des marchandises/sélection de shelf"
+          ],
+          "scenario": "Pour les produits arrivant en entrepôt 01, l'étagère ACCEPT-01 arrive par défaut."
+        }
+      },
+      "warehouseDefaultLocation": {
+        "default": {
+          "summary": "C'est l'étagère par défaut où les marchandises seront placées en premier dans l'entrepôt sélectionné.",
+          "effect": "Ce rack est recommandé pour les nouvelles lignes d'acceptation à moins que l'opérateur ne change.",
+          "affects": [
+            "Recommandation concernant le plateau d'acceptation des marchandises",
+            "balance du plateau"
+          ],
+          "scenario": "Lorsque 01 entrepôt est sélectionné, ACCEPT-01 est automatiquement sélectionné."
+        }
+      },
+      "assignmentUser": {
+        "default": {
+          "summary": "L'utilisateur WMS auquel l'autorité d'entreposage sera attribuée.",
+          "effect": "L'utilisateur sélectionné ne peut accepter que des marchandises dans les entrepôts qui lui sont assignés.",
+          "affects": [
+            "Autorité chargée de l ' acceptation des biens"
+          ],
+          "scenario": "Entrepôtier A n'est affecté qu'aux entrepôts 01 et 02."
+        }
+      }
+    },
+    "goodsReceipt": {
+      "overReceiptPolicy": {
+        "NotAllowed": {
+          "summary": "Plus que la quantité claire dans l'ordre est inacceptable.",
+          "effect": "Si le montant d'acceptation dépasse le solde de la commande ouverte, la ligne n'est pas enregistrée.",
+          "affects": [
+            "Contrôle de la quantité des marchandises commandées",
+            "Message d'erreur Overaccept"
+          ],
+          "scenario": "Si 105 AD est lu alors que 100 AD est ouvert dans l'ordre, la transaction sera bloquée au-dessus de 100 AD."
+        },
+        "WithinTolerance": {
+          "summary": "La suracceptation ne peut être faite que dans la limite de pourcentage définie.",
+          "effect": "Le montant ouvert peut être dépassé par le pourcentage de tolérance; plus sont bloqués.",
+          "affects": [
+            "Accepter les marchandises commandées",
+            "Tolérance excessive d'acceptation"
+          ],
+          "scenario": "100 ordres AD et 5% de tolérance, maximum 105 AD sont acceptés."
+        },
+        "ApprovalRequired": {
+          "summary": "Le dépassement est enregistré, mais le processus ne se déroule pas sans autorisation.",
+          "effect": "Le dépassement du montant est marqué comme une exception en attente d'approbation.",
+          "affects": [
+            "Dossier d ' acceptation des marchandises",
+            "Port de transfert PGI"
+          ],
+          "scenario": "Si 108 AD sont reçus pour la commande de 100 AD, l'enregistrement sera ouvert; Il est complété après l'approbation du superviseur."
+        }
+      },
+      "overReceiptTolerancePercent": {
+        "default": {
+          "summary": "est le taux de suracceptation maximum pour la sélection -- dans la tolérance.",
+          "effect": "Pourcentage est calculé sur la quantité ouverte de la commande.",
+          "affects": [
+            "Validation de la quantité de la ligne de commande"
+          ],
+          "scenario": "Si la quantité ouverte est de 200 et que la tolérance est de 2 %, jusqu'à 204 acceptations sont possibles.",
+          "warning": "Si la politique d'acceptation excessive est « Interdite », ce champ n'est pas utilisé."
+        }
+      },
+      "inventoryAvailabilityPolicy": {
+        "Immediate": {
+          "summary": "Le stock accepté est transféré au solde disponible sans attendre.",
+          "effect": "Stock; Elle est immédiatement ouverte aux transactions de transfert, d'expédition et de réservation.",
+          "affects": [
+            "Entrepôt et balance des étagères",
+            "Réserve",
+            "Expédition/transfert"
+          ],
+          "scenario": "10 AD peut être sélectionné dans un autre ordre de transfert dès que l'acceptation prend fin."
+        },
+        "AfterReceiptApproval": {
+          "summary": "Le stock reste bloqué jusqu'à l'approbation de l'acceptation des marchandises.",
+          "effect": "Un enregistrement physique est créé, mais le solde disponible est ouvert après confirmation.",
+          "affects": [
+            "Confirmation d'acceptation des marchandises",
+            "Solde disponible"
+          ],
+          "scenario": "L'exploitant termine l'acceptation; Une fois que le superviseur approuve, le stock est ouvert à l'expédition."
+        },
+        "AfterQualityApproval": {
+          "summary": "Le stock inclus dans le plan qualité ne peut être utilisé tant que la décision de qualité n'est pas prise.",
+          "effect": "Les stocks de mauvaise qualité ne sont pas affectés; les stocks affectés à la qualité sont maintenus en attente.",
+          "affects": [
+            "Examen de la qualité",
+            "Solde de quarantaine/disponible"
+          ],
+          "scenario": "Lorsque l'échantillon est vérifié, 20 stocks AD sont disponibles."
+        },
+        "AfterAllApprovals": {
+          "summary": "L'acceptation des marchandises, la qualité et toutes les approbations nécessaires du PGI sont attendues.",
+          "effect": "Le stock ne sera pas libéré avant que toutes les portes d'approbation définies ne soient franchies.",
+          "affects": [
+            "Acceptation des marchandises",
+            "Qualité",
+            "Approbation des PGI",
+            "Solde disponible"
+          ],
+          "scenario": "Même si l'approbation de qualité est donnée, si l'approbation du superviseur de l'acceptation des marchandises est manquante, le stock continue d'attendre."
+        }
+      },
+      "erpPostingPolicy": {
+        "AfterReceipt": {
+          "summary": "Une fois l'acceptation des marchandises terminée, la lettre de livraison du PGI est prête à être envoyée.",
+          "effect": "S'il n'y a pas d'autre porte d'approbation, la file d'attente ERP est déclenchée immédiatement.",
+          "affects": [
+            "Achèvement de l ' acceptation des marchandises",
+            "Réception du PGI"
+          ],
+          "scenario": "Lorsque l'acceptation qui n'exige pas la qualité est terminée, un reçu Netsis est créé."
+        },
+        "AfterReceiptApproval": {
+          "summary": "Pour l'inscription du PGI, l'approbation du gestionnaire de l'acceptation des marchandises est attendue.",
+          "effect": "L'achèvement de l'opérateur à lui seul ne déclenche pas le transfert du PGI.",
+          "affects": [
+            "Confirmation d'acceptation des marchandises",
+            "Dossier ERP"
+          ],
+          "scenario": "L'opérateur termine l'acceptation; Une fois que le superviseur approuve, la lettre de livraison est envoyée."
+        },
+        "AfterQualityApproval": {
+          "summary": "En cas d'acceptation avec un plan de qualité, le PGI n'est pas enregistré tant que la décision sur la qualité n'est pas prise.",
+          "effect": "Le résultat de qualité peut être passé ou échoué; La décision devrait être prise.",
+          "affects": [
+            "Résultat de l'examen de la qualité",
+            "Réception du PGI"
+          ],
+          "scenario": "Même si le produit reçoit un résultat de qualité infructueuse, une note d'achat obligatoire peut être envoyée après la décision."
+        },
+        "AfterAllApprovals": {
+          "summary": "Le transfert du PGI est effectué une fois toutes les approbations définies terminées.",
+          "effect": "Les barrières d'acceptation, de qualité et d'approbation du PGI sont évaluées ensemble.",
+          "affects": [
+            "Confirmation d'acceptation des marchandises",
+            "Décision de qualité",
+            "Approbation du PGI"
+          ],
+          "scenario": "Même si la qualité est remplie, s'il n'y a pas d'approbation PGI autorisée, le transfert attendra."
+        }
+      },
+      "erpQualityGatePolicy": {
+        "None": {
+          "summary": "Le plan qualité ne bloque pas le transfert ERP.",
+          "effect": "Même s'il y a un examen manuel de la qualité fondé sur des règles, le calendrier des PGI n'est déterminé que par la politique de transfert des PGI.",
+          "affects": [
+            "Réception du PGI",
+            "Portail d'intégration de la qualité"
+          ],
+          "scenario": "Le produit est envoyé à la qualité; Le bon de livraison peut être transféré sans attendre le résultat de qualité."
+        },
+        "RuleBasedOnly": {
+          "summary": "Seules les inspections découlant de la règle stock/qualité permettront le transfert du PGI.",
+          "effect": "Le produit envoyé par l'opérateur à la qualité manuelle ne crée pas de porte ERP.",
+          "affects": [
+            "Règle de qualité des stocks",
+            "Dossier de transfert de PGI"
+          ],
+          "scenario": "La qualité s'attend à ce que les stocks soient obligatoires; Cependant, elle ne tient pas le bon de livraison des stocks, qui est jugé suspect et envoyé manuellement, en attente."
+        },
+        "AnyQualityPlan": {
+          "summary": "Chaque plan de qualité ouvert selon les règles ou manuellement tiendra le transfert ERP.",
+          "effect": "Le reçu ne sera pas en attente tant que la décision de qualité n'aura pas été prise.",
+          "affects": [
+            "Plan de qualité manuel",
+            "Qualité fondée sur des règles",
+            "Transfert de PGI"
+          ],
+          "scenario": "Si l'opérateur envoie manuellement le produit suspect à la qualité, la lettre de livraison ne sera pas jetée avant que le résultat de qualité soit reçu."
+        }
+      },
+      "allowUnderReceipt": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Le document peut être laissé ouvert en acceptant une partie du montant de la commande.",
+          "affects": [
+            "Ordre accepté",
+            "Montant restant ouvert"
+          ],
+          "scenario": "60 AD vient de la commande de 100 AD; 60 est accepté, 40 reste ouvert."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "La ligne de commande ne peut pas être remplie normalement avec la quantité manquante.",
+          "affects": [
+            "Ordre accepté"
+          ],
+          "scenario": "Lorsque 60 AD est lu pour une commande de 100 AD, l'achèvement est bloqué ou une fermeture courte est nécessaire."
+        }
+      },
+      "requireShortCloseApproval": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "L'approbation de l'administrateur est requise pour couvrir la quantité restante.",
+          "affects": [
+            "Fermeture courte",
+            "Dossier d'approbation"
+          ],
+          "scenario": "Si les 40 autres seront annulés après l'acceptation de 60/100, l'approbation du superviseur est demandée."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "L'opérateur autorisé peut fermer la ligne manquante sans confirmation supplémentaire.",
+          "affects": [
+            "Fermeture courte"
+          ],
+          "scenario": "Après l'acceptation 60/100, les 40 restants peuvent être fermés directement."
+        }
+      },
+      "requireReceiptApproval": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Une confirmation d'acceptation de marchandises distinctes est créée après acceptation physique.",
+          "affects": [
+            "État d ' acceptation",
+            "Libération des stocks",
+            "Transfert de PGI"
+          ],
+          "scenario": "L'entrepositaire met fin à l'acceptation; Le processus n'est pas terminé tant que le superviseur n'a pas dit :"
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "L'achèvement par l'exploitant de l'acceptation des marchandises constitue une confirmation d'acceptation.",
+          "affects": [
+            "État d ' acceptation"
+          ],
+          "scenario": "Lorsque l'entrepositaire termine la transaction, le dossier passe à la prochaine étape appropriée."
+        }
+      },
+      "requireQualityApproval": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Dans les stocks pour lesquels un plan de qualité a été créé, le processus n'est pas publié avant l'achèvement de la décision.",
+          "affects": [
+            "Examen de la qualité",
+            "État des stocks"
+          ],
+          "scenario": "Le lot allant à la qualité est maintenu en quarantaine jusqu'à ce qu'il soit fini."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "S'il n'y a pas de règle de qualité, il n'est pas nécessaire d'obtenir une approbation de qualité distincte.",
+          "affects": [
+            "Portail de qualité"
+          ],
+          "scenario": "Stock sans définition de qualité va directement à l'étape suivante."
+        }
+      },
+      "requireErpApproval": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "L'approbation de l'utilisateur autorisé est requise avant la soumission du PGI.",
+          "affects": [
+            "Dossier de transfert de PGI",
+            "Vérification de l'autorisation"
+          ],
+          "scenario": "La lettre de livraison est prête; Une fois que le PGI responsable approuve, il est envoyé à Netsis."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Une fois les autres portes terminées, la soumission du PGI peut se faire automatiquement.",
+          "affects": [
+            "Dossier de transfert de PGI"
+          ],
+          "scenario": "Dès que la qualité est terminée, le bon de livraison sera envoyé automatiquement."
+        }
+      },
+      "holdInventoryUntilQualityDecision": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "La qualité en attente est attribuée à partir des stocks disponibles.",
+          "affects": [
+            "État de la balance des stocks",
+            "Réservation et expédition"
+          ],
+          "scenario": "100 AD est sur l'étagère physique mais ne peut être attribué à la commande d'expédition jusqu'à ce que la qualité soit terminée."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "L'examen de la qualité à lui seul ne bloque pas la disponibilité des stocks.",
+          "affects": [
+            "Solde disponible"
+          ],
+          "scenario": "Même si l'enregistrement de qualité est ouvert, le stock peut être sélectionné si d'autres politiques le permettent."
+        }
+      },
+      "blockPutawayUntilQualityDecision": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Le produit en attente de qualité ne peut être placé sur l'étagère finale.",
+          "affects": [
+            "Tâche de rayonnage",
+            "Support d'attente de qualité"
+          ],
+          "scenario": "Le produit attend sur l'étagère d'acceptation / quarantaine; Après Passé, la cible est placée sur l'étagère."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Le rayonnage physique peut être fait en attendant le résultat de qualité.",
+          "affects": [
+            "Tâche de rayonnage"
+          ],
+          "scenario": "Le produit est placé sur l'étagère cible, mais l'état du stock peut rester bloqué en raison de la qualité."
+        }
+      },
+      "allowOrderlessReceipt": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "L'acceptation peut être ouverte avec une lettre de livraison et un article de stock sans commande d'achat.",
+          "affects": [
+            "Accepter des marchandises sans commande"
+          ],
+          "scenario": "Les matériaux urgents sont acceptés sans lien de commande."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Toute acceptation de marchandises doit être liée à une commande valide.",
+          "affects": [
+            "Début de l'acceptation des nouvelles marchandises"
+          ],
+          "scenario": "L'utilisateur qui veut continuer sans sélectionner une commande sera bloqué."
+        }
+      },
+      "allowUnplannedReceipt": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "L'acceptation physique directe peut être faite sans ouvrir une commande à l'avance.",
+          "affects": [
+            "Acceptation directe",
+            "Création d'une tâche"
+          ],
+          "scenario": "L'admission immédiate est amorcée pour le véhicule arrivant à la porte."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "La commande/tâche d'acceptation des marchandises est requise avant l'acceptation physique.",
+          "affects": [
+            "Droits de perception"
+          ],
+          "scenario": "L'entrepositaire ne peut exécuter que l'ordre d'acceptation qui lui est assigné."
+        }
+      },
+      "showAllocatedOpenOrderLines": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Les lignes de commande réservées à d'autres acceptations WMS ouvertes sont énumérées avec l'avertissement.",
+          "affects": [
+            "Sélection de la commande Netsis"
+          ],
+          "scenario": "Si le même article de commande est dans un autre ordre, l'utilisateur le voit, mais le contrôle de quantité dupliqué continue."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Les lignes réservées aux autres acceptations WMS sont cachées dans la sélection de commande.",
+          "affects": [
+            "Sélection de la commande Netsis"
+          ],
+          "scenario": "L'opérateur ne voit que des lignes ouvertes qui n'ont pas encore été attribuées."
+        }
+      },
+      "warehouseDefaultWarehouse": {
+        "default": {
+          "summary": "C'est l'entrepôt auquel appartient la recommandation par défaut.",
+          "effect": "Lorsque l'entrepôt est sélectionné pour l'acceptation des marchandises, l'étagère par défaut définie pour cet entrepôt peut être utilisée.",
+          "affects": [
+            "Entrepôt d'acceptation des marchandises/sélection de shelf"
+          ],
+          "scenario": "Pour les produits arrivant en entrepôt 01, l'étagère ACCEPT-01 arrive par défaut."
+        }
+      },
+      "warehouseDefaultLocation": {
+        "default": {
+          "summary": "C'est l'étagère par défaut où les marchandises seront placées en premier dans l'entrepôt sélectionné.",
+          "effect": "Ce rack est recommandé pour les nouvelles lignes d'acceptation à moins que l'opérateur ne change.",
+          "affects": [
+            "Recommandation concernant le plateau d'acceptation des marchandises",
+            "balance du plateau"
+          ],
+          "scenario": "Lorsque 01 entrepôt est sélectionné, ACCEPT-01 est automatiquement sélectionné."
+        }
+      },
+      "assignmentUser": {
+        "default": {
+          "summary": "L'utilisateur WMS auquel l'autorité d'entreposage sera attribuée.",
+          "effect": "L'utilisateur sélectionné ne peut accepter que des marchandises dans les entrepôts qui lui sont assignés.",
+          "affects": [
+            "Autorité chargée de l ' acceptation des biens"
+          ],
+          "scenario": "Entrepôtier A n'est affecté qu'aux entrepôts 01 et 02."
+        }
+      }
+    },
+    "outbound": {
+      "allowOrderBasedTask": {
+        "true": {
+          "summary": "Ce contrôle s'applique aux opérations actives et nouvelles.",
+          "effect": "Une commande de décharge/expédition peut être ouverte à partir de la commande.",
+          "affects": [
+            "Nouvel ordre",
+            "Attribuer les tâches"
+          ],
+          "scenario": "La commande de vente est sélectionnée et la tâche de cueillette est attribuée au personnel."
+        },
+        "false": {
+          "summary": "Ce contrôle est désactivé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Le flux d'accompagnement basé sur l'ordre ne peut pas être utilisé dans le menu.",
+          "affects": [
+            "Nouvel ordre"
+          ],
+          "scenario": "L'utilisateur ne peut pas ouvrir une commande de la commande."
+        }
+      },
+      "allowStockBasedTask": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Une bourse peut être ouverte sans commande.",
+          "affects": [
+            "Numéro de stock gratuit",
+            "Attribuer les tâches"
+          ],
+          "scenario": "Le stock est sélectionné pour l'expédition de l'échantillon et un ordre de collecte est attribué."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "La sortie sans commande sera bloquée.",
+          "affects": [
+            "Nouvel ordre"
+          ],
+          "scenario": "L'option d'ouvrir une tâche à partir de stock gratuit n'est pas disponible."
+        }
+      },
+      "allowOrderBasedDirect": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Les transactions peuvent être effectuées directement à partir de la commande sans assigner une tâche.",
+          "affects": [
+            "Sortie/expédition directe"
+          ],
+          "scenario": "La petite commande est collectée et complétée par l'opérateur sur le même écran."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Les transactions ordonnées sont exécutées à partir du flux correspondant.",
+          "affects": [
+            "Action directe"
+          ],
+          "scenario": "Même si l'ordre est sélectionné, il faut d'abord créer une tâche."
+        }
+      },
+      "allowStockBasedDirect": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Le stock sans commande peut être pris directement à la sortie.",
+          "affects": [
+            "Sortie directe libre"
+          ],
+          "scenario": "La ferraille ou le stock d'échantillon est retiré instantanément."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Sortie directe sans ordre est bloqué.",
+          "affects": [
+            "Nouvelle version"
+          ],
+          "scenario": "Il n'est pas possible de procéder à la sélection des stocks sans papiers."
+        }
+      },
+      "reservationPolicy": {
+        "None": {
+          "summary": "Aucune réservation de stock n'est faite pour la quantité de commande.",
+          "effect": "D'autres emplois peuvent voir le même équilibre; Le contrôle exact se fait à la collecte.",
+          "affects": [
+            "Solde disponible",
+            "Ajout"
+          ],
+          "scenario": "Deux commandes peuvent voir le même stock; utilise le montant collecté en premier.",
+          "warning": "Dans les opérations à forte activité, il peut y avoir pénurie de stocks en service."
+        },
+        "OnCreate": {
+          "summary": "Stock est réservé lorsque l'ordre est créé comme un brouillon.",
+          "effect": "Le montant est fermé à d'autres commandes.",
+          "affects": [
+            "Création d'un ordre",
+            "Solde des réserves"
+          ],
+          "scenario": "Lorsqu'une commande de 100 AD est ouverte, 100 AD sont immédiatement déduits du solde disponible."
+        },
+        "OnRelease": {
+          "summary": "Une réservation est faite lorsque la commande est libérée et mise en service.",
+          "effect": "Les tirants d'eau ne lient pas le stock; les supports de stock en service actif.",
+          "affects": [
+            "Ordonnance de libération",
+            "Réserve"
+          ],
+          "scenario": "Planificateur prépare le plan; Une fois approuvé et publié, le stock est réservé."
+        }
+      },
+      "shortagePolicy": {
+        "Block": {
+          "summary": "La transaction ne peut être effectuée avec un stock incomplet.",
+          "effect": "Le montant total demandé doit être disponible.",
+          "affects": [
+            "Achèvement des ajouts"
+          ],
+          "scenario": "10 AD est demandé, s'il y a 8 AD, l'achèvement est bloqué."
+        },
+        "AllowPartial": {
+          "summary": "Les transactions partielles peuvent être effectuées jusqu'au montant trouvé.",
+          "effect": "Le montant restant est contrôlé comme étant ouvert ou manquant.",
+          "affects": [
+            "Collecte partielle",
+            "Montant restant"
+          ],
+          "scenario": "8 AD de la commande 10 AD sont expédiés, 2 AD restent ouverts."
+        },
+        "RequireApproval": {
+          "summary": "Le montant manquant peut être rempli avec l'approbation de la personne autorisée.",
+          "effect": "L'opérateur ne peut effectuer seul une fermeture courte.",
+          "affects": [
+            "Confirmation de l'exception",
+            "Fermeture courte"
+          ],
+          "scenario": "8/10 En collecte, l'expédition est effectuée après l'approbation du superviseur."
+        }
+      },
+      "overPickPolicy": {
+        "Block": {
+          "summary": "Recueillir plus que le montant de la commande est bloqué.",
+          "effect": "Il ne peut dépasser le montant total des plans enseignés.",
+          "affects": [
+            "Numérisation du code-barres",
+            "Recouvrement"
+          ],
+          "scenario": "11e lecture pour 10 AD ordre est rejeté."
+        },
+        "AllowWithinTolerance": {
+          "summary": "La surcollection n'est acceptée que dans la limite du pourcentage de tolérance.",
+          "effect": "La limite supérieure est calculée sur le montant du régime.",
+          "affects": [
+            "Contrôle de la quantité de collecte"
+          ],
+          "scenario": "100 AD et 102 AD autorisés à une tolérance de 2%."
+        },
+        "RequireApproval": {
+          "summary": "L'excédent de recouvrement est soumis à l'approbation autorisée.",
+          "effect": "Le dépassement de la quantité ne peut être expédié sans approbation.",
+          "affects": [
+            "Confirmation de l'exception",
+            "Port maritime"
+          ],
+          "scenario": "La collecte 11/10 attend l'approbation du superviseur."
+        }
+      },
+      "packingPolicy": {
+        "NotRequired": {
+          "summary": "La sortie peut être effectuée sans fermer le paquet.",
+          "effect": "L'étape Paquet/SSCC n'est pas obligatoire.",
+          "affects": [
+            "Emballage",
+            "Achèvement de l'expédition"
+          ],
+          "scenario": "Le produit sans palette va directement au chargement."
+        },
+        "Optional": {
+          "summary": "L'emballage peut être utilisé mais n'est pas requis.",
+          "effect": "Il peut être effectué avec ou sans emballage selon l'opération.",
+          "affects": [
+            "Emballage"
+          ],
+          "scenario": "Le produit en boîte est emballé, le produit en vrac est expédié directement."
+        },
+        "Required": {
+          "summary": "La vérification ne peut être effectuée avant que toutes les quantités appropriées ne soient emballées.",
+          "effect": "La fermeture du colis est la porte d'expédition.",
+          "affects": [
+            "Emballage",
+            "SSCC/étiquette",
+            "Achèvement de l'expédition"
+          ],
+          "scenario": "L'approbation de chargement ne peut pas être donnée avant que le 20 AD collecté ne soit pris dans des boîtes."
+        }
+      },
+      "minimumFulfillmentPercent": {
+        "default": {
+          "summary": "Il s'agit du taux minimum de couverture requis pour l'achèvement partiel.",
+          "effect": "Si le montant perçu est inférieur à ce taux, l'achèvement sera bloqué.",
+          "affects": [
+            "Collecte partielle",
+            "Fermeture courte"
+          ],
+          "scenario": "Si le taux est de 80% dans un ordre de 100 AD, au moins 80 AD doivent être collectés."
+        }
+      },
+      "overPickTolerancePercent": {
+        "default": {
+          "summary": "Le pourcentage maximal de surcollection tolérable.",
+          "effect": "Utilisé seulement lorsque la politique de surcollection est tolérante.",
+          "affects": [
+            "Contrôle de la quantité de collecte"
+          ],
+          "scenario": "50 AD et un maximum de 52 AD peuvent être collectés à une tolérance de 4%."
+        }
+      },
+      "requireApproval": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "L'approbation autorisée est requise avant l'entrée en vigueur de la commande.",
+          "affects": [
+            "État de la commande",
+            "Tâche diffusée"
+          ],
+          "scenario": "Le planificateur crée le schéma; Après l'approbation du superviseur, l'entrepositaire le voit."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "La commande peut être mise en service directement le cas échéant.",
+          "affects": [
+            "État de la commande"
+          ],
+          "scenario": "Le projet est sauvegardé et la tâche commence immédiatement."
+        }
+      },
+      "requireAssigneeForTask": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Au moins un utilisateur doit être affecté au flux correspondant.",
+          "affects": [
+            "Création d'une tâche",
+            "Ordres attribués"
+          ],
+          "scenario": "L'ordre ne peut être libéré sans avoir choisi le personnel."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "La tâche peut être abandonnée dans le pool sans affecter un utilisateur.",
+          "affects": [
+            "Pool de tâches"
+          ],
+          "scenario": "La tâche vacante est alors assumée par un employé."
+        }
+      },
+      "allowMultipleAssignees": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "La même tâche peut être attribuée à plusieurs utilisateurs/équipes.",
+          "affects": [
+            "Attribuer les tâches",
+            "Progrès accomplis"
+          ],
+          "scenario": "Une grande commande est collectée en parallèle par deux entrepôts."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "La tâche ne peut être confiée qu'à une seule personne responsable.",
+          "affects": [
+            "Attribuer les tâches"
+          ],
+          "scenario": "Lorsque le deuxième utilisateur est sélectionné, l'assignation précédente est modifiée."
+        }
+      },
+      "autoReleaseTaskBased": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "L'officier actuel est automatiquement libéré lorsque l'ordre est enregistré.",
+          "affects": [
+            "Tâche diffusée"
+          ],
+          "scenario": "Dès que l'affectation est terminée, la tâche est inscrite sur la liste du personnel."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "La tâche doit également être traitée.",
+          "affects": [
+            "État de la tâche"
+          ],
+          "scenario": "Le planificateur vérifie le projet et le publie."
+        }
+      },
+      "allowPartialPicking": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "La séance de collecte peut être close sous le montant du plan.",
+          "affects": [
+            "Recouvrement",
+            "Montant restant"
+          ],
+          "scenario": "6 AD de 10 AD sont collectées et la session est partiellement fermée."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "L'agrégation attend que la totalité du montant soit complétée.",
+          "affects": [
+            "Achèvement des ajouts"
+          ],
+          "scenario": "Dans les 6/10 cas, le bouton complet est bloqué."
+        }
+      },
+      "allowPartialShipment": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Une partie du montant perçu peut être remplie à titre d'expédition/sortie.",
+          "affects": [
+            "Achèvement de l'expédition",
+            "Ordre restant"
+          ],
+          "scenario": "6 sur 10 en voiture, 4 restent ouverts."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Le document n'est rempli que lorsque tous les montants appropriés sont disponibles.",
+          "affects": [
+            "Achèvement de l'expédition"
+          ],
+          "scenario": "La sortie du véhicule ne peut être confirmée tant que 6/10 est prêt."
+        }
+      },
+      "requireSourceLocation": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Chaque ligne nécessite la sélection de la tablette source ou la vérification du code-barres.",
+          "affects": [
+            "Ajout",
+            "Solde de conservation"
+          ],
+          "scenario": "Un code-barres incorrect sera rejeté même si le stock est correct."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "L'étagère source n'est pas requise sur la rangée; Le système peut le résoudre à partir de l'équilibre approprié.",
+          "affects": [
+            "Ajout"
+          ],
+          "scenario": "L'opérateur ne peut procéder qu'avec le code-barres produit."
+        }
+      },
+      "requireShipmentInformation": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Le départ ne peut être effectué sans entrer dans les informations relatives au véhicule, au conducteur ou au transport.",
+          "affects": [
+            "Envoi",
+            "Achèvement du document"
+          ],
+          "scenario": "Le processus d'expédition complet est bloqué lorsque la plaque est manquante."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Les informations de transport sont facultatives.",
+          "affects": [
+            "Installation"
+          ],
+          "scenario": "La sortie d'écoutille interne peut être complétée sans plaque."
+        }
+      },
+      "requireLoadingConfirmation": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Une confirmation de chargement séparée est nécessaire après la collecte.",
+          "affects": [
+            "Commande de charge",
+            "État d'expédition"
+          ],
+          "scenario": "Le colis collecté est expédié après vérification avec le code à barres dans le véhicule."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Une fois la collecte/emballage terminée, aucune étape de chargement séparée n'est requise.",
+          "affects": [
+            "État d'expédition"
+          ],
+          "scenario": "Une petite livraison est effectuée directement."
+        }
+      },
+      "autoPostErpAfterApproval": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Après l'approbation finale de l'opération, l'enregistrement ERP est automatiquement en attente.",
+          "affects": [
+            "Questions relatives à l ' expédition et au stockage du PGI"
+          ],
+          "scenario": "Une fois l'approbation de téléchargement donnée, l'enregistrement Netsis est envoyé automatiquement."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Le transfert ERP est initié séparément par l'utilisateur ou la tâche d'intégration.",
+          "affects": [
+            "Dossier ERP"
+          ],
+          "scenario": "L'opération est terminée; l'agent ERP l'envoie plus tard."
+        }
+      }
+    },
+    "shipping": {
+      "allowOrderBasedTask": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Une commande de décharge/expédition peut être ouverte à partir de la commande.",
+          "affects": [
+            "Nouvel ordre",
+            "Attribuer les tâches"
+          ],
+          "scenario": "La commande de vente est sélectionnée et la tâche de cueillette est attribuée au personnel."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Le flux d'accompagnement basé sur l'ordre ne peut pas être utilisé dans le menu.",
+          "affects": [
+            "Nouvel ordre"
+          ],
+          "scenario": "L'utilisateur ne peut pas ouvrir une commande de la commande."
+        }
+      },
+      "allowStockBasedTask": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Une bourse peut être ouverte sans commande.",
+          "affects": [
+            "Numéro de stock gratuit",
+            "Attribuer les tâches"
+          ],
+          "scenario": "Le stock est sélectionné pour l'expédition de l'échantillon et un ordre de collecte est attribué."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "La sortie sans surveillance est bloquée.",
+          "affects": [
+            "Nouvel ordre"
+          ],
+          "scenario": "L'option d'ouvrir une mission à partir de stocks gratuits n'est pas disponible."
+        }
+      },
+      "allowOrderBasedDirect": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Les transactions peuvent être effectuées directement à partir de la commande sans assigner une tâche.",
+          "affects": [
+            "Sortie/expédition directe"
+          ],
+          "scenario": "La petite commande est collectée et complétée par l'opérateur sur le même écran."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Les transactions ordonnées sont exécutées à partir du flux correspondant.",
+          "affects": [
+            "Action directe"
+          ],
+          "scenario": "Même si l'ordre est sélectionné, il faut d'abord créer une tâche."
+        }
+      },
+      "allowStockBasedDirect": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Le stock sans commande peut être pris directement à la sortie.",
+          "affects": [
+            "Sortie directe libre"
+          ],
+          "scenario": "La ferraille ou le stock d'échantillon est retiré instantanément."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Sortie directe sans ordre est bloqué.",
+          "affects": [
+            "Nouvelle version"
+          ],
+          "scenario": "Il n'est pas possible de procéder à la sélection des stocks sans papiers."
+        }
+      },
+      "reservationPolicy": {
+        "None": {
+          "summary": "Aucune réservation de stock n'est faite pour la quantité de commande.",
+          "effect": "D'autres emplois peuvent voir le même équilibre; Le contrôle exact se fait à la collecte.",
+          "affects": [
+            "Solde disponible",
+            "Ajout"
+          ],
+          "scenario": "Deux commandes peuvent voir le même stock; utilise le montant collecté en premier.",
+          "warning": "Dans les opérations à forte activité, il peut y avoir pénurie de stocks en service."
+        },
+        "OnCreate": {
+          "summary": "Stock est réservé pendant que l'ordre est créé comme un brouillon.",
+          "effect": "Le montant est fermé à d'autres commandes.",
+          "affects": [
+            "Création d'un ordre",
+            "Solde des réserves"
+          ],
+          "scenario": "Lorsqu'une commande de 100 AD est ouverte, 100 AD sont immédiatement déduits du solde disponible."
+        },
+        "OnRelease": {
+          "summary": "Une réservation est faite lorsque la commande est libérée et mise en service.",
+          "effect": "Les tirants d'eau ne lient pas le stock; les supports de stock en service actif.",
+          "affects": [
+            "Ordonnance de libération",
+            "Réserve"
+          ],
+          "scenario": "Planificateur prépare le plan; Une fois approuvé et publié, le stock est réservé."
+        }
+      },
+      "shortagePolicy": {
+        "Block": {
+          "summary": "La transaction ne peut être effectuée avec un stock incomplet.",
+          "effect": "La totalité du montant demandé doit être disponible.",
+          "affects": [
+            "Achèvement des ajouts"
+          ],
+          "scenario": "10 AD est demandé, l'achèvement est bloqué s'il y a 8 AD."
+        },
+        "AllowPartial": {
+          "summary": "Les transactions partielles peuvent être effectuées jusqu'au montant trouvé.",
+          "effect": "Le montant restant est contrôlé comme étant ouvert ou manquant.",
+          "affects": [
+            "Collecte partielle",
+            "Montant restant"
+          ],
+          "scenario": "8 AD de 10 commandes AD sont expédiées, 2 AD restent ouvertes."
+        },
+        "RequireApproval": {
+          "summary": "Le montant manquant peut être rempli avec l'approbation de la personne autorisée.",
+          "effect": "L'opérateur ne peut effectuer seul une fermeture courte.",
+          "affects": [
+            "Confirmation de l'exception",
+            "Fermeture courte"
+          ],
+          "scenario": "8/10 En collecte, l'expédition est effectuée après l'approbation du superviseur."
+        }
+      },
+      "overPickPolicy": {
+        "Block": {
+          "summary": "Recueillir plus que le montant de la commande est bloqué.",
+          "effect": "Il ne peut dépasser le montant total des plans enseignés.",
+          "affects": [
+            "Numérisation du code-barres",
+            "Recouvrement"
+          ],
+          "scenario": "La 11e lecture de l'ordre AD est rejetée."
+        },
+        "AllowWithinTolerance": {
+          "summary": "La surcollection n'est acceptée que dans la limite du pourcentage de tolérance.",
+          "effect": "La limite supérieure est calculée sur le montant du régime.",
+          "affects": [
+            "Contrôle de la quantité de collecte"
+          ],
+          "scenario": "100 AD et 102 AD autorisés à une tolérance de 2%."
+        },
+        "RequireApproval": {
+          "summary": "L'excédent de recouvrement est soumis à l'approbation autorisée.",
+          "effect": "La quantité excédentaire ne peut être expédiée sans approbation.",
+          "affects": [
+            "Confirmation de l'exception",
+            "Port maritime"
+          ],
+          "scenario": "La collecte 11/10 attend l'approbation du superviseur."
+        }
+      },
+      "packingPolicy": {
+        "NotRequired": {
+          "summary": "La sortie peut être effectuée sans fermer le paquet.",
+          "effect": "L'étape Paquet/SSCC n'est pas obligatoire.",
+          "affects": [
+            "Emballage",
+            "Achèvement de l'expédition"
+          ],
+          "scenario": "Sans palette, le produit passe directement au chargement."
+        },
+        "Optional": {
+          "summary": "L'emballage peut être utilisé mais n'est pas requis.",
+          "effect": "Il peut être effectué avec ou sans emballage, selon l'opération.",
+          "affects": [
+            "Emballage"
+          ],
+          "scenario": "Le produit en boîte est emballé, le produit en vrac est expédié directement."
+        },
+        "Required": {
+          "summary": "La vérification ne peut être effectuée avant que toutes les quantités appropriées ne soient emballées.",
+          "effect": "La fermeture du colis est la porte d'expédition.",
+          "affects": [
+            "Emballage",
+            "SSCC/étiquette",
+            "Achèvement de l'expédition"
+          ],
+          "scenario": "L'approbation de chargement ne peut pas être donnée avant que le 20 AD collecté ne soit pris dans des boîtes."
+        }
+      },
+      "minimumFulfillmentPercent": {
+        "default": {
+          "summary": "est le taux minimal de couverture requis pour l'achèvement partiel.",
+          "effect": "Si le montant perçu est inférieur à ce taux, l'achèvement sera bloqué.",
+          "affects": [
+            "Collecte partielle",
+            "Fermeture courte"
+          ],
+          "scenario": "Si le taux est de 80% dans un ordre de 100 AD, au moins 80 AD doivent être collectés."
+        }
+      },
+      "overPickTolerancePercent": {
+        "default": {
+          "summary": "Le pourcentage maximal de surcollection tolérable.",
+          "effect": "Utilisé seulement lorsque la politique de surcollection est tolérante.",
+          "affects": [
+            "Contrôle de la quantité de collecte"
+          ],
+          "scenario": "50 AD et un maximum de 52 AD peuvent être collectés à une tolérance de 4%."
+        }
+      },
+      "requireApproval": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "L'approbation autorisée est requise avant l'entrée en vigueur de la commande.",
+          "affects": [
+            "État de la commande",
+            "Tâche diffusée"
+          ],
+          "scenario": "Planificateur crée un aperçu; Après l'approbation du superviseur, l'entrepositaire le voit."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "La commande peut être mise en service directement le cas échéant.",
+          "affects": [
+            "État de la commande"
+          ],
+          "scenario": "Le projet est sauvegardé et la tâche commence immédiatement."
+        }
+      },
+      "requireAssigneeForTask": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Au moins un utilisateur doit être affecté au flux correspondant.",
+          "affects": [
+            "Création d'une tâche",
+            "Ordres attribués"
+          ],
+          "scenario": "Les ordres ne peuvent être libérés sans avoir choisi le personnel."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "La tâche peut être abandonnée dans le pool sans affecter un utilisateur.",
+          "affects": [
+            "Pool de tâches"
+          ],
+          "scenario": "La vacance est alors prise par un employé."
+        }
+      },
+      "allowMultipleAssignees": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "La même tâche peut être attribuée à plusieurs utilisateurs/équipes.",
+          "affects": [
+            "Attribuer les tâches",
+            "Progrès accomplis"
+          ],
+          "scenario": "Le grand ordre est choisi en parallèle par deux entrepositaires."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "La tâche ne peut être confiée qu'à une seule personne responsable.",
+          "affects": [
+            "Attribuer les tâches"
+          ],
+          "scenario": "Lorsque le deuxième utilisateur est sélectionné, l'assignation précédente est modifiée."
+        }
+      },
+      "autoReleaseTaskBased": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "L'officier actuel est automatiquement libéré lorsque l'ordre est enregistré.",
+          "affects": [
+            "Tâche diffusée"
+          ],
+          "scenario": "Dès que l'affectation est terminée, la tâche est inscrite sur la liste du personnel."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "La tâche doit également être traitée.",
+          "affects": [
+            "État de la tâche"
+          ],
+          "scenario": "Le planificateur vérifie le projet et le publie."
+        }
+      },
+      "allowPartialPicking": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "La séance de collecte peut être close sous le montant du plan.",
+          "affects": [
+            "Recouvrement",
+            "Montant restant"
+          ],
+          "scenario": "6 AD de 10 AD sont collectées et la session est partiellement fermée."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "L'agrégation attend que la totalité du montant soit complétée.",
+          "affects": [
+            "Achèvement des ajouts"
+          ],
+          "scenario": "Dans les 6/10 cas, le bouton complet est bloqué."
+        }
+      },
+      "allowPartialShipment": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Une partie du montant perçu peut être remplie à titre d'expédition/sortie.",
+          "affects": [
+            "Achèvement de l'expédition",
+            "Ordre restant"
+          ],
+          "scenario": "6 sur 10 en voiture, 4 restent ouverts."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Le document n'est rempli que lorsque tous les montants appropriés sont disponibles.",
+          "affects": [
+            "Achèvement de l'expédition"
+          ],
+          "scenario": "La sortie du véhicule ne peut être confirmée tant que 6/10 est prêt."
+        }
+      },
+      "requireSourceLocation": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Chaque ligne nécessite la sélection de la tablette source ou la vérification du code-barres.",
+          "affects": [
+            "Ajout",
+            "Solde de conservation"
+          ],
+          "scenario": "Un code-barres incorrect sera rejeté même si le stock est correct."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "L'étagère source n'est pas requise sur la rangée; Le système peut le résoudre à partir de l'équilibre approprié.",
+          "affects": [
+            "Ajout"
+          ],
+          "scenario": "L'opérateur ne peut procéder qu'avec le code-barres produit."
+        }
+      },
+      "requireShipmentInformation": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "La vérification ne peut être effectuée sans entrer dans les renseignements sur le véhicule, le conducteur ou le transport.",
+          "affects": [
+            "Envoi",
+            "Achèvement du document"
+          ],
+          "scenario": "Le processus d'expédition complet est bloqué lorsque la plaque est manquante."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Les informations de transport sont facultatives.",
+          "affects": [
+            "Installation"
+          ],
+          "scenario": "La sortie d'écoutille interne peut être complétée sans plaque."
+        }
+      },
+      "requireLoadingConfirmation": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Une confirmation de chargement séparée est nécessaire après la collecte.",
+          "affects": [
+            "Commande de charge",
+            "État d'expédition"
+          ],
+          "scenario": "Le colis collecté est expédié après vérification avec le code à barres dans le véhicule."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Une fois la collecte/emballage terminée, aucune étape de chargement séparée n'est requise.",
+          "affects": [
+            "État d'expédition"
+          ],
+          "scenario": "Une petite livraison est effectuée directement."
+        }
+      },
+      "autoPostErpAfterApproval": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Après l'approbation finale de l'opération, l'enregistrement ERP est automatiquement en attente.",
+          "affects": [
+            "Questions relatives à l ' expédition et au stockage du PGI"
+          ],
+          "scenario": "Une fois l'approbation de téléchargement donnée, l'enregistrement Netsis est envoyé automatiquement."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Le transfert ERP est initié séparément par l'utilisateur ou la tâche d'intégration.",
+          "affects": [
+            "Dossier ERP"
+          ],
+          "scenario": "L'opération est terminée; l'agent ERP l'envoie plus tard."
+        }
+      }
+    },
+    "transfer": {
+      "allowOrderBasedTask": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Une commande de décharge/expédition peut être ouverte à partir de la commande.",
+          "affects": [
+            "Nouvel ordre",
+            "Attribuer les tâches"
+          ],
+          "scenario": "La commande de vente est sélectionnée et la tâche de cueillette est attribuée au personnel."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Le flux d'accompagnement basé sur l'ordre ne peut pas être utilisé dans le menu.",
+          "affects": [
+            "Nouvel ordre"
+          ],
+          "scenario": "L'utilisateur ne peut pas ouvrir une commande de la commande."
+        }
+      },
+      "allowStockBasedTask": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Une bourse peut être ouverte sans commande.",
+          "affects": [
+            "Numéro de stock gratuit",
+            "Attribuer les tâches"
+          ],
+          "scenario": "Le stock est sélectionné pour l'expédition de l'échantillon et un ordre de collecte est attribué."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "La sortie sans commande sera bloquée.",
+          "affects": [
+            "Nouvel ordre"
+          ],
+          "scenario": "L'option d'ouvrir une tâche à partir de stock gratuit n'est pas disponible."
+        }
+      },
+      "allowOrderBasedDirect": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Les transactions peuvent être effectuées directement à partir de la commande sans assigner une tâche.",
+          "affects": [
+            "Sortie/expédition directe"
+          ],
+          "scenario": "La petite commande est collectée et complétée par l'opérateur sur le même écran."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Les transactions ordonnées sont exécutées à partir du flux correspondant.",
+          "affects": [
+            "Action directe"
+          ],
+          "scenario": "Même si l'ordre est sélectionné, il faut d'abord créer une tâche."
+        }
+      },
+      "allowStockBasedDirect": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Le stock sans commande peut être pris directement à la sortie.",
+          "affects": [
+            "Sortie directe libre"
+          ],
+          "scenario": "La ferraille ou le stock d'échantillon est retiré instantanément."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Sortie directe sans ordre est bloqué.",
+          "affects": [
+            "Nouvelle version"
+          ],
+          "scenario": "Il n'est pas possible de procéder à la sélection des stocks sans papiers."
+        }
+      },
+      "reservationPolicy": {
+        "None": {
+          "summary": "Aucune réservation de stock n'est faite pour la quantité de commande.",
+          "effect": "D'autres emplois peuvent voir le même équilibre; Le contrôle exact se fait à la collecte.",
+          "affects": [
+            "Solde disponible",
+            "Ajout"
+          ],
+          "scenario": "Deux commandes peuvent voir le même stock; utilise le montant collecté en premier.",
+          "warning": "Dans les opérations à forte activité, il peut y avoir pénurie de stocks en service."
+        },
+        "OnCreate": {
+          "summary": "Stock est réservé lorsque l'ordre est créé comme un brouillon.",
+          "effect": "Le montant est fermé à d'autres commandes.",
+          "affects": [
+            "Création d'un ordre",
+            "Solde des réserves"
+          ],
+          "scenario": "Lorsqu'une commande de 100 AD est ouverte, 100 AD sont immédiatement déduits du solde disponible."
+        },
+        "OnRelease": {
+          "summary": "Une réservation est faite lorsque la commande est libérée et mise en service.",
+          "effect": "Les tirants d'eau ne lient pas le stock; les supports de stock en service actif.",
+          "affects": [
+            "Ordonnance de libération",
+            "Réserve"
+          ],
+          "scenario": "Planificateur prépare le plan; Une fois approuvé et publié, le stock est réservé."
+        }
+      },
+      "minimumFulfillmentPercent": {
+        "default": {
+          "summary": "Il s'agit du taux minimum de couverture requis pour l'achèvement partiel.",
+          "effect": "Si le montant perçu est inférieur à ce taux, l'achèvement sera bloqué.",
+          "affects": [
+            "Collecte partielle",
+            "Fermeture courte"
+          ],
+          "scenario": "Si le taux est de 80% dans un ordre de 100 AD, au moins 80 AD doivent être collectés."
+        }
+      },
+      "requireApproval": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "L'approbation autorisée est requise avant l'entrée en vigueur de la commande.",
+          "affects": [
+            "État de la commande",
+            "Tâche diffusée"
+          ],
+          "scenario": "Planificateur crée un avant-projet; Après l'approbation du superviseur, l'entrepositaire le voit."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "La commande peut être mise en service directement le cas échéant.",
+          "affects": [
+            "État de la commande"
+          ],
+          "scenario": "Le projet est sauvegardé et la tâche commence immédiatement."
+        }
+      },
+      "requireAssigneeForTask": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Au moins un utilisateur doit être affecté au flux correspondant.",
+          "affects": [
+            "Création d'une tâche",
+            "Ordres attribués"
+          ],
+          "scenario": "Les ordres ne peuvent être libérés sans avoir choisi le personnel."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "La tâche peut être abandonnée dans le pool sans affecter un utilisateur.",
+          "affects": [
+            "Pool de tâches"
+          ],
+          "scenario": "La vacance est alors prise par un employé."
+        }
+      },
+      "allowMultipleAssignees": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "La même tâche peut être attribuée à plusieurs utilisateurs/équipes.",
+          "affects": [
+            "Attribuer les tâches",
+            "Progrès accomplis"
+          ],
+          "scenario": "Le grand ordre est choisi en parallèle par deux entrepositaires."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "La tâche ne peut être confiée qu'à une seule personne responsable.",
+          "affects": [
+            "Attribuer les tâches"
+          ],
+          "scenario": "Lorsque le deuxième utilisateur est sélectionné, l'assignation précédente est modifiée."
+        }
+      },
+      "autoReleaseTaskBased": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "L'officier actuel est automatiquement libéré lorsque l'ordre est enregistré.",
+          "affects": [
+            "Tâche diffusée"
+          ],
+          "scenario": "Dès que l'affectation est terminée, la tâche est inscrite sur la liste du personnel."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "La tâche doit également être traitée.",
+          "affects": [
+            "État de la tâche"
+          ],
+          "scenario": "Le planificateur vérifie le projet et le publie."
+        }
+      },
+      "allowPartialPicking": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "La séance de collecte peut être close sous le montant du plan.",
+          "affects": [
+            "Recouvrement",
+            "Montant restant"
+          ],
+          "scenario": "6 AD de 10 AD sont collectées et la session est partiellement fermée."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "L'agrégation attend que la totalité du montant soit complétée.",
+          "affects": [
+            "Achèvement des ajouts"
+          ],
+          "scenario": "Dans les 6/10 cas, le bouton complet est bloqué."
+        }
+      },
+      "requireSourceLocation": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Chaque ligne nécessite la sélection de la tablette source ou la vérification du code-barres.",
+          "affects": [
+            "Ajout",
+            "Solde de conservation"
+          ],
+          "scenario": "Un code-barres incorrect sera rejeté même si le stock est correct."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "L'étagère source n'est pas requise sur la rangée; Le système peut le résoudre à partir de l'équilibre approprié.",
+          "affects": [
+            "Ajout"
+          ],
+          "scenario": "L'opérateur ne peut procéder qu'avec le code-barres produit."
+        }
+      },
+      "requireShipmentInformation": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Le départ ne peut être effectué sans entrer dans les informations relatives au véhicule, au conducteur ou au transport.",
+          "affects": [
+            "Envoi",
+            "Achèvement du document"
+          ],
+          "scenario": "Le processus d'expédition complet est bloqué lorsque la plaque est manquante."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Les informations de transport sont facultatives.",
+          "affects": [
+            "Installation"
+          ],
+          "scenario": "La sortie d'écoutille interne peut être complétée sans plaque."
+        }
+      },
+      "discrepancyPolicy": {
+        "Block": {
+          "summary": "Si la sortie source et le montant d'admission cible sont différents, l'opération est bloquée.",
+          "effect": "La livraison sous/au-dessus ne peut pas être couverte.",
+          "affects": [
+            "Acceptation du transfert",
+            "Rapprochement des quantités"
+          ],
+          "scenario": "10 AD est sortie, si 9 AD est atteint, l'acceptation ne peut pas être terminée."
+        },
+        "AllowWithReason": {
+          "summary": "La différence de quantité peut être acceptée en entrant la justification.",
+          "effect": "La différence et l'explication sont écrites à la piste de vérification.",
+          "affects": [
+            "Acceptation du transfert",
+            "Vérification des comptes"
+          ],
+          "scenario": "Si 1 AD est endommagé, 9 AD est accepté en raison de « dommages dans le transport »."
+        },
+        "RequireApproval": {
+          "summary": "La différence de quantité est envoyée pour approbation autorisée.",
+          "effect": "Le solde cible n'est pas finalisé sans confirmation.",
+          "affects": [
+            "Confirmation de l'exception de transfert"
+          ],
+          "scenario": "L'acceptation 9/10 se termine après l'approbation du superviseur."
+        }
+      },
+      "allowPartialShipment": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Une partie de la commande peut être expédiée de l'entrepôt source.",
+          "affects": [
+            "Expédition de transfert",
+            "Montant restant"
+          ],
+          "scenario": "60 AD sur 100 AD seront libérés avec le premier véhicule."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "L'envoi des ressources attend le montant total du régime.",
+          "affects": [
+            "Expédition de transfert"
+          ],
+          "scenario": "L'expédition ne peut être terminée lorsque 60/100 est prêt."
+        }
+      },
+      "allowPartialReceipt": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "L'entrepôt cible peut accepter partiellement la quantité reçue.",
+          "affects": [
+            "Acceptation du transfert"
+          ],
+          "scenario": "60 AD dans le premier véhicule est accepté, 40 AD reste en transit."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "L'acceptation de la cible attend le montant total de l'expédition.",
+          "affects": [
+            "Acceptation du transfert"
+          ],
+          "scenario": "Le document n'est pas fermé à la livraison partielle."
+        }
+      },
+      "requireDestinationAcceptance": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Une confirmation d'acceptation séparée de l'utilisateur cible est requise après la sortie de la source.",
+          "affects": [
+            "Stocks de transit",
+            "Accepter la cible"
+          ],
+          "scenario": "Le stock est en route; Quand l'entrepositaire cible dit prendre, le solde cible est transféré."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "La sortie source peut mettre à jour directement le solde cible.",
+          "affects": [
+            "Fin du transfert"
+          ],
+          "scenario": "Un transfert court dans le même champ est effectué en une seule étape."
+        }
+      },
+      "createTransitInventory": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "L'équilibre de transit est maintenu entre la sortie de la source et l'acceptation de la cible.",
+          "affects": [
+            "Stocks de transit",
+            "Solde des entrepôts"
+          ],
+          "scenario": "100 AD dans le véhicule n'est pas dans la source, il n'est pas dans la cible; apparaît en transit."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "L'état du stock de transit séparé n'est pas créé.",
+          "affects": [
+            "Solde des entrepôts"
+          ],
+          "scenario": "Dans un transfert en une seule étape, le stock est transféré directement à la destination."
+        }
+      },
+      "requirePutaway": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Après l'acceptation de la cible, la tâche de rayonnage doit être terminée.",
+          "affects": [
+            "Étagères",
+            "Solde de la tablette cible"
+          ],
+          "scenario": "Le processus ne se ferme pas jusqu'à ce que le produit dans la zone de réception soit lu sur l'étagère cible."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "L'acceptation de la cible peut écrire l'équilibre directement sur l'étagère sélectionnée.",
+          "affects": [
+            "Solde de la tablette cible"
+          ],
+          "scenario": "Dès l'acceptation, l'étagère cible est sélectionnée et une tâche séparée n'est pas ouverte."
+        }
+      },
+      "requireTargetLocation": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "L'étagère cible est obligatoire dans la ligne de transfert.",
+          "affects": [
+            "Créer un ordre",
+            "Solde de la tablette cible"
+          ],
+          "scenario": "Une ligne ne peut pas être sauvegardée sans sélectionner l'étagère cible."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "L'étagère cible peut être déterminée à l'étape de l'acceptation ou de l'abri.",
+          "affects": [
+            "Acceptation des objectifs"
+          ],
+          "scenario": "La commande n'est ouverte qu'avec l'entrepôt cible; L'entrepositaire choisit l'étagère appropriée."
+        }
+      },
+      "directPostingPolicy": {
+        "OneStep": {
+          "summary": "La sortie de la source et l'entrée cible sont terminées en une seule opération.",
+          "effect": "Les étapes d'attente en transit et d'acceptation cible ne se produisent pas.",
+          "affects": [
+            "Mouvement des stocks",
+            "Solde source/objectif"
+          ],
+          "scenario": "Le transfert d'entrepôt dans la même installation passe instantanément à la destination."
+        },
+        "TwoStepTransit": {
+          "summary": "Les sorties de source, le transit et l'acceptation de destination sont surveillés séparément.",
+          "effect": "Les stocks restent en transit jusqu'à leur livraison physique.",
+          "affects": [
+            "Solde de transit",
+            "Accepter la cible"
+          ],
+          "scenario": "Dans le transport interurbain, lorsque le véhicule part, le transit est complété lorsque la destination confirme."
+        }
+      }
+    },
+    "quality": {
+      "defaultInspectionMode": {
+        "NoCheck": {
+          "summary": "Par défaut, le plan de contrôle de la qualité n'est pas ouvert.",
+          "effect": "Si la règle du stock n'exige pas une qualité supplémentaire, le produit reste directement dans le flux d'acceptation.",
+          "affects": [
+            "Acceptation des marchandises",
+            "Création d'un plan qualité"
+          ],
+          "scenario": "Le matériel d'emballage standard est accepté sans ouvrir de dossier de qualité."
+        },
+        "QuickCheck": {
+          "summary": "Le produit est dirigé vers de courtes étapes de contrôle.",
+          "effect": "Un contrôle visuel/mesure rapide est ouvert au lieu d'un examen de laboratoire complet.",
+          "affects": [
+            "Examen de la qualité",
+            "Modèle de contrôle"
+          ],
+          "scenario": "L'exploitant prend la décision en vérifiant l'emballage et la quantité."
+        },
+        "InspectionRequired": {
+          "summary": "Un examen complet de la qualité devient obligatoire.",
+          "effect": "Le processus de qualité n'est pas terminé avant qu'une décision ne soit prise.",
+          "affects": [
+            "Plan qualité",
+            "Quarantaine",
+            "Libération des stocks"
+          ],
+          "scenario": "Attendre que l'échantillon de matière première et les résultats de mesure soient saisis."
+        }
+      },
+      "defaultFailAction": {
+        "Quarantine": {
+          "summary": "Le produit défaillant est placé en quarantaine.",
+          "effect": "Le stock est séparé de la balance disponible et se dirige vers le plateau de quarantaine.",
+          "affects": [
+            "Jugement de qualité",
+            "Solde de quarantaine"
+          ],
+          "scenario": "Le lot non mesuré est transporté au rack de quarantaine pour inspection."
+        },
+        "Reject": {
+          "summary": "Le produit échoué est placé en état de rejet.",
+          "effect": "Le produit ne peut pas être utilisé en fonctionnement normal.",
+          "affects": [
+            "Décision de qualité",
+            "Étagère rouge"
+          ],
+          "scenario": "Le produit endommagé est transporté sur l'étagère de rejet."
+        },
+        "ReturnToSupplier": {
+          "summary": "Le produit échoué est préparé pour le processus de retour au fournisseur.",
+          "effect": "L'état des stocks et les registres de suivi sont rendus.",
+          "affects": [
+            "Jugement de qualité",
+            "Retour des fournisseurs"
+          ],
+          "scenario": "Le mauvais lot de spécifications atterrit sur la liste de retour."
+        },
+        "ManagerApproval": {
+          "summary": "Le résultat échoué va à la décision d'administration pour l'action finale.",
+          "effect": "La décision de quarantaine, d'acceptation conditionnelle ou de retour est choisie par le fonctionnaire.",
+          "affects": [
+            "Dossier d'approbation de qualité"
+          ],
+          "scenario": "Le produit à la valeur limite est envoyé au gestionnaire de la qualité pour approbation."
+        }
+      },
+      "defaultQualityLocationId": {
+        "default": {
+          "summary": "L'étagère par défaut pour les produits en attente d'examen de la qualité.",
+          "effect": "Ce rack est recommandé pour une orientation de qualité automatique.",
+          "affects": [
+            "Routage après acceptation des marchandises",
+            "Solde de réserve de qualité"
+          ],
+          "scenario": "Le produit envoyé à qualité est placé sur l'étagère KLT-01."
+        }
+      },
+      "defaultQuarantineLocationId": {
+        "default": {
+          "summary": "C'est la tablette par défaut des produits qui ont été mis en quarantaine.",
+          "effect": "Les stocks manquants/suspicieux sont dirigés vers cet endroit.",
+          "affects": [
+            "Mouvement de quarantaine",
+            "Solde de conservation"
+          ],
+          "scenario": "Le lot qui a reçu le résultat raté est placé sur l'étagère KRN-01."
+        }
+      },
+      "defaultRejectLocationId": {
+        "default": {
+          "summary": "La tablette par défaut des produits rejetés.",
+          "effect": "Déterminer l'emplacement de la cible recommandée après la décision de rejet.",
+          "affects": [
+            "Déplacement",
+            "Solde de conservation"
+          ],
+          "scenario": "Le produit en attente de retour est conservé sur l'étagère RED-01."
+        }
+      },
+      "autoCreateInspectionOnReceipt": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "L'inspection est ouverte automatiquement pour la ligne d'acceptation des marchandises qui est conforme à la règle de qualité.",
+          "affects": [
+            "Achèvement de l ' acceptation des marchandises",
+            "Liste de qualité"
+          ],
+          "scenario": "Lorsque le stock obligatoire de qualité est accepté, l'exploitant n'ouvre pas de dossier distinct."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "L'examen est ouvert manuellement par l'utilisateur autorisé.",
+          "affects": [
+            "Liste de qualité"
+          ],
+          "scenario": "L ' acceptation est achevée; L'agent de qualité crée un plan s'il le juge nécessaire."
+        }
+      },
+      "holdInventoryUntilDecision": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Le stock ne peut être utilisé tant qu'une décision de qualité n'est pas prise.",
+          "affects": [
+            "Solde disponible",
+            "Expédition/transfert"
+          ],
+          "scenario": "ne peut pas être sélectionné pour la commande d'expédition."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "L'enregistrement de la qualité à lui seul ne bloque pas la disponibilité des stocks.",
+          "affects": [
+            "Solde disponible"
+          ],
+          "scenario": "Bien que le contrôle soit en cours, les stocks peuvent être utilisés si d'autres politiques le permettent."
+        }
+      },
+      "blockPutawayUntilDecision": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Le produit en attente de qualité ne peut être déplacé sur l'étagère finale.",
+          "affects": [
+            "Tâche de rayonnage"
+          ],
+          "scenario": "Le produit attend dans la zone de qualité; Après la décision, il va à l'étagère normale."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Le rayonnage physique peut être fait en attendant la qualité.",
+          "affects": [
+            "Étagères"
+          ],
+          "scenario": "Le produit est placé sur l'étagère normale, mais sa qualité est maintenue."
+        }
+      },
+      "blockErpPostingUntilDecision": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "La note de livraison du PGI ne sera envoyée qu'une fois la décision sur la qualité prise.",
+          "affects": [
+            "Réception du PGI"
+          ],
+          "scenario": "Lorsque la décision est passée ou a échoué, une lettre de livraison obligatoire est envoyée."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Le résultat de qualité ne freine pas le transfert ERP.",
+          "affects": [
+            "Transfert de PGI"
+          ],
+          "scenario": "Lorsque l'examen est terminé, la note de livraison peut être envoyée au PGI."
+        }
+      },
+      "requireManagerApprovalForRelease": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Le retour de la quarantaine au stock utilisable nécessite l'approbation de l'administrateur.",
+          "affects": [
+            "Qualité libérée"
+          ],
+          "scenario": "Retourne Qualité passée; Une fois que le gestionnaire approuve, le stock est ouvert."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "La décision de l'utilisateur de qualité autorisé libère le stock.",
+          "affects": [
+            "Jugement de qualité"
+          ],
+          "scenario": "Après le résultat passé, le stock est ouvert immédiatement."
+        }
+      },
+      "allowPartialDecision": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "La quantité d'un lot de qualité peut être divisée en différents résultats.",
+          "affects": [
+            "Lignes de décision sur la qualité",
+            "État des stocks"
+          ],
+          "scenario": "95 sur 100 AD sont acceptés et 5 sont rejetés."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Une seule décision de qualité est donnée à l'ensemble du lot.",
+          "affects": [
+            "Jugement de qualité"
+          ],
+          "scenario": "Tous les 100 AD seront passés ou échoués."
+        }
+      },
+      "allowDirectReceiptWhenNoRule": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Stock sans règles de qualité est accepté sans attendre la qualité.",
+          "affects": [
+            "Acceptation des marchandises",
+            "Plan qualité"
+          ],
+          "scenario": "Les consommables qui n'ont pas la règle deviennent des stocks directs."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Bien qu'il ne s'agisse pas d'une règle, il faut un jugement de qualité ou une orientation manuelle.",
+          "affects": [
+            "Achèvement de l ' acceptation des marchandises"
+          ],
+          "scenario": "Tous les produits ne peuvent pas être complétés sans être renvoyés à l'équipe de qualité."
+        }
+      },
+      "blockReceiptWhenLotMissing": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "En stock avec suivi des lots, l'acceptation ne peut pas être terminée sans entrer dans le lot.",
+          "affects": [
+            "Vérification de l'acceptation des marchandises"
+          ],
+          "scenario": "Si le champ Lot est vide, l'erreur de correction est affichée à l'utilisateur."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Le module qualité n'empêche pas séparément les pénuries de lots.",
+          "affects": [
+            "Acceptation des marchandises"
+          ],
+          "scenario": "Si la politique de suivi des stocks le permet, des progrès sont réalisés sans lots."
+        }
+      },
+      "blockReceiptWhenSerialMissing": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "En stock avec suivi de série, l'acceptation ne peut être effectuée sans entrer le numéro de série requis.",
+          "affects": [
+            "Code à barres/vérification en série"
+          ],
+          "scenario": "Si 3 séries AD sont requises, trois séries doivent être lues."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Le module qualité n'empêche pas les défaillances série séparément.",
+          "affects": [
+            "Acceptation des marchandises"
+          ],
+          "scenario": "Si la politique de suivi des stocks est appropriée, des progrès peuvent être réalisés sans série."
+        }
+      },
+      "blockReceiptWhenExpiryMissing": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Dans le stock obligatoire SKT, l'acceptation ne peut pas être effectuée sans entrer la date.",
+          "affects": [
+            "Vérification de l'acceptation des marchandises"
+          ],
+          "scenario": "Si la date d'expiration du lot alimentaire est vide, l'enregistrement sera rejeté."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Le module qualité n'empêche pas non plus la déficience SKT.",
+          "affects": [
+            "Acceptation des marchandises"
+          ],
+          "scenario": "Si la politique sur les stocks n'est pas obligatoire, procéder sans date."
+        }
+      }
+    },
+    "packing": {
+      "requirePacking": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Il est obligatoire de créer un paquet avant l'expédition/départ.",
+          "affects": [
+            "Centre d'affaires de l'emballage",
+            "porte d'expédition"
+          ],
+          "scenario": "L'expédition ne peut être effectuée sans avoir pris le produit collecté dans le colis."
+        },
+        "false": {
+          "summary": "Ce contrôle est désactivé; L'obligation pertinente ne s'applique pas.",
+          "effect": "L'étape d'emballage est facultative.",
+          "affects": [
+            "Achèvement de l'expédition"
+          ],
+          "scenario": "Le produit en vrac passe directement au chargement."
+        }
+      },
+      "allowPartialPacking": {
+        "true": {
+          "summary": "Ce contrôle s'applique aux opérations actives et nouvelles.",
+          "effect": "Une partie de la quantité collectée peut être emballée et laissée ouverte.",
+          "affects": [
+            "lignes de paquets",
+            "Montant restant"
+          ],
+          "scenario": "60 de 100 AD sont pris dans le premier groupe de colis."
+        },
+        "false": {
+          "summary": "Ce contrôle est désactivé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Toute la quantité appropriée est attendue lors de la même séance d'emballage.",
+          "affects": [
+            "fermeture du colis"
+          ],
+          "scenario": "Le processus ne se ferme pas lorsque 60/100 est emballé."
+        }
+      },
+      "allowMixedStock": {
+        "true": {
+          "summary": "Ce contrôle s'applique aux opérations actives et nouvelles.",
+          "effect": "Le même colis peut contenir différents codes de stock.",
+          "affects": [
+            "Vérification du contenu du colis"
+          ],
+          "scenario": "Trois produits différents du même client sont collectés dans une seule boîte."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Chaque paquet porte un seul code de stock.",
+          "affects": [
+            "Vérification du contenu du colis"
+          ],
+          "scenario": "Lorsqu'un stock différent est scanné, un nouveau paquet est demandé."
+        }
+      },
+      "allowMixedLot": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Différents lots pour le même stock peuvent être emballés dans le même emballage.",
+          "affects": [
+            "Traçabilité des lots",
+            "Contenu du colis"
+          ],
+          "scenario": "LOT-A et LOT-B sont mis sur la même palette."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Le paquet est limité à un lot.",
+          "affects": [
+            "Contenu du colis"
+          ],
+          "scenario": "Une nouvelle boîte/palette est ouverte pour le deuxième lot."
+        }
+      },
+      "allowMixedCustomer": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Le même paquet peut contenir des lignes de différents clients.",
+          "affects": [
+            "Séparation des clients",
+            "Étiquette de l'emballage"
+          ],
+          "scenario": "Un paquet multi-clients est préparé dans le cadre de la consolidation interne des transferts."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Le paquet appartient à un seul client.",
+          "affects": [
+            "Vérification du colis"
+          ],
+          "scenario": "Si le produit d'un autre client est scanné, il sera rejeté."
+        }
+      },
+      "requireSerialLotScan": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Le produit n'est pas ajouté à l'emballage avant que les informations de série/lot soient vérifiées avec le code à barres.",
+          "affects": [
+            "Scannage de l'emballage",
+            "Traçabilité"
+          ],
+          "scenario": "L'identité du périphérique série dans le colis est vérifiée par balayage du code-barres série."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "L'information de suivi peut être obtenue à partir de la sélection actuelle des stocks.",
+          "affects": [
+            "Emballage"
+          ],
+          "scenario": "Le produit non-série est emballé avec entrée de quantité."
+        }
+      },
+      "requireWeight": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Le poids réel est obligatoire à la fermeture de l'emballage.",
+          "affects": [
+            "Fermer le paquet",
+            "Document de transport"
+          ],
+          "scenario": "Le colis ne peut pas être fermé sans le peser."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Le poids est facultatif.",
+          "affects": [
+            "Fermeture de l'emballage"
+          ],
+          "scenario": "Le petit paquet à base de quantité est fermé sans poids."
+        }
+      },
+      "requireDimensions": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Le colis ne sera fermé que si la largeur, la longueur et la hauteur sont entrées.",
+          "affects": [
+            "Fermeture de l'emballage",
+            "Calcul du volume"
+          ],
+          "scenario": "Trois dimensions de la boîte de cargaison sont enregistrées."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Les dimensions de l'emballage sont facultatives.",
+          "affects": [
+            "Fermeture de l'emballage"
+          ],
+          "scenario": "Le boîtier standard est fermé sans entrer dans des dimensions supplémentaires."
+        }
+      },
+      "requireSscc": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Chaque unité logistique doit avoir un SSCC valide.",
+          "affects": [
+            "Étiquette de l'emballage",
+            "Vérification du code à barres"
+          ],
+          "scenario": "La balise SSCC est créée lorsque la palette se ferme."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Sans SSCC, le paquet peut être fermé.",
+          "affects": [
+            "Étiquette de l'emballage"
+          ],
+          "scenario": "La boîte d'utilisation interne est suivie par le numéro de paquet local."
+        }
+      },
+      "autoGenerateSscc": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Si le SSCC est obligatoire, le système génère le prochain numéro unique.",
+          "affects": [
+            "Règle du code à barres",
+            "Étiquette de l'emballage"
+          ],
+          "scenario": "Lorsqu'une nouvelle palette est ouverte, l'utilisateur ne tape pas un nombre."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "SSCC est reçu du système utilisateur/externe.",
+          "affects": [
+            "Création d'un paquet"
+          ],
+          "scenario": "Le code-barres SSCC du fournisseur est scanné."
+        }
+      },
+      "autoPrintLabelOnClose": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Lorsque le paquet est fermé, l'impression d'étiquettes est automatiquement ouverte.",
+          "affects": [
+            "Police d'impression",
+            "Étiquette de l'emballage"
+          ],
+          "scenario": "L'étiquette est retirée dès que la boîte est fermée."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "L'étiquette est imprimée par commande utilisateur.",
+          "affects": [
+            "Affichage de l'étiquette"
+          ],
+          "scenario": "L'opérateur sélectionne l'étiquette d'impression dans la liste des paquets."
+        }
+      },
+      "allowReopen": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Un colis fermé peut être rouvert par une opération autorisée.",
+          "affects": [
+            "État du colis",
+            "Vérification des comptes"
+          ],
+          "scenario": "Lorsque le produit manquant est remarqué, le paquet est à nouveau ouvert."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Un colis fermé ne peut être modifié.",
+          "affects": [
+            "État du colis"
+          ],
+          "scenario": "Correction nécessite annulation / nouveau paquet."
+        }
+      },
+      "allowRepack": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Le contenu du paquet peut être déplacé vers un autre paquet.",
+          "affects": [
+            "Reconditionnement",
+            "Mouvement de colis"
+          ],
+          "scenario": "Le contenu du colis endommagé est transféré au nouveau colis."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Le déplacement du contenu entre les paquets est évité.",
+          "affects": [
+            "Opérations de paquetage"
+          ],
+          "scenario": "Un mauvais colis nécessite un processus d'annulation."
+        }
+      },
+      "weightTolerancePercent": {
+        "default": {
+          "summary": "La différence admissible entre le poids prévu et le poids réel du colis.",
+          "effect": "Si la tolérance est dépassée, la fermeture du paquet est mise en garde ou bloquée.",
+          "affects": [
+            "Contrôle de pesée des colis"
+          ],
+          "scenario": "98 à 102 kg sont acceptés à une tolérance prévue de 100 kg et de 2 %."
+        }
+      },
+      "closePolicy": {
+        "Manual": {
+          "summary": "Le paquet se ferme quand l'utilisateur dit \"Fermer\".",
+          "effect": "Le contrôle de l'utilisateur est attendu même si le contenu est complet.",
+          "affects": [
+            "Fermeture de l'emballage"
+          ],
+          "scenario": "L'opérateur ferme le paquet après la dernière vérification."
+        },
+        "AutoWhenComplete": {
+          "summary": "Le paquet se ferme automatiquement lorsque le contenu prévu est terminé.",
+          "effect": "Aucun clic de fermeture supplémentaire nécessaire.",
+          "affects": [
+            "Scannage de l'emballage",
+            "Balise"
+          ],
+          "scenario": "Lorsque le produit final est scanné, la boîte est fermée et le processus d'étiquetage commence."
+        }
+      },
+      "releasePolicy": {
+        "Manual": {
+          "summary": "Le colis fermé est remis séparément pour expédition.",
+          "effect": "La fermeture de l'emballage à elle seule ne rend pas le bateau.",
+          "affects": [
+            "Libération du colis"
+          ],
+          "scenario": "Après le contrôle de la qualité, le superviseur ouvre le colis pour l'expédition."
+        },
+        "OnClose": {
+          "summary": "Lorsque le colis est fermé, il est prêt pour l'expédition automatique.",
+          "effect": "L'étape de sortie séparée est ignorée.",
+          "affects": [
+            "Préparation de l'expédition"
+          ],
+          "scenario": "Il apparaît dans la liste de chargement dès que le colis est fermé."
+        }
+      }
+    },
+    "project": {
+      "numberLocale": {
+        "tr-TR": {
+          "summary": "Les numéros sont affichés avec les séparateurs turcs.",
+          "effect": "Le séparateur des milliers est un point, le séparateur décimal est une virgule.",
+          "affects": [
+            "Tous les écrans montant, solde, prix et rapport"
+          ],
+          "scenario": "1234.5 apparaît comme 1234.50."
+        },
+        "en-US": {
+          "summary": "Les numéros sont affichés avec des séparateurs anglais (US).",
+          "effect": "Les milliers de séparateurs sont une virgule, le séparateur décimal est une période.",
+          "affects": [
+            "Toutes les représentations numériques"
+          ],
+          "scenario": "1234.5 apparaît comme étant 1 234.50."
+        },
+        "de-DE": {
+          "summary": "Les chiffres sont représentés par des séparateurs allemands.",
+          "effect": "Le séparateur des milliers est un point, le séparateur décimal est une virgule.",
+          "affects": [
+            "Toutes les représentations numériques"
+          ],
+          "scenario": "1234.5 apparaît comme 1234.50."
+        }
+      },
+      "decimalPlaces": {
+        "default": {
+          "summary": "Nombre de décimales à afficher en quantités et en valeurs numériques.",
+          "effect": "La valeur calculée ne change pas; Cependant, l'affichage à l'utilisateur et la sensibilité d'entrée sont normalisés.",
+          "affects": [
+            "Grilles",
+            "Formulaires",
+            "Impression PDF/Excel"
+          ],
+          "scenario": "Si 3 chiffres sont sélectionnés, le montant 1.5 s'élève à 1 500."
+        }
+      },
+      "dateFormat": {
+        "default": {
+          "summary": "Déterminer l'ordre dans lequel les dates seront affichées à l'écran.",
+          "effect": "La date UTC dans la base de données ne change pas; Seul le style de présentation change.",
+          "affects": [
+            "Tous les champs de date",
+            "Rapports et documents"
+          ],
+          "scenario": "8 août 2026, 08.08.2026 apparaît dans la sélection dd.MM.aaaa."
+        }
+      },
+      "timeFormat": {
+        "default": {
+          "summary": "Spécifie le format 24/12 heures et secondes de l'affichage de l'heure.",
+          "effect": "Le temps UTC enregistré ne change pas; La vue de l'utilisateur change.",
+          "affects": [
+            "Tous les champs heure et date/heure"
+          ],
+          "scenario": "Lorsque vous sélectionnez HH:mm:ss, le temps apparaît comme 16:05:09."
+        }
+      },
+      "yearFormat": {
+        "default": {
+          "summary": "Spécifie la représentation à deux ou quatre chiffres de l'année.",
+          "effect": "Elle n'affecte que l'apparence, et non les données du document.",
+          "affects": [
+            "Année labels et rapports"
+          ],
+          "scenario": "2026 apparaît dans la sélection aaaa, 26 dans la sélection aaa."
+        }
+      },
+      "timeZoneId": {
+        "default": {
+          "summary": "UTC est le fuseau horaire par défaut dans lequel les enregistrements seront traduits à l'utilisateur.",
+          "effect": "Les dates de l'API restent UTC; elles sont converties à l'heure de la zone sélectionnée à l'écran.",
+          "affects": [
+            "Périodes de vérification",
+            "Dates d'exploitation",
+            "Rapports"
+          ],
+          "scenario": "13:00 UTC, 16:00 est montré dans la sélection Europe/Istanbul.",
+          "warning": "Un changement de fuseau horaire ne modifie pas la valeur UTC des anciens enregistrements."
+        }
+      },
+      "passwordMinimumLength": {
+        "default": {
+          "summary": "Le nombre minimum de caractères pour les mots de passe nouveaux ou modifiés.",
+          "effect": "Le module d'identité rejette les mots de passe plus courts.",
+          "affects": [
+            "Création d'un utilisateur",
+            "modifier le mot de passe",
+            "réinitialiser le mot de passe"
+          ],
+          "scenario": "Si 8 est sélectionné, un mot de passe de 7 caractères ne peut pas être enregistré."
+        }
+      },
+      "passwordMaximumLength": {
+        "default": {
+          "summary": "C'est la limite supérieure du mot de passe acceptée par le système.",
+          "effect": "C'est la limite supérieure fixe de l'infrastructure de sécurité et ne peut pas être changé de cet écran.",
+          "affects": [
+            "Authentification"
+          ],
+          "scenario": "L'utilisateur définit le mot de passe avec le nombre maximum de caractères affichés."
+        }
+      },
+      "sendSerialsToErp": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "L'information en série dans les opérations WMS est également envoyée aux lignes de documents ERP.",
+          "affects": [
+            "Acceptation des marchandises",
+            "Transfert",
+            "PGI pour les opérations d ' expédition et d ' entrepôt"
+          ],
+          "scenario": "Lorsque le produit série est accepté, la liste série est transférée à la note de livraison Netsis."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Les séries ne sont vues que dans WMS; Le montant des documents est envoyé au PGI.",
+          "affects": [
+            "Intégration des PGI",
+            "Registre série WMS"
+          ],
+          "scenario": "WMS conserve les stocks en série, seulement 10 AD sont attribués à Netsis."
+        }
+      }
+    },
+    "subcontracting": {
+      "requireSupplier": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Chaque document d'entrée/sortie du sous-traitant est lié à un fournisseur.",
+          "affects": [
+            "Création de commandes de sous-traitance",
+            "Cartographie des clients du PGI"
+          ],
+          "scenario": "Le matériel envoyé à la peinture est enregistré avec le client sous-traitant sélectionné."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "La sélection des fournisseurs n'est pas obligatoire.",
+          "affects": [
+            "Création de commandes de sous-traitance"
+          ],
+          "scenario": "Le transfert interne de l'atelier est ouvert sans sélectionner le transfert actuel."
+        }
+      },
+      "requireSubcontractOrderForReceipt": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "L'acceptation du retour de sous-traitance doit être fondée sur une commande de sous-traitance valide.",
+          "affects": [
+            "Connexion au contrat",
+            "Solde des commandes"
+          ],
+          "scenario": "Les retours sans numéro de commande ne seront pas acceptés."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Il peut être possible d'accepter des retours de sous-traitants sans commande.",
+          "affects": [
+            "Connexion au contrat"
+          ],
+          "scenario": "La transaction urgente est acceptée sans lien de commande."
+        }
+      },
+      "requireIssueBeforeReceipt": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Le montant de la déclaration ne peut dépasser le montant précédemment envoyé au sous-traitant.",
+          "affects": [
+            "Connexion au contrat",
+            "Montant envoyé/réservé"
+          ],
+          "scenario": "Si 10 AD est envoyé, un maximum de 10 AD sera retourné."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Un dossier de retour peut être ouvert sans la précédente émission de sous-traitant.",
+          "affects": [
+            "Connexion au contrat"
+          ],
+          "scenario": "Le produit envoyé avant d'être transféré au système est accepté directement."
+        }
+      },
+      "allowOrderlessIssue": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Le matériel peut être délivré au fournisseur sans ordonnance de sous-traitance.",
+          "affects": [
+            "externalisé"
+          ],
+          "scenario": "Le matériel est envoyé sans commande pour le traitement des échantillons."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Chaque sortie de sous-traitant est liée à la commande.",
+          "affects": [
+            "Sous-traitance"
+          ],
+          "scenario": "Un ordre ne peut pas être enregistré sans avoir sélectionné l'ordre."
+        }
+      },
+      "allowOrderlessReceipt": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Les retours des sous-traitants peuvent être acceptés sans commande.",
+          "affects": [
+            "Connexion au contrat"
+          ],
+          "scenario": "Les anciens travaux sont repris sans ordonnance."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "L'ordonnance est obligatoire pour la sous-traitance.",
+          "affects": [
+            "Connexion au contrat"
+          ],
+          "scenario": "L'acceptation ne peut pas être commencée sans la sélection de la commande."
+        }
+      },
+      "allowSupplierToSupplier": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Le matériel peut être dirigé d'un sous-traitant à un autre sans retourner à l'entrepôt principal.",
+          "affects": [
+            "Voie de transfert du contrat"
+          ],
+          "scenario": "Le produit du peintre est envoyé directement au galvaniseur."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Le transfert direct entre sous-traitants est interdit.",
+          "affects": [
+            "Voie de transfert du contrat"
+          ],
+          "scenario": "Le produit doit d'abord être accepté dans l'entrepôt de l'entreprise."
+        }
+      },
+      "allowPartialIssue": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Une partie de la production sous-traitée prévue peut être expédiée.",
+          "affects": [
+            "externalisé",
+            "Montant restant"
+          ],
+          "scenario": "60 AD de 100 AD sont envoyés avec le premier véhicule."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Le sous-traitant attend toute la quantité.",
+          "affects": [
+            "externalisé"
+          ],
+          "scenario": "La sortie n'est pas terminée alors que 60/100 est prêt."
+        }
+      },
+      "allowPartialReceipt": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Le retour du contrat peut être accepté séparément.",
+          "affects": [
+            "Connexion au contrat",
+            "Montant restant"
+          ],
+          "scenario": "40 AD de 100 emplois AD sont acceptés aujourd'hui."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "L'acceptation de retour s'attend au plein montant.",
+          "affects": [
+            "Connexion au contrat"
+          ],
+          "scenario": "Le document ne se termine pas par une rotation de 40/100."
+        }
+      },
+      "requireQualityOnReceipt": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Le retour du sous-traitant est dirigé vers le contrôle de la qualité.",
+          "affects": [
+            "Connexion au contrat",
+            "Examen de la qualité"
+          ],
+          "scenario": "Le retour du revêtement est mis en stock après approbation de qualité."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Une porte de qualité automatique n'est pas requise pour la sous-traitance.",
+          "affects": [
+            "Connexion au contrat"
+          ],
+          "scenario": "Le produit transformé standard est directement mis en stock."
+        }
+      },
+      "requireTaskAssignment": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "L'ordre d'opération de sous-traitance doit être attribué à un utilisateur.",
+          "affects": [
+            "Pool de tâches",
+            "Ordres attribués"
+          ],
+          "scenario": "La tâche de sortie ne sera pas publiée à moins que l'entreposeur ne soit sélectionné."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "L'ordre peut se dérouler dans le pool de tâches sans affectation.",
+          "affects": [
+            "Pool de tâches"
+          ],
+          "scenario": "L'opérateur approprié prend la tâche lui-même."
+        }
+      },
+      "requireApproval": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "L'approbation autorisée est requise avant l'entrée en vigueur du contrat.",
+          "affects": [
+            "Confirmation de commande"
+          ],
+          "scenario": "Planificateur ouvre la commande; Une fois que le superviseur l'approuve, il est placé dans l'entrepôt."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Le document actuel peut être mis en service directement.",
+          "affects": [
+            "État de la commande"
+          ],
+          "scenario": "Une fois l'ordre enregistré, la mission peut commencer."
+        }
+      },
+      "allowOverReceipt": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Le retour sous-traité peut dépasser ce qui est expédié selon la tolérance définie.",
+          "affects": [
+            "Contrôle de la quantité des intrants contractuels"
+          ],
+          "scenario": "Avec la différence de feu/mesure, 101 kg sont acceptés au lieu de 100."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Plus de retours que le montant envoyé sera bloqué.",
+          "affects": [
+            "Connexion au contrat"
+          ],
+          "scenario": "100 AD sortie 101 AD est rejeté."
+        }
+      },
+      "overReceiptTolerancePercent": {
+        "default": {
+          "summary": "Le pourcentage maximal de rendement excédentaire de sous-traitance.",
+          "effect": "Utilisé seulement lorsque plusieurs admissions sont autorisées.",
+          "affects": [
+            "Contrôle de la quantité des intrants contractuels"
+          ],
+          "scenario": "La tolérance de 100 kg et de 2 % est acceptée comme maximum de 102 kg."
+        }
+      },
+      "defaultLeadTimeDays": {
+        "default": {
+          "summary": "Il s'agit du nombre par défaut de délais pour les nouveaux emplois sous-traités.",
+          "effect": "La date de retour prévue est suggérée en ajoutant cette date à la date du document.",
+          "affects": [
+            "Délai de commande du contrat",
+            "Rapports de latence"
+          ],
+          "scenario": "Si 5 jours sont sélectionnés, l'emploi ouvert le 8 août sera livré le 13 août."
+        }
+      }
+    },
+    "production": {
+      "productionOrderSource": {
+        "NetsisErpFunctions": {
+          "summary": "L'ordre de travail et la recette sont lus à partir des fonctions instantanées Netsis.",
+          "effect": "Les tableaux sources d'intégration WMS ne sont pas utilisés dans la liste.",
+          "affects": [
+            "Sélection des commandes de production",
+            "Stylos d'ordonnance"
+          ],
+          "scenario": "L'opérateur sélectionne l'ordre de travail ouvert dans Netsis et apporte les lignes de matériaux."
+        },
+        "WmsIntegrationTables": {
+          "summary": "L'ordre de travail et la recette sont lus à partir des tableaux d'intégration WMS.",
+          "effect": "Système externe comme Windbox alimente RII PR SOURCE ORDER et lignes.",
+          "affects": [
+            "Sélection des commandes de production",
+            "Intégration du système externe"
+          ],
+          "scenario": "Windbox écrit des commandes avec le code source WINDBOX; WMS liste cet ordre."
+        },
+        "ErpAndWms": {
+          "summary": "Les commandes ERP et WMS sont listées ensemble.",
+          "effect": "Le conflit avec l'étiquette du système source et la clé unique est évité.",
+          "affects": [
+            "Sélection des commandes de production"
+          ],
+          "scenario": "Les commandes ERP et WINDBOX avec le même numéro apparaissent séparément avec la balise source."
+        }
+      },
+      "wmsSourceSystemCode": {
+        "default": {
+          "summary": "est le code système externe à lire dans la table d'intégration WMS.",
+          "effect": "Seules les commandes actives et en version appartenant à ce code sont listées.",
+          "affects": [
+            "RII PR SOURCE ORDER",
+            "Sélection des commandes de production"
+          ],
+          "scenario": "Si WINDBOX est tapé, les enregistrements SourceSystemCode=WINDBOX sont affichés."
+        }
+      },
+      "requireProductionOrderReference": {
+        "true": {
+          "summary": "Ce contrôle s'applique aux opérations actives et nouvelles.",
+          "effect": "Le transfert doit être lié à l'ordre de production valide.",
+          "affects": [
+            "Création d'un transfert vers la production"
+          ],
+          "scenario": "Le transfert ne peut être enregistré sans avoir sélectionné l'ordre de travail."
+        },
+        "false": {
+          "summary": "Ce contrôle est désactivé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Un transfert vers une production non planifiée peut être ouvert sans commande de travail.",
+          "affects": [
+            "transfert manuel"
+          ],
+          "scenario": "La consommation urgente est ouverte en choisissant le stock et la quantité."
+        }
+      },
+      "allowManualTransfer": {
+        "true": {
+          "summary": "Ce contrôle s'applique aux opérations actives et nouvelles.",
+          "effect": "L'option de transfert à la production ponctuelle ou manuelle est disponible.",
+          "affects": [
+            "Transfert vers une nouvelle production"
+          ],
+          "scenario": "Le matériel urgent est envoyé à la production avant l'arrivée de la commande."
+        },
+        "false": {
+          "summary": "Ce contrôle est désactivé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Seul le transfert basé sur l'ordre de travail source est ouvert.",
+          "affects": [
+            "nouveau transfert"
+          ],
+          "scenario": "La sélection manuelle des stocks n'est pas disponible dans le menu."
+        }
+      },
+      "requireErpMasterDataForManualTransfer": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "En transfert manuel, le code stock/entrepôt/structure est vérifié depuis le miroir ERP.",
+          "affects": [
+            "Vérification manuelle du transfert"
+          ],
+          "scenario": "Le transfert imprévu ne peut être ouvert avec un stock non défini dans ERP."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Le transfert manuel peut se faire avec les données de base WMS.",
+          "affects": [
+            "Transfert manuel"
+          ],
+          "scenario": "S'il y a un stock actif dans WMS, il peut être sélectionné sans contrôle ERP."
+        }
+      },
+      "allowAutomaticGeneration": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Les transferts peuvent être générés automatiquement à partir de commandes sources appropriées.",
+          "affects": [
+            "Travail d'intégration",
+            "Projet de transfert"
+          ],
+          "scenario": "Lorsque l'ordre de production approuvé arrive, une ébauche de transfert est créée."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Le transfert est initié par l'utilisateur.",
+          "affects": [
+            "Nouveau transfert"
+          ],
+          "scenario": "L'ordre de travail est sélectionné dans la liste et un transfert manuel est créé."
+        }
+      },
+      "checkMaterialAvailability": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "La disponibilité des stocks de source est vérifiée lors de l'ouverture ou de l'ouverture d'une commande.",
+          "affects": [
+            "Vérification des commandes",
+            "Solde des sources"
+          ],
+          "scenario": "10 AD sont requis, s'il y a 8 AD, un avertissement manquant est affiché."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Pas de vérification préliminaire de la disponibilité des stocks; Il reste à collecter le contrôle final.",
+          "affects": [
+            "Ajout"
+          ],
+          "scenario": "La commande est ouverte, mais l'opérateur peut la trouver manquante sur l'étagère."
+        }
+      },
+      "blockOnShortage": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Le transfert de production ne peut commencer si le stock manque.",
+          "affects": [
+            "Démarrer une tâche"
+          ],
+          "scenario": "La tâche 8/10 est bloquée en stock."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Le stock incomplet peut être accepté avec un avertissement et transféré à un flux partiel.",
+          "affects": [
+            "Démarrer une tâche",
+            "Quantité manquante"
+          ],
+          "scenario": "La mission commence avec 8/10 stock, 2 AD est surveillé comme restant."
+        }
+      },
+      "requireTaskAssignment": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Au moins un utilisateur doit être affecté au flux correspondant.",
+          "affects": [
+            "Création d'une tâche",
+            "Ordres attribués"
+          ],
+          "scenario": "Les ordres ne peuvent être libérés sans avoir choisi le personnel."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "La tâche peut être abandonnée dans le pool sans affecter un utilisateur.",
+          "affects": [
+            "Pool de tâches"
+          ],
+          "scenario": "La tâche vacante est alors assumée par un employé."
+        }
+      },
+      "requireSourceProductionLocation": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Lors de la cueillette, le rack source de production est vérifié par code-barres.",
+          "affects": [
+            "Ajout",
+            "Solde de conservation"
+          ],
+          "scenario": "Si le stock correct est scanné de la mauvaise étagère, il sera rejeté."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "L'exigence de rack de ressources ne s'applique pas.",
+          "affects": [
+            "Recouvrement"
+          ],
+          "scenario": "Le système peut résoudre les ressources à partir de l'équilibre approprié."
+        }
+      },
+      "requireTargetProductionLocation": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Le plateau cible dans la zone de production doit être défini.",
+          "affects": [
+            "Confirmation de livraison/transfert",
+            "Solde de la tablette cible"
+          ],
+          "scenario": "Le matériel est affecté au support de production."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "La sélection du rack cible n'est pas obligatoire.",
+          "affects": [
+            "Fin du transfert"
+          ],
+          "scenario": "Le matériel est livré au niveau de l'entrepôt cible."
+        }
+      },
+      "allowPartialSupply": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Une partie de la demande peut être livrée à la production et une nouvelle commande de travail peut être ouverte pour le reste.",
+          "affects": [
+            "Confirmation du transfert",
+            "Ordre restant"
+          ],
+          "scenario": "8 AD de 10 demandes AD sont livrées; Une commande de continuation est créée pour 2 AD."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "La confirmation de transfert attend le montant total de la demande.",
+          "affects": [
+            "Confirmation du transfert"
+          ],
+          "scenario": "Complet est bloqué dans 8/10 cas."
+        }
+      },
+      "allowOverIssue": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "La sortie à la production selon le calendrier peut se faire dans les limites de la tolérance.",
+          "affects": [
+            "Montant du recouvrement",
+            "Confirmation du transfert"
+          ],
+          "scenario": "La demande de 100 kg est indiquée avec une tolérance de 101 kg."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "La production dépassant le montant de la demande est bloquée.",
+          "affects": [
+            "Numérisation du code-barres"
+          ],
+          "scenario": "10 La demande AD rejette le 11e point."
+        }
+      },
+      "overIssueTolerancePercent": {
+        "default": {
+          "summary": "Le pourcentage maximal de la production excédentaire.",
+          "effect": "S'applique seulement lorsque la sortie redondante est activée.",
+          "affects": [
+            "Contrôle de la quantité de collecte"
+          ],
+          "scenario": "100 kg et un maximum de 101 kg avec une tolérance de 1 %."
+        }
+      },
+      "requireApproval": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "La personne/superviseur qui reçoit le produit pour la production donne l'approbation finale du transfert.",
+          "affects": [
+            "Deuxième étape confirmation du transfert"
+          ],
+          "scenario": "L'entrepositaire perçoit; Le responsable de la production l'approuve lors de la livraison physique."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Une fois la collecte terminée, le transfert peut être effectué automatiquement.",
+          "affects": [
+            "État du transfert"
+          ],
+          "scenario": "L'approbation séparée du bénéficiaire n'est pas requise."
+        }
+      },
+      "cancellationReturnPolicy": {
+        "OriginalSourceLocation": {
+          "summary": "Lors de l'annulation, le stock retourne sur l'étagère où il a été initialement collecté.",
+          "effect": "L'enregistrement des transactions protège l'étagère source.",
+          "affects": [
+            "Remboursement",
+            "Solde de conservation"
+          ],
+          "scenario": "Lorsque la série collectée est annulée, la même source est retournée à l'étagère."
+        },
+        "WarehouseDefaultReturnLocation": {
+          "summary": "Lors de l'annulation, l'étagère de retour par défaut de l'entrepôt est utilisée.",
+          "effect": "S'il n'y a pas d'entrepôt, la transaction est bloquée.",
+          "affects": [
+            "Remboursement",
+            "Réglage des étagères"
+          ],
+          "scenario": "Le matériel annulé va sur l'étagère RETURN-01."
+        },
+        "ManagerSelectionRequired": {
+          "summary": "Lors de l'annulation, l'administrateur sélectionne l'étagère de retour cible.",
+          "effect": "Le mouvement inverse ne peut être effectué sans avoir sélectionné l'étagère.",
+          "affects": [
+            "Annuler l'écran",
+            "Autorité"
+          ],
+          "scenario": "Le produit endommagé est sélectionné pour l'étagère de quarantaine au lieu de la source."
+        }
+      }
+    },
+    "kkd": {
+      "enableMaterialRequestOrderFlow": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Les demandes de matériel personnel fonctionnent avec Netsis commandes ouvertes.",
+          "affects": [
+            "Distribution des EPI",
+            "Groupe de travail sur la production"
+          ],
+          "scenario": "Les éléments d'ordre ouvert appartenant au client de l'employé sont sélectionnés."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Le canal de demande de matériel basé sur les commandes est fermé.",
+          "affects": [
+            "Distribution des EPI"
+          ],
+          "scenario": "La distribution n'est ouverte qu'à partir de la matrice des droits/processus manuel."
+        }
+      },
+      "requireOpenOrder": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "L'ordre net est obligatoire pour la distribution.",
+          "affects": [
+            "Nouvelle distribution d'EPI"
+          ],
+          "scenario": "Les documents ne peuvent être ouverts au personnel qui n'a pas d'ordre public."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "S'il y a un droit, la distribution EPI peut être effectuée sans commande.",
+          "affects": [
+            "Nouvelle distribution"
+          ],
+          "scenario": "L'allocation de gant périodique est livrée sans commande."
+        }
+      },
+      "allowMultipleOrdersPerDistribution": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Une seule distribution peut contenir des articles de différents ordres.",
+          "affects": [
+            "Lignes de distribution EPI"
+          ],
+          "scenario": "Chaussures et casques sont livrés en deux commandes dans la même livraison."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Une distribution est basée sur un seul ordre.",
+          "affects": [
+            "Distribution des EPI"
+          ],
+          "scenario": "Un document séparé est ouvert pour un autre point de commande."
+        }
+      },
+      "allowOpenOrderExcess": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "S'il y a une commande ouverte, la livraison au-dessus de la matrice des droits peut être possible.",
+          "affects": [
+            "Contrôle des droits",
+            "Quota"
+          ],
+          "scenario": "Des produits supplémentaires sont fournis au personnel dont l'indemnité annuelle a expiré à partir de la commande ouverte."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "La livraison ne peut pas dépasser le montant calculé.",
+          "affects": [
+            "Enquête sur les droits"
+          ],
+          "scenario": "Le deuxième produit est bloqué pour le personnel qui a 1 droit."
+        }
+      },
+      "requireManagerApprovalForExcess": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "La livraison non autorisée ne devient pas un problème d'entrepôt sans l'approbation du gestionnaire.",
+          "affects": [
+            "Approbation EPI",
+            "Sortie de l'entrepôt"
+          ],
+          "scenario": "Les demandes de casques supplémentaires sont soumises à l'approbation du gestionnaire."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "L'exploitant autorisé peut compléter l'excédent autorisé sans autorisation supplémentaire.",
+          "affects": [
+            "Distribution des EPI"
+          ],
+          "scenario": "Livraison supplémentaire avec commandes ouvertes est faite directement."
+        }
+      },
+      "requireEmployeeUserLink": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "La carte du personnel doit être liée à l'utilisateur WMS actif.",
+          "affects": [
+            "Vérification du personnel",
+            "Traçabilité"
+          ],
+          "scenario": "La livraison au personnel sans connexion utilisateur est bloquée."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Le personnel qui n'a pas de compte WMS peut également s'inscrire.",
+          "affects": [
+            "Distribution des EPI"
+          ],
+          "scenario": "La livraison est faite à l'employé sur le terrain via la carte du personnel."
+        }
+      },
+      "allowFutureDatedDistribution": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "La distribution future des EPI peut être enregistrée.",
+          "affects": [
+            "Date du document",
+            "Période de droits"
+          ],
+          "scenario": "La livraison du personnel devrait commencer la semaine prochaine."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "La date du document ne peut être postérieure à aujourd'hui.",
+          "affects": [
+            "Nouvelle distribution"
+          ],
+          "scenario": "Lorsque la date de demain est sélectionnée, une erreur de validation se produit."
+        }
+      }
+    },
+    "procurement": {
+      "allowMultipleRfqsPerRequest": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Plusieurs appels d'offres peuvent être ouverts à partir de la même demande.",
+          "affects": [
+            "Création d'une demande de devis",
+            "Chaîne de documents"
+          ],
+          "scenario": "Le premier tour est considéré comme coûteux; un deuxième tour fournisseur est ouvert pour la même demande."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "La demande est limitée à un appel d'offres actif.",
+          "affects": [
+            "Demande de devis"
+          ],
+          "scenario": "Pour ouvrir le deuxième RFQ, le cycle actuel est fermé en premier."
+        }
+      },
+      "allowPartialRfqLines": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Le prix de l'élément/quantité sélectionnée de la demande peut être établi.",
+          "affects": [
+            "Lignes RFQ",
+            "Montant de la demande ouverte"
+          ],
+          "scenario": "Seuls 3 éléments urgents sur une demande de 10 éléments seront inclus dans la QDP."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Tous les éléments ouverts de la demande sont inclus dans le RFQ ensemble.",
+          "affects": [
+            "Création de RFQ"
+          ],
+          "scenario": "La visite partielle ne peut pas être ouverte en sélectionnant un stylo."
+        }
+      },
+      "allowMultipleQuotesPerSupplier": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Le même fournisseur peut soumettre plusieurs dossiers de soumission pour la même tournée.",
+          "affects": [
+            "Inscription des offres"
+          ],
+          "scenario": "Le fournisseur présente une deuxième offre pour la marque de remplacement."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Un seul dossier de soumission est conservé par fournisseur.",
+          "affects": [
+            "Entrée du devis"
+          ],
+          "scenario": "Le nouveau prix est mis à jour avec la révision actuelle de l'offre."
+        }
+      },
+      "allowSplitAwardsAcrossSuppliers": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Les éléments/quantités de la demande peuvent être répartis entre différents fournisseurs.",
+          "affects": [
+            "Comparaison des offres",
+            "Création d'un ordre"
+          ],
+          "scenario": "5 articles sont donnés à la société A et 3 à la société B."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "La récompense résulte en un seul fournisseur.",
+          "affects": [
+            "Confirmation du devis"
+          ],
+          "scenario": "Toute la demande est adressée à l'entreprise sélectionnée."
+        }
+      },
+      "allowPartialOrderLines": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "La quantité sélectionnée du devis peut être convertie en commande.",
+          "affects": [
+            "Bon de commande",
+            "Montant restant"
+          ],
+          "scenario": "60 AD de 100 AD sont commandés."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "La ligne de devis se transforme en une commande avec la pleine quantité.",
+          "affects": [
+            "Création d'un ordre"
+          ],
+          "scenario": "L'entrée de la commande 60/100 est bloquée."
+        }
+      },
+      "allowMultipleOrdersPerQuote": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Plusieurs commandes peuvent être créées à partir de la même offre.",
+          "affects": [
+            "Chaîne d'appel d'offres"
+          ],
+          "scenario": "60 AD seront ouverts aujourd'hui, les 40 AD restants seront ouverts dans le prochain ordre."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "L'offre se transforme en une seule commande.",
+          "affects": [
+            "Création d'un ordre"
+          ],
+          "scenario": "L'ouverture de la deuxième commande est bloquée."
+        }
+      },
+      "allowSupplierQuantityChange": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Le fournisseur peut offrir une quantité différente de celle demandée.",
+          "affects": [
+            "Les lignes du portail"
+          ],
+          "scenario": "120 est offert en raison d'un forfait minimum pour 100 articles demandés."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Le montant de la soumission demeure le même que le montant demandé.",
+          "affects": [
+            "Entrée du devis"
+          ],
+          "scenario": "Le fournisseur entre seulement le prix et la date limite."
+        }
+      },
+      "allowZeroUnitPrice": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Le prix zéro est accepté pour un article gratuit/échantillon.",
+          "affects": [
+            "Vérification de l'offre"
+          ],
+          "scenario": "L'échantillon est envoyé avec 0 TL."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "Un prix positif est exigé pour chaque offre.",
+          "affects": [
+            "Envoyer une offre"
+          ],
+          "scenario": "0 article de prix empêche la soumission de soumission."
+        }
+      },
+      "requireSupplierDeliveryDate": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "La date limite est obligatoire pour chaque offre.",
+          "affects": [
+            "Envoyer une offre",
+            "Comparaison"
+          ],
+          "scenario": "Si la date limite est vide, le fournisseur ne peut pas envoyer l'offre."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "La date limite est facultative.",
+          "affects": [
+            "Entrée du devis"
+          ],
+          "scenario": "Seules les offres de prix peuvent être faites."
+        }
+      },
+      "allowSupplierRevisions": {
+        "true": {
+          "summary": "Cette vérification s'applique aux opérations actives et nouvelles.",
+          "effect": "Un cycle de révision peut être ouvert pour la proposition soumise.",
+          "affects": [
+            "Portail des fournisseurs",
+            "Historique de l'offre"
+          ],
+          "scenario": "Révision du prix des demandes d'achat; le fournisseur envoie une nouvelle version."
+        },
+        "false": {
+          "summary": "Ce contrôle est fermé; L'obligation pertinente ne s'applique pas.",
+          "effect": "L'offre soumise ne peut être modifiée.",
+          "affects": [
+            "État de l'offre"
+          ],
+          "scenario": "Le changement exige un nouveau dossier de soumission/round."
+        }
+      },
+      "supplierQuoteChannelMode": {
+        "InternalOnly": {
+          "summary": "Seul le personnel d'achat introduit les offres dans le système.",
+          "effect": "Aucun lien externe n'est envoyé au fournisseur.",
+          "affects": [
+            "Entrée du devis"
+          ],
+          "scenario": "Le spécialiste des achats enregistre l'offre de courrier électronique au système."
+        },
+        "PortalOptional": {
+          "summary": "L'offre peut être saisie par le portail ou l'utilisateur interne.",
+          "effect": "Les deux canaux peuvent être utilisés ensemble.",
+          "affects": [
+            "Portail des fournisseurs",
+            "Soumission interne"
+          ],
+          "scenario": "Une entreprise entre dans l'offre par le contact, l'autre par le personnel."
+        },
+        "PortalRequired": {
+          "summary": "L'offre n'est envoyée que par le biais de la connexion sécurisée du fournisseur.",
+          "effect": "L'utilisateur interne ne peut pas saisir l'offre finale au nom du fournisseur.",
+          "affects": [
+            "Portail des fournisseurs"
+          ],
+          "scenario": "Le fournisseur entre le prix et le délai à partir du lien dans l'e-mail."
+        }
+      },
+      "invitationValidityDays": {
+        "default": {
+          "summary": "Détermine combien de jours la connexion du fournisseur sera valide.",
+          "effect": "À la fin de la période, l'écran d'offre avec le jeton ne peut pas être ouvert.",
+          "affects": [
+            "Invitation du fournisseur",
+            "Sécurité du portail"
+          ],
+          "scenario": "Si 7 jours sont sélectionnés, la connexion apparaîtra expirée le huitième jour."
+        }
+      },
+      "maximumSupplierRevisionCount": {
+        "default": {
+          "summary": "Il s'agit de la série maximale de révisions permise pour une proposition.",
+          "effect": "Lorsque la limite est atteinte, une nouvelle révision ne peut être demandée.",
+          "affects": [
+            "Historique de révision de l'offre"
+          ],
+          "scenario": "Si 2 est sélectionné, le fournisseur peut expédier jusqu'à deux nouvelles versions."
+        }
+      },
+      "allowSupplierDraftSave": {
+        "true": {
+          "summary": "Ce contrôle s'applique aux opérations actives et nouvelles.",
+          "effect": "Le fournisseur peut faire une inscription provisoire sans envoyer l'offre.",
+          "affects": [
+            "Portail des fournisseurs"
+          ],
+          "scenario": "La citation multi-éléments est enregistrée aujourd'hui et terminée demain."
+        },
+        "false": {
+          "summary": "Ce contrôle est désactivé; L'obligation pertinente ne s'applique pas.",
+          "effect": "L'entrée du portail doit être soumise en une seule session.",
+          "affects": [
+            "Portail des fournisseurs"
+          ],
+          "scenario": "Si la page est fermée, l'entrée non soumise n'est pas stockée."
+        }
+      }
+    },
+    "barcode": {
+      "displayName": {
+        "default": {
+          "summary": "le nom du profil qui apparaît à l'utilisateur; Il ne modifie pas la valeur du code-barres générée.",
+          "effect": "Ce nom descriptif est affiché dans la carte, la fenêtre d'édition et les sélections d'opération.",
+          "affects": [
+            "Carte politique du code-barres",
+            "Choix de l'utilisateur",
+            "Écrans de fonctionnement"
+          ],
+          "scenario": "Le nom « Produit / Série » indique à l'opérateur que le profil est pour les stocks avec suivi en série; Il n'est pas écrit dans le contenu du code-barres."
+        }
+      },
+      "prefix": {
+        "default": {
+          "summary": "Ajoute un code de type constant au début du code-barres.",
+          "effect": "Le scanner peut distinguer plus rapidement à quel profil appartient le code-barres; Si elle est laissée en blanc, le code-barres commence par le premier segment.",
+          "affects": [
+            "Modèle de code-barres",
+            "Redirection du navigateur",
+            "Sortie de l'étiquette"
+          ],
+          "scenario": "Si le préfixe est WMS-S, le code à barres commence par WMS-S/150-01/SN-1.",
+          "warning": "Modifier le préfixe ne change pas les étiquettes imprimées antérieurement; les codes-barres nouvellement produits utilisent le nouveau préfixe."
+        }
+      },
+      "separator": {
+        "default": {
+          "summary": "est le caractère séparateur entre le préfixe et les segments.",
+          "effect": "Lors de la génération du code-barres, toutes les pièces sont combinées avec cette valeur; l'analyse et la lisibilité humaine varient en conséquence.",
+          "affects": [
+            "Modèle de code-barres",
+            "Analyse du code barre",
+            "Sortie de l'étiquette"
+          ],
+          "scenario": "Si le séparateur est de 1/, les valeurs de STK-1, SN-10 et LOT-A deviennent STK-1/SN-10/LOT-A.",
+          "warning": "L'analyse peut ne pas être claire si le séparateur sélectionné est utilisé dans le code de stock ou la valeur de série."
+        }
+      },
+      "isEnabled": {
+        "true": {
+          "summary": "Le profil peut être utilisé dans de nouveaux processus de génération de codes-barres et de prévisualisation.",
+          "effect": "Les opérations de cette portée peuvent produire des codes-barres avec un motif défini.",
+          "affects": [
+            "Étiquette d'acceptation des marchandises",
+            "Service de production de codes-barres",
+            "Écrans de fonctionnement"
+          ],
+          "scenario": "Lorsque le profil Produit / Série est ouvert, une étiquette série est créée dès la réception des marchandises."
+        },
+        "false": {
+          "summary": "Le profil est fermé à une nouvelle génération de codes-barres ; les codes-barres passés sont conservés.",
+          "effect": "Avec cette portée, la demande de produire un nouveau code à barres est bloquée, les enregistrements existants et les étiquettes imprimées ne sont pas supprimés.",
+          "affects": [
+            "Nouvelle génération de codes-barres",
+            "Impression des étiquettes"
+          ],
+          "scenario": "Une fois le profil fermé, une nouvelle étiquette série ne peut être générée; L'étiquette imprimée hier est toujours contestable."
+        }
+      }
+    }
+  }
+}
