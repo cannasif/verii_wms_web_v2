@@ -2,9 +2,11 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { Loader2, Save, SlidersHorizontal } from 'lucide-react';
 import { toast } from 'sonner';
 import { AppDropdown } from '@/components/shared/AppDropdown';
+import { ParameterFieldGuide, ParameterPageGuide, ParameterToggleCard } from '@/components/shared/ParameterGuidance';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { api } from '@/lib/axios';
 import { useAuthStore } from '@/stores/auth-store';
+import { parameterGuidance } from '@/features/settings-guidance/parameter-guidance.catalog';
 
 type Policy = {
   id: number;
@@ -74,9 +76,11 @@ export function WarehouseInboundPolicyPage() {
         <p className="text-sm text-slate-500">{t('policy.description')}</p>
       </header>
 
+      <ParameterPageGuide translationKey="inbound" title="Ambar giriş ayar rehberi" description="Seçimin giriş miktarını, onayları, kalite beklemesini, raflamayı ve ERP aktarımını nasıl değiştirdiğini alan bazında gösterir." />
+
       <div className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5">
         <div className="grid gap-4 md:grid-cols-2">
-          <Field label={t('policy.fields.overReceipt')}>
+          <Field label={t('policy.fields.overReceipt')} guideKey="overReceiptPolicy" value={form.overReceiptPolicy}>
             <AppDropdown
               value={form.overReceiptPolicy}
               onValueChange={(value) => {
@@ -90,7 +94,7 @@ export function WarehouseInboundPolicyPage() {
               ]}
             />
           </Field>
-          <Field label={t('policy.fields.overReceiptTolerance')}>
+          <Field label={t('policy.fields.overReceiptTolerance')} guideKey="overReceiptTolerancePercent" value={form.overReceiptTolerancePercent} currentValue={`%${form.overReceiptTolerancePercent}`}>
             <input
               className="input"
               type="number"
@@ -102,7 +106,7 @@ export function WarehouseInboundPolicyPage() {
               onChange={(event) => set('overReceiptTolerancePercent', Number(event.target.value))}
             />
           </Field>
-          <Field label={t('policy.fields.inventoryAvailability')}>
+          <Field label={t('policy.fields.inventoryAvailability')} guideKey="inventoryAvailabilityPolicy" value={form.inventoryAvailabilityPolicy}>
             <AppDropdown
               value={form.inventoryAvailabilityPolicy}
               onValueChange={(value) => set('inventoryAvailabilityPolicy', value)}
@@ -114,7 +118,7 @@ export function WarehouseInboundPolicyPage() {
               ]}
             />
           </Field>
-          <Field label={t('policy.fields.erpPosting')}>
+          <Field label={t('policy.fields.erpPosting')} guideKey="erpPostingPolicy" value={form.erpPostingPolicy}>
             <AppDropdown
               value={form.erpPostingPolicy}
               onValueChange={(value) => set('erpPostingPolicy', value)}
@@ -129,15 +133,15 @@ export function WarehouseInboundPolicyPage() {
         </div>
 
         <div className="mt-5 grid gap-3 md:grid-cols-2">
-          <Toggle label={t('policy.toggles.allowUnderReceipt')} value={form.allowUnderReceipt} set={(value) => set('allowUnderReceipt', value)} />
-          <Toggle label={t('policy.toggles.requireShortCloseApproval')} value={form.requireShortCloseApproval} set={(value) => set('requireShortCloseApproval', value)} />
-          <Toggle label={t('policy.toggles.requireReceiptApproval')} value={form.requireReceiptApproval} set={(value) => set('requireReceiptApproval', value)} />
-          <Toggle label={t('policy.toggles.requireQualityApproval')} value={form.requireQualityApproval} set={(value) => set('requireQualityApproval', value)} />
-          <Toggle label={t('policy.toggles.requireErpApproval')} value={form.requireErpApproval} set={(value) => set('requireErpApproval', value)} />
-          <Toggle label={t('policy.toggles.holdInventoryUntilQualityDecision')} value={form.holdInventoryUntilQualityDecision} set={(value) => set('holdInventoryUntilQualityDecision', value)} />
-          <Toggle label={t('policy.toggles.blockPutawayUntilQualityDecision')} value={form.blockPutawayUntilQualityDecision} set={(value) => set('blockPutawayUntilQualityDecision', value)} />
-          <Toggle label={t('policy.toggles.allowOrderlessReceipt')} value={form.allowOrderlessReceipt} set={(value) => set('allowOrderlessReceipt', value)} />
-          <Toggle label={t('policy.toggles.allowUnplannedReceipt')} value={form.allowUnplannedReceipt} set={(value) => set('allowUnplannedReceipt', value)} />
+          <Toggle guideKey="allowUnderReceipt" label={t('policy.toggles.allowUnderReceipt')} value={form.allowUnderReceipt} set={(value) => set('allowUnderReceipt', value)} />
+          <Toggle guideKey="requireShortCloseApproval" label={t('policy.toggles.requireShortCloseApproval')} value={form.requireShortCloseApproval} set={(value) => set('requireShortCloseApproval', value)} />
+          <Toggle guideKey="requireReceiptApproval" label={t('policy.toggles.requireReceiptApproval')} value={form.requireReceiptApproval} set={(value) => set('requireReceiptApproval', value)} />
+          <Toggle guideKey="requireQualityApproval" label={t('policy.toggles.requireQualityApproval')} value={form.requireQualityApproval} set={(value) => set('requireQualityApproval', value)} />
+          <Toggle guideKey="requireErpApproval" label={t('policy.toggles.requireErpApproval')} value={form.requireErpApproval} set={(value) => set('requireErpApproval', value)} />
+          <Toggle guideKey="holdInventoryUntilQualityDecision" label={t('policy.toggles.holdInventoryUntilQualityDecision')} value={form.holdInventoryUntilQualityDecision} set={(value) => set('holdInventoryUntilQualityDecision', value)} />
+          <Toggle guideKey="blockPutawayUntilQualityDecision" label={t('policy.toggles.blockPutawayUntilQualityDecision')} value={form.blockPutawayUntilQualityDecision} set={(value) => set('blockPutawayUntilQualityDecision', value)} />
+          <Toggle guideKey="allowOrderlessReceipt" label={t('policy.toggles.allowOrderlessReceipt')} value={form.allowOrderlessReceipt} set={(value) => set('allowOrderlessReceipt', value)} />
+          <Toggle guideKey="allowUnplannedReceipt" label={t('policy.toggles.allowUnplannedReceipt')} value={form.allowUnplannedReceipt} set={(value) => set('allowUnplannedReceipt', value)} />
         </div>
 
         <div className="mt-5 rounded-xl border border-cyan-500/30 bg-cyan-500/10 p-4 text-sm">
@@ -160,25 +164,16 @@ export function WarehouseInboundPolicyPage() {
   );
 }
 
-function Field({ label, children }: { label: string; children: ReactNode }) {
+function Field({ label, children, guideKey, value, currentValue }: { label: string; children: ReactNode; guideKey?: string; value?: unknown; currentValue?: string }) {
   return (
-    <label className="space-y-1.5 text-sm">
+    <div className="space-y-1.5 text-sm">
       <span className="font-semibold">{label}</span>
       {children}
-    </label>
+      {guideKey ? <ParameterFieldGuide guidance={parameterGuidance('inbound', guideKey, value)} currentValue={currentValue ?? String(value)} /> : null}
+    </div>
   );
 }
 
-function Toggle({ label, value, set }: { label: string; value: boolean; set: (value: boolean) => void }) {
-  return (
-    <label className="flex items-center justify-between rounded-xl border p-3 text-sm">
-      <span>{label}</span>
-      <input
-        type="checkbox"
-        checked={value}
-        onChange={(event) => set(event.target.checked)}
-        className="size-4"
-      />
-    </label>
-  );
+function Toggle({ label, value, set, guideKey }: { label: string; value: boolean; set: (value: boolean) => void; guideKey: string }) {
+  return <ParameterToggleCard title={label} checked={value} onCheckedChange={set} guidance={parameterGuidance('inbound', guideKey, value)} />;
 }

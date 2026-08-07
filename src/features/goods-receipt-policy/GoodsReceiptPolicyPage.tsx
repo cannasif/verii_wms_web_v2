@@ -3,6 +3,7 @@ import { Loader2, MapPin, PlugZap, Save, SlidersHorizontal, UsersRound, Warehous
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { AppDropdown } from '@/components/shared/AppDropdown';
+import { ParameterFieldGuide, ParameterPageGuide, ParameterToggleCard } from '@/components/shared/ParameterGuidance';
 import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
 import { goodsReceiptV2Api } from '@/features/goods-receipt-v2/api/goods-receipt.api';
 import type {
@@ -13,6 +14,7 @@ import { userManagementApi } from '@/features/user-management/api/user-managemen
 import type { UserDetail, UserRow, WarehouseOption } from '@/features/user-management/types/user-management.types';
 import { api } from '@/lib/axios';
 import { useAuthStore } from '@/stores/auth-store';
+import { parameterGuidance } from '@/features/settings-guidance/parameter-guidance.catalog';
 
 type Policy = {
   id: number;
@@ -156,6 +158,12 @@ export function GoodsReceiptPolicyPage() {
         <p className="text-sm text-slate-500">{t(`${POLICY}.description`)}</p>
       </header>
 
+      <ParameterPageGuide
+        translationKey="goodsReceipt"
+        title="Mal kabul ayar rehberi"
+        description="Her parametrenin mevcut sonucunu, stok ve ERP üzerindeki etkisini ve örnek mal kabul senaryosunu alanın hemen altında inceleyebilirsiniz."
+      />
+
       <div className="flex flex-wrap gap-2 rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-2">
         <TabButton active={tab === 'policy'} onClick={() => setTab('policy')} icon={<SlidersHorizontal className="size-4" />}>
           {t(`${POLICY}.tabs.policy`)}
@@ -177,7 +185,7 @@ export function GoodsReceiptPolicyPage() {
         />
       ) : <div className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5">
         <div className="grid gap-4 md:grid-cols-2">
-          <Field label={t(`${POLICY}.fields.overReceipt`)}>
+          <Field label={t(`${POLICY}.fields.overReceipt`)} guideKey="overReceiptPolicy" value={form.overReceiptPolicy} currentValue={overReceiptOptions.find((x) => x.value === form.overReceiptPolicy)?.label}>
             <AppDropdown
               value={form.overReceiptPolicy}
               onValueChange={(value) => {
@@ -187,7 +195,7 @@ export function GoodsReceiptPolicyPage() {
               options={[...overReceiptOptions]}
             />
           </Field>
-          <Field label={t(`${POLICY}.fields.overReceiptTolerance`)}>
+          <Field label={t(`${POLICY}.fields.overReceiptTolerance`)} guideKey="overReceiptTolerancePercent" value={form.overReceiptTolerancePercent} currentValue={`%${form.overReceiptTolerancePercent}`}>
             <input
               className="input"
               type="number"
@@ -199,21 +207,21 @@ export function GoodsReceiptPolicyPage() {
               onChange={(event) => set('overReceiptTolerancePercent', Number(event.target.value))}
             />
           </Field>
-          <Field label={t(`${POLICY}.fields.inventoryAvailability`)}>
+          <Field label={t(`${POLICY}.fields.inventoryAvailability`)} guideKey="inventoryAvailabilityPolicy" value={form.inventoryAvailabilityPolicy} currentValue={inventoryAvailabilityOptions.find((x) => x.value === form.inventoryAvailabilityPolicy)?.label}>
             <AppDropdown
               value={form.inventoryAvailabilityPolicy}
               onValueChange={(value) => set('inventoryAvailabilityPolicy', value)}
               options={inventoryAvailabilityOptions}
             />
           </Field>
-          <Field label={t(`${POLICY}.fields.erpPosting`)}>
+          <Field label={t(`${POLICY}.fields.erpPosting`)} guideKey="erpPostingPolicy" value={form.erpPostingPolicy} currentValue={erpPostingOptions.find((x) => x.value === form.erpPostingPolicy)?.label}>
             <AppDropdown
               value={form.erpPostingPolicy}
               onValueChange={(value) => set('erpPostingPolicy', value)}
               options={erpPostingOptions}
             />
           </Field>
-          <Field label={t(`${POLICY}.erpQualityGatePolicy.title`)}>
+          <Field label={t(`${POLICY}.erpQualityGatePolicy.title`)} guideKey="erpQualityGatePolicy" value={form.erpQualityGatePolicy} currentValue={erpQualityGateOptions.find((x) => x.value === form.erpQualityGatePolicy)?.label}>
             <AppDropdown
               value={form.erpQualityGatePolicy}
               onValueChange={(value) => set('erpQualityGatePolicy', value)}
@@ -228,14 +236,15 @@ export function GoodsReceiptPolicyPage() {
         </div>
 
         <div className="mt-5 grid gap-3 md:grid-cols-2">
-          <Toggle label={t(`${POLICY}.toggles.allowUnderReceipt`)} value={form.allowUnderReceipt} set={(value) => set('allowUnderReceipt', value)} />
-          <Toggle label={t(`${POLICY}.toggles.requireShortCloseApproval`)} value={form.requireShortCloseApproval} set={(value) => set('requireShortCloseApproval', value)} />
-          <Toggle label={t(`${POLICY}.toggles.requireReceiptApproval`)} value={form.requireReceiptApproval} set={(value) => set('requireReceiptApproval', value)} />
-          <Toggle label={t(`${POLICY}.toggles.requireQualityApproval`)} value={form.requireQualityApproval} set={(value) => set('requireQualityApproval', value)} />
-          <Toggle label={t(`${POLICY}.toggles.requireErpApproval`)} value={form.requireErpApproval} set={(value) => set('requireErpApproval', value)} />
-          <Toggle label={t(`${POLICY}.toggles.holdInventoryUntilQualityDecision`)} value={form.holdInventoryUntilQualityDecision} set={(value) => set('holdInventoryUntilQualityDecision', value)} />
+          <Toggle guideKey="allowUnderReceipt" label={t(`${POLICY}.toggles.allowUnderReceipt`)} value={form.allowUnderReceipt} set={(value) => set('allowUnderReceipt', value)} />
+          <Toggle guideKey="requireShortCloseApproval" label={t(`${POLICY}.toggles.requireShortCloseApproval`)} value={form.requireShortCloseApproval} set={(value) => set('requireShortCloseApproval', value)} />
+          <Toggle guideKey="requireReceiptApproval" label={t(`${POLICY}.toggles.requireReceiptApproval`)} value={form.requireReceiptApproval} set={(value) => set('requireReceiptApproval', value)} />
+          <Toggle guideKey="requireQualityApproval" label={t(`${POLICY}.toggles.requireQualityApproval`)} value={form.requireQualityApproval} set={(value) => set('requireQualityApproval', value)} />
+          <Toggle guideKey="requireErpApproval" label={t(`${POLICY}.toggles.requireErpApproval`)} value={form.requireErpApproval} set={(value) => set('requireErpApproval', value)} />
+          <Toggle guideKey="holdInventoryUntilQualityDecision" label={t(`${POLICY}.toggles.holdInventoryUntilQualityDecision`)} value={form.holdInventoryUntilQualityDecision} set={(value) => set('holdInventoryUntilQualityDecision', value)} />
           <div>
             <Toggle
+              guideKey="blockPutawayUntilQualityDecision"
               label={t(`${POLICY}.toggles.blockPutawayUntilQualityDecision`)}
               value={form.blockPutawayUntilQualityDecision}
               set={(value) => set('blockPutawayUntilQualityDecision', value)}
@@ -244,9 +253,10 @@ export function GoodsReceiptPolicyPage() {
               {t(`${POLICY}.toggles.blockPutawayHint`)}
             </p>
           </div>
-          <Toggle label={t(`${POLICY}.toggles.allowOrderlessReceipt`)} value={form.allowOrderlessReceipt} set={(value) => set('allowOrderlessReceipt', value)} />
-          <Toggle label={t(`${POLICY}.toggles.allowUnplannedReceipt`)} value={form.allowUnplannedReceipt} set={(value) => set('allowUnplannedReceipt', value)} />
+          <Toggle guideKey="allowOrderlessReceipt" label={t(`${POLICY}.toggles.allowOrderlessReceipt`)} value={form.allowOrderlessReceipt} set={(value) => set('allowOrderlessReceipt', value)} />
+          <Toggle guideKey="allowUnplannedReceipt" label={t(`${POLICY}.toggles.allowUnplannedReceipt`)} value={form.allowUnplannedReceipt} set={(value) => set('allowUnplannedReceipt', value)} />
           <Toggle
+            guideKey="showAllocatedOpenOrderLines"
             label={t(`${POLICY}.toggles.showAllocatedOpenOrderLines`)}
             value={form.showAllocatedOpenOrderLines}
             set={(value) => set('showAllocatedOpenOrderLines', value)}
@@ -394,7 +404,7 @@ function WarehouseDefaultLocationsPanel({
         </div>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
-        <Field label={t(`${POLICY}.fields.warehouse`)}>
+        <Field label={t(`${POLICY}.fields.warehouse`)} guideKey="warehouseDefaultWarehouse" value={warehouseId} currentValue={warehouses.find((x) => String(x.id) === warehouseId)?.warehouseName ?? warehouseId ?? undefined}>
           <AppDropdown
             value={warehouseId}
             onValueChange={setWarehouseId}
@@ -404,7 +414,7 @@ function WarehouseDefaultLocationsPanel({
             }))}
           />
         </Field>
-        <Field label={t(`${POLICY}.fields.defaultLocation`)}>
+        <Field label={t(`${POLICY}.fields.defaultLocation`)} guideKey="warehouseDefaultLocation" value={locationId} currentValue={locations.find((x) => String(x.id) === locationId)?.name ?? locationId}>
           <AppDropdown
             value={locationId}
             onValueChange={setLocationId}
@@ -529,7 +539,7 @@ function UserWarehouseAssignmentsPanel({ branch, canManage }: { branch: string; 
 
       {loading ? <div className="grid min-h-44 place-items-center"><Loader2 className="animate-spin" /></div> : (
         <>
-          <Field label={t(`${POLICY}.fields.user`)}>
+          <Field label={t(`${POLICY}.fields.user`)} guideKey="assignmentUser" value={selectedUserId} currentValue={(() => { const selected = users.find((x) => String(x.id) === selectedUserId); return selected ? `${selected.firstName ?? ''} ${selected.lastName ?? ''}`.trim() || selected.username || undefined : selectedUserId ?? undefined; })()}>
             <AppDropdown
               value={selectedUserId}
               onValueChange={setSelectedUserId}
@@ -615,25 +625,16 @@ function TabButton({ active, onClick, icon, children }: { active: boolean; onCli
   );
 }
 
-function Field({ label, children }: { label: string; children: ReactNode }) {
+function Field({ label, children, guideKey, value, currentValue }: { label: string; children: ReactNode; guideKey?: string; value?: unknown; currentValue?: string }) {
   return (
-    <label className="space-y-1.5 text-sm">
+    <div className="space-y-1.5 text-sm">
       <span className="font-semibold">{label}</span>
       {children}
-    </label>
+      {guideKey ? <ParameterFieldGuide guidance={parameterGuidance('goodsReceipt', guideKey, value)} currentValue={currentValue} /> : null}
+    </div>
   );
 }
 
-function Toggle({ label, value, set }: { label: string; value: boolean; set: (value: boolean) => void }) {
-  return (
-    <label className="flex items-center justify-between rounded-xl border p-3 text-sm">
-      <span>{label}</span>
-      <input
-        type="checkbox"
-        checked={value}
-        onChange={(event) => set(event.target.checked)}
-        className="size-4"
-      />
-    </label>
-  );
+function Toggle({ label, value, set, guideKey }: { label: string; value: boolean; set: (value: boolean) => void; guideKey: string }) {
+  return <ParameterToggleCard title={label} checked={value} onCheckedChange={set} guidance={parameterGuidance('goodsReceipt', guideKey, value)} />;
 }

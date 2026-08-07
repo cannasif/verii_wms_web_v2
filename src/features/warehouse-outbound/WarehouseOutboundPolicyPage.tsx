@@ -2,10 +2,12 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { Loader2, Save, SlidersHorizontal } from 'lucide-react';
 import { toast } from 'sonner';
 import { AppDropdown } from '@/components/shared/AppDropdown';
+import { ParameterFieldGuide, ParameterPageGuide, ParameterToggleCard } from '@/components/shared/ParameterGuidance';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { useAuthStore } from '@/stores/auth-store';
 import { warehouseOutboundApi } from './warehouseOutbound-api';
 import type { ShipmentPolicy } from './types';
+import { parameterGuidance } from '@/features/settings-guidance/parameter-guidance.catalog';
 
 export function WarehouseOutboundPolicyPage() {
   const { t } = useModuleTranslation('warehouse-outbound');
@@ -42,18 +44,19 @@ export function WarehouseOutboundPolicyPage() {
         <h1 className="mt-2 text-2xl font-black">{t('settings.title')}</h1>
         <p className="text-sm text-slate-500">{t('settings.description')}</p>
       </header>
+      <ParameterPageGuide translationKey="outbound" title="Ambar çıkış ayar rehberi" description="Emir kaynağı, rezervasyon, eksik/fazla toplama, paketleme, yükleme ve ERP aktarımı üzerindeki etkileri alan bazında açıklar." />
       <div className="space-y-6 rounded-2xl border bg-[var(--wms-app-panel)] p-5">
         <Section title={t('settings.sections.flowMatrix')}>
           <Grid>
-            <Toggle l={t('settings.flowToggles.orderTask')} v={f.allowOrderBasedTask} s={(v) => set('allowOrderBasedTask', v)} />
-            <Toggle l={t('settings.flowToggles.stockTask')} v={f.allowStockBasedTask} s={(v) => set('allowStockBasedTask', v)} />
-            <Toggle l={t('settings.flowToggles.orderDirect')} v={f.allowOrderBasedDirect} s={(v) => set('allowOrderBasedDirect', v)} />
-            <Toggle l={t('settings.flowToggles.stockDirect')} v={f.allowStockBasedDirect} s={(v) => set('allowStockBasedDirect', v)} />
+            <Toggle guideKey="allowOrderBasedTask" l={t('settings.flowToggles.orderTask')} v={f.allowOrderBasedTask} s={(v) => set('allowOrderBasedTask', v)} />
+            <Toggle guideKey="allowStockBasedTask" l={t('settings.flowToggles.stockTask')} v={f.allowStockBasedTask} s={(v) => set('allowStockBasedTask', v)} />
+            <Toggle guideKey="allowOrderBasedDirect" l={t('settings.flowToggles.orderDirect')} v={f.allowOrderBasedDirect} s={(v) => set('allowOrderBasedDirect', v)} />
+            <Toggle guideKey="allowStockBasedDirect" l={t('settings.flowToggles.stockDirect')} v={f.allowStockBasedDirect} s={(v) => set('allowStockBasedDirect', v)} />
           </Grid>
         </Section>
         <Section title={t('settings.sections.reservationPickingQuantity')}>
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-            <Field l={t('settings.fields.reservation')}>
+            <Field l={t('settings.fields.reservation')} guideKey="reservationPolicy" value={f.reservationPolicy}>
               <AppDropdown value={f.reservationPolicy} onValueChange={(v) => set('reservationPolicy', v as ShipmentPolicy['reservationPolicy'])}
                 options={[
                   { value: 'None', label: t('settings.reservationOptions.none') },
@@ -61,7 +64,7 @@ export function WarehouseOutboundPolicyPage() {
                   { value: 'OnRelease', label: t('settings.reservationOptions.onRelease') },
                 ]} />
             </Field>
-            <Field l={t('settings.fields.shortage')}>
+            <Field l={t('settings.fields.shortage')} guideKey="shortagePolicy" value={f.shortagePolicy}>
               <AppDropdown value={f.shortagePolicy} onValueChange={(v) => set('shortagePolicy', v as ShipmentPolicy['shortagePolicy'])}
                 options={[
                   { value: 'Block', label: t('settings.shortageOptions.block') },
@@ -69,7 +72,7 @@ export function WarehouseOutboundPolicyPage() {
                   { value: 'RequireApproval', label: t('settings.shortageOptions.requireApproval') },
                 ]} />
             </Field>
-            <Field l={t('settings.fields.overPick')}>
+            <Field l={t('settings.fields.overPick')} guideKey="overPickPolicy" value={f.overPickPolicy}>
               <AppDropdown value={f.overPickPolicy} onValueChange={(v) => set('overPickPolicy', v as ShipmentPolicy['overPickPolicy'])}
                 options={[
                   { value: 'Block', label: t('settings.overPickOptions.block') },
@@ -77,7 +80,7 @@ export function WarehouseOutboundPolicyPage() {
                   { value: 'RequireApproval', label: t('settings.overPickOptions.requireApproval') },
                 ]} />
             </Field>
-            <Field l={t('settings.fields.packing')}>
+            <Field l={t('settings.fields.packing')} guideKey="packingPolicy" value={f.packingPolicy}>
               <AppDropdown value={f.packingPolicy} onValueChange={(v) => set('packingPolicy', v as ShipmentPolicy['packingPolicy'])}
                 options={[
                   { value: 'NotRequired', label: t('settings.packingOptions.notRequired') },
@@ -85,11 +88,11 @@ export function WarehouseOutboundPolicyPage() {
                   { value: 'Required', label: t('settings.packingOptions.required') },
                 ]} />
             </Field>
-            <Field l={t('settings.fields.minimumFulfillment')}>
+            <Field l={t('settings.fields.minimumFulfillment')} guideKey="minimumFulfillmentPercent" value={f.minimumFulfillmentPercent} currentValue={`%${f.minimumFulfillmentPercent}`}>
               <input className="input" type="number" min="0" max="100" value={f.minimumFulfillmentPercent}
                 onChange={(e) => set('minimumFulfillmentPercent', Number(e.target.value))} />
             </Field>
-            <Field l={t('settings.fields.overPickTolerance')}>
+            <Field l={t('settings.fields.overPickTolerance')} guideKey="overPickTolerancePercent" value={f.overPickTolerancePercent} currentValue={`%${f.overPickTolerancePercent}`}>
               <input className="input" type="number" min="0" max="100" value={f.overPickTolerancePercent}
                 onChange={(e) => set('overPickTolerancePercent', Number(e.target.value))} />
             </Field>
@@ -97,16 +100,16 @@ export function WarehouseOutboundPolicyPage() {
         </Section>
         <Section title={t('settings.sections.operationGates')}>
           <Grid>
-            <Toggle l={t('settings.gateToggles.requireApproval')} v={f.requireApproval} s={(v) => set('requireApproval', v)} />
-            <Toggle l={t('settings.gateToggles.requireAssigneeForTask')} v={f.requireAssigneeForTask} s={(v) => set('requireAssigneeForTask', v)} />
-            <Toggle l={t('settings.gateToggles.allowMultipleAssignees')} v={f.allowMultipleAssignees} s={(v) => set('allowMultipleAssignees', v)} />
-            <Toggle l={t('settings.gateToggles.autoReleaseTaskBased')} v={f.autoReleaseTaskBased} s={(v) => set('autoReleaseTaskBased', v)} />
-            <Toggle l={t('settings.gateToggles.allowPartialPicking')} v={f.allowPartialPicking} s={(v) => set('allowPartialPicking', v)} />
-            <Toggle l={t('settings.gateToggles.allowPartialShipment')} v={f.allowPartialShipment} s={(v) => set('allowPartialShipment', v)} />
-            <Toggle l={t('settings.gateToggles.requireSourceLocation')} v={f.requireSourceLocation} s={(v) => set('requireSourceLocation', v)} />
-            <Toggle l={t('settings.gateToggles.requireShipmentInformation')} v={f.requireShipmentInformation} s={(v) => set('requireShipmentInformation', v)} />
-            <Toggle l={t('settings.gateToggles.requireLoadingConfirmation')} v={f.requireLoadingConfirmation} s={(v) => set('requireLoadingConfirmation', v)} />
-            <Toggle l={t('settings.gateToggles.autoPostErpAfterApproval')} v={f.autoPostErpAfterApproval} s={(v) => set('autoPostErpAfterApproval', v)} />
+            <Toggle guideKey="requireApproval" l={t('settings.gateToggles.requireApproval')} v={f.requireApproval} s={(v) => set('requireApproval', v)} />
+            <Toggle guideKey="requireAssigneeForTask" l={t('settings.gateToggles.requireAssigneeForTask')} v={f.requireAssigneeForTask} s={(v) => set('requireAssigneeForTask', v)} />
+            <Toggle guideKey="allowMultipleAssignees" l={t('settings.gateToggles.allowMultipleAssignees')} v={f.allowMultipleAssignees} s={(v) => set('allowMultipleAssignees', v)} />
+            <Toggle guideKey="autoReleaseTaskBased" l={t('settings.gateToggles.autoReleaseTaskBased')} v={f.autoReleaseTaskBased} s={(v) => set('autoReleaseTaskBased', v)} />
+            <Toggle guideKey="allowPartialPicking" l={t('settings.gateToggles.allowPartialPicking')} v={f.allowPartialPicking} s={(v) => set('allowPartialPicking', v)} />
+            <Toggle guideKey="allowPartialShipment" l={t('settings.gateToggles.allowPartialShipment')} v={f.allowPartialShipment} s={(v) => set('allowPartialShipment', v)} />
+            <Toggle guideKey="requireSourceLocation" l={t('settings.gateToggles.requireSourceLocation')} v={f.requireSourceLocation} s={(v) => set('requireSourceLocation', v)} />
+            <Toggle guideKey="requireShipmentInformation" l={t('settings.gateToggles.requireShipmentInformation')} v={f.requireShipmentInformation} s={(v) => set('requireShipmentInformation', v)} />
+            <Toggle guideKey="requireLoadingConfirmation" l={t('settings.gateToggles.requireLoadingConfirmation')} v={f.requireLoadingConfirmation} s={(v) => set('requireLoadingConfirmation', v)} />
+            <Toggle guideKey="autoPostErpAfterApproval" l={t('settings.gateToggles.autoPostErpAfterApproval')} v={f.autoPostErpAfterApproval} s={(v) => set('autoPostErpAfterApproval', v)} />
           </Grid>
         </Section>
         <div className="flex justify-end">
@@ -126,9 +129,9 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 function Grid({ children }: { children: ReactNode }) {
   return <div className="grid gap-3 md:grid-cols-2">{children}</div>;
 }
-function Toggle({ l, v, s }: { l: string; v: boolean; s: (v: boolean) => void }) {
-  return <label className="flex items-center justify-between rounded-xl border p-3 text-sm"><span>{l}</span><input type="checkbox" checked={v} onChange={(e) => s(e.target.checked)} /></label>;
+function Toggle({ l, v, s, guideKey }: { l: string; v: boolean; s: (v: boolean) => void; guideKey: string }) {
+  return <ParameterToggleCard title={l} checked={v} onCheckedChange={s} guidance={parameterGuidance('outbound', guideKey, v)} />;
 }
-function Field({ l, children }: { l: string; children: ReactNode }) {
-  return <label className="space-y-1 text-sm"><span className="font-semibold">{l}</span>{children}</label>;
+function Field({ l, children, guideKey, value, currentValue }: { l: string; children: ReactNode; guideKey?: string; value?: unknown; currentValue?: string }) {
+  return <div className="space-y-1 text-sm"><span className="font-semibold">{l}</span>{children}{guideKey ? <ParameterFieldGuide guidance={parameterGuidance('outbound', guideKey, value)} currentValue={currentValue ?? String(value)} /> : null}</div>;
 }
