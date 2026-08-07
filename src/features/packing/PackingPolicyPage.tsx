@@ -3,9 +3,11 @@ import { Loader2, Save, SlidersHorizontal } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { AppDropdown } from '@/components/shared/AppDropdown';
+import { ParameterFieldGuide, ParameterPageGuide, ParameterToggleCard } from '@/components/shared/ParameterGuidance';
 import { useAuthStore } from '@/stores/auth-store';
 import { packingApi } from './packing-api';
 import type { PackingPolicy } from './types';
+import { parameterGuidance } from '@/features/settings-guidance/parameter-guidance.catalog';
 
 const POLICY = 'processPolicy.packing';
 const TOGGLE_KEYS = [
@@ -86,18 +88,23 @@ export function PackingPolicyPage() {
         <p className="text-sm text-slate-500">{t(`${POLICY}.description`)}</p>
       </header>
 
+      <ParameterPageGuide translationKey="packing" title="Paketleme ayar rehberi" description="Paket zorunluluğu, karışık içerik, seri/lot doğrulaması, SSCC, tartım, kapatma ve etiket davranışını örneklerle açıklar." />
+
       <div className="space-y-5 rounded-2xl border bg-[var(--wms-app-panel)] p-5">
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {TOGGLE_KEYS.map(key => (
-            <label key={key} className="flex items-center justify-between rounded-xl border p-3 text-sm">
-              <span>{t(`${POLICY}.toggles.${key}`)}</span>
-              <input type="checkbox" checked={form[key]} onChange={e => set(key, e.target.checked)} />
-            </label>
+            <ParameterToggleCard
+              key={key}
+              title={t(`${POLICY}.toggles.${key}`)}
+              checked={form[key]}
+              onCheckedChange={value => set(key, value)}
+              guidance={parameterGuidance('packing', key, form[key])}
+            />
           ))}
         </div>
 
         <div className="grid gap-3 md:grid-cols-3">
-          <label className="space-y-1 text-sm">
+          <div className="space-y-1 text-sm">
             <span>{t(`${POLICY}.fields.weightTolerance`)}</span>
             <input
               className="input"
@@ -107,23 +114,26 @@ export function PackingPolicyPage() {
               value={form.weightTolerancePercent}
               onChange={e => set('weightTolerancePercent', Number(e.target.value))}
             />
-          </label>
-          <label className="space-y-1 text-sm">
+            <ParameterFieldGuide guidance={parameterGuidance('packing', 'weightTolerancePercent', form.weightTolerancePercent)} currentValue={`%${form.weightTolerancePercent}`} />
+          </div>
+          <div className="space-y-1 text-sm">
             <span>{t(`${POLICY}.fields.closePolicy`)}</span>
             <AppDropdown
               value={form.closePolicy}
               onValueChange={v => set('closePolicy', v as PackingPolicy['closePolicy'])}
               options={closeOptions.map(o => ({ value: o.value, label: o.label }))}
             />
-          </label>
-          <label className="space-y-1 text-sm">
+            <ParameterFieldGuide guidance={parameterGuidance('packing', 'closePolicy', form.closePolicy)} currentValue={closeOptions.find((x) => x.value === form.closePolicy)?.label} />
+          </div>
+          <div className="space-y-1 text-sm">
             <span>{t(`${POLICY}.fields.releasePolicy`)}</span>
             <AppDropdown
               value={form.releasePolicy}
               onValueChange={v => set('releasePolicy', v as PackingPolicy['releasePolicy'])}
               options={releaseOptions.map(o => ({ value: o.value, label: o.label }))}
             />
-          </label>
+            <ParameterFieldGuide guidance={parameterGuidance('packing', 'releasePolicy', form.releasePolicy)} currentValue={releaseOptions.find((x) => x.value === form.releasePolicy)?.label} />
+          </div>
         </div>
 
         <div className="flex justify-end">

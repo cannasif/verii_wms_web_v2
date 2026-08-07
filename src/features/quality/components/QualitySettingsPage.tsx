@@ -3,10 +3,12 @@ import { Loader2, Save, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { AppDropdown } from '@/components/shared/AppDropdown';
 import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
+import { ParameterFieldGuide, ParameterPageGuide, ParameterToggleCard } from '@/components/shared/ParameterGuidance';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { localizeEnumValue } from '@/lib/enum-localization';
 import { useAuthStore } from '@/stores/auth-store';
 import { qualityApi, type QualityParameter } from '../api/quality.api';
+import { parameterGuidance } from '@/features/settings-guidance/parameter-guidance.catalog';
 
 export function QualitySettingsPage() {
   const { t } = useModuleTranslation('quality');
@@ -45,9 +47,10 @@ export function QualitySettingsPage() {
   return (
     <section className="mx-auto max-w-6xl space-y-5">
       <Header eyebrow={t('settings.eyebrow')} title={t('settings.title')} text={t('settings.description')} />
+      <ParameterPageGuide translationKey="quality" title="Kalite ayar rehberi" description="Kontrol tipinin, başarısız sonuç davranışının, bekleme raflarının ve stok/ERP blokajlarının etkisini örneklerle açıklar." />
       <div className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5">
         <div className="grid gap-4 md:grid-cols-2">
-          <Field label={t('settings.defaultInspectionModeLabel')}>
+          <Field label={t('settings.defaultInspectionModeLabel')} guideKey="defaultInspectionMode" value={form.defaultInspectionMode} currentValue={localizeEnumValue(form.defaultInspectionMode)}>
             <AppDropdown
               value={form.defaultInspectionMode}
               onValueChange={(v) => set('defaultInspectionMode', v)}
@@ -57,7 +60,7 @@ export function QualitySettingsPage() {
               }))}
             />
           </Field>
-          <Field label={t('settings.defaultFailActionLabel')}>
+          <Field label={t('settings.defaultFailActionLabel')} guideKey="defaultFailAction" value={form.defaultFailAction} currentValue={localizeEnumValue(form.defaultFailAction)}>
             <AppDropdown
               value={form.defaultFailAction}
               onValueChange={(v) => set('defaultFailAction', v)}
@@ -79,6 +82,7 @@ export function QualitySettingsPage() {
               branch={branch}
               value={form.defaultQualityLocationId}
               set={(value) => set('defaultQualityLocationId', value)}
+              guideKey="defaultQualityLocationId"
             />
             <LocationField
               label={t('settings.locationsSection.quarantineLocationLabel')}
@@ -87,6 +91,7 @@ export function QualitySettingsPage() {
               value={form.defaultQuarantineLocationId}
               set={(value) => set('defaultQuarantineLocationId', value)}
               quarantineOnly
+              guideKey="defaultQuarantineLocationId"
             />
             <LocationField
               label={t('settings.locationsSection.rejectLocationLabel')}
@@ -95,21 +100,22 @@ export function QualitySettingsPage() {
               value={form.defaultRejectLocationId}
               set={(value) => set('defaultRejectLocationId', value)}
               quarantineOnly
+              guideKey="defaultRejectLocationId"
             />
           </div>
         </section>
 
         <div className="mt-5 grid gap-3 md:grid-cols-2">
-          <Toggle label={t('settings.toggles.autoCreateInspection')} value={form.autoCreateInspectionOnReceipt} set={(v) => set('autoCreateInspectionOnReceipt', v)} />
-          <Toggle label={t('settings.toggles.holdInventory')} value={form.holdInventoryUntilDecision} set={(v) => set('holdInventoryUntilDecision', v)} />
-          <Toggle label={t('settings.toggles.blockPutaway')} value={form.blockPutawayUntilDecision} set={(v) => set('blockPutawayUntilDecision', v)} />
-          <Toggle label={t('settings.toggles.blockErpPosting')} value={form.blockErpPostingUntilDecision} set={(v) => set('blockErpPostingUntilDecision', v)} />
-          <Toggle label={t('settings.toggles.requireManagerApproval')} value={form.requireManagerApprovalForRelease} set={(v) => set('requireManagerApprovalForRelease', v)} />
-          <Toggle label={t('settings.toggles.allowPartialDecision')} value={form.allowPartialDecision} set={(v) => set('allowPartialDecision', v)} />
-          <Toggle label={t('settings.toggles.allowDirectReceipt')} value={form.allowDirectReceiptWhenNoRule} set={(v) => set('allowDirectReceiptWhenNoRule', v)} />
-          <Toggle label={t('settings.toggles.blockWhenLotMissing')} value={form.blockReceiptWhenLotMissing} set={(v) => set('blockReceiptWhenLotMissing', v)} />
-          <Toggle label={t('settings.toggles.blockWhenSerialMissing')} value={form.blockReceiptWhenSerialMissing} set={(v) => set('blockReceiptWhenSerialMissing', v)} />
-          <Toggle label={t('settings.toggles.blockWhenExpiryMissing')} value={form.blockReceiptWhenExpiryMissing} set={(v) => set('blockReceiptWhenExpiryMissing', v)} />
+          <Toggle guideKey="autoCreateInspectionOnReceipt" label={t('settings.toggles.autoCreateInspection')} value={form.autoCreateInspectionOnReceipt} set={(v) => set('autoCreateInspectionOnReceipt', v)} />
+          <Toggle guideKey="holdInventoryUntilDecision" label={t('settings.toggles.holdInventory')} value={form.holdInventoryUntilDecision} set={(v) => set('holdInventoryUntilDecision', v)} />
+          <Toggle guideKey="blockPutawayUntilDecision" label={t('settings.toggles.blockPutaway')} value={form.blockPutawayUntilDecision} set={(v) => set('blockPutawayUntilDecision', v)} />
+          <Toggle guideKey="blockErpPostingUntilDecision" label={t('settings.toggles.blockErpPosting')} value={form.blockErpPostingUntilDecision} set={(v) => set('blockErpPostingUntilDecision', v)} />
+          <Toggle guideKey="requireManagerApprovalForRelease" label={t('settings.toggles.requireManagerApproval')} value={form.requireManagerApprovalForRelease} set={(v) => set('requireManagerApprovalForRelease', v)} />
+          <Toggle guideKey="allowPartialDecision" label={t('settings.toggles.allowPartialDecision')} value={form.allowPartialDecision} set={(v) => set('allowPartialDecision', v)} />
+          <Toggle guideKey="allowDirectReceiptWhenNoRule" label={t('settings.toggles.allowDirectReceipt')} value={form.allowDirectReceiptWhenNoRule} set={(v) => set('allowDirectReceiptWhenNoRule', v)} />
+          <Toggle guideKey="blockReceiptWhenLotMissing" label={t('settings.toggles.blockWhenLotMissing')} value={form.blockReceiptWhenLotMissing} set={(v) => set('blockReceiptWhenLotMissing', v)} />
+          <Toggle guideKey="blockReceiptWhenSerialMissing" label={t('settings.toggles.blockWhenSerialMissing')} value={form.blockReceiptWhenSerialMissing} set={(v) => set('blockReceiptWhenSerialMissing', v)} />
+          <Toggle guideKey="blockReceiptWhenExpiryMissing" label={t('settings.toggles.blockWhenExpiryMissing')} value={form.blockReceiptWhenExpiryMissing} set={(v) => set('blockReceiptWhenExpiryMissing', v)} />
         </div>
 
         <p className="mt-5 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-600">
@@ -143,22 +149,18 @@ function Header({ eyebrow, title, text }: { eyebrow: string; title: string; text
   );
 }
 
-function Field({ label, children }: { label: string; children: ReactNode }) {
+function Field({ label, children, guideKey, value, currentValue }: { label: string; children: ReactNode; guideKey?: string; value?: unknown; currentValue?: string }) {
   return (
-    <label className="space-y-1.5 text-sm">
+    <div className="space-y-1.5 text-sm">
       <span className="font-semibold">{label}</span>
       {children}
-    </label>
+      {guideKey ? <ParameterFieldGuide guidance={parameterGuidance('quality', guideKey, value)} currentValue={currentValue} /> : null}
+    </div>
   );
 }
 
-function Toggle({ label, value, set }: { label: string; value: boolean; set: (v: boolean) => void }) {
-  return (
-    <label className="flex items-center justify-between rounded-xl border p-3 text-sm">
-      <span>{label}</span>
-      <input type="checkbox" checked={value} onChange={(e) => set(e.target.checked)} className="size-4" />
-    </label>
-  );
+function Toggle({ label, value, set, guideKey }: { label: string; value: boolean; set: (v: boolean) => void; guideKey: string }) {
+  return <ParameterToggleCard title={label} checked={value} onCheckedChange={set} guidance={parameterGuidance('quality', guideKey, value)} />;
 }
 
 function LocationField({
@@ -168,6 +170,7 @@ function LocationField({
   value,
   set,
   quarantineOnly = false,
+  guideKey,
 }: {
   label: string;
   placeholder: string;
@@ -175,9 +178,10 @@ function LocationField({
   value: number | null;
   set: (value: number | null) => void;
   quarantineOnly?: boolean;
+  guideKey: string;
 }) {
   return (
-    <Field label={label}>
+    <Field label={label} guideKey={guideKey} value={value} currentValue={value ? `Raf #${value}` : 'Seçilmedi'}>
       <PagedAppDropdown
         queryKey={['quality-locations', branch, label]}
         fetchPage={(request) => qualityApi.locations(request, branch)}

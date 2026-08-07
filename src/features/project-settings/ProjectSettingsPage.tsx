@@ -5,6 +5,7 @@ import { AppDropdown, type AppDropdownOption } from '@/components/shared/AppDrop
 import { AppInput } from '@/components/shared/AppInput';
 import { OpsActionButton } from '@/components/shared/OpsActionButton';
 import { OpsCircuitToggleField } from '@/components/shared/OpsCircuitToggle';
+import { ParameterFieldGuide, ParameterPageGuide } from '@/components/shared/ParameterGuidance';
 import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import {
@@ -17,6 +18,7 @@ import {
 import { useProjectSettingsStore } from '@/stores/project-settings-store';
 import { projectSettingsApi } from './project-settings.api';
 import type { ProjectSettings, UpdateProjectSettings } from './project-settings.types';
+import { parameterGuidance } from '@/features/settings-guidance/parameter-guidance.catalog';
 
 type ProjectSettingsForm = UpdateProjectSettings & Pick<ProjectSettings, 'passwordMaximumLength'>;
 
@@ -118,6 +120,8 @@ export function ProjectSettingsPage() {
         <p className="mt-1 text-sm text-slate-500">{t('description')}</p>
       </div>
 
+      <ParameterPageGuide translationKey="project" title="Genel proje ayar rehberi" description="Biçim ayarlarının veriyi değiştirmediğini, yalnız görünümü etkilediğini; güvenlik ve ERP seri ayarlarının ise hangi işlemlerde kural uyguladığını örneklerle gösterir." />
+
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <Preview icon={<Hash />} label={t('preview.number')} value={formatProjectNumber(1234.5, undefined, form)} />
         <Preview icon={<CalendarDays />} label={t('preview.date')} value={formatProjectDate(preview, form)} />
@@ -128,13 +132,13 @@ export function ProjectSettingsPage() {
 
       <form onSubmit={submit} className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5 shadow-sm">
         <div className="grid gap-5 md:grid-cols-2">
-          <Field label={t('numberLocale.label')}><AppDropdown value={form.numberLocale} onValueChange={(value) => set('numberLocale', value)} options={numberLocaleOptions} ariaLabel={t('numberLocale.label')} testId="number-locale-dropdown" /></Field>
-          <Field label={t('decimalPlaces.label')}><AppDropdown value={String(form.decimalPlaces)} onValueChange={(value) => set('decimalPlaces', Number(value))} options={decimalOptions} ariaLabel={t('decimalPlaces.label')} testId="decimal-places-dropdown" /></Field>
-          <Field label={t('dateFormat.label')}><AppDropdown value={form.dateFormat} onValueChange={(value) => set('dateFormat', value)} options={dateOptions} ariaLabel={t('dateFormat.label')} testId="date-format-dropdown" /></Field>
-          <Field label={t('timeFormat.label')}><AppDropdown value={form.timeFormat} onValueChange={(value) => set('timeFormat', value)} options={timeOptions} ariaLabel={t('timeFormat.label')} testId="time-format-dropdown" /></Field>
-          <Field label={t('yearFormat.label')}><AppDropdown value={form.yearFormat} onValueChange={(value) => set('yearFormat', value)} options={yearOptions} ariaLabel={t('yearFormat.label')} testId="year-format-dropdown" /></Field>
-          <Field label={t('timeZone.label')}><AppDropdown value={form.timeZoneId} onValueChange={(value) => set('timeZoneId', value)} options={timeZoneOptions} ariaLabel={t('timeZone.label')} searchable searchPlaceholder={t('timeZone.searchPlaceholder')} testId="timezone-dropdown" /></Field>
-          <Field label={t('passwordMinLength.label')}>
+          <Field label={t('numberLocale.label')} guideKey="numberLocale" value={form.numberLocale} currentValue={numberLocaleOptions.find((x) => x.value === form.numberLocale)?.label}><AppDropdown value={form.numberLocale} onValueChange={(value) => set('numberLocale', value)} options={numberLocaleOptions} ariaLabel={t('numberLocale.label')} testId="number-locale-dropdown" /></Field>
+          <Field label={t('decimalPlaces.label')} guideKey="decimalPlaces" value={form.decimalPlaces} currentValue={decimalOptions.find((x) => x.value === String(form.decimalPlaces))?.label}><AppDropdown value={String(form.decimalPlaces)} onValueChange={(value) => set('decimalPlaces', Number(value))} options={decimalOptions} ariaLabel={t('decimalPlaces.label')} testId="decimal-places-dropdown" /></Field>
+          <Field label={t('dateFormat.label')} guideKey="dateFormat" value={form.dateFormat} currentValue={form.dateFormat}><AppDropdown value={form.dateFormat} onValueChange={(value) => set('dateFormat', value)} options={dateOptions} ariaLabel={t('dateFormat.label')} testId="date-format-dropdown" /></Field>
+          <Field label={t('timeFormat.label')} guideKey="timeFormat" value={form.timeFormat} currentValue={form.timeFormat}><AppDropdown value={form.timeFormat} onValueChange={(value) => set('timeFormat', value)} options={timeOptions} ariaLabel={t('timeFormat.label')} testId="time-format-dropdown" /></Field>
+          <Field label={t('yearFormat.label')} guideKey="yearFormat" value={form.yearFormat} currentValue={yearOptions.find((x) => x.value === form.yearFormat)?.label}><AppDropdown value={form.yearFormat} onValueChange={(value) => set('yearFormat', value)} options={yearOptions} ariaLabel={t('yearFormat.label')} testId="year-format-dropdown" /></Field>
+          <Field label={t('timeZone.label')} guideKey="timeZoneId" value={form.timeZoneId} currentValue={timeZoneOptions.find((x) => x.value === form.timeZoneId)?.label}><AppDropdown value={form.timeZoneId} onValueChange={(value) => set('timeZoneId', value)} options={timeZoneOptions} ariaLabel={t('timeZone.label')} searchable searchPlaceholder={t('timeZone.searchPlaceholder')} testId="timezone-dropdown" /></Field>
+          <Field label={t('passwordMinLength.label')} guideKey="passwordMinimumLength" value={form.passwordMinimumLength} currentValue={`${form.passwordMinimumLength} karakter`}>
             <AppInput
               type="number"
               min={5}
@@ -146,7 +150,7 @@ export function ProjectSettingsPage() {
               disabled={!canManage}
             />
           </Field>
-          <Field label={t('passwordMaxLength.label')}>
+          <Field label={t('passwordMaxLength.label')} guideKey="passwordMaximumLength" value={form.passwordMaximumLength} currentValue={`${form.passwordMaximumLength} karakter`}>
             <AppInput
               type="number"
               value={form.passwordMaximumLength}
@@ -163,6 +167,7 @@ export function ProjectSettingsPage() {
               description={t('sendSerialsToErp.description')}
               className="rounded-xl border"
             />
+            <ParameterFieldGuide guidance={parameterGuidance('project', 'sendSerialsToErp', form.sendSerialsToErp)} currentValue={form.sendSerialsToErp ? 'Açık' : 'Kapalı'} />
           </div>
         </div>
 
@@ -198,8 +203,8 @@ function toForm(settings: ProjectSettings): ProjectSettingsForm {
   };
 }
 
-function Field({ label, children }: { label: string; children: ReactNode }): ReactNode {
-  return <div className="space-y-1.5"><label className="text-sm font-semibold">{label}</label>{children}</div>;
+function Field({ label, children, guideKey, value, currentValue }: { label: string; children: ReactNode; guideKey?: string; value?: unknown; currentValue?: string }): ReactNode {
+  return <div className="space-y-1.5"><label className="text-sm font-semibold">{label}</label>{children}{guideKey ? <ParameterFieldGuide guidance={parameterGuidance('project', guideKey, value)} currentValue={currentValue} /> : null}</div>;
 }
 
 function Preview({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
