@@ -2,7 +2,9 @@ import { useId, type ReactElement, type ReactNode } from "react";
 import {
   BookOpenCheck,
   ChevronDown,
+  CircleCheckBig,
   CircleHelp,
+  ClipboardCheck,
   MapPinned,
   PlayCircle,
   TriangleAlert,
@@ -15,6 +17,7 @@ export type ParameterGuidanceContent = {
   effect: string;
   affects: readonly string[];
   scenario: string;
+  decision?: string;
   warning?: string;
   resourceKey?: string;
 };
@@ -39,6 +42,13 @@ export function ParameterPageGuide({
       description ??
       "Her alanın altında mevcut seçimin kısa sonucu bulunur. “Etki ve örnek” bölümünü açarak hangi işlemleri etkilediğini ve gerçek kullanım senaryosunu görebilirsiniz.",
   });
+  const checklistValue = t(`pages.${translationKey}.checklist`, {
+    returnObjects: true,
+    defaultValue: t("pages.default.checklist", { returnObjects: true }),
+  });
+  const checklist = Array.isArray(checklistValue)
+    ? checklistValue.map(String)
+    : [];
 
   return (
     <aside
@@ -72,6 +82,31 @@ export function ParameterPageGuide({
               </li>
             ))}
           </ol>
+          {checklist.length > 0 ? (
+            <details className="group mt-3 rounded-xl border border-amber-500/25 bg-amber-500/[.045]">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-2.5 text-xs font-black text-amber-700 marker:content-none dark:text-amber-300">
+                <span className="flex items-center gap-2">
+                  <ClipboardCheck className="size-4" aria-hidden />
+                  {t("labels.beforeSave")}
+                </span>
+                <ChevronDown
+                  className="size-3.5 transition-transform group-open:rotate-180"
+                  aria-hidden
+                />
+              </summary>
+              <ul className="grid gap-2 border-t border-amber-500/20 p-3 text-[0.72rem] leading-5 text-[var(--wms-app-text-muted)] sm:grid-cols-3">
+                {checklist.map((item) => (
+                  <li key={item} className="flex items-start gap-2">
+                    <CircleCheckBig
+                      className="mt-0.5 size-3.5 shrink-0 text-amber-600 dark:text-amber-300"
+                      aria-hidden
+                    />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          ) : null}
         </div>
       </div>
     </aside>
@@ -144,10 +179,20 @@ export function ParameterFieldGuide({
           >
             {localizedGuidance.effect}
           </GuideBlock>
+          {localizedGuidance.decision ? (
+            <GuideBlock
+              icon={<CircleCheckBig />}
+              title={t("labels.decision", {
+                defaultValue: "2. Bu seçeneği ne zaman tercih etmelisiniz?",
+              })}
+            >
+              {localizedGuidance.decision}
+            </GuideBlock>
+          ) : null}
           <GuideBlock
             icon={<PlayCircle />}
             title={t("labels.scenario", {
-              defaultValue: "2. Gerçek örnek: işlem nasıl ilerler?",
+              defaultValue: "3. Gerçek örnek: işlem nasıl ilerler?",
             })}
             className="border-[color-mix(in_oklab,var(--wms-brand-primary)_20%,var(--wms-app-border))] bg-[color-mix(in_oklab,var(--wms-brand-primary)_5%,var(--wms-app-panel))]"
           >
@@ -156,7 +201,7 @@ export function ParameterFieldGuide({
           <GuideBlock
             icon={<MapPinned />}
             title={t("labels.affects", {
-              defaultValue: "3. Hangi ekranlar ve işlemler değişir?",
+              defaultValue: "4. Hangi ekranlar ve işlemler değişir?",
             })}
           >
             <ul className="grid gap-1 sm:grid-cols-2">
@@ -169,7 +214,7 @@ export function ParameterFieldGuide({
             <GuideBlock
               icon={<TriangleAlert />}
               title={t("labels.warning", {
-                defaultValue: "4. Dikkat: yanlış seçimde ne olabilir?",
+                defaultValue: "5. Dikkat: yanlış seçimde ne olabilir?",
               })}
               className="border border-amber-500/25 bg-amber-500/8 text-amber-700 dark:text-amber-300"
             >
@@ -285,6 +330,13 @@ function localizeGuidance(
         defaultValue: guidance.scenario,
       }),
     ),
+    decision: guidance.decision
+      ? String(
+          t(`${guidance.resourceKey}.decision`, {
+            defaultValue: guidance.decision,
+          }),
+        )
+      : undefined,
     warning: guidance.warning
       ? String(
           t(`${guidance.resourceKey}.warning`, {

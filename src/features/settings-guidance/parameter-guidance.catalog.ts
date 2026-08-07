@@ -1890,12 +1890,16 @@ export function buildParameterGuidanceSourceResource(): Record<string, unknown> 
     for (const [field, definition] of Object.entries(fields)) {
       guidance[module][field] = {};
       if (isGuide(definition)) {
-        guidance[module][field].default = stripResourceKey(definition);
+        guidance[module][field].default = stripResourceKey(
+          enrichGuidance(definition),
+        );
         continue;
       }
 
       for (const [value, content] of Object.entries(definition)) {
-        guidance[module][field][value] = stripResourceKey(content);
+        guidance[module][field][value] = stripResourceKey(
+          enrichGuidance(content),
+        );
       }
     }
   }
@@ -1909,9 +1913,21 @@ function withResourceKey(
   field: string,
   value: string,
 ): ParameterGuidanceContent {
+  const enriched = enrichGuidance(content);
+  return {
+    ...enriched,
+    resourceKey: `guidance.${module}.${field}.${value}`,
+  };
+}
+
+function enrichGuidance(
+  content: ParameterGuidanceContent,
+): ParameterGuidanceContent {
+  if (content.decision) return content;
+
   return {
     ...content,
-    resourceKey: `guidance.${module}.${field}.${value}`,
+    decision: `Bu seçenek özellikle şu işlemleri yönetir: ${content.affects.join(", ")}. Bu işlemlerde “${content.summary}” sonucunu istiyorsanız bu değeri seçin.`,
   };
 }
 
