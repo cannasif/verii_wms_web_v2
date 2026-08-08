@@ -4913,8 +4913,8 @@
         "requireQualityApproval": "Qualitätsfreigabe erforderlich",
         "requireErpApproval": "ERP-Freigabe erforderlich",
         "holdInventoryUntilQualityDecision": "Bestand bis Qualitätsentscheidung zurückhalten",
-        "blockPutawayUntilQualityDecision": "Welche Lagerplätze können für qualitätsausstehende Produkte gewählt werden?",
-        "blockPutawayHint": "Wenn aktiv, dürfen qualitätsausstehende Produkte nur in Annahme- oder Staging-Bereiche; wenn inaktiv, sind alle aktiven Lagerplätze im Ziellager wählbar.",
+        "blockPutawayUntilQualityDecision": "Endgültige Einlagerung bis zur Qualitätsentscheidung sperren",
+        "blockPutawayHint": "Aktiviert: Nur Annahme-, Staging- oder Qualitätssperrplätze sind wählbar. Deaktiviert: Auch ein normaler aktiver Lagerplatz kann gewählt werden. Diese Einstellung steuert den physischen Platz; die Bestandsverfügbarkeit wird separat durch die Bestandssperre gesteuert.",
         "allowOrderlessReceipt": "Annahme ohne Auftrag erlauben",
         "allowUnplannedReceipt": "Ungeplante Annahme erlauben",
         "showAllocatedOpenOrderLines": "Reservierte / versendete Auftragspositionen anzeigen"

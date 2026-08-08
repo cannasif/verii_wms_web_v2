@@ -3348,8 +3348,8 @@
         "requireQualityApproval": "Exigir aprobación de calidad",
         "requireErpApproval": "Exigir aprobación ERP",
         "holdInventoryUntilQualityDecision": "Retener stock hasta decisión de calidad",
-        "blockPutawayUntilQualityDecision": "¿Qué estanterías se pueden seleccionar para productos pendientes de calidad?",
-        "blockPutawayHint": "Si está activo, los productos pendientes de calidad solo pueden ir a recepción o staging; si está inactivo, se pueden seleccionar todas las estanterías activas del almacén destino.",
+        "blockPutawayUntilQualityDecision": "Bloquear la ubicación final hasta la decisión de calidad",
+        "blockPutawayHint": "Activado: solo se permiten ubicaciones de recepción, staging o espera de calidad. Desactivado: también se puede elegir una ubicación activa normal. Este ajuste controla la ubicación física; la disponibilidad del stock se controla por separado con el bloqueo de inventario.",
         "allowOrderlessReceipt": "Permitir recepción sin pedido",
         "allowUnplannedReceipt": "Permitir recepción no planificada",
         "showAllocatedOpenOrderLines": "Mostrar líneas de pedido reservadas / enviadas"

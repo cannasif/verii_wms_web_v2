@@ -5188,8 +5188,8 @@
         "requireQualityApproval": "Require quality approval",
         "requireErpApproval": "Require ERP approval",
         "holdInventoryUntilQualityDecision": "Hold stock until quality decision",
-        "blockPutawayUntilQualityDecision": "Which shelves can be selected for quality-pending products?",
-        "blockPutawayHint": "When enabled, quality-pending products can only go to receiving or staging areas; when disabled, all active shelves in the target warehouse are selectable.",
+        "blockPutawayUntilQualityDecision": "Block final putaway until the quality decision",
+        "blockPutawayHint": "Enabled: Only receiving, staging, or quality-hold locations can be selected. Disabled: A normal active location can also be selected. This setting controls the physical location; stock availability is controlled separately by the inventory-hold setting.",
         "allowOrderlessReceipt": "Allow receipt without order",
         "allowUnplannedReceipt": "Allow unplanned receipt",
         "showAllocatedOpenOrderLines": "Show allocated / shipped order lines"

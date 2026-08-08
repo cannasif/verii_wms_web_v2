@@ -3348,8 +3348,8 @@
         "requireQualityApproval": "Exiger approbation qualité",
         "requireErpApproval": "Exiger approbation ERP",
         "holdInventoryUntilQualityDecision": "Retenir le stock jusqu'à décision qualité",
-        "blockPutawayUntilQualityDecision": "Quels emplacements peuvent être choisis pour les produits en attente qualité ?",
-        "blockPutawayHint": "Si activé, les produits en attente qualité vont uniquement en réception ou staging ; si désactivé, tous les emplacements actifs de l'entrepôt cible sont sélectionnables.",
+        "blockPutawayUntilQualityDecision": "Bloquer le rangement final jusqu’à la décision qualité",
+        "blockPutawayHint": "Activé : seuls les emplacements de réception, de staging ou d’attente qualité sont proposés. Désactivé : un emplacement actif normal peut aussi être choisi. Ce réglage contrôle l’emplacement physique ; la disponibilité du stock est gérée séparément par le blocage de stock.",
         "allowOrderlessReceipt": "Autoriser réception sans commande",
         "allowUnplannedReceipt": "Autoriser réception non planifiée",
         "showAllocatedOpenOrderLines": "Afficher les lignes de commande réservées / expédiées"

@@ -5209,8 +5209,8 @@
         "requireQualityApproval": "Kalite onayı iste",
         "requireErpApproval": "ERP onayı iste",
         "holdInventoryUntilQualityDecision": "Kalite kararına kadar stoğu beklet",
-        "blockPutawayUntilQualityDecision": "Kalite bekleyen üründe hangi raflar seçilebilir?",
-        "blockPutawayHint": "Açıkken kalite bekleyen ürünler yalnızca kabul veya staging alanına alınır; kapalıyken hedef depodaki tüm aktif raflar seçilebilir.",
+        "blockPutawayUntilQualityDecision": "Kalite kararı çıkana kadar nihai raf yerleştirmesini engelle",
+        "blockPutawayHint": "Açık: Yalnız kabul, geçici bekleme veya kalite rafı seçilir. Kapalı: Normal aktif raf da seçilebilir. Bu ayar fiziksel rafı belirler; stoğun sevk edilebilir olup olmadığını ayrıca stok bekletme ayarı belirler.",
         "allowOrderlessReceipt": "Emirsiz kabule izin ver",
         "allowUnplannedReceipt": "Plansız kabule izin ver",
         "showAllocatedOpenOrderLines": "Ayrılmış / gönderilmiş sipariş kalemlerini göster"
