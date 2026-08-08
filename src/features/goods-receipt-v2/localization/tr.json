@@ -984,7 +984,8 @@
       "Printed": "Yazdırıldı",
       "Assigned": "Atandı",
       "Consumed": "Kullanıldı",
-      "Void": "Geçersiz Kılındı"
+      "Void": "Geçersiz Kılındı",
+      "Split": "Bölündü"
     },
     "processType": {
       "OrderBasedTask": "Siparişe İstinaden Emirli",
@@ -1012,6 +1013,27 @@
       "ProductionReturn": "Üretim İadesi",
       "SteelPlate": "SAC Levha"
     }
+  },
+  "labelSplit": {
+    "action": "Etiketi böl",
+    "title": "Stok etiketini böl",
+    "description": "Kaynak etiketi kapatıp miktarı toplamı değişmeyecek şekilde iki benzersiz alt etikete ayırın.",
+    "defaultReason": "Fiziksel stok etiketi bölündü",
+    "invalid": "Ayrılacak miktar sıfırdan büyük ve kaynak miktardan küçük olmalıdır. Açıklamayı da kontrol edin.",
+    "success": "Etiket iki alt etikete bölündü. Yeni etiketleri yazdırabilirsiniz.",
+    "failed": "Etiket bölünemedi.",
+    "stock": "Stok",
+    "tracking": "Seri / Lot",
+    "sourceQuantity": "Kaynak etiket miktarı",
+    "sourceBarcode": "Kaynak barkod",
+    "splitQuantity": "Yeni etikete ayrılacak miktar",
+    "quantityHelp": "Bu miktar ilk alt etikete yazılır; kalan miktar ikinci alt etikete otomatik aktarılır.",
+    "firstChild": "Ayrılan alt etiket",
+    "remainderChild": "Kalan alt etiket",
+    "reason": "Bölme nedeni",
+    "stockNote": "Bu işlem stok miktarını, depoyu veya rafı değiştirmez. Kaynak barkod kapanır; iki yeni barkod oluşur. Ürün daha sonra transfer veya sevk edildiğinde ilgili alt etiket okutulur.",
+    "cancel": "Vazgeç",
+    "confirm": "Böl ve etiketleri oluştur"
   },
   "hub": {
     "eyebrow": "Depo Operasyonları",

@@ -971,7 +971,8 @@
       "Printed": "Gedruckt",
       "Assigned": "Zugewiesen",
       "Consumed": "Verbraucht",
-      "Void": "Ungültig"
+      "Void": "Ungültig",
+      "Split": "Geteilt"
     },
     "processType": {
       "OrderBasedTask": "Auftrag mit Bestellbezug",
@@ -999,6 +1000,12 @@
       "ProductionReturn": "Produktionsrückgabe",
       "SteelPlate": "Stahlblech"
     }
+  },
+  "labelSplit": {
+    "action": "Etikett teilen", "title": "Bestandsetikett teilen", "description": "Quell-Etikett schließen und die Menge ohne Summenänderung auf zwei eindeutige Unteretiketten verteilen.",
+    "defaultReason": "Physisches Bestandsetikett wurde geteilt", "invalid": "Die Teilmenge muss größer als null und kleiner als die Quellmenge sein. Prüfen Sie auch den Grund.", "success": "Das Etikett wurde in zwei Unteretiketten geteilt. Die neuen Etiketten können gedruckt werden.", "failed": "Das Etikett konnte nicht geteilt werden.",
+    "stock": "Bestand", "tracking": "Seriennummer / Charge", "sourceQuantity": "Menge des Quell-Etiketts", "sourceBarcode": "Quell-Barcode", "splitQuantity": "Menge für das neue Etikett", "quantityHelp": "Diese Menge erhält das erste Unteretikett; der Rest wird automatisch dem zweiten zugewiesen.",
+    "firstChild": "Abgetrenntes Unteretikett", "remainderChild": "Rest-Unteretikett", "reason": "Teilungsgrund", "stockNote": "Dieser Vorgang ändert weder Bestand, Lager noch Lagerplatz. Der Quell-Barcode wird geschlossen und zwei neue Barcodes werden erstellt.", "cancel": "Abbrechen", "confirm": "Teilen und Etiketten erstellen"
   },
   "hub": {
     "eyebrow": "Lagerbetrieb",

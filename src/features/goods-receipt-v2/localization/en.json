@@ -984,7 +984,8 @@
       "Printed": "Printed",
       "Assigned": "Assigned",
       "Consumed": "Consumed",
-      "Void": "Voided"
+      "Void": "Voided",
+      "Split": "Split"
     },
     "processType": {
       "OrderBasedTask": "Order-based Task",
@@ -1012,6 +1013,27 @@
       "ProductionReturn": "Production Return",
       "SteelPlate": "Steel Plate"
     }
+  },
+  "labelSplit": {
+    "action": "Split label",
+    "title": "Split inventory label",
+    "description": "Close the source label and divide its quantity into two unique child labels without changing the total.",
+    "defaultReason": "Physical inventory label was split",
+    "invalid": "The split quantity must be greater than zero and less than the source quantity. Check the reason as well.",
+    "success": "The label was split into two child labels. You can print the new labels now.",
+    "failed": "The label could not be split.",
+    "stock": "Stock",
+    "tracking": "Serial / Lot",
+    "sourceQuantity": "Source label quantity",
+    "sourceBarcode": "Source barcode",
+    "splitQuantity": "Quantity for the new label",
+    "quantityHelp": "This quantity goes to the first child label; the remainder is assigned to the second automatically.",
+    "firstChild": "Separated child label",
+    "remainderChild": "Remainder child label",
+    "reason": "Split reason",
+    "stockNote": "This action does not change inventory quantity, warehouse, or location. The source barcode is closed and two new barcodes are created. Scan the relevant child label during a later transfer or shipment.",
+    "cancel": "Cancel",
+    "confirm": "Split and create labels"
   },
   "hub": {
     "eyebrow": "Warehouse Operations",

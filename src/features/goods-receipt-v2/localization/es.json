@@ -971,7 +971,8 @@
       "Printed": "Impresa",
       "Assigned": "Asignada",
       "Consumed": "Consumida",
-      "Void": "Anulada"
+      "Void": "Anulada",
+      "Split": "Dividida"
     },
     "processType": {
       "OrderBasedTask": "Tarea basada en pedido",
@@ -999,6 +1000,12 @@
       "ProductionReturn": "Devolución de producción",
       "SteelPlate": "Chapa de acero"
     }
+  },
+  "labelSplit": {
+    "action": "Dividir etiqueta", "title": "Dividir etiqueta de inventario", "description": "Cierre la etiqueta de origen y divida la cantidad en dos etiquetas hijas únicas sin cambiar el total.",
+    "defaultReason": "Se dividió la etiqueta física de inventario", "invalid": "La cantidad a separar debe ser mayor que cero y menor que la cantidad de origen. Revise también el motivo.", "success": "La etiqueta se dividió en dos etiquetas hijas. Ya puede imprimirlas.", "failed": "No se pudo dividir la etiqueta.",
+    "stock": "Artículo", "tracking": "Serie / Lote", "sourceQuantity": "Cantidad de la etiqueta de origen", "sourceBarcode": "Código de barras de origen", "splitQuantity": "Cantidad para la nueva etiqueta", "quantityHelp": "Esta cantidad se asigna a la primera etiqueta hija; el resto pasa automáticamente a la segunda.",
+    "firstChild": "Etiqueta hija separada", "remainderChild": "Etiqueta hija restante", "reason": "Motivo de división", "stockNote": "Esta acción no cambia la cantidad, el almacén ni la ubicación. El código de origen se cierra y se crean dos códigos nuevos.", "cancel": "Cancelar", "confirm": "Dividir y crear etiquetas"
   },
   "hub": {
     "eyebrow": "Operaciones de almacén",

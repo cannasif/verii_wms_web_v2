@@ -4,7 +4,8 @@ import type { GoodsReceiptLabelRow } from '../types/goods-receipt.types';
 const WIDTH_MM=100,HEIGHT_MM=70,SCALE=10;
 
 export function printableLabels(labels:GoodsReceiptLabelRow[]):GoodsReceiptLabelRow[]{
-  return labels.filter(x=>!['Void','Consumed'].includes(x.status));
+  return labels.filter(x=>!['Void','Split'].includes(x.status)
+    && (x.status!=='Consumed'||x.parentLabelId!=null));
 }
 
 export function printReceiptLabels(labels:GoodsReceiptLabelRow[],title:string):void{

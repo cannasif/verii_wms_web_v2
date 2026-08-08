@@ -971,7 +971,8 @@
       "Printed": "Imprimé",
       "Assigned": "Assigné",
       "Consumed": "Consommé",
-      "Void": "Annulé"
+      "Void": "Annulé",
+      "Split": "Divisé"
     },
     "processType": {
       "OrderBasedTask": "Tâche basée sur commande",
@@ -999,6 +1000,12 @@
       "ProductionReturn": "Retour de production",
       "SteelPlate": "Tôle d’acier"
     }
+  },
+  "labelSplit": {
+    "action": "Diviser l’étiquette", "title": "Diviser l’étiquette de stock", "description": "Fermez l’étiquette source et répartissez sa quantité sur deux sous-étiquettes uniques sans modifier le total.",
+    "defaultReason": "L’étiquette physique du stock a été divisée", "invalid": "La quantité séparée doit être supérieure à zéro et inférieure à la quantité source. Vérifiez aussi le motif.", "success": "L’étiquette a été divisée en deux sous-étiquettes. Vous pouvez les imprimer.", "failed": "L’étiquette n’a pas pu être divisée.",
+    "stock": "Article", "tracking": "Série / Lot", "sourceQuantity": "Quantité de l’étiquette source", "sourceBarcode": "Code-barres source", "splitQuantity": "Quantité de la nouvelle étiquette", "quantityHelp": "Cette quantité est affectée à la première sous-étiquette ; le reste est automatiquement affecté à la seconde.",
+    "firstChild": "Sous-étiquette séparée", "remainderChild": "Sous-étiquette restante", "reason": "Motif de division", "stockNote": "Cette action ne modifie ni la quantité, ni l’entrepôt, ni l’emplacement. Le code-barres source est fermé et deux nouveaux codes sont créés.", "cancel": "Annuler", "confirm": "Diviser et créer les étiquettes"
   },
   "hub": {
     "eyebrow": "Opérations d'entrepôt",

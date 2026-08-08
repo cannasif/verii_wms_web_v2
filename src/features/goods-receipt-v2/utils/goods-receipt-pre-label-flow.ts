@@ -14,7 +14,7 @@ export function activePreLabelsForTask(
     (label) =>
       label.taskLineId != null &&
       openTaskLineIds.has(label.taskLineId) &&
-      !["Consumed", "Void"].includes(label.status),
+      !["Consumed", "Void", "Split"].includes(label.status),
   );
 }
 

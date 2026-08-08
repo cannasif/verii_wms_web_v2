@@ -971,7 +971,8 @@
       "Printed": "Stampata",
       "Assigned": "Assegnata",
       "Consumed": "Utilizzata",
-      "Void": "Annullata"
+      "Void": "Annullata",
+      "Split": "Divisa"
     },
     "processType": {
       "OrderBasedTask": "Attività basata su ordine",
@@ -999,6 +1000,12 @@
       "ProductionReturn": "Reso di produzione",
       "SteelPlate": "Lamiera di acciaio"
     }
+  },
+  "labelSplit": {
+    "action": "Dividi etichetta", "title": "Dividi etichetta di magazzino", "description": "Chiudi l’etichetta sorgente e suddividi la quantità in due etichette figlie univoche senza modificare il totale.",
+    "defaultReason": "L’etichetta fisica di magazzino è stata divisa", "invalid": "La quantità da separare deve essere maggiore di zero e minore della quantità sorgente. Controlla anche il motivo.", "success": "L’etichetta è stata divisa in due etichette figlie. Ora puoi stamparle.", "failed": "Impossibile dividere l’etichetta.",
+    "stock": "Articolo", "tracking": "Serie / Lotto", "sourceQuantity": "Quantità etichetta sorgente", "sourceBarcode": "Codice a barre sorgente", "splitQuantity": "Quantità per la nuova etichetta", "quantityHelp": "Questa quantità va alla prima etichetta figlia; il residuo viene assegnato automaticamente alla seconda.",
+    "firstChild": "Etichetta figlia separata", "remainderChild": "Etichetta figlia residua", "reason": "Motivo della divisione", "stockNote": "Questa operazione non modifica quantità, magazzino o ubicazione. Il codice sorgente viene chiuso e vengono creati due nuovi codici.", "cancel": "Annulla", "confirm": "Dividi e crea etichette"
   },
   "hub": {
     "eyebrow": "Operazioni di magazzino",

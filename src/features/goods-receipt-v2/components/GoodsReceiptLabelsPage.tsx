@@ -1,7 +1,7 @@
-import { useCallback, useMemo, useState, type ReactElement } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactElement } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { code128 } from "bwip-js/browser";
-import { Ban, Eye, Loader2, Printer, X } from "lucide-react";
+import { Ban, Eye, Loader2, Printer, Scissors, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
@@ -9,6 +9,7 @@ import {
   type GridColumn,
 } from "@/components/shared/AdvancedDataGrid";
 import { ResponsiveDialog } from "@/components/shared/ResponsiveDialog";
+import { AppInput } from "@/components/shared/AppInput";
 import {
   requiredActionColumn,
   systemColumns,
@@ -28,9 +29,13 @@ import type {
 
 const G = "dataGrid.goodsReceiptPreLabels";
 
+function isPrintableLabel(label: GoodsReceiptLabelRow): boolean {
+  return !["Void", "Split"].includes(label.status)
+    && (label.status !== "Consumed" || label.parentLabelId != null);
+}
+
 export function GoodsReceiptLabelsPage(): ReactElement {
-  const { t: tGrid, i18n } = useTranslation("common");
-  const gridLanguage = i18n.resolvedLanguage ?? i18n.language;
+  const { t: tGrid } = useTranslation("common");
   const { t } = useModuleTranslation("goods-receipt-v2");
   const cache = useQueryClient();
   const [detail, setDetail] = useState<GoodsReceiptLabelBatchDetail | null>(
@@ -129,7 +134,7 @@ export function GoodsReceiptLabelsPage(): ReactElement {
         ),
       },
     ],
-    [busy, gridLanguage, open, t, tGrid],
+    [busy, open, t, tGrid],
   );
   const reload = async () => {
     if (detail) setDetail(await goodsReceiptV2Api.labelBatch(detail.batch.id));
@@ -169,12 +174,18 @@ function LabelDialog({
   const { t } = useModuleTranslation("goods-receipt-v2");
   const [selected, setSelected] = useState<number[]>(
     detail.labels
-      .filter((x) => !["Consumed", "Void"].includes(x.status))
+      .filter(isPrintableLabel)
       .map((x) => x.id),
   );
+  const [splitTarget, setSplitTarget] = useState<GoodsReceiptLabelRow | null>(null);
   const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    setSelected(detail.labels
+      .filter(isPrintableLabel)
+      .map((x) => x.id));
+  }, [detail.labels]);
   const printable = detail.labels.filter(
-    (x) => selected.includes(x.id) && !["Consumed", "Void"].includes(x.status),
+    (x) => selected.includes(x.id) && isPrintableLabel(x),
   );
   const print = async () => {
     if (printable.length === 0) {
@@ -292,7 +303,7 @@ function LabelDialog({
                 <td className="p-3">
                   <input
                     type="checkbox"
-                    disabled={["Consumed", "Void"].includes(label.status)}
+                    disabled={!isPrintableLabel(label)}
                     checked={selected.includes(label.id)}
                     onChange={() => toggle(label.id)}
                   />
@@ -316,10 +327,20 @@ function LabelDialog({
                     {goodsReceiptEnumLabel(t, 'labelStatus', label.status)}
                   </td>
                 <td className="p-3 text-center">
+                  <div className="flex items-center justify-center gap-1">
+                    <button
+                      type="button"
+                      disabled={busy || !label.canSplit}
+                      onClick={() => setSplitTarget(label)}
+                      className="grid size-11 place-items-center rounded-lg text-cyan-600 disabled:cursor-not-allowed disabled:opacity-35"
+                      title={label.canSplit ? t("labelSplit.action") : label.splitBlockReason}
+                    >
+                      <Scissors className="size-4" />
+                    </button>
                   <button
                     type="button"
                     disabled={
-                      busy || ["Consumed", "Void"].includes(label.status)
+                      busy || ["Consumed", "Void", "Split"].includes(label.status)
                     }
                     onClick={() => void voidLabel(label)}
                     className="grid size-11 place-items-center rounded-lg text-red-500"
@@ -327,14 +348,144 @@ function LabelDialog({
                   >
                     <Ban className="size-4" />
                   </button>
+                  </div>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+      {splitTarget && (
+        <SplitLabelDialog
+          label={splitTarget}
+          close={() => setSplitTarget(null)}
+          completed={() => {
+            setSplitTarget(null);
+            reload();
+          }}
+        />
+      )}
     </ResponsiveDialog>
   );
+}
+
+function SplitLabelDialog({
+  label,
+  close,
+  completed,
+}: {
+  label: GoodsReceiptLabelRow;
+  close: () => void;
+  completed: () => void;
+}): ReactElement {
+  const { t } = useModuleTranslation("goods-receipt-v2");
+  const [quantityText, setQuantityText] = useState(String(label.quantity / 2));
+  const [reason, setReason] = useState(String(t("labelSplit.defaultReason")));
+  const [busy, setBusy] = useState(false);
+  const splitQuantity = parseQuantity(quantityText);
+  const remaining = splitQuantity == null ? null : label.quantity - splitQuantity;
+  const quantityValid = splitQuantity != null && splitQuantity > 0 && remaining != null && remaining > 0;
+  const valid = quantityValid && reason.trim().length >= 3;
+
+  const submit = async () => {
+    if (!valid || splitQuantity == null) {
+      toast.error(String(t("labelSplit.invalid")));
+      return;
+    }
+    setBusy(true);
+    try {
+      await goodsReceiptV2Api.splitLabel(label.id, {
+        idempotencyKey: crypto.randomUUID(),
+        splitQuantity,
+        reason: reason.trim(),
+        rowVersion: label.rowVersion,
+      });
+      toast.success(String(t("labelSplit.success")));
+      completed();
+    } catch (error) {
+      toast.error(message(error, String(t("labelSplit.failed"))));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <ResponsiveDialog
+      onClose={close}
+      title={String(t("labelSplit.title"))}
+      description={String(t("labelSplit.description"))}
+      className="!max-w-2xl"
+    >
+      <div className="space-y-5 p-5">
+        <section className="grid gap-3 rounded-2xl border border-[var(--wms-app-border)] p-4 sm:grid-cols-2">
+          <Info label={String(t("labelSplit.stock"))} value={`${label.stockCode} · ${label.stockName ?? "—"}`} />
+          <Info label={String(t("labelSplit.tracking"))} value={`${label.serialNo || "—"} / ${label.lotNo || "—"}`} />
+          <Info label={String(t("labelSplit.sourceQuantity"))} value={`${formatProjectNumber(label.quantity)} ${label.unitCode}`} />
+          <Info label={String(t("labelSplit.sourceBarcode"))} value={label.barcodeValue} />
+        </section>
+
+        <label className="block space-y-2">
+          <span className="text-sm font-bold">{t("labelSplit.splitQuantity")}</span>
+          <AppInput
+            inputMode="decimal"
+            value={quantityText}
+            onChange={(event) => setQuantityText(event.target.value)}
+            invalid={quantityText.length > 0 && !quantityValid}
+            disabled={busy}
+          />
+          <span className="block text-xs text-slate-500">{t("labelSplit.quantityHelp")}</span>
+        </label>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <SplitPreview title={String(t("labelSplit.firstChild"))} quantity={splitQuantity} unitCode={label.unitCode} />
+          <SplitPreview title={String(t("labelSplit.remainderChild"))} quantity={remaining} unitCode={label.unitCode} />
+        </div>
+
+        <label className="block space-y-2">
+          <span className="text-sm font-bold">{t("labelSplit.reason")}</span>
+          <textarea
+            value={reason}
+            onChange={(event) => setReason(event.target.value)}
+            maxLength={500}
+            disabled={busy}
+            className="input min-h-24 w-full resize-y"
+          />
+        </label>
+
+        <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200">
+          {t("labelSplit.stockNote")}
+        </div>
+
+        <footer className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <button type="button" onClick={close} disabled={busy} className="min-h-11 rounded-xl border px-5 font-semibold">
+            {t("labelSplit.cancel")}
+          </button>
+          <button type="button" onClick={() => void submit()} disabled={busy || !valid} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-cyan-600 px-5 font-semibold text-white disabled:opacity-40">
+            {busy ? <Loader2 className="size-4 animate-spin" /> : <Scissors className="size-4" />}
+            {t("labelSplit.confirm")}
+          </button>
+        </footer>
+      </div>
+    </ResponsiveDialog>
+  );
+}
+
+function SplitPreview({ title, quantity, unitCode }: { title:string; quantity:number|null; unitCode:string }): ReactElement {
+  return (
+    <div className="rounded-2xl border border-cyan-500/30 bg-cyan-500/5 p-4">
+      <div className="text-xs font-bold uppercase tracking-wider text-cyan-600">{title}</div>
+      <div className="mt-2 text-xl font-black">{quantity != null && quantity > 0 ? formatProjectNumber(quantity) : "—"} {unitCode}</div>
+    </div>
+  );
+}
+
+function Info({ label, value }: { label:string; value:string }): ReactElement {
+  return <div className="min-w-0"><div className="text-xs text-slate-500">{label}</div><div className="break-all font-semibold">{value}</div></div>;
+}
+
+function parseQuantity(value: string): number | null {
+  const parsed = Number(value.trim().replace(/\s/g, "").replace(",", "."));
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
 function labelHtml(label: GoodsReceiptLabelRow): string {
