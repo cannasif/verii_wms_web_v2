@@ -58,6 +58,13 @@ const result: WarehouseAssistantChatResponse = {
     plannedQuantity: 3, processedQuantity: 1, remainingQuantity: 2, plannedAtUtc: '2026-08-08T07:00:00Z',
     dueAtUtc: '2026-08-09T07:00:00Z', assigneeUserId: 2, assigneeDisplayName: 'Depo Kullanıcısı',
   }],
+  goodsReceipts: [{
+    goodsReceiptId: 21, documentNo: 'GR-21', documentDate: '2026-08-08', receivedAtUtc: '2026-08-08T10:30:00Z',
+    supplierId: 20, supplierCode: 'ABC', supplierName: 'ABC TEDARIK', warehouseCode: 1, warehouseName: 'Ana Depo',
+    stockId: 4, stockCode: '01/013', stockName: 'Test levha', yapCode: null, unitCode: 'AD', receivedQuantity: 9,
+    acceptedQuantity: 9, rejectedQuantity: 0, quarantineQuantity: 0, putawayQuantity: 9, status: 'Completed',
+    qualityStatus: 'NotRequired', erpIntegrationStatus: 'Posted', receivedByUserId: 2, receivedByDisplayName: 'Depo Kullanıcısı',
+  }],
   suggestions: [],
 };
 
@@ -80,10 +87,16 @@ describe('warehouse assistant export model', () => {
     expect(model.metadata[0]).toEqual({ label: 'Kullanıcı sorusu', value: 'DTG-1 hareketlerini göster' });
     expect(model.metadata[2]).toEqual({ label: 'Yetki kapsamı', value: 'Yalnız yetkili olduğum depolar' });
     expect(model.sections.map((item) => item.key)).toEqual([
-      'activities', 'serial-balances', 'stock-locations', 'barcode', 'movements', 'tasks',
+      'activities', 'serial-balances', 'stock-locations', 'barcode', 'movements', 'tasks', 'goods-receipts',
     ]);
     expect(model.sections.find((item) => item.key === 'serial-balances')?.rows[0].availableQuantity).toBe(7);
     expect(model.sections.find((item) => item.key === 'movements')?.rows[0].occurredAt).toBeInstanceOf(Date);
+    expect(model.sections.find((item) => item.key === 'serial-balances')?.rows[0].stockStatus)
+      .toBe(translator(tr)('stockStatuses.Available'));
+    expect(model.sections.find((item) => item.key === 'movements')?.rows[0].movementStatus)
+      .toBe(translator(tr)('operationStatuses.Completed'));
+    expect(model.sections.find((item) => item.key === 'goods-receipts')?.rows[0].status)
+      .toBe(translator(tr)('operationStatuses.Completed'));
   });
 
   it('keeps PDF tables limited to readable operational columns', () => {
