@@ -21,6 +21,7 @@ import type {
   WarehouseAssistantConversationRow,
   WarehouseAssistantMessageRow,
 } from '../types/warehouse-assistant.types';
+import { WarehouseAssistantExportMenu } from './WarehouseAssistantExportMenu';
 
 interface ChatMessage {
   id: string;
@@ -212,7 +213,7 @@ export function WarehouseAssistantPage(): ReactElement {
               <WelcomePanel examples={examples} onSelect={(value) => void submitQuestion(value)} t={t} />
             ) : (
               <div className="space-y-4">
-                {messages.map((item) => (
+                {messages.map((item, index) => (
                   <article key={item.id} className={cn('flex', item.role === 'user' ? 'justify-end' : 'justify-start')}>
                     <div className={cn(
                       'max-w-[94%] rounded-2xl px-4 py-3 sm:max-w-[85%]',
@@ -221,7 +222,7 @@ export function WarehouseAssistantPage(): ReactElement {
                         : 'rounded-bl-md border border-slate-200 bg-slate-50 text-slate-800 dark:border-white/10 dark:bg-white/5 dark:text-slate-100',
                     )}>
                       <p className="whitespace-pre-wrap text-sm leading-6">{item.content}</p>
-                      {item.result ? <AssistantResult result={item.result} language={i18n.language} t={t} onSuggestion={(value) => void submitQuestion(value)} /> : null}
+                      {item.result ? <AssistantResult result={item.result} question={findPreviousQuestion(messages, index)} language={i18n.language} t={t} onSuggestion={(value) => void submitQuestion(value)} /> : null}
                     </div>
                   </article>
                 ))}
@@ -340,11 +341,12 @@ function WelcomePanel({ examples, onSelect, t }: { examples: string[]; onSelect:
   );
 }
 
-function AssistantResult({ result, language, t, onSuggestion }: { result: WarehouseAssistantChatResponse; language: string; t: TFunction; onSuggestion: (value: string) => void }): ReactElement | null {
+function AssistantResult({ result, question, language, t, onSuggestion }: { result: WarehouseAssistantChatResponse; question: string; language: string; t: TFunction; onSuggestion: (value: string) => void }): ReactElement | null {
   const hasData = result.activities.length + result.serialBalances.length + result.serialReceipts.length + result.stockLocations.length + result.movements.length + result.tasks.length + (result.barcode ? 1 : 0) > 0;
   if (!hasData && result.suggestions.length === 0) return null;
   return (
     <div className="mt-3 space-y-3 border-t border-slate-200 pt-3 dark:border-white/10">
+      {hasData ? <div className="flex justify-end"><WarehouseAssistantExportMenu result={result} question={question} language={language} t={t} /></div> : null}
       {result.activities.length > 0 ? (
         <ResultSection icon={<UserRoundSearch className="size-4" />} title={t('results.activities')}>
           {result.activities.map((row) => <ResultCard key={row.id} title={row.description} meta={`${row.userDisplayName} · ${formatDate(row.occurredAtUtc, language)}`} detail={`${row.entityType} #${row.entityId}`} />)}
@@ -421,6 +423,13 @@ function ResultCard({ title, meta, detail }: { title: string; meta: string; deta
 
 function mapHistoryMessage(row: WarehouseAssistantMessageRow): ChatMessage {
   return { id: `history-${row.id}`, role: row.role, content: row.content, result: row.result ?? undefined };
+}
+
+function findPreviousQuestion(messages: ChatMessage[], assistantIndex: number): string {
+  for (let index = assistantIndex - 1; index >= 0; index -= 1) {
+    if (messages[index]?.role === 'user') return messages[index].content;
+  }
+  return '';
 }
 
 function translateValue(t: TFunction, group: string, value: string): string {
