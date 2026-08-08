@@ -562,6 +562,7 @@
     "locationBalances": "Raf Bakiyeleri",
     "warehouseBalances": "Depo Stok Bakiyesi",
     "serialBalances": "Stok Seri Bakiyesi",
+    "warehouseAssistant": "Depo Asistanı",
     "qualityQuarantine": "Karantina Kararları",
     "packing": "Paketleme",
     "packingWorkbench": "Paketleme İstasyonu",

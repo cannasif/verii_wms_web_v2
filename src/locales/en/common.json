@@ -562,6 +562,7 @@
     "locationBalances": "Location Balances",
     "warehouseBalances": "Warehouse Stock Balance",
     "serialBalances": "Stock Serial Balance",
+    "warehouseAssistant": "Warehouse Assistant",
     "qualityQuarantine": "Quarantine Decisions",
     "packing": "Packing",
     "packingWorkbench": "Packing Station",

@@ -503,6 +503,7 @@
     "locationBalances": "أرصدة المواقع",
     "warehouseBalances": "رصيد مخزون المستودع",
     "serialBalances": "رصيد السلسلة التسلسلية للمخزون",
+    "warehouseAssistant": "مساعد المستودع",
     "qualityControl": "الجودة",
     "qualityControlInspections": "قائمة فحص الجودة",
     "qualityQuarantine": "قرارات الحجر الصحي",

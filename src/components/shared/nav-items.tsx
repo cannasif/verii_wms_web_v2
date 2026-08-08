@@ -141,6 +141,7 @@ export const WMS_NAV_ITEMS: NavItem[] = [
     ] },
   ] },
   { title: 'sidebar.warehouseManagement', titleFallback: 'Depo Yönetimi', icon: warehouseManagementIcon, children: [
+    { title: 'sidebar.warehouseAssistant', titleFallback: 'Depo Asistanı', href: '/warehouse/assistant', searchAliases: ['asistan', 'chatbot', 'yapay zeka', 'stok sor', 'seri sor', 'işlemlerim'] },
     { title: 'sidebar.locationDefinitions', titleFallback: 'Raf Tanımları', href: '/warehouse/locations', searchAliases: ['lokasyon', 'raf', 'adres', 'göz'], requiredPermission: 'WMS.LOCATIONS.VIEW' },
     { title: 'sidebar.documentSeries', titleFallback: 'Belge Seri Tanımları', href: '/warehouse/document-series', searchAliases: ['belge', 'seri', 'numara', 'mal kabul', 'transfer', 'sevk', 'ambar'], requiredPermission: 'WMS.DOCUMENT_SERIES.VIEW' },
     { title: 'sidebar.barcodeDesigner', titleFallback: 'Barkod Tasarım ve Baskı', href: '/warehouse/barcode-designer', searchAliases: ['barkod', 'etiket', 'tasarım', 'pdf', 'yazıcı', 'gs1', 'sscc'], requiredPermission: 'WMS.BARCODE_DESIGNER.VIEW' },

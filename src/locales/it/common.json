@@ -503,6 +503,7 @@
     "locationBalances": "Saldi ubicazione",
     "warehouseBalances": "Saldo scorte magazzino",
     "serialBalances": "Saldo serie scorte",
+    "warehouseAssistant": "Assistente di magazzino",
     "qualityControl": "Qualità",
     "qualityControlInspections": "Elenco ispezioni qualità",
     "qualityQuarantine": "Decisioni di quarantena",

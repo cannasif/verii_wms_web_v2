@@ -540,6 +540,7 @@
     "locationBalances": "Lagerplatzbestände",
     "warehouseBalances": "Lagerbestand",
     "serialBalances": "Seriennummer-Bestand",
+    "warehouseAssistant": "Lagerassistent",
     "qualityQuarantine": "Quarantäneentscheidungen",
     "packing": "Verpackung",
     "packingWorkbench": "Verpackungsstation",

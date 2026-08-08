@@ -503,6 +503,7 @@
     "locationBalances": "Soldes d'emplacement",
     "warehouseBalances": "Solde de stock d'entrepôt",
     "serialBalances": "Solde de série de stock",
+    "warehouseAssistant": "Assistant d’entrepôt",
     "qualityControl": "Qualité",
     "qualityControlInspections": "Liste d'inspection qualité",
     "qualityQuarantine": "Décisions de quarantaine",

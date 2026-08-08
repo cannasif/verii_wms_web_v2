@@ -10,6 +10,7 @@ export const loadHangfirePage = () => import('@/features/hangfire/components/Han
 export const loadLocationDefinitionsPage = () => import('@/features/locations');
 export const loadStockMovementsPage = () => import('@/features/stock-movements/components/StockMovementsPage');
 export const loadStockBalancePages = () => import('@/features/stock-balances/components/StockBalancePages');
+export const loadWarehouseAssistantPage = () => import('@/features/warehouse-assistant/components/WarehouseAssistantPage');
 export const loadProjectSettingsPage = () => import('@/features/project-settings/ProjectSettingsPage');
 export const loadDocumentSeriesPage = () => import('@/features/document-series');
 export const loadBarcodeDesignerPage = () => import('@/features/barcode-designer');
@@ -74,6 +75,7 @@ export const loadWarehouseOutboundPolicyPage = () => import('@/features/warehous
 export const loadWarehouseOutboundOperationPage = () => import('@/features/warehouse-outbound/WarehouseOutboundOperationPage');
 export const loadPackingPages = () => import('@/features/packing');
 const routePreloaders: Array<[prefix: string, load: () => Promise<unknown>]> = [
+  ['/warehouse/assistant', loadWarehouseAssistantPage],
   ['/procurement/quotes/new', loadSupplierQuoteEntryPage],
   ['/procurement', loadProcurementPage],
   ['/warehouse/kkd', loadKkdPages],

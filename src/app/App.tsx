@@ -21,7 +21,7 @@ import {
   loadShippingOperationPage, loadShippingPolicyPage, loadSmtpSettingsPage, loadSteelReceiptHubPage,
   loadSupplierStockMappingsPage,
   loadSteelReceiptImportPage, loadSteelReceiptInspectionPage, loadSteelReceiptOperationsPage,
-  loadSteelReceiptPlansPage, loadSteelReceiptReportsPage, loadStockBalancePages, loadStockMovementsPage, loadUserManagementPage,
+  loadSteelReceiptPlansPage, loadSteelReceiptReportsPage, loadStockBalancePages, loadStockMovementsPage, loadUserManagementPage, loadWarehouseAssistantPage,
   loadVehicleCheckInListPage, loadVehicleCheckInPage, loadWarehouseTransferDraftPage,
   loadWarehouseTransferCreateHubPage, loadWarehouseTransferHubPage, loadWarehouseTransferListPage, loadWarehouseTransferOperationPage,
   loadWarehouseTransferPolicyPage,
@@ -51,6 +51,7 @@ const StockMovementsPage = lazy(() => loadStockMovementsPage().then((m) => ({ de
 const LocationBalancesPage = lazy(() => loadStockBalancePages().then((m) => ({ default: m.LocationBalancesPage })));
 const SerialBalancesPage = lazy(() => loadStockBalancePages().then((m) => ({ default: m.SerialBalancesPage })));
 const WarehouseBalancesPage = lazy(() => loadStockBalancePages().then((m) => ({ default: m.WarehouseBalancesPage })));
+const WarehouseAssistantPage = lazy(() => loadWarehouseAssistantPage().then((m) => ({ default: m.WarehouseAssistantPage })));
 const ProjectSettingsPage = lazy(() => loadProjectSettingsPage().then((m) => ({ default: m.ProjectSettingsPage })));
 const DocumentSeriesPage = lazy(() => loadDocumentSeriesPage().then((m) => ({ default: m.DocumentSeriesPage })));
 const BarcodeDesignerPage = lazy(() => loadBarcodeDesignerPage().then((m) => ({ default: m.BarcodeDesignerPage })));
@@ -269,6 +270,7 @@ export function App(): ReactElement {
           <Route path="warehouse/location-balances" element={<LocationBalancesPage />} />
           <Route path="warehouse/stock-balances" element={<WarehouseBalancesPage />} />
           <Route path="warehouse/serial-balances" element={<SerialBalancesPage />} />
+          <Route path="warehouse/assistant" element={<WarehouseAssistantPage />} />
           <Route path="warehouse/serial-number-rules" element={<SerialNumberRulesPage />} />
           <Route path="warehouse/stock-tracking-policies" element={<Navigate to="/erp/stocks" replace />} />
           <Route path="warehouse/document-series" element={<DocumentSeriesPage />} />
