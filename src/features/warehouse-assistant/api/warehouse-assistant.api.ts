@@ -5,6 +5,7 @@ import type {
   WarehouseAssistantChatResponse,
   WarehouseAssistantConversationRow,
   WarehouseAssistantMessageRow,
+  WarehouseAssistantParameterHint,
 } from '../types/warehouse-assistant.types';
 
 function unwrap<T>(response: ApiResponse<T>): T {
@@ -29,10 +30,15 @@ export const warehouseAssistantApi = {
     ));
   },
 
-  async ask(message: string, conversationId?: number | null): Promise<WarehouseAssistantChatResponse> {
+  async ask(
+    message: string,
+    conversationId?: number | null,
+    parameterHint?: WarehouseAssistantParameterHint | null,
+  ): Promise<WarehouseAssistantChatResponse> {
     return unwrap(await api.post<ApiResponse<WarehouseAssistantChatResponse>>('/api/warehouse-assistant/chat', {
       conversationId: conversationId ?? null,
       message,
+      parameterHint: parameterHint ?? null,
     }));
   },
 

@@ -8,7 +8,15 @@ export type WarehouseAssistantIntent =
   | 'barcodeLookup'
   | 'stockMovementHistory'
   | 'assignedTasks'
+  | 'goodsReceiptAnalysis'
+  | 'parameterHelp'
   | 'unknown';
+
+export interface WarehouseAssistantParameterHint {
+  module: string;
+  field: string;
+  value?: string | null;
+}
 
 export interface WarehouseAssistantCapabilities {
   canQueryAllUsers: boolean;
@@ -19,6 +27,8 @@ export interface WarehouseAssistantCapabilities {
   canQueryAssignedTasks: boolean;
   scopeLabel: string;
   exampleQuestions: string[];
+  canQueryGoodsReceiptAnalysis?: boolean;
+  canExplainParameters?: boolean;
 }
 export interface WarehouseAssistantConversationRow {
   id: number;
@@ -166,6 +176,39 @@ export interface WarehouseAssistantTaskRow {
   assigneeDisplayName: string;
 }
 
+export interface WarehouseAssistantGoodsReceiptRow {
+  goodsReceiptId: number;
+  documentNo: string;
+  documentDate: string;
+  receivedAtUtc?: string | null;
+  supplierId?: number | null;
+  supplierCode: string;
+  supplierName: string;
+  warehouseCode: number;
+  warehouseName: string;
+  stockId: number;
+  stockCode: string;
+  stockName: string;
+  yapCode?: string | null;
+  unitCode: string;
+  receivedQuantity: number;
+  acceptedQuantity: number;
+  rejectedQuantity: number;
+  quarantineQuantity: number;
+  putawayQuantity: number;
+  status: string;
+  qualityStatus: string;
+  erpIntegrationStatus: string;
+  receivedByUserId?: number | null;
+  receivedByDisplayName: string;
+}
+
+export interface WarehouseAssistantParameterGuideRow {
+  module: string;
+  field: string;
+  value?: string | null;
+}
+
 export interface WarehouseAssistantChatResponse {
   conversationId: number;
   messageId: number;
@@ -180,5 +223,7 @@ export interface WarehouseAssistantChatResponse {
   barcode?: WarehouseAssistantBarcodeRow | null;
   movements: WarehouseAssistantMovementRow[];
   tasks: WarehouseAssistantTaskRow[];
+  goodsReceipts?: WarehouseAssistantGoodsReceiptRow[];
+  parameterGuides?: WarehouseAssistantParameterGuideRow[];
   suggestions: string[];
 }

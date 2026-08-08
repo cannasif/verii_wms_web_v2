@@ -182,6 +182,22 @@ export function buildWarehouseAssistantExportModel({
         remainingQuantity: row.remainingQuantity, plannedAt: dateValue(row.plannedAtUtc), dueAt: dateValue(row.dueAtUtc),
       })),
     ),
+    section(
+      'goods-receipts',
+      t('results.goodsReceipts'),
+      [
+        col(t, 'receivedAt', 21), col(t, 'goodsReceiptNo', 24), col(t, 'stockCode', 20),
+        col(t, 'stockName', 34), col(t, 'configurationCode', 18, false), col(t, 'warehouseCode', 14, false),
+        col(t, 'warehouseName', 24), col(t, 'quantity', 14), col(t, 'unitCode', 12),
+        col(t, 'status', 18), col(t, 'receivedBy', 24),
+      ],
+      (result.goodsReceipts ?? []).map((row) => ({
+        receivedAt: dateValue(row.receivedAtUtc ?? row.documentDate), goodsReceiptNo: row.documentNo,
+        stockCode: row.stockCode, stockName: row.stockName, configurationCode: textValue(row.yapCode),
+        warehouseCode: row.warehouseCode, warehouseName: row.warehouseName, quantity: row.receivedQuantity,
+        unitCode: row.unitCode, status: row.status, receivedBy: row.receivedByDisplayName,
+      })),
+    ),
   ].filter((item): item is WarehouseAssistantExportSection => item !== null);
 
   return {

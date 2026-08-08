@@ -2,6 +2,7 @@ import type {
   ParameterGuidanceContent,
   ParameterToggleGuidance,
 } from "@/components/shared/ParameterGuidance";
+import type { TFunction } from "i18next";
 
 type ValueGuide =
   ParameterGuidanceContent | Record<string, ParameterGuidanceContent>;
@@ -1948,6 +1949,159 @@ export function buildParameterGuidanceSourceResource(): Record<string, unknown> 
   }
 
   return { guidance };
+}
+
+export type ParameterGuidanceHint = {
+  module: string;
+  field: string;
+  value?: string;
+};
+
+export type ParameterGuidanceOption = {
+  value: string;
+  guidance: ParameterGuidanceContent;
+};
+
+const parameterQuestionWords = [
+  "parametre", "ayar", "secenek", "seçenek", "dropdown", "acilir liste", "açılır liste", "politika", "kural",
+  "ne ise yarar", "ne işe yarar", "ne demek", "secersem", "seçersem", "acarsam", "açarsam",
+  "what does", "parameter", "setting", "option",
+];
+
+const fieldAliases: Record<string, readonly string[]> = {
+  "goodsReceipt.blockPutawayUntilQualityDecision": ["kalite bekleyen üründe hangi raflar seçilebilir", "kalite beklerken raflama", "kalite raf seçimi"],
+  "goodsReceipt.erpPostingPolicy": ["mal kabul erp aktarım zamanı", "irsaliye ne zaman netsise atılır", "erp kayıt zamanı"],
+  "goodsReceipt.erpQualityGatePolicy": ["kalite erp aktarımını bekletsin", "manuel kalite planı erp", "kalite kapısı"],
+  "goodsReceipt.inventoryAvailabilityPolicy": ["stok ne zaman kullanılabilir", "mal kabul stok kullanılabilirliği"],
+  "project.sendSerialsToErp": ["serileri erpye aktar", "seri netsise gitsin mi"],
+  "production.productionOrderSource": ["üretim emri kaynağı", "iş emri nereden okunsun", "erp ve wms emirleri"],
+  "transfer.directPostingPolicy": ["transfer erp kayıt biçimi", "dat kayıt biçimi"],
+  "shipping.reservationPolicy": ["sevk rezervasyon politikası", "sevk stok ayırma"],
+};
+
+export function resolveParameterGuidanceHint(
+  question: string,
+  t?: TFunction,
+): ParameterGuidanceHint | null {
+  const normalizedQuestion = normalizeSearchText(question);
+  if (!parameterQuestionWords.some((word) => normalizedQuestion.includes(normalizeSearchText(word)))) return null;
+  const tokens = meaningfulTokens(normalizedQuestion);
+  let best: { score: number; module: string; field: string; value?: string } | null = null;
+
+  for (const [module, fields] of Object.entries(catalog)) {
+    for (const [field, definition] of Object.entries(fields)) {
+      const options = isGuide(definition)
+        ? [["default", definition] as const]
+        : Object.entries(definition);
+      const aliasText = fieldAliases[`${module}.${field}`]?.join(" ") ?? "";
+      const fieldText = normalizeSearchText(`${splitCamelCase(field)} ${aliasText}`);
+      let score = scoreText(normalizedQuestion, tokens, fieldText) * 2;
+      let selectedValue: string | undefined;
+      let selectedScore = 0;
+
+      for (const [value, rawGuidance] of options) {
+        const guidance = localizeParameterGuidance(
+          withResourceKey(rawGuidance, module, field, value),
+          t,
+        );
+        const optionText = normalizeSearchText([
+          value,
+          guidance.summary,
+          guidance.effect,
+          guidance.scenario,
+          guidance.decision,
+          guidance.warning,
+          ...guidance.affects,
+        ].filter(Boolean).join(" "));
+        const optionScore = scoreText(normalizedQuestion, tokens, optionText);
+        score += Math.min(optionScore, 8);
+        if (optionScore > selectedScore && optionMentioned(normalizedQuestion, value, optionText)) {
+          selectedScore = optionScore;
+          selectedValue = value === "default" ? undefined : value;
+        }
+      }
+
+      if (!best || score > best.score) best = { score, module, field, value: selectedValue };
+    }
+  }
+
+  return best && best.score >= 4
+    ? { module: best.module, field: best.field, value: best.value }
+    : null;
+}
+
+export function parameterGuidanceOptions(
+  module: string,
+  field: string,
+  t?: TFunction,
+): ParameterGuidanceOption[] {
+  const definition = catalog[module]?.[field];
+  if (!definition) return [];
+  const options = isGuide(definition)
+    ? [["default", definition] as const]
+    : Object.entries(definition);
+  return options.map(([value, guidance]) => ({
+    value,
+    guidance: localizeParameterGuidance(withResourceKey(guidance, module, field, value), t),
+  }));
+}
+
+export function localizeParameterGuidance(
+  guidance: ParameterGuidanceContent,
+  t?: TFunction,
+): ParameterGuidanceContent {
+  if (!t || !guidance.resourceKey) return guidance;
+  const translatedAffects = t(`${guidance.resourceKey}.affects`, {
+    returnObjects: true,
+    defaultValue: guidance.affects,
+  });
+  return {
+    ...guidance,
+    summary: String(t(`${guidance.resourceKey}.summary`, { defaultValue: guidance.summary })),
+    effect: String(t(`${guidance.resourceKey}.effect`, { defaultValue: guidance.effect })),
+    affects: Array.isArray(translatedAffects) ? translatedAffects.map(String) : guidance.affects,
+    scenario: String(t(`${guidance.resourceKey}.scenario`, { defaultValue: guidance.scenario })),
+    decision: guidance.decision
+      ? String(t(`${guidance.resourceKey}.decision`, { defaultValue: guidance.decision }))
+      : undefined,
+    warning: guidance.warning
+      ? String(t(`${guidance.resourceKey}.warning`, { defaultValue: guidance.warning }))
+      : undefined,
+  };
+}
+
+function normalizeSearchText(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/ı/g, "i")
+    .toLocaleLowerCase("tr-TR")
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function splitCamelCase(value: string): string {
+  return value.replace(/([a-z0-9])([A-Z])/g, "$1 $2");
+}
+
+function meaningfulTokens(value: string): string[] {
+  const stopWords = new Set(["parametre", "ayar", "secenek", "nedir", "icin", "bunu", "bunu", "olur", "hangi", "what", "does", "this", "setting", "option"]);
+  return [...new Set(value.split(" ").filter((token) => token.length >= 3 && !stopWords.has(token)))];
+}
+
+function scoreText(question: string, tokens: readonly string[], candidate: string): number {
+  let score = candidate && question.includes(candidate) ? 8 : 0;
+  for (const token of tokens) if (candidate.includes(token)) score += token.length >= 7 ? 2 : 1;
+  return score;
+}
+
+function optionMentioned(question: string, value: string, optionText: string): boolean {
+  const normalizedValue = normalizeSearchText(value);
+  if (normalizedValue && question.includes(normalizedValue)) return true;
+  if (value === "true") return /\b(acik|aktif|evet|acarsam|on|enabled|true)\b/.test(question);
+  if (value === "false") return /\b(kapali|pasif|hayir|off|disabled|false)\b/.test(question);
+  return scoreText(question, meaningfulTokens(question), optionText) >= 5;
 }
 
 function withResourceKey(

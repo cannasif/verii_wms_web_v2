@@ -1,5 +1,5 @@
 import { type FormEvent, type ReactElement, useEffect, useMemo, useRef, useState } from 'react';
-import { Archive, Bot, Boxes, Clock3, History, ListChecks, Loader2, MapPin, MessageSquarePlus, ScanBarcode, Send, ShieldCheck, UserRoundSearch, Waypoints } from 'lucide-react';
+import { Archive, Bot, Boxes, CircleAlert, Clock3, History, ListChecks, Loader2, MapPin, MessageSquarePlus, ReceiptText, ScanBarcode, Send, Settings2, ShieldCheck, UserRoundSearch, Waypoints } from 'lucide-react';
 import type { TFunction } from 'i18next';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,7 @@ import type {
   WarehouseAssistantMessageRow,
 } from '../types/warehouse-assistant.types';
 import { WarehouseAssistantExportMenu } from './WarehouseAssistantExportMenu';
+import { parameterGuidanceOptions, resolveParameterGuidanceHint } from '@/features/settings-guidance/parameter-guidance.catalog';
 
 interface ChatMessage {
   id: string;
@@ -37,12 +38,15 @@ const emptyCapabilities: WarehouseAssistantCapabilities = {
   canQueryBarcode: false,
   canQueryStockMovements: false,
   canQueryAssignedTasks: false,
+  canQueryGoodsReceiptAnalysis: false,
+  canExplainParameters: true,
   scopeLabel: '',
   exampleQuestions: [],
 };
 
 export function WarehouseAssistantPage(): ReactElement {
   const { t, i18n, moduleReady } = useModuleTranslation('warehouse-assistant');
+  const { t: settingsT, moduleReady: settingsGuidanceReady } = useModuleTranslation('settings-guidance');
   const setPageTitle = useUIStore((state) => state.setPageTitle);
   const [capabilities, setCapabilities] = useState(emptyCapabilities);
   const [conversations, setConversations] = useState<WarehouseAssistantConversationRow[]>([]);
@@ -92,7 +96,10 @@ export function WarehouseAssistantPage(): ReactElement {
     setMessage('');
     setIsSending(true);
     try {
-      const result = await warehouseAssistantApi.ask(trimmed, conversationId);
+      const parameterHint = capabilities.canExplainParameters
+        ? resolveParameterGuidanceHint(trimmed, settingsT)
+        : null;
+      const result = await warehouseAssistantApi.ask(trimmed, conversationId, parameterHint);
       setConversationId(result.conversationId);
       setMessages((current) => [...current, {
         id: `assistant-${result.messageId}`,
@@ -149,7 +156,7 @@ export function WarehouseAssistantPage(): ReactElement {
     }
   }
 
-  if (!moduleReady) {
+  if (!moduleReady || !settingsGuidanceReady) {
     return <section className="grid min-h-[calc(100dvh-8rem)] place-items-center"><Loader2 className="size-7 animate-spin text-cyan-500" aria-label="Loading" /></section>;
   }
 
@@ -222,7 +229,7 @@ export function WarehouseAssistantPage(): ReactElement {
                         : 'rounded-bl-md border border-slate-200 bg-slate-50 text-slate-800 dark:border-white/10 dark:bg-white/5 dark:text-slate-100',
                     )}>
                       <p className="whitespace-pre-wrap text-sm leading-6">{item.content}</p>
-                      {item.result ? <AssistantResult result={item.result} question={findPreviousQuestion(messages, index)} language={i18n.language} t={t} onSuggestion={(value) => void submitQuestion(value)} /> : null}
+                      {item.result ? <AssistantResult result={item.result} question={findPreviousQuestion(messages, index)} language={i18n.language} t={t} settingsT={settingsT} onSuggestion={(value) => void submitQuestion(value)} /> : null}
                     </div>
                   </article>
                 ))}
@@ -341,12 +348,15 @@ function WelcomePanel({ examples, onSelect, t }: { examples: string[]; onSelect:
   );
 }
 
-function AssistantResult({ result, question, language, t, onSuggestion }: { result: WarehouseAssistantChatResponse; question: string; language: string; t: TFunction; onSuggestion: (value: string) => void }): ReactElement | null {
-  const hasData = result.activities.length + result.serialBalances.length + result.serialReceipts.length + result.stockLocations.length + result.movements.length + result.tasks.length + (result.barcode ? 1 : 0) > 0;
+function AssistantResult({ result, question, language, t, settingsT, onSuggestion }: { result: WarehouseAssistantChatResponse; question: string; language: string; t: TFunction; settingsT: TFunction; onSuggestion: (value: string) => void }): ReactElement | null {
+  const goodsReceipts = result.goodsReceipts ?? [];
+  const parameterGuides = result.parameterGuides ?? [];
+  const exportableCount = result.activities.length + result.serialBalances.length + result.serialReceipts.length + result.stockLocations.length + result.movements.length + result.tasks.length + goodsReceipts.length + (result.barcode ? 1 : 0);
+  const hasData = exportableCount + parameterGuides.length > 0;
   if (!hasData && result.suggestions.length === 0) return null;
   return (
     <div className="mt-3 space-y-3 border-t border-slate-200 pt-3 dark:border-white/10">
-      {hasData ? <div className="flex justify-end"><WarehouseAssistantExportMenu result={result} question={question} language={language} t={t} /></div> : null}
+      {exportableCount > 0 ? <div className="flex justify-end"><WarehouseAssistantExportMenu result={result} question={question} language={language} t={t} /></div> : null}
       {result.activities.length > 0 ? (
         <ResultSection icon={<UserRoundSearch className="size-4" />} title={t('results.activities')}>
           {result.activities.map((row) => <ResultCard key={row.id} title={row.description} meta={`${row.userDisplayName} · ${formatDate(row.occurredAtUtc, language)}`} detail={`${row.entityType} #${row.entityId}`} />)}
@@ -404,12 +414,65 @@ function AssistantResult({ result, question, language, t, onSuggestion }: { resu
           ))}
         </ResultSection>
       ) : null}
+      {goodsReceipts.length > 0 ? (
+        <ResultSection icon={<ReceiptText className="size-4" />} title={t('results.goodsReceipts')}>
+          {goodsReceipts.map((row, index) => (
+            <ResultCard
+              key={`${row.goodsReceiptId}-${row.stockId}-${index}`}
+              title={`${row.documentNo} · ${row.stockCode} - ${row.stockName}`}
+              meta={`${formatDocumentDate(row.documentDate, language)} · ${row.supplierCode} - ${row.supplierName} · ${row.receivedByDisplayName}`}
+              detail={`${row.warehouseCode} - ${row.warehouseName} · ${formatNumber(row.receivedQuantity, language)} ${row.unitCode}${row.yapCode ? ` · ${t('goodsReceipt.configurationCode')}: ${row.yapCode}` : ''}`}
+            />
+          ))}
+        </ResultSection>
+      ) : null}
+      {parameterGuides.map((guide) => (
+        <ParameterGuideCard
+          key={`${guide.module}-${guide.field}-${guide.value ?? 'all'}`}
+          module={guide.module}
+          field={guide.field}
+          selectedValue={guide.value}
+          t={t}
+          settingsT={settingsT}
+        />
+      ))}
       {result.suggestions.length > 0 ? (
         <div className="flex flex-wrap gap-2">
           {result.suggestions.map((suggestion) => <button key={suggestion} type="button" onClick={() => onSuggestion(suggestion)} className="rounded-full border border-cyan-500/25 bg-cyan-500/10 px-3 py-1.5 text-left text-xs font-semibold text-cyan-800 hover:bg-cyan-500/15 dark:text-cyan-200">{suggestion}</button>)}
         </div>
       ) : null}
     </div>
+  );
+}
+
+function ParameterGuideCard({ module, field, selectedValue, t, settingsT }: { module: string; field: string; selectedValue?: string | null; t: TFunction; settingsT: TFunction }): ReactElement | null {
+  const options = parameterGuidanceOptions(module, field, settingsT);
+  if (options.length === 0) return null;
+  return (
+    <section>
+      <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-slate-500">
+        <Settings2 className="size-4" />{t('parameter.title')}
+      </div>
+      <div className="space-y-2">
+        {options.map((option, index) => {
+          const selected = selectedValue != null && option.value.toLocaleLowerCase() === selectedValue.toLocaleLowerCase();
+          return (
+            <article key={option.value} className={cn('rounded-2xl border p-3.5', selected ? 'border-cyan-500 bg-cyan-500/10' : 'border-slate-200 bg-white dark:border-white/10 dark:bg-slate-950/45')}>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-sm font-black">{t('parameter.option', { number: index + 1 })}</p>
+                {selected ? <span className="rounded-full bg-cyan-600 px-2.5 py-1 text-[11px] font-bold text-white">{t('parameter.mentionedOption')}</span> : null}
+              </div>
+              <p className="mt-2 text-sm font-bold text-slate-900 dark:text-white">{option.guidance.summary}</p>
+              <p className="mt-2 text-xs leading-5 text-slate-600 dark:text-slate-300"><strong>{t('parameter.whatHappens')}:</strong> {option.guidance.effect}</p>
+              {option.guidance.decision ? <p className="mt-2 text-xs leading-5 text-slate-600 dark:text-slate-300"><strong>{t('parameter.whenToChoose')}:</strong> {option.guidance.decision}</p> : null}
+              <p className="mt-2 rounded-xl bg-slate-100 px-3 py-2 text-xs leading-5 text-slate-700 dark:bg-white/5 dark:text-slate-200"><strong>{t('parameter.scenario')}:</strong> {option.guidance.scenario}</p>
+              <p className="mt-2 text-[11px] leading-5 text-slate-500"><strong>{t('parameter.affects')}:</strong> {option.guidance.affects.join(' · ')}</p>
+              {option.guidance.warning ? <p className="mt-2 flex items-start gap-1.5 text-xs font-semibold leading-5 text-amber-700 dark:text-amber-300"><CircleAlert className="mt-0.5 size-3.5 shrink-0" />{option.guidance.warning}</p> : null}
+            </article>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 
@@ -439,6 +502,11 @@ function translateValue(t: TFunction, group: string, value: string): string {
 function formatDate(value: string, language: string): string {
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? '-' : date.toLocaleString(language);
+}
+
+function formatDocumentDate(value: string, language: string): string {
+  const date = new Date(`${value}T00:00:00`);
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString(language);
 }
 
 function formatNumber(value: number, language: string): string {

@@ -18,7 +18,9 @@
     "description": "It understands stock, product, material, and finished good as related business terms. Include a serial number, user name, and time range for the most accurate result."
   },
   "examples": { "myActivities": "Show my activity today" },
-  "results": { "activities": "Activity records", "serialBalances": "Serial balances", "serialReceipts": "Goods receipt history", "stockLocations": "Stock and bin balances", "barcode": "Barcode and label resolution", "movements": "Inventory movement trail", "tasks": "Open and assigned tasks" },
+  "parameter": { "title": "Parameter options and effects", "option": "Option {{number}}", "mentionedOption": "Option in your question", "whatHappens": "What happens when selected?", "whenToChoose": "When should you choose it?", "scenario": "Real operation example", "affects": "Affected screens and operations" },
+  "results": { "activities": "Activity records", "serialBalances": "Serial balances", "serialReceipts": "Goods receipt history", "stockLocations": "Stock and bin balances", "barcode": "Barcode and label resolution", "movements": "Inventory movement trail", "tasks": "Open and assigned tasks", "goodsReceipts": "Goods receipt documents and received items" },
+  "goodsReceipt": { "configurationCode": "Configuration code" },
   "barcode": { "source": "Source", "serial": "Serial", "lot": "Lot", "stockOnly": "Item master barcode" },
   "barcodeSources": { "GoodsReceiptLabel": "Goods receipt label", "WarehouseInboundLabel": "Warehouse inbound label", "GeneratedBarcode": "Generated barcode", "GS1": "GS1 barcode", "SerialBalance": "Serial balance", "StockAlias": "Item master code" },
   "movementTypes": { "Receipt": "Receipt", "Shipment": "Shipment", "Transfer": "Transfer", "AdjustmentIncrease": "Adjustment increase", "AdjustmentDecrease": "Adjustment decrease", "CustomerReturn": "Customer return", "SupplierReturn": "Supplier return", "Reversal": "Reversal" },

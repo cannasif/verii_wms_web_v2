@@ -38,6 +38,7 @@
     "description": "Stok, ürün, malzeme ve mamul ifadelerini aynı iş kavramı olarak anlayabilir. Seri numarası, kullanıcı adı ve zaman aralığını açık yazmanız en doğru sonucu verir."
   },
   "examples": { "myActivities": "Bugün yaptığım işlemleri göster" },
+  "parameter": { "title": "Parametre seçenekleri ve etkileri", "option": "{{number}}. seçenek", "mentionedOption": "Sorduğunuz seçenek", "whatHappens": "Bu seçilirse ne olur?", "whenToChoose": "Ne zaman seçmelisiniz?", "scenario": "Gerçek operasyon örneği", "affects": "Etkilenen ekran ve işlemler" },
   "results": {
     "activities": "İşlem kayıtları",
     "serialBalances": "Seri bakiyeleri",
@@ -45,8 +46,10 @@
     "stockLocations": "Stok ve raf bakiyeleri",
     "barcode": "Barkod ve etiket çözümü",
     "movements": "Stok hareket izi",
-    "tasks": "Açık ve atanmış görevler"
+    "tasks": "Açık ve atanmış görevler",
+    "goodsReceipts": "Mal kabul belgeleri ve alınan stoklar"
   },
+  "goodsReceipt": { "configurationCode": "Yapılandırma kodu" },
   "barcode": { "source": "Kaynak", "serial": "Seri", "lot": "Lot", "stockOnly": "Stok kartı barkodu" },
   "barcodeSources": { "GoodsReceiptLabel": "Mal kabul etiketi", "WarehouseInboundLabel": "Ambar giriş etiketi", "GeneratedBarcode": "Üretilen barkod", "GS1": "GS1 barkodu", "SerialBalance": "Seri bakiyesi", "StockAlias": "Stok kartı kodu" },
   "movementTypes": { "Receipt": "Giriş", "Shipment": "Sevk", "Transfer": "Transfer", "AdjustmentIncrease": "Sayım/fark artışı", "AdjustmentDecrease": "Sayım/fark azalışı", "CustomerReturn": "Müşteri iadesi", "SupplierReturn": "Tedarikçi iadesi", "Reversal": "Ters kayıt" },
