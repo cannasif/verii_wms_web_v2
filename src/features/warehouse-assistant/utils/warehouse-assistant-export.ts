@@ -70,6 +70,8 @@ export function buildWarehouseAssistantExportModel({
   generatedAt = new Date(),
 }: WarehouseAssistantExportParams): WarehouseAssistantExportModel {
   const yesNo = (value: boolean): string => t(value ? 'export.values.yes' : 'export.values.no');
+  const enumValue = (group: string, value: string): string =>
+    t(`${group}.${value}`, { defaultValue: value });
   const sections = [
     section(
       'activities',
@@ -80,7 +82,8 @@ export function buildWarehouseAssistantExportModel({
       ],
       result.activities.map((row) => ({
         occurredAt: dateValue(row.occurredAtUtc), user: row.userDisplayName, action: row.action,
-        description: row.description, entityType: row.entityType, entityId: row.entityId, result: row.result,
+        description: row.description, entityType: row.entityType, entityId: row.entityId,
+        result: enumValue('resultStatuses', row.result),
       })),
     ),
     section(
@@ -96,7 +99,8 @@ export function buildWarehouseAssistantExportModel({
         stockCode: row.stockCode, stockName: row.stockName, serialNo: row.serialNo, lotNo: textValue(row.lotNo),
         warehouseCode: row.warehouseCode, warehouseName: row.warehouseName, locationCode: row.locationCode,
         locationName: row.locationName, quantity: row.quantity, reservedQuantity: row.reservedQuantity,
-        availableQuantity: row.availableQuantity, unitCode: row.unitCode, stockStatus: row.stockStatus,
+        availableQuantity: row.availableQuantity, unitCode: row.unitCode,
+        stockStatus: enumValue('stockStatuses', row.stockStatus),
         lastTransactionAt: dateValue(row.lastTransactionAtUtc),
       })),
     ),
@@ -159,10 +163,10 @@ export function buildWarehouseAssistantExportModel({
       ],
       result.movements.map((row) => ({
         occurredAt: dateValue(row.occurredAtUtc), movementType: t(`movementTypes.${row.operationType}`, { defaultValue: row.operationType }),
-        movementStatus: row.operationStatus, referenceNo: textValue(row.referenceNo) || textValue(row.referenceType),
+        movementStatus: enumValue('operationStatuses', row.operationStatus), referenceNo: textValue(row.referenceNo) || textValue(row.referenceType),
         stockCode: row.stockCode, stockName: row.stockName, serialNo: textValue(row.serialNo), lotNo: textValue(row.lotNo),
         warehouseName: row.warehouseName, locationCode: row.locationCode, quantityChange: row.quantityDelta,
-        unitCode: row.unitCode, stockStatus: row.stockStatus, isReversal: yesNo(row.isReversal),
+        unitCode: row.unitCode, stockStatus: enumValue('stockStatuses', row.stockStatus), isReversal: yesNo(row.isReversal),
       })),
     ),
     section(
@@ -175,9 +179,9 @@ export function buildWarehouseAssistantExportModel({
         col(t, 'plannedAt', 21, false), col(t, 'dueAt', 21),
       ],
       result.tasks.map((row) => ({
-        module: t(`taskModules.${row.module}`, { defaultValue: row.module }), taskNo: row.taskNo, taskType: row.taskType,
+        module: enumValue('taskModules', row.module), taskNo: row.taskNo, taskType: enumValue('taskTypes', row.taskType),
         documentNo: row.documentNo, warehouseName: row.warehouseName, assignee: row.assigneeDisplayName,
-        status: t(`taskStatuses.${row.status}`, { defaultValue: row.status }), priority: row.priority,
+        status: enumValue('taskStatuses', row.status), priority: row.priority,
         plannedQuantity: row.plannedQuantity, processedQuantity: row.processedQuantity,
         remainingQuantity: row.remainingQuantity, plannedAt: dateValue(row.plannedAtUtc), dueAt: dateValue(row.dueAtUtc),
       })),
@@ -195,7 +199,7 @@ export function buildWarehouseAssistantExportModel({
         receivedAt: dateValue(row.receivedAtUtc ?? row.documentDate), goodsReceiptNo: row.documentNo,
         stockCode: row.stockCode, stockName: row.stockName, configurationCode: textValue(row.yapCode),
         warehouseCode: row.warehouseCode, warehouseName: row.warehouseName, quantity: row.receivedQuantity,
-        unitCode: row.unitCode, status: row.status, receivedBy: row.receivedByDisplayName,
+        unitCode: row.unitCode, status: enumValue('operationStatuses', row.status), receivedBy: row.receivedByDisplayName,
       })),
     ),
   ].filter((item): item is WarehouseAssistantExportSection => item !== null);
