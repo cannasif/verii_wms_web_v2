@@ -15,6 +15,20 @@
     "success": "Konuşma arşivlendi.",
     "error": "Konuşma arşivlenemedi."
   },
+  "export": {
+    "action": "Dışa aktar",
+    "excel": "Excel olarak indir",
+    "pdf": "PDF olarak indir",
+    "successExcel": "AI Helper sonucu Excel olarak indirildi.",
+    "successPdf": "AI Helper sonucu PDF olarak indirildi.",
+    "error": "Sonuç dosyası oluşturulamadı.",
+    "reportTitle": "V3RII WMS - Depo Asistanı Sonucu",
+    "summarySheet": "Sorgu Özeti",
+    "metadata": { "question": "Kullanıcı sorusu", "answer": "Asistan cevabı", "scope": "Yetki kapsamı", "generatedAt": "Oluşturulma zamanı", "conversationId": "Konuşma ID", "messageId": "Mesaj ID", "language": "Dil" },
+    "values": { "yes": "Evet", "no": "Hayır" },
+    "columns": { "occurredAt": "İşlem zamanı", "user": "Kullanıcı", "action": "İşlem", "description": "Açıklama", "entityType": "Kayıt türü", "entityId": "Kayıt ID", "result": "Sonuç", "stockCode": "Stok kodu", "stockName": "Stok adı", "serialNo": "Seri no", "lotNo": "Lot no", "warehouseCode": "Depo kodu", "warehouseName": "Depo adı", "locationCode": "Raf kodu", "locationName": "Raf adı", "quantity": "Miktar", "reservedQuantity": "Rezerve miktar", "availableQuantity": "Kullanılabilir miktar", "unitCode": "Birim", "stockStatus": "Stok durumu", "lastTransactionAt": "Son hareket zamanı", "receivedAt": "Kabul zamanı", "goodsReceiptNo": "Mal kabul no", "receivedBy": "Kabul eden", "barcode": "Barkod", "source": "Kaynak", "configurationCode": "Yapılandırma kodu", "manufacturingDate": "Üretim tarihi", "expirationDate": "Son kullanma tarihi", "missingFields": "Eksik alanlar", "movementType": "Hareket tipi", "movementStatus": "Hareket durumu", "referenceNo": "Referans no", "quantityChange": "Miktar değişimi", "isReversal": "Ters kayıt", "module": "Modül", "taskNo": "Görev no", "taskType": "Görev tipi", "documentNo": "Belge no", "assignee": "Atanan kişi", "status": "Durum", "priority": "Öncelik", "plannedQuantity": "Planlanan miktar", "processedQuantity": "İşlenen miktar", "remainingQuantity": "Kalan miktar", "plannedAt": "Plan zamanı", "dueAt": "Son tamamlanma zamanı" }
+  },
+  "exportScopes": { "self": "Yalnız kendi kayıtlarım ve yetkili olduğum depolar", "all-users": "Tüm kullanıcılar ve yetkili olduğum depolar", "selected-user": "Seçilen kullanıcı ve yetkili olduğum depolar", "authorized-warehouses": "Yalnız yetkili olduğum depolar", "all-users-available": "Tüm kullanıcıları sorgulama yetkisi mevcut", "authorized": "Yetkili olduğum WMS verileri", "denied": "Bu sorgu için erişim izni yok" },
   "thinking": "Yetkili WMS kayıtları kontrol ediliyor...",
   "placeholder": "Örnek: DTG-1 serisi hangi depo ve raflarda?",
   "send": "Soruyu gönder",
