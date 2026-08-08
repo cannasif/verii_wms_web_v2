@@ -8,6 +8,9 @@ export const KKD_QUOTA_FULL_MESSAGE =
 export const KKD_QUOTA_FREQUENCY_HINT =
   'Bu ürün için kullanım sıklığı dolmamış olabilir; sonraki hak tarihine bakın.';
 
+export const KKD_QUOTA_REJECT_HINT =
+  'Reddederseniz yalnızca kota aşan kalem(ler) belgeden düşer; hak edilen diğer kalemler aynı ambar çıkışıyla teslim edilmeye devam eder. Personel, düşen kalem için ayrıca yeni bir talep açmalıdır.';
+
 export function formatExcessApprovalStatus(status: string): string {
   switch (status) {
     case 'Pending':
@@ -26,4 +29,23 @@ export function formatExcessApprovalStatus(status: string): string {
 
 export function isExcessApprovalPending(status: string | null | undefined): boolean {
   return status === 'Pending';
+}
+
+export function formatDistributionStatus(status: string): string {
+  switch (status) {
+    case 'Draft':
+      return 'Taslak';
+    case 'Validated':
+      return 'Doğrulandı';
+    case 'OutboundCreated':
+      return 'Çıkışa hazır';
+    case 'Completed':
+      return 'Tamamlandı';
+    case 'Cancelled':
+      return 'İptal edildi';
+    case 'Failed':
+      return 'Başarısız';
+    default:
+      return status || '—';
+  }
 }

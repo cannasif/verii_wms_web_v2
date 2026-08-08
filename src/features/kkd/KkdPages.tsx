@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
-import type { AppDropdownOption } from '@/components/shared/AppDropdown';
+import { AppDropdown, type AppDropdownOption } from '@/components/shared/AppDropdown';
 import { AppDateInput, AppInput } from '@/components/shared/AppInput';
 import { OpsActionButton } from '@/components/shared/OpsActionButton';
 import { OpsGridEmptyState } from '@/components/shared/OpsGridEmptyState';
@@ -35,9 +35,11 @@ import { OpsStatusBadge, inferOpsStatusTone } from '@/components/shared/OpsStatu
 import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
 import { PagedLookupDialog } from '@/components/shared/PagedLookupDialog';
 import { ParameterPageGuide, ParameterToggleCard } from '@/components/shared/ParameterGuidance';
+import { ResponsiveDialog } from '@/components/shared/ResponsiveDialog';
 import { OPS_SELECT_TRIGGER_CLASS } from '@/components/shared/ops-field-styles';
 import type { DropdownPage } from '@/hooks/useDropdownInfiniteSearch';
 import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
+import { stockMovementsApi } from '@/features/stock-movements/api/stock-movements.api';
 import { cn } from '@/lib/utils';
 import type { PagedResponse } from '@/types/api';
 import { parameterToggleGuidance } from '@/features/settings-guidance/parameter-guidance.catalog';
@@ -55,6 +57,7 @@ import {
 import {
   kkdApi,
   type KkdCustomerLookup,
+  type KkdDistribution,
   type KkdEntitlementResult,
   type KkdLookup,
   type KkdPolicy,
@@ -64,11 +67,13 @@ import { KkdMatrixManager } from './KkdMatrixManager';
 import { KkdOverrideManager } from './KkdOverrideManager';
 import { KkdDistributionReceiptDialog } from './KkdDistributionReceiptDialog';
 import {
+  formatDistributionStatus,
   formatExcessApprovalStatus,
   isExcessApprovalPending,
   KKD_QUOTA_FREQUENCY_HINT,
   KKD_QUOTA_FULL_MESSAGE,
   KKD_QUOTA_FULL_TITLE,
+  KKD_QUOTA_REJECT_HINT,
 } from './kkd-quota-copy';
 
 const toPagedResponse = <T,>(page: DropdownPage<T>): PagedResponse<T> => ({
@@ -170,25 +175,16 @@ export function KkdOverviewPage(): ReactElement {
               },
             ]
           : []),
-        ...(materialRequests.data?.isEnabled
-          ? [
-              {
-                key: 'material-requests',
-                code: 'KKD.MRQ',
-                href: '/warehouse/production-transfers/material-requests',
-                icon: ClipboardList,
-                title: 'Malzeme talep siparişleri',
-                description: 'Personel kartından bağlı carinin canlı Netsis açık siparişlerini getirip dağıtıma hazırlayın.',
-              },
-            ]
-          : []),
         {
           key: 'distribution-new',
           code: 'KKD.NEW',
           href: '/warehouse/kkd/distributions/new',
           icon: PackageCheck,
-          title: 'Yeni KKD dağıtımı',
-          description: 'Açık siparişten teslim ve fiziksel ambar çıkışını tek akışta başlatın.',
+          title: 'KKD Malzeme Talep Siparişleri',
+          description: materialRequests.data?.isEnabled
+            ? 'Personel kartından Netsis açık siparişlerini seçip kalem, depo ve görev atamasıyla dağıtım / ambar çıkışını tek sayfada hazırlayın.'
+            : 'Açık siparişten teslim ve fiziksel ambar çıkışını tek akışta başlatın (malzeme talep kanalı şube politikasından açılır).',
+          featured: Boolean(materialRequests.data?.isEnabled),
         },
         {
           key: 'distributions',
@@ -1328,13 +1324,21 @@ export function KkdEntitlementPage(): ReactElement {
   );
 }
 
+const DISTRIBUTION_PAGE_SIZE_OPTIONS: AppDropdownOption[] = [10, 20, 50, 100].map((size) => ({
+  value: String(size),
+  label: String(size),
+}));
+
 export function KkdDistributionsPage(): ReactElement {
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [warehouseFilter, setWarehouseFilter] = useState('');
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [receiptOpen, setReceiptOpen] = useState(false);
+  const [decisionTarget, setDecisionTarget] = useState<{ row: KkdDistribution; approve: boolean } | null>(null);
+  const [decisionReason, setDecisionReason] = useState('');
   useEffect(() => {
     const timer = window.setTimeout(() => {
       setSearch(searchInput.trim());
@@ -1345,6 +1349,11 @@ export function KkdDistributionsPage(): ReactElement {
   const query = useQuery({
     queryKey: ['kkd', 'distributions', 'all'],
     queryFn: () => kkdApi.distributions(),
+  });
+  const warehousesQuery = useQuery({
+    queryKey: ['stock-movements', 'warehouses'],
+    queryFn: stockMovementsApi.getWarehouses,
+    staleTime: 5 * 60 * 1000,
   });
   const filteredRows = useMemo(() => {
     const needle = search.toLocaleLowerCase('tr-TR');
@@ -1357,20 +1366,26 @@ export function KkdDistributionsPage(): ReactElement {
         .includes(needle);
     });
   }, [query.data, search, warehouseFilter]);
-  const pageSize = 25;
   const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize));
   const pageRows = useMemo(() => {
     const safePage = Math.min(page, totalPages);
     const startIndex = (safePage - 1) * pageSize;
     return filteredRows.slice(startIndex, startIndex + pageSize);
-  }, [filteredRows, page, totalPages]);
+  }, [filteredRows, page, pageSize, totalPages]);
   const warehouseOptions = useMemo((): AppDropdownOption[] => {
-    const ids = [...new Set((query.data ?? []).map((row) => row.warehouseId))].sort((a, b) => a - b);
+    const known = [...(warehousesQuery.data ?? [])].sort((a, b) => a.warehouseCode - b.warehouseCode);
     return [
       { value: '', label: 'Tüm depolar' },
-      ...ids.map((id) => ({ value: String(id), label: `Depo #${id}` })),
+      ...known.map((warehouse) => ({
+        value: String(warehouse.id),
+        label: `${warehouse.warehouseCode} · ${warehouse.warehouseName}`,
+      })),
     ];
-  }, [query.data]);
+  }, [warehousesQuery.data]);
+  const selectedWarehouseLabel = useMemo(
+    () => warehouseOptions.find((option) => option.value === warehouseFilter)?.label,
+    [warehouseOptions, warehouseFilter],
+  );
   useEffect(() => {
     if (page > totalPages) setPage(totalPages);
   }, [page, totalPages]);
@@ -1381,18 +1396,22 @@ export function KkdDistributionsPage(): ReactElement {
   });
   const qc = useQueryClient();
   const { can } = usePermissionAccess();
-  const [reasons, setReasons] = useState<Record<number, string>>({});
   const decision = useMutation({
-    mutationFn: ({ id, approve }: { id: number; approve: boolean }) =>
-      kkdApi.decideExcessApproval(id, approve, reasons[id] || ''),
+    mutationFn: ({ id, approve, reason }: { id: number; approve: boolean; reason: string }) =>
+      kkdApi.decideExcessApproval(id, approve, reason),
     onSuccess: async () => {
       toast.success('Kota aşım kararı kaydedildi.');
       await qc.invalidateQueries({ queryKey: ['kkd', 'distributions'] });
+      setDecisionTarget(null);
     },
     onError: (error) => toast.error(message(error)),
   });
   const canManageOverrides = can('WMS.KKD.OVERRIDES.MANAGE');
-  const columns = ['Belge', 'Personel', 'Depo', 'Toplam', 'Hak', 'Fazla', 'Kota aşım onayı', 'Durum', 'Ambar çıkışı', 'İşlemler'];
+  const columns = ['Belge', 'Personel', 'Depo', 'Toplam', 'Hak', 'Fazla', 'Kota aşım onayı', 'Durum', 'İşlemler'];
+  const openDecision = (row: KkdDistribution, approve: boolean) => {
+    setDecisionReason('');
+    setDecisionTarget({ row, approve });
+  };
 
   return (
     <KkdPage
@@ -1412,7 +1431,7 @@ export function KkdDistributionsPage(): ReactElement {
           <OpsActionButton variant="primary" className="wms-ops-list-toolbar-btn" asChild>
             <Link to="/warehouse/kkd/distributions/new">
               <PackageCheck className="size-3.5 shrink-0" />
-              Yeni dağıtım
+              Yeni talep siparişi
             </Link>
           </OpsActionButton>
         </div>
@@ -1438,17 +1457,17 @@ export function KkdDistributionsPage(): ReactElement {
               setPage(1);
             }}
             options={warehouseOptions}
-            placeholder="Depo filtrele"
+            placeholder={warehousesQuery.isLoading ? 'Depolar yükleniyor…' : 'Depo filtrele'}
             searchable
           />
         </div>
         {warehouseFilter ? (
           <div className="flex items-center gap-2 border-b border-[var(--wms-app-border)] bg-[color-mix(in_oklab,var(--wms-ops-accent)_6%,transparent)] px-3 py-2 text-[0.72rem] text-[var(--wms-app-text-muted)]">
             <Warehouse className="size-3.5 shrink-0 text-[var(--wms-ops-accent)]" strokeWidth={1.75} />
-            Yalnızca depo #{warehouseFilter} kayıtları gösteriliyor.
+            Yalnızca {selectedWarehouseLabel ?? `depo #${warehouseFilter}`} kayıtları gösteriliyor.
           </div>
         ) : null}
-        <KkdTableShell minWidthClass="min-w-[1240px]" className="border-x-0 border-b-0">
+        <KkdTableShell minWidthClass="min-w-[1040px]" className="border-x-0 border-b-0">
           <thead className="sticky top-0 z-10">
             <tr>
               {columns.map((column) => (
@@ -1473,7 +1492,6 @@ export function KkdDistributionsPage(): ReactElement {
               </tr>
             ) : (
               pageRows.map((row) => {
-                const reason = reasons[row.id] || '';
                 const isPending = isExcessApprovalPending(row.excessApprovalStatus);
                 return (
                   <tr key={row.id}>
@@ -1491,83 +1509,75 @@ export function KkdDistributionsPage(): ReactElement {
                       {row.excessQuantity}
                     </td>
                     <td className={KKD_CELL}>
-                      <OpsStatusBadge tone={inferOpsStatusTone(row.excessApprovalStatus)}>
-                        {formatExcessApprovalStatus(row.excessApprovalStatus)}
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <OpsStatusBadge
+                          tone={inferOpsStatusTone(row.excessApprovalStatus)}
+                          title={row.excessApprovalReason || (isPending ? KKD_QUOTA_FULL_MESSAGE : undefined)}
+                        >
+                          {formatExcessApprovalStatus(row.excessApprovalStatus)}
+                        </OpsStatusBadge>
+                        {canManageOverrides && isPending ? (
+                          <div className="wms-ops-row-actions">
+                            <button
+                              type="button"
+                              title="Onayla"
+                              aria-label="Onayla"
+                              className="wms-ops-grid-icon-btn wms-ops-grid-icon-btn--approve"
+                              onClick={() => openDecision(row, true)}
+                            >
+                              <Check className="size-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              title="Reddet"
+                              aria-label="Reddet"
+                              className="wms-ops-grid-icon-btn wms-ops-grid-icon-btn--danger"
+                              onClick={() => openDecision(row, false)}
+                            >
+                              <X className="size-3.5" />
+                            </button>
+                          </div>
+                        ) : null}
+                      </div>
+                    </td>
+                    <td className={KKD_CELL}>
+                      <OpsStatusBadge tone={inferOpsStatusTone(row.status)}>
+                        {formatDistributionStatus(row.status)}
                       </OpsStatusBadge>
-                      {isPending ? (
-                        <div className="mt-1.5 max-w-sm text-xs leading-5 text-amber-600 dark:text-amber-400">
-                          <strong className="block">{KKD_QUOTA_FULL_TITLE}</strong>
-                          <span>{KKD_QUOTA_FULL_MESSAGE}</span>
-                        </div>
-                      ) : null}
-                      {row.excessApprovalReason ? (
-                        <div className="mt-1 text-xs text-[var(--wms-app-text-muted)]">{row.excessApprovalReason}</div>
-                      ) : null}
-                      {canManageOverrides && isPending ? (
-                        <div className="mt-2 flex min-w-[300px] flex-wrap items-center gap-1.5">
-                          <AppInput
-                            value={reason}
-                            onChange={(event) =>
-                              setReasons((current) => ({ ...current, [row.id]: event.target.value }))
-                            }
-                            placeholder="Fiziksel kontrol notu (zorunlu)"
-                            className="min-w-44"
-                          />
-                          <OpsActionButton
-                            variant="primary"
-                            className="wms-ops-list-toolbar-btn"
-                            disabled={decision.isPending || reason.trim().length < 5}
-                            onClick={() => decision.mutate({ id: row.id, approve: true })}
-                          >
-                            <Check className="size-3.5 shrink-0" />
-                            Onayla
-                          </OpsActionButton>
-                          <OpsActionButton
-                            variant="secondary"
-                            className="wms-ops-list-toolbar-btn !text-rose-500"
-                            disabled={decision.isPending || reason.trim().length < 5}
-                            onClick={() => decision.mutate({ id: row.id, approve: false })}
-                          >
-                            <X className="size-3.5 shrink-0" />
-                            Reddet
-                          </OpsActionButton>
-                        </div>
-                      ) : null}
                     </td>
                     <td className={KKD_CELL}>
-                      <OpsStatusBadge tone={inferOpsStatusTone(row.status)}>{row.status}</OpsStatusBadge>
-                    </td>
-                    <td className={KKD_CELL}>
-                      {row.warehouseOutboundId ? (
-                        <OpsActionButton variant="secondary" className="wms-ops-list-toolbar-btn" asChild>
-                          <Link to={`/warehouse/warehouse-outbounds/${row.warehouseOutboundId}/operations`}>
-                            <PackageCheck className="size-3.5" />
-                            Operasyon
-                          </Link>
-                        </OpsActionButton>
-                      ) : (
-                        <span className="text-[var(--wms-app-text-muted)]">—</span>
-                      )}
-                    </td>
-                    <td className={KKD_CELL}>
-                      <div className="flex flex-wrap gap-1.5">
-                        <OpsActionButton
-                          variant="secondary"
-                          className="wms-ops-list-toolbar-btn"
+                      <div className="wms-ops-row-actions">
+                        <button
+                          type="button"
+                          title="Detay"
+                          aria-label="Detay"
+                          className="wms-ops-grid-icon-btn"
                           onClick={() => setSelectedId(row.id)}
                         >
-                          <ClipboardCheck className="size-3.5" /> Detay
-                        </OpsActionButton>
-                        <OpsActionButton
-                          variant="secondary"
-                          className="wms-ops-list-toolbar-btn"
+                          <ClipboardCheck className="size-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          title="Teslim belgesi"
+                          aria-label="Teslim belgesi"
+                          className="wms-ops-grid-icon-btn"
                           onClick={() => {
                             setSelectedId(row.id);
                             setReceiptOpen(true);
                           }}
                         >
-                          <Printer className="size-3.5" /> Belge
-                        </OpsActionButton>
+                          <Printer className="size-3.5" />
+                        </button>
+                        {row.warehouseOutboundId ? (
+                          <Link
+                            to={`/warehouse/warehouse-outbounds/${row.warehouseOutboundId}/operations`}
+                            title="Ambar çıkış operasyonu"
+                            aria-label="Ambar çıkış operasyonu"
+                            className="wms-ops-grid-icon-btn"
+                          >
+                            <PackageCheck className="size-3.5" />
+                          </Link>
+                        ) : null}
                       </div>
                     </td>
                   </tr>
@@ -1576,10 +1586,22 @@ export function KkdDistributionsPage(): ReactElement {
             )}
           </tbody>
         </KkdTableShell>
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--wms-app-border)] p-3 text-sm">
-          <span>
-            {filteredRows.length} kayıt · Sayfa {Math.min(page, totalPages)}/{totalPages}
-          </span>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--wms-app-border)] p-3 text-sm">
+          <div className="flex items-center gap-2 text-[var(--wms-app-text-muted)]">
+            <span>
+              {filteredRows.length} kayıt · Sayfa {Math.min(page, totalPages)}/{totalPages}
+            </span>
+            <AppDropdown
+              value={String(pageSize)}
+              onValueChange={(value) => {
+                setPageSize(Number(value));
+                setPage(1);
+              }}
+              options={DISTRIBUTION_PAGE_SIZE_OPTIONS}
+              ariaLabel="Sayfa başına kayıt"
+              className="h-9 w-20"
+            />
+          </div>
           <div className="flex gap-2">
             <OpsActionButton variant="secondary" disabled={page <= 1} onClick={() => setPage((value) => value - 1)}>
               Önceki
@@ -1595,30 +1617,86 @@ export function KkdDistributionsPage(): ReactElement {
         </div>
       </KkdPanel>
 
-      {selectedId ? (
-        <KkdPanel
-          code={`DST_${selectedId}`}
-          icon={<ClipboardCheck className="size-4" />}
-          title={detail.data?.documentNo || 'Dağıtım detayı'}
-          description="Belge özeti, stok kalemleri, hak/fazla ayrımı, sipariş ve izlenebilirlik bilgileri."
-          actions={
-            <div className="flex flex-wrap gap-1.5">
+      <ResponsiveDialog
+        open={Boolean(decisionTarget)}
+        onClose={() => setDecisionTarget(null)}
+        title={decisionTarget ? `${decisionTarget.row.documentNo} · ${decisionTarget.approve ? 'Onayla' : 'Reddet'}` : ''}
+        description={decisionTarget ? `${decisionTarget.row.employeeCode} · ${decisionTarget.row.employeeName}` : undefined}
+        className="!max-w-lg"
+      >
+        {decisionTarget ? (
+          <div className="space-y-3 text-sm">
+            <div className="rounded-none border border-amber-500/35 bg-amber-500/10 p-3">
+              <strong className="block text-[0.82rem]">{KKD_QUOTA_FULL_TITLE}</strong>
+              <p className="mt-1 text-[0.78rem] leading-5 text-[var(--wms-app-text-muted)]">{KKD_QUOTA_FULL_MESSAGE}</p>
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-center text-xs">
+              <div className="rounded-none border border-[var(--wms-app-border)] p-2">
+                <span className="block text-[var(--wms-app-text-muted)]">Toplam</span>
+                <strong className="text-sm">{decisionTarget.row.totalQuantity}</strong>
+              </div>
+              <div className="rounded-none border border-[var(--wms-app-border)] p-2">
+                <span className="block text-[var(--wms-app-text-muted)]">Hak</span>
+                <strong className="text-sm text-emerald-500">{decisionTarget.row.entitledQuantity}</strong>
+              </div>
+              <div className="rounded-none border border-[var(--wms-app-border)] p-2">
+                <span className="block text-[var(--wms-app-text-muted)]">Fazla</span>
+                <strong className="text-sm text-amber-500">{decisionTarget.row.excessQuantity}</strong>
+              </div>
+            </div>
+            {!decisionTarget.approve ? (
+              <p className="text-[0.78rem] leading-5 text-[var(--wms-app-text-muted)]">{KKD_QUOTA_REJECT_HINT}</p>
+            ) : null}
+            <AppInput
+              value={decisionReason}
+              onChange={(event) => setDecisionReason(event.target.value)}
+              placeholder="Fiziksel kontrol notu (zorunlu, en az 5 karakter)"
+            />
+            <div className="flex justify-end gap-2 pt-1">
+              <OpsActionButton variant="secondary" onClick={() => setDecisionTarget(null)}>
+                Vazgeç
+              </OpsActionButton>
+              <OpsActionButton
+                variant={decisionTarget.approve ? 'primary' : 'secondary'}
+                className={decisionTarget.approve ? undefined : '!text-rose-500'}
+                disabled={decision.isPending || decisionReason.trim().length < 5}
+                onClick={() =>
+                  decision.mutate({
+                    id: decisionTarget.row.id,
+                    approve: decisionTarget.approve,
+                    reason: decisionReason.trim(),
+                  })
+                }
+              >
+                {decisionTarget.approve ? <Check className="size-3.5 shrink-0" /> : <X className="size-3.5 shrink-0" />}
+                {decisionTarget.approve ? 'Onayla' : 'Reddet'}
+              </OpsActionButton>
+            </div>
+          </div>
+        ) : null}
+      </ResponsiveDialog>
+
+      <ResponsiveDialog
+        open={Boolean(selectedId)}
+        onClose={() => setSelectedId(null)}
+        title={detail.data?.documentNo || 'Dağıtım detayı'}
+        description="Belge özeti, stok kalemleri, hak/fazla ayrımı, sipariş ve izlenebilirlik bilgileri."
+        className="!max-w-4xl"
+      >
+        {selectedId ? (
+          <>
+            <div className="mb-3 flex justify-end">
               <OpsActionButton variant="secondary" disabled={!detail.data} onClick={() => setReceiptOpen(true)}>
                 <Printer className="size-3.5" /> Teslim belgesi
               </OpsActionButton>
-              <OpsActionButton variant="secondary" onClick={() => setSelectedId(null)}>
-                <X className="size-3.5" /> Kapat
-              </OpsActionButton>
             </div>
-          }
-          bodyClassName="px-0 py-0 sm:px-0 sm:py-0"
-        >
-          {detail.isLoading ? <div className="p-4"><OpsLoadingState code="DETAIL" message="Dağıtım detayı yükleniyor…" compact /></div>
-            : detail.data ? (
+            {detail.isLoading ? (
+              <OpsLoadingState code="DETAIL" message="Dağıtım detayı yükleniyor…" compact />
+            ) : detail.data ? (
               <>
-                <div className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-5">
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
                   <KkdMetric label="Personel" value={`${detail.data.employeeCode} · ${detail.data.employeeName}`} />
-                  <KkdMetric label="Durum" value={detail.data.status} />
+                  <KkdMetric label="Durum" value={formatDistributionStatus(detail.data.status)} />
                   <KkdMetric
                     label="Kota onayı"
                     value={formatExcessApprovalStatus(detail.data.excessApprovalStatus)}
@@ -1629,7 +1707,7 @@ export function KkdDistributionsPage(): ReactElement {
                 {isExcessApprovalPending(detail.data.excessApprovalStatus) ? (
                   <KkdCallout
                     tone="warn"
-                    className="mx-4 mb-4"
+                    className="mt-4"
                     icon={<ShieldAlert className="size-4" strokeWidth={1.75} />}
                     title={KKD_QUOTA_FULL_TITLE}
                   >
@@ -1639,8 +1717,8 @@ export function KkdDistributionsPage(): ReactElement {
                     ) : null}
                   </KkdCallout>
                 ) : null}
-                {detail.data.failureReason ? <KkdCallout tone="danger" className="mx-4 mb-4">{detail.data.failureReason}</KkdCallout> : null}
-                <KkdTableShell minWidthClass="min-w-[980px]" className="border-x-0 border-b-0">
+                {detail.data.failureReason ? <KkdCallout tone="danger" className="mt-4">{detail.data.failureReason}</KkdCallout> : null}
+                <KkdTableShell minWidthClass="min-w-[980px]" className="mt-4">
                   <thead><tr>{['#', 'Stok kodu', 'Stok adı', 'Grup', 'Toplam', 'Hak', 'Fazla', 'Raf', 'Lot / seri', 'Sipariş'].map((column) => <th key={column} className={KKD_HEAD_CELL}>{column}</th>)}</tr></thead>
                   <tbody>{detail.data.lines.map((line) => (
                     <tr key={line.id}>
@@ -1658,9 +1736,12 @@ export function KkdDistributionsPage(): ReactElement {
                   ))}</tbody>
                 </KkdTableShell>
               </>
-            ) : <div className="p-4"><OpsGridEmptyState message="Dağıtım detayı yüklenemedi." /></div>}
-        </KkdPanel>
-      ) : null}
+            ) : (
+              <OpsGridEmptyState message="Dağıtım detayı yüklenemedi." />
+            )}
+          </>
+        ) : null}
+      </ResponsiveDialog>
 
       <KkdDistributionReceiptDialog
         open={receiptOpen && Boolean(detail.data)}
