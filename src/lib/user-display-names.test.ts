@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
+import { describe, it } from 'vitest';
 import { buildUserDisplayNameMap, formatUserDisplayName } from './user-display-names';
 
 describe('user-display-names', () => {

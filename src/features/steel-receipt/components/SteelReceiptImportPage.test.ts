@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import test from 'node:test';
+import { test } from 'vitest';
 import type {GridPage,GridRequest} from '@/components/shared/AdvancedDataGrid';
 import type {SteelLineRow} from '../types/steel-receipt.types';
 import type {SteelImportRequest} from '../types/steel-receipt.types';

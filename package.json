@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "quality": "npm run lint && npm run build",
-    "test:manual-gr": "npx tsx --test src/features/goods-receipt-v2/goods-receipt-manual.utils.test.ts",
+    "test": "vitest run",
+    "test:manual-gr": "vitest run src/features/goods-receipt-v2/goods-receipt-manual.utils.test.ts",
     "test:manual-gr:api": "node scripts/test-orderless-api.mjs",
     "preview": "vite preview"
   },
