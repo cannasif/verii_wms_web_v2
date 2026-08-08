@@ -5,12 +5,18 @@ export type WarehouseAssistantIntent =
   | 'serialBalance'
   | 'serialReceiptHistory'
   | 'stockLocationBalance'
+  | 'barcodeLookup'
+  | 'stockMovementHistory'
+  | 'assignedTasks'
   | 'unknown';
 
 export interface WarehouseAssistantCapabilities {
   canQueryAllUsers: boolean;
   canQuerySerialBalances: boolean;
   canQuerySerialReceiptHistory: boolean;
+  canQueryBarcode: boolean;
+  canQueryStockMovements: boolean;
+  canQueryAssignedTasks: boolean;
   scopeLabel: string;
   exampleQuestions: string[];
 }
@@ -28,6 +34,7 @@ export interface WarehouseAssistantMessageRow {
   intent?: string | null;
   scope?: string | null;
   createdDate?: string | null;
+  result?: WarehouseAssistantChatResponse | null;
 }
 
 export interface WarehouseAssistantActivityRow {
@@ -93,6 +100,72 @@ export interface WarehouseAssistantStockLocationRow {
   availableQuantity: number;
 }
 
+export interface WarehouseAssistantBarcodeRow {
+  barcode: string;
+  source: string;
+  stockId: number;
+  stockCode: string;
+  stockName: string;
+  yapCodeId?: number | null;
+  yapCode?: string | null;
+  encodedQuantity?: number | null;
+  unitCode: string;
+  lotNo?: string | null;
+  serialNo?: string | null;
+  manufacturingDate?: string | null;
+  expirationDate?: string | null;
+  requireSerial: boolean;
+  requireLot: boolean;
+  requireManufacturingDate: boolean;
+  requireExpirationDate: boolean;
+  missingFields: string[];
+}
+
+export interface WarehouseAssistantMovementRow {
+  entryId: number;
+  operationId: number;
+  operationType: string;
+  operationStatus: string;
+  referenceType?: string | null;
+  referenceNo?: string | null;
+  referenceId?: number | null;
+  stockId: number;
+  stockCode: string;
+  stockName: string;
+  warehouseCode: number;
+  warehouseName: string;
+  locationCode: string;
+  locationName: string;
+  quantityDelta: number;
+  unitCode: string;
+  lotNo?: string | null;
+  serialNo?: string | null;
+  stockStatus: string;
+  occurredAtUtc: string;
+  isReversal: boolean;
+}
+
+export interface WarehouseAssistantTaskRow {
+  module: string;
+  taskId: number;
+  taskNo: string;
+  taskType: string;
+  status: string;
+  priority: number;
+  documentId: number;
+  documentNo: string;
+  warehouseId: number;
+  warehouseCode: number;
+  warehouseName: string;
+  plannedQuantity: number;
+  processedQuantity: number;
+  remainingQuantity: number;
+  plannedAtUtc?: string | null;
+  dueAtUtc?: string | null;
+  assigneeUserId?: number | null;
+  assigneeDisplayName: string;
+}
+
 export interface WarehouseAssistantChatResponse {
   conversationId: number;
   messageId: number;
@@ -104,5 +177,8 @@ export interface WarehouseAssistantChatResponse {
   serialBalances: WarehouseAssistantSerialBalanceRow[];
   serialReceipts: WarehouseAssistantSerialReceiptRow[];
   stockLocations: WarehouseAssistantStockLocationRow[];
+  barcode?: WarehouseAssistantBarcodeRow | null;
+  movements: WarehouseAssistantMovementRow[];
+  tasks: WarehouseAssistantTaskRow[];
   suggestions: string[];
 }

@@ -6,6 +6,7 @@
   "newConversation": "New conversation",
   "history": "Conversations",
   "emptyHistory": "There are no saved conversations yet.",
+  "archive": { "action": "Archive conversation", "title": "Archive conversation", "description": "The conversation \"{{title}}\" will be removed from the active list. You can start a new conversation.", "confirm": "Archive", "cancel": "Cancel", "success": "Conversation archived.", "error": "Conversation could not be archived." },
   "thinking": "Checking authorized WMS records...",
   "placeholder": "Example: Which warehouse and bin contains serial DTG-1?",
   "send": "Send question",
@@ -15,6 +16,13 @@
     "description": "It understands stock, product, material, and finished good as related business terms. Include a serial number, user name, and time range for the most accurate result."
   },
   "examples": { "myActivities": "Show my activity today" },
-  "results": { "activities": "Activity records", "serialBalances": "Serial balances", "serialReceipts": "Goods receipt history", "stockLocations": "Stock and bin balances" },
+  "results": { "activities": "Activity records", "serialBalances": "Serial balances", "serialReceipts": "Goods receipt history", "stockLocations": "Stock and bin balances", "barcode": "Barcode and label resolution", "movements": "Inventory movement trail", "tasks": "Open and assigned tasks" },
+  "barcode": { "source": "Source", "serial": "Serial", "lot": "Lot", "stockOnly": "Item master barcode" },
+  "barcodeSources": { "GoodsReceiptLabel": "Goods receipt label", "WarehouseInboundLabel": "Warehouse inbound label", "GeneratedBarcode": "Generated barcode", "GS1": "GS1 barcode", "SerialBalance": "Serial balance", "StockAlias": "Item master code" },
+  "movementTypes": { "Receipt": "Receipt", "Shipment": "Shipment", "Transfer": "Transfer", "AdjustmentIncrease": "Adjustment increase", "AdjustmentDecrease": "Adjustment decrease", "CustomerReturn": "Customer return", "SupplierReturn": "Supplier return", "Reversal": "Reversal" },
+  "taskModules": { "GoodsReceipt": "Goods receipt", "WarehouseTransfer": "Warehouse transfer", "ProductionTransfer": "Production transfer", "Shipping": "Shipping", "WarehouseInbound": "Warehouse inbound", "WarehouseOutbound": "Warehouse outbound" },
+  "taskStatuses": { "Draft": "Draft", "Released": "Released", "Open": "Open", "Assigned": "Assigned", "Accepted": "Accepted", "InProgress": "In progress", "Paused": "Paused", "PartiallyCompleted": "Partially completed", "Completed": "Completed", "Cancelled": "Cancelled" },
+  "tasks": { "remaining": "Remaining", "priority": "Priority" },
+  "common": { "noReference": "No reference" },
   "errors": { "load": "Warehouse Assistant could not be loaded.", "ask": "The question could not be answered.", "loadConversation": "Conversation history could not be loaded." }
 }

@@ -1,8 +1,16 @@
 import { type FormEvent, type ReactElement, useEffect, useMemo, useRef, useState } from 'react';
-import { Bot, Boxes, Clock3, History, Loader2, MapPin, MessageSquarePlus, Send, ShieldCheck, UserRoundSearch } from 'lucide-react';
+import { Archive, Bot, Boxes, Clock3, History, ListChecks, Loader2, MapPin, MessageSquarePlus, ScanBarcode, Send, ShieldCheck, UserRoundSearch, Waypoints } from 'lucide-react';
 import type { TFunction } from 'i18next';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { cn } from '@/lib/utils';
 import { useUIStore } from '@/stores/ui-store';
@@ -25,6 +33,9 @@ const emptyCapabilities: WarehouseAssistantCapabilities = {
   canQueryAllUsers: false,
   canQuerySerialBalances: false,
   canQuerySerialReceiptHistory: false,
+  canQueryBarcode: false,
+  canQueryStockMovements: false,
+  canQueryAssignedTasks: false,
   scopeLabel: '',
   exampleQuestions: [],
 };
@@ -39,6 +50,8 @@ export function WarehouseAssistantPage(): ReactElement {
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
+  const [archiveTarget, setArchiveTarget] = useState<WarehouseAssistantConversationRow | null>(null);
+  const [isArchiving, setIsArchiving] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -119,6 +132,22 @@ export function WarehouseAssistantPage(): ReactElement {
     setMessage('');
   }
 
+  async function archiveConversation(): Promise<void> {
+    if (!archiveTarget || isArchiving) return;
+    setIsArchiving(true);
+    try {
+      await warehouseAssistantApi.archiveConversation(archiveTarget.id);
+      setConversations((current) => current.filter((item) => item.id !== archiveTarget.id));
+      if (conversationId === archiveTarget.id) startNewConversation();
+      toast.success(t('archive.success'));
+      setArchiveTarget(null);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t('archive.error'));
+    } finally {
+      setIsArchiving(false);
+    }
+  }
+
   if (!moduleReady) {
     return <section className="grid min-h-[calc(100dvh-8rem)] place-items-center"><Loader2 className="size-7 animate-spin text-cyan-500" aria-label="Loading" /></section>;
   }
@@ -156,20 +185,23 @@ export function WarehouseAssistantPage(): ReactElement {
             {conversations.length === 0 && !isLoading ? (
               <p className="rounded-xl px-2 py-4 text-sm text-slate-500">{t('emptyHistory')}</p>
             ) : conversations.map((row) => (
-              <button
+              <div
                 key={row.id}
-                type="button"
-                onClick={() => void openConversation(row)}
                 className={cn(
-                  'w-full rounded-xl px-3 py-2.5 text-left transition-colors',
+                  'group flex items-start rounded-xl transition-colors',
                   conversationId === row.id
                     ? 'bg-cyan-500/15 text-cyan-800 dark:text-cyan-200'
                     : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/5',
                 )}
               >
-                <span className="line-clamp-2 text-sm font-semibold">{row.title}</span>
-                <span className="mt-1 block text-[11px] opacity-70">{formatDate(row.lastMessageAtUtc, i18n.language)}</span>
-              </button>
+                <button type="button" onClick={() => void openConversation(row)} className="min-w-0 flex-1 px-3 py-2.5 text-left">
+                  <span className="line-clamp-2 text-sm font-semibold">{row.title}</span>
+                  <span className="mt-1 block text-[11px] opacity-70">{formatDate(row.lastMessageAtUtc, i18n.language)}</span>
+                </button>
+                <button type="button" onClick={() => setArchiveTarget(row)} title={t('archive.action')} aria-label={t('archive.action')} className="mt-2 mr-2 grid size-8 shrink-0 place-items-center rounded-lg opacity-70 hover:bg-slate-200 hover:opacity-100 dark:hover:bg-white/10 xl:opacity-0 xl:group-hover:opacity-100 xl:focus-visible:opacity-100">
+                  <Archive className="size-4" />
+                </button>
+              </div>
             ))}
           </div>
         </aside>
@@ -230,7 +262,64 @@ export function WarehouseAssistantPage(): ReactElement {
           </form>
         </div>
       </section>
+      <ArchiveConversationDialog
+        open={archiveTarget !== null}
+        title={t('archive.title')}
+        description={t('archive.description', { title: archiveTarget?.title ?? '' })}
+        confirmLabel={t('archive.confirm')}
+        cancelLabel={t('archive.cancel')}
+        isPending={isArchiving}
+        onOpenChange={(open) => { if (!open && !isArchiving) setArchiveTarget(null); }}
+        onConfirm={archiveConversation}
+      />
     </main>
+  );
+}
+
+function ArchiveConversationDialog({
+  open,
+  title,
+  description,
+  confirmLabel,
+  cancelLabel,
+  isPending,
+  onOpenChange,
+  onConfirm,
+}: {
+  open: boolean;
+  title: string;
+  description: string;
+  confirmLabel: string;
+  cancelLabel: string;
+  isPending: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: () => void | Promise<void>;
+}): ReactElement {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="w-[calc(100vw-2rem)] max-w-md rounded-3xl border-cyan-500/20 p-0" showCloseButton={!isPending}>
+        <DialogHeader className="border-b border-slate-200/80 px-5 py-5 text-left dark:border-white/10 sm:px-6">
+          <div className="flex items-start gap-3 pr-8">
+            <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-cyan-500/12 text-cyan-600 ring-1 ring-cyan-500/20 dark:text-cyan-300">
+              <Archive className="size-5" />
+            </span>
+            <div className="min-w-0">
+              <DialogTitle className="text-base font-black text-slate-950 dark:text-white">{title}</DialogTitle>
+              <DialogDescription className="mt-1.5 text-sm leading-6">{description}</DialogDescription>
+            </div>
+          </div>
+        </DialogHeader>
+        <DialogFooter className="gap-2 px-5 py-4 sm:px-6">
+          <Button type="button" variant="outline" disabled={isPending} onClick={() => onOpenChange(false)}>
+            {cancelLabel}
+          </Button>
+          <Button type="button" disabled={isPending} onClick={() => void onConfirm()} className="bg-cyan-600 hover:bg-cyan-500">
+            {isPending ? <Loader2 className="size-4 animate-spin" /> : <Archive className="size-4" />}
+            {confirmLabel}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -252,7 +341,7 @@ function WelcomePanel({ examples, onSelect, t }: { examples: string[]; onSelect:
 }
 
 function AssistantResult({ result, language, t, onSuggestion }: { result: WarehouseAssistantChatResponse; language: string; t: TFunction; onSuggestion: (value: string) => void }): ReactElement | null {
-  const hasData = result.activities.length + result.serialBalances.length + result.serialReceipts.length + result.stockLocations.length > 0;
+  const hasData = result.activities.length + result.serialBalances.length + result.serialReceipts.length + result.stockLocations.length + result.movements.length + result.tasks.length + (result.barcode ? 1 : 0) > 0;
   if (!hasData && result.suggestions.length === 0) return null;
   return (
     <div className="mt-3 space-y-3 border-t border-slate-200 pt-3 dark:border-white/10">
@@ -276,6 +365,43 @@ function AssistantResult({ result, language, t, onSuggestion }: { result: Wareho
           {result.stockLocations.map((row, index) => <ResultCard key={`${row.stockId}-${row.warehouseCode}-${row.locationCode}-${index}`} title={`${row.stockCode} · ${row.stockName}`} meta={`${row.warehouseCode} - ${row.warehouseName}`} detail={`${row.locationCode} - ${row.locationName} · ${formatNumber(row.availableQuantity, language)} ${row.unitCode}`} />)}
         </ResultSection>
       ) : null}
+      {result.barcode ? (
+        <ResultSection icon={<ScanBarcode className="size-4" />} title={t('results.barcode')}>
+          <ResultCard
+            title={`${result.barcode.stockCode} · ${result.barcode.stockName}`}
+            meta={`${t('barcode.source')}: ${translateValue(t, 'barcodeSources', result.barcode.source)} · ${result.barcode.barcode}`}
+            detail={[
+              result.barcode.serialNo ? `${t('barcode.serial')}: ${result.barcode.serialNo}` : null,
+              result.barcode.lotNo ? `${t('barcode.lot')}: ${result.barcode.lotNo}` : null,
+              result.barcode.encodedQuantity != null ? `${formatNumber(result.barcode.encodedQuantity, language)} ${result.barcode.unitCode}` : null,
+            ].filter(Boolean).join(' · ') || t('barcode.stockOnly')}
+          />
+        </ResultSection>
+      ) : null}
+      {result.movements.length > 0 ? (
+        <ResultSection icon={<Waypoints className="size-4" />} title={t('results.movements')}>
+          {result.movements.map((row) => (
+            <ResultCard
+              key={row.entryId}
+              title={`${row.stockCode} · ${translateValue(t, 'movementTypes', row.operationType)}`}
+              meta={`${formatDate(row.occurredAtUtc, language)} · ${row.referenceNo || row.referenceType || t('common.noReference')}`}
+              detail={`${row.warehouseCode} - ${row.warehouseName} / ${row.locationCode} · ${row.quantityDelta > 0 ? '+' : ''}${formatNumber(row.quantityDelta, language)} ${row.unitCode}${row.serialNo ? ` · ${t('barcode.serial')}: ${row.serialNo}` : ''}`}
+            />
+          ))}
+        </ResultSection>
+      ) : null}
+      {result.tasks.length > 0 ? (
+        <ResultSection icon={<ListChecks className="size-4" />} title={t('results.tasks')}>
+          {result.tasks.map((row) => (
+            <ResultCard
+              key={`${row.module}-${row.taskId}-${row.assigneeUserId ?? 0}`}
+              title={`${row.taskNo} · ${translateValue(t, 'taskModules', row.module)}`}
+              meta={`${row.documentNo} · ${row.assigneeDisplayName} · ${translateValue(t, 'taskStatuses', row.status)}`}
+              detail={`${row.warehouseCode} - ${row.warehouseName} · ${t('tasks.remaining')}: ${formatNumber(row.remainingQuantity, language)} / ${formatNumber(row.plannedQuantity, language)} · ${t('tasks.priority')}: ${row.priority}`}
+            />
+          ))}
+        </ResultSection>
+      ) : null}
       {result.suggestions.length > 0 ? (
         <div className="flex flex-wrap gap-2">
           {result.suggestions.map((suggestion) => <button key={suggestion} type="button" onClick={() => onSuggestion(suggestion)} className="rounded-full border border-cyan-500/25 bg-cyan-500/10 px-3 py-1.5 text-left text-xs font-semibold text-cyan-800 hover:bg-cyan-500/15 dark:text-cyan-200">{suggestion}</button>)}
@@ -294,7 +420,11 @@ function ResultCard({ title, meta, detail }: { title: string; meta: string; deta
 }
 
 function mapHistoryMessage(row: WarehouseAssistantMessageRow): ChatMessage {
-  return { id: `history-${row.id}`, role: row.role, content: row.content };
+  return { id: `history-${row.id}`, role: row.role, content: row.content, result: row.result ?? undefined };
+}
+
+function translateValue(t: TFunction, group: string, value: string): string {
+  return t(`${group}.${value}`, { defaultValue: value });
 }
 
 function formatDate(value: string, language: string): string {

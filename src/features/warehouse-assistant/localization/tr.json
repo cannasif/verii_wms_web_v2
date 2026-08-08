@@ -6,6 +6,15 @@
   "newConversation": "Yeni konuşma",
   "history": "Konuşmalar",
   "emptyHistory": "Henüz kayıtlı bir konuşma yok.",
+  "archive": {
+    "action": "Konuşmayı arşivle",
+    "title": "Konuşmayı arşivle",
+    "description": "\"{{title}}\" konuşması aktif listeden kaldırılacak. Yeni bir konuşma başlatabilirsiniz.",
+    "confirm": "Arşivle",
+    "cancel": "Vazgeç",
+    "success": "Konuşma arşivlendi.",
+    "error": "Konuşma arşivlenemedi."
+  },
   "thinking": "Yetkili WMS kayıtları kontrol ediliyor...",
   "placeholder": "Örnek: DTG-1 serisi hangi depo ve raflarda?",
   "send": "Soruyu gönder",
@@ -19,8 +28,18 @@
     "activities": "İşlem kayıtları",
     "serialBalances": "Seri bakiyeleri",
     "serialReceipts": "Mal kabul geçmişi",
-    "stockLocations": "Stok ve raf bakiyeleri"
+    "stockLocations": "Stok ve raf bakiyeleri",
+    "barcode": "Barkod ve etiket çözümü",
+    "movements": "Stok hareket izi",
+    "tasks": "Açık ve atanmış görevler"
   },
+  "barcode": { "source": "Kaynak", "serial": "Seri", "lot": "Lot", "stockOnly": "Stok kartı barkodu" },
+  "barcodeSources": { "GoodsReceiptLabel": "Mal kabul etiketi", "WarehouseInboundLabel": "Ambar giriş etiketi", "GeneratedBarcode": "Üretilen barkod", "GS1": "GS1 barkodu", "SerialBalance": "Seri bakiyesi", "StockAlias": "Stok kartı kodu" },
+  "movementTypes": { "Receipt": "Giriş", "Shipment": "Sevk", "Transfer": "Transfer", "AdjustmentIncrease": "Sayım/fark artışı", "AdjustmentDecrease": "Sayım/fark azalışı", "CustomerReturn": "Müşteri iadesi", "SupplierReturn": "Tedarikçi iadesi", "Reversal": "Ters kayıt" },
+  "taskModules": { "GoodsReceipt": "Mal kabul", "WarehouseTransfer": "Depolar arası transfer", "ProductionTransfer": "Üretime transfer", "Shipping": "Sevk", "WarehouseInbound": "Ambar giriş", "WarehouseOutbound": "Ambar çıkış" },
+  "taskStatuses": { "Draft": "Taslak", "Released": "Serbest bırakıldı", "Open": "Açık", "Assigned": "Atandı", "Accepted": "Kabul edildi", "InProgress": "Devam ediyor", "Paused": "Duraklatıldı", "PartiallyCompleted": "Kısmen tamamlandı", "Completed": "Tamamlandı", "Cancelled": "İptal edildi" },
+  "tasks": { "remaining": "Kalan", "priority": "Öncelik" },
+  "common": { "noReference": "Referans yok" },
   "errors": {
     "load": "Depo asistanı yüklenemedi.",
     "ask": "Soru yanıtlanamadı.",

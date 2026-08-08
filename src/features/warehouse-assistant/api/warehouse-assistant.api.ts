@@ -35,4 +35,10 @@ export const warehouseAssistantApi = {
       message,
     }));
   },
+
+  async archiveConversation(conversationId: number): Promise<void> {
+    await api.post<ApiResponse<{ conversationId: number }>>(
+      `/api/warehouse-assistant/conversations/${conversationId}/archive`,
+    );
+  },
 };
