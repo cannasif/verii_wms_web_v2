@@ -14,7 +14,7 @@ import { userManagementApi } from '@/features/user-management/api/user-managemen
 import type { UserDetail, UserRow, WarehouseOption } from '@/features/user-management/types/user-management.types';
 import { api } from '@/lib/axios';
 import { useAuthStore } from '@/stores/auth-store';
-import { parameterGuidance } from '@/features/settings-guidance/parameter-guidance.catalog';
+import { parameterGuidance, parameterToggleGuidance } from '@/features/settings-guidance/parameter-guidance.catalog';
 
 type Policy = {
   id: number;
@@ -636,5 +636,5 @@ function Field({ label, children, guideKey, value, currentValue }: { label: stri
 }
 
 function Toggle({ label, value, set, guideKey }: { label: string; value: boolean; set: (value: boolean) => void; guideKey: string }) {
-  return <ParameterToggleCard title={label} checked={value} onCheckedChange={set} guidance={parameterGuidance('goodsReceipt', guideKey, value)} />;
+  return <ParameterToggleCard title={label} checked={value} onCheckedChange={set} guidance={parameterToggleGuidance('goodsReceipt', guideKey)} />;
 }

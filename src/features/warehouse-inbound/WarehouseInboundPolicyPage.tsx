@@ -6,7 +6,7 @@ import { ParameterFieldGuide, ParameterPageGuide, ParameterToggleCard } from '@/
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { api } from '@/lib/axios';
 import { useAuthStore } from '@/stores/auth-store';
-import { parameterGuidance } from '@/features/settings-guidance/parameter-guidance.catalog';
+import { parameterGuidance, parameterToggleGuidance } from '@/features/settings-guidance/parameter-guidance.catalog';
 
 type Policy = {
   id: number;
@@ -175,5 +175,5 @@ function Field({ label, children, guideKey, value, currentValue }: { label: stri
 }
 
 function Toggle({ label, value, set, guideKey }: { label: string; value: boolean; set: (value: boolean) => void; guideKey: string }) {
-  return <ParameterToggleCard title={label} checked={value} onCheckedChange={set} guidance={parameterGuidance('inbound', guideKey, value)} />;
+  return <ParameterToggleCard title={label} checked={value} onCheckedChange={set} guidance={parameterToggleGuidance('inbound', guideKey)} />;
 }

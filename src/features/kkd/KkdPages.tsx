@@ -40,7 +40,7 @@ import type { DropdownPage } from '@/hooks/useDropdownInfiniteSearch';
 import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
 import { cn } from '@/lib/utils';
 import type { PagedResponse } from '@/types/api';
-import { parameterGuidance } from '@/features/settings-guidance/parameter-guidance.catalog';
+import { parameterToggleGuidance } from '@/features/settings-guidance/parameter-guidance.catalog';
 import {
   KKD_CELL,
   KKD_HEAD_CELL,
@@ -320,14 +320,14 @@ export function KkdPolicyPage(): ReactElement {
 
   const checkGrid = (rows: Array<[keyof PolicyForm, string, string]>): ReactElement => (
     <div className="grid gap-2.5 lg:grid-cols-2">
-      {rows.map(([key, title, description]) => (
+      {rows.map(([key, title]) => (
         <ParameterToggleCard
           key={key}
           checked={form[key]}
           onCheckedChange={(checked) => set(key, checked)}
           disabled={query.isLoading || mutation.isPending}
           title={title}
-          guidance={{ ...parameterGuidance('kkd', key, form[key]), summary: description }}
+          guidance={parameterToggleGuidance('kkd', key)}
         />
       ))}
     </div>

@@ -9,6 +9,10 @@
     "warning": "5. Achtung: Was kann bei falscher Auswahl geschehen?",
     "enabled": "Aktiviert",
     "disabled": "Deaktiviert",
+    "enabledResult": "Wenn aktiviert",
+    "disabledResult": "Wenn deaktiviert",
+    "selected": "Aktuell ausgewählt",
+    "detailsForState": "Details und Beispiel für den Status {{state}} anzeigen",
     "noPrefix": "Kein Präfix",
     "decision": "2. Wann sollten Sie diese Option wählen?",
     "beforeSave": "Prüfen Sie diese 3 Punkte vor dem Speichern"

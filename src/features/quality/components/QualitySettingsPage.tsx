@@ -8,7 +8,7 @@ import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { localizeEnumValue } from '@/lib/enum-localization';
 import { useAuthStore } from '@/stores/auth-store';
 import { qualityApi, type QualityParameter } from '../api/quality.api';
-import { parameterGuidance } from '@/features/settings-guidance/parameter-guidance.catalog';
+import { parameterGuidance, parameterToggleGuidance } from '@/features/settings-guidance/parameter-guidance.catalog';
 
 export function QualitySettingsPage() {
   const { t } = useModuleTranslation('quality');
@@ -160,7 +160,7 @@ function Field({ label, children, guideKey, value, currentValue }: { label: stri
 }
 
 function Toggle({ label, value, set, guideKey }: { label: string; value: boolean; set: (v: boolean) => void; guideKey: string }) {
-  return <ParameterToggleCard title={label} checked={value} onCheckedChange={set} guidance={parameterGuidance('quality', guideKey, value)} />;
+  return <ParameterToggleCard title={label} checked={value} onCheckedChange={set} guidance={parameterToggleGuidance('quality', guideKey)} />;
 }
 
 function LocationField({

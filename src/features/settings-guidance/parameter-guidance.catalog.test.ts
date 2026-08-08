@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildParameterGuidanceSourceResource,
   parameterGuidance,
+  parameterToggleGuidance,
 } from "./parameter-guidance.catalog";
 
 describe("parameter guidance catalog", () => {
@@ -34,6 +35,18 @@ describe("parameter guidance catalog", () => {
 
     expect(enabled.effect).not.toBe(disabled.effect);
     expect(enabled.scenario).not.toBe(disabled.scenario);
+  });
+
+  it("bool alanlarda kullanıcıya açık ve kapalı sonuçlarını birlikte verir", () => {
+    const comparison = parameterToggleGuidance(
+      "goodsReceipt",
+      "blockPutawayUntilQualityDecision",
+    );
+
+    expect(comparison.enabled.summary).toContain("normal stok rafı seçilemez");
+    expect(comparison.disabled.summary).toContain("normal aktif raflar seçilebilir");
+    expect(comparison.enabled.scenario).toContain("KABUL-01");
+    expect(comparison.disabled.scenario).toContain("SATIS-RAF-10");
   });
 
   it("açık/kapalı alanlarda genel cümle yerine gerçek operasyon sonucunu gösterir", () => {

@@ -9,6 +9,10 @@
     "warning": "5. تنبيه: ماذا قد يحدث عند الاختيار الخاطئ؟",
     "enabled": "مفعّل",
     "disabled": "معطّل",
+    "enabledResult": "عند التفعيل",
+    "disabledResult": "عند التعطيل",
+    "selected": "المحدد حاليًا",
+    "detailsForState": "عرض التفاصيل ومثال للحالة {{state}}",
     "noPrefix": "بدون بادئة",
     "decision": "2. متى تختار هذا الخيار؟",
     "beforeSave": "نفّذ هذه الفحوصات الثلاثة قبل الحفظ"

@@ -22,6 +22,11 @@ export type ParameterGuidanceContent = {
   resourceKey?: string;
 };
 
+export type ParameterToggleGuidance = {
+  enabled: ParameterGuidanceContent;
+  disabled: ParameterGuidanceContent;
+};
+
 export function ParameterPageGuide({
   title,
   description,
@@ -117,10 +122,12 @@ export function ParameterFieldGuide({
   guidance,
   currentValue,
   className,
+  showSummary = true,
 }: {
   guidance: ParameterGuidanceContent;
   currentValue?: string;
   className?: string;
+  showSummary?: boolean;
 }): ReactElement {
   const contentId = useId();
   const { t } = useModuleTranslation("settings-guidance");
@@ -129,39 +136,42 @@ export function ParameterFieldGuide({
 
   return (
     <div className={cn("mt-2", className)}>
-      <div className="flex items-start gap-2 rounded-xl bg-[color-mix(in_oklab,var(--wms-brand-primary)_4%,transparent)] px-2.5 py-2 text-xs leading-5 text-[var(--wms-app-text-muted)]">
-        <CircleHelp
-          className="mt-0.5 size-3.5 shrink-0 text-[var(--wms-brand-primary)]"
-          aria-hidden
-        />
-        <div className="min-w-0">
-          {localizedCurrentValue ? (
-            <p className="font-black text-[var(--wms-brand-primary)]">
-              {t("labels.current", {
-                value: localizedCurrentValue,
-                defaultValue: `Seçili değer: ${localizedCurrentValue}`,
-              })}
+      {showSummary ? (
+        <div className="flex items-start gap-2 rounded-xl bg-[color-mix(in_oklab,var(--wms-brand-primary)_4%,transparent)] px-2.5 py-2 text-xs leading-5 text-[var(--wms-app-text-muted)]">
+          <CircleHelp
+            className="mt-0.5 size-3.5 shrink-0 text-[var(--wms-brand-primary)]"
+            aria-hidden
+          />
+          <div className="min-w-0">
+            {localizedCurrentValue ? (
+              <p className="font-black text-[var(--wms-brand-primary)]">
+                {t("labels.current", {
+                  value: localizedCurrentValue,
+                  defaultValue: `Seçili değer: ${localizedCurrentValue}`,
+                })}
+              </p>
+            ) : null}
+            <p className={cn("text-[var(--wms-app-text)]", localizedCurrentValue && "mt-0.5")}>
+              <span className="font-black">
+                {t("labels.shortResult", { defaultValue: "Sonuç:" })}{" "}
+              </span>
+              {localizedGuidance.summary}
             </p>
-          ) : null}
-          <p className={cn("text-[var(--wms-app-text)]", localizedCurrentValue && "mt-0.5")}>
-            <span className="font-black">
-              {t("labels.shortResult", { defaultValue: "Sonuç:" })}{" "}
-            </span>
-            {localizedGuidance.summary}
-          </p>
+          </div>
         </div>
-      </div>
+      ) : null}
 
-      <details className="group mt-2 rounded-xl border border-[var(--wms-app-border)] bg-[color-mix(in_oklab,var(--wms-app-panel)_94%,var(--wms-brand-primary))]">
+      <details className={cn("group rounded-xl border border-[var(--wms-app-border)] bg-[color-mix(in_oklab,var(--wms-app-panel)_94%,var(--wms-brand-primary))]", showSummary && "mt-2")}>
         <summary
           aria-controls={contentId}
           className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2 text-xs font-bold text-[var(--wms-brand-primary)] marker:content-none"
         >
-          <span>
-            {t("labels.details", {
-              defaultValue: "Basit açıklamayı ve örneği göster",
-            })}
-          </span>
+          <span>{localizedCurrentValue
+            ? t("labels.detailsForState", {
+                state: localizedCurrentValue,
+                defaultValue: `${localizedCurrentValue} durumunun ayrıntısını ve örneğini göster`,
+              })
+            : t("labels.details", { defaultValue: "Basit açıklamayı ve örneği göster" })}</span>
           <ChevronDown
             className="size-3.5 transition-transform group-open:rotate-180"
             aria-hidden
@@ -238,12 +248,18 @@ export function ParameterToggleCard({
   title: string;
   checked: boolean;
   onCheckedChange: (checked: boolean) => void;
-  guidance: ParameterGuidanceContent;
+  guidance: ParameterToggleGuidance;
   disabled?: boolean;
   className?: string;
 }): ReactElement {
   const inputId = useId();
   const { t } = useModuleTranslation("settings-guidance");
+  const enabledGuidance = localizeGuidance(guidance.enabled, t);
+  const disabledGuidance = localizeGuidance(guidance.disabled, t);
+  const selectedGuidance = checked ? guidance.enabled : guidance.disabled;
+  const selectedState = checked
+    ? String(t("labels.enabled", { defaultValue: "Açık" }))
+    : String(t("labels.disabled", { defaultValue: "Kapalı" }));
 
   return (
     <article
@@ -286,15 +302,59 @@ export function ParameterToggleCard({
           className="mt-0.5 size-4 shrink-0 accent-[var(--wms-brand-primary)]"
         />
       </div>
+      <div className="mt-3 grid gap-2 sm:grid-cols-2">
+        <ToggleStateResult
+          active={checked}
+          label={String(t("labels.enabledResult", { defaultValue: "Açık yaparsanız" }))}
+          result={enabledGuidance.summary}
+          selectedLabel={String(t("labels.selected", { defaultValue: "Şu an seçili" }))}
+        />
+        <ToggleStateResult
+          active={!checked}
+          label={String(t("labels.disabledResult", { defaultValue: "Kapalı bırakırsanız" }))}
+          result={disabledGuidance.summary}
+          selectedLabel={String(t("labels.selected", { defaultValue: "Şu an seçili" }))}
+        />
+      </div>
       <ParameterFieldGuide
-        guidance={guidance}
-        currentValue={
-          checked
-            ? t("labels.enabled", { defaultValue: "Açık" })
-            : t("labels.disabled", { defaultValue: "Kapalı" })
-        }
+        guidance={selectedGuidance}
+        currentValue={selectedState}
+        showSummary={false}
       />
     </article>
+  );
+}
+
+function ToggleStateResult({
+  active,
+  label,
+  result,
+  selectedLabel,
+}: {
+  active: boolean;
+  label: string;
+  result: string;
+  selectedLabel: string;
+}): ReactElement {
+  return (
+    <section
+      className={cn(
+        "rounded-xl border px-3 py-2.5 text-xs leading-5",
+        active
+          ? "border-[color-mix(in_oklab,var(--wms-brand-primary)_45%,var(--wms-app-border))] bg-[var(--wms-brand-soft)] text-[var(--wms-app-text)]"
+          : "border-[var(--wms-app-border)] bg-[color-mix(in_oklab,var(--wms-app-panel)_96%,black)] text-[var(--wms-app-text-muted)]",
+      )}
+    >
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className="font-black uppercase tracking-[0.08em]">{label}</span>
+        {active ? (
+          <span className="inline-flex items-center gap-1 rounded-full bg-[var(--wms-brand-primary)] px-2 py-0.5 text-[0.62rem] font-black text-white">
+            <CircleCheckBig className="size-3" aria-hidden /> {selectedLabel}
+          </span>
+        ) : null}
+      </div>
+      <p className="mt-1">{result}</p>
+    </section>
   );
 }
 

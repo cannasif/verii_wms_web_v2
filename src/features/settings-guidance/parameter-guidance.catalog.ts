@@ -1,4 +1,7 @@
-import type { ParameterGuidanceContent } from "@/components/shared/ParameterGuidance";
+import type {
+  ParameterGuidanceContent,
+  ParameterToggleGuidance,
+} from "@/components/shared/ParameterGuidance";
 
 type ValueGuide =
   ParameterGuidanceContent | Record<string, ParameterGuidanceContent>;
@@ -218,16 +221,26 @@ const inbound: Record<string, ValueGuide> = {
   ),
   blockPutawayUntilQualityDecision: onOff(
     {
-      effect: "Kalite bekleyen ürün nihai rafa yerleştirilemez.",
-      affects: ["Raflama görevi", "Kalite bekleme rafı"],
+      summary:
+        "Kalite kararı çıkana kadar normal stok rafı seçilemez; ürün yalnız kabul, geçici bekleme veya kalite rafında tutulur.",
+      effect:
+        "Kalite bekleyen satır için hedef depodaki normal toplama rafları kapatılır. Yalnız Receiving (Kabul), Staging (Geçici Bekleme) veya tanımlı kalite bekleme rafı seçilebilir. Kalite kararı tamamlandıktan sonra ürün ayrı bir raflama adımıyla nihai stok rafına taşınır.",
+      affects: ["Mal kabul raf seçimi ve raflama görevi", "Kalite bekleme rafı"],
       scenario:
-        "Ürün kabul/karantina rafında bekler; Passed sonrası hedef rafa alınır.",
+        "100 AD ürün kalite kontrolüne ayrıldı. Operatör KABUL-01 veya KALITE-BEKLEME rafını seçebilir; SATIS-RAF-10 seçilemez. Kalite sonucu verildikten sonra 100 AD için nihai raflama görevi açılır.",
+      decision:
+        "Kalite sonucu belli olmadan ürünü normal stok raflarına karıştırmak istemiyorsanız Açık kullanın. Depoda en az bir Kabul, Geçici Bekleme veya kalite bekleme rafı tanımlı olmalıdır.",
     },
     {
-      effect: "Kalite sonucu beklenirken fiziksel raflama yapılabilir.",
-      affects: ["Raflama görevi"],
+      summary:
+        "Kalite sonucu beklenirken hedef depodaki normal aktif raflar seçilebilir.",
+      effect:
+        "Ürün kalite kontrolünü beklese bile operatör hedef depodaki normal aktif stok rafını seçebilir ve ürünü fiziksel olarak o rafa yerleştirebilir. Bu seçim stok miktarını otomatik olarak kullanılabilir yapmaz; kullanılabilirlik ayrıca ‘Kalite kararına kadar stoğu beklet’ ayarıyla belirlenir.",
+      affects: ["Mal kabul raf seçimi, raflama ve stok kullanılabilirlik statüsü"],
       scenario:
-        "Ürün hedef rafa konur ancak stok statüsü kalite nedeniyle bloke kalabilir.",
+        "100 AD ürün SATIS-RAF-10 rafına konur. ‘Kalite kararına kadar stoğu beklet’ ayarı Açıksa ürün aynı rafta görünür fakat sevk ve transferde kullanılamaz; kalite kararı sonrası kullanılabilir olur.",
+      decision:
+        "Kalite bekleyen ürünü depo içinde ayrıca bir bekleme alanına taşımadan doğrudan nihai rafına koymak istiyorsanız Kapalı kullanın.",
     },
   ),
   allowOrderlessReceipt: onOff(
@@ -1880,6 +1893,16 @@ export function parameterGuidance(
     field,
     resolved ? valueKey : "_fallback",
   );
+}
+
+export function parameterToggleGuidance(
+  module: keyof typeof catalog,
+  field: string,
+): ParameterToggleGuidance {
+  return {
+    enabled: parameterGuidance(module, field, true),
+    disabled: parameterGuidance(module, field, false),
+  };
 }
 
 export function buildParameterGuidanceSourceResource(): Record<string, unknown> {

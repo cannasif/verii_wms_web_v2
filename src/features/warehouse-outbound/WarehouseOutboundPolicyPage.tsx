@@ -7,7 +7,7 @@ import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { useAuthStore } from '@/stores/auth-store';
 import { warehouseOutboundApi } from './warehouseOutbound-api';
 import type { ShipmentPolicy } from './types';
-import { parameterGuidance } from '@/features/settings-guidance/parameter-guidance.catalog';
+import { parameterGuidance, parameterToggleGuidance } from '@/features/settings-guidance/parameter-guidance.catalog';
 
 export function WarehouseOutboundPolicyPage() {
   const { t } = useModuleTranslation('warehouse-outbound');
@@ -130,7 +130,7 @@ function Grid({ children }: { children: ReactNode }) {
   return <div className="grid gap-3 md:grid-cols-2">{children}</div>;
 }
 function Toggle({ l, v, s, guideKey }: { l: string; v: boolean; s: (v: boolean) => void; guideKey: string }) {
-  return <ParameterToggleCard title={l} checked={v} onCheckedChange={s} guidance={parameterGuidance('outbound', guideKey, v)} />;
+  return <ParameterToggleCard title={l} checked={v} onCheckedChange={s} guidance={parameterToggleGuidance('outbound', guideKey)} />;
 }
 function Field({ l, children, guideKey, value, currentValue }: { l: string; children: ReactNode; guideKey?: string; value?: unknown; currentValue?: string }) {
   return <div className="space-y-1 text-sm"><span className="font-semibold">{l}</span>{children}{guideKey ? <ParameterFieldGuide guidance={parameterGuidance('outbound', guideKey, value)} currentValue={currentValue ?? String(value)} /> : null}</div>;

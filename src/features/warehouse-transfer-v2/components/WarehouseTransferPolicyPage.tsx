@@ -7,7 +7,7 @@ import { ParameterFieldGuide, ParameterPageGuide, ParameterToggleCard } from '@/
 import { useAuthStore } from '@/stores/auth-store';
 import { warehouseTransferApi } from '../api/warehouse-transfer.api';
 import type { WarehouseTransferPolicy } from '../types/warehouse-transfer.types';
-import { parameterGuidance } from '@/features/settings-guidance/parameter-guidance.catalog';
+import { parameterGuidance, parameterToggleGuidance } from '@/features/settings-guidance/parameter-guidance.catalog';
 
 const POLICY = 'processPolicy.transfer';
 
@@ -202,5 +202,5 @@ function Toggle({
   set: (value: boolean) => void;
   guideKey: string;
 }) {
-  return <ParameterToggleCard title={label} checked={value} onCheckedChange={set} guidance={parameterGuidance('transfer', guideKey, value)} />;
+  return <ParameterToggleCard title={label} checked={value} onCheckedChange={set} guidance={parameterToggleGuidance('transfer', guideKey)} />;
 }

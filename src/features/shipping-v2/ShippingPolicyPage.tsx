@@ -7,7 +7,7 @@ import { ParameterFieldGuide, ParameterPageGuide, ParameterToggleCard } from '@/
 import { useAuthStore } from '@/stores/auth-store';
 import { shippingApi } from './shipping-api';
 import type { ShipmentPolicy } from './types';
-import { parameterGuidance } from '@/features/settings-guidance/parameter-guidance.catalog';
+import { parameterGuidance, parameterToggleGuidance } from '@/features/settings-guidance/parameter-guidance.catalog';
 
 const POLICY = 'processPolicy.shipping';
 
@@ -210,7 +210,7 @@ function Toggle({
   set: (value: boolean) => void;
   guideKey: string;
 }) {
-  return <ParameterToggleCard title={label} checked={value} onCheckedChange={set} guidance={parameterGuidance('shipping', guideKey, value)} />;
+  return <ParameterToggleCard title={label} checked={value} onCheckedChange={set} guidance={parameterToggleGuidance('shipping', guideKey)} />;
 }
 
 function Field({ label, children, guideKey, value, currentValue }: { label: string; children: ReactNode; guideKey?: string; value?: unknown; currentValue?: string }) {

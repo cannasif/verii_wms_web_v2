@@ -38,7 +38,7 @@ import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
 import { ParameterFieldGuide, ParameterPageGuide, ParameterToggleCard } from '@/components/shared/ParameterGuidance';
 import type { PreparedNetsisProductionWorkOrder } from '@/features/production/types';
 import { kkdApi } from '@/features/kkd/kkd-api';
-import { parameterGuidance } from '@/features/settings-guidance/parameter-guidance.catalog';
+import { parameterGuidance, parameterToggleGuidance } from '@/features/settings-guidance/parameter-guidance.catalog';
 
 export function ProductionTransferHubPage() {
   const { t, moduleReady } = useModuleTranslation('production-transfer');
@@ -588,7 +588,7 @@ function PolicyField({label,hint,htmlFor,className,children,guideKey,value,curre
 }
 
 function PolicyCheckRow({checked,onCheckedChange,label,guideKey}:{checked:boolean;onCheckedChange:(value:boolean)=>void;label:string;guideKey:string}){
-  return <ParameterToggleCard title={label} checked={checked} onCheckedChange={onCheckedChange} guidance={parameterGuidance('production',guideKey,checked)}/>;
+  return <ParameterToggleCard title={label} checked={checked} onCheckedChange={onCheckedChange} guidance={parameterToggleGuidance('production',guideKey)}/>;
 }
 
 function PolicyChoice({checked,onSelect,title,text}:{checked:boolean;onSelect:()=>void;title:string;text:string}){

@@ -8,7 +8,7 @@ import { WarehouseTransferListPage } from '@/features/warehouse-transfer-v2/comp
 import { WarehouseTransferOperationPage } from '@/features/warehouse-transfer-v2/WarehouseTransferOperationPage';
 import { useAuthStore } from '@/stores/auth-store';
 import { ParameterFieldGuide, ParameterPageGuide, ParameterToggleCard } from '@/components/shared/ParameterGuidance';
-import { parameterGuidance } from '@/features/settings-guidance/parameter-guidance.catalog';
+import { parameterGuidance, parameterToggleGuidance } from '@/features/settings-guidance/parameter-guidance.catalog';
 import { subcontractingTransferApi, type SubcontractingTransferPolicy } from './api';
 
 export function SubcontractingTransferHubPage(){
@@ -67,4 +67,4 @@ export function SubcontractingTransferPolicyPage(){
 function Card({href,icon,title,text}:{href:string;icon:ReactNode;title:string;text:string}){return <Link to={href} className="group rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--wms-brand-primary)]"><div className="flex items-center justify-between text-[var(--wms-brand-primary)]">{icon}<ArrowRight className="size-5 transition group-hover:translate-x-1"/></div><h2 className="mt-4 font-black">{title}</h2><p className="mt-1 text-sm text-[var(--wms-app-text-muted)]">{text}</p></Link>;}
 function Panel({title,children}:{title:string;children:ReactNode}){return <section className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5"><h2 className="mb-4 flex items-center gap-2 font-black text-[var(--wms-brand-primary)]"><BriefcaseBusiness className="size-5"/>{title}</h2>{children}</section>;}
 function ToggleGrid({children}:{children:ReactNode}){return <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{children}</div>;}
-function Toggle({label,value,set,guideKey}:{label:string;value:boolean;set:(v:boolean)=>void;guideKey:string}){return <ParameterToggleCard title={label} checked={value} onCheckedChange={set} guidance={parameterGuidance('subcontracting',guideKey,value)}/>;}
+function Toggle({label,value,set,guideKey}:{label:string;value:boolean;set:(v:boolean)=>void;guideKey:string}){return <ParameterToggleCard title={label} checked={value} onCheckedChange={set} guidance={parameterToggleGuidance('subcontracting',guideKey)}/>;}

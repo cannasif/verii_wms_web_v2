@@ -9,6 +9,10 @@
     "warning": "5. Attention : que peut provoquer un mauvais choix ?",
     "enabled": "Activé",
     "disabled": "Désactivé",
+    "enabledResult": "Si activé",
+    "disabledResult": "Si désactivé",
+    "selected": "Actuellement sélectionné",
+    "detailsForState": "Afficher les détails et un exemple pour l’état {{state}}",
     "noPrefix": "Pas de préfixe",
     "decision": "2. Quand choisir cette option ?",
     "beforeSave": "Effectuez ces 3 contrôles avant d’enregistrer"

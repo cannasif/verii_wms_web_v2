@@ -9,6 +9,10 @@
     "warning": "5. Caution: what could happen with the wrong choice?",
     "enabled": "Enabled",
     "disabled": "Disabled",
+    "enabledResult": "If enabled",
+    "disabledResult": "If disabled",
+    "selected": "Currently selected",
+    "detailsForState": "Show details and an example for the {{state}} state",
     "noPrefix": "No prefix",
     "decision": "2. When should you choose this option?",
     "beforeSave": "Complete these 3 checks before saving"

@@ -7,7 +7,7 @@ import { ParameterFieldGuide, ParameterPageGuide, ParameterToggleCard } from '@/
 import { useAuthStore } from '@/stores/auth-store';
 import { packingApi } from './packing-api';
 import type { PackingPolicy } from './types';
-import { parameterGuidance } from '@/features/settings-guidance/parameter-guidance.catalog';
+import { parameterGuidance, parameterToggleGuidance } from '@/features/settings-guidance/parameter-guidance.catalog';
 
 const POLICY = 'processPolicy.packing';
 const TOGGLE_KEYS = [
@@ -98,7 +98,7 @@ export function PackingPolicyPage() {
               title={t(`${POLICY}.toggles.${key}`)}
               checked={form[key]}
               onCheckedChange={value => set(key, value)}
-              guidance={parameterGuidance('packing', key, form[key])}
+              guidance={parameterToggleGuidance('packing', key)}
             />
           ))}
         </div>
