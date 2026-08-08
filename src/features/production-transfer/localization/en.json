@@ -27,8 +27,8 @@
         "description": "Manage all production transfer tasks, remaining work and warehouse workload in one place."
       },
       "materialRequests": {
-        "title": "Material Request Orders",
-        "description": "Scan a personnel card, load the linked account's open Netsis orders and prepare KKD distribution."
+        "title": "KKD Material Request Orders",
+        "description": "Scan a personnel card, load the linked account's open Netsis orders and prepare KKD distribution on the same page."
       },
       "list": {
         "title": "Transfer Records",

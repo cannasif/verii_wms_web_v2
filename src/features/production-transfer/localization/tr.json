@@ -27,8 +27,8 @@
         "description": "Tüm üretim transferi görevlerini, kalan işi ve depo çalışanı yükünü tek ekranda yönetin."
       },
       "materialRequests": {
-        "title": "Malzeme Talep Siparişleri",
-        "description": "Personel kartını okutun; bağlı carinin Netsis açık siparişlerini getirip KKD dağıtımına hazırlayın."
+        "title": "KKD Malzeme Talep Siparişleri",
+        "description": "Personel kartını okutun; bağlı carinin Netsis açık siparişlerini getirip aynı sayfada KKD dağıtımını hazırlayın."
       },
       "list": {
         "title": "Transfer Kayıtları",

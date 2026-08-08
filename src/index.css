@@ -11765,6 +11765,39 @@ html.skin-premium .wms-ops-kkd-flow-steps__label {
 .wms-ops-form .wms-ops-kkd-header-fields > * {
   min-width: 0;
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.375rem;
+}
+
+/* KkdField space-y ile çakışmasın — hizayı gap yönetir */
+.wms-ops-form .wms-ops-kkd-header-fields > * > * + * {
+  margin-top: 0 !important;
+}
+
+/* Etiket satırlarını eşitle — kısa/uzun label farkı inputları kaydırmasın */
+.wms-ops-form .wms-ops-kkd-header-fields > * > .wms-ops-entry-label {
+  box-sizing: border-box;
+  display: flex;
+  min-height: 2.5rem;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0;
+}
+
+.wms-ops-form .wms-ops-kkd-header-fields .wms-ops-field-shell {
+  width: 100%;
+  min-width: 0;
+}
+
+.wms-ops-form .wms-ops-kkd-header-fields .wms-ops-field-shell > button,
+.wms-ops-form .wms-ops-kkd-header-fields .wms-ops-field-shell .wms-ops-list-field-trigger,
+.wms-ops-form .wms-ops-kkd-header-fields .wms-ops-field-shell .app-date-input,
+.wms-ops-form .wms-ops-kkd-header-fields .wms-ops-field-shell input {
+  min-height: 2.25rem;
+  height: 2.25rem;
 }
 
 .wms-ops-kkd-receipt {
