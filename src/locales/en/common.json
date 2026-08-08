@@ -469,6 +469,7 @@
     "serviceAllocation": "Service Allocation",
     "kkd": "PPE",
     "kkdOverview": "PPE Operations Hub",
+    "kkdRequests": "Open PPE Requests",
     "kkdInitialOrder": "PPE Initial Order",
     "qualityControl": "Quality Control",
     "qualityControlSettings": "Quality Parameters",

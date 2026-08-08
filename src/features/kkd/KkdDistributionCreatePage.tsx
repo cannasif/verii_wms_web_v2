@@ -68,6 +68,7 @@ import {
 } from './kkd-quota-copy';
 
 const MATERIAL_REQUESTS_PATH = '/warehouse/production-transfers/material-requests';
+const KKD_REQUESTS_PATH = '/warehouse/kkd/requests';
 
 function buildMaterialRequestsReturnHref(employeeId: string, orderNumbers: string[]): string {
   const params = new URLSearchParams();
@@ -120,15 +121,17 @@ export function KkdDistributionCreatePage(): ReactElement {
       ),
     ],
     taskMode: searchParams.get('taskMode') === '1',
+    requestId: Number(searchParams.get('requestId') || 0),
   }));
+  const requestMode = initialSelection.requestId > 0;
   /** Malzeme talep listesinden “Dağıtıma hazırla” ile gelindi — ön seçim kilitli devam. */
   const isHandoff =
     initialSelection.taskMode &&
     Boolean(initialSelection.employeeId) &&
-    initialSelection.orders.length > 0;
+    (initialSelection.orders.length > 0 || requestMode);
   const returnToSelectionHref = useMemo(
-    () => buildMaterialRequestsReturnHref(initialSelection.employeeId, initialSelection.orders),
-    [initialSelection.employeeId, initialSelection.orders],
+    () => requestMode ? KKD_REQUESTS_PATH : buildMaterialRequestsReturnHref(initialSelection.employeeId, initialSelection.orders),
+    [initialSelection.employeeId, initialSelection.orders, requestMode],
   );
   const flowSteps = useMemo(
     () => [
@@ -143,8 +146,8 @@ export function KkdDistributionCreatePage(): ReactElement {
   const [employeeQr, setEmployeeQr] = useState('');
   const employeeNumber = Number(employeeId || 0);
   const context = useQuery({
-    queryKey: ['kkd', 'distribution-context', employeeNumber],
-    queryFn: () => kkdApi.distributionContext(employeeNumber),
+    queryKey: ['kkd', 'distribution-context', employeeNumber, requestMode ? 'request' : 'order'],
+    queryFn: () => kkdApi.distributionContext(employeeNumber, !requestMode),
     enabled: employeeNumber > 0,
   });
   const [orders, setOrders] = useState<string[]>(initialSelection.orders);
@@ -157,8 +160,29 @@ export function KkdDistributionCreatePage(): ReactElement {
   const orderLines = useQuery({
     queryKey: ['kkd', 'distribution-lines', employeeNumber, sortedOrders.join('|')],
     queryFn: () => kkdApi.distributionOrderLines(employeeNumber, sortedOrders),
-    enabled: employeeNumber > 0 && sortedOrders.length > 0,
+    enabled: !requestMode && employeeNumber > 0 && sortedOrders.length > 0,
   });
+  const linkedRequest = useQuery({
+    queryKey: ['kkd', 'requests', initialSelection.requestId],
+    queryFn: () => kkdApi.requestDetail(initialSelection.requestId),
+    enabled: requestMode,
+  });
+  const effectiveLines = useMemo<KkdOpenOrderLine[]>(() => requestMode
+    ? (linkedRequest.data?.lines ?? []).filter((line) => line.status !== 'Cancelled').map((line) => ({
+        orderNumber: linkedRequest.data!.requestNo,
+        orderLineId: line.id,
+        orderLineSequence: line.lineNo,
+        stockId: line.stockId ?? undefined,
+        stockCode: line.stockCode ?? line.groupCode,
+        stockName: line.stockName ?? line.groupName ?? line.groupCode,
+        unitCode: line.unitCode,
+        projectCode: line.groupCode,
+        remainingQuantity: line.remainingQuantity,
+        isMapped: Boolean(line.stockId),
+        mappingMessage: line.stockId ? undefined : `${line.groupCode} grubu için stok/beden seçimi bekleniyor.`,
+        kkdRequestLineId: line.id,
+      }))
+    : (orderLines.data ?? []), [linkedRequest.data, orderLines.data, requestMode]);
   const [warehouseValue, setWarehouseValue] = useState<string | null>(null);
   const warehouseId = Number(warehouseValue?.split('|')[0] || 0);
   const [seriesId, setSeriesId] = useState('');
@@ -217,7 +241,7 @@ export function KkdDistributionCreatePage(): ReactElement {
         current[key] ?? { selected: false, quantity: Math.min(1, line.remainingQuantity), lotNo: '', serials: '' };
       return { ...current, [key]: { ...existing, ...value } };
     });
-  const selected = (orderLines.data ?? []).filter((x) => edits[lineKey(x)]?.selected);
+  const selected = effectiveLines.filter((x) => edits[lineKey(x)]?.selected);
   const quotaWarnings = useMemo(() => {
     const items = remainingEntitlements.data ?? [];
     if (items.length === 0 || selected.length === 0) return [];
@@ -257,8 +281,8 @@ export function KkdDistributionCreatePage(): ReactElement {
   }, [context.data?.preferredStocks, documentDate, edits, remainingEntitlements.data, selected]);
   const hasQuotaWarning = quotaWarnings.length > 0;
   const selectableLines = useMemo(
-    () => (orderLines.data ?? []).filter((line) => line.isMapped),
-    [orderLines.data],
+    () => effectiveLines.filter((line) => line.isMapped),
+    [effectiveLines],
   );
   const allSelectableSelected =
     selectableLines.length > 0 && selectableLines.every((line) => edits[lineKey(line)]?.selected);
@@ -281,7 +305,9 @@ export function KkdDistributionCreatePage(): ReactElement {
   const create = useMutation({
     mutationFn: async () => {
       if (!employeeNumber || !warehouseId || !seriesId || selected.length === 0) {
-        throw new Error('Personel, kaynak depo, belge serisi ve en az bir sipariş kalemi zorunludur.');
+        throw new Error(requestMode
+          ? 'Personel, kaynak depo, belge serisi ve en az bir KKD talep kalemi zorunludur.'
+          : 'Personel, kaynak depo, belge serisi ve en az bir sipariş kalemi zorunludur.');
       }
       const lines = selected.map((line) => {
         const edit = edits[lineKey(line)];
@@ -322,21 +348,22 @@ export function KkdDistributionCreatePage(): ReactElement {
         if (serials.length && serials.length !== edit.quantity) {
           throw new Error(`${line.stockCode} için seri sayısı teslim miktarıyla aynı olmalıdır.`);
         }
-        const issuedStockId = edit.issuedStockId ?? line.stockId!;
-        const substituted = Boolean(edit.issuedStockId && edit.issuedStockId !== line.stockId);
+        const issuedStockId = requestMode ? line.stockId! : edit.issuedStockId ?? line.stockId!;
+        const substituted = !requestMode && Boolean(edit.issuedStockId && edit.issuedStockId !== line.stockId);
         return {
           stockId: issuedStockId,
           yapCodeId: null,
           quantity: edit.quantity,
           unitCode: line.unitCode || null,
           sourceLocationId: edit.sourceLocationId,
-          orderNumber: line.orderNumber,
-          orderLineId: line.orderLineId,
+          orderNumber: requestMode ? null : line.orderNumber,
+          orderLineId: requestMode ? null : line.orderLineId,
           requireHandlingUnit: false,
           description: substituted
             ? `Stok değişimi: bu stoktan istendi (${line.stockCode} · ${line.stockName}), bu stoktan çıkış yapıldı (${edit.issuedStockLabel}).`
             : null,
           trackings,
+          kkdRequestLineId: line.kkdRequestLineId ?? null,
         };
       });
       return kkdApi.createDistribution({
@@ -351,6 +378,7 @@ export function KkdDistributionCreatePage(): ReactElement {
         lines,
         createWarehouseTask: initialSelection.taskMode,
         assignedUserIds: initialSelection.taskMode ? assignees.map((x) => x.id) : null,
+        kkdRequestId: requestMode ? initialSelection.requestId : null,
       });
     },
     onSuccess: (value) => {
@@ -369,7 +397,9 @@ export function KkdDistributionCreatePage(): ReactElement {
     label: `${item.code} · ${item.name}`,
     description: item.isDefault ? 'Varsayılan seri' : item.previewDocumentNumber,
   }));
-  const lineColumns = ['Sipariş / sıra', 'Stok', 'Proje', 'Açık miktar', 'Eşleme'];
+  const lineColumns = requestMode
+    ? ['Talep / sıra', 'Stok', 'KKD grubu', 'Kalan miktar', 'Çözümleme']
+    : ['Sipariş / sıra', 'Stok', 'Proje', 'Açık miktar', 'Eşleme'];
 
   return (
     <KkdPage
@@ -388,7 +418,7 @@ export function KkdDistributionCreatePage(): ReactElement {
           <OpsActionButton variant="secondary" className="w-full shrink-0 sm:w-auto" asChild>
             <Link to={returnToSelectionHref}>
               <ArrowLeft className="size-3.5 shrink-0" />
-              Sipariş seçimine dön
+              {requestMode ? 'Açık taleplere dön' : 'Sipariş seçimine dön'}
             </Link>
           </OpsActionButton>
         </div>
@@ -577,7 +607,7 @@ export function KkdDistributionCreatePage(): ReactElement {
         </KkdCallout>
       ) : null}
 
-      {context.data ? (
+      {context.data && !requestMode ? (
         <KkdPanel
           code="ORD_02"
           icon={<ClipboardList className="size-4" strokeWidth={1.75} />}
@@ -667,12 +697,12 @@ export function KkdDistributionCreatePage(): ReactElement {
         </KkdPanel>
       ) : null}
 
-      {sortedOrders.length > 0 ? (
+      {sortedOrders.length > 0 || requestMode ? (
         <KkdPanel
           code="LIN_03"
           icon={<ClipboardList className="size-4" strokeWidth={1.75} />}
-          title="Sipariş kalemleri"
-          description="WMS stoğuyla eşleşmeyen satırlar dağıtıma alınamaz."
+          title={requestMode ? 'KKD talep kalemleri' : 'Sipariş kalemleri'}
+          description={requestMode ? 'Grup için kesin stok/beden seçilmemiş satırlar hazırlamaya alınamaz.' : 'WMS stoğuyla eşleşmeyen satırlar dağıtıma alınamaz.'}
           actions={<OpsStatusBadge tone="neutral">{selected.length} kalem</OpsStatusBadge>}
           bodyClassName="px-0 py-0 sm:px-0 sm:py-0"
         >
@@ -698,20 +728,20 @@ export function KkdDistributionCreatePage(): ReactElement {
               </tr>
             </thead>
             <tbody>
-              {orderLines.isLoading ? (
+              {(requestMode ? linkedRequest.isLoading : orderLines.isLoading) ? (
                 <tr>
                   <td colSpan={lineColumns.length + 1} className="wms-ops-grid-state-cell">
                     <OpsLoadingState code="FETCH" message="Sipariş kalemleri okunuyor…" compact />
                   </td>
                 </tr>
-              ) : (orderLines.data?.length ?? 0) === 0 ? (
+              ) : effectiveLines.length === 0 ? (
                 <tr>
                   <td colSpan={lineColumns.length + 1} className="wms-ops-grid-state-cell">
                     <OpsGridEmptyState message="Seçilen siparişlerde açık kalem bulunamadı." />
                   </td>
                 </tr>
               ) : (
-                orderLines.data?.map((line) => (
+                effectiveLines.map((line) => (
                   <tr key={lineKey(line)}>
                     <td className={cn(KKD_CELL, 'text-center')}>
                       <KkdRowCheckbox
@@ -957,7 +987,7 @@ export function KkdDistributionCreatePage(): ReactElement {
                       <OpsStatusBadge tone="active">{line.unitCode || 'ADET'}</OpsStatusBadge>
                     </div>
                   </div>
-                  <div className="mb-2 grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+                  {!requestMode ? <div className="mb-2 grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
                     <KkdField label="Çıkış stoğu">
                       <PagedLookupDialog<KkdStockLookup>
                         variant="ops"
@@ -1011,7 +1041,7 @@ export function KkdDistributionCreatePage(): ReactElement {
                         Talebe dön
                       </OpsActionButton>
                     ) : null}
-                  </div>
+                  </div> : null}
                   <div className="wms-ops-kkd-delivery-row__fields">
                     <div className="wms-ops-kkd-delivery-row__field">
                       <span className="wms-ops-entry-label">Miktar</span>

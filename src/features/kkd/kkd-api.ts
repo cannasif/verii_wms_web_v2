@@ -1,6 +1,7 @@
 import { api } from '@/lib/axios';
 import type { DropdownPage, DropdownPageRequest } from '@/hooks/useDropdownInfiniteSearch';
 import { buildDropdownPagedBody } from '@/lib/dropdown-paging';
+import type { GridPage, GridRequest } from '@/components/shared/AdvancedDataGrid';
 
 type Envelope<T> = { success: boolean; data: T; message?: string };
 const unwrap = <T,>(response: Envelope<T>): T => {
@@ -64,6 +65,7 @@ export type KkdOpenOrderLine = {
   orderNumber: string; orderLineId: number; orderLineSequence: number; stockId?: number;
   stockCode: string; stockName: string; unitCode?: string; yapCode?: string; projectCode?: string;
   orderDate?: string; deliveryDate?: string; remainingQuantity: number; isMapped: boolean; mappingMessage?: string;
+  kkdRequestLineId?: number | null;
 };
 export type KkdDistributionCreateResult = {
   id: number; documentNo: string; status: string; warehouseOutboundId: number;
@@ -83,11 +85,12 @@ export type KkdDistributionCreatePayload = {
   idempotencyKey: string; employeeId: number; warehouseId: number; documentSeriesId: number;
   documentDate: string; stagingLocationId: number | null; loadingLocationId: number | null;
   description: string | null; createWarehouseTask?: boolean; assignedUserIds?: number[] | null;
+  kkdRequestId?: number | null;
   lines: Array<{ stockId: number; yapCodeId: null; quantity: number; unitCode: string | null;
     sourceLocationId: number; orderNumber: string | null; orderLineId: number | null; requireHandlingUnit: boolean;
     description: string | null; trackings: Array<{ quantity: number; lotNo: string | null;
       serialNo: string | null; handlingUnitNo: string | null; manufacturingDate: null;
-      expirationDate: null; sourceLocationId: number }> | null }>;
+      expirationDate: null; sourceLocationId: number }> | null; kkdRequestLineId?: number | null }>;
 };
 export type KkdEntitlementResult = {
   isAllowed: boolean; reasonCode: string; message: string; employeeId: number; stockId: number;
@@ -120,6 +123,42 @@ export type KkdOverride = {
 export type KkdPaged<T> = {
   items: T[]; totalCount: number; pageNumber: number; pageSize: number; totalPages: number;
   hasPreviousPage: boolean; hasNextPage: boolean;
+};
+
+export type KkdRequestRow = {
+  id: number; requestNo: string; status: string; priority: string; sourceType: string;
+  employeeId: number; employeeCode: string; employeeName: string; departmentName: string; roleName: string;
+  warehouseId?: number | null; assignedUserId?: number | null; externalRequestNo?: string | null;
+  totalLineCount: number; unresolvedLineCount: number; requestedQuantity: number;
+  allocatedQuantity: number; deliveredQuantity: number; requestedAtUtc: string; neededAtUtc?: string | null;
+  createdBy?: number | null; createdDate?: string | null; updatedBy?: number | null; updatedDate?: string | null;
+};
+
+export type KkdRequestLine = {
+  id: number; lineNo: number; groupCode: string; groupName?: string | null; stockId?: number | null;
+  stockCode?: string | null; stockName?: string | null; unitCode: string; requestedQuantity: number;
+  allocatedQuantity: number; deliveredQuantity: number; remainingQuantity: number; status: string;
+  externalOrderNo?: string | null; externalOrderLineId?: string | null; resolvedByUserId?: number | null;
+  resolvedAtUtc?: string | null; resolutionReason?: string | null; rowVersion: string;
+  resolutions: Array<{ id: number; previousStockId?: number | null; stockId: number; stockCode: string;
+    stockName?: string | null; reason: string; resolvedBy?: number | null; resolvedAtUtc: string }>;
+};
+
+export type KkdRequestDetail = {
+  id: number; correlationId: string; requestNo: string; status: string; priority: string; sourceType: string;
+  employeeId: number; employeeCode: string; employeeName: string; departmentName: string; roleName: string;
+  customerId: number; warehouseId?: number | null; assignedUserId?: number | null; externalRequestNo?: string | null;
+  requestedAtUtc: string; neededAtUtc?: string | null; startedAtUtc?: string | null; readyAtUtc?: string | null;
+  completedAtUtc?: string | null; cancelledAtUtc?: string | null; cancellationReason?: string | null;
+  description?: string | null; rowVersion: string; lines: KkdRequestLine[];
+};
+
+export type KkdRequestCreatePayload = {
+  idempotencyKey: string; employeeId: number; warehouseId: number | null; assignedUserId: number | null;
+  sourceType: 'Wms'|'Windbox'|'Netsis'|'Manual'; externalRequestNo: string | null;
+  priority: 'Low'|'Normal'|'High'|'Urgent'; neededAtUtc: string | null; description: string | null;
+  lines: Array<{ groupCode: string; groupName: string | null; stockId: number | null; quantity: number;
+    externalOrderNo: string | null; externalOrderLineId: string | null }>;
 };
 
 export const kkdApi = {
@@ -169,8 +208,10 @@ export const kkdApi = {
     })),
   distributionDetail: async (id: number) =>
     unwrap(await api.get<Envelope<KkdDistributionDetail>>(`/api/kkd/distributions/${id}`)),
-  distributionContext: async (employeeId: number) =>
-    unwrap(await api.get<Envelope<KkdDistributionContext>>(`/api/kkd/distributions/context/${employeeId}`)),
+  distributionContext: async (employeeId: number, includeOpenOrders = true) =>
+    unwrap(await api.get<Envelope<KkdDistributionContext>>(`/api/kkd/distributions/context/${employeeId}`, {
+      params: { includeOpenOrders },
+    })),
   distributionOrderLines: async (employeeId: number, orderNumbers: string[]) =>
     unwrap(await api.get<Envelope<KkdOpenOrderLine[]>>(`/api/kkd/distributions/context/${employeeId}/lines`, { params: { orderNumbersCsv: orderNumbers.join(',') } })),
   materialRequestConfiguration: async () =>
@@ -179,6 +220,26 @@ export const kkdApi = {
     unwrap(await api.get<Envelope<KkdDistributionContext>>(`/api/kkd/material-requests/context/${employeeId}`)),
   materialRequestOrderLines: async (employeeId: number, orderNumbers: string[]) =>
     unwrap(await api.get<Envelope<KkdOpenOrderLine[]>>(`/api/kkd/material-requests/context/${employeeId}/lines`, { params: { orderNumbersCsv: orderNumbers.join(',') } })),
+  requestsPaged: async (request: GridRequest): Promise<GridPage<KkdRequestRow>> =>
+    unwrap(await api.post<Envelope<GridPage<KkdRequestRow>>>('/api/kkd/requests/paged', {
+      ...request,
+      sortBy: request.sortBy || 'requestedAtUtc',
+      sortDirection: request.sortDirection || 'desc',
+    })),
+  requestDetail: async (id: number) =>
+    unwrap(await api.get<Envelope<KkdRequestDetail>>(`/api/kkd/requests/${id}`)),
+  createRequest: async (payload: KkdRequestCreatePayload) =>
+    unwrap(await api.post<Envelope<KkdRequestDetail>>('/api/kkd/requests', payload)),
+  resolveRequestLine: async (requestId: number, lineId: number, payload: { stockId: number; reason: string; expectedRowVersion: string }) =>
+    unwrap(await api.post<Envelope<KkdRequestDetail>>(`/api/kkd/requests/${requestId}/lines/${lineId}/resolve`, {
+      ...payload, idempotencyKey: crypto.randomUUID(),
+    })),
+  assignRequest: async (id: number, payload: { warehouseId: number | null; assignedUserId: number | null; expectedRowVersion: string }) =>
+    unwrap(await api.put<Envelope<KkdRequestDetail>>(`/api/kkd/requests/${id}/assignment`, payload)),
+  cancelRequest: async (id: number, reason: string, expectedRowVersion: string) =>
+    unwrap(await api.post<Envelope<KkdRequestDetail>>(`/api/kkd/requests/${id}/cancel`, {
+      idempotencyKey: crypto.randomUUID(), reason, expectedRowVersion,
+    })),
   distributionSeries: async () =>
     unwrap(await api.get<Envelope<Array<{ id:number; code:string; name:string; previewDocumentNumber:string; isDefault:boolean }>>>('/api/document-series/lookup?documentType=WarehouseIssue')),
   createDistribution: async (payload: KkdDistributionCreatePayload) =>

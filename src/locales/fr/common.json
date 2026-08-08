@@ -437,6 +437,7 @@
     "inventoryCountList": "Count Orders",
     "kkd": "PPE",
     "kkdOverview": "PPE Operations Hub",
+    "kkdRequests": "Demandes d'EPI ouvertes",
     "kkdOperationsGroup": "Operations",
     "kkdMonitoringGroup": "Check and Monitoring",
     "kkdReportsGroup": "Reports",

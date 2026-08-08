@@ -446,6 +446,7 @@
     "serviceAllocation": "Servicezuweisung",
     "kkd": "PSA",
     "kkdOverview": "PSA-Operations-Zentrum",
+    "kkdRequests": "Offene PSA-Anforderungen",
     "kkdInitialOrder": "PSA-Erstausgabe",
     "qualityControl": "Qualitätskontrolle",
     "qualityControlSettings": "Qualitätsparameter",

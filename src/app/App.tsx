@@ -65,6 +65,7 @@ const KkdEntitlementPage = lazy(() => loadKkdPages().then((m) => ({ default: m.K
 const KkdDistributionsPage = lazy(() => loadKkdPages().then((m) => ({ default: m.KkdDistributionsPage })));
 const KkdDistributionCreatePage = lazy(() => loadKkdPages().then((m) => ({ default: m.KkdDistributionCreatePage })));
 const KkdMaterialRequestsPage = lazy(() => loadKkdPages().then((m) => ({ default: m.KkdMaterialRequestsPage })));
+const KkdRequestsPage = lazy(() => loadKkdPages().then((m) => ({ default: m.KkdRequestsPage })));
 const KkdReportsPage = lazy(() => loadKkdPages().then((m) => ({ default: m.KkdReportsPage })));
 const KkdPolicyPage = lazy(() => loadKkdPages().then((m) => ({ default: m.KkdPolicyPage })));
 const GoodsReceiptAssignedTasksPage = lazy(() => loadGoodsReceiptAssignedTasksPage().then((m) => ({ default: m.GoodsReceiptAssignedTasksPage })));
@@ -196,6 +197,7 @@ export function App(): ReactElement {
           <Route path="warehouse/kkd" element={<KkdOverviewPage />} />
           <Route path="warehouse/kkd/definitions" element={<KkdDefinitionsPage />} />
           <Route path="warehouse/kkd/entitlement" element={<KkdEntitlementPage />} />
+          <Route path="warehouse/kkd/requests" element={<KkdRequestsPage />} />
           <Route path="warehouse/kkd/distributions" element={<KkdDistributionsPage />} />
           <Route path="warehouse/kkd/distributions/new" element={<KkdDistributionCreatePage />} />
           <Route path="warehouse/production-transfers/material-requests" element={<KkdMaterialRequestsPage />} />

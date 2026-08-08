@@ -96,6 +96,7 @@ export const WMS_NAV_ITEMS: NavItem[] = [
     { title: 'sidebar.kkdOverview', titleFallback: 'KKD Süreç Merkezi', href: '/warehouse/kkd', searchAliases: ['kkd', 'iş güvenliği', 'koruyucu donanım'], requiredPermission: 'WMS.KKD.DEFINITIONS.VIEW' },
     { title: 'sidebar.kkdDefinitions', titleFallback: 'Tanımlar ve Hak Matrisi', href: '/warehouse/kkd/definitions', searchAliases: ['kkd', 'departman', 'rol', 'personel', 'hak'], requiredPermission: 'WMS.KKD.DEFINITIONS.VIEW' },
     { title: 'sidebar.kkdEntitlement', titleFallback: 'Hak Sorgulama', href: '/warehouse/kkd/entitlement', searchAliases: ['kkd', 'hak', 'kontrol'], requiredPermission: 'WMS.KKD.ENTITLEMENT.CHECK' },
+    { title: 'sidebar.kkdRequests', titleFallback: 'Açık KKD Talepleri', href: '/warehouse/kkd/requests', searchAliases: ['kkd', 'açık talep', 'hazırlama', 'beden', 'stok seçimi'], requiredPermission: 'WMS.KKD.REQUESTS.VIEW' },
     { title: 'sidebar.kkdDistributionNew', titleFallback: 'Yeni KKD Dağıtımı', href: '/warehouse/kkd/distributions/new', searchAliases: ['kkd', 'teslim', 'personel', 'sipariş'], requiredPermission: 'WMS.KKD.DISTRIBUTION.OPERATE' },
     { title: 'sidebar.kkdDistributions', titleFallback: 'Dağıtım ve Ambar Çıkış', href: '/warehouse/kkd/distributions', searchAliases: ['kkd', 'dağıtım', 'ambar çıkış', 'teslim'], requiredPermission: 'WMS.KKD.DISTRIBUTION.OPERATE' },
     { title: 'sidebar.kkdReports', titleFallback: 'KKD Raporları', href: '/warehouse/kkd/reports', searchAliases: ['kkd', 'rapor', 'kullanım', 'doğrulama'], requiredPermission: 'WMS.KKD.REPORTS.VIEW' },

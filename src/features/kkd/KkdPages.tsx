@@ -157,6 +157,19 @@ export function KkdOverviewPage(): ReactElement {
       description: 'Açık Netsis siparişinden teslim açın; fiziksel çıkış ve hak tüketimi aynı belge zincirinde ilerlesin.',
       sectionCode: 'KKD-OPS',
       items: [
+        ...(can('WMS.KKD.REQUESTS.VIEW')
+          ? [
+              {
+                key: 'open-requests',
+                code: 'KKD.REQ',
+                href: '/warehouse/kkd/requests',
+                icon: ClipboardList,
+                title: 'Açık KKD talepleri',
+                description: 'Tüm personelin açık taleplerini tek kuyrukta görün; grup taleplerini stok ve bedene bağlayıp hazırlayın.',
+                featured: true,
+              },
+            ]
+          : []),
         ...(materialRequests.data?.isEnabled
           ? [
               {
