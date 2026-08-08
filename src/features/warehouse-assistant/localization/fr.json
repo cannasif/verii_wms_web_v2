@@ -1,0 +1,17 @@
+{
+  "eyebrow": "Assistant WMS soumis aux autorisations",
+  "title": "Assistant d’entrepôt",
+  "description": "Interrogez en langage naturel l’historique des opérations, les stocks et séries, les emplacements et la traçabilité des réceptions. Chaque résultat respecte vos droits utilisateur, agence, entrepôt et module.",
+  "scope": { "self": "Uniquement vos opérations et les données WMS autorisées" },
+  "newConversation": "Nouvelle conversation",
+  "history": "Conversations",
+  "emptyHistory": "Aucune conversation enregistrée.",
+  "thinking": "Vérification des données WMS autorisées...",
+  "placeholder": "Exemple : dans quel entrepôt et emplacement se trouve la série DTG-1 ?",
+  "send": "Envoyer la question",
+  "privacyNote": "L’assistant exécute uniquement des requêtes WMS autorisées en lecture seule ; aucun SQL libre ni modification de données.",
+  "welcome": { "title": "Interroger rapidement les données d’entrepôt", "description": "Les termes stock, produit, matière et article sont compris comme des concepts liés. Précisez la série, l’utilisateur et la période pour un résultat exact." },
+  "examples": { "myActivities": "Afficher mes opérations d’aujourd’hui" },
+  "results": { "activities": "Opérations", "serialBalances": "Stocks par série", "serialReceipts": "Historique des réceptions", "stockLocations": "Stocks par emplacement" },
+  "errors": { "load": "Impossible de charger l’assistant.", "ask": "Impossible de répondre à la question.", "loadConversation": "Impossible de charger l’historique." }
+}

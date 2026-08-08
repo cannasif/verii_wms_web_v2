@@ -1,0 +1,17 @@
+{
+  "eyebrow": "Assistente WMS basato sui permessi",
+  "title": "Assistente di magazzino",
+  "description": "Interroga in linguaggio naturale attività, giacenze di articoli e seriali, ubicazioni e tracciabilità dei ricevimenti. Ogni risultato rispetta i permessi utente, filiale, magazzino e modulo.",
+  "scope": { "self": "Solo le tue attività e i dati WMS autorizzati" },
+  "newConversation": "Nuova conversazione",
+  "history": "Conversazioni",
+  "emptyHistory": "Non ci sono ancora conversazioni salvate.",
+  "thinking": "Controllo dei record WMS autorizzati...",
+  "placeholder": "Esempio: in quale magazzino e ubicazione si trova il seriale DTG-1?",
+  "send": "Invia domanda",
+  "privacyNote": "L’assistente esegue solo query WMS autorizzate in sola lettura; non esegue SQL libero e non modifica record.",
+  "welcome": { "title": "Il modo rapido per interrogare il magazzino", "description": "Comprende stock, prodotto, materiale e articolo come termini correlati. Specifica seriale, utente e intervallo temporale per risultati accurati." },
+  "examples": { "myActivities": "Mostra le mie attività di oggi" },
+  "results": { "activities": "Attività", "serialBalances": "Giacenze seriali", "serialReceipts": "Storico ricevimenti", "stockLocations": "Giacenze per ubicazione" },
+  "errors": { "load": "Impossibile caricare l’assistente.", "ask": "Impossibile rispondere alla domanda.", "loadConversation": "Impossibile caricare lo storico." }
+}

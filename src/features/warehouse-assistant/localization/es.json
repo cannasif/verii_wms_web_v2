@@ -1,0 +1,17 @@
+{
+  "eyebrow": "Asistente WMS con control de permisos",
+  "title": "Asistente de almacén",
+  "description": "Consulte en lenguaje natural el historial de operaciones, existencias y series, ubicaciones y trazabilidad de recepciones. Cada resultado está limitado por sus permisos de usuario, sucursal, almacén y módulo.",
+  "scope": { "self": "Solo sus operaciones y datos WMS autorizados" },
+  "newConversation": "Nueva conversación",
+  "history": "Conversaciones",
+  "emptyHistory": "Aún no hay conversaciones guardadas.",
+  "thinking": "Comprobando registros WMS autorizados...",
+  "placeholder": "Ejemplo: ¿en qué almacén y ubicación está la serie DTG-1?",
+  "send": "Enviar pregunta",
+  "privacyNote": "El asistente solo ejecuta consultas WMS autorizadas de solo lectura; no admite SQL libre ni modifica registros.",
+  "welcome": { "title": "La forma rápida de consultar el almacén", "description": "Comprende stock, producto, material y artículo como términos relacionados. Indique serie, usuario y período para obtener mayor precisión." },
+  "examples": { "myActivities": "Mostrar mis operaciones de hoy" },
+  "results": { "activities": "Operaciones", "serialBalances": "Existencias por serie", "serialReceipts": "Historial de recepciones", "stockLocations": "Existencias por ubicación" },
+  "errors": { "load": "No se pudo cargar el asistente.", "ask": "No se pudo responder la pregunta.", "loadConversation": "No se pudo cargar el historial." }
+}

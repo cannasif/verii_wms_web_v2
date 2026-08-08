@@ -1,0 +1,17 @@
+{
+  "eyebrow": "Berechtigungsabhängiger WMS-Assistent",
+  "title": "Lagerassistent",
+  "description": "Fragen Sie in natürlicher Sprache nach Aktivitäten, Beständen von Artikeln und Serien, Lagerplätzen und Wareneingängen. Jedes Ergebnis wird durch Ihre Benutzer-, Niederlassungs-, Lager- und Modulrechte begrenzt.",
+  "scope": { "self": "Nur eigene Aktivitäten und berechtigte WMS-Daten" },
+  "newConversation": "Neue Unterhaltung",
+  "history": "Unterhaltungen",
+  "emptyHistory": "Noch keine gespeicherten Unterhaltungen.",
+  "thinking": "Berechtigte WMS-Datensätze werden geprüft...",
+  "placeholder": "Beispiel: In welchem Lager und Fach liegt Serie DTG-1?",
+  "send": "Frage senden",
+  "privacyNote": "Der Assistent führt nur freigegebene, schreibgeschützte WMS-Abfragen aus; kein freies SQL und keine Datenänderung.",
+  "welcome": { "title": "Lagerdaten schnell abfragen", "description": "Artikel, Produkt, Material und Fertigware werden als verwandte Fachbegriffe verstanden. Seriennummer, Benutzername und Zeitraum verbessern das Ergebnis." },
+  "examples": { "myActivities": "Meine heutigen Aktivitäten anzeigen" },
+  "results": { "activities": "Aktivitäten", "serialBalances": "Serienbestände", "serialReceipts": "Wareneingangshistorie", "stockLocations": "Artikel- und Fachbestände" },
+  "errors": { "load": "Der Lagerassistent konnte nicht geladen werden.", "ask": "Die Frage konnte nicht beantwortet werden.", "loadConversation": "Der Verlauf konnte nicht geladen werden." }
+}

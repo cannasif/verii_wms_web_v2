@@ -1,0 +1,29 @@
+{
+  "eyebrow": "Yetkili WMS sorgu yardımcısı",
+  "title": "Depo Asistanı",
+  "description": "İşlem geçmişini, stok ve seri bakiyelerini, raf konumlarını ve mal kabul izini doğal dille sorgulayın. Her sonuç kullanıcı, şube, depo ve modül yetkilerinizle sınırlandırılır.",
+  "scope": { "self": "Yalnız kendi işlemleriniz ve yetkili olduğunuz WMS verileri" },
+  "newConversation": "Yeni konuşma",
+  "history": "Konuşmalar",
+  "emptyHistory": "Henüz kayıtlı bir konuşma yok.",
+  "thinking": "Yetkili WMS kayıtları kontrol ediliyor...",
+  "placeholder": "Örnek: DTG-1 serisi hangi depo ve raflarda?",
+  "send": "Soruyu gönder",
+  "privacyNote": "Asistan yalnızca izin verilen, salt okunur WMS sorgularını çalıştırır; serbest SQL veya kayıt değiştiren işlem çalıştırmaz.",
+  "welcome": {
+    "title": "Depo verisini sormanın kısa yolu",
+    "description": "Stok, ürün, malzeme ve mamul ifadelerini aynı iş kavramı olarak anlayabilir. Seri numarası, kullanıcı adı ve zaman aralığını açık yazmanız en doğru sonucu verir."
+  },
+  "examples": { "myActivities": "Bugün yaptığım işlemleri göster" },
+  "results": {
+    "activities": "İşlem kayıtları",
+    "serialBalances": "Seri bakiyeleri",
+    "serialReceipts": "Mal kabul geçmişi",
+    "stockLocations": "Stok ve raf bakiyeleri"
+  },
+  "errors": {
+    "load": "Depo asistanı yüklenemedi.",
+    "ask": "Soru yanıtlanamadı.",
+    "loadConversation": "Konuşma geçmişi yüklenemedi."
+  }
+}

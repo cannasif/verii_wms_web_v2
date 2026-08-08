@@ -1,0 +1,20 @@
+{
+  "eyebrow": "Permission-aware WMS query assistant",
+  "title": "Warehouse Assistant",
+  "description": "Ask about activity history, stock and serial balances, bin locations, and receipt traceability in natural language. Every result is limited by your user, branch, warehouse, and module permissions.",
+  "scope": { "self": "Only your own activity and authorized WMS data" },
+  "newConversation": "New conversation",
+  "history": "Conversations",
+  "emptyHistory": "There are no saved conversations yet.",
+  "thinking": "Checking authorized WMS records...",
+  "placeholder": "Example: Which warehouse and bin contains serial DTG-1?",
+  "send": "Send question",
+  "privacyNote": "The assistant runs only approved read-only WMS queries; it cannot execute arbitrary SQL or modify records.",
+  "welcome": {
+    "title": "The short way to query warehouse data",
+    "description": "It understands stock, product, material, and finished good as related business terms. Include a serial number, user name, and time range for the most accurate result."
+  },
+  "examples": { "myActivities": "Show my activity today" },
+  "results": { "activities": "Activity records", "serialBalances": "Serial balances", "serialReceipts": "Goods receipt history", "stockLocations": "Stock and bin balances" },
+  "errors": { "load": "Warehouse Assistant could not be loaded.", "ask": "The question could not be answered.", "loadConversation": "Conversation history could not be loaded." }
+}
