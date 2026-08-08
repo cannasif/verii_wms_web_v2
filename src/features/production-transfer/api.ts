@@ -115,6 +115,69 @@ export interface ProductionTransferScanPickResult {
   remainingBarcodeQuantity?: number;
 }
 
+export interface ProductionTransferPickingRow {
+  taskLineId: number;
+  wtLineId: number;
+  lineNo: number;
+  sourceLocationId?: number;
+  sourceLocationCode?: string;
+  stockId: number;
+  stockCode: string;
+  stockName?: string;
+  serialNo?: string;
+  requestedQuantity: number;
+  remainingQuantity: number;
+  processedQuantity: number;
+  canPick: boolean;
+}
+
+export interface ProductionTransferPickingTable {
+  transferId: number;
+  documentNo: string;
+  externalReferenceNo?: string;
+  workflowStatus: ProductionTransferWorkflowStatus;
+  pickTaskId: number;
+  pickTaskNo: string;
+  isLocked: boolean;
+  canCompletePicking: boolean;
+  requestedQuantity: number;
+  pickedQuantity: number;
+  shortageQuantity: number;
+  rows: ProductionTransferPickingRow[];
+}
+
+export interface ResolveProductionTransferBarcodeResult {
+  taskLineId: number;
+  wtLineId: number;
+  sourceLocationId?: number;
+  sourceLocationCode?: string;
+  stockId: number;
+  stockCode: string;
+  stockName?: string;
+  serialNo?: string;
+  lotNo?: string;
+  remainingQuantity: number;
+  defaultQuantity: number;
+  isSerial: boolean;
+  canPick: boolean;
+}
+
+export interface ProductionTransferRouteRefreshCandidate {
+  locationId: number;
+  locationCode: string;
+  availableQuantity: number;
+  suggestedQuantity: number;
+  serialNo?: string | null;
+}
+
+export interface ProductionTransferRouteRefreshCandidates {
+  taskLineId: number;
+  remainingQuantity: number;
+  isSerial: boolean;
+  currentSerialNo?: string | null;
+  candidates: ProductionTransferRouteRefreshCandidate[];
+}
+
 const taskPath = (transferId: number, taskId: number) => `/api/production-transfers/${transferId}/tasks/${taskId}`;
 const assignmentPath = (transferId: number, taskId: number, userId: number) =>
   `${taskPath(transferId, taskId)}/assignments/${userId}`;
@@ -134,10 +197,39 @@ export const productionTransferApi = {
 
   execution: async (id: number): Promise<ProductionTransferExecution> =>
     unwrap(await api.get<Envelope<ProductionTransferExecution>>(`/api/production-transfers/${id}/execution`)),
-  scanPick: async (id: number, expectedLineId: number, barcode: string, sourceLocationId?: number): Promise<ProductionTransferScanPickResult> =>
-    unwrap(await api.post<Envelope<ProductionTransferScanPickResult>>(`/api/production-transfers/${id}/scan-pick`, {
-      idempotencyKey: crypto.randomUUID(), expectedLineId, barcode: barcode.trim(), sourceLocationId: sourceLocationId || null,
+  pickingTable: async (id: number): Promise<ProductionTransferPickingTable> =>
+    unwrap(await api.get<Envelope<ProductionTransferPickingTable>>(`/api/production-transfers/${id}/picking-table`)),
+  resolveBarcode: async (id: number, barcode: string): Promise<ResolveProductionTransferBarcodeResult> =>
+    unwrap(await api.post<Envelope<ResolveProductionTransferBarcodeResult>>(`/api/production-transfers/${id}/resolve-barcode`, {
+      barcode: barcode.trim(),
     })),
+  scanPick: async (id: number, expectedTaskLineId: number, barcode: string, quantity?: number, sourceLocationId?: number): Promise<ProductionTransferScanPickResult> =>
+    unwrap(await api.post<Envelope<ProductionTransferScanPickResult>>(`/api/production-transfers/${id}/scan-pick`, {
+      idempotencyKey: crypto.randomUUID(),
+      expectedTaskLineId,
+      barcode: barcode.trim(),
+      quantity: quantity ?? null,
+      sourceLocationId: sourceLocationId || null,
+    })),
+  routeRefreshCandidates: async (id: number, taskLineId: number, serialNo?: string | null): Promise<ProductionTransferRouteRefreshCandidates> =>
+    unwrap(await api.get<Envelope<ProductionTransferRouteRefreshCandidates>>(
+      `/api/production-transfers/${id}/task-lines/${taskLineId}/route-candidates`,
+      { params: serialNo?.trim() ? { serialNo: serialNo.trim() } : undefined },
+    )),
+  applyRouteSplit: async (
+    id: number,
+    taskLineId: number,
+    splits: { locationId: number; quantity: number; serialNo?: string | null }[],
+    currentSerialNo?: string | null,
+  ): Promise<ProductionTransferPickingTable> =>
+    unwrap(await api.post<Envelope<ProductionTransferPickingTable>>(
+      `/api/production-transfers/${id}/task-lines/${taskLineId}/route-split`,
+      {
+        idempotencyKey: crypto.randomUUID(),
+        currentSerialNo: currentSerialNo?.trim() || null,
+        splits,
+      },
+    )),
   completePicking: async (id: number, confirmPartialPicking: boolean, reason?: string): Promise<ProductionTransferExecution> =>
     unwrap(await api.post<Envelope<ProductionTransferExecution>>(`/api/production-transfers/${id}/complete-picking`, {
       idempotencyKey: crypto.randomUUID(), confirmPartialPicking, reason: reason?.trim() || null,

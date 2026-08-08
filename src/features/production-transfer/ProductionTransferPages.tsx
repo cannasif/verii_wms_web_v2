@@ -15,7 +15,6 @@ import { OpsPageHeader } from '@/components/shared/OpsPageHeader';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { WarehouseTransferDraftPage, type ProductionTransferInitialSource } from '@/features/warehouse-transfer-v2/components/WarehouseTransferDraftPage';
 import { WarehouseTransferListPage } from '@/features/warehouse-transfer-v2/components/WarehouseTransferListPage';
-import { WarehouseTransferOperationPage } from '@/features/warehouse-transfer-v2/WarehouseTransferOperationPage';
 import { useAuthStore } from '@/stores/auth-store';
 import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
 import { warehouseTransferApi, transferApiFor } from '@/features/warehouse-transfer-v2/api/warehouse-transfer.api';
@@ -162,13 +161,8 @@ export function ProductionTransferDraftPage(){
 }
 export function ProductionTransferListPage(){return <WarehouseTransferListPage variant="production"/>;}
 export function ProductionTransferOperationPage(){
-  return <div className="space-y-5">
-    <ProductionTaskPanel/>
-    <ProductionTransferExecutionPage/>
-    <WarehouseTransferOperationPage variant="production"/>
-  </div>;
+  return <ProductionTransferExecutionPage/>;
 }
-
 export function ProductionTransferPolicyPage(){
   const {t,moduleReady}=useModuleTranslation('production-transfer');
   const branchCode=useAuthStore(x=>x.branch?.code??'0');
@@ -332,7 +326,7 @@ const TASK_TYPE_LABELS: Record<string, string> = {
 };
 const taskTypeLabel = (type: string): string => TASK_TYPE_LABELS[type] ?? type;
 
-function ProductionTaskPanel(){
+export function ProductionTaskPanel(){
   const id=Number(useParams().id);
   const currentUserId=useAuthStore(x=>x.user?.id);
   const branchCode=useAuthStore(x=>x.branch?.code??'0');

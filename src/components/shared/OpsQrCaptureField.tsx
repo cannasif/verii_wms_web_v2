@@ -4,6 +4,7 @@ import {
   useRef,
   useState,
   type ReactElement,
+  type Ref,
 } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { Camera, Loader2 } from 'lucide-react';
@@ -50,6 +51,7 @@ export function OpsQrCaptureField({
   invalid = false,
   className,
   inputClassName,
+  inputRef: externalInputRef,
   cameraTitle = 'Personel QR okut',
   cameraDescription = 'Karttaki veya ekrandaki QR kodu kamera karesine getirin.',
 }: {
@@ -63,12 +65,19 @@ export function OpsQrCaptureField({
   invalid?: boolean;
   className?: string;
   inputClassName?: string;
+  inputRef?: Ref<HTMLInputElement | null>;
   cameraTitle?: string;
   cameraDescription?: string;
 }): ReactElement {
   const prefersCamera = usePrefersCameraCapture();
   const [cameraOpen, setCameraOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
+
+  const setInputRef = (node: HTMLInputElement | null): void => {
+    inputRef.current = node;
+    if (typeof externalInputRef === 'function') externalInputRef(node);
+    else if (externalInputRef) externalInputRef.current = node;
+  };
 
   useEffect(() => {
     if (!autoFocus || prefersCamera) return;
@@ -86,7 +95,7 @@ export function OpsQrCaptureField({
   return (
     <div className={cn('min-w-0 w-full', className)}>
       <AppInput
-        ref={inputRef}
+        ref={setInputRef}
         autoFocus={autoFocus && !prefersCamera}
         value={value}
         disabled={disabled}
