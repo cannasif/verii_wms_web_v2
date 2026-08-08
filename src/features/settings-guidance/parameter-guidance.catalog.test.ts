@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   buildParameterGuidanceSourceResource,
   parameterGuidance,
+  parameterGuidanceOptions,
+  resolveParameterGuidanceHint,
   parameterToggleGuidance,
 } from "./parameter-guidance.catalog";
 
@@ -98,5 +100,26 @@ describe("parameter guidance catalog", () => {
         });
       });
     });
+  });
+
+  it("doğal dildeki parametre sorusunu doğru modül ve alana bağlar", () => {
+    const hint = resolveParameterGuidanceHint(
+      "Kalite bekleyen üründe hangi raflar seçilebilir parametresini açarsam ne olur?",
+    );
+
+    expect(hint).toMatchObject({
+      module: "goodsReceipt",
+      field: "blockPutawayUntilQualityDecision",
+      value: "true",
+    });
+  });
+
+  it("seçenek belirtilmezse dropdown içindeki tüm senaryoları karşılaştırmaya hazırlar", () => {
+    const hint = resolveParameterGuidanceHint("Mal kabul ERP aktarım zamanı ayarı ne işe yarıyor?");
+    expect(hint).toMatchObject({ module: "goodsReceipt", field: "erpPostingPolicy" });
+
+    const options = parameterGuidanceOptions(hint!.module, hint!.field);
+    expect(options.length).toBeGreaterThan(2);
+    expect(options.every((option) => option.guidance.scenario.length > 12)).toBe(true);
   });
 });
