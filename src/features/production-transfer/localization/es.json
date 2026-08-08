@@ -69,5 +69,41 @@
       "requireApproval": "Aprobación obligatoria",
       "overIssueTolerancePercent": "Tolerancia de exceso de salida (%)"
     }
+  },
+  "enums": {
+    "transferStatus": {
+      "Draft": "Borrador",
+      "Released": "Liberado",
+      "Picking": "Preparación",
+      "PartiallyPicked": "Parcialmente preparado",
+      "Picked": "Preparado",
+      "Shipped": "Enviado",
+      "PartiallyShipped": "Parcialmente enviado",
+      "PartiallyReceived": "Parcialmente recibido",
+      "Received": "Recibido",
+      "PartiallyPutaway": "Parcialmente ubicado",
+      "Completed": "Completado",
+      "Cancelled": "Cancelado",
+      "AwaitingHandover": "Pendiente de entrega",
+      "CompletedWithShortage": "Completado con faltante",
+      "InProgress": "En curso"
+    },
+    "workflowStatus": {
+      "Planned": "Planificado",
+      "Picking": "En preparación",
+      "AwaitingHandover": "Pendiente de entrega",
+      "Completed": "Completado",
+      "CompletedWithShortage": "Completado con faltante",
+      "Cancelled": "Cancelado"
+    },
+    "taskStatus": {
+      "Open": "Abierto",
+      "Assigned": "Asignado",
+      "Accepted": "Aceptado",
+      "InProgress": "En curso",
+      "PartiallyCompleted": "Parcialmente completado",
+      "Completed": "Completado",
+      "Cancelled": "Cancelado"
+    }
   }
 }

@@ -69,5 +69,41 @@
       "requireApproval": "Genehmigung erforderlich",
       "overIssueTolerancePercent": "Mehrverbrauchstoleranz (%)"
     }
+  },
+  "enums": {
+    "transferStatus": {
+      "Draft": "Entwurf",
+      "Released": "Freigegeben",
+      "Picking": "Kommissionierung",
+      "PartiallyPicked": "Teilweise kommissioniert",
+      "Picked": "Kommissioniert",
+      "Shipped": "Versendet",
+      "PartiallyShipped": "Teilweise versendet",
+      "PartiallyReceived": "Teilweise empfangen",
+      "Received": "Empfangen",
+      "PartiallyPutaway": "Teilweise eingelagert",
+      "Completed": "Abgeschlossen",
+      "Cancelled": "Storniert",
+      "AwaitingHandover": "Übergabe ausstehend",
+      "CompletedWithShortage": "Mit Fehlmenge abgeschlossen",
+      "InProgress": "In Bearbeitung"
+    },
+    "workflowStatus": {
+      "Planned": "Geplant",
+      "Picking": "In Kommissionierung",
+      "AwaitingHandover": "Übergabe ausstehend",
+      "Completed": "Abgeschlossen",
+      "CompletedWithShortage": "Mit Fehlmenge abgeschlossen",
+      "Cancelled": "Storniert"
+    },
+    "taskStatus": {
+      "Open": "Offen",
+      "Assigned": "Zugewiesen",
+      "Accepted": "Angenommen",
+      "InProgress": "In Bearbeitung",
+      "PartiallyCompleted": "Teilweise abgeschlossen",
+      "Completed": "Abgeschlossen",
+      "Cancelled": "Storniert"
+    }
   }
 }

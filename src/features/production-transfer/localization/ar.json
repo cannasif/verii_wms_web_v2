@@ -69,5 +69,41 @@
       "requireApproval": "الموافقة مطلوبة",
       "overIssueTolerancePercent": "نسبة تسامح الصرف الزائد (%)"
     }
+  },
+  "enums": {
+    "transferStatus": {
+      "Draft": "مسودة",
+      "Released": "مُفرج عنه",
+      "Picking": "جاري التجميع",
+      "PartiallyPicked": "تم التجميع جزئيًا",
+      "Picked": "تم التجميع",
+      "Shipped": "تم الشحن",
+      "PartiallyShipped": "تم الشحن جزئيًا",
+      "PartiallyReceived": "تم الاستلام جزئيًا",
+      "Received": "تم الاستلام",
+      "PartiallyPutaway": "تم التخزين جزئيًا",
+      "Completed": "مكتمل",
+      "Cancelled": "ملغى",
+      "AwaitingHandover": "بانتظار التسليم",
+      "CompletedWithShortage": "مكتمل مع نقص",
+      "InProgress": "قيد التنفيذ"
+    },
+    "workflowStatus": {
+      "Planned": "مخطط",
+      "Picking": "في التجميع",
+      "AwaitingHandover": "بانتظار التسليم",
+      "Completed": "مكتمل",
+      "CompletedWithShortage": "مكتمل مع نقص",
+      "Cancelled": "ملغى"
+    },
+    "taskStatus": {
+      "Open": "مفتوح",
+      "Assigned": "مُعيَّن",
+      "Accepted": "مقبول",
+      "InProgress": "قيد التنفيذ",
+      "PartiallyCompleted": "مكتمل جزئيًا",
+      "Completed": "مكتمل",
+      "Cancelled": "ملغى"
+    }
   }
 }

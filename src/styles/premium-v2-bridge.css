@@ -366,6 +366,10 @@ html.skin-premium .wms-ops-list tbody tr:hover {
   background: var(--wms-brand-soft) !important;
 }
 
+html.skin-premium .wms-ops-list table.wms-ops-data-grid.wms-ops-data-grid--no-row-hover tbody tr:hover {
+  background: transparent !important;
+}
+
 /* Toolbar buttons → premium pills */
 html.skin-premium .wms-ops-list .wms-ops-list-toolbar-btn,
 html.skin-premium .wms-ops-workspace-host .wms-ops-list-toolbar-btn {

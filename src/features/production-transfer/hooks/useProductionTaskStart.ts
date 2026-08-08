@@ -15,9 +15,10 @@ interface ShortageDialogState {
 interface Options {
   transferId: number;
   run: (action: () => Promise<ProductionTaskBoard>) => Promise<void>;
+  onError?: (message: string) => void;
 }
 
-export function useProductionTaskStart({ transferId, run }: Options) {
+export function useProductionTaskStart({ transferId, run, onError }: Options) {
   const [shortageDialog, setShortageDialog] = useState<ShortageDialogState | null>(null);
   const [checkingTaskId, setCheckingTaskId] = useState<number>();
 
@@ -31,11 +32,13 @@ export function useProductionTaskStart({ transferId, run }: Options) {
       }
       await run(() => productionTransferApi.startTask(transferId, taskId));
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Stok kontrolü başarısız.');
+      const message = error instanceof Error ? error.message : 'Stok kontrolü başarısız.';
+      onError?.(message);
+      toast.error(message);
     } finally {
       setCheckingTaskId(undefined);
     }
-  }, [run, transferId]);
+  }, [onError, run, transferId]);
 
   const confirmPartialStart = useCallback(async () => {
     if (!shortageDialog) return;

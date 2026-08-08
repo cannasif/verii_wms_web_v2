@@ -36,6 +36,8 @@ export interface ProductionTaskLine {
   requestedQuantity: number; reservedQuantity: number; missingQuantity: number; processedQuantity: number;
   totalRequestedQuantity: number;
   sourceLocationId?: number; sourceLocationCode?: string; sourceLocationName?: string;
+  targetLocationId?: number; targetLocationCode?: string; targetLocationName?: string;
+  serialNo?: string;
 }
 export interface ProductionTask {
   taskId: number; taskNo: string; taskType: string; warehouseId: number; status: string; acceptedAtUtc?: string; acceptedBy?: number;
@@ -53,6 +55,51 @@ export interface ProductionTaskPoolRow {
   taskId: number; taskNo: string; taskType: string; warehouseId: number; taskStatus: string;
   plannedQuantity: number; processedQuantity: number; remainingQuantity: number;
   assignedUsers: string[]; createdDate?: string;
+}
+
+export type ProductionWorkOrderTransferTab = 'Picking' | 'Completed' | 'Cancelled';
+
+export interface ProductionWorkOrderTransferTaskRow {
+  taskId: number;
+  taskNo: string;
+  displayLabel: string;
+  displaySuffix?: string;
+  taskType: string;
+  status: string;
+  warehouseId: number;
+  plannedQuantity: number;
+  processedQuantity: number;
+  remainingQuantity: number;
+  assignedUsernames: string[];
+  previousTaskId?: number;
+  originTaskId?: number;
+  originUserId?: number;
+  completedAtUtc?: string;
+}
+
+export interface ProductionWorkOrderTransferHeaderRow {
+  transferId: number;
+  documentNo: string;
+  externalReferenceNo?: string;
+  transferStatus: string;
+  workflowStatus: ProductionTransferWorkflowStatus;
+  productionOrderId?: number;
+  productionOrderNo?: string;
+  productionHeaderId?: number;
+  parentTransferId?: number;
+  residualTransferId?: number;
+  residualDocumentNo?: string;
+  isResidualHeader: boolean;
+  sourceWarehouseId: number;
+  sourceWarehouseCode: number;
+  sourceWarehouseName: string;
+  targetWarehouseId: number;
+  targetWarehouseCode: number;
+  targetWarehouseName: string;
+  requestedQuantity: number;
+  pickedQuantity: number;
+  createdDate?: string;
+  tasks: ProductionWorkOrderTransferTaskRow[];
 }
 
 /** Görev başlatmadan önce depo-geneli stok yeterlilik kontrolü sonucu. */
@@ -115,6 +162,69 @@ export interface ProductionTransferScanPickResult {
   remainingBarcodeQuantity?: number;
 }
 
+export interface ProductionTransferPickingRow {
+  taskLineId: number;
+  wtLineId: number;
+  lineNo: number;
+  sourceLocationId?: number;
+  sourceLocationCode?: string;
+  stockId: number;
+  stockCode: string;
+  stockName?: string;
+  serialNo?: string;
+  requestedQuantity: number;
+  remainingQuantity: number;
+  processedQuantity: number;
+  canPick: boolean;
+}
+
+export interface ProductionTransferPickingTable {
+  transferId: number;
+  documentNo: string;
+  externalReferenceNo?: string;
+  workflowStatus: ProductionTransferWorkflowStatus;
+  pickTaskId: number;
+  pickTaskNo: string;
+  isLocked: boolean;
+  canCompletePicking: boolean;
+  requestedQuantity: number;
+  pickedQuantity: number;
+  shortageQuantity: number;
+  rows: ProductionTransferPickingRow[];
+}
+
+export interface ResolveProductionTransferBarcodeResult {
+  taskLineId: number;
+  wtLineId: number;
+  sourceLocationId?: number;
+  sourceLocationCode?: string;
+  stockId: number;
+  stockCode: string;
+  stockName?: string;
+  serialNo?: string;
+  lotNo?: string;
+  remainingQuantity: number;
+  defaultQuantity: number;
+  isSerial: boolean;
+  canPick: boolean;
+}
+
+export interface ProductionTransferRouteRefreshCandidate {
+  locationId: number;
+  locationCode: string;
+  availableQuantity: number;
+  suggestedQuantity: number;
+  serialNo?: string | null;
+}
+
+export interface ProductionTransferRouteRefreshCandidates {
+  taskLineId: number;
+  remainingQuantity: number;
+  isSerial: boolean;
+  currentSerialNo?: string | null;
+  candidates: ProductionTransferRouteRefreshCandidate[];
+}
+
 const taskPath = (transferId: number, taskId: number) => `/api/production-transfers/${transferId}/tasks/${taskId}`;
 const assignmentPath = (transferId: number, taskId: number, userId: number) =>
   `${taskPath(transferId, taskId)}/assignments/${userId}`;
@@ -131,13 +241,50 @@ export const productionTransferApi = {
     unwrap(await api.get<Envelope<ProductionTaskBoard>>(`/api/production-transfers/${id}/tasks`)),
   taskPool: async (): Promise<ProductionTaskPoolRow[]> =>
     unwrap(await api.get<Envelope<ProductionTaskPoolRow[]>>('/api/production-transfers/task-pool')),
+  workOrderTransferGroups: async (
+    tab: ProductionWorkOrderTransferTab,
+    search?: string,
+  ): Promise<ProductionWorkOrderTransferHeaderRow[]> =>
+    unwrap(await api.get<Envelope<ProductionWorkOrderTransferHeaderRow[]>>(
+      '/api/production-transfers/work-order-transfer-groups',
+      { params: { tab, search: search?.trim() || undefined } },
+    )),
 
   execution: async (id: number): Promise<ProductionTransferExecution> =>
     unwrap(await api.get<Envelope<ProductionTransferExecution>>(`/api/production-transfers/${id}/execution`)),
-  scanPick: async (id: number, expectedLineId: number, barcode: string, sourceLocationId?: number): Promise<ProductionTransferScanPickResult> =>
-    unwrap(await api.post<Envelope<ProductionTransferScanPickResult>>(`/api/production-transfers/${id}/scan-pick`, {
-      idempotencyKey: crypto.randomUUID(), expectedLineId, barcode: barcode.trim(), sourceLocationId: sourceLocationId || null,
+  pickingTable: async (id: number): Promise<ProductionTransferPickingTable> =>
+    unwrap(await api.get<Envelope<ProductionTransferPickingTable>>(`/api/production-transfers/${id}/picking-table`)),
+  resolveBarcode: async (id: number, barcode: string): Promise<ResolveProductionTransferBarcodeResult> =>
+    unwrap(await api.post<Envelope<ResolveProductionTransferBarcodeResult>>(`/api/production-transfers/${id}/resolve-barcode`, {
+      barcode: barcode.trim(),
     })),
+  scanPick: async (id: number, expectedTaskLineId: number, barcode: string, quantity?: number, sourceLocationId?: number): Promise<ProductionTransferScanPickResult> =>
+    unwrap(await api.post<Envelope<ProductionTransferScanPickResult>>(`/api/production-transfers/${id}/scan-pick`, {
+      idempotencyKey: crypto.randomUUID(),
+      expectedTaskLineId,
+      barcode: barcode.trim(),
+      quantity: quantity ?? null,
+      sourceLocationId: sourceLocationId || null,
+    })),
+  routeRefreshCandidates: async (id: number, taskLineId: number, serialNo?: string | null): Promise<ProductionTransferRouteRefreshCandidates> =>
+    unwrap(await api.get<Envelope<ProductionTransferRouteRefreshCandidates>>(
+      `/api/production-transfers/${id}/task-lines/${taskLineId}/route-candidates`,
+      { params: serialNo?.trim() ? { serialNo: serialNo.trim() } : undefined },
+    )),
+  applyRouteSplit: async (
+    id: number,
+    taskLineId: number,
+    splits: { locationId: number; quantity: number; serialNo?: string | null }[],
+    currentSerialNo?: string | null,
+  ): Promise<ProductionTransferPickingTable> =>
+    unwrap(await api.post<Envelope<ProductionTransferPickingTable>>(
+      `/api/production-transfers/${id}/task-lines/${taskLineId}/route-split`,
+      {
+        idempotencyKey: crypto.randomUUID(),
+        currentSerialNo: currentSerialNo?.trim() || null,
+        splits,
+      },
+    )),
   completePicking: async (id: number, confirmPartialPicking: boolean, reason?: string): Promise<ProductionTransferExecution> =>
     unwrap(await api.post<Envelope<ProductionTransferExecution>>(`/api/production-transfers/${id}/complete-picking`, {
       idempotencyKey: crypto.randomUUID(), confirmPartialPicking, reason: reason?.trim() || null,
@@ -176,6 +323,8 @@ export const productionTransferApi = {
     unwrap(await api.post<Envelope<ProductionTaskBoard>>(`${taskPath(id, taskId)}/complete-assignment-return`, { idempotencyKey: crypto.randomUUID() })),
   completeCancellationReturn: async (id: number, taskId: number): Promise<ProductionTaskBoard> =>
     unwrap(await api.post<Envelope<ProductionTaskBoard>>(`${taskPath(id, taskId)}/complete-cancellation-return`, { idempotencyKey: crypto.randomUUID() })),
+  processReturnTaskLine: async (id: number, taskId: number, taskLineId: number): Promise<ProductionTaskBoard> =>
+    unwrap(await api.post<Envelope<ProductionTaskBoard>>(`${taskPath(id, taskId)}/task-lines/${taskLineId}/process-return`, { idempotencyKey: crypto.randomUUID() })),
 
   // — Depo raf ayarları —
   defaultTargetLocation: async (warehouseId: number, branchCode: string): Promise<DefaultProductionTargetLocation> =>
