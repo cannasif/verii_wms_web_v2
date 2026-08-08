@@ -10,6 +10,8 @@ export type WarehouseAssistantIntent =
   | 'assignedTasks'
   | 'goodsReceiptAnalysis'
   | 'parameterHelp'
+  | 'steelVehicleAnalysis'
+  | 'warehouseTransferAnalysis'
   | 'unknown';
 
 export interface WarehouseAssistantParameterHint {
@@ -29,6 +31,8 @@ export interface WarehouseAssistantCapabilities {
   exampleQuestions: string[];
   canQueryGoodsReceiptAnalysis?: boolean;
   canExplainParameters?: boolean;
+  canQuerySteelVehicleAnalysis?: boolean;
+  canQueryTransferAnalysis?: boolean;
 }
 export interface WarehouseAssistantConversationRow {
   id: number;
@@ -209,6 +213,46 @@ export interface WarehouseAssistantParameterGuideRow {
   value?: string | null;
 }
 
+export interface WarehouseAssistantSteelVehicleRow {
+  vehicleCheckInId: number;
+  plateNo: string;
+  trailerPlateNo?: string | null;
+  driverName: string;
+  carrierName?: string | null;
+  declaredSteelSheetCount: number;
+  acceptedPlateCount: number;
+  unresolvedPlateCount: number;
+  status: string;
+  checkedInAtUtc: string;
+  businessDate: string;
+  customerCode?: string | null;
+  customerName?: string | null;
+}
+
+export interface WarehouseAssistantTransferRow {
+  transferId: number;
+  documentNo: string;
+  documentDate: string;
+  businessContext: string;
+  sourceWarehouseCode: number;
+  sourceWarehouseName: string;
+  targetWarehouseCode: number;
+  targetWarehouseName: string;
+  status: string;
+  approvalStatus: string;
+  erpIntegrationStatus: string;
+  lineCount: number;
+  unitCode: string;
+  requestedQuantity: number;
+  pickedQuantity: number;
+  shippedQuantity: number;
+  receivedQuantity: number;
+  putawayQuantity: number;
+  shortClosedQuantity: number;
+  externalReferenceNo?: string | null;
+  completedAtUtc?: string | null;
+}
+
 export interface WarehouseAssistantChatResponse {
   conversationId: number;
   messageId: number;
@@ -225,5 +269,7 @@ export interface WarehouseAssistantChatResponse {
   tasks: WarehouseAssistantTaskRow[];
   goodsReceipts?: WarehouseAssistantGoodsReceiptRow[];
   parameterGuides?: WarehouseAssistantParameterGuideRow[];
+  steelVehicles?: WarehouseAssistantSteelVehicleRow[];
+  transfers?: WarehouseAssistantTransferRow[];
   suggestions: string[];
 }

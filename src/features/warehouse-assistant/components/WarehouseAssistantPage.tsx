@@ -1,5 +1,5 @@
 import { type FormEvent, type ReactElement, useEffect, useMemo, useRef, useState } from 'react';
-import { Archive, Bot, Boxes, CircleAlert, Clock3, History, ListChecks, Loader2, MapPin, MessageSquarePlus, ReceiptText, ScanBarcode, Send, Settings2, ShieldCheck, UserRoundSearch, Waypoints } from 'lucide-react';
+import { Archive, ArrowLeftRight, Bot, Boxes, CircleAlert, Clock3, History, ListChecks, Loader2, MapPin, MessageSquarePlus, ReceiptText, ScanBarcode, Send, Settings2, ShieldCheck, Truck, UserRoundSearch, Waypoints } from 'lucide-react';
 import type { TFunction } from 'i18next';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -40,6 +40,8 @@ const emptyCapabilities: WarehouseAssistantCapabilities = {
   canQueryAssignedTasks: false,
   canQueryGoodsReceiptAnalysis: false,
   canExplainParameters: true,
+  canQuerySteelVehicleAnalysis: false,
+  canQueryTransferAnalysis: false,
   scopeLabel: '',
   exampleQuestions: [],
 };
@@ -351,7 +353,9 @@ function WelcomePanel({ examples, onSelect, t }: { examples: string[]; onSelect:
 function AssistantResult({ result, question, language, t, settingsT, onSuggestion }: { result: WarehouseAssistantChatResponse; question: string; language: string; t: TFunction; settingsT: TFunction; onSuggestion: (value: string) => void }): ReactElement | null {
   const goodsReceipts = result.goodsReceipts ?? [];
   const parameterGuides = result.parameterGuides ?? [];
-  const exportableCount = result.activities.length + result.serialBalances.length + result.serialReceipts.length + result.stockLocations.length + result.movements.length + result.tasks.length + goodsReceipts.length + (result.barcode ? 1 : 0);
+  const steelVehicles = result.steelVehicles ?? [];
+  const transfers = result.transfers ?? [];
+  const exportableCount = result.activities.length + result.serialBalances.length + result.serialReceipts.length + result.stockLocations.length + result.movements.length + result.tasks.length + goodsReceipts.length + steelVehicles.length + transfers.length + (result.barcode ? 1 : 0);
   const hasData = exportableCount + parameterGuides.length > 0;
   if (!hasData && result.suggestions.length === 0) return null;
   return (
@@ -396,7 +400,7 @@ function AssistantResult({ result, question, language, t, settingsT, onSuggestio
             <ResultCard
               key={row.entryId}
               title={`${row.stockCode} · ${translateValue(t, 'movementTypes', row.operationType)}`}
-              meta={`${formatDate(row.occurredAtUtc, language)} · ${row.referenceNo || row.referenceType || t('common.noReference')}`}
+              meta={`${formatDate(row.occurredAtUtc, language)} · ${row.referenceNo || row.referenceType || t('fallbacks.noReference')}`}
               detail={`${row.warehouseCode} - ${row.warehouseName} / ${row.locationCode} · ${row.quantityDelta > 0 ? '+' : ''}${formatNumber(row.quantityDelta, language)} ${row.unitCode}${row.serialNo ? ` · ${t('barcode.serial')}: ${row.serialNo}` : ''}`}
             />
           ))}
@@ -422,6 +426,30 @@ function AssistantResult({ result, question, language, t, settingsT, onSuggestio
               title={`${row.documentNo} · ${row.stockCode} - ${row.stockName}`}
               meta={`${formatDocumentDate(row.documentDate, language)} · ${row.supplierCode} - ${row.supplierName} · ${row.receivedByDisplayName}`}
               detail={`${row.warehouseCode} - ${row.warehouseName} · ${formatNumber(row.receivedQuantity, language)} ${row.unitCode}${row.yapCode ? ` · ${t('goodsReceipt.configurationCode')}: ${row.yapCode}` : ''}`}
+            />
+          ))}
+        </ResultSection>
+      ) : null}
+      {steelVehicles.length > 0 ? (
+        <ResultSection icon={<Truck className="size-4" />} title={t('results.steelVehicles')}>
+          {steelVehicles.map((row) => (
+            <ResultCard
+              key={row.vehicleCheckInId}
+              title={row.plateNo}
+              meta={`${formatDate(row.checkedInAtUtc, language)} · ${row.driverName || t('fallbacks.noDriver')} · ${translateValue(t, 'vehicleStatuses', row.status)}`}
+              detail={`${t('steelVehicles.declared')}: ${row.declaredSteelSheetCount} · ${t('steelVehicles.accepted')}: ${row.acceptedPlateCount} · ${t('steelVehicles.unresolved')}: ${row.unresolvedPlateCount}${row.customerCode ? ` · ${row.customerCode} - ${row.customerName ?? ''}` : ''}`}
+            />
+          ))}
+        </ResultSection>
+      ) : null}
+      {transfers.length > 0 ? (
+        <ResultSection icon={<ArrowLeftRight className="size-4" />} title={t('results.transfers')}>
+          {transfers.map((row, index) => (
+            <ResultCard
+              key={`${row.transferId}-${row.unitCode}-${index}`}
+              title={`${row.documentNo} · ${translateValue(t, 'transferContexts', row.businessContext)}`}
+              meta={`${row.sourceWarehouseCode} - ${row.sourceWarehouseName} → ${row.targetWarehouseCode} - ${row.targetWarehouseName} · ${translateValue(t, 'transferStatuses', row.status)}`}
+              detail={`${t('transfers.requested')}: ${formatNumber(row.requestedQuantity, language)} · ${t('transfers.picked')}: ${formatNumber(row.pickedQuantity, language)} · ${t('transfers.received')}: ${formatNumber(row.receivedQuantity, language)} · ${t('transfers.shortClosed')}: ${formatNumber(row.shortClosedQuantity, language)} ${row.unitCode}`}
             />
           ))}
         </ResultSection>

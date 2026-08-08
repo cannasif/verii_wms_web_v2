@@ -202,6 +202,46 @@ export function buildWarehouseAssistantExportModel({
         unitCode: row.unitCode, status: enumValue('operationStatuses', row.status), receivedBy: row.receivedByDisplayName,
       })),
     ),
+    section(
+      'steel-vehicles',
+      t('results.steelVehicles'),
+      [
+        col(t, 'checkedInAt', 21), col(t, 'plateNo', 18), col(t, 'trailerPlateNo', 18, false),
+        col(t, 'driverName', 24), col(t, 'carrierName', 24, false), col(t, 'declaredSteelSheetCount', 16),
+        col(t, 'acceptedPlateCount', 16), col(t, 'unresolvedPlateCount', 16), col(t, 'status', 18),
+        col(t, 'customerCode', 18, false), col(t, 'customerName', 28),
+      ],
+      (result.steelVehicles ?? []).map((row) => ({
+        checkedInAt: dateValue(row.checkedInAtUtc), plateNo: row.plateNo,
+        trailerPlateNo: textValue(row.trailerPlateNo), driverName: row.driverName,
+        carrierName: textValue(row.carrierName), declaredSteelSheetCount: row.declaredSteelSheetCount,
+        acceptedPlateCount: row.acceptedPlateCount, unresolvedPlateCount: row.unresolvedPlateCount,
+        status: enumValue('vehicleStatuses', row.status), customerCode: textValue(row.customerCode),
+        customerName: textValue(row.customerName),
+      })),
+    ),
+    section(
+      'transfers',
+      t('results.transfers'),
+      [
+        col(t, 'documentDate', 18), col(t, 'documentNo', 22), col(t, 'businessContext', 22),
+        col(t, 'sourceWarehouse', 26), col(t, 'targetWarehouse', 26), col(t, 'status', 18),
+        col(t, 'lineCount', 12, false), col(t, 'unitCode', 12), col(t, 'requestedQuantity', 16),
+        col(t, 'pickedQuantity', 16, false), col(t, 'shippedQuantity', 16, false), col(t, 'receivedQuantity', 16),
+        col(t, 'putawayQuantity', 16, false), col(t, 'shortClosedQuantity', 16), col(t, 'externalReferenceNo', 22, false),
+      ],
+      (result.transfers ?? []).map((row) => ({
+        documentDate: dateValue(row.documentDate), documentNo: row.documentNo,
+        businessContext: enumValue('transferContexts', row.businessContext),
+        sourceWarehouse: `${row.sourceWarehouseCode} - ${row.sourceWarehouseName}`,
+        targetWarehouse: `${row.targetWarehouseCode} - ${row.targetWarehouseName}`,
+        status: enumValue('transferStatuses', row.status), lineCount: row.lineCount, unitCode: row.unitCode,
+        requestedQuantity: row.requestedQuantity, pickedQuantity: row.pickedQuantity,
+        shippedQuantity: row.shippedQuantity, receivedQuantity: row.receivedQuantity,
+        putawayQuantity: row.putawayQuantity, shortClosedQuantity: row.shortClosedQuantity,
+        externalReferenceNo: textValue(row.externalReferenceNo),
+      })),
+    ),
   ].filter((item): item is WarehouseAssistantExportSection => item !== null);
 
   return {
