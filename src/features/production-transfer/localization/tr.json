@@ -78,5 +78,41 @@
       "requireApproval": "Onay zorunlu",
       "overIssueTolerancePercent": "Fazla sarf toleransı (%)"
     }
+  },
+  "enums": {
+    "transferStatus": {
+      "Draft": "Taslak",
+      "Released": "Serbest Bırakıldı",
+      "Picking": "Toplanıyor",
+      "PartiallyPicked": "Kısmen Toplandı",
+      "Picked": "Toplandı",
+      "Shipped": "Sevk Edildi",
+      "PartiallyShipped": "Kısmen Sevk Edildi",
+      "PartiallyReceived": "Kısmen Kabul Edildi",
+      "Received": "Kabul Edildi",
+      "PartiallyPutaway": "Kısmen Yerleştirildi",
+      "Completed": "Tamamlandı",
+      "Cancelled": "İptal Edildi",
+      "AwaitingHandover": "Teslim Onayı Bekliyor",
+      "CompletedWithShortage": "Eksik Tamamlandı",
+      "InProgress": "Devam Ediyor"
+    },
+    "workflowStatus": {
+      "Planned": "Planlandı",
+      "Picking": "Toplamada",
+      "AwaitingHandover": "Teslim Onayı Bekliyor",
+      "Completed": "Tamamlandı",
+      "CompletedWithShortage": "Eksik Tamamlandı",
+      "Cancelled": "İptal Edildi"
+    },
+    "taskStatus": {
+      "Open": "Açık",
+      "Assigned": "Atandı",
+      "Accepted": "Kabul Edildi",
+      "InProgress": "Devam Ediyor",
+      "PartiallyCompleted": "Kısmen Tamamlandı",
+      "Completed": "Tamamlandı",
+      "Cancelled": "İptal Edildi"
+    }
   }
 }

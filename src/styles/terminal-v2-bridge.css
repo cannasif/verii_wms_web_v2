@@ -290,6 +290,10 @@ html:not(.skin-premium) .wms-ops-list table.wms-ops-data-grid tbody tr:hover {
   background: color-mix(in oklab, var(--wms-ops-accent) 4%, transparent) !important;
 }
 
+html:not(.skin-premium) .wms-ops-list table.wms-ops-data-grid.wms-ops-data-grid--no-row-hover tbody tr:hover {
+  background: transparent !important;
+}
+
 html:not(.skin-premium) .wms-ops-list .wms-ops-list-toolbar-btn,
 html:not(.skin-premium) .wms-ops-list button.h-11 {
   border-radius: 0 !important;

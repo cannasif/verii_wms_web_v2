@@ -7612,6 +7612,10 @@ html.skin-premium .wms-ops-list .wms-ops-grid-search__clear {
   background: color-mix(in oklab, var(--wms-ops-accent) 4%, transparent);
 }
 
+.wms-ops-list table.wms-ops-data-grid.wms-ops-data-grid--no-row-hover tbody tr:hover {
+  background: transparent !important;
+}
+
 .wms-ops-list .wms-ops-data-grid td {
   font-size: 0.8125rem;
   line-height: 1.25;
@@ -20607,6 +20611,10 @@ html.skin-premium .wms-ops-list .wms-ops-data-grid tbody tr {
 
 html.skin-premium .wms-ops-list .wms-ops-data-grid tbody tr:hover {
   background: var(--wms-brand-soft);
+}
+
+html.skin-premium .wms-ops-list table.wms-ops-data-grid.wms-ops-data-grid--no-row-hover tbody tr:hover {
+  background: transparent !important;
 }
 
 html.skin-premium .wms-ops-list .wms-ops-status-badge {

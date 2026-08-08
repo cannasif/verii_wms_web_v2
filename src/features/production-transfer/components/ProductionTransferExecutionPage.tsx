@@ -9,12 +9,14 @@ import { useAuthStore } from '@/stores/auth-store';
 import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
 import { productionTransferApi, type ProductionTransferExecution } from '../api';
 import { ProductionTransferPickingSection } from './ProductionTransferPickingSection';
+import { ProductionTransferReturnSection } from './ProductionTransferReturnSection';
 
 export function ProductionTransferExecutionPage() {
   const id = Number(useParams().id);
   const currentUserId = useAuthStore((state) => state.user?.id);
   const { can } = usePermissionAccess();
   const [execution, setExecution] = useState<ProductionTransferExecution>();
+  const [hasActiveReturnTask, setHasActiveReturnTask] = useState(false);
   const [busy, setBusy] = useState(false);
   const [loadError, setLoadError] = useState<string>();
   const [shortageConfirmed, setShortageConfirmed] = useState(false);
@@ -23,13 +25,20 @@ export function ProductionTransferExecutionPage() {
   const load = useCallback(async () => {
     if (!id) return;
     try {
-      const result = await productionTransferApi.execution(id);
+      const [result, board] = await Promise.all([
+        productionTransferApi.execution(id),
+        productionTransferApi.taskBoard(id),
+      ]);
       setExecution(result);
+      setHasActiveReturnTask(board.tasks.some((task) =>
+        (task.taskType === 'AssignmentReturn' || task.taskType === 'CancellationReturn')
+        && task.assignments.some((assignment) => assignment.userId === currentUserId)
+        && !['Completed', 'Cancelled'].includes(task.status)));
       setLoadError(undefined);
     } catch (error) {
       setLoadError(error instanceof Error ? error.message : 'Üretim transferi açılamadı.');
     }
-  }, [id]);
+  }, [currentUserId, id]);
 
   useEffect(() => { void load(); }, [load]);
 
@@ -58,19 +67,34 @@ export function ProductionTransferExecutionPage() {
   const pickingStage = execution.workflowStatus === 'Planned' || execution.workflowStatus === 'Picking';
   const handoverStage = execution.workflowStatus === 'AwaitingHandover';
   const completed = execution.workflowStatus === 'Completed' || execution.workflowStatus === 'CompletedWithShortage';
+  const showReturnSection = hasActiveReturnTask;
+  const showPickingSection = pickingStage && !showReturnSection;
 
   return <section className="space-y-5">
     <header className="wms-ops-form-card p-5">
       <Link to="/warehouse/production-transfers/list" className="mb-4 inline-flex items-center gap-1 text-xs font-bold text-[var(--wms-brand-primary)]">
         <ArrowLeft className="size-4" />Transfer kayıtlarına dön
       </Link>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Step active={pickingStage} done={!pickingStage} number="01" title="Barkodlu toplama" text="Kalemleri tablodan takip edin, barkodla toplayın veya rotayı güncelleyin." />
-        <Step active={handoverStage} done={completed} number="02" title="Fiziksel teslim onayı" text="Talep sahibi malzemeyi alınca tam veya eksik teslimi onaylasın." />
-      </div>
+      {!showReturnSection ? (
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Step active={pickingStage} done={!pickingStage} number="01" title="Barkodlu toplama" text="Kalemleri tablodan takip edin, barkodla toplayın veya rotayı güncelleyin." />
+          <Step active={handoverStage} done={completed} number="02" title="Fiziksel teslim onayı" text="Talep sahibi malzemeyi alınca tam veya eksik teslimi onaylasın." />
+        </div>
+      ) : null}
     </header>
 
-    {pickingStage && (
+    {showReturnSection && (
+      <ProductionTransferReturnSection
+        transferId={id}
+        documentNo={execution.documentNo}
+        onBoardChange={(board) => setHasActiveReturnTask(board.tasks.some((task) =>
+          (task.taskType === 'AssignmentReturn' || task.taskType === 'CancellationReturn')
+          && task.assignments.some((assignment) => assignment.userId === currentUserId)
+          && !['Completed', 'Cancelled'].includes(task.status)))}
+      />
+    )}
+
+    {showPickingSection && (
       <ProductionTransferPickingSection
         transferId={id}
         execution={execution}
@@ -96,4 +120,7 @@ export function ProductionTransferExecutionPage() {
 }
 
 function Step({ active, done, number, title, text }: { active: boolean; done: boolean; number: string; title: string; text: string }) { return <div className={cn('rounded-xl border p-4', active ? 'border-[var(--wms-brand-primary)] bg-[color-mix(in_oklab,var(--wms-brand-primary)_8%,transparent)]' : 'border-[var(--wms-app-border)]', done && 'border-emerald-500/40')}><div className="flex items-center gap-3"><span className={cn('grid size-9 place-items-center rounded-full text-xs font-black', done ? 'bg-emerald-500 text-white' : 'bg-[var(--wms-brand-primary)] text-[var(--wms-brand-on-primary)]')}>{done ? <CheckCircle2 className="size-5" /> : number}</span><span><strong className="block">{title}</strong><span className="text-xs text-[var(--wms-app-text-muted)]">{text}</span></span></div></div>; }
-function LineSummary({ execution }: { execution: ProductionTransferExecution }) { return <div className="mt-5 overflow-x-auto rounded-xl border border-[var(--wms-app-border)]"><table className="w-full min-w-[680px] text-sm"><thead className="bg-black/5 text-left dark:bg-white/5"><tr><th className="p-3">Stok</th><th className="p-3 text-right">Talep</th><th className="p-3 text-right">Toplanan/Teslim</th><th className="p-3 text-right">Eksik</th></tr></thead><tbody>{execution.lines.map((line) => <tr key={line.lineId} className="border-t border-[var(--wms-app-border)]"><td className="p-3"><strong>{line.stockCode}</strong><span className="block text-xs text-[var(--wms-app-text-muted)]">{line.stockName}</span></td><td className="p-3 text-right">{formatProjectNumber(line.requestedQuantity)} {line.unitCode}</td><td className="p-3 text-right text-emerald-600">{formatProjectNumber(line.pickedQuantity)}</td><td className="p-3 text-right text-amber-600">{formatProjectNumber(line.shortageQuantity)}</td></tr>)}</tbody></table></div>; }
+function LineSummary({ execution }: { execution: ProductionTransferExecution }) {
+  const pickedLines = execution.lines.filter((line) => line.pickedQuantity > 0);
+  return <div className="mt-5 overflow-x-auto rounded-xl border border-[var(--wms-app-border)]"><table className="w-full min-w-[680px] text-sm"><thead className="bg-black/5 text-left dark:bg-white/5"><tr><th className="p-3">Stok</th><th className="p-3 text-right">Talep</th><th className="p-3 text-right">Toplanan/Teslim</th><th className="p-3 text-right">Eksik</th></tr></thead><tbody>{pickedLines.map((line) => <tr key={line.lineId} className="border-t border-[var(--wms-app-border)]"><td className="p-3"><strong>{line.stockCode}</strong><span className="block text-xs text-[var(--wms-app-text-muted)]">{line.stockName}</span></td><td className="p-3 text-right">{formatProjectNumber(line.requestedQuantity)} {line.unitCode}</td><td className="p-3 text-right text-emerald-600">{formatProjectNumber(line.pickedQuantity)}</td><td className="p-3 text-right text-amber-600">{formatProjectNumber(line.shortageQuantity)}</td></tr>)}</tbody></table></div>;
+}

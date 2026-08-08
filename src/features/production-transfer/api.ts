@@ -36,6 +36,8 @@ export interface ProductionTaskLine {
   requestedQuantity: number; reservedQuantity: number; missingQuantity: number; processedQuantity: number;
   totalRequestedQuantity: number;
   sourceLocationId?: number; sourceLocationCode?: string; sourceLocationName?: string;
+  targetLocationId?: number; targetLocationCode?: string; targetLocationName?: string;
+  serialNo?: string;
 }
 export interface ProductionTask {
   taskId: number; taskNo: string; taskType: string; warehouseId: number; status: string; acceptedAtUtc?: string; acceptedBy?: number;
@@ -53,6 +55,51 @@ export interface ProductionTaskPoolRow {
   taskId: number; taskNo: string; taskType: string; warehouseId: number; taskStatus: string;
   plannedQuantity: number; processedQuantity: number; remainingQuantity: number;
   assignedUsers: string[]; createdDate?: string;
+}
+
+export type ProductionWorkOrderTransferTab = 'Picking' | 'Completed' | 'Cancelled';
+
+export interface ProductionWorkOrderTransferTaskRow {
+  taskId: number;
+  taskNo: string;
+  displayLabel: string;
+  displaySuffix?: string;
+  taskType: string;
+  status: string;
+  warehouseId: number;
+  plannedQuantity: number;
+  processedQuantity: number;
+  remainingQuantity: number;
+  assignedUsernames: string[];
+  previousTaskId?: number;
+  originTaskId?: number;
+  originUserId?: number;
+  completedAtUtc?: string;
+}
+
+export interface ProductionWorkOrderTransferHeaderRow {
+  transferId: number;
+  documentNo: string;
+  externalReferenceNo?: string;
+  transferStatus: string;
+  workflowStatus: ProductionTransferWorkflowStatus;
+  productionOrderId?: number;
+  productionOrderNo?: string;
+  productionHeaderId?: number;
+  parentTransferId?: number;
+  residualTransferId?: number;
+  residualDocumentNo?: string;
+  isResidualHeader: boolean;
+  sourceWarehouseId: number;
+  sourceWarehouseCode: number;
+  sourceWarehouseName: string;
+  targetWarehouseId: number;
+  targetWarehouseCode: number;
+  targetWarehouseName: string;
+  requestedQuantity: number;
+  pickedQuantity: number;
+  createdDate?: string;
+  tasks: ProductionWorkOrderTransferTaskRow[];
 }
 
 /** Görev başlatmadan önce depo-geneli stok yeterlilik kontrolü sonucu. */
@@ -194,6 +241,14 @@ export const productionTransferApi = {
     unwrap(await api.get<Envelope<ProductionTaskBoard>>(`/api/production-transfers/${id}/tasks`)),
   taskPool: async (): Promise<ProductionTaskPoolRow[]> =>
     unwrap(await api.get<Envelope<ProductionTaskPoolRow[]>>('/api/production-transfers/task-pool')),
+  workOrderTransferGroups: async (
+    tab: ProductionWorkOrderTransferTab,
+    search?: string,
+  ): Promise<ProductionWorkOrderTransferHeaderRow[]> =>
+    unwrap(await api.get<Envelope<ProductionWorkOrderTransferHeaderRow[]>>(
+      '/api/production-transfers/work-order-transfer-groups',
+      { params: { tab, search: search?.trim() || undefined } },
+    )),
 
   execution: async (id: number): Promise<ProductionTransferExecution> =>
     unwrap(await api.get<Envelope<ProductionTransferExecution>>(`/api/production-transfers/${id}/execution`)),
@@ -268,6 +323,8 @@ export const productionTransferApi = {
     unwrap(await api.post<Envelope<ProductionTaskBoard>>(`${taskPath(id, taskId)}/complete-assignment-return`, { idempotencyKey: crypto.randomUUID() })),
   completeCancellationReturn: async (id: number, taskId: number): Promise<ProductionTaskBoard> =>
     unwrap(await api.post<Envelope<ProductionTaskBoard>>(`${taskPath(id, taskId)}/complete-cancellation-return`, { idempotencyKey: crypto.randomUUID() })),
+  processReturnTaskLine: async (id: number, taskId: number, taskLineId: number): Promise<ProductionTaskBoard> =>
+    unwrap(await api.post<Envelope<ProductionTaskBoard>>(`${taskPath(id, taskId)}/task-lines/${taskLineId}/process-return`, { idempotencyKey: crypto.randomUUID() })),
 
   // — Depo raf ayarları —
   defaultTargetLocation: async (warehouseId: number, branchCode: string): Promise<DefaultProductionTargetLocation> =>

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react';
-import { ArrowDown, ArrowRightLeft, ArrowUp, CheckCircle2, ChevronDown, ChevronUp, CircleHelp, FileText, PackageOpen, Plus, RefreshCw, Search, X } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { ArrowDown, ArrowUp, CheckCircle2, ChevronDown, ChevronUp, CircleHelp, FileText, PackageOpen, Plus, RefreshCw, Search, X } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -28,6 +29,12 @@ import type { DropdownPage } from '@/hooks/useDropdownInfiniteSearch';
 import type { PagedResponse } from '@/types/api';
 import { productionApi } from './api';
 import type { ProductionSourceWorkOrder, PreparedNetsisProductionMaterial, PreparedNetsisProductionWorkOrder } from './types';
+import {
+  ProductionWorkOrderTransferTabPanel,
+  PRODUCTION_WORK_ORDER_TRANSFER_TABS,
+  workOrderTransferApiTab,
+  type ProductionWorkOrderPageTab,
+} from './components/ProductionWorkOrderTransferTabPanel';
 
 const todayIsoDate = (): string => new Date().toLocaleDateString('en-CA');
 
@@ -187,6 +194,7 @@ export function ProductionWorkOrdersPage(): ReactElement {
   const { t, i18n } = useTranslation();
   const { skin } = useTheme();
   const { can } = usePermissionAccess();
+  const queryClient = useQueryClient();
   const branchCode = useAuthStore((state) => state.branch?.code ?? '0');
   const isPremium = skin === 'premium';
   const [policy, setPolicy] = useState<ProductionTransferPolicy>();
@@ -198,6 +206,7 @@ export function ProductionWorkOrdersPage(): ReactElement {
   const [selected, setSelected] = useState<PreparedNetsisProductionWorkOrder>();
   const [detailLoading, setDetailLoading] = useState<string>();
   const [dateSort, setDateSort] = useState<DateSort>('desc');
+  const [activeTab, setActiveTab] = useState<ProductionWorkOrderPageTab>('pending');
   const eyebrow = buildTerminalEyebrowFromNav(pathname, t, i18n.resolvedLanguage ?? i18n.language) ?? 'VERII WMS';
 
   const load = useCallback(async (term?: string) => {
@@ -227,14 +236,20 @@ export function ProductionWorkOrdersPage(): ReactElement {
     const term = searchInput.trim();
     setSearchTokens((current) => appendFoldedSearchToken(current, searchInput));
     if (term) setSearchInput('');
-    void load(term || undefined);
+    if (activeTab === 'pending') void load(term || undefined);
   };
 
   const clearSearch = () => {
     setSearchInput('');
     setSearchTokens([]);
     setActiveSearch([]);
-    void load();
+    if (activeTab === 'pending') void load();
+    else void queryClient.invalidateQueries({ queryKey: ['production-work-order-transfer-groups'] });
+  };
+
+  const refreshActiveTab = () => {
+    if (activeTab === 'pending') void load();
+    else void queryClient.invalidateQueries({ queryKey: ['production-work-order-transfer-groups'] });
   };
 
   const visibleRows = useMemo(() => {
@@ -319,6 +334,24 @@ export function ProductionWorkOrdersPage(): ReactElement {
       )}
     >
       <div className="wms-ops-data-grid min-w-0 space-y-0">
+        <div className="mb-4 flex flex-wrap gap-2 border-b border-[var(--wms-ops-card-border)] pb-3">
+          {PRODUCTION_WORK_ORDER_TRANSFER_TABS.map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => setActiveTab(tab.key)}
+              className={cn(
+                'rounded-full border px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] transition',
+                activeTab === tab.key
+                  ? 'border-[var(--wms-brand-primary)] bg-[var(--wms-brand-primary)] text-[var(--wms-brand-on-primary)]'
+                  : 'border-[var(--wms-app-border)] text-[var(--wms-app-text-muted)] hover:border-[var(--wms-brand-primary)] hover:text-[var(--wms-brand-primary)]',
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
         <div className="wms-ops-data-grid-toolbar flex flex-wrap items-start justify-between gap-2">
           <div className="wms-ops-data-grid-toolbar__start flex min-w-0 !grow flex-wrap items-start gap-2">
             <div className="wms-ops-grid-search wms-ops-grid-search--tokens" data-no-auto-localize="true">
@@ -369,13 +402,26 @@ export function ProductionWorkOrdersPage(): ReactElement {
               <Search className="size-3.5" aria-hidden />
               <span>Ara</span>
             </OpsActionButton>
-            <OpsActionButton variant="secondary" className="wms-ops-list-toolbar-btn" onClick={() => void load()} disabled={loading} title="Açık iş emirlerini yenile">
+            <OpsActionButton
+              variant="secondary"
+              className="wms-ops-list-toolbar-btn"
+              onClick={refreshActiveTab}
+              disabled={loading}
+              title={activeTab === 'pending' ? 'Açık iş emirlerini yenile' : 'Transfer listesini yenile'}
+            >
               <RefreshCw className={cn('size-3.5', loading && 'animate-spin')} aria-hidden />
               <span className="hidden md:inline">Yenile</span>
             </OpsActionButton>
           </div>
         </div>
 
+        {activeTab !== 'pending' ? (
+          <ProductionWorkOrderTransferTabPanel
+            tab={workOrderTransferApiTab(activeTab)}
+            search={activeSearch.join(' ') || undefined}
+          />
+        ) : (
+        <>
         {/* Skin'in tablo sarmalayıcı sınıfları yatay kaydırmayı zorunlu kıldığı için burada kullanılmaz; kolonlar sığıyor. */}
         <div className="wms-ops-scrollbar relative mt-4 block max-h-[max(20rem,calc(100dvh-26rem))] overflow-x-auto overflow-y-auto border border-[var(--wms-ops-card-border)] max-sm:hidden">
           <table className="wms-ops-data-grid w-full border-collapse text-sm">
@@ -501,6 +547,8 @@ export function ProductionWorkOrdersPage(): ReactElement {
             </>
           )}
         </div>
+        </>
+        )}
       </div>
     </OpsListPageShell>
     {selected && (
@@ -508,9 +556,7 @@ export function ProductionWorkOrdersPage(): ReactElement {
         value={selected}
         branchCode={branchCode}
         close={() => setSelected(undefined)}
-        createTransfer={(assignee, materials) => navigate('/warehouse/production-transfers/new', {
-          state: { netsisProduction: { ...selected, materials }, assignees: [assignee] },
-        })}
+        onTransferCreated={() => void load()}
         canCreateTransfer={can('WMS.PRODUCTION_TRANSFER.CREATE')}
       />
     )}
@@ -521,16 +567,15 @@ function WorkOrderDrawer({
   value,
   branchCode,
   close,
-  createTransfer,
+  onTransferCreated,
   canCreateTransfer,
 }: {
   value: PreparedNetsisProductionWorkOrder;
   branchCode: string;
   close: () => void;
-  createTransfer: (assignee: ActiveUserOption, materials: PreparedNetsisProductionMaterial[]) => void;
+  onTransferCreated?: () => void;
   canCreateTransfer: boolean;
 }): ReactElement {
-  const navigate = useNavigate();
   const blocked = value.mappingErrors.length > 0 || value.isClosed;
   const alreadyImported = Boolean(value.existingProductionOrderId);
   // Dar ekranda başlık bloğu yer kapladığı için varsayılan kapalı; sm ve üstünde her zaman açık.
@@ -589,7 +634,7 @@ function WorkOrderDrawer({
       const taskLabel = created.taskNo ? ` · ${created.taskNo}` : '';
       toast.success(`Transfer oluşturuldu: ${created.documentNo}${taskLabel}`);
       close();
-      navigate(`/warehouse/production-transfers/${created.id}/operations`);
+      onTransferCreated?.();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Doğrudan transfer tamamlanamadı.');
     } finally {
@@ -874,7 +919,7 @@ function WorkOrderDrawer({
             <span className="text-xs text-[var(--wms-app-text-muted)] max-sm:text-[0.62rem] sm:mr-auto">{footerHint}</span>
           ) : null}
           <OpsActionButton
-            variant="secondary"
+            variant="primary"
             className={MODAL_CTA_CLASS}
             disabled={blocked || !canCreateTransfer || !assignee || selectedCount === 0}
             loading={completingTransfer}
@@ -882,20 +927,6 @@ function WorkOrderDrawer({
           >
             <CheckCircle2 className="size-4 max-sm:size-3.5" aria-hidden />
             Doğrudan transferi tamamla
-          </OpsActionButton>
-          <OpsActionButton
-            variant="primary"
-            className={MODAL_CTA_CLASS}
-            disabled={blocked || !canCreateTransfer || !assignee || selectedCount === 0}
-            onClick={() => {
-              if (!assignee || selectedCount === 0) return;
-              createTransfer(assignee, value.materials.filter((_, index) => selectedLines.has(index)));
-            }}
-          >
-            <ArrowRightLeft className="size-4 max-sm:size-3.5" aria-hidden />
-            {selectedCount === value.materials.length
-              ? 'Doğrudan transfer hazırla'
-              : `Seçili ${selectedCount} kalem için transfer hazırla`}
           </OpsActionButton>
         </footer>
       </DialogContent>

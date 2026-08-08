@@ -355,7 +355,7 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
   }, []);
   const hasShortage = (execution.shortageQuantity ?? 0) > 0;
   const [partialConfirmed, setPartialConfirmed] = useState(false);
-  const [partialReason, setPartialReason] = useState('');
+  const [completePickingDialogOpen, setCompletePickingDialogOpen] = useState(false);
 
   const resolveBarcode = async (rawBarcode?: string) => {
     const scanned = (rawBarcode ?? barcode).trim();
@@ -510,9 +510,9 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
       const result = await productionTransferApi.completePicking(
         transferId,
         hasShortage ? partialConfirmed : false,
-        partialReason,
       );
       onExecutionChange(result);
+      setCompletePickingDialogOpen(false);
       toast.success('Toplama tamamlandı. Malzeme teslim onayı bekliyor.');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Toplama tamamlanamadı.');
@@ -667,25 +667,16 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
         </div>
 
         {table.canCompletePicking && !table.isLocked && (
-          <div className="mt-5 rounded-xl border border-[var(--wms-app-border)] p-4">
-            <h3 className="font-black">Toplamayı bitir</h3>
-            {hasShortage && (
-              <div className="mt-3 rounded-xl border border-amber-500/50 bg-amber-500/10 p-3">
-                <label className="flex items-start gap-2 text-sm">
-                  <input type="checkbox" checked={partialConfirmed} onChange={(event) => setPartialConfirmed(event.target.checked)} className="mt-1" />
-                  Eksik toplamayı bilinçli olarak teslim aşamasına taşıyorum.
-                </label>
-                <textarea className="input mt-3 min-h-20 w-full" value={partialReason} onChange={(event) => setPartialReason(event.target.value)} placeholder="Eksik toplama nedeni" />
-              </div>
-            )}
+          <div className="mt-5 flex justify-end">
             <OpsActionButton
-              className="mt-4"
               variant="primary"
-              loading={busy}
-              disabled={hasShortage && (!partialConfirmed || partialReason.trim().length < 5)}
-              onClick={() => void completePicking()}
+              onClick={() => {
+                if (hasShortage) setCompletePickingDialogOpen(true);
+                else void completePicking();
+              }}
             >
-              <PackageCheck className="size-4" />Toplamayı bitir ve teslim beklemeye al
+              <PackageCheck className="size-4" />
+              Toplamayı bitir
             </OpsActionButton>
           </div>
         )}
@@ -759,6 +750,52 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
               <OpsActionButton ref={step2SubmitRef} type="submit" variant="primary" loading={busy}>Onayla</OpsActionButton>
             </div>
           </form>
+        </ResponsiveDialog>
+      )}
+
+      {completePickingDialogOpen && (
+        <ResponsiveDialog
+          onClose={() => setCompletePickingDialogOpen(false)}
+          title="Toplamayı bitir"
+          description="Onayladığınızda transfer teslim beklemeye alınır."
+        >
+          <div className="space-y-4">
+            <p className="text-sm text-[var(--wms-app-text-muted)]">
+              Toplanan: {formatProjectNumber(table.pickedQuantity)} / {formatProjectNumber(table.requestedQuantity)}
+              {hasShortage ? ` · Eksik: ${formatProjectNumber(table.shortageQuantity)}` : ''}
+            </p>
+            {hasShortage && (
+              <div className="rounded-xl border border-amber-500/50 bg-amber-500/10 p-3">
+                <label className="flex items-start gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={partialConfirmed}
+                    onChange={(event) => setPartialConfirmed(event.target.checked)}
+                    className="mt-1"
+                  />
+                  Eksik toplamayı bilinçli olarak teslim aşamasına taşıyorum.
+                </label>
+              </div>
+            )}
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                className="rounded-lg border px-4 py-2 text-sm font-semibold"
+                onClick={() => setCompletePickingDialogOpen(false)}
+              >
+                İptal
+              </button>
+              <OpsActionButton
+                variant="primary"
+                loading={busy}
+                disabled={hasShortage && !partialConfirmed}
+                onClick={() => void completePicking()}
+              >
+                <PackageCheck className="size-4" />
+                Toplamayı bitir ve teslim beklemeye al
+              </OpsActionButton>
+            </div>
+          </div>
         </ResponsiveDialog>
       )}
 
