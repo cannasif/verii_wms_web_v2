@@ -51,6 +51,11 @@
     "description": "Verwalten Sie zentral Produktionsauftrag-, Materialverfügbarkeits-, Zuweisungs-, Standort- und Toleranzregeln.",
     "sections": { "source": "Quelle für Auftrag und Rezeptur", "order": "Produktionsauftrag und Materialverfügbarkeit", "execution": "Physische Ausführung und Toleranz" },
     "source": { "netsis": "Aus Netsis-ERP-Funktionen lesen", "netsisHint": "Aufträge und Rezepturen werden live aus Netsis gelesen.", "wms": "Aus WMS-Integrationstabellen lesen", "wmsHint": "Ein freigegebenes Planungssystem wie Windbox speist die WMS-Quelltabellen.", "combined": "ERP- und WMS-Aufträge gemeinsam anzeigen", "combinedHint": "Beide Quellen werden gekennzeichnet; gleiche Auftragsnummern bleiben getrennt.", "boundaryTitle": "Integrationsgrenze", "boundaryText": "Externe Systeme speisen nur versionierte Quelltabellen. WMS erstellt operative Aufträge, Transfers, Reservierungen und Bestandsbewegungen." },
+    "erpPosting": {
+      "AfterHandover": { "title": "Nach Übergabebestätigung automatisch buchen", "description": "WMS schließt zuerst die Bestandsbewegung ab und bucht den Transfer anschließend automatisch in Netsis." },
+      "Manual": { "title": "Manuell durch berechtigten Benutzer buchen", "description": "Der Transfer wird in WMS abgeschlossen; ein berechtigter Benutzer startet die Netsis-Buchung später." },
+      "Disabled": { "title": "Nicht an Netsis senden", "description": "Der Transfer wirkt nur auf WMS-Bestand und Lagerplätze; es wird kein Netsis-Beleg erstellt." }
+    },
     "fields": {
       "productionOrderSource": "Woher sollen Produktionsdaten gelesen werden?",
       "wmsSourceSystemCode": "Quellsystemcode",
@@ -67,9 +72,11 @@
       "allowPartialSupply": "Teilversorgung zulassen",
       "allowOverIssue": "Mehrverbrauch zulassen",
       "requireApproval": "Genehmigung erforderlich",
+      "erpPostingPolicy": "Wann soll der abgeschlossene Produktionstransfer an Netsis gesendet werden?",
       "overIssueTolerancePercent": "Mehrverbrauchstoleranz (%)"
     }
   },
+  "execution": { "erp": { "title": "Netsis-Buchungsstatus", "documentNo": "Netsis-Belegnummer", "retry": "An Netsis senden / Erneut versuchen", "postedWithCompletion": "Produktionstransfer abgeschlossen und Netsis-Beleg erstellt.", "failedAfterCompletion": "Transfer in WMS abgeschlossen, Netsis-Buchung fehlgeschlagen. Ein erneuter Versuch ist möglich.", "uncertainAfterCompletion": "Transfer abgeschlossen, Netsis-Ergebnis unklar. Vor erneutem Senden Netsis prüfen.", "retrySucceeded": "Netsis-Buchung erfolgreich abgeschlossen.", "retryFailed": "Netsis-Buchung konnte nicht abgeschlossen werden.", "status": { "Pending": "Buchung ausstehend", "Processing": "Wird an Netsis gesendet", "Succeeded": "Netsis-Beleg erstellt", "Failed": "Buchung fehlgeschlagen; Wiederholung möglich", "CommitUncertain": "Ergebnis unklar; manuelle Prüfung erforderlich", "Cancelled": "Netsis-Beleg storniert" } } },
   "enums": {
     "transferStatus": {
       "Draft": "Entwurf",

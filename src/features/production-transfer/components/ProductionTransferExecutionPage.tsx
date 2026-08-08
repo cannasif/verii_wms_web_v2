@@ -7,17 +7,20 @@ import { formatProjectNumber } from '@/lib/project-format';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
 import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
+import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { productionTransferApi, type ProductionTransferExecution } from '../api';
 import { ProductionTransferPickingSection } from './ProductionTransferPickingSection';
 import { ProductionTransferReturnSection } from './ProductionTransferReturnSection';
 
 export function ProductionTransferExecutionPage() {
+  const { t } = useModuleTranslation('production-transfer');
   const id = Number(useParams().id);
   const currentUserId = useAuthStore((state) => state.user?.id);
   const { can } = usePermissionAccess();
   const [execution, setExecution] = useState<ProductionTransferExecution>();
   const [hasActiveReturnTask, setHasActiveReturnTask] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [erpBusy, setErpBusy] = useState(false);
   const [loadError, setLoadError] = useState<string>();
   const [shortageConfirmed, setShortageConfirmed] = useState(false);
   const [shortageReason, setShortageReason] = useState('');
@@ -53,12 +56,32 @@ export function ProductionTransferExecutionPage() {
     try {
       const result = await productionTransferApi.confirmHandover(id, hasShortage ? shortageConfirmed : false, shortageReason);
       setExecution(result);
-      toast.success(result.residualDocumentNo
+      if (result.erpIntegrationStatus === 'Succeeded') {
+        toast.success(t('execution.erp.postedWithCompletion'));
+      } else if (result.erpIntegrationStatus === 'Failed') {
+        toast.warning(t('execution.erp.failedAfterCompletion'));
+      } else if (result.erpIntegrationStatus === 'CommitUncertain') {
+        toast.warning(t('execution.erp.uncertainAfterCompletion'));
+      } else toast.success(result.residualDocumentNo
         ? `Teslim tamamlandı. Kalan miktar için ${result.residualDocumentNo} oluşturuldu.`
         : 'Üretim transferi teslim edildi ve tamamlandı.');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Transfer teslimi onaylanamadı.');
     } finally { setBusy(false); }
+  };
+
+  const postErp = async () => {
+    if (!execution) return;
+    setErpBusy(true);
+    try {
+      const result = await productionTransferApi.postErp(id);
+      setExecution(result);
+      if (result.erpIntegrationStatus === 'Succeeded') toast.success(t('execution.erp.retrySucceeded'));
+      else if (result.erpIntegrationStatus === 'CommitUncertain') toast.warning(t('execution.erp.uncertainAfterCompletion'));
+      else toast.error(result.erpErrorMessage || t('execution.erp.retryFailed'));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t('execution.erp.retryFailed'));
+    } finally { setErpBusy(false); }
   };
 
   if (loadError) return <section className="wms-ops-form-card p-5"><p className="font-bold text-red-500">{loadError}</p><button className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-[var(--wms-brand-primary)]" onClick={() => void load()}><RefreshCw className="size-4" />Tekrar dene</button></section>;
@@ -114,6 +137,28 @@ export function ProductionTransferExecutionPage() {
     {completed && <section className="wms-ops-form-card border-emerald-500/40 p-5">
       <div className="flex items-start gap-3"><CheckCircle2 className="mt-1 size-7 text-emerald-500" /><div><h2 className="text-xl font-black">Transfer tamamlandı</h2><p className="text-sm text-[var(--wms-app-text-muted)]">{execution.handoverConfirmedAtUtc ? new Date(execution.handoverConfirmedAtUtc).toLocaleString('tr-TR') : ''} tarihinde fiziksel teslim onaylandı.</p></div></div>
       <LineSummary execution={execution} />
+      <div className={cn(
+        'mt-5 rounded-xl border p-4',
+        execution.erpIntegrationStatus === 'Succeeded' && 'border-emerald-500/40 bg-emerald-500/10',
+        execution.erpIntegrationStatus === 'Failed' && 'border-red-500/40 bg-red-500/10',
+        execution.erpIntegrationStatus === 'CommitUncertain' && 'border-amber-500/50 bg-amber-500/10',
+      )}>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <strong className="block">{t('execution.erp.title')}</strong>
+            <span className="mt-1 block text-sm text-[var(--wms-app-text-muted)]">{t(`execution.erp.status.${execution.erpIntegrationStatus}`)}</span>
+            {execution.erpDocumentNo && <span className="mt-2 block text-xs font-bold">{t('execution.erp.documentNo')}: {execution.erpDocumentNo}</span>}
+            {execution.erpErrorMessage && <span className="mt-2 block text-xs text-red-600">{execution.erpErrorMessage}</span>}
+          </div>
+          {can('WMS.PRODUCTION_TRANSFER.APPROVE')
+            && execution.erpPostingPolicy !== 'Disabled'
+            && ['Pending','Failed'].includes(execution.erpIntegrationStatus) && (
+            <OpsActionButton variant="secondary" loading={erpBusy} onClick={() => void postErp()}>
+              <RefreshCw className="size-4" />{t('execution.erp.retry')}
+            </OpsActionButton>
+          )}
+        </div>
+      </div>
       {execution.residualTransferId && <div className="mt-5 rounded-xl border border-amber-500/50 bg-amber-500/10 p-4"><strong>Kalan iş emri oluşturuldu</strong><p className="mt-1 text-sm">Eksik miktarlar yeni belgeye taşındı; tamamlanan transfer tekrar açılamaz.</p><Link className="mt-3 inline-flex items-center gap-2 font-bold text-[var(--wms-brand-primary)]" to={`/warehouse/production-transfers/${execution.residualTransferId}/operations`}>{execution.residualDocumentNo || `#${execution.residualTransferId}`} iş emrine git</Link></div>}
     </section>}
   </section>;

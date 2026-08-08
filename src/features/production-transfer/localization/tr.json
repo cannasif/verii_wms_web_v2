@@ -60,6 +60,11 @@
       "boundaryTitle": "Entegrasyon sınırı",
       "boundaryText": "Dış sistem yalnızca sürümlü kaynak iş emri ve reçete tablolarını besler. WMS operasyon emri, transfer, rezervasyon ve stok hareketini kendi transaction sınırında oluşturur."
     },
+    "erpPosting": {
+      "AfterHandover": { "title": "Teslim onayından sonra otomatik gönder", "description": "Talep sahibi Transferi Onayla dediğinde WMS önce stok hareketini tamamlar, ardından aynı belgeyi Netsis'e otomatik gönderir." },
+      "Manual": { "title": "Yetkili kullanıcı elle göndersin", "description": "Transfer WMS'te tamamlanır fakat Netsis belgesi otomatik oluşmaz. Yetkili kullanıcı tamamlanan kayıttan Netsis'e Gönder işlemini çalıştırır." },
+      "Disabled": { "title": "Netsis'e gönderme", "description": "Üretim transferi yalnızca WMS stok ve raf bakiyelerini etkiler; bu transfer için Netsis belgesi oluşturulmaz." }
+    },
     "fields": {
       "productionOrderSource": "Üretim verisini nereden oku?",
       "wmsSourceSystemCode": "Kaynak sistem kodu",
@@ -76,7 +81,21 @@
       "allowPartialSupply": "Kısmi beslemeye izin ver",
       "allowOverIssue": "Fazla sarfa izin ver",
       "requireApproval": "Onay zorunlu",
+      "erpPostingPolicy": "Tamamlanan üretim transferi Netsis'e ne zaman gönderilsin?",
       "overIssueTolerancePercent": "Fazla sarf toleransı (%)"
+    }
+  },
+  "execution": {
+    "erp": {
+      "title": "Netsis aktarım durumu",
+      "documentNo": "Netsis belge no",
+      "retry": "Netsis'e Gönder / Tekrar Dene",
+      "postedWithCompletion": "Üretim transferi tamamlandı ve Netsis belgesi oluşturuldu.",
+      "failedAfterCompletion": "Transfer WMS'te tamamlandı ancak Netsis aktarımı başarısız oldu. Kayıttan tekrar deneyebilirsiniz.",
+      "uncertainAfterCompletion": "Transfer WMS'te tamamlandı ancak Netsis sonucu kesinleşmedi. Mükerrer kayıt oluşturmadan önce Netsis'i kontrol edin.",
+      "retrySucceeded": "Netsis aktarımı başarıyla tamamlandı.",
+      "retryFailed": "Netsis aktarımı tamamlanamadı.",
+      "status": { "Pending": "Gönderim bekliyor", "Processing": "Netsis'e gönderiliyor", "Succeeded": "Netsis belgesi oluşturuldu", "Failed": "Gönderim başarısız; tekrar denenebilir", "CommitUncertain": "Sonuç belirsiz; manuel kontrol gerekli", "Cancelled": "Netsis belgesi iptal edildi" }
     }
   },
   "enums": {

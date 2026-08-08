@@ -51,6 +51,11 @@
     "description": "أدر مركزيًا قواعد أمر الإنتاج وتوفر المواد والتعيين والموقع والتسامح.",
     "sections": { "source": "مصدر أمر العمل والوصفة", "order": "أمر الإنتاج وتوفر المواد", "execution": "التنفيذ الفعلي والتسامح" },
     "source": { "netsis": "القراءة من وظائف Netsis ERP", "netsisHint": "يتم إعداد أوامر العمل والوصفات مباشرة من Netsis.", "wms": "القراءة من جداول تكامل WMS", "wmsHint": "يغذي نظام تخطيط معتمد مثل Windbox جداول مصدر WMS.", "combined": "عرض أوامر ERP وWMS معًا", "combinedHint": "يتم تمييز المصدرين وتبقى أرقام الأوامر المتطابقة منفصلة.", "boundaryTitle": "حدود التكامل", "boundaryText": "تغذي الأنظمة الخارجية جداول المصدر ذات الإصدارات فقط. ينشئ WMS الأوامر التشغيلية والتحويلات والحجوزات وحركات المخزون." },
+    "erpPosting": {
+      "AfterHandover": { "title": "الإرسال تلقائيًا بعد تأكيد التسليم", "description": "يكمل WMS حركة المخزون أولًا ثم يرسل التحويل تلقائيًا إلى Netsis." },
+      "Manual": { "title": "الإرسال يدويًا بواسطة مستخدم مخوّل", "description": "يكتمل التحويل في WMS ثم يبدأ مستخدم مخوّل الإرسال إلى Netsis لاحقًا." },
+      "Disabled": { "title": "عدم الإرسال إلى Netsis", "description": "يؤثر التحويل فقط على مخزون ومواقع WMS ولا يتم إنشاء مستند Netsis." }
+    },
     "fields": {
       "productionOrderSource": "من أين تتم قراءة بيانات الإنتاج؟",
       "wmsSourceSystemCode": "رمز نظام المصدر",
@@ -67,9 +72,11 @@
       "allowPartialSupply": "السماح بالتغذية الجزئية",
       "allowOverIssue": "السماح بالصرف الزائد",
       "requireApproval": "الموافقة مطلوبة",
+      "erpPostingPolicy": "متى يجب إرسال تحويل الإنتاج المكتمل إلى Netsis؟",
       "overIssueTolerancePercent": "نسبة تسامح الصرف الزائد (%)"
     }
   },
+  "execution": { "erp": { "title": "حالة الإرسال إلى Netsis", "documentNo": "رقم مستند Netsis", "retry": "إرسال إلى Netsis / إعادة المحاولة", "postedWithCompletion": "اكتمل تحويل الإنتاج وتم إنشاء مستند Netsis.", "failedAfterCompletion": "اكتمل التحويل في WMS لكن فشل الإرسال إلى Netsis. يمكن إعادة المحاولة.", "uncertainAfterCompletion": "نتيجة Netsis غير مؤكدة. تحقق من Netsis قبل إعادة المحاولة.", "retrySucceeded": "اكتمل الإرسال إلى Netsis بنجاح.", "retryFailed": "تعذر إكمال الإرسال إلى Netsis.", "status": { "Pending": "بانتظار الإرسال", "Processing": "جارٍ الإرسال إلى Netsis", "Succeeded": "تم إنشاء مستند Netsis", "Failed": "فشل الإرسال ويمكن إعادة المحاولة", "CommitUncertain": "النتيجة غير مؤكدة وتتطلب تحققًا يدويًا", "Cancelled": "تم إلغاء مستند Netsis" } } },
   "enums": {
     "transferStatus": {
       "Draft": "مسودة",

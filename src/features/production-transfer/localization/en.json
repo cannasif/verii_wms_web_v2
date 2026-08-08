@@ -60,6 +60,11 @@
       "boundaryTitle": "Integration boundary",
       "boundaryText": "External systems only feed versioned source work-order and recipe tables. WMS creates operational orders, transfers, reservations and stock movements within its own transaction boundary."
     },
+    "erpPosting": {
+      "AfterHandover": { "title": "Post automatically after handover", "description": "When the requester confirms handover, WMS completes the stock movement first and then posts the same document to Netsis automatically." },
+      "Manual": { "title": "Post manually by an authorized user", "description": "The transfer completes in WMS without creating a Netsis document. An authorized user posts it from the completed record." },
+      "Disabled": { "title": "Do not post to Netsis", "description": "The production transfer affects only WMS stock and location balances; no Netsis document is created." }
+    },
     "fields": {
       "productionOrderSource": "Where should production data be read from?",
       "wmsSourceSystemCode": "Source system code",
@@ -76,7 +81,21 @@
       "allowPartialSupply": "Allow partial supply",
       "allowOverIssue": "Allow over-issue",
       "requireApproval": "Require approval",
+      "erpPostingPolicy": "When should a completed production transfer be posted to Netsis?",
       "overIssueTolerancePercent": "Over-issue tolerance (%)"
+    }
+  },
+  "execution": {
+    "erp": {
+      "title": "Netsis posting status",
+      "documentNo": "Netsis document no",
+      "retry": "Post to Netsis / Retry",
+      "postedWithCompletion": "The production transfer completed and its Netsis document was created.",
+      "failedAfterCompletion": "The transfer completed in WMS, but Netsis posting failed. You can retry from the completed record.",
+      "uncertainAfterCompletion": "The transfer completed in WMS, but the Netsis result is uncertain. Check Netsis before retrying to avoid duplicates.",
+      "retrySucceeded": "Netsis posting completed successfully.",
+      "retryFailed": "Netsis posting could not be completed.",
+      "status": { "Pending": "Waiting to be posted", "Processing": "Posting to Netsis", "Succeeded": "Netsis document created", "Failed": "Posting failed; retry is available", "CommitUncertain": "Result uncertain; manual verification required", "Cancelled": "Netsis document cancelled" }
     }
   },
   "enums": {

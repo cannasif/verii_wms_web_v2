@@ -51,6 +51,11 @@
     "description": "Gestione de forma centralizada las reglas de orden de producción, disponibilidad de material, asignación, ubicación y tolerancia.",
     "sections": { "source": "Fuente de orden y receta", "order": "Orden de producción y disponibilidad de material", "execution": "Ejecución física y tolerancia" },
     "source": { "netsis": "Leer desde funciones de Netsis ERP", "netsisHint": "Las órdenes y recetas se preparan en tiempo real desde Netsis.", "wms": "Leer desde tablas de integración WMS", "wmsHint": "Un sistema aprobado como Windbox alimenta las tablas fuente de WMS.", "combined": "Listar juntas las órdenes ERP y WMS", "combinedHint": "Ambas fuentes se etiquetan y los números iguales permanecen separados.", "boundaryTitle": "Límite de integración", "boundaryText": "Los sistemas externos solo alimentan tablas fuente versionadas. WMS crea órdenes operativas, transferencias, reservas y movimientos de stock." },
+    "erpPosting": {
+      "AfterHandover": { "title": "Enviar automáticamente tras la entrega", "description": "WMS completa primero el movimiento de stock y después envía automáticamente la transferencia a Netsis." },
+      "Manual": { "title": "Envío manual por usuario autorizado", "description": "La transferencia se completa en WMS y un usuario autorizado inicia posteriormente el envío a Netsis." },
+      "Disabled": { "title": "No enviar a Netsis", "description": "La transferencia solo afecta al stock y ubicaciones WMS; no se crea documento en Netsis." }
+    },
     "fields": {
       "productionOrderSource": "¿De dónde se deben leer los datos de producción?",
       "wmsSourceSystemCode": "Código del sistema fuente",
@@ -67,9 +72,11 @@
       "allowPartialSupply": "Permitir suministro parcial",
       "allowOverIssue": "Permitir exceso de salida",
       "requireApproval": "Aprobación obligatoria",
+      "erpPostingPolicy": "¿Cuándo debe enviarse a Netsis la transferencia de producción completada?",
       "overIssueTolerancePercent": "Tolerancia de exceso de salida (%)"
     }
   },
+  "execution": { "erp": { "title": "Estado de envío a Netsis", "documentNo": "N.º de documento Netsis", "retry": "Enviar a Netsis / Reintentar", "postedWithCompletion": "La transferencia terminó y se creó el documento Netsis.", "failedAfterCompletion": "La transferencia terminó en WMS, pero falló el envío a Netsis. Puede reintentarlo.", "uncertainAfterCompletion": "El resultado de Netsis es incierto. Compruebe Netsis antes de reintentar.", "retrySucceeded": "Envío a Netsis completado correctamente.", "retryFailed": "No se pudo completar el envío a Netsis.", "status": { "Pending": "Pendiente de envío", "Processing": "Enviando a Netsis", "Succeeded": "Documento Netsis creado", "Failed": "Envío fallido; se puede reintentar", "CommitUncertain": "Resultado incierto; requiere control manual", "Cancelled": "Documento Netsis cancelado" } } },
   "enums": {
     "transferStatus": {
       "Draft": "Borrador",

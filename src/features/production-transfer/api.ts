@@ -27,6 +27,7 @@ export interface ProductionTransferPolicy {
   allowOverIssue: boolean;
   overIssueTolerancePercent: number;
   requireApproval: boolean;
+  erpPostingPolicy: 'Disabled' | 'Manual' | 'AfterHandover';
   cancellationReturnPolicy: 'OriginalSourceLocation' | 'WarehouseDefaultReturnLocation' | 'ManagerSelectionRequired';
 }
 
@@ -144,6 +145,10 @@ export interface ProductionTransferExecutionLine {
 
 export interface ProductionTransferExecution {
   transferId: number; documentNo: string; workflowStatus: ProductionTransferWorkflowStatus; transferStatus: string;
+  erpPostingPolicy: 'Disabled' | 'Manual' | 'AfterHandover';
+  erpIntegrationStatus: 'Pending' | 'Processing' | 'Succeeded' | 'Failed' | 'CommitUncertain' | 'Cancelled';
+  erpPostingStatus?: 'Pending' | 'Processing' | 'Succeeded' | 'Failed' | 'CommitUncertain';
+  erpDocumentNo?: string; erpErrorCode?: string; erpErrorMessage?: string;
   sourceWarehouseId: number; sourceWarehouseCode: number; sourceWarehouseName: string;
   targetWarehouseId: number; targetWarehouseCode: number; targetWarehouseName: string;
   waitingLocationId?: number; waitingLocationCode?: string; waitingLocationName?: string;
@@ -292,6 +297,10 @@ export const productionTransferApi = {
   confirmHandover: async (id: number, confirmShortage: boolean, shortageReason?: string): Promise<ProductionTransferExecution> =>
     unwrap(await api.post<Envelope<ProductionTransferExecution>>(`/api/production-transfers/${id}/confirm-handover`, {
       idempotencyKey: crypto.randomUUID(), confirmShortage, shortageReason: shortageReason?.trim() || null,
+    })),
+  postErp: async (id: number): Promise<ProductionTransferExecution> =>
+    unwrap(await api.post<Envelope<ProductionTransferExecution>>(`/api/production-transfers/${id}/erp/post`, {
+      idempotencyKey: crypto.randomUUID(),
     })),
 
   // — Atama ve devir —

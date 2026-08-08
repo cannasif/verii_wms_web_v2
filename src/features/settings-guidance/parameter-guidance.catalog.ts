@@ -1512,6 +1512,26 @@ const production: Record<string, ValueGuide> = {
       scenario: "Ayrı teslim alan onayı aranmaz.",
     },
   ),
+  erpPostingPolicy: {
+    AfterHandover: g(
+      "Fiziksel teslim onaylanınca üretim transferi Netsis'e otomatik gönderilir.",
+      "WMS stok ve raf hareketini önce transaction içinde tamamlar; Netsis çağrısı daha sonra idempotent olarak çalışır. Netsis başarısız olsa bile tamamlanan WMS hareketi kaybolmaz ve kayıt üzerinden tekrar denenebilir.",
+      ["Transferi onayla", "Netsis DAT belgesi", "ERP gönderim geçmişi"],
+      "Depocu 10 AD toplar, talep sahibi teslimi onaylar; WMS transferi tamamlar ve aynı belgeyi Netsis'e otomatik gönderir.",
+    ),
+    Manual: g(
+      "Fiziksel transfer WMS'te tamamlanır ancak Netsis'e otomatik gönderilmez.",
+      "ERP gönderme yetkisi bulunan kullanıcı tamamlanan kayıt içindeki 'Netsis'e Gönder / Tekrar Dene' düğmesini kullanmalıdır.",
+      ["Tamamlanan transfer", "Netsis'e manuel gönderim"],
+      "Gece vardiyası transferi tamamlar; muhasebe veya yetkili depo yöneticisi belgeyi daha sonra Netsis'e yollar.",
+    ),
+    Disabled: g(
+      "Bu üretim transferi için Netsis belgesi oluşturulmaz.",
+      "Yalnız WMS stok, seri, depo ve raf bakiyeleri güncellenir. Kullanıcı ekranında Netsis'e gönderme düğmesi gösterilmez.",
+      ["WMS iç hareket", "ERP dışı süreç"],
+      "ERP'de izlenmeyen geçici üretim alanı hareketi yalnız WMS içinde tamamlanır.",
+    ),
+  },
   cancellationReturnPolicy: {
     OriginalSourceLocation: g(
       "İptalde stok özgün toplandığı rafa döner.",

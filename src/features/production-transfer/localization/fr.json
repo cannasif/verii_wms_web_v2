@@ -51,6 +51,11 @@
     "description": "Gérez de manière centralisée les règles d'ordre de production, de disponibilité des matières, d'affectation, d'emplacement et de tolérance.",
     "sections": { "source": "Source de l’ordre et de la recette", "order": "Ordre de production et disponibilité des matières", "execution": "Exécution physique et tolérance" },
     "source": { "netsis": "Lire depuis les fonctions Netsis ERP", "netsisHint": "Les ordres et recettes sont préparés en temps réel depuis Netsis.", "wms": "Lire depuis les tables d’intégration WMS", "wmsHint": "Un système approuvé tel que Windbox alimente les tables sources WMS.", "combined": "Afficher ensemble les ordres ERP et WMS", "combinedHint": "Les deux sources sont identifiées et les numéros identiques restent distincts.", "boundaryTitle": "Limite d’intégration", "boundaryText": "Les systèmes externes alimentent uniquement les tables sources versionnées. WMS crée les ordres opérationnels, transferts, réservations et mouvements de stock." },
+    "erpPosting": {
+      "AfterHandover": { "title": "Envoyer automatiquement après la remise", "description": "WMS termine d’abord le mouvement de stock, puis envoie automatiquement le transfert à Netsis." },
+      "Manual": { "title": "Envoi manuel par un utilisateur autorisé", "description": "Le transfert est terminé dans WMS et un utilisateur autorisé lance ensuite l’envoi vers Netsis." },
+      "Disabled": { "title": "Ne pas envoyer à Netsis", "description": "Le transfert affecte uniquement le stock et les emplacements WMS ; aucun document Netsis n’est créé." }
+    },
     "fields": {
       "productionOrderSource": "D’où lire les données de production ?",
       "wmsSourceSystemCode": "Code du système source",
@@ -67,9 +72,11 @@
       "allowPartialSupply": "Autoriser l'approvisionnement partiel",
       "allowOverIssue": "Autoriser la sur-sortie",
       "requireApproval": "Approbation obligatoire",
+      "erpPostingPolicy": "Quand le transfert de production terminé doit-il être envoyé à Netsis ?",
       "overIssueTolerancePercent": "Tolérance de sur-sortie (%)"
     }
   },
+  "execution": { "erp": { "title": "État de l’envoi Netsis", "documentNo": "N° de document Netsis", "retry": "Envoyer à Netsis / Réessayer", "postedWithCompletion": "Le transfert est terminé et le document Netsis a été créé.", "failedAfterCompletion": "Le transfert est terminé dans WMS, mais l’envoi Netsis a échoué. Vous pouvez réessayer.", "uncertainAfterCompletion": "Le résultat Netsis est incertain. Vérifiez Netsis avant de réessayer.", "retrySucceeded": "Envoi Netsis terminé avec succès.", "retryFailed": "L’envoi Netsis n’a pas pu être terminé.", "status": { "Pending": "En attente d’envoi", "Processing": "Envoi vers Netsis", "Succeeded": "Document Netsis créé", "Failed": "Échec de l’envoi ; nouvel essai possible", "CommitUncertain": "Résultat incertain ; contrôle manuel requis", "Cancelled": "Document Netsis annulé" } } },
   "enums": {
     "transferStatus": {
       "Draft": "Brouillon",

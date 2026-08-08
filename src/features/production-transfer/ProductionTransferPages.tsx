@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Boxes, ChevronDown, ChevronRight, ClipboardList, Factory, PackageCheck, Play, RefreshCw, RotateCcw, Rows3, Save, Settings2, ShieldAlert, Trash2, UserPlus, Warehouse } from 'lucide-react';
 import { Link, useLocation, useParams } from 'react-router-dom';
@@ -264,6 +264,24 @@ export function ProductionTransferPolicyPage(){
           <PolicyCheckRow key={key} guideKey={key} checked={form[key]} onCheckedChange={value=>set(key,value)} label={label}/>
         ))}
       </div>
+      <div className="mt-4">
+        <PolicyField
+          label={t('policy.fields.erpPostingPolicy',{defaultValue:'Tamamlanan üretim transferi Netsis’e ne zaman gönderilsin?'})}
+          guideKey="erpPostingPolicy"
+          value={form.erpPostingPolicy}
+          currentValue={t(`policy.erpPosting.${form.erpPostingPolicy}.title`)}
+        >
+          <OpsSelect
+            value={form.erpPostingPolicy}
+            onValueChange={value=>set('erpPostingPolicy',value as ProductionTransferPolicy['erpPostingPolicy'])}
+            options={(['AfterHandover','Manual','Disabled'] as const).map(value=>({
+              value,
+              label:t(`policy.erpPosting.${value}.title`),
+              description:t(`policy.erpPosting.${value}.description`),
+            }))}
+          />
+        </PolicyField>
+      </div>
       <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,18rem)_1fr]">
         <PolicyField
           htmlFor="pt-policy-over-issue-tolerance"
@@ -329,7 +347,7 @@ export function ProductionTaskPanel(){
   const branchCode=useAuthStore(x=>x.branch?.code??'0');
   const{can}=usePermissionAccess();
   const queryClient=useQueryClient();
-  const boardQueryKey=['production-transfer','board',id] as const;
+  const boardQueryKey=useMemo(()=>['production-transfer','board',id] as const,[id]);
   const boardQuery=useQuery({queryKey:boardQueryKey,queryFn:()=>productionTransferApi.taskBoard(id),enabled:Number.isFinite(id)&&id>0});
   const detailQuery=useQuery({queryKey:['production-transfer','detail',id],queryFn:()=>transferApiFor('production').detail(id),enabled:Number.isFinite(id)&&id>0});
   const board=boardQuery.data;
