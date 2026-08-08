@@ -234,7 +234,7 @@ export const kkdApi = {
     unwrap(await api.post<Envelope<KkdRequestDetail>>(`/api/kkd/requests/${requestId}/lines/${lineId}/resolve`, {
       ...payload, idempotencyKey: crypto.randomUUID(),
     })),
-  assignRequest: async (id: number, payload: { warehouseId: number | null; assignedUserId: number | null; expectedRowVersion: string }) =>
+  assignRequest: async (id: number, payload: { warehouseId: number | null; assignedUserId: number | null; expectedRowVersion?: string | null }) =>
     unwrap(await api.put<Envelope<KkdRequestDetail>>(`/api/kkd/requests/${id}/assignment`, payload)),
   cancelRequest: async (id: number, reason: string, expectedRowVersion: string) =>
     unwrap(await api.post<Envelope<KkdRequestDetail>>(`/api/kkd/requests/${id}/cancel`, {
