@@ -1,5 +1,11 @@
 import type { ProductionTask, ProductionWorkOrderTransferTaskRow } from './api';
 
+const RETURN_TASK_TYPES = new Set(['AssignmentReturn', 'CancellationReturn']);
+
+export function isReturnTaskType(taskType: string): boolean {
+  return RETURN_TASK_TYPES.has(taskType);
+}
+
 type ChainTask = {
   taskId: number;
   taskNo: string;
@@ -14,7 +20,7 @@ type ChainTask = {
   assignedUsernames?: string[];
 };
 
-/** Handoff / iade zincirini okunabilir sırada gösterir (-1, -2, -IADE). */
+/** Handoff / iade zincirini okunabilir sırada gösterir (-1, -IADE, -KALANTRANSFER). */
 export function orderTasksForDisplay<T extends ChainTask>(tasks: readonly T[]): T[] {
   if (tasks.length <= 1) return [...tasks];
 
@@ -22,18 +28,37 @@ export function orderTasksForDisplay<T extends ChainTask>(tasks: readonly T[]): 
   const attached = new Set<number>();
   const ordered: T[] = [];
 
+  const appendReturnsForOrigin = (originTaskId: number) => {
+    for (const task of tasks
+      .filter((row) => isReturnTaskType(row.taskType)
+        && row.originTaskId === originTaskId
+        && !attached.has(row.taskId))
+      .sort((left, right) => left.taskId - right.taskId)) {
+      attached.add(task.taskId);
+      ordered.push(task);
+    }
+  };
+
   const appendChain = (root: T) => {
     let cursor: T | undefined = root;
     while (cursor && !attached.has(cursor.taskId)) {
       attached.add(cursor.taskId);
       ordered.push(cursor);
+
+      if (!isReturnTaskType(cursor.taskType)) {
+        appendReturnsForOrigin(cursor.taskId);
+      }
+
       cursor = tasks
-        .filter((task) => task.previousTaskId === cursor!.taskId)
+        .filter((task) => task.previousTaskId === cursor!.taskId
+          && !attached.has(task.taskId)
+          && !isReturnTaskType(task.taskType))
         .sort((left, right) => left.taskId - right.taskId)[0];
     }
   };
 
   const roots = tasks
+    .filter((task) => !isReturnTaskType(task.taskType))
     .filter((task) => !task.previousTaskId || !byId.has(task.previousTaskId))
     .sort((left, right) => left.taskId - right.taskId);
 

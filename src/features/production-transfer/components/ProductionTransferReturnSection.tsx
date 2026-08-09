@@ -1,11 +1,17 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { CheckCircle2, CircleCheck, Loader2, PackageCheck, Play } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Layers, Loader2, PackageCheck, Play } from 'lucide-react';
 import { toast } from 'sonner';
 import { OpsActionButton } from '@/components/shared/OpsActionButton';
+import { OpsSkinCheckbox } from '@/components/shared/OpsSkinCheckbox';
+import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
 import { ResponsiveDialog } from '@/components/shared/ResponsiveDialog';
 import { StockIdentityCell } from '@/components/shared/StockIdentityCell';
 import { formatProjectNumber } from '@/lib/project-format';
+import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
+import type { LocationOption } from '@/features/goods-receipt-v2/types/goods-receipt.types';
+import { warehouseTransferApi } from '@/features/warehouse-transfer-v2/api/warehouse-transfer.api';
 import {
   productionTransferApi,
   type ProductionTask,
@@ -14,6 +20,12 @@ import {
 } from '../api';
 import { productionTaskTypeLabel } from '../production-transfer-task-labels';
 import { useProductionTaskStart } from '../hooks/useProductionTaskStart';
+import { PRODUCTION_WORK_ORDERS_MY_ASSIGNMENTS_URL } from '@/features/production/components/ProductionWorkOrderTransferTabPanel';
+
+const TABLE_HEAD_CELL = 'border border-[var(--wms-app-border)] p-3';
+const TABLE_CELL = 'border border-[var(--wms-app-border)] p-3';
+const CHECKBOX_HEAD_CELL = cn(TABLE_HEAD_CELL, 'w-12 text-center');
+const CHECKBOX_CELL = cn(TABLE_CELL, 'text-center');
 
 interface Props {
   transferId: number;
@@ -21,50 +33,24 @@ interface Props {
   onBoardChange?: (board: ProductionTaskBoard) => void;
 }
 
-function isReturnLineConfirmed(line: ProductionTaskLine): boolean {
-  return line.processedQuantity >= line.requestedQuantity;
-}
-
-function returnShelfLabel(line: ProductionTaskLine): string {
-  return line.targetLocationCode || line.sourceLocationCode || '—';
-}
-
-function ReturnLineSummary({ line }: { line: ProductionTaskLine }) {
-  return (
-    <div className="rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-surface)] p-4 text-sm">
-      <div className="grid gap-2 sm:grid-cols-2">
-        <div>
-          <span className="text-xs text-[var(--wms-app-text-muted)]">Raf</span>
-          <strong className="block">{returnShelfLabel(line)}</strong>
-        </div>
-        <div>
-          <span className="text-xs text-[var(--wms-app-text-muted)]">Miktar</span>
-          <strong className="block">{formatProjectNumber(line.requestedQuantity)}</strong>
-        </div>
-        <div className="sm:col-span-2">
-          <StockIdentityCell
-            stockCode={line.stockCode}
-            stockName={line.stockName}
-            layout="stacked"
-          />
-        </div>
-        {line.serialNo ? (
-          <div>
-            <span className="text-xs text-[var(--wms-app-text-muted)]">Seri</span>
-            <strong className="block">{line.serialNo}</strong>
-          </div>
-        ) : null}
-      </div>
-    </div>
-  );
+function locationOptionLabel(code?: string, name?: string): string {
+  if (code && name) return `${code} · ${name}`;
+  return code || name || 'Raf seçin';
 }
 
 export function ProductionTransferReturnSection({ transferId, documentNo, onBoardChange }: Props) {
+  const navigate = useNavigate();
   const currentUserId = useAuthStore((state) => state.user?.id);
   const [board, setBoard] = useState<ProductionTaskBoard>();
   const [loadError, setLoadError] = useState<string>();
   const [busy, setBusy] = useState(false);
-  const [confirmLine, setConfirmLine] = useState<ProductionTaskLine | null>(null);
+  const [lineTargets, setLineTargets] = useState<Record<number, string>>({});
+  const [lineTargetLabels, setLineTargetLabels] = useState<Record<number, string>>({});
+  const [selectedLineIds, setSelectedLineIds] = useState<number[]>([]);
+  const [bulkPlacementOpen, setBulkPlacementOpen] = useState(false);
+  const [bulkTargetLocation, setBulkTargetLocation] = useState('');
+  const [bulkTargetLabel, setBulkTargetLabel] = useState('');
+  const locationLabelsRef = useRef<Record<string, string>>({});
 
   const load = useCallback(async () => {
     try {
@@ -87,6 +73,29 @@ export function ProductionTransferReturnSection({ transferId, documentNo, onBoar
       && !['Completed', 'Cancelled'].includes(task.status));
   }, [board, currentUserId]);
 
+  useEffect(() => {
+    if (!returnTask) return;
+    setLineTargets((current) => {
+      const next = { ...current };
+      for (const line of returnTask.lines) {
+        if (line.targetLocationId && !next[line.taskLineId]) {
+          next[line.taskLineId] = String(line.targetLocationId);
+        }
+      }
+      return next;
+    });
+    setLineTargetLabels((current) => {
+      const next = { ...current };
+      for (const line of returnTask.lines) {
+        if (line.targetLocationId && !next[line.taskLineId]) {
+          next[line.taskLineId] = locationOptionLabel(line.targetLocationCode, line.targetLocationName);
+        }
+      }
+      return next;
+    });
+    setSelectedLineIds((current) => current.filter((id) => returnTask.lines.some((line) => line.taskLineId === id)));
+  }, [returnTask]);
+
   const runBoardAction = useCallback(async (action: () => Promise<ProductionTaskBoard>) => {
     setBusy(true);
     try {
@@ -106,42 +115,105 @@ export function ProductionTransferReturnSection({ transferId, documentNo, onBoar
     requestStart,
   } = useProductionTaskStart({ transferId, run: runBoardAction });
 
-  const allLinesConfirmed = useMemo(
-    () => Boolean(returnTask && returnTask.lines.length > 0 && returnTask.lines.every(isReturnLineConfirmed)),
-    [returnTask],
+  const canStart = Boolean(
+    returnTask
+    && returnTask.assignments.some((assignment) => assignment.userId === currentUserId)
+    && !['InProgress', 'PartiallyCompleted', 'Completed', 'Cancelled'].includes(returnTask.status),
+  );
+  const canWork = Boolean(
+    returnTask
+    && ['InProgress', 'PartiallyCompleted'].includes(returnTask.status)
+    && returnTask.startedBy === currentUserId,
   );
 
-  const confirmReturnLine = async (line: ProductionTaskLine) => {
+  const selectedLineIdSet = useMemo(() => new Set(selectedLineIds), [selectedLineIds]);
+  const hasBulkSelection = selectedLineIds.length > 0;
+  const allLinesSelected = Boolean(
+    returnTask
+    && returnTask.lines.length > 0
+    && returnTask.lines.every((line) => selectedLineIdSet.has(line.taskLineId)),
+  );
+  const someLinesSelected = Boolean(
+    returnTask
+    && returnTask.lines.some((line) => selectedLineIdSet.has(line.taskLineId)),
+  );
+
+  const allTargetsSelected = Boolean(
+    returnTask
+    && returnTask.lines.length > 0
+    && returnTask.lines.every((line) => {
+      const value = lineTargets[line.taskLineId];
+      return value != null && value !== '' && Number(value) > 0;
+    }),
+  );
+
+  const toggleLineSelection = (taskLineId: number, checked: boolean) => {
+    setSelectedLineIds((current) => {
+      if (checked) return current.includes(taskLineId) ? current : [...current, taskLineId];
+      return current.filter((id) => id !== taskLineId);
+    });
+  };
+
+  const toggleSelectAll = (checked: boolean) => {
     if (!returnTask) return;
-    setBusy(true);
-    try {
-      const nextBoard = await productionTransferApi.processReturnTaskLine(
-        transferId,
-        returnTask.taskId,
-        line.taskLineId,
-      );
-      setBoard(nextBoard);
-      onBoardChange?.(nextBoard);
-      setConfirmLine(null);
-      toast.success(`${line.stockCode} rafa yerleştirildi.`);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'İade satırı onaylanamadı.');
-    } finally {
-      setBusy(false);
+    setSelectedLineIds(checked ? returnTask.lines.map((line) => line.taskLineId) : []);
+  };
+
+  const buildCompletePayload = (lines: ProductionTaskLine[]) =>
+    lines.map((line) => ({
+      taskLineId: line.taskLineId,
+      targetLocationId: Number(lineTargets[line.taskLineId]),
+    }));
+
+  const toLocationOption = useCallback((item: LocationOption) => {
+    const label = `${item.code} · ${item.name}`;
+    locationLabelsRef.current[String(item.id)] = label;
+    return { value: String(item.id), label };
+  }, []);
+
+  const applyBulkTargetLocation = () => {
+    if (!bulkTargetLocation || Number(bulkTargetLocation) <= 0) {
+      toast.error('Toplu yerleştirme için raf seçin.');
+      return;
     }
+    const label = bulkTargetLabel
+      || locationLabelsRef.current[bulkTargetLocation]
+      || bulkTargetLocation;
+    const assignedCount = selectedLineIds.length;
+    setLineTargets((current) => {
+      const next = { ...current };
+      for (const taskLineId of selectedLineIds) next[taskLineId] = bulkTargetLocation;
+      return next;
+    });
+    setLineTargetLabels((current) => {
+      const next = { ...current };
+      for (const taskLineId of selectedLineIds) next[taskLineId] = label;
+      return next;
+    });
+    setBulkPlacementOpen(false);
+    setBulkTargetLocation('');
+    setBulkTargetLabel('');
+    setSelectedLineIds([]);
+    toast.success(`${assignedCount} satır seçilen rafa atandı.`);
   };
 
   const completeReturn = async (task: ProductionTask) => {
+    if (!allTargetsSelected) {
+      toast.error('Tüm satırlar için hedef raf seçin.');
+      return;
+    }
     setBusy(true);
     try {
+      const payload = buildCompletePayload(task.lines);
       const nextBoard = task.taskType === 'AssignmentReturn'
-        ? await productionTransferApi.completeAssignmentReturn(transferId, task.taskId)
-        : await productionTransferApi.completeCancellationReturn(transferId, task.taskId);
+        ? await productionTransferApi.completeAssignmentReturn(transferId, task.taskId, payload)
+        : await productionTransferApi.completeCancellationReturn(transferId, task.taskId, payload);
       setBoard(nextBoard);
       onBoardChange?.(nextBoard);
       toast.success(task.taskType === 'AssignmentReturn'
         ? 'İade tamamlandı, atama kaldırıldı.'
         : 'İptal iadesi tamamlandı.');
+      navigate(PRODUCTION_WORK_ORDERS_MY_ASSIGNMENTS_URL);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'İade tamamlanamadı.');
     } finally {
@@ -162,9 +234,8 @@ export function ProductionTransferReturnSection({ transferId, documentNo, onBoar
 
   if (!board || !returnTask) return null;
 
-  const canStart = returnTask.assignments.some((assignment) => assignment.userId === currentUserId)
-    && !['InProgress', 'PartiallyCompleted', 'Completed', 'Cancelled'].includes(returnTask.status);
-  const isActive = returnTask.status === 'InProgress' && returnTask.startedBy === currentUserId;
+  const showReturnTable = returnTask.lines.length > 0;
+  const warehouseId = board.sourceWarehouseId;
 
   return (
     <section className="space-y-4">
@@ -176,7 +247,7 @@ export function ProductionTransferReturnSection({ transferId, documentNo, onBoar
             </p>
             <h2 className="mt-1 text-xl font-black">{documentNo}</h2>
             <p className="mt-1 text-sm text-[var(--wms-app-text-muted)]">
-              {returnTask.taskNo} · Ürünleri özgün rafa geri yerleştirin
+              {returnTask.taskNo} · Bekleme rafından seçtiğiniz rafa geri yerleştirin
             </p>
           </div>
           {canStart ? (
@@ -192,45 +263,76 @@ export function ProductionTransferReturnSection({ transferId, documentNo, onBoar
           ) : null}
         </div>
 
-        {isActive ? (
+        {showReturnTable ? (
           <>
+            {!canWork ? (
+              <p className="mb-4 text-sm text-[var(--wms-app-text-muted)]">
+                Hedef rafları seçip iadeyi tamamlamak için önce &quot;Bu işi yapıyorum&quot; butonuna basın.
+              </p>
+            ) : null}
             <div className="overflow-x-auto rounded-xl border border-[var(--wms-app-border)]">
-              <table className="w-full min-w-[720px] text-sm">
+              <table className="w-full min-w-[780px] border-collapse text-sm">
                 <thead className="bg-black/5 text-xs uppercase text-[var(--wms-app-text-muted)] dark:bg-white/5">
                   <tr>
-                    <th className="p-3 text-left">Raf</th>
-                    <th className="p-3 text-left">Stok</th>
-                    <th className="p-3 text-left">Seri</th>
-                    <th className="p-3 text-right">Miktar</th>
-                    <th className="p-3 text-center">Onay</th>
+                    <th className={CHECKBOX_HEAD_CELL}>
+                      <OpsSkinCheckbox
+                        checked={allLinesSelected}
+                        indeterminate={someLinesSelected && !allLinesSelected}
+                        onCheckedChange={toggleSelectAll}
+                        disabled={!canWork || busy}
+                        aria-label="Tüm satırları seç"
+                      />
+                    </th>
+                    <th className={cn(TABLE_HEAD_CELL, 'text-left')}>Geri konulacak raf</th>
+                    <th className={cn(TABLE_HEAD_CELL, 'text-left')}>Stok</th>
+                    <th className={cn(TABLE_HEAD_CELL, 'text-left')}>Seri</th>
+                    <th className={cn(TABLE_HEAD_CELL, 'text-right')}>Miktar</th>
                   </tr>
                 </thead>
                 <tbody>
                   {returnTask.lines.map((line) => {
-                    const confirmed = isReturnLineConfirmed(line);
+                    const isBulkSelected = selectedLineIdSet.has(line.taskLineId);
                     return (
-                      <tr key={line.taskLineId} className="border-t border-[var(--wms-app-border)]">
-                        <td className="p-3">{returnShelfLabel(line)}</td>
-                        <td className="p-3">
+                      <tr key={line.taskLineId}>
+                        <td className={CHECKBOX_CELL}>
+                          <OpsSkinCheckbox
+                            checked={isBulkSelected}
+                            onCheckedChange={(checked) => toggleLineSelection(line.taskLineId, checked)}
+                            disabled={!canWork || busy}
+                            aria-label={`${line.stockCode} satırını seç`}
+                          />
+                        </td>
+                        <td className={TABLE_CELL}>
+                          <PagedAppDropdown<LocationOption>
+                            queryKey={['production-return-target-location', warehouseId, line.taskLineId]}
+                            fetchPage={(request) => warehouseTransferApi.locations(request, warehouseId)}
+                            toOption={toLocationOption}
+                            enabled={canWork && warehouseId > 0 && !isBulkSelected}
+                            dependencies={[warehouseId, line.taskLineId]}
+                            value={lineTargets[line.taskLineId] ?? ''}
+                            onValueChange={(value) => {
+                              setLineTargets((current) => ({ ...current, [line.taskLineId]: value }));
+                              setLineTargetLabels((current) => ({
+                                ...current,
+                                [line.taskLineId]: locationLabelsRef.current[value] ?? value,
+                              }));
+                            }}
+                            selectedOption={lineTargets[line.taskLineId] ? {
+                              value: lineTargets[line.taskLineId],
+                              label: lineTargetLabels[line.taskLineId]
+                                ?? locationOptionLabel(line.targetLocationCode, line.targetLocationName),
+                            } : undefined}
+                            placeholder={isBulkSelected ? 'Toplu atama bekliyor' : 'Raf seçin'}
+                            searchable
+                            disabled={!canWork || busy || isBulkSelected}
+                            className="min-w-[12rem]"
+                          />
+                        </td>
+                        <td className={TABLE_CELL}>
                           <StockIdentityCell stockCode={line.stockCode} stockName={line.stockName} layout="stacked" />
                         </td>
-                        <td className="p-3">{line.serialNo || '—'}</td>
-                        <td className="p-3 text-right">{formatProjectNumber(line.requestedQuantity)}</td>
-                        <td className="p-3 text-center">
-                          {confirmed ? (
-                            <CheckCircle2 className="mx-auto size-5 text-emerald-500" aria-label="Onaylandı" />
-                          ) : (
-                            <button
-                              type="button"
-                              disabled={busy}
-                              title="Rafa yerleştirmeyi onayla"
-                              onClick={() => setConfirmLine(line)}
-                              className="mx-auto inline-flex size-9 items-center justify-center rounded-lg border border-[var(--wms-app-border)] hover:border-emerald-500 hover:text-emerald-500 disabled:opacity-40"
-                            >
-                              <CircleCheck className="size-5" />
-                            </button>
-                          )}
-                        </td>
+                        <td className={TABLE_CELL}>{line.serialNo || '—'}</td>
+                        <td className={cn(TABLE_CELL, 'text-right')}>{formatProjectNumber(line.requestedQuantity)}</td>
                       </tr>
                     );
                   })}
@@ -238,11 +340,21 @@ export function ProductionTransferReturnSection({ transferId, documentNo, onBoar
               </table>
             </div>
 
-            <div className="mt-5 flex justify-end">
+            <div className="mt-5 flex flex-wrap items-center justify-end gap-2">
+              <OpsActionButton
+                variant="secondary"
+                loading={false}
+                disabled={!canWork || !hasBulkSelection || busy}
+                onClick={() => setBulkPlacementOpen(true)}
+              >
+                <Layers className="size-4" />
+                Yerleştirme rafını seç
+                {hasBulkSelection ? ` (${selectedLineIds.length})` : ''}
+              </OpsActionButton>
               <OpsActionButton
                 variant="primary"
                 loading={busy}
-                disabled={!allLinesConfirmed}
+                disabled={!canWork || !allTargetsSelected}
                 onClick={() => void completeReturn(returnTask)}
               >
                 <PackageCheck className="size-4" />
@@ -252,29 +364,62 @@ export function ProductionTransferReturnSection({ transferId, documentNo, onBoar
           </>
         ) : (
           <p className="text-sm text-[var(--wms-app-text-muted)]">
-            İade işlemine başlamak için &quot;Bu işi yapıyorum&quot; butonunu kullanın.
+            İade edilecek satır bulunmuyor.
           </p>
         )}
       </div>
 
-      {confirmLine ? (
+      {bulkPlacementOpen ? (
         <ResponsiveDialog
-          onClose={() => setConfirmLine(null)}
-          title="Rafa yerleştirmeyi onayla"
-          description="Bilgileri kontrol edin; onayladığınızda stok hareketi kaydedilir."
+          variant="lookup"
+          onClose={() => {
+            setBulkPlacementOpen(false);
+            setBulkTargetLocation('');
+            setBulkTargetLabel('');
+          }}
+          title="Toplu yerleştirme rafı"
+          description={`Seçili ${selectedLineIds.length} satır bekleme rafından aşağıdaki rafa atanacak.`}
         >
-          <ReturnLineSummary line={confirmLine} />
-          <p className="mt-4 text-sm font-semibold">Rafa geri yerleştirmeyi onaylıyor musunuz?</p>
+          <PagedAppDropdown<LocationOption>
+            queryKey={['production-return-bulk-target-location', warehouseId]}
+            fetchPage={(request) => warehouseTransferApi.locations(request, warehouseId)}
+            toOption={toLocationOption}
+            enabled={warehouseId > 0}
+            dependencies={[warehouseId]}
+            value={bulkTargetLocation}
+            onValueChange={(value) => {
+              setBulkTargetLocation(value);
+              setBulkTargetLabel(locationLabelsRef.current[value] ?? value);
+            }}
+            selectedOption={bulkTargetLocation ? {
+              value: bulkTargetLocation,
+              label: bulkTargetLabel || locationLabelsRef.current[bulkTargetLocation] || bulkTargetLocation,
+            } : undefined}
+            placeholder="Raf seçin"
+            searchable
+            portalContainer={null}
+            contentClassName="z-[5100]"
+            className="min-w-full"
+          />
           <div className="mt-5 flex justify-end gap-2">
             <button
               type="button"
               className="rounded-lg border px-4 py-2 text-sm font-semibold"
-              onClick={() => setConfirmLine(null)}
+              onClick={() => {
+                setBulkPlacementOpen(false);
+                setBulkTargetLocation('');
+                setBulkTargetLabel('');
+              }}
             >
               İptal
             </button>
-            <OpsActionButton variant="primary" loading={busy} onClick={() => void confirmReturnLine(confirmLine)}>
-              Onayla
+            <OpsActionButton
+              variant="primary"
+              loading={false}
+              disabled={!bulkTargetLocation}
+              onClick={applyBulkTargetLocation}
+            >
+              Seçili satırlara ata
             </OpsActionButton>
           </div>
         </ResponsiveDialog>

@@ -43,6 +43,7 @@ import {
 import { useProductionTransferListCancel } from '@/features/production-transfer/hooks/useProductionTransferListCancel';
 import {
   productionTransferApi,
+  type ProductionTask,
   type ProductionTaskBoard,
   type ProductionWorkOrderTransferHeaderRow,
   type ProductionWorkOrderTransferTab,
@@ -54,6 +55,7 @@ import {
 } from '@/features/production-transfer/production-transfer-task-labels';
 import { productionTransferEnumLabel } from '@/features/production-transfer/localization/enum-labels';
 import { taskLineageHasProgress } from '@/features/production-transfer/production-transfer-task-progress';
+import { isReturnTaskType } from '@/features/production-transfer/production-transfer-task-chain';
 import { transferApiFor } from '@/features/warehouse-transfer-v2/api/warehouse-transfer.api';
 import type { WarehouseTransferGridRow } from '@/features/warehouse-transfer-v2/types/warehouse-transfer.types';
 import { filterLocalGridPage } from '../production-work-order-transfer-grid.utils';
@@ -96,14 +98,30 @@ const TASK_ACTIONS_HEAD = cn(
 const transferBaseUrl = '/warehouse/production-transfers';
 const G = 'dataGrid.transferRecords';
 
-const RETURN_TASK_TYPES = new Set(['AssignmentReturn', 'CancellationReturn']);
-
-function isReturnTaskType(taskType: string): boolean {
-  return RETURN_TASK_TYPES.has(taskType);
-}
-
 function isActiveTaskStatus(status: string): boolean {
   return !['Completed', 'Cancelled'].includes(status);
+}
+
+function canRequestAssignmentReturn(
+  task: ProductionWorkOrderTransferTaskRow,
+  liveTask: ProductionTask | undefined,
+  boardTasks: ProductionTask[] | undefined,
+  hasProgress: boolean,
+): boolean {
+  if (!liveTask || isReturnTaskType(task.taskType) || !isActiveTaskStatus(task.status)) return false;
+  if (liveTask.assignments.length === 0 || !hasProgress) return false;
+
+  const hasCompletedReturn = boardTasks?.some((item) =>
+    item.taskType === 'AssignmentReturn'
+    && item.originTaskId === task.taskId
+    && item.status === 'Completed') ?? false;
+  if (hasCompletedReturn) return false;
+
+  const hasOpenReturn = boardTasks?.some((item) =>
+    item.taskType === 'AssignmentReturn'
+    && item.originTaskId === task.taskId
+    && !['Completed', 'Cancelled'].includes(item.status)) ?? false;
+  return !hasOpenReturn;
 }
 
 export type ProductionWorkOrderTransferGridRow = WarehouseTransferGridRow & {
@@ -240,11 +258,12 @@ function ExpandedTransferTasks({
           {orderedTasks.map((task) => {
             const liveTask = board?.tasks.find((item) => item.taskId === task.taskId);
             const hasProgress = liveTask ? taskLineageHasProgress(liveTask, board?.tasks ?? []) : false;
-            const returnTask = board?.tasks.find((item) =>
-              item.originTaskId === task.taskId && item.status !== 'Cancelled');
             const assignableUserId = selectedUsers[task.taskId];
             const handoffHint = describeHandoffRelation(task, orderedTasks);
             const showExecuteOperation = isReturnTaskType(task.taskType) && isActiveTaskStatus(task.status);
+            const showRequestReturn = canManageAssignments
+              && canAssign
+              && canRequestAssignmentReturn(task, liveTask, board?.tasks, hasProgress);
             return (
               <tr key={task.taskId}>
                 <td className={TASK_NAME_COL}>
@@ -276,21 +295,17 @@ function ExpandedTransferTasks({
                         Operasyonu yürüt
                       </Link>
                     ) : null}
-                    {canManageAssignments && canAssign && liveTask && hasProgress && !returnTask ? (
+                    {showRequestReturn ? (
                         <button
                           type="button"
                           title="İade ataması oluştur"
                           disabled={busy}
                           onClick={() => {
-                            const assignment = liveTask.assignments[0];
-                            if (!assignment) {
-                              toast.error('İade için atanmış kullanıcı bulunamadı.');
-                              return;
-                            }
+                            const assignment = liveTask!.assignments[0];
                             void run(() =>
                               productionTransferApi.requestAssignmentReturn(
                                 transferId,
-                                liveTask.taskId,
+                                liveTask!.taskId,
                                 assignment.userId,
                               ));
                           }}
@@ -303,6 +318,8 @@ function ExpandedTransferTasks({
                       {canManageAssignments
                         && tab === 'Picking'
                         && canAssign && liveTask
+                        && !isReturnTaskType(task.taskType)
+                        && isActiveTaskStatus(task.status)
                         && liveTask.assignments.length > 0
                         && liveTask.lines.some((line) => line.processedQuantity < line.requestedQuantity) ? (
                           <>

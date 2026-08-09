@@ -347,10 +347,24 @@ export const productionTransferApi = {
     unwrap(await api.post<Envelope<ProductionTaskBoard>>(`${assignmentPath(id, taskId, userId)}/request-return`, {})),
   requestCancellationReturn: async (id: number, taskId: number, userId: number): Promise<ProductionTaskBoard> =>
     unwrap(await api.post<Envelope<ProductionTaskBoard>>(`${assignmentPath(id, taskId, userId)}/request-cancellation-return`, {})),
-  completeAssignmentReturn: async (id: number, taskId: number): Promise<ProductionTaskBoard> =>
-    unwrap(await api.post<Envelope<ProductionTaskBoard>>(`${taskPath(id, taskId)}/complete-assignment-return`, { idempotencyKey: crypto.randomUUID() })),
-  completeCancellationReturn: async (id: number, taskId: number): Promise<ProductionTaskBoard> =>
-    unwrap(await api.post<Envelope<ProductionTaskBoard>>(`${taskPath(id, taskId)}/complete-cancellation-return`, { idempotencyKey: crypto.randomUUID() })),
+  completeAssignmentReturn: async (
+    id: number,
+    taskId: number,
+    lines: { taskLineId: number; targetLocationId: number }[],
+  ): Promise<ProductionTaskBoard> =>
+    unwrap(await api.post<Envelope<ProductionTaskBoard>>(`${taskPath(id, taskId)}/complete-assignment-return`, {
+      idempotencyKey: crypto.randomUUID(),
+      lines,
+    })),
+  completeCancellationReturn: async (
+    id: number,
+    taskId: number,
+    lines: { taskLineId: number; targetLocationId: number }[],
+  ): Promise<ProductionTaskBoard> =>
+    unwrap(await api.post<Envelope<ProductionTaskBoard>>(`${taskPath(id, taskId)}/complete-cancellation-return`, {
+      idempotencyKey: crypto.randomUUID(),
+      lines,
+    })),
   processReturnTaskLine: async (id: number, taskId: number, taskLineId: number): Promise<ProductionTaskBoard> =>
     unwrap(await api.post<Envelope<ProductionTaskBoard>>(`${taskPath(id, taskId)}/task-lines/${taskLineId}/process-return`, { idempotencyKey: crypto.randomUUID() })),
 

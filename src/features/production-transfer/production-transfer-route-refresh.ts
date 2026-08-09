@@ -2,6 +2,11 @@ import { productionTransferApi, type ProductionTaskBoard } from './api';
 
 const PICK_TASK_TYPES = new Set(['Pick']);
 
+export type ProductionReturnCompleteLine = {
+  taskLineId: number;
+  targetLocationId: number;
+};
+
 /** İade sonrası aktif toplama görevlerinin rotasını ve rezervasyonlarını yeniler. */
 export async function refreshActiveProductionPickRoutes(
   transferId: number,
@@ -22,15 +27,17 @@ export async function refreshActiveProductionPickRoutes(
 export async function completeAssignmentReturnAndRefresh(
   transferId: number,
   taskId: number,
+  lines: ProductionReturnCompleteLine[],
 ): Promise<ProductionTaskBoard> {
-  const board = await productionTransferApi.completeAssignmentReturn(transferId, taskId);
+  const board = await productionTransferApi.completeAssignmentReturn(transferId, taskId, lines);
   return refreshActiveProductionPickRoutes(transferId, board);
 }
 
 export async function completeCancellationReturnAndRefresh(
   transferId: number,
   taskId: number,
+  lines: ProductionReturnCompleteLine[],
 ): Promise<ProductionTaskBoard> {
-  const board = await productionTransferApi.completeCancellationReturn(transferId, taskId);
+  const board = await productionTransferApi.completeCancellationReturn(transferId, taskId, lines);
   return refreshActiveProductionPickRoutes(transferId, board);
 }
