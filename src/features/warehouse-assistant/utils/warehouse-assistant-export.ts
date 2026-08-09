@@ -74,6 +74,43 @@ export function buildWarehouseAssistantExportModel({
     t(`${group}.${value}`, { defaultValue: value });
   const sections = [
     section(
+      'summary-metrics',
+      t('results.shiftSummary'),
+      [col(t, 'description', 36), col(t, 'quantity', 16), col(t, 'unitCode', 14), col(t, 'priority', 16), col(t, 'module', 20)],
+      (result.summaryMetrics ?? []).map((row) => ({
+        description: row.label, quantity: row.value, unitCode: row.unit,
+        priority: t(`severity.${row.severity}`, { defaultValue: row.severity }), module: row.module,
+      })),
+    ),
+    section(
+      'exceptions',
+      t('results.exceptions'),
+      [
+        col(t, 'priority', 16), col(t, 'module', 20), col(t, 'documentNo', 24), col(t, 'description', 36),
+        col(t, 'result', 46), col(t, 'status', 18), col(t, 'occurredAt', 21), col(t, 'action', 46),
+      ],
+      (result.exceptions ?? []).map((row) => ({
+        priority: t(`severity.${row.severity}`, { defaultValue: row.severity }), module: row.module,
+        documentNo: textValue(row.documentNo), description: row.title, result: row.description, status: row.status,
+        occurredAt: dateValue(row.detectedAtUtc), action: row.suggestedAction,
+      })),
+    ),
+    section(
+      'traceability',
+      t('results.traceability'),
+      [
+        col(t, 'occurredAt', 21), col(t, 'movementType', 20), col(t, 'documentNo', 24), col(t, 'stockCode', 20),
+        col(t, 'stockName', 34), col(t, 'serialNo', 24), col(t, 'lotNo', 18), col(t, 'warehouseName', 24),
+        col(t, 'locationCode', 18), col(t, 'quantityChange', 16), col(t, 'unitCode', 12), col(t, 'user', 24),
+      ],
+      (result.traceabilityEvents ?? []).map((row) => ({
+        occurredAt: dateValue(row.occurredAtUtc), movementType: row.eventType,
+        documentNo: textValue(row.documentNo) || row.documentType, stockCode: row.stockCode, stockName: row.stockName,
+        serialNo: textValue(row.serialNo), lotNo: textValue(row.lotNo), warehouseName: textValue(row.warehouseName),
+        locationCode: textValue(row.locationCode), quantityChange: row.quantity, unitCode: row.unitCode, user: row.actorDisplayName,
+      })),
+    ),
+    section(
       'activities',
       t('results.activities'),
       [
@@ -242,6 +279,15 @@ export function buildWarehouseAssistantExportModel({
         externalReferenceNo: textValue(row.externalReferenceNo),
       })),
     ),
+    section(
+      'evidence',
+      t('evidence.title'),
+      [col(t, 'source', 28), col(t, 'action', 28), col(t, 'quantity', 16), col(t, 'occurredAt', 21), col(t, 'lastTransactionAt', 21), col(t, 'description', 48)],
+      (result.evidence ?? []).map((row) => ({
+        source: row.source, action: row.tool, quantity: row.recordCount,
+        occurredAt: dateValue(row.generatedAtUtc), lastTransactionAt: dateValue(row.dataAsOfUtc), description: row.filters,
+      })),
+    ),
   ].filter((item): item is WarehouseAssistantExportSection => item !== null);
 
   return {
@@ -265,7 +311,7 @@ export function buildWarehouseAssistantExportModel({
 }
 
 const safeSheetName = (value: string, fallback: string): string => {
-  const normalized = value.replace(/[\\/?*\[\]:]/g, ' ').replace(/\s+/g, ' ').trim();
+  const normalized = value.replace(/[\\/?*[\]:]/g, ' ').replace(/\s+/g, ' ').trim();
   return (normalized || fallback).slice(0, 31);
 };
 
