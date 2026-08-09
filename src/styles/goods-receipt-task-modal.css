@@ -1,6 +1,37 @@
 /* Mal kabul emri modalı (tasks / assigned tasks)
    Liste detay modalı ile aynı ops DNA'sı: Terminal varsayılan, Premium override. */
 
+/* ── 2 sekmeli ana tab şeridi (hak matrisi detay/toplu) ─────────────────── */
+.wms-ops-detail-dialog [data-slot='tabs-list'].wms-ops-detail-main-tabs--cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.wms-ops-detail-dialog
+  [data-slot='tabs-list'].wms-ops-detail-main-tabs--cols-2
+  .wms-ops-detail-tab-indicator {
+  width: calc((100% - 0.74rem) / 2);
+}
+
+.wms-ops-detail-dialog
+  [data-slot='tabs-list'].wms-ops-detail-main-tabs--cols-2[data-active-index='1']
+  .wms-ops-detail-tab-indicator {
+  transform: translateX(calc(100% + 0.25rem));
+}
+
+html.skin-premium
+  .wms-ops-detail-dialog
+  [data-slot='tabs-list'].wms-ops-detail-main-tabs--cols-2
+  .wms-ops-detail-tab-indicator {
+  width: calc((100% - 0.84rem) / 2);
+}
+
+html.skin-premium
+  .wms-ops-detail-dialog
+  [data-slot='tabs-list'].wms-ops-detail-main-tabs--cols-2[data-active-index='1']
+  .wms-ops-detail-tab-indicator {
+  transform: translateX(calc(100% + 0.3rem));
+}
+
 /* ── 3 sekmeli ana tab şeridi ─────────────────────────────────────────── */
 .wms-ops-detail-dialog [data-slot='tabs-list'].wms-ops-detail-main-tabs--cols-3 {
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -418,8 +449,10 @@ html.skin-premium .wms-ops-detail-dialog .wms-ops-task-line-flag {
   padding: 0.1rem 0.5rem;
 }
 
-/* ── Üretim iş emri listesi: 4 sekmeli ana tab şeridi ─────────────────── */
-.wms-ops-production-work-order-tabs.wms-ops-detail-dialog {
+/* ── Üretim iş emri listesi / KKD tanımları: ana tab şeridi ─────────────── */
+.wms-ops-production-work-order-tabs.wms-ops-detail-dialog,
+.wms-ops-kkd-definition-tabs.wms-ops-detail-dialog,
+.wms-ops-kkd-matrix-editor-tabs.wms-ops-detail-dialog {
   overflow: visible;
   box-shadow: none !important;
   background: transparent !important;
@@ -430,12 +463,20 @@ html.skin-premium .wms-ops-detail-dialog .wms-ops-task-line-flag {
 
 /* Aktif sekme metni glider üzerinde okunaklı kalsın */
 .wms-ops-production-work-order-tabs.wms-ops-detail-dialog
+  [data-slot='tabs-trigger'].wms-ops-detail-main-tab,
+.wms-ops-kkd-definition-tabs.wms-ops-detail-dialog
+  [data-slot='tabs-trigger'].wms-ops-detail-main-tab,
+.wms-ops-kkd-matrix-editor-tabs.wms-ops-detail-dialog
   [data-slot='tabs-trigger'].wms-ops-detail-main-tab {
   position: relative;
   z-index: 1;
 }
 
 .wms-ops-production-work-order-tabs.wms-ops-detail-dialog
+  [data-slot='tabs-trigger'].wms-ops-detail-main-tab[data-state='active'],
+.wms-ops-kkd-definition-tabs.wms-ops-detail-dialog
+  [data-slot='tabs-trigger'].wms-ops-detail-main-tab[data-state='active'],
+.wms-ops-kkd-matrix-editor-tabs.wms-ops-detail-dialog
   [data-slot='tabs-trigger'].wms-ops-detail-main-tab[data-state='active'] {
   color: var(--wms-ops-tab-active-fg) !important;
   -webkit-text-fill-color: var(--wms-ops-tab-active-fg) !important;
@@ -445,6 +486,10 @@ html.skin-premium .wms-ops-detail-dialog .wms-ops-task-line-flag {
 }
 
 html.skin-premium .wms-ops-production-work-order-tabs.wms-ops-detail-dialog
+  [data-slot='tabs-trigger'].wms-ops-detail-main-tab[data-state='active'],
+html.skin-premium .wms-ops-kkd-definition-tabs.wms-ops-detail-dialog
+  [data-slot='tabs-trigger'].wms-ops-detail-main-tab[data-state='active'],
+html.skin-premium .wms-ops-kkd-matrix-editor-tabs.wms-ops-detail-dialog
   [data-slot='tabs-trigger'].wms-ops-detail-main-tab[data-state='active'] {
   color: #2d1a12 !important;
   -webkit-text-fill-color: #2d1a12 !important;
@@ -452,6 +497,10 @@ html.skin-premium .wms-ops-production-work-order-tabs.wms-ops-detail-dialog
 }
 
 html.skin-premium.dark .wms-ops-production-work-order-tabs.wms-ops-detail-dialog
+  [data-slot='tabs-trigger'].wms-ops-detail-main-tab[data-state='active'],
+html.skin-premium.dark .wms-ops-kkd-definition-tabs.wms-ops-detail-dialog
+  [data-slot='tabs-trigger'].wms-ops-detail-main-tab[data-state='active'],
+html.skin-premium.dark .wms-ops-kkd-matrix-editor-tabs.wms-ops-detail-dialog
   [data-slot='tabs-trigger'].wms-ops-detail-main-tab[data-state='active'] {
   color: #f8fafc !important;
   -webkit-text-fill-color: #f8fafc !important;
@@ -520,6 +569,8 @@ html.skin-premium
 }
 
 .wms-ops-production-work-order-tabs
+  [data-slot='tabs-trigger'].wms-ops-detail-main-tab,
+.wms-ops-kkd-definition-tabs
   [data-slot='tabs-trigger'].wms-ops-detail-main-tab {
   min-width: 0;
   overflow: hidden;

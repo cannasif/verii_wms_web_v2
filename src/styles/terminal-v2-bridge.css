@@ -184,9 +184,9 @@ html:not(.skin-premium) .wms-ops-list .wms-ops-list-search__icon {
 
 /* ?? AppDropdown trigger / content (workspace only ? never auth/login) ?? */
 html:not(.skin-premium) .wms-ops-workspace-host .wms-ops-lookup-trigger,
-html:not(.skin-premium) .wms-ops-workspace-host button[role='combobox'],
+html:not(.skin-premium) .wms-ops-workspace-host button[role='combobox']:not(.wms-ops-bulk-toolbar-select),
 html:not(.skin-premium) #wms-workspace-portal-root.wms-ops-workspace-host .wms-ops-lookup-trigger,
-html:not(.skin-premium) #wms-workspace-portal-root.wms-ops-workspace-host button[role='combobox'] {
+html:not(.skin-premium) #wms-workspace-portal-root.wms-ops-workspace-host button[role='combobox']:not(.wms-ops-bulk-toolbar-select) {
   border-radius: 0 !important;
   border-width: 1px 1px 0 1px !important;
   border-color: var(--wms-ops-field-border) !important;
@@ -199,8 +199,26 @@ html:not(.skin-premium) #wms-workspace-portal-root.wms-ops-workspace-host button
   box-shadow: inset 0 -1px 0 var(--wms-ops-field-idle-line);
 }
 
+html:not(.skin-premium) .wms-ops-workspace-host button.wms-ops-bulk-toolbar-select[role='combobox'],
+html:not(.skin-premium) #wms-workspace-portal-root.wms-ops-workspace-host button.wms-ops-bulk-toolbar-select[role='combobox'] {
+  border-radius: 0 !important;
+  border-style: solid !important;
+  border-width: 1px !important;
+  border-bottom-width: 1px !important;
+  border-color: color-mix(in oklab, var(--wms-ops-accent) 32%, var(--wms-ops-field-border)) !important;
+  background: var(--wms-ops-field-bg) !important;
+  color: var(--wms-ops-field-fg) !important;
+  font-family: var(--wms-terminal-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  min-height: 2.25rem;
+  height: 2.25rem;
+  box-shadow: inset 0 -1px 0 var(--wms-ops-field-idle-line) !important;
+}
+
 html:not(.skin-premium) .wms-ops-workspace-host .wms-ops-lookup-trigger[aria-expanded='true'],
-html:not(.skin-premium) .wms-ops-workspace-host button[role='combobox'][aria-expanded='true'],
+html:not(.skin-premium) .wms-ops-workspace-host button[role='combobox'][aria-expanded='true']:not(.wms-ops-bulk-toolbar-select),
 html:not(.skin-premium) #wms-workspace-portal-root.wms-ops-workspace-host .wms-ops-lookup-trigger[aria-expanded='true'] {
   box-shadow:
     inset 0 -2px 0 var(--wms-ops-accent-electric),

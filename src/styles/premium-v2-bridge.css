@@ -234,9 +234,9 @@ html.skin-premium .wms-ops-list .wms-ops-list-search:focus-within .wms-ops-field
 
 /* ?? Dropdown / combobox / floating surfaces ?? */
 html.skin-premium .wms-ops-workspace-host .wms-ops-lookup-trigger,
-html.skin-premium .wms-ops-workspace-host button[role='combobox'],
+html.skin-premium .wms-ops-workspace-host button[role='combobox']:not(.wms-ops-bulk-toolbar-select),
 html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host .wms-ops-lookup-trigger,
-html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host button[role='combobox'] {
+html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host button[role='combobox']:not(.wms-ops-bulk-toolbar-select) {
   border-radius: 0.7rem !important;
   border-width: 1px !important;
   border-color: var(--wms-ops-field-border) !important;
@@ -248,6 +248,18 @@ html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host button[role=
   text-transform: none;
   min-height: 2.625rem;
   box-shadow: 0 2px 6px -2px rgb(0 0 0 / 10%);
+}
+
+html.skin-premium .wms-ops-workspace-host button.wms-ops-bulk-toolbar-select[role='combobox'],
+html.skin-premium #wms-workspace-portal-root.wms-ops-workspace-host button.wms-ops-bulk-toolbar-select[role='combobox'] {
+  border-radius: 0.55rem !important;
+  border-width: 1px !important;
+  border-bottom-width: 1px !important;
+  border-color: color-mix(in oklab, var(--wms-brand-primary) 28%, var(--wms-ops-field-border)) !important;
+  background: var(--wms-ops-field-bg) !important;
+  box-shadow: inset 0 -1px 0 color-mix(in oklab, var(--wms-brand-primary) 45%, transparent) !important;
+  min-height: 2.25rem;
+  height: 2.25rem;
 }
 
 html.skin-premium .wms-ops-workspace-host .wms-ops-lookup-trigger[aria-expanded='true'],

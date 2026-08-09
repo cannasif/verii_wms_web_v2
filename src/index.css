@@ -2110,6 +2110,25 @@ label[data-wms-error-target].wms-error-focus-flash-field .app-input-shell input 
   opacity: 1;
 }
 
+.wms-ops-form .wms-ops-action-btn--secondary.wms-ops-action-btn--danger {
+  color: #f43f5e;
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, #f43f5e 42%, transparent);
+}
+
+.wms-ops-form .wms-ops-action-btn--secondary.wms-ops-action-btn--danger:hover:not(:disabled) {
+  color: #fda4af;
+  background: color-mix(in oklab, #ef4444 14%, transparent);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklab, #f87171 58%, transparent),
+    0 0 20px color-mix(in oklab, #ef4444 28%, transparent),
+    0 0 36px color-mix(in oklab, #ef4444 12%, transparent);
+  transform: translateY(-1px);
+}
+
+.wms-ops-form .wms-ops-action-btn--secondary.wms-ops-action-btn--danger:hover:not(:disabled)::after {
+  opacity: 0;
+}
+
 .wms-ops-form .wms-ops-action-btn--primary,
 .wms-ops-list-popover .wms-ops-action-btn--primary {
   background: linear-gradient(118deg, #0891b2 0%, #2563eb 46%, #fb923c 100%);
@@ -3026,7 +3045,7 @@ button.wms-ops-lookup-trigger--multi {
 }
 
 :is(.wms-ops-detail-dialog, .wms-ops-lookup-dialog, .wms-ops-form)
-  button[role='combobox'],
+  button[role='combobox']:not(.wms-ops-bulk-toolbar-select),
 :is(.wms-ops-detail-dialog, .wms-ops-lookup-dialog, .wms-ops-form)
   .wms-ops-lookup-trigger {
   border-radius: 0 !important;
@@ -7232,6 +7251,18 @@ html:not(.dark) .wms-ops-list .wms-ops-data-grid tbody tr:hover .wms-ops-table-i
   margin: 0;
 }
 
+.wms-ops-list .wms-ops-grid-icon-btn--lg {
+  height: 2rem;
+  width: 2rem;
+  min-height: 2rem;
+  min-width: 2rem;
+}
+
+.wms-ops-list .wms-ops-grid-icon-btn--lg > svg {
+  width: 1rem;
+  height: 1rem;
+}
+
 .wms-ops-list .wms-ops-grid-icon-btn:hover:not(:disabled) {
   color: var(--wms-ops-accent);
   background: color-mix(in oklab, var(--wms-ops-accent) 10%, transparent);
@@ -7247,6 +7278,16 @@ html:not(.dark) .wms-ops-list .wms-ops-data-grid tbody tr:hover .wms-ops-table-i
   color: #ef4444;
   background: color-mix(in oklab, #ef4444 10%, transparent);
   box-shadow: inset 0 0 0 1px color-mix(in oklab, #ef4444 55%, transparent);
+}
+
+.wms-ops-list .wms-ops-grid-icon-btn:disabled,
+.wms-ops-form .wms-ops-grid-icon-btn:disabled,
+.wms-ops-detail-dialog .wms-ops-grid-icon-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.32;
+  color: var(--wms-app-text-muted) !important;
+  background: transparent !important;
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--wms-ops-card-border) 55%, transparent) !important;
 }
 
 .dark .wms-ops-list .wms-ops-grid-icon-btn {
@@ -9924,6 +9965,57 @@ html:not(.skin-premium) .wms-ops-advanced-filter .wms-ops-field-shell {
   box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--wms-ops-field-border) 55%, transparent);
 }
 
+/* OpsSelect kabuk içinde: inset kutu + çift çerçeve olmasın (chevron yanında garip border) */
+.wms-ops-form .wms-ops-field-shell > button.wms-ops-list-field-trigger,
+.wms-ops-lookup-dialog .wms-ops-field-shell > button.wms-ops-list-field-trigger,
+.wms-ops-detail-dialog .wms-ops-field-shell > button.wms-ops-list-field-trigger {
+  border-width: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* Kural kartı: input cyan alt çizgisi kaybolmasın */
+.wms-ops-form .wms-ops-kkd-rule-card .app-input-shell .input,
+.wms-ops-form .wms-ops-kkd-rule-card .app-input-shell input {
+  box-shadow: inset 0 -1px 0 var(--wms-ops-field-idle-line) !important;
+}
+.wms-ops-form button.wms-ops-bulk-toolbar-select[role='combobox'],
+.wms-ops-detail-dialog button.wms-ops-bulk-toolbar-select[role='combobox'],
+.wms-ops-form button.wms-ops-bulk-toolbar-select,
+.wms-ops-detail-dialog button.wms-ops-bulk-toolbar-select {
+  height: 2.25rem !important;
+  min-height: 2.25rem !important;
+  border-radius: 0 !important;
+  border-style: solid !important;
+  border-width: 1px !important;
+  border-bottom-width: 1px !important;
+  border-color: color-mix(in oklab, var(--wms-ops-accent) 32%, var(--wms-ops-field-border)) !important;
+  background: var(--wms-ops-field-bg) !important;
+  box-shadow: inset 0 -1px 0 var(--wms-ops-field-idle-line) !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.wms-ops-form button.wms-ops-bulk-toolbar-select:focus-visible,
+.wms-ops-detail-dialog button.wms-ops-bulk-toolbar-select:focus-visible,
+.wms-ops-form button.wms-ops-bulk-toolbar-select[aria-expanded='true'],
+.wms-ops-detail-dialog button.wms-ops-bulk-toolbar-select[aria-expanded='true'] {
+  border-color: color-mix(in oklab, var(--wms-ops-accent) 55%, transparent) !important;
+  box-shadow:
+    inset 0 -2px 0 var(--wms-ops-accent-electric, var(--wms-ops-accent)),
+    0 0 12px color-mix(in oklab, var(--wms-ops-accent) 14%, transparent) !important;
+}
+
+.wms-ops-bulk-matrix-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--wms-ops-field-bg) !important;
+  box-shadow: inset 0 -1px 0 var(--wms-ops-card-border);
+}
+
 .wms-ops-form .wms-ops-field-shell [data-slot='select-trigger'] {
   color: var(--wms-ops-field-fg) !important;
 }
@@ -9948,6 +10040,13 @@ html:not(.skin-premium) .wms-ops-advanced-filter .wms-ops-field-shell {
   box-shadow:
     inset 0 0 0 1px color-mix(in oklab, var(--wms-ops-accent) 55%, transparent),
     0 0 12px color-mix(in oklab, var(--wms-ops-accent) 12%, transparent) !important;
+}
+
+.wms-ops-form .wms-ops-field-shell > button.wms-ops-list-field-trigger:focus-visible,
+.wms-ops-lookup-dialog .wms-ops-field-shell > button.wms-ops-list-field-trigger:focus-visible,
+.wms-ops-detail-dialog .wms-ops-field-shell > button.wms-ops-list-field-trigger:focus-visible {
+  border-color: transparent !important;
+  box-shadow: none !important;
 }
 
 .wms-ops-list-select-content {
@@ -22083,6 +22182,23 @@ html.skin-premium .wms-ops-list-popover .wms-ops-field {
   font-size: 0.78rem !important;
   letter-spacing: 0.01em !important;
   box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--wms-brand-primary) 12%, var(--wms-ops-field-border)) !important;
+}
+
+html.skin-premium .wms-ops-form .wms-ops-field-shell > button.wms-ops-list-field-trigger,
+html.skin-premium .wms-ops-lookup-dialog .wms-ops-field-shell > button.wms-ops-list-field-trigger,
+html.skin-premium .wms-ops-detail-dialog .wms-ops-field-shell > button.wms-ops-list-field-trigger {
+  border-radius: 0.55rem !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+html.skin-premium .wms-ops-form button.wms-ops-bulk-toolbar-select,
+html.skin-premium .wms-ops-detail-dialog button.wms-ops-bulk-toolbar-select {
+  border-radius: 0.55rem !important;
+  font-family: var(--wms-premium-font) !important;
+  text-transform: none;
+  letter-spacing: 0.01em;
+  box-shadow: none !important;
 }
 
 html.skin-premium .wms-ops-list-popover__checkbox {
