@@ -134,6 +134,9 @@
     "affects": "Affected screens and operations"
   },
   "results": {
+    "shiftSummary": "Shift and workload summary",
+    "exceptions": "Operations requiring attention",
+    "traceability": "End-to-end traceability",
     "activities": "Activity records",
     "serialBalances": "Serial balances",
     "serialReceipts": "Goods receipt history",
@@ -277,6 +280,22 @@
     "Cancelled": "Cancelled"
   },
   "tasks": { "remaining": "Remaining", "priority": "Priority" },
+  "severity": { "Critical": "Critical", "High": "High", "Medium": "Medium", "Info": "Information" },
+  "exceptions": {
+    "suggestedAction": "Suggested action",
+    "ageHours_one": "open for {{count}} hour",
+    "ageHours_other": "open for {{count}} hours"
+  },
+  "traceability": { "reversal": "Reversal" },
+  "evidence": {
+    "title": "Data source and freshness",
+    "recordCount_one": "{{count}} record inspected",
+    "recordCount_other": "{{count}} records inspected",
+    "generatedAt": "Response time",
+    "dataAsOf": "Latest data event",
+    "truncated": "Results were limited for performance. Use export for full detail."
+  },
+  "actions": { "openModule": "Open related screen" },
   "fallbacks": {
     "noReference": "No reference",
     "noDriver": "Driver not specified"

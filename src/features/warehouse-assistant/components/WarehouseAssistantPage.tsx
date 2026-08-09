@@ -1,6 +1,7 @@
 import { type FormEvent, type ReactElement, useEffect, useMemo, useRef, useState } from 'react';
-import { Archive, ArrowLeftRight, Bot, Boxes, CircleAlert, Clock3, History, ListChecks, Loader2, MapPin, MessageSquarePlus, ReceiptText, ScanBarcode, Send, Settings2, ShieldCheck, Truck, UserRoundSearch, Waypoints } from 'lucide-react';
+import { Activity, Archive, ArrowLeftRight, Bot, Boxes, CircleAlert, Clock3, Database, ExternalLink, History, ListChecks, Loader2, MapPin, MessageSquarePlus, ReceiptText, ScanBarcode, Send, Settings2, ShieldCheck, TriangleAlert, Truck, UserRoundSearch, Waypoints } from 'lucide-react';
 import type { TFunction } from 'i18next';
+import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
@@ -42,6 +43,10 @@ const emptyCapabilities: WarehouseAssistantCapabilities = {
   canExplainParameters: true,
   canQuerySteelVehicleAnalysis: false,
   canQueryTransferAnalysis: false,
+  canQueryShiftBrief: false,
+  canQueryOperationalExceptions: false,
+  canQueryTraceability: false,
+  canQueryProcessBlockers: false,
   scopeLabel: '',
   exampleQuestions: [],
 };
@@ -356,7 +361,11 @@ function AssistantResult({ result, question, language, t, settingsT, onSuggestio
   const steelVehicles = result.steelVehicles ?? [];
   const transfers = result.transfers ?? [];
   const entityCandidates = result.entityCandidates ?? [];
-  const exportableCount = result.activities.length + result.serialBalances.length + result.serialReceipts.length + result.stockLocations.length + result.movements.length + result.tasks.length + goodsReceipts.length + steelVehicles.length + transfers.length + (result.barcode ? 1 : 0);
+  const summaryMetrics = result.summaryMetrics ?? [];
+  const exceptions = result.exceptions ?? [];
+  const traceabilityEvents = result.traceabilityEvents ?? [];
+  const evidence = result.evidence ?? [];
+  const exportableCount = result.activities.length + result.serialBalances.length + result.serialReceipts.length + result.stockLocations.length + result.movements.length + result.tasks.length + goodsReceipts.length + steelVehicles.length + transfers.length + summaryMetrics.length + exceptions.length + traceabilityEvents.length + (result.barcode ? 1 : 0);
   const hasData = exportableCount + parameterGuides.length > 0;
   if (!hasData && entityCandidates.length === 0 && result.suggestions.length === 0) return null;
   return (
@@ -387,6 +396,30 @@ function AssistantResult({ result, question, language, t, settingsT, onSuggestio
             ))}
           </div>
         </ResultSection>
+      ) : null}
+      {summaryMetrics.length > 0 ? (
+        <ResultSection icon={<Activity className="size-4" />} title={t('results.shiftSummary')}>
+          {summaryMetrics.map((metric) => (
+            <MetricCard key={metric.key} metric={metric} language={language} t={t} />
+          ))}
+        </ResultSection>
+      ) : null}
+      {exceptions.length > 0 ? (
+        <ResultSection icon={<TriangleAlert className="size-4" />} title={t('results.exceptions')}>
+          {exceptions.map((row, index) => (
+            <ExceptionCard key={`${row.code}-${row.entityId ?? row.documentNo ?? index}`} row={row} language={language} t={t} />
+          ))}
+        </ResultSection>
+      ) : null}
+      {traceabilityEvents.length > 0 ? (
+        <section>
+          <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-slate-500"><Waypoints className="size-4" />{t('results.traceability')}</div>
+          <div className="relative space-y-2 border-s border-cyan-500/30 ps-4">
+            {traceabilityEvents.map((row) => (
+              <TraceabilityCard key={row.eventKey} row={row} language={language} t={t} />
+            ))}
+          </div>
+        </section>
       ) : null}
       {result.activities.length > 0 ? (
         <ResultSection icon={<UserRoundSearch className="size-4" />} title={t('results.activities')}>
@@ -491,6 +524,23 @@ function AssistantResult({ result, question, language, t, settingsT, onSuggestio
           settingsT={settingsT}
         />
       ))}
+      {evidence.length > 0 ? (
+        <details className="rounded-2xl border border-slate-200 bg-slate-50/80 p-3 dark:border-white/10 dark:bg-white/[0.03]">
+          <summary className="flex cursor-pointer list-none items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-300">
+            <Database className="size-4 text-cyan-600" />{t('evidence.title')}
+          </summary>
+          <div className="mt-3 grid gap-2">
+            {evidence.map((row, index) => (
+              <div key={`${row.tool}-${index}`} className="rounded-xl border border-slate-200 bg-white p-3 text-xs dark:border-white/10 dark:bg-slate-950/50">
+                <div className="flex flex-wrap items-center justify-between gap-2"><strong>{row.source}</strong><span>{t('evidence.recordCount', { count: row.recordCount })}</span></div>
+                <p className="mt-1 text-slate-500">{row.filters}</p>
+                <p className="mt-1 text-slate-500">{t('evidence.generatedAt')}: {formatDate(row.generatedAtUtc, language)}{row.dataAsOfUtc ? ` · ${t('evidence.dataAsOf')}: ${formatDate(row.dataAsOfUtc, language)}` : ''}</p>
+                {row.isTruncated ? <p className="mt-2 font-semibold text-amber-700 dark:text-amber-300">{t('evidence.truncated')}</p> : null}
+              </div>
+            ))}
+          </div>
+        </details>
+      ) : null}
       {result.suggestions.length > 0 ? (
         <div className="flex flex-wrap gap-2">
           {result.suggestions.map((suggestion) => <button key={suggestion} type="button" onClick={() => onSuggestion(suggestion)} className="rounded-full border border-cyan-500/25 bg-cyan-500/10 px-3 py-1.5 text-left text-xs font-semibold text-cyan-800 hover:bg-cyan-500/15 dark:text-cyan-200">{suggestion}</button>)}
@@ -537,6 +587,56 @@ function ResultSection({ icon, title, children }: { icon: ReactElement; title: s
 
 function ResultCard({ title, meta, detail }: { title: string; meta: string; detail: string }): ReactElement {
   return <div className="rounded-xl border border-slate-200 bg-white p-3 dark:border-white/10 dark:bg-slate-950/45"><p className="text-sm font-bold">{title}</p><p className="mt-1 text-xs text-slate-500">{meta}</p><p className="mt-1 text-xs font-medium text-cyan-700 dark:text-cyan-300">{detail}</p></div>;
+}
+
+function MetricCard({ metric, language, t }: { metric: NonNullable<WarehouseAssistantChatResponse['summaryMetrics']>[number]; language: string; t: TFunction }): ReactElement {
+  const tone = severityTone(metric.severity);
+  const content = (
+    <div className={cn('h-full rounded-2xl border p-3.5 transition', tone, metric.route && 'hover:-translate-y-0.5 hover:shadow-md')}>
+      <p className="text-xs font-bold text-slate-600 dark:text-slate-300">{metric.label}</p>
+      <div className="mt-2 flex items-end justify-between gap-3">
+        <p className="text-2xl font-black text-slate-950 dark:text-white">{formatNumber(metric.value, language)} <span className="text-xs font-bold text-slate-500">{metric.unit}</span></p>
+        {metric.route ? <ExternalLink className="size-4 text-cyan-600" aria-label={t('actions.openModule')} /> : null}
+      </div>
+    </div>
+  );
+  return metric.route ? <Link to={metric.route}>{content}</Link> : content;
+}
+
+function ExceptionCard({ row, language, t }: { row: NonNullable<WarehouseAssistantChatResponse['exceptions']>[number]; language: string; t: TFunction }): ReactElement {
+  return (
+    <article className={cn('rounded-2xl border p-3.5', severityTone(row.severity))}>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className="rounded-full bg-slate-950/90 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-white dark:bg-white dark:text-slate-950">{t(`severity.${row.severity}`, { defaultValue: row.severity })}</span>
+        <span className="text-[11px] font-bold text-slate-500">{row.documentNo ?? `${row.entityType} #${row.entityId ?? '-'}`}</span>
+      </div>
+      <h4 className="mt-3 text-sm font-black text-slate-950 dark:text-white">{row.title}</h4>
+      <p className="mt-1 text-xs leading-5 text-slate-600 dark:text-slate-300">{row.description}</p>
+      <div className="mt-3 rounded-xl bg-white/70 px-3 py-2 text-xs font-semibold text-slate-700 dark:bg-slate-950/45 dark:text-slate-200"><strong>{t('exceptions.suggestedAction')}:</strong> {row.suggestedAction}</div>
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500">
+        <span>{row.detectedAtUtc ? formatDate(row.detectedAtUtc, language) : '-'}{row.ageHours != null ? ` · ${t('exceptions.ageHours', { count: row.ageHours })}` : ''}</span>
+        {row.route ? <Link to={row.route} className="inline-flex items-center gap-1 font-bold text-cyan-700 hover:underline dark:text-cyan-300">{t('actions.openModule')}<ExternalLink className="size-3" /></Link> : null}
+      </div>
+    </article>
+  );
+}
+
+function TraceabilityCard({ row, language, t }: { row: NonNullable<WarehouseAssistantChatResponse['traceabilityEvents']>[number]; language: string; t: TFunction }): ReactElement {
+  return (
+    <article className="relative rounded-2xl border border-slate-200 bg-white p-3.5 before:absolute before:-start-[1.3rem] before:top-5 before:size-2.5 before:rounded-full before:bg-cyan-500 before:ring-4 before:ring-cyan-500/15 dark:border-white/10 dark:bg-slate-950/45">
+      <div className="flex flex-wrap items-center justify-between gap-2"><strong className="text-sm">{row.stage} · {translateValue(t, 'movementTypes', row.eventType)}</strong><span className="text-[11px] text-slate-500">{formatDate(row.occurredAtUtc, language)}</span></div>
+      <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">{row.stockCode} - {row.stockName}</p>
+      <p className="mt-1 text-xs font-semibold text-cyan-700 dark:text-cyan-300">{row.warehouseCode ?? '-'} - {row.warehouseName ?? '-'} / {row.locationCode ?? '-'} · {row.quantity > 0 ? '+' : ''}{formatNumber(row.quantity, language)} {row.unitCode}</p>
+      <p className="mt-2 text-[11px] text-slate-500">{row.documentNo ?? row.documentType} · {row.actorDisplayName}{row.isReversal ? ` · ${t('traceability.reversal')}` : ''}</p>
+    </article>
+  );
+}
+
+function severityTone(severity: string): string {
+  if (severity === 'Critical') return 'border-red-300 bg-red-50/80 dark:border-red-500/30 dark:bg-red-500/10';
+  if (severity === 'High') return 'border-amber-300 bg-amber-50/80 dark:border-amber-500/30 dark:bg-amber-500/10';
+  if (severity === 'Medium') return 'border-violet-300 bg-violet-50/80 dark:border-violet-500/30 dark:bg-violet-500/10';
+  return 'border-cyan-200 bg-cyan-50/70 dark:border-cyan-500/25 dark:bg-cyan-500/10';
 }
 
 function mapHistoryMessage(row: WarehouseAssistantMessageRow): ChatMessage {

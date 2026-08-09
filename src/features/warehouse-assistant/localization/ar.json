@@ -134,6 +134,9 @@
     "affects": "الشاشات والعمليات المتأثرة"
   },
   "results": {
+    "shiftSummary": "ملخص الوردية وحجم العمل",
+    "exceptions": "العمليات التي تتطلب التدخل",
+    "traceability": "التتبع الكامل من البداية إلى النهاية",
     "activities": "سجلات العمليات",
     "serialBalances": "أرصدة الأرقام التسلسلية",
     "serialReceipts": "سجل الاستلام",
@@ -277,6 +280,11 @@
     "Cancelled": "ملغى"
   },
   "tasks": { "remaining": "المتبقي", "priority": "الأولوية" },
+  "severity": { "Critical": "حرج", "High": "مرتفع", "Medium": "متوسط", "Info": "معلومة" },
+  "exceptions": { "suggestedAction": "الإجراء المقترح", "ageHours_one": "مفتوح منذ ساعة واحدة", "ageHours_other": "مفتوح منذ {{count}} ساعات" },
+  "traceability": { "reversal": "قيد عكسي" },
+  "evidence": { "title": "مصدر البيانات وحداثتها", "recordCount_one": "تم فحص سجل واحد", "recordCount_other": "تم فحص {{count}} سجلات", "generatedAt": "وقت الإجابة", "dataAsOf": "وقت آخر حدث للبيانات", "truncated": "تم تقييد النتائج للحفاظ على الأداء. استخدم التصدير لعرض جميع التفاصيل." },
+  "actions": { "openModule": "فتح الشاشة المرتبطة" },
   "fallbacks": { "noReference": "بلا مرجع", "noDriver": "لم يتم تحديد السائق" },
   "errors": {
     "load": "تعذر تحميل مساعد المستودع.",

@@ -136,6 +136,9 @@
     "affects": "Etkilenen ekran ve işlemler"
   },
   "results": {
+    "shiftSummary": "Vardiya ve iş yükü özeti",
+    "exceptions": "Müdahale gereken operasyonlar",
+    "traceability": "Uçtan uca izlenebilirlik",
     "activities": "İşlem kayıtları",
     "serialBalances": "Seri bakiyeleri",
     "serialReceipts": "Mal kabul geçmişi",
@@ -279,6 +282,22 @@
     "Cancelled": "İptal edildi"
   },
   "tasks": { "remaining": "Kalan", "priority": "Öncelik" },
+  "severity": { "Critical": "Kritik", "High": "Yüksek", "Medium": "Orta", "Info": "Bilgi" },
+  "exceptions": {
+    "suggestedAction": "Önerilen işlem",
+    "ageHours_one": "{{count}} saattir açık",
+    "ageHours_other": "{{count}} saattir açık"
+  },
+  "traceability": { "reversal": "Ters kayıt" },
+  "evidence": {
+    "title": "Veri kaynağı ve güncellik",
+    "recordCount_one": "{{count}} kayıt incelendi",
+    "recordCount_other": "{{count}} kayıt incelendi",
+    "generatedAt": "Cevap zamanı",
+    "dataAsOf": "Verinin son olay zamanı",
+    "truncated": "Performans için sonuç sınırlandı. Tam ayrıntı için dışa aktarımı kullanın."
+  },
+  "actions": { "openModule": "İlgili ekranı aç" },
   "fallbacks": {
     "noReference": "Referans yok",
     "noDriver": "Sürücü belirtilmemiş"

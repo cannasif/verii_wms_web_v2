@@ -134,6 +134,9 @@
     "affects": "Betroffene Masken und Vorgänge"
   },
   "results": {
+    "shiftSummary": "Schicht- und Arbeitslastübersicht",
+    "exceptions": "Vorgänge mit Handlungsbedarf",
+    "traceability": "Lückenlose Rückverfolgbarkeit",
     "activities": "Aktivitäten",
     "serialBalances": "Serienbestände",
     "serialReceipts": "Wareneingangshistorie",
@@ -277,6 +280,11 @@
     "Cancelled": "Storniert"
   },
   "tasks": { "remaining": "Restmenge", "priority": "Priorität" },
+  "severity": { "Critical": "Kritisch", "High": "Hoch", "Medium": "Mittel", "Info": "Information" },
+  "exceptions": { "suggestedAction": "Empfohlene Maßnahme", "ageHours_one": "seit {{count}} Stunde offen", "ageHours_other": "seit {{count}} Stunden offen" },
+  "traceability": { "reversal": "Stornobuchung" },
+  "evidence": { "title": "Datenquelle und Aktualität", "recordCount_one": "{{count}} Datensatz geprüft", "recordCount_other": "{{count}} Datensätze geprüft", "generatedAt": "Antwortzeit", "dataAsOf": "Letztes Datenereignis", "truncated": "Die Ergebnisse wurden aus Leistungsgründen begrenzt. Nutzen Sie den Export für alle Details." },
+  "actions": { "openModule": "Zugehörige Seite öffnen" },
   "fallbacks": {
     "noReference": "Keine Referenz",
     "noDriver": "Kein Fahrer angegeben"

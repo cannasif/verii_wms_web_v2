@@ -134,6 +134,9 @@
     "affects": "Pantallas y operaciones afectadas"
   },
   "results": {
+    "shiftSummary": "Resumen del turno y la carga de trabajo",
+    "exceptions": "Operaciones que requieren atención",
+    "traceability": "Trazabilidad de extremo a extremo",
     "activities": "Operaciones",
     "serialBalances": "Existencias por serie",
     "serialReceipts": "Historial de recepciones",
@@ -277,6 +280,11 @@
     "Cancelled": "Cancelado"
   },
   "tasks": { "remaining": "Pendiente", "priority": "Prioridad" },
+  "severity": { "Critical": "Crítica", "High": "Alta", "Medium": "Media", "Info": "Información" },
+  "exceptions": { "suggestedAction": "Acción recomendada", "ageHours_one": "abierto durante {{count}} hora", "ageHours_other": "abierto durante {{count}} horas" },
+  "traceability": { "reversal": "Asiento de reversión" },
+  "evidence": { "title": "Origen y actualidad de los datos", "recordCount_one": "{{count}} registro analizado", "recordCount_other": "{{count}} registros analizados", "generatedAt": "Hora de respuesta", "dataAsOf": "Último evento de datos", "truncated": "Los resultados se limitaron por rendimiento. Use la exportación para ver todos los detalles." },
+  "actions": { "openModule": "Abrir pantalla relacionada" },
   "fallbacks": {
     "noReference": "Sin referencia",
     "noDriver": "Conductor no indicado"

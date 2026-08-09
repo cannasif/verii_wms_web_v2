@@ -12,6 +12,10 @@ export type WarehouseAssistantIntent =
   | 'parameterHelp'
   | 'steelVehicleAnalysis'
   | 'warehouseTransferAnalysis'
+  | 'shiftBrief'
+  | 'operationalExceptions'
+  | 'traceability'
+  | 'processBlockers'
   | 'unknown';
 
 export interface WarehouseAssistantParameterHint {
@@ -33,6 +37,10 @@ export interface WarehouseAssistantCapabilities {
   canExplainParameters?: boolean;
   canQuerySteelVehicleAnalysis?: boolean;
   canQueryTransferAnalysis?: boolean;
+  canQueryShiftBrief?: boolean;
+  canQueryOperationalExceptions?: boolean;
+  canQueryTraceability?: boolean;
+  canQueryProcessBlockers?: boolean;
 }
 export interface WarehouseAssistantConversationRow {
   id: number;
@@ -263,6 +271,69 @@ export interface WarehouseAssistantEntityCandidateRow {
   selectionMessage: string;
 }
 
+export interface WarehouseAssistantSummaryMetricRow {
+  key: string;
+  label: string;
+  value: number;
+  unit: string;
+  severity: 'Info' | 'Medium' | 'High' | 'Critical' | string;
+  module: string;
+  route?: string | null;
+}
+
+export interface WarehouseAssistantExceptionRow {
+  code: string;
+  severity: 'Info' | 'Medium' | 'High' | 'Critical' | string;
+  module: string;
+  title: string;
+  description: string;
+  entityType: string;
+  entityId?: number | null;
+  documentNo?: string | null;
+  status: string;
+  detectedAtUtc?: string | null;
+  ageHours?: number | null;
+  suggestedAction: string;
+  route?: string | null;
+}
+
+export interface WarehouseAssistantTraceabilityEventRow {
+  eventKey: string;
+  occurredAtUtc: string;
+  stage: string;
+  eventType: string;
+  documentType: string;
+  documentId?: number | null;
+  documentNo?: string | null;
+  stockId: number;
+  stockCode: string;
+  stockName: string;
+  serialNo?: string | null;
+  lotNo?: string | null;
+  quantity: number;
+  unitCode: string;
+  warehouseCode?: number | null;
+  warehouseName?: string | null;
+  locationCode?: string | null;
+  locationName?: string | null;
+  status: string;
+  actorDisplayName: string;
+  isReversal: boolean;
+  route?: string | null;
+}
+
+export interface WarehouseAssistantEvidenceRow {
+  source: string;
+  tool: string;
+  recordCount: number;
+  generatedAtUtc: string;
+  dataAsOfUtc?: string | null;
+  scope: string;
+  filters: string;
+  isTruncated: boolean;
+  route?: string | null;
+}
+
 export interface WarehouseAssistantChatResponse {
   conversationId: number;
   messageId: number;
@@ -282,5 +353,9 @@ export interface WarehouseAssistantChatResponse {
   steelVehicles?: WarehouseAssistantSteelVehicleRow[];
   transfers?: WarehouseAssistantTransferRow[];
   entityCandidates?: WarehouseAssistantEntityCandidateRow[];
+  summaryMetrics?: WarehouseAssistantSummaryMetricRow[];
+  exceptions?: WarehouseAssistantExceptionRow[];
+  traceabilityEvents?: WarehouseAssistantTraceabilityEventRow[];
+  evidence?: WarehouseAssistantEvidenceRow[];
   suggestions: string[];
 }

@@ -136,6 +136,9 @@
     "affects": "Écrans et opérations concernés"
   },
   "results": {
+    "shiftSummary": "Résumé de l'équipe et de la charge",
+    "exceptions": "Opérations nécessitant une intervention",
+    "traceability": "Traçabilité de bout en bout",
     "activities": "Opérations",
     "serialBalances": "Stocks par série",
     "serialReceipts": "Historique des réceptions",
@@ -279,6 +282,11 @@
     "Cancelled": "Annulé"
   },
   "tasks": { "remaining": "Restant", "priority": "Priorité" },
+  "severity": { "Critical": "Critique", "High": "Élevée", "Medium": "Moyenne", "Info": "Information" },
+  "exceptions": { "suggestedAction": "Action recommandée", "ageHours_one": "ouvert depuis {{count}} heure", "ageHours_other": "ouvert depuis {{count}} heures" },
+  "traceability": { "reversal": "Écriture d'annulation" },
+  "evidence": { "title": "Source et fraîcheur des données", "recordCount_one": "{{count}} enregistrement analysé", "recordCount_other": "{{count}} enregistrements analysés", "generatedAt": "Heure de réponse", "dataAsOf": "Dernier événement de données", "truncated": "Les résultats ont été limités pour préserver les performances. Utilisez l'export pour tous les détails." },
+  "actions": { "openModule": "Ouvrir l'écran associé" },
   "fallbacks": {
     "noReference": "Aucune référence",
     "noDriver": "Conducteur non renseigné"
