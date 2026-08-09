@@ -5519,7 +5519,7 @@
     "toast": {
       "fetchRecordFailed": "No se pudo cargar el registro del vehículo.",
       "plateRequired": "La matrícula es obligatoria.",
-      "todayFound": "Se ha cargado el registro del vehículo de hoy.",
+      "todayFound": "Se cargó la última llegada de hoy para esta matrícula. Use Nueva entrada de vehículo para una nueva llegada.",
       "todayNotFound": "No se encontró ningún registro para hoy; se creará durante la aceptación.",
       "searchFailed": "Error al buscar el registro del vehículo.",
       "sheetCountRange": "Para la aceptación de un solo vehículo, el número de chapas de acero debe estar entre 1 y 50.",
@@ -5624,7 +5624,7 @@
       "serialSearch": "Serie, DCode, stock, pedido o n.º Excel"
     },
     "action": {
-      "findToday": "Buscar el vehículo de hoy",
+      "findToday": "Buscar la última llegada de hoy para editar",
       "pickVehicleImage": "Seleccionar imagen del vehículo",
       "captureVehicleImage": "Tomar foto del vehículo",
       "findSheet": "Buscar chapa",

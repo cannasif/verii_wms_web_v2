@@ -1137,8 +1137,8 @@
     "description": "Erstellen Sie den ersten Datensatz für ein ankommendes Fahrzeug. Wenn dieselbe Platte am selben Tag zurückkehrt, wird der aktuelle Datensatz aktualisiert.",
     "guidance": {
       "title": "Geschäftsregel",
-      "sameDayRule": "Wenn die gleiche Platte am selben Tag wieder ankommt, wird kein neuer Datensatz erstellt; der bestehende Datensatz wird aktualisiert.",
-      "nextDayRule": "Wenn die gleiche Platte an einem anderen Tag ankommt, erfasst das System sie als neuen Eintrag."
+      "sameDayRule": "Dasselbe Kennzeichen kann am selben Tag mehrfach eintreffen. Jede physische Ankunft wird mit einem separaten Datensatz, Zeitpunkt, Bildern und Stahlannahme-Verknüpfungen gespeichert.",
+      "nextDayRule": "Öffnen Sie zum Bearbeiten eine bestehende Ankunft aus der Liste oder laden Sie den letzten heutigen Datensatz; verwenden Sie für eine neue Ankunft Neuer Fahrzeugeingang."
     },
     "fields": {
       "plate": "Teller",
@@ -1156,7 +1156,7 @@
       "description": "Wählen Sie the customer to be associated with this vehicle arrival aus."
     },
     "actions": {
-      "findToday": "Finden Sie den heutigen Datensatz",
+      "findToday": "Letzten heutigen Datensatz laden",
       "save": "Speichern / Aktualisieren",
       "openList": "Datensatzliste öffnen"
     },
@@ -1191,7 +1191,7 @@
     },
     "messages": {
       "plateRequired": "Für die Fahrzeuganmeldung ist ein Kennzeichen erforderlich.",
-      "todayFound": "Der heutige Fahrzeugdatensatz wurde geladen.",
+      "todayFound": "Die letzte heutige Ankunft dieses Kennzeichens wurde geladen.",
       "saved": "Fahrzeug-Check-in-Datensatz gespeichert.",
       "saveFirst": "Erstellen Sie zuerst den Fahrzeug-Check-in-Datensatz.",
       "imagesUploaded": "Fahrzeugbilder hochgeladen.",
@@ -1200,7 +1200,7 @@
     "toast": {
       "fetchRecordFailed": "Fahrzeugdatensatz konnte nicht geladen werden.",
       "plateRequired": "Kennzeichen ist erforderlich.",
-      "todayFound": "Der heutige Fahrzeugdatensatz wurde geladen.",
+      "todayFound": "Die letzte heutige Ankunft dieses Kennzeichens wurde geladen. Verwenden Sie für eine neue Ankunft Neuer Fahrzeugeingang.",
       "todayNotFound": "Für heute wurde kein Datensatz gefunden; er wird bei der Annahme erstellt.",
       "searchFailed": "Suche nach Fahrzeugdatensatz fehlgeschlagen.",
       "sheetCountRange": "Für die Einzel-Fahrzeugannahme muss die Anzahl der Stahlbleche zwischen 1 und 50 liegen.",
@@ -1304,7 +1304,7 @@
       "serialSearch": "Seriennr., DCode, Artikel, Auftrag oder Excel-Nr."
     },
     "action": {
-      "findToday": "Heutiges Fahrzeug finden",
+      "findToday": "Letzte heutige Ankunft zum Bearbeiten finden",
       "pickVehicleImage": "Fahrzeugbild auswählen",
       "captureVehicleImage": "Fahrzeugfoto aufnehmen",
       "findSheet": "Blech finden",

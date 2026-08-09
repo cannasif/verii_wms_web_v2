@@ -5519,7 +5519,7 @@
     "toast": {
       "fetchRecordFailed": "Impossible de charger l'enregistrement du véhicule.",
       "plateRequired": "La plaque est obligatoire.",
-      "todayFound": "L'enregistrement du véhicule d'aujourd'hui a été chargé.",
+      "todayFound": "La dernière arrivée de ce véhicule aujourd'hui a été chargée. Utilisez Nouvelle entrée véhicule pour une nouvelle arrivée.",
       "todayNotFound": "Aucun enregistrement trouvé pour aujourd'hui ; il sera créé lors de l'acceptation.",
       "searchFailed": "Échec de la recherche de l'enregistrement du véhicule.",
       "sheetCountRange": "Pour l'acceptation d'un seul véhicule, le nombre de tôles d'acier doit être compris entre 1 et 50.",
@@ -5624,7 +5624,7 @@
       "serialSearch": "Série, DCode, stock, commande ou n° Excel"
     },
     "action": {
-      "findToday": "Trouver le véhicule d'aujourd'hui",
+      "findToday": "Trouver la dernière arrivée du jour à modifier",
       "pickVehicleImage": "Choisir une image du véhicule",
       "captureVehicleImage": "Prendre une photo du véhicule",
       "findSheet": "Trouver la tôle",

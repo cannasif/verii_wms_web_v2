@@ -1178,8 +1178,8 @@
     "description": "Sahaya gelen araç için ilk kaydı oluşturun. Aynı plaka aynı gün tekrar gelirse mevcut kayıt güncellenir.",
     "guidance": {
       "title": "İş Kuralı",
-      "sameDayRule": "Aynı gün aynı plaka tekrar gelirse yeni kayıt açılmaz; mevcut kayıt güncellenir.",
-      "nextDayRule": "Aynı plaka farklı bir gün gelirse sistem bunu yeni giriş olarak kaydeder."
+      "sameDayRule": "Aynı plaka aynı gün yeniden gelebilir. Her fiziksel geliş ayrı kayıt, giriş zamanı, görsel ve SAC kabul ilişkisiyle saklanır.",
+      "nextDayRule": "Mevcut bir gelişi düzenlemek için kayıt listesinden açın veya bugünkü son kaydı getirin; yeni geliş için Yeni Araç Girişi kullanın."
     },
     "fields": {
       "plate": "Plaka",
@@ -1197,7 +1197,7 @@
       "description": "Araç gelişi ile ilişkilendirilecek müşteriyi seçin."
     },
     "actions": {
-      "findToday": "Bugünkü Kaydı Getir",
+      "findToday": "Bugünkü Son Kaydı Getir",
       "save": "Kaydet / Güncelle",
       "openList": "Kayıt Listesini Aç"
     },
@@ -1232,7 +1232,7 @@
     },
     "messages": {
       "plateRequired": "Araç kontrol kaydı için plaka zorunludur.",
-      "todayFound": "Bugünkü araç kaydı getirildi.",
+      "todayFound": "Bu plakanın bugünkü son geliş kaydı getirildi.",
       "saved": "Araç kontrol kaydı kaydedildi.",
       "saveFirst": "Önce araç kontrol kaydını oluşturun.",
       "imagesUploaded": "Araç görselleri yüklendi.",
@@ -1241,7 +1241,7 @@
     "toast": {
       "fetchRecordFailed": "Araç kaydı getirilemedi.",
       "plateRequired": "Plaka zorunludur.",
-      "todayFound": "Bugünkü araç kaydı getirildi.",
+      "todayFound": "Bu plakanın bugünkü son geliş kaydı getirildi. Yeni geliş kaydı için Yeni Araç Girişi kullanın.",
       "todayNotFound": "Bugün için kayıt bulunamadı; kabul ile birlikte oluşturulacak.",
       "searchFailed": "Araç kaydı aranamadı.",
       "sheetCountRange": "Tek araç kabulünde SAC levha adedi 1-50 arasında olmalıdır.",
@@ -1347,7 +1347,7 @@
       "serialSearch": "Seri, DCode, stok, sipariş veya Excel no"
     },
     "action": {
-      "findToday": "Bugünkü aracı bul",
+      "findToday": "Düzenlemek için bugünkü son geliş kaydını bul",
       "pickVehicleImage": "Araç görseli seç",
       "captureVehicleImage": "Araç fotoğrafı çek",
       "findSheet": "SAC Bul",

@@ -1178,8 +1178,8 @@
     "description": "Create the first record for an arriving vehicle. If the same plate returns on the same day, the current record is updated.",
     "guidance": {
       "title": "Business Rule",
-      "sameDayRule": "If the same plate arrives again on the same day, no new record is created; the existing record is updated.",
-      "nextDayRule": "If the same plate arrives on a different day, the system records it as a new entry."
+      "sameDayRule": "The same plate may arrive more than once on the same day. Every physical arrival is stored with a separate record, time, images, and steel acceptance links.",
+      "nextDayRule": "Open an existing arrival from the list or load today's latest record to edit it; use New Vehicle Check-In for a new arrival."
     },
     "fields": {
       "plate": "Plate",
@@ -1197,7 +1197,7 @@
       "description": "Select the customer to be associated with this vehicle arrival."
     },
     "actions": {
-      "findToday": "Find Today's Record",
+      "findToday": "Load Today's Latest Record",
       "save": "Save / Update",
       "openList": "Open Record List"
     },
@@ -1232,7 +1232,7 @@
     },
     "messages": {
       "plateRequired": "Plate is required for vehicle check-in.",
-      "todayFound": "Today's vehicle record has been loaded.",
+      "todayFound": "The latest arrival for this plate today has been loaded.",
       "saved": "Vehicle check-in record saved.",
       "saveFirst": "Create the vehicle check-in record first.",
       "imagesUploaded": "Vehicle images uploaded.",
@@ -1241,7 +1241,7 @@
     "toast": {
       "fetchRecordFailed": "Vehicle record could not be loaded.",
       "plateRequired": "Plate is required.",
-      "todayFound": "Today's vehicle record has been loaded.",
+      "todayFound": "The latest arrival for this plate today has been loaded. Use New Vehicle Check-In for a new arrival.",
       "todayNotFound": "No record found for today; it will be created during acceptance.",
       "searchFailed": "Vehicle record search failed.",
       "sheetCountRange": "For single vehicle acceptance, steel sheet count must be between 1 and 50.",
@@ -1347,7 +1347,7 @@
       "serialSearch": "Serial, DCode, stock, order, or Excel no"
     },
     "action": {
-      "findToday": "Find today's vehicle",
+      "findToday": "Find today's latest arrival to edit",
       "pickVehicleImage": "Pick vehicle image",
       "captureVehicleImage": "Take vehicle photo",
       "findSheet": "Find steel sheet",

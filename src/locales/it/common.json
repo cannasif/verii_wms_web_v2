@@ -5519,7 +5519,7 @@
     "toast": {
       "fetchRecordFailed": "Impossibile caricare il record del veicolo.",
       "plateRequired": "La targa è obbligatoria.",
-      "todayFound": "Il record del veicolo di oggi è stato caricato.",
+      "todayFound": "È stato caricato l'ultimo arrivo odierno per questa targa. Usa Nuovo ingresso veicolo per un nuovo arrivo.",
       "todayNotFound": "Nessun record trovato per oggi; verrà creato durante l'accettazione.",
       "searchFailed": "Ricerca del record del veicolo non riuscita.",
       "sheetCountRange": "Per l'accettazione di un singolo veicolo, il numero di lamiere d'acciaio deve essere compreso tra 1 e 50.",
@@ -5624,7 +5624,7 @@
       "serialSearch": "Serie, DCode, stock, ordine o n. Excel"
     },
     "action": {
-      "findToday": "Trova il veicolo di oggi",
+      "findToday": "Trova l'ultimo arrivo di oggi da modificare",
       "pickVehicleImage": "Seleziona immagine del veicolo",
       "captureVehicleImage": "Scatta una foto del veicolo",
       "findSheet": "Trova lamiera",
