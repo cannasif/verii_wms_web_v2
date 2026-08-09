@@ -44,6 +44,7 @@ export interface ProductionTask {
   taskId: number; taskNo: string; taskType: string; warehouseId: number; status: string; acceptedAtUtc?: string; acceptedBy?: number;
   startedAtUtc?: string; startedBy?: number; completedAtUtc?: string; completedBy?: number; assignments: ProductionTaskAssignment[]; lines: ProductionTaskLine[];
   originTaskId?: number; originUserId?: number; previousTaskId?: number;
+  assignedUsernames?: string[];
 }
 export interface ProductionTaskBoard {
   transferId: number; documentNo: string; transferStatus: string; sourceWarehouseId: number;
@@ -110,6 +111,12 @@ export interface ProductionWorkOrderTransferHeaderRow {
   updatedDate?: string;
   createdDate?: string;
   tasks: ProductionWorkOrderTransferTaskRow[];
+  erpPostingPolicy?: 'Disabled' | 'Manual' | 'AfterHandover';
+  erpIntegrationStatus?: ProductionTransferExecution['erpIntegrationStatus'];
+  erpPostingStatus?: ProductionTransferExecution['erpPostingStatus'];
+  erpDocumentNo?: string;
+  erpErrorCode?: string;
+  erpErrorMessage?: string;
 }
 
 /** Görev başlatmadan önce depo-geneli stok yeterlilik kontrolü sonucu. */

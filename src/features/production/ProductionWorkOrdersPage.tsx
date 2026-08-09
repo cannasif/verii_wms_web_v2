@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react';
-import { ArrowDown, ArrowUp, CheckCircle2, ChevronDown, ChevronUp, CircleHelp, FileText, PackageOpen, Plus, RefreshCw, Search, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, CheckCircle2, ChevronDown, ChevronUp, CircleHelp, FileText, PackageOpen, Plus, RefreshCw, Search, UserPlus, X } from 'lucide-react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -168,6 +168,34 @@ const HEADER_CARD_CLASS = 'wms-ops-detail-panel !px-3 !py-2 max-sm:!px-2.5 max-s
 /** Dialog CSS'i aksiyon butonlarına 2.75rem yükseklik dayatıyor; mobilde bunu kırıp kompakt tutar. */
 const MODAL_CTA_CLASS =
   'max-sm:w-full max-sm:!min-h-9 max-sm:!gap-1.5 max-sm:!px-3 max-sm:!text-[0.62rem]';
+
+type AssigneeRecipeGroup = {
+  assignee: ActiveUserOption;
+  lineIndices: number[];
+};
+
+function allMaterialIndices(count: number): number[] {
+  return Array.from({ length: count }, (_, index) => index);
+}
+
+function mergeAssigneeGroup(
+  groups: AssigneeRecipeGroup[],
+  assignee: ActiveUserOption,
+  lineIndices: number[],
+): AssigneeRecipeGroup[] {
+  const existingIndex = groups.findIndex((group) => group.assignee.id === assignee.id);
+  const sorted = [...lineIndices].sort((left, right) => left - right);
+  if (existingIndex < 0) return [...groups, { assignee, lineIndices: sorted }];
+
+  const merged = new Set([...groups[existingIndex].lineIndices, ...sorted]);
+  return groups.map((group, index) => (index === existingIndex
+    ? { ...group, lineIndices: [...merged].sort((left, right) => left - right) }
+    : group));
+}
+
+function materialRowKey(material: PreparedNetsisProductionMaterial, index: number): string {
+  return `${material.stockCode}-${material.operationNumber}-${index}`;
+}
 
 /** Aynı iş emri numarası farklı kaynaklarda tekrar edebildiği için satır kimliği kaynakla birlikte kurulur. */
 const workOrderKey = (row: ProductionSourceWorkOrder): string =>
@@ -597,39 +625,82 @@ function WorkOrderDrawer({
 }): ReactElement {
   const blocked = value.mappingErrors.length > 0 || value.isClosed;
   const alreadyImported = Boolean(value.existingProductionOrderId);
-  // Dar ekranda başlık bloğu yer kapladığı için varsayılan kapalı; sm ve üstünde her zaman açık.
   const [headerOpen, setHeaderOpen] = useState(false);
   const [assignee, setAssignee] = useState<ActiveUserOption | null>(null);
   const [assigneeLookupOpen, setAssigneeLookupOpen] = useState(false);
   const [assigneeHintOpen, setAssigneeHintOpen] = useState(false);
   const [completingTransfer, setCompletingTransfer] = useState(false);
-  const [selectedLines, setSelectedLines] = useState<ReadonlySet<number>>(
-    () => new Set(value.materials.map((_, index) => index)),
+  const [unassignedLines, setUnassignedLines] = useState<ReadonlySet<number>>(
+    () => new Set(allMaterialIndices(value.materials.length)),
   );
+  const [assigneeGroups, setAssigneeGroups] = useState<AssigneeRecipeGroup[]>([]);
+  const [selectedUnassigned, setSelectedUnassigned] = useState<ReadonlySet<number>>(new Set());
 
-  // Başka bir iş emri açıldığında seçim tüm kalemlerle yeniden başlar.
   useEffect(() => {
-    setSelectedLines(new Set(value.materials.map((_, index) => index)));
+    setUnassignedLines(new Set(allMaterialIndices(value.materials.length)));
+    setAssigneeGroups([]);
+    setSelectedUnassigned(new Set());
+    setAssignee(null);
   }, [value]);
 
-  const selectedCount = selectedLines.size;
-  const allSelected = value.materials.length > 0 && selectedCount === value.materials.length;
-  const toggleLine = (index: number): void =>
-    setSelectedLines((current) => {
+  const unassignedList = useMemo(
+    () => [...unassignedLines].sort((left, right) => left - right),
+    [unassignedLines],
+  );
+  const selectedUnassignedCount = selectedUnassigned.size;
+  const allUnassignedSelected = unassignedList.length > 0 && selectedUnassignedCount === unassignedList.length;
+  const assignedCount = value.materials.length - unassignedLines.size;
+
+  const toggleUnassignedLine = (index: number): void =>
+    setSelectedUnassigned((current) => {
       const next = new Set(current);
       if (next.has(index)) next.delete(index);
       else next.add(index);
       return next;
     });
-  const toggleAllLines = (): void =>
-    setSelectedLines(allSelected ? new Set() : new Set(value.materials.map((_, index) => index)));
+
+  const toggleAllUnassigned = (): void =>
+    setSelectedUnassigned(allUnassignedSelected ? new Set() : new Set(unassignedList));
+
+  const assignSelectedLines = (): void => {
+    if (!assignee || selectedUnassignedCount === 0) return;
+    const indices = [...selectedUnassigned].filter((index) => unassignedLines.has(index));
+    if (indices.length === 0) return;
+
+    setUnassignedLines((current) => {
+      const next = new Set(current);
+      indices.forEach((index) => next.delete(index));
+      return next;
+    });
+    setAssigneeGroups((current) => mergeAssigneeGroup(current, assignee, indices));
+    setSelectedUnassigned(new Set());
+  };
+
+  const removeAssignedLine = (assigneeId: number, lineIndex: number): void => {
+    setAssigneeGroups((current) => current
+      .map((group) => group.assignee.id === assigneeId
+        ? { ...group, lineIndices: group.lineIndices.filter((index) => index !== lineIndex) }
+        : group)
+      .filter((group) => group.lineIndices.length > 0));
+    setUnassignedLines((current) => new Set([...current, lineIndex]));
+    setSelectedUnassigned((current) => {
+      if (!current.has(lineIndex)) return current;
+      const next = new Set(current);
+      next.delete(lineIndex);
+      return next;
+    });
+  };
+
   const footerHint = blocked || !canCreateTransfer
     ? null
-    : !assignee
-      ? 'Devam etmek için emir sorumlusu seçin.'
-      : selectedCount === 0
-        ? 'Devam etmek için en az bir reçete bileşeni seçin.'
-        : null;
+    : unassignedLines.size > 0
+      ? `${unassignedLines.size} bileşen henüz atanmadı. Kayıt için tüm satırlar atanmalıdır.`
+      : assigneeGroups.length === 0
+        ? 'Kayıt için en az bir atama grubu oluşturun.'
+        : selectedUnassignedCount > 0 && !assignee
+          ? 'Seçili satırları atamak için depo çalışanı seçin.'
+          : null;
+
   const recipeExportRows = value.materials.map((material, index) => ({
     lineNo: index + 1,
     stockCode: material.stockCode,
@@ -643,19 +714,27 @@ function WorkOrderDrawer({
   }));
   const recipeExportFileName = `Recete_${value.workOrderNumber.replace(/[^\p{L}\p{N}._-]+/gu, '_')}`;
 
-  const completeDirectTransfer = async (): Promise<void> => {
-    if (!assignee || selectedCount === 0 || blocked || !canCreateTransfer) return;
-    const materials = value.materials.filter((_, index) => selectedLines.has(index));
+  const completeAssignments = async (): Promise<void> => {
+    if (blocked || !canCreateTransfer || unassignedLines.size > 0 || assigneeGroups.length === 0) return;
     setCompletingTransfer(true);
     try {
-      const payload = await buildAutoCompleteProductionTransferPayload(value, materials, assignee, branchCode);
-      const created = await warehouseTransferApi.createProductionDraft(payload);
-      const taskLabel = created.taskNo ? ` · ${created.taskNo}` : '';
-      toast.success(`Transfer oluşturuldu: ${created.documentNo}${taskLabel}`);
+      const createdDocs: string[] = [];
+      for (const group of assigneeGroups) {
+        const materials = group.lineIndices.map((index) => value.materials[index]);
+        const payload = await buildAutoCompleteProductionTransferPayload(value, materials, group.assignee, branchCode);
+        const created = await warehouseTransferApi.createProductionDraft(payload);
+        const taskLabel = created.taskNo ? ` · ${created.taskNo}` : '';
+        createdDocs.push(`${created.documentNo}${taskLabel}`);
+      }
+      toast.success(
+        createdDocs.length === 1
+          ? `Transfer oluşturuldu: ${createdDocs[0]}`
+          : `${createdDocs.length} transfer oluşturuldu: ${createdDocs.join(', ')}`,
+      );
       close();
       onTransferCreated?.();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Doğrudan transfer tamamlanamadı.');
+      toast.error(error instanceof Error ? error.message : 'Atamalar kaydedilemedi.');
     } finally {
       setCompletingTransfer(false);
     }
@@ -732,65 +811,77 @@ function WorkOrderDrawer({
           <section className="space-y-4">
             <div className="wms-ops-detail-panel p-3 sm:p-4">
               <div className="flex items-center gap-1.5">
-                <h3 className="wms-ops-detail-section-title !border-0 !p-0">Emir sorumlusu</h3>
+                <h3 className="wms-ops-detail-section-title !border-0 !p-0">Atama</h3>
                 <TooltipProvider delayDuration={160}>
                   <Tooltip
                     open={assigneeHintOpen}
                     onOpenChange={(next) => {
-                      // Drawer açılışında odak bu butona gelince Radix otomatik açmasın; yalnızca tıklama açsın.
                       if (!next) setAssigneeHintOpen(false);
                     }}
                   >
                     <TooltipTrigger asChild>
                       <button
                         type="button"
-                        aria-label="Emir sorumlusu hakkında"
+                        aria-label="Atama hakkında"
                         onClick={() => setAssigneeHintOpen((current) => !current)}
                         className="inline-flex size-5 items-center justify-center rounded-full text-[var(--wms-app-text-muted)] transition hover:text-[var(--wms-brand-primary)]"
                       >
                         <CircleHelp className="size-4" aria-hidden />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent side="bottom" align="start" className="max-w-[16rem]">
-                      Transferi hazırlamadan önce görevi üstlenecek depo çalışanını seçin; transfer bu kişiye atanmış olarak açılır.
+                    <TooltipContent side="bottom" align="start" className="max-w-[18rem]">
+                      Atanmamış listeden bileşen seçin, depo çalışanını belirleyin ve &quot;Seçilenleri ata&quot; ile gruba ekleyin.
+                      Her kullanıcı için ayrı transfer belgesi oluşturulur.
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               </div>
-              <div className="mt-2">
-                <PagedLookupDialog<ActiveUserOption>
-                  variant="ops"
-                  triggerMode="combobox"
-                  autoSearchMinLength={1}
-                  popoverPortalContainer={null}
-                  openDialogOnTouchTap
-                  open={assigneeLookupOpen}
-                  onOpenChange={setAssigneeLookupOpen}
-                  title="Emir sorumlusu seçin"
-                  value={assignee ? userDisplayName(assignee) : null}
-                  placeholder="Depo çalışanı seçin"
-                  searchPlaceholder="Ad, kullanıcı adı veya e-posta ile arayın"
-                  emptyText="Eşleşen depo çalışanı bulunamadı."
-                  triggerClassName="!h-11 !py-2 !pl-9 !pr-3"
-                  queryKey={['production-work-order-assignee']}
-                  fetchPage={async ({ pageNumber, pageSize, search, signal }) =>
-                    toPagedResponse(await warehouseTransferApi.activeUsers({
-                      pageNumber,
-                      pageSize,
-                      search,
-                      sortBy: 'username',
-                      sortDirection: 'asc',
-                      signal: signal ?? new AbortController().signal,
-                    }))
-                  }
-                  getKey={(user) => String(user.id)}
-                  getLabel={(user) => userDisplayName(user)}
-                  onSelect={setAssignee}
-                />
+              <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-end">
+                <div className="min-w-0 flex-1">
+                  <PagedLookupDialog<ActiveUserOption>
+                    variant="ops"
+                    triggerMode="combobox"
+                    autoSearchMinLength={1}
+                    popoverPortalContainer={null}
+                    openDialogOnTouchTap
+                    open={assigneeLookupOpen}
+                    onOpenChange={setAssigneeLookupOpen}
+                    title="Depo çalışanı seçin"
+                    value={assignee ? userDisplayName(assignee) : null}
+                    placeholder="Depo çalışanı seçin"
+                    searchPlaceholder="Ad, kullanıcı adı veya e-posta ile arayın"
+                    emptyText="Eşleşen depo çalışanı bulunamadı."
+                    triggerClassName="!h-11 !py-2 !pl-9 !pr-3"
+                    queryKey={['production-work-order-assignee']}
+                    fetchPage={async ({ pageNumber, pageSize, search, signal }) =>
+                      toPagedResponse(await warehouseTransferApi.activeUsers({
+                        pageNumber,
+                        pageSize,
+                        search,
+                        sortBy: 'username',
+                        sortDirection: 'asc',
+                        signal: signal ?? new AbortController().signal,
+                      }))
+                    }
+                    getKey={(user) => String(user.id)}
+                    getLabel={(user) => userDisplayName(user)}
+                    onSelect={setAssignee}
+                  />
+                </div>
+                <OpsActionButton
+                  variant="secondary"
+                  className="shrink-0"
+                  disabled={blocked || !canCreateTransfer || !assignee || selectedUnassignedCount === 0}
+                  onClick={assignSelectedLines}
+                >
+                  <UserPlus className="size-4" aria-hidden />
+                  Seçilenleri ata
+                </OpsActionButton>
               </div>
-              {assignee ? (
+              {assignee && selectedUnassignedCount > 0 ? (
                 <p className="mt-2 text-xs text-[var(--wms-app-text-muted)]">
-                  Görev <strong className="text-[var(--wms-brand-primary)]">{userDisplayName(assignee)}</strong> kullanıcısına atanacak.
+                  <strong className="text-[var(--wms-brand-primary)]">{selectedUnassignedCount}</strong> seçili bileşen{' '}
+                  <strong className="text-[var(--wms-brand-primary)]">{userDisplayName(assignee)}</strong> kullanıcısına atanacak.
                 </p>
               ) : null}
             </div>
@@ -815,9 +906,12 @@ function WorkOrderDrawer({
 
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h3 className="wms-ops-detail-section-title !border-0 !p-0">Reçete bileşenleri</h3>
+                <h3 className="wms-ops-detail-section-title !border-0 !p-0">Atanmamış bileşenler</h3>
                 <p className="mt-1 text-xs text-slate-500">
-                  {value.materials.length} bileşen · <strong className="text-[var(--wms-brand-primary)]">{selectedCount}</strong> seçili
+                  {unassignedList.length} atanmamış · <strong className="text-[var(--wms-brand-primary)]">{selectedUnassignedCount}</strong> seçili
+                  {assignedCount > 0 ? (
+                    <> · <strong className="text-[var(--wms-brand-primary)]">{assignedCount}</strong> atandı</>
+                  ) : null}
                 </p>
               </div>
               <GridExportMenu
@@ -834,6 +928,10 @@ function WorkOrderDrawer({
                 <PackageOpen className="wms-ops-detail-empty__icon size-8 opacity-40" aria-hidden />
                 <p className="wms-ops-detail-empty__title text-sm text-slate-500">Bu iş emrine bağlı reçete bileşeni bulunamadı.</p>
               </div>
+            ) : unassignedList.length === 0 ? (
+              <div className="wms-ops-detail-panel p-4 text-sm text-[var(--wms-app-text-muted)]">
+                Tüm reçete bileşenleri atandı. Kaydı tamamlamak için <strong className="text-[var(--wms-brand-primary)]">Atamayı yap</strong> butonunu kullanın.
+              </div>
             ) : (
               <>
               <div className="wms-ops-gr-detail-lines-wrap overflow-x-auto max-sm:hidden">
@@ -842,10 +940,10 @@ function WorkOrderDrawer({
                     <tr>
                       <th className="w-10">
                         <OpsSkinCheckbox
-                          aria-label="Tüm bileşenleri seç"
-                          checked={allSelected}
-                          indeterminate={selectedCount > 0 && !allSelected}
-                          onCheckedChange={toggleAllLines}
+                          aria-label="Tüm atanmamış bileşenleri seç"
+                          checked={allUnassignedSelected}
+                          indeterminate={selectedUnassignedCount > 0 && !allUnassignedSelected}
+                          onCheckedChange={toggleAllUnassigned}
                         />
                       </th>
                       <th>#</th>
@@ -858,84 +956,176 @@ function WorkOrderDrawer({
                     </tr>
                   </thead>
                   <tbody>
-                    {value.materials.map((row, index) => (
-                      <tr
-                        key={`${row.stockCode}-${row.operationNumber}-${index}`}
-                        className={cn(!selectedLines.has(index) && 'opacity-55')}
-                      >
-                        <td>
-                          <OpsSkinCheckbox
-                            aria-label={`${row.stockCode} bileşenini seç`}
-                            checked={selectedLines.has(index)}
-                            onCheckedChange={() => toggleLine(index)}
-                          />
-                        </td>
-                        <td>{index + 1}</td>
-                        <td>
-                          <strong>{row.stockCode}</strong>
-                          <div className="wms-ops-gr-detail-lines-table__muted text-xs text-[var(--wms-app-text-muted)]">{row.stockName}</div>
-                        </td>
-                        <td>{row.unitCode}</td>
-                        <td className="wms-ops-gr-detail-lines-table__num">{formatProjectNumber(row.recipeQuantity)}</td>
-                        <td className="wms-ops-gr-detail-lines-table__num">{formatProjectNumber(row.wasteQuantity)}</td>
-                        <td className="wms-ops-gr-detail-lines-table__num wms-ops-gr-detail-lines-table__accent">
-                          {formatProjectNumber(row.requiredQuantity)}
-                        </td>
-                        <td>
-                          <OpsStatusBadge tone={row.mappingError ? 'danger' : 'done'} title={row.mappingError ?? undefined}>
-                            {row.mappingError ?? 'Hazır'}
-                          </OpsStatusBadge>
-                        </td>
-                      </tr>
-                    ))}
+                    {unassignedList.map((index) => {
+                      const row = value.materials[index];
+                      return (
+                        <tr
+                          key={materialRowKey(row, index)}
+                          className={cn(!selectedUnassigned.has(index) && 'opacity-55')}
+                        >
+                          <td>
+                            <OpsSkinCheckbox
+                              aria-label={`${row.stockCode} bileşenini seç`}
+                              checked={selectedUnassigned.has(index)}
+                              onCheckedChange={() => toggleUnassignedLine(index)}
+                            />
+                          </td>
+                          <td>{index + 1}</td>
+                          <td>
+                            <strong>{row.stockCode}</strong>
+                            <div className="wms-ops-gr-detail-lines-table__muted text-xs text-[var(--wms-app-text-muted)]">{row.stockName}</div>
+                          </td>
+                          <td>{row.unitCode}</td>
+                          <td className="wms-ops-gr-detail-lines-table__num">{formatProjectNumber(row.recipeQuantity)}</td>
+                          <td className="wms-ops-gr-detail-lines-table__num">{formatProjectNumber(row.wasteQuantity)}</td>
+                          <td className="wms-ops-gr-detail-lines-table__num wms-ops-gr-detail-lines-table__accent">
+                            {formatProjectNumber(row.requiredQuantity)}
+                          </td>
+                          <td>
+                            <OpsStatusBadge tone={row.mappingError ? 'danger' : 'done'} title={row.mappingError ?? undefined}>
+                              {row.mappingError ?? 'Hazır'}
+                            </OpsStatusBadge>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
 
               <div className="flex items-center gap-2 text-xs font-semibold text-[var(--wms-app-text-muted)] sm:hidden">
                 <OpsSkinCheckbox
-                  aria-label="Tüm bileşenleri seç"
-                  checked={allSelected}
-                  indeterminate={selectedCount > 0 && !allSelected}
-                  onCheckedChange={toggleAllLines}
+                  aria-label="Tüm atanmamış bileşenleri seç"
+                  checked={allUnassignedSelected}
+                  indeterminate={selectedUnassignedCount > 0 && !allUnassignedSelected}
+                  onCheckedChange={toggleAllUnassigned}
                 />
-                <button type="button" onClick={toggleAllLines}>Tümünü seç</button>
+                <button type="button" onClick={toggleAllUnassigned}>Tümünü seç</button>
               </div>
 
               <div className="space-y-3 sm:hidden">
-                {value.materials.map((row, index) => (
-                  <article
-                    key={`${row.stockCode}-${row.operationNumber}-${index}-card`}
-                    className={cn('wms-ops-detail-panel overflow-hidden', !selectedLines.has(index) && 'opacity-55')}
-                  >
-                    <div className="flex items-start justify-between gap-3 border-b border-[color-mix(in_oklab,var(--wms-ops-accent)_12%,var(--wms-ops-card-border))] px-3 py-2.5">
-                      <div className="flex min-w-0 items-start gap-2">
-                        <OpsSkinCheckbox
-                          aria-label={`${row.stockCode} bileşenini seç`}
-                          className="mt-0.5"
-                          checked={selectedLines.has(index)}
-                          onCheckedChange={() => toggleLine(index)}
-                        />
-                        <div className="min-w-0">
-                          <strong className="block text-sm">{row.stockCode}</strong>
-                          <div className="truncate text-xs text-[var(--wms-app-text-muted)]">{row.stockName}</div>
+                {unassignedList.map((index) => {
+                  const row = value.materials[index];
+                  return (
+                    <article
+                      key={`${materialRowKey(row, index)}-card`}
+                      className={cn('wms-ops-detail-panel overflow-hidden', !selectedUnassigned.has(index) && 'opacity-55')}
+                    >
+                      <div className="flex items-start justify-between gap-3 border-b border-[color-mix(in_oklab,var(--wms-ops-accent)_12%,var(--wms-ops-card-border))] px-3 py-2.5">
+                        <div className="flex min-w-0 items-start gap-2">
+                          <OpsSkinCheckbox
+                            aria-label={`${row.stockCode} bileşenini seç`}
+                            className="mt-0.5"
+                            checked={selectedUnassigned.has(index)}
+                            onCheckedChange={() => toggleUnassignedLine(index)}
+                          />
+                          <div className="min-w-0">
+                            <strong className="block text-sm">{row.stockCode}</strong>
+                            <div className="truncate text-xs text-[var(--wms-app-text-muted)]">{row.stockName}</div>
+                          </div>
                         </div>
+                        <OpsStatusBadge tone={row.mappingError ? 'danger' : 'done'} title={row.mappingError ?? undefined}>
+                          {row.mappingError ? 'Hata' : 'Hazır'}
+                        </OpsStatusBadge>
                       </div>
-                      <OpsStatusBadge tone={row.mappingError ? 'danger' : 'done'} title={row.mappingError ?? undefined}>
-                        {row.mappingError ? 'Hata' : 'Hazır'}
-                      </OpsStatusBadge>
-                    </div>
-                    <dl className="grid grid-cols-2 gap-x-3 gap-y-2 px-3 py-2.5">
-                      <CardStat label="Birim" value={row.unitCode} />
-                      <CardStat label="Reçete" value={formatProjectNumber(row.recipeQuantity)} />
-                      <CardStat label="Fire" value={formatProjectNumber(row.wasteQuantity)} />
-                      <CardStat label="Toplam ihtiyaç" value={formatProjectNumber(row.requiredQuantity)} accent />
-                    </dl>
-                  </article>
-                ))}
+                      <dl className="grid grid-cols-2 gap-x-3 gap-y-2 px-3 py-2.5">
+                        <CardStat label="Birim" value={row.unitCode} />
+                        <CardStat label="Reçete" value={formatProjectNumber(row.recipeQuantity)} />
+                        <CardStat label="Fire" value={formatProjectNumber(row.wasteQuantity)} />
+                        <CardStat label="Toplam ihtiyaç" value={formatProjectNumber(row.requiredQuantity)} accent />
+                      </dl>
+                    </article>
+                  );
+                })}
               </div>
               </>
             )}
+
+            {assigneeGroups.length > 0 ? (
+              <div className="space-y-4 pt-2">
+                <h3 className="wms-ops-detail-section-title !border-0 !p-0">Atanan bileşenler</h3>
+                {assigneeGroups.map((group) => (
+                  <section key={group.assignee.id} className="wms-ops-detail-panel overflow-hidden">
+                    <header className="flex items-center justify-between gap-3 border-b border-[color-mix(in_oklab,var(--wms-ops-accent)_12%,var(--wms-ops-card-border))] px-3 py-2.5 sm:px-4">
+                      <div>
+                        <h4 className="text-sm font-bold text-[var(--wms-brand-primary)]">{userDisplayName(group.assignee)}</h4>
+                        <p className="text-xs text-[var(--wms-app-text-muted)]">{group.lineIndices.length} bileşen · ayrı transfer belgesi oluşturulacak</p>
+                      </div>
+                    </header>
+                    <div className="wms-ops-gr-detail-lines-wrap overflow-x-auto max-sm:hidden">
+                      <table className="wms-ops-gr-detail-lines-table w-full min-w-[820px] text-sm">
+                        <thead>
+                          <tr>
+                            <th>#</th>
+                            <th>Bileşen</th>
+                            <th>Birim</th>
+                            <th className="wms-ops-gr-detail-lines-table__num">Toplam ihtiyaç</th>
+                            <th className="w-12" aria-label="Kaldır" />
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {group.lineIndices.map((index) => {
+                            const row = value.materials[index];
+                            return (
+                              <tr key={`${group.assignee.id}-${materialRowKey(row, index)}`}>
+                                <td>{index + 1}</td>
+                                <td>
+                                  <strong>{row.stockCode}</strong>
+                                  <div className="wms-ops-gr-detail-lines-table__muted text-xs text-[var(--wms-app-text-muted)]">{row.stockName}</div>
+                                </td>
+                                <td>{row.unitCode}</td>
+                                <td className="wms-ops-gr-detail-lines-table__num wms-ops-gr-detail-lines-table__accent">
+                                  {formatProjectNumber(row.requiredQuantity)}
+                                </td>
+                                <td>
+                                  <button
+                                    type="button"
+                                    title="Atamadan kaldır"
+                                    aria-label={`${row.stockCode} bileşenini atamadan kaldır`}
+                                    onClick={() => removeAssignedLine(group.assignee.id, index)}
+                                    className="inline-flex size-8 items-center justify-center rounded-lg text-rose-500 hover:bg-rose-500/10"
+                                  >
+                                    <X className="size-4" aria-hidden />
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="space-y-2 p-3 sm:hidden">
+                      {group.lineIndices.map((index) => {
+                        const row = value.materials[index];
+                        return (
+                          <article
+                            key={`${group.assignee.id}-${materialRowKey(row, index)}-assigned-card`}
+                            className="flex items-start justify-between gap-3 rounded-xl border border-[color-mix(in_oklab,var(--wms-ops-accent)_12%,var(--wms-ops-card-border))] px-3 py-2.5"
+                          >
+                            <div className="min-w-0">
+                              <strong className="block text-sm">{row.stockCode}</strong>
+                              <div className="truncate text-xs text-[var(--wms-app-text-muted)]">{row.stockName}</div>
+                              <div className="mt-1 text-xs font-semibold text-[var(--wms-brand-primary)]">
+                                {formatProjectNumber(row.requiredQuantity)} {row.unitCode}
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              title="Atamadan kaldır"
+                              aria-label={`${row.stockCode} bileşenini atamadan kaldır`}
+                              onClick={() => removeAssignedLine(group.assignee.id, index)}
+                              className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg text-rose-500 hover:bg-rose-500/10"
+                            >
+                              <X className="size-4" aria-hidden />
+                            </button>
+                          </article>
+                        );
+                      })}
+                    </div>
+                  </section>
+                ))}
+              </div>
+            ) : null}
           </section>
         </div>
 
@@ -946,12 +1136,13 @@ function WorkOrderDrawer({
           <OpsActionButton
             variant="primary"
             className={MODAL_CTA_CLASS}
-            disabled={blocked || !canCreateTransfer || !assignee || selectedCount === 0}
+            disabled={blocked || !canCreateTransfer || unassignedLines.size > 0 || assigneeGroups.length === 0}
             loading={completingTransfer}
-            onClick={() => void completeDirectTransfer()}
+            onClick={() => void completeAssignments()}
           >
             <CheckCircle2 className="size-4 max-sm:size-3.5" aria-hidden />
-            Doğrudan transferi tamamla
+            Atamayı yap
+            {assigneeGroups.length > 1 ? ` (${assigneeGroups.length} belge)` : null}
           </OpsActionButton>
         </footer>
       </DialogContent>
