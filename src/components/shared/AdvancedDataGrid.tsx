@@ -144,6 +144,8 @@ interface Props<T extends { id: number }> {
   hideSearch?: boolean;
   /** Toolbar altına ek satır (ör. durum dropdown filtreleri). */
   toolbarBelowExtra?: ReactNode;
+  /** Sayfa başlığı ile toolbar arasına eklenen içerik (ör. yaşam döngüsü sekmeleri). */
+  aboveToolbarExtra?: ReactNode;
   /** Mutation sonrasında sunucu verisini yeniden okumak için artırılan sürüm anahtarı. */
   refreshKey?: string | number;
   /** true: sayfa başlığı/eyebrow gizlenir; sadece arama+tablo kartı kalır. */
@@ -455,6 +457,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
   toolbarAfterRefreshExtra,
   hideSearch = false,
   toolbarBelowExtra,
+  aboveToolbarExtra,
   refreshKey = 0,
   compactShell = false,
   onRowDoubleClick,
@@ -1050,6 +1053,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
       ) : undefined}
     >
       <div className="wms-ops-data-grid min-w-0 space-y-0">
+      {aboveToolbarExtra}
       <div className="wms-ops-data-grid-toolbar flex flex-wrap items-start justify-between gap-2">
         <div className="wms-ops-data-grid-toolbar__start flex min-w-0 flex-wrap items-start gap-2">
           {toolbarStartExtra}

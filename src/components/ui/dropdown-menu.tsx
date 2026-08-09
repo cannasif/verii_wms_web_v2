@@ -40,10 +40,16 @@ function DropdownMenuContent({
   container,
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Content> & {
+  /** `null` = document.body (dialog üstünde kalması için). */
   container?: HTMLElement | null
 }) {
+  const portalContainer =
+    container === null
+      ? undefined
+      : (container ?? getWorkspacePortalRoot() ?? undefined)
+
   return (
-    <DropdownMenuPrimitive.Portal container={container ?? getWorkspacePortalRoot() ?? undefined}>
+    <DropdownMenuPrimitive.Portal container={portalContainer}>
       <DropdownMenuPrimitive.Content
         data-slot="dropdown-menu-content"
         sideOffset={sideOffset}

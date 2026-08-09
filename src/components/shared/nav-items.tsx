@@ -93,7 +93,7 @@ export const WMS_NAV_ITEMS: NavItem[] = [
   ] },
   { title: 'sidebar.kkd', titleFallback: 'KKD', icon: kkdIcon, children: [
     { title: 'sidebar.kkdOverview', titleFallback: 'KKD Süreç Merkezi', href: '/warehouse/kkd', searchAliases: ['kkd', 'iş güvenliği', 'koruyucu donanım'], requiredPermission: 'WMS.KKD.DEFINITIONS.VIEW' },
-    { title: 'sidebar.kkdDefinitions', titleFallback: 'Tanımlar ve Hak Matrisi', href: '/warehouse/kkd/definitions', searchAliases: ['kkd', 'departman', 'rol', 'personel', 'hak'], requiredPermission: 'WMS.KKD.DEFINITIONS.VIEW' },
+    { title: 'sidebar.kkdDefinitions', titleFallback: 'Tanımlar', href: '/warehouse/kkd/definitions', searchAliases: ['kkd', 'departman', 'rol', 'personel', 'hak', 'matris'], requiredPermission: 'WMS.KKD.DEFINITIONS.VIEW' },
     { title: 'sidebar.kkdEntitlement', titleFallback: 'Hak Sorgulama', href: '/warehouse/kkd/entitlement', searchAliases: ['kkd', 'hak', 'kontrol'], requiredPermission: 'WMS.KKD.ENTITLEMENT.CHECK' },
     { title: 'sidebar.kkdRequests', titleFallback: 'Açık KKD Talepleri', href: '/warehouse/kkd/requests', searchAliases: ['kkd', 'açık talep', 'hazırlama', 'beden', 'stok seçimi'], requiredPermission: 'WMS.KKD.REQUESTS.VIEW' },
     { title: 'sidebar.kkdDistributionNew', titleFallback: 'KKD Malzeme Talep Siparişleri', href: '/warehouse/kkd/distributions/new', searchAliases: ['kkd', 'teslim', 'personel', 'sipariş', 'malzeme', 'talep', 'windbox'], requiredPermission: 'WMS.KKD.DISTRIBUTION.OPERATE' },

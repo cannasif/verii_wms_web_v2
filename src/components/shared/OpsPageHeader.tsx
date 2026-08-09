@@ -71,8 +71,8 @@ export function OpsPageHeader({
           ) : null}
         </div>
         {subRow ? (
-          <div className="wms-ops-card-toolbar flex flex-wrap items-center justify-end gap-3 border-t border-[var(--wms-ops-card-border)] px-4 py-2.5 sm:px-6">
-            {subRow}
+          <div className="wms-ops-card-toolbar border-t border-[var(--wms-ops-card-border)] px-3 py-2.5 sm:px-4">
+            <div className="w-full min-w-0">{subRow}</div>
           </div>
         ) : null}
       </div>

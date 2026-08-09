@@ -545,6 +545,8 @@ export function PagedLookupDialog<T>({
                       id={`paged-lookup-option-${key}`}
                       type="button"
                       role="option"
+                      title={label}
+                      aria-label={label}
                       aria-selected={active || highlighted}
                       className={cn(
                         'flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm outline-none transition-colors',
@@ -708,10 +710,14 @@ export function PagedLookupDialog<T>({
                       {emptyText ?? t('common.noResults')}
                     </div>
                   ) : (
-                    items.map((item) => (
+                    items.map((item) => {
+                      const label = getLabel(item);
+                      return (
                       <button
                         key={getKey(item)}
                         type="button"
+                        title={label}
+                        aria-label={label}
                         className={cn(
                           'flex w-full items-center px-3 py-2.5 text-left text-sm transition',
                           isOps
@@ -723,10 +729,11 @@ export function PagedLookupDialog<T>({
                         }}
                       >
                         <span className={isOps ? 'wms-ops-lookup-item__label' : 'font-medium text-slate-900 dark:text-white'}>
-                          {getLabel(item)}
+                          {label}
                         </span>
                       </button>
-                    ))
+                      );
+                    })
                   )}
                 </>
               )}
