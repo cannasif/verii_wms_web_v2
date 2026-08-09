@@ -145,6 +145,14 @@
     "steelVehicles": "Steel vehicle entries and sheet acceptances",
     "transfers": "Transfer documents"
   },
+  "entityResolution": {
+    "title": "Did you mean one of these?",
+    "stock": "Item",
+    "customer": "Customer",
+    "codeMatch": "Code match",
+    "nameMatch": "Name match",
+    "choose": "Choose this record and run the question again"
+  },
   "steelVehicles": {
     "declared": "Declared",
     "accepted": "Accepted",

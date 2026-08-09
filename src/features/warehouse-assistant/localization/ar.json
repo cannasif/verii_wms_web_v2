@@ -145,6 +145,14 @@
     "steelVehicles": "دخول مركبات الصاج وقبول الصفائح",
     "transfers": "مستندات التحويل"
   },
+  "entityResolution": {
+    "title": "هل تقصد أحد هذه السجلات؟",
+    "stock": "صنف",
+    "customer": "عميل",
+    "codeMatch": "تشابه الرمز",
+    "nameMatch": "تشابه الاسم",
+    "choose": "اختر هذا السجل وأعد تنفيذ السؤال"
+  },
   "steelVehicles": {
     "declared": "مصرح بها",
     "accepted": "مقبولة",

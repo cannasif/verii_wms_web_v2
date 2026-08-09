@@ -355,12 +355,39 @@ function AssistantResult({ result, question, language, t, settingsT, onSuggestio
   const parameterGuides = result.parameterGuides ?? [];
   const steelVehicles = result.steelVehicles ?? [];
   const transfers = result.transfers ?? [];
+  const entityCandidates = result.entityCandidates ?? [];
   const exportableCount = result.activities.length + result.serialBalances.length + result.serialReceipts.length + result.stockLocations.length + result.movements.length + result.tasks.length + goodsReceipts.length + steelVehicles.length + transfers.length + (result.barcode ? 1 : 0);
   const hasData = exportableCount + parameterGuides.length > 0;
-  if (!hasData && result.suggestions.length === 0) return null;
+  if (!hasData && entityCandidates.length === 0 && result.suggestions.length === 0) return null;
   return (
     <div className="mt-3 space-y-3 border-t border-slate-200 pt-3 dark:border-white/10">
       {exportableCount > 0 ? <div className="flex justify-end"><WarehouseAssistantExportMenu result={result} question={question} language={language} t={t} /></div> : null}
+      {entityCandidates.length > 0 ? (
+        <ResultSection icon={<CircleAlert className="size-4" />} title={t('entityResolution.title')}>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {entityCandidates.map((candidate) => (
+              <button
+                key={`${candidate.entityType}-${candidate.entityId ?? candidate.code}`}
+                type="button"
+                onClick={() => onSuggestion(candidate.selectionMessage)}
+                className="group rounded-2xl border border-amber-300/70 bg-amber-50/80 p-3.5 text-left transition hover:-translate-y-0.5 hover:border-cyan-500 hover:bg-cyan-50 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 dark:border-amber-400/25 dark:bg-amber-400/5 dark:hover:border-cyan-400 dark:hover:bg-cyan-400/10"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <span className="rounded-full bg-slate-900 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-white dark:bg-white dark:text-slate-950">
+                    {t(`entityResolution.${candidate.entityType}`)}
+                  </span>
+                  <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                    {t(`entityResolution.${candidate.matchedBy}Match`)}
+                  </span>
+                </div>
+                <p className="mt-3 break-all text-sm font-black text-slate-950 dark:text-white">{candidate.code}</p>
+                <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-600 dark:text-slate-300">{candidate.name}</p>
+                <p className="mt-3 text-xs font-extrabold text-cyan-700 group-hover:text-cyan-800 dark:text-cyan-300">{t('entityResolution.choose')}</p>
+              </button>
+            ))}
+          </div>
+        </ResultSection>
+      ) : null}
       {result.activities.length > 0 ? (
         <ResultSection icon={<UserRoundSearch className="size-4" />} title={t('results.activities')}>
           {result.activities.map((row) => <ResultCard key={row.id} title={row.description} meta={`${row.userDisplayName} · ${formatDate(row.occurredAtUtc, language)}`} detail={`${row.entityType} #${row.entityId}`} />)}

@@ -145,6 +145,14 @@
     "steelVehicles": "Fahrzeugeinfahrten und Blechannahmen",
     "transfers": "Transferbelege"
   },
+  "entityResolution": {
+    "title": "Meinten Sie einen dieser Einträge?",
+    "stock": "Artikel",
+    "customer": "Kunde",
+    "codeMatch": "Code-Ähnlichkeit",
+    "nameMatch": "Namensähnlichkeit",
+    "choose": "Diesen Datensatz wählen und die Frage erneut ausführen"
+  },
   "steelVehicles": {
     "declared": "Gemeldet",
     "accepted": "Angenommen",

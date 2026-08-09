@@ -145,6 +145,14 @@
     "steelVehicles": "Entradas de vehículos de acero y aceptación de chapas",
     "transfers": "Documentos de transferencia"
   },
+  "entityResolution": {
+    "title": "¿Quiso decir uno de estos registros?",
+    "stock": "Artículo",
+    "customer": "Cliente",
+    "codeMatch": "Código similar",
+    "nameMatch": "Nombre similar",
+    "choose": "Elegir este registro y volver a ejecutar la pregunta"
+  },
   "steelVehicles": {
     "declared": "Declaradas",
     "accepted": "Aceptadas",

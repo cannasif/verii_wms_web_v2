@@ -145,6 +145,14 @@
     "steelVehicles": "Ingressi veicoli acciaio e accettazioni lamiere",
     "transfers": "Documenti di trasferimento"
   },
+  "entityResolution": {
+    "title": "Intendevi uno di questi record?",
+    "stock": "Articolo",
+    "customer": "Cliente",
+    "codeMatch": "Codice simile",
+    "nameMatch": "Nome simile",
+    "choose": "Scegli questo record ed esegui di nuovo la domanda"
+  },
   "steelVehicles": {
     "declared": "Dichiarate",
     "accepted": "Accettate",

@@ -253,6 +253,16 @@ export interface WarehouseAssistantTransferRow {
   completedAtUtc?: string | null;
 }
 
+export interface WarehouseAssistantEntityCandidateRow {
+  entityType: 'stock' | 'customer';
+  entityId?: number | null;
+  code: string;
+  name: string;
+  matchedBy: 'code' | 'name';
+  matchScore: number;
+  selectionMessage: string;
+}
+
 export interface WarehouseAssistantChatResponse {
   conversationId: number;
   messageId: number;
@@ -271,5 +281,6 @@ export interface WarehouseAssistantChatResponse {
   parameterGuides?: WarehouseAssistantParameterGuideRow[];
   steelVehicles?: WarehouseAssistantSteelVehicleRow[];
   transfers?: WarehouseAssistantTransferRow[];
+  entityCandidates?: WarehouseAssistantEntityCandidateRow[];
   suggestions: string[];
 }

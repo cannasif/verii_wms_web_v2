@@ -147,6 +147,14 @@
     "steelVehicles": "Sac araç girişleri ve levha kabulleri",
     "transfers": "Transfer belgeleri"
   },
+  "entityResolution": {
+    "title": "Bunu mu demek istediniz?",
+    "stock": "Stok",
+    "customer": "Cari",
+    "codeMatch": "Kod benzerliği",
+    "nameMatch": "Ad benzerliği",
+    "choose": "Bu kaydı seç ve soruyu yeniden çalıştır"
+  },
   "steelVehicles": {
     "declared": "Beyan",
     "accepted": "Kabul",

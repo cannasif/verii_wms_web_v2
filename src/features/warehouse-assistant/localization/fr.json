@@ -147,6 +147,14 @@
     "steelVehicles": "Entrées de véhicules acier et acceptations de tôles",
     "transfers": "Documents de transfert"
   },
+  "entityResolution": {
+    "title": "Vouliez-vous dire l’un de ces éléments ?",
+    "stock": "Article",
+    "customer": "Client",
+    "codeMatch": "Code similaire",
+    "nameMatch": "Nom similaire",
+    "choose": "Choisir cette fiche et relancer la question"
+  },
   "steelVehicles": {
     "declared": "Déclarées",
     "accepted": "Acceptées",
