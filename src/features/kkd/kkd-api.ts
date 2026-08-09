@@ -9,7 +9,14 @@ const unwrap = <T,>(response: Envelope<T>): T => {
   return response.data;
 };
 
-export type KkdLookup = { id: number; code: string; name: string; isActive: boolean };
+export type KkdLookup = {
+  id: number;
+  code: string;
+  name: string;
+  isActive: boolean;
+  departmentId?: number;
+  departmentName?: string;
+};
 export type KkdCustomerLookup = { id: number; code: string; name: string };
 export type KkdStockLookup = { id: number; code: string; name: string; unitCode: string; groupCode?: string | null };
 export type KkdStockBulkResolve = { requestedCode: string; id?: number | null; code?: string | null; name?: string | null; unitCode?: string | null; groupCode?: string | null; isFound: boolean };
@@ -125,13 +132,52 @@ export type KkdPaged<T> = {
   hasPreviousPage: boolean; hasNextPage: boolean;
 };
 
+export type KkdRequestBoardTab = 'all' | 'pending' | 'preparing' | 'completed' | 'cancelled' | 'mine';
+
+export type KkdRequestTabCounts = {
+  pending: number; preparing: number; completed: number; cancelled: number; mine: number;
+};
+
 export type KkdRequestRow = {
   id: number; requestNo: string; status: string; priority: string; sourceType: string;
   employeeId: number; employeeCode: string; employeeName: string; departmentName: string; roleName: string;
-  warehouseId?: number | null; assignedUserId?: number | null; externalRequestNo?: string | null;
+  warehouseId?: number | null; assignedUserId?: number | null; assignedUserName?: string | null;
+  externalRequestNo?: string | null;
   totalLineCount: number; unresolvedLineCount: number; requestedQuantity: number;
   allocatedQuantity: number; deliveredQuantity: number; requestedAtUtc: string; neededAtUtc?: string | null;
+  linkedDistributionId?: number | null; linkedDistributionStatus?: string | null;
+  linkedDistributionFailureReason?: string | null;
+  warehouseOutboundId?: number | null; rowVersion: string;
+  activeTaskCount: number; unassignedLineCount: number; myActiveTaskId?: number | null;
+  activeAssigneeNames: string[];
+  /** Depo havuzuna bırakılmış (kişiye atanmamış), henüz kimsenin üzerine almadığı aktif bir görev var mı. */
+  hasPoolTask: boolean;
+  poolTaskId?: number | null;
   createdBy?: number | null; createdDate?: string | null; updatedBy?: number | null; updatedDate?: string | null;
+};
+
+export type KkdPreparationTaskLineRow = {
+  id: number; requestLineId: number; lineNo: number; groupCode: string; groupName?: string | null;
+  stockId?: number | null; stockCode?: string | null; stockName?: string | null; unitCode: string;
+  quantity: number; preparedQuantity: number; deliveredQuantity: number; lineStatus: string;
+  requestLineRowVersion: string;
+};
+
+export type KkdPreparationTaskRow = {
+  id: number; taskNo: string; requestId: number; requestNo: string; status: string;
+  /** null ise görev kişiye değil depo havuzuna bırakılmıştır. */
+  assignedUserId: number | null; assignedUserName: string | null; warehouseId: number;
+  previousTaskId?: number | null; previousTaskNo?: string | null;
+  originUserId?: number | null; originUserName?: string | null;
+  distributionId?: number | null; warehouseOutboundId?: number | null;
+  assignedAtUtc: string; startedAtUtc?: string | null; completedAtUtc?: string | null;
+  closureReason?: string | null; rowVersion: string;
+  lines: KkdPreparationTaskLineRow[];
+};
+
+export type KkdRequestCancelPrecheck = {
+  canCancel: boolean; blockers: string[];
+  activeDistributionId?: number | null; activeWarehouseOutboundId?: number | null;
 };
 
 export type KkdRequestLine = {
@@ -220,12 +266,14 @@ export const kkdApi = {
     unwrap(await api.get<Envelope<KkdDistributionContext>>(`/api/kkd/material-requests/context/${employeeId}`)),
   materialRequestOrderLines: async (employeeId: number, orderNumbers: string[]) =>
     unwrap(await api.get<Envelope<KkdOpenOrderLine[]>>(`/api/kkd/material-requests/context/${employeeId}/lines`, { params: { orderNumbersCsv: orderNumbers.join(',') } })),
-  requestsPaged: async (request: GridRequest): Promise<GridPage<KkdRequestRow>> =>
+  requestsPaged: async (request: GridRequest, tab: KkdRequestBoardTab = 'all'): Promise<GridPage<KkdRequestRow>> =>
     unwrap(await api.post<Envelope<GridPage<KkdRequestRow>>>('/api/kkd/requests/paged', {
       ...request,
       sortBy: request.sortBy || 'requestedAtUtc',
       sortDirection: request.sortDirection || 'desc',
-    })),
+    }, { params: { tab } })),
+  requestTabCounts: async () =>
+    unwrap(await api.get<Envelope<KkdRequestTabCounts>>('/api/kkd/requests/tab-counts')),
   requestDetail: async (id: number) =>
     unwrap(await api.get<Envelope<KkdRequestDetail>>(`/api/kkd/requests/${id}`)),
   createRequest: async (payload: KkdRequestCreatePayload) =>
@@ -236,6 +284,36 @@ export const kkdApi = {
     })),
   assignRequest: async (id: number, payload: { warehouseId: number | null; assignedUserId: number | null; expectedRowVersion?: string | null }) =>
     unwrap(await api.put<Envelope<KkdRequestDetail>>(`/api/kkd/requests/${id}/assignment`, payload)),
+  requestPreparationTasks: async (requestId: number) =>
+    unwrap(await api.get<Envelope<KkdPreparationTaskRow[]>>(`/api/kkd/requests/${requestId}/preparation-tasks`)),
+  assignPreparationTasks: async (requestId: number, payload: {
+    warehouseId: number;
+    /** assignedUserId null olan grup depo havuzuna bırakılır (kişiye özel değil). */
+    groups: Array<{ assignedUserId: number | null; lineIds: number[] }>;
+    expectedRowVersion?: string | null;
+  }) =>
+    unwrap(await api.post<Envelope<KkdPreparationTaskRow[]>>(`/api/kkd/requests/${requestId}/preparation-tasks`, {
+      ...payload, idempotencyKey: crypto.randomUUID(),
+    })),
+  claimRequest: async (requestId: number, payload: { warehouseId: number; expectedRowVersion?: string | null }) =>
+    unwrap(await api.post<Envelope<KkdPreparationTaskRow>>(`/api/kkd/requests/${requestId}/claim`, {
+      ...payload, idempotencyKey: crypto.randomUUID(),
+    })),
+  /** Depo havuzundaki (sahipsiz) bir görevi aktörün üzerine alması. */
+  claimPreparationTask: async (taskId: number, payload: { expectedRowVersion?: string | null }) =>
+    unwrap(await api.post<Envelope<KkdPreparationTaskRow>>(`/api/kkd/preparation-tasks/${taskId}/claim`, {
+      ...payload, idempotencyKey: crypto.randomUUID(),
+    })),
+  handoffPreparationTask: async (taskId: number, payload: { toUserId: number; reason: string; expectedRowVersion?: string | null }) =>
+    unwrap(await api.post<Envelope<KkdPreparationTaskRow>>(`/api/kkd/preparation-tasks/${taskId}/handoff`, {
+      ...payload, idempotencyKey: crypto.randomUUID(),
+    })),
+  returnPreparationTask: async (taskId: number, payload: { reason: string; expectedRowVersion?: string | null }) =>
+    unwrap(await api.post<Envelope<null>>(`/api/kkd/preparation-tasks/${taskId}/return`, {
+      ...payload, idempotencyKey: crypto.randomUUID(),
+    })),
+  requestCancelPrecheck: async (id: number) =>
+    unwrap(await api.get<Envelope<KkdRequestCancelPrecheck>>(`/api/kkd/requests/${id}/cancel-precheck`)),
   cancelRequest: async (id: number, reason: string, expectedRowVersion: string) =>
     unwrap(await api.post<Envelope<KkdRequestDetail>>(`/api/kkd/requests/${id}/cancel`, {
       idempotencyKey: crypto.randomUUID(), reason, expectedRowVersion,

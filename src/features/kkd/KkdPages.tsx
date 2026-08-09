@@ -10,14 +10,17 @@ import {
   Gauge,
   Grid3X3,
   PackageCheck,
+  Pencil,
+  Plus,
+  Power,
   Printer,
   RefreshCw,
   Save,
   ScrollText,
+  Search,
   Settings2,
   ShieldAlert,
   ShieldCheck,
-  Sparkles,
   Users,
   Warehouse,
   X,
@@ -37,6 +40,7 @@ import { PagedLookupDialog } from '@/components/shared/PagedLookupDialog';
 import { ParameterPageGuide, ParameterToggleCard } from '@/components/shared/ParameterGuidance';
 import { ResponsiveDialog } from '@/components/shared/ResponsiveDialog';
 import { OPS_SELECT_TRIGGER_CLASS } from '@/components/shared/ops-field-styles';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { DropdownPage } from '@/hooks/useDropdownInfiniteSearch';
 import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
 import { stockMovementsApi } from '@/features/stock-movements/api/stock-movements.api';
@@ -417,6 +421,7 @@ export function KkdPolicyPage(): ReactElement {
 }
 
 type DefinitionTab = 'department' | 'role' | 'employee' | 'matrix' | 'override';
+type DefinitionStatusFilter = 'all' | 'active' | 'inactive';
 
 const DEFINITION_TABS: Array<[DefinitionTab, string]> = [
   ['department', 'Departman'],
@@ -426,9 +431,33 @@ const DEFINITION_TABS: Array<[DefinitionTab, string]> = [
   ['override', 'Personel ek hakları'],
 ];
 
+const emptyDefinitionForm = (): Record<string, string> => ({
+  isActive: 'true',
+  employmentStartDate: new Date().toLocaleDateString('en-CA'),
+  initialQuantity: '1',
+  recurringQuantity: '1',
+  recurringInterval: '1',
+});
+
+const splitFullName = (fullName: string): { firstName: string; lastName: string } => {
+  const parts = fullName.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return { firstName: '', lastName: '' };
+  if (parts.length === 1) return { firstName: parts[0], lastName: '' };
+  return { firstName: parts[0], lastName: parts.slice(1).join(' ') };
+};
+
 export function KkdDefinitionsPage(): ReactElement {
   const qc = useQueryClient();
   const [tab, setTab] = useState<DefinitionTab>('department');
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [listSearch, setListSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<DefinitionStatusFilter>('all');
+  const [statusConfirm, setStatusConfirm] = useState<{
+    id: number;
+    code: string;
+    name: string;
+    active: boolean;
+  } | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, boolean>>({});
   const [departmentLookupOpen, setDepartmentLookupOpen] = useState(false);
   const [roleLookupOpen, setRoleLookupOpen] = useState(false);
@@ -436,13 +465,10 @@ export function KkdDefinitionsPage(): ReactElement {
   const roles = useQuery({ queryKey: ['kkd', 'roles'], queryFn: () => kkdApi.roles() });
   const employees = useQuery({ queryKey: ['kkd', 'employees'], queryFn: kkdApi.employees });
   const matrices = useQuery({ queryKey: ['kkd', 'matrices'], queryFn: kkdApi.matrices });
-  const [form, setForm] = useState<Record<string, string>>({
-    isActive: 'true',
-    employmentStartDate: new Date().toLocaleDateString('en-CA'),
-    initialQuantity: '1',
-    recurringQuantity: '1',
-    recurringInterval: '1',
-  });
+  const [form, setForm] = useState<Record<string, string>>(emptyDefinitionForm);
+  const isEditing = editingId != null;
+  const formActive = form.isActive !== 'false';
+
   const clearError = (key: string): void =>
     setFieldErrors((current) => (current[key] ? { ...current, [key]: false } : current));
   const change = (key: string, value: string): void => {
@@ -457,6 +483,12 @@ export function KkdDefinitionsPage(): ReactElement {
     }));
     clearError('departmentId');
     if (tab === 'employee') clearError('roleId');
+  };
+
+  const resetForm = (): void => {
+    setEditingId(null);
+    setFieldErrors({});
+    setForm(emptyDefinitionForm());
   };
 
   const departmentRoles = useQuery({
@@ -478,103 +510,88 @@ export function KkdDefinitionsPage(): ReactElement {
     mutationFn: async () => {
       // Ops seçim bileşenleri native `required` doğrulaması yapmadığından zorunlu
       // ilişkiler burada kontrol edilir; aksi halde sunucuya 0 id gönderilir.
-      if (tab !== 'department' && !n(form.departmentId)) throw new Error('Departman seçilmelidir.');
-      if ((tab === 'employee' || tab === 'matrix') && !n(form.roleId)) throw new Error('Rol seçilmelidir.');
-      if ((tab === 'employee' || tab === 'matrix') && !n(form.customerId)) throw new Error('Entegre cari seçilmelidir.');
-      if (tab === 'matrix' && !form.groupCode) throw new Error('Stok grubu seçilmelidir.');
-      if (tab === 'department') return kkdApi.saveDepartment({ code: form.code, name: form.name, isActive: true });
-      if (tab === 'role') return kkdApi.saveRole({ departmentId: n(form.departmentId), code: form.code, name: form.name, isActive: true });
-      if (tab === 'employee') {
-        return kkdApi.saveEmployee({
-          customerId: n(form.customerId),
-          userId: n(form.userId) || null,
-          employeeCode: form.code,
-          firstName: form.firstName,
-          lastName: form.lastName,
-          departmentId: n(form.departmentId),
-          roleId: n(form.roleId),
-          qrCode: form.qrCode,
-          employmentStartDate: form.employmentStartDate,
-          isActive: true,
+      if (tab === 'role' && !isEditing && !n(form.departmentId)) throw new Error('Departman seçilmelidir.');
+      if (tab === 'employee' && !n(form.departmentId)) throw new Error('Departman seçilmelidir.');
+      if (tab === 'employee' && !n(form.roleId)) throw new Error('Rol seçilmelidir.');
+      if (tab === 'employee' && !n(form.customerId)) throw new Error('Entegre cari seçilmelidir.');
+      if (tab === 'department') {
+        return kkdApi.saveDepartment({
+          code: form.code.trim(),
+          name: form.name.trim(),
+          isActive: formActive,
         });
       }
-      return kkdApi.saveMatrix({
+      if (tab === 'role') {
+        return kkdApi.saveRole({
+          ...(n(form.departmentId) ? { departmentId: n(form.departmentId) } : {}),
+          code: form.code.trim(),
+          name: form.name.trim(),
+          isActive: formActive,
+        });
+      }
+      return kkdApi.saveEmployee({
         customerId: n(form.customerId),
+        userId: n(form.userId) || null,
+        employeeCode: form.code.trim(),
+        firstName: form.firstName.trim(),
+        lastName: form.lastName.trim(),
         departmentId: n(form.departmentId),
         roleId: n(form.roleId),
-        code: form.code,
-        name: form.name,
-        effectiveFrom: form.effectiveFrom || null,
-        effectiveTo: form.effectiveTo || null,
-        isActive: true,
-        description: form.description || null,
-        rules: [
-          {
-            groupCode: form.groupCode,
-            groupName: form.groupName || null,
-            stockId: n(form.stockId) || null,
-            standardCode: form.standardCode || null,
-            standardName: null,
-            annualIssueCount: n(form.annualIssueCount) || null,
-            annualQuantity: n(form.annualQuantity) || null,
-            maxCarryQuantity: n(form.maxCarryQuantity) || null,
-            allowBulkIssue: form.allowBulkIssue === 'true',
-            isMandatory: form.isMandatory === 'true',
-            sortOrder: 1,
-            isActive: true,
-            description: null,
-            phases: [
-              {
-                phaseType: 'Initial',
-                offsetMonths: 0,
-                quantity: n(form.initialQuantity),
-                allowBulkIssue: form.allowBulkIssue === 'true',
-                frequencyDays: n(form.frequencyDays) || null,
-                quantityPerFrequency: n(form.frequencyQuantity) || null,
-                periodType: null,
-                periodInterval: null,
-                sortOrder: 1,
-                isActive: true,
-              },
-              {
-                phaseType: 'AfterMonths',
-                offsetMonths: n(form.afterMonths) || 3,
-                quantity: n(form.afterQuantity) || 0,
-                allowBulkIssue: form.allowBulkIssue === 'true',
-                frequencyDays: null,
-                quantityPerFrequency: null,
-                periodType: null,
-                periodInterval: null,
-                sortOrder: 2,
-                isActive: n(form.afterQuantity) > 0,
-              },
-              {
-                phaseType: 'Recurring',
-                offsetMonths: 0,
-                quantity: n(form.recurringQuantity),
-                allowBulkIssue: form.allowBulkIssue === 'true',
-                frequencyDays: n(form.frequencyDays) || null,
-                quantityPerFrequency: n(form.frequencyQuantity) || null,
-                periodType: form.periodType || 'Year',
-                periodInterval: n(form.recurringInterval) || 1,
-                sortOrder: 3,
-                isActive: true,
-              },
-            ],
-          },
-        ],
+        qrCode: form.qrCode.trim(),
+        employmentStartDate: form.employmentStartDate,
+        isActive: formActive,
       });
     },
     onSuccess: async () => {
-      toast.success('KKD tanımı kaydedildi.');
-      setFieldErrors({});
-      setForm({
-        isActive: 'true',
-        employmentStartDate: new Date().toLocaleDateString('en-CA'),
-        initialQuantity: '1',
-        recurringQuantity: '1',
-        recurringInterval: '1',
+      toast.success(isEditing ? 'KKD tanımı güncellendi.' : 'KKD tanımı kaydedildi.');
+      resetForm();
+      await qc.invalidateQueries({ queryKey: ['kkd'] });
+    },
+    onError: (error) => toast.error(message(error)),
+  });
+
+  const toggleActive = useMutation({
+    mutationFn: async (row: { id: number; code: string; name: string; active: boolean }) => {
+      const nextActive = !row.active;
+      if (tab === 'department') {
+        const department = departments.data?.find((item) => item.id === row.id);
+        if (!department) throw new Error('Departman kaydı bulunamadı.');
+        return kkdApi.saveDepartment({
+          code: department.code,
+          name: department.name,
+          isActive: nextActive,
+        });
+      }
+      if (tab === 'role') {
+        const role = roles.data?.find((item) => item.id === row.id);
+        if (!role) throw new Error('Rol kaydı bulunamadı.');
+        return kkdApi.saveRole({
+          ...(role.departmentId ? { departmentId: role.departmentId } : {}),
+          code: role.code,
+          name: role.name,
+          isActive: nextActive,
+        });
+      }
+      const employee = employees.data?.find((item) => item.id === row.id);
+      if (!employee) throw new Error('Personel kaydı bulunamadı.');
+      const names = splitFullName(employee.fullName);
+      return kkdApi.saveEmployee({
+        customerId: employee.customerId,
+        userId: null,
+        employeeCode: employee.employeeCode,
+        firstName: names.firstName,
+        lastName: names.lastName,
+        departmentId: employee.departmentId,
+        roleId: employee.roleId,
+        qrCode: employee.qrCode,
+        employmentStartDate: employee.employmentStartDate,
+        isActive: nextActive,
       });
+    },
+    onSuccess: async (_data, row) => {
+      toast.success(row.active ? 'Tanım pasife alındı.' : 'Tanım aktifleştirildi.');
+      setStatusConfirm(null);
+      if (editingId === row.id) resetForm();
       await qc.invalidateQueries({ queryKey: ['kkd'] });
     },
     onError: (error) => toast.error(message(error)),
@@ -582,7 +599,8 @@ export function KkdDefinitionsPage(): ReactElement {
 
   const validateForm = (): boolean => {
     const next: Record<string, boolean> = {};
-    if (tab !== 'department' && !n(form.departmentId)) next.departmentId = true;
+    if (tab === 'role' && !isEditing && !n(form.departmentId)) next.departmentId = true;
+    if (tab === 'employee' && !n(form.departmentId)) next.departmentId = true;
     if (tab === 'employee' && !n(form.roleId)) next.roleId = true;
     if (tab === 'employee' && !n(form.customerId)) next.customerId = true;
     if (!form.code?.trim()) next.code = true;
@@ -623,37 +641,118 @@ export function KkdDefinitionsPage(): ReactElement {
 
   const switchTab = (key: DefinitionTab): void => {
     setTab(key);
-    setFieldErrors({});
+    setListSearch('');
+    setStatusFilter('all');
+    setStatusConfirm(null);
+    resetForm();
   };
 
-  const listRows = rows(tab, {
-    departments: departments.data,
-    roles: roles.data,
-    employees: employees.data,
-    matrices: matrices.data,
-  });
+  const beginEdit = (id: number): void => {
+    setFieldErrors({});
+    if (tab === 'department') {
+      const item = departments.data?.find((row) => row.id === id);
+      if (!item) return;
+      setEditingId(id);
+      setForm({
+        ...emptyDefinitionForm(),
+        code: item.code,
+        name: item.name,
+        isActive: item.isActive ? 'true' : 'false',
+      });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    if (tab === 'role') {
+      const item = roles.data?.find((row) => row.id === id);
+      if (!item) return;
+      setEditingId(id);
+      setForm({
+        ...emptyDefinitionForm(),
+        code: item.code,
+        name: item.name,
+        departmentId: item.departmentId ? String(item.departmentId) : '',
+        isActive: item.isActive ? 'true' : 'false',
+      });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    const item = employees.data?.find((row) => row.id === id);
+    if (!item) return;
+    const names = splitFullName(item.fullName);
+    setEditingId(id);
+    setForm({
+      ...emptyDefinitionForm(),
+      code: item.employeeCode,
+      firstName: names.firstName,
+      lastName: names.lastName,
+      customerId: String(item.customerId),
+      customerLabel: `Cari #${item.customerId}`,
+      departmentId: String(item.departmentId),
+      roleId: String(item.roleId),
+      qrCode: item.qrCode,
+      employmentStartDate: item.employmentStartDate?.slice(0, 10) || new Date().toLocaleDateString('en-CA'),
+      isActive: item.isActive ? 'true' : 'false',
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const listRows = useMemo(
+    () =>
+      rows(tab, {
+        departments: departments.data,
+        roles: roles.data,
+        employees: employees.data,
+        matrices: matrices.data,
+      }),
+    [tab, departments.data, roles.data, employees.data, matrices.data],
+  );
+
+  const filteredRows = useMemo(() => {
+    const term = listSearch.trim().toLocaleLowerCase('tr-TR');
+    return listRows.filter((row) => {
+      if (statusFilter === 'active' && !row.active) return false;
+      if (statusFilter === 'inactive' && row.active) return false;
+      if (!term) return true;
+      return `${row.code} ${row.name}`.toLocaleLowerCase('tr-TR').includes(term);
+    });
+  }, [listRows, listSearch, statusFilter]);
+
+  const activeCount = listRows.filter((row) => row.active).length;
+  const inactiveCount = listRows.length - activeCount;
   const listLoading =
     (tab === 'department' && departments.isLoading) ||
     (tab === 'role' && roles.isLoading) ||
     (tab === 'employee' && employees.isLoading) ||
     (tab === 'matrix' && matrices.isLoading);
+  const tabLabel = DEFINITION_TABS.find(([key]) => key === tab)?.[1] ?? '';
+  const activeTabIndex = Math.max(
+    DEFINITION_TABS.findIndex(([key]) => key === tab),
+    0,
+  );
 
   return (
     <KkdPage
       title="KKD Tanımları"
-      description="V1 kurallarını tek matris motorunda, tarih ve yaşam döngüsü fazlarıyla yönetin."
-      actions={
-        <div className="flex flex-wrap gap-1.5">
-          {DEFINITION_TABS.map(([key, label]) => (
-            <OpsActionButton
-              key={key}
-              variant={tab === key ? 'primary' : 'secondary'}
-              className="wms-ops-list-toolbar-btn"
-              onClick={() => switchTab(key)}
+      description="Departman, rol ve personel tanımlarını oluşturun; hak matrisi ile personel ek haklarını buradan yönetin."
+      subRow={
+        <div className="wms-ops-kkd-definition-tabs wms-ops-detail-dialog w-full min-w-0">
+          <Tabs
+            value={tab}
+            onValueChange={(value) => switchTab(value as DefinitionTab)}
+            className="gap-0"
+          >
+            <TabsList
+              className={cn('w-full', 'wms-ops-detail-main-tabs', 'wms-ops-detail-main-tabs--cols-5')}
+              data-active-index={activeTabIndex}
             >
-              {label}
-            </OpsActionButton>
-          ))}
+              <span className="wms-ops-detail-tab-indicator" aria-hidden />
+              {DEFINITION_TABS.map(([key, label]) => (
+                <TabsTrigger key={key} value={key} className="wms-ops-detail-main-tab" title={label}>
+                  {label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
         </div>
       }
     >
@@ -662,16 +761,30 @@ export function KkdDefinitionsPage(): ReactElement {
       ) : tab === 'override' ? (
         <KkdOverrideManager />
       ) : (
-      <div className="grid gap-4 xl:grid-cols-[minmax(340px,.75fr)_1.25fr]">
+      <div className="grid gap-4 xl:grid-cols-[minmax(320px,.7fr)_1.3fr] xl:items-stretch">
         <KkdPanel
-          code="DEF_NEW"
-          icon={<Sparkles className="size-4" strokeWidth={1.75} />}
-          title="Yeni tanım"
-          description="Kaydedilen tanım anında listeye ve hak motoruna yansır."
+          code={isEditing ? `DEF_${editingId}` : 'DEF_NEW'}
+          icon={
+            isEditing ? (
+              <Pencil className="size-4" strokeWidth={1.75} />
+            ) : (
+              <Plus className="size-4" strokeWidth={1.75} />
+            )
+          }
+          title={isEditing ? 'Tanımı düzenle' : 'Yeni tanım'}
+          description={
+            isEditing
+              ? 'Değişiklikler kaydedilince listeye ve hak motoruna yansır.'
+              : 'Kaydedilen tanım anında listeye ve hak motoruna yansır.'
+          }
+          className="min-w-0"
         >
           <form className="grid content-start gap-3" onSubmit={submit} noValidate>
             {(tab === 'role' || tab === 'employee') && (
-              <KkdField label="Departman">
+              <KkdField
+                label="Departman"
+                hint={tab === 'role' && isEditing && !form.departmentId ? 'API departman dönmediyse mevcut bağ korunur.' : undefined}
+              >
                 <PagedLookupDialog<KkdLookup>
                   variant="ops"
                   triggerMode="combobox"
@@ -721,24 +834,16 @@ export function KkdDefinitionsPage(): ReactElement {
                 />
               </KkdField>
             )}
-            <KkdField label={tab === 'employee' ? 'Personel kodu' : 'Kod'}>
-              <AppInput
-                value={form.code ?? ''}
-                onChange={(event) => change('code', event.target.value)}
-                invalid={Boolean(fieldErrors.code)}
-              />
-            </KkdField>
-            {tab !== 'employee' && (
-              <KkdField label="Ad">
-                <AppInput
-                  value={form.name ?? ''}
-                  onChange={(event) => change('name', event.target.value)}
-                  invalid={Boolean(fieldErrors.name)}
-                />
-              </KkdField>
-            )}
-            {tab === 'employee' && (
+            {tab === 'employee' ? (
               <>
+                <KkdField label="Personel kodu">
+                  <AppInput
+                    value={form.code ?? ''}
+                    onChange={(event) => change('code', event.target.value)}
+                    invalid={Boolean(fieldErrors.code)}
+                    disabled={isEditing}
+                  />
+                </KkdField>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <KkdField label="Ad">
                     <AppInput
@@ -764,20 +869,22 @@ export function KkdDefinitionsPage(): ReactElement {
                     clearError('customerId');
                   }}
                 />
-                <KkdField label="Kullanıcı ID" hint="Opsiyonel; WMS kullanıcı hesabıyla eşleştirir.">
-                  <AppInput
-                    type="number"
-                    value={form.userId ?? ''}
-                    onChange={(event) => change('userId', event.target.value)}
-                  />
-                </KkdField>
-                <KkdField label="QR kodu">
-                  <AppInput
-                    value={form.qrCode ?? ''}
-                    onChange={(event) => change('qrCode', event.target.value)}
-                    invalid={Boolean(fieldErrors.qrCode)}
-                  />
-                </KkdField>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <KkdField label="Kullanıcı ID" hint="Opsiyonel">
+                    <AppInput
+                      type="number"
+                      value={form.userId ?? ''}
+                      onChange={(event) => change('userId', event.target.value)}
+                    />
+                  </KkdField>
+                  <KkdField label="QR kodu">
+                    <AppInput
+                      value={form.qrCode ?? ''}
+                      onChange={(event) => change('qrCode', event.target.value)}
+                      invalid={Boolean(fieldErrors.qrCode)}
+                    />
+                  </KkdField>
+                </div>
                 <KkdField label="İşe giriş tarihi">
                   <AppDateInput
                     value={form.employmentStartDate ?? ''}
@@ -786,22 +893,54 @@ export function KkdDefinitionsPage(): ReactElement {
                   />
                 </KkdField>
               </>
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2">
+                <KkdField label="Kod">
+                  <AppInput
+                    value={form.code ?? ''}
+                    onChange={(event) => change('code', event.target.value)}
+                    invalid={Boolean(fieldErrors.code)}
+                    disabled={isEditing}
+                  />
+                </KkdField>
+                <KkdField label="Ad">
+                  <AppInput
+                    value={form.name ?? ''}
+                    onChange={(event) => change('name', event.target.value)}
+                    invalid={Boolean(fieldErrors.name)}
+                  />
+                </KkdField>
+              </div>
             )}
-            <OpsActionButton
-              type="submit"
-              variant="primary"
-              className="mt-1 w-full"
-              loading={mutation.isPending}
-              loadingLabel={
-                <>
-                  <Save className="size-3.5 shrink-0" />
-                  Kaydediliyor…
-                </>
-              }
-            >
-              <Save className="size-3.5 shrink-0" />
-              Kaydet
-            </OpsActionButton>
+            <KkdCheckRow
+              checked={formActive}
+              onCheckedChange={(checked) => change('isActive', checked ? 'true' : 'false')}
+              title="Tanım aktif"
+              description="Pasif kayıtlar hak hesabına katılmaz; geçmiş dağıtımlar korunur."
+            />
+            <div className="mt-1 flex flex-wrap gap-2">
+              <OpsActionButton
+                type="submit"
+                variant="primary"
+                className="min-w-[10rem] flex-1"
+                loading={mutation.isPending}
+                loadingLabel={
+                  <>
+                    <Save className="size-3.5 shrink-0" />
+                    Kaydediliyor…
+                  </>
+                }
+              >
+                <Save className="size-3.5 shrink-0" />
+                {isEditing ? 'Değişiklikleri kaydet' : 'Kaydet'}
+              </OpsActionButton>
+              {isEditing ? (
+                <OpsActionButton type="button" variant="secondary" onClick={resetForm}>
+                  <X className="size-3.5 shrink-0" />
+                  Vazgeç
+                </OpsActionButton>
+              ) : null}
+            </div>
           </form>
         </KkdPanel>
 
@@ -809,7 +948,8 @@ export function KkdDefinitionsPage(): ReactElement {
           code="DEF_LST"
           icon={<Grid3X3 className="size-4" strokeWidth={1.75} />}
           title="Tanım listesi"
-          description={`Aktif sekme: ${DEFINITION_TABS.find(([key]) => key === tab)?.[1] ?? ''}`}
+          description={`${tabLabel}: ${listRows.length} kayıt · ${activeCount} aktif · ${inactiveCount} pasif`}
+          className="flex min-h-0 min-w-0 flex-col xl:h-full"
           actions={
             <OpsActionButton
               variant="secondary"
@@ -820,47 +960,154 @@ export function KkdDefinitionsPage(): ReactElement {
               <span className="hidden md:inline">Yenile</span>
             </OpsActionButton>
           }
-          bodyClassName="px-0 py-0 sm:px-0 sm:py-0"
+          bodyClassName="flex min-h-0 flex-1 flex-col overflow-hidden px-0 py-0 sm:px-0 sm:py-0"
         >
-          <KkdTableShell minWidthClass="min-w-[640px]" className="border-x-0 border-b-0">
+          <div className="flex shrink-0 flex-col gap-2 border-b border-[var(--wms-app-border)] p-3 sm:flex-row sm:items-center">
+            <div className="relative min-w-0 flex-1">
+              <Search
+                className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-[var(--wms-app-text-muted)]"
+                aria-hidden
+              />
+              <AppInput
+                className="pl-8"
+                value={listSearch}
+                onChange={(event) => setListSearch(event.target.value)}
+                placeholder="Kod veya ad ile ara"
+                aria-label="Tanım ara"
+              />
+            </div>
+            <div className="w-full sm:w-[11.5rem] sm:shrink-0">
+              <OpsSelect
+                value={statusFilter}
+                onValueChange={(value) => setStatusFilter(value as DefinitionStatusFilter)}
+                options={[
+                  { value: 'all', label: `Tümü (${listRows.length})` },
+                  { value: 'active', label: `Aktif (${activeCount})` },
+                  { value: 'inactive', label: `Pasif (${inactiveCount})` },
+                ]}
+                placeholder="Durum filtresi"
+                className={OPS_SELECT_TRIGGER_CLASS}
+              />
+            </div>
+          </div>
+          <KkdTableShell fill minWidthClass="min-w-[640px]" className="border-x-0 border-b-0" maxHeightClass={false}>
             <thead className="sticky top-0 z-10">
               <tr>
                 <th className={KKD_HEAD_CELL}>Kod</th>
                 <th className={KKD_HEAD_CELL}>Ad / kapsam</th>
                 <th className={KKD_HEAD_CELL}>Durum</th>
+                <th className={cn(KKD_HEAD_CELL, 'w-[1%] whitespace-nowrap')}>İşlem</th>
               </tr>
             </thead>
             <tbody>
               {listLoading ? (
                 <tr>
-                  <td colSpan={3} className="wms-ops-grid-state-cell">
+                  <td colSpan={4} className="wms-ops-grid-state-cell">
                     <OpsLoadingState code="FETCH" message="Tanımlar yükleniyor…" compact />
                   </td>
                 </tr>
-              ) : listRows.length === 0 ? (
+              ) : filteredRows.length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="wms-ops-grid-state-cell">
-                    <OpsGridEmptyState message="Bu sekmede kayıtlı tanım bulunamadı." />
+                  <td colSpan={4} className="wms-ops-grid-state-cell">
+                    <OpsGridEmptyState
+                      message={
+                        listRows.length === 0
+                          ? 'Bu sekmede kayıtlı tanım bulunamadı.'
+                          : 'Arama veya filtreye uygun tanım yok.'
+                      }
+                    />
                   </td>
                 </tr>
               ) : (
-                listRows.map((row) => (
-                  <tr key={row.id}>
-                    <td className={cn(KKD_CELL, 'font-mono font-black text-[var(--wms-brand-primary)]')}>{row.code}</td>
-                    <td className={KKD_CELL}>{row.name}</td>
-                    <td className={KKD_CELL}>
-                      <OpsStatusBadge tone={row.active ? 'active' : 'neutral'}>
-                        {row.active ? 'Aktif' : 'Pasif'}
-                      </OpsStatusBadge>
-                    </td>
-                  </tr>
-                ))
+                filteredRows.map((row) => (
+                    <tr
+                      key={row.id}
+                      className={cn(editingId === row.id && 'bg-[color-mix(in_oklab,var(--wms-ops-accent)_8%,transparent)]')}
+                    >
+                      <td className={cn(KKD_CELL, 'font-mono font-black text-[var(--wms-brand-primary)]')}>{row.code}</td>
+                      <td className={KKD_CELL}>{row.name}</td>
+                      <td className={KKD_CELL}>
+                        <OpsStatusBadge tone={row.active ? 'active' : 'neutral'}>
+                          {row.active ? 'Aktif' : 'Pasif'}
+                        </OpsStatusBadge>
+                      </td>
+                      <td className={KKD_CELL}>
+                        <div className="wms-ops-row-actions">
+                          <button
+                            type="button"
+                            title="Düzenle"
+                            aria-label="Düzenle"
+                            className="wms-ops-grid-icon-btn"
+                            onClick={() => beginEdit(row.id)}
+                          >
+                            <Pencil className="size-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            title={row.active ? 'Pasife al' : 'Aktifleştir'}
+                            aria-label={row.active ? 'Pasife al' : 'Aktifleştir'}
+                            className={cn(
+                              'wms-ops-grid-icon-btn',
+                              row.active && 'wms-ops-grid-icon-btn--danger',
+                            )}
+                            disabled={toggleActive.isPending}
+                            onClick={() => setStatusConfirm(row)}
+                          >
+                            <Power className="size-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
               )}
             </tbody>
           </KkdTableShell>
         </KkdPanel>
       </div>
       )}
+      <ResponsiveDialog
+        open={Boolean(statusConfirm)}
+        onClose={() => {
+          if (!toggleActive.isPending) setStatusConfirm(null);
+        }}
+        title={statusConfirm?.active ? 'Tanımı pasife al' : 'Tanımı aktifleştir'}
+        description="Bu işlem hak motorundaki tanım durumunu değiştirir."
+        className="!max-w-md"
+      >
+        {statusConfirm ? (
+          <div className="space-y-4">
+            <p className="text-sm leading-6 text-[var(--wms-app-text-muted)]">
+              <span className="font-semibold text-[var(--wms-app-text)]">
+                {statusConfirm.code} · {statusConfirm.name}
+              </span>
+              {statusConfirm.active
+                ? ' kaydını pasife almak istediğine emin misin? Pasif tanımlar hak hesabına katılmaz.'
+                : ' kaydını yeniden aktifleştirmek istediğine emin misin?'}
+            </p>
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <OpsActionButton
+                type="button"
+                variant="secondary"
+                disabled={toggleActive.isPending}
+                onClick={() => setStatusConfirm(null)}
+              >
+                Vazgeç
+              </OpsActionButton>
+              <OpsActionButton
+                type="button"
+                variant={statusConfirm.active ? 'secondary' : 'primary'}
+                className={statusConfirm.active ? 'wms-ops-action-btn--danger' : undefined}
+                loading={toggleActive.isPending}
+                loadingLabel={statusConfirm.active ? 'Pasife alınıyor…' : 'Aktifleştiriliyor…'}
+                onClick={() => toggleActive.mutate(statusConfirm)}
+              >
+                <Power className="size-3.5 shrink-0" />
+                {statusConfirm.active ? 'Pasife al' : 'Aktifleştir'}
+              </OpsActionButton>
+            </div>
+          </div>
+        ) : null}
+      </ResponsiveDialog>
     </KkdPage>
   );
 }
@@ -1932,7 +2179,13 @@ function rows(
   tab: string,
   data: {
     departments?: Array<{ id: number; code: string; name: string; isActive: boolean }>;
-    roles?: Array<{ id: number; code: string; name: string; isActive: boolean }>;
+    roles?: Array<{
+      id: number;
+      code: string;
+      name: string;
+      isActive: boolean;
+      departmentName?: string;
+    }>;
     employees?: Array<{
       id: number;
       employeeCode: string;
@@ -1948,7 +2201,12 @@ function rows(
     return (data.departments || []).map((x) => ({ id: x.id, code: x.code, name: x.name, active: x.isActive }));
   }
   if (tab === 'role') {
-    return (data.roles || []).map((x) => ({ id: x.id, code: x.code, name: x.name, active: x.isActive }));
+    return (data.roles || []).map((x) => ({
+      id: x.id,
+      code: x.code,
+      name: x.departmentName ? `${x.name} · ${x.departmentName}` : x.name,
+      active: x.isActive,
+    }));
   }
   if (tab === 'employee') {
     return (data.employees || []).map((x) => ({

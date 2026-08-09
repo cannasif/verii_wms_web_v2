@@ -1,4 +1,4 @@
-import { useEffect, type ReactElement, type ReactNode } from 'react';
+import { useEffect, useRef, type ReactElement, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '@/components/theme-provider';
 import { OpsCodeBadge } from '@/components/shared/OpsStatusBadge';
@@ -25,6 +25,7 @@ export function KkdPage({
   description,
   hintLabel = 'Bu sayfa ne yapar?',
   actions,
+  subRow,
   children,
   className,
 }: {
@@ -32,6 +33,8 @@ export function KkdPage({
   description?: string;
   hintLabel?: string;
   actions?: ReactNode;
+  /** Başlık kartına bitişik ikinci satır (sekme / filtre şeridi). */
+  subRow?: ReactNode;
   children: ReactNode;
   className?: string;
 }): ReactElement {
@@ -44,7 +47,13 @@ export function KkdPage({
 
   return (
     <section className={cn('wms-ops-list wms-ops-form mx-auto w-full max-w-[1500px] space-y-4', className)}>
-      <OpsPageHeader title={title} description={description} hintLabel={hintLabel} actions={actions} />
+      <OpsPageHeader
+        title={title}
+        description={description}
+        hintLabel={hintLabel}
+        actions={actions}
+        subRow={subRow}
+      />
       {children}
     </section>
   );
@@ -79,7 +88,7 @@ export function KkdPanel({
         className,
       )}
     >
-      <div className="wms-ops-card-toolbar flex flex-col gap-3 border-b border-[color-mix(in_oklab,var(--wms-ops-card-border)_80%,transparent)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6">
+      <div className="wms-ops-card-toolbar flex shrink-0 flex-col gap-3 border-b border-[color-mix(in_oklab,var(--wms-ops-card-border)_80%,transparent)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6">
         <div className="wms-ops-card-heading min-w-0">
           <div className="flex min-w-0 items-center gap-3">
             {icon ? (
@@ -124,7 +133,7 @@ export function KkdPanel({
           </div>
         ) : null}
       </div>
-      <div className={cn('px-3 py-3 sm:px-4 sm:py-4', bodyClassName)}>{children}</div>
+      <div className={cn('min-h-0 px-3 py-3 sm:px-4 sm:py-4', bodyClassName)}>{children}</div>
     </section>
   );
 }
@@ -162,19 +171,50 @@ export function KkdField({
 export function KkdTableShell({
   minWidthClass = 'min-w-[900px]',
   maxHeightClass = 'max-h-[max(20rem,calc(100dvh-30rem))]',
+  fill = false,
   children,
   className,
 }: {
   minWidthClass?: string;
-  maxHeightClass?: string;
+  /** `false` ile kapatılır; `fill` iken üst kapsayıcı yüksekliğini doldurur. */
+  maxHeightClass?: string | false;
+  /**
+   * Parent flex kolonunda kalan yüksekliği doldurur; içerik taşınca scroll olur.
+   * Hover’dayken tekerlek listeyi kaydırır, sınırda / hover dışındayken sayfa kayar.
+   */
+  fill?: boolean;
   children: ReactNode;
   className?: string;
 }): ReactElement {
+  const shellRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const element = shellRef.current;
+    if (!element) return;
+
+    const onWheel = (event: WheelEvent): void => {
+      const { scrollTop, scrollHeight, clientHeight } = element;
+      const canScroll = scrollHeight > clientHeight + 1;
+      if (!canScroll) return;
+
+      const atTop = scrollTop <= 0;
+      const atBottom = scrollTop + clientHeight >= scrollHeight - 1;
+      if ((event.deltaY < 0 && atTop) || (event.deltaY > 0 && atBottom)) return;
+
+      event.preventDefault();
+      element.scrollTop += event.deltaY;
+    };
+
+    element.addEventListener('wheel', onWheel, { passive: false });
+    return () => element.removeEventListener('wheel', onWheel);
+  }, [fill]);
+
   return (
     <div
+      ref={shellRef}
       className={cn(
-        'wms-ops-scrollbar relative block overflow-x-auto overflow-y-auto border border-[var(--wms-ops-card-border)]',
-        maxHeightClass,
+        'wms-ops-scrollbar relative block overflow-x-auto overflow-y-auto overscroll-contain border border-[var(--wms-ops-card-border)]',
+        fill ? 'min-h-0 flex-1' : maxHeightClass || undefined,
         className,
       )}
     >

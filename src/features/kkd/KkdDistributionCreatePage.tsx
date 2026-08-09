@@ -176,6 +176,7 @@ export function KkdDistributionCreatePage(): ReactElement {
       ),
     ],
     requestId: Number(searchParams.get('requestId') || 0),
+    taskId: Number(searchParams.get('taskId') || 0),
   }));
   const requestMode = initialSelection.requestId > 0;
   const startsOnDistribute =
@@ -252,11 +253,27 @@ export function KkdDistributionCreatePage(): ReactElement {
     queryFn: () => kkdApi.requestDetail(initialSelection.requestId),
     enabled: requestMode,
   });
+  // Görev modu: tezgah yalnızca ilgili hazırlama görevine atanmış kalemleri, görev miktarıyla sınırlı gösterir.
+  const linkedTasks = useQuery({
+    queryKey: ['kkd', 'requests', initialSelection.requestId, 'preparation-tasks'],
+    queryFn: () => kkdApi.requestPreparationTasks(initialSelection.requestId),
+    enabled: requestMode && initialSelection.taskId > 0,
+  });
+  const taskLineQuota = useMemo<Map<number, number> | null>(() => {
+    if (!(initialSelection.taskId > 0)) return null;
+    const task = linkedTasks.data?.find((item) => item.id === initialSelection.taskId);
+    if (!task) return null;
+    return new Map(task.lines.map((line) => [
+      line.requestLineId,
+      Math.max(0, line.quantity - line.preparedQuantity - line.deliveredQuantity),
+    ]));
+  }, [initialSelection.taskId, linkedTasks.data]);
   const effectiveLines = useMemo<KkdOpenOrderLine[]>(
     () =>
       requestMode
         ? (linkedRequest.data?.lines ?? [])
             .filter((line) => line.status !== 'Cancelled')
+            .filter((line) => !taskLineQuota || (taskLineQuota.get(line.id) ?? 0) > 0)
             .map((line) => ({
               orderNumber: linkedRequest.data!.requestNo,
               orderLineId: line.id,
@@ -266,7 +283,9 @@ export function KkdDistributionCreatePage(): ReactElement {
               stockName: line.stockName ?? line.groupName ?? line.groupCode,
               unitCode: line.unitCode,
               projectCode: line.groupCode,
-              remainingQuantity: line.remainingQuantity,
+              remainingQuantity: taskLineQuota
+                ? Math.min(line.remainingQuantity, taskLineQuota.get(line.id) ?? 0)
+                : line.remainingQuantity,
               isMapped: Boolean(line.stockId),
               mappingMessage: line.stockId
                 ? undefined
@@ -274,7 +293,7 @@ export function KkdDistributionCreatePage(): ReactElement {
               kkdRequestLineId: line.id,
             }))
         : (orderLines.data ?? []),
-    [linkedRequest.data, orderLines.data, requestMode],
+    [linkedRequest.data, orderLines.data, requestMode, taskLineQuota],
   );
 
   const [warehouseValue, setWarehouseValue] = useState<string | null>(null);
