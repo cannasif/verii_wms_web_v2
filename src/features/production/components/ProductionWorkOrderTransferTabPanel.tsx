@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState, type ReactElement } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Ban,
+  AlertTriangle,
   ChevronDown,
   ChevronRight,
   Eye,
@@ -9,7 +10,6 @@ import {
   Pencil,
   PlayCircle,
   RotateCcw,
-  Trash2,
   UserPlus,
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -20,13 +20,13 @@ import {
   type GridColumn,
   type GridRequest,
 } from '@/components/shared/AdvancedDataGrid';
-import { DeleteConfirmDialog } from '@/components/shared/DeleteConfirmDialog';
 import { requiredActionColumn, systemColumns } from '@/components/shared/GridSystemColumns';
 import { OpsLoadingState } from '@/components/shared/OpsLoadingState';
 import { OpsStatusBadge } from '@/components/shared/OpsStatusBadge';
 import { formatProjectDate, formatProjectNumber } from '@/lib/project-format';
 import { localizeEnumValue } from '@/lib/enum-localization';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
 import {
@@ -35,8 +35,13 @@ import {
 } from '@/features/production-transfer/components/ProductionTransferCancelDialogs';
 import { ProductionTransferDetailDialog } from '@/features/production-transfer/components/ProductionTransferDetailDialog';
 import {
+  productionTransferErpErrorMessage,
+  productionTransferNeedsErpAttention,
+} from '@/features/production-transfer/production-transfer-erp-posting';
+import {
   describeHandoffRelation,
   mapBoardTasksToChainRows,
+  formatTaskAssignees,
   orderTasksForDisplay,
   taskDisplayName,
 } from '@/features/production-transfer/production-transfer-task-chain';
@@ -153,7 +158,7 @@ function toGridRow(row: ProductionWorkOrderTransferHeaderRow): ProductionWorkOrd
     processType: 'PlannedTask',
     status: row.transferStatus as WarehouseTransferGridRow['status'],
     approvalStatus: 'NotRequired',
-    erpIntegrationStatus: 'Pending',
+    erpIntegrationStatus: (row.erpIntegrationStatus ?? 'Pending') as WarehouseTransferGridRow['erpIntegrationStatus'],
     sourceWarehouseId: row.sourceWarehouseId,
     sourceWarehouseCode: row.sourceWarehouseCode,
     sourceWarehouseName: row.sourceWarehouseName,
@@ -210,7 +215,14 @@ function ExpandedTransferTasks({
       const merged = mapBoardTasksToChainRows(board.tasks).map((row) => {
         const meta = metaById.get(row.taskId);
         return meta
-          ? { ...row, displayLabel: meta.displayLabel, displaySuffix: meta.displaySuffix }
+          ? {
+              ...row,
+              displayLabel: meta.displayLabel,
+              displaySuffix: meta.displaySuffix,
+              assignedUsernames: row.assignedUsernames.length > 0
+                ? row.assignedUsernames
+                : meta.assignedUsernames,
+            }
           : row;
       });
       return orderTasksForDisplay(merged);
@@ -282,7 +294,7 @@ function ExpandedTransferTasks({
                 <td className={TASK_CELL}>{productionTransferEnumLabel(t, 'taskStatus', task.status)}</td>
                 <td className={TASK_CELL}>{formatProjectNumber(task.plannedQuantity)}</td>
                 <td className={TASK_CELL}>{formatProjectNumber(task.processedQuantity)}</td>
-                <td className={TASK_CELL}>{task.assignedUsernames.join(', ') || 'Atanmamış'}</td>
+                <td className={TASK_CELL}>{formatTaskAssignees(task.assignedUsernames)}</td>
                 <td className={TASK_ACTIONS_COL}>
                   <div className="flex flex-wrap items-center justify-end gap-2">
                     {showExecuteOperation ? (
@@ -426,8 +438,6 @@ export function ProductionWorkOrderTransferTabPanel({
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [detailTarget, setDetailTarget] = useState<ProductionWorkOrderTransferHeaderRow | null>(null);
   const [loadingEditId, setLoadingEditId] = useState<number | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<ProductionWorkOrderTransferHeaderRow | null>(null);
-  const [deletingDraft, setDeletingDraft] = useState(false);
   const {
     precheckId: cancelPrecheckId,
     blocked: productionCancelBlocked,
@@ -474,23 +484,8 @@ export function ProductionWorkOrderTransferTabPanel({
     }
   };
 
-  const deleteDraft = async () => {
-    if (!deleteTarget) return;
-    setDeletingDraft(true);
-    try {
-      await transferApi.deleteDraft(deleteTarget.transferId);
-      toast.success('Taslak silindi.');
-      setDeleteTarget(null);
-      refreshGroups();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Taslak silinemedi.');
-    } finally {
-      setDeletingDraft(false);
-    }
-  };
-
   const columns = useMemo<GridColumn<ProductionWorkOrderTransferGridRow>[]>(() => [
-    {
+    ...(!isMyAssignmentsTab ? [{
       key: 'expand',
       label: '',
       width: 48,
@@ -498,7 +493,7 @@ export function ProductionWorkOrderTransferTabPanel({
       filterable: false,
       searchable: false,
       hideable: false,
-      render: (row) => (
+      render: (row: ProductionWorkOrderTransferGridRow) => (
         <button
           type="button"
           aria-expanded={expandedId === row.id}
@@ -511,8 +506,40 @@ export function ProductionWorkOrderTransferTabPanel({
             : <ChevronRight className="size-4 text-[var(--wms-brand-primary)]" aria-hidden />}
         </button>
       ),
-    },
-    ...systemColumns<ProductionWorkOrderTransferGridRow>(),
+    }] satisfies GridColumn<ProductionWorkOrderTransferGridRow>[] : []),
+    ...systemColumns<ProductionWorkOrderTransferGridRow>().map((column) => (
+      tab === 'Completed' && column.key === 'id'
+        ? {
+            ...column,
+            render: (row: ProductionWorkOrderTransferGridRow) => {
+              const erpError = productionTransferErpErrorMessage(row.source);
+              const showErpWarning = productionTransferNeedsErpAttention(row.source);
+              return (
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="font-mono text-xs font-semibold">#{row.id}</span>
+                  {showErpWarning ? (
+                    <TooltipProvider delayDuration={120}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span
+                            className="inline-flex size-5 items-center justify-center rounded-full bg-amber-500/15 text-amber-600"
+                            aria-label="Netsis aktarım hatası"
+                          >
+                            <AlertTriangle className="size-3.5" aria-hidden />
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="max-w-xs">
+                          {erpError ?? 'Netsis aktarımı başarısız veya belirsiz.'}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  ) : null}
+                </span>
+              );
+            },
+          }
+        : column
+    )),
     {
       key: 'documentNo',
       label: tc(`${G}.documentNo`),
@@ -636,35 +663,27 @@ export function ProductionWorkOrderTransferTabPanel({
       ...requiredActionColumn,
       render: (row) => (
         <div className="flex items-center justify-center gap-1">
-          <Link
-            to={`${transferBaseUrl}/${row.id}/operations`}
-            title="Operasyonu yürüt"
-            className="rounded-lg p-2 text-cyan-500 hover:bg-cyan-500/10"
-          >
-            <PlayCircle className="size-4" aria-hidden />
-          </Link>
+          {row.status !== 'Draft' ? (
+            <Link
+              to={`${transferBaseUrl}/${row.id}/operations`}
+              title="Operasyonu yürüt"
+              className="rounded-lg p-2 text-cyan-500 hover:bg-cyan-500/10"
+            >
+              <PlayCircle className="size-4" aria-hidden />
+            </Link>
+          ) : null}
           {row.status === 'Draft' && tab !== 'MyAssignments' ? (
-            <>
-              <button
-                type="button"
-                title="Taslağı düzenle"
-                disabled={loadingEditId === row.id}
-                onClick={() => void openEdit(row.source)}
-                className="rounded-lg p-2 text-amber-500 hover:bg-amber-500/10"
-              >
-                {loadingEditId === row.id
-                  ? <Loader2 className="size-4 animate-spin" aria-hidden />
-                  : <Pencil className="size-4" aria-hidden />}
-              </button>
-              <button
-                type="button"
-                title="Taslağı sil"
-                onClick={() => setDeleteTarget(row.source)}
-                className="rounded-lg p-2 text-rose-500 hover:bg-rose-500/10"
-              >
-                <Trash2 className="size-4" aria-hidden />
-              </button>
-            </>
+            <button
+              type="button"
+              title="Taslağı düzenle"
+              disabled={loadingEditId === row.id}
+              onClick={() => void openEdit(row.source)}
+              className="rounded-lg p-2 text-amber-500 hover:bg-amber-500/10"
+            >
+              {loadingEditId === row.id
+                ? <Loader2 className="size-4 animate-spin" aria-hidden />
+                : <Pencil className="size-4" aria-hidden />}
+            </button>
           ) : null}
           {row.status !== 'Cancelled' && tab !== 'MyAssignments' ? (
             <button
@@ -695,6 +714,7 @@ export function ProductionWorkOrderTransferTabPanel({
     cancelPrecheckId,
     expandedId,
     gridLanguage,
+    isMyAssignmentsTab,
     loadingEditId,
     t,
     tab,
@@ -712,25 +732,15 @@ export function ProductionWorkOrderTransferTabPanel({
         columns={columns}
         fetchPage={fetchPage}
         emptyMessage={`${TAB_LABELS[tab]} sekmesinde transfer bulunamadı.`}
-        expandedRowId={expandedId}
+        expandedRowId={isMyAssignmentsTab ? undefined : expandedId}
         onRowDoubleClick={handleRowDoubleClick}
-        renderExpandedRow={(row) => (
+        renderExpandedRow={isMyAssignmentsTab ? undefined : (row) => (
           <ProductionWorkOrderTransferTaskList
             transferId={row.id}
             tab={tab}
             onBoardChanged={refreshGroups}
           />
         )}
-      />
-
-      <DeleteConfirmDialog
-        open={Boolean(deleteTarget)}
-        title="Taslağı sil"
-        description={deleteTarget ? `${deleteTarget.documentNo} taslağı kalıcı olarak silinecek.` : undefined}
-        confirmLabel="Sil"
-        isPending={deletingDraft}
-        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
-        onConfirm={deleteDraft}
       />
 
       {productionCancelBlocked ? (

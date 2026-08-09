@@ -103,6 +103,15 @@ export function describeHandoffRelation(task: ChainTask, tasks: readonly ChainTa
   return null;
 }
 
+export function formatTaskAssignees(usernames: readonly string[] | undefined): string {
+  return usernames?.length ? usernames.join(', ') : 'Atanmamış';
+}
+
+export function resolveTaskAssignedUsernames(task: Pick<ProductionTask, 'assignments' | 'assignedUsernames'>): string[] {
+  if (task.assignedUsernames?.length) return [...task.assignedUsernames];
+  return task.assignments.map((assignment) => assignment.username);
+}
+
 export function mapBoardTasksToChainRows(tasks: ProductionTask[]): ProductionWorkOrderTransferTaskRow[] {
   return tasks.map((task) => ({
     taskId: task.taskId,
@@ -117,7 +126,7 @@ export function mapBoardTasksToChainRows(tasks: ProductionTask[]): ProductionWor
       (sum, line) => sum + Math.max(0, line.requestedQuantity - line.processedQuantity),
       0,
     ),
-    assignedUsernames: task.assignments.map((assignment) => assignment.username),
+    assignedUsernames: resolveTaskAssignedUsernames(task),
     previousTaskId: task.previousTaskId,
     originTaskId: task.originTaskId,
     originUserId: task.originUserId,

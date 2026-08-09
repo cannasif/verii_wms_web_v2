@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { describeHandoffRelation, orderTasksForDisplay } from './production-transfer-task-chain';
+import {
+  describeHandoffRelation,
+  formatTaskAssignees,
+  orderTasksForDisplay,
+  resolveTaskAssignedUsernames,
+} from './production-transfer-task-chain';
 
 describe('orderTasksForDisplay', () => {
   it('orders handoff chain as -1 then -2', () => {
@@ -76,5 +81,27 @@ describe('describeHandoffRelation', () => {
 
     expect(describeHandoffRelation(child, [parent, child])).toContain('devredildi');
     expect(describeHandoffRelation(parent, [parent, child])).toContain('TR-1-2');
+  });
+});
+
+describe('resolveTaskAssignedUsernames', () => {
+  it('uses assignedUsernames from api when present', () => {
+    expect(resolveTaskAssignedUsernames({
+      assignedUsernames: ['ali'],
+      assignments: [],
+    })).toEqual(['ali']);
+  });
+
+  it('falls back to active assignments', () => {
+    expect(resolveTaskAssignedUsernames({
+      assignments: [{ userId: 1, username: 'veli', isPrimary: true, assignedAtUtc: '2026-01-01' }],
+    })).toEqual(['veli']);
+  });
+});
+
+describe('formatTaskAssignees', () => {
+  it('shows unassigned label when empty', () => {
+    expect(formatTaskAssignees([])).toBe('Atanmamış');
+    expect(formatTaskAssignees(undefined)).toBe('Atanmamış');
   });
 });

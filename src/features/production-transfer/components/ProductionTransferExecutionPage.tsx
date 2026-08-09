@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { AlertTriangle, ArrowLeft, CheckCircle2, Loader2, PackageCheck, RefreshCw, Send } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, CheckCircle2, Loader2, PackageCheck, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { OpsActionButton } from '@/components/shared/OpsActionButton';
-import { ResponsiveDialog } from '@/components/shared/ResponsiveDialog';
 import { formatProjectNumber } from '@/lib/project-format';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
@@ -12,9 +11,9 @@ import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { productionTransferApi, type ProductionTransferExecution } from '../api';
 import { ProductionTransferPickingSection } from './ProductionTransferPickingSection';
 import { ProductionTransferReturnSection } from './ProductionTransferReturnSection';
+import { ErpPostingPanel, ErpPostingTriggerButton } from './ProductionTransferErpPostingControls';
+import { productionTransferCanRetryErp } from '../production-transfer-erp-posting';
 import { PRODUCTION_WORK_ORDERS_MY_ASSIGNMENTS_URL } from '@/features/production/components/ProductionWorkOrderTransferTabPanel';
-
-type ErpIntegrationStatus = ProductionTransferExecution['erpIntegrationStatus'];
 
 export function ProductionTransferExecutionPage() {
   const { t } = useModuleTranslation('production-transfer');
@@ -124,9 +123,11 @@ export function ProductionTransferExecutionPage() {
   const showReturnSection = hasActiveReturnTask;
   const showPickingSection = pickingStage && !showReturnSection;
   const showErpControls = execution.erpPostingPolicy !== 'Disabled';
-  const canRetryErp = can('WMS.PRODUCTION_TRANSFER.APPROVE')
-    && showErpControls
-    && ['Pending', 'Failed'].includes(execution.erpIntegrationStatus);
+  const canRetryErp = productionTransferCanRetryErp(
+    execution.erpIntegrationStatus,
+    execution.erpPostingPolicy,
+    can('WMS.PRODUCTION_TRANSFER.APPROVE'),
+  );
 
   const renderErpTriggerButton = () => (showErpControls ? (
     <ErpPostingTriggerButton
@@ -218,116 +219,6 @@ export function ProductionTransferExecutionPage() {
 }
 
 function Step({ active, done, number, title, text }: { active: boolean; done: boolean; number: string; title: string; text: string }) { return <div className={cn('rounded-xl border p-4', active ? 'border-[var(--wms-brand-primary)] bg-[color-mix(in_oklab,var(--wms-brand-primary)_8%,transparent)]' : 'border-[var(--wms-app-border)]', done && 'border-emerald-500/40')}><div className="flex items-center gap-3"><span className={cn('grid size-9 place-items-center rounded-full text-xs font-black', done ? 'bg-emerald-500 text-white' : 'bg-[var(--wms-brand-primary)] text-[var(--wms-brand-on-primary)]')}>{done ? <CheckCircle2 className="size-5" /> : number}</span><span><strong className="block">{title}</strong><span className="text-xs text-[var(--wms-app-text-muted)]">{text}</span></span></div></div>; }
-
-function ErpPostingTriggerButton({
-  status,
-  label,
-  onClick,
-  className,
-}: {
-  status: ErpIntegrationStatus;
-  label: string;
-  onClick: () => void;
-  className?: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        'inline-flex shrink-0 items-center gap-2 rounded-lg border px-3 py-2 text-xs font-bold transition-colors',
-        status === 'Failed' && 'border-red-500/50 text-red-600 hover:bg-red-500/10',
-        status === 'CommitUncertain' && 'border-amber-500/50 text-amber-600 hover:bg-amber-500/10',
-        status === 'Pending' && 'border-amber-500/50 text-amber-600 hover:bg-amber-500/10',
-        status === 'Processing' && 'border-[var(--wms-brand-primary)]/50 text-[var(--wms-brand-primary)] hover:bg-[var(--wms-brand-soft)]',
-        status === 'Succeeded' && 'border-emerald-500/40 text-emerald-600 hover:bg-emerald-500/10',
-        status === 'Cancelled' && 'border-[var(--wms-app-border)] text-[var(--wms-app-text-muted)] hover:bg-black/5 dark:hover:bg-white/5',
-        className,
-      )}
-    >
-      <Send className="size-4" aria-hidden />
-      {label}
-    </button>
-  );
-}
-
-function ErpPostingPanel({
-  execution,
-  canRetry,
-  erpBusy,
-  onClose,
-  onRetry,
-  t,
-}: {
-  execution: ProductionTransferExecution;
-  canRetry: boolean;
-  erpBusy: boolean;
-  onClose: () => void;
-  onRetry: () => void;
-  t: (key: string) => string;
-}) {
-  const status = execution.erpIntegrationStatus;
-
-  return (
-    <ResponsiveDialog
-      onClose={onClose}
-      title={t('execution.erp.title')}
-      description={t(`execution.erp.status.${status}`)}
-      className="!max-w-lg"
-    >
-      <div
-        className={cn(
-          'rounded-xl border p-4',
-          status === 'Succeeded' && 'border-emerald-500/40 bg-emerald-500/10',
-          status === 'Failed' && 'border-red-500/40 bg-red-500/10',
-          status === 'CommitUncertain' && 'border-amber-500/50 bg-amber-500/10',
-          status === 'Pending' && 'border-amber-500/50 bg-amber-500/10',
-          status === 'Processing' && 'border-[var(--wms-brand-primary)]/40 bg-[var(--wms-brand-soft)]',
-          status === 'Cancelled' && 'border-[var(--wms-app-border)] bg-[var(--wms-app-surface)]',
-        )}
-      >
-        <div className="space-y-3 text-sm">
-          <div>
-            <span className="text-xs font-bold uppercase tracking-wide text-[var(--wms-app-text-muted)]">Durum</span>
-            <p className="mt-1 font-semibold text-[var(--wms-app-text)]">{t(`execution.erp.status.${status}`)}</p>
-          </div>
-          {execution.erpDocumentNo && (
-            <div>
-              <span className="text-xs font-bold uppercase tracking-wide text-[var(--wms-app-text-muted)]">{t('execution.erp.documentNo')}</span>
-              <p className="mt-1 font-mono font-bold text-[var(--wms-brand-primary)]">{execution.erpDocumentNo}</p>
-            </div>
-          )}
-          {execution.erpErrorCode && (
-            <div>
-              <span className="text-xs font-bold uppercase tracking-wide text-[var(--wms-app-text-muted)]">Hata kodu</span>
-              <p className="mt-1 font-mono text-xs text-red-600">{execution.erpErrorCode}</p>
-            </div>
-          )}
-          {execution.erpErrorMessage && (
-            <div>
-              <span className="text-xs font-bold uppercase tracking-wide text-[var(--wms-app-text-muted)]">Hata mesajı</span>
-              <p className="mt-1 whitespace-pre-wrap text-sm text-red-600">{execution.erpErrorMessage}</p>
-            </div>
-          )}
-          {status === 'CommitUncertain' && (
-            <p className="text-sm text-amber-700 dark:text-amber-300">{t('execution.erp.uncertainAfterCompletion')}</p>
-          )}
-          {status === 'Failed' && (
-            <p className="text-sm text-[var(--wms-app-text-muted)]">{t('execution.erp.failedAfterCompletion')}</p>
-          )}
-        </div>
-      </div>
-      {canRetry && (
-        <div className="mt-5 flex justify-end">
-          <OpsActionButton variant="primary" loading={erpBusy} onClick={onRetry}>
-            <RefreshCw className="size-4" />
-            {t('execution.erp.retry')}
-          </OpsActionButton>
-        </div>
-      )}
-    </ResponsiveDialog>
-  );
-}
 
 function LineSummary({ execution }: { execution: ProductionTransferExecution }) {
   const pickedLines = execution.lines.filter((line) => line.pickedQuantity > 0);

@@ -1,7 +1,8 @@
 import { useMemo, useState, type ReactElement } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { ExternalLink, PackageOpen } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { AlertTriangle, ExternalLink, PackageOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 import { OpsActionButton } from '@/components/shared/OpsActionButton';
 import { OpsCodeBadge, OpsStatusBadge } from '@/components/shared/OpsStatusBadge';
 import { OpsLoadingState } from '@/components/shared/OpsLoadingState';
@@ -10,15 +11,26 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/compone
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { formatProjectDate, formatProjectDateTime, formatProjectNumber } from '@/lib/project-format';
 import { cn } from '@/lib/utils';
+import { useModuleTranslation } from '@/hooks/useModuleTranslation';
+import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
 import { transferApiFor } from '@/features/warehouse-transfer-v2/api/warehouse-transfer.api';
 import {
   productionTransferApi,
   type ProductionWorkOrderTransferHeaderRow,
 } from '../api';
+import { ErpPostingPanel, ErpPostingTriggerButton } from './ProductionTransferErpPostingControls';
+import {
+  productionTransferCanRetryErp,
+  productionTransferErpErrorMessage,
+  productionTransferNeedsErpAttention,
+  productionTransferShowErpControls,
+} from '../production-transfer-erp-posting';
 import { productionTaskTypeLabel } from '../production-transfer-task-labels';
 import {
   describeHandoffRelation,
+  formatTaskAssignees,
   orderTasksForDisplay,
+  resolveTaskAssignedUsernames,
   taskDisplayName,
 } from '../production-transfer-task-chain';
 
@@ -37,7 +49,12 @@ export function ProductionTransferDetailDialog({
   summary?: ProductionWorkOrderTransferHeaderRow;
   onClose: () => void;
 }): ReactElement {
+  const { t } = useModuleTranslation('production-transfer');
+  const { can } = usePermissionAccess();
+  const queryClient = useQueryClient();
   const [mainTab, setMainTab] = useState<MainTab>('info');
+  const [erpPanelOpen, setErpPanelOpen] = useState(false);
+  const [erpBusy, setErpBusy] = useState(false);
   const transferApi = useMemo(() => transferApiFor('production'), []);
 
   const detailQuery = useQuery({
@@ -79,7 +96,7 @@ export function ProductionTransferDetailDialog({
             (sum, line) => sum + Math.max(0, line.requestedQuantity - line.processedQuantity),
             0,
           ),
-          assignedUsernames: task.assignments.map((assignment) => assignment.username),
+          assignedUsernames: resolveTaskAssignedUsernames(task),
           previousTaskId: task.previousTaskId,
           originTaskId: task.originTaskId,
           originUserId: task.originUserId,
@@ -93,6 +110,52 @@ export function ProductionTransferDetailDialog({
   const productionOrderNo = summary?.productionOrderNo ?? summary?.externalReferenceNo ?? header?.documentNo;
   const mainTabIndex = MAIN_TABS.indexOf(mainTab);
 
+  const erpInfo = useMemo(() => {
+    const erpPostingPolicy = execution?.erpPostingPolicy ?? summary?.erpPostingPolicy ?? 'Disabled';
+    const erpIntegrationStatus = execution?.erpIntegrationStatus
+      ?? summary?.erpIntegrationStatus
+      ?? 'Pending';
+    const workflow = execution?.workflowStatus ?? summary?.workflowStatus ?? 'Planned';
+    return {
+      erpPostingPolicy,
+      erpIntegrationStatus,
+      workflowStatus: workflow,
+      erpErrorMessage: execution?.erpErrorMessage ?? summary?.erpErrorMessage,
+      erpErrorCode: execution?.erpErrorCode ?? summary?.erpErrorCode,
+    };
+  }, [execution, summary]);
+
+  const showErpControls = productionTransferShowErpControls(erpInfo);
+  const showErpWarning = productionTransferNeedsErpAttention(erpInfo);
+  const erpErrorText = productionTransferErpErrorMessage({
+    erpErrorMessage: erpInfo.erpErrorMessage,
+    erpErrorCode: erpInfo.erpErrorCode,
+  });
+  const canRetryErp = execution
+    ? productionTransferCanRetryErp(
+        execution.erpIntegrationStatus,
+        execution.erpPostingPolicy,
+        can('WMS.PRODUCTION_TRANSFER.APPROVE'),
+      )
+    : false;
+
+  const postErp = async (): Promise<void> => {
+    if (!execution) return;
+    setErpBusy(true);
+    try {
+      const result = await productionTransferApi.postErp(transferId);
+      queryClient.setQueryData(['production-transfer-execution', transferId], result);
+      await queryClient.invalidateQueries({ queryKey: ['advanced-grid', 'production-work-order-transfers-Completed'] });
+      if (result.erpIntegrationStatus === 'Succeeded') toast.success(t('execution.erp.retrySucceeded'));
+      else if (result.erpIntegrationStatus === 'CommitUncertain') toast.warning(t('execution.erp.uncertainAfterCompletion'));
+      else toast.error(result.erpErrorMessage || t('execution.erp.retryFailed'));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t('execution.erp.retryFailed'));
+    } finally {
+      setErpBusy(false);
+    }
+  };
+
   return (
     <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
       <DialogContent
@@ -105,6 +168,7 @@ export function ProductionTransferDetailDialog({
         )}
       >
         <header className="wms-ops-detail-dialog__header shrink-0">
+          <div className="flex min-w-0 items-start justify-between gap-3">
           <div className="min-w-0 pr-2">
             <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-600 dark:text-cyan-300">
               Üretim transferi
@@ -127,8 +191,38 @@ export function ProductionTransferDetailDialog({
                 <OpsCodeBadge>Kalan belge: {summary.residualDocumentNo}</OpsCodeBadge>
               ) : null}
             </div>
+            {showErpWarning && erpErrorText ? (
+              <div className="mt-3 rounded-xl border border-amber-500/50 bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden />
+                  <div>
+                    <strong className="block">Netsis aktarım hatası</strong>
+                    <p className="mt-1 whitespace-pre-wrap text-xs">{erpErrorText}</p>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+          </div>
+          {showErpControls && execution ? (
+            <ErpPostingTriggerButton
+              status={execution.erpIntegrationStatus}
+              label={t('execution.erp.openPanel')}
+              onClick={() => setErpPanelOpen(true)}
+            />
+          ) : null}
           </div>
         </header>
+
+        {showErpControls && execution && erpPanelOpen ? (
+          <ErpPostingPanel
+            execution={execution}
+            canRetry={canRetryErp}
+            erpBusy={erpBusy}
+            onClose={() => setErpPanelOpen(false)}
+            onRetry={() => void postErp()}
+            t={t}
+          />
+        ) : null}
 
         {loading || !detail || !execution || !header ? (
           <div className="grid min-h-0 flex-1 place-items-center px-6 py-10">
@@ -283,7 +377,7 @@ export function ProductionTransferDetailDialog({
                         <MiniStat label="Planlanan" value={formatProjectNumber(task.plannedQuantity)} />
                         <MiniStat label="Yapılan" value={formatProjectNumber(task.processedQuantity)} />
                         <MiniStat label="Kalan" value={formatProjectNumber(task.remainingQuantity)} />
-                        <MiniStat label="Atananlar" value={task.assignedUsernames.join(', ') || 'Atanmamış'} />
+                        <MiniStat label="Atananlar" value={formatTaskAssignees(task.assignedUsernames)} />
                       </dl>
                     </article>
                   );
