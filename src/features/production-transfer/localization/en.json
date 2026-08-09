@@ -88,6 +88,7 @@
   "execution": {
     "erp": {
       "title": "Netsis posting status",
+      "openPanel": "Post to Netsis",
       "documentNo": "Netsis document no",
       "retry": "Post to Netsis / Retry",
       "postedWithCompletion": "The production transfer completed and its Netsis document was created.",

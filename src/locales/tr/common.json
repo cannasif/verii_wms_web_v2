@@ -5374,6 +5374,9 @@
       "handlingUnitRequired": "Palet zorunlu",
       "removeLine": "Kalemi kaldır"
     },
+    "stockSelect": {
+      "openPanel": "Stok seç panelini aç"
+    },
     "success": {
       "title": "Transfer oluşturuldu",
       "linesAndQty": "{{count}} kalem · {{total}} miktar",
@@ -5978,6 +5981,24 @@
     "statusPending": "Kaydedilmedi",
     "statusCurrent": "Güncel",
     "readOnlyInfo": "Bu ekranı görüntüleyebilirsiniz ancak grup atamalarını güncellemek için update yetkisi gerekir."
+  },
+  "stockSelectDialog": {
+    "title": "Stok seç",
+    "description": "Listeden veya kart görünümünden stok seçin.",
+    "searchPlaceholder": "Stok kodu veya adı ile ara…",
+    "loading": "Stoklar yükleniyor…",
+    "loadFailed": "Stok listesi alınamadı.",
+    "minChars": "Aramak için en az {{count}} karakter girin.",
+    "noResults": "Aramanızla eşleşen stok bulunamadı.",
+    "emptyBrowse": "Stokları görmek için arama yapın veya listede gezinin.",
+    "colCode": "Stok kodu",
+    "colName": "Stok adı",
+    "colUnit": "Birim",
+    "colAction": "İşlem",
+    "selected": "Seçili",
+    "select": "Seç",
+    "cardView": "Kart görünümü",
+    "listView": "Liste görünümü"
   },
   "paged": {
     "search": "Ara",

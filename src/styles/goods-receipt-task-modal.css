@@ -417,3 +417,178 @@ html.skin-premium .wms-ops-detail-dialog .wms-ops-task-line-flag {
   text-transform: none;
   padding: 0.1rem 0.5rem;
 }
+
+/* ── Üretim iş emri listesi: 4 sekmeli ana tab şeridi ─────────────────── */
+.wms-ops-production-work-order-tabs.wms-ops-detail-dialog {
+  overflow: visible;
+  box-shadow: none !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  max-width: none !important;
+}
+
+/* Aktif sekme metni glider üzerinde okunaklı kalsın */
+.wms-ops-production-work-order-tabs.wms-ops-detail-dialog
+  [data-slot='tabs-trigger'].wms-ops-detail-main-tab {
+  position: relative;
+  z-index: 1;
+}
+
+.wms-ops-production-work-order-tabs.wms-ops-detail-dialog
+  [data-slot='tabs-trigger'].wms-ops-detail-main-tab[data-state='active'] {
+  color: var(--wms-ops-tab-active-fg) !important;
+  -webkit-text-fill-color: var(--wms-ops-tab-active-fg) !important;
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+html.skin-premium .wms-ops-production-work-order-tabs.wms-ops-detail-dialog
+  [data-slot='tabs-trigger'].wms-ops-detail-main-tab[data-state='active'] {
+  color: #2d1a12 !important;
+  -webkit-text-fill-color: #2d1a12 !important;
+  text-shadow: none !important;
+}
+
+html.skin-premium.dark .wms-ops-production-work-order-tabs.wms-ops-detail-dialog
+  [data-slot='tabs-trigger'].wms-ops-detail-main-tab[data-state='active'] {
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 28%) !important;
+}
+
+.wms-ops-detail-dialog [data-slot='tabs-list'].wms-ops-detail-main-tabs--cols-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.wms-ops-detail-dialog
+  [data-slot='tabs-list'].wms-ops-detail-main-tabs--cols-4
+  .wms-ops-detail-tab-indicator {
+  width: calc((100% - 1.48rem) / 4);
+}
+
+.wms-ops-detail-dialog
+  [data-slot='tabs-list'].wms-ops-detail-main-tabs--cols-4[data-active-index='1']
+  .wms-ops-detail-tab-indicator {
+  transform: translateX(calc(100% + 0.25rem));
+}
+
+.wms-ops-detail-dialog
+  [data-slot='tabs-list'].wms-ops-detail-main-tabs--cols-4[data-active-index='2']
+  .wms-ops-detail-tab-indicator {
+  transform: translateX(calc(2 * (100% + 0.25rem)));
+}
+
+.wms-ops-detail-dialog
+  [data-slot='tabs-list'].wms-ops-detail-main-tabs--cols-4[data-active-index='3']
+  .wms-ops-detail-tab-indicator {
+  transform: translateX(calc(3 * (100% + 0.25rem)));
+}
+
+html.skin-premium
+  .wms-ops-detail-dialog
+  [data-slot='tabs-list'].wms-ops-detail-main-tabs--cols-4
+  .wms-ops-detail-tab-indicator {
+  width: calc((100% - 1.66rem) / 4);
+}
+
+html.skin-premium
+  .wms-ops-detail-dialog
+  [data-slot='tabs-list'].wms-ops-detail-main-tabs--cols-4[data-active-index='1']
+  .wms-ops-detail-tab-indicator {
+  transform: translateX(calc(100% + 0.3rem));
+}
+
+html.skin-premium
+  .wms-ops-detail-dialog
+  [data-slot='tabs-list'].wms-ops-detail-main-tabs--cols-4[data-active-index='2']
+  .wms-ops-detail-tab-indicator {
+  transform: translateX(calc(2 * (100% + 0.3rem)));
+}
+
+html.skin-premium
+  .wms-ops-detail-dialog
+  [data-slot='tabs-list'].wms-ops-detail-main-tabs--cols-4[data-active-index='3']
+  .wms-ops-detail-tab-indicator {
+  transform: translateX(calc(3 * (100% + 0.3rem)));
+}
+
+/* ── Üretim iş emri listesi: 5 sekmeli ana tab şeridi ─────────────────── */
+.wms-ops-detail-dialog [data-slot='tabs-list'].wms-ops-detail-main-tabs--cols-5 {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.wms-ops-production-work-order-tabs
+  [data-slot='tabs-trigger'].wms-ops-detail-main-tab {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding-inline: 0.35rem;
+}
+
+.wms-ops-detail-dialog
+  [data-slot='tabs-list'].wms-ops-detail-main-tabs--cols-5
+  .wms-ops-detail-tab-indicator {
+  width: calc((100% - 1.85rem) / 5);
+}
+
+.wms-ops-detail-dialog
+  [data-slot='tabs-list'].wms-ops-detail-main-tabs--cols-5[data-active-index='1']
+  .wms-ops-detail-tab-indicator {
+  transform: translateX(calc(100% + 0.25rem));
+}
+
+.wms-ops-detail-dialog
+  [data-slot='tabs-list'].wms-ops-detail-main-tabs--cols-5[data-active-index='2']
+  .wms-ops-detail-tab-indicator {
+  transform: translateX(calc(2 * (100% + 0.25rem)));
+}
+
+.wms-ops-detail-dialog
+  [data-slot='tabs-list'].wms-ops-detail-main-tabs--cols-5[data-active-index='3']
+  .wms-ops-detail-tab-indicator {
+  transform: translateX(calc(3 * (100% + 0.25rem)));
+}
+
+.wms-ops-detail-dialog
+  [data-slot='tabs-list'].wms-ops-detail-main-tabs--cols-5[data-active-index='4']
+  .wms-ops-detail-tab-indicator {
+  transform: translateX(calc(4 * (100% + 0.25rem)));
+}
+
+html.skin-premium
+  .wms-ops-detail-dialog
+  [data-slot='tabs-list'].wms-ops-detail-main-tabs--cols-5
+  .wms-ops-detail-tab-indicator {
+  width: calc((100% - 2.08rem) / 5);
+}
+
+html.skin-premium
+  .wms-ops-detail-dialog
+  [data-slot='tabs-list'].wms-ops-detail-main-tabs--cols-5[data-active-index='1']
+  .wms-ops-detail-tab-indicator {
+  transform: translateX(calc(100% + 0.3rem));
+}
+
+html.skin-premium
+  .wms-ops-detail-dialog
+  [data-slot='tabs-list'].wms-ops-detail-main-tabs--cols-5[data-active-index='2']
+  .wms-ops-detail-tab-indicator {
+  transform: translateX(calc(2 * (100% + 0.3rem)));
+}
+
+html.skin-premium
+  .wms-ops-detail-dialog
+  [data-slot='tabs-list'].wms-ops-detail-main-tabs--cols-5[data-active-index='3']
+  .wms-ops-detail-tab-indicator {
+  transform: translateX(calc(3 * (100% + 0.3rem)));
+}
+
+html.skin-premium
+  .wms-ops-detail-dialog
+  [data-slot='tabs-list'].wms-ops-detail-main-tabs--cols-5[data-active-index='4']
+  .wms-ops-detail-tab-indicator {
+  transform: translateX(calc(4 * (100% + 0.3rem)));
+}

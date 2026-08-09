@@ -3,29 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { WMS_NAV_ITEMS, resolveNavItemTitle, type NavItem } from './nav-items';
-
-/** Route'a en uygun (en uzun href eşleşmeli) nav zincirini döndürür. */
-function findTrail(items: NavItem[], pathname: string): NavItem[] | null {
-  let best: { trail: NavItem[]; length: number } | null = null;
-
-  const walk = (nodes: NavItem[], trail: NavItem[]): void => {
-    for (const item of nodes) {
-      const nextTrail = [...trail, item];
-      if (item.href && (pathname === item.href || pathname.startsWith(`${item.href}/`))) {
-        if (!best || item.href.length > best.length) {
-          best = { trail: nextTrail, length: item.href.length };
-        }
-      }
-      if (item.children?.length) {
-        walk(item.children, nextTrail);
-      }
-    }
-  };
-
-  walk(items, []);
-  return best ? (best as { trail: NavItem[]; length: number }).trail : null;
-}
+import { findNavTrail, WMS_NAV_ITEMS, resolveNavItemTitle, type NavItem } from './nav-items';
 
 /**
  * Premium skin'de terminal eyebrow'u ("GİRİŞ_OP / MAL_KABUL") yerine
@@ -39,7 +17,7 @@ export function PremiumEyebrow({ eyebrow }: { eyebrow: ReactNode }): ReactElemen
   const language = i18n.resolvedLanguage ?? i18n.language;
 
   const segments = useMemo(() => {
-    const trail = findTrail(WMS_NAV_ITEMS, pathname);
+    const trail = findNavTrail(WMS_NAV_ITEMS, pathname);
     if (trail && trail.length > 0) {
       const resolve = (item: NavItem): string => resolveNavItemTitle(t, language, item);
       const labels = trail.map(resolve);
@@ -86,7 +64,7 @@ export function buildTerminalEyebrowFromNav(
   t: ReturnType<typeof useTranslation>['t'],
   language: string,
 ): ReactNode | null {
-  const trail = findTrail(WMS_NAV_ITEMS, pathname);
+  const trail = findNavTrail(WMS_NAV_ITEMS, pathname);
   if (!trail || trail.length < 1) return null;
   const pick = trail.length > 3
     ? [trail[1], trail[trail.length - 2], trail[trail.length - 1]]

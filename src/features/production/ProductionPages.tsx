@@ -117,7 +117,6 @@ export function ProductionHubPage(): ReactElement {
       eyebrow={t('hub.eyebrow')}
       title={t('hub.title')}
       description={t('hub.description')}
-      path="/warehouse/production"
       phases={phases}
       callout={{ title: t('hub.boundary.title'), text: t('hub.boundary.text') }}
     />

@@ -172,7 +172,7 @@ const DEFAULT_COLUMN_WIDTH = 160;
 const DEFAULT_ID_COLUMN_WIDTH = 88;
 const DEFAULT_ACTIONS_COLUMN_WIDTH = 120;
 const LOCKED_COLUMN_KEYS = new Set(['id']);
-const EXCLUDED_COLUMN_PREF_KEYS = new Set(['actions']);
+const EXCLUDED_COLUMN_PREF_KEYS = new Set(['actions', 'expand']);
 const gridScrollPositions = new Map<string, number>();
 
 function resolveColumnWidth<T>(columnOrKey: GridColumn<T> | string, widths: Record<string, number>, fallbackWidth?: number): number {
@@ -491,7 +491,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
     const localizedColumn = systemLabelKey
       ? { ...column, label: t(`dataGrid.systemColumns.${systemLabelKey}`) }
       : column;
-    return column.key === 'id' || column.key === 'actions'
+    return column.key === 'id' || column.key === 'actions' || column.key === 'expand'
       ? { ...localizedColumn, hideable: false }
       : localizedColumn;
   }), [sourceColumns, t]);
@@ -504,7 +504,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
     () => columns.map((column) => ({
       key: column.key,
       sortable: column.sortable,
-      hideable: (column.key === 'id' || column.key === 'actions') ? false : column.hideable,
+      hideable: (column.key === 'id' || column.key === 'actions' || column.key === 'expand') ? false : column.hideable,
       searchable: isGridColumnSearchable(column),
       defaultSearch: column.defaultSearch,
     })),
@@ -1382,94 +1382,100 @@ export function AdvancedDataGrid<T extends { id: number }>({
                 collisionPadding={8}
                 className="wms-ops-list-popover wms-ops-list-popover--columns pointer-events-auto z-[4000] w-80 border-0 p-0 shadow-none outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95"
               >
-                <div className="space-y-1 p-2">
-                  <div className="wms-ops-list-popover__section-title">{t('common.visibleColumns')}</div>
-                  <GridMenuSearch value={columnMenuSearch} onChange={setColumnMenuSearch} placeholder={t('dataGrid.menuSearchPlaceholder')} clearLabel={t('dataGrid.clearMenuSearch')} />
-                  <div className="wms-ops-list-popover__scroll space-y-0.5">
-                    {columnMenuColumns.filter((column) => displayColumns.includes(column.key)).length === 0
-                      ? <p role="status" className="px-2 py-6 text-center text-sm text-[var(--wms-app-text-muted)]">{t('dataGrid.noMatchingColumns')}</p>
-                      : columnMenuColumns.filter((column) => displayColumns.includes(column.key)).map((column) => {
-                        const isLocked = LOCKED_COLUMN_KEYS.has(column.key) || column.hideable === false;
-                        const idx = displayColumns.indexOf(column.key);
-                        return (
-                          <div key={column.key} className="wms-ops-list-popover__row group">
-                            <div className="wms-ops-list-popover__move-slot" aria-hidden={isLocked}>
+                <div className="wms-ops-list-popover--columns-shell">
+                  <div className="wms-ops-list-popover--columns-header space-y-1 p-2 pb-1">
+                    <div className="wms-ops-list-popover__section-title">{t('common.visibleColumns')}</div>
+                    <GridMenuSearch value={columnMenuSearch} onChange={setColumnMenuSearch} placeholder={t('dataGrid.menuSearchPlaceholder')} clearLabel={t('dataGrid.clearMenuSearch')} />
+                  </div>
+                  <div className="wms-ops-list-popover--columns-body wms-ops-list-popover__scroll space-y-1 px-2">
+                    <div className="space-y-0.5">
+                      {columnMenuColumns.filter((column) => displayColumns.includes(column.key)).length === 0
+                        ? <p role="status" className="px-2 py-6 text-center text-sm text-[var(--wms-app-text-muted)]">{t('dataGrid.noMatchingColumns')}</p>
+                        : columnMenuColumns.filter((column) => displayColumns.includes(column.key)).map((column) => {
+                          const isLocked = LOCKED_COLUMN_KEYS.has(column.key) || column.hideable === false;
+                          const idx = displayColumns.indexOf(column.key);
+                          return (
+                            <div key={column.key} className="wms-ops-list-popover__row group">
+                              <div className="wms-ops-list-popover__move-slot" aria-hidden={isLocked}>
+                                {!isLocked ? (
+                                  <>
+                                    <button
+                                      type="button"
+                                      className="wms-ops-list-popover__icon-btn wms-ops-list-popover__icon-btn--move"
+                                      onClick={() => moveColumnInPopover(column.key, 'up')}
+                                      disabled={idx <= firstMovableIndex}
+                                      aria-label={t('common.moveUp', { defaultValue: 'Up' })}
+                                    >
+                                      <ArrowUp className="size-3" aria-hidden />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="wms-ops-list-popover__icon-btn wms-ops-list-popover__icon-btn--move"
+                                      onClick={() => moveColumnInPopover(column.key, 'down')}
+                                      disabled={idx >= displayColumns.length - 1}
+                                      aria-label={t('common.moveDown', { defaultValue: 'Down' })}
+                                    >
+                                      <ArrowDown className="size-3" aria-hidden />
+                                    </button>
+                                  </>
+                                ) : null}
+                              </div>
+                              <span className="wms-ops-list-popover__row-label truncate">{column.label}</span>
                               {!isLocked ? (
-                                <>
-                                  <button
-                                    type="button"
-                                    className="wms-ops-list-popover__icon-btn wms-ops-list-popover__icon-btn--move"
-                                    onClick={() => moveColumnInPopover(column.key, 'up')}
-                                    disabled={idx <= firstMovableIndex}
-                                    aria-label={t('common.moveUp', { defaultValue: 'Up' })}
-                                  >
-                                    <ArrowUp className="size-3" aria-hidden />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="wms-ops-list-popover__icon-btn wms-ops-list-popover__icon-btn--move"
-                                    onClick={() => moveColumnInPopover(column.key, 'down')}
-                                    disabled={idx >= displayColumns.length - 1}
-                                    aria-label={t('common.moveDown', { defaultValue: 'Down' })}
-                                  >
-                                    <ArrowDown className="size-3" aria-hidden />
-                                  </button>
-                                </>
-                              ) : null}
+                                <button
+                                  type="button"
+                                  className="wms-ops-list-popover__icon-btn wms-ops-list-popover__icon-btn--danger shrink-0"
+                                  onClick={() => toggleColumn(column.key)}
+                                  title={t('common.hide')}
+                                  aria-label={t('common.hide')}
+                                >
+                                  <EyeOff className="size-3" aria-hidden />
+                                </button>
+                              ) : (
+                                <span className="wms-ops-list-popover__action-spacer" aria-hidden />
+                              )}
                             </div>
-                            <span className="wms-ops-list-popover__row-label truncate">{column.label}</span>
-                            {!isLocked ? (
+                          );
+                        })}
+                    </div>
+
+                    {hiddenColumns.length > 0 ? (
+                      <>
+                        <div className="wms-ops-list-popover__divider" />
+                        <div className="wms-ops-list-popover__section-title">{t('common.hiddenColumns')}</div>
+                        <div className="space-y-0.5">
+                          {columnMenuColumns.filter((column) => hiddenColumns.includes(column.key)).map((column) => (
+                            <div key={column.key} className="wms-ops-list-popover__row">
+                              <span className="wms-ops-list-popover__move-slot" aria-hidden />
+                              <span className="wms-ops-list-popover__row-label wms-ops-list-popover__row-label--muted truncate">
+                                {column.label}
+                              </span>
                               <button
                                 type="button"
-                                className="wms-ops-list-popover__icon-btn wms-ops-list-popover__icon-btn--danger shrink-0"
+                                className="wms-ops-list-popover__icon-btn shrink-0"
                                 onClick={() => toggleColumn(column.key)}
-                                title={t('common.hide')}
-                                aria-label={t('common.hide')}
+                                title={t('common.show')}
+                                aria-label={t('common.show')}
                               >
-                                <EyeOff className="size-3" aria-hidden />
+                                <Eye className="size-3" aria-hidden />
                               </button>
-                            ) : (
-                              <span className="wms-ops-list-popover__action-spacer" aria-hidden />
-                            )}
-                          </div>
-                        );
-                      })}
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    ) : null}
                   </div>
 
-                  {hiddenColumns.length > 0 ? (
-                    <>
-                      <div className="wms-ops-list-popover__divider" />
-                      <div className="wms-ops-list-popover__section-title">{t('common.hiddenColumns')}</div>
-                      <div className="wms-ops-list-popover__scroll space-y-0.5">
-                        {columnMenuColumns.filter((column) => hiddenColumns.includes(column.key)).map((column) => (
-                          <div key={column.key} className="wms-ops-list-popover__row">
-                            <span className="wms-ops-list-popover__move-slot" aria-hidden />
-                            <span className="wms-ops-list-popover__row-label wms-ops-list-popover__row-label--muted truncate">
-                              {column.label}
-                            </span>
-                            <button
-                              type="button"
-                              className="wms-ops-list-popover__icon-btn shrink-0"
-                              onClick={() => toggleColumn(column.key)}
-                              title={t('common.show')}
-                              aria-label={t('common.show')}
-                            >
-                              <Eye className="size-3" aria-hidden />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </>
-                  ) : null}
-
-                  <button
-                    type="button"
-                    onClick={resetLayout}
-                    className="mt-2 inline-flex min-h-10 w-full items-center justify-center gap-2 border border-[var(--wms-app-border)] px-3 py-2 text-sm hover:bg-[var(--wms-brand-soft)]"
-                  >
-                    <RotateCcw className="size-3.5" aria-hidden />
-                    {t('dataGrid.resetLayout')}
-                  </button>
+                  <div className="wms-ops-list-popover--columns-footer p-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={resetLayout}
+                      className="inline-flex min-h-10 w-full items-center justify-center gap-2 border border-[var(--wms-app-border)] px-3 py-2 text-sm hover:bg-[var(--wms-brand-soft)]"
+                    >
+                      <RotateCcw className="size-3.5" aria-hidden />
+                      {t('dataGrid.resetLayout')}
+                    </button>
+                  </div>
                 </div>
               </PopoverPrimitive.Content>
             </PopoverPrimitive.Portal>

@@ -48,7 +48,6 @@ export function WarehouseInboundHubPage() {
       eyebrow={t('hub.eyebrow')}
       title={t('hub.title')}
       description={t('hub.description')}
-      path="/warehouse/warehouse-inbounds"
       phases={phases}
     />
   );

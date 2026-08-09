@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
 import { ArrowDown, ArrowUp, CheckCircle2, ChevronDown, ChevronUp, CircleHelp, FileText, PackageOpen, Plus, RefreshCw, Search, X } from 'lucide-react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useTheme } from '@/components/theme-provider';
@@ -17,6 +16,7 @@ import { OpsCodeBadge, OpsStatusBadge } from '@/components/shared/OpsStatusBadge
 import { PagedLookupDialog } from '@/components/shared/PagedLookupDialog';
 import { buildTerminalEyebrowFromNav } from '@/components/shared/PremiumEyebrow';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { formatProjectDate, formatProjectNumber } from '@/lib/project-format';
 import { appendFoldedSearchToken, foldTurkishSearch } from '@/lib/turkish-search';
@@ -32,6 +32,7 @@ import type { ProductionSourceWorkOrder, PreparedNetsisProductionMaterial, Prepa
 import {
   ProductionWorkOrderTransferTabPanel,
   PRODUCTION_WORK_ORDER_TRANSFER_TABS,
+  isProductionWorkOrderPageTab,
   workOrderTransferApiTab,
   type ProductionWorkOrderPageTab,
 } from './components/ProductionWorkOrderTransferTabPanel';
@@ -191,10 +192,10 @@ function dateValue(value?: string): number {
 export function ProductionWorkOrdersPage(): ReactElement {
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const [searchParams] = useSearchParams();
   const { t, i18n } = useTranslation();
   const { skin } = useTheme();
   const { can } = usePermissionAccess();
-  const queryClient = useQueryClient();
   const branchCode = useAuthStore((state) => state.branch?.code ?? '0');
   const isPremium = skin === 'premium';
   const [policy, setPolicy] = useState<ProductionTransferPolicy>();
@@ -206,8 +207,20 @@ export function ProductionWorkOrdersPage(): ReactElement {
   const [selected, setSelected] = useState<PreparedNetsisProductionWorkOrder>();
   const [detailLoading, setDetailLoading] = useState<string>();
   const [dateSort, setDateSort] = useState<DateSort>('desc');
-  const [activeTab, setActiveTab] = useState<ProductionWorkOrderPageTab>('pending');
+  const [activeTab, setActiveTab] = useState<ProductionWorkOrderPageTab>(() => {
+    const tab = searchParams.get('tab');
+    return isProductionWorkOrderPageTab(tab) ? tab : 'pending';
+  });
+  const [transferRefreshKey, setTransferRefreshKey] = useState(0);
   const eyebrow = buildTerminalEyebrowFromNav(pathname, t, i18n.resolvedLanguage ?? i18n.language) ?? 'VERII WMS';
+  const activeTabIndex = PRODUCTION_WORK_ORDER_TRANSFER_TABS.findIndex((tab) => tab.key === activeTab);
+
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (isProductionWorkOrderPageTab(tab)) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
 
   const load = useCallback(async (term?: string) => {
     setLoading(true);
@@ -244,12 +257,11 @@ export function ProductionWorkOrdersPage(): ReactElement {
     setSearchTokens([]);
     setActiveSearch([]);
     if (activeTab === 'pending') void load();
-    else void queryClient.invalidateQueries({ queryKey: ['production-work-order-transfer-groups'] });
   };
 
   const refreshActiveTab = () => {
     if (activeTab === 'pending') void load();
-    else void queryClient.invalidateQueries({ queryKey: ['production-work-order-transfer-groups'] });
+    else setTransferRefreshKey((value) => value + 1);
   };
 
   const visibleRows = useMemo(() => {
@@ -334,24 +346,30 @@ export function ProductionWorkOrdersPage(): ReactElement {
       )}
     >
       <div className="wms-ops-data-grid min-w-0 space-y-0">
-        <div className="mb-4 flex flex-wrap gap-2 border-b border-[var(--wms-ops-card-border)] pb-3">
-          {PRODUCTION_WORK_ORDER_TRANSFER_TABS.map((tab) => (
-            <button
-              key={tab.key}
-              type="button"
-              onClick={() => setActiveTab(tab.key)}
+        <div className="wms-ops-production-work-order-tabs wms-ops-detail-dialog mb-4">
+          <Tabs
+            value={activeTab}
+            onValueChange={(value) => setActiveTab(value as ProductionWorkOrderPageTab)}
+          >
+            <TabsList
               className={cn(
-                'rounded-full border px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] transition',
-                activeTab === tab.key
-                  ? 'border-[var(--wms-brand-primary)] bg-[var(--wms-brand-primary)] text-[var(--wms-brand-on-primary)]'
-                  : 'border-[var(--wms-app-border)] text-[var(--wms-app-text-muted)] hover:border-[var(--wms-brand-primary)] hover:text-[var(--wms-brand-primary)]',
+                'w-full',
+                'wms-ops-detail-main-tabs',
+                'wms-ops-detail-main-tabs--cols-5',
               )}
+              data-active-index={Math.max(activeTabIndex, 0)}
             >
-              {tab.label}
-            </button>
-          ))}
+              <span className="wms-ops-detail-tab-indicator" aria-hidden />
+              {PRODUCTION_WORK_ORDER_TRANSFER_TABS.map((tab) => (
+                <TabsTrigger key={tab.key} value={tab.key} className="wms-ops-detail-main-tab">
+                  {tab.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
         </div>
 
+        {activeTab === 'pending' ? (
         <div className="wms-ops-data-grid-toolbar flex flex-wrap items-start justify-between gap-2">
           <div className="wms-ops-data-grid-toolbar__start flex min-w-0 !grow flex-wrap items-start gap-2">
             <div className="wms-ops-grid-search wms-ops-grid-search--tokens" data-no-auto-localize="true">
@@ -414,11 +432,12 @@ export function ProductionWorkOrdersPage(): ReactElement {
             </OpsActionButton>
           </div>
         </div>
+        ) : null}
 
         {activeTab !== 'pending' ? (
           <ProductionWorkOrderTransferTabPanel
             tab={workOrderTransferApiTab(activeTab)}
-            search={activeSearch.join(' ') || undefined}
+            refreshKey={transferRefreshKey}
           />
         ) : (
         <>
@@ -715,7 +734,13 @@ function WorkOrderDrawer({
               <div className="flex items-center gap-1.5">
                 <h3 className="wms-ops-detail-section-title !border-0 !p-0">Emir sorumlusu</h3>
                 <TooltipProvider delayDuration={160}>
-                  <Tooltip open={assigneeHintOpen} onOpenChange={setAssigneeHintOpen}>
+                  <Tooltip
+                    open={assigneeHintOpen}
+                    onOpenChange={(next) => {
+                      // Drawer açılışında odak bu butona gelince Radix otomatik açmasın; yalnızca tıklama açsın.
+                      if (!next) setAssigneeHintOpen(false);
+                    }}
+                  >
                     <TooltipTrigger asChild>
                       <button
                         type="button"

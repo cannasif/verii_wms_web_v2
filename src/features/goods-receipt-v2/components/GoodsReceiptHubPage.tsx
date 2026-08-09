@@ -48,7 +48,6 @@ export function GoodsReceiptHubPage() {
       eyebrow={t('hub.eyebrow')}
       title={t('hub.title')}
       description={t('hub.description')}
-      path="/warehouse/goods-receipts"
       phases={phases}
     />
   );

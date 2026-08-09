@@ -58,7 +58,7 @@ export interface ProductionTaskPoolRow {
   assignedUsers: string[]; createdDate?: string;
 }
 
-export type ProductionWorkOrderTransferTab = 'Picking' | 'Completed' | 'Cancelled';
+export type ProductionWorkOrderTransferTab = 'Picking' | 'Completed' | 'Cancelled' | 'MyAssignments';
 
 export interface ProductionWorkOrderTransferTaskRow {
   taskId: number;
@@ -99,6 +99,15 @@ export interface ProductionWorkOrderTransferHeaderRow {
   targetWarehouseName: string;
   requestedQuantity: number;
   pickedQuantity: number;
+  documentDate: string;
+  initiationMode: string;
+  lineCount: number;
+  shippedQuantity: number;
+  receivedQuantity: number;
+  putawayQuantity: number;
+  createdBy?: number;
+  updatedBy?: number;
+  updatedDate?: string;
   createdDate?: string;
   tasks: ProductionWorkOrderTransferTaskRow[];
 }
@@ -254,6 +263,12 @@ export const productionTransferApi = {
       '/api/production-transfers/work-order-transfer-groups',
       { params: { tab, search: search?.trim() || undefined } },
     )),
+  workOrderTransferGroupTasks: async (
+    transferId: number,
+  ): Promise<ProductionWorkOrderTransferTaskRow[]> =>
+    unwrap(await api.get<Envelope<ProductionWorkOrderTransferTaskRow[]>>(
+      `/api/production-transfers/work-order-transfer-groups/${transferId}/tasks`,
+    )),
 
   execution: async (id: number): Promise<ProductionTransferExecution> =>
     unwrap(await api.get<Envelope<ProductionTransferExecution>>(`/api/production-transfers/${id}/execution`)),
@@ -293,6 +308,10 @@ export const productionTransferApi = {
   completePicking: async (id: number, confirmPartialPicking: boolean, reason?: string): Promise<ProductionTransferExecution> =>
     unwrap(await api.post<Envelope<ProductionTransferExecution>>(`/api/production-transfers/${id}/complete-picking`, {
       idempotencyKey: crypto.randomUUID(), confirmPartialPicking, reason: reason?.trim() || null,
+    })),
+  resumePicking: async (id: number): Promise<ProductionTransferExecution> =>
+    unwrap(await api.post<Envelope<ProductionTransferExecution>>(`/api/production-transfers/${id}/resume-picking`, {
+      idempotencyKey: crypto.randomUUID(),
     })),
   confirmHandover: async (id: number, confirmShortage: boolean, shortageReason?: string): Promise<ProductionTransferExecution> =>
     unwrap(await api.post<Envelope<ProductionTransferExecution>>(`/api/production-transfers/${id}/confirm-handover`, {

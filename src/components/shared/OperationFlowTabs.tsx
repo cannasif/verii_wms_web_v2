@@ -20,6 +20,7 @@ type Props = {
   directDescription?: string;
   hiddenExecutions?: OperationExecutionMode[];
   hideExecutionSection?: boolean;
+  hideSourceSection?: boolean;
   accent?: 'cyan' | 'violet';
   children?: ReactNode;
 };
@@ -44,10 +45,12 @@ export function OperationFlowTabs({
   directDescription,
   hiddenExecutions = [],
   hideExecutionSection = false,
+  hideSourceSection = false,
   children,
 }: Props): ReactElement {
   const { t } = useTranslation('common');
   const showExecutionSection = !hideExecutionSection;
+  const showSourceSection = !hideSourceSection;
   const allExecutionTabs: Array<FlowTab<OperationExecutionMode>> = [
     {
       value: 'task',
@@ -94,14 +97,16 @@ export function OperationFlowTabs({
           disabledHint={t(`${OF}.combinationDisabled`)}
         />
       ) : null}
-      <FlowTabGroup
-        label={showExecutionSection ? t(`${OF}.documentSource`) : t(`${OF}.documentSourceStandalone`)}
-        ariaLabel={t(`${OF}.sourceAriaLabel`)}
-        tabs={sourceTabs}
-        value={source}
-        onChange={onSourceChange}
-        disabledHint={t(`${OF}.combinationDisabled`)}
-      />
+      {showSourceSection ? (
+        <FlowTabGroup
+          label={showExecutionSection ? t(`${OF}.documentSource`) : t(`${OF}.documentSourceStandalone`)}
+          ariaLabel={t(`${OF}.sourceAriaLabel`)}
+          tabs={sourceTabs}
+          value={source}
+          onChange={onSourceChange}
+          disabledHint={t(`${OF}.combinationDisabled`)}
+        />
+      ) : null}
       {children ? (
         <p className="wms-ops-flow__note">
           <Info className="wms-ops-flow__note-icon size-3.5" aria-hidden />

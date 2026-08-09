@@ -1,10 +1,11 @@
 import type { LucideIcon } from 'lucide-react';
 import { ArrowRight, Loader2 } from 'lucide-react';
-import type { ReactElement, ReactNode } from 'react';
+import { useMemo, type ReactElement, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/components/theme-provider';
 import { cn } from '@/lib/utils';
+import { resolveNavTrailLabels } from './nav-items';
 
 export type OpsProcessHubCard = {
   key: string;
@@ -31,7 +32,8 @@ export type OpsProcessHubProps = {
   eyebrow: string;
   title: string;
   description: string;
-  path: string;
+  path?: string;
+  showPath?: boolean;
   phases: OpsProcessHubPhase[];
   callout?: { title: string; text: string };
   loading?: boolean;
@@ -54,15 +56,27 @@ function HubHero({
   title,
   description,
   path,
+  showPath,
   isPremium,
 }: {
   eyebrow: string;
   title: string;
   description: string;
-  path: string;
+  path?: string;
+  showPath: boolean;
   isPremium: boolean;
 }): ReactElement {
-  const { t } = useTranslation('common');
+  const { t, i18n } = useTranslation('common');
+  const language = i18n.resolvedLanguage ?? i18n.language;
+  const pathValue = useMemo(() => {
+    if (!path) return '';
+    const labels = resolveNavTrailLabels(t, language, path);
+    if (labels?.length) {
+      return labels.join(isPremium ? ' · ' : ' :: ');
+    }
+    return path;
+  }, [isPremium, language, path, t]);
+
   return (
     <header className="wms-ops-dashboard-hero wms-ops-process-hub__hero">
       <span className="wms-ops-dashboard-hero__frame" aria-hidden>
@@ -76,20 +90,22 @@ function HubHero({
         <p className="wms-ops-dashboard-hero__eyebrow">{eyebrow}</p>
         <h1 className="wms-ops-dashboard-hero__title">{title}</h1>
         <p className="wms-ops-dashboard-hero__subtitle">{description}</p>
-        <div className="wms-ops-process-hub__path" aria-label="route">
-          <span className="wms-ops-process-hub__path-prompt" aria-hidden>
-            {isPremium ? '' : '> '}
-          </span>
-          <span className="wms-ops-process-hub__path-label">
-            {isPremium
-              ? t('processHub.path', { defaultValue: 'Rota' })
-              : t('processHub.pathTerminal', { defaultValue: 'PATH' })}
-          </span>
-          <span className="wms-ops-process-hub__path-sep" aria-hidden>
-            {isPremium ? ' · ' : ' :: '}
-          </span>
-          <code className="wms-ops-process-hub__path-value">{path}</code>
-        </div>
+        {showPath && path ? (
+          <div className="wms-ops-process-hub__path" aria-label="route">
+            <span className="wms-ops-process-hub__path-prompt" aria-hidden>
+              {isPremium ? '' : '> '}
+            </span>
+            <span className="wms-ops-process-hub__path-label">
+              {isPremium
+                ? t('processHub.path', { defaultValue: 'Rota' })
+                : t('processHub.pathTerminal', { defaultValue: 'PATH' })}
+            </span>
+            <span className="wms-ops-process-hub__path-sep" aria-hidden>
+              {isPremium ? ' · ' : ' :: '}
+            </span>
+            <span className="wms-ops-process-hub__path-value">{pathValue}</span>
+          </div>
+        ) : null}
       </div>
     </header>
   );
@@ -229,6 +245,7 @@ export function OpsProcessHub({
   title,
   description,
   path,
+  showPath = true,
   phases,
   callout,
   loading,
@@ -258,6 +275,7 @@ export function OpsProcessHub({
           title={title}
           description={description}
           path={path}
+          showPath={showPath}
           isPremium={isPremium}
         />
         {phases.map((phase) => (

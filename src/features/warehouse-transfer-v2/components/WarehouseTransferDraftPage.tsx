@@ -40,6 +40,7 @@ import {
 import { OpsFieldShell } from "@/components/shared/OpsFieldShell";
 import { OpsPageHeader } from "@/components/shared/OpsPageHeader";
 import { OpsSkinCheckbox } from "@/components/shared/OpsSkinCheckbox";
+import { StockSelectDialog } from "@/components/shared/StockSelectDialog";
 import { PagedAppDropdown } from "@/components/shared/PagedAppDropdown";
 import { Dialog, DialogTitle } from "@/components/ui/dialog";
 import { useDropdownInfiniteSearch } from "@/hooks/useDropdownInfiniteSearch";
@@ -648,7 +649,11 @@ export function WarehouseTransferDraftPage({
         return t(`${D}.validation.lineQuantityRequired`, { index: lineNo });
       if (line.source && line.quantity > line.source.availableQuantity)
         return t(`${D}.validation.lineQuantityExceeded`, { index: lineNo });
-      if ((policy.requireSourceLocation || intraWarehouseOp) && !line.sourceLocationId)
+      if (
+        variant !== "production" &&
+        (policy.requireSourceLocation || intraWarehouseOp) &&
+        !line.sourceLocationId
+      )
         return t(`${D}.validation.lineSourceLocationRequired`, { index: lineNo });
       if ((policy.requireTargetLocation || intraWarehouseOp) && !line.targetLocationId)
         return t(`${D}.validation.lineTargetLocationRequired`, { index: lineNo });
@@ -659,7 +664,7 @@ export function WarehouseTransferDraftPage({
         line.sourceLocationId === line.targetLocationId
       )
         return t(`${D}.validation.lineSameLocationInWarehouse`, { index: lineNo });
-      if (line.trackingType !== "None") {
+      if (variant !== "production" && line.trackingType !== "None") {
         if (!line.trackings.length)
           return t(`${D}.validation.lineTrackingRequired`, { index: lineNo });
         const tracked = line.trackings.reduce(
@@ -691,23 +696,25 @@ export function WarehouseTransferDraftPage({
         if (new Set(serials).size !== serials.length)
           return t(`${D}.validation.lineSerialDuplicate`, { index: lineNo });
       }
-      if (
-        line.trackingPolicy?.requireManufacturingDate &&
-        line.trackings.some((x) => !x.manufacturingDate)
-      )
-        return t(`${D}.validation.lineManufacturingDateRequired`, { index: lineNo });
-      if (
-        line.trackingPolicy?.requireExpirationDate &&
-        line.trackings.some((x) => !x.expirationDate)
-      )
-        return t(`${D}.validation.lineExpirationDateRequired`, { index: lineNo });
-      if (
-        line.trackingPolicy?.serialQuantityRule === "OneSerialPerBaseUnit" &&
-        (!Number.isInteger(line.quantity) ||
-          line.trackings.length !== line.quantity ||
-          line.trackings.some((x) => x.quantity !== 1))
-      )
-        return t(`${D}.validation.lineSerialCountMismatch`, { index: lineNo });
+      if (variant !== "production") {
+        if (
+          line.trackingPolicy?.requireManufacturingDate &&
+          line.trackings.some((x) => !x.manufacturingDate)
+        )
+          return t(`${D}.validation.lineManufacturingDateRequired`, { index: lineNo });
+        if (
+          line.trackingPolicy?.requireExpirationDate &&
+          line.trackings.some((x) => !x.expirationDate)
+        )
+          return t(`${D}.validation.lineExpirationDateRequired`, { index: lineNo });
+        if (
+          line.trackingPolicy?.serialQuantityRule === "OneSerialPerBaseUnit" &&
+          (!Number.isInteger(line.quantity) ||
+            line.trackings.length !== line.quantity ||
+            line.trackings.some((x) => x.quantity !== 1))
+        )
+          return t(`${D}.validation.lineSerialCountMismatch`, { index: lineNo });
+      }
     }
     return null;
   };
@@ -778,7 +785,8 @@ export function WarehouseTransferDraftPage({
       };
       const created = variant === "production"
         ? await warehouseTransferApi.createProductionDraft({
-            transfer,
+            autoAssignSources: true,
+            transfer: { ...transfer, autoAssignSources: true },
             purpose: productionPurpose,
             productionHeaderId,
             productionOrderId,
@@ -928,38 +936,39 @@ export function WarehouseTransferDraftPage({
           ) : null
         }
       />
-      <OperationFlowTabs
-        source={sourceKind === "OrderBased" ? "order" : "stock"}
-        execution={executionKind === "TaskBased" ? "task" : "direct"}
-        onSourceChange={(value) =>
-          setSource(value === "order" ? "OrderBased" : "StockBased")
-        }
-        onExecutionChange={(value) =>
-          setExecution(value === "task" ? "TaskBased" : "Direct")
-        }
-        hideExecutionSection={variant === "production"}
-        accent="violet"
-        orderLabel={orderLabel}
-        stockLabel={stockLabel}
-        isAllowed={(source, execution) => {
-          if (!policy) return false;
-          return source === "order"
-            ? execution === "task"
-              ? policy.allowOrderBasedTask
-              : policy.allowOrderBasedDirect
-            : execution === "task"
-              ? policy.allowStockBasedTask
-              : policy.allowStockBasedDirect;
-        }}
-      >
-        {sourceKind === "OrderBased"
-          ? variant === "warehouse" ? t(`${D}.flowHint.orderWarehouse`)
-            : t(`${D}.flowHint.orderOther`)
-          : t(`${D}.flowHint.stock`)}{" "}
-        {executionKind === "TaskBased"
-          ? t(`${D}.flowHint.task`)
-          : t(`${D}.flowHint.direct`)}
-      </OperationFlowTabs>
+      {variant !== "production" ? (
+        <OperationFlowTabs
+          source={sourceKind === "OrderBased" ? "order" : "stock"}
+          execution={executionKind === "TaskBased" ? "task" : "direct"}
+          onSourceChange={(value) =>
+            setSource(value === "order" ? "OrderBased" : "StockBased")
+          }
+          onExecutionChange={(value) =>
+            setExecution(value === "task" ? "TaskBased" : "Direct")
+          }
+          accent="violet"
+          orderLabel={orderLabel}
+          stockLabel={stockLabel}
+          isAllowed={(source, execution) => {
+            if (!policy) return false;
+            return source === "order"
+              ? execution === "task"
+                ? policy.allowOrderBasedTask
+                : policy.allowOrderBasedDirect
+              : execution === "task"
+                ? policy.allowStockBasedTask
+                : policy.allowStockBasedDirect;
+          }}
+        >
+          {sourceKind === "OrderBased"
+            ? variant === "warehouse" ? t(`${D}.flowHint.orderWarehouse`)
+              : t(`${D}.flowHint.orderOther`)
+            : t(`${D}.flowHint.stock`)}{" "}
+          {executionKind === "TaskBased"
+            ? t(`${D}.flowHint.task`)
+            : t(`${D}.flowHint.direct`)}
+        </OperationFlowTabs>
+      ) : null}
       <div
         className={cn(
           pairedContextPanel
@@ -1221,6 +1230,7 @@ export function WarehouseTransferDraftPage({
               key={line.localId}
               line={line}
               index={index}
+              variant={variant}
               branchCode={branchCode}
               sourceId={sourceId}
               targetId={targetId}
@@ -1237,7 +1247,27 @@ export function WarehouseTransferDraftPage({
         {(sourceKind === "StockBased" || variant !== "warehouse") && (
           <button
             type="button"
-            onClick={() => setLines((current) => [...current, blankLine()])}
+            onClick={() =>
+              setLines((current) => {
+                const newLine = blankLine();
+                if (variant === "production") {
+                  const template = current.find((x) => x.targetLocationId);
+                  if (template) {
+                    return [
+                      ...current,
+                      {
+                        ...newLine,
+                        targetLocationId: template.targetLocationId,
+                        targetLocationValue: template.targetLocationValue,
+                        targetLocationCode: template.targetLocationCode,
+                        targetLocationName: template.targetLocationName,
+                      },
+                    ];
+                  }
+                }
+                return [...current, newLine];
+              })
+            }
             className="wms-ops-line-add mt-3 inline-flex items-center gap-2 rounded-xl border border-[var(--wms-brand-ring)] px-3.5 py-2 text-sm font-semibold text-[var(--wms-brand-primary)]"
           >
             <Plus className="size-4" />
@@ -1651,6 +1681,7 @@ function AssigneePickerDialog({
 function LineCard({
   line,
   index,
+  variant,
   branchCode,
   sourceId,
   targetId,
@@ -1660,6 +1691,7 @@ function LineCard({
 }: {
   line: TransferDraftLine;
   index: number;
+  variant: TransferDraftVariant;
   branchCode: string;
   sourceId: number;
   targetId: number;
@@ -1668,6 +1700,7 @@ function LineCard({
   remove: () => void;
 }): ReactElement {
   const { t } = useTranslation("common");
+  const [stockDialogOpen, setStockDialogOpen] = useState(false);
   const excludedSourceLocationKey = (excludeSourceLocationIds ?? []).join(",");
   const stock = line.stockId
     ? {
@@ -1684,6 +1717,22 @@ function LineCard({
         description: undefined,
       }
     : undefined;
+
+  const applyStock = (x: StockOption) =>
+    warehouseTransferApi.trackingPolicy(branchCode, x.id).then((trackingPolicy) => {
+      patch(line.localId, {
+        stockId: x.id,
+        stockCode: x.erpStockCode,
+        stockName: x.stockName,
+        unitCode: x.unitCode || "",
+        trackingType: trackingPolicy.trackingType,
+        trackingPolicy,
+        trackings: [],
+      });
+    }).catch((error: unknown) => {
+      toast.error(message(error, t(`${D}.toast.trackingPolicyFailed`)));
+      throw error;
+    });
 
   const sourceAutoFillKey = useRef<string>("");
   const applySourceLocation = (locationId: number, locationCode?: string, locationName?: string) =>
@@ -1798,48 +1847,56 @@ function LineCard({
       <div className="wms-ops-line-card__body">
       <div className="grid gap-2.5 md:grid-cols-2 xl:grid-cols-4">
         <Field label={t(`${D}.lines.stock`)}>
-          <OpsFieldShell>
-          <PagedAppDropdown
-            queryKey={["wt-stock", line.localId, branchCode]}
-            fetchPage={(r) => warehouseTransferApi.stocks(r, branchCode)}
-            toOption={stockOption}
-            selectedOption={
-              stock
-                ? {
-                    value: stockValue(stock),
-                    label: `${stock.erpStockCode} · ${stock.stockName ?? ""}`,
+          <div className="flex items-stretch gap-2">
+            <OpsFieldShell className="min-w-0 flex-1">
+            <PagedAppDropdown
+              queryKey={["wt-stock", line.localId, branchCode]}
+              fetchPage={(r) => warehouseTransferApi.stocks(r, branchCode)}
+              toOption={stockOption}
+              selectedOption={
+                stock
+                  ? {
+                      value: stockValue(stock),
+                      label: `${stock.erpStockCode} · ${stock.stockName ?? ""}`,
+                    }
+                  : undefined
+              }
+              value={stock ? stockValue(stock) : null}
+              onValueChange={(value) => {
+                void (async () => {
+                  try {
+                    const x = JSON.parse(
+                      decodeURIComponent(value),
+                    ) as StockOption;
+                    await applyStock(x);
+                  } catch (error) {
+                    if (error instanceof SyntaxError) return;
+                    toast.error(
+                      message(error, t(`${D}.toast.trackingPolicyFailed`)),
+                    );
                   }
-                : undefined
-            }
-            value={stock ? stockValue(stock) : null}
-            onValueChange={(value) => {
-              void (async () => {
-                try {
-                  const x = JSON.parse(
-                    decodeURIComponent(value),
-                  ) as StockOption;
-                  const trackingPolicy =
-                    await warehouseTransferApi.trackingPolicy(branchCode, x.id);
-                  patch(line.localId, {
-                    stockId: x.id,
-                    stockCode: x.erpStockCode,
-                    stockName: x.stockName,
-                    unitCode: x.unitCode || "",
-                    trackingType: trackingPolicy.trackingType,
-                    trackingPolicy,
-                    trackings: [],
-                  });
-                } catch (error) {
-                  toast.error(
-                    message(error, t(`${D}.toast.trackingPolicyFailed`)),
-                  );
-                }
-              })();
-            }}
-            searchable
-            minSearchLength={2}
+                })();
+              }}
+              searchable
+              minSearchLength={2}
+            />
+            </OpsFieldShell>
+            <button
+              type="button"
+              onClick={() => setStockDialogOpen(true)}
+              aria-label={t(`${D}.stockSelect.openPanel`)}
+              className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl border border-[var(--wms-brand-ring)] bg-[var(--wms-app-panel)] text-[var(--wms-brand-primary)] transition hover:bg-[var(--wms-brand-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--wms-brand-ring)]"
+            >
+              <Search className="size-4" strokeWidth={2.25} />
+            </button>
+          </div>
+          <StockSelectDialog
+            open={stockDialogOpen}
+            onOpenChange={setStockDialogOpen}
+            branchCode={branchCode}
+            selectedStockId={line.stockId}
+            onSelect={applyStock}
           />
-          </OpsFieldShell>
         </Field>
         <Field label={t(`${D}.lines.yapCode`)}>
           <OpsFieldShell>
@@ -1883,101 +1940,105 @@ function LineCard({
             </span>
           </span>
         </Field>
-        <Field label={t(`${D}.lines.sourceLocation`)}>
-          <OpsFieldShell
-            data-wms-error-target="sourceLocation"
-            data-wms-error-keys="kaynak raf|source location"
-          >
-          <PagedAppDropdown
-            queryKey={["wt-line-source", line.localId, sourceId, line.stockId, line.yapCodeId, excludedSourceLocationKey]}
-            fetchPage={(r) =>
-              line.stockId
-                ? warehouseTransferApi
-                    .stockLocationsPage(r, branchCode, sourceId, line.stockId, line.yapCodeId, excludeSourceLocationIds)
-                    .then((p) => ({
-                      ...p,
-                      items: p.items
-                        .filter((x) => !excludeSourceLocationIds?.includes(x.locationId))
-                        .map((x) => ({
-                        id: x.locationId,
-                        code: x.locationCode,
-                        name: x.locationName,
-                        availableQuantity: x.availableQuantity,
-                      })),
-                    }))
-                : warehouseTransferApi.locations(r, sourceId).then((p) => ({
-                    ...p,
-                    items: p.items
-                      .filter((x) => !excludeSourceLocationIds?.includes(x.id))
-                      .map((x) => ({
-                      id: x.id,
-                      code: x.code,
-                      name: x.name,
-                      locationType: x.locationType,
-                    })),
-                  }))
-            }
-            toOption={sourceLocationOption}
-            enabled={Boolean(sourceId)}
-            selectedOption={line.sourceLocationCode && line.sourceLocationId && !excludeSourceLocationIds?.includes(line.sourceLocationId)
-              ? { value: String(line.sourceLocationId), label: `${line.sourceLocationCode} · ${line.sourceLocationName}` }
-              : undefined}
-            value={line.sourceLocationValue}
-            onValueChange={(value) =>
-              patch(line.localId, {
-                sourceLocationValue: value,
-                sourceLocationId: Number(value),
-                sourceLocationCode: undefined,
-                sourceLocationName: undefined,
-              })
-            }
-            searchable
-          />
-          </OpsFieldShell>
-        </Field>
-        <Field label={t(`${D}.lines.targetLocation`)}>
-          <OpsFieldShell
-            data-wms-error-target="targetLocation"
-            data-wms-error-keys="hedef raf|target location"
-          >
-          <PagedAppDropdown
-            queryKey={["wt-line-target", line.localId, targetId]}
-            fetchPage={(r) => warehouseTransferApi.locations(r, targetId)}
-            toOption={locationOption}
-            enabled={Boolean(targetId)}
-            selectedOption={line.targetLocationCode
-              ? { value: String(line.targetLocationId), label: `${line.targetLocationCode} · ${line.targetLocationName}` }
-              : undefined}
-            value={line.targetLocationValue}
-            onValueChange={(value) =>
-              patch(line.localId, {
-                targetLocationValue: value,
-                targetLocationId: Number(value),
-                targetLocationCode: undefined,
-                targetLocationName: undefined,
-              })
-            }
-            searchable
-          />
-          </OpsFieldShell>
-        </Field>
-        <div className="wms-ops-line-card__toggle">
-          <OpsSkinCheckbox
-            checked={line.requireHandlingUnit}
-            onCheckedChange={(checked) =>
-              patch(line.localId, { requireHandlingUnit: checked })
-            }
-            aria-label={t(`${D}.lines.handlingUnitRequired`)}
-          />
-          <span
-            className="min-w-0 cursor-pointer select-none truncate"
-            onClick={() =>
-              patch(line.localId, { requireHandlingUnit: !line.requireHandlingUnit })
-            }
-          >
-            {t(`${D}.lines.handlingUnitRequired`)}
-          </span>
-        </div>
+        {variant !== "production" && (
+          <>
+            <Field label={t(`${D}.lines.sourceLocation`)}>
+              <OpsFieldShell
+                data-wms-error-target="sourceLocation"
+                data-wms-error-keys="kaynak raf|source location"
+              >
+              <PagedAppDropdown
+                queryKey={["wt-line-source", line.localId, sourceId, line.stockId, line.yapCodeId, excludedSourceLocationKey]}
+                fetchPage={(r) =>
+                  line.stockId
+                    ? warehouseTransferApi
+                        .stockLocationsPage(r, branchCode, sourceId, line.stockId, line.yapCodeId, excludeSourceLocationIds)
+                        .then((p) => ({
+                          ...p,
+                          items: p.items
+                            .filter((x) => !excludeSourceLocationIds?.includes(x.locationId))
+                            .map((x) => ({
+                            id: x.locationId,
+                            code: x.locationCode,
+                            name: x.locationName,
+                            availableQuantity: x.availableQuantity,
+                          })),
+                        }))
+                    : warehouseTransferApi.locations(r, sourceId).then((p) => ({
+                        ...p,
+                        items: p.items
+                          .filter((x) => !excludeSourceLocationIds?.includes(x.id))
+                          .map((x) => ({
+                          id: x.id,
+                          code: x.code,
+                          name: x.name,
+                          locationType: x.locationType,
+                        })),
+                      }))
+                }
+                toOption={sourceLocationOption}
+                enabled={Boolean(sourceId)}
+                selectedOption={line.sourceLocationCode && line.sourceLocationId && !excludeSourceLocationIds?.includes(line.sourceLocationId)
+                  ? { value: String(line.sourceLocationId), label: `${line.sourceLocationCode} · ${line.sourceLocationName}` }
+                  : undefined}
+                value={line.sourceLocationValue}
+                onValueChange={(value) =>
+                  patch(line.localId, {
+                    sourceLocationValue: value,
+                    sourceLocationId: Number(value),
+                    sourceLocationCode: undefined,
+                    sourceLocationName: undefined,
+                  })
+                }
+                searchable
+              />
+              </OpsFieldShell>
+            </Field>
+            <Field label={t(`${D}.lines.targetLocation`)}>
+              <OpsFieldShell
+                data-wms-error-target="targetLocation"
+                data-wms-error-keys="hedef raf|target location"
+              >
+              <PagedAppDropdown
+                queryKey={["wt-line-target", line.localId, targetId]}
+                fetchPage={(r) => warehouseTransferApi.locations(r, targetId)}
+                toOption={locationOption}
+                enabled={Boolean(targetId)}
+                selectedOption={line.targetLocationCode
+                  ? { value: String(line.targetLocationId), label: `${line.targetLocationCode} · ${line.targetLocationName}` }
+                  : undefined}
+                value={line.targetLocationValue}
+                onValueChange={(value) =>
+                  patch(line.localId, {
+                    targetLocationValue: value,
+                    targetLocationId: Number(value),
+                    targetLocationCode: undefined,
+                    targetLocationName: undefined,
+                  })
+                }
+                searchable
+              />
+              </OpsFieldShell>
+            </Field>
+            <div className="wms-ops-line-card__toggle">
+              <OpsSkinCheckbox
+                checked={line.requireHandlingUnit}
+                onCheckedChange={(checked) =>
+                  patch(line.localId, { requireHandlingUnit: checked })
+                }
+                aria-label={t(`${D}.lines.handlingUnitRequired`)}
+              />
+              <span
+                className="min-w-0 cursor-pointer select-none truncate"
+                onClick={() =>
+                  patch(line.localId, { requireHandlingUnit: !line.requireHandlingUnit })
+                }
+              >
+                {t(`${D}.lines.handlingUnitRequired`)}
+              </span>
+            </div>
+          </>
+        )}
       </div>
       <div
         data-wms-error-target="serial"

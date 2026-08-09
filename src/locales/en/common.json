@@ -5353,6 +5353,9 @@
       "handlingUnitRequired": "Handling unit required",
       "removeLine": "Remove line"
     },
+    "stockSelect": {
+      "openPanel": "Open stock selection panel"
+    },
     "success": {
       "title": "Transfer created",
       "linesAndQty": "{{count}} lines · {{total}} qty",
@@ -5957,6 +5960,24 @@
     "statusPending": "Not saved",
     "statusCurrent": "Current",
     "readOnlyInfo": "You can view this screen, but update permission is required to change group assignments."
+  },
+  "stockSelectDialog": {
+    "title": "Select stock",
+    "description": "Pick a stock from the list or card view.",
+    "searchPlaceholder": "Search by stock code or name…",
+    "loading": "Loading stocks…",
+    "loadFailed": "Could not load stock list.",
+    "minChars": "Enter at least {{count}} characters to search.",
+    "noResults": "No stocks match your search.",
+    "emptyBrowse": "Search or browse the list to find stocks.",
+    "colCode": "Stock code",
+    "colName": "Stock name",
+    "colUnit": "Unit",
+    "colAction": "Action",
+    "selected": "Selected",
+    "select": "Select",
+    "cardView": "Card view",
+    "listView": "List view"
   },
   "paged": {
     "search": "Search",

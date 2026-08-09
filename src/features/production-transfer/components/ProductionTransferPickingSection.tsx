@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type UIEvent } from 'react';
 import {
-  Barcode, BookOpen, ChevronDown, ChevronRight, Loader2, MapPin, PackageCheck, Play, RefreshCw,
+  AlertTriangle, Barcode, ChevronRight, List, Loader2, MapPin, PackageCheck, Play, RefreshCw,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { OpsActionButton } from '@/components/shared/OpsActionButton';
@@ -10,6 +10,9 @@ import { StockIdentityCell } from '@/components/shared/StockIdentityCell';
 import { formatProjectNumber } from '@/lib/project-format';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
+import { useDropdownInfiniteSearch } from '@/hooks/useDropdownInfiniteSearch';
+import { warehouseTransferApi } from '@/features/warehouse-transfer-v2/api/warehouse-transfer.api';
+import type { StockOption } from '@/features/goods-receipt-v2/types/goods-receipt.types';
 import {
   productionTransferApi,
   type ProductionTaskBoard,
@@ -35,8 +38,15 @@ type TableSection =
       rows: ProductionTransferPickingRow[];
     };
 
+const STOCK_LIST_SEARCH_DEBOUNCE_MS = 400;
+const STOCK_LIST_PAGE_SIZE = 50;
+const STOCK_LIST_MIN_SEARCH_CHARS = 2;
+const STOCK_LIST_SCROLL_THRESHOLD = 0.82;
+
 const TABLE_HEAD_CELL = 'border border-[var(--wms-app-border)] p-3';
 const TABLE_CELL = 'border border-[var(--wms-app-border)] p-3';
+const LOCATION_HEAD_CELL = cn(TABLE_HEAD_CELL, 'text-center');
+const LOCATION_CELL = cn(TABLE_CELL, 'text-center');
 const HIGHLIGHT_ROW_CLASS = 'bg-amber-500/15 ring-2 ring-inset ring-amber-500';
 
 function parseTransferLineNoFromError(message: string): number | undefined {
@@ -85,30 +95,48 @@ function compareLineNoThenSerial(left: ProductionTransferPickingRow, right: Prod
   return (left.serialNo ?? '').localeCompare(right.serialNo ?? '', 'tr', { sensitivity: 'base' });
 }
 
-function sortRowsWithCompletedAtBottom(rows: ProductionTransferPickingRow[]): ProductionTransferPickingRow[] {
+function compareDisplayOrder(
+  left: ProductionTransferPickingRow,
+  right: ProductionTransferPickingRow,
+  displayOrder: Map<string, number>,
+): number {
+  const leftOrder = displayOrder.get(pickingRowSelectionKey(left)) ?? 0;
+  const rightOrder = displayOrder.get(pickingRowSelectionKey(right)) ?? 0;
+  if (leftOrder !== rightOrder) return leftOrder - rightOrder;
+  return compareLineNoThenSerial(left, right);
+}
+
+function sortRowsWithCompletedAtBottom(
+  rows: ProductionTransferPickingRow[],
+  displayOrder: Map<string, number>,
+): ProductionTransferPickingRow[] {
   return [...rows].sort((left, right) => {
     const leftDone = isRowCompleted(left);
     const rightDone = isRowCompleted(right);
     if (leftDone !== rightDone) return leftDone ? 1 : -1;
-    return compareLineNoThenSerial(left, right);
+    return compareDisplayOrder(left, right, displayOrder);
   });
 }
 
-function sortSerialGroupRows(rows: ProductionTransferPickingRow[], tab: PickTab): ProductionTransferPickingRow[] {
+function sortSerialGroupRows(
+  rows: ProductionTransferPickingRow[],
+  tab: PickTab,
+  displayOrder: Map<string, number>,
+): ProductionTransferPickingRow[] {
   const filtered = tab === 'completed'
     ? rows.filter(isRowCompleted)
     : rows;
 
   if (tab === 'all') {
-    return sortRowsWithCompletedAtBottom(filtered);
+    return sortRowsWithCompletedAtBottom(filtered, displayOrder);
   }
 
-  return [...filtered].sort(compareLineNoThenSerial);
+  return [...filtered].sort((left, right) => compareDisplayOrder(left, right, displayOrder));
 }
 
-function sectionLineOrder(section: TableSection): number {
-  if (section.type === 'flat') return section.row.lineNo;
-  return Math.min(...section.rows.map((row) => row.lineNo));
+function sectionDisplayOrder(section: TableSection, displayOrder: Map<string, number>): number {
+  if (section.type === 'flat') return displayOrder.get(pickingRowSelectionKey(section.row)) ?? section.row.lineNo;
+  return Math.min(...section.rows.map((row) => displayOrder.get(pickingRowSelectionKey(row)) ?? row.lineNo));
 }
 
 function isSectionCompleted(section: TableSection): boolean {
@@ -116,16 +144,22 @@ function isSectionCompleted(section: TableSection): boolean {
   return isSerialGroupCompleted(section.rows);
 }
 
-function compareTableSections(left: TableSection, right: TableSection, tab: PickTab): number {
+function compareTableSections(
+  left: TableSection,
+  right: TableSection,
+  tab: PickTab,
+  displayOrder: Map<string, number>,
+): number {
   if (tab === 'all') {
     const leftCompleted = isSectionCompleted(left);
     const rightCompleted = isSectionCompleted(right);
     if (leftCompleted !== rightCompleted) return leftCompleted ? 1 : -1;
   }
-  return sectionLineOrder(left) - sectionLineOrder(right);
+  return sectionDisplayOrder(left, displayOrder) - sectionDisplayOrder(right, displayOrder);
 }
 
 function buildTableSections(rows: ProductionTransferPickingRow[], tab: PickTab): TableSection[] {
+  const displayOrder = new Map(rows.map((row, index) => [pickingRowSelectionKey(row), index]));
   const serialRows = rows.filter(isSerialRow);
   const nonSerialRows = rows.filter((row) => !isSerialRow(row));
 
@@ -133,8 +167,8 @@ function buildTableSections(rows: ProductionTransferPickingRow[], tab: PickTab):
     ? nonSerialRows.filter(isRowCompleted)
     : nonSerialRows;
   const flatSections: TableSection[] = (tab === 'all'
-    ? sortRowsWithCompletedAtBottom(visibleNonSerial)
-    : [...visibleNonSerial].sort((left, right) => left.lineNo - right.lineNo)
+    ? sortRowsWithCompletedAtBottom(visibleNonSerial, displayOrder)
+    : [...visibleNonSerial].sort((left, right) => compareDisplayOrder(left, right, displayOrder))
   ).map((row) => ({ type: 'flat' as const, row } satisfies TableSection));
 
   const serialGroups = new Map<number, ProductionTransferPickingRow[]>();
@@ -150,11 +184,11 @@ function buildTableSections(rows: ProductionTransferPickingRow[], tab: PickTab):
       stockId,
       stockCode: groupRows[0]?.stockCode ?? '',
       stockName: groupRows[0]?.stockName,
-      rows: sortSerialGroupRows(groupRows, tab),
+      rows: sortSerialGroupRows(groupRows, tab, displayOrder),
     }))
     .filter((group) => group.rows.length > 0);
 
-  return [...serialSections, ...flatSections].sort((left, right) => compareTableSections(left, right, tab));
+  return [...serialSections, ...flatSections].sort((left, right) => compareTableSections(left, right, tab, displayOrder));
 }
 
 function sanitizePositiveIntegerInput(rawValue: string): string {
@@ -236,6 +270,7 @@ interface Props {
 
 export function ProductionTransferPickingSection({ transferId, execution, onExecutionChange }: Props) {
   const currentUserId = useAuthStore((state) => state.user?.id);
+  const branchCode = useAuthStore((state) => state.branch?.code ?? '0');
   const [table, setTable] = useState<ProductionTransferPickingTable>();
   const [board, setBoard] = useState<ProductionTaskBoard>();
   const [loadError, setLoadError] = useState<string>();
@@ -243,7 +278,9 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
   const [tab, setTab] = useState<PickTab>('all');
   const [selectedRowKey, setSelectedRowKey] = useState<string>();
   const [barcode, setBarcode] = useState('');
-  const [guideOpen, setGuideOpen] = useState(false);
+  const [stockListOpen, setStockListOpen] = useState(false);
+  const [stockListSearch, setStockListSearch] = useState('');
+  const [debouncedStockListSearch, setDebouncedStockListSearch] = useState('');
   const [step1, setStep1] = useState<BarcodeStep1 | null>(null);
   const [step2, setStep2] = useState<BarcodeStep1 | null>(null);
   const [routeDialog, setRouteDialog] = useState<ProductionTransferRouteRefreshCandidates | null>(null);
@@ -282,6 +319,46 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
   }, [transferId]);
 
   useEffect(() => { void load(); }, [load]);
+
+  useEffect(() => {
+    if (!stockListOpen) {
+      setStockListSearch('');
+      setDebouncedStockListSearch('');
+      return;
+    }
+    const timer = window.setTimeout(
+      () => setDebouncedStockListSearch(stockListSearch.trim()),
+      STOCK_LIST_SEARCH_DEBOUNCE_MS,
+    );
+    return () => window.clearTimeout(timer);
+  }, [stockListOpen, stockListSearch]);
+
+  const stockListQuery = useDropdownInfiniteSearch<StockOption>({
+    queryKey: ['production-picking-stock-list', branchCode],
+    searchTerm: debouncedStockListSearch,
+    enabled: stockListOpen,
+    minSearchLength: STOCK_LIST_MIN_SEARCH_CHARS,
+    pageSize: STOCK_LIST_PAGE_SIZE,
+    sortBy: 'erpStockCode',
+    sortDirection: 'asc',
+    searchFields: ['erpStockCode', 'stockName'],
+    fetchPage: (request) => warehouseTransferApi.stocks(request, branchCode),
+  });
+
+  const stockListRows = stockListQuery.items;
+  const stockListTotalCount = stockListQuery.data?.pages[0]?.totalCount ?? stockListRows.length;
+  const isStockListThresholdInput = stockListSearch.trim().length > 0
+    && stockListSearch.trim().length < STOCK_LIST_MIN_SEARCH_CHARS;
+
+  const handleStockListScroll = useCallback((event: UIEvent<HTMLDivElement>) => {
+    if (!stockListQuery.hasNextPage || stockListQuery.isFetchingNextPage) return;
+    const target = event.currentTarget;
+    if (target.scrollHeight <= 0) return;
+    const progress = (target.scrollTop + target.clientHeight) / target.scrollHeight;
+    if (progress >= STOCK_LIST_SCROLL_THRESHOLD) {
+      void stockListQuery.fetchNextPage();
+    }
+  }, [stockListQuery]);
   useEffect(() => {
     if (!table?.isLocked) requestAnimationFrame(() => barcodeRef.current?.focus());
   }, [table?.isLocked, table?.rows.length]);
@@ -290,7 +367,7 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
     if (!board) return undefined;
     const tasks = board.tasks.filter((task) =>
       task.taskType === 'Pick' && !['Completed', 'Cancelled'].includes(task.status));
-    return tasks.find((task) => task.assignments.some((a) => a.userId === currentUserId)) ?? tasks[0];
+    return tasks.find((task) => task.assignments.some((a) => a.userId === currentUserId));
   }, [board, currentUserId]);
 
   const runBoardAction = useCallback(async (action: () => Promise<ProductionTaskBoard>) => {
@@ -334,17 +411,6 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
       window.clearTimeout(clearTimer);
     };
   }, [highlightedLineNo, tableSections]);
-
-  const productGuideRows = useMemo(() => {
-    if (!table) return [];
-    const seen = new Set<string>();
-    return table.rows.filter((row) => {
-      const key = `${row.stockId}:${row.serialNo ?? ''}`;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-  }, [table]);
 
   const selectedCount = selectedRowKey ? 1 : 0;
   const selectedRow = table?.rows.find((row) => pickingRowSelectionKey(row) === selectedRowKey);
@@ -553,7 +619,11 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
               <PickingRowTabs value={tab} onChange={setTab} />
             </div>
             <p className="mt-1 text-sm text-[var(--wms-app-text-muted)]">
-              {table.pickTaskNo} · {table.isLocked ? 'Önizleme' : 'Toplama aktif'}
+              {table.pickTaskNo}
+              {' · '}
+              {execution.sourceWarehouseCode} · {execution.sourceWarehouseName}
+              {' · '}
+              {table.isLocked ? 'Reçete' : 'Toplama aktif'}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2 xl:justify-end">
@@ -578,6 +648,15 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
                   <RefreshCw className="size-4" />Rotayı güncelle
                 </button>
                 <div className="relative flex min-w-0 flex-1 items-center gap-2">
+                  <button
+                    type="button"
+                    className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-[var(--wms-app-border)] px-3 py-2 text-xs font-bold text-[var(--wms-app-text)] hover:bg-black/5 dark:hover:bg-white/5"
+                    title="Stok listesi"
+                    onClick={() => setStockListOpen(true)}
+                  >
+                    <List className="size-4" aria-hidden />
+                    <span className="hidden sm:inline">Stok listesi</span>
+                  </button>
                   <OpsQrCaptureField
                     className="min-w-0 flex-1"
                     inputRef={barcodeRef}
@@ -593,26 +672,6 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
                   <OpsActionButton variant="primary" loading={busy} disabled={!barcode.trim() || pickDialogOpen} onClick={() => void resolveBarcode()}>
                     <Barcode className="size-4" />Onayla
                   </OpsActionButton>
-                  <div className="relative">
-                    <button
-                      type="button"
-                      className="inline-flex size-10 items-center justify-center rounded-lg border border-[var(--wms-app-border)]"
-                      title="Ürün rehberi"
-                      onClick={() => setGuideOpen((current) => !current)}
-                    >
-                      <BookOpen className="size-4" />
-                      <ChevronDown className="size-3" />
-                    </button>
-                    {guideOpen && (
-                      <div className="absolute right-0 z-20 mt-2 max-h-72 w-80 overflow-auto rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-2 shadow-lg">
-                        {productGuideRows.map((row) => (
-                          <div key={`${row.stockId}:${row.serialNo ?? ''}`} className="border-b border-[var(--wms-app-border)] px-2 py-2 last:border-b-0">
-                            <StockIdentityCell stockId={row.stockId} stockCode={row.stockCode} stockName={row.stockName} layout="stacked" />
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
                 </div>
               </div>
             ) : null}
@@ -620,14 +679,14 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
         </div>
 
         <div className="overflow-x-auto rounded-xl border border-[var(--wms-app-border)]">
-          <table className="w-full min-w-[920px] border-collapse text-sm">
+          <table className={cn('w-full border-collapse text-sm', table.isLocked ? 'min-w-[640px]' : 'min-w-[920px]')}>
             <thead className="bg-black/5 text-left text-xs uppercase text-[var(--wms-app-text-muted)] dark:bg-white/5">
               <tr>
                 <th className={cn(TABLE_HEAD_CELL, 'w-10')} />
                 <th className={cn(TABLE_HEAD_CELL, 'w-14 text-right')}>No</th>
-                <th className={TABLE_HEAD_CELL}>Raf</th>
+                {!table.isLocked && <th className={LOCATION_HEAD_CELL}>Raf</th>}
                 <th className={TABLE_HEAD_CELL}>Stok</th>
-                <th className={TABLE_HEAD_CELL}>Seri</th>
+                {!table.isLocked && <th className={TABLE_HEAD_CELL}>Seri</th>}
                 <th className={cn(TABLE_HEAD_CELL, 'text-right')}>İstenen</th>
                 <th className={cn(TABLE_HEAD_CELL, 'text-right')}>Kalan</th>
                 <th className={cn(TABLE_HEAD_CELL, 'text-right')}>Toplanan</th>
@@ -641,6 +700,7 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
                       key={`flat:${section.row.taskLineId}:${section.row.sourceLocationId ?? 'x'}:${section.row.serialNo ?? ''}`}
                       row={section.row}
                       locked={table.isLocked}
+                      showRouteColumns={!table.isLocked}
                       selected={selectedRowKey === pickingRowSelectionKey(section.row)}
                       highlighted={isLineHighlighted(section.row.lineNo, highlightedLineNo)}
                       onSelect={toggleRowSelection}
@@ -656,6 +716,7 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
                     stockName={section.stockName}
                     rows={section.rows}
                     locked={table.isLocked}
+                    showRouteColumns={!table.isLocked}
                     highlightedLineNo={highlightedLineNo}
                     selectedRowKey={selectedRowKey}
                     onSelect={toggleRowSelection}
@@ -681,6 +742,112 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
           </div>
         )}
       </div>
+
+      {stockListOpen && (
+        <ResponsiveDialog
+          onClose={() => setStockListOpen(false)}
+          title="Stok listesi"
+          description={`Toplam ${stockListTotalCount.toLocaleString('tr-TR')} stok kalemi`}
+          className="!max-w-2xl"
+        >
+          <div className="space-y-4">
+            <input
+              className="input w-full"
+              value={stockListSearch}
+              onChange={(event) => setStockListSearch(event.target.value)}
+              placeholder="Stok kodu veya adına göre ara (en az 2 karakter)..."
+              aria-label="Stok listesinde ara"
+            />
+            <div
+              onScroll={handleStockListScroll}
+              className="max-h-[min(28rem,60dvh)] overflow-auto"
+            >
+              {stockListQuery.isLoading ? (
+                <div className="flex min-h-40 items-center justify-center rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)]">
+                  <Loader2 className="size-6 animate-spin text-[var(--wms-brand-primary)]" />
+                </div>
+              ) : stockListQuery.isError ? (
+                <p className="rounded-2xl border border-red-500/30 bg-red-500/5 p-6 text-center text-sm font-semibold text-red-500">
+                  Stok listesi yüklenemedi.
+                </p>
+              ) : isStockListThresholdInput ? (
+                <p className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-6 text-center text-sm text-[var(--wms-app-text-muted)]">
+                  Arama için en az {STOCK_LIST_MIN_SEARCH_CHARS} karakter girin.
+                </p>
+              ) : (
+                <div className="rounded-2xl bg-[var(--wms-app-border)] p-px shadow-sm">
+                  <div className="overflow-hidden rounded-[calc(1rem-1px)] bg-[var(--wms-app-panel)]">
+                    <table className="w-full min-w-[28rem] border-separate border-spacing-0 text-sm">
+                      <thead>
+                        <tr className="text-[10px] font-semibold uppercase tracking-wide text-[var(--wms-app-text-muted)]">
+                          <th
+                            className={cn(
+                              'w-[140px] bg-[color-mix(in_oklab,var(--wms-brand-primary)_6%,var(--wms-app-panel))] px-3 py-2.5 text-start',
+                              'border-b border-e border-[var(--wms-app-border)]',
+                            )}
+                          >
+                            Stok kodu
+                          </th>
+                          <th
+                            className={cn(
+                              'bg-[color-mix(in_oklab,var(--wms-brand-primary)_6%,var(--wms-app-panel))] px-3 py-2.5 text-start',
+                              'border-b border-[var(--wms-app-border)]',
+                            )}
+                          >
+                            Stok adı
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {stockListRows.length === 0 ? (
+                          <tr>
+                            <td
+                              colSpan={2}
+                              className="px-3 py-8 text-center text-sm text-[var(--wms-app-text-muted)]"
+                            >
+                              {debouncedStockListSearch ? 'Aramaya uygun stok bulunamadı.' : 'Stok kalemi bulunamadı.'}
+                            </td>
+                          </tr>
+                        ) : stockListRows.map((row, rowIndex) => {
+                          const isLast = rowIndex === stockListRows.length - 1;
+                          const rowBorder = isLast ? '' : 'border-b border-[var(--wms-app-border)]';
+                          return (
+                            <tr
+                              key={row.id}
+                              className="transition-colors hover:bg-[var(--wms-brand-soft)]"
+                            >
+                              <td
+                                className={cn(
+                                  'border-e border-[var(--wms-app-border)] px-3 py-2.5 align-middle',
+                                  rowBorder,
+                                )}
+                              >
+                                <span className="font-mono text-xs font-semibold text-[var(--wms-brand-primary)]">
+                                  {row.erpStockCode}
+                                </span>
+                              </td>
+                              <td className={cn('px-3 py-2.5 align-middle', rowBorder)}>
+                                <span className="line-clamp-2 text-sm font-medium text-[var(--wms-app-text)]">
+                                  {row.stockName?.trim() || '—'}
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+              {stockListQuery.isFetchingNextPage && (
+                <div className="flex items-center justify-center py-3">
+                  <Loader2 className="size-5 animate-spin text-[var(--wms-brand-primary)]" />
+                </div>
+              )}
+            </div>
+          </div>
+        </ResponsiveDialog>
+      )}
 
       {step1 && (
         <ResponsiveDialog
@@ -817,61 +984,62 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
             }}
           >
             <div className="overflow-x-auto rounded-xl border border-[var(--wms-app-border)]">
-              <table className="w-full min-w-[520px] text-sm">
-                <thead className="bg-black/5 text-xs uppercase text-[var(--wms-app-text-muted)] dark:bg-white/5">
-                  <tr>
-                    {routeDialog.isSerial && <th className="p-3 text-left">Seç</th>}
-                    <th className="p-3 text-left">Raf</th>
-                    {routeDialog.isSerial && <th className="p-3 text-left">Seri</th>}
-                    <th className="p-3 text-right">Mevcut</th>
-                    {!routeDialog.isSerial && <th className="p-3 text-right">Miktar</th>}
-                  </tr>
-                </thead>
-                <tbody>
-                  {routeDialog.candidates.map((row) => (
-                    <tr key={routeDialog.isSerial ? serialRouteCandidateKey(row) : row.locationId} className="border-t border-[var(--wms-app-border)]">
-                      {routeDialog.isSerial && (
-                        <td className="p-3">
-                          <input
-                            type="radio"
-                            name="serial-route-candidate"
-                            checked={selectedSerialCandidateKey === serialRouteCandidateKey(row)}
-                            onChange={() => setSelectedSerialCandidateKey(serialRouteCandidateKey(row))}
-                          />
-                        </td>
-                      )}
-                      <td className="p-3 font-bold">{row.locationCode}</td>
-                      {routeDialog.isSerial && <td className="p-3 font-semibold">{row.serialNo || '—'}</td>}
-                      <td className="p-3 text-right">{formatProjectNumber(row.availableQuantity)}</td>
-                      {!routeDialog.isSerial && (
-                        <td className="p-3 text-right">
-                          <input
-                            className="input w-28 text-right"
-                            inputMode="numeric"
-                            pattern="[0-9]*"
-                            value={routeQuantities[row.locationId] ?? ''}
-                            onChange={(event) => updateRouteQuantity(row.locationId, event.target.value)}
-                            onFocus={(event) => event.currentTarget.select()}
-                          />
-                        </td>
-                      )}
+              {routeDialog.candidates.length === 0 ? (
+                <p className="p-6 text-center text-sm font-semibold text-[var(--wms-app-text-muted)]">
+                  Bu stoktan başka rafta yoktur
+                </p>
+              ) : (
+                <table className="w-full min-w-[520px] text-sm">
+                  <thead className="bg-black/5 text-xs uppercase text-[var(--wms-app-text-muted)] dark:bg-white/5">
+                    <tr>
+                      {routeDialog.isSerial && <th className="p-3 text-left">Seç</th>}
+                      <th className="p-3 text-left">Raf</th>
+                      {routeDialog.isSerial && <th className="p-3 text-left">Seri</th>}
+                      <th className="p-3 text-right">Mevcut</th>
+                      {!routeDialog.isSerial && <th className="p-3 text-right">Miktar</th>}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {routeDialog.candidates.map((row) => (
+                      <tr key={routeDialog.isSerial ? serialRouteCandidateKey(row) : row.locationId} className="border-t border-[var(--wms-app-border)]">
+                        {routeDialog.isSerial && (
+                          <td className="p-3">
+                            <input
+                              type="radio"
+                              name="serial-route-candidate"
+                              checked={selectedSerialCandidateKey === serialRouteCandidateKey(row)}
+                              onChange={() => setSelectedSerialCandidateKey(serialRouteCandidateKey(row))}
+                            />
+                          </td>
+                        )}
+                        <td className="p-3 font-bold">{row.locationCode}</td>
+                        {routeDialog.isSerial && <td className="p-3 font-semibold">{row.serialNo || '—'}</td>}
+                        <td className="p-3 text-right">{formatProjectNumber(row.availableQuantity)}</td>
+                        {!routeDialog.isSerial && (
+                          <td className="p-3 text-right">
+                            <input
+                              className="input w-28 text-right"
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              value={routeQuantities[row.locationId] ?? ''}
+                              onChange={(event) => updateRouteQuantity(row.locationId, event.target.value)}
+                              onFocus={(event) => event.currentTarget.select()}
+                            />
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
-            {routeDialog.isSerial && routeDialog.candidates.length === 0 && (
-              <p className="mt-3 text-sm text-[var(--wms-app-text-muted)]">
-                Tabloda olmayan uygun seri başka rafta bulunamadı.
-              </p>
-            )}
             <div className="mt-5 flex justify-end gap-2">
               <button type="button" className="rounded-lg border px-4 py-2 text-sm font-semibold" onClick={() => setRouteDialog(null)}>İptal</button>
               <OpsActionButton
                 type="submit"
                 variant="primary"
                 loading={busy}
-                disabled={routeDialog.isSerial && routeDialog.candidates.length === 0}
+                disabled={routeDialog.candidates.length === 0}
               >
                 Rotayı tamamla
               </OpsActionButton>
@@ -933,6 +1101,86 @@ function PickingRowTabs({
   );
 }
 
+function isPickingRowWithoutBalance(row: ProductionTransferPickingRow): boolean {
+  return row.remainingQuantity > 0 && !row.sourceLocationId;
+}
+
+function PickingLocationCell({
+  row,
+  serialDetail = false,
+}: {
+  row: ProductionTransferPickingRow;
+  serialDetail?: boolean;
+}) {
+  if (isPickingRowWithoutBalance(row)) {
+    return (
+      <td className={cn(LOCATION_CELL, serialDetail && 'pl-6')}>
+        <span
+          className="inline-flex items-center justify-center gap-1.5"
+          title="Depoda yeterli stok bakiyesi bulunamadı"
+        >
+          <AlertTriangle
+            className="size-5 shrink-0 text-amber-500"
+            aria-label="Stok bakiyesi yok"
+          />
+        </span>
+      </td>
+    );
+  }
+
+  return (
+    <td className={cn(LOCATION_CELL, serialDetail && 'pl-6')}>
+      {row.sourceLocationCode
+        ? (
+            <span className="inline-flex items-center justify-center gap-1 font-bold">
+              <MapPin className="size-3.5" />
+              {row.sourceLocationCode}
+            </span>
+          )
+        : <span className="text-[var(--wms-app-text-muted)]">—</span>}
+    </td>
+  );
+}
+
+function PickingLocationSummaryCell({
+  rows,
+}: {
+  rows: ProductionTransferPickingRow[];
+}) {
+  const remaining = rows.reduce((sum, row) => sum + row.remainingQuantity, 0);
+  const locationLabel = summarizeSerialLocations(rows);
+  const hasShortage = rows.some(isPickingRowWithoutBalance);
+
+  if (hasShortage && locationLabel === '—' && remaining > 0) {
+    return (
+      <td className={LOCATION_CELL}>
+        <span
+          className="inline-flex items-center justify-center gap-1.5"
+          title="Depoda yeterli stok bakiyesi bulunamadı"
+        >
+          <AlertTriangle
+            className="size-5 shrink-0 text-amber-500"
+            aria-label="Stok bakiyesi yok"
+          />
+        </span>
+      </td>
+    );
+  }
+
+  return (
+    <td className={LOCATION_CELL}>
+      {locationLabel !== '—'
+        ? (
+            <span className="inline-flex items-center justify-center gap-1 font-bold">
+              <MapPin className="size-3.5" />
+              {locationLabel}
+            </span>
+          )
+        : <span className="text-[var(--wms-app-text-muted)]">—</span>}
+    </td>
+  );
+}
+
 function summarizeSerialLocations(rows: ProductionTransferPickingRow[]): string {
   const codes = [...new Set(rows.map((row) => row.sourceLocationCode).filter(Boolean))] as string[];
   if (codes.length === 0) return '—';
@@ -946,6 +1194,7 @@ function SerialStockGroup({
   stockName,
   rows,
   locked,
+  showRouteColumns,
   highlightedLineNo,
   selectedRowKey,
   onSelect,
@@ -955,6 +1204,7 @@ function SerialStockGroup({
   stockName?: string;
   rows: ProductionTransferPickingRow[];
   locked: boolean;
+  showRouteColumns: boolean;
   highlightedLineNo?: number;
   selectedRowKey?: string;
   onSelect: (row: ProductionTransferPickingRow) => void;
@@ -966,7 +1216,6 @@ function SerialStockGroup({
     processed: rows.reduce((sum, row) => sum + row.processedQuantity, 0),
   }), [rows]);
   const done = totals.remaining <= 0;
-  const locationLabel = summarizeSerialLocations(rows);
   const lineNoLabel = summarizeSerialLineNos(rows);
   const headerHighlighted = rows.some((row) => isLineHighlighted(row.lineNo, highlightedLineNo));
 
@@ -994,17 +1243,15 @@ function SerialStockGroup({
           </button>
         </td>
         <td className={cn(TABLE_CELL, 'text-right font-bold tabular-nums')}>{lineNoLabel}</td>
-        <td className={TABLE_CELL}>
-          {locationLabel !== '—'
-            ? <span className="inline-flex items-center gap-1 font-bold"><MapPin className="size-3.5" />{locationLabel}</span>
-            : <span className="text-[var(--wms-app-text-muted)]">—</span>}
-        </td>
+        {showRouteColumns && <PickingLocationSummaryCell rows={rows} />}
         <td className={TABLE_CELL}>
           <StockIdentityCell stockId={stockId} stockCode={stockCode} stockName={stockName} layout="stacked" />
         </td>
-        <td className={TABLE_CELL}>
-          <span className="text-[var(--wms-app-text-muted)]">—</span>
-        </td>
+        {showRouteColumns && (
+          <td className={TABLE_CELL}>
+            <span className="text-[var(--wms-app-text-muted)]">—</span>
+          </td>
+        )}
         <td className={cn(TABLE_CELL, 'text-right font-semibold')}>{formatProjectNumber(totals.requested)}</td>
         <td className={cn(TABLE_CELL, 'text-right font-semibold')}>{formatProjectNumber(totals.remaining)}</td>
         <td className={cn(TABLE_CELL, 'text-right font-semibold text-emerald-600')}>{formatProjectNumber(totals.processed)}</td>
@@ -1014,6 +1261,7 @@ function SerialStockGroup({
           key={`serial:${row.taskLineId}:${row.serialNo ?? ''}`}
           row={row}
           locked={locked}
+          showRouteColumns={showRouteColumns}
           selected={selectedRowKey === pickingRowSelectionKey(row)}
           highlighted={isLineHighlighted(row.lineNo, highlightedLineNo)}
           onSelect={onSelect}
@@ -1027,6 +1275,7 @@ function SerialStockGroup({
 function PickingRow({
   row,
   locked,
+  showRouteColumns,
   selected,
   highlighted = false,
   onSelect,
@@ -1034,6 +1283,7 @@ function PickingRow({
 }: {
   row: ProductionTransferPickingRow;
   locked: boolean;
+  showRouteColumns: boolean;
   selected: boolean;
   highlighted?: boolean;
   onSelect: (row: ProductionTransferPickingRow) => void;
@@ -1055,15 +1305,13 @@ function PickingRow({
         />
       </td>
       <td className={cn(TABLE_CELL, 'text-right font-bold tabular-nums')}>{row.lineNo}</td>
-      <td className={cn(TABLE_CELL, serialDetail && 'pl-6')}>
-        {row.sourceLocationCode
-          ? <span className="inline-flex items-center gap-1 font-bold"><MapPin className="size-3.5" />{row.sourceLocationCode}</span>
-          : <span className="text-[var(--wms-app-text-muted)]">—</span>}
-      </td>
+      {showRouteColumns && <PickingLocationCell row={row} serialDetail={serialDetail} />}
       <td className={TABLE_CELL}>
         <StockIdentityCell stockId={row.stockId} stockCode={row.stockCode} stockName={row.stockName} layout="stacked" />
       </td>
-      <td className={cn(TABLE_CELL, serialDetail && 'font-semibold')}>{row.serialNo || '—'}</td>
+      {showRouteColumns && (
+        <td className={cn(TABLE_CELL, serialDetail && 'font-semibold')}>{row.serialNo || '—'}</td>
+      )}
       <td className={cn(TABLE_CELL, 'text-right')}>{formatProjectNumber(row.requestedQuantity)}</td>
       <td className={cn(TABLE_CELL, 'text-right')}>{formatProjectNumber(row.remainingQuantity)}</td>
       <td className={cn(TABLE_CELL, 'text-right text-emerald-600')}>{formatProjectNumber(row.processedQuantity)}</td>

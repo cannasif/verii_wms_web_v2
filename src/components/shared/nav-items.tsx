@@ -173,6 +173,45 @@ export const WMS_NAV_ITEMS: NavItem[] = [
   ] },
 ];
 
+/** Route'a en uygun (en uzun href eşleşmeli) nav zincirini döndürür. */
+export function findNavTrail(items: NavItem[], pathname: string): NavItem[] | null {
+  let bestTrail: NavItem[] | null = null;
+  let bestLength = 0;
+
+  const walk = (nodes: NavItem[], trail: NavItem[]): void => {
+    for (const item of nodes) {
+      const nextTrail = [...trail, item];
+      if (item.href && (pathname === item.href || pathname.startsWith(`${item.href}/`))) {
+        if (!bestTrail || item.href.length > bestLength) {
+          bestTrail = nextTrail;
+          bestLength = item.href.length;
+        }
+      }
+      if (item.children?.length) {
+        walk(item.children, nextTrail);
+      }
+    }
+  };
+
+  walk(items, []);
+  return bestTrail;
+}
+
+export function resolveNavTrailLabels(
+  t: TFunction,
+  language: string,
+  pathname: string,
+): string[] | null {
+  const trail = findNavTrail(WMS_NAV_ITEMS, pathname);
+  if (!trail || trail.length === 0) return null;
+
+  const labels = trail.map((item) => resolveNavItemTitle(t, language, item));
+  if (labels.length > 3) {
+    return [labels[1], labels[labels.length - 2], labels[labels.length - 1]];
+  }
+  return labels;
+}
+
 export function filterAuthorizedNavItems(items: NavItem[], permissions: MyPermissionsDto): NavItem[] {
   return items.flatMap((item) => {
     if (item.requiredPermission && !hasPermission(permissions, item.requiredPermission)) return [];

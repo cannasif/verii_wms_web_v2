@@ -150,6 +150,7 @@ const toPreviewGridRow=({row,source,lineNo}:{row:SteelImportPreviewLine;source?:
   combinedSize:source?.combinedSize,materialGrade:source?.materialGrade,heatNumber:source?.heatNumber,certificateNumber:source?.certificateNumber,
   action:row.action,existingDCode:row.existingDCode,errors:row.errors,
 });
+const localizePreviewAction=(action:string,t:(key:string)=>string)=>action==='New'?t(`${I}.previewNew`):action==='Existing'?t(`${I}.previewExisting`):action;
 
 function ImportStatBadge({label,value,tone}:{label:string;value:number;tone:OpsStatusTone}){
   return <OpsStatusBadge tone={tone} className="!px-3 !py-1.5 !text-[11px] !normal-case !tracking-wide">
@@ -272,7 +273,7 @@ function SteelImportPreviewGrid({preview,lines}:{preview:SteelImportPreview;line
     {key:'materialGrade',label:t(`${I}.colMaterialGrade`),render:r=>gridDash(r.materialGrade),contextValue:r=>r.materialGrade},
     {key:'heatNumber',label:t(`${I}.colHeatNumber`),render:r=><span className="font-mono">{gridDash(r.heatNumber)}</span>,contextValue:r=>r.heatNumber},
     {key:'certificateNumber',label:t(`${I}.colCertificateNumber`),render:r=><span className="font-mono">{gridDash(r.certificateNumber)}</span>,contextValue:r=>r.certificateNumber},
-    {key:'action',label:t(`${I}.colAction`),filterType:'enum',render:r=>r.action,contextValue:r=>r.action},
+    {key:'action',label:t(`${I}.colAction`),filterType:'enum',render:r=>localizePreviewAction(r.action,t),contextValue:r=>localizePreviewAction(r.action,t)},
     {key:'errors',label:t(`${I}.colErrors`),sortable:false,width:220,render:r=><PreviewErrorCell errors={r.errors} lineNo={r.lineNo}/>,contextValue:r=>r.errors.join(', ')},
   // eslint-disable-next-line react-hooks/exhaustive-deps -- gridLanguage forces column label refresh
   ],[t,gridLanguage]);

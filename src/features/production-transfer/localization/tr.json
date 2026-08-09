@@ -88,6 +88,7 @@
   "execution": {
     "erp": {
       "title": "Netsis aktarım durumu",
+      "openPanel": "Netsis'e gönder",
       "documentNo": "Netsis belge no",
       "retry": "Netsis'e Gönder / Tekrar Dene",
       "postedWithCompletion": "Üretim transferi tamamlandı ve Netsis belgesi oluşturuldu.",

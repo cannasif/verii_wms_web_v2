@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { AlertTriangle, ArrowLeft, CheckCircle2, Loader2, PackageCheck, RefreshCw } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, CheckCircle2, Loader2, PackageCheck, RefreshCw, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import { OpsActionButton } from '@/components/shared/OpsActionButton';
+import { ResponsiveDialog } from '@/components/shared/ResponsiveDialog';
 import { formatProjectNumber } from '@/lib/project-format';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
@@ -11,6 +12,9 @@ import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { productionTransferApi, type ProductionTransferExecution } from '../api';
 import { ProductionTransferPickingSection } from './ProductionTransferPickingSection';
 import { ProductionTransferReturnSection } from './ProductionTransferReturnSection';
+import { PRODUCTION_WORK_ORDERS_MY_ASSIGNMENTS_URL } from '@/features/production/components/ProductionWorkOrderTransferTabPanel';
+
+type ErpIntegrationStatus = ProductionTransferExecution['erpIntegrationStatus'];
 
 export function ProductionTransferExecutionPage() {
   const { t } = useModuleTranslation('production-transfer');
@@ -24,6 +28,9 @@ export function ProductionTransferExecutionPage() {
   const [loadError, setLoadError] = useState<string>();
   const [shortageConfirmed, setShortageConfirmed] = useState(false);
   const [shortageReason, setShortageReason] = useState('');
+  const [erpPanelOpen, setErpPanelOpen] = useState(false);
+  const [resumePickingBusy, setResumePickingBusy] = useState(false);
+  const [canResumePicking, setCanResumePicking] = useState(false);
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -37,6 +44,13 @@ export function ProductionTransferExecutionPage() {
         (task.taskType === 'AssignmentReturn' || task.taskType === 'CancellationReturn')
         && task.assignments.some((assignment) => assignment.userId === currentUserId)
         && !['Completed', 'Cancelled'].includes(task.status)));
+      setCanResumePicking(
+        result.workflowStatus === 'AwaitingHandover'
+        && board.tasks.some((task) =>
+          task.taskType === 'Pick'
+          && !['Completed', 'Cancelled'].includes(task.status)
+          && task.assignments.some((assignment) => assignment.userId === currentUserId)),
+      );
       setLoadError(undefined);
     } catch (error) {
       setLoadError(error instanceof Error ? error.message : 'Üretim transferi açılamadı.');
@@ -70,6 +84,23 @@ export function ProductionTransferExecutionPage() {
     } finally { setBusy(false); }
   };
 
+  const resumePicking = async () => {
+    if (!execution) return;
+    setResumePickingBusy(true);
+    try {
+      const result = await productionTransferApi.resumePicking(id);
+      setExecution(result);
+      setCanResumePicking(false);
+      setShortageConfirmed(false);
+      setShortageReason('');
+      toast.success('Toplama ekranına geri dönüldü.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Toplamaya geri dönülemedi.');
+    } finally {
+      setResumePickingBusy(false);
+    }
+  };
+
   const postErp = async () => {
     if (!execution) return;
     setErpBusy(true);
@@ -92,11 +123,23 @@ export function ProductionTransferExecutionPage() {
   const completed = execution.workflowStatus === 'Completed' || execution.workflowStatus === 'CompletedWithShortage';
   const showReturnSection = hasActiveReturnTask;
   const showPickingSection = pickingStage && !showReturnSection;
+  const showErpControls = execution.erpPostingPolicy !== 'Disabled';
+  const canRetryErp = can('WMS.PRODUCTION_TRANSFER.APPROVE')
+    && showErpControls
+    && ['Pending', 'Failed'].includes(execution.erpIntegrationStatus);
+
+  const renderErpTriggerButton = () => (showErpControls ? (
+    <ErpPostingTriggerButton
+      status={execution.erpIntegrationStatus}
+      label={t('execution.erp.openPanel')}
+      onClick={() => setErpPanelOpen(true)}
+    />
+  ) : null);
 
   return <section className="space-y-5">
     <header className="wms-ops-form-card p-5">
-      <Link to="/warehouse/production-transfers/list" className="mb-4 inline-flex items-center gap-1 text-xs font-bold text-[var(--wms-brand-primary)]">
-        <ArrowLeft className="size-4" />Transfer kayıtlarına dön
+      <Link to={PRODUCTION_WORK_ORDERS_MY_ASSIGNMENTS_URL} className="mb-4 inline-flex items-center gap-1 text-xs font-bold text-[var(--wms-brand-primary)]">
+        <ArrowLeft className="size-4" />Benim İşlerim'e dön
       </Link>
       {!showReturnSection ? (
         <div className="grid gap-3 sm:grid-cols-2">
@@ -126,6 +169,17 @@ export function ProductionTransferExecutionPage() {
     )}
 
     {handoverStage && <section className="wms-ops-form-card p-5">
+      {canResumePicking ? (
+        <button
+          type="button"
+          disabled={resumePickingBusy}
+          onClick={() => void resumePicking()}
+          className="mb-4 inline-flex items-center gap-1 text-xs font-bold text-[var(--wms-brand-primary)] disabled:opacity-50"
+        >
+          {resumePickingBusy ? <Loader2 className="size-4 animate-spin" /> : <ArrowLeft className="size-4" />}
+          Toplamaya geri dön
+        </button>
+      ) : null}
       <div className="flex items-start gap-3"><PackageCheck className="mt-1 size-6 text-[var(--wms-brand-primary)]" /><div><h2 className="text-xl font-black">Talep sahibi teslim onayı</h2><p className="text-sm text-[var(--wms-app-text-muted)]">Malzemeler {execution.waitingLocationCode} · {execution.waitingLocationName} rafında bekliyor. Fiziksel teslim gerçekleşmeden onaylamayın.</p></div></div>
       <div className="mt-4 rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-surface)] p-4"><span className="text-xs text-[var(--wms-app-text-muted)]">Teslim alacak kişi</span><strong className="mt-1 block">{execution.requestedByName || (execution.requestedByUserId ? `Kullanıcı #${execution.requestedByUserId}` : 'Emri oluşturan kullanıcı')}</strong></div>
       <LineSummary execution={execution} />
@@ -135,37 +189,173 @@ export function ProductionTransferExecutionPage() {
     </section>}
 
     {completed && <section className="wms-ops-form-card border-emerald-500/40 p-5">
-      <div className="flex items-start gap-3"><CheckCircle2 className="mt-1 size-7 text-emerald-500" /><div><h2 className="text-xl font-black">Transfer tamamlandı</h2><p className="text-sm text-[var(--wms-app-text-muted)]">{execution.handoverConfirmedAtUtc ? new Date(execution.handoverConfirmedAtUtc).toLocaleString('tr-TR') : ''} tarihinde fiziksel teslim onaylandı.</p></div></div>
-      <LineSummary execution={execution} />
-      <div className={cn(
-        'mt-5 rounded-xl border p-4',
-        execution.erpIntegrationStatus === 'Succeeded' && 'border-emerald-500/40 bg-emerald-500/10',
-        execution.erpIntegrationStatus === 'Failed' && 'border-red-500/40 bg-red-500/10',
-        execution.erpIntegrationStatus === 'CommitUncertain' && 'border-amber-500/50 bg-amber-500/10',
-      )}>
-        <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <CheckCircle2 className="mt-1 size-7 text-emerald-500" />
           <div>
-            <strong className="block">{t('execution.erp.title')}</strong>
-            <span className="mt-1 block text-sm text-[var(--wms-app-text-muted)]">{t(`execution.erp.status.${execution.erpIntegrationStatus}`)}</span>
-            {execution.erpDocumentNo && <span className="mt-2 block text-xs font-bold">{t('execution.erp.documentNo')}: {execution.erpDocumentNo}</span>}
-            {execution.erpErrorMessage && <span className="mt-2 block text-xs text-red-600">{execution.erpErrorMessage}</span>}
+            <h2 className="text-xl font-black">Transfer tamamlandı</h2>
+            <p className="text-sm text-[var(--wms-app-text-muted)]">
+              {execution.handoverConfirmedAtUtc ? new Date(execution.handoverConfirmedAtUtc).toLocaleString('tr-TR') : ''} tarihinde fiziksel teslim onaylandı.
+            </p>
           </div>
-          {can('WMS.PRODUCTION_TRANSFER.APPROVE')
-            && execution.erpPostingPolicy !== 'Disabled'
-            && ['Pending','Failed'].includes(execution.erpIntegrationStatus) && (
-            <OpsActionButton variant="secondary" loading={erpBusy} onClick={() => void postErp()}>
-              <RefreshCw className="size-4" />{t('execution.erp.retry')}
-            </OpsActionButton>
-          )}
         </div>
+        {renderErpTriggerButton()}
       </div>
+      <LineSummary execution={execution} />
       {execution.residualTransferId && <div className="mt-5 rounded-xl border border-amber-500/50 bg-amber-500/10 p-4"><strong>Kalan iş emri oluşturuldu</strong><p className="mt-1 text-sm">Eksik miktarlar yeni belgeye taşındı; tamamlanan transfer tekrar açılamaz.</p><Link className="mt-3 inline-flex items-center gap-2 font-bold text-[var(--wms-brand-primary)]" to={`/warehouse/production-transfers/${execution.residualTransferId}/operations`}>{execution.residualDocumentNo || `#${execution.residualTransferId}`} iş emrine git</Link></div>}
+      {showErpControls && erpPanelOpen && (
+        <ErpPostingPanel
+          execution={execution}
+          canRetry={canRetryErp}
+          erpBusy={erpBusy}
+          onClose={() => setErpPanelOpen(false)}
+          onRetry={() => void postErp()}
+          t={t}
+        />
+      )}
     </section>}
   </section>;
 }
 
 function Step({ active, done, number, title, text }: { active: boolean; done: boolean; number: string; title: string; text: string }) { return <div className={cn('rounded-xl border p-4', active ? 'border-[var(--wms-brand-primary)] bg-[color-mix(in_oklab,var(--wms-brand-primary)_8%,transparent)]' : 'border-[var(--wms-app-border)]', done && 'border-emerald-500/40')}><div className="flex items-center gap-3"><span className={cn('grid size-9 place-items-center rounded-full text-xs font-black', done ? 'bg-emerald-500 text-white' : 'bg-[var(--wms-brand-primary)] text-[var(--wms-brand-on-primary)]')}>{done ? <CheckCircle2 className="size-5" /> : number}</span><span><strong className="block">{title}</strong><span className="text-xs text-[var(--wms-app-text-muted)]">{text}</span></span></div></div>; }
+
+function ErpPostingTriggerButton({
+  status,
+  label,
+  onClick,
+  className,
+}: {
+  status: ErpIntegrationStatus;
+  label: string;
+  onClick: () => void;
+  className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'inline-flex shrink-0 items-center gap-2 rounded-lg border px-3 py-2 text-xs font-bold transition-colors',
+        status === 'Failed' && 'border-red-500/50 text-red-600 hover:bg-red-500/10',
+        status === 'CommitUncertain' && 'border-amber-500/50 text-amber-600 hover:bg-amber-500/10',
+        status === 'Pending' && 'border-amber-500/50 text-amber-600 hover:bg-amber-500/10',
+        status === 'Processing' && 'border-[var(--wms-brand-primary)]/50 text-[var(--wms-brand-primary)] hover:bg-[var(--wms-brand-soft)]',
+        status === 'Succeeded' && 'border-emerald-500/40 text-emerald-600 hover:bg-emerald-500/10',
+        status === 'Cancelled' && 'border-[var(--wms-app-border)] text-[var(--wms-app-text-muted)] hover:bg-black/5 dark:hover:bg-white/5',
+        className,
+      )}
+    >
+      <Send className="size-4" aria-hidden />
+      {label}
+    </button>
+  );
+}
+
+function ErpPostingPanel({
+  execution,
+  canRetry,
+  erpBusy,
+  onClose,
+  onRetry,
+  t,
+}: {
+  execution: ProductionTransferExecution;
+  canRetry: boolean;
+  erpBusy: boolean;
+  onClose: () => void;
+  onRetry: () => void;
+  t: (key: string) => string;
+}) {
+  const status = execution.erpIntegrationStatus;
+
+  return (
+    <ResponsiveDialog
+      onClose={onClose}
+      title={t('execution.erp.title')}
+      description={t(`execution.erp.status.${status}`)}
+      className="!max-w-lg"
+    >
+      <div
+        className={cn(
+          'rounded-xl border p-4',
+          status === 'Succeeded' && 'border-emerald-500/40 bg-emerald-500/10',
+          status === 'Failed' && 'border-red-500/40 bg-red-500/10',
+          status === 'CommitUncertain' && 'border-amber-500/50 bg-amber-500/10',
+          status === 'Pending' && 'border-amber-500/50 bg-amber-500/10',
+          status === 'Processing' && 'border-[var(--wms-brand-primary)]/40 bg-[var(--wms-brand-soft)]',
+          status === 'Cancelled' && 'border-[var(--wms-app-border)] bg-[var(--wms-app-surface)]',
+        )}
+      >
+        <div className="space-y-3 text-sm">
+          <div>
+            <span className="text-xs font-bold uppercase tracking-wide text-[var(--wms-app-text-muted)]">Durum</span>
+            <p className="mt-1 font-semibold text-[var(--wms-app-text)]">{t(`execution.erp.status.${status}`)}</p>
+          </div>
+          {execution.erpDocumentNo && (
+            <div>
+              <span className="text-xs font-bold uppercase tracking-wide text-[var(--wms-app-text-muted)]">{t('execution.erp.documentNo')}</span>
+              <p className="mt-1 font-mono font-bold text-[var(--wms-brand-primary)]">{execution.erpDocumentNo}</p>
+            </div>
+          )}
+          {execution.erpErrorCode && (
+            <div>
+              <span className="text-xs font-bold uppercase tracking-wide text-[var(--wms-app-text-muted)]">Hata kodu</span>
+              <p className="mt-1 font-mono text-xs text-red-600">{execution.erpErrorCode}</p>
+            </div>
+          )}
+          {execution.erpErrorMessage && (
+            <div>
+              <span className="text-xs font-bold uppercase tracking-wide text-[var(--wms-app-text-muted)]">Hata mesajı</span>
+              <p className="mt-1 whitespace-pre-wrap text-sm text-red-600">{execution.erpErrorMessage}</p>
+            </div>
+          )}
+          {status === 'CommitUncertain' && (
+            <p className="text-sm text-amber-700 dark:text-amber-300">{t('execution.erp.uncertainAfterCompletion')}</p>
+          )}
+          {status === 'Failed' && (
+            <p className="text-sm text-[var(--wms-app-text-muted)]">{t('execution.erp.failedAfterCompletion')}</p>
+          )}
+        </div>
+      </div>
+      {canRetry && (
+        <div className="mt-5 flex justify-end">
+          <OpsActionButton variant="primary" loading={erpBusy} onClick={onRetry}>
+            <RefreshCw className="size-4" />
+            {t('execution.erp.retry')}
+          </OpsActionButton>
+        </div>
+      )}
+    </ResponsiveDialog>
+  );
+}
+
 function LineSummary({ execution }: { execution: ProductionTransferExecution }) {
   const pickedLines = execution.lines.filter((line) => line.pickedQuantity > 0);
-  return <div className="mt-5 overflow-x-auto rounded-xl border border-[var(--wms-app-border)]"><table className="w-full min-w-[680px] text-sm"><thead className="bg-black/5 text-left dark:bg-white/5"><tr><th className="p-3">Stok</th><th className="p-3 text-right">Talep</th><th className="p-3 text-right">Toplanan/Teslim</th><th className="p-3 text-right">Eksik</th></tr></thead><tbody>{pickedLines.map((line) => <tr key={line.lineId} className="border-t border-[var(--wms-app-border)]"><td className="p-3"><strong>{line.stockCode}</strong><span className="block text-xs text-[var(--wms-app-text-muted)]">{line.stockName}</span></td><td className="p-3 text-right">{formatProjectNumber(line.requestedQuantity)} {line.unitCode}</td><td className="p-3 text-right text-emerald-600">{formatProjectNumber(line.pickedQuantity)}</td><td className="p-3 text-right text-amber-600">{formatProjectNumber(line.shortageQuantity)}</td></tr>)}</tbody></table></div>;
+  return (
+    <div className="mt-5 overflow-x-auto rounded-xl border border-[var(--wms-app-border)]">
+      <table className="w-full min-w-[680px] text-sm">
+          <thead className="bg-black/5 text-left dark:bg-white/5">
+            <tr>
+              <th className="p-3">Stok</th>
+              <th className="p-3 text-right">Talep</th>
+              <th className="p-3 text-right">Toplanan/Teslim</th>
+              <th className="p-3 text-right">Eksik</th>
+            </tr>
+          </thead>
+          <tbody>
+            {pickedLines.map((line) => (
+              <tr key={line.lineId} className="border-t border-[var(--wms-app-border)]">
+                <td className="p-3">
+                  <strong>{line.stockCode}</strong>
+                  <span className="block text-xs text-[var(--wms-app-text-muted)]">{line.stockName}</span>
+                </td>
+                <td className="p-3 text-right">{formatProjectNumber(line.requestedQuantity)} {line.unitCode}</td>
+                <td className="p-3 text-right text-emerald-600">{formatProjectNumber(line.pickedQuantity)}</td>
+                <td className="p-3 text-right text-amber-600">{formatProjectNumber(line.shortageQuantity)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+    </div>
+  );
 }

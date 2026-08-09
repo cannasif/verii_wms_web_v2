@@ -10031,13 +10031,44 @@ html:not(.skin-premium) .wms-ops-advanced-filter .wms-ops-field-shell {
 
 .wms-ops-list-popover--columns,
 .wms-ops-list-popover--search-fields {
+  display: flex;
   max-height: min(
     32rem,
     calc(100dvh - 2rem),
     var(--radix-popover-content-available-height, calc(100dvh - 2rem))
   );
-  overflow-y: auto;
+  overflow: hidden;
   overscroll-behavior: contain;
+}
+
+.wms-ops-list-popover--columns-shell {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.wms-ops-list-popover--columns-header {
+  flex-shrink: 0;
+}
+
+.wms-ops-list-popover--columns-body {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+  padding-right: 0.125rem;
+  padding-bottom: 0.25rem;
+}
+
+.wms-ops-list-popover--columns-footer {
+  flex-shrink: 0;
+  border-top: 1px solid color-mix(in oklab, var(--wms-ops-accent) 14%, var(--wms-ops-card-border));
+  background: color-mix(in oklab, var(--wms-ops-field-bg) 92%, transparent);
+}
+
+.wms-ops-list-popover--search-fields {
+  overflow-y: auto;
 }
 
 .wms-ops-list-popover--search-fields .wms-ops-list-popover__scroll {
@@ -10125,6 +10156,10 @@ html:not(.skin-premium) .wms-ops-advanced-filter .wms-ops-field-shell {
   max-height: 12rem;
   overflow-y: auto;
   padding-right: 0.125rem;
+}
+
+.wms-ops-list-popover--columns .wms-ops-list-popover--columns-body {
+  max-height: none;
 }
 
 .wms-ops-list-popover--columns .wms-ops-list-popover__row-label {

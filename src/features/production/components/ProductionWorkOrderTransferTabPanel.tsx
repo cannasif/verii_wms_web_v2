@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useMemo, useState, type ReactElement } from 'react';
+import { useCallback, useMemo, useState, type ReactElement } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Ban,
@@ -12,13 +12,20 @@ import {
   Trash2,
   UserPlus,
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import {
+  AdvancedDataGrid,
+  type GridColumn,
+  type GridRequest,
+} from '@/components/shared/AdvancedDataGrid';
 import { DeleteConfirmDialog } from '@/components/shared/DeleteConfirmDialog';
-import { OpsGridEmptyState } from '@/components/shared/OpsGridEmptyState';
+import { requiredActionColumn, systemColumns } from '@/components/shared/GridSystemColumns';
 import { OpsLoadingState } from '@/components/shared/OpsLoadingState';
 import { OpsStatusBadge } from '@/components/shared/OpsStatusBadge';
 import { formatProjectDate, formatProjectNumber } from '@/lib/project-format';
+import { localizeEnumValue } from '@/lib/enum-localization';
 import { cn } from '@/lib/utils';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
@@ -41,39 +48,90 @@ import {
   type ProductionWorkOrderTransferTab,
   type ProductionWorkOrderTransferTaskRow,
 } from '@/features/production-transfer/api';
-import { productionTaskTypeLabel } from '@/features/production-transfer/production-transfer-task-labels';
+import {
+  productionTaskTypeLabel,
+  productionWorkOrderTransferPickingStatusLabel,
+} from '@/features/production-transfer/production-transfer-task-labels';
 import { productionTransferEnumLabel } from '@/features/production-transfer/localization/enum-labels';
 import { taskLineageHasProgress } from '@/features/production-transfer/production-transfer-task-progress';
 import { transferApiFor } from '@/features/warehouse-transfer-v2/api/warehouse-transfer.api';
 import type { WarehouseTransferGridRow } from '@/features/warehouse-transfer-v2/types/warehouse-transfer.types';
+import { filterLocalGridPage } from '../production-work-order-transfer-grid.utils';
 
 const TAB_LABELS: Record<ProductionWorkOrderTransferTab, string> = {
   Picking: 'Toplamada',
   Completed: 'Tamamlanan',
   Cancelled: 'İptal Edilen',
+  MyAssignments: 'Benim İşlerim',
 };
 
-const CELL =
-  'border-r border-[color-mix(in_oklab,var(--wms-ops-accent)_16%,var(--wms-ops-card-border))] px-2 py-2 text-center align-middle last:border-r-0';
+const usesPickingStatusLabel = (tab: ProductionWorkOrderTransferTab): boolean =>
+  tab === 'Picking' || tab === 'MyAssignments';
 
 const TASK_CELL =
-  'border-r border-[color-mix(in_oklab,var(--wms-ops-accent)_16%,var(--wms-ops-card-border))] px-2 py-2 align-top text-left last:border-r-0';
+  'border-r border-[color-mix(in_oklab,var(--wms-ops-accent)_16%,var(--wms-ops-card-border))] px-2 py-2 text-center align-middle last:border-r-0';
 
-const TASK_HEAD = cn(
+const TASK_NAME_COL = cn(
   TASK_CELL,
-  'align-middle text-xs uppercase text-[var(--wms-app-text-muted)]',
+  'min-w-[20rem] w-[20rem] whitespace-normal text-left',
+);
+
+const TASK_NAME_HEAD = cn(
+  TASK_CELL,
+  'min-w-[20rem] w-[20rem] text-left',
+);
+
+const TASK_ACTIONS_COL = cn(
+  TASK_CELL,
+  'min-w-[22rem] w-[22rem] whitespace-normal text-right',
+);
+
+const TASK_HEAD = TASK_CELL;
+
+const TASK_ACTIONS_HEAD = cn(
+  TASK_CELL,
+  'min-w-[22rem] w-[22rem] text-right',
 );
 
 const transferBaseUrl = '/warehouse/production-transfers';
+const G = 'dataGrid.transferRecords';
 
-function toGridRow(row: ProductionWorkOrderTransferHeaderRow): WarehouseTransferGridRow {
+const RETURN_TASK_TYPES = new Set(['AssignmentReturn', 'CancellationReturn']);
+
+function isReturnTaskType(taskType: string): boolean {
+  return RETURN_TASK_TYPES.has(taskType);
+}
+
+function isActiveTaskStatus(status: string): boolean {
+  return !['Completed', 'Cancelled'].includes(status);
+}
+
+export type ProductionWorkOrderTransferGridRow = WarehouseTransferGridRow & {
+  source: ProductionWorkOrderTransferHeaderRow;
+  externalReferenceNo?: string;
+  productionOrderNo?: string;
+};
+
+const SEARCHABLE_KEYS = [
+  'documentNo',
+  'sourceWarehouseCode',
+  'sourceWarehouseName',
+  'targetWarehouseCode',
+  'targetWarehouseName',
+  'initiationMode',
+  'status',
+  'externalReferenceNo',
+  'productionOrderNo',
+];
+
+function toGridRow(row: ProductionWorkOrderTransferHeaderRow): ProductionWorkOrderTransferGridRow {
   return {
     id: row.transferId,
     branchCode: '0',
     documentNo: row.documentNo,
-    documentDate: row.createdDate?.slice(0, 10) ?? new Date().toISOString().slice(0, 10),
+    documentDate: row.documentDate?.slice(0, 10) ?? row.createdDate?.slice(0, 10) ?? new Date().toISOString().slice(0, 10),
     businessContext: 'ProductionMaterialSupply',
-    initiationMode: 'StockBased',
+    initiationMode: (row.initiationMode ?? 'StockBased') as WarehouseTransferGridRow['initiationMode'],
     processType: 'PlannedTask',
     status: row.transferStatus as WarehouseTransferGridRow['status'],
     approvalStatus: 'NotRequired',
@@ -84,19 +142,22 @@ function toGridRow(row: ProductionWorkOrderTransferHeaderRow): WarehouseTransfer
     targetWarehouseId: row.targetWarehouseId,
     targetWarehouseCode: row.targetWarehouseCode,
     targetWarehouseName: row.targetWarehouseName,
-    lineCount: row.tasks.length,
+    lineCount: row.lineCount ?? 0,
     requestedQuantity: row.requestedQuantity,
     pickedQuantity: row.pickedQuantity,
-    shippedQuantity: 0,
-    receivedQuantity: 0,
-    putawayQuantity: 0,
+    shippedQuantity: row.shippedQuantity ?? 0,
+    receivedQuantity: row.receivedQuantity ?? 0,
+    putawayQuantity: row.putawayQuantity ?? 0,
     priority: 3,
     plannedDispatchAtUtc: undefined,
     plannedArrivalAtUtc: undefined,
-    createdBy: undefined,
+    createdBy: row.createdBy,
     createdDate: row.createdDate,
-    updatedBy: undefined,
-    updatedDate: undefined,
+    updatedBy: row.updatedBy,
+    updatedDate: row.updatedDate,
+    externalReferenceNo: row.externalReferenceNo,
+    productionOrderNo: row.productionOrderNo,
+    source: row,
   };
 }
 
@@ -112,14 +173,14 @@ function ExpandedTransferTasks({
   onBoardChanged: () => void;
 }): ReactElement {
   const { t } = useModuleTranslation('production-transfer');
-  const readOnly = tab === 'Cancelled';
+  const canManageAssignments = tab !== 'Cancelled';
   const { can } = usePermissionAccess();
   const queryClient = useQueryClient();
   const boardQueryKey = ['production-transfer', 'board', transferId] as const;
   const boardQuery = useQuery({
     queryKey: boardQueryKey,
     queryFn: () => productionTransferApi.taskBoard(transferId),
-    enabled: !readOnly && Number.isFinite(transferId) && transferId > 0,
+    enabled: canManageAssignments && Number.isFinite(transferId) && transferId > 0,
   });
   const [busy, setBusy] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState<Record<number, number>>({});
@@ -144,39 +205,35 @@ function ExpandedTransferTasks({
     try {
       queryClient.setQueryData(boardQueryKey, await action());
       onBoardChanged();
-      await queryClient.invalidateQueries({ queryKey: ['production-work-order-transfer-groups'] });
+      await queryClient.invalidateQueries({ queryKey: ['advanced-grid', `production-work-order-transfers-${tab}`] });
+      await queryClient.invalidateQueries({ queryKey: ['production-work-order-transfer-tasks', transferId] });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'İşlem başarısız.');
     } finally {
       setBusy(false);
     }
-  }, [boardQueryKey, onBoardChanged, queryClient]);
+  }, [boardQueryKey, onBoardChanged, queryClient, tab]);
 
-  if (!readOnly && boardQuery.isLoading) {
+  if (canManageAssignments && boardQuery.isLoading) {
     return (
-      <div className="px-4 py-3">
+      <div className="wms-ops-grid-state-cell px-4 py-3">
         <OpsLoadingState message="Görevler yükleniyor…" code="TASKS" compact />
       </div>
     );
   }
 
   return (
-    <div className="space-y-4 border-t border-[color-mix(in_oklab,var(--wms-ops-accent)_16%,var(--wms-ops-card-border))] bg-[color-mix(in_oklab,var(--wms-ops-accent)_4%,transparent)] px-3 py-4">
-      <table
-        className={cn(
-          'wms-ops-data-grid w-full min-w-[920px] border-collapse text-sm',
-          tab !== 'Picking' && 'wms-ops-data-grid--no-row-hover',
-        )}
-      >
-        <thead>
-          <tr className="border-b border-[color-mix(in_oklab,var(--wms-ops-accent)_16%,var(--wms-ops-card-border))]">
-            <th className={TASK_HEAD}>Görev</th>
+    <div className="wms-ops-scrollbar relative block overflow-x-auto overflow-y-auto border border-[var(--wms-ops-card-border)]">
+      <table className="wms-ops-data-grid w-full min-w-[1180px] border-collapse text-sm">
+        <thead className="sticky top-0 z-10">
+          <tr>
+            <th className={TASK_NAME_HEAD}>Görev</th>
             <th className={TASK_HEAD}>Tür</th>
             <th className={TASK_HEAD}>Durum</th>
-            <th className={cn(TASK_HEAD, 'text-right')}>Planlanan</th>
-            <th className={cn(TASK_HEAD, 'text-right')}>Yapılan</th>
+            <th className={TASK_HEAD}>Planlanan</th>
+            <th className={TASK_HEAD}>Yapılan</th>
             <th className={TASK_HEAD}>Atananlar</th>
-            {!readOnly ? <th className={cn(TASK_HEAD, 'w-[1%] whitespace-nowrap')}>İşlem</th> : null}
+            <th className={TASK_ACTIONS_HEAD}>İşlem</th>
           </tr>
         </thead>
         <tbody>
@@ -187,9 +244,10 @@ function ExpandedTransferTasks({
               item.originTaskId === task.taskId && item.status !== 'Cancelled');
             const assignableUserId = selectedUsers[task.taskId];
             const handoffHint = describeHandoffRelation(task, orderedTasks);
+            const showExecuteOperation = isReturnTaskType(task.taskType) && isActiveTaskStatus(task.status);
             return (
-              <tr key={task.taskId} className="border-b border-[color-mix(in_oklab,var(--wms-ops-accent)_12%,var(--wms-ops-card-border))]">
-                <td className={TASK_CELL}>
+              <tr key={task.taskId}>
+                <td className={TASK_NAME_COL}>
                   <strong>{taskDisplayName(task)}</strong>
                   {task.displaySuffix ? (
                     <span className="ml-2 rounded-full bg-cyan-500/10 px-2 py-0.5 text-[0.65rem] font-bold text-cyan-600 dark:text-cyan-300">
@@ -203,13 +261,22 @@ function ExpandedTransferTasks({
                 </td>
                 <td className={TASK_CELL}>{productionTaskTypeLabel(task.taskType)}</td>
                 <td className={TASK_CELL}>{productionTransferEnumLabel(t, 'taskStatus', task.status)}</td>
-                <td className={cn(TASK_CELL, 'text-right')}>{formatProjectNumber(task.plannedQuantity)}</td>
-                <td className={cn(TASK_CELL, 'text-right')}>{formatProjectNumber(task.processedQuantity)}</td>
+                <td className={TASK_CELL}>{formatProjectNumber(task.plannedQuantity)}</td>
+                <td className={TASK_CELL}>{formatProjectNumber(task.processedQuantity)}</td>
                 <td className={TASK_CELL}>{task.assignedUsernames.join(', ') || 'Atanmamış'}</td>
-                {!readOnly ? (
-                  <td className={cn(TASK_CELL, 'w-[1%] whitespace-nowrap')}>
-                    <div className="flex flex-nowrap items-center justify-end gap-2">
-                      {canAssign && liveTask && hasProgress && !returnTask ? (
+                <td className={TASK_ACTIONS_COL}>
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    {showExecuteOperation ? (
+                      <Link
+                        to={`${transferBaseUrl}/${transferId}/operations`}
+                        title="Operasyonu yürüt"
+                        className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg border border-cyan-500/50 px-3 py-2 text-xs font-bold text-cyan-600 hover:bg-cyan-500/10"
+                      >
+                        <PlayCircle className="size-4" aria-hidden />
+                        Operasyonu yürüt
+                      </Link>
+                    ) : null}
+                    {canManageAssignments && canAssign && liveTask && hasProgress && !returnTask ? (
                         <button
                           type="button"
                           title="İade ataması oluştur"
@@ -233,7 +300,8 @@ function ExpandedTransferTasks({
                           İade
                         </button>
                       ) : null}
-                      {tab === 'Picking'
+                      {canManageAssignments
+                        && tab === 'Picking'
                         && canAssign && liveTask
                         && liveTask.assignments.length > 0
                         && liveTask.lines.some((line) => line.processedQuantity < line.requestedQuantity) ? (
@@ -274,7 +342,6 @@ function ExpandedTransferTasks({
                         ) : null}
                     </div>
                   </td>
-                ) : null}
               </tr>
             );
           })}
@@ -284,17 +351,62 @@ function ExpandedTransferTasks({
   );
 }
 
+function ProductionWorkOrderTransferTaskList({
+  transferId,
+  tab,
+  onBoardChanged,
+}: {
+  transferId: number;
+  tab: ProductionWorkOrderTransferTab;
+  onBoardChanged: () => void;
+}): ReactElement {
+  const tasksQuery = useQuery({
+    queryKey: ['production-work-order-transfer-tasks', transferId],
+    queryFn: () => productionTransferApi.workOrderTransferGroupTasks(transferId),
+    enabled: Number.isFinite(transferId) && transferId > 0,
+  });
+
+  if (tasksQuery.isLoading) {
+    return (
+      <div className="wms-ops-grid-state-cell px-4 py-3">
+        <OpsLoadingState message="Görevler yükleniyor…" code="TASKS" compact />
+      </div>
+    );
+  }
+
+  if (tasksQuery.isError) {
+    return (
+      <div className="wms-ops-grid-state-cell px-4 py-3 text-sm text-rose-500">
+        {tasksQuery.error instanceof Error ? tasksQuery.error.message : 'Görevler yüklenemedi.'}
+      </div>
+    );
+  }
+
+  return (
+    <ExpandedTransferTasks
+      transferId={transferId}
+      tasks={tasksQuery.data ?? []}
+      tab={tab}
+      onBoardChanged={onBoardChanged}
+    />
+  );
+}
+
 export function ProductionWorkOrderTransferTabPanel({
   tab,
-  search,
+  refreshKey = 0,
 }: {
   tab: ProductionWorkOrderTransferTab;
-  search?: string;
+  refreshKey?: number;
 }): ReactElement {
   const { t } = useModuleTranslation('production-transfer');
+  const { t: tc, i18n } = useTranslation('common');
+  const navigate = useNavigate();
+  const isMyAssignmentsTab = tab === 'MyAssignments';
+  const gridLanguage = i18n.resolvedLanguage ?? i18n.language;
   const transferApi = useMemo(() => transferApiFor('production'), []);
   const queryClient = useQueryClient();
-  const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
+  const [expandedId, setExpandedId] = useState<number | null>(null);
   const [detailTarget, setDetailTarget] = useState<ProductionWorkOrderTransferHeaderRow | null>(null);
   const [loadingEditId, setLoadingEditId] = useState<number | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ProductionWorkOrderTransferHeaderRow | null>(null);
@@ -308,24 +420,26 @@ export function ProductionWorkOrderTransferTabPanel({
     closeConfirm,
   } = useProductionTransferListCancel();
 
-  const query = useQuery({
-    queryKey: ['production-work-order-transfer-groups', tab, search ?? ''],
-    queryFn: () => productionTransferApi.workOrderTransferGroups(tab, search),
-    refetchOnWindowFocus: true,
-  });
+  const fetchPage = useCallback(async (request: GridRequest) => {
+    const rows = await productionTransferApi.workOrderTransferGroups(tab);
+    return filterLocalGridPage(rows.map(toGridRow), request, SEARCHABLE_KEYS);
+  }, [tab, refreshKey]);
 
   const refreshGroups = useCallback(() => {
-    void queryClient.invalidateQueries({ queryKey: ['production-work-order-transfer-groups'] });
-  }, [queryClient]);
+    void queryClient.invalidateQueries({ queryKey: ['advanced-grid', `production-work-order-transfers-${tab}`] });
+  }, [queryClient, tab]);
 
-  const toggleExpanded = (transferId: number) => {
-    setExpandedIds((current) => {
-      const next = new Set(current);
-      if (next.has(transferId)) next.delete(transferId);
-      else next.add(transferId);
-      return next;
-    });
-  };
+  const toggleExpanded = useCallback((transferId: number) => {
+    setExpandedId((current) => (current === transferId ? null : transferId));
+  }, []);
+
+  const handleRowDoubleClick = useCallback((row: ProductionWorkOrderTransferGridRow) => {
+    if (isMyAssignmentsTab) {
+      navigate(`${transferBaseUrl}/${row.id}/operations`);
+      return;
+    }
+    toggleExpanded(row.id);
+  }, [isMyAssignmentsTab, navigate, toggleExpanded]);
 
   const openDetail = (row: ProductionWorkOrderTransferHeaderRow) => {
     setDetailTarget(row);
@@ -358,159 +472,239 @@ export function ProductionWorkOrderTransferTabPanel({
     }
   };
 
-  const rows = query.data ?? [];
+  const columns = useMemo<GridColumn<ProductionWorkOrderTransferGridRow>[]>(() => [
+    {
+      key: 'expand',
+      label: '',
+      width: 48,
+      sortable: false,
+      filterable: false,
+      searchable: false,
+      hideable: false,
+      render: (row) => (
+        <button
+          type="button"
+          aria-expanded={expandedId === row.id}
+          aria-label={expandedId === row.id ? 'Satırı daralt' : 'Görevleri göster'}
+          onClick={() => toggleExpanded(row.id)}
+          className="inline-flex size-8 items-center justify-center rounded-lg hover:bg-[var(--wms-brand-primary)]/10"
+        >
+          {expandedId === row.id
+            ? <ChevronDown className="size-4 text-[var(--wms-brand-primary)]" aria-hidden />
+            : <ChevronRight className="size-4 text-[var(--wms-brand-primary)]" aria-hidden />}
+        </button>
+      ),
+    },
+    ...systemColumns<ProductionWorkOrderTransferGridRow>(),
+    {
+      key: 'documentNo',
+      label: tc(`${G}.documentNo`),
+      sortable: true,
+      filterable: true,
+      render: (row) => (
+        <>
+          <strong className="font-mono font-semibold text-[var(--wms-brand-primary)]">{row.documentNo}</strong>
+          {row.source.isResidualHeader ? (
+            <div className="mt-1">
+              <OpsStatusBadge tone="pending">Kalan transfer</OpsStatusBadge>
+            </div>
+          ) : null}
+          {row.source.residualDocumentNo ? (
+            <div className="mt-1 text-xs text-[var(--wms-app-text-muted)]">
+              Kalan: {row.source.residualDocumentNo}
+            </div>
+          ) : null}
+        </>
+      ),
+    },
+    {
+      key: 'documentDate',
+      label: tc(`${G}.documentDate`),
+      sortable: true,
+      filterable: true,
+      render: (row) => formatProjectDate(row.documentDate),
+    },
+    {
+      key: 'sourceWarehouseCode',
+      label: tc(`${G}.sourceWarehouseCode`),
+      sortable: true,
+      filterable: true,
+      render: (row) => row.sourceWarehouseCode,
+    },
+    {
+      key: 'sourceWarehouseName',
+      label: tc(`${G}.sourceWarehouseName`),
+      sortable: true,
+      filterable: true,
+      render: (row) => row.sourceWarehouseName,
+    },
+    {
+      key: 'targetWarehouseCode',
+      label: tc(`${G}.targetWarehouseCode`),
+      sortable: true,
+      filterable: true,
+      render: (row) => row.targetWarehouseCode,
+    },
+    {
+      key: 'targetWarehouseName',
+      label: tc(`${G}.targetWarehouseName`),
+      sortable: true,
+      filterable: true,
+      render: (row) => row.targetWarehouseName,
+    },
+    {
+      key: 'initiationMode',
+      label: tc(`${G}.flow`),
+      sortable: true,
+      filterable: true,
+      render: (row) => localizeEnumValue(row.initiationMode),
+    },
+    {
+      key: 'status',
+      label: tc(`${G}.status`),
+      sortable: true,
+      filterable: true,
+      render: (row) => (usesPickingStatusLabel(tab)
+        ? productionWorkOrderTransferPickingStatusLabel(
+            row.source,
+            productionTransferEnumLabel(t, 'transferStatus', row.status),
+          )
+        : productionTransferEnumLabel(t, 'transferStatus', row.status)),
+    },
+    {
+      key: 'lineCount',
+      label: tc(`${G}.lineCount`),
+      sortable: true,
+      filterable: true,
+      render: (row) => row.lineCount,
+    },
+    {
+      key: 'requestedQuantity',
+      label: tc(`${G}.planned`),
+      sortable: true,
+      filterable: true,
+      render: (row) => formatProjectNumber(row.requestedQuantity),
+    },
+    {
+      key: 'pickedQuantity',
+      label: tc(`${G}.picked`),
+      sortable: true,
+      filterable: true,
+      render: (row) => formatProjectNumber(row.pickedQuantity),
+    },
+    {
+      key: 'shippedQuantity',
+      label: tc(`${G}.shipped`),
+      sortable: true,
+      filterable: true,
+      render: (row) => formatProjectNumber(row.shippedQuantity),
+    },
+    {
+      key: 'receivedQuantity',
+      label: tc(`${G}.received`),
+      sortable: true,
+      filterable: true,
+      render: (row) => formatProjectNumber(row.receivedQuantity),
+    },
+    {
+      key: 'putawayQuantity',
+      label: tc(`${G}.putaway`),
+      sortable: true,
+      filterable: true,
+      render: (row) => formatProjectNumber(row.putawayQuantity),
+    },
+    {
+      key: 'actions',
+      label: tc(`${G}.actions`),
+      ...requiredActionColumn,
+      render: (row) => (
+        <div className="flex items-center justify-center gap-1">
+          <Link
+            to={`${transferBaseUrl}/${row.id}/operations`}
+            title="Operasyonu yürüt"
+            className="rounded-lg p-2 text-cyan-500 hover:bg-cyan-500/10"
+          >
+            <PlayCircle className="size-4" aria-hidden />
+          </Link>
+          {row.status === 'Draft' && tab !== 'MyAssignments' ? (
+            <>
+              <button
+                type="button"
+                title="Taslağı düzenle"
+                disabled={loadingEditId === row.id}
+                onClick={() => void openEdit(row.source)}
+                className="rounded-lg p-2 text-amber-500 hover:bg-amber-500/10"
+              >
+                {loadingEditId === row.id
+                  ? <Loader2 className="size-4 animate-spin" aria-hidden />
+                  : <Pencil className="size-4" aria-hidden />}
+              </button>
+              <button
+                type="button"
+                title="Taslağı sil"
+                onClick={() => setDeleteTarget(row.source)}
+                className="rounded-lg p-2 text-rose-500 hover:bg-rose-500/10"
+              >
+                <Trash2 className="size-4" aria-hidden />
+              </button>
+            </>
+          ) : null}
+          {row.status !== 'Cancelled' && tab !== 'MyAssignments' ? (
+            <button
+              type="button"
+              title="Transferi iptal et"
+              disabled={cancelPrecheckId === row.id}
+              onClick={() => void beginProductionCancel(row)}
+              className="rounded-lg p-2 text-orange-500 hover:bg-orange-500/10 disabled:opacity-50"
+            >
+              {cancelPrecheckId === row.id
+                ? <Loader2 className="size-4 animate-spin" aria-hidden />
+                : <Ban className="size-4" aria-hidden />}
+            </button>
+          ) : null}
+          <button
+            type="button"
+            title="Detayı göster"
+            onClick={() => openDetail(row.source)}
+            className="rounded-lg p-2 text-violet-500 hover:bg-violet-500/10"
+          >
+            <Eye className="size-4" aria-hidden />
+          </button>
+        </div>
+      ),
+    },
+  ], [
+    beginProductionCancel,
+    cancelPrecheckId,
+    expandedId,
+    gridLanguage,
+    loadingEditId,
+    t,
+    tab,
+    tc,
+    toggleExpanded,
+  ]);
 
   return (
     <>
-      <div className="relative mt-4 block max-h-[max(20rem,calc(100dvh-26rem))] overflow-x-auto overflow-y-auto border border-[var(--wms-ops-card-border)]">
-        <table className="wms-ops-data-grid w-full border-collapse text-sm">
-          <thead className="sticky top-0 z-10">
-            <tr>
-              <th className={cn(CELL, 'w-10')} aria-label="Genişlet" />
-              <th className={CELL}>Transfer</th>
-              <th className={CELL}>İş emri</th>
-              <th className={CELL}>Akış</th>
-              <th className={CELL}>Depo akışı</th>
-              <th className={CELL}>Plan / toplanan</th>
-              <th className={CELL}>Tarih</th>
-              <th className={CELL} aria-label="İşlem" />
-            </tr>
-          </thead>
-          <tbody>
-            {query.isLoading ? (
-              <tr>
-                <td colSpan={8} className="wms-ops-grid-state-cell">
-                  <OpsLoadingState message={`${TAB_LABELS[tab]} transferleri yükleniyor…`} code="FETCH" compact />
-                </td>
-              </tr>
-            ) : rows.length === 0 ? (
-              <tr>
-                <td colSpan={8} className="wms-ops-grid-state-cell">
-                  <OpsGridEmptyState message={`${TAB_LABELS[tab]} sekmesinde transfer bulunamadı.`} />
-                </td>
-              </tr>
-            ) : rows.map((row) => {
-              const expanded = expandedIds.has(row.transferId);
-              const gridRow = toGridRow(row);
-              return (
-                <Fragment key={row.transferId}>
-                  <tr className="align-top">
-                    <td className={CELL}>
-                      <button
-                        type="button"
-                        aria-expanded={expanded}
-                        aria-label={expanded ? 'Satırı daralt' : 'Görevleri göster'}
-                        onClick={() => toggleExpanded(row.transferId)}
-                        className="inline-flex size-8 items-center justify-center rounded-lg hover:bg-[var(--wms-brand-primary)]/10"
-                      >
-                        {expanded
-                          ? <ChevronDown className="size-4 text-[var(--wms-brand-primary)]" aria-hidden />
-                          : <ChevronRight className="size-4 text-[var(--wms-brand-primary)]" aria-hidden />}
-                      </button>
-                    </td>
-                    <td className={cn(CELL, 'text-left')}>
-                      <strong className="font-mono text-[var(--wms-brand-primary)]">{row.documentNo}</strong>
-                      {row.isResidualHeader ? (
-                        <div className="mt-1">
-                          <OpsStatusBadge tone="pending">Kalan transfer</OpsStatusBadge>
-                        </div>
-                      ) : null}
-                      {row.residualDocumentNo ? (
-                        <div className="mt-1 text-xs text-[var(--wms-app-text-muted)]">
-                          Kalan: {row.residualDocumentNo}
-                        </div>
-                      ) : null}
-                    </td>
-                    <td className={CELL}>{row.productionOrderNo || row.externalReferenceNo || '—'}</td>
-                    <td className={CELL}>
-                      <div>{productionTransferEnumLabel(t, 'transferStatus', row.transferStatus)}</div>
-                      <div className="mt-1 text-xs text-[var(--wms-app-text-muted)]">
-                        {productionTransferEnumLabel(t, 'workflowStatus', row.workflowStatus)}
-                      </div>
-                    </td>
-                    <td className={CELL}>
-                      {row.sourceWarehouseCode} → {row.targetWarehouseCode}
-                    </td>
-                    <td className={CELL}>
-                      {formatProjectNumber(row.requestedQuantity)} / {formatProjectNumber(row.pickedQuantity)}
-                    </td>
-                    <td className={CELL}>{formatProjectDate(row.createdDate)}</td>
-                    <td className={CELL}>
-                      <div className="flex items-center justify-center gap-1">
-                        {row.transferStatus !== 'Cancelled' ? (
-                          <Link
-                            to={`${transferBaseUrl}/${row.transferId}/operations`}
-                            title="Operasyonu yürüt"
-                            className="rounded-lg p-2 text-cyan-500 hover:bg-cyan-500/10"
-                          >
-                            <PlayCircle className="size-4" aria-hidden />
-                          </Link>
-                        ) : null}
-                        {row.transferStatus === 'Draft' ? (
-                          <>
-                            <button
-                              type="button"
-                              title="Taslağı düzenle"
-                              disabled={loadingEditId === row.transferId}
-                              onClick={() => void openEdit(row)}
-                              className="rounded-lg p-2 text-amber-500 hover:bg-amber-500/10"
-                            >
-                              {loadingEditId === row.transferId
-                                ? <Loader2 className="size-4 animate-spin" aria-hidden />
-                                : <Pencil className="size-4" aria-hidden />}
-                            </button>
-                            <button
-                              type="button"
-                              title="Taslağı sil"
-                              onClick={() => setDeleteTarget(row)}
-                              className="rounded-lg p-2 text-rose-500 hover:bg-rose-500/10"
-                            >
-                              <Trash2 className="size-4" aria-hidden />
-                            </button>
-                          </>
-                        ) : null}
-                        {row.transferStatus !== 'Cancelled' ? (
-                          <button
-                            type="button"
-                            title="Transferi iptal et"
-                            disabled={cancelPrecheckId === row.transferId}
-                            onClick={() => void beginProductionCancel(gridRow)}
-                            className="rounded-lg p-2 text-orange-500 hover:bg-orange-500/10 disabled:opacity-50"
-                          >
-                            {cancelPrecheckId === row.transferId
-                              ? <Loader2 className="size-4 animate-spin" aria-hidden />
-                              : <Ban className="size-4" aria-hidden />}
-                          </button>
-                        ) : null}
-                        <button
-                          type="button"
-                          title="Detayı göster"
-                          onClick={() => openDetail(row)}
-                          className="rounded-lg p-2 text-violet-500 hover:bg-violet-500/10"
-                        >
-                          <Eye className="size-4" aria-hidden />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                  {expanded ? (
-                    <tr>
-                      <td colSpan={8} className="p-0">
-                        <ExpandedTransferTasks
-                          transferId={row.transferId}
-                          tasks={row.tasks}
-                          tab={tab}
-                          onBoardChanged={refreshGroups}
-                        />
-                      </td>
-                    </tr>
-                  ) : null}
-                </Fragment>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+      <AdvancedDataGrid<ProductionWorkOrderTransferGridRow>
+        compactShell
+        title=""
+        pageKey={`production-work-order-transfers-${tab}`}
+        refreshKey={refreshKey}
+        columns={columns}
+        fetchPage={fetchPage}
+        emptyMessage={`${TAB_LABELS[tab]} sekmesinde transfer bulunamadı.`}
+        expandedRowId={expandedId}
+        onRowDoubleClick={handleRowDoubleClick}
+        renderExpandedRow={(row) => (
+          <ProductionWorkOrderTransferTaskList
+            transferId={row.id}
+            tab={tab}
+            onBoardChanged={refreshGroups}
+          />
+        )}
+      />
 
       <DeleteConfirmDialog
         open={Boolean(deleteTarget)}
@@ -557,9 +751,24 @@ export const PRODUCTION_WORK_ORDER_TRANSFER_TABS = [
   { key: 'picking', label: 'Toplamada', apiTab: 'Picking' as ProductionWorkOrderTransferTab },
   { key: 'completed', label: 'Tamamlanan', apiTab: 'Completed' as ProductionWorkOrderTransferTab },
   { key: 'cancelled', label: 'İptal Edilen', apiTab: 'Cancelled' as ProductionWorkOrderTransferTab },
+  { key: 'mine', label: 'Benim İşlerim', apiTab: 'MyAssignments' as ProductionWorkOrderTransferTab },
 ] as const;
 
 export type ProductionWorkOrderPageTab = typeof PRODUCTION_WORK_ORDER_TRANSFER_TABS[number]['key'];
+
+export const PRODUCTION_WORK_ORDERS_PAGE_PATH = '/warehouse/production/work-orders';
+
+export function isProductionWorkOrderPageTab(value: string | null | undefined): value is ProductionWorkOrderPageTab {
+  return PRODUCTION_WORK_ORDER_TRANSFER_TABS.some((tab) => tab.key === value);
+}
+
+export function productionWorkOrdersPageUrl(tab: ProductionWorkOrderPageTab = 'pending'): string {
+  return tab === 'pending'
+    ? PRODUCTION_WORK_ORDERS_PAGE_PATH
+    : `${PRODUCTION_WORK_ORDERS_PAGE_PATH}?tab=${tab}`;
+}
+
+export const PRODUCTION_WORK_ORDERS_MY_ASSIGNMENTS_URL = productionWorkOrdersPageUrl('mine');
 
 export function workOrderTransferApiTab(tab: ProductionWorkOrderPageTab): ProductionWorkOrderTransferTab {
   const match = PRODUCTION_WORK_ORDER_TRANSFER_TABS.find((item) => item.key === tab);
