@@ -43,13 +43,15 @@ import { OpsPageHeader } from "@/components/shared/OpsPageHeader";
 import { OpsSkinCheckbox } from "@/components/shared/OpsSkinCheckbox";
 import { StockSelectDialog } from "@/components/shared/StockSelectDialog";
 import { PagedAppDropdown } from "@/components/shared/PagedAppDropdown";
+import { PagedLookupDialog } from "@/components/shared/PagedLookupDialog";
 import { Dialog, DialogTitle } from "@/components/ui/dialog";
-import { useDropdownInfiniteSearch } from "@/hooks/useDropdownInfiniteSearch";
+import { useDropdownInfiniteSearch, type DropdownPage } from "@/hooks/useDropdownInfiniteSearch";
 import { StockIdentityCell } from "@/components/shared/StockIdentityCell";
 import { TrackingPlanEditor } from "@/components/shared/TrackingPlanEditor";
 import { StockTrackingPolicyField } from "@/features/stock-tracking/effective-stock-tracking";
 import { useAuthStore } from "@/stores/auth-store";
 import { cn } from "@/lib/utils";
+import type { PagedResponse } from "@/types/api";
 import { OperationDraftRestoreDialog } from "@/features/operation-drafts/OperationDraftRestoreDialog";
 import { useOperationDraft } from "@/features/operation-drafts/useOperationDraft";
 import type {
@@ -74,6 +76,17 @@ import type {
 
 const today = () => new Date().toLocaleDateString("en-CA");
 const D = "transferDraft";
+const assigneeDisplayName = (user: ActiveUserOption) =>
+  `${user.firstName} ${user.lastName}`.trim() || user.username;
+const toPagedResponse = <T,>(page: DropdownPage<T>): PagedResponse<T> => ({
+  data: page.items,
+  totalCount: page.totalCount,
+  pageNumber: page.pageNumber,
+  pageSize: page.pageSize,
+  totalPages: page.totalPages ?? Math.max(1, Math.ceil(page.totalCount / Math.max(page.pageSize, 1))),
+  hasPreviousPage: page.pageNumber > 1,
+  hasNextPage: Boolean(page.hasNextPage),
+});
 const warehouseOption = (x: WarehouseOption) => ({
   value: `${x.id}|${x.warehouseCode}`,
   label: `${x.warehouseCode} · ${x.warehouseName}`,
@@ -932,7 +945,8 @@ export function WarehouseTransferDraftPage({
             <Assignees
               assignees={assignees}
               setAssignees={setAssignees}
-              allowMultiple={policy?.allowMultipleAssignees ?? true}
+              allowMultiple={variant === "production" ? false : (policy?.allowMultipleAssignees ?? true)}
+              pickerMode={variant === "production" ? "lookup" : "dialog"}
             />
           ) : null
         }
@@ -1381,22 +1395,24 @@ function Assignees({
   assignees,
   setAssignees,
   allowMultiple = true,
+  pickerMode = "dialog",
 }: {
   assignees: ActiveUserOption[];
   setAssignees: React.Dispatch<React.SetStateAction<ActiveUserOption[]>>;
   allowMultiple?: boolean;
+  pickerMode?: "dialog" | "lookup";
 }): ReactElement {
   const { t } = useTranslation("common");
+  const [lookupOpen, setLookupOpen] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [draft, setDraft] = useState<ActiveUserOption[]>([]);
   const [summaryOpen, setSummaryOpen] = useState(false);
   const closeTimer = useRef<number | null>(null);
-  const userDisplayName = (user: ActiveUserOption) =>
-    `${user.firstName} ${user.lastName}`.trim() || user.username;
+  const userDisplayName = assigneeDisplayName;
 
   useEffect(() => {
-    if (assignees.length < 2) setSummaryOpen(false);
-  }, [assignees.length]);
+    if (pickerMode !== "dialog" || assignees.length < 2) setSummaryOpen(false);
+  }, [assignees.length, pickerMode]);
 
   useEffect(() => () => {
     if (closeTimer.current) window.clearTimeout(closeTimer.current);
@@ -1428,6 +1444,48 @@ function Assignees({
 
   const removeLabel = (user: ActiveUserOption) =>
     t(`${D}.assignees.removeAria`, { name: userDisplayName(user) });
+
+  if (pickerMode === "lookup") {
+    const selectedUser = assignees[0];
+    return (
+      <div className="flex w-full min-w-0 justify-end">
+        <div className="w-full min-w-[min(100%,18rem)] sm:max-w-md">
+          <PagedLookupDialog<ActiveUserOption>
+            variant="ops"
+            triggerMode="combobox"
+            autoSearchMinLength={1}
+            popoverPortalContainer={null}
+            openDialogOnTouchTap
+            open={lookupOpen}
+            onOpenChange={setLookupOpen}
+            title="Depo çalışanı seçin"
+            value={selectedUser ? userDisplayName(selectedUser) : null}
+            placeholder="Depo çalışanı seçin"
+            searchPlaceholder="Ad, kullanıcı adı veya e-posta ile arayın"
+            emptyText="Eşleşen depo çalışanı bulunamadı."
+            triggerClassName="!h-11 !py-2 !pl-9 !pr-3"
+            queryKey={["production-transfer-draft-assignee"]}
+            fetchPage={async ({ pageNumber, pageSize, search, signal }) =>
+              toPagedResponse(await warehouseTransferApi.activeUsers({
+                pageNumber,
+                pageSize,
+                search,
+                sortBy: "username",
+                sortDirection: "asc",
+                signal: signal ?? new AbortController().signal,
+              }))
+            }
+            getKey={(user) => String(user.id)}
+            getLabel={(user) => userDisplayName(user)}
+            onSelect={(user) => setAssignees([user])}
+            onComboboxTextChange={(text) => {
+              if (!text.trim()) setAssignees([]);
+            }}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>

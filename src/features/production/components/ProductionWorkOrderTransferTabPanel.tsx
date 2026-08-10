@@ -422,9 +422,11 @@ function ProductionWorkOrderTransferTaskList({
 export function ProductionWorkOrderTransferTabPanel({
   tab,
   refreshKey = 0,
+  onPendingQueueChanged,
 }: {
   tab: ProductionWorkOrderTransferTab;
   refreshKey?: number;
+  onPendingQueueChanged?: () => void;
 }): ReactElement {
   const { t } = useModuleTranslation('production-transfer');
   const { t: tc, i18n } = useTranslation('common');
@@ -843,7 +845,10 @@ export function ProductionWorkOrderTransferTabPanel({
         <ProductionTransferDraftWithdrawDialog
           row={withdrawTarget}
           onClose={() => setWithdrawTarget(null)}
-          onCompleted={refreshGroups}
+          onCompleted={() => {
+            refreshGroups();
+            onPendingQueueChanged?.();
+          }}
         />
       ) : null}
 

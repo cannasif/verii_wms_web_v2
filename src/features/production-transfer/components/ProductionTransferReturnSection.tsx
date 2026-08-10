@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Layers, Loader2, PackageCheck, Play } from 'lucide-react';
+import { Layers, Loader2, PackageCheck, Play, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { OpsActionButton } from '@/components/shared/OpsActionButton';
 import { OpsSkinCheckbox } from '@/components/shared/OpsSkinCheckbox';
@@ -36,6 +36,18 @@ interface Props {
 function locationOptionLabel(code?: string, name?: string): string {
   if (code && name) return `${code} · ${name}`;
   return code || name || 'Raf seçin';
+}
+
+function buildDefaultTargetsFromLines(lines: ProductionTaskLine[]) {
+  const targets: Record<number, string> = {};
+  const labels: Record<number, string> = {};
+  for (const line of lines) {
+    if (line.targetLocationId) {
+      targets[line.taskLineId] = String(line.targetLocationId);
+      labels[line.taskLineId] = locationOptionLabel(line.targetLocationCode, line.targetLocationName);
+    }
+  }
+  return { targets, labels };
 }
 
 export function ProductionTransferReturnSection({ transferId, documentNo, onBoardChange }: Props) {
@@ -147,6 +159,15 @@ export function ProductionTransferReturnSection({ transferId, documentNo, onBoar
     }),
   );
 
+  const hasLayoutChanges = useMemo(() => {
+    if (!returnTask) return false;
+    if (selectedLineIds.length > 0) return true;
+    return returnTask.lines.some((line) => {
+      const defaultTarget = line.targetLocationId ? String(line.targetLocationId) : '';
+      return (lineTargets[line.taskLineId] ?? '') !== defaultTarget;
+    });
+  }, [lineTargets, returnTask, selectedLineIds]);
+
   const toggleLineSelection = (taskLineId: number, checked: boolean) => {
     setSelectedLineIds((current) => {
       if (checked) return current.includes(taskLineId) ? current : [...current, taskLineId];
@@ -170,6 +191,18 @@ export function ProductionTransferReturnSection({ transferId, documentNo, onBoar
     locationLabelsRef.current[String(item.id)] = label;
     return { value: String(item.id), label };
   }, []);
+
+  const resetLayout = () => {
+    if (!returnTask) return;
+    const { targets, labels } = buildDefaultTargetsFromLines(returnTask.lines);
+    setLineTargets(targets);
+    setLineTargetLabels(labels);
+    setSelectedLineIds([]);
+    setBulkPlacementOpen(false);
+    setBulkTargetLocation('');
+    setBulkTargetLabel('');
+    toast.success('Raf seçimleri varsayılan değerlere döndürüldü.');
+  };
 
   const applyBulkTargetLocation = () => {
     if (!bulkTargetLocation || Number(bulkTargetLocation) <= 0) {
@@ -236,7 +269,7 @@ export function ProductionTransferReturnSection({ transferId, documentNo, onBoar
   return (
     <section className="space-y-4">
       <div className="wms-ops-form-card p-5">
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs font-bold uppercase tracking-[.16em] text-[var(--wms-app-text-muted)]">
               {productionTaskTypeLabel(returnTask.taskType)}
@@ -251,11 +284,35 @@ export function ProductionTransferReturnSection({ transferId, documentNo, onBoar
               type="button"
               disabled={busy || checkingTaskId === returnTask.taskId}
               onClick={() => void requestStart(returnTask.taskId, returnTask.taskNo)}
-              className="inline-flex items-center gap-2 rounded-lg bg-[var(--wms-brand-primary)] px-4 py-2 text-sm font-bold text-[var(--wms-brand-on-primary)] disabled:opacity-50"
+              className="inline-flex shrink-0 items-center gap-2 self-end rounded-lg bg-[var(--wms-brand-primary)] px-4 py-2 text-sm font-bold text-[var(--wms-brand-on-primary)] disabled:opacity-50"
             >
               {checkingTaskId === returnTask.taskId ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}
               Bu işi yapıyorum
             </button>
+          ) : canWork ? (
+            <div className="flex shrink-0 flex-wrap items-center gap-2 self-end">
+              <OpsActionButton
+                variant="secondary"
+                loading={false}
+                disabled={!hasLayoutChanges || busy}
+                onClick={resetLayout}
+                className="px-4 py-2 text-sm"
+              >
+                <RotateCcw className="size-4" />
+                Düzeni sıfırla
+              </OpsActionButton>
+              <OpsActionButton
+                variant="secondary"
+                loading={false}
+                disabled={!hasBulkSelection || busy}
+                onClick={() => setBulkPlacementOpen(true)}
+                className="px-4 py-2 text-sm"
+              >
+                <Layers className="size-4" />
+                Yerleştirme rafını seç
+                {hasBulkSelection ? ` (${selectedLineIds.length})` : ''}
+              </OpsActionButton>
+            </div>
           ) : null}
         </div>
 
@@ -338,23 +395,13 @@ export function ProductionTransferReturnSection({ transferId, documentNo, onBoar
 
             <div className="mt-5 flex flex-wrap items-center justify-end gap-2">
               <OpsActionButton
-                variant="secondary"
-                loading={false}
-                disabled={!canWork || !hasBulkSelection || busy}
-                onClick={() => setBulkPlacementOpen(true)}
-              >
-                <Layers className="size-4" />
-                Yerleştirme rafını seç
-                {hasBulkSelection ? ` (${selectedLineIds.length})` : ''}
-              </OpsActionButton>
-              <OpsActionButton
                 variant="primary"
                 loading={busy}
                 disabled={!canWork || !allTargetsSelected}
                 onClick={() => void completeReturn(returnTask)}
               >
                 <PackageCheck className="size-4" />
-                İadeyi tamamladım, tüm ürünleri yerine yerleştirdim
+                İadeyi tamamladım
               </OpsActionButton>
             </div>
           </>

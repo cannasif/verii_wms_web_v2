@@ -697,6 +697,7 @@ export function ProductionWorkOrdersPage(): ReactElement {
             <ProductionWorkOrderTransferTabPanel
               tab={workOrderTransferApiTab(activeTab)}
               refreshKey={transferRefreshKey}
+              onPendingQueueChanged={() => void load(activeSearch[0] || undefined)}
             />
         ) : (
         <>

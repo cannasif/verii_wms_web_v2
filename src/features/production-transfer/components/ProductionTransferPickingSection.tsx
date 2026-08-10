@@ -23,6 +23,7 @@ import {
   type ProductionTransferRouteRefreshCandidate,
   type ProductionTransferRouteRefreshCandidates,
   type ResolveProductionTransferBarcodeResult,
+  type ProductionTransferScanPickResult,
   type WarehouseTransferReturnSetting,
 } from '../api';
 import { ProductionTaskStartShortageDialog } from './ProductionTaskStartShortageDialog';
@@ -140,16 +141,19 @@ function buildTableSections(rows: ProductionTransferPickingRow[], tab: PickTab):
   const displayOrder = new Map(rows.map((row, index) => [pickingRowSelectionKey(row), index]));
   const serialRows = rows.filter(isSerialRow);
   const nonSerialRows = rows.filter((row) => !isSerialRow(row));
+  const serialStockIds = new Set(serialRows.map((row) => row.stockId));
+  const serialShortageRows = nonSerialRows.filter((row) => serialStockIds.has(row.stockId));
+  const standaloneNonSerialRows = nonSerialRows.filter((row) => !serialStockIds.has(row.stockId));
 
   const visibleNonSerial = tab === 'completed'
-    ? nonSerialRows.filter(isRowCompleted)
-    : nonSerialRows.filter((row) => !isRowCompleted(row));
+    ? standaloneNonSerialRows.filter(isRowCompleted)
+    : standaloneNonSerialRows.filter((row) => !isRowCompleted(row));
   const flatSections: TableSection[] = [...visibleNonSerial]
     .sort((left, right) => compareDisplayOrder(left, right, displayOrder))
     .map((row) => ({ type: 'flat' as const, row } satisfies TableSection));
 
   const serialGroups = new Map<number, ProductionTransferPickingRow[]>();
-  for (const row of serialRows) {
+  for (const row of [...serialRows, ...serialShortageRows]) {
     const bucket = serialGroups.get(row.stockId) ?? [];
     bucket.push(row);
     serialGroups.set(row.stockId, bucket);
@@ -159,8 +163,8 @@ function buildTableSections(rows: ProductionTransferPickingRow[], tab: PickTab):
     .map(([stockId, groupRows]) => ({
       type: 'serial-group' as const,
       stockId,
-      stockCode: groupRows[0]?.stockCode ?? '',
-      stockName: groupRows[0]?.stockName,
+      stockCode: groupRows.find((row) => row.stockCode)?.stockCode ?? '',
+      stockName: groupRows.find((row) => row.stockName)?.stockName,
       rows: sortSerialGroupRows(groupRows, tab, displayOrder),
     }))
     .filter((group) => group.rows.length > 0);
@@ -237,6 +241,58 @@ interface BarcodeStep1 {
   barcode: string;
   match: ResolveProductionTransferBarcodeResult;
   quantity: string;
+  idempotencyKey: string;
+  requiresThresholdConfirm?: boolean;
+}
+
+export const PICK_ABOVE_THRESHOLD_CONFIRM_MESSAGE =
+  'Bu miktar onay eşiğini aşıyor. Devam etmek için onaylayın.';
+
+function isPickAboveThresholdConfirmError(message: string): boolean {
+  return message.includes('onay eşiğini');
+}
+
+function applyScanPickDelta(
+  table: ProductionTransferPickingTable,
+  execution: ProductionTransferExecution,
+  result: ProductionTransferScanPickResult,
+): { table: ProductionTransferPickingTable; execution: ProductionTransferExecution } {
+  const rowKey = (row: ProductionTransferPickingRow) => pickingRowSelectionKey(row);
+  const updatedRow = result.row;
+  const resultRowKey = rowKey(updatedRow);
+  const hasRow = table.rows.some((row) => rowKey(row) === resultRowKey);
+  const rows = hasRow
+    ? table.rows.map((row) => (rowKey(row) === resultRowKey ? updatedRow : row))
+    : table.rows.map((row) => (row.taskLineId === updatedRow.taskLineId && !row.serialNo?.trim()
+      ? updatedRow
+      : row));
+  return {
+    table: {
+      ...table,
+      workflowStatus: result.summary.workflowStatus,
+      pickedQuantity: result.summary.pickedQuantity,
+      shortageQuantity: result.summary.shortageQuantity,
+      overIssueQuantity: result.summary.overIssueQuantity,
+      canCompletePicking: result.summary.canCompletePicking,
+      rows,
+    },
+    execution: {
+      ...execution,
+      workflowStatus: result.summary.workflowStatus,
+      pickedQuantity: result.summary.pickedQuantity,
+      shortageQuantity: result.summary.shortageQuantity,
+      overIssueQuantity: result.summary.overIssueQuantity,
+      canCompletePicking: result.summary.canCompletePicking,
+      lines: execution.lines.map((line) => line.lineId === result.executionLine.lineId
+        ? {
+            ...line,
+            pickedQuantity: result.executionLine.pickedQuantity,
+            remainingToPickQuantity: result.executionLine.remainingToPickQuantity,
+            overIssueQuantity: result.executionLine.overIssueQuantity,
+          }
+        : line),
+    },
+  };
 }
 
 interface Props {
@@ -505,7 +561,7 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
   const [overIssueConfirmed, setOverIssueConfirmed] = useState(false);
   const [completePickingDialogOpen, setCompletePickingDialogOpen] = useState(false);
 
-  const performPick = async (payload: BarcodeStep1) => {
+  const performPick = async (payload: BarcodeStep1, confirmAboveThreshold = false) => {
     const quantity = payload.match.isSerial ? null : parsePositiveIntegerInput(payload.quantity);
     if (!payload.match.isSerial && quantity === null) {
       toast.error('Geçerli bir tam sayı miktar girin.');
@@ -515,11 +571,20 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
       transferId,
       payload.match.taskLineId,
       payload.barcode,
-      payload.match.isSerial ? undefined : quantity!,
-      payload.match.sourceLocationId,
+      {
+        quantity: payload.match.isSerial ? undefined : quantity!,
+        sourceLocationId: payload.match.sourceLocationId,
+        idempotencyKey: payload.idempotencyKey,
+        confirmAboveThreshold: confirmAboveThreshold || payload.requiresThresholdConfirm === true,
+      },
     );
-    onExecutionChange(result.execution);
-    await load();
+    if (!table) {
+      await load();
+    } else {
+      const next = applyScanPickDelta(table, execution, result);
+      setTable(next.table);
+      onExecutionChange(next.execution);
+    }
     setBarcode('');
     setStep1(null);
     toast.success(`${result.stockCode}: ${formatProjectNumber(result.acceptedQuantity)} toplandı.`);
@@ -529,38 +594,43 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
     const scanned = (rawBarcode ?? barcode).trim();
     if (!scanned || table?.isLocked || busy) return;
     setBusy(true);
+    const idempotencyKey = crypto.randomUUID();
     try {
       const match = await productionTransferApi.resolveBarcode(transferId, scanned);
+      const payload: BarcodeStep1 = {
+        barcode: scanned,
+        match,
+        quantity: String(Math.floor(match.defaultQuantity)),
+        idempotencyKey,
+      };
       if (match.isSerial) {
         try {
-          await performPick({
-            barcode: scanned,
-            match,
-            quantity: String(match.defaultQuantity),
-          });
+          await performPick(payload);
         } catch (error) {
-          toast.error(error instanceof Error ? error.message : 'Toplama kaydedilemedi.');
+          const message = error instanceof Error ? error.message : 'Toplama kaydedilemedi.';
+          if (isPickAboveThresholdConfirmError(message)) {
+            setStep1({ ...payload, requiresThresholdConfirm: true });
+            return;
+          }
+          toast.error(message);
         }
         return;
       }
       const autoPickQuantity = Math.floor(match.defaultQuantity);
       if (shouldAutoPickWithoutConfirm(match, sourceWarehouseReturnSetting?.autoPickWithoutConfirmMaxQuantity)) {
         try {
-          await performPick({
-            barcode: scanned,
-            match,
-            quantity: String(autoPickQuantity),
-          });
+          await performPick({ ...payload, quantity: String(autoPickQuantity) });
         } catch (error) {
-          toast.error(error instanceof Error ? error.message : 'Toplama kaydedilemedi.');
+          const message = error instanceof Error ? error.message : 'Toplama kaydedilemedi.';
+          if (isPickAboveThresholdConfirmError(message)) {
+            setStep1({ ...payload, quantity: String(autoPickQuantity), requiresThresholdConfirm: true });
+            return;
+          }
+          toast.error(message);
         }
         return;
       }
-      setStep1({
-        barcode: scanned,
-        match,
-        quantity: String(Math.floor(match.defaultQuantity)),
-      });
+      setStep1(payload);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Barkod doğrulanamadı.');
     } finally {
@@ -573,7 +643,7 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
     if (busy) return;
     setBusy(true);
     try {
-      await performPick(payload);
+      await performPick(payload, payload.requiresThresholdConfirm === true);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Toplama kaydedilemedi.');
     } finally {
@@ -973,11 +1043,13 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
       {step1 && (
         <ResponsiveDialog
           onClose={() => setStep1(null)}
-          title="Toplama miktarı"
+          title={step1.requiresThresholdConfirm ? 'Onay eşiği aşıldı' : 'Toplama miktarı'}
           description={
-            step1.match.maxPickQuantity > step1.match.remainingQuantity
-              ? `Kalan ${formatProjectNumber(step1.match.remainingQuantity)}; fazla sarf ile en fazla ${formatProjectNumber(step1.match.maxPickQuantity)} toplanabilir.`
-              : 'Miktarı düşürerek kısmi toplama yapabilirsiniz.'
+            step1.requiresThresholdConfirm
+              ? 'Bu miktar depo onay eşiğinin üzerinde. Devam etmek istiyor musunuz?'
+              : step1.match.maxPickQuantity > step1.match.remainingQuantity
+                ? `Kalan ${formatProjectNumber(step1.match.remainingQuantity)}; fazla sarf ile en fazla ${formatProjectNumber(step1.match.maxPickQuantity)} toplanabilir.`
+                : 'Miktarı düşürerek kısmi toplama yapabilirsiniz.'
           }
         >
           <form

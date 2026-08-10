@@ -179,10 +179,34 @@ export interface ProductionTransferExecution {
   lines: ProductionTransferExecutionLine[];
 }
 
+export interface ProductionTransferScanPickSummaryDelta {
+  workflowStatus: ProductionTransferWorkflowStatus;
+  pickedQuantity: number;
+  shortageQuantity: number;
+  overIssueQuantity: number;
+  canCompletePicking: boolean;
+}
+
+export interface ProductionTransferScanPickExecutionLineDelta {
+  lineId: number;
+  pickedQuantity: number;
+  remainingToPickQuantity: number;
+  overIssueQuantity: number;
+}
+
 export interface ProductionTransferScanPickResult {
-  execution: ProductionTransferExecution; lineId: number; stockCode: string; acceptedQuantity: number;
-  serialNo?: string; lotNo?: string; barcodeSource: string;
-  sourceLocationId: number; sourceLocationCode: string; sourceLocationName: string;
+  row: ProductionTransferPickingRow;
+  summary: ProductionTransferScanPickSummaryDelta;
+  executionLine: ProductionTransferScanPickExecutionLineDelta;
+  lineId: number;
+  stockCode: string;
+  acceptedQuantity: number;
+  serialNo?: string;
+  lotNo?: string;
+  barcodeSource: string;
+  sourceLocationId: number;
+  sourceLocationCode: string;
+  sourceLocationName: string;
   remainingBarcodeQuantity?: number;
 }
 
@@ -337,13 +361,24 @@ export const productionTransferApi = {
     unwrap(await api.post<Envelope<ResolveProductionTransferBarcodeResult>>(`/api/production-transfers/${id}/resolve-barcode`, {
       barcode: barcode.trim(),
     })),
-  scanPick: async (id: number, expectedTaskLineId: number, barcode: string, quantity?: number, sourceLocationId?: number): Promise<ProductionTransferScanPickResult> =>
+  scanPick: async (
+    id: number,
+    expectedTaskLineId: number,
+    barcode: string,
+    options?: {
+      quantity?: number;
+      sourceLocationId?: number;
+      idempotencyKey?: string;
+      confirmAboveThreshold?: boolean;
+    },
+  ): Promise<ProductionTransferScanPickResult> =>
     unwrap(await api.post<Envelope<ProductionTransferScanPickResult>>(`/api/production-transfers/${id}/scan-pick`, {
-      idempotencyKey: crypto.randomUUID(),
+      idempotencyKey: options?.idempotencyKey ?? crypto.randomUUID(),
       expectedTaskLineId,
       barcode: barcode.trim(),
-      quantity: quantity ?? null,
-      sourceLocationId: sourceLocationId || null,
+      quantity: options?.quantity ?? null,
+      sourceLocationId: options?.sourceLocationId || null,
+      confirmAboveThreshold: options?.confirmAboveThreshold ?? false,
     })),
   routeRefreshCandidates: async (id: number, taskLineId: number, serialNo?: string | null): Promise<ProductionTransferRouteRefreshCandidates> =>
     unwrap(await api.get<Envelope<ProductionTransferRouteRefreshCandidates>>(
