@@ -257,7 +257,24 @@
       "capsLockOn": "Caps Lock açık",
       "startAnimation": "Animasyonu başlat",
       "stopAnimation": "Animasyonu durdur",
-      "comingSoon": "Çok yakında!"
+      "comingSoon": "Çok yakında!",
+      "intro": {
+        "headline": "Depoyu arayan değil, <brand>V3RII</brand> ile yöneten olun.",
+        "description": "Mal kabulden sevkiyata, raftan transfera — depo akışını net, sakin ve tek yerden yönet.",
+        "flowTitle": "V3RII WMS FLOW",
+        "live": "CANLI",
+        "greetingMorning": "Günaydın.",
+        "greetingAfternoon": "İyi günler.",
+        "greetingEvening": "İyi akşamlar.",
+        "greetingNight": "İyi geceler.",
+        "humanNote": "Hazır olduğunda buradan vardiyana geç.",
+        "steps": {
+          "inbound": "Mal Kabul",
+          "stock": "Stok & Raf",
+          "transfer": "Transfer",
+          "shipping": "Sevkiyat"
+        }
+      }
     },
     "sessionRecovery": {
       "title": "Oturum bağlantısı geçici olarak kesildi",
@@ -315,7 +332,7 @@
     "search_placeholder": "Hızlı arama yap..."
   },
   "sidebar": {
-    "warehouseOperations": "Ambar İşlemleri",
+    "warehouseOperations": "Depo(Ambar) İşlemleri",
     "warehouseTransfer": "Depolar Arası Transfer",
     "normalTransferGroup": "Normal Transfer",
     "subcontractingIssueGroup": "Fasona Çıkış",
@@ -331,7 +348,7 @@
     "productionTransferList": "Üretim Transfer Kayıtları",
     "productionTransferMaterialRequests": "KKD Malzeme Talep Siparişleri",
     "productionTransferSettings": "Üretim Transfer Ayarları",
-    "production": "Üretim",
+    "production": "Üretim ve Kalite",
     "productionHub": "Üretim Süreç Merkezi",
     "productionCreate": "Üretim Emrini Oluşturma",
     "productionList": "Üretim Planları",
@@ -340,10 +357,10 @@
     "subcontractingTransferCreate": "Fason Transferi Oluştur",
     "subcontractingTransferList": "Fason Transfer Kayıtları",
     "subcontractingTransferSettings": "Fason Ayarları",
-    "shipping": "Sevk",
+    "shipping": "Sevkiyat İşlemleri",
     "warehouseManagement": "Depo Yönetimi",
     "mainNavigation": "Ana menü",
-    "dashboard": "Dashboard",
+    "dashboard": "Gösterge Paneli",
     "goodsReceipt": "Mal Kabul",
     "goodsReceiptOps": "Operasyon",
     "goodsReceiptCreate": "Emir Oluştur",
@@ -408,7 +425,7 @@
     "traceExplorer": "Trace Explorer",
     "wmsScopePolicies": "WMS Kapsam Politikaları",
     "wmsScopeAssignments": "WMS Kapsam Atamaları",
-    "erp": "ERP",
+    "erp": "Entegrasyonlar",
     "erpCustomers": "Cariler",
     "erpStocks": "Stoklar",
     "erpWarehouses": "Depolar",
@@ -451,7 +468,7 @@
     "inventoryGroup": "Depo ve Görünüm",
     "analyticsGroup": "Raporlama",
     "masterDataGroup": "Ana Veri ve Tanımlar",
-    "systemGroup": "Sistem ve Yetki",
+    "systemGroup": "Parametreler ve Sistem Ayarları",
     "filterLabel": "Filtre",
     "inventoryCount": "Sayım",
     "inventoryCountCreate": "Sayım Emrini Oluşturma",
@@ -571,7 +588,8 @@
     "packingDefinitions": "Paketleme Tanımları",
     "packingSettings": "Paketleme Ayarları",
     "projectSettings": "Genel Proje Ayarları",
-    "auditLogs": "Audit Kayıtları"
+    "auditLogs": "Audit Kayıtları",
+    "processParameters": "Süreç Parametreleri"
   },
   "serviceOps": {
     "breadcrumb": {

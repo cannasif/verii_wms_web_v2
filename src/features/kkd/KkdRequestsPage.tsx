@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactElement, type ReactNode } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowRightLeft, Check, CheckCircle2, ChevronDown, ChevronRight, ClipboardList, Eye, Hand, PackageCheck, PlayCircle, Plus, RefreshCw, SearchCheck, Trash2, TriangleAlert, Undo2, UserPlus, UserRoundCog, Users, X } from 'lucide-react';
+import { Ban, ArrowRightLeft, Check, CheckCircle2, ClipboardList, Eye, Hand, PackageCheck, PlayCircle, Plus, RefreshCw, SearchCheck, Trash2, TriangleAlert, Undo2, UserPlus, UserRoundCog, Users, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdvancedDataGrid, type GridColumn, type GridRequest } from '@/components/shared/AdvancedDataGrid';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { AppDropdown } from '@/components/shared/AppDropdown';
 import { AppInput } from '@/components/shared/AppInput';
 import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
@@ -12,6 +13,7 @@ import { PagedLookupDialog } from '@/components/shared/PagedLookupDialog';
 import { ResponsiveDialog } from '@/components/shared/ResponsiveDialog';
 import { OpsActionButton } from '@/components/shared/OpsActionButton';
 import { OpsSkinCheckbox } from '@/components/shared/OpsSkinCheckbox';
+import { OpsCodeBadge, OpsStatusBadge, inferOpsStatusTone } from '@/components/shared/OpsStatusBadge';
 import { OPS_SELECT_TRIGGER_CLASS } from '@/components/shared/ops-field-styles';
 import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
 import { goodsReceiptV2Api } from '@/features/goods-receipt-v2/api/goods-receipt.api';
@@ -76,6 +78,7 @@ const newLine = (): DraftLine => ({
 });
 
 const CLOSED = new Set(['Completed', 'Cancelled']);
+const ACTIVE_TASK_STATUSES = new Set(['Assigned', 'InPreparation']);
 
 /** Üretim iş emirleri sayfasındaki yaşam döngüsü sekmeleri; server-side filtrelenir. */
 const PAGE_TABS = ['pending', 'preparing', 'completed', 'cancelled', 'mine'] as const;
@@ -115,7 +118,6 @@ export function KkdRequestsPage(): ReactElement {
     return isPageTab(tab) ? tab : 'pending';
   });
   const [revision, setRevision] = useState(0);
-  const [expandedId, setExpandedId] = useState<number | null>(null);
   const [detailId, setDetailId] = useState<number | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [resolveRequestId, setResolveRequestId] = useState<number | null>(null);
@@ -145,7 +147,6 @@ export function KkdRequestsPage(): ReactElement {
 
   const goToTab = useCallback((tab: PageTab) => {
     setActiveTab(tab);
-    setExpandedId(null);
     setSearchParams((params) => { params.set('tab', tab); return params; }, { replace: true });
   }, [setSearchParams]);
 
@@ -167,6 +168,22 @@ export function KkdRequestsPage(): ReactElement {
     queryFn: () => kkdApi.requestDetail(detailId!),
     enabled: Boolean(detailId),
   });
+  const detailTasks = useQuery({
+    queryKey: ['kkd', 'requests', detailId, 'preparation-tasks'],
+    queryFn: () => kkdApi.requestPreparationTasks(detailId!),
+    enabled: Boolean(detailId),
+  });
+  const detailPrepareTarget = useMemo(() => {
+    const tasks = (detailTasks.data ?? []).filter((task) => ACTIVE_TASK_STATUSES.has(task.status));
+    const currentUserId = currentUserOption?.id ?? null;
+    const myTask = currentUserId != null
+      ? tasks.find((task) => task.assignedUserId === currentUserId)
+      : undefined;
+    return {
+      /** Sadece üzerime atanmış / aldığım aktif görevde toplama. Havuz henüz alınmamışsa görünmez. */
+      prepareTaskId: myTask?.id ?? null,
+    };
+  }, [currentUserOption?.id, detailTasks.data]);
 
   const warehouseLabel = useCallback((id?: number | null): string => {
     if (!id) return t('grid.warehouseUnset');
@@ -207,12 +224,18 @@ export function KkdRequestsPage(): ReactElement {
    */
   const navigatePrepare = useCallback((row: { id: number; employeeId: number }, taskId?: number | null): void => {
     if (taskId) {
-      navigate(`/warehouse/kkd/requests/${row.id}/preparation-tasks/${taskId}/pick`);
+      try {
+        sessionStorage.setItem('kkd-requests-return-tab', activeTab);
+      } catch {
+        /* private mode / quota — URL query yeterli */
+      }
+      const params = new URLSearchParams({ returnTab: activeTab });
+      navigate(`/warehouse/kkd/requests/${row.id}/preparation-tasks/${taskId}/pick?${params.toString()}`);
       return;
     }
     const params = new URLSearchParams({ employeeId: String(row.employeeId), requestId: String(row.id), taskMode: '1' });
     navigate(`/warehouse/kkd/distributions/new?${params.toString()}`);
-  }, [navigate]);
+  }, [activeTab, navigate]);
 
   const invalidateBoard = useCallback(() => {
     setRevision((item) => item + 1);
@@ -314,6 +337,50 @@ export function KkdRequestsPage(): ReactElement {
     onError: (error) => toast.error(error instanceof Error ? error.message : t('messages.failed')),
   });
 
+  /** Grid işlemlerinden devret/iade için üzerimdeki aktif görevi yükler. */
+  const loadMyActiveTask = useCallback(async (row: KkdRequestRow): Promise<KkdPreparationTaskRow | null> => {
+    const taskId = row.myActiveTaskId;
+    if (!taskId) return null;
+    const tasks = await kkdApi.requestPreparationTasks(row.id);
+    const task = tasks.find((item) => item.id === taskId);
+    if (!task || !ACTIVE_TASK_STATUSES.has(task.status) || task.assignedUserId == null) return null;
+    return task;
+  }, []);
+
+  const openHandoffFromRow = useCallback(async (row: KkdRequestRow) => {
+    try {
+      const task = await loadMyActiveTask(row);
+      if (!task) {
+        toast.error(t('messages.taskNotFound'));
+        return;
+      }
+      setHandoffUser(null);
+      setHandoffReason('');
+      setHandoffTask(task);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t('messages.failed'));
+    }
+  }, [loadMyActiveTask, t]);
+
+  const openReturnFromRow = useCallback(async (row: KkdRequestRow) => {
+    try {
+      const task = await loadMyActiveTask(row);
+      if (!task) {
+        toast.error(t('messages.taskNotFound'));
+        return;
+      }
+      const hasProgress = task.lines.some((line) => line.preparedQuantity > 0 || line.deliveredQuantity > 0);
+      if (hasProgress) {
+        toast.error(t('messages.returnBlockedProgress'));
+        return;
+      }
+      setReturnReason('');
+      setReturnTask(task);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t('messages.failed'));
+    }
+  }, [loadMyActiveTask, t]);
+
   const erpRetry = useMutation({
     mutationFn: async (distributionId: number) => kkdApi.complete(distributionId),
     onSuccess: () => { invalidateBoard(); toast.success(t('messages.erpRetried')); },
@@ -333,22 +400,6 @@ export function KkdRequestsPage(): ReactElement {
   });
 
   const columns = useMemo<GridColumn<KkdRequestRow>[]>(() => [
-    {
-      key: 'expand', label: '', width: 48, sortable: false, filterable: false, searchable: false,
-      render: (row) => (
-        <button
-          type="button"
-          aria-expanded={expandedId === row.id}
-          aria-label={expandedId === row.id ? t('actions.collapse') : t('actions.expand')}
-          onClick={(event) => { event.stopPropagation(); setExpandedId((current) => (current === row.id ? null : row.id)); }}
-          className="inline-flex size-8 items-center justify-center rounded-lg hover:bg-[var(--wms-brand-primary)]/10"
-        >
-          {expandedId === row.id
-            ? <ChevronDown className="size-4 text-[var(--wms-brand-primary)]" aria-hidden />
-            : <ChevronRight className="size-4 text-[var(--wms-brand-primary)]" aria-hidden />}
-        </button>
-      ),
-    },
     { key: 'id', label: t('grid.id'), width: 88, render: (row) => row.id, filterType: 'number', sortable: true },
     { key: 'requestNo', label: t('grid.requestNo'), width: 190, render: (row) => <strong>{row.requestNo}</strong>, searchable: true, defaultSearch: true, sortable: true },
     { key: 'status', label: t('grid.status'), width: 165, render: (row) => <Status value={row.status} text={enumText('status', row.status)}/>, filterType: 'enum', sortable: true },
@@ -414,10 +465,11 @@ export function KkdRequestsPage(): ReactElement {
     { key: 'updatedBy', label: t('grid.updatedBy'), width: 110, render: (row) => row.updatedBy ?? '—', filterType: 'number', searchable: true, sortable: true },
     { key: 'updatedDate', label: t('grid.updatedDate'), width: 170, render: (row) => formatDateTime(row.updatedDate), filterType: 'datetime', sortable: true },
     {
-      key: 'actions', label: t('grid.actions'), width: 230, filterable: false, searchable: false,
+      key: 'actions', label: t('grid.actions'), width: 280, filterable: false, searchable: false,
       render: (row) => {
         const open = !CLOSED.has(row.status);
         const hasUnassigned = row.unassignedLineCount > 0;
+        const canManageMyTask = canResolve && open && Boolean(row.myActiveTaskId);
         return (
           <div className="wms-ops-row-actions" onClick={(event) => event.stopPropagation()}>
             <button type="button" className="wms-ops-grid-icon-btn" title={t('actions.detail')} aria-label={t('actions.detail')} onClick={() => setDetailId(row.id)}>
@@ -445,6 +497,28 @@ export function KkdRequestsPage(): ReactElement {
             {canPrepare && open && (row.myActiveTaskId || (row.hasPoolTask && row.poolTaskId)) ? (
               <button type="button" className="wms-ops-grid-icon-btn" title={t('actions.prepare')} aria-label={t('actions.prepare')} onClick={() => prepare(row, row.myActiveTaskId ?? row.poolTaskId)}>
                 <PackageCheck className="size-3.5" />
+              </button>
+            ) : null}
+            {canManageMyTask ? (
+              <button
+                type="button"
+                className="wms-ops-grid-icon-btn"
+                title={t('actions.handoff')}
+                aria-label={t('actions.handoff')}
+                onClick={() => void openHandoffFromRow(row)}
+              >
+                <ArrowRightLeft className="size-3.5" />
+              </button>
+            ) : null}
+            {canManageMyTask ? (
+              <button
+                type="button"
+                className="wms-ops-grid-icon-btn !text-rose-600"
+                title={t('actions.returnWork')}
+                aria-label={t('actions.returnWork')}
+                onClick={() => void openReturnFromRow(row)}
+              >
+                <Undo2 className="size-3.5" />
               </button>
             ) : null}
             {row.warehouseOutboundId ? (
@@ -496,7 +570,7 @@ export function KkdRequestsPage(): ReactElement {
         );
       },
     },
-  ], [canAssignToOthers, canCancel, canClaimSelf, canPrepare, claimPool, claimSelf, enumText, erpRetry, expandedId, formatDateTime, formatQuantity, openPrepare, prepare, reactivateRequest, t, warehouseFilterOptions, warehouseLabel]);
+  ], [canAssignToOthers, canCancel, canClaimSelf, canPrepare, canResolve, claimPool, claimSelf, enumText, erpRetry, formatDateTime, formatQuantity, openHandoffFromRow, openPrepare, openReturnFromRow, prepare, reactivateRequest, t, warehouseFilterOptions, warehouseLabel]);
 
   const createRequest = useMutation({
     mutationFn: async () => {
@@ -597,25 +671,6 @@ export function KkdRequestsPage(): ReactElement {
           </Tabs>
         </div>
       )}
-      expandedRowId={expandedId}
-      renderExpandedRow={(row) => (
-        <RequestExpanded
-          row={row}
-          t={t}
-          formatQuantity={formatQuantity}
-          formatDateTime={formatDateTime}
-          enumText={enumText}
-          canResolve={canResolve}
-          canPrepare={canPrepare}
-          canClaimSelf={canClaimSelf}
-          currentUserId={currentUserOption?.id ?? null}
-          onResolve={(line) => openResolve(row.id, line)}
-          onPrepareTask={(taskId) => prepare(row, taskId)}
-          onHandoff={(task) => { setHandoffUser(null); setHandoffReason(''); setHandoffTask(task); }}
-          onReturn={(task) => { setReturnReason(''); setReturnTask(task); }}
-          onClaimPool={(task) => claimPool.mutate({ taskId: task.id, expectedRowVersion: task.rowVersion })}
-        />
-      )}
       onRowDoubleClick={(row) => {
         if (activeTab === 'mine' && (row.myActiveTaskId || row.poolTaskId)) {
           prepare(row, row.myActiveTaskId ?? row.poolTaskId);
@@ -693,16 +748,46 @@ export function KkdRequestsPage(): ReactElement {
       </form>
     </ResponsiveDialog> : null}
 
-    {detailId ? <ResponsiveDialog onClose={() => { setDetailId(null); setCancelReason(''); }} title={detail.data?.requestNo ?? t('detail.title')} description={t('detail.description')} className="!max-w-6xl">
-      {detail.isLoading ? <p>{t('messages.loading')}</p> : detail.isError || !detail.data ? <p className="text-rose-600">{t('messages.detailFailed')}</p> : <RequestDetailView
-        value={detail.data} t={t} formatDateTime={formatDateTime} formatQuantity={formatQuantity} enumText={enumText}
-        canResolve={canResolve} canAssign={canAssignToOthers} canClaim={canClaimSelf} canCancel={can('WMS.KKD.REQUESTS.CANCEL')} canPrepare={canPrepare}
-        warehouseLabel={warehouseLabel} cancelReason={cancelReason} setCancelReason={setCancelReason} cancelling={cancel.isPending}
+    {detailId ? (
+      <KkdRequestDetailDialog
+        open
+        loading={detail.isLoading}
+        error={detail.isError}
+        value={detail.data ?? null}
+        tasks={detailTasks.data ?? []}
+        tasksLoading={detailTasks.isLoading}
+        t={t}
+        formatDateTime={formatDateTime}
+        formatQuantity={formatQuantity}
+        enumText={enumText}
+        canResolve={canResolve}
+        canAssign={canAssignToOthers}
+        canClaim={canClaimSelf}
+        canCancel={can('WMS.KKD.REQUESTS.CANCEL')}
+        canPrepare={canPrepare}
+        prepareTaskId={detailPrepareTarget.prepareTaskId}
+        currentUserId={currentUserOption?.id ?? null}
+        initialTab={activeTab === 'preparing' || activeTab === 'mine' ? 'tasks' : 'content'}
+        warehouseLabel={warehouseLabel}
+        cancelReason={cancelReason}
+        setCancelReason={setCancelReason}
+        cancelling={cancel.isPending}
+        onClose={() => { setDetailId(null); setCancelReason(''); }}
         onResolve={(line) => openResolve(detail.data!.id, line)}
         onAssign={() => openPrepare(detail.data!)}
         onClaim={() => claimSelf(detail.data!)}
-        onCancel={() => cancel.mutate({ id: detail.data!.id, rowVersion: detail.data!.rowVersion })} onPrepare={() => prepare(detail.data!)}/>} 
-    </ResponsiveDialog> : null}
+        onCancel={() => cancel.mutate({ id: detail.data!.id, rowVersion: detail.data!.rowVersion })}
+        onPrepare={() => {
+          const taskId = detailPrepareTarget.prepareTaskId;
+          if (!detail.data || !taskId) return;
+          prepare(detail.data, taskId);
+        }}
+        onPrepareTask={(taskId) => prepare(detail.data!, taskId)}
+        onHandoff={(task) => { setHandoffUser(null); setHandoffReason(''); setHandoffTask(task); }}
+        onReturn={(task) => { setReturnReason(''); setReturnTask(task); }}
+        onClaimPool={(task) => claimPool.mutate({ taskId: task.id, expectedRowVersion: task.rowVersion })}
+      />
+    ) : null}
 
     {cancelTarget ? <ResponsiveDialog
       onClose={() => { setCancelTarget(null); setCancelReason(''); }}
@@ -932,150 +1017,6 @@ export function KkdRequestsPage(): ReactElement {
       </div>
     </ResponsiveDialog> : null}
   </>;
-}
-
-const ACTIVE_TASK_STATUSES = new Set(['Assigned', 'InPreparation']);
-
-/**
- * Grid satırı genişletildiğinde talebin kalemlerini ve hazırlama görevlerini gösterir.
- * Kalem tarafında stok/beden seçimi, görev tarafında hazırlama / devir / iade aksiyonları sunar.
- */
-function RequestExpanded({ row, t, formatQuantity, formatDateTime, enumText, canResolve, canPrepare, canClaimSelf, currentUserId, onResolve, onPrepareTask, onHandoff, onReturn, onClaimPool }: {
-  row: KkdRequestRow;
-  t: (key: string, options?: Record<string, unknown>) => string;
-  formatQuantity: (value: number) => string;
-  formatDateTime: (value?: string | null) => string;
-  enumText: (scope: string, value: string) => string;
-  canResolve: boolean;
-  canPrepare: boolean;
-  canClaimSelf: boolean;
-  currentUserId: number | null;
-  onResolve: (line: KkdRequestLine) => void;
-  onPrepareTask: (taskId: number) => void;
-  onHandoff: (task: KkdPreparationTaskRow) => void;
-  onReturn: (task: KkdPreparationTaskRow) => void;
-  onClaimPool: (task: KkdPreparationTaskRow) => void;
-}): ReactElement {
-  const requestId = row.id;
-  const detail = useQuery({
-    queryKey: ['kkd', 'requests', requestId],
-    queryFn: () => kkdApi.requestDetail(requestId),
-  });
-  const tasks = useQuery({
-    queryKey: ['kkd', 'requests', requestId, 'preparation-tasks'],
-    queryFn: () => kkdApi.requestPreparationTasks(requestId),
-  });
-  if (detail.isLoading) return <p className="text-sm text-[var(--wms-app-text-muted)]">{t('messages.loading')}</p>;
-  if (detail.isError || !detail.data) return <p className="text-sm text-rose-600">{t('messages.detailFailed')}</p>;
-  const assignedLineIds = new Set(
-    (tasks.data ?? [])
-      .filter((task) => ACTIVE_TASK_STATUSES.has(task.status))
-      .flatMap((task) => task.lines.map((line) => line.requestLineId)),
-  );
-  return (
-    <div className="space-y-3">
-      <section className="space-y-2">
-        <h4 className="text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-[var(--wms-app-text-muted)]">{t('expanded.lines')}</h4>
-        {detail.data.lines.map((line) => (
-          <article key={line.id} className={cn('rounded-xl border border-[var(--wms-ops-card-border)] bg-[var(--wms-app-surface)] p-3', !line.stockId && line.status !== 'Cancelled' && 'border-amber-500/50 bg-amber-500/5')}>
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <div className="min-w-0">
-                <strong className="text-sm">#{line.lineNo} · {line.groupCode}{line.groupName ? ` · ${line.groupName}` : ''}</strong>
-                <p className="mt-0.5 text-xs text-[var(--wms-app-text-muted)]">
-                  {line.stockId ? `${line.stockCode} · ${line.stockName}` : t('detail.stockAwaiting')}
-                </p>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs text-[var(--wms-app-text-muted)]">
-                  {t('grid.requested')}: <strong>{formatQuantity(line.requestedQuantity)}</strong>
-                  {' · '}{t('grid.delivered')}: <strong>{formatQuantity(line.deliveredQuantity)}</strong>
-                </span>
-                {line.status !== 'Cancelled' && line.status !== 'Completed' ? (
-                  assignedLineIds.has(line.id)
-                    ? <span className="inline-flex rounded-full bg-emerald-500/10 px-2 py-0.5 text-[0.68rem] font-semibold text-emerald-600">{t('expanded.lineAssigned')}</span>
-                    : <span className="inline-flex rounded-full bg-amber-500/10 px-2 py-0.5 text-[0.68rem] font-semibold text-amber-600">{t('expanded.lineUnassigned')}</span>
-                ) : null}
-                <Status value={line.status} text={enumText('lineStatus', line.status)}/>
-                {canResolve && !line.stockId && line.status !== 'Cancelled' && line.allocatedQuantity === 0 && line.deliveredQuantity === 0 ? (
-                  <button type="button" className="wms-ops-grid-icon-btn" title={t('actions.selectStock')} aria-label={t('actions.selectStock')} onClick={() => onResolve(line)}>
-                    <SearchCheck className="size-3.5"/>
-                  </button>
-                ) : null}
-              </div>
-            </div>
-          </article>
-        ))}
-      </section>
-      <section className="space-y-2">
-        <h4 className="text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-[var(--wms-app-text-muted)]">{t('expanded.tasks')}</h4>
-        {tasks.isLoading ? <p className="text-sm text-[var(--wms-app-text-muted)]">{t('messages.loading')}</p>
-          : (tasks.data ?? []).length === 0 ? <p className="text-sm text-[var(--wms-app-text-muted)]">{t('expanded.noTasks')}</p>
-          : (tasks.data ?? []).map((task) => {
-            const active = ACTIVE_TASK_STATUSES.has(task.status);
-            const isPool = task.assignedUserId == null;
-            const mine = currentUserId != null && task.assignedUserId === currentUserId;
-            const hasProgress = task.lines.some((line) => line.preparedQuantity > 0 || line.deliveredQuantity > 0);
-            return (
-              <article key={task.id} className={cn(
-                'rounded-xl border border-[var(--wms-ops-card-border)] bg-[var(--wms-app-surface)] p-3',
-                mine && active && 'border-[var(--wms-brand-primary)]/50 bg-[var(--wms-brand-primary)]/5',
-                isPool && active && 'border-cyan-500/40 bg-cyan-500/5',
-              )}>
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="min-w-0">
-                    <strong className="text-sm">{task.taskNo}</strong>
-                    <p className="mt-0.5 text-xs text-[var(--wms-app-text-muted)]">
-                      {isPool ? (
-                        <span className="inline-flex items-center gap-1 font-semibold text-cyan-600"><Users className="size-3" aria-hidden/>{t('expanded.taskPool')}</span>
-                      ) : t('expanded.taskAssignee', { user: task.assignedUserName })}
-                      {task.originUserName ? ` · ${t('expanded.taskOrigin', { user: task.originUserName })}` : ''}
-                      {' · '}{formatDateTime(task.assignedAtUtc)}
-                    </p>
-                    <p className="mt-0.5 text-xs text-[var(--wms-app-text-muted)]">
-                      {task.lines.map((line) => `#${line.lineNo} ${line.groupCode} (${formatQuantity(line.deliveredQuantity)}/${formatQuantity(line.quantity)})`).join(' · ')}
-                    </p>
-                    {task.closureReason ? <p className="mt-0.5 text-xs text-rose-600">{task.closureReason}</p> : null}
-                  </div>
-                  <div className="flex flex-wrap items-center gap-1.5" onClick={(event) => event.stopPropagation()}>
-                    <Status value={task.status === 'Completed' ? 'Completed' : task.status === 'Cancelled' || task.status === 'Returned' ? 'Cancelled' : task.status} text={enumText('taskStatus', task.status)}/>
-                    {canClaimSelf && active && isPool ? (
-                      <button type="button" className="wms-ops-grid-icon-btn" title={t('actions.claimPool')} aria-label={t('actions.claimPool')} onClick={() => onClaimPool(task)}>
-                        <Users className="size-3.5"/>
-                      </button>
-                    ) : null}
-                    {canPrepare && active && mine ? (
-                      <button type="button" className="wms-ops-grid-icon-btn" title={t('actions.prepare')} aria-label={t('actions.prepare')} onClick={() => onPrepareTask(task.id)}>
-                        <PackageCheck className="size-3.5"/>
-                      </button>
-                    ) : null}
-                    {task.warehouseOutboundId ? (
-                      <Link
-                        to={`/warehouse/warehouse-outbounds/${task.warehouseOutboundId}/operations`}
-                        className="wms-ops-grid-icon-btn"
-                        title={t('actions.operation')}
-                        aria-label={t('actions.operation')}
-                      >
-                        <PlayCircle className="size-3.5"/>
-                      </Link>
-                    ) : null}
-                    {canResolve && active && !isPool ? (
-                      <button type="button" className="wms-ops-grid-icon-btn" title={t('actions.handoff')} aria-label={t('actions.handoff')} onClick={() => onHandoff(task)}>
-                        <ArrowRightLeft className="size-3.5"/>
-                      </button>
-                    ) : null}
-                    {canResolve && active && !isPool && !hasProgress ? (
-                      <button type="button" className="wms-ops-grid-icon-btn !text-rose-600" title={t('actions.returnWork')} aria-label={t('actions.returnWork')} onClick={() => onReturn(task)}>
-                        <Undo2 className="size-3.5"/>
-                      </button>
-                    ) : null}
-                  </div>
-                </div>
-              </article>
-            );
-          })}
-      </section>
-    </div>
-  );
 }
 
 /**
@@ -1763,74 +1704,595 @@ function DraftLineEditor({ line, index, canRemove, t, onChange, onRemove }: {
   );
 }
 
-function RequestDetailView({ value, t, formatDateTime, formatQuantity, enumText, canResolve, canAssign, canClaim, canCancel, canPrepare,
-  warehouseLabel, cancelReason, setCancelReason, cancelling, onResolve, onAssign, onClaim, onCancel, onPrepare }: {
-  value: KkdRequestDetail; t: (key: string, options?: Record<string, unknown>) => string;
-  formatDateTime: (value?: string | null) => string; formatQuantity: (value: number) => string;
-  enumText: (scope: string, value: string) => string; canResolve: boolean; canAssign: boolean; canClaim: boolean; canCancel: boolean; canPrepare: boolean;
+type KkdDetailMainTab = 'info' | 'content' | 'tasks';
+const KKD_DETAIL_TAB_ORDER: KkdDetailMainTab[] = ['info', 'content', 'tasks'];
+
+function KkdRequestDetailDialog({
+  open,
+  loading,
+  error,
+  value,
+  tasks,
+  tasksLoading,
+  t,
+  formatDateTime,
+  formatQuantity,
+  enumText,
+  canResolve,
+  canAssign,
+  canClaim,
+  canCancel,
+  canPrepare,
+  prepareTaskId,
+  currentUserId,
+  initialTab = 'content',
+  warehouseLabel,
+  cancelReason,
+  setCancelReason,
+  cancelling,
+  onClose,
+  onResolve,
+  onAssign,
+  onClaim,
+  onCancel,
+  onPrepare,
+  onPrepareTask,
+  onHandoff,
+  onReturn,
+  onClaimPool,
+}: {
+  open: boolean;
+  loading: boolean;
+  error: boolean;
+  value: KkdRequestDetail | null;
+  tasks: KkdPreparationTaskRow[];
+  tasksLoading: boolean;
+  t: (key: string, options?: Record<string, unknown>) => string;
+  formatDateTime: (value?: string | null) => string;
+  formatQuantity: (value: number) => string;
+  enumText: (scope: string, value: string) => string;
+  canResolve: boolean;
+  canAssign: boolean;
+  canClaim: boolean;
+  canCancel: boolean;
+  canPrepare: boolean;
+  prepareTaskId?: number | null;
+  currentUserId: number | null;
+  initialTab?: KkdDetailMainTab;
   warehouseLabel: (id?: number | null) => string;
-  cancelReason: string; setCancelReason: (value: string) => void; cancelling: boolean;
-  onResolve: (line: KkdRequestLine) => void; onAssign: () => void; onClaim: () => void; onCancel: () => void; onPrepare: () => void;
+  cancelReason: string;
+  setCancelReason: (value: string) => void;
+  cancelling: boolean;
+  onClose: () => void;
+  onResolve: (line: KkdRequestLine) => void;
+  onAssign: () => void;
+  onClaim: () => void;
+  onCancel: () => void;
+  onPrepare: () => void;
+  onPrepareTask: (taskId: number) => void;
+  onHandoff: (task: KkdPreparationTaskRow) => void;
+  onReturn: (task: KkdPreparationTaskRow) => void;
+  onClaimPool: (task: KkdPreparationTaskRow) => void;
 }): ReactElement {
-  const open = !CLOSED.has(value.status);
-  return <div className="space-y-4">
-    <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-      <Info label={t('detail.person')} value={`${value.employeeCode} · ${value.employeeName}`}/>
-      <Info label={t('detail.departmentRole')} value={`${value.departmentName} · ${value.roleName}`}/>
-      <Info label={t('grid.status')} value={enumText('status', value.status)}/>
-      <Info label={t('grid.priority')} value={enumText('priority', value.priority)}/>
-      <Info label={t('grid.requestedAt')} value={formatDateTime(value.requestedAtUtc)}/>
-      <Info label={t('grid.neededAt')} value={formatDateTime(value.neededAtUtc)}/>
-      <Info label={t('detail.warehouse')} value={warehouseLabel(value.warehouseId)}/>
-      <Info label={t('detail.assignedUser')} value={value.assignedUserId ? t('grid.assigned') : t('grid.unassigned')}/>
-    </div>
-    {open && (canAssign || (canClaim && !value.assignedUserId)) ? (
-      <div className="flex justify-end gap-1.5">
-        {canAssign ? (
-          <button type="button" className="wms-ops-grid-icon-btn" title={t('actions.assign')} aria-label={t('actions.assign')} onClick={onAssign}>
-            <UserRoundCog className="size-3.5" />
-          </button>
-        ) : null}
-        {canClaim && !value.assignedUserId ? (
-          <button type="button" className="wms-ops-grid-icon-btn" title={t('actions.claim')} aria-label={t('actions.claim')} onClick={onClaim}>
-            <Hand className="size-3.5" />
-          </button>
-        ) : null}
-      </div>
-    ) : null}
-    <div className="space-y-2">
-      {value.lines.map((line) => <article key={line.id} className={cn('rounded-xl border p-3', !line.stockId && 'border-amber-500/50 bg-amber-500/5')}>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-          <div><strong>#{line.lineNo} · {line.groupCode}{line.groupName ? ` · ${line.groupName}` : ''}</strong>
-            <p className="mt-1 text-sm text-[var(--wms-app-text-muted)]">{line.stockId ? `${line.stockCode} · ${line.stockName}` : t('detail.stockAwaiting')}</p></div>
-          <div className="flex flex-wrap items-center gap-2"><Status value={line.status} text={enumText('lineStatus', line.status)}/>
-            {canResolve && !line.stockId && line.allocatedQuantity === 0 && line.deliveredQuantity === 0 ? (
-              <button type="button" className="wms-ops-grid-icon-btn" title={t('actions.selectStock')} aria-label={t('actions.selectStock')} onClick={() => onResolve(line)}>
-                <SearchCheck className="size-3.5"/>
-              </button>
+  const [mainTab, setMainTab] = useState<KkdDetailMainTab>(initialTab);
+  const [showCancelPanel, setShowCancelPanel] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    setMainTab(initialTab);
+    setShowCancelPanel(false);
+  }, [open, value?.id, initialTab]);
+
+  const activeTasks = useMemo(
+    () => tasks.filter((task) => ACTIVE_TASK_STATUSES.has(task.status)),
+    [tasks],
+  );
+  const assignedLineIds = useMemo(
+    () => new Set(activeTasks.flatMap((task) => task.lines.map((line) => line.requestLineId))),
+    [activeTasks],
+  );
+  const hasPoolTask = activeTasks.some((task) => task.assignedUserId == null);
+  const myActiveTaskId = useMemo(() => {
+    if (prepareTaskId) return prepareTaskId;
+    if (currentUserId == null) return null;
+    return activeTasks.find((task) => task.assignedUserId === currentUserId)?.id ?? null;
+  }, [activeTasks, currentUserId, prepareTaskId]);
+  const hasUnassignedLines = Boolean(
+    value?.lines.some((line) =>
+      line.status !== 'Cancelled'
+      && line.status !== 'Completed'
+      && line.remainingQuantity > 0
+      && !assignedLineIds.has(line.id)),
+  );
+
+  const requestOpen = Boolean(value && !CLOSED.has(value.status));
+  /** Grid ile aynı: yalnızca atanmamış açık kalem kaldıysa. */
+  const showAssign = Boolean(requestOpen && canAssign && hasUnassignedLines);
+  /** Talep-seviye üzerime al: atanmamış kalem var, havuz/kişisel görev yok. */
+  const showClaim = Boolean(
+    requestOpen && canClaim && hasUnassignedLines && !hasPoolTask && !myActiveTaskId,
+  );
+  /** Üzerimdeki aktif görev varsa doğrudan toplama. */
+  const showPrepare = Boolean(requestOpen && canPrepare && myActiveTaskId);
+  const showCancel = Boolean(requestOpen && canCancel);
+  const hasLifecycle = showAssign || showClaim || showPrepare || showCancel;
+  const mainTabIndex = KKD_DETAIL_TAB_ORDER.indexOf(mainTab);
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) onClose();
+      }}
+    >
+      <DialogContent
+        portalRoot="body"
+        tone="ops"
+        aria-describedby={undefined}
+        className={cn(
+          'wms-ops-detail-dialog wms-ops-form flex !h-[min(90vh,880px)] !max-h-[calc(100dvh-2rem)] w-full !max-w-6xl flex-col !gap-0 overflow-hidden border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] !p-0',
+          '[scrollbar-gutter:auto]',
+        )}
+      >
+        <header className="wms-ops-detail-dialog__header shrink-0">
+          <div className="min-w-0 pr-2">
+            <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-600 dark:text-cyan-300">
+              {t('detail.eyebrow')}
+            </p>
+            <DialogTitle className="wms-ops-detail-dialog__title">
+              {t('detail.title')}
+              {value ? (
+                <span className="ml-2 font-mono text-base font-bold text-cyan-600 dark:text-cyan-300">
+                  {value.requestNo}
+                </span>
+              ) : null}
+            </DialogTitle>
+            <DialogDescription className="wms-ops-detail-dialog__description">
+              {value
+                ? `${value.employeeCode} · ${value.employeeName} · ${enumText('status', value.status)}`
+                : t('detail.description')}
+            </DialogDescription>
+            {value ? (
+              <div className="mt-3 flex flex-wrap gap-2">
+                <OpsStatusBadge tone={inferOpsStatusTone(value.status)}>
+                  {enumText('status', value.status)}
+                </OpsStatusBadge>
+                <OpsCodeBadge>{enumText('priority', value.priority)}</OpsCodeBadge>
+                <OpsCodeBadge>{value.sourceType}</OpsCodeBadge>
+              </div>
             ) : null}
           </div>
-        </div>
-        <div className="mt-3 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
-          <Info label={t('grid.requested')} value={formatQuantity(line.requestedQuantity)}/>
-          <Info label={t('grid.allocated')} value={formatQuantity(line.allocatedQuantity)}/>
-          <Info label={t('grid.delivered')} value={formatQuantity(line.deliveredQuantity)}/>
-          <Info label={t('detail.remaining')} value={formatQuantity(line.remainingQuantity)}/>
-        </div>
-      </article>)}
-    </div>
-    <div className="flex flex-col gap-3 border-t pt-4 lg:flex-row lg:items-end lg:justify-between">
-      {canCancel && open ? <KkdField label={t('detail.cancelReason')} className="w-full lg:max-w-xl"><AppInput value={cancelReason} onChange={(event) => setCancelReason(event.target.value)} placeholder={t('detail.cancelReasonPlaceholder')}/></KkdField> : <span/>}
-      <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
-        {canCancel && open ? <button type="button" disabled={cancelling} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-rose-500 px-4 text-rose-600 disabled:opacity-50" onClick={onCancel}><X className="size-4"/>{t('actions.cancel')}</button> : null}
-        {canPrepare && open ? <button type="button" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-cyan-600 px-4 font-semibold text-white" onClick={onPrepare}><PackageCheck className="size-4"/>{t('actions.prepare')}</button> : null}
-      </div>
-    </div>
-  </div>;
+        </header>
+
+        {loading || !value ? (
+          <div className="wms-ops-detail-state grid min-h-0 flex-1 place-items-center px-6 py-10">
+            <p className="text-sm text-[var(--wms-app-text-muted)]">
+              {error ? t('messages.detailFailed') : t('messages.loading')}
+            </p>
+          </div>
+        ) : (
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+            <div className="wms-ops-detail-lifecycle shrink-0 px-4 py-3 sm:px-6">
+              {hasLifecycle ? (
+                <div className="space-y-3">
+                  <div className="wms-ops-detail-lifecycle__bar">
+                    {showAssign ? (
+                      <KkdDetailLifecycleButton
+                        label={t('detail.lifecycleAssign')}
+                        icon={<UserRoundCog className="size-4" />}
+                        onClick={onAssign}
+                      />
+                    ) : null}
+                    {showClaim ? (
+                      <KkdDetailLifecycleButton
+                        label={t('detail.lifecycleClaim')}
+                        icon={<Hand className="size-4" />}
+                        onClick={onClaim}
+                      />
+                    ) : null}
+                    {showPrepare && myActiveTaskId ? (
+                      <KkdDetailLifecycleButton
+                        label={t('detail.lifecyclePrepare')}
+                        icon={<PackageCheck className="size-4" />}
+                        onClick={onPrepare}
+                      />
+                    ) : null}
+                    {showCancel ? (
+                      <KkdDetailLifecycleButton
+                        label={t('actions.cancel')}
+                        danger
+                        icon={<Ban className="size-4" />}
+                        onClick={() => {
+                          setShowCancelPanel((current) => !current);
+                          setMainTab('info');
+                        }}
+                      />
+                    ) : null}
+                  </div>
+                  {showCancel && showCancelPanel ? (
+                    <div className="rounded-xl border border-rose-500/35 bg-rose-500/5 p-3">
+                      <KkdField label={t('detail.cancelReason')}>
+                        <AppInput
+                          value={cancelReason}
+                          onChange={(event) => setCancelReason(event.target.value)}
+                          placeholder={t('detail.cancelReasonPlaceholder')}
+                        />
+                      </KkdField>
+                      <div className="mt-3 flex flex-wrap justify-end gap-2">
+                        <OpsActionButton
+                          type="button"
+                          variant="secondary"
+                          className="wms-ops-list-toolbar-btn"
+                          onClick={() => setShowCancelPanel(false)}
+                        >
+                          {t('actions.close')}
+                        </OpsActionButton>
+                        <button
+                          type="button"
+                          className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-rose-500/70 bg-rose-500/10 px-3 text-sm font-semibold text-rose-600 disabled:opacity-50"
+                          disabled={cancelling || cancelReason.trim().length < 3}
+                          onClick={onCancel}
+                        >
+                          <Ban className="size-3.5" aria-hidden />
+                          {t('detail.cancelConfirm')}
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              ) : (
+                <div className="wms-ops-detail-lifecycle__cancelled">
+                  {enumText('status', value.status)}
+                </div>
+              )}
+            </div>
+
+            <Tabs
+              value={mainTab}
+              onValueChange={(next) => setMainTab(next as KkdDetailMainTab)}
+              className="flex min-h-0 flex-1 flex-col gap-0"
+            >
+              <div className="shrink-0 px-4 pt-4 sm:px-6">
+                <TabsList
+                  className={cn('w-full', 'wms-ops-detail-main-tabs', 'wms-ops-detail-main-tabs--cols-3')}
+                  data-active-index={Math.max(mainTabIndex, 0)}
+                >
+                  <span className="wms-ops-detail-tab-indicator" aria-hidden />
+                  <TabsTrigger value="info" className="wms-ops-detail-main-tab">
+                    {t('detail.infoTab')}
+                  </TabsTrigger>
+                  <TabsTrigger value="content" className="wms-ops-detail-main-tab">
+                    {t('detail.linesTab')}
+                  </TabsTrigger>
+                  <TabsTrigger value="tasks" className="wms-ops-detail-main-tab">
+                    {t('detail.tasksTab')}
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+
+              <TabsContent
+                value="info"
+                className="wms-ops-scrollbar mt-0 min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6"
+              >
+                <div className="space-y-4">
+                  <div className="wms-ops-detail-panel">
+                    <div className="wms-ops-detail-grid">
+                      <KkdDetailField label={t('detail.person')}>
+                        {value.employeeCode} · {value.employeeName}
+                      </KkdDetailField>
+                      <KkdDetailField label={t('detail.departmentRole')}>
+                        {value.departmentName} · {value.roleName}
+                      </KkdDetailField>
+                      <KkdDetailField label={t('grid.status')}>
+                        <OpsStatusBadge tone={inferOpsStatusTone(value.status)}>
+                          {enumText('status', value.status)}
+                        </OpsStatusBadge>
+                      </KkdDetailField>
+                      <KkdDetailField label={t('grid.priority')}>
+                        {enumText('priority', value.priority)}
+                      </KkdDetailField>
+                      <KkdDetailField label={t('grid.requestedAt')}>
+                        {formatDateTime(value.requestedAtUtc)}
+                      </KkdDetailField>
+                      <KkdDetailField label={t('grid.neededAt')}>
+                        {formatDateTime(value.neededAtUtc)}
+                      </KkdDetailField>
+                      <KkdDetailField label={t('detail.warehouse')}>
+                        {warehouseLabel(value.warehouseId)}
+                      </KkdDetailField>
+                      <KkdDetailField label={t('detail.assignedUser')}>
+                        {value.assignedUserId ? t('grid.assigned') : t('grid.unassigned')}
+                      </KkdDetailField>
+                      <KkdDetailField label={t('detail.sourceType')}>
+                        {value.sourceType}
+                      </KkdDetailField>
+                      <KkdDetailField label={t('detail.externalNo')}>
+                        {value.externalRequestNo || '—'}
+                      </KkdDetailField>
+                      <KkdDetailField label={t('detail.notes')} wide>
+                        {value.description?.trim() || '—'}
+                      </KkdDetailField>
+                      {value.cancellationReason ? (
+                        <KkdDetailField label={t('detail.cancelReason')} wide>
+                          {value.cancellationReason}
+                        </KkdDetailField>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent
+                value="content"
+                className="mt-0 flex min-h-0 flex-1 flex-col overflow-hidden px-4 py-4 sm:px-6"
+              >
+                {!value.lines.length ? (
+                  <div className="wms-ops-detail-empty flex flex-col items-center gap-2 border border-dashed border-[var(--wms-app-border)] p-8 text-center">
+                    <ClipboardList className="size-8 opacity-40" aria-hidden />
+                    <p className="text-sm text-slate-500">{t('detail.noLines')}</p>
+                  </div>
+                ) : (
+                  <div className="wms-ops-gr-detail-lines-wrap min-h-0 flex-1 overflow-auto">
+                    <table className="wms-ops-gr-detail-lines-table w-full min-w-[820px] text-sm">
+                      <thead>
+                        <tr>
+                          <th>#</th>
+                          <th>{t('detail.colGroup')}</th>
+                          <th>{t('detail.colStock')}</th>
+                          <th className="wms-ops-gr-detail-lines-table__num">{t('grid.requested')}</th>
+                          <th className="wms-ops-gr-detail-lines-table__num">{t('grid.allocated')}</th>
+                          <th className="wms-ops-gr-detail-lines-table__num">{t('grid.delivered')}</th>
+                          <th className="wms-ops-gr-detail-lines-table__num">{t('detail.remaining')}</th>
+                          <th>{t('detail.colAssignment')}</th>
+                          <th>{t('grid.status')}</th>
+                          <th className="wms-ops-gr-detail-lines-table__actions">{t('grid.actions')}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {value.lines.map((line) => {
+                          const canResolveLine = canResolve
+                            && !line.stockId
+                            && line.allocatedQuantity === 0
+                            && line.deliveredQuantity === 0;
+                          const lineOpen = line.status !== 'Cancelled' && line.status !== 'Completed';
+                          return (
+                            <tr key={line.id} className={cn(!line.stockId && 'bg-amber-500/[0.04]')}>
+                              <td>{line.lineNo}</td>
+                              <td>
+                                <div className="font-medium">{line.groupCode}</div>
+                                {line.groupName ? (
+                                  <div className="wms-ops-gr-detail-lines-table__muted text-xs">{line.groupName}</div>
+                                ) : null}
+                              </td>
+                              <td>
+                                {line.stockId ? (
+                                  <>
+                                    <div className="font-medium">{line.stockCode}</div>
+                                    <div className="wms-ops-gr-detail-lines-table__muted text-xs">{line.stockName}</div>
+                                  </>
+                                ) : (
+                                  <span className="text-amber-600">{t('detail.stockAwaiting')}</span>
+                                )}
+                              </td>
+                              <td className="wms-ops-gr-detail-lines-table__num">{formatQuantity(line.requestedQuantity)}</td>
+                              <td className="wms-ops-gr-detail-lines-table__num">{formatQuantity(line.allocatedQuantity)}</td>
+                              <td className="wms-ops-gr-detail-lines-table__num">{formatQuantity(line.deliveredQuantity)}</td>
+                              <td className="wms-ops-gr-detail-lines-table__num wms-ops-gr-detail-lines-table__accent">
+                                {formatQuantity(line.remainingQuantity)}
+                              </td>
+                              <td>
+                                {lineOpen ? (
+                                  assignedLineIds.has(line.id)
+                                    ? <span className="text-emerald-600">{t('detail.lineAssigned')}</span>
+                                    : <span className="text-amber-600">{t('detail.lineUnassigned')}</span>
+                                ) : '—'}
+                              </td>
+                              <td>
+                                <OpsStatusBadge tone={inferOpsStatusTone(line.status)}>
+                                  {enumText('lineStatus', line.status)}
+                                </OpsStatusBadge>
+                              </td>
+                              <td className="wms-ops-gr-detail-lines-table__actions">
+                                {canResolveLine ? (
+                                  <button
+                                    type="button"
+                                    className="wms-ops-grid-icon-btn"
+                                    title={t('actions.selectStock')}
+                                    aria-label={t('actions.selectStock')}
+                                    onClick={() => onResolve(line)}
+                                  >
+                                    <SearchCheck className="size-3.5" />
+                                  </button>
+                                ) : (
+                                  <span className="text-[var(--wms-app-text-muted)]">—</span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent
+                value="tasks"
+                className="mt-0 flex min-h-0 flex-1 flex-col overflow-hidden px-4 py-4 sm:px-6"
+              >
+                {tasksLoading ? (
+                  <p className="text-sm text-[var(--wms-app-text-muted)]">{t('messages.loading')}</p>
+                ) : !tasks.length ? (
+                  <div className="wms-ops-detail-empty flex flex-col items-center gap-2 border border-dashed border-[var(--wms-app-border)] p-8 text-center">
+                    <Users className="size-8 opacity-40" aria-hidden />
+                    <p className="text-sm text-slate-500">{t('detail.noTasks')}</p>
+                  </div>
+                ) : (
+                  <div className="wms-ops-gr-detail-lines-wrap min-h-0 flex-1 overflow-auto">
+                    <table className="wms-ops-gr-detail-lines-table w-full min-w-[880px] text-sm">
+                      <thead>
+                        <tr>
+                          <th>{t('detail.colTaskNo')}</th>
+                          <th>{t('detail.colTaskAssignee')}</th>
+                          <th>{t('detail.colTaskLines')}</th>
+                          <th>{t('grid.status')}</th>
+                          <th>{t('detail.colTaskAssignedAt')}</th>
+                          <th className="wms-ops-gr-detail-lines-table__actions">{t('grid.actions')}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {tasks.map((task) => {
+                          const active = ACTIVE_TASK_STATUSES.has(task.status);
+                          const isPool = task.assignedUserId == null;
+                          const mine = currentUserId != null && task.assignedUserId === currentUserId;
+                          const hasProgress = task.lines.some((line) => line.preparedQuantity > 0 || line.deliveredQuantity > 0);
+                          const statusToneValue = task.status === 'Completed'
+                            ? 'Completed'
+                            : task.status === 'Cancelled' || task.status === 'Returned'
+                              ? 'Cancelled'
+                              : task.status;
+                          return (
+                            <tr key={task.id} className={cn(
+                              mine && active && 'bg-[var(--wms-brand-primary)]/[0.04]',
+                              isPool && active && 'bg-cyan-500/[0.04]',
+                            )}>
+                              <td>
+                                <div className="font-medium">{task.taskNo}</div>
+                                {task.closureReason ? (
+                                  <div className="text-xs text-rose-600">{task.closureReason}</div>
+                                ) : null}
+                              </td>
+                              <td>
+                                {isPool ? (
+                                  <span className="inline-flex items-center gap-1 font-semibold text-cyan-600">
+                                    <Users className="size-3.5" aria-hidden />
+                                    {t('detail.taskPool')}
+                                  </span>
+                                ) : (
+                                  <div>
+                                    <div>{task.assignedUserName || '—'}</div>
+                                    {task.originUserName ? (
+                                      <div className="wms-ops-gr-detail-lines-table__muted text-xs">
+                                        {t('detail.taskOrigin', { user: task.originUserName })}
+                                      </div>
+                                    ) : null}
+                                  </div>
+                                )}
+                              </td>
+                              <td className="wms-ops-gr-detail-lines-table__muted text-xs">
+                                {task.lines.map((line) => (
+                                  `#${line.lineNo} ${line.groupCode} (${formatQuantity(line.deliveredQuantity)}/${formatQuantity(line.quantity)})`
+                                )).join(' · ')}
+                              </td>
+                              <td>
+                                <OpsStatusBadge tone={inferOpsStatusTone(statusToneValue)}>
+                                  {enumText('taskStatus', task.status)}
+                                </OpsStatusBadge>
+                              </td>
+                              <td>{formatDateTime(task.assignedAtUtc)}</td>
+                              <td className="wms-ops-gr-detail-lines-table__actions">
+                                <div className="flex justify-center gap-1">
+                                  {canClaim && active && isPool ? (
+                                    <button type="button" className="wms-ops-grid-icon-btn" title={t('actions.claimPool')} aria-label={t('actions.claimPool')} onClick={() => onClaimPool(task)}>
+                                      <Users className="size-3.5" />
+                                    </button>
+                                  ) : null}
+                                  {canPrepare && active && mine ? (
+                                    <button type="button" className="wms-ops-grid-icon-btn" title={t('actions.prepare')} aria-label={t('actions.prepare')} onClick={() => onPrepareTask(task.id)}>
+                                      <PackageCheck className="size-3.5" />
+                                    </button>
+                                  ) : null}
+                                  {task.warehouseOutboundId ? (
+                                    <Link
+                                      to={`/warehouse/warehouse-outbounds/${task.warehouseOutboundId}/operations`}
+                                      className="wms-ops-grid-icon-btn"
+                                      title={t('actions.operation')}
+                                      aria-label={t('actions.operation')}
+                                    >
+                                      <PlayCircle className="size-3.5" />
+                                    </Link>
+                                  ) : null}
+                                  {canResolve && active && !isPool ? (
+                                    <button type="button" className="wms-ops-grid-icon-btn" title={t('actions.handoff')} aria-label={t('actions.handoff')} onClick={() => onHandoff(task)}>
+                                      <ArrowRightLeft className="size-3.5" />
+                                    </button>
+                                  ) : null}
+                                  {canResolve && active && !isPool && !hasProgress ? (
+                                    <button type="button" className="wms-ops-grid-icon-btn !text-rose-600" title={t('actions.returnWork')} aria-label={t('actions.returnWork')} onClick={() => onReturn(task)}>
+                                      <Undo2 className="size-3.5" />
+                                    </button>
+                                  ) : null}
+                                  {!(
+                                    (canClaim && active && isPool)
+                                    || (canPrepare && active && mine)
+                                    || task.warehouseOutboundId
+                                    || (canResolve && active && !isPool)
+                                  ) ? (
+                                    <span className="text-[var(--wms-app-text-muted)]">—</span>
+                                  ) : null}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
 }
 
-function Info({ label, value }: { label: string; value: string }): ReactElement {
-  return <div className="rounded-lg border border-[var(--wms-ops-card-border)] p-2.5"><span className="block text-[0.68rem] uppercase tracking-wide text-[var(--wms-app-text-muted)]">{label}</span><strong className="mt-1 block break-words text-sm">{value}</strong></div>;
+function KkdDetailField({
+  label,
+  children,
+  wide = false,
+}: {
+  label: string;
+  children: ReactNode;
+  wide?: boolean;
+}): ReactElement {
+  return (
+    <div className={cn('wms-ops-detail-field', wide && 'wms-ops-detail-field--wide')}>
+      <span className="wms-ops-detail-field__label">{label}</span>
+      <span className="wms-ops-detail-field__value">{children}</span>
+    </div>
+  );
+}
+
+function KkdDetailLifecycleButton({
+  label,
+  icon,
+  onClick,
+  danger = false,
+  disabled = false,
+}: {
+  label: string;
+  icon: ReactElement;
+  onClick: () => void;
+  danger?: boolean;
+  disabled?: boolean;
+}): ReactElement {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={cn(
+        'wms-ops-detail-lifecycle__btn',
+        danger && 'wms-ops-detail-lifecycle__btn--danger',
+        disabled && 'opacity-45',
+      )}
+    >
+      {icon}
+      {label}
+    </button>
+  );
 }
 
 function Status({ value, text }: { value: string; text: string }): ReactElement {

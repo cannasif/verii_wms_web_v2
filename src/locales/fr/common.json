@@ -235,7 +235,25 @@
       "animationOn": "Activer l'animation",
       "capsLockOn": "Verr. Maj. activé",
       "startAnimation": "Démarrer l'animation",
-      "stopAnimation": "Arrêter l'animation"
+      "stopAnimation": "Arrêter l'animation",
+      "comingSoon": "Bientôt !",
+      "intro": {
+        "headline": "Ne cherchez pas l'entrepôt — gérez-le avec <brand>V3RII</brand>.",
+        "description": "De la réception à l'expédition, des rayons aux transferts — gardez le flux clair, calme et au même endroit.",
+        "flowTitle": "V3RII WMS FLOW",
+        "live": "EN DIRECT",
+        "greetingMorning": "Bonjour.",
+        "greetingAfternoon": "Bon après-midi.",
+        "greetingEvening": "Bonsoir.",
+        "greetingNight": "Bonne nuit.",
+        "humanNote": "Quand tu es prêt, commence ton équipe ici.",
+        "steps": {
+          "inbound": "Réception",
+          "stock": "Stock & Rayon",
+          "transfer": "Transfert",
+          "shipping": "Expédition"
+        }
+      }
     },
     "sessionRecovery": {
       "title": "La connexion de session a été temporairement interrompue",
@@ -291,7 +309,7 @@
     "search_placeholder": "Recherche rapide..."
   },
   "sidebar": {
-    "warehouseOperations": "Opérations d'entrepôt",
+    "warehouseOperations": "Opérations dépôt (magasin)",
     "warehouseTransfer": "Transfert inter-entrepôts",
     "normalTransferGroup": "Transfert standard",
     "subcontractingIssueGroup": "Sortie vers sous-traitant",
@@ -306,7 +324,7 @@
     "productionTransferCreate": "Créer un transfert de production",
     "productionTransferList": "Transferts de production",
     "productionTransferSettings": "Paramètres de transfert de production",
-    "production": "Production",
+    "production": "Production et qualité",
     "productionHub": "Centre des processus de production",
     "productionCreate": "Create Production Order",
     "productionList": "Production Plans",
@@ -315,7 +333,7 @@
     "subcontractingTransferCreate": "Créer un transfert de sous-traitance",
     "subcontractingTransferList": "Transferts de sous-traitance",
     "subcontractingTransferSettings": "Paramètres de sous-traitance",
-    "shipping": "Expédition",
+    "shipping": "Opérations d'expédition",
     "warehouseManagement": "Gestion d’entrepôt",
     "mainNavigation": "Navigation principale",
     "dashboard": "Tableau de bord",
@@ -397,7 +415,7 @@
     "accessControlManagementGroup": "Access and User Management",
     "accessControlSystemGroup": "System Tools",
     "serviceOperationsGroup": "Service Operations",
-    "erp": "ERP",
+    "erp": "Intégrations",
     "erpBarcodeDefinitions": "Barkod Tanımları",
     "erpCustomers": "Clients",
     "erpStocks": "Articles",
@@ -428,7 +446,7 @@
     "inventoryGroup": "Warehouse and Visibility",
     "analyticsGroup": "Reporting",
     "masterDataGroup": "Master Data and Definitions",
-    "systemGroup": "Système et accès",
+    "systemGroup": "Paramètres et réglages système",
     "filterLabel": "Filter",
     "inventoryCount": "Count",
     "inventoryCountCreate": "Create Count Order",
@@ -515,7 +533,8 @@
     "packingDefinitions": "Définitions d'emballage",
     "packingSettings": "Paramètres d'emballage",
     "projectSettings": "Paramètres généraux du projet",
-    "auditLogs": "Journaux d'audit"
+    "auditLogs": "Journaux d'audit",
+    "processParameters": "Paramètres de processus"
   },
   "welcome": {
     "title": "Bienvenue",
@@ -5587,7 +5606,9 @@
       "searchPlaceholder": "Rechercher par code ou nom",
       "empty": "Aucun fournisseur trouvé"
     },
-    "saveVehicleBlockers": {"title": "Éléments manquants pour enregistrer"},
+    "saveVehicleBlockers": {
+      "title": "Éléments manquants pour enregistrer"
+    },
     "confirm": {
       "removeUnknownTitle": "Retirer la tôle inconnue",
       "removeUnknownDescription": "Vous retirez la tôle inconnue ajoutée pour ce véhicule. Continuer ?"

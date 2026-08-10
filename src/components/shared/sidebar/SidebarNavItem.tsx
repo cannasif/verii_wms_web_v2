@@ -9,10 +9,8 @@ import { preloadRoute } from '@/app/route-loaders';
 import type { NavItem } from '../nav-items';
 import {
   getItemKey,
-  getToneByTitle,
   nodeHasActiveDescendant,
   nodeMatchesSearch,
-  toneClassMap,
 } from './sidebar-utils';
 import {
   sidebarActiveDotClassName,
@@ -121,8 +119,6 @@ export function SidebarNavItem({
   const title = resolveTitle(item);
   const searchMatched = nodeMatchesSearch(item, searchQuery, resolveTitle);
   const isExpanded = expandedItemKeys.includes(itemKey) || (Boolean(searchQuery.trim()) && hasChildren && searchMatched);
-  const iconTone = getToneByTitle(item.title);
-  const toneClasses = toneClassMap[iconTone];
   const isParentActive = hasActiveChild || isActive;
   const isSectionHeader = level === 1 && hasChildren;
 
@@ -166,8 +162,8 @@ export function SidebarNavItem({
           {item.icon && level === 0 ? (
             <span
               className={cn(
-                sidebarIconBoxClassName(isParentActive, toneClasses.idle),
-                '[&_svg]:h-5 [&_svg]:w-5',
+                sidebarIconBoxClassName(isParentActive),
+                '[&_svg]:h-7 [&_svg]:w-7 [&_.nav-png-icon]:h-7 [&_.nav-png-icon]:w-7',
                 !isSidebarOpen && 'mx-auto',
               )}
               onClick={handleIconClick}
@@ -237,8 +233,8 @@ export function SidebarNavItem({
       {item.icon && level === 0 ? (
         <span
           className={cn(
-            sidebarIconBoxClassName(isActive, toneClasses.idle),
-            '[&_svg]:h-5 [&_svg]:w-5',
+            sidebarIconBoxClassName(isActive),
+            '[&_svg]:h-7 [&_svg]:w-7 [&_.nav-png-icon]:h-7 [&_.nav-png-icon]:w-7',
             !isSidebarOpen && 'mx-auto',
           )}
           onClick={handleIconClick}

@@ -111,6 +111,78 @@
       "PartiallyCompleted": "مكتمل جزئيًا",
       "Completed": "مكتمل",
       "Cancelled": "ملغى"
+    },
+    "lineStatus": {
+      "Open": "مفتوح",
+      "Reserved": "محجوز",
+      "PartiallyPicked": "مُجمَّع جزئيًا",
+      "Picked": "مُجمَّع",
+      "Shipped": "مُشحَّن",
+      "PartiallyReceived": "مُستلم جزئيًا",
+      "Received": "مُستلم",
+      "Putaway": "مُخزَّن",
+      "ShortClosed": "مُغلق بنقص",
+      "Cancelled": "ملغى"
+    },
+    "taskType": {
+      "Pick": "تجميع",
+      "Dispatch": "شحن",
+      "Receive": "استلام",
+      "Putaway": "تخزين",
+      "CancellationReturn": "إرجاع الإلغاء",
+      "AssignmentReturn": "إرجاع التعيين"
     }
+  },
+  "detail": {
+    "eyebrow": "نقل الإنتاج",
+    "titleDocument": "المستند",
+    "descriptionFallback": "تفاصيل نقل الإنتاج",
+    "descriptionWorkOrder": "أمر العمل {{orderNo}}",
+    "residualBadge": "نقل متبقٍ",
+    "residualDocument": "مستند متبقٍ: {{documentNo}}",
+    "loading": "جارٍ تحميل تفاصيل النقل…",
+    "waitingHandover": "في الانتظار",
+    "shortageReason": "سبب التسليم مع نقص:",
+    "noLines": "لم يتم العثور على بنود.",
+    "noTasks": "لم يتم العثور على مهام.",
+    "close": "إغلاق",
+    "openOperations": "فتح العملية",
+    "tabs": { "info": "معلومات", "content": "المحتوى", "tasks": "المهام" },
+    "fields": {
+      "transferStatus": "حالة النقل",
+      "workflowStatus": "حالة سير العمل",
+      "sourceWarehouse": "المستودع المصدر",
+      "targetWarehouse": "المستودع الهدف",
+      "requestedQuantity": "الكمية المطلوبة",
+      "pickedQuantity": "الكمية المجمعة",
+      "handedOverQuantity": "المُسلَّم",
+      "shortageQuantity": "النقص",
+      "documentDate": "تاريخ المستند",
+      "createdDate": "تاريخ الإنشاء",
+      "waitingLocation": "موقع الانتظار",
+      "handoverConfirmation": "تأكيد التسليم"
+    },
+    "columns": {
+      "stock": "الصنف",
+      "requested": "المطلوب",
+      "picked": "المجمّع",
+      "handedOver": "المُسلَّم",
+      "status": "الحالة"
+    },
+    "taskStats": {
+      "planned": "مخطط",
+      "processed": "مُعالَج",
+      "remaining": "المتبقي",
+      "assignees": "المُعيَّنون"
+    }
+  },
+  "taskChain": {
+    "cancellationReturnFrom": "إرجاع إلغاء أُنشئ من المهمة {{origin}}",
+    "cancellationReturn": "مهمة إرجاع الإلغاء",
+    "handoffFromPrevious": "تم توريث العمل المتبقي من المهمة {{previous}}",
+    "handoffTask": "مهمة التوريد",
+    "handoffToChild": "تم توريث الكمية المتبقية إلى المهمة {{child}}",
+    "sameTaskReassign": "لم تُعالَج بعد؛ التوريد يغيّر المستخدم على نفس المهمة",
+    "unassigned": "غير مُعيَّن"
   }
 }

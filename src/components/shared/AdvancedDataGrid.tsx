@@ -222,7 +222,7 @@ function inferFilterType<T>(column: GridColumn<T>): GridFilterType {
   if (/(correlationid$|operationcode$|traceid$|requestid$)/.test(key)) return 'guid';
   if (/(^id$|id$|count$|quantity$|amount$|percent$|priority$|number$|lineno$|sequenceno$|version$|dpi$|widthmm$|heightmm$|warehousecode$)/.test(key)) return 'number';
   if (/(status$|type$|mode$|scope$|policy$|direction$|action$|strategy$|decision$|state$|format$|characterset$|uniqueness$)/.test(key)) return 'enum';
-  if (/(atutc$|datetime$|createdat$|updatedat$|occurredat$)/.test(key)) return 'datetime';
+  if (/(atutc$|datetime$|createdat$|updatedat$|occurredat$|[a-z]at$)/.test(key)) return 'datetime';
   if (/(date$|day$)/.test(key)) return 'date';
   if (/^(is|has|can|allow|require)[a-z]/.test(key)) return 'boolean';
   return 'text';
@@ -668,6 +668,16 @@ export function AdvancedDataGrid<T extends { id: number }>({
       ? selected
       : visibleSearchableColumns.slice(0, 1).map((column) => column.key);
   }, [searchFields, visibleSearchableColumns]);
+
+  useEffect(() => {
+    const validKeys = new Set(visibleSearchableColumns.map((column) => column.key));
+    setSearchFields((current) => {
+      const sanitized = current.filter((key) => validKeys.has(key));
+      if (sanitized.length === current.length) return current;
+      if (sanitized.length > 0) return sanitized;
+      return getDefaultGridPreferences(preferenceColumns).searchFields;
+    });
+  }, [preferenceColumns, visibleSearchableColumns]);
   const request = useMemo<GridRequest>(
     () => {
       const apiSearch = search ? toTurkishApiSearch(search) : '';
@@ -1143,33 +1153,39 @@ export function AdvancedDataGrid<T extends { id: number }>({
                 </OpsActionButton>
               </PopoverPrimitive.Trigger>
               <PopoverPrimitive.Portal container={typeof document !== 'undefined' ? document.body : undefined}>
-                <PopoverPrimitive.Content role="menu" align="start" sideOffset={8} collisionPadding={8} className="wms-ops-list-popover wms-ops-list-popover--search-fields pointer-events-auto z-[4000] w-72 border-0 p-3 shadow-none outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95">
-                  <div className="wms-ops-list-popover__section-title">{t('dataGrid.searchFields')}</div>
-                  <p className="mb-2 px-2 text-xs text-[var(--wms-app-text-muted)]">{t('dataGrid.searchFieldsHelp')}</p>
-                  <GridMenuSearch value={searchFieldMenuSearch} onChange={setSearchFieldMenuSearch} placeholder={t('dataGrid.menuSearchPlaceholder')} clearLabel={t('dataGrid.clearMenuSearch')}/>
-                  <div className="wms-ops-list-popover__scroll space-y-0.5">
-                    {filteredSearchableColumns.length === 0
-                      ? <p role="status" className="px-2 py-6 text-center text-sm text-[var(--wms-app-text-muted)]">{t('dataGrid.noMatchingColumns')}</p>
-                      : filteredSearchableColumns.map((column) => {
-                        const checked = effectiveSearchFields.includes(column.key);
-                        const locked = checked && effectiveSearchFields.length === 1;
-                        const limitReached = !checked && effectiveSearchFields.length >= MAX_GRID_SEARCH_FIELDS;
-                        return (
-                          <label
-                            key={column.key}
-                            className={cn(
-                              'flex min-h-8 items-center gap-2 px-2 py-1.5 text-sm',
-                              'border border-transparent hover:border-[color-mix(in_oklab,var(--wms-ops-accent)_14%,var(--wms-ops-card-border))] hover:bg-[color-mix(in_oklab,var(--wms-ops-accent)_6%,transparent)]',
-                              locked && 'opacity-60',
-                            )}
-                          >
-                            <input type="checkbox" checked={checked} disabled={locked || limitReached} onChange={() => toggleSearchField(column.key)} className="wms-ops-list-popover__checkbox size-3.5 shrink-0" />
-                            <span className="min-w-0 truncate">{column.label}</span>
-                          </label>
-                        );
-                      })}
+                <PopoverPrimitive.Content role="menu" align="start" sideOffset={8} collisionPadding={8} className="wms-ops-list-popover wms-ops-list-popover--search-fields pointer-events-auto z-[4000] w-72 border-0 p-0 shadow-none outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95">
+                  <div className="wms-ops-list-popover--columns-shell">
+                    <div className="wms-ops-list-popover--columns-header space-y-1 p-2 pb-1">
+                      <div className="wms-ops-list-popover__section-title">{t('dataGrid.searchFields')}</div>
+                      <p className="px-0.5 text-xs text-[var(--wms-app-text-muted)]">{t('dataGrid.searchFieldsHelp')}</p>
+                      <GridMenuSearch value={searchFieldMenuSearch} onChange={setSearchFieldMenuSearch} placeholder={t('dataGrid.menuSearchPlaceholder')} clearLabel={t('dataGrid.clearMenuSearch')}/>
+                    </div>
+                    <div className="wms-ops-list-popover--columns-body wms-ops-list-popover__scroll space-y-0.5 px-2">
+                      {filteredSearchableColumns.length === 0
+                        ? <p role="status" className="px-2 py-6 text-center text-sm text-[var(--wms-app-text-muted)]">{t('dataGrid.noMatchingColumns')}</p>
+                        : filteredSearchableColumns.map((column) => {
+                          const checked = effectiveSearchFields.includes(column.key);
+                          const locked = checked && effectiveSearchFields.length === 1;
+                          const limitReached = !checked && effectiveSearchFields.length >= MAX_GRID_SEARCH_FIELDS;
+                          return (
+                            <label
+                              key={column.key}
+                              className={cn(
+                                'flex min-h-8 items-center gap-2 px-2 py-1.5 text-sm',
+                                'border border-transparent hover:border-[color-mix(in_oklab,var(--wms-ops-accent)_14%,var(--wms-ops-card-border))] hover:bg-[color-mix(in_oklab,var(--wms-ops-accent)_6%,transparent)]',
+                                locked && 'opacity-60',
+                              )}
+                            >
+                              <input type="checkbox" checked={checked} disabled={locked || limitReached} onChange={() => toggleSearchField(column.key)} className="wms-ops-list-popover__checkbox size-3.5 shrink-0" />
+                              <span className="min-w-0 truncate">{column.label}</span>
+                            </label>
+                          );
+                        })}
+                    </div>
+                    <div className="wms-ops-list-popover--columns-footer p-2 pt-1">
+                      <button type="button" onClick={resetSearchFields} className="inline-flex min-h-10 w-full items-center justify-center gap-2 border border-[var(--wms-app-border)] px-3 py-2 text-sm hover:bg-[var(--wms-brand-soft)]"><RotateCcw className="size-3.5"/>{t('dataGrid.resetSearchFields')}</button>
+                    </div>
                   </div>
-                  <button type="button" onClick={resetSearchFields} className="mt-2 inline-flex min-h-10 w-full items-center justify-center gap-2 border border-[var(--wms-app-border)] px-3 py-2 text-sm hover:bg-[var(--wms-brand-soft)]"><RotateCcw className="size-3.5"/>{t('dataGrid.resetSearchFields')}</button>
                 </PopoverPrimitive.Content>
               </PopoverPrimitive.Portal>
             </PopoverPrimitive.Root>

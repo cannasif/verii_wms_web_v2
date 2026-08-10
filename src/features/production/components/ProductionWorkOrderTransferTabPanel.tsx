@@ -292,7 +292,7 @@ function ExpandedTransferTasks({
           {orderedTasks.map((task) => {
             const liveTask = board?.tasks.find((item) => item.taskId === task.taskId);
             const assignableUserId = selectedUsers[task.taskId];
-            const handoffHint = describeHandoffRelation(task, orderedTasks);
+            const handoffHint = describeHandoffRelation(task, orderedTasks, t);
             const showExecuteOperation = isReturnTaskType(task.taskType) && isActiveTaskStatus(task.status);
             return (
               <tr key={task.taskId}>
@@ -308,11 +308,11 @@ function ExpandedTransferTasks({
                     <div className="mt-1 text-[0.65rem] text-[var(--wms-app-text-muted)]">{handoffHint}</div>
                   ) : null}
                 </td>
-                <td className={TASK_CELL}>{productionTaskTypeLabel(task.taskType)}</td>
+                <td className={TASK_CELL}>{productionTaskTypeLabel(task.taskType, t)}</td>
                 <td className={TASK_CELL}>{productionTransferEnumLabel(t, 'taskStatus', task.status)}</td>
                 <td className={TASK_CELL}>{formatProjectNumber(task.plannedQuantity)}</td>
                 <td className={TASK_CELL}>{formatProjectNumber(task.processedQuantity)}</td>
-                <td className={TASK_CELL}>{formatTaskAssignees(task.assignedUsernames)}</td>
+                <td className={TASK_CELL}>{formatTaskAssignees(task.assignedUsernames, t)}</td>
                 <td className={TASK_ACTIONS_COL}>
                   <div className="flex flex-wrap items-center justify-end gap-2">
                     {showExecuteOperation ? (
@@ -422,9 +422,11 @@ function ProductionWorkOrderTransferTaskList({
 export function ProductionWorkOrderTransferTabPanel({
   tab,
   refreshKey = 0,
+  onPendingQueueChanged,
 }: {
   tab: ProductionWorkOrderTransferTab;
   refreshKey?: number;
+  onPendingQueueChanged?: () => void;
 }): ReactElement {
   const { t } = useModuleTranslation('production-transfer');
   const { t: tc, i18n } = useTranslation('common');
@@ -843,7 +845,10 @@ export function ProductionWorkOrderTransferTabPanel({
         <ProductionTransferDraftWithdrawDialog
           row={withdrawTarget}
           onClose={() => setWithdrawTarget(null)}
-          onCompleted={refreshGroups}
+          onCompleted={() => {
+            refreshGroups();
+            onPendingQueueChanged?.();
+          }}
         />
       ) : null}
 

@@ -257,7 +257,24 @@
       "capsLockOn": "Caps Lock is on",
       "startAnimation": "Start animation",
       "stopAnimation": "Stop animation",
-      "comingSoon": "Coming soon!"
+      "comingSoon": "Coming soon!",
+      "intro": {
+        "headline": "Don't search the warehouse — manage it with <brand>V3RII</brand>.",
+        "description": "From goods receipt to shipping, shelves to transfers — keep the warehouse flow clear, calm, and in one place.",
+        "flowTitle": "V3RII WMS FLOW",
+        "live": "LIVE",
+        "greetingMorning": "Good morning.",
+        "greetingAfternoon": "Good afternoon.",
+        "greetingEvening": "Good evening.",
+        "greetingNight": "Good night.",
+        "humanNote": "When you're ready, step into your shift here.",
+        "steps": {
+          "inbound": "Goods Receipt",
+          "stock": "Stock & Rack",
+          "transfer": "Transfer",
+          "shipping": "Shipping"
+        }
+      }
     },
     "sessionRecovery": {
       "title": "The session connection was temporarily interrupted",
@@ -315,7 +332,7 @@
     "search_placeholder": "Quick search..."
   },
   "sidebar": {
-    "warehouseOperations": "Warehouse Operations",
+    "warehouseOperations": "Warehouse (Stockroom) Operations",
     "warehouseTransfer": "Inter-Warehouse Transfer",
     "normalTransferGroup": "Standard Transfer",
     "subcontractingIssueGroup": "Issue to Subcontractor",
@@ -331,7 +348,7 @@
     "productionTransferList": "Production Transfer Records",
     "productionTransferMaterialRequests": "KKD Material Request Orders",
     "productionTransferSettings": "Production Transfer Settings",
-    "production": "Production",
+    "production": "Production and Quality",
     "productionHub": "Production Process Center",
     "productionCreate": "Create Production Order",
     "productionList": "Production Plans",
@@ -340,7 +357,7 @@
     "subcontractingTransferCreate": "Create Subcontracting Transfer",
     "subcontractingTransferList": "Subcontracting Transfer Records",
     "subcontractingTransferSettings": "Subcontracting Settings",
-    "shipping": "Shipping",
+    "shipping": "Shipping Operations",
     "warehouseManagement": "Warehouse Management",
     "mainNavigation": "Main navigation",
     "dashboard": "Dashboard",
@@ -408,7 +425,7 @@
     "traceExplorer": "Trace Explorer",
     "wmsScopePolicies": "WMS Scope Policies",
     "wmsScopeAssignments": "WMS Scope Assignments",
-    "erp": "ERP",
+    "erp": "Integrations",
     "erpCustomers": "Customers",
     "erpStocks": "Stocks",
     "erpWarehouses": "Warehouses",
@@ -451,7 +468,7 @@
     "inventoryGroup": "Warehouse and Visibility",
     "analyticsGroup": "Reporting",
     "masterDataGroup": "Master Data and Definitions",
-    "systemGroup": "System and Access",
+    "systemGroup": "Parameters and System Settings",
     "filterLabel": "Filter",
     "inventoryCount": "Count",
     "inventoryCountCreate": "Create Count Order",
@@ -571,7 +588,8 @@
     "packingDefinitions": "Packing Definitions",
     "packingSettings": "Packing Settings",
     "projectSettings": "General Project Settings",
-    "auditLogs": "Audit Logs"
+    "auditLogs": "Audit Logs",
+    "processParameters": "Process Parameters"
   },
   "serviceOps": {
     "breadcrumb": {

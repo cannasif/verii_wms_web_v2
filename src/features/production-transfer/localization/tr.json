@@ -133,6 +133,78 @@
       "PartiallyCompleted": "Kısmen Tamamlandı",
       "Completed": "Tamamlandı",
       "Cancelled": "İptal Edildi"
+    },
+    "lineStatus": {
+      "Open": "Açık",
+      "Reserved": "Rezerve",
+      "PartiallyPicked": "Kısmen Toplandı",
+      "Picked": "Toplandı",
+      "Shipped": "Sevk Edildi",
+      "PartiallyReceived": "Kısmen Kabul Edildi",
+      "Received": "Kabul Edildi",
+      "Putaway": "Yerleştirildi",
+      "ShortClosed": "Eksik Kapatıldı",
+      "Cancelled": "İptal Edildi"
+    },
+    "taskType": {
+      "Pick": "Toplama",
+      "Dispatch": "Sevk",
+      "Receive": "Kabul",
+      "Putaway": "Yerleştirme",
+      "CancellationReturn": "İptal İadesi",
+      "AssignmentReturn": "Atama İadesi"
     }
+  },
+  "detail": {
+    "eyebrow": "Üretim transferi",
+    "titleDocument": "Belge",
+    "descriptionFallback": "Üretime transfer detayı",
+    "descriptionWorkOrder": "İş emri {{orderNo}}",
+    "residualBadge": "Kalan transfer",
+    "residualDocument": "Kalan belge: {{documentNo}}",
+    "loading": "Transfer detayı yükleniyor…",
+    "waitingHandover": "Bekliyor",
+    "shortageReason": "Eksik teslim nedeni:",
+    "noLines": "Satır bulunamadı.",
+    "noTasks": "Görev kaydı bulunamadı.",
+    "close": "Kapat",
+    "openOperations": "Operasyona git",
+    "tabs": { "info": "Bilgi", "content": "İçerik", "tasks": "Görevler" },
+    "fields": {
+      "transferStatus": "Transfer durumu",
+      "workflowStatus": "Akış durumu",
+      "sourceWarehouse": "Kaynak depo",
+      "targetWarehouse": "Hedef depo",
+      "requestedQuantity": "Planlanan miktar",
+      "pickedQuantity": "Toplanan miktar",
+      "handedOverQuantity": "Teslim edilen",
+      "shortageQuantity": "Eksik",
+      "documentDate": "Belge tarihi",
+      "createdDate": "Oluşturma",
+      "waitingLocation": "Bekleme rafı",
+      "handoverConfirmation": "Teslim onayı"
+    },
+    "columns": {
+      "stock": "Stok",
+      "requested": "Talep",
+      "picked": "Toplanan",
+      "handedOver": "Teslim",
+      "status": "Durum"
+    },
+    "taskStats": {
+      "planned": "Planlanan",
+      "processed": "Yapılan",
+      "remaining": "Kalan",
+      "assignees": "Atananlar"
+    }
+  },
+  "taskChain": {
+    "cancellationReturnFrom": "{{origin}} görevinden oluşturulan iptal iadesi",
+    "cancellationReturn": "İptal iadesi görevi",
+    "handoffFromPrevious": "{{previous}} görevindeki kalan işten devredildi",
+    "handoffTask": "Devir görevi",
+    "handoffToChild": "{{child}} görevine kalan miktar devredildi",
+    "sameTaskReassign": "Henüz işlenmedi; devir aynı görev üzerinde kullanıcı değiştirir",
+    "unassigned": "Atanmamış"
   }
 }

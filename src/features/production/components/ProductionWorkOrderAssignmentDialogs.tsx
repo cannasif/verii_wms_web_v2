@@ -23,7 +23,7 @@ export function ProductionWorkOrderAssignmentCancelDialog({
     if (reason.trim().length < 5) return;
     setBusy(true);
     try {
-      await productionApi.cancelWorkOrderAssignment({
+      const result = await productionApi.cancelWorkOrderAssignment({
         idempotencyKey: crypto.randomUUID(),
         workOrderNumber: row.workOrderNumber,
         sourceType: row.sourceType,
@@ -32,9 +32,11 @@ export function ProductionWorkOrderAssignmentCancelDialog({
         transferId: row.transferId ?? null,
       });
       toast.success(
-        isCancellationReturnRemainder
-          ? `${row.workOrderNumber} iptal kalanı ataması iptal edildi.`
-          : `${row.workOrderNumber} iş emri ataması iptal edildi. Kayıt İptal Edilen sekmesinde görünür.`,
+        result.cancellationId > 0
+          ? isCancellationReturnRemainder
+            ? `${row.workOrderNumber} iptal kalanı ataması iptal edildi.`
+            : `${row.workOrderNumber} iş emri ataması iptal edildi. Kayıt İptal Edilen sekmesinde görünür.`
+          : `${row.workOrderNumber} taslak ataması geri alındı. Malzemeler Atanmayanlar sekmesinde görünür.`,
       );
       onCompleted();
     } catch (error) {

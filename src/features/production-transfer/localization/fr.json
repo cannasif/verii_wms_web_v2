@@ -111,6 +111,78 @@
       "PartiallyCompleted": "Partiellement terminé",
       "Completed": "Terminé",
       "Cancelled": "Annulé"
+    },
+    "lineStatus": {
+      "Open": "Ouvert",
+      "Reserved": "Réservé",
+      "PartiallyPicked": "Partiellement prélevé",
+      "Picked": "Prélevé",
+      "Shipped": "Expédié",
+      "PartiallyReceived": "Partiellement reçu",
+      "Received": "Reçu",
+      "Putaway": "Rangé",
+      "ShortClosed": "Clôturé avec manquant",
+      "Cancelled": "Annulé"
+    },
+    "taskType": {
+      "Pick": "Prélèvement",
+      "Dispatch": "Expédition",
+      "Receive": "Réception",
+      "Putaway": "Rangement",
+      "CancellationReturn": "Retour d'annulation",
+      "AssignmentReturn": "Retour d'affectation"
     }
+  },
+  "detail": {
+    "eyebrow": "Transfert production",
+    "titleDocument": "Document",
+    "descriptionFallback": "Détail du transfert production",
+    "descriptionWorkOrder": "Ordre de fabrication {{orderNo}}",
+    "residualBadge": "Transfert résiduel",
+    "residualDocument": "Document résiduel : {{documentNo}}",
+    "loading": "Chargement du détail du transfert…",
+    "waitingHandover": "En attente",
+    "shortageReason": "Motif de remise avec manquant :",
+    "noLines": "Aucune ligne trouvée.",
+    "noTasks": "Aucune tâche trouvée.",
+    "close": "Fermer",
+    "openOperations": "Ouvrir l'opération",
+    "tabs": { "info": "Info", "content": "Contenu", "tasks": "Tâches" },
+    "fields": {
+      "transferStatus": "Statut transfert",
+      "workflowStatus": "Statut workflow",
+      "sourceWarehouse": "Entrepôt source",
+      "targetWarehouse": "Entrepôt cible",
+      "requestedQuantity": "Quantité demandée",
+      "pickedQuantity": "Quantité prélevée",
+      "handedOverQuantity": "Remis",
+      "shortageQuantity": "Manquant",
+      "documentDate": "Date document",
+      "createdDate": "Créé le",
+      "waitingLocation": "Emplacement d'attente",
+      "handoverConfirmation": "Confirmation de remise"
+    },
+    "columns": {
+      "stock": "Article",
+      "requested": "Demandé",
+      "picked": "Prélevé",
+      "handedOver": "Remis",
+      "status": "Statut"
+    },
+    "taskStats": {
+      "planned": "Planifié",
+      "processed": "Traité",
+      "remaining": "Restant",
+      "assignees": "Assignés"
+    }
+  },
+  "taskChain": {
+    "cancellationReturnFrom": "Retour d'annulation créé depuis la tâche {{origin}}",
+    "cancellationReturn": "Tâche de retour d'annulation",
+    "handoffFromPrevious": "Reprise du reste de la tâche {{previous}}",
+    "handoffTask": "Tâche de transfert",
+    "handoffToChild": "Quantité restante transférée à la tâche {{child}}",
+    "sameTaskReassign": "Pas encore traité ; le transfert change l'utilisateur sur la même tâche",
+    "unassigned": "Non assigné"
   }
 }

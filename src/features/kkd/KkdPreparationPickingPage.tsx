@@ -1,5 +1,5 @@
-import { useEffect, useState, type ReactElement } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useEffect, useMemo, useState, type ReactElement } from 'react';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { ArrowLeft, CheckCircle2, Loader2, PackageCheck, ScanBarcode, TriangleAlert } from 'lucide-react';
@@ -12,6 +12,21 @@ import { useAuthStore } from '@/stores/auth-store';
 import { KKD_CELL, KKD_HEAD_CELL, KkdCallout, KkdPage, KkdPanel, KkdTableShell } from './kkd-ops-ui';
 import { kkdApi } from './kkd-api';
 import { KkdDistributionReceiptDialog } from './KkdDistributionReceiptDialog';
+
+const BOARD_TABS = new Set(['pending', 'preparing', 'completed', 'cancelled', 'mine']);
+
+function resolveBoardHref(returnTab: string | null): string {
+  let tab = returnTab;
+  if (!tab || !BOARD_TABS.has(tab)) {
+    try {
+      tab = sessionStorage.getItem('kkd-requests-return-tab');
+    } catch {
+      tab = null;
+    }
+  }
+  if (!tab || !BOARD_TABS.has(tab)) tab = 'mine';
+  return `/warehouse/kkd/requests?tab=${tab}`;
+}
 
 type Stage = 'loading' | 'not-found' | 'working' | 'excess-pending' | 'finishing' | 'done' | 'error';
 
@@ -47,10 +62,15 @@ type PickLine = {
  */
 export function KkdPreparationPickingPage(): ReactElement {
   const { requestId: requestIdParam, taskId: taskIdParam } = useParams();
+  const [searchParams] = useSearchParams();
   const requestId = Number(requestIdParam);
   const taskId = Number(taskIdParam);
   const branchCode = useAuthStore((state) => state.branch?.code ?? '0');
   const queryClient = useQueryClient();
+  const boardHref = useMemo(
+    () => resolveBoardHref(searchParams.get('returnTab')),
+    [searchParams],
+  );
 
   const [stage, setStage] = useState<Stage>('loading');
   const [errorMessage, setErrorMessage] = useState('');
@@ -261,7 +281,7 @@ export function KkdPreparationPickingPage(): ReactElement {
         </KkdCallout>
         <div className="mt-4">
           <OpsActionButton variant="secondary" asChild>
-            <Link to="/warehouse/kkd/requests"><ArrowLeft className="size-3.5 shrink-0" />Talepler panosuna dön</Link>
+            <Link to={boardHref}><ArrowLeft className="size-3.5 shrink-0" />Talepler panosuna dön</Link>
           </OpsActionButton>
         </div>
       </KkdPage>
@@ -274,7 +294,7 @@ export function KkdPreparationPickingPage(): ReactElement {
       description={`${requestQuery.data!.employeeName} (${requestQuery.data!.employeeCode}) için ${task!.taskNo} görevi`}
       actions={
         <OpsActionButton variant="secondary" asChild>
-          <Link to="/warehouse/kkd/requests"><ArrowLeft className="size-3.5 shrink-0" />Panoya dön</Link>
+          <Link to={boardHref}><ArrowLeft className="size-3.5 shrink-0" />Panoya dön</Link>
         </OpsActionButton>
       }
     >

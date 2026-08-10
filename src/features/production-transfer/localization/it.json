@@ -111,6 +111,78 @@
       "PartiallyCompleted": "Parzialmente completato",
       "Completed": "Completato",
       "Cancelled": "Annullato"
+    },
+    "lineStatus": {
+      "Open": "Aperto",
+      "Reserved": "Riservato",
+      "PartiallyPicked": "Parzialmente prelevato",
+      "Picked": "Prelevato",
+      "Shipped": "Spedito",
+      "PartiallyReceived": "Parzialmente ricevuto",
+      "Received": "Ricevuto",
+      "Putaway": "Stoccato",
+      "ShortClosed": "Chiuso con carenza",
+      "Cancelled": "Annullato"
+    },
+    "taskType": {
+      "Pick": "Prelievo",
+      "Dispatch": "Spedizione",
+      "Receive": "Ricezione",
+      "Putaway": "Stoccaggio",
+      "CancellationReturn": "Reso per annullamento",
+      "AssignmentReturn": "Reso assegnazione"
     }
+  },
+  "detail": {
+    "eyebrow": "Trasferimento produzione",
+    "titleDocument": "Documento",
+    "descriptionFallback": "Dettaglio trasferimento produzione",
+    "descriptionWorkOrder": "Ordine di lavoro {{orderNo}}",
+    "residualBadge": "Trasferimento residuo",
+    "residualDocument": "Documento residuo: {{documentNo}}",
+    "loading": "Caricamento dettaglio trasferimento…",
+    "waitingHandover": "In attesa",
+    "shortageReason": "Motivo consegna con carenza:",
+    "noLines": "Nessuna riga trovata.",
+    "noTasks": "Nessuna attività trovata.",
+    "close": "Chiudi",
+    "openOperations": "Apri operazione",
+    "tabs": { "info": "Info", "content": "Contenuto", "tasks": "Attività" },
+    "fields": {
+      "transferStatus": "Stato trasferimento",
+      "workflowStatus": "Stato workflow",
+      "sourceWarehouse": "Magazzino origine",
+      "targetWarehouse": "Magazzino destinazione",
+      "requestedQuantity": "Quantità richiesta",
+      "pickedQuantity": "Quantità prelevata",
+      "handedOverQuantity": "Consegnato",
+      "shortageQuantity": "Carenza",
+      "documentDate": "Data documento",
+      "createdDate": "Creato",
+      "waitingLocation": "Ubicazione di attesa",
+      "handoverConfirmation": "Conferma consegna"
+    },
+    "columns": {
+      "stock": "Articolo",
+      "requested": "Richiesto",
+      "picked": "Prelevato",
+      "handedOver": "Consegnato",
+      "status": "Stato"
+    },
+    "taskStats": {
+      "planned": "Pianificato",
+      "processed": "Elaborato",
+      "remaining": "Rimanente",
+      "assignees": "Assegnati"
+    }
+  },
+  "taskChain": {
+    "cancellationReturnFrom": "Reso annullamento creato dall'attività {{origin}}",
+    "cancellationReturn": "Attività di reso annullamento",
+    "handoffFromPrevious": "Lavoro residuo trasferito dall'attività {{previous}}",
+    "handoffTask": "Attività di passaggio",
+    "handoffToChild": "Quantità residua trasferita all'attività {{child}}",
+    "sameTaskReassign": "Non ancora elaborato; il passaggio cambia l'utente sulla stessa attività",
+    "unassigned": "Non assegnato"
   }
 }

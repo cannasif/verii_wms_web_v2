@@ -1,15 +1,12 @@
+import type { TFunction } from 'i18next';
+import i18n from '@/lib/i18n';
 import type { ProductionWorkOrderTransferHeaderRow, ProductionWorkOrderTransferTaskRow } from './api';
+import { productionTransferEnumLabel } from './localization/enum-labels';
 
-export const PRODUCTION_TASK_TYPE_LABELS: Record<string, string> = {
-  Pick: 'Toplama',
-  Dispatch: 'Sevk',
-  Receive: 'Kabul',
-  Putaway: 'Yerleştirme',
-  CancellationReturn: 'İptal İadesi',
-};
-
-export const productionTaskTypeLabel = (type: string): string =>
-  PRODUCTION_TASK_TYPE_LABELS[type] ?? type;
+export function productionTaskTypeLabel(type: string, t?: TFunction): string {
+  const translate = t ?? i18n.getFixedT(null, 'production-transfer');
+  return productionTransferEnumLabel(translate, 'taskType', type);
+}
 
 const CLOSED_CANCELLATION_RETURN_STATUSES = new Set(['Completed', 'Cancelled']);
 

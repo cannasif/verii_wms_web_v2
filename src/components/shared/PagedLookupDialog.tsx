@@ -31,6 +31,10 @@ import { OPS_FIELD_CLASS } from './ops-field-styles';
 
 const SEARCH_DEBOUNCE_MS = 300;
 const LOAD_MORE_THRESHOLD = 0.82;
+const SELECTION_LOCK_MS = 400;
+/** Radix popover/dialog kapanış animasyonu bitene kadar liste etkileşimini dondur. */
+const CLOSE_ANIMATION_MS = 200;
+const SELECTION_COOLDOWN_MS = SELECTION_LOCK_MS + CLOSE_ANIMATION_MS;
 
 const isCoarsePointer = (): boolean =>
   typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches === true;
@@ -113,8 +117,10 @@ export function PagedLookupDialog<T>({
   const fetchLockRef = useRef(false);
   const skipBlurCloseRef = useRef(false);
   const selectionLockRef = useRef(false);
-
-  const SELECTION_LOCK_MS = 400;
+  const selectionCleanupTimerRef = useRef<number | null>(null);
+  const frozenComboboxItemsRef = useRef<T[]>([]);
+  const frozenDialogItemsRef = useRef<T[]>([]);
+  const [selectionFrozen, setSelectionFrozen] = useState(false);
 
   const isCombobox = triggerMode === 'combobox';
   const minLen = autoSearchMinLength ?? 1;
@@ -182,11 +188,22 @@ export function PagedLookupDialog<T>({
   );
 
   useEffect(() => {
-    if (!open) {
+    if (open) return;
+    const timer = window.setTimeout(() => {
       setSearch('');
       setSearchInput('');
-    }
+    }, SELECTION_COOLDOWN_MS);
+    return () => window.clearTimeout(timer);
   }, [open]);
+
+  useEffect(
+    () => () => {
+      if (selectionCleanupTimerRef.current !== null) {
+        window.clearTimeout(selectionCleanupTimerRef.current);
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     if (!open) {
@@ -274,25 +291,41 @@ export function PagedLookupDialog<T>({
     if (progress >= LOAD_MORE_THRESHOLD) fetchComboboxNext();
   };
 
-  const beginSelectionLock = (): void => {
-    selectionLockRef.current = true;
-    skipBlurCloseRef.current = true;
-    window.setTimeout(() => {
+  const scheduleSelectionCleanup = (onCleanup?: () => void): void => {
+    if (selectionCleanupTimerRef.current !== null) {
+      window.clearTimeout(selectionCleanupTimerRef.current);
+    }
+    selectionCleanupTimerRef.current = window.setTimeout(() => {
+      selectionCleanupTimerRef.current = null;
       selectionLockRef.current = false;
       skipBlurCloseRef.current = false;
-    }, SELECTION_LOCK_MS);
+      setSelectionFrozen(false);
+      onCleanup?.();
+    }, SELECTION_COOLDOWN_MS);
   };
 
-  const selectItem = (item: T): void => {
+  const selectItem = (item: T, source: 'combobox' | 'dialog'): void => {
     if (selectionLockRef.current) return;
-    beginSelectionLock();
+    selectionLockRef.current = true;
+    skipBlurCloseRef.current = true;
+
+    if (source === 'combobox') {
+      frozenComboboxItemsRef.current = comboboxItems;
+    } else {
+      frozenDialogItemsRef.current = items;
+    }
+    setSelectionFrozen(true);
+
     onSelect(item);
     setEditing(false);
     setComboboxOpen(false);
-    setComboboxSearch('');
     setComboboxDraft(getLabel(item));
     onOpenChange(false);
     inputRef.current?.blur();
+
+    scheduleSelectionCleanup(() => {
+      setComboboxSearch('');
+    });
   };
 
   const openDialog = (): void => {
@@ -303,7 +336,7 @@ export function PagedLookupDialog<T>({
   };
 
   const handleComboboxSelect = (item: T): void => {
-    selectItem(item);
+    selectItem(item, 'combobox');
   };
 
   const handleInputKeyDown = (event: KeyboardEvent<HTMLInputElement>): void => {
@@ -370,6 +403,10 @@ export function PagedLookupDialog<T>({
   const comboboxEmptyText = isThresholdMode
     ? t('shared:dropdown.minSearchCharacters', { count: minLen })
     : (emptyText ?? t('common.noResults'));
+  const visibleComboboxItems = selectionFrozen ? frozenComboboxItemsRef.current : comboboxItems;
+  const visibleDialogItems = selectionFrozen ? frozenDialogItemsRef.current : items;
+  const showComboboxLoading = !selectionFrozen && comboboxLoading;
+  const showDialogInitialLoading = !selectionFrozen && isInitialLoading;
 
   const buttonTrigger = isOps ? (
     <OpsFieldShell aria-invalid={invalid || undefined}>
@@ -418,9 +455,9 @@ export function PagedLookupDialog<T>({
 
   const comboboxInner = (
     <PopoverPrimitive.Root
-      open={comboboxOpen && !open}
+      open={comboboxOpen && !open && !selectionFrozen}
       onOpenChange={(next) => {
-        if (open || selectionLockRef.current) return;
+        if (open || selectionLockRef.current || selectionFrozen) return;
         // Dropdown yalnızca yazınca açılır; dışarı tıklanınca kapanabilir.
         if (!next) {
           setComboboxOpen(false);
@@ -439,8 +476,8 @@ export function PagedLookupDialog<T>({
             aria-autocomplete="list"
             aria-controls="paged-lookup-combobox-list"
             aria-activedescendant={
-              comboboxOpen && comboboxItems[highlightIndex]
-                ? `paged-lookup-option-${getKey(comboboxItems[highlightIndex])}`
+              comboboxOpen && visibleComboboxItems[highlightIndex]
+                ? `paged-lookup-option-${getKey(visibleComboboxItems[highlightIndex])}`
                 : undefined
             }
             disabled={disabled}
@@ -492,7 +529,7 @@ export function PagedLookupDialog<T>({
                 setComboboxOpen(false);
                 setEditing(false);
                 setComboboxDraft(value ?? '');
-              }, SELECTION_LOCK_MS);
+              }, SELECTION_COOLDOWN_MS);
             }}
           />
           <button
@@ -541,19 +578,22 @@ export function PagedLookupDialog<T>({
             onPointerDown={() => {
               skipBlurCloseRef.current = true;
             }}
-            className="relative h-64 space-y-1 overflow-y-auto overscroll-contain p-1.5"
+            className={cn(
+              'relative h-64 space-y-1 overflow-y-auto overscroll-contain p-1.5',
+              selectionFrozen && 'pointer-events-none',
+            )}
           >
-            {comboboxLoading ? (
+            {showComboboxLoading ? (
               <div className="flex h-full items-center justify-center px-2">
                 <OpsLoadingState message={t('common.loading')} compact code="LOOKUP" />
               </div>
-            ) : comboboxItems.length === 0 ? (
+            ) : visibleComboboxItems.length === 0 ? (
               <div className="flex h-full items-center justify-center px-3 text-center text-sm text-slate-500">
                 {comboboxEmptyText}
               </div>
             ) : (
               <>
-                {comboboxItems.map((item, index) => {
+                {visibleComboboxItems.map((item, index) => {
                   const key = getKey(item);
                   const label = getLabel(item);
                   const active = value === label;
@@ -618,7 +658,7 @@ export function PagedLookupDialog<T>({
       <Dialog
         open={open}
         onOpenChange={(next) => {
-          if (next && selectionLockRef.current) return;
+          if (next && (selectionLockRef.current || selectionFrozen)) return;
           onOpenChange(next);
         }}
       >
@@ -708,9 +748,10 @@ export function PagedLookupDialog<T>({
                 isOps
                   ? 'wms-ops-lookup-list'
                   : 'rounded-2xl border border-slate-200/70 bg-slate-50/80 dark:border-white/10 dark:bg-white/3',
+                selectionFrozen && 'pointer-events-none',
               )}
             >
-              {isInitialLoading ? (
+              {showDialogInitialLoading ? (
                 <div className={cn('flex h-full items-center justify-center', isOps ? 'wms-ops-lookup-list__loading px-2' : 'px-2')}>
                   <OpsLoadingState message={t('common.loading')} compact code="FETCH" />
                 </div>
@@ -729,7 +770,7 @@ export function PagedLookupDialog<T>({
                     </div>
                   ) : null}
 
-                  {items.length === 0 ? (
+                  {visibleDialogItems.length === 0 ? (
                     <div
                       className={cn(
                         'flex h-full items-center justify-center text-center text-sm',
@@ -739,7 +780,7 @@ export function PagedLookupDialog<T>({
                       {emptyText ?? t('common.noResults')}
                     </div>
                   ) : (
-                    items.map((item) => {
+                    visibleDialogItems.map((item) => {
                       const label = getLabel(item);
                       return (
                       <button
@@ -756,7 +797,7 @@ export function PagedLookupDialog<T>({
                         onPointerDown={(event) => {
                           event.preventDefault();
                           if (selectionLockRef.current) return;
-                          selectItem(item);
+                          selectItem(item, 'dialog');
                         }}
                       >
                         <span className={isOps ? 'wms-ops-lookup-item__label' : 'font-medium text-slate-900 dark:text-white'}>
