@@ -24,6 +24,7 @@ import {
   productionTransferErpPanelSource,
   productionTransferShowErpControls,
 } from '../production-transfer-erp-posting';
+import { productionTransferEnumLabel } from '../localization/enum-labels';
 import { productionTaskTypeLabel } from '../production-transfer-task-labels';
 import {
   describeHandoffRelation,
@@ -105,7 +106,10 @@ export function ProductionTransferDetailDialog({
   }, [board?.tasks, summary?.tasks]);
 
   const documentNo = header?.documentNo ?? summary?.documentNo ?? `#${transferId}`;
-  const workflowStatus = execution?.workflowStatus ?? summary?.workflowStatus ?? '—';
+  const workflowStatus = execution?.workflowStatus ?? summary?.workflowStatus;
+  const workflowStatusLabel = workflowStatus
+    ? productionTransferEnumLabel(t, 'workflowStatus', workflowStatus)
+    : '—';
   const productionOrderNo = summary?.productionOrderNo ?? summary?.externalReferenceNo ?? header?.documentNo;
   const mainTabIndex = MAIN_TABS.indexOf(mainTab);
 
@@ -165,24 +169,32 @@ export function ProductionTransferDetailDialog({
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0 pr-2">
               <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-600 dark:text-cyan-300">
-                Üretim transferi
+                {t('detail.eyebrow')}
               </p>
               <DialogTitle className="wms-ops-detail-dialog__title">
-                Belge
+                {t('detail.titleDocument')}
                 <span className="ml-2 font-mono text-base font-bold text-cyan-600 dark:text-cyan-300">
                   {documentNo}
                 </span>
               </DialogTitle>
               <DialogDescription className="wms-ops-detail-dialog__description">
-                {productionOrderNo ? `İş emri ${productionOrderNo}` : 'Üretime transfer detayı'}
+                {productionOrderNo
+                  ? t('detail.descriptionWorkOrder', { orderNo: productionOrderNo })
+                  : t('detail.descriptionFallback')}
                 {execution ? ` · ${execution.sourceWarehouseName} → ${execution.targetWarehouseName}` : null}
               </DialogDescription>
               <div className="mt-3 flex flex-wrap gap-2">
-                {header ? <OpsStatusBadge tone="active">{header.status}</OpsStatusBadge> : null}
-                <OpsStatusBadge tone="pending">{workflowStatus}</OpsStatusBadge>
-                {summary?.isResidualHeader ? <OpsCodeBadge>Kalan transfer</OpsCodeBadge> : null}
+                {header ? (
+                  <OpsStatusBadge tone="active">
+                    {productionTransferEnumLabel(t, 'transferStatus', header.status)}
+                  </OpsStatusBadge>
+                ) : null}
+                <OpsStatusBadge tone="pending">{workflowStatusLabel}</OpsStatusBadge>
+                {summary?.isResidualHeader ? <OpsCodeBadge>{t('detail.residualBadge')}</OpsCodeBadge> : null}
                 {summary?.residualDocumentNo ? (
-                  <OpsCodeBadge>Kalan belge: {summary.residualDocumentNo}</OpsCodeBadge>
+                  <OpsCodeBadge>
+                    {t('detail.residualDocument', { documentNo: summary.residualDocumentNo })}
+                  </OpsCodeBadge>
                 ) : null}
               </div>
             </div>
@@ -225,20 +237,20 @@ export function ProductionTransferDetailDialog({
             >
               <span className="wms-ops-detail-tab-indicator" aria-hidden />
               <TabsTrigger value="info" className="wms-ops-detail-main-tab">
-                Bilgi
+                {t('detail.tabs.info')}
               </TabsTrigger>
               <TabsTrigger value="content" className="wms-ops-detail-main-tab">
-                İçerik
+                {t('detail.tabs.content')}
               </TabsTrigger>
               <TabsTrigger value="tasks" className="wms-ops-detail-main-tab">
-                Görevler
+                {t('detail.tabs.tasks')}
               </TabsTrigger>
             </TabsList>
           </div>
 
           {loading || !detail || !execution || !header ? (
             <div className="grid min-h-0 flex-1 place-items-center px-6 py-10">
-              <OpsLoadingState message="Transfer detayı yükleniyor…" code="SYNC" />
+              <OpsLoadingState message={t('detail.loading')} code="SYNC" />
             </div>
           ) : (
             <>
@@ -248,32 +260,44 @@ export function ProductionTransferDetailDialog({
             >
               <div className="space-y-4">
                 <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                  <SummaryCell label="Transfer durumu" value={header.status} />
-                  <SummaryCell label="Akış durumu" value={workflowStatus} />
-                  <SummaryCell label="Kaynak depo" value={`${execution.sourceWarehouseCode} · ${execution.sourceWarehouseName}`} />
-                  <SummaryCell label="Hedef depo" value={`${execution.targetWarehouseCode} · ${execution.targetWarehouseName}`} />
-                  <SummaryCell label="Planlanan miktar" value={formatProjectNumber(execution.requestedQuantity)} />
-                  <SummaryCell label="Toplanan miktar" value={formatProjectNumber(execution.pickedQuantity)} />
-                  <SummaryCell label="Teslim edilen" value={formatProjectNumber(execution.handedOverQuantity)} />
-                  <SummaryCell label="Eksik" value={formatProjectNumber(execution.shortageQuantity)} />
-                  <SummaryCell label="Belge tarihi" value={formatProjectDate(header.documentDate)} />
-                  <SummaryCell label="Oluşturma" value={formatProjectDate(header.createdDate)} />
                   <SummaryCell
-                    label="Bekleme rafı"
+                    label={t('detail.fields.transferStatus')}
+                    value={productionTransferEnumLabel(t, 'transferStatus', header.status)}
+                  />
+                  <SummaryCell
+                    label={t('detail.fields.workflowStatus')}
+                    value={workflowStatusLabel}
+                  />
+                  <SummaryCell
+                    label={t('detail.fields.sourceWarehouse')}
+                    value={`${execution.sourceWarehouseCode} · ${execution.sourceWarehouseName}`}
+                  />
+                  <SummaryCell
+                    label={t('detail.fields.targetWarehouse')}
+                    value={`${execution.targetWarehouseCode} · ${execution.targetWarehouseName}`}
+                  />
+                  <SummaryCell label={t('detail.fields.requestedQuantity')} value={formatProjectNumber(execution.requestedQuantity)} />
+                  <SummaryCell label={t('detail.fields.pickedQuantity')} value={formatProjectNumber(execution.pickedQuantity)} />
+                  <SummaryCell label={t('detail.fields.handedOverQuantity')} value={formatProjectNumber(execution.handedOverQuantity)} />
+                  <SummaryCell label={t('detail.fields.shortageQuantity')} value={formatProjectNumber(execution.shortageQuantity)} />
+                  <SummaryCell label={t('detail.fields.documentDate')} value={formatProjectDate(header.documentDate)} />
+                  <SummaryCell label={t('detail.fields.createdDate')} value={formatProjectDate(header.createdDate)} />
+                  <SummaryCell
+                    label={t('detail.fields.waitingLocation')}
                     value={execution.waitingLocationCode
                       ? `${execution.waitingLocationCode} · ${execution.waitingLocationName ?? ''}`
                       : '—'}
                   />
                   <SummaryCell
-                    label="Teslim onayı"
+                    label={t('detail.fields.handoverConfirmation')}
                     value={execution.handoverConfirmedAtUtc
                       ? formatProjectDateTime(execution.handoverConfirmedAtUtc)
-                      : 'Bekliyor'}
+                      : t('detail.waitingHandover')}
                   />
                 </div>
                 {execution.handoverShortageReason ? (
                   <div className="wms-ops-detail-panel p-4 text-sm">
-                    <strong className="text-amber-600">Eksik teslim nedeni:</strong>
+                    <strong className="text-amber-600">{t('detail.shortageReason')}</strong>
                     <p className="mt-1 text-[var(--wms-app-text-muted)]">{execution.handoverShortageReason}</p>
                   </div>
                 ) : null}
@@ -287,7 +311,7 @@ export function ProductionTransferDetailDialog({
               {detail.lines.length === 0 ? (
                 <div className="wms-ops-detail-empty flex flex-col items-center gap-2 p-8 text-center">
                   <PackageOpen className="size-8 opacity-40" aria-hidden />
-                  <p className="text-sm text-[var(--wms-app-text-muted)]">Satır bulunamadı.</p>
+                  <p className="text-sm text-[var(--wms-app-text-muted)]">{t('detail.noLines')}</p>
                 </div>
               ) : (
                 <div className="wms-ops-gr-detail-lines-wrap overflow-x-auto">
@@ -295,11 +319,11 @@ export function ProductionTransferDetailDialog({
                     <thead>
                       <tr>
                         <th>#</th>
-                        <th>Stok</th>
-                        <th className="wms-ops-gr-detail-lines-table__num">Talep</th>
-                        <th className="wms-ops-gr-detail-lines-table__num">Toplanan</th>
-                        <th className="wms-ops-gr-detail-lines-table__num">Teslim</th>
-                        <th>Durum</th>
+                        <th>{t('detail.columns.stock')}</th>
+                        <th className="wms-ops-gr-detail-lines-table__num">{t('detail.columns.requested')}</th>
+                        <th className="wms-ops-gr-detail-lines-table__num">{t('detail.columns.picked')}</th>
+                        <th className="wms-ops-gr-detail-lines-table__num">{t('detail.columns.handedOver')}</th>
+                        <th>{t('detail.columns.status')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -316,7 +340,7 @@ export function ProductionTransferDetailDialog({
                             <td className="wms-ops-gr-detail-lines-table__num">
                               {formatProjectNumber(executionLine?.handedOverQuantity ?? 0)}
                             </td>
-                            <td>{line.status}</td>
+                            <td>{productionTransferEnumLabel(t, 'lineStatus', line.status)}</td>
                           </tr>
                         );
                       })}
@@ -333,10 +357,10 @@ export function ProductionTransferDetailDialog({
               <div className="space-y-3">
                 {taskRows.length === 0 ? (
                   <div className="wms-ops-detail-empty p-8 text-center text-sm text-[var(--wms-app-text-muted)]">
-                    Görev kaydı bulunamadı.
+                    {t('detail.noTasks')}
                   </div>
                 ) : taskRows.map((task) => {
-                  const hint = describeHandoffRelation(task, taskRows);
+                  const hint = describeHandoffRelation(task, taskRows, t);
                   return (
                     <article key={task.taskId} className="wms-ops-detail-panel p-4">
                       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -352,18 +376,20 @@ export function ProductionTransferDetailDialog({
                           <div className="mt-1 text-xs text-[var(--wms-app-text-muted)]">{task.taskNo}</div>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                          <OpsCodeBadge>{productionTaskTypeLabel(task.taskType)}</OpsCodeBadge>
-                          <OpsStatusBadge tone="active">{task.status}</OpsStatusBadge>
+                          <OpsCodeBadge>{productionTaskTypeLabel(task.taskType, t)}</OpsCodeBadge>
+                          <OpsStatusBadge tone="active">
+                            {productionTransferEnumLabel(t, 'taskStatus', task.status)}
+                          </OpsStatusBadge>
                         </div>
                       </div>
                       {hint ? (
                         <p className="mt-2 text-xs text-[var(--wms-app-text-muted)]">{hint}</p>
                       ) : null}
                       <dl className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                        <MiniStat label="Planlanan" value={formatProjectNumber(task.plannedQuantity)} />
-                        <MiniStat label="Yapılan" value={formatProjectNumber(task.processedQuantity)} />
-                        <MiniStat label="Kalan" value={formatProjectNumber(task.remainingQuantity)} />
-                        <MiniStat label="Atananlar" value={formatTaskAssignees(task.assignedUsernames)} />
+                        <MiniStat label={t('detail.taskStats.planned')} value={formatProjectNumber(task.plannedQuantity)} />
+                        <MiniStat label={t('detail.taskStats.processed')} value={formatProjectNumber(task.processedQuantity)} />
+                        <MiniStat label={t('detail.taskStats.remaining')} value={formatProjectNumber(task.remainingQuantity)} />
+                        <MiniStat label={t('detail.taskStats.assignees')} value={formatTaskAssignees(task.assignedUsernames, t)} />
                       </dl>
                     </article>
                   );
@@ -375,11 +401,11 @@ export function ProductionTransferDetailDialog({
         </Tabs>
 
         <footer className="wms-ops-actions wms-ops-detail-dialog__footer flex shrink-0 flex-wrap items-center justify-end gap-2 px-4 py-3 sm:px-6">
-          <OpsActionButton variant="secondary" onClick={onClose}>Kapat</OpsActionButton>
+          <OpsActionButton variant="secondary" onClick={onClose}>{t('detail.close')}</OpsActionButton>
           <Link to={`${transferBaseUrl}/${transferId}/operations`} className="inline-flex">
             <OpsActionButton variant="primary" type="button">
               <ExternalLink className="size-4" aria-hidden />
-              Operasyona git
+              {t('detail.openOperations')}
             </OpsActionButton>
           </Link>
         </footer>

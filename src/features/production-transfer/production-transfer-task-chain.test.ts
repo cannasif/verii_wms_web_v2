@@ -1,10 +1,30 @@
 import { describe, expect, it } from 'vitest';
+import type { TFunction } from 'i18next';
 import {
   describeHandoffRelation,
   formatTaskAssignees,
   orderTasksForDisplay,
   resolveTaskAssignedUsernames,
 } from './production-transfer-task-chain';
+
+const tTr = ((key: string, options?: Record<string, string>) => {
+  const templates: Record<string, string> = {
+    'taskChain.cancellationReturnFrom': '{{origin}} görevinden oluşturulan iptal iadesi',
+    'taskChain.cancellationReturn': 'İptal iadesi görevi',
+    'taskChain.handoffFromPrevious': '{{previous}} görevindeki kalan işten devredildi',
+    'taskChain.handoffTask': 'Devir görevi',
+    'taskChain.handoffToChild': '{{child}} görevine kalan miktar devredildi',
+    'taskChain.sameTaskReassign': 'Henüz işlenmedi; devir aynı görev üzerinde kullanıcı değiştirir',
+    'taskChain.unassigned': 'Atanmamış',
+  };
+  let value = templates[key] ?? key;
+  if (options) {
+    for (const [name, replacement] of Object.entries(options)) {
+      value = value.replace(`{{${name}}}`, replacement);
+    }
+  }
+  return value;
+}) as TFunction;
 
 describe('orderTasksForDisplay', () => {
   it('orders handoff chain as -1 then -2', () => {
@@ -53,7 +73,7 @@ describe('describeHandoffRelation', () => {
       assignedUsernames: ['ali'],
     };
 
-    expect(describeHandoffRelation(task, [task])).toContain('aynı görev');
+    expect(describeHandoffRelation(task, [task], tTr)).toContain('aynı görev');
   });
 
   it('explains child task created after partial progress', () => {
@@ -79,8 +99,8 @@ describe('describeHandoffRelation', () => {
       assignedUsernames: ['veli'],
     };
 
-    expect(describeHandoffRelation(child, [parent, child])).toContain('devredildi');
-    expect(describeHandoffRelation(parent, [parent, child])).toContain('TR-1-2');
+    expect(describeHandoffRelation(child, [parent, child], tTr)).toContain('devredildi');
+    expect(describeHandoffRelation(parent, [parent, child], tTr)).toContain('TR-1-2');
   });
 });
 
@@ -101,7 +121,7 @@ describe('resolveTaskAssignedUsernames', () => {
 
 describe('formatTaskAssignees', () => {
   it('shows unassigned label when empty', () => {
-    expect(formatTaskAssignees([])).toBe('Atanmamış');
-    expect(formatTaskAssignees(undefined)).toBe('Atanmamış');
+    expect(formatTaskAssignees([], tTr)).toBe('Atanmamış');
+    expect(formatTaskAssignees(undefined, tTr)).toBe('Atanmamış');
   });
 });

@@ -37,6 +37,7 @@ import {
   type ProductionWorkOrderPageTab,
 } from './components/ProductionWorkOrderTransferTabPanel';
 import { ProductionWorkOrderAssignmentCancelDialog } from './components/ProductionWorkOrderAssignmentDialogs';
+import { WorkOrderAssignmentProgressRing } from './components/WorkOrderAssignmentProgressRing';
 
 const todayIsoDate = (): string => new Date().toLocaleDateString('en-CA');
 
@@ -740,7 +741,12 @@ export function ProductionWorkOrdersPage(): ReactElement {
                 </tr>
               ) : visibleRows.map((row) => (
                 <tr key={workOrderKey(row)} onClick={() => void open(row)} className="cursor-pointer">
-                  <td className={cn(CELL, 'font-mono font-black text-[var(--wms-brand-primary)]')}>{row.workOrderNumber}</td>
+                  <td className={cn(CELL, 'font-mono font-black text-[var(--wms-brand-primary)]')}>
+                    <div className="flex items-center justify-center gap-2">
+                      <span>{row.workOrderNumber}</span>
+                      <WorkOrderAssignmentProgressRing row={row} />
+                    </div>
+                  </td>
                   <td className={CELL}>
                     <SourceListingKindBadge row={row} />
                     {row.listingKind !== 'CancellationReturnRemainder' && row.revisionNumber > 1 ? (
@@ -811,7 +817,10 @@ export function ProductionWorkOrdersPage(): ReactElement {
                 <article key={`${workOrderKey(row)}-card`} className="overflow-hidden border border-[var(--wms-ops-card-border)] bg-[var(--wms-ops-card-bg)]">
                   <div className="border-b border-[color-mix(in_oklab,var(--wms-ops-accent)_16%,var(--wms-ops-card-border))] px-3 py-2.5">
                     <div className="flex items-start justify-between gap-2">
-                      <div className="font-mono text-sm font-black text-[var(--wms-brand-primary)]">{row.workOrderNumber}</div>
+                      <div className="flex min-w-0 items-center gap-2 font-mono text-sm font-black text-[var(--wms-brand-primary)]">
+                        <span className="truncate">{row.workOrderNumber}</span>
+                        <WorkOrderAssignmentProgressRing row={row} />
+                      </div>
                       <SourceListingKindBadge row={row} />
                     </div>
                     <strong className="mt-1 block text-sm">{row.stockCode}</strong>

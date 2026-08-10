@@ -111,6 +111,78 @@
       "PartiallyCompleted": "Parcialmente completado",
       "Completed": "Completado",
       "Cancelled": "Cancelado"
+    },
+    "lineStatus": {
+      "Open": "Abierto",
+      "Reserved": "Reservado",
+      "PartiallyPicked": "Parcialmente preparado",
+      "Picked": "Preparado",
+      "Shipped": "Enviado",
+      "PartiallyReceived": "Parcialmente recibido",
+      "Received": "Recibido",
+      "Putaway": "Ubicado",
+      "ShortClosed": "Cerrado con faltante",
+      "Cancelled": "Cancelado"
+    },
+    "taskType": {
+      "Pick": "Preparación",
+      "Dispatch": "Despacho",
+      "Receive": "Recepción",
+      "Putaway": "Ubicación",
+      "CancellationReturn": "Devolución por cancelación",
+      "AssignmentReturn": "Devolución de asignación"
     }
+  },
+  "detail": {
+    "eyebrow": "Transferencia de producción",
+    "titleDocument": "Documento",
+    "descriptionFallback": "Detalle de transferencia de producción",
+    "descriptionWorkOrder": "Orden de trabajo {{orderNo}}",
+    "residualBadge": "Transferencia residual",
+    "residualDocument": "Documento residual: {{documentNo}}",
+    "loading": "Cargando detalle de transferencia…",
+    "waitingHandover": "En espera",
+    "shortageReason": "Motivo de entrega con faltante:",
+    "noLines": "No se encontraron líneas.",
+    "noTasks": "No se encontraron tareas.",
+    "close": "Cerrar",
+    "openOperations": "Ir a operación",
+    "tabs": { "info": "Info", "content": "Contenido", "tasks": "Tareas" },
+    "fields": {
+      "transferStatus": "Estado de transferencia",
+      "workflowStatus": "Estado del flujo",
+      "sourceWarehouse": "Almacén origen",
+      "targetWarehouse": "Almacén destino",
+      "requestedQuantity": "Cantidad solicitada",
+      "pickedQuantity": "Cantidad preparada",
+      "handedOverQuantity": "Entregado",
+      "shortageQuantity": "Faltante",
+      "documentDate": "Fecha del documento",
+      "createdDate": "Creado",
+      "waitingLocation": "Ubicación de espera",
+      "handoverConfirmation": "Confirmación de entrega"
+    },
+    "columns": {
+      "stock": "Artículo",
+      "requested": "Solicitado",
+      "picked": "Preparado",
+      "handedOver": "Entregado",
+      "status": "Estado"
+    },
+    "taskStats": {
+      "planned": "Planificado",
+      "processed": "Procesado",
+      "remaining": "Restante",
+      "assignees": "Asignados"
+    }
+  },
+  "taskChain": {
+    "cancellationReturnFrom": "Devolución por cancelación creada desde la tarea {{origin}}",
+    "cancellationReturn": "Tarea de devolución por cancelación",
+    "handoffFromPrevious": "Trabajo restante transferido desde la tarea {{previous}}",
+    "handoffTask": "Tarea de traspaso",
+    "handoffToChild": "Cantidad restante transferida a la tarea {{child}}",
+    "sameTaskReassign": "Aún no procesado; el traspaso cambia el usuario en la misma tarea",
+    "unassigned": "Sin asignar"
   }
 }

@@ -10166,17 +10166,8 @@ html:not(.skin-premium) .wms-ops-advanced-filter .wms-ops-field-shell {
   background: color-mix(in oklab, var(--wms-ops-field-bg) 92%, transparent);
 }
 
-.wms-ops-list-popover--search-fields {
-  overflow-y: auto;
-}
-
-.wms-ops-list-popover--search-fields .wms-ops-list-popover__scroll {
-  max-height: 14rem;
-  overflow-y: auto;
-  padding-right: 0.125rem;
-}
-
-.wms-ops-list-popover--columns .wms-ops-list-popover__section-title {
+.wms-ops-list-popover--columns .wms-ops-list-popover__section-title,
+.wms-ops-list-popover--search-fields .wms-ops-list-popover__section-title {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.62rem;
   font-weight: 600;

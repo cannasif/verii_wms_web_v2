@@ -133,6 +133,78 @@
       "PartiallyCompleted": "Partially Completed",
       "Completed": "Completed",
       "Cancelled": "Cancelled"
+    },
+    "lineStatus": {
+      "Open": "Open",
+      "Reserved": "Reserved",
+      "PartiallyPicked": "Partially Picked",
+      "Picked": "Picked",
+      "Shipped": "Shipped",
+      "PartiallyReceived": "Partially Received",
+      "Received": "Received",
+      "Putaway": "Put Away",
+      "ShortClosed": "Short Closed",
+      "Cancelled": "Cancelled"
+    },
+    "taskType": {
+      "Pick": "Pick",
+      "Dispatch": "Dispatch",
+      "Receive": "Receive",
+      "Putaway": "Putaway",
+      "CancellationReturn": "Cancellation Return",
+      "AssignmentReturn": "Assignment Return"
     }
+  },
+  "detail": {
+    "eyebrow": "Production transfer",
+    "titleDocument": "Document",
+    "descriptionFallback": "Production transfer details",
+    "descriptionWorkOrder": "Work order {{orderNo}}",
+    "residualBadge": "Residual transfer",
+    "residualDocument": "Residual document: {{documentNo}}",
+    "loading": "Loading transfer details…",
+    "waitingHandover": "Waiting",
+    "shortageReason": "Shortage handover reason:",
+    "noLines": "No lines found.",
+    "noTasks": "No task records found.",
+    "close": "Close",
+    "openOperations": "Open operations",
+    "tabs": { "info": "Info", "content": "Content", "tasks": "Tasks" },
+    "fields": {
+      "transferStatus": "Transfer status",
+      "workflowStatus": "Workflow status",
+      "sourceWarehouse": "Source warehouse",
+      "targetWarehouse": "Target warehouse",
+      "requestedQuantity": "Requested quantity",
+      "pickedQuantity": "Picked quantity",
+      "handedOverQuantity": "Handed over",
+      "shortageQuantity": "Shortage",
+      "documentDate": "Document date",
+      "createdDate": "Created",
+      "waitingLocation": "Staging location",
+      "handoverConfirmation": "Handover confirmation"
+    },
+    "columns": {
+      "stock": "Stock",
+      "requested": "Requested",
+      "picked": "Picked",
+      "handedOver": "Handed over",
+      "status": "Status"
+    },
+    "taskStats": {
+      "planned": "Planned",
+      "processed": "Processed",
+      "remaining": "Remaining",
+      "assignees": "Assignees"
+    }
+  },
+  "taskChain": {
+    "cancellationReturnFrom": "Cancellation return created from task {{origin}}",
+    "cancellationReturn": "Cancellation return task",
+    "handoffFromPrevious": "Handed off from remaining work on task {{previous}}",
+    "handoffTask": "Handoff task",
+    "handoffToChild": "Remaining quantity handed off to task {{child}}",
+    "sameTaskReassign": "Not processed yet; handoff reassigns users on the same task",
+    "unassigned": "Unassigned"
   }
 }

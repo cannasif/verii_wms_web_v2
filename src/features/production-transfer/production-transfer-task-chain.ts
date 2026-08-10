@@ -1,4 +1,10 @@
+import type { TFunction } from 'i18next';
+import i18n from '@/lib/i18n';
 import type { ProductionTask, ProductionWorkOrderTransferTaskRow } from './api';
+
+function resolveTaskChainT(t?: TFunction): TFunction {
+  return t ?? i18n.getFixedT(null, 'production-transfer');
+}
 
 const RETURN_TASK_TYPES = new Set(['CancellationReturn']);
 
@@ -76,35 +82,42 @@ export function taskDisplayName(task: Pick<ChainTask, 'displayLabel' | 'taskNo'>
 }
 
 /** Devir sonrası aynı görev mi yoksa yeni -2 görevi mi oluştuğuna dair kısa açıklama. */
-export function describeHandoffRelation(task: ChainTask, tasks: readonly ChainTask[]): string | null {
+export function describeHandoffRelation(
+  task: ChainTask,
+  tasks: readonly ChainTask[],
+  t?: TFunction,
+): string | null {
+  const translate = resolveTaskChainT(t);
+
   if (task.taskType === 'CancellationReturn') {
     const origin = tasks.find((row) => row.taskId === task.originTaskId);
     return origin
-      ? `${taskDisplayName(origin)} görevinden oluşturulan iptal iadesi`
-      : 'İptal iadesi görevi';
+      ? translate('taskChain.cancellationReturnFrom', { origin: taskDisplayName(origin) })
+      : translate('taskChain.cancellationReturn');
   }
 
   if (task.previousTaskId) {
     const previous = tasks.find((row) => row.taskId === task.previousTaskId);
     return previous
-      ? `${taskDisplayName(previous)} görevindeki kalan işten devredildi`
-      : 'Devir görevi';
+      ? translate('taskChain.handoffFromPrevious', { previous: taskDisplayName(previous) })
+      : translate('taskChain.handoffTask');
   }
 
   const child = tasks.find((row) => row.previousTaskId === task.taskId);
   if (child && task.processedQuantity > 0) {
-    return `${taskDisplayName(child)} görevine kalan miktar devredildi`;
+    return translate('taskChain.handoffToChild', { child: taskDisplayName(child) });
   }
 
   if (task.processedQuantity <= 0 && task.assignedUsernames && task.assignedUsernames.length > 0) {
-    return 'Henüz işlenmedi; devir aynı görev üzerinde kullanıcı değiştirir';
+    return translate('taskChain.sameTaskReassign');
   }
 
   return null;
 }
 
-export function formatTaskAssignees(usernames: readonly string[] | undefined): string {
-  return usernames?.length ? usernames.join(', ') : 'Atanmamış';
+export function formatTaskAssignees(usernames: readonly string[] | undefined, t?: TFunction): string {
+  const translate = resolveTaskChainT(t);
+  return usernames?.length ? usernames.join(', ') : translate('taskChain.unassigned');
 }
 
 export function resolveTaskAssignedUsernames(task: Pick<ProductionTask, 'assignments' | 'assignedUsernames'>): string[] {

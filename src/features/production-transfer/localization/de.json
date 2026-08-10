@@ -111,6 +111,78 @@
       "PartiallyCompleted": "Teilweise abgeschlossen",
       "Completed": "Abgeschlossen",
       "Cancelled": "Storniert"
+    },
+    "lineStatus": {
+      "Open": "Offen",
+      "Reserved": "Reserviert",
+      "PartiallyPicked": "Teilweise kommissioniert",
+      "Picked": "Kommissioniert",
+      "Shipped": "Versendet",
+      "PartiallyReceived": "Teilweise empfangen",
+      "Received": "Empfangen",
+      "Putaway": "Eingelagert",
+      "ShortClosed": "Mit Fehlmenge geschlossen",
+      "Cancelled": "Storniert"
+    },
+    "taskType": {
+      "Pick": "Kommissionierung",
+      "Dispatch": "Versand",
+      "Receive": "Empfang",
+      "Putaway": "Einlagerung",
+      "CancellationReturn": "Storno-Rückgabe",
+      "AssignmentReturn": "Zuweisungsrückgabe"
     }
+  },
+  "detail": {
+    "eyebrow": "Produktionstransfer",
+    "titleDocument": "Beleg",
+    "descriptionFallback": "Produktionstransfer-Details",
+    "descriptionWorkOrder": "Arbeitsauftrag {{orderNo}}",
+    "residualBadge": "Resttransfer",
+    "residualDocument": "Restbeleg: {{documentNo}}",
+    "loading": "Transferdetails werden geladen…",
+    "waitingHandover": "Wartet",
+    "shortageReason": "Grund für Fehlmengenübergabe:",
+    "noLines": "Keine Positionen gefunden.",
+    "noTasks": "Keine Aufgaben gefunden.",
+    "close": "Schließen",
+    "openOperations": "Zur Operation",
+    "tabs": { "info": "Info", "content": "Inhalt", "tasks": "Aufgaben" },
+    "fields": {
+      "transferStatus": "Transferstatus",
+      "workflowStatus": "Workflow-Status",
+      "sourceWarehouse": "Quelllager",
+      "targetWarehouse": "Ziellager",
+      "requestedQuantity": "Geplante Menge",
+      "pickedQuantity": "Kommissionierte Menge",
+      "handedOverQuantity": "Übergeben",
+      "shortageQuantity": "Fehlmenge",
+      "documentDate": "Belegdatum",
+      "createdDate": "Erstellt",
+      "waitingLocation": "Staging-Lagerplatz",
+      "handoverConfirmation": "Übergabebestätigung"
+    },
+    "columns": {
+      "stock": "Artikel",
+      "requested": "Bedarf",
+      "picked": "Kommissioniert",
+      "handedOver": "Übergeben",
+      "status": "Status"
+    },
+    "taskStats": {
+      "planned": "Geplant",
+      "processed": "Bearbeitet",
+      "remaining": "Verbleibend",
+      "assignees": "Zugewiesen"
+    }
+  },
+  "taskChain": {
+    "cancellationReturnFrom": "Storno-Rückgabe aus Aufgabe {{origin}} erstellt",
+    "cancellationReturn": "Storno-Rückgabeaufgabe",
+    "handoffFromPrevious": "Restarbeit von Aufgabe {{previous}} übernommen",
+    "handoffTask": "Übergabeaufgabe",
+    "handoffToChild": "Restmenge an Aufgabe {{child}} übergeben",
+    "sameTaskReassign": "Noch nicht bearbeitet; Übergabe wechselt Benutzer auf derselben Aufgabe",
+    "unassigned": "Nicht zugewiesen"
   }
 }

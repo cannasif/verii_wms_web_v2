@@ -225,7 +225,7 @@ export function UserManagementPage() {
       ),
       contextValue: (row) => (row.isActive ? t('grid.statusActive') : t('grid.statusInactive')),
     },
-    { key: 'lastLoginAt', label: t('grid.columns.lastLogin'), render: (row) => formatProjectDateTime(row.lastLoginAt) },
+    { key: 'lastLoginAt', label: t('grid.columns.lastLogin'), searchable: false, filterType: 'datetime', render: (row) => formatProjectDateTime(row.lastLoginAt) },
     {
       key: 'actions',
       label: t('grid.columns.actions'),
