@@ -340,6 +340,20 @@ export interface WarehouseAssistantEvidenceRow {
   route?: string | null;
 }
 
+export interface WarehouseAssistantInterpretationRow {
+  intent: WarehouseAssistantIntent;
+  confidence: number;
+  usedLocalSemanticModel: boolean;
+  dateFrom?: string | null;
+  dateTo?: string | null;
+  serialNo?: string | null;
+  barcode?: string | null;
+  vehiclePlate?: string | null;
+  transferDocumentNo?: string | null;
+  documentNo?: string | null;
+  transferScope: 'all' | 'interWarehouse' | 'production' | string;
+}
+
 export interface WarehouseAssistantChatResponse {
   conversationId: number;
   messageId: number;
@@ -363,5 +377,6 @@ export interface WarehouseAssistantChatResponse {
   exceptions?: WarehouseAssistantExceptionRow[];
   traceabilityEvents?: WarehouseAssistantTraceabilityEventRow[];
   evidence?: WarehouseAssistantEvidenceRow[];
+  interpretations?: WarehouseAssistantInterpretationRow[];
   suggestions: string[];
 }

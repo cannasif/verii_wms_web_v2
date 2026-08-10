@@ -1,5 +1,5 @@
 import { type FormEvent, type ReactElement, useEffect, useMemo, useRef, useState } from 'react';
-import { Activity, Archive, ArrowLeftRight, Bot, Boxes, CircleAlert, Clock3, Database, ExternalLink, History, Layers3, ListChecks, Loader2, MapPin, MessageSquarePlus, ReceiptText, ScanBarcode, Send, Settings2, ShieldCheck, Sparkles, TriangleAlert, Truck, UserRoundSearch, Waypoints } from 'lucide-react';
+import { Activity, Archive, ArrowLeftRight, Bot, Boxes, BrainCircuit, CircleAlert, Clock3, Database, ExternalLink, History, Layers3, ListChecks, Loader2, MapPin, MessageSquarePlus, ReceiptText, ScanBarcode, Send, Settings2, ShieldCheck, Sparkles, TriangleAlert, Truck, UserRoundSearch, Waypoints } from 'lucide-react';
 import type { TFunction } from 'i18next';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -47,8 +47,8 @@ const emptyCapabilities: WarehouseAssistantCapabilities = {
   canQueryOperationalExceptions: false,
   canQueryTraceability: false,
   canQueryProcessBlockers: false,
-  assistantVersion: '2.3.0',
-  routingMode: 'LocalSemantic',
+  assistantVersion: '2.4.0',
+  routingMode: 'LocalHybrid',
   semanticRoutingAvailable: false,
   semanticModel: null,
   canRunCompoundQueries: true,
@@ -210,7 +210,7 @@ export function WarehouseAssistantPage(): ReactElement {
               <Sparkles className="size-4 shrink-0" aria-hidden />
               <span>{t(`routing.${routingKey}`)}</span>
               <span className="rounded-full bg-white/60 px-1.5 py-0.5 font-mono text-[10px] dark:bg-black/20">
-                {t('routing.version', { version: capabilities.assistantVersion || '2.3.0' })}
+                {t('routing.version', { version: capabilities.assistantVersion || '2.4.0' })}
               </span>
             </div>
             {capabilities.canRunCompoundQueries ? (
@@ -404,11 +404,42 @@ function AssistantResult({ result, question, language, t, settingsT, onSuggestio
   const exceptions = result.exceptions ?? [];
   const traceabilityEvents = result.traceabilityEvents ?? [];
   const evidence = result.evidence ?? [];
+  const interpretations = result.interpretations ?? [];
   const exportableCount = result.activities.length + result.serialBalances.length + result.serialReceipts.length + result.stockLocations.length + result.movements.length + result.tasks.length + goodsReceipts.length + steelVehicles.length + transfers.length + summaryMetrics.length + exceptions.length + traceabilityEvents.length + (result.barcode ? 1 : 0);
   const hasData = exportableCount + parameterGuides.length > 0;
-  if (!hasData && entityCandidates.length === 0 && result.suggestions.length === 0) return null;
+  if (!hasData && entityCandidates.length === 0 && result.suggestions.length === 0 && interpretations.length === 0) return null;
   return (
     <div className="mt-3 space-y-3 border-t border-slate-200 pt-3 dark:border-white/10">
+      {interpretations.length > 0 ? (
+        <div className="rounded-2xl border border-indigo-200/80 bg-indigo-50/70 p-3 text-slate-800 dark:border-indigo-400/20 dark:bg-indigo-400/5 dark:text-slate-100">
+          <div className="flex items-start gap-2.5">
+            <BrainCircuit className="mt-0.5 size-4 shrink-0 text-indigo-600 dark:text-indigo-300" aria-hidden />
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-black uppercase tracking-[0.12em] text-indigo-700 dark:text-indigo-200">{t('interpretation.title')}</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {interpretations.map((item, interpretationIndex) => {
+                  const intentKey = `${item.intent.charAt(0).toLowerCase()}${item.intent.slice(1)}`;
+                  const identifiers = [item.serialNo, item.barcode, item.vehiclePlate, item.transferDocumentNo, item.documentNo]
+                    .filter((value, valueIndex, values): value is string => Boolean(value) && values.indexOf(value) === valueIndex);
+                  return (
+                    <div key={`${item.intent}-${interpretationIndex}`} className="min-w-0 rounded-xl border border-indigo-200/70 bg-white/75 px-3 py-2 dark:border-indigo-300/15 dark:bg-slate-950/45">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <strong className="text-xs">{t(`interpretation.intents.${intentKey}`, { defaultValue: item.intent })}</strong>
+                        <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-bold text-indigo-700 dark:bg-indigo-400/15 dark:text-indigo-200">
+                          {t('interpretation.confidence', { value: Math.round(item.confidence * 100) })}
+                        </span>
+                        {item.usedLocalSemanticModel ? <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">{t('interpretation.localSemantic')}</span> : null}
+                      </div>
+                      {identifiers.length > 0 ? <p className="mt-1 break-all text-[11px] text-slate-500 dark:text-slate-400">{identifiers.join(' · ')}</p> : null}
+                    </div>
+                  );
+                })}
+              </div>
+              <p className="mt-2 text-[11px] leading-5 text-slate-500 dark:text-slate-400">{t('interpretation.safety')}</p>
+            </div>
+          </div>
+        </div>
+      ) : null}
       {exportableCount > 0 ? <div className="flex justify-end"><WarehouseAssistantExportMenu result={result} question={question} language={language} t={t} /></div> : null}
       {entityCandidates.length > 0 ? (
         <ResultSection icon={<CircleAlert className="size-4" />} title={t('entityResolution.title')}>

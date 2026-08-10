@@ -3,12 +3,26 @@
     "version": "v{{version}}",
     "local": "Comprensione linguistica locale avanzata",
     "localHint": "Le domande vengono elaborate localmente con il vocabolario WMS, tolleranza agli errori e contesto della conversazione, senza servizi esterni.",
-    "semantic": "Comprensione avanzata del linguaggio attiva",
+    "semantic": "Comprensione linguistica ibrida locale attiva",
     "fallback": "Comprensione linguistica di base",
-    "semanticHint": "Le domande vengono interpretate in base al significato e al contesto della conversazione, non solo alle parole chiave.",
+    "semanticHint": "Senza uscire dal sistema, il modello semantico locale, le regole WMS e gli indizi relativi a stock, serie o fornitore vengono valutati insieme.",
     "fallbackHint": "La connessione AI non è pronta. I modelli di domanda locali sicuri restano disponibili.",
     "compound": "Supporto multi-domanda",
     "compoundHint": "Fino a tre domande di magazzino indipendenti e di sola lettura vengono eseguite separatamente e in sicurezza."
+  },
+  "interpretation": {
+    "title": "Ho interpretato la richiesta così",
+    "confidence": "Affidabilità {{value}}%",
+    "localSemantic": "Modello semantico locale",
+    "safety": "Questa interpretazione seleziona solo un piano di interrogazione sicuro; autorizzazioni, filiale, magazzino e regole dei dati vengono verificati separatamente.",
+    "intents": {
+      "help": "Aiuto", "myActivities": "Le mie attività", "userActivities": "Attività utenti",
+      "serialBalance": "Saldo seriale", "serialReceiptHistory": "Storico ricezione seriale", "stockLocationBalance": "Saldo stock e ubicazione",
+      "barcodeLookup": "Ricerca barcode", "stockMovementHistory": "Movimenti di stock", "assignedTasks": "Attività assegnate",
+      "goodsReceiptAnalysis": "Analisi ricevimento merci", "parameterHelp": "Spiegazione parametro", "steelVehicleAnalysis": "Analisi veicoli acciaio",
+      "warehouseTransferAnalysis": "Analisi trasferimenti", "shiftBrief": "Riepilogo turno", "operationalExceptions": "Eccezioni operative",
+      "traceability": "Tracciabilità end-to-end", "processBlockers": "Blocchi di processo", "composite": "Query multiple", "unknown": "Domanda ambigua"
+    }
   },
   "eyebrow": "Assistente WMS basato sui permessi",
   "title": "Assistente di magazzino",

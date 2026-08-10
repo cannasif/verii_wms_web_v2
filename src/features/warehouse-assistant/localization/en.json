@@ -3,12 +3,26 @@
     "version": "v{{version}}",
     "local": "Advanced local language understanding",
     "localHint": "Questions are processed on this system with the WMS vocabulary, typo tolerance and conversation context; no external service is required.",
-    "semantic": "Advanced language understanding active",
+    "semantic": "Local hybrid language understanding active",
     "fallback": "Basic language understanding",
-    "semanticHint": "Questions are interpreted by meaning and conversation context, not only by keywords.",
+    "semanticHint": "Without leaving this system, the local meaning model, WMS rules, and detected stock, serial, or supplier evidence are evaluated together.",
     "fallbackHint": "The AI connection is not ready. Safe local question patterns remain available.",
     "compound": "Multi-question support",
     "compoundHint": "Up to three independent read-only warehouse questions in one message are executed separately and safely."
+  },
+  "interpretation": {
+    "title": "I understood your request as",
+    "confidence": "{{value}}% confidence",
+    "localSemantic": "Local meaning model",
+    "safety": "This interpretation only selects a safe query plan; permissions, branch, warehouse, and data rules are validated separately.",
+    "intents": {
+      "help": "Help", "myActivities": "My activities", "userActivities": "User activities",
+      "serialBalance": "Serial balance", "serialReceiptHistory": "Serial receipt history", "stockLocationBalance": "Stock and bin balance",
+      "barcodeLookup": "Barcode lookup", "stockMovementHistory": "Stock movements", "assignedTasks": "Assigned tasks",
+      "goodsReceiptAnalysis": "Goods receipt analysis", "parameterHelp": "Parameter explanation", "steelVehicleAnalysis": "Steel vehicle analysis",
+      "warehouseTransferAnalysis": "Transfer analysis", "shiftBrief": "Shift brief", "operationalExceptions": "Operational exceptions",
+      "traceability": "End-to-end traceability", "processBlockers": "Process blockers", "composite": "Multiple queries", "unknown": "Unclear question"
+    }
   },
   "eyebrow": "Permission-aware WMS query assistant",
   "title": "Warehouse Assistant",

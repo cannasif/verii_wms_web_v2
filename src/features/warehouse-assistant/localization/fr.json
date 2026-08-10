@@ -3,12 +3,26 @@
     "version": "v{{version}}",
     "local": "Compréhension locale avancée du langage",
     "localHint": "Les questions sont traitées localement avec le vocabulaire WMS, la tolérance aux fautes et le contexte de conversation, sans service externe.",
-    "semantic": "Compréhension avancée du langage active",
+    "semantic": "Compréhension linguistique hybride locale active",
     "fallback": "Compréhension linguistique de base",
-    "semanticHint": "Les questions sont interprétées selon leur sens et le contexte de la conversation, pas seulement par mots-clés.",
+    "semanticHint": "Sans quitter ce système, le modèle sémantique local, les règles WMS et les indices de stock, série ou fournisseur sont évalués ensemble.",
     "fallbackHint": "La connexion IA n'est pas prête. Les modèles de questions locales sécurisés restent disponibles.",
     "compound": "Prise en charge multi-question",
     "compoundHint": "Jusqu’à trois questions d’entrepôt indépendantes et en lecture seule sont exécutées séparément et en toute sécurité."
+  },
+  "interpretation": {
+    "title": "J’ai compris votre demande ainsi",
+    "confidence": "Confiance {{value}} %",
+    "localSemantic": "Modèle sémantique local",
+    "safety": "Cette interprétation sélectionne uniquement un plan de requête sûr ; les droits, la branche, l’entrepôt et les règles de données sont vérifiés séparément.",
+    "intents": {
+      "help": "Aide", "myActivities": "Mes activités", "userActivities": "Activités des utilisateurs",
+      "serialBalance": "Solde de série", "serialReceiptHistory": "Historique de réception de série", "stockLocationBalance": "Stock et solde d’emplacement",
+      "barcodeLookup": "Lecture de code-barres", "stockMovementHistory": "Mouvements de stock", "assignedTasks": "Tâches assignées",
+      "goodsReceiptAnalysis": "Analyse des réceptions", "parameterHelp": "Explication du paramètre", "steelVehicleAnalysis": "Analyse des véhicules acier",
+      "warehouseTransferAnalysis": "Analyse des transferts", "shiftBrief": "Résumé de poste", "operationalExceptions": "Exceptions opérationnelles",
+      "traceability": "Traçabilité de bout en bout", "processBlockers": "Blocages de processus", "composite": "Requêtes multiples", "unknown": "Question ambiguë"
+    }
   },
   "eyebrow": "Assistant WMS soumis aux autorisations",
   "title": "Assistant d’entrepôt",

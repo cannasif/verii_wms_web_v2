@@ -3,12 +3,26 @@
     "version": "v{{version}}",
     "local": "Comprensión local avanzada del lenguaje",
     "localHint": "Las preguntas se procesan localmente con vocabulario WMS, tolerancia a errores y contexto de conversación, sin requerir servicios externos.",
-    "semantic": "Comprensión avanzada del lenguaje activa",
+    "semantic": "Comprensión lingüística híbrida local activa",
     "fallback": "Comprensión básica del lenguaje",
-    "semanticHint": "Las preguntas se interpretan por su significado y el contexto de la conversación, no solo por palabras clave.",
+    "semanticHint": "Sin salir de este sistema, se evalúan conjuntamente el modelo semántico local, las reglas WMS y las evidencias de stock, serie o proveedor.",
     "fallbackHint": "La conexión de IA no está lista. Los patrones locales seguros siguen disponibles.",
     "compound": "Soporte para varias preguntas",
     "compoundHint": "Hasta tres consultas de almacén independientes y de solo lectura se ejecutan por separado y de forma segura."
+  },
+  "interpretation": {
+    "title": "He entendido su solicitud así",
+    "confidence": "{{value}} % de confianza",
+    "localSemantic": "Modelo semántico local",
+    "safety": "Esta interpretación solo selecciona un plan de consulta seguro; los permisos, la sucursal, el almacén y las reglas de datos se validan por separado.",
+    "intents": {
+      "help": "Ayuda", "myActivities": "Mis actividades", "userActivities": "Actividades de usuarios",
+      "serialBalance": "Saldo de serie", "serialReceiptHistory": "Historial de recepción de serie", "stockLocationBalance": "Saldo de stock y ubicación",
+      "barcodeLookup": "Consulta de código de barras", "stockMovementHistory": "Movimientos de stock", "assignedTasks": "Tareas asignadas",
+      "goodsReceiptAnalysis": "Análisis de recepciones", "parameterHelp": "Explicación del parámetro", "steelVehicleAnalysis": "Análisis de vehículos de acero",
+      "warehouseTransferAnalysis": "Análisis de transferencias", "shiftBrief": "Resumen del turno", "operationalExceptions": "Excepciones operativas",
+      "traceability": "Trazabilidad integral", "processBlockers": "Bloqueos del proceso", "composite": "Varias consultas", "unknown": "Pregunta ambigua"
+    }
   },
   "eyebrow": "Asistente WMS con control de permisos",
   "title": "Asistente de almacén",

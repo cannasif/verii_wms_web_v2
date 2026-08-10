@@ -3,12 +3,26 @@
     "version": "v{{version}}",
     "local": "Erweitertes lokales Sprachverständnis",
     "localHint": "Fragen werden lokal mit WMS-Wortschatz, Tippfehlertoleranz und Gesprächskontext verarbeitet; ein externer Dienst ist nicht erforderlich.",
-    "semantic": "Erweitertes Sprachverständnis aktiv",
+    "semantic": "Lokales hybrides Sprachverständnis aktiv",
     "fallback": "Grundlegendes Sprachverständnis",
-    "semanticHint": "Fragen werden nach Bedeutung und Gesprächskontext statt nur nach Schlüsselwörtern interpretiert.",
+    "semanticHint": "Ohne das System zu verlassen, werden das lokale Bedeutungsmodell, WMS-Regeln und erkannte Bestands-, Serien- oder Lieferantendaten gemeinsam bewertet.",
     "fallbackHint": "Die KI-Verbindung ist nicht bereit. Sichere lokale Fragemuster bleiben verfügbar.",
     "compound": "Unterstützung für mehrere Fragen",
     "compoundHint": "Bis zu drei unabhängige, schreibgeschützte Lagerfragen in einer Nachricht werden sicher getrennt ausgeführt."
+  },
+  "interpretation": {
+    "title": "So habe ich Ihre Anfrage verstanden",
+    "confidence": "{{value}} % Sicherheit",
+    "localSemantic": "Lokales Bedeutungsmodell",
+    "safety": "Diese Interpretation wählt nur einen sicheren Abfrageplan; Berechtigungen, Niederlassung, Lager und Datenregeln werden separat geprüft.",
+    "intents": {
+      "help": "Hilfe", "myActivities": "Meine Aktivitäten", "userActivities": "Benutzeraktivitäten",
+      "serialBalance": "Serienbestand", "serialReceiptHistory": "Serieneingangshistorie", "stockLocationBalance": "Artikel- und Lagerplatzbestand",
+      "barcodeLookup": "Barcode-Abfrage", "stockMovementHistory": "Bestandsbewegungen", "assignedTasks": "Zugewiesene Aufgaben",
+      "goodsReceiptAnalysis": "Wareneingangsanalyse", "parameterHelp": "Parametererklärung", "steelVehicleAnalysis": "Stahlfahrzeuganalyse",
+      "warehouseTransferAnalysis": "Transferanalyse", "shiftBrief": "Schichtübersicht", "operationalExceptions": "Betriebliche Ausnahmen",
+      "traceability": "End-to-End-Rückverfolgbarkeit", "processBlockers": "Prozessblockaden", "composite": "Mehrere Abfragen", "unknown": "Unklare Frage"
+    }
   },
   "eyebrow": "Berechtigungsabhängiger WMS-Assistent",
   "title": "Lagerassistent",
