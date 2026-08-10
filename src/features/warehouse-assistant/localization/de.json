@@ -1,4 +1,11 @@
 {
+  "routing": {
+    "version": "v{{version}}",
+    "semantic": "Erweitertes Sprachverständnis aktiv",
+    "fallback": "Grundlegendes Sprachverständnis",
+    "semanticHint": "Fragen werden nach Bedeutung und Gesprächskontext statt nur nach Schlüsselwörtern interpretiert.",
+    "fallbackHint": "Die KI-Verbindung ist nicht bereit. Sichere lokale Fragemuster bleiben verfügbar."
+  },
   "eyebrow": "Berechtigungsabhängiger WMS-Assistent",
   "title": "Lagerassistent",
   "description": "Fragen Sie in natürlicher Sprache nach Aktivitäten, Beständen von Artikeln und Serien, Lagerplätzen und Wareneingängen. Jedes Ergebnis wird durch Ihre Benutzer-, Niederlassungs-, Lager- und Modulrechte begrenzt.",

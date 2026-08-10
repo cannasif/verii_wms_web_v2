@@ -1,4 +1,11 @@
 {
+  "routing": {
+    "version": "v{{version}}",
+    "semantic": "Gelişmiş dil anlama aktif",
+    "fallback": "Temel dil anlama",
+    "semanticHint": "Sorular yalnızca kelimelere değil, anlamlarına ve konuşma bağlamına göre yorumlanır.",
+    "fallbackHint": "AI bağlantısı hazır değil. Güvenli yerel soru kalıpları kullanılmaya devam ediyor."
+  },
   "eyebrow": "Yetkili WMS sorgu yardımcısı",
   "title": "Depo Asistanı",
   "description": "İşlem geçmişini, stok ve seri bakiyelerini, raf konumlarını ve mal kabul izini doğal dille sorgulayın. Her sonuç kullanıcı, şube, depo ve modül yetkilerinizle sınırlandırılır.",

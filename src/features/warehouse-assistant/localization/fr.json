@@ -1,4 +1,11 @@
 {
+  "routing": {
+    "version": "v{{version}}",
+    "semantic": "Compréhension avancée du langage active",
+    "fallback": "Compréhension linguistique de base",
+    "semanticHint": "Les questions sont interprétées selon leur sens et le contexte de la conversation, pas seulement par mots-clés.",
+    "fallbackHint": "La connexion IA n'est pas prête. Les modèles de questions locales sécurisés restent disponibles."
+  },
   "eyebrow": "Assistant WMS soumis aux autorisations",
   "title": "Assistant d’entrepôt",
   "description": "Interrogez en langage naturel l’historique des opérations, les stocks et séries, les emplacements et la traçabilité des réceptions. Chaque résultat respecte vos droits utilisateur, agence, entrepôt et module.",

@@ -41,6 +41,10 @@ export interface WarehouseAssistantCapabilities {
   canQueryOperationalExceptions?: boolean;
   canQueryTraceability?: boolean;
   canQueryProcessBlockers?: boolean;
+  assistantVersion?: string;
+  routingMode?: string;
+  semanticRoutingAvailable?: boolean;
+  semanticModel?: string | null;
 }
 export interface WarehouseAssistantConversationRow {
   id: number;

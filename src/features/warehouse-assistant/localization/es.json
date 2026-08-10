@@ -1,4 +1,11 @@
 {
+  "routing": {
+    "version": "v{{version}}",
+    "semantic": "Comprensión avanzada del lenguaje activa",
+    "fallback": "Comprensión básica del lenguaje",
+    "semanticHint": "Las preguntas se interpretan por su significado y el contexto de la conversación, no solo por palabras clave.",
+    "fallbackHint": "La conexión de IA no está lista. Los patrones locales seguros siguen disponibles."
+  },
   "eyebrow": "Asistente WMS con control de permisos",
   "title": "Asistente de almacén",
   "description": "Consulte en lenguaje natural el historial de operaciones, existencias y series, ubicaciones y trazabilidad de recepciones. Cada resultado está limitado por sus permisos de usuario, sucursal, almacén y módulo.",

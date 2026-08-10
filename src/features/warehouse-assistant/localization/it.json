@@ -1,4 +1,11 @@
 {
+  "routing": {
+    "version": "v{{version}}",
+    "semantic": "Comprensione avanzata del linguaggio attiva",
+    "fallback": "Comprensione linguistica di base",
+    "semanticHint": "Le domande vengono interpretate in base al significato e al contesto della conversazione, non solo alle parole chiave.",
+    "fallbackHint": "La connessione AI non è pronta. I modelli di domanda locali sicuri restano disponibili."
+  },
   "eyebrow": "Assistente WMS basato sui permessi",
   "title": "Assistente di magazzino",
   "description": "Interroga in linguaggio naturale attività, giacenze di articoli e seriali, ubicazioni e tracciabilità dei ricevimenti. Ogni risultato rispetta i permessi utente, filiale, magazzino e modulo.",

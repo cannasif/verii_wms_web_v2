@@ -1,5 +1,5 @@
 import { type FormEvent, type ReactElement, useEffect, useMemo, useRef, useState } from 'react';
-import { Activity, Archive, ArrowLeftRight, Bot, Boxes, CircleAlert, Clock3, Database, ExternalLink, History, ListChecks, Loader2, MapPin, MessageSquarePlus, ReceiptText, ScanBarcode, Send, Settings2, ShieldCheck, TriangleAlert, Truck, UserRoundSearch, Waypoints } from 'lucide-react';
+import { Activity, Archive, ArrowLeftRight, Bot, Boxes, CircleAlert, Clock3, Database, ExternalLink, History, ListChecks, Loader2, MapPin, MessageSquarePlus, ReceiptText, ScanBarcode, Send, Settings2, ShieldCheck, Sparkles, TriangleAlert, Truck, UserRoundSearch, Waypoints } from 'lucide-react';
 import type { TFunction } from 'i18next';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -47,6 +47,10 @@ const emptyCapabilities: WarehouseAssistantCapabilities = {
   canQueryOperationalExceptions: false,
   canQueryTraceability: false,
   canQueryProcessBlockers: false,
+  assistantVersion: '2.1.0',
+  routingMode: 'DeterministicOnly',
+  semanticRoutingAvailable: false,
+  semanticModel: null,
   scopeLabel: '',
   exampleQuestions: [],
 };
@@ -181,9 +185,26 @@ export function WarehouseAssistantPage(): ReactElement {
               <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600 dark:text-slate-300">{t('description')}</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-800 dark:text-emerald-200">
-            <ShieldCheck className="size-4 shrink-0" />
-            <span>{capabilities.scopeLabel || t('scope.self')}</span>
+          <div className="flex flex-wrap items-center gap-2 lg:max-w-md lg:justify-end">
+            <div className="flex items-center gap-2 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-800 dark:text-emerald-200">
+              <ShieldCheck className="size-4 shrink-0" />
+              <span>{capabilities.scopeLabel || t('scope.self')}</span>
+            </div>
+            <div
+              className={cn(
+                'flex items-center gap-2 rounded-2xl border px-3 py-2 text-xs font-semibold',
+                capabilities.semanticRoutingAvailable
+                  ? 'border-cyan-500/25 bg-cyan-500/10 text-cyan-800 dark:text-cyan-200'
+                  : 'border-amber-500/25 bg-amber-500/10 text-amber-800 dark:text-amber-200',
+              )}
+              title={t(capabilities.semanticRoutingAvailable ? 'routing.semanticHint' : 'routing.fallbackHint')}
+            >
+              <Sparkles className="size-4 shrink-0" aria-hidden />
+              <span>{t(capabilities.semanticRoutingAvailable ? 'routing.semantic' : 'routing.fallback')}</span>
+              <span className="rounded-full bg-white/60 px-1.5 py-0.5 font-mono text-[10px] dark:bg-black/20">
+                {t('routing.version', { version: capabilities.assistantVersion || '2.1.0' })}
+              </span>
+            </div>
           </div>
         </div>
       </header>
