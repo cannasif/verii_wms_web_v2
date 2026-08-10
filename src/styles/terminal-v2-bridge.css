@@ -778,6 +778,24 @@ html:not(.skin-premium) :is(
   font-family: 'Outfit', sans-serif !important;
 }
 
+[data-wms-auth-surface='true'] .auth-login-intro,
+[data-wms-auth-surface='true'] .auth-login-intro * {
+  font-family: 'Space Grotesk Variable', 'Space Grotesk', 'Outfit', sans-serif !important;
+}
+
+[data-wms-auth-surface='true'] .auth-login-intro .font-mono,
+[data-wms-auth-surface='true'] .auth-login-intro .font-mono * {
+  font-family: 'Cascadia Code', 'Cascadia Mono', 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+}
+
+[data-wms-auth-surface='true'] .auth-login-intro-title {
+  letter-spacing: -0.02em;
+}
+
+[data-wms-auth-surface='true'] .auth-flow-arrow-lit {
+  filter: drop-shadow(0 0 8px rgba(34, 211, 238, 0.85)) drop-shadow(0 0 16px rgba(56, 132, 246, 0.45));
+}
+
 html [data-wms-auth-surface='true'] .input,
 html [data-wms-auth-surface='true'] [data-slot='input'],
 html [data-wms-auth-surface='true'] .auth-field-input,
@@ -1105,6 +1123,14 @@ html [data-wms-auth-surface='true'] button.auth-login-submit:hover:not(:disabled
 
 [data-wms-auth-surface='true'] .wms-bg-paused .wms-sunset-beam {
   opacity: 0.7 !important;
+}
+
+[data-wms-auth-surface='true'] .wms-bg-paused .wms-auth-silk {
+  opacity: 0.45;
+}
+
+[data-wms-auth-surface='true'] .wms-bg-paused .wms-auth-float {
+  opacity: 0.28;
 }
 
 /* List table bottom horizontal scrollbar — Terminal (loads last, beats thin ops scrollbars) */

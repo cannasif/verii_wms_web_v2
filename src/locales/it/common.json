@@ -235,7 +235,25 @@
       "animationOn": "Attiva animazione",
       "capsLockOn": "BLOC MAIUSC attivo",
       "startAnimation": "Avvia animazione",
-      "stopAnimation": "Ferma animazione"
+      "stopAnimation": "Ferma animazione",
+      "comingSoon": "Prossimamente!",
+      "intro": {
+        "headline": "Non cercare il magazzino — gestiscilo con <brand>V3RII</brand>.",
+        "description": "Dalla ricezione alla spedizione, dagli scaffali ai trasferimenti — tieni il flusso chiaro, calmo e in un solo posto.",
+        "flowTitle": "V3RII WMS FLOW",
+        "live": "LIVE",
+        "greetingMorning": "Buongiorno.",
+        "greetingAfternoon": "Buon pomeriggio.",
+        "greetingEvening": "Buonasera.",
+        "greetingNight": "Buonanotte.",
+        "humanNote": "Quando sei pronto, inizia il turno da qui.",
+        "steps": {
+          "inbound": "Ricezione",
+          "stock": "Stock e Scaffale",
+          "transfer": "Trasferimento",
+          "shipping": "Spedizione"
+        }
+      }
     },
     "sessionRecovery": {
       "title": "La connessione della sessione è stata temporaneamente interrotta",
@@ -306,7 +324,7 @@
     "productionTransferCreate": "Crea trasferimento di produzione",
     "productionTransferList": "Trasferimenti di produzione",
     "productionTransferSettings": "Impostazioni trasferimento produzione",
-    "production": "Production",
+    "production": "Produzione e qualità",
     "productionHub": "Centro processi di produzione",
     "productionCreate": "Create Production Order",
     "productionList": "Production Plans",
@@ -315,10 +333,10 @@
     "subcontractingTransferCreate": "Crea trasferimento esterno",
     "subcontractingTransferList": "Trasferimenti esterni",
     "subcontractingTransferSettings": "Impostazioni lavorazioni esterne",
-    "shipping": "Spedizione",
+    "shipping": "Operazioni di spedizione",
     "warehouseManagement": "Gestione magazzino",
     "mainNavigation": "Navigazione principale",
-    "dashboard": "Dashboard",
+    "dashboard": "Pannello di controllo",
     "goodsReceipt": "Ricevimento merci",
     "goodsReceiptCreate": "Goods Receipt Entry",
     "goodsReceiptList": "Goods Receipt List",
@@ -329,7 +347,7 @@
     "inventory": "Inventory",
     "warehouse3d": "3D Warehouse",
     "warehouse3dOutside": "3D Outside Warehouse",
-    "reports": "Reports",
+    "reports": "Report",
     "shipment": "Shipment",
     "shipmentCreate": "Shipment Order",
     "shipmentList": "Shipment Order List",
@@ -397,7 +415,7 @@
     "accessControlManagementGroup": "Access and User Management",
     "accessControlSystemGroup": "System Tools",
     "serviceOperationsGroup": "Service Operations",
-    "erp": "ERP",
+    "erp": "Integrazioni",
     "erpBarcodeDefinitions": "Barkod Tanımları",
     "erpCustomers": "Clienti",
     "erpStocks": "Articoli",
@@ -428,7 +446,7 @@
     "inventoryGroup": "Warehouse and Visibility",
     "analyticsGroup": "Reporting",
     "masterDataGroup": "Master Data and Definitions",
-    "systemGroup": "Sistema e accesso",
+    "systemGroup": "Parametri e impostazioni di sistema",
     "filterLabel": "Filter",
     "inventoryCount": "Count",
     "inventoryCountCreate": "Create Count Order",
@@ -515,7 +533,8 @@
     "packingDefinitions": "Definizioni di imballaggio",
     "packingSettings": "Impostazioni di imballaggio",
     "projectSettings": "Impostazioni generali del progetto",
-    "auditLogs": "Registri di controllo"
+    "auditLogs": "Registri di controllo",
+    "processParameters": "Parametri di processo"
   },
   "welcome": {
     "title": "Benvenuto",
@@ -5587,7 +5606,9 @@
       "searchPlaceholder": "Cerca per codice o nome",
       "empty": "Nessun fornitore trovato"
     },
-    "saveVehicleBlockers": {"title": "Elementi mancanti per salvare"},
+    "saveVehicleBlockers": {
+      "title": "Elementi mancanti per salvare"
+    },
     "confirm": {
       "removeUnknownTitle": "Rimuovi lamiera sconosciuta",
       "removeUnknownDescription": "Stai rimuovendo la lamiera sconosciuta aggiunta per questo veicolo. Continuare?"

@@ -235,7 +235,25 @@
       "animationOn": "Activar animación",
       "capsLockOn": "Bloq Mayús activado",
       "startAnimation": "Iniciar animación",
-      "stopAnimation": "Detener animación"
+      "stopAnimation": "Detener animación",
+      "comingSoon": "¡Muy pronto!",
+      "intro": {
+        "headline": "No busques el almacén — gestionalo con <brand>V3RII</brand>.",
+        "description": "Desde la recepción hasta el envío, de estanterías a transferencias — mantén el flujo claro, calmado y en un solo lugar.",
+        "flowTitle": "V3RII WMS FLOW",
+        "live": "EN VIVO",
+        "greetingMorning": "Buenos días.",
+        "greetingAfternoon": "Buenas tardes.",
+        "greetingEvening": "Buenas noches.",
+        "greetingNight": "Que descanses.",
+        "humanNote": "Cuando estés listo, entra a tu turno desde aquí.",
+        "steps": {
+          "inbound": "Recepción",
+          "stock": "Stock y Estante",
+          "transfer": "Transferencia",
+          "shipping": "Envío"
+        }
+      }
     },
     "sessionRecovery": {
       "title": "La conexión de la sesión se interrumpió temporalmente",
@@ -306,7 +324,7 @@
     "productionTransferCreate": "Crear transferencia de producción",
     "productionTransferList": "Transferencias de producción",
     "productionTransferSettings": "Configuración de transferencia de producción",
-    "production": "Production",
+    "production": "Producción y calidad",
     "productionHub": "Centro de procesos de producción",
     "productionCreate": "Create Production Order",
     "productionList": "Production Plans",
@@ -315,10 +333,10 @@
     "subcontractingTransferCreate": "Crear transferencia subcontratada",
     "subcontractingTransferList": "Transferencias subcontratadas",
     "subcontractingTransferSettings": "Configuración de subcontratación",
-    "shipping": "Expedición",
+    "shipping": "Operaciones de envío",
     "warehouseManagement": "Gestión de almacén",
     "mainNavigation": "Navegación principal",
-    "dashboard": "Tablero",
+    "dashboard": "Panel de control",
     "goodsReceipt": "Recepción de mercancías",
     "goodsReceiptCreate": "Goods Receipt Entry",
     "goodsReceiptList": "Goods Receipt List",
@@ -329,7 +347,7 @@
     "inventory": "Inventory",
     "warehouse3d": "3D Warehouse",
     "warehouse3dOutside": "3D Outside Warehouse",
-    "reports": "Reports",
+    "reports": "Informes",
     "shipment": "Shipment",
     "shipmentCreate": "Shipment Order",
     "shipmentList": "Shipment Order List",
@@ -397,7 +415,7 @@
     "accessControlManagementGroup": "Access and User Management",
     "accessControlSystemGroup": "System Tools",
     "serviceOperationsGroup": "Service Operations",
-    "erp": "ERP",
+    "erp": "Integraciones",
     "erpBarcodeDefinitions": "Barkod Tanımları",
     "erpCustomers": "Clientes",
     "erpStocks": "Artículos",
@@ -428,7 +446,7 @@
     "inventoryGroup": "Warehouse and Visibility",
     "analyticsGroup": "Reporting",
     "masterDataGroup": "Master Data and Definitions",
-    "systemGroup": "Sistema y acceso",
+    "systemGroup": "Parámetros y ajustes del sistema",
     "filterLabel": "Filter",
     "inventoryCount": "Count",
     "inventoryCountCreate": "Create Count Order",
@@ -515,7 +533,8 @@
     "packingDefinitions": "Definiciones de embalaje",
     "packingSettings": "Configuración de embalaje",
     "projectSettings": "Configuración general del proyecto",
-    "auditLogs": "Registros de auditoría"
+    "auditLogs": "Registros de auditoría",
+    "processParameters": "Parámetros de proceso"
   },
   "welcome": {
     "title": "Bienvenido",
@@ -5587,7 +5606,9 @@
       "searchPlaceholder": "Buscar por código o nombre",
       "empty": "No se encontró ningún proveedor"
     },
-    "saveVehicleBlockers": {"title": "Elementos faltantes para guardar"},
+    "saveVehicleBlockers": {
+      "title": "Elementos faltantes para guardar"
+    },
     "confirm": {
       "removeUnknownTitle": "Quitar chapa desconocida",
       "removeUnknownDescription": "Va a quitar la chapa desconocida añadida para este vehículo. ¿Continuar?"

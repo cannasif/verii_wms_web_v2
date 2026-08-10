@@ -247,7 +247,25 @@
       "animationOn": "Animation aktivieren",
       "capsLockOn": "Caps Lock ist aktiv",
       "startAnimation": "Animation starten",
-      "stopAnimation": "Animation stoppen"
+      "stopAnimation": "Animation stoppen",
+      "comingSoon": "Demnächst!",
+      "intro": {
+        "headline": "Suchen Sie nicht im Lager — steuern Sie es mit <brand>V3RII</brand>.",
+        "description": "Vom Wareneingang bis zum Versand, vom Regal bis zum Transfer — behalten Sie den Lagerfluss klar, ruhig und an einem Ort.",
+        "flowTitle": "V3RII WMS FLOW",
+        "live": "LIVE",
+        "greetingMorning": "Guten Morgen.",
+        "greetingAfternoon": "Guten Tag.",
+        "greetingEvening": "Guten Abend.",
+        "greetingNight": "Gute Nacht.",
+        "humanNote": "Wenn du bereit bist, starte hier deine Schicht.",
+        "steps": {
+          "inbound": "Wareneingang",
+          "stock": "Bestand & Regal",
+          "transfer": "Transfer",
+          "shipping": "Versand"
+        }
+      }
     },
     "sessionRecovery": {
       "title": "Die Sitzungsverbindung wurde vorübergehend unterbrochen",
@@ -303,7 +321,7 @@
     "search_placeholder": "Schnellsuche..."
   },
   "sidebar": {
-    "warehouseOperations": "Lageroperationen",
+    "warehouseOperations": "Lager(Ambar)-Operationen",
     "warehouseTransfer": "Lagerumlagerung",
     "normalTransferGroup": "Standardumlagerung",
     "subcontractingIssueGroup": "Ausgabe an Fremdbearbeiter",
@@ -318,7 +336,7 @@
     "productionTransferCreate": "Produktionstransfer erstellen",
     "productionTransferList": "Produktionstransfers",
     "productionTransferSettings": "Produktionstransfer-Einstellungen",
-    "production": "Produktion",
+    "production": "Produktion und Qualität",
     "productionHub": "Produktionsprozesszentrum",
     "productionCreate": "Fertigungsauftrag erstellen",
     "productionList": "Produktionspläne",
@@ -327,10 +345,10 @@
     "subcontractingTransferCreate": "Fremdbearbeitungstransfer erstellen",
     "subcontractingTransferList": "Fremdbearbeitungstransfers",
     "subcontractingTransferSettings": "Fremdbearbeitungs-Einstellungen",
-    "shipping": "Versand",
+    "shipping": "Versandoperationen",
     "warehouseManagement": "Lagerverwaltung",
     "mainNavigation": "Hauptnavigation",
-    "dashboard": "Dashboard",
+    "dashboard": "Übersichtspanel",
     "goodsReceipt": "Wareneingang",
     "goodsReceiptCreate": "Wareneingang erfassen",
     "goodsReceiptProcess": "Wareneingang Direkterfassung",
@@ -393,7 +411,7 @@
     "traceExplorer": "Trace-Explorer",
     "wmsScopePolicies": "WMS-Bereichsrichtlinien",
     "wmsScopeAssignments": "WMS-Bereichszuweisungen",
-    "erp": "ERP",
+    "erp": "Integrationen",
     "erpCustomers": "Kunden",
     "erpStocks": "Aktien",
     "erpWarehouses": "Lager",
@@ -428,7 +446,7 @@
     "inventoryGroup": "Lager und Sichtbarkeit",
     "analyticsGroup": "Berichterstattung",
     "masterDataGroup": "Stammdaten und Definitionen",
-    "systemGroup": "System und Zugriff",
+    "systemGroup": "Parameter und Systemeinstellungen",
     "filterLabel": "Filter",
     "inventoryCount": "Inventur",
     "inventoryCountCreate": "Inventurauftrag erstellen",
@@ -548,7 +566,8 @@
     "packingDefinitions": "Verpackungsdefinitionen",
     "packingSettings": "Verpackungseinstellungen",
     "projectSettings": "Allgemeine Projekteinstellungen",
-    "auditLogs": "Prüfprotokolle"
+    "auditLogs": "Prüfprotokolle",
+    "processParameters": "Prozessparameter"
   },
   "erpReference": {
     "badge": "ERP-Spiegel",
@@ -1267,7 +1286,9 @@
       "searchPlaceholder": "Nach Kundencode oder Name suchen",
       "empty": "Kein Lieferant gefunden"
     },
-    "saveVehicleBlockers": {"title": "Fehlende Angaben zum Speichern"},
+    "saveVehicleBlockers": {
+      "title": "Fehlende Angaben zum Speichern"
+    },
     "confirm": {
       "removeUnknownTitle": "Unbekanntes Blech entfernen",
       "removeUnknownDescription": "Das für dieses Fahrzeug hinzugefügte unbekannte Blech wird entfernt. Fortfahren?"

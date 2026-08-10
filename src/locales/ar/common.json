@@ -235,7 +235,25 @@
       "animationOn": "تفعيل الحركة",
       "capsLockOn": "قفل الأحرف الكبيرة مفعّل",
       "startAnimation": "بدء الحركة",
-      "stopAnimation": "إيقاف الحركة"
+      "stopAnimation": "إيقاف الحركة",
+      "comingSoon": "قريبًا!",
+      "intro": {
+        "headline": "لا تبحث في المستودع — أدِره مع <brand>V3RII</brand>.",
+        "description": "من استلام البضائع إلى الشحن، ومن الرفوف إلى التحويلات — اجعل تدفق المستودع واضحًا وهادئًا وفي مكان واحد.",
+        "flowTitle": "V3RII WMS FLOW",
+        "live": "مباشر",
+        "greetingMorning": "صباح الخير.",
+        "greetingAfternoon": "مساء الخير.",
+        "greetingEvening": "مساء الخير.",
+        "greetingNight": "تصبح على خير.",
+        "humanNote": "عندما تكون جاهزًا، ابدأ ورديتك من هنا.",
+        "steps": {
+          "inbound": "استلام البضائع",
+          "stock": "المخزون والرف",
+          "transfer": "تحويل",
+          "shipping": "شحن"
+        }
+      }
     },
     "sessionRecovery": {
       "title": "انقطع اتصال الجلسة مؤقتًا",
@@ -291,8 +309,8 @@
     "search_placeholder": "بحث سريع..."
   },
   "sidebar": {
-    "dashboard": "لوحة المعلومات",
-    "warehouseOperations": "عمليات المستودع",
+    "dashboard": "لوحة المؤشرات",
+    "warehouseOperations": "عمليات المستودع (المخزن)",
     "warehouseTransfer": "النقل بين المستودعات",
     "normalTransferGroup": "نقل قياسي",
     "subcontractingIssueGroup": "إرسال إلى المقاول",
@@ -307,7 +325,7 @@
     "productionTransferCreate": "إنشاء نقل إنتاج",
     "productionTransferList": "سجلات نقل الإنتاج",
     "productionTransferSettings": "إعدادات نقل الإنتاج",
-    "production": "Production",
+    "production": "الإنتاج والجودة",
     "productionHub": "مركز عمليات الإنتاج",
     "productionCreate": "Create Production Order",
     "productionList": "Production Plans",
@@ -316,7 +334,7 @@
     "subcontractingTransferCreate": "إنشاء نقل مقاولة",
     "subcontractingTransferList": "سجلات نقل المقاولة",
     "subcontractingTransferSettings": "إعدادات المقاولة",
-    "shipping": "الشحن",
+    "shipping": "عمليات الشحن",
     "warehouseManagement": "إدارة المستودع",
     "mainNavigation": "التنقل الرئيسي",
     "goodsReceipt": "استلام البضائع",
@@ -329,7 +347,7 @@
     "inventory": "Inventory",
     "warehouse3d": "3D Warehouse",
     "warehouse3dOutside": "3D Outside Warehouse",
-    "reports": "Reports",
+    "reports": "التقارير",
     "shipment": "Shipment",
     "shipmentCreate": "Shipment Order",
     "shipmentList": "Shipment Order List",
@@ -397,7 +415,7 @@
     "accessControlManagementGroup": "Access and User Management",
     "accessControlSystemGroup": "System Tools",
     "serviceOperationsGroup": "Service Operations",
-    "erp": "ERP",
+    "erp": "التكاملات",
     "erpBarcodeDefinitions": "Barkod Tanımları",
     "erpCustomers": "العملاء",
     "erpStocks": "الأصناف",
@@ -428,7 +446,7 @@
     "inventoryGroup": "Warehouse and Visibility",
     "analyticsGroup": "Reporting",
     "masterDataGroup": "Master Data and Definitions",
-    "systemGroup": "النظام والصلاحيات",
+    "systemGroup": "المعاملات وإعدادات النظام",
     "filterLabel": "Filter",
     "inventoryCount": "Count",
     "inventoryCountCreate": "Create Count Order",
@@ -515,7 +533,8 @@
     "packingDefinitions": "تعريفات التعبئة",
     "packingSettings": "إعدادات التعبئة",
     "projectSettings": "إعدادات المشروع العامة",
-    "auditLogs": "سجلات التدقيق"
+    "auditLogs": "سجلات التدقيق",
+    "processParameters": "معاملات العمليات"
   },
   "welcome": {
     "title": "مرحباً",
@@ -5587,7 +5606,9 @@
       "searchPlaceholder": "البحث بالرمز أو الاسم",
       "empty": "لم يتم العثور على مورد"
     },
-    "saveVehicleBlockers": {"title": "عناصر ناقصة للحفظ"},
+    "saveVehicleBlockers": {
+      "title": "عناصر ناقصة للحفظ"
+    },
     "confirm": {
       "removeUnknownTitle": "إزالة اللوح المجهول",
       "removeUnknownDescription": "أنت تزيل اللوح المجهول المضاف لهذه المركبة. هل تريد المتابعة؟"
