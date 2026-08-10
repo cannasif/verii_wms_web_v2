@@ -1,6 +1,8 @@
 {
   "routing": {
     "version": "v{{version}}",
+    "local": "Advanced local language understanding",
+    "localHint": "Questions are processed on this system with the WMS vocabulary, typo tolerance and conversation context; no external service is required.",
     "semantic": "Advanced language understanding active",
     "fallback": "Basic language understanding",
     "semanticHint": "Questions are interpreted by meaning and conversation context, not only by keywords.",

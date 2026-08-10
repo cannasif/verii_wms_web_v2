@@ -1,6 +1,8 @@
 {
   "routing": {
     "version": "v{{version}}",
+    "local": "Erweitertes lokales Sprachverständnis",
+    "localHint": "Fragen werden lokal mit WMS-Wortschatz, Tippfehlertoleranz und Gesprächskontext verarbeitet; ein externer Dienst ist nicht erforderlich.",
     "semantic": "Erweitertes Sprachverständnis aktiv",
     "fallback": "Grundlegendes Sprachverständnis",
     "semanticHint": "Fragen werden nach Bedeutung und Gesprächskontext statt nur nach Schlüsselwörtern interpretiert.",

@@ -47,8 +47,8 @@ const emptyCapabilities: WarehouseAssistantCapabilities = {
   canQueryOperationalExceptions: false,
   canQueryTraceability: false,
   canQueryProcessBlockers: false,
-  assistantVersion: '2.2.0',
-  routingMode: 'DeterministicOnly',
+  assistantVersion: '2.3.0',
+  routingMode: 'LocalSemantic',
   semanticRoutingAvailable: false,
   semanticModel: null,
   canRunCompoundQueries: true,
@@ -172,6 +172,13 @@ export function WarehouseAssistantPage(): ReactElement {
     return <section className="grid min-h-[calc(100dvh-8rem)] place-items-center"><Loader2 className="size-7 animate-spin text-cyan-500" aria-label="Loading" /></section>;
   }
 
+  const routingKey = capabilities.semanticRoutingAvailable
+    ? 'semantic'
+    : capabilities.routingMode === 'LocalSemantic'
+      ? 'local'
+      : 'fallback';
+  const hasAdvancedRouting = routingKey !== 'fallback';
+
   return (
     <main className="mx-auto flex min-h-[calc(100dvh-9rem)] w-full max-w-[1540px] flex-col gap-4 px-3 pb-5 sm:px-5 xl:px-7">
       <header className="overflow-hidden rounded-3xl border border-cyan-500/20 bg-[linear-gradient(125deg,rgba(6,182,212,.14),rgba(99,102,241,.08)_52%,rgba(249,115,22,.10))] p-4 shadow-sm sm:p-6">
@@ -194,16 +201,16 @@ export function WarehouseAssistantPage(): ReactElement {
             <div
               className={cn(
                 'flex items-center gap-2 rounded-2xl border px-3 py-2 text-xs font-semibold',
-                capabilities.semanticRoutingAvailable
+                hasAdvancedRouting
                   ? 'border-cyan-500/25 bg-cyan-500/10 text-cyan-800 dark:text-cyan-200'
                   : 'border-amber-500/25 bg-amber-500/10 text-amber-800 dark:text-amber-200',
               )}
-              title={t(capabilities.semanticRoutingAvailable ? 'routing.semanticHint' : 'routing.fallbackHint')}
+              title={t(`routing.${routingKey}Hint`)}
             >
               <Sparkles className="size-4 shrink-0" aria-hidden />
-              <span>{t(capabilities.semanticRoutingAvailable ? 'routing.semantic' : 'routing.fallback')}</span>
+              <span>{t(`routing.${routingKey}`)}</span>
               <span className="rounded-full bg-white/60 px-1.5 py-0.5 font-mono text-[10px] dark:bg-black/20">
-                {t('routing.version', { version: capabilities.assistantVersion || '2.2.0' })}
+                {t('routing.version', { version: capabilities.assistantVersion || '2.3.0' })}
               </span>
             </div>
             {capabilities.canRunCompoundQueries ? (

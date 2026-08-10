@@ -1,6 +1,8 @@
 {
   "routing": {
     "version": "v{{version}}",
+    "local": "Comprensión local avanzada del lenguaje",
+    "localHint": "Las preguntas se procesan localmente con vocabulario WMS, tolerancia a errores y contexto de conversación, sin requerir servicios externos.",
     "semantic": "Comprensión avanzada del lenguaje activa",
     "fallback": "Comprensión básica del lenguaje",
     "semanticHint": "Las preguntas se interpretan por su significado y el contexto de la conversación, no solo por palabras clave.",

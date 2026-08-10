@@ -1,6 +1,8 @@
 {
   "routing": {
     "version": "v{{version}}",
+    "local": "Yerel gelişmiş dil anlama",
+    "localHint": "Sorular dış servise gönderilmeden, cihazdaki WMS sözlüğü, yazım hatası toleransı ve konuşma bağlamıyla işlenir.",
     "semantic": "Gelişmiş dil anlama aktif",
     "fallback": "Temel dil anlama",
     "semanticHint": "Sorular yalnızca kelimelere değil, anlamlarına ve konuşma bağlamına göre yorumlanır.",
