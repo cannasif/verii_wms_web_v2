@@ -68,7 +68,7 @@ export function ProductionTransferReturnSection({ transferId, documentNo, onBoar
   const returnTask = useMemo(() => {
     if (!board || !currentUserId) return undefined;
     return board.tasks.find((task) =>
-      (task.taskType === 'AssignmentReturn' || task.taskType === 'CancellationReturn')
+      task.taskType === 'CancellationReturn'
       && task.assignments.some((assignment) => assignment.userId === currentUserId)
       && !['Completed', 'Cancelled'].includes(task.status));
   }, [board, currentUserId]);
@@ -205,14 +205,10 @@ export function ProductionTransferReturnSection({ transferId, documentNo, onBoar
     setBusy(true);
     try {
       const payload = buildCompletePayload(task.lines);
-      const nextBoard = task.taskType === 'AssignmentReturn'
-        ? await productionTransferApi.completeAssignmentReturn(transferId, task.taskId, payload)
-        : await productionTransferApi.completeCancellationReturn(transferId, task.taskId, payload);
+      const nextBoard = await productionTransferApi.completeCancellationReturn(transferId, task.taskId, payload);
       setBoard(nextBoard);
       onBoardChange?.(nextBoard);
-      toast.success(task.taskType === 'AssignmentReturn'
-        ? 'İade tamamlandı, atama kaldırıldı.'
-        : 'İptal iadesi tamamlandı.');
+      toast.success('İptal iadesi tamamlandı.');
       navigate(PRODUCTION_WORK_ORDERS_MY_ASSIGNMENTS_URL);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'İade tamamlanamadı.');

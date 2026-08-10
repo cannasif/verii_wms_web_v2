@@ -1,6 +1,5 @@
 import { useState, type ReactElement } from 'react';
-import { AlertTriangle, Ban, Loader2 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { AlertTriangle, Ban, Loader2, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { ResponsiveDialog } from '@/components/shared/ResponsiveDialog';
 import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
@@ -14,14 +13,36 @@ export function ProductionTransferCancelBlockedDialog({
   documentNo,
   transferId,
   readiness,
+  canAssign = false,
   onClose,
+  onReturnTasksStarted,
 }: {
   documentNo: string;
   transferId: number;
   readiness: ProductionCancellationReadiness;
+  canAssign?: boolean;
   onClose: () => void;
+  onReturnTasksStarted?: () => void | Promise<void>;
 }): ReactElement {
-  const operationsUrl = `/warehouse/production-transfers/${transferId}/operations`;
+  const [busy, setBusy] = useState(false);
+  const canStartReturnTasks = canAssign
+    && readiness.needsCancellationReturn
+    && !readiness.unresolvedPickedStock;
+
+  const startReturnTasks = async (): Promise<void> => {
+    if (!canStartReturnTasks) return;
+    setBusy(true);
+    try {
+      await productionTransferApi.requestCancellationReturn(transferId);
+      toast.success('İptal iade görevi oluşturuldu. İade tamamlandığında kalan toplama işi Atanmayanlar sekmesinde görünür.');
+      await onReturnTasksStarted?.();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'İptal iade görevi oluşturulamadı.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <ResponsiveDialog
       onClose={onClose}
@@ -34,15 +55,15 @@ export function ProductionTransferCancelBlockedDialog({
         <div className="text-sm">
           <strong className="block text-amber-700 dark:text-amber-300">Toplanmış {formatProjectNumber(readiness.pickedQuantity)} birim stok bulundu.</strong>
           <p className="mt-1 text-[var(--wms-app-text-muted)]">
-            İptal edebilmek için transfer operasyon sayfasından ilgili depo çalışanları için <strong>iptal iade görevi</strong> başlatılmalı;
-            toplanan stoklar rafa geri konulup iade görevleri tamamlanana kadar belge iptal edilemez.
+            İptal edebilmek için tek bir <strong>iptal iade görevi</strong> başlatılmalı;
+            iade tamamlandığında kalan toplama işi <strong>Atanmayanlar</strong> sekmesinde görünür.
           </p>
         </div>
       </div>
 
-      {readiness.missingReturnTasks.length > 0 && (
+      {readiness.needsCancellationReturn && readiness.missingReturnTasks.length > 0 && (
         <div className="mt-4">
-          <p className="text-xs font-bold uppercase tracking-wide text-[var(--wms-app-text-muted)]">İade görevi başlatılmalı</p>
+          <p className="text-xs font-bold uppercase tracking-wide text-[var(--wms-app-text-muted)]">Toplanan stok özeti</p>
           <ul className="mt-2 space-y-1 text-sm">
             {readiness.missingReturnTasks.map((picker) => (
               <li key={picker.userId} className="rounded-lg border border-[var(--wms-app-border)] px-3 py-2">
@@ -59,7 +80,7 @@ export function ProductionTransferCancelBlockedDialog({
       {readiness.unresolvedPickedStock && (
         <div className="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-sm text-[var(--wms-app-text-muted)]">
           Transfer kaydında toplanmış stok görünüyor ancak hangi depo çalışanının topladığı netleşmedi.
-          Operasyon sayfasından ilgili iade görevlerini başlatıp tamamlayın.
+          Önce ilgili iade görevlerini başlatıp tamamlayın.
         </div>
       )}
 
@@ -81,13 +102,17 @@ export function ProductionTransferCancelBlockedDialog({
 
       <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <button type="button" onClick={onClose} className="min-h-11 rounded-xl border px-4 py-2 text-sm">Kapat</button>
-        <Link
-          to={operationsUrl}
-          onClick={onClose}
-          className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[var(--wms-brand-primary)] px-4 py-2 text-sm font-bold text-[var(--wms-brand-on-primary)]"
-        >
-          Operasyon sayfasına git
-        </Link>
+        {canStartReturnTasks ? (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void startReturnTasks()}
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[var(--wms-brand-primary)] px-4 py-2 text-sm font-bold text-[var(--wms-brand-on-primary)] disabled:opacity-50"
+          >
+            {busy ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <RotateCcw className="size-4" aria-hidden />}
+            İade görevini başlat
+          </button>
+        ) : null}
       </div>
     </ResponsiveDialog>
   );

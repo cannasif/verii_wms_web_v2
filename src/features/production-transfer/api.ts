@@ -142,6 +142,7 @@ export interface WarehouseTransferReturnSetting {
   warehouseId: number;
   defaultTransferReturnLocationId?: number;
   defaultProductionTransferLocationId?: number;
+  autoPickWithoutConfirmMaxQuantity?: number;
 }
 export interface DefaultProductionTargetLocation {
   locationId?: number;
@@ -155,7 +156,7 @@ export type ProductionTransferWorkflowStatus =
 export interface ProductionTransferExecutionLine {
   lineId: number; lineNo: number; stockId: number; stockCode: string; stockName?: string; unitCode: string;
   requestedQuantity: number; pickedQuantity: number; handedOverQuantity: number;
-  remainingToPickQuantity: number; shortageQuantity: number; trackingType: string;
+  remainingToPickQuantity: number; shortageQuantity: number; overIssueQuantity: number; trackingType: string;
   suggestedSourceLocationId?: number; suggestedSourceLocationCode?: string; suggestedSourceLocationName?: string;
 }
 
@@ -171,7 +172,9 @@ export interface ProductionTransferExecution {
   requestedByUserId?: number; requestedByName?: string; handoverConfirmedBy?: number; handoverConfirmedAtUtc?: string;
   handoverShortageReason?: string; parentTransferId?: number; residualTransferId?: number; residualDocumentNo?: string;
   requestedQuantity: number; pickedQuantity: number; handedOverQuantity: number; shortageQuantity: number;
+  overIssueQuantity: number;
   canCompletePicking: boolean; canConfirmHandover: boolean;
+  overIssueLines: ProductionTransferOverIssueLine[];
   excludedSourceLocationIds: number[];
   lines: ProductionTransferExecutionLine[];
 }
@@ -199,6 +202,17 @@ export interface ProductionTransferPickingRow {
   canPick: boolean;
 }
 
+export interface ProductionTransferOverIssueLine {
+  lineId: number;
+  lineNo: number;
+  stockCode: string;
+  stockName?: string;
+  unitCode: string;
+  requestedQuantity: number;
+  pickedQuantity: number;
+  overIssueQuantity: number;
+}
+
 export interface ProductionTransferPickingTable {
   transferId: number;
   documentNo: string;
@@ -211,6 +225,10 @@ export interface ProductionTransferPickingTable {
   requestedQuantity: number;
   pickedQuantity: number;
   shortageQuantity: number;
+  allowOverIssue: boolean;
+  overIssueTolerancePercent: number;
+  overIssueQuantity: number;
+  overIssueLines: ProductionTransferOverIssueLine[];
   rows: ProductionTransferPickingRow[];
 }
 
@@ -225,6 +243,7 @@ export interface ResolveProductionTransferBarcodeResult {
   serialNo?: string;
   lotNo?: string;
   remainingQuantity: number;
+  maxPickQuantity: number;
   defaultQuantity: number;
   isSerial: boolean;
   canPick: boolean;
@@ -244,6 +263,31 @@ export interface ProductionTransferRouteRefreshCandidates {
   isSerial: boolean;
   currentSerialNo?: string | null;
   candidates: ProductionTransferRouteRefreshCandidate[];
+}
+
+export interface WithdrawProductionTransferDraftLinesRequest {
+  transferLineIds: number[];
+  reason?: string | null;
+}
+
+export interface WithdrawnProductionTransferDraftLine {
+  transferLineId: number;
+  stockId: number;
+  stockCode: string;
+  stockName?: string;
+  quantity: number;
+  requirementReference?: string;
+}
+
+export interface WithdrawProductionTransferDraftLinesResult {
+  transferDeleted: boolean;
+  transferId?: number | null;
+  documentNo?: string | null;
+  workOrderNumber?: string | null;
+  withdrawnLineCount: number;
+  withdrawnQuantity: number;
+  remainingLineCount: number;
+  withdrawnLines: WithdrawnProductionTransferDraftLine[];
 }
 
 const taskPath = (transferId: number, taskId: number) => `/api/production-transfers/${transferId}/tasks/${taskId}`;
@@ -279,6 +323,14 @@ export const productionTransferApi = {
 
   execution: async (id: number): Promise<ProductionTransferExecution> =>
     unwrap(await api.get<Envelope<ProductionTransferExecution>>(`/api/production-transfers/${id}/execution`)),
+  withdrawDraftLines: async (
+    id: number,
+    payload: WithdrawProductionTransferDraftLinesRequest,
+  ): Promise<WithdrawProductionTransferDraftLinesResult> =>
+    unwrap(await api.post<Envelope<WithdrawProductionTransferDraftLinesResult>>(
+      `/api/production-transfers/${id}/withdraw-draft-lines`,
+      payload,
+    )),
   pickingTable: async (id: number): Promise<ProductionTransferPickingTable> =>
     unwrap(await api.get<Envelope<ProductionTransferPickingTable>>(`/api/production-transfers/${id}/picking-table`)),
   resolveBarcode: async (id: number, barcode: string): Promise<ResolveProductionTransferBarcodeResult> =>
@@ -312,9 +364,33 @@ export const productionTransferApi = {
         splits,
       },
     )),
-  completePicking: async (id: number, confirmPartialPicking: boolean, reason?: string): Promise<ProductionTransferExecution> =>
+  unpickToLocation: async (
+    id: number,
+    payload: {
+      taskLineId: number;
+      targetLocationId: number;
+      quantity?: number | null;
+      serialNo?: string | null;
+    },
+  ): Promise<ProductionTransferPickingTable> =>
+    unwrap(await api.post<Envelope<ProductionTransferPickingTable>>(
+      `/api/production-transfers/${id}/unpick-to-location`,
+      {
+        idempotencyKey: crypto.randomUUID(),
+        taskLineId: payload.taskLineId,
+        targetLocationId: payload.targetLocationId,
+        quantity: payload.quantity ?? null,
+        serialNo: payload.serialNo?.trim() || null,
+      },
+    )),
+  completePicking: async (
+    id: number,
+    confirmPartialPicking: boolean,
+    confirmOverIssuePicking: boolean,
+    reason?: string,
+  ): Promise<ProductionTransferExecution> =>
     unwrap(await api.post<Envelope<ProductionTransferExecution>>(`/api/production-transfers/${id}/complete-picking`, {
-      idempotencyKey: crypto.randomUUID(), confirmPartialPicking, reason: reason?.trim() || null,
+      idempotencyKey: crypto.randomUUID(), confirmPartialPicking, confirmOverIssuePicking, reason: reason?.trim() || null,
     })),
   resumePicking: async (id: number): Promise<ProductionTransferExecution> =>
     unwrap(await api.post<Envelope<ProductionTransferExecution>>(`/api/production-transfers/${id}/resume-picking`, {
@@ -349,20 +425,9 @@ export const productionTransferApi = {
       `/api/production-transfers/${id}/lines/${lineId}/picked-sources`,
     )),
 
-  // — İade görevleri (atama kaldırma / iptal) —
-  requestAssignmentReturn: async (id: number, taskId: number, userId: number): Promise<ProductionTaskBoard> =>
-    unwrap(await api.post<Envelope<ProductionTaskBoard>>(`${assignmentPath(id, taskId, userId)}/request-return`, {})),
-  requestCancellationReturn: async (id: number, taskId: number, userId: number): Promise<ProductionTaskBoard> =>
-    unwrap(await api.post<Envelope<ProductionTaskBoard>>(`${assignmentPath(id, taskId, userId)}/request-cancellation-return`, {})),
-  completeAssignmentReturn: async (
-    id: number,
-    taskId: number,
-    lines: { taskLineId: number; targetLocationId: number }[],
-  ): Promise<ProductionTaskBoard> =>
-    unwrap(await api.post<Envelope<ProductionTaskBoard>>(`${taskPath(id, taskId)}/complete-assignment-return`, {
-      idempotencyKey: crypto.randomUUID(),
-      lines,
-    })),
+  // — İptal iade görevleri —
+  requestCancellationReturn: async (id: number): Promise<ProductionTaskBoard> =>
+    unwrap(await api.post<Envelope<ProductionTaskBoard>>(`/api/production-transfers/${id}/request-cancellation-return`, {})),
   completeCancellationReturn: async (
     id: number,
     taskId: number,
@@ -384,10 +449,13 @@ export const productionTransferApi = {
     warehouseId: number,
     defaultTransferReturnLocationId?: number,
     defaultProductionTransferLocationId?: number,
+    autoPickWithoutConfirmMaxQuantity?: number | null,
   ): Promise<WarehouseTransferReturnSetting> =>
     unwrap(await api.put<Envelope<WarehouseTransferReturnSetting>>('/api/production-transfers/warehouse-return-setting', {
-      warehouseId, defaultTransferReturnLocationId: defaultTransferReturnLocationId || null,
+      warehouseId,
+      defaultTransferReturnLocationId: defaultTransferReturnLocationId || null,
       defaultProductionTransferLocationId: defaultProductionTransferLocationId || null,
+      autoPickWithoutConfirmMaxQuantity: autoPickWithoutConfirmMaxQuantity ?? null,
     })),
 
   // — İptal (toplanmış stok iadesi tamamlandıktan sonra) —

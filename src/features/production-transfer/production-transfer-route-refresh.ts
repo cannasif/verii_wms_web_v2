@@ -24,15 +24,6 @@ export async function refreshActiveProductionPickRoutes(
   return current;
 }
 
-export async function completeAssignmentReturnAndRefresh(
-  transferId: number,
-  taskId: number,
-  lines: ProductionReturnCompleteLine[],
-): Promise<ProductionTaskBoard> {
-  const board = await productionTransferApi.completeAssignmentReturn(transferId, taskId, lines);
-  return refreshActiveProductionPickRoutes(transferId, board);
-}
-
 export async function completeCancellationReturnAndRefresh(
   transferId: number,
   taskId: number,

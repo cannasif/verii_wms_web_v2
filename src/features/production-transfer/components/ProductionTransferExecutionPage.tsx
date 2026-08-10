@@ -40,7 +40,7 @@ export function ProductionTransferExecutionPage() {
       ]);
       setExecution(result);
       setHasActiveReturnTask(board.tasks.some((task) =>
-        (task.taskType === 'AssignmentReturn' || task.taskType === 'CancellationReturn')
+        task.taskType === 'CancellationReturn'
         && task.assignments.some((assignment) => assignment.userId === currentUserId)
         && !['Completed', 'Cancelled'].includes(task.status)));
       setCanResumePicking(
@@ -155,7 +155,7 @@ export function ProductionTransferExecutionPage() {
         transferId={id}
         documentNo={execution.documentNo}
         onBoardChange={(board) => setHasActiveReturnTask(board.tasks.some((task) =>
-          (task.taskType === 'AssignmentReturn' || task.taskType === 'CancellationReturn')
+          task.taskType === 'CancellationReturn'
           && task.assignments.some((assignment) => assignment.userId === currentUserId)
           && !['Completed', 'Cancelled'].includes(task.status)))}
       />
@@ -181,8 +181,7 @@ export function ProductionTransferExecutionPage() {
           Toplamaya geri dön
         </button>
       ) : null}
-      <div className="flex items-start gap-3"><PackageCheck className="mt-1 size-6 text-[var(--wms-brand-primary)]" /><div><h2 className="text-xl font-black">Talep sahibi teslim onayı</h2><p className="text-sm text-[var(--wms-app-text-muted)]">Malzemeler {execution.waitingLocationCode} · {execution.waitingLocationName} rafında bekliyor. Fiziksel teslim gerçekleşmeden onaylamayın.</p></div></div>
-      <div className="mt-4 rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-surface)] p-4"><span className="text-xs text-[var(--wms-app-text-muted)]">Teslim alacak kişi</span><strong className="mt-1 block">{execution.requestedByName || (execution.requestedByUserId ? `Kullanıcı #${execution.requestedByUserId}` : 'Emri oluşturan kullanıcı')}</strong></div>
+      <div className="flex items-start gap-3"><PackageCheck className="mt-1 size-6 text-[var(--wms-brand-primary)]" /><div><h2 className="text-xl font-black">Talep sahibi teslim onayı</h2><p className="text-sm text-[var(--wms-app-text-muted)]">Fiziksel teslim gerçekleşmeden onaylamayın.</p></div></div>
       <LineSummary execution={execution} />
       {!canConfirmRequester && <div className="mt-5 rounded-xl border border-red-500/50 bg-red-500/10 p-4 text-sm font-bold text-red-600">Bu teslimi yalnızca emri isteyen kişi onaylayabilir. Yönetici müdahalesi için üretim transferi onay yetkisi gerekir.</div>}
       {hasShortage && <div className="mt-5 rounded-xl border-2 border-amber-500/60 bg-amber-500/10 p-4"><h3 className="flex items-center gap-2 font-black text-amber-600"><AlertTriangle className="size-5" />Eksik transfer uyarısı</h3><p className="mt-1 text-sm">Talep {formatProjectNumber(execution.requestedQuantity)}, teslim edilecek {formatProjectNumber(execution.pickedQuantity)}, eksik {formatProjectNumber(execution.shortageQuantity)}. Onaydan sonra mevcut transfer eksik tamamlanır ve yalnız kalan miktarlar için yeni iş emri oluşturulur.</p><label className="mt-4 flex items-start gap-2 text-sm font-bold"><input type="checkbox" className="mt-1" checked={shortageConfirmed} onChange={(event) => setShortageConfirmed(event.target.checked)} />Eksik transferi ve yeni kalan iş emri oluşturulmasını onaylıyorum.</label><textarea className="input mt-3 min-h-24 w-full" value={shortageReason} onChange={(event) => setShortageReason(event.target.value)} placeholder="Eksik teslim nedeni (en az 5 karakter)" /></div>}
@@ -206,7 +205,7 @@ export function ProductionTransferExecutionPage() {
       {execution.residualTransferId && <div className="mt-5 rounded-xl border border-amber-500/50 bg-amber-500/10 p-4"><strong>Kalan iş emri oluşturuldu</strong><p className="mt-1 text-sm">Eksik miktarlar yeni belgeye taşındı; tamamlanan transfer tekrar açılamaz.</p><Link className="mt-3 inline-flex items-center gap-2 font-bold text-[var(--wms-brand-primary)]" to={`/warehouse/production-transfers/${execution.residualTransferId}/operations`}>{execution.residualDocumentNo || `#${execution.residualTransferId}`} iş emrine git</Link></div>}
       {showErpControls && erpPanelOpen && (
         <ErpPostingPanel
-          execution={execution}
+          erp={execution}
           canRetry={canRetryErp}
           erpBusy={erpBusy}
           onClose={() => setErpPanelOpen(false)}

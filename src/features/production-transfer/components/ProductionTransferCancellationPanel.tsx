@@ -78,8 +78,8 @@ export function ProductionTransferCancellationPanel({
           </h3>
           <p className="mt-1 text-xs text-[var(--wms-app-text-muted)]">
             Bu transferde toplanmış {formatProjectNumber(readiness.pickedQuantity)} birim stok var.
-            İptal edebilmek için her toplayan depo çalışanı için <strong>iptal iade görevi</strong> başlatılmalı
-            ve stok rafa geri konulmalıdır.
+            İptal edebilmek için tek bir <strong>iptal iade görevi</strong> başlatılmalı;
+            iade tamamlandığında kalan toplama işi <strong>Atanmayanlar</strong> sekmesinde listelenir.
           </p>
           {readiness.unresolvedPickedStock && (
             <p className="mt-2 text-xs text-amber-700 dark:text-amber-300">
@@ -87,50 +87,40 @@ export function ProductionTransferCancellationPanel({
             </p>
           )}
           <ul className="mt-3 space-y-2 text-sm">
-            {readiness.pickers.map((picker) => {
-              const pending = picker.returnTask && picker.returnTask.status !== 'Completed';
-              const completed = picker.returnTask?.status === 'Completed';
-              return (
-                <li
-                  key={picker.userId}
-                  className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[var(--wms-app-border)] px-3 py-2"
-                >
-                  <div>
-                    <strong>{picker.username}</strong>
-                    <span className="ml-2 text-[var(--wms-app-text-muted)]">
-                      {formatProjectNumber(picker.processedQuantity)} birim · {picker.pickTaskNo}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {completed && <span className="text-xs font-bold text-emerald-600">İade tamamlandı</span>}
-                    {pending && (
-                      <span className="text-xs font-bold text-amber-600">
-                        {picker.returnTask?.taskNo} · {picker.returnTask?.status}
-                      </span>
-                    )}
-                    {!picker.returnTask && canAssign && (
-                      <button
-                        type="button"
-                        disabled={busy}
-                        title="İptal iade görevi oluştur"
-                        onClick={() => void onRun(() => productionTransferApi.requestCancellationReturn(transferId, picker.pickTaskId, picker.userId))}
-                        className="inline-flex items-center gap-1 rounded-lg border border-amber-500 px-2 py-1 text-xs font-bold text-amber-600"
-                      >
-                        <RotateCcw className="size-3.5" />
-                        İade görevi başlat
-                      </button>
-                    )}
-                    {!picker.returnTask && !canAssign && (
-                      <span className="text-xs text-amber-600">İade görevi bekleniyor</span>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
+            {readiness.pickers.map((picker) => (
+              <li
+                key={picker.userId}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[var(--wms-app-border)] px-3 py-2"
+              >
+                <div>
+                  <strong>{picker.username}</strong>
+                  <span className="ml-2 text-[var(--wms-app-text-muted)]">
+                    {formatProjectNumber(picker.processedQuantity)} birim · {picker.pickTaskNo}
+                  </span>
+                </div>
+              </li>
+            ))}
           </ul>
-          {!readiness.canCancel && (
+          {readiness.needsCancellationReturn && canAssign && (
+            <button
+              type="button"
+              disabled={busy}
+              title="İptal iade görevi oluştur"
+              onClick={() => void onRun(() => productionTransferApi.requestCancellationReturn(transferId))}
+              className="mt-3 inline-flex items-center gap-1 rounded-lg border border-amber-500 px-3 py-2 text-xs font-bold text-amber-600"
+            >
+              <RotateCcw className="size-3.5" />
+              İade görevini başlat
+            </button>
+          )}
+          {readiness.cancellationReturnTask && readiness.cancellationReturnTask.status !== 'Completed' && (
             <p className="mt-3 text-xs font-semibold text-amber-700 dark:text-amber-300">
-              Tüm iade görevleri tamamlanana kadar transfer iptal edilemez.
+              {readiness.cancellationReturnTask.taskNo} iptal iade görevi tamamlanana kadar transfer iptal edilemez.
+            </p>
+          )}
+          {!readiness.canCancel && !readiness.needsCancellationReturn && (
+            <p className="mt-3 text-xs font-semibold text-amber-700 dark:text-amber-300">
+              İptal iade görevi tamamlanana kadar transfer iptal edilemez.
             </p>
           )}
         </div>

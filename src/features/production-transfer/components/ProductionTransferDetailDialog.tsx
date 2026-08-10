@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactElement } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { AlertTriangle, ExternalLink, PackageOpen } from 'lucide-react';
+import { ExternalLink, PackageOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { OpsActionButton } from '@/components/shared/OpsActionButton';
@@ -21,8 +21,7 @@ import {
 import { ErpPostingPanel, ErpPostingTriggerButton } from './ProductionTransferErpPostingControls';
 import {
   productionTransferCanRetryErp,
-  productionTransferErpErrorMessage,
-  productionTransferNeedsErpAttention,
+  productionTransferErpPanelSource,
   productionTransferShowErpControls,
 } from '../production-transfer-erp-posting';
 import { productionTaskTypeLabel } from '../production-transfer-task-labels';
@@ -126,18 +125,12 @@ export function ProductionTransferDetailDialog({
   }, [execution, summary]);
 
   const showErpControls = productionTransferShowErpControls(erpInfo);
-  const showErpWarning = productionTransferNeedsErpAttention(erpInfo);
-  const erpErrorText = productionTransferErpErrorMessage({
-    erpErrorMessage: erpInfo.erpErrorMessage,
-    erpErrorCode: erpInfo.erpErrorCode,
-  });
-  const canRetryErp = execution
-    ? productionTransferCanRetryErp(
-        execution.erpIntegrationStatus,
-        execution.erpPostingPolicy,
-        can('WMS.PRODUCTION_TRANSFER.APPROVE'),
-      )
-    : false;
+  const erpPanelSource = productionTransferErpPanelSource(execution, summary);
+  const canRetryErp = productionTransferCanRetryErp(
+    erpInfo.erpIntegrationStatus,
+    erpInfo.erpPostingPolicy,
+    can('WMS.PRODUCTION_TRANSFER.APPROVE'),
+  );
 
   const postErp = async (): Promise<void> => {
     if (!execution) return;
@@ -162,60 +155,52 @@ export function ProductionTransferDetailDialog({
         portalRoot="body"
         tone="ops"
         aria-describedby={undefined}
+        showCloseButton
         className={cn(
           'wms-ops-detail-dialog wms-ops-form flex !h-[min(90vh,880px)] !max-h-[calc(100dvh-2rem)] w-full !max-w-6xl flex-col !gap-0 overflow-hidden border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] !p-0',
           '[scrollbar-gutter:auto]',
         )}
       >
         <header className="wms-ops-detail-dialog__header shrink-0">
-          <div className="flex min-w-0 items-start justify-between gap-3">
-          <div className="min-w-0 pr-2">
-            <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-600 dark:text-cyan-300">
-              Üretim transferi
-            </p>
-            <DialogTitle className="wms-ops-detail-dialog__title">
-              Belge
-              <span className="ml-2 font-mono text-base font-bold text-cyan-600 dark:text-cyan-300">
-                {documentNo}
-              </span>
-            </DialogTitle>
-            <DialogDescription className="wms-ops-detail-dialog__description">
-              {productionOrderNo ? `İş emri ${productionOrderNo}` : 'Üretime transfer detayı'}
-              {execution ? ` · ${execution.sourceWarehouseName} → ${execution.targetWarehouseName}` : null}
-            </DialogDescription>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {header ? <OpsStatusBadge tone="active">{header.status}</OpsStatusBadge> : null}
-              <OpsStatusBadge tone="pending">{workflowStatus}</OpsStatusBadge>
-              {summary?.isResidualHeader ? <OpsCodeBadge>Kalan transfer</OpsCodeBadge> : null}
-              {summary?.residualDocumentNo ? (
-                <OpsCodeBadge>Kalan belge: {summary.residualDocumentNo}</OpsCodeBadge>
-              ) : null}
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0 pr-2">
+              <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-600 dark:text-cyan-300">
+                Üretim transferi
+              </p>
+              <DialogTitle className="wms-ops-detail-dialog__title">
+                Belge
+                <span className="ml-2 font-mono text-base font-bold text-cyan-600 dark:text-cyan-300">
+                  {documentNo}
+                </span>
+              </DialogTitle>
+              <DialogDescription className="wms-ops-detail-dialog__description">
+                {productionOrderNo ? `İş emri ${productionOrderNo}` : 'Üretime transfer detayı'}
+                {execution ? ` · ${execution.sourceWarehouseName} → ${execution.targetWarehouseName}` : null}
+              </DialogDescription>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {header ? <OpsStatusBadge tone="active">{header.status}</OpsStatusBadge> : null}
+                <OpsStatusBadge tone="pending">{workflowStatus}</OpsStatusBadge>
+                {summary?.isResidualHeader ? <OpsCodeBadge>Kalan transfer</OpsCodeBadge> : null}
+                {summary?.residualDocumentNo ? (
+                  <OpsCodeBadge>Kalan belge: {summary.residualDocumentNo}</OpsCodeBadge>
+                ) : null}
+              </div>
             </div>
-            {showErpWarning && erpErrorText ? (
-              <div className="mt-3 rounded-xl border border-amber-500/50 bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200">
-                <div className="flex items-start gap-2">
-                  <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden />
-                  <div>
-                    <strong className="block">Netsis aktarım hatası</strong>
-                    <p className="mt-1 whitespace-pre-wrap text-xs">{erpErrorText}</p>
-                  </div>
-                </div>
+            {showErpControls && erpPanelSource ? (
+              <div className="wms-ops-detail-dialog__header-actions shrink-0 self-end mb-1">
+                <ErpPostingTriggerButton
+                  status={erpInfo.erpIntegrationStatus}
+                  label={t('execution.erp.openPanel')}
+                  onClick={() => setErpPanelOpen(true)}
+                />
               </div>
             ) : null}
           </div>
-          {showErpControls && execution ? (
-            <ErpPostingTriggerButton
-              status={execution.erpIntegrationStatus}
-              label={t('execution.erp.openPanel')}
-              onClick={() => setErpPanelOpen(true)}
-            />
-          ) : null}
-          </div>
         </header>
 
-        {showErpControls && execution && erpPanelOpen ? (
+        {showErpControls && erpPanelSource && erpPanelOpen ? (
           <ErpPostingPanel
-            execution={execution}
+            erp={erpPanelSource}
             canRetry={canRetryErp}
             erpBusy={erpBusy}
             onClose={() => setErpPanelOpen(false)}
@@ -224,38 +209,39 @@ export function ProductionTransferDetailDialog({
           />
         ) : null}
 
-        {loading || !detail || !execution || !header ? (
-          <div className="grid min-h-0 flex-1 place-items-center px-6 py-10">
-            <OpsLoadingState message="Transfer detayı yükleniyor…" code="SYNC" />
+        <Tabs
+          value={mainTab}
+          onValueChange={(value) => setMainTab(value as MainTab)}
+          className="flex min-h-0 flex-1 flex-col gap-0"
+        >
+          <div className="wms-ops-production-work-order-tabs wms-ops-detail-dialog shrink-0 px-4 pt-4 sm:px-6">
+            <TabsList
+              className={cn(
+                'w-full',
+                'wms-ops-detail-main-tabs',
+                'wms-ops-detail-main-tabs--cols-3',
+              )}
+              data-active-index={Math.max(mainTabIndex, 0)}
+            >
+              <span className="wms-ops-detail-tab-indicator" aria-hidden />
+              <TabsTrigger value="info" className="wms-ops-detail-main-tab">
+                Bilgi
+              </TabsTrigger>
+              <TabsTrigger value="content" className="wms-ops-detail-main-tab">
+                İçerik
+              </TabsTrigger>
+              <TabsTrigger value="tasks" className="wms-ops-detail-main-tab">
+                Görevler
+              </TabsTrigger>
+            </TabsList>
           </div>
-        ) : (
-          <Tabs
-            value={mainTab}
-            onValueChange={(value) => setMainTab(value as MainTab)}
-            className="flex min-h-0 flex-1 flex-col gap-0"
-          >
-            <div className="wms-ops-production-work-order-tabs wms-ops-detail-dialog shrink-0 px-4 pt-4 sm:px-6">
-              <TabsList
-                className={cn(
-                  'w-full',
-                  'wms-ops-detail-main-tabs',
-                  'wms-ops-detail-main-tabs--cols-3',
-                )}
-                data-active-index={Math.max(mainTabIndex, 0)}
-              >
-                <span className="wms-ops-detail-tab-indicator" aria-hidden />
-                <TabsTrigger value="info" className="wms-ops-detail-main-tab">
-                  Bilgi
-                </TabsTrigger>
-                <TabsTrigger value="content" className="wms-ops-detail-main-tab">
-                  İçerik
-                </TabsTrigger>
-                <TabsTrigger value="tasks" className="wms-ops-detail-main-tab">
-                  Görevler
-                </TabsTrigger>
-              </TabsList>
-            </div>
 
+          {loading || !detail || !execution || !header ? (
+            <div className="grid min-h-0 flex-1 place-items-center px-6 py-10">
+              <OpsLoadingState message="Transfer detayı yükleniyor…" code="SYNC" />
+            </div>
+          ) : (
+            <>
             <TabsContent
               value="info"
               className="wms-ops-scrollbar mt-0 min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6"
@@ -384,8 +370,9 @@ export function ProductionTransferDetailDialog({
                 })}
               </div>
             </TabsContent>
-          </Tabs>
-        )}
+            </>
+          )}
+        </Tabs>
 
         <footer className="wms-ops-actions wms-ops-detail-dialog__footer flex shrink-0 flex-wrap items-center justify-end gap-2 px-4 py-3 sm:px-6">
           <OpsActionButton variant="secondary" onClick={onClose}>Kapat</OpsActionButton>

@@ -23,6 +23,7 @@ import {
   X,
 } from "lucide-react";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
+import { PRODUCTION_WORK_ORDERS_PAGE_PATH } from "@/features/production/components/ProductionWorkOrderTransferTabPanel";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -315,7 +316,7 @@ export function WarehouseTransferDraftPage({
       } satisfies TransferDraftLine;
     })).then(async preparedLines => {
       try {
-        const defaultTarget = await productionTransferApi.defaultTargetLocation(initialProductionSource.targetWarehouse.id, branchCode);
+        const defaultTarget = await productionTransferApi.defaultTargetLocation(initialProductionSource.sourceWarehouse.id, branchCode);
         if (defaultTarget.locationId) {
           preparedLines = preparedLines.map((line) => ({
             ...line,
@@ -851,7 +852,7 @@ export function WarehouseTransferDraftPage({
           ? t(`${D}.titles.subcontractingIssue`)
           : t(`${D}.titles.subcontractingGeneral`)
       : t(`${D}.titles.warehouse`);
-  const listUrl = variant === "production" ? "/warehouse/production-transfers/list"
+  const listUrl = variant === "production" ? PRODUCTION_WORK_ORDERS_PAGE_PATH
     : variant === "subcontracting" ? "/warehouse/subcontracting-transfers/list"
       : "/warehouse/transfers/list";
   const orderLabel = variant === "production" ? t(`${D}.sourceLabels.productionOrder`)
@@ -894,7 +895,7 @@ export function WarehouseTransferDraftPage({
             to={listUrl}
             className="rounded-xl bg-[var(--wms-brand-secondary)] px-5 py-2.5 font-semibold text-[var(--wms-brand-on-primary)]"
           >
-            {t(`${D}.success.goToRecords`)}
+            {variant === "production" ? "İş emirlerine git" : t(`${D}.success.goToRecords`)}
           </Link>
           <button
             type="button"
@@ -1056,7 +1057,28 @@ export function WarehouseTransferDraftPage({
                   ...line,
                   sourceLocationId: undefined,
                   sourceLocationValue: null,
+                  ...(variant === "production" ? {
+                    targetLocationId: undefined,
+                    targetLocationValue: null,
+                    targetLocationCode: undefined,
+                    targetLocationName: undefined,
+                  } : {}),
                 })));
+                if (variant === "production" && value) {
+                  const warehouseId = Number(value.split("|")[0]);
+                  void productionTransferApi.defaultTargetLocation(warehouseId, branchCode)
+                    .then((defaultTarget) => {
+                      if (!defaultTarget.locationId) return;
+                      setLines((current) => current.map((line) => ({
+                        ...line,
+                        targetLocationId: defaultTarget.locationId,
+                        targetLocationValue: String(defaultTarget.locationId),
+                        targetLocationCode: defaultTarget.locationCode,
+                        targetLocationName: defaultTarget.locationName,
+                      })));
+                    })
+                    .catch(() => {});
+                }
               }}
               searchable
               placeholder={t(`${D}.document.sourceWarehousePlaceholder`)}
@@ -1078,27 +1100,14 @@ export function WarehouseTransferDraftPage({
               onValueChange={(value) => {
                 setTargetValue(value);
                 setTargetReceiving(null);
-                setLines((current) => current.map((line) => ({
-                  ...line,
-                  targetLocationId: undefined,
-                  targetLocationValue: null,
-                  targetLocationCode: undefined,
-                  targetLocationName: undefined,
-                })));
-                if (variant === "production" && value) {
-                  const warehouseId = Number(value.split("|")[0]);
-                  void productionTransferApi.defaultTargetLocation(warehouseId, branchCode)
-                    .then((defaultTarget) => {
-                      if (!defaultTarget.locationId) return;
-                      setLines((current) => current.map((line) => ({
-                        ...line,
-                        targetLocationId: defaultTarget.locationId,
-                        targetLocationValue: String(defaultTarget.locationId),
-                        targetLocationCode: defaultTarget.locationCode,
-                        targetLocationName: defaultTarget.locationName,
-                      })));
-                    })
-                    .catch(() => {});
+                if (variant !== "production") {
+                  setLines((current) => current.map((line) => ({
+                    ...line,
+                    targetLocationId: undefined,
+                    targetLocationValue: null,
+                    targetLocationCode: undefined,
+                    targetLocationName: undefined,
+                  })));
                 }
               }}
               searchable

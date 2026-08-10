@@ -1,5 +1,5 @@
 import { useState, type ReactElement } from 'react';
-import { RotateCcw, Trash2, UserPlus } from 'lucide-react';
+import { Trash2, UserPlus } from 'lucide-react';
 import { productionTransferApi, type ProductionTask, type ProductionTaskBoard } from '../api';
 import { taskLineageHasProgress } from '../production-transfer-task-progress';
 import { productionTaskTypeLabel } from '../production-transfer-task-labels';
@@ -52,10 +52,6 @@ export function ProductionTransferTaskAssignSection({
         <div className="flex flex-wrap items-center gap-2">
           {task.assignments.map((assignment) => {
             const hasProgress = lineageHasProgress(task);
-            const returnTask = board.tasks.find((item) =>
-              item.originTaskId === task.taskId
-              && item.originUserId === assignment.userId
-              && item.status !== 'Cancelled');
             return (
               <span
                 key={assignment.userId}
@@ -65,29 +61,10 @@ export function ProductionTransferTaskAssignSection({
                   {assignment.username}
                   {assignment.isPrimary ? ' · Birincil' : ''}
                 </span>
-                {hasProgress && returnTask && returnTask.status !== 'Completed' ? (
-                  <span
-                    className="text-amber-500"
-                    title={`${returnTask.taskNo} tamamlanmadan atama kaldırılamaz`}
-                  >
-                    İade bekleniyor
-                  </span>
-                ) : null}
-                {hasProgress && !returnTask ? (
-                  <button
-                    type="button"
-                    title="İade görevi oluştur — atamayı kaldırmadan önce toplanan stok eski rafına konmalı"
-                    disabled={busy}
-                    onClick={() => void run(() =>
-                      productionTransferApi.requestAssignmentReturn(transferId, task.taskId, assignment.userId))}
-                  >
-                    <RotateCcw className="size-3.5 text-amber-500" aria-hidden />
-                  </button>
-                ) : null}
                 <button
                   type="button"
-                  title="Atamayı kaldır"
-                  disabled={busy}
+                  title={hasProgress ? 'Toplanmış stok varken atama kaldırılamaz; kalan işi devredin veya eksik teslim ile tamamlayın' : 'Atamayı kaldır'}
+                  disabled={busy || hasProgress}
                   onClick={() => void run(() =>
                     productionTransferApi.removeAssignment(transferId, task.taskId, assignment.userId))}
                 >

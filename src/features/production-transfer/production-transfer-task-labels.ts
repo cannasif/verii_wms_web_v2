@@ -6,7 +6,6 @@ export const PRODUCTION_TASK_TYPE_LABELS: Record<string, string> = {
   Receive: 'Kabul',
   Putaway: 'Yerleştirme',
   CancellationReturn: 'İptal İadesi',
-  AssignmentReturn: 'İade',
 };
 
 export const productionTaskTypeLabel = (type: string): string =>

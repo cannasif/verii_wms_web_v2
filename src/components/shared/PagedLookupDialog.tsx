@@ -112,6 +112,9 @@ export function PagedLookupDialog<T>({
   const dropdownListRef = useRef<HTMLDivElement | null>(null);
   const fetchLockRef = useRef(false);
   const skipBlurCloseRef = useRef(false);
+  const selectionLockRef = useRef(false);
+
+  const SELECTION_LOCK_MS = 400;
 
   const isCombobox = triggerMode === 'combobox';
   const minLen = autoSearchMinLength ?? 1;
@@ -271,27 +274,36 @@ export function PagedLookupDialog<T>({
     if (progress >= LOAD_MORE_THRESHOLD) fetchComboboxNext();
   };
 
+  const beginSelectionLock = (): void => {
+    selectionLockRef.current = true;
+    skipBlurCloseRef.current = true;
+    window.setTimeout(() => {
+      selectionLockRef.current = false;
+      skipBlurCloseRef.current = false;
+    }, SELECTION_LOCK_MS);
+  };
+
   const selectItem = (item: T): void => {
+    if (selectionLockRef.current) return;
+    beginSelectionLock();
     onSelect(item);
     setEditing(false);
     setComboboxOpen(false);
+    setComboboxSearch('');
     setComboboxDraft(getLabel(item));
     onOpenChange(false);
+    inputRef.current?.blur();
   };
 
   const openDialog = (): void => {
-    if (disabled) return;
+    if (disabled || selectionLockRef.current) return;
     setComboboxOpen(false);
     setEditing(false);
     onOpenChange(true);
   };
 
   const handleComboboxSelect = (item: T): void => {
-    skipBlurCloseRef.current = true;
     selectItem(item);
-    window.setTimeout(() => {
-      skipBlurCloseRef.current = false;
-    }, 0);
   };
 
   const handleInputKeyDown = (event: KeyboardEvent<HTMLInputElement>): void => {
@@ -370,7 +382,10 @@ export function PagedLookupDialog<T>({
           triggerClassName,
         )}
         aria-invalid={invalid || undefined}
-        onClick={() => onOpenChange(true)}
+        onClick={() => {
+          if (selectionLockRef.current) return;
+          onOpenChange(true);
+        }}
         disabled={disabled}
       >
         <span className="truncate">{value || placeholder}</span>
@@ -386,7 +401,10 @@ export function PagedLookupDialog<T>({
         !value && 'text-muted-foreground',
         triggerClassName,
       )}
-      onClick={() => onOpenChange(true)}
+      onClick={() => {
+        if (selectionLockRef.current) return;
+        onOpenChange(true);
+      }}
       disabled={disabled}
     >
       <span className="truncate">{value || placeholder}</span>
@@ -402,7 +420,7 @@ export function PagedLookupDialog<T>({
     <PopoverPrimitive.Root
       open={comboboxOpen && !open}
       onOpenChange={(next) => {
-        if (open) return;
+        if (open || selectionLockRef.current) return;
         // Dropdown yalnızca yazınca açılır; dışarı tıklanınca kapanabilir.
         if (!next) {
           setComboboxOpen(false);
@@ -440,12 +458,12 @@ export function PagedLookupDialog<T>({
             )}
             title={displayValue || undefined}
             onFocus={(event) => {
-              if (disabled || open) return;
+              if (disabled || open || selectionLockRef.current) return;
               setEditing(true);
               event.currentTarget.select();
             }}
             onClick={() => {
-              if (disabled || open) return;
+              if (disabled || open || selectionLockRef.current) return;
               if (openDialogOnTouchTap && isCoarsePointer()) {
                 openDialog();
                 return;
@@ -454,9 +472,11 @@ export function PagedLookupDialog<T>({
             }}
             onDoubleClick={(event) => {
               event.preventDefault();
+              if (selectionLockRef.current) return;
               openDialog();
             }}
             onChange={(event) => {
+              if (selectionLockRef.current) return;
               const next = event.target.value;
               setEditing(true);
               setComboboxDraft(next);
@@ -467,12 +487,12 @@ export function PagedLookupDialog<T>({
             onKeyDown={handleInputKeyDown}
             onBlur={() => {
               window.setTimeout(() => {
-                if (skipBlurCloseRef.current) return;
+                if (skipBlurCloseRef.current || selectionLockRef.current) return;
                 if (open) return;
                 setComboboxOpen(false);
                 setEditing(false);
                 setComboboxDraft(value ?? '');
-              }, 150);
+              }, SELECTION_LOCK_MS);
             }}
           />
           <button
@@ -482,15 +502,14 @@ export function PagedLookupDialog<T>({
             aria-label={resolvedSearchPlaceholder}
             className="absolute left-0.5 top-1/2 z-[1] inline-flex size-6 -translate-y-1/2 items-center justify-center rounded-md text-[var(--wms-app-text-muted)] transition hover:bg-[var(--wms-brand-soft)] hover:text-[var(--wms-brand-primary)] disabled:opacity-50 max-sm:size-8"
             onPointerDown={(event) => {
+              if (selectionLockRef.current) return;
               skipBlurCloseRef.current = true;
               // Dokunmatikte preventDefault sonraki click'i bastırabildiği için yalnızca fareye uygulanır.
               if (event.pointerType === 'mouse') event.preventDefault();
             }}
             onClick={() => {
+              if (selectionLockRef.current) return;
               openDialog();
-              window.setTimeout(() => {
-                skipBlurCloseRef.current = false;
-              }, 0);
             }}
           >
             {open && isLookupFetching ? (
@@ -519,7 +538,7 @@ export function PagedLookupDialog<T>({
             id="paged-lookup-combobox-list"
             role="listbox"
             onScroll={handleComboboxScroll}
-            onMouseDown={() => {
+            onPointerDown={() => {
               skipBlurCloseRef.current = true;
             }}
             className="relative h-64 space-y-1 overflow-y-auto overscroll-contain p-1.5"
@@ -555,7 +574,11 @@ export function PagedLookupDialog<T>({
                         comboboxFetching && 'opacity-70',
                       )}
                       onMouseEnter={() => setHighlightIndex(index)}
-                      onClick={() => handleComboboxSelect(item)}
+                      onPointerDown={(event) => {
+                        event.preventDefault();
+                        if (selectionLockRef.current) return;
+                        handleComboboxSelect(item);
+                      }}
                     >
                       <span className="min-w-0 flex-1 truncate">{label}</span>
                       <Check className={cn('size-4 shrink-0 text-[var(--wms-brand-primary)]', !active && 'opacity-0')} />
@@ -592,7 +615,13 @@ export function PagedLookupDialog<T>({
     <>
       {trigger}
 
-      <Dialog open={open} onOpenChange={onOpenChange}>
+      <Dialog
+        open={open}
+        onOpenChange={(next) => {
+          if (next && selectionLockRef.current) return;
+          onOpenChange(next);
+        }}
+      >
         <DialogContent
           tone="ops"
           portalRoot="body"
@@ -724,7 +753,9 @@ export function PagedLookupDialog<T>({
                             ? 'wms-ops-lookup-item'
                             : 'rounded-xl border border-slate-200/70 bg-white/80 hover:border-sky-300 hover:bg-sky-50/70 dark:border-white/10 dark:bg-white/4 dark:hover:border-sky-400/50 dark:hover:bg-sky-500/10',
                         )}
-                        onClick={() => {
+                        onPointerDown={(event) => {
+                          event.preventDefault();
+                          if (selectionLockRef.current) return;
                           selectItem(item);
                         }}
                       >

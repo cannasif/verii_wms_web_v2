@@ -17,6 +17,8 @@ export interface ProductionCancellationReadiness {
   pickers: PickerReturnStatus[];
   pendingReturns: PickerReturnStatus[];
   missingReturnTasks: PickerReturnStatus[];
+  cancellationReturnTask?: ProductionTask;
+  needsCancellationReturn: boolean;
   unresolvedPickedStock: boolean;
   canCancel: boolean;
 }
@@ -28,7 +30,7 @@ export interface ProductionCancellationInput {
   transferPickedQuantity?: number;
 }
 
-const RETURN_TASK_TYPES = new Set(['CancellationReturn', 'AssignmentReturn']);
+const RETURN_TASK_TYPES = new Set(['CancellationReturn']);
 
 function taskProcessedQuantity(task: ProductionTask): number {
   return task.lines.reduce((sum, line) => sum + line.processedQuantity, 0);
@@ -62,13 +64,11 @@ function pickerProcessedQuantity(userId: number, pickTask: ProductionTask, tasks
     .reduce((sum, line) => sum + line.processedQuantity, 0);
 }
 
-function findCancellationReturn(board: ProductionTaskBoard, userId: number, pickTaskId: number): ProductionTask | undefined {
-  return board.tasks.find((t) =>
-    t.taskType === 'CancellationReturn'
-    && t.status !== 'Cancelled'
-    && (t.originUserId === userId || t.startedBy === userId)
-    && (t.originTaskId === pickTaskId || t.originTaskId == null),
-  );
+function findTransferCancellationReturnTask(board: ProductionTaskBoard): ProductionTask | undefined {
+  return board.tasks.find((task) =>
+    task.taskType === 'CancellationReturn'
+    && task.status !== 'Cancelled'
+    && task.taskNo.toUpperCase().includes('-IPTALIADE'));
 }
 
 function usernameFor(board: ProductionTaskBoard, userId: number, pickTask: ProductionTask): string {
@@ -106,12 +106,12 @@ export function analyzeProductionCancellationReadiness(
         pickTaskNo: task.taskNo,
         processedQuantity,
         processedLineCount,
-        returnTask: findCancellationReturn(board, userId, task.taskId),
       });
     }
   }
 
   const pickers = [...pickerMap.values()].sort((a, b) => a.username.localeCompare(b.username, 'tr'));
+  const cancellationReturnTask = findTransferCancellationReturnTask(board);
   const pickedQuantity = Math.max(
     pickedQuantityHint,
     transferPickedQuantity,
@@ -120,12 +120,29 @@ export function analyzeProductionCancellationReadiness(
   );
   const hasPickedStock = pickedQuantity > 0;
   const unresolvedPickedStock = hasPickedStock && pickers.length === 0;
-  const missingReturnTasks = pickers.filter((p) => !p.returnTask);
-  const pendingReturns = pickers.filter((p) => p.returnTask && p.returnTask.status !== 'Completed');
+  const needsCancellationReturn = hasPickedStock && !cancellationReturnTask;
+  const pendingCancellationReturn = Boolean(
+    cancellationReturnTask && cancellationReturnTask.status !== 'Completed',
+  );
+  const missingReturnTasks = needsCancellationReturn ? pickers : [];
+  const pendingReturns = pendingCancellationReturn && cancellationReturnTask
+    ? [{
+      userId: cancellationReturnTask.originUserId ?? cancellationReturnTask.startedBy ?? 0,
+      username: cancellationReturnTask.assignments[0]?.username
+        ?? (cancellationReturnTask.originUserId
+          ? `Kullanıcı #${cancellationReturnTask.originUserId}`
+          : 'Atanmayı bekliyor'),
+      pickTaskId: cancellationReturnTask.originTaskId ?? 0,
+      pickTaskNo: cancellationReturnTask.taskNo,
+      processedQuantity: cancellationReturnTask.lines.reduce((sum, line) => sum + line.requestedQuantity, 0),
+      processedLineCount: cancellationReturnTask.lines.length,
+      returnTask: cancellationReturnTask,
+    }]
+    : [];
   const canCancel = !hasPickedStock || (
     !unresolvedPickedStock
-    && missingReturnTasks.length === 0
-    && pendingReturns.length === 0
+    && !needsCancellationReturn
+    && !pendingCancellationReturn
   );
 
   return {
@@ -134,6 +151,8 @@ export function analyzeProductionCancellationReadiness(
     pickers,
     pendingReturns,
     missingReturnTasks,
+    cancellationReturnTask,
+    needsCancellationReturn,
     unresolvedPickedStock,
     canCancel,
   };

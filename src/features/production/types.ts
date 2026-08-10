@@ -69,6 +69,11 @@ export interface CreateProductionPlanResult {
   replayed: boolean;
 }
 
+export type ProductionSourceWorkOrderListingKind =
+  | 'Standard'
+  | 'CancellationReturnRemainder'
+  | 'ManagerCancelledAssignment';
+
 export interface ProductionSourceWorkOrder {
   sourceType: 'NetsisErpFunctions' | 'WmsIntegrationTables';
   sourceSystemCode: string;
@@ -90,6 +95,57 @@ export interface ProductionSourceWorkOrder {
   warehouseCode: number;
   issueWarehouseCode: number;
   isClosed: boolean;
+  listingKind?: ProductionSourceWorkOrderListingKind;
+  transferId?: number;
+  kalanTaskId?: number;
+  cancellationId?: number;
+  assignedRecipeLineCount?: number;
+  recipeLineCount?: number;
+}
+
+export interface CancelProductionWorkOrderAssignmentRequest {
+  idempotencyKey: string;
+  workOrderNumber: string;
+  sourceType?: ProductionSourceWorkOrder['sourceType'];
+  sourceSystemCode?: string;
+  reason: string;
+  transferId?: number | null;
+}
+
+export interface RestoreProductionWorkOrderAssignmentRequest {
+  idempotencyKey: string;
+  workOrderNumber: string;
+  reason?: string | null;
+}
+
+export interface ProductionWorkOrderAssignmentCancellationResult {
+  cancellationId: number;
+  workOrderNumber: string;
+  status: 'Active' | 'Restored';
+  cancelledQuantityTotal: number;
+  replayed: boolean;
+}
+
+export type ProductionReturnedWorkOrderKind =
+  | 'CancellationReturnRemainder'
+  | 'PartialTransferRemainder';
+
+export interface ProductionReturnedWorkOrder {
+  workOrderNumber: string;
+  transferId: number;
+  documentNo: string;
+  kalanTaskId: number;
+  kalanTaskNo: string;
+  kalanTaskDisplayLabel: string;
+  remainingQuantity: number;
+  plannedQuantity: number;
+  documentDate?: string;
+  projectCode?: string;
+  sourceWarehouseCode: number;
+  targetWarehouseCode: number;
+  sourceWarehouseId: number;
+  taskWarehouseId: number;
+  returnKind: ProductionReturnedWorkOrderKind;
 }
 
 export type NetsisProductionWorkOrder = ProductionSourceWorkOrder;
@@ -135,6 +191,10 @@ export interface PreparedNetsisProductionWorkOrder {
   existingProductionDocumentNo?: string;
   mappingErrors: string[];
   materials: PreparedNetsisProductionMaterial[];
+  assignedMaterials?: PreparedNetsisProductionMaterial[];
+  listingKind?: ProductionSourceWorkOrderListingKind;
+  transferId?: number;
+  kalanTaskId?: number;
 }
 
 export interface ProductionPlanGridRow {

@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type UIEvent } from 'react';
 import {
-  AlertTriangle, Barcode, ChevronRight, List, Loader2, MapPin, PackageCheck, Play, RefreshCw,
+  AlertTriangle, Barcode, ChevronRight, List, Loader2, MapPin, PackageCheck, Play, RefreshCw, Undo2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { OpsActionButton } from '@/components/shared/OpsActionButton';
 import { OpsQrCaptureField } from '@/components/shared/OpsQrCaptureField';
+import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
 import { ResponsiveDialog } from '@/components/shared/ResponsiveDialog';
 import { StockIdentityCell } from '@/components/shared/StockIdentityCell';
 import { formatProjectNumber } from '@/lib/project-format';
@@ -12,7 +13,7 @@ import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
 import { useDropdownInfiniteSearch } from '@/hooks/useDropdownInfiniteSearch';
 import { warehouseTransferApi } from '@/features/warehouse-transfer-v2/api/warehouse-transfer.api';
-import type { StockOption } from '@/features/goods-receipt-v2/types/goods-receipt.types';
+import type { LocationOption, StockOption } from '@/features/goods-receipt-v2/types/goods-receipt.types';
 import {
   productionTransferApi,
   type ProductionTaskBoard,
@@ -22,6 +23,7 @@ import {
   type ProductionTransferRouteRefreshCandidate,
   type ProductionTransferRouteRefreshCandidates,
   type ResolveProductionTransferBarcodeResult,
+  type WarehouseTransferReturnSetting,
 } from '../api';
 import { ProductionTaskStartShortageDialog } from './ProductionTaskStartShortageDialog';
 import { useProductionTaskStart } from '../hooks/useProductionTaskStart';
@@ -75,6 +77,12 @@ function pickingRowSelectionKey(row: ProductionTransferPickingRow): string {
   if (isSerialRow(row)) {
     return `${row.taskLineId}:${row.serialNo!.trim().toUpperCase()}`;
   }
+  if (row.remainingQuantity <= 0 && row.processedQuantity > 0) {
+    return `${row.taskLineId}:picked`;
+  }
+  if (row.processedQuantity <= 0 && row.remainingQuantity > 0) {
+    return `${row.taskLineId}:open`;
+  }
   return String(row.taskLineId);
 }
 
@@ -86,9 +94,6 @@ function isRowCompleted(row: ProductionTransferPickingRow): boolean {
   return row.remainingQuantity <= 0;
 }
 
-function isSerialGroupCompleted(rows: ProductionTransferPickingRow[]): boolean {
-  return rows.length > 0 && rows.every(isRowCompleted);
-}
 
 function compareLineNoThenSerial(left: ProductionTransferPickingRow, right: ProductionTransferPickingRow): number {
   if (left.lineNo !== right.lineNo) return left.lineNo - right.lineNo;
@@ -106,18 +111,6 @@ function compareDisplayOrder(
   return compareLineNoThenSerial(left, right);
 }
 
-function sortRowsWithCompletedAtBottom(
-  rows: ProductionTransferPickingRow[],
-  displayOrder: Map<string, number>,
-): ProductionTransferPickingRow[] {
-  return [...rows].sort((left, right) => {
-    const leftDone = isRowCompleted(left);
-    const rightDone = isRowCompleted(right);
-    if (leftDone !== rightDone) return leftDone ? 1 : -1;
-    return compareDisplayOrder(left, right, displayOrder);
-  });
-}
-
 function sortSerialGroupRows(
   rows: ProductionTransferPickingRow[],
   tab: PickTab,
@@ -125,11 +118,7 @@ function sortSerialGroupRows(
 ): ProductionTransferPickingRow[] {
   const filtered = tab === 'completed'
     ? rows.filter(isRowCompleted)
-    : rows;
-
-  if (tab === 'all') {
-    return sortRowsWithCompletedAtBottom(filtered, displayOrder);
-  }
+    : rows.filter((row) => !isRowCompleted(row));
 
   return [...filtered].sort((left, right) => compareDisplayOrder(left, right, displayOrder));
 }
@@ -139,22 +128,11 @@ function sectionDisplayOrder(section: TableSection, displayOrder: Map<string, nu
   return Math.min(...section.rows.map((row) => displayOrder.get(pickingRowSelectionKey(row)) ?? row.lineNo));
 }
 
-function isSectionCompleted(section: TableSection): boolean {
-  if (section.type === 'flat') return isRowCompleted(section.row);
-  return isSerialGroupCompleted(section.rows);
-}
-
 function compareTableSections(
   left: TableSection,
   right: TableSection,
-  tab: PickTab,
   displayOrder: Map<string, number>,
 ): number {
-  if (tab === 'all') {
-    const leftCompleted = isSectionCompleted(left);
-    const rightCompleted = isSectionCompleted(right);
-    if (leftCompleted !== rightCompleted) return leftCompleted ? 1 : -1;
-  }
   return sectionDisplayOrder(left, displayOrder) - sectionDisplayOrder(right, displayOrder);
 }
 
@@ -165,11 +143,10 @@ function buildTableSections(rows: ProductionTransferPickingRow[], tab: PickTab):
 
   const visibleNonSerial = tab === 'completed'
     ? nonSerialRows.filter(isRowCompleted)
-    : nonSerialRows;
-  const flatSections: TableSection[] = (tab === 'all'
-    ? sortRowsWithCompletedAtBottom(visibleNonSerial, displayOrder)
-    : [...visibleNonSerial].sort((left, right) => compareDisplayOrder(left, right, displayOrder))
-  ).map((row) => ({ type: 'flat' as const, row } satisfies TableSection));
+    : nonSerialRows.filter((row) => !isRowCompleted(row));
+  const flatSections: TableSection[] = [...visibleNonSerial]
+    .sort((left, right) => compareDisplayOrder(left, right, displayOrder))
+    .map((row) => ({ type: 'flat' as const, row } satisfies TableSection));
 
   const serialGroups = new Map<number, ProductionTransferPickingRow[]>();
   for (const row of serialRows) {
@@ -188,7 +165,7 @@ function buildTableSections(rows: ProductionTransferPickingRow[], tab: PickTab):
     }))
     .filter((group) => group.rows.length > 0);
 
-  return [...serialSections, ...flatSections].sort((left, right) => compareTableSections(left, right, tab, displayOrder));
+  return [...serialSections, ...flatSections].sort((left, right) => compareTableSections(left, right, displayOrder));
 }
 
 function sanitizePositiveIntegerInput(rawValue: string): string {
@@ -268,6 +245,15 @@ interface Props {
   onExecutionChange: (execution: ProductionTransferExecution) => void;
 }
 
+function shouldAutoPickWithoutConfirm(
+  match: ResolveProductionTransferBarcodeResult,
+  threshold?: number,
+): boolean {
+  if (!threshold || threshold <= 0) return false;
+  const quantity = Math.floor(match.defaultQuantity);
+  return quantity > 0 && quantity <= Math.floor(threshold);
+}
+
 export function ProductionTransferPickingSection({ transferId, execution, onExecutionChange }: Props) {
   const currentUserId = useAuthStore((state) => state.user?.id);
   const branchCode = useAuthStore((state) => state.branch?.code ?? '0');
@@ -282,20 +268,18 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
   const [stockListSearch, setStockListSearch] = useState('');
   const [debouncedStockListSearch, setDebouncedStockListSearch] = useState('');
   const [step1, setStep1] = useState<BarcodeStep1 | null>(null);
-  const [step2, setStep2] = useState<BarcodeStep1 | null>(null);
   const [routeDialog, setRouteDialog] = useState<ProductionTransferRouteRefreshCandidates | null>(null);
   const [routeQuantities, setRouteQuantities] = useState<Record<number, string>>({});
   const [selectedSerialCandidateKey, setSelectedSerialCandidateKey] = useState<string>();
+  const [unpickDialog, setUnpickDialog] = useState<ProductionTransferPickingRow | null>(null);
+  const [unpickTargetLocation, setUnpickTargetLocation] = useState('');
+  const [unpickTargetLabel, setUnpickTargetLabel] = useState('');
+  const [unpickQuantity, setUnpickQuantity] = useState('');
+  const [sourceWarehouseReturnSetting, setSourceWarehouseReturnSetting] = useState<WarehouseTransferReturnSetting>();
+  const unpickLocationLabelsRef = useRef<Record<string, string>>({});
   const [highlightedLineNo, setHighlightedLineNo] = useState<number>();
   const barcodeRef = useRef<HTMLInputElement>(null);
-  const step2SubmitRef = useRef<HTMLButtonElement>(null);
-  const pickDialogOpen = Boolean(step1 || step2);
-
-  useEffect(() => {
-    if (!step2) return;
-    barcodeRef.current?.blur();
-    window.requestAnimationFrame(() => step2SubmitRef.current?.focus());
-  }, [step2]);
+  const pickDialogOpen = Boolean(step1);
 
   const focusPickingLineError = useCallback((message: string) => {
     const lineNo = parseTransferLineNoFromError(message);
@@ -414,23 +398,162 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
 
   const selectedCount = selectedRowKey ? 1 : 0;
   const selectedRow = table?.rows.find((row) => pickingRowSelectionKey(row) === selectedRowKey);
+  const selectedCompletedRow = selectedRow && isRowCompleted(selectedRow) && selectedRow.processedQuantity > 0
+    ? selectedRow
+    : undefined;
+
+  useEffect(() => {
+    setSelectedRowKey(undefined);
+  }, [tab]);
+
+  const unpickExcludedLocationIds = useMemo(() => {
+    const ids = new Set<number>();
+    if (execution.waitingLocationId) ids.add(execution.waitingLocationId);
+    if (sourceWarehouseReturnSetting?.defaultProductionTransferLocationId) {
+      ids.add(sourceWarehouseReturnSetting.defaultProductionTransferLocationId);
+    }
+    return ids;
+  }, [execution.waitingLocationId, sourceWarehouseReturnSetting?.defaultProductionTransferLocationId]);
+
+  useEffect(() => {
+    if (execution.sourceWarehouseId <= 0) {
+      setSourceWarehouseReturnSetting(undefined);
+      return;
+    }
+    let cancelled = false;
+    void productionTransferApi.returnSetting(execution.sourceWarehouseId)
+      .then((setting) => {
+        if (!cancelled) setSourceWarehouseReturnSetting(setting);
+      })
+      .catch(() => {
+        if (!cancelled) setSourceWarehouseReturnSetting(undefined);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [execution.sourceWarehouseId]);
+
+  useEffect(() => {
+    if (!unpickDialog) return;
+    const selectedId = Number(unpickTargetLocation);
+    if (selectedId > 0 && unpickExcludedLocationIds.has(selectedId)) {
+      setUnpickTargetLocation('');
+      setUnpickTargetLabel('');
+    }
+  }, [unpickDialog, unpickExcludedLocationIds, unpickTargetLocation]);
+
+  const openUnpickDialog = () => {
+    if (!selectedCompletedRow) return;
+    const isSerial = Boolean(selectedCompletedRow.serialNo?.trim());
+    const defaultLocationId = selectedCompletedRow.sourceLocationId;
+    const canUseDefaultLocation = defaultLocationId
+      && !unpickExcludedLocationIds.has(defaultLocationId);
+    setUnpickTargetLocation(canUseDefaultLocation ? String(defaultLocationId) : '');
+    setUnpickTargetLabel(canUseDefaultLocation ? (selectedCompletedRow.sourceLocationCode ?? '') : '');
+    setUnpickQuantity(isSerial ? '1' : formatRouteQuantityValue(selectedCompletedRow.processedQuantity));
+    setUnpickDialog(selectedCompletedRow);
+  };
+
+  const confirmUnpick = async () => {
+    if (!unpickDialog || busy) return;
+    const targetLocationId = Number(unpickTargetLocation);
+    if (!Number.isFinite(targetLocationId) || targetLocationId <= 0) {
+      toast.error('Raf seçin.');
+      return;
+    }
+    const isSerial = Boolean(unpickDialog.serialNo?.trim());
+    const quantity = isSerial
+      ? 1
+      : parsePositiveIntegerInput(unpickQuantity);
+    if (!isSerial && (quantity === null || quantity <= 0 || quantity > Math.floor(unpickDialog.processedQuantity))) {
+      toast.error('Geçerli bir geri alma miktarı girin.');
+      return;
+    }
+    setBusy(true);
+    try {
+      const nextTable = await productionTransferApi.unpickToLocation(transferId, {
+        taskLineId: unpickDialog.taskLineId,
+        targetLocationId,
+        quantity: isSerial ? undefined : quantity!,
+        serialNo: unpickDialog.serialNo,
+      });
+      setTable(nextTable);
+      const nextExecution = await productionTransferApi.execution(transferId);
+      onExecutionChange(nextExecution);
+      setUnpickDialog(null);
+      setUnpickTargetLocation('');
+      setUnpickTargetLabel('');
+      setUnpickQuantity('');
+      setSelectedRowKey(undefined);
+      setTab('all');
+      toast.success('Toplanan stok seçilen rafa bırakıldı.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Rafa bırakma başarısız.');
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const toggleRowSelection = useCallback((row: ProductionTransferPickingRow) => {
     const key = pickingRowSelectionKey(row);
     setSelectedRowKey((current) => (current === key ? undefined : key));
   }, []);
   const hasShortage = (execution.shortageQuantity ?? 0) > 0;
+  const hasOverIssue = (table?.overIssueQuantity ?? execution.overIssueQuantity ?? 0) > 0;
+  const overIssueLines = table?.overIssueLines ?? execution.overIssueLines ?? [];
   const [partialConfirmed, setPartialConfirmed] = useState(false);
+  const [overIssueConfirmed, setOverIssueConfirmed] = useState(false);
   const [completePickingDialogOpen, setCompletePickingDialogOpen] = useState(false);
+
+  const performPick = async (payload: BarcodeStep1) => {
+    const quantity = payload.match.isSerial ? null : parsePositiveIntegerInput(payload.quantity);
+    if (!payload.match.isSerial && quantity === null) {
+      toast.error('Geçerli bir tam sayı miktar girin.');
+      return;
+    }
+    const result = await productionTransferApi.scanPick(
+      transferId,
+      payload.match.taskLineId,
+      payload.barcode,
+      payload.match.isSerial ? undefined : quantity!,
+      payload.match.sourceLocationId,
+    );
+    onExecutionChange(result.execution);
+    await load();
+    setBarcode('');
+    setStep1(null);
+    toast.success(`${result.stockCode}: ${formatProjectNumber(result.acceptedQuantity)} toplandı.`);
+  };
 
   const resolveBarcode = async (rawBarcode?: string) => {
     const scanned = (rawBarcode ?? barcode).trim();
-    if (!scanned || table?.isLocked) return;
+    if (!scanned || table?.isLocked || busy) return;
     setBusy(true);
     try {
       const match = await productionTransferApi.resolveBarcode(transferId, scanned);
       if (match.isSerial) {
-        setStep2({ barcode: scanned, match, quantity: String(match.defaultQuantity) });
+        try {
+          await performPick({
+            barcode: scanned,
+            match,
+            quantity: String(match.defaultQuantity),
+          });
+        } catch (error) {
+          toast.error(error instanceof Error ? error.message : 'Toplama kaydedilemedi.');
+        }
+        return;
+      }
+      const autoPickQuantity = Math.floor(match.defaultQuantity);
+      if (shouldAutoPickWithoutConfirm(match, sourceWarehouseReturnSetting?.autoPickWithoutConfirmMaxQuantity)) {
+        try {
+          await performPick({
+            barcode: scanned,
+            match,
+            quantity: String(autoPickQuantity),
+          });
+        } catch (error) {
+          toast.error(error instanceof Error ? error.message : 'Toplama kaydedilemedi.');
+        }
         return;
       }
       setStep1({
@@ -442,31 +565,15 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
       toast.error(error instanceof Error ? error.message : 'Barkod doğrulanamadı.');
     } finally {
       setBusy(false);
+      requestAnimationFrame(() => barcodeRef.current?.focus());
     }
   };
 
   const confirmPick = async (payload: BarcodeStep1) => {
     if (busy) return;
-    const quantity = payload.match.isSerial ? null : parsePositiveIntegerInput(payload.quantity);
-    if (!payload.match.isSerial && quantity === null) {
-      toast.error('Geçerli bir tam sayı miktar girin.');
-      return;
-    }
     setBusy(true);
     try {
-      const result = await productionTransferApi.scanPick(
-        transferId,
-        payload.match.taskLineId,
-        payload.barcode,
-        payload.match.isSerial ? undefined : quantity!,
-        payload.match.sourceLocationId,
-      );
-      onExecutionChange(result.execution);
-      await load();
-      setBarcode('');
-      setStep1(null);
-      setStep2(null);
-      toast.success(`${result.stockCode}: ${formatProjectNumber(result.acceptedQuantity)} toplandı.`);
+      await performPick(payload);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Toplama kaydedilemedi.');
     } finally {
@@ -576,6 +683,7 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
       const result = await productionTransferApi.completePicking(
         transferId,
         hasShortage ? partialConfirmed : false,
+        hasOverIssue ? overIssueConfirmed : false,
       );
       onExecutionChange(result);
       setCompletePickingDialogOpen(false);
@@ -638,6 +746,16 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
                 Bu işi yapıyorum
               </button>
             ) : !table.isLocked ? (
+              tab === 'completed' ? (
+                <OpsActionButton
+                  variant="primary"
+                  disabled={busy || !selectedCompletedRow}
+                  onClick={openUnpickDialog}
+                >
+                  <Undo2 className="size-4" />
+                  Rafa bırak
+                </OpsActionButton>
+              ) : (
               <div className="flex min-w-[280px] flex-1 items-center gap-2 xl:flex-none">
                 <button
                   type="button"
@@ -674,6 +792,7 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
                   </OpsActionButton>
                 </div>
               </div>
+              )
             ) : null}
           </div>
         </div>
@@ -701,6 +820,7 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
                       row={section.row}
                       locked={table.isLocked}
                       showRouteColumns={!table.isLocked}
+                      pickTab={tab}
                       selected={selectedRowKey === pickingRowSelectionKey(section.row)}
                       highlighted={isLineHighlighted(section.row.lineNo, highlightedLineNo)}
                       onSelect={toggleRowSelection}
@@ -717,6 +837,7 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
                     rows={section.rows}
                     locked={table.isLocked}
                     showRouteColumns={!table.isLocked}
+                    pickTab={tab}
                     highlightedLineNo={highlightedLineNo}
                     selectedRowKey={selectedRowKey}
                     onSelect={toggleRowSelection}
@@ -732,12 +853,12 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
             <OpsActionButton
               variant="primary"
               onClick={() => {
-                if (hasShortage) setCompletePickingDialogOpen(true);
+                if (hasShortage || hasOverIssue) setCompletePickingDialogOpen(true);
                 else void completePicking();
               }}
             >
               <PackageCheck className="size-4" />
-              Toplamayı bitir
+              Transfere hazır
             </OpsActionButton>
           </div>
         )}
@@ -853,21 +974,26 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
         <ResponsiveDialog
           onClose={() => setStep1(null)}
           title="Toplama miktarı"
-          description="Miktarı düşürerek kısmi toplama yapabilirsiniz."
+          description={
+            step1.match.maxPickQuantity > step1.match.remainingQuantity
+              ? `Kalan ${formatProjectNumber(step1.match.remainingQuantity)}; fazla sarf ile en fazla ${formatProjectNumber(step1.match.maxPickQuantity)} toplanabilir.`
+              : 'Miktarı düşürerek kısmi toplama yapabilirsiniz.'
+          }
         >
           <form
             onSubmit={(event) => {
               event.preventDefault();
+              if (busy) return;
               const qty = parsePositiveIntegerInput(step1.quantity);
-              const maxQty = Math.floor(step1.match.remainingQuantity);
+              const maxQty = Math.floor(step1.match.maxPickQuantity);
               if (qty === null || qty > maxQty) {
                 toast.error('Geçerli bir tam sayı miktar girin.');
                 return;
               }
-              setStep2({ ...step1, quantity: String(qty) });
+              void confirmPick({ ...step1, quantity: String(qty) });
             }}
           >
-            <PickSummary match={step1.match} />
+            <PickSummary match={step1.match} quantity={parsePositiveIntegerInput(step1.quantity) ?? undefined} />
             <label className="mt-4 block text-xs font-bold">Miktar</label>
             <input
               className="input mt-1 w-full"
@@ -876,7 +1002,7 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
               value={step1.quantity}
               onChange={(event) => setStep1({
                 ...step1,
-                quantity: clampPositiveIntegerInput(event.target.value, step1.match.remainingQuantity),
+                quantity: clampPositiveIntegerInput(event.target.value, step1.match.maxPickQuantity),
               })}
               onFocus={(event) => event.currentTarget.select()}
               autoFocus
@@ -884,37 +1010,8 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
             <div className="mt-5 flex justify-end gap-2">
               <button type="button" className="rounded-lg border px-4 py-2 text-sm font-semibold" onClick={() => setStep1(null)}>İptal</button>
               <OpsActionButton type="submit" variant="primary" loading={busy}>
-                Devam
+                Onayla
               </OpsActionButton>
-            </div>
-          </form>
-        </ResponsiveDialog>
-      )}
-
-      {step2 && (
-        <ResponsiveDialog
-          onClose={() => (step2.match.isSerial ? setStep2(null) : setStep1(step2))}
-          title="Toplamayı onayla"
-          description="Onayladığınızda stok hareketi kaydedilir."
-          showCloseButton={false}
-        >
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
-              if (busy) return;
-              void confirmPick(step2);
-            }}
-          >
-            <PickSummary match={step2.match} quantity={step2.match.isSerial ? step2.match.defaultQuantity : Number(step2.quantity.replace(',', '.'))} />
-            <div className="mt-5 flex justify-end gap-2">
-              <button
-                type="button"
-                className="rounded-lg border px-4 py-2 text-sm font-semibold"
-                onClick={() => (step2.match.isSerial ? setStep2(null) : setStep1(step2))}
-              >
-                İptal
-              </button>
-              <OpsActionButton ref={step2SubmitRef} type="submit" variant="primary" loading={busy}>Onayla</OpsActionButton>
             </div>
           </form>
         </ResponsiveDialog>
@@ -923,14 +1020,65 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
       {completePickingDialogOpen && (
         <ResponsiveDialog
           onClose={() => setCompletePickingDialogOpen(false)}
-          title="Toplamayı bitir"
+          title="Transfere hazır"
           description="Onayladığınızda transfer teslim beklemeye alınır."
         >
           <div className="space-y-4">
             <p className="text-sm text-[var(--wms-app-text-muted)]">
               Toplanan: {formatProjectNumber(table.pickedQuantity)} / {formatProjectNumber(table.requestedQuantity)}
               {hasShortage ? ` · Eksik: ${formatProjectNumber(table.shortageQuantity)}` : ''}
+              {hasOverIssue ? ` · Fazla: ${formatProjectNumber(table.overIssueQuantity)}` : ''}
             </p>
+            {hasOverIssue && (
+              <div className="rounded-xl border-2 border-orange-500/60 bg-orange-500/10 p-3">
+                <h4 className="flex items-center gap-2 text-sm font-black text-orange-600">
+                  <AlertTriangle className="size-4" />
+                  Fazla toplama uyarısı
+                </h4>
+                <p className="mt-1 text-sm text-[var(--wms-app-text-muted)]">
+                  Aşağıdaki kalemler talep miktarının üzerinde toplanmış.
+                  {table.allowOverIssue && table.overIssueTolerancePercent > 0
+                    ? ` Politika en fazla %${formatProjectNumber(table.overIssueTolerancePercent)} fazla toplamaya izin veriyor.`
+                    : ''}
+                </p>
+                <div className="mt-3 overflow-x-auto rounded-lg border border-orange-500/30">
+                  <table className="w-full min-w-[520px] text-sm">
+                    <thead className="bg-black/5 text-left dark:bg-white/5">
+                      <tr>
+                        <th className="p-2">Stok</th>
+                        <th className="p-2 text-right">Talep</th>
+                        <th className="p-2 text-right">Toplanan</th>
+                        <th className="p-2 text-right">Fazla</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {overIssueLines.map((line) => (
+                        <tr key={line.lineId} className="border-t border-orange-500/20">
+                          <td className="p-2">
+                            <strong>{line.stockCode}</strong>
+                            {line.stockName && (
+                              <span className="block text-xs text-[var(--wms-app-text-muted)]">{line.stockName}</span>
+                            )}
+                          </td>
+                          <td className="p-2 text-right">{formatProjectNumber(line.requestedQuantity)} {line.unitCode}</td>
+                          <td className="p-2 text-right text-emerald-600">{formatProjectNumber(line.pickedQuantity)}</td>
+                          <td className="p-2 text-right font-bold text-orange-600">{formatProjectNumber(line.overIssueQuantity)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <label className="mt-4 flex items-start gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={overIssueConfirmed}
+                    onChange={(event) => setOverIssueConfirmed(event.target.checked)}
+                    className="mt-1"
+                  />
+                  Fazla toplamayı bilinçli olarak teslim aşamasına taşıyorum.
+                </label>
+              </div>
+            )}
             {hasShortage && (
               <div className="rounded-xl border border-amber-500/50 bg-amber-500/10 p-3">
                 <label className="flex items-start gap-2 text-sm">
@@ -955,14 +1103,115 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
               <OpsActionButton
                 variant="primary"
                 loading={busy}
-                disabled={hasShortage && !partialConfirmed}
+                disabled={(hasShortage && !partialConfirmed) || (hasOverIssue && !overIssueConfirmed)}
                 onClick={() => void completePicking()}
               >
                 <PackageCheck className="size-4" />
-                Toplamayı bitir ve teslim beklemeye al
+                Transfere hazır
               </OpsActionButton>
             </div>
           </div>
+        </ResponsiveDialog>
+      )}
+
+      {unpickDialog && (
+        <ResponsiveDialog
+          variant="lookup"
+          onClose={() => setUnpickDialog(null)}
+          title="Rafa bırak"
+          description="Toplanan stok bekleme rafından seçtiğiniz rafa geri yerleştirilir ve satır Tümü sekmesine döner."
+        >
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              void confirmUnpick();
+            }}
+          >
+            <div className="rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-surface)] p-4 text-sm">
+              <div className="grid gap-2 sm:grid-cols-2">
+                <div>
+                  <span className="text-xs text-[var(--wms-app-text-muted)]">Stok</span>
+                  <strong className="block">{unpickDialog.stockCode}</strong>
+                </div>
+                <div>
+                  <span className="text-xs text-[var(--wms-app-text-muted)]">Miktar</span>
+                  <strong className="block">
+                    {unpickDialog.serialNo
+                      ? '1'
+                      : formatProjectNumber(parsePositiveIntegerInput(unpickQuantity) ?? unpickDialog.processedQuantity)}
+                  </strong>
+                </div>
+                {unpickDialog.serialNo && (
+                  <div>
+                    <span className="text-xs text-[var(--wms-app-text-muted)]">Seri</span>
+                    <strong className="block">{unpickDialog.serialNo}</strong>
+                  </div>
+                )}
+              </div>
+            </div>
+            {!unpickDialog.serialNo && (
+              <>
+                <label className="mt-4 block text-xs font-bold">Geri alınacak miktar</label>
+                <input
+                  className="input mt-1 w-full"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={unpickQuantity}
+                  onChange={(event) => setUnpickQuantity(
+                    clampPositiveIntegerInput(event.target.value, unpickDialog.processedQuantity),
+                  )}
+                  onFocus={(event) => event.currentTarget.select()}
+                  autoFocus
+                />
+              </>
+            )}
+            <label className="mt-4 block text-xs font-bold">Raf</label>
+            <PagedAppDropdown<LocationOption>
+              queryKey={[
+                'production-pick-unpick-location',
+                execution.sourceWarehouseId,
+                execution.waitingLocationId ?? 0,
+                sourceWarehouseReturnSetting?.defaultProductionTransferLocationId ?? 0,
+              ]}
+              fetchPage={async (request) => {
+                const page = await warehouseTransferApi.locations(request, execution.sourceWarehouseId);
+                return {
+                  ...page,
+                  items: page.items.filter((item) => !unpickExcludedLocationIds.has(item.id)),
+                };
+              }}
+              toOption={(item) => {
+                const label = `${item.code} · ${item.name}`;
+                unpickLocationLabelsRef.current[String(item.id)] = label;
+                return { value: String(item.id), label };
+              }}
+              enabled={execution.sourceWarehouseId > 0}
+              dependencies={[
+                execution.sourceWarehouseId,
+                execution.waitingLocationId,
+                sourceWarehouseReturnSetting?.defaultProductionTransferLocationId,
+              ]}
+              value={unpickTargetLocation}
+              onValueChange={(value) => {
+                setUnpickTargetLocation(value);
+                setUnpickTargetLabel(unpickLocationLabelsRef.current[value] ?? '');
+              }}
+              selectedOption={unpickTargetLocation
+                ? { value: unpickTargetLocation, label: unpickTargetLabel || unpickTargetLocation }
+                : undefined}
+              searchable
+              placeholder="Raf seçin"
+              portalContainer={null}
+              contentClassName="z-[5100]"
+              className="mt-1 min-w-full"
+            />
+            <div className="mt-5 flex justify-end gap-2">
+              <button type="button" className="rounded-lg border px-4 py-2 text-sm font-semibold" onClick={() => setUnpickDialog(null)}>
+                İptal
+              </button>
+              <OpsActionButton type="submit" variant="primary" loading={busy}>Onayla</OpsActionButton>
+            </div>
+          </form>
         </ResponsiveDialog>
       )}
 
@@ -1195,6 +1444,7 @@ function SerialStockGroup({
   rows,
   locked,
   showRouteColumns,
+  pickTab,
   highlightedLineNo,
   selectedRowKey,
   onSelect,
@@ -1205,6 +1455,7 @@ function SerialStockGroup({
   rows: ProductionTransferPickingRow[];
   locked: boolean;
   showRouteColumns: boolean;
+  pickTab: PickTab;
   highlightedLineNo?: number;
   selectedRowKey?: string;
   onSelect: (row: ProductionTransferPickingRow) => void;
@@ -1262,6 +1513,7 @@ function SerialStockGroup({
           row={row}
           locked={locked}
           showRouteColumns={showRouteColumns}
+          pickTab={pickTab}
           selected={selectedRowKey === pickingRowSelectionKey(row)}
           highlighted={isLineHighlighted(row.lineNo, highlightedLineNo)}
           onSelect={onSelect}
@@ -1276,6 +1528,7 @@ function PickingRow({
   row,
   locked,
   showRouteColumns,
+  pickTab,
   selected,
   highlighted = false,
   onSelect,
@@ -1284,13 +1537,18 @@ function PickingRow({
   row: ProductionTransferPickingRow;
   locked: boolean;
   showRouteColumns: boolean;
+  pickTab: PickTab;
   selected: boolean;
   highlighted?: boolean;
   onSelect: (row: ProductionTransferPickingRow) => void;
   serialDetail?: boolean;
 }) {
   const done = row.remainingQuantity <= 0;
-  const canSelectForRoute = !locked && row.remainingQuantity > 0;
+  const canSelect = !locked && (
+    pickTab === 'completed'
+      ? row.processedQuantity > 0 && row.remainingQuantity <= 0
+      : row.remainingQuantity > 0
+  );
   return (
     <tr
       data-picking-line-no={row.lineNo}
@@ -1300,8 +1558,8 @@ function PickingRow({
         <input
           type="checkbox"
           checked={selected}
-          disabled={locked || !canSelectForRoute}
-          onChange={() => canSelectForRoute && onSelect(row)}
+          disabled={!canSelect}
+          onChange={() => canSelect && onSelect(row)}
         />
       </td>
       <td className={cn(TABLE_CELL, 'text-right font-bold tabular-nums')}>{row.lineNo}</td>

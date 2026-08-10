@@ -17,9 +17,9 @@ describe('orderTasksForDisplay', () => {
     expect(ordered.map((task) => task.taskId)).toEqual([10, 20]);
   });
 
-  it('keeps return task after its origin pick task', () => {
+  it('keeps cancellation return task after its origin pick task', () => {
     const tasks = [
-      { taskId: 30, taskNo: 'TR-1-1-IADE', originTaskId: 10, taskType: 'AssignmentReturn', status: 'Assigned', processedQuantity: 0, plannedQuantity: 7, remainingQuantity: 7 },
+      { taskId: 30, taskNo: 'TR-1-IPTALIADE1', originTaskId: 10, taskType: 'CancellationReturn', status: 'Assigned', processedQuantity: 0, plannedQuantity: 7, remainingQuantity: 7 },
       { taskId: 10, taskNo: 'TR-1-1', taskType: 'Pick', status: 'InProgress', processedQuantity: 3, plannedQuantity: 10, remainingQuantity: 7 },
     ];
 
@@ -27,12 +27,12 @@ describe('orderTasksForDisplay', () => {
     expect(ordered.map((task) => task.taskId)).toEqual([10, 30]);
   });
 
-  it('orders completed return before kalan pick task created after return', () => {
+  it('orders completed cancellation return before kalan pick task', () => {
     const tasks = [
       { taskId: 10, taskNo: 'TR-1-P01', taskType: 'Pick', status: 'Completed', processedQuantity: 3, plannedQuantity: 10, remainingQuantity: 0 },
       { taskId: 20, taskNo: 'TR-1-1', previousTaskId: 10, taskType: 'Pick', status: 'Completed', processedQuantity: 2, plannedQuantity: 7, remainingQuantity: 0 },
-      { taskId: 30, taskNo: 'TR-1-IADE1', originTaskId: 20, taskType: 'AssignmentReturn', status: 'Completed', processedQuantity: 5, plannedQuantity: 5, remainingQuantity: 0 },
-      { taskId: 40, taskNo: 'TR-1-2', previousTaskId: 20, taskType: 'Pick', status: 'Open', processedQuantity: 0, plannedQuantity: 15, remainingQuantity: 15 },
+      { taskId: 30, taskNo: 'TR-1-IPTALIADE1', originTaskId: 20, taskType: 'CancellationReturn', status: 'Completed', processedQuantity: 5, plannedQuantity: 5, remainingQuantity: 0 },
+      { taskId: 40, taskNo: 'TR-1-2', previousTaskId: 30, taskType: 'Pick', status: 'Open', processedQuantity: 0, plannedQuantity: 15, remainingQuantity: 15 },
     ];
 
     const ordered = orderTasksForDisplay(tasks);

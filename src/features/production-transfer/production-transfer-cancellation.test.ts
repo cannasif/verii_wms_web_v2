@@ -42,6 +42,7 @@ describe('analyzeProductionCancellationReadiness', () => {
       },
     ]), { transferPickedQuantity: 4 });
     expect(result.canCancel).toBe(false);
+    expect(result.needsCancellationReturn).toBe(true);
     expect(result.missingReturnTasks).toHaveLength(1);
     expect(result.missingReturnTasks[0]?.username).toBe('Ali');
   });
@@ -67,7 +68,7 @@ describe('analyzeProductionCancellationReadiness', () => {
         lines: [{ taskLineId: 1, transferLineId: 1, stockCode: 'STK', requestedQuantity: 10, reservedQuantity: 10, missingQuantity: 0, processedQuantity: 4, totalRequestedQuantity: 10 }],
       },
       {
-        taskId: 2, taskNo: 'CR-1', taskType: 'CancellationReturn', warehouseId: 1, status: 'Completed', startedBy: 5, originTaskId: 1, originUserId: 5,
+        taskId: 2, taskNo: 'PT-001-IPTALIADE1', taskType: 'CancellationReturn', warehouseId: 1, status: 'Completed', startedBy: 5,
         assignments: [], lines: [],
       },
     ]), { transferPickedQuantity: 4 });

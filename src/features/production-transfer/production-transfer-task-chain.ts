@@ -1,6 +1,6 @@
 import type { ProductionTask, ProductionWorkOrderTransferTaskRow } from './api';
 
-const RETURN_TASK_TYPES = new Set(['AssignmentReturn', 'CancellationReturn']);
+const RETURN_TASK_TYPES = new Set(['CancellationReturn']);
 
 export function isReturnTaskType(taskType: string): boolean {
   return RETURN_TASK_TYPES.has(taskType);
@@ -77,11 +77,11 @@ export function taskDisplayName(task: Pick<ChainTask, 'displayLabel' | 'taskNo'>
 
 /** Devir sonrası aynı görev mi yoksa yeni -2 görevi mi oluştuğuna dair kısa açıklama. */
 export function describeHandoffRelation(task: ChainTask, tasks: readonly ChainTask[]): string | null {
-  if (task.taskType === 'AssignmentReturn' || task.taskType === 'CancellationReturn') {
+  if (task.taskType === 'CancellationReturn') {
     const origin = tasks.find((row) => row.taskId === task.originTaskId);
     return origin
-      ? `${taskDisplayName(origin)} görevinden oluşturulan iade`
-      : 'İade görevi';
+      ? `${taskDisplayName(origin)} görevinden oluşturulan iptal iadesi`
+      : 'İptal iadesi görevi';
   }
 
   if (task.previousTaskId) {

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Boxes, ChevronDown, ChevronRight, ClipboardList, Factory, PackageCheck, Play, RefreshCw, RotateCcw, Rows3, Save, Settings2, ShieldAlert, Trash2, UserPlus, Warehouse } from 'lucide-react';
+import { Boxes, ChevronDown, ChevronRight, ClipboardList, Factory, PackageCheck, Play, RefreshCw, Rows3, Save, Settings2, ShieldAlert, Trash2, UserPlus, Warehouse } from 'lucide-react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -337,7 +337,7 @@ export function ProductionTransferPolicyPage(){
 
 const TASK_TYPE_LABELS: Record<string, string> = {
   Pick: 'Toplama', Dispatch: 'Sevk', Receive: 'Kabul', Putaway: 'Yerleştirme',
-  CancellationReturn: 'İptal İadesi', AssignmentReturn: 'İade',
+  CancellationReturn: 'İptal İadesi',
 };
 const taskTypeLabel = (type: string): string => TASK_TYPE_LABELS[type] ?? type;
 
@@ -397,15 +397,15 @@ export function ProductionTaskPanel(){
   const transferPickedQuantity=detailQuery.data?sumTransferPickedQuantity(detailQuery.data):0;
   const cancellationReadiness=analyzeProductionCancellationReadiness(board,{transferPickedQuantity});
   const activeReturnTask=board.tasks.find(task=>
-    (task.taskType==='AssignmentReturn'||task.taskType==='CancellationReturn')
+    task.taskType==='CancellationReturn'
     &&task.assignments.some(assignment=>assignment.userId===currentUserId)
     &&!['Completed','Cancelled'].includes(task.status));
   return <section className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5">
     <div className="mb-4 flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-widest text-[var(--wms-brand-primary)]">Üretim transfer görevi</p><h2 className="text-xl font-black">{board.documentNo}</h2></div><span className="rounded-full border border-[var(--wms-app-border)] px-3 py-1 text-xs font-bold">{board.transferStatus}</span></div>
     {activeReturnTask?(<ProductionTransferReturnSection transferId={id} documentNo={board.documentNo} onBoardChange={nextBoard=>queryClient.setQueryData(boardQueryKey,nextBoard)}/>):null}
     <div className="space-y-4">{board.tasks.filter(task=>!activeReturnTask||task.taskId!==activeReturnTask.taskId).map(task=><article key={task.taskId} className="rounded-xl border border-[var(--wms-app-border)] p-4">
-      <div className="flex flex-wrap items-center justify-between gap-3"><div><strong>{task.taskNo}</strong>{['AssignmentReturn','CancellationReturn'].includes(task.taskType)?<span className="ml-2 rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-bold text-amber-500">{taskTypeLabel(task.taskType)}</span>:<span className="ml-2 text-xs text-[var(--wms-app-text-muted)]">{taskTypeLabel(task.taskType)}</span>}<span className="ml-2 text-xs text-[var(--wms-app-text-muted)]">{task.status}</span>{task.completedAtUtc&&<span className="ml-2 text-xs text-[var(--wms-app-text-muted)]">· {new Date(task.completedAtUtc).toLocaleString('tr-TR')}</span>}</div>
-        <div className="flex flex-wrap gap-2">{!['CancellationReturn','AssignmentReturn'].includes(task.taskType)&&task.lines.some(x=>x.missingQuantity>0||x.processedQuantity>0&&x.processedQuantity<x.requestedQuantity)&&!['Completed','Cancelled'].includes(task.status)&&<button disabled={busy} onClick={()=>void run(()=>productionTransferApi.refreshRoute(id,task.taskId))} className="inline-flex items-center gap-2 rounded-lg border border-amber-500 px-3 py-2 text-xs font-bold text-amber-500"><RefreshCw className="size-4"/>Rotayı güncelle</button>}{task.assignments.some(x=>x.userId===currentUserId)&&!['InProgress','PartiallyCompleted','Completed','Cancelled'].includes(task.status)&&<button disabled={busy||checkingTaskId===task.taskId} onClick={()=>void requestStart(task.taskId,task.taskNo)} className="inline-flex items-center gap-2 rounded-lg bg-[var(--wms-brand-primary)] px-3 py-2 text-xs font-bold text-[var(--wms-brand-on-primary)]"><Play className="size-4"/>Bu işi yapıyorum</button>}</div></div>
+      <div className="flex flex-wrap items-center justify-between gap-3"><div><strong>{task.taskNo}</strong>{task.taskType==='CancellationReturn'?<span className="ml-2 rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-bold text-amber-500">{taskTypeLabel(task.taskType)}</span>:<span className="ml-2 text-xs text-[var(--wms-app-text-muted)]">{taskTypeLabel(task.taskType)}</span>}<span className="ml-2 text-xs text-[var(--wms-app-text-muted)]">{task.status}</span>{task.completedAtUtc&&<span className="ml-2 text-xs text-[var(--wms-app-text-muted)]">· {new Date(task.completedAtUtc).toLocaleString('tr-TR')}</span>}</div>
+        <div className="flex flex-wrap gap-2">{task.taskType!=='CancellationReturn'&&task.lines.some(x=>x.missingQuantity>0||x.processedQuantity>0&&x.processedQuantity<x.requestedQuantity)&&!['Completed','Cancelled'].includes(task.status)&&<button disabled={busy} onClick={()=>void run(()=>productionTransferApi.refreshRoute(id,task.taskId))} className="inline-flex items-center gap-2 rounded-lg border border-amber-500 px-3 py-2 text-xs font-bold text-amber-500"><RefreshCw className="size-4"/>Rotayı güncelle</button>}{task.assignments.some(x=>x.userId===currentUserId)&&!['InProgress','PartiallyCompleted','Completed','Cancelled'].includes(task.status)&&<button disabled={busy||checkingTaskId===task.taskId} onClick={()=>void requestStart(task.taskId,task.taskNo)} className="inline-flex items-center gap-2 rounded-lg bg-[var(--wms-brand-primary)] px-3 py-2 text-xs font-bold text-[var(--wms-brand-on-primary)]"><Play className="size-4"/>Bu işi yapıyorum</button>}</div></div>
       <div className="mt-3 overflow-x-auto"><table className="w-full min-w-[720px] text-left text-sm"><thead className="text-xs uppercase text-[var(--wms-app-text-muted)]"><tr><th className="p-2">Stok</th><th className="p-2">Kaynak raf</th><th className="p-2 text-right">İstenen</th><th className="p-2 text-right">Rezerve</th><th className="p-2 text-right">Eksik</th><th className="p-2 text-right">Toplanan</th></tr></thead><tbody>{task.lines.map(line=><tr key={line.taskLineId} className="border-t border-[var(--wms-app-border)]"><td className="p-2"><strong>{line.stockCode}</strong><div className="text-xs text-[var(--wms-app-text-muted)]">{line.stockName}</div></td><ProductionTaskSourceLocationCell line={line} getAvailable={sourceAvailable} loading={sourceAvailabilityLoading}/><td className="p-2 text-right">{line.requestedQuantity}</td><td className="p-2 text-right text-emerald-500">{line.reservedQuantity}</td><td className="p-2 text-right text-red-500">{line.missingQuantity}</td><td className="p-2 text-right">{line.processedQuantity}</td></tr>)}</tbody></table></div>
       {task.assignments.length>0&&<div className="mt-3 flex flex-wrap items-center gap-2">{task.assignments.map(a=><span key={a.userId} className="inline-flex items-center gap-2 rounded-full border border-[var(--wms-app-border)] px-3 py-1 text-xs">{a.username}{a.isPrimary?' · Birincil':''}</span>)}</div>}
     </article>)}</div>
@@ -431,12 +431,9 @@ export function ProductionTaskPanel(){
         {task&&<div className="flex flex-wrap items-center gap-2">
           {task.assignments.map(a=>{
             const hasProgress=lineageHasProgress(task);
-            const returnTask=board.tasks.find(t=>t.originTaskId===task.taskId&&t.originUserId===a.userId&&t.status!=='Cancelled');
             return <span key={a.userId} className="inline-flex items-center gap-2 rounded-full border border-[var(--wms-app-border)] px-3 py-1 text-xs">
               <span>{a.username}{a.isPrimary?' · Birincil':''}</span>
-              {hasProgress&&returnTask&&returnTask.status!=='Completed'&&<span className="text-amber-500" title={`${returnTask.taskNo} tamamlanmadan atama kaldırılamaz`}>İade bekleniyor</span>}
-              {hasProgress&&!returnTask&&<button title="İade görevi oluştur — atamayı kaldırmadan önce toplanan stok eski rafına konmalı" disabled={busy} onClick={()=>void run(()=>productionTransferApi.requestAssignmentReturn(id,task.taskId,a.userId))}><RotateCcw className="size-3.5 text-amber-500"/></button>}
-              <button title="Atamayı kaldır" disabled={busy} onClick={()=>void run(()=>productionTransferApi.removeAssignment(id,task.taskId,a.userId))}><Trash2 className="size-3.5 text-red-500"/></button>
+              <button title={hasProgress?'Toplanmış stok varken atama kaldırılamaz; kalan işi devredin veya eksik teslim ile tamamlayın':'Atamayı kaldır'} disabled={busy||hasProgress} onClick={()=>void run(()=>productionTransferApi.removeAssignment(id,task.taskId,a.userId))}><Trash2 className="size-3.5 text-red-500"/></button>
             </span>;
           })}
           <select className="input min-w-52" value={selectedUsers[task.taskId]??''} onChange={e=>setSelectedUsers(x=>({...x,[task.taskId]:Number(e.target.value)}))}><option value="">Depo çalışanı seçin</option>{board.eligibleAssignees.filter(u=>(u.warehouseIds.length===0||u.warehouseIds.includes(task.warehouseId))&&!task.assignments.some(a=>a.userId===u.userId)).map(u=><option key={u.userId} value={u.userId}>{u.username}</option>)}</select>
@@ -515,27 +512,49 @@ function TransferReturnLocationPanel({branchCode}:{branchCode:string}){
   const[warehouseValue,setWarehouseValue]=useState<string|null>(null);
   const[returnLocationValue,setReturnLocationValue]=useState<string|null>(null);
   const[productionLocationValue,setProductionLocationValue]=useState<string|null>(null);
+  const[autoPickThreshold,setAutoPickThreshold]=useState('');
   const[busy,setBusy]=useState(false);
   const warehouseId=Number(warehouseValue||0);
   useEffect(()=>{
-    if(!warehouseId){setReturnLocationValue(null);setProductionLocationValue(null);return;}
+    if(!warehouseId){setReturnLocationValue(null);setProductionLocationValue(null);setAutoPickThreshold('');return;}
     void productionTransferApi.returnSetting(warehouseId).then(x=>{
       setReturnLocationValue(x.defaultTransferReturnLocationId?String(x.defaultTransferReturnLocationId):null);
       setProductionLocationValue(x.defaultProductionTransferLocationId?String(x.defaultProductionTransferLocationId):null);
+      setAutoPickThreshold(
+        x.autoPickWithoutConfirmMaxQuantity && x.autoPickWithoutConfirmMaxQuantity > 0
+          ? String(Math.floor(x.autoPickWithoutConfirmMaxQuantity))
+          : '',
+      );
     }).catch((e:Error)=>toast.error(e.message));
   },[warehouseId]);
   const save=async()=>{
     if(!warehouseId)return;
+    const trimmedThreshold = autoPickThreshold.trim();
+    let parsedThreshold: number | null = null;
+    if (trimmedThreshold !== '') {
+      const value = Number(trimmedThreshold.replace(',', '.'));
+      if (!Number.isFinite(value) || value < 0 || !Number.isInteger(value)) {
+        toast.error('Onaysız toplama eşiği geçerli bir tam sayı olmalıdır.');
+        return;
+      }
+      parsedThreshold = value;
+    }
     setBusy(true);
     try{
       const result=await productionTransferApi.updateReturnSetting(
         warehouseId,
         returnLocationValue?Number(returnLocationValue):undefined,
         productionLocationValue?Number(productionLocationValue):undefined,
+        parsedThreshold,
       );
       setReturnLocationValue(result.defaultTransferReturnLocationId?String(result.defaultTransferReturnLocationId):null);
       setProductionLocationValue(result.defaultProductionTransferLocationId?String(result.defaultProductionTransferLocationId):null);
-      toast.success('Depo üretim transfer ve iade rafı ayarları kaydedildi.');
+      setAutoPickThreshold(
+        result.autoPickWithoutConfirmMaxQuantity && result.autoPickWithoutConfirmMaxQuantity > 0
+          ? String(Math.floor(result.autoPickWithoutConfirmMaxQuantity))
+          : '',
+      );
+      toast.success('Depo üretim transfer ayarları kaydedildi.');
     }catch(e){toast.error(e instanceof Error?e.message:'Ayar kaydedilemedi.');}
     finally{setBusy(false);}
   };
@@ -568,8 +587,23 @@ function TransferReturnLocationPanel({branchCode}:{branchCode:string}){
         loadingLabel={<><Save className="size-4"/>Kaydediliyor…</>}
         onClick={()=>void save()}
       >
-        <Save className="size-4"/>Rafları kaydet
+        <Save className="size-4"/>Kaydet
       </OpsActionButton>
+    </div>
+    <div className="mt-4 grid items-end gap-4 xl:grid-cols-[minmax(0,16rem)_1fr]">
+      <PolicyField label="Onaysız toplama eşiği (adet)">
+        <AppInput
+          inputMode="numeric"
+          pattern="[0-9]*"
+          value={autoPickThreshold}
+          onChange={(event) => setAutoPickThreshold(event.target.value.replace(/[^\d]/g, ''))}
+          placeholder="Kapalı"
+          disabled={warehouseId <= 0}
+        />
+      </PolicyField>
+      <p className="pb-2 text-sm text-[var(--wms-app-text-muted)]">
+        Serisiz stokta varsayılan miktar bu eşiğe eşit veya küçükse miktar popup&apos;ı açılmadan toplanır. Boş bırakılırsa her zaman miktar sorulur.
+      </p>
     </div>
   </PolicySection>;
 }

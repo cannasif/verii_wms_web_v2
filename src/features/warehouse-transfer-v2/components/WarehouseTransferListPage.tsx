@@ -11,6 +11,7 @@ import { localizeEnumValue } from '@/lib/enum-localization';
 import { formatProjectDate, formatProjectDateTime, formatProjectNumber } from '@/lib/project-format';
 import { StockIdentityCell } from '@/components/shared/StockIdentityCell';
 import { useProductionTransferListCancel } from '@/features/production-transfer/hooks/useProductionTransferListCancel';
+import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
 import {
   ProductionTransferCancelBlockedDialog,
   ProductionTransferCancelConfirmDialog,
@@ -33,6 +34,7 @@ export function WarehouseTransferListPage({
   subcontractingDirection?: SubcontractingTransferDirection;
 }): ReactElement {
   const { t, i18n } = useTranslation('common');
+  const { can } = usePermissionAccess();
   const gridLanguage = i18n.resolvedLanguage ?? i18n.language;
   const transferApi = useMemo(
     () => transferApiFor(variant, subcontractingDirection),
@@ -124,7 +126,12 @@ export function WarehouseTransferListPage({
           documentNo={productionCancelBlocked.row.documentNo}
           transferId={productionCancelBlocked.row.id}
           readiness={productionCancelBlocked.readiness}
+          canAssign={can('WMS.PRODUCTION_TRANSFER.ASSIGN')}
           onClose={closeBlocked}
+          onReturnTasksStarted={() => {
+            closeBlocked();
+            refreshed();
+          }}
         />
       )}
       {productionCancelConfirm && (

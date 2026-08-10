@@ -2,8 +2,7 @@ import { RefreshCw, Send } from 'lucide-react';
 import { OpsActionButton } from '@/components/shared/OpsActionButton';
 import { ResponsiveDialog } from '@/components/shared/ResponsiveDialog';
 import { cn } from '@/lib/utils';
-import type { ProductionTransferExecution } from '../api';
-import type { ProductionTransferErpIntegrationStatus } from '../production-transfer-erp-posting';
+import type { ProductionTransferErpIntegrationStatus, ProductionTransferErpPanelSource } from '../production-transfer-erp-posting';
 
 export function ErpPostingTriggerButton({
   status,
@@ -38,21 +37,21 @@ export function ErpPostingTriggerButton({
 }
 
 export function ErpPostingPanel({
-  execution,
+  erp,
   canRetry,
   erpBusy,
   onClose,
   onRetry,
   t,
 }: {
-  execution: ProductionTransferExecution;
+  erp: ProductionTransferErpPanelSource;
   canRetry: boolean;
   erpBusy: boolean;
   onClose: () => void;
   onRetry: () => void;
   t: (key: string) => string;
 }) {
-  const status = execution.erpIntegrationStatus;
+  const status = erp.erpIntegrationStatus;
 
   return (
     <ResponsiveDialog
@@ -77,22 +76,22 @@ export function ErpPostingPanel({
             <span className="text-xs font-bold uppercase tracking-wide text-[var(--wms-app-text-muted)]">Durum</span>
             <p className="mt-1 font-semibold text-[var(--wms-app-text)]">{t(`execution.erp.status.${status}`)}</p>
           </div>
-          {execution.erpDocumentNo ? (
+          {erp.erpDocumentNo ? (
             <div>
               <span className="text-xs font-bold uppercase tracking-wide text-[var(--wms-app-text-muted)]">{t('execution.erp.documentNo')}</span>
-              <p className="mt-1 font-mono font-bold text-[var(--wms-brand-primary)]">{execution.erpDocumentNo}</p>
+              <p className="mt-1 font-mono font-bold text-[var(--wms-brand-primary)]">{erp.erpDocumentNo}</p>
             </div>
           ) : null}
-          {execution.erpErrorCode ? (
+          {erp.erpErrorCode ? (
             <div>
               <span className="text-xs font-bold uppercase tracking-wide text-[var(--wms-app-text-muted)]">Hata kodu</span>
-              <p className="mt-1 font-mono text-xs text-red-600">{execution.erpErrorCode}</p>
+              <p className="mt-1 font-mono text-xs text-red-600">{erp.erpErrorCode}</p>
             </div>
           ) : null}
-          {execution.erpErrorMessage ? (
+          {erp.erpErrorMessage ? (
             <div>
               <span className="text-xs font-bold uppercase tracking-wide text-[var(--wms-app-text-muted)]">Hata mesajı</span>
-              <p className="mt-1 whitespace-pre-wrap text-sm text-red-600">{execution.erpErrorMessage}</p>
+              <p className="mt-1 whitespace-pre-wrap text-sm text-red-600">{erp.erpErrorMessage}</p>
             </div>
           ) : null}
           {status === 'CommitUncertain' ? (

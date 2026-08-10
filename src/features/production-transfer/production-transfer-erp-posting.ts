@@ -45,3 +45,24 @@ export function productionTransferErpErrorMessage(
   if (row.erpErrorCode?.trim()) return row.erpErrorCode.trim();
   return undefined;
 }
+
+export type ProductionTransferErpPanelSource = Pick<
+  ProductionTransferExecution,
+  'erpIntegrationStatus' | 'erpDocumentNo' | 'erpErrorCode' | 'erpErrorMessage'
+>;
+
+export function productionTransferErpPanelSource(
+  execution: ProductionTransferExecution | undefined,
+  summary: ProductionWorkOrderTransferHeaderRow | undefined,
+): ProductionTransferErpPanelSource | null {
+  if (!execution && !summary) return null;
+
+  return {
+    erpIntegrationStatus: execution?.erpIntegrationStatus
+      ?? summary?.erpIntegrationStatus
+      ?? 'Pending',
+    erpDocumentNo: execution?.erpDocumentNo ?? summary?.erpDocumentNo,
+    erpErrorCode: execution?.erpErrorCode ?? summary?.erpErrorCode,
+    erpErrorMessage: execution?.erpErrorMessage ?? summary?.erpErrorMessage,
+  };
+}

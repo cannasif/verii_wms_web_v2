@@ -6,7 +6,11 @@ import type {
   ProductionPlanDetail,
   ProductionPlanGridRow,
   ProductionSourceWorkOrder,
+  ProductionReturnedWorkOrder,
   PreparedNetsisProductionWorkOrder,
+  CancelProductionWorkOrderAssignmentRequest,
+  RestoreProductionWorkOrderAssignmentRequest,
+  ProductionWorkOrderAssignmentCancellationResult,
 } from './types';
 
 interface Envelope<T> { success: boolean; data: T; message?: string }
@@ -20,11 +24,34 @@ export const productionApi = {
     unwrap(await api.get<Envelope<ProductionSourceWorkOrder[]>>('/api/production/work-orders', {
       params: { search: search?.trim() || undefined, take: 200 },
     })),
-  prepareSourceWorkOrder: async (row: Pick<ProductionSourceWorkOrder, 'workOrderNumber' | 'sourceType' | 'sourceSystemCode'>): Promise<PreparedNetsisProductionWorkOrder> =>
-    unwrap(await api.get<Envelope<PreparedNetsisProductionWorkOrder>>(
+  returnedWorkOrders: async (search?: string): Promise<ProductionReturnedWorkOrder[]> =>
+    unwrap(await api.get<Envelope<ProductionReturnedWorkOrder[]>>('/api/production/work-orders/returned', {
+      params: { search: search?.trim() || undefined, take: 200 },
+    })),
+  cancelledWorkOrderAssignments: async (search?: string): Promise<ProductionSourceWorkOrder[]> =>
+    unwrap(await api.get<Envelope<ProductionSourceWorkOrder[]>>('/api/production/work-orders/cancelled-assignments', {
+      params: { search: search?.trim() || undefined, take: 200 },
+    })),
+  cancelWorkOrderAssignment: async (payload: CancelProductionWorkOrderAssignmentRequest): Promise<ProductionWorkOrderAssignmentCancellationResult> =>
+    unwrap(await api.post<Envelope<ProductionWorkOrderAssignmentCancellationResult>>('/api/production/work-orders/cancel-assignment', payload)),
+  restoreWorkOrderAssignment: async (payload: RestoreProductionWorkOrderAssignmentRequest): Promise<ProductionWorkOrderAssignmentCancellationResult> =>
+    unwrap(await api.post<Envelope<ProductionWorkOrderAssignmentCancellationResult>>('/api/production/work-orders/restore-assignment', payload)),
+  prepareSourceWorkOrder: async (row: Pick<ProductionSourceWorkOrder, 'workOrderNumber' | 'sourceType' | 'sourceSystemCode' | 'listingKind' | 'transferId' | 'kalanTaskId'>): Promise<PreparedNetsisProductionWorkOrder> => {
+    const useKalanScope = row.listingKind === 'CancellationReturnRemainder'
+      || (Number.isFinite(row.transferId) && (row.transferId ?? 0) > 0
+        && Number.isFinite(row.kalanTaskId) && (row.kalanTaskId ?? 0) > 0);
+    return unwrap(await api.get<Envelope<PreparedNetsisProductionWorkOrder>>(
       `/api/production/work-orders/${encodeURIComponent(row.workOrderNumber)}/prepare`,
-      { params: { sourceType: row.sourceType, sourceSystemCode: row.sourceSystemCode } },
-    )),
+      {
+        params: {
+          sourceType: row.sourceType,
+          sourceSystemCode: row.sourceSystemCode,
+          transferId: useKalanScope ? row.transferId : undefined,
+          kalanTaskId: useKalanScope ? row.kalanTaskId : undefined,
+        },
+      },
+    ));
+  },
   create: async (payload: CreateProductionPlanRequest): Promise<CreateProductionPlanResult> =>
     unwrap(await api.post<Envelope<CreateProductionPlanResult>>('/api/production/plans', payload)),
   paged: async (request: GridRequest): Promise<GridPage<ProductionPlanGridRow>> =>
