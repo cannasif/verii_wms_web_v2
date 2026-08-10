@@ -2,3 +2,4 @@ export { KkdOverviewPage, KkdDefinitionsPage, KkdEntitlementPage, KkdDistributio
 export { KkdDistributionCreatePage } from './KkdDistributionCreatePage';
 export { KkdMaterialRequestsPage } from './KkdMaterialRequestsPage';
 export { KkdRequestsPage } from './KkdRequestsPage';
+export { KkdPreparationPickingPage } from './KkdPreparationPickingPage';
