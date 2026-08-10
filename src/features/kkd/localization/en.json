@@ -6,14 +6,14 @@
     "preparing": "Requests with preparation tasks in progress. Expand a row to manage its tasks.",
     "completed": "Requests whose delivery is completed. Track ERP status here.",
     "cancelled": "Cancelled requests.",
-    "mine": "Active tasks you claimed or that were assigned to you. Double-click to start preparation."
+    "mine": "Active tasks you claimed or that were assigned to you. Double-click to start picking."
   },
   "grid": { "id": "Record ID", "requestNo": "Request no", "status": "Status", "priority": "Priority", "employeeCode": "Employee code", "employeeName": "Employee", "department": "Department", "warehouse": "Warehouse", "warehouseUnset": "No warehouse yet", "assignedUser": "Preparers", "assigned": "Assigned", "unassigned": "Unassigned", "erp": "Document / ERP", "lineCount": "Lines", "unresolved": "Awaiting SKU", "requested": "Requested", "allocated": "Prepared", "delivered": "Delivered", "neededAt": "Needed by", "requestedAt": "Requested at", "createdBy": "Created by", "createdDate": "Created at", "updatedBy": "Updated by", "updatedDate": "Updated at", "actions": "Actions" },
-  "actions": { "new": "New PPE request", "detail": "Details", "assign": "Prepare request (assign by line)", "claim": "Claim for myself", "claimPool": "Claim from pool", "prepare": "Send to preparation", "operation": "Warehouse outbound operation", "handoff": "Hand over remaining work", "returnWork": "Return work to pool", "erpRetry": "Retry ERP posting", "expand": "Show lines", "collapse": "Hide lines", "addLine": "Add line", "removeLine": "Remove line", "selectStock": "Select SKU/size", "create": "Create request", "save": "Save", "close": "Close", "cancel": "Cancel request" },
+  "actions": { "new": "New PPE request", "detail": "Details", "assign": "Prepare request (assign by line)", "claim": "Claim for myself", "claimPool": "Claim from pool", "prepare": "Start picking", "reactivate": "Put back to pending", "operation": "Warehouse outbound operation", "handoff": "Hand over remaining work", "returnWork": "Return work to pool", "erpRetry": "Retry ERP posting", "expand": "Show lines", "collapse": "Hide lines", "addLine": "Add line", "removeLine": "Remove line", "selectStock": "Select SKU/size", "create": "Create request", "save": "Save", "close": "Close", "cancel": "Cancel request" },
   "cancelDialog": { "title": "Cancel request", "description": "PPE request {{no}} will be cancelled. Provide the cancellation reason.", "checking": "Running cancellation precheck...", "blockedTitle": "This request cannot be cancelled right now", "goToOutbound": "Go to the linked warehouse outbound" },
   "prepareDialog": {
     "title": "Prepare request",
-    "description": "Distribute the lines of request {{no}} to people or a warehouse. All open lines must be assigned before saving.",
+    "description": "Distribute the lines of request {{no}} to people or a warehouse. You can approve quota-exceeding lines or exclude them from this round.",
     "assignSection": "Assignment",
     "assignHint": "Select lines from the unassigned list, choose Person or Warehouse, then press 'Assign selected'.",
     "targetUser": "Person",
@@ -37,14 +37,23 @@
     "groupLines": "{{count}} lines",
     "removeGroup": "Remove assignment group",
     "removeLine": "Remove from assignment",
-    "remainingLines": "{{count}} lines remain unassigned. All lines must be assigned to save.",
+    "remainingLines": "{{count}} lines remain unassigned. All lines other than excluded ones must be assigned to save.",
     "needGroup": "Create at least one assignment group to save.",
     "needTarget": "Select a person or warehouse to assign the selected lines.",
-    "allLinesRequired": "All open lines of the request must be assigned before saving.",
+    "allLinesRequired": "All open lines that are not excluded must be assigned before saving.",
     "nothingToAssign": "There are no open lines to assign on this request.",
     "colLine": "Line",
     "colQuantity": "Quantity",
     "colStock": "SKU / size",
+    "colQuota": "Quota",
+    "quotaExceeded": "Quota exceeded",
+    "quotaApprove": "Approve",
+    "quotaApproved": "Approved",
+    "quotaReject": "Reject",
+    "quotaRejected": "Rejected — will not be assigned this round",
+    "quotaRestore": "Undo",
+    "quotaConfirmReject": "This line will not be assigned this round, are you sure?",
+    "quotaConfirmYes": "Yes, exclude it",
     "confirm": "Confirm assignment"
   },
   "handoff": {
@@ -79,5 +88,5 @@
   "distributionStatus": { "Draft": "Draft", "Validated": "Validated", "OutboundCreated": "Outbound created", "Completed": "Posted to ERP", "Cancelled": "Cancelled", "Failed": "ERP failed" },
   "priority": { "Low": "Low", "Normal": "Normal", "High": "High", "Urgent": "Urgent" },
   "validation": { "employeeAndLine": "Select an employee and at least one PPE group.", "quantity": "All quantities must be greater than zero.", "stock": "Select the stock to issue.", "reason": "Operation reason must contain at least three characters.", "warehouse": "Warehouse must be selected.", "user": "A user must be selected." },
-  "messages": { "created": "PPE request {{no}} was created.", "resolved": "SKU/size selection was saved.", "assigned": "Request was assigned.", "claimed": "Request was claimed for you. Start preparation from the 'My work' tab.", "claimedPool": "The task was claimed from the warehouse pool.", "tasksAssigned": "Preparation tasks were created.", "handedOver": "Remaining work was handed over.", "returned": "Task was returned to the pool.", "erpRetried": "ERP posting was retried.", "unassigned": "Assignment cleared, warehouse updated.", "cancelled": "PPE request was cancelled.", "failed": "PPE operation could not be completed.", "loading": "Loading request...", "detailFailed": "Request detail could not be loaded." }
+  "messages": { "created": "PPE request {{no}} was created.", "resolved": "SKU/size selection was saved.", "assigned": "Request was assigned.", "claimed": "Request was claimed for you. Start preparation from the 'My work' tab.", "claimedPool": "The task was claimed from the warehouse pool.", "tasksAssigned": "Preparation tasks were created.", "handedOver": "Remaining work was handed over.", "returned": "Task was returned to the pool.", "erpRetried": "ERP posting was retried.", "unassigned": "Assignment cleared, warehouse updated.", "cancelled": "PPE request was cancelled.", "reactivated": "PPE request was put back to pending.", "failed": "PPE operation could not be completed.", "loading": "Loading request...", "detailFailed": "Request detail could not be loaded." }
 }

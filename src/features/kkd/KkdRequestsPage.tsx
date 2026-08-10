@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowRightLeft, ChevronDown, ChevronRight, ClipboardList, Eye, Hand, PackageCheck, PlayCircle, Plus, RefreshCw, SearchCheck, Trash2, Undo2, UserPlus, UserRoundCog, Users, X } from 'lucide-react';
+import { ArrowRightLeft, Check, CheckCircle2, ChevronDown, ChevronRight, ClipboardList, Eye, Hand, PackageCheck, PlayCircle, Plus, RefreshCw, SearchCheck, Trash2, TriangleAlert, Undo2, UserPlus, UserRoundCog, Users, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdvancedDataGrid, type GridColumn, type GridRequest } from '@/components/shared/AdvancedDataGrid';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -200,10 +200,17 @@ export function KkdRequestsPage(): ReactElement {
     new Intl.NumberFormat(i18n.language, { maximumFractionDigits: 6 }).format(value), [i18n.language]);
   const enumText = useCallback((scope: string, value: string): string =>
     t(`${scope}.${value}`, { defaultValue: value }), [t]);
-  /** Görev modunda tezgahı açar; taskId verilirse tezgah yalnızca o görevin kalemlerini ön doldurur. */
+  /**
+   * Bilinen bir hazırlama görevi varsa doğrudan barkodlu toplama sayfasına götürür (görev
+   * zaten hangi stoğun ne kadar toplanacağını biliyor, kullanıcı hiçbir şey seçmez).
+   * Görev bilinmiyorsa (ör. siparişsiz/ad-hoc senaryo) eski manuel dağıtım formuna düşer.
+   */
   const navigatePrepare = useCallback((row: { id: number; employeeId: number }, taskId?: number | null): void => {
+    if (taskId) {
+      navigate(`/warehouse/kkd/requests/${row.id}/preparation-tasks/${taskId}/pick`);
+      return;
+    }
     const params = new URLSearchParams({ employeeId: String(row.employeeId), requestId: String(row.id), taskMode: '1' });
-    if (taskId) params.set('taskId', String(taskId));
     navigate(`/warehouse/kkd/distributions/new?${params.toString()}`);
   }, [navigate]);
 
@@ -313,6 +320,12 @@ export function KkdRequestsPage(): ReactElement {
     onError: (error) => toast.error(error instanceof Error ? error.message : t('messages.failed')),
   });
 
+  const reactivateRequest = useMutation({
+    mutationFn: async ({ id, rowVersion }: { id: number; rowVersion: string }) => kkdApi.reactivateRequest(id, rowVersion),
+    onSuccess: () => { invalidateBoard(); toast.success(t('messages.reactivated')); },
+    onError: (error) => toast.error(error instanceof Error ? error.message : t('messages.failed')),
+  });
+
   const cancelPrecheck = useQuery({
     queryKey: ['kkd', 'requests', cancelTarget?.id, 'cancel-precheck'],
     queryFn: () => kkdApi.requestCancelPrecheck(cancelTarget!.id),
@@ -347,9 +360,9 @@ export function KkdRequestsPage(): ReactElement {
     {
       key: 'assignedUserId', label: t('grid.assignedUser'), width: 200, filterable: false, searchable: false,
       render: (row) => {
-        const names = row.activeAssigneeNames.length > 0
-          ? row.activeAssigneeNames
-          : (row.assignedUserName ? [row.assignedUserName] : []);
+        // Yalnızca aktif hazırlama görevinden gelen atamalar gösterilir — talep üzerindeki eski/bağımsız
+        // assignedUserId alanı görev oluşturmadan işaretlenmiş olabilir ve "toplama" aksiyonuyla tutarsız kalır.
+        const names = row.activeAssigneeNames;
         if (names.length === 0 && !row.hasPoolTask) {
           return <span className="inline-flex rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-600">{t('grid.unassigned')}</span>;
         }
@@ -361,10 +374,10 @@ export function KkdRequestsPage(): ReactElement {
               </span>
             ) : null}
             {names.slice(0, 2).map((name) => (
-              <span key={name} className="inline-flex max-w-full truncate rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-600">{name}</span>
+              <span key={name} title={name} className="inline-flex max-w-[9rem] truncate rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-600">{name}</span>
             ))}
             {names.length > 2 ? (
-              <span className="inline-flex rounded-full bg-emerald-500/10 px-2 py-1 text-xs font-semibold text-emerald-600">+{names.length - 2}</span>
+              <span title={names.slice(2).join(', ')} className="inline-flex rounded-full bg-emerald-500/10 px-2 py-1 text-xs font-semibold text-emerald-600">+{names.length - 2}</span>
             ) : null}
           </span>
         );
@@ -429,7 +442,7 @@ export function KkdRequestsPage(): ReactElement {
                 <Hand className="size-3.5" />
               </button>
             ) : null}
-            {canPrepare && open && (row.myActiveTaskId || (row.hasPoolTask && row.poolTaskId)) && row.unresolvedLineCount === 0 ? (
+            {canPrepare && open && (row.myActiveTaskId || (row.hasPoolTask && row.poolTaskId)) ? (
               <button type="button" className="wms-ops-grid-icon-btn" title={t('actions.prepare')} aria-label={t('actions.prepare')} onClick={() => prepare(row, row.myActiveTaskId ?? row.poolTaskId)}>
                 <PackageCheck className="size-3.5" />
               </button>
@@ -467,11 +480,23 @@ export function KkdRequestsPage(): ReactElement {
                 <X className="size-3.5" />
               </button>
             ) : null}
+            {canCancel && row.status === 'Cancelled' ? (
+              <button
+                type="button"
+                className="wms-ops-grid-icon-btn"
+                title={t('actions.reactivate')}
+                aria-label={t('actions.reactivate')}
+                disabled={reactivateRequest.isPending}
+                onClick={() => reactivateRequest.mutate({ id: row.id, rowVersion: row.rowVersion })}
+              >
+                <Undo2 className="size-3.5" />
+              </button>
+            ) : null}
           </div>
         );
       },
     },
-  ], [canAssignToOthers, canCancel, canClaimSelf, canPrepare, claimPool, claimSelf, enumText, erpRetry, expandedId, formatDateTime, formatQuantity, openPrepare, prepare, t, warehouseFilterOptions, warehouseLabel]);
+  ], [canAssignToOthers, canCancel, canClaimSelf, canPrepare, claimPool, claimSelf, enumText, erpRetry, expandedId, formatDateTime, formatQuantity, openPrepare, prepare, reactivateRequest, t, warehouseFilterOptions, warehouseLabel]);
 
   const createRequest = useMutation({
     mutationFn: async () => {
@@ -592,7 +617,7 @@ export function KkdRequestsPage(): ReactElement {
         />
       )}
       onRowDoubleClick={(row) => {
-        if (activeTab === 'mine' && row.unresolvedLineCount === 0 && (row.myActiveTaskId || row.poolTaskId)) {
+        if (activeTab === 'mine' && (row.myActiveTaskId || row.poolTaskId)) {
           prepare(row, row.myActiveTaskId ?? row.poolTaskId);
         }
         else setDetailId(row.id);
@@ -747,6 +772,7 @@ export function KkdRequestsPage(): ReactElement {
         warehouseOptions={warehouseOptions}
         formatQuantity={formatQuantity}
         currentUserOption={currentUserOption}
+        onOpenResolve={openResolve}
         onClose={() => setPrepTarget(null)}
         onDone={() => {
           setPrepTarget(null);
@@ -989,7 +1015,6 @@ function RequestExpanded({ row, t, formatQuantity, formatDateTime, enumText, can
             const isPool = task.assignedUserId == null;
             const mine = currentUserId != null && task.assignedUserId === currentUserId;
             const hasProgress = task.lines.some((line) => line.preparedQuantity > 0 || line.deliveredQuantity > 0);
-            const unresolved = task.lines.some((line) => !line.stockId && line.lineStatus !== 'Cancelled');
             return (
               <article key={task.id} className={cn(
                 'rounded-xl border border-[var(--wms-ops-card-border)] bg-[var(--wms-app-surface)] p-3',
@@ -1018,7 +1043,7 @@ function RequestExpanded({ row, t, formatQuantity, formatDateTime, enumText, can
                         <Users className="size-3.5"/>
                       </button>
                     ) : null}
-                    {canPrepare && active && mine && !unresolved ? (
+                    {canPrepare && active && mine ? (
                       <button type="button" className="wms-ops-grid-icon-btn" title={t('actions.prepare')} aria-label={t('actions.prepare')} onClick={() => onPrepareTask(task.id)}>
                         <PackageCheck className="size-3.5"/>
                       </button>
@@ -1062,12 +1087,13 @@ const POOL_GROUP_KEY = 'pool';
 type PrepareGroup = { user: ActiveUserOption | null; lineIds: number[] };
 type AssignTargetMode = 'user' | 'warehouse';
 
-function PrepareRequestDialog({ target, t, warehouseOptions, formatQuantity, currentUserOption, onClose, onDone }: {
+function PrepareRequestDialog({ target, t, warehouseOptions, formatQuantity, currentUserOption, onOpenResolve, onClose, onDone }: {
   target: PrepTarget;
   t: (key: string, options?: Record<string, unknown>) => string;
   warehouseOptions: Array<{ value: string; label: string }>;
   formatQuantity: (value: number) => string;
   currentUserOption: ActiveUserOption | null;
+  onOpenResolve: (requestId: number, line: KkdRequestLine) => void;
   onClose: () => void;
   onDone: () => void;
 }): ReactElement {
@@ -1079,6 +1105,11 @@ function PrepareRequestDialog({ target, t, warehouseOptions, formatQuantity, cur
   const [selectedLineIds, setSelectedLineIds] = useState<Set<number>>(new Set());
   const [groups, setGroups] = useState<PrepareGroup[]>([]);
   const [didAutoSelect, setDidAutoSelect] = useState(false);
+  /** Müdürün bu atama turunda hariç tuttuğu (kota aşımı nedeniyle reddedilen) kalemler — sadece bu diyalog oturumunda tutulur. */
+  const [excludedLineIds, setExcludedLineIds] = useState<Set<number>>(new Set());
+  /** Kota aşımına rağmen müdürün "onaylıyorum" dediği kalemler — sadece görsel teyit, davranışı değiştirmez (dahil edilmeyi zaten engellemiyor). */
+  const [approvedLineIds, setApprovedLineIds] = useState<Set<number>>(new Set());
+  const [pendingRejectId, setPendingRejectId] = useState<number | null>(null);
 
   const detail = useQuery({
     queryKey: ['kkd', 'requests', target.id],
@@ -1099,17 +1130,37 @@ function PrepareRequestDialog({ target, t, warehouseOptions, formatQuantity, cur
     line.status !== 'Cancelled' && line.status !== 'Completed'
     && line.remainingQuantity > 0
     && !activeAssignedIds.has(line.id)), [activeAssignedIds, detail.data]);
+  const employeeId = detail.data?.employeeId;
+  const excessCheckKey = assignableLines.filter((line) => line.stockId)
+    .map((line) => `${line.id}:${line.stockId}:${line.remainingQuantity}`).join('|');
+  const excessQuery = useQuery({
+    queryKey: ['kkd', 'requests', target.id, 'excess-check', employeeId, excessCheckKey],
+    queryFn: async () => {
+      const entries = await Promise.all(
+        assignableLines.filter((line) => line.stockId).map(async (line) => {
+          const result = await kkdApi.check({ employeeId: employeeId!, stockId: line.stockId!, quantity: line.remainingQuantity });
+          return [line.id, result.isAllowed] as const;
+        }),
+      );
+      return new Map(entries);
+    },
+    enabled: Boolean(employeeId) && excessCheckKey.length > 0,
+  });
+  const excessLineIds = useMemo(() => new Set(
+    [...(excessQuery.data?.entries() ?? [])].filter(([, isAllowed]) => !isAllowed).map(([lineId]) => lineId),
+  ), [excessQuery.data]);
   const remainingLines = assignableLines.filter((line) => !groupedIds.has(line.id));
-  const allCovered = assignableLines.length > 0 && remainingLines.length === 0;
-  const selectedUnassignedCount = remainingLines.filter((line) => selectedLineIds.has(line.id)).length;
-  const allUnassignedSelected = remainingLines.length > 0 && selectedUnassignedCount === remainingLines.length;
+  const coverableLines = remainingLines.filter((line) => !excludedLineIds.has(line.id));
+  const allCovered = assignableLines.length > 0 && coverableLines.length === 0;
+  const selectedUnassignedCount = coverableLines.filter((line) => selectedLineIds.has(line.id)).length;
+  const allUnassignedSelected = coverableLines.length > 0 && selectedUnassignedCount === coverableLines.length;
   const assignedCount = assignableLines.length - remainingLines.length;
 
   useEffect(() => {
-    if (didAutoSelect || remainingLines.length === 0) return;
-    setSelectedLineIds(new Set(remainingLines.map((line) => line.id)));
+    if (didAutoSelect || coverableLines.length === 0) return;
+    setSelectedLineIds(new Set(coverableLines.map((line) => line.id)));
     setDidAutoSelect(true);
-  }, [didAutoSelect, remainingLines]);
+  }, [didAutoSelect, coverableLines]);
 
   const effectiveWarehouseId = targetMode === 'warehouse' && poolWarehouseId
     ? poolWarehouseId
@@ -1130,6 +1181,7 @@ function PrepareRequestDialog({ target, t, warehouseOptions, formatQuantity, cur
   });
 
   const toggleLine = (lineId: number): void => {
+    if (excludedLineIds.has(lineId)) return;
     setSelectedLineIds((current) => {
       const next = new Set(current);
       if (next.has(lineId)) next.delete(lineId);
@@ -1141,7 +1193,30 @@ function PrepareRequestDialog({ target, t, warehouseOptions, formatQuantity, cur
   const toggleAllUnassigned = (): void => {
     setSelectedLineIds(allUnassignedSelected
       ? new Set()
-      : new Set(remainingLines.map((line) => line.id)));
+      : new Set(coverableLines.map((line) => line.id)));
+  };
+
+  const rejectExcessLine = (lineId: number): void => {
+    setExcludedLineIds((current) => new Set([...current, lineId]));
+    setSelectedLineIds((current) => {
+      const next = new Set(current);
+      next.delete(lineId);
+      return next;
+    });
+    setPendingRejectId(null);
+  };
+
+  const restoreExcludedLine = (lineId: number): void => {
+    setExcludedLineIds((current) => {
+      const next = new Set(current);
+      next.delete(lineId);
+      return next;
+    });
+  };
+
+  const approveExcessLine = (lineId: number): void => {
+    setApprovedLineIds((current) => new Set([...current, lineId]));
+    setPendingRejectId(null);
   };
 
   const groupKey = (group: PrepareGroup): string | number => group.user?.id ?? POOL_GROUP_KEY;
@@ -1161,7 +1236,7 @@ function PrepareRequestDialog({ target, t, warehouseOptions, formatQuantity, cur
   };
 
   const assignSelected = (): void => {
-    const lineIds = remainingLines.filter((line) => selectedLineIds.has(line.id)).map((line) => line.id);
+    const lineIds = coverableLines.filter((line) => selectedLineIds.has(line.id)).map((line) => line.id);
     if (lineIds.length === 0) return;
     if (targetMode === 'warehouse') {
       if (!poolWarehouseId) return;
@@ -1200,8 +1275,8 @@ function PrepareRequestDialog({ target, t, warehouseOptions, formatQuantity, cur
 
   const lineById = useMemo(() => new Map(assignableLines.map((line) => [line.id, line])), [assignableLines]);
 
-  const footerHint = remainingLines.length > 0
-    ? t('prepareDialog.remainingLines', { count: remainingLines.length })
+  const footerHint = coverableLines.length > 0
+    ? t('prepareDialog.remainingLines', { count: coverableLines.length })
     : groups.length === 0
       ? t('prepareDialog.needGroup')
       : selectedUnassignedCount > 0 && !canAssignSelected
@@ -1385,32 +1460,113 @@ function PrepareRequestDialog({ target, t, warehouseOptions, formatQuantity, cur
                       <th>{t('prepareDialog.colLine')}</th>
                       <th className="wms-ops-gr-detail-lines-table__num">{t('prepareDialog.colQuantity')}</th>
                       <th>{t('prepareDialog.colStock')}</th>
+                      <th>{t('prepareDialog.colQuota')}</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {remainingLines.map((line) => (
-                      <tr
-                        key={line.id}
-                        className={cn('cursor-pointer', !selectedLineIds.has(line.id) && 'opacity-55')}
-                        onClick={() => toggleLine(line.id)}
-                      >
-                        <td>
-                          <OpsSkinCheckbox
-                            aria-label={`#${line.lineNo}`}
-                            checked={selectedLineIds.has(line.id)}
-                            onCheckedChange={() => toggleLine(line.id)}
-                          />
-                        </td>
-                        <td className="font-mono text-xs">{line.lineNo}</td>
-                        <td>
-                          <div className="font-semibold">{line.groupCode}{line.groupName ? ` · ${line.groupName}` : ''}</div>
-                        </td>
-                        <td className="wms-ops-gr-detail-lines-table__num">{formatQuantity(line.remainingQuantity)}</td>
-                        <td className="wms-ops-gr-detail-lines-table__muted text-xs">
-                          {line.stockId ? `${line.stockCode} · ${line.stockName}` : t('detail.stockAwaiting')}
-                        </td>
-                      </tr>
-                    ))}
+                    {remainingLines.map((line) => {
+                      const isExcess = excessLineIds.has(line.id);
+                      const isExcluded = excludedLineIds.has(line.id);
+                      return (
+                        <tr
+                          key={line.id}
+                          className={cn(
+                            isExcluded ? 'cursor-not-allowed opacity-40' : 'cursor-pointer',
+                            !isExcluded && !selectedLineIds.has(line.id) && 'opacity-55',
+                          )}
+                          onClick={() => toggleLine(line.id)}
+                        >
+                          <td>
+                            <OpsSkinCheckbox
+                              aria-label={`#${line.lineNo}`}
+                              checked={selectedLineIds.has(line.id)}
+                              disabled={isExcluded}
+                              onCheckedChange={() => toggleLine(line.id)}
+                            />
+                          </td>
+                          <td className="font-mono text-xs">{line.lineNo}</td>
+                          <td>
+                            <div className="font-semibold">{line.groupCode}{line.groupName ? ` · ${line.groupName}` : ''}</div>
+                          </td>
+                          <td className="wms-ops-gr-detail-lines-table__num">{formatQuantity(line.remainingQuantity)}</td>
+                          <td className="wms-ops-gr-detail-lines-table__muted text-xs" onClick={(event) => event.stopPropagation()}>
+                            {line.stockId ? (
+                              `${line.stockCode} · ${line.stockName}`
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5">
+                                {t('detail.stockAwaiting')}
+                                <button
+                                  type="button"
+                                  className="wms-ops-grid-icon-btn"
+                                  title={t('actions.selectStock')}
+                                  aria-label={t('actions.selectStock')}
+                                  onClick={() => onOpenResolve(target.id, line)}
+                                >
+                                  <SearchCheck className="size-3.5" />
+                                </button>
+                              </span>
+                            )}
+                          </td>
+                          <td onClick={(event) => event.stopPropagation()}>
+                            {!isExcess ? null : isExcluded ? (
+                              <div className="flex items-center gap-1.5 text-xs font-semibold text-rose-600">
+                                <TriangleAlert className="size-3.5 shrink-0" />
+                                {t('prepareDialog.quotaRejected')}
+                                <button
+                                  type="button"
+                                  className="wms-ops-grid-icon-btn"
+                                  title={t('prepareDialog.quotaRestore')}
+                                  aria-label={t('prepareDialog.quotaRestore')}
+                                  onClick={() => restoreExcludedLine(line.id)}
+                                >
+                                  <Undo2 className="size-3.5" />
+                                </button>
+                              </div>
+                            ) : pendingRejectId === line.id ? (
+                              <div className="flex items-center gap-1.5 text-xs">
+                                <span className="font-semibold text-rose-600">{t('prepareDialog.quotaConfirmReject')}</span>
+                                <button type="button" className="wms-ops-grid-icon-btn !text-rose-600" onClick={() => rejectExcessLine(line.id)}>
+                                  {t('prepareDialog.quotaConfirmYes')}
+                                </button>
+                                <button type="button" className="wms-ops-grid-icon-btn" onClick={() => setPendingRejectId(null)}>
+                                  {t('actions.close')}
+                                </button>
+                              </div>
+                            ) : approvedLineIds.has(line.id) ? (
+                              <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
+                                <Check className="size-3.5 shrink-0" />
+                                {t('prepareDialog.quotaApproved')}
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-1.5">
+                                <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-semibold text-amber-600">
+                                  <TriangleAlert className="size-3 shrink-0" />
+                                  {t('prepareDialog.quotaExceeded')}
+                                </span>
+                                <button
+                                  type="button"
+                                  className="wms-ops-grid-icon-btn !text-emerald-600"
+                                  title={t('prepareDialog.quotaApprove')}
+                                  aria-label={t('prepareDialog.quotaApprove')}
+                                  onClick={() => approveExcessLine(line.id)}
+                                >
+                                  <CheckCircle2 className="size-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  className="wms-ops-grid-icon-btn !text-rose-600"
+                                  title={t('prepareDialog.quotaReject')}
+                                  aria-label={t('prepareDialog.quotaReject')}
+                                  onClick={() => setPendingRejectId(line.id)}
+                                >
+                                  <X className="size-3.5" />
+                                </button>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -1616,7 +1772,6 @@ function RequestDetailView({ value, t, formatDateTime, formatQuantity, enumText,
   cancelReason: string; setCancelReason: (value: string) => void; cancelling: boolean;
   onResolve: (line: KkdRequestLine) => void; onAssign: () => void; onClaim: () => void; onCancel: () => void; onPrepare: () => void;
 }): ReactElement {
-  const unresolved = value.lines.some((line) => !line.stockId && line.status !== 'Cancelled');
   const open = !CLOSED.has(value.status);
   return <div className="space-y-4">
     <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
@@ -1668,7 +1823,7 @@ function RequestDetailView({ value, t, formatDateTime, formatQuantity, enumText,
       {canCancel && open ? <KkdField label={t('detail.cancelReason')} className="w-full lg:max-w-xl"><AppInput value={cancelReason} onChange={(event) => setCancelReason(event.target.value)} placeholder={t('detail.cancelReasonPlaceholder')}/></KkdField> : <span/>}
       <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
         {canCancel && open ? <button type="button" disabled={cancelling} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-rose-500 px-4 text-rose-600 disabled:opacity-50" onClick={onCancel}><X className="size-4"/>{t('actions.cancel')}</button> : null}
-        {canPrepare && !unresolved && open ? <button type="button" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-cyan-600 px-4 font-semibold text-white" onClick={onPrepare}><PackageCheck className="size-4"/>{t('actions.prepare')}</button> : null}
+        {canPrepare && open ? <button type="button" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-cyan-600 px-4 font-semibold text-white" onClick={onPrepare}><PackageCheck className="size-4"/>{t('actions.prepare')}</button> : null}
       </div>
     </div>
   </div>;

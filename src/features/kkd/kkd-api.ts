@@ -94,10 +94,10 @@ export type KkdDistributionCreatePayload = {
   description: string | null; createWarehouseTask?: boolean; assignedUserIds?: number[] | null;
   kkdRequestId?: number | null;
   lines: Array<{ stockId: number; yapCodeId: null; quantity: number; unitCode: string | null;
-    sourceLocationId: number; orderNumber: string | null; orderLineId: number | null; requireHandlingUnit: boolean;
+    sourceLocationId: number | null; orderNumber: string | null; orderLineId: number | null; requireHandlingUnit: boolean;
     description: string | null; trackings: Array<{ quantity: number; lotNo: string | null;
       serialNo: string | null; handlingUnitNo: string | null; manufacturingDate: null;
-      expirationDate: null; sourceLocationId: number }> | null; kkdRequestLineId?: number | null }>;
+      expirationDate: null; sourceLocationId: number | null }> | null; kkdRequestLineId?: number | null }>;
 };
 export type KkdEntitlementResult = {
   isAllowed: boolean; reasonCode: string; message: string; employeeId: number; stockId: number;
@@ -317,6 +317,11 @@ export const kkdApi = {
   cancelRequest: async (id: number, reason: string, expectedRowVersion: string) =>
     unwrap(await api.post<Envelope<KkdRequestDetail>>(`/api/kkd/requests/${id}/cancel`, {
       idempotencyKey: crypto.randomUUID(), reason, expectedRowVersion,
+    })),
+  /** İptal edilmiş bir talebi tekrar beklemeye alır (Hazırlamada'dan gelen görev iadesinden ayrı bir akış). */
+  reactivateRequest: async (id: number, expectedRowVersion?: string | null) =>
+    unwrap(await api.post<Envelope<KkdRequestDetail>>(`/api/kkd/requests/${id}/reactivate`, {
+      idempotencyKey: crypto.randomUUID(), expectedRowVersion,
     })),
   distributionSeries: async () =>
     unwrap(await api.get<Envelope<Array<{ id:number; code:string; name:string; previewDocumentNumber:string; isDefault:boolean }>>>('/api/document-series/lookup?documentType=WarehouseIssue')),

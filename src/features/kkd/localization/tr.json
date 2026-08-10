@@ -6,14 +6,14 @@
     "preparing": "Hazırlama görevleri oluşturulmuş, hazırlığı süren talepler. Satırı genişleterek görevleri yönetin.",
     "completed": "Teslimi tamamlanmış talepler. ERP durumunu buradan izleyin.",
     "cancelled": "İptal edilmiş talepler.",
-    "mine": "Üzerinize aldığınız veya size atanan aktif görevler. Çift tıklayarak hazırlamaya başlayın."
+    "mine": "Üzerinize aldığınız veya size atanan aktif görevler. Çift tıklayarak toplamaya başlayın."
   },
   "grid": { "id": "Kayıt ID", "requestNo": "Talep no", "status": "Durum", "priority": "Öncelik", "employeeCode": "Personel kodu", "employeeName": "Personel", "department": "Departman", "warehouse": "Depo", "warehouseUnset": "Depo atanmadı", "assignedUser": "Hazırlayanlar", "assigned": "Atandı", "unassigned": "Atanmadı", "erp": "Belge / ERP", "lineCount": "Kalem", "unresolved": "Stok bekleyen", "requested": "Talep", "allocated": "Hazırlanan", "delivered": "Teslim", "neededAt": "İhtiyaç zamanı", "requestedAt": "Talep zamanı", "createdBy": "Oluşturan", "createdDate": "Oluşturma zamanı", "updatedBy": "Güncelleyen", "updatedDate": "Güncelleme zamanı", "actions": "İşlemler" },
-  "actions": { "new": "Yeni KKD talebi", "detail": "Detay", "assign": "Talebi hazırlat (kalem bazlı ata)", "claim": "Üzerime al", "claimPool": "Havuzdan üzerime al", "prepare": "Hazırlamaya gönder", "operation": "Ambar çıkışı operasyonu", "handoff": "Kalan işi devret", "returnWork": "İşi havuza iade et", "erpRetry": "ERP kaydını yeniden dene", "expand": "Kalemleri göster", "collapse": "Kalemleri gizle", "addLine": "Kalem ekle", "removeLine": "Kalemi kaldır", "selectStock": "Stok/beden seç", "create": "Talebi oluştur", "save": "Kaydet", "close": "Vazgeç", "cancel": "Talebi iptal et" },
+  "actions": { "new": "Yeni KKD talebi", "detail": "Detay", "assign": "Talebi hazırlat (kalem bazlı ata)", "claim": "Üzerime al", "claimPool": "Havuzdan üzerime al", "prepare": "Toplama yap", "reactivate": "Beklemeye al", "operation": "Ambar çıkışı operasyonu", "handoff": "Kalan işi devret", "returnWork": "İşi havuza iade et", "erpRetry": "ERP kaydını yeniden dene", "expand": "Kalemleri göster", "collapse": "Kalemleri gizle", "addLine": "Kalem ekle", "removeLine": "Kalemi kaldır", "selectStock": "Stok/beden seç", "create": "Talebi oluştur", "save": "Kaydet", "close": "Vazgeç", "cancel": "Talebi iptal et" },
   "cancelDialog": { "title": "Talebi iptal et", "description": "{{no}} numaralı KKD talebi iptal edilecek. İptal gerekçesini yazın.", "checking": "İptal ön kontrolü yapılıyor...", "blockedTitle": "Bu talep şu an iptal edilemez", "goToOutbound": "Bağlı ambar çıkışına git" },
   "prepareDialog": {
     "title": "Talebi hazırlat",
-    "description": "{{no}} numaralı talebin kalemlerini kişilere veya depoya dağıtın. Kayıt için tüm açık kalemler atanmış olmalıdır.",
+    "description": "{{no}} numaralı talebin kalemlerini kişilere veya depoya dağıtın. Kota aşımlı kalemleri onaylayabilir veya bu turdan hariç tutabilirsiniz.",
     "assignSection": "Atama",
     "assignHint": "Atanmamış listeden kalem seçin; Kişi veya Depo sekmesinden hedef belirleyip 'Seçilenleri ata' deyin.",
     "targetUser": "Kişi",
@@ -37,14 +37,23 @@
     "groupLines": "{{count}} kalem",
     "removeGroup": "Atama grubunu kaldır",
     "removeLine": "Atamadan kaldır",
-    "remainingLines": "Atanmamış {{count}} kalem kaldı. Kayıt için tüm kalemler atanmalıdır.",
+    "remainingLines": "Atanmamış {{count}} kalem kaldı. Hariç tutulanlar dışında tüm kalemler atanmalıdır.",
     "needGroup": "Kayıt için en az bir atama grubu oluşturun.",
     "needTarget": "Seçili kalemleri atamak için kişi veya depo seçin.",
-    "allLinesRequired": "Kayıt için talebin tüm açık kalemleri atanmış olmalıdır.",
+    "allLinesRequired": "Hariç tutulmayan tüm açık kalemler atanmış olmalıdır.",
     "nothingToAssign": "Bu talepte atanabilecek açık kalem bulunmuyor.",
     "colLine": "Kalem",
     "colQuantity": "Miktar",
     "colStock": "Stok / beden",
+    "colQuota": "Kota",
+    "quotaExceeded": "Kota aşımı",
+    "quotaApprove": "Onayla",
+    "quotaApproved": "Onaylandı",
+    "quotaReject": "Reddet",
+    "quotaRejected": "Reddedildi — bu turda atanmayacak",
+    "quotaRestore": "Geri al",
+    "quotaConfirmReject": "Bu kalem bu turda atanmayacak, emin misiniz?",
+    "quotaConfirmYes": "Evet, hariç tut",
     "confirm": "Atamayı yap"
   },
   "handoff": {
@@ -79,5 +88,5 @@
   "distributionStatus": { "Draft": "Taslak", "Validated": "Doğrulandı", "OutboundCreated": "Çıkış açıldı", "Completed": "ERP'ye işlendi", "Cancelled": "İptal edildi", "Failed": "ERP hatası" },
   "priority": { "Low": "Düşük", "Normal": "Normal", "High": "Yüksek", "Urgent": "Acil" },
   "validation": { "employeeAndLine": "Personel ve en az bir KKD grubu seçilmelidir.", "quantity": "Bütün miktarlar sıfırdan büyük olmalıdır.", "stock": "Verilecek stok seçilmelidir.", "reason": "İşlem nedeni en az 3 karakter olmalıdır.", "warehouse": "Depo seçilmelidir.", "user": "Kullanıcı seçilmelidir." },
-  "messages": { "created": "{{no}} numaralı KKD talebi oluşturuldu.", "resolved": "Stok/beden seçimi kaydedildi.", "assigned": "Talep atandı.", "claimed": "Talep üzerinize alındı. 'Benim İşlerim' sekmesinden hazırlamaya başlayabilirsiniz.", "claimedPool": "Görev depo havuzundan üzerinize alındı.", "tasksAssigned": "Hazırlama görevleri oluşturuldu.", "handedOver": "Kalan iş devredildi.", "returned": "Görev havuza iade edildi.", "erpRetried": "ERP kaydı yeniden denendi.", "unassigned": "Atama kaldırıldı, depo bilgisi güncellendi.", "cancelled": "KKD talebi iptal edildi.", "failed": "KKD işlemi tamamlanamadı.", "loading": "Talep yükleniyor...", "detailFailed": "Talep detayı alınamadı." }
+  "messages": { "created": "{{no}} numaralı KKD talebi oluşturuldu.", "resolved": "Stok/beden seçimi kaydedildi.", "assigned": "Talep atandı.", "claimed": "Talep üzerinize alındı. 'Benim İşlerim' sekmesinden hazırlamaya başlayabilirsiniz.", "claimedPool": "Görev depo havuzundan üzerinize alındı.", "tasksAssigned": "Hazırlama görevleri oluşturuldu.", "handedOver": "Kalan iş devredildi.", "returned": "Görev havuza iade edildi.", "erpRetried": "ERP kaydı yeniden denendi.", "unassigned": "Atama kaldırıldı, depo bilgisi güncellendi.", "cancelled": "KKD talebi iptal edildi.", "reactivated": "KKD talebi tekrar beklemeye alındı.", "failed": "KKD işlemi tamamlanamadı.", "loading": "Talep yükleniyor...", "detailFailed": "Talep detayı alınamadı." }
 }
