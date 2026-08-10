@@ -34,13 +34,13 @@ export const sidebarActiveLeafClassName = cn(
   'shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--wms-brand-primary)_22%,transparent)]',
 );
 
-export const sidebarIconBoxClassName = (isActive: boolean, idleToneClass: string): string =>
+/** Single quiet chip — no rainbow idle tones (they clash with terminal + PNG marks). */
+export const sidebarIconBoxClassName = (isActive: boolean): string =>
   cn(
-    'flex h-9 w-9 shrink-0 items-center justify-center rounded-sm border shadow-xs transition-all duration-200',
-    'border-slate-200 dark:border-slate-800',
+    'flex h-9 w-9 shrink-0 items-center justify-center overflow-visible rounded-sm border p-1 transition-all duration-200',
     isActive
-      ? 'border-[var(--wms-brand-ring)] bg-[var(--wms-brand-soft)] text-[var(--wms-brand-primary)] shadow-[0_0_12px_var(--wms-brand-shadow)]'
-      : idleToneClass,
+      ? 'border-[color-mix(in_oklab,var(--wms-brand-primary)_35%,transparent)] bg-[color-mix(in_oklab,var(--wms-brand-primary)_12%,transparent)] text-[var(--wms-brand-primary)] shadow-[0_0_10px_color-mix(in_oklab,var(--wms-brand-primary)_18%,transparent)]'
+      : 'border-slate-200/70 bg-slate-100/55 text-slate-600 shadow-none dark:border-white/10 dark:bg-white/[0.045] dark:text-slate-300',
   );
 
 export const sidebarLeafAccentClassName = cn(
