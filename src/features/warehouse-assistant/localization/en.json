@@ -4,7 +4,9 @@
     "semantic": "Advanced language understanding active",
     "fallback": "Basic language understanding",
     "semanticHint": "Questions are interpreted by meaning and conversation context, not only by keywords.",
-    "fallbackHint": "The AI connection is not ready. Safe local question patterns remain available."
+    "fallbackHint": "The AI connection is not ready. Safe local question patterns remain available.",
+    "compound": "Multi-question support",
+    "compoundHint": "Up to three independent read-only warehouse questions in one message are executed separately and safely."
   },
   "eyebrow": "Permission-aware WMS query assistant",
   "title": "Warehouse Assistant",
@@ -128,7 +130,8 @@
   "privacyNote": "The assistant runs only approved read-only WMS queries; it cannot execute arbitrary SQL or modify records.",
   "welcome": {
     "title": "The short way to query warehouse data",
-    "description": "It understands stock, product, material, and finished good as related business terms. Include a serial number, user name, and time range for the most accurate result."
+    "description": "It understands stock, product, material, and finished good as related business terms. Include a serial number, user name, and time range for the most accurate result.",
+    "compound": "You can ask more than one question in a message: “Show my activities today; also bring my assigned open tasks.”"
   },
   "examples": { "myActivities": "Show my activity today" },
   "parameter": {

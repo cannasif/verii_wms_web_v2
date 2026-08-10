@@ -16,6 +16,7 @@ export type WarehouseAssistantIntent =
   | 'operationalExceptions'
   | 'traceability'
   | 'processBlockers'
+  | 'composite'
   | 'unknown';
 
 export interface WarehouseAssistantParameterHint {
@@ -45,6 +46,7 @@ export interface WarehouseAssistantCapabilities {
   routingMode?: string;
   semanticRoutingAvailable?: boolean;
   semanticModel?: string | null;
+  canRunCompoundQueries?: boolean;
 }
 export interface WarehouseAssistantConversationRow {
   id: number;

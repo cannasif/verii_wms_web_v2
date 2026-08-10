@@ -4,7 +4,9 @@
     "semantic": "Gelişmiş dil anlama aktif",
     "fallback": "Temel dil anlama",
     "semanticHint": "Sorular yalnızca kelimelere değil, anlamlarına ve konuşma bağlamına göre yorumlanır.",
-    "fallbackHint": "AI bağlantısı hazır değil. Güvenli yerel soru kalıpları kullanılmaya devam ediyor."
+    "fallbackHint": "AI bağlantısı hazır değil. Güvenli yerel soru kalıpları kullanılmaya devam ediyor.",
+    "compound": "Çoklu soru desteği",
+    "compoundHint": "Bir mesajda en fazla üç bağımsız, salt okunur depo sorusu güvenli biçimde ayrı ayrı çalıştırılır."
   },
   "eyebrow": "Yetkili WMS sorgu yardımcısı",
   "title": "Depo Asistanı",
@@ -130,7 +132,8 @@
   "privacyNote": "Asistan yalnızca izin verilen, salt okunur WMS sorgularını çalıştırır; serbest SQL veya kayıt değiştiren işlem çalıştırmaz.",
   "welcome": {
     "title": "Depo verisini sormanın kısa yolu",
-    "description": "Stok, ürün, malzeme ve mamul ifadelerini aynı iş kavramı olarak anlayabilir. Seri numarası, kullanıcı adı ve zaman aralığını açık yazmanız en doğru sonucu verir."
+    "description": "Stok, ürün, malzeme ve mamul ifadelerini aynı iş kavramı olarak anlayabilir. Seri numarası, kullanıcı adı ve zaman aralığını açık yazmanız en doğru sonucu verir.",
+    "compound": "Tek mesajda birden fazla soru sorabilirsiniz: “Bugünkü işlemlerimi göster; ayrıca bana atanan açık emirleri getir.”"
   },
   "examples": { "myActivities": "Bugün yaptığım işlemleri göster" },
   "parameter": {

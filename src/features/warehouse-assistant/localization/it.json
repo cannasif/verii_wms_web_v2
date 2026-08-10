@@ -4,7 +4,9 @@
     "semantic": "Comprensione avanzata del linguaggio attiva",
     "fallback": "Comprensione linguistica di base",
     "semanticHint": "Le domande vengono interpretate in base al significato e al contesto della conversazione, non solo alle parole chiave.",
-    "fallbackHint": "La connessione AI non è pronta. I modelli di domanda locali sicuri restano disponibili."
+    "fallbackHint": "La connessione AI non è pronta. I modelli di domanda locali sicuri restano disponibili.",
+    "compound": "Supporto multi-domanda",
+    "compoundHint": "Fino a tre domande di magazzino indipendenti e di sola lettura vengono eseguite separatamente e in sicurezza."
   },
   "eyebrow": "Assistente WMS basato sui permessi",
   "title": "Assistente di magazzino",
@@ -128,7 +130,8 @@
   "privacyNote": "L’assistente esegue solo query WMS autorizzate in sola lettura; non esegue SQL libero e non modifica record.",
   "welcome": {
     "title": "Il modo rapido per interrogare il magazzino",
-    "description": "Comprende stock, prodotto, materiale e articolo come termini correlati. Specifica seriale, utente e intervallo temporale per risultati accurati."
+    "description": "Comprende stock, prodotto, materiale e articolo come termini correlati. Specifica seriale, utente e intervallo temporale per risultati accurati.",
+    "compound": "Puoi fare più domande in un messaggio: «Mostra le attività di oggi; inoltre, i miei compiti aperti.»"
   },
   "examples": { "myActivities": "Mostra le mie attività di oggi" },
   "parameter": {

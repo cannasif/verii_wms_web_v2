@@ -4,7 +4,9 @@
     "semantic": "Compréhension avancée du langage active",
     "fallback": "Compréhension linguistique de base",
     "semanticHint": "Les questions sont interprétées selon leur sens et le contexte de la conversation, pas seulement par mots-clés.",
-    "fallbackHint": "La connexion IA n'est pas prête. Les modèles de questions locales sécurisés restent disponibles."
+    "fallbackHint": "La connexion IA n'est pas prête. Les modèles de questions locales sécurisés restent disponibles.",
+    "compound": "Prise en charge multi-question",
+    "compoundHint": "Jusqu’à trois questions d’entrepôt indépendantes et en lecture seule sont exécutées séparément et en toute sécurité."
   },
   "eyebrow": "Assistant WMS soumis aux autorisations",
   "title": "Assistant d’entrepôt",
@@ -130,7 +132,8 @@
   "privacyNote": "L’assistant exécute uniquement des requêtes WMS autorisées en lecture seule ; aucun SQL libre ni modification de données.",
   "welcome": {
     "title": "Interroger rapidement les données d’entrepôt",
-    "description": "Les termes stock, produit, matière et article sont compris comme des concepts liés. Précisez la série, l’utilisateur et la période pour un résultat exact."
+    "description": "Les termes stock, produit, matière et article sont compris comme des concepts liés. Précisez la série, l’utilisateur et la période pour un résultat exact.",
+    "compound": "Vous pouvez poser plusieurs questions dans un message : « Affiche mes opérations du jour ; ajoute mes tâches ouvertes. »"
   },
   "examples": { "myActivities": "Afficher mes opérations d’aujourd’hui" },
   "parameter": {

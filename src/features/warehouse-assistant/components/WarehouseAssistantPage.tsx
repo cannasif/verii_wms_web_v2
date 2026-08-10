@@ -1,5 +1,5 @@
 import { type FormEvent, type ReactElement, useEffect, useMemo, useRef, useState } from 'react';
-import { Activity, Archive, ArrowLeftRight, Bot, Boxes, CircleAlert, Clock3, Database, ExternalLink, History, ListChecks, Loader2, MapPin, MessageSquarePlus, ReceiptText, ScanBarcode, Send, Settings2, ShieldCheck, Sparkles, TriangleAlert, Truck, UserRoundSearch, Waypoints } from 'lucide-react';
+import { Activity, Archive, ArrowLeftRight, Bot, Boxes, CircleAlert, Clock3, Database, ExternalLink, History, Layers3, ListChecks, Loader2, MapPin, MessageSquarePlus, ReceiptText, ScanBarcode, Send, Settings2, ShieldCheck, Sparkles, TriangleAlert, Truck, UserRoundSearch, Waypoints } from 'lucide-react';
 import type { TFunction } from 'i18next';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -47,10 +47,11 @@ const emptyCapabilities: WarehouseAssistantCapabilities = {
   canQueryOperationalExceptions: false,
   canQueryTraceability: false,
   canQueryProcessBlockers: false,
-  assistantVersion: '2.1.0',
+  assistantVersion: '2.2.0',
   routingMode: 'DeterministicOnly',
   semanticRoutingAvailable: false,
   semanticModel: null,
+  canRunCompoundQueries: true,
   scopeLabel: '',
   exampleQuestions: [],
 };
@@ -202,9 +203,18 @@ export function WarehouseAssistantPage(): ReactElement {
               <Sparkles className="size-4 shrink-0" aria-hidden />
               <span>{t(capabilities.semanticRoutingAvailable ? 'routing.semantic' : 'routing.fallback')}</span>
               <span className="rounded-full bg-white/60 px-1.5 py-0.5 font-mono text-[10px] dark:bg-black/20">
-                {t('routing.version', { version: capabilities.assistantVersion || '2.1.0' })}
+                {t('routing.version', { version: capabilities.assistantVersion || '2.2.0' })}
               </span>
             </div>
+            {capabilities.canRunCompoundQueries ? (
+              <div
+                className="flex items-center gap-2 rounded-2xl border border-indigo-500/20 bg-indigo-500/10 px-3 py-2 text-xs font-semibold text-indigo-800 dark:text-indigo-200"
+                title={t('routing.compoundHint')}
+              >
+                <Layers3 className="size-4 shrink-0" aria-hidden />
+                <span>{t('routing.compound')}</span>
+              </div>
+            ) : null}
           </div>
         </div>
       </header>
@@ -365,6 +375,7 @@ function WelcomePanel({ examples, onSelect, t }: { examples: string[]; onSelect:
       <span className="mx-auto grid size-16 place-items-center rounded-3xl bg-cyan-500/15 text-cyan-600 ring-1 ring-cyan-500/20 dark:text-cyan-300"><Bot className="size-8" /></span>
       <h2 className="mt-5 text-xl font-black text-slate-950 dark:text-white sm:text-2xl">{t('welcome.title')}</h2>
       <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-slate-600 dark:text-slate-300">{t('welcome.description')}</p>
+      <p className="mx-auto mt-2 max-w-xl rounded-xl bg-indigo-500/8 px-3 py-2 text-xs font-semibold leading-5 text-indigo-700 dark:text-indigo-200">{t('welcome.compound')}</p>
       <div className="mt-6 grid gap-2 sm:grid-cols-2">
         {examples.map((example, index) => (
           <button key={`${example}-${index}`} type="button" onClick={() => onSelect(example)} className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:border-cyan-400 hover:shadow-md dark:border-white/10 dark:bg-white/5 dark:text-slate-200">

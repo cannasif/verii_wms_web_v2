@@ -4,7 +4,9 @@
     "semantic": "Erweitertes Sprachverständnis aktiv",
     "fallback": "Grundlegendes Sprachverständnis",
     "semanticHint": "Fragen werden nach Bedeutung und Gesprächskontext statt nur nach Schlüsselwörtern interpretiert.",
-    "fallbackHint": "Die KI-Verbindung ist nicht bereit. Sichere lokale Fragemuster bleiben verfügbar."
+    "fallbackHint": "Die KI-Verbindung ist nicht bereit. Sichere lokale Fragemuster bleiben verfügbar.",
+    "compound": "Unterstützung für mehrere Fragen",
+    "compoundHint": "Bis zu drei unabhängige, schreibgeschützte Lagerfragen in einer Nachricht werden sicher getrennt ausgeführt."
   },
   "eyebrow": "Berechtigungsabhängiger WMS-Assistent",
   "title": "Lagerassistent",
@@ -128,7 +130,8 @@
   "privacyNote": "Der Assistent führt nur freigegebene, schreibgeschützte WMS-Abfragen aus; kein freies SQL und keine Datenänderung.",
   "welcome": {
     "title": "Lagerdaten schnell abfragen",
-    "description": "Artikel, Produkt, Material und Fertigware werden als verwandte Fachbegriffe verstanden. Seriennummer, Benutzername und Zeitraum verbessern das Ergebnis."
+    "description": "Artikel, Produkt, Material und Fertigware werden als verwandte Fachbegriffe verstanden. Seriennummer, Benutzername und Zeitraum verbessern das Ergebnis.",
+    "compound": "Sie können mehrere Fragen in einer Nachricht stellen: „Zeige meine heutigen Vorgänge; zusätzlich meine offenen Aufgaben.“"
   },
   "examples": { "myActivities": "Meine heutigen Aktivitäten anzeigen" },
   "parameter": {
