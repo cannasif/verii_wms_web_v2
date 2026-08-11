@@ -8438,6 +8438,17 @@ html.skin-premium .wms-ops-list .wms-ops-grid-search__clear {
   scrollbar-gutter: stable;
 }
 
+.wms-ops-list .wms-ops-data-grid-wrap.wms-ops-data-grid-viewport {
+  --wms-ops-grid-viewport-rows: 10;
+  --wms-ops-grid-row-height: 3rem;
+  --wms-ops-grid-head-height: 2.75rem;
+  max-height: calc(
+    var(--wms-ops-grid-head-height) + (var(--wms-ops-grid-row-height) * var(--wms-ops-grid-viewport-rows))
+  );
+  overflow-y: auto !important;
+  overscroll-behavior-y: contain;
+}
+
 .wms-ops-list .wms-ops-table-h-scroll--alt,
 .wms-ops-list .wms-ops-table-h-scroll--alt * {
   cursor: grab !important;

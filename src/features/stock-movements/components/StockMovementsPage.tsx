@@ -1,10 +1,12 @@
-import { useCallback, useMemo, useState, type FormEvent, type ReactNode } from 'react';
+import { useCallback, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { ArrowDownToLine, ArrowUpFromLine, Eye, Loader2, Plus, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdvancedDataGrid, type GridColumn } from '@/components/shared/AdvancedDataGrid';
-import { AppDropdown } from '@/components/shared/AppDropdown';
+import { AppDropdown, type AppDropdownOption } from '@/components/shared/AppDropdown';
+import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
+import type { DropdownPageRequest } from '@/hooks/useDropdownInfiniteSearch';
 import { systemColumns } from '@/components/shared/GridSystemColumns';
 import { OpsDialogBody, OpsDialogContent, OpsDialogFooter, OpsDialogHeader } from '@/components/shared/OpsDialogShell';
 import { Dialog, DialogTitle } from '@/components/ui/dialog';
@@ -34,12 +36,37 @@ export function StockMovementsPage() {
   const typeLabel = useCallback((type: string) => t(`${P}.operationTypes.${type}`, { defaultValue: type }), [t]);
   const movementStatusLabel = useCallback((status: string) => t(`${P}.movementStatuses.${status}`, { defaultValue: status }), [t]);
   const [formOpen, setFormOpen] = useState(false); const [form, setForm] = useState<FormState>(newForm());
-  const [stocks, setStocks] = useState<StockOption[]>([]); const [warehouses, setWarehouses] = useState<WarehouseOption[]>([]); const [yapCodes, setYapCodes] = useState<YapCodeOption[]>([]);
+  const [selectedStockOption, setSelectedStockOption] = useState<AppDropdownOption<string> | undefined>();
+  const stockItemsRef = useRef<Map<string, StockOption>>(new Map());
+  const [warehouses, setWarehouses] = useState<WarehouseOption[]>([]); const [yapCodes, setYapCodes] = useState<YapCodeOption[]>([]);
   const [sourceLocations, setSourceLocations] = useState<LocationOption[]>([]); const [targetLocations, setTargetLocations] = useState<LocationOption[]>([]);
   const [detail, setDetail] = useState<StockMovementDetail | null>(null); const [loadingDetail, setLoadingDetail] = useState(false);
   const [reverseTarget, setReverseTarget] = useState<StockMovementGridRow | null>(null); const [reverseReason, setReverseReason] = useState(''); const [saving, setSaving] = useState(false);
 
-  const openCreate = useCallback(async () => { setForm(newForm()); setFormOpen(true); try { const [stockRows, warehouseRows, yapCodeRows] = await Promise.all([stockMovementsApi.getStocks(), stockMovementsApi.getWarehouses(), stockMovementsApi.getYapCodes()]); setStocks(stockRows); setWarehouses(warehouseRows); setYapCodes(yapCodeRows); } catch (error) { toast.error(error instanceof Error ? error.message : t(`${P}.toast.optionsFailed`)); setFormOpen(false); } }, [t]);
+  const stockToOption = useCallback((item: StockOption): AppDropdownOption<string> => ({
+    value: String(item.id),
+    label: `${item.erpStockCode} - ${item.stockName}`,
+    description: item.unitCode ? t(`${P}.unitLabel`, { unit: item.unitCode }) : t(`${P}.unitUndefined`),
+  }), [t]);
+  const fetchStocksPaged = useCallback(async (request: DropdownPageRequest) => {
+    const page = await stockMovementsApi.getStocksPaged(request);
+    for (const item of page.items) stockItemsRef.current.set(String(item.id), item);
+    return page;
+  }, []);
+  const openCreate = useCallback(async () => {
+    setForm(newForm());
+    setSelectedStockOption(undefined);
+    stockItemsRef.current.clear();
+    setFormOpen(true);
+    try {
+      const [warehouseRows, yapCodeRows] = await Promise.all([stockMovementsApi.getWarehouses(), stockMovementsApi.getYapCodes()]);
+      setWarehouses(warehouseRows);
+      setYapCodes(yapCodeRows);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t(`${P}.toast.optionsFailed`));
+      setFormOpen(false);
+    }
+  }, [t]);
   const setValue = (key: keyof FormState, value: string) => setForm(current => ({ ...current, [key]: value }));
   const selectWarehouse = async (side: 'source' | 'target', value: string) => { setValue(side === 'source' ? 'sourceWarehouseId' : 'targetWarehouseId', value); setValue(side === 'source' ? 'sourceLocationId' : 'targetLocationId', ''); if (!value) { if (side === 'source') setSourceLocations([]); else setTargetLocations([]); return; } try { const rows = await stockMovementsApi.getLocations(Number(value)); if (side === 'source') setSourceLocations(rows); else setTargetLocations(rows); } catch (error) { toast.error(error instanceof Error ? error.message : t(`${P}.toast.locationsFailed`)); } };
   const submit = async (event: FormEvent) => { event.preventDefault(); const qty = Number(form.quantity); if (!form.stockId || !Number.isFinite(qty) || qty <= 0) { toast.error(t(`${P}.toast.stockQtyRequired`)); return; } if (!form.unitCode) { toast.error(t(`${P}.toast.unitRequired`)); return; } const needsSource = outgoing.has(form.operationType) || form.operationType === 'Transfer'; const needsTarget = incoming.has(form.operationType) || form.operationType === 'Transfer'; if ((needsSource && (!form.sourceWarehouseId || !form.sourceLocationId)) || (needsTarget && (!form.targetWarehouseId || !form.targetLocationId))) { toast.error(t(`${P}.toast.warehouseLocationRequired`)); return; } setSaving(true); try { const payload: PostStockMovementRequest = { idempotencyKey: form.idempotencyKey, operationType: form.operationType, referenceType: nullable(form.referenceType), referenceNo: nullable(form.referenceNo), referenceId: null, occurredAt: null, reason: nullable(form.reason), description: nullable(form.description), lines: [{ stockId: Number(form.stockId), yapCodeId: form.yapCodeId ? Number(form.yapCodeId) : null, quantity: qty, sourceWarehouseId: needsSource ? Number(form.sourceWarehouseId) : null, sourceLocationId: needsSource ? Number(form.sourceLocationId) : null, targetWarehouseId: needsTarget ? Number(form.targetWarehouseId) : null, targetLocationId: needsTarget ? Number(form.targetLocationId) : null, unitCode: form.unitCode, lotNo: nullable(form.lotNo), serialNo: nullable(form.serialNo), stockStatus: form.stockStatus }] }; await stockMovementsApi.post(payload); toast.success(t(`${P}.toast.saveSuccess`)); setFormOpen(false); await Promise.all([queryClient.invalidateQueries({ queryKey: ['advanced-grid', 'stock-movements'] }), queryClient.invalidateQueries({ queryKey: ['advanced-grid', 'location-stock-balances'] }), queryClient.invalidateQueries({ queryKey: ['advanced-grid', 'warehouse-stock-balances'] })]); } catch (error) { toast.error(error instanceof Error ? error.message : t(`${P}.toast.saveFailed`)); } finally { setSaving(false); } };
@@ -77,8 +104,34 @@ export function StockMovementsPage() {
           <form onSubmit={submit} className="flex min-h-0 flex-1 flex-col">
             <OpsDialogBody className="space-y-5">
               <div className="grid gap-4 md:grid-cols-3">
-                <Field label={t(`${P}.operationType`)}><AppDropdown value={form.operationType} onValueChange={(value) => { setForm(current => ({ ...newForm(), idempotencyKey: current.idempotencyKey, operationType: value })); setSourceLocations([]); setTargetLocations([]); }} options={operationOptions} ariaLabel={t(`${P}.operationType`)} portalContainer={null} /></Field>
-                <Field label={t(`${P}.stock`)}><AppDropdown value={form.stockId} onValueChange={(value) => { const selected = stocks.find(item => String(item.id) === value); setForm(current => ({ ...current, stockId: value, unitCode: selected?.unitCode ?? '' })); }} options={stocks.map((item) => ({ value: String(item.id), label: `${item.erpStockCode} - ${item.stockName}`, description: item.unitCode ? t(`${P}.unitLabel`, { unit: item.unitCode }) : t(`${P}.unitUndefined`) }))} placeholder={t(`${P}.selectStock`)} ariaLabel={t(`${P}.stock`)} searchable portalContainer={null} /></Field>
+                <Field label={t(`${P}.operationType`)}><AppDropdown value={form.operationType} onValueChange={(value) => { setForm(current => ({ ...newForm(), idempotencyKey: current.idempotencyKey, operationType: value })); setSelectedStockOption(undefined); setSourceLocations([]); setTargetLocations([]); }} options={operationOptions} ariaLabel={t(`${P}.operationType`)} portalContainer={null} /></Field>
+                <Field label={t(`${P}.stock`)}>
+                  <PagedAppDropdown<StockOption>
+                    queryKey={['stock-movements-form-stocks', branchCode]}
+                    fetchPage={fetchStocksPaged}
+                    toOption={stockToOption}
+                    selectedOption={selectedStockOption}
+                    value={form.stockId || null}
+                    onValueChange={(value) => {
+                      const selected = value ? stockItemsRef.current.get(value) : undefined;
+                      if (selected) setSelectedStockOption(stockToOption(selected));
+                      else setSelectedStockOption(undefined);
+                      setForm(current => ({
+                        ...current,
+                        stockId: value,
+                        yapCodeId: '',
+                        unitCode: selected?.unitCode ?? '',
+                      }));
+                    }}
+                    placeholder={t(`${P}.selectStock`)}
+                    ariaLabel={t(`${P}.stock`)}
+                    searchable
+                    minSearchLength={2}
+                    sortBy="erpStockCode"
+                    searchFields={['erpStockCode', 'stockName']}
+                    portalContainer={null}
+                  />
+                </Field>
                 <Field label={t(`${P}.quantity`)}><input type="number" min="0.000001" step="0.000001" value={form.quantity} onChange={e => setValue('quantity', e.target.value)} className="input" /></Field>
               </div>
               {needsSource && <section className="rounded-xl border p-4"><h3 className="mb-3 flex items-center gap-2 font-semibold text-red-600"><ArrowUpFromLine className="size-4" />{t(`${P}.sourceSection`)}</h3><div className="grid gap-4 sm:grid-cols-2"><Field label={t(`${P}.sourceWarehouse`)}><AppDropdown value={form.sourceWarehouseId} onValueChange={(value) => void selectWarehouse('source', value)} options={warehouses.map((item) => ({ value: String(item.id), label: `${item.warehouseCode} - ${item.warehouseName}` }))} placeholder={t(`${P}.selectWarehouse`)} ariaLabel={t(`${P}.sourceWarehouse`)} searchable portalContainer={null} /></Field><Field label={t(`${P}.sourceLocation`)}><AppDropdown value={form.sourceLocationId} onValueChange={(value) => setValue('sourceLocationId', value)} options={sourceLocations.map((item) => ({ value: String(item.id), label: `${item.code} - ${item.name}` }))} placeholder={t(`${P}.selectLocation`)} ariaLabel={t(`${P}.sourceLocation`)} searchable portalContainer={null} /></Field></div></section>}

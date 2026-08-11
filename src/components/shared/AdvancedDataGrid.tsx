@@ -1518,7 +1518,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
       <div
         ref={tableScrollRef}
         className={cn(
-          'relative mt-4 block wms-ops-table-wrap wms-ops-data-grid-wrap wms-ops-scrollbar wms-ops-table-h-scroll overflow-auto border border-[var(--wms-ops-card-border)] max-sm:hidden',
+          'relative mt-4 block wms-ops-table-wrap wms-ops-data-grid-wrap wms-ops-data-grid-viewport wms-ops-scrollbar wms-ops-table-h-scroll overflow-auto border border-[var(--wms-ops-card-border)] max-sm:hidden',
           query.isLoading && 'cursor-wait',
         )}
       >

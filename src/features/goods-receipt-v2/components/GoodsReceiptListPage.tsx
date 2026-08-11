@@ -154,6 +154,32 @@ export function GoodsReceiptListPage(): ReactElement {
         },
       },
       {
+        key: 'orderNumbers',
+        label: t('list.orderNo'),
+        sortable: false,
+        filterable: false,
+        searchable: false,
+        render: (r) => (
+          r.orderNumbers
+            ? <span className="font-mono text-xs font-semibold">{r.orderNumbers}</span>
+            : '—'
+        ),
+        contextValue: (r) => r.orderNumbers ?? undefined,
+      },
+      {
+        key: 'projectCodes',
+        label: t('list.projectCode'),
+        sortable: false,
+        filterable: false,
+        searchable: false,
+        render: (r) => (
+          r.projectCodes
+            ? <span className="font-mono text-xs font-semibold">{r.projectCodes}</span>
+            : '—'
+        ),
+        contextValue: (r) => r.projectCodes ?? undefined,
+      },
+      {
         key: 'supplierName',
         label: t('list.supplier'),
         sortable: true,
@@ -320,7 +346,7 @@ export function GoodsReceiptListPage(): ReactElement {
   return (
     <>
       <AdvancedDataGrid<GoodsReceiptGridRow>
-        pageKey="goods-receipts-list-v5"
+        pageKey="goods-receipts-list-v6"
         refreshKey={`${gridVersion}:${JSON.stringify(listFacets)}`}
         eyebrow={
           <>

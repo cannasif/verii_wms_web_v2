@@ -94,6 +94,24 @@ export function GoodsReceiptDetailDialog({
   const shortCloseAvailable = detail?.lines.some(
     (line) => line.expectedQuantity - line.receivedQuantity - line.shortClosedQuantity > 0,
   );
+  const projectCodes = useMemo(
+    () => [...new Set((detail?.projectCodes ?? []).map((code) => code.trim()).filter(Boolean))]
+      .sort((left, right) => left.localeCompare(right, 'tr', { sensitivity: 'base' })),
+    [detail?.projectCodes],
+  );
+  const orderNumbers = useMemo(
+    () => [...new Set((detail?.sourceDocuments ?? [])
+      .map((document) => {
+        const separatorIndex = document.indexOf(':');
+        if (separatorIndex < 0) return '';
+        const documentType = document.slice(0, separatorIndex).trim();
+        if (documentType !== 'PurchaseOrder') return '';
+        return document.slice(separatorIndex + 1).trim();
+      })
+      .filter(Boolean))]
+      .sort((left, right) => left.localeCompare(right, 'tr', { sensitivity: 'base' })),
+    [detail?.sourceDocuments],
+  );
   const cancelled = header?.status === 'Cancelled';
   const cancelAvailable = Boolean(
     header
@@ -229,7 +247,15 @@ export function GoodsReceiptDetailDialog({
             </DialogTitle>
             <DialogDescription className="wms-ops-detail-dialog__description">
               {header
-                ? `${header.supplierName || header.supplierCode || '—'} · ${goodsReceiptEnumLabel(t, 'operationStatus', header.status)}`
+                ? [
+                    header.supplierName && header.supplierCode
+                      ? `${header.supplierName} (${header.supplierCode})`
+                      : header.supplierName || header.supplierCode || '—',
+                    header.warehouseName
+                      ? `${header.warehouseName} (${header.warehouseCode})`
+                      : String(header.warehouseCode),
+                    goodsReceiptEnumLabel(t, 'operationStatus', header.status),
+                  ].join(' · ')
                 : t('list.detailDescription')}
             </DialogDescription>
             {header ? (
@@ -368,6 +394,12 @@ export function GoodsReceiptDetailDialog({
                       </OpsDetailField>
                       <OpsDetailField label={t('list.plannedArrival')}>
                         {header.plannedArrivalAtUtc ? formatProjectDateTime(header.plannedArrivalAtUtc) : '—'}
+                      </OpsDetailField>
+                      <OpsDetailField label={t('list.orderNo')}>
+                        {orderNumbers.length === 0 ? '—' : orderNumbers.join(', ')}
+                      </OpsDetailField>
+                      <OpsDetailField label={t('list.projectCode')}>
+                        {formatGoodsReceiptDetailCodeList(projectCodes, t, 'list.multipleProjectsCount')}
                       </OpsDetailField>
                       <OpsDetailField label={t('list.waybillDate')}>
                         {header.waybillDate ? formatProjectDate(header.waybillDate) : '—'}
@@ -788,6 +820,22 @@ export function GoodsReceiptDetailDialog({
         )}
       </DialogContent>
     </Dialog>
+  );
+}
+
+function formatGoodsReceiptDetailCodeList(
+  values: string[],
+  t: (key: string, options?: Record<string, unknown>) => string,
+  multipleCountKey: string,
+): ReactNode {
+  if (values.length === 0) return '—';
+  if (values.length === 1) return values[0];
+  return (
+    <span title={values.join(', ')}>
+      {t(multipleCountKey, { count: values.length })}
+      {' · '}
+      {values.join(', ')}
+    </span>
   );
 }
 

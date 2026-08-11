@@ -1938,7 +1938,7 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
             <div className="overflow-x-auto rounded-xl border border-[var(--wms-app-border)]">
               {routeDialog.candidates.length === 0 ? (
                 <p className="p-6 text-center text-sm font-semibold text-[var(--wms-app-text-muted)]">
-                  Bu stoktan başka rafta yoktur
+                  Uygun alternatif seri bulunamadı
                 </p>
               ) : (
                 <table className="w-full min-w-[520px] text-sm">
