@@ -18,6 +18,9 @@ import {
   Save,
   Plus,
   X,
+  ArrowUp,
+  ArrowDown,
+  ChevronsUpDown,
 } from 'lucide-react';
 import {toast} from 'sonner';
 import {Tooltip,TooltipContent,TooltipProvider,TooltipTrigger} from '@/components/ui/tooltip';
@@ -55,6 +58,15 @@ interface SelectedPlate {
 }
 
 interface UnknownPlateSlot {id:string}
+
+type CandidateSortKey=
+  |'dCode'
+  |'supplierSerialNo'
+  |'stockCode'
+  |'combinedSize'
+  |'expectedQuantity'
+  |'warehouseCode'
+  |'attachmentCount';
 
 interface PendingUnknownPlateResolve {
   acceptedPlateId:number;
@@ -156,6 +168,8 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
   const [pendingResolves,setPendingResolves]=useState<PendingUnknownPlateResolve[]>([]);
   const [sheetInput,setSheetInput]=useState('');
   const [candidateSearch,setCandidateSearch]=useState<{value:string;run:number}|null>(null);
+  const [candidateSortBy,setCandidateSortBy]=useState<CandidateSortKey|'lineNo'>('lineNo');
+  const [candidateSortDirection,setCandidateSortDirection]=useState<'asc'|'desc'>('asc');
   const [busy,setBusy]=useState(false);
   const [idempotencyKey,setIdempotencyKey]=useState(()=>crypto.randomUUID());
   const [completed,setCompleted]=useState<CompleteSteelVehicleAcceptanceResult|null>(null);
@@ -238,8 +252,16 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
     });
     return items;
   },[footerReadyCount,form.plateNo,form.steelSheetCount,platesWithoutImages,t,vehicleImageCount]);
+  const changeCandidateSort=useCallback((column:CandidateSortKey)=>{
+    if(candidateSortBy===column){
+      setCandidateSortDirection(value=>value==='asc'?'desc':'asc');
+      return;
+    }
+    setCandidateSortBy(column);
+    setCandidateSortDirection('asc');
+  },[candidateSortBy]);
   const candidates=useQuery({
-    queryKey:['steel-vehicle-acceptance-candidates',branch,candidateSearch?.value,candidateSearch?.run,form.steelSheetCount],
+    queryKey:['steel-vehicle-acceptance-candidates',branch,candidateSearch?.value,candidateSearch?.run,form.steelSheetCount,candidateSortBy,candidateSortDirection],
     enabled:Boolean(candidateSearch),
     queryFn:()=>vehicleCheckInApi.steelCandidates(branch,{
       pageNumber:1,
@@ -247,8 +269,8 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
       search:candidateSearch?.value||null,
       filterLogic:'and',
       filters:[],
-      sortBy:'lineNo',
-      sortDirection:'asc',
+      sortBy:candidateSortBy,
+      sortDirection:candidateSortDirection,
     }),
   });
 
@@ -700,7 +722,7 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
           </div>
         </div>
       )}
-      {candidateSearch&&<CandidateTable rows={candidateRows} loading={candidates.isFetching} selected={candidateTableSelected} onToggle={togglePlate} onToggleAll={toggleAllCandidates}/>}
+      {candidateSearch&&<CandidateTable rows={candidateRows} loading={candidates.isFetching} selected={candidateTableSelected} onToggle={togglePlate} onToggleAll={toggleAllCandidates} sortBy={candidateSortBy} sortDirection={candidateSortDirection} onSort={changeCandidateSort}/>}
     </Panel>
 
     {selectedCount>0&&<Panel emphasized title={t('vehicleCheckIn.section.selectedSheets',{defaultValue:'4 · Seçilen levhalar ({{selected}}/{{total}})',selected:footerReadyCount,total:form.steelSheetCount})} icon={<MapPin className="size-5"/>}>
@@ -935,28 +957,42 @@ function UnknownAcceptedPlateCard({
   </article>;
 }
 
-function CandidateTable({rows,loading,selected,onToggle,onToggleAll}:{rows:SteelVehicleAcceptanceCandidate[];loading:boolean;selected:Record<number,SelectedPlate>;onToggle:(row:SteelVehicleAcceptanceCandidate)=>void;onToggleAll:(rows:SteelVehicleAcceptanceCandidate[],select:boolean)=>void}){
+function CandidateSortHeader({label,columnKey,sortBy,sortDirection,onSort}:{label:string;columnKey:CandidateSortKey;sortBy:string;sortDirection:'asc'|'desc';onSort:(column:CandidateSortKey)=>void}){
+  const active=sortBy===columnKey;
+  return <th className="wms-ops-table-head relative border-b border-r border-[var(--wms-app-border)] px-1 py-2 font-semibold last:border-r-0">
+    <button type="button" onClick={()=>onSort(columnKey)} className="flex min-w-0 flex-1 items-center gap-1 rounded-lg px-1 py-1 text-left">
+      <span className="truncate">{label}</span>
+      {active
+        ?sortDirection==='asc'
+          ?<ArrowUp className="size-3.5 shrink-0" aria-hidden="true"/>
+          :<ArrowDown className="size-3.5 shrink-0" aria-hidden="true"/>
+        :<ChevronsUpDown className="size-3.5 shrink-0 opacity-40" aria-hidden="true"/>}
+    </button>
+  </th>;
+}
+
+function CandidateTable({rows,loading,selected,onToggle,onToggleAll,sortBy,sortDirection,onSort}:{rows:SteelVehicleAcceptanceCandidate[];loading:boolean;selected:Record<number,SelectedPlate>;onToggle:(row:SteelVehicleAcceptanceCandidate)=>void;onToggleAll:(rows:SteelVehicleAcceptanceCandidate[],select:boolean)=>void;sortBy:string;sortDirection:'asc'|'desc';onSort:(column:CandidateSortKey)=>void}){
   const {t}=useTranslation('common');
   const selectAllRef=useRef<HTMLInputElement>(null);
   const visibleSelectedCount=rows.filter(row=>selected[row.id]).length;
   const allVisibleSelected=rows.length>0&&visibleSelectedCount===rows.length;
   const someVisibleSelected=visibleSelectedCount>0&&!allVisibleSelected;
   useEffect(()=>{if(selectAllRef.current)selectAllRef.current.indeterminate=someVisibleSelected},[someVisibleSelected]);
-  return <div className="mt-5 overflow-x-auto rounded-xl border">
-    <table className="min-w-[1100px] w-full text-left text-sm">
-      <thead className="bg-[var(--wms-app-surface)] text-xs uppercase tracking-wide text-slate-500"><tr><th className="p-3"><input ref={selectAllRef} type="checkbox" checked={allVisibleSelected} disabled={loading||rows.length===0} onChange={event=>onToggleAll(rows,event.target.checked)} className="size-5 accent-cyan-600" aria-label={t('vehicleCheckIn.table.selectAll',{defaultValue:'Tümünü seç'})} title={t('vehicleCheckIn.table.selectAll',{defaultValue:'Tümünü seç'})}/></th><th className="p-3">{t('vehicleCheckIn.table.dCodeExcel',{defaultValue:'DCode / Excel'})}</th><th className="p-3">{t('vehicleCheckIn.table.serial',{defaultValue:'Seri'})}</th><th className="p-3">{t('vehicleCheckIn.table.stock',{defaultValue:'Stok'})}</th><th className="p-3">{t('vehicleCheckIn.table.sizeQuality',{defaultValue:'Ölçü / kalite'})}</th><th className="p-3">{t('vehicleCheckIn.table.quantity',{defaultValue:'Miktar'})}</th><th className="p-3">{t('vehicleCheckIn.table.warehouseRack',{defaultValue:'Depo / kabul rafı'})}</th><th className="p-3">{t('vehicleCheckIn.table.evidence',{defaultValue:'Kanıt'})}</th></tr></thead>
+  return <div className="wms-ops-list mt-5 wms-ops-table-wrap wms-ops-data-grid-wrap wms-ops-scrollbar wms-ops-table-h-scroll overflow-auto rounded-xl border border-[var(--wms-ops-card-border)]">
+    <table className="wms-ops-data-grid w-full min-w-[1100px] border-collapse text-sm">
+      <thead className="sticky top-0 z-10 bg-[var(--wms-app-panel-muted)] text-left text-xs uppercase tracking-wide text-[var(--wms-app-text-muted)]"><tr><th className="wms-ops-table-head relative border-b border-r border-[var(--wms-app-border)] px-1 py-2 font-semibold"><div className="flex min-h-10 items-center px-2"><input ref={selectAllRef} type="checkbox" checked={allVisibleSelected} disabled={loading||rows.length===0} onChange={event=>onToggleAll(rows,event.target.checked)} className="size-5 accent-cyan-600" aria-label={t('vehicleCheckIn.table.selectAll',{defaultValue:'Tümünü seç'})} title={t('vehicleCheckIn.table.selectAll',{defaultValue:'Tümünü seç'})}/></div></th><CandidateSortHeader label={t('vehicleCheckIn.table.dCodeExcel',{defaultValue:'DCode / Excel'})} columnKey="dCode" sortBy={sortBy} sortDirection={sortDirection} onSort={onSort}/><CandidateSortHeader label={t('vehicleCheckIn.table.serial',{defaultValue:'Seri'})} columnKey="supplierSerialNo" sortBy={sortBy} sortDirection={sortDirection} onSort={onSort}/><CandidateSortHeader label={t('vehicleCheckIn.table.stock',{defaultValue:'Stok'})} columnKey="stockCode" sortBy={sortBy} sortDirection={sortDirection} onSort={onSort}/><CandidateSortHeader label={t('vehicleCheckIn.table.sizeQuality',{defaultValue:'Ölçü / kalite'})} columnKey="combinedSize" sortBy={sortBy} sortDirection={sortDirection} onSort={onSort}/><CandidateSortHeader label={t('vehicleCheckIn.table.quantity',{defaultValue:'Miktar'})} columnKey="expectedQuantity" sortBy={sortBy} sortDirection={sortDirection} onSort={onSort}/><CandidateSortHeader label={t('vehicleCheckIn.table.warehouseRack',{defaultValue:'Depo / kabul rafı'})} columnKey="warehouseCode" sortBy={sortBy} sortDirection={sortDirection} onSort={onSort}/><CandidateSortHeader label={t('vehicleCheckIn.table.evidence',{defaultValue:'Kanıt'})} columnKey="attachmentCount" sortBy={sortBy} sortDirection={sortDirection} onSort={onSort}/></tr></thead>
       <tbody>
-        {loading&&<tr><td colSpan={8} className="p-5 text-slate-500">{t('vehicleCheckIn.table.loading',{defaultValue:'Uygun levhalar aranıyor...'})}</td></tr>}
-        {!loading&&rows.length===0&&<tr><td colSpan={8} className="p-5 text-slate-500">{t('vehicleCheckIn.table.empty',{defaultValue:'Kabul bekleyen uygun SAC levhası bulunamadı.'})}</td></tr>}
-        {!loading&&rows.map(row=><tr key={row.id} className={`border-t ${selected[row.id]?'bg-cyan-500/10':''}`}>
-          <td className="p-3"><input type="checkbox" checked={Boolean(selected[row.id])} onChange={()=>onToggle(row)} className="size-5 accent-cyan-600"/></td>
-          <td className="p-3"><strong className="font-mono text-cyan-600">{row.dCode}</strong><small className="block text-slate-500">{row.importReferenceNo} · {row.sourceFileName}</small></td>
-          <td className="p-3"><strong>{row.supplierSerialNo}</strong><small className="block text-slate-500">{row.secondarySerialNo||'-'}</small></td>
-          <td className="p-3"><strong>{row.stockCode}</strong><small className="block text-slate-500">{row.stockName||'-'}</small></td>
-          <td className="p-3">{row.combinedSize||'-'}<small className="block text-slate-500">{row.materialGrade||'-'} · {t('vehicleCheckIn.table.heat',{defaultValue:'Heat'})} {row.heatNumber||'-'}</small></td>
-          <td className="p-3 font-bold">{formatProjectNumber(row.expectedQuantity)} {row.unitCode}</td>
-          <td className="p-3">{row.warehouseCode} · {row.warehouseName}<small className="block text-slate-500">{row.receivingLocationCode} · {row.receivingLocationName}</small></td>
-          <td className="p-3"><span className="rounded-full border px-2 py-1 text-xs font-bold">{t('vehicleCheckIn.table.imageCount',{defaultValue:'{{count}} görsel',count:row.attachmentCount})}</span></td>
+        {loading&&<tr><td colSpan={8} className="wms-ops-grid-state-cell border-b border-[var(--wms-app-border)] p-5 text-[var(--wms-app-text-muted)]">{t('vehicleCheckIn.table.loading',{defaultValue:'Uygun levhalar aranıyor...'})}</td></tr>}
+        {!loading&&rows.length===0&&<tr><td colSpan={8} className="wms-ops-grid-state-cell border-b border-[var(--wms-app-border)] p-5 text-[var(--wms-app-text-muted)]">{t('vehicleCheckIn.table.empty',{defaultValue:'Kabul bekleyen uygun SAC levhası bulunamadı.'})}</td></tr>}
+        {!loading&&rows.map(row=><tr key={row.id} className={`border-b border-[var(--wms-app-border)] hover:bg-[var(--wms-brand-soft)] ${selected[row.id]?'bg-[var(--wms-brand-soft)]':''}`}>
+          <td className="wms-ops-grid-cell border-r border-[var(--wms-app-border)] px-4 py-3"><input type="checkbox" checked={Boolean(selected[row.id])} onChange={()=>onToggle(row)} className="size-5 accent-cyan-600"/></td>
+          <td className="wms-ops-grid-cell border-r border-[var(--wms-app-border)] px-4 py-3"><strong className="font-mono text-cyan-600">{row.dCode}</strong><small className="block text-[var(--wms-app-text-muted)]">{row.importReferenceNo} · {row.sourceFileName}</small></td>
+          <td className="wms-ops-grid-cell border-r border-[var(--wms-app-border)] px-4 py-3"><strong>{row.supplierSerialNo}</strong><small className="block text-[var(--wms-app-text-muted)]">{row.secondarySerialNo||'-'}</small></td>
+          <td className="wms-ops-grid-cell border-r border-[var(--wms-app-border)] px-4 py-3"><strong>{row.stockCode}</strong><small className="block text-[var(--wms-app-text-muted)]">{row.stockName||'-'}</small></td>
+          <td className="wms-ops-grid-cell border-r border-[var(--wms-app-border)] px-4 py-3">{row.combinedSize||'-'}<small className="block text-[var(--wms-app-text-muted)]">{row.materialGrade||'-'} · {t('vehicleCheckIn.table.heat',{defaultValue:'Heat'})} {row.heatNumber||'-'}</small></td>
+          <td className="wms-ops-grid-cell border-r border-[var(--wms-app-border)] px-4 py-3 font-bold">{formatProjectNumber(row.expectedQuantity)} {row.unitCode}</td>
+          <td className="wms-ops-grid-cell border-r border-[var(--wms-app-border)] px-4 py-3">{row.warehouseCode} · {row.warehouseName}<small className="block text-[var(--wms-app-text-muted)]">{row.receivingLocationCode} · {row.receivingLocationName}</small></td>
+          <td className="wms-ops-grid-cell px-4 py-3 last:border-r-0"><span className="rounded-full border px-2 py-1 text-xs font-bold">{t('vehicleCheckIn.table.imageCount',{defaultValue:'{{count}} görsel',count:row.attachmentCount})}</span></td>
         </tr>)}
       </tbody>
     </table>

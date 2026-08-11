@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Layers, Loader2, PackageCheck, Play, RotateCcw } from 'lucide-react';
+import { Layers, Loader2, PackageCheck, Play, RotateCcw, Undo2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { OpsActionButton } from '@/components/shared/OpsActionButton';
 import { OpsSkinCheckbox } from '@/components/shared/OpsSkinCheckbox';
@@ -36,6 +36,10 @@ interface Props {
 function locationOptionLabel(code?: string, name?: string): string {
   if (code && name) return `${code} · ${name}`;
   return code || name || 'Raf seçin';
+}
+
+function isOpenReturnLine(line: ProductionTaskLine): boolean {
+  return line.processedQuantity + 0.0001 < line.requestedQuantity;
 }
 
 function buildDefaultTargetsFromLines(lines: ProductionTaskLine[]) {
@@ -138,22 +142,35 @@ export function ProductionTransferReturnSection({ transferId, documentNo, onBoar
     && returnTask.startedBy === currentUserId,
   );
 
+  const openReturnLines = useMemo(
+    () => returnTask?.lines.filter(isOpenReturnLine) ?? [],
+    [returnTask],
+  );
+
   const selectedLineIdSet = useMemo(() => new Set(selectedLineIds), [selectedLineIds]);
   const hasBulkSelection = selectedLineIds.length > 0;
   const allLinesSelected = Boolean(
-    returnTask
-    && returnTask.lines.length > 0
-    && returnTask.lines.every((line) => selectedLineIdSet.has(line.taskLineId)),
+    openReturnLines.length > 0
+    && openReturnLines.every((line) => selectedLineIdSet.has(line.taskLineId)),
   );
   const someLinesSelected = Boolean(
-    returnTask
-    && returnTask.lines.some((line) => selectedLineIdSet.has(line.taskLineId)),
+    openReturnLines.some((line) => selectedLineIdSet.has(line.taskLineId)),
   );
 
+  const returnRowsReadyToPlace = useMemo(() => {
+    const selectedOnly = selectedLineIds.length > 0;
+    return openReturnLines.filter((line) => {
+      if (selectedOnly && !selectedLineIdSet.has(line.taskLineId)) return false;
+      const target = lineTargets[line.taskLineId];
+      return target != null && target !== '' && Number(target) > 0;
+    });
+  }, [lineTargets, openReturnLines, selectedLineIdSet, selectedLineIds.length]);
+
+  const canPlaceReturnOnShelf = returnRowsReadyToPlace.length > 0;
+
   const allTargetsSelected = Boolean(
-    returnTask
-    && returnTask.lines.length > 0
-    && returnTask.lines.every((line) => {
+    openReturnLines.length > 0
+    && openReturnLines.every((line) => {
       const value = lineTargets[line.taskLineId];
       return value != null && value !== '' && Number(value) > 0;
     }),
@@ -162,11 +179,11 @@ export function ProductionTransferReturnSection({ transferId, documentNo, onBoar
   const hasLayoutChanges = useMemo(() => {
     if (!returnTask) return false;
     if (selectedLineIds.length > 0) return true;
-    return returnTask.lines.some((line) => {
+    return openReturnLines.some((line) => {
       const defaultTarget = line.targetLocationId ? String(line.targetLocationId) : '';
       return (lineTargets[line.taskLineId] ?? '') !== defaultTarget;
     });
-  }, [lineTargets, returnTask, selectedLineIds]);
+  }, [lineTargets, openReturnLines, returnTask, selectedLineIds]);
 
   const toggleLineSelection = (taskLineId: number, checked: boolean) => {
     setSelectedLineIds((current) => {
@@ -176,8 +193,7 @@ export function ProductionTransferReturnSection({ transferId, documentNo, onBoar
   };
 
   const toggleSelectAll = (checked: boolean) => {
-    if (!returnTask) return;
-    setSelectedLineIds(checked ? returnTask.lines.map((line) => line.taskLineId) : []);
+    setSelectedLineIds(checked ? openReturnLines.map((line) => line.taskLineId) : []);
   };
 
   const buildCompletePayload = (lines: ProductionTaskLine[]) =>
@@ -194,7 +210,7 @@ export function ProductionTransferReturnSection({ transferId, documentNo, onBoar
 
   const resetLayout = () => {
     if (!returnTask) return;
-    const { targets, labels } = buildDefaultTargetsFromLines(returnTask.lines);
+    const { targets, labels } = buildDefaultTargetsFromLines(openReturnLines);
     setLineTargets(targets);
     setLineTargetLabels(labels);
     setSelectedLineIds([]);
@@ -230,6 +246,61 @@ export function ProductionTransferReturnSection({ transferId, documentNo, onBoar
     toast.success(`${assignedCount} satır seçilen rafa atandı.`);
   };
 
+  const handleReturnCompleted = (nextBoard: ProductionTaskBoard) => {
+    setBoard(nextBoard);
+    onBoardChange?.(nextBoard);
+    toast.success('İptal iadesi tamamlandı.');
+    navigate(PRODUCTION_WORK_ORDERS_MY_ASSIGNMENTS_URL);
+  };
+
+  const placeReturnOnShelf = async () => {
+    if (!returnTask || returnRowsReadyToPlace.length === 0) return;
+    setBusy(true);
+    const processedLineIds = new Set<number>();
+    try {
+      let nextBoard = board;
+      for (const line of returnRowsReadyToPlace) {
+        const targetLocationId = Number(lineTargets[line.taskLineId]);
+        if (!Number.isFinite(targetLocationId) || targetLocationId <= 0) continue;
+        nextBoard = await productionTransferApi.processReturnTaskLine(
+          transferId,
+          returnTask.taskId,
+          line.taskLineId,
+          targetLocationId,
+        );
+        processedLineIds.add(line.taskLineId);
+      }
+      if (!nextBoard) return;
+
+      setBoard(nextBoard);
+      onBoardChange?.(nextBoard);
+      setLineTargets((current) => {
+        const next = { ...current };
+        for (const taskLineId of processedLineIds) delete next[taskLineId];
+        return next;
+      });
+      setLineTargetLabels((current) => {
+        const next = { ...current };
+        for (const taskLineId of processedLineIds) delete next[taskLineId];
+        return next;
+      });
+      setSelectedLineIds([]);
+
+      const updatedReturnTask = nextBoard.tasks.find((task) => task.taskId === returnTask.taskId);
+      if (updatedReturnTask?.status === 'Completed') {
+        handleReturnCompleted(nextBoard);
+        return;
+      }
+
+      toast.success(`${processedLineIds.size} satır seçilen rafa bırakıldı.`);
+    } catch (error) {
+      await load();
+      toast.error(error instanceof Error ? error.message : 'Rafa bırakma başarısız.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const completeReturn = async (task: ProductionTask) => {
     if (!allTargetsSelected) {
       toast.error('Tüm satırlar için hedef raf seçin.');
@@ -237,12 +308,9 @@ export function ProductionTransferReturnSection({ transferId, documentNo, onBoar
     }
     setBusy(true);
     try {
-      const payload = buildCompletePayload(task.lines);
+      const payload = buildCompletePayload(openReturnLines);
       const nextBoard = await productionTransferApi.completeCancellationReturn(transferId, task.taskId, payload);
-      setBoard(nextBoard);
-      onBoardChange?.(nextBoard);
-      toast.success('İptal iadesi tamamlandı.');
-      navigate(PRODUCTION_WORK_ORDERS_MY_ASSIGNMENTS_URL);
+      handleReturnCompleted(nextBoard);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'İade tamamlanamadı.');
     } finally {
@@ -263,7 +331,7 @@ export function ProductionTransferReturnSection({ transferId, documentNo, onBoar
 
   if (!board || !returnTask) return null;
 
-  const showReturnTable = returnTask.lines.length > 0;
+  const showReturnTable = openReturnLines.length > 0;
   const warehouseId = board.sourceWarehouseId;
 
   return (
@@ -312,6 +380,16 @@ export function ProductionTransferReturnSection({ transferId, documentNo, onBoar
                 Yerleştirme rafını seç
                 {hasBulkSelection ? ` (${selectedLineIds.length})` : ''}
               </OpsActionButton>
+              <OpsActionButton
+                variant="primary"
+                disabled={busy || !canPlaceReturnOnShelf}
+                onClick={() => void placeReturnOnShelf()}
+                className="px-4 py-2 text-sm"
+              >
+                <Undo2 className="size-4" />
+                Rafa bırak
+                {returnRowsReadyToPlace.length > 0 ? ` (${returnRowsReadyToPlace.length})` : ''}
+              </OpsActionButton>
             </div>
           ) : null}
         </div>
@@ -336,14 +414,14 @@ export function ProductionTransferReturnSection({ transferId, documentNo, onBoar
                         aria-label="Tüm satırları seç"
                       />
                     </th>
-                    <th className={cn(TABLE_HEAD_CELL, 'text-left')}>Geri konulacak raf</th>
+                    <th className={cn(TABLE_HEAD_CELL, 'text-left')}>Raf</th>
                     <th className={cn(TABLE_HEAD_CELL, 'text-left')}>Stok</th>
                     <th className={cn(TABLE_HEAD_CELL, 'text-left')}>Seri</th>
                     <th className={cn(TABLE_HEAD_CELL, 'text-right')}>Miktar</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {returnTask.lines.map((line) => {
+                  {openReturnLines.map((line) => {
                     const isBulkSelected = selectedLineIdSet.has(line.taskLineId);
                     return (
                       <tr key={line.taskLineId}>
@@ -395,7 +473,7 @@ export function ProductionTransferReturnSection({ transferId, documentNo, onBoar
 
             <div className="mt-5 flex flex-wrap items-center justify-end gap-2">
               <OpsActionButton
-                variant="primary"
+                variant="secondary"
                 loading={busy}
                 disabled={!canWork || !allTargetsSelected}
                 onClick={() => void completeReturn(returnTask)}

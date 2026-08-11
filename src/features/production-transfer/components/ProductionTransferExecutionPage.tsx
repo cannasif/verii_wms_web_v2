@@ -75,9 +75,7 @@ export function ProductionTransferExecutionPage() {
         toast.warning(t('execution.erp.failedAfterCompletion'));
       } else if (result.erpIntegrationStatus === 'CommitUncertain') {
         toast.warning(t('execution.erp.uncertainAfterCompletion'));
-      } else toast.success(result.residualDocumentNo
-        ? `Teslim tamamlandı. Kalan miktar için ${result.residualDocumentNo} oluşturuldu.`
-        : 'Üretim transferi teslim edildi ve tamamlandı.');
+      } else toast.success('Üretim transferi teslim edildi ve tamamlandı.');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Transfer teslimi onaylanamadı.');
     } finally { setBusy(false); }
@@ -202,7 +200,6 @@ export function ProductionTransferExecutionPage() {
         {renderErpTriggerButton()}
       </div>
       <LineSummary execution={execution} />
-      {execution.residualTransferId && <div className="mt-5 rounded-xl border border-amber-500/50 bg-amber-500/10 p-4"><strong>Kalan iş emri oluşturuldu</strong><p className="mt-1 text-sm">Eksik miktarlar yeni belgeye taşındı; tamamlanan transfer tekrar açılamaz.</p><Link className="mt-3 inline-flex items-center gap-2 font-bold text-[var(--wms-brand-primary)]" to={`/warehouse/production-transfers/${execution.residualTransferId}/operations`}>{execution.residualDocumentNo || `#${execution.residualTransferId}`} iş emrine git</Link></div>}
       {showErpControls && erpPanelOpen && (
         <ErpPostingPanel
           erp={execution}

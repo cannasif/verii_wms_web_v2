@@ -79,7 +79,7 @@ export function ProductionTransferCancellationPanel({
           <p className="mt-1 text-xs text-[var(--wms-app-text-muted)]">
             Bu transferde toplanmış {formatProjectNumber(readiness.pickedQuantity)} birim stok var.
             İptal edebilmek için tek bir <strong>iptal iade görevi</strong> başlatılmalı;
-            iade tamamlandığında kalan toplama işi <strong>Atanmayanlar</strong> sekmesinde listelenir.
+            iade tamamlandığında toplanmamış kalan malzeme <strong>iş emrinin Atanmayanlar</strong> havuzuna geri döner.
           </p>
           {readiness.unresolvedPickedStock && (
             <p className="mt-2 text-xs text-amber-700 dark:text-amber-300">

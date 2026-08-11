@@ -472,8 +472,16 @@ export const productionTransferApi = {
       idempotencyKey: crypto.randomUUID(),
       lines,
     })),
-  processReturnTaskLine: async (id: number, taskId: number, taskLineId: number): Promise<ProductionTaskBoard> =>
-    unwrap(await api.post<Envelope<ProductionTaskBoard>>(`${taskPath(id, taskId)}/task-lines/${taskLineId}/process-return`, { idempotencyKey: crypto.randomUUID() })),
+  processReturnTaskLine: async (
+    id: number,
+    taskId: number,
+    taskLineId: number,
+    targetLocationId: number,
+  ): Promise<ProductionTaskBoard> =>
+    unwrap(await api.post<Envelope<ProductionTaskBoard>>(`${taskPath(id, taskId)}/task-lines/${taskLineId}/process-return`, {
+      idempotencyKey: crypto.randomUUID(),
+      targetLocationId,
+    })),
 
   // — Depo raf ayarları —
   defaultTargetLocation: async (warehouseId: number, branchCode: string): Promise<DefaultProductionTargetLocation> =>

@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type UIEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  AlertTriangle, Barcode, ChevronRight, List, Loader2, MapPin, PackageCheck, Play, RefreshCw, Undo2,
+  AlertTriangle, Barcode, ChevronRight, Layers, List, Loader2, MapPin, PackageCheck, Play, RefreshCw,
+  RotateCcw, Undo2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { OpsActionButton } from '@/components/shared/OpsActionButton';
+import { OpsSkinCheckbox } from '@/components/shared/OpsSkinCheckbox';
 import { OpsQrCaptureField } from '@/components/shared/OpsQrCaptureField';
 import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
 import { ResponsiveDialog } from '@/components/shared/ResponsiveDialog';
@@ -11,9 +13,8 @@ import { StockIdentityCell } from '@/components/shared/StockIdentityCell';
 import { formatProjectNumber } from '@/lib/project-format';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
-import { useDropdownInfiniteSearch } from '@/hooks/useDropdownInfiniteSearch';
 import { warehouseTransferApi } from '@/features/warehouse-transfer-v2/api/warehouse-transfer.api';
-import type { LocationOption, StockOption } from '@/features/goods-receipt-v2/types/goods-receipt.types';
+import type { LocationOption } from '@/features/goods-receipt-v2/types/goods-receipt.types';
 import {
   productionTransferApi,
   type ProductionTaskBoard,
@@ -42,15 +43,76 @@ type TableSection =
     };
 
 const STOCK_LIST_SEARCH_DEBOUNCE_MS = 400;
-const STOCK_LIST_PAGE_SIZE = 50;
-const STOCK_LIST_MIN_SEARCH_CHARS = 2;
-const STOCK_LIST_SCROLL_THRESHOLD = 0.82;
+const PICKING_BARCODE_SEPARATOR = '**';
+
+type PickingTableStockListItem = {
+  stockId: number;
+  stockCode: string;
+  stockName?: string;
+};
+
+function buildPickingTableStockList(rows: ProductionTransferPickingRow[]): PickingTableStockListItem[] {
+  const byStockId = new Map<number, PickingTableStockListItem>();
+  for (const row of rows) {
+    if (byStockId.has(row.stockId)) continue;
+    byStockId.set(row.stockId, {
+      stockId: row.stockId,
+      stockCode: row.stockCode,
+      stockName: row.stockName,
+    });
+  }
+  return [...byStockId.values()].sort((left, right) =>
+    left.stockCode.localeCompare(right.stockCode, 'tr', { sensitivity: 'base' }));
+}
+
+function filterPickingTableStockList(
+  rows: PickingTableStockListItem[],
+  searchTerm: string,
+): PickingTableStockListItem[] {
+  const query = searchTerm.trim().toLocaleLowerCase('tr-TR');
+  if (!query) return rows;
+  return rows.filter((row) =>
+    row.stockCode.toLocaleLowerCase('tr-TR').includes(query)
+    || (row.stockName?.toLocaleLowerCase('tr-TR').includes(query) ?? false));
+}
 
 const TABLE_HEAD_CELL = 'border border-[var(--wms-app-border)] p-3';
 const TABLE_CELL = 'border border-[var(--wms-app-border)] p-3';
+const CHECKBOX_HEAD_CELL = cn(TABLE_HEAD_CELL, 'w-12 text-center');
+const CHECKBOX_CELL = cn(TABLE_CELL, 'text-center');
 const LOCATION_HEAD_CELL = cn(TABLE_HEAD_CELL, 'text-center');
 const LOCATION_CELL = cn(TABLE_CELL, 'text-center');
 const HIGHLIGHT_ROW_CLASS = 'bg-amber-500/15 ring-2 ring-inset ring-amber-500';
+
+function locationOptionLabel(code?: string, name?: string): string {
+  if (code && name) return `${code} · ${name}`;
+  return code || name || 'Raf seçin';
+}
+
+function collectPlacableCompletedRows(sections: TableSection[]): ProductionTransferPickingRow[] {
+  const rows: ProductionTransferPickingRow[] = [];
+  for (const section of sections) {
+    if (section.type === 'flat') rows.push(section.row);
+    else rows.push(...section.rows);
+  }
+  return rows.filter((row) => isRowCompleted(row) && row.processedQuantity > 0);
+}
+
+function buildDefaultCompletedTargets(
+  rows: ProductionTransferPickingRow[],
+  excludedLocationIds: ReadonlySet<number>,
+) {
+  const targets: Record<string, string> = {};
+  const labels: Record<string, string> = {};
+  for (const row of rows) {
+    const key = pickingRowSelectionKey(row);
+    const defaultLocationId = row.sourceLocationId;
+    if (!defaultLocationId || excludedLocationIds.has(defaultLocationId)) continue;
+    targets[key] = String(defaultLocationId);
+    labels[key] = locationOptionLabel(row.sourceLocationCode, undefined);
+  }
+  return { targets, labels };
+}
 
 function parseTransferLineNoFromError(message: string): number | undefined {
   const match = message.match(/(\d+)\. satır/i);
@@ -237,6 +299,56 @@ function clampRouteQuantityInput(
   return sanitized;
 }
 
+function parsePickingBarcodeInput(raw: string): {
+  stockCode: string | null;
+  serialNo: string | null;
+  isComposite: boolean;
+} {
+  const trimmed = raw.trim();
+  const separatorIndex = trimmed.indexOf(PICKING_BARCODE_SEPARATOR);
+  if (separatorIndex < 0) {
+    return { stockCode: null, serialNo: null, isComposite: false };
+  }
+  const stockCode = trimmed.slice(0, separatorIndex).trim();
+  const serialNo = trimmed.slice(separatorIndex + PICKING_BARCODE_SEPARATOR.length).trim();
+  if (!stockCode || !serialNo) {
+    return { stockCode: null, serialNo: null, isComposite: false };
+  }
+  return { stockCode, serialNo, isComposite: true };
+}
+
+function samePickingStockCode(left: string, right: string): boolean {
+  return left.trim().toLocaleUpperCase('tr-TR') === right.trim().toLocaleUpperCase('tr-TR');
+}
+
+function isOpenPickableRow(row: ProductionTransferPickingRow): boolean {
+  return row.remainingQuantity > 0 && row.canPick;
+}
+
+function findOpenSerialRowsByStockCode(
+  rows: ProductionTransferPickingRow[],
+  stockCode: string,
+): ProductionTransferPickingRow[] {
+  return rows.filter((row) =>
+    isOpenPickableRow(row)
+    && Boolean(row.serialNo?.trim())
+    && samePickingStockCode(row.stockCode, stockCode));
+}
+
+function findOpenNonSerialRowsByStockCode(
+  rows: ProductionTransferPickingRow[],
+  stockCode: string,
+): ProductionTransferPickingRow[] {
+  return rows.filter((row) =>
+    isOpenPickableRow(row)
+    && !row.serialNo?.trim()
+    && samePickingStockCode(row.stockCode, stockCode));
+}
+
+function buildSerialPickBarcode(stockCode: string, serialNo: string): string {
+  return `${stockCode.trim()}${PICKING_BARCODE_SEPARATOR}${serialNo.trim()}`;
+}
+
 interface BarcodeStep1 {
   barcode: string;
   match: ResolveProductionTransferBarcodeResult;
@@ -312,7 +424,6 @@ function shouldAutoPickWithoutConfirm(
 
 export function ProductionTransferPickingSection({ transferId, execution, onExecutionChange }: Props) {
   const currentUserId = useAuthStore((state) => state.user?.id);
-  const branchCode = useAuthStore((state) => state.branch?.code ?? '0');
   const [table, setTable] = useState<ProductionTransferPickingTable>();
   const [board, setBoard] = useState<ProductionTaskBoard>();
   const [loadError, setLoadError] = useState<string>();
@@ -323,19 +434,33 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
   const [stockListOpen, setStockListOpen] = useState(false);
   const [stockListSearch, setStockListSearch] = useState('');
   const [debouncedStockListSearch, setDebouncedStockListSearch] = useState('');
+  const [selectedStockListStockId, setSelectedStockListStockId] = useState<number>();
   const [step1, setStep1] = useState<BarcodeStep1 | null>(null);
+  const [serialBulkPickDialog, setSerialBulkPickDialog] = useState<{
+    stockCode: string;
+    rows: ProductionTransferPickingRow[];
+  } | null>(null);
+  const [serialBulkPickSelection, setSerialBulkPickSelection] = useState<Set<string>>(() => new Set());
   const [routeDialog, setRouteDialog] = useState<ProductionTransferRouteRefreshCandidates | null>(null);
   const [routeQuantities, setRouteQuantities] = useState<Record<number, string>>({});
   const [selectedSerialCandidateKey, setSelectedSerialCandidateKey] = useState<string>();
-  const [unpickDialog, setUnpickDialog] = useState<ProductionTransferPickingRow | null>(null);
-  const [unpickTargetLocation, setUnpickTargetLocation] = useState('');
-  const [unpickTargetLabel, setUnpickTargetLabel] = useState('');
-  const [unpickQuantity, setUnpickQuantity] = useState('');
+  const [completedLineTargets, setCompletedLineTargets] = useState<Record<string, string>>({});
+  const [completedLineTargetLabels, setCompletedLineTargetLabels] = useState<Record<string, string>>({});
+  const [completedSelectedKeys, setCompletedSelectedKeys] = useState<Set<string>>(() => new Set());
+  const [completedBulkPlacementOpen, setCompletedBulkPlacementOpen] = useState(false);
+  const [completedBulkTargetLocation, setCompletedBulkTargetLocation] = useState('');
+  const [completedBulkTargetLabel, setCompletedBulkTargetLabel] = useState('');
+  const [nonSerialUnpickDialog, setNonSerialUnpickDialog] = useState<ProductionTransferPickingRow | null>(null);
+  const [nonSerialUnpickTargetLocation, setNonSerialUnpickTargetLocation] = useState('');
+  const [nonSerialUnpickTargetLabel, setNonSerialUnpickTargetLabel] = useState('');
+  const [nonSerialUnpickQuantity, setNonSerialUnpickQuantity] = useState('');
   const [sourceWarehouseReturnSetting, setSourceWarehouseReturnSetting] = useState<WarehouseTransferReturnSetting>();
-  const unpickLocationLabelsRef = useRef<Record<string, string>>({});
+  const completedLocationLabelsRef = useRef<Record<string, string>>({});
   const [highlightedLineNo, setHighlightedLineNo] = useState<number>();
   const barcodeRef = useRef<HTMLInputElement>(null);
   const pickDialogOpen = Boolean(step1);
+  const serialBulkPickDialogOpen = Boolean(serialBulkPickDialog);
+  const blockingDialogOpen = pickDialogOpen || serialBulkPickDialogOpen || Boolean(nonSerialUnpickDialog);
 
   const focusPickingLineError = useCallback((message: string) => {
     const lineNo = parseTransferLineNoFromError(message);
@@ -364,6 +489,7 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
     if (!stockListOpen) {
       setStockListSearch('');
       setDebouncedStockListSearch('');
+      setSelectedStockListStockId(undefined);
       return;
     }
     const timer = window.setTimeout(
@@ -373,32 +499,23 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
     return () => window.clearTimeout(timer);
   }, [stockListOpen, stockListSearch]);
 
-  const stockListQuery = useDropdownInfiniteSearch<StockOption>({
-    queryKey: ['production-picking-stock-list', branchCode],
-    searchTerm: debouncedStockListSearch,
-    enabled: stockListOpen,
-    minSearchLength: STOCK_LIST_MIN_SEARCH_CHARS,
-    pageSize: STOCK_LIST_PAGE_SIZE,
-    sortBy: 'erpStockCode',
-    sortDirection: 'asc',
-    searchFields: ['erpStockCode', 'stockName'],
-    fetchPage: (request) => warehouseTransferApi.stocks(request, branchCode),
-  });
+  const pickingTableStockList = useMemo(
+    () => buildPickingTableStockList(table?.rows ?? []),
+    [table?.rows],
+  );
+  const stockListRows = useMemo(
+    () => filterPickingTableStockList(pickingTableStockList, debouncedStockListSearch),
+    [debouncedStockListSearch, pickingTableStockList],
+  );
+  const stockListTotalCount = pickingTableStockList.length;
 
-  const stockListRows = stockListQuery.items;
-  const stockListTotalCount = stockListQuery.data?.pages[0]?.totalCount ?? stockListRows.length;
-  const isStockListThresholdInput = stockListSearch.trim().length > 0
-    && stockListSearch.trim().length < STOCK_LIST_MIN_SEARCH_CHARS;
+  const selectStockListRow = useCallback((row: PickingTableStockListItem) => {
+    setSelectedStockListStockId(row.stockId);
+    setBarcode(row.stockCode);
+    setStockListOpen(false);
+    requestAnimationFrame(() => barcodeRef.current?.focus());
+  }, []);
 
-  const handleStockListScroll = useCallback((event: UIEvent<HTMLDivElement>) => {
-    if (!stockListQuery.hasNextPage || stockListQuery.isFetchingNextPage) return;
-    const target = event.currentTarget;
-    if (target.scrollHeight <= 0) return;
-    const progress = (target.scrollTop + target.clientHeight) / target.scrollHeight;
-    if (progress >= STOCK_LIST_SCROLL_THRESHOLD) {
-      void stockListQuery.fetchNextPage();
-    }
-  }, [stockListQuery]);
   useEffect(() => {
     if (!table?.isLocked) requestAnimationFrame(() => barcodeRef.current?.focus());
   }, [table?.isLocked, table?.rows.length]);
@@ -454,12 +571,26 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
 
   const selectedCount = selectedRowKey ? 1 : 0;
   const selectedRow = table?.rows.find((row) => pickingRowSelectionKey(row) === selectedRowKey);
-  const selectedCompletedRow = selectedRow && isRowCompleted(selectedRow) && selectedRow.processedQuantity > 0
-    ? selectedRow
-    : undefined;
+  const completedRows = useMemo(
+    () => collectPlacableCompletedRows(tableSections),
+    [tableSections],
+  );
+  const completedSelectedKeyList = useMemo(() => [...completedSelectedKeys], [completedSelectedKeys]);
+  const hasCompletedBulkSelection = completedSelectedKeys.size > 0;
+  const allCompletedRowsSelected = completedRows.length > 0
+    && completedRows.every((row) => completedSelectedKeys.has(pickingRowSelectionKey(row)));
+  const someCompletedRowsSelected = completedRows.some((row) =>
+    completedSelectedKeys.has(pickingRowSelectionKey(row)));
 
   useEffect(() => {
-    setSelectedRowKey(undefined);
+    if (tab === 'completed') {
+      setSelectedRowKey(undefined);
+      return;
+    }
+    setCompletedSelectedKeys(new Set());
+    setCompletedBulkPlacementOpen(false);
+    setCompletedBulkTargetLocation('');
+    setCompletedBulkTargetLabel('');
   }, [tab]);
 
   const unpickExcludedLocationIds = useMemo(() => {
@@ -468,8 +599,13 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
     if (sourceWarehouseReturnSetting?.defaultProductionTransferLocationId) {
       ids.add(sourceWarehouseReturnSetting.defaultProductionTransferLocationId);
     }
+    for (const locationId of execution.excludedSourceLocationIds ?? []) ids.add(locationId);
     return ids;
-  }, [execution.waitingLocationId, sourceWarehouseReturnSetting?.defaultProductionTransferLocationId]);
+  }, [
+    execution.excludedSourceLocationIds,
+    execution.waitingLocationId,
+    sourceWarehouseReturnSetting?.defaultProductionTransferLocationId,
+  ]);
 
   useEffect(() => {
     if (execution.sourceWarehouseId <= 0) {
@@ -490,57 +626,233 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
   }, [execution.sourceWarehouseId]);
 
   useEffect(() => {
-    if (!unpickDialog) return;
-    const selectedId = Number(unpickTargetLocation);
-    if (selectedId > 0 && unpickExcludedLocationIds.has(selectedId)) {
-      setUnpickTargetLocation('');
-      setUnpickTargetLabel('');
-    }
-  }, [unpickDialog, unpickExcludedLocationIds, unpickTargetLocation]);
+    if (tab !== 'completed' || !table) return;
+    setCompletedLineTargets((current) => {
+      const next = { ...current };
+      let changed = false;
+      for (const row of completedRows) {
+        const key = pickingRowSelectionKey(row);
+        if (next[key]) continue;
+        const defaultLocationId = row.sourceLocationId;
+        if (!defaultLocationId || unpickExcludedLocationIds.has(defaultLocationId)) continue;
+        next[key] = String(defaultLocationId);
+        changed = true;
+      }
+      return changed ? next : current;
+    });
+    setCompletedLineTargetLabels((current) => {
+      const next = { ...current };
+      let changed = false;
+      for (const row of completedRows) {
+        const key = pickingRowSelectionKey(row);
+        if (next[key]) continue;
+        const defaultLocationId = row.sourceLocationId;
+        if (!defaultLocationId || unpickExcludedLocationIds.has(defaultLocationId)) continue;
+        next[key] = locationOptionLabel(row.sourceLocationCode, undefined);
+        changed = true;
+      }
+      return changed ? next : current;
+    });
+    setCompletedSelectedKeys((current) => {
+      const validKeys = new Set(completedRows.map((row) => pickingRowSelectionKey(row)));
+      const next = new Set([...current].filter((key) => validKeys.has(key)));
+      return next.size === current.size ? current : next;
+    });
+  }, [completedRows, tab, table, unpickExcludedLocationIds]);
 
-  const openUnpickDialog = () => {
-    if (!selectedCompletedRow) return;
-    const isSerial = Boolean(selectedCompletedRow.serialNo?.trim());
-    const defaultLocationId = selectedCompletedRow.sourceLocationId;
-    const canUseDefaultLocation = defaultLocationId
-      && !unpickExcludedLocationIds.has(defaultLocationId);
-    setUnpickTargetLocation(canUseDefaultLocation ? String(defaultLocationId) : '');
-    setUnpickTargetLabel(canUseDefaultLocation ? (selectedCompletedRow.sourceLocationCode ?? '') : '');
-    setUnpickQuantity(isSerial ? '1' : formatRouteQuantityValue(selectedCompletedRow.processedQuantity));
-    setUnpickDialog(selectedCompletedRow);
+  const toCompletedLocationOption = useCallback((item: LocationOption) => {
+    const label = `${item.code} · ${item.name}`;
+    completedLocationLabelsRef.current[String(item.id)] = label;
+    return { value: String(item.id), label };
+  }, []);
+
+  const fetchCompletedLocationPage = useCallback(async (request: Parameters<typeof warehouseTransferApi.locations>[0]) => {
+    const page = await warehouseTransferApi.locations(request, execution.sourceWarehouseId);
+    return {
+      ...page,
+      items: page.items.filter((item) => !unpickExcludedLocationIds.has(item.id)),
+    };
+  }, [execution.sourceWarehouseId, unpickExcludedLocationIds]);
+
+  const hasCompletedLayoutChanges = useMemo(() => {
+    if (tab !== 'completed') return false;
+    if (completedSelectedKeys.size > 0) return true;
+    const defaults = buildDefaultCompletedTargets(completedRows, unpickExcludedLocationIds);
+    return completedRows.some((row) => {
+      const key = pickingRowSelectionKey(row);
+      return (completedLineTargets[key] ?? '') !== (defaults.targets[key] ?? '');
+    });
+  }, [completedLineTargets, completedRows, completedSelectedKeys.size, tab, unpickExcludedLocationIds]);
+
+  const completedRowsReadyToUnpick = useMemo(() => {
+    const selectedOnly = completedSelectedKeys.size > 0;
+    return completedRows.filter((row) => {
+      const key = pickingRowSelectionKey(row);
+      if (selectedOnly && !completedSelectedKeys.has(key)) return false;
+      const target = completedLineTargets[key];
+      return target != null && target !== '' && Number(target) > 0;
+    });
+  }, [completedLineTargets, completedRows, completedSelectedKeys]);
+
+  const singleSelectedNonSerialRow = useMemo(() => {
+    if (completedSelectedKeys.size !== 1) return undefined;
+    const row = completedRows.find((item) => completedSelectedKeys.has(pickingRowSelectionKey(item)));
+    if (!row || isSerialRow(row)) return undefined;
+    return row;
+  }, [completedRows, completedSelectedKeys]);
+
+  const canExecuteCompletedUnpick = Boolean(
+    singleSelectedNonSerialRow?.processedQuantity
+    || completedRowsReadyToUnpick.length > 0,
+  );
+
+  const completedUnpickActionCount = singleSelectedNonSerialRow
+    ? 1
+    : completedRowsReadyToUnpick.length;
+
+  const resetCompletedLayout = () => {
+    const { targets, labels } = buildDefaultCompletedTargets(completedRows, unpickExcludedLocationIds);
+    setCompletedLineTargets(targets);
+    setCompletedLineTargetLabels(labels);
+    setCompletedSelectedKeys(new Set());
+    setCompletedBulkPlacementOpen(false);
+    setCompletedBulkTargetLocation('');
+    setCompletedBulkTargetLabel('');
+    toast.success('Raf seçimleri varsayılan değerlere döndürüldü.');
   };
 
-  const confirmUnpick = async () => {
-    if (!unpickDialog || busy) return;
-    const targetLocationId = Number(unpickTargetLocation);
+  const applyCompletedBulkTargetLocation = () => {
+    if (!completedBulkTargetLocation || Number(completedBulkTargetLocation) <= 0) {
+      toast.error('Toplu yerleştirme için raf seçin.');
+      return;
+    }
+    const label = completedBulkTargetLabel
+      || completedLocationLabelsRef.current[completedBulkTargetLocation]
+      || completedBulkTargetLocation;
+    const assignedCount = completedSelectedKeys.size;
+    setCompletedLineTargets((current) => {
+      const next = { ...current };
+      for (const key of completedSelectedKeys) next[key] = completedBulkTargetLocation;
+      return next;
+    });
+    setCompletedLineTargetLabels((current) => {
+      const next = { ...current };
+      for (const key of completedSelectedKeys) next[key] = label;
+      return next;
+    });
+    setCompletedBulkPlacementOpen(false);
+    setCompletedBulkTargetLocation('');
+    setCompletedBulkTargetLabel('');
+    setCompletedSelectedKeys(new Set());
+    toast.success(`${assignedCount} satır seçilen rafa atandı.`);
+  };
+
+  const openNonSerialUnpickDialog = (row: ProductionTransferPickingRow) => {
+    const key = pickingRowSelectionKey(row);
+    const presetTarget = completedLineTargets[key];
+    const defaultLocationId = row.sourceLocationId;
+    const canUseDefaultLocation = defaultLocationId && !unpickExcludedLocationIds.has(defaultLocationId);
+    setNonSerialUnpickDialog(row);
+    setNonSerialUnpickTargetLocation(
+      presetTarget || (canUseDefaultLocation ? String(defaultLocationId) : ''),
+    );
+    setNonSerialUnpickTargetLabel(
+      completedLineTargetLabels[key] || (canUseDefaultLocation ? (row.sourceLocationCode ?? '') : ''),
+    );
+    setNonSerialUnpickQuantity(formatRouteQuantityValue(row.processedQuantity));
+  };
+
+  const handleCompletedUnpickClick = () => {
+    if (busy || !canExecuteCompletedUnpick) return;
+    if (singleSelectedNonSerialRow) {
+      openNonSerialUnpickDialog(singleSelectedNonSerialRow);
+      return;
+    }
+    void confirmCompletedUnpick();
+  };
+
+  const confirmCompletedUnpick = async () => {
+    if (busy || completedRowsReadyToUnpick.length === 0) return;
+    setBusy(true);
+    const processedKeys = new Set<string>();
+    try {
+      let nextTable = table;
+      for (const row of completedRowsReadyToUnpick) {
+        const key = pickingRowSelectionKey(row);
+        const targetLocationId = Number(completedLineTargets[key]);
+        if (!Number.isFinite(targetLocationId) || targetLocationId <= 0) continue;
+        const isSerial = Boolean(row.serialNo?.trim());
+        nextTable = await productionTransferApi.unpickToLocation(transferId, {
+          taskLineId: row.taskLineId,
+          targetLocationId,
+          quantity: isSerial ? undefined : Math.floor(row.processedQuantity),
+          serialNo: row.serialNo,
+        });
+        processedKeys.add(key);
+      }
+      if (nextTable) setTable(nextTable);
+      const nextExecution = await productionTransferApi.execution(transferId);
+      onExecutionChange(nextExecution);
+      setCompletedLineTargets((current) => {
+        const next = { ...current };
+        for (const key of processedKeys) delete next[key];
+        return next;
+      });
+      setCompletedLineTargetLabels((current) => {
+        const next = { ...current };
+        for (const key of processedKeys) delete next[key];
+        return next;
+      });
+      setCompletedSelectedKeys(new Set());
+      setTab('all');
+      toast.success(`${processedKeys.size} satır seçilen rafa bırakıldı.`);
+    } catch (error) {
+      if (table) await load();
+      toast.error(error instanceof Error ? error.message : 'Rafa bırakma başarısız.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const confirmNonSerialUnpickDialog = async () => {
+    if (!nonSerialUnpickDialog || busy) return;
+    const targetLocationId = Number(nonSerialUnpickTargetLocation);
     if (!Number.isFinite(targetLocationId) || targetLocationId <= 0) {
       toast.error('Raf seçin.');
       return;
     }
-    const isSerial = Boolean(unpickDialog.serialNo?.trim());
-    const quantity = isSerial
-      ? 1
-      : parsePositiveIntegerInput(unpickQuantity);
-    if (!isSerial && (quantity === null || quantity <= 0 || quantity > Math.floor(unpickDialog.processedQuantity))) {
+    const quantity = parsePositiveIntegerInput(nonSerialUnpickQuantity);
+    if (quantity === null || quantity <= 0 || quantity > Math.floor(nonSerialUnpickDialog.processedQuantity)) {
       toast.error('Geçerli bir geri alma miktarı girin.');
       return;
     }
     setBusy(true);
+    const rowKey = pickingRowSelectionKey(nonSerialUnpickDialog);
     try {
       const nextTable = await productionTransferApi.unpickToLocation(transferId, {
-        taskLineId: unpickDialog.taskLineId,
+        taskLineId: nonSerialUnpickDialog.taskLineId,
         targetLocationId,
-        quantity: isSerial ? undefined : quantity!,
-        serialNo: unpickDialog.serialNo,
+        quantity,
+        serialNo: nonSerialUnpickDialog.serialNo,
       });
       setTable(nextTable);
       const nextExecution = await productionTransferApi.execution(transferId);
       onExecutionChange(nextExecution);
-      setUnpickDialog(null);
-      setUnpickTargetLocation('');
-      setUnpickTargetLabel('');
-      setUnpickQuantity('');
-      setSelectedRowKey(undefined);
+      setNonSerialUnpickDialog(null);
+      setNonSerialUnpickTargetLocation('');
+      setNonSerialUnpickTargetLabel('');
+      setNonSerialUnpickQuantity('');
+      setCompletedLineTargets((current) => {
+        const next = { ...current };
+        delete next[rowKey];
+        return next;
+      });
+      setCompletedLineTargetLabels((current) => {
+        const next = { ...current };
+        delete next[rowKey];
+        return next;
+      });
+      setCompletedSelectedKeys(new Set());
       setTab('all');
       toast.success('Toplanan stok seçilen rafa bırakıldı.');
     } catch (error) {
@@ -549,6 +861,30 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
       setBusy(false);
     }
   };
+
+  const toggleCompletedRowSelection = useCallback((row: ProductionTransferPickingRow, checked: boolean) => {
+    const key = pickingRowSelectionKey(row);
+    setCompletedSelectedKeys((current) => {
+      const next = new Set(current);
+      if (checked) next.add(key);
+      else next.delete(key);
+      return next;
+    });
+  }, []);
+
+  const toggleCompletedSelectAll = useCallback((checked: boolean) => {
+    setCompletedSelectedKeys(checked
+      ? new Set(completedRows.map((row) => pickingRowSelectionKey(row)))
+      : new Set());
+  }, [completedRows]);
+
+  const updateCompletedLineTarget = useCallback((rowKey: string, value: string) => {
+    setCompletedLineTargets((current) => ({ ...current, [rowKey]: value }));
+    setCompletedLineTargetLabels((current) => ({
+      ...current,
+      [rowKey]: completedLocationLabelsRef.current[value] ?? value,
+    }));
+  }, []);
 
   const toggleRowSelection = useCallback((row: ProductionTransferPickingRow) => {
     const key = pickingRowSelectionKey(row);
@@ -590,9 +926,93 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
     toast.success(`${result.stockCode}: ${formatProjectNumber(result.acceptedQuantity)} toplandı.`);
   };
 
+  const pickSerialBarcode = async (
+    pickBarcode: string,
+    confirmAboveThreshold = false,
+  ) => {
+    const match = await productionTransferApi.resolveBarcode(transferId, pickBarcode);
+    return productionTransferApi.scanPick(
+      transferId,
+      match.taskLineId,
+      pickBarcode,
+      {
+        quantity: undefined,
+        sourceLocationId: match.sourceLocationId,
+        idempotencyKey: crypto.randomUUID(),
+        confirmAboveThreshold,
+      },
+    );
+  };
+
+  const toggleSerialBulkPickSelection = useCallback((row: ProductionTransferPickingRow) => {
+    const key = pickingRowSelectionKey(row);
+    setSerialBulkPickSelection((current) => {
+      const next = new Set(current);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }, []);
+
+  const confirmSerialBulkPick = async () => {
+    if (!serialBulkPickDialog || serialBulkPickSelection.size === 0 || busy) return;
+    setBusy(true);
+    let pickedCount = 0;
+    let currentTable = table;
+    let currentExecution = execution;
+    try {
+      const selectedRows = serialBulkPickDialog.rows.filter((row) =>
+        serialBulkPickSelection.has(pickingRowSelectionKey(row)));
+      for (const row of selectedRows) {
+        const serialNo = row.serialNo?.trim();
+        if (!serialNo) continue;
+        const pickBarcode = buildSerialPickBarcode(serialBulkPickDialog.stockCode, serialNo);
+        const result = await pickSerialBarcode(pickBarcode);
+        pickedCount += 1;
+        if (currentTable) {
+          const next = applyScanPickDelta(currentTable, currentExecution, result);
+          currentTable = next.table;
+          currentExecution = next.execution;
+        }
+      }
+      if (currentTable) {
+        setTable(currentTable);
+        onExecutionChange(currentExecution);
+      } else {
+        await load();
+      }
+      setSerialBulkPickDialog(null);
+      setSerialBulkPickSelection(new Set());
+      setBarcode('');
+      toast.success(`${pickedCount} seri toplandı.`);
+    } catch (error) {
+      if (currentTable) {
+        setTable(currentTable);
+        onExecutionChange(currentExecution);
+      }
+      toast.error(error instanceof Error ? error.message : 'Seçilen seriler toplanamadı.');
+    } finally {
+      setBusy(false);
+      requestAnimationFrame(() => barcodeRef.current?.focus());
+    }
+  };
+
   const resolveBarcode = async (rawBarcode?: string) => {
     const scanned = (rawBarcode ?? barcode).trim();
     if (!scanned || table?.isLocked || busy) return;
+
+    const parsed = parsePickingBarcodeInput(scanned);
+    if (!parsed.isComposite && table) {
+      const openSerialRows = findOpenSerialRowsByStockCode(table.rows, scanned);
+      const openNonSerialRows = findOpenNonSerialRowsByStockCode(table.rows, scanned);
+      if (openSerialRows.length > 0 && openNonSerialRows.length === 0) {
+        setSerialBulkPickDialog({ stockCode: scanned, rows: openSerialRows });
+        setSerialBulkPickSelection(new Set());
+        setBarcode('');
+        return;
+      }
+    }
+
     setBusy(true);
     const idempotencyKey = crypto.randomUUID();
     try {
@@ -785,6 +1205,7 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
     && workerPickTask.assignments.some((a) => a.userId === currentUserId)
     && !['InProgress', 'PartiallyCompleted', 'Completed', 'Cancelled'].includes(workerPickTask.status),
   );
+  const showCompletedShelfColumn = tab === 'completed' && !table.isLocked;
 
   return (
     <section className="space-y-4">
@@ -817,14 +1238,38 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
               </button>
             ) : !table.isLocked ? (
               tab === 'completed' ? (
-                <OpsActionButton
-                  variant="primary"
-                  disabled={busy || !selectedCompletedRow}
-                  onClick={openUnpickDialog}
-                >
-                  <Undo2 className="size-4" />
-                  Rafa bırak
-                </OpsActionButton>
+                <div className="flex shrink-0 flex-wrap items-center gap-2 self-end">
+                  <OpsActionButton
+                    variant="secondary"
+                    loading={false}
+                    disabled={!hasCompletedLayoutChanges || busy}
+                    onClick={resetCompletedLayout}
+                    className="px-4 py-2 text-sm"
+                  >
+                    <RotateCcw className="size-4" />
+                    Düzeni sıfırla
+                  </OpsActionButton>
+                  <OpsActionButton
+                    variant="secondary"
+                    loading={false}
+                    disabled={!hasCompletedBulkSelection || busy}
+                    onClick={() => setCompletedBulkPlacementOpen(true)}
+                    className="px-4 py-2 text-sm"
+                  >
+                    <Layers className="size-4" />
+                    Yerleştirme rafını seç
+                    {hasCompletedBulkSelection ? ` (${completedSelectedKeys.size})` : ''}
+                  </OpsActionButton>
+                  <OpsActionButton
+                    variant="primary"
+                    disabled={busy || !canExecuteCompletedUnpick}
+                    onClick={handleCompletedUnpickClick}
+                  >
+                    <Undo2 className="size-4" />
+                    Rafa bırak
+                    {completedUnpickActionCount > 0 ? ` (${completedUnpickActionCount})` : ''}
+                  </OpsActionButton>
+                </div>
               ) : (
               <div className="flex min-w-[280px] flex-1 items-center gap-2 xl:flex-none">
                 <button
@@ -852,12 +1297,12 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
                     onChange={setBarcode}
                     onCommit={(code) => void resolveBarcode(code)}
                     autoFocus={!table.isLocked}
-                    disabled={busy || pickDialogOpen}
+                    disabled={busy || blockingDialogOpen}
                     placeholder="Barkod veya StokKodu**SeriNo"
                     cameraTitle="Barkod okut"
                     cameraDescription="Barkod veya QR kodu kamera karesine getirin."
                   />
-                  <OpsActionButton variant="primary" loading={busy} disabled={!barcode.trim() || pickDialogOpen} onClick={() => void resolveBarcode()}>
+                  <OpsActionButton variant="primary" loading={busy} disabled={!barcode.trim() || blockingDialogOpen} onClick={() => void resolveBarcode()}>
                     <Barcode className="size-4" />Onayla
                   </OpsActionButton>
                 </div>
@@ -868,10 +1313,23 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
         </div>
 
         <div className="overflow-x-auto rounded-xl border border-[var(--wms-app-border)]">
-          <table className={cn('w-full border-collapse text-sm', table.isLocked ? 'min-w-[640px]' : 'min-w-[920px]')}>
+          <table className={cn(
+            'w-full border-collapse text-sm',
+            table.isLocked ? 'min-w-[640px]' : 'min-w-[920px]',
+          )}>
             <thead className="bg-black/5 text-left text-xs uppercase text-[var(--wms-app-text-muted)] dark:bg-white/5">
               <tr>
-                <th className={cn(TABLE_HEAD_CELL, 'w-10')} />
+                <th className={tab === 'completed' && !table.isLocked ? CHECKBOX_HEAD_CELL : cn(TABLE_HEAD_CELL, 'w-10')}>
+                  {tab === 'completed' && !table.isLocked ? (
+                    <OpsSkinCheckbox
+                      checked={allCompletedRowsSelected}
+                      indeterminate={someCompletedRowsSelected && !allCompletedRowsSelected}
+                      onCheckedChange={toggleCompletedSelectAll}
+                      disabled={busy || completedRows.length === 0}
+                      aria-label="Tüm satırları seç"
+                    />
+                  ) : null}
+                </th>
                 <th className={cn(TABLE_HEAD_CELL, 'w-14 text-right')}>No</th>
                 {!table.isLocked && <th className={LOCATION_HEAD_CELL}>Raf</th>}
                 <th className={TABLE_HEAD_CELL}>Stok</th>
@@ -891,9 +1349,23 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
                       locked={table.isLocked}
                       showRouteColumns={!table.isLocked}
                       pickTab={tab}
-                      selected={selectedRowKey === pickingRowSelectionKey(section.row)}
+                      selected={tab === 'completed'
+                        ? completedSelectedKeys.has(pickingRowSelectionKey(section.row))
+                        : selectedRowKey === pickingRowSelectionKey(section.row)}
                       highlighted={isLineHighlighted(section.row.lineNo, highlightedLineNo)}
                       onSelect={toggleRowSelection}
+                      completedShelf={showCompletedShelfColumn ? {
+                        rowKey: pickingRowSelectionKey(section.row),
+                        targetLocationId: completedLineTargets[pickingRowSelectionKey(section.row)] ?? '',
+                        targetLabel: completedLineTargetLabels[pickingRowSelectionKey(section.row)] ?? '',
+                        bulkSelected: completedSelectedKeys.has(pickingRowSelectionKey(section.row)),
+                        disabled: busy,
+                        warehouseId: execution.sourceWarehouseId,
+                        onTargetChange: updateCompletedLineTarget,
+                        onBulkSelect: toggleCompletedRowSelection,
+                        toLocationOption: toCompletedLocationOption,
+                        fetchLocationPage: fetchCompletedLocationPage,
+                      } : undefined}
                     />
                   );
                 }
@@ -910,7 +1382,17 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
                     pickTab={tab}
                     highlightedLineNo={highlightedLineNo}
                     selectedRowKey={selectedRowKey}
+                    completedSelectedKeys={tab === 'completed' ? completedSelectedKeys : undefined}
                     onSelect={toggleRowSelection}
+                    showCompletedShelfColumn={showCompletedShelfColumn}
+                    completedLineTargets={completedLineTargets}
+                    completedLineTargetLabels={completedLineTargetLabels}
+                    completedShelfBusy={busy}
+                    completedWarehouseId={execution.sourceWarehouseId}
+                    onCompletedTargetChange={updateCompletedLineTarget}
+                    onCompletedBulkSelect={toggleCompletedRowSelection}
+                    toCompletedLocationOption={toCompletedLocationOption}
+                    fetchCompletedLocationPage={fetchCompletedLocationPage}
                   />
                 );
               })}
@@ -938,7 +1420,7 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
         <ResponsiveDialog
           onClose={() => setStockListOpen(false)}
           title="Stok listesi"
-          description={`Toplam ${stockListTotalCount.toLocaleString('tr-TR')} stok kalemi`}
+          description={`Toplam ${stockListTotalCount.toLocaleString('tr-TR')} stok kalemi · Seçilen kod barkod alanına yazılır`}
           className="!max-w-2xl"
         >
           <div className="space-y-4">
@@ -946,97 +1428,210 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
               className="input w-full"
               value={stockListSearch}
               onChange={(event) => setStockListSearch(event.target.value)}
-              placeholder="Stok kodu veya adına göre ara (en az 2 karakter)..."
+              placeholder="Stok kodu veya adına göre ara..."
               aria-label="Stok listesinde ara"
             />
-            <div
-              onScroll={handleStockListScroll}
-              className="max-h-[min(28rem,60dvh)] overflow-auto"
-            >
-              {stockListQuery.isLoading ? (
-                <div className="flex min-h-40 items-center justify-center rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)]">
-                  <Loader2 className="size-6 animate-spin text-[var(--wms-brand-primary)]" />
-                </div>
-              ) : stockListQuery.isError ? (
-                <p className="rounded-2xl border border-red-500/30 bg-red-500/5 p-6 text-center text-sm font-semibold text-red-500">
-                  Stok listesi yüklenemedi.
-                </p>
-              ) : isStockListThresholdInput ? (
-                <p className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-6 text-center text-sm text-[var(--wms-app-text-muted)]">
-                  Arama için en az {STOCK_LIST_MIN_SEARCH_CHARS} karakter girin.
-                </p>
-              ) : (
-                <div className="rounded-2xl bg-[var(--wms-app-border)] p-px shadow-sm">
-                  <div className="overflow-hidden rounded-[calc(1rem-1px)] bg-[var(--wms-app-panel)]">
-                    <table className="w-full min-w-[28rem] border-separate border-spacing-0 text-sm">
-                      <thead>
-                        <tr className="text-[10px] font-semibold uppercase tracking-wide text-[var(--wms-app-text-muted)]">
-                          <th
-                            className={cn(
-                              'w-[140px] bg-[color-mix(in_oklab,var(--wms-brand-primary)_6%,var(--wms-app-panel))] px-3 py-2.5 text-start',
-                              'border-b border-e border-[var(--wms-app-border)]',
-                            )}
+            <div className="max-h-[min(28rem,60dvh)] overflow-auto">
+              <div className="rounded-2xl bg-[var(--wms-app-border)] p-px shadow-sm">
+                <div className="overflow-hidden rounded-[calc(1rem-1px)] bg-[var(--wms-app-panel)]">
+                  <table className="w-full min-w-[28rem] border-separate border-spacing-0 text-sm">
+                    <thead>
+                      <tr className="text-[10px] font-semibold uppercase tracking-wide text-[var(--wms-app-text-muted)]">
+                        <th
+                          className={cn(
+                            'w-10 bg-[color-mix(in_oklab,var(--wms-brand-primary)_6%,var(--wms-app-panel))] px-3 py-2.5 text-start',
+                            'border-b border-e border-[var(--wms-app-border)]',
+                          )}
+                        />
+                        <th
+                          className={cn(
+                            'w-[140px] bg-[color-mix(in_oklab,var(--wms-brand-primary)_6%,var(--wms-app-panel))] px-3 py-2.5 text-start',
+                            'border-b border-e border-[var(--wms-app-border)]',
+                          )}
+                        >
+                          Stok kodu
+                        </th>
+                        <th
+                          className={cn(
+                            'bg-[color-mix(in_oklab,var(--wms-brand-primary)_6%,var(--wms-app-panel))] px-3 py-2.5 text-start',
+                            'border-b border-[var(--wms-app-border)]',
+                          )}
+                        >
+                          Stok adı
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {stockListRows.length === 0 ? (
+                        <tr>
+                          <td
+                            colSpan={3}
+                            className="px-3 py-8 text-center text-sm text-[var(--wms-app-text-muted)]"
                           >
-                            Stok kodu
-                          </th>
-                          <th
-                            className={cn(
-                              'bg-[color-mix(in_oklab,var(--wms-brand-primary)_6%,var(--wms-app-panel))] px-3 py-2.5 text-start',
-                              'border-b border-[var(--wms-app-border)]',
-                            )}
-                          >
-                            Stok adı
-                          </th>
+                            {debouncedStockListSearch ? 'Aramaya uygun stok bulunamadı.' : 'Toplama tablosunda stok kalemi bulunamadı.'}
+                          </td>
                         </tr>
-                      </thead>
-                      <tbody>
-                        {stockListRows.length === 0 ? (
-                          <tr>
+                      ) : stockListRows.map((row, rowIndex) => {
+                        const isLast = rowIndex === stockListRows.length - 1;
+                        const rowBorder = isLast ? '' : 'border-b border-[var(--wms-app-border)]';
+                        const selected = selectedStockListStockId === row.stockId;
+                        return (
+                          <tr
+                            key={row.stockId}
+                            role="button"
+                            tabIndex={0}
+                            aria-pressed={selected}
+                            onClick={() => selectStockListRow(row)}
+                            onKeyDown={(event) => {
+                              if (event.key === 'Enter' || event.key === ' ') {
+                                event.preventDefault();
+                                selectStockListRow(row);
+                              }
+                            }}
+                            className={cn(
+                              'cursor-pointer transition-colors hover:bg-[var(--wms-brand-soft)]',
+                              selected && 'bg-[var(--wms-brand-soft)]',
+                            )}
+                          >
+                            <td className={cn('px-3 py-2.5 align-middle', rowBorder)}>
+                              <input
+                                type="radio"
+                                name="picking-stock-list"
+                                checked={selected}
+                                readOnly
+                                aria-label={`${row.stockCode} seç`}
+                                className="pointer-events-none"
+                              />
+                            </td>
                             <td
-                              colSpan={2}
-                              className="px-3 py-8 text-center text-sm text-[var(--wms-app-text-muted)]"
+                              className={cn(
+                                'border-e border-[var(--wms-app-border)] px-3 py-2.5 align-middle',
+                                rowBorder,
+                              )}
                             >
-                              {debouncedStockListSearch ? 'Aramaya uygun stok bulunamadı.' : 'Stok kalemi bulunamadı.'}
+                              <span className="font-mono text-xs font-semibold text-[var(--wms-brand-primary)]">
+                                {row.stockCode}
+                              </span>
+                            </td>
+                            <td className={cn('px-3 py-2.5 align-middle', rowBorder)}>
+                              <span className="line-clamp-2 text-sm font-medium text-[var(--wms-app-text)]">
+                                {row.stockName?.trim() || '—'}
+                              </span>
                             </td>
                           </tr>
-                        ) : stockListRows.map((row, rowIndex) => {
-                          const isLast = rowIndex === stockListRows.length - 1;
-                          const rowBorder = isLast ? '' : 'border-b border-[var(--wms-app-border)]';
-                          return (
-                            <tr
-                              key={row.id}
-                              className="transition-colors hover:bg-[var(--wms-brand-soft)]"
-                            >
-                              <td
-                                className={cn(
-                                  'border-e border-[var(--wms-app-border)] px-3 py-2.5 align-middle',
-                                  rowBorder,
-                                )}
-                              >
-                                <span className="font-mono text-xs font-semibold text-[var(--wms-brand-primary)]">
-                                  {row.erpStockCode}
-                                </span>
-                              </td>
-                              <td className={cn('px-3 py-2.5 align-middle', rowBorder)}>
-                                <span className="line-clamp-2 text-sm font-medium text-[var(--wms-app-text)]">
-                                  {row.stockName?.trim() || '—'}
-                                </span>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
-              )}
-              {stockListQuery.isFetchingNextPage && (
-                <div className="flex items-center justify-center py-3">
-                  <Loader2 className="size-5 animate-spin text-[var(--wms-brand-primary)]" />
-                </div>
-              )}
+              </div>
             </div>
           </div>
+        </ResponsiveDialog>
+      )}
+
+      {serialBulkPickDialog && (
+        <ResponsiveDialog
+          onClose={() => {
+            setSerialBulkPickDialog(null);
+            setSerialBulkPickSelection(new Set());
+          }}
+          title="Seri seçerek topla"
+          description={`${serialBulkPickDialog.stockCode} · Toplanacak serileri seçin`}
+          className="!max-w-2xl"
+        >
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              void confirmSerialBulkPick();
+            }}
+          >
+            <div className="overflow-x-auto rounded-xl border border-[var(--wms-app-border)]">
+              <table className="w-full min-w-[520px] text-sm">
+                <thead className="bg-black/5 text-xs uppercase text-[var(--wms-app-text-muted)] dark:bg-white/5">
+                  <tr>
+                    <th className="w-10 p-3">
+                      <input
+                        type="checkbox"
+                        aria-label="Tümünü seç"
+                        checked={serialBulkPickDialog.rows.length > 0
+                          && serialBulkPickDialog.rows.every((row) =>
+                            serialBulkPickSelection.has(pickingRowSelectionKey(row)))}
+                        onChange={(event) => {
+                          setSerialBulkPickSelection(event.target.checked
+                            ? new Set(serialBulkPickDialog.rows.map((row) => pickingRowSelectionKey(row)))
+                            : new Set());
+                        }}
+                      />
+                    </th>
+                    <th className="p-3 text-right">No</th>
+                    <th className="p-3 text-left">Raf</th>
+                    <th className="p-3 text-left">Seri</th>
+                    <th className="p-3 text-right">Kalan</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {serialBulkPickDialog.rows.map((row) => {
+                    const rowKey = pickingRowSelectionKey(row);
+                    const selected = serialBulkPickSelection.has(rowKey);
+                    return (
+                      <tr
+                        key={rowKey}
+                        role="button"
+                        tabIndex={0}
+                        aria-pressed={selected}
+                        onClick={() => toggleSerialBulkPickSelection(row)}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            toggleSerialBulkPickSelection(row);
+                          }
+                        }}
+                        className={cn(
+                          'cursor-pointer border-t border-[var(--wms-app-border)] transition-colors hover:bg-[var(--wms-brand-soft)]',
+                          selected && 'bg-[var(--wms-brand-soft)]',
+                        )}
+                      >
+                        <td className="p-3">
+                          <input
+                            type="checkbox"
+                            checked={selected}
+                            readOnly
+                            aria-label={`Satır ${row.lineNo} seç`}
+                            className="pointer-events-none"
+                          />
+                        </td>
+                        <td className="p-3 text-right font-bold tabular-nums">{row.lineNo}</td>
+                        <td className="p-3 font-bold">{row.sourceLocationCode || '—'}</td>
+                        <td className="p-3 font-semibold">{row.serialNo || '—'}</td>
+                        <td className="p-3 text-right">{formatProjectNumber(row.remainingQuantity)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                className="rounded-lg border px-4 py-2 text-sm font-semibold"
+                onClick={() => {
+                  setSerialBulkPickDialog(null);
+                  setSerialBulkPickSelection(new Set());
+                }}
+              >
+                İptal
+              </button>
+              <OpsActionButton
+                type="submit"
+                variant="primary"
+                loading={busy}
+                disabled={serialBulkPickSelection.size === 0}
+              >
+                Onayla ({serialBulkPickSelection.size})
+              </OpsActionButton>
+            </div>
+          </form>
         </ResponsiveDialog>
       )}
 
@@ -1186,91 +1781,63 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
         </ResponsiveDialog>
       )}
 
-      {unpickDialog && (
+      {nonSerialUnpickDialog && (
         <ResponsiveDialog
           variant="lookup"
-          onClose={() => setUnpickDialog(null)}
+          onClose={() => setNonSerialUnpickDialog(null)}
           title="Rafa bırak"
           description="Toplanan stok bekleme rafından seçtiğiniz rafa geri yerleştirilir ve satır Tümü sekmesine döner."
         >
           <form
             onSubmit={(event) => {
               event.preventDefault();
-              void confirmUnpick();
+              void confirmNonSerialUnpickDialog();
             }}
           >
             <div className="rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-surface)] p-4 text-sm">
               <div className="grid gap-2 sm:grid-cols-2">
                 <div>
                   <span className="text-xs text-[var(--wms-app-text-muted)]">Stok</span>
-                  <strong className="block">{unpickDialog.stockCode}</strong>
+                  <strong className="block">{nonSerialUnpickDialog.stockCode}</strong>
                 </div>
                 <div>
-                  <span className="text-xs text-[var(--wms-app-text-muted)]">Miktar</span>
-                  <strong className="block">
-                    {unpickDialog.serialNo
-                      ? '1'
-                      : formatProjectNumber(parsePositiveIntegerInput(unpickQuantity) ?? unpickDialog.processedQuantity)}
-                  </strong>
+                  <span className="text-xs text-[var(--wms-app-text-muted)]">Toplanan</span>
+                  <strong className="block">{formatProjectNumber(nonSerialUnpickDialog.processedQuantity)}</strong>
                 </div>
-                {unpickDialog.serialNo && (
-                  <div>
-                    <span className="text-xs text-[var(--wms-app-text-muted)]">Seri</span>
-                    <strong className="block">{unpickDialog.serialNo}</strong>
-                  </div>
-                )}
               </div>
             </div>
-            {!unpickDialog.serialNo && (
-              <>
-                <label className="mt-4 block text-xs font-bold">Geri alınacak miktar</label>
-                <input
-                  className="input mt-1 w-full"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  value={unpickQuantity}
-                  onChange={(event) => setUnpickQuantity(
-                    clampPositiveIntegerInput(event.target.value, unpickDialog.processedQuantity),
-                  )}
-                  onFocus={(event) => event.currentTarget.select()}
-                  autoFocus
-                />
-              </>
-            )}
+            <label className="mt-4 block text-xs font-bold">Geri alınacak miktar</label>
+            <input
+              className="input mt-1 w-full"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={nonSerialUnpickQuantity}
+              onChange={(event) => setNonSerialUnpickQuantity(
+                clampPositiveIntegerInput(event.target.value, nonSerialUnpickDialog.processedQuantity),
+              )}
+              onFocus={(event) => event.currentTarget.select()}
+              autoFocus
+            />
             <label className="mt-4 block text-xs font-bold">Raf</label>
             <PagedAppDropdown<LocationOption>
               queryKey={[
-                'production-pick-unpick-location',
+                'production-pick-nonserial-unpick-location',
                 execution.sourceWarehouseId,
-                execution.waitingLocationId ?? 0,
-                sourceWarehouseReturnSetting?.defaultProductionTransferLocationId ?? 0,
+                nonSerialUnpickDialog.taskLineId,
               ]}
-              fetchPage={async (request) => {
-                const page = await warehouseTransferApi.locations(request, execution.sourceWarehouseId);
-                return {
-                  ...page,
-                  items: page.items.filter((item) => !unpickExcludedLocationIds.has(item.id)),
-                };
-              }}
-              toOption={(item) => {
-                const label = `${item.code} · ${item.name}`;
-                unpickLocationLabelsRef.current[String(item.id)] = label;
-                return { value: String(item.id), label };
-              }}
+              fetchPage={fetchCompletedLocationPage}
+              toOption={toCompletedLocationOption}
               enabled={execution.sourceWarehouseId > 0}
-              dependencies={[
-                execution.sourceWarehouseId,
-                execution.waitingLocationId,
-                sourceWarehouseReturnSetting?.defaultProductionTransferLocationId,
-              ]}
-              value={unpickTargetLocation}
+              dependencies={[execution.sourceWarehouseId, nonSerialUnpickDialog.taskLineId]}
+              value={nonSerialUnpickTargetLocation}
               onValueChange={(value) => {
-                setUnpickTargetLocation(value);
-                setUnpickTargetLabel(unpickLocationLabelsRef.current[value] ?? '');
+                setNonSerialUnpickTargetLocation(value);
+                setNonSerialUnpickTargetLabel(completedLocationLabelsRef.current[value] ?? '');
               }}
-              selectedOption={unpickTargetLocation
-                ? { value: unpickTargetLocation, label: unpickTargetLabel || unpickTargetLocation }
-                : undefined}
+              selectedOption={nonSerialUnpickTargetLocation ? {
+                value: nonSerialUnpickTargetLocation,
+                label: nonSerialUnpickTargetLabel || nonSerialUnpickTargetLocation,
+              } : undefined}
               searchable
               placeholder="Raf seçin"
               portalContainer={null}
@@ -1278,7 +1845,11 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
               className="mt-1 min-w-full"
             />
             <div className="mt-5 flex justify-end gap-2">
-              <button type="button" className="rounded-lg border px-4 py-2 text-sm font-semibold" onClick={() => setUnpickDialog(null)}>
+              <button
+                type="button"
+                className="rounded-lg border px-4 py-2 text-sm font-semibold"
+                onClick={() => setNonSerialUnpickDialog(null)}
+              >
                 İptal
               </button>
               <OpsActionButton type="submit" variant="primary" loading={busy}>Onayla</OpsActionButton>
@@ -1287,13 +1858,73 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
         </ResponsiveDialog>
       )}
 
+      {completedBulkPlacementOpen ? (
+        <ResponsiveDialog
+          variant="lookup"
+          onClose={() => {
+            setCompletedBulkPlacementOpen(false);
+            setCompletedBulkTargetLocation('');
+            setCompletedBulkTargetLabel('');
+          }}
+          title="Toplu yerleştirme rafı"
+          description={`Seçili ${completedSelectedKeys.size} satır bekleme rafından aşağıdaki rafa atanacak.`}
+        >
+          <PagedAppDropdown<LocationOption>
+            queryKey={['production-pick-completed-bulk-target', execution.sourceWarehouseId]}
+            fetchPage={fetchCompletedLocationPage}
+            toOption={toCompletedLocationOption}
+            enabled={execution.sourceWarehouseId > 0}
+            dependencies={[execution.sourceWarehouseId, completedSelectedKeyList.join(',')]}
+            value={completedBulkTargetLocation}
+            onValueChange={(value) => {
+              setCompletedBulkTargetLocation(value);
+              setCompletedBulkTargetLabel(completedLocationLabelsRef.current[value] ?? value);
+            }}
+            selectedOption={completedBulkTargetLocation ? {
+              value: completedBulkTargetLocation,
+              label: completedBulkTargetLabel
+                || completedLocationLabelsRef.current[completedBulkTargetLocation]
+                || completedBulkTargetLocation,
+            } : undefined}
+            placeholder="Raf seçin"
+            searchable
+            portalContainer={null}
+            contentClassName="z-[5100]"
+            className="min-w-full"
+          />
+          <div className="mt-5 flex justify-end gap-2">
+            <button
+              type="button"
+              className="rounded-lg border px-4 py-2 text-sm font-semibold"
+              onClick={() => {
+                setCompletedBulkPlacementOpen(false);
+                setCompletedBulkTargetLocation('');
+                setCompletedBulkTargetLabel('');
+              }}
+            >
+              İptal
+            </button>
+            <OpsActionButton
+              variant="primary"
+              loading={false}
+              disabled={!completedBulkTargetLocation}
+              onClick={applyCompletedBulkTargetLocation}
+            >
+              Seçili satırlara ata
+            </OpsActionButton>
+          </div>
+        </ResponsiveDialog>
+      ) : null}
+
       {routeDialog && (
         <ResponsiveDialog
           onClose={() => setRouteDialog(null)}
           title="Rotayı güncelle"
           description={
             routeDialog.isSerial
-              ? `Mevcut seri: ${routeDialog.currentSerialNo || '—'} · Listede olmayan alternatif serilerden birini seçin.`
+              ? routeDialog.currentSerialNo
+                ? `Mevcut seri: ${routeDialog.currentSerialNo} · Listede olmayan alternatif serilerden birini seçin.`
+                : `Eksik seri: ${formatProjectNumber(routeDialog.remainingQuantity)} adet · Atanmamış serilerden birini seçin.`
               : `Kalan miktar: ${formatProjectNumber(routeDialog.remainingQuantity)}`
           }
           className="!max-w-2xl"
@@ -1426,13 +2057,52 @@ function isPickingRowWithoutBalance(row: ProductionTransferPickingRow): boolean 
   return row.remainingQuantity > 0 && !row.sourceLocationId;
 }
 
+type CompletedShelfProps = {
+  rowKey: string;
+  targetLocationId: string;
+  targetLabel: string;
+  bulkSelected: boolean;
+  disabled: boolean;
+  warehouseId: number;
+  onTargetChange: (rowKey: string, value: string) => void;
+  onBulkSelect: (row: ProductionTransferPickingRow, checked: boolean) => void;
+  toLocationOption: (item: LocationOption) => { value: string; label: string };
+  fetchLocationPage: (request: Parameters<typeof warehouseTransferApi.locations>[0]) => Promise<Awaited<ReturnType<typeof warehouseTransferApi.locations>>>;
+};
+
 function PickingLocationCell({
   row,
   serialDetail = false,
+  completedShelf,
 }: {
   row: ProductionTransferPickingRow;
   serialDetail?: boolean;
+  completedShelf?: CompletedShelfProps;
 }) {
+  if (completedShelf) {
+    return (
+      <td className={cn(LOCATION_CELL, serialDetail && 'pl-6')}>
+        <PagedAppDropdown<LocationOption>
+          queryKey={['production-pick-completed-target', completedShelf.warehouseId, completedShelf.rowKey]}
+          fetchPage={completedShelf.fetchLocationPage}
+          toOption={completedShelf.toLocationOption}
+          enabled={completedShelf.warehouseId > 0 && !completedShelf.bulkSelected}
+          dependencies={[completedShelf.warehouseId, completedShelf.rowKey]}
+          value={completedShelf.targetLocationId}
+          onValueChange={(value) => completedShelf.onTargetChange(completedShelf.rowKey, value)}
+          selectedOption={completedShelf.targetLocationId ? {
+            value: completedShelf.targetLocationId,
+            label: completedShelf.targetLabel || completedShelf.targetLocationId,
+          } : undefined}
+          placeholder={completedShelf.bulkSelected ? 'Toplu atama bekliyor' : 'Raf seçin'}
+          searchable
+          disabled={completedShelf.disabled || completedShelf.bulkSelected}
+          className="min-w-[12rem]"
+        />
+      </td>
+    );
+  }
+
   if (isPickingRowWithoutBalance(row)) {
     return (
       <td className={cn(LOCATION_CELL, serialDetail && 'pl-6')}>
@@ -1519,7 +2189,17 @@ function SerialStockGroup({
   pickTab,
   highlightedLineNo,
   selectedRowKey,
+  completedSelectedKeys,
   onSelect,
+  showCompletedShelfColumn = false,
+  completedLineTargets,
+  completedLineTargetLabels,
+  completedShelfBusy = false,
+  completedWarehouseId = 0,
+  onCompletedTargetChange,
+  onCompletedBulkSelect,
+  toCompletedLocationOption,
+  fetchCompletedLocationPage,
 }: {
   stockId: number;
   stockCode: string;
@@ -1530,7 +2210,17 @@ function SerialStockGroup({
   pickTab: PickTab;
   highlightedLineNo?: number;
   selectedRowKey?: string;
+  completedSelectedKeys?: Set<string>;
   onSelect: (row: ProductionTransferPickingRow) => void;
+  showCompletedShelfColumn?: boolean;
+  completedLineTargets?: Record<string, string>;
+  completedLineTargetLabels?: Record<string, string>;
+  completedShelfBusy?: boolean;
+  completedWarehouseId?: number;
+  onCompletedTargetChange?: (rowKey: string, value: string) => void;
+  onCompletedBulkSelect?: (row: ProductionTransferPickingRow, checked: boolean) => void;
+  toCompletedLocationOption?: (item: LocationOption) => { value: string; label: string };
+  fetchCompletedLocationPage?: CompletedShelfProps['fetchLocationPage'];
 }) {
   const [expanded, setExpanded] = useState(false);
   const totals = useMemo(() => ({
@@ -1566,7 +2256,15 @@ function SerialStockGroup({
           </button>
         </td>
         <td className={cn(TABLE_CELL, 'text-right font-bold tabular-nums')}>{lineNoLabel}</td>
-        {showRouteColumns && <PickingLocationSummaryCell rows={rows} />}
+        {showRouteColumns && (
+          showCompletedShelfColumn
+            ? (
+                <td className={LOCATION_CELL}>
+                  <span className="text-[var(--wms-app-text-muted)]">—</span>
+                </td>
+              )
+            : <PickingLocationSummaryCell rows={rows} />
+        )}
         <td className={TABLE_CELL}>
           <StockIdentityCell stockId={stockId} stockCode={stockCode} stockName={stockName} layout="stacked" />
         </td>
@@ -1579,19 +2277,43 @@ function SerialStockGroup({
         <td className={cn(TABLE_CELL, 'text-right font-semibold')}>{formatProjectNumber(totals.remaining)}</td>
         <td className={cn(TABLE_CELL, 'text-right font-semibold text-emerald-600')}>{formatProjectNumber(totals.processed)}</td>
       </tr>
-      {expanded && rows.map((row) => (
+      {expanded && rows.map((row) => {
+        const rowKey = pickingRowSelectionKey(row);
+        const completedShelf = showCompletedShelfColumn
+          && onCompletedTargetChange
+          && onCompletedBulkSelect
+          && toCompletedLocationOption
+          && fetchCompletedLocationPage
+          ? {
+            rowKey,
+            targetLocationId: completedLineTargets?.[rowKey] ?? '',
+            targetLabel: completedLineTargetLabels?.[rowKey] ?? '',
+            bulkSelected: completedSelectedKeys?.has(rowKey) ?? false,
+            disabled: completedShelfBusy,
+            warehouseId: completedWarehouseId,
+            onTargetChange: onCompletedTargetChange,
+            onBulkSelect: onCompletedBulkSelect,
+            toLocationOption: toCompletedLocationOption,
+            fetchLocationPage: fetchCompletedLocationPage,
+          }
+          : undefined;
+        return (
         <PickingRow
           key={`serial:${row.taskLineId}:${row.serialNo ?? ''}`}
           row={row}
           locked={locked}
           showRouteColumns={showRouteColumns}
           pickTab={pickTab}
-          selected={selectedRowKey === pickingRowSelectionKey(row)}
+          selected={pickTab === 'completed'
+            ? (completedSelectedKeys?.has(rowKey) ?? false)
+            : selectedRowKey === rowKey}
           highlighted={isLineHighlighted(row.lineNo, highlightedLineNo)}
           onSelect={onSelect}
           serialDetail
+          completedShelf={completedShelf}
         />
-      ))}
+        );
+      })}
     </>
   );
 }
@@ -1605,6 +2327,7 @@ function PickingRow({
   highlighted = false,
   onSelect,
   serialDetail = false,
+  completedShelf,
 }: {
   row: ProductionTransferPickingRow;
   locked: boolean;
@@ -1614,6 +2337,7 @@ function PickingRow({
   highlighted?: boolean;
   onSelect: (row: ProductionTransferPickingRow) => void;
   serialDetail?: boolean;
+  completedShelf?: CompletedShelfProps;
 }) {
   const done = row.remainingQuantity <= 0;
   const canSelect = !locked && (
@@ -1621,21 +2345,31 @@ function PickingRow({
       ? row.processedQuantity > 0 && row.remainingQuantity <= 0
       : row.remainingQuantity > 0
   );
+  const isCompletedTab = pickTab === 'completed';
   return (
     <tr
       data-picking-line-no={row.lineNo}
       className={cn(done && 'opacity-70', serialDetail && 'bg-black/[0.02] dark:bg-white/[0.02]', highlighted && HIGHLIGHT_ROW_CLASS)}
     >
-      <td className={TABLE_CELL}>
-        <input
-          type="checkbox"
-          checked={selected}
-          disabled={!canSelect}
-          onChange={() => canSelect && onSelect(row)}
-        />
+      <td className={isCompletedTab ? CHECKBOX_CELL : TABLE_CELL}>
+        {isCompletedTab ? (
+          <OpsSkinCheckbox
+            checked={selected}
+            onCheckedChange={(checked) => completedShelf?.onBulkSelect(row, checked)}
+            disabled={!canSelect || completedShelf?.disabled}
+            aria-label={`${row.stockCode} satırını seç`}
+          />
+        ) : (
+          <input
+            type="checkbox"
+            checked={selected}
+            disabled={!canSelect}
+            onChange={() => canSelect && onSelect(row)}
+          />
+        )}
       </td>
       <td className={cn(TABLE_CELL, 'text-right font-bold tabular-nums')}>{row.lineNo}</td>
-      {showRouteColumns && <PickingLocationCell row={row} serialDetail={serialDetail} />}
+      {showRouteColumns && <PickingLocationCell row={row} serialDetail={serialDetail} completedShelf={completedShelf} />}
       <td className={TABLE_CELL}>
         <StockIdentityCell stockId={row.stockId} stockCode={row.stockCode} stockName={row.stockName} layout="stacked" />
       </td>

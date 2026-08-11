@@ -398,14 +398,16 @@ const workOrderKey = (row: ProductionSourceWorkOrder): string =>
     : `${row.sourceType}:${row.sourceSystemCode}:${row.workOrderNumber}`;
 
 const sourceListingKindLabel = (kind: ProductionSourceWorkOrder['listingKind']): string => {
-  if (kind === 'CancellationReturnRemainder') return 'Transfer iptali';
+  if (kind === 'CancellationReturnRemainder') return 'Transfer iadesi';
   if (kind === 'ManagerCancelledAssignment') return 'İptal edildi';
+  if (kind === 'RestoredCancelledAssignment') return 'İş emri';
   return 'İş emri';
 };
 
 const sourceListingKindBadgeClass = (kind: ProductionSourceWorkOrder['listingKind']): string => {
   if (kind === 'CancellationReturnRemainder') return 'bg-yellow-500/15 text-yellow-800 dark:text-yellow-300';
   if (kind === 'ManagerCancelledAssignment') return 'bg-amber-500/10 text-amber-700 dark:text-amber-300';
+  if (kind === 'RestoredCancelledAssignment') return 'bg-sky-500/10 text-sky-700 dark:text-sky-300';
   return 'bg-sky-500/10 text-sky-700 dark:text-sky-300';
 };
 
@@ -903,7 +905,6 @@ function WorkOrderDrawer({
 }): ReactElement {
   const blocked = value.mappingErrors.length > 0 || value.isClosed;
   const alreadyImported = Boolean(value.existingProductionOrderId);
-  const isCancellationReturnRemainder = isCancellationReturnRemainderContext(value);
   const [headerOpen, setHeaderOpen] = useState(false);
   const [assignee, setAssignee] = useState<ActiveUserOption | null>(null);
   const [assigneeLookupOpen, setAssigneeLookupOpen] = useState(false);
@@ -931,9 +932,7 @@ function WorkOrderDrawer({
   const selectedUnassignedCount = selectedUnassigned.size;
   const allUnassignedSelected = unassignedList.length > 0 && selectedUnassignedCount === unassignedList.length;
   const assignedCount = value.materials.length - unassignedLines.size;
-  const transferredAssignedMaterials = isCancellationReturnRemainder
-    ? []
-    : (value.assignedMaterials ?? []);
+  const transferredAssignedMaterials = value.assignedMaterials ?? [];
   const hasAssignedPreview = transferredAssignedMaterials.length > 0 || assigneeGroups.length > 0;
   const FADED_ASSIGNED_ROW_CLASS = 'opacity-45 text-[var(--wms-app-text-muted)]';
 
@@ -1069,9 +1068,6 @@ function WorkOrderDrawer({
               {alreadyImported ? (
                 <OpsStatusBadge tone="pending">WMS’e alınmış</OpsStatusBadge>
               ) : null}
-              {value.listingKind === 'CancellationReturnRemainder' || isCancellationReturnRemainder ? (
-                <OpsStatusBadge tone="danger">İptal kalanı</OpsStatusBadge>
-              ) : null}
               <OpsCodeBadge className="max-sm:hidden">{value.unitCode || '—'}</OpsCodeBadge>
             </div>
             <button
@@ -1198,14 +1194,14 @@ function WorkOrderDrawer({
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h3 className="wms-ops-detail-section-title !border-0 !p-0">
-                  {isCancellationReturnRemainder ? 'İptal kalanı bileşenleri' : 'Reçete bileşenleri'}
+                  Reçete bileşenleri
                 </h3>
                 <p className="mt-1 text-xs text-slate-500">
                   {unassignedList.length} atanmamış · <strong className="text-[var(--wms-brand-primary)]">{selectedUnassignedCount}</strong> seçili
                   {assignedCount > 0 ? (
                     <> · <strong className="text-[var(--wms-brand-primary)]">{assignedCount}</strong> bu oturumda atandı</>
                   ) : null}
-                  {!isCancellationReturnRemainder && transferredAssignedMaterials.length > 0 ? (
+                  {transferredAssignedMaterials.length > 0 ? (
                     <> · <strong className="text-[var(--wms-app-text-muted)]">{transferredAssignedMaterials.length}</strong> transfer edildi</>
                   ) : null}
                 </p>

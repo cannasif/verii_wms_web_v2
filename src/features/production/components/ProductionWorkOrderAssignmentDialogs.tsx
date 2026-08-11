@@ -17,8 +17,6 @@ export function ProductionWorkOrderAssignmentCancelDialog({
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
 
-  const isCancellationReturnRemainder = row.listingKind === 'CancellationReturnRemainder';
-
   const submit = async (): Promise<void> => {
     if (reason.trim().length < 5) return;
     setBusy(true);
@@ -30,12 +28,11 @@ export function ProductionWorkOrderAssignmentCancelDialog({
         sourceSystemCode: row.sourceSystemCode,
         reason: reason.trim(),
         transferId: row.transferId ?? null,
+        kalanTaskId: row.kalanTaskId ?? null,
       });
       toast.success(
         result.cancellationId > 0
-          ? isCancellationReturnRemainder
-            ? `${row.workOrderNumber} iptal kalanı ataması iptal edildi.`
-            : `${row.workOrderNumber} iş emri ataması iptal edildi. Kayıt İptal Edilen sekmesinde görünür.`
+          ? `${row.workOrderNumber} iş emri ataması iptal edildi. Kayıt İptal Edilen sekmesinde görünür.`
           : `${row.workOrderNumber} taslak ataması geri alındı. Malzemeler Atanmayanlar sekmesinde görünür.`,
       );
       onCompleted();
@@ -49,12 +46,8 @@ export function ProductionWorkOrderAssignmentCancelDialog({
   return (
     <ResponsiveDialog
       onClose={onClose}
-      title={isCancellationReturnRemainder ? 'İptal kalanını iptal et' : 'İş emri atamasını iptal et'}
-      description={
-        isCancellationReturnRemainder
-          ? `${row.workOrderNumber} · İptal iadesi sonrası kalan toplama ataması iptal edilir.`
-          : `${row.workOrderNumber} · Atanmayan malzemeler iptal edilir; açık transferler geri çekilir veya iptal edilir.`
-      }
+      title="İş emri atamasını iptal et"
+      description={`${row.workOrderNumber} · Atanmayan malzemeler iptal edilir; açık transferler geri çekilir veya iptal edilir.`}
       className="!max-w-lg border-rose-500/30"
     >
       <div className="flex items-start gap-3">

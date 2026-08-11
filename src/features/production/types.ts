@@ -72,7 +72,8 @@ export interface CreateProductionPlanResult {
 export type ProductionSourceWorkOrderListingKind =
   | 'Standard'
   | 'CancellationReturnRemainder'
-  | 'ManagerCancelledAssignment';
+  | 'ManagerCancelledAssignment'
+  | 'RestoredCancelledAssignment';
 
 export interface ProductionSourceWorkOrder {
   sourceType: 'NetsisErpFunctions' | 'WmsIntegrationTables';
@@ -110,6 +111,7 @@ export interface CancelProductionWorkOrderAssignmentRequest {
   sourceSystemCode?: string;
   reason: string;
   transferId?: number | null;
+  kalanTaskId?: number | null;
 }
 
 export interface RestoreProductionWorkOrderAssignmentRequest {
