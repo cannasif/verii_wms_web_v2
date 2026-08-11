@@ -10,21 +10,21 @@
     "title": "Importazione iniziale delle definizioni di scaffale con Excel",
     "description": "Crea la gerarchia degli scaffali in un unico file con un'importazione sicura, solo in creazione.",
     "warning": "Gli scaffali esistenti non vengono aggiornati né eliminati. L'intera importazione viene interrotta se esiste già lo stesso codice magazzino/scaffale.",
-    "limitText": "Massimo 5 MB e 1.000 righe di scaffale",
+    "limitText": "Massimo 64 MB e 50.000 righe di scaffale",
     "submitLabel": "Crea scaffali",
     "summary": { "total": "Totale", "created": "Creato", "failed": "Non riuscito" }
   },
   "warehouseOpening": {
     "title": "Apertura magazzino con un unico file Excel",
-    "description": "Crea la gerarchia degli scaffali e i saldi iniziali di stock, lotto e serie in un'unica operazione atomica.",
-    "atomicImportTitle": "Importazione atomica",
-    "atomicImportDescription": "Lo stesso magazzino e scaffale possono ripetersi su centinaia di righe. Lo scaffale viene risolto una sola volta; ogni riga di stock/serie diventa un movimento di apertura separato. In caso di un singolo errore, nessun record viene salvato.",
+    "description": "Crea la gerarchia degli scaffali e i saldi iniziali di stock, lotto e serie con importazioni controllate fino a 50.000 righe.",
+    "atomicImportTitle": "Importazione massiva prevalidata e ripristinabile",
+    "atomicImportDescription": "Prima viene convalidato l'intero file. I record vengono salvati in transazioni brevi da 500 righe; dopo un'interruzione, ricaricando lo stesso file si riprende senza duplicare i lotti completati.",
     "steps": { "template": "Modello", "preValidation": "Pre-validazione", "confirmAndSave": "Conferma e salva" },
     "downloadTemplateTitle": "Scarica il modello attuale",
     "downloadTemplateDescription": "Il modello include i riferimenti di magazzino e scaffale, oltre ai primi 5.000 record di stock/configurazione come esempi. È inoltre possibile digitare direttamente codici validi non visualizzati nell'elenco; la pre-validazione li verifica nel sistema.",
     "downloadTemplate": "Scarica modello",
     "selectFileTitle": "Seleziona il file compilato",
-    "selectFileLimit": "Massimo 8 MB e 2.000 righe",
+    "selectFileLimit": "Massimo 64 MB e 50.000 righe",
     "preValidationSuccess": "Pre-validazione riuscita",
     "cards": {
       "warehouse": "Magazzino",
@@ -33,7 +33,8 @@
       "balanceRow": "Riga di saldo",
       "stock": "Stock",
       "serial": "Serie",
-      "totalQuantity": "Quantità totale"
+      "totalQuantity": "Quantità totale",
+      "batch": "Lotti di transazione"
     },
     "importCompleteTitle": "Importazione completata",
     "importCompleteSummary": "Sono stati elaborati {{created}} nuovi scaffali e {{balances}} righe di saldo.",
@@ -42,7 +43,7 @@
     "preValidate": "Pre-valida",
     "errors": {
       "invalidExtension": "È possibile caricare solo file Excel con estensione .xlsx.",
-      "tooLarge": "Il file Excel può avere una dimensione massima di 8 MB.",
+      "tooLarge": "Il file Excel può avere una dimensione massima di 64 MB.",
       "templateDownloadFailed": "Impossibile scaricare il modello.",
       "preValidationFailed": "Impossibile completare la pre-validazione.",
       "importFailed": "Impossibile completare l'importazione dell'apertura magazzino."

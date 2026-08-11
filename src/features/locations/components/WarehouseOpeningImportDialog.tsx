@@ -10,7 +10,7 @@ import {
   type WarehouseOpeningPreview,
 } from '../api/warehouse-opening-import.api';
 
-const MAX_FILE_SIZE = 8 * 1024 * 1024;
+const MAX_FILE_SIZE = 64 * 1024 * 1024;
 
 export function WarehouseOpeningImportDialog({
   open,
@@ -120,6 +120,7 @@ export function WarehouseOpeningImportDialog({
     [t('warehouseOpening.cards.stock'), preview.distinctStockCount],
     [t('warehouseOpening.cards.serial'), preview.serialCount],
     [t('warehouseOpening.cards.totalQuantity'), preview.totalQuantity.toLocaleString('tr-TR')],
+    [t('warehouseOpening.cards.batch'), preview.batchCount],
   ] : [];
 
   return (

@@ -10,21 +10,21 @@
     "title": "Import initial des définitions d'emplacement avec Excel",
     "description": "Créez la hiérarchie des emplacements dans un seul fichier grâce à un import sécurisé, en création uniquement.",
     "warning": "Les emplacements existants ne sont ni mis à jour ni supprimés. L'ensemble de l'import est arrêté si le même code entrepôt/emplacement existe déjà.",
-    "limitText": "Maximum 5 Mo et 1 000 lignes d'emplacement",
+    "limitText": "Maximum 64 Mo et 50 000 lignes d'emplacement",
     "submitLabel": "Créer les emplacements",
     "summary": { "total": "Total", "created": "Créé", "failed": "Échoué" }
   },
   "warehouseOpening": {
     "title": "Ouverture d'entrepôt avec un seul fichier Excel",
-    "description": "Créez la hiérarchie des emplacements ainsi que les soldes initiaux de stock, de lot et de série en une seule opération atomique.",
-    "atomicImportTitle": "Import atomique",
-    "atomicImportDescription": "Le même entrepôt et emplacement peuvent se répéter sur des centaines de lignes. L'emplacement est résolu une seule fois ; chaque ligne de stock/série devient un mouvement d'ouverture distinct. En cas d'erreur unique, aucun enregistrement n'est conservé.",
+    "description": "Créez la hiérarchie des emplacements ainsi que les soldes initiaux de stock, de lot et de série au moyen d'importations contrôlées jusqu'à 50 000 lignes.",
+    "atomicImportTitle": "Import en masse prévalidé et reprenable",
+    "atomicImportDescription": "Le fichier complet est d'abord validé. Les enregistrements sont sauvegardés par transactions courtes de 500 lignes ; après une interruption, le rechargement du même fichier reprend sans dupliquer les lots terminés.",
     "steps": { "template": "Modèle", "preValidation": "Pré-validation", "confirmAndSave": "Confirmation et enregistrement" },
     "downloadTemplateTitle": "Téléchargez le modèle actuel",
     "downloadTemplateDescription": "Le modèle inclut les références d'entrepôt et d'emplacement, ainsi que les 5 000 premiers enregistrements de stock/configuration à titre d'exemple. Vous pouvez également saisir directement des codes valides non affichés dans la liste ; la pré-validation les vérifie auprès du système.",
     "downloadTemplate": "Télécharger le modèle",
     "selectFileTitle": "Sélectionnez le fichier rempli",
-    "selectFileLimit": "Maximum 8 Mo et 2 000 lignes",
+    "selectFileLimit": "Maximum 64 Mo et 50 000 lignes",
     "preValidationSuccess": "Pré-validation réussie",
     "cards": {
       "warehouse": "Entrepôt",
@@ -33,7 +33,8 @@
       "balanceRow": "Ligne de solde",
       "stock": "Stock",
       "serial": "Série",
-      "totalQuantity": "Quantité totale"
+      "totalQuantity": "Quantité totale",
+      "batch": "Lots de transaction"
     },
     "importCompleteTitle": "Import terminé",
     "importCompleteSummary": "{{created}} nouveaux emplacements et {{balances}} lignes de solde ont été traités.",

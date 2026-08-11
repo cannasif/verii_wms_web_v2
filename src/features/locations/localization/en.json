@@ -10,21 +10,21 @@
     "title": "Initial Shelf Definition Import with Excel",
     "description": "Create the shelf hierarchy in a single file using a safe, create-only import.",
     "warning": "Existing shelves are not updated or deleted. The entire import is stopped if the same warehouse/shelf code already exists.",
-    "limitText": "Maximum 5 MB and 1,000 shelf rows",
+    "limitText": "Maximum 64 MB and 50,000 shelf rows",
     "submitLabel": "Create Shelves",
     "summary": { "total": "Total", "created": "Created", "failed": "Failed" }
   },
   "warehouseOpening": {
     "title": "Warehouse Opening with a Single Excel File",
-    "description": "Create the shelf hierarchy and initial stock, lot and serial balances in a single atomic operation.",
-    "atomicImportTitle": "Atomic import",
-    "atomicImportDescription": "The same warehouse and shelf can repeat across hundreds of rows. The shelf is resolved once; each stock/serial row becomes a separate opening movement. If a single error occurs, no record is persisted.",
+    "description": "Create the shelf hierarchy and initial stock, lot and serial balances with controlled imports of up to 50,000 rows.",
+    "atomicImportTitle": "Prevalidated, resumable bulk import",
+    "atomicImportDescription": "The complete file is validated first. Records are committed in short 500-row transaction batches; after an interruption, uploading the same file resumes without duplicating completed batches.",
     "steps": { "template": "Template", "preValidation": "Pre-validation", "confirmAndSave": "Confirm and Save" },
     "downloadTemplateTitle": "Download the current template",
     "downloadTemplateDescription": "The template includes warehouse and shelf references, plus the first 5,000 stock/configuration records as examples. You can also type valid codes not shown in the list directly; pre-validation checks them against the system.",
     "downloadTemplate": "Download Template",
     "selectFileTitle": "Select the completed file",
-    "selectFileLimit": "Maximum 8 MB and 2,000 rows",
+    "selectFileLimit": "Maximum 64 MB and 50,000 rows",
     "preValidationSuccess": "Pre-validation succeeded",
     "cards": {
       "warehouse": "Warehouse",
@@ -33,7 +33,8 @@
       "balanceRow": "Balance row",
       "stock": "Stock",
       "serial": "Serial",
-      "totalQuantity": "Total quantity"
+      "totalQuantity": "Total quantity",
+      "batch": "Transaction batches"
     },
     "importCompleteTitle": "Import completed",
     "importCompleteSummary": "{{created}} new shelves and {{balances}} balance rows were processed.",
@@ -42,7 +43,7 @@
     "preValidate": "Pre-validate",
     "errors": {
       "invalidExtension": "Only Excel files with the .xlsx extension can be uploaded.",
-      "tooLarge": "The Excel file can be at most 8 MB.",
+      "tooLarge": "The Excel file can be at most 64 MB.",
       "templateDownloadFailed": "The template could not be downloaded.",
       "preValidationFailed": "Pre-validation could not be completed.",
       "importFailed": "The warehouse opening import could not be completed."

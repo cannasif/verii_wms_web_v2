@@ -10,21 +10,21 @@
     "title": "Erster Import von Regaldefinitionen mit Excel",
     "description": "Erstellen Sie die Regalhierarchie in einer einzigen Datei mit einem sicheren, nur erstellenden Import.",
     "warning": "Bestehende Regale werden nicht aktualisiert oder gelöscht. Der gesamte Import wird gestoppt, wenn derselbe Lager-/Regalcode bereits existiert.",
-    "limitText": "Maximal 5 MB und 1.000 Regalzeilen",
+    "limitText": "Maximal 64 MB und 50.000 Regalzeilen",
     "submitLabel": "Regale erstellen",
     "summary": { "total": "Gesamt", "created": "Erstellt", "failed": "Fehlgeschlagen" }
   },
   "warehouseOpening": {
     "title": "Lagereröffnung mit einer einzigen Excel-Datei",
-    "description": "Erstellen Sie die Regalhierarchie sowie die anfänglichen Bestands-, Chargen- und Seriennummernbestände in einem einzigen atomaren Vorgang.",
-    "atomicImportTitle": "Atomarer Import",
-    "atomicImportDescription": "Dasselbe Lager und Regal kann sich über Hunderte von Zeilen wiederholen. Das Regal wird einmal aufgelöst; jede Bestands-/Seriennummernzeile wird zu einer separaten Eröffnungsbewegung. Bei einem einzigen Fehler wird kein Datensatz gespeichert.",
+    "description": "Erstellen Sie die Regalhierarchie sowie die anfänglichen Bestands-, Chargen- und Seriennummernbestände mit kontrollierten Importen von bis zu 50.000 Zeilen.",
+    "atomicImportTitle": "Vorab geprüfter, fortsetzbarer Massenimport",
+    "atomicImportDescription": "Die vollständige Datei wird zuerst geprüft. Die Datensätze werden in kurzen Transaktionen mit jeweils 500 Zeilen gespeichert; nach einer Unterbrechung wird beim erneuten Hochladen derselben Datei ohne Duplizieren abgeschlossener Pakete fortgesetzt.",
     "steps": { "template": "Vorlage", "preValidation": "Vorabprüfung", "confirmAndSave": "Bestätigen und speichern" },
     "downloadTemplateTitle": "Aktuelle Vorlage herunterladen",
     "downloadTemplateDescription": "Die Vorlage enthält Lager- und Regalreferenzen sowie die ersten 5.000 Bestands-/Konfigurationsdatensätze als Beispiele. Sie können auch gültige Codes, die nicht in der Liste angezeigt werden, direkt eingeben; die Vorabprüfung überprüft diese im System.",
     "downloadTemplate": "Vorlage herunterladen",
     "selectFileTitle": "Ausgefüllte Datei auswählen",
-    "selectFileLimit": "Maximal 8 MB und 2.000 Zeilen",
+    "selectFileLimit": "Maximal 64 MB und 50.000 Zeilen",
     "preValidationSuccess": "Vorabprüfung erfolgreich",
     "cards": {
       "warehouse": "Lager",
@@ -33,7 +33,8 @@
       "balanceRow": "Bestandszeile",
       "stock": "Bestand",
       "serial": "Seriennummer",
-      "totalQuantity": "Gesamtmenge"
+      "totalQuantity": "Gesamtmenge",
+      "batch": "Transaktionsblöcke"
     },
     "importCompleteTitle": "Import abgeschlossen",
     "importCompleteSummary": "{{created}} neue Regale und {{balances}} Bestandszeilen wurden verarbeitet.",
@@ -42,7 +43,7 @@
     "preValidate": "Vorab prüfen",
     "errors": {
       "invalidExtension": "Es können nur Excel-Dateien mit der Endung .xlsx hochgeladen werden.",
-      "tooLarge": "Die Excel-Datei darf höchstens 8 MB groß sein.",
+      "tooLarge": "Die Excel-Datei darf höchstens 64 MB groß sein.",
       "templateDownloadFailed": "Die Vorlage konnte nicht heruntergeladen werden.",
       "preValidationFailed": "Die Vorabprüfung konnte nicht abgeschlossen werden.",
       "importFailed": "Der Lagereröffnungsimport konnte nicht abgeschlossen werden."

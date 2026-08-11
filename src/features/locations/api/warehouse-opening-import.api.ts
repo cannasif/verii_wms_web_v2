@@ -15,6 +15,7 @@ export interface WarehouseOpeningPreview {
   distinctStockCount: number;
   serialCount: number;
   totalQuantity: number;
+  batchCount: number;
   warnings: string[];
 }
 
@@ -31,6 +32,8 @@ export interface WarehouseOpeningImportResult {
     isReplay: boolean;
     totalRows: number;
     totalQuantity: number;
+    batchCount: number;
+    rowsTruncated: boolean;
   };
 }
 
