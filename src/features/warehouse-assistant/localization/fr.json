@@ -3,17 +3,17 @@
     "version": "v{{version}}",
     "local": "Compréhension locale avancée du langage",
     "localHint": "Les questions sont traitées localement avec le vocabulaire WMS, la tolérance aux fautes et le contexte de conversation, sans service externe.",
-    "semantic": "Compréhension linguistique hybride locale active",
+    "semantic": "Compréhension linguistique interne active",
     "fallback": "Compréhension linguistique de base",
-    "semanticHint": "Sans quitter ce système, le modèle sémantique local, les règles WMS et les indices de stock, série ou fournisseur sont évalués ensemble.",
-    "fallbackHint": "La connexion IA n'est pas prête. Les modèles de questions locales sécurisés restent disponibles.",
+    "semanticHint": "Les questions sont traitées dans l’API avec le vocabulaire WMS, la tolérance aux fautes et le contexte validé ; aucun service ou modèle externe ne les reçoit.",
+    "fallbackHint": "Les informations linguistiques avancées sont indisponibles ; les questions WMS de base sécurisées restent actives.",
     "compound": "Prise en charge multi-question",
     "compoundHint": "Jusqu’à trois questions d’entrepôt indépendantes et en lecture seule sont exécutées séparément et en toute sécurité."
   },
   "interpretation": {
     "title": "J’ai compris votre demande ainsi",
     "confidence": "Confiance {{value}} %",
-    "localSemantic": "Modèle sémantique local",
+    "localSemantic": "Interprétation linguistique locale",
     "safety": "Cette interprétation sélectionne uniquement un plan de requête sûr ; les droits, la branche, l’entrepôt et les règles de données sont vérifiés séparément.",
     "intents": {
       "help": "Aide", "myActivities": "Mes activités", "userActivities": "Activités des utilisateurs",

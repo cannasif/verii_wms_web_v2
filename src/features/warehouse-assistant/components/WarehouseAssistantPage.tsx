@@ -47,8 +47,8 @@ const emptyCapabilities: WarehouseAssistantCapabilities = {
   canQueryOperationalExceptions: false,
   canQueryTraceability: false,
   canQueryProcessBlockers: false,
-  assistantVersion: '2.4.0',
-  routingMode: 'LocalHybrid',
+  assistantVersion: '2.5.0',
+  routingMode: 'InProcessNlp',
   semanticRoutingAvailable: false,
   semanticModel: null,
   canRunCompoundQueries: true,
@@ -174,7 +174,7 @@ export function WarehouseAssistantPage(): ReactElement {
 
   const routingKey = capabilities.semanticRoutingAvailable
     ? 'semantic'
-    : capabilities.routingMode === 'LocalSemantic'
+    : capabilities.routingMode === 'InProcessNlp'
       ? 'local'
       : 'fallback';
   const hasAdvancedRouting = routingKey !== 'fallback';
@@ -210,7 +210,7 @@ export function WarehouseAssistantPage(): ReactElement {
               <Sparkles className="size-4 shrink-0" aria-hidden />
               <span>{t(`routing.${routingKey}`)}</span>
               <span className="rounded-full bg-white/60 px-1.5 py-0.5 font-mono text-[10px] dark:bg-black/20">
-                {t('routing.version', { version: capabilities.assistantVersion || '2.4.0' })}
+                {t('routing.version', { version: capabilities.assistantVersion || '2.5.0' })}
               </span>
             </div>
             {capabilities.canRunCompoundQueries ? (

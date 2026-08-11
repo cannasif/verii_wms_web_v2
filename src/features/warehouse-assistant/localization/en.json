@@ -3,17 +3,17 @@
     "version": "v{{version}}",
     "local": "Advanced local language understanding",
     "localHint": "Questions are processed on this system with the WMS vocabulary, typo tolerance and conversation context; no external service is required.",
-    "semantic": "Local hybrid language understanding active",
+    "semantic": "In-process language engine active",
     "fallback": "Basic language understanding",
-    "semanticHint": "Without leaving this system, the local meaning model, WMS rules, and detected stock, serial, or supplier evidence are evaluated together.",
-    "fallbackHint": "The AI connection is not ready. Safe local question patterns remain available.",
+    "semanticHint": "Questions are processed inside the API using the WMS vocabulary, typo tolerance, and validated conversation context; no external service or model receives them.",
+    "fallbackHint": "Advanced language information is unavailable; safe basic WMS question patterns remain active.",
     "compound": "Multi-question support",
     "compoundHint": "Up to three independent read-only warehouse questions in one message are executed separately and safely."
   },
   "interpretation": {
     "title": "I understood your request as",
     "confidence": "{{value}}% confidence",
-    "localSemantic": "Local meaning model",
+    "localSemantic": "Local language interpretation",
     "safety": "This interpretation only selects a safe query plan; permissions, branch, warehouse, and data rules are validated separately.",
     "intents": {
       "help": "Help", "myActivities": "My activities", "userActivities": "User activities",

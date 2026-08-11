@@ -3,17 +3,17 @@
     "version": "v{{version}}",
     "local": "Yerel gelişmiş dil anlama",
     "localHint": "Sorular dış servise gönderilmeden, cihazdaki WMS sözlüğü, yazım hatası toleransı ve konuşma bağlamıyla işlenir.",
-    "semantic": "Yerel hibrit dil anlama aktif",
+    "semantic": "Sunucu içi dil anlama aktif",
     "fallback": "Temel dil anlama",
-    "semanticHint": "Soru dışarı gönderilmeden yerel anlam modeli, WMS kuralları ve bulunan stok, seri veya cari bilgileri birlikte değerlendirilir.",
-    "fallbackHint": "AI bağlantısı hazır değil. Güvenli yerel soru kalıpları kullanılmaya devam ediyor.",
+    "semanticHint": "Sorular herhangi bir dış servise veya modele gönderilmeden; WMS sözlüğü, yazım hatası toleransı ve doğrulanmış konuşma bağlamıyla API içinde işlenir.",
+    "fallbackHint": "Gelişmiş dil bilgisi alınamadı; güvenli temel WMS soru kalıpları kullanılmaya devam ediyor.",
     "compound": "Çoklu soru desteği",
     "compoundHint": "Bir mesajda en fazla üç bağımsız, salt okunur depo sorusu güvenli biçimde ayrı ayrı çalıştırılır."
   },
   "interpretation": {
     "title": "Sizi şöyle anladım",
     "confidence": "%{{value}} güven",
-    "localSemantic": "Yerel anlam modeli",
+    "localSemantic": "Yerel dil yorumu",
     "safety": "Bu yorum yalnızca güvenli sorgu planını seçer; yetki, şube, depo ve veri kuralları ayrıca doğrulanır.",
     "intents": {
       "help": "Yardım", "myActivities": "İşlemlerim", "userActivities": "Kullanıcı işlemleri",
