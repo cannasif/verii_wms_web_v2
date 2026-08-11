@@ -142,6 +142,7 @@ export interface WarehouseTransferReturnSetting {
   warehouseId: number;
   defaultTransferReturnLocationId?: number;
   defaultProductionTransferLocationId?: number;
+  productionPickingStagingLocationId?: number;
   autoPickWithoutConfirmMaxQuantity?: number;
 }
 export interface DefaultProductionTargetLocation {
@@ -492,12 +493,14 @@ export const productionTransferApi = {
     warehouseId: number,
     defaultTransferReturnLocationId?: number,
     defaultProductionTransferLocationId?: number,
+    productionPickingStagingLocationId?: number,
     autoPickWithoutConfirmMaxQuantity?: number | null,
   ): Promise<WarehouseTransferReturnSetting> =>
     unwrap(await api.put<Envelope<WarehouseTransferReturnSetting>>('/api/production-transfers/warehouse-return-setting', {
       warehouseId,
       defaultTransferReturnLocationId: defaultTransferReturnLocationId || null,
       defaultProductionTransferLocationId: defaultProductionTransferLocationId || null,
+      productionPickingStagingLocationId: productionPickingStagingLocationId || null,
       autoPickWithoutConfirmMaxQuantity: autoPickWithoutConfirmMaxQuantity ?? null,
     })),
 

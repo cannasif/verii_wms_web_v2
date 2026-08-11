@@ -422,10 +422,12 @@ function ProductionWorkOrderTransferTaskList({
 export function ProductionWorkOrderTransferTabPanel({
   tab,
   refreshKey = 0,
+  hidden = false,
   onPendingQueueChanged,
 }: {
   tab: ProductionWorkOrderTransferTab;
   refreshKey?: number;
+  hidden?: boolean;
   onPendingQueueChanged?: () => void;
 }): ReactElement {
   const { t } = useModuleTranslation('production-transfer');
@@ -787,12 +789,13 @@ export function ProductionWorkOrderTransferTabPanel({
   ]);
 
   return (
-    <>
+    <div hidden={hidden}>
       <AdvancedDataGrid<ProductionWorkOrderTransferGridRow>
         compactShell
         title=""
         pageKey={`production-work-order-transfers-${tab}`}
         refreshKey={refreshKey}
+        retainQueryCache
         columns={columns}
         fetchPage={fetchPage}
         emptyMessage={`${TAB_LABELS[tab]} sekmesinde kayıt bulunamadı.`}
@@ -862,7 +865,7 @@ export function ProductionWorkOrderTransferTabPanel({
           }}
         />
       ) : null}
-    </>
+    </div>
   );
 }
 

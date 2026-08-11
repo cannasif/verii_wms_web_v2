@@ -22,7 +22,7 @@ import { formatProjectDate, formatProjectNumber } from '@/lib/project-format';
 import { appendFoldedSearchToken, foldTurkishSearch } from '@/lib/turkish-search';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
-import { productionTransferApi, type ProductionTransferPolicy } from '@/features/production-transfer/api';
+import { productionTransferApi, type ProductionTransferPolicy, type ProductionWorkOrderTransferTab } from '@/features/production-transfer/api';
 import { warehouseTransferApi } from '@/features/warehouse-transfer-v2/api/warehouse-transfer.api';
 import type { ActiveUserOption } from '@/features/goods-receipt-v2/types/goods-receipt.types';
 import type { DropdownPage } from '@/hooks/useDropdownInfiniteSearch';
@@ -33,7 +33,6 @@ import {
   ProductionWorkOrderTransferTabPanel,
   PRODUCTION_WORK_ORDER_TRANSFER_TABS,
   isProductionWorkOrderPageTab,
-  workOrderTransferApiTab,
   type ProductionWorkOrderPageTab,
 } from './components/ProductionWorkOrderTransferTabPanel';
 import { ProductionWorkOrderAssignmentCancelDialog } from './components/ProductionWorkOrderAssignmentDialogs';
@@ -462,7 +461,12 @@ export function ProductionWorkOrdersPage(): ReactElement {
     const tab = searchParams.get('tab');
     return isProductionWorkOrderPageTab(tab) ? tab : 'pending';
   });
-  const [transferRefreshKey, setTransferRefreshKey] = useState(0);
+  const [visitedTabs, setVisitedTabs] = useState<Set<ProductionWorkOrderPageTab>>(() => {
+    const tab = searchParams.get('tab');
+    const initial = isProductionWorkOrderPageTab(tab) ? tab : 'pending';
+    return new Set([initial]);
+  });
+  const [transferRefreshKeys, setTransferRefreshKeys] = useState<Partial<Record<ProductionWorkOrderPageTab, number>>>({});
   const [cancelTarget, setCancelTarget] = useState<ProductionSourceWorkOrder>();
   const canCancelAssignment = can('WMS.PRODUCTION_TRANSFER.CANCEL');
   const eyebrow = buildTerminalEyebrowFromNav(pathname, t, i18n.resolvedLanguage ?? i18n.language) ?? 'VERII WMS';
@@ -475,20 +479,26 @@ export function ProductionWorkOrdersPage(): ReactElement {
     }
   }, [searchParams]);
 
-  const load = useCallback(async (term?: string) => {
+  useEffect(() => {
+    setVisitedTabs((current) => {
+      if (current.has(activeTab)) return current;
+      return new Set(current).add(activeTab);
+    });
+  }, [activeTab]);
+
+  const loadPending = useCallback(async (term?: string) => {
     setLoading(true);
     try {
-      if (activeTab !== 'pending') return;
       setRows(await productionApi.sourceWorkOrders(term));
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Üretim iş emirleri yüklenemedi.');
     } finally {
       setLoading(false);
     }
-  }, [activeTab]);
+  }, []);
   useEffect(() => {
-    if (activeTab === 'pending') void load();
-  }, [activeTab, load]);
+    void loadPending();
+  }, [loadPending]);
   useEffect(() => { void productionTransferApi.policy(branchCode).then(setPolicy).catch((error: Error) => toast.error(error.message)); }, [branchCode]);
 
   // Rozet varken serbest metin aramaya karışmaz; rozetsizken yazarken canlı aranır.
@@ -509,19 +519,22 @@ export function ProductionWorkOrdersPage(): ReactElement {
     const term = searchInput.trim();
     setSearchTokens((current) => appendFoldedSearchToken(current, searchInput));
     if (term) setSearchInput('');
-    if (activeTab === 'pending') void load(term || undefined);
+    if (activeTab === 'pending') void loadPending(term || undefined);
   };
 
   const clearSearch = () => {
     setSearchInput('');
     setSearchTokens([]);
     setActiveSearch([]);
-    if (activeTab === 'pending') void load();
+    if (activeTab === 'pending') void loadPending();
   };
 
   const refreshActiveTab = () => {
-    if (activeTab === 'pending') void load(activeSearch[0] || undefined);
-    else setTransferRefreshKey((value) => value + 1);
+    if (activeTab === 'pending') void loadPending(activeSearch[0] || undefined);
+    else setTransferRefreshKeys((current) => ({
+      ...current,
+      [activeTab]: (current[activeTab] ?? 0) + 1,
+    }));
   };
 
   const visibleRows = useMemo(() => {
@@ -630,7 +643,7 @@ export function ProductionWorkOrdersPage(): ReactElement {
           </Tabs>
         </div>
 
-        {activeTab === 'pending' ? (
+        <div hidden={activeTab !== 'pending'}>
         <div className="wms-ops-data-grid-toolbar flex flex-wrap items-start justify-between gap-2">
           <div className="wms-ops-data-grid-toolbar__start flex min-w-0 !grow flex-wrap items-start gap-2">
             <div className="wms-ops-grid-search wms-ops-grid-search--tokens" data-no-auto-localize="true">
@@ -686,22 +699,14 @@ export function ProductionWorkOrdersPage(): ReactElement {
               className="wms-ops-list-toolbar-btn"
               onClick={refreshActiveTab}
               disabled={loading}
-              title={activeTab === 'pending' ? 'Atanmayan iş emirlerini yenile' : 'Transfer listesini yenile'}
+              title="Atanmayan iş emirlerini yenile"
             >
               <RefreshCw className={cn('size-3.5', loading && 'animate-spin')} aria-hidden />
               <span className="hidden md:inline">Yenile</span>
             </OpsActionButton>
           </div>
         </div>
-        ) : null}
 
-        {activeTab !== 'pending' ? (
-            <ProductionWorkOrderTransferTabPanel
-              tab={workOrderTransferApiTab(activeTab)}
-              refreshKey={transferRefreshKey}
-              onPendingQueueChanged={() => void load(activeSearch[0] || undefined)}
-            />
-        ) : (
         <>
         {/* Skin'in tablo sarmalayıcı sınıfları yatay kaydırmayı zorunlu kıldığı için burada kullanılmaz; kolonlar sığıyor. */}
         <div className="wms-ops-scrollbar relative mt-4 block max-h-[max(20rem,calc(100dvh-26rem))] overflow-x-auto overflow-y-auto border border-[var(--wms-ops-card-border)] max-sm:hidden">
@@ -864,7 +869,21 @@ export function ProductionWorkOrdersPage(): ReactElement {
           )}
         </div>
         </>
-        )}
+        </div>
+
+        {PRODUCTION_WORK_ORDER_TRANSFER_TABS
+          .filter((tab): tab is typeof PRODUCTION_WORK_ORDER_TRANSFER_TABS[number] & { apiTab: ProductionWorkOrderTransferTab } => 'apiTab' in tab)
+          .map((tabDef) => (
+            visitedTabs.has(tabDef.key) ? (
+              <ProductionWorkOrderTransferTabPanel
+                key={tabDef.key}
+                tab={tabDef.apiTab}
+                hidden={activeTab !== tabDef.key}
+                refreshKey={transferRefreshKeys[tabDef.key] ?? 0}
+                onPendingQueueChanged={() => void loadPending(activeSearch[0] || undefined)}
+              />
+            ) : null
+          ))}
       </div>
     </OpsListPageShell>
     {selected && (
@@ -872,7 +891,13 @@ export function ProductionWorkOrdersPage(): ReactElement {
         value={selected}
         branchCode={branchCode}
         close={() => setSelected(undefined)}
-        onTransferCreated={() => void load()}
+        onTransferCreated={() => {
+          void loadPending();
+          setTransferRefreshKeys((current) => ({
+            ...current,
+            picking: (current.picking ?? 0) + 1,
+          }));
+        }}
         canCreateTransfer={can('WMS.PRODUCTION_TRANSFER.CREATE')}
       />
     )}
@@ -882,8 +907,11 @@ export function ProductionWorkOrdersPage(): ReactElement {
         onClose={() => setCancelTarget(undefined)}
         onCompleted={() => {
           setCancelTarget(undefined);
-          void load(activeSearch[0] || undefined);
-          setTransferRefreshKey((value) => value + 1);
+          void loadPending(activeSearch[0] || undefined);
+          setTransferRefreshKeys((current) => ({
+            ...current,
+            cancelled: (current.cancelled ?? 0) + 1,
+          }));
         }}
       />
     ) : null}

@@ -148,6 +148,8 @@ interface Props<T extends { id: number }> {
   aboveToolbarExtra?: ReactNode;
   /** Mutation sonrasında sunucu verisini yeniden okumak için artırılan sürüm anahtarı. */
   refreshKey?: string | number;
+  /** true: sekme geçişlerinde önbelleği korur; yalnızca refreshKey veya grid yenile ile tekrar okur. */
+  retainQueryCache?: boolean;
   /** true: sayfa başlığı/eyebrow gizlenir; sadece arama+tablo kartı kalır. */
   compactShell?: boolean;
   /** Satıra çift tıklanınca çağrılır (aksiyon hücreleri hariç etkileşimleri engellemez). */
@@ -459,6 +461,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
   toolbarBelowExtra,
   aboveToolbarExtra,
   refreshKey = 0,
+  retainQueryCache = false,
   compactShell = false,
   onRowDoubleClick,
   expandedRowId = null,
@@ -698,6 +701,9 @@ export function AdvancedDataGrid<T extends { id: number }>({
     queryKey: ['advanced-grid', pageKey, refreshKey, request],
     queryFn: async () => normalizeGridPage<T>(await fetchPage(request)),
     placeholderData: (previous) => previous,
+    staleTime: retainQueryCache ? 5 * 60 * 1000 : 0,
+    refetchOnMount: retainQueryCache ? false : undefined,
+    refetchOnWindowFocus: retainQueryCache ? false : undefined,
   });
   const activeColumns = useMemo(() => {
     const fromPrefs = order

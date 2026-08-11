@@ -512,14 +512,16 @@ function TransferReturnLocationPanel({branchCode}:{branchCode:string}){
   const[warehouseValue,setWarehouseValue]=useState<string|null>(null);
   const[returnLocationValue,setReturnLocationValue]=useState<string|null>(null);
   const[productionLocationValue,setProductionLocationValue]=useState<string|null>(null);
+  const[pickingStagingLocationValue,setPickingStagingLocationValue]=useState<string|null>(null);
   const[autoPickThreshold,setAutoPickThreshold]=useState('');
   const[busy,setBusy]=useState(false);
   const warehouseId=Number(warehouseValue||0);
   useEffect(()=>{
-    if(!warehouseId){setReturnLocationValue(null);setProductionLocationValue(null);setAutoPickThreshold('');return;}
+    if(!warehouseId){setReturnLocationValue(null);setProductionLocationValue(null);setPickingStagingLocationValue(null);setAutoPickThreshold('');return;}
     void productionTransferApi.returnSetting(warehouseId).then(x=>{
       setReturnLocationValue(x.defaultTransferReturnLocationId?String(x.defaultTransferReturnLocationId):null);
       setProductionLocationValue(x.defaultProductionTransferLocationId?String(x.defaultProductionTransferLocationId):null);
+      setPickingStagingLocationValue(x.productionPickingStagingLocationId?String(x.productionPickingStagingLocationId):null);
       setAutoPickThreshold(
         x.autoPickWithoutConfirmMaxQuantity && x.autoPickWithoutConfirmMaxQuantity > 0
           ? String(Math.floor(x.autoPickWithoutConfirmMaxQuantity))
@@ -545,10 +547,12 @@ function TransferReturnLocationPanel({branchCode}:{branchCode:string}){
         warehouseId,
         returnLocationValue?Number(returnLocationValue):undefined,
         productionLocationValue?Number(productionLocationValue):undefined,
+        pickingStagingLocationValue?Number(pickingStagingLocationValue):undefined,
         parsedThreshold,
       );
       setReturnLocationValue(result.defaultTransferReturnLocationId?String(result.defaultTransferReturnLocationId):null);
       setProductionLocationValue(result.defaultProductionTransferLocationId?String(result.defaultProductionTransferLocationId):null);
+      setPickingStagingLocationValue(result.productionPickingStagingLocationId?String(result.productionPickingStagingLocationId):null);
       setAutoPickThreshold(
         result.autoPickWithoutConfirmMaxQuantity && result.autoPickWithoutConfirmMaxQuantity > 0
           ? String(Math.floor(result.autoPickWithoutConfirmMaxQuantity))
@@ -564,10 +568,15 @@ function TransferReturnLocationPanel({branchCode}:{branchCode:string}){
     title="Depo varsayılan üretim transfer rafları"
     description="Hedef raf satırda seçilmemişse üretim transfer rafı otomatik kullanılır. İptal iade rafı yalnız geri dönüş operasyonlarında kullanılır."
   >
-    <div className="grid items-end gap-4 xl:grid-cols-[1fr_1fr_1fr_auto]">
+    <div className="grid items-end gap-4 xl:grid-cols-[1fr_1fr_1fr_1fr_auto]">
       <PolicyField label="Depo">
         <div className="wms-ops-field-shell">
           <PagedAppDropdown<WarehouseOption> queryKey={['production-location-warehouse',branchCode]} fetchPage={r=>warehouseTransferApi.warehouses(r,branchCode)} toOption={x=>({value:String(x.id),label:`${x.warehouseCode} · ${x.warehouseName}`})} value={warehouseValue} onValueChange={setWarehouseValue} placeholder="Depo seçin" searchable className={OPS_SELECT_TRIGGER_CLASS}/>
+        </div>
+      </PolicyField>
+      <PolicyField label="Toplama sanal rafı">
+        <div className="wms-ops-field-shell">
+          <PagedAppDropdown<LocationOption> queryKey={['production-picking-staging-location',warehouseId]} fetchPage={r=>warehouseTransferApi.locations(r,warehouseId)} toOption={x=>({value:String(x.id),label:`${x.code} · ${x.name}`})} enabled={warehouseId>0} dependencies={[warehouseId]} value={pickingStagingLocationValue} onValueChange={setPickingStagingLocationValue} placeholder="Raf seçin" searchable className={OPS_SELECT_TRIGGER_CLASS}/>
         </div>
       </PolicyField>
       <PolicyField label="Varsayılan üretim transfer rafı">
