@@ -78,6 +78,7 @@
     "parentLocation": "Üst lokasyon",
     "rootLocation": "Kök lokasyon",
     "code": "Raf kodu",
+    "codeHint": "Harf ve rakamların yanında /, -, . ve _ kullanılabilir. Örnek: A01/R01-G01",
     "name": "Raf adı",
     "zoneCode": "Bölge kodu",
     "aisleNo": "Koridor no",
@@ -137,6 +138,7 @@
   "actions": { "edit": "Düzenle", "delete": "Sil" },
   "validation": {
     "requiredBasic": "Depo, raf kodu ve raf adı zorunludur.",
+    "invalidCode": "Raf kodu harf veya rakamla başlamalıdır. Yalnızca harf, rakam, /, -, . ve _ kullanabilirsiniz; en fazla 50 karakter olabilir.",
     "parentRequired": "Koridor, raf, raf seviyesi ve göz tipleri için önce uygun bir üst lokasyon seçmelisiniz.",
     "barcodeRequired": "Manuel barkod modunda barkod zorunludur.",
     "capacityUnitRequired": "Kapasite değeri girdiğinizde kapasite birimi de zorunludur."

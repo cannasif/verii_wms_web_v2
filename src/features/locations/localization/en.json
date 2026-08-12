@@ -78,6 +78,7 @@
     "parentLocation": "Parent location",
     "rootLocation": "Root location",
     "code": "Location code",
+    "codeHint": "Letters and numbers may be combined with /, -, . and _. Example: A01/R01-G01",
     "name": "Location name",
     "zoneCode": "Zone code",
     "aisleNo": "Aisle no",
@@ -137,6 +138,7 @@
   "actions": { "edit": "Edit", "delete": "Delete" },
   "validation": {
     "requiredBasic": "Warehouse, location code and location name are required.",
+    "invalidCode": "The location code must start with a letter or number. Use only letters, numbers, /, -, . and _; maximum 50 characters.",
     "parentRequired": "Select a valid parent location for aisle, rack, shelf level and bin types.",
     "barcodeRequired": "Barcode is required in manual barcode mode.",
     "capacityUnitRequired": "Capacity unit is required when a capacity value is entered."

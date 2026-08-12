@@ -78,6 +78,7 @@
     "parentLocation": "Localisation des parents",
     "rootLocation": "Emplacement racine",
     "code": "Code de localisation",
+    "codeHint": "Les lettres et chiffres peuvent être combinés avec /, -, . et _. Exemple : A01/R01-G01",
     "name": "Nom du lieu",
     "zoneCode": "Code de zone",
     "aisleNo": "Allée non",
@@ -146,6 +147,7 @@
   },
   "validation": {
     "requiredBasic": "L’entrepôt, le code d’emplacement et le nom de l’emplacement sont requis.",
+    "invalidCode": "Le code d’emplacement doit commencer par une lettre ou un chiffre. Utilisez uniquement lettres, chiffres, /, -, . et _ ; 50 caractères maximum.",
     "parentRequired": "Sélectionnez un emplacement parent valide pour les types d'allée, de rack, de niveau d'étagère et de bac.",
     "barcodeRequired": "Le code-barres est requis en mode code-barres manuel.",
     "capacityUnitRequired": "L'unité de capacité est requise lorsqu'une valeur de capacité est saisie."

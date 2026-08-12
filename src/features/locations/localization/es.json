@@ -78,6 +78,7 @@
     "parentLocation": "Ubicación principal",
     "rootLocation": "Ubicación de la raíz",
     "code": "Código de ubicación",
+    "codeHint": "Se pueden combinar letras y números con /, -, . y _. Ejemplo: A01/R01-G01",
     "name": "Nombre de la ubicación",
     "zoneCode": "código de zona",
     "aisleNo": "Pasillo no",
@@ -146,6 +147,7 @@
   },
   "validation": {
     "requiredBasic": "Se requieren almacén, código de ubicación y nombre de la ubicación.",
+    "invalidCode": "El código de ubicación debe comenzar con una letra o un número. Use solo letras, números, /, -, . y _; máximo 50 caracteres.",
     "parentRequired": "Seleccione una ubicación principal válida para pasillo, estante, nivel de estante y tipos de contenedores.",
     "barcodeRequired": "Se requiere código de barras en el modo de código de barras manual.",
     "capacityUnitRequired": "Se requiere unidad de capacidad cuando se ingresa un valor de capacidad."

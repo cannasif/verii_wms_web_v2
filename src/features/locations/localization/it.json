@@ -78,6 +78,7 @@
     "parentLocation": "Posizione del genitore",
     "rootLocation": "Posizione della radice",
     "code": "Codice di posizione",
+    "codeHint": "Lettere e numeri possono essere combinati con /, -, . e _. Esempio: A01/R01-G01",
     "name": "Nome della posizione",
     "zoneCode": "Codice della zona",
     "aisleNo": "Corridoio n",
@@ -146,6 +147,7 @@
   },
   "validation": {
     "requiredBasic": "Magazzino, codice ubicazione e nome ubicazione sono obbligatori.",
+    "invalidCode": "Il codice ubicazione deve iniziare con una lettera o un numero. Usa solo lettere, numeri, /, -, . e _; massimo 50 caratteri.",
     "parentRequired": "Seleziona una posizione principale valida per i tipi di corridoio, scaffale, livello di scaffale e contenitore.",
     "barcodeRequired": "Il codice a barre è richiesto in modalità codice a barre manuale.",
     "capacityUnitRequired": "L'unità di capacità è obbligatoria quando viene immesso un valore di capacità."

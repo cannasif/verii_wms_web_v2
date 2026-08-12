@@ -78,6 +78,7 @@
     "parentLocation": "Übergeordneter Standort",
     "rootLocation": "Root-Standort",
     "code": "Standortcode",
+    "codeHint": "Buchstaben und Zahlen können mit /, -, . und _ kombiniert werden. Beispiel: A01/R01-G01",
     "name": "Standortname",
     "zoneCode": "Zonencode",
     "aisleNo": "Gang-Nr",
@@ -146,6 +147,7 @@
   },
   "validation": {
     "requiredBasic": "Lager, Standortcode und Standortname sind erforderlich.",
+    "invalidCode": "Der Standortcode muss mit einem Buchstaben oder einer Zahl beginnen. Zulässig sind nur Buchstaben, Zahlen, /, -, . und _; maximal 50 Zeichen.",
     "parentRequired": "Wählen Sie einen gültigen übergeordneten Standort für Gang-, Regal-, Regalebenen- und Lagerplatztypen aus.",
     "barcodeRequired": "Im manuellen Barcode-Modus ist ein Barcode erforderlich.",
     "capacityUnitRequired": "Die Kapazitätseinheit ist erforderlich, wenn ein Kapazitätswert eingegeben wird."
