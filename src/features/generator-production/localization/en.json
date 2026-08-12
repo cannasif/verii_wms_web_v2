@@ -1,0 +1,11 @@
+{
+  "hub": {
+    "eyebrow": "Production & Quality / Generator Production",
+    "title": "Generator Production Centre",
+    "description": "Combine stator, rotor and stiffener flows with final assembly in one delivery plan.",
+    "projects": { "title": "Generator Projects", "text": "Manage projects, delivery dates and SA/RA/FA component scope." },
+    "gantt": { "title": "Production Plan & Gantt", "text": "Monitor the finite-capacity station plan and critical path." },
+    "definitions": { "title": "SA / RA / FA Definitions", "text": "Review stations, routes, shifts, resources and planning rules." }
+  },
+  "overview": { "projects": "Total projects", "planned": "Planned", "active": "Active production", "delayed": "Delayed operations" }
+}

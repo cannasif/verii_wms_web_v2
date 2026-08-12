@@ -1,0 +1,4 @@
+{
+  "hub": { "eyebrow": "Production et qualité / Production de générateurs", "title": "Centre de production de générateurs", "description": "Réunissez les flux stator, rotor et support avec l'assemblage final dans un plan de livraison.", "projects": { "title": "Projets générateurs", "text": "Gérez les projets, les livraisons et le périmètre SA/RA/FA." }, "gantt": { "title": "Plan de production et Gantt", "text": "Suivez la capacité des postes et le chemin critique." }, "definitions": { "title": "Définitions SA / RA / FA", "text": "Consultez postes, gammes, équipes, ressources et règles." } },
+  "overview": { "projects": "Total projets", "planned": "Planifiés", "active": "Production active", "delayed": "Opérations en retard" }
+}

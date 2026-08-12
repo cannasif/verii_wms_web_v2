@@ -269,6 +269,7 @@ export const PERMISSION_SCOPE_DISPLAY: Record<string, PermissionScopeDisplay> = 
   'wms.shipment': { key: 'sidebar.shipment', fallback: 'Sevkiyat' },
   'wms.service-allocation': { key: 'sidebar.serviceAllocation', fallback: 'Servis ve Hakediş' },
   'wms.production': { key: 'sidebar.production', fallback: 'Üretim' },
+  'wms.generator-production': { key: 'sidebar.generatorProductionGroup', fallback: 'Jeneratör Üretim' },
   'wms.production-transfer': { key: 'sidebar.productionTransfer', fallback: 'Üretim Transferi' },
   'wms.package': { key: 'sidebar.package', fallback: 'Paketleme' },
   'wms.warehouse-balance': { key: 'sidebar.erpWarehouseStockBalance', fallback: 'Depo Stok Bakiyesi' },

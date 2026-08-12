@@ -1,0 +1,4 @@
+{
+  "hub": { "eyebrow": "Produzione e qualità / Produzione generatori", "title": "Centro produzione generatori", "description": "Unisci i flussi statore, rotore e supporto con l'assemblaggio finale in un unico piano.", "projects": { "title": "Progetti generatori", "text": "Gestisci progetti, consegne e ambito SA/RA/FA." }, "gantt": { "title": "Piano di produzione e Gantt", "text": "Monitora capacità delle stazioni e percorso critico." }, "definitions": { "title": "Definizioni SA / RA / FA", "text": "Consulta stazioni, cicli, turni, risorse e regole." } },
+  "overview": { "projects": "Progetti totali", "planned": "Pianificati", "active": "Produzione attiva", "delayed": "Operazioni in ritardo" }
+}

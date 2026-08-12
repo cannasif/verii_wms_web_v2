@@ -13,7 +13,7 @@ import {
   loadHangfirePage, loadIncomingInvoiceArchivePage, loadLocationDefinitionsPage, loadPermissionGroupsPage, loadPermissionsPage, loadProfilePage,
   loadKkdPages,
   loadProjectSettingsPage, loadQualityInspectionsPage, loadQualityRulesPage, loadQualitySettingsPage,
-  loadProductionPages, loadProductionTransferPages, loadSubcontractingTransferPages,
+  loadProductionPages, loadGeneratorProductionPages, loadProductionTransferPages, loadSubcontractingTransferPages,
   loadProcurementPage,
   loadSupplierQuoteEntryPage,
   loadSupplierQuotePortalPage,
@@ -106,6 +106,29 @@ const ProductionTransferPolicyPage = lazy(() => loadProductionTransferPages().th
 const ProductionTransferOperationPage = lazy(() => loadProductionTransferPages().then((m) => ({ default: m.ProductionTransferOperationPage })));
 const ProductionTransferTaskPoolPage = lazy(() => loadProductionTransferPages().then((m) => ({ default: m.ProductionTransferTaskPoolPage })));
 const ProductionHubPage = lazy(() => loadProductionPages().then((m) => ({ default: m.ProductionHubPage })));
+const GeneratorProductionHubPage = lazy(() => loadGeneratorProductionPages().then((m) => ({ default: m.GeneratorProductionHubPage })));
+const GeneratorProductionProjectsPage = lazy(() => loadGeneratorProductionPages().then((m) => ({ default: m.GeneratorProductionProjectsPage })));
+const GeneratorProductionProjectListPage = lazy(() => loadGeneratorProductionPages().then((m) => ({ default: m.GeneratorProductionProjectListPage })));
+const GeneratorProductionProjectCreatePage = lazy(() => loadGeneratorProductionPages().then((m) => ({ default: m.GeneratorProductionProjectCreatePage })));
+const GeneratorProductionProjectDetailPage = lazy(() => loadGeneratorProductionPages().then((m) => ({ default: m.GeneratorProductionProjectDetailPage })));
+const GeneratorProductionScenarioPage = lazy(() => loadGeneratorProductionPages().then((m) => ({ default: m.GeneratorProductionScenarioPage })));
+const GeneratorProductionAssistantPage = lazy(() => loadGeneratorProductionPages().then((m) => ({ default: m.GeneratorProductionAssistantPage })));
+const GeneratorProductionGanttPage = lazy(() => loadGeneratorProductionPages().then((m) => ({ default: m.GeneratorProductionGanttPage })));
+const GeneratorProductionAndonPage = lazy(() => loadGeneratorProductionPages().then((m) => ({ default: m.GeneratorProductionAndonPage })));
+const GeneratorProductionDefinitionsPage = lazy(() => loadGeneratorProductionPages().then((m) => ({ default: m.GeneratorProductionDefinitionsPage })));
+const GeneratorProductionDefinitionsHubPage = lazy(() => loadGeneratorProductionPages().then((m) => ({ default: m.GeneratorProductionDefinitionsHubPage })));
+const GeneratorProductionParametersPage = lazy(() => loadGeneratorProductionPages().then((m) => ({ default: m.GeneratorProductionParametersPage })));
+const GeneratorProductionStationsPage = lazy(() => loadGeneratorProductionPages().then((m) => ({ default: m.GeneratorProductionStationsPage })));
+const GeneratorProductionRoutesPage = lazy(() => loadGeneratorProductionPages().then((m) => ({ default: m.GeneratorProductionRoutesPage })));
+const GeneratorProductionCalendarPage = lazy(() => loadGeneratorProductionPages().then((m) => ({ default: m.GeneratorProductionCalendarPage })));
+const GeneratorProductionResourcesPage = lazy(() => loadGeneratorProductionPages().then((m) => ({ default: m.GeneratorProductionResourcesPage })));
+const GeneratorProductionRulesPage = lazy(() => loadGeneratorProductionPages().then((m) => ({ default: m.GeneratorProductionRulesPage })));
+const GeneratorProductionStationBoardPage = lazy(() => loadGeneratorProductionPages().then((m) => ({ default: m.GeneratorProductionStationBoardPage })));
+const GeneratorProductionFactoryMapPage = lazy(() => loadGeneratorProductionPages().then((m) => ({ default: m.GeneratorProductionFactoryMapPage })));
+const GeneratorProductionMaterialControlPage = lazy(() => loadGeneratorProductionPages().then((m) => ({ default: m.GeneratorProductionMaterialControlPage })));
+const GeneratorProductionOutboundPage = lazy(() => loadGeneratorProductionPages().then((m) => ({ default: m.GeneratorProductionOutboundPage })));
+const GeneratorProductionReportsPage = lazy(() => loadGeneratorProductionPages().then((m) => ({ default: m.GeneratorProductionReportsPage })));
+const GeneratorProductionRevisionsPage = lazy(() => loadGeneratorProductionPages().then((m) => ({ default: m.GeneratorProductionRevisionsPage })));
 const ProcurementHubPage = lazy(() => loadProcurementPage().then((m) => ({ default: m.ProcurementHubPage })));
 const ProcurementRequestsPage = lazy(() => loadProcurementPage().then((m) => ({ default: m.ProcurementRequestsPage })));
 const ProcurementRfqsPage = lazy(() => loadProcurementPage().then((m) => ({ default: m.ProcurementRfqsPage })));
@@ -219,6 +242,29 @@ export function App(): ReactElement {
           <Route path="warehouse/transfers/:id/operations" element={<WarehouseTransferOperationPage />} />
           <Route path="warehouse/transfers/settings" element={<WarehouseTransferPolicyPage />} />
           <Route path="warehouse/production" element={<ProductionHubPage />} />
+          <Route path="warehouse/production/generator" element={<GeneratorProductionHubPage />} />
+          <Route path="warehouse/production/generator/projects" element={<GeneratorProductionProjectListPage />} />
+          <Route path="warehouse/production/generator/projects/new" element={<GeneratorProductionProjectCreatePage />} />
+          <Route path="warehouse/production/generator/projects/:id" element={<GeneratorProductionProjectDetailPage />} />
+          <Route path="warehouse/production/generator/planning" element={<GeneratorProductionProjectsPage />} />
+          <Route path="warehouse/production/generator/scenarios" element={<GeneratorProductionScenarioPage />} />
+          <Route path="warehouse/production/generator/assistant" element={<GeneratorProductionAssistantPage />} />
+          <Route path="warehouse/production/generator/gantt" element={<div className="gp-page--gantt"><GeneratorProductionGanttPage /></div>} />
+          <Route path="warehouse/production/generator/revisions" element={<GeneratorProductionRevisionsPage />} />
+          <Route path="warehouse/production/generator/station-board" element={<div className="gp-page--live"><GeneratorProductionStationBoardPage /></div>} />
+          <Route path="warehouse/production/generator/factory-map" element={<GeneratorProductionFactoryMapPage />} />
+          <Route path="warehouse/production/generator/andon" element={<div className="gp-page--live"><GeneratorProductionAndonPage /></div>} />
+          <Route path="warehouse/production/generator/materials" element={<GeneratorProductionMaterialControlPage />} />
+          <Route path="warehouse/production/generator/outbound" element={<GeneratorProductionOutboundPage />} />
+          <Route path="warehouse/production/generator/reports" element={<GeneratorProductionReportsPage />} />
+          <Route path="warehouse/production/generator/definitions" element={<GeneratorProductionDefinitionsHubPage />} />
+          <Route path="warehouse/production/generator/definitions/parameters" element={<GeneratorProductionParametersPage />} />
+          <Route path="warehouse/production/generator/definitions/all" element={<GeneratorProductionDefinitionsPage />} />
+          <Route path="warehouse/production/generator/definitions/stations" element={<GeneratorProductionStationsPage />} />
+          <Route path="warehouse/production/generator/definitions/routes" element={<GeneratorProductionRoutesPage />} />
+          <Route path="warehouse/production/generator/definitions/calendar" element={<GeneratorProductionCalendarPage />} />
+          <Route path="warehouse/production/generator/definitions/resources" element={<GeneratorProductionResourcesPage />} />
+          <Route path="warehouse/production/generator/definitions/rules" element={<GeneratorProductionRulesPage />} />
           <Route path="procurement" element={<ProcurementHubPage />} />
           <Route path="procurement/requests" element={<ProcurementRequestsPage />} />
           <Route path="procurement/rfqs" element={<ProcurementRfqsPage />} />

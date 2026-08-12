@@ -1,0 +1,330 @@
+.gp-page,
+section.space-y-5:has(.gp-panel),
+section.space-y-6:has(.gp-panel) {
+  --gp-ink: var(--wms-app-text);
+  --gp-muted: var(--wms-app-text-muted);
+  --gp-line: color-mix(in oklab, var(--wms-app-border) 82%, transparent);
+  --gp-blue: var(--wms-brand-primary);
+  --gp-cyan: var(--wms-brand-secondary);
+  --gp-orange: var(--wms-brand-accent);
+  position: relative;
+  isolation: isolate;
+  padding-bottom: 1.5rem;
+}
+
+.gp-page::before,
+section.space-y-5:has(.gp-panel)::before,
+section.space-y-6:has(.gp-panel)::before {
+  position: absolute;
+  z-index: -1;
+  inset: -1rem;
+  content: "";
+  pointer-events: none;
+  opacity: .38;
+  background-image:
+    linear-gradient(var(--gp-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--gp-line) 1px, transparent 1px),
+    radial-gradient(circle at 12% 0%, color-mix(in oklab, var(--gp-blue) 11%, transparent), transparent 34%);
+  background-size: 32px 32px, 32px 32px, 100% 100%;
+  mask-image: linear-gradient(to bottom, black 0%, transparent 72%);
+}
+
+.gp-hero,
+section.space-y-5:has(.gp-panel) > header,
+section.space-y-6:has(.gp-panel) > header {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid color-mix(in oklab, var(--gp-blue) 22%, var(--wms-app-border));
+  border-radius: 1.5rem;
+  padding: 1.35rem 1.5rem 0;
+  background:
+    linear-gradient(120deg, color-mix(in oklab, var(--wms-app-panel) 94%, var(--gp-blue) 6%) 0%, var(--wms-app-panel) 60%, color-mix(in oklab, var(--wms-app-panel) 92%, var(--gp-orange) 8%) 100%);
+  box-shadow: 0 18px 42px -32px color-mix(in oklab, var(--gp-blue) 60%, transparent);
+}
+
+.gp-hero::before,
+section.space-y-5:has(.gp-panel) > header::before,
+section.space-y-6:has(.gp-panel) > header::before {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  content: "";
+  background: var(--wms-brand-gradient);
+}
+
+.gp-hero::after,
+section.space-y-5:has(.gp-panel) > header::after,
+section.space-y-6:has(.gp-panel) > header::after {
+  position: absolute;
+  top: -5rem;
+  right: -3rem;
+  width: 16rem;
+  height: 16rem;
+  border: 1px solid color-mix(in oklab, var(--gp-blue) 18%, transparent);
+  border-radius: 999px;
+  content: "";
+  pointer-events: none;
+  box-shadow:
+    0 0 0 2.5rem color-mix(in oklab, var(--gp-blue) 4%, transparent),
+    0 0 0 5rem color-mix(in oklab, var(--gp-blue) 2%, transparent);
+}
+
+.gp-hero__main {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: .9rem;
+  padding-bottom: 1.15rem;
+}
+
+section.space-y-5:has(.gp-panel) > header:not(.gp-hero),
+section.space-y-6:has(.gp-panel) > header:not(.gp-hero) {
+  padding-bottom: 1.35rem;
+}
+
+section.space-y-5:has(.gp-panel) > header > *,
+section.space-y-6:has(.gp-panel) > header > * {
+  position: relative;
+  z-index: 1;
+}
+
+.gp-process-nav {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  gap: .35rem;
+  margin: 0 -.35rem;
+  padding: .7rem .35rem;
+  overflow-x: auto;
+  border-top: 1px solid var(--gp-line);
+  scrollbar-width: none;
+}
+
+.gp-process-nav::-webkit-scrollbar { display: none; }
+
+.gp-process-nav__item {
+  display: inline-flex;
+  min-height: 2.25rem;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: .45rem;
+  border: 1px solid transparent;
+  border-radius: .75rem;
+  padding: .45rem .75rem;
+  color: var(--gp-muted);
+  font-size: .73rem;
+  font-weight: 800;
+  letter-spacing: .01em;
+  transition: 160ms ease;
+}
+
+.gp-process-nav__item:hover {
+  border-color: var(--gp-line);
+  color: var(--gp-ink);
+  background: color-mix(in oklab, var(--wms-app-panel-strong) 78%, transparent);
+}
+
+.gp-process-nav__item.is-active {
+  border-color: color-mix(in oklab, var(--gp-blue) 34%, transparent);
+  color: var(--gp-blue);
+  background: color-mix(in oklab, var(--gp-blue) 12%, transparent);
+  box-shadow: inset 0 -2px 0 var(--gp-blue);
+}
+
+.gp-process-nav__code {
+  display: grid;
+  width: 1.45rem;
+  height: 1.45rem;
+  place-items: center;
+  border-radius: .45rem;
+  color: var(--wms-brand-on-primary);
+  background: var(--gp-blue);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: .57rem;
+}
+
+.gp-panel {
+  border-color: color-mix(in oklab, var(--wms-app-border) 88%, var(--gp-blue) 12%);
+  box-shadow:
+    0 16px 32px -28px color-mix(in oklab, var(--gp-blue) 42%, transparent),
+    inset 0 1px 0 color-mix(in oklab, white 36%, transparent);
+}
+
+a.gp-panel.group {
+  position: relative;
+  overflow: hidden;
+}
+
+a.gp-panel.group::after {
+  position: absolute;
+  inset: auto 0 0;
+  height: 3px;
+  content: "";
+  transform: scaleX(0);
+  transform-origin: left;
+  background: var(--wms-brand-gradient);
+  transition: transform 180ms ease;
+}
+
+a.gp-panel.group:hover::after { transform: scaleX(1); }
+
+.gp-metric {
+  position: relative;
+  overflow: hidden;
+  min-height: 8rem;
+  border-color: color-mix(in oklab, var(--wms-app-border) 82%, var(--gp-blue) 18%);
+  background:
+    linear-gradient(145deg, var(--wms-app-panel) 0%, color-mix(in oklab, var(--wms-app-panel) 91%, var(--gp-blue) 9%) 100%);
+}
+
+.gp-metric::after {
+  position: absolute;
+  inset: auto 0 0;
+  height: 3px;
+  content: "";
+  opacity: .8;
+  background: linear-gradient(90deg, var(--gp-blue), var(--gp-cyan), transparent 80%);
+}
+
+.gp-metric__icon {
+  display: grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  place-items: center;
+  border: 1px solid color-mix(in oklab, var(--gp-blue) 22%, transparent);
+  border-radius: .75rem;
+  background: color-mix(in oklab, var(--gp-blue) 10%, transparent);
+}
+
+.gp-primary-button,
+.gp-secondary-button {
+  transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
+}
+
+.gp-primary-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 22px -14px var(--gp-blue);
+}
+
+.gp-secondary-button:hover:not(:disabled) { transform: translateY(-1px); }
+
+.gp-page table thead,
+.gp-panel table thead {
+  color: var(--gp-muted);
+  background: color-mix(in oklab, var(--wms-app-panel-muted) 92%, var(--gp-blue) 8%);
+}
+
+.gp-page table tbody tr,
+.gp-panel table tbody tr { transition: background 120ms ease; }
+.gp-page table tbody tr:hover,
+.gp-panel table tbody tr:hover { background: color-mix(in oklab, var(--gp-blue) 5%, transparent); }
+
+.gp-page--gantt .gp-timeline {
+  border-color: color-mix(in oklab, var(--gp-blue) 20%, var(--wms-app-border));
+  background:
+    linear-gradient(90deg, transparent 0 49.8%, color-mix(in oklab, var(--gp-blue) 6%, transparent) 50% 50.2%, transparent 50.2%),
+    var(--wms-app-panel);
+}
+
+.gp-page--gantt .gp-panel {
+  border-top: 3px solid color-mix(in oklab, var(--gp-blue) 72%, transparent);
+}
+
+.gp-page--gantt .gp-panel > div > .grid > :first-child {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  border-right: 1px solid var(--gp-line);
+  background: color-mix(in oklab, var(--wms-app-panel) 94%, var(--gp-blue) 6%);
+  box-shadow: 12px 0 22px -22px color-mix(in oklab, var(--gp-blue) 70%, transparent);
+}
+
+.gp-page--gantt .gp-panel > div > .grid:first-child > :first-child { z-index: 12; }
+
+.gp-page--gantt [title] {
+  border: 1px solid rgb(255 255 255 / 28%);
+  box-shadow: 0 5px 12px -8px rgb(15 23 42 / 75%);
+}
+
+.gp-page--live {
+  --wms-app-text: #f8fafc;
+  --wms-app-text-muted: #94a3b8;
+  --wms-app-border: #263b53;
+  --wms-app-panel: #081626;
+  --wms-app-panel-muted: #0d1d31;
+  --wms-app-panel-strong: #10243b;
+  --wms-app-surface: #0d2035;
+  margin: -.35rem;
+  border: 1px solid #1e3048;
+  border-radius: 1.6rem;
+  padding: 1.15rem;
+  color: #f8fafc;
+  background:
+    radial-gradient(circle at 10% 0%, rgb(14 165 233 / 16%), transparent 30%),
+    radial-gradient(circle at 92% 8%, rgb(249 115 22 / 10%), transparent 24%),
+    #06111f;
+  box-shadow: 0 28px 64px -38px rgb(2 6 23 / 92%);
+}
+
+.gp-page--live::before,
+.gp-page--live section.space-y-5:has(.gp-panel)::before,
+.gp-page--live section.space-y-6:has(.gp-panel)::before { display: none; }
+
+.gp-page--live .gp-panel,
+.gp-page--live .gp-metric {
+  border-color: rgb(71 85 105 / 42%);
+  color: #f8fafc;
+  background: rgb(8 22 38 / 92%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 4%);
+}
+
+.gp-page--live .gp-hero,
+.gp-page--live section.space-y-5:has(.gp-panel) > header {
+  border-color: rgb(56 189 248 / 22%);
+  background: linear-gradient(120deg, rgb(9 28 48 / 96%), rgb(7 18 32 / 96%));
+}
+
+.gp-page--live .gp-hero p,
+.gp-page--live section.space-y-5:has(.gp-panel) > header p,
+.gp-page--live .gp-process-nav__item { color: #94a3b8; }
+.gp-page--live .gp-process-nav__item:hover { color: #f8fafc; background: rgb(30 41 59 / 66%); }
+.gp-page--live .gp-process-nav__item.is-active { color: #67e8f9; background: rgb(8 145 178 / 18%); }
+.gp-page--live table thead { color: #94a3b8; background: rgb(15 31 50 / 96%); }
+.gp-page--live table tbody tr:hover { background: rgb(14 165 233 / 6%); }
+
+.gp-page--live article.gp-panel:not(.gp-metric) {
+  border-left: 3px solid color-mix(in oklab, var(--gp-blue) 72%, #67e8f9);
+}
+
+.gp-page--live article.gp-panel:not(.gp-metric):has(.text-red-500) {
+  border-left-color: #ef4444;
+}
+
+.gp-station-accent {
+  position: relative;
+}
+
+.gp-station-accent::before {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  border-radius: 0 4px 4px 0;
+  content: "";
+  background: var(--gp-blue);
+}
+
+@media (max-width: 760px) {
+  .gp-page::before,
+  section.space-y-5:has(.gp-panel)::before,
+  section.space-y-6:has(.gp-panel)::before { inset: -.5rem; }
+  .gp-hero,
+  section.space-y-5:has(.gp-panel) > header,
+  section.space-y-6:has(.gp-panel) > header { border-radius: 1.1rem; padding: 1.1rem 1rem 0; }
+  .gp-hero::after { opacity: .45; }
+  .gp-process-nav { margin-inline: -.1rem; }
+  .gp-process-nav__item { padding-inline: .6rem; }
+  .gp-page--live { margin: -.65rem; border-radius: 1.15rem; padding: .75rem; }
+}

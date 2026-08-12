@@ -1,0 +1,4 @@
+{
+  "hub": { "eyebrow": "Producción y calidad / Producción de generadores", "title": "Centro de producción de generadores", "description": "Combine los flujos de estator, rotor y soporte con el montaje final en un solo plan.", "projects": { "title": "Proyectos de generadores", "text": "Gestione proyectos, entregas y alcance SA/RA/FA." }, "gantt": { "title": "Plan de producción y Gantt", "text": "Supervise la capacidad de estaciones y la ruta crítica." }, "definitions": { "title": "Definiciones SA / RA / FA", "text": "Revise estaciones, rutas, turnos, recursos y reglas." } },
+  "overview": { "projects": "Total de proyectos", "planned": "Planificados", "active": "Producción activa", "delayed": "Operaciones retrasadas" }
+}

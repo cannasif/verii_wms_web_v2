@@ -51,6 +51,7 @@ export const loadWarehouseTransferOperationPage = () => import('@/features/wareh
 export const loadProductionTransferPages = () => import('@/features/production-transfer/ProductionTransferPages');
 export const loadSubcontractingTransferPages = () => import('@/features/subcontracting-transfer/SubcontractingTransferPages');
 export const loadProductionPages = () => import('@/features/production/ProductionPages');
+export const loadGeneratorProductionPages = () => import('@/features/generator-production/GeneratorProductionPages');
 export const loadProcurementPage = () => import('@/features/procurement/ProcurementPage');
 export const loadSupplierQuoteEntryPage = () => import('@/features/procurement/SupplierQuoteEntryPage');
 export const loadSupplierQuotePortalPage = () => import('@/features/procurement/SupplierQuotePortalPage');
@@ -120,6 +121,7 @@ const routePreloaders: Array<[prefix: string, load: () => Promise<unknown>]> = [
   ['/warehouse/transfers/list', loadWarehouseTransferListPage],
   ['/warehouse/transfers/new', loadWarehouseTransferDraftPage],
   ['/warehouse/transfers', loadWarehouseTransferHubPage],
+  ['/warehouse/production/generator', loadGeneratorProductionPages],
   ['/warehouse/production', loadProductionPages],
   ['/warehouse/production-transfers', loadProductionTransferPages],
   ['/warehouse/subcontracting-transfers', loadSubcontractingTransferPages],

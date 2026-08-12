@@ -1,0 +1,4 @@
+{
+  "hub": { "eyebrow": "Produktion & Qualität / Generatorfertigung", "title": "Generatorfertigungszentrum", "description": "Stator-, Rotor- und Trägerabläufe mit der Endmontage in einem Lieferplan verbinden.", "projects": { "title": "Generatorprojekte", "text": "Projekte, Liefertermine und SA/RA/FA-Umfang verwalten." }, "gantt": { "title": "Produktionsplan & Gantt", "text": "Kapazitätsplan und kritischen Pfad überwachen." }, "definitions": { "title": "SA / RA / FA Definitionen", "text": "Stationen, Routen, Schichten, Ressourcen und Regeln prüfen." } },
+  "overview": { "projects": "Projekte gesamt", "planned": "Geplant", "active": "Aktive Produktion", "delayed": "Verspätete Vorgänge" }
+}

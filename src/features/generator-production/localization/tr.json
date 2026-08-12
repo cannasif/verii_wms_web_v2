@@ -1,0 +1,11 @@
+{
+  "hub": {
+    "eyebrow": "Üretim ve Kalite / Jeneratör Üretim",
+    "title": "Jeneratör Üretim Merkezi",
+    "description": "Stator, rotor ve taşıyıcı kol akışlarını final montajla tek teslim planında birleştirin.",
+    "projects": { "title": "Jeneratör Projeleri", "text": "Projeleri, teslim tarihlerini ve SA/RA/FA bileşen kapsamını yönetin." },
+    "gantt": { "title": "Üretim Planı ve Gantt", "text": "İstasyon bazlı sonlu kapasite planını ve kritik yolu izleyin." },
+    "definitions": { "title": "SA / RA / FA Tanımları", "text": "İstasyon, rota, vardiya, kaynak ve planlama kurallarını inceleyin." }
+  },
+  "overview": { "projects": "Toplam proje", "planned": "Planlanan", "active": "Aktif üretim", "delayed": "Geciken operasyon" }
+}
