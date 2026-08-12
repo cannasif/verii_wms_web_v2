@@ -1824,6 +1824,7 @@ function LineCard({
   // Serili/LotAndSerial: tüm seriler girilip planlanan miktar tamamlanınca, o serilerin
   // gerçekte bulunduğu rafı (hepsi aynı raftaysa) kaynak rafına otomatik yazar.
   useEffect(() => {
+    if (variant === "production") return;
     if (line.trackingType !== "Serial" && line.trackingType !== "LotAndSerial") return;
     const stockId = line.stockId;
     if (!stockId || !sourceId || line.sourceLocationId) return;
@@ -1858,10 +1859,11 @@ function LineCard({
         );
     }, 700);
     return () => clearTimeout(timer);
-  }, [branchCode, index, line.localId, line.quantity, line.sourceLocationId, line.stockId, line.stockCode, line.trackingType, line.trackings, line.yapCodeId, sourceId]);
+  }, [branchCode, index, line.localId, line.quantity, line.sourceLocationId, line.stockId, line.stockCode, line.trackingType, line.trackings, line.yapCodeId, sourceId, variant]);
 
   // Takipsiz (None) stoklar: stok+depo tek bir rafta bakiye buluyorsa kaynak rafına otomatik yazar.
   useEffect(() => {
+    if (variant === "production") return;
     if (line.trackingType !== "None") return;
     if (!line.stockId || !sourceId || line.sourceLocationId) return;
     const key = `${sourceId}|${line.stockId}|${line.yapCodeId ?? ""}`;
@@ -1874,7 +1876,7 @@ function LineCard({
         applySourceLocation(locations[0].locationId, locations[0].locationCode, locations[0].locationName);
       })
       .catch((error: Error) => toast.error(message(error, "Stok raf bilgisi sorgulanamadı.")));
-  }, [branchCode, excludeSourceLocationIds, line.localId, line.sourceLocationId, line.stockId, line.stockCode, line.trackingType, line.yapCodeId, sourceId]);
+  }, [branchCode, excludeSourceLocationIds, line.localId, line.sourceLocationId, line.stockId, line.stockCode, line.trackingType, line.yapCodeId, sourceId, variant]);
 
   return (
     <div
@@ -2107,6 +2109,7 @@ function LineCard({
           </>
         )}
       </div>
+      {variant !== "production" && (
       <div
         data-wms-error-target="serial"
         data-wms-error-keys="seri|serial|serisi icin|kaynak rafi otomatik|farkli rafta bulundu"
@@ -2125,6 +2128,7 @@ function LineCard({
         compact
       />
       </div>
+      )}
       </div>
     </div>
   );

@@ -1214,7 +1214,7 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
           <div className="min-w-0">
             <p className="text-xs font-bold uppercase tracking-[.16em] text-[var(--wms-app-text-muted)]">Reçete / iş emri</p>
             <div className="mt-1 flex flex-wrap items-center gap-3">
-              <h2 className="text-xl font-black">{table.externalReferenceNo || execution.documentNo}</h2>
+              <h2 className="text-xl font-black">{table.externalReferenceNo?.trim() || execution.documentNo}</h2>
               <PickingRowTabs value={tab} onChange={setTab} />
             </div>
             <p className="mt-1 text-sm text-[var(--wms-app-text-muted)]">
