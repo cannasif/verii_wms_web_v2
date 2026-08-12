@@ -245,7 +245,22 @@ export function LocationDefinitionsPage() {
                 <section><h3 className="mb-3 flex items-center gap-2 font-semibold"><MapPin className="size-4 text-[var(--wms-brand-primary)]"/>{t('form.basicInformation')}</h3><div className="grid gap-4 md:grid-cols-3"><Field label={t('form.warehouse')} required><PagedAppDropdown<WarehouseOption> value={form.warehouseId} onValueChange={(value) => void changeWarehouse(value)} queryKey="location-definition-warehouses" fetchPage={locationsApi.getWarehousesPaged} toOption={(item) => ({ value: String(item.id), label: `${item.warehouseCode} - ${item.warehouseName}` })} selectedOption={warehouses.filter((item) => String(item.id) === form.warehouseId).map((item) => ({ value: String(item.id), label: `${item.warehouseCode} - ${item.warehouseName}` }))[0]} placeholder={t('form.warehousePlaceholder')} ariaLabel={t('form.warehouse')} portalContainer={null} /></Field><Field label={t('form.locationType')} required><AppDropdown value={form.locationType} onValueChange={(value) => { update('locationType', value); if (value === 'Zone') update('parentLocationId', ''); }} options={locationTypes.map(([value, label]) => ({ value, label }))} ariaLabel={t('form.locationType')} portalContainer={null} /></Field><Field label={t('form.parentLocation')}><PagedAppDropdown<LocationLookupRow> value={form.parentLocationId} onValueChange={(value) => update('parentLocationId', value)} queryKey={['location-definition-parents', form.warehouseId]} fetchPage={(request) => locationsApi.getLocationsPaged(request, Number(form.warehouseId))} dependencies={[form.warehouseId]} enabled={Boolean(form.warehouseId)} toOption={(item) => ({ value: String(item.id), label: `${item.code} - ${item.name}`, disabled: item.id === form.id })} staticOptions={[{ value: '', label: t('form.rootLocation') }]} selectedOption={parents.filter((item) => String(item.id) === form.parentLocationId).map((item) => ({ value: String(item.id), label: `${item.code} - ${item.name}` }))[0]} placeholder={t('form.rootLocation')} ariaLabel={t('form.parentLocation')} portalContainer={null} /></Field><Field label={t('form.code')} required hint={t('form.codeHint')}><AppInput autoFocus value={form.code} maxLength={50} onChange={(e) => update('code', e.target.value.toUpperCase())} placeholder="A01/R01-G01"/></Field><Field label={t('form.name')} required><AppInput value={form.name} maxLength={150} onChange={(e) => update('name', e.target.value)}/></Field><Field label={t('form.zoneCode')}><AppInput value={form.zoneCode} maxLength={50} onChange={(e) => update('zoneCode', e.target.value)}/></Field></div></section>
                 <section><h3 className="mb-3 flex items-center gap-2 font-semibold"><Boxes className="size-4 text-[var(--wms-brand-primary)]"/>{t('form.addressAndBarcode')}</h3><div className="grid gap-4 md:grid-cols-3"><Field label={t('form.aisleNo')}><NumberInput value={form.aisleNo} set={(v) => update('aisleNo', v)}/></Field><Field label={t('form.rackNo')}><NumberInput value={form.rackNo} set={(v) => update('rackNo', v)}/></Field><Field label={t('form.levelNo')}><NumberInput value={form.levelNo} set={(v) => update('levelNo', v)}/></Field><Field label={t('form.binNo')}><NumberInput value={form.binNo} set={(v) => update('binNo', v)}/></Field><Field label={t('form.barcodeMode')}><AppDropdown value={form.barcodeEntryMode} onValueChange={(value) => update('barcodeEntryMode', value)} options={[{ value: 'Auto', label: t('barcodeModes.Auto') }, { value: 'Manual', label: t('barcodeModes.Manual') }]} ariaLabel={t('form.barcodeMode')} portalContainer={null} /></Field><Field label={t('form.barcode')} required={form.barcodeEntryMode === 'Manual'}><AppInput disabled={form.barcodeEntryMode === 'Auto'} value={form.barcode} maxLength={100} onChange={(e) => update('barcode', e.target.value)} placeholder={form.barcodeEntryMode === 'Auto' ? t('form.barcodeAutoPlaceholder') : ''}/></Field></div></section>
                 <section><h3 className="mb-3 font-semibold">{t('form.capacity')}</h3><div className="grid gap-4 md:grid-cols-4"><Field label={t('form.quantity')}><DecimalInput value={form.capacityQuantity} set={(v) => update('capacityQuantity', v)}/></Field><Field label={t('form.weight')}><DecimalInput value={form.capacityWeight} set={(v) => update('capacityWeight', v)}/></Field><Field label={t('form.volume')}><DecimalInput value={form.capacityVolume} set={(v) => update('capacityVolume', v)}/></Field><Field label={t('form.unit')}><AppInput value={form.capacityUnit} maxLength={20} onChange={(e) => update('capacityUnit', e.target.value)} placeholder="ADET / KG / M3"/></Field></div></section>
-                <section><h3 className="mb-3 font-semibold">{t('form.usageRules')}</h3><div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4"><Check label={t('rules.mixedStock')} checked={form.allowMixedStock} set={(v) => update('allowMixedStock', v)}/><Check label={t('rules.mixedLot')} checked={form.allowMixedLot} set={(v) => update('allowMixedLot', v)}/><Check label={t('rules.mixedStatus')} checked={form.allowMixedStatus} set={(v) => update('allowMixedStatus', v)}/><Check label={t('rules.cycleCount')} checked={form.allowCycleCount} set={(v) => update('allowCycleCount', v)}/><Check label={t('rules.pickable')} checked={form.isPickable} set={(v) => update('isPickable', v)}/><Check label={t('rules.putaway')} checked={form.isPutaway} set={(v) => update('isPutaway', v)}/><Check label={t('rules.quarantine')} checked={form.isQuarantine} set={(v) => { update('isQuarantine', v); if (v) update('isPickable', false); }}/><Check label={t('rules.active')} checked={form.isActive} set={(v) => update('isActive', v)}/></div></section>
+                <section>
+                  <h3 className="font-semibold">{t('form.usageRules')}</h3>
+                  <p className="mb-3 mt-1 max-w-4xl text-xs leading-5 text-slate-500 dark:text-slate-400">
+                    {t('form.usageRulesDescription')}
+                  </p>
+                  <div className="grid gap-3 lg:grid-cols-2">
+                    <RuleToggle helpKey="mixedStock" label={t('rules.mixedStock')} checked={form.allowMixedStock} set={(v) => update('allowMixedStock', v)}/>
+                    <RuleToggle helpKey="mixedLot" label={t('rules.mixedLot')} checked={form.allowMixedLot} set={(v) => update('allowMixedLot', v)}/>
+                    <RuleToggle helpKey="mixedStatus" label={t('rules.mixedStatus')} checked={form.allowMixedStatus} set={(v) => update('allowMixedStatus', v)}/>
+                    <RuleToggle helpKey="cycleCount" label={t('rules.cycleCount')} checked={form.allowCycleCount} set={(v) => update('allowCycleCount', v)}/>
+                    <RuleToggle helpKey="pickable" label={t('rules.pickable')} checked={form.isPickable} set={(v) => update('isPickable', v)}/>
+                    <RuleToggle helpKey="putaway" label={t('rules.putaway')} checked={form.isPutaway} set={(v) => update('isPutaway', v)}/>
+                    <RuleToggle helpKey="quarantine" label={t('rules.quarantine')} checked={form.isQuarantine} set={(v) => { update('isQuarantine', v); if (v) update('isPickable', false); }}/>
+                    <RuleToggle helpKey="active" label={t('rules.active')} checked={form.isActive} set={(v) => update('isActive', v)}/>
+                  </div>
+                </section>
                 <Field label={t('form.descriptionLabel')}><textarea value={form.description} maxLength={500} rows={3} onChange={(e) => update('description', e.target.value)} className="input wms-ops-field min-h-[5rem] resize-y"/></Field>
               </OpsDialogBody>
               <OpsDialogFooter>
@@ -287,11 +302,55 @@ function NumberInput({ value, set }: { value: string; set: (value: string) => vo
 function DecimalInput({ value, set }: { value: string; set: (value: string) => void }) {
   return <AppInput type="number" min={0} step="0.000001" value={value} onChange={(e) => set(e.target.value)} />;
 }
-function Check({ label, checked, set }: { label: string; checked: boolean; set: (value: boolean) => void }) {
+type RuleHelpKey = 'mixedStock' | 'mixedLot' | 'mixedStatus' | 'cycleCount' | 'pickable' | 'putaway' | 'quarantine' | 'active';
+
+function RuleToggle({
+  helpKey,
+  label,
+  checked,
+  set,
+}: {
+  helpKey: RuleHelpKey;
+  label: string;
+  checked: boolean;
+  set: (value: boolean) => void;
+}) {
+  const { t } = useModuleTranslation('locations');
+
   return (
-    <label className="flex cursor-pointer items-center justify-between border border-[var(--wms-ops-field-border)] bg-[var(--wms-ops-field-bg)] p-3 text-sm">
-      <span className="wms-ops-prelabel-form-label !mb-0">{label}</span>
-      <input type="checkbox" checked={checked} onChange={(e) => set(e.target.checked)} className="size-4" />
-    </label>
+    <article className={`rounded-xl border p-3 transition ${checked ? 'border-cyan-400/60 bg-cyan-500/5' : 'border-[var(--wms-ops-field-border)] bg-[var(--wms-ops-field-bg)]'}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-sm font-bold text-[var(--wms-app-text)]">{label}</p>
+          <p className={`mt-0.5 text-[0.68rem] font-black uppercase tracking-[0.12em] ${checked ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500'}`}>
+            {checked ? t('rulesHelp.enabled') : t('rulesHelp.disabled')}
+          </p>
+        </div>
+        <label className="relative inline-flex cursor-pointer items-center" aria-label={`${label}: ${checked ? t('rulesHelp.enabled') : t('rulesHelp.disabled')}`}>
+          <input type="checkbox" role="switch" checked={checked} onChange={(event) => set(event.target.checked)} className="peer sr-only" />
+          <span className="h-6 w-11 rounded-full bg-slate-300 transition peer-checked:bg-cyan-600 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-cyan-500 dark:bg-slate-700" />
+          <span className="absolute left-1 size-4 rounded-full bg-white shadow transition-transform peer-checked:translate-x-5" />
+        </label>
+      </div>
+      <div className="mt-3 grid gap-2 sm:grid-cols-2">
+        <RuleState active={checked} title={t('rulesHelp.whenEnabled')} text={t(`rulesHelp.${helpKey}.enabled`)} />
+        <RuleState active={!checked} title={t('rulesHelp.whenDisabled')} text={t(`rulesHelp.${helpKey}.disabled`)} />
+      </div>
+      <p className="mt-2 rounded-lg bg-black/[0.035] px-2.5 py-2 text-xs leading-5 text-slate-600 dark:bg-white/[0.04] dark:text-slate-300">
+        <strong>{t('rulesHelp.affects')}:</strong> {t(`rulesHelp.${helpKey}.affects`)}
+      </p>
+    </article>
+  );
+}
+
+function RuleState({ active, title, text }: { active: boolean; title: string; text: string }) {
+  return (
+    <div className={`rounded-lg border px-2.5 py-2 text-xs leading-5 ${active ? 'border-cyan-400/50 bg-cyan-500/10 text-[var(--wms-app-text)]' : 'border-[var(--wms-app-border)] text-slate-500'}`}>
+      <div className="flex items-center justify-between gap-2">
+        <strong>{title}</strong>
+        {active ? <span className="rounded-full bg-cyan-600 px-1.5 py-0.5 text-[0.6rem] font-black uppercase text-white">✓</span> : null}
+      </div>
+      <p className="mt-1">{text}</p>
+    </div>
   );
 }

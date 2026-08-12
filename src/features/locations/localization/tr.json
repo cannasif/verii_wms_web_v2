@@ -71,7 +71,8 @@
     "basicInformation": "Temel Bilgiler",
     "addressAndBarcode": "Adres ve Barkod",
     "capacity": "Kapasite",
-    "usageRules": "Kullanım Kuralları",
+    "usageRules": "Rafın operasyon kuralları",
+    "usageRulesDescription": "Bu seçimler yalnızca bilgi amaçlı değildir; rafın yerleştirme, toplama, kalite, karantina ve sayım işlemlerinde nasıl kullanılacağını belirler. Her kartta Açık ve Kapalı sonucunu karşılaştırarak seçim yapın.",
     "warehouse": "Depo",
     "warehousePlaceholder": "Depo seçin",
     "locationType": "Lokasyon tipi",
@@ -99,14 +100,61 @@
     "close": "Kapat"
   },
   "rules": {
-    "mixedStock": "Karma stok",
-    "mixedLot": "Karma lot",
-    "mixedStatus": "Karma durum",
-    "cycleCount": "Sayım yapılabilir",
-    "pickable": "Toplanabilir",
-    "putaway": "Yerleştirilebilir",
-    "quarantine": "Karantina",
-    "active": "Aktif"
+    "mixedStock": "Farklı stok kodları aynı rafta bulunabilir mi?",
+    "mixedLot": "Aynı stoğun farklı lotları aynı rafta bulunabilir mi?",
+    "mixedStatus": "Farklı stok durumları aynı rafta bulunabilir mi?",
+    "cycleCount": "Bu raf sayım planına alınabilir mi?",
+    "pickable": "Bu raftan ürün toplanabilir mi?",
+    "putaway": "Bu rafa ürün yerleştirilebilir mi?",
+    "quarantine": "Bu raf karantina / ret rafı mı?",
+    "active": "Bu raf yeni işlemlerde kullanılabilir mi?"
+  },
+  "rulesHelp": {
+    "enabled": "Açık",
+    "disabled": "Kapalı",
+    "whenEnabled": "Açık yaparsanız",
+    "whenDisabled": "Kapalı bırakırsanız",
+    "affects": "Etkilediği işlemler",
+    "mixedStock": {
+      "enabled": "Bu rafta aynı anda birden fazla farklı stok kodu tutulabilir.",
+      "disabled": "Raf tek stok kodu düzeninde kullanılır; başka stok bulunan raf yeni stok için önerilmez.",
+      "affects": "Mal kabul sonrası raf önerisi, yerleştirme ve raf düzeni."
+    },
+    "mixedLot": {
+      "enabled": "Aynı stok kodunun farklı lotları bu rafta birlikte tutulabilir.",
+      "disabled": "Raf tek lot düzeni için işaretlenir; farklı lotlar ayrı raflarda tutulmalıdır.",
+      "affects": "Lot izlenebilirliği, yerleştirme düzeni ve sayım kontrolü."
+    },
+    "mixedStatus": {
+      "enabled": "Kullanılabilir, kalite bekliyor veya karantina gibi farklı stok durumları bu rafta birlikte bulunabilir.",
+      "disabled": "Raf tek stok durumu için kullanılmalıdır; kalite bekleyen ve kullanılabilir stok ayrıştırılır.",
+      "affects": "Kalite, karantina, kullanılabilir bakiye ve raf düzeni."
+    },
+    "cycleCount": {
+      "enabled": "Raf sayım planlarına eklenebilir ve bu raf için sayım görevi açılabilir.",
+      "disabled": "Raf yeni sayım emri ve sayım rafı seçim listesinde gösterilmez.",
+      "affects": "Periyodik sayım, plansız sayım ve sayım emri oluşturma."
+    },
+    "pickable": {
+      "enabled": "Sevk, transfer ve üretim toplama emirleri bu raftaki kullanılabilir stoktan ürün alabilir.",
+      "disabled": "Raf toplama kaynağı olarak önerilmez veya seçilemez; kalite bekleme ve karantina raflarında kapalı olmalıdır.",
+      "affects": "Toplama, sevk, depolar arası transfer ve üretime transfer."
+    },
+    "putaway": {
+      "enabled": "Mal kabul, transfer veya kalite kabulü sonrasında bu raf hedef olarak seçilebilir.",
+      "disabled": "Raf normal yerleştirme hedefi olarak kullanılmaz; kabul, hazırlık veya sanal alanlarda kapalı tutulabilir.",
+      "affects": "Raflama, mal kabul sonrası yerleştirme, transfer ve kalite kabulü."
+    },
+    "quarantine": {
+      "enabled": "Raf kalite karantina ve ret kararlarında hedef olarak kullanılabilir. Açıldığında toplama otomatik olarak kapatılır.",
+      "disabled": "Raf normal operasyon rafıdır ve kalite karantina / ret hedefi olarak seçilemez.",
+      "affects": "Kalite inceleme, karantina, ret ve stok statüsü hareketleri."
+    },
+    "active": {
+      "enabled": "Raf yeni operasyonlarda, aramalarda ve uygun seçim listelerinde kullanılabilir.",
+      "disabled": "Raf yeni işlemlerde kullanılamaz; mevcut bakiye ve geçmiş hareket kayıtları silinmez.",
+      "affects": "Tüm depo işlemleri, raf aramaları ve hedef / kaynak seçimleri."
+    }
   },
   "types": {
     "Zone": "Bölge",

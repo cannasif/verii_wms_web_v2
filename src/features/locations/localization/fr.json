@@ -71,7 +71,8 @@
     "basicInformation": "Informations de base",
     "addressAndBarcode": "Adresse et code-barres",
     "capacity": "Capacité",
-    "usageRules": "Règles d'utilisation",
+    "usageRules": "Règles opérationnelles de l'emplacement",
+    "usageRulesDescription": "Ces choix sont des règles opérationnelles, pas de simples informations. Ils déterminent l'utilisation de l'emplacement pour le rangement, le prélèvement, la qualité, la quarantaine et l'inventaire. Comparez les effets Activé et Désactivé avant d'enregistrer.",
     "warehouse": "Entrepôt",
     "warehousePlaceholder": "Sélectionnez un entrepôt",
     "locationType": "Type d'emplacement",
@@ -99,14 +100,29 @@
     "close": "Fermer"
   },
   "rules": {
-    "mixedStock": "Stock mixte",
-    "mixedLot": "Lot mixte",
-    "mixedStatus": "Statut mixte",
-    "cycleCount": "Nombre de cycles activé",
-    "pickable": "Sélectionnable",
-    "putaway": "Rangement activé",
-    "quarantine": "Quarantaine",
-    "active": "Actif"
+    "mixedStock": "Des codes article différents peuvent-ils partager cet emplacement ?",
+    "mixedLot": "Des lots différents du même article peuvent-ils partager cet emplacement ?",
+    "mixedStatus": "Des statuts de stock différents peuvent-ils partager cet emplacement ?",
+    "cycleCount": "Cet emplacement peut-il être inclus dans un plan d'inventaire ?",
+    "pickable": "Les produits peuvent-ils être prélevés depuis cet emplacement ?",
+    "putaway": "Les produits peuvent-ils être rangés dans cet emplacement ?",
+    "quarantine": "S'agit-il d'un emplacement de quarantaine / rejet ?",
+    "active": "Cet emplacement peut-il être utilisé dans de nouvelles opérations ?"
+  },
+  "rulesHelp": {
+    "enabled": "Activé",
+    "disabled": "Désactivé",
+    "whenEnabled": "Si activé",
+    "whenDisabled": "Si désactivé",
+    "affects": "Opérations concernées",
+    "mixedStock": { "enabled": "Plusieurs codes article différents peuvent être stockés simultanément dans cet emplacement.", "disabled": "L'emplacement suit une règle mono-article et n'est pas proposé à un autre article lorsqu'il est occupé.", "affects": "Suggestion après réception, rangement et organisation de l'emplacement." },
+    "mixedLot": { "enabled": "Différents lots du même article peuvent être stockés ensemble.", "disabled": "L'emplacement est réservé à un seul lot ; les autres lots doivent être séparés.", "affects": "Traçabilité des lots, organisation du rangement et contrôle d'inventaire." },
+    "mixedStatus": { "enabled": "Les stocks disponibles, en attente qualité ou en quarantaine peuvent coexister.", "disabled": "L'emplacement doit contenir un seul statut ; le stock bloqué est séparé du stock disponible.", "affects": "Qualité, quarantaine, stock disponible et organisation de l'emplacement." },
+    "cycleCount": { "enabled": "L'emplacement peut être ajouté aux plans et tâches d'inventaire.", "disabled": "L'emplacement est exclu des nouveaux ordres et sélecteurs d'inventaire.", "affects": "Inventaire tournant, inventaire ponctuel et création d'ordres." },
+    "pickable": { "enabled": "Les ordres d'expédition, de transfert et de production peuvent prélever le stock disponible ici.", "disabled": "L'emplacement n'est pas proposé comme source de prélèvement ; laissez-le désactivé pour la qualité et la quarantaine.", "affects": "Prélèvement, expédition, transfert entre dépôts et transfert production." },
+    "putaway": { "enabled": "L'emplacement peut être choisi comme cible après réception, transfert ou acceptation qualité.", "disabled": "L'emplacement n'est pas une cible de rangement normale ; réception, préparation ou zones virtuelles peuvent rester ainsi.", "affects": "Rangement, après-réception, transfert et acceptation qualité." },
+    "quarantine": { "enabled": "L'emplacement peut recevoir les décisions de quarantaine et de rejet. Le prélèvement est désactivé automatiquement.", "disabled": "L'emplacement est opérationnel normal et ne peut pas être choisi comme cible de quarantaine / rejet.", "affects": "Contrôle qualité, quarantaine, rejet et mouvements de statut." },
+    "active": { "enabled": "L'emplacement est disponible dans les nouvelles opérations, recherches et sélecteurs.", "disabled": "L'emplacement ne peut plus être utilisé ; les soldes et l'historique existants sont conservés.", "affects": "Toutes les opérations, recherches et sélections source / cible." }
   },
   "types": {
     "Zone": "Zone",

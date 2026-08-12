@@ -71,7 +71,8 @@
     "basicInformation": "Informazioni di base",
     "addressAndBarcode": "Indirizzo e codice a barre",
     "capacity": "Capacità",
-    "usageRules": "Regole di utilizzo",
+    "usageRules": "Regole operative della posizione",
+    "usageRulesDescription": "Queste scelte sono regole operative, non semplici informazioni. Determinano l'uso della posizione per stoccaggio, prelievo, qualità, quarantena e inventario. Confronta gli effetti Attivo e Disattivo prima di salvare.",
     "warehouse": "Magazzino",
     "warehousePlaceholder": "Seleziona magazzino",
     "locationType": "Tipo di posizione",
@@ -99,14 +100,25 @@
     "close": "Chiudi"
   },
   "rules": {
-    "mixedStock": "Azione mista",
-    "mixedLot": "Lotto misto",
-    "mixedStatus": "Stato misto",
-    "cycleCount": "Conteggio cicli abilitato",
-    "pickable": "Selezionabile",
-    "putaway": "Stoccaggio abilitato",
-    "quarantine": "Quarantena",
-    "active": "Attivo"
+    "mixedStock": "Codici articolo diversi possono condividere questa posizione?",
+    "mixedLot": "Lotti diversi dello stesso articolo possono condividere questa posizione?",
+    "mixedStatus": "Stati di inventario diversi possono condividere questa posizione?",
+    "cycleCount": "Questa posizione può essere inclusa in un piano di inventario?",
+    "pickable": "I prodotti possono essere prelevati da questa posizione?",
+    "putaway": "I prodotti possono essere stoccati in questa posizione?",
+    "quarantine": "È una posizione di quarantena / rifiuto?",
+    "active": "Questa posizione può essere usata in nuove operazioni?"
+  },
+  "rulesHelp": {
+    "enabled": "Attivo", "disabled": "Disattivo", "whenEnabled": "Se attivo", "whenDisabled": "Se disattivo", "affects": "Operazioni interessate",
+    "mixedStock": { "enabled": "Più codici articolo diversi possono essere conservati contemporaneamente.", "disabled": "La posizione segue la regola di un solo articolo e, se occupata, non viene proposta per un altro articolo.", "affects": "Suggerimento dopo il ricevimento, stoccaggio e organizzazione." },
+    "mixedLot": { "enabled": "Lotti diversi dello stesso articolo possono essere conservati insieme.", "disabled": "La posizione è destinata a un solo lotto; gli altri lotti devono essere separati.", "affects": "Tracciabilità lotti, organizzazione e controllo inventario." },
+    "mixedStatus": { "enabled": "Possono coesistere stati disponibile, attesa qualità o quarantena.", "disabled": "La posizione deve contenere un solo stato; lo stock bloccato è separato da quello disponibile.", "affects": "Qualità, quarantena, saldo disponibile e organizzazione." },
+    "cycleCount": { "enabled": "La posizione può essere aggiunta a piani e attività di inventario.", "disabled": "La posizione è esclusa da nuovi ordini e selettori di inventario.", "affects": "Inventario ciclico, conteggio ad hoc e creazione ordini." },
+    "pickable": { "enabled": "Gli ordini di spedizione, trasferimento e produzione possono prelevare stock disponibile da qui.", "disabled": "La posizione non è proposta come origine di prelievo; mantenerla disattiva per qualità e quarantena.", "affects": "Prelievo, spedizione, trasferimento e produzione." },
+    "putaway": { "enabled": "Può essere scelta come destinazione dopo ricevimento, trasferimento o accettazione qualità.", "disabled": "Non è una normale destinazione di stoccaggio; ricevimento, staging o aree virtuali possono restare disattivi.", "affects": "Stoccaggio, post-ricevimento, trasferimento e accettazione qualità." },
+    "quarantine": { "enabled": "Può essere destinazione di decisioni di quarantena e rifiuto. Il prelievo viene disattivato automaticamente.", "disabled": "È una posizione operativa normale e non può essere scelta per quarantena / rifiuto.", "affects": "Controllo qualità, quarantena, rifiuto e movimenti di stato." },
+    "active": { "enabled": "È disponibile in nuove operazioni, ricerche e selettori.", "disabled": "Non può essere usata in nuove operazioni; saldi e storico esistenti restano disponibili.", "affects": "Tutte le operazioni, ricerche e selezioni origine / destinazione." }
   },
   "types": {
     "Zone": "Zona",

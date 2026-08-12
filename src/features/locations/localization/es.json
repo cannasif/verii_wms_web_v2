@@ -71,7 +71,8 @@
     "basicInformation": "Información básica",
     "addressAndBarcode": "Dirección y código de barras",
     "capacity": "Capacidad",
-    "usageRules": "Reglas de uso",
+    "usageRules": "Reglas operativas de la ubicación",
+    "usageRulesDescription": "Estas opciones son reglas operativas, no simples datos informativos. Determinan cómo se usa la ubicación en almacenamiento, preparación, calidad, cuarentena e inventario. Compare los resultados Activado y Desactivado antes de guardar.",
     "warehouse": "Almacén",
     "warehousePlaceholder": "Seleccionar almacén",
     "locationType": "Tipo de ubicación",
@@ -99,14 +100,25 @@
     "close": "Cerrar"
   },
   "rules": {
-    "mixedStock": "Stock mixto",
-    "mixedLot": "Lote mixto",
-    "mixedStatus": "Estado mixto",
-    "cycleCount": "Conteo de ciclos habilitado",
-    "pickable": "Recogible",
-    "putaway": "Almacenamiento habilitado",
-    "quarantine": "cuarentena",
-    "active": "Activo"
+    "mixedStock": "¿Pueden compartir esta ubicación códigos de stock diferentes?",
+    "mixedLot": "¿Pueden compartir esta ubicación lotes diferentes del mismo stock?",
+    "mixedStatus": "¿Pueden compartir esta ubicación estados de inventario diferentes?",
+    "cycleCount": "¿Puede incluirse esta ubicación en un plan de inventario?",
+    "pickable": "¿Se pueden preparar productos desde esta ubicación?",
+    "putaway": "¿Se pueden almacenar productos en esta ubicación?",
+    "quarantine": "¿Es una ubicación de cuarentena / rechazo?",
+    "active": "¿Puede usarse esta ubicación en nuevas operaciones?"
+  },
+  "rulesHelp": {
+    "enabled": "Activado", "disabled": "Desactivado", "whenEnabled": "Si está activado", "whenDisabled": "Si está desactivado", "affects": "Operaciones afectadas",
+    "mixedStock": { "enabled": "Pueden almacenarse varios códigos de stock diferentes al mismo tiempo.", "disabled": "La ubicación sigue una regla de stock único y no se propone para otro stock cuando está ocupada.", "affects": "Sugerencia tras recepción, almacenamiento y organización de ubicaciones." },
+    "mixedLot": { "enabled": "Pueden almacenarse juntos distintos lotes del mismo stock.", "disabled": "La ubicación se marca para un solo lote; los demás lotes deben separarse.", "affects": "Trazabilidad de lotes, organización e inventario." },
+    "mixedStatus": { "enabled": "Pueden coexistir estados disponible, pendiente de calidad o cuarentena.", "disabled": "La ubicación debe contener un solo estado; el stock bloqueado se separa del disponible.", "affects": "Calidad, cuarentena, saldo disponible y organización." },
+    "cycleCount": { "enabled": "La ubicación puede añadirse a planes y tareas de inventario.", "disabled": "La ubicación se excluye de nuevas órdenes y selectores de inventario.", "affects": "Inventario cíclico, inventario puntual y creación de órdenes." },
+    "pickable": { "enabled": "Las órdenes de expedición, transferencia y producción pueden consumir stock disponible desde aquí.", "disabled": "La ubicación no se ofrece como origen de preparación; manténgala desactivada para calidad y cuarentena.", "affects": "Preparación, expedición, transferencia entre almacenes y producción." },
+    "putaway": { "enabled": "Puede seleccionarse como destino tras recepción, transferencia o aceptación de calidad.", "disabled": "No se usa como destino normal de almacenamiento; recepción, preparación o zonas virtuales pueden mantenerlo desactivado.", "affects": "Almacenamiento, posrecepción, transferencia y aceptación de calidad." },
+    "quarantine": { "enabled": "Puede ser destino de decisiones de cuarentena y rechazo. La preparación se desactiva automáticamente.", "disabled": "Es una ubicación operativa normal y no puede elegirse como destino de cuarentena / rechazo.", "affects": "Inspección de calidad, cuarentena, rechazo y movimientos de estado." },
+    "active": { "enabled": "Está disponible en nuevas operaciones, búsquedas y selectores.", "disabled": "No puede usarse en operaciones nuevas; se conservan saldos e historial existentes.", "affects": "Todas las operaciones, búsquedas y selecciones de origen / destino." }
   },
   "types": {
     "Zone": "Zona",

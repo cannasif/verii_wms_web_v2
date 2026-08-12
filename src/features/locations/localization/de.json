@@ -71,7 +71,8 @@
     "basicInformation": "Grundlegende Informationen",
     "addressAndBarcode": "Adresse und Barcode",
     "capacity": "Kapazität",
-    "usageRules": "Nutzungsregeln",
+    "usageRules": "Betriebsregeln des Lagerplatzes",
+    "usageRulesDescription": "Diese Auswahlen sind operative Regeln und keine reinen Informationen. Sie bestimmen die Nutzung des Lagerplatzes bei Einlagerung, Kommissionierung, Qualität, Quarantäne und Inventur. Vergleichen Sie vor dem Speichern die Folgen von Aktiv und Inaktiv.",
     "warehouse": "Lager",
     "warehousePlaceholder": "Lager auswählen",
     "locationType": "Standorttyp",
@@ -99,14 +100,29 @@
     "close": "Schließen"
   },
   "rules": {
-    "mixedStock": "Gemischte Brühe",
-    "mixedLot": "Gemischtes Los",
-    "mixedStatus": "Gemischter Status",
-    "cycleCount": "Zykluszählung aktiviert",
-    "pickable": "Auswählbar",
-    "putaway": "Einlagerung aktiviert",
-    "quarantine": "Quarantäne",
-    "active": "Aktiv"
+    "mixedStock": "Dürfen verschiedene Artikelcodes denselben Lagerplatz nutzen?",
+    "mixedLot": "Dürfen verschiedene Chargen desselben Artikels denselben Lagerplatz nutzen?",
+    "mixedStatus": "Dürfen verschiedene Bestandsstatus denselben Lagerplatz nutzen?",
+    "cycleCount": "Darf dieser Lagerplatz in einen Inventurplan aufgenommen werden?",
+    "pickable": "Dürfen Produkte von diesem Lagerplatz kommissioniert werden?",
+    "putaway": "Dürfen Produkte auf diesem Lagerplatz eingelagert werden?",
+    "quarantine": "Ist dies ein Quarantäne- / Sperrlagerplatz?",
+    "active": "Darf dieser Lagerplatz in neuen Vorgängen verwendet werden?"
+  },
+  "rulesHelp": {
+    "enabled": "Aktiv",
+    "disabled": "Inaktiv",
+    "whenEnabled": "Wenn aktiv",
+    "whenDisabled": "Wenn inaktiv",
+    "affects": "Betroffene Vorgänge",
+    "mixedStock": { "enabled": "Mehrere unterschiedliche Artikelcodes dürfen gleichzeitig auf diesem Lagerplatz liegen.", "disabled": "Der Lagerplatz folgt einer Ein-Artikel-Regel und wird bei Belegung nicht für einen anderen Artikel vorgeschlagen.", "affects": "Lagerplatzvorschlag nach Wareneingang, Einlagerung und Platzordnung." },
+    "mixedLot": { "enabled": "Verschiedene Chargen desselben Artikels dürfen gemeinsam gelagert werden.", "disabled": "Der Lagerplatz ist für eine Charge vorgesehen; andere Chargen sollen getrennt gelagert werden.", "affects": "Chargenrückverfolgung, Einlagerungsordnung und Inventurkontrolle." },
+    "mixedStatus": { "enabled": "Freier, qualitätsgesperrter und Quarantänebestand dürfen gemeinsam liegen.", "disabled": "Der Lagerplatz soll nur einen Bestandsstatus enthalten; gesperrter und freier Bestand werden getrennt.", "affects": "Qualität, Quarantäne, verfügbarer Bestand und Platzordnung." },
+    "cycleCount": { "enabled": "Der Lagerplatz kann Inventurplänen und Zählaufträgen hinzugefügt werden.", "disabled": "Der Lagerplatz wird aus neuen Zählaufträgen und Auswahllisten ausgeschlossen.", "affects": "Permanente Inventur, Ad-hoc-Zählung und Zählauftrag." },
+    "pickable": { "enabled": "Versand-, Transfer- und Produktionsaufträge dürfen verfügbaren Bestand von hier entnehmen.", "disabled": "Der Lagerplatz wird nicht als Entnahmequelle angeboten; für Qualitäts- und Quarantäneplätze inaktiv lassen.", "affects": "Kommissionierung, Versand, Lagertransfer und Produktionstransfer." },
+    "putaway": { "enabled": "Der Lagerplatz kann nach Wareneingang, Transfer oder Qualitätsfreigabe als Ziel gewählt werden.", "disabled": "Der Lagerplatz ist kein normales Einlagerungsziel; Wareneingangs-, Bereitstellungs- oder virtuelle Bereiche können so geführt werden.", "affects": "Einlagerung, Wareneingang, Transfer und Qualitätsfreigabe." },
+    "quarantine": { "enabled": "Der Lagerplatz kann Ziel von Quarantäne- und Sperrentscheidungen sein. Die Kommissionierung wird automatisch deaktiviert.", "disabled": "Der Lagerplatz ist ein normaler Betriebsplatz und kein Quarantäne- / Sperrziel.", "affects": "Qualitätsprüfung, Quarantäne, Ablehnung und Statusbewegungen." },
+    "active": { "enabled": "Der Lagerplatz steht in neuen Vorgängen, Suchen und Auswahllisten zur Verfügung.", "disabled": "Der Lagerplatz kann nicht neu verwendet werden; vorhandene Bestände und Bewegungen bleiben erhalten.", "affects": "Alle Lagervorgänge, Suchen sowie Quell- und Zielauswahl." }
   },
   "types": {
     "Zone": "Zone",

@@ -71,7 +71,8 @@
     "basicInformation": "Basic Information",
     "addressAndBarcode": "Address and Barcode",
     "capacity": "Capacity",
-    "usageRules": "Usage Rules",
+    "usageRules": "Location operation rules",
+    "usageRulesDescription": "These choices are operational controls, not informational flags. They determine how this location is used for putaway, picking, quality, quarantine and counting. Compare the Enabled and Disabled outcomes on every card before saving.",
     "warehouse": "Warehouse",
     "warehousePlaceholder": "Select warehouse",
     "locationType": "Location type",
@@ -99,14 +100,61 @@
     "close": "Close"
   },
   "rules": {
-    "mixedStock": "Mixed stock",
-    "mixedLot": "Mixed lot",
-    "mixedStatus": "Mixed status",
-    "cycleCount": "Cycle count enabled",
-    "pickable": "Pickable",
-    "putaway": "Putaway enabled",
-    "quarantine": "Quarantine",
-    "active": "Active"
+    "mixedStock": "Can different stock codes share this location?",
+    "mixedLot": "Can different lots of the same stock share this location?",
+    "mixedStatus": "Can different inventory statuses share this location?",
+    "cycleCount": "Can this location be included in a count plan?",
+    "pickable": "Can products be picked from this location?",
+    "putaway": "Can products be put away into this location?",
+    "quarantine": "Is this a quarantine / reject location?",
+    "active": "Can this location be used in new operations?"
+  },
+  "rulesHelp": {
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "whenEnabled": "When enabled",
+    "whenDisabled": "When disabled",
+    "affects": "Affected operations",
+    "mixedStock": {
+      "enabled": "Multiple different stock codes may be stored in this location at the same time.",
+      "disabled": "The location follows a single-stock layout and is not suggested for another stock when occupied.",
+      "affects": "Post-receipt location suggestions, putaway and location organization."
+    },
+    "mixedLot": {
+      "enabled": "Different lots of the same stock may be stored together in this location.",
+      "disabled": "The location is marked for a single-lot layout; different lots should use separate locations.",
+      "affects": "Lot traceability, putaway organization and count control."
+    },
+    "mixedStatus": {
+      "enabled": "Available, quality-hold or quarantine inventory statuses may coexist in this location.",
+      "disabled": "The location should contain one inventory status; quality-hold and available stock are separated.",
+      "affects": "Quality, quarantine, available balance and location organization."
+    },
+    "cycleCount": {
+      "enabled": "The location can be added to count plans and receive count tasks.",
+      "disabled": "The location is excluded from new count orders and count-location selectors.",
+      "affects": "Cycle counts, ad-hoc counts and count-order creation."
+    },
+    "pickable": {
+      "enabled": "Shipment, transfer and production picking orders may consume available stock from this location.",
+      "disabled": "The location is not offered as a picking source; keep this disabled for quality-hold and quarantine locations.",
+      "affects": "Picking, shipment, warehouse transfer and production transfer."
+    },
+    "putaway": {
+      "enabled": "This location may be selected as a target after receipt, transfer or quality acceptance.",
+      "disabled": "The location is not used as a normal putaway target; receiving, staging or virtual areas may keep it disabled.",
+      "affects": "Putaway, post-receipt placement, transfer and quality acceptance."
+    },
+    "quarantine": {
+      "enabled": "The location may be targeted by quality quarantine and reject decisions. Picking is switched off automatically.",
+      "disabled": "The location is a normal operation location and cannot be selected as a quality quarantine / reject target.",
+      "affects": "Quality inspection, quarantine, rejection and inventory-status movements."
+    },
+    "active": {
+      "enabled": "The location is available in new operations, searches and eligible selectors.",
+      "disabled": "The location cannot be used in new operations; existing balances and movement history are retained.",
+      "affects": "All warehouse operations, location searches and source / target selectors."
+    }
   },
   "types": {
     "Zone": "Zone",
