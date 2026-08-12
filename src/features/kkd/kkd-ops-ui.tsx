@@ -24,6 +24,7 @@ export function KkdPage({
   title,
   description,
   hintLabel = 'Bu sayfa ne yapar?',
+  leading,
   actions,
   subRow,
   children,
@@ -32,6 +33,7 @@ export function KkdPage({
   title: string;
   description?: string;
   hintLabel?: string;
+  leading?: ReactNode;
   actions?: ReactNode;
   /** Başlık kartına bitişik ikinci satır (sekme / filtre şeridi). */
   subRow?: ReactNode;
@@ -51,6 +53,7 @@ export function KkdPage({
         title={title}
         description={description}
         hintLabel={hintLabel}
+        leading={leading}
         actions={actions}
         subRow={subRow}
       />

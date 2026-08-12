@@ -1,15 +1,16 @@
 {
   "page": { "title": "KKD Talepleri", "description": "Tüm personelin taleplerini tek kuyrukta görün; grup taleplerini doğru beden/stoğa bağlayıp hazırlamaya gönderin.", "empty": "Bu sekmede KKD talebi bulunmuyor." },
-  "tabs": { "pending": "Beklemede", "preparing": "Hazırlamada", "completed": "Tamamlanan", "cancelled": "İptal Edilen", "mine": "Benim İşlerim" },
+  "tabs": { "pending": "Beklemede", "preparing": "Hazırlamada", "completed": "Tamamlanan", "cancelled": "İptal Edilen", "mine": "Benim İşlerim", "quotapending": "Kota Onayı" },
   "tabDescriptions": {
     "pending": "Aktif bir hazırlama görevine bağlanmamış açık kalemi olan talepler. Müdür kalem bazlı atayabilir, depo görevlisi üzerine alabilir.",
     "preparing": "Hazırlama görevleri oluşturulmuş, hazırlığı süren talepler. Satırı genişleterek görevleri yönetin.",
     "completed": "Teslimi tamamlanmış talepler. ERP durumunu buradan izleyin.",
     "cancelled": "İptal edilmiş talepler.",
-    "mine": "Üzerinize aldığınız veya size atanan aktif görevler. Çift tıklayarak toplamaya başlayın."
+    "mine": "Üzerinize aldığınız veya size atanan aktif görevler. Çift tıklayarak toplamaya başlayın.",
+    "quotapending": "KKD hak matrisini aşan, karar bekleyen kalemler. Talep detayından Onayla/Reddet ile karara bağlayın."
   },
-  "grid": { "id": "Kayıt ID", "requestNo": "Talep no", "status": "Durum", "priority": "Öncelik", "employeeCode": "Personel kodu", "employeeName": "Personel", "department": "Departman", "warehouse": "Depo", "warehouseUnset": "Depo atanmadı", "assignedUser": "Hazırlayanlar", "assigned": "Atandı", "unassigned": "Atanmadı", "erp": "Belge / ERP", "lineCount": "Kalem", "unresolved": "Stok bekleyen", "requested": "Talep", "allocated": "Hazırlanan", "delivered": "Teslim", "neededAt": "İhtiyaç zamanı", "requestedAt": "Talep zamanı", "createdBy": "Oluşturan", "createdDate": "Oluşturma zamanı", "updatedBy": "Güncelleyen", "updatedDate": "Güncelleme zamanı", "actions": "İşlemler" },
-  "actions": { "new": "Yeni KKD talebi", "detail": "Detay", "assign": "Talebi hazırlat (kalem bazlı ata)", "claim": "Üzerime al", "claimPool": "Havuzdan üzerime al", "prepare": "Toplama yap", "reactivate": "Beklemeye al", "operation": "Ambar çıkışı operasyonu", "handoff": "Kalan işi devret", "returnWork": "İşi havuza iade et", "erpRetry": "ERP kaydını yeniden dene", "expand": "Kalemleri göster", "collapse": "Kalemleri gizle", "addLine": "Kalem ekle", "removeLine": "Kalemi kaldır", "selectStock": "Stok/beden seç", "create": "Talebi oluştur", "save": "Kaydet", "close": "Vazgeç", "cancel": "Talebi iptal et" },
+  "grid": { "id": "Kayıt ID", "requestNo": "Talep no", "status": "Durum", "priority": "Öncelik", "employeeCode": "Personel kodu", "employeeName": "Personel", "department": "Departman", "warehouse": "Depo", "warehouseUnset": "Depo atanmadı", "assignedUser": "Hazırlayanlar", "assigned": "Atandı", "unassigned": "Atanmadı", "taskInProgress": "Devam ediyor", "quotaStatus": "Kota durumu", "quotaPending": "Kota onayı bekliyor", "quotaApproved": "Kota onayı verildi", "erp": "Belge / ERP", "lineCount": "Kalem", "unresolved": "Stok bekleyen", "requested": "Talep", "allocated": "Hazırlanan", "delivered": "Teslim", "neededAt": "İhtiyaç zamanı", "requestedAt": "Talep zamanı", "createdBy": "Oluşturan", "createdDate": "Oluşturma zamanı", "updatedBy": "Güncelleyen", "updatedDate": "Güncelleme zamanı", "actions": "İşlemler" },
+  "actions": { "new": "Yeni KKD talebi", "detail": "Detay", "assign": "Talebi hazırlat (kalem bazlı ata)", "claim": "Üzerime al", "claimPool": "Havuzdan üzerime al", "prepare": "Toplama yap", "continuePrepare": "İşe devam et", "reactivate": "Beklemeye al", "operation": "Ambar çıkışı operasyonu", "handoff": "Kalan işi devret", "returnWork": "İşi havuza iade et", "erpRetry": "ERP kaydını yeniden dene", "expand": "Kalemleri göster", "collapse": "Kalemleri gizle", "addLine": "Kalem ekle", "removeLine": "Kalemi kaldır", "selectStock": "Stok/beden seç", "create": "Talebi oluştur", "save": "Kaydet", "close": "Vazgeç", "cancel": "Talebi iptal et" },
   "cancelDialog": { "title": "Talebi iptal et", "description": "{{no}} numaralı KKD talebi iptal edilecek. İptal gerekçesini yazın.", "checking": "İptal ön kontrolü yapılıyor...", "blockedTitle": "Bu talep şu an iptal edilemez", "goToOutbound": "Bağlı ambar çıkışına git" },
   "prepareDialog": {
     "title": "Talebi hazırlat",
@@ -51,6 +52,8 @@
     "quotaApproved": "Onaylandı",
     "quotaReject": "Reddet",
     "quotaRejected": "Reddedildi — bu turda atanmayacak",
+    "quotaRejectedHint": "Bu karar kaydedildi; geri almak için Kota Onayı ekranına gidin.",
+    "quotaNeedsManager": "Karar için müdür yetkisi gerekiyor.",
     "quotaRestore": "Geri al",
     "quotaConfirmReject": "Bu kalem bu turda atanmayacak, emin misiniz?",
     "quotaConfirmYes": "Evet, hariç tut",
@@ -78,7 +81,34 @@
     "taskPool": "Depo havuzunda · sahipsiz, herkes üzerine alabilir",
     "taskOrigin": "Devreden: {{user}}"
   },
-  "create": { "title": "Yeni KKD talebi", "description": "Beden henüz bilinmiyorsa yalnızca KKD grubunu seçin. Depo görevlisi hazırlarken gerçek stoğu seçebilir.", "employee": "Personel", "employeePlaceholder": "Personel seçin", "priority": "Öncelik", "neededAt": "En geç ihtiyaç zamanı", "description": "Talep açıklaması", "lines": "Talep kalemleri", "linesHelp": "Bir talepte birden fazla KKD grubu olabilir. Stok alanı isteğe bağlıdır.", "lineNo": "{{no}}. kalem", "group": "KKD grubu", "groupPlaceholder": "Ayakkabı, eldiven, gözlük...", "stock": "Kesin stok / beden", "stockOptional": "Beden bilinmiyorsa boş bırakın; açık talepler ekranında seçilir.", "stockPlaceholder": "Stok veya beden seçin", "selectGroupFirst": "Önce KKD grubunu seçin", "quantity": "Miktar" },
+  "create": {
+    "title": "Yeni KKD talebi",
+    "description": "Doğrudan stok/beden seçebilir veya beden bilinmiyorsa yalnızca KKD grubunu seçebilirsiniz. Grup seçilirse stok listesi o gruba göre filtrelenir.",
+    "employee": "Personel",
+    "employeePlaceholder": "Personel seçin",
+    "priority": "Öncelik",
+    "neededAt": "En geç ihtiyaç zamanı",
+    "descriptionLabel": "Talep açıklaması",
+    "lines": "Talep kalemleri",
+    "linesHelp": "Grup veya doğrudan stok ile kalem ekleyin. Stok seçilirse grup otomatik dolar; grup seçilirse stok isteğe bağlıdır.",
+    "lineNo": "{{no}}. kalem",
+    "group": "KKD grubu",
+    "groupPlaceholder": "Grup yazın veya seçin",
+    "groupSearch": "Grup ara",
+    "groupEmpty": "KKD grubu bulunamadı.",
+    "groupLookupTitle": "KKD grubu seç",
+    "groupLookupDescription": "Kod veya ad yazarak arayın. Arama ikonu veya çift tık ile liste penceresini açın.",
+    "stock": "Kesin stok / beden",
+    "stockOptional": "Beden bilinmiyorsa boş bırakın; depo hazırlarken seçer. Direkt stok da seçebilirsiniz.",
+    "stockPlaceholder": "Stok veya beden yazın / seçin",
+    "stockSearch": "Stok ara",
+    "stockEmpty": "Stok bulunamadı.",
+    "stockLookupTitle": "Stok / beden seç",
+    "stockLookupDescription": "Tüm KKD stoklarında arayın. Grup seçiliyse liste o gruba göre daralır. Çift tık ile geniş listeyi açın.",
+    "stockLookupDescriptionFiltered": "{{group}} grubundaki stoklarda arayın. Çift tık ile geniş listeyi açın.",
+    "selectGroupFirst": "Önce KKD grubunu seçin",
+    "quantity": "Miktar"
+  },
   "detail": {
     "title": "KKD talep detayı",
     "eyebrow": "KKD Talebi",
@@ -122,6 +152,6 @@
   "taskStatus": { "Assigned": "Atandı", "InPreparation": "Hazırlanıyor", "Completed": "Tamamlandı", "Returned": "İade edildi", "HandedOver": "Devredildi", "Cancelled": "İptal edildi" },
   "distributionStatus": { "Draft": "Taslak", "Validated": "Doğrulandı", "OutboundCreated": "Çıkış açıldı", "Completed": "ERP'ye işlendi", "Cancelled": "İptal edildi", "Failed": "ERP hatası" },
   "priority": { "Low": "Düşük", "Normal": "Normal", "High": "Yüksek", "Urgent": "Acil" },
-  "validation": { "employeeAndLine": "Personel ve en az bir KKD grubu seçilmelidir.", "quantity": "Bütün miktarlar sıfırdan büyük olmalıdır.", "stock": "Verilecek stok seçilmelidir.", "reason": "İşlem nedeni en az 3 karakter olmalıdır.", "warehouse": "Depo seçilmelidir.", "user": "Kullanıcı seçilmelidir." },
+  "validation": { "employeeAndLine": "Personel ve en az bir kalem (grup veya stok) seçilmelidir.", "groupRequired": "Her kalemde KKD grubu olmalıdır. Stok seçtiyseniz grubu tanımlı bir stok seçin veya grubu elle seçin.", "quantity": "Bütün miktarlar sıfırdan büyük olmalıdır.", "stock": "Verilecek stok seçilmelidir.", "reason": "İşlem nedeni en az 3 karakter olmalıdır.", "warehouse": "Depo seçilmelidir.", "user": "Kullanıcı seçilmelidir." },
   "messages": { "created": "{{no}} numaralı KKD talebi oluşturuldu.", "resolved": "Stok/beden seçimi kaydedildi.", "assigned": "Talep atandı.", "claimed": "Talep üzerinize alındı. 'Benim İşlerim' sekmesinden hazırlamaya başlayabilirsiniz.", "claimedPool": "Görev depo havuzundan üzerinize alındı.", "tasksAssigned": "Hazırlama görevleri oluşturuldu.", "handedOver": "Kalan iş devredildi.", "returned": "Görev havuza iade edildi.", "returnBlockedProgress": "Hazırlığı başlamış görev havuza iade edilemez. Kalan işi başka kullanıcıya devredebilirsiniz.", "taskNotFound": "Aktif hazırlama görevi bulunamadı.", "erpRetried": "ERP kaydı yeniden denendi.", "unassigned": "Atama kaldırıldı, depo bilgisi güncellendi.", "cancelled": "KKD talebi iptal edildi.", "reactivated": "KKD talebi tekrar beklemeye alındı.", "failed": "KKD işlemi tamamlanamadı.", "loading": "Talep yükleniyor...", "detailFailed": "Talep detayı alınamadı." }
 }

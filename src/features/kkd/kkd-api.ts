@@ -1,4 +1,5 @@
 import { api } from '@/lib/axios';
+import type { WarehouseBarcodeBalanceCandidate } from '@/features/barcode-resolution/barcode-resolution.api';
 import type { DropdownPage, DropdownPageRequest } from '@/hooks/useDropdownInfiniteSearch';
 import { buildDropdownPagedBody } from '@/lib/dropdown-paging';
 import type { GridPage, GridRequest } from '@/components/shared/AdvancedDataGrid';
@@ -132,11 +133,14 @@ export type KkdPaged<T> = {
   hasPreviousPage: boolean; hasNextPage: boolean;
 };
 
-export type KkdRequestBoardTab = 'all' | 'pending' | 'preparing' | 'completed' | 'cancelled' | 'mine';
+/** Not: 'quotapending' backend'deki KkdRequestBoardTab.QuotaPending'e Enum.TryParse(ignoreCase:true) ile eşleşir — tire/boşluk desteklenmiyor. */
+export type KkdRequestBoardTab = 'all' | 'pending' | 'preparing' | 'completed' | 'cancelled' | 'mine' | 'quotapending';
 
 export type KkdRequestTabCounts = {
-  pending: number; preparing: number; completed: number; cancelled: number; mine: number;
+  pending: number; preparing: number; completed: number; cancelled: number; mine: number; quotaPending: number;
 };
+
+export type KkdQuotaDecision = 'None' | 'Pending' | 'Approved' | 'Rejected';
 
 export type KkdRequestRow = {
   id: number; requestNo: string; status: string; priority: string; sourceType: string;
@@ -150,17 +154,31 @@ export type KkdRequestRow = {
   warehouseOutboundId?: number | null; rowVersion: string;
   activeTaskCount: number; unassignedLineCount: number; myActiveTaskId?: number | null;
   activeAssigneeNames: string[];
+  /** myActiveTaskId "Bu işi yapıyorum" ile başlatıldı mı — "Toplama yap"/"İşe devam et" ayrımı için. */
+  myActiveTaskStarted?: boolean;
+  /** myActiveTaskId'nin canlı toplanan (henüz teslim edilmemiş) miktar toplamı. */
+  myActiveTaskPreparedQuantity?: number;
+  /** myActiveTaskId'nin kota kararı bekleyen (Pending/Rejected) kalem sayısı — toplama bu yüzden başlayamıyor olabilir. */
+  myActiveTaskQuotaPendingCount?: number;
+  /** myActiveTaskId'nin müdürce onaylanmış (Approved) kota kararı sayısı. */
+  myActiveTaskQuotaApprovedCount?: number;
   /** Depo havuzuna bırakılmış (kişiye atanmamış), henüz kimsenin üzerine almadığı aktif bir görev var mı. */
   hasPoolTask: boolean;
   poolTaskId?: number | null;
   createdBy?: number | null; createdDate?: string | null; updatedBy?: number | null; updatedDate?: string | null;
 };
 
+/** Bir görev satırının bir rafa ayrılmış rezervasyon/toplama izi ("Bu işi yapıyorum"/"Rotayı güncelle" ile oluşur). */
+export type KkdPreparationTaskLineLocationRow = {
+  locationId: number; locationCode: string; locationName: string;
+  reservedQuantity: number; pickedQuantity: number; serialNo?: string | null; lotNo?: string | null;
+};
+
 export type KkdPreparationTaskLineRow = {
   id: number; requestLineId: number; lineNo: number; groupCode: string; groupName?: string | null;
   stockId?: number | null; stockCode?: string | null; stockName?: string | null; unitCode: string;
   quantity: number; preparedQuantity: number; deliveredQuantity: number; lineStatus: string;
-  requestLineRowVersion: string;
+  requestLineRowVersion: string; quotaDecision: KkdQuotaDecision; locations: KkdPreparationTaskLineLocationRow[];
 };
 
 export type KkdPreparationTaskRow = {
@@ -175,6 +193,65 @@ export type KkdPreparationTaskRow = {
   lines: KkdPreparationTaskLineRow[];
 };
 
+export type KkdPreparationResolveScanResult = {
+  taskLineId: number;
+  requestLineId: number;
+  needsGroupResolve: boolean;
+  groupCode: string;
+  stockId: number;
+  stockCode: string;
+  stockName: string;
+  unitCode: string;
+  lotNo?: string | null;
+  serialNo?: string | null;
+  suggestedLocationId?: number | null;
+  requireSerial: boolean;
+  requireLot: boolean;
+  remainingQuantity: number;
+  defaultQuantity: number;
+  isSerial: boolean;
+  canAutoPick: boolean;
+  /** Depo AutoPickWithoutConfirmMaxQuantity — üretim ile aynı. */
+  autoPickWithoutConfirmMaxQuantity?: number | null;
+  rawBarcode: string;
+  source: string;
+  /** Birden fazla raf/seri varsa kullanıcının seçebilmesi için tüm adaylar. */
+  balanceCandidates: WarehouseBarcodeBalanceCandidate[];
+};
+
+export const KKD_PICK_ABOVE_THRESHOLD_CONFIRM_MESSAGE =
+  'Bu miktar onay eşiğini aşıyor. Devam etmek için onaylayın.';
+
+export type KkdPreparationScanPickResult = {
+  isReplay: boolean;
+  taskLineId: number;
+  requestLineId: number;
+  acceptedQuantity: number;
+  linePreparedQuantity: number;
+  lineQuantity: number;
+  stockId: number;
+  stockCode: string;
+  stockName: string;
+  lotNo?: string | null;
+  serialNo?: string | null;
+  sourceLocationId?: number | null;
+  task: KkdPreparationTaskRow;
+};
+
+export type KkdPreparationScanTracking = {
+  quantity: number;
+  lotNo?: string | null;
+  serialNo?: string | null;
+  sourceLocationId?: number | null;
+};
+
+/** "Son okutmalar" listesindeki bir satır — geri alma (Unpick) hedefi. */
+export type KkdPreparationScanRow = {
+  id: number; taskLineId: number; stockId: number; stockCode: string; stockName: string;
+  quantity: number; unitCode: string; lotNo?: string | null; serialNo?: string | null;
+  sourceLocationId?: number | null; scannedAtUtc: string; isReversed: boolean; canUnpick: boolean;
+};
+
 export type KkdRequestCancelPrecheck = {
   canCancel: boolean; blockers: string[];
   activeDistributionId?: number | null; activeWarehouseOutboundId?: number | null;
@@ -185,7 +262,9 @@ export type KkdRequestLine = {
   stockCode?: string | null; stockName?: string | null; unitCode: string; requestedQuantity: number;
   allocatedQuantity: number; deliveredQuantity: number; remainingQuantity: number; status: string;
   externalOrderNo?: string | null; externalOrderLineId?: string | null; resolvedByUserId?: number | null;
-  resolvedAtUtc?: string | null; resolutionReason?: string | null; rowVersion: string;
+  resolvedAtUtc?: string | null; resolutionReason?: string | null;
+  quotaDecision: KkdQuotaDecision; quotaDecisionByUserId?: number | null; quotaDecisionAtUtc?: string | null;
+  rowVersion: string;
   resolutions: Array<{ id: number; previousStockId?: number | null; stockId: number; stockCode: string;
     stockName?: string | null; reason: string; resolvedBy?: number | null; resolvedAtUtc: string }>;
 };
@@ -211,6 +290,16 @@ export const kkdApi = {
   policy: async () => unwrap(await api.get<Envelope<KkdPolicy>>('/api/kkd/policy')),
   savePolicy: async (payload: Omit<KkdPolicy, 'id'|'branchCode'|'updatedBy'|'updatedDate'>) =>
     unwrap(await api.put<Envelope<KkdPolicy>>('/api/kkd/policy', payload)),
+  /** Depo bazlı KKD toplama sanal rafı — canlı toplamada kaynak raftan buraya stok hareketi postalanır. */
+  pickingStagingLocation: async (warehouseId: number) =>
+    unwrap(await api.get<Envelope<{ warehouseId: number; kkdPickingStagingLocationId: number | null }>>(
+      `/api/kkd/warehouses/${warehouseId}/picking-staging-location`,
+    )),
+  updatePickingStagingLocation: async (warehouseId: number, locationId: number | null) =>
+    unwrap(await api.put<Envelope<{ warehouseId: number; kkdPickingStagingLocationId: number | null }>>(
+      `/api/kkd/warehouses/${warehouseId}/picking-staging-location`,
+      { locationId },
+    )),
   departments: async () => unwrap(await api.get<Envelope<KkdLookup[]>>('/api/kkd/departments')),
   roles: async (departmentId?: number) => unwrap(await api.get<Envelope<KkdLookup[]>>('/api/kkd/roles', { params: { departmentId } })),
   customersPaged: async (request: DropdownPageRequest): Promise<DropdownPage<KkdCustomerLookup>> =>
@@ -282,6 +371,11 @@ export const kkdApi = {
     unwrap(await api.post<Envelope<KkdRequestDetail>>(`/api/kkd/requests/${requestId}/lines/${lineId}/resolve`, {
       ...payload, idempotencyKey: crypto.randomUUID(),
     })),
+  /** Kota aşımı kararı — talebe özel (onay bu talep için tek günlük bir ek hak yaratır). */
+  decideQuota: async (lineId: number, payload: { approve: boolean; reason: string }) =>
+    unwrap(await api.post<Envelope<{ requestLineId: number; quotaDecision: KkdQuotaDecision; quotaOverrideId: number | null }>>(
+      `/api/kkd/requests/lines/${lineId}/quota-decision`, { ...payload, idempotencyKey: crypto.randomUUID() },
+    )),
   assignRequest: async (id: number, payload: { warehouseId: number | null; assignedUserId: number | null; expectedRowVersion?: string | null }) =>
     unwrap(await api.put<Envelope<KkdRequestDetail>>(`/api/kkd/requests/${id}/assignment`, payload)),
   requestPreparationTasks: async (requestId: number) =>
@@ -312,6 +406,53 @@ export const kkdApi = {
     unwrap(await api.post<Envelope<null>>(`/api/kkd/preparation-tasks/${taskId}/return`, {
       ...payload, idempotencyKey: crypto.randomUUID(),
     })),
+  resolvePreparationScan: async (taskId: number, payload: { barcode: string; expectedTaskLineId?: number | null }) =>
+    unwrap(await api.post<Envelope<KkdPreparationResolveScanResult>>(
+      `/api/kkd/preparation-tasks/${taskId}/resolve-scan`,
+      payload,
+    )),
+  scanPickPreparationTask: async (taskId: number, payload: {
+    barcode: string;
+    expectedTaskLineId?: number | null;
+    quantity?: number | null;
+    sourceLocationId?: number | null;
+    expectedRequestLineRowVersion?: string | null;
+    confirmAboveThreshold?: boolean;
+  }) =>
+    unwrap(await api.post<Envelope<KkdPreparationScanPickResult>>(
+      `/api/kkd/preparation-tasks/${taskId}/scan-pick`,
+      { ...payload, idempotencyKey: crypto.randomUUID() },
+    )),
+  preparationStagedTrackings: async (taskId: number, requestLineId: number) =>
+    unwrap(await api.get<Envelope<KkdPreparationScanTracking[]>>(
+      `/api/kkd/preparation-tasks/${taskId}/lines/${requestLineId}/staged-trackings`,
+    )),
+  /** "Bu işi yapıyorum": havuz görevinde üzerine alır, stoğu bilinen satırlara raf ataması + gerçek rezervasyon yapar. */
+  startPreparationTask: async (taskId: number) =>
+    unwrap(await api.post<Envelope<KkdPreparationTaskRow>>(`/api/kkd/preparation-tasks/${taskId}/start`, {
+      idempotencyKey: crypto.randomUUID(),
+    })),
+  routeCandidates: async (taskLineId: number) =>
+    unwrap(await api.get<Envelope<{ isSerial: boolean; candidates: Array<{
+      locationId: number; locationCode: string; locationName: string; availableQuantity: number;
+      serialNo?: string | null; lotNo?: string | null;
+    }> }>>(`/api/kkd/preparation-tasks/lines/${taskLineId}/route-candidates`)),
+  applyRouteSplit: async (taskLineId: number, payload: {
+    selections: Array<{ locationId: number; quantity: number; serialNo?: string | null }>;
+    expectedTaskLineRowVersion?: string | null;
+  }) =>
+    unwrap(await api.post<Envelope<KkdPreparationTaskRow>>(`/api/kkd/preparation-tasks/lines/${taskLineId}/route-split`, {
+      ...payload, idempotencyKey: crypto.randomUUID(),
+    })),
+  /** Son okutmalar listesi — geri alma (Unpick) UI'sı için, en yeni önce. */
+  preparationScans: async (taskId: number) =>
+    unwrap(await api.get<Envelope<KkdPreparationScanRow[]>>(`/api/kkd/preparation-tasks/${taskId}/scans`)),
+  /** Yanlış okutulan bir taramayı geri alır: gerçek stok hareketi ters çevrilir, rezervasyon geri yüklenir. */
+  unpickScan: async (taskId: number, scanId: number) =>
+    unwrap(await api.post<Envelope<{ scanId: number; taskLineId: number; revertedQuantity: number; task: KkdPreparationTaskRow }>>(
+      `/api/kkd/preparation-tasks/${taskId}/scans/${scanId}/unpick`,
+      { idempotencyKey: crypto.randomUUID() },
+    )),
   requestCancelPrecheck: async (id: number) =>
     unwrap(await api.get<Envelope<KkdRequestCancelPrecheck>>(`/api/kkd/requests/${id}/cancel-precheck`)),
   cancelRequest: async (id: number, reason: string, expectedRowVersion: string) =>
