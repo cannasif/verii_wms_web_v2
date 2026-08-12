@@ -30,12 +30,14 @@ export function WarehouseOpeningImportDialog({
   const [result, setResult] = useState<WarehouseOpeningImportResult | null>(null);
   const [busy, setBusy] = useState<'download' | 'preview' | 'commit' | null>(null);
   const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
+  const [replaceExistingBalances, setReplaceExistingBalances] = useState(false);
 
   useEffect(() => {
     if (!open) return;
     setFile(null);
     setPreview(null);
     setResult(null);
+    setReplaceExistingBalances(false);
     setIdempotencyKey(crypto.randomUUID());
     if (inputRef.current) inputRef.current.value = '';
   }, [open]);
@@ -43,6 +45,7 @@ export function WarehouseOpeningImportDialog({
   const selectFile = (selected: File | null) => {
     setPreview(null);
     setResult(null);
+    setReplaceExistingBalances(false);
     setIdempotencyKey(crypto.randomUUID());
     if (!selected) return setFile(null);
     if (!selected.name.toLowerCase().endsWith('.xlsx')) {
@@ -82,6 +85,7 @@ export function WarehouseOpeningImportDialog({
     try {
       const value = await warehouseOpeningImportApi.preview(file, branchCode);
       setPreview(value);
+      setReplaceExistingBalances(false);
       setResult(null);
       toast.success(t('warehouseOpening.success.preValidated'));
     } catch (error) {
@@ -101,6 +105,8 @@ export function WarehouseOpeningImportDialog({
         branchCode,
         preview.fileHash,
         idempotencyKey,
+        replaceExistingBalances,
+        preview.balanceSnapshotHash,
       );
       setResult(value);
       await onImported();
@@ -121,7 +127,15 @@ export function WarehouseOpeningImportDialog({
     [t('warehouseOpening.cards.serial'), preview.serialCount],
     [t('warehouseOpening.cards.totalQuantity'), preview.totalQuantity.toLocaleString('tr-TR')],
     [t('warehouseOpening.cards.batch'), preview.batchCount],
+    ...(preview.requiresBalanceReplacement ? [
+      [t('warehouseOpening.cards.currentBalanceRow'), preview.currentBalanceRowCount],
+      [t('warehouseOpening.cards.currentQuantity'), preview.currentTotalQuantity.toLocaleString('tr-TR')],
+      [t('warehouseOpening.cards.existingMovement'), preview.existingMovementCount],
+      [t('warehouseOpening.cards.reservedQuantity'), preview.reservedQuantity.toLocaleString('tr-TR')],
+    ] : []),
   ] : [];
+  const replacementBlocked = Boolean(preview?.requiresBalanceReplacement && preview.reservedQuantity > 0);
+  const confirmationMissing = Boolean(preview?.requiresBalanceReplacement && !replaceExistingBalances);
 
   return (
     <Dialog open={open} onOpenChange={(next) => !busy && onOpenChange(next)}>
@@ -186,6 +200,25 @@ export function WarehouseOpeningImportDialog({
                 ))}
               </div>
               {preview.warnings.map((warning) => <p key={warning} className="text-sm text-amber-700 dark:text-amber-300">• {warning}</p>)}
+              {preview.requiresBalanceReplacement && (
+                <label className={`flex items-start gap-3 rounded-xl border p-4 ${replacementBlocked ? 'border-red-300 bg-red-50 dark:border-red-900 dark:bg-red-950/20' : 'border-amber-400 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/20'}`}>
+                  <input
+                    type="checkbox"
+                    checked={replaceExistingBalances}
+                    disabled={replacementBlocked || Boolean(busy)}
+                    onChange={(event) => setReplaceExistingBalances(event.target.checked)}
+                    className="mt-1 size-4 accent-amber-600"
+                  />
+                  <span>
+                    <strong className="block">{t('warehouseOpening.replacement.title')}</strong>
+                    <span className="mt-1 block text-sm text-slate-600 dark:text-slate-300">
+                      {replacementBlocked
+                        ? t('warehouseOpening.replacement.reservationBlocked', { quantity: preview.reservedQuantity.toLocaleString('tr-TR') })
+                        : t('warehouseOpening.replacement.description')}
+                    </span>
+                  </span>
+                </label>
+              )}
             </section>
           )}
 
@@ -208,9 +241,11 @@ export function WarehouseOpeningImportDialog({
           <button type="button" disabled={Boolean(busy)} onClick={() => onOpenChange(false)} className="rounded-xl border px-5 py-2.5 disabled:opacity-50">{t('warehouseOpening.close')}</button>
           {!result && (
             preview ? (
-              <button type="button" disabled={Boolean(busy)} onClick={() => void commit()} className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 font-semibold text-white disabled:opacity-50">
+              <button type="button" disabled={Boolean(busy) || replacementBlocked || confirmationMissing} onClick={() => void commit()} className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 font-semibold text-white disabled:opacity-50">
                 {busy === 'commit' ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />}
-                {t('warehouseOpening.confirmImport')}
+                {preview.requiresBalanceReplacement
+                  ? t('warehouseOpening.replacement.confirmButton')
+                  : t('warehouseOpening.confirmImport')}
               </button>
             ) : (
               <button type="button" disabled={!file || Boolean(busy)} onClick={() => void validate()} className="inline-flex items-center gap-2 rounded-xl bg-[var(--wms-brand-primary)] px-5 py-2.5 font-semibold text-white disabled:opacity-50">

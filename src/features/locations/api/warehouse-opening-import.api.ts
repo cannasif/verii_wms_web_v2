@@ -8,6 +8,7 @@ interface ApiEnvelope<T> {
 
 export interface WarehouseOpeningPreview {
   fileHash: string;
+  balanceSnapshotHash: string;
   warehouseCount: number;
   newLocationCount: number;
   existingLocationCount: number;
@@ -16,6 +17,12 @@ export interface WarehouseOpeningPreview {
   serialCount: number;
   totalQuantity: number;
   batchCount: number;
+  existingMovementCount: number;
+  currentBalanceRowCount: number;
+  currentTotalQuantity: number;
+  reservedBalanceRowCount: number;
+  reservedQuantity: number;
+  requiresBalanceReplacement: boolean;
   warnings: string[];
 }
 
@@ -64,9 +71,11 @@ export const warehouseOpeningImportApi = {
     branchCode: string,
     previewHash: string,
     idempotencyKey: string,
+    replaceExistingBalances: boolean,
+    balanceSnapshotHash: string,
   ): Promise<WarehouseOpeningImportResult> =>
     unwrap(await api.post<ApiEnvelope<WarehouseOpeningImportResult>>(
-      `/api/warehouse-opening-import/commit?branchCode=${encodeURIComponent(branchCode)}&previewHash=${encodeURIComponent(previewHash)}&idempotencyKey=${encodeURIComponent(idempotencyKey)}`,
+      `/api/warehouse-opening-import/commit?branchCode=${encodeURIComponent(branchCode)}&previewHash=${encodeURIComponent(previewHash)}&idempotencyKey=${encodeURIComponent(idempotencyKey)}&replaceExistingBalances=${replaceExistingBalances}&balanceSnapshotHash=${encodeURIComponent(balanceSnapshotHash)}`,
       form(file),
     )),
 };

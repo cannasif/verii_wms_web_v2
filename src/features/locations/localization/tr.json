@@ -34,7 +34,17 @@
       "stock": "Stok",
       "serial": "Seri",
       "totalQuantity": "Toplam miktar",
-      "batch": "İşlem partisi"
+      "batch": "İşlem partisi",
+      "currentBalanceRow": "Mevcut bakiye satırı",
+      "currentQuantity": "Mevcut miktar",
+      "existingMovement": "Geçmiş hareket",
+      "reservedQuantity": "Rezerve miktar"
+    },
+    "replacement": {
+      "title": "Mevcut bakiyeleri Excel ile eşitle",
+      "description": "Bu onayla Excel, seçilen depoların kesin bakiye fotoğrafı kabul edilir. Geçmiş hareketler silinmez. Excel'de bulunan stok/raf/seri/lot miktarları Excel değerine getirilir; dosyada bulunmayan mevcut bakiyeler fark hareketiyle sıfırlanır. İşlem boyunca ilgili depolarda başka hareket yapılmamalıdır.",
+      "reservationBlocked": "Eşitleme başlatılamaz: {{quantity}} miktar açık emirlere ayrılmış durumda. Önce emirleri tamamlayın veya rezervasyonları serbest bırakın.",
+      "confirmButton": "Excel bakiyesiyle eşitle"
     },
     "importCompleteTitle": "Aktarım tamamlandı",
     "importCompleteSummary": "{{created}} yeni raf ve {{balances}} bakiye satırı işlendi.",

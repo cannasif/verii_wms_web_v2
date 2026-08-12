@@ -34,7 +34,17 @@
       "stock": "Bestand",
       "serial": "Seriennummer",
       "totalQuantity": "Gesamtmenge",
-      "batch": "Transaktionsblöcke"
+      "batch": "Transaktionsblöcke",
+      "currentBalanceRow": "Aktuelle Bestandszeilen",
+      "currentQuantity": "Aktuelle Menge",
+      "existingMovement": "Historische Bewegungen",
+      "reservedQuantity": "Reservierte Menge"
+    },
+    "replacement": {
+      "title": "Vorhandene Bestände mit Excel abgleichen",
+      "description": "Excel gilt als verbindliche Bestandsaufnahme der ausgewählten Lager. Die Bewegungshistorie bleibt erhalten. Enthaltene Lagerplatz-, Serien- und Chargenbestände werden auf die Excel-Menge gebracht; nicht enthaltene Bestände werden durch nachvollziehbare Differenzbuchungen auf null gesetzt. Währenddessen dürfen keine anderen Lagerbewegungen gebucht werden.",
+      "reservationBlocked": "Der Abgleich kann nicht starten: {{quantity}} ist für offene Aufträge reserviert. Schließen Sie die Aufträge ab oder geben Sie die Reservierungen frei.",
+      "confirmButton": "Mit Excel-Bestand abgleichen"
     },
     "importCompleteTitle": "Import abgeschlossen",
     "importCompleteSummary": "{{created}} neue Regale und {{balances}} Bestandszeilen wurden verarbeitet.",

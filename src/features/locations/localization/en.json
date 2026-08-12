@@ -34,7 +34,17 @@
       "stock": "Stock",
       "serial": "Serial",
       "totalQuantity": "Total quantity",
-      "batch": "Transaction batches"
+      "batch": "Transaction batches",
+      "currentBalanceRow": "Current balance rows",
+      "currentQuantity": "Current quantity",
+      "existingMovement": "Historical movements",
+      "reservedQuantity": "Reserved quantity"
+    },
+    "replacement": {
+      "title": "Reconcile existing balances with Excel",
+      "description": "Excel will be treated as the definitive balance snapshot for the selected warehouses. Movement history is preserved. Stock, location, serial and lot quantities found in Excel are adjusted to the file values; existing balances omitted from the file are brought to zero with auditable difference movements. Do not post other warehouse movements during this operation.",
+      "reservationBlocked": "Reconciliation cannot start: {{quantity}} is reserved by open orders. Complete the orders or release their reservations first.",
+      "confirmButton": "Reconcile with Excel balance"
     },
     "importCompleteTitle": "Import completed",
     "importCompleteSummary": "{{created}} new shelves and {{balances}} balance rows were processed.",

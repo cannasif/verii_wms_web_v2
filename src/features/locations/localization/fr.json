@@ -34,7 +34,17 @@
       "stock": "Stock",
       "serial": "Série",
       "totalQuantity": "Quantité totale",
-      "batch": "Lots de transaction"
+      "batch": "Lots de transaction",
+      "currentBalanceRow": "Lignes de stock actuelles",
+      "currentQuantity": "Quantité actuelle",
+      "existingMovement": "Mouvements historiques",
+      "reservedQuantity": "Quantité réservée"
+    },
+    "replacement": {
+      "title": "Rapprocher les stocks existants avec Excel",
+      "description": "Excel sera considéré comme l'inventaire de référence des entrepôts sélectionnés. L'historique des mouvements est conservé. Les quantités par emplacement, série et lot présentes dans le fichier sont ajustées à leur valeur Excel ; les soldes absents du fichier sont ramenés à zéro par des mouvements d'écart traçables. Aucun autre mouvement ne doit être saisi pendant l'opération.",
+      "reservationBlocked": "Le rapprochement ne peut pas démarrer : {{quantity}} est réservé par des ordres ouverts. Terminez les ordres ou libérez les réservations.",
+      "confirmButton": "Rapprocher avec le stock Excel"
     },
     "importCompleteTitle": "Import terminé",
     "importCompleteSummary": "{{created}} nouveaux emplacements et {{balances}} lignes de solde ont été traités.",

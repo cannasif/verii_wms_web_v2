@@ -34,7 +34,17 @@
       "stock": "Stock",
       "serial": "Serie",
       "totalQuantity": "Cantidad total",
-      "batch": "Lotes de transacción"
+      "batch": "Lotes de transacción",
+      "currentBalanceRow": "Líneas de saldo actuales",
+      "currentQuantity": "Cantidad actual",
+      "existingMovement": "Movimientos históricos",
+      "reservedQuantity": "Cantidad reservada"
+    },
+    "replacement": {
+      "title": "Conciliar los saldos existentes con Excel",
+      "description": "Excel se tratará como la foto definitiva del inventario de los almacenes seleccionados. El historial de movimientos se conserva. Las cantidades por ubicación, serie y lote incluidas se ajustan al valor del archivo; los saldos existentes que no aparezcan se llevan a cero mediante movimientos de diferencia auditables. No registre otros movimientos durante la operación.",
+      "reservationBlocked": "La conciliación no puede comenzar: {{quantity}} está reservado por órdenes abiertas. Complete las órdenes o libere las reservas.",
+      "confirmButton": "Conciliar con el saldo Excel"
     },
     "importCompleteTitle": "Importación completada",
     "importCompleteSummary": "Se procesaron {{created}} nuevas ubicaciones y {{balances}} filas de saldo.",

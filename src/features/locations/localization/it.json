@@ -34,7 +34,17 @@
       "stock": "Stock",
       "serial": "Serie",
       "totalQuantity": "Quantità totale",
-      "batch": "Lotti di transazione"
+      "batch": "Lotti di transazione",
+      "currentBalanceRow": "Righe saldo attuali",
+      "currentQuantity": "Quantità attuale",
+      "existingMovement": "Movimenti storici",
+      "reservedQuantity": "Quantità riservata"
+    },
+    "replacement": {
+      "title": "Riconcilia i saldi esistenti con Excel",
+      "description": "Excel sarà considerato la fotografia definitiva delle giacenze dei magazzini selezionati. Lo storico movimenti viene conservato. Le quantità per ubicazione, seriale e lotto presenti nel file vengono adeguate ai valori Excel; i saldi non presenti vengono azzerati con movimenti di differenza tracciabili. Durante l'operazione non devono essere registrati altri movimenti.",
+      "reservationBlocked": "La riconciliazione non può iniziare: {{quantity}} è riservata da ordini aperti. Completare gli ordini o liberare le prenotazioni.",
+      "confirmButton": "Riconcilia con il saldo Excel"
     },
     "importCompleteTitle": "Importazione completata",
     "importCompleteSummary": "Sono stati elaborati {{created}} nuovi scaffali e {{balances}} righe di saldo.",
