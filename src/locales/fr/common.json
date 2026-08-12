@@ -522,6 +522,7 @@
     "locationBalances": "Soldes d'emplacement",
     "warehouseBalances": "Solde de stock d'entrepôt",
     "serialBalances": "Solde de série de stock",
+    "inventoryCounts": "Gestion des inventaires",
     "warehouseAssistant": "Assistant d’entrepôt",
     "qualityControl": "Qualité",
     "qualityControlInspections": "Liste d'inspection qualité",

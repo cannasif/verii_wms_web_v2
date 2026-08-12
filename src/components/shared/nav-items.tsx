@@ -111,6 +111,7 @@ export const WMS_NAV_ITEMS: NavItem[] = [
       { title: 'sidebar.locationBalances', titleFallback: 'Raf Bakiyeleri', href: '/warehouse/location-balances', searchAliases: ['raf', 'bakiye', 'lot', 'seri', 'yap'], requiredPermission: 'WMS.STOCK_BALANCES.VIEW' },
       { title: 'sidebar.warehouseBalances', titleFallback: 'Depo Stok Bakiyesi', href: '/warehouse/stock-balances', searchAliases: ['depo', 'stok', 'bakiye', 'drill down'], requiredPermission: 'WMS.STOCK_BALANCES.VIEW' },
       { title: 'sidebar.serialBalances', titleFallback: 'Stok Seri Bakiyesi', href: '/warehouse/serial-balances', searchAliases: ['stok', 'seri', 'bakiye', 'izlenebilirlik', 'lot'], requiredPermission: 'WMS.STOCK_BALANCES.VIEW' },
+      { title: 'sidebar.inventoryCounts', titleFallback: 'Sayım Yönetimi', href: '/warehouse/inventory-counts', searchAliases: ['sayım', 'envanter', 'fiziksel sayım', 'döngüsel sayım', 'kör sayım', 'fark'], requiredPermission: 'WMS.INVENTORY_COUNT.VIEW' },
       { title: 'sidebar.packing', titleFallback: 'Paketleme', children: [
         { title: 'sidebar.packingWorkbench', titleFallback: 'Paketleme İstasyonu', href: '/warehouse/packing', searchAliases: ['paket', 'koli', 'palet', 'sscc', 'tartı'], requiredPermission: 'WMS.PACKING.VIEW' },
         { title: 'sidebar.packingDefinitions', titleFallback: 'Paketleme Tanımları', href: '/warehouse/packing/definitions', searchAliases: ['ambalaj', 'koli', 'palet', 'istasyon'], requiredPermission: 'WMS.PACKING.DEFINITIONS.VIEW' },

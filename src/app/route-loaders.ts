@@ -74,7 +74,9 @@ export const loadWarehouseOutboundListPage = () => import('@/features/warehouse-
 export const loadWarehouseOutboundPolicyPage = () => import('@/features/warehouse-outbound/WarehouseOutboundPolicyPage');
 export const loadWarehouseOutboundOperationPage = () => import('@/features/warehouse-outbound/WarehouseOutboundOperationPage');
 export const loadPackingPages = () => import('@/features/packing');
+export const loadInventoryCountPage = () => import('@/features/inventory-count');
 const routePreloaders: Array<[prefix: string, load: () => Promise<unknown>]> = [
+  ['/warehouse/inventory-counts', loadInventoryCountPage],
   ['/warehouse/assistant', loadWarehouseAssistantPage],
   ['/procurement/quotes/new', loadSupplierQuoteEntryPage],
   ['/procurement', loadProcurementPage],

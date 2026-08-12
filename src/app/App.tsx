@@ -25,6 +25,7 @@ import {
   loadVehicleCheckInListPage, loadVehicleCheckInPage, loadWarehouseTransferDraftPage,
   loadWarehouseTransferCreateHubPage, loadWarehouseTransferHubPage, loadWarehouseTransferListPage, loadWarehouseTransferOperationPage,
   loadWarehouseTransferPolicyPage,
+  loadInventoryCountPage,
 } from './route-loaders';
 
 import {
@@ -146,6 +147,7 @@ const WarehouseOutboundOperationPage = lazy(() => loadWarehouseOutboundOperation
 const PackingWorkbenchPage = lazy(() => loadPackingPages().then((m) => ({ default: m.PackingWorkbenchPage })));
 const PackingDefinitionsPage = lazy(() => loadPackingPages().then((m) => ({ default: m.PackingDefinitionsPage })));
 const PackingPolicyPage = lazy(() => loadPackingPages().then((m) => ({ default: m.PackingPolicyPage })));
+const InventoryCountPage = lazy(() => loadInventoryCountPage().then((m) => ({ default: m.InventoryCountPage })));
 function Dashboard(): ReactElement {
   return <DashboardPage />;
 }
@@ -208,6 +210,7 @@ export function App(): ReactElement {
           <Route path="warehouse/packing" element={<PackingWorkbenchPage />} />
           <Route path="warehouse/packing/definitions" element={<PackingDefinitionsPage />} />
           <Route path="warehouse/packing/settings" element={<PackingPolicyPage />} />
+          <Route path="warehouse/inventory-counts" element={<InventoryCountPage />} />
           <Route path="warehouse/transfers" element={<WarehouseTransferHubPage />} />
           <Route path="warehouse/transfers/new" element={<WarehouseTransferDraftPage />} />
           <Route path="warehouse/transfers/new-operation" element={<WarehouseTransferCreateHubPage />} />

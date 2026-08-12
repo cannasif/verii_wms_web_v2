@@ -522,6 +522,7 @@
     "locationBalances": "أرصدة المواقع",
     "warehouseBalances": "رصيد مخزون المستودع",
     "serialBalances": "رصيد السلسلة التسلسلية للمخزون",
+    "inventoryCounts": "إدارة الجرد",
     "warehouseAssistant": "مساعد المستودع",
     "qualityControl": "الجودة",
     "qualityControlInspections": "قائمة فحص الجودة",
