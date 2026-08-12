@@ -47,7 +47,7 @@
     "orderSelection": "Order selection",
     "steps": {
       "0": "Orders and line plan",
-      "1": "Review and create"
+      "1": "Review and create waybill"
     },
     "orderNo": "Order No",
     "orderNoHelpAria": "About fetching by order number",
@@ -157,7 +157,15 @@
       "suggestion": "suggested",
       "selected": "Selected",
       "autoSerialReserved": "Auto-generated serials were reserved.",
-      "cancelAutoSerials": "Cancel auto-generated serials"
+      "cancelAutoSerials": "Cancel auto-generated serials",
+      "stockImageAria": "{{name}} stock image",
+      "stockImageHint": "Hover to preview, click to enlarge",
+      "stockImageLoading": "Loading image…",
+      "stockImageEmpty": "No stock image",
+      "stockImageError": "Could not load image",
+      "stockImageLightbox": "{{name}} image",
+      "stockImageClose": "Close",
+      "stockImageFallback": "Stock"
     },
     "labelOptions": {
       "none": "No label",
@@ -170,6 +178,13 @@
     "review": {
       "supplierCard": "Supplier account",
       "customerCode": "Account code",
+      "city": "City",
+      "district": "District",
+      "cityDistrict": "City / District",
+      "address": "Address",
+      "phone": "Phone",
+      "email": "Email",
+      "website": "Website",
       "branch": "Branch",
       "orderInfoCard": "Order information",
       "documentSeries": "Document series",
@@ -177,8 +192,9 @@
       "projectAndOrderDate": "Project / order date",
       "orderDate": "Order date",
       "summaryTitle": "Review summary",
-      "linesAndQuantity": "Lines / quantity",
-      "orderAvailableQuantity": "Order available quantity",
+      "linesAndQuantity": "Items / quantity",
+      "orderAvailableQuantity": "Available",
+      "metricAvailableHint": "Accepted: {{accepted}}",
       "warehouseCount": "Warehouse count",
       "trackingLineCount": "Lot/serial rows",
       "qualityRoutingTitle": "Quality control routing",
@@ -193,9 +209,15 @@
       "multipleProjectsCount": "{{count}} projects",
       "projectsTooltipHint": "Scroll to see all project codes",
       "metricLinesHint": "View stocks",
+      "metricLineUnit": "items",
+      "metricQuantityUnit": "qty",
+      "metricUnitCount": "{{count}} units",
       "metricQualityLabel": "Quality",
       "metricQualityNone": "None",
       "metricQualityHint": "View quality list",
+      "qualityWarnTitle": "Items will go to quality control",
+      "qualityWarnText": "{{count}} line(s) will be routed to quality. Click here or the Quality card to view them.",
+      "qualityWarnAria": "View {{count}} quality line(s)",
       "forceQualityLabel": "Send to quality",
       "forceQualityAria": "Send stocks on this receipt to quality"
     },
@@ -236,13 +258,13 @@
       "removeForcedTitle": "Remove from quality for this receipt",
       "removeForcedAria": "Remove {{code}} from quality for this receipt",
       "receiptLinesTitle": "Receipt lines",
-      "receiptLinesDescription": "Select new lines and Send to quality to add them. Use the X on the quality list to remove; rule stocks stay locked.",
+      "receiptLinesDescription": "Select new lines and use Add to quality. Remove with the X on the quality list; rule stocks stay locked.",
       "receiptLinesSearchAria": "Search receipt lines",
       "orderLinesDescription": "All lines in this goods receipt task.",
       "selectLineAria": "Select line {{code}}",
-      "forceQualitySubmit": "Send to quality",
+      "forceQualitySubmit": "Add to quality",
       "forceQualityCancel": "Cancel",
-      "forceQualitySubmitTitle": "Adds the selected stocks to quality for this receipt"
+      "forceQualitySubmitTitle": "Adds selected lines to this receipt’s quality list; they go to quality approval after the waybill."
     },
     "success": {
       "directEyebrow": "Direct goods receipt from order",

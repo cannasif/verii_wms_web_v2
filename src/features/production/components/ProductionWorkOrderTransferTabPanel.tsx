@@ -1,16 +1,18 @@
 import { useCallback, useMemo, useState, type ReactElement } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Ban,
   AlertTriangle,
+  ArrowRightLeft,
   ChevronDown,
   ChevronRight,
   Eye,
   Loader2,
+  PackageCheck,
   Pencil,
   PlayCircle,
   RotateCcw,
-  UserPlus,
+  Users,
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -23,8 +25,14 @@ import {
 import { requiredActionColumn, systemColumns } from '@/components/shared/GridSystemColumns';
 import { OpsLoadingState } from '@/components/shared/OpsLoadingState';
 import { OpsStatusBadge } from '@/components/shared/OpsStatusBadge';
+import { OpsActionButton } from '@/components/shared/OpsActionButton';
+import { AppInput } from '@/components/shared/AppInput';
+import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
+import { ResponsiveDialog } from '@/components/shared/ResponsiveDialog';
+import { OPS_SELECT_TRIGGER_CLASS } from '@/components/shared/ops-field-styles';
 import { formatProjectDate, formatProjectNumber } from '@/lib/project-format';
 import { localizeEnumValue } from '@/lib/enum-localization';
+import { foldTurkishSearch } from '@/lib/turkish-search';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
@@ -49,7 +57,9 @@ import {
 import { useProductionTransferListCancel } from '@/features/production-transfer/hooks/useProductionTransferListCancel';
 import {
   productionTransferApi,
+  type ProductionTask,
   type ProductionTaskBoard,
+  type ProductionTaskPoolRow,
   type ProductionWorkOrderTransferHeaderRow,
   type ProductionWorkOrderTransferTab,
   type ProductionWorkOrderTransferTaskRow,
@@ -61,6 +71,7 @@ import {
 import { productionTransferEnumLabel } from '@/features/production-transfer/localization/enum-labels';
 import { isReturnTaskType } from '@/features/production-transfer/production-transfer-task-chain';
 import type { WarehouseTransferGridRow } from '@/features/warehouse-transfer-v2/types/warehouse-transfer.types';
+import type { ActiveUserOption } from '@/features/goods-receipt-v2/types/goods-receipt.types';
 import { filterLocalGridPage } from '../production-work-order-transfer-grid.utils';
 import { productionApi } from '../api';
 import type { ProductionSourceWorkOrder } from '../types';
@@ -91,21 +102,271 @@ const TASK_NAME_HEAD = cn(
 
 const TASK_ACTIONS_COL = cn(
   TASK_CELL,
-  'min-w-[22rem] w-[22rem] whitespace-normal text-right',
+  'min-w-[10rem] w-[10rem] whitespace-normal text-right',
 );
 
 const TASK_HEAD = TASK_CELL;
 
 const TASK_ACTIONS_HEAD = cn(
   TASK_CELL,
-  'min-w-[22rem] w-[22rem] text-right',
+  'min-w-[10rem] w-[10rem] text-right',
 );
 
 const transferBaseUrl = '/warehouse/production-transfers';
 const G = 'dataGrid.transferRecords';
+const HANDOFF_DIALOG_DROPDOWN_CONTENT = 'z-[5000]';
+
+const encodeHandoffUser = (user: ActiveUserOption): string => encodeURIComponent(JSON.stringify(user));
+const decodeHandoffUser = (value: string): ActiveUserOption => JSON.parse(decodeURIComponent(value)) as ActiveUserOption;
 
 function isActiveTaskStatus(status: string): boolean {
   return !['Completed', 'Cancelled'].includes(status);
+}
+
+function isHandoffEligibleLiveTask(
+  liveTask: ProductionTaskBoard['tasks'][number],
+): boolean {
+  return !isReturnTaskType(liveTask.taskType)
+    && isActiveTaskStatus(liveTask.status)
+    && liveTask.assignments.length > 0
+    && liveTask.lines.some((line) => line.processedQuantity < line.requestedQuantity);
+}
+
+function TransferHandoffAction({
+  transferId,
+  documentNo,
+  tab,
+  onCompleted,
+}: {
+  transferId: number;
+  documentNo: string;
+  tab: ProductionWorkOrderTransferTab;
+  onCompleted: () => void;
+}): ReactElement | null {
+  const { can } = usePermissionAccess();
+  const queryClient = useQueryClient();
+  const canAssign = can('WMS.PRODUCTION_TRANSFER.ASSIGN');
+  const boardQueryKey = ['production-transfer', 'board', transferId] as const;
+  const showHandoff = tab === 'Picking' && canAssign && transferId > 0;
+  const boardQuery = useQuery({
+    queryKey: boardQueryKey,
+    queryFn: () => productionTransferApi.taskBoard(transferId),
+    enabled: showHandoff,
+  });
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [handoffTask, setHandoffTask] = useState<ProductionTask | null>(null);
+  const [handoffUser, setHandoffUser] = useState<ActiveUserOption | null>(null);
+  const [handoffReason, setHandoffReason] = useState('');
+  const [busy, setBusy] = useState(false);
+  const board = boardQuery.data;
+
+  const eligibleLiveTasks = useMemo(
+    () => (board?.tasks ?? []).filter(isHandoffEligibleLiveTask),
+    [board?.tasks],
+  );
+
+  const eligibleHandoffUserIds = useMemo(() => {
+    if (!board || !handoffTask) return new Set<number>();
+    return new Set(
+      board.eligibleAssignees
+        .filter((user) =>
+          (user.warehouseIds.length === 0 || user.warehouseIds.includes(handoffTask.warehouseId))
+          && !handoffTask.assignments.some((assignment) => assignment.userId === user.userId))
+        .map((user) => user.userId),
+    );
+  }, [board, handoffTask]);
+
+  const openDialog = useCallback(() => {
+    if (!board) return;
+    const task = eligibleLiveTasks[eligibleLiveTasks.length - 1] ?? null;
+    if (!task) {
+      toast.error('Devredilebilir açık görev bulunamadı.');
+      return;
+    }
+    setHandoffTask(task);
+    setHandoffUser(null);
+    setHandoffReason('');
+    setDialogOpen(true);
+  }, [board, eligibleLiveTasks]);
+
+  const closeDialog = useCallback(() => {
+    if (busy) return;
+    setDialogOpen(false);
+    setHandoffTask(null);
+    setHandoffUser(null);
+    setHandoffReason('');
+  }, [busy]);
+
+  const submit = useCallback(async () => {
+    if (!handoffTask || !handoffUser) return;
+    if (handoffReason.trim().length < 3) {
+      toast.error('Devir nedeni en az 3 karakter olmalıdır.');
+      return;
+    }
+    if (!eligibleHandoffUserIds.has(handoffUser.id)) {
+      toast.error('Seçilen kullanıcı bu görev için devralamaz.');
+      return;
+    }
+    setBusy(true);
+    try {
+      const nextBoard = await productionTransferApi.handoffTask(
+        transferId,
+        handoffTask.taskId,
+        handoffUser.id,
+        handoffReason.trim(),
+      );
+      queryClient.setQueryData(boardQueryKey, nextBoard);
+      toast.success(`${documentNo} · Kalan iş devredildi.`);
+      setDialogOpen(false);
+      setHandoffTask(null);
+      setHandoffUser(null);
+      setHandoffReason('');
+      onCompleted();
+      await queryClient.invalidateQueries({ queryKey: ['advanced-grid', `production-work-order-transfers-${tab}`] });
+      await queryClient.invalidateQueries({ queryKey: ['production-work-order-transfer-tasks', transferId] });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Devir başarısız.');
+    } finally {
+      setBusy(false);
+    }
+  }, [
+    boardQueryKey,
+    documentNo,
+    eligibleHandoffUserIds,
+    handoffReason,
+    handoffTask,
+    handoffUser,
+    onCompleted,
+    queryClient,
+    tab,
+    transferId,
+  ]);
+
+  if (!showHandoff || boardQuery.isLoading || eligibleLiveTasks.length === 0) return null;
+
+  const assignedUsers = handoffTask?.assignments.map((assignment) => assignment.username).join(', ') ?? '';
+  const remainingLineCount = handoffTask?.lines.filter((line) => line.processedQuantity < line.requestedQuantity).length ?? 0;
+
+  return (
+    <>
+      <button
+        type="button"
+        title="Kalan işi devret"
+        aria-label="Kalan işi devret"
+        onClick={openDialog}
+        className="wms-ops-grid-icon-btn"
+      >
+        <ArrowRightLeft className="size-3.5" aria-hidden />
+      </button>
+      {dialogOpen && handoffTask ? (
+        <ResponsiveDialog
+          onClose={closeDialog}
+          title="Kalan işi devret"
+          description={`${handoffTask.taskNo} görevi şu an ${assignedUsers || 'atanmış kullanıcı'} üzerinde. Kalan toplama işi seçeceğiniz depo çalışanına devredilir.`}
+          className="!max-w-lg border-amber-500/30"
+        >
+          <div className="space-y-4">
+            <div className="rounded-xl border border-[var(--wms-ops-card-border)] p-3 text-sm text-[var(--wms-app-text-muted)]">
+              Devredilecek {remainingLineCount} kalem var. Toplanmış kısım mevcut görevde kalır; mevcut atananlar korunur.
+            </div>
+            <label className="block space-y-1.5 text-xs font-bold uppercase tracking-wide text-[var(--wms-app-text-muted)]">
+              Devralacak depo çalışanı
+              <div className="wms-ops-field-shell w-full min-w-0">
+                <PagedAppDropdown<ActiveUserOption>
+                  queryKey={['production-transfer-handoff-users', transferId, handoffTask.taskId, board?.eligibleAssignees.length ?? 0]}
+                  fetchPage={async (request) => {
+                    if (!board) {
+                      return {
+                        items: [],
+                        pageNumber: 1,
+                        pageSize: request.pageSize,
+                        totalCount: 0,
+                        totalPages: 1,
+                        hasNextPage: false,
+                      };
+                    }
+
+                    const normalizedSearch = foldTurkishSearch(request.search?.trim() ?? '');
+                    const filtered = board.eligibleAssignees
+                      .filter((user) => eligibleHandoffUserIds.has(user.userId))
+                      .filter((user) => !normalizedSearch
+                        || foldTurkishSearch(user.username).includes(normalizedSearch))
+                      .sort((left, right) => left.username.localeCompare(right.username, 'tr'));
+
+                    const totalCount = filtered.length;
+                    const start = (request.pageNumber - 1) * request.pageSize;
+                    const items = filtered.slice(start, start + request.pageSize).map((assignee) => ({
+                      id: assignee.userId,
+                      username: assignee.username,
+                      email: '',
+                      firstName: '',
+                      lastName: '',
+                      isActive: true,
+                    } satisfies ActiveUserOption));
+
+                    return {
+                      items,
+                      totalCount,
+                      pageNumber: request.pageNumber,
+                      pageSize: request.pageSize,
+                      totalPages: Math.max(1, Math.ceil(totalCount / Math.max(request.pageSize, 1))),
+                      hasNextPage: start + request.pageSize < totalCount,
+                    };
+                  }}
+                  toOption={(user) => ({
+                    value: encodeHandoffUser(user),
+                    label: `${user.firstName} ${user.lastName}`.trim() || user.username,
+                    description: `${user.username} · ${user.email}`,
+                  })}
+                  value={handoffUser ? encodeHandoffUser(handoffUser) : null}
+                  selectedOption={handoffUser ? {
+                    value: encodeHandoffUser(handoffUser),
+                    label: `${handoffUser.firstName} ${handoffUser.lastName}`.trim() || handoffUser.username,
+                  } : undefined}
+                  onValueChange={(value) => setHandoffUser(value ? decodeHandoffUser(value) : null)}
+                  searchable
+                  minSearchLength={1}
+                  portalContainer={null}
+                  contentClassName={HANDOFF_DIALOG_DROPDOWN_CONTENT}
+                  className={cn(OPS_SELECT_TRIGGER_CLASS, 'w-full')}
+                  placeholder="Depo çalışanı seçin"
+                />
+              </div>
+            </label>
+            <label className="block space-y-1.5 text-xs font-bold uppercase tracking-wide text-[var(--wms-app-text-muted)]">
+              Devir nedeni
+              <AppInput
+                value={handoffReason}
+                onChange={(event) => setHandoffReason(event.target.value)}
+                maxLength={1000}
+              />
+            </label>
+            <div className="flex justify-end gap-2 border-t border-[var(--wms-ops-card-border)] pt-4">
+              <OpsActionButton
+                type="button"
+                variant="secondary"
+                className="wms-ops-list-toolbar-btn"
+                disabled={busy}
+                onClick={closeDialog}
+              >
+                Vazgeç
+              </OpsActionButton>
+              <OpsActionButton
+                type="button"
+                variant="primary"
+                className="wms-ops-list-toolbar-btn"
+                disabled={busy || !handoffUser || handoffReason.trim().length < 3}
+                onClick={() => void submit()}
+              >
+                <ArrowRightLeft className="size-3.5" aria-hidden />
+                Kalan işi devret
+              </OpsActionButton>
+            </div>
+          </div>
+        </ResponsiveDialog>
+      ) : null}
+    </>
+  );
 }
 
 export type ProductionWorkOrderTransferGridRow = WarehouseTransferGridRow & {
@@ -113,7 +374,37 @@ export type ProductionWorkOrderTransferGridRow = WarehouseTransferGridRow & {
   externalReferenceNo?: string;
   productionOrderNo?: string;
   cancelledWorkOrder?: ProductionSourceWorkOrder;
+  /** Toplamada sekmesinde Benim İşlerim API'si ile eşleşen transferler. */
+  hasMyAssignment?: boolean;
+  /** Depo havuzunda, henüz kimseye atanmamış açık toplama görevi. */
+  hasPoolTask?: boolean;
+  poolTaskId?: number;
 };
+
+function isClaimablePoolTaskRow(row: ProductionTaskPoolRow): boolean {
+  return row.taskType === 'Pick'
+    && row.taskStatus === 'Open'
+    && row.assignedUsers.length === 0;
+}
+
+function buildPoolTaskIdsByTransferId(poolRows: ProductionTaskPoolRow[]): Map<number, number> {
+  const map = new Map<number, number>();
+  for (const poolRow of poolRows) {
+    if (!isClaimablePoolTaskRow(poolRow)) continue;
+    map.set(poolRow.transferId, poolRow.taskId);
+  }
+  return map;
+}
+
+function canShowTransferOperations(
+  row: ProductionWorkOrderTransferGridRow,
+  tab: ProductionWorkOrderTransferTab,
+): boolean {
+  if (row.status === 'Cancelled') return false;
+  if (tab === 'MyAssignments') return true;
+  if (tab === 'Picking') return Boolean(row.hasMyAssignment) && row.status !== 'Draft';
+  return row.status !== 'Draft';
+}
 
 const isCancelledWorkOrderAssignmentRow = (
   row: ProductionWorkOrderTransferGridRow,
@@ -210,26 +501,20 @@ function ExpandedTransferTasks({
   transferId,
   tasks,
   tab,
-  onBoardChanged,
+  canOperate,
 }: {
   transferId: number;
   tasks: ProductionWorkOrderTransferTaskRow[];
   tab: ProductionWorkOrderTransferTab;
-  onBoardChanged: () => void;
+  canOperate: boolean;
 }): ReactElement {
   const { t } = useModuleTranslation('production-transfer');
   const canManageAssignments = tab !== 'Cancelled';
-  const { can } = usePermissionAccess();
-  const queryClient = useQueryClient();
-  const boardQueryKey = ['production-transfer', 'board', transferId] as const;
   const boardQuery = useQuery({
-    queryKey: boardQueryKey,
+    queryKey: ['production-transfer', 'board', transferId],
     queryFn: () => productionTransferApi.taskBoard(transferId),
     enabled: canManageAssignments && Number.isFinite(transferId) && transferId > 0,
   });
-  const [busy, setBusy] = useState(false);
-  const [selectedUsers, setSelectedUsers] = useState<Record<number, number>>({});
-  const canAssign = can('WMS.PRODUCTION_TRANSFER.ASSIGN');
   const board = boardQuery.data;
   const orderedTasks = useMemo(() => {
     if (board?.tasks.length) {
@@ -251,20 +536,6 @@ function ExpandedTransferTasks({
     }
     return orderTasksForDisplay(tasks);
   }, [board?.tasks, tasks]);
-
-  const run = useCallback(async (action: () => Promise<ProductionTaskBoard>) => {
-    setBusy(true);
-    try {
-      queryClient.setQueryData(boardQueryKey, await action());
-      onBoardChanged();
-      await queryClient.invalidateQueries({ queryKey: ['advanced-grid', `production-work-order-transfers-${tab}`] });
-      await queryClient.invalidateQueries({ queryKey: ['production-work-order-transfer-tasks', transferId] });
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'İşlem başarısız.');
-    } finally {
-      setBusy(false);
-    }
-  }, [boardQueryKey, onBoardChanged, queryClient, tab]);
 
   if (canManageAssignments && boardQuery.isLoading) {
     return (
@@ -290,10 +561,10 @@ function ExpandedTransferTasks({
         </thead>
         <tbody>
           {orderedTasks.map((task) => {
-            const liveTask = board?.tasks.find((item) => item.taskId === task.taskId);
-            const assignableUserId = selectedUsers[task.taskId];
             const handoffHint = describeHandoffRelation(task, orderedTasks, t);
-            const showExecuteOperation = isReturnTaskType(task.taskType) && isActiveTaskStatus(task.status);
+            const showExecuteOperation = canOperate
+              && isReturnTaskType(task.taskType)
+              && isActiveTaskStatus(task.status);
             return (
               <tr key={task.taskId}>
                 <td className={TASK_NAME_COL}>
@@ -325,50 +596,8 @@ function ExpandedTransferTasks({
                         Operasyonu yürüt
                       </Link>
                     ) : null}
-                      {canManageAssignments
-                        && tab === 'Picking'
-                        && canAssign && liveTask
-                        && !isReturnTaskType(task.taskType)
-                        && isActiveTaskStatus(task.status)
-                        && liveTask.assignments.length > 0
-                        && liveTask.lines.some((line) => line.processedQuantity < line.requestedQuantity) ? (
-                          <>
-                            <select
-                              className="input !h-8 !min-h-8 !w-auto min-w-32 shrink-0 !rounded-lg !px-3 !py-0 !text-xs leading-8"
-                              value={assignableUserId ?? ''}
-                              onChange={(event) =>
-                                setSelectedUsers((current) => ({
-                                  ...current,
-                                  [task.taskId]: Number(event.target.value),
-                                }))}
-                            >
-                              <option value="">Depo çalışanı seçin</option>
-                              {(board?.eligibleAssignees ?? [])
-                                .filter((user) =>
-                                  (user.warehouseIds.length === 0 || user.warehouseIds.includes(liveTask.warehouseId))
-                                  && !liveTask.assignments.some((assignment) => assignment.userId === user.userId))
-                                .map((user) => (
-                                  <option key={user.userId} value={user.userId}>{user.username}</option>
-                                ))}
-                            </select>
-                            <button
-                              type="button"
-                              disabled={busy || !assignableUserId}
-                              onClick={() => void run(() =>
-                                productionTransferApi.handoffTask(
-                                  transferId,
-                                  liveTask.taskId,
-                                  assignableUserId,
-                                ))}
-                              className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg bg-amber-500 px-3 py-2 text-xs font-black text-slate-950 disabled:opacity-40"
-                            >
-                              <UserPlus className="size-4" aria-hidden />
-                              Kalan işi devret
-                            </button>
-                          </>
-                        ) : null}
-                    </div>
-                  </td>
+                  </div>
+                </td>
               </tr>
             );
           })}
@@ -381,11 +610,11 @@ function ExpandedTransferTasks({
 function ProductionWorkOrderTransferTaskList({
   transferId,
   tab,
-  onBoardChanged,
+  canOperate,
 }: {
   transferId: number;
   tab: ProductionWorkOrderTransferTab;
-  onBoardChanged: () => void;
+  canOperate: boolean;
 }): ReactElement {
   const tasksQuery = useQuery({
     queryKey: ['production-work-order-transfer-tasks', transferId],
@@ -414,7 +643,7 @@ function ProductionWorkOrderTransferTaskList({
       transferId={transferId}
       tasks={tasksQuery.data ?? []}
       tab={tab}
-      onBoardChanged={onBoardChanged}
+      canOperate={canOperate}
     />
   );
 }
@@ -424,11 +653,14 @@ export function ProductionWorkOrderTransferTabPanel({
   refreshKey = 0,
   hidden = false,
   onPendingQueueChanged,
+  onAfterPoolClaim,
 }: {
   tab: ProductionWorkOrderTransferTab;
   refreshKey?: number;
   hidden?: boolean;
   onPendingQueueChanged?: () => void;
+  /** Havuzdan üzerine alındıktan sonra (KKD Hazırlamada → Benim İşlerim geçişi gibi). */
+  onAfterPoolClaim?: () => void;
 }): ReactElement {
   const { t } = useModuleTranslation('production-transfer');
   const { t: tc, i18n } = useTranslation('common');
@@ -465,12 +697,58 @@ export function ProductionWorkOrderTransferTabPanel({
     }
 
     const rows = await productionTransferApi.workOrderTransferGroups(tab);
-    return filterLocalGridPage(rows.map(toGridRow), request, SEARCHABLE_KEYS);
+    if (tab === 'Picking') {
+      const [myAssignments, poolRows] = await Promise.all([
+        productionTransferApi.workOrderTransferGroups('MyAssignments'),
+        productionTransferApi.taskPool(),
+      ]);
+      const myAssignmentIds = new Set(myAssignments.map((row) => row.transferId));
+      const poolTaskIdsByTransferId = buildPoolTaskIdsByTransferId(poolRows);
+      return filterLocalGridPage(
+        rows.map((row) => {
+          const poolTaskId = poolTaskIdsByTransferId.get(row.transferId);
+          return {
+            ...toGridRow(row),
+            hasMyAssignment: myAssignmentIds.has(row.transferId),
+            hasPoolTask: poolTaskId != null,
+            poolTaskId,
+          };
+        }),
+        request,
+        SEARCHABLE_KEYS,
+      );
+    }
+
+    return filterLocalGridPage(
+      rows.map((row) => ({
+        ...toGridRow(row),
+        hasMyAssignment: tab === 'MyAssignments' ? true : undefined,
+      })),
+      request,
+      SEARCHABLE_KEYS,
+    );
   }, [tab, refreshKey]);
 
   const refreshGroups = useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: ['advanced-grid', `production-work-order-transfers-${tab}`] });
   }, [queryClient, tab]);
+
+  const refreshAllTransferGrids = useCallback(() => {
+    for (const gridTab of ['Picking', 'MyAssignments', 'Completed', 'Cancelled'] as const) {
+      void queryClient.invalidateQueries({ queryKey: ['advanced-grid', `production-work-order-transfers-${gridTab}`] });
+    }
+  }, [queryClient]);
+
+  const claimPool = useMutation({
+    mutationFn: async (payload: { transferId: number; taskId: number }) =>
+      productionTransferApi.claimTask(payload.transferId, payload.taskId),
+    onSuccess: () => {
+      refreshAllTransferGrids();
+      onAfterPoolClaim?.();
+      toast.success('Görev depo havuzundan üzerinize alındı.');
+    },
+    onError: (error) => toast.error(error instanceof Error ? error.message : 'Görev üzerine alınamadı.'),
+  });
 
   const toggleExpanded = useCallback((transferId: number) => {
     if (transferId < 0) return;
@@ -714,61 +992,90 @@ export function ProductionWorkOrderTransferTabPanel({
       key: 'actions',
       label: tc(`${G}.actions`),
       ...requiredActionColumn,
+      width: tab === 'Picking' ? 280 : tab === 'MyAssignments' ? 200 : 220,
       render: (row) => (
-        <div className="flex items-center justify-center gap-1">
+        <div className="wms-ops-row-actions" onClick={(event) => event.stopPropagation()}>
           {isCancelledWorkOrderAssignmentRow(row) ? (
             can('WMS.PRODUCTION_TRANSFER.CREATE') ? (
               <button
                 type="button"
                 title="İş emrini geri getir"
+                aria-label="İş emrini geri getir"
                 onClick={() => setRestoreTarget(row.cancelledWorkOrder)}
-                className="rounded-lg p-2 text-emerald-500 hover:bg-emerald-500/10"
+                className="wms-ops-grid-icon-btn"
               >
-                <RotateCcw className="size-4" aria-hidden />
+                <RotateCcw className="size-3.5" aria-hidden />
               </button>
             ) : null
           ) : (
           <>
-          {row.status !== 'Cancelled' && (isMyAssignmentsTab || row.status !== 'Draft') ? (
+          <button
+            type="button"
+            title="Detayı göster"
+            aria-label="Detayı göster"
+            onClick={() => openDetail(row.source)}
+            className="wms-ops-grid-icon-btn"
+          >
+            <Eye className="size-3.5" aria-hidden />
+          </button>
+          <TransferHandoffAction
+            transferId={row.id}
+            documentNo={row.documentNo}
+            tab={tab}
+            onCompleted={refreshGroups}
+          />
+          {tab === 'Picking'
+            && can('WMS.PRODUCTION_TRANSFER.OPERATE')
+            && row.hasPoolTask
+            && row.poolTaskId
+            && !row.hasMyAssignment
+            && row.status !== 'Cancelled' ? (
+            <button
+              type="button"
+              className="wms-ops-grid-icon-btn"
+              title="Havuzdan üzerime al"
+              aria-label="Havuzdan üzerime al"
+              disabled={claimPool.isPending}
+              onClick={() => claimPool.mutate({ transferId: row.id, taskId: row.poolTaskId! })}
+            >
+              <Users className="size-3.5" aria-hidden />
+            </button>
+          ) : null}
+          {canShowTransferOperations(row, tab) ? (
             <Link
               to={`${transferBaseUrl}/${row.id}/operations`}
-              title="Operasyonu yürüt"
-              className="rounded-lg p-2 text-cyan-500 hover:bg-cyan-500/10"
+              title="Toplama yap"
+              aria-label="Toplama yap"
+              className="wms-ops-grid-icon-btn"
             >
-              <PlayCircle className="size-4" aria-hidden />
+              <PackageCheck className="size-3.5" aria-hidden />
             </Link>
           ) : null}
           {row.status === 'Draft' && tab !== 'MyAssignments' ? (
             <button
               type="button"
               title="Atanan stokları geri al"
+              aria-label="Atanan stokları geri al"
               onClick={() => openWithdrawDraft(row.source)}
-              className="rounded-lg p-2 text-amber-500 hover:bg-amber-500/10"
+              className="wms-ops-grid-icon-btn"
             >
-              <Pencil className="size-4" aria-hidden />
+              <Pencil className="size-3.5" aria-hidden />
             </button>
           ) : null}
           {row.status !== 'Cancelled' && tab !== 'MyAssignments' ? (
             <button
               type="button"
               title="Transferi iptal et"
+              aria-label="Transferi iptal et"
               disabled={cancelPrecheckId === row.id}
               onClick={() => void beginProductionCancel(row)}
-              className="rounded-lg p-2 text-orange-500 hover:bg-orange-500/10 disabled:opacity-50"
+              className="wms-ops-grid-icon-btn !text-rose-600 disabled:opacity-50"
             >
               {cancelPrecheckId === row.id
-                ? <Loader2 className="size-4 animate-spin" aria-hidden />
-                : <Ban className="size-4" aria-hidden />}
+                ? <Loader2 className="size-3.5 animate-spin" aria-hidden />
+                : <Ban className="size-3.5" aria-hidden />}
             </button>
           ) : null}
-          <button
-            type="button"
-            title="Detayı göster"
-            onClick={() => openDetail(row.source)}
-            className="rounded-lg p-2 text-violet-500 hover:bg-violet-500/10"
-          >
-            <Eye className="size-4" aria-hidden />
-          </button>
           </>
           )}
         </div>
@@ -778,6 +1085,7 @@ export function ProductionWorkOrderTransferTabPanel({
     can,
     beginProductionCancel,
     cancelPrecheckId,
+    claimPool,
     expandedId,
     gridLanguage,
     isMyAssignmentsTab,
@@ -786,6 +1094,7 @@ export function ProductionWorkOrderTransferTabPanel({
     tab,
     tc,
     toggleExpanded,
+    refreshGroups,
   ]);
 
   return (
@@ -806,7 +1115,7 @@ export function ProductionWorkOrderTransferTabPanel({
             <ProductionWorkOrderTransferTaskList
               transferId={row.id}
               tab={tab}
-              onBoardChanged={refreshGroups}
+              canOperate={canShowTransferOperations(row, tab)}
             />
           )
         ) : undefined}

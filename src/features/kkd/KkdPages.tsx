@@ -43,8 +43,11 @@ import { OPS_SELECT_TRIGGER_CLASS } from '@/components/shared/ops-field-styles';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { DropdownPage } from '@/hooks/useDropdownInfiniteSearch';
 import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
+import type { LocationOption, WarehouseOption } from '@/features/goods-receipt-v2/types/goods-receipt.types';
 import { stockMovementsApi } from '@/features/stock-movements/api/stock-movements.api';
+import { warehouseTransferApi } from '@/features/warehouse-transfer-v2/api/warehouse-transfer.api';
 import { cn } from '@/lib/utils';
+import { useAuthStore } from '@/stores/auth-store';
 import type { PagedResponse } from '@/types/api';
 import { parameterToggleGuidance } from '@/features/settings-guidance/parameter-guidance.catalog';
 import {
@@ -267,6 +270,93 @@ const toPolicyForm = (value: KkdPolicy): PolicyForm => ({
   requireManagerApprovalForExcess: value.requireManagerApprovalForExcess,
 });
 
+/**
+ * Depo bazlı KKD toplama sanal rafı — canlı toplamada (barkod okutup miktar onaylayınca) kaynak
+ * raftan buraya gerçek stok hareketi postalanır. Üretimin ProductionPickingStagingLocationId'siyle
+ * aynı desen, ayrı bir KKD alanı (bkz. Warehouse.KkdPickingStagingLocationId).
+ */
+function KkdPickingStagingLocationPanel(): ReactElement {
+  const branchCode = useAuthStore((state) => state.branch?.code ?? '0');
+  const [warehouseValue, setWarehouseValue] = useState<string | null>(null);
+  const [locationValue, setLocationValue] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const warehouseId = Number(warehouseValue || 0);
+
+  useEffect(() => {
+    if (!warehouseId) { setLocationValue(null); return; }
+    void kkdApi.pickingStagingLocation(warehouseId)
+      .then((x) => setLocationValue(x.kkdPickingStagingLocationId ? String(x.kkdPickingStagingLocationId) : null))
+      .catch((error: Error) => toast.error(error.message));
+  }, [warehouseId]);
+
+  const save = async (): Promise<void> => {
+    if (!warehouseId) return;
+    setBusy(true);
+    try {
+      const result = await kkdApi.updatePickingStagingLocation(warehouseId, locationValue ? Number(locationValue) : null);
+      setLocationValue(result.kkdPickingStagingLocationId ? String(result.kkdPickingStagingLocationId) : null);
+      toast.success('KKD toplama sanal rafı kaydedildi.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Ayar kaydedilemedi.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <KkdPanel
+      code="LOC_05"
+      icon={<Warehouse className="size-4" strokeWidth={1.75} />}
+      title="Depo KKD toplama sanal rafı"
+      description="Barkodla toplama sırasında kaynak raftan buraya gerçek stok hareketi postalanır — teslim onaylanınca oradan çıkışa gider."
+    >
+      <div className="grid items-end gap-4 xl:grid-cols-[1fr_1fr_auto]">
+        <div className="min-w-0 space-y-1.5">
+          <span className="wms-ops-entry-label block">Depo</span>
+          <div className="wms-ops-field-shell">
+            <PagedAppDropdown<WarehouseOption>
+              queryKey={['kkd-picking-staging-warehouse', branchCode]}
+              fetchPage={(r) => warehouseTransferApi.warehouses(r, branchCode)}
+              toOption={(x) => ({ value: String(x.id), label: `${x.warehouseCode} · ${x.warehouseName}` })}
+              value={warehouseValue}
+              onValueChange={setWarehouseValue}
+              placeholder="Depo seçin"
+              searchable
+              className={OPS_SELECT_TRIGGER_CLASS}
+            />
+          </div>
+        </div>
+        <div className="min-w-0 space-y-1.5">
+          <span className="wms-ops-entry-label block">Toplama sanal rafı</span>
+          <div className="wms-ops-field-shell">
+            <PagedAppDropdown<LocationOption>
+              queryKey={['kkd-picking-staging-location', warehouseId]}
+              fetchPage={(r) => warehouseTransferApi.locations(r, warehouseId)}
+              toOption={(x) => ({ value: String(x.id), label: `${x.code} · ${x.name}` })}
+              enabled={warehouseId > 0}
+              dependencies={[warehouseId]}
+              value={locationValue}
+              onValueChange={setLocationValue}
+              placeholder="Raf seçin"
+              searchable
+              className={OPS_SELECT_TRIGGER_CLASS}
+            />
+          </div>
+        </div>
+        <OpsActionButton
+          variant="secondary"
+          disabled={warehouseId <= 0}
+          loading={busy}
+          loadingLabel={<><Save className="size-4" />Kaydediliyor…</>}
+          onClick={() => void save()}
+        >
+          <Save className="size-4" />Kaydet
+        </OpsActionButton>
+      </div>
+    </KkdPanel>
+  );
+}
+
 export function KkdPolicyPage(): ReactElement {
   const query = useQuery({ queryKey: ['kkd', 'policy'], queryFn: kkdApi.policy });
   const [form, setForm] = useState<PolicyForm>(POLICY_DEFAULTS);
@@ -394,6 +484,8 @@ export function KkdPolicyPage(): ReactElement {
               ve gerçek ambar çıkışı doğrulamaları her zaman uygulanır.
             </KkdCallout>
           </KkdPanel>
+
+          <KkdPickingStagingLocationPanel />
 
           <div className="wms-ops-form-card wms-ops-data-grid-shell flex flex-wrap items-center justify-between gap-3 overflow-hidden rounded-none border border-[var(--wms-ops-card-border)] px-4 py-3 shadow-none sm:px-6">
             <p className="min-w-0 text-[0.72rem] leading-5 text-[var(--wms-app-text-muted)]">

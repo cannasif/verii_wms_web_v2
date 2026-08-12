@@ -526,6 +526,13 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
       task.taskType === 'Pick' && !['Completed', 'Cancelled'].includes(task.status));
     return tasks.find((task) => task.assignments.some((a) => a.userId === currentUserId));
   }, [board, currentUserId]);
+  const poolPickTask = useMemo(() => {
+    if (!board) return undefined;
+    return board.tasks.find((task) =>
+      task.taskType === 'Pick'
+      && task.status === 'Open'
+      && task.assignments.length === 0);
+  }, [board]);
 
   const runBoardAction = useCallback(async (action: () => Promise<ProductionTaskBoard>) => {
     setBusy(true);
@@ -1205,6 +1212,11 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
     && workerPickTask.assignments.some((a) => a.userId === currentUserId)
     && !['InProgress', 'PartiallyCompleted', 'Completed', 'Cancelled'].includes(workerPickTask.status),
   );
+  const canClaimPool = Boolean(
+    table?.isLocked
+    && poolPickTask
+    && !workerPickTask,
+  );
   const showCompletedShelfColumn = tab === 'completed' && !table.isLocked;
 
   return (
@@ -1234,6 +1246,16 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
                 className="inline-flex items-center gap-2 rounded-lg bg-[var(--wms-brand-primary)] px-4 py-2 text-sm font-bold text-[var(--wms-brand-on-primary)] disabled:opacity-50"
               >
                 {checkingTaskId === workerPickTask?.taskId ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}
+                Bu işi yapıyorum
+              </button>
+            ) : table.isLocked && canClaimPool && poolPickTask ? (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => void runBoardAction(() => productionTransferApi.claimTask(transferId, poolPickTask.taskId))}
+                className="inline-flex items-center gap-2 rounded-lg bg-[var(--wms-brand-primary)] px-4 py-2 text-sm font-bold text-[var(--wms-brand-on-primary)] disabled:opacity-50"
+              >
+                {busy ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}
                 Bu işi yapıyorum
               </button>
             ) : !table.isLocked ? (

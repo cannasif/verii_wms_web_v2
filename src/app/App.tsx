@@ -73,6 +73,7 @@ const KkdPolicyPage = lazy(() => loadKkdPages().then((m) => ({ default: m.KkdPol
 const GoodsReceiptAssignedTasksPage = lazy(() => loadGoodsReceiptAssignedTasksPage().then((m) => ({ default: m.GoodsReceiptAssignedTasksPage })));
 const GoodsReceiptTasksPage = lazy(() => loadGoodsReceiptAssignedTasksPage().then((m) => ({ default: m.GoodsReceiptTasksPage })));
 const GoodsReceiptCreatePage = lazy(() => loadGoodsReceiptCreatePage().then((m) => ({ default: m.GoodsReceiptCreatePage })));
+const GoodsReceiptSuccessPreviewPage = lazy(() => loadGoodsReceiptCreatePage().then((m) => ({ default: m.GoodsReceiptSuccessPreviewPage })));
 const GoodsReceiptDirectPage = lazy(() => loadGoodsReceiptManualPage().then((m) => ({ default: m.GoodsReceiptDirectPage })));
 const GoodsReceiptOrderlessPage = lazy(() => loadGoodsReceiptManualPage().then((m) => ({ default: m.GoodsReceiptOrderlessPage })));
 const GoodsReceiptHubPage = lazy(() => loadGoodsReceiptHubPage().then((m) => ({ default: m.GoodsReceiptHubPage })));
@@ -251,6 +252,7 @@ export function App(): ReactElement {
           <Route path="warehouse/goods-receipts/new" element={<GoodsReceiptCreatePage />} />
           <Route path="warehouse/goods-receipts/orderless" element={<GoodsReceiptOrderlessPage />} />
           <Route path="warehouse/goods-receipts/direct" element={<GoodsReceiptDirectPage />} />
+          <Route path="warehouse/goods-receipts/success-preview" element={<GoodsReceiptSuccessPreviewPage />} />
           <Route path="warehouse/goods-receipts/list" element={<GoodsReceiptListPage />} />
           <Route path="warehouse/incoming-invoices" element={<IncomingInvoiceArchivePage />} />
           <Route path="warehouse/incoming-invoices/connections" element={<ELogoConnectionsPage />} />

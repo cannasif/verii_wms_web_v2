@@ -556,6 +556,66 @@ export type ToastErrorOptions = NonNullable<Parameters<typeof toast.error>[1]> &
   skipErrorNavigation?: boolean;
 };
 
+/** Cap active toasts; oldest dismisses (with Sonner exit animation) when over limit. */
+export const MAX_VISIBLE_TOASTS = 5;
+
+const activeToastIds: Array<string | number> = [];
+
+function forgetToastId(id: string | number): void {
+  const index = activeToastIds.indexOf(id);
+  if (index >= 0) activeToastIds.splice(index, 1);
+}
+
+function rememberToastId(id: string | number): void {
+  forgetToastId(id);
+  activeToastIds.push(id);
+  while (activeToastIds.length > MAX_VISIBLE_TOASTS) {
+    const oldest = activeToastIds.shift();
+    if (oldest != null) toast.dismiss(oldest);
+  }
+}
+
+type ToastData = NonNullable<Parameters<typeof toast.error>[1]> & {
+  skipErrorNavigation?: boolean;
+};
+
+function withToastLifecycle<T extends (message: Parameters<typeof toast.error>[0], data?: ToastData) => string | number>(
+  original: T,
+  kind: 'error' | 'warning' | 'success' | 'info' | 'message',
+): T {
+  return ((message: Parameters<typeof toast.error>[0], data?: ToastData) => {
+    const text = messageToText(message);
+    const { skipErrorNavigation, onDismiss, onAutoClose, ...rest } = data ?? {};
+    // Same message replaces the existing toast instead of stacking a twin
+    // (e.g. select-all warning spam, or blur + confirm on the same field).
+    const options: ToastData = {
+      ...rest,
+      ...(rest.id != null || !text ? {} : { id: `wms-${kind}:${text}` }),
+      onDismiss: (item) => {
+        forgetToastId(item.id);
+        onDismiss?.(item);
+      },
+      onAutoClose: (item) => {
+        forgetToastId(item.id);
+        onAutoClose?.(item);
+      },
+    };
+
+    const id = original(message, options);
+    rememberToastId(id);
+
+    if (kind === 'error' && !skipErrorNavigation) {
+      window.requestAnimationFrame(() => {
+        window.setTimeout(() => {
+          navigateToErrorTarget(text);
+        }, 40);
+      });
+    }
+
+    return id;
+  }) as T;
+}
+
 /** Typed wrapper so callers can pass `skipErrorNavigation` without fighting sonner's ExternalToast. */
 export function toastError(
   message: Parameters<typeof toast.error>[0],
@@ -568,29 +628,9 @@ export function installGlobalToastErrorNavigation(): void {
   if (installed || typeof window === 'undefined') return;
   installed = true;
 
-  const originalError = toast.error.bind(toast);
-
-  toast.error = ((message: Parameters<typeof toast.error>[0], data?: Parameters<typeof toast.error>[1] & {
-    skipErrorNavigation?: boolean;
-  }) => {
-    const text = messageToText(message);
-    // Same message replaces the existing toast instead of stacking a twin
-    // (e.g. input blur + confirm both validating the same serial mask).
-    const { skipErrorNavigation, ...rest } = data ?? {};
-    const options =
-      rest.id != null || !text
-        ? rest
-        : { ...rest, id: `wms-error:${text}` };
-    const id = originalError(message, options);
-
-    if (!skipErrorNavigation) {
-      window.requestAnimationFrame(() => {
-        window.setTimeout(() => {
-          navigateToErrorTarget(text);
-        }, 40);
-      });
-    }
-
-    return id;
-  }) as typeof toast.error;
+  toast.error = withToastLifecycle(toast.error.bind(toast), 'error');
+  toast.warning = withToastLifecycle(toast.warning.bind(toast), 'warning');
+  toast.success = withToastLifecycle(toast.success.bind(toast), 'success');
+  toast.info = withToastLifecycle(toast.info.bind(toast), 'info');
+  toast.message = withToastLifecycle(toast.message.bind(toast), 'message');
 }

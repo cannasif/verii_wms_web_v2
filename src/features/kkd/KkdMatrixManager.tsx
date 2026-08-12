@@ -852,7 +852,7 @@ function RuleEditor({
             value={groupLabel}
             placeholder="Hakediş grubu yazın veya seçin"
             searchPlaceholder="Grup ara"
-            emptyText="Hakediş grubu bulunamadı."
+            emptyText="Hakediş grubu bulunamadı — yazdığınız metin yeni grup kodu olarak kullanılabilir."
             queryKey={['kkd', 'matrix-entitlement-group-lookup']}
             fetchPage={async ({ pageNumber, pageSize, search, signal }) =>
               toPagedResponse(
@@ -876,6 +876,9 @@ function RuleEditor({
                 stockId: '',
                 stockLabel: '',
               })
+            }
+            onComboboxTextChange={(text) =>
+              patchRule(item.key, { groupCode: text.trim(), groupName: '', stockId: '', stockLabel: '' })
             }
           />
         </KkdField>

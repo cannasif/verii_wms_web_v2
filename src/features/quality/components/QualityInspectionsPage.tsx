@@ -38,6 +38,11 @@ import {
 } from "@/components/ui/tooltip";
 import { QualityInspectionStatusFilter } from "./QualityInspectionStatusFilter";
 import {
+  QualityApproveSubmitScreen,
+  QualityDecisionFlowOverlay,
+  QualityReceiptCreatedSuccessPanel,
+} from "./QualityDecisionFlowScreens";
+import {
   buildQualityInspectionStatusFilters,
   QUALITY_INSPECTION_STATUS_EXCLUDE_PASSED,
 } from "../utils/quality-inspection-list-filters";
@@ -52,6 +57,7 @@ import { useModuleTranslation } from "@/hooks/useModuleTranslation";
 import { goodsReceiptV2Api } from "@/features/goods-receipt-v2/api/goods-receipt.api";
 import {
   qualityApi,
+  type QualityDecisionResult,
   type QualityInspection,
   type QualityInspectionDetail,
   type QualityInspectionDispositionRequest,
@@ -894,6 +900,13 @@ function InspectionDetailPanel({
   const [saving, setSaving] = useState(false);
   const [applyConfirmOpen, setApplyConfirmOpen] = useState(false);
   const [openLineId, setOpenLineId] = useState<number | null>(null);
+  const [decisionFlow, setDecisionFlow] = useState<
+    | { phase: "running" }
+    | { phase: "error"; message: string }
+    | { phase: "success"; result: QualityDecisionResult; lineCount: number }
+    | null
+  >(null);
+  const [bulkPanelOpen, setBulkPanelOpen] = useState(false);
 
   const final =
     ["Passed", "Failed", "Released", "Cancelled"].includes(
@@ -1117,11 +1130,16 @@ function InspectionDetailPanel({
       }
     }
 
+    setApplyConfirmOpen(false);
     setSaving(true);
+    setDecisionFlow({ phase: "running" });
+    const startedAt = Date.now();
     try {
       let rowVersion = detail.rowVersion;
       const calls: Array<() => ReturnType<typeof qualityApi.decide>> = [];
       let completionMessage = "";
+      let receiptCreatedNow = false;
+      let lastResult: QualityDecisionResult | null = null;
 
       if (dispositionRequests.length > 0) {
         const notes = distributionRows
@@ -1188,12 +1206,30 @@ function InspectionDetailPanel({
 
       for (let i = 0; i < calls.length; i += 1) {
         const result = await calls[i]();
+        lastResult = result;
         completionMessage = result.message;
+        if (result.erpDocumentCreatedNow) receiptCreatedNow = true;
         if (i < calls.length - 1) {
           const fresh = await qualityApi.inspection(detail.header.id);
           rowVersion = fresh.rowVersion;
         }
       }
+
+      const elapsed = Date.now() - startedAt;
+      if (elapsed < 1400) {
+        await new Promise((resolve) => window.setTimeout(resolve, 1400 - elapsed));
+      }
+
+      if (receiptCreatedNow && lastResult) {
+        setDecisionFlow({
+          phase: "success",
+          result: lastResult,
+          lineCount: pending.length,
+        });
+        return true;
+      }
+
+      setDecisionFlow(null);
       await notifyGoodsReceiptAfterDecision(
         detail,
         () => navigate("/warehouse/goods-receipts/list"),
@@ -1206,7 +1242,11 @@ function InspectionDetailPanel({
       decided();
       return true;
     } catch (error) {
-      toast.error(message(error, t("errors.decisionSaveFailed")));
+      const errorMessage = message(error, t("errors.decisionSaveFailed"));
+      toast.error(errorMessage);
+      setDecisionFlow({ phase: "error", message: errorMessage });
+      await new Promise((resolve) => window.setTimeout(resolve, 2600));
+      setDecisionFlow(null);
       return false;
     } finally {
       setSaving(false);
@@ -1300,109 +1340,137 @@ function InspectionDetailPanel({
         )}
 
       {!final && actionable.length > 0 && (
-        <section className="wms-ops-quality-bulk">
-          <div className="wms-ops-quality-bulk__top">
-            <p className="wms-ops-quality-bulk__title">{t("detail.bulk.title")}</p>
-            <span className="wms-ops-quality-bulk__count">
-              {t("detail.bulk.countLabel", {
-                selected: selected.length,
-                total: actionable.length,
-                decided: decidedCount,
-              })}
-            </span>
-            <div className="wms-ops-quality-bulk__selects">
-              <OpsActionButton
-                type="button"
-                variant="secondary"
-                onClick={selectAll}
-                className="wms-ops-quality-decide-btn wms-ops-quality-bulk__btn"
-              >
-                {t("detail.bulk.selectAll")}
-              </OpsActionButton>
-              <OpsActionButton
-                type="button"
-                variant="secondary"
-                onClick={clearSelection}
-                disabled={selected.length === 0}
-                className="wms-ops-quality-decide-btn wms-ops-quality-bulk__btn"
-              >
-                {t("detail.bulk.clearSelection")}
-              </OpsActionButton>
-            </div>
-          </div>
-          <div className="wms-ops-quality-bulk__fields">
-            <label className="wms-ops-quality-bulk__field">
-              <span>{t("detail.bulk.decisionLabel")}</span>
-              <AppDropdown
-                value={bulkDecision || null}
-                onValueChange={(value) => {
-                  setBulkDecision(value);
-                  if (value === bulkRemainderDecision) {
-                    const next = remainderOptionsFor(
-                      value,
-                      allowQuarantineRemainder,
-                      t,
-                    )[0]?.value;
-                    if (next) setBulkRemainderDecision(next);
-                  }
-                }}
-                options={options}
-                placeholder={t("detail.bulk.decisionPlaceholder")}
-                className="wms-ops-quality-field wms-ops-quality-bulk__control"
-                portalContainer={null}
-              />
-            </label>
-            <label className="wms-ops-quality-bulk__field">
-              <span>{t("detail.bulk.quantityLabel")}</span>
-              <AppInput
-                value={bulkQuantity}
-                onChange={(e) => setBulkQuantity(e.target.value)}
-                placeholder={t("detail.bulk.quantityPlaceholder")}
-                inputMode="decimal"
-                className="wms-ops-quality-field wms-ops-quality-bulk__control"
-              />
-            </label>
-            <label className="wms-ops-quality-bulk__field">
-              <span>{t("detail.bulk.remainderLabel")}</span>
-              <AppDropdown
-                value={bulkRemainderDecision || null}
-                onValueChange={setBulkRemainderDecision}
-                options={bulkRemainderOptions}
-                placeholder={t("detail.bulk.remainderPlaceholder")}
-                disabled={
-                  bulkDecision === "Returned" || !bulkQuantity.trim()
-                }
-                className="wms-ops-quality-field wms-ops-quality-bulk__control"
-                portalContainer={null}
-              />
-            </label>
-            <label className="wms-ops-quality-bulk__field">
-              <span>{t("detail.bulk.reasonCodeLabel")}</span>
-              <AppInput
-                value={bulkReasonCode}
-                onChange={(e) => setBulkReasonCode(e.target.value)}
-                placeholder={t("detail.bulk.reasonCodePlaceholder")}
-                className="wms-ops-quality-field wms-ops-quality-bulk__control"
-              />
-            </label>
-            <label className="wms-ops-quality-bulk__field">
-              <span>{t("detail.bulk.reasonLabel")}</span>
-              <AppInput
-                value={bulkReasonNote}
-                onChange={(e) => setBulkReasonNote(e.target.value)}
-                placeholder={t("detail.bulk.reasonPlaceholder")}
-                className="wms-ops-quality-field wms-ops-quality-bulk__control"
-              />
-            </label>
-            <OpsActionButton
-              type="button"
-              variant="secondary"
-              onClick={applyBulkToSelected}
-              className="wms-ops-quality-decide-btn wms-ops-quality-bulk__apply"
-            >
-              {t("detail.bulk.applyButton")}
-            </OpsActionButton>
-          </div>
+        <section
+          className={cn(
+            "wms-ops-quality-bulk",
+            !bulkPanelOpen && "wms-ops-quality-bulk--collapsed",
+          )}
+        >
+          <button
+            type="button"
+            className="wms-ops-quality-bulk__secret-toggle"
+            aria-expanded={bulkPanelOpen}
+            aria-label={t("detail.bulk.toggleAria")}
+            title={t("detail.bulk.toggleAria")}
+            onClick={() => setBulkPanelOpen((open) => !open)}
+          >
+            <ChevronDown
+              className={cn(
+                "wms-ops-quality-bulk__secret-chevron",
+                bulkPanelOpen && "wms-ops-quality-bulk__secret-chevron--open",
+              )}
+              aria-hidden
+            />
+          </button>
+
+          {bulkPanelOpen ? (
+            <>
+              <div className="wms-ops-quality-bulk__top">
+                <p className="wms-ops-quality-bulk__title">
+                  {t("detail.bulk.title")}
+                </p>
+                <span className="wms-ops-quality-bulk__count">
+                  {t("detail.bulk.countLabel", {
+                    selected: selected.length,
+                    total: actionable.length,
+                    decided: decidedCount,
+                  })}
+                </span>
+                <div className="wms-ops-quality-bulk__selects">
+                  <OpsActionButton
+                    type="button"
+                    variant="secondary"
+                    onClick={selectAll}
+                    className="wms-ops-quality-decide-btn wms-ops-quality-bulk__btn"
+                  >
+                    {t("detail.bulk.selectAll")}
+                  </OpsActionButton>
+                  <OpsActionButton
+                    type="button"
+                    variant="secondary"
+                    onClick={clearSelection}
+                    disabled={selected.length === 0}
+                    className="wms-ops-quality-decide-btn wms-ops-quality-bulk__btn"
+                  >
+                    {t("detail.bulk.clearSelection")}
+                  </OpsActionButton>
+                </div>
+              </div>
+              <div className="wms-ops-quality-bulk__fields">
+                <label className="wms-ops-quality-bulk__field">
+                  <span>{t("detail.bulk.decisionLabel")}</span>
+                  <AppDropdown
+                    value={bulkDecision || null}
+                    onValueChange={(value) => {
+                      setBulkDecision(value);
+                      if (value === bulkRemainderDecision) {
+                        const next = remainderOptionsFor(
+                          value,
+                          allowQuarantineRemainder,
+                          t,
+                        )[0]?.value;
+                        if (next) setBulkRemainderDecision(next);
+                      }
+                    }}
+                    options={options}
+                    placeholder={t("detail.bulk.decisionPlaceholder")}
+                    className="wms-ops-quality-field wms-ops-quality-bulk__control"
+                    portalContainer={null}
+                  />
+                </label>
+                <label className="wms-ops-quality-bulk__field">
+                  <span>{t("detail.bulk.quantityLabel")}</span>
+                  <AppInput
+                    value={bulkQuantity}
+                    onChange={(e) => setBulkQuantity(e.target.value)}
+                    placeholder={t("detail.bulk.quantityPlaceholder")}
+                    inputMode="decimal"
+                    className="wms-ops-quality-field wms-ops-quality-bulk__control"
+                  />
+                </label>
+                <label className="wms-ops-quality-bulk__field">
+                  <span>{t("detail.bulk.remainderLabel")}</span>
+                  <AppDropdown
+                    value={bulkRemainderDecision || null}
+                    onValueChange={setBulkRemainderDecision}
+                    options={bulkRemainderOptions}
+                    placeholder={t("detail.bulk.remainderPlaceholder")}
+                    disabled={
+                      bulkDecision === "Returned" || !bulkQuantity.trim()
+                    }
+                    className="wms-ops-quality-field wms-ops-quality-bulk__control"
+                    portalContainer={null}
+                  />
+                </label>
+                <label className="wms-ops-quality-bulk__field">
+                  <span>{t("detail.bulk.reasonCodeLabel")}</span>
+                  <AppInput
+                    value={bulkReasonCode}
+                    onChange={(e) => setBulkReasonCode(e.target.value)}
+                    placeholder={t("detail.bulk.reasonCodePlaceholder")}
+                    className="wms-ops-quality-field wms-ops-quality-bulk__control"
+                  />
+                </label>
+                <label className="wms-ops-quality-bulk__field">
+                  <span>{t("detail.bulk.reasonLabel")}</span>
+                  <AppInput
+                    value={bulkReasonNote}
+                    onChange={(e) => setBulkReasonNote(e.target.value)}
+                    placeholder={t("detail.bulk.reasonPlaceholder")}
+                    className="wms-ops-quality-field wms-ops-quality-bulk__control"
+                  />
+                </label>
+                <OpsActionButton
+                  type="button"
+                  variant="secondary"
+                  onClick={applyBulkToSelected}
+                  className="wms-ops-quality-decide-btn wms-ops-quality-bulk__apply"
+                >
+                  {t("detail.bulk.applyButton")}
+                </OpsActionButton>
+              </div>
+            </>
+          ) : null}
         </section>
       )}
 
@@ -1834,9 +1902,7 @@ function InspectionDetailPanel({
               disabled={saving || !canApplyDecision}
               className="wms-ops-quality-decide-btn"
               onClick={() => {
-                void (async () => {
-                  if (await save()) setApplyConfirmOpen(false);
-                })();
+                void save();
               }}
             >
               {saving ? (
@@ -1849,6 +1915,49 @@ function InspectionDetailPanel({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {decisionFlow && typeof document !== "undefined"
+        ? createPortal(
+            <QualityDecisionFlowOverlay>
+              {decisionFlow.phase === "success" ? (
+                <QualityReceiptCreatedSuccessPanel
+                  result={decisionFlow.result}
+                  lineCount={decisionFlow.lineCount}
+                  sourceLabel={
+                    detail.header.sourceWaybillNo?.trim() ||
+                    detail.header.sourceDocumentNo?.trim() ||
+                    undefined
+                  }
+                  onDone={() => {
+                    setDecisionFlow(null);
+                    decided();
+                  }}
+                />
+              ) : (
+                <QualityApproveSubmitScreen
+                  phase={decisionFlow.phase}
+                  errorMessage={
+                    decisionFlow.phase === "error"
+                      ? decisionFlow.message
+                      : undefined
+                  }
+                  lineCount={decidedCount}
+                  documentNo={
+                    detail.header.sourceWaybillNo?.trim() ||
+                    detail.header.sourceDocumentNo?.trim() ||
+                    undefined
+                  }
+                  sourceLabel={
+                    detail.header.sourceWaybillNo?.trim() ||
+                    detail.header.sourceDocumentNo?.trim() ||
+                    undefined
+                  }
+                />
+              )}
+            </QualityDecisionFlowOverlay>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }

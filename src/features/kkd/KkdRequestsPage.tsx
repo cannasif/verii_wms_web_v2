@@ -7,7 +7,7 @@ import { AdvancedDataGrid, type GridColumn, type GridRequest } from '@/component
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { AppDropdown } from '@/components/shared/AppDropdown';
-import { AppInput } from '@/components/shared/AppInput';
+import { AppDateInput, AppInput } from '@/components/shared/AppInput';
 import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
 import { PagedLookupDialog } from '@/components/shared/PagedLookupDialog';
 import { ResponsiveDialog } from '@/components/shared/ResponsiveDialog';
@@ -28,6 +28,7 @@ import type { PagedResponse } from '@/types/api';
 import {
   kkdApi,
   type KkdEmployee,
+  type KkdEntitlementGroupLookup,
   type KkdPreparationTaskRow,
   type KkdRequestBoardTab,
   type KkdRequestCreatePayload,
@@ -36,7 +37,7 @@ import {
   type KkdRequestRow,
   type KkdStockLookup,
 } from './kkd-api';
-import { KkdField, KkdPanel } from './kkd-ops-ui';
+import { KKD_CELL, KKD_HEAD_CELL, KkdField, KkdPanel, KkdTableShell } from './kkd-ops-ui';
 
 /** Dialog içi dropdown'lar body'ye portal edilir; aksi halde overflow keser / arkada kalır. */
 const DIALOG_DROPDOWN_CONTENT = 'z-[5000]';
@@ -82,8 +83,11 @@ const ACTIVE_TASK_STATUSES = new Set(['Assigned', 'InPreparation']);
 
 /** Üretim iş emirleri sayfasındaki yaşam döngüsü sekmeleri; server-side filtrelenir. */
 const PAGE_TABS = ['pending', 'preparing', 'completed', 'cancelled', 'mine'] as const;
-type PageTab = (typeof PAGE_TABS)[number];
-const isPageTab = (value: string | null): value is PageTab => PAGE_TABS.includes(value as PageTab);
+/** Sekme şeridinde görünmez — sadece kota onayı yetkisi olanlara açık, ayrı bir buton ile girilir. */
+const QUOTA_TAB = 'quotapending' as const;
+type PageTab = (typeof PAGE_TABS)[number] | typeof QUOTA_TAB;
+const isPageTab = (value: string | null): value is PageTab =>
+  PAGE_TABS.includes(value as (typeof PAGE_TABS)[number]) || value === QUOTA_TAB;
 
 /** "Talebi hazırla" (kalem bazlı atama) veya "Üzerime al" hedefi. */
 type PrepTarget = {
@@ -112,6 +116,8 @@ export function KkdRequestsPage(): ReactElement {
   const canResolve = can('WMS.KKD.REQUESTS.RESOLVE');
   const canPrepare = can('WMS.KKD.DISTRIBUTION.OPERATE');
   const canCancel = can('WMS.KKD.REQUESTS.CANCEL');
+  /** Kota onayı bekleyenler sekmesi ve Ata diyaloğundaki gerçek onay/red — ek hak tanımlama yetkisiyle aynı. */
+  const canManageQuota = can('WMS.KKD.OVERRIDES.MANAGE');
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<PageTab>(() => {
     const tab = searchParams.get('tab');
@@ -400,7 +406,15 @@ export function KkdRequestsPage(): ReactElement {
   });
 
   const columns = useMemo<GridColumn<KkdRequestRow>[]>(() => [
-    { key: 'id', label: t('grid.id'), width: 88, render: (row) => row.id, filterType: 'number', sortable: true },
+    {
+      key: 'id', label: t('grid.id'), width: 88, filterType: 'number', sortable: true,
+      render: (row) => (
+        <span className="inline-flex items-center gap-1">
+          {row.myActiveTaskStarted ? <PlayCircle className="size-3.5 shrink-0 text-sky-500" aria-label={t('grid.taskInProgress')} /> : null}
+          {row.id}
+        </span>
+      ),
+    },
     { key: 'requestNo', label: t('grid.requestNo'), width: 190, render: (row) => <strong>{row.requestNo}</strong>, searchable: true, defaultSearch: true, sortable: true },
     { key: 'status', label: t('grid.status'), width: 165, render: (row) => <Status value={row.status} text={enumText('status', row.status)}/>, filterType: 'enum', sortable: true },
     { key: 'priority', label: t('grid.priority'), width: 125, render: (row) => enumText('priority', row.priority), filterType: 'enum', sortable: true },
@@ -432,6 +446,34 @@ export function KkdRequestsPage(): ReactElement {
             ) : null}
           </span>
         );
+      },
+    },
+    {
+      key: 'myActiveTaskStarted', label: t('grid.taskInProgress'), width: 150, filterable: false, searchable: false, sortable: true,
+      render: (row) => (row.myActiveTaskStarted ? (
+        <span className="inline-flex items-center gap-1 rounded-full bg-sky-500/10 px-2.5 py-1 text-xs font-semibold text-sky-600">
+          <PlayCircle className="size-3" aria-hidden />{t('grid.taskInProgress')}
+        </span>
+      ) : <span className="text-xs text-[var(--wms-app-text-muted)]">—</span>),
+    },
+    {
+      key: 'myActiveTaskQuotaPendingCount', label: t('grid.quotaStatus'), width: 170, filterable: false, searchable: false, sortable: true,
+      render: (row) => {
+        if ((row.myActiveTaskQuotaPendingCount ?? 0) > 0) {
+          return (
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-600">
+              <TriangleAlert className="size-3 shrink-0" aria-hidden />{t('grid.quotaPending')}
+            </span>
+          );
+        }
+        if ((row.myActiveTaskQuotaApprovedCount ?? 0) > 0) {
+          return (
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-600">
+              <CheckCircle2 className="size-3 shrink-0" aria-hidden />{t('grid.quotaApproved')}
+            </span>
+          );
+        }
+        return <span className="text-xs text-[var(--wms-app-text-muted)]">—</span>;
       },
     },
     {
@@ -495,8 +537,14 @@ export function KkdRequestsPage(): ReactElement {
               </button>
             ) : null}
             {canPrepare && open && (row.myActiveTaskId || (row.hasPoolTask && row.poolTaskId)) ? (
-              <button type="button" className="wms-ops-grid-icon-btn" title={t('actions.prepare')} aria-label={t('actions.prepare')} onClick={() => prepare(row, row.myActiveTaskId ?? row.poolTaskId)}>
-                <PackageCheck className="size-3.5" />
+              <button
+                type="button"
+                className="wms-ops-grid-icon-btn"
+                title={row.myActiveTaskId && row.myActiveTaskStarted ? t('actions.continuePrepare') : t('actions.prepare')}
+                aria-label={row.myActiveTaskId && row.myActiveTaskStarted ? t('actions.continuePrepare') : t('actions.prepare')}
+                onClick={() => prepare(row, row.myActiveTaskId ?? row.poolTaskId)}
+              >
+                {row.myActiveTaskId && row.myActiveTaskStarted ? <PlayCircle className="size-3.5 text-sky-600" /> : <PackageCheck className="size-3.5" />}
               </button>
             ) : null}
             {canManageMyTask ? (
@@ -574,8 +622,9 @@ export function KkdRequestsPage(): ReactElement {
 
   const createRequest = useMutation({
     mutationFn: async () => {
-      const normalized = lines.filter((line) => line.groupCode.trim());
+      const normalized = lines.filter((line) => line.groupCode.trim() || line.stockId != null);
       if (!employeeId || normalized.length === 0) throw new Error(t('validation.employeeAndLine'));
+      if (normalized.some((line) => !line.groupCode.trim())) throw new Error(t('validation.groupRequired'));
       if (normalized.some((line) => line.quantity <= 0)) throw new Error(t('validation.quantity'));
       return kkdApi.createRequest({
         idempotencyKey: crypto.randomUUID(), employeeId: Number(employeeId), warehouseId: null, assignedUserId: null,
@@ -632,7 +681,7 @@ export function KkdRequestsPage(): ReactElement {
   };
 
   const activeTabIndex = PAGE_TABS.findIndex((tab) => tab === activeTab);
-  const tabCount = (tab: PageTab): number | null => {
+  const tabCount = (tab: (typeof PAGE_TABS)[number]): number | null => {
     if (!tabCounts.data) return null;
     return tabCounts.data[tab];
   };
@@ -648,12 +697,15 @@ export function KkdRequestsPage(): ReactElement {
       fetchPage={fetchPage}
       aboveToolbarExtra={(
         <div className="wms-ops-production-work-order-tabs wms-ops-detail-dialog mb-4">
-          <Tabs value={activeTab} onValueChange={(value) => goToTab(value as PageTab)}>
+          <Tabs
+            value={activeTab === QUOTA_TAB ? '' : activeTab}
+            onValueChange={(value) => goToTab(value as PageTab)}
+          >
             <TabsList
               className={cn('w-full', 'wms-ops-detail-main-tabs', 'wms-ops-detail-main-tabs--cols-5')}
-              data-active-index={Math.max(activeTabIndex, 0)}
+              data-active-index={activeTab === QUOTA_TAB ? undefined : Math.max(activeTabIndex, 0)}
             >
-              <span className="wms-ops-detail-tab-indicator" aria-hidden />
+              {activeTab === QUOTA_TAB ? null : <span className="wms-ops-detail-tab-indicator" aria-hidden />}
               {PAGE_TABS.map((tab) => {
                 const count = tabCount(tab);
                 return (
@@ -677,9 +729,19 @@ export function KkdRequestsPage(): ReactElement {
         }
         else setDetailId(row.id);
       }}
-      toolbarAction={can('WMS.KKD.REQUESTS.CREATE') ? {
-        label: t('actions.new'), icon: <Plus className="size-4"/>, run: async () => setCreateOpen(true),
-      } : undefined}
+      toolbarActions={[
+        canManageQuota ? {
+          label: tabCounts.data && tabCounts.data.quotaPending > 0
+            ? `${t('tabs.quotapending')} (${tabCounts.data.quotaPending})`
+            : t('tabs.quotapending'),
+          icon: <TriangleAlert className="size-4" />,
+          tooltip: t('tabDescriptions.quotapending'),
+          run: async () => goToTab(QUOTA_TAB),
+        } : null,
+        can('WMS.KKD.REQUESTS.CREATE') ? {
+          label: t('actions.new'), icon: <Plus className="size-4"/>, run: async () => setCreateOpen(true),
+        } : null,
+      ].filter((action): action is NonNullable<typeof action> => action !== null)}
     />
 
     {createOpen ? <ResponsiveDialog onClose={() => { setCreateOpen(false); resetCreate(); }} title={t('create.title')} description={t('create.description')} className="!max-w-5xl">
@@ -693,7 +755,7 @@ export function KkdRequestsPage(): ReactElement {
                 searchable
                 portalContainer={null}
                 contentClassName={DIALOG_DROPDOWN_CONTENT}
-                className={cn(OPS_SELECT_TRIGGER_CLASS, 'w-full')}
+                className="w-full"
                 options={(employees.data ?? []).filter((item) => item.isActive).map(employeeOption)}
                 placeholder={t('create.employeePlaceholder')}
               />
@@ -706,32 +768,52 @@ export function KkdRequestsPage(): ReactElement {
                 onValueChange={(value) => setPriority(value as KkdRequestCreatePayload['priority'])}
                 portalContainer={null}
                 contentClassName={DIALOG_DROPDOWN_CONTENT}
-                className={cn(OPS_SELECT_TRIGGER_CLASS, 'w-full')}
+                className="w-full"
                 options={['Low', 'Normal', 'High', 'Urgent'].map((value) => ({ value, label: enumText('priority', value) }))}
               />
             </div>
           </KkdField>
           <KkdField label={t('create.neededAt')}>
-            <AppInput type="datetime-local" value={neededAt} onChange={(event) => setNeededAt(event.target.value)}/>
+            <AppDateInput type="datetime-local" value={neededAt} onChange={(event) => setNeededAt(event.target.value)}/>
           </KkdField>
-          <KkdField label={t('create.description')}>
+          <KkdField label={t('create.descriptionLabel')}>
             <AppInput value={description} onChange={(event) => setDescription(event.target.value)} maxLength={2000}/>
           </KkdField>
         </div>
 
-        <KkdPanel title={t('create.lines')} description={t('create.linesHelp')} icon={<ClipboardList className="size-4" strokeWidth={1.75}/>}>
-          <div className="space-y-3">
-            {lines.map((line, index) => (
-              <DraftLineEditor
-                key={line.key}
-                line={line}
-                index={index}
-                canRemove={lines.length > 1}
-                t={t}
-                onChange={(next) => setLines((current) => current.map((item) => (item.key === line.key ? next : item)))}
-                onRemove={() => setLines((current) => current.filter((item) => item.key !== line.key))}
-              />
-            ))}
+        <KkdPanel
+          title={t('create.lines')}
+          description={t('create.linesHelp')}
+          icon={<ClipboardList className="size-4" strokeWidth={1.75}/>}
+          bodyClassName="!p-0"
+        >
+          <div className="wms-ops-kkd-create-lines">
+            <KkdTableShell minWidthClass="min-w-[720px]" className="border-0" maxHeightClass={false}>
+              <thead>
+                <tr>
+                  <th className={cn(KKD_HEAD_CELL, 'w-14 whitespace-nowrap text-center')}>#</th>
+                  <th className={KKD_HEAD_CELL}>{t('create.group')}</th>
+                  <th className={KKD_HEAD_CELL} title={t('create.stockOptional')}>{t('create.stock')}</th>
+                  <th className={cn(KKD_HEAD_CELL, 'w-28 text-right')}>{t('create.quantity')}</th>
+                  <th className={cn(KKD_HEAD_CELL, 'w-12')} aria-label={t('actions.removeLine')} />
+                </tr>
+              </thead>
+              <tbody>
+                {lines.map((line, index) => (
+                  <DraftLineEditor
+                    key={line.key}
+                    line={line}
+                    index={index}
+                    canRemove={lines.length > 1}
+                    t={t}
+                    onChange={(next) => setLines((current) => current.map((item) => (item.key === line.key ? next : item)))}
+                    onRemove={() => setLines((current) => current.filter((item) => item.key !== line.key))}
+                  />
+                ))}
+              </tbody>
+            </KkdTableShell>
+          </div>
+          <div className="border-t border-[var(--wms-ops-card-border)] px-3 py-3 sm:px-4">
             <OpsActionButton type="button" variant="secondary" className="wms-ops-list-toolbar-btn" onClick={() => setLines((current) => [...current, newLine()])}>
               <Plus className="size-3.5 shrink-0"/>{t('actions.addLine')}
             </OpsActionButton>
@@ -857,6 +939,7 @@ export function KkdRequestsPage(): ReactElement {
         warehouseOptions={warehouseOptions}
         formatQuantity={formatQuantity}
         currentUserOption={currentUserOption}
+        canManageQuota={canManageQuota}
         onOpenResolve={openResolve}
         onClose={() => setPrepTarget(null)}
         onDone={() => {
@@ -1028,16 +1111,19 @@ const POOL_GROUP_KEY = 'pool';
 type PrepareGroup = { user: ActiveUserOption | null; lineIds: number[] };
 type AssignTargetMode = 'user' | 'warehouse';
 
-function PrepareRequestDialog({ target, t, warehouseOptions, formatQuantity, currentUserOption, onOpenResolve, onClose, onDone }: {
+function PrepareRequestDialog({ target, t, warehouseOptions, formatQuantity, currentUserOption, canManageQuota, onOpenResolve, onClose, onDone }: {
   target: PrepTarget;
   t: (key: string, options?: Record<string, unknown>) => string;
   warehouseOptions: Array<{ value: string; label: string }>;
   formatQuantity: (value: number) => string;
   currentUserOption: ActiveUserOption | null;
+  /** Kota Onayla/Reddet gerçek bir ek hak (override) kaydı yarattığı için sadece bu yetkiye sahip olanlar karar verebilir. */
+  canManageQuota: boolean;
   onOpenResolve: (requestId: number, line: KkdRequestLine) => void;
   onClose: () => void;
   onDone: () => void;
 }): ReactElement {
+  const queryClient = useQueryClient();
   const [warehouseId, setWarehouseId] = useState(target.warehouseId ? String(target.warehouseId) : (warehouseOptions[0]?.value ?? ''));
   const [targetMode, setTargetMode] = useState<AssignTargetMode>('user');
   const [groupUser, setGroupUser] = useState<ActiveUserOption | null>(null);
@@ -1048,8 +1134,9 @@ function PrepareRequestDialog({ target, t, warehouseOptions, formatQuantity, cur
   const [didAutoSelect, setDidAutoSelect] = useState(false);
   /** Müdürün bu atama turunda hariç tuttuğu (kota aşımı nedeniyle reddedilen) kalemler — sadece bu diyalog oturumunda tutulur. */
   const [excludedLineIds, setExcludedLineIds] = useState<Set<number>>(new Set());
-  /** Kota aşımına rağmen müdürün "onaylıyorum" dediği kalemler — sadece görsel teyit, davranışı değiştirmez (dahil edilmeyi zaten engellemiyor). */
+  /** Kota aşımına rağmen müdürün onayladığı kalemler — gerçek bir ek hak (override) kaydı yaratır (bkz. decideQuota). */
   const [approvedLineIds, setApprovedLineIds] = useState<Set<number>>(new Set());
+  const [decidingLineId, setDecidingLineId] = useState<number | null>(null);
   const [pendingRejectId, setPendingRejectId] = useState<number | null>(null);
 
   const detail = useQuery({
@@ -1137,27 +1224,36 @@ function PrepareRequestDialog({ target, t, warehouseOptions, formatQuantity, cur
       : new Set(coverableLines.map((line) => line.id)));
   };
 
-  const rejectExcessLine = (lineId: number): void => {
-    setExcludedLineIds((current) => new Set([...current, lineId]));
-    setSelectedLineIds((current) => {
-      const next = new Set(current);
-      next.delete(lineId);
-      return next;
-    });
-    setPendingRejectId(null);
+  const rejectExcessLine = async (lineId: number): Promise<void> => {
+    setDecidingLineId(lineId);
+    try {
+      await kkdApi.decideQuota(lineId, { approve: false, reason: 'Atama ekranından reddedildi.' });
+      setExcludedLineIds((current) => new Set([...current, lineId]));
+      setSelectedLineIds((current) => {
+        const next = new Set(current);
+        next.delete(lineId);
+        return next;
+      });
+      setPendingRejectId(null);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Kota kararı kaydedilemedi.');
+    } finally {
+      setDecidingLineId(null);
+    }
   };
 
-  const restoreExcludedLine = (lineId: number): void => {
-    setExcludedLineIds((current) => {
-      const next = new Set(current);
-      next.delete(lineId);
-      return next;
-    });
-  };
-
-  const approveExcessLine = (lineId: number): void => {
-    setApprovedLineIds((current) => new Set([...current, lineId]));
-    setPendingRejectId(null);
+  const approveExcessLine = async (lineId: number): Promise<void> => {
+    setDecidingLineId(lineId);
+    try {
+      await kkdApi.decideQuota(lineId, { approve: true, reason: 'Atama ekranından onaylandı.' });
+      setApprovedLineIds((current) => new Set([...current, lineId]));
+      setPendingRejectId(null);
+      void queryClient.invalidateQueries({ queryKey: ['kkd', 'requests', target.id, 'excess-check'] });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Kota kararı kaydedilemedi.');
+    } finally {
+      setDecidingLineId(null);
+    }
   };
 
   const groupKey = (group: PrepareGroup): string | number => group.user?.id ?? POOL_GROUP_KEY;
@@ -1450,23 +1546,19 @@ function PrepareRequestDialog({ target, t, warehouseOptions, formatQuantity, cur
                           </td>
                           <td onClick={(event) => event.stopPropagation()}>
                             {!isExcess ? null : isExcluded ? (
-                              <div className="flex items-center gap-1.5 text-xs font-semibold text-rose-600">
+                              <div className="flex items-center gap-1.5 text-xs font-semibold text-rose-600" title={t('prepareDialog.quotaRejectedHint')}>
                                 <TriangleAlert className="size-3.5 shrink-0" />
                                 {t('prepareDialog.quotaRejected')}
-                                <button
-                                  type="button"
-                                  className="wms-ops-grid-icon-btn"
-                                  title={t('prepareDialog.quotaRestore')}
-                                  aria-label={t('prepareDialog.quotaRestore')}
-                                  onClick={() => restoreExcludedLine(line.id)}
-                                >
-                                  <Undo2 className="size-3.5" />
-                                </button>
                               </div>
                             ) : pendingRejectId === line.id ? (
                               <div className="flex items-center gap-1.5 text-xs">
                                 <span className="font-semibold text-rose-600">{t('prepareDialog.quotaConfirmReject')}</span>
-                                <button type="button" className="wms-ops-grid-icon-btn !text-rose-600" onClick={() => rejectExcessLine(line.id)}>
+                                <button
+                                  type="button"
+                                  className="wms-ops-grid-icon-btn !text-rose-600"
+                                  disabled={decidingLineId === line.id}
+                                  onClick={() => void rejectExcessLine(line.id)}
+                                >
                                   {t('prepareDialog.quotaConfirmYes')}
                                 </button>
                                 <button type="button" className="wms-ops-grid-icon-btn" onClick={() => setPendingRejectId(null)}>
@@ -1484,24 +1576,32 @@ function PrepareRequestDialog({ target, t, warehouseOptions, formatQuantity, cur
                                   <TriangleAlert className="size-3 shrink-0" />
                                   {t('prepareDialog.quotaExceeded')}
                                 </span>
-                                <button
-                                  type="button"
-                                  className="wms-ops-grid-icon-btn !text-emerald-600"
-                                  title={t('prepareDialog.quotaApprove')}
-                                  aria-label={t('prepareDialog.quotaApprove')}
-                                  onClick={() => approveExcessLine(line.id)}
-                                >
-                                  <CheckCircle2 className="size-3.5" />
-                                </button>
-                                <button
-                                  type="button"
-                                  className="wms-ops-grid-icon-btn !text-rose-600"
-                                  title={t('prepareDialog.quotaReject')}
-                                  aria-label={t('prepareDialog.quotaReject')}
-                                  onClick={() => setPendingRejectId(line.id)}
-                                >
-                                  <X className="size-3.5" />
-                                </button>
+                                {canManageQuota ? (
+                                  <>
+                                    <button
+                                      type="button"
+                                      className="wms-ops-grid-icon-btn !text-emerald-600"
+                                      title={t('prepareDialog.quotaApprove')}
+                                      aria-label={t('prepareDialog.quotaApprove')}
+                                      disabled={decidingLineId === line.id}
+                                      onClick={() => void approveExcessLine(line.id)}
+                                    >
+                                      <CheckCircle2 className="size-3.5" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="wms-ops-grid-icon-btn !text-rose-600"
+                                      title={t('prepareDialog.quotaReject')}
+                                      aria-label={t('prepareDialog.quotaReject')}
+                                      disabled={decidingLineId === line.id}
+                                      onClick={() => setPendingRejectId(line.id)}
+                                    >
+                                      <X className="size-3.5" />
+                                    </button>
+                                  </>
+                                ) : (
+                                  <span className="text-[0.68rem] text-[var(--wms-app-text-muted)]">{t('prepareDialog.quotaNeedsManager')}</span>
+                                )}
                               </div>
                             )}
                           </td>
@@ -1616,91 +1716,143 @@ function DraftLineEditor({ line, index, canRemove, t, onChange, onRemove }: {
   line: DraftLine; index: number; canRemove: boolean; t: (key: string, options?: Record<string, unknown>) => string;
   onChange: (line: DraftLine) => void; onRemove: () => void;
 }): ReactElement {
+  const [groupLookupOpen, setGroupLookupOpen] = useState(false);
+  const [stockLookupOpen, setStockLookupOpen] = useState(false);
+  const groupLabel = line.groupCode
+    ? (line.groupName ? `${line.groupCode} · ${line.groupName}` : line.groupCode)
+    : '';
+
   return (
-    <article className="rounded-xl border border-[var(--wms-ops-card-border)] bg-[color-mix(in_oklab,var(--wms-ops-accent)_4%,transparent)] p-3">
-      <div className="mb-3 flex items-center justify-between gap-2">
-        <strong className="text-sm">{t('create.lineNo', { no: index + 1 })}</strong>
-        {canRemove ? (
-          <button
-            type="button"
-            className="inline-flex size-8 items-center justify-center rounded-lg text-rose-600 transition hover:bg-rose-500/10"
-            onClick={onRemove}
-            aria-label={t('actions.removeLine')}
-          >
-            <Trash2 className="size-4"/>
-          </button>
-        ) : null}
-      </div>
-      <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_8.5rem]">
-        <KkdField label={t('create.group')}>
-          <div className="wms-ops-field-shell w-full min-w-0">
-            <PagedAppDropdown
-              queryKey={['kkd-request-groups', line.key]}
-              fetchPage={kkdApi.entitlementGroupsPaged}
-              toOption={(item) => ({
-                value: encodeURIComponent(JSON.stringify({ code: item.code, name: item.name })),
-                label: `${item.code} · ${item.name}`,
-              })}
-              value={line.groupCode ? encodeURIComponent(JSON.stringify({ code: line.groupCode, name: line.groupName })) : null}
-              selectedOption={line.groupCode ? {
-                value: encodeURIComponent(JSON.stringify({ code: line.groupCode, name: line.groupName })),
-                label: `${line.groupCode} · ${line.groupName}`,
-              } : undefined}
-              onValueChange={(value) => {
-                const item = value
-                  ? JSON.parse(decodeURIComponent(value)) as { code: string; name: string }
-                  : { code: '', name: '' };
-                onChange({ ...line, groupCode: item.code, groupName: item.name, stockId: null, stockLabel: '' });
-              }}
-              searchable
-              minSearchLength={1}
-              portalContainer={null}
-              contentClassName={DIALOG_DROPDOWN_CONTENT}
-              className={cn(OPS_SELECT_TRIGGER_CLASS, 'w-full')}
-              placeholder={t('create.groupPlaceholder')}
-            />
-          </div>
-        </KkdField>
-        <KkdField label={t('create.stock')} hint={t('create.stockOptional')}>
-          <div className="wms-ops-field-shell w-full min-w-0">
-            <PagedAppDropdown<KkdStockLookup>
-              queryKey={['kkd-request-line-stock', line.key, line.groupCode]}
-              fetchPage={(request) => kkdApi.stocksPaged(request, line.groupCode)}
-              enabled={Boolean(line.groupCode)}
-              toOption={(item) => ({
-                value: encodeStock(item),
-                label: `${item.code} · ${item.name}`,
-                description: item.unitCode,
-              })}
-              value={line.stockId ? encodeURIComponent(JSON.stringify({ id: line.stockId, label: line.stockLabel })) : null}
-              selectedOption={line.stockId ? {
-                value: encodeURIComponent(JSON.stringify({ id: line.stockId, label: line.stockLabel })),
-                label: line.stockLabel,
-              } : undefined}
-              onValueChange={(value) => {
-                const stock = value ? decodeStock(value) : null;
-                onChange({ ...line, stockId: stock?.id ?? null, stockLabel: stock?.label ?? '' });
-              }}
-              searchable
-              minSearchLength={1}
-              portalContainer={null}
-              contentClassName={DIALOG_DROPDOWN_CONTENT}
-              className={cn(OPS_SELECT_TRIGGER_CLASS, 'w-full')}
-              placeholder={line.groupCode ? t('create.stockPlaceholder') : t('create.selectGroupFirst')}
-            />
-          </div>
-        </KkdField>
-        <KkdField label={t('create.quantity')}>
+    <tr>
+      <td className={KKD_CELL}>
+        <div className="wms-ops-kkd-create-lines__index" title={t('create.lineNo', { no: index + 1 })}>
+          <span className="wms-ops-kkd-create-lines__index-num">{String(index + 1).padStart(2, '0')}</span>
+        </div>
+      </td>
+      <td className={KKD_CELL}>
+        <div className="wms-ops-kkd-create-lines__cell">
+          <PagedLookupDialog<KkdEntitlementGroupLookup>
+            variant="ops"
+            triggerMode="combobox"
+            autoSearchMinLength={1}
+            open={groupLookupOpen}
+            onOpenChange={setGroupLookupOpen}
+            title={t('create.groupLookupTitle')}
+            description={t('create.groupLookupDescription')}
+            value={groupLabel}
+            placeholder={t('create.groupPlaceholder')}
+            searchPlaceholder={t('create.groupSearch')}
+            emptyText={t('create.groupEmpty')}
+            popoverPortalContainer={null}
+            queryKey={['kkd-request-groups', line.key]}
+            fetchPage={async ({ pageNumber, pageSize, search, signal }) =>
+              toPagedResponse(
+                await kkdApi.entitlementGroupsPaged({
+                  pageNumber,
+                  pageSize,
+                  search,
+                  searchFields: ['code', 'name'],
+                  sortBy: 'code',
+                  sortDirection: 'asc',
+                  signal: signal ?? new AbortController().signal,
+                }),
+              )
+            }
+            getKey={(group) => group.code}
+            getLabel={(group) => `${group.code} · ${group.name}`}
+            onSelect={(group) =>
+              onChange({
+                ...line,
+                groupCode: group.code,
+                groupName: group.name,
+                stockId: null,
+                stockLabel: '',
+              })
+            }
+          />
+        </div>
+      </td>
+      <td className={KKD_CELL}>
+        <div className="wms-ops-kkd-create-lines__cell">
+          <PagedLookupDialog<KkdStockLookup>
+            variant="ops"
+            triggerMode="combobox"
+            autoSearchMinLength={1}
+            open={stockLookupOpen}
+            onOpenChange={setStockLookupOpen}
+            title={t('create.stockLookupTitle')}
+            description={
+              line.groupCode
+                ? t('create.stockLookupDescriptionFiltered', { group: line.groupCode })
+                : t('create.stockLookupDescription')
+            }
+            value={line.stockLabel}
+            placeholder={t('create.stockPlaceholder')}
+            searchPlaceholder={t('create.stockSearch')}
+            emptyText={t('create.stockEmpty')}
+            popoverPortalContainer={null}
+            queryKey={['kkd-request-line-stock', line.key, line.groupCode || 'all']}
+            fetchPage={async ({ pageNumber, pageSize, search, signal }) =>
+              toPagedResponse(
+                await kkdApi.stocksPaged(
+                  {
+                    pageNumber,
+                    pageSize,
+                    search,
+                    searchFields: ['code', 'name'],
+                    sortBy: 'code',
+                    sortDirection: 'asc',
+                    signal: signal ?? new AbortController().signal,
+                  },
+                  line.groupCode || undefined,
+                ),
+              )
+            }
+            getKey={(stock) => String(stock.id)}
+            getLabel={(stock) => `${stock.code} · ${stock.name}`}
+            onSelect={(stock) => {
+              const stockGroup = stock.groupCode?.trim() || '';
+              onChange({
+                ...line,
+                stockId: stock.id,
+                stockLabel: `${stock.code} · ${stock.name}`,
+                groupCode: stockGroup || line.groupCode,
+                groupName: stockGroup
+                  ? (stockGroup === line.groupCode ? line.groupName : '')
+                  : line.groupName,
+              });
+            }}
+          />
+        </div>
+      </td>
+      <td className={KKD_CELL}>
+        <div className="wms-ops-kkd-create-lines__cell wms-ops-kkd-create-lines__qty">
           <AppInput
             type="number"
             min="0.000001"
             step="any"
             value={line.quantity}
             onChange={(event) => onChange({ ...line, quantity: Number(event.target.value) })}
+            aria-label={t('create.quantity')}
+            className="wms-ops-kkd-create-lines__qty-input"
           />
-        </KkdField>
-      </div>
-    </article>
+        </div>
+      </td>
+      <td className={KKD_CELL}>
+        <div className="wms-ops-kkd-create-lines__actions">
+          {canRemove ? (
+            <button
+              type="button"
+              className="inline-flex size-7 items-center justify-center text-rose-500/80 transition hover:bg-rose-500/10 hover:text-rose-400"
+              onClick={onRemove}
+              aria-label={t('actions.removeLine')}
+            >
+              <Trash2 className="size-3.5"/>
+            </button>
+          ) : null}
+        </div>
+      </td>
+    </tr>
   );
 }
 

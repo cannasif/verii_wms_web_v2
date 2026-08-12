@@ -48,23 +48,25 @@ const compareGridValues = (a: unknown, b: unknown): number => {
 };
 
 const matchesGridFilter = (row: Record<string, unknown>, filter: GridFilter): boolean => {
-  const raw = gridText(row[filter.column]).toLocaleLowerCase('tr-TR');
-  const value = filter.value.trim().toLocaleLowerCase('tr-TR');
+  const rawFolded = foldTurkishSearch(gridText(row[filter.column]));
+  const valueFolded = foldTurkishSearch(filter.value);
+  const rawLower = gridText(row[filter.column]).toLocaleLowerCase('tr-TR');
+  const valueLower = filter.value.trim().toLocaleLowerCase('tr-TR');
   switch (filter.operator) {
-    case 'contains': return raw.includes(value);
-    case 'notContains': return !raw.includes(value);
-    case 'equals': return raw === value;
-    case 'notEquals': return raw !== value;
-    case 'startsWith': return raw.startsWith(value);
-    case 'endsWith': return raw.endsWith(value);
-    case 'isNull': return !raw;
-    case 'isNotNull': return Boolean(raw);
+    case 'contains': return rawFolded.includes(valueFolded);
+    case 'notContains': return !rawFolded.includes(valueFolded);
+    case 'equals': return rawFolded === valueFolded;
+    case 'notEquals': return rawFolded !== valueFolded;
+    case 'startsWith': return rawFolded.startsWith(valueFolded);
+    case 'endsWith': return rawFolded.endsWith(valueFolded);
+    case 'isNull': return !rawLower;
+    case 'isNotNull': return Boolean(rawLower);
     case 'gt':
     case 'gte':
     case 'lt':
     case 'lte': {
-      const num = Number(raw);
-      const cmp = Number(value);
+      const num = Number(rawLower);
+      const cmp = Number(valueLower);
       if (!Number.isFinite(num) || !Number.isFinite(cmp)) return false;
       if (filter.operator === 'gt') return num > cmp;
       if (filter.operator === 'gte') return num >= cmp;

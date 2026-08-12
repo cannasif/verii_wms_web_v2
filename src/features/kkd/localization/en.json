@@ -1,15 +1,16 @@
 {
   "page": { "title": "PPE Requests", "description": "View every employee's requests in one queue, resolve group requests to the correct size/SKU, and send them for preparation.", "empty": "No PPE request was found in this tab." },
-  "tabs": { "pending": "Pending", "preparing": "In preparation", "completed": "Completed", "cancelled": "Cancelled", "mine": "My work" },
+  "tabs": { "pending": "Pending", "preparing": "In preparation", "completed": "Completed", "cancelled": "Cancelled", "mine": "My work", "quotapending": "Quota Approvals" },
   "tabDescriptions": {
     "pending": "Requests with open lines not linked to an active preparation task. Managers can assign line by line; warehouse staff can claim.",
     "preparing": "Requests with preparation tasks in progress. Expand a row to manage its tasks.",
     "completed": "Requests whose delivery is completed. Track ERP status here.",
     "cancelled": "Cancelled requests.",
-    "mine": "Active tasks you claimed or that were assigned to you. Double-click to start picking."
+    "mine": "Active tasks you claimed or that were assigned to you. Double-click to start picking.",
+    "quotapending": "Lines that exceed the KKD entitlement matrix and await a decision. Approve/Reject from the request detail."
   },
-  "grid": { "id": "Record ID", "requestNo": "Request no", "status": "Status", "priority": "Priority", "employeeCode": "Employee code", "employeeName": "Employee", "department": "Department", "warehouse": "Warehouse", "warehouseUnset": "No warehouse yet", "assignedUser": "Preparers", "assigned": "Assigned", "unassigned": "Unassigned", "erp": "Document / ERP", "lineCount": "Lines", "unresolved": "Awaiting SKU", "requested": "Requested", "allocated": "Prepared", "delivered": "Delivered", "neededAt": "Needed by", "requestedAt": "Requested at", "createdBy": "Created by", "createdDate": "Created at", "updatedBy": "Updated by", "updatedDate": "Updated at", "actions": "Actions" },
-  "actions": { "new": "New PPE request", "detail": "Details", "assign": "Prepare request (assign by line)", "claim": "Claim for myself", "claimPool": "Claim from pool", "prepare": "Start picking", "reactivate": "Put back to pending", "operation": "Warehouse outbound operation", "handoff": "Hand over remaining work", "returnWork": "Return work to pool", "erpRetry": "Retry ERP posting", "expand": "Show lines", "collapse": "Hide lines", "addLine": "Add line", "removeLine": "Remove line", "selectStock": "Select SKU/size", "create": "Create request", "save": "Save", "close": "Close", "cancel": "Cancel request" },
+  "grid": { "id": "Record ID", "requestNo": "Request no", "status": "Status", "priority": "Priority", "employeeCode": "Employee code", "employeeName": "Employee", "department": "Department", "warehouse": "Warehouse", "warehouseUnset": "No warehouse yet", "assignedUser": "Preparers", "assigned": "Assigned", "unassigned": "Unassigned", "taskInProgress": "In progress", "quotaStatus": "Quota status", "quotaPending": "Quota approval pending", "quotaApproved": "Quota approved", "erp": "Document / ERP", "lineCount": "Lines", "unresolved": "Awaiting SKU", "requested": "Requested", "allocated": "Prepared", "delivered": "Delivered", "neededAt": "Needed by", "requestedAt": "Requested at", "createdBy": "Created by", "createdDate": "Created at", "updatedBy": "Updated by", "updatedDate": "Updated at", "actions": "Actions" },
+  "actions": { "new": "New PPE request", "detail": "Details", "assign": "Prepare request (assign by line)", "claim": "Claim for myself", "claimPool": "Claim from pool", "prepare": "Start picking", "continuePrepare": "Continue picking", "reactivate": "Put back to pending", "operation": "Warehouse outbound operation", "handoff": "Hand over remaining work", "returnWork": "Return work to pool", "erpRetry": "Retry ERP posting", "expand": "Show lines", "collapse": "Hide lines", "addLine": "Add line", "removeLine": "Remove line", "selectStock": "Select SKU/size", "create": "Create request", "save": "Save", "close": "Close", "cancel": "Cancel request" },
   "cancelDialog": { "title": "Cancel request", "description": "PPE request {{no}} will be cancelled. Provide the cancellation reason.", "checking": "Running cancellation precheck...", "blockedTitle": "This request cannot be cancelled right now", "goToOutbound": "Go to the linked warehouse outbound" },
   "prepareDialog": {
     "title": "Prepare request",
@@ -51,6 +52,8 @@
     "quotaApproved": "Approved",
     "quotaReject": "Reject",
     "quotaRejected": "Rejected — will not be assigned this round",
+    "quotaRejectedHint": "This decision was recorded; go to the Quota Approvals screen to undo it.",
+    "quotaNeedsManager": "Manager permission is required to decide.",
     "quotaRestore": "Undo",
     "quotaConfirmReject": "This line will not be assigned this round, are you sure?",
     "quotaConfirmYes": "Yes, exclude it",
@@ -78,7 +81,34 @@
     "taskPool": "In warehouse pool · unowned, anyone can claim it",
     "taskOrigin": "Handed over by: {{user}}"
   },
-  "create": { "title": "New PPE request", "description": "If the size is unknown, select only the PPE group. Warehouse staff can select the exact SKU during preparation.", "employee": "Employee", "employeePlaceholder": "Select employee", "priority": "Priority", "neededAt": "Needed by", "description": "Request description", "lines": "Request lines", "linesHelp": "A request can contain multiple PPE groups. Exact SKU is optional.", "lineNo": "Line {{no}}", "group": "PPE group", "groupPlaceholder": "Shoes, gloves, goggles...", "stock": "Exact SKU / size", "stockOptional": "Leave empty if the size is unknown; it can be selected in the open request queue.", "stockPlaceholder": "Select SKU or size", "selectGroupFirst": "Select PPE group first", "quantity": "Quantity" },
+  "create": {
+    "title": "New PPE request",
+    "description": "Select an exact SKU/size directly, or pick only the PPE group if the size is unknown. Choosing a group filters the stock list.",
+    "employee": "Employee",
+    "employeePlaceholder": "Select employee",
+    "priority": "Priority",
+    "neededAt": "Needed by",
+    "descriptionLabel": "Request description",
+    "lines": "Request lines",
+    "linesHelp": "Add lines by group or by exact SKU. Selecting a SKU fills the group automatically; with a group only, SKU stays optional.",
+    "lineNo": "Line {{no}}",
+    "group": "PPE group",
+    "groupPlaceholder": "Type or select a group",
+    "groupSearch": "Search groups",
+    "groupEmpty": "No PPE group found.",
+    "groupLookupTitle": "Select PPE group",
+    "groupLookupDescription": "Search by code or name. Use the search icon or double-click to open the full list.",
+    "stock": "Exact SKU / size",
+    "stockOptional": "Leave empty if the size is unknown; warehouse can resolve it later. You can also pick a SKU directly.",
+    "stockPlaceholder": "Type or select SKU / size",
+    "stockSearch": "Search stock",
+    "stockEmpty": "No stock found.",
+    "stockLookupTitle": "Select SKU / size",
+    "stockLookupDescription": "Search all PPE stock. If a group is selected, the list is filtered. Double-click for the full list.",
+    "stockLookupDescriptionFiltered": "Search stock in group {{group}}. Double-click for the full list.",
+    "selectGroupFirst": "Select PPE group first",
+    "quantity": "Quantity"
+  },
   "detail": {
     "title": "PPE request detail",
     "eyebrow": "PPE Request",
@@ -122,6 +152,6 @@
   "taskStatus": { "Assigned": "Assigned", "InPreparation": "In preparation", "Completed": "Completed", "Returned": "Returned", "HandedOver": "Handed over", "Cancelled": "Cancelled" },
   "distributionStatus": { "Draft": "Draft", "Validated": "Validated", "OutboundCreated": "Outbound created", "Completed": "Posted to ERP", "Cancelled": "Cancelled", "Failed": "ERP failed" },
   "priority": { "Low": "Low", "Normal": "Normal", "High": "High", "Urgent": "Urgent" },
-  "validation": { "employeeAndLine": "Select an employee and at least one PPE group.", "quantity": "All quantities must be greater than zero.", "stock": "Select the stock to issue.", "reason": "Operation reason must contain at least three characters.", "warehouse": "Warehouse must be selected.", "user": "A user must be selected." },
+  "validation": { "employeeAndLine": "Select an employee and at least one line (group or stock).", "groupRequired": "Each line needs a PPE group. If you picked a SKU, choose one with a group or select the group manually.", "quantity": "All quantities must be greater than zero.", "stock": "Select the stock to issue.", "reason": "Operation reason must contain at least three characters.", "warehouse": "Warehouse must be selected.", "user": "A user must be selected." },
   "messages": { "created": "PPE request {{no}} was created.", "resolved": "SKU/size selection was saved.", "assigned": "Request was assigned.", "claimed": "Request was claimed for you. Start preparation from the 'My work' tab.", "claimedPool": "The task was claimed from the warehouse pool.", "tasksAssigned": "Preparation tasks were created.", "handedOver": "Remaining work was handed over.", "returned": "Task was returned to the pool.", "returnBlockedProgress": "A task with preparation progress cannot be returned to the pool. Hand over the remaining work instead.", "taskNotFound": "No active preparation task was found.", "erpRetried": "ERP posting was retried.", "unassigned": "Assignment cleared, warehouse updated.", "cancelled": "PPE request was cancelled.", "reactivated": "PPE request was put back to pending.", "failed": "PPE operation could not be completed.", "loading": "Loading request...", "detailFailed": "Request detail could not be loaded." }
 }

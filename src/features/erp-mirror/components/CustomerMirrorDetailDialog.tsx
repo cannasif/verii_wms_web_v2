@@ -1,5 +1,5 @@
 import { type ReactElement, type ReactNode } from 'react';
-import { Building2, Hash, RefreshCw, ShieldCheck, Users } from 'lucide-react';
+import { Building2, Hash, MapPin, RefreshCw, ShieldCheck, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { OpsActionButton } from '@/components/shared/OpsActionButton';
 import {
@@ -113,8 +113,30 @@ export function CustomerMirrorDetailDialog({
                   <OpsDetailField label={t('erpMirror.fields.branchCode')}>{display(customer.branchCode)}</OpsDetailField>
                   <OpsDetailField label={t('erpMirror.fields.businessUnitCode')}>{display(customer.businessUnitCode)}</OpsDetailField>
                   <OpsDetailField label={t('erpMirror.fields.customerCode')}>{display(customer.customerCode)}</OpsDetailField>
+                  <OpsDetailField label={t('erpMirror.fields.customerType')}>{display(customer.customerType)}</OpsDetailField>
+                  <OpsDetailField label={t('erpMirror.fields.taxOffice')}>{display(customer.taxOffice)}</OpsDetailField>
                   <OpsDetailField label={t('erpMirror.fields.customerName')} wide>
                     {display(customer.customerName)}
+                  </OpsDetailField>
+                </div>
+              </section>
+
+              <section className="space-y-3">
+                <SectionHeading
+                  icon={<MapPin className="size-3.5" aria-hidden />}
+                  title={t(`${CARD}.contactSection`)}
+                />
+                <div className="grid gap-3 rounded-xl border border-[var(--wms-app-border)] bg-[color-mix(in_oklab,var(--wms-app-panel)_92%,transparent)] p-4 sm:grid-cols-2">
+                  <OpsDetailField label={t('erpMirror.fields.phone1')}>{display(customer.phone1)}</OpsDetailField>
+                  <OpsDetailField label={t('erpMirror.fields.phone2')}>{display(customer.phone2)}</OpsDetailField>
+                  <OpsDetailField label={t('erpMirror.fields.phone3')}>{display(customer.phone3)}</OpsDetailField>
+                  <OpsDetailField label={t('erpMirror.fields.email')}>{display(customer.email)}</OpsDetailField>
+                  <OpsDetailField label={t('erpMirror.fields.website')}>{display(customer.website)}</OpsDetailField>
+                  <OpsDetailField label={t('erpMirror.fields.countryCode')}>{display(customer.countryCode)}</OpsDetailField>
+                  <OpsDetailField label={t('erpMirror.fields.city')}>{display(customer.city)}</OpsDetailField>
+                  <OpsDetailField label={t('erpMirror.fields.district')}>{display(customer.district)}</OpsDetailField>
+                  <OpsDetailField label={t('erpMirror.fields.address')} wide>
+                    {display(customer.address)}
                   </OpsDetailField>
                 </div>
               </section>

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { ArrowDown, ArrowUp, CheckCircle2, ChevronDown, ChevronUp, CircleHelp, Eye, Loader2, PackageOpen, Plus, RefreshCw, Search, UserPlus, UserRoundCog, X } from 'lucide-react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -16,7 +17,9 @@ import { OpsCodeBadge, OpsStatusBadge } from '@/components/shared/OpsStatusBadge
 import { PagedLookupDialog } from '@/components/shared/PagedLookupDialog';
 import { buildTerminalEyebrowFromNav } from '@/components/shared/PremiumEyebrow';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import { AppDropdown } from '@/components/shared/AppDropdown';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { OPS_SELECT_TRIGGER_CLASS } from '@/components/shared/ops-field-styles';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { formatProjectDate, formatProjectNumber } from '@/lib/project-format';
 import { appendFoldedSearchToken, foldTurkishSearch } from '@/lib/turkish-search';
@@ -38,13 +41,15 @@ import {
 import { ProductionWorkOrderAssignmentCancelDialog } from './components/ProductionWorkOrderAssignmentDialogs';
 import { ProductionWorkOrderDetailDialog } from './components/ProductionWorkOrderDetailDialog';
 import { WorkOrderAssignmentProgressRing } from './components/WorkOrderAssignmentProgressRing';
+import { fetchProductionWorkOrderTabCounts } from './production-work-order-tab-counts';
 
 const todayIsoDate = (): string => new Date().toLocaleDateString('en-CA');
+
+const DIALOG_DROPDOWN_CONTENT = 'z-[5000]';
 
 async function buildAutoCompleteProductionTransferPayload(
   workOrder: PreparedNetsisProductionWorkOrder,
   materials: PreparedNetsisProductionMaterial[],
-  assignee: ActiveUserOption,
   branchCode: string,
 ): Promise<unknown> {
   const series = await warehouseTransferApi.series('ProductionTransfer');
@@ -103,7 +108,6 @@ async function buildAutoCompleteProductionTransferPayload(
       externalReferenceNo: workOrder.workOrderNumber,
       description: `${workOrder.sourceSystemCode} ${workOrder.workOrderNumber} iş emri reçetesinden otomatik tamamlandı.`,
       lines: preparedLines,
-      assignedUserIds: [assignee.id],
     },
     purpose: 'MaterialSupply',
     productionHeaderId: workOrder.existingProductionHeaderId ?? null,
@@ -176,10 +180,33 @@ const HEADER_CARD_CLASS = 'wms-ops-detail-panel !px-3 !py-2 max-sm:!px-2.5 max-s
 const MODAL_CTA_CLASS =
   'max-sm:w-full max-sm:!min-h-9 max-sm:!gap-1.5 max-sm:!px-3 max-sm:!text-[0.62rem]';
 
+type AssignTargetMode = 'user' | 'warehouse';
+
 type AssigneeRecipeGroup = {
-  assignee: ActiveUserOption;
+  assignee: ActiveUserOption | null;
+  warehouseId: number;
   lineIndices: number[];
 };
+
+function assigneeGroupKey(group: AssigneeRecipeGroup): string {
+  return group.assignee ? String(group.assignee.id) : `pool:${group.warehouseId}`;
+}
+
+function assigneeGroupLabel(group: AssigneeRecipeGroup, warehouseLabel: (id: number) => string): string {
+  if (group.assignee) return userDisplayName(group.assignee);
+  return `Depo havuzu · ${warehouseLabel(group.warehouseId)}`;
+}
+
+async function applyProductionTransferGroupAssignment(
+  transferId: number,
+  taskId: number,
+  group: AssigneeRecipeGroup,
+): Promise<void> {
+  await productionTransferApi.releaseTaskToPool(transferId, taskId, group.warehouseId);
+  if (group.assignee) {
+    await productionTransferApi.assignTask(transferId, taskId, group.assignee.id);
+  }
+}
 
 /** Mobil kartlarda etiket/değer; hem liste hem dialog kapsamında çalışsın diye dialog'a scope'lu CSS yerine utility kullanır. */
 function CardStat({ label, value, accent = false }: { label: string; value: string; accent?: boolean }): ReactElement {
@@ -197,12 +224,14 @@ function allMaterialIndices(count: number): number[] {
 
 function mergeAssigneeGroup(
   groups: AssigneeRecipeGroup[],
-  assignee: ActiveUserOption,
+  assignee: ActiveUserOption | null,
+  warehouseId: number,
   lineIndices: number[],
 ): AssigneeRecipeGroup[] {
-  const existingIndex = groups.findIndex((group) => group.assignee.id === assignee.id);
+  const key = assigneeGroupKey({ assignee, warehouseId, lineIndices: [] });
+  const existingIndex = groups.findIndex((group) => assigneeGroupKey(group) === key);
   const sorted = [...lineIndices].sort((left, right) => left - right);
-  if (existingIndex < 0) return [...groups, { assignee, lineIndices: sorted }];
+  if (existingIndex < 0) return [...groups, { assignee, warehouseId, lineIndices: sorted }];
 
   const merged = new Set([...groups[existingIndex].lineIndices, ...sorted]);
   return groups.map((group, index) => (index === existingIndex
@@ -213,17 +242,21 @@ function mergeAssigneeGroup(
 function AssigneeGroupMaterialsPanel({
   group,
   materials,
+  warehouseLabel,
   onRemoveLine,
 }: {
   group: AssigneeRecipeGroup;
   materials: PreparedNetsisProductionMaterial[];
-  onRemoveLine: (assigneeId: number, lineIndex: number) => void;
+  warehouseLabel: (id: number) => string;
+  onRemoveLine: (groupKey: string, lineIndex: number) => void;
 }): ReactElement {
+  const groupKey = assigneeGroupKey(group);
+  const label = assigneeGroupLabel(group, warehouseLabel);
   return (
     <section className="mt-5 border-t border-[color-mix(in_oklab,var(--wms-ops-accent)_14%,var(--wms-app-border))] pt-4">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <h4 className="text-sm font-bold text-[var(--wms-app-text)]">
-          {userDisplayName(group.assignee)}
+          {label}
           <span className="ml-2 text-xs font-semibold text-[var(--wms-app-text-muted)]">
             · {group.lineIndices.length} bileşen · kayda hazır
           </span>
@@ -247,7 +280,7 @@ function AssigneeGroupMaterialsPanel({
             {group.lineIndices.map((index, rowNumber) => {
               const row = materials[index];
               return (
-                <tr key={`${group.assignee.id}-${materialRowKey(row, index)}`}>
+                <tr key={`${groupKey}-${materialRowKey(row, index)}`}>
                   <td>{rowNumber + 1}</td>
                   <td>
                     <strong>{row.stockCode}</strong>
@@ -262,7 +295,7 @@ function AssigneeGroupMaterialsPanel({
                       type="button"
                       title="Atamadan kaldır"
                       aria-label={`${row.stockCode} bileşenini atamadan kaldır`}
-                      onClick={() => onRemoveLine(group.assignee.id, index)}
+                      onClick={() => onRemoveLine(groupKey, index)}
                       className="inline-flex size-7 items-center justify-center rounded-lg text-rose-500 hover:bg-rose-500/10"
                     >
                       <X className="size-3.5" aria-hidden />
@@ -280,7 +313,7 @@ function AssigneeGroupMaterialsPanel({
           const row = materials[index];
           return (
             <article
-              key={`${group.assignee.id}-${materialRowKey(row, index)}-card`}
+              key={`${groupKey}-${materialRowKey(row, index)}-card`}
               className="wms-ops-detail-panel overflow-hidden"
             >
               <div className="flex items-start justify-between gap-3 border-b border-[color-mix(in_oklab,var(--wms-ops-accent)_12%,var(--wms-ops-card-border))] px-3 py-2.5">
@@ -292,7 +325,7 @@ function AssigneeGroupMaterialsPanel({
                   type="button"
                   title="Atamadan kaldır"
                   aria-label={`${row.stockCode} bileşenini atamadan kaldır`}
-                  onClick={() => onRemoveLine(group.assignee.id, index)}
+                  onClick={() => onRemoveLine(groupKey, index)}
                   className="inline-flex size-8 items-center justify-center rounded-lg text-rose-500 hover:bg-rose-500/10"
                 >
                   <X className="size-4" aria-hidden />
@@ -469,10 +502,26 @@ export function ProductionWorkOrdersPage(): ReactElement {
     return new Set([initial]);
   });
   const [transferRefreshKeys, setTransferRefreshKeys] = useState<Partial<Record<ProductionWorkOrderPageTab, number>>>({});
+  const [tabCountsRevision, setTabCountsRevision] = useState(0);
   const [cancelTarget, setCancelTarget] = useState<ProductionSourceWorkOrder>();
   const canCancelAssignment = can('WMS.PRODUCTION_TRANSFER.CANCEL');
   const eyebrow = buildTerminalEyebrowFromNav(pathname, t, i18n.resolvedLanguage ?? i18n.language) ?? 'VERII WMS';
   const activeTabIndex = PRODUCTION_WORK_ORDER_TRANSFER_TABS.findIndex((tab) => tab.key === activeTab);
+
+  const refreshTabCounts = useCallback(() => {
+    setTabCountsRevision((current) => current + 1);
+  }, []);
+
+  const tabCounts = useQuery({
+    queryKey: ['production', 'work-orders', 'tab-counts', tabCountsRevision],
+    queryFn: fetchProductionWorkOrderTabCounts,
+    refetchInterval: 60_000,
+  });
+
+  const tabCount = (tab: ProductionWorkOrderPageTab): number | null => {
+    if (!tabCounts.data) return null;
+    return tabCounts.data[tab];
+  };
 
   useEffect(() => {
     const tab = searchParams.get('tab');
@@ -496,8 +545,9 @@ export function ProductionWorkOrdersPage(): ReactElement {
       toast.error(error instanceof Error ? error.message : 'Üretim iş emirleri yüklenemedi.');
     } finally {
       setLoading(false);
+      refreshTabCounts();
     }
-  }, []);
+  }, [refreshTabCounts]);
   useEffect(() => {
     void loadPending();
   }, [loadPending]);
@@ -532,6 +582,7 @@ export function ProductionWorkOrdersPage(): ReactElement {
   };
 
   const refreshActiveTab = () => {
+    refreshTabCounts();
     if (activeTab === 'pending') void loadPending(activeSearch[0] || undefined);
     else setTransferRefreshKeys((current) => ({
       ...current,
@@ -645,11 +696,19 @@ export function ProductionWorkOrdersPage(): ReactElement {
               data-active-index={Math.max(activeTabIndex, 0)}
             >
               <span className="wms-ops-detail-tab-indicator" aria-hidden />
-              {PRODUCTION_WORK_ORDER_TRANSFER_TABS.map((tab) => (
-                <TabsTrigger key={tab.key} value={tab.key} className="wms-ops-detail-main-tab">
-                  {tab.label}
-                </TabsTrigger>
-              ))}
+              {PRODUCTION_WORK_ORDER_TRANSFER_TABS.map((tab) => {
+                const count = tabCount(tab.key);
+                return (
+                  <TabsTrigger key={tab.key} value={tab.key} className="wms-ops-detail-main-tab">
+                    {tab.label}
+                    {count != null && count > 0 ? (
+                      <span className="ml-1.5 inline-flex min-w-5 items-center justify-center rounded-full bg-[var(--wms-brand-primary)]/12 px-1.5 text-[0.68rem] font-bold text-[var(--wms-brand-primary)]">
+                        {count}
+                      </span>
+                    ) : null}
+                  </TabsTrigger>
+                );
+              })}
             </TabsList>
           </Tabs>
         </div>
@@ -923,6 +982,15 @@ export function ProductionWorkOrdersPage(): ReactElement {
                 hidden={activeTab !== tabDef.key}
                 refreshKey={transferRefreshKeys[tabDef.key] ?? 0}
                 onPendingQueueChanged={() => void loadPending(activeSearch[0] || undefined)}
+                onAfterPoolClaim={() => {
+                  refreshTabCounts();
+                  setActiveTab('mine');
+                  setTransferRefreshKeys((current) => ({
+                    ...current,
+                    picking: (current.picking ?? 0) + 1,
+                    mine: (current.mine ?? 0) + 1,
+                  }));
+                }}
               />
             ) : null
           ))}
@@ -947,6 +1015,7 @@ export function ProductionWorkOrdersPage(): ReactElement {
         branchCode={branchCode}
         close={() => setSelected(undefined)}
         onTransferCreated={() => {
+          refreshTabCounts();
           void loadPending();
           setTransferRefreshKeys((current) => ({
             ...current,
@@ -962,6 +1031,7 @@ export function ProductionWorkOrdersPage(): ReactElement {
         onClose={() => setCancelTarget(undefined)}
         onCompleted={() => {
           setCancelTarget(undefined);
+          refreshTabCounts();
           void loadPending(activeSearch[0] || undefined);
           setTransferRefreshKeys((current) => ({
             ...current,
@@ -986,10 +1056,15 @@ function WorkOrderDrawer({
   onTransferCreated?: () => void;
   canCreateTransfer: boolean;
 }): ReactElement {
+  const authUser = useAuthStore((state) => state.user);
   const blocked = value.mappingErrors.length > 0 || value.isClosed;
   const alreadyImported = Boolean(value.existingProductionOrderId);
+  const defaultWarehouseId = value.sourceWarehouseId ? String(value.sourceWarehouseId) : '';
   const [headerOpen, setHeaderOpen] = useState(false);
-  const [assignee, setAssignee] = useState<ActiveUserOption | null>(null);
+  const [targetMode, setTargetMode] = useState<AssignTargetMode>('user');
+  const [warehouseId, setWarehouseId] = useState(defaultWarehouseId);
+  const [poolWarehouseId, setPoolWarehouseId] = useState(defaultWarehouseId);
+  const [groupUser, setGroupUser] = useState<ActiveUserOption | null>(null);
   const [assigneeLookupOpen, setAssigneeLookupOpen] = useState(false);
   const [assigneeHintOpen, setAssigneeHintOpen] = useState(false);
   const [completingTransfer, setCompletingTransfer] = useState(false);
@@ -1001,11 +1076,68 @@ function WorkOrderDrawer({
     () => new Set(allMaterialIndices(value.materials.length)),
   );
 
+  const warehousesQuery = useQuery({
+    queryKey: ['production-work-order-assignment-warehouses', branchCode],
+    queryFn: async () => {
+      const page = await warehouseTransferApi.warehouses({
+        pageNumber: 1,
+        pageSize: 500,
+        search: '',
+        sortBy: 'warehouseCode',
+        sortDirection: 'asc',
+        signal: new AbortController().signal,
+      }, branchCode);
+      return page.items;
+    },
+    enabled: Boolean(branchCode),
+  });
+  const eligibleAssigneesQuery = useQuery({
+    queryKey: ['production-work-order-eligible-assignees'],
+    queryFn: () => productionTransferApi.eligibleAssignees(),
+    enabled: canCreateTransfer,
+  });
+
+  const warehouseOptions = useMemo(
+    () => (warehousesQuery.data ?? [])
+      .sort((left, right) => left.warehouseCode - right.warehouseCode)
+      .map((item) => ({ value: String(item.id), label: `${item.warehouseCode} · ${item.warehouseName}` })),
+    [warehousesQuery.data],
+  );
+  const warehouseLabel = useCallback((id: number): string => {
+    const match = warehouseOptions.find((item) => item.value === String(id));
+    return match?.label ?? `#${id}`;
+  }, [warehouseOptions]);
+  const currentUserOption = useMemo<ActiveUserOption | null>(() => {
+    if (!authUser) return null;
+    const eligible = eligibleAssigneesQuery.data?.find((assignee) => assignee.userId === authUser.id);
+    return {
+      id: authUser.id,
+      username: eligible?.username ?? authUser.email,
+      email: authUser.email ?? '',
+      firstName: '',
+      lastName: '',
+      isActive: true,
+    };
+  }, [authUser, eligibleAssigneesQuery.data]);
+  const eligibleUserIdsForWarehouse = useMemo(() => {
+    const selectedWarehouseId = Number(targetMode === 'warehouse' ? poolWarehouseId : warehouseId);
+    if (!Number.isFinite(selectedWarehouseId) || selectedWarehouseId <= 0) return new Set<number>();
+    return new Set(
+      (eligibleAssigneesQuery.data ?? [])
+        .filter((assignee) => assignee.warehouseIds.length === 0 || assignee.warehouseIds.includes(selectedWarehouseId))
+        .map((assignee) => assignee.userId),
+    );
+  }, [eligibleAssigneesQuery.data, poolWarehouseId, targetMode, warehouseId]);
+
   useEffect(() => {
+    const nextWarehouseId = value.sourceWarehouseId ? String(value.sourceWarehouseId) : '';
     setUnassignedLines(new Set(allMaterialIndices(value.materials.length)));
     setAssigneeGroups([]);
     setSelectedUnassigned(new Set(allMaterialIndices(value.materials.length)));
-    setAssignee(null);
+    setGroupUser(null);
+    setTargetMode('user');
+    setWarehouseId(nextWarehouseId);
+    setPoolWarehouseId(nextWarehouseId);
   }, [value]);
 
   const unassignedList = useMemo(
@@ -1031,28 +1163,51 @@ function WorkOrderDrawer({
     setSelectedUnassigned(allUnassignedSelected ? new Set() : new Set(unassignedList));
 
   const assignSelectedLines = (): void => {
-    if (!assignee || selectedUnassignedCount === 0) return;
+    if (selectedUnassignedCount === 0) return;
     const indices = [...selectedUnassigned].filter((index) => unassignedLines.has(index));
     if (indices.length === 0) return;
 
+    if (targetMode === 'warehouse') {
+      const poolId = Number(poolWarehouseId);
+      if (!Number.isFinite(poolId) || poolId <= 0) return;
+      setUnassignedLines((current) => {
+        const next = new Set(current);
+        indices.forEach((index) => next.delete(index));
+        return next;
+      });
+      setAssigneeGroups((current) => mergeAssigneeGroup(current, null, poolId, indices));
+      setSelectedUnassigned(new Set());
+      return;
+    }
+
+    const selectedWarehouseId = Number(warehouseId);
+    if (!groupUser || !Number.isFinite(selectedWarehouseId) || selectedWarehouseId <= 0) return;
     setUnassignedLines((current) => {
       const next = new Set(current);
       indices.forEach((index) => next.delete(index));
       return next;
     });
-    setAssigneeGroups((current) => mergeAssigneeGroup(current, assignee, indices));
+    setAssigneeGroups((current) => mergeAssigneeGroup(current, groupUser, selectedWarehouseId, indices));
     setSelectedUnassigned(new Set());
   };
 
-  const removeAssignedLine = (assigneeId: number, lineIndex: number): void => {
+  const removeAssignedLine = (groupKey: string, lineIndex: number): void => {
     setAssigneeGroups((current) => current
-      .map((group) => group.assignee.id === assigneeId
+      .map((group) => assigneeGroupKey(group) === groupKey
         ? { ...group, lineIndices: group.lineIndices.filter((index) => index !== lineIndex) }
         : group)
       .filter((group) => group.lineIndices.length > 0));
     setUnassignedLines((current) => new Set([...current, lineIndex]));
     setSelectedUnassigned((current) => new Set([...current, lineIndex]));
   };
+
+  const canAssignSelected = selectedUnassignedCount > 0
+    && (targetMode === 'warehouse'
+      ? Boolean(poolWarehouseId)
+      : Boolean(groupUser && warehouseId));
+  const assignPreviewLabel = targetMode === 'warehouse'
+    ? (poolWarehouseId ? warehouseLabel(Number(poolWarehouseId)) : null)
+    : (groupUser ? userDisplayName(groupUser) : null);
 
   const footerHint = blocked || !canCreateTransfer
     ? null
@@ -1062,8 +1217,8 @@ function WorkOrderDrawer({
         : 'Atanacak kalan bileşen bulunmuyor.'
       : unassignedLines.size > 0
         ? `${assigneeGroups.length} atama grubu kaydedilecek; ${unassignedLines.size} bileşen iş emrinde kalan olarak kalacak.`
-        : selectedUnassignedCount > 0 && !assignee
-          ? 'Seçili satırları atamak için depo çalışanı seçin.'
+        : selectedUnassignedCount > 0 && !canAssignSelected
+          ? 'Seçili satırları atamak için depo ve hedef belirleyin.'
           : null;
 
   const recipeExportRows = value.materials.map((material, index) => ({
@@ -1092,11 +1247,13 @@ function WorkOrderDrawer({
     try {
       if (isExistingUnlinkedRemainder) {
         if (assigneeGroups.length !== 1) {
-          throw new Error('İş emrisiz iptal kalanı aynı belgeye yalnızca tek kullanıcı atanabilir.');
+          throw new Error('İptal kalan transferi aynı oturumda yalnızca tek bir atama grubu ile kaydedilebilir.');
         }
-        const assignee = assigneeGroups[0].assignee;
-        await productionTransferApi.assignTask(value.transferId!, value.kalanTaskId!, assignee.id);
-        toast.success(`Transfer ${value.workOrderNumber} · ${userDisplayName(assignee)} kullanıcısına atandı.`);
+        const group = assigneeGroups[0];
+        await applyProductionTransferGroupAssignment(value.transferId!, value.kalanTaskId!, group);
+        toast.success(group.assignee
+          ? `Transfer ${value.workOrderNumber} · ${userDisplayName(group.assignee)} kullanıcısına atandı.`
+          : `Transfer ${value.workOrderNumber} · ${warehouseLabel(group.warehouseId)} depo havuzuna bırakıldı.`);
         close();
         onTransferCreated?.();
         return;
@@ -1105,10 +1262,15 @@ function WorkOrderDrawer({
       const createdDocs: string[] = [];
       for (const group of assigneeGroups) {
         const materials = group.lineIndices.map((index) => value.materials[index]);
-        const payload = await buildAutoCompleteProductionTransferPayload(value, materials, group.assignee, branchCode);
+        const payload = await buildAutoCompleteProductionTransferPayload(value, materials, branchCode);
         const created = await warehouseTransferApi.createProductionDraft(payload);
+        if (!created.taskId) throw new Error('Toplama görevi oluşturulamadı.');
+        await applyProductionTransferGroupAssignment(created.id, created.taskId, group);
         const taskLabel = created.taskNo ? ` · ${created.taskNo}` : '';
-        createdDocs.push(`${created.documentNo}${taskLabel}`);
+        const targetLabel = group.assignee
+          ? userDisplayName(group.assignee)
+          : `Depo havuzu · ${warehouseLabel(group.warehouseId)}`;
+        createdDocs.push(`${created.documentNo}${taskLabel} → ${targetLabel}`);
       }
       toast.success(
         remainingCount > 0
@@ -1218,58 +1380,164 @@ function WorkOrderDrawer({
                       </button>
                     </TooltipTrigger>
                     <TooltipContent side="bottom" align="start" className="max-w-[18rem]">
-                      Atanmamış listeden bileşen seçin, depo çalışanını belirleyin ve &quot;Seçilenleri ata&quot; ile gruba ekleyin.
-                      Her kullanıcı için ayrı transfer belgesi oluşturulur.
+                      Atanmamış listeden bileşen seçin; Kişi veya Depo sekmesinden hedef belirleyip &quot;Seçilenleri ata&quot; deyin.
+                      Kişi modunda önce depo seçilir, kullanıcı listesi yalnızca o depodaki çalışanları gösterir.
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               </div>
-              <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-end">
-                <div className="min-w-0 flex-1">
-                  <PagedLookupDialog<ActiveUserOption>
-                    variant="ops"
-                    triggerMode="combobox"
-                    autoSearchMinLength={1}
-                    popoverPortalContainer={null}
-                    openDialogOnTouchTap
-                    open={assigneeLookupOpen}
-                    onOpenChange={setAssigneeLookupOpen}
-                    title="Depo çalışanı seçin"
-                    value={assignee ? userDisplayName(assignee) : null}
-                    placeholder="Depo çalışanı seçin"
-                    searchPlaceholder="Ad, kullanıcı adı veya e-posta ile arayın"
-                    emptyText="Eşleşen depo çalışanı bulunamadı."
-                    triggerClassName="!h-11 !py-2 !pl-9 !pr-3"
-                    queryKey={['production-work-order-assignee']}
-                    fetchPage={async ({ pageNumber, pageSize, search, signal }) =>
-                      toPagedResponse(await warehouseTransferApi.activeUsers({
-                        pageNumber,
-                        pageSize,
-                        search,
-                        sortBy: 'username',
-                        sortDirection: 'asc',
-                        signal: signal ?? new AbortController().signal,
-                      }))
-                    }
-                    getKey={(user) => String(user.id)}
-                    getLabel={(user) => userDisplayName(user)}
-                    onSelect={setAssignee}
-                  />
-                </div>
-                <OpsActionButton
-                  variant="primary"
-                  className={cn('shrink-0', MODAL_CTA_CLASS)}
-                  disabled={blocked || !canCreateTransfer || !assignee || selectedUnassignedCount === 0}
-                  onClick={assignSelectedLines}
-                >
-                  <UserPlus className="size-4 max-sm:size-3.5" aria-hidden />
-                  Seçilenleri ata
-                </OpsActionButton>
+
+              <div className="mt-3 wms-ops-production-work-order-tabs wms-ops-detail-dialog">
+                <Tabs value={targetMode} onValueChange={(next) => setTargetMode(next as AssignTargetMode)}>
+                  <TabsList
+                    className={cn('w-full', 'wms-ops-detail-main-tabs', 'wms-ops-detail-main-tabs--cols-2')}
+                    data-active-index={targetMode === 'user' ? 0 : 1}
+                  >
+                    <span className="wms-ops-detail-tab-indicator" aria-hidden />
+                    <TabsTrigger value="user" className="wms-ops-detail-main-tab">
+                      Kişi
+                    </TabsTrigger>
+                    <TabsTrigger value="warehouse" className="wms-ops-detail-main-tab">
+                      Depo
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
               </div>
-              {assignee && selectedUnassignedCount > 0 ? (
+
+              <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end">
+                <div className="min-w-0 flex-1 space-y-3">
+                  {targetMode === 'user' ? (
+                    <>
+                      <div className="space-y-1.5">
+                        <p className="text-[0.68rem] font-semibold uppercase tracking-wide text-[var(--wms-app-text-muted)]">Depo</p>
+                        <div className="wms-ops-field-shell w-full min-w-0">
+                          <AppDropdown
+                            value={warehouseId || null}
+                            onValueChange={(next) => setWarehouseId(next ?? '')}
+                            options={warehouseOptions}
+                            placeholder={warehousesQuery.isLoading ? 'Depolar yükleniyor…' : 'Depo seçin'}
+                            searchable
+                            portalContainer={null}
+                            contentClassName={DIALOG_DROPDOWN_CONTENT}
+                            className={cn(OPS_SELECT_TRIGGER_CLASS, 'w-full')}
+                          />
+                        </div>
+                        <p className="text-xs text-[var(--wms-app-text-muted)]">Kişiye atanan kalemler seçilen depoda hazırlanır.</p>
+                      </div>
+                      <div className="space-y-1.5">
+                        <p className="text-[0.68rem] font-semibold uppercase tracking-wide text-[var(--wms-app-text-muted)]">Depo personeli</p>
+                        <PagedLookupDialog<ActiveUserOption>
+                          variant="ops"
+                          triggerMode="combobox"
+                          autoSearchMinLength={1}
+                          popoverPortalContainer={null}
+                          openDialogOnTouchTap
+                          open={assigneeLookupOpen}
+                          onOpenChange={setAssigneeLookupOpen}
+                          title="Depo personeli seçin"
+                          value={groupUser ? userDisplayName(groupUser) : null}
+                          placeholder={warehouseId ? 'Depo personeli seçin' : 'Önce depo seçin'}
+                          searchPlaceholder="Ad, kullanıcı adı veya e-posta ile arayın"
+                          emptyText="Bu depoda eşleşen depo çalışanı bulunamadı."
+                          triggerClassName="!h-11 !py-2 !pl-9 !pr-3"
+                          queryKey={['production-work-order-assignee', warehouseId, eligibleAssigneesQuery.dataUpdatedAt]}
+                          fetchPage={async ({ pageNumber, pageSize, search }) => {
+                            const selectedWarehouseId = Number(warehouseId);
+                            if (!Number.isFinite(selectedWarehouseId) || selectedWarehouseId <= 0) {
+                              return toPagedResponse({
+                                items: [],
+                                totalCount: 0,
+                                pageNumber: 1,
+                                pageSize,
+                                totalPages: 1,
+                                hasNextPage: false,
+                              });
+                            }
+
+                            const normalizedSearch = foldTurkishSearch(search?.trim() ?? '');
+                            const filtered = (eligibleAssigneesQuery.data ?? [])
+                              .filter((assignee) => assignee.warehouseIds.length === 0
+                                || assignee.warehouseIds.includes(selectedWarehouseId))
+                              .filter((assignee) => !normalizedSearch
+                                || foldTurkishSearch(assignee.username).includes(normalizedSearch))
+                              .sort((left, right) => left.username.localeCompare(right.username, 'tr'));
+
+                            const totalCount = filtered.length;
+                            const start = (pageNumber - 1) * pageSize;
+                            const items = filtered.slice(start, start + pageSize).map((assignee) => ({
+                              id: assignee.userId,
+                              username: assignee.username,
+                              email: '',
+                              firstName: '',
+                              lastName: '',
+                              isActive: true,
+                            } satisfies ActiveUserOption));
+
+                            return toPagedResponse({
+                              items,
+                              totalCount,
+                              pageNumber,
+                              pageSize,
+                              totalPages: Math.max(1, Math.ceil(totalCount / Math.max(pageSize, 1))),
+                              hasNextPage: start + pageSize < totalCount,
+                            });
+                          }}
+                          getKey={(user) => String(user.id)}
+                          getLabel={(user) => userDisplayName(user)}
+                          onSelect={setGroupUser}
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <div className="space-y-1.5">
+                      <p className="text-[0.68rem] font-semibold uppercase tracking-wide text-[var(--wms-app-text-muted)]">Depo</p>
+                      <div className="wms-ops-field-shell w-full min-w-0">
+                        <AppDropdown
+                          value={poolWarehouseId || null}
+                          onValueChange={(next) => setPoolWarehouseId(next ?? '')}
+                          options={warehouseOptions}
+                          placeholder={warehousesQuery.isLoading ? 'Depolar yükleniyor…' : 'Depo seçin'}
+                          searchable
+                          portalContainer={null}
+                          contentClassName={DIALOG_DROPDOWN_CONTENT}
+                          className={cn(OPS_SELECT_TRIGGER_CLASS, 'w-full')}
+                        />
+                      </div>
+                      <p className="text-xs text-[var(--wms-app-text-muted)]">
+                        Görev seçilen depoya ortak olarak bırakılır; o depodaki bir çalışan üzerine alabilir.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex shrink-0 flex-col gap-2 sm:pb-0.5 sm:flex-row">
+                  {targetMode === 'user' && currentUserOption && eligibleUserIdsForWarehouse.has(currentUserOption.id) ? (
+                    <OpsActionButton
+                      type="button"
+                      variant="secondary"
+                      className={cn('wms-ops-list-toolbar-btn', MODAL_CTA_CLASS)}
+                      onClick={() => setGroupUser(currentUserOption)}
+                    >
+                      Kendimi seç
+                    </OpsActionButton>
+                  ) : null}
+                  <OpsActionButton
+                    variant="primary"
+                    className={cn('shrink-0', MODAL_CTA_CLASS)}
+                    disabled={blocked || !canCreateTransfer || !canAssignSelected}
+                    onClick={assignSelectedLines}
+                  >
+                    <UserPlus className="size-4 max-sm:size-3.5" aria-hidden />
+                    Seçilenleri ata
+                  </OpsActionButton>
+                </div>
+              </div>
+
+              {assignPreviewLabel && selectedUnassignedCount > 0 ? (
                 <p className="mt-2 text-xs text-[var(--wms-app-text-muted)]">
                   <strong className="text-[var(--wms-brand-primary)]">{selectedUnassignedCount}</strong> seçili bileşen{' '}
-                  <strong className="text-[var(--wms-brand-primary)]">{userDisplayName(assignee)}</strong> kullanıcısına atanacak.
+                  <strong className="text-[var(--wms-brand-primary)]">{assignPreviewLabel}</strong>{' '}
+                  {targetMode === 'warehouse' ? 'depo havuzuna' : 'kullanıcısına'} atanacak.
                 </p>
               ) : null}
             </div>
@@ -1444,9 +1712,10 @@ function WorkOrderDrawer({
 
                 {assigneeGroups.map((group) => (
                   <AssigneeGroupMaterialsPanel
-                    key={group.assignee.id}
+                    key={assigneeGroupKey(group)}
                     group={group}
                     materials={value.materials}
+                    warehouseLabel={warehouseLabel}
                     onRemoveLine={removeAssignedLine}
                   />
                 ))}

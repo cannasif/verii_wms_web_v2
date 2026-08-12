@@ -91,9 +91,10 @@ export function Toaster({ ...props }: ToasterProps): ReactElement {
       className={cn('wms-ops-toaster', isPremium && 'wms-ops-toaster--premium')}
       position="bottom-right"
       closeButton
-      gap={isPremium ? 12 : 10}
+      expand
+      gap={12}
       offset={18}
-      expand={isPremium}
+      visibleToasts={5}
       toastOptions={{
         classNames: {
           toast: cn('wms-ops-toast', isPremium && 'wms-premium-toast'),

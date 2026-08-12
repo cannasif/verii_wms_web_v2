@@ -1,6 +1,24 @@
 import type { EffectiveStockTrackingPolicy } from '@/features/stock-tracking/effective-stock-tracking.service';
 
-export interface CustomerOption { id: number; branchCode: string; customerCode: string; customerName: string }
+export interface CustomerOption {
+  id: number
+  branchCode: string
+  customerCode: string
+  customerName: string
+  phone1?: string | null
+  phone2?: string | null
+  phone3?: string | null
+  city?: string | null
+  district?: string | null
+  countryCode?: string | null
+  address?: string | null
+  customerType?: string | null
+  taxOffice?: string | null
+  email?: string | null
+  website?: string | null
+  businessUnitCode?: number
+  lastSyncDate?: string | null
+}
 export interface WarehouseOption {
   id: number;
   branchCode: string;

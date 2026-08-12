@@ -110,13 +110,13 @@ export interface ProductionWorkOrderTransferHeaderRow {
   updatedBy?: number;
   updatedDate?: string;
   createdDate?: string;
-  tasks: ProductionWorkOrderTransferTaskRow[];
   erpPostingPolicy?: 'Disabled' | 'Manual' | 'AfterHandover';
   erpIntegrationStatus?: ProductionTransferExecution['erpIntegrationStatus'];
   erpPostingStatus?: ProductionTransferExecution['erpPostingStatus'];
   erpDocumentNo?: string;
   erpErrorCode?: string;
   erpErrorMessage?: string;
+  tasks: ProductionWorkOrderTransferTaskRow[];
 }
 
 /** Görev başlatmadan önce depo-geneli stok yeterlilik kontrolü sonucu. */
@@ -444,6 +444,12 @@ export const productionTransferApi = {
   // — Atama ve devir —
   assignTask: async (id: number, taskId: number, userId: number): Promise<ProductionTaskBoard> =>
     unwrap(await api.post<Envelope<ProductionTaskBoard>>(`${taskPath(id, taskId)}/assign`, { userId })),
+  releaseTaskToPool: async (id: number, taskId: number, warehouseId: number): Promise<ProductionTaskBoard> =>
+    unwrap(await api.post<Envelope<ProductionTaskBoard>>(`${taskPath(id, taskId)}/release-to-pool`, { warehouseId })),
+  claimTask: async (id: number, taskId: number): Promise<ProductionTaskBoard> =>
+    unwrap(await api.post<Envelope<ProductionTaskBoard>>(`${taskPath(id, taskId)}/claim`, { idempotencyKey: crypto.randomUUID() })),
+  eligibleAssignees: async (): Promise<ProductionTaskBoard['eligibleAssignees']> =>
+    unwrap(await api.get<Envelope<ProductionTaskBoard['eligibleAssignees']>>('/api/production-transfers/eligible-assignees')),
   removeAssignment: async (id: number, taskId: number, userId: number): Promise<ProductionTaskBoard> =>
     unwrap(await api.post<Envelope<ProductionTaskBoard>>(`${assignmentPath(id, taskId, userId)}/remove`, {})),
   handoffTask: async (id: number, taskId: number, targetUserId: number, reason?: string): Promise<ProductionTaskBoard> =>
