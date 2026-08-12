@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react';
-import { ArrowDown, ArrowUp, Ban, CheckCircle2, ChevronDown, ChevronUp, CircleHelp, FileText, PackageOpen, Plus, RefreshCw, Search, UserPlus, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, CheckCircle2, ChevronDown, ChevronUp, CircleHelp, Eye, Loader2, PackageOpen, Plus, RefreshCw, Search, UserPlus, UserRoundCog, X } from 'lucide-react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -36,6 +36,7 @@ import {
   type ProductionWorkOrderPageTab,
 } from './components/ProductionWorkOrderTransferTabPanel';
 import { ProductionWorkOrderAssignmentCancelDialog } from './components/ProductionWorkOrderAssignmentDialogs';
+import { ProductionWorkOrderDetailDialog } from './components/ProductionWorkOrderDetailDialog';
 import { WorkOrderAssignmentProgressRing } from './components/WorkOrderAssignmentProgressRing';
 
 const todayIsoDate = (): string => new Date().toLocaleDateString('en-CA');
@@ -455,7 +456,8 @@ export function ProductionWorkOrdersPage(): ReactElement {
   const [rows, setRows] = useState<ProductionSourceWorkOrder[]>([]);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<PreparedNetsisProductionWorkOrder>();
-  const [detailLoading, setDetailLoading] = useState<string>();
+  const [detailTarget, setDetailTarget] = useState<ProductionSourceWorkOrder>();
+  const [assignmentLoading, setAssignmentLoading] = useState<string>();
   const [dateSort, setDateSort] = useState<DateSort>('desc');
   const [activeTab, setActiveTab] = useState<ProductionWorkOrderPageTab>(() => {
     const tab = searchParams.get('tab');
@@ -546,11 +548,20 @@ export function ProductionWorkOrdersPage(): ReactElement {
     });
   }, [rows, activeSearch, dateSort]);
 
-  const open = async (row: ProductionSourceWorkOrder) => {
-    setDetailLoading(workOrderKey(row));
-    try { setSelected(await productionApi.prepareSourceWorkOrder(row)); }
-    catch (error) { toast.error(error instanceof Error ? error.message : 'İş emri reçetesi hazırlanamadı.'); }
-    finally { setDetailLoading(undefined); }
+  const openDetail = (row: ProductionSourceWorkOrder): void => {
+    setDetailTarget(row);
+  };
+
+  const openAssignment = async (row: ProductionSourceWorkOrder) => {
+    setAssignmentLoading(workOrderKey(row));
+    try {
+      setSelected(await productionApi.prepareSourceWorkOrder(row));
+      setDetailTarget(undefined);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'İş emri reçetesi hazırlanamadı.');
+    } finally {
+      setAssignmentLoading(undefined);
+    }
   };
 
   const sourceLabel = policy?.productionOrderSource === 'ErpAndWms'
@@ -748,7 +759,7 @@ export function ProductionWorkOrdersPage(): ReactElement {
                   </td>
                 </tr>
               ) : visibleRows.map((row) => (
-                <tr key={workOrderKey(row)} onClick={() => void open(row)} className="cursor-pointer">
+                <tr key={workOrderKey(row)} onClick={() => openDetail(row)} className="cursor-pointer">
                   <td className={cn(CELL, 'font-mono font-black text-[var(--wms-brand-primary)]')}>
                     <div className="flex items-center justify-center gap-2">
                       <span>{row.workOrderNumber}</span>
@@ -770,31 +781,40 @@ export function ProductionWorkOrdersPage(): ReactElement {
                   <td className={CELL}>{row.projectCode || '—'}</td>
                   <td className={CELL}>{row.issueWarehouseCode} → {row.warehouseCode}</td>
                   <td className={CELL}>
-                    <div className="flex flex-wrap items-center justify-center gap-1.5">
-                      <OpsActionButton
-                        variant="secondary"
-                        className="wms-ops-list-toolbar-btn"
-                        loading={detailLoading === workOrderKey(row)}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          void open(row);
-                        }}
+                    <div className="wms-ops-row-actions" onClick={(event) => event.stopPropagation()}>
+                      <button
+                        type="button"
+                        className="wms-ops-grid-icon-btn"
+                        title="Detay"
+                        aria-label="Detay"
+                        onClick={() => openDetail(row)}
                       >
-                        <FileText className="size-3.5" aria-hidden />
-                        <span>Reçeteyi aç</span>
-                      </OpsActionButton>
+                        <Eye className="size-3.5" aria-hidden />
+                      </button>
+                      <button
+                        type="button"
+                        className="wms-ops-grid-icon-btn"
+                        title="Reçeteyi aç"
+                        aria-label="Reçeteyi aç"
+                        disabled={assignmentLoading === workOrderKey(row)}
+                        onClick={() => void openAssignment(row)}
+                      >
+                        {assignmentLoading === workOrderKey(row) ? (
+                          <Loader2 className="size-3.5 animate-spin" aria-hidden />
+                        ) : (
+                          <UserRoundCog className="size-3.5" aria-hidden />
+                        )}
+                      </button>
                       {canCancelAssignment ? (
-                        <OpsActionButton
-                          variant="secondary"
-                          className="wms-ops-list-toolbar-btn !border-rose-500/30 !text-rose-600 dark:!text-rose-300"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            setCancelTarget(row);
-                          }}
+                        <button
+                          type="button"
+                          className="wms-ops-grid-icon-btn !text-rose-600"
+                          title="İptal et"
+                          aria-label="İptal et"
+                          onClick={() => setCancelTarget(row)}
                         >
-                          <Ban className="size-3.5" aria-hidden />
-                          <span>İptal</span>
-                        </OpsActionButton>
+                          <X className="size-3.5" aria-hidden />
+                        </button>
                       ) : null}
                     </div>
                   </td>
@@ -822,7 +842,11 @@ export function ProductionWorkOrdersPage(): ReactElement {
                 {dateSort === 'asc' ? <ArrowUp className="size-3.5" aria-hidden /> : <ArrowDown className="size-3.5" aria-hidden />}
               </button>
               {visibleRows.map((row) => (
-                <article key={`${workOrderKey(row)}-card`} className="overflow-hidden border border-[var(--wms-ops-card-border)] bg-[var(--wms-ops-card-bg)]">
+                <article
+                  key={`${workOrderKey(row)}-card`}
+                  className="cursor-pointer overflow-hidden border border-[var(--wms-ops-card-border)] bg-[var(--wms-ops-card-bg)]"
+                  onClick={() => openDetail(row)}
+                >
                   <div className="border-b border-[color-mix(in_oklab,var(--wms-ops-accent)_16%,var(--wms-ops-card-border))] px-3 py-2.5">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex min-w-0 items-center gap-2 font-mono text-sm font-black text-[var(--wms-brand-primary)]">
@@ -840,26 +864,44 @@ export function ProductionWorkOrdersPage(): ReactElement {
                     <CardStat label="Proje" value={row.projectCode || '—'} />
                     <CardStat label="Depo akışı" value={`${row.issueWarehouseCode} → ${row.warehouseCode}`} />
                   </dl>
-                  <div className="border-t border-[color-mix(in_oklab,var(--wms-ops-accent)_16%,var(--wms-ops-card-border))] px-3 py-2.5">
-                    <div className="flex flex-col gap-2">
-                      <OpsActionButton
-                        variant="secondary"
-                        className="wms-ops-list-toolbar-btn w-full"
-                        loading={detailLoading === workOrderKey(row)}
-                        onClick={() => void open(row)}
+                  <div
+                    className="border-t border-[color-mix(in_oklab,var(--wms-ops-accent)_16%,var(--wms-ops-card-border))] px-3 py-2.5"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <div className="wms-ops-row-actions justify-start">
+                      <button
+                        type="button"
+                        className="wms-ops-grid-icon-btn"
+                        title="Detay"
+                        aria-label="Detay"
+                        onClick={() => openDetail(row)}
                       >
-                        <FileText className="size-3.5" aria-hidden />
-                        <span>Reçeteyi aç</span>
-                      </OpsActionButton>
+                        <Eye className="size-3.5" aria-hidden />
+                      </button>
+                      <button
+                        type="button"
+                        className="wms-ops-grid-icon-btn"
+                        title="Reçeteyi aç"
+                        aria-label="Reçeteyi aç"
+                        disabled={assignmentLoading === workOrderKey(row)}
+                        onClick={() => void openAssignment(row)}
+                      >
+                        {assignmentLoading === workOrderKey(row) ? (
+                          <Loader2 className="size-3.5 animate-spin" aria-hidden />
+                        ) : (
+                          <UserRoundCog className="size-3.5" aria-hidden />
+                        )}
+                      </button>
                       {canCancelAssignment ? (
-                        <OpsActionButton
-                          variant="secondary"
-                          className="wms-ops-list-toolbar-btn w-full !border-rose-500/30 !text-rose-600 dark:!text-rose-300"
+                        <button
+                          type="button"
+                          className="wms-ops-grid-icon-btn !text-rose-600"
+                          title="İptal et"
+                          aria-label="İptal et"
                           onClick={() => setCancelTarget(row)}
                         >
-                          <Ban className="size-3.5" aria-hidden />
-                          <span>İptal</span>
-                        </OpsActionButton>
+                          <X className="size-3.5" aria-hidden />
+                        </button>
                       ) : null}
                     </div>
                   </div>
@@ -886,6 +928,19 @@ export function ProductionWorkOrdersPage(): ReactElement {
           ))}
       </div>
     </OpsListPageShell>
+    {detailTarget ? (
+      <ProductionWorkOrderDetailDialog
+        row={detailTarget}
+        canCreateTransfer={can('WMS.PRODUCTION_TRANSFER.CREATE')}
+        canCancel={canCancelAssignment}
+        onClose={() => setDetailTarget(undefined)}
+        onOpenAssignment={(row) => void openAssignment(row)}
+        onCancel={(row) => {
+          setDetailTarget(undefined);
+          setCancelTarget(row);
+        }}
+      />
+    ) : null}
     {selected && (
       <WorkOrderDrawer
         value={selected}
@@ -1027,8 +1082,26 @@ function WorkOrderDrawer({
   const completeAssignments = async (): Promise<void> => {
     if (blocked || !canCreateTransfer || assigneeGroups.length === 0) return;
     const remainingCount = unassignedLines.size;
+    const isExistingUnlinkedRemainder =
+      value.listingKind === 'CancellationReturnRemainder'
+      && Number.isFinite(value.transferId) && (value.transferId ?? 0) > 0
+      && Number.isFinite(value.kalanTaskId) && (value.kalanTaskId ?? 0) > 0
+      && !value.existingProductionOrderId
+      && !value.existingProductionHeaderId;
     setCompletingTransfer(true);
     try {
+      if (isExistingUnlinkedRemainder) {
+        if (assigneeGroups.length !== 1) {
+          throw new Error('İş emrisiz iptal kalanı aynı belgeye yalnızca tek kullanıcı atanabilir.');
+        }
+        const assignee = assigneeGroups[0].assignee;
+        await productionTransferApi.assignTask(value.transferId!, value.kalanTaskId!, assignee.id);
+        toast.success(`Transfer ${value.workOrderNumber} · ${userDisplayName(assignee)} kullanıcısına atandı.`);
+        close();
+        onTransferCreated?.();
+        return;
+      }
+
       const createdDocs: string[] = [];
       for (const group of assigneeGroups) {
         const materials = group.lineIndices.map((index) => value.materials[index]);

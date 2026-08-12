@@ -110,7 +110,7 @@ export function ProductionTransferDetailDialog({
   const workflowStatusLabel = workflowStatus
     ? productionTransferEnumLabel(t, 'workflowStatus', workflowStatus)
     : '—';
-  const productionOrderNo = summary?.productionOrderNo ?? summary?.externalReferenceNo ?? header?.documentNo;
+  const workOrderReference = summary?.productionOrderNo ?? summary?.externalReferenceNo ?? null;
   const mainTabIndex = MAIN_TABS.indexOf(mainTab);
 
   const erpInfo = useMemo(() => {
@@ -178,8 +178,8 @@ export function ProductionTransferDetailDialog({
                 </span>
               </DialogTitle>
               <DialogDescription className="wms-ops-detail-dialog__description">
-                {productionOrderNo
-                  ? t('detail.descriptionWorkOrder', { orderNo: productionOrderNo })
+                {workOrderReference
+                  ? t('detail.descriptionWorkOrder', { orderNo: workOrderReference })
                   : t('detail.descriptionFallback')}
                 {execution ? ` · ${execution.sourceWarehouseName} → ${execution.targetWarehouseName}` : null}
               </DialogDescription>
