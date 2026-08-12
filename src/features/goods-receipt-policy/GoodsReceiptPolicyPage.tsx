@@ -10,6 +10,7 @@ import type {
   LocationOption,
   WarehouseOption as GoodsReceiptWarehouseOption,
 } from '@/features/goods-receipt-v2/types/goods-receipt.types';
+import { locationsApi } from '@/features/locations/api/locations.api';
 import { userManagementApi } from '@/features/user-management/api/user-management.api';
 import type { UserDetail, UserRow, WarehouseOption } from '@/features/user-management/types/user-management.types';
 import { api } from '@/lib/axios';
@@ -345,17 +346,16 @@ function WarehouseDefaultLocationsPanel({
     if (!selectedWarehouseId) return;
     let active = true;
     setLocationsLoading(true);
-    void goodsReceiptV2Api.locations({
-      pageNumber: 1,
-      pageSize: 500,
-      search: undefined,
-      filterLogic: 'and',
-      filters: [],
-      sortBy: 'code',
-      sortDirection: 'asc',
-      signal: new AbortController().signal,
-    }, selectedWarehouseId).then((page) => {
-      if (active) setLocations(page.items);
+    // Lookup returns every active shelf for the warehouse (no 500-row page cap).
+    void locationsApi.getLookup(selectedWarehouseId).then((rows) => {
+      if (!active) return;
+      setLocations(rows.map((row) => ({
+        id: row.id,
+        warehouseId: row.warehouseId,
+        code: row.code,
+        name: row.name,
+        locationType: row.locationType,
+      })));
     }).catch((error) => {
       if (active) toast.error(error instanceof Error ? error.message : t(`${POLICY}.defaults.locationsLoadError`));
     }).finally(() => {
@@ -419,6 +419,7 @@ function WarehouseDefaultLocationsPanel({
             value={locationId}
             onValueChange={setLocationId}
             disabled={!warehouseId || locationsLoading}
+            searchable
             options={[
               { value: 'none', label: t(`${POLICY}.defaults.noDefaultLocation`) },
               ...locations.map((item) => ({

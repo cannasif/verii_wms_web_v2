@@ -22,9 +22,10 @@ function onlyWarehouseLocations<T extends { warehouseId?: number | null }>(
   warehouseId: number,
 ): T[] {
   if (!(warehouseId > 0)) return [];
-  const hasWarehouseIds = items.some((item) => item.warehouseId != null && item.warehouseId > 0);
+  const targetId = Number(warehouseId);
+  const hasWarehouseIds = items.some((item) => Number(item.warehouseId) > 0);
   if (!hasWarehouseIds) return items;
-  return items.filter((item) => item.warehouseId === warehouseId);
+  return items.filter((item) => Number(item.warehouseId) === targetId);
 }
 
 function readDetailRoutes(detail: GoodsReceiptDetail & Record<string, unknown>): GoodsReceiptRoutingResult[] {
@@ -100,34 +101,32 @@ export const goodsReceiptV2Api = {
         hasNextPage: false,
       };
     }
-    const page = unwrap(await api.post<Envelope<GridPage<LocationOption>>>('/api/locations/paged', pagedBody({ ...request, sortBy: request.sortBy ?? 'code', filterLogic: 'and' }, [
+    const page = normalizeGridPage<LocationOption>(unwrap(await api.post<Envelope<GridPage<LocationOption>>>('/api/locations/paged', pagedBody({ ...request, sortBy: request.sortBy ?? 'code', filterLogic: 'and' }, [
       { column: 'warehouseId', operator: 'equals', value: String(warehouseId) },
       { column: 'isActive', operator: 'equals', value: 'true' },
-    ]), { signal: request.signal }));
+    ]), { signal: request.signal })));
     const items = onlyWarehouseLocations(page.items, warehouseId);
+    const pageNumber = page.pageNumber || 1;
+    const pageSize = page.pageSize || request.pageSize || 20;
+    const totalCount = page.totalCount || items.length;
     return {
-      ...page,
       items,
-      totalCount: items.length,
-      totalPages: 1,
-      pageNumber: 1,
-      hasNextPage: false,
+      pageNumber,
+      pageSize,
+      totalCount,
+      totalPages: page.totalPages ?? Math.max(1, Math.ceil(totalCount / pageSize) || 0),
+      hasNextPage: Boolean(page.hasNextPage ?? pageNumber * pageSize < totalCount),
     };
   },
   /** Mal kabul için yalnızca Receiving/Staging lokasyonları. */
   receivingLocations: async (request: DropdownPageRequest, warehouseId: number): Promise<GridPage<LocationOption>> => {
-    const page = await goodsReceiptV2Api.locations({
-      ...request,
-      pageSize: Math.max(request.pageSize ?? 20, 100),
-    }, warehouseId);
+    const page = await goodsReceiptV2Api.locations(request, warehouseId);
     const items = page.items.filter((item) => item.locationType === 'Receiving' || item.locationType === 'Staging');
     return {
       ...page,
       items,
-      totalCount: items.length,
-      totalPages: 1,
-      pageNumber: 1,
-      hasNextPage: false,
+      // Client-side type filter can shrink a page; keep paging flags from the warehouse query
+      // so infinite dropdowns can still request remaining pages.
     };
   },
   putawaySuggestions: async (warehouseId: number, params: { stockId?: number; stockCode?: string; yapCodeId?: number; quantity: number; limit?: number }): Promise<PutawayLocationSuggestion[]> => {
