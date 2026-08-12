@@ -287,7 +287,8 @@
     "ProductionOutputMove": "Movimiento de salida de producción",
     "SubcontractingIssue": "Salida a subcontratación",
     "SubcontractingReceipt": "Recepción de subcontratación",
-    "SubcontractorToSubcontractor": "Transferencia entre subcontratistas"
+    "SubcontractorToSubcontractor": "Transferencia entre subcontratistas",
+    "QualityDisposition": "Transferencia por decisión de calidad"
   },
   "transferStatuses": {
     "Draft": "Borrador",

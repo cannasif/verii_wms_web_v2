@@ -287,7 +287,8 @@
     "ProductionOutputMove": "Production output movement",
     "SubcontractingIssue": "Subcontracting issue",
     "SubcontractingReceipt": "Subcontracting receipt",
-    "SubcontractorToSubcontractor": "Subcontractor-to-subcontractor transfer"
+    "SubcontractorToSubcontractor": "Subcontractor-to-subcontractor transfer",
+    "QualityDisposition": "Quality disposition transfer"
   },
   "transferStatuses": {
     "Draft": "Draft",

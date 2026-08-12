@@ -2410,6 +2410,15 @@
           "decision": "Diese Option steuert folgende Vorgänge: Routing nach Warenannahme, Qualitäts-Standby-Balance. Wählen Sie sie, wenn Sie folgendes Ergebnis wünschen: „Das Standardregal für Produkte, die auf eine Qualitätsprüfung warten.“"
         }
       },
+      "defaultAcceptedLocationId": {
+        "default": {
+          "summary": "Empfohlenes Lager und empfohlener Lagerplatz für von der Qualitätskontrolle angenommene Produkte.",
+          "effect": "Bei einer Annahmeentscheidung wird dieses Ziel automatisch ausgewählt; berechtigte Benutzer können es ändern.",
+          "affects": ["Qualitätsentscheidung", "Bestandsbewegung Annahme", "Lagerübertragung"],
+          "scenario": "Ein angenommenes Produkt wird für ANNAHME-01 vorgeschlagen; der Benutzer kann ein anderes zulässiges Ziel wählen.",
+          "decision": "Mit diesem Wert werden Ziellager und Lagerplatz bei Annahme vorausgefüllt und bleiben änderbar."
+        }
+      },
       "defaultQuarantineLocationId": {
         "default": {
           "summary": "Dies ist das Standardregal für Produkte, die unter Quarantäne gestellt wurden.",

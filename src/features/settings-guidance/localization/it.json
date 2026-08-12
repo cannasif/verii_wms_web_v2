@@ -2410,6 +2410,15 @@
           "decision": "Questa opzione controlla le seguenti operazioni: Routing dopo l'accettazione delle merci, Bilancio standby di qualità. Selezionarla se si desidera questo risultato: «Lo scaffale predefinito per i prodotti in attesa di recensione di qualità.»"
         }
       },
+      "defaultAcceptedLocationId": {
+        "default": {
+          "summary": "Magazzino e ubicazione suggeriti per i prodotti accettati dal controllo qualità.",
+          "effect": "Questa destinazione viene selezionata automaticamente all'accettazione; un utente autorizzato può modificarla.",
+          "affects": ["Decisione qualità", "Movimento stock accettato", "Trasferimento tra magazzini"],
+          "scenario": "Un prodotto accettato viene proposto per ACCETTA-01; l'utente può scegliere un'altra destinazione valida.",
+          "decision": "Seleziona questo valore per precompilare magazzino e ubicazione di destinazione mantenendoli modificabili."
+        }
+      },
       "defaultQuarantineLocationId": {
         "default": {
           "summary": "È lo scaffale predefinito di prodotti che sono stati messi in quarantena.",

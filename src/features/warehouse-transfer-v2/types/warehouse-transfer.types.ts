@@ -10,7 +10,8 @@ export type WarehouseTransferBusinessContext =
   | 'ProductionOutputMove'
   | 'SubcontractingIssue'
   | 'SubcontractingReceipt'
-  | 'SubcontractorToSubcontractor';
+  | 'SubcontractorToSubcontractor'
+  | 'QualityDisposition';
 
 export type EffectiveTrackingPolicy = EffectiveStockTrackingPolicy;
 

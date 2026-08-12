@@ -59,6 +59,9 @@
     "quarantine": "Enviar a Cuarentena"
   },
   "errors": {
+    "distributionAtLeastOne": "Agregue al menos una fila de distribución de calidad.",
+    "distributionRowsInvalid": "Cada fila debe tener una decisión y una cantidad mayor que cero.",
+    "distributionTotalMismatch": "El total distribuido {{total}} debe ser igual a la cantidad restante {{remaining}}.",
     "qtyMustBePositive": "La cantidad de '{{stockCode}}' debe ser mayor que 0.",
     "qtyExceedsRemaining": "La cantidad de '{{stockCode}}' no puede superar el restante {{remaining}}.",
     "returnedFullLineOnly": "La decisión de devolución de '{{stockCode}}' se registra como línea completa sin dividir la cantidad.",
@@ -78,7 +81,9 @@
     "reasonCodeRequiredAllRows": "Se requiere un código de decisión para cada línea con decisiones de rechazo, cuarentena o devolución.",
     "quantityDistributionInvalid": "La distribución de cantidades no es válida.",
     "returnedQuantityMustEqualRemaining": "Para '{{stockCode}}', la cantidad de devolución debe ser igual al monto restante completo ({{remaining}}).",
-    "decisionSaveFailed": "No se pudo guardar la decisión de calidad."
+    "decisionSaveFailed": "No se pudo guardar la decisión de calidad.",
+    "quarantineDestinationRequired": "Seleccione el almacén y la ubicación de destino para la cantidad en cuarentena.",
+    "decisionDestinationRequired": "Seleccione el almacén y la ubicación de destino para un rechazo o una cuarentena."
   },
   "applySummary": {
     "title": "Resumen de aplicación",
@@ -106,6 +111,11 @@
   "bulkApplySuccess": "\"{{label}}\" aplicado a {{count}} líneas.",
   "decisionSaved": "Decisión de calidad y movimiento de stock registrados.",
   "detail": {
+    "history": {
+      "title": "Historial de distribución de calidad",
+      "description": "Muestra la decisión y la ruta de almacén/ubicación de cada cantidad.",
+      "datReference": "Registro DAT #{{id}}"
+    },
     "eyebrow": "Detalle de línea de calidad",
     "close": "Cerrar",
     "meta": {
@@ -117,6 +127,14 @@
       "total": "Total"
     },
     "managerApprovalNotice": "Liberar de cuarentena requiere autorización independiente de un gerente.",
+    "quarantineDestination": {
+      "title": "Destino de cuarentena",
+      "description": "Seleccione el almacén y la ubicación para la cantidad en cuarentena. Si no se elige, se usa el destino predeterminado.",
+      "placeholder": "Seleccionar almacén / ubicación de cuarentena",
+      "defaultSuffix": "Predeterminado",
+      "autoOption": "Enrutar automáticamente",
+      "autoOptionDescription": "Priorizar el almacén de origen, después el destino predeterminado y la prioridad."
+    },
     "bulk": {
       "title": "Decidir para los seleccionados",
       "countLabel": "{{selected}}/{{total}} seleccionadas · {{decided}} líneas decididas",
@@ -173,6 +191,23 @@
     }
   },
   "linePopover": {
+    "distributionTitle": "Dividir cantidad por decisión y destino",
+    "distributionDescription": "Dirija partes de la misma línea a destinos separados de aceptación, rechazo o cuarentena.",
+    "openDistribution": "Plan de distribución",
+    "useQuickDecision": "Usar decisión rápida",
+    "allocated": "Distribuido: {{value}}",
+    "unallocated": "Restante: {{value}}",
+    "routeNo": "Destino {{no}}",
+    "removeRoute": "Eliminar fila",
+    "addRoute": "Agregar decisión y destino",
+    "automaticAcceptedTarget": "Ubicación aceptada automática",
+    "automaticAcceptedTargetDescription": "El stock disponible permanece; de lo contrario se usa el destino de recepción.",
+    "acceptedTargetPlaceholder": "Seleccione almacén / ubicación aceptada",
+    "automaticQuarantineTarget": "Destino automático de cuarentena / rechazo",
+    "automaticQuarantineTargetDescription": "Usa el mismo almacén, destino predeterminado y orden de prioridad.",
+    "quarantineTargetPlaceholder": "Seleccione almacén / ubicación de cuarentena",
+    "rejectedTargetPlaceholder": "Seleccione almacén / ubicación de rechazo",
+    "defaultTargetSuffix": "Destino predeterminado",
     "triggerTitle": "Haga clic para tomar una decisión",
     "editLabel": "Editar",
     "decideLabel": "Decidir",
@@ -181,6 +216,7 @@
     "remainingPrefix": "Cantidad restante:",
     "serialNoSplit": " · número de serie — no se puede dividir",
     "decisionLabel": "Decisión",
+    "targetLocationLabel": "Almacén / ubicación de destino",
     "decisionPlaceholder": "Seleccionar decisión",
     "thisDecisionQuantityLabel": "Cantidad para esta decisión",
     "remainderLabel": "Restante ({{value}})",
@@ -315,9 +351,22 @@
       "title": "Ubicaciones de movimiento de calidad",
       "description": "Defina los destinos físicos que se utilizarán cuando una decisión de calidad se convierta en un movimiento de stock.",
       "qualityLocationLabel": "Ubicación de espera de calidad",
+      "acceptedLocationLabel": "Almacén / ubicación aceptada predeterminada",
       "quarantineLocationLabel": "Ubicación de cuarentena",
       "rejectLocationLabel": "Ubicación de rechazo",
-      "locationPlaceholder": "Seleccionar una ubicación"
+      "locationPlaceholder": "Seleccionar una ubicación",
+      "quarantineLocationsLabel": "Almacenes y ubicaciones de cuarentena",
+      "quarantineLocationsDescription": "Añada varios almacenes y ubicaciones. El enrutamiento automático prioriza el almacén de origen, después el destino predeterminado y finalmente la prioridad.",
+      "addQuarantineLocation": "Añadir destino de cuarentena",
+      "noQuarantineLocations": "No hay destino de cuarentena definido. Añada al menos un almacén / ubicación activo.",
+      "priorityLabel": "Prioridad",
+      "defaultBadge": "Predeterminado",
+      "makeDefault": "Hacer predeterminado",
+      "removeLocation": "Eliminar destino",
+      "destinationRequired": "Seleccione un almacén / ubicación para cada destino añadido.",
+      "destinationDuplicate": "La misma ubicación de cuarentena no se puede añadir más de una vez.",
+      "destinationCount": "{{count}} destinos de cuarentena",
+      "noSelection": "Sin seleccionar"
     },
     "toggles": {
       "autoCreateInspection": "Crear automáticamente un control en la recepción",

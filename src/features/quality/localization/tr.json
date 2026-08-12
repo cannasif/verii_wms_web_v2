@@ -59,6 +59,9 @@
     "quarantine": "Karantinaya Al"
   },
   "errors": {
+    "distributionAtLeastOne": "En az bir kalite dağıtım satırı ekleyin.",
+    "distributionRowsInvalid": "Her dağıtım satırında karar ve sıfırdan büyük miktar bulunmalıdır.",
+    "distributionTotalMismatch": "Dağıtılan toplam {{total}}, karar bekleyen {{remaining}} miktara eşit olmalıdır.",
     "qtyMustBePositive": "'{{stockCode}}' için miktar 0'dan büyük olmalıdır.",
     "qtyExceedsRemaining": "'{{stockCode}}' için miktar kalan {{remaining}} değerini aşamaz.",
     "returnedFullLineOnly": "'{{stockCode}}' iade kararı miktar bölünmeden tam satır olarak kaydedilir.",
@@ -78,7 +81,9 @@
     "reasonCodeRequiredAllRows": "Ret, karantina ve iade kararlarında her satır için karar kodu zorunludur.",
     "quantityDistributionInvalid": "Miktar dağılımı geçersiz.",
     "returnedQuantityMustEqualRemaining": "'{{stockCode}}' iade için miktar kalanın tamamı ({{remaining}}) olmalıdır.",
-    "decisionSaveFailed": "Kalite kararı kaydedilemedi."
+    "decisionSaveFailed": "Kalite kararı kaydedilemedi.",
+    "quarantineDestinationRequired": "Karantinaya alınacak miktar için hedef depo ve raf seçin.",
+    "decisionDestinationRequired": "Ret veya karantina kararı için hedef depo ve raf seçin."
   },
   "applySummary": {
     "title": "Uygulama özeti",
@@ -106,6 +111,11 @@
   "bulkApplySuccess": "{{count}} satıra \"{{label}}\" uygulandı.",
   "decisionSaved": "Kalite kararı ve stok hareketi kaydedildi.",
   "detail": {
+    "history": {
+      "title": "Kalite dağıtım geçmişi",
+      "description": "Her miktarın hangi karar ile hangi depo ve rafa yönlendirildiğini gösterir.",
+      "datReference": "DAT kaydı #{{id}}"
+    },
     "eyebrow": "Kalite satır detayı",
     "close": "Kapat",
     "meta": {
@@ -117,6 +127,14 @@
       "total": "Toplam"
     },
     "managerApprovalNotice": "Karantinadan serbest bırakma işlemi ayrı yönetici yetkisi gerektirir.",
+    "quarantineDestination": {
+      "title": "Karantina hedefi",
+      "description": "Karantina kararı verilen miktarın taşınacağı depo ve rafı seçin. Seçim yapılmazsa varsayılan hedef kullanılır.",
+      "placeholder": "Karantina depo / rafını seçin",
+      "defaultSuffix": "Varsayılan",
+      "autoOption": "Otomatik yönlendir",
+      "autoOptionDescription": "Önce kaynakla aynı depo, sonra varsayılan hedef ve öncelik sırası kullanılır."
+    },
     "bulk": {
       "title": "Seçilenlere karar",
       "countLabel": "{{selected}}/{{total}} seçili · {{decided}} satırda karar",
@@ -173,6 +191,23 @@
     }
   },
   "linePopover": {
+    "distributionTitle": "Miktarı karar ve hedeflere böl",
+    "distributionDescription": "Aynı stok miktarını farklı kabul, ret veya karantina hedeflerine ayrı ayrı yönlendirin.",
+    "openDistribution": "Dağıtım planı",
+    "useQuickDecision": "Hızlı karara dön",
+    "allocated": "Dağıtılan: {{value}}",
+    "unallocated": "Kalan: {{value}}",
+    "routeNo": "Hedef {{no}}",
+    "removeRoute": "Dağıtım satırını kaldır",
+    "addRoute": "Yeni karar ve hedef ekle",
+    "automaticAcceptedTarget": "Otomatik kabul rafı",
+    "automaticAcceptedTargetDescription": "Mevcut kaynak uygunsa yerinde kalır; değilse mal kabul hedef rafı kullanılır.",
+    "acceptedTargetPlaceholder": "Kabul depo / rafını seçin",
+    "automaticQuarantineTarget": "Otomatik karantina / ret hedefi",
+    "automaticQuarantineTargetDescription": "Aynı depo, varsayılan hedef ve öncelik sırasına göre belirlenir.",
+    "quarantineTargetPlaceholder": "Karantina depo / rafını seçin",
+    "rejectedTargetPlaceholder": "Ret depo / rafını seçin",
+    "defaultTargetSuffix": "Varsayılan hedef",
     "triggerTitle": "Karar vermek için tıklayın",
     "editLabel": "Düzenle",
     "decideLabel": "Karar ver",
@@ -181,6 +216,7 @@
     "remainingPrefix": "Kalan miktar:",
     "serialNoSplit": " · seri — bölünemez",
     "decisionLabel": "Karar",
+    "targetLocationLabel": "Hedef depo / raf",
     "decisionPlaceholder": "Karar seçin",
     "thisDecisionQuantityLabel": "Bu karar miktarı",
     "remainderLabel": "Kalan ({{value}})",
@@ -315,9 +351,22 @@
       "title": "Kalite hareket rafları",
       "description": "Kalite kararı stok hareketine dönüştüğünde kullanılacak fiziksel hedefleri belirleyin.",
       "qualityLocationLabel": "Kalite bekleme rafı",
+      "acceptedLocationLabel": "Varsayılan kabul depo / rafı",
       "quarantineLocationLabel": "Karantina rafı",
       "rejectLocationLabel": "Ret rafı",
-      "locationPlaceholder": "Raf seçin"
+      "locationPlaceholder": "Raf seçin",
+      "quarantineLocationsLabel": "Karantina depo ve rafları",
+      "quarantineLocationsDescription": "Birden fazla depo ve karantina rafı ekleyin. Sistem otomatik yönlendirmede önce kaynakla aynı depoyu, sonra varsayılan hedefi ve en son öncelik sırasını kullanır.",
+      "addQuarantineLocation": "Karantina hedefi ekle",
+      "noQuarantineLocations": "Henüz karantina hedefi tanımlanmadı. Karantina kararı verilebilmesi için en az bir aktif depo / raf ekleyin.",
+      "priorityLabel": "Öncelik",
+      "defaultBadge": "Varsayılan",
+      "makeDefault": "Varsayılan yap",
+      "removeLocation": "Karantina hedefini kaldır",
+      "destinationRequired": "Eklenen her karantina hedefi için depo / raf seçmelisiniz.",
+      "destinationDuplicate": "Aynı karantina rafını birden fazla kez ekleyemezsiniz.",
+      "destinationCount": "{{count}} karantina hedefi",
+      "noSelection": "Seçilmedi"
     },
     "toggles": {
       "autoCreateInspection": "Mal kabulde kontrolü otomatik oluştur",

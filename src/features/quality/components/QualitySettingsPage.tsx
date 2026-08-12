@@ -1,13 +1,14 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { Loader2, Save, ShieldCheck } from 'lucide-react';
+import { Loader2, Plus, Save, ShieldCheck, Star, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AppDropdown } from '@/components/shared/AppDropdown';
+import { AppInput } from '@/components/shared/AppInput';
 import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
 import { ParameterFieldGuide, ParameterPageGuide, ParameterToggleCard } from '@/components/shared/ParameterGuidance';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { localizeEnumValue } from '@/lib/enum-localization';
 import { useAuthStore } from '@/stores/auth-store';
-import { qualityApi, type QualityParameter } from '../api/quality.api';
+import { qualityApi, type QualityParameter, type QualityQuarantineDestination } from '../api/quality.api';
 import { parameterGuidance, parameterToggleGuidance } from '@/features/settings-guidance/parameter-guidance.catalog';
 
 export function QualitySettingsPage() {
@@ -17,7 +18,9 @@ export function QualitySettingsPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    qualityApi.getParameters(branch).then(setForm).catch((e) => toast.error(e.message));
+    qualityApi.getParameters(branch)
+      .then((value) => setForm({ ...value, quarantineDestinations: value.quarantineDestinations ?? [] }))
+      .catch((e) => toast.error(e.message));
   }, [branch]);
 
   const set = <K extends keyof QualityParameter>(k: K, v: QualityParameter[K]) =>
@@ -25,9 +28,31 @@ export function QualitySettingsPage() {
 
   const save = async () => {
     if (!form) return;
+    const destinations = form.quarantineDestinations ?? [];
+    if (destinations.some((destination) => destination.locationId <= 0)) {
+      toast.error(t('settings.locationsSection.destinationRequired'));
+      return;
+    }
+    if (new Set(destinations.map((destination) => destination.locationId)).size !== destinations.length) {
+      toast.error(t('settings.locationsSection.destinationDuplicate'));
+      return;
+    }
+    const defaultQuarantineLocationId = destinations.some(
+      (destination) => destination.locationId === form.defaultQuarantineLocationId,
+    )
+      ? form.defaultQuarantineLocationId
+      : destinations[0]?.locationId ?? null;
     setSaving(true);
     try {
-      setForm(await qualityApi.updateParameters(form));
+      setForm(await qualityApi.updateParameters({
+        ...form,
+        defaultQuarantineLocationId,
+        quarantineDestinations: destinations.map((destination, index) => ({
+          ...destination,
+          priority: Math.max(1, Math.min(9999, Number(destination.priority) || (index + 1) * 100)),
+          isActive: true,
+        })),
+      }));
       toast.success(t('settings.toast.saved'));
     } catch (e) {
       toast.error(e instanceof Error ? e.message : t('settings.toast.saveFailed'));
@@ -75,7 +100,7 @@ export function QualitySettingsPage() {
         <section className="mt-5 rounded-xl border border-[var(--wms-app-border)] p-4">
           <h2 className="font-bold">{t('settings.locationsSection.title')}</h2>
           <p className="mt-1 text-xs text-slate-500">{t('settings.locationsSection.description')}</p>
-          <div className="mt-4 grid gap-4 md:grid-cols-3">
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
             <LocationField
               label={t('settings.locationsSection.qualityLocationLabel')}
               placeholder={t('settings.locationsSection.locationPlaceholder')}
@@ -85,13 +110,13 @@ export function QualitySettingsPage() {
               guideKey="defaultQualityLocationId"
             />
             <LocationField
-              label={t('settings.locationsSection.quarantineLocationLabel')}
+              label={t('settings.locationsSection.acceptedLocationLabel')}
               placeholder={t('settings.locationsSection.locationPlaceholder')}
               branch={branch}
-              value={form.defaultQuarantineLocationId}
-              set={(value) => set('defaultQuarantineLocationId', value)}
-              quarantineOnly
-              guideKey="defaultQuarantineLocationId"
+              value={form.defaultAcceptedLocationId}
+              set={(value) => set('defaultAcceptedLocationId', value)}
+              putawayOnly
+              guideKey="defaultAcceptedLocationId"
             />
             <LocationField
               label={t('settings.locationsSection.rejectLocationLabel')}
@@ -103,6 +128,13 @@ export function QualitySettingsPage() {
               guideKey="defaultRejectLocationId"
             />
           </div>
+          <QuarantineDestinationsField
+            branch={branch}
+            destinations={form.quarantineDestinations ?? []}
+            defaultLocationId={form.defaultQuarantineLocationId}
+            onChange={(destinations) => set('quarantineDestinations', destinations)}
+            onDefaultChange={(locationId) => set('defaultQuarantineLocationId', locationId)}
+          />
         </section>
 
         <div className="mt-5 grid gap-3 md:grid-cols-2">
@@ -159,6 +191,143 @@ function Field({ label, children, guideKey, value, currentValue }: { label: stri
   );
 }
 
+function QuarantineDestinationsField({
+  branch,
+  destinations,
+  defaultLocationId,
+  onChange,
+  onDefaultChange,
+}: {
+  branch: string;
+  destinations: QualityQuarantineDestination[];
+  defaultLocationId: number | null;
+  onChange: (value: QualityQuarantineDestination[]) => void;
+  onDefaultChange: (value: number | null) => void;
+}) {
+  const { t } = useModuleTranslation('quality');
+  const selectedIds = new Set(destinations.map((destination) => destination.locationId).filter(Boolean));
+  const patch = (index: number, value: Partial<QualityQuarantineDestination>) =>
+    onChange(destinations.map((destination, current) => current === index ? { ...destination, ...value } : destination));
+  const remove = (index: number) => {
+    const removed = destinations[index];
+    const next = destinations.filter((_, current) => current !== index);
+    onChange(next);
+    if (removed?.locationId === defaultLocationId) {
+      onDefaultChange(next.find((destination) => destination.locationId > 0)?.locationId ?? null);
+    }
+  };
+  const add = () => onChange([
+    ...destinations,
+    {
+      id: 0,
+      locationId: 0,
+      warehouseId: 0,
+      warehouseCode: 0,
+      warehouseName: '',
+      locationCode: '',
+      locationName: '',
+      priority: (destinations.length + 1) * 100,
+      isDefault: false,
+      isActive: true,
+    },
+  ]);
+
+  return (
+    <div className="mt-5 space-y-3 rounded-xl border border-cyan-500/20 bg-cyan-500/[0.035] p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-bold">{t('settings.locationsSection.quarantineLocationsLabel')}</h3>
+          <p className="mt-1 max-w-3xl text-xs text-slate-500">
+            {t('settings.locationsSection.quarantineLocationsDescription')}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={add}
+          className="inline-flex items-center gap-2 rounded-xl border border-cyan-500/35 px-3 py-2 text-xs font-bold text-cyan-600 hover:bg-cyan-500/10"
+        >
+          <Plus className="size-4" /> {t('settings.locationsSection.addQuarantineLocation')}
+        </button>
+      </div>
+
+      {destinations.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-[var(--wms-app-border)] p-4 text-sm text-slate-500">
+          {t('settings.locationsSection.noQuarantineLocations')}
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {destinations.map((destination, index) => {
+            const isDefault = destination.locationId > 0 && destination.locationId === defaultLocationId;
+            return (
+              <div key={`${destination.id || 'new'}-${index}`} className="grid gap-3 rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-3 lg:grid-cols-[minmax(0,1fr)_8rem_auto_auto] lg:items-end">
+                <label className="space-y-1.5 text-sm">
+                  <span className="font-semibold">{t('settings.locationsSection.quarantineLocationLabel')}</span>
+                  <PagedAppDropdown
+                    queryKey={['quality-quarantine-locations', branch, index]}
+                    fetchPage={(request) => qualityApi.locations(request, branch)}
+                    toOption={(location) => ({
+                      value: String(location.id),
+                      label: `${location.warehouseCode} / ${location.code} · ${location.name}`,
+                      description: location.warehouseName,
+                      disabled: !location.isQuarantine || (selectedIds.has(location.id) && location.id !== destination.locationId),
+                    })}
+                    selectedOption={destination.locationId > 0 && destination.locationCode ? {
+                      value: String(destination.locationId),
+                      label: `${destination.warehouseCode} / ${destination.locationCode} · ${destination.locationName}`,
+                      description: destination.warehouseName,
+                    } : undefined}
+                    value={destination.locationId > 0 ? String(destination.locationId) : null}
+                    onValueChange={(next) => {
+                      const locationId = next ? Number(next) : 0;
+                      patch(index, { locationId });
+                      if (!defaultLocationId || destination.locationId === defaultLocationId) {
+                        onDefaultChange(locationId || null);
+                      }
+                    }}
+                    placeholder={t('settings.locationsSection.locationPlaceholder')}
+                    searchable
+                  />
+                </label>
+                <label className="space-y-1.5 text-sm">
+                  <span className="font-semibold">{t('settings.locationsSection.priorityLabel')}</span>
+                  <AppInput
+                    type="number"
+                    min={1}
+                    max={9999}
+                    value={destination.priority}
+                    onChange={(event) => patch(index, { priority: Number(event.target.value) })}
+                  />
+                </label>
+                <button
+                  type="button"
+                  disabled={destination.locationId <= 0}
+                  onClick={() => onDefaultChange(destination.locationId)}
+                  className={`inline-flex h-10 items-center justify-center gap-2 rounded-xl border px-3 text-xs font-bold ${isDefault ? 'border-amber-400/50 bg-amber-400/10 text-amber-600' : 'border-[var(--wms-app-border)] text-slate-500 hover:bg-slate-500/10'}`}
+                >
+                  <Star className={`size-4 ${isDefault ? 'fill-current' : ''}`} />
+                  {isDefault ? t('settings.locationsSection.defaultBadge') : t('settings.locationsSection.makeDefault')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => remove(index)}
+                  aria-label={t('settings.locationsSection.removeLocation')}
+                  className="inline-flex size-10 items-center justify-center rounded-xl border border-rose-500/30 text-rose-500 hover:bg-rose-500/10"
+                >
+                  <Trash2 className="size-4" />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+      <ParameterFieldGuide
+        guidance={parameterGuidance('quality', 'defaultQuarantineLocationId', defaultLocationId)}
+        currentValue={destinations.length > 0 ? t('settings.locationsSection.destinationCount', { count: destinations.length }) : t('settings.locationsSection.noSelection')}
+      />
+    </div>
+  );
+}
+
 function Toggle({ label, value, set, guideKey }: { label: string; value: boolean; set: (v: boolean) => void; guideKey: string }) {
   return <ParameterToggleCard title={label} checked={value} onCheckedChange={set} guidance={parameterToggleGuidance('quality', guideKey)} />;
 }
@@ -170,6 +339,7 @@ function LocationField({
   value,
   set,
   quarantineOnly = false,
+  putawayOnly = false,
   guideKey,
 }: {
   label: string;
@@ -178,6 +348,7 @@ function LocationField({
   value: number | null;
   set: (value: number | null) => void;
   quarantineOnly?: boolean;
+  putawayOnly?: boolean;
   guideKey: string;
 }) {
   return (
@@ -189,7 +360,8 @@ function LocationField({
           value: String(location.id),
           label: `${location.warehouseCode} / ${location.code} · ${location.name}`,
           description: location.locationType,
-          disabled: quarantineOnly && !location.isQuarantine,
+          disabled: (quarantineOnly && !location.isQuarantine)
+            || (putawayOnly && (!location.isPutaway || location.isQuarantine)),
         })}
         value={value ? String(value) : null}
         onValueChange={(next) => set(next ? Number(next) : null)}

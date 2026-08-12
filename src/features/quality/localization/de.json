@@ -59,6 +59,9 @@
     "quarantine": "In Quarantäne senden"
   },
   "errors": {
+    "distributionAtLeastOne": "Fügen Sie mindestens eine Qualitätsverteilungszeile hinzu.",
+    "distributionRowsInvalid": "Jede Verteilungszeile benötigt eine Entscheidung und eine Menge größer als null.",
+    "distributionTotalMismatch": "Die verteilte Gesamtmenge {{total}} muss der Restmenge {{remaining}} entsprechen.",
     "qtyMustBePositive": "Die Menge für '{{stockCode}}' muss größer als 0 sein.",
     "qtyExceedsRemaining": "Die Menge für '{{stockCode}}' darf die verbleibende Menge von {{remaining}} nicht überschreiten.",
     "returnedFullLineOnly": "Die Rücksendeentscheidung für '{{stockCode}}' wird als vollständige Position ohne Mengenaufteilung erfasst.",
@@ -78,7 +81,9 @@
     "reasonCodeRequiredAllRows": "Für jede Position mit Ablehnungs-, Quarantäne- oder Rücksendeentscheidung ist ein Entscheidungscode erforderlich.",
     "quantityDistributionInvalid": "Die Mengenverteilung ist ungültig.",
     "returnedQuantityMustEqualRemaining": "Für '{{stockCode}}' muss die Rücksendemenge der vollständigen verbleibenden Menge ({{remaining}}) entsprechen.",
-    "decisionSaveFailed": "Die Qualitätsentscheidung konnte nicht gespeichert werden."
+    "decisionSaveFailed": "Die Qualitätsentscheidung konnte nicht gespeichert werden.",
+    "quarantineDestinationRequired": "Wählen Sie Ziellager und Lagerplatz für die Quarantänemenge aus.",
+    "decisionDestinationRequired": "Wählen Sie Ziellager und Lagerplatz für eine Ablehnung oder Quarantäne aus."
   },
   "applySummary": {
     "title": "Anwendungsübersicht",
@@ -106,6 +111,11 @@
   "bulkApplySuccess": "\"{{label}}\" auf {{count}} Positionen angewendet.",
   "decisionSaved": "Qualitätsentscheidung und Lagerbewegung erfasst.",
   "detail": {
+    "history": {
+      "title": "Qualitätsverteilungsverlauf",
+      "description": "Zeigt Entscheidung und Lagerplatzroute für jeden Mengenteil.",
+      "datReference": "DAT-Beleg #{{id}}"
+    },
     "eyebrow": "Qualitätspositionsdetail",
     "close": "Schließen",
     "meta": {
@@ -117,6 +127,14 @@
       "total": "Gesamt"
     },
     "managerApprovalNotice": "Die Freigabe aus der Quarantäne erfordert eine separate Managerberechtigung.",
+    "quarantineDestination": {
+      "title": "Quarantäneziel",
+      "description": "Wählen Sie Lager und Lagerplatz für die Quarantänemenge. Ohne Auswahl wird das Standardziel verwendet.",
+      "placeholder": "Quarantänelager / Lagerplatz auswählen",
+      "defaultSuffix": "Standard",
+      "autoOption": "Automatisch zuweisen",
+      "autoOptionDescription": "Zuerst Quelllager, dann Standardziel und Priorität verwenden."
+    },
     "bulk": {
       "title": "Für Auswahl entscheiden",
       "countLabel": "{{selected}}/{{total}} ausgewählt · {{decided}} Positionen entschieden",
@@ -173,6 +191,23 @@
     }
   },
   "linePopover": {
+    "distributionTitle": "Menge nach Entscheidung und Ziel aufteilen",
+    "distributionDescription": "Teilen Sie dieselbe Bestandszeile auf getrennte Annahme-, Ablehnungs- oder Quarantäneziele auf.",
+    "openDistribution": "Verteilungsplan",
+    "useQuickDecision": "Schnellentscheidung verwenden",
+    "allocated": "Verteilt: {{value}}",
+    "unallocated": "Rest: {{value}}",
+    "routeNo": "Ziel {{no}}",
+    "removeRoute": "Verteilungszeile entfernen",
+    "addRoute": "Entscheidung und Ziel hinzufügen",
+    "automaticAcceptedTarget": "Automatischer Annahmeplatz",
+    "automaticAcceptedTargetDescription": "Verfügbarer Bestand bleibt am Platz, andernfalls wird das Wareneingangsziel verwendet.",
+    "acceptedTargetPlaceholder": "Annahmelager / Platz auswählen",
+    "automaticQuarantineTarget": "Automatisches Quarantäne-/Ablehnungsziel",
+    "automaticQuarantineTargetDescription": "Verwendet gleiches Lager, Standardziel und Prioritätsreihenfolge.",
+    "quarantineTargetPlaceholder": "Quarantänelager / Platz auswählen",
+    "rejectedTargetPlaceholder": "Ablehnungslager / Platz auswählen",
+    "defaultTargetSuffix": "Standardziel",
     "triggerTitle": "Klicken, um eine Entscheidung zu treffen",
     "editLabel": "Bearbeiten",
     "decideLabel": "Entscheiden",
@@ -181,6 +216,7 @@
     "remainingPrefix": "Verbleibende Menge:",
     "serialNoSplit": " · Seriennummer — kann nicht aufgeteilt werden",
     "decisionLabel": "Entscheidung",
+    "targetLocationLabel": "Ziellager / Lagerplatz",
     "decisionPlaceholder": "Entscheidung auswählen",
     "thisDecisionQuantityLabel": "Menge für diese Entscheidung",
     "remainderLabel": "Rest ({{value}})",
@@ -315,9 +351,22 @@
       "title": "Qualitätsbewegungslagerplätze",
       "description": "Legen Sie die physischen Zielorte fest, die verwendet werden, wenn eine Qualitätsentscheidung zu einer Lagerbewegung wird.",
       "qualityLocationLabel": "Qualitätswartelagerplatz",
+      "acceptedLocationLabel": "Standardlager / -lagerplatz für Annahme",
       "quarantineLocationLabel": "Quarantänelagerplatz",
       "rejectLocationLabel": "Ablehnungslagerplatz",
-      "locationPlaceholder": "Lagerplatz auswählen"
+      "locationPlaceholder": "Lagerplatz auswählen",
+      "quarantineLocationsLabel": "Quarantänelager und -lagerplätze",
+      "quarantineLocationsDescription": "Fügen Sie mehrere Lager und Quarantänelagerplätze hinzu. Die automatische Auswahl bevorzugt zuerst das Quelllager, dann das Standardziel und danach die Priorität.",
+      "addQuarantineLocation": "Quarantäneziel hinzufügen",
+      "noQuarantineLocations": "Kein Quarantäneziel definiert. Fügen Sie mindestens ein aktives Lager / einen Lagerplatz hinzu.",
+      "priorityLabel": "Priorität",
+      "defaultBadge": "Standard",
+      "makeDefault": "Als Standard",
+      "removeLocation": "Quarantäneziel entfernen",
+      "destinationRequired": "Wählen Sie für jedes Quarantäneziel ein Lager / einen Lagerplatz.",
+      "destinationDuplicate": "Derselbe Quarantänelagerplatz kann nicht mehrfach hinzugefügt werden.",
+      "destinationCount": "{{count}} Quarantäneziele",
+      "noSelection": "Nicht ausgewählt"
     },
     "toggles": {
       "autoCreateInspection": "Kontrolle beim Wareneingang automatisch erstellen",

@@ -128,6 +128,7 @@ const TR_ENUM_LABELS: Record<string, string> = {
   Inspected: 'İncelendi',
   InspectionInProgress: 'İnceleme Devam Ediyor',
   InspectionRequired: 'İnceleme Gerekli',
+  QualityDisposition: 'Kalite Dağıtımı',
   InternalRequest: 'Dahili Talep',
   InterWarehouseTransfer: 'Depolar Arası Transfer',
   IsNotNull: 'Boş Değildir',

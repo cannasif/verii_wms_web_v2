@@ -287,7 +287,8 @@
     "ProductionOutputMove": "Movimento uscita produzione",
     "SubcontractingIssue": "Uscita in conto lavoro",
     "SubcontractingReceipt": "Rientro da conto lavoro",
-    "SubcontractorToSubcontractor": "Trasferimento tra terzisti"
+    "SubcontractorToSubcontractor": "Trasferimento tra terzisti",
+    "QualityDisposition": "Trasferimento per decisione qualità"
   },
   "transferStatuses": {
     "Draft": "Bozza",

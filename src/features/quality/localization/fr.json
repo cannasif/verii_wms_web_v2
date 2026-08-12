@@ -59,6 +59,9 @@
     "quarantine": "Mettre en quarantaine"
   },
   "errors": {
+    "distributionAtLeastOne": "Ajoutez au moins une ligne de répartition qualité.",
+    "distributionRowsInvalid": "Chaque ligne doit contenir une décision et une quantité supérieure à zéro.",
+    "distributionTotalMismatch": "Le total réparti {{total}} doit être égal à la quantité restante {{remaining}}.",
     "qtyMustBePositive": "La quantité pour '{{stockCode}}' doit être supérieure à 0.",
     "qtyExceedsRemaining": "La quantité pour '{{stockCode}}' ne peut pas dépasser le reste de {{remaining}}.",
     "returnedFullLineOnly": "La décision de retour pour '{{stockCode}}' est enregistrée pour la ligne entière, sans répartition de la quantité.",
@@ -78,7 +81,9 @@
     "reasonCodeRequiredAllRows": "Un code de décision est requis pour chaque ligne avec une décision de refus, de quarantaine ou de retour.",
     "quantityDistributionInvalid": "La répartition des quantités n'est pas valide.",
     "returnedQuantityMustEqualRemaining": "Pour '{{stockCode}}', la quantité de retour doit être égale à la totalité du reste ({{remaining}}).",
-    "decisionSaveFailed": "Impossible d'enregistrer la décision qualité."
+    "decisionSaveFailed": "Impossible d'enregistrer la décision qualité.",
+    "quarantineDestinationRequired": "Sélectionnez l'entrepôt et l'emplacement de destination pour la quantité mise en quarantaine.",
+    "decisionDestinationRequired": "Sélectionnez l'entrepôt et l'emplacement de destination pour un rejet ou une quarantaine."
   },
   "applySummary": {
     "title": "Résumé de l'application",
@@ -106,6 +111,11 @@
   "bulkApplySuccess": "\"{{label}}\" appliqué à {{count}} lignes.",
   "decisionSaved": "Décision qualité et mouvement de stock enregistrés.",
   "detail": {
+    "history": {
+      "title": "Historique de répartition qualité",
+      "description": "Affiche la décision et le trajet entrepôt/emplacement pour chaque quantité.",
+      "datReference": "Enregistrement DAT #{{id}}"
+    },
     "eyebrow": "Détail de la ligne qualité",
     "close": "Fermer",
     "meta": {
@@ -117,6 +127,14 @@
       "total": "Total"
     },
     "managerApprovalNotice": "La libération depuis la quarantaine nécessite une autorisation managériale distincte.",
+    "quarantineDestination": {
+      "title": "Destination de quarantaine",
+      "description": "Sélectionnez l'entrepôt et l'emplacement où déplacer la quantité en quarantaine. La destination par défaut est utilisée sans sélection explicite.",
+      "placeholder": "Sélectionner l'entrepôt / emplacement de quarantaine",
+      "defaultSuffix": "Par défaut",
+      "autoOption": "Acheminer automatiquement",
+      "autoOptionDescription": "Privilégier l'entrepôt source, puis la destination par défaut et la priorité."
+    },
     "bulk": {
       "title": "Décider pour la sélection",
       "countLabel": "{{selected}}/{{total}} sélectionné(s) · {{decided}} lignes décidées",
@@ -173,6 +191,23 @@
     }
   },
   "linePopover": {
+    "distributionTitle": "Répartir la quantité par décision et destination",
+    "distributionDescription": "Dirigez des parties de la même ligne vers des destinations distinctes d'acceptation, de rejet ou de quarantaine.",
+    "openDistribution": "Plan de répartition",
+    "useQuickDecision": "Utiliser la décision rapide",
+    "allocated": "Réparti : {{value}}",
+    "unallocated": "Restant : {{value}}",
+    "routeNo": "Destination {{no}}",
+    "removeRoute": "Supprimer la ligne",
+    "addRoute": "Ajouter une décision et une destination",
+    "automaticAcceptedTarget": "Emplacement accepté automatique",
+    "automaticAcceptedTargetDescription": "Le stock disponible reste en place, sinon la destination de réception est utilisée.",
+    "acceptedTargetPlaceholder": "Choisir l'entrepôt / emplacement accepté",
+    "automaticQuarantineTarget": "Destination de quarantaine / rejet automatique",
+    "automaticQuarantineTargetDescription": "Utilise le même entrepôt, la destination par défaut et l'ordre de priorité.",
+    "quarantineTargetPlaceholder": "Choisir l'entrepôt / emplacement de quarantaine",
+    "rejectedTargetPlaceholder": "Choisir l'entrepôt / emplacement de rejet",
+    "defaultTargetSuffix": "Destination par défaut",
     "triggerTitle": "Cliquez pour prendre une décision",
     "editLabel": "Modifier",
     "decideLabel": "Décider",
@@ -181,6 +216,7 @@
     "remainingPrefix": "Quantité restante :",
     "serialNoSplit": " · numéro de série — ne peut pas être réparti",
     "decisionLabel": "Décision",
+    "targetLocationLabel": "Entrepôt / emplacement cible",
     "decisionPlaceholder": "Sélectionner une décision",
     "thisDecisionQuantityLabel": "Quantité pour cette décision",
     "remainderLabel": "Reste ({{value}})",
@@ -315,9 +351,22 @@
       "title": "Emplacements de mouvement qualité",
       "description": "Définissez les destinations physiques à utiliser lorsqu'une décision qualité se transforme en mouvement de stock.",
       "qualityLocationLabel": "Emplacement d'attente qualité",
+      "acceptedLocationLabel": "Entrepôt / emplacement accepté par défaut",
       "quarantineLocationLabel": "Emplacement de quarantaine",
       "rejectLocationLabel": "Emplacement de rejet",
-      "locationPlaceholder": "Sélectionner un emplacement"
+      "locationPlaceholder": "Sélectionner un emplacement",
+      "quarantineLocationsLabel": "Entrepôts et emplacements de quarantaine",
+      "quarantineLocationsDescription": "Ajoutez plusieurs entrepôts et emplacements. Le routage automatique privilégie l'entrepôt source, puis la destination par défaut et enfin la priorité.",
+      "addQuarantineLocation": "Ajouter une destination",
+      "noQuarantineLocations": "Aucune destination de quarantaine n'est définie. Ajoutez au moins un entrepôt / emplacement actif.",
+      "priorityLabel": "Priorité",
+      "defaultBadge": "Par défaut",
+      "makeDefault": "Définir par défaut",
+      "removeLocation": "Supprimer la destination",
+      "destinationRequired": "Sélectionnez un entrepôt / emplacement pour chaque destination ajoutée.",
+      "destinationDuplicate": "Le même emplacement de quarantaine ne peut pas être ajouté plusieurs fois.",
+      "destinationCount": "{{count}} destinations de quarantaine",
+      "noSelection": "Non sélectionné"
     },
     "toggles": {
       "autoCreateInspection": "Créer automatiquement un contrôle à la réception",

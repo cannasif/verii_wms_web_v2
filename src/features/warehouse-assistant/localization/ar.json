@@ -287,7 +287,8 @@
     "ProductionOutputMove": "حركة مخرجات الإنتاج",
     "SubcontractingIssue": "إرسال إلى المقاول الفرعي",
     "SubcontractingReceipt": "استلام من المقاول الفرعي",
-    "SubcontractorToSubcontractor": "تحويل بين المقاولين الفرعيين"
+    "SubcontractorToSubcontractor": "تحويل بين المقاولين الفرعيين",
+    "QualityDisposition": "تحويل قرار الجودة"
   },
   "transferStatuses": {
     "Draft": "مسودة",

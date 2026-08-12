@@ -59,6 +59,9 @@
     "quarantine": "Send to Quarantine"
   },
   "errors": {
+    "distributionAtLeastOne": "Add at least one quality distribution row.",
+    "distributionRowsInvalid": "Every distribution row must have a decision and a quantity greater than zero.",
+    "distributionTotalMismatch": "The distributed total {{total}} must equal the remaining quantity {{remaining}}.",
     "qtyMustBePositive": "The quantity for '{{stockCode}}' must be greater than 0.",
     "qtyExceedsRemaining": "The quantity for '{{stockCode}}' cannot exceed the remaining {{remaining}}.",
     "returnedFullLineOnly": "The return decision for '{{stockCode}}' is recorded as a full line without splitting the quantity.",
@@ -78,7 +81,9 @@
     "reasonCodeRequiredAllRows": "A decision code is required for every line with reject, quarantine or return decisions.",
     "quantityDistributionInvalid": "The quantity distribution is invalid.",
     "returnedQuantityMustEqualRemaining": "For '{{stockCode}}', the return quantity must equal the full remaining amount ({{remaining}}).",
-    "decisionSaveFailed": "Could not save the quality decision."
+    "decisionSaveFailed": "Could not save the quality decision.",
+    "quarantineDestinationRequired": "Select the target warehouse and location for the quantity going into quarantine.",
+    "decisionDestinationRequired": "Select a target warehouse and location for a reject or quarantine decision."
   },
   "applySummary": {
     "title": "Application summary",
@@ -106,6 +111,11 @@
   "bulkApplySuccess": "\"{{label}}\" applied to {{count}} lines.",
   "decisionSaved": "Quality decision and stock movement recorded.",
   "detail": {
+    "history": {
+      "title": "Quality distribution history",
+      "description": "Shows the decision and warehouse/location route for every quantity portion.",
+      "datReference": "DAT record #{{id}}"
+    },
     "eyebrow": "Quality line detail",
     "close": "Close",
     "meta": {
@@ -117,6 +127,14 @@
       "total": "Total"
     },
     "managerApprovalNotice": "Releasing from quarantine requires separate manager authorization.",
+    "quarantineDestination": {
+      "title": "Quarantine destination",
+      "description": "Select the warehouse and location where quarantined quantity will be moved. The default destination is used when no explicit selection is made.",
+      "placeholder": "Select quarantine warehouse / location",
+      "defaultSuffix": "Default",
+      "autoOption": "Route automatically",
+      "autoOptionDescription": "Prefer the source warehouse, then the default destination and priority order."
+    },
     "bulk": {
       "title": "Decide for selected",
       "countLabel": "{{selected}}/{{total}} selected · {{decided}} lines decided",
@@ -173,6 +191,23 @@
     }
   },
   "linePopover": {
+    "distributionTitle": "Split quantity by decision and destination",
+    "distributionDescription": "Route portions of the same stock line to separate accept, reject or quarantine destinations.",
+    "openDistribution": "Distribution plan",
+    "useQuickDecision": "Use quick decision",
+    "allocated": "Allocated: {{value}}",
+    "unallocated": "Remaining: {{value}}",
+    "routeNo": "Destination {{no}}",
+    "removeRoute": "Remove distribution row",
+    "addRoute": "Add decision and destination",
+    "automaticAcceptedTarget": "Automatic accepted location",
+    "automaticAcceptedTargetDescription": "Stock stays in place when already available; otherwise the receipt destination is used.",
+    "acceptedTargetPlaceholder": "Select accepted warehouse / location",
+    "automaticQuarantineTarget": "Automatic quarantine / reject destination",
+    "automaticQuarantineTargetDescription": "Uses the same warehouse, default destination and priority order.",
+    "quarantineTargetPlaceholder": "Select quarantine warehouse / location",
+    "rejectedTargetPlaceholder": "Select reject warehouse / location",
+    "defaultTargetSuffix": "Default target",
     "triggerTitle": "Click to make a decision",
     "editLabel": "Edit",
     "decideLabel": "Decide",
@@ -181,6 +216,7 @@
     "remainingPrefix": "Remaining quantity:",
     "serialNoSplit": " · serial — cannot be split",
     "decisionLabel": "Decision",
+    "targetLocationLabel": "Target warehouse / location",
     "decisionPlaceholder": "Select decision",
     "thisDecisionQuantityLabel": "Quantity for this decision",
     "remainderLabel": "Remainder ({{value}})",
@@ -315,9 +351,22 @@
       "title": "Quality movement locations",
       "description": "Set the physical destinations to use when a quality decision turns into a stock movement.",
       "qualityLocationLabel": "Quality hold location",
+      "acceptedLocationLabel": "Default accepted warehouse / location",
       "quarantineLocationLabel": "Quarantine location",
       "rejectLocationLabel": "Reject location",
-      "locationPlaceholder": "Select a location"
+      "locationPlaceholder": "Select a location",
+      "quarantineLocationsLabel": "Quarantine warehouses and locations",
+      "quarantineLocationsDescription": "Add multiple warehouses and quarantine locations. Automatic routing first prefers the source warehouse, then the default destination, and finally the priority order.",
+      "addQuarantineLocation": "Add quarantine destination",
+      "noQuarantineLocations": "No quarantine destination is defined. Add at least one active warehouse / location before using a quarantine decision.",
+      "priorityLabel": "Priority",
+      "defaultBadge": "Default",
+      "makeDefault": "Make default",
+      "removeLocation": "Remove quarantine destination",
+      "destinationRequired": "Select a warehouse / location for every added quarantine destination.",
+      "destinationDuplicate": "The same quarantine location cannot be added more than once.",
+      "destinationCount": "{{count}} quarantine destinations",
+      "noSelection": "Not selected"
     },
     "toggles": {
       "autoCreateInspection": "Automatically create an inspection on goods receipt",

@@ -289,7 +289,8 @@
     "ProductionOutputMove": "Üretim çıktısı transferi",
     "SubcontractingIssue": "Fason çıkış",
     "SubcontractingReceipt": "Fason giriş",
-    "SubcontractorToSubcontractor": "Fasoncular arası transfer"
+    "SubcontractorToSubcontractor": "Fasoncular arası transfer",
+    "QualityDisposition": "Kalite kararı dağıtımı"
   },
   "transferStatuses": {
     "Draft": "Taslak",
