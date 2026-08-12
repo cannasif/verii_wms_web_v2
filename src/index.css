@@ -2305,8 +2305,18 @@ label[data-wms-error-target].wms-error-focus-flash-field .app-input-shell input 
 
 .wms-ops-page-hint-tooltip [class*='arrow'],
 .wms-ops-page-hint-tooltip svg {
-  fill: color-mix(in oklab, var(--wms-app-panel) 96%, black) !important;
-  background: color-mix(in oklab, var(--wms-app-panel) 96%, black) !important;
+  fill: var(--wms-ops-card-bg) !important;
+  background: var(--wms-ops-card-bg) !important;
+}
+
+.wms-ops-page-hint-tooltip {
+  color: var(--wms-ops-shell-fg) !important;
+  background: var(--wms-ops-card-bg) !important;
+}
+
+.wms-ops-page-hint-tooltip .wms-ops-page-hint-tooltip__body,
+.wms-ops-page-hint-tooltip p {
+  color: color-mix(in oklab, var(--wms-ops-shell-fg) 92%, transparent) !important;
 }
 
 .wms-ops-form .wms-ops-field-shell,
@@ -2479,6 +2489,28 @@ label[data-wms-error-target].wms-error-focus-flash-field .app-input-shell input 
     background-color 200ms ease;
 }
 
+/* KKD create-lines: miktar/input hücrede gömülü kalsın (form field chrome'unu ez) */
+.wms-ops-form .wms-ops-kkd-create-lines__cell .wms-ops-field,
+.wms-ops-form .wms-ops-kkd-create-lines__cell input.wms-ops-field,
+.wms-ops-form .wms-ops-kkd-create-lines__cell input.input,
+.wms-ops-form .wms-ops-kkd-create-lines__cell .wms-ops-kkd-create-lines__qty-input {
+  border: 0 !important;
+  border-width: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  outline: none !important;
+  background: transparent !important;
+}
+
+.wms-ops-form .wms-ops-kkd-create-lines__cell .wms-ops-field-shell::before,
+.wms-ops-form .wms-ops-kkd-create-lines__cell .wms-ops-field-shell::after,
+.wms-ops-form .wms-ops-kkd-create-lines__cell .app-input-shell::before,
+.wms-ops-form .wms-ops-kkd-create-lines__cell .app-input-shell::after {
+  content: none !important;
+  display: none !important;
+  opacity: 0 !important;
+}
+
 .wms-ops-form .wms-ops-field::placeholder,
 .wms-ops-lookup-dialog .wms-ops-field::placeholder {
   color: var(--wms-ops-field-placeholder-fg);
@@ -2630,6 +2662,20 @@ label[data-wms-error-target].wms-error-focus-flash-field .app-input-shell input 
   --tw-ring-shadow: 0 0 #0000 !important;
   --tw-ring-width: 0 !important;
   --tw-ring-offset-width: 0 !important;
+}
+
+.wms-ops-form .wms-ops-kkd-create-lines__cell .wms-ops-field-shell:focus-within .wms-ops-field,
+.wms-ops-form .wms-ops-kkd-create-lines__cell .wms-ops-field-shell:focus-within:not([aria-invalid='true']):not(.wms-ops-field-shell--error) .wms-ops-field,
+.wms-ops-form .wms-ops-kkd-create-lines__cell .app-input-shell:focus-within .wms-ops-field,
+.wms-ops-form .wms-ops-kkd-create-lines__cell .app-input-shell:focus-within .input,
+.wms-ops-form .wms-ops-kkd-create-lines__cell .wms-ops-field:focus,
+.wms-ops-form .wms-ops-kkd-create-lines__cell .wms-ops-field:focus-visible {
+  border: 0 !important;
+  border-width: 0 !important;
+  border-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
 }
 
 /* Hata: focus olsa bile sabit kırmızı kutu — yanıp sönme yok */
@@ -7452,6 +7498,7 @@ html:not(.dark) .wms-ops-form .wms-ops-station__token--danger {
 
 .wms-ops-form .wms-ops-receipt-entry-row .wms-ops-warehouse-badge {
   position: relative;
+  flex: 0 0 auto;
   gap: 0.28rem;
   padding: 0.1rem 0.45rem 0.1rem 0.5rem;
   overflow: hidden;
@@ -8590,6 +8637,22 @@ html.skin-premium .wms-ops-quality-bulk {
     color-mix(in oklab, var(--wms-brand-primary) 14%, transparent);
 }
 
+.wms-ops-quality-decision-flow-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 6200;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  background: color-mix(in oklab, #020617 72%, transparent);
+  backdrop-filter: blur(6px);
+}
+.wms-ops-quality-decision-flow-overlay__panel {
+  width: min(100%, 40rem);
+  max-height: min(92vh, 52rem);
+  overflow: auto;
+}
+
 .dark .wms-ops-quality-detail {
   border-color: color-mix(in oklab, var(--wms-brand-primary) 28%, transparent);
   box-shadow: 0 0 16px -6px
@@ -8729,6 +8792,56 @@ html.skin-premium .wms-ops-quality-bulk {
   border: 1px solid
     color-mix(in oklab, var(--wms-brand-primary) 22%, var(--wms-app-border));
   background: color-mix(in oklab, var(--wms-brand-primary) 5%, transparent);
+}
+
+.wms-ops-quality-bulk--collapsed {
+  align-items: flex-end;
+  gap: 0;
+  padding: 0.1rem 0.2rem;
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+
+.wms-ops-quality-bulk__secret-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-end;
+  width: 1.15rem;
+  height: 1.15rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0.25rem;
+  background: transparent;
+  color: color-mix(in oklab, hsl(var(--muted-foreground)) 28%, transparent);
+  cursor: pointer;
+  opacity: 0.35;
+  transition: opacity 0.15s ease, color 0.15s ease;
+}
+
+.wms-ops-quality-bulk__secret-toggle:hover,
+.wms-ops-quality-bulk__secret-toggle:focus-visible {
+  opacity: 0.7;
+  color: color-mix(in oklab, hsl(var(--muted-foreground)) 55%, transparent);
+  outline: none;
+}
+
+.wms-ops-quality-bulk__secret-chevron {
+  width: 0.85rem;
+  height: 0.85rem;
+  transition: transform 0.16s ease;
+}
+
+.wms-ops-quality-bulk__secret-chevron--open {
+  transform: rotate(180deg);
+}
+
+.wms-ops-quality-bulk:not(.wms-ops-quality-bulk--collapsed)
+  .wms-ops-quality-bulk__secret-toggle {
+  align-self: flex-end;
+  margin-bottom: -0.15rem;
 }
 
 .wms-ops-quality-bulk__top {
@@ -12191,6 +12304,19 @@ html:not(.dark) .wms-ops-list .wms-ops-data-grid .wms-ops-table-wrap {
   }
 }
 
+/* Keep stacked toasts readable (no card-pile overlap) and dismiss lightly. */
+.wms-ops-toaster[data-expanded='true'] [data-sonner-toast] {
+  transition:
+    transform 180ms ease,
+    opacity 180ms ease,
+    height 180ms ease,
+    box-shadow 180ms ease !important;
+}
+
+.wms-ops-toaster [data-sonner-toast][data-removed='true'] {
+  opacity: 0 !important;
+}
+
 .wms-ops-list.wms-ops-kkd-page .wms-ops-kkd-metrics,
 .wms-ops-form.wms-ops-kkd-page .wms-ops-kkd-metrics {
   display: grid;
@@ -12624,6 +12750,185 @@ html.skin-premium .wms-ops-kkd-flow-steps__label {
   padding: 0 0.5rem !important;
   font-size: 0.75rem !important;
   line-height: 1 !important;
+}
+
+/* Yeni KKD talebi — kalem tablosu: hücre çerçeveleri net, inputlar gömülü */
+.wms-ops-form .wms-ops-kkd-create-lines {
+  --kkd-create-line-divider: color-mix(in oklab, var(--wms-ops-accent) 14%, var(--wms-ops-card-border));
+}
+
+.wms-ops-form .wms-ops-kkd-create-lines .wms-ops-data-grid {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.wms-ops-form .wms-ops-kkd-create-lines th,
+.wms-ops-form .wms-ops-kkd-create-lines td {
+  border-right: 1px solid var(--kkd-create-line-divider) !important;
+  border-bottom: 1px solid var(--kkd-create-line-divider);
+  vertical-align: middle;
+  padding: 0 !important;
+  background: transparent;
+}
+
+.wms-ops-form .wms-ops-kkd-create-lines th:last-child,
+.wms-ops-form .wms-ops-kkd-create-lines td:last-child {
+  border-right: 0 !important;
+}
+
+.wms-ops-form .wms-ops-kkd-create-lines thead th {
+  padding: 0.55rem 0.75rem !important;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--wms-ops-accent) 72%, var(--wms-app-text-muted));
+  background: color-mix(in oklab, var(--wms-ops-accent) 6%, transparent);
+  border-bottom-color: color-mix(in oklab, var(--wms-ops-accent) 28%, var(--wms-ops-card-border));
+}
+
+.wms-ops-form .wms-ops-kkd-create-lines tbody tr {
+  transition: background-color 160ms ease;
+}
+
+.wms-ops-form .wms-ops-kkd-create-lines tbody tr:hover td {
+  background: color-mix(in oklab, var(--wms-ops-accent) 4%, transparent);
+}
+
+.wms-ops-form .wms-ops-kkd-create-lines tbody tr:focus-within td {
+  background: color-mix(in oklab, var(--wms-ops-accent) 6%, transparent);
+}
+
+.wms-ops-form .wms-ops-kkd-create-lines__index {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.5rem;
+  padding: 0 0.65rem;
+}
+
+.wms-ops-form .wms-ops-kkd-create-lines__index-num {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  padding: 0 0.25rem;
+  border: 1px solid color-mix(in oklab, var(--wms-ops-accent) 28%, transparent);
+  background: color-mix(in oklab, var(--wms-ops-accent) 8%, transparent);
+  color: var(--wms-ops-accent);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.wms-ops-form .wms-ops-kkd-create-lines__cell {
+  position: relative;
+  min-width: 0;
+  min-height: 2.5rem;
+  display: flex;
+  align-items: stretch;
+}
+
+.wms-ops-form .wms-ops-kkd-create-lines__cell .wms-ops-field-shell,
+.wms-ops-form .wms-ops-kkd-create-lines__cell .app-input-shell {
+  display: flex;
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  align-items: stretch;
+}
+
+.wms-ops-form .wms-ops-kkd-create-lines__cell .wms-ops-field-shell::before,
+.wms-ops-form .wms-ops-kkd-create-lines__cell .wms-ops-field-shell::after,
+.wms-ops-form .wms-ops-kkd-create-lines__cell .app-input-shell::before,
+.wms-ops-form .wms-ops-kkd-create-lines__cell .app-input-shell::after {
+  content: none !important;
+  display: none !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  box-shadow: none !important;
+}
+
+.wms-ops-form .wms-ops-kkd-create-lines__cell button.wms-ops-lookup-trigger,
+.wms-ops-form .wms-ops-kkd-create-lines__cell .wms-ops-list-field-trigger,
+.wms-ops-form .wms-ops-kkd-create-lines__cell .wms-ops-field,
+.wms-ops-form .wms-ops-kkd-create-lines__cell .app-input-control,
+.wms-ops-form .wms-ops-kkd-create-lines__cell input.input,
+.wms-ops-form .wms-ops-kkd-create-lines__cell input.wms-ops-field,
+.wms-ops-form .wms-ops-kkd-create-lines__cell input.app-input-control {
+  flex: 1;
+  width: 100% !important;
+  height: 2.5rem !important;
+  min-height: 2.5rem !important;
+  max-height: 2.5rem !important;
+  border: 0 !important;
+  border-width: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  outline: none !important;
+  background: transparent !important;
+  padding-block: 0 !important;
+  padding-inline: 0.75rem !important;
+  font-size: 0.78rem !important;
+}
+
+/* Lookup combobox: sol arama ikonu için padding koru */
+.wms-ops-form .wms-ops-kkd-create-lines__cell input.wms-ops-field.pl-8,
+.wms-ops-form .wms-ops-kkd-create-lines__cell input.wms-ops-field[class*='!pl-8'],
+.wms-ops-form .wms-ops-kkd-create-lines__cell .wms-ops-field-shell input.wms-ops-field {
+  padding-left: 2rem !important;
+  padding-right: 0.75rem !important;
+}
+
+.wms-ops-form .wms-ops-kkd-create-lines__cell:focus-within {
+  box-shadow: inset 0 -2px 0 var(--wms-ops-accent-electric, var(--wms-ops-accent));
+}
+
+.wms-ops-form .wms-ops-kkd-create-lines__cell:focus-within .wms-ops-field,
+.wms-ops-form .wms-ops-kkd-create-lines__cell:focus-within .app-input-control,
+.wms-ops-form .wms-ops-kkd-create-lines__cell:focus-within input.input {
+  border: 0 !important;
+  border-width: 0 !important;
+  box-shadow: none !important;
+  outline: none !important;
+  background: transparent !important;
+}
+
+.wms-ops-form .wms-ops-kkd-create-lines__qty .wms-ops-field,
+.wms-ops-form .wms-ops-kkd-create-lines__qty .app-input-control,
+.wms-ops-form .wms-ops-kkd-create-lines__qty input.input,
+.wms-ops-form .wms-ops-kkd-create-lines__qty-input {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.wms-ops-form .wms-ops-kkd-create-lines__actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.5rem;
+  width: 2.75rem;
+}
+
+/* Premium skin: workspace-host input kuralları miktarı tekrar kutuya çevirmesin */
+html.skin-premium .wms-ops-form .wms-ops-kkd-create-lines__cell .app-input-control,
+html.skin-premium .wms-ops-form .wms-ops-kkd-create-lines__cell input.input,
+html.skin-premium .wms-ops-workspace-host .wms-ops-kkd-create-lines__cell .app-input-control,
+html.skin-premium .wms-ops-workspace-host .wms-ops-kkd-create-lines__cell input.input,
+html.skin-premium .wms-ops-workspace-host .wms-ops-kkd-create-lines__cell .app-input-control:focus,
+html.skin-premium .wms-ops-workspace-host .wms-ops-kkd-create-lines__cell .app-input-control:focus-visible,
+html.skin-premium .wms-ops-workspace-host .wms-ops-kkd-create-lines__cell input.input:focus,
+html.skin-premium .wms-ops-workspace-host .wms-ops-kkd-create-lines__cell input.input:focus-visible {
+  border: 0 !important;
+  border-width: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  outline: none !important;
+  background: transparent !important;
 }
 
 .wms-ops-form .wms-ops-kkd-header-fields {
@@ -27959,6 +28264,12 @@ html.skin-premium .wms-ops-form .wms-ops-receipt-selected-lines__stat {
 }
 
 .wms-ops-form .wms-ops-receipt-entry-row__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.45rem;
+  min-width: 0;
   line-height: 1.2;
   margin: 0;
   padding: 0.05rem 0.25rem 0 0.1rem;
@@ -27971,10 +28282,162 @@ html.skin-premium .wms-ops-form .wms-ops-receipt-selected-lines__stat {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.12rem;
+  gap: 0.28rem;
   padding-top: 0.15rem;
   z-index: 2;
   pointer-events: auto;
+}
+
+.wms-ops-form .wms-ops-receipt-entry-row__ready-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.wms-ops-stock-image-peek {
+  display: inline-grid;
+  place-items: center;
+  width: 1.55rem;
+  height: 1.55rem;
+  border-radius: 0.35rem;
+  border: 1px solid color-mix(in oklab, var(--wms-ops-accent) 40%, var(--wms-app-border));
+  background: color-mix(in oklab, var(--wms-ops-accent) 10%, var(--wms-ops-field-bg));
+  color: var(--wms-ops-accent);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    color 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.wms-ops-stock-image-peek:hover,
+.wms-ops-stock-image-peek:focus-visible {
+  border-color: color-mix(in oklab, var(--wms-ops-accent) 70%, var(--wms-app-border));
+  background: color-mix(in oklab, var(--wms-ops-accent) 18%, var(--wms-ops-field-bg));
+  outline: none;
+}
+
+.wms-ops-stock-image-peek--empty {
+  opacity: 0.38;
+  cursor: default;
+  border-color: color-mix(in oklab, var(--wms-app-border) 85%, transparent);
+  background: color-mix(in oklab, var(--wms-ops-field-bg) 88%, transparent);
+  color: var(--wms-app-text-muted);
+  pointer-events: auto;
+}
+
+.wms-ops-stock-image-peek--empty:hover,
+.wms-ops-stock-image-peek--empty:focus-visible {
+  border-color: color-mix(in oklab, var(--wms-app-border) 85%, transparent);
+  background: color-mix(in oklab, var(--wms-ops-field-bg) 88%, transparent);
+  color: var(--wms-app-text-muted);
+}
+
+.wms-ops-stock-image-peek__popover {
+  position: fixed;
+  z-index: 6400;
+  width: 13.75rem;
+  padding: 0.4rem;
+  border-radius: 0.7rem;
+  border: 1px solid color-mix(in oklab, var(--wms-ops-accent) 35%, var(--wms-app-border));
+  background: color-mix(in oklab, var(--wms-app-panel) 96%, #020617);
+  box-shadow:
+    0 16px 36px -18px rgb(0 0 0 / 65%),
+    0 0 0 1px color-mix(in oklab, var(--wms-ops-accent) 12%, transparent);
+  pointer-events: auto;
+}
+
+.wms-ops-stock-image-peek__thumb {
+  display: block;
+  width: 100%;
+  max-height: 10rem;
+  object-fit: contain;
+  border-radius: 0.45rem;
+  background: color-mix(in oklab, black 18%, transparent);
+}
+
+.wms-ops-stock-image-peek__state {
+  display: grid;
+  place-items: center;
+  gap: 0.35rem;
+  min-height: 5.5rem;
+  padding: 0.75rem;
+  text-align: center;
+  font-size: 0.7rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.wms-ops-stock-image-peek__state--error {
+  color: #f87171;
+}
+
+.wms-ops-stock-image-dialog .wms-ops-detail-dialog__header {
+  overflow: visible;
+}
+
+.wms-ops-stock-image-dialog__title,
+.wms-ops-stock-image-dialog .wms-ops-detail-dialog__title {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: unset !important;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  line-height: 1.35 !important;
+}
+
+.wms-ops-stock-image-dialog__body {
+  display: grid;
+  place-items: center;
+  min-height: min(52vw, 16rem);
+  max-height: min(70dvh, 28rem);
+  padding: 1rem 1rem 1.15rem;
+  overflow: auto;
+  background: color-mix(in oklab, var(--wms-app-panel) 94%, transparent);
+}
+
+.wms-ops-stock-image-dialog__img {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: min(58dvh, 24rem);
+  object-fit: contain;
+  border-radius: 0.65rem;
+  border: 1px solid color-mix(in oklab, var(--wms-app-border) 80%, transparent);
+  background: color-mix(in oklab, black 16%, var(--wms-ops-field-bg, transparent));
+}
+
+.wms-ops-stock-image-dialog__state {
+  display: grid;
+  place-items: center;
+  gap: 0.55rem;
+  min-height: 10rem;
+  width: 100%;
+  padding: 1.25rem;
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--wms-app-text-muted);
+}
+
+.wms-ops-stock-image-dialog__state--error {
+  color: #f87171;
+}
+
+@media (max-width: 640px) {
+  .wms-ops-stock-image-dialog__body {
+    min-height: 12rem;
+    max-height: min(62dvh, 22rem);
+    padding: 0.85rem;
+  }
+
+  .wms-ops-stock-image-dialog__img {
+    max-height: min(48dvh, 18rem);
+  }
 }
 
 .wms-ops-form .wms-ops-receipt-entry-row__shell > .wms-ops-putaway-suggestions {
@@ -27983,7 +28446,10 @@ html.skin-premium .wms-ops-form .wms-ops-receipt-selected-lines__stat {
 
 .wms-ops-form .wms-ops-receipt-entry-row__title {
   display: block;
-  max-width: 100%;
+  flex: 0 1 auto;
+  width: fit-content;
+  min-width: 0;
+  max-width: min(100%, calc(100% - 7.5rem));
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -27993,6 +28459,20 @@ html.skin-premium .wms-ops-form .wms-ops-receipt-selected-lines__stat {
   line-height: 1.25;
   color: var(--wms-app-text);
   padding-left: 0.05rem;
+}
+
+.wms-ops-form .wms-ops-receipt-entry-row__stock-code {
+  flex: 0 0 auto;
+  max-width: min(42%, 16rem);
+  overflow: hidden;
+}
+
+.wms-ops-form .wms-ops-receipt-entry-row__stock-code .wms-ops-stock-identity,
+.wms-ops-form .wms-ops-receipt-entry-row__stock-code span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .wms-ops-form .wms-ops-receipt-entry-row__title strong {
@@ -29292,7 +29772,7 @@ html.skin-premium .wms-ops-lookup-dialog.wms-ops-detail-dialog > [data-slot='dia
 }
 .wms-ops-form .wms-ops-gr-review__hero {
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.35fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 1rem;
   padding: 1rem;
   border-bottom: 1px solid color-mix(in oklab, var(--wms-ops-accent) 12%, var(--wms-app-border));
@@ -29309,11 +29789,13 @@ html.skin-premium .wms-ops-lookup-dialog.wms-ops-detail-dialog > [data-slot='dia
   border-radius: 0.9rem;
   background: color-mix(in oklab, var(--wms-app-panel) 86%, transparent);
   padding: 1rem 1.1rem;
+  min-height: 100%;
+  height: 100%;
 }
 .wms-ops-form .wms-ops-gr-review__hero-card--supplier {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: stretch;
+  justify-content: flex-start;
   min-height: 100%;
   background:
     linear-gradient(
@@ -29326,7 +29808,7 @@ html.skin-premium .wms-ops-lookup-dialog.wms-ops-detail-dialog > [data-slot='dia
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 0.45rem;
   width: 100%;
   min-width: 0;
@@ -29334,11 +29816,150 @@ html.skin-premium .wms-ops-lookup-dialog.wms-ops-detail-dialog > [data-slot='dia
 .wms-ops-form .wms-ops-gr-review__hero-card--supplier .wms-ops-gr-review__hero-title {
   margin-top: 0;
   width: 100%;
+  font-size: clamp(1.35rem, 1.1rem + 0.7vw, 1.75rem);
+  line-height: 1.15;
   overflow-wrap: anywhere;
   word-break: break-word;
 }
 .wms-ops-form .wms-ops-gr-review__hero-card--supplier .wms-ops-gr-review__hero-meta {
   margin-top: 0;
+}
+.wms-ops-form .wms-ops-gr-review__supplier-details {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-top: 0.55rem;
+  border-top: 1px solid color-mix(in oklab, var(--wms-app-border) 78%, transparent);
+}
+.wms-ops-form .wms-ops-gr-review__supplier-band {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem 1rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid color-mix(in oklab, var(--wms-app-border) 55%, transparent);
+}
+.wms-ops-form .wms-ops-gr-review__supplier-band--solo {
+  grid-template-columns: minmax(0, 1fr);
+}
+.wms-ops-form .wms-ops-gr-review__supplier-details > .wms-ops-gr-review__supplier-band--triple {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 0.55rem 0.65rem;
+}
+.wms-ops-form .wms-ops-gr-review__supplier-band--last {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.wms-ops-form .wms-ops-gr-review__supplier-field {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.22rem;
+  min-width: 0;
+}
+.wms-ops-form .wms-ops-gr-review__supplier-field--full {
+  width: 100%;
+}
+.wms-ops-form .wms-ops-gr-review__supplier-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--wms-ops-accent) 42%, hsl(var(--muted-foreground)));
+}
+.wms-ops-form .wms-ops-gr-review__supplier-value {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  font-size: 0.9rem;
+  font-weight: 650;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+  color: #7ec8f5;
+  background-image: linear-gradient(120deg, #9ad7fa 0%, #6bb8ef 55%, #5aa4e8 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.wms-ops-form .wms-ops-gr-review__supplier-value--clip {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wms-ops-form .wms-ops-gr-review__supplier-value--clip .wms-ops-gr-review__supplier-link {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
+}
+.wms-ops-form .wms-ops-gr-review__supplier-link {
+  color: #7ec8f5;
+  background-image: linear-gradient(120deg, #9ad7fa 0%, #6bb8ef 55%, #5aa4e8 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-decoration: none;
+}
+.wms-ops-form .wms-ops-gr-review__supplier-link:hover {
+  text-decoration: underline;
+  text-decoration-color: color-mix(in oklab, #6bb8ef 70%, transparent);
+}
+.wms-ops-form .wms-ops-gr-review__supplier-details--order .wms-ops-gr-review__supplier-value,
+.wms-ops-form .wms-ops-gr-review__supplier-details--order .wms-ops-gr-review__supplier-value button {
+  color: #f0a989;
+  background-image: linear-gradient(120deg, #f5bea6 0%, #ea9874 55%, #e88860 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.wms-ops-form .wms-ops-gr-review__hero-card--meta {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+}
+.wms-ops-form .wms-ops-gr-review__hero-card--meta .wms-ops-gr-review__hero-head {
+  min-height: 2.85rem;
+  align-items: center;
+}
+.wms-ops-form .wms-ops-gr-review__hero-card--meta .wms-ops-gr-review__hero-label {
+  font-size: clamp(1.05rem, 0.95rem + 0.35vw, 1.28rem);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+  color: hsl(var(--foreground));
+}
+.wms-ops-form .wms-ops-gr-review__hero-card--meta .wms-ops-gr-review__hero-icon {
+  width: 2.15rem;
+  height: 2.15rem;
+  border-radius: 0.65rem;
+}
+.wms-ops-form .wms-ops-gr-review__hero-card--meta .wms-ops-gr-review__hero-icon svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+.wms-ops-form .wms-ops-gr-review__hero-card--meta .wms-ops-gr-review__meta-list {
+  margin-top: 0.55rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid color-mix(in oklab, var(--wms-app-border) 78%, transparent);
+}
+.wms-ops-form .wms-ops-gr-review__hero-card--meta .wms-ops-gr-review__supplier-details {
+  flex: 1;
+}
+@media (max-width: 720px) {
+  .wms-ops-form .wms-ops-gr-review__supplier-band {
+    grid-template-columns: 1fr;
+  }
+  .wms-ops-form .wms-ops-gr-review__supplier-details > .wms-ops-gr-review__supplier-band--triple {
+    grid-template-columns: 1fr !important;
+  }
 }
 .wms-ops-form .wms-ops-gr-review__hero-label,
 .wms-ops-form .wms-ops-gr-review__section-title {
@@ -29361,10 +29982,10 @@ html.skin-premium .wms-ops-lookup-dialog.wms-ops-detail-dialog > [data-slot='dia
 .wms-ops-form .wms-ops-gr-review__hero-icon {
   display: grid;
   place-items: center;
-  width: 1.9rem;
-  height: 1.9rem;
+  width: 1.7rem;
+  height: 1.7rem;
   flex-shrink: 0;
-  border-radius: 0.6rem;
+  border-radius: 0.55rem;
   border: 1px solid color-mix(in oklab, var(--wms-brand-primary) 32%, var(--wms-app-border));
   background:
     linear-gradient(
@@ -29374,6 +29995,10 @@ html.skin-premium .wms-ops-lookup-dialog.wms-ops-detail-dialog > [data-slot='dia
     );
   color: color-mix(in oklab, var(--wms-brand-primary) 78%, hsl(var(--foreground)));
   box-shadow: 0 6px 16px -10px color-mix(in oklab, var(--wms-brand-primary) 55%, transparent);
+}
+.wms-ops-form .wms-ops-gr-review__hero-icon svg {
+  width: 0.95rem;
+  height: 0.95rem;
 }
 .wms-ops-form .wms-ops-gr-review__hero-title {
   margin-top: 0.7rem;
@@ -29548,14 +30173,14 @@ html.skin-premium .wms-ops-lookup-dialog.wms-ops-detail-dialog > [data-slot='dia
 .wms-ops-form .wms-ops-gr-review__meta-list {
   display: grid;
   gap: 0;
-  margin-top: 0.75rem;
+  margin-top: 0.55rem;
 }
 .wms-ops-form .wms-ops-gr-review__meta-item {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
   align-items: baseline;
-  padding: 0.55rem 0;
+  padding: 0.42rem 0;
   border-bottom: 1px solid color-mix(in oklab, var(--wms-app-border) 55%, transparent);
 }
 .wms-ops-form .wms-ops-gr-review__meta-item:last-child {
@@ -29563,7 +30188,7 @@ html.skin-premium .wms-ops-lookup-dialog.wms-ops-detail-dialog > [data-slot='dia
   padding-bottom: 0;
 }
 .wms-ops-form .wms-ops-gr-review__meta-item span {
-  font-size: 0.84rem;
+  font-size: 0.8rem;
   color: hsl(var(--muted-foreground));
 }
 .wms-ops-form .wms-ops-gr-review__meta-label {
@@ -29573,11 +30198,13 @@ html.skin-premium .wms-ops-lookup-dialog.wms-ops-detail-dialog > [data-slot='dia
   font-weight: 600;
 }
 .wms-ops-form .wms-ops-gr-review__meta-label svg {
+  width: 0.95rem;
+  height: 0.95rem;
   color: color-mix(in oklab, var(--wms-brand-primary) 68%, hsl(var(--muted-foreground)));
 }
 .wms-ops-form .wms-ops-gr-review__meta-item strong {
   text-align: right;
-  font-size: 0.92rem;
+  font-size: 0.88rem;
   font-weight: 700;
   color: hsl(var(--foreground));
   word-break: break-word;
@@ -29586,34 +30213,68 @@ html.skin-premium .wms-ops-lookup-dialog.wms-ops-detail-dialog > [data-slot='dia
   letter-spacing: 0.02em;
   background-clip: text;
   -webkit-background-clip: text;
-  color: transparent;
+  color: #f0a989;
   -webkit-text-fill-color: transparent;
 }
 /* Soft corporate peach / rose — muted, no loud rainbow */
 .wms-ops-form .wms-ops-gr-review__meta-value--series {
-  background-image: linear-gradient(120deg, #e8c5b8 0%, #d9b0a4 100%);
+  background-image: linear-gradient(120deg, #f3b9a2 0%, #e89572 100%);
 }
 .wms-ops-form .wms-ops-gr-review__meta-value--receipt {
-  font-size: 1rem;
+  font-size: 0.94rem;
   letter-spacing: 0.015em;
-  background-image: linear-gradient(120deg, #ebc0b0 0%, #dea898 100%);
+  background-image: linear-gradient(120deg, #f5bea6 0%, #ea9874 100%);
 }
 .wms-ops-form .wms-ops-gr-review__meta-value--date {
-  background-image: linear-gradient(120deg, #e6c8bc 0%, #d4b2a6 100%);
+  background-image: linear-gradient(120deg, #f0b69d 0%, #e49070 100%);
 }
 .wms-ops-form .wms-ops-gr-review__meta-value--order {
-  background-image: linear-gradient(120deg, #eccab8 0%, #e0b09a 100%);
+  background-image: linear-gradient(120deg, #f6c2a8 0%, #ec9a76 100%);
 }
 .wms-ops-form .wms-ops-gr-review__meta-value--project {
-  background-image: linear-gradient(120deg, #e4c6be 0%, #d2b0a8 100%);
+  background-image: linear-gradient(120deg, #efb59c 0%, #e48d6c 100%);
 }
 .wms-ops-form .wms-ops-gr-review__meta-value--accent {
-  color: color-mix(in oklab, var(--wms-brand-accent) 70%, var(--wms-brand-primary));
+  color: #f0a989;
+  -webkit-text-fill-color: #f0a989;
   letter-spacing: 0.02em;
 }
 .wms-ops-form .wms-ops-gr-review__meta-value--strong {
-  font-size: 1rem;
+  font-size: 0.94rem;
   letter-spacing: 0.015em;
+}
+.wms-ops-form .wms-ops-gr-review__meta-value--supplier {
+  background-image: linear-gradient(120deg, #9ad7fa 0%, #6bb8ef 55%, #5aa4e8 100%);
+}
+.wms-ops-form .wms-ops-gr-review__meta-value--ellipsis {
+  display: block;
+  max-width: min(68%, 22rem);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wms-ops-form .wms-ops-gr-review__meta-value--ellipsis .wms-ops-gr-review__supplier-link {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
+}
+.wms-ops-form .wms-ops-gr-review__meta-list--supplier .wms-ops-gr-review__supplier-link {
+  color: #7ec8f5;
+  background-image: linear-gradient(120deg, #9ad7fa 0%, #6bb8ef 55%, #5aa4e8 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-decoration: none;
+}
+.wms-ops-form .wms-ops-gr-review__meta-list--supplier .wms-ops-gr-review__supplier-link:hover {
+  text-decoration: underline;
+  text-decoration-color: color-mix(in oklab, #6bb8ef 70%, transparent);
+}
+.wms-ops-form .wms-ops-gr-review__hero-card--supplier .wms-ops-gr-review__meta-list {
+  width: 100%;
 }
 .wms-ops-form .wms-ops-gr-review__section-title {
   padding: 1rem 1rem 0.5rem;
@@ -29628,6 +30289,9 @@ html.skin-premium .wms-ops-lookup-dialog.wms-ops-detail-dialog > [data-slot='dia
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.75rem;
+}
+.wms-ops-form .wms-ops-gr-review__metric-grid--two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 .wms-ops-form .wms-ops-gr-review__metric-card {
   display: flex;
@@ -29745,12 +30409,84 @@ html.skin-premium .wms-ops-lookup-dialog.wms-ops-detail-dialog > [data-slot='dia
   color: color-mix(in oklab, #94a3b8 55%, hsl(var(--muted-foreground)));
 }
 .wms-ops-form .wms-ops-gr-review__metric-card-value {
+  width: 100%;
+  min-width: 0;
   font-size: 1.35rem;
   line-height: 1.15;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   color: hsl(var(--foreground));
   word-break: break-word;
+}
+.wms-ops-form .wms-ops-gr-review__metric-card-inline {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.45rem 0.55rem;
+  width: 100%;
+  min-width: 0;
+}
+.wms-ops-form .wms-ops-gr-review__metric-card-inline-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  min-width: 0;
+}
+.wms-ops-form .wms-ops-gr-review__metric-card-inline-sep {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: color-mix(in oklab, #22d3ee 40%, hsl(var(--muted-foreground)));
+}
+.wms-ops-form .wms-ops-gr-review__metric-card-stack-num {
+  font-size: 1.45rem;
+  line-height: 1.1;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: hsl(var(--foreground));
+}
+.wms-ops-form .wms-ops-gr-review__metric-card-stack-unit {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: hsl(var(--muted-foreground));
+}
+.wms-ops-form .wms-ops-gr-review__metric-card-unit-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.1rem;
+  padding: 0.18rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, #22d3ee 40%, var(--wms-app-border));
+  background: color-mix(in oklab, #22d3ee 12%, transparent);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, #22d3ee 70%, hsl(var(--foreground)));
+  cursor: help;
+}
+.wms-ops-form .wms-ops-gr-review__metric-card-unit-badge:hover,
+.wms-ops-form .wms-ops-gr-review__metric-card-unit-badge:focus-visible {
+  border-color: color-mix(in oklab, #22d3ee 70%, transparent);
+  outline: none;
+}
+.wms-ops-gr-review__metric-card-unit-tooltip {
+  max-width: min(16rem, 90vw);
+}
+.wms-ops-gr-review__metric-card-unit-list {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 7rem;
+}
+.wms-ops-gr-review__metric-card-unit-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.85rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 .wms-ops-form .wms-ops-gr-review__metric-card--quality-none .wms-ops-gr-review__metric-card-value {
   color: hsl(var(--muted-foreground));
@@ -30084,6 +30820,85 @@ html.skin-premium .wms-ops-lookup-dialog.wms-ops-detail-dialog > [data-slot='dia
   margin-top: 1.1rem;
   padding-top: 1rem;
   border-top: 1px solid color-mix(in oklab, var(--wms-ops-accent) 12%, var(--wms-app-border));
+}
+
+/* ── Goods receipt quality warning (below steps) ── */
+.wms-ops-form .wms-ops-gr-review__quality-warn {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  width: 100%;
+  margin: 0.15rem 0 0.35rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid color-mix(in oklab, #f59e0b 48%, var(--wms-app-border));
+  border-radius: 0.85rem;
+  background:
+    linear-gradient(90deg, color-mix(in oklab, #f59e0b 18%, transparent), transparent 55%),
+    color-mix(in oklab, #f59e0b 10%, var(--wms-app-panel));
+  color: color-mix(in oklab, #fde68a 72%, hsl(var(--foreground)));
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+}
+.wms-ops-form .wms-ops-gr-review__quality-warn:hover {
+  border-color: color-mix(in oklab, #fbbf24 62%, var(--wms-app-border));
+  background:
+    linear-gradient(90deg, color-mix(in oklab, #f59e0b 24%, transparent), transparent 58%),
+    color-mix(in oklab, #f59e0b 14%, var(--wms-app-panel));
+  transform: translateY(-1px);
+}
+.wms-ops-form .wms-ops-gr-review__quality-warn:focus-visible {
+  outline: 2px solid color-mix(in oklab, #fbbf24 70%, transparent);
+  outline-offset: 2px;
+}
+.wms-ops-form .wms-ops-gr-review__quality-warn-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 0.65rem;
+  border: 1px solid color-mix(in oklab, #f59e0b 45%, transparent);
+  background: color-mix(in oklab, #f59e0b 18%, transparent);
+  color: #fbbf24;
+}
+.wms-ops-form .wms-ops-gr-review__quality-warn-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+.wms-ops-form .wms-ops-gr-review__quality-warn-title {
+  font-size: 0.92rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  color: #fde68a;
+}
+.wms-ops-form .wms-ops-gr-review__quality-warn-text {
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: color-mix(in oklab, #fde68a 58%, hsl(var(--muted-foreground)));
+}
+html.light .wms-ops-form .wms-ops-gr-review__quality-warn,
+html:not(.dark) .wms-ops-form .wms-ops-gr-review__quality-warn {
+  background:
+    linear-gradient(90deg, color-mix(in oklab, #f59e0b 14%, transparent), transparent 55%),
+    color-mix(in oklab, #fff7ed 88%, white);
+  color: #92400e;
+}
+html.light .wms-ops-form .wms-ops-gr-review__quality-warn-title,
+html:not(.dark) .wms-ops-form .wms-ops-gr-review__quality-warn-title {
+  color: #b45309;
+}
+html.light .wms-ops-form .wms-ops-gr-review__quality-warn-text,
+html:not(.dark) .wms-ops-form .wms-ops-gr-review__quality-warn-text {
+  color: #a16207;
+}
+html.light .wms-ops-form .wms-ops-gr-review__quality-warn-icon,
+html:not(.dark) .wms-ops-form .wms-ops-gr-review__quality-warn-icon {
+  color: #d97706;
+  background: color-mix(in oklab, #f59e0b 16%, white);
 }
 
 /* ── Goods receipt error banner (base = terminal) ── */
@@ -30728,8 +31543,58 @@ html.skin-premium .wms-ops-form .wms-ops-gr-submit__error-tag {
   --gr-success-line: color-mix(in oklab, #10b981 38%, var(--wms-app-border));
 }
 .wms-ops-form .wms-ops-gr-success--quality {
-  --gr-success-tone: #c5d46e;
-  --gr-success-line: color-mix(in oklab, #a8c45c 38%, var(--wms-app-border));
+  --gr-success-tone: #a3ec85;
+  --gr-success-line: color-mix(in oklab, #a3ec85 72%, var(--wms-app-border));
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--gr-success-tone) 16%, var(--wms-app-panel)) 0%,
+      var(--wms-app-panel) 42%,
+      var(--wms-app-panel) 100%
+    );
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--gr-success-tone) 22%, transparent),
+    0 0 42px -18px color-mix(in oklab, var(--gr-success-tone) 55%, transparent),
+    0 18px 36px -24px rgb(0 0 0 / 55%);
+}
+.wms-ops-form .wms-ops-gr-success--quality .wms-ops-gr-success__icon {
+  border-color: color-mix(in oklab, var(--gr-success-tone) 85%, transparent);
+  background: color-mix(in oklab, var(--gr-success-tone) 22%, transparent);
+  box-shadow: 0 0 28px -6px color-mix(in oklab, var(--gr-success-tone) 85%, transparent);
+}
+.wms-ops-form .wms-ops-gr-success--quality .wms-ops-gr-success__eyebrow {
+  color: color-mix(in oklab, var(--gr-success-tone) 92%, white);
+}
+.wms-ops-form .wms-ops-gr-success--quality .wms-ops-gr-success__doc {
+  border-color: color-mix(in oklab, var(--gr-success-tone) 70%, var(--wms-app-border));
+  background: color-mix(in oklab, var(--gr-success-tone) 14%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--gr-success-tone) 18%, transparent);
+}
+.wms-ops-form .wms-ops-gr-success--quality .wms-ops-gr-success__doc-value {
+  text-shadow: 0 0 22px color-mix(in oklab, var(--gr-success-tone) 55%, transparent);
+}
+.wms-ops-form .wms-ops-gr-success--quality .wms-ops-gr-success__doc-copy-icon {
+  color: var(--gr-success-tone);
+  opacity: 1;
+}
+.wms-ops-form .wms-ops-gr-success--quality .wms-ops-gr-success__stat-value--status,
+.wms-ops-form .wms-ops-gr-success--quality .wms-ops-gr-success__stat-hint {
+  color: color-mix(in oklab, var(--gr-success-tone) 88%, white);
+}
+.wms-ops-form .wms-ops-gr-success--quality .wms-ops-gr-success__quality {
+  border-color: color-mix(in oklab, var(--gr-success-tone) 72%, var(--wms-app-border));
+  background: color-mix(in oklab, var(--gr-success-tone) 16%, transparent);
+}
+.wms-ops-form .wms-ops-gr-success--quality .wms-ops-gr-success__quality-copy {
+  color: color-mix(in oklab, var(--gr-success-tone) 90%, white);
+}
+.wms-ops-form .wms-ops-gr-success--quality .wms-ops-gr-success__quality-copy strong {
+  color: color-mix(in oklab, var(--gr-success-tone) 82%, white);
+}
+.wms-ops-form .wms-ops-gr-success--quality .wms-ops-gr-success__quality-btn {
+  border-color: color-mix(in oklab, var(--gr-success-tone) 75%, transparent);
+  background: color-mix(in oklab, var(--gr-success-tone) 18%, var(--wms-app-panel));
+  color: color-mix(in oklab, var(--gr-success-tone) 88%, white);
 }
 .wms-ops-form .wms-ops-gr-success__glow {
   pointer-events: none;
@@ -31121,6 +31986,12 @@ html.skin-premium .wms-ops-form .wms-ops-gr-success__doc-value {
   -webkit-background-clip: text;
   color: transparent;
   -webkit-text-fill-color: transparent;
+}
+html.skin-premium .wms-ops-form .wms-ops-gr-success--done .wms-ops-gr-success__doc-value {
+  background-image: linear-gradient(120deg, #6ee7b7 0%, #34d399 50%, #10b981 100%);
+}
+html.skin-premium .wms-ops-form .wms-ops-gr-success--quality .wms-ops-gr-success__doc-value {
+  background-image: linear-gradient(120deg, #c8f5b0 0%, #a3ec85 50%, #7fd45f 100%);
 }
 html.skin-premium .wms-ops-form .wms-ops-gr-success__stat-value--status,
 html.skin-premium .wms-ops-form .wms-ops-gr-success__stat-hint,
