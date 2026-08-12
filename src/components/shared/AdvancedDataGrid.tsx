@@ -72,7 +72,7 @@ import { AppDateInput } from './AppInput';
 import { getWorkspacePortalRoot } from '@/lib/workspace-portal';
 import { localizeLegacyUiText } from '@/lib/legacy-ui-localization';
 import { normalizeGridPage } from '@/lib/paged';
-import { appendFoldedSearchToken, toTurkishApiSearch } from '@/lib/turkish-search';
+import { appendFoldedSearchToken, foldTurkishSearch, toTurkishApiSearch } from '@/lib/turkish-search';
 import { OpsActionButton } from './OpsActionButton';
 import { OpsListPageShell } from './OpsListPageShell';
 import { OpsListSearchField } from './OpsListSearchField';
@@ -237,12 +237,7 @@ function isGridColumnSearchable<T>(column: GridColumn<T>): boolean {
 }
 
 function normalizeGridMenuSearch(value: string): string {
-  return value
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLocaleLowerCase()
-    .replace(/Ä±/g, 'i')
-    .trim();
+  return foldTurkishSearch(value);
 }
 
 function matchesGridMenuSearch(label: string, search: string): boolean {

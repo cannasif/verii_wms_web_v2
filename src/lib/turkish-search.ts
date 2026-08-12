@@ -1,6 +1,7 @@
 /**
  * Türkçe arama katlama: İ/I/ı/i ve ş/ğ/ü/ö/ç farklarını ASCII'ye indirger.
  * "DİGİ" ve "DIGI" aynı anahtara düşer → "digi".
+ * Yerel (client) eşleştirmede her iki taraf da katlanır.
  */
 export function foldTurkishSearch(value: string): string {
   return value
@@ -18,10 +19,32 @@ export function foldTurkishSearch(value: string): string {
     .replace(/ç/g, 'c');
 }
 
-/** API araması için: katlanmış + Latin uppercase (ERP kodları / CI collations). */
+/**
+ * API araması:
+ * - İ/ı/I/i → Latin I (ADMİN ≈ ADMIN ≈ Administrator)
+ * - ğüşöç korunur (Erdoğan ≈ ERDOĞAN)
+ * - tr-TR upper kullanılmaz; yoksa "admin" → "ADMİN" olur ve English isimlerde kırılır
+ */
 export function toTurkishApiSearch(value: string): string {
-  const folded = foldTurkishSearch(value);
-  return folded ? folded.toLocaleUpperCase('en-US') : '';
+  const trimmed = value.trim();
+  if (!trimmed) return '';
+
+  const iNormalized = trimmed
+    .replace(/İ/g, 'i')
+    .replace(/I/g, 'i')
+    .replace(/ı/g, 'i');
+
+  const lower = iNormalized.toLocaleLowerCase('tr-TR');
+
+  let out = '';
+  for (const ch of lower) {
+    if (ch === 'i') {
+      out += 'I';
+      continue;
+    }
+    out += ch.toLocaleUpperCase('tr-TR');
+  }
+  return out;
 }
 
 /** Enter ile rozet ekler; Türkçe katlamaya göre yinelenenleri atlar. */
