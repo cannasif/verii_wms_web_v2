@@ -194,6 +194,7 @@
       "multipleProjectsCount": "{{count}} progetti",
       "projectsTooltipHint": "Scorri per vedere tutti i codici progetto",
       "metricLinesHint": "Visualizza giacenze",
+      "metricLinesQualityNote": "Anche senza una regola qualità, tocca questa scheda per scegliere gli articoli da inviare in qualità.",
       "metricQualityLabel": "Qualità",
       "metricQualityNone": "Nessuna",
       "metricQualityHint": "Visualizza elenco qualità"

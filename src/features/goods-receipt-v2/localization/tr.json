@@ -209,6 +209,7 @@
       "multipleProjectsCount": "{{count}} proje",
       "projectsTooltipHint": "Kaydırarak tüm proje kodlarını görebilirsiniz",
       "metricLinesHint": "Stokları gör",
+      "metricLinesQualityNote": "Kalite kuralı tanımlı olmasa da, kaliteye göndermek istediğiniz stokları seçmek için bu karta basabilirsiniz.",
       "metricLineUnit": "kalem",
       "metricQuantityUnit": "miktar",
       "metricUnitCount": "{{count}} birim",

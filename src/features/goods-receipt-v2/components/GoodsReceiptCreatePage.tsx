@@ -3152,6 +3152,11 @@ export function GoodsReceiptCreatePage({
                         </span>
                       }
                       hint={t("createFlow.review.metricLinesHint")}
+                      note={
+                        allowManualQualityRouting
+                          ? t("createFlow.review.metricLinesQualityNote")
+                          : undefined
+                      }
                       onClick={() => setReviewLinesDialog("receipt")}
                     />
                     {direct ? (
@@ -4853,6 +4858,7 @@ function ReviewMetricCard({
   label,
   value,
   hint,
+  note,
   onClick,
   footer,
 }: {
@@ -4861,6 +4867,7 @@ function ReviewMetricCard({
   label: string;
   value: ReactNode;
   hint?: string;
+  note?: string;
   onClick?: () => void;
   footer?: ReactNode;
 }): ReactElement {
@@ -4878,18 +4885,25 @@ function ReviewMetricCard({
       </span>
       <span className="wms-ops-gr-review__metric-card-label">{label}</span>
       <div className="wms-ops-gr-review__metric-card-value">{value}</div>
-      {hint ? (
-        onClick && footer ? (
-          <button
-            type="button"
-            className="wms-ops-gr-review__metric-card-hint wms-ops-gr-review__metric-card-hint--action"
-            onClick={onClick}
-          >
-            {hint}
-          </button>
-        ) : (
-          <span className="wms-ops-gr-review__metric-card-hint">{hint}</span>
-        )
+      {hint || note ? (
+        <div className="wms-ops-gr-review__metric-card-foot">
+          {note ? (
+            <span className="wms-ops-gr-review__metric-card-note">{note}</span>
+          ) : null}
+          {hint ? (
+            onClick && footer ? (
+              <button
+                type="button"
+                className="wms-ops-gr-review__metric-card-hint wms-ops-gr-review__metric-card-hint--action"
+                onClick={onClick}
+              >
+                {hint}
+              </button>
+            ) : (
+              <span className="wms-ops-gr-review__metric-card-hint">{hint}</span>
+            )
+          ) : null}
+        </div>
       ) : null}
       {footer}
     </>

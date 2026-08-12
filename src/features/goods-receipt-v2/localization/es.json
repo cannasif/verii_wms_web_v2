@@ -194,6 +194,7 @@
       "multipleProjectsCount": "{{count}} proyectos",
       "projectsTooltipHint": "Desplácese para ver todos los códigos de proyecto",
       "metricLinesHint": "Ver existencias",
+      "metricLinesQualityNote": "Aunque no haya regla de calidad, pulse esta tarjeta para elegir los stocks que deben ir a calidad.",
       "metricQualityLabel": "Calidad",
       "metricQualityNone": "Ninguna",
       "metricQualityHint": "Ver lista de calidad"

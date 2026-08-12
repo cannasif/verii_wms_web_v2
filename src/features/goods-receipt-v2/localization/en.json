@@ -209,6 +209,7 @@
       "multipleProjectsCount": "{{count}} projects",
       "projectsTooltipHint": "Scroll to see all project codes",
       "metricLinesHint": "View stocks",
+      "metricLinesQualityNote": "Even without a quality rule, tap this card to choose stocks that should go to quality.",
       "metricLineUnit": "items",
       "metricQuantityUnit": "qty",
       "metricUnitCount": "{{count}} units",

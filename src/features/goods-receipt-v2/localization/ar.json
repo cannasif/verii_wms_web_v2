@@ -194,6 +194,7 @@
       "multipleProjectsCount": "{{count}} مشروع",
       "projectsTooltipHint": "مرّر لرؤية جميع رموز المشاريع",
       "metricLinesHint": "عرض المخزون",
+      "metricLinesQualityNote": "حتى دون قاعدة جودة، اضغط على هذه البطاقة لاختيار المخزون الذي يجب إرساله إلى الجودة.",
       "metricQualityLabel": "الجودة",
       "metricQualityNone": "بدون",
       "metricQualityHint": "عرض قائمة الجودة"

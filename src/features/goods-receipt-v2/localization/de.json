@@ -194,6 +194,7 @@
       "multipleProjectsCount": "{{count}} Projekte",
       "projectsTooltipHint": "Scrollen, um alle Projektcodes zu sehen",
       "metricLinesHint": "Bestände anzeigen",
+      "metricLinesQualityNote": "Auch ohne Qualitätsregel können Sie über diese Karte Bestände auswählen, die in die Qualität sollen.",
       "metricQualityLabel": "Qualität",
       "metricQualityNone": "Keine",
       "metricQualityHint": "Qualitätsliste anzeigen"
