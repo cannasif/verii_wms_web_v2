@@ -294,6 +294,13 @@ function defaultWarehouseForDecision(
   return null;
 }
 
+function acceptedDestinationForLine(
+  line: QualityInspectionLine,
+  fallback: QualityInspectionDetail["defaultAcceptedDestination"],
+) {
+  return line.defaultAcceptedDestination ?? fallback ?? null;
+}
+
 function dispositionDraft(
   decision = "Accepted",
   quantity = 0,
@@ -907,7 +914,6 @@ function InspectionDetailPanel({
     ? "Quarantined"
     : "Rejected";
   const quarantineDestinations = detail.quarantineDestinations ?? [];
-  const defaultAcceptedLocationId = detail.defaultAcceptedDestination?.locationId ?? null;
   const defaultAcceptedWarehouseId = detail.defaultAcceptedDestination?.warehouseId ?? null;
   const defaultRejectedLocationId = detail.defaultRejectedDestination?.locationId ?? null;
   const defaultRejectedWarehouseId = detail.defaultRejectedDestination?.warehouseId ?? null;
@@ -922,16 +928,22 @@ function InspectionDetailPanel({
   );
   const [drafts, setDrafts] = useState<Record<number, LineDraft>>(() =>
     Object.fromEntries(
-      actionable.map((line) => [
-        line.id,
-        emptyDraft(
-          defaultDecision,
-          actionableQuantity(line),
-          defaultRemainder,
-          defaultAcceptedLocationId,
-          defaultAcceptedWarehouseId,
-        ),
-      ]),
+      actionable.map((line) => {
+        const acceptedDestination = acceptedDestinationForLine(
+          line,
+          detail.defaultAcceptedDestination,
+        );
+        return [
+          line.id,
+          emptyDraft(
+            defaultDecision,
+            actionableQuantity(line),
+            defaultRemainder,
+            acceptedDestination?.locationId ?? null,
+            acceptedDestination?.warehouseId ?? null,
+          ),
+        ];
+      }),
     ),
   );
   const [bulkDecision, setBulkDecision] = useState(defaultDecision);
@@ -958,6 +970,50 @@ function InspectionDetailPanel({
   const [warehouseTransferDocumentSeriesId, setWarehouseTransferDocumentSeriesId] = useState<string>(() =>
     String(datDocumentSeries.find((series) => series.isDefault)?.id ?? ""),
   );
+
+  useEffect(() => {
+    setDrafts((current) => {
+      let changed = false;
+      const next = { ...current };
+      for (const line of actionable) {
+        const destination = acceptedDestinationForLine(
+          line,
+          detail.defaultAcceptedDestination,
+        );
+        if (!destination) continue;
+        const draft = next[line.id];
+        if (!draft) continue;
+        let updatedDraft = draft;
+        if (draft.decision === "Accepted"
+            && (!draft.targetLocationId || !draft.targetWarehouseId)) {
+          updatedDraft = {
+            ...updatedDraft,
+            targetLocationId: destination.locationId,
+            targetWarehouseId: destination.warehouseId,
+          };
+        }
+        if (draft.dispositions?.some((part) =>
+          part.decision === "Accepted" && (!part.targetLocationId || !part.targetWarehouseId))) {
+          updatedDraft = {
+            ...updatedDraft,
+            dispositions: draft.dispositions.map((part) =>
+              part.decision === "Accepted" && (!part.targetLocationId || !part.targetWarehouseId)
+                ? {
+                    ...part,
+                    targetLocationId: destination.locationId,
+                    targetWarehouseId: destination.warehouseId,
+                  }
+                : part),
+          };
+        }
+        if (updatedDraft !== draft) {
+          next[line.id] = updatedDraft;
+          changed = true;
+        }
+      }
+      return changed ? next : current;
+    });
+  }, [actionable, detail.defaultAcceptedDestination]);
 
   const final =
     ["Passed", "Failed", "Released", "Cancelled"].includes(
@@ -1048,12 +1104,15 @@ function InspectionDetailPanel({
   const patchDraft = (id: number, patch: Partial<LineDraft>) =>
     setDrafts((current) => {
       const line = actionable.find((item) => item.id === id);
+      const acceptedDestination = line
+        ? acceptedDestinationForLine(line, detail.defaultAcceptedDestination)
+        : detail.defaultAcceptedDestination;
       const fallback = emptyDraft(
         defaultDecision,
         line ? actionableQuantity(line) : 0,
         defaultRemainder,
-        defaultAcceptedLocationId,
-        defaultAcceptedWarehouseId,
+        acceptedDestination?.locationId ?? null,
+        acceptedDestination?.warehouseId ?? null,
       );
       return {
         ...current,
@@ -1121,6 +1180,10 @@ function InspectionDetailPanel({
       const next = { ...current };
       for (const line of selectedLines) {
         const remaining = actionableQuantity(line);
+        const lineAcceptedDestination = acceptedDestinationForLine(
+          line,
+          detail.defaultAcceptedDestination,
+        );
         const qty =
           bulkDecision === "Returned"
             ? remaining
@@ -1140,13 +1203,13 @@ function InspectionDetailPanel({
           reasonNote: bulkReasonNote.trim(),
           targetLocationId: defaultTargetForDecision(
             bulkDecision,
-            defaultAcceptedLocationId,
+            lineAcceptedDestination?.locationId ?? null,
             configuredDefaultQuarantineLocationId,
             defaultRejectedLocationId,
           ),
           targetWarehouseId: defaultWarehouseForDecision(
             bulkDecision,
-            defaultAcceptedWarehouseId,
+            lineAcceptedDestination?.warehouseId ?? null,
             configuredDefaultQuarantineWarehouseId,
             defaultRejectedWarehouseId,
           ),
@@ -1189,10 +1252,14 @@ function InspectionDetailPanel({
     for (const { line, draft } of pending) {
       if (draft.dispositions?.length) {
         try {
+          const lineAcceptedDestination = acceptedDestinationForLine(
+            line,
+            detail.defaultAcceptedDestination,
+          );
           buildDispositionRequests(
             line,
             draft,
-            defaultAcceptedLocationId,
+            lineAcceptedDestination?.locationId ?? null,
             configuredDefaultQuarantineLocationId,
             defaultRejectedLocationId,
             t,
@@ -1229,16 +1296,20 @@ function InspectionDetailPanel({
 
     let dispositionRequests: QualityInspectionDispositionRequest[] = [];
     try {
-      dispositionRequests = distributionRows.flatMap(({ line, draft }) =>
-        buildDispositionRequests(
+      dispositionRequests = distributionRows.flatMap(({ line, draft }) => {
+        const lineAcceptedDestination = acceptedDestinationForLine(
+          line,
+          detail.defaultAcceptedDestination,
+        );
+        return buildDispositionRequests(
           line,
           draft,
-          defaultAcceptedLocationId,
+          lineAcceptedDestination?.locationId ?? null,
           configuredDefaultQuarantineLocationId,
           defaultRejectedLocationId,
           t,
-        ),
-      );
+        );
+      });
     } catch (error) {
       toast.error(message(error, t("errors.quantityDistributionInvalid")));
       return false;
@@ -1649,6 +1720,10 @@ function InspectionDetailPanel({
           <tbody>
             {displayGroups.map((group) => {
               const line = group.primary;
+              const lineAcceptedDestination = acceptedDestinationForLine(
+                line,
+                detail.defaultAcceptedDestination,
+              );
               const groupIds = group.lines.map((item) => item.id);
               const active = isActionableLine(line);
               const draft = drafts[line.id];
@@ -1817,9 +1892,9 @@ function InspectionDetailPanel({
                         options={options}
                         branchCode={detail.header.branchCode}
                         quarantineDestinations={quarantineDestinations}
-                        defaultAcceptedDestination={detail.defaultAcceptedDestination ?? null}
+                        defaultAcceptedDestination={lineAcceptedDestination}
                         defaultRejectedDestination={detail.defaultRejectedDestination ?? null}
-                        defaultAcceptedLocationId={defaultAcceptedLocationId}
+                        defaultAcceptedLocationId={lineAcceptedDestination?.locationId ?? null}
                         defaultRejectedLocationId={defaultRejectedLocationId}
                         fallbackQuarantineLocationId={configuredDefaultQuarantineLocationId}
                         line={
@@ -1845,8 +1920,8 @@ function InspectionDetailPanel({
                                     defaultDecision,
                                     remainingQty,
                                     defaultRemainder,
-                                    defaultAcceptedLocationId,
-                                    defaultAcceptedWarehouseId,
+                                    lineAcceptedDestination?.locationId ?? null,
+                                    lineAcceptedDestination?.warehouseId ?? null,
                                   )),
                                 quantity: String(remainingQty),
                               }
@@ -1855,8 +1930,8 @@ function InspectionDetailPanel({
                                 defaultDecision,
                                 remainingQty,
                                 defaultRemainder,
-                                defaultAcceptedLocationId,
-                                defaultAcceptedWarehouseId,
+                                lineAcceptedDestination?.locationId ?? null,
+                                lineAcceptedDestination?.warehouseId ?? null,
                               )
                         }
                         onChange={(patch) => {
