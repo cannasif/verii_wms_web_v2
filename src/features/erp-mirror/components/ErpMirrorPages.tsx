@@ -77,6 +77,17 @@ function buildCustomerColumns(t: TFunction): GridColumn<CustomerMirror>[] {
     { key: 'businessUnitCode', label: col(t, 'businessUnitCode'), render: row => row.businessUnitCode },
     { key: 'customerCode', label: col(t, 'customerCode'), render: row => row.customerCode },
     { key: 'customerName', label: col(t, 'customerName'), render: row => row.customerName },
+    { key: 'customerType', label: col(t, 'customerType'), render: row => row.customerType || '—' },
+    { key: 'phone1', label: col(t, 'phone1'), render: row => row.phone1 || '—' },
+    { key: 'phone2', label: col(t, 'phone2'), render: row => row.phone2 || '—' },
+    { key: 'phone3', label: col(t, 'phone3'), render: row => row.phone3 || '—' },
+    { key: 'email', label: col(t, 'email'), render: row => row.email || '—' },
+    { key: 'website', label: col(t, 'website'), render: row => row.website || '—' },
+    { key: 'city', label: col(t, 'city'), render: row => row.city || '—' },
+    { key: 'district', label: col(t, 'district'), render: row => row.district || '—' },
+    { key: 'countryCode', label: col(t, 'countryCode'), render: row => row.countryCode || '—' },
+    { key: 'address', label: col(t, 'address'), render: row => row.address || '—' },
+    { key: 'taxOffice', label: col(t, 'taxOffice'), render: row => row.taxOffice || '—' },
     { key: 'lastSyncDate', label: col(t, 'lastSyncDate'), render: row => date(row.lastSyncDate) },
   ];
 }
