@@ -25,6 +25,7 @@ import {
   type KkdPreparationTaskLineLocationRow,
   type KkdPreparationTaskLineRow,
   type KkdPreparationTaskRow,
+  type KkdQuotaDecision,
   type KkdStockLookup,
 } from './kkd-api';
 import { KkdDistributionReceiptDialog } from './KkdDistributionReceiptDialog';
@@ -79,6 +80,8 @@ type PickLine = {
   sourceLocationId: number | null;
   lotNo: string | null;
   serialNo: string | null;
+  /** Kota aşımı kararı — Pending/Rejected olduğu sürece bu görev başlatılamaz (bkz. StartAsync). */
+  quotaDecision: KkdQuotaDecision;
 };
 
 type PendingPick = {
@@ -130,6 +133,7 @@ function mapTaskToPickLines(task: KkdPreparationTaskRow): PickLine[] {
         sourceLocationId: null,
         lotNo: null,
         serialNo: null,
+        quotaDecision: line.quotaDecision,
       };
     });
 }
@@ -211,12 +215,11 @@ function PickLineIdentity({ line, onOpenStockList }: { line: PickLine; onOpenSto
   );
 }
 
-/** Raf sütunu: rezervasyon/toplama izini raf kodu + miktar çipleri olarak gösterir. */
-function LocationChips({ line, onOpenRoute }: { line: PickLine; onOpenRoute: (line: PickLine) => void }): ReactElement {
+/** Raf sütunu: rezervasyon/toplama izini raf kodu + miktar çipleri olarak gösterir. Rota güncellemesi
+ * artık satırı seçip üstteki (Production'daki gibi) "Rotayı güncelle" araç çubuğu butonundan yapılır. */
+function LocationChips({ line }: { line: PickLine }): ReactElement {
   if (!line.stockId) return <span className="text-xs text-[var(--wms-app-text-muted)]">—</span>;
-  if (line.locations.length === 0) {
-    return <span className="text-xs text-[var(--wms-app-text-muted)]">Henüz raf atanmadı</span>;
-  }
+  if (line.locations.length === 0) return <span className="text-xs text-amber-700 dark:text-amber-400">Henüz raf atanmadı</span>;
   return (
     <div className="flex flex-wrap items-center gap-1">
       {line.locations.map((loc) => (
@@ -230,15 +233,6 @@ function LocationChips({ line, onOpenRoute }: { line: PickLine; onOpenRoute: (li
           {loc.serialNo ? <span className="text-[var(--wms-app-text-muted)]">#{loc.serialNo}</span> : null}
         </span>
       ))}
-      <button
-        type="button"
-        className="wms-ops-grid-icon-btn !size-6"
-        title="Rotayı güncelle"
-        aria-label="Rotayı güncelle"
-        onClick={(event) => { event.stopPropagation(); onOpenRoute(line); }}
-      >
-        <RotateCcw className="size-3" />
-      </button>
     </div>
   );
 }
@@ -310,6 +304,12 @@ export function KkdPreparationPickingPage(): ReactElement {
   const [routeDialog, setRouteDialog] = useState<RouteDialogState | null>(null);
   const [stockListLine, setStockListLine] = useState<PickLine | null>(null);
   const [stockListSearch, setStockListSearch] = useState('');
+  /** Üretimdeki toplama ekranındaki gibi: satır seçilir, ardından üstteki "Rotayı güncelle" butonu o satıra uygulanır. */
+  const [selectedLineId, setSelectedLineId] = useState<number | null>(null);
+  /** Üretimdeki "Stok listesi": barkod okunamadığında bu görevin kendi (zaten çözülmüş) stoklarından
+   * birini seçip barkod alanına yazdırır — normal okutma akışı (Onayla) aynen çalışır. */
+  const [quickStockPickerOpen, setQuickStockPickerOpen] = useState(false);
+  const [quickStockPickerSearch, setQuickStockPickerSearch] = useState('');
   const [scansOpen, setScansOpen] = useState(false);
   const [deliveryOpen, setDeliveryOpen] = useState(false);
   const [deliveryQuantities, setDeliveryQuantities] = useState<Record<number, string>>({});
@@ -466,6 +466,8 @@ export function KkdPreparationPickingPage(): ReactElement {
   }, []);
 
   const remainingFor = (line: PickLine): number => Math.max(0, line.targetQuantity - line.quantity);
+  /** Kota kararı bekleyen/reddedilen kalemler — bunlar varken StartAsync toplamayı başlatmaz (bkz. backend). */
+  const quotaBlockedLines = lines.filter((line) => line.quotaDecision === 'Pending' || line.quotaDecision === 'Rejected');
 
   const commitPick = async (pending: PendingPick, confirmAboveThreshold = false): Promise<void> => {
     const line = lines.find((item) => item.requestLineId === pending.resolved.requestLineId);
@@ -657,6 +659,23 @@ export function KkdPreparationPickingPage(): ReactElement {
 
   const pendingLines = lines.filter((line) => !line.stockId || line.quantity < line.targetQuantity);
   const deliverableLines = lines.filter((line) => line.stockId && line.deliverable > 0);
+  const selectedLine = lines.find((line) => line.requestLineId === selectedLineId) ?? null;
+  const toggleLineSelection = (line: PickLine): void => {
+    setSelectedLineId((current) => (current === line.requestLineId ? null : line.requestLineId));
+  };
+  const resolvedLinesForQuickPick = lines.filter((line): line is PickLine & { stockId: number; stockCode: string } =>
+    Boolean(line.stockId && line.stockCode));
+  const quickPickSearch = quickStockPickerSearch.trim().toLocaleLowerCase('tr-TR');
+  const quickPickRows = quickPickSearch
+    ? resolvedLinesForQuickPick.filter((line) => line.stockCode.toLocaleLowerCase('tr-TR').includes(quickPickSearch)
+      || (line.stockName ?? '').toLocaleLowerCase('tr-TR').includes(quickPickSearch))
+    : resolvedLinesForQuickPick;
+  const selectFromQuickStockPicker = (line: PickLine & { stockCode: string }): void => {
+    setBarcode(line.stockCode);
+    setQuickStockPickerOpen(false);
+    setQuickStockPickerSearch('');
+    requestAnimationFrame(() => barcodeRef.current?.focus());
+  };
 
   const openDeliveryDialog = (): void => {
     setDeliveryQuantities(
@@ -864,10 +883,17 @@ export function KkdPreparationPickingPage(): ReactElement {
         </KkdPanel>
       ) : !started ? (
         <div className="space-y-4">
-          <KkdCallout tone="info" icon={<PlayCircle className="size-5" />} title="Henüz başlatılmadı">
-            Görev görüntülenebilir ama raf ataması/rezervasyon yok. &quot;Bu işi yapıyorum&quot; dediğiniz an
-            stoğu bilinen kalemler için raflar rezerve edilir ve toplamaya başlayabilirsiniz.
-          </KkdCallout>
+          {quotaBlockedLines.length > 0 ? (
+            <KkdCallout tone="danger" icon={<TriangleAlert className="size-5" />} title="Kota kararı bekleniyor">
+              Bu görevde KKD hak matrisini aşan {quotaBlockedLines.length} kalem var: {quotaBlockedLines.map((line) => line.groupCode).join(', ')}.
+              Müdürünüz bunu &quot;Kota Onayı&quot; ekranından karara bağlayana kadar toplamaya başlanamaz.
+            </KkdCallout>
+          ) : (
+            <KkdCallout tone="info" icon={<PlayCircle className="size-5" />} title="Henüz başlatılmadı">
+              Görev görüntülenebilir ama raf ataması/rezervasyon yok. &quot;Bu işi yapıyorum&quot; dediğiniz an
+              stoğu bilinen kalemler için raflar rezerve edilir ve toplamaya başlayabilirsiniz.
+            </KkdCallout>
+          )}
           <KkdPanel title="Görev kalemleri" icon={<PackageCheck className="size-4" />}>
             <KkdTableShell>
               <thead>
@@ -875,6 +901,7 @@ export function KkdPreparationPickingPage(): ReactElement {
                   <th className={KKD_HEAD_CELL}>Grup / Stok</th>
                   <th className={KKD_HEAD_CELL}>İstenen</th>
                   <th className={KKD_HEAD_CELL}>Kalan</th>
+                  <th className={KKD_HEAD_CELL}>Kota</th>
                 </tr>
               </thead>
               <tbody>
@@ -892,12 +919,27 @@ export function KkdPreparationPickingPage(): ReactElement {
                     </td>
                     <td className={KKD_CELL}>{formatProjectNumber(line.targetQuantity)} {line.unitCode}</td>
                     <td className={KKD_CELL}>{formatProjectNumber(remainingFor(line))} {line.unitCode}</td>
+                    <td className={KKD_CELL}>
+                      {line.quotaDecision === 'Pending' ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-semibold text-amber-600">
+                          <TriangleAlert className="size-3 shrink-0" />Onay bekliyor
+                        </span>
+                      ) : line.quotaDecision === 'Rejected' ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/10 px-2 py-0.5 text-xs font-semibold text-rose-600">
+                          <TriangleAlert className="size-3 shrink-0" />Reddedildi
+                        </span>
+                      ) : line.quotaDecision === 'Approved' ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-600">
+                          Onaylandı
+                        </span>
+                      ) : <span className="text-[var(--wms-app-text-muted)]">—</span>}
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </KkdTableShell>
             <div className="mt-5 flex justify-center">
-              <OpsActionButton onClick={() => void startTask()} loading={startBusy} className="!px-6">
+              <OpsActionButton onClick={() => void startTask()} loading={startBusy} disabled={quotaBlockedLines.length > 0} className="!px-6">
                 <PlayCircle className="size-4 shrink-0" />Bu işi yapıyorum
               </OpsActionButton>
             </div>
@@ -913,6 +955,29 @@ export function KkdPreparationPickingPage(): ReactElement {
               description="Enter, Tab veya el terminali bip’i Onayla gibidir."
             >
               <div className="flex flex-col gap-2">
+                <div className="flex flex-wrap gap-2">
+                  <OpsActionButton
+                    variant="secondary"
+                    className="flex-1"
+                    disabled={!working || !selectedLine?.stockId}
+                    onClick={() => selectedLine && void openRouteDialog(selectedLine)}
+                  >
+                    <RotateCcw className="size-3.5 shrink-0" />Rotayı güncelle
+                  </OpsActionButton>
+                  <OpsActionButton
+                    variant="secondary"
+                    className="flex-1"
+                    disabled={!working}
+                    onClick={() => setQuickStockPickerOpen(true)}
+                  >
+                    <List className="size-3.5 shrink-0" />Stok listesi
+                  </OpsActionButton>
+                </div>
+                {!selectedLine ? (
+                  <p className="text-[0.7rem] leading-4 text-[var(--wms-app-text-muted)]">
+                    Rotayı güncellemek için önce aşağıdaki listeden bir satır seçin.
+                  </p>
+                ) : null}
                 <OpsQrCaptureField
                   className="min-w-0 w-full"
                   inputRef={barcodeRef}
@@ -973,24 +1038,34 @@ export function KkdPreparationPickingPage(): ReactElement {
               <div className="space-y-2 md:hidden">
                 {lines.map((line) => {
                   const state = linePickState(line);
+                  const rowSelected = selectedLineId === line.requestLineId;
                   return (
                     <article
                       key={line.requestLineId}
+                      role="button"
+                      tabIndex={0}
+                      aria-pressed={rowSelected}
+                      onClick={() => toggleLineSelection(line)}
+                      onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggleLineSelection(line); } }}
                       className={cn(
-                        'wms-kkd-pick-line-card',
+                        'wms-kkd-pick-line-card cursor-pointer',
                         flashLineId === line.requestLineId && 'wms-kkd-pick-flash',
                         state === 'partial' && 'border-[color-mix(in_oklab,#f59e0b_35%,var(--wms-ops-card-border))]',
                         state === 'done' && 'border-[color-mix(in_oklab,#10b981_35%,var(--wms-ops-card-border))]',
+                        rowSelected && 'ring-2 ring-[var(--wms-ops-accent)]',
                       )}
                     >
                       <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0"><PickLineIdentity line={line} onOpenStockList={setStockListLine} /></div>
+                        <div className="flex min-w-0 items-start gap-2">
+                          <input type="radio" checked={rowSelected} readOnly aria-label="Satırı seç" className="mt-1 pointer-events-none" />
+                          <div className="min-w-0"><PickLineIdentity line={line} onOpenStockList={setStockListLine} /></div>
+                        </div>
                         <PickStatusChip state={state} />
                       </div>
                       <p className="mt-2 text-[0.7rem] text-[var(--wms-app-text-muted)]">
                         Seri / Lot: {line.serialNo || '—'} / {line.lotNo || '—'}
                       </p>
-                      <div className="mt-2"><LocationChips line={line} onOpenRoute={(target) => void openRouteDialog(target)} /></div>
+                      <div className="mt-2"><LocationChips line={line} /></div>
                       <PickProgress line={line} />
                     </article>
                   );
@@ -1002,6 +1077,7 @@ export function KkdPreparationPickingPage(): ReactElement {
                 <KkdTableShell>
                   <thead>
                     <tr>
+                      <th className={cn(KKD_HEAD_CELL, 'w-8')} />
                       <th className={KKD_HEAD_CELL}>Grup / Stok</th>
                       <th className={KKD_HEAD_CELL}>Raf</th>
                       <th className={KKD_HEAD_CELL}>İlerleme</th>
@@ -1011,18 +1087,29 @@ export function KkdPreparationPickingPage(): ReactElement {
                   <tbody>
                     {lines.map((line) => {
                       const state = linePickState(line);
+                      const rowSelected = selectedLineId === line.requestLineId;
                       return (
                         <tr
                           key={line.requestLineId}
+                          role="button"
+                          tabIndex={0}
+                          aria-pressed={rowSelected}
+                          onClick={() => toggleLineSelection(line)}
+                          onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggleLineSelection(line); } }}
                           className={cn(
+                            'cursor-pointer',
                             flashLineId === line.requestLineId && 'wms-kkd-pick-flash',
                             state === 'partial' && 'bg-[color-mix(in_oklab,#f59e0b_6%,transparent)]',
                             state === 'done' && 'bg-[color-mix(in_oklab,#10b981_6%,transparent)]',
+                            rowSelected && 'outline outline-2 -outline-offset-2 outline-[var(--wms-ops-accent)]',
                           )}
                         >
+                          <td className={KKD_CELL}>
+                            <input type="radio" checked={rowSelected} readOnly aria-label="Satırı seç" className="pointer-events-none" />
+                          </td>
                           <td className={KKD_CELL}><PickLineIdentity line={line} onOpenStockList={setStockListLine} /></td>
                           <td className={cn(KKD_CELL, 'min-w-[10rem]')}>
-                            <LocationChips line={line} onOpenRoute={(target) => void openRouteDialog(target)} />
+                            <LocationChips line={line} />
                           </td>
                           <td className={cn(KKD_CELL, 'min-w-[9rem]')}>
                             <PickProgress line={line} />
@@ -1213,7 +1300,7 @@ export function KkdPreparationPickingPage(): ReactElement {
       {stockListLine ? (
         <ResponsiveDialog
           onClose={() => { setStockListLine(null); setStockListSearch(''); }}
-          title="Stok listesi"
+          title="Grubu stoğa bağla"
           description={`${stockListLine.groupCode} grubu içinde ara ve bir stok/beden seçin.`}
           className="!max-w-lg"
         >
@@ -1243,6 +1330,46 @@ export function KkdPreparationPickingPage(): ReactElement {
                       <span className="block text-xs text-[var(--wms-app-text-muted)]">{stock.name}</span>
                     </span>
                     <span className="text-[0.65rem] text-[var(--wms-app-text-muted)]">{stock.unitCode}</span>
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        </ResponsiveDialog>
+      ) : null}
+
+      {quickStockPickerOpen ? (
+        <ResponsiveDialog
+          onClose={() => { setQuickStockPickerOpen(false); setQuickStockPickerSearch(''); }}
+          title="Stok listesi"
+          description="Bu görevdeki stoklardan birini seçin — kod barkod alanına yazılır, okutmuş gibi Onayla'ya basın."
+          className="!max-w-lg"
+        >
+          <div className="space-y-3">
+            <AppInput
+              autoFocus
+              placeholder="Stok kodu veya adı ile ara…"
+              value={quickStockPickerSearch}
+              onChange={(event) => setQuickStockPickerSearch(event.target.value)}
+            />
+            <div className="max-h-80 space-y-1 overflow-y-auto">
+              {quickPickRows.length === 0 ? (
+                <p className="p-3 text-sm text-[var(--wms-app-text-muted)]">
+                  {quickStockPickerSearch ? 'Sonuç bulunamadı.' : 'Bu görevde henüz çözülmüş stok yok.'}
+                </p>
+              ) : (
+                quickPickRows.map((line) => (
+                  <button
+                    key={line.requestLineId}
+                    type="button"
+                    className="flex w-full items-center justify-between gap-2 border border-transparent p-2.5 text-left hover:border-[var(--wms-ops-card-border)] hover:bg-[color-mix(in_oklab,var(--wms-ops-field-bg)_85%,transparent)]"
+                    onClick={() => selectFromQuickStockPicker(line)}
+                  >
+                    <span className="min-w-0">
+                      <strong className="block font-mono text-sm">{line.stockCode}</strong>
+                      <span className="block text-xs text-[var(--wms-app-text-muted)]">{line.stockName}</span>
+                    </span>
+                    <span className="text-[0.65rem] text-[var(--wms-app-text-muted)]">{line.unitCode}</span>
                   </button>
                 ))
               )}
