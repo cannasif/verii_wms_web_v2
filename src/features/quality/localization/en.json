@@ -105,6 +105,39 @@
   },
   "bulkApplySuccess": "\"{{label}}\" applied to {{count}} lines.",
   "decisionSaved": "Quality decision and stock movement recorded.",
+  "decisionFlow": {
+    "submit": {
+      "eyebrow": "Quality approval",
+      "title": "Approving quality",
+      "subtitle": "{{name}} · applying decision for {{count}} lines",
+      "documentLabel": "Waybill no",
+      "errorEyebrow": "Operation failed",
+      "errorTitle": "Approval could not be completed",
+      "errorReturning": "Returning to quality detail…",
+      "errorFallback": "An unexpected error occurred.",
+      "log0": "Validating quality decisions",
+      "log1": "Writing stock movements",
+      "log2": "Updating quality status",
+      "log3": "Checking waybill / ERP",
+      "log4": "Completing approval"
+    },
+    "success": {
+      "eyebrow": "After quality approval",
+      "title": "Waybill created",
+      "subtitle": "Waybill creation completed after quality approval.",
+      "subtitleWithSource": "Waybill creation completed after quality approval for {{name}}.",
+      "documentLabel": "Waybill no",
+      "copyDocument": "Copy waybill number",
+      "documentCopied": "Waybill number copied",
+      "documentCopyFailed": "Could not copy waybill number",
+      "line": "Lines",
+      "status": "Status",
+      "erp": "ERP",
+      "statusCompleted": "Completed",
+      "backToList": "Quality list",
+      "receiptList": "Goods receipt list"
+    }
+  },
   "detail": {
     "eyebrow": "Quality line detail",
     "close": "Close",
@@ -132,7 +165,8 @@
       "reasonCodePlaceholder": "Reject / quarantine / return",
       "reasonLabel": "Reason",
       "reasonPlaceholder": "Short reason",
-      "applyButton": "Apply"
+      "applyButton": "Apply",
+      "toggleAria": "Show or hide bulk decision tools"
     },
     "table": {
       "selectAllAria": "Select all lines subject to control",

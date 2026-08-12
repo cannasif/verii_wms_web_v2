@@ -2,7 +2,7 @@
   "list": {
     "titleDefault": "Kalite İnceleme Listesi",
     "titleQuarantine": "Karantina Karar Kuyruğu",
-    "descriptionDefault": "Özet satırda irsaliye ve işlemi yapan görünür; satırı açınca stok / lot / seri ve karar detayı accordion içinde gelir.",
+    "descriptionDefault": "Özet satırda irsaliye ve işlemi yapan görünür; satırı açınca stok / lot / seri ve karar detayı akordiyon içinde gelir.",
     "descriptionQuarantine": "Karantinadaki ürünleri yetkili biçimde serbest bırakın, reddedin veya iade edin.",
     "emptyDefault": "Henüz kuyrukta kalite kaydı yok. Siparişli emir oluşturmak yetmez — Emir Yönetimi veya Bana Atanan Emirler'den fiziksel kabulü bitirince bu listeye düşer.",
     "emptyQuarantine": "Karantinada kayıt yok.",
@@ -105,6 +105,39 @@
   },
   "bulkApplySuccess": "{{count}} satıra \"{{label}}\" uygulandı.",
   "decisionSaved": "Kalite kararı ve stok hareketi kaydedildi.",
+  "decisionFlow": {
+    "submit": {
+      "eyebrow": "Kalite onay",
+      "title": "Kalite onaylanıyor",
+      "subtitle": "{{name}} · {{count}} kalem kararı uygulanıyor",
+      "documentLabel": "İrsaliye no",
+      "errorEyebrow": "İşlem başarısız",
+      "errorTitle": "Onay tamamlanamadı",
+      "errorReturning": "Kalite detayına dönülüyor…",
+      "errorFallback": "Beklenmeyen bir hata oluştu.",
+      "log0": "Kalite kararları doğrulanıyor",
+      "log1": "Stok hareketleri yazılıyor",
+      "log2": "Kalite durumu güncelleniyor",
+      "log3": "İrsaliye / ERP kontrolü yapılıyor",
+      "log4": "Onay tamamlanıyor"
+    },
+    "success": {
+      "eyebrow": "Kalite onay sonrası",
+      "title": "İrsaliye oluşturuldu",
+      "subtitle": "Kalite onayı sonrası irsaliye oluşturma işlemi tamamlandı.",
+      "subtitleWithSource": "{{name}} için kalite onayı sonrası irsaliye oluşturma işlemi tamamlandı.",
+      "documentLabel": "İrsaliye no",
+      "copyDocument": "İrsaliye numarasını kopyala",
+      "documentCopied": "İrsaliye numarası kopyalandı",
+      "documentCopyFailed": "İrsaliye numarası kopyalanamadı",
+      "line": "Satır",
+      "status": "Durum",
+      "erp": "ERP",
+      "statusCompleted": "Tamamlandı",
+      "backToList": "Kalite listesi",
+      "receiptList": "Mal kabul listesi"
+    }
+  },
   "detail": {
     "eyebrow": "Kalite satır detayı",
     "close": "Kapat",
@@ -132,7 +165,8 @@
       "reasonCodePlaceholder": "Ret / karantina / iade",
       "reasonLabel": "Neden",
       "reasonPlaceholder": "Kısa neden",
-      "applyButton": "Uygula"
+      "applyButton": "Uygula",
+      "toggleAria": "Toplu karar araçlarını aç/kapat"
     },
     "table": {
       "selectAllAria": "Tüm kontrole tabi satırları seç",

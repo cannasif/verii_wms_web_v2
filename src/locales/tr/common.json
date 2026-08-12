@@ -1686,7 +1686,7 @@
       },
       "queue": {
         "title": "Kalite İnceleme Listesi",
-        "description": "Özet satırda irsaliye ve işlemi yapan görünür; satırı açınca stok / lot / seri ve karar detayı accordion içinde gelir.",
+        "description": "Özet satırda irsaliye ve işlemi yapan görünür; satırı açınca stok / lot / seri ve karar detayı akordiyon içinde gelir.",
         "quarantineTitle": "Karantina Karar Kuyruğu",
         "quarantineDescription": "Karantinadaki ürünleri yetkili biçimde serbest bırakın, reddedin veya iade edin.",
         "empty": "Henüz kuyrukta kalite kaydı yok. Siparişli emir oluşturmak yetmez — Emir Yönetimi veya Bana Atanan Emirler'den fiziksel kabulü bitirince bu listeye düşer.",
