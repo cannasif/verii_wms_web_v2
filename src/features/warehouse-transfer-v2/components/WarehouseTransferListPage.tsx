@@ -110,7 +110,7 @@ export function WarehouseTransferListPage({
         <button type="button" title="Detayı göster" onClick={() => void load(row.id, 'detail')} className="rounded-lg p-2 text-violet-500 hover:bg-violet-500/10">{loadingId === row.id ? <Loader2 className="size-4 animate-spin" /> : <Eye className="size-4" />}</button>
       </div>,
     },
-  ], [baseUrl, beginCancel, cancelPrecheckId, load, loadingId, t]);
+  ], [baseUrl, beginCancel, cancelPrecheckId, gridLanguage, load, loadingId, t]);
 
   const refreshed = () => setRevision((value) => value + 1);
   return (
