@@ -1,0 +1,34 @@
+{
+  "page": {
+    "title": "Sayım Yönetimi",
+    "description": "Fiziksel ve döngüsel sayımları gerçek raf bakiyesi snapshot'ı, görevler ve kontrollü fark onayıyla yönetin.",
+    "empty": "Henüz sayım belgesi oluşturulmadı.",
+    "newAction": "Yeni Sayım"
+  },
+  "workflow": {
+    "snapshotTitle": "Defter bakiyesi snapshot'ı",
+    "snapshotText": "Sayım serbest bırakılırken raf, stok, yapılandırma kodu, lot, seri ve statü bazındaki beklenen miktar dondurulur.",
+    "blindTitle": "Kör ve bağımsız sayım",
+    "blindText": "Depo görevlisi beklenen miktarı görmeden sayar; gerekirse ikinci kullanıcıdan bağımsız yeniden sayım istenir.",
+    "varianceTitle": "Onaylı fark kapatma",
+    "varianceText": "Sayım farkı doğrudan bakiyeyi değiştirmez. İnceleme ve onaydan sonra değiştirilemez stok hareketi olarak kaydedilir."
+  },
+  "types": { "FullPhysical": "Tam fiziksel sayım", "Cycle": "Döngüsel sayım", "Spot": "Noktasal sayım", "ZeroCheck": "Sıfır kontrolü", "Partial": "Kısmi sayım" },
+  "modes": { "Blind": "Kör sayım", "Open": "Açık sayım", "DoubleBlind": "Çift kör sayım" },
+  "movementPolicies": { "Snapshot": "Snapshot", "SnapshotWithMovementReconciliation": "Snapshot + hareket uzlaştırma", "LocationFreeze": "Lokasyonu kilitle" },
+  "statuses": { "Draft": "Taslak", "Planned": "Planlandı", "Released": "Serbest bırakıldı", "InProgress": "Sayılıyor", "AwaitingReview": "İnceleme bekliyor", "RecountRequired": "Yeniden sayım gerekli", "AwaitingApproval": "Onay bekliyor", "Posting": "Farklar işleniyor", "Completed": "Tamamlandı", "Cancelled": "İptal edildi" },
+  "columns": { "documentNo": "Sayım No", "warehouseCode": "Depo Kodu", "warehouseName": "Depo Adı", "countType": "Sayım Türü", "countMode": "Sayım Biçimi", "status": "Durum", "priority": "Öncelik", "tasks": "Tamamlanan/Görev", "lines": "Sayılan/Kalem", "variances": "Farklı Kalem", "plannedStart": "Planlanan Başlangıç", "snapshotAt": "Snapshot Zamanı", "description": "Açıklama", "actions": "İşlemler" },
+  "actions": { "preview": "Kapsamı önizle", "delete": "Sil", "removeLocation": "Rafı kapsamdan çıkar", "cancel": "Vazgeç", "saveDraft": "Taslağı Kaydet", "close": "Kapat", "release": "Görevleri Oluştur ve Serbest Bırak" },
+  "form": {
+    "title": "Yeni Sayım Planı",
+    "description": "Önce kapsamı ve kontrol kurallarını belirleyin. Görevler, raf bakiyesi önizlemesi onaylandıktan sonra oluşturulur.",
+    "sections": { "identity": "Plan ve belge bilgileri", "scope": "Sayılacak kapsam", "controls": "Sayım ve fark kontrol kuralları" },
+    "warehouse": "Depo", "warehousePlaceholder": "Sayılacak depoyu seçin", "countType": "Sayım türü", "priority": "Öncelik (1 en yüksek)", "plannedStart": "Planlanan başlangıç", "plannedEnd": "Planlanan bitiş",
+    "wholeWarehouseHint": "Raf seçmezseniz sayılabilir durumdaki tüm depo rafları kapsama alınır.", "selectedLocationHint": "{{count}} raf/bölge kapsamda. Alt raflar seçeneğine göre bağlı hücreler de dahil edilir.", "locationPlaceholder": "Raf, hücre veya bölge ekleyin", "includeDescendants": "Seçilen bölge/rafın alt lokasyonlarını da say",
+    "countMode": "Sayım biçimi", "movementPolicy": "Sayım sırasında stok hareketi kuralı", "maxCountAttempts": "En fazla sayım denemesi", "quantityTolerance": "Miktar toleransı", "percentageTolerance": "Yüzde toleransı", "requireIndependentRecount": "Farkta bağımsız ikinci sayım iste", "allowUnexpectedStock": "Beklenmeyen stok okutulmasına izin ver", "autoApproveWithinTolerance": "Tolerans içindeki farkları otomatik onayla", "includeEmptyLocations": "Boş raflar için sıfır doğrulama görevi oluştur", "notes": "Operasyon notu"
+  },
+  "validation": { "warehouse": "Sayılacak depo zorunludur.", "partialScope": "Kısmi sayımda en az bir raf veya bölge seçmelisiniz.", "priority": "Öncelik 1 ile 5 arasında olmalıdır.", "attempts": "Sayım denemesi 1 ile 10 arasında olmalıdır.", "tolerance": "Toleranslar negatif olamaz; yüzde toleransı 100'ü geçemez.", "dateRange": "Planlanan bitiş başlangıçtan önce olamaz." },
+  "messages": { "draftCreated": "Sayım taslağı oluşturuldu. Kapsamı önizleyip görevleri serbest bırakabilirsiniz.", "saveFailed": "Sayım taslağı kaydedilemedi.", "previewFailed": "Sayım kapsamı önizlenemedi.", "releaseFailed": "Sayım görevleri oluşturulamadı.", "released": "{{taskCount}} raf görevi ve {{lineCount}} sayım kalemi oluşturuldu.", "deleted": "Sayım taslağı silindi.", "deleteFailed": "Sayım taslağı silinemedi.", "locationLoadFailed": "Raf bilgisi yüklenemedi." },
+  "preview": { "title": "{{documentNo}} kapsam önizlemesi", "description": "Bu onay, mevcut raf bakiyesini snapshot olarak dondurur ve lokasyon görevlerini üretir.", "locations": "Sayılacak raf", "emptyLocations": "Boş raf", "lines": "Bakiye kalemi", "stocks": "Farklı stok", "serials": "Farklı seri", "totalQuantity": "Toplam defter miktarı", "ready": "Kapsam geçerli. Serbest bırakıldığında aynı rafta çakışan ikinci aktif sayım açılması engellenir." },
+  "delete": { "title": "Sayım taslağını sil", "description": "{{documentNo}} numaralı taslağı silmek istediğinize emin misiniz? Serbest bırakılmış sayımlar silinemez." }
+}

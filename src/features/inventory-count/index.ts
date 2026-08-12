@@ -1,0 +1,1 @@
+export { InventoryCountPage } from './InventoryCountPage';
