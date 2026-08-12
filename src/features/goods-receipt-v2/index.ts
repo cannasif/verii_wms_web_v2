@@ -1,4 +1,4 @@
-export { GoodsReceiptCreatePage } from './components/GoodsReceiptCreatePage';
+export { GoodsReceiptCreatePage, GoodsReceiptSuccessPreviewPage } from './components/GoodsReceiptCreatePage';
 export { GoodsReceiptDirectPage, GoodsReceiptOrderlessPage } from './components/GoodsReceiptManualPage';
 export { GoodsReceiptListPage } from './components/GoodsReceiptListPage';
 export { GoodsReceiptHubPage } from './components/GoodsReceiptHubPage';

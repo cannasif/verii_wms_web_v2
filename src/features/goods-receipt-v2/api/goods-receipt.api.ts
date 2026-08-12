@@ -16,6 +16,17 @@ const unwrap = <T,>(value: Envelope<T>): T => { if (!value.success) throw new Er
 const pagedBody = (request: DropdownPageRequest, filters: unknown[] = []) =>
   buildDropdownPagedBody(request, { filters });
 
+/** Backend bazen warehouseId filtresini es geçebilir; UI yalnızca seçili deponun raflarını göstermeli. */
+function onlyWarehouseLocations<T extends { warehouseId?: number | null }>(
+  items: T[],
+  warehouseId: number,
+): T[] {
+  if (!(warehouseId > 0)) return [];
+  const hasWarehouseIds = items.some((item) => item.warehouseId != null && item.warehouseId > 0);
+  if (!hasWarehouseIds) return items;
+  return items.filter((item) => item.warehouseId === warehouseId);
+}
+
 function readDetailRoutes(detail: GoodsReceiptDetail & Record<string, unknown>): GoodsReceiptRoutingResult[] {
   return normalizeGoodsReceiptRoutes(
     detail.routes
@@ -78,9 +89,31 @@ export const goodsReceiptV2Api = {
   },
   stocks: async (request: DropdownPageRequest, branchCode: string): Promise<GridPage<StockOption>> => unwrap(await api.post<Envelope<GridPage<StockOption>>>('/api/erp-mirror/stocks/paged', pagedBody({ ...request, sortBy: request.sortBy ?? 'erpStockCode' }, [{ column: 'branchCode', operator: 'equals', value: branchCode }]), { signal: request.signal })),
   yapCodes: async (request: DropdownPageRequest, branchCode: string): Promise<GridPage<YapCodeOption>> => unwrap(await api.post<Envelope<GridPage<YapCodeOption>>>('/api/erp-mirror/yap-codes/paged', pagedBody({ ...request, sortBy: request.sortBy ?? 'configurationCode' }, [{ column: 'branchCode', operator: 'equals', value: branchCode }]), { signal: request.signal })),
-  locations: async (request: DropdownPageRequest, warehouseId: number): Promise<GridPage<LocationOption>> => unwrap(await api.post<Envelope<GridPage<LocationOption>>>('/api/locations/paged', pagedBody({ ...request, sortBy: request.sortBy ?? 'code', filterLogic: 'and' }, [
-    { column: 'warehouseId', operator: 'equals', value: String(warehouseId) }, { column: 'isActive', operator: 'equals', value: 'true' },
-  ]), { signal: request.signal })),
+  locations: async (request: DropdownPageRequest, warehouseId: number): Promise<GridPage<LocationOption>> => {
+    if (!(warehouseId > 0)) {
+      return {
+        items: [],
+        pageNumber: 1,
+        pageSize: request.pageSize ?? 20,
+        totalCount: 0,
+        totalPages: 0,
+        hasNextPage: false,
+      };
+    }
+    const page = unwrap(await api.post<Envelope<GridPage<LocationOption>>>('/api/locations/paged', pagedBody({ ...request, sortBy: request.sortBy ?? 'code', filterLogic: 'and' }, [
+      { column: 'warehouseId', operator: 'equals', value: String(warehouseId) },
+      { column: 'isActive', operator: 'equals', value: 'true' },
+    ]), { signal: request.signal }));
+    const items = onlyWarehouseLocations(page.items, warehouseId);
+    return {
+      ...page,
+      items,
+      totalCount: items.length,
+      totalPages: 1,
+      pageNumber: 1,
+      hasNextPage: false,
+    };
+  },
   /** Mal kabul için yalnızca Receiving/Staging lokasyonları. */
   receivingLocations: async (request: DropdownPageRequest, warehouseId: number): Promise<GridPage<LocationOption>> => {
     const page = await goodsReceiptV2Api.locations({
@@ -97,10 +130,13 @@ export const goodsReceiptV2Api = {
       hasNextPage: false,
     };
   },
-  putawaySuggestions: async (warehouseId: number, params: { stockId?: number; stockCode?: string; yapCodeId?: number; quantity: number; limit?: number }): Promise<PutawayLocationSuggestion[]> =>
-    unwrap(await api.get<Envelope<PutawayLocationSuggestion[]>>('/api/locations/putaway-suggestions', {
+  putawaySuggestions: async (warehouseId: number, params: { stockId?: number; stockCode?: string; yapCodeId?: number; quantity: number; limit?: number }): Promise<PutawayLocationSuggestion[]> => {
+    if (!(warehouseId > 0)) return [];
+    const items = unwrap(await api.get<Envelope<PutawayLocationSuggestion[]>>('/api/locations/putaway-suggestions', {
       params: { warehouseId, stockId: params.stockId, stockCode: params.stockCode, yapCodeId: params.yapCodeId, quantity: params.quantity, limit: params.limit ?? 5 },
-    })),
+    }));
+    return onlyWarehouseLocations(items, warehouseId);
+  },
   series: async (): Promise<SeriesOption[]> => unwrap(await api.get<Envelope<SeriesOption[]>>('/api/document-series/lookup?documentType=GoodsReceipt')),
   transferSeries: async (): Promise<SeriesOption[]> => unwrap(await api.get<Envelope<SeriesOption[]>>('/api/document-series/lookup?documentType=InterWarehouseTransfer')),
   outboundSeries: async (): Promise<SeriesOption[]> => unwrap(await api.get<Envelope<SeriesOption[]>>('/api/document-series/lookup?documentType=WarehouseIssue')),

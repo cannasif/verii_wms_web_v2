@@ -47,7 +47,7 @@
     "orderSelection": "Sipariş seçimi",
     "steps": {
       "0": "Sipariş ve kalem planı",
-      "1": "Kontrol ve oluşturma"
+      "1": "Kontrol ve irsaliye oluşturma"
     },
     "orderNo": "Sipariş No",
     "orderNoHelpAria": "Sipariş numarasıyla getirme hakkında",
@@ -157,7 +157,15 @@
       "suggestion": "öneri",
       "selected": "Seçili",
       "autoSerialReserved": "Otomatik seriler rezerve edildi.",
-      "cancelAutoSerials": "Otomatik serileri iptal et"
+      "cancelAutoSerials": "Otomatik serileri iptal et",
+      "stockImageAria": "{{name}} stok görseli",
+      "stockImageHint": "Görseli önizlemek için üzerine gelin, büyütmek için tıklayın",
+      "stockImageLoading": "Görsel yükleniyor…",
+      "stockImageEmpty": "Stok görseli yok",
+      "stockImageError": "Görsel alınamadı",
+      "stockImageLightbox": "{{name}} görseli",
+      "stockImageClose": "Kapat",
+      "stockImageFallback": "Stok"
     },
     "labelOptions": {
       "none": "Etiket yok",
@@ -170,6 +178,13 @@
     "review": {
       "supplierCard": "Tedarikçi Carisi",
       "customerCode": "Cari kodu",
+      "city": "İl",
+      "district": "İlçe",
+      "cityDistrict": "İl / İlçe",
+      "address": "Adres",
+      "phone": "Telefon",
+      "email": "E-posta",
+      "website": "Web",
       "branch": "Şube",
       "orderInfoCard": "Sipariş Bilgileri",
       "documentSeries": "Belge serisi",
@@ -177,8 +192,9 @@
       "projectAndOrderDate": "Proje / sipariş tarihi",
       "orderDate": "Sipariş tarihi",
       "summaryTitle": "Kontrol özeti",
-      "linesAndQuantity": "Satır / miktar",
-      "orderAvailableQuantity": "Sipariş uygun miktar",
+      "linesAndQuantity": "Kalem / miktar",
+      "orderAvailableQuantity": "Alınabilir",
+      "metricAvailableHint": "Kabul: {{accepted}}",
       "warehouseCount": "Depo sayısı",
       "trackingLineCount": "Lot/seri satırı",
       "qualityRoutingTitle": "Kalite Kontrol Yönlendirmesi",
@@ -193,9 +209,15 @@
       "multipleProjectsCount": "{{count}} proje",
       "projectsTooltipHint": "Kaydırarak tüm proje kodlarını görebilirsiniz",
       "metricLinesHint": "Stokları gör",
+      "metricLineUnit": "kalem",
+      "metricQuantityUnit": "miktar",
+      "metricUnitCount": "{{count}} birim",
       "metricQualityLabel": "Kalite",
       "metricQualityNone": "Yok",
       "metricQualityHint": "Kalite listesini gör",
+      "qualityWarnTitle": "Kaliteye gidecek ürünler var",
+      "qualityWarnText": "{{count}} kalem kalite kontrole yönlendirilecek. Kalite kısmına tıklarsanız listeyi görebilirsiniz.",
+      "qualityWarnAria": "Kaliteye gidecek {{count}} kalemi görüntüle",
       "forceQualityLabel": "Kaliteye gönder",
       "forceQualityAria": "Bu irsaliyedeki stokları kaliteye gönder"
     },
@@ -236,13 +258,13 @@
       "removeForcedTitle": "Bu irsaliyelik kaliteden çıkar",
       "removeForcedAria": "{{code}} stoğunu bu irsaliyelik kaliteden çıkar",
       "receiptLinesTitle": "Kabul satırları",
-      "receiptLinesDescription": "Yeni satır seçip Kaliteye gönder ile ekle. Çıkarmak için Kalite listesindeki çarpıyı kullan; kural stokları kilitlidir.",
+      "receiptLinesDescription": "Yeni satır seçip Kaliteye ekle ile listeye alın. Çıkarmak için Kalite listesindeki çarpıyı kullan; kural stokları kilitlidir.",
       "receiptLinesSearchAria": "Kabul satırlarında ara",
       "orderLinesDescription": "Bu mal kabul emrinde yer alan tüm satırlar.",
       "selectLineAria": "{{code}} satırını seç",
-      "forceQualitySubmit": "Kaliteye gönder",
+      "forceQualitySubmit": "Kaliteye ekle",
       "forceQualityCancel": "İptal",
-      "forceQualitySubmitTitle": "Seçili stokları bu irsaliyelik kaliteye ekler"
+      "forceQualitySubmitTitle": "Seçili satırları bu irsaliyenin kalite listesine ekler; irsaliye sonrası kalite onayına düşer."
     },
     "success": {
       "directEyebrow": "Siparişten doğrudan mal kabul",
