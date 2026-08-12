@@ -170,24 +170,31 @@ async function notifyGoodsReceiptAfterDecision(
   detail: QualityInspectionDetail,
   openGoodsReceiptList: () => void,
   t: TFunction,
+  primaryMessage?: string | null,
 ): Promise<void> {
   const docNo = detail.header.sourceDocumentNo?.trim();
   const isGoodsReceipt =
     detail.header.sourceDocumentType === "GR" ||
     detail.header.sourceDocumentType === "GoodsReceipt";
   const actionLabel = t("goodsReceiptNotice.actionLabel");
+  const title =
+    primaryMessage?.trim() || t("goodsReceiptNotice.decidedToastTitle");
+  const fallbackDescription = docNo
+    ? t("goodsReceiptNotice.withDoc", { docNo })
+    : t("goodsReceiptNotice.withoutDoc");
+  const action = {
+    label: actionLabel,
+    onClick: openGoodsReceiptList,
+  };
 
-  toast.success(t("goodsReceiptNotice.decidedToastTitle"), {
-    description: docNo
-      ? t("goodsReceiptNotice.withDoc", { docNo })
-      : t("goodsReceiptNotice.withoutDoc"),
-    action: {
-      label: actionLabel,
-      onClick: openGoodsReceiptList,
-    },
-  });
-
-  if (!isGoodsReceipt || !docNo) return;
+  if (!isGoodsReceipt || !docNo) {
+    toast.success(title, {
+      description: fallbackDescription,
+      action,
+      duration: 7000,
+    });
+    return;
+  }
 
   try {
     const page = await goodsReceiptV2Api.paged({
@@ -206,48 +213,50 @@ async function notifyGoodsReceiptAfterDecision(
           docNo.toLocaleUpperCase("tr-TR"),
         ),
       );
+
     if (!row) {
-      toast.message(t("goodsReceiptNotice.searchable"), {
-        description: docNo,
-        action: { label: actionLabel, onClick: openGoodsReceiptList },
+      toast.success(title, {
+        description: `${fallbackDescription} ${t("goodsReceiptNotice.searchable")}`,
+        action,
+        duration: 7000,
       });
       return;
     }
 
     const erp = row.erpIntegrationStatus;
     const erpLabel = localizeEnumValue(erp);
+    let description = fallbackDescription;
+    let tone: "success" | "message" | "warning" = "success";
+
     if (erp === "Succeeded") {
-      toast.success(t("goodsReceiptNotice.erpTransferredTitle"), {
-        description: t("goodsReceiptNotice.erpTransferredDesc", { docNo }),
-        action: { label: actionLabel, onClick: openGoodsReceiptList },
-      });
+      description = t("goodsReceiptNotice.erpTransferredDesc", { docNo });
+      tone = "success";
     } else if (erp === "Pending" || erp === "Processing") {
-      toast.message(t("goodsReceiptNotice.erpPendingTitle"), {
-        description: t("goodsReceiptNotice.erpPendingDesc", { docNo, erpLabel }),
-        action: { label: actionLabel, onClick: openGoodsReceiptList },
-      });
+      description = t("goodsReceiptNotice.erpPendingDesc", { docNo, erpLabel });
+      tone = "message";
     } else if (erp === "Failed" || erp === "CommitUncertain") {
-      toast.warning(t("goodsReceiptNotice.erpFailedTitle"), {
-        description: t("goodsReceiptNotice.erpFailedDesc", { docNo, erpLabel }),
-        action: { label: actionLabel, onClick: openGoodsReceiptList },
-      });
+      description = t("goodsReceiptNotice.erpFailedDesc", { docNo, erpLabel });
+      tone = "warning";
     } else if (erp === "NotRequired") {
-      toast.message(t("goodsReceiptNotice.erpNotRequiredTitle"), {
-        description: docNo,
-        action: { label: actionLabel, onClick: openGoodsReceiptList },
-      });
+      description = `${t("goodsReceiptNotice.erpNotRequiredTitle")} (${docNo})`;
+      tone = "message";
+    } else if (erp) {
+      description = t("goodsReceiptNotice.updatedDescWithErp", { docNo, erpLabel });
+      tone = "message";
     } else {
-      toast.message(t("goodsReceiptNotice.updatedTitle"), {
-        description: erp
-          ? t("goodsReceiptNotice.updatedDescWithErp", { docNo, erpLabel })
-          : t("goodsReceiptNotice.updatedDescNoErp", { docNo }),
-        action: { label: actionLabel, onClick: openGoodsReceiptList },
-      });
+      description = t("goodsReceiptNotice.updatedDescNoErp", { docNo });
+      tone = "message";
     }
+
+    const options = { description, action, duration: 7000 };
+    if (tone === "warning") toast.warning(title, options);
+    else if (tone === "message") toast.message(title, options);
+    else toast.success(title, options);
   } catch {
-    toast.message(t("goodsReceiptNotice.unresolvedTitle"), {
-      description: docNo,
-      action: { label: actionLabel, onClick: openGoodsReceiptList },
+    toast.success(title, {
+      description: t("goodsReceiptNotice.unresolvedTitle"),
+      action,
+      duration: 7000,
     });
   }
 }
@@ -1435,10 +1444,7 @@ function InspectionDetailPanel({
         detail,
         () => navigate("/warehouse/goods-receipts/list"),
         t,
-      );
-      toast.success(
         completionMessage || t("decisionSaved"),
-        { duration: 7000 }
       );
       decided();
       return true;

@@ -2,7 +2,7 @@
   "list": {
     "titleDefault": "Kalite İnceleme Listesi",
     "titleQuarantine": "Karantina Karar Kuyruğu",
-    "descriptionDefault": "Özet satırda irsaliye ve işlemi yapan görünür; satırı açınca stok / lot / seri ve karar detayı akordiyon içinde gelir.",
+    "descriptionDefault": "Özet satırda irsaliye ve işlemi yapan görünür; satırı açınca stok / lot / seri ve karar detayı akordeon içinde gelir.",
     "descriptionQuarantine": "Karantinadaki ürünleri yetkili biçimde serbest bırakın, reddedin veya iade edin.",
     "emptyDefault": "Henüz kuyrukta kalite kaydı yok. Siparişli emir oluşturmak yetmez — Emir Yönetimi veya Bana Atanan Emirler'den fiziksel kabulü bitirince bu listeye düşer.",
     "emptyQuarantine": "Karantinada kayıt yok.",
