@@ -366,7 +366,20 @@
       "destinationRequired": "اختر مستودعًا / موقعًا لكل وجهة حجر مضافة.",
       "destinationDuplicate": "لا يمكن إضافة موقع الحجر نفسه أكثر من مرة.",
       "destinationCount": "{{count}} وجهات حجر",
-      "noSelection": "غير محدد"
+      "noSelection": "غير محدد",
+      "warehouseRoutesTitle": "مصفوفة توجيه الجودة حسب المستودع",
+      "warehouseRoutesDescription": "حدد مواقع انتظار وقبول وحجر ورفض مستقلة لكل مستودع مصدر مثل 100 أو 4 أو 399.",
+      "addWarehouseRoute": "إضافة مسار مستودع",
+      "noWarehouseRoutes": "لا توجد مسارات خاصة. تُستخدم الإعدادات العامة للمستودعات غير المطابقة.",
+      "sourceWarehouseLabel": "المستودع المصدر",
+      "warehousePlaceholder": "اختر المستودع المصدر",
+      "removeWarehouseRoute": "حذف مسار المستودع",
+      "inheritPlaceholder": "يستخدم الإعداد العام عند تركه فارغاً",
+      "selectWarehouseFirst": "اختر المستودع المصدر أولاً",
+      "routeFallbackNotice": "كل هدف فارغ يرث الإعداد العام. يجب أن يكون موقع انتظار الجودة داخل المستودع المصدر، ويمكن أن تكون بقية الأهداف في مستودع آخر.",
+      "routeWarehouseRequired": "اختر مستودعاً مصدراً لكل مسار جودة.",
+      "routeWarehouseDuplicate": "لا يمكن تكرار مسار الجودة لنفس المستودع المصدر.",
+      "routeTargetRequired": "اختر هدفاً واحداً على الأقل لكل مسار مستودع."
     },
     "toggles": {
       "autoCreateInspection": "إنشاء فحص تلقائيًا عند الاستلام",

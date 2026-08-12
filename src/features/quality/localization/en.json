@@ -400,7 +400,20 @@
       "destinationRequired": "Select a warehouse / location for every added quarantine destination.",
       "destinationDuplicate": "The same quarantine location cannot be added more than once.",
       "destinationCount": "{{count}} quarantine destinations",
-      "noSelection": "Not selected"
+      "noSelection": "Not selected",
+      "warehouseRoutesTitle": "Warehouse-specific quality routing matrix",
+      "warehouseRoutesDescription": "Define separate quality hold, accepted, quarantine and reject destinations for each source warehouse such as 100, 4 or 399.",
+      "addWarehouseRoute": "Add warehouse route",
+      "noWarehouseRoutes": "No warehouse-specific route exists. The general defaults above apply to every unmatched warehouse.",
+      "sourceWarehouseLabel": "Source warehouse",
+      "warehousePlaceholder": "Select source warehouse",
+      "removeWarehouseRoute": "Remove warehouse route",
+      "inheritPlaceholder": "Uses the general default when empty",
+      "selectWarehouseFirst": "Select the source warehouse first",
+      "routeFallbackNotice": "Any empty destination in this row inherits the general default above. The quality hold location must be in the source warehouse; accepted, quarantine and reject targets may be in another warehouse and create an inter-warehouse transfer when required.",
+      "routeWarehouseRequired": "Select a source warehouse for every quality route.",
+      "routeWarehouseDuplicate": "The same source warehouse cannot have more than one quality route.",
+      "routeTargetRequired": "Select at least one quality hold, accepted, quarantine or reject location for every warehouse route."
     },
     "toggles": {
       "autoCreateInspection": "Automatically create an inspection on goods receipt",

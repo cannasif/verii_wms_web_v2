@@ -366,7 +366,20 @@
       "destinationRequired": "Sélectionnez un entrepôt / emplacement pour chaque destination ajoutée.",
       "destinationDuplicate": "Le même emplacement de quarantaine ne peut pas être ajouté plusieurs fois.",
       "destinationCount": "{{count}} destinations de quarantaine",
-      "noSelection": "Non sélectionné"
+      "noSelection": "Non sélectionné",
+      "warehouseRoutesTitle": "Matrice de routage qualité par dépôt",
+      "warehouseRoutesDescription": "Définissez séparément les destinations d'attente, d'acceptation, de quarantaine et de rejet pour chaque dépôt source, par exemple 100, 4 ou 399.",
+      "addWarehouseRoute": "Ajouter une route dépôt",
+      "noWarehouseRoutes": "Aucune route spécifique. Les valeurs générales ci-dessus s'appliquent aux dépôts non associés.",
+      "sourceWarehouseLabel": "Dépôt source",
+      "warehousePlaceholder": "Sélectionner le dépôt source",
+      "removeWarehouseRoute": "Supprimer la route dépôt",
+      "inheritPlaceholder": "Vide : utilise la valeur générale",
+      "selectWarehouseFirst": "Sélectionnez d'abord le dépôt source",
+      "routeFallbackNotice": "Toute destination vide hérite de la valeur générale. L'emplacement d'attente qualité doit appartenir au dépôt source ; les autres cibles peuvent appartenir à un autre dépôt.",
+      "routeWarehouseRequired": "Sélectionnez un dépôt source pour chaque route qualité.",
+      "routeWarehouseDuplicate": "Un dépôt source ne peut avoir qu'une seule route qualité.",
+      "routeTargetRequired": "Sélectionnez au moins une destination pour chaque route dépôt."
     },
     "toggles": {
       "autoCreateInspection": "Créer automatiquement un contrôle à la réception",

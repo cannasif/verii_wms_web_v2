@@ -366,7 +366,20 @@
       "destinationRequired": "Seleziona un magazzino / ubicazione per ogni destinazione aggiunta.",
       "destinationDuplicate": "La stessa ubicazione di quarantena non può essere aggiunta più volte.",
       "destinationCount": "{{count}} destinazioni di quarantena",
-      "noSelection": "Non selezionata"
+      "noSelection": "Non selezionata",
+      "warehouseRoutesTitle": "Matrice di instradamento qualità per magazzino",
+      "warehouseRoutesDescription": "Definisci destinazioni separate di attesa, accettazione, quarantena e rifiuto per ogni magazzino sorgente, ad esempio 100, 4 o 399.",
+      "addWarehouseRoute": "Aggiungi rotta magazzino",
+      "noWarehouseRoutes": "Nessuna rotta specifica. I valori generali si applicano ai magazzini non associati.",
+      "sourceWarehouseLabel": "Magazzino sorgente",
+      "warehousePlaceholder": "Seleziona magazzino sorgente",
+      "removeWarehouseRoute": "Rimuovi rotta magazzino",
+      "inheritPlaceholder": "Vuoto usa il valore generale",
+      "selectWarehouseFirst": "Seleziona prima il magazzino sorgente",
+      "routeFallbackNotice": "Le destinazioni vuote ereditano il valore generale. L'ubicazione di attesa deve essere nel magazzino sorgente; le altre destinazioni possono essere in un altro magazzino.",
+      "routeWarehouseRequired": "Seleziona un magazzino sorgente per ogni rotta.",
+      "routeWarehouseDuplicate": "Un magazzino sorgente può avere una sola rotta qualità.",
+      "routeTargetRequired": "Seleziona almeno una destinazione per ogni rotta magazzino."
     },
     "toggles": {
       "autoCreateInspection": "Crea automaticamente un controllo alla ricezione",

@@ -366,7 +366,20 @@
       "destinationRequired": "Wählen Sie für jedes Quarantäneziel ein Lager / einen Lagerplatz.",
       "destinationDuplicate": "Derselbe Quarantänelagerplatz kann nicht mehrfach hinzugefügt werden.",
       "destinationCount": "{{count}} Quarantäneziele",
-      "noSelection": "Nicht ausgewählt"
+      "noSelection": "Nicht ausgewählt",
+      "warehouseRoutesTitle": "Lagerspezifische Qualitäts-Routingmatrix",
+      "warehouseRoutesDescription": "Definieren Sie für jedes Quelllager, z. B. 100, 4 oder 399, eigene Ziele für Warten, Annahme, Quarantäne und Ablehnung.",
+      "addWarehouseRoute": "Lagerroute hinzufügen",
+      "noWarehouseRoutes": "Keine lagerspezifische Route vorhanden. Für nicht zugeordnete Lager gelten die allgemeinen Standardwerte oben.",
+      "sourceWarehouseLabel": "Quelllager",
+      "warehousePlaceholder": "Quelllager auswählen",
+      "removeWarehouseRoute": "Lagerroute entfernen",
+      "inheritPlaceholder": "Leer verwendet den allgemeinen Standard",
+      "selectWarehouseFirst": "Zuerst Quelllager auswählen",
+      "routeFallbackNotice": "Leere Ziele übernehmen den allgemeinen Standard. Der Qualitäts-Warteplatz muss im Quelllager liegen; andere Ziele dürfen in einem anderen Lager liegen.",
+      "routeWarehouseRequired": "Wählen Sie für jede Qualitätsroute ein Quelllager.",
+      "routeWarehouseDuplicate": "Ein Quelllager darf nur eine Qualitätsroute besitzen.",
+      "routeTargetRequired": "Wählen Sie je Lagerroute mindestens ein Ziel aus."
     },
     "toggles": {
       "autoCreateInspection": "Kontrolle beim Wareneingang automatisch erstellen",

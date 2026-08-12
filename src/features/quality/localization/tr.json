@@ -400,7 +400,20 @@
       "destinationRequired": "Eklenen her karantina hedefi için depo / raf seçmelisiniz.",
       "destinationDuplicate": "Aynı karantina rafını birden fazla kez ekleyemezsiniz.",
       "destinationCount": "{{count}} karantina hedefi",
-      "noSelection": "Seçilmedi"
+      "noSelection": "Seçilmedi",
+      "warehouseRoutesTitle": "Depo bazlı kalite yönlendirme matrisi",
+      "warehouseRoutesDescription": "Kaynak depo 100, 4 veya 399 gibi her depo için kalite bekleme, kabul, karantina ve ret hedeflerini ayrı belirleyin.",
+      "addWarehouseRoute": "Depo rotası ekle",
+      "noWarehouseRoutes": "Depoya özel rota yok. Eşleşmeyen tüm depolarda yukarıdaki genel varsayılanlar kullanılır.",
+      "sourceWarehouseLabel": "Kaynak depo",
+      "warehousePlaceholder": "Kaynak depo seçin",
+      "removeWarehouseRoute": "Depo rotasını kaldır",
+      "inheritPlaceholder": "Seçilmezse genel varsayılan kullanılır",
+      "selectWarehouseFirst": "Önce kaynak depo seçin",
+      "routeFallbackNotice": "Bu satırda boş bıraktığınız hedef, yukarıdaki genel varsayılandan alınır. Kalite bekleme rafı kaynak deponun içinde olmalıdır; kabul, karantina ve ret hedefi başka bir depoda olabilir ve gerektiğinde depolar arası transfer oluşturulur.",
+      "routeWarehouseRequired": "Eklenen her kalite rotası için kaynak depo seçmelisiniz.",
+      "routeWarehouseDuplicate": "Aynı kaynak depo için birden fazla kalite rotası ekleyemezsiniz.",
+      "routeTargetRequired": "Her depo rotasında en az bir kalite bekleme, kabul, karantina veya ret rafı seçmelisiniz."
     },
     "toggles": {
       "autoCreateInspection": "Mal kabulde kontrolü otomatik oluştur",

@@ -366,7 +366,20 @@
       "destinationRequired": "Seleccione un almacén / ubicación para cada destino añadido.",
       "destinationDuplicate": "La misma ubicación de cuarentena no se puede añadir más de una vez.",
       "destinationCount": "{{count}} destinos de cuarentena",
-      "noSelection": "Sin seleccionar"
+      "noSelection": "Sin seleccionar",
+      "warehouseRoutesTitle": "Matriz de enrutamiento de calidad por almacén",
+      "warehouseRoutesDescription": "Defina destinos separados de espera, aceptación, cuarentena y rechazo para cada almacén de origen, como 100, 4 o 399.",
+      "addWarehouseRoute": "Añadir ruta de almacén",
+      "noWarehouseRoutes": "No hay rutas específicas. Los valores generales se aplican a los almacenes sin coincidencia.",
+      "sourceWarehouseLabel": "Almacén de origen",
+      "warehousePlaceholder": "Seleccione almacén de origen",
+      "removeWarehouseRoute": "Eliminar ruta de almacén",
+      "inheritPlaceholder": "Vacío usa el valor general",
+      "selectWarehouseFirst": "Seleccione primero el almacén de origen",
+      "routeFallbackNotice": "Los destinos vacíos heredan el valor general. La ubicación de espera debe estar en el almacén de origen; los demás destinos pueden estar en otro almacén.",
+      "routeWarehouseRequired": "Seleccione un almacén de origen para cada ruta.",
+      "routeWarehouseDuplicate": "Un almacén de origen solo puede tener una ruta de calidad.",
+      "routeTargetRequired": "Seleccione al menos un destino para cada ruta de almacén."
     },
     "toggles": {
       "autoCreateInspection": "Crear automáticamente un control en la recepción",

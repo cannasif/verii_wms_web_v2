@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { Loader2, Plus, Save, ShieldCheck, Star, Trash2 } from 'lucide-react';
+import { Loader2, Plus, Save, ShieldCheck, Star, Trash2, Warehouse } from 'lucide-react';
 import { toast } from 'sonner';
 import { AppDropdown } from '@/components/shared/AppDropdown';
 import { AppInput } from '@/components/shared/AppInput';
@@ -8,7 +8,7 @@ import { ParameterFieldGuide, ParameterPageGuide, ParameterToggleCard } from '@/
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { localizeEnumValue } from '@/lib/enum-localization';
 import { useAuthStore } from '@/stores/auth-store';
-import { qualityApi, type QualityParameter, type QualityQuarantineDestination } from '../api/quality.api';
+import { qualityApi, type QualityParameter, type QualityQuarantineDestination, type QualityWarehouseRoute } from '../api/quality.api';
 import { parameterGuidance, parameterToggleGuidance } from '@/features/settings-guidance/parameter-guidance.catalog';
 
 export function QualitySettingsPage() {
@@ -19,7 +19,7 @@ export function QualitySettingsPage() {
 
   useEffect(() => {
     qualityApi.getParameters(branch)
-      .then((value) => setForm({ ...value, quarantineDestinations: value.quarantineDestinations ?? [] }))
+      .then((value) => setForm({ ...value, quarantineDestinations: value.quarantineDestinations ?? [], warehouseRoutes: value.warehouseRoutes ?? [] }))
       .catch((e) => toast.error(e.message));
   }, [branch]);
 
@@ -35,6 +35,19 @@ export function QualitySettingsPage() {
     }
     if (new Set(destinations.map((destination) => destination.locationId)).size !== destinations.length) {
       toast.error(t('settings.locationsSection.destinationDuplicate'));
+      return;
+    }
+    const routes = form.warehouseRoutes ?? [];
+    if (routes.some((route) => route.sourceWarehouseId <= 0)) {
+      toast.error(t('settings.locationsSection.routeWarehouseRequired'));
+      return;
+    }
+    if (new Set(routes.map((route) => route.sourceWarehouseId)).size !== routes.length) {
+      toast.error(t('settings.locationsSection.routeWarehouseDuplicate'));
+      return;
+    }
+    if (routes.some((route) => !route.qualityLocationId && !route.acceptedLocationId && !route.quarantineLocationId && !route.rejectLocationId)) {
+      toast.error(t('settings.locationsSection.routeTargetRequired'));
       return;
     }
     const defaultQuarantineLocationId = destinations.some(
@@ -134,6 +147,11 @@ export function QualitySettingsPage() {
             defaultLocationId={form.defaultQuarantineLocationId}
             onChange={(destinations) => set('quarantineDestinations', destinations)}
             onDefaultChange={(locationId) => set('defaultQuarantineLocationId', locationId)}
+          />
+          <WarehouseRoutesField
+            branch={branch}
+            routes={form.warehouseRoutes ?? []}
+            onChange={(routes) => set('warehouseRoutes', routes)}
           />
         </section>
 
@@ -325,6 +343,155 @@ function QuarantineDestinationsField({
         currentValue={destinations.length > 0 ? t('settings.locationsSection.destinationCount', { count: destinations.length }) : t('settings.locationsSection.noSelection')}
       />
     </div>
+  );
+}
+
+function WarehouseRoutesField({
+  branch,
+  routes,
+  onChange,
+}: {
+  branch: string;
+  routes: QualityWarehouseRoute[];
+  onChange: (value: QualityWarehouseRoute[]) => void;
+}) {
+  const { t } = useModuleTranslation('quality');
+  const selectedWarehouseIds = new Set(routes.map((route) => route.sourceWarehouseId).filter(Boolean));
+  const patch = (index: number, value: Partial<QualityWarehouseRoute>) =>
+    onChange(routes.map((route, current) => current === index ? { ...route, ...value } : route));
+  const add = () => onChange([...routes, {
+    id: 0,
+    sourceWarehouseId: 0,
+    sourceWarehouseCode: 0,
+    sourceWarehouseName: '',
+    qualityLocationId: null,
+    acceptedLocationId: null,
+    quarantineLocationId: null,
+    rejectLocationId: null,
+    qualityLocation: null,
+    acceptedLocation: null,
+    quarantineLocation: null,
+    rejectLocation: null,
+    isActive: true,
+  }]);
+
+  return (
+    <div className="mt-5 space-y-3 rounded-xl border border-violet-500/25 bg-violet-500/[0.035] p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="max-w-3xl">
+          <div className="flex items-center gap-2">
+            <Warehouse className="size-4 text-violet-500" />
+            <h3 className="text-sm font-bold">{t('settings.locationsSection.warehouseRoutesTitle')}</h3>
+          </div>
+          <p className="mt-1 text-xs leading-5 text-slate-500">
+            {t('settings.locationsSection.warehouseRoutesDescription')}
+          </p>
+        </div>
+        <button type="button" onClick={add} className="inline-flex items-center gap-2 rounded-xl border border-violet-500/35 px-3 py-2 text-xs font-bold text-violet-600 hover:bg-violet-500/10">
+          <Plus className="size-4" /> {t('settings.locationsSection.addWarehouseRoute')}
+        </button>
+      </div>
+
+      {routes.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-[var(--wms-app-border)] p-4 text-sm text-slate-500">
+          {t('settings.locationsSection.noWarehouseRoutes')}
+        </div>
+      ) : routes.map((route, index) => (
+        <article key={`${route.id || 'new'}-${index}`} className="rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-4">
+          <div className="flex items-start justify-between gap-3">
+            <label className="w-full max-w-xl space-y-1.5 text-sm">
+              <span className="font-semibold">{t('settings.locationsSection.sourceWarehouseLabel')}</span>
+              <PagedAppDropdown
+                queryKey={['quality-route-warehouses', branch, index]}
+                fetchPage={(request) => qualityApi.warehouses(request, branch)}
+                toOption={(warehouse) => ({
+                  value: String(warehouse.id),
+                  label: `${warehouse.warehouseCode} · ${warehouse.warehouseName}`,
+                  disabled: selectedWarehouseIds.has(warehouse.id) && warehouse.id !== route.sourceWarehouseId,
+                })}
+                selectedOption={route.sourceWarehouseId > 0 && (route.sourceWarehouseCode > 0 || route.sourceWarehouseName) ? {
+                  value: String(route.sourceWarehouseId),
+                  label: `${route.sourceWarehouseCode} · ${route.sourceWarehouseName}`,
+                } : undefined}
+                value={route.sourceWarehouseId > 0 ? String(route.sourceWarehouseId) : null}
+                onValueChange={(next) => patch(index, {
+                  sourceWarehouseId: next ? Number(next) : 0,
+                  sourceWarehouseCode: 0,
+                  sourceWarehouseName: '',
+                  qualityLocationId: null,
+                  qualityLocation: null,
+                })}
+                placeholder={t('settings.locationsSection.warehousePlaceholder')}
+                searchable
+              />
+            </label>
+            <button type="button" onClick={() => onChange(routes.filter((_, current) => current !== index))} aria-label={t('settings.locationsSection.removeWarehouseRoute')} className="mt-6 inline-flex size-10 shrink-0 items-center justify-center rounded-xl border border-rose-500/30 text-rose-500 hover:bg-rose-500/10">
+              <Trash2 className="size-4" />
+            </button>
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            <RouteLocationField branch={branch} route={route} kind="quality" label={t('settings.locationsSection.qualityLocationLabel')} warehouseId={route.sourceWarehouseId || null} onChange={(locationId) => patch(index, { qualityLocationId: locationId, qualityLocation: null })} />
+            <RouteLocationField branch={branch} route={route} kind="accepted" label={t('settings.locationsSection.acceptedLocationLabel')} onChange={(locationId) => patch(index, { acceptedLocationId: locationId, acceptedLocation: null })} />
+            <RouteLocationField branch={branch} route={route} kind="quarantine" label={t('settings.locationsSection.quarantineLocationLabel')} onChange={(locationId) => patch(index, { quarantineLocationId: locationId, quarantineLocation: null })} />
+            <RouteLocationField branch={branch} route={route} kind="reject" label={t('settings.locationsSection.rejectLocationLabel')} onChange={(locationId) => patch(index, { rejectLocationId: locationId, rejectLocation: null })} />
+          </div>
+          <p className="mt-3 rounded-lg bg-violet-500/10 px-3 py-2 text-xs leading-5 text-violet-700 dark:text-violet-300">
+            {t('settings.locationsSection.routeFallbackNotice')}
+          </p>
+        </article>
+      ))}
+    </div>
+  );
+}
+
+function RouteLocationField({
+  branch,
+  route,
+  kind,
+  label,
+  warehouseId,
+  onChange,
+}: {
+  branch: string;
+  route: QualityWarehouseRoute;
+  kind: 'quality' | 'accepted' | 'quarantine' | 'reject';
+  label: string;
+  warehouseId?: number | null;
+  onChange: (value: number | null) => void;
+}) {
+  const { t } = useModuleTranslation('quality');
+  const idKey = `${kind}LocationId` as const;
+  const destinationKey = `${kind}Location` as const;
+  const locationId = route[idKey];
+  const destination = route[destinationKey];
+  return (
+    <label className="space-y-1.5 text-sm">
+      <span className="font-semibold">{label}</span>
+      <PagedAppDropdown
+        queryKey={['quality-route-locations', branch, route.sourceWarehouseId, kind]}
+        fetchPage={(request) => qualityApi.locations(request, branch, warehouseId)}
+        toOption={(location) => ({
+          value: String(location.id),
+          label: `${location.warehouseCode} / ${location.code} · ${location.name}`,
+          description: location.warehouseName,
+          disabled: kind === 'quality' ? location.isPickable
+            : kind === 'accepted' ? !location.isPutaway || location.isQuarantine
+              : !location.isQuarantine,
+        })}
+        selectedOption={locationId && destination ? {
+          value: String(locationId),
+          label: `${destination.warehouseCode} / ${destination.locationCode} · ${destination.locationName}`,
+          description: destination.warehouseName,
+        } : undefined}
+        value={locationId ? String(locationId) : null}
+        onValueChange={(next) => onChange(next ? Number(next) : null)}
+        placeholder={kind === 'quality' && route.sourceWarehouseId <= 0
+          ? t('settings.locationsSection.selectWarehouseFirst')
+          : t('settings.locationsSection.inheritPlaceholder')}
+        disabled={kind === 'quality' && route.sourceWarehouseId <= 0}
+        searchable
+      />
+    </label>
   );
 }
 
