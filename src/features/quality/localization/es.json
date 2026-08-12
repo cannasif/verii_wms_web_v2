@@ -83,7 +83,9 @@
     "returnedQuantityMustEqualRemaining": "Para '{{stockCode}}', la cantidad de devolución debe ser igual al monto restante completo ({{remaining}}).",
     "decisionSaveFailed": "No se pudo guardar la decisión de calidad.",
     "quarantineDestinationRequired": "Seleccione el almacén y la ubicación de destino para la cantidad en cuarentena.",
-    "decisionDestinationRequired": "Seleccione el almacén y la ubicación de destino para un rechazo o una cuarentena."
+    "decisionDestinationRequired": "Seleccione el almacén y la ubicación de destino para un rechazo o una cuarentena.",
+    "receiptMustBeCompletedBeforeQualityRouting": "Complete primero la recepción física antes de dirigir el inventario mediante control de calidad.",
+    "datDocumentSeriesRequired": "El almacén de destino es diferente del almacén de recepción. Seleccione una serie documental de transferencia entre almacenes."
   },
   "applySummary": {
     "title": "Resumen de aplicación",
@@ -106,7 +108,15 @@
     "title": "Aplicar decisión",
     "infoLabel": "Información",
     "confirm": "¿Estás seguro?",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "sameWarehouseNotice": "Todos los destinos están en el almacén de recepción. No se crea una transferencia entre almacenes; solo se registra el movimiento interno de ubicación y estado.",
+    "datSeries": {
+      "title": "Se creará una transferencia entre almacenes",
+      "description": "Al menos un destino de calidad difiere del almacén de recepción {{sourceWarehouse}}. Seleccione la serie para el borrador de transferencia.",
+      "placeholder": "Seleccione la serie de transferencia",
+      "defaultDescription": "Serie predeterminada · Siguiente documento: {{preview}}",
+      "notConfigured": "No existe una serie activa de transferencia entre almacenes para esta sucursal. Defínala primero en Series de documentos."
+    }
   },
   "bulkApplySuccess": "\"{{label}}\" aplicado a {{count}} líneas.",
   "decisionSaved": "Decisión de calidad y movimiento de stock registrados.",
@@ -187,7 +197,8 @@
       "allRequired": " · Todas las líneas son obligatorias",
       "helperNoteWithDoc": "El movimiento de stock se registra al aplicar; el albarán de Netsis puede emitirse según las políticas. Consulte el resultado en la lista de recepciones de mercancía ({{docNo}}).",
       "helperNoteWithoutDoc": "El movimiento de stock se registra al aplicar; el albarán de Netsis puede emitirse según las políticas. Consulte el resultado en la lista de recepciones de mercancía.",
-      "applyButton": "Aplicar decisión"
+      "applyButton": "Aplicar decisión",
+      "receiptNotCompletedWarning": "La recepción física aún no está completa ({{status}}). El enrutamiento de calidad y la transferencia se habilitarán después."
     }
   },
   "linePopover": {

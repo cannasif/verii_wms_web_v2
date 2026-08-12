@@ -83,7 +83,9 @@
     "returnedQuantityMustEqualRemaining": "For '{{stockCode}}', the return quantity must equal the full remaining amount ({{remaining}}).",
     "decisionSaveFailed": "Could not save the quality decision.",
     "quarantineDestinationRequired": "Select the target warehouse and location for the quantity going into quarantine.",
-    "decisionDestinationRequired": "Select a target warehouse and location for a reject or quarantine decision."
+    "decisionDestinationRequired": "Select a target warehouse and location for a reject or quarantine decision.",
+    "receiptMustBeCompletedBeforeQualityRouting": "Complete the physical goods receipt before routing inventory through quality control.",
+    "datDocumentSeriesRequired": "The target warehouse differs from the receiving warehouse. Select an inter-warehouse transfer document series to continue."
   },
   "applySummary": {
     "title": "Application summary",
@@ -106,7 +108,15 @@
     "title": "Apply decision",
     "infoLabel": "Information",
     "confirm": "Are you sure",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "sameWarehouseNotice": "All selected targets are in the receiving warehouse. No inter-warehouse transfer is created; only an internal location and stock-status movement is posted.",
+    "datSeries": {
+      "title": "An inter-warehouse transfer will be created",
+      "description": "At least one quality destination differs from receiving warehouse {{sourceWarehouse}}. Select the document series for the transfer draft created with this decision.",
+      "placeholder": "Select transfer document series",
+      "defaultDescription": "Default series · Next document: {{preview}}",
+      "notConfigured": "No active inter-warehouse transfer document series exists for this branch. Define one on the Document Series page first."
+    }
   },
   "bulkApplySuccess": "\"{{label}}\" applied to {{count}} lines.",
   "decisionSaved": "Quality decision and stock movement recorded.",
@@ -221,7 +231,8 @@
       "allRequired": " · All lines required",
       "helperNoteWithDoc": "The stock movement is recorded after applying; the Netsis waybill may go out according to policies. Check the result from the goods receipt list ({{docNo}}).",
       "helperNoteWithoutDoc": "The stock movement is recorded after applying; the Netsis waybill may go out according to policies. Check the result from the goods receipt list.",
-      "applyButton": "Apply decision"
+      "applyButton": "Apply decision",
+      "receiptNotCompletedWarning": "The physical goods receipt is not complete yet ({{status}}). Quality routing and transfer creation become available afterwards."
     }
   },
   "linePopover": {

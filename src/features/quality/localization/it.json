@@ -83,7 +83,9 @@
     "returnedQuantityMustEqualRemaining": "Per '{{stockCode}}', la quantità da restituire deve essere pari all'intero residuo ({{remaining}}).",
     "decisionSaveFailed": "Impossibile salvare la decisione di qualità.",
     "quarantineDestinationRequired": "Seleziona il magazzino e l'ubicazione di destinazione per la quantità in quarantena.",
-    "decisionDestinationRequired": "Seleziona il magazzino e l'ubicazione di destinazione per un rifiuto o una quarantena."
+    "decisionDestinationRequired": "Seleziona il magazzino e l'ubicazione di destinazione per un rifiuto o una quarantena.",
+    "receiptMustBeCompletedBeforeQualityRouting": "Completa prima il ricevimento fisico prima di instradare le scorte tramite il controllo qualità.",
+    "datDocumentSeriesRequired": "Il magazzino di destinazione è diverso da quello di ricevimento. Seleziona una serie documento per il trasferimento tra magazzini."
   },
   "applySummary": {
     "title": "Riepilogo applicazione",
@@ -106,7 +108,15 @@
     "title": "Applica decisione",
     "infoLabel": "Informazioni",
     "confirm": "Sei sicuro",
-    "cancel": "Annulla"
+    "cancel": "Annulla",
+    "sameWarehouseNotice": "Tutte le destinazioni sono nel magazzino di ricevimento. Non viene creato alcun trasferimento tra magazzini; viene registrato solo il movimento interno di ubicazione e stato.",
+    "datSeries": {
+      "title": "Verrà creato un trasferimento tra magazzini",
+      "description": "Almeno una destinazione qualità è diversa dal magazzino di ricevimento {{sourceWarehouse}}. Seleziona la serie per la bozza di trasferimento.",
+      "placeholder": "Seleziona la serie di trasferimento",
+      "defaultDescription": "Serie predefinita · Prossimo documento: {{preview}}",
+      "notConfigured": "Non esiste una serie attiva per i trasferimenti tra magazzini in questa filiale. Definiscila prima nella pagina Serie documenti."
+    }
   },
   "bulkApplySuccess": "\"{{label}}\" applicata a {{count}} righe.",
   "decisionSaved": "Decisione di qualità e movimento di magazzino registrati.",
@@ -187,7 +197,8 @@
       "allRequired": " · Tutte le righe obbligatorie",
       "helperNoteWithDoc": "Il movimento di magazzino viene registrato dopo l'applicazione; la bolla Netsis potrebbe essere emessa in base alle politiche. Verifica il risultato dall'elenco ricevimenti merci ({{docNo}}).",
       "helperNoteWithoutDoc": "Il movimento di magazzino viene registrato dopo l'applicazione; la bolla Netsis potrebbe essere emessa in base alle politiche. Verifica il risultato dall'elenco ricevimenti merci.",
-      "applyButton": "Applica decisione"
+      "applyButton": "Applica decisione",
+      "receiptNotCompletedWarning": "Il ricevimento fisico non è ancora completo ({{status}}). L'instradamento qualità e il trasferimento saranno disponibili in seguito."
     }
   },
   "linePopover": {

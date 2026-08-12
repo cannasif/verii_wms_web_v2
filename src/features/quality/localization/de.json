@@ -83,7 +83,9 @@
     "returnedQuantityMustEqualRemaining": "Für '{{stockCode}}' muss die Rücksendemenge der vollständigen verbleibenden Menge ({{remaining}}) entsprechen.",
     "decisionSaveFailed": "Die Qualitätsentscheidung konnte nicht gespeichert werden.",
     "quarantineDestinationRequired": "Wählen Sie Ziellager und Lagerplatz für die Quarantänemenge aus.",
-    "decisionDestinationRequired": "Wählen Sie Ziellager und Lagerplatz für eine Ablehnung oder Quarantäne aus."
+    "decisionDestinationRequired": "Wählen Sie Ziellager und Lagerplatz für eine Ablehnung oder Quarantäne aus.",
+    "receiptMustBeCompletedBeforeQualityRouting": "Schließen Sie zuerst den physischen Wareneingang ab, bevor die Qualitätsweiterleitung erfolgt.",
+    "datDocumentSeriesRequired": "Das Ziellager unterscheidet sich vom Wareneingangslager. Wählen Sie eine Belegserie für die Lagerumlagerung."
   },
   "applySummary": {
     "title": "Anwendungsübersicht",
@@ -106,7 +108,15 @@
     "title": "Entscheidung anwenden",
     "infoLabel": "Hinweis",
     "confirm": "Bist du sicher",
-    "cancel": "Abbrechen"
+    "cancel": "Abbrechen",
+    "sameWarehouseNotice": "Alle Ziele liegen im Wareneingangslager. Es wird keine Lagerumlagerung erstellt; nur Lagerplatz und Bestandsstatus werden intern gebucht.",
+    "datSeries": {
+      "title": "Eine Lagerumlagerung wird erstellt",
+      "description": "Mindestens ein Qualitätsziel unterscheidet sich vom Wareneingangslager {{sourceWarehouse}}. Wählen Sie die Belegserie für den Umlagerungsentwurf.",
+      "placeholder": "Belegserie für Umlagerung wählen",
+      "defaultDescription": "Standardserie · Nächster Beleg: {{preview}}",
+      "notConfigured": "Für diese Niederlassung ist keine aktive Belegserie für Lagerumlagerungen vorhanden. Definieren Sie zuerst eine unter Belegserien."
+    }
   },
   "bulkApplySuccess": "\"{{label}}\" auf {{count}} Positionen angewendet.",
   "decisionSaved": "Qualitätsentscheidung und Lagerbewegung erfasst.",
@@ -187,7 +197,8 @@
       "allRequired": " · Alle Positionen erforderlich",
       "helperNoteWithDoc": "Die Lagerbewegung wird nach der Anwendung erfasst; der Netsis-Lieferschein kann je nach Richtlinien ausgehen. Überprüfen Sie das Ergebnis in der Wareneingangsliste ({{docNo}}).",
       "helperNoteWithoutDoc": "Die Lagerbewegung wird nach der Anwendung erfasst; der Netsis-Lieferschein kann je nach Richtlinien ausgehen. Überprüfen Sie das Ergebnis in der Wareneingangsliste.",
-      "applyButton": "Entscheidung anwenden"
+      "applyButton": "Entscheidung anwenden",
+      "receiptNotCompletedWarning": "Der physische Wareneingang ist noch nicht abgeschlossen ({{status}}). Qualitätsweiterleitung und Umlagerung werden danach freigegeben."
     }
   },
   "linePopover": {

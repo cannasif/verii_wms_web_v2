@@ -83,7 +83,9 @@
     "returnedQuantityMustEqualRemaining": "'{{stockCode}}' iade için miktar kalanın tamamı ({{remaining}}) olmalıdır.",
     "decisionSaveFailed": "Kalite kararı kaydedilemedi.",
     "quarantineDestinationRequired": "Karantinaya alınacak miktar için hedef depo ve raf seçin.",
-    "decisionDestinationRequired": "Ret veya karantina kararı için hedef depo ve raf seçin."
+    "decisionDestinationRequired": "Ret veya karantina kararı için hedef depo ve raf seçin.",
+    "receiptMustBeCompletedBeforeQualityRouting": "GKK depo ve raf yönlendirmesi için önce mal kabulün fiziksel kabul işlemini tamamlayın.",
+    "datDocumentSeriesRequired": "Hedef depo mal kabul deposundan farklıdır. Devam etmek için DAT belge serisini seçin."
   },
   "applySummary": {
     "title": "Uygulama özeti",
@@ -106,7 +108,15 @@
     "title": "Kararı uygula",
     "infoLabel": "Bilgilendirme",
     "confirm": "Emin misin",
-    "cancel": "Vazgeç"
+    "cancel": "Vazgeç",
+    "sameWarehouseNotice": "Seçilen hedefler mal kabul deposundadır. DAT oluşmaz; yalnızca depo içi raf ve stok statüsü hareketi kaydedilir.",
+    "datSeries": {
+      "title": "Depolar arası transfer oluşturulacak",
+      "description": "En az bir GKK hedefi {{sourceWarehouse}} mal kabul deposundan farklıdır. Kalite kararıyla birlikte DAT taslağı oluşturulacağı için belge serisini seçin.",
+      "placeholder": "DAT belge serisini seçin",
+      "defaultDescription": "Varsayılan seri · Sıradaki belge: {{preview}}",
+      "notConfigured": "Bu şube için aktif Depolar Arası Transfer belge serisi yok. Önce Belge Serileri ekranından tanımlayın."
+    }
   },
   "bulkApplySuccess": "{{count}} satıra \"{{label}}\" uygulandı.",
   "decisionSaved": "Kalite kararı ve stok hareketi kaydedildi.",
@@ -221,7 +231,8 @@
       "allRequired": " · Tüm satırlar zorunlu",
       "helperNoteWithDoc": "Uygulama sonrası stok hareketi kaydedilir; Netsis irsaliyesi politikalara göre gidebilir. Sonucu mal kabul listesinden kontrol edin ({{docNo}}).",
       "helperNoteWithoutDoc": "Uygulama sonrası stok hareketi kaydedilir; Netsis irsaliyesi politikalara göre gidebilir. Sonucu mal kabul listesinden kontrol edin.",
-      "applyButton": "Kararı uygula"
+      "applyButton": "Kararı uygula",
+      "receiptNotCompletedWarning": "Mal kabul henüz fiziksel olarak tamamlanmadı ({{status}}). GKK depo/raf kararı ve DAT oluşturma bu aşamadan sonra açılır."
     }
   },
   "linePopover": {

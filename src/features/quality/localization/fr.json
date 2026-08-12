@@ -83,7 +83,9 @@
     "returnedQuantityMustEqualRemaining": "Pour '{{stockCode}}', la quantité de retour doit être égale à la totalité du reste ({{remaining}}).",
     "decisionSaveFailed": "Impossible d'enregistrer la décision qualité.",
     "quarantineDestinationRequired": "Sélectionnez l'entrepôt et l'emplacement de destination pour la quantité mise en quarantaine.",
-    "decisionDestinationRequired": "Sélectionnez l'entrepôt et l'emplacement de destination pour un rejet ou une quarantaine."
+    "decisionDestinationRequired": "Sélectionnez l'entrepôt et l'emplacement de destination pour un rejet ou une quarantaine.",
+    "receiptMustBeCompletedBeforeQualityRouting": "Terminez d'abord la réception physique avant d'orienter le stock après contrôle qualité.",
+    "datDocumentSeriesRequired": "L'entrepôt cible diffère de l'entrepôt de réception. Sélectionnez une série de documents de transfert inter-entrepôts."
   },
   "applySummary": {
     "title": "Résumé de l'application",
@@ -106,7 +108,15 @@
     "title": "Appliquer la décision",
     "infoLabel": "Information",
     "confirm": "Êtes-vous sûr",
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "sameWarehouseNotice": "Toutes les destinations se trouvent dans l'entrepôt de réception. Aucun transfert inter-entrepôts n'est créé ; seul le mouvement interne d'emplacement et de statut est enregistré.",
+    "datSeries": {
+      "title": "Un transfert inter-entrepôts sera créé",
+      "description": "Au moins une destination qualité diffère de l'entrepôt de réception {{sourceWarehouse}}. Sélectionnez la série du brouillon de transfert.",
+      "placeholder": "Sélectionner la série de transfert",
+      "defaultDescription": "Série par défaut · Prochain document : {{preview}}",
+      "notConfigured": "Aucune série active de transfert inter-entrepôts n'existe pour cette agence. Définissez-en une dans Séries de documents."
+    }
   },
   "bulkApplySuccess": "\"{{label}}\" appliqué à {{count}} lignes.",
   "decisionSaved": "Décision qualité et mouvement de stock enregistrés.",
@@ -187,7 +197,8 @@
       "allRequired": " · Toutes les lignes sont requises",
       "helperNoteWithDoc": "Le mouvement de stock est enregistré après application ; le bordereau Netsis peut être émis selon les politiques. Vérifiez le résultat depuis la liste des réceptions ({{docNo}}).",
       "helperNoteWithoutDoc": "Le mouvement de stock est enregistré après application ; le bordereau Netsis peut être émis selon les politiques. Vérifiez le résultat depuis la liste des réceptions.",
-      "applyButton": "Appliquer la décision"
+      "applyButton": "Appliquer la décision",
+      "receiptNotCompletedWarning": "La réception physique n'est pas encore terminée ({{status}}). L'orientation qualité et le transfert seront disponibles ensuite."
     }
   },
   "linePopover": {

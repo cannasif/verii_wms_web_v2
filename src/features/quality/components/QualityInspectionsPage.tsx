@@ -46,6 +46,7 @@ import {
   buildQualityInspectionStatusFilters,
   QUALITY_INSPECTION_STATUS_EXCLUDE_PASSED,
 } from "../utils/quality-inspection-list-filters";
+import { requiresQualityDat } from "../utils/quality-dat-routing";
 import { cn } from "@/lib/utils";
 import { localizeEnumValue } from "@/lib/enum-localization";
 import {
@@ -74,6 +75,7 @@ type LineDraft = {
   reasonCode: string;
   reasonNote: string;
   targetLocationId?: number | null;
+  targetWarehouseId?: number | null;
   dispositions?: DispositionDraft[];
 };
 
@@ -82,7 +84,25 @@ type DispositionDraft = {
   decision: string;
   quantity: string;
   targetLocationId: number | null;
+  targetWarehouseId?: number | null;
 };
+
+const QUALITY_LOCATION_VALUE_SEPARATOR = "|";
+
+function encodeQualityLocationValue(locationId: number, warehouseId: number): string {
+  return `${locationId}${QUALITY_LOCATION_VALUE_SEPARATOR}${warehouseId}`;
+}
+
+function decodeQualityLocationValue(value: string): { targetLocationId: number | null; targetWarehouseId: number | null } {
+  if (!value) return { targetLocationId: null, targetWarehouseId: null };
+  const [locationValue, warehouseValue] = value.split(QUALITY_LOCATION_VALUE_SEPARATOR);
+  const locationId = Number(locationValue);
+  const warehouseId = Number(warehouseValue);
+  return {
+    targetLocationId: Number.isFinite(locationId) && locationId > 0 ? locationId : null,
+    targetWarehouseId: Number.isFinite(warehouseId) && warehouseId > 0 ? warehouseId : null,
+  };
+}
 
 function isActionableLine(line: QualityInspectionLine): boolean {
   return ACTIONABLE_DECISIONS.has(line.decision);
@@ -237,6 +257,7 @@ function emptyDraft(
   quantity = 0,
   remainderDecision = "Quarantined",
   targetLocationId: number | null = null,
+  targetWarehouseId: number | null = null,
 ): LineDraft {
   return {
     decision: defaultDecision,
@@ -245,6 +266,7 @@ function emptyDraft(
     reasonCode: "",
     reasonNote: "",
     targetLocationId,
+    targetWarehouseId,
   };
 }
 
@@ -260,16 +282,30 @@ function defaultTargetForDecision(
   return null;
 }
 
+function defaultWarehouseForDecision(
+  decision: string,
+  acceptedWarehouseId: number | null,
+  quarantineWarehouseId: number | null,
+  rejectedWarehouseId: number | null,
+): number | null {
+  if (decision === "Accepted") return acceptedWarehouseId;
+  if (decision === "Quarantined") return quarantineWarehouseId;
+  if (decision === "Rejected") return rejectedWarehouseId;
+  return null;
+}
+
 function dispositionDraft(
   decision = "Accepted",
   quantity = 0,
   targetLocationId: number | null = null,
+  targetWarehouseId: number | null = null,
 ): DispositionDraft {
   return {
     key: crypto.randomUUID(),
     decision,
     quantity: quantity > 0 ? String(roundQty(quantity)) : "",
     targetLocationId,
+    targetWarehouseId,
   };
 }
 
@@ -289,6 +325,7 @@ function draftDispositions(
       "Accepted",
       allocation.acceptedQuantity,
       draft.decision === "Accepted" ? draft.targetLocationId ?? fallbackAcceptedLocationId : fallbackAcceptedLocationId,
+      draft.decision === "Accepted" ? draft.targetWarehouseId ?? null : null,
     ));
   }
   if (allocation.quarantineQuantity > QTY_EPS) {
@@ -296,6 +333,7 @@ function draftDispositions(
       "Quarantined",
       allocation.quarantineQuantity,
       draft.decision === "Quarantined" ? draft.targetLocationId ?? fallbackQuarantineLocationId : fallbackQuarantineLocationId,
+      draft.decision === "Quarantined" ? draft.targetWarehouseId ?? null : null,
     ));
   }
   if (allocation.rejectedQuantity > QTY_EPS) {
@@ -303,6 +341,7 @@ function draftDispositions(
       "Rejected",
       allocation.rejectedQuantity,
       draft.decision === "Rejected" ? draft.targetLocationId ?? fallbackRejectedLocationId : fallbackRejectedLocationId,
+      draft.decision === "Rejected" ? draft.targetWarehouseId ?? null : null,
     ));
   }
   return result;
@@ -869,10 +908,14 @@ function InspectionDetailPanel({
     : "Rejected";
   const quarantineDestinations = detail.quarantineDestinations ?? [];
   const defaultAcceptedLocationId = detail.defaultAcceptedDestination?.locationId ?? null;
+  const defaultAcceptedWarehouseId = detail.defaultAcceptedDestination?.warehouseId ?? null;
   const defaultRejectedLocationId = detail.defaultRejectedDestination?.locationId ?? null;
-  const configuredDefaultQuarantineLocationId = quarantineDestinations.find((destination) => destination.isDefault)?.locationId
-    ?? quarantineDestinations[0]?.locationId
+  const defaultRejectedWarehouseId = detail.defaultRejectedDestination?.warehouseId ?? null;
+  const configuredDefaultQuarantineDestination = quarantineDestinations.find((destination) => destination.isDefault)
+    ?? quarantineDestinations[0]
     ?? null;
+  const configuredDefaultQuarantineLocationId = configuredDefaultQuarantineDestination?.locationId ?? null;
+  const configuredDefaultQuarantineWarehouseId = configuredDefaultQuarantineDestination?.warehouseId ?? null;
 
   const [selected, setSelected] = useState<number[]>(() =>
     actionable.map((line) => line.id),
@@ -886,6 +929,7 @@ function InspectionDetailPanel({
           actionableQuantity(line),
           defaultRemainder,
           defaultAcceptedLocationId,
+          defaultAcceptedWarehouseId,
         ),
       ]),
     ),
@@ -907,6 +951,13 @@ function InspectionDetailPanel({
     | null
   >(null);
   const [bulkPanelOpen, setBulkPanelOpen] = useState(false);
+  const datDocumentSeries = useMemo(
+    () => detail.warehouseTransferDocumentSeries ?? [],
+    [detail.warehouseTransferDocumentSeries],
+  );
+  const [warehouseTransferDocumentSeriesId, setWarehouseTransferDocumentSeriesId] = useState<string>(() =>
+    String(datDocumentSeries.find((series) => series.isDefault)?.id ?? ""),
+  );
 
   const final =
     ["Passed", "Failed", "Released", "Cancelled"].includes(
@@ -919,7 +970,68 @@ function InspectionDetailPanel({
   const allSelected =
     actionable.length > 0 && selected.length === actionable.length;
   const someSelected = selected.length > 0 && !allSelected;
-  const canApplyDecision = !final && actionable.length > 0 && decidedCount > 0;
+  const canApplyDecision = detail.canDecideInventoryDisposition
+    && !final
+    && actionable.length > 0
+    && decidedCount > 0;
+  const requiresDatTransfer = useMemo(() => {
+    const targets = actionable.flatMap((line) => {
+      const draft = drafts[line.id];
+      if (!draft?.decision && !draft?.dispositions?.length) return [];
+      if (draft.dispositions?.length) {
+        return draft.dispositions.map((part) => ({
+          decision: part.decision,
+          targetWarehouseId: part.targetWarehouseId ?? defaultWarehouseForDecision(
+            part.decision,
+            defaultAcceptedWarehouseId,
+            configuredDefaultQuarantineWarehouseId,
+            defaultRejectedWarehouseId,
+          ),
+        }));
+      }
+      const targetsForLine = [{
+        decision: draft.decision,
+        targetWarehouseId: draft.targetWarehouseId ?? defaultWarehouseForDecision(
+          draft.decision,
+          defaultAcceptedWarehouseId,
+          configuredDefaultQuarantineWarehouseId,
+          defaultRejectedWarehouseId,
+        ),
+      }];
+      const quantity = parseQty(draft.quantity);
+      if (draft.decision !== "Returned"
+          && Number.isFinite(quantity)
+          && actionableQuantity(line) - quantity > QTY_EPS) {
+        targetsForLine.push({
+          decision: draft.remainderDecision,
+          targetWarehouseId: defaultWarehouseForDecision(
+            draft.remainderDecision,
+            defaultAcceptedWarehouseId,
+            configuredDefaultQuarantineWarehouseId,
+            defaultRejectedWarehouseId,
+          ),
+        });
+      }
+      return targetsForLine;
+    });
+    return requiresQualityDat(detail.header.warehouseId, targets);
+  }, [
+    actionable,
+    configuredDefaultQuarantineWarehouseId,
+    defaultAcceptedWarehouseId,
+    defaultRejectedWarehouseId,
+    detail.header.warehouseId,
+    drafts,
+  ]);
+
+  useEffect(() => {
+    if (!requiresDatTransfer) return;
+    const currentId = Number(warehouseTransferDocumentSeriesId);
+    if (datDocumentSeries.some((series) => series.id === currentId)) return;
+    setWarehouseTransferDocumentSeriesId(String(
+      datDocumentSeries.find((series) => series.isDefault)?.id ?? "",
+    ));
+  }, [datDocumentSeries, requiresDatTransfer, warehouseTransferDocumentSeriesId]);
   const bulkRemainderOptions = remainderOptionsFor(
     bulkDecision,
     allowQuarantineRemainder,
@@ -941,6 +1053,7 @@ function InspectionDetailPanel({
         line ? actionableQuantity(line) : 0,
         defaultRemainder,
         defaultAcceptedLocationId,
+        defaultAcceptedWarehouseId,
       );
       return {
         ...current,
@@ -1031,6 +1144,12 @@ function InspectionDetailPanel({
             configuredDefaultQuarantineLocationId,
             defaultRejectedLocationId,
           ),
+          targetWarehouseId: defaultWarehouseForDecision(
+            bulkDecision,
+            defaultAcceptedWarehouseId,
+            configuredDefaultQuarantineWarehouseId,
+            defaultRejectedWarehouseId,
+          ),
         };
       }
       return next;
@@ -1044,6 +1163,14 @@ function InspectionDetailPanel({
   };
 
   const save = async (): Promise<boolean> => {
+    if (!detail.canDecideInventoryDisposition) {
+      toast.error(t("errors.receiptMustBeCompletedBeforeQualityRouting"));
+      return false;
+    }
+    if (requiresDatTransfer && !Number(warehouseTransferDocumentSeriesId)) {
+      toast.error(t("errors.datDocumentSeriesRequired"));
+      return false;
+    }
     const pending = actionable
       .map((line) => {
         const draft = drafts[line.id] ?? emptyDraft();
@@ -1167,6 +1294,9 @@ function InspectionDetailPanel({
             rowVersion,
             dispositions: dispositionRequests,
             quarantineLocationId: configuredDefaultQuarantineLocationId,
+            warehouseTransferDocumentSeriesId: requiresDatTransfer
+              ? Number(warehouseTransferDocumentSeriesId)
+              : null,
           });
         });
       }
@@ -1716,6 +1846,7 @@ function InspectionDetailPanel({
                                     remainingQty,
                                     defaultRemainder,
                                     defaultAcceptedLocationId,
+                                    defaultAcceptedWarehouseId,
                                   )),
                                 quantity: String(remainingQty),
                               }
@@ -1725,6 +1856,7 @@ function InspectionDetailPanel({
                                 remainingQty,
                                 defaultRemainder,
                                 defaultAcceptedLocationId,
+                                defaultAcceptedWarehouseId,
                               )
                         }
                         onChange={(patch) => {
@@ -1835,6 +1967,13 @@ function InspectionDetailPanel({
                   })
                 : t("detail.footer.helperNoteWithoutDoc")}
             </span>
+            {!detail.canDecideInventoryDisposition ? (
+              <span className="block text-xs font-semibold text-rose-600">
+                {t("detail.footer.receiptNotCompletedWarning", {
+                  status: localizeEnumValue(detail.sourceOperationStatus ?? "InProgress"),
+                })}
+              </span>
+            ) : null}
           </label>
           <OpsActionButton
             type="button"
@@ -1886,6 +2025,48 @@ function InspectionDetailPanel({
                 </li>
               ))}
             </ul>
+            {requiresDatTransfer ? (
+              <div className="mt-4 space-y-2 rounded-xl border border-amber-400/40 bg-amber-400/10 p-3">
+                <div>
+                  <p className="text-sm font-bold text-amber-700 dark:text-amber-300">
+                    {t("applyConfirm.datSeries.title")}
+                  </p>
+                  <p className="mt-1 text-xs leading-5 text-slate-600 dark:text-slate-300">
+                    {t("applyConfirm.datSeries.description", {
+                      sourceWarehouse: detail.header.warehouseName
+                        || detail.header.warehouseCode
+                        || detail.header.warehouseId,
+                    })}
+                  </p>
+                </div>
+                <AppDropdown
+                  value={warehouseTransferDocumentSeriesId || null}
+                  onValueChange={setWarehouseTransferDocumentSeriesId}
+                  options={datDocumentSeries.map((series) => ({
+                    value: String(series.id),
+                    label: `${series.code} · ${series.name}`,
+                    description: series.isDefault
+                      ? t("applyConfirm.datSeries.defaultDescription", {
+                          preview: series.previewDocumentNumber,
+                        })
+                      : series.previewDocumentNumber,
+                  }))}
+                  placeholder={t("applyConfirm.datSeries.placeholder")}
+                  searchable
+                  portalContainer={null}
+                  contentClassName="!z-[6100]"
+                />
+                {datDocumentSeries.length === 0 ? (
+                  <p className="text-xs font-semibold text-rose-600">
+                    {t("applyConfirm.datSeries.notConfigured")}
+                  </p>
+                ) : null}
+              </div>
+            ) : (
+              <p className="mt-4 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-700 dark:text-emerald-300">
+                {t("applyConfirm.sameWarehouseNotice")}
+              </p>
+            )}
           </div>
 
           <DialogFooter className="wms-ops-detail-dialog__footer gap-2 border-t px-6 py-4 sm:justify-end sm:gap-2">
@@ -1899,7 +2080,9 @@ function InspectionDetailPanel({
             </OpsActionButton>
             <OpsActionButton
               type="button"
-              disabled={saving || !canApplyDecision}
+              disabled={saving
+                || !canApplyDecision
+                || requiresDatTransfer && !Number(warehouseTransferDocumentSeriesId)}
               className="wms-ops-quality-decide-btn"
               onClick={() => {
                 void save();
@@ -2088,6 +2271,11 @@ function LineDecisionPopover({
       line.decision === "Quarantined",
     t,
   );
+  const fallbackQuarantineWarehouseId = quarantineDestinations.find(
+    (destination) => destination.locationId === fallbackQuarantineLocationId,
+  )?.warehouseId ?? null;
+  const defaultAcceptedWarehouseId = defaultAcceptedDestination?.warehouseId ?? null;
+  const defaultRejectedWarehouseId = defaultRejectedDestination?.warehouseId ?? null;
   const advancedDispositions = draft.dispositions ?? [];
   const allocatedQuantity = roundQty(
     advancedDispositions.reduce((sum, part) => {
@@ -2106,7 +2294,15 @@ function LineDecisionPopover({
           fallbackQuarantineLocationId,
           defaultRejectedLocationId,
           t,
-        ),
+        ).map((part) => ({
+          ...part,
+          targetWarehouseId: part.targetWarehouseId ?? defaultWarehouseForDecision(
+            part.decision,
+            defaultAcceptedWarehouseId,
+            fallbackQuarantineWarehouseId,
+            defaultRejectedWarehouseId,
+          ),
+        })),
       });
     } catch (error) {
       toast.error(message(error, t("errors.quantityDistributionInvalid")));
@@ -2122,7 +2318,12 @@ function LineDecisionPopover({
     onChange({
       dispositions: [
         ...advancedDispositions,
-        dispositionDraft("Accepted", unallocatedQuantity, defaultAcceptedLocationId),
+        dispositionDraft(
+          "Accepted",
+          unallocatedQuantity,
+          defaultAcceptedLocationId,
+          defaultAcceptedWarehouseId,
+        ),
       ],
     });
   const removeDisposition = (key: string) =>
@@ -2269,6 +2470,12 @@ function LineDecisionPopover({
                         fallbackQuarantineLocationId,
                         defaultRejectedLocationId,
                       ),
+                      targetWarehouseId: defaultWarehouseForDecision(
+                        value,
+                        defaultAcceptedWarehouseId,
+                        fallbackQuarantineWarehouseId,
+                        defaultRejectedWarehouseId,
+                      ),
                       quantity:
                         value === "Returned" || serial
                           ? String(remaining)
@@ -2312,7 +2519,16 @@ function LineDecisionPopover({
                       fallbackQuarantineLocationId,
                       defaultRejectedLocationId,
                     )}
-                    onChange={(targetLocationId) => onChange({ targetLocationId })}
+                    targetWarehouseId={draft.targetWarehouseId ?? defaultWarehouseForDecision(
+                      draft.decision,
+                      defaultAcceptedWarehouseId,
+                      fallbackQuarantineWarehouseId,
+                      defaultRejectedWarehouseId,
+                    )}
+                    onChange={(targetLocationId, targetWarehouseId) => onChange({
+                      targetLocationId,
+                      targetWarehouseId,
+                    })}
                     branchCode={branchCode}
                     queryScope={`quick-${line.id}`}
                     quarantineDestinations={quarantineDestinations}
@@ -2380,6 +2596,12 @@ function LineDecisionPopover({
                                 : value === "Quarantined"
                                   ? fallbackQuarantineLocationId
                                   : null,
+                            targetWarehouseId: defaultWarehouseForDecision(
+                              value,
+                              defaultAcceptedWarehouseId,
+                              fallbackQuarantineWarehouseId,
+                              defaultRejectedWarehouseId,
+                            ),
                           })}
                           options={options}
                           placeholder={t("linePopover.decisionPlaceholder")}
@@ -2400,20 +2622,26 @@ function LineDecisionPopover({
                           queryKey={["quality-approved-target", branchCode, line.id, part.key]}
                           fetchPage={(request) => qualityApi.locations(request, branchCode)}
                           toOption={(location) => ({
-                            value: String(location.id),
+                            value: encodeQualityLocationValue(location.id, location.warehouseId),
                             label: `${location.warehouseCode} / ${location.code} · ${location.name}`,
                             description: location.warehouseName,
                             disabled: !location.isPutaway || location.isQuarantine,
                           })}
-                          value={part.targetLocationId ? String(part.targetLocationId) : null}
+                          value={part.targetLocationId && part.targetWarehouseId
+                            ? encodeQualityLocationValue(part.targetLocationId, part.targetWarehouseId)
+                            : null}
                           selectedOption={part.targetLocationId === defaultAcceptedDestination?.locationId ? {
-                            value: String(defaultAcceptedDestination.locationId),
+                            value: encodeQualityLocationValue(
+                              defaultAcceptedDestination.locationId,
+                              defaultAcceptedDestination.warehouseId,
+                            ),
                             label: `${defaultAcceptedDestination.warehouseCode} / ${defaultAcceptedDestination.locationCode} · ${defaultAcceptedDestination.locationName}`,
                             description: `${defaultAcceptedDestination.warehouseName} · ${t("linePopover.defaultTargetSuffix")}`,
                           } : undefined}
-                          onValueChange={(value) => patchDisposition(part.key, {
-                            targetLocationId: value ? Number(value) : null,
-                          })}
+                          onValueChange={(value) => patchDisposition(
+                            part.key,
+                            decodeQualityLocationValue(value),
+                          )}
                           staticOptions={[{
                             value: "",
                             label: t("linePopover.automaticAcceptedTarget"),
@@ -2427,11 +2655,19 @@ function LineDecisionPopover({
                         />
                       ) : part.decision === "Quarantined" ? (
                         <AppDropdown
-                          value={part.targetLocationId ? String(part.targetLocationId) : null}
-                          onValueChange={(value) => patchDisposition(part.key, { targetLocationId: value ? Number(value) : null })}
+                          value={part.targetLocationId && part.targetWarehouseId
+                            ? encodeQualityLocationValue(part.targetLocationId, part.targetWarehouseId)
+                            : null}
+                          onValueChange={(value) => patchDisposition(
+                            part.key,
+                            decodeQualityLocationValue(value),
+                          )}
                           options={[
                             ...quarantineDestinations.map((destination) => ({
-                              value: String(destination.locationId),
+                              value: encodeQualityLocationValue(
+                                destination.locationId,
+                                destination.warehouseId,
+                              ),
                               label: `${destination.warehouseCode} / ${destination.locationCode} · ${destination.locationName}`,
                               description: destination.isDefault
                                 ? `${destination.warehouseName} · ${t("linePopover.defaultTargetSuffix")}`
@@ -2449,20 +2685,26 @@ function LineDecisionPopover({
                           queryKey={["quality-rejected-target", branchCode, line.id, part.key]}
                           fetchPage={(request) => qualityApi.locations(request, branchCode)}
                           toOption={(location) => ({
-                            value: String(location.id),
+                            value: encodeQualityLocationValue(location.id, location.warehouseId),
                             label: `${location.warehouseCode} / ${location.code} · ${location.name}`,
                             description: location.warehouseName,
                             disabled: !location.isQuarantine,
                           })}
-                          value={part.targetLocationId ? String(part.targetLocationId) : null}
+                          value={part.targetLocationId && part.targetWarehouseId
+                            ? encodeQualityLocationValue(part.targetLocationId, part.targetWarehouseId)
+                            : null}
                           selectedOption={part.targetLocationId === defaultRejectedDestination?.locationId ? {
-                            value: String(defaultRejectedDestination.locationId),
+                            value: encodeQualityLocationValue(
+                              defaultRejectedDestination.locationId,
+                              defaultRejectedDestination.warehouseId,
+                            ),
                             label: `${defaultRejectedDestination.warehouseCode} / ${defaultRejectedDestination.locationCode} · ${defaultRejectedDestination.locationName}`,
                             description: `${defaultRejectedDestination.warehouseName} · ${t("linePopover.defaultTargetSuffix")}`,
                           } : undefined}
-                          onValueChange={(value) => patchDisposition(part.key, {
-                            targetLocationId: value ? Number(value) : null,
-                          })}
+                          onValueChange={(value) => patchDisposition(
+                            part.key,
+                            decodeQualityLocationValue(value),
+                          )}
                           placeholder={t("linePopover.rejectedTargetPlaceholder")}
                           searchable
                           className="wms-ops-quality-field !h-10 !min-h-10 !text-xs"
@@ -2527,6 +2769,7 @@ function LineDecisionPopover({
 function QualityDecisionTargetPicker({
   decision,
   targetLocationId,
+  targetWarehouseId,
   onChange,
   branchCode,
   queryScope,
@@ -2536,7 +2779,8 @@ function QualityDecisionTargetPicker({
 }: {
   decision: string;
   targetLocationId: number | null;
-  onChange: (value: number | null) => void;
+  targetWarehouseId: number | null;
+  onChange: (locationId: number | null, warehouseId: number | null) => void;
   branchCode: string;
   queryScope: string;
   quarantineDestinations: QualityInspectionDetail["quarantineDestinations"];
@@ -2550,18 +2794,26 @@ function QualityDecisionTargetPicker({
         queryKey={["quality-approved-target", branchCode, queryScope]}
         fetchPage={(request) => qualityApi.locations(request, branchCode)}
         toOption={(location) => ({
-          value: String(location.id),
+          value: encodeQualityLocationValue(location.id, location.warehouseId),
           label: `${location.warehouseCode} / ${location.code} · ${location.name}`,
           description: location.warehouseName,
           disabled: !location.isPutaway || location.isQuarantine,
         })}
-        value={targetLocationId ? String(targetLocationId) : null}
+        value={targetLocationId && targetWarehouseId
+          ? encodeQualityLocationValue(targetLocationId, targetWarehouseId)
+          : null}
         selectedOption={targetLocationId === defaultAcceptedDestination?.locationId ? {
-          value: String(defaultAcceptedDestination.locationId),
+          value: encodeQualityLocationValue(
+            defaultAcceptedDestination.locationId,
+            defaultAcceptedDestination.warehouseId,
+          ),
           label: `${defaultAcceptedDestination.warehouseCode} / ${defaultAcceptedDestination.locationCode} · ${defaultAcceptedDestination.locationName}`,
           description: `${defaultAcceptedDestination.warehouseName} · ${t("linePopover.defaultTargetSuffix")}`,
         } : undefined}
-        onValueChange={(value) => onChange(value ? Number(value) : null)}
+        onValueChange={(value) => {
+          const target = decodeQualityLocationValue(value);
+          onChange(target.targetLocationId, target.targetWarehouseId);
+        }}
         staticOptions={targetLocationId ? [] : [{
           value: "",
           label: t("linePopover.automaticAcceptedTarget"),
@@ -2578,10 +2830,15 @@ function QualityDecisionTargetPicker({
   if (decision === "Quarantined") {
     return (
       <AppDropdown
-        value={targetLocationId ? String(targetLocationId) : null}
-        onValueChange={(value) => onChange(value ? Number(value) : null)}
+        value={targetLocationId && targetWarehouseId
+          ? encodeQualityLocationValue(targetLocationId, targetWarehouseId)
+          : null}
+        onValueChange={(value) => {
+          const target = decodeQualityLocationValue(value);
+          onChange(target.targetLocationId, target.targetWarehouseId);
+        }}
         options={quarantineDestinations.map((destination) => ({
-          value: String(destination.locationId),
+          value: encodeQualityLocationValue(destination.locationId, destination.warehouseId),
           label: `${destination.warehouseCode} / ${destination.locationCode} · ${destination.locationName}`,
           description: destination.isDefault
             ? `${destination.warehouseName} · ${t("linePopover.defaultTargetSuffix")}`
@@ -2601,18 +2858,26 @@ function QualityDecisionTargetPicker({
         queryKey={["quality-rejected-target", branchCode, queryScope]}
         fetchPage={(request) => qualityApi.locations(request, branchCode)}
         toOption={(location) => ({
-          value: String(location.id),
+          value: encodeQualityLocationValue(location.id, location.warehouseId),
           label: `${location.warehouseCode} / ${location.code} · ${location.name}`,
           description: location.warehouseName,
           disabled: !location.isQuarantine,
         })}
-        value={targetLocationId ? String(targetLocationId) : null}
+        value={targetLocationId && targetWarehouseId
+          ? encodeQualityLocationValue(targetLocationId, targetWarehouseId)
+          : null}
         selectedOption={targetLocationId === defaultRejectedDestination?.locationId ? {
-          value: String(defaultRejectedDestination.locationId),
+          value: encodeQualityLocationValue(
+            defaultRejectedDestination.locationId,
+            defaultRejectedDestination.warehouseId,
+          ),
           label: `${defaultRejectedDestination.warehouseCode} / ${defaultRejectedDestination.locationCode} · ${defaultRejectedDestination.locationName}`,
           description: `${defaultRejectedDestination.warehouseName} · ${t("linePopover.defaultTargetSuffix")}`,
         } : undefined}
-        onValueChange={(value) => onChange(value ? Number(value) : null)}
+        onValueChange={(value) => {
+          const target = decodeQualityLocationValue(value);
+          onChange(target.targetLocationId, target.targetWarehouseId);
+        }}
         placeholder={t("linePopover.rejectedTargetPlaceholder")}
         searchable
         className="wms-ops-quality-field !h-10 !min-h-10 !text-xs"
