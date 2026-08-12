@@ -1306,6 +1306,17 @@ html:not(.skin-premium) .wms-ops-form .wms-ops-gr-review__metric-card-hint {
   font-size: 0.64rem;
 }
 
+html:not(.skin-premium) .wms-ops-form .wms-ops-gr-review__metric-card-note {
+  font-family: inherit;
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  font-size: 0.66rem;
+  line-height: 1.45;
+  opacity: 0.78;
+}
+
 /* Review stock / quality dialogs */
 html:not(.skin-premium) .wms-ops-lookup-dialog .wms-ops-gr-review__quality-dialog-body {
   padding: 0.85rem 1.1rem 1rem;
