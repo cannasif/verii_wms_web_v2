@@ -42,7 +42,7 @@ export function DocumentSeriesPage() {
 
   const documentTypes = useMemo(
     () => moduleReady
-      ? (['GoodsReceipt', 'InterWarehouseTransfer', 'Shipment', 'WarehouseReceipt', 'WarehouseIssue', 'ProductionOrder', 'ProductionTransfer', 'SubcontractingIssue', 'SubcontractingReceipt'] as WmsDocumentType[])
+      ? (['GoodsReceipt', 'InterWarehouseTransfer', 'Shipment', 'WarehouseReceipt', 'WarehouseIssue', 'ProductionOrder', 'ProductionTransfer', 'SubcontractingIssue', 'SubcontractingReceipt', 'InventoryCount'] as WmsDocumentType[])
         .map((value) => ({ value, label: t(`types.${value}`) }))
       : [],
     [moduleReady, t],

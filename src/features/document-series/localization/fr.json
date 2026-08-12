@@ -27,7 +27,8 @@
     "ProductionOrder": "Ordre de production",
     "ProductionTransfer": "Transfert vers la production",
     "SubcontractingIssue": "Sortie vers sous-traitant",
-    "SubcontractingReceipt": "Retour de sous-traitance"
+    "SubcontractingReceipt": "Retour de sous-traitance",
+    "InventoryCount": "Inventaire"
   },
   "yearFormats": {
     "None": "Pas d'année",

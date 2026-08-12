@@ -27,7 +27,8 @@
     "ProductionOrder": "أمر إنتاج",
     "ProductionTransfer": "نقل إلى الإنتاج",
     "SubcontractingIssue": "صرف إلى المقاول",
-    "SubcontractingReceipt": "استلام من المقاول"
+    "SubcontractingReceipt": "استلام من المقاول",
+    "InventoryCount": "جرد المستودع"
   },
   "yearFormats": {
     "None": "لا سنة",

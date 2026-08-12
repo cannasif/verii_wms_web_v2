@@ -7,7 +7,8 @@ export type WmsDocumentType =
   | 'ProductionOrder'
   | 'ProductionTransfer'
   | 'SubcontractingIssue'
-  | 'SubcontractingReceipt';
+  | 'SubcontractingReceipt'
+  | 'InventoryCount';
 export type DocumentYearFormat = 'None' | 'TwoDigit' | 'FourDigit';
 
 export interface DocumentSeriesRow {

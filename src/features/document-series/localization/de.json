@@ -27,7 +27,8 @@
     "ProductionOrder": "Produktionsauftrag",
     "ProductionTransfer": "Produktionstransfer",
     "SubcontractingIssue": "Beistellungsentnahme",
-    "SubcontractingReceipt": "Lohnbearbeitungseingang"
+    "SubcontractingReceipt": "Lohnbearbeitungseingang",
+    "InventoryCount": "Inventur"
   },
   "yearFormats": {
     "None": "Kein Jahr",

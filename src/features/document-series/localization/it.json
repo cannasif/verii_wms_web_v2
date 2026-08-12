@@ -27,7 +27,8 @@
     "ProductionOrder": "Ordine di produzione",
     "ProductionTransfer": "Trasferimento alla produzione",
     "SubcontractingIssue": "Uscita al terzista",
-    "SubcontractingReceipt": "Rientro dal terzista"
+    "SubcontractingReceipt": "Rientro dal terzista",
+    "InventoryCount": "Inventario"
   },
   "yearFormats": {
     "None": "Nessun anno",
