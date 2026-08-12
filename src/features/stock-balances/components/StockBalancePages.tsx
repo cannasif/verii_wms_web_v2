@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { Eye, FileSpreadsheet, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdvancedDataGrid, type GridColumn } from '@/components/shared/AdvancedDataGrid';
-import { InitialExcelImportDialog } from '@/components/shared/InitialExcelImportDialog';
 import { systemColumns } from '@/components/shared/GridSystemColumns';
 import { OpsDialogBody, OpsDialogContent, OpsDialogHeader } from '@/components/shared/OpsDialogShell';
 import { Dialog, DialogTitle } from '@/components/ui/dialog';
@@ -14,6 +13,7 @@ import { stockBalancesApi } from '../api/stock-balances.api';
 import type { LocationBalanceRow, ReconciliationSummary, SerialBalanceRow, SerialMovementHistoryRow, StockBalanceDrillDown, WarehouseBalanceRow } from '../types/stock-balance.types';
 import { formatProjectDateTime, formatProjectNumber } from '@/lib/project-format';
 import { useAuthStore } from '@/stores/auth-store';
+import { WarehouseOpeningImportDialog } from '@/features/locations/components/WarehouseOpeningImportDialog';
 
 const L = 'dataGrid.locationBalances';
 const W = 'dataGrid.warehouseBalances';
@@ -99,23 +99,10 @@ export function LocationBalancesPage() {
           ...(allow ? [{ label: working ? t(`${L}.reconciling`) : t(`${L}.reconcile`), run: reconcile }] : []),
         ]}
       />
-      <InitialExcelImportDialog
+      <WarehouseOpeningImportDialog
         open={importOpen}
-        title={t(`${L}.openingImport.title`)}
-        description={t(`${L}.openingImport.description`)}
-        warning={t(`${L}.openingImport.warning`)}
-        templateFileName="wms-v2-ilk-raf-bakiyesi-sablonu.xlsx"
-        limitText={t(`${L}.openingImport.limitText`)}
-        submitLabel={t(`${L}.openingImport.submitLabel`)}
+        branchCode={branchCode}
         onOpenChange={setImportOpen}
-        downloadTemplate={() => stockBalancesApi.downloadOpeningTemplate(branchCode)}
-        importFile={(file, idempotencyKey) => stockBalancesApi.importOpeningBalance(file, branchCode, idempotencyKey)}
-        summarize={(result) => [
-          { label: t(`${L}.openingImport.summaryRows`), value: result.totalRows },
-          { label: t(`${L}.openingImport.summaryTotalQuantity`), value: formatProjectNumber(result.totalQuantity) },
-          { label: t(`${L}.openingImport.summaryOperation`), value: `#${result.operationId}` },
-          { label: t(`${L}.openingImport.summaryStatus`), value: result.isReplay ? t(`${L}.openingImport.summaryStatusReplay`) : t(`${L}.openingImport.summaryStatusSaved`) },
-        ]}
         onImported={async () => queryClient.invalidateQueries({ queryKey: ['advanced-grid'] })}
       />
     </div>
