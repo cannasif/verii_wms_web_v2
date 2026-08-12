@@ -2422,6 +2422,7 @@ function LineDecisionPopover({
                           placeholder={t("linePopover.acceptedTargetPlaceholder")}
                           searchable
                           className="wms-ops-quality-field !h-10 !min-h-10 !text-xs"
+                          portalContainer={null}
                           contentClassName="!z-[5100]"
                         />
                       ) : part.decision === "Quarantined" ? (
@@ -2465,6 +2466,7 @@ function LineDecisionPopover({
                           placeholder={t("linePopover.rejectedTargetPlaceholder")}
                           searchable
                           className="wms-ops-quality-field !h-10 !min-h-10 !text-xs"
+                          portalContainer={null}
                           contentClassName="!z-[5100]"
                         />
                       ) : null}
@@ -2568,6 +2570,7 @@ function QualityDecisionTargetPicker({
         placeholder={t("linePopover.acceptedTargetPlaceholder")}
         searchable
         className="wms-ops-quality-field !h-10 !min-h-10 !text-xs"
+        portalContainer={null}
         contentClassName="!z-[5100]"
       />
     );
@@ -2613,6 +2616,7 @@ function QualityDecisionTargetPicker({
         placeholder={t("linePopover.rejectedTargetPlaceholder")}
         searchable
         className="wms-ops-quality-field !h-10 !min-h-10 !text-xs"
+        portalContainer={null}
         contentClassName="!z-[5100]"
       />
     );
