@@ -12,6 +12,15 @@ export const gpField = 'min-h-11 w-full rounded-xl border border-[var(--wms-app-
 export const gpPrimaryButton = 'gp-primary-button inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[var(--wms-brand-primary)] px-4 text-sm font-bold text-[var(--wms-brand-on-primary)] disabled:cursor-not-allowed disabled:opacity-50';
 export const gpSecondaryButton = 'gp-secondary-button inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[var(--wms-app-border)] px-4 text-sm font-bold hover:border-[var(--wms-brand-primary)] disabled:cursor-not-allowed disabled:opacity-50';
 
+export type GeneratorWorkflowStep = 'project' | 'planning' | 'production' | 'tracking';
+
+const workflowSteps: Array<{ id: GeneratorWorkflowStep; label: string; text: string; href: string }> = [
+  { id: 'project', label: 'İşi oluştur', text: 'Proje ve teslim bilgisini gir', href: '/warehouse/production/generator/projects/new' },
+  { id: 'planning', label: 'Planı hazırla', text: 'Projeyi seç, kontrol et ve uygula', href: '/warehouse/production/generator/planning' },
+  { id: 'production', label: 'Üretimi yürüt', text: 'İstasyon işlerini başlat ve tamamla', href: '/warehouse/production/generator/andon' },
+  { id: 'tracking', label: 'Sonucu izle', text: 'Gecikme, risk ve yükleri kontrol et', href: '/warehouse/production/generator/reports' },
+];
+
 const processLinks = [
   { code: '01', label: 'Merkez', href: '/warehouse/production/generator' },
   { code: '02', label: 'Projeler', href: '/warehouse/production/generator/projects' },
@@ -39,6 +48,18 @@ function isProcessLinkActive(pathname: string, code: string, href: string): bool
 export function GeneratorPageHeader({ eyebrow, title, description, actions }: { eyebrow: string; title: string; description: string; actions?: ReactNode }): ReactElement {
   const location = useLocation();
   return <header className="gp-hero"><div className="gp-hero__main"><div><p className="text-xs font-black uppercase tracking-[0.2em] text-[var(--wms-brand-primary)]">{eyebrow}</p><h1 className="mt-2 text-2xl font-black">{title}</h1><p className="mt-1 max-w-3xl text-sm text-[var(--wms-app-text-muted)]">{description}</p></div>{actions && <div className="flex flex-wrap gap-2">{actions}</div>}</div><nav className="gp-process-nav" aria-label="Jeneratör üretim süreçleri">{processLinks.map((item) => { const active = isProcessLinkActive(location.pathname, item.code, item.href); return <Link key={item.href} className={`gp-process-nav__item ${active ? 'is-active' : ''}`} to={item.href}><span className="gp-process-nav__code">{item.code}</span>{item.label}</Link>; })}</nav></header>;
+}
+
+export function GeneratorWorkflow({ current }: { current: GeneratorWorkflowStep }): ReactElement {
+  const currentIndex = workflowSteps.findIndex((step) => step.id === current);
+  return <nav className={`${gpPanel} gp-workflow`} aria-label="Jeneratör üretim iş akışı">{workflowSteps.map((step, index) => {
+    const state = index < currentIndex ? 'is-done' : index === currentIndex ? 'is-current' : '';
+    return <Link key={step.id} className={`gp-workflow__step ${state}`} to={step.href} aria-current={index === currentIndex ? 'step' : undefined}><span className="gp-workflow__number">{index < currentIndex ? '✓' : index + 1}</span><span><strong>{step.label}</strong><small>{step.text}</small></span></Link>;
+  })}</nav>;
+}
+
+export function GeneratorTaskSteps({ items }: { items: Array<{ title: string; text: string; state: 'waiting' | 'current' | 'done' }> }): ReactElement {
+  return <ol className="gp-task-steps" aria-label="Bu ekrandaki işlem adımları">{items.map((item, index) => <li key={item.title} className={`gp-task-steps__item is-${item.state}`}><span>{item.state === 'done' ? '✓' : index + 1}</span><div><strong>{item.title}</strong><small>{item.text}</small></div></li>)}</ol>;
 }
 
 export function GeneratorMetric({ icon: Icon, label, value, hint }: { icon: LucideIcon; label: string; value: number | string; hint?: string }): ReactElement {
