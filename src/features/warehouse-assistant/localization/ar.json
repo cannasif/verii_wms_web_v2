@@ -216,6 +216,7 @@
     "AdjustmentDecrease": "تسوية بالنقص",
     "CustomerReturn": "مرتجع عميل",
     "SupplierReturn": "مرتجع مورد",
+    "BalanceReconciliation": "مطابقة رصيد Excel",
     "Reversal": "عكس الحركة"
   },
   "operationStatuses": {

@@ -216,6 +216,7 @@
     "AdjustmentDecrease": "Adjustment decrease",
     "CustomerReturn": "Customer return",
     "SupplierReturn": "Supplier return",
+    "BalanceReconciliation": "Excel balance reconciliation",
     "Reversal": "Reversal"
   },
   "operationStatuses": {

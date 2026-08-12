@@ -218,6 +218,7 @@
     "AdjustmentDecrease": "Sayım/fark azalışı",
     "CustomerReturn": "Müşteri iadesi",
     "SupplierReturn": "Tedarikçi iadesi",
+    "BalanceReconciliation": "Excel kesin bakiye eşitlemesi",
     "Reversal": "Ters kayıt"
   },
   "operationStatuses": {

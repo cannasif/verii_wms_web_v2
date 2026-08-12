@@ -218,6 +218,7 @@
     "AdjustmentDecrease": "Ajustement négatif",
     "CustomerReturn": "Retour client",
     "SupplierReturn": "Retour fournisseur",
+    "BalanceReconciliation": "Rapprochement de stock Excel",
     "Reversal": "Contre-passation"
   },
   "operationStatuses": {

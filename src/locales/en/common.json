@@ -7325,6 +7325,7 @@
       "AdjustmentDecrease": "Count Decrease",
       "CustomerReturn": "Customer Return",
       "SupplierReturn": "Supplier Return",
+      "BalanceReconciliation": "Excel Balance Reconciliation",
       "Reversal": "Reversal"
     },
     "stockStatuses": {

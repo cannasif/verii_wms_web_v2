@@ -5510,6 +5510,7 @@
       "AdjustmentDecrease": "Diminuzione da conteggio",
       "CustomerReturn": "Resa cliente",
       "SupplierReturn": "Resa al fornitore",
+      "BalanceReconciliation": "Riconciliazione saldo Excel",
       "Reversal": "Rettifica inversa"
     },
     "stockStatuses": {

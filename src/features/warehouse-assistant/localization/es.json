@@ -216,6 +216,7 @@
     "AdjustmentDecrease": "Ajuste negativo",
     "CustomerReturn": "Devolución de cliente",
     "SupplierReturn": "Devolución a proveedor",
+    "BalanceReconciliation": "Conciliación de saldo Excel",
     "Reversal": "Reversión"
   },
   "operationStatuses": {

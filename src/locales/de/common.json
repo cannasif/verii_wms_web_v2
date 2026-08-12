@@ -6952,6 +6952,7 @@
       "AdjustmentDecrease": "Zählungsminderung",
       "CustomerReturn": "Kundenrücksendung",
       "SupplierReturn": "Rücksendung an Lieferanten",
+      "BalanceReconciliation": "Excel-Bestandsabgleich",
       "Reversal": "Stornobuchung"
     },
     "stockStatuses": {

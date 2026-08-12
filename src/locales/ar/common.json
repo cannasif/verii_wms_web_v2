@@ -5510,6 +5510,7 @@
       "AdjustmentDecrease": "نقص بالعد",
       "CustomerReturn": "مرتجع عميل",
       "SupplierReturn": "مرتجع إلى المورد",
+      "BalanceReconciliation": "مطابقة رصيد Excel",
       "Reversal": "عملية عكسية"
     },
     "stockStatuses": {

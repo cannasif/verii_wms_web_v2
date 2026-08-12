@@ -216,6 +216,7 @@
     "AdjustmentDecrease": "Bestandsminderung",
     "CustomerReturn": "Kundenrückgabe",
     "SupplierReturn": "Lieferantenrückgabe",
+    "BalanceReconciliation": "Excel-Bestandsabgleich",
     "Reversal": "Stornobuchung"
   },
   "operationStatuses": {

@@ -5510,6 +5510,7 @@
       "AdjustmentDecrease": "Diminution d'inventaire",
       "CustomerReturn": "Retour client",
       "SupplierReturn": "Retour fournisseur",
+      "BalanceReconciliation": "Rapprochement de stock Excel",
       "Reversal": "Contre-écriture"
     },
     "stockStatuses": {

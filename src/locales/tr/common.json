@@ -7358,6 +7358,7 @@
       "AdjustmentDecrease": "Sayım Azalışı",
       "CustomerReturn": "Müşteri İadesi",
       "SupplierReturn": "Tedarikçiye İade",
+      "BalanceReconciliation": "Excel Kesin Bakiye Eşitlemesi",
       "Reversal": "Ters Kayıt"
     },
     "stockStatuses": {
