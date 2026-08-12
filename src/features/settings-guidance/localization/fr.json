@@ -2410,6 +2410,15 @@
           "decision": "Cette option contrôle les opérations suivantes : Routage après acceptation des marchandises, Solde de réserve de qualité. Choisissez-la si vous souhaitez ce résultat : « L'étagère par défaut pour les produits en attente d'examen de la qualité. »"
         }
       },
+      "defaultAcceptedLocationId": {
+        "default": {
+          "summary": "Entrepôt et emplacement proposés pour les produits acceptés par le contrôle qualité.",
+          "effect": "Cette destination est sélectionnée automatiquement pour une décision d'acceptation; un utilisateur autorisé peut la modifier.",
+          "affects": ["Décision qualité", "Mouvement de stock accepté", "Transfert inter-entrepôts"],
+          "scenario": "Un produit accepté est proposé pour ACCEPT-01; l'utilisateur peut choisir une autre destination admissible.",
+          "decision": "Choisissez cette valeur pour préremplir l'entrepôt et l'emplacement cibles tout en laissant la sélection modifiable."
+        }
+      },
       "defaultQuarantineLocationId": {
         "default": {
           "summary": "C'est la tablette par défaut des produits qui ont été mis en quarantaine.",

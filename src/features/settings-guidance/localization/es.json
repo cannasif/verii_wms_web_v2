@@ -2410,6 +2410,15 @@
           "decision": "Esta opción controla estas operaciones: Despliegue después de la aceptación de bienes, Equilibrio de reserva de calidad. Elíjala si desea este resultado: «La plataforma predeterminada para productos que esperan una revisión de calidad.»"
         }
       },
+      "defaultAcceptedLocationId": {
+        "default": {
+          "summary": "Almacén y ubicación sugeridos para productos aceptados por control de calidad.",
+          "effect": "Este destino se selecciona automáticamente al aceptar; un usuario autorizado puede cambiarlo.",
+          "affects": ["Decisión de calidad", "Movimiento de stock aceptado", "Transferencia entre almacenes"],
+          "scenario": "Un producto aceptado se propone para ACEPT-01; el usuario puede elegir otro destino válido.",
+          "decision": "Seleccione este valor para completar el almacén y la ubicación de destino y permitir su modificación."
+        }
+      },
       "defaultQuarantineLocationId": {
         "default": {
           "summary": "Es el estante predeterminado de productos que se han cuarentenado.",

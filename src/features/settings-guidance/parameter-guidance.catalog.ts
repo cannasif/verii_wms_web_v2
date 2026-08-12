@@ -758,6 +758,12 @@ const quality: Record<string, ValueGuide> = {
     ["Mal kabul sonrası yönlendirme", "Kalite bekleme bakiyesi"],
     "Kaliteye gönderilen ürün KLT-01 rafına yerleştirilir.",
   ),
+  defaultAcceptedLocationId: g(
+    "Kalite kontrolünde kabul edilen ürünlerin önerilen depo ve rafıdır.",
+    "Kabul kararı seçildiğinde bu hedef otomatik gelir; yetkili kullanıcı işlem satırında değiştirebilir.",
+    ["Kalite kararı", "Kabul stok hareketi", "Depolar arası transfer"],
+    "Kabul edilen ürün varsayılan ONAY-01 rafına önerilir; kullanıcı gerekirse başka uygun depo ve rafı seçer.",
+  ),
   defaultQuarantineLocationId: g(
     "Karantina kararı verilen ürünlerin varsayılan rafıdır.",
     "Başarısız/şüpheli stok bu lokasyona yöneltilir.",

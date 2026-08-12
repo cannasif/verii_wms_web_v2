@@ -2410,6 +2410,15 @@
           "decision": "This option controls these operations: Routing after goods acceptance, Quality standby balance. Choose it when you want this result: “The default shelf for products awaiting quality review.”"
         }
       },
+      "defaultAcceptedLocationId": {
+        "default": {
+          "summary": "The suggested warehouse and location for products accepted by quality control.",
+          "effect": "This destination is selected automatically for an acceptance decision; an authorized user can change it on the decision line.",
+          "affects": ["Quality decision", "Accepted stock movement", "Inter-warehouse transfer"],
+          "scenario": "An accepted product is suggested for ACCEPT-01; the user may select another eligible warehouse and location.",
+          "decision": "Select this value to prefill the target warehouse and location for acceptance while keeping the selection editable."
+        }
+      },
       "defaultQuarantineLocationId": {
         "default": {
           "summary": "It is the default shelf of products that have been quarantined.",

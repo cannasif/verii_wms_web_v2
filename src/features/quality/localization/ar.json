@@ -59,6 +59,9 @@
     "quarantine": "إرسال إلى الحجر"
   },
   "errors": {
+    "distributionAtLeastOne": "أضف سطر توزيع جودة واحدًا على الأقل.",
+    "distributionRowsInvalid": "يجب أن يحتوي كل سطر على قرار وكمية أكبر من صفر.",
+    "distributionTotalMismatch": "يجب أن يساوي إجمالي التوزيع {{total}} الكمية المتبقية {{remaining}}.",
     "qtyMustBePositive": "يجب أن تكون كمية '{{stockCode}}' أكبر من 0.",
     "qtyExceedsRemaining": "لا يمكن أن تتجاوز كمية '{{stockCode}}' الكمية المتبقية البالغة {{remaining}}.",
     "returnedFullLineOnly": "يُسجَّل قرار الإعادة لـ '{{stockCode}}' كبند كامل دون تقسيم الكمية.",
@@ -78,7 +81,9 @@
     "reasonCodeRequiredAllRows": "رمز القرار مطلوب لكل بند تم اتخاذ قرار الرفض أو الحجر أو الإعادة بشأنه.",
     "quantityDistributionInvalid": "توزيع الكمية غير صالح.",
     "returnedQuantityMustEqualRemaining": "بالنسبة لـ '{{stockCode}}'، يجب أن تساوي كمية الإعادة كامل الكمية المتبقية ({{remaining}}).",
-    "decisionSaveFailed": "تعذر حفظ قرار الجودة."
+    "decisionSaveFailed": "تعذر حفظ قرار الجودة.",
+    "quarantineDestinationRequired": "اختر المستودع والموقع المستهدف للكمية التي ستدخل الحجر.",
+    "decisionDestinationRequired": "اختر المستودع والموقع المستهدف لقرار الرفض أو الحجر."
   },
   "applySummary": {
     "title": "ملخص التطبيق",
@@ -106,6 +111,11 @@
   "bulkApplySuccess": "تم تطبيق \"{{label}}\" على {{count}} بند.",
   "decisionSaved": "تم تسجيل قرار الجودة وحركة المخزون.",
   "detail": {
+    "history": {
+      "title": "سجل توزيع الجودة",
+      "description": "يعرض القرار ومسار المستودع والموقع لكل جزء من الكمية.",
+      "datReference": "سجل DAT رقم {{id}}"
+    },
     "eyebrow": "تفاصيل بند الجودة",
     "close": "إغلاق",
     "meta": {
@@ -117,6 +127,14 @@
       "total": "الإجمالي"
     },
     "managerApprovalNotice": "يتطلب الإفراج من الحجر تفويضًا منفصلاً من المدير.",
+    "quarantineDestination": {
+      "title": "وجهة الحجر",
+      "description": "اختر المستودع والموقع الذي ستنقل إليه كمية الحجر. تُستخدم الوجهة الافتراضية عند عدم الاختيار.",
+      "placeholder": "اختر مستودع / موقع الحجر",
+      "defaultSuffix": "افتراضي",
+      "autoOption": "توجيه تلقائي",
+      "autoOptionDescription": "يفضّل مستودع المصدر ثم الوجهة الافتراضية ثم ترتيب الأولوية."
+    },
     "bulk": {
       "title": "اتخاذ قرار للبنود المحددة",
       "countLabel": "{{selected}}/{{total}} محدد · تم اتخاذ قرار بشأن {{decided}} بند",
@@ -173,6 +191,23 @@
     }
   },
   "linePopover": {
+    "distributionTitle": "تقسيم الكمية حسب القرار والوجهة",
+    "distributionDescription": "وجّه أجزاء السطر نفسه إلى وجهات قبول أو رفض أو حجر منفصلة.",
+    "openDistribution": "خطة التوزيع",
+    "useQuickDecision": "استخدام القرار السريع",
+    "allocated": "الموزع: {{value}}",
+    "unallocated": "المتبقي: {{value}}",
+    "routeNo": "الوجهة {{no}}",
+    "removeRoute": "إزالة سطر التوزيع",
+    "addRoute": "إضافة قرار ووجهة",
+    "automaticAcceptedTarget": "موقع قبول تلقائي",
+    "automaticAcceptedTargetDescription": "يبقى المخزون المتاح في موقعه، وإلا تُستخدم وجهة الاستلام.",
+    "acceptedTargetPlaceholder": "اختر مستودع / موقع القبول",
+    "automaticQuarantineTarget": "وجهة حجر / رفض تلقائية",
+    "automaticQuarantineTargetDescription": "تستخدم المستودع نفسه ثم الوجهة الافتراضية وترتيب الأولوية.",
+    "quarantineTargetPlaceholder": "اختر مستودع / موقع الحجر",
+    "rejectedTargetPlaceholder": "اختر مستودع / موقع الرفض",
+    "defaultTargetSuffix": "الوجهة الافتراضية",
     "triggerTitle": "انقر لاتخاذ قرار",
     "editLabel": "تعديل",
     "decideLabel": "اتخاذ قرار",
@@ -181,6 +216,7 @@
     "remainingPrefix": "الكمية المتبقية:",
     "serialNoSplit": " · متتبّع بالرقم التسلسلي — لا يمكن تقسيمه",
     "decisionLabel": "القرار",
+    "targetLocationLabel": "المستودع / الموقع المستهدف",
     "decisionPlaceholder": "اختر القرار",
     "thisDecisionQuantityLabel": "الكمية لهذا القرار",
     "remainderLabel": "المتبقي ({{value}})",
@@ -315,9 +351,22 @@
       "title": "مواقع حركة الجودة",
       "description": "حدد الوجهات الفعلية المستخدمة عند تحول قرار الجودة إلى حركة مخزون.",
       "qualityLocationLabel": "موقع انتظار الجودة",
+      "acceptedLocationLabel": "المستودع / الموقع الافتراضي للقبول",
       "quarantineLocationLabel": "موقع الحجر",
       "rejectLocationLabel": "موقع الرفض",
-      "locationPlaceholder": "اختر موقعًا"
+      "locationPlaceholder": "اختر موقعًا",
+      "quarantineLocationsLabel": "مستودعات ومواقع الحجر",
+      "quarantineLocationsDescription": "أضف عدة مستودعات ومواقع حجر. يفضّل التوجيه التلقائي مستودع المصدر ثم الوجهة الافتراضية ثم ترتيب الأولوية.",
+      "addQuarantineLocation": "إضافة وجهة حجر",
+      "noQuarantineLocations": "لم يتم تعريف وجهة حجر. أضف مستودعًا / موقعًا نشطًا واحدًا على الأقل.",
+      "priorityLabel": "الأولوية",
+      "defaultBadge": "افتراضي",
+      "makeDefault": "تعيين كافتراضي",
+      "removeLocation": "إزالة وجهة الحجر",
+      "destinationRequired": "اختر مستودعًا / موقعًا لكل وجهة حجر مضافة.",
+      "destinationDuplicate": "لا يمكن إضافة موقع الحجر نفسه أكثر من مرة.",
+      "destinationCount": "{{count}} وجهات حجر",
+      "noSelection": "غير محدد"
     },
     "toggles": {
       "autoCreateInspection": "إنشاء فحص تلقائيًا عند الاستلام",

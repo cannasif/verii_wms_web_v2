@@ -287,7 +287,8 @@
     "ProductionOutputMove": "Fertigungszugang",
     "SubcontractingIssue": "Beistellung an Lohnfertiger",
     "SubcontractingReceipt": "Rücknahme vom Lohnfertiger",
-    "SubcontractorToSubcontractor": "Transfer zwischen Lohnfertigern"
+    "SubcontractorToSubcontractor": "Transfer zwischen Lohnfertigern",
+    "QualityDisposition": "Transfer nach Qualitätsentscheidung"
   },
   "transferStatuses": {
     "Draft": "Entwurf",

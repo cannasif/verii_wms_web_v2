@@ -104,9 +104,9 @@ export function WarehouseTransferListPage({
       key: 'actions', label: t(`${G}.actions`), ...requiredActionColumn,
       render: (row) => <div className="flex items-center gap-1">
         {row.status !== 'Cancelled' && <Link to={`${baseUrl}/${row.id}/operations`} title="Operasyonu yürüt" className="rounded-lg p-2 text-cyan-500 hover:bg-cyan-500/10"><PlayCircle className="size-4" /></Link>}
-        {row.status === 'Draft' && <button type="button" title="Taslağı düzenle" onClick={() => void load(row.id, 'edit')} className="rounded-lg p-2 text-amber-500 hover:bg-amber-500/10"><Pencil className="size-4" /></button>}
-        {row.status === 'Draft' && <button type="button" title="Taslağı sil" onClick={() => setLifecycle({ row, kind: 'delete' })} className="rounded-lg p-2 text-rose-500 hover:bg-rose-500/10"><Trash2 className="size-4" /></button>}
-        {row.status !== 'Cancelled' && <button type="button" title="Transferi iptal et" disabled={cancelPrecheckId === row.id} onClick={() => void beginCancel(row)} className="rounded-lg p-2 text-orange-500 hover:bg-orange-500/10 disabled:opacity-50">{cancelPrecheckId === row.id ? <Loader2 className="size-4 animate-spin" /> : <Ban className="size-4" />}</button>}
+        {row.status === 'Draft' && row.businessContext === 'InterWarehouse' && <button type="button" title="Taslağı düzenle" onClick={() => void load(row.id, 'edit')} className="rounded-lg p-2 text-amber-500 hover:bg-amber-500/10"><Pencil className="size-4" /></button>}
+        {row.status === 'Draft' && row.businessContext === 'InterWarehouse' && <button type="button" title="Taslağı sil" onClick={() => setLifecycle({ row, kind: 'delete' })} className="rounded-lg p-2 text-rose-500 hover:bg-rose-500/10"><Trash2 className="size-4" /></button>}
+        {row.status !== 'Cancelled' && row.businessContext === 'InterWarehouse' && <button type="button" title="Transferi iptal et" disabled={cancelPrecheckId === row.id} onClick={() => void beginCancel(row)} className="rounded-lg p-2 text-orange-500 hover:bg-orange-500/10 disabled:opacity-50">{cancelPrecheckId === row.id ? <Loader2 className="size-4 animate-spin" /> : <Ban className="size-4" />}</button>}
         <button type="button" title="Detayı göster" onClick={() => void load(row.id, 'detail')} className="rounded-lg p-2 text-violet-500 hover:bg-violet-500/10">{loadingId === row.id ? <Loader2 className="size-4 animate-spin" /> : <Eye className="size-4" />}</button>
       </div>,
     },
