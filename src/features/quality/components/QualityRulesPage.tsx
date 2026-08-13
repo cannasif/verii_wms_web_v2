@@ -91,6 +91,13 @@ export function QualityRulesPage() {
     useState<QualityStockGroupOption | null>(null);
   const [form, setForm] = useState<RuleForm>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
+  const samplingPreviewValue = Number(form.samplingValue) || 0;
+  const samplingPreviewLot = 100;
+  const samplingPreviewRequired = form.samplingMode === "Percentage"
+    ? Math.min(samplingPreviewLot, Math.ceil(samplingPreviewLot * Math.min(100, Math.max(0, samplingPreviewValue)) / 100))
+    : form.samplingMode === "FixedQuantity"
+      ? Math.min(samplingPreviewLot, Math.max(0, samplingPreviewValue))
+      : samplingPreviewLot;
 
   const refreshGrid = useCallback(async () => {
     await queryClient.invalidateQueries({
@@ -476,6 +483,21 @@ export function QualityRulesPage() {
                 }
               />
             </Field>
+            <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/[0.05] p-3 sm:col-span-2">
+              <div className="text-xs font-bold text-foreground">
+                {t("rules.dialog.samplingHelp.title")}
+              </div>
+              <p className="mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+                {t(`rules.dialog.samplingHelp.${form.samplingMode}`, {
+                  value: samplingPreviewValue,
+                  lot: samplingPreviewLot,
+                  required: samplingPreviewRequired,
+                })}
+              </p>
+              <p className="mt-1.5 text-[0.68rem] leading-relaxed text-slate-500">
+                {t("rules.dialog.samplingHelp.decisionDifference")}
+              </p>
+            </div>
             <SelectField
               label={t("rules.dialog.failActionLabel")}
               value={form.failAction}

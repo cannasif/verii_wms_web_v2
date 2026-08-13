@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import type { TFunction } from "i18next";
-import { ChevronDown, ClipboardPen, Flag, Loader2, Plus, ShieldCheck, Trash2 } from "lucide-react";
+import { ChevronDown, Clock3, ClipboardPen, Flag, History, Loader2, Pause, Play, Plus, ShieldCheck, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 import {
   AdvancedDataGrid,
@@ -26,6 +26,7 @@ import { OPS_FIELD_CLASS } from "@/components/shared/ops-field-styles";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -65,13 +66,26 @@ import {
   qualityApi,
   type QualityDecisionResult,
   type QualityInspection,
+  type QualityInspectionControlQuantityRequest,
   type QualityInspectionDetail,
   type QualityInspectionDispositionRequest,
   type QualityInspectionLine,
+  type QualityInspectionWorkSession,
+  type QualityInspectionWorkStopReason,
 } from "../api/quality.api";
 
 const ACTIONABLE_DECISIONS = new Set(["Pending", "Hold", "Quarantined"]);
 const QTY_EPS = 0.000001;
+const QUALITY_WORK_STOP_REASONS: QualityInspectionWorkStopReason[] = [
+  "Break",
+  "MaterialWait",
+  "EquipmentIssue",
+  "DocumentationWait",
+  "SupervisorWait",
+  "ShiftEnd",
+  "Handover",
+  "Other",
+];
 
 type LineDraft = {
   decision: string;
@@ -79,6 +93,7 @@ type LineDraft = {
   remainderDecision: string;
   reasonCode: string;
   reasonNote: string;
+  inspectedQuantity: string;
   targetLocationId?: number | null;
   targetWarehouseId?: number | null;
   dispositions?: DispositionDraft[];
@@ -155,6 +170,27 @@ function sumActionableQuantity(lines: QualityInspectionLine[]): number {
 
 function sumSampleQuantity(lines: QualityInspectionLine[]): number {
   return roundQty(lines.reduce((sum, line) => sum + line.sampleQuantity, 0));
+}
+
+function sumInspectedQuantity(lines: QualityInspectionLine[]): number {
+  return roundQty(lines.reduce((sum, line) => sum + line.inspectedQuantity, 0));
+}
+
+function totalMinimumControlQuantity(line: QualityInspectionLine): number {
+  const controlLotQuantity =
+    line.decision === "Quarantined" ? line.quarantineQuantity : line.quantity;
+  return roundQty(
+    Math.min(Math.max(0, line.sampleQuantity), Math.max(0, controlLotQuantity)),
+  );
+}
+
+function minimumControlQuantity(line: QualityInspectionLine): number {
+  return roundQty(
+    Math.min(
+      Math.max(0, totalMinimumControlQuantity(line) - line.inspectedQuantity),
+      actionableQuantity(line),
+    ),
+  );
 }
 
 /** Backend ActionableQuantity ile aynı mantık. */
@@ -279,9 +315,40 @@ function emptyDraft(
     remainderDecision,
     reasonCode: "",
     reasonNote: "",
+    inspectedQuantity: "",
     targetLocationId,
     targetWarehouseId,
   };
+}
+
+function buildControlQuantityRequest(
+  line: QualityInspectionLine,
+  draft: LineDraft,
+  t: TFunction,
+): QualityInspectionControlQuantityRequest {
+  const required = minimumControlQuantity(line);
+  const maximum = roundQty(actionableQuantity(line));
+  const inspected = roundQty(
+    parseQty(draft.inspectedQuantity || String(required)),
+  );
+  if (!Number.isFinite(inspected) || inspected < 0) {
+    throw new Error(t("errors.controlQuantityMustBePositive", { stockCode: line.stockCode }));
+  }
+  if (inspected - maximum > QTY_EPS) {
+    throw new Error(t("errors.controlQuantityExceedsRemaining", {
+      stockCode: line.stockCode,
+      inspected: formatProjectNumber(inspected),
+      remaining: formatProjectNumber(maximum),
+    }));
+  }
+  if (required - inspected > QTY_EPS) {
+    throw new Error(t("errors.controlQuantityBelowMinimum", {
+      stockCode: line.stockCode,
+      inspected: formatProjectNumber(inspected),
+      required: formatProjectNumber(required),
+    }));
+  }
+  return { lineId: line.id, inspectedQuantity: inspected };
 }
 
 function defaultTargetForDecision(
@@ -698,6 +765,10 @@ export function QualityInspectionsPage({
     },
     [pageKey, priorityLoading, queryClient, t],
   );
+  const refreshDetail = useCallback(async (id: number) => {
+    setDetail(await qualityApi.inspection(id));
+    await queryClient.invalidateQueries({ queryKey: ["advanced-grid", pageKey] });
+  }, [pageKey, queryClient]);
   const columns = useMemo<GridColumn<QualityInspection>[]>(
     () => {
       void moduleReady;
@@ -803,6 +874,29 @@ export function QualityInspectionsPage({
         ),
       },
       {
+        key: "workState",
+        label: t("list.columns.work"),
+        sortable: true,
+        filterable: true,
+        searchable: false,
+        render: (r) => (
+          <div className="flex min-w-36 flex-col items-start gap-1">
+            <OpsStatusBadge tone={inferOpsStatusTone(r.workState)}>
+              {t(`detail.work.states.${r.workState}`)}
+            </OpsStatusBadge>
+            {r.activeWorkerName ? (
+              <span className="max-w-44 truncate text-[11px] text-muted-foreground" title={r.activeWorkerName}>
+                {r.activeWorkerName}
+              </span>
+            ) : r.workSessionCount > 0 ? (
+              <span className="text-[11px] text-muted-foreground">
+                {t("detail.work.sessions")}: {r.workSessionCount}
+              </span>
+            ) : null}
+          </div>
+        ),
+      },
+      {
         key: "createdAtUtc",
         label: t("list.columns.createdAt"),
         sortable: true,
@@ -866,6 +960,30 @@ export function QualityInspectionsPage({
           </div>
         ),
       },
+      {
+        key: "inspectedQuantity",
+        label: t("list.columns.controlQuantity"),
+        sortable: true,
+        filterable: true,
+        searchable: false,
+        render: (r) => {
+          const required = Number(r.requiredInspectionQuantity ?? 0);
+          const inspected = Number(r.inspectedQuantity ?? 0);
+          const percentage = required > 0
+            ? Math.round((inspected / required) * 100)
+            : 0;
+          return (
+            <div className="min-w-24 text-right font-mono text-xs">
+              <strong className="block text-foreground">
+                {formatProjectNumber(inspected)} / {formatProjectNumber(required)}
+              </strong>
+              <span className={inspected + QTY_EPS >= required ? "text-emerald-600" : "text-amber-600"}>
+                {t("list.controlProgress", { percentage })}
+              </span>
+            </div>
+          );
+        },
+      },
     ];
     },
     [can, expandedId, loading, moduleReady, priorityLoading, t, toggle, toggleInspectionPriority],
@@ -906,6 +1024,7 @@ export function QualityInspectionsPage({
         detail && detail.header.id === row.id ? (
           <InspectionDetailPanel
             detail={detail}
+            refresh={() => refreshDetail(row.id)}
             close={() => {
               setExpandedId(null);
               setDetail(null);
@@ -924,10 +1043,12 @@ export function QualityInspectionsPage({
 
 function InspectionDetailPanel({
   detail,
+  refresh,
   close,
   decided,
 }: {
   detail: QualityInspectionDetail;
+  refresh: () => Promise<void>;
   close: () => void;
   decided: () => void;
 }): ReactElement {
@@ -1023,6 +1144,10 @@ function InspectionDetailPanel({
     | null
   >(null);
   const [bulkPanelOpen, setBulkPanelOpen] = useState(false);
+  const [workBusy, setWorkBusy] = useState<"start" | "pause" | null>(null);
+  const [pauseDialogOpen, setPauseDialogOpen] = useState(false);
+  const [pauseReason, setPauseReason] = useState<QualityInspectionWorkStopReason>("Break");
+  const [pauseNote, setPauseNote] = useState("");
   const datDocumentSeries = useMemo(
     () => detail.warehouseTransferDocumentSeries ?? [],
     [detail.warehouseTransferDocumentSeries],
@@ -1030,6 +1155,44 @@ function InspectionDetailPanel({
   const [warehouseTransferDocumentSeriesId, setWarehouseTransferDocumentSeriesId] = useState<string>(() =>
     String(datDocumentSeries.find((series) => series.isDefault)?.id ?? ""),
   );
+
+  const startWork = async () => {
+    if (workBusy || !detail.work.canStart) return;
+    setWorkBusy("start");
+    try {
+      await qualityApi.startInspectionWork(detail.header.id, {
+        idempotencyKey: crypto.randomUUID(),
+        rowVersion: detail.rowVersion,
+      });
+      await refresh();
+      toast.success(t(detail.work.state === "Paused" ? "detail.work.resumed" : "detail.work.started"));
+    } catch (error) {
+      toast.error(message(error, t("detail.work.startFailed")));
+    } finally {
+      setWorkBusy(null);
+    }
+  };
+
+  const pauseWork = async () => {
+    if (workBusy || !detail.work.canPause) return;
+    setWorkBusy("pause");
+    try {
+      await qualityApi.pauseInspectionWork(detail.header.id, {
+        idempotencyKey: crypto.randomUUID(),
+        reason: pauseReason,
+        note: pauseNote.trim() || null,
+        rowVersion: detail.rowVersion,
+      });
+      setPauseDialogOpen(false);
+      setPauseNote("");
+      await refresh();
+      toast.success(t("detail.work.paused"));
+    } catch (error) {
+      toast.error(message(error, t("detail.work.pauseFailed")));
+    } finally {
+      setWorkBusy(null);
+    }
+  };
 
   useEffect(() => {
     setDrafts((current) => {
@@ -1087,6 +1250,7 @@ function InspectionDetailPanel({
     actionable.length > 0 && selected.length === actionable.length;
   const someSelected = selected.length > 0 && !allSelected;
   const canApplyDecision = detail.canDecideInventoryDisposition
+    && detail.work.canApplyDecision
     && !final
     && actionable.length > 0
     && decidedCount > 0;
@@ -1261,6 +1425,7 @@ function InspectionDetailPanel({
               : bulkRemainderDecision,
           reasonCode: bulkDecision === "Accepted" ? "" : bulkReasonCode.trim(),
           reasonNote: bulkReasonNote.trim(),
+          inspectedQuantity: String(minimumControlQuantity(line)),
           targetLocationId: defaultTargetForDecision(
             bulkDecision,
             lineAcceptedDestination?.locationId ?? null,
@@ -1307,6 +1472,15 @@ function InspectionDetailPanel({
     }
     if (!detail.allowPartialDecision && pending.length !== actionable.length) {
       toast.error(t("errors.partialDecisionDisabled"));
+      return false;
+    }
+    let controlRequests: QualityInspectionControlQuantityRequest[] = [];
+    try {
+      controlRequests = pending.map(({ line, draft }) =>
+        buildControlQuantityRequest(line, draft, t),
+      );
+    } catch (error) {
+      toast.error(message(error, t("errors.controlQuantityInvalid")));
       return false;
     }
     for (const { line, draft } of pending) {
@@ -1424,6 +1598,9 @@ function InspectionDetailPanel({
             reasonCode: reasonCodes[0] || undefined,
             rowVersion,
             dispositions: dispositionRequests,
+            controlQuantities: controlRequests.filter((control) =>
+              distributionRows.some((row) => row.line.id === control.lineId),
+            ),
             quarantineLocationId: configuredDefaultQuarantineLocationId,
             warehouseTransferDocumentSeriesId: requiresDatTransfer
               ? Number(warehouseTransferDocumentSeriesId)
@@ -1460,6 +1637,9 @@ function InspectionDetailPanel({
               undefined,
             reasonCode: group.reasonCode || undefined,
             lineIds: group.lineIds,
+            controlQuantities: controlRequests.filter((control) =>
+              group.lineIds.includes(control.lineId),
+            ),
             rowVersion,
           });
         });
@@ -1596,6 +1776,83 @@ function InspectionDetailPanel({
             {t("detail.managerApprovalNotice")}
           </div>
         )}
+
+      <QualityInspectionWorkPanel
+        work={detail.work}
+        sessions={detail.workSessions ?? []}
+        busy={workBusy}
+        onStart={() => void startWork()}
+        onPause={() => setPauseDialogOpen(true)}
+      />
+
+      <Dialog
+        open={pauseDialogOpen}
+        onOpenChange={(open) => {
+          if (workBusy) return;
+          setPauseDialogOpen(open);
+        }}
+      >
+        <DialogContent
+          portalRoot="body"
+          tone="ops"
+          className="wms-ops-form max-w-lg gap-0 overflow-hidden border-0 p-0 shadow-none"
+        >
+          <DialogHeader className="border-b px-6 py-4 text-left">
+            <DialogTitle>{t("detail.work.pauseDialog.title")}</DialogTitle>
+            <DialogDescription className="text-sm leading-6 text-slate-500">
+              {t("detail.work.pauseDialog.description")}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 px-6 py-5">
+            <label className="block space-y-1.5 text-sm font-semibold">
+              <span>{t("detail.work.pauseDialog.reason")}</span>
+              <AppDropdown
+                value={pauseReason}
+                onValueChange={(value) => setPauseReason(value as QualityInspectionWorkStopReason)}
+                options={QUALITY_WORK_STOP_REASONS.map((reason) => ({
+                  value: reason,
+                  label: t(`detail.work.stopReasons.${reason}`),
+                }))}
+                className="wms-ops-quality-field"
+              />
+            </label>
+            <label className="block space-y-1.5 text-sm font-semibold">
+              <span>{t("detail.work.pauseDialog.note")}</span>
+              <textarea
+                value={pauseNote}
+                onChange={(event) => setPauseNote(event.target.value)}
+                rows={3}
+                maxLength={1000}
+                placeholder={t("detail.work.pauseDialog.notePlaceholder")}
+                className="wms-ops-quality-field min-h-24 w-full resize-y rounded-xl border px-3 py-2 text-sm"
+              />
+              <span className="block text-xs font-normal text-slate-500">
+                {pauseReason === "Other"
+                  ? t("detail.work.pauseDialog.noteRequired")
+                  : t("detail.work.pauseDialog.noteHelp")}
+              </span>
+            </label>
+          </div>
+          <DialogFooter className="border-t px-6 py-4">
+            <OpsActionButton
+              type="button"
+              variant="secondary"
+              disabled={Boolean(workBusy)}
+              onClick={() => setPauseDialogOpen(false)}
+            >
+              {t("detail.work.pauseDialog.cancel")}
+            </OpsActionButton>
+            <OpsActionButton
+              type="button"
+              disabled={Boolean(workBusy) || (pauseReason === "Other" && !pauseNote.trim())}
+              onClick={() => void pauseWork()}
+            >
+              {workBusy === "pause" ? <Loader2 className="size-4 animate-spin" /> : <Pause className="size-4" />}
+              {t("detail.work.pauseDialog.confirm")}
+            </OpsActionButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {!final && actionable.length > 0 && (
         <section
@@ -1763,6 +2020,9 @@ function InspectionDetailPanel({
               <th className="wms-ops-quality-lines__cell p-2.5 text-right text-[0.65rem] font-semibold uppercase tracking-wider">
                 {t("detail.table.sample")}
               </th>
+              <th className="wms-ops-quality-lines__cell p-2.5 text-right text-[0.65rem] font-semibold uppercase tracking-wider">
+                {t("detail.table.inspected")}
+              </th>
               <th className="wms-ops-quality-lines__cell p-2.5 text-[0.65rem] font-semibold uppercase tracking-wider">
                 {t("detail.table.status")}
               </th>
@@ -1793,6 +2053,7 @@ function InspectionDetailPanel({
               const totalQty = sumLineQuantity(group.lines);
               const remainingQty = sumActionableQuantity(group.lines);
               const sampleQty = sumSampleQuantity(group.lines);
+              const inspectedQty = sumInspectedQuantity(group.lines);
               const expiryDates = [
                 ...new Set(
                   group.lines
@@ -1865,6 +2126,14 @@ function InspectionDetailPanel({
                   </td>
                   <td className="wms-ops-quality-lines__cell p-2.5 align-middle text-right font-mono">
                     {formatProjectNumber(sampleQty)}
+                  </td>
+                  <td className="wms-ops-quality-lines__cell p-2.5 align-middle text-right font-mono">
+                    <span className="block font-semibold">{formatProjectNumber(inspectedQty)}</span>
+                    <span className="block text-[0.65rem] text-slate-500">
+                      {t("detail.table.inspectedProgress", {
+                        value: sampleQty > 0 ? Math.round((inspectedQty / sampleQty) * 100) : 0,
+                      })}
+                    </span>
                   </td>
                   <td className="wms-ops-quality-lines__cell p-2.5 align-middle">
                     {active ? (
@@ -2018,6 +2287,41 @@ function InspectionDetailPanel({
         </table>
       </div>
 
+      {(detail.controls ?? []).length > 0 ? (
+        <section className="space-y-2 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.03] p-3">
+          <div>
+            <p className="text-sm font-bold">{t("detail.controlHistory.title")}</p>
+            <p className="text-xs text-slate-500">{t("detail.controlHistory.description")}</p>
+          </div>
+          <div className="grid gap-2 md:grid-cols-2">
+            {detail.controls.map((control) => {
+              const sourceLine = detail.lines.find((line) => line.id === control.lineId);
+              return (
+                <article key={control.id} className="rounded-xl border border-emerald-500/20 bg-[var(--wms-app-panel)] p-3 text-xs">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="font-mono font-bold">{sourceLine?.stockCode ?? `#${control.lineId}`}</span>
+                    <OpsStatusBadge tone={control.inspectedQuantity + QTY_EPS >= control.requiredQuantity ? "done" : "pending"}>
+                      {t("detail.controlHistory.quantity", {
+                        inspected: formatProjectNumber(control.inspectedQuantity),
+                        required: formatProjectNumber(control.requiredQuantity),
+                      })}
+                    </OpsStatusBadge>
+                  </div>
+                  <div className="mt-2 text-[0.68rem] text-slate-500">
+                    {t("detail.controlHistory.lotQuantity", { value: formatProjectNumber(control.lotQuantity) })}
+                    {" · "}
+                    {formatProjectDateTime(control.inspectedAtUtc)}
+                    {" · "}
+                    {t("detail.controlHistory.user", { id: control.inspectedBy })}
+                  </div>
+                  <div className="mt-1 font-mono text-[0.65rem] text-slate-500">{control.outcomeSummary}</div>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+      ) : null}
+
       {(detail.dispositions ?? []).length > 0 ? (
         <section className="space-y-2 rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-3">
           <div>
@@ -2104,6 +2408,13 @@ function InspectionDetailPanel({
                 {t("detail.footer.receiptNotCompletedWarning", {
                   status: localizeEnumValue(detail.sourceOperationStatus ?? "InProgress"),
                 })}
+              </span>
+            ) : null}
+            {detail.canDecideInventoryDisposition && !detail.work.canApplyDecision ? (
+              <span className="block text-xs font-semibold text-amber-700 dark:text-amber-300">
+                {detail.work.activeWorkerName
+                  ? t("detail.work.decisionLockedByOther", { name: detail.work.activeWorkerName })
+                  : t("detail.work.decisionRequiresStart")}
               </span>
             ) : null}
           </label>
@@ -2277,6 +2588,154 @@ function InspectionDetailPanel({
   );
 }
 
+function QualityInspectionWorkPanel({
+  work,
+  sessions,
+  busy,
+  onStart,
+  onPause,
+}: {
+  work: QualityInspectionDetail["work"];
+  sessions: QualityInspectionWorkSession[];
+  busy: "start" | "pause" | null;
+  onStart: () => void;
+  onPause: () => void;
+}): ReactElement {
+  const { t } = useModuleTranslation("quality");
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (work.state !== "Running") return undefined;
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [work.state]);
+
+  useEffect(() => setNow(Date.now()), [work.serverNowUtc]);
+
+  const liveDelta = work.state === "Running"
+    ? Math.max(0, Math.floor((now - new Date(work.serverNowUtc).getTime()) / 1000))
+    : 0;
+  const totalSeconds = work.totalWorkedSeconds + liveDelta;
+  const activeSession = sessions.find((session) => !session.endedAtUtc) ?? null;
+  const startLabel = work.state === "Paused"
+    ? t("detail.work.resume")
+    : t("detail.work.start");
+
+  return (
+    <section className="overflow-hidden rounded-2xl border border-cyan-400/30 bg-[var(--wms-app-panel-muted)] p-3.5 shadow-[0_12px_32px_color-mix(in_oklab,var(--wms-brand-primary)_8%,transparent)]">
+      <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <Clock3 className="size-4 text-cyan-600" aria-hidden />
+            <h4 className="text-sm font-bold">{t("detail.work.title")}</h4>
+            <OpsStatusBadge tone={work.state === "Running" ? "active" : work.state === "Completed" ? "done" : "pending"}>
+              {t(`detail.work.states.${work.state}`)}
+            </OpsStatusBadge>
+          </div>
+          <p className="mt-1 text-xs leading-5 text-slate-500">{t("detail.work.description")}</p>
+          {work.activeWorkerName ? (
+            <p className="mt-1 text-xs font-semibold text-cyan-700 dark:text-cyan-300">
+              {t("detail.work.activeWorker", {
+                name: work.activeWorkerName,
+                startedAt: work.activeStartedAtUtc ? formatProjectDateTime(work.activeStartedAtUtc) : "—",
+              })}
+            </p>
+          ) : null}
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 xl:min-w-[33rem]">
+          <WorkMetric icon={<Clock3 className="size-3.5" />} label={t("detail.work.totalTime")} value={formatDurationSeconds(totalSeconds)} />
+          <WorkMetric icon={<Clock3 className="size-3.5" />} label={t("detail.work.myTime")} value={formatDurationSeconds(work.currentUserWorkedSeconds + (work.canApplyDecision ? liveDelta : 0))} />
+          <WorkMetric icon={<Users className="size-3.5" />} label={t("detail.work.participants")} value={String(work.participantCount)} />
+          <WorkMetric icon={<History className="size-3.5" />} label={t("detail.work.sessions")} value={String(work.sessionCount)} />
+        </div>
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-[var(--wms-app-border)] pt-3">
+        {work.canStart ? (
+          <OpsActionButton type="button" disabled={Boolean(busy)} onClick={onStart}>
+            {busy === "start" ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}
+            {startLabel}
+          </OpsActionButton>
+        ) : null}
+        {work.canPause ? (
+          <OpsActionButton type="button" variant="secondary" disabled={Boolean(busy)} onClick={onPause}>
+            <Pause className="size-4" />
+            {t("detail.work.pause")}
+          </OpsActionButton>
+        ) : null}
+        {!work.canStart && !work.canPause && work.state === "Running" ? (
+          <span className="text-xs font-semibold text-amber-700 dark:text-amber-300">
+            {t("detail.work.otherWorkerLock", { name: work.activeWorkerName ?? "—" })}
+          </span>
+        ) : null}
+        {sessions.length > 0 ? (
+          <button
+            type="button"
+            className="ml-auto inline-flex min-h-9 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold text-cyan-700 hover:bg-cyan-500/10 dark:text-cyan-300"
+            aria-expanded={historyOpen}
+            onClick={() => setHistoryOpen((open) => !open)}
+          >
+            <History className="size-4" />
+            {t("detail.work.history")}
+            <ChevronDown className={cn("size-3.5 transition-transform", historyOpen && "rotate-180")} />
+          </button>
+        ) : null}
+      </div>
+
+      {historyOpen ? (
+        <div className="mt-3 grid gap-2 border-t border-[var(--wms-app-border)] pt-3 md:grid-cols-2 xl:grid-cols-3">
+          {sessions.map((session) => {
+            const sessionSeconds = session.endedAtUtc
+              ? session.durationSeconds
+              : activeSession?.id === session.id
+                ? Math.max(0, Math.floor((now - new Date(session.startedAtUtc).getTime()) / 1000))
+                : session.durationSeconds;
+            return (
+              <article key={session.id} className="rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-3 text-xs">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="font-bold">{session.workerName}</p>
+                    <p className="mt-0.5 text-slate-500">#{session.sequenceNo} · {formatProjectDateTime(session.startedAtUtc)}</p>
+                  </div>
+                  <span className="font-mono font-bold text-cyan-700 dark:text-cyan-300">{formatDurationSeconds(sessionSeconds)}</span>
+                </div>
+                <p className="mt-2 text-slate-500">
+                  {session.endedAtUtc
+                    ? t("detail.work.historyEnded", { date: formatProjectDateTime(session.endedAtUtc) })
+                    : t("detail.work.historyRunning")}
+                </p>
+                {session.stopReason ? (
+                  <p className="mt-1 font-semibold">{t(`detail.work.stopReasons.${session.stopReason}`)}</p>
+                ) : null}
+                {session.stopNote ? <p className="mt-1 leading-5 text-slate-500">{session.stopNote}</p> : null}
+              </article>
+            );
+          })}
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
+function WorkMetric({ icon, label, value }: { icon: ReactNode; label: string; value: string }): ReactElement {
+  return (
+    <div className="rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] px-3 py-2">
+      <span className="flex items-center gap-1.5 text-[0.62rem] font-semibold uppercase tracking-wide text-slate-500">{icon}{label}</span>
+      <strong className="mt-1 block font-mono text-sm">{value}</strong>
+    </div>
+  );
+}
+
+function formatDurationSeconds(value: number): string {
+  const seconds = Math.max(0, Math.floor(Number.isFinite(value) ? value : 0));
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const remainingSeconds = seconds % 60;
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`;
+}
+
 function LotSerialHoverCell({
   lines,
 }: {
@@ -2390,6 +2849,9 @@ function LineDecisionPopover({
     null,
   );
   const remaining = actionableQuantity(line);
+  const totalRequiredControl = totalMinimumControlQuantity(line);
+  const requiredControl = minimumControlQuantity(line);
+  const inspectedThisDecision = draft.inspectedQuantity || String(requiredControl);
   const serial = isSerialTracked(line);
   const qty = parseQty(draft.quantity);
   const hasRemainder =
@@ -2562,6 +3024,46 @@ function LineDecisionPopover({
                 </span>
                 {serial ? t("linePopover.serialNoSplit") : null}
               </p>
+              <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/[0.05] p-2.5">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <div className="text-xs font-bold text-foreground">
+                      {t("linePopover.controlQuantityTitle")}
+                    </div>
+                    <div className="mt-0.5 text-[0.65rem] text-slate-500">
+                      {t("linePopover.controlQuantitySummary", {
+                        totalRequired: formatProjectNumber(totalRequiredControl),
+                        required: formatProjectNumber(requiredControl),
+                        remaining: formatProjectNumber(remaining),
+                        previous: formatProjectNumber(line.inspectedQuantity),
+                      })}
+                    </div>
+                  </div>
+                  <span className="rounded-lg bg-emerald-500/10 px-2 py-1 font-mono text-[0.65rem] font-bold text-emerald-700 dark:text-emerald-300">
+                    {t("linePopover.previouslyInspected", {
+                      value: formatProjectNumber(line.inspectedQuantity),
+                    })}
+                  </span>
+                </div>
+                <label className="mt-2 block space-y-1 text-sm">
+                  <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                    {t("linePopover.inspectedThisDecisionLabel")}
+                  </span>
+                  <AppInput
+                    value={inspectedThisDecision}
+                    onChange={(event) => onChange({ inspectedQuantity: event.target.value })}
+                    inputMode="decimal"
+                    className="wms-ops-quality-field h-10 text-sm"
+                  />
+                  <span className="block text-[0.65rem] leading-relaxed text-slate-500">
+                    {t("linePopover.inspectedThisDecisionHelp", {
+                      totalRequired: formatProjectNumber(totalRequiredControl),
+                      required: formatProjectNumber(requiredControl),
+                      previous: formatProjectNumber(line.inspectedQuantity),
+                    })}
+                  </span>
+                </label>
+              </div>
               <div className="flex items-center justify-between gap-2 rounded-lg border border-cyan-500/20 bg-cyan-500/[0.04] p-2">
                 <div>
                   <div className="text-xs font-bold">{t("linePopover.distributionTitle")}</div>
