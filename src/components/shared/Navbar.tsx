@@ -431,13 +431,21 @@ export function Navbar({ navItems = [] }: NavbarProps): ReactElement {
         <div className="flex h-20 items-center justify-between gap-3 sm:gap-4">
           <div className="relative flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
             {isPremium ? (
-              <img
-                src={v3riiWmsLogo}
-                alt="V3RII WMS"
-                decoding="async"
-                fetchPriority="high"
-                className="wms-premium-navbar-logo h-11 w-auto shrink-0 object-contain sm:h-12"
-              />
+              <button
+                type="button"
+                onClick={() => navigate('/dashboard')}
+                aria-label={t('sidebar.dashboard')}
+                title={t('sidebar.dashboard')}
+                className="shrink-0 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--wms-brand-ring)]"
+              >
+                <img
+                  src={v3riiWmsLogo}
+                  alt="V3RII WMS"
+                  decoding="async"
+                  fetchPriority="high"
+                  className="wms-premium-navbar-logo h-11 w-auto object-contain sm:h-12"
+                />
+              </button>
             ) : (
               <button
                 type="button"

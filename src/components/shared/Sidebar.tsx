@@ -1,5 +1,5 @@
 import { type ReactElement, useCallback, useEffect, useRef, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { HugeiconsIcon } from '@hugeicons/react';
 import Cancel01Icon from '@hugeicons/core-free-icons/Cancel01Icon';
@@ -152,31 +152,38 @@ export function Sidebar({ items }: SidebarProps): ReactElement {
               isSidebarOpen ? 'px-3' : 'px-0.5',
             )}
           >
-            <img
-              src={v3riiWmsLogo}
-              alt="V3RII WMS"
-              decoding="async"
-              fetchPriority="high"
-              width={320}
-              height={160}
-              className={cn(
-                'h-24 w-auto max-w-[min(100%,17.5rem)] object-contain transition-opacity duration-[260ms] sm:h-28 lg:h-32',
-                isSidebarOpen ? 'opacity-100' : 'pointer-events-none absolute opacity-0',
-              )}
-            />
-            <img
-              src={v3logo}
-              alt="V3"
-              decoding="async"
-              width={128}
-              height={128}
-              className={cn(
-                'object-contain transition-[opacity,transform] duration-[260ms]',
-                isSidebarOpen
-                  ? 'pointer-events-none absolute h-24 w-auto opacity-0'
-                  : 'h-14 w-14 origin-center scale-[2.1] opacity-100',
-              )}
-            />
+            <Link
+              to="/dashboard"
+              aria-label={t('sidebar.dashboard')}
+              title={t('sidebar.dashboard')}
+              className="relative flex h-full min-w-0 flex-1 items-center justify-center rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--wms-brand-ring)]"
+            >
+              <img
+                src={v3riiWmsLogo}
+                alt="V3RII WMS"
+                decoding="async"
+                fetchPriority="high"
+                width={320}
+                height={160}
+                className={cn(
+                  'h-24 w-auto max-w-[min(100%,17.5rem)] object-contain transition-opacity duration-[260ms] sm:h-28 lg:h-32',
+                  isSidebarOpen ? 'opacity-100' : 'pointer-events-none absolute opacity-0',
+                )}
+              />
+              <img
+                src={v3logo}
+                alt="V3"
+                decoding="async"
+                width={128}
+                height={128}
+                className={cn(
+                  'object-contain transition-[opacity,transform] duration-[260ms]',
+                  isSidebarOpen
+                    ? 'pointer-events-none absolute h-24 w-auto opacity-0'
+                    : 'h-14 w-14 origin-center scale-[2.1] opacity-100',
+                )}
+              />
+            </Link>
             <button
               type="button"
               onClick={() => setSidebarOpen(false)}
