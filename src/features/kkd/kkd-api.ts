@@ -402,10 +402,6 @@ export const kkdApi = {
     unwrap(await api.post<Envelope<KkdPreparationTaskRow>>(`/api/kkd/preparation-tasks/${taskId}/handoff`, {
       ...payload, idempotencyKey: crypto.randomUUID(),
     })),
-  returnPreparationTask: async (taskId: number, payload: { reason: string; expectedRowVersion?: string | null }) =>
-    unwrap(await api.post<Envelope<null>>(`/api/kkd/preparation-tasks/${taskId}/return`, {
-      ...payload, idempotencyKey: crypto.randomUUID(),
-    })),
   resolvePreparationScan: async (taskId: number, payload: { barcode: string; expectedTaskLineId?: number | null }) =>
     unwrap(await api.post<Envelope<KkdPreparationResolveScanResult>>(
       `/api/kkd/preparation-tasks/${taskId}/resolve-scan`,

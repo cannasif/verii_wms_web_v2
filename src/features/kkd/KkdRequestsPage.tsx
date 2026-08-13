@@ -143,8 +143,6 @@ export function KkdRequestsPage(): ReactElement {
   const [handoffTask, setHandoffTask] = useState<KkdPreparationTaskRow | null>(null);
   const [handoffUser, setHandoffUser] = useState<ActiveUserOption | null>(null);
   const [handoffReason, setHandoffReason] = useState('');
-  const [returnTask, setReturnTask] = useState<KkdPreparationTaskRow | null>(null);
-  const [returnReason, setReturnReason] = useState('');
 
   useEffect(() => {
     const tab = searchParams.get('tab');
@@ -328,22 +326,7 @@ export function KkdRequestsPage(): ReactElement {
     onError: (error) => toast.error(error instanceof Error ? error.message : t('messages.failed')),
   });
 
-  const returnWork = useMutation({
-    mutationFn: async () => {
-      if (!returnTask) throw new Error(t('messages.failed'));
-      if (returnReason.trim().length < 3) throw new Error(t('validation.reason'));
-      return kkdApi.returnPreparationTask(returnTask.id, {
-        reason: returnReason.trim(), expectedRowVersion: returnTask.rowVersion,
-      });
-    },
-    onSuccess: () => {
-      setReturnTask(null); setReturnReason(''); invalidateBoard();
-      toast.success(t('messages.returned'));
-    },
-    onError: (error) => toast.error(error instanceof Error ? error.message : t('messages.failed')),
-  });
-
-  /** Grid işlemlerinden devret/iade için üzerimdeki aktif görevi yükler. */
+  /** Grid işlemlerinden devret için üzerimdeki aktif görevi yükler. */
   const loadMyActiveTask = useCallback(async (row: KkdRequestRow): Promise<KkdPreparationTaskRow | null> => {
     const taskId = row.myActiveTaskId;
     if (!taskId) return null;
@@ -363,25 +346,6 @@ export function KkdRequestsPage(): ReactElement {
       setHandoffUser(null);
       setHandoffReason('');
       setHandoffTask(task);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : t('messages.failed'));
-    }
-  }, [loadMyActiveTask, t]);
-
-  const openReturnFromRow = useCallback(async (row: KkdRequestRow) => {
-    try {
-      const task = await loadMyActiveTask(row);
-      if (!task) {
-        toast.error(t('messages.taskNotFound'));
-        return;
-      }
-      const hasProgress = task.lines.some((line) => line.preparedQuantity > 0 || line.deliveredQuantity > 0);
-      if (hasProgress) {
-        toast.error(t('messages.returnBlockedProgress'));
-        return;
-      }
-      setReturnReason('');
-      setReturnTask(task);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : t('messages.failed'));
     }
@@ -558,17 +522,6 @@ export function KkdRequestsPage(): ReactElement {
                 <ArrowRightLeft className="size-3.5" />
               </button>
             ) : null}
-            {canManageMyTask ? (
-              <button
-                type="button"
-                className="wms-ops-grid-icon-btn !text-rose-600"
-                title={t('actions.returnWork')}
-                aria-label={t('actions.returnWork')}
-                onClick={() => void openReturnFromRow(row)}
-              >
-                <Undo2 className="size-3.5" />
-              </button>
-            ) : null}
             {row.warehouseOutboundId ? (
               <Link
                 to={`/warehouse/warehouse-outbounds/${row.warehouseOutboundId}/operations`}
@@ -618,7 +571,7 @@ export function KkdRequestsPage(): ReactElement {
         );
       },
     },
-  ], [canAssignToOthers, canCancel, canClaimSelf, canPrepare, canResolve, claimPool, claimSelf, enumText, erpRetry, formatDateTime, formatQuantity, openHandoffFromRow, openPrepare, openReturnFromRow, prepare, reactivateRequest, t, warehouseFilterOptions, warehouseLabel]);
+  ], [canAssignToOthers, canCancel, canClaimSelf, canPrepare, canResolve, claimPool, claimSelf, enumText, erpRetry, formatDateTime, formatQuantity, openHandoffFromRow, openPrepare, prepare, reactivateRequest, t, warehouseFilterOptions, warehouseLabel]);
 
   const createRequest = useMutation({
     mutationFn: async () => {
@@ -866,7 +819,6 @@ export function KkdRequestsPage(): ReactElement {
         }}
         onPrepareTask={(taskId) => prepare(detail.data!, taskId)}
         onHandoff={(task) => { setHandoffUser(null); setHandoffReason(''); setHandoffTask(task); }}
-        onReturn={(task) => { setReturnReason(''); setReturnTask(task); }}
         onClaimPool={(task) => claimPool.mutate({ taskId: task.id, expectedRowVersion: task.rowVersion })}
       />
     ) : null}
@@ -1036,31 +988,6 @@ export function KkdRequestsPage(): ReactElement {
             onClick={() => handoff.mutate()}
           >
             <ArrowRightLeft className="size-3.5"/>{t('actions.handoff')}
-          </OpsActionButton>
-        </div>
-      </div>
-    </ResponsiveDialog> : null}
-
-    {returnTask ? <ResponsiveDialog
-      onClose={() => setReturnTask(null)}
-      title={t('returnDialog.title')}
-      description={t('returnDialog.description', { no: returnTask.taskNo })}
-      className="!max-w-lg"
-    >
-      <div className="space-y-4">
-        <KkdField label={t('returnDialog.reason')}>
-          <AppInput value={returnReason} onChange={(event) => setReturnReason(event.target.value)} maxLength={1000} autoFocus/>
-        </KkdField>
-        <div className="flex justify-end gap-2 border-t border-[var(--wms-ops-card-border)] pt-4">
-          <OpsActionButton type="button" variant="secondary" className="wms-ops-list-toolbar-btn" onClick={() => setReturnTask(null)}>
-            {t('actions.close')}
-          </OpsActionButton>
-          <OpsActionButton
-            type="button" variant="primary" className="wms-ops-list-toolbar-btn"
-            disabled={returnWork.isPending || returnReason.trim().length < 3}
-            onClick={() => returnWork.mutate()}
-          >
-            <Undo2 className="size-3.5"/>{t('actions.returnWork')}
           </OpsActionButton>
         </div>
       </div>
@@ -1890,7 +1817,6 @@ function KkdRequestDetailDialog({
   onPrepare,
   onPrepareTask,
   onHandoff,
-  onReturn,
   onClaimPool,
 }: {
   open: boolean;
@@ -1923,7 +1849,6 @@ function KkdRequestDetailDialog({
   onPrepare: () => void;
   onPrepareTask: (taskId: number) => void;
   onHandoff: (task: KkdPreparationTaskRow) => void;
-  onReturn: (task: KkdPreparationTaskRow) => void;
   onClaimPool: (task: KkdPreparationTaskRow) => void;
 }): ReactElement {
   const [mainTab, setMainTab] = useState<KkdDetailMainTab>(initialTab);
@@ -2297,7 +2222,6 @@ function KkdRequestDetailDialog({
                           const active = ACTIVE_TASK_STATUSES.has(task.status);
                           const isPool = task.assignedUserId == null;
                           const mine = currentUserId != null && task.assignedUserId === currentUserId;
-                          const hasProgress = task.lines.some((line) => line.preparedQuantity > 0 || line.deliveredQuantity > 0);
                           const statusToneValue = task.status === 'Completed'
                             ? 'Completed'
                             : task.status === 'Cancelled' || task.status === 'Returned'
@@ -2367,11 +2291,6 @@ function KkdRequestDetailDialog({
                                   {canResolve && active && !isPool ? (
                                     <button type="button" className="wms-ops-grid-icon-btn" title={t('actions.handoff')} aria-label={t('actions.handoff')} onClick={() => onHandoff(task)}>
                                       <ArrowRightLeft className="size-3.5" />
-                                    </button>
-                                  ) : null}
-                                  {canResolve && active && !isPool && !hasProgress ? (
-                                    <button type="button" className="wms-ops-grid-icon-btn !text-rose-600" title={t('actions.returnWork')} aria-label={t('actions.returnWork')} onClick={() => onReturn(task)}>
-                                      <Undo2 className="size-3.5" />
                                     </button>
                                   ) : null}
                                   {!(
