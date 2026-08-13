@@ -6,7 +6,17 @@ import {
   requestSessionAccessToken,
 } from '@/lib/auth-session';
 import { getBranchCodeFromToken, getUserFromToken } from '@/utils/jwt';
-import { isRequestCanceled } from './request-utils';
+import { getRequestAbortSignal, isRequestCanceled } from './request-utils';
+import {
+  bindApiRequestToRecentAction,
+  releaseApiActionRequest,
+  type ApiActionRequestToken,
+} from './api-action-guard';
+import {
+  beginInFlightRequest,
+  buildApiRequestFingerprint,
+  endInFlightRequest,
+} from './in-flight-request-guard';
 import {
   loadConfig,
   getApiUrl,
@@ -213,7 +223,13 @@ api.interceptors.request.use((config) => {
   config.baseURL = getApiBaseUrl() || api.defaults.baseURL || config.baseURL;
   config.headers['X-Language'] = getLanguageForHttpHeader();
 
-  const originalMethod = (config.method ?? 'get').toLowerCase();
+  // Advanced grids pass React Query's cancellation signal on the payload with
+  // a symbol. Existing feature API wrappers may spread the body, but the
+  // symbol is preserved and never serialized to JSON.
+  config.signal ??= getRequestAbortSignal(config.data);
+
+  const originalMethod = config._wmsOriginalMethod ?? (config.method ?? 'get').toLowerCase();
+  config._wmsOriginalMethod = originalMethod;
   const useNativeHttpMethod = config.useNativeHttpMethod === true;
   if (!useNativeHttpMethod) {
     if (originalMethod === 'put') {
@@ -258,8 +274,31 @@ api.interceptors.request.use((config) => {
     }
   }
 
+  if (!config._wmsApiActionToken && config.skipGlobalButtonLoading !== true) {
+    config._wmsApiActionToken = bindApiRequestToRecentAction();
+  }
+  if (config._wmsApiActionToken && config.allowDuplicateRequest !== true && !config._wmsDuplicateRequestKey) {
+    const duplicateKey = buildApiRequestFingerprint(config);
+    const duplicateToken = beginInFlightRequest(duplicateKey);
+    if (!duplicateToken) {
+      releaseApiActionRequest(config._wmsApiActionToken);
+      throw new axios.CanceledError('duplicate-request', undefined, config);
+    }
+    config._wmsDuplicateRequestKey = duplicateKey;
+    config._wmsDuplicateRequestToken = duplicateToken;
+  }
+
   return config;
 });
+
+function releaseRequestGuards(config: import('axios').AxiosRequestConfig | undefined): void {
+  if (!config) return;
+  releaseApiActionRequest(config._wmsApiActionToken);
+  endInFlightRequest(config._wmsDuplicateRequestKey, config._wmsDuplicateRequestToken);
+  config._wmsApiActionToken = undefined;
+  config._wmsDuplicateRequestKey = undefined;
+  config._wmsDuplicateRequestToken = undefined;
+}
 
 let refreshPromise: Promise<string> | null = null;
 
@@ -280,6 +319,7 @@ async function refreshAccessToken(): Promise<string> {
 
 api.interceptors.response.use(
   (response) => {
+    releaseRequestGuards(response.config);
     if (response.status === 204 || response.data === '' || response.data == null) {
       return {
         success: true,
@@ -298,6 +338,7 @@ api.interceptors.response.use(
   },
   async (error) => {
     if (isRequestCanceled(error)) {
+      releaseRequestGuards(error.config);
       return Promise.reject(error);
     }
 
@@ -307,6 +348,7 @@ api.interceptors.response.use(
         await refreshAccessToken();
         return api.request(error.config);
       } catch (refreshError) {
+        releaseRequestGuards(error.config);
         if (isDefinitiveSessionRefreshError(refreshError)) {
           useAuthStore.getState().logout(false);
           if (!isCurrentAppPath('/auth/login?sessionExpired=true')) {
@@ -320,6 +362,8 @@ api.interceptors.response.use(
         return Promise.reject(refreshError);
       }
     }
+
+    releaseRequestGuards(error.config);
 
     const apiError = normalizeApiEnvelope(error.response?.data);
     if (error.response) {
@@ -353,7 +397,13 @@ declare module 'axios' {
     skipAuth?: boolean;
     skipSessionExpiredOn401?: boolean;
     useNativeHttpMethod?: boolean;
+    skipGlobalButtonLoading?: boolean;
+    allowDuplicateRequest?: boolean;
     _retry?: boolean;
+    _wmsOriginalMethod?: string;
+    _wmsApiActionToken?: ApiActionRequestToken;
+    _wmsDuplicateRequestKey?: string;
+    _wmsDuplicateRequestToken?: symbol;
   }
 
   export interface AxiosInstance {

@@ -8,6 +8,7 @@ import { ThemeProvider } from './components/theme-provider';
 import i18n, { ensureI18nReady } from './lib/i18n';
 import { ensureApiReady } from './lib/axios';
 import { installGlobalToastErrorNavigation } from './lib/toast-error-navigation';
+import { installGlobalApiActionGuard } from './lib/api-action-guard';
 import { useAuthStore } from './stores/auth-store';
 import './index.css';
 import './styles/shared-input.css';
@@ -21,8 +22,11 @@ import './styles/operation-flow-tabs.css';
 import './styles/ops-inline-note.css';
 import './styles/ops-assignee-chip.css';
 import './styles/ops-line-card.css';
+import './styles/dashboard-command-center.css';
+import './styles/api-action-guard.css';
 
 installGlobalToastErrorNavigation();
+installGlobalApiActionGuard();
 
 const queryClient = new QueryClient({
   defaultOptions: {

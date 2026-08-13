@@ -1,0 +1,29 @@
+:where(button, input[type="button"], input[type="submit"], [role="button"])[data-wms-api-pending="true"] {
+  cursor: wait !important;
+  opacity: 0.72;
+  transition: opacity 120ms ease;
+}
+
+:where(button, [role="button"])[data-wms-api-pending="true"]:not(:has(.animate-spin))::after {
+  animation: wms-api-action-spin 700ms linear infinite;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 9999px;
+  box-sizing: border-box;
+  content: "";
+  display: inline-block;
+  flex: 0 0 auto;
+  height: 0.9em;
+  margin-inline-start: 0.5rem;
+  width: 0.9em;
+}
+
+@keyframes wms-api-action-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where(button, [role="button"])[data-wms-api-pending="true"]::after {
+    animation-duration: 1.4s;
+  }
+}
