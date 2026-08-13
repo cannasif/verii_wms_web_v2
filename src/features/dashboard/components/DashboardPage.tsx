@@ -1,126 +1,198 @@
-import { type ComponentProps, type ReactElement, useEffect, useMemo, useState } from 'react';
+import { type ReactElement, type ReactNode, useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
-  ArrowDataTransferHorizontalIcon,
-  ClipboardIcon,
-  DeliveryTruck01Icon,
-  PackageSearchIcon,
-  UserCheck01Icon,
-  WarehouseIcon,
-} from '@hugeicons/core-free-icons';
-import { HugeiconsIcon } from '@hugeicons/react';
+  AlertCircle,
+  ArrowLeftRight,
+  ArrowRight,
+  Boxes,
+  CheckCircle2,
+  ClipboardCheck,
+  ClipboardList,
+  Clock3,
+  PackageCheck,
+  PackageSearch,
+  RefreshCw,
+  ScanLine,
+  Send,
+  ShieldCheck,
+  Truck,
+  UserRoundCheck,
+  Warehouse,
+  type LucideIcon,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useTheme } from '@/components/theme-provider';
+import warehouseBackdrop from '@/assets/v3riiwmsloginbg.webp';
 import { useUIStore } from '@/stores/ui-store';
 import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
+import { cn } from '@/lib/utils';
 import { useDashboardMetrics } from '../hooks/useDashboardMetrics';
+import type { DashboardActivityItem, DashboardActivityKind } from '../types/dashboard.types';
 import {
-  DashboardOpsActivityFeed,
-  DashboardOpsHero,
-  DashboardOpsMetricTile,
-  DashboardOpsPanel,
-  DashboardOpsQuickLink,
-  DashboardOpsSection,
-  DashboardOpsStatusBar,
-} from './dashboard-ops-ui';
+  DashboardCommandMetric,
+  DashboardInventoryDonut,
+  DashboardOperationsTrend,
+  DashboardSystemHealthStrip,
+} from './dashboard-command-center';
 
-type HugeIcon = ComponentProps<typeof HugeiconsIcon>['icon'];
-
-interface QuickLinkConfig {
+interface QuickActionConfig {
   permission: string;
-  moduleCode: string;
   titleKey: string;
   descriptionKey: string;
   href: string;
-  icon: HugeIcon;
+  icon: LucideIcon;
 }
 
-const QUICK_LINKS: QuickLinkConfig[] = [
+const QUICK_ACTIONS: QuickActionConfig[] = [
   {
     permission: 'wms.goods-receipt.create',
-    moduleCode: 'CMD-GR-NEW',
     titleKey: 'dashboard.newGoodsReceipt',
     descriptionKey: 'dashboard.terminal.quickGrDescription',
     href: '/warehouse/goods-receipts/new',
-    icon: ClipboardIcon,
+    icon: ClipboardCheck,
   },
   {
-    permission: 'wms.goods-receipt.view',
-    moduleCode: 'CMD-GR-ASN',
-    titleKey: 'dashboard.terminal.assignedGoodsReceipt',
-    descriptionKey: 'dashboard.terminal.quickAssignedDescription',
-    href: '/warehouse/goods-receipts/assigned',
-    icon: UserCheck01Icon,
+    permission: 'wms.transfer.create',
+    titleKey: 'newTransfer',
+    descriptionKey: 'dashboard.terminal.quickTransferDescription',
+    href: '/warehouse/transfers/new-operation',
+    icon: ArrowLeftRight,
   },
   {
     permission: 'wms.shipment.create',
-    moduleCode: 'CMD-SH-NEW',
     titleKey: 'dashboard.newShipment',
     descriptionKey: 'dashboard.terminal.quickShipmentDescription',
-    href: '/warehouse/warehouse-outbounds/new',
-    icon: DeliveryTruck01Icon,
+    href: '/warehouse/shipments/new',
+    icon: Send,
   },
   {
-    permission: 'wms.transfer.view',
-    moduleCode: 'CMD-TR-LST',
-    titleKey: 'dashboard.terminal.transferList',
-    descriptionKey: 'dashboard.terminal.quickTransferDescription',
-    href: '/warehouse/transfers/list',
-    icon: ArrowDataTransferHorizontalIcon,
+    permission: 'wms.inventory-count.view',
+    titleKey: 'inventoryCount',
+    descriptionKey: 'inventoryCountDescription',
+    href: '/warehouse/inventory-counts',
+    icon: ScanLine,
   },
   {
     permission: 'wms.warehouse-balance.view',
-    moduleCode: 'CMD-STK-QRY',
     titleKey: 'dashboard.stockQuery',
     descriptionKey: 'dashboard.terminal.quickStockDescription',
     href: '/warehouse/stock-balances',
-    icon: WarehouseIcon,
+    icon: PackageSearch,
   },
   {
-    permission: 'wms.reports.view',
-    moduleCode: 'CMD-RPT-HUB',
-    titleKey: 'dashboard.terminal.reportsHub',
-    descriptionKey: 'dashboard.terminal.quickReportsDescription',
-    href: '/warehouse/goods-receipts/steel/reports',
-    icon: PackageSearchIcon,
+    permission: 'wms.quality.inspections.view',
+    titleKey: 'qualityControl',
+    descriptionKey: 'qualityControlDescription',
+    href: '/warehouse/quality/inspections',
+    icon: ShieldCheck,
   },
 ];
+
+const ACTIVITY_HREFS: Record<DashboardActivityKind, string> = {
+  'goods-receipt': '/warehouse/goods-receipts/list',
+  shipment: '/warehouse/shipments/list',
+  transfer: '/warehouse/transfers/list',
+};
+
+const ACTIVITY_ICONS: Record<DashboardActivityKind, LucideIcon> = {
+  'goods-receipt': PackageCheck,
+  shipment: Truck,
+  transfer: ArrowLeftRight,
+};
 
 function formatRelativeTimestamp(
   value: string,
   language: string,
-  t: (key: string, options?: Record<string, unknown>) => string,
+  minuteLabel: (minutes: number) => string,
+  hourLabel: (hours: number) => string,
 ): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '-';
 
   const diffMs = Date.now() - date.getTime();
   const diffMinutes = Math.max(1, Math.floor(diffMs / 60_000));
-  if (diffMinutes < 60) {
-    return t('dashboard.terminal.minutesAgo', { defaultValue: '{{minutes}} dk önce', minutes: diffMinutes });
-  }
-
+  if (diffMinutes < 60) return minuteLabel(diffMinutes);
   const diffHours = Math.floor(diffMinutes / 60);
-  if (diffHours < 48) {
-    return t('dashboard.hoursAgo', { hours: diffHours });
-  }
-
+  if (diffHours < 48) return hourLabel(diffHours);
   return date.toLocaleString(language);
 }
 
-function getDaypartGreetingKey(date: Date): 'goodMorning' | 'goodAfternoon' | 'goodEvening' {
+function daypart(date: Date): 'goodMorning' | 'goodAfternoon' | 'goodEvening' {
   const hour = date.getHours();
   if (hour < 12) return 'goodMorning';
   if (hour < 18) return 'goodAfternoon';
   return 'goodEvening';
 }
 
+function DashboardPanel({
+  title,
+  description,
+  action,
+  className,
+  children,
+}: {
+  title: string;
+  description: string;
+  action?: ReactElement;
+  className?: string;
+  children: ReactNode;
+}): ReactElement {
+  return (
+    <section className={cn('wms-command-panel', className)}>
+      <header className="wms-command-panel__header">
+        <div>
+          <h2>{title}</h2>
+          <p>{description}</p>
+        </div>
+        {action}
+      </header>
+      <div className="wms-command-panel__body">{children}</div>
+    </section>
+  );
+}
+
+function ActivityRow({
+  item,
+  kindLabel,
+  statusLabel,
+  timestamp,
+}: {
+  item: DashboardActivityItem;
+  kindLabel: string;
+  statusLabel: string;
+  timestamp: string;
+}): ReactElement {
+  const Icon = ACTIVITY_ICONS[item.kind];
+  return (
+    <li>
+      <Link className="wms-command-activity" to={ACTIVITY_HREFS[item.kind]}>
+        <span className={cn('wms-command-activity__icon', `wms-command-activity__icon--${item.kind}`)} aria-hidden>
+          <Icon size={18} strokeWidth={1.8} />
+        </span>
+        <span className="wms-command-activity__content">
+          <span className="wms-command-activity__title">{kindLabel}</span>
+          <strong>{item.title}</strong>
+          <small>{item.subtitle}</small>
+        </span>
+        <span className="wms-command-activity__meta">
+          <span className={cn('wms-command-status', `wms-command-status--${item.statusKey}`)}>{statusLabel}</span>
+          <time>{timestamp}</time>
+        </span>
+        <ArrowRight size={16} className="wms-command-activity__arrow" aria-hidden />
+      </Link>
+    </li>
+  );
+}
+
 export function DashboardPage(): ReactElement {
   const { t, i18n } = useTranslation('common');
-  const { skin } = useTheme();
-  const isPremium = skin === 'premium';
+  const commandCenterPrefix = i18n.exists('common.commandCenter.eyebrow')
+    ? 'common.commandCenter'
+    : 'dashboard.commandCenter';
+  const commandText = (key: string, options?: Record<string, unknown>) =>
+    t(`${commandCenterPrefix}.${key}`, options);
   const setPageTitle = useUIStore((state) => state.setPageTitle);
   const permissionAccess = usePermissionAccess();
-  const { user, branch, metrics, isLoading, isError } = useDashboardMetrics();
+  const { user, branch, metrics, isLoading, isError, isFetching, refetch } = useDashboardMetrics();
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -129,229 +201,255 @@ export function DashboardPage(): ReactElement {
   }, [setPageTitle, t]);
 
   useEffect(() => {
-    if (!isPremium) return;
     const id = window.setInterval(() => setNow(new Date()), 1000);
     return () => window.clearInterval(id);
-  }, [isPremium]);
+  }, []);
 
   const displayName = user?.name || user?.email || t('dashboard.user');
-  const branchLabel = branch?.name || branch?.code || t('dashboard.terminal.branchFallback');
-  const greetingKey = getDaypartGreetingKey(now);
-
-  const visibleQuickLinks = useMemo(
-    () => QUICK_LINKS.filter((link) => permissionAccess.can(link.permission)),
+  const branchLabel = branch?.name || branch?.code;
+  const hasBranchContext = Boolean(branchLabel && branchLabel !== '0');
+  const visibleQuickActions = useMemo(
+    () => QUICK_ACTIONS.filter((action) => permissionAccess.can(action.permission)),
     [permissionAccess],
   );
+  const goodsReceiptTrend = metrics.dailyOperations.map((item) => item.goodsReceiptCount);
+  const shipmentTrend = metrics.dailyOperations.map((item) => item.shipmentCount);
+  const transferTrend = metrics.dailyOperations.map((item) => item.transferCount);
+  const activityKindLabels: Record<DashboardActivityKind, string> = {
+    'goods-receipt': t('dashboard.goodsReceipt'),
+    shipment: t('dashboard.shipment'),
+    transfer: commandText('transfer'),
+  };
+  const statusLabels = {
+    completed: t('dashboard.completed'),
+    preparing: t('dashboard.preparing'),
+    pending: t('dashboard.terminal.pending'),
+  };
 
-  const clockTime = now.toLocaleTimeString(i18n.language, {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  });
-  const clockDate = now.toLocaleDateString(i18n.language, {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+  const formatMetric = (value: number): string => value.toLocaleString(i18n.language);
+  const formatSystemTimestamp = (value: string): string => {
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime())
+      ? '-'
+      : parsed.toLocaleString(i18n.language, { dateStyle: 'short', timeStyle: 'short' });
+  };
 
   return (
-    <div className="wms-ops-dashboard-page wms-ops-erp-skin">
-      <div className="wms-ops-dashboard-terminal">
-        <div className="wms-ops-dashboard-terminal__scanlines" aria-hidden />
-
-        <DashboardOpsHero
-          eyebrow={
-            isPremium
-              ? t('dashboard.premium.eyebrow', { defaultValue: 'Operasyon Merkezi' })
-              : t('dashboard.terminal.eyebrow', { defaultValue: 'WMS / KOMUT MERKEZİ' })
-          }
-          greeting={
-            isPremium
-              ? t(`dashboard.premium.${greetingKey}`, {
-                  defaultValue:
-                    greetingKey === 'goodMorning'
-                      ? 'Günaydın'
-                      : greetingKey === 'goodAfternoon'
-                        ? 'İyi günler'
-                        : 'İyi akşamlar',
-                })
-              : undefined
-          }
-          title={
-            isPremium
-              ? t('dashboard.premium.welcome', { defaultValue: 'Hoş geldiniz, {{name}}', name: displayName })
-              : t('dashboard.terminal.welcome', { defaultValue: 'Hoş geldin, {{name}}', name: displayName })
-          }
-          subtitle={
-            isPremium
-              ? t('dashboard.premium.subtitle', { defaultValue: 'Depo operasyonlarınızı tek bakışta yönetin.' })
-              : t('dashboard.subtitle')
-          }
-          operatorLabel={
-            isPremium
-              ? t('dashboard.premium.operator', { defaultValue: 'Operatör' })
-              : t('dashboard.terminal.operator', { defaultValue: 'OPERATÖR' })
-          }
-          operatorValue={displayName}
-          branchLabel={
-            isPremium
-              ? t('dashboard.premium.branch', { defaultValue: 'Şube' })
-              : t('dashboard.terminal.branch', { defaultValue: 'ŞUBE' })
-          }
-          branchValue={branchLabel}
-          clockLabel={isPremium ? t('dashboard.premium.systemClock', { defaultValue: 'Sistem saati' }) : undefined}
-          clockTime={isPremium ? clockTime : undefined}
-          clockDate={isPremium ? clockDate : undefined}
-          clockDateTime={isPremium ? now.toISOString() : undefined}
-        />
-
-        <DashboardOpsPanel>
-          <DashboardOpsStatusBar
-            pulseLabel={
-              isPremium
-                ? t('dashboard.premium.systemPulse', { defaultValue: 'Sistem durumu' })
-                : t('dashboard.terminal.systemPulse', { defaultValue: 'SİSTEM DURUMU' })
-            }
-            pulseValue={
-              isError
-                ? t(isPremium ? 'dashboard.premium.metricsError' : 'dashboard.terminal.metricsError', {
-                    defaultValue: isPremium ? 'Metrikler yüklenemedi' : 'HATA',
-                  })
-                : isLoading
-                ? t(isPremium ? 'dashboard.premium.syncing' : 'dashboard.terminal.syncing', {
-                    defaultValue: isPremium ? 'Senkronize ediliyor' : 'SENKRONİZE',
-                  })
-                : t(isPremium ? 'dashboard.premium.online' : 'dashboard.terminal.online', {
-                    defaultValue: isPremium ? 'Çevrimiçi' : 'ÇEVRİMİÇİ',
-                  })
-            }
-            tasksLabel={
-              isPremium
-                ? t('dashboard.premium.myTasks', { defaultValue: 'Görevlerim' })
-                : t('dashboard.terminal.myTasks', { defaultValue: 'GÖREVLERİM' })
-            }
-            tasksValue={String(metrics.myTasksCount).padStart(2, '0')}
-            hint={
-              isPremium
-                ? t('dashboard.premium.statusHint', {
-                    defaultValue: 'Güncel metrikler, son hareketler ve hızlı erişim aşağıda.',
-                  })
-                : t('dashboard.terminal.statusHint', {
-                    defaultValue: 'Canlı operasyon metrikleri ve son hareketler aşağıda.',
-                  })
-            }
-          />
-        </DashboardOpsPanel>
-
-        <DashboardOpsPanel className="wms-ops-dashboard-panel--metrics">
-          <div className="wms-ops-dashboard-panel__heading">
-            <span className="wms-ops-subtitle-prefix" aria-hidden>{'> '}</span>
-            <span>
-              {isPremium
-                ? t('dashboard.premium.metricsPanel', { defaultValue: 'Operasyon metrikleri' })
-                : t('dashboard.terminal.metricsPanel', { defaultValue: 'OPERASYON METRİKLERİ' })}
-            </span>
+    <div className="wms-command-page">
+      <section className="wms-command-hero">
+        <div className="wms-command-hero__intro">
+          <span className="wms-command-hero__eyebrow">{commandText('eyebrow')}</span>
+          <p className="wms-command-hero__greeting">{t(`dashboard.premium.${daypart(now)}`)}</p>
+          <h1>{commandText('welcome', { name: displayName })}</h1>
+          <p>{commandText('subtitle')}</p>
+          <div className="wms-command-hero__identity">
+            <span><UserRoundCheck size={15} aria-hidden />{displayName}</span>
+            {hasBranchContext ? <span><Warehouse size={15} aria-hidden />{branchLabel}</span> : null}
           </div>
-          <div className="wms-ops-dashboard-metrics">
-            <DashboardOpsMetricTile
-              label={t('dashboard.terminal.stockSkuCount', { defaultValue: 'Stok Kalemi' })}
-              value={metrics.stockSkuCount.toLocaleString(i18n.language)}
-              hint={t('dashboard.terminal.stockSkuHint', { defaultValue: 'Depo bakiye kayıtları' })}
-              tone="accent"
-              isLoading={isLoading}
-            />
-            <DashboardOpsMetricTile
-              label={t('dashboard.goodsReceipt')}
-              value={metrics.goodsReceiptCount.toLocaleString(i18n.language)}
-              hint={t('dashboard.terminal.openGoodsReceiptHint', { defaultValue: 'Toplam mal kabul emri' })}
-              isLoading={isLoading}
-            />
-            <DashboardOpsMetricTile
-              label={t('dashboard.shipment')}
-              value={metrics.shipmentCount.toLocaleString(i18n.language)}
-              hint={t('dashboard.terminal.openShipmentHint', { defaultValue: 'Toplam sevkiyat emri' })}
-              isLoading={isLoading}
-            />
-            <DashboardOpsMetricTile
-              label={t('dashboard.terminal.pendingApproval', { defaultValue: 'Onay Bekleyen' })}
-              value={metrics.pendingApprovalCount.toLocaleString(i18n.language)}
-              hint={t('dashboard.terminal.pendingApprovalHint', { defaultValue: 'Mal kabul onay kuyruğu' })}
-              tone="warn"
-              isLoading={isLoading}
-            />
-            <DashboardOpsMetricTile
-              label={t('dashboard.terminal.myAssignments', { defaultValue: 'Bana Atanan' })}
-              value={metrics.myTasksCount.toLocaleString(i18n.language)}
-              hint={t('dashboard.terminal.myAssignmentsHint', { defaultValue: 'Mal kabul + sevkiyat görevleri' })}
-              tone="success"
-              isLoading={isLoading}
-            />
-            <DashboardOpsMetricTile
-              label={t('dashboard.terminal.transferCount', { defaultValue: 'Transfer' })}
-              value={metrics.transferCount.toLocaleString(i18n.language)}
-              hint={t('dashboard.terminal.transferHint', { defaultValue: 'Aktif transfer emirleri' })}
-              isLoading={isLoading}
-            />
-          </div>
-        </DashboardOpsPanel>
-
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(18rem,1fr)]">
-          <DashboardOpsSection
-            title={t('dashboard.recentTransactions')}
-            description={t('dashboard.recentTransactionsSubtitle')}
-            sectionCode="FEED-OPS"
-          >
-            <DashboardOpsActivityFeed
-              items={metrics.activityItems}
-              emptyText={t('dashboard.terminal.activityEmpty', { defaultValue: 'Henüz görüntülenecek hareket yok.' })}
-              kindLabels={{
-                'goods-receipt': t('dashboard.goodsReceipt'),
-                shipment: t('dashboard.shipment'),
-              }}
-              statusLabels={{
-                completed: t('dashboard.completed'),
-                preparing: t('dashboard.preparing'),
-                pending: t('dashboard.terminal.pending', { defaultValue: 'Bekliyor' }),
-              }}
-              formatTimestamp={(value) => formatRelativeTimestamp(value, i18n.language, t)}
-            />
-          </DashboardOpsSection>
-
-          <DashboardOpsSection
-            title={t('dashboard.quickAccess')}
-            description={t('dashboard.quickAccessSubtitle')}
-            sectionCode="CMD-QUICK"
-          >
-            <div className="wms-ops-dashboard-quick-grid">
-              {visibleQuickLinks.length === 0 ? (
-                <p className="wms-ops-dashboard-activity__empty">
-                  {t('dashboard.terminal.quickLinksEmpty', {
-                    defaultValue: 'Bu kullanıcı için hızlı komut bulunamadı.',
-                  })}
-                </p>
-              ) : (
-                visibleQuickLinks.map((link, index) => (
-                  <DashboardOpsQuickLink
-                    key={link.href}
-                    index={index + 1}
-                    moduleCode={link.moduleCode}
-                    title={t(link.titleKey)}
-                    description={t(link.descriptionKey, { defaultValue: link.titleKey })}
-                    href={link.href}
-                    icon={link.icon}
-                    openLabel={
-                      isPremium
-                        ? t('dashboard.premium.launch', { defaultValue: 'Devam et' })
-                        : t('dashboard.terminal.launch', { defaultValue: 'Başlat' })
-                    }
-                  />
-                ))
-              )}
-            </div>
-          </DashboardOpsSection>
         </div>
+
+        <div className="wms-command-hero__visual" style={{ backgroundImage: `url(${warehouseBackdrop})` }}>
+          <div className="wms-command-hero__visual-shade" aria-hidden />
+          <div className="wms-command-hero__pulse" aria-hidden><span /><span /><span /></div>
+          <div className="wms-command-hero__floating wms-command-hero__floating--operations">
+            <span>{commandText('openOperations')}</span>
+            <strong>{isLoading ? '…' : formatMetric(metrics.openOperationCount)}</strong>
+            <small>{commandText('liveWorkload')}</small>
+          </div>
+          <div className="wms-command-hero__floating wms-command-hero__floating--stock">
+            <span>{commandText('stockItems')}</span>
+            <strong>{isLoading ? '…' : formatMetric(metrics.stockSkuCount)}</strong>
+            <small>{commandText('withBalance')}</small>
+          </div>
+        </div>
+
+        <aside className="wms-command-clock">
+          <div>
+            <Clock3 size={17} aria-hidden />
+            <span>{t('dashboard.premium.systemClock')}</span>
+          </div>
+          <time dateTime={now.toISOString()}>{now.toLocaleTimeString(i18n.language)}</time>
+          <p>{now.toLocaleDateString(i18n.language, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+          <div className={cn('wms-command-clock__status', isError && 'wms-command-clock__status--error')}>
+            {isError ? <AlertCircle size={15} aria-hidden /> : <CheckCircle2 size={15} aria-hidden />}
+            <span>{isError ? commandText('metricsUnavailable') : commandText('systemNormal')}</span>
+          </div>
+        </aside>
+      </section>
+
+      {isError ? (
+        <div className="wms-command-error" role="alert">
+          <AlertCircle size={18} aria-hidden />
+          <span>{commandText('loadError')}</span>
+          <button type="button" onClick={refetch} disabled={isFetching}>
+            <RefreshCw size={15} className={isFetching ? 'animate-spin' : undefined} aria-hidden />
+            {commandText('retry')}
+          </button>
+        </div>
+      ) : null}
+
+      <section className="wms-command-quick" aria-labelledby="dashboard-quick-actions">
+        <header>
+          <div>
+            <h2 id="dashboard-quick-actions">{t('dashboard.quickAccess')}</h2>
+            <p>{commandText('quickAccessDescription')}</p>
+          </div>
+          <span>{commandText('permissionScoped')}</span>
+        </header>
+        <div className="wms-command-quick__grid">
+          {visibleQuickActions.map((action) => {
+            const Icon = action.icon;
+            return (
+              <Link key={action.href} to={action.href} className="wms-command-quick__item">
+                <span aria-hidden><Icon size={20} strokeWidth={1.8} /></span>
+                  <strong>{action.titleKey.includes('.') ? t(action.titleKey) : commandText(action.titleKey)}</strong>
+                  <small>{action.descriptionKey.includes('.') ? t(action.descriptionKey) : commandText(action.descriptionKey)}</small>
+                <ArrowRight size={15} aria-hidden />
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="wms-command-metrics" aria-label={t('dashboard.premium.metricsPanel')}>
+        <DashboardCommandMetric
+          label={commandText('todayGoodsReceipts')}
+          value={formatMetric(metrics.goodsReceiptTodayCount)}
+          hint={commandText('todayGoodsReceiptsHint')}
+          icon={PackageCheck}
+          tone="violet"
+          href="/warehouse/goods-receipts/list"
+          trend={goodsReceiptTrend}
+          isLoading={isLoading}
+        />
+        <DashboardCommandMetric
+          label={commandText('todayShipments')}
+          value={formatMetric(metrics.shipmentTodayCount)}
+          hint={commandText('todayShipmentsHint')}
+          icon={Truck}
+          tone="blue"
+          href="/warehouse/shipments/list"
+          trend={shipmentTrend}
+          isLoading={isLoading}
+        />
+        <DashboardCommandMetric
+          label={commandText('todayTransfers')}
+          value={formatMetric(metrics.transferTodayCount)}
+          hint={commandText('todayTransfersHint')}
+          icon={ArrowLeftRight}
+          tone="cyan"
+          href="/warehouse/transfers/list"
+          trend={transferTrend}
+          isLoading={isLoading}
+        />
+        <DashboardCommandMetric
+          label={commandText('qualityQueue')}
+          value={formatMetric(metrics.pendingQualityInspectionCount)}
+          hint={commandText('qualityQueueHint')}
+          icon={ShieldCheck}
+          tone="amber"
+          href="/warehouse/quality/inspections"
+          isLoading={isLoading}
+        />
+        <DashboardCommandMetric
+          label={commandText('pendingApprovals')}
+          value={formatMetric(metrics.pendingApprovalCount)}
+          hint={commandText('pendingApprovalsHint')}
+          icon={ClipboardList}
+          tone="rose"
+          href="/warehouse/goods-receipts/list"
+          isLoading={isLoading}
+        />
+        <DashboardCommandMetric
+          label={commandText('myAssignments')}
+          value={formatMetric(metrics.myTasksCount)}
+          hint={commandText('myAssignmentsHint')}
+          icon={UserRoundCheck}
+          tone="green"
+          href="/warehouse/goods-receipts/assigned"
+          isLoading={isLoading}
+        />
+      </section>
+
+      <div className="wms-command-analytics">
+        <DashboardPanel
+          className="wms-command-panel--trend"
+          title={commandText('operationsTrend')}
+          description={commandText('operationsTrendDescription')}
+          action={<span className="wms-command-panel__period">{commandText('lastSevenDays')}</span>}
+        >
+          <DashboardOperationsTrend
+            data={metrics.dailyOperations}
+            series={[
+              { key: 'goodsReceiptCount', label: t('dashboard.goodsReceipt'), color: '#8b5cf6' },
+              { key: 'shipmentCount', label: t('dashboard.shipment'), color: '#3b82f6' },
+              { key: 'transferCount', label: commandText('transfer'), color: '#14b8a6' },
+            ]}
+            formatDate={(value) => new Date(`${value}T00:00:00`).toLocaleDateString(i18n.language, { day: '2-digit', month: 'short' })}
+            emptyText={commandText('noTrendData')}
+          />
+        </DashboardPanel>
+
+        <DashboardPanel
+          title={commandText('inventoryHealth')}
+          description={commandText('inventoryHealthDescription')}
+          action={<Link className="wms-command-panel__link" to="/warehouse/stock-balances">{commandText('details')}<ArrowRight size={14} aria-hidden /></Link>}
+        >
+          <DashboardInventoryDonut
+            inventory={metrics.inventoryHealth}
+            labels={{
+              total: commandText('stockPositions'),
+              available: commandText('available'),
+              reserved: commandText('reserved'),
+              qualityHold: commandText('qualityHold'),
+              unavailable: commandText('unavailable'),
+            }}
+          />
+        </DashboardPanel>
       </div>
+
+      <DashboardPanel
+        className="wms-command-panel--activity"
+        title={t('dashboard.recentTransactions')}
+        description={commandText('recentTransactionsDescription')}
+        action={<span className="wms-command-panel__live"><span aria-hidden />{commandText('live')}</span>}
+      >
+        {metrics.activityItems.length === 0 ? (
+          <div className="wms-command-empty"><Boxes size={28} aria-hidden /><p>{t('dashboard.terminal.activityEmpty')}</p></div>
+        ) : (
+          <ul className="wms-command-activity-list">
+            {metrics.activityItems.map((item) => (
+              <ActivityRow
+                key={item.id}
+                item={item}
+                kindLabel={activityKindLabels[item.kind]}
+                statusLabel={statusLabels[item.statusKey]}
+                timestamp={formatRelativeTimestamp(
+                  item.timestamp,
+                  i18n.language,
+                  (minutes) => t('dashboard.terminal.minutesAgo', { minutes }),
+                  (hours) => t('dashboard.hoursAgo', { hours }),
+                )}
+              />
+            ))}
+          </ul>
+        )}
+      </DashboardPanel>
+
+      <DashboardSystemHealthStrip
+        health={metrics.systemHealth}
+        labels={{
+          database: commandText('database'),
+          connected: commandText('connected'),
+          erpIntegration: commandText('erpIntegration'),
+          normal: commandText('normal'),
+          issueCount: (count) => commandText('issueCount', { count }),
+          balanceProjection: commandText('balanceProjection'),
+          awaitingFirstRun: commandText('awaitingFirstRun'),
+          updated: commandText('updated'),
+        }}
+        formatTimestamp={formatSystemTimestamp}
+      />
     </div>
   );
 }

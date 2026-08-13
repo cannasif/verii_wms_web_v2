@@ -22,6 +22,23 @@ const EMPTY_METRICS: DashboardMetrics = {
   shipmentCount: 0,
   transferCount: 0,
   myTasksCount: 0,
+  goodsReceiptTodayCount: 0,
+  shipmentTodayCount: 0,
+  transferTodayCount: 0,
+  pendingQualityInspectionCount: 0,
+  openOperationCount: 0,
+  inventoryHealth: {
+    availablePositionCount: 0,
+    reservedPositionCount: 0,
+    qualityHoldPositionCount: 0,
+    unavailablePositionCount: 0,
+  },
+  dailyOperations: [],
+  systemHealth: {
+    generatedAtUtc: '',
+    lastBalanceProjectionAtUtc: null,
+    erpIssueCount: 0,
+  },
   activityItems: [],
 };
 
@@ -44,6 +61,14 @@ export function mapDashboardSummary(summary: DashboardSummary | undefined): Dash
     shipmentCount: summary.shipmentOrderCount,
     transferCount: summary.activeTransferOrderCount,
     myTasksCount: summary.myAssignedTaskCount,
+    goodsReceiptTodayCount: summary.goodsReceiptTodayCount ?? 0,
+    shipmentTodayCount: summary.shipmentTodayCount ?? 0,
+    transferTodayCount: summary.transferTodayCount ?? 0,
+    pendingQualityInspectionCount: summary.pendingQualityInspectionCount ?? 0,
+    openOperationCount: summary.openOperationCount ?? 0,
+    inventoryHealth: summary.inventoryHealth ?? EMPTY_METRICS.inventoryHealth,
+    dailyOperations: summary.dailyOperations ?? [],
+    systemHealth: summary.systemHealth ?? EMPTY_METRICS.systemHealth,
     activityItems,
   };
 }
@@ -54,6 +79,8 @@ export function useDashboardMetrics(): {
   metrics: DashboardMetrics;
   isLoading: boolean;
   isError: boolean;
+  isFetching: boolean;
+  refetch: () => void;
 } {
   const user = useAuthStore((state) => state.user);
   const branch = useAuthStore((state) => state.branch);
@@ -62,6 +89,9 @@ export function useDashboardMetrics(): {
     queryKey: ['dashboard', 'summary', user?.id ?? null, branch?.code ?? null],
     queryFn: ({ signal }) => dashboardApi.getSummary({ signal }),
     staleTime: 60_000,
+    refetchInterval: 60_000,
+    refetchIntervalInBackground: false,
+    retry: 1,
   });
 
   const metrics = useMemo(
@@ -75,5 +105,9 @@ export function useDashboardMetrics(): {
     metrics,
     isLoading: summaryQuery.isLoading,
     isError: summaryQuery.isError,
+    isFetching: summaryQuery.isFetching,
+    refetch: () => {
+      void summaryQuery.refetch();
+    },
   };
 }
