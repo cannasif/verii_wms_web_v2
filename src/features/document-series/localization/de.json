@@ -44,13 +44,14 @@
   "form": {
     "createTitle": "Dokumentserie erstellen",
     "editTitle": "Dokumentserie bearbeiten",
-    "description": "Definieren Sie Dokumenttyp und ein Nummernformat mit höchstens 15 Zeichen.",
+    "description": "Definieren Sie ein Dokumentnummernformat mit genau 15 Zeichen.",
     "code": "Seriencode",
     "name": "Serienname",
     "documentType": "Dokumenttyp",
     "prefix": "Präfix",
     "yearFormat": "Jahresformat",
-    "numberLength": "Nummernlänge",
+    "numberLength": "Zählerstellen",
+    "numberLengthHint": "Das System berechnet diesen Wert aus Präfix und Jahresformat automatisch auf genau 15 Zeichen.",
     "startNumber": "Startnummer",
     "nextNumber": "Nächste Nummer",
     "incrementBy": "Inkrement",
@@ -66,7 +67,7 @@
   },
   "validation": {
     "required": "Seriencode, Name und Präfix sind erforderlich.",
-    "numbers": "Nummerierungsfelder sind ungültig."
+    "numbers": "Die Dokumentnummer muss genau 15 Zeichen lang sein und mindestens 3 Zählerstellen enthalten."
   },
   "messages": {
     "createSuccess": "Dokumentenserie erstellt.",

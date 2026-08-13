@@ -44,13 +44,14 @@
   "form": {
     "createTitle": "Crea serie di documenti",
     "editTitle": "Modifica serie di documenti",
-    "description": "Definire il tipo di documento e un formato numerico di massimo 15 caratteri.",
+    "description": "Definisci un formato del numero documento di esattamente 15 caratteri.",
     "code": "Codice serie",
     "name": "Nome della serie",
     "documentType": "Tipo di documento",
     "prefix": "Prefisso",
     "yearFormat": "Formato anno",
-    "numberLength": "Lunghezza del numero",
+    "numberLength": "Cifre del contatore",
+    "numberLengthHint": "Il sistema calcola automaticamente il valore da prefisso e formato anno per ottenere esattamente 15 caratteri.",
     "startNumber": "Numero di partenza",
     "nextNumber": "Numero successivo",
     "incrementBy": "Incremento",
@@ -66,7 +67,7 @@
   },
   "validation": {
     "required": "Sono richiesti il codice della serie, il nome e il prefisso.",
-    "numbers": "I campi di numerazione non sono validi."
+    "numbers": "Il numero documento deve essere lungo esattamente 15 caratteri e avere almeno 3 cifre di contatore."
   },
   "messages": {
     "createSuccess": "Serie di documenti creata.",

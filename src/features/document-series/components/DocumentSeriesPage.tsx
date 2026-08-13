@@ -15,12 +15,12 @@ import { documentSeriesApi } from '../api/document-series.api';
 import type { DocumentSeriesRow, DocumentSeriesUpsertPayload, DocumentYearFormat, WmsDocumentType } from '../types/document-series.types';
 
 type FormState = Omit<DocumentSeriesUpsertPayload, 'numberLength' | 'startNumber' | 'nextNumber' | 'incrementBy'> & {
-  numberLength: string; startNumber: string; nextNumber: string; incrementBy: string;
+  startNumber: string; nextNumber: string; incrementBy: string;
 };
 
 const emptyForm = (): FormState => ({
   branchCode: '0', code: '', name: '', documentType: 'GoodsReceipt', prefix: 'MK',
-  yearFormat: 'FourDigit', numberLength: '8', startNumber: '1', nextNumber: '1', incrementBy: '1',
+  yearFormat: 'FourDigit', startNumber: '1', nextNumber: '1', incrementBy: '1',
   isDefault: false, isActive: true, description: null,
 });
 
@@ -62,25 +62,24 @@ export function DocumentSeriesPage() {
     setForm({
       branchCode: row.branchCode, code: row.code, name: row.name,
       documentType: row.documentType, prefix: row.prefix, yearFormat: row.yearFormat,
-      numberLength: String(row.numberLength), startNumber: String(row.startNumber), nextNumber: String(row.nextNumber), incrementBy: String(row.incrementBy),
+      startNumber: String(row.startNumber), nextNumber: String(row.nextNumber), incrementBy: String(row.incrementBy),
       isDefault: row.isDefault, isActive: row.isActive, description: row.description ?? null,
     });
     setFormError(null); setMode('edit');
   }, []);
 
-  const preview = useMemo(() => {
-    const year = form.yearFormat === 'TwoDigit' ? String(new Date().getFullYear()).slice(-2) : form.yearFormat === 'FourDigit' ? String(new Date().getFullYear()) : '';
-    const number = String(Math.max(Number(form.nextNumber) || 0, 0)).padStart(Math.max(Number(form.numberLength) || 0, 0), '0');
-    return `${form.prefix.trim().toUpperCase()}${year}${number}`;
-  }, [form.nextNumber, form.numberLength, form.prefix, form.yearFormat]);
-
   const yearLength = form.yearFormat === 'TwoDigit' ? 2 : form.yearFormat === 'FourDigit' ? 4 : 0;
   const numberCapacity = 15 - form.prefix.trim().length - yearLength;
+  const preview = useMemo(() => {
+    const year = form.yearFormat === 'TwoDigit' ? String(new Date().getFullYear()).slice(-2) : form.yearFormat === 'FourDigit' ? String(new Date().getFullYear()) : '';
+    const number = String(Math.max(Number(form.nextNumber) || 0, 0)).padStart(Math.max(numberCapacity, 0), '0');
+    return `${form.prefix.trim().toUpperCase()}${year}${number}`;
+  }, [form.nextNumber, form.prefix, form.yearFormat, numberCapacity]);
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     if (!form.code.trim() || !form.name.trim() || !form.prefix.trim()) { setFormError(t('validation.required')); return; }
-    const numberLength = Number(form.numberLength), startNumber = Number(form.startNumber), nextNumber = Number(form.nextNumber), incrementBy = Number(form.incrementBy);
+    const numberLength = numberCapacity, startNumber = Number(form.startNumber), nextNumber = Number(form.nextNumber), incrementBy = Number(form.incrementBy);
     if (
       !Number.isSafeInteger(numberLength)
       || !Number.isSafeInteger(startNumber)
@@ -88,7 +87,6 @@ export function DocumentSeriesPage() {
       || !Number.isSafeInteger(incrementBy)
       || numberLength < 3
       || numberLength > 15
-      || numberLength > numberCapacity
       || String(Math.trunc(startNumber)).length > numberLength
       || String(Math.trunc(nextNumber)).length > numberLength
       || startNumber < 1
@@ -161,12 +159,17 @@ export function DocumentSeriesPage() {
               <Field label={t('form.name')} required><input value={form.name} maxLength={150} onChange={(event) => update('name', event.target.value)} className="input"/></Field>
               <Field label={t('form.prefix')} required><input value={form.prefix} maxLength={10} disabled={locked} onChange={(event) => update('prefix', event.target.value.toUpperCase())} className="input disabled:opacity-50"/></Field>
               <Field label={t('form.yearFormat')}><AppDropdown value={form.yearFormat} onValueChange={(value) => update('yearFormat', value)} options={yearFormats} searchable disabled={locked} portalContainer={null}/></Field>
-              <Field label={t('form.numberLength')}><NumberField value={form.numberLength} min={3} max={15} disabled={locked} onChange={(value) => update('numberLength', value)}/></Field>
+              <Field label={t('form.numberLength')}>
+                <div className="space-y-1">
+                  <input value={Math.max(numberCapacity, 0)} readOnly aria-readonly="true" className="input cursor-not-allowed bg-slate-50 text-slate-600 dark:bg-slate-900"/>
+                  <span className="block text-xs text-slate-500">{t('form.numberLengthHint')}</span>
+                </div>
+              </Field>
               <Field label={t('form.startNumber')}><NumberField value={form.startNumber} min={1} disabled={locked} onChange={(value) => update('startNumber', value)}/></Field>
               <Field label={t('form.nextNumber')}><NumberField value={form.nextNumber} min={1} disabled={locked} onChange={(value) => update('nextNumber', value)}/></Field>
               <Field label={t('form.incrementBy')}><NumberField value={form.incrementBy} min={1} max={1000} disabled={locked} onChange={(value) => update('incrementBy', value)}/></Field>
               <Field label={t('form.preview')}>
-                <div className={`input flex items-center justify-between gap-3 font-mono font-semibold ${preview.length > 15 ? 'border-red-400 text-red-600' : 'text-[var(--wms-brand-primary)]'}`}>
+                <div className={`input flex items-center justify-between gap-3 font-mono font-semibold ${preview.length !== 15 ? 'border-red-400 text-red-600' : 'text-[var(--wms-brand-primary)]'}`}>
                   <span>{preview}</span>
                   <span className="text-xs font-normal text-slate-500">{preview.length}/15</span>
                 </div>
