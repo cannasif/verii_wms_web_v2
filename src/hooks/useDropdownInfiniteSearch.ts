@@ -2,6 +2,10 @@ import { useMemo } from 'react';
 import { keepPreviousData, useInfiniteQuery, type InfiniteData } from '@tanstack/react-query';
 import type { PagedFilter } from '@/types/api';
 import { toTurkishApiSearch } from '@/lib/turkish-search';
+import {
+  isDropdownSearchSettling,
+  resolveDropdownSearchInputState,
+} from './dropdown-search-state';
 
 export interface DropdownPageRequest {
   pageNumber: number;
@@ -26,6 +30,8 @@ export interface DropdownPage<TItem> {
 
 interface DropdownInfiniteSearchOptions<TItem> {
   queryKey: string | readonly unknown[];
+  /** Immediate input value; searchTerm may be debounced by the dropdown UI. */
+  inputSearchTerm?: string;
   searchTerm: string;
   fetchPage: (request: DropdownPageRequest) => Promise<DropdownPage<TItem>>;
   buildFilters?: (searchTerm: string) => PagedFilter[] | Record<string, unknown> | undefined;
@@ -41,6 +47,7 @@ interface DropdownInfiniteSearchOptions<TItem> {
 
 export function useDropdownInfiniteSearch<TItem>({
   queryKey,
+  inputSearchTerm,
   searchTerm,
   fetchPage,
   buildFilters,
@@ -53,22 +60,26 @@ export function useDropdownInfiniteSearch<TItem>({
   filterLogic = 'or',
   dependencies = [],
 }: DropdownInfiniteSearchOptions<TItem>) {
-  const normalizedSearch = searchTerm.trim();
-  const isBrowseMode = normalizedSearch.length === 0;
-  const isSearchMode = normalizedSearch.length >= minSearchLength;
-  const isThresholdMode = !isBrowseMode && !isSearchMode;
-  const activeSearch = isSearchMode ? toTurkishApiSearch(normalizedSearch) : '';
+  const querySearchState = resolveDropdownSearchInputState(searchTerm, minSearchLength);
+  const inputSearchState = resolveDropdownSearchInputState(
+    inputSearchTerm ?? searchTerm,
+    minSearchLength,
+  );
+  const activeSearch = querySearchState.isSearchMode
+    ? toTurkishApiSearch(querySearchState.activeTerm)
+    : '';
+  const isSearchSettling = isDropdownSearchSettling(inputSearchState, querySearchState);
   const stableKey = Array.isArray(queryKey) ? queryKey : [queryKey];
 
   const query = useInfiniteQuery({
-    queryKey: [...stableKey, 'dropdown', isSearchMode ? 'search' : 'browse', activeSearch, searchFields.join('|'), pageSize, sortBy ?? null, sortDirection, ...dependencies],
-    enabled: enabled && !isThresholdMode,
+    queryKey: [...stableKey, 'dropdown', querySearchState.isSearchMode ? 'search' : 'browse', activeSearch, searchFields.join('|'), pageSize, sortBy ?? null, sortDirection, ...dependencies],
+    enabled: enabled && !querySearchState.isThresholdMode,
     initialPageParam: 1,
     queryFn: ({ pageParam, signal }) => fetchPage({
       pageNumber: pageParam,
       pageSize,
       search: activeSearch || undefined,
-      searchFields: isSearchMode ? [...searchFields] : undefined,
+      searchFields: querySearchState.isSearchMode ? [...searchFields] : undefined,
       sortBy,
       sortDirection,
       filters: buildFilters?.(activeSearch),
@@ -90,18 +101,30 @@ export function useDropdownInfiniteSearch<TItem>({
     placeholderData: keepPreviousData,
   });
 
-  const items = useMemo(
-    () => query.data?.pages.flatMap((page) => page.items) ?? [],
-    [query.data],
-  );
+  const items = useMemo(() => {
+    // Never present browse/previous-search rows as matches for the text that is
+    // currently visible in the input.
+    if (
+      inputSearchState.isThresholdMode
+      || isSearchSettling
+      || (query.isPlaceholderData && query.isFetching)
+    ) {
+      return [] as TItem[];
+    }
+    return query.data?.pages.flatMap((page) => page.items) ?? [];
+  }, [inputSearchState.isThresholdMode, isSearchSettling, query.data, query.isFetching, query.isPlaceholderData]);
 
   return {
     ...query,
     data: query.data as InfiniteData<DropdownPage<TItem>> | undefined,
     items,
-    isBrowseMode,
-    isSearchMode,
-    isThresholdMode,
+    isBrowseMode: inputSearchState.isBrowseMode,
+    isSearchMode: inputSearchState.isSearchMode,
+    isThresholdMode: inputSearchState.isThresholdMode,
+    isSearchSettling,
+    isLoading: query.isLoading
+      || isSearchSettling
+      || (query.isPlaceholderData && query.isFetching),
     hasNextPage: query.hasNextPage ?? false,
   };
 }

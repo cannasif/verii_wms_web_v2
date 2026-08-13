@@ -39,6 +39,8 @@ export interface AppDropdownProps<TValue extends string = string> {
   isFetchingNextPage?: boolean;
   hasNextPage?: boolean;
   onSearchChange?: (search: string) => void;
+  /** Fires immediately, before the debounced API search callback. */
+  onSearchInputChange?: (search: string) => void;
   onFetchNextPage?: () => void | Promise<unknown>;
   onOpenChange?: (open: boolean) => void;
   errorText?: string;
@@ -110,6 +112,7 @@ export function AppDropdown<TValue extends string = string>({
   isFetchingNextPage = false,
   hasNextPage = false,
   onSearchChange,
+  onSearchInputChange,
   onFetchNextPage,
   onOpenChange,
   errorText,
@@ -147,8 +150,11 @@ export function AppDropdown<TValue extends string = string>({
   useEffect(() => {
     if (open) return;
     setSearch('');
-    if (remoteSearch) onSearchChange('');
-  }, [onSearchChange, open, remoteSearch]);
+    if (remoteSearch) {
+      onSearchInputChange?.('');
+      onSearchChange('');
+    }
+  }, [onSearchChange, onSearchInputChange, open, remoteSearch]);
 
   useDropdownListWheelScroll(listRef, open);
 
@@ -255,7 +261,11 @@ export function AppDropdown<TValue extends string = string>({
               <Search className="size-4 shrink-0 text-slate-400" aria-hidden />
               <input
                 value={search}
-                onChange={(event) => setSearch(event.target.value)}
+                onChange={(event) => {
+                  const nextSearch = event.target.value;
+                  setSearch(nextSearch);
+                  if (remoteSearch) onSearchInputChange?.(nextSearch);
+                }}
                 placeholder={searchPlaceholder ?? t('dropdown.search')}
                 aria-label={searchPlaceholder ?? t('dropdown.search')}
                 className="wms-ops-dropdown-search h-10 min-w-0 flex-1 border-0 bg-transparent p-0 text-sm shadow-none outline-none ring-0 placeholder:text-slate-400 focus:border-0 focus:shadow-none focus:outline-none focus:ring-0"

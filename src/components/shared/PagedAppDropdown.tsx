@@ -56,10 +56,12 @@ export function PagedAppDropdown<TItem, TValue extends string = string>({
   ...dropdownProps
 }: PagedAppDropdownProps<TItem, TValue>): ReactElement {
   const { t } = useTranslation('shared');
+  const [inputSearchTerm, setInputSearchTerm] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [rememberedSelected, setRememberedSelected] = useState<AppDropdownOption<TValue> | undefined>();
   const query = useDropdownInfiniteSearch({
     queryKey,
+    inputSearchTerm,
     searchTerm,
     fetchPage,
     enabled,
@@ -109,6 +111,7 @@ export function PagedAppDropdown<TItem, TValue extends string = string>({
       options={options}
       searchable={searchable}
       searchApi
+      onSearchInputChange={setInputSearchTerm}
       onSearchChange={setSearchTerm}
       onFetchNextPage={query.fetchNextPage}
       hasNextPage={query.hasNextPage}
