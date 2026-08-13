@@ -29,8 +29,12 @@ import {
 } from '../api';
 import { ProductionTaskStartShortageDialog } from './ProductionTaskStartShortageDialog';
 import { useProductionTaskStart } from '../hooks/useProductionTaskStart';
-
-type PickTab = 'all' | 'completed';
+import {
+  countProductionTransferPickingRows,
+  filterProductionTransferPickingRows,
+  isProductionTransferPickingRowCompleted,
+  type ProductionTransferPickTab as PickTab,
+} from '../production-transfer-picking-view';
 
 type TableSection =
   | { type: 'flat'; row: ProductionTransferPickingRow }
@@ -83,6 +87,7 @@ const CHECKBOX_CELL = cn(TABLE_CELL, 'text-center');
 const LOCATION_HEAD_CELL = cn(TABLE_HEAD_CELL, 'text-center');
 const LOCATION_CELL = cn(TABLE_CELL, 'text-center');
 const HIGHLIGHT_ROW_CLASS = 'bg-amber-500/15 ring-2 ring-inset ring-amber-500';
+const COMPLETED_ROW_CLASS = 'bg-emerald-500/10 text-emerald-950 dark:text-emerald-100';
 
 function locationOptionLabel(code?: string, name?: string): string {
   if (code && name) return `${code} · ${name}`;
@@ -154,7 +159,7 @@ function serialRouteCandidateKey(candidate: ProductionTransferRouteRefreshCandid
 }
 
 function isRowCompleted(row: ProductionTransferPickingRow): boolean {
-  return row.remainingQuantity <= 0;
+  return isProductionTransferPickingRowCompleted(row);
 }
 
 
@@ -179,9 +184,7 @@ function sortSerialGroupRows(
   tab: PickTab,
   displayOrder: Map<string, number>,
 ): ProductionTransferPickingRow[] {
-  const filtered = tab === 'completed'
-    ? rows.filter(isRowCompleted)
-    : rows.filter((row) => !isRowCompleted(row));
+  const filtered = filterProductionTransferPickingRows(rows, tab);
 
   return [...filtered].sort((left, right) => compareDisplayOrder(left, right, displayOrder));
 }
@@ -207,9 +210,7 @@ function buildTableSections(rows: ProductionTransferPickingRow[], tab: PickTab):
   const serialShortageRows = nonSerialRows.filter((row) => serialStockIds.has(row.stockId));
   const standaloneNonSerialRows = nonSerialRows.filter((row) => !serialStockIds.has(row.stockId));
 
-  const visibleNonSerial = tab === 'completed'
-    ? standaloneNonSerialRows.filter(isRowCompleted)
-    : standaloneNonSerialRows.filter((row) => !isRowCompleted(row));
+  const visibleNonSerial = filterProductionTransferPickingRows(standaloneNonSerialRows, tab);
   const flatSections: TableSection[] = [...visibleNonSerial]
     .sort((left, right) => compareDisplayOrder(left, right, displayOrder))
     .map((row) => ({ type: 'flat' as const, row } satisfies TableSection));
@@ -1227,7 +1228,7 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
             <p className="text-xs font-bold uppercase tracking-[.16em] text-[var(--wms-app-text-muted)]">Reçete / iş emri</p>
             <div className="mt-1 flex flex-wrap items-center gap-3">
               <h2 className="text-xl font-black">{table.externalReferenceNo?.trim() || execution.documentNo}</h2>
-              <PickingRowTabs value={tab} onChange={setTab} />
+              <PickingRowTabs value={tab} rows={table.rows} onChange={setTab} />
             </div>
             <p className="mt-1 text-sm text-[var(--wms-app-text-muted)]">
               {table.pickTaskNo}
@@ -2037,19 +2038,23 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
 
 function PickingRowTabs({
   value,
+  rows,
   onChange,
 }: {
   value: PickTab;
+  rows: ProductionTransferPickingRow[];
   onChange: (value: PickTab) => void;
 }) {
+  const counts = countProductionTransferPickingRows(rows);
   const tabs = [
-    { id: 'all' as const, label: 'Tümü' },
-    { id: 'completed' as const, label: 'Toplananlar' },
+    { id: 'all' as const, label: 'Tümü', count: counts.all },
+    { id: 'pending' as const, label: 'Toplanacak', count: counts.pending },
+    { id: 'completed' as const, label: 'Toplanan', count: counts.completed },
   ];
 
   return (
     <div
-      className="inline-grid w-[12.5rem] shrink-0 grid-cols-2 overflow-hidden rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-surface)] shadow-[inset_0_0_0_1px_rgba(15,23,42,0.04)] dark:shadow-[inset_0_0_0_1px_rgba(148,163,184,0.08)]"
+      className="inline-grid w-full min-w-0 shrink-0 grid-cols-3 overflow-hidden rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-surface)] shadow-[inset_0_0_0_1px_rgba(15,23,42,0.04)] sm:w-[25rem] dark:shadow-[inset_0_0_0_1px_rgba(148,163,184,0.08)]"
       role="tablist"
       aria-label="Toplama sekmeleri"
     >
@@ -2068,7 +2073,8 @@ function PickingRowTabs({
               : 'text-slate-500 hover:bg-black/5 dark:hover:bg-white/5',
           )}
         >
-          {tab.label}
+          <span>{tab.label}</span>
+          <span className="ml-1 tabular-nums opacity-70">({tab.count})</span>
         </button>
       ))}
     </div>
@@ -2250,7 +2256,8 @@ function SerialStockGroup({
     remaining: rows.reduce((sum, row) => sum + row.remainingQuantity, 0),
     processed: rows.reduce((sum, row) => sum + row.processedQuantity, 0),
   }), [rows]);
-  const done = totals.remaining <= 0;
+  const done = rows.length > 0 && rows.every(isRowCompleted);
+  const hasCompletedRows = rows.some(isRowCompleted);
   const lineNoLabel = summarizeSerialLineNos(rows);
   const headerHighlighted = rows.some((row) => isLineHighlighted(row.lineNo, highlightedLineNo));
 
@@ -2264,7 +2271,13 @@ function SerialStockGroup({
     <>
       <tr
         data-picking-line-no={lineNoLabel.includes(',') ? undefined : lineNoLabel}
-        className={cn('transition-colors', done && 'opacity-70', expanded && 'bg-black/[0.03] dark:bg-white/[0.03]', headerHighlighted && HIGHLIGHT_ROW_CLASS)}
+        className={cn(
+          'transition-colors',
+          hasCompletedRows && 'bg-emerald-500/[0.06]',
+          done && COMPLETED_ROW_CLASS,
+          expanded && !hasCompletedRows && 'bg-black/[0.03] dark:bg-white/[0.03]',
+          headerHighlighted && HIGHLIGHT_ROW_CLASS,
+        )}
       >
         <td className={TABLE_CELL}>
           <button
@@ -2361,7 +2374,7 @@ function PickingRow({
   serialDetail?: boolean;
   completedShelf?: CompletedShelfProps;
 }) {
-  const done = row.remainingQuantity <= 0;
+  const done = isRowCompleted(row);
   const canSelect = !locked && (
     pickTab === 'completed'
       ? row.processedQuantity > 0 && row.remainingQuantity <= 0
@@ -2371,7 +2384,11 @@ function PickingRow({
   return (
     <tr
       data-picking-line-no={row.lineNo}
-      className={cn(done && 'opacity-70', serialDetail && 'bg-black/[0.02] dark:bg-white/[0.02]', highlighted && HIGHLIGHT_ROW_CLASS)}
+      className={cn(
+        serialDetail && !done && 'bg-black/[0.02] dark:bg-white/[0.02]',
+        done && COMPLETED_ROW_CLASS,
+        highlighted && HIGHLIGHT_ROW_CLASS,
+      )}
     >
       <td className={isCompletedTab ? CHECKBOX_CELL : TABLE_CELL}>
         {isCompletedTab ? (
