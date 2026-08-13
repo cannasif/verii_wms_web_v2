@@ -62,6 +62,7 @@ import {
   getGridPreferenceKey,
   loadGridPreferences,
   MAX_GRID_SEARCH_FIELDS,
+  resolveGridSearchFields,
   saveGridPreferences,
   type GridPreferences,
 } from '@/lib/grid-preferences';
@@ -630,13 +631,9 @@ export function AdvancedDataGrid<T extends { id: number }>({
     () => localizedColumns.filter(isGridColumnSearchable),
     [localizedColumns],
   );
-  const visibleSearchableColumns = useMemo(
-    () => searchableColumns.filter((column) => visible.includes(column.key)),
-    [searchableColumns, visible],
-  );
   const filteredSearchableColumns = useMemo(
-    () => visibleSearchableColumns.filter((column) => matchesGridMenuSearch(column.label, searchFieldMenuSearch)),
-    [searchFieldMenuSearch, visibleSearchableColumns],
+    () => searchableColumns.filter((column) => matchesGridMenuSearch(column.label, searchFieldMenuSearch)),
+    [searchFieldMenuSearch, searchableColumns],
   );
   const columnMenuColumns = useMemo(
     () => order
@@ -659,23 +656,21 @@ export function AdvancedDataGrid<T extends { id: number }>({
     return index < 0 ? displayColumns.length : index;
   }, [displayColumns]);
   const effectiveSearchFields = useMemo(() => {
-    const selected = searchFields
-      .filter((key) => visibleSearchableColumns.some((column) => column.key === key))
-      .slice(0, MAX_GRID_SEARCH_FIELDS);
-    return selected.length > 0
-      ? selected
-      : visibleSearchableColumns.slice(0, 1).map((column) => column.key);
-  }, [searchFields, visibleSearchableColumns]);
+    return resolveGridSearchFields(
+      searchFields,
+      searchableColumns.map((column) => column.key),
+    );
+  }, [searchFields, searchableColumns]);
 
   useEffect(() => {
-    const validKeys = new Set(visibleSearchableColumns.map((column) => column.key));
+    const validKeys = new Set(searchableColumns.map((column) => column.key));
     setSearchFields((current) => {
       const sanitized = current.filter((key) => validKeys.has(key));
       if (sanitized.length === current.length) return current;
       if (sanitized.length > 0) return sanitized;
       return getDefaultGridPreferences(preferenceColumns).searchFields;
     });
-  }, [preferenceColumns, visibleSearchableColumns]);
+  }, [preferenceColumns, searchableColumns]);
   const request = useMemo<GridRequest>(
     () => {
       const apiSearch = search ? toTurkishApiSearch(search) : '';
@@ -790,9 +785,9 @@ export function AdvancedDataGrid<T extends { id: number }>({
   const toggleSearchField = (key: string) => {
     setSearchFields((current) => {
       if (!current.includes(key)) {
-        const visibleSelectedCount = current.filter((item) =>
-          visibleSearchableColumns.some((column) => column.key === item)).length;
-        return visibleSelectedCount >= MAX_GRID_SEARCH_FIELDS ? current : [...current, key];
+        const selectedCount = current.filter((item) =>
+          searchableColumns.some((column) => column.key === item)).length;
+        return selectedCount >= MAX_GRID_SEARCH_FIELDS ? current : [...current, key];
       }
       return effectiveSearchFields.length > 1 ? current.filter((item) => item !== key) : current;
     });
@@ -1135,7 +1130,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
         </div>
 
         <div className="wms-ops-data-grid-toolbar__end flex flex-wrap items-center gap-2">
-          {!hideSearch && visibleSearchableColumns.length > 0 ? (
+          {!hideSearch && searchableColumns.length > 0 ? (
             <PopoverPrimitive.Root open={showSearchFields} onOpenChange={(open) => { setShowSearchFields(open); if (!open) setSearchFieldMenuSearch(''); }}>
               <PopoverPrimitive.Trigger asChild>
                 <OpsActionButton

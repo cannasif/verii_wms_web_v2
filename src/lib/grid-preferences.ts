@@ -25,6 +25,25 @@ const PAGE_SIZE_OPTIONS = [10, 20, 25, 50, 100] as const;
 const MIN_COLUMN_WIDTH = 80;
 const MAX_COLUMN_WIDTH = 800;
 
+/**
+ * Resolves the server-side search scope independently from column visibility.
+ * Hiding a column is a presentation preference and must not silently remove a
+ * field that the user explicitly selected for searching.
+ */
+export function resolveGridSearchFields(
+  selectedFields: readonly string[],
+  searchableFields: readonly string[],
+): string[] {
+  const allowed = new Set(searchableFields);
+  const selected = selectedFields
+    .filter((field, index) => allowed.has(field) && selectedFields.indexOf(field) === index)
+    .slice(0, MAX_GRID_SEARCH_FIELDS);
+
+  return selected.length > 0
+    ? selected
+    : searchableFields.slice(0, 1);
+}
+
 export function getGridPreferenceKey(pageKey: string, userId?: number): string {
   return `wms-grid:v${GRID_PREFERENCE_VERSION}:${userId ?? 'anonymous'}:${pageKey}`;
 }
