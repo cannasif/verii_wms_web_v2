@@ -157,7 +157,28 @@
       "lotSerial": "دفعة / تسلسل",
       "serialPreview": "{{first}} +{{count}}",
       "serialFilledCount": "{{filled}}/{{total}} رقم تسلسلي",
-      "serialHoverTitle": "الأرقام التسلسلية المدخلة ({{count}})"
+      "serialHoverTitle": "الأرقام التسلسلية المدخلة ({{count}})",
+      "stockImageAddToCard": "إضافة صورة إلى بطاقة المخزون",
+      "stockImageUpload": {
+        "title": "صور بطاقة المخزون",
+        "description": "عرض وإضافة صور إلى المعرض الدائم للمخزون {{code}} · {{name}}.",
+        "stockCardNoticeTitle": "يتم حفظ هذه الصورة في بطاقة المخزون",
+        "stockCardNotice": "لا يتم إرفاق الملف باستلام البضاعة أو بسطر مستند التسليم. يصبح خاصية للمخزون ويمكن استخدامه في جميع شاشات WMS.",
+        "dropTitle": "اسحب الصور هنا أو اخترها من الجهاز",
+        "limits": "JPG أو PNG أو WebP · بحد أقصى 10 ميغابايت للصورة · 20 صورة للمخزون",
+        "select": "اختيار صورة",
+        "uploading": "جارٍ الرفع إلى بطاقة المخزون…",
+        "libraryTitle": "معرض صور المخزون",
+        "libraryCount": "{{current}}/{{maximum}} صورة",
+        "empty": "لا توجد صور في بطاقة المخزون حتى الآن.",
+        "primary": "الغلاف",
+        "saved": "تمت إضافة الصورة إلى بطاقة المخزون.",
+        "failed": "تعذرت إضافة الصورة إلى بطاقة المخزون.",
+        "loadFailed": "تعذر تحميل صور المخزون.",
+        "batchLimit": "يمكنك رفع {{count}} صور كحد أقصى في المرة الواحدة.",
+        "libraryLimit": "يمكن أن تحتوي بطاقة المخزون على {{count}} صورة كحد أقصى.",
+        "invalidFile": "الملف {{name}} غير صالح. المدعوم هو JPG أو PNG أو WebP حتى 10 ميغابايت."
+      }
     },
     "labelOptions": {
       "none": "بدون ملصق",

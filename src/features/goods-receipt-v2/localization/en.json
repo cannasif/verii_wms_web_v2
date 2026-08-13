@@ -165,7 +165,28 @@
       "stockImageError": "Could not load image",
       "stockImageLightbox": "{{name}} image",
       "stockImageClose": "Close",
-      "stockImageFallback": "Stock"
+      "stockImageFallback": "Stock",
+      "stockImageAddToCard": "Add image to stock card",
+      "stockImageUpload": {
+        "title": "Stock card images",
+        "description": "View and add images to the permanent gallery of stock card {{code}} · {{name}}.",
+        "stockCardNoticeTitle": "This image is saved to the stock card",
+        "stockCardNotice": "The uploaded file is not attached to the goods receipt or dispatch-note line. It is available as a stock attribute throughout WMS.",
+        "dropTitle": "Drop images here or select them from the device",
+        "limits": "JPG, PNG or WebP · maximum 10 MB per image · maximum 20 images per stock",
+        "select": "Select image",
+        "uploading": "Uploading to stock card…",
+        "libraryTitle": "Stock image gallery",
+        "libraryCount": "{{current}}/{{maximum}} images",
+        "empty": "This stock card has no images yet.",
+        "primary": "COVER",
+        "saved": "Image added to the stock card.",
+        "failed": "Image could not be added to the stock card.",
+        "loadFailed": "Stock images could not be loaded.",
+        "batchLimit": "You can upload at most {{count}} images at once.",
+        "libraryLimit": "A stock card can contain at most {{count}} images.",
+        "invalidFile": "{{name}} is invalid. Only JPG, PNG or WebP up to 10 MB is supported."
+      }
     },
     "labelOptions": {
       "none": "No label",

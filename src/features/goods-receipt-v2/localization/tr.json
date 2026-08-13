@@ -165,7 +165,28 @@
       "stockImageError": "Görsel alınamadı",
       "stockImageLightbox": "{{name}} görseli",
       "stockImageClose": "Kapat",
-      "stockImageFallback": "Stok"
+      "stockImageFallback": "Stok",
+      "stockImageAddToCard": "Stok kartına görsel ekle",
+      "stockImageUpload": {
+        "title": "Stok kartı görselleri",
+        "description": "{{code}} · {{name}} stok kartının kalıcı görsel galerisini görüntüleyin ve yeni görsel ekleyin.",
+        "stockCardNoticeTitle": "Bu görsel stok kartına kaydedilir",
+        "stockCardNotice": "Yüklenen dosya mal kabul belgesine veya irsaliye satırına eklenmez. Aynı stok seçildiğinde tüm WMS ekranlarında stok özelliği olarak kullanılabilir.",
+        "dropTitle": "Görselleri buraya sürükleyin veya cihazdan seçin",
+        "limits": "JPG, PNG veya WebP · görsel başına en fazla 10 MB · stok başına en fazla 20 görsel",
+        "select": "Görsel seç",
+        "uploading": "Stok kartına yükleniyor…",
+        "libraryTitle": "Stok görsel galerisi",
+        "libraryCount": "{{current}}/{{maximum}} görsel",
+        "empty": "Bu stok kartında henüz görsel yok.",
+        "primary": "KAPAK",
+        "saved": "Görsel stok kartına eklendi.",
+        "failed": "Görsel stok kartına eklenemedi.",
+        "loadFailed": "Stok görselleri alınamadı.",
+        "batchLimit": "Tek seferde en fazla {{count}} görsel yükleyebilirsiniz.",
+        "libraryLimit": "Bir stok kartında en fazla {{count}} görsel bulunabilir.",
+        "invalidFile": "{{name}} geçersiz. Yalnız JPG, PNG veya WebP ve en fazla 10 MB desteklenir."
+      }
     },
     "labelOptions": {
       "none": "Etiket yok",

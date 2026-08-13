@@ -157,7 +157,28 @@
       "lotSerial": "Los / Serie",
       "serialPreview": "{{first}} +{{count}}",
       "serialFilledCount": "{{filled}}/{{total}} Seriennummern",
-      "serialHoverTitle": "Eingegebene Seriennummern ({{count}})"
+      "serialHoverTitle": "Eingegebene Seriennummern ({{count}})",
+      "stockImageAddToCard": "Bild zur Artikelkarte hinzufügen",
+      "stockImageUpload": {
+        "title": "Bilder der Artikelkarte",
+        "description": "Dauerhafte Galerie der Artikelkarte {{code}} · {{name}} anzeigen und Bilder hinzufügen.",
+        "stockCardNoticeTitle": "Dieses Bild wird in der Artikelkarte gespeichert",
+        "stockCardNotice": "Die Datei wird nicht an den Wareneingang oder die Lieferscheinzeile angehängt. Sie steht im gesamten WMS als Artikelmerkmal zur Verfügung.",
+        "dropTitle": "Bilder hier ablegen oder vom Gerät auswählen",
+        "limits": "JPG, PNG oder WebP · maximal 10 MB je Bild · maximal 20 Bilder je Artikel",
+        "select": "Bild auswählen",
+        "uploading": "Wird in die Artikelkarte geladen…",
+        "libraryTitle": "Artikelbild-Galerie",
+        "libraryCount": "{{current}}/{{maximum}} Bilder",
+        "empty": "Für diese Artikelkarte sind noch keine Bilder vorhanden.",
+        "primary": "TITELBILD",
+        "saved": "Bild wurde der Artikelkarte hinzugefügt.",
+        "failed": "Bild konnte nicht hinzugefügt werden.",
+        "loadFailed": "Artikelbilder konnten nicht geladen werden.",
+        "batchLimit": "Sie können höchstens {{count}} Bilder gleichzeitig hochladen.",
+        "libraryLimit": "Eine Artikelkarte kann höchstens {{count}} Bilder enthalten.",
+        "invalidFile": "{{name}} ist ungültig. Unterstützt werden nur JPG, PNG oder WebP bis 10 MB."
+      }
     },
     "labelOptions": {
       "none": "Kein Etikett",

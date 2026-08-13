@@ -157,7 +157,28 @@
       "lotSerial": "Lotto / Seriale",
       "serialPreview": "{{first}} +{{count}}",
       "serialFilledCount": "{{filled}}/{{total}} seriali",
-      "serialHoverTitle": "Seriali inseriti ({{count}})"
+      "serialHoverTitle": "Seriali inseriti ({{count}})",
+      "stockImageAddToCard": "Aggiungi immagine alla scheda articolo",
+      "stockImageUpload": {
+        "title": "Immagini della scheda articolo",
+        "description": "Visualizza e aggiungi immagini alla galleria permanente di {{code}} · {{name}}.",
+        "stockCardNoticeTitle": "Questa immagine viene salvata nella scheda articolo",
+        "stockCardNotice": "Il file non viene allegato al ricevimento o alla riga del documento. Sarà disponibile come attributo articolo in tutto il WMS.",
+        "dropTitle": "Trascina qui le immagini o selezionale dal dispositivo",
+        "limits": "JPG, PNG o WebP · massimo 10 MB per immagine · massimo 20 immagini per articolo",
+        "select": "Seleziona immagine",
+        "uploading": "Caricamento nella scheda articolo…",
+        "libraryTitle": "Galleria immagini articolo",
+        "libraryCount": "{{current}}/{{maximum}} immagini",
+        "empty": "Questa scheda articolo non contiene ancora immagini.",
+        "primary": "COPERTINA",
+        "saved": "Immagine aggiunta alla scheda articolo.",
+        "failed": "Impossibile aggiungere l'immagine.",
+        "loadFailed": "Impossibile caricare le immagini dell'articolo.",
+        "batchLimit": "È possibile caricare al massimo {{count}} immagini alla volta.",
+        "libraryLimit": "Una scheda articolo può contenere al massimo {{count}} immagini.",
+        "invalidFile": "{{name}} non è valido. Sono supportati solo JPG, PNG o WebP fino a 10 MB."
+      }
     },
     "labelOptions": {
       "none": "Nessuna etichetta",

@@ -23,6 +23,7 @@ import {
   Copy,
   Globe,
   Hash,
+  ImagePlus,
   Loader2,
   Mail,
   MapPin,
@@ -40,6 +41,7 @@ import {
 import { toast } from "sonner";
 import { AppDropdown } from "@/components/shared/AppDropdown";
 import { AppDateInput, AppInput } from "@/components/shared/AppInput";
+import { CopyableDataCellValue } from "@/components/shared/CopyableDataCellValue";
 import { OpsActionButton } from "@/components/shared/OpsActionButton";
 import { OpsFieldShell } from "@/components/shared/OpsFieldShell";
 import { OPS_FIELD_CLASS } from "@/components/shared/ops-field-styles";
@@ -48,6 +50,7 @@ import { PagedAppDropdown } from "@/components/shared/PagedAppDropdown";
 import { PagedLookupDialog } from "@/components/shared/PagedLookupDialog";
 import { StockIdentityCell } from "@/components/shared/StockIdentityCell";
 import { StockImagePeekButton } from "@/features/erp-mirror/components/StockImagePeekButton";
+import { usePermissionAccess } from "@/features/access-control/hooks/usePermissionAccess";
 import { PremiumEyebrow } from "@/components/shared/PremiumEyebrow";
 import { ResponsiveDialog } from "@/components/shared/ResponsiveDialog";
 import {
@@ -104,6 +107,7 @@ import {
   maxSerialRowCount,
 } from "../utils/serial-mask";
 import { GoodsReceiptPostCreateRoutingActions } from "./GoodsReceiptPostCreateRoutingActions";
+import { GoodsReceiptStockImageDialog } from "./GoodsReceiptStockImageDialog";
 
 const toPagedResponse = <T,>(page: DropdownPage<T>): PagedResponse<T> => ({
   data: page.items,
@@ -294,6 +298,11 @@ export function GoodsReceiptCreatePage({
   const isPremium = skin === "premium";
   const branchCode = useAuthStore((state) => state.branch?.code ?? "0");
   const userId = useAuthStore((state) => state.user?.id);
+  const { can } = usePermissionAccess();
+  const canAddStockImage =
+    can("ERP.MIRROR.SYNC") ||
+    can("WMS.GOODS_RECEIPT.CREATE") ||
+    can("WMS.GOODS_RECEIPT.RECEIVE");
   const createEyebrow = `${t("list.eyebrowParent")} / ${t("list.eyebrowModule")}`;
   const [step, setStep] = useState(0);
   const [busyAction, setBusyAction] = useState<
@@ -2395,10 +2404,18 @@ export function GoodsReceiptCreatePage({
                               />
                             </td>
                             <td className="font-mono font-semibold">
-                              {line.siparisNo}
+                              <CopyableDataCellValue
+                                label={t("createFlow.table.orderNo")}
+                                value={line.siparisNo}
+                              />
                             </td>
                             <td className="font-mono">
-                              {line.projectCode || "—"}
+                              <CopyableDataCellValue
+                                label={t("createFlow.table.projectCode")}
+                                value={line.projectCode}
+                              >
+                                {line.projectCode || "—"}
+                              </CopyableDataCellValue>
                             </td>
                             <td
                               className="font-mono font-semibold"
@@ -2424,30 +2441,47 @@ export function GoodsReceiptCreatePage({
                               />
                             </td>
                             <td className="wms-ops-order-fetch__qty font-mono">
-                              {formatProjectNumber(line.orderedQuantity ?? 0)}
+                              <CopyableDataCellValue
+                                label={t("createFlow.table.orderQty")}
+                                value={formatProjectNumber(line.orderedQuantity ?? 0)}
+                              />
                             </td>
                             <td className="wms-ops-order-fetch__qty font-mono">
-                              {formatProjectNumber(
-                                line.availableQuantity ??
-                                  line.remainingQuantity ??
-                                  0,
-                              )}
-                              {unavailable ? (
-                                <span className="ml-2 whitespace-nowrap text-[10px] text-amber-600">
-                                  {t("createFlow.reservedBadge")}
-                                </span>
-                              ) : null}
+                              <CopyableDataCellValue
+                                label={t("createFlow.table.remaining")}
+                                value={formatProjectNumber(
+                                  line.availableQuantity ?? line.remainingQuantity ?? 0,
+                                )}
+                              >
+                                {formatProjectNumber(
+                                  line.availableQuantity ?? line.remainingQuantity ?? 0,
+                                )}
+                                {unavailable ? (
+                                  <span className="ml-2 whitespace-nowrap text-[10px] text-amber-600">
+                                    {t("createFlow.reservedBadge")}
+                                  </span>
+                                ) : null}
+                              </CopyableDataCellValue>
                             </td>
                             <td>
-                              <span className="font-mono font-semibold">
-                                {line.targetWarehouseCode ?? "—"}
-                              </span>
-                              {warehouseName ? (
-                                <span className="wms-ops-order-fetch__warehouse-name">
-                                  {" "}
-                                  · {warehouseName}
+                              <CopyableDataCellValue
+                                label={t("createFlow.table.targetWarehouse")}
+                                value={
+                                  line.targetWarehouseCode
+                                    ? `${line.targetWarehouseCode}${warehouseName ? ` · ${warehouseName}` : ""}`
+                                    : null
+                                }
+                              >
+                                <span className="font-mono font-semibold">
+                                  {line.targetWarehouseCode ?? "—"}
                                 </span>
-                              ) : null}
+                                {warehouseName ? (
+                                  <span className="wms-ops-order-fetch__warehouse-name">
+                                    {" "}
+                                    · {warehouseName}
+                                  </span>
+                                ) : null}
+                              </CopyableDataCellValue>
                             </td>
                           </tr>
                         );
@@ -2651,6 +2685,7 @@ export function GoodsReceiptCreatePage({
                     sortOrder={lineSortOrder.get(key) ?? 0}
                     line={line}
                     branchCode={customer?.branch ?? branchCode}
+                    canAddStockImage={canAddStockImage}
                     confirmed={confirmedLineOrder.includes(key)}
                     onConfirmedChange={(next) => toggleLineConfirmed(key, next)}
                     updateLine={updateLine}
@@ -3462,6 +3497,7 @@ function ReceiptEntryRow({
   dataLineKey,
   sortOrder,
   branchCode,
+  canAddStockImage,
   confirmed,
   onConfirmedChange,
   updateLine,
@@ -3476,6 +3512,7 @@ function ReceiptEntryRow({
   dataLineKey: string;
   sortOrder: number;
   branchCode: string;
+  canAddStockImage: boolean;
   confirmed: boolean;
   onConfirmedChange: (next: boolean) => void;
   updateLine: (key: string, patch: Partial<SelectedReceiptLine>) => void;
@@ -3517,6 +3554,7 @@ function ReceiptEntryRow({
     line.quantity > 0;
   const [serialOpen, setSerialOpen] = useState(false);
   const [locationLookupOpen, setLocationLookupOpen] = useState(false);
+  const [stockImageDialogOpen, setStockImageDialogOpen] = useState(false);
   const pieceUnit = isPieceUnit(line.unitCode);
   const { step: qtyStep, places: qtyPlaces } = receiptQuantityStep(
     line.unitCode,
@@ -4212,6 +4250,21 @@ function ReceiptEntryRow({
               stockId={line.stockId}
               stockName={line.stockName}
             />
+            {canAddStockImage ? (
+              <button
+                type="button"
+                className="wms-ops-stock-image-peek"
+                title={t("createFlow.entryRow.stockImageAddToCard")}
+                aria-label={t("createFlow.entryRow.stockImageAddToCard")}
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  setStockImageDialogOpen(true);
+                }}
+              >
+                <ImagePlus className="size-3.5" aria-hidden />
+              </button>
+            ) : null}
             <OpsSkinCheckbox
               checked={confirmed}
               onCheckedChange={onConfirmedChange}
@@ -4229,6 +4282,14 @@ function ReceiptEntryRow({
             {confirmed ? t("createFlow.entryRow.confirm") : t("createFlow.entryRow.ready")}
           </span>
         </div>
+
+        <GoodsReceiptStockImageDialog
+          open={stockImageDialogOpen}
+          stockId={line.stockId}
+          stockCode={line.stockCode ?? ""}
+          stockName={line.stockName}
+          onClose={() => setStockImageDialogOpen(false)}
+        />
 
         {canShowPutawaySuggestions && (
           <div className="wms-ops-putaway-suggestions">

@@ -157,7 +157,28 @@
       "lotSerial": "Lote / Serie",
       "serialPreview": "{{first}} +{{count}}",
       "serialFilledCount": "{{filled}}/{{total}} series",
-      "serialHoverTitle": "Series introducidas ({{count}})"
+      "serialHoverTitle": "Series introducidas ({{count}})",
+      "stockImageAddToCard": "Añadir imagen a la ficha de stock",
+      "stockImageUpload": {
+        "title": "Imágenes de la ficha de stock",
+        "description": "Consulte y añada imágenes a la galería permanente de {{code}} · {{name}}.",
+        "stockCardNoticeTitle": "Esta imagen se guarda en la ficha de stock",
+        "stockCardNotice": "El archivo no se adjunta a la recepción ni a la línea del albarán. Se utiliza como atributo del stock en todo el WMS.",
+        "dropTitle": "Suelte imágenes aquí o selecciónelas desde el dispositivo",
+        "limits": "JPG, PNG o WebP · máximo 10 MB por imagen · máximo 20 imágenes por stock",
+        "select": "Seleccionar imagen",
+        "uploading": "Subiendo a la ficha de stock…",
+        "libraryTitle": "Galería de imágenes del stock",
+        "libraryCount": "{{current}}/{{maximum}} imágenes",
+        "empty": "Esta ficha de stock aún no tiene imágenes.",
+        "primary": "PORTADA",
+        "saved": "Imagen añadida a la ficha de stock.",
+        "failed": "No se pudo añadir la imagen.",
+        "loadFailed": "No se pudieron cargar las imágenes del stock.",
+        "batchLimit": "Puede subir como máximo {{count}} imágenes a la vez.",
+        "libraryLimit": "Una ficha de stock puede contener como máximo {{count}} imágenes.",
+        "invalidFile": "{{name}} no es válido. Solo se admiten JPG, PNG o WebP de hasta 10 MB."
+      }
     },
     "labelOptions": {
       "none": "Sin etiqueta",

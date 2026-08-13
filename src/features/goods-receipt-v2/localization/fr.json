@@ -157,7 +157,28 @@
       "lotSerial": "Lot / Série",
       "serialPreview": "{{first}} +{{count}}",
       "serialFilledCount": "{{filled}}/{{total}} séries",
-      "serialHoverTitle": "Séries saisies ({{count}})"
+      "serialHoverTitle": "Séries saisies ({{count}})",
+      "stockImageAddToCard": "Ajouter une image à la fiche article",
+      "stockImageUpload": {
+        "title": "Images de la fiche article",
+        "description": "Consultez et complétez la galerie permanente de la fiche {{code}} · {{name}}.",
+        "stockCardNoticeTitle": "Cette image est enregistrée dans la fiche article",
+        "stockCardNotice": "Le fichier n'est pas joint à la réception ni à la ligne de bon de livraison. Il devient un attribut de l'article dans tout le WMS.",
+        "dropTitle": "Déposez les images ici ou sélectionnez-les sur l'appareil",
+        "limits": "JPG, PNG ou WebP · 10 Mo maximum par image · 20 images maximum par article",
+        "select": "Sélectionner une image",
+        "uploading": "Chargement dans la fiche article…",
+        "libraryTitle": "Galerie d'images de l'article",
+        "libraryCount": "{{current}}/{{maximum}} images",
+        "empty": "Cette fiche article ne contient encore aucune image.",
+        "primary": "COUVERTURE",
+        "saved": "Image ajoutée à la fiche article.",
+        "failed": "L'image n'a pas pu être ajoutée.",
+        "loadFailed": "Impossible de charger les images de l'article.",
+        "batchLimit": "Vous pouvez charger au maximum {{count}} images à la fois.",
+        "libraryLimit": "Une fiche article peut contenir au maximum {{count}} images.",
+        "invalidFile": "{{name}} n'est pas valide. Seuls JPG, PNG ou WebP jusqu'à 10 Mo sont acceptés."
+      }
     },
     "labelOptions": {
       "none": "Aucune étiquette",
