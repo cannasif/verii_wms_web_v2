@@ -35,7 +35,7 @@
     "withDoc": "Documento di origine {{docNo}}. Puoi verificarlo nell'elenco ricevimenti merci.",
     "withoutDoc": "Puoi verificare il documento correlato nell'elenco ricevimenti merci.",
     "actionLabel": "Elenco ricevimenti merci",
-    "searchable": "Il record di ricevimento merci può essere cercato nell'elenco; verificalo tramite il numero di documento.",
+    "searchable": "Il ricevimento merci può essere cercato nell'elenco; verificalo tramite il numero della bolla o della bolla elettronica.",
     "erpTransferredTitle": "Bolla Netsis trasferita.",
     "erpTransferredDesc": "{{docNo}} — Puoi verificarla nell'elenco ricevimenti merci.",
     "erpPendingTitle": "Bolla Netsis non ancora completata.",

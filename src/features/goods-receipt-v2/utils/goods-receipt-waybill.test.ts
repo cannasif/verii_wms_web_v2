@@ -3,6 +3,7 @@ import { describe, it } from 'vitest';
 import {
   normalizeGoodsReceiptWaybillFields,
   resolveGoodsReceiptWaybillNo,
+  resolveGoodsReceiptWaybillReference,
 } from './goods-receipt-waybill';
 
 describe('goods-receipt-waybill', () => {
@@ -23,6 +24,17 @@ describe('goods-receipt-waybill', () => {
         electronicWaybillNo: null,
       }),
       'IRS202600000001',
+    );
+  });
+
+  it('reports the reference kind for dynamic user-facing labels', () => {
+    assert.deepEqual(
+      resolveGoodsReceiptWaybillReference({ electronicWaybillNo: 'GIB2026AB000000' }),
+      { number: 'GIB2026AB000000', kind: 'electronic' },
+    );
+    assert.deepEqual(
+      resolveGoodsReceiptWaybillReference({ waybillNo: 'IRS202600000001' }),
+      { number: 'IRS202600000001', kind: 'regular' },
     );
   });
 

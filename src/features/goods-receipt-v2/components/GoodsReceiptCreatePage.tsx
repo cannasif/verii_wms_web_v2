@@ -1698,7 +1698,7 @@ export function GoodsReceiptCreatePage({
       setSubmitOverlay(null);
       setResult(created);
       await operationDraft.clearDraft();
-      toast.success(`${t("created")}: ${created.documentNo}`);
+      toast.success(`${t("created")}: ${receiptNo}`);
     } catch (cause) {
       const message =
         cause instanceof Error
@@ -5457,7 +5457,7 @@ function DirectCreateSuccessPanel({
   const statusValue = hasQuality
     ? t("createFlow.success.statusAwaitingQuality")
     : t("createFlow.success.statusCompleted");
-  const documentValue = (receiptNo || result.documentNo || "").trim();
+  const documentValue = receiptNo.trim();
 
   return (
     <div
@@ -5486,7 +5486,9 @@ function DirectCreateSuccessPanel({
         </p>
         {documentValue ? (
           <SuccessDocumentChip
-            label={isElectronicReceipt ? t("createFlow.waybill.eReceipt") : t("createFlow.submit.documentLabel")}
+            label={t(isElectronicReceipt
+              ? "createFlow.waybill.eReceiptNumber"
+              : "createFlow.waybill.receiptNumber")}
             value={documentValue}
           />
         ) : null}
@@ -5642,10 +5644,12 @@ function CreateSuccessPanel({
             : t("createFlow.success.orderSubtitleGeneric")}{" "}
           {t("createFlow.success.orderSubtitleTail")}
         </p>
-        {(receiptNo || result.documentNo) ? (
+        {receiptNo.trim() ? (
           <SuccessDocumentChip
-            label={isElectronicReceipt ? t("createFlow.waybill.eReceipt") : t("createFlow.submit.documentLabel")}
-            value={(receiptNo || result.documentNo || "").trim()}
+            label={t(isElectronicReceipt
+              ? "createFlow.waybill.eReceiptNumber"
+              : "createFlow.waybill.receiptNumber")}
+            value={receiptNo.trim()}
           />
         ) : null}
       </header>

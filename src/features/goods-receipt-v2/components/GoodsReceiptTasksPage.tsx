@@ -69,6 +69,10 @@ import type {
 import { useModuleTranslation } from "@/hooks/useModuleTranslation";
 import { printReceiptLabels } from "../utils/goods-receipt-label-output";
 import {
+  resolveGoodsReceiptWaybillNo,
+  resolveGoodsReceiptWaybillReference,
+} from "../utils/goods-receipt-waybill";
+import {
   activePreLabelsForTask,
   isGoodsReceiptLabelBarcode,
   printedPreLabelsForTask,
@@ -171,11 +175,13 @@ export function GoodsReceiptTasksPage({
         ),
       },
       {
-        key: "documentNo",
-        label: tGrid("dataGrid.goodsReceiptTasks.documentNo"),
+        key: "waybillNo",
+        label: t("list.waybillReference"),
         sortable: true,
         filterable: true,
-        render: (row) => row.documentNo,
+        searchable: true,
+        defaultSearch: true,
+        render: (row) => resolveGoodsReceiptWaybillNo(row) || "—",
       },
       {
         key: "processType",
@@ -394,7 +400,7 @@ function TaskModal({
               </span>
             </DialogTitle>
             <DialogDescription className="wms-ops-detail-dialog__description">
-              {`${task.documentNo} · ${supplier}`}
+              {`${resolveGoodsReceiptWaybillNo(task) || t("list.noWaybillShort")} · ${supplier}`}
             </DialogDescription>
             <div className="mt-3 flex flex-wrap gap-2">
               <OpsStatusBadge tone={inferOpsStatusTone(task.status)}>
@@ -472,7 +478,13 @@ function TaskModal({
               <div className="wms-ops-detail-panel">
                 <div className="wms-ops-detail-grid">
                   <TaskField label={t("tasks.taskNo")}>{task.taskNo}</TaskField>
-                  <TaskField label={t("tasks.documentNo")}>{task.documentNo}</TaskField>
+                  <TaskField
+                    label={t(resolveGoodsReceiptWaybillReference(task)?.kind === "electronic"
+                      ? "createFlow.waybill.eReceiptNumber"
+                      : "createFlow.waybill.receiptNumber")}
+                  >
+                    {resolveGoodsReceiptWaybillNo(task) || "—"}
+                  </TaskField>
                   <TaskField label={t("tasks.supplierName")}>{supplier}</TaskField>
                   <TaskField label={t("tasks.modal.info.warehouse")}>
                     {`${task.warehouseCode} · ${task.warehouseName}`}
@@ -921,7 +933,7 @@ function ReceiptGeneratedLabelsPanel({
     if (labels.length === 0) return;
     setBusy(true);
     try {
-      printReceiptLabels(labels, `${detail.task.documentNo} ${t("tasks.modal.receiptLabels.title").toLowerCase()}`);
+      printReceiptLabels(labels, `${resolveGoodsReceiptWaybillNo(detail.task) || `receipt-${detail.task.goodsReceiptId}`} ${t("tasks.modal.receiptLabels.title").toLowerCase()}`);
       if (unprinted.length > 0)
         await goodsReceiptV2Api.markLabelsPrinted(unprinted.map((x) => x.id));
       setLabels((current) =>

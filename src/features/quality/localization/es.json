@@ -35,7 +35,7 @@
     "withDoc": "Documento de origen {{docNo}}. Puede consultarlo en la lista de recepciones de mercancía.",
     "withoutDoc": "Puede consultar el documento relacionado en la lista de recepciones de mercancía.",
     "actionLabel": "Lista de recepciones de mercancía",
-    "searchable": "El registro de recepción de mercancía se puede buscar en la lista; consúltelo usando el número de documento.",
+    "searchable": "El registro de recepción de mercancía se puede buscar en la lista; consúltelo usando el número de albarán o e-albarán.",
     "erpTransferredTitle": "Albarán de Netsis transferido.",
     "erpTransferredDesc": "{{docNo}} — Puede consultarlo en la lista de recepciones de mercancía.",
     "erpPendingTitle": "El albarán de Netsis aún no se ha completado.",

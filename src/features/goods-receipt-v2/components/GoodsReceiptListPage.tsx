@@ -21,7 +21,10 @@ import {
   EMPTY_GOODS_RECEIPT_LIST_FACETS,
   type GoodsReceiptListFacets,
 } from '../utils/goods-receipt-list-filters';
-import { resolveGoodsReceiptWaybillNo } from '../utils/goods-receipt-waybill';
+import {
+  resolveGoodsReceiptWaybillNo,
+  resolveGoodsReceiptWaybillReference,
+} from '../utils/goods-receipt-waybill';
 import { enrichGoodsReceiptListWaybills } from '../utils/enrich-goods-receipt-list-waybills';
 import {
   GoodsReceiptDetailDialog,
@@ -125,15 +128,6 @@ export function GoodsReceiptListPage(): ReactElement {
     return [
       ...systemColumns<GoodsReceiptGridRow>({ searchable: ['createdBy', 'updatedBy'] }),
       {
-        key: 'documentNo',
-        label: t('list.documentNo'),
-        sortable: true,
-        filterable: true,
-        searchable: true,
-        defaultSearch: true,
-        render: (r) => <span className="font-mono text-xs font-semibold">{r.documentNo}</span>,
-      },
-      {
         key: 'documentDate',
         label: t('list.documentDate'),
         sortable: true,
@@ -143,14 +137,23 @@ export function GoodsReceiptListPage(): ReactElement {
       },
       {
         key: 'waybillNo',
-        label: t('list.waybill'),
+        label: t('list.waybillReference'),
         sortable: true,
         filterable: true,
         searchable: true,
         defaultSearch: true,
         render: (r) => {
-          const waybill = resolveGoodsReceiptWaybillNo(r);
-          return waybill ? <span className="font-mono text-xs font-semibold">{waybill}</span> : '—';
+          const reference = resolveGoodsReceiptWaybillReference(r);
+          return reference ? (
+            <div className="min-w-0 text-left">
+              <div className="truncate font-mono text-xs font-semibold">{reference.number}</div>
+              <div className="text-[0.65rem] opacity-70">
+                {t(reference.kind === 'electronic'
+                  ? 'createFlow.waybill.eReceiptNumber'
+                  : 'createFlow.waybill.receiptNumber')}
+              </div>
+            </div>
+          ) : '—';
         },
       },
       {
@@ -308,13 +311,13 @@ export function GoodsReceiptListPage(): ReactElement {
             <ActionButton
               title={t('list.printAllLabels')}
               busy={outputBusy === `${r.id}:all:print`}
-              onClick={() => void output(r.id, undefined, 'print', r.documentNo)}
+              onClick={() => void output(r.id, undefined, 'print', resolveGoodsReceiptWaybillNo(r) || `receipt-${r.id}`)}
               icon={<Printer className="size-3.5" />}
             />
             <ActionButton
               title={t('list.showAllLabelsPdf')}
               busy={outputBusy === `${r.id}:all:pdf`}
-              onClick={() => void output(r.id, undefined, 'pdf', r.documentNo)}
+              onClick={() => void output(r.id, undefined, 'pdf', resolveGoodsReceiptWaybillNo(r) || `receipt-${r.id}`)}
               icon={<FileText className="size-3.5" />}
             />
           </div>

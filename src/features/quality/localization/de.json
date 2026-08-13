@@ -35,7 +35,7 @@
     "withDoc": "Quelldokument {{docNo}}. Sie können es in der Wareneingangsliste überprüfen.",
     "withoutDoc": "Sie können das zugehörige Dokument in der Wareneingangsliste überprüfen.",
     "actionLabel": "Wareneingangsliste",
-    "searchable": "Der Wareneingangsdatensatz kann in der Liste gesucht werden; überprüfen Sie ihn anhand der Belegnummer.",
+    "searchable": "Der Wareneingangsdatensatz kann in der Liste gesucht werden; prüfen Sie ihn anhand der Lieferschein- oder E-Lieferscheinnummer.",
     "erpTransferredTitle": "Netsis-Lieferschein übertragen.",
     "erpTransferredDesc": "{{docNo}} — Sie können ihn in der Wareneingangsliste überprüfen.",
     "erpPendingTitle": "Netsis-Lieferschein noch nicht abgeschlossen.",

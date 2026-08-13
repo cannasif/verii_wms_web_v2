@@ -35,7 +35,7 @@
     "withDoc": "Document source {{docNo}}. Vous pouvez le consulter dans la liste des réceptions.",
     "withoutDoc": "Vous pouvez consulter le document associé dans la liste des réceptions.",
     "actionLabel": "Liste des réceptions",
-    "searchable": "L'enregistrement de réception peut être recherché dans la liste ; vérifiez-le à l'aide du numéro de document.",
+    "searchable": "L'enregistrement de réception peut être recherché dans la liste ; vérifiez-le avec le numéro de bon de livraison ou d'e-bon.",
     "erpTransferredTitle": "Bordereau Netsis transféré.",
     "erpTransferredDesc": "{{docNo}} — Vous pouvez le consulter dans la liste des réceptions.",
     "erpPendingTitle": "Bordereau Netsis pas encore finalisé.",

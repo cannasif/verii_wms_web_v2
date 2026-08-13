@@ -14,6 +14,7 @@ import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { cn } from '@/lib/utils';
 import { goodsReceiptV2Api } from '../api/goods-receipt.api';
 import type { ErpPostingResult, GoodsReceiptGridRow } from '../types/goods-receipt.types';
+import { resolveGoodsReceiptWaybillNo } from '../utils/goods-receipt-waybill';
 
 export function GoodsReceiptErpRetryDialog({
   header,
@@ -60,7 +61,7 @@ export function GoodsReceiptErpRetryDialog({
     : posting?.status === 'Failed'
       ? t('list.erpRetryDialog.submitResend')
       : t('list.erpSendToErp');
-  const waybillRef = header.waybillNo || header.electronicWaybillNo || t('list.erpRetryDialog.waybillNumberFallback');
+  const waybillRef = resolveGoodsReceiptWaybillNo(header) || t('list.erpRetryDialog.waybillNumberFallback');
 
   const retry = async () => {
     if (!canSubmit) return;
@@ -105,7 +106,7 @@ export function GoodsReceiptErpRetryDialog({
             {t('list.erpRetryDialog.title')}
           </DialogTitle>
           <DialogDescription className="wms-ops-detail-dialog__description wms-ops-erp-retry-dialog__description mt-1.5">
-            {t('list.erpRetryDialog.description', { documentNo: header.documentNo })}
+            {t('list.erpRetryDialog.description', { documentNo: waybillRef })}
           </DialogDescription>
         </DialogHeader>
 
@@ -152,8 +153,6 @@ export function GoodsReceiptErpRetryDialog({
                     <AlertTriangle className="wms-ops-erp-retry-dialog__warn-icon" aria-hidden />
                     <p>
                       {t('list.erpRetryDialog.uncertainWarningPrefix')}{' '}
-                      <strong className="wms-ops-erp-retry-dialog__ref">{header.documentNo}</strong>
-                      {' '}{t('list.erpRetryDialog.uncertainWarningAnd')}{' '}
                       <strong className="wms-ops-erp-retry-dialog__ref">{waybillRef}</strong>{' '}
                       {t('list.erpRetryDialog.uncertainWarningSuffix')}
                     </p>

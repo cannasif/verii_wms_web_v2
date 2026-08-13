@@ -26,6 +26,7 @@ import type {
   GoodsReceiptLabelBatchRow,
   GoodsReceiptLabelRow,
 } from "../types/goods-receipt.types";
+import { resolveGoodsReceiptWaybillNo } from "../utils/goods-receipt-waybill";
 
 const G = "dataGrid.goodsReceiptPreLabels";
 
@@ -65,11 +66,13 @@ export function GoodsReceiptLabelsPage(): ReactElement {
         ),
       },
       {
-        key: "documentNo",
-        label: tGrid(`${G}.documentNo`),
+        key: "waybillNo",
+        label: t("list.waybillReference"),
         sortable: true,
         filterable: true,
-        render: (r) => r.documentNo,
+        searchable: true,
+        defaultSearch: true,
+        render: (r) => resolveGoodsReceiptWaybillNo(r) || "—",
       },
       {
         key: "taskNo",
@@ -250,7 +253,7 @@ function LabelDialog({
           </p>
           <h2 className="text-xl font-bold">{detail.batch.batchNo}</h2>
           <p className="text-sm text-slate-500">
-            {detail.batch.documentNo} · {detail.batch.taskNo}
+            {resolveGoodsReceiptWaybillNo(detail.batch) || t("list.noWaybillShort")} · {detail.batch.taskNo}
           </p>
         </div>
         <button

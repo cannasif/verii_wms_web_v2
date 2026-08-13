@@ -36,7 +36,10 @@ import type {
 } from '../types/goods-receipt.types';
 import { StockIdentityCell } from '@/components/shared/StockIdentityCell';
 import { canCancelGoodsReceiptFromWms } from '../utils/goods-receipt-cancel';
-import { resolveGoodsReceiptWaybillNo } from '../utils/goods-receipt-waybill';
+import {
+  resolveGoodsReceiptWaybillNo,
+  resolveGoodsReceiptWaybillReference,
+} from '../utils/goods-receipt-waybill';
 import { mergeGoodsReceiptRoutes } from '../utils/goods-receipt-routes';
 import { GoodsReceiptLifecycleDialog, type GoodsReceiptLifecycleAction } from './GoodsReceiptLifecycleDialog';
 import { GoodsReceiptRoutingDialog } from './GoodsReceiptRoutingDialog';
@@ -79,6 +82,10 @@ export function GoodsReceiptDetailDialog({
   const [lineSearch, setLineSearch] = useState('');
   const detail = state.detail;
   const header = detail?.header;
+  const waybillReference = resolveGoodsReceiptWaybillReference(header);
+  const waybillLabel = t(waybillReference?.kind === 'electronic'
+    ? 'createFlow.waybill.eReceiptNumber'
+    : 'createFlow.waybill.receiptNumber');
 
   useEffect(() => {
     setSessionRoutes([]);
@@ -236,10 +243,10 @@ export function GoodsReceiptDetailDialog({
               {t('list.eyebrowModule')}
             </p>
             <DialogTitle className="wms-ops-detail-dialog__title">
-              {t('list.detailWaybillTitle')}
+              {waybillLabel}
               {header ? (
                 <span className="ml-2 font-mono text-base font-bold text-cyan-600 dark:text-cyan-300">
-                  {resolveGoodsReceiptWaybillNo(header) || t('list.noWaybillShort')}
+                  {waybillReference?.number || t('list.noWaybillShort')}
                 </span>
               ) : (
                 <span className="wms-ops-detail-dialog__id"> #{state.id}</span>
@@ -317,13 +324,13 @@ export function GoodsReceiptDetailDialog({
                   <LifecycleButton
                     label={t('list.printLabels')}
                     icon={printBusy ? <Loader2 className="size-4 animate-spin" /> : <Printer className="size-4" />}
-                    onClick={() => void output(header.id, undefined, 'print', resolveGoodsReceiptWaybillNo(header) || header.documentNo)}
+                    onClick={() => void output(header.id, undefined, 'print', resolveGoodsReceiptWaybillNo(header) || `receipt-${header.id}`)}
                     disabled={printBusy}
                   />
                   <LifecycleButton
                     label={t('list.showPdf')}
                     icon={pdfBusy ? <Loader2 className="size-4 animate-spin" /> : <FileText className="size-4" />}
-                    onClick={() => void output(header.id, undefined, 'pdf', resolveGoodsReceiptWaybillNo(header) || header.documentNo)}
+                    onClick={() => void output(header.id, undefined, 'pdf', resolveGoodsReceiptWaybillNo(header) || `receipt-${header.id}`)}
                     disabled={pdfBusy}
                   />
                   {cancelAvailable ? (
@@ -366,7 +373,7 @@ export function GoodsReceiptDetailDialog({
                 <div className="space-y-4">
                   <div className="wms-ops-detail-panel">
                     <div className="wms-ops-detail-grid">
-                      <OpsDetailField label={t('list.waybill')}>{resolveGoodsReceiptWaybillNo(header) || '—'}</OpsDetailField>
+                      <OpsDetailField label={waybillLabel}>{waybillReference?.number || '—'}</OpsDetailField>
                       <OpsDetailField label={t('list.supplier')}>
                         {header.supplierName && header.supplierCode
                           ? `${header.supplierName} (${header.supplierCode})`
@@ -749,7 +756,7 @@ export function GoodsReceiptDetailDialog({
                                         header.id,
                                         line.id,
                                         'print',
-                                        `${header.documentNo}-${line.lineNo}`,
+                                        `${waybillReference?.number || `receipt-${header.id}`}-${line.lineNo}`,
                                       )
                                     }
                                     icon={<Printer className="size-3.5" />}
@@ -762,7 +769,7 @@ export function GoodsReceiptDetailDialog({
                                         header.id,
                                         line.id,
                                         'pdf',
-                                        `${header.documentNo}-${line.lineNo}`,
+                                        `${waybillReference?.number || `receipt-${header.id}`}-${line.lineNo}`,
                                       )
                                     }
                                     icon={<FileText className="size-3.5" />}

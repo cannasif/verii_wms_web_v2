@@ -35,7 +35,7 @@
     "withDoc": "Source document {{docNo}}. You can check it in the goods receipt list.",
     "withoutDoc": "You can check the related document in the goods receipt list.",
     "actionLabel": "Goods receipt list",
-    "searchable": "The goods receipt record can be searched in the list; check it using the document number.",
+    "searchable": "The goods receipt record can be searched in the list; check it using the dispatch or e-dispatch number.",
     "erpTransferredTitle": "Netsis waybill transferred.",
     "erpTransferredDesc": "{{docNo}} — You can check it in the goods receipt list.",
     "erpPendingTitle": "Netsis waybill not yet completed.",

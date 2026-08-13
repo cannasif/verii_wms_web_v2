@@ -35,7 +35,7 @@
     "withDoc": "Kaynak belge {{docNo}}. Mal kabul listesinden kontrol edebilirsiniz.",
     "withoutDoc": "Mal kabul listesinden ilgili belgeyi kontrol edebilirsiniz.",
     "actionLabel": "Mal kabul listesi",
-    "searchable": "Mal kabul kaydı listede aranabilir; belge no ile kontrol edin.",
+    "searchable": "Mal kabul kaydı listede aranabilir; irsaliye veya e-irsaliye numarasıyla kontrol edin.",
     "erpTransferredTitle": "Netsis irsaliyesi aktarıldı.",
     "erpTransferredDesc": "{{docNo}} — Mal kabul listesinden kontrol edebilirsiniz.",
     "erpPendingTitle": "Netsis irsaliyesi henüz tamamlanmadı.",
