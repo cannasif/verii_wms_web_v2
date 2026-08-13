@@ -88,6 +88,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+import { canRetainGridPlaceholder } from '@/lib/grid-query-state';
+import { withRequestAbortSignal } from '@/lib/request-utils';
 import {
   Tooltip,
   TooltipContent,
@@ -692,8 +694,13 @@ export function AdvancedDataGrid<T extends { id: number }>({
   );
   const query = useQuery({
     queryKey: ['advanced-grid', pageKey, refreshKey, request],
-    queryFn: async () => normalizeGridPage<T>(await fetchPage(request)),
-    placeholderData: (previous) => previous,
+    queryFn: async ({ signal }) => normalizeGridPage<T>(
+      await fetchPage(withRequestAbortSignal(request, signal)),
+    ),
+    placeholderData: (previous, previousQuery) => {
+      const previousRequest = previousQuery?.queryKey?.[3] as GridRequest | undefined;
+      return canRetainGridPlaceholder(previousRequest, request) ? previous : undefined;
+    },
     staleTime: retainQueryCache ? 5 * 60 * 1000 : 0,
     refetchOnMount: retainQueryCache ? false : undefined,
     refetchOnWindowFocus: retainQueryCache ? false : undefined,
@@ -805,7 +812,11 @@ export function AdvancedDataGrid<T extends { id: number }>({
     if (!node) return;
     const saved = gridScrollPositions.get(pageKey);
     if (typeof saved === 'number') node.scrollLeft = saved;
-    const onScroll = () => { gridScrollPositions.set(pageKey, node.scrollLeft); };
+    node.style.setProperty('--wms-grid-scroll-x', `${node.scrollLeft}px`);
+    const onScroll = () => {
+      gridScrollPositions.set(pageKey, node.scrollLeft);
+      node.style.setProperty('--wms-grid-scroll-x', `${node.scrollLeft}px`);
+    };
     node.addEventListener('scroll', onScroll, { passive: true });
     return () => node.removeEventListener('scroll', onScroll);
   }, [pageKey, pageRows.length, activeColumns.length]);
@@ -1510,6 +1521,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
 
       <div
         ref={tableScrollRef}
+        style={{ containerType: 'inline-size' }}
         className={cn(
           'relative mt-4 block wms-ops-table-wrap wms-ops-data-grid-wrap wms-ops-data-grid-viewport wms-ops-scrollbar wms-ops-table-h-scroll overflow-auto border border-[var(--wms-ops-card-border)] max-sm:hidden',
           query.isLoading && 'cursor-wait',
@@ -1626,7 +1638,12 @@ export function AdvancedDataGrid<T extends { id: number }>({
                       {expandedRowId === row.id && renderExpandedRow ? (
                         <tr className="border-b border-[var(--wms-app-border)] bg-[color-mix(in_oklab,var(--wms-brand-soft)_55%,transparent)]">
                           <td colSpan={Math.max(activeColumns.length, 1)} className="px-4 py-4">
-                            {renderExpandedRow(row)}
+                            <div
+                              className="w-[100cqw] max-w-[100cqw]"
+                              style={{ transform: 'translateX(var(--wms-grid-scroll-x, 0px))' }}
+                            >
+                              {renderExpandedRow(row)}
+                            </div>
                           </td>
                         </tr>
                       ) : null}
