@@ -156,6 +156,7 @@ export const WMS_NAV_ITEMS: NavItem[] = [
     { title: 'sidebar.qualityControl', titleFallback: 'Kalite', children: [
       { title: 'sidebar.qualityControlInspections', titleFallback: 'Kalite İnceleme Listesi', href: '/warehouse/quality/inspections', searchAliases: ['kalite', 'kontrol', 'karantina', 'onay'], requiredPermission: 'WMS.QUALITY.INSPECTIONS.VIEW' },
       { title: 'sidebar.qualityQuarantine', titleFallback: 'Karantina Kararları', href: '/warehouse/quality/quarantine', searchAliases: ['kalite', 'karantina', 'serbest bırak', 'ret', 'iade'], requiredPermission: 'WMS.QUALITY.INSPECTIONS.VIEW' },
+      { title: 'sidebar.qualityControlRules', titleFallback: 'Kalite Kural Tanımları', href: '/warehouse/quality/rules', searchAliases: ['kalite', 'örnekleme', 'stok kuralı', 'kural tanımları'], requiredPermission: 'WMS.QUALITY.RULES.VIEW' },
     ] },
   ] },
   { title: 'sidebar.shipping', titleFallback: 'Sevkiyat İşlemleri', icon: shippingIcon, children: [
@@ -197,7 +198,6 @@ export const WMS_NAV_ITEMS: NavItem[] = [
       { title: 'sidebar.subcontractingTransferSettings', titleFallback: 'Fason Ayarları', href: '/warehouse/subcontracting-transfers/settings', searchAliases: ['fason', 'ayar', 'kalite', 'termin'], requiredPermission: 'WMS.SUBCONTRACTING_TRANSFER.SETTINGS.VIEW' },
       { title: 'sidebar.productionTransferSettings', titleFallback: 'Üretim Transfer Ayarları', href: '/warehouse/production-transfers/settings', searchAliases: ['üretim', 'malzeme', 'uygunluk', 'tolerans'], requiredPermission: 'WMS.PRODUCTION_TRANSFER.SETTINGS.VIEW' },
       { title: 'sidebar.shippingSettings', titleFallback: 'Sevkiyat Süreç Ayarları', href: '/warehouse/shipments/settings', searchAliases: ['sevk', 'ayar', 'rezervasyon', 'paketleme'], requiredPermission: 'WMS.SHIPPING.SETTINGS.VIEW' },
-      { title: 'sidebar.qualityControlRules', titleFallback: 'Kalite Stok Kuralları', href: '/warehouse/quality/rules', searchAliases: ['kalite', 'örnekleme', 'stok kuralı'], requiredPermission: 'WMS.QUALITY.RULES.VIEW' },
       { title: 'sidebar.qualityControlSettings', titleFallback: 'Kalite Genel Ayarlar', href: '/warehouse/quality/settings', searchAliases: ['kalite', 'karantina', 'bekletme', 'ayar'], requiredPermission: 'WMS.QUALITY.SETTINGS.VIEW' },
       { title: 'sidebar.packingSettings', titleFallback: 'Paketleme Ayarları', href: '/warehouse/packing/settings', searchAliases: ['paket', 'politika', 'sscc', 'tolerans'], requiredPermission: 'WMS.PACKING.SETTINGS.VIEW' },
       { title: 'sidebar.documentSeries', titleFallback: 'Belge Seri Tanımları', href: '/warehouse/document-series', searchAliases: ['belge', 'seri', 'numara', 'mal kabul', 'transfer', 'sevk', 'ambar'], requiredPermission: 'WMS.DOCUMENT_SERIES.VIEW' },
