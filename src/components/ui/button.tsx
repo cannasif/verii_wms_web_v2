@@ -2,8 +2,10 @@
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
+import { Loader2 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { useAsyncActionGuard, type AsyncActionHandler } from "@/hooks/useAsyncActionGuard"
 
 const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-medium transition-all duration-200 cursor-pointer disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
@@ -42,19 +44,43 @@ function Button({
   variant,
   size,
   asChild = false,
+  onClick,
+  disabled,
+  loading = false,
+  loadingLabel,
+  minimumBusyMs,
+  guardAsyncAction = true,
+  children,
   ...props
-}: React.ComponentProps<"button"> &
+}: Omit<React.ComponentProps<"button">, "onClick"> &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean
+    loading?: boolean
+    loadingLabel?: React.ReactNode
+    minimumBusyMs?: number
+    guardAsyncAction?: boolean
+    onClick?: AsyncActionHandler<React.MouseEvent<HTMLButtonElement>>
   }) {
   const Comp = asChild ? Slot : "button"
+  const guarded = useAsyncActionGuard(
+    onClick,
+    guardAsyncAction && !asChild && !disabled && !loading,
+    minimumBusyMs,
+  )
+  const effectiveLoading = loading || guarded.busy
 
   return (
     <Comp
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
+      disabled={asChild ? undefined : disabled || effectiveLoading}
+      aria-busy={effectiveLoading || undefined}
+      onClick={asChild ? onClick : guarded.run}
       {...props}
-    />
+    >
+      {!asChild && effectiveLoading ? <Loader2 className="animate-spin" aria-hidden /> : null}
+      {effectiveLoading && loadingLabel ? loadingLabel : children}
+    </Comp>
   )
 }
 

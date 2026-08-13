@@ -1,20 +1,30 @@
 import { Slot } from '@radix-ui/react-slot';
 import { cn } from '@/lib/utils';
 import {
+  useAsyncActionGuard,
+  type AsyncActionHandler,
+} from '@/hooks/useAsyncActionGuard';
+import {
   type ButtonHTMLAttributes,
   forwardRef,
+  type MouseEvent,
   type ReactElement,
   type ReactNode,
 } from 'react';
 
 type OpsActionButtonVariant = 'primary' | 'secondary';
 
-interface OpsActionButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+interface OpsActionButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'onClick'> {
   variant?: OpsActionButtonVariant;
   asChild?: boolean;
   /** Temaya özel buton içi dönen loading göstergesi */
   loading?: boolean;
   loadingLabel?: ReactNode;
+  /** Çok hızlı işlemlerde loading durumunun görülebileceği en kısa süre. */
+  minimumBusyMs?: number;
+  /** Ortak tek-tıklama/Promise loading korumasını gerektiğinde kapatır. */
+  guardAsyncAction?: boolean;
+  onClick?: AsyncActionHandler<MouseEvent<HTMLButtonElement>>;
 }
 
 export const OpsActionButton = forwardRef<HTMLButtonElement, OpsActionButtonProps>(function OpsActionButton(
@@ -27,16 +37,25 @@ export const OpsActionButton = forwardRef<HTMLButtonElement, OpsActionButtonProp
     loadingLabel,
     disabled,
     children,
+    onClick,
+    minimumBusyMs,
+    guardAsyncAction = true,
     ...props
   },
   ref,
 ): ReactElement {
   const Comp = asChild ? Slot : 'button';
-  const label = loading ? (loadingLabel ?? children) : children;
+  const guarded = useAsyncActionGuard(
+    onClick,
+    guardAsyncAction && !asChild && !disabled && !loading,
+    minimumBusyMs,
+  );
+  const effectiveLoading = loading || guarded.busy;
+  const label = effectiveLoading ? (loadingLabel ?? children) : children;
   const classes = cn(
     'wms-ops-action-btn',
     variant === 'primary' ? 'wms-ops-action-btn--primary' : 'wms-ops-action-btn--secondary',
-    loading && 'wms-ops-action-btn--loading',
+    effectiveLoading && 'wms-ops-action-btn--loading',
     className,
   );
 
@@ -47,6 +66,7 @@ export const OpsActionButton = forwardRef<HTMLButtonElement, OpsActionButtonProp
         ref={ref}
         aria-busy={loading || undefined}
         className={classes}
+        onClick={onClick}
         {...props}
       >
         {children}
@@ -58,20 +78,21 @@ export const OpsActionButton = forwardRef<HTMLButtonElement, OpsActionButtonProp
     <Comp
       ref={ref}
       type={type}
-      disabled={disabled || loading}
-      aria-busy={loading || undefined}
+      disabled={disabled || effectiveLoading}
+      aria-busy={effectiveLoading || undefined}
       className={classes}
+      onClick={guarded.run}
       {...props}
     >
       <span
         className={cn(
           'wms-ops-action-btn__content',
-          loading && 'wms-ops-action-btn__content--busy',
+          effectiveLoading && 'wms-ops-action-btn__content--busy',
         )}
       >
         {label}
       </span>
-      {loading ? (
+      {effectiveLoading ? (
         <span className="wms-ops-action-btn__spinner-slot" aria-hidden>
           <span className="wms-ops-action-btn__spinner">
             <span className="wms-ops-action-btn__spinner-ring" />
