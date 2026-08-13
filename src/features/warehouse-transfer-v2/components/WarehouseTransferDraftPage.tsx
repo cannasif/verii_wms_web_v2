@@ -64,7 +64,11 @@ import type {
   YapCodeOption,
 } from "@/features/goods-receipt-v2/types/goods-receipt.types";
 import { warehouseTransferApi } from "../api/warehouse-transfer.api";
-import { productionTransferApi } from "@/features/production-transfer/api";
+import {
+  productionTransferApi,
+  type ProductionTransferPolicy,
+} from "@/features/production-transfer/api";
+import { resolveTransferDraftPolicy } from "../transfer-draft-policy";
 import type {
   CreateTransferDraftResult,
   TransferDraftLine,
@@ -221,6 +225,7 @@ export function WarehouseTransferDraftPage({
   const branchCode = useAuthStore((x) => x.branch?.code ?? "0");
   const userId = useAuthStore((x) => x.user?.id);
   const [policy, setPolicy] = useState<WarehouseTransferPolicy | null>(null);
+  const [productionPolicy, setProductionPolicy] = useState<ProductionTransferPolicy | null>(null);
   const [sourceKind, setSourceKind] =
     useState<TransferSourceKind>("StockBased");
   const [executionKind, setExecutionKind] =
@@ -413,11 +418,22 @@ export function WarehouseTransferDraftPage({
   }, [fixedSubcontractingDirection]);
 
   useEffect(() => {
-    void warehouseTransferApi
-      .policy(branchCode)
-      .then(setPolicy)
-      .catch((error: Error) => toast.error(error.message));
-  }, [branchCode]);
+    setPolicy(null);
+    setProductionPolicy(null);
+    const request = variant === "production"
+      ? productionTransferApi.policy(branchCode).then(setProductionPolicy)
+      : warehouseTransferApi.policy(branchCode).then(setPolicy);
+    void request.catch((error: Error) => toast.error(error.message));
+  }, [branchCode, variant]);
+
+  const effectivePolicy = useMemo(() => resolveTransferDraftPolicy({
+    variant,
+    sourceKind,
+    executionKind,
+    warehousePolicy: policy,
+    productionPolicy,
+    autoAssignSources: variant === "production",
+  }), [executionKind, policy, productionPolicy, sourceKind, variant]);
   useEffect(() => {
     setSeries([]);
     if (!sourceId) return;
@@ -619,16 +635,8 @@ export function WarehouseTransferDraftPage({
   };
 
   const validate = (): string | null => {
-    if (!policy) return t(`${D}.validation.policyLoadFailed`);
-    const allowed =
-      sourceKind === "OrderBased"
-        ? executionKind === "TaskBased"
-          ? policy.allowOrderBasedTask
-          : policy.allowOrderBasedDirect
-        : executionKind === "TaskBased"
-          ? policy.allowStockBasedTask
-          : policy.allowStockBasedDirect;
-    if (!allowed) return t(`${D}.validation.combinationDisabled`);
+    if (!effectivePolicy.loaded) return t(`${D}.validation.policyLoadFailed`);
+    if (!effectivePolicy.combinationAllowed) return t(`${D}.validation.combinationDisabled`);
     if (!sourceId || !targetId) return t(`${D}.validation.warehousesRequired`);
     if (variant === "warehouse" && sourceId === targetId) return t(`${D}.validation.sameWarehouse`);
     if (!seriesId) return t(`${D}.validation.seriesRequired`);
@@ -646,12 +654,11 @@ export function WarehouseTransferDraftPage({
     if (variant === "subcontracting" && subcontractDirection === "ReceiptFromSupplier" && !parentIssueTransferId.trim())
       return t(`${D}.validation.parentIssueRequired`);
     if (
-      executionKind === "TaskBased" &&
-      policy.requireAssigneeForTask &&
+      effectivePolicy.requireAssignee &&
       !assignees.length
     )
       return t(`${D}.validation.assigneeRequired`);
-    if (!policy.allowMultipleAssignees && assignees.length > 1)
+    if (!effectivePolicy.allowMultipleAssignees && assignees.length > 1)
       return t(`${D}.validation.singleAssigneeOnly`);
     const intraWarehouseOp = variant !== "warehouse" && sourceId === targetId;
     for (const [index, line] of lines.entries()) {
@@ -664,12 +671,11 @@ export function WarehouseTransferDraftPage({
       if (line.source && line.quantity > line.source.availableQuantity)
         return t(`${D}.validation.lineQuantityExceeded`, { index: lineNo });
       if (
-        variant !== "production" &&
-        (policy.requireSourceLocation || intraWarehouseOp) &&
+        (effectivePolicy.requireSourceLocation || intraWarehouseOp) &&
         !line.sourceLocationId
       )
         return t(`${D}.validation.lineSourceLocationRequired`, { index: lineNo });
-      if ((policy.requireTargetLocation || intraWarehouseOp) && !line.targetLocationId)
+      if ((effectivePolicy.requireTargetLocation || intraWarehouseOp) && !line.targetLocationId)
         return t(`${D}.validation.lineTargetLocationRequired`, { index: lineNo });
       if (
         intraWarehouseOp &&
@@ -945,7 +951,7 @@ export function WarehouseTransferDraftPage({
             <Assignees
               assignees={assignees}
               setAssignees={setAssignees}
-              allowMultiple={variant === "production" ? false : (policy?.allowMultipleAssignees ?? true)}
+              allowMultiple={effectivePolicy.loaded ? effectivePolicy.allowMultipleAssignees : false}
               pickerMode={variant === "production" ? "lookup" : "dialog"}
             />
           ) : null
