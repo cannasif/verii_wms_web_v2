@@ -33,7 +33,7 @@
     "create": "Nuovo piano di produzione", "loadFailed": "Impossibile caricare il piano di produzione.", "release": "Rilascia", "delete": "Elimina bozza", "detail": "Mostra dettagli",
     "columns": { "documentNo": "N. piano", "documentDate": "Data documento", "planType": "Tipo piano", "executionMode": "Esecuzione", "status": "Stato", "orders": "Ordini", "materials": "Materiali", "planned": "Pianificato", "completed": "Completato", "actions": "Azioni" }
   },
-  "detail": { "materials": "Fabbisogno materiali", "outputs": "Uscite previste", "assignees": "Responsabili", "workCenter": "Centro di lavoro" },
+  "detail": { "materials": "Fabbisogno materiali", "outputs": "Uscite previste", "assignees": "Responsabili", "workCenter": "Centro di lavoro", "description": "Descrizione" },
   "lifecycle": {
     "release": { "title": "Rilascia piano di produzione", "text": "Gli ordini in {{documentNo}} saranno aperti per l'esecuzione.", "action": "Rilascia", "success": "Piano di produzione rilasciato." },
     "delete": { "title": "Elimina piano di produzione in bozza", "text": "La bozza {{documentNo}} e le relative righe di pianificazione saranno eliminate.", "action": "Elimina bozza", "success": "Piano di produzione eliminato." },

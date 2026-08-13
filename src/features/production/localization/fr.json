@@ -33,7 +33,7 @@
     "create": "Nouveau plan de production", "loadFailed": "Le plan de production n'a pas pu être chargé.", "release": "Publier", "delete": "Supprimer le brouillon", "detail": "Afficher les détails",
     "columns": { "documentNo": "N° de plan", "documentDate": "Date du document", "planType": "Type de plan", "executionMode": "Exécution", "status": "Statut", "orders": "Ordres", "materials": "Matières", "planned": "Planifié", "completed": "Terminé", "actions": "Actions" }
   },
-  "detail": { "materials": "Besoins en matières", "outputs": "Sorties attendues", "assignees": "Responsables", "workCenter": "Poste de charge" },
+  "detail": { "materials": "Besoins en matières", "outputs": "Sorties attendues", "assignees": "Responsables", "workCenter": "Poste de charge", "description": "Description" },
   "lifecycle": {
     "release": { "title": "Publier le plan de production", "text": "Les ordres de {{documentNo}} seront ouverts pour exécution.", "action": "Publier", "success": "Plan de production publié." },
     "delete": { "title": "Supprimer le plan de production brouillon", "text": "Le brouillon {{documentNo}} et ses lignes de planification seront supprimés.", "action": "Supprimer le brouillon", "success": "Plan de production supprimé." },

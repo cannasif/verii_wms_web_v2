@@ -176,7 +176,10 @@ export function ProductionCreatePage(): ReactElement {
     setDocumentDate(sourcePrefill.workOrderDate?.slice(0, 10) || today());
     setPlannedStart(sourcePrefill.workOrderDate?.slice(0, 16) || '');
     setPlannedEnd(sourcePrefill.deliveryDate?.slice(0, 16) || '');
-    setDescription(`${sourcePrefill.workOrderNumber} kaynak iş emrinden hazırlandı${sourcePrefill.projectCode ? ` · Proje: ${sourcePrefill.projectCode}` : ''}`);
+    const sourceTrace = `${sourcePrefill.workOrderNumber} kaynak iş emrinden hazırlandı${sourcePrefill.projectCode ? ` · Proje: ${sourcePrefill.projectCode}` : ''}`;
+    setDescription(sourcePrefill.description?.trim()
+      ? `${sourcePrefill.description.trim()}\n\n${sourceTrace}`
+      : sourceTrace);
     setMaterials(sourcePrefill.materials.map(row => ({
       localId: crypto.randomUUID(),
       stockValue: encode({ id: row.stockId!, branchCode, erpStockCode: row.stockCode, stockName: row.stockName, unitCode: row.unitCode } satisfies StockOption),
@@ -434,6 +437,7 @@ function ProductionDetailDialog({ detail, close }: { detail: ProductionPlanDetai
     </div>
     <div className="mt-5 space-y-4">{detail.orders.map((order) => <article key={order.id} className="rounded-xl border border-[var(--wms-app-border)] p-4">
       <div className="flex flex-wrap justify-between gap-2"><div><strong className="font-mono">{order.orderNo}</strong><p className="text-sm text-[var(--wms-app-text-muted)]">{order.producedStockCode} · {order.producedStockName}</p></div><span className="text-sm font-bold text-[var(--wms-brand-primary)]">{formatProjectNumber(order.plannedQuantity)} {order.unitCode}</span></div>
+      {order.description?.trim() ? <p className="mt-3 whitespace-pre-wrap rounded-lg border border-[var(--wms-app-border)] bg-[var(--wms-app-panel-muted)] px-3 py-2 text-sm leading-relaxed text-[var(--wms-app-text-muted)]"><strong className="text-[var(--wms-app-text)]">{t('detail.description')}:</strong> {order.description.trim()}</p> : null}
       <div className="mt-3 grid gap-4 lg:grid-cols-2">
         <DetailList title={t('detail.materials')} rows={order.materials.map((row) => `${row.stockCode} · ${formatProjectNumber(row.requiredQuantity)} ${row.unitCode}`)} />
         <DetailList title={t('detail.outputs')} rows={order.outputs.map((row) => `${row.stockCode} · ${formatProjectNumber(row.plannedQuantity)} ${row.unitCode}`)} />

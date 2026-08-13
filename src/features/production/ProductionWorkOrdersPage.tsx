@@ -25,6 +25,7 @@ import { formatProjectDate, formatProjectNumber } from '@/lib/project-format';
 import { appendFoldedSearchToken, foldTurkishSearch } from '@/lib/turkish-search';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
+import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { productionTransferApi, type ProductionTransferPolicy, type ProductionWorkOrderTransferTab } from '@/features/production-transfer/api';
 import { warehouseTransferApi } from '@/features/warehouse-transfer-v2/api/warehouse-transfer.api';
 import type { ActiveUserOption } from '@/features/goods-receipt-v2/types/goods-receipt.types';
@@ -459,6 +460,7 @@ function matchesSearch(row: ProductionSourceWorkOrder, terms: string[]): boolean
     row.stockCode,
     row.stockName ?? '',
     row.sourceSystemCode,
+    row.description ?? '',
     sourceListingKindLabel(row.listingKind),
   ].join(' '));
   return terms.every((term) => {
@@ -478,6 +480,7 @@ export function ProductionWorkOrdersPage(): ReactElement {
   const { pathname } = useLocation();
   const [searchParams] = useSearchParams();
   const { t, i18n } = useTranslation();
+  const { t: tProduction } = useModuleTranslation('production');
   const { skin } = useTheme();
   const { can } = usePermissionAccess();
   const branchCode = useAuthStore((state) => state.branch?.code ?? '0');
@@ -801,19 +804,20 @@ export function ProductionWorkOrdersPage(): ReactElement {
                 </th>
                 <th className={HEAD_CELL}>Proje</th>
                 <th className={HEAD_CELL}>Depo akışı</th>
+                <th className={HEAD_CELL}>{tProduction('detail.description')}</th>
                 <th className={HEAD_CELL} aria-label="İşlem" />
               </tr>
             </thead>
             <tbody>
               {loading && rows.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="wms-ops-grid-state-cell">
+                  <td colSpan={9} className="wms-ops-grid-state-cell">
                     <OpsLoadingState message="İş emirleri yükleniyor…" code="FETCH" compact />
                   </td>
                 </tr>
               ) : visibleRows.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="wms-ops-grid-state-cell">
+                  <td colSpan={9} className="wms-ops-grid-state-cell">
                     <OpsGridEmptyState message={activeSearch.length > 0 ? 'Aramaya uygun açık iş emri bulunamadı.' : 'Seçili kaynakta transfere hazır açık iş emri bulunamadı.'} />
                   </td>
                 </tr>
@@ -839,6 +843,11 @@ export function ProductionWorkOrdersPage(): ReactElement {
                   <td className={CELL}>{formatProjectDate(row.workOrderDate)}</td>
                   <td className={CELL}>{row.projectCode || '—'}</td>
                   <td className={CELL}>{row.issueWarehouseCode} → {row.warehouseCode}</td>
+                  <td className={CELL}>
+                    <p className="mx-auto line-clamp-2 max-w-72 whitespace-pre-wrap text-left text-xs text-[var(--wms-app-text-muted)]" title={row.description?.trim()}>
+                      {row.description?.trim() || '—'}
+                    </p>
+                  </td>
                   <td className={CELL}>
                     <div className="wms-ops-row-actions" onClick={(event) => event.stopPropagation()}>
                       <button
@@ -916,6 +925,12 @@ export function ProductionWorkOrdersPage(): ReactElement {
                     </div>
                     <strong className="mt-1 block text-sm">{row.stockCode}</strong>
                     <div className="truncate text-xs text-[var(--wms-app-text-muted)]">{row.stockName}</div>
+                    {row.description?.trim() ? (
+                      <p className="mt-2 line-clamp-3 whitespace-pre-wrap text-xs leading-relaxed text-[var(--wms-app-text-muted)]">
+                        <span className="font-semibold text-[var(--wms-app-text)]">{tProduction('detail.description')}:</span>{' '}
+                        {row.description.trim()}
+                      </p>
+                    ) : null}
                   </div>
                   <dl className="grid grid-cols-2 gap-x-3 gap-y-2 px-3 py-2.5">
                     <CardStat label="Miktar" value={`${formatProjectNumber(row.workOrderQuantity)} ${row.unitCode ?? ''}`} />
@@ -1056,6 +1071,7 @@ function WorkOrderDrawer({
   onTransferCreated?: () => void;
   canCreateTransfer: boolean;
 }): ReactElement {
+  const { t: tProduction } = useModuleTranslation('production');
   const authUser = useAuthStore((state) => state.user);
   const blocked = value.mappingErrors.length > 0 || value.isClosed;
   const alreadyImported = Boolean(value.existingProductionOrderId);
@@ -1359,6 +1375,16 @@ function WorkOrderDrawer({
 
         <div className="wms-ops-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6">
           <section className="space-y-4">
+            {value.description?.trim() ? (
+              <div className="wms-ops-detail-panel p-3 sm:p-4">
+                <p className="text-[0.68rem] font-semibold uppercase tracking-wide text-[var(--wms-app-text-muted)]">
+                  {tProduction('detail.description')}
+                </p>
+                <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-[var(--wms-app-text)]">
+                  {value.description.trim()}
+                </p>
+              </div>
+            ) : null}
             <div className="wms-ops-detail-panel p-3 sm:p-4">
               <div className="flex items-center gap-1.5">
                 <h3 className="wms-ops-detail-section-title !border-0 !p-0">Atama</h3>

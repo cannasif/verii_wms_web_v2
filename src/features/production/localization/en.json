@@ -33,7 +33,7 @@
     "create": "New Production Plan", "loadFailed": "Production plan could not be loaded.", "release": "Release", "delete": "Delete draft", "detail": "Show details",
     "columns": { "documentNo": "Plan No", "documentDate": "Document Date", "planType": "Plan Type", "executionMode": "Execution", "status": "Status", "orders": "Orders", "materials": "Materials", "planned": "Planned", "completed": "Completed", "actions": "Actions" }
   },
-  "detail": { "materials": "Material requirements", "outputs": "Expected outputs", "assignees": "Assignees", "workCenter": "Work center" },
+  "detail": { "materials": "Material requirements", "outputs": "Expected outputs", "assignees": "Assignees", "workCenter": "Work center", "description": "Description" },
   "lifecycle": {
     "release": { "title": "Release Production Plan", "text": "Orders in {{documentNo}} will be opened for execution.", "action": "Release", "success": "Production plan released." },
     "delete": { "title": "Delete Draft Production Plan", "text": "Draft {{documentNo}} and its planning lines will be deleted.", "action": "Delete Draft", "success": "Production plan deleted." },

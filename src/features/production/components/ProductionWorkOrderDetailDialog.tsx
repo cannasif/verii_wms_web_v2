@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { OpsCodeBadge, OpsStatusBadge } from '@/components/shared/OpsStatusBadge';
 import { formatProjectDate, formatProjectNumber } from '@/lib/project-format';
 import { cn } from '@/lib/utils';
+import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { productionApi } from '../api';
 import type { PreparedNetsisProductionWorkOrder, ProductionSourceWorkOrder } from '../types';
 
@@ -79,6 +80,7 @@ export function ProductionWorkOrderDetailDialog({
   onOpenAssignment: (row: ProductionSourceWorkOrder) => void;
   onCancel: (row: ProductionSourceWorkOrder) => void;
 }): ReactElement {
+  const { t } = useModuleTranslation('production');
   const [mainTab, setMainTab] = useState<DetailTab>('info');
   const [prepared, setPrepared] = useState<PreparedNetsisProductionWorkOrder | null>(null);
   const [loading, setLoading] = useState(true);
@@ -260,6 +262,11 @@ export function ProductionWorkOrderDetailDialog({
                           ? `${assignedCount} / ${recipeTotal} atandı`
                           : `${value.materials.length} bileşen`}
                       </DetailField>
+                      {value.description?.trim() ? (
+                        <DetailField label={t('detail.description')} wide>
+                          <span className="whitespace-pre-wrap">{value.description.trim()}</span>
+                        </DetailField>
+                      ) : null}
                       {value.existingProductionDocumentNo ? (
                         <DetailField label="WMS belgesi">
                           {value.existingProductionDocumentNo}

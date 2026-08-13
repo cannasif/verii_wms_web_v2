@@ -33,7 +33,7 @@
     "create": "Nuevo plan de producción", "loadFailed": "No se pudo cargar el plan de producción.", "release": "Publicar", "delete": "Eliminar borrador", "detail": "Ver detalles",
     "columns": { "documentNo": "N.º de plan", "documentDate": "Fecha de documento", "planType": "Tipo de plan", "executionMode": "Ejecución", "status": "Estado", "orders": "Órdenes", "materials": "Materiales", "planned": "Planificado", "completed": "Completado", "actions": "Acciones" }
   },
-  "detail": { "materials": "Necesidades de material", "outputs": "Salidas esperadas", "assignees": "Responsables", "workCenter": "Centro de trabajo" },
+  "detail": { "materials": "Necesidades de material", "outputs": "Salidas esperadas", "assignees": "Responsables", "workCenter": "Centro de trabajo", "description": "Descripción" },
   "lifecycle": {
     "release": { "title": "Publicar plan de producción", "text": "Las órdenes de {{documentNo}} se abrirán para ejecución.", "action": "Publicar", "success": "Plan de producción publicado." },
     "delete": { "title": "Eliminar plan de producción en borrador", "text": "El borrador {{documentNo}} y sus líneas de planificación se eliminarán.", "action": "Eliminar borrador", "success": "Plan de producción eliminado." },

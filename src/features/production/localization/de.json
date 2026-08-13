@@ -33,7 +33,7 @@
     "create": "Neuer Produktionsplan", "loadFailed": "Produktionsplan konnte nicht geladen werden.", "release": "Freigeben", "delete": "Entwurf löschen", "detail": "Details anzeigen",
     "columns": { "documentNo": "Plan-Nr.", "documentDate": "Belegdatum", "planType": "Plantyp", "executionMode": "Ausführung", "status": "Status", "orders": "Aufträge", "materials": "Materialien", "planned": "Geplant", "completed": "Abgeschlossen", "actions": "Aktionen" }
   },
-  "detail": { "materials": "Materialbedarf", "outputs": "Erwartete Ausgaben", "assignees": "Zuständige", "workCenter": "Arbeitsplatz" },
+  "detail": { "materials": "Materialbedarf", "outputs": "Erwartete Ausgaben", "assignees": "Zuständige", "workCenter": "Arbeitsplatz", "description": "Beschreibung" },
   "lifecycle": {
     "release": { "title": "Produktionsplan freigeben", "text": "Aufträge in {{documentNo}} werden zur Ausführung geöffnet.", "action": "Freigeben", "success": "Produktionsplan freigegeben." },
     "delete": { "title": "Entwurfs-Produktionsplan löschen", "text": "Entwurf {{documentNo}} und dessen Planungszeilen werden gelöscht.", "action": "Entwurf löschen", "success": "Produktionsplan gelöscht." },

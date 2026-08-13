@@ -49,7 +49,7 @@
       "status": "Durum", "orders": "Emir", "materials": "Malzeme", "planned": "Planlanan", "completed": "Tamamlanan", "actions": "İşlemler"
     }
   },
-  "detail": { "materials": "Malzeme ihtiyaçları", "outputs": "Beklenen çıktılar", "assignees": "Sorumlular", "workCenter": "İş merkezi" },
+  "detail": { "materials": "Malzeme ihtiyaçları", "outputs": "Beklenen çıktılar", "assignees": "Sorumlular", "workCenter": "İş merkezi", "description": "Açıklama" },
   "lifecycle": {
     "release": { "title": "Üretim Planını Serbest Bırak", "text": "{{documentNo}} planındaki emirler yürütmeye açılacak.", "action": "Serbest Bırak", "success": "Üretim planı serbest bırakıldı." },
     "delete": { "title": "Taslak Üretim Planını Sil", "text": "{{documentNo}} taslağı ve bağlı plan satırları silinecek.", "action": "Taslağı Sil", "success": "Üretim planı silindi." },

@@ -33,7 +33,7 @@
     "create": "خطة إنتاج جديدة", "loadFailed": "تعذر تحميل خطة الإنتاج.", "release": "اعتماد", "delete": "حذف المسودة", "detail": "عرض التفاصيل",
     "columns": { "documentNo": "رقم الخطة", "documentDate": "تاريخ المستند", "planType": "نوع الخطة", "executionMode": "التنفيذ", "status": "الحالة", "orders": "الأوامر", "materials": "المواد", "planned": "مخطط", "completed": "مكتمل", "actions": "الإجراءات" }
   },
-  "detail": { "materials": "احتياجات المواد", "outputs": "المخرجات المتوقعة", "assignees": "المسؤولون", "workCenter": "مركز العمل" },
+  "detail": { "materials": "احتياجات المواد", "outputs": "المخرجات المتوقعة", "assignees": "المسؤولون", "workCenter": "مركز العمل", "description": "الوصف" },
   "lifecycle": {
     "release": { "title": "اعتماد خطة الإنتاج", "text": "سيتم فتح الأوامر في {{documentNo}} للتنفيذ.", "action": "اعتماد", "success": "تم اعتماد خطة الإنتاج." },
     "delete": { "title": "حذف خطة الإنتاج المسودة", "text": "سيتم حذف المسودة {{documentNo}} وسطور التخطيط الخاصة بها.", "action": "حذف المسودة", "success": "تم حذف خطة الإنتاج." },

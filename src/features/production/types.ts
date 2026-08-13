@@ -102,6 +102,7 @@ export interface ProductionSourceWorkOrder {
   cancellationId?: number;
   assignedRecipeLineCount?: number;
   recipeLineCount?: number;
+  description?: string;
 }
 
 export interface CancelProductionWorkOrderAssignmentRequest {
@@ -197,6 +198,7 @@ export interface PreparedNetsisProductionWorkOrder {
   listingKind?: ProductionSourceWorkOrderListingKind;
   transferId?: number;
   kalanTaskId?: number;
+  description?: string;
 }
 
 export interface ProductionPlanGridRow {
@@ -240,6 +242,7 @@ export interface ProductionPlanDetail {
     unitCode: string;
     plannedQuantity: number;
     completedQuantity: number;
+    description?: string;
     materials: Array<{
       id: number;
       stockCode: string;
