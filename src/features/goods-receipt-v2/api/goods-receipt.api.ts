@@ -118,6 +118,8 @@ export const goodsReceiptV2Api = {
       hasNextPage: Boolean(page.hasNextPage ?? pageNumber * pageSize < totalCount),
     };
   },
+  locationById: async (id: number): Promise<LocationOption> =>
+    unwrap(await api.get<Envelope<LocationOption>>(`/api/locations/${id}`)),
   /** Mal kabul için yalnızca Receiving/Staging lokasyonları. */
   receivingLocations: async (request: DropdownPageRequest, warehouseId: number): Promise<GridPage<LocationOption>> => {
     const page = await goodsReceiptV2Api.locations(request, warehouseId);

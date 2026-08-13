@@ -259,6 +259,16 @@ const hasGoodsReceiptDirectDraft = (draft: GoodsReceiptDirectDraft): boolean =>
     draft.searchTokens.length,
   );
 
+function sameLocationId(
+  left?: number | string | null,
+  right?: number | string | null,
+): boolean {
+  if (left == null || right == null || left === "") return false;
+  const a = Number(left);
+  const b = Number(right);
+  return Number.isFinite(a) && Number.isFinite(b) && a === b;
+}
+
 function putawayLocationPatch(location: {
   id: number;
   code: string;
@@ -1071,7 +1081,15 @@ export function GoodsReceiptCreatePage({
       const stockByCode = new Map<string, StockOption>(stockLookups);
       const yapIdByCode = new Map<string, number>(yapLookups);
       const stockIds = [...stockByCode.values()].map((stock) => stock.id);
-      const [qualityRequirements, trackingPolicyEntries] = await Promise.all([
+      const defaultLocationIds = [
+        ...new Set(
+          [...warehouseLookup.values()]
+            .map((warehouse) => Number(warehouse?.defaultGoodsReceiptLocationId))
+            .filter((id) => Number.isFinite(id) && id > 0),
+        ),
+      ];
+      const [qualityRequirements, trackingPolicyEntries, defaultLocationEntries] =
+        await Promise.all([
         goodsReceiptV2Api.qualityRequirements(customer.branch, stockIds),
         Promise.all(
           stockIds.map(async (stockId) => {
@@ -1082,7 +1100,21 @@ export function GoodsReceiptCreatePage({
             return [stockId, policy] as const;
           }),
         ),
+        Promise.all(
+          defaultLocationIds.map(async (id) => {
+            try {
+              return [id, await goodsReceiptV2Api.locationById(id)] as const;
+            } catch {
+              return [id, undefined] as const;
+            }
+          }),
+        ),
       ]);
+      const defaultLocationById = new Map(
+        defaultLocationEntries.filter(
+          (entry): entry is readonly [number, LocationOption] => entry[1] != null,
+        ),
+      );
       const qualityByStockId = new Map(
         qualityRequirements.stocks.map((requirement) => [
           requirement.stockId,
@@ -1118,6 +1150,11 @@ export function GoodsReceiptCreatePage({
               throw new Error(
                 t("createFlow.errors.stockMirrorNotFound", { code: x.stockCode }),
               );
+            const defaultLocationId = warehouse?.defaultGoodsReceiptLocationId;
+            const defaultLocation =
+              defaultLocationId != null
+                ? defaultLocationById.get(Number(defaultLocationId))
+                : undefined;
             return {
               ...x,
               stockId: stock.id,
@@ -1132,11 +1169,13 @@ export function GoodsReceiptCreatePage({
                 ? warehouseOption(warehouse).value
                 : null,
               targetWarehouseName: warehouse?.warehouseName,
-              warehouseDefaultLocationId: warehouse?.defaultGoodsReceiptLocationId,
-              receivingLocationId: warehouse?.defaultGoodsReceiptLocationId,
-              receivingLocationValue: warehouse?.defaultGoodsReceiptLocationId
-                ? String(warehouse.defaultGoodsReceiptLocationId)
-                : null,
+              warehouseDefaultLocationId: defaultLocationId,
+              receivingLocationId: defaultLocationId,
+              receivingLocationValue:
+                defaultLocationId != null ? String(defaultLocationId) : null,
+              receivingLocationCode: defaultLocation?.code,
+              putawayLocationId: defaultLocation?.id,
+              putawayLocationCode: defaultLocation?.code,
               trackingType: trackingPolicy.trackingType,
               trackingPolicy,
               // Serial mask loads lazily when the lot/serial dialog opens.
@@ -3502,11 +3541,7 @@ function ReceiptEntryRow({
         : warehouseCode != null
           ? t("createFlow.entryRow.warehouseFallback", { code: warehouseCode })
           : "";
-  const receivingLabel =
-    line.receivingLocationCode ||
-    (line.receivingLocationValue
-      ? `Raf #${line.receivingLocationValue}`
-      : "");
+  const receivingLabel = line.receivingLocationCode || "";
   const filledSerials = useMemo(
     () =>
       line.trackings
@@ -3577,6 +3612,16 @@ function ReceiptEntryRow({
     const locationQuery = allowAnyActiveLocation
       ? goodsReceiptV2Api.locations
       : goodsReceiptV2Api.receivingLocations;
+    const applyPutaway = (location: { id: number; code: string }) =>
+      allowAnyActiveLocation &&
+      (sameLocationId(location.id, line.warehouseDefaultLocationId) ||
+        sameLocationId(location.id, line.putawayLocationId))
+        ? {
+            putawayLocationId: location.id,
+            putawayLocationCode: location.code,
+          }
+        : {};
+
     void locationQuery(
         {
           pageNumber: 1,
@@ -3590,18 +3635,20 @@ function ReceiptEntryRow({
         },
         line.targetWarehouseId,
       )
-      .then((page) => {
+      .then(async (page) => {
         if (cancelled) return;
-        const configuredDefault = page.items.find(
-          (item) => item.id === line.warehouseDefaultLocationId,
+        const configuredDefault = page.items.find((item) =>
+          sameLocationId(item.id, line.warehouseDefaultLocationId),
         );
         const preferred = configuredDefault ??
           (allowAnyActiveLocation
-            ? page.items.find((item) => item.id === line.putawayLocationId)
+            ? page.items.find((item) =>
+                sameLocationId(item.id, line.putawayLocationId),
+              )
             : page.items.find((item) => item.locationType === "Receiving") ??
               page.items[0]);
-        if (!preferred) return;
         if (
+          preferred &&
           preferred.warehouseId != null &&
           preferred.warehouseId !== line.targetWarehouseId
         ) {
@@ -3609,46 +3656,49 @@ function ReceiptEntryRow({
         }
 
         if (line.receivingLocationId == null) {
+          if (!preferred) return;
           updateLine(key, {
             receivingLocationId: preferred.id,
             receivingLocationValue: String(preferred.id),
             receivingLocationCode: preferred.code,
-            ...(configuredDefault && allowAnyActiveLocation
-              ? {
-                  putawayLocationId: preferred.id,
-                  putawayLocationCode: preferred.code,
-                }
-              : {}),
+            ...applyPutaway(preferred),
           });
           return;
         }
 
-        const selectedIsValid = page.items.some(
-          (item) => item.id === line.receivingLocationId,
+        let selected = page.items.find((item) =>
+          sameLocationId(item.id, line.receivingLocationId),
         );
-        if (selectedIsValid) {
-          if (!line.receivingLocationCode) {
-            const current = page.items.find(
-              (item) => item.id === line.receivingLocationId,
+        if (!selected) {
+          try {
+            const byId = await goodsReceiptV2Api.locationById(
+              Number(line.receivingLocationId),
             );
-            if (current) {
-              updateLine(key, {
-                receivingLocationCode: current.code,
-                ...(configuredDefault && allowAnyActiveLocation
-                  ? {
-                      putawayLocationId: current.id,
-                      putawayLocationCode: current.code,
-                    }
-                  : {}),
-              });
+            if (cancelled) return;
+            if (
+              byId.warehouseId == null ||
+              byId.warehouseId === line.targetWarehouseId
+            ) {
+              selected = byId;
             }
+          } catch {
+            selected = undefined;
+          }
+        }
+        if (selected) {
+          if (!line.receivingLocationCode) {
+            updateLine(key, {
+              receivingLocationCode: selected.code,
+              receivingLocationValue: String(selected.id),
+              ...applyPutaway(selected),
+            });
           }
           return;
         }
 
         if (
           line.putawayLocationId != null &&
-          line.receivingLocationId === line.putawayLocationId
+          sameLocationId(line.receivingLocationId, line.putawayLocationId)
         ) {
           if (!line.receivingLocationCode && line.putawayLocationCode) {
             updateLine(key, {
@@ -3658,6 +3708,7 @@ function ReceiptEntryRow({
           return;
         }
 
+        if (!preferred) return;
         updateLine(key, {
           receivingLocationId: preferred.id,
           receivingLocationValue: String(preferred.id),
