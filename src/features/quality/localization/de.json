@@ -24,6 +24,14 @@
     "hide": "Ausblenden",
     "open": "Öffnen",
     "detailLoading": "Detail wird geladen...",
+    "priority": {
+      "badge": "Priorisierte Qualitätsprüfung",
+      "give": "Priorisieren",
+      "remove": "Priorität entfernen",
+      "added": "Die Qualitätsprüfung wurde priorisiert und an den Anfang der Liste verschoben.",
+      "removed": "Die Priorität der Qualitätsprüfung wurde entfernt.",
+      "failed": "Die Priorität der Qualitätsprüfung konnte nicht geändert werden."
+    },
     "facetFiltersTitle": "Listenfilter",
     "facetStatus": "Status",
     "facetAll": "Alle",

@@ -155,6 +155,8 @@ interface Props<T extends { id: number }> {
   compactShell?: boolean;
   /** Satıra çift tıklanınca çağrılır (aksiyon hücreleri hariç etkileşimleri engellemez). */
   onRowDoubleClick?: (row: T) => void;
+  /** Sunucu durumuna göre satıra semantik vurgu sınıfı ekler. */
+  rowClassName?: (row: T) => string | undefined;
   /** Açık satır detayı; `renderExpandedRow` ile birlikte kullanılır. */
   expandedRowId?: number | null;
   /** Özet satırın altına açılan detay içeriği. */
@@ -460,6 +462,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
   retainQueryCache = false,
   compactShell = false,
   onRowDoubleClick,
+  rowClassName,
   expandedRowId = null,
   renderExpandedRow,
   persistPreferences = true,
@@ -1593,6 +1596,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
                           onRowDoubleClick && 'cursor-pointer',
                           cellContext?.row.id === row.id && 'bg-[var(--wms-brand-soft)]',
                           expandedRowId === row.id && 'bg-[var(--wms-brand-soft)]',
+                          rowClassName?.(row),
                         )}
                         onDoubleClick={() => onRowDoubleClick?.(row)}
                       >
@@ -1655,6 +1659,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
             className={cn(
               'overflow-hidden rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] shadow-sm',
               onRowDoubleClick && 'cursor-pointer',
+              rowClassName?.(row),
             )}
             onDoubleClick={() => onRowDoubleClick?.(row)}
           >

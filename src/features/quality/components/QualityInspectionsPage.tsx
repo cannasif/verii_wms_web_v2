@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import type { TFunction } from "i18next";
-import { ChevronDown, ClipboardPen, Loader2, Plus, ShieldCheck, Trash2 } from "lucide-react";
+import { ChevronDown, ClipboardPen, Flag, Loader2, Plus, ShieldCheck, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   AdvancedDataGrid,
@@ -47,6 +47,10 @@ import {
   QUALITY_INSPECTION_STATUS_EXCLUDE_PASSED,
 } from "../utils/quality-inspection-list-filters";
 import { requiresQualityDat } from "../utils/quality-dat-routing";
+import {
+  canToggleQualityInspectionPriority,
+  qualityInspectionPriorityRowClass,
+} from "../utils/quality-inspection-priority";
 import { cn } from "@/lib/utils";
 import { localizeEnumValue } from "@/lib/enum-localization";
 import {
@@ -55,6 +59,7 @@ import {
   formatProjectNumber,
 } from "@/lib/project-format";
 import { useModuleTranslation } from "@/hooks/useModuleTranslation";
+import { usePermissionAccess } from "@/features/access-control/hooks/usePermissionAccess";
 import { goodsReceiptV2Api } from "@/features/goods-receipt-v2/api/goods-receipt.api";
 import {
   qualityApi,
@@ -623,10 +628,12 @@ export function QualityInspectionsPage({
   quarantineOnly?: boolean;
 }): ReactElement {
   const { t, moduleReady } = useModuleTranslation("quality");
+  const { can } = usePermissionAccess();
   const queryClient = useQueryClient();
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [detail, setDetail] = useState<QualityInspectionDetail | null>(null);
   const [loading, setLoading] = useState<number | null>(null);
+  const [priorityLoading, setPriorityLoading] = useState<number | null>(null);
   const [statusFacet, setStatusFacet] = useState(QUALITY_INSPECTION_STATUS_EXCLUDE_PASSED);
   const pageKey = quarantineOnly ? "quality-quarantine-v2" : "quality-inspections-v2";
   const statusFilters = useMemo(
@@ -672,6 +679,25 @@ export function QualityInspectionsPage({
     },
     [expandedId, t],
   );
+  const toggleInspectionPriority = useCallback(
+    async (inspection: QualityInspection) => {
+      if (priorityLoading !== null) return;
+      setPriorityLoading(inspection.id);
+      try {
+        const result = await qualityApi.togglePriority(inspection.id);
+        setDetail((current) => current?.header.id === inspection.id
+          ? { ...current, header: { ...current.header, isPriority: result.isPriority } }
+          : current);
+        await queryClient.invalidateQueries({ queryKey: ["advanced-grid", pageKey] });
+        toast.success(result.isPriority ? t("list.priority.added") : t("list.priority.removed"));
+      } catch (error) {
+        toast.error(message(error, t("list.priority.failed")));
+      } finally {
+        setPriorityLoading(null);
+      }
+    },
+    [pageKey, priorityLoading, queryClient, t],
+  );
   const columns = useMemo<GridColumn<QualityInspection>[]>(
     () => {
       void moduleReady;
@@ -690,6 +716,9 @@ export function QualityInspectionsPage({
             className="inline-flex items-center gap-1.5 font-mono font-semibold text-cyan-600 hover:underline dark:text-cyan-300"
             aria-expanded={expandedId === r.id}
           >
+            {r.isPriority ? (
+              <Flag className="size-3.5 fill-rose-500 text-rose-600" aria-label={t("list.priority.badge")} />
+            ) : null}
             <ChevronDown
               className={`size-3.5 shrink-0 transition-transform ${
                 expandedId === r.id ? "rotate-180" : ""
@@ -794,7 +823,27 @@ export function QualityInspectionsPage({
         key: "actions",
         label: t("list.columns.detail"),
         ...requiredActionColumn,
+        width: 260,
         render: (r) => (
+          <div className="flex items-center justify-center gap-1">
+          {can("WMS.QUALITY.INSPECTIONS.PRIORITIZE") && canToggleQualityInspectionPriority(r.status) ? (
+            <button
+              type="button"
+              onClick={() => void toggleInspectionPriority(r)}
+              disabled={priorityLoading !== null}
+              className={cn(
+                "inline-flex min-h-9 items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-semibold",
+                r.isPriority
+                  ? "bg-rose-500/15 text-rose-700 hover:bg-rose-500/25 dark:text-rose-300"
+                  : "text-slate-600 hover:bg-rose-500/10 hover:text-rose-700 dark:text-slate-300 dark:hover:text-rose-300",
+              )}
+              aria-label={r.isPriority ? t("list.priority.remove") : t("list.priority.give")}
+              title={r.isPriority ? t("list.priority.remove") : t("list.priority.give")}
+            >
+              {priorityLoading === r.id ? <Loader2 className="size-4 animate-spin" /> : <Flag className={cn("size-4", r.isPriority && "fill-current")} />}
+              <span>{r.isPriority ? t("list.priority.remove") : t("list.priority.give")}</span>
+            </button>
+          ) : null}
           <button
             type="button"
             onClick={() => void toggle(r.id)}
@@ -814,11 +863,12 @@ export function QualityInspectionsPage({
               {expandedId === r.id ? t("list.hide") : t("list.open")}
             </span>
           </button>
+          </div>
         ),
       },
     ];
     },
-    [expandedId, loading, moduleReady, t, toggle],
+    [can, expandedId, loading, moduleReady, priorityLoading, t, toggle, toggleInspectionPriority],
   );
   const decided = async () => {
     setExpandedId(null);
@@ -851,6 +901,7 @@ export function QualityInspectionsPage({
       }
       expandedRowId={expandedId}
       onRowDoubleClick={(row) => void toggle(row.id)}
+      rowClassName={(row) => qualityInspectionPriorityRowClass(row.isPriority)}
       renderExpandedRow={(row) =>
         detail && detail.header.id === row.id ? (
           <InspectionDetailPanel

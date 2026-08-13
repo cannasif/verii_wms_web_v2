@@ -24,6 +24,14 @@
     "hide": "Hide",
     "open": "Open",
     "detailLoading": "Loading detail...",
+    "priority": {
+      "badge": "Priority quality inspection",
+      "give": "Prioritize",
+      "remove": "Remove priority",
+      "added": "The quality inspection was prioritized and moved to the top of the list.",
+      "removed": "Priority was removed from the quality inspection.",
+      "failed": "The quality inspection priority could not be changed."
+    },
     "facetFiltersTitle": "List filters",
     "facetStatus": "Status",
     "facetAll": "All",

@@ -24,6 +24,14 @@
     "hide": "Masquer",
     "open": "Ouvrir",
     "detailLoading": "Chargement du détail...",
+    "priority": {
+      "badge": "Contrôle qualité prioritaire",
+      "give": "Rendre prioritaire",
+      "remove": "Retirer la priorité",
+      "added": "Le contrôle qualité a été rendu prioritaire et placé en tête de liste.",
+      "removed": "La priorité du contrôle qualité a été retirée.",
+      "failed": "La priorité du contrôle qualité n’a pas pu être modifiée."
+    },
     "facetFiltersTitle": "Filtres de liste",
     "facetStatus": "Statut",
     "facetAll": "Tous",

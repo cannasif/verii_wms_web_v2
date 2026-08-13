@@ -24,6 +24,14 @@
     "hide": "Nascondi",
     "open": "Apri",
     "detailLoading": "Caricamento dettaglio...",
+    "priority": {
+      "badge": "Controllo qualità prioritario",
+      "give": "Assegna priorità",
+      "remove": "Rimuovi priorità",
+      "added": "Il controllo qualità è stato reso prioritario e spostato in cima all’elenco.",
+      "removed": "La priorità del controllo qualità è stata rimossa.",
+      "failed": "Non è stato possibile modificare la priorità del controllo qualità."
+    },
     "facetFiltersTitle": "Filtri elenco",
     "facetStatus": "Stato",
     "facetAll": "Tutti",

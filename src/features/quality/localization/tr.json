@@ -24,6 +24,14 @@
     "hide": "Gizle",
     "open": "Aç",
     "detailLoading": "Detay yükleniyor...",
+    "priority": {
+      "badge": "Öncelikli GKK kaydı",
+      "give": "Önceliklendir",
+      "remove": "Önceliği kaldır",
+      "added": "GKK kaydı önceliklendirildi ve listenin üstüne alındı.",
+      "removed": "GKK kaydının önceliği kaldırıldı.",
+      "failed": "GKK önceliği değiştirilemedi."
+    },
     "facetFiltersTitle": "Liste filtreleri",
     "facetStatus": "Durum",
     "facetAll": "Tümü",

@@ -24,6 +24,14 @@
     "hide": "Ocultar",
     "open": "Abrir",
     "detailLoading": "Cargando detalle...",
+    "priority": {
+      "badge": "Inspección de calidad prioritaria",
+      "give": "Priorizar",
+      "remove": "Quitar prioridad",
+      "added": "La inspección de calidad fue priorizada y movida al principio de la lista.",
+      "removed": "Se quitó la prioridad de la inspección de calidad.",
+      "failed": "No se pudo cambiar la prioridad de la inspección de calidad."
+    },
     "facetFiltersTitle": "Filtros de lista",
     "facetStatus": "Estado",
     "facetAll": "Todos",
