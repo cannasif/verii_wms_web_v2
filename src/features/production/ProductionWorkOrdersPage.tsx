@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowDown, ArrowUp, CheckCircle2, ChevronDown, ChevronUp, CircleHelp, Eye, Loader2, PackageOpen, Plus, RefreshCw, Search, UserPlus, UserRoundCog, X } from 'lucide-react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -31,7 +31,6 @@ import { warehouseTransferApi } from '@/features/warehouse-transfer-v2/api/wareh
 import type { ActiveUserOption } from '@/features/goods-receipt-v2/types/goods-receipt.types';
 import type { DropdownPage } from '@/hooks/useDropdownInfiniteSearch';
 import type { PagedResponse } from '@/types/api';
-import { productionApi } from './api';
 import type { ProductionSourceWorkOrder, PreparedNetsisProductionMaterial, PreparedNetsisProductionWorkOrder } from './types';
 import {
   ProductionWorkOrderTransferTabPanel,
@@ -43,6 +42,10 @@ import { ProductionWorkOrderAssignmentCancelDialog } from './components/Producti
 import { ProductionWorkOrderDetailDialog } from './components/ProductionWorkOrderDetailDialog';
 import { WorkOrderAssignmentProgressRing } from './components/WorkOrderAssignmentProgressRing';
 import { fetchProductionWorkOrderTabCounts } from './production-work-order-tab-counts';
+import {
+  productionWorkOrderListQueryOptions,
+  productionWorkOrderRecipeQueryOptions,
+} from './production-work-order-recipe-query';
 
 const todayIsoDate = (): string => new Date().toLocaleDateString('en-CA');
 
@@ -483,6 +486,7 @@ export function ProductionWorkOrdersPage(): ReactElement {
   const { t: tProduction } = useModuleTranslation('production');
   const { skin } = useTheme();
   const { can } = usePermissionAccess();
+  const queryClient = useQueryClient();
   const branchCode = useAuthStore((state) => state.branch?.code ?? '0');
   const isPremium = skin === 'premium';
   const [policy, setPolicy] = useState<ProductionTransferPolicy>();
@@ -522,6 +526,10 @@ export function ProductionWorkOrdersPage(): ReactElement {
   });
 
   const tabCount = (tab: ProductionWorkOrderPageTab): number | null => {
+    if (tab === 'pending') {
+      if (loading && rows.length === 0) return null;
+      return rows.filter((row) => row.listingKind !== 'ManagerCancelledAssignment').length;
+    }
     if (!tabCounts.data) return null;
     return tabCounts.data[tab];
   };
@@ -540,17 +548,21 @@ export function ProductionWorkOrdersPage(): ReactElement {
     });
   }, [activeTab]);
 
-  const loadPending = useCallback(async (term?: string) => {
+  const loadPending = useCallback(async (term?: string, force = false) => {
     setLoading(true);
     try {
-      setRows(await productionApi.sourceWorkOrders(term));
+      const query = productionWorkOrderListQueryOptions(branchCode, term);
+      if (force) {
+        await queryClient.invalidateQueries({ queryKey: query.queryKey, exact: true });
+      }
+      setRows(await queryClient.fetchQuery(query));
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Üretim iş emirleri yüklenemedi.');
     } finally {
       setLoading(false);
       refreshTabCounts();
     }
-  }, [refreshTabCounts]);
+  }, [branchCode, queryClient, refreshTabCounts]);
   useEffect(() => {
     void loadPending();
   }, [loadPending]);
@@ -586,7 +598,7 @@ export function ProductionWorkOrdersPage(): ReactElement {
 
   const refreshActiveTab = () => {
     refreshTabCounts();
-    if (activeTab === 'pending') void loadPending(activeSearch[0] || undefined);
+    if (activeTab === 'pending') void loadPending(activeSearch[0] || undefined, true);
     else setTransferRefreshKeys((current) => ({
       ...current,
       [activeTab]: (current[activeTab] ?? 0) + 1,
@@ -609,7 +621,7 @@ export function ProductionWorkOrdersPage(): ReactElement {
   const openAssignment = async (row: ProductionSourceWorkOrder) => {
     setAssignmentLoading(workOrderKey(row));
     try {
-      setSelected(await productionApi.prepareSourceWorkOrder(row));
+      setSelected(await queryClient.fetchQuery(productionWorkOrderRecipeQueryOptions(row)));
       setDetailTarget(undefined);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'İş emri reçetesi hazırlanamadı.');
@@ -996,7 +1008,7 @@ export function ProductionWorkOrdersPage(): ReactElement {
                 tab={tabDef.apiTab}
                 hidden={activeTab !== tabDef.key}
                 refreshKey={transferRefreshKeys[tabDef.key] ?? 0}
-                onPendingQueueChanged={() => void loadPending(activeSearch[0] || undefined)}
+                onPendingQueueChanged={() => void loadPending(activeSearch[0] || undefined, true)}
                 onAfterPoolClaim={() => {
                   refreshTabCounts();
                   setActiveTab('mine');
@@ -1031,7 +1043,7 @@ export function ProductionWorkOrdersPage(): ReactElement {
         close={() => setSelected(undefined)}
         onTransferCreated={() => {
           refreshTabCounts();
-          void loadPending();
+          void loadPending(undefined, true);
           setTransferRefreshKeys((current) => ({
             ...current,
             picking: (current.picking ?? 0) + 1,
@@ -1047,7 +1059,7 @@ export function ProductionWorkOrdersPage(): ReactElement {
         onCompleted={() => {
           setCancelTarget(undefined);
           refreshTabCounts();
-          void loadPending(activeSearch[0] || undefined);
+          void loadPending(activeSearch[0] || undefined, true);
           setTransferRefreshKeys((current) => ({
             ...current,
             cancelled: (current.cancelled ?? 0) + 1,

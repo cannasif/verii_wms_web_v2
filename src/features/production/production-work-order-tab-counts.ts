@@ -6,14 +6,12 @@ export type ProductionWorkOrderTabCounts = Record<ProductionWorkOrderPageTab, nu
 
 export async function fetchProductionWorkOrderTabCounts(): Promise<ProductionWorkOrderTabCounts> {
   const [
-    pendingRows,
     pickingRows,
     completedRows,
     cancelledTransfers,
     cancelledAssignments,
     mineRows,
   ] = await Promise.all([
-    productionApi.sourceWorkOrders(),
     productionTransferApi.workOrderTransferGroups('Picking'),
     productionTransferApi.workOrderTransferGroups('Completed'),
     productionTransferApi.workOrderTransferGroups('Cancelled'),
@@ -22,7 +20,9 @@ export async function fetchProductionWorkOrderTabCounts(): Promise<ProductionWor
   ]);
 
   return {
-    pending: pendingRows.filter((row) => row.listingKind !== 'ManagerCancelledAssignment').length,
+    // Pending is derived from the already loaded page rows. Calling the source endpoint
+    // again here doubled the initial ERP request and was refreshed every minute.
+    pending: 0,
     picking: pickingRows.length,
     completed: completedRows.length,
     cancelled: cancelledTransfers.length + cancelledAssignments.length,

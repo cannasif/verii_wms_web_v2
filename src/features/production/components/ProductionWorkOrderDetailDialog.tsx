@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactElement, type ReactNode } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Ban, ClipboardList, UserRoundCog } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -6,8 +7,8 @@ import { OpsCodeBadge, OpsStatusBadge } from '@/components/shared/OpsStatusBadge
 import { formatProjectDate, formatProjectNumber } from '@/lib/project-format';
 import { cn } from '@/lib/utils';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
-import { productionApi } from '../api';
-import type { PreparedNetsisProductionWorkOrder, ProductionSourceWorkOrder } from '../types';
+import type { ProductionSourceWorkOrder } from '../types';
+import { productionWorkOrderRecipeQueryOptions } from '../production-work-order-recipe-query';
 
 type DetailTab = 'info' | 'content';
 
@@ -82,38 +83,21 @@ export function ProductionWorkOrderDetailDialog({
 }): ReactElement {
   const { t } = useModuleTranslation('production');
   const [mainTab, setMainTab] = useState<DetailTab>('info');
-  const [prepared, setPrepared] = useState<PreparedNetsisProductionWorkOrder | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const preparedQuery = useQuery(productionWorkOrderRecipeQueryOptions(row));
 
   useEffect(() => {
     setMainTab('info');
-    setPrepared(null);
-    setLoading(true);
-    setError(false);
-    let cancelled = false;
-    void productionApi.prepareSourceWorkOrder(row)
-      .then((value) => {
-        if (!cancelled) setPrepared(value);
-      })
-      .catch(() => {
-        if (!cancelled) setError(true);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
   }, [row]);
 
   const assignedCount = row.assignedRecipeLineCount ?? 0;
-  const recipeTotal = row.recipeLineCount ?? prepared?.materials.length ?? 0;
+  const recipeTotal = row.recipeLineCount || preparedQuery.data?.materials.length || 0;
   const showAssign = canCreateTransfer && !row.isClosed;
   const showCancel = canCancel && !row.isClosed;
   const hasLifecycle = showAssign || showCancel;
   const mainTabIndex = mainTab === 'info' ? 0 : 1;
-  const value = prepared;
+  const value = preparedQuery.data ?? null;
+  const loading = preparedQuery.isLoading;
+  const error = preparedQuery.isError;
 
   return (
     <Dialog
