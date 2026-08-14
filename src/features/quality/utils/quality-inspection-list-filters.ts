@@ -8,6 +8,19 @@ export function buildQualityInspectionStatusFilters(statusFacet: string): GridFi
   return [{ column: 'status', operator: 'equals', value }];
 }
 
+export function mergeQualityInspectionStatusFilters(
+  filters: GridFilter[],
+  statusFacet: string,
+): GridFilter[] {
+  const filtersWithoutStatus = filters.filter(
+    (filter) => filter.column.trim().toLocaleLowerCase('en-US') !== 'status',
+  );
+  return [
+    ...buildQualityInspectionStatusFilters(statusFacet),
+    ...filtersWithoutStatus,
+  ];
+}
+
 export function isQualityInspectionStatusFilterDefault(statusFacet: string, defaultValue: string): boolean {
   return statusFacet === defaultValue;
 }

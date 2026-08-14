@@ -43,7 +43,7 @@ import {
   QualityDecisionFlowOverlay,
   QualityReceiptCreatedSuccessPanel,
 } from "./QualityDecisionFlowScreens";
-import { buildQualityInspectionStatusFilters } from "../utils/quality-inspection-list-filters";
+import { mergeQualityInspectionStatusFilters } from "../utils/quality-inspection-list-filters";
 import { requiresQualityDat } from "../utils/quality-dat-routing";
 import {
   canToggleQualityInspectionPriority,
@@ -711,29 +711,19 @@ export function QualityInspectionsPage({
     [statusCatalogQuery.data?.items],
   );
   const pageKey = quarantineOnly ? "quality-quarantine-v2" : "quality-inspections-v2";
-  const statusFilters = useMemo(
-    () => (quarantineOnly ? [] : buildQualityInspectionStatusFilters(statusFacet)),
-    [quarantineOnly, statusFacet],
-  );
   const fetchPage = useCallback(
     (request: GridRequest) =>
       qualityApi.inspectionsPaged(
-        quarantineOnly
-          ? {
-              ...request,
-              filterLogic: "and",
-              filters: [
-                ...request.filters,
-                { column: "status", operator: "equals", value: "Quarantined" },
-              ],
-            }
-          : {
-              ...request,
-              filterLogic: "and",
-              filters: [...statusFilters, ...request.filters],
-            },
+        {
+          ...request,
+          filterLogic: "and",
+          filters: mergeQualityInspectionStatusFilters(
+            request.filters,
+            quarantineOnly ? "Quarantined" : statusFacet,
+          ),
+        },
       ),
-    [quarantineOnly, statusFilters],
+    [quarantineOnly, statusFacet],
   );
   const toggle = useCallback(
     async (id: number) => {
