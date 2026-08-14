@@ -298,7 +298,7 @@ export function WarehouseTransferOperationPage({ variant = 'warehouse' }: { vari
           >
             <div className="mb-3 flex justify-between gap-3"><div><strong>#{line.lineNo} · {line.stockCode}</strong><p className="text-xs text-slate-500">{line.stockName} · {line.yapCode || 'YAP yok'} · Kullanılabilir {formatProjectNumber(Math.max(0, available))}</p></div><CheckCircle2 className={`size-5 ${available <= 0 ? 'text-emerald-500' : 'text-slate-500'}`} /></div>
             {edit && <>
-              {variant === 'production' && phase === 'pick' && line.pickedQuantity > 0 && (
+              {variant === 'production' && phase === 'pick' && line.pickedQuantity > 0 && !detail.sourceIsRackless && (
                 <div className="mb-3">
                   <TransferLinePickedSources
                     transferId={id}
@@ -309,6 +309,7 @@ export function WarehouseTransferOperationPage({ variant = 'warehouse' }: { vari
               )}
               <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                 {line.trackingType === 'None' && <Field label="Miktar"><input className="input" type="number" min="0.000001" max={available} step="0.000001" value={edit.quantity} onChange={(e) => patch(line.id, { quantity: Number(e.target.value) })} /></Field>}
+                {!(variant === 'production' && phase === 'pick' && detail.sourceIsRackless) && (
                 <Field label="Kaynak raf">
                   <PagedAppDropdown
                     queryKey={['wt-op-source', variant, phase, line.id, sourceWarehouseId, line.stockId, line.yapCodeId, line.defaultSourceLocationId]}
@@ -338,6 +339,8 @@ export function WarehouseTransferOperationPage({ variant = 'warehouse' }: { vari
                     searchable
                   />
                 </Field>
+                )}
+                {!(variant === 'production' && phase !== 'pick' && detail.targetIsRackless) && (
                 <Field label="Hedef raf">
                   <PagedAppDropdown
                     queryKey={['wt-op-target', phase, line.id, targetWarehouseId]}
@@ -349,6 +352,7 @@ export function WarehouseTransferOperationPage({ variant = 'warehouse' }: { vari
                     searchable
                   />
                 </Field>
+                )}
               </div>
               {line.trackingType !== 'None' && <TrackingPlanEditor
                 mode={line.trackingType}

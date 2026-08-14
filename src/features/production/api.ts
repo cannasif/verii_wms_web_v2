@@ -38,6 +38,7 @@ export const productionApi = {
     unwrap(await api.post<Envelope<ProductionWorkOrderAssignmentCancellationResult>>('/api/production/work-orders/restore-assignment', payload)),
   prepareSourceWorkOrder: async (row: Pick<ProductionSourceWorkOrder, 'workOrderNumber' | 'sourceType' | 'sourceSystemCode' | 'listingKind' | 'transferId' | 'kalanTaskId'>): Promise<PreparedNetsisProductionWorkOrder> => {
     const useKalanScope = row.listingKind === 'CancellationReturnRemainder'
+      || row.listingKind === 'PartialTransferRemainder'
       || (Number.isFinite(row.transferId) && (row.transferId ?? 0) > 0
         && Number.isFinite(row.kalanTaskId) && (row.kalanTaskId ?? 0) > 0);
     return unwrap(await api.get<Envelope<PreparedNetsisProductionWorkOrder>>(

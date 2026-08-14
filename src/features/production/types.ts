@@ -73,7 +73,8 @@ export type ProductionSourceWorkOrderListingKind =
   | 'Standard'
   | 'CancellationReturnRemainder'
   | 'ManagerCancelledAssignment'
-  | 'RestoredCancelledAssignment';
+  | 'RestoredCancelledAssignment'
+  | 'PartialTransferRemainder';
 
 export interface ProductionSourceWorkOrder {
   sourceType: 'NetsisErpFunctions' | 'WmsIntegrationTables';
