@@ -62,9 +62,10 @@ function Button({
     onClick?: AsyncActionHandler<React.MouseEvent<HTMLButtonElement>>
   }) {
   const Comp = asChild ? Slot : "button"
+  const hasClickAction = typeof onClick === "function"
   const guarded = useAsyncActionGuard(
     onClick,
-    guardAsyncAction && !asChild && !disabled && !loading,
+    guardAsyncAction && hasClickAction && !asChild && !disabled && !loading,
     minimumBusyMs,
   )
   const effectiveLoading = loading || guarded.busy
@@ -75,7 +76,7 @@ function Button({
       className={cn(buttonVariants({ variant, size, className }))}
       disabled={asChild ? undefined : disabled || effectiveLoading}
       aria-busy={effectiveLoading || undefined}
-      onClick={asChild ? onClick : guarded.run}
+      onClick={asChild ? onClick : hasClickAction ? guarded.run : undefined}
       {...props}
     >
       {!asChild && effectiveLoading ? <Loader2 className="animate-spin" aria-hidden /> : null}

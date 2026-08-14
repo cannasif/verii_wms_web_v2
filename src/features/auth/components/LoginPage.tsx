@@ -388,6 +388,7 @@ export function LoginPage(): React.JSX.Element {
                     disabled={isPending}
                     aria-busy={isPending}
                     data-wms-api-loading="off"
+                    guardAsyncAction={false}
                   >
                     {isPending ? (
                       <span className="inline-flex items-center gap-2">
