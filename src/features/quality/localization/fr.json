@@ -289,6 +289,13 @@
     "reasonNoteRequired": "Une note est obligatoire pour ce code",
     "reasonLabel": "Motif",
     "reasonPlaceholder": "Description (facultative)",
+    "images": {
+      "title": "Images de contrôle", "gallery": "Images", "openGallery": "Ouvrir les images de la ligne qualité", "description": "Ajoutez les preuves de dommage, emballage, étiquette ou contrôle physique de cette ligne de stock. Elles appartiennent uniquement à cette ligne GKK, pas à la fiche article.",
+      "add": "Ajouter une image", "uploading": "Téléchargement…", "empty": "Aucune image n’a encore été ajoutée à cette ligne qualité.", "limits": "{{current}}/{{total}} images · JPG, PNG ou WebP · 10 Mo maximum chacune",
+      "preview": "Agrandir {{name}}", "previewDescription": "Preuve visuelle privée enregistrée pendant le contrôle qualité.", "delete": "Supprimer l’image", "deleteTitle": "Supprimer l’image qualité", "deleteDescription": "{{name}} sera retirée de cette ligne qualité. L’action restera dans la piste d’audit.", "cancel": "Annuler",
+      "uploaded": "Images qualité téléchargées.", "deleted": "Image qualité supprimée.", "uploadFailed": "Impossible de télécharger les images qualité.", "deleteFailed": "Impossible de supprimer l’image qualité.", "loadFailed": "Impossible de charger les images. Cliquez pour réessayer.",
+      "invalidType": "Seules les images JPG, PNG ou WebP sont autorisées.", "sizeLimit": "Chaque image doit faire entre 1 octet et 10 Mo.", "batchLimit": "Vous pouvez sélectionner jusqu’à {{count}} images à la fois.", "lineLimit": "Une ligne qualité peut contenir jusqu’à {{count}} images."
+    },
     "confirmButton": "Terminé"
   },
   "rules": {

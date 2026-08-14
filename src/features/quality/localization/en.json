@@ -354,6 +354,13 @@
     "reasonNoteRequired": "A note is required for this code",
     "reasonLabel": "Reason",
     "reasonPlaceholder": "Description (optional)",
+    "images": {
+      "title": "Inspection images", "gallery": "Images", "openGallery": "Open quality line images", "description": "Attach damage, packaging, label or physical inspection evidence for this stock line. Images belong only to this GKK line, not to the stock card.",
+      "add": "Add image", "uploading": "Uploading…", "empty": "No image has been added to this quality line yet.", "limits": "{{current}}/{{total}} images · JPG, PNG or WebP · maximum 10 MB each",
+      "preview": "Enlarge {{name}}", "previewDescription": "Private visual evidence recorded during quality inspection.", "delete": "Delete image", "deleteTitle": "Delete quality image", "deleteDescription": "{{name}} will be removed from this quality line. The action remains in the audit trail.", "cancel": "Cancel",
+      "uploaded": "Quality images uploaded.", "deleted": "Quality image deleted.", "uploadFailed": "Quality images could not be uploaded.", "deleteFailed": "Quality image could not be deleted.", "loadFailed": "Images could not be loaded. Click to retry.",
+      "invalidType": "Only JPG, PNG or WebP images are allowed.", "sizeLimit": "Each image must be between 1 byte and 10 MB.", "batchLimit": "You can select up to {{count}} images at once.", "lineLimit": "A quality line can contain up to {{count}} images."
+    },
     "confirmButton": "Done"
   },
   "rules": {

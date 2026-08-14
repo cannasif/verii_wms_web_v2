@@ -289,6 +289,13 @@
     "reasonNoteRequired": "Se requiere una nota para este código",
     "reasonLabel": "Motivo",
     "reasonPlaceholder": "Descripción (opcional)",
+    "images": {
+      "title": "Imágenes de inspección", "gallery": "Imágenes", "openGallery": "Abrir imágenes de la línea de calidad", "description": "Adjunte evidencias de daños, embalaje, etiqueta o inspección física para esta línea de stock. Las imágenes pertenecen solo a esta línea GKK, no a la ficha del artículo.",
+      "add": "Añadir imagen", "uploading": "Subiendo…", "empty": "Todavía no se añadieron imágenes a esta línea de calidad.", "limits": "{{current}}/{{total}} imágenes · JPG, PNG o WebP · máximo 10 MB cada una",
+      "preview": "Ampliar {{name}}", "previewDescription": "Evidencia visual privada registrada durante la inspección de calidad.", "delete": "Eliminar imagen", "deleteTitle": "Eliminar imagen de calidad", "deleteDescription": "{{name}} se eliminará de esta línea de calidad. La acción quedará en la auditoría.", "cancel": "Cancelar",
+      "uploaded": "Imágenes de calidad subidas.", "deleted": "Imagen de calidad eliminada.", "uploadFailed": "No se pudieron subir las imágenes de calidad.", "deleteFailed": "No se pudo eliminar la imagen de calidad.", "loadFailed": "No se pudieron cargar las imágenes. Haga clic para reintentar.",
+      "invalidType": "Solo se permiten imágenes JPG, PNG o WebP.", "sizeLimit": "Cada imagen debe tener entre 1 byte y 10 MB.", "batchLimit": "Puede seleccionar hasta {{count}} imágenes a la vez.", "lineLimit": "Una línea de calidad puede contener hasta {{count}} imágenes."
+    },
     "confirmButton": "Listo"
   },
   "rules": {

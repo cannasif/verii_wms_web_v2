@@ -354,6 +354,13 @@
     "reasonNoteRequired": "Bu kod için açıklama zorunludur",
     "reasonLabel": "Neden",
     "reasonPlaceholder": "Açıklama (opsiyonel)",
+    "images": {
+      "title": "Kontrol görselleri", "gallery": "Görseller", "openGallery": "Kalite satırı görsellerini aç", "description": "Bu stok satırına ait hasar, ambalaj, etiket veya fiziksel kontrol kanıtlarını ekleyin. Görseller stok kartına değil, yalnız bu GKK satırına kaydedilir.",
+      "add": "Görsel ekle", "uploading": "Yükleniyor…", "empty": "Bu kalite satırına henüz görsel eklenmedi.", "limits": "{{current}}/{{total}} görsel · JPG, PNG veya WebP · görsel başına en fazla 10 MB",
+      "preview": "{{name}} görselini büyüt", "previewDescription": "Kalite kontrolü sırasında kaydedilen özel görsel kanıt.", "delete": "Görseli sil", "deleteTitle": "Kalite görselini sil", "deleteDescription": "{{name}} görseli bu kalite satırından kaldırılacak. İşlem denetim kaydına yazılır.", "cancel": "Vazgeç",
+      "uploaded": "Kalite görselleri yüklendi.", "deleted": "Kalite görseli silindi.", "uploadFailed": "Kalite görselleri yüklenemedi.", "deleteFailed": "Kalite görseli silinemedi.", "loadFailed": "Görseller yüklenemedi. Yeniden denemek için tıklayın.",
+      "invalidType": "Yalnızca JPG, PNG veya WebP görsel yükleyebilirsiniz.", "sizeLimit": "Her görsel 1 bayt ile 10 MB arasında olmalıdır.", "batchLimit": "Tek seferde en fazla {{count}} görsel seçebilirsiniz.", "lineLimit": "Bir kalite satırında en fazla {{count}} görsel bulunabilir."
+    },
     "confirmButton": "Tamam"
   },
   "rules": {

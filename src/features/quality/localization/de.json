@@ -289,6 +289,13 @@
     "reasonNoteRequired": "Für diesen Code ist eine Notiz erforderlich",
     "reasonLabel": "Begründung",
     "reasonPlaceholder": "Beschreibung (optional)",
+    "images": {
+      "title": "Prüfbilder", "gallery": "Bilder", "openGallery": "Bilder der Qualitätszeile öffnen", "description": "Fügen Sie Schadens-, Verpackungs-, Etikett- oder Prüfbelege für diese Lagerzeile hinzu. Die Bilder gehören nur zu dieser GKK-Zeile, nicht zur Artikelkarte.",
+      "add": "Bild hinzufügen", "uploading": "Wird hochgeladen…", "empty": "Für diese Qualitätszeile wurden noch keine Bilder hinzugefügt.", "limits": "{{current}}/{{total}} Bilder · JPG, PNG oder WebP · maximal 10 MB je Bild",
+      "preview": "{{name}} vergrößern", "previewDescription": "Privater Bildnachweis der Qualitätsprüfung.", "delete": "Bild löschen", "deleteTitle": "Qualitätsbild löschen", "deleteDescription": "{{name}} wird aus dieser Qualitätszeile entfernt. Die Aktion bleibt im Audit-Protokoll.", "cancel": "Abbrechen",
+      "uploaded": "Qualitätsbilder wurden hochgeladen.", "deleted": "Qualitätsbild wurde gelöscht.", "uploadFailed": "Qualitätsbilder konnten nicht hochgeladen werden.", "deleteFailed": "Qualitätsbild konnte nicht gelöscht werden.", "loadFailed": "Bilder konnten nicht geladen werden. Zum Wiederholen klicken.",
+      "invalidType": "Nur JPG-, PNG- oder WebP-Bilder sind zulässig.", "sizeLimit": "Jedes Bild muss zwischen 1 Byte und 10 MB groß sein.", "batchLimit": "Sie können höchstens {{count}} Bilder gleichzeitig auswählen.", "lineLimit": "Eine Qualitätszeile kann höchstens {{count}} Bilder enthalten."
+    },
     "confirmButton": "Fertig"
   },
   "rules": {
