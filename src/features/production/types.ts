@@ -166,6 +166,9 @@ export interface PreparedNetsisProductionMaterial {
   wasteQuantity: number;
   requiredQuantity: number;
   mappingError?: string;
+  sourceWarehouseQuantity?: number;
+  sourceWarehouseReservedQuantity?: number;
+  sourceWarehouseAvailableQuantity?: number;
 }
 
 export interface PreparedNetsisProductionWorkOrder {

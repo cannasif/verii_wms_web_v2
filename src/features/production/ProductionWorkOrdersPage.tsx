@@ -171,6 +171,9 @@ const RECIPE_EXPORT_COLUMNS = [
   { key: 'recipeQuantity', label: 'Reçete miktarı' },
   { key: 'wasteQuantity', label: 'Fire miktarı' },
   { key: 'requiredQuantity', label: 'Toplam ihtiyaç' },
+  { key: 'sourceWarehouseQuantity', label: 'Depo bakiyesi' },
+  { key: 'sourceWarehouseReservedQuantity', label: 'Rezerve miktar' },
+  { key: 'sourceWarehouseAvailableQuantity', label: 'Kullanılabilir miktar' },
   { key: 'mappingStatus', label: 'Eşleme durumu' },
 ];
 
@@ -222,6 +225,33 @@ function CardStat({ label, value, accent = false }: { label: string; value: stri
   );
 }
 
+function formatWarehouseBalance(value: number | undefined): string {
+  return value == null ? '—' : formatProjectNumber(value);
+}
+
+function WarehouseBalanceCell({
+  value,
+  tone = 'default',
+  title,
+}: {
+  value: number | undefined;
+  tone?: 'default' | 'reserved' | 'available';
+  title: string;
+}): ReactElement {
+  return (
+    <td
+      title={title}
+      className={cn(
+        'wms-ops-gr-detail-lines-table__num font-semibold tabular-nums',
+        tone === 'reserved' && 'text-amber-600 dark:text-amber-300',
+        tone === 'available' && 'text-emerald-600 dark:text-emerald-300',
+      )}
+    >
+      {formatWarehouseBalance(value)}
+    </td>
+  );
+}
+
 function allMaterialIndices(count: number): number[] {
   return Array.from({ length: count }, (_, index) => index);
 }
@@ -268,7 +298,7 @@ function AssigneeGroupMaterialsPanel({
       </div>
 
       <div className="wms-ops-gr-detail-lines-wrap overflow-x-auto max-sm:hidden">
-        <table className="wms-ops-gr-detail-lines-table w-full min-w-[880px] text-sm">
+        <table className="wms-ops-gr-detail-lines-table w-full min-w-[1120px] text-sm">
           <thead>
             <tr>
               <th>#</th>
@@ -277,6 +307,9 @@ function AssigneeGroupMaterialsPanel({
               <th className="wms-ops-gr-detail-lines-table__num">Reçete</th>
               <th className="wms-ops-gr-detail-lines-table__num">Fire</th>
               <th className="wms-ops-gr-detail-lines-table__num">Toplam ihtiyaç</th>
+              <th className="wms-ops-gr-detail-lines-table__num" title="İş emrinin çıkış deposundaki fiziksel kullanılabilir statülü stok">Depo bakiyesi</th>
+              <th className="wms-ops-gr-detail-lines-table__num" title="Çıkış deposunda açık emirlere ayrılmış miktar">Rezerve</th>
+              <th className="wms-ops-gr-detail-lines-table__num" title="Çıkış deposunda yeni toplama için kullanılabilecek miktar">Kullanılabilir</th>
               <th className="w-24">İşlem</th>
             </tr>
           </thead>
@@ -294,6 +327,9 @@ function AssigneeGroupMaterialsPanel({
                   <td className="wms-ops-gr-detail-lines-table__num">{formatProjectNumber(row.recipeQuantity)}</td>
                   <td className="wms-ops-gr-detail-lines-table__num">{formatProjectNumber(row.wasteQuantity)}</td>
                   <td className="wms-ops-gr-detail-lines-table__num">{formatProjectNumber(row.requiredQuantity)}</td>
+                  <WarehouseBalanceCell value={row.sourceWarehouseQuantity} title="Çıkış deposu bakiyesi" />
+                  <WarehouseBalanceCell value={row.sourceWarehouseReservedQuantity} tone="reserved" title="Çıkış deposunda rezerve miktar" />
+                  <WarehouseBalanceCell value={row.sourceWarehouseAvailableQuantity} tone="available" title="Çıkış deposunda kullanılabilir miktar" />
                   <td>
                     <button
                       type="button"
@@ -340,6 +376,9 @@ function AssigneeGroupMaterialsPanel({
                 <CardStat label="Reçete" value={formatProjectNumber(row.recipeQuantity)} />
                 <CardStat label="Fire" value={formatProjectNumber(row.wasteQuantity)} />
                 <CardStat label="Toplam ihtiyaç" value={formatProjectNumber(row.requiredQuantity)} accent />
+                <CardStat label="Depo bakiyesi" value={formatWarehouseBalance(row.sourceWarehouseQuantity)} />
+                <CardStat label="Rezerve" value={formatWarehouseBalance(row.sourceWarehouseReservedQuantity)} />
+                <CardStat label="Kullanılabilir" value={formatWarehouseBalance(row.sourceWarehouseAvailableQuantity)} accent />
               </dl>
             </article>
           );
@@ -364,7 +403,7 @@ function TransferredMaterialsPanel({
       </h4>
 
       <div className="wms-ops-gr-detail-lines-wrap overflow-x-auto max-sm:hidden">
-        <table className="wms-ops-gr-detail-lines-table w-full min-w-[880px] text-sm">
+        <table className="wms-ops-gr-detail-lines-table w-full min-w-[1120px] text-sm">
           <thead>
             <tr>
               <th>#</th>
@@ -373,6 +412,9 @@ function TransferredMaterialsPanel({
               <th className="wms-ops-gr-detail-lines-table__num">Reçete</th>
               <th className="wms-ops-gr-detail-lines-table__num">Fire</th>
               <th className="wms-ops-gr-detail-lines-table__num">Toplam ihtiyaç</th>
+              <th className="wms-ops-gr-detail-lines-table__num">Depo bakiyesi</th>
+              <th className="wms-ops-gr-detail-lines-table__num">Rezerve</th>
+              <th className="wms-ops-gr-detail-lines-table__num">Kullanılabilir</th>
               <th>Durum</th>
             </tr>
           </thead>
@@ -388,6 +430,9 @@ function TransferredMaterialsPanel({
                 <td className="wms-ops-gr-detail-lines-table__num">{formatProjectNumber(row.recipeQuantity)}</td>
                 <td className="wms-ops-gr-detail-lines-table__num">{formatProjectNumber(row.wasteQuantity)}</td>
                 <td className="wms-ops-gr-detail-lines-table__num">{formatProjectNumber(row.requiredQuantity)}</td>
+                <WarehouseBalanceCell value={row.sourceWarehouseQuantity} title="Çıkış deposu bakiyesi" />
+                <WarehouseBalanceCell value={row.sourceWarehouseReservedQuantity} tone="reserved" title="Çıkış deposunda rezerve miktar" />
+                <WarehouseBalanceCell value={row.sourceWarehouseAvailableQuantity} tone="available" title="Çıkış deposunda kullanılabilir miktar" />
                 <td><span className="text-xs">Transfer edildi</span></td>
               </tr>
             ))}
@@ -409,6 +454,9 @@ function TransferredMaterialsPanel({
             <dl className="grid grid-cols-2 gap-x-3 gap-y-2 px-3 py-2.5">
               <CardStat label="Birim" value={row.unitCode} />
               <CardStat label="Toplam ihtiyaç" value={formatProjectNumber(row.requiredQuantity)} accent />
+              <CardStat label="Depo bakiyesi" value={formatWarehouseBalance(row.sourceWarehouseQuantity)} />
+              <CardStat label="Rezerve" value={formatWarehouseBalance(row.sourceWarehouseReservedQuantity)} />
+              <CardStat label="Kullanılabilir" value={formatWarehouseBalance(row.sourceWarehouseAvailableQuantity)} accent />
             </dl>
           </article>
         ))}
@@ -1263,6 +1311,9 @@ function WorkOrderDrawer({
     recipeQuantity: material.recipeQuantity,
     wasteQuantity: material.wasteQuantity,
     requiredQuantity: material.requiredQuantity,
+    sourceWarehouseQuantity: material.sourceWarehouseQuantity ?? '',
+    sourceWarehouseReservedQuantity: material.sourceWarehouseReservedQuantity ?? '',
+    sourceWarehouseAvailableQuantity: material.sourceWarehouseAvailableQuantity ?? '',
     mappingStatus: material.mappingError ?? 'Hazır',
   }));
   const recipeExportFileName = `Recete_${value.workOrderNumber.replace(/[^\p{L}\p{N}._-]+/gu, '_')}`;
@@ -1335,8 +1386,8 @@ function WorkOrderDrawer({
         aria-describedby={undefined}
         className={cn(
           'wms-ops-detail-dialog wms-ops-form flex !h-[min(90dvh,880px)] !max-h-[calc(100dvh-2.5rem)] w-full flex-col !gap-0 overflow-hidden border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] !p-0',
-          // Geniş ekranda 72rem; dar ekranda kenarlara yaslanmasın diye pay bırakılır.
-          '!max-w-[min(72rem,calc(100%-2.5rem))]',
+          // Bakiye kolonları geniş ekranda aynı bakışta görünür; dar ekranda tablo kendi içinde yatay kayar.
+          '!max-w-[min(90rem,calc(100%-2.5rem))]',
           '[scrollbar-gutter:auto]',
         )}
       >
@@ -1647,7 +1698,7 @@ function WorkOrderDrawer({
                 {unassignedList.length > 0 ? (
                   <>
                     <div className="wms-ops-gr-detail-lines-wrap overflow-x-auto max-sm:hidden">
-                      <table className="wms-ops-gr-detail-lines-table w-full min-w-[880px] text-sm">
+                      <table className="wms-ops-gr-detail-lines-table w-full min-w-[1120px] text-sm">
                         <thead>
                           <tr>
                             <th className="w-10">
@@ -1664,6 +1715,9 @@ function WorkOrderDrawer({
                             <th className="wms-ops-gr-detail-lines-table__num">Reçete</th>
                             <th className="wms-ops-gr-detail-lines-table__num">Fire</th>
                             <th className="wms-ops-gr-detail-lines-table__num">Toplam ihtiyaç</th>
+                            <th className="wms-ops-gr-detail-lines-table__num" title="İş emrinin çıkış deposundaki fiziksel kullanılabilir statülü stok">Depo bakiyesi</th>
+                            <th className="wms-ops-gr-detail-lines-table__num" title="Çıkış deposunda açık emirlere ayrılmış miktar">Rezerve</th>
+                            <th className="wms-ops-gr-detail-lines-table__num" title="Çıkış deposunda yeni toplama için kullanılabilecek miktar">Kullanılabilir</th>
                             <th>Eşleme</th>
                           </tr>
                         </thead>
@@ -1692,6 +1746,9 @@ function WorkOrderDrawer({
                                 <td className="wms-ops-gr-detail-lines-table__num wms-ops-gr-detail-lines-table__accent">
                                   {formatProjectNumber(row.requiredQuantity)}
                                 </td>
+                                <WarehouseBalanceCell value={row.sourceWarehouseQuantity} title="Çıkış deposu bakiyesi" />
+                                <WarehouseBalanceCell value={row.sourceWarehouseReservedQuantity} tone="reserved" title="Çıkış deposunda rezerve miktar" />
+                                <WarehouseBalanceCell value={row.sourceWarehouseAvailableQuantity} tone="available" title="Çıkış deposunda kullanılabilir miktar" />
                                 <td>
                                   <OpsStatusBadge tone={row.mappingError ? 'danger' : 'done'} title={row.mappingError ?? undefined}>
                                     {row.mappingError ?? 'Hazır'}
@@ -1744,6 +1801,9 @@ function WorkOrderDrawer({
                               <CardStat label="Reçete" value={formatProjectNumber(row.recipeQuantity)} />
                               <CardStat label="Fire" value={formatProjectNumber(row.wasteQuantity)} />
                               <CardStat label="Toplam ihtiyaç" value={formatProjectNumber(row.requiredQuantity)} accent />
+                              <CardStat label="Depo bakiyesi" value={formatWarehouseBalance(row.sourceWarehouseQuantity)} />
+                              <CardStat label="Rezerve" value={formatWarehouseBalance(row.sourceWarehouseReservedQuantity)} />
+                              <CardStat label="Kullanılabilir" value={formatWarehouseBalance(row.sourceWarehouseAvailableQuantity)} accent />
                             </dl>
                           </article>
                         );
