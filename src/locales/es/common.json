@@ -586,6 +586,7 @@
     "qualityControlInspections": "Lista de inspección de calidad",
     "qualityQuarantine": "Decisiones de cuarentena",
     "qualityControlRules": "Reglas de stock",
+    "qualityDecisionCodes": "Códigos de decisión de calidad",
     "qualityControlSettings": "Configuración general",
     "packing": "Embalaje",
     "packingWorkbench": "Estación de embalaje",

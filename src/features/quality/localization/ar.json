@@ -92,7 +92,8 @@
     "bulkSelectRemainderDecision": "اختر القرار للكمية المتبقية الخاصة بالمقدار الجزئي.",
     "selectAtLeastOneLineDecision": "اختر قرارًا لبند واحد على الأقل.",
     "partialDecisionDisabled": "قرارات الجودة الجزئية معطّلة لهذا الفرع. يجب اتخاذ قرار بشأن جميع البنود الخاضعة للرقابة.",
-    "reasonCodeRequiredAllRows": "رمز القرار مطلوب لكل بند تم اتخاذ قرار الرفض أو الحجر أو الإعادة بشأنه.",
+    "reasonCodeRequiredAllRows": "اختر رمز قرار معرفًا لكل بند مرفوض أو محجوز أو معاد.",
+    "reasonNoteRequiredForCode": "الملاحظة مطلوبة لرمز القرار المحدد.",
     "controlQuantityInvalid": "كمية فحص GKK غير صالحة.",
     "controlQuantityRequired": "أدخل الكمية التي فحصتها فعليًا أثناء هذا الاعتماد للصنف '{{stockCode}}'. لن يملأ النظام هذه القيمة تلقائيًا.",
     "controlQuantityMustBePositive": "لا يمكن أن تكون الكمية المفحوصة للصنف '{{stockCode}}' سالبة.",
@@ -199,7 +200,8 @@
       "remainderLabel": "قرار الباقي",
       "remainderPlaceholder": "للكمية المتبقية",
       "reasonCodeLabel": "رمز القرار",
-      "reasonCodePlaceholder": "رفض / حجر / إعادة",
+      "reasonCodePlaceholder": "اختر رمز قرار معرفًا",
+      "reasonNoteRequired": "الملاحظة مطلوبة لهذا الرمز",
       "reasonLabel": "السبب",
       "reasonPlaceholder": "سبب مختصر",
       "applyButton": "تطبيق"
@@ -283,7 +285,8 @@
     "remainderLabel": "المتبقي ({{value}})",
     "remainderPlaceholder": "قرار الباقي",
     "reasonCodeLabel": "رمز القرار",
-    "reasonCodePlaceholder": "رفض / حجر / إعادة",
+    "reasonCodePlaceholder": "اختر رمز قرار معرفًا",
+    "reasonNoteRequired": "الملاحظة مطلوبة لهذا الرمز",
     "reasonLabel": "السبب",
     "reasonPlaceholder": "وصف (اختياري)",
     "confirmButton": "تم"
@@ -405,6 +408,17 @@
       "templateDownloaded": "تم تنزيل قالب Excel بمجموعات المخزون الحالية.",
       "resultSummary": "تم إنشاء {{created}} قاعدة؛ تم تجاهل {{skipped}}، وفشل {{failed}}."
     }
+  },
+  "decisionCodes": {
+    "title": "رموز قرارات الجودة", "description": "إدارة أسباب القبول والرفض والحجر والإرجاع القياسية لكل بند.",
+    "add": "إضافة رمز قرار", "createTitle": "إنشاء رمز قرار", "editTitle": "تعديل رمز القرار",
+    "dialogDescription": "حدد أنواع القرارات المسموح بها وما إذا كانت الملاحظة إلزامية.", "allDecisions": "جميع أنواع القرارات",
+    "yes": "نعم", "no": "لا", "active": "نشط", "inactive": "غير نشط", "edit": "تعديل", "delete": "حذف", "save": "حفظ", "saving": "جارٍ الحفظ...",
+    "created": "تم إنشاء الرمز.", "updated": "تم تحديث الرمز.", "deleted": "تم حذف الرمز.",
+    "saveFailed": "تعذر حفظ الرمز.", "deleteFailed": "تعذر حذف الرمز.",
+    "confirmDelete": "هل تريد حذف الرمز {{code}}؟", "required": "الرمز والاسم مطلوبان.", "sortInvalid": "يجب أن يكون الترتيب عددًا صحيحًا لا يقل عن صفر.",
+    "columns": { "code": "الرمز", "name": "الاسم", "decision": "نوع القرار", "requiresNote": "الملاحظة مطلوبة", "sortOrder": "الترتيب", "status": "الحالة", "actions": "الإجراءات" },
+    "fields": { "code": "رمز القرار", "name": "اسم القرار", "decision": "القرار المطبق", "sortOrder": "ترتيب العرض", "description": "الوصف", "requiresNote": "طلب ملاحظة عند اختيار هذا الرمز", "isActive": "نشط" }
   },
   "settings": {
     "eyebrow": "الجودة",

@@ -92,7 +92,8 @@
     "bulkSelectRemainderDecision": "Kısmi miktar için kalan miktarın kararını seçin.",
     "selectAtLeastOneLineDecision": "En az bir satır için karar seçin.",
     "partialDecisionDisabled": "Bu şubede kısmi kalite kararı kapalıdır. Tüm kontrole tabi satırlara karar verin.",
-    "reasonCodeRequiredAllRows": "Ret, karantina ve iade kararlarında her satır için karar kodu zorunludur.",
+    "reasonCodeRequiredAllRows": "Ret, karantina ve iade kararlarında her satır için tanımlı karar kodu seçilmelidir.",
+    "reasonNoteRequiredForCode": "Seçilen karar kodu için açıklama girilmelidir.",
     "controlQuantityInvalid": "GKK kontrol miktarı geçersiz.",
     "controlQuantityRequired": "'{{stockCode}}' için bu onayda fiziksel olarak kontrol ettiğiniz miktarı yazın. Sistem bu değeri sizin yerinize doldurmaz.",
     "controlQuantityMustBePositive": "'{{stockCode}}' için kontrol edilen miktar negatif olamaz.",
@@ -263,7 +264,8 @@
       "remainderLabel": "Kalan karar",
       "remainderPlaceholder": "Kalan için",
       "reasonCodeLabel": "Karar kodu",
-      "reasonCodePlaceholder": "Ret / karantina / iade",
+      "reasonCodePlaceholder": "Tanımlı karar kodu seçin",
+      "reasonNoteRequired": "Bu kod için açıklama zorunludur",
       "reasonLabel": "Neden",
       "reasonPlaceholder": "Kısa neden",
       "applyButton": "Uygula",
@@ -348,7 +350,8 @@
     "remainderLabel": "Kalan ({{value}})",
     "remainderPlaceholder": "Kalan karar",
     "reasonCodeLabel": "Karar kodu",
-    "reasonCodePlaceholder": "Ret / karantina / iade",
+    "reasonCodePlaceholder": "Tanımlı karar kodu seçin",
+    "reasonNoteRequired": "Bu kod için açıklama zorunludur",
     "reasonLabel": "Neden",
     "reasonPlaceholder": "Açıklama (opsiyonel)",
     "confirmButton": "Tamam"
@@ -470,6 +473,23 @@
       "templateDownloaded": "Güncel stok gruplarıyla Excel şablonu indirildi.",
       "resultSummary": "{{created}} kural oluşturuldu; {{skipped}} atlandı, {{failed}} başarısız."
     }
+  },
+  "decisionCodes": {
+    "title": "Kalite Karar Kodları",
+    "description": "GKK sırasında kalem bazında seçilecek standart kabul, ret, karantina ve iade nedenlerini yönetin.",
+    "add": "Karar kodu ekle",
+    "createTitle": "Kalite karar kodu oluştur",
+    "editTitle": "Kalite karar kodunu düzenle",
+    "dialogDescription": "Kodun hangi karar türlerinde kullanılacağını ve açıklama zorunluluğunu belirleyin.",
+    "allDecisions": "Tüm karar türleri",
+    "yes": "Evet", "no": "Hayır", "active": "Aktif", "inactive": "Pasif",
+    "edit": "Düzenle", "delete": "Sil", "save": "Kaydet", "saving": "Kaydediliyor...",
+    "created": "Karar kodu oluşturuldu.", "updated": "Karar kodu güncellendi.", "deleted": "Karar kodu silindi.",
+    "saveFailed": "Karar kodu kaydedilemedi.", "deleteFailed": "Karar kodu silinemedi.",
+    "confirmDelete": "{{code}} karar kodunu silmek istiyor musunuz?",
+    "required": "Kod ve ad zorunludur.", "sortInvalid": "Sıra numarası sıfır veya daha büyük bir tam sayı olmalıdır.",
+    "columns": { "code": "Kod", "name": "Ad", "decision": "Karar türü", "requiresNote": "Açıklama zorunlu", "sortOrder": "Sıra", "status": "Durum", "actions": "İşlemler" },
+    "fields": { "code": "Karar kodu", "name": "Karar adı", "decision": "Kullanılacağı karar", "sortOrder": "Gösterim sırası", "description": "Açıklama", "requiresNote": "Bu kod seçildiğinde açıklama zorunlu", "isActive": "Aktif" }
   },
   "settings": {
     "eyebrow": "Kalite",

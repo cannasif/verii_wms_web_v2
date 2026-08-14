@@ -21,6 +21,7 @@ export interface AppDropdownOption<TValue extends string = string> {
   label: string;
   description?: string;
   disabled?: boolean;
+  meta?: unknown;
 }
 
 export interface AppDropdownProps<TValue extends string = string> {

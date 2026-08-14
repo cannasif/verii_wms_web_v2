@@ -30,6 +30,7 @@ export const loadGoodsReceiptPolicyPage = () => import('@/features/goods-receipt
 
 export const loadQualitySettingsPage = () => import('@/features/quality/components/QualitySettingsPage');
 export const loadQualityRulesPage = () => import('@/features/quality/components/QualityRulesPage');
+export const loadQualityDecisionCodesPage = () => import('@/features/quality/components/QualityDecisionCodesPage');
 export const loadQualityInspectionsPage = () => import('@/features/quality/components/QualityInspectionsPage');
 export const loadSerialNumberRulesPage = () => import('@/features/serial-number-rules');
 
@@ -133,6 +134,7 @@ const routePreloaders: Array<[prefix: string, load: () => Promise<unknown>]> = [
   ['/warehouse/quality/quarantine', loadQualityInspectionsPage],
   ['/warehouse/quality/settings', loadQualitySettingsPage],
   ['/warehouse/quality/rules', loadQualityRulesPage],
+  ['/warehouse/quality/decision-codes', loadQualityDecisionCodesPage],
   ['/warehouse/barcode-designer', loadBarcodeDesignerPage],
   ['/warehouse/barcode-policy', loadBarcodePolicyPage],
   ['/warehouse/document-series', loadDocumentSeriesPage],

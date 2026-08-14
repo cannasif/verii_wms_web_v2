@@ -157,6 +157,7 @@ export const WMS_NAV_ITEMS: NavItem[] = [
       { title: 'sidebar.qualityControlInspections', titleFallback: 'Kalite İnceleme Listesi', href: '/warehouse/quality/inspections', searchAliases: ['kalite', 'kontrol', 'karantina', 'onay'], requiredPermission: 'WMS.QUALITY.INSPECTIONS.VIEW' },
       { title: 'sidebar.qualityQuarantine', titleFallback: 'Karantina Kararları', href: '/warehouse/quality/quarantine', searchAliases: ['kalite', 'karantina', 'serbest bırak', 'ret', 'iade'], requiredPermission: 'WMS.QUALITY.INSPECTIONS.VIEW' },
       { title: 'sidebar.qualityControlRules', titleFallback: 'Kalite Kural Tanımları', href: '/warehouse/quality/rules', searchAliases: ['kalite', 'örnekleme', 'stok kuralı', 'kural tanımları'], requiredPermission: 'WMS.QUALITY.RULES.VIEW' },
+      { title: 'sidebar.qualityDecisionCodes', titleFallback: 'Kalite Karar Kodları', href: '/warehouse/quality/decision-codes', searchAliases: ['kalite', 'karar', 'ret', 'karantina', 'neden kodu'], requiredPermission: 'WMS.QUALITY.DECISION_CODES.VIEW' },
     ] },
   ] },
   { title: 'sidebar.shipping', titleFallback: 'Sevkiyat İşlemleri', icon: shippingIcon, children: [

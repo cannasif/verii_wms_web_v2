@@ -26,6 +26,7 @@ export interface PagedAppDropdownProps<TItem, TValue extends string = string> ex
   toOption: (item: TItem) => AppDropdownOption<TValue>;
   staticOptions?: readonly AppDropdownOption<TValue>[];
   selectedOption?: AppDropdownOption<TValue>;
+  onOptionChange?: (option: AppDropdownOption<TValue> | undefined) => void;
   enabled?: boolean;
   pageSize?: number;
   minSearchLength?: number;
@@ -42,6 +43,7 @@ export function PagedAppDropdown<TItem, TValue extends string = string>({
   toOption,
   staticOptions = [],
   selectedOption,
+  onOptionChange,
   enabled = true,
   pageSize = 20,
   minSearchLength = 1,
@@ -106,6 +108,7 @@ export function PagedAppDropdown<TItem, TValue extends string = string>({
         const matched = options.find((option) => option.value === next);
         if (matched) setRememberedSelected(matched);
         else if (next == null || next === '') setRememberedSelected(undefined);
+        onOptionChange?.(matched);
         onValueChange(next);
       }}
       options={options}

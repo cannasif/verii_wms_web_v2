@@ -92,7 +92,8 @@
     "bulkSelectRemainderDecision": "Seleccione la decisión para la cantidad restante de un monto parcial.",
     "selectAtLeastOneLineDecision": "Seleccione una decisión para al menos una línea.",
     "partialDecisionDisabled": "Las decisiones de calidad parciales están deshabilitadas para esta sucursal. Decida sobre todas las líneas sujetas a control.",
-    "reasonCodeRequiredAllRows": "Se requiere un código de decisión para cada línea con decisiones de rechazo, cuarentena o devolución.",
+    "reasonCodeRequiredAllRows": "Seleccione un código definido para cada línea rechazada, en cuarentena o devuelta.",
+    "reasonNoteRequiredForCode": "Se requiere una nota para el código de decisión seleccionado.",
     "controlQuantityInvalid": "La cantidad inspeccionada GKK no es válida.",
     "controlQuantityRequired": "Introduzca la cantidad inspeccionada físicamente durante esta aprobación para '{{stockCode}}'. El sistema no completará este valor por usted.",
     "controlQuantityMustBePositive": "La cantidad inspeccionada de '{{stockCode}}' no puede ser negativa.",
@@ -199,7 +200,8 @@
       "remainderLabel": "Decisión del restante",
       "remainderPlaceholder": "Para el restante",
       "reasonCodeLabel": "Código de decisión",
-      "reasonCodePlaceholder": "Rechazo / cuarentena / devolución",
+      "reasonCodePlaceholder": "Seleccione un código de decisión definido",
+      "reasonNoteRequired": "Se requiere una nota para este código",
       "reasonLabel": "Motivo",
       "reasonPlaceholder": "Motivo breve",
       "applyButton": "Aplicar"
@@ -283,7 +285,8 @@
     "remainderLabel": "Restante ({{value}})",
     "remainderPlaceholder": "Decisión del restante",
     "reasonCodeLabel": "Código de decisión",
-    "reasonCodePlaceholder": "Rechazo / cuarentena / devolución",
+    "reasonCodePlaceholder": "Seleccione un código de decisión definido",
+    "reasonNoteRequired": "Se requiere una nota para este código",
     "reasonLabel": "Motivo",
     "reasonPlaceholder": "Descripción (opcional)",
     "confirmButton": "Listo"
@@ -405,6 +408,17 @@
       "templateDownloaded": "Plantilla de Excel descargada con los grupos de stock actuales.",
       "resultSummary": "{{created}} reglas creadas; {{skipped}} omitidas, {{failed}} fallidas."
     }
+  },
+  "decisionCodes": {
+    "title": "Códigos de decisión de calidad", "description": "Gestione motivos estándar de aceptación, rechazo, cuarentena y devolución por línea.",
+    "add": "Añadir código", "createTitle": "Crear código de decisión", "editTitle": "Editar código de decisión",
+    "dialogDescription": "Defina los tipos de decisión permitidos y si la nota es obligatoria.", "allDecisions": "Todos los tipos de decisión",
+    "yes": "Sí", "no": "No", "active": "Activo", "inactive": "Inactivo", "edit": "Editar", "delete": "Eliminar", "save": "Guardar", "saving": "Guardando...",
+    "created": "Código creado.", "updated": "Código actualizado.", "deleted": "Código eliminado.",
+    "saveFailed": "No se pudo guardar el código.", "deleteFailed": "No se pudo eliminar el código.",
+    "confirmDelete": "¿Eliminar el código {{code}}?", "required": "El código y el nombre son obligatorios.", "sortInvalid": "El orden debe ser un entero mayor o igual que cero.",
+    "columns": { "code": "Código", "name": "Nombre", "decision": "Tipo de decisión", "requiresNote": "Nota obligatoria", "sortOrder": "Orden", "status": "Estado", "actions": "Acciones" },
+    "fields": { "code": "Código de decisión", "name": "Nombre de decisión", "decision": "Decisión aplicable", "sortOrder": "Orden de visualización", "description": "Descripción", "requiresNote": "Exigir nota al seleccionar este código", "isActive": "Activo" }
   },
   "settings": {
     "eyebrow": "Calidad",

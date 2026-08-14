@@ -92,7 +92,8 @@
     "bulkSelectRemainderDecision": "Wählen Sie die Entscheidung für die verbleibende Menge eines Teilbetrags.",
     "selectAtLeastOneLineDecision": "Wählen Sie eine Entscheidung für mindestens eine Position.",
     "partialDecisionDisabled": "Teilweise Qualitätsentscheidungen sind für diese Filiale deaktiviert. Entscheiden Sie über alle prüfpflichtigen Positionen.",
-    "reasonCodeRequiredAllRows": "Für jede Position mit Ablehnungs-, Quarantäne- oder Rücksendeentscheidung ist ein Entscheidungscode erforderlich.",
+    "reasonCodeRequiredAllRows": "Wählen Sie für jede abgelehnte, quarantänisierte oder zurückgesendete Position einen definierten Entscheidungscode.",
+    "reasonNoteRequiredForCode": "Für den ausgewählten Entscheidungscode ist eine Notiz erforderlich.",
     "controlQuantityInvalid": "Die GKK-Prüfmenge ist ungültig.",
     "controlQuantityRequired": "Geben Sie für '{{stockCode}}' die bei dieser Freigabe tatsächlich geprüfte Menge ein. Das System füllt diesen Wert nicht automatisch aus.",
     "controlQuantityMustBePositive": "Die geprüfte Menge für '{{stockCode}}' darf nicht negativ sein.",
@@ -199,7 +200,8 @@
       "remainderLabel": "Restmengenentscheidung",
       "remainderPlaceholder": "Für den Rest",
       "reasonCodeLabel": "Entscheidungscode",
-      "reasonCodePlaceholder": "Ablehnen / Quarantäne / Rücksendung",
+      "reasonCodePlaceholder": "Definierten Entscheidungscode auswählen",
+      "reasonNoteRequired": "Für diesen Code ist eine Notiz erforderlich",
       "reasonLabel": "Begründung",
       "reasonPlaceholder": "Kurze Begründung",
       "applyButton": "Anwenden"
@@ -283,7 +285,8 @@
     "remainderLabel": "Rest ({{value}})",
     "remainderPlaceholder": "Restmengenentscheidung",
     "reasonCodeLabel": "Entscheidungscode",
-    "reasonCodePlaceholder": "Ablehnen / Quarantäne / Rücksendung",
+    "reasonCodePlaceholder": "Definierten Entscheidungscode auswählen",
+    "reasonNoteRequired": "Für diesen Code ist eine Notiz erforderlich",
     "reasonLabel": "Begründung",
     "reasonPlaceholder": "Beschreibung (optional)",
     "confirmButton": "Fertig"
@@ -405,6 +408,17 @@
       "templateDownloaded": "Excel-Vorlage mit den aktuellen Lagerartikelgruppen heruntergeladen.",
       "resultSummary": "{{created}} Regeln erstellt; {{skipped}} übersprungen, {{failed}} fehlgeschlagen."
     }
+  },
+  "decisionCodes": {
+    "title": "Qualitätsentscheidungscodes", "description": "Standardgründe für Annahme, Ablehnung, Quarantäne und Rückgabe je Position verwalten.",
+    "add": "Entscheidungscode hinzufügen", "createTitle": "Entscheidungscode erstellen", "editTitle": "Entscheidungscode bearbeiten",
+    "dialogDescription": "Legen Sie die zulässigen Entscheidungstypen und die Pflichtnotiz fest.", "allDecisions": "Alle Entscheidungstypen",
+    "yes": "Ja", "no": "Nein", "active": "Aktiv", "inactive": "Inaktiv", "edit": "Bearbeiten", "delete": "Löschen", "save": "Speichern", "saving": "Speichern...",
+    "created": "Entscheidungscode erstellt.", "updated": "Entscheidungscode aktualisiert.", "deleted": "Entscheidungscode gelöscht.",
+    "saveFailed": "Entscheidungscode konnte nicht gespeichert werden.", "deleteFailed": "Entscheidungscode konnte nicht gelöscht werden.",
+    "confirmDelete": "Entscheidungscode {{code}} löschen?", "required": "Code und Name sind erforderlich.", "sortInvalid": "Die Reihenfolge muss eine ganze Zahl ab null sein.",
+    "columns": { "code": "Code", "name": "Name", "decision": "Entscheidungstyp", "requiresNote": "Notiz erforderlich", "sortOrder": "Reihenfolge", "status": "Status", "actions": "Aktionen" },
+    "fields": { "code": "Entscheidungscode", "name": "Entscheidungsname", "decision": "Zulässige Entscheidung", "sortOrder": "Anzeigereihenfolge", "description": "Beschreibung", "requiresNote": "Notiz bei Auswahl dieses Codes verlangen", "isActive": "Aktiv" }
   },
   "settings": {
     "eyebrow": "Qualität",

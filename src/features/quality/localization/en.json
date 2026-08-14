@@ -92,7 +92,8 @@
     "bulkSelectRemainderDecision": "Select the decision for the remaining quantity for a partial amount.",
     "selectAtLeastOneLineDecision": "Select a decision for at least one line.",
     "partialDecisionDisabled": "Partial quality decisions are disabled for this branch. Decide on all lines subject to control.",
-    "reasonCodeRequiredAllRows": "A decision code is required for every line with reject, quarantine or return decisions.",
+    "reasonCodeRequiredAllRows": "Select a defined decision code for every rejected, quarantined or returned line.",
+    "reasonNoteRequiredForCode": "A note is required for the selected decision code.",
     "controlQuantityInvalid": "The GKK inspected quantity is invalid.",
     "controlQuantityRequired": "Enter the quantity you physically inspected during this approval for '{{stockCode}}'. The system will not fill this value for you.",
     "controlQuantityMustBePositive": "The inspected quantity for '{{stockCode}}' cannot be negative.",
@@ -263,7 +264,8 @@
       "remainderLabel": "Remainder decision",
       "remainderPlaceholder": "For the remainder",
       "reasonCodeLabel": "Decision code",
-      "reasonCodePlaceholder": "Reject / quarantine / return",
+      "reasonCodePlaceholder": "Select a defined decision code",
+      "reasonNoteRequired": "A note is required for this code",
       "reasonLabel": "Reason",
       "reasonPlaceholder": "Short reason",
       "applyButton": "Apply",
@@ -348,7 +350,8 @@
     "remainderLabel": "Remainder ({{value}})",
     "remainderPlaceholder": "Remainder decision",
     "reasonCodeLabel": "Decision code",
-    "reasonCodePlaceholder": "Reject / quarantine / return",
+    "reasonCodePlaceholder": "Select a defined decision code",
+    "reasonNoteRequired": "A note is required for this code",
     "reasonLabel": "Reason",
     "reasonPlaceholder": "Description (optional)",
     "confirmButton": "Done"
@@ -470,6 +473,23 @@
       "templateDownloaded": "Excel template downloaded with the current stock groups.",
       "resultSummary": "{{created}} rules created; {{skipped}} skipped, {{failed}} failed."
     }
+  },
+  "decisionCodes": {
+    "title": "Quality Decision Codes",
+    "description": "Manage standard acceptance, rejection, quarantine and return reasons selected per line during quality control.",
+    "add": "Add decision code",
+    "createTitle": "Create quality decision code",
+    "editTitle": "Edit quality decision code",
+    "dialogDescription": "Choose the decision types where the code can be used and whether a note is mandatory.",
+    "allDecisions": "All decision types",
+    "yes": "Yes", "no": "No", "active": "Active", "inactive": "Inactive",
+    "edit": "Edit", "delete": "Delete", "save": "Save", "saving": "Saving...",
+    "created": "Decision code created.", "updated": "Decision code updated.", "deleted": "Decision code deleted.",
+    "saveFailed": "Decision code could not be saved.", "deleteFailed": "Decision code could not be deleted.",
+    "confirmDelete": "Delete decision code {{code}}?",
+    "required": "Code and name are required.", "sortInvalid": "Sort order must be a whole number greater than or equal to zero.",
+    "columns": { "code": "Code", "name": "Name", "decision": "Decision type", "requiresNote": "Note required", "sortOrder": "Order", "status": "Status", "actions": "Actions" },
+    "fields": { "code": "Decision code", "name": "Decision name", "decision": "Applicable decision", "sortOrder": "Display order", "description": "Description", "requiresNote": "Require a note when this code is selected", "isActive": "Active" }
   },
   "settings": {
     "eyebrow": "Quality",

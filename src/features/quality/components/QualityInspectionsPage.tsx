@@ -88,7 +88,9 @@ type LineDraft = {
   decision: string;
   quantity: string;
   remainderDecision: string;
+  decisionCodeId: string;
   reasonCode: string;
+  decisionCodeRequiresNote: boolean;
   reasonNote: string;
   inspectedQuantity: string;
   targetLocationId?: number | null;
@@ -309,7 +311,9 @@ function emptyDraft(
     decision: defaultDecision,
     quantity: quantity > 0 ? String(quantity) : "",
     remainderDecision,
+    decisionCodeId: "",
     reasonCode: "",
+    decisionCodeRequiresNote: false,
     reasonNote: "",
     inspectedQuantity: "",
     targetLocationId,
@@ -575,8 +579,11 @@ function buildDispositionRequests(
   if (returned.length > 0 && parsed.length !== 1) {
     throw new Error(t("errors.returnedFullLineOnly", { stockCode: line.stockCode }));
   }
-  if (parsed.some((part) => part.decision !== "Accepted") && !draft.reasonCode.trim()) {
+  if (parsed.some((part) => part.decision !== "Accepted") && !Number(draft.decisionCodeId)) {
     throw new Error(t("errors.reasonCodeRequiredAllRows"));
+  }
+  if (draft.decisionCodeRequiresNote && !draft.reasonNote.trim()) {
+    throw new Error(t("errors.reasonNoteRequiredForCode"));
   }
   if (parsed.some((part) => (part.decision === "Rejected" || part.decision === "Quarantined") && !part.targetLocationId)) {
     throw new Error(t("errors.decisionDestinationRequired"));
@@ -586,7 +593,7 @@ function buildDispositionRequests(
     decision: part.decision,
     quantity: part.parsedQuantity,
     targetLocationId: part.targetLocationId,
-    reasonCode: draft.reasonCode.trim() || undefined,
+    decisionCodeId: part.decision === "Accepted" ? undefined : Number(draft.decisionCodeId) || undefined,
     note: draft.reasonNote.trim() || undefined,
   }));
 }
@@ -1127,7 +1134,9 @@ function InspectionDetailPanel({
   const [bulkQuantity, setBulkQuantity] = useState("");
   const [bulkRemainderDecision, setBulkRemainderDecision] =
     useState(defaultRemainder);
+  const [bulkDecisionCodeId, setBulkDecisionCodeId] = useState("");
   const [bulkReasonCode, setBulkReasonCode] = useState("");
+  const [bulkDecisionCodeRequiresNote, setBulkDecisionCodeRequiresNote] = useState(false);
   const [bulkReasonNote, setBulkReasonNote] = useState("");
   const [headerNote, setHeaderNote] = useState(detail.note ?? "");
   const [saving, setSaving] = useState(false);
@@ -1349,8 +1358,12 @@ function InspectionDetailPanel({
       toast.error(t("errors.bulkSelectAtLeastOneLine"));
       return;
     }
-    if (bulkDecision !== "Accepted" && !bulkReasonCode.trim()) {
+    if (bulkDecision !== "Accepted" && !Number(bulkDecisionCodeId)) {
       toast.error(t("errors.bulkReasonCodeRequired"));
+      return;
+    }
+    if (bulkDecisionCodeRequiresNote && !bulkReasonNote.trim()) {
+      toast.error(t("errors.reasonNoteRequiredForCode"));
       return;
     }
     const bulkQty = bulkQuantity.trim() ? parseQty(bulkQuantity) : null;
@@ -1419,7 +1432,9 @@ function InspectionDetailPanel({
                 ? "Rejected"
                 : defaultRemainder
               : bulkRemainderDecision,
+          decisionCodeId: bulkDecision === "Accepted" ? "" : bulkDecisionCodeId,
           reasonCode: bulkDecision === "Accepted" ? "" : bulkReasonCode.trim(),
+          decisionCodeRequiresNote: bulkDecision === "Accepted" ? false : bulkDecisionCodeRequiresNote,
           reasonNote: bulkReasonNote.trim(),
           inspectedQuantity: "",
           targetLocationId: defaultTargetForDecision(
@@ -1511,8 +1526,12 @@ function InspectionDetailPanel({
             draft.remainderDecision !== "Accepted"
           );
         })();
-      if (needsReason && !draft.reasonCode.trim()) {
+      if (needsReason && !Number(draft.decisionCodeId)) {
         toast.error(t("errors.reasonCodeRequiredAllRows"));
+        return false;
+      }
+      if (draft.decisionCodeRequiresNote && !draft.reasonNote.trim()) {
+        toast.error(t("errors.reasonNoteRequiredForCode"));
         return false;
       }
     }
@@ -1573,13 +1592,6 @@ function InspectionDetailPanel({
         const notes = distributionRows
           .map(({ draft }) => draft.reasonNote.trim())
           .filter(Boolean);
-        const reasonCodes = [
-          ...new Set(
-            distributionRows
-              .map(({ draft }) => draft.reasonCode.trim())
-              .filter(Boolean),
-          ),
-        ];
         const primaryDecision =
           dispositionRequests.find((part) => part.decision === "Accepted")?.decision
           ?? dispositionRequests[0]?.decision
@@ -1591,7 +1603,6 @@ function InspectionDetailPanel({
             note:
               [headerNote.trim(), ...notes].filter(Boolean).join(" · ") ||
               undefined,
-            reasonCode: reasonCodes[0] || undefined,
             rowVersion,
             dispositions: dispositionRequests,
             controlQuantities: controlRequests.filter((control) =>
@@ -1607,17 +1618,18 @@ function InspectionDetailPanel({
 
       const returnedGroups = new Map<
         string,
-        { reasonCode: string; lineIds: number[]; notes: string[] }
+        { decisionCodeId: number; lineIds: number[]; notes: string[] }
       >();
       for (const { line, draft } of returnedRows) {
-        const key = draft.reasonCode.trim();
+        const decisionCodeId = Number(draft.decisionCodeId);
+        const key = String(decisionCodeId);
         const existing = returnedGroups.get(key);
         if (existing) {
           existing.lineIds.push(line.id);
           if (draft.reasonNote.trim()) existing.notes.push(draft.reasonNote.trim());
         } else {
           returnedGroups.set(key, {
-            reasonCode: key,
+            decisionCodeId,
             lineIds: [line.id],
             notes: draft.reasonNote.trim() ? [draft.reasonNote.trim()] : [],
           });
@@ -1631,7 +1643,7 @@ function InspectionDetailPanel({
             note:
               [headerNote.trim(), ...group.notes].filter(Boolean).join(" · ") ||
               undefined,
-            reasonCode: group.reasonCode || undefined,
+            decisionCodeId: group.decisionCodeId,
             lineIds: group.lineIds,
             controlQuantities: controlRequests.filter((control) =>
               group.lineIds.includes(control.lineId),
@@ -1914,6 +1926,9 @@ function InspectionDetailPanel({
                     value={bulkDecision || null}
                     onValueChange={(value) => {
                       setBulkDecision(value);
+                      setBulkDecisionCodeId("");
+                      setBulkReasonCode("");
+                      setBulkDecisionCodeRequiresNote(false);
                       if (value === bulkRemainderDecision) {
                         const next = remainderOptionsFor(
                           value,
@@ -1955,11 +1970,33 @@ function InspectionDetailPanel({
                 </label>
                 <label className="wms-ops-quality-bulk__field">
                   <span>{t("detail.bulk.reasonCodeLabel")}</span>
-                  <AppInput
-                    value={bulkReasonCode}
-                    onChange={(e) => setBulkReasonCode(e.target.value)}
+                  <PagedAppDropdown
+                    queryKey={["quality-decision-code-bulk", detail.header.branchCode, bulkDecision]}
+                    fetchPage={(request) => qualityApi.decisionCodeOptions(request, detail.header.branchCode, bulkDecision || "Accepted")}
+                    toOption={(item) => ({
+                      value: String(item.id),
+                      label: `${item.code} · ${item.name}`,
+                      description: item.requiresNote ? t("detail.bulk.reasonNoteRequired") : undefined,
+                      meta: item,
+                    })}
+                    value={bulkDecisionCodeId || null}
+                    selectedOption={bulkDecisionCodeId && bulkReasonCode ? {
+                      value: bulkDecisionCodeId,
+                      label: bulkReasonCode,
+                    } : undefined}
+                    onValueChange={(value) => {
+                      setBulkDecisionCodeId(value);
+                    }}
+                    onOptionChange={(option) => {
+                      const item = option?.meta as { code?: string; name?: string; requiresNote?: boolean } | undefined;
+                      setBulkReasonCode(item?.code && item?.name ? `${item.code} · ${item.name}` : "");
+                      setBulkDecisionCodeRequiresNote(Boolean(item?.requiresNote));
+                    }}
                     placeholder={t("detail.bulk.reasonCodePlaceholder")}
                     className="wms-ops-quality-field wms-ops-quality-bulk__control"
+                    searchFields={["code", "name"]}
+                    enabled={Boolean(bulkDecision)}
+                    portalContainer={null}
                   />
                 </label>
                 <label className="wms-ops-quality-bulk__field">
@@ -2869,6 +2906,10 @@ function LineDecisionPopover({
   const defaultAcceptedWarehouseId = defaultAcceptedDestination?.warehouseId ?? null;
   const defaultRejectedWarehouseId = defaultRejectedDestination?.warehouseId ?? null;
   const advancedDispositions = draft.dispositions ?? [];
+  const decisionCodeFilter = advancedDispositions.find((part) => part.decision !== "Accepted")?.decision
+    ?? (draft.decision !== "Accepted" ? draft.decision : hasRemainder && draft.remainderDecision !== "Accepted"
+      ? draft.remainderDecision
+      : draft.decision || "Accepted");
   const allocatedQuantity = roundQty(
     advancedDispositions.reduce((sum, part) => {
       const quantity = parseQty(part.quantity);
@@ -2900,11 +2941,22 @@ function LineDecisionPopover({
       toast.error(message(error, t("errors.quantityDistributionInvalid")));
     }
   };
-  const patchDisposition = (key: string, patch: Partial<DispositionDraft>) =>
+  const patchDisposition = (
+    key: string,
+    patch: Partial<DispositionDraft>,
+    resetDecisionCode = false,
+  ) =>
     onChange({
       dispositions: advancedDispositions.map((part) =>
         part.key === key ? { ...part, ...patch } : part,
       ),
+      ...(resetDecisionCode
+        ? {
+            decisionCodeId: "",
+            reasonCode: "",
+            decisionCodeRequiresNote: false,
+          }
+        : {}),
     });
   const addDisposition = () =>
     onChange({
@@ -3097,6 +3149,9 @@ function LineDecisionPopover({
                     )[0]?.value;
                     onChange({
                       decision: value,
+                      decisionCodeId: "",
+                      reasonCode: "",
+                      decisionCodeRequiresNote: false,
                       targetLocationId: defaultTargetForDecision(
                         value,
                         defaultAcceptedLocationId,
@@ -3238,7 +3293,7 @@ function LineDecisionPopover({
                               fallbackQuarantineWarehouseId,
                               defaultRejectedWarehouseId,
                             ),
-                          })}
+                          }, true)}
                           options={options}
                           placeholder={t("linePopover.decisionPlaceholder")}
                           className="wms-ops-quality-field !h-10 !min-h-10 !text-xs"
@@ -3363,11 +3418,34 @@ function LineDecisionPopover({
                 <span className="text-xs font-semibold text-slate-500">
                   {t("linePopover.reasonCodeLabel")}
                 </span>
-                <AppInput
-                  value={draft.reasonCode}
-                  onChange={(e) => onChange({ reasonCode: e.target.value })}
+                <PagedAppDropdown
+                  queryKey={["quality-decision-code-line", branchCode, line.id, decisionCodeFilter]}
+                  fetchPage={(request) => qualityApi.decisionCodeOptions(request, branchCode, decisionCodeFilter)}
+                  toOption={(item) => ({
+                    value: String(item.id),
+                    label: `${item.code} · ${item.name}`,
+                    description: item.requiresNote ? t("linePopover.reasonNoteRequired") : undefined,
+                    meta: item,
+                  })}
+                  value={draft.decisionCodeId || null}
+                  selectedOption={draft.decisionCodeId && draft.reasonCode ? {
+                    value: draft.decisionCodeId,
+                    label: draft.reasonCode,
+                  } : undefined}
+                  onValueChange={(value) => onChange({ decisionCodeId: value })}
+                  onOptionChange={(option) => {
+                    const item = option?.meta as { code?: string; name?: string; requiresNote?: boolean } | undefined;
+                    onChange({
+                      reasonCode: item?.code && item?.name ? `${item.code} · ${item.name}` : "",
+                      decisionCodeRequiresNote: Boolean(item?.requiresNote),
+                    });
+                  }}
                   placeholder={t("linePopover.reasonCodePlaceholder")}
-                  className="wms-ops-quality-field h-10 text-sm"
+                  className="wms-ops-quality-field !h-10 !min-h-10 !text-sm"
+                  searchFields={["code", "name"]}
+                  enabled={Boolean(decisionCodeFilter)}
+                  portalContainer={null}
+                  contentClassName="!z-[5100]"
                 />
               </label>
               <label className="block space-y-1 text-sm">
