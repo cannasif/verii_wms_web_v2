@@ -43,6 +43,10 @@ import {
   QualityDecisionFlowOverlay,
   QualityReceiptCreatedSuccessPanel,
 } from "./QualityDecisionFlowScreens";
+import {
+  QualityInspectionLineImageGallery,
+  QualityInspectionLineImageGalleryDialog,
+} from "./QualityInspectionLineImageGallery";
 import { mergeQualityInspectionStatusFilters } from "../utils/quality-inspection-list-filters";
 import { requiresQualityDat } from "../utils/quality-dat-routing";
 import {
@@ -1056,6 +1060,7 @@ function InspectionDetailPanel({
   decided: () => void;
 }): ReactElement {
   const { t } = useModuleTranslation("quality");
+  const { can } = usePermissionAccess();
   const navigate = useNavigate();
   const actionable = useMemo(
     () => detail.lines.filter(isActionableLine),
@@ -2122,7 +2127,13 @@ function InspectionDetailPanel({
                         })}
                       />
                     ) : (
-                      <span className="text-xs text-slate-400">—</span>
+                      <QualityInspectionLineImageGalleryDialog
+                        inspectionId={detail.header.id}
+                        lineId={line.id}
+                        canView={can("WMS.QUALITY.INSPECTIONS.IMAGES.VIEW")}
+                        canUpload={can("WMS.QUALITY.INSPECTIONS.IMAGES.UPLOAD")}
+                        canDelete={can("WMS.QUALITY.INSPECTIONS.IMAGES.DELETE")}
+                      />
                     )}
                   </td>
                   <td className="wms-ops-quality-lines__cell p-2.5 align-middle">
@@ -2246,6 +2257,7 @@ function InspectionDetailPanel({
                   <td className="wms-ops-quality-lines__cell p-2.5 align-middle text-center">
                     {active && !final ? (
                       <LineDecisionPopover
+                        inspectionId={detail.header.id}
                         open={openLineId === line.id}
                         onOpenChange={(open) =>
                           setOpenLineId(open ? line.id : null)
@@ -2310,6 +2322,9 @@ function InspectionDetailPanel({
                             patchDraft(member.id, memberPatch);
                           }
                         }}
+                        canViewImages={can("WMS.QUALITY.INSPECTIONS.IMAGES.VIEW")}
+                        canUploadImages={can("WMS.QUALITY.INSPECTIONS.IMAGES.UPLOAD")}
+                        canDeleteImages={can("WMS.QUALITY.INSPECTIONS.IMAGES.DELETE")}
                       />
                     ) : (
                       <span className="text-xs text-slate-400">—</span>
@@ -2849,6 +2864,7 @@ function LotSerialHoverCell({
 }
 
 function LineDecisionPopover({
+  inspectionId,
   open,
   onOpenChange,
   options,
@@ -2862,7 +2878,11 @@ function LineDecisionPopover({
   line,
   draft,
   onChange,
+  canViewImages,
+  canUploadImages,
+  canDeleteImages,
 }: {
+  inspectionId: number;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   options: Array<{ value: string; label: string }>;
@@ -2876,6 +2896,9 @@ function LineDecisionPopover({
   line: QualityInspectionLine;
   draft: LineDraft;
   onChange: (patch: Partial<LineDraft>) => void;
+  canViewImages: boolean;
+  canUploadImages: boolean;
+  canDeleteImages: boolean;
 }): ReactElement {
   const { t } = useModuleTranslation("quality");
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -3009,6 +3032,13 @@ function LineDecisionPopover({
     };
   }, [open, updatePosition, hasRemainder]);
 
+  useLayoutEffect(() => {
+    if (!open || !panelRef.current || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => updatePosition());
+    observer.observe(panelRef.current);
+    return () => observer.disconnect();
+  }, [open, updatePosition]);
+
   useEffect(() => {
     if (!open) return;
     const onPointerDown = (event: PointerEvent) => {
@@ -3018,7 +3048,7 @@ function LineDecisionPopover({
         triggerRef.current?.contains(target) ||
         panelRef.current?.contains(target) ||
         target.closest(
-          '.wms-ops-list-select-content, .wms-floating-surface, [data-radix-popper-content-wrapper], [role="listbox"]',
+          '.wms-ops-list-select-content, .wms-floating-surface, [data-radix-popper-content-wrapper], [data-wms-image-lightbox], [role="listbox"]',
         )
       ) {
         return;
@@ -3115,6 +3145,13 @@ function LineDecisionPopover({
                   </span>
                 </label>
               </div>
+              <QualityInspectionLineImageGallery
+                inspectionId={inspectionId}
+                lineId={line.id}
+                canView={canViewImages}
+                canUpload={canUploadImages}
+                canDelete={canDeleteImages}
+              />
               <div className="flex items-center justify-between gap-2 rounded-lg border border-cyan-500/20 bg-cyan-500/[0.04] p-2">
                 <div>
                   <div className="text-xs font-bold">{t("linePopover.distributionTitle")}</div>
