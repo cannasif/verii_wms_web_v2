@@ -174,20 +174,19 @@ function sumInspectedQuantity(lines: QualityInspectionLine[]): number {
 }
 
 function totalMinimumControlQuantity(line: QualityInspectionLine): number {
-  const controlLotQuantity =
-    line.decision === "Quarantined" ? line.quarantineQuantity : line.quantity;
   return roundQty(
-    Math.min(Math.max(0, line.sampleQuantity), Math.max(0, controlLotQuantity)),
+    Math.min(Math.max(0, line.sampleQuantity), Math.max(0, line.quantity)),
   );
 }
 
 function minimumControlQuantity(line: QualityInspectionLine): number {
   return roundQty(
-    Math.min(
-      Math.max(0, totalMinimumControlQuantity(line) - line.inspectedQuantity),
-      actionableQuantity(line),
-    ),
+    Math.max(0, totalMinimumControlQuantity(line) - line.inspectedQuantity),
   );
+}
+
+function remainingInspectableQuantity(line: QualityInspectionLine): number {
+  return roundQty(Math.max(0, line.quantity - line.inspectedQuantity));
 }
 
 /** Backend ActionableQuantity ile aynı mantık. */
@@ -324,10 +323,11 @@ function buildControlQuantityRequest(
   t: TFunction,
 ): QualityInspectionControlQuantityRequest {
   const required = minimumControlQuantity(line);
-  const maximum = roundQty(actionableQuantity(line));
-  const inspected = roundQty(
-    parseQty(draft.inspectedQuantity || String(required)),
-  );
+  const maximum = remainingInspectableQuantity(line);
+  if (!draft.inspectedQuantity.trim()) {
+    throw new Error(t("errors.controlQuantityRequired", { stockCode: line.stockCode }));
+  }
+  const inspected = roundQty(parseQty(draft.inspectedQuantity));
   if (!Number.isFinite(inspected) || inspected < 0) {
     throw new Error(t("errors.controlQuantityMustBePositive", { stockCode: line.stockCode }));
   }
@@ -958,30 +958,6 @@ export function QualityInspectionsPage({
           </div>
         ),
       },
-      {
-        key: "inspectedQuantity",
-        label: t("list.columns.controlQuantity"),
-        sortable: true,
-        filterable: true,
-        searchable: false,
-        render: (r) => {
-          const required = Number(r.requiredInspectionQuantity ?? 0);
-          const inspected = Number(r.inspectedQuantity ?? 0);
-          const percentage = required > 0
-            ? Math.round((inspected / required) * 100)
-            : 0;
-          return (
-            <div className="min-w-24 text-right font-mono text-xs">
-              <strong className="block text-foreground">
-                {formatProjectNumber(inspected)} / {formatProjectNumber(required)}
-              </strong>
-              <span className={inspected + QTY_EPS >= required ? "text-emerald-600" : "text-amber-600"}>
-                {t("list.controlProgress", { percentage })}
-              </span>
-            </div>
-          );
-        },
-      },
     ];
     },
     [can, expandedId, loading, moduleReady, prioritizableStatuses, priorityLoading, t, toggle, toggleInspectionPriority],
@@ -1445,7 +1421,7 @@ function InspectionDetailPanel({
               : bulkRemainderDecision,
           reasonCode: bulkDecision === "Accepted" ? "" : bulkReasonCode.trim(),
           reasonNote: bulkReasonNote.trim(),
-          inspectedQuantity: String(minimumControlQuantity(line)),
+          inspectedQuantity: "",
           targetLocationId: defaultTargetForDecision(
             bulkDecision,
             lineAcceptedDestination?.locationId ?? null,
@@ -2151,7 +2127,9 @@ function InspectionDetailPanel({
                     <span className="block font-semibold">{formatProjectNumber(inspectedQty)}</span>
                     <span className="block text-[0.65rem] text-slate-500">
                       {t("detail.table.inspectedProgress", {
-                        value: sampleQty > 0 ? Math.round((inspectedQty / sampleQty) * 100) : 0,
+                        value: sampleQty > 0
+                          ? Math.min(100, Math.round((inspectedQty / sampleQty) * 100))
+                          : 0,
                       })}
                     </span>
                   </td>
@@ -2871,7 +2849,7 @@ function LineDecisionPopover({
   const remaining = actionableQuantity(line);
   const totalRequiredControl = totalMinimumControlQuantity(line);
   const requiredControl = minimumControlQuantity(line);
-  const inspectedThisDecision = draft.inspectedQuantity || String(requiredControl);
+  const inspectedThisDecision = draft.inspectedQuantity;
   const serial = isSerialTracked(line);
   const qty = parseQty(draft.quantity);
   const hasRemainder =
@@ -3054,7 +3032,7 @@ function LineDecisionPopover({
                       {t("linePopover.controlQuantitySummary", {
                         totalRequired: formatProjectNumber(totalRequiredControl),
                         required: formatProjectNumber(requiredControl),
-                        remaining: formatProjectNumber(remaining),
+                        lotQuantity: formatProjectNumber(line.quantity),
                         previous: formatProjectNumber(line.inspectedQuantity),
                       })}
                     </div>
@@ -3072,6 +3050,7 @@ function LineDecisionPopover({
                   <AppInput
                     value={inspectedThisDecision}
                     onChange={(event) => onChange({ inspectedQuantity: event.target.value })}
+                    placeholder={formatProjectNumber(requiredControl)}
                     inputMode="decimal"
                     className="wms-ops-quality-field h-10 text-sm"
                   />
@@ -3159,6 +3138,9 @@ function LineDecisionPopover({
                   disabled={serial || draft.decision === "Returned"}
                   className="wms-ops-quality-field h-10 text-sm"
                 />
+                <span className="block text-[0.65rem] leading-relaxed text-slate-500">
+                  {t("linePopover.decisionQuantityHelp")}
+                </span>
               </label>
               {draft.decision && draft.decision !== "Returned" ? (
                 <div className="space-y-1">
