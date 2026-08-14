@@ -4,29 +4,31 @@ import { authApi } from '../api/auth-api';
 import { useAuthStore } from '@/stores/auth-store';
 import { getUserFromToken } from '@/utils/jwt';
 import type { LoginRequest, Branch } from '../types/auth';
+import { requireSuccessfulLogin } from '../utils/login-flow';
 
 export const useLogin = (branches?: Branch[]) => {
   const navigate = useNavigate();
   const setAuth = useAuthStore((state) => state.setAuth);
 
   return useMutation({
-    mutationFn: (data: LoginRequest) => {
+    mutationFn: async (data: LoginRequest) => {
       const selectedBranch = branches?.find((branch) => branch.id === data.branchId);
       const branchCode = selectedBranch?.code?.trim();
       if (!branchCode) {
-        throw new Error('Seçilen şubenin kodu geçersiz.');
+        throw new Error();
       }
-      return authApi.login(data, branchCode);
+      const response = await authApi.login(data, branchCode);
+      const session = requireSuccessfulLogin(response);
+      const user = getUserFromToken(session.accessToken);
+      if (!user) {
+        throw new Error(response.message?.trim() ?? '');
+      }
+
+      return { session, user, selectedBranch: selectedBranch ?? null };
     },
-    onSuccess: (response, variables) => {
-      if (response.success && response.data) {
-        const user = getUserFromToken(response.data.accessToken);
-        if (user) {
-          const selectedBranch = branches?.find((b) => b.id === variables.branchId) || null;
-          setAuth(user, response.data.accessToken, selectedBranch);
-          navigate('/');
-        }
-      }
+    onSuccess: ({ session, user, selectedBranch }) => {
+      setAuth(user, session.accessToken, selectedBranch);
+      navigate('/');
     },
   });
 };

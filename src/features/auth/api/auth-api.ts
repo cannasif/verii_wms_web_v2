@@ -22,7 +22,7 @@ export const authApi = {
         password: data.password,
         branchCode,
       },
-      { skipAuth: true, skipSessionExpiredOn401: true },
+      { skipAuth: true, skipSessionExpiredOn401: true, timeout: 20_000 },
     );
     return response;
   },

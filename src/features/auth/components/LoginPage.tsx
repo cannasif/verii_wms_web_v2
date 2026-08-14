@@ -30,6 +30,7 @@ import TelegramIcon from '@hugeicons/core-free-icons/TelegramIcon';
 import TelephoneIcon from '@hugeicons/core-free-icons/TelephoneIcon';
 import WhatsappIcon from '@hugeicons/core-free-icons/WhatsappIcon';
 import { SessionRecoveryPage } from './SessionRecoveryPage';
+import { resolveSingleBranchId } from '../utils/login-flow';
 
 export function LoginPage(): React.JSX.Element {
   const { t, i18n } = useTranslation('common');
@@ -63,6 +64,22 @@ export function LoginPage(): React.JSX.Element {
       branchId: '',
     },
   });
+
+  const visibleError = form.formState.errors.root?.message
+    ?? form.formState.errors.branchId?.message
+    ?? form.formState.errors.identifier?.message
+    ?? form.formState.errors.password?.message;
+
+  useEffect(() => {
+    const singleBranchId = resolveSingleBranchId(branches);
+    if (!singleBranchId || form.getValues('branchId')) return;
+
+    form.setValue('branchId', singleBranchId, {
+      shouldDirty: false,
+      shouldTouch: false,
+      shouldValidate: form.formState.submitCount > 0,
+    });
+  }, [branches, form, form.formState.submitCount]);
 
   useEffect(() => {
     if (searchParams.get('sessionExpired') !== 'true') {
@@ -100,7 +117,11 @@ export function LoginPage(): React.JSX.Element {
         const status = isAxiosError(error) ? error.response?.status : undefined;
         const raw = (error.message ?? '').trim();
         const message =
-          status === 401 ? (raw || t('auth.login.wrongCredentials')) : (raw || t('auth.login.loginError'));
+          status === 401
+            ? (raw || t('auth.login.wrongCredentials'))
+            : isAxiosError(error) && !error.response
+              ? t('auth.login.connectionError')
+              : (raw || t('auth.login.loginError'));
         form.setError('root', { type: 'server', message });
       },
     });
@@ -162,6 +183,25 @@ export function LoginPage(): React.JSX.Element {
 
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 sm:space-y-4" noValidate>
+                  {visibleError ? (
+                    <div
+                      data-testid="login-error-summary"
+                      role="alert"
+                      aria-live="assertive"
+                      className="flex items-start gap-3 rounded-xl border border-red-400/45 bg-red-950/45 px-3.5 py-3 text-left shadow-[0_0_18px_rgba(248,113,113,0.12)]"
+                    >
+                      <TriangleAlert className="mt-0.5 size-5 shrink-0 text-red-300" aria-hidden />
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-red-200">
+                          {form.formState.errors.root
+                            ? t('auth.login.loginFailedTitle')
+                            : t('auth.login.formIncompleteTitle')}
+                        </p>
+                        <p className="mt-0.5 text-xs leading-relaxed text-red-100/90">{visibleError}</p>
+                      </div>
+                    </div>
+                  ) : null}
+
                   <FormField
                     control={form.control}
                     name="branchId"
@@ -174,7 +214,13 @@ export function LoginPage(): React.JSX.Element {
                               size={18}
                             />
                           </div>
-                          <Select onValueChange={field.onChange} value={field.value}>
+                          <Select
+                            onValueChange={(value) => {
+                              form.clearErrors('root');
+                              field.onChange(value);
+                            }}
+                            value={field.value}
+                          >
                             <FormControl>
                               <SelectTrigger
                                 data-testid="login-branch"
@@ -291,11 +337,7 @@ export function LoginPage(): React.JSX.Element {
                             </button>
                           </div>
                           <div className="min-h-[18px]">
-                            {form.formState.errors.root ? (
-                              <p className="text-xs text-red-400" role="alert">
-                                {form.formState.errors.root.message}
-                              </p>
-                            ) : fieldState.error ? (
+                            {fieldState.error ? (
                               <FormMessage className="text-xs text-red-400" />
                             ) : capsLockActive ? (
                               <div className="mt-1 flex w-fit items-center gap-1 rounded-md border border-amber-400/30 bg-amber-400/10 px-2 py-1 text-xs text-amber-300">
@@ -323,8 +365,14 @@ export function LoginPage(): React.JSX.Element {
                     type="submit"
                     className="auth-login-submit mt-2 h-12 w-full rounded-xl bg-linear-to-r from-cyan-600 via-blue-600 to-orange-400 text-sm font-semibold uppercase tracking-wide text-white transition-all duration-300 hover:brightness-105 hover:shadow-[0_0_16px_rgba(56,132,246,0.30)]"
                     disabled={isPending}
+                    aria-busy={isPending}
                   >
-                    {isPending ? t('auth.login.loggingIn') : t('auth.login.loginButton')}
+                    {isPending ? (
+                      <span className="inline-flex items-center gap-2">
+                        <span className="size-4 animate-spin rounded-full border-2 border-white/40 border-r-white" aria-hidden />
+                        {t('auth.login.loggingIn')}
+                      </span>
+                    ) : t('auth.login.loginButton')}
                   </Button>
                 </form>
               </Form>
