@@ -17,22 +17,22 @@ describe('foldTurkishSearch', () => {
 });
 
 describe('toTurkishApiSearch', () => {
-  it('maps Turkish/English I variants to Latin ADMIN for Administrator', () => {
-    assert.equal(toTurkishApiSearch('ADMİN'), 'ADMIN');
-    assert.equal(toTurkishApiSearch('admin'), 'ADMIN');
-    assert.equal(toTurkishApiSearch('Admin'), 'ADMIN');
+  it('preserves Turkish and English I variants for server-side collation', () => {
+    assert.equal(toTurkishApiSearch('ADMİN'), 'ADMİN');
+    assert.equal(toTurkishApiSearch('admin'), 'admin');
+    assert.equal(toTurkishApiSearch('Admin'), 'Admin');
     assert.equal(toTurkishApiSearch('ADMIN'), 'ADMIN');
   });
 
-  it('folds DİGİ / digi to DIGI for ERP-style codes', () => {
-    assert.equal(toTurkishApiSearch('DİGİ'), 'DIGI');
-    assert.equal(toTurkishApiSearch('digi'), 'DIGI');
+  it('does not turn dotted Turkish text into a different word', () => {
+    assert.equal(toTurkishApiSearch('SABİT'), 'SABİT');
+    assert.equal(toTurkishApiSearch('sabit'), 'sabit');
+    assert.equal(toTurkishApiSearch('  sabit  '), 'sabit');
   });
 
-  it('preserves ğüşöç so Turkish names still match', () => {
-    assert.equal(toTurkishApiSearch('Erdoğan'), 'ERDOĞAN');
-    assert.equal(toTurkishApiSearch('erdoğan'), 'ERDOĞAN');
-    assert.equal(toTurkishApiSearch('işlem'), 'IŞLEM');
+  it('preserves all remaining Turkish characters', () => {
+    assert.equal(toTurkishApiSearch('Erdoğan'), 'Erdoğan');
+    assert.equal(toTurkishApiSearch('işlem'), 'işlem');
   });
 });
 

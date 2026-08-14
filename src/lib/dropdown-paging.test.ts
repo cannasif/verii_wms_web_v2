@@ -31,4 +31,16 @@ describe('buildDropdownPagedBody', () => {
     expect(searching.searchFields).toEqual(['erpStockCode', 'stockName']);
     expect(idle.searchFields).toBeUndefined();
   });
+
+  it('limits supplier lookup search to customer code and name', () => {
+    const body = buildDropdownPagedBody({
+      pageNumber: 1,
+      pageSize: 20,
+      search: 'sabit',
+      sortBy: 'customerCode',
+    });
+
+    expect(body.search).toBe('sabit');
+    expect(body.searchFields).toEqual(['customerCode', 'customerName']);
+  });
 });

@@ -20,31 +20,15 @@ export function foldTurkishSearch(value: string): string {
 }
 
 /**
- * API araması:
- * - İ/ı/I/i → Latin I (ADMİN ≈ ADMIN ≈ Administrator)
- * - ğüşöç korunur (Erdoğan ≈ ERDOĞAN)
- * - tr-TR upper kullanılmaz; yoksa "admin" → "ADMİN" olur ve English isimlerde kırılır
+ * API aramasında kullanıcının yazdığı metni korur.
+ *
+ * Türkçe i/İ ile ı/I aynı harf değildir. Metni istemcide tek bir büyük harf
+ * biçimine zorlamak "sabit" aramasını "SABIT" yaparak "SABİT" kaydını
+ * kaçırıyordu. Kültür ve collation kuralları API/veritabanı sorumluluğudur;
+ * istemci yalnızca dış boşlukları temizler.
  */
 export function toTurkishApiSearch(value: string): string {
-  const trimmed = value.trim();
-  if (!trimmed) return '';
-
-  const iNormalized = trimmed
-    .replace(/İ/g, 'i')
-    .replace(/I/g, 'i')
-    .replace(/ı/g, 'i');
-
-  const lower = iNormalized.toLocaleLowerCase('tr-TR');
-
-  let out = '';
-  for (const ch of lower) {
-    if (ch === 'i') {
-      out += 'I';
-      continue;
-    }
-    out += ch.toLocaleUpperCase('tr-TR');
-  }
-  return out;
+  return value.trim();
 }
 
 /** Enter ile rozet ekler; Türkçe katlamaya göre yinelenenleri atlar. */
