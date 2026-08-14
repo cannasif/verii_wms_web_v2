@@ -144,7 +144,7 @@ export interface ProductionTaskStartOptions {
 }
 export interface WarehouseTransferReturnSetting {
   warehouseId: number;
-  defaultTransferReturnLocationId?: number;
+  defaultProductionTransferReturnLocationId?: number;
   defaultProductionTransferLocationId?: number;
   productionPickingStagingLocationId?: number;
   autoPickWithoutConfirmMaxQuantity?: number;
@@ -512,14 +512,14 @@ export const productionTransferApi = {
     unwrap(await api.get<Envelope<WarehouseTransferReturnSetting>>('/api/production-transfers/warehouse-return-setting', { params: { warehouseId } })),
   updateReturnSetting: async (
     warehouseId: number,
-    defaultTransferReturnLocationId?: number,
+    defaultProductionTransferReturnLocationId?: number,
     defaultProductionTransferLocationId?: number,
     productionPickingStagingLocationId?: number,
     autoPickWithoutConfirmMaxQuantity?: number | null,
   ): Promise<WarehouseTransferReturnSetting> =>
     unwrap(await api.put<Envelope<WarehouseTransferReturnSetting>>('/api/production-transfers/warehouse-return-setting', {
       warehouseId,
-      defaultTransferReturnLocationId: defaultTransferReturnLocationId || null,
+      defaultProductionTransferReturnLocationId: defaultProductionTransferReturnLocationId || null,
       defaultProductionTransferLocationId: defaultProductionTransferLocationId || null,
       productionPickingStagingLocationId: productionPickingStagingLocationId || null,
       autoPickWithoutConfirmMaxQuantity: autoPickWithoutConfirmMaxQuantity ?? null,

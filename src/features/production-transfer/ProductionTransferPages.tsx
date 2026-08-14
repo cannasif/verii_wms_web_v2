@@ -519,7 +519,7 @@ function TransferReturnLocationPanel({branchCode}:{branchCode:string}){
   useEffect(()=>{
     if(!warehouseId){setReturnLocationValue(null);setProductionLocationValue(null);setPickingStagingLocationValue(null);setAutoPickThreshold('');return;}
     void productionTransferApi.returnSetting(warehouseId).then(x=>{
-      setReturnLocationValue(x.defaultTransferReturnLocationId?String(x.defaultTransferReturnLocationId):null);
+      setReturnLocationValue(x.defaultProductionTransferReturnLocationId?String(x.defaultProductionTransferReturnLocationId):null);
       setProductionLocationValue(x.defaultProductionTransferLocationId?String(x.defaultProductionTransferLocationId):null);
       setPickingStagingLocationValue(x.productionPickingStagingLocationId?String(x.productionPickingStagingLocationId):null);
       setAutoPickThreshold(
@@ -550,7 +550,7 @@ function TransferReturnLocationPanel({branchCode}:{branchCode:string}){
         pickingStagingLocationValue?Number(pickingStagingLocationValue):undefined,
         parsedThreshold,
       );
-      setReturnLocationValue(result.defaultTransferReturnLocationId?String(result.defaultTransferReturnLocationId):null);
+      setReturnLocationValue(result.defaultProductionTransferReturnLocationId?String(result.defaultProductionTransferReturnLocationId):null);
       setProductionLocationValue(result.defaultProductionTransferLocationId?String(result.defaultProductionTransferLocationId):null);
       setPickingStagingLocationValue(result.productionPickingStagingLocationId?String(result.productionPickingStagingLocationId):null);
       setAutoPickThreshold(
@@ -566,7 +566,7 @@ function TransferReturnLocationPanel({branchCode}:{branchCode:string}){
     code="LOC_04"
     icon={<Warehouse className="size-4" strokeWidth={1.75}/>}
     title="Depo varsayılan üretim transfer rafları"
-    description="Hedef raf satırda seçilmemişse üretim transfer rafı otomatik kullanılır. İptal iade rafı yalnız geri dönüş operasyonlarında kullanılır."
+    description="Üretim hedef rafı ve üretim iptal/iade rafı yalnız üretim transferi akışında kullanılır; normal depolar arası transfer ayarlarını değiştirmez. İptal/iade görevi açıldığında seçilen iade rafı satırlara otomatik önerilir ve görevde değiştirilebilir."
   >
     <div className="grid items-end gap-4 xl:grid-cols-[1fr_1fr_1fr_1fr_auto]">
       <PolicyField label="Depo">
@@ -574,17 +574,26 @@ function TransferReturnLocationPanel({branchCode}:{branchCode:string}){
           <PagedAppDropdown<WarehouseOption> queryKey={['production-location-warehouse',branchCode]} fetchPage={r=>warehouseTransferApi.warehouses(r,branchCode)} toOption={x=>({value:String(x.id),label:`${x.warehouseCode} · ${x.warehouseName}`})} value={warehouseValue} onValueChange={setWarehouseValue} placeholder="Depo seçin" searchable className={OPS_SELECT_TRIGGER_CLASS}/>
         </div>
       </PolicyField>
-      <PolicyField label="Toplama sanal rafı">
+      <PolicyField
+        label="Toplama sanal rafı"
+        hint="Depo görevlisinin üretim için topladığı ürünler, teslim alınana veya iade edilene kadar bu bekleme rafında tutulur."
+      >
         <div className="wms-ops-field-shell">
           <PagedAppDropdown<LocationOption> queryKey={['production-picking-staging-location',warehouseId]} fetchPage={r=>warehouseTransferApi.locations(r,warehouseId)} toOption={x=>({value:String(x.id),label:`${x.code} · ${x.name}`})} enabled={warehouseId>0} dependencies={[warehouseId]} value={pickingStagingLocationValue} onValueChange={setPickingStagingLocationValue} placeholder="Raf seçin" searchable className={OPS_SELECT_TRIGGER_CLASS}/>
         </div>
       </PolicyField>
-      <PolicyField label="Varsayılan üretim transfer rafı">
+      <PolicyField
+        label="Varsayılan üretim transfer rafı"
+        hint="Üretime teslim edilen ürünlerin hedef rafı satırda belirtilmemişse bu raf otomatik kullanılır."
+      >
         <div className="wms-ops-field-shell">
           <PagedAppDropdown<LocationOption> queryKey={['production-default-target-location',warehouseId]} fetchPage={r=>warehouseTransferApi.locations(r,warehouseId)} toOption={x=>({value:String(x.id),label:`${x.code} · ${x.name}`})} enabled={warehouseId>0} dependencies={[warehouseId]} value={productionLocationValue} onValueChange={setProductionLocationValue} placeholder="Raf seçin" searchable className={OPS_SELECT_TRIGGER_CLASS}/>
         </div>
       </PolicyField>
-      <PolicyField label="Varsayılan iptal iade rafı">
+      <PolicyField
+        label="Varsayılan üretim iptal/iade rafı"
+        hint="İptal edilen üretim transferinde bekleme rafındaki ürünler için başlangıç iade hedefidir. Görev açılınca otomatik gelir, görev sırasında değiştirilebilir ve normal DAT ayarını etkilemez."
+      >
         <div className="wms-ops-field-shell">
           <PagedAppDropdown<LocationOption> queryKey={['production-return-location',warehouseId]} fetchPage={r=>warehouseTransferApi.locations(r,warehouseId)} toOption={x=>({value:String(x.id),label:`${x.code} · ${x.name}`})} enabled={warehouseId>0} dependencies={[warehouseId]} value={returnLocationValue} onValueChange={setReturnLocationValue} placeholder="Raf seçin" searchable className={OPS_SELECT_TRIGGER_CLASS}/>
         </div>
