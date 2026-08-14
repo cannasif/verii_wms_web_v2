@@ -45,6 +45,7 @@ function Button({
   size,
   asChild = false,
   onClick,
+  type = "button",
   disabled,
   loading = false,
   loadingLabel,
@@ -73,6 +74,7 @@ function Button({
   return (
     <Comp
       data-slot="button"
+      type={asChild ? undefined : type}
       className={cn(buttonVariants({ variant, size, className }))}
       disabled={asChild ? undefined : disabled || effectiveLoading}
       aria-busy={effectiveLoading || undefined}

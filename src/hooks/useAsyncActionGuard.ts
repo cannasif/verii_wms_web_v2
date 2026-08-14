@@ -28,7 +28,7 @@ export function useAsyncActionGuard<Event>(
   }, []);
 
   const run = useCallback((event: Event) => {
-    if (!enabled) {
+    if (!enabled || !onAction) {
       onAction?.(event);
       return;
     }
@@ -50,7 +50,7 @@ export function useAsyncActionGuard<Event>(
 
     let result: unknown;
     try {
-      result = onAction?.(event);
+      result = onAction(event);
     } catch (error) {
       release();
       throw error;

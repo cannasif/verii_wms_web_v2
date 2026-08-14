@@ -45,9 +45,10 @@ export const OpsActionButton = forwardRef<HTMLButtonElement, OpsActionButtonProp
   ref,
 ): ReactElement {
   const Comp = asChild ? Slot : 'button';
+  const hasClickAction = typeof onClick === 'function';
   const guarded = useAsyncActionGuard(
     onClick,
-    guardAsyncAction && !asChild && !disabled && !loading,
+    guardAsyncAction && hasClickAction && !asChild && !disabled && !loading,
     minimumBusyMs,
   );
   const effectiveLoading = loading || guarded.busy;
@@ -81,7 +82,7 @@ export const OpsActionButton = forwardRef<HTMLButtonElement, OpsActionButtonProp
       disabled={disabled || effectiveLoading}
       aria-busy={effectiveLoading || undefined}
       className={classes}
-      onClick={guarded.run}
+      onClick={hasClickAction ? guarded.run : undefined}
       {...props}
     >
       <span
