@@ -40,6 +40,26 @@
       }
     }
   },
+  "picking": {
+    "historicalCollected": "Heredado de la tarea anterior",
+    "multiShelf": {
+      "title": "Preparación desde varias ubicaciones",
+      "description": "Las ubicaciones con el artículo {{stockCode}} se muestran en un único plan.",
+      "stock": "Artículo",
+      "shelfCount": "Ubicaciones de origen",
+      "totalQuantity": "Total a preparar",
+      "sourceShelf": "Ubicación de origen",
+      "remaining": "Pendiente de la orden",
+      "pickQuantity": "Recoger de aquí",
+      "notice": "Al confirmar, cada ubicación se valida por separado y las líneas correctas se trasladan a la ubicación de espera de producción.",
+      "cancel": "Cancelar",
+      "confirm": "Confirmar preparación desde {{shelfCount}} ubicaciones",
+      "invalidQuantity": "Introduzca un número entero válido para cada ubicación sin superar la cantidad pendiente.",
+      "success": "Se recogieron {{quantity}} en total desde {{shelfCount}} ubicaciones.",
+      "failed": "No se pudo completar la preparación.",
+      "partialFailed": "Se procesaron {{completed}} ubicaciones; las restantes fallaron. {{detail}}"
+    }
+  },
   "policy": {
     "loading": "Cargando configuración de transferencia de producción…",
     "saved": "Política de transferencia de producción guardada.",

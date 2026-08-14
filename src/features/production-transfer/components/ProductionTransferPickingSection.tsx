@@ -12,6 +12,7 @@ import { ResponsiveDialog } from '@/components/shared/ResponsiveDialog';
 import { StockIdentityCell } from '@/components/shared/StockIdentityCell';
 import { formatProjectNumber } from '@/lib/project-format';
 import { cn } from '@/lib/utils';
+import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { useAuthStore } from '@/stores/auth-store';
 import { warehouseTransferApi } from '@/features/warehouse-transfer-v2/api/warehouse-transfer.api';
 import type { LocationOption } from '@/features/goods-receipt-v2/types/goods-receipt.types';
@@ -29,7 +30,9 @@ import {
 } from '../api';
 import { ProductionTaskStartShortageDialog } from './ProductionTaskStartShortageDialog';
 import { useProductionTaskStart } from '../hooks/useProductionTaskStart';
+import { buildProductionTransferBulkPickPlan } from '../production-transfer-bulk-pick';
 import {
+  canSelectProductionTransferPickingRow,
   countProductionTransferPickingRows,
   filterProductionTransferPickingRows,
   isProductionTransferPickingRowCompleted,
@@ -100,7 +103,7 @@ function collectPlacableCompletedRows(sections: TableSection[]): ProductionTrans
     if (section.type === 'flat') rows.push(section.row);
     else rows.push(...section.rows);
   }
-  return rows.filter((row) => isRowCompleted(row) && row.processedQuantity > 0);
+  return rows.filter((row) => canSelectProductionTransferPickingRow(row, 'completed', false));
 }
 
 function buildDefaultCompletedTargets(
@@ -358,6 +361,17 @@ interface BarcodeStep1 {
   requiresThresholdConfirm?: boolean;
 }
 
+interface NonSerialBulkPickDialog {
+  barcode: string;
+  stockCode: string;
+  stockName?: string;
+  rows: Array<{
+    row: ProductionTransferPickingRow;
+    quantity: string;
+    idempotencyKey: string;
+  }>;
+}
+
 export const PICK_ABOVE_THRESHOLD_CONFIRM_MESSAGE =
   'Bu miktar onay eşiğini aşıyor. Devam etmek için onaylayın.';
 
@@ -424,6 +438,7 @@ function shouldAutoPickWithoutConfirm(
 }
 
 export function ProductionTransferPickingSection({ transferId, execution, onExecutionChange }: Props) {
+  const { t } = useModuleTranslation('production-transfer');
   const currentUserId = useAuthStore((state) => state.user?.id);
   const [table, setTable] = useState<ProductionTransferPickingTable>();
   const [board, setBoard] = useState<ProductionTaskBoard>();
@@ -442,6 +457,7 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
     rows: ProductionTransferPickingRow[];
   } | null>(null);
   const [serialBulkPickSelection, setSerialBulkPickSelection] = useState<Set<string>>(() => new Set());
+  const [nonSerialBulkPickDialog, setNonSerialBulkPickDialog] = useState<NonSerialBulkPickDialog | null>(null);
   const [routeDialog, setRouteDialog] = useState<ProductionTransferRouteRefreshCandidates | null>(null);
   const [routeQuantities, setRouteQuantities] = useState<Record<number, string>>({});
   const [selectedSerialCandidateKey, setSelectedSerialCandidateKey] = useState<string>();
@@ -461,7 +477,13 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
   const barcodeRef = useRef<HTMLInputElement>(null);
   const pickDialogOpen = Boolean(step1);
   const serialBulkPickDialogOpen = Boolean(serialBulkPickDialog);
-  const blockingDialogOpen = pickDialogOpen || serialBulkPickDialogOpen || Boolean(nonSerialUnpickDialog);
+  const blockingDialogOpen = pickDialogOpen
+    || serialBulkPickDialogOpen
+    || Boolean(nonSerialBulkPickDialog)
+    || Boolean(nonSerialUnpickDialog);
+  const historicalCollectedLabel = t('picking.historicalCollected', {
+    defaultValue: 'Önceki görevden devralındı',
+  });
 
   const focusPickingLineError = useCallback((message: string) => {
     const lineNo = parseTransferLineNoFromError(message);
@@ -1005,6 +1027,99 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
     }
   };
 
+  const updateNonSerialBulkQuantity = (taskLineId: number, quantity: string) => {
+    setNonSerialBulkPickDialog((current) => current ? {
+      ...current,
+      rows: current.rows.map((item) => item.row.taskLineId === taskLineId
+        ? { ...item, quantity }
+        : item),
+    } : current);
+  };
+
+  const confirmNonSerialBulkPick = async () => {
+    if (!nonSerialBulkPickDialog || busy) return;
+
+    const plannedRows = nonSerialBulkPickDialog.rows.map((item) => ({
+      ...item,
+      parsedQuantity: parsePositiveIntegerInput(item.quantity),
+    }));
+    const invalidRow = plannedRows.find((item) =>
+      item.parsedQuantity === null
+      || item.parsedQuantity <= 0
+      || item.parsedQuantity > Math.floor(item.row.remainingQuantity));
+    if (invalidRow) {
+      toast.error(t('picking.multiShelf.invalidQuantity', {
+        defaultValue: 'Her raf için kalan miktarı aşmayan geçerli bir tam sayı girin.',
+      }));
+      return;
+    }
+
+    setBusy(true);
+    let completedCount = 0;
+    let currentTable = table;
+    let currentExecution = execution;
+    try {
+      for (const item of plannedRows) {
+        const result = await productionTransferApi.scanPick(
+          transferId,
+          item.row.taskLineId,
+          nonSerialBulkPickDialog.barcode,
+          {
+            quantity: item.parsedQuantity!,
+            sourceLocationId: item.row.sourceLocationId,
+            idempotencyKey: item.idempotencyKey,
+            confirmAboveThreshold: true,
+          },
+        );
+        completedCount += 1;
+        if (currentTable) {
+          const next = applyScanPickDelta(currentTable, currentExecution, result);
+          currentTable = next.table;
+          currentExecution = next.execution;
+        }
+      }
+
+      if (currentTable) {
+        setTable(currentTable);
+        onExecutionChange(currentExecution);
+      } else {
+        await load();
+      }
+      const totalQuantity = plannedRows.reduce((total, item) => total + item.parsedQuantity!, 0);
+      setNonSerialBulkPickDialog(null);
+      setBarcode('');
+      toast.success(t('picking.multiShelf.success', {
+        defaultValue: '{{shelfCount}} raftan toplam {{quantity}} adet toplandı.',
+        shelfCount: completedCount,
+        quantity: formatProjectNumber(totalQuantity),
+      }));
+    } catch (error) {
+      if (currentTable) {
+        setTable(currentTable);
+        onExecutionChange(currentExecution);
+      } else {
+        await load();
+      }
+      setNonSerialBulkPickDialog((current) => current ? {
+        ...current,
+        rows: current.rows.slice(completedCount),
+      } : current);
+      const detail = error instanceof Error ? error.message : t('picking.multiShelf.failed', {
+        defaultValue: 'Raflardan toplama tamamlanamadı.',
+      });
+      toast.error(completedCount > 0
+        ? t('picking.multiShelf.partialFailed', {
+            defaultValue: '{{completed}} raf işlendi; kalan raflar işlenemedi. {{detail}}',
+            completed: completedCount,
+            detail,
+          })
+        : detail);
+    } finally {
+      setBusy(false);
+      requestAnimationFrame(() => barcodeRef.current?.focus());
+    }
+  };
+
   const resolveBarcode = async (rawBarcode?: string) => {
     const scanned = (rawBarcode ?? barcode).trim();
     if (!scanned || table?.isLocked || busy) return;
@@ -1016,6 +1131,21 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
       if (openSerialRows.length > 0 && openNonSerialRows.length === 0) {
         setSerialBulkPickDialog({ stockCode: scanned, rows: openSerialRows });
         setSerialBulkPickSelection(new Set());
+        setBarcode('');
+        return;
+      }
+      const bulkPlan = buildProductionTransferBulkPickPlan(table.rows, scanned);
+      if (bulkPlan.length > 1) {
+        setNonSerialBulkPickDialog({
+          barcode: scanned,
+          stockCode: bulkPlan[0].row.stockCode,
+          stockName: bulkPlan[0].row.stockName,
+          rows: bulkPlan.map((item) => ({
+            row: item.row,
+            quantity: String(item.quantity),
+            idempotencyKey: crypto.randomUUID(),
+          })),
+        });
         setBarcode('');
         return;
       }
@@ -1377,6 +1507,7 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
                         : selectedRowKey === pickingRowSelectionKey(section.row)}
                       highlighted={isLineHighlighted(section.row.lineNo, highlightedLineNo)}
                       onSelect={toggleRowSelection}
+                      historicalLabel={historicalCollectedLabel}
                       completedShelf={showCompletedShelfColumn ? {
                         rowKey: pickingRowSelectionKey(section.row),
                         targetLocationId: completedLineTargets[pickingRowSelectionKey(section.row)] ?? '',
@@ -1407,6 +1538,7 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
                     selectedRowKey={selectedRowKey}
                     completedSelectedKeys={tab === 'completed' ? completedSelectedKeys : undefined}
                     onSelect={toggleRowSelection}
+                    historicalLabel={historicalCollectedLabel}
                     showCompletedShelfColumn={showCompletedShelfColumn}
                     completedLineTargets={completedLineTargets}
                     completedLineTargetLabels={completedLineTargetLabels}
@@ -1550,6 +1682,130 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
               </div>
             </div>
           </div>
+        </ResponsiveDialog>
+      )}
+
+      {nonSerialBulkPickDialog && (
+        <ResponsiveDialog
+          onClose={() => {
+            if (!busy) setNonSerialBulkPickDialog(null);
+          }}
+          title={t('picking.multiShelf.title', { defaultValue: 'Çok raflı toplama' })}
+          description={t('picking.multiShelf.description', {
+            defaultValue: '{{stockCode}} stokunun bulunduğu raflar tek işlem planında gösteriliyor.',
+            stockCode: nonSerialBulkPickDialog.stockCode,
+          })}
+          className="!max-w-3xl"
+        >
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              void confirmNonSerialBulkPick();
+            }}
+          >
+            <div className="mb-4 grid gap-3 sm:grid-cols-3">
+              <div className="rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-surface-soft)] p-3">
+                <div className="text-xs font-bold text-[var(--wms-app-text-muted)]">
+                  {t('picking.multiShelf.stock', { defaultValue: 'Stok' })}
+                </div>
+                <div className="mt-1 font-mono text-sm font-bold text-[var(--wms-brand-primary)]">
+                  {nonSerialBulkPickDialog.stockCode}
+                </div>
+                <div className="mt-1 line-clamp-2 text-xs text-[var(--wms-app-text-muted)]">
+                  {nonSerialBulkPickDialog.stockName || '—'}
+                </div>
+              </div>
+              <div className="rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-surface-soft)] p-3">
+                <div className="text-xs font-bold text-[var(--wms-app-text-muted)]">
+                  {t('picking.multiShelf.shelfCount', { defaultValue: 'Kaynak raf' })}
+                </div>
+                <div className="mt-2 text-2xl font-black tabular-nums">
+                  {nonSerialBulkPickDialog.rows.length}
+                </div>
+              </div>
+              <div className="rounded-xl border border-[var(--wms-brand-primary)]/30 bg-[var(--wms-brand-soft)] p-3">
+                <div className="text-xs font-bold text-[var(--wms-app-text-muted)]">
+                  {t('picking.multiShelf.totalQuantity', { defaultValue: 'Toplanacak toplam' })}
+                </div>
+                <div className="mt-2 text-2xl font-black tabular-nums text-[var(--wms-brand-primary)]">
+                  {formatProjectNumber(nonSerialBulkPickDialog.rows.reduce(
+                    (total, item) => total + (parsePositiveIntegerInput(item.quantity) ?? 0),
+                    0,
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto rounded-xl border border-[var(--wms-app-border)]">
+              <table className="w-full min-w-[640px] text-sm">
+                <thead className="bg-black/5 text-xs uppercase text-[var(--wms-app-text-muted)] dark:bg-white/5">
+                  <tr>
+                    <th className="p-3 text-right">#</th>
+                    <th className="p-3 text-left">
+                      {t('picking.multiShelf.sourceShelf', { defaultValue: 'Kaynak raf' })}
+                    </th>
+                    <th className="p-3 text-right">
+                      {t('picking.multiShelf.remaining', { defaultValue: 'Emirde kalan' })}
+                    </th>
+                    <th className="p-3 text-right">
+                      {t('picking.multiShelf.pickQuantity', { defaultValue: 'Bu raftan toplanacak' })}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {nonSerialBulkPickDialog.rows.map((item, index) => (
+                    <tr key={item.row.taskLineId} className="border-t border-[var(--wms-app-border)]">
+                      <td className="p-3 text-right font-bold tabular-nums">{index + 1}</td>
+                      <td className="p-3">
+                        <div className="flex items-center gap-2 font-bold">
+                          <MapPin className="h-4 w-4 text-[var(--wms-brand-primary)]" />
+                          {item.row.sourceLocationCode || '—'}
+                        </div>
+                      </td>
+                      <td className="p-3 text-right font-semibold tabular-nums">
+                        {formatProjectNumber(item.row.remainingQuantity)}
+                      </td>
+                      <td className="p-3 text-right">
+                        <input
+                          className="input ms-auto w-32 text-right font-bold tabular-nums"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          min={1}
+                          max={Math.floor(item.row.remainingQuantity)}
+                          value={item.quantity}
+                          disabled={busy}
+                          aria-label={`${item.row.sourceLocationCode || index + 1} rafından toplanacak miktar`}
+                          onChange={(event) => updateNonSerialBulkQuantity(item.row.taskLineId, event.target.value)}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="mt-4 rounded-xl border border-sky-500/25 bg-sky-500/10 p-3 text-sm text-[var(--wms-app-text)]">
+              {t('picking.multiShelf.notice', {
+                defaultValue: 'Onayladığınızda her raf ayrı ayrı stok ve hareket kontrolünden geçer; başarılı satırlar üretim bekleme rafına alınır.',
+              })}
+            </div>
+            <div className="mt-5 flex flex-col-reverse justify-end gap-2 sm:flex-row">
+              <button
+                type="button"
+                className="rounded-lg border px-4 py-2 text-sm font-semibold"
+                disabled={busy}
+                onClick={() => setNonSerialBulkPickDialog(null)}
+              >
+                {t('picking.multiShelf.cancel', { defaultValue: 'İptal' })}
+              </button>
+              <OpsActionButton type="submit" variant="primary" loading={busy}>
+                {t('picking.multiShelf.confirm', {
+                  defaultValue: '{{shelfCount}} raftan toplamayı onayla',
+                  shelfCount: nonSerialBulkPickDialog.rows.length,
+                })}
+              </OpsActionButton>
+            </div>
+          </form>
         </ResponsiveDialog>
       )}
 
@@ -2219,6 +2475,7 @@ function SerialStockGroup({
   selectedRowKey,
   completedSelectedKeys,
   onSelect,
+  historicalLabel,
   showCompletedShelfColumn = false,
   completedLineTargets,
   completedLineTargetLabels,
@@ -2240,6 +2497,7 @@ function SerialStockGroup({
   selectedRowKey?: string;
   completedSelectedKeys?: Set<string>;
   onSelect: (row: ProductionTransferPickingRow) => void;
+  historicalLabel: string;
   showCompletedShelfColumn?: boolean;
   completedLineTargets?: Record<string, string>;
   completedLineTargetLabels?: Record<string, string>;
@@ -2344,6 +2602,7 @@ function SerialStockGroup({
             : selectedRowKey === rowKey}
           highlighted={isLineHighlighted(row.lineNo, highlightedLineNo)}
           onSelect={onSelect}
+          historicalLabel={historicalLabel}
           serialDetail
           completedShelf={completedShelf}
         />
@@ -2361,6 +2620,7 @@ function PickingRow({
   selected,
   highlighted = false,
   onSelect,
+  historicalLabel,
   serialDetail = false,
   completedShelf,
 }: {
@@ -2371,15 +2631,12 @@ function PickingRow({
   selected: boolean;
   highlighted?: boolean;
   onSelect: (row: ProductionTransferPickingRow) => void;
+  historicalLabel: string;
   serialDetail?: boolean;
   completedShelf?: CompletedShelfProps;
 }) {
   const done = isRowCompleted(row);
-  const canSelect = !locked && (
-    pickTab === 'completed'
-      ? row.processedQuantity > 0 && row.remainingQuantity <= 0
-      : row.remainingQuantity > 0
-  );
+  const canSelect = canSelectProductionTransferPickingRow(row, pickTab, locked);
   const isCompletedTab = pickTab === 'completed';
   return (
     <tr
@@ -2411,6 +2668,11 @@ function PickingRow({
       {showRouteColumns && <PickingLocationCell row={row} serialDetail={serialDetail} completedShelf={completedShelf} />}
       <td className={TABLE_CELL}>
         <StockIdentityCell stockId={row.stockId} stockCode={row.stockCode} stockName={row.stockName} layout="stacked" />
+        {row.isHistorical ? (
+          <span className="mt-1 inline-flex rounded-full border border-sky-500/30 bg-sky-500/10 px-2 py-0.5 text-[10px] font-bold text-sky-700 dark:text-sky-300">
+            {historicalLabel}
+          </span>
+        ) : null}
       </td>
       {showRouteColumns && (
         <td className={cn(TABLE_CELL, serialDetail && 'font-semibold')}>{row.serialNo || '—'}</td>

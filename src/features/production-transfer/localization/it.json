@@ -40,6 +40,26 @@
       }
     }
   },
+  "picking": {
+    "historicalCollected": "Ereditato dall'attività precedente",
+    "multiShelf": {
+      "title": "Prelievo da più ubicazioni",
+      "description": "Le ubicazioni contenenti l'articolo {{stockCode}} sono mostrate in un unico piano.",
+      "stock": "Articolo",
+      "shelfCount": "Ubicazioni sorgente",
+      "totalQuantity": "Totale da prelevare",
+      "sourceShelf": "Ubicazione sorgente",
+      "remaining": "Residuo ordine",
+      "pickQuantity": "Da prelevare qui",
+      "notice": "Alla conferma ogni ubicazione viene verificata separatamente e le righe valide vengono spostate nell'ubicazione di attesa produzione.",
+      "cancel": "Annulla",
+      "confirm": "Conferma il prelievo da {{shelfCount}} ubicazioni",
+      "invalidQuantity": "Inserire un numero intero valido per ogni ubicazione senza superare la quantità residua.",
+      "success": "Prelevati {{quantity}} in totale da {{shelfCount}} ubicazioni.",
+      "failed": "Il prelievo non è stato completato.",
+      "partialFailed": "{{completed}} ubicazioni elaborate; le restanti non sono riuscite. {{detail}}"
+    }
+  },
   "policy": {
     "loading": "Caricamento impostazioni trasferimento produzione…",
     "saved": "Politica di trasferimento produzione salvata.",

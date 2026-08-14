@@ -33,3 +33,14 @@ export function countProductionTransferPickingRows(rows: ProductionTransferPicki
     completed: rows.filter(isProductionTransferPickingRowCompleted).length,
   };
 }
+
+export function canSelectProductionTransferPickingRow(
+  row: ProductionTransferPickingRow,
+  tab: ProductionTransferPickTab,
+  locked: boolean,
+): boolean {
+  if (locked) return false;
+  return tab === 'completed'
+    ? row.processedQuantity > 0 && row.remainingQuantity <= QUANTITY_TOLERANCE
+    : row.remainingQuantity > QUANTITY_TOLERANCE;
+}

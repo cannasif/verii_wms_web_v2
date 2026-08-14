@@ -40,6 +40,26 @@
       }
     }
   },
+  "picking": {
+    "historicalCollected": "Repris de la tâche précédente",
+    "multiShelf": {
+      "title": "Prélèvement multi-emplacements",
+      "description": "Les emplacements contenant l'article {{stockCode}} sont affichés dans un seul plan.",
+      "stock": "Article",
+      "shelfCount": "Emplacements source",
+      "totalQuantity": "Total à prélever",
+      "sourceShelf": "Emplacement source",
+      "remaining": "Reste de l'ordre",
+      "pickQuantity": "À prélever ici",
+      "notice": "À la confirmation, chaque emplacement est contrôlé séparément et les lignes réussies sont transférées vers l'emplacement d'attente de production.",
+      "cancel": "Annuler",
+      "confirm": "Confirmer le prélèvement sur {{shelfCount}} emplacements",
+      "invalidQuantity": "Saisissez un nombre entier valide pour chaque emplacement sans dépasser la quantité restante.",
+      "success": "{{quantity}} prélevés au total sur {{shelfCount}} emplacements.",
+      "failed": "Le prélèvement n'a pas pu être terminé.",
+      "partialFailed": "{{completed}} emplacements traités ; les autres ont échoué. {{detail}}"
+    }
+  },
   "policy": {
     "loading": "Chargement des paramètres de transfert de production…",
     "saved": "Politique de transfert de production enregistrée.",

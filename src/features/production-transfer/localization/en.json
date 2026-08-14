@@ -40,6 +40,26 @@
       }
     }
   },
+  "picking": {
+    "historicalCollected": "Inherited from the previous task",
+    "multiShelf": {
+      "title": "Multi-shelf picking",
+      "description": "Shelves containing stock {{stockCode}} are shown in one picking plan.",
+      "stock": "Stock",
+      "shelfCount": "Source shelves",
+      "totalQuantity": "Total to pick",
+      "sourceShelf": "Source shelf",
+      "remaining": "Order remaining",
+      "pickQuantity": "Pick from this shelf",
+      "notice": "On confirmation, every shelf is validated independently and successful rows are moved to the production staging shelf.",
+      "cancel": "Cancel",
+      "confirm": "Confirm picking from {{shelfCount}} shelves",
+      "invalidQuantity": "Enter a valid whole number for every shelf without exceeding its remaining quantity.",
+      "success": "A total of {{quantity}} was picked from {{shelfCount}} shelves.",
+      "failed": "Shelf picking could not be completed.",
+      "partialFailed": "{{completed}} shelves were processed; the remaining shelves failed. {{detail}}"
+    }
+  },
   "policy": {
     "loading": "Loading production transfer settings…",
     "saved": "Production transfer policy saved.",

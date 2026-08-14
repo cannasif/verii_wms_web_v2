@@ -40,6 +40,26 @@
       }
     }
   },
+  "picking": {
+    "historicalCollected": "Aus der vorherigen Aufgabe übernommen",
+    "multiShelf": {
+      "title": "Kommissionierung aus mehreren Regalen",
+      "description": "Regale mit Bestand {{stockCode}} werden in einem Kommissionierplan angezeigt.",
+      "stock": "Artikel",
+      "shelfCount": "Quellregale",
+      "totalQuantity": "Gesamtmenge",
+      "sourceShelf": "Quellregal",
+      "remaining": "Restmenge Auftrag",
+      "pickQuantity": "Aus diesem Regal",
+      "notice": "Bei Bestätigung wird jedes Regal einzeln geprüft; erfolgreiche Positionen werden in das Produktionsbereitstellungsregal verschoben.",
+      "cancel": "Abbrechen",
+      "confirm": "Kommissionierung aus {{shelfCount}} Regalen bestätigen",
+      "invalidQuantity": "Geben Sie für jedes Regal eine gültige ganze Zahl ein, die die Restmenge nicht überschreitet.",
+      "success": "Insgesamt {{quantity}} aus {{shelfCount}} Regalen kommissioniert.",
+      "failed": "Die Regalkommissionierung konnte nicht abgeschlossen werden.",
+      "partialFailed": "{{completed}} Regale wurden verarbeitet; die übrigen sind fehlgeschlagen. {{detail}}"
+    }
+  },
   "policy": {
     "loading": "Produktionstransfer-Einstellungen werden geladen…",
     "saved": "Produktionstransfer-Richtlinie gespeichert.",

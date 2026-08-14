@@ -225,6 +225,7 @@ export interface ProductionTransferPickingRow {
   remainingQuantity: number;
   processedQuantity: number;
   canPick: boolean;
+  isHistorical?: boolean;
 }
 
 export interface ProductionTransferOverIssueLine {
