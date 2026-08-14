@@ -121,7 +121,7 @@ export function HangfirePage() {
                   <td className="p-3">{job.cron || '-'}</td>
                   <td className="p-3">{formatProjectDateTime(job.lastExecution)}</td>
                   <td className="p-3 text-center">
-                    <OpsActionButton type="button" variant="secondary" disabled={triggering !== null} onClick={() => void trigger(job.id)}>
+                    <OpsActionButton type="button" variant="secondary" disabled={triggering !== null} onClick={() => trigger(job.id)}>
                       {triggering === job.id ? <RefreshCw className="size-3.5 animate-spin" aria-hidden /> : <Play className="size-3.5" aria-hidden />}
                       {t(`${H}.recurring.trigger`)}
                     </OpsActionButton>

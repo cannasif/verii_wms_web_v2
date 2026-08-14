@@ -553,7 +553,7 @@ export function QualityRulesPage() {
             <OpsActionButton type="button" variant="secondary" disabled={saving} onClick={() => setDialogOpen(false)}>
               {t("rules.dialog.cancelButton")}
             </OpsActionButton>
-            <OpsActionButton type="button" variant="primary" disabled={saving} onClick={() => void submit()}>
+            <OpsActionButton type="button" variant="primary" disabled={saving} onClick={() => submit()}>
               {editingRule ? <Save className="size-4" /> : <Plus className="size-4" />}
               {saving ? t("rules.dialog.savingButton") : editingRule ? t("rules.dialog.updateButton") : t("rules.dialog.createButton")}
             </OpsActionButton>

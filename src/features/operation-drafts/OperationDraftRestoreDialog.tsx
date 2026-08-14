@@ -47,7 +47,7 @@ export function OperationDraftRestoreDialog({
         </div>
       ) : null}
       <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-        <OpsActionButton type="button" variant="secondary" onClick={() => void onDiscard()}>
+        <OpsActionButton type="button" variant="secondary" onClick={() => onDiscard()}>
           <Trash2 className="size-4" />
           {t('operationDraftRestore.discard')}
         </OpsActionButton>

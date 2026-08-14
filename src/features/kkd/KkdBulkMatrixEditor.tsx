@@ -258,7 +258,7 @@ export function KkdBulkMatrixEditor({ rules, onChange, createRule }: Props): Rea
               <Upload className="size-3.5" />
               İçeri aktar
             </OpsActionButton>
-            <OpsActionButton type="button" variant="secondary" onClick={() => void exportFile()}>
+            <OpsActionButton type="button" variant="secondary" onClick={() => exportFile()}>
               <Download className="size-3.5" />
               Dışarı aktar
             </OpsActionButton>

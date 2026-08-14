@@ -316,7 +316,7 @@ export function PermissionGroupsPage() {
                     {readOnly ? t(`${P}.modal.close`) : t(`${P}.modal.cancel`)}
                   </OpsActionButton>
                   {!readOnly && (
-                    <OpsActionButton type="button" variant="primary" disabled={saving || name.trim().length < 2} onClick={() => void save()}>
+                    <OpsActionButton type="button" variant="primary" disabled={saving || name.trim().length < 2} onClick={() => save()}>
                       {saving ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Plus className="size-4" aria-hidden />}
                       {t(`${P}.modal.save`)}
                     </OpsActionButton>

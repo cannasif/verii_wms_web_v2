@@ -1455,7 +1455,7 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
                     cameraTitle="Barkod okut"
                     cameraDescription="Barkod veya QR kodu kamera karesine getirin."
                   />
-                  <OpsActionButton variant="primary" loading={busy} disabled={!barcode.trim() || blockingDialogOpen} onClick={() => void resolveBarcode()}>
+                  <OpsActionButton variant="primary" loading={busy} disabled={!barcode.trim() || blockingDialogOpen} onClick={() => resolveBarcode()}>
                     <Barcode className="size-4" />Onayla
                   </OpsActionButton>
                 </div>

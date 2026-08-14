@@ -113,7 +113,7 @@ export function StockSelectDialog({
       return (
         <div className="flex min-h-[240px] flex-col items-center justify-center gap-3 text-sm text-red-500">
           <span>{t("stockSelectDialog.loadFailed")}</span>
-          <OpsActionButton variant="secondary" onClick={() => void stocksQuery.refetch()}>
+          <OpsActionButton variant="secondary" onClick={() => stocksQuery.refetch()}>
             {t("common.retry", { defaultValue: "Tekrar dene" })}
           </OpsActionButton>
         </div>

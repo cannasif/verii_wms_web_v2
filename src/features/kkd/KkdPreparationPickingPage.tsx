@@ -939,7 +939,7 @@ export function KkdPreparationPickingPage(): ReactElement {
               </tbody>
             </KkdTableShell>
             <div className="mt-5 flex justify-center">
-              <OpsActionButton onClick={() => void startTask()} loading={startBusy} disabled={quotaBlockedLines.length > 0} className="!px-6">
+              <OpsActionButton onClick={() => startTask()} loading={startBusy} disabled={quotaBlockedLines.length > 0} className="!px-6">
                 <PlayCircle className="size-4 shrink-0" />Bu işi yapıyorum
               </OpsActionButton>
             </div>
@@ -1288,7 +1288,7 @@ export function KkdPreparationPickingPage(): ReactElement {
               </div>
               <div className="flex justify-end gap-2 border-t border-[var(--wms-ops-card-border)] pt-4">
                 <OpsActionButton variant="secondary" onClick={() => setRouteDialog(null)}>Vazgeç</OpsActionButton>
-                <OpsActionButton loading={routeDialog.submitting} onClick={() => void submitRouteSplit()}>
+                <OpsActionButton loading={routeDialog.submitting} onClick={() => submitRouteSplit()}>
                   <RotateCcw className="size-3.5 shrink-0" />Rotayı Uygula
                 </OpsActionButton>
               </div>
@@ -1403,7 +1403,7 @@ export function KkdPreparationPickingPage(): ReactElement {
                     </span>
                   </span>
                   {scan.canUnpick ? (
-                    <OpsActionButton variant="secondary" className="!h-8 !px-2 !text-xs" onClick={() => void unpickScan(scan)}>
+                    <OpsActionButton variant="secondary" className="!h-8 !px-2 !text-xs" onClick={() => unpickScan(scan)}>
                       <Undo2 className="size-3.5 shrink-0" />Geri al
                     </OpsActionButton>
                   ) : null}
@@ -1442,7 +1442,7 @@ export function KkdPreparationPickingPage(): ReactElement {
             </div>
             <div className="flex justify-end gap-2 border-t border-[var(--wms-ops-card-border)] pt-4">
               <OpsActionButton variant="secondary" onClick={() => setDeliveryOpen(false)}>Vazgeç</OpsActionButton>
-              <OpsActionButton onClick={() => void confirmDelivery()}>
+              <OpsActionButton onClick={() => confirmDelivery()}>
                 <CheckCircle2 className="size-3.5 shrink-0" />Teslimi Onayla
               </OpsActionButton>
             </div>

@@ -251,7 +251,7 @@ export function KkdOverrideManager(): ReactElement {
         title="Personel ek hakları"
         description="Aktif, tüketilmiş ve süresi dolmuş istisnaları tek listede izleyin."
         actions={
-          <OpsActionButton variant="secondary" className="wms-ops-list-toolbar-btn" onClick={() => void list.refetch()}>
+          <OpsActionButton variant="secondary" className="wms-ops-list-toolbar-btn" onClick={() => list.refetch()}>
             <RefreshCw className="size-3.5" /> Yenile
           </OpsActionButton>
         }

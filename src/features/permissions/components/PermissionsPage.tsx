@@ -147,7 +147,7 @@ export function PermissionsPage() {
             <OpsActionButton type="button" variant="secondary" disabled={saving} onClick={() => setEditing(undefined)}>
               {t('dialog.cancelButton')}
             </OpsActionButton>
-            <OpsActionButton type="button" variant="primary" disabled={saving} onClick={() => void save()}>
+            <OpsActionButton type="button" variant="primary" disabled={saving} onClick={() => save()}>
               {saving ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
               {t('dialog.saveButton')}
             </OpsActionButton>

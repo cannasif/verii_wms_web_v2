@@ -631,7 +631,7 @@ export function KkdMatrixManager(): ReactElement {
         description="Arayın, düzenleyin veya mevcut matrisi yeni kapsam için kopyalayın."
         className="flex h-full min-h-0 min-w-0 flex-col"
         actions={
-          <OpsActionButton variant="secondary" className="wms-ops-list-toolbar-btn" onClick={() => void matrices.refetch()}>
+          <OpsActionButton variant="secondary" className="wms-ops-list-toolbar-btn" onClick={() => matrices.refetch()}>
             <RefreshCw className="size-3.5" />
             Yenile
           </OpsActionButton>

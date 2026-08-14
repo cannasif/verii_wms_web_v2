@@ -121,7 +121,7 @@ export function SmtpSettingsPage() {
             <OpsActionButton type="button" variant="secondary" disabled={testing} onClick={() => setTestOpen(false)}>
               {t('common.cancel')}
             </OpsActionButton>
-            <OpsActionButton type="button" variant="primary" disabled={testing || !testEmail.trim()} onClick={() => void sendTest()}>
+            <OpsActionButton type="button" variant="primary" disabled={testing || !testEmail.trim()} onClick={() => sendTest()}>
               {testing ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
               {t(`${S}.sendTest`)}
             </OpsActionButton>

@@ -213,7 +213,7 @@ export function UserImportDialog({ open, onOpenChange, onImported }: UserImportD
           <OpsActionButton type="button" variant="secondary" disabled={uploading} onClick={() => onOpenChange(false)}>
             {t('import.closeButton')}
           </OpsActionButton>
-          <OpsActionButton type="button" variant="primary" disabled={!file || uploading} onClick={() => void upload()}>
+          <OpsActionButton type="button" variant="primary" disabled={!file || uploading} onClick={() => upload()}>
             {uploading ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Upload className="size-4" aria-hidden />}
             {uploading ? t('import.creatingButton') : t('import.createUsersButton')}
           </OpsActionButton>

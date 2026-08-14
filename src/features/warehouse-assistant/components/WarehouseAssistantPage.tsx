@@ -366,7 +366,7 @@ function ArchiveConversationDialog({
           <Button type="button" variant="outline" disabled={isPending} onClick={() => onOpenChange(false)}>
             {cancelLabel}
           </Button>
-          <Button type="button" disabled={isPending} onClick={() => void onConfirm()} className="bg-cyan-600 hover:bg-cyan-500">
+          <Button type="button" disabled={isPending} onClick={() => onConfirm()} className="bg-cyan-600 hover:bg-cyan-500">
             {isPending ? <Loader2 className="size-4 animate-spin" /> : <Archive className="size-4" />}
             {confirmLabel}
           </Button>
