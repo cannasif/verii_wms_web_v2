@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Branch, LoginResponse } from '../types/auth';
-import { requireSuccessfulLogin, resolveSingleBranchId } from './login-flow';
+import { requireSuccessfulLogin, resolveLoginSubmitValues, resolveSingleBranchId } from './login-flow';
 
 const branch = (id: string): Branch => ({ id, code: id, name: `Branch ${id}` });
 
@@ -25,6 +25,18 @@ describe('login flow', () => {
     expect(resolveSingleBranchId([branch('0')])).toBe('0');
     expect(resolveSingleBranchId([branch('0'), branch('1')])).toBeNull();
     expect(resolveSingleBranchId(undefined)).toBeNull();
+  });
+
+  it('uses values filled directly by the browser and resolves the sole branch on submit', () => {
+    expect(resolveLoginSubmitValues(
+      { identifier: '', password: '', branchId: '' },
+      { identifier: 'operator@v3rii.com', password: 'browser-filled-password' },
+      [branch('0')],
+    )).toEqual({
+      identifier: 'operator@v3rii.com',
+      password: 'browser-filled-password',
+      branchId: '0',
+    });
   });
 
   it('accepts only a successful response containing an access token', () => {

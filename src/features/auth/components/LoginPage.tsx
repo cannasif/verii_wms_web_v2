@@ -30,7 +30,7 @@ import TelegramIcon from '@hugeicons/core-free-icons/TelegramIcon';
 import TelephoneIcon from '@hugeicons/core-free-icons/TelephoneIcon';
 import WhatsappIcon from '@hugeicons/core-free-icons/WhatsappIcon';
 import { SessionRecoveryPage } from './SessionRecoveryPage';
-import { resolveSingleBranchId } from '../utils/login-flow';
+import { resolveLoginSubmitValues, resolveSingleBranchId } from '../utils/login-flow';
 
 export function LoginPage(): React.JSX.Element {
   const { t, i18n } = useTranslation('common');
@@ -127,6 +127,27 @@ export function LoginPage(): React.JSX.Element {
     });
   };
 
+  const handleLoginFormSubmit = (event: React.FormEvent<HTMLFormElement>): void => {
+    event.preventDefault();
+
+    const nativeFormData = new FormData(event.currentTarget);
+    const nativeIdentifier = nativeFormData.get('identifier');
+    const nativePassword = nativeFormData.get('password');
+    const submitValues = resolveLoginSubmitValues(
+      form.getValues(),
+      {
+        identifier: typeof nativeIdentifier === 'string' ? nativeIdentifier : undefined,
+        password: typeof nativePassword === 'string' ? nativePassword : undefined,
+      },
+      branches,
+    );
+
+    form.setValue('identifier', submitValues.identifier, { shouldDirty: true });
+    form.setValue('password', submitValues.password, { shouldDirty: true });
+    form.setValue('branchId', submitValues.branchId, { shouldDirty: true });
+    void form.handleSubmit(onSubmit)();
+  };
+
   return (
     <div data-wms-auth-surface="true" className="relative min-h-dvh w-full overflow-x-hidden overflow-y-auto bg-[#070d1f] text-white">
       <style>{`
@@ -182,7 +203,7 @@ export function LoginPage(): React.JSX.Element {
                   </div>
 
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 sm:space-y-4" noValidate>
+                <form onSubmit={handleLoginFormSubmit} className="space-y-3 sm:space-y-4" noValidate>
                   {visibleError ? (
                     <div
                       data-testid="login-error-summary"
@@ -366,6 +387,7 @@ export function LoginPage(): React.JSX.Element {
                     className="auth-login-submit mt-2 h-12 w-full rounded-xl bg-linear-to-r from-cyan-600 via-blue-600 to-orange-400 text-sm font-semibold uppercase tracking-wide text-white transition-all duration-300 hover:brightness-105 hover:shadow-[0_0_16px_rgba(56,132,246,0.30)]"
                     disabled={isPending}
                     aria-busy={isPending}
+                    data-wms-api-loading="off"
                   >
                     {isPending ? (
                       <span className="inline-flex items-center gap-2">
