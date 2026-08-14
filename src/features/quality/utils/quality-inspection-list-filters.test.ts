@@ -4,15 +4,14 @@ import {
   buildQualityInspectionStatusFilters,
   isQualityInspectionStatusFilterDefault,
   QUALITY_INSPECTION_STATUS_ALL,
-  QUALITY_INSPECTION_STATUS_EXCLUDE_PASSED,
 } from './quality-inspection-list-filters';
 
 describe('buildQualityInspectionStatusFilters', () => {
-  it('defaults to excluding Passed', () => {
-    assert.deepEqual(buildQualityInspectionStatusFilters(QUALITY_INSPECTION_STATUS_EXCLUDE_PASSED), [
-      { column: 'status', operator: 'notEquals', value: 'Passed' },
+  it('filters the API-provided default status with an advanced enum filter', () => {
+    assert.deepEqual(buildQualityInspectionStatusFilters('Pending'), [
+      { column: 'status', operator: 'equals', value: 'Pending' },
     ]);
-    assert.equal(isQualityInspectionStatusFilterDefault(QUALITY_INSPECTION_STATUS_EXCLUDE_PASSED), true);
+    assert.equal(isQualityInspectionStatusFilterDefault('Pending', 'Pending'), true);
   });
 
   it('clears filter for all', () => {

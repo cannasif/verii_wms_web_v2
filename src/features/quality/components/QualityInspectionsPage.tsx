@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactElement, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { TFunction } from "i18next";
 import { ChevronDown, Clock3, ClipboardPen, Flag, History, Loader2, Pause, Play, Plus, ShieldCheck, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
@@ -43,10 +43,7 @@ import {
   QualityDecisionFlowOverlay,
   QualityReceiptCreatedSuccessPanel,
 } from "./QualityDecisionFlowScreens";
-import {
-  buildQualityInspectionStatusFilters,
-  QUALITY_INSPECTION_STATUS_EXCLUDE_PASSED,
-} from "../utils/quality-inspection-list-filters";
+import { buildQualityInspectionStatusFilters } from "../utils/quality-inspection-list-filters";
 import { requiresQualityDat } from "../utils/quality-dat-routing";
 import {
   canToggleQualityInspectionPriority,
@@ -697,11 +694,22 @@ export function QualityInspectionsPage({
   const { t, moduleReady } = useModuleTranslation("quality");
   const { can } = usePermissionAccess();
   const queryClient = useQueryClient();
+  const statusCatalogQuery = useQuery({
+    queryKey: ["quality-inspection-status-options"],
+    queryFn: qualityApi.inspectionStatusOptions,
+    enabled: !quarantineOnly,
+    staleTime: Number.POSITIVE_INFINITY,
+  });
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [detail, setDetail] = useState<QualityInspectionDetail | null>(null);
   const [loading, setLoading] = useState<number | null>(null);
   const [priorityLoading, setPriorityLoading] = useState<number | null>(null);
-  const [statusFacet, setStatusFacet] = useState(QUALITY_INSPECTION_STATUS_EXCLUDE_PASSED);
+  const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
+  const statusFacet = selectedStatus ?? statusCatalogQuery.data?.defaultValue ?? "";
+  const prioritizableStatuses = useMemo(
+    () => new Set(statusCatalogQuery.data?.items.filter((item) => item.canPrioritize).map((item) => item.value) ?? []),
+    [statusCatalogQuery.data?.items],
+  );
   const pageKey = quarantineOnly ? "quality-quarantine-v2" : "quality-inspections-v2";
   const statusFilters = useMemo(
     () => (quarantineOnly ? [] : buildQualityInspectionStatusFilters(statusFacet)),
@@ -920,7 +928,7 @@ export function QualityInspectionsPage({
         width: 260,
         render: (r) => (
           <div className="flex items-center justify-center gap-1">
-          {can("WMS.QUALITY.INSPECTIONS.PRIORITIZE") && canToggleQualityInspectionPriority(r.status) ? (
+          {can("WMS.QUALITY.INSPECTIONS.PRIORITIZE") && canToggleQualityInspectionPriority(r.status, prioritizableStatuses) ? (
             <button
               type="button"
               onClick={() => void toggleInspectionPriority(r)}
@@ -986,7 +994,7 @@ export function QualityInspectionsPage({
       },
     ];
     },
-    [can, expandedId, loading, moduleReady, priorityLoading, t, toggle, toggleInspectionPriority],
+    [can, expandedId, loading, moduleReady, prioritizableStatuses, priorityLoading, t, toggle, toggleInspectionPriority],
   );
   const decided = async () => {
     setExpandedId(null);
@@ -995,6 +1003,23 @@ export function QualityInspectionsPage({
       queryKey: ["advanced-grid", pageKey],
     });
   };
+  if (!quarantineOnly && statusCatalogQuery.isPending) {
+    return (
+      <div className="flex min-h-64 items-center justify-center gap-3 rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-surface)] text-sm text-slate-500">
+        <Loader2 className="size-5 animate-spin" /> {t("list.statusOptionsLoading")}
+      </div>
+    );
+  }
+  if (!quarantineOnly && statusCatalogQuery.isError) {
+    return (
+      <div className="flex min-h-64 flex-col items-center justify-center gap-3 rounded-2xl border border-rose-500/30 bg-rose-500/5 p-6 text-center">
+        <p className="text-sm font-semibold text-rose-600">{t("list.statusOptionsFailed")}</p>
+        <OpsActionButton type="button" onClick={() => statusCatalogQuery.refetch()}>
+          {t("list.retry")}
+        </OpsActionButton>
+      </div>
+    );
+  }
   return (
     <AdvancedDataGrid<QualityInspection>
       pageKey={pageKey}
@@ -1014,7 +1039,12 @@ export function QualityInspectionsPage({
       fetchPage={fetchPage}
       toolbarBelowExtra={
         quarantineOnly ? undefined : (
-          <QualityInspectionStatusFilter value={statusFacet} onChange={setStatusFacet} />
+          <QualityInspectionStatusFilter
+            value={statusFacet}
+            defaultValue={statusCatalogQuery.data?.defaultValue ?? statusFacet}
+            statusOptions={statusCatalogQuery.data?.items ?? []}
+            onChange={setSelectedStatus}
+          />
         )
       }
       expandedRowId={expandedId}

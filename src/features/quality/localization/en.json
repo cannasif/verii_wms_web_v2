@@ -39,7 +39,10 @@
     "facetStatus": "Status",
     "facetAll": "All",
     "facetStatusExcludePassed": "Incomplete",
-    "facetClear": "Reset filter"
+    "facetClear": "Reset filter",
+    "statusOptionsLoading": "Loading quality statuses...",
+    "statusOptionsFailed": "Quality statuses could not be loaded. The list cannot be filtered safely.",
+    "retry": "Try again"
   },
   "goodsReceiptNotice": {
     "decidedToastTitle": "Quality decision and stock movement recorded.",

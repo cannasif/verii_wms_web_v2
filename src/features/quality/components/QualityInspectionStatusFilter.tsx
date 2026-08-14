@@ -8,15 +8,18 @@ import { cn } from '@/lib/utils';
 import {
   isQualityInspectionStatusFilterDefault,
   QUALITY_INSPECTION_STATUS_ALL,
-  QUALITY_INSPECTION_STATUS_EXCLUDE_PASSED,
-  QUALITY_INSPECTION_STATUS_OPTIONS,
 } from '../utils/quality-inspection-list-filters';
+import type { QualityInspectionStatusOption } from '../api/quality.api';
 
 export function QualityInspectionStatusFilter({
   value,
+  defaultValue,
+  statusOptions,
   onChange,
 }: {
   value: string;
+  defaultValue: string;
+  statusOptions: QualityInspectionStatusOption[];
   onChange: (value: string) => void;
 }): ReactElement {
   const { t, moduleReady } = useModuleTranslation('quality');
@@ -25,21 +28,17 @@ export function QualityInspectionStatusFilter({
     void moduleReady;
     return [
       {
-        value: QUALITY_INSPECTION_STATUS_EXCLUDE_PASSED,
-        label: t('list.facetStatusExcludePassed'),
-      },
-      {
         value: QUALITY_INSPECTION_STATUS_ALL,
         label: t('list.facetAll'),
       },
-      ...QUALITY_INSPECTION_STATUS_OPTIONS.map((status) => ({
-        value: status,
-        label: localizeEnumValue(status),
+      ...statusOptions.map((status) => ({
+        value: status.value,
+        label: localizeEnumValue(status.value),
       })),
     ];
-  }, [moduleReady, t]);
+  }, [moduleReady, statusOptions, t]);
 
-  const dirty = !isQualityInspectionStatusFilterDefault(value);
+  const dirty = !isQualityInspectionStatusFilterDefault(value, defaultValue);
 
   return (
     <div
@@ -66,7 +65,7 @@ export function QualityInspectionStatusFilter({
         <button
           type="button"
           className="wms-ops-gr-list-facets__clear"
-          onClick={() => onChange(QUALITY_INSPECTION_STATUS_EXCLUDE_PASSED)}
+          onClick={() => onChange(defaultValue)}
         >
           {t('list.facetClear')}
         </button>

@@ -1,12 +1,8 @@
-const PRIORITIZABLE_QUALITY_STATUSES = new Set([
-  "Pending",
-  "InProgress",
-  "PartiallyDecided",
-  "Quarantined",
-]);
-
-export function canToggleQualityInspectionPriority(status: string): boolean {
-  return PRIORITIZABLE_QUALITY_STATUSES.has(status);
+export function canToggleQualityInspectionPriority(
+  status: string,
+  prioritizableStatuses: ReadonlySet<string>,
+): boolean {
+  return prioritizableStatuses.has(status);
 }
 
 export function qualityInspectionPriorityRowClass(isPriority: boolean): string | undefined {

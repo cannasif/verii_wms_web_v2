@@ -5,14 +5,16 @@ import {
 } from "./quality-inspection-priority";
 
 describe("quality inspection priority", () => {
+  const prioritizableStatuses = new Set(["Pending", "InProgress", "PartiallyDecided", "Quarantined"]);
+
   it.each(["Pending", "InProgress", "PartiallyDecided", "Quarantined"])(
     "allows open status %s",
-    (status) => expect(canToggleQualityInspectionPriority(status)).toBe(true),
+    (status) => expect(canToggleQualityInspectionPriority(status, prioritizableStatuses)).toBe(true),
   );
 
   it.each(["Passed", "Failed", "Released", "Cancelled"])(
     "blocks terminal status %s",
-    (status) => expect(canToggleQualityInspectionPriority(status)).toBe(false),
+    (status) => expect(canToggleQualityInspectionPriority(status, prioritizableStatuses)).toBe(false),
   );
 
   it("returns a red row emphasis only for prioritized records", () => {

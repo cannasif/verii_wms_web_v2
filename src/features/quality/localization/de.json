@@ -39,7 +39,10 @@
     "facetStatus": "Status",
     "facetAll": "Alle",
     "facetStatusExcludePassed": "Unvollständig",
-    "facetClear": "Filter zurücksetzen"
+    "facetClear": "Filter zurücksetzen",
+    "statusOptionsLoading": "Qualitätsstatus werden geladen...",
+    "statusOptionsFailed": "Die Qualitätsstatus konnten nicht geladen werden. Die Liste kann nicht sicher gefiltert werden.",
+    "retry": "Erneut versuchen"
   },
   "goodsReceiptNotice": {
     "decidedToastTitle": "Qualitätsentscheidung und Lagerbewegung erfasst.",

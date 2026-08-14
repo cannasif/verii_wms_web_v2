@@ -39,7 +39,10 @@
     "facetStatus": "Stato",
     "facetAll": "Tutti",
     "facetStatusExcludePassed": "Non completati",
-    "facetClear": "Reimposta filtro"
+    "facetClear": "Reimposta filtro",
+    "statusOptionsLoading": "Caricamento degli stati qualità...",
+    "statusOptionsFailed": "Impossibile caricare gli stati qualità. L’elenco non può essere filtrato in modo sicuro.",
+    "retry": "Riprova"
   },
   "goodsReceiptNotice": {
     "decidedToastTitle": "Decisione di qualità e movimento di magazzino registrati.",

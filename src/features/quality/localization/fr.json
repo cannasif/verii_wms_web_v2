@@ -39,7 +39,10 @@
     "facetStatus": "Statut",
     "facetAll": "Tous",
     "facetStatusExcludePassed": "Non terminés",
-    "facetClear": "Réinitialiser le filtre"
+    "facetClear": "Réinitialiser le filtre",
+    "statusOptionsLoading": "Chargement des statuts qualité...",
+    "statusOptionsFailed": "Les statuts qualité n’ont pas pu être chargés. La liste ne peut pas être filtrée de manière sûre.",
+    "retry": "Réessayer"
   },
   "goodsReceiptNotice": {
     "decidedToastTitle": "Décision qualité et mouvement de stock enregistrés.",

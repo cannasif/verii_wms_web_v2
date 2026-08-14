@@ -39,7 +39,10 @@
     "facetStatus": "Estado",
     "facetAll": "Todos",
     "facetStatusExcludePassed": "No completados",
-    "facetClear": "Restablecer filtro"
+    "facetClear": "Restablecer filtro",
+    "statusOptionsLoading": "Cargando estados de calidad...",
+    "statusOptionsFailed": "No se pudieron cargar los estados de calidad. La lista no se puede filtrar de forma segura.",
+    "retry": "Reintentar"
   },
   "goodsReceiptNotice": {
     "decidedToastTitle": "Decisión de calidad y movimiento de stock registrados.",

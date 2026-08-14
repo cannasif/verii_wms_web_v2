@@ -39,7 +39,10 @@
     "facetStatus": "الحالة",
     "facetAll": "الكل",
     "facetStatusExcludePassed": "غير المكتملة",
-    "facetClear": "إعادة تعيين المرشح"
+    "facetClear": "إعادة تعيين المرشح",
+    "statusOptionsLoading": "جارٍ تحميل حالات الجودة...",
+    "statusOptionsFailed": "تعذر تحميل حالات الجودة. لا يمكن تصفية القائمة بأمان.",
+    "retry": "إعادة المحاولة"
   },
   "goodsReceiptNotice": {
     "decidedToastTitle": "تم تسجيل قرار الجودة وحركة المخزون.",

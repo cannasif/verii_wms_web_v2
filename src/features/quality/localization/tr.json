@@ -39,7 +39,10 @@
     "facetStatus": "Durum",
     "facetAll": "Tümü",
     "facetStatusExcludePassed": "Tamamlanmamışlar",
-    "facetClear": "Filtreyi sıfırla"
+    "facetClear": "Filtreyi sıfırla",
+    "statusOptionsLoading": "Kalite durumları yükleniyor...",
+    "statusOptionsFailed": "Kalite durumları alınamadı. Liste güvenli biçimde filtrelenemedi.",
+    "retry": "Tekrar dene"
   },
   "goodsReceiptNotice": {
     "decidedToastTitle": "Kalite kararı ve stok hareketi kaydedildi.",
