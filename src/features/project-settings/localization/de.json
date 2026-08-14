@@ -51,8 +51,8 @@
     "label": "Maximale Passwortlänge"
   },
   "sendSerialsToErp": {
-    "label": "Seriennummern an ERP senden",
-    "description": "Seriennummern bei Wareneingang und verwandten Vorgängen an das ERP-System übertragen."
+    "label": "Seriennummern bei allen ERP-Vorgängen senden",
+    "description": "Wenn aktiviert, werden Seriennummern in ERP-Belegen für Wareneingang, Produktionstransfer, Lagertransfer, Versand sowie Lagerzu- und -abgänge übertragen. Wenn deaktiviert, bleiben Seriennummern im WMS verfolgbar, werden jedoch keinem ERP-Beleg hinzugefügt. Das ERP kann den Beleg ablehnen, wenn die Seriennummer im Artikelstamm vorgeschrieben ist."
   },
   "passwordSecurityNotice": {
     "label": "Passwortsicherheit:",

@@ -3091,25 +3091,26 @@
       },
       "sendSerialsToErp": {
         "true": {
-          "summary": "Le informazioni seriali nelle operazioni WMS vengono inviate anche alle linee di documenti ERP.",
-          "effect": "Le informazioni seriali nelle operazioni WMS vengono inviate anche alle linee di documenti ERP.",
+          "summary": "I numeri di serie usati nel WMS vengono inviati in tutti i tipi di documento ERP.",
+          "effect": "Il campo SeriNo è incluso nei documenti ERP di ricevimento, trasferimento alla produzione, trasferimento tra magazzini, spedizione, entrata e uscita.",
           "affects": [
             "Accettazione delle merci",
-            "Trasferimento",
-            "Record ERP di operazioni di spedizione e magazzino"
+            "Trasferimenti di produzione e magazzino",
+            "Documenti ERP di spedizione, entrata e uscita"
           ],
-          "scenario": "Quando il prodotto seriale viene accettato, l'elenco seriale viene trasferito alla nota di consegna Netsis.",
-          "decision": "Questa opzione controlla le seguenti operazioni: Accettazione delle merci, Trasferimento, Record ERP di operazioni di spedizione e magazzino. Selezionarla se si desidera questo risultato: «Le informazioni seriali nelle operazioni WMS vengono inviate anche alle linee di documenti ERP.»"
+          "scenario": "Con ricevimento o trasferimento alla produzione della serie SR-001, la riga ERP contiene SeriNo SR-001.",
+          "decision": "Attivare quando ERP deve tracciare le stesse serie del WMS. L'impostazione è globale per tutti i documenti ERP."
         },
         "false": {
-          "summary": "Le serie sono visualizzate solo all'interno di WMS; L'importo dei documenti viene inviato all'ERP.",
-          "effect": "Le serie sono visualizzate solo all'interno di WMS; L'importo dei documenti viene inviato all'ERP.",
+          "summary": "Le serie restano nel WMS e nessuna riga ERP contiene SeriNo.",
+          "effect": "Registro seriali, saldi per ubicazione e movimenti restano attivi nel WMS; ERP riceve articolo, quantità e magazzino senza serie.",
           "affects": [
-            "Integrazione ERP",
-            "Registro seriale WMS"
+            "Tutti i documenti ERP",
+            "Registro e saldi seriali WMS",
+            "Obbligo serie nell'anagrafica ERP"
           ],
-          "scenario": "WMS mantiene stock su base seriale, solo 10 quantità di AD va a Netsis.",
-          "decision": "Questa opzione controlla le seguenti operazioni: Integrazione ERP, Registro seriale WMS. Selezionarla se si desidera questo risultato: «Le serie sono visualizzate solo all'interno di WMS; L'importo dei documenti viene inviato all'ERP.»"
+          "scenario": "WMS conserva SR-001 nei saldi ed ERP riceve solo quantità 10. ERP può rifiutare se l'articolo richiede la serie.",
+          "decision": "Disattivare per mantenere le serie solo nel WMS. Allineare la scelta con l'obbligo serie dell'anagrafica ERP."
         }
       }
     },

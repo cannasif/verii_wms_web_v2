@@ -3091,25 +3091,26 @@
       },
       "sendSerialsToErp": {
         "true": {
-          "summary": "Serieninformationen in WMS-Vorgängen werden auch an ERP-Dokumentzeilen gesendet.",
-          "effect": "Serieninformationen in WMS-Vorgängen werden auch an ERP-Dokumentzeilen gesendet.",
+          "summary": "Im WMS verwendete Seriennummern werden in allen ERP-Belegarten übertragen.",
+          "effect": "Das Feld SeriNo wird bei Wareneingang, Produktionstransfer, Lagertransfer, Versand sowie Lagerzu- und -abgang an das ERP gesendet.",
           "affects": [
             "Warenannahme",
-            "Übertragen",
-            "ERP-Aufzeichnungen von Versand- und Lagertransaktionen"
+            "Produktions- und Lagertransfers",
+            "ERP-Belege für Versand sowie Lagerzu- und -abgang"
           ],
-          "scenario": "Bei der Annahme eines Serienprodukts wird die Serienliste in den Netsis-Lieferschein übernommen.",
-          "decision": "Diese Option steuert folgende Vorgänge: Warenannahme, Übertragen, ERP-Aufzeichnungen von Versand- und Lagertransaktionen. Wählen Sie sie, wenn Sie folgendes Ergebnis wünschen: „Serieninformationen in WMS-Vorgängen werden auch an ERP-Dokumentzeilen gesendet.“"
+          "scenario": "Bei Wareneingang oder Produktionstransfer mit SR-001 enthält die ERP-Zeile SeriNo SR-001.",
+          "decision": "Aktivieren, wenn ERP dieselben Seriennummern wie WMS führen soll. Die Einstellung gilt global für alle ERP-Belege."
         },
         "false": {
-          "summary": "Serien werden nur innerhalb von WMS angezeigt; Die Anzahl der Dokumente wird an ERP gesendet.",
-          "effect": "Serien werden nur innerhalb von WMS angezeigt; Die Anzahl der Dokumente wird an ERP gesendet.",
+          "summary": "Serien bleiben im WMS; keine ERP-Belegzeile enthält SeriNo.",
+          "effect": "Serienregister, Lagerplatzbestände und Bewegungen bleiben im WMS aktiv; ERP erhält Artikel, Menge und Lager ohne Seriennummer.",
           "affects": [
-            "ERP-Integration",
-            "WMS-Serienregister"
+            "Alle ERP-Belegbuchungen",
+            "WMS-Serienregister und Bestände",
+            "Serienpflicht im ERP-Artikelstamm"
           ],
-          "scenario": "WMS hält den Lagerbestand auf Serienbasis, nur 10 AD-Mengen gehen an Netsis.",
-          "decision": "Diese Option steuert folgende Vorgänge: ERP-Integration, WMS-Serienregister. Wählen Sie sie, wenn Sie folgendes Ergebnis wünschen: „Serien werden nur innerhalb von WMS angezeigt; Die Anzahl der Dokumente wird an ERP gesendet.“"
+          "scenario": "WMS behält SR-001 im Bestand; ERP erhält nur Menge 10. Bei Serienpflicht im Artikelstamm kann ERP den Beleg ablehnen.",
+          "decision": "Deaktivieren, um Serien nur im WMS zu führen. Die Einstellung muss mit der Serienpflicht des ERP-Artikelstamms übereinstimmen."
         }
       }
     },

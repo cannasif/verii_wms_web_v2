@@ -3091,25 +3091,26 @@
       },
       "sendSerialsToErp": {
         "true": {
-          "summary": "Serial information in WMS operations is also sent to ERP document lines.",
-          "effect": "Serial information in WMS operations is also sent to ERP document lines.",
+          "summary": "Serial numbers used in WMS are sent on every ERP document type.",
+          "effect": "The SeriNo field is included in ERP documents for goods receipt, production transfer, warehouse transfer, shipment, warehouse inbound and warehouse outbound.",
           "affects": [
             "Acceptance of goods",
-            "Transfer",
-            "ERP records of shipping and warehouse transactions"
+            "Production and warehouse transfers",
+            "Shipment, warehouse inbound and warehouse outbound ERP records"
           ],
-          "scenario": "When serial product is accepted, the serial list is transferred to the Netsis delivery note.",
-          "decision": "This option controls these operations: Acceptance of goods, Transfer, ERP records of shipping and warehouse transactions. Choose it when you want this result: “Serial information in WMS operations is also sent to ERP document lines.”"
+          "scenario": "When goods are received or transferred to production with serial SR-001, the ERP line contains SeriNo SR-001.",
+          "decision": "Choose Enabled when ERP must track the same serial numbers as WMS. This is a global switch for every ERP document, not only goods receipt."
         },
         "false": {
-          "summary": "Series are viewed only within WMS; The amount of documents is sent to ERP.",
-          "effect": "Series are viewed only within WMS; The amount of documents is sent to ERP.",
+          "summary": "Serials remain inside WMS and no ERP document line contains SeriNo.",
+          "effect": "WMS serial registry, location balances and movements keep working; ERP receives stock, quantity and warehouse data without serial numbers.",
           "affects": [
-            "ERP integration",
-            "WMS serial register"
+            "All ERP document postings",
+            "WMS serial registry and balances",
+            "ERP stock-card serial requirements"
           ],
-          "scenario": "WMS keeps stock on a serial basis, only 10 AD quantity goes to Netsis.",
-          "decision": "This option controls these operations: ERP integration, WMS serial register. Choose it when you want this result: “Series are viewed only within WMS; The amount of documents is sent to ERP.”"
+          "scenario": "WMS retains serial SR-001 in stock and location balances while ERP receives only quantity 10. ERP may reject it when the stock card requires a serial.",
+          "decision": "Choose Disabled to keep serials only in WMS. Keep this choice aligned with the ERP stock-card serial requirement to avoid ERP rejection."
         }
       }
     },

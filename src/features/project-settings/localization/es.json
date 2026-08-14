@@ -51,8 +51,8 @@
     "label": "Longitud máxima de contraseña"
   },
   "sendSerialsToErp": {
-    "label": "Enviar series al ERP",
-    "description": "Transmitir números de serie al sistema ERP durante la recepción de mercancías y operaciones relacionadas."
+    "label": "Enviar números de serie en todas las operaciones ERP",
+    "description": "Si está activado, los números de serie se incluyen en los documentos ERP de recepción, transferencia a producción, transferencia entre almacenes, expedición, entrada y salida de almacén. Si está desactivado, las series se siguen controlando en WMS, pero ningún documento ERP incluye el campo de serie. El ERP puede rechazar el documento si la ficha del artículo exige serie."
   },
   "passwordSecurityNotice": {
     "label": "Seguridad de contraseña:",

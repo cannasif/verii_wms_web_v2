@@ -1168,21 +1168,25 @@ const project: Record<string, ValueGuide> = {
   sendSerialsToErp: onOff(
     {
       effect:
-        "WMS operasyonlarındaki seri bilgileri ERP belge satırlarına da gönderilir.",
+        "WMS'te kullanılan seri numaraları bütün ERP belge türlerinin satırlarına gönderilir.",
       affects: [
         "Mal kabul",
-        "Transfer",
-        "Sevk ve ambar işlemlerinin ERP kayıtları",
+        "Üretime transfer ve depolar arası transfer",
+        "Sevk, ambar giriş ve ambar çıkış ERP kayıtları",
       ],
       scenario:
-        "Serili ürün kabulünde seri listesi Netsis irsaliyesine aktarılır.",
+        "SR-001 seri numarasıyla mal kabul veya üretime transfer yapıldığında ERP kaleminde SeriNo alanı SR-001 olarak gönderilir.",
     },
     {
       effect:
-        "Seriler yalnız WMS içinde izlenir; ERP’ye belge miktarı gönderilir.",
-      affects: ["ERP entegrasyonu", "WMS seri sicili"],
+        "Seriler yalnız WMS içinde izlenir; hiçbir ERP belge satırına SeriNo alanı eklenmez.",
+      affects: [
+        "Tüm ERP belge gönderimleri",
+        "WMS seri sicili ve seri bakiyesi",
+        "Netsis stok kartı seri zorunluluğu",
+      ],
       scenario:
-        "WMS seri bazında stok tutar, Netsis’e yalnız 10 AD miktar gider.",
+        "WMS, SR-001 serisini stok ve raf bakiyesinde tutar; ERP'ye yalnız 10 AD miktar gönderir. Netsis stok kartında seri zorunluysa Netsis bu belgeyi reddedebilir; bu durumda ERP stok kartı ayarıyla proje ayarı uyumlu hale getirilmelidir.",
     },
   ),
 };

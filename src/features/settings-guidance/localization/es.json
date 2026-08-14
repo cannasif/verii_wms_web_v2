@@ -3091,25 +3091,26 @@
       },
       "sendSerialsToErp": {
         "true": {
-          "summary": "También se envía información en serie en las operaciones WMS a las líneas de documentos ERP.",
-          "effect": "También se envía información en serie en las operaciones WMS a las líneas de documentos ERP.",
+          "summary": "Los números de serie utilizados en WMS se envían en todos los tipos de documento ERP.",
+          "effect": "El campo SeriNo se incluye en recepción, transferencia a producción, transferencia entre almacenes, expedición, entrada y salida de almacén.",
           "affects": [
             "Aceptación de bienes",
-            "Transferencia",
-            "ERP records of shipping and warehouse transactions"
+            "Transferencias de producción y almacén",
+            "Documentos ERP de expedición, entrada y salida"
           ],
-          "scenario": "Cuando se acepta el producto serial, la lista de serie se transfiere a la nota de entrega de Netsis.",
-          "decision": "Esta opción controla estas operaciones: Aceptación de bienes, Transferencia, ERP records of shipping and warehouse transactions. Elíjala si desea este resultado: «También se envía información en serie en las operaciones WMS a las líneas de documentos ERP.»"
+          "scenario": "Al recibir o transferir a producción con la serie SR-001, la línea ERP contiene SeriNo SR-001.",
+          "decision": "Active la opción cuando ERP deba controlar las mismas series que WMS. Es una opción global para todos los documentos ERP."
         },
         "false": {
-          "summary": "Las series se ven sólo en el marco del Sistema Mundial de Gestión; The amount of documents is sent to ERP.",
-          "effect": "Las series se ven sólo en el marco del Sistema Mundial de Gestión; The amount of documents is sent to ERP.",
+          "summary": "Las series permanecen en WMS y ninguna línea ERP contiene SeriNo.",
+          "effect": "El registro de series, los saldos por ubicación y los movimientos continúan en WMS; ERP recibe artículo, cantidad y almacén sin serie.",
           "affects": [
-            "Integración de los recursos institucionales",
-            "Registro de serie WMS"
+            "Todos los documentos ERP",
+            "Registro y saldos de series WMS",
+            "Obligatoriedad de serie en la ficha ERP"
           ],
-          "scenario": "WMS mantiene el stock en serie, sólo 10 d.C. va a Netsis.",
-          "decision": "Esta opción controla estas operaciones: Integración de los recursos institucionales, Registro de serie WMS. Elíjala si desea este resultado: «Las series se ven sólo en el marco del Sistema Mundial de Gestión; The amount of documents is sent to ERP.»"
+          "scenario": "WMS conserva SR-001 en sus saldos y ERP recibe sólo cantidad 10. ERP puede rechazar el documento si la ficha exige serie.",
+          "decision": "Desactive para mantener las series sólo en WMS. Alinee esta opción con la obligatoriedad de serie de la ficha ERP."
         }
       }
     },

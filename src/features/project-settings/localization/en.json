@@ -51,8 +51,8 @@
     "label": "Maximum password length"
   },
   "sendSerialsToErp": {
-    "label": "Send serials to ERP",
-    "description": "Transmit serial numbers to the ERP system during goods receipt and related operations."
+    "label": "Send serial numbers in all ERP operations",
+    "description": "When enabled, serial numbers are included in ERP documents for goods receipt, production transfer, warehouse transfer, shipment, warehouse inbound and warehouse outbound. When disabled, serials remain tracked in WMS but no ERP document contains a serial field. ERP may reject the document if its stock card requires serials."
   },
   "passwordSecurityNotice": {
     "label": "Password security:",

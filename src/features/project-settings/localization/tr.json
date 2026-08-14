@@ -51,8 +51,8 @@
     "label": "Maksimum şifre uzunluğu"
   },
   "sendSerialsToErp": {
-    "label": "Serileri ERP'ye gönder",
-    "description": "Mal kabul ve ilgili işlemlerde seri numaralarını ERP sistemine ilet."
+    "label": "Tüm ERP işlemlerinde seri numaralarını gönder",
+    "description": "Açıkken mal kabul, üretime transfer, depolar arası transfer, sevk, ambar giriş ve ambar çıkış belgelerinde seri numaraları ERP'ye gönderilir. Kapalıyken seriler WMS içinde izlenmeye devam eder ancak hiçbir ERP belgesine seri alanı eklenmez. ERP stok kartı seri zorunluysa kapalı kullanım ERP tarafından reddedilebilir."
   },
   "passwordSecurityNotice": {
     "label": "Parola güvenliği:",

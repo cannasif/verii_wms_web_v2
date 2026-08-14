@@ -3091,25 +3091,26 @@
       },
       "sendSerialsToErp": {
         "true": {
-          "summary": "L'information en série dans les opérations WMS est également envoyée aux lignes de documents ERP.",
-          "effect": "L'information en série dans les opérations WMS est également envoyée aux lignes de documents ERP.",
+          "summary": "Les numéros de série utilisés dans le WMS sont envoyés dans tous les types de documents ERP.",
+          "effect": "Le champ SeriNo est inclus pour la réception, le transfert de production, le transfert entre dépôts, l'expédition ainsi que les entrées et sorties de dépôt.",
           "affects": [
             "Acceptation des marchandises",
-            "Transfert",
-            "PGI pour les opérations d ' expédition et d ' entrepôt"
+            "Transferts de production et entre dépôts",
+            "Documents ERP d'expédition, d'entrée et de sortie"
           ],
-          "scenario": "Lorsque le produit série est accepté, la liste série est transférée à la note de livraison Netsis.",
-          "decision": "Cette option contrôle les opérations suivantes : Acceptation des marchandises, Transfert, PGI pour les opérations d ' expédition et d ' entrepôt. Choisissez-la si vous souhaitez ce résultat : « L'information en série dans les opérations WMS est également envoyée aux lignes de documents ERP. »"
+          "scenario": "Lors d'une réception ou d'un transfert de production avec SR-001, la ligne ERP contient SeriNo SR-001.",
+          "decision": "Activez si l'ERP doit suivre les mêmes séries que le WMS. Ce réglage est global pour tous les documents ERP."
         },
         "false": {
-          "summary": "Les séries ne sont vues que dans WMS; Le montant des documents est envoyé au PGI.",
-          "effect": "Les séries ne sont vues que dans WMS; Le montant des documents est envoyé au PGI.",
+          "summary": "Les séries restent dans le WMS et aucune ligne ERP ne contient SeriNo.",
+          "effect": "Le registre des séries, les soldes par emplacement et les mouvements restent actifs dans le WMS ; l'ERP reçoit article, quantité et dépôt sans série.",
           "affects": [
-            "Intégration des PGI",
-            "Registre série WMS"
+            "Tous les documents ERP",
+            "Registre et soldes de séries WMS",
+            "Obligation de série dans la fiche article ERP"
           ],
-          "scenario": "WMS conserve les stocks en série, seulement 10 AD sont attribués à Netsis.",
-          "decision": "Cette option contrôle les opérations suivantes : Intégration des PGI, Registre série WMS. Choisissez-la si vous souhaitez ce résultat : « Les séries ne sont vues que dans WMS; Le montant des documents est envoyé au PGI. »"
+          "scenario": "Le WMS conserve SR-001 dans ses soldes et l'ERP reçoit seulement la quantité 10. L'ERP peut refuser si la série est obligatoire.",
+          "decision": "Désactivez pour conserver les séries uniquement dans le WMS. Alignez ce choix avec l'obligation de série de la fiche ERP."
         }
       }
     },

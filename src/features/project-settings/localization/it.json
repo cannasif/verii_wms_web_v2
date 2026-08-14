@@ -51,8 +51,8 @@
     "label": "Lunghezza massima password"
   },
   "sendSerialsToErp": {
-    "label": "Invia seriali all'ERP",
-    "description": "Trasmetti i numeri di serie al sistema ERP durante la ricezione merce e le operazioni correlate."
+    "label": "Invia i numeri di serie in tutte le operazioni ERP",
+    "description": "Se attivo, i numeri di serie vengono inclusi nei documenti ERP di ricevimento, trasferimento alla produzione, trasferimento tra magazzini, spedizione, entrata e uscita di magazzino. Se disattivo, le serie restano tracciate nel WMS ma nessun documento ERP contiene il campo serie. L'ERP può rifiutare il documento se l'anagrafica articolo richiede la serie."
   },
   "passwordSecurityNotice": {
     "label": "Sicurezza password:",

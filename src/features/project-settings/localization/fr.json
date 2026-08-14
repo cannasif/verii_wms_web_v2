@@ -51,8 +51,8 @@
     "label": "Longueur maximale du mot de passe"
   },
   "sendSerialsToErp": {
-    "label": "Envoyer les numéros de série à l'ERP",
-    "description": "Transmettre les numéros de série au système ERP lors de la réception et des opérations associées."
+    "label": "Envoyer les numéros de série dans toutes les opérations ERP",
+    "description": "Si l'option est activée, les numéros de série sont inclus dans les documents ERP de réception, transfert de production, transfert entre dépôts, expédition, entrée et sortie de dépôt. Si elle est désactivée, les séries restent suivies dans le WMS mais aucun document ERP ne contient de champ série. L'ERP peut refuser le document si la fiche article exige une série."
   },
   "passwordSecurityNotice": {
     "label": "Sécurité du mot de passe :",
