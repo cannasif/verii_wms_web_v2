@@ -49,7 +49,6 @@ function Button({
   disabled,
   loading = false,
   loadingLabel,
-  minimumBusyMs,
   guardAsyncAction = true,
   children,
   ...props
@@ -58,7 +57,6 @@ function Button({
     asChild?: boolean
     loading?: boolean
     loadingLabel?: React.ReactNode
-    minimumBusyMs?: number
     guardAsyncAction?: boolean
     onClick?: AsyncActionHandler<React.MouseEvent<HTMLButtonElement>>
   }) {
@@ -67,7 +65,6 @@ function Button({
   const guarded = useAsyncActionGuard(
     onClick,
     guardAsyncAction && hasClickAction && !asChild && !disabled && !loading,
-    minimumBusyMs,
   )
   const effectiveLoading = loading || guarded.busy
 

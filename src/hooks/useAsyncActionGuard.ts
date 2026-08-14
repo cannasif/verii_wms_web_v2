@@ -1,9 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  DEFAULT_ACTION_BUSY_MS,
-  isPromiseLike,
-  remainingActionBusyTime,
-} from '@/lib/async-action-guard';
+import { isPromiseLike } from '@/lib/async-action-guard';
 
 export type AsyncActionHandler<Event> = (
   event: Event,
@@ -12,18 +8,15 @@ export type AsyncActionHandler<Event> = (
 export function useAsyncActionGuard<Event>(
   onAction: AsyncActionHandler<Event> | undefined,
   enabled = true,
-  minimumBusyMs = DEFAULT_ACTION_BUSY_MS,
 ): { busy: boolean; run: (event: Event) => void } {
   const lockRef = useRef(false);
   const mountedRef = useRef(true);
-  const releaseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
-      if (releaseTimerRef.current) clearTimeout(releaseTimerRef.current);
     };
   }, []);
 
@@ -37,15 +30,10 @@ export function useAsyncActionGuard<Event>(
 
     lockRef.current = true;
     setBusy(true);
-    const startedAt = Date.now();
 
     const release = () => {
-      const remaining = remainingActionBusyTime(startedAt, minimumBusyMs);
-      releaseTimerRef.current = setTimeout(() => {
-        lockRef.current = false;
-        if (mountedRef.current) setBusy(false);
-        releaseTimerRef.current = null;
-      }, remaining);
+      lockRef.current = false;
+      if (mountedRef.current) setBusy(false);
     };
 
     let result: unknown;
@@ -62,7 +50,7 @@ export function useAsyncActionGuard<Event>(
     }
 
     release();
-  }, [enabled, minimumBusyMs, onAction]);
+  }, [enabled, onAction]);
 
   return { busy, run };
 }

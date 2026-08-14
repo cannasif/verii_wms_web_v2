@@ -20,9 +20,7 @@ interface OpsActionButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonEleme
   /** Temaya özel buton içi dönen loading göstergesi */
   loading?: boolean;
   loadingLabel?: ReactNode;
-  /** Çok hızlı işlemlerde loading durumunun görülebileceği en kısa süre. */
-  minimumBusyMs?: number;
-  /** Ortak tek-tıklama/Promise loading korumasını gerektiğinde kapatır. */
+  /** Promise sonuçlanana kadar ortak tek-tıklama/loading korumasını gerektiğinde kapatır. */
   guardAsyncAction?: boolean;
   onClick?: AsyncActionHandler<MouseEvent<HTMLButtonElement>>;
 }
@@ -38,7 +36,6 @@ export const OpsActionButton = forwardRef<HTMLButtonElement, OpsActionButtonProp
     disabled,
     children,
     onClick,
-    minimumBusyMs,
     guardAsyncAction = true,
     ...props
   },
@@ -49,7 +46,6 @@ export const OpsActionButton = forwardRef<HTMLButtonElement, OpsActionButtonProp
   const guarded = useAsyncActionGuard(
     onClick,
     guardAsyncAction && hasClickAction && !asChild && !disabled && !loading,
-    minimumBusyMs,
   );
   const effectiveLoading = loading || guarded.busy;
   const label = effectiveLoading ? (loadingLabel ?? children) : children;
