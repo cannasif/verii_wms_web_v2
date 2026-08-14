@@ -207,6 +207,8 @@ export interface WarehouseTransferDetail {
     description?: string;
     projectCode?: string;
   };
+  sourceIsRackless?: boolean;
+  targetIsRackless?: boolean;
 }
 
 export interface UpdateWarehouseTransferDraft {

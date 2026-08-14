@@ -425,6 +425,7 @@ const isCancellationReturnRemainderContext = (
   row: Pick<ProductionSourceWorkOrder | PreparedNetsisProductionWorkOrder, 'listingKind' | 'transferId' | 'kalanTaskId'>,
 ): boolean =>
   row.listingKind === 'CancellationReturnRemainder'
+  || row.listingKind === 'PartialTransferRemainder'
   || (Number.isFinite(row.transferId) && (row.transferId ?? 0) > 0
     && Number.isFinite(row.kalanTaskId) && (row.kalanTaskId ?? 0) > 0);
 
@@ -436,6 +437,7 @@ const workOrderKey = (row: ProductionSourceWorkOrder): string =>
 
 const sourceListingKindLabel = (kind: ProductionSourceWorkOrder['listingKind']): string => {
   if (kind === 'CancellationReturnRemainder') return 'Transfer iadesi';
+  if (kind === 'PartialTransferRemainder') return 'Eksik teslim kalanı';
   if (kind === 'ManagerCancelledAssignment') return 'İptal edildi';
   if (kind === 'RestoredCancelledAssignment') return 'İş emri';
   return 'İş emri';
@@ -443,6 +445,7 @@ const sourceListingKindLabel = (kind: ProductionSourceWorkOrder['listingKind']):
 
 const sourceListingKindBadgeClass = (kind: ProductionSourceWorkOrder['listingKind']): string => {
   if (kind === 'CancellationReturnRemainder') return 'bg-yellow-500/15 text-yellow-800 dark:text-yellow-300';
+  if (kind === 'PartialTransferRemainder') return 'bg-orange-500/15 text-orange-800 dark:text-orange-300';
   if (kind === 'ManagerCancelledAssignment') return 'bg-amber-500/10 text-amber-700 dark:text-amber-300';
   if (kind === 'RestoredCancelledAssignment') return 'bg-sky-500/10 text-sky-700 dark:text-sky-300';
   return 'bg-sky-500/10 text-sky-700 dark:text-sky-300';
@@ -843,7 +846,9 @@ export function ProductionWorkOrdersPage(): ReactElement {
                   </td>
                   <td className={CELL}>
                     <SourceListingKindBadge row={row} />
-                    {row.listingKind !== 'CancellationReturnRemainder' && row.revisionNumber > 1 ? (
+                    {row.listingKind !== 'CancellationReturnRemainder'
+                      && row.listingKind !== 'PartialTransferRemainder'
+                      && row.revisionNumber > 1 ? (
                       <div className="mt-1 text-xs text-[var(--wms-app-text-muted)]">Rev. {row.revisionNumber}</div>
                     ) : null}
                   </td>
@@ -1266,7 +1271,7 @@ function WorkOrderDrawer({
     if (blocked || !canCreateTransfer || assigneeGroups.length === 0) return;
     const remainingCount = unassignedLines.size;
     const isExistingUnlinkedRemainder =
-      value.listingKind === 'CancellationReturnRemainder'
+      (value.listingKind === 'CancellationReturnRemainder' || value.listingKind === 'PartialTransferRemainder')
       && Number.isFinite(value.transferId) && (value.transferId ?? 0) > 0
       && Number.isFinite(value.kalanTaskId) && (value.kalanTaskId ?? 0) > 0
       && !value.existingProductionOrderId
@@ -1275,7 +1280,11 @@ function WorkOrderDrawer({
     try {
       if (isExistingUnlinkedRemainder) {
         if (assigneeGroups.length !== 1) {
-          throw new Error('İptal kalan transferi aynı oturumda yalnızca tek bir atama grubu ile kaydedilebilir.');
+          throw new Error(
+            value.listingKind === 'PartialTransferRemainder'
+              ? 'Eksik teslim kalan transferi aynı oturumda yalnızca tek bir atama grubu ile kaydedilebilir.'
+              : 'İptal kalan transferi aynı oturumda yalnızca tek bir atama grubu ile kaydedilebilir.',
+          );
         }
         const group = assigneeGroups[0];
         await applyProductionTransferGroupAssignment(value.transferId!, value.kalanTaskId!, group);

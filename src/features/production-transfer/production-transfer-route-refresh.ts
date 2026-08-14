@@ -4,7 +4,7 @@ const PICK_TASK_TYPES = new Set(['Pick']);
 
 export type ProductionReturnCompleteLine = {
   taskLineId: number;
-  targetLocationId: number;
+  targetLocationId?: number | null;
 };
 
 /** İade sonrası aktif toplama görevlerinin rotasını ve rezervasyonlarını yeniler. */

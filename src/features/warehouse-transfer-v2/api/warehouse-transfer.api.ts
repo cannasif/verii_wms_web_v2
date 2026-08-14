@@ -37,6 +37,8 @@ export interface StockLocationBalance {
   locationCode: string;
   locationName: string;
   availableQuantity: number;
+  quantity?: number;
+  reservedQuantity?: number;
 }
 export interface WarehouseTransferOperationLinePayload {
   lineId: number;
@@ -103,6 +105,7 @@ export const warehouseTransferApi = {
     stockId: number,
     yapCodeId: number | undefined,
     excludeLocationIds?: number[],
+    includeOnHand = false,
   ): Promise<StockLocationBalance[]> =>
     unwrap(await api.get<Envelope<StockLocationBalance[]>>(
       `/api/stock-balances/stocks/${stockId}/locations`,
@@ -111,6 +114,7 @@ export const warehouseTransferApi = {
         branchCode,
         yapCodeId: yapCodeId ?? undefined,
         excludeLocationIds: excludeLocationIds?.length ? excludeLocationIds.join(',') : undefined,
+        includeOnHand: includeOnHand || undefined,
       } },
     )),
   stockLocationsPage: async (

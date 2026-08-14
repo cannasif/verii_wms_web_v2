@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useQueries, useQueryClient } from '@tanstack/react-query';
 import {
-  AlertTriangle, Barcode, ChevronRight, Layers, List, Loader2, MapPin, PackageCheck, Play, RefreshCw,
+  AlertTriangle, Barcode, CheckCircle2, ChevronRight, Layers, List, Loader2, MapPin, PackageCheck, Play, RefreshCw,
   RotateCcw, Undo2,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -145,16 +146,67 @@ function isSerialRow(row: ProductionTransferPickingRow): boolean {
 }
 
 function pickingRowSelectionKey(row: ProductionTransferPickingRow): string {
+  let key: string;
   if (isSerialRow(row)) {
-    return `${row.taskLineId}:${row.serialNo!.trim().toUpperCase()}`;
+    key = `${row.taskLineId}:${row.serialNo!.trim().toUpperCase()}`;
+  } else if (row.remainingQuantity <= 0 && row.processedQuantity > 0) {
+    key = `${row.taskLineId}:picked`;
+  } else if (row.processedQuantity <= 0 && row.remainingQuantity > 0) {
+    key = `${row.taskLineId}:open`;
+  } else {
+    key = String(row.taskLineId);
   }
-  if (row.remainingQuantity <= 0 && row.processedQuantity > 0) {
-    return `${row.taskLineId}:picked`;
+  return row.displaySplit ? `${key}:${row.displaySplit}` : key;
+}
+
+function matchesPickingRowSelectionKey(row: ProductionTransferPickingRow, selectedKey?: string): boolean {
+  if (!selectedKey) return false;
+  const key = pickingRowSelectionKey(row);
+  if (key === selectedKey) return true;
+  // UI split satırları seçildiğinde API satırına eşle.
+  return `${key}:stocked` === selectedKey || `${key}:shortage` === selectedKey;
+}
+
+/** Rafsız: bakiyeli / bakiyesiz parçayı raflı rota bölmesi gibi iki satırda göster (yalnızca UI). */
+function expandRacklessPartialShortageRows(
+  rows: ProductionTransferPickingRow[],
+  availableLookup: ReadonlyMap<string, number>,
+): ProductionTransferPickingRow[] {
+  const expanded: ProductionTransferPickingRow[] = [];
+  for (const row of rows) {
+    if (isSerialRow(row) || row.remainingQuantity <= 0 || row.displaySplit) {
+      expanded.push(row);
+      continue;
+    }
+    const available = row.sourceLocationId
+      ? availableLookup.get(`${row.stockId}|${row.sourceLocationId}`) ?? 0
+      : 0;
+    const pickable = Math.max(0, Math.min(row.remainingQuantity, available));
+    const missing = Math.max(0, row.remainingQuantity - available);
+    if (pickable <= 0 || missing <= 0) {
+      expanded.push(row);
+      continue;
+    }
+    expanded.push({
+      ...row,
+      requestedQuantity: pickable,
+      remainingQuantity: pickable,
+      processedQuantity: 0,
+      canPick: Boolean(row.sourceLocationId),
+      displaySplit: 'stocked',
+    });
+    expanded.push({
+      ...row,
+      sourceLocationId: undefined,
+      sourceLocationCode: undefined,
+      requestedQuantity: missing,
+      remainingQuantity: missing,
+      processedQuantity: 0,
+      canPick: false,
+      displaySplit: 'shortage',
+    });
   }
-  if (row.processedQuantity <= 0 && row.remainingQuantity > 0) {
-    return `${row.taskLineId}:open`;
-  }
-  return String(row.taskLineId);
+  return expanded;
 }
 
 function serialRouteCandidateKey(candidate: ProductionTransferRouteRefreshCandidate): string {
@@ -437,9 +489,43 @@ function shouldAutoPickWithoutConfirm(
   return quantity > 0 && quantity <= Math.floor(threshold);
 }
 
+function onHandQuantity(location: {
+  quantity?: number;
+  availableQuantity: number;
+  reservedQuantity?: number;
+}): number {
+  if (location.quantity != null && Number.isFinite(location.quantity)) {
+    return Math.max(0, location.quantity);
+  }
+  return Math.max(0, location.availableQuantity + (location.reservedQuantity ?? 0));
+}
+
+/** Rafsız: barkod üst sınırını raftaki fiziksel bakiyeyle (rezerve dahil) sınırla. Raflıya dokunmaz. */
+function applyRacklessPickQuantityCap(
+  match: ResolveProductionTransferBarcodeResult,
+  availableLookup: ReadonlyMap<string, number>,
+  enabled: boolean,
+): ResolveProductionTransferBarcodeResult {
+  if (!enabled) return match;
+  const available = match.sourceLocationId
+    ? availableLookup.get(`${match.stockId}|${match.sourceLocationId}`) ?? 0
+    : 0;
+  const cappedMax = Math.max(0, Math.min(match.maxPickQuantity, available));
+  const cappedDefault = Math.max(0, Math.min(match.defaultQuantity, cappedMax));
+  if (cappedMax === match.maxPickQuantity && cappedDefault === match.defaultQuantity) return match;
+  return {
+    ...match,
+    maxPickQuantity: cappedMax,
+    defaultQuantity: cappedDefault,
+  };
+}
+
 export function ProductionTransferPickingSection({ transferId, execution, onExecutionChange }: Props) {
   const { t } = useModuleTranslation('production-transfer');
+  const queryClient = useQueryClient();
   const currentUserId = useAuthStore((state) => state.user?.id);
+  const branchCode = useAuthStore((x) => x.branch?.code ?? '0');
+  const warehouseId = execution.sourceWarehouseId;
   const [table, setTable] = useState<ProductionTransferPickingTable>();
   const [board, setBoard] = useState<ProductionTaskBoard>();
   const [loadError, setLoadError] = useState<string>();
@@ -581,36 +667,8 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
     cancelPartialStart,
   } = useProductionTaskStart({ transferId, run: runBoardAction, onError: focusPickingLineError });
 
-  const tableSections = useMemo(() => {
-    if (!table) return [];
-    return buildTableSections(table.rows, tab);
-  }, [tab, table]);
-
-  useEffect(() => {
-    if (!highlightedLineNo) return;
-    const timer = window.setTimeout(() => {
-      document.querySelector(`tr[data-picking-line-no="${highlightedLineNo}"]`)
-        ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 120);
-    const clearTimer = window.setTimeout(() => setHighlightedLineNo(undefined), 8000);
-    return () => {
-      window.clearTimeout(timer);
-      window.clearTimeout(clearTimer);
-    };
-  }, [highlightedLineNo, tableSections]);
-
   const selectedCount = selectedRowKey ? 1 : 0;
-  const selectedRow = table?.rows.find((row) => pickingRowSelectionKey(row) === selectedRowKey);
-  const completedRows = useMemo(
-    () => collectPlacableCompletedRows(tableSections),
-    [tableSections],
-  );
-  const completedSelectedKeyList = useMemo(() => [...completedSelectedKeys], [completedSelectedKeys]);
-  const hasCompletedBulkSelection = completedSelectedKeys.size > 0;
-  const allCompletedRowsSelected = completedRows.length > 0
-    && completedRows.every((row) => completedSelectedKeys.has(pickingRowSelectionKey(row)));
-  const someCompletedRowsSelected = completedRows.some((row) =>
-    completedSelectedKeys.has(pickingRowSelectionKey(row)));
+  const selectedRow = table?.rows.find((row) => matchesPickingRowSelectionKey(row, selectedRowKey));
 
   useEffect(() => {
     if (tab === 'completed') {
@@ -655,6 +713,92 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
     };
   }, [execution.sourceWarehouseId]);
 
+  const toCompletedLocationOption = useCallback((item: LocationOption) => {
+    const label = `${item.code} · ${item.name}`;
+    completedLocationLabelsRef.current[String(item.id)] = label;
+    return { value: String(item.id), label };
+  }, []);
+
+  const fetchCompletedLocationPage = useCallback(async (request: Parameters<typeof warehouseTransferApi.locations>[0]) => {
+    const page = await warehouseTransferApi.locations(request, execution.sourceWarehouseId);
+    return {
+      ...page,
+      items: page.items.filter((item) => !unpickExcludedLocationIds.has(item.id)),
+    };
+  }, [execution.sourceWarehouseId, unpickExcludedLocationIds]);
+
+  const isSourceRackless = Boolean(board?.sourceIsRackless || execution.sourceIsRackless);
+
+  const stockIds = useMemo(
+    () => [...new Set((table?.rows ?? []).map((row) => row.stockId))],
+    [table?.rows],
+  );
+
+  const stockLocationQueries = useQueries({
+    queries: stockIds.map((stockId) => ({
+      queryKey: ['production-pick-stock-locations', branchCode, warehouseId, stockId, 'on-hand'] as const,
+      queryFn: () => warehouseTransferApi.resolveStockLocations(
+        branchCode,
+        warehouseId,
+        stockId,
+        undefined,
+        undefined,
+        true,
+      ),
+      enabled: isSourceRackless && warehouseId > 0 && stockIds.length > 0,
+      staleTime: 30_000,
+    })),
+  });
+
+  const availableLookup = useMemo(() => {
+    const map = new Map<string, number>();
+    stockIds.forEach((stockId, index) => {
+      for (const location of stockLocationQueries[index]?.data ?? []) {
+        map.set(`${stockId}|${location.locationId}`, onHandQuantity(location));
+      }
+    });
+    return map;
+  }, [stockIds, stockLocationQueries]);
+
+  const availabilityReady = stockIds.length === 0
+    || stockLocationQueries.every((query) => query.isFetched);
+  const racklessBalanceReady = isSourceRackless && availabilityReady;
+
+  const displayRows = useMemo(() => {
+    if (!table) return [];
+    if (!isSourceRackless || !availabilityReady) return table.rows;
+    return expandRacklessPartialShortageRows(table.rows, availableLookup);
+  }, [availabilityReady, availableLookup, isSourceRackless, table]);
+
+  const tableSections = useMemo(
+    () => buildTableSections(displayRows, tab),
+    [displayRows, tab],
+  );
+
+  useEffect(() => {
+    if (!highlightedLineNo) return;
+    const timer = window.setTimeout(() => {
+      document.querySelector(`tr[data-picking-line-no="${highlightedLineNo}"]`)
+        ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 120);
+    const clearTimer = window.setTimeout(() => setHighlightedLineNo(undefined), 8000);
+    return () => {
+      window.clearTimeout(timer);
+      window.clearTimeout(clearTimer);
+    };
+  }, [highlightedLineNo, tableSections]);
+
+  const completedRows = useMemo(
+    () => collectPlacableCompletedRows(tableSections),
+    [tableSections],
+  );
+  const completedSelectedKeyList = useMemo(() => [...completedSelectedKeys], [completedSelectedKeys]);
+  const hasCompletedBulkSelection = completedSelectedKeys.size > 0;
+  const allCompletedRowsSelected = completedRows.length > 0
+    && completedRows.every((row) => completedSelectedKeys.has(pickingRowSelectionKey(row)));
+  const someCompletedRowsSelected = completedRows.some((row) =>
+    completedSelectedKeys.has(pickingRowSelectionKey(row)));
+
   useEffect(() => {
     if (tab !== 'completed' || !table) return;
     setCompletedLineTargets((current) => {
@@ -690,20 +834,6 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
     });
   }, [completedRows, tab, table, unpickExcludedLocationIds]);
 
-  const toCompletedLocationOption = useCallback((item: LocationOption) => {
-    const label = `${item.code} · ${item.name}`;
-    completedLocationLabelsRef.current[String(item.id)] = label;
-    return { value: String(item.id), label };
-  }, []);
-
-  const fetchCompletedLocationPage = useCallback(async (request: Parameters<typeof warehouseTransferApi.locations>[0]) => {
-    const page = await warehouseTransferApi.locations(request, execution.sourceWarehouseId);
-    return {
-      ...page,
-      items: page.items.filter((item) => !unpickExcludedLocationIds.has(item.id)),
-    };
-  }, [execution.sourceWarehouseId, unpickExcludedLocationIds]);
-
   const hasCompletedLayoutChanges = useMemo(() => {
     if (tab !== 'completed') return false;
     if (completedSelectedKeys.size > 0) return true;
@@ -719,10 +849,11 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
     return completedRows.filter((row) => {
       const key = pickingRowSelectionKey(row);
       if (selectedOnly && !completedSelectedKeys.has(key)) return false;
+      if (isSourceRackless) return row.processedQuantity > 0;
       const target = completedLineTargets[key];
       return target != null && target !== '' && Number(target) > 0;
     });
-  }, [completedLineTargets, completedRows, completedSelectedKeys]);
+  }, [completedLineTargets, completedRows, completedSelectedKeys, isSourceRackless]);
 
   const singleSelectedNonSerialRow = useMemo(() => {
     if (completedSelectedKeys.size !== 1) return undefined;
@@ -794,6 +925,11 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
 
   const handleCompletedUnpickClick = () => {
     if (busy || !canExecuteCompletedUnpick) return;
+    // Rafsız kaynak: raf seçim dialogunu atla, backend sanal rafı doldurur.
+    if (isSourceRackless) {
+      void confirmCompletedUnpick();
+      return;
+    }
     if (singleSelectedNonSerialRow) {
       openNonSerialUnpickDialog(singleSelectedNonSerialRow);
       return;
@@ -809,8 +945,8 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
       let nextTable = table;
       for (const row of completedRowsReadyToUnpick) {
         const key = pickingRowSelectionKey(row);
-        const targetLocationId = Number(completedLineTargets[key]);
-        if (!Number.isFinite(targetLocationId) || targetLocationId <= 0) continue;
+        const targetLocationId = isSourceRackless ? undefined : Number(completedLineTargets[key]);
+        if (!isSourceRackless && (!Number.isFinite(targetLocationId) || (targetLocationId ?? 0) <= 0)) continue;
         const isSerial = Boolean(row.serialNo?.trim());
         nextTable = await productionTransferApi.unpickToLocation(transferId, {
           taskLineId: row.taskLineId,
@@ -846,8 +982,8 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
 
   const confirmNonSerialUnpickDialog = async () => {
     if (!nonSerialUnpickDialog || busy) return;
-    const targetLocationId = Number(nonSerialUnpickTargetLocation);
-    if (!Number.isFinite(targetLocationId) || targetLocationId <= 0) {
+    const targetLocationId = isSourceRackless ? undefined : Number(nonSerialUnpickTargetLocation);
+    if (!isSourceRackless && (!Number.isFinite(targetLocationId) || (targetLocationId ?? 0) <= 0)) {
       toast.error('Raf seçin.');
       return;
     }
@@ -1154,7 +1290,16 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
     setBusy(true);
     const idempotencyKey = crypto.randomUUID();
     try {
-      const match = await productionTransferApi.resolveBarcode(transferId, scanned);
+      const resolved = await productionTransferApi.resolveBarcode(transferId, scanned);
+      const match = applyRacklessPickQuantityCap(
+        resolved,
+        availableLookup,
+        racklessBalanceReady,
+      );
+      if (racklessBalanceReady && !match.isSerial && Math.floor(match.maxPickQuantity) <= 0) {
+        toast.error('Depoda toplanabilir stok bakiyesi yok.');
+        return;
+      }
       const payload: BarcodeStep1 = {
         barcode: scanned,
         match,
@@ -1224,6 +1369,26 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
       setSelectedSerialCandidateKey(undefined);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Rota adayları alınamadı.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  /** Rafsız: seçili stok bakiyesini yeniden çek; UI satır ayrımı (yeşil/sarı) güncellenir. Raflı rotaya dokunmaz. */
+  const refreshRacklessStockBalance = async () => {
+    if (!isSourceRackless || !selectedRow || table?.isLocked || selectedRow.remainingQuantity <= 0) return;
+    if (warehouseId <= 0) {
+      toast.error('Kaynak depo bulunamadı.');
+      return;
+    }
+    setBusy(true);
+    try {
+      await queryClient.refetchQueries({
+        queryKey: ['production-pick-stock-locations', branchCode, warehouseId, selectedRow.stockId, 'on-hand'],
+      });
+      toast.success('Stok bakiyesi güncellendi.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Stok bakiyesi güncellenemedi.');
     } finally {
       setBusy(false);
     }
@@ -1348,7 +1513,11 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
     && poolPickTask
     && !workerPickTask,
   );
-  const showCompletedShelfColumn = tab === 'completed' && !table.isLocked;
+  // Rafsızda raf sütunu yok; bakiye ikonu stok hücresinin solunda (raflıda dokunulmaz).
+  const showRouteColumns = !table.isLocked;
+  const showShelfLocationCodes = !isSourceRackless;
+  const showLocationColumn = showRouteColumns && showShelfLocationCodes;
+  const showCompletedShelfColumn = tab === 'completed' && !table.isLocked && !isSourceRackless;
 
   return (
     <section className="space-y-4">
@@ -1402,6 +1571,7 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
                     <RotateCcw className="size-4" />
                     Düzeni sıfırla
                   </OpsActionButton>
+                  {!isSourceRackless && (
                   <OpsActionButton
                     variant="secondary"
                     loading={false}
@@ -1413,6 +1583,7 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
                     Yerleştirme rafını seç
                     {hasCompletedBulkSelection ? ` (${completedSelectedKeys.size})` : ''}
                   </OpsActionButton>
+                  )}
                   <OpsActionButton
                     variant="primary"
                     disabled={busy || !canExecuteCompletedUnpick}
@@ -1425,6 +1596,7 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
                 </div>
               ) : (
               <div className="flex min-w-[280px] flex-1 items-center gap-2 xl:flex-none">
+                {!isSourceRackless && (
                 <button
                   type="button"
                   disabled={busy || selectedCount !== 1 || !selectedRow || selectedRow.remainingQuantity <= 0}
@@ -1433,6 +1605,17 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
                 >
                   <RefreshCw className="size-4" />Rotayı güncelle
                 </button>
+                )}
+                {isSourceRackless && (
+                <button
+                  type="button"
+                  disabled={busy || selectedCount !== 1 || !selectedRow || selectedRow.remainingQuantity <= 0}
+                  onClick={() => void refreshRacklessStockBalance()}
+                  className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-amber-500 px-3 py-2 text-xs font-bold text-amber-500 disabled:opacity-40"
+                >
+                  <RefreshCw className="size-4" />Stoğu güncelle
+                </button>
+                )}
                 <div className="relative flex min-w-0 flex-1 items-center gap-2">
                   <button
                     type="button"
@@ -1484,9 +1667,9 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
                   ) : null}
                 </th>
                 <th className={cn(TABLE_HEAD_CELL, 'w-14 text-right')}>No</th>
-                {!table.isLocked && <th className={LOCATION_HEAD_CELL}>Raf</th>}
+                {showLocationColumn && <th className={LOCATION_HEAD_CELL}>Raf</th>}
                 <th className={TABLE_HEAD_CELL}>Stok</th>
-                {!table.isLocked && <th className={TABLE_HEAD_CELL}>Seri</th>}
+                {showRouteColumns && <th className={TABLE_HEAD_CELL}>Seri</th>}
                 <th className={cn(TABLE_HEAD_CELL, 'text-right')}>İstenen</th>
                 <th className={cn(TABLE_HEAD_CELL, 'text-right')}>Kalan</th>
                 <th className={cn(TABLE_HEAD_CELL, 'text-right')}>Toplanan</th>
@@ -1497,10 +1680,14 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
                 if (section.type === 'flat') {
                   return (
                     <PickingRow
-                      key={`flat:${section.row.taskLineId}:${section.row.sourceLocationId ?? 'x'}:${section.row.serialNo ?? ''}`}
+                      key={`flat:${section.row.taskLineId}:${section.row.sourceLocationId ?? 'x'}:${section.row.serialNo ?? ''}:${section.row.displaySplit ?? ''}`}
                       row={section.row}
                       locked={table.isLocked}
-                      showRouteColumns={!table.isLocked}
+                      showRouteColumns={showRouteColumns}
+                      showLocationColumn={showLocationColumn}
+                      showShelfLocationCodes={showShelfLocationCodes}
+                      availableLookup={availableLookup}
+                      availabilityReady={racklessBalanceReady}
                       pickTab={tab}
                       selected={tab === 'completed'
                         ? completedSelectedKeys.has(pickingRowSelectionKey(section.row))
@@ -1532,7 +1719,11 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
                     stockName={section.stockName}
                     rows={section.rows}
                     locked={table.isLocked}
-                    showRouteColumns={!table.isLocked}
+                    showRouteColumns={showRouteColumns}
+                    showLocationColumn={showLocationColumn}
+                    showShelfLocationCodes={showShelfLocationCodes}
+                    availableLookup={availableLookup}
+                    availabilityReady={racklessBalanceReady}
                     pickTab={tab}
                     highlightedLineNo={highlightedLineNo}
                     selectedRowKey={selectedRowKey}
@@ -1844,7 +2035,7 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
                       />
                     </th>
                     <th className="p-3 text-right">No</th>
-                    <th className="p-3 text-left">Raf</th>
+                    {!isSourceRackless && <th className="p-3 text-left">Raf</th>}
                     <th className="p-3 text-left">Seri</th>
                     <th className="p-3 text-right">Kalan</th>
                   </tr>
@@ -1881,7 +2072,7 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
                           />
                         </td>
                         <td className="p-3 text-right font-bold tabular-nums">{row.lineNo}</td>
-                        <td className="p-3 font-bold">{row.sourceLocationCode || '—'}</td>
+                        {!isSourceRackless && <td className="p-3 font-bold">{row.sourceLocationCode || '—'}</td>}
                         <td className="p-3 font-semibold">{row.serialNo || '—'}</td>
                         <td className="p-3 text-right">{formatProjectNumber(row.remainingQuantity)}</td>
                       </tr>
@@ -1939,7 +2130,11 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
               void confirmPick({ ...step1, quantity: String(qty) });
             }}
           >
-            <PickSummary match={step1.match} quantity={parsePositiveIntegerInput(step1.quantity) ?? undefined} />
+            <PickSummary
+              match={step1.match}
+              quantity={parsePositiveIntegerInput(step1.quantity) ?? undefined}
+              hideLocation={isSourceRackless}
+            />
             <label className="mt-4 block text-xs font-bold">Miktar</label>
             <input
               className="input mt-1 w-full"
@@ -2137,7 +2332,7 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
         </ResponsiveDialog>
       )}
 
-      {completedBulkPlacementOpen ? (
+      {completedBulkPlacementOpen && !isSourceRackless ? (
         <ResponsiveDialog
           variant="lookup"
           onClose={() => {
@@ -2337,8 +2532,57 @@ function PickingRowTabs({
   );
 }
 
-function isPickingRowWithoutBalance(row: ProductionTransferPickingRow): boolean {
-  return row.remainingQuantity > 0 && !row.sourceLocationId;
+/** Rafsız: fiziksel bakiye (rezerve dahil) yoksa eksik. Raflıda availabilityReady kapalı kalır. */
+function hasRowShortage(
+  row: ProductionTransferPickingRow,
+  availableLookup: ReadonlyMap<string, number>,
+): boolean {
+  if (row.remainingQuantity <= 0) return false;
+  const available = row.sourceLocationId
+    ? availableLookup.get(`${row.stockId}|${row.sourceLocationId}`) ?? 0
+    : 0;
+  return available <= 0;
+}
+
+type RacklessStockBalanceTone = 'shortage' | 'stocked';
+
+function resolveRacklessStockBalanceTone(
+  row: ProductionTransferPickingRow,
+  availableLookup: ReadonlyMap<string, number>,
+  availabilityReady: boolean,
+): RacklessStockBalanceTone | null {
+  if (row.remainingQuantity <= 0) return null;
+  const shortage = availabilityReady
+    ? hasRowShortage(row, availableLookup)
+    : !row.sourceLocationId;
+  return shortage ? 'shortage' : 'stocked';
+}
+
+function RacklessStockBalanceIcon({ tone }: { tone: RacklessStockBalanceTone }) {
+  if (tone === 'shortage') {
+    return (
+      <span
+        className="inline-flex shrink-0 items-center justify-center"
+        title="Depoda yeterli stok bakiyesi bulunamadı"
+      >
+        <AlertTriangle
+          className="size-5 text-amber-500"
+          aria-label="Stok bakiyesi yok"
+        />
+      </span>
+    );
+  }
+  return (
+    <span
+      className="inline-flex shrink-0 items-center justify-center"
+      title="Depoda toplanabilir stok var"
+    >
+      <CheckCircle2
+        className="size-5 text-emerald-500"
+        aria-label="Stok bakiyesi var"
+      />
+    </span>
+  );
 }
 
 type CompletedShelfProps = {
@@ -2358,10 +2602,16 @@ function PickingLocationCell({
   row,
   serialDetail = false,
   completedShelf,
+  availableLookup,
+  availabilityReady = false,
+  showShelfLocationCodes = true,
 }: {
   row: ProductionTransferPickingRow;
   serialDetail?: boolean;
   completedShelf?: CompletedShelfProps;
+  availableLookup: ReadonlyMap<string, number>;
+  availabilityReady?: boolean;
+  showShelfLocationCodes?: boolean;
 }) {
   if (completedShelf) {
     return (
@@ -2387,7 +2637,11 @@ function PickingLocationCell({
     );
   }
 
-  if (isPickingRowWithoutBalance(row)) {
+  const shortage = availabilityReady
+    ? hasRowShortage(row, availableLookup)
+    : row.remainingQuantity > 0 && !row.sourceLocationId;
+
+  if (shortage) {
     return (
       <td className={cn(LOCATION_CELL, serialDetail && 'pl-6')}>
         <span
@@ -2399,6 +2653,14 @@ function PickingLocationCell({
             aria-label="Stok bakiyesi yok"
           />
         </span>
+      </td>
+    );
+  }
+
+  if (!showShelfLocationCodes) {
+    return (
+      <td className={cn(LOCATION_CELL, serialDetail && 'pl-6')}>
+        <span className="text-[var(--wms-app-text-muted)]">—</span>
       </td>
     );
   }
@@ -2419,14 +2681,32 @@ function PickingLocationCell({
 
 function PickingLocationSummaryCell({
   rows,
+  availableLookup,
+  availabilityReady = false,
+  showShelfLocationCodes = true,
 }: {
   rows: ProductionTransferPickingRow[];
+  availableLookup: ReadonlyMap<string, number>;
+  availabilityReady?: boolean;
+  showShelfLocationCodes?: boolean;
 }) {
   const remaining = rows.reduce((sum, row) => sum + row.remainingQuantity, 0);
-  const locationLabel = summarizeSerialLocations(rows);
-  const hasShortage = rows.some(isPickingRowWithoutBalance);
+  const locationLabel = showShelfLocationCodes ? summarizeSerialLocations(rows) : '—';
+  const hasShortage = availabilityReady
+    ? rows.some((row) => hasRowShortage(row, availableLookup))
+    : rows.some((row) => row.remainingQuantity > 0 && !row.sourceLocationId);
+  // Raflı: stoklu satır varsa raf kodu, yoksa üçgen. Rafsız: stoklu satır varsa "—", hepsi stoksuzsa üçgen.
+  const hasStockedRemaining = availabilityReady
+    ? rows.some((row) => {
+      if (row.remainingQuantity <= 0) return false;
+      const available = row.sourceLocationId
+        ? availableLookup.get(`${row.stockId}|${row.sourceLocationId}`) ?? 0
+        : 0;
+      return available > 0;
+    })
+    : rows.some((row) => row.remainingQuantity > 0 && Boolean(row.sourceLocationId));
 
-  if (hasShortage && locationLabel === '—' && remaining > 0) {
+  if (hasShortage && !hasStockedRemaining && locationLabel === '—' && remaining > 0) {
     return (
       <td className={LOCATION_CELL}>
         <span
@@ -2438,6 +2718,14 @@ function PickingLocationSummaryCell({
             aria-label="Stok bakiyesi yok"
           />
         </span>
+      </td>
+    );
+  }
+
+  if (!showShelfLocationCodes) {
+    return (
+      <td className={LOCATION_CELL}>
+        <span className="text-[var(--wms-app-text-muted)]">—</span>
       </td>
     );
   }
@@ -2470,6 +2758,10 @@ function SerialStockGroup({
   rows,
   locked,
   showRouteColumns,
+  showLocationColumn = true,
+  showShelfLocationCodes = true,
+  availableLookup,
+  availabilityReady = false,
   pickTab,
   highlightedLineNo,
   selectedRowKey,
@@ -2492,6 +2784,10 @@ function SerialStockGroup({
   rows: ProductionTransferPickingRow[];
   locked: boolean;
   showRouteColumns: boolean;
+  showLocationColumn?: boolean;
+  showShelfLocationCodes?: boolean;
+  availableLookup: ReadonlyMap<string, number>;
+  availabilityReady?: boolean;
   pickTab: PickTab;
   highlightedLineNo?: number;
   selectedRowKey?: string;
@@ -2518,6 +2814,14 @@ function SerialStockGroup({
   const hasCompletedRows = rows.some(isRowCompleted);
   const lineNoLabel = summarizeSerialLineNos(rows);
   const headerHighlighted = rows.some((row) => isLineHighlighted(row.lineNo, highlightedLineNo));
+  const racklessGroupTone = useMemo((): RacklessStockBalanceTone | null => {
+    if (showShelfLocationCodes || locked) return null;
+    const tones = rows
+      .map((row) => resolveRacklessStockBalanceTone(row, availableLookup, availabilityReady))
+      .filter((tone): tone is RacklessStockBalanceTone => tone != null);
+    if (tones.length === 0) return null;
+    return tones.every((item) => item === 'shortage') ? 'shortage' : 'stocked';
+  }, [availabilityReady, availableLookup, locked, rows, showShelfLocationCodes]);
 
   useEffect(() => {
     if (highlightedLineNo && rows.some((row) => row.lineNo === highlightedLineNo)) {
@@ -2549,17 +2853,27 @@ function SerialStockGroup({
           </button>
         </td>
         <td className={cn(TABLE_CELL, 'text-right font-bold tabular-nums')}>{lineNoLabel}</td>
-        {showRouteColumns && (
+        {showLocationColumn && (
           showCompletedShelfColumn
             ? (
                 <td className={LOCATION_CELL}>
                   <span className="text-[var(--wms-app-text-muted)]">—</span>
                 </td>
               )
-            : <PickingLocationSummaryCell rows={rows} />
+            : (
+                <PickingLocationSummaryCell
+                  rows={rows}
+                  availableLookup={availableLookup}
+                  availabilityReady={availabilityReady}
+                  showShelfLocationCodes={showShelfLocationCodes}
+                />
+              )
         )}
         <td className={TABLE_CELL}>
-          <StockIdentityCell stockId={stockId} stockCode={stockCode} stockName={stockName} layout="stacked" />
+          <div className="flex items-start gap-2">
+            {racklessGroupTone ? <RacklessStockBalanceIcon tone={racklessGroupTone} /> : null}
+            <StockIdentityCell stockId={stockId} stockCode={stockCode} stockName={stockName} layout="stacked" />
+          </div>
         </td>
         {showRouteColumns && (
           <td className={TABLE_CELL}>
@@ -2592,10 +2906,14 @@ function SerialStockGroup({
           : undefined;
         return (
         <PickingRow
-          key={`serial:${row.taskLineId}:${row.serialNo ?? ''}`}
+          key={`serial:${row.taskLineId}:${row.serialNo ?? ''}:${row.displaySplit ?? ''}`}
           row={row}
           locked={locked}
           showRouteColumns={showRouteColumns}
+          showLocationColumn={showLocationColumn}
+          showShelfLocationCodes={showShelfLocationCodes}
+          availableLookup={availableLookup}
+          availabilityReady={availabilityReady}
           pickTab={pickTab}
           selected={pickTab === 'completed'
             ? (completedSelectedKeys?.has(rowKey) ?? false)
@@ -2616,6 +2934,10 @@ function PickingRow({
   row,
   locked,
   showRouteColumns,
+  showLocationColumn = true,
+  showShelfLocationCodes = true,
+  availableLookup,
+  availabilityReady = false,
   pickTab,
   selected,
   highlighted = false,
@@ -2627,6 +2949,10 @@ function PickingRow({
   row: ProductionTransferPickingRow;
   locked: boolean;
   showRouteColumns: boolean;
+  showLocationColumn?: boolean;
+  showShelfLocationCodes?: boolean;
+  availableLookup: ReadonlyMap<string, number>;
+  availabilityReady?: boolean;
   pickTab: PickTab;
   selected: boolean;
   highlighted?: boolean;
@@ -2638,6 +2964,9 @@ function PickingRow({
   const done = isRowCompleted(row);
   const canSelect = canSelectProductionTransferPickingRow(row, pickTab, locked);
   const isCompletedTab = pickTab === 'completed';
+  const racklessTone = !showShelfLocationCodes && !locked
+    ? resolveRacklessStockBalanceTone(row, availableLookup, availabilityReady)
+    : null;
   return (
     <tr
       data-picking-line-no={row.lineNo}
@@ -2665,14 +2994,28 @@ function PickingRow({
         )}
       </td>
       <td className={cn(TABLE_CELL, 'text-right font-bold tabular-nums')}>{row.lineNo}</td>
-      {showRouteColumns && <PickingLocationCell row={row} serialDetail={serialDetail} completedShelf={completedShelf} />}
+      {showLocationColumn && (
+        <PickingLocationCell
+          row={row}
+          serialDetail={serialDetail}
+          completedShelf={completedShelf}
+          availableLookup={availableLookup}
+          availabilityReady={availabilityReady}
+          showShelfLocationCodes={showShelfLocationCodes}
+        />
+      )}
       <td className={TABLE_CELL}>
-        <StockIdentityCell stockId={row.stockId} stockCode={row.stockCode} stockName={row.stockName} layout="stacked" />
-        {row.isHistorical ? (
-          <span className="mt-1 inline-flex rounded-full border border-sky-500/30 bg-sky-500/10 px-2 py-0.5 text-[10px] font-bold text-sky-700 dark:text-sky-300">
-            {historicalLabel}
-          </span>
-        ) : null}
+        <div className="flex items-start gap-2">
+          {racklessTone ? <RacklessStockBalanceIcon tone={racklessTone} /> : null}
+          <div>
+            <StockIdentityCell stockId={row.stockId} stockCode={row.stockCode} stockName={row.stockName} layout="stacked" />
+            {row.isHistorical ? (
+              <span className="mt-1 inline-flex rounded-full border border-sky-500/30 bg-sky-500/10 px-2 py-0.5 text-[10px] font-bold text-sky-700 dark:text-sky-300">
+                {historicalLabel}
+              </span>
+            ) : null}
+          </div>
+        </div>
       </td>
       {showRouteColumns && (
         <td className={cn(TABLE_CELL, serialDetail && 'font-semibold')}>{row.serialNo || '—'}</td>
@@ -2687,14 +3030,18 @@ function PickingRow({
 function PickSummary({
   match,
   quantity,
+  hideLocation = false,
 }: {
   match: ResolveProductionTransferBarcodeResult;
   quantity?: number;
+  hideLocation?: boolean;
 }) {
   return (
     <div className="rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-surface)] p-4 text-sm">
       <div className="grid gap-2 sm:grid-cols-2">
-        <div><span className="text-xs text-[var(--wms-app-text-muted)]">Raf</span><strong className="block">{match.sourceLocationCode || '—'}</strong></div>
+        {!hideLocation && (
+          <div><span className="text-xs text-[var(--wms-app-text-muted)]">Raf</span><strong className="block">{match.sourceLocationCode || '—'}</strong></div>
+        )}
         <div><span className="text-xs text-[var(--wms-app-text-muted)]">Miktar</span><strong className="block">{formatProjectNumber(quantity ?? match.defaultQuantity)}</strong></div>
         <div className="sm:col-span-2"><StockIdentityCell stockId={match.stockId} stockCode={match.stockCode} stockName={match.stockName} layout="stacked" /></div>
         {match.serialNo && <div><span className="text-xs text-[var(--wms-app-text-muted)]">Seri</span><strong className="block">{match.serialNo}</strong></div>}

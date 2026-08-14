@@ -157,23 +157,26 @@ export function ProductionTransferReturnSection({ transferId, documentNo, onBoar
     openReturnLines.some((line) => selectedLineIdSet.has(line.taskLineId)),
   );
 
+  const isSourceRackless = Boolean(board?.sourceIsRackless);
+
   const returnRowsReadyToPlace = useMemo(() => {
     const selectedOnly = selectedLineIds.length > 0;
     return openReturnLines.filter((line) => {
       if (selectedOnly && !selectedLineIdSet.has(line.taskLineId)) return false;
+      if (isSourceRackless) return true;
       const target = lineTargets[line.taskLineId];
       return target != null && target !== '' && Number(target) > 0;
     });
-  }, [lineTargets, openReturnLines, selectedLineIdSet, selectedLineIds.length]);
+  }, [isSourceRackless, lineTargets, openReturnLines, selectedLineIdSet, selectedLineIds.length]);
 
   const canPlaceReturnOnShelf = returnRowsReadyToPlace.length > 0;
 
   const allTargetsSelected = Boolean(
     openReturnLines.length > 0
-    && openReturnLines.every((line) => {
+    && (isSourceRackless || openReturnLines.every((line) => {
       const value = lineTargets[line.taskLineId];
       return value != null && value !== '' && Number(value) > 0;
-    }),
+    })),
   );
 
   const hasLayoutChanges = useMemo(() => {
@@ -199,7 +202,7 @@ export function ProductionTransferReturnSection({ transferId, documentNo, onBoar
   const buildCompletePayload = (lines: ProductionTaskLine[]) =>
     lines.map((line) => ({
       taskLineId: line.taskLineId,
-      targetLocationId: Number(lineTargets[line.taskLineId]),
+      targetLocationId: isSourceRackless ? undefined : Number(lineTargets[line.taskLineId]),
     }));
 
   const toLocationOption = useCallback((item: LocationOption) => {
@@ -260,8 +263,8 @@ export function ProductionTransferReturnSection({ transferId, documentNo, onBoar
     try {
       let nextBoard = board;
       for (const line of returnRowsReadyToPlace) {
-        const targetLocationId = Number(lineTargets[line.taskLineId]);
-        if (!Number.isFinite(targetLocationId) || targetLocationId <= 0) continue;
+        const targetLocationId = isSourceRackless ? undefined : Number(lineTargets[line.taskLineId]);
+        if (!isSourceRackless && (!Number.isFinite(targetLocationId) || (targetLocationId ?? 0) <= 0)) continue;
         nextBoard = await productionTransferApi.processReturnTaskLine(
           transferId,
           returnTask.taskId,
@@ -302,7 +305,7 @@ export function ProductionTransferReturnSection({ transferId, documentNo, onBoar
   };
 
   const completeReturn = async (task: ProductionTask) => {
-    if (!allTargetsSelected) {
+    if (!isSourceRackless && !allTargetsSelected) {
       toast.error('Tüm satırlar için hedef raf seçin.');
       return;
     }
@@ -369,6 +372,7 @@ export function ProductionTransferReturnSection({ transferId, documentNo, onBoar
                 <RotateCcw className="size-4" />
                 Düzeni sıfırla
               </OpsActionButton>
+              {!isSourceRackless && (
               <OpsActionButton
                 variant="secondary"
                 loading={false}
@@ -380,6 +384,7 @@ export function ProductionTransferReturnSection({ transferId, documentNo, onBoar
                 Yerleştirme rafını seç
                 {hasBulkSelection ? ` (${selectedLineIds.length})` : ''}
               </OpsActionButton>
+              )}
               <OpsActionButton
                 variant="primary"
                 disabled={busy || !canPlaceReturnOnShelf}
@@ -398,7 +403,9 @@ export function ProductionTransferReturnSection({ transferId, documentNo, onBoar
           <>
             {!canWork ? (
               <p className="mb-4 text-sm text-[var(--wms-app-text-muted)]">
-                Hedef rafları seçip iadeyi tamamlamak için önce &quot;Bu işi yapıyorum&quot; butonuna basın.
+                {isSourceRackless
+                  ? 'İadeyi tamamlamak için önce "Bu işi yapıyorum" butonuna basın.'
+                  : 'Hedef rafları seçip iadeyi tamamlamak için önce "Bu işi yapıyorum" butonuna basın.'}
               </p>
             ) : null}
             <div className="overflow-x-auto rounded-xl border border-[var(--wms-app-border)]">
@@ -434,6 +441,11 @@ export function ProductionTransferReturnSection({ transferId, documentNo, onBoar
                           />
                         </td>
                         <td className={TABLE_CELL}>
+                          {isSourceRackless ? (
+                            <span className="inline-flex items-center rounded-full border border-[var(--wms-app-border)] px-3 py-1 text-xs font-semibold text-[var(--wms-app-text-muted)]">
+                              Otomatik
+                            </span>
+                          ) : (
                           <PagedAppDropdown<LocationOption>
                             queryKey={['production-return-target-location', warehouseId, line.taskLineId]}
                             fetchPage={(request) => warehouseTransferApi.locations(request, warehouseId)}
@@ -458,6 +470,7 @@ export function ProductionTransferReturnSection({ transferId, documentNo, onBoar
                             disabled={!canWork || busy || isBulkSelected}
                             className="min-w-[12rem]"
                           />
+                          )}
                         </td>
                         <td className={TABLE_CELL}>
                           <StockIdentityCell stockCode={line.stockCode} stockName={line.stockName} layout="stacked" />
@@ -490,7 +503,7 @@ export function ProductionTransferReturnSection({ transferId, documentNo, onBoar
         )}
       </div>
 
-      {bulkPlacementOpen ? (
+      {bulkPlacementOpen && !isSourceRackless ? (
         <ResponsiveDialog
           variant="lookup"
           onClose={() => {

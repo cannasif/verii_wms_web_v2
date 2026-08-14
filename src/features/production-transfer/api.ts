@@ -51,6 +51,8 @@ export interface ProductionTaskBoard {
   tasks: ProductionTask[];
   workloads: { userId: number; username: string; assignedTaskCount: number; completedTaskCount: number; plannedQuantity: number; processedQuantity: number; completionPercent: number }[];
   eligibleAssignees: { userId: number; username: string; warehouseIds: number[] }[];
+  sourceIsRackless?: boolean;
+  targetIsRackless?: boolean;
 }
 export interface ProductionTaskPoolRow {
   transferId: number; documentNo: string; businessContext: string; transferStatus: string;
@@ -95,9 +97,11 @@ export interface ProductionWorkOrderTransferHeaderRow {
   sourceWarehouseId: number;
   sourceWarehouseCode: number;
   sourceWarehouseName: string;
+  sourceIsRackless?: boolean;
   targetWarehouseId: number;
   targetWarehouseCode: number;
   targetWarehouseName: string;
+  targetIsRackless?: boolean;
   requestedQuantity: number;
   pickedQuantity: number;
   documentDate: string;
@@ -144,6 +148,7 @@ export interface WarehouseTransferReturnSetting {
   defaultProductionTransferLocationId?: number;
   productionPickingStagingLocationId?: number;
   autoPickWithoutConfirmMaxQuantity?: number;
+  isRackless?: boolean;
 }
 export interface DefaultProductionTargetLocation {
   locationId?: number;
@@ -168,7 +173,9 @@ export interface ProductionTransferExecution {
   erpPostingStatus?: 'Pending' | 'Processing' | 'Succeeded' | 'Failed' | 'CommitUncertain';
   erpDocumentNo?: string; erpErrorCode?: string; erpErrorMessage?: string;
   sourceWarehouseId: number; sourceWarehouseCode: number; sourceWarehouseName: string;
+  sourceIsRackless?: boolean;
   targetWarehouseId: number; targetWarehouseCode: number; targetWarehouseName: string;
+  targetIsRackless?: boolean;
   waitingLocationId?: number; waitingLocationCode?: string; waitingLocationName?: string;
   requestedByUserId?: number; requestedByName?: string; handoverConfirmedBy?: number; handoverConfirmedAtUtc?: string;
   handoverShortageReason?: string; parentTransferId?: number; residualTransferId?: number; residualDocumentNo?: string;
@@ -226,6 +233,8 @@ export interface ProductionTransferPickingRow {
   processedQuantity: number;
   canPick: boolean;
   isHistorical?: boolean;
+  /** Yalnızca UI: rafsız kısmi eksik satır ayrımı (API gelmez). */
+  displaySplit?: 'stocked' | 'shortage';
 }
 
 export interface ProductionTransferOverIssueLine {
@@ -405,7 +414,7 @@ export const productionTransferApi = {
     id: number,
     payload: {
       taskLineId: number;
-      targetLocationId: number;
+      targetLocationId?: number | null;
       quantity?: number | null;
       serialNo?: string | null;
     },
@@ -415,7 +424,9 @@ export const productionTransferApi = {
       {
         idempotencyKey: crypto.randomUUID(),
         taskLineId: payload.taskLineId,
-        targetLocationId: payload.targetLocationId,
+        targetLocationId: payload.targetLocationId && payload.targetLocationId > 0
+          ? payload.targetLocationId
+          : 0,
         quantity: payload.quantity ?? null,
         serialNo: payload.serialNo?.trim() || null,
       },
@@ -474,21 +485,24 @@ export const productionTransferApi = {
   completeCancellationReturn: async (
     id: number,
     taskId: number,
-    lines: { taskLineId: number; targetLocationId: number }[],
+    lines: { taskLineId: number; targetLocationId?: number | null }[],
   ): Promise<ProductionTaskBoard> =>
     unwrap(await api.post<Envelope<ProductionTaskBoard>>(`${taskPath(id, taskId)}/complete-cancellation-return`, {
       idempotencyKey: crypto.randomUUID(),
-      lines,
+      lines: lines.map((line) => ({
+        taskLineId: line.taskLineId,
+        targetLocationId: line.targetLocationId && line.targetLocationId > 0 ? line.targetLocationId : 0,
+      })),
     })),
   processReturnTaskLine: async (
     id: number,
     taskId: number,
     taskLineId: number,
-    targetLocationId: number,
+    targetLocationId?: number | null,
   ): Promise<ProductionTaskBoard> =>
     unwrap(await api.post<Envelope<ProductionTaskBoard>>(`${taskPath(id, taskId)}/task-lines/${taskLineId}/process-return`, {
       idempotencyKey: crypto.randomUUID(),
-      targetLocationId,
+      targetLocationId: targetLocationId && targetLocationId > 0 ? targetLocationId : 0,
     })),
 
   // — Depo raf ayarları —
