@@ -5,8 +5,6 @@ import { useTranslation } from 'react-i18next';
 import { Dialog, DialogTitle } from '@/components/ui/dialog';
 import { OpsDialogBody, OpsDialogContent, OpsDialogFooter, OpsDialogHeader } from '@/components/shared/OpsDialogShell';
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024;
-
 export function InitialExcelImportDialog<T>({
   open,
   title,
@@ -20,6 +18,9 @@ export function InitialExcelImportDialog<T>({
   importFile,
   summarize,
   onImported,
+  maxFileSizeMb = 5,
+  warningTitle,
+  downloadStepDescription,
 }: {
   open: boolean;
   title: string;
@@ -33,6 +34,9 @@ export function InitialExcelImportDialog<T>({
   importFile: (file: File, idempotencyKey: string) => Promise<T>;
   summarize: (result: T) => Array<{ label: string; value: string | number }>;
   onImported: () => Promise<void>;
+  maxFileSizeMb?: number;
+  warningTitle?: string;
+  downloadStepDescription?: string;
 }) {
   const { t } = useTranslation('common');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -40,6 +44,7 @@ export function InitialExcelImportDialog<T>({
   const [result, setResult] = useState<T | null>(null);
   const [busy, setBusy] = useState<'download' | 'upload' | null>(null);
   const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
+  const maxFileSize = maxFileSizeMb * 1024 * 1024;
 
   useEffect(() => {
     if (!open) return;
@@ -56,8 +61,8 @@ export function InitialExcelImportDialog<T>({
       toast.error(t('initialExcelImport.errors.invalidExtension'));
       return setFile(null);
     }
-    if (selected.size > MAX_FILE_SIZE) {
-      toast.error(t('initialExcelImport.errors.tooLarge'));
+    if (selected.size > maxFileSize) {
+      toast.error(maxFileSizeMb === 5 ? t('initialExcelImport.errors.tooLarge') : limitText);
       return setFile(null);
     }
     setFile(selected);
@@ -110,12 +115,12 @@ export function InitialExcelImportDialog<T>({
         <OpsDialogBody className="space-y-5">
           <div className="flex gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-200">
             <AlertTriangle className="mt-0.5 size-5 shrink-0" />
-            <div><strong className="block">{t('initialExcelImport.securityRuleTitle')}</strong><p>{warning}</p></div>
+            <div><strong className="block">{warningTitle ?? t('initialExcelImport.securityRuleTitle')}</strong><p>{warning}</p></div>
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             <section className="rounded-xl border p-4">
               <h3 className="font-semibold">{t('initialExcelImport.downloadStepTitle')}</h3>
-              <p className="mt-1 text-sm text-slate-500">{t('initialExcelImport.downloadStepDescription')}</p>
+              <p className="mt-1 text-sm text-slate-500">{downloadStepDescription ?? t('initialExcelImport.downloadStepDescription')}</p>
               <button type="button" disabled={Boolean(busy)} onClick={() => void download()} className="mt-4 inline-flex items-center gap-2 rounded-xl border border-[var(--wms-brand-primary)] px-4 py-2 text-sm font-semibold text-[var(--wms-brand-primary)] disabled:opacity-50">
                 {busy === 'download' ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}{t('initialExcelImport.downloadTemplate')}
               </button>

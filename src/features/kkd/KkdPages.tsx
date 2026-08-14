@@ -29,6 +29,7 @@ import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { AppDropdown, type AppDropdownOption } from '@/components/shared/AppDropdown';
 import { AppDateInput, AppInput } from '@/components/shared/AppInput';
+import { InitialExcelImportDialog } from '@/components/shared/InitialExcelImportDialog';
 import { OpsActionButton } from '@/components/shared/OpsActionButton';
 import { OpsGridEmptyState } from '@/components/shared/OpsGridEmptyState';
 import { OpsLoadingState } from '@/components/shared/OpsLoadingState';
@@ -66,6 +67,7 @@ import {
   type KkdCustomerLookup,
   type KkdDistribution,
   type KkdEntitlementResult,
+  type KkdDefinitionWorkbookImportResult,
   type KkdLookup,
   type KkdPolicy,
   type KkdRemainingEntitlement,
@@ -540,7 +542,9 @@ const splitFullName = (fullName: string): { firstName: string; lastName: string 
 
 export function KkdDefinitionsPage(): ReactElement {
   const qc = useQueryClient();
+  const { can } = usePermissionAccess();
   const [tab, setTab] = useState<DefinitionTab>('department');
+  const [workbookOpen, setWorkbookOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [listSearch, setListSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<DefinitionStatusFilter>('all');
@@ -560,6 +564,10 @@ export function KkdDefinitionsPage(): ReactElement {
   const [form, setForm] = useState<Record<string, string>>(emptyDefinitionForm);
   const isEditing = editingId != null;
   const formActive = form.isActive !== 'false';
+  const canManageWorkbook =
+    can('WMS.KKD.DEFINITIONS.MANAGE') &&
+    can('WMS.KKD.EMPLOYEES.MANAGE') &&
+    can('WMS.KKD.MATRICES.MANAGE');
 
   const clearError = (key: string): void =>
     setFieldErrors((current) => (current[key] ? { ...current, [key]: false } : current));
@@ -826,6 +834,12 @@ export function KkdDefinitionsPage(): ReactElement {
     <KkdPage
       title="KKD Tanımları"
       description="Departman, rol ve personel tanımlarını oluşturun; hak matrisi ile personel ek haklarını buradan yönetin."
+      actions={canManageWorkbook ? (
+        <OpsActionButton variant="secondary" onClick={() => setWorkbookOpen(true)}>
+          <FileSpreadsheet className="size-3.5 shrink-0" />
+          Excel ile toplu yönet
+        </OpsActionButton>
+      ) : null}
       subRow={
         <div className="wms-ops-kkd-definition-tabs wms-ops-detail-dialog w-full min-w-0">
           <Tabs
@@ -1200,6 +1214,34 @@ export function KkdDefinitionsPage(): ReactElement {
           </div>
         ) : null}
       </ResponsiveDialog>
+      <InitialExcelImportDialog<KkdDefinitionWorkbookImportResult>
+        open={workbookOpen}
+        onOpenChange={setWorkbookOpen}
+        title="KKD tanımlarını tek Excel ile yönet"
+        description="Departman, rol, personel ve hak matrislerini mevcut kayıtlarla dolu tek dosyada düzenleyin."
+        warningTitle="Güvenli güncelleme kuralı"
+        warning="Önce güncel şablonu indirin. ID ve kodları değiştirmeyin. Dosyadan satır silmek sistemden kayıt silmez; bir kaydı kullanımdan kaldırmak için Aktif alanını HAYIR yapın. Dosyanın tamamı doğrulanır ve tek işlemde uygulanır; tek bir hatalı satır varsa hiçbir kayıt değişmez."
+        downloadStepDescription="Dosya; mevcut departmanları, rolleri, personelleri, hak matrislerini, kuralları ve dönemleri dolu getirir. Cari, stok ve kullanıcı sayfaları seçim yaparken başvuru kaynağıdır."
+        templateFileName={`WMS_KKD_Tanimlari_${new Date().toLocaleDateString('en-CA')}.xlsx`}
+        limitText="Yalnızca .xlsx · en fazla 15 MB · her sayfada en fazla 10.000 veri satırı"
+        submitLabel="Dosyayı doğrula ve uygula"
+        maxFileSizeMb={15}
+        downloadTemplate={kkdApi.downloadDefinitionWorkbook}
+        importFile={kkdApi.importDefinitionWorkbook}
+        summarize={(result) => [
+          { label: 'Toplam satır', value: result.totalRows },
+          { label: 'Yeni kayıt', value: result.created },
+          { label: 'Güncellendi', value: result.updated },
+          { label: 'Değişmedi', value: result.unchanged },
+          { label: 'Departman', value: result.departments.processed },
+          { label: 'Rol', value: result.roles.processed },
+          { label: 'Personel', value: result.employees.processed },
+          { label: 'Hak matrisi', value: result.matrices.processed },
+        ]}
+        onImported={async () => {
+          await qc.invalidateQueries({ queryKey: ['kkd'] });
+        }}
+      />
     </KkdPage>
   );
 }

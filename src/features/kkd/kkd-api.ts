@@ -133,6 +133,18 @@ export type KkdPaged<T> = {
   hasPreviousPage: boolean; hasNextPage: boolean;
 };
 
+export type KkdDefinitionWorkbookCategoryResult = {
+  created: number; updated: number; unchanged: number; processed: number;
+};
+export type KkdDefinitionWorkbookImportResult = {
+  totalRows: number; created: number; updated: number; unchanged: number;
+  departments: KkdDefinitionWorkbookCategoryResult;
+  roles: KkdDefinitionWorkbookCategoryResult;
+  employees: KkdDefinitionWorkbookCategoryResult;
+  matrices: KkdDefinitionWorkbookCategoryResult;
+  warnings: string[];
+};
+
 /** Not: 'quotapending' backend'deki KkdRequestBoardTab.QuotaPending'e Enum.TryParse(ignoreCase:true) ile eşleşir — tire/boşluk desteklenmiyor. */
 export type KkdRequestBoardTab = 'all' | 'pending' | 'preparing' | 'completed' | 'cancelled' | 'mine' | 'quotapending';
 
@@ -300,6 +312,15 @@ export const kkdApi = {
       `/api/kkd/warehouses/${warehouseId}/picking-staging-location`,
       { locationId },
     )),
+  downloadDefinitionWorkbook: async (): Promise<Blob> =>
+    api.get<Blob>('/api/kkd/definitions/import-template', { responseType: 'blob' }),
+  importDefinitionWorkbook: async (file: File, idempotencyKey: string): Promise<KkdDefinitionWorkbookImportResult> => {
+    const data = new FormData();
+    data.append('file', file);
+    return unwrap(await api.post<Envelope<KkdDefinitionWorkbookImportResult>>('/api/kkd/definitions/import', data, {
+      headers: { 'Idempotency-Key': idempotencyKey },
+    }));
+  },
   departments: async () => unwrap(await api.get<Envelope<KkdLookup[]>>('/api/kkd/departments')),
   roles: async (departmentId?: number) => unwrap(await api.get<Envelope<KkdLookup[]>>('/api/kkd/roles', { params: { departmentId } })),
   customersPaged: async (request: DropdownPageRequest): Promise<DropdownPage<KkdCustomerLookup>> =>
