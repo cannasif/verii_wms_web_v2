@@ -124,16 +124,21 @@ export function StockIdentityCell({
       {menu && createPortal(
         <>
           <div
-            className="pointer-events-auto fixed inset-0 z-[10050]"
+            className="pointer-events-auto fixed inset-0 z-[12050]"
             aria-hidden
-            onPointerDown={() => setMenu(null)}
+            onPointerDown={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              setMenu(null);
+            }}
           />
           <div
             ref={menuRef}
             role="menu"
             aria-label={t('stockCard.menuLabel')}
             style={{ left: menu.x, top: menu.y }}
-            className="wms-ops-stock-ctx pointer-events-auto fixed z-[10060] w-64 max-w-[calc(100vw-1rem)]"
+            className="wms-ops-stock-ctx pointer-events-auto fixed z-[12060] w-64 max-w-[calc(100vw-1rem)]"
+            onPointerDown={(event) => event.stopPropagation()}
           >
             <div className="wms-ops-stock-ctx__header">
               <div className="wms-ops-stock-ctx__title-row">

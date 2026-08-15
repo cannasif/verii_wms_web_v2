@@ -18,6 +18,7 @@ import { SessionRecoveryPage } from '@/features/auth/components/SessionRecoveryP
 import { WarehouseAmbientBackground } from '@/components/shared/WarehouseAmbientBackground';
 import { OpsRouteLoadingState } from '@/components/shared/OpsRouteLoadingState';
 import { StockCardProvider } from '@/features/erp-mirror/components/StockCardProvider';
+import { InventoryLookupProvider } from '@/features/stock-balances/components/InventoryLookupProvider';
 import { useUserDetail } from '@/features/user-detail/hooks/useUserDetail';
 import {
   DEFAULT_WMS_BACKGROUND_MOTION,
@@ -119,54 +120,56 @@ export function AppLayout() {
 
       <div className="relative z-10 flex h-full min-h-0 overflow-hidden">
         {!isPremium && <Sidebar items={visibleNavItems} />}
-        <div
-          className="app-main-panel relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
-          data-layout-region="application"
-        >
-          <Navbar navItems={visibleNavItems} />
-          {isPremium && <PremiumTopNav items={visibleNavItems} />}
-          <section
-            className="relative isolate flex min-h-0 min-w-0 flex-1 overflow-hidden"
-            data-layout-region="workspace"
-          >
-            <main
-              ref={mainRef}
-              className="wms-ops-scrollbar custom-scrollbar crm-skin relative min-h-0 min-w-0 flex-1 touch-pan-y overflow-x-hidden overflow-y-auto overscroll-contain"
-              data-layout-region="screen"
-            >
-              {!isPremium ? (
-                <>
-                  <div aria-hidden className="pointer-events-none absolute inset-0 z-0 wms-ops-main-glow" />
-                  <div aria-hidden className="pointer-events-none absolute inset-0 z-0 wms-ops-grid-bg" />
-                </>
-              ) : null}
-              <div
-                className={cn(
-                  'relative z-[1] w-full wms-ops-workspace-host wms-ops-form wms-ops-list',
-                  isPremium
-                    ? 'mx-auto max-w-[1560px] px-4 py-5 sm:px-6 sm:py-6 lg:px-8'
-                    : 'px-3 py-3 sm:px-4 sm:py-4',
-                )}
-              >
-                <Suspense fallback={<WorkspaceRouteLoader />}>
-                  <LegacyLocalizationBoundary>
-                    <StockCardProvider>
-                      <Outlet />
-                    </StockCardProvider>
-                  </LegacyLocalizationBoundary>
-                </Suspense>
-              </div>
-            </main>
-            <div
-              id={WORKSPACE_PORTAL_ROOT_ID}
-              className="pointer-events-none absolute inset-0 z-[80] overflow-hidden wms-ops-workspace-host wms-ops-form wms-ops-list"
-            />
-          </section>
+        <StockCardProvider>
+          <InventoryLookupProvider>
           <div
-            id={SHELL_PORTAL_ROOT_ID}
-            className="pointer-events-none absolute inset-0 z-[100] overflow-visible"
-          />
-        </div>
+            className="app-main-panel relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
+            data-layout-region="application"
+          >
+            <Navbar navItems={visibleNavItems} />
+            {isPremium && <PremiumTopNav items={visibleNavItems} />}
+            <section
+              className="relative isolate flex min-h-0 min-w-0 flex-1 overflow-hidden"
+              data-layout-region="workspace"
+            >
+              <main
+                ref={mainRef}
+                className="wms-ops-scrollbar custom-scrollbar crm-skin relative min-h-0 min-w-0 flex-1 touch-pan-y overflow-x-hidden overflow-y-auto overscroll-contain"
+                data-layout-region="screen"
+              >
+                {!isPremium ? (
+                  <>
+                    <div aria-hidden className="pointer-events-none absolute inset-0 z-0 wms-ops-main-glow" />
+                    <div aria-hidden className="pointer-events-none absolute inset-0 z-0 wms-ops-grid-bg" />
+                  </>
+                ) : null}
+                <div
+                  className={cn(
+                    'relative z-[1] w-full wms-ops-workspace-host wms-ops-form wms-ops-list',
+                    isPremium
+                      ? 'mx-auto max-w-[1560px] px-4 py-5 sm:px-6 sm:py-6 lg:px-8'
+                      : 'px-3 py-3 sm:px-4 sm:py-4',
+                  )}
+                >
+                  <Suspense fallback={<WorkspaceRouteLoader />}>
+                    <LegacyLocalizationBoundary>
+                      <Outlet />
+                    </LegacyLocalizationBoundary>
+                  </Suspense>
+                </div>
+              </main>
+              <div
+                id={WORKSPACE_PORTAL_ROOT_ID}
+                className="pointer-events-none absolute inset-0 z-[80] overflow-hidden wms-ops-workspace-host wms-ops-form wms-ops-list"
+              />
+            </section>
+            <div
+              id={SHELL_PORTAL_ROOT_ID}
+              className="pointer-events-none absolute inset-0 z-[100] overflow-visible"
+            />
+          </div>
+          </InventoryLookupProvider>
+        </StockCardProvider>
       </div>
     </div>
   );

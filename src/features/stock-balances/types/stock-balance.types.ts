@@ -5,3 +5,50 @@ export interface SerialMovementHistoryRow { id:number; operationId:number; opera
 export interface StockBalanceDrillDown { summary:WarehouseBalanceRow; locations:LocationBalanceRow[] }
 export interface ReconciliationSummary { ledgerGroupCount:number; projectionGroupCount:number; mismatchCount:number; missingProjectionCount:number; extraProjectionCount:number; ledgerLastEntryId:number; projectionLastEntryId:number; checkedAt:string }
 export interface ProjectionRebuildResult { locationRows:number; warehouseRows:number; lastMovementEntryId:number; rebuiltAt:string }
+
+export interface WarehouseInventoryLookup {
+  warehouseId: number;
+  warehouseCode: number;
+  warehouseName: string;
+  branchCode: string;
+  quantity: number;
+  reservedQuantity: number;
+  availableQuantity: number;
+  distinctStockCount: number;
+  distinctLocationCount: number;
+  linesTruncated: boolean;
+  lines: LocationBalanceRow[];
+}
+
+export interface LocationInventoryLookup {
+  locationId: number;
+  locationCode: string;
+  locationName: string;
+  locationType: string;
+  warehouseId: number;
+  warehouseCode: number;
+  warehouseName: string;
+  branchCode: string;
+  quantity: number;
+  reservedQuantity: number;
+  availableQuantity: number;
+  distinctStockCount: number;
+  linesTruncated: boolean;
+  lines: LocationBalanceRow[];
+}
+
+export interface SerialInventoryLookup {
+  balance: SerialBalanceRow;
+  recentMovements: SerialMovementHistoryRow[];
+}
+
+export interface LotInventoryLookup {
+  lotNo: string;
+  quantity: number;
+  reservedQuantity: number;
+  availableQuantity: number;
+  distinctStockCount: number;
+  distinctLocationCount: number;
+  linesTruncated: boolean;
+  lines: LocationBalanceRow[];
+}
