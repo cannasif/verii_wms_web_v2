@@ -84,7 +84,7 @@
     "documentSettings": "Belge ve emir ayarları"
   },
   "manual": {
-    "eyebrow": "Mal Kabul Operasyonu", "directTitle": "Doğrudan Mal Kabul", "orderlessTitle": "Siparişsiz Mal Kabul Emri",
+    "eyebrow": "Mal Kabul Operasyonu", "directTitle": "Yurt İçi Mal Kabul", "orderlessTitle": "Siparişsiz Mal Kabul Emri",
     "directSubtitle": "Belgeyi doğrulayın; fiziksel kabul, kalite ve stok hareketini kontrollü biçimde oluşturun.",
     "orderlessSubtitle": "Sipariş bağlantısı olmadan planlı kabul emri ve görev oluşturun.", "currentStep": "Adım",
     "steps": { "document": "Belge", "operation": "Operasyon", "lines": "Stok Satırları", "review": "Kontrol" },

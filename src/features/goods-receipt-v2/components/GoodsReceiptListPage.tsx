@@ -1,4 +1,5 @@
-import { useCallback, useMemo, useState, type ReactElement } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Ban, Eye, FileText, Loader2, Printer, RefreshCw, Scale } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -41,6 +42,8 @@ const ERP_RETRY_STATUSES = ['Pending', 'Failed', 'CommitUncertain'] as const;
 export function GoodsReceiptListPage(): ReactElement {
   const { t, moduleReady } = useModuleTranslation('goods-receipt-v2');
   const { can } = usePermissionAccess();
+  const [searchParams] = useSearchParams();
+  const openedFromQueryRef = useRef<number | null>(null);
   const [detailView, setDetailView] = useState<GoodsReceiptDetailViewState | null>(null);
   const [erpRetryRow, setErpRetryRow] = useState<GoodsReceiptGridRow | null>(null);
   const [listFacets, setListFacets] = useState<GoodsReceiptListFacets>(EMPTY_GOODS_RECEIPT_LIST_FACETS);
@@ -98,6 +101,15 @@ export function GoodsReceiptListPage(): ReactElement {
     },
     [t],
   );
+
+  useEffect(() => {
+    const raw = searchParams.get('open');
+    const id = raw ? Number(raw) : NaN;
+    if (!Number.isFinite(id) || id <= 0) return;
+    if (openedFromQueryRef.current === id) return;
+    openedFromQueryRef.current = id;
+    void openDetail(id);
+  }, [openDetail, searchParams]);
 
   const output = useCallback(
     async (receiptId: number, lineId: number | undefined, mode: OutputMode, title: string) => {

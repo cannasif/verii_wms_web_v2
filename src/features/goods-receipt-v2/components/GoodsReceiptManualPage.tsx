@@ -421,6 +421,8 @@ export function GoodsReceiptManualPage({
           }
           getKey={(item) => String(item.id)}
           getLabel={(item) => `${item.customerName} (${item.customerCode})`}
+          getPrimaryLabel={(item) => item.customerName}
+          getSecondaryLabel={(item) => item.customerCode}
           onSelect={(item) => setCustomer(encodeCustomerValue(item))}
         />
       </Field>

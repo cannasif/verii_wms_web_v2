@@ -20,6 +20,9 @@ type Props = {
   stockId: number;
   stockName?: string | null;
   className?: string;
+  /** Tıklanınca lightbox yerine bu callback açılır (görüntüle + yükle popup). */
+  onOpen?: () => void;
+  canUpload?: boolean;
 };
 
 function pickPrimaryImage(images: StockImage[] | undefined): StockImage | null {
@@ -28,13 +31,15 @@ function pickPrimaryImage(images: StockImage[] | undefined): StockImage | null {
 }
 
 /**
- * Lazy stok görseli: hover/tık ile istek atar.
- * Görsel yoksa ikon pasif kalır; sadece native tooltip (“Stok görseli yok”) gösterilir.
+ * Lazy stok görseli: hover ile istek atar.
+ * Görsel varsa küçük önizleme; tıklanınca galeri/yükleme popup'ı açılır.
  */
 export function StockImagePeekButton({
   stockId,
   stockName,
   className,
+  onOpen,
+  canUpload = false,
 }: Props): ReactElement | null {
   const { t } = useTranslation('goods-receipt-v2');
   const tipId = useId();
@@ -79,7 +84,7 @@ export function StockImagePeekButton({
   };
 
   const beginHover = () => {
-    if (lightboxOpen || isEmpty) return;
+    if (lightboxOpen) return;
     clearLeaveTimer();
     setIntentLoad(true);
     setHovering(true);
@@ -119,9 +124,14 @@ export function StockImagePeekButton({
   if (!(stockId > 0)) return null;
 
   const showHoverPeek = peekOpen && !lightboxOpen && Boolean(image) && Boolean(anchor);
-  const titleText = isEmpty
-    ? t('createFlow.entryRow.stockImageEmpty')
-    : t('createFlow.entryRow.stockImageHint');
+  const opensGallery = typeof onOpen === "function";
+  const titleText = canUpload
+    ? isEmpty || !query.isSuccess
+      ? t("createFlow.entryRow.stockImageTooltipEmpty")
+      : t("createFlow.entryRow.stockImageTooltipHasImage")
+    : isEmpty || !query.isSuccess
+      ? t("createFlow.entryRow.stockImageEmpty")
+      : t("createFlow.entryRow.stockImageTooltipView");
 
   return (
     <>
@@ -133,12 +143,8 @@ export function StockImagePeekButton({
           isEmpty && 'wms-ops-stock-image-peek--empty',
           className,
         )}
-        aria-label={
-          isEmpty
-            ? t('createFlow.entryRow.stockImageEmpty')
-            : t('createFlow.entryRow.stockImageAria', { name: label })
-        }
-        aria-disabled={isEmpty || undefined}
+        aria-label={titleText}
+        aria-disabled={!opensGallery && isEmpty ? true : undefined}
         aria-describedby={showHoverPeek ? tipId : undefined}
         title={titleText}
         onMouseEnter={beginHover}
@@ -148,11 +154,15 @@ export function StockImagePeekButton({
         onClick={(event) => {
           event.preventDefault();
           event.stopPropagation();
-          if (isEmpty) return;
           clearLeaveTimer();
           setIntentLoad(true);
           setHovering(false);
           setPeekOpen(false);
+          if (opensGallery) {
+            onOpen();
+            return;
+          }
+          if (isEmpty) return;
           setLightboxOpen(true);
         }}
       >

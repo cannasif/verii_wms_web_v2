@@ -9,7 +9,6 @@ import {
   type ReactElement,
   type ReactNode,
 } from "react";
-import { createPortal } from "react-dom";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -23,7 +22,6 @@ import {
   Copy,
   Globe,
   Hash,
-  ImagePlus,
   Loader2,
   Mail,
   MapPin,
@@ -70,7 +68,7 @@ import {
   parseLocalizedNumber,
 } from "@/lib/project-format";
 import { cn } from "@/lib/utils";
-import { getWorkspacePortalRoot } from "@/lib/workspace-portal";
+import { isRequestCanceled } from "@/lib/request-utils";
 import { navigateToErrorTarget, toastError } from "@/lib/toast-error-navigation";
 import { useAuthStore } from "@/stores/auth-store";
 import { useProjectSettingsStore } from "@/stores/project-settings-store";
@@ -309,6 +307,7 @@ export function GoodsReceiptCreatePage({
     "orders" | "orderByNumber" | "lines" | "confirm" | "create" | null
   >(null);
   const busy = busyAction != null;
+  const loadLinesLockRef = useRef(false);
   const [error, setError] = useState<string | null>(null);
   const [submitOverlay, setSubmitOverlay] = useState<{
     mode: "receipt" | "quality";
@@ -334,6 +333,7 @@ export function GoodsReceiptCreatePage({
   );
   const [orderNumberSearch, setOrderNumberSearch] = useState("");
   const [orders, setOrders] = useState<OpenOrderHeader[]>([]);
+  const [ordersLoaded, setOrdersLoaded] = useState(false);
   const [directOrderLines, setDirectOrderLines] = useState<OpenOrderLine[]>([]);
   const [selectedDirectLineKeys, setSelectedDirectLineKeys] = useState<string[]>([]);
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
@@ -538,6 +538,7 @@ export function GoodsReceiptCreatePage({
       ? [
           {
             lineKey: lineKey(line),
+            stockId: line.stockId,
             stockCode: line.stockCode,
             stockName: line.stockName,
             quantity: line.quantity,
@@ -549,6 +550,8 @@ export function GoodsReceiptCreatePage({
             qualityRequiredByRule: Boolean(line.qualityRequiredByRule),
             forcedQuality:
               Boolean(line.forceQualityControl) && !line.qualityRequiredByRule,
+            receivingLocationCode: line.receivingLocationCode,
+            putawayLocationCode: line.putawayLocationCode,
           },
         ]
       : [],
@@ -598,6 +601,9 @@ export function GoodsReceiptCreatePage({
     setOrderNumberSearch(draft.orderNumberSearch ?? "");
     setOrders(draft.orders ?? []);
     setDirectOrderLines(draft.directOrderLines ?? []);
+    setOrdersLoaded(
+      (draft.orders?.length ?? 0) > 0 || (draft.directOrderLines?.length ?? 0) > 0,
+    );
     setSelectedDirectLineKeys(draft.selectedDirectLineKeys ?? []);
     setSelectedOrders(draft.selectedOrders ?? []);
     setLines(draft.lines ?? []);
@@ -799,6 +805,7 @@ export function GoodsReceiptCreatePage({
     setWarehouseByCode(new Map());
     setOrders([]);
     setDirectOrderLines([]);
+    setOrdersLoaded(false);
     setSelectedDirectLineKeys([]);
     setSelectedOrders([]);
     setLines([]);
@@ -872,6 +879,7 @@ export function GoodsReceiptCreatePage({
       setSearchDraft("");
       setOrders(groupedOrders);
       setDirectOrderLines(direct ? rows : []);
+      setOrdersLoaded(true);
       setSelectedDirectLineKeys([]);
       setSelectedOrders(
         !direct &&
@@ -943,6 +951,7 @@ export function GoodsReceiptCreatePage({
         setSelectedDirectLineKeys([]);
         const directOrders = groupOrderLines(filteredLines);
         setOrders(directOrders);
+        setOrdersLoaded(true);
         const warehouses = await resolveWarehousesByCode(
           filteredLines,
           customer.branch,
@@ -962,6 +971,7 @@ export function GoodsReceiptCreatePage({
       });
       const filtered = rows;
       setOrders(filtered);
+      setOrdersLoaded(true);
       if (filtered.length === 1 && canUseOrderWarehouse(filtered[0].targetWarehouseCode))
         setSelectedOrders([filtered[0].siparisNo]);
     } catch (cause) {
@@ -973,12 +983,14 @@ export function GoodsReceiptCreatePage({
 
   const loadLines = async (): Promise<void> => {
     if (
+      loadLinesLockRef.current ||
       !customer ||
       (direct
         ? selectedDirectLineKeys.length === 0
         : selectedOrders.length === 0)
     )
       return;
+    loadLinesLockRef.current = true;
     setBusyAction("lines");
     setError(null);
     try {
@@ -1205,6 +1217,7 @@ export function GoodsReceiptCreatePage({
     } catch (cause) {
       report(cause, t("createFlow.errors.orderLinesLoadFailed"));
     } finally {
+      loadLinesLockRef.current = false;
       setBusyAction(null);
     }
   };
@@ -1726,6 +1739,7 @@ export function GoodsReceiptCreatePage({
   };
 
   const report = (cause: unknown, fallback: string): void => {
+    if (isRequestCanceled(cause)) return;
     const message = cause instanceof Error ? cause.message : fallback;
     setError(message);
     toast.error(message);
@@ -1970,8 +1984,12 @@ export function GoodsReceiptCreatePage({
                       getLabel={(item) =>
                         `${item.customerName} (${item.customerCode})`
                       }
+                      getPrimaryLabel={(item) => item.customerName}
+                      getSecondaryLabel={(item) => item.customerCode}
                       onSelect={(item) => {
+                        const sameCustomer = selectedCustomer?.id === item.id;
                         setSelectedCustomer(item);
+                        if (sameCustomer) return;
                         setOrderNumberSearch("");
                         clearCustomerDependent();
                       }}
@@ -1982,7 +2000,7 @@ export function GoodsReceiptCreatePage({
                     variant="primary"
                     loading={busyAction === "orders"}
                     disabled={busy || !customer}
-                    onClick={() => void loadOrders()}
+                    onClick={() => loadOrders()}
                     className="wms-ops-order-lookup__action shrink-0"
                   >
                     {t("loadOrders")}
@@ -2042,7 +2060,7 @@ export function GoodsReceiptCreatePage({
                     variant="primary"
                     loading={busyAction === "orderByNumber"}
                     disabled={busy || !orderNumberSearch.trim()}
-                    onClick={() => void loadOrderByNumber()}
+                    onClick={() => loadOrderByNumber()}
                     className="wms-ops-order-lookup__action shrink-0"
                   >
                     {t("createFlow.fetchOrder")}
@@ -2496,7 +2514,7 @@ export function GoodsReceiptCreatePage({
                 <div className="wms-ops-panel-empty py-10 text-center">
                   <PackageOpen className="mx-auto size-8 opacity-50" aria-hidden />
                   <p className="mt-3 text-sm text-[var(--wms-app-text-muted)]">
-                    {t("noOrders")}
+                    {t(ordersLoaded ? "noOrders" : "ordersIdle")}
                   </p>
                 </div>
               ) : !direct ? (
@@ -2593,7 +2611,7 @@ export function GoodsReceiptCreatePage({
                       ? selectedDirectLineKeys.length === 0
                       : selectedOrders.length === 0) || busy
                   }
-                  onClick={() => void loadLines()}
+                  onClick={() => loadLines()}
                 >
                   {direct ? t("createFlow.prepareSelectedLines") : t("loadLines")}
                 </OpsActionButton>
@@ -2913,20 +2931,20 @@ export function GoodsReceiptCreatePage({
             </>
           )}
 
-            {/* Docked Geri/Devam ile "Seçili kalemleri hazırla" çakışmasın */}
-            <div className="h-24 shrink-0 sm:h-28" aria-hidden />
-
-            <Footer
-              docked
-              back={() => {
-                setError(null);
-                setLines([]);
-              }}
-              next={() => void goToConfirmation()}
-              disabled={busy}
-              loading={busyAction === "confirm"}
-              t={t}
-            />
+            {(direct
+              ? selectedDirectLineKeys.length > 0
+              : selectedOrders.length > 0) ? (
+              <Footer
+                back={() => {
+                  setError(null);
+                  setLines([]);
+                }}
+                next={() => goToConfirmation()}
+                disabled={busy}
+                loading={busyAction === "confirm"}
+                t={t}
+              />
+            ) : null}
         </>
       )}
 
@@ -2951,6 +2969,8 @@ export function GoodsReceiptCreatePage({
                   setLines([]);
                   setSelectedOrders([]);
                   setOrders([]);
+                  setDirectOrderLines([]);
+                  setOrdersLoaded(false);
                   setReceiptNo("");
                   setWaybillDate(today());
                   setError(null);
@@ -2971,6 +2991,8 @@ export function GoodsReceiptCreatePage({
                 setLines([]);
                 setSelectedOrders([]);
                 setOrders([]);
+                setDirectOrderLines([]);
+                setOrdersLoaded(false);
                 setAssignees([]);
                 setReceiptNo("");
                 setWaybillDate(today());
@@ -3298,19 +3320,24 @@ export function GoodsReceiptCreatePage({
                       icon={<ShieldCheck className="size-4" />}
                       label={t("createFlow.review.metricQualityLabel")}
                       value={
-                        hasQualityLines
-                          ? String(qualityLines.length)
-                          : t("createFlow.review.metricQualityNone")
+                        <span className="wms-ops-gr-review__metric-card-inline">
+                          <span className="wms-ops-gr-review__metric-card-inline-item">
+                            <span className="wms-ops-gr-review__metric-card-stack-num">
+                              {qualityLines.length}
+                            </span>
+                            <span className="wms-ops-gr-review__metric-card-stack-unit">
+                              {t("createFlow.review.metricLineUnit")}
+                            </span>
+                          </span>
+                        </span>
                       }
                       hint={
                         hasQualityLines
                           ? t("createFlow.review.metricQualityHint")
-                          : undefined
+                          : t("createFlow.review.metricQualityHintEmpty")
                       }
-                      onClick={
-                        hasQualityLines
-                          ? () => setReviewLinesDialog("quality")
-                          : undefined
+                      onClick={() =>
+                        setReviewLinesDialog(hasQualityLines ? "quality" : "receipt")
                       }
                     />
                   </div>
@@ -3345,21 +3372,12 @@ export function GoodsReceiptCreatePage({
                           requireQualityControl: true,
                         };
                       }
-                      // Çıkarma yalnızca kalite listesindeki X ile; burada sadece ekleme.
                       return line;
                     }),
                   );
                   setReviewLinesDialog(null);
                 } : undefined}
-              />
-              <QualityLinesDialog
-                lines={qualityLines}
-                open={reviewLinesDialog === "quality"}
-                onClose={() => setReviewLinesDialog(null)}
-                tone="quality"
-                title={t("createFlow.qualityDialog.title")}
-                description={t("createFlow.qualityDialog.description")}
-                onRemoveForcedQuality={(key) => {
+                onRemoveForcedQuality={allowManualQualityRouting ? (key) => {
                   setLines((current) =>
                     current.map((line) => {
                       if (lineKey(line) !== key) return line;
@@ -3371,7 +3389,28 @@ export function GoodsReceiptCreatePage({
                       };
                     }),
                   );
-                }}
+                } : undefined}
+              />
+              <QualityLinesDialog
+                lines={qualityLines}
+                open={reviewLinesDialog === "quality"}
+                onClose={() => setReviewLinesDialog(null)}
+                tone="quality"
+                title={t("createFlow.qualityDialog.title")}
+                description={t("createFlow.qualityDialog.description")}
+                onRemoveForcedQuality={allowManualQualityRouting ? (key) => {
+                  setLines((current) =>
+                    current.map((line) => {
+                      if (lineKey(line) !== key) return line;
+                      if (line.qualityRequiredByRule) return line;
+                      return {
+                        ...line,
+                        forceQualityControl: false,
+                        requireQualityControl: false,
+                      };
+                    }),
+                  );
+                } : undefined}
               />
               <div className="wms-ops-gr-review__actions">
                 <OpsActionButton
@@ -3386,7 +3425,7 @@ export function GoodsReceiptCreatePage({
                   variant="primary"
                   loading={busyAction === "create"}
                   disabled={busy}
-                  onClick={() => void create()}
+                  onClick={() => create()}
                 >
                   {direct
                     ? hasQualityLines
@@ -4249,22 +4288,9 @@ function ReceiptEntryRow({
             <StockImagePeekButton
               stockId={line.stockId}
               stockName={line.stockName}
+              canUpload={canAddStockImage}
+              onOpen={() => setStockImageDialogOpen(true)}
             />
-            {canAddStockImage ? (
-              <button
-                type="button"
-                className="wms-ops-stock-image-peek"
-                title={t("createFlow.entryRow.stockImageAddToCard")}
-                aria-label={t("createFlow.entryRow.stockImageAddToCard")}
-                onClick={(event) => {
-                  event.preventDefault();
-                  event.stopPropagation();
-                  setStockImageDialogOpen(true);
-                }}
-              >
-                <ImagePlus className="size-3.5" aria-hidden />
-              </button>
-            ) : null}
             <OpsSkinCheckbox
               checked={confirmed}
               onCheckedChange={onConfirmedChange}
@@ -4288,6 +4314,7 @@ function ReceiptEntryRow({
           stockId={line.stockId}
           stockCode={line.stockCode ?? ""}
           stockName={line.stockName}
+          canUpload={canAddStockImage}
           onClose={() => setStockImageDialogOpen(false)}
         />
 
@@ -5032,6 +5059,31 @@ function ReviewMetricCard({
   return <div className={className}>{body}</div>;
 }
 
+function qualityIncludedKeys(
+  lines: Array<{
+    lineKey?: string;
+    qualityRequiredByRule?: boolean;
+    forcedQuality?: boolean;
+  }>,
+): string[] {
+  return lines
+    .filter((line) => line.lineKey && (line.qualityRequiredByRule || line.forcedQuality))
+    .map((line) => line.lineKey as string);
+}
+
+function qualityLineLocationLabel(line: {
+  receivingLocationCode?: string | null;
+  putawayLocationCode?: string | null;
+}): { receiving: string; putaway: string; same: boolean } {
+  const receiving = line.receivingLocationCode?.trim() || "";
+  const putaway = line.putawayLocationCode?.trim() || "";
+  return {
+    receiving,
+    putaway,
+    same: !receiving || !putaway || receiving === putaway,
+  };
+}
+
 function QualityLinesDialog({
   lines,
   open,
@@ -5045,6 +5097,7 @@ function QualityLinesDialog({
 }: {
   lines: Array<{
     lineKey?: string;
+    stockId?: number;
     stockCode: string;
     stockName?: string;
     quantity: number;
@@ -5052,6 +5105,8 @@ function QualityLinesDialog({
     requireQualityControl?: boolean;
     qualityRequiredByRule?: boolean;
     forcedQuality?: boolean;
+    receivingLocationCode?: string | null;
+    putawayLocationCode?: string | null;
   }>;
   open: boolean;
   onClose: () => void;
@@ -5065,34 +5120,44 @@ function QualityLinesDialog({
   const { t } = useTranslation("goods-receipt-v2");
   const [search, setSearch] = useState("");
   const [draftSelectedKeys, setDraftSelectedKeys] = useState<string[]>([]);
+  const [baselineSelectedKeys, setBaselineSelectedKeys] = useState<string[]>([]);
   const linesRef = useRef(lines);
   linesRef.current = lines;
   const canForce = tone === "receipt" && typeof onConfirmForceQuality === "function";
-  const canRemoveForced =
-    tone === "quality" && typeof onRemoveForcedQuality === "function";
+  const canRemoveForced = typeof onRemoveForcedQuality === "function";
+  const hasNewAdds = canForce && draftSelectedKeys.some((key) => !baselineSelectedKeys.includes(key));
+  const populatedWhileOpenRef = useRef(false);
 
   useEffect(() => {
     if (!open) return;
+    const included = qualityIncludedKeys(linesRef.current);
     setSearch("");
-    setDraftSelectedKeys(
-      linesRef.current
-        .filter((line) => line.lineKey && (line.forcedQuality || line.qualityRequiredByRule))
-        .map((line) => line.lineKey as string),
-    );
+    setDraftSelectedKeys(included);
+    setBaselineSelectedKeys(included);
   }, [open]);
 
   useEffect(() => {
-    if (!open || !canRemoveForced) return;
-    if (lines.length === 0) onClose();
-  }, [open, canRemoveForced, lines.length, onClose]);
+    if (!open) {
+      populatedWhileOpenRef.current = false;
+      return;
+    }
+    if (lines.length > 0) populatedWhileOpenRef.current = true;
+    else if (tone === "quality" && canRemoveForced && populatedWhileOpenRef.current) onClose();
+  }, [open, tone, canRemoveForced, lines.length, onClose]);
 
   const filtered = useMemo(() => {
     const query = search.trim().toLocaleLowerCase("tr-TR");
     if (!query) return lines;
     return lines.filter((line) => {
-      const code = line.stockCode.toLocaleLowerCase("tr-TR");
-      const name = (line.stockName || "").toLocaleLowerCase("tr-TR");
-      return code.includes(query) || name.includes(query);
+      const haystack = [
+        line.stockCode,
+        line.stockName || "",
+        line.receivingLocationCode || "",
+        line.putawayLocationCode || "",
+      ]
+        .join(" ")
+        .toLocaleLowerCase("tr-TR");
+      return haystack.includes(query);
     });
   }, [lines, search]);
 
@@ -5108,7 +5173,7 @@ function QualityLinesDialog({
       title={title ?? t("createFlow.qualityDialog.title")}
       description={description ?? t("createFlow.qualityDialog.description")}
       variant="lookup"
-      className="!max-w-2xl"
+      className="!max-w-3xl"
     >
       <div
         className={cn(
@@ -5129,13 +5194,19 @@ function QualityLinesDialog({
             />
           </div>
         ) : null}
-        <div className="wms-ops-gr-review__quality-dialog-meta">
-          <span>
-            {t("createFlow.qualityDialog.showing")}: <strong>{filtered.length}</strong> / {lines.length}
-          </span>
-          <span>{t("createFlow.qualityDialog.scrollHint")}</span>
-        </div>
-        {filtered.length === 0 ? (
+        {lines.length > 0 ? (
+          <div className="wms-ops-gr-review__quality-dialog-meta">
+            <span>
+              {t("createFlow.qualityDialog.showing")}: <strong>{filtered.length}</strong> / {lines.length}
+            </span>
+            <span>{t("createFlow.qualityDialog.scrollHint")}</span>
+          </div>
+        ) : null}
+        {lines.length === 0 ? (
+          <div className="wms-ops-gr-review__quality-dialog-empty">
+            {t("createFlow.qualityDialog.qualityEmptyList")}
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="wms-ops-gr-review__quality-dialog-empty">
             {t("createFlow.qualityDialog.empty")}
           </div>
@@ -5144,21 +5215,40 @@ function QualityLinesDialog({
             {filtered.map((line, index) => {
               const lockedByRule = Boolean(line.qualityRequiredByRule);
               const alreadyForced = Boolean(line.forcedQuality) && !lockedByRule;
-              const lockedInReceipt = lockedByRule || alreadyForced;
+              const lockedInReceipt = canForce && (lockedByRule || alreadyForced);
               const checked = Boolean(
-                line.lineKey && draftSelectedKeys.includes(line.lineKey),
+                lockedInReceipt
+                || (line.lineKey && draftSelectedKeys.includes(line.lineKey)),
               );
               const showForcedRemove =
                 canRemoveForced
                 && Boolean(line.forcedQuality)
                 && !lockedByRule
                 && Boolean(line.lineKey);
+              const location = qualityLineLocationLabel(line);
+              const locationText = location.receiving || location.putaway;
               return (
-                <li key={line.lineKey ?? `${line.stockCode}-${line.quantity}-${index}`}>
+                <li
+                  key={line.lineKey ?? `${line.stockCode}-${line.quantity}-${index}`}
+                  data-included={checked ? "true" : "false"}
+                  data-locked={lockedInReceipt || lockedByRule ? "true" : "false"}
+                  data-removable={showForcedRemove ? "true" : "false"}
+                  title={
+                    lockedByRule
+                      ? t("createFlow.qualityDialog.ruleLockedHint")
+                      : undefined
+                  }
+                >
                   {canForce && line.lineKey ? (
                     <OpsSkinCheckbox
-                      checked={checked || lockedInReceipt}
+                      checked={checked}
                       disabled={lockedInReceipt}
+                      className="self-start mt-0.5"
+                      title={
+                        lockedByRule
+                          ? t("createFlow.qualityDialog.ruleLockedHint")
+                          : undefined
+                      }
                       onCheckedChange={(next) => {
                         if (lockedInReceipt || !line.lineKey) return;
                         const key = line.lineKey;
@@ -5174,18 +5264,53 @@ function QualityLinesDialog({
                       })}
                     />
                   ) : null}
-                  <span className="wms-ops-gr-review__quality-dialog-code">
-                    {line.stockCode}
+                  <span className="wms-ops-gr-review__quality-dialog-identity">
+                    <span className="wms-ops-gr-review__quality-dialog-identity-head">
+                      <StockIdentityCell
+                        stockId={line.stockId}
+                        stockCode={line.stockCode}
+                        stockName={line.stockName}
+                        layout="code"
+                        className="wms-ops-gr-review__quality-dialog-code"
+                      />
+                      {locationText ? (
+                        <span
+                          className="wms-ops-gr-review__quality-dialog-loc"
+                          title={
+                            location.same
+                              ? `${t("createFlow.entryRow.locationCode")} ${locationText}`
+                              : t("createFlow.qualityDialog.locationBoth", {
+                                  receiving: location.receiving,
+                                  putaway: location.putaway,
+                                })
+                          }
+                        >
+                          <span className="wms-ops-gr-review__quality-dialog-loc-label">
+                            {t("createFlow.qualityDialog.locationLabel")}
+                          </span>
+                          <span className="wms-ops-gr-review__quality-dialog-loc-value">
+                            {location.same
+                              ? locationText
+                              : `${location.receiving} · ${location.putaway}`}
+                          </span>
+                        </span>
+                      ) : null}
+                    </span>
+                    <span
+                      className="wms-ops-gr-review__quality-dialog-name"
+                      title={line.stockName || undefined}
+                    >
+                      {line.stockName || "—"}
+                    </span>
                   </span>
-                  <span
-                    className="wms-ops-gr-review__quality-dialog-name"
-                    title={line.stockName || undefined}
-                  >
-                    {line.stockName || "—"}
-                  </span>
-                  {line.qualityRequiredByRule || line.forcedQuality ? (
-                    <span className="wms-ops-gr-review__quality-dialog-badge">
-                      {line.qualityRequiredByRule
+                  {lockedByRule || checked ? (
+                    <span
+                      className={cn(
+                        "wms-ops-gr-review__quality-dialog-badge",
+                        !lockedByRule && "wms-ops-gr-review__quality-dialog-badge--forced",
+                      )}
+                    >
+                      {lockedByRule
                         ? t("createFlow.qualityDialog.qualityBadge")
                         : t("createFlow.qualityDialog.forcedQualityBadge")}
                     </span>
@@ -5207,10 +5332,14 @@ function QualityLinesDialog({
                       })}
                       onClick={() => {
                         if (!line.lineKey) return;
-                        onRemoveForcedQuality?.(line.lineKey);
+                        const key = line.lineKey;
+                        setDraftSelectedKeys((current) => current.filter((item) => item !== key));
+                        setBaselineSelectedKeys((current) => current.filter((item) => item !== key));
+                        onRemoveForcedQuality?.(key);
                       }}
                     >
                       <X className="size-3.5" aria-hidden />
+                      <span>{t("createFlow.qualityDialog.removeForcedLabel")}</span>
                     </button>
                   ) : null}
                 </li>
@@ -5230,26 +5359,10 @@ function QualityLinesDialog({
                     <OpsActionButton
                       type="button"
                       variant="primary"
-                      disabled={
-                        !draftSelectedKeys.some((key) => {
-                          const line = lines.find((item) => item.lineKey === key);
-                          return Boolean(
-                            line
-                            && !line.qualityRequiredByRule
-                            && !line.forcedQuality,
-                          );
-                        })
-                      }
+                      disabled={!hasNewAdds}
                       onClick={() => {
                         onConfirmForceQuality?.(
-                          draftSelectedKeys.filter((key) => {
-                            const line = lines.find((item) => item.lineKey === key);
-                            return Boolean(
-                              line
-                              && !line.qualityRequiredByRule
-                              && !line.forcedQuality,
-                            );
-                          }),
+                          draftSelectedKeys.filter((key) => !baselineSelectedKeys.includes(key)),
                         );
                       }}
                     >
@@ -5641,7 +5754,7 @@ function DirectCreateSuccessPanel({
         open={linesOpen}
         onClose={() => setLinesOpen(false)}
         title={t("createFlow.qualityDialog.receiptLinesTitle")}
-        description={t("createFlow.qualityDialog.receiptLinesDescription")}
+        description={t("createFlow.qualityDialog.orderLinesDescription")}
         searchAriaLabel={t("createFlow.qualityDialog.receiptLinesSearchAria")}
       />
       <QualityLinesDialog
@@ -5957,22 +6070,15 @@ function Footer({
   disabled,
   loading = false,
   t,
-  sticky = false,
-  docked = false,
 }: {
   back: () => void;
-  next: () => void;
+  next: () => void | Promise<void>;
   disabled: boolean;
   loading?: boolean;
   t: (key: string) => string;
-  sticky?: boolean;
-  docked?: boolean;
 }): ReactElement {
-  const { skin } = useTheme();
-  const isPremium = skin === "premium";
-
-  const bar = (
-    <footer className="flex items-center justify-between rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)]/95 p-3 shadow-xl backdrop-blur">
+  return (
+    <footer className="mt-5 flex items-center justify-between rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-3">
       <OpsActionButton type="button" variant="secondary" onClick={back}>
         {t("back")}
       </OpsActionButton>
@@ -5981,52 +6087,6 @@ function Footer({
         variant="primary"
         disabled={disabled}
         loading={loading}
-        onClick={next}
-      >
-        {t("continue")}
-      </OpsActionButton>
-    </footer>
-  );
-
-  if (docked) {
-    const workspaceRoot = getWorkspacePortalRoot();
-    if (workspaceRoot) {
-      return createPortal(
-        <div
-          className={cn(
-            "pointer-events-none absolute inset-x-0 bottom-0 z-30",
-            isPremium ? "px-4 pb-5 sm:px-6 lg:px-8" : "px-3 pb-3 sm:px-4",
-          )}
-        >
-          <div
-            className={cn(
-              "pointer-events-auto mx-auto w-full",
-              isPremium && "max-w-[1560px]",
-            )}
-          >
-            {bar}
-          </div>
-        </div>,
-        workspaceRoot,
-      );
-    }
-  }
-
-  return (
-    <footer
-      className={cn(
-        sticky
-          ? "sticky bottom-3 z-20 flex items-center justify-between rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)]/95 p-3 shadow-xl backdrop-blur"
-          : "mt-5 flex justify-between border-t border-[var(--wms-app-border)] pt-4",
-      )}
-    >
-      <OpsActionButton type="button" variant="secondary" onClick={back}>
-        {t("back")}
-      </OpsActionButton>
-      <OpsActionButton
-        type="button"
-        variant="primary"
-        disabled={disabled}
         onClick={next}
       >
         {t("continue")}
@@ -6084,14 +6144,14 @@ export function GoodsReceiptSuccessPreviewPage(): ReactElement {
 
   const tabs: Array<{ id: SuccessPreviewView; label: string }> = [
     { id: "submit-receipt", label: "Submit · İrsaliye" },
-    { id: "submit-quality", label: "Submit · Kalite" },
+    { id: "submit-quality", label: "Submit · G.K.K" },
     { id: "success-receipt", label: "Success · İrsaliye" },
-    { id: "success-quality", label: "Success · Kalite" },
+    { id: "success-quality", label: "Success · G.K.K" },
   ];
 
   return (
     <div className="mx-auto flex w-full max-w-[1100px] flex-col gap-4 px-4 py-6 sm:px-6">
-      <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+      <div className="rounded-xl border border-amber-600/35 bg-amber-100 px-4 py-3 text-sm text-amber-950 dark:border-amber-400/40 dark:bg-amber-500/15 dark:text-amber-100">
         <strong className="font-semibold">Tasarım önizlemesi</strong>
         {" — "}
         Kayıt atılmaz. Gerçek success / submit bileşenleri mock veri ile gösterilir.

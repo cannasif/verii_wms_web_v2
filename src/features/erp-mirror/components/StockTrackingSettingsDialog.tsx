@@ -194,7 +194,8 @@ export function StockTrackingSettingsDialog({ stock, initialTab = 'details', onC
       <OpsDialogContent
         size="xl"
         portalRoot="body"
-        className="!max-h-[min(92dvh,900px)] !gap-0 !overflow-hidden !rounded-2xl !p-0 data-no-auto-localize"
+        overlayClassName="!z-[11000]"
+        className="!z-[11010] !max-h-[min(92dvh,900px)] !gap-0 !overflow-hidden !p-0 data-no-auto-localize"
       >
         <OpsDialogHeader className="!m-0 !w-full !rounded-none !border-x-0 !border-t-0 !px-5 !py-4 !pr-14 sm:!px-6">
           <div className="flex w-full items-start gap-3 sm:gap-4">

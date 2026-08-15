@@ -13,6 +13,7 @@ import axios from 'axios';
 interface Envelope<T> { success: boolean; data: T; message?: string }
 type GridPage<T> = DropdownPage<T>;
 const unwrap = <T,>(value: Envelope<T>): T => { if (!value.success) throw new Error(value.message || 'İşlem başarısız.'); return value.data; };
+let warehouseAccessInFlight: Promise<UserWarehouseAccess> | null = null;
 const pagedBody = (request: DropdownPageRequest, filters: unknown[] = []) =>
   buildDropdownPagedBody(request, { filters });
 
@@ -54,8 +55,20 @@ export const goodsReceiptV2Api = {
       { params },
     ));
   },
-  warehouseAccess: async (): Promise<UserWarehouseAccess> =>
-    unwrap(await api.get<Envelope<UserWarehouseAccess>>('/api/goods-receipts/warehouse-access')),
+  warehouseAccess: (): Promise<UserWarehouseAccess> => {
+    if (!warehouseAccessInFlight) {
+      warehouseAccessInFlight = (async () => {
+        try {
+          return unwrap(
+            await api.get<Envelope<UserWarehouseAccess>>('/api/goods-receipts/warehouse-access'),
+          );
+        } finally {
+          warehouseAccessInFlight = null;
+        }
+      })();
+    }
+    return warehouseAccessInFlight;
+  },
   policy: async (branchCode: string): Promise<GoodsReceiptPolicy> => {
     const value = unwrap(await api.get<Envelope<GoodsReceiptPolicy>>('/api/goods-receipt-policy', {
       params: { branchCode },
