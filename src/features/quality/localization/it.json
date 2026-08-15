@@ -30,6 +30,7 @@
     "detailLoading": "Caricamento dettaglio...",
     "priority": {
       "badge": "Controllo qualità prioritario",
+      "badgeRank": "Priorità {{rank}}",
       "give": "Assegna priorità",
       "remove": "Rimuovi priorità",
       "added": "Il controllo qualità è stato reso prioritario e spostato in cima all’elenco.",

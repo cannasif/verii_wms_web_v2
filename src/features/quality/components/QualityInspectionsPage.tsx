@@ -929,6 +929,7 @@ export function QualityInspectionsPage({
       {
         key: "inspectionNo",
         label: t("list.columns.inspectionNo"),
+        width: 252,
         sortable: true,
         filterable: true,
         searchable: true,
@@ -941,7 +942,19 @@ export function QualityInspectionsPage({
             aria-expanded={expandedId === r.id}
           >
             {r.isPriority ? (
-              <Flag className="size-3.5 fill-rose-500 text-rose-600" aria-label={t("list.priority.badge")} />
+              <span
+                className="inline-flex items-center gap-0.5 text-rose-600 dark:text-rose-300"
+                aria-label={
+                  r.priorityRank != null
+                    ? t("list.priority.badgeRank", { rank: r.priorityRank })
+                    : t("list.priority.badge")
+                }
+              >
+                <Flag className="size-3.5 fill-rose-500 text-rose-600" />
+                {r.priorityRank != null ? (
+                  <span className="min-w-3 text-[11px] font-bold leading-none tabular-nums">{r.priorityRank}</span>
+                ) : null}
+              </span>
             ) : null}
             <ChevronDown
               className={`size-3.5 shrink-0 transition-transform ${
@@ -3158,7 +3171,7 @@ function LineDecisionPopover({
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const controlSectionRef = useRef<HTMLDivElement>(null);
-  const [coords, setCoords] = useState<{ top: number; left: number } | null>(
+  const [coords, setCoords] = useState<{ top: number; left: number; maxHeight: number } | null>(
     null,
   );
   const [controlError, setControlError] = useState<string | null>(null);
@@ -3258,16 +3271,22 @@ function LineDecisionPopover({
     const trigger = triggerRef.current;
     if (!trigger) return;
     const rect = trigger.getBoundingClientRect();
-    const panelWidth = Math.min(520, window.innerWidth - 16);
-    const estimatedHeight = panelRef.current?.offsetHeight || 520;
+    const margin = 8;
     const gap = 6;
+    const panelWidth = Math.min(520, window.innerWidth - margin * 2);
+    const maxHeight = Math.max(160, window.innerHeight - margin * 2);
+    const contentHeight = panelRef.current?.scrollHeight || 520;
+    const height = Math.min(contentHeight, maxHeight);
     const left = Math.min(
-      Math.max(8, rect.right - panelWidth),
-      window.innerWidth - panelWidth - 8,
+      Math.max(margin, rect.right - panelWidth),
+      window.innerWidth - panelWidth - margin,
     );
-    // Always open above the trigger so it stays over the table, not outside below.
-    const top = Math.max(8, rect.top - estimatedHeight - gap);
-    setCoords({ top, left });
+    let top = rect.top - height - gap;
+    if (top < margin) top = margin;
+    if (top + height > window.innerHeight - margin) {
+      top = Math.max(margin, window.innerHeight - height - margin);
+    }
+    setCoords({ top, left, maxHeight });
   }, []);
 
   useLayoutEffect(() => {
@@ -3364,8 +3383,8 @@ function LineDecisionPopover({
               ref={panelRef}
               role="dialog"
               aria-label={t("linePopover.ariaLabel")}
-              style={{ top: coords.top, left: coords.left }}
-              className="wms-ops-quality-decision-popover wms-ops-list-popover fixed z-[5000] max-h-[calc(100vh-1rem)] w-[min(32rem,calc(100vw-1rem))] space-y-2.5 overflow-y-auto border-0 p-3 shadow-none outline-none"
+              style={{ top: coords.top, left: coords.left, maxHeight: coords.maxHeight }}
+              className="wms-ops-quality-decision-popover wms-ops-list-popover fixed z-[5000] w-[min(32rem,calc(100vw-1rem))] space-y-2.5 border-0 p-3 shadow-none outline-none"
             >
               <div className="wms-ops-list-popover__section-title">
                 {t("linePopover.sectionTitle")}

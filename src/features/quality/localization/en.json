@@ -30,6 +30,7 @@
     "detailLoading": "Loading detail...",
     "priority": {
       "badge": "Priority quality inspection",
+      "badgeRank": "Priority {{rank}}",
       "give": "Prioritize",
       "remove": "Remove priority",
       "added": "The quality inspection was prioritized and moved to the top of the list.",

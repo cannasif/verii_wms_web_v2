@@ -9114,6 +9114,13 @@ html.skin-premium .wms-ops-quality-detail__chip {
   min-width: 16.5rem;
 }
 
+.wms-ops-quality-decision-popover.wms-ops-list-popover {
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  max-height: calc(100dvh - 1rem);
+}
+
 .wms-ops-quality-detail .wms-ops-quality-field,
 .wms-ops-quality-detail .wms-ops-quality-field.wms-ops-field,
 .wms-ops-quality-detail .wms-ops-quality-field.wms-ops-lookup-trigger,

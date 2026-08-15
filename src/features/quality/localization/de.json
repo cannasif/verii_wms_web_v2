@@ -30,6 +30,7 @@
     "detailLoading": "Detail wird geladen...",
     "priority": {
       "badge": "Priorisierte Qualitätsprüfung",
+      "badgeRank": "Priorität {{rank}}",
       "give": "Priorisieren",
       "remove": "Priorität entfernen",
       "added": "Die Qualitätsprüfung wurde priorisiert und an den Anfang der Liste verschoben.",

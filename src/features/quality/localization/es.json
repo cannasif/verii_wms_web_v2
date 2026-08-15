@@ -30,6 +30,7 @@
     "detailLoading": "Cargando detalle...",
     "priority": {
       "badge": "Inspección de calidad prioritaria",
+      "badgeRank": "Prioridad {{rank}}",
       "give": "Priorizar",
       "remove": "Quitar prioridad",
       "added": "La inspección de calidad fue priorizada y movida al principio de la lista.",

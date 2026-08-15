@@ -30,6 +30,7 @@
     "detailLoading": "Detay yükleniyor...",
     "priority": {
       "badge": "Öncelikli GKK kaydı",
+      "badgeRank": "Öncelik {{rank}}",
       "give": "Önceliklendir",
       "remove": "Önceliği kaldır",
       "added": "GKK kaydı önceliklendirildi ve listenin üstüne alındı.",
