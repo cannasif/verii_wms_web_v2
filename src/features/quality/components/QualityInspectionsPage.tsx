@@ -104,6 +104,7 @@ type LineDraft = {
   decisionCodeRequiresNote: boolean;
   reasonNote: string;
   inspectedQuantity: string;
+  confirmedInspectedQuantity: string;
   targetLocationId?: number | null;
   targetWarehouseId?: number | null;
   dispositions?: DispositionDraft[];
@@ -170,6 +171,23 @@ function groupQualityLines(lines: QualityInspectionLine[]): QualityLineGroup[] {
   });
 }
 
+function joinGroupedCodes(
+  lines: QualityInspectionLine[],
+  pick: (line: QualityInspectionLine) => string | null | undefined,
+): string {
+  const values = [
+    ...new Set(
+      lines.flatMap((line) =>
+        (pick(line) ?? "")
+          .split(",")
+          .map((part) => part.trim())
+          .filter(Boolean),
+      ),
+    ),
+  ];
+  return values.length > 0 ? values.join(", ") : "—";
+}
+
 function sumLineQuantity(lines: QualityInspectionLine[]): number {
   return roundQty(lines.reduce((sum, line) => sum + line.quantity, 0));
 }
@@ -184,6 +202,12 @@ function sumSampleQuantity(lines: QualityInspectionLine[]): number {
 
 function sumInspectedQuantity(lines: QualityInspectionLine[]): number {
   return roundQty(lines.reduce((sum, line) => sum + line.inspectedQuantity, 0));
+}
+
+function draftInspectedThisDecision(draft: LineDraft | undefined): number {
+  if (!draft?.confirmedInspectedQuantity?.trim()) return 0;
+  const qty = roundQty(parseQty(draft.confirmedInspectedQuantity));
+  return Number.isFinite(qty) && qty > 0 ? qty : 0;
 }
 
 function totalMinimumControlQuantity(line: QualityInspectionLine): number {
@@ -327,6 +351,7 @@ function emptyDraft(
     decisionCodeRequiresNote: false,
     reasonNote: "",
     inspectedQuantity: "",
+    confirmedInspectedQuantity: "",
     targetLocationId,
     targetWarehouseId,
   };
@@ -455,6 +480,22 @@ function parseQty(value: string): number {
   if (!normalized) return NaN;
   const n = Number(normalized);
   return Number.isFinite(n) ? n : NaN;
+}
+
+function sanitizeQtyInput(value: string): string {
+  let separatorSeen = false;
+  let result = "";
+  for (const ch of value) {
+    if (ch >= "0" && ch <= "9") {
+      result += ch;
+      continue;
+    }
+    if ((ch === "." || ch === ",") && !separatorSeen) {
+      separatorSeen = true;
+      result += ch;
+    }
+  }
+  return result;
 }
 
 function roundQty(value: number): number {
@@ -1476,6 +1517,7 @@ function InspectionDetailPanel({
           decisionCodeRequiresNote: bulkDecision === "Accepted" ? false : bulkDecisionCodeRequiresNote,
           reasonNote: bulkReasonNote.trim(),
           inspectedQuantity: "",
+          confirmedInspectedQuantity: "",
           targetLocationId: defaultTargetForDecision(
             bulkDecision,
             lineAcceptedDestination?.locationId ?? null,
@@ -1861,6 +1903,8 @@ function InspectionDetailPanel({
                   label: t(`detail.work.stopReasons.${reason}`),
                 }))}
                 className="wms-ops-quality-field"
+                portalContainer={null}
+                contentClassName="!z-[6100]"
               />
             </label>
             <label className="block space-y-1.5 text-sm font-semibold">
@@ -2061,11 +2105,25 @@ function InspectionDetailPanel({
         </section>
       )}
 
-      <div className="wms-ops-quality-lines overflow-x-auto rounded-xl border border-[var(--wms-app-border)]">
+      <div className="wms-ops-quality-lines !overflow-x-auto rounded-xl border border-[var(--wms-app-border)]">
         <table className="w-full border-collapse text-sm">
+          <colgroup>
+            <col className="wms-ops-quality-lines__col--photo" />
+            <col className="wms-ops-quality-lines__col--stock" />
+            <col className="wms-ops-quality-lines__col--project" />
+            <col className="wms-ops-quality-lines__col--order" />
+            <col className="wms-ops-quality-lines__col--lot" />
+            <col className="wms-ops-quality-lines__col--expiry" />
+            <col className="wms-ops-quality-lines__col--qty" />
+            <col className="wms-ops-quality-lines__col--sample" />
+            <col className="wms-ops-quality-lines__col--inspected" />
+            <col className="wms-ops-quality-lines__col--status" />
+            <col className="wms-ops-quality-lines__col--decision" />
+            <col className="wms-ops-quality-lines__col--actions" />
+          </colgroup>
           <thead>
-            <tr className="bg-[color-mix(in_oklab,var(--wms-brand-primary)_8%,transparent)] text-left">
-              <th className="wms-ops-quality-lines__cell w-12 p-2.5">
+            <tr className="bg-[color-mix(in_oklab,var(--wms-brand-primary)_8%,transparent)] text-center">
+              <th className="wms-ops-quality-lines__cell p-2.5">
                 {!final && actionable.length > 0 ? (
                   <OpsSkinCheckbox
                     checked={allSelected}
@@ -2077,8 +2135,14 @@ function InspectionDetailPanel({
                   />
                 ) : null}
               </th>
-              <th className="wms-ops-quality-lines__cell p-2.5 text-[0.65rem] font-semibold uppercase tracking-wider">
+              <th className="wms-ops-quality-lines__cell wms-ops-quality-lines__cell--stock p-2.5 text-[0.65rem] font-semibold uppercase tracking-wider">
                 {t("detail.table.stock")}
+              </th>
+              <th className="wms-ops-quality-lines__cell p-2.5 text-[0.65rem] font-semibold uppercase tracking-wider">
+                {t("detail.table.projectCode")}
+              </th>
+              <th className="wms-ops-quality-lines__cell p-2.5 text-[0.65rem] font-semibold uppercase tracking-wider">
+                {t("detail.table.orderNo")}
               </th>
               <th className="wms-ops-quality-lines__cell p-2.5 text-[0.65rem] font-semibold uppercase tracking-wider">
                 {t("detail.table.lotSerial")}
@@ -2086,13 +2150,13 @@ function InspectionDetailPanel({
               <th className="wms-ops-quality-lines__cell p-2.5 text-[0.65rem] font-semibold uppercase tracking-wider">
                 {t("detail.table.expiry")}
               </th>
-              <th className="wms-ops-quality-lines__cell p-2.5 text-right text-[0.65rem] font-semibold uppercase tracking-wider">
+              <th className="wms-ops-quality-lines__cell p-2.5 text-center text-[0.65rem] font-semibold uppercase tracking-wider">
                 {t("detail.table.quantityRemaining")}
               </th>
-              <th className="wms-ops-quality-lines__cell p-2.5 text-right text-[0.65rem] font-semibold uppercase tracking-wider">
+              <th className="wms-ops-quality-lines__cell p-2.5 text-center text-[0.65rem] font-semibold uppercase tracking-wider">
                 {t("detail.table.sample")}
               </th>
-              <th className="wms-ops-quality-lines__cell p-2.5 text-right text-[0.65rem] font-semibold uppercase tracking-wider">
+              <th className="wms-ops-quality-lines__cell p-2.5 text-center text-[0.65rem] font-semibold uppercase tracking-wider">
                 {t("detail.table.inspected")}
               </th>
               <th className="wms-ops-quality-lines__cell p-2.5 text-[0.65rem] font-semibold uppercase tracking-wider">
@@ -2101,7 +2165,7 @@ function InspectionDetailPanel({
               <th className="wms-ops-quality-lines__cell p-2.5 text-[0.65rem] font-semibold uppercase tracking-wider">
                 {t("detail.table.decision")}
               </th>
-              <th className="wms-ops-quality-lines__cell w-28 p-2.5 text-center text-[0.65rem] font-semibold uppercase tracking-wider">
+              <th className="wms-ops-quality-lines__cell p-2.5 text-center text-[0.65rem] font-semibold uppercase tracking-wider">
                 {t("detail.table.actions")}
               </th>
             </tr>
@@ -2125,7 +2189,11 @@ function InspectionDetailPanel({
               const totalQty = sumLineQuantity(group.lines);
               const remainingQty = sumActionableQuantity(group.lines);
               const sampleQty = sumSampleQuantity(group.lines);
-              const inspectedQty = sumInspectedQuantity(group.lines);
+              const inspectedQty = roundQty(
+                sumInspectedQuantity(group.lines) + draftInspectedThisDecision(draft),
+              );
+              const projectCodes = joinGroupedCodes(group.lines, (item) => item.projectCodes);
+              const orderNumbers = joinGroupedCodes(group.lines, (item) => item.orderNumbers);
               const expiryDates = [
                 ...new Set(
                   group.lines
@@ -2170,13 +2238,25 @@ function InspectionDetailPanel({
                       />
                     )}
                   </td>
-                  <td className="wms-ops-quality-lines__cell p-2.5 align-middle">
+                  <td className="wms-ops-quality-lines__cell wms-ops-quality-lines__cell--stock p-2.5 align-middle">
                     <strong className="block text-[0.8125rem] leading-tight">
                       {line.stockCode}
                     </strong>
                     <span className="block truncate text-xs text-slate-500">
                       {line.stockName}
                     </span>
+                  </td>
+                  <td
+                    className="wms-ops-quality-lines__cell p-2.5 align-middle font-mono text-xs"
+                    title={projectCodes === "—" ? undefined : projectCodes}
+                  >
+                    {projectCodes}
+                  </td>
+                  <td
+                    className="wms-ops-quality-lines__cell p-2.5 align-middle font-mono text-xs"
+                    title={orderNumbers === "—" ? undefined : orderNumbers}
+                  >
+                    {orderNumbers}
                   </td>
                   <td className="wms-ops-quality-lines__cell p-2.5 align-middle font-mono text-xs">
                     <LotSerialHoverCell lines={group.lines} />
@@ -2190,7 +2270,7 @@ function InspectionDetailPanel({
                           })
                         : "—"}
                   </td>
-                  <td className="wms-ops-quality-lines__cell p-2.5 align-middle text-right font-mono">
+                  <td className="wms-ops-quality-lines__cell p-2.5 align-middle text-center font-mono">
                     <span className="block">
                       {formatProjectNumber(totalQty)}
                     </span>
@@ -2202,10 +2282,10 @@ function InspectionDetailPanel({
                       </span>
                     ) : null}
                   </td>
-                  <td className="wms-ops-quality-lines__cell p-2.5 align-middle text-right font-mono">
+                  <td className="wms-ops-quality-lines__cell p-2.5 align-middle text-center font-mono">
                     {formatProjectNumber(sampleQty)}
                   </td>
-                  <td className="wms-ops-quality-lines__cell p-2.5 align-middle text-right font-mono">
+                  <td className="wms-ops-quality-lines__cell p-2.5 align-middle text-center font-mono">
                     <span className="block font-semibold">{formatProjectNumber(inspectedQty)}</span>
                     <span className="block text-[0.65rem] text-slate-500">
                       {t("detail.table.inspectedProgress", {
@@ -2227,7 +2307,7 @@ function InspectionDetailPanel({
                   <td className="wms-ops-quality-lines__cell p-2.5 align-middle">
                     {active ? (
                       draft?.decision || draft?.dispositions?.length ? (
-                        <div className="space-y-1">
+                        <div className="flex flex-col items-center space-y-1">
                           <OpsStatusBadge
                             tone={inferOpsStatusTone(draft.dispositions?.[0]?.decision ?? draft.decision)}
                           >
@@ -3165,7 +3245,9 @@ function LineDecisionPopover({
                   </span>
                   <AppInput
                     value={inspectedThisDecision}
-                    onChange={(event) => onChange({ inspectedQuantity: event.target.value })}
+                    onChange={(event) =>
+                      onChange({ inspectedQuantity: sanitizeQtyInput(event.target.value) })
+                    }
                     placeholder={formatProjectNumber(requiredControl)}
                     inputMode="decimal"
                     className="wms-ops-quality-field h-10 text-sm"
@@ -3538,7 +3620,10 @@ function LineDecisionPopover({
               </label>
               <OpsActionButton
                 type="button"
-                onClick={() => onOpenChange(false)}
+                onClick={() => {
+                  onChange({ confirmedInspectedQuantity: draft.inspectedQuantity });
+                  onOpenChange(false);
+                }}
                 className="wms-ops-quality-decide-btn w-full !min-h-9 !text-xs"
               >
                 {t("linePopover.confirmButton")}

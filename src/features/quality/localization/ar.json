@@ -229,6 +229,8 @@
       "selectAllAria": "تحديد جميع البنود الخاضعة للرقابة",
       "selectRowAria": "تحديد بند {{stockCode}}",
       "stock": "المخزون",
+      "projectCode": "رمز المشروع",
+      "orderNo": "رقم الطلب",
       "lotSerial": "الدفعة / الرقم التسلسلي",
       "lotSerialHoverHint": "مرّر المؤشر لعرض قائمة الأرقام التسلسلية",
       "serialCount": "{{count}} رقم تسلسلي",

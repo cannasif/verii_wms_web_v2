@@ -9,6 +9,7 @@ import { requiredActionColumn, systemColumns } from "@/components/shared/GridSys
 import { OpsActionButton } from "@/components/shared/OpsActionButton";
 import { OpsSkinCheckbox } from "@/components/shared/OpsSkinCheckbox";
 import { OpsStatusBadge } from "@/components/shared/OpsStatusBadge";
+import { DeleteConfirmDialog } from "@/components/shared/DeleteConfirmDialog";
 import { ResponsiveDialog } from "@/components/shared/ResponsiveDialog";
 import { useModuleTranslation } from "@/hooks/useModuleTranslation";
 import { localizeEnumValue } from "@/lib/enum-localization";
@@ -29,15 +30,25 @@ type FormState = {
   isActive: boolean;
 };
 
+const ALL_DECISIONS_VALUE = "__all__";
+
 const EMPTY_FORM: FormState = {
   code: "",
   name: "",
-  applicableDecision: "",
+  applicableDecision: ALL_DECISIONS_VALUE,
   description: "",
   requiresNote: false,
   sortOrder: "0",
   isActive: true,
 };
+
+function decisionToFormValue(decision?: string | null): string {
+  return decision?.trim() ? decision : ALL_DECISIONS_VALUE;
+}
+
+function formValueToDecision(value: string): string | null {
+  return value === ALL_DECISIONS_VALUE || !value.trim() ? null : value;
+}
 
 export function QualityDecisionCodesPage() {
   const { t, moduleReady } = useModuleTranslation("quality");
@@ -47,6 +58,8 @@ export function QualityDecisionCodesPage() {
   const [editing, setEditing] = useState<QualityDecisionCode | null>(null);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<QualityDecisionCode | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const refresh = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: ["advanced-grid", "quality-decision-codes"] });
@@ -63,7 +76,7 @@ export function QualityDecisionCodesPage() {
     setForm({
       code: row.code,
       name: row.name,
-      applicableDecision: row.applicableDecision ?? "",
+      applicableDecision: decisionToFormValue(row.applicableDecision),
       description: row.description ?? "",
       requiresNote: row.requiresNote,
       sortOrder: String(row.sortOrder),
@@ -72,16 +85,24 @@ export function QualityDecisionCodesPage() {
     setDialogOpen(true);
   }, []);
 
-  const remove = useCallback(async (row: QualityDecisionCode) => {
-    if (!window.confirm(t("decisionCodes.confirmDelete", { code: row.code }))) return;
+  const requestDelete = useCallback((row: QualityDecisionCode) => {
+    setDeleteTarget(row);
+  }, []);
+
+  const confirmDelete = useCallback(async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
     try {
-      await qualityApi.deleteDecisionCode(row.id);
+      await qualityApi.deleteDecisionCode(deleteTarget.id);
+      setDeleteTarget(null);
       await refresh();
       toast.success(t("decisionCodes.deleted"));
     } catch (error) {
       toast.error(error instanceof Error ? error.message : t("decisionCodes.deleteFailed"));
+    } finally {
+      setDeleting(false);
     }
-  }, [refresh, t]);
+  }, [deleteTarget, refresh, t]);
 
   const columns = useMemo<GridColumn<QualityDecisionCode>[]>(() => {
     void moduleReady;
@@ -120,14 +141,14 @@ export function QualityDecisionCodesPage() {
             <button type="button" onClick={() => openEdit(row)} className="rounded-lg border p-2 text-cyan-600" title={t("decisionCodes.edit")}>
               <Pencil className="size-4" />
             </button>
-            <button type="button" onClick={() => void remove(row)} className="rounded-lg border p-2 text-rose-500" title={t("decisionCodes.delete")}>
+            <button type="button" onClick={() => requestDelete(row)} className="rounded-lg border p-2 text-rose-500" title={t("decisionCodes.delete")}>
               <Trash2 className="size-4" />
             </button>
           </div>
         ),
       },
     ];
-  }, [moduleReady, openEdit, remove, t]);
+  }, [moduleReady, openEdit, requestDelete, t]);
 
   const submit = async () => {
     const code = form.code.trim().toUpperCase();
@@ -145,7 +166,7 @@ export function QualityDecisionCodesPage() {
       branchCode,
       code,
       name,
-      applicableDecision: form.applicableDecision || null,
+      applicableDecision: formValueToDecision(form.applicableDecision),
       description: form.description.trim() || null,
       requiresNote: form.requiresNote,
       sortOrder,
@@ -177,7 +198,9 @@ export function QualityDecisionCodesPage() {
         toolbarAction={{
           label: t("decisionCodes.add"),
           icon: <Plus className="size-4" />,
-          run: async () => openCreate(),
+          run: async () => {
+            openCreate();
+          },
         }}
       />
 
@@ -199,13 +222,15 @@ export function QualityDecisionCodesPage() {
           <label className="space-y-1 text-sm">
             <span>{t("decisionCodes.fields.decision")}</span>
             <AppDropdown
-              value={form.applicableDecision || null}
+              value={form.applicableDecision}
               onValueChange={(value) => setForm((current) => ({ ...current, applicableDecision: value }))}
               options={[
-                { value: "", label: t("decisionCodes.allDecisions") },
+                { value: ALL_DECISIONS_VALUE, label: t("decisionCodes.allDecisions") },
                 ...["Accepted", "Rejected", "Quarantined", "Returned", "Hold"].map((value) => ({ value, label: localizeEnumValue(value) })),
               ]}
               searchable={false}
+              portalContainer={null}
+              contentClassName="!z-[6100]"
             />
           </label>
           <label className="space-y-1 text-sm">
@@ -227,6 +252,21 @@ export function QualityDecisionCodesPage() {
           </OpsActionButton>
         </div>
       </ResponsiveDialog>
+      <DeleteConfirmDialog
+        open={Boolean(deleteTarget)}
+        onOpenChange={(open) => {
+          if (!open && !deleting) setDeleteTarget(null);
+        }}
+        title={t("decisionCodes.delete")}
+        description={
+          deleteTarget
+            ? t("decisionCodes.confirmDelete", { code: deleteTarget.code })
+            : undefined
+        }
+        confirmLabel={t("decisionCodes.delete")}
+        isPending={deleting}
+        onConfirm={() => void confirmDelete()}
+      />
     </section>
   );
 }

@@ -251,6 +251,8 @@ interface GoodsReceiptDirectDraft {
   labelStrategy: string;
 }
 
+const CUSTOMER_LOOKUP_MIN_LEN = 2;
+
 const hasGoodsReceiptDirectDraft = (draft: GoodsReceiptDirectDraft): boolean =>
   Boolean(
     draft.selectedCustomer ||
@@ -260,6 +262,54 @@ const hasGoodsReceiptDirectDraft = (draft: GoodsReceiptDirectDraft): boolean =>
     draft.lines.length ||
     draft.searchTokens.length,
   );
+
+function customerLookupLabel(customer: CustomerOption): string {
+  return `${customer.customerName} (${customer.customerCode})`;
+}
+
+function extractCustomerLookupQuery(raw: string): string {
+  const trimmed = raw.trim();
+  const wrappedCode = trimmed.match(/\(([^)]+)\)\s*$/)?.[1]?.trim();
+  return wrappedCode || trimmed;
+}
+
+function customerMatchesLookup(
+  customer: CustomerOption | null,
+  raw: string,
+): boolean {
+  if (!customer) return false;
+  const trimmed = raw.trim();
+  if (!trimmed) return true;
+  const query = extractCustomerLookupQuery(trimmed);
+  const upper = query.toLocaleUpperCase("tr-TR");
+  return (
+    trimmed === customerLookupLabel(customer).trim() ||
+    customer.customerCode.trim().toLocaleUpperCase("tr-TR") === upper ||
+    customer.customerName.trim().toLocaleUpperCase("tr-TR") ===
+      trimmed.toLocaleUpperCase("tr-TR")
+  );
+}
+
+function matchCustomerLookupItem(
+  items: CustomerOption[],
+  raw: string,
+): CustomerOption | undefined {
+  const trimmed = raw.trim();
+  if (!trimmed) return undefined;
+  const query = extractCustomerLookupQuery(trimmed);
+  const upper = query.toLocaleUpperCase("tr-TR");
+  const upperRaw = trimmed.toLocaleUpperCase("tr-TR");
+  return (
+    items.find(
+      (item) => item.customerCode.trim().toLocaleUpperCase("tr-TR") === upper,
+    ) ??
+    items.find((item) => customerLookupLabel(item).trim() === trimmed) ??
+    items.find(
+      (item) => item.customerName.trim().toLocaleUpperCase("tr-TR") === upperRaw,
+    ) ??
+    (items.length === 1 ? items[0] : undefined)
+  );
+}
 
 function sameLocationId(
   left?: number | string | null,
@@ -308,6 +358,7 @@ export function GoodsReceiptCreatePage({
   >(null);
   const busy = busyAction != null;
   const loadLinesLockRef = useRef(false);
+  const loadOrdersLockRef = useRef(false);
   const [error, setError] = useState<string | null>(null);
   const [submitOverlay, setSubmitOverlay] = useState<{
     mode: "receipt" | "quality";
@@ -317,6 +368,7 @@ export function GoodsReceiptCreatePage({
   const [showFieldErrors, setShowFieldErrors] = useState(false);
   const [selectedCustomer, setSelectedCustomer] =
     useState<CustomerOption | null>(null);
+  const [customerLookupText, setCustomerLookupText] = useState("");
   const [customerLookupOpen, setCustomerLookupOpen] = useState(false);
   const [projectCodeFilter, setProjectCodeFilter] = useState("");
   const [warehouseCodeFilter, setWarehouseCodeFilter] = useState("");
@@ -442,7 +494,7 @@ export function GoodsReceiptCreatePage({
     };
   }, [selectedCustomer]);
   const customerDisplay = selectedCustomer
-    ? `${selectedCustomer.customerName} (${selectedCustomer.customerCode})`
+    ? customerLookupLabel(selectedCustomer)
     : "";
   const supplierSummary = selectedCustomer
     ? `${selectedCustomer.customerName} · ${selectedCustomer.customerCode}`
@@ -594,6 +646,9 @@ export function GoodsReceiptCreatePage({
   const restoreDraftPayload = useCallback((draft: GoodsReceiptDirectDraft): void => {
     setStep(Math.min(1, Math.max(0, draft.step ?? 0)));
     setSelectedCustomer(draft.selectedCustomer ?? null);
+    setCustomerLookupText(
+      draft.selectedCustomer ? customerLookupLabel(draft.selectedCustomer) : "",
+    );
     setProjectCodeFilter(draft.projectCodeFilter ?? "");
     setWarehouseCodeFilter(draft.warehouseCodeFilter ?? "");
     setSearchTokens(draft.searchTokens ?? []);
@@ -812,26 +867,28 @@ export function GoodsReceiptCreatePage({
     setConfirmedLineOrder([]);
   };
 
+  const applySelectedCustomer = (item: CustomerOption): void => {
+    setSelectedCustomer(item);
+    setCustomerLookupText(customerLookupLabel(item));
+  };
+
   const findCustomerByCode = async (customerCode: string): Promise<CustomerOption> => {
+    const query = extractCustomerLookupQuery(customerCode);
     const page = await goodsReceiptV2Api.customers(
       {
         pageNumber: 1,
         pageSize: 20,
-        search: customerCode,
+        search: query,
         sortBy: "customerCode",
         sortDirection: "asc",
         signal: new AbortController().signal,
       },
       branchCode,
     );
-    const match = page.items.find(
-      (item) =>
-        item.customerCode.trim().toLocaleUpperCase("tr-TR") ===
-        customerCode.trim().toLocaleUpperCase("tr-TR"),
-    );
+    const match = matchCustomerLookupItem(page.items, customerCode);
     if (!match)
       throw new Error(
-        t("createFlow.errors.customerMirrorNotFound", { customerCode }),
+        t("createFlow.errors.customerMirrorNotFound", { customerCode: query }),
       );
     return match;
   };
@@ -872,7 +929,7 @@ export function GoodsReceiptCreatePage({
 
       const resolvedCustomer = await findCustomerByCode(customerCodes[0]);
       const groupedOrders = groupOrderLines(rows);
-      setSelectedCustomer(resolvedCustomer);
+      applySelectedCustomer(resolvedCustomer);
       setProjectCodeFilter("");
       setWarehouseCodeFilter("");
       setSearchTokens([]);
@@ -924,59 +981,96 @@ export function GoodsReceiptCreatePage({
       .catch((cause: Error) => setError(cause.message));
   }, [branchCode]);
 
-  const loadOrders = async (): Promise<void> => {
-    if (!customer) {
+  const loadOrders = async (lookupTextOverride?: string): Promise<void> => {
+    if (loadOrdersLockRef.current || busyAction === "orders") return;
+    const raw = (lookupTextOverride ?? customerLookupText).trim();
+    let resolvedCustomer = selectedCustomer;
+    const typedDiffers =
+      raw.length >= CUSTOMER_LOOKUP_MIN_LEN &&
+      !customerMatchesLookup(resolvedCustomer, raw);
+    if ((!resolvedCustomer || typedDiffers) && raw.length < CUSTOMER_LOOKUP_MIN_LEN) {
       toast.error(t("createFlow.validation.selectCustomerFirst"));
       return;
     }
+    loadOrdersLockRef.current = true;
     setBusyAction("orders");
     setError(null);
-    setSelectedOrders([]);
-    setLines([]);
-    setConfirmedLineOrder([]);
-    setProjectCodeFilter("");
-    setWarehouseCodeFilter("");
-    setSearchTokens([]);
-    setSearchDraft("");
     try {
+      if (!resolvedCustomer || typedDiffers) {
+        try {
+          resolvedCustomer = await findCustomerByCode(raw);
+          applySelectedCustomer(resolvedCustomer);
+        } catch (cause) {
+          report(cause, t("createFlow.errors.customerMirrorNotFound", {
+            customerCode: extractCustomerLookupQuery(raw),
+          }));
+          return;
+        }
+      }
+      if (!resolvedCustomer) {
+        toast.error(t("createFlow.validation.selectCustomerFirst"));
+        return;
+      }
+      const resolved = {
+        id: resolvedCustomer.id,
+        branch: resolvedCustomer.branchCode,
+        code: resolvedCustomer.customerCode,
+      };
       if (direct) {
         const allLines = await goodsReceiptV2Api.orderLines(
-          customer.code,
-          customer.branch,
+          resolved.code,
+          resolved.branch,
           [],
           showAllocatedOpenOrderLines,
         );
         const filteredLines = allLines;
         setDirectOrderLines(filteredLines);
         setSelectedDirectLineKeys([]);
+        setLines([]);
+        setConfirmedLineOrder([]);
+        setProjectCodeFilter("");
+        setWarehouseCodeFilter("");
+        setSearchTokens([]);
+        setSearchDraft("");
         const directOrders = groupOrderLines(filteredLines);
         setOrders(directOrders);
         setOrdersLoaded(true);
         const warehouses = await resolveWarehousesByCode(
           filteredLines,
-          customer.branch,
+          resolved.branch,
         );
         setWarehouseByCode(warehouses);
-        if (
+        setSelectedOrders(
           directOrders.length === 1 &&
-          canUseOrderWarehouse(directOrders[0].targetWarehouseCode)
-        )
-          setSelectedOrders([directOrders[0].siparisNo]);
+            canUseOrderWarehouse(directOrders[0].targetWarehouseCode)
+            ? [directOrders[0].siparisNo]
+            : [],
+        );
         return;
       }
       setWarehouseByCode(new Map());
       const rows = await goodsReceiptV2Api.orderHeaders({
-        branchCode: customer.branch,
-        customerCode: customer.code,
+        branchCode: resolved.branch,
+        customerCode: resolved.code,
       });
       const filtered = rows;
       setOrders(filtered);
       setOrdersLoaded(true);
-      if (filtered.length === 1 && canUseOrderWarehouse(filtered[0].targetWarehouseCode))
-        setSelectedOrders([filtered[0].siparisNo]);
+      setSelectedOrders(
+        filtered.length === 1 && canUseOrderWarehouse(filtered[0].targetWarehouseCode)
+          ? [filtered[0].siparisNo]
+          : [],
+      );
+      setLines([]);
+      setConfirmedLineOrder([]);
+      setProjectCodeFilter("");
+      setWarehouseCodeFilter("");
+      setSearchTokens([]);
+      setSearchDraft("");
     } catch (cause) {
       report(cause, t("createFlow.errors.ordersLoadFailed"));
     } finally {
+      loadOrdersLockRef.current = false;
       setBusyAction(null);
     }
   };
@@ -1955,7 +2049,7 @@ export function GoodsReceiptCreatePage({
                     <PagedLookupDialog<CustomerOption>
                       variant="ops"
                       triggerMode="combobox"
-                      autoSearchMinLength={2}
+                      autoSearchMinLength={CUSTOMER_LOOKUP_MIN_LEN}
                       open={customerLookupOpen}
                       onOpenChange={setCustomerLookupOpen}
                       title={t("selectCustomer")}
@@ -1981,17 +2075,23 @@ export function GoodsReceiptCreatePage({
                         )
                       }
                       getKey={(item) => String(item.id)}
-                      getLabel={(item) =>
-                        `${item.customerName} (${item.customerCode})`
-                      }
+                      getLabel={(item) => customerLookupLabel(item)}
                       getPrimaryLabel={(item) => item.customerName}
                       getSecondaryLabel={(item) => item.customerCode}
                       onSelect={(item) => {
                         const sameCustomer = selectedCustomer?.id === item.id;
-                        setSelectedCustomer(item);
+                        applySelectedCustomer(item);
                         if (sameCustomer) return;
                         setOrderNumberSearch("");
                         clearCustomerDependent();
+                      }}
+                      onComboboxTextChange={(text) => {
+                        setCustomerLookupText(text);
+                      }}
+                      onCommitText={(text) => {
+                        if (customerLookupOpen) return;
+                        setCustomerLookupText(text);
+                        return loadOrders(text);
                       }}
                     />
                   </div>
@@ -1999,7 +2099,8 @@ export function GoodsReceiptCreatePage({
                     type="button"
                     variant="primary"
                     loading={busyAction === "orders"}
-                    disabled={busy || !customer}
+                    disabled={false}
+                    guardAsyncAction={false}
                     onClick={() => loadOrders()}
                     className="wms-ops-order-lookup__action shrink-0"
                   >

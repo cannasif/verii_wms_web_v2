@@ -294,6 +294,8 @@
       "selectAllAria": "Select all lines subject to control",
       "selectRowAria": "Select the {{stockCode}} line",
       "stock": "Stock",
+      "projectCode": "Project Code",
+      "orderNo": "Order No",
       "lotSerial": "Lot / Serial",
       "lotSerialHoverHint": "Hover to see serial list",
       "serialCount": "{{count}} serials",

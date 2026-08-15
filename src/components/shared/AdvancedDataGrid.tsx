@@ -769,11 +769,15 @@ export function AdvancedDataGrid<T extends { id: number }>({
     setRunningActionIndex(index);
     try {
       await action.run();
-      await query.refetch();
     } catch {
       // Toasts / error UX are owned by the action runner when provided.
     } finally {
       setRunningActionIndex(null);
+    }
+    try {
+      await query.refetch();
+    } catch {
+      // Refresh failures are surfaced by the grid query state.
     }
   };
   const toggleColumn = (key: string) => {

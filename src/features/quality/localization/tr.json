@@ -294,6 +294,8 @@
       "selectAllAria": "Tüm kontrole tabi satırları seç",
       "selectRowAria": "{{stockCode}} satırını seç",
       "stock": "Stok",
+      "projectCode": "Proje Kodu",
+      "orderNo": "Sipariş No",
       "lotSerial": "Lot / Seri",
       "lotSerialHoverHint": "Seri listesini görmek için üzerine gelin",
       "serialCount": "{{count}} seri",

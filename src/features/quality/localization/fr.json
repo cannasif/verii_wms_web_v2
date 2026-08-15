@@ -229,6 +229,8 @@
       "selectAllAria": "Sélectionner toutes les lignes soumises au contrôle",
       "selectRowAria": "Sélectionner la ligne {{stockCode}}",
       "stock": "Stock",
+      "projectCode": "Code projet",
+      "orderNo": "N° commande",
       "lotSerial": "Lot / Numéro de série",
       "lotSerialHoverHint": "Survolez pour voir la liste des numéros de série",
       "serialCount": "{{count}} séries",

@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useId,
   useMemo,
   useRef,
   useState,
@@ -80,6 +81,8 @@ interface PagedLookupDialogProps<T> {
   onSelect: (item: T) => void;
   /** Combobox modunda yazılan metni parent'a iletir (serbest metin / seçim dışı değer için). */
   onComboboxTextChange?: (text: string) => void;
+  /** Combobox'ta Enter: listeden seçilemezse yazılan metni parent'a teslim eder. */
+  onCommitText?: (text: string) => unknown | PromiseLike<unknown>;
 }
 
 export function PagedLookupDialog<T>({
@@ -107,6 +110,7 @@ export function PagedLookupDialog<T>({
   getSecondaryLabel,
   onSelect,
   onComboboxTextChange,
+  onCommitText,
 }: PagedLookupDialogProps<T>): ReactElement {
   const { t } = useTranslation(['common', 'shared']);
   const [searchInput, setSearchInput] = useState('');
@@ -128,6 +132,19 @@ export function PagedLookupDialog<T>({
   const frozenComboboxItemsRef = useRef<T[]>([]);
   const frozenDialogItemsRef = useRef<T[]>([]);
   const [selectionFrozen, setSelectionFrozen] = useState(false);
+  const openRef = useRef(open);
+  const valueRef = useRef(value);
+  openRef.current = open;
+  valueRef.current = value;
+  const dialogSearchId = useId();
+
+  const restoreBodyPointerEvents = (): void => {
+    window.setTimeout(() => {
+      if (document.body.style.pointerEvents === 'none') {
+        document.body.style.removeProperty('pointer-events');
+      }
+    }, 0);
+  };
 
   const isCombobox = triggerMode === 'combobox';
   const minLen = autoSearchMinLength ?? 1;
@@ -313,6 +330,15 @@ export function PagedLookupDialog<T>({
 
   const selectItem = (item: T, source: 'combobox' | 'dialog'): void => {
     if (selectionLockRef.current) return;
+    const label = getLabel(item);
+    if (Boolean(value) && label.trim() === (value ?? '').trim()) {
+      setComboboxDraft(label);
+      setComboboxOpen(false);
+      setEditing(false);
+      onOpenChange(false);
+      restoreBodyPointerEvents();
+      return;
+    }
     selectionLockRef.current = true;
     skipBlurCloseRef.current = true;
 
@@ -326,19 +352,33 @@ export function PagedLookupDialog<T>({
     onSelect(item);
     setEditing(false);
     setComboboxOpen(false);
-    setComboboxDraft(getLabel(item));
+    setComboboxDraft(label);
     onOpenChange(false);
-    inputRef.current?.blur();
+    restoreBodyPointerEvents();
+    if (source !== 'dialog') {
+      inputRef.current?.blur();
+    }
 
     scheduleSelectionCleanup(() => {
       setComboboxSearch('');
     });
   };
 
+  const focusDialogSearch = (): void => {
+    const field = document.getElementById(dialogSearchId);
+    if (!(field instanceof HTMLInputElement)) return;
+    field.focus();
+    field.select();
+  };
+
   const openDialog = (): void => {
     if (disabled || selectionLockRef.current) return;
+    skipBlurCloseRef.current = true;
     setComboboxOpen(false);
     setEditing(false);
+    setSearchInput('');
+    setSearch('');
+    inputRef.current?.blur();
     onOpenChange(true);
   };
 
@@ -346,8 +386,15 @@ export function PagedLookupDialog<T>({
     selectItem(item, 'combobox');
   };
 
+  const handleDialogSearchKeyDown = (event: KeyboardEvent<HTMLInputElement>): void => {
+    if (event.key !== 'Enter') return;
+    event.preventDefault();
+    event.stopPropagation();
+    setSearch(searchInput.trim());
+  };
+
   const handleInputKeyDown = (event: KeyboardEvent<HTMLInputElement>): void => {
-    if (disabled) return;
+    if (disabled || open) return;
 
     if (event.key === 'Escape') {
       event.preventDefault();
@@ -375,10 +422,23 @@ export function PagedLookupDialog<T>({
     }
 
     if (event.key === 'Enter') {
-      if (!comboboxOpen || comboboxItems.length === 0) return;
-      event.preventDefault();
-      const item = comboboxItems[highlightIndex] ?? comboboxItems[0];
-      if (item) handleComboboxSelect(item);
+      if (comboboxOpen && comboboxItems.length > 0) {
+        event.preventDefault();
+        const item = comboboxItems[highlightIndex] ?? comboboxItems[0];
+        if (item) {
+          const alreadySelected =
+            Boolean(value) && getLabel(item).trim() === (value ?? '').trim();
+          handleComboboxSelect(item);
+          if (!alreadySelected) onCommitText?.(getLabel(item));
+        }
+        return;
+      }
+      if (trimmedDraft.length >= minLen && onCommitText) {
+        event.preventDefault();
+        setComboboxOpen(false);
+        setEditing(false);
+        onCommitText(trimmedDraft);
+      }
       return;
     }
 
@@ -468,8 +528,6 @@ export function PagedLookupDialog<T>({
         // Dropdown yalnızca yazınca açılır; dışarı tıklanınca kapanabilir.
         if (!next) {
           setComboboxOpen(false);
-          setEditing(false);
-          setComboboxDraft(value ?? '');
         }
       }}
     >
@@ -488,6 +546,7 @@ export function PagedLookupDialog<T>({
                 : undefined
             }
             disabled={disabled}
+            tabIndex={open ? -1 : undefined}
             aria-invalid={invalid || undefined}
             value={displayValue}
             placeholder={placeholder}
@@ -502,7 +561,12 @@ export function PagedLookupDialog<T>({
             )}
             title={displayValue || undefined}
             onFocus={(event) => {
-              if (disabled || open || selectionLockRef.current) return;
+              if (open) {
+                event.currentTarget.blur();
+                window.requestAnimationFrame(focusDialogSearch);
+                return;
+              }
+              if (disabled || selectionLockRef.current) return;
               setEditing(true);
               event.currentTarget.select();
             }}
@@ -520,22 +584,21 @@ export function PagedLookupDialog<T>({
               openDialog();
             }}
             onChange={(event) => {
-              if (selectionLockRef.current) return;
               const next = event.target.value;
               setEditing(true);
               setComboboxDraft(next);
               onComboboxTextChange?.(next);
-              // Sadece yazmaya başlayınca aç; boşsa kapat.
+              if (selectionLockRef.current) return;
               setComboboxOpen(next.trim().length > 0);
             }}
             onKeyDown={handleInputKeyDown}
             onBlur={() => {
               window.setTimeout(() => {
                 if (skipBlurCloseRef.current || selectionLockRef.current) return;
-                if (open) return;
+                if (openRef.current) return;
                 setComboboxOpen(false);
                 setEditing(false);
-                setComboboxDraft(value ?? '');
+                setComboboxDraft(valueRef.current ?? '');
               }, SELECTION_COOLDOWN_MS);
             }}
           />
@@ -625,7 +688,12 @@ export function PagedLookupDialog<T>({
                       )}
                       onMouseEnter={() => setHighlightIndex(index)}
                       onPointerDown={(event) => {
+                        event.stopPropagation();
+                        skipBlurCloseRef.current = true;
+                      }}
+                      onClick={(event) => {
                         event.preventDefault();
+                        event.stopPropagation();
                         if (selectionLockRef.current) return;
                         handleComboboxSelect(item);
                       }}
@@ -668,12 +736,24 @@ export function PagedLookupDialog<T>({
         open={open}
         onOpenChange={(next) => {
           if (next && (selectionLockRef.current || selectionFrozen)) return;
+          if (!next && !selectionLockRef.current) {
+            skipBlurCloseRef.current = false;
+            restoreBodyPointerEvents();
+          }
           onOpenChange(next);
         }}
       >
         <DialogContent
           tone="ops"
           portalRoot="body"
+          onCloseAutoFocus={(event) => event.preventDefault()}
+          onOpenAutoFocus={(event) => {
+            event.preventDefault();
+            inputRef.current?.blur();
+            focusDialogSearch();
+            window.requestAnimationFrame(focusDialogSearch);
+            window.setTimeout(focusDialogSearch, 50);
+          }}
           className={cn(
             isOps ? 'wms-ops-lookup-dialog sm:max-w-2xl lg:max-w-3xl' : 'sm:max-w-xl',
           )}
@@ -690,13 +770,10 @@ export function PagedLookupDialog<T>({
               {isOps ? (
                 <OpsFieldShell className="min-w-0 flex-1">
                   <Input
+                    id={dialogSearchId}
                     value={searchInput}
                     onChange={(event) => setSearchInput(event.target.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter') {
-                        setSearch(searchInput.trim());
-                      }
-                    }}
+                    onKeyDown={handleDialogSearchKeyDown}
                     placeholder={resolvedSearchPlaceholder}
                     className={cn(OPS_FIELD_CLASS, 'h-10')}
                     aria-label={resolvedSearchPlaceholder}
@@ -704,13 +781,10 @@ export function PagedLookupDialog<T>({
                 </OpsFieldShell>
               ) : (
                 <Input
+                  id={dialogSearchId}
                   value={searchInput}
                   onChange={(event) => setSearchInput(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter') {
-                      setSearch(searchInput.trim());
-                    }
-                  }}
+                  onKeyDown={handleDialogSearchKeyDown}
                   placeholder={resolvedSearchPlaceholder}
                   className="min-w-0 flex-1"
                   aria-label={resolvedSearchPlaceholder}
@@ -806,7 +880,11 @@ export function PagedLookupDialog<T>({
                             : 'rounded-xl border border-slate-200/70 bg-white/80 hover:border-sky-300 hover:bg-sky-50/70 dark:border-white/10 dark:bg-white/4 dark:hover:border-sky-400/50 dark:hover:bg-sky-500/10',
                         )}
                         onPointerDown={(event) => {
+                          event.stopPropagation();
+                        }}
+                        onClick={(event) => {
                           event.preventDefault();
+                          event.stopPropagation();
                           if (selectionLockRef.current) return;
                           selectItem(item, 'dialog');
                         }}

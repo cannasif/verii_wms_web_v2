@@ -229,6 +229,8 @@
       "selectAllAria": "Alle prüfpflichtigen Positionen auswählen",
       "selectRowAria": "Position {{stockCode}} auswählen",
       "stock": "Lagerartikel",
+      "projectCode": "Projektcode",
+      "orderNo": "Bestellnr.",
       "lotSerial": "Charge / Seriennummer",
       "lotSerialHoverHint": "Serienliste per Hover anzeigen",
       "serialCount": "{{count}} Serien",
