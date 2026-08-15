@@ -9,7 +9,7 @@ import {
 } from 'react';
 import { useInfiniteQuery, keepPreviousData } from '@tanstack/react-query';
 import * as PopoverPrimitive from '@radix-ui/react-popover';
-import { Check, Loader2, Search } from 'lucide-react';
+import { Loader2, Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { PagedResponse } from '@/types/api';
 import { Button } from '@/components/ui/button';
@@ -28,6 +28,7 @@ import { getWorkspacePortalRoot } from '@/lib/workspace-portal';
 import { OpsActionButton } from './OpsActionButton';
 import { OpsFieldShell } from './OpsFieldShell';
 import { OPS_FIELD_CLASS } from './ops-field-styles';
+import { DROPDOWN_OVERLAY_WIDTH_CLASS, DropdownOptionLabel } from './DropdownOptionLabel';
 
 const SEARCH_DEBOUNCE_MS = 300;
 const LOAD_MORE_THRESHOLD = 0.82;
@@ -72,6 +73,10 @@ interface PagedLookupDialogProps<T> {
   }) => Promise<PagedResponse<T>>;
   getKey: (item: T) => string;
   getLabel: (item: T) => string;
+  /** Combobox satırında üst satır (ör. cari adı). Yoksa `getLabel` kullanılır. */
+  getPrimaryLabel?: (item: T) => string;
+  /** Combobox satırında alt satır; hiç kesilmez (ör. cari kodu). */
+  getSecondaryLabel?: (item: T) => string;
   onSelect: (item: T) => void;
   /** Combobox modunda yazılan metni parent'a iletir (serbest metin / seçim dışı değer için). */
   onComboboxTextChange?: (text: string) => void;
@@ -98,6 +103,8 @@ export function PagedLookupDialog<T>({
   fetchPage,
   getKey,
   getLabel,
+  getPrimaryLabel,
+  getSecondaryLabel,
   onSelect,
   onComboboxTextChange,
 }: PagedLookupDialogProps<T>): ReactElement {
@@ -566,7 +573,8 @@ export function PagedLookupDialog<T>({
           onOpenAutoFocus={(event) => event.preventDefault()}
           onCloseAutoFocus={(event) => event.preventDefault()}
           className={cn(
-            'wms-floating-surface wms-ops-lookup-popover wms-ops-list-select-content z-[2000] w-[var(--radix-popover-trigger-width)] overflow-hidden outline-none',
+            'wms-floating-surface wms-ops-lookup-popover wms-ops-list-select-content z-[2000] overflow-hidden outline-none',
+            DROPDOWN_OVERLAY_WIDTH_CLASS,
             'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0',
           )}
         >
@@ -596,6 +604,8 @@ export function PagedLookupDialog<T>({
                 {visibleComboboxItems.map((item, index) => {
                   const key = getKey(item);
                   const label = getLabel(item);
+                  const primary = getPrimaryLabel?.(item) ?? label;
+                  const secondary = getSecondaryLabel?.(item);
                   const active = value === label;
                   const highlighted = index === highlightIndex;
                   return (
@@ -608,7 +618,7 @@ export function PagedLookupDialog<T>({
                       aria-label={label}
                       aria-selected={active || highlighted}
                       className={cn(
-                        'flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm outline-none transition-colors',
+                        'flex w-full items-start gap-2 rounded-lg px-2.5 py-2 text-left text-sm outline-none transition-colors',
                         'hover:bg-[var(--wms-brand-soft)] focus-visible:bg-[var(--wms-brand-soft)]',
                         (active || highlighted) && 'bg-[var(--wms-brand-soft)] font-semibold text-[var(--wms-brand-primary)]',
                         comboboxFetching && 'opacity-70',
@@ -620,8 +630,7 @@ export function PagedLookupDialog<T>({
                         handleComboboxSelect(item);
                       }}
                     >
-                      <span className="min-w-0 flex-1 truncate">{label}</span>
-                      <Check className={cn('size-4 shrink-0 text-[var(--wms-brand-primary)]', !active && 'opacity-0')} />
+                      <DropdownOptionLabel primary={primary} secondary={secondary} />
                     </button>
                   );
                 })}
@@ -782,6 +791,8 @@ export function PagedLookupDialog<T>({
                   ) : (
                     visibleDialogItems.map((item) => {
                       const label = getLabel(item);
+                      const primary = getPrimaryLabel?.(item) ?? label;
+                      const secondary = getSecondaryLabel?.(item);
                       return (
                       <button
                         key={getKey(item)}
@@ -789,7 +800,7 @@ export function PagedLookupDialog<T>({
                         title={label}
                         aria-label={label}
                         className={cn(
-                          'flex w-full items-center px-3 py-2.5 text-left text-sm transition',
+                          'flex w-full items-start px-3 py-2.5 text-left text-sm transition',
                           isOps
                             ? 'wms-ops-lookup-item'
                             : 'rounded-xl border border-slate-200/70 bg-white/80 hover:border-sky-300 hover:bg-sky-50/70 dark:border-white/10 dark:bg-white/4 dark:hover:border-sky-400/50 dark:hover:bg-sky-500/10',
@@ -800,8 +811,8 @@ export function PagedLookupDialog<T>({
                           selectItem(item, 'dialog');
                         }}
                       >
-                        <span className={isOps ? 'wms-ops-lookup-item__label' : 'font-medium text-slate-900 dark:text-white'}>
-                          {label}
+                        <span className={isOps ? 'wms-ops-lookup-item__label w-full' : 'w-full font-medium text-slate-900 dark:text-white'}>
+                          <DropdownOptionLabel primary={primary} secondary={secondary} />
                         </span>
                       </button>
                       );

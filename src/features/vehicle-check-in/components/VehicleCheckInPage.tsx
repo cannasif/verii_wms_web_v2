@@ -654,6 +654,8 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
               },branch))}
               getKey={item=>String(item.id)}
               getLabel={item=>`${item.customerName} (${item.customerCode})`}
+              getPrimaryLabel={item=>item.customerName}
+              getSecondaryLabel={item=>item.customerCode}
               onSelect={item=>patch('carrierName',item.customerName)}
             />
           </div>

@@ -281,9 +281,9 @@ html.skin-premium .wms-ops-list-dropdown,
 html.skin-premium .wms-ops-list-select-content {
   border-radius: 0.9rem !important;
   border: 1px solid color-mix(in oklab, var(--wms-brand-primary) 18%, var(--wms-app-border)) !important;
-  background: color-mix(in srgb, var(--wms-app-panel-strong) 90%, transparent) !important;
-  backdrop-filter: blur(18px) !important;
-  -webkit-backdrop-filter: blur(18px) !important;
+  background: var(--wms-app-panel-strong) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   box-shadow:
     0 20px 48px -20px rgb(2 6 23 / 40%),
     0 0 24px -14px var(--wms-brand-shadow) !important;
@@ -1222,9 +1222,9 @@ html.skin-premium .wms-ops-list-dropdown,
 html.skin-premium .wms-ops-list-select-content {
   border-radius: 0.9rem !important;
   border: 1px solid color-mix(in oklab, var(--wms-brand-primary) 18%, var(--wms-app-border)) !important;
-  background: color-mix(in srgb, var(--wms-app-panel-strong) 90%, transparent) !important;
-  backdrop-filter: blur(18px) !important;
-  -webkit-backdrop-filter: blur(18px) !important;
+  background: var(--wms-app-panel-strong) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   box-shadow:
     0 20px 48px -20px rgb(2 6 23 / 40%),
     0 0 24px -14px var(--wms-brand-shadow) !important;

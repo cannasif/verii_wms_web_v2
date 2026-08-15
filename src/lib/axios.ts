@@ -278,14 +278,18 @@ api.interceptors.request.use((config) => {
     config._wmsApiActionToken = bindApiRequestToRecentAction();
   }
   if (config._wmsApiActionToken && config.allowDuplicateRequest !== true && !config._wmsDuplicateRequestKey) {
-    const duplicateKey = buildApiRequestFingerprint(config);
-    const duplicateToken = beginInFlightRequest(duplicateKey);
-    if (!duplicateToken) {
-      releaseApiActionRequest(config._wmsApiActionToken);
-      throw new axios.CanceledError('duplicate-request', undefined, config);
+    const originalMethod = (config._wmsOriginalMethod ?? config.method ?? 'get').toLowerCase();
+    const isReadRequest = originalMethod === 'get' || originalMethod === 'head' || originalMethod === 'options';
+    if (!isReadRequest) {
+      const duplicateKey = buildApiRequestFingerprint(config);
+      const duplicateToken = beginInFlightRequest(duplicateKey);
+      if (!duplicateToken) {
+        releaseApiActionRequest(config._wmsApiActionToken);
+        throw new axios.CanceledError('duplicate-request', undefined, config);
+      }
+      config._wmsDuplicateRequestKey = duplicateKey;
+      config._wmsDuplicateRequestToken = duplicateToken;
     }
-    config._wmsDuplicateRequestKey = duplicateKey;
-    config._wmsDuplicateRequestToken = duplicateToken;
   }
 
   return config;

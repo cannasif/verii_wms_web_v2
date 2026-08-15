@@ -78,6 +78,9 @@ export async function requestSessionAccessToken(): Promise<string> {
         // IIS rejects bodyless POST requests with HTTP 411 before they reach ASP.NET.
         body: '{}',
         cache: 'no-store',
+        signal: typeof AbortSignal.timeout === 'function'
+          ? AbortSignal.timeout(8_000)
+          : undefined,
       });
 
       if (!response.ok) {

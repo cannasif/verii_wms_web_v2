@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { localizeEnumOptionLabel } from '@/lib/enum-localization';
 import { cn } from '@/lib/utils';
 import { getWorkspacePortalRoot } from '@/lib/workspace-portal';
+import { DROPDOWN_OVERLAY_WIDTH_CLASS, DropdownOptionLabel } from './DropdownOptionLabel';
 
 export interface AppDropdownOption<TValue extends string = string> {
   value: TValue;
@@ -252,7 +253,7 @@ export function AppDropdown<TValue extends string = string>({
           className={cn(
             'wms-floating-surface z-[2000] overflow-hidden rounded-xl outline-none',
             opsTone && 'wms-ops-list-select-content',
-            matchTriggerWidth ? 'w-[var(--radix-popover-trigger-width)]' : 'min-w-[12rem] w-max max-w-[min(18rem,calc(100vw-1.5rem))]',
+            matchTriggerWidth ? DROPDOWN_OVERLAY_WIDTH_CLASS : 'min-w-[12rem] w-max max-w-[min(18rem,calc(100vw-1.5rem))]',
             'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95',
             contentClassName,
           )}
@@ -306,21 +307,14 @@ export function AppDropdown<TValue extends string = string>({
                       setOpen(false);
                     }}
                     className={cn(
-                      'flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm outline-none transition-colors',
+                      'flex w-full items-start gap-2 rounded-lg px-2.5 py-2 text-left text-sm outline-none transition-colors',
                       'hover:bg-[var(--wms-brand-soft)] focus-visible:bg-[var(--wms-brand-soft)]',
                       active && 'bg-[var(--wms-brand-soft)] font-semibold text-[var(--wms-brand-primary)]',
                       option.disabled && 'cursor-not-allowed opacity-45',
                     )}
                   >
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate">{option.label}</span>
-                      {option.description && (
-                        <span className="mt-0.5 block truncate text-xs font-normal text-slate-500 dark:text-slate-400">
-                          {option.description}
-                        </span>
-                      )}
-                    </span>
-                    <Check className={cn('size-4 shrink-0 text-[var(--wms-brand-primary)]', !active && 'opacity-0')} />
+                    <DropdownOptionLabel primary={option.label} secondary={option.description} />
+                    <Check className={cn('mt-0.5 size-4 shrink-0 text-[var(--wms-brand-primary)]', !active && 'opacity-0')} />
                   </button>
                 );
               })

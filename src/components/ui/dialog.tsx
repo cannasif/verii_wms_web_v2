@@ -84,6 +84,7 @@ function DialogContent({
   showCloseButton = true,
   portalRoot = "body",
   tone,
+  overlayClassName,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
@@ -91,6 +92,7 @@ function DialogContent({
   portalRoot?: DialogPortalRoot
   /** `ops` applies Terminal/Premium dialog DNA. `plain` skips it (profile slide-over, date pickers). */
   tone?: DialogTone
+  overlayClassName?: string
 }) {
   const { t } = useTranslation()
   const portalContainer = resolveDialogPortalContainer(portalRoot)
@@ -98,7 +100,7 @@ function DialogContent({
   const applyOps = shouldApplyOpsDialogDna(className, tone)
   return (
     <DialogPortal data-slot="dialog-portal" container={portalContainer}>
-      <DialogOverlay contained={contained} />
+      <DialogOverlay contained={contained} className={overlayClassName} />
       <DialogPrimitive.Content
         data-slot="dialog-content"
         data-wms-dialog-tone={applyOps ? "ops" : "plain"}

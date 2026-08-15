@@ -26,6 +26,7 @@ import {
   loadWarehouseTransferCreateHubPage, loadWarehouseTransferHubPage, loadWarehouseTransferListPage, loadWarehouseTransferOperationPage,
   loadWarehouseTransferPolicyPage,
   loadInventoryCountPage,
+  loadProcessParametersHubPage,
 } from './route-loaders';
 
 import {
@@ -54,6 +55,8 @@ const SerialBalancesPage = lazy(() => loadStockBalancePages().then((m) => ({ def
 const WarehouseBalancesPage = lazy(() => loadStockBalancePages().then((m) => ({ default: m.WarehouseBalancesPage })));
 const WarehouseAssistantPage = lazy(() => loadWarehouseAssistantPage().then((m) => ({ default: m.WarehouseAssistantPage })));
 const ProjectSettingsPage = lazy(() => loadProjectSettingsPage().then((m) => ({ default: m.ProjectSettingsPage })));
+const ProcessParametersHubPage = lazy(() => loadProcessParametersHubPage().then((m) => ({ default: m.ProcessParametersHubPage })));
+const ProcessParametersIndexRedirect = lazy(() => loadProcessParametersHubPage().then((m) => ({ default: m.ProcessParametersIndexRedirect })));
 const DocumentSeriesPage = lazy(() => loadDocumentSeriesPage().then((m) => ({ default: m.DocumentSeriesPage })));
 const BarcodeDesignerPage = lazy(() => loadBarcodeDesignerPage().then((m) => ({ default: m.BarcodeDesignerPage })));
 const BarcodePolicyPage = lazy(() => loadBarcodePolicyPage().then((m) => ({ default: m.BarcodePolicyPage })));
@@ -217,12 +220,13 @@ export function App(): ReactElement {
           <Route path="warehouse/warehouse-inbounds/tasks" element={<WarehouseInboundTasksPage />} />
           <Route path="warehouse/warehouse-inbounds/assigned" element={<WarehouseInboundAssignedTasksPage />} />
           <Route path="warehouse/warehouse-inbounds/labels" element={<WarehouseInboundLabelsPage />} />
-          <Route path="warehouse/warehouse-inbounds/settings" element={<WarehouseInboundPolicyPage />} />
+          <Route path="warehouse/warehouse-inbounds/settings" element={<Navigate to="/warehouse/process-parameters/inbound" replace />} />
           <Route path="warehouse/warehouse-outbounds" element={<WarehouseOutboundHubPage />} />
           <Route path="warehouse/warehouse-outbounds/new" element={<WarehouseOutboundCreatePage />} />
           <Route path="warehouse/warehouse-outbounds/list" element={<WarehouseOutboundListPage />} />
           <Route path="warehouse/warehouse-outbounds/:id/operations" element={<WarehouseOutboundOperationPage />} />
-          <Route path="warehouse/warehouse-outbounds/settings" element={<WarehouseOutboundPolicyPage />} />          <Route path="warehouse/locations" element={<LocationDefinitionsPage />} />
+          <Route path="warehouse/warehouse-outbounds/settings" element={<Navigate to="/warehouse/process-parameters/outbound" replace />} />
+          <Route path="warehouse/locations" element={<LocationDefinitionsPage />} />
           <Route path="warehouse/kkd" element={<KkdOverviewPage />} />
           <Route path="warehouse/kkd/definitions" element={<KkdDefinitionsPage />} />
           <Route path="warehouse/kkd/entitlement" element={<KkdEntitlementPage />} />
@@ -232,17 +236,17 @@ export function App(): ReactElement {
           <Route path="warehouse/kkd/distributions/new" element={<KkdDistributionCreatePage />} />
           <Route path="warehouse/production-transfers/material-requests" element={<KkdMaterialRequestsPage />} />
           <Route path="warehouse/kkd/reports" element={<KkdReportsPage />} />
-          <Route path="warehouse/kkd/policy" element={<KkdPolicyPage />} />
+          <Route path="warehouse/kkd/policy" element={<Navigate to="/warehouse/process-parameters/kkd-policy" replace />} />
           <Route path="warehouse/packing" element={<PackingWorkbenchPage />} />
           <Route path="warehouse/packing/definitions" element={<PackingDefinitionsPage />} />
-          <Route path="warehouse/packing/settings" element={<PackingPolicyPage />} />
+          <Route path="warehouse/packing/settings" element={<Navigate to="/warehouse/process-parameters/packing" replace />} />
           <Route path="warehouse/inventory-counts" element={<InventoryCountPage />} />
           <Route path="warehouse/transfers" element={<WarehouseTransferHubPage />} />
           <Route path="warehouse/transfers/new" element={<WarehouseTransferDraftPage />} />
           <Route path="warehouse/transfers/new-operation" element={<WarehouseTransferCreateHubPage />} />
           <Route path="warehouse/transfers/list" element={<WarehouseTransferListPage />} />
           <Route path="warehouse/transfers/:id/operations" element={<WarehouseTransferOperationPage />} />
-          <Route path="warehouse/transfers/settings" element={<WarehouseTransferPolicyPage />} />
+          <Route path="warehouse/transfers/settings" element={<Navigate to="/warehouse/process-parameters/transfer" replace />} />
           <Route path="warehouse/production" element={<ProductionHubPage />} />
           <Route path="warehouse/production/generator" element={<GeneratorProductionHubPage />} />
           <Route path="warehouse/production/generator/projects" element={<GeneratorProductionProjectListPage />} />
@@ -281,12 +285,12 @@ export function App(): ReactElement {
           <Route path="warehouse/production-transfers/list" element={<ProductionTransferListPage />} />
           <Route path="warehouse/production-transfers/task-pool" element={<ProductionTransferTaskPoolPage />} />
           <Route path="warehouse/production-transfers/:id/operations" element={<ProductionTransferOperationPage />} />
-          <Route path="warehouse/production-transfers/settings" element={<ProductionTransferPolicyPage />} />
+          <Route path="warehouse/production-transfers/settings" element={<Navigate to="/warehouse/process-parameters/production-transfer" replace />} />
           <Route path="warehouse/subcontracting-transfers" element={<SubcontractingTransferHubPage />} />
           <Route path="warehouse/subcontracting-transfers/new" element={<SubcontractingTransferDraftPage />} />
           <Route path="warehouse/subcontracting-transfers/list" element={<SubcontractingTransferListPage />} />
           <Route path="warehouse/subcontracting-transfers/:id/operations" element={<SubcontractingTransferOperationPage />} />
-          <Route path="warehouse/subcontracting-transfers/settings" element={<SubcontractingTransferPolicyPage />} />
+          <Route path="warehouse/subcontracting-transfers/settings" element={<Navigate to="/warehouse/process-parameters/subcontracting" replace />} />
           <Route path="warehouse/subcontracting-transfers/issue/new" element={<SubcontractingIssueDraftPage />} />
           <Route path="warehouse/subcontracting-transfers/issue/list" element={<SubcontractingIssueListPage />} />
           <Route path="warehouse/subcontracting-transfers/receipt/new" element={<SubcontractingReceiptDraftPage />} />
@@ -295,7 +299,7 @@ export function App(): ReactElement {
           <Route path="warehouse/shipments/new" element={<ShippingCreatePage />} />
           <Route path="warehouse/shipments/list" element={<ShippingListPage />} />
           <Route path="warehouse/shipments/:id/operations" element={<ShippingOperationPage />} />
-          <Route path="warehouse/shipments/settings" element={<ShippingPolicyPage />} />
+          <Route path="warehouse/shipments/settings" element={<Navigate to="/warehouse/process-parameters/shipping" replace />} />
           <Route path="warehouse/goods-receipts" element={<GoodsReceiptHubPage />} />
           <Route path="warehouse/goods-receipts/new" element={<GoodsReceiptCreatePage />} />
           <Route path="warehouse/goods-receipts/orderless" element={<GoodsReceiptOrderlessPage />} />
@@ -318,8 +322,8 @@ export function App(): ReactElement {
           <Route path="warehouse/goods-receipts/steel/receipt" element={<SteelReceiptOperationsPage initialTab="receipt" />} />
           <Route path="warehouse/goods-receipts/steel/placement" element={<SteelReceiptOperationsPage initialTab="placement" />} />
           <Route path="warehouse/goods-receipts/steel/reports" element={<SteelReceiptReportsPage />} />
-          <Route path="warehouse/goods-receipt-settings" element={<GoodsReceiptPolicyPage />} />
-          <Route path="warehouse/quality/settings" element={<QualitySettingsPage />} />
+          <Route path="warehouse/goods-receipt-settings" element={<Navigate to="/warehouse/process-parameters/goods-receipt" replace />} />
+          <Route path="warehouse/quality/settings" element={<Navigate to="/warehouse/process-parameters/quality" replace />} />
           <Route path="warehouse/quality/rules" element={<QualityRulesPage />} />
           <Route path="warehouse/quality/decision-codes" element={<QualityDecisionCodesPage />} />
           <Route path="warehouse/quality/inspections" element={<QualityInspectionsPage />} />
@@ -332,10 +336,26 @@ export function App(): ReactElement {
           <Route path="warehouse/assistant" element={<WarehouseAssistantPage />} />
           <Route path="warehouse/serial-number-rules" element={<SerialNumberRulesPage />} />
           <Route path="warehouse/stock-tracking-policies" element={<Navigate to="/erp/stocks" replace />} />
-          <Route path="warehouse/document-series" element={<DocumentSeriesPage />} />
-          <Route path="warehouse/barcode-designer" element={<BarcodeDesignerPage />} />
-          <Route path="warehouse/barcode-policy" element={<BarcodePolicyPage />} />
-          <Route path="warehouse/barcode-rules" element={<Navigate to="/warehouse/barcode-policy" replace />} />
+          <Route path="warehouse/document-series" element={<Navigate to="/warehouse/process-parameters/document-series" replace />} />
+          <Route path="warehouse/process-parameters" element={<ProcessParametersHubPage />}>
+            <Route index element={<ProcessParametersIndexRedirect />} />
+            <Route path="goods-receipt" element={<GoodsReceiptPolicyPage />} />
+            <Route path="inbound" element={<WarehouseInboundPolicyPage />} />
+            <Route path="outbound" element={<WarehouseOutboundPolicyPage />} />
+            <Route path="transfer" element={<WarehouseTransferPolicyPage />} />
+            <Route path="subcontracting" element={<SubcontractingTransferPolicyPage />} />
+            <Route path="production-transfer" element={<ProductionTransferPolicyPage />} />
+            <Route path="shipping" element={<ShippingPolicyPage />} />
+            <Route path="quality" element={<QualitySettingsPage />} />
+            <Route path="packing" element={<PackingPolicyPage />} />
+            <Route path="document-series" element={<DocumentSeriesPage />} />
+            <Route path="barcode-designer" element={<BarcodeDesignerPage />} />
+            <Route path="barcode-policy" element={<BarcodePolicyPage />} />
+            <Route path="kkd-policy" element={<KkdPolicyPage />} />
+          </Route>
+          <Route path="warehouse/barcode-designer" element={<Navigate to="/warehouse/process-parameters/barcode-designer" replace />} />
+          <Route path="warehouse/barcode-policy" element={<Navigate to="/warehouse/process-parameters/barcode-policy" replace />} />
+          <Route path="warehouse/barcode-rules" element={<Navigate to="/warehouse/process-parameters/barcode-policy" replace />} />
           <Route path="system/users" element={<UserManagementPage />} />
           <Route path="system/permissions" element={<PermissionsPage />} />
           <Route path="system/permission-groups" element={<PermissionGroupsPage />} />

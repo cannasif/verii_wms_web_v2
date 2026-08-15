@@ -1,5 +1,5 @@
 import { type MouseEvent, type ReactElement } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { HugeiconsIcon } from '@hugeicons/react';
 import ArrowRight01Icon from '@hugeicons/core-free-icons/ArrowRight01Icon';
 import { useUIStore } from '@/stores/ui-store';
@@ -110,6 +110,7 @@ export function SidebarNavItem({
   level = 0,
 }: SidebarNavItemProps): ReactElement {
   const location = useLocation();
+  const navigate = useNavigate();
   const isSidebarOpen = useUIStore((state) => state.isSidebarOpen);
   const setSidebarOpen = useUIStore((state) => state.setSidebarOpen);
   const hasChildren = (item.children?.length ?? 0) > 0;
@@ -145,10 +146,22 @@ export function SidebarNavItem({
           onClick={() => {
             if (!isSidebarOpen) {
               setSidebarOpen(true);
-              setTimeout(() => onToggle(itemKey), 80);
-            } else {
-              onToggle(itemKey);
+              setTimeout(() => {
+                if (item.href) navigate(item.href);
+                onToggle(itemKey);
+              }, 80);
+              return;
             }
+            if (item.href) {
+              navigate(item.href);
+              if (window.innerWidth < 1024) setSidebarOpen(false);
+              if (!isExpanded) onToggle(itemKey);
+              return;
+            }
+            onToggle(itemKey);
+          }}
+          onMouseEnter={() => {
+            if (item.href) preloadRoute(item.href);
           }}
           className={cn(
             'flex w-full items-center gap-2.5 rounded-sm transition-colors duration-200',
@@ -156,8 +169,11 @@ export function SidebarNavItem({
             !isSectionHeader && sidebarItemHoverClassName,
             !isSectionHeader && (isParentActive ? sidebarActiveParentClassName : 'text-slate-600 dark:text-slate-300'),
             isSectionHeader && (isParentActive ? 'text-[var(--wms-brand-primary)]' : ''),
+            isSectionHeader && item.href && 'cursor-pointer hover:text-[var(--wms-brand-primary)]',
+            isSectionHeader && item.href && isActive && 'text-[var(--wms-brand-primary)]',
             !isSidebarOpen && 'justify-center',
           )}
+          title={item.href ? title : undefined}
         >
           {item.icon && level === 0 ? (
             <span
@@ -172,6 +188,14 @@ export function SidebarNavItem({
             </span>
           ) : null}
           <SidebarNavLabel title={title} isSidebarOpen={isSidebarOpen} level={level} hasChildren={hasChildren} />
+          {isSidebarOpen && isSectionHeader && item.href ? (
+            <span
+              className="shrink-0 font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--wms-brand-primary)] opacity-80"
+              aria-hidden
+            >
+              →
+            </span>
+          ) : null}
           {isSidebarOpen && !isSectionHeader ? (
             <HugeiconsIcon
               icon={ArrowRight01Icon}

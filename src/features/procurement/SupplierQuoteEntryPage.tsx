@@ -1682,6 +1682,8 @@ export function SupplierQuoteEntryPage(): ReactElement {
                             getLabel={(item) =>
                               `${item.customerCode} · ${item.customerName}`
                             }
+                            getPrimaryLabel={(item) => item.customerName}
+                            getSecondaryLabel={(item) => item.customerCode}
                             onComboboxTextChange={(text) => {
                               patchDraft(draft.key, {
                                 supplierId: null,

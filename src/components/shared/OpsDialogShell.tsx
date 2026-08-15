@@ -12,12 +12,14 @@ export function OpsDialogContent({
   size = 'lg',
   showCloseButton = true,
   portalRoot = 'body',
+  overlayClassName,
 }: {
   children: ReactNode;
   className?: string;
   size?: 'md' | 'lg' | 'xl' | 'full';
   showCloseButton?: boolean;
   portalRoot?: DialogPortalRoot;
+  overlayClassName?: string;
 }): ReactElement {
   const sizeClass =
     size === 'full'
@@ -33,6 +35,7 @@ export function OpsDialogContent({
       showCloseButton={showCloseButton}
       portalRoot={portalRoot}
       tone="ops"
+      overlayClassName={overlayClassName}
       className={cn(
         'wms-ops-form wms-ops-erp-skin wms-ops-detail-dialog flex max-h-[min(90dvh,880px)] flex-col gap-0 overflow-hidden border-0 p-0 shadow-none',
         sizeClass,

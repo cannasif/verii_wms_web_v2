@@ -60,7 +60,7 @@ function NavPngIcon({ kind }: { kind: NavPngIconKind }): ReactElement {
   const src = skin === 'premium' ? pair.premium : pair.terminal;
 
   return (
-    <span className="nav-png-icon" aria-hidden>
+    <span className="nav-png-icon" data-nav-icon={kind} aria-hidden>
       <img src={src} alt="" draggable={false} />
     </span>
   );

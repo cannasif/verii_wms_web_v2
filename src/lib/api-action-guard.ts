@@ -14,8 +14,6 @@ export type ApiActionRequestToken = {
 type PendingState = {
   count: number;
   previousAriaBusy: string | null;
-  previousAriaDisabled: string | null;
-  previousDisabled?: boolean;
 };
 
 type RecentAction = {
@@ -41,13 +39,6 @@ function resolveActionElement(target: EventTarget | null): ActionElement | null 
 
 function isPending(element: ActionElement): boolean {
   return element.getAttribute(PENDING_ATTRIBUTE) === 'true';
-}
-
-function isNativeDisableable(element: ActionElement): element is HTMLButtonElement | HTMLInputElement {
-  return (
-    (typeof HTMLButtonElement !== 'undefined' && element instanceof HTMLButtonElement)
-    || (typeof HTMLInputElement !== 'undefined' && element instanceof HTMLInputElement)
-  );
 }
 
 function captureAction(element: ActionElement): void {
@@ -102,15 +93,11 @@ export function bindApiRequestToRecentAction(): ApiActionRequestToken | undefine
   const state = pendingStates.get(element) ?? {
     count: 0,
     previousAriaBusy: element.getAttribute('aria-busy'),
-    previousAriaDisabled: element.getAttribute('aria-disabled'),
-    previousDisabled: isNativeDisableable(element) ? element.disabled : undefined,
   };
   state.count += 1;
   pendingStates.set(element, state);
   element.setAttribute(PENDING_ATTRIBUTE, 'true');
   element.setAttribute('aria-busy', 'true');
-  element.setAttribute('aria-disabled', 'true');
-  if (isNativeDisableable(element)) element.disabled = true;
 
   return { element, startedAt: now(), released: false };
 }
@@ -130,10 +117,5 @@ export function releaseApiActionRequest(token: ApiActionRequestToken | undefined
     token.element.removeAttribute(PENDING_ATTRIBUTE);
     if (state.previousAriaBusy == null) token.element.removeAttribute('aria-busy');
     else token.element.setAttribute('aria-busy', state.previousAriaBusy);
-    if (state.previousAriaDisabled == null) token.element.removeAttribute('aria-disabled');
-    else token.element.setAttribute('aria-disabled', state.previousAriaDisabled);
-    if (isNativeDisableable(token.element) && state.previousDisabled !== undefined) {
-      token.element.disabled = state.previousDisabled;
-    }
   }, remaining);
 }

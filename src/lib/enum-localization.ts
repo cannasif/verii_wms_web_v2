@@ -93,7 +93,7 @@ const TR_ENUM_LABELS: Record<string, string> = {
   Damaged: 'Hasarlı',
   Date: 'Tarih',
   Direct: 'Doğrudan',
-  DirectReceipt: 'Doğrudan Mal Kabul',
+  DirectReceipt: 'Yurt İçi Mal Kabul',
   DirectTransfer: 'Doğrudan Transfer',
   Dispatch: 'Sevk',
   Document: 'Belge',

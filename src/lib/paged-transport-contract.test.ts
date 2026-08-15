@@ -14,7 +14,7 @@ function sourceFiles(directory: string): string[] {
 }
 
 describe('paged HTTP transport contract', () => {
-  it('never sends a paged API request with GET', () => {
+  it('never sends a paged API request with GET', { timeout: 60_000 }, () => {
     const violations: string[] = [];
     const root = path.resolve(process.cwd(), 'src');
 

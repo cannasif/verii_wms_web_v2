@@ -10,7 +10,6 @@ import { Copy } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { getWorkspacePortalRoot } from '@/lib/workspace-portal';
 
 interface CopyableDataCellValueProps {
   label: string;
@@ -110,15 +109,20 @@ export function CopyableDataCellValue({
       {menu && createPortal(
         <>
           <div
-            className="pointer-events-auto fixed inset-0 z-[10050]"
+            className="pointer-events-auto fixed inset-0 z-[12050]"
             aria-hidden
-            onPointerDown={() => setMenu(null)}
+            onPointerDown={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              setMenu(null);
+            }}
           />
           <div
             role="menu"
             aria-label={t('dataGrid.cellMenu')}
             style={{ left: menu.x, top: menu.y }}
-            className="pointer-events-auto fixed z-[10060] w-80 max-w-[calc(100vw-1rem)] overflow-hidden rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-2 text-sm shadow-2xl"
+            className="pointer-events-auto fixed z-[12060] w-80 max-w-[calc(100vw-1rem)] overflow-hidden rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-2 text-sm shadow-2xl"
+            onPointerDown={(event) => event.stopPropagation()}
           >
             <div className="rounded-xl bg-[var(--wms-app-panel-muted)] px-3 py-2.5">
               <span className="block text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-[var(--wms-app-text-muted)]">
@@ -140,7 +144,8 @@ export function CopyableDataCellValue({
             </button>
           </div>
         </>,
-        getWorkspacePortalRoot() ?? document.body,
+        // Dialogs portal to document.body (z-50); workspace portal sits under them.
+        document.body,
       )}
     </>
   );

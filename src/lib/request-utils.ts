@@ -38,7 +38,12 @@ export function isRequestCanceled(error: unknown): boolean {
   }
 
   if (error instanceof Error) {
-    return error.name === 'CanceledError' || error.name === 'AbortError' || error.message === 'canceled';
+    return (
+      error.name === 'CanceledError'
+      || error.name === 'AbortError'
+      || error.message === 'canceled'
+      || error.message === 'duplicate-request'
+    );
   }
 
   return false;

@@ -12,6 +12,7 @@ export const loadStockMovementsPage = () => import('@/features/stock-movements/c
 export const loadStockBalancePages = () => import('@/features/stock-balances/components/StockBalancePages');
 export const loadWarehouseAssistantPage = () => import('@/features/warehouse-assistant/components/WarehouseAssistantPage');
 export const loadProjectSettingsPage = () => import('@/features/project-settings/ProjectSettingsPage');
+export const loadProcessParametersHubPage = () => import('@/features/process-parameters/ProcessParametersHubPage');
 export const loadDocumentSeriesPage = () => import('@/features/document-series');
 export const loadBarcodeDesignerPage = () => import('@/features/barcode-designer');
 export const loadBarcodePolicyPage = () => import('@/features/barcode-policy');
@@ -137,6 +138,7 @@ const routePreloaders: Array<[prefix: string, load: () => Promise<unknown>]> = [
   ['/warehouse/quality/settings', loadQualitySettingsPage],
   ['/warehouse/quality/rules', loadQualityRulesPage],
   ['/warehouse/quality/decision-codes', loadQualityDecisionCodesPage],
+  ['/warehouse/process-parameters', loadProcessParametersHubPage],
   ['/warehouse/barcode-designer', loadBarcodeDesignerPage],
   ['/warehouse/barcode-policy', loadBarcodePolicyPage],
   ['/warehouse/document-series', loadDocumentSeriesPage],
