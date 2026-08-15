@@ -37,7 +37,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { QualityInspectionStatusFilter } from "./QualityInspectionStatusFilter";
+import {
+  QualityInspectionCreatedPeriodTabs,
+  QualityInspectionStatusFilter,
+} from "./QualityInspectionStatusFilter";
 import {
   QualityApproveSubmitScreen,
   QualityDecisionFlowOverlay,
@@ -47,7 +50,11 @@ import {
   QualityInspectionLineImageGallery,
   QualityInspectionLineImageGalleryDialog,
 } from "./QualityInspectionLineImageGallery";
-import { mergeQualityInspectionStatusFilters } from "../utils/quality-inspection-list-filters";
+import {
+  mergeQualityInspectionStatusFilters,
+  type QualityInspectionCreatedPeriod,
+} from "../utils/quality-inspection-list-filters";
+import { localizeQualityInspectionStatus } from "../utils/quality-inspection-status-label";
 import { requiresQualityDat } from "../utils/quality-dat-routing";
 import {
   canToggleQualityInspectionPriority,
@@ -716,6 +723,8 @@ export function QualityInspectionsPage({
   const [loading, setLoading] = useState<number | null>(null);
   const [priorityLoading, setPriorityLoading] = useState<number | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
+  const [createdPeriod, setCreatedPeriod] = useState<QualityInspectionCreatedPeriod | null>("month");
+  const [createdPeriodAnchor, setCreatedPeriodAnchor] = useState(() => new Date());
   const statusFacet = selectedStatus ?? statusCatalogQuery.data?.defaultValue ?? "";
   const prioritizableStatuses = useMemo(
     () => new Set(statusCatalogQuery.data?.items.filter((item) => item.canPrioritize).map((item) => item.value) ?? []),
@@ -731,10 +740,12 @@ export function QualityInspectionsPage({
           filters: mergeQualityInspectionStatusFilters(
             request.filters,
             quarantineOnly ? "Quarantined" : statusFacet,
+            createdPeriod,
+            createdPeriodAnchor,
           ),
         },
       ),
-    [quarantineOnly, statusFacet],
+    [createdPeriod, createdPeriodAnchor, quarantineOnly, statusFacet],
   );
   const toggle = useCallback(
     async (id: number) => {
@@ -829,6 +840,20 @@ export function QualityInspectionsPage({
         ),
       },
       {
+        key: "projectCodes",
+        label: t("list.columns.projectCode"),
+        sortable: false,
+        filterable: false,
+        searchable: false,
+        render: (r) =>
+          r.projectCodes ? (
+            <span className="font-mono text-xs font-semibold">{r.projectCodes}</span>
+          ) : (
+            "—"
+          ),
+        contextValue: (r) => r.projectCodes ?? undefined,
+      },
+      {
         key: "sourceDocumentType",
         label: t("list.columns.documentType"),
         sortable: true,
@@ -877,7 +902,7 @@ export function QualityInspectionsPage({
         render: (r) => (
           <div className="flex justify-center">
             <OpsStatusBadge tone={inferOpsStatusTone(r.status)}>
-              {localizeEnumValue(r.status)}
+              {localizeQualityInspectionStatus(r.status, t)}
             </OpsStatusBadge>
           </div>
         ),
@@ -1000,7 +1025,7 @@ export function QualityInspectionsPage({
   return (
     <AdvancedDataGrid<QualityInspection>
       pageKey={pageKey}
-      refreshKey={quarantineOnly ? 0 : statusFacet}
+      refreshKey={quarantineOnly ? 0 : `${statusFacet}:${createdPeriod ?? "all"}:${createdPeriodAnchor.getTime()}`}
       title={
         quarantineOnly ? t("list.titleQuarantine") : t("list.titleDefault")
       }
@@ -1014,13 +1039,22 @@ export function QualityInspectionsPage({
       }
       columns={columns}
       fetchPage={fetchPage}
-      toolbarBelowExtra={
+      aboveToolbarExtra={
         quarantineOnly ? undefined : (
           <QualityInspectionStatusFilter
             value={statusFacet}
-            defaultValue={statusCatalogQuery.data?.defaultValue ?? statusFacet}
             statusOptions={statusCatalogQuery.data?.items ?? []}
             onChange={setSelectedStatus}
+          />
+        )
+      }
+      toolbarBelowExtra={
+        quarantineOnly ? undefined : (
+          <QualityInspectionCreatedPeriodTabs
+            value={createdPeriod}
+            onChange={setCreatedPeriod}
+            anchor={createdPeriodAnchor}
+            onAnchorChange={setCreatedPeriodAnchor}
           />
         )
       }
@@ -1724,7 +1758,7 @@ function InspectionDetailPanel({
               tone={inferOpsStatusTone(detail.header.status)}
               className="wms-ops-quality-detail__badge"
             >
-              {localizeEnumValue(detail.header.status)}
+              {localizeQualityInspectionStatus(detail.header.status, t)}
             </OpsStatusBadge>
             <OpsStatusBadge
               tone={inferDocumentTypeTone(docTypeKey)}

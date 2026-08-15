@@ -11,6 +11,7 @@
       "inspectionNo": "Prüfnummer",
       "waybillNo": "Lieferscheinnummer",
       "sourceDocument": "Quelldokument",
+      "projectCode": "Projektcode",
       "documentType": "Belegart",
       "processedBy": "Bearbeitet von",
       "lineCount": "Positionen",
@@ -42,7 +43,25 @@
     "facetClear": "Filter zurücksetzen",
     "statusOptionsLoading": "Qualitätsstatus werden geladen...",
     "statusOptionsFailed": "Die Qualitätsstatus konnten nicht geladen werden. Die Liste kann nicht sicher gefiltert werden.",
-    "retry": "Erneut versuchen"
+    "retry": "Erneut versuchen",
+    "statuses": {
+      "Released": "Abgeschlossen"
+    },
+    "createdPeriodTitle": "Erstellungsdatum",
+    "createdPeriodPrev": "Vorheriger Zeitraum",
+    "createdPeriodNext": "Nächster Zeitraum",
+    "createdPeriodNow": {
+      "day": "Heute",
+      "week": "Diese Woche",
+      "month": "Dieser Monat",
+      "year": "Dieses Jahr"
+    },
+    "createdPeriod": {
+      "day": "Tag",
+      "week": "Woche",
+      "month": "Monat",
+      "year": "Jahr"
+    }
   },
   "goodsReceiptNotice": {
     "decidedToastTitle": "Qualitätsentscheidung und Lagerbewegung erfasst.",

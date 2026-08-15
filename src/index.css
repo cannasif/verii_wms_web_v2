@@ -8170,6 +8170,110 @@ html.skin-premium .wms-ops-list .wms-ops-gr-list-facets button.wms-ops-lookup-tr
   border-radius: 0.4rem !important;
 }
 
+.wms-ops-list .wms-ops-quality-created-period-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.wms-ops-list .wms-ops-quality-created-period-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.wms-ops-list .wms-ops-quality-created-period-nav__arrow,
+.wms-ops-list .wms-ops-quality-created-period-nav__now {
+  min-height: 1.9rem;
+  margin: 0;
+  border: 1px solid color-mix(in oklab, var(--wms-app-border) 88%, transparent);
+  background: var(--wms-app-surface);
+  color: var(--wms-app-text-muted);
+  cursor: pointer;
+}
+
+.wms-ops-list .wms-ops-quality-created-period-nav__arrow {
+  display: grid;
+  width: 1.9rem;
+  place-items: center;
+  padding: 0;
+}
+
+.wms-ops-list .wms-ops-quality-created-period-nav__now {
+  min-width: 6.25rem;
+  padding: 0 0.85rem;
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+}
+
+.wms-ops-list .wms-ops-quality-created-period-nav__arrow:hover:not(:disabled),
+.wms-ops-list .wms-ops-quality-created-period-nav__arrow:focus-visible:not(:disabled),
+.wms-ops-list .wms-ops-quality-created-period-nav__now:hover,
+.wms-ops-list .wms-ops-quality-created-period-nav__now:focus-visible {
+  color: var(--wms-ops-accent);
+  border-color: color-mix(in oklab, var(--wms-ops-accent) 45%, var(--wms-app-border));
+}
+
+.wms-ops-list .wms-ops-quality-created-period-nav__arrow:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.wms-ops-list .wms-ops-quality-created-period-nav__now--active {
+  background: color-mix(in oklab, var(--wms-ops-accent) 16%, var(--wms-app-surface));
+  border-color: color-mix(in oklab, var(--wms-ops-accent) 45%, var(--wms-app-border));
+  color: var(--wms-ops-accent);
+}
+
+html.skin-premium .wms-ops-list .wms-ops-quality-created-period-nav__arrow,
+html.skin-premium .wms-ops-list .wms-ops-quality-created-period-nav__now {
+  border-radius: 0.4rem;
+}
+
+.wms-ops-list .wms-ops-quality-created-periods {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid color-mix(in oklab, var(--wms-app-border) 88%, transparent);
+  background: color-mix(in oklab, var(--wms-ops-accent) 3%, var(--wms-app-panel));
+  padding: 0.3rem;
+}
+
+.wms-ops-list .wms-ops-quality-created-periods__tab {
+  min-height: 1.9rem;
+  margin: 0;
+  border: 1px solid color-mix(in oklab, var(--wms-app-border) 88%, transparent);
+  background: var(--wms-app-surface);
+  padding: 0 0.85rem;
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  color: var(--wms-app-text-muted);
+  cursor: pointer;
+}
+
+.wms-ops-list .wms-ops-quality-created-periods__tab:hover,
+.wms-ops-list .wms-ops-quality-created-periods__tab:focus-visible {
+  color: var(--wms-ops-accent);
+  border-color: color-mix(in oklab, var(--wms-ops-accent) 45%, var(--wms-app-border));
+}
+
+.wms-ops-list .wms-ops-quality-created-periods__tab--active {
+  background: color-mix(in oklab, var(--wms-ops-accent) 16%, var(--wms-app-surface));
+  border-color: color-mix(in oklab, var(--wms-ops-accent) 45%, var(--wms-app-border));
+  color: var(--wms-ops-accent);
+}
+
+html.skin-premium .wms-ops-list .wms-ops-quality-created-periods {
+  border-radius: 0.5rem;
+}
+
+html.skin-premium .wms-ops-list .wms-ops-quality-created-periods__tab {
+  border-radius: 0.4rem;
+}
+
 .wms-ops-list .wms-ops-grid-search {
   display: flex;
   min-width: 0;

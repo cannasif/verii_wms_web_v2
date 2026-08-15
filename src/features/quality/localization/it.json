@@ -11,6 +11,7 @@
       "inspectionNo": "N. Ispezione",
       "waybillNo": "N. Bolla",
       "sourceDocument": "Documento di Origine",
+      "projectCode": "Codice progetto",
       "documentType": "Tipo Documento",
       "processedBy": "Elaborato Da",
       "lineCount": "Righe",
@@ -42,7 +43,25 @@
     "facetClear": "Reimposta filtro",
     "statusOptionsLoading": "Caricamento degli stati qualità...",
     "statusOptionsFailed": "Impossibile caricare gli stati qualità. L’elenco non può essere filtrato in modo sicuro.",
-    "retry": "Riprova"
+    "retry": "Riprova",
+    "statuses": {
+      "Released": "Completato"
+    },
+    "createdPeriodTitle": "Data di creazione",
+    "createdPeriodPrev": "Periodo precedente",
+    "createdPeriodNext": "Periodo successivo",
+    "createdPeriodNow": {
+      "day": "Oggi",
+      "week": "Questa settimana",
+      "month": "Questo mese",
+      "year": "Quest'anno"
+    },
+    "createdPeriod": {
+      "day": "Giorno",
+      "week": "Settimana",
+      "month": "Mese",
+      "year": "Anno"
+    }
   },
   "goodsReceiptNotice": {
     "decidedToastTitle": "Decisione di qualità e movimento di magazzino registrati.",

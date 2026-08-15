@@ -11,6 +11,7 @@
       "inspectionNo": "N.º de Inspección",
       "waybillNo": "N.º de Albarán",
       "sourceDocument": "Documento de Origen",
+      "projectCode": "Código de proyecto",
       "documentType": "Tipo de Documento",
       "processedBy": "Procesado Por",
       "lineCount": "Líneas",
@@ -42,7 +43,25 @@
     "facetClear": "Restablecer filtro",
     "statusOptionsLoading": "Cargando estados de calidad...",
     "statusOptionsFailed": "No se pudieron cargar los estados de calidad. La lista no se puede filtrar de forma segura.",
-    "retry": "Reintentar"
+    "retry": "Reintentar",
+    "statuses": {
+      "Released": "Completado"
+    },
+    "createdPeriodTitle": "Fecha de creación",
+    "createdPeriodPrev": "Periodo anterior",
+    "createdPeriodNext": "Periodo siguiente",
+    "createdPeriodNow": {
+      "day": "Hoy",
+      "week": "Esta semana",
+      "month": "Este mes",
+      "year": "Este año"
+    },
+    "createdPeriod": {
+      "day": "Día",
+      "week": "Semana",
+      "month": "Mes",
+      "year": "Año"
+    }
   },
   "goodsReceiptNotice": {
     "decidedToastTitle": "Decisión de calidad y movimiento de stock registrados.",

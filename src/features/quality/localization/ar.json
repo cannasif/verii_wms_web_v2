@@ -11,6 +11,7 @@
       "inspectionNo": "رقم الفحص",
       "waybillNo": "رقم بوليصة الشحن",
       "sourceDocument": "المستند المصدر",
+      "projectCode": "رمز المشروع",
       "documentType": "نوع المستند",
       "processedBy": "تمت المعالجة بواسطة",
       "lineCount": "البنود",
@@ -42,7 +43,25 @@
     "facetClear": "إعادة تعيين المرشح",
     "statusOptionsLoading": "جارٍ تحميل حالات الجودة...",
     "statusOptionsFailed": "تعذر تحميل حالات الجودة. لا يمكن تصفية القائمة بأمان.",
-    "retry": "إعادة المحاولة"
+    "retry": "إعادة المحاولة",
+    "statuses": {
+      "Released": "مكتمل"
+    },
+    "createdPeriodTitle": "تاريخ الإنشاء",
+    "createdPeriodPrev": "الفترة السابقة",
+    "createdPeriodNext": "الفترة التالية",
+    "createdPeriodNow": {
+      "day": "اليوم",
+      "week": "هذا الأسبوع",
+      "month": "هذا الشهر",
+      "year": "هذه السنة"
+    },
+    "createdPeriod": {
+      "day": "يوم",
+      "week": "أسبوع",
+      "month": "شهر",
+      "year": "سنة"
+    }
   },
   "goodsReceiptNotice": {
     "decidedToastTitle": "تم تسجيل قرار الجودة وحركة المخزون.",

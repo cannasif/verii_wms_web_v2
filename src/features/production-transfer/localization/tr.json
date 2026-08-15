@@ -70,7 +70,7 @@
     "saving": "Kaydediliyor…",
     "save": "Ayarları Kaydet",
     "eyebrow": "Üretime Transfer",
-    "title": "Üretim Besleme Politikası",
+    "title": "Üretim Transfer Ayarları",
     "description": "Üretim emri, malzeme uygunluğu, görev, raf ve tolerans kurallarını merkezi yönetin.",
     "sections": { "source": "İş emri ve reçete kaynağı", "order": "Üretim emri ve malzeme uygunluğu", "execution": "Fiziksel yürütme ve tolerans" },
     "source": {

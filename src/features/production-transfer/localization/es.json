@@ -70,7 +70,7 @@
     "saving": "Guardando…",
     "save": "Guardar configuración",
     "eyebrow": "Transferencia de producción",
-    "title": "Política de suministro de producción",
+    "title": "Configuración de transferencia de producción",
     "description": "Gestione de forma centralizada las reglas de orden de producción, disponibilidad de material, asignación, ubicación y tolerancia.",
     "sections": { "source": "Fuente de orden y receta", "order": "Orden de producción y disponibilidad de material", "execution": "Ejecución física y tolerancia" },
     "source": { "netsis": "Leer desde funciones de Netsis ERP", "netsisHint": "Las órdenes y recetas se preparan en tiempo real desde Netsis.", "wms": "Leer desde tablas de integración WMS", "wmsHint": "Un sistema aprobado como Windbox alimenta las tablas fuente de WMS.", "combined": "Listar juntas las órdenes ERP y WMS", "combinedHint": "Ambas fuentes se etiquetan y los números iguales permanecen separados.", "boundaryTitle": "Límite de integración", "boundaryText": "Los sistemas externos solo alimentan tablas fuente versionadas. WMS crea órdenes operativas, transferencias, reservas y movimientos de stock." },

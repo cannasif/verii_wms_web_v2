@@ -89,6 +89,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { canRetainGridPlaceholder } from '@/lib/grid-query-state';
+import {
+  nextRefreshAvailableAt,
+  remainingRefreshCooldownSeconds,
+} from '@/lib/grid-refresh-cooldown';
 import { withRequestAbortSignal } from '@/lib/request-utils';
 import {
   Tooltip,
@@ -544,6 +548,8 @@ export function AdvancedDataGrid<T extends { id: number }>({
   const [filters, setFilters] = useState<GridFilter[]>([]);
   const [filterLogic, setFilterLogic] = useState<'and' | 'or'>('and');
   const [runningActionIndex, setRunningActionIndex] = useState<number | null>(null);
+  const [refreshAvailableAt, setRefreshAvailableAt] = useState<number | null>(null);
+  const [refreshNowMs, setRefreshNowMs] = useState(() => Date.now());
   const [cellContext, setCellContext] = useState<GridCellContext<T> | null>(null);
   const cellMenuRef = useRef<HTMLDivElement>(null);
   const resizeRef = useRef<{ key: string; startX: number; startWidth: number; pointerId: number } | null>(null);
@@ -554,6 +560,23 @@ export function AdvancedDataGrid<T extends { id: number }>({
     useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 6 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
+
+  useEffect(() => {
+    if (refreshAvailableAt == null) return;
+    const tick = () => {
+      const current = Date.now();
+      setRefreshNowMs(current);
+      if (current >= refreshAvailableAt) {
+        setRefreshAvailableAt(null);
+      }
+    };
+    tick();
+    const intervalId = window.setInterval(tick, 250);
+    return () => window.clearInterval(intervalId);
+  }, [refreshAvailableAt]);
+
+  const refreshCooldownSeconds = remainingRefreshCooldownSeconds(refreshAvailableAt, refreshNowMs);
+  const refreshOnCooldown = refreshCooldownSeconds > 0;
 
   useEffect(() => {
     if (loadedKey === storageKey) return;
@@ -705,6 +728,11 @@ export function AdvancedDataGrid<T extends { id: number }>({
     refetchOnMount: retainQueryCache ? false : undefined,
     refetchOnWindowFocus: retainQueryCache ? false : undefined,
   });
+  const handleRefreshClick = useCallback(() => {
+    if (refreshOnCooldown) return;
+    setRefreshAvailableAt(nextRefreshAvailableAt(Date.now()));
+    void query.refetch();
+  }, [query, refreshOnCooldown]);
   const activeColumns = useMemo(() => {
     const fromPrefs = order
       .map((key) => localizedColumns.find((column) => column.key === key))
@@ -1134,11 +1162,17 @@ export function AdvancedDataGrid<T extends { id: number }>({
             type="button"
             variant="secondary"
             className="wms-ops-list-toolbar-btn"
-            onClick={() => void query.refetch()}
-            disabled={query.isFetching}
+            onClick={handleRefreshClick}
+            disabled={query.isFetching || refreshOnCooldown}
+            data-wms-api-loading="off"
+            aria-live="polite"
           >
             <RefreshCw className={cn('size-3.5', query.isFetching && 'animate-spin')} aria-hidden />
-            <span className="hidden md:inline">{t('common.refresh')}</span>
+            <span className={cn(!refreshOnCooldown && 'hidden md:inline')}>
+              {refreshOnCooldown
+                ? t('common.refreshCountdown', { seconds: refreshCooldownSeconds })
+                : t('common.refresh')}
+            </span>
           </OpsActionButton>
           {toolbarAfterRefreshExtra}
         </div>

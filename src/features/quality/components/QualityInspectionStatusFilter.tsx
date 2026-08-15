@@ -1,75 +1,150 @@
-import { useMemo, type ReactElement } from 'react';
-import { AppDropdown, type AppDropdownOption } from '@/components/shared/AppDropdown';
-import { OpsFieldShell } from '@/components/shared/OpsFieldShell';
-import { OPS_FIELD_CLASS } from '@/components/shared/ops-field-styles';
+import { useMemo, type CSSProperties, type ReactElement } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
-import { localizeEnumValue } from '@/lib/enum-localization';
+import { localizeQualityInspectionStatus } from '../utils/quality-inspection-status-label';
 import { cn } from '@/lib/utils';
 import {
-  isQualityInspectionStatusFilterDefault,
+  canAdvanceQualityInspectionCreatedPeriod,
+  isCurrentQualityInspectionCreatedPeriod,
+  QUALITY_INSPECTION_CREATED_PERIODS,
   QUALITY_INSPECTION_STATUS_ALL,
+  shiftQualityInspectionCreatedAnchor,
+  type QualityInspectionCreatedPeriod,
 } from '../utils/quality-inspection-list-filters';
 import type { QualityInspectionStatusOption } from '../api/quality.api';
 
 export function QualityInspectionStatusFilter({
   value,
-  defaultValue,
   statusOptions,
   onChange,
 }: {
   value: string;
-  defaultValue: string;
   statusOptions: QualityInspectionStatusOption[];
   onChange: (value: string) => void;
 }): ReactElement {
   const { t, moduleReady } = useModuleTranslation('quality');
 
-  const options = useMemo<AppDropdownOption[]>(() => {
+  const tabs = useMemo(() => {
     void moduleReady;
     return [
-      {
-        value: QUALITY_INSPECTION_STATUS_ALL,
-        label: t('list.facetAll'),
-      },
+      { value: QUALITY_INSPECTION_STATUS_ALL, label: t('list.facetAll') },
       ...statusOptions.map((status) => ({
         value: status.value,
-        label: localizeEnumValue(status.value),
+        label: localizeQualityInspectionStatus(status.value, t),
       })),
     ];
   }, [moduleReady, statusOptions, t]);
 
-  const dirty = !isQualityInspectionStatusFilterDefault(value, defaultValue);
+  const activeIndex = Math.max(tabs.findIndex((tab) => tab.value === value), 0);
 
   return (
-    <div
-      className="wms-ops-gr-list-facets"
-      aria-label={t('list.facetFiltersTitle')}
-      data-no-auto-localize="true"
-    >
-      <div className="wms-ops-gr-list-facets__field">
-        <span className="wms-ops-gr-list-facets__label">{t('list.facetStatus')}</span>
-        <OpsFieldShell className="wms-ops-gr-list-facets__shell">
-          <AppDropdown
-            value={value}
-            onValueChange={onChange}
-            options={options}
-            ariaLabel={t('list.facetStatus')}
-            searchable
-            className={cn(OPS_FIELD_CLASS, 'wms-ops-gr-list-facets__control')}
-            matchTriggerWidth={false}
-            contentClassName="min-w-[14rem]"
-          />
-        </OpsFieldShell>
-      </div>
-      {dirty ? (
+    <div className="wms-ops-production-work-order-tabs wms-ops-detail-dialog mb-4">
+      <Tabs value={value} onValueChange={onChange}>
+        <TabsList
+          className={cn('w-full', 'wms-ops-detail-main-tabs', 'wms-ops-detail-main-tabs--dynamic')}
+          style={{
+            '--tab-count': tabs.length,
+            '--active-index': activeIndex,
+          } as CSSProperties}
+          data-active-index={activeIndex}
+          aria-label={t('list.facetStatus')}
+        >
+          <span className="wms-ops-detail-tab-indicator" aria-hidden />
+          {tabs.map((tab) => (
+            <TabsTrigger key={tab.value} value={tab.value} className="wms-ops-detail-main-tab">
+              {tab.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
+    </div>
+  );
+}
+
+export function QualityInspectionCreatedPeriodTabs({
+  value,
+  onChange,
+  anchor,
+  onAnchorChange,
+}: {
+  value: QualityInspectionCreatedPeriod | null;
+  onChange: (period: QualityInspectionCreatedPeriod | null) => void;
+  anchor: Date;
+  onAnchorChange: (anchor: Date) => void;
+}): ReactElement {
+  const { t, moduleReady } = useModuleTranslation('quality');
+  void moduleReady;
+  const navPeriod = value ?? 'day';
+  const isCurrent = isCurrentQualityInspectionCreatedPeriod(navPeriod, anchor);
+  const canGoNext = canAdvanceQualityInspectionCreatedPeriod(navPeriod, anchor);
+
+  return (
+    <div className="wms-ops-quality-created-period-row">
+      <div className="wms-ops-quality-created-period-nav" data-no-auto-localize="true">
         <button
           type="button"
-          className="wms-ops-gr-list-facets__clear"
-          onClick={() => onChange(defaultValue)}
+          className="wms-ops-quality-created-period-nav__arrow"
+          aria-label={t('list.createdPeriodPrev')}
+          onClick={() => {
+            if (!value) onChange(navPeriod);
+            onAnchorChange(shiftQualityInspectionCreatedAnchor(navPeriod, anchor, -1));
+          }}
         >
-          {t('list.facetClear')}
+          <ChevronLeft className="size-4" aria-hidden />
         </button>
-      ) : null}
+        <button
+          type="button"
+          className={cn(
+            'wms-ops-quality-created-period-nav__now',
+            isCurrent && 'wms-ops-quality-created-period-nav__now--active',
+          )}
+          onClick={() => {
+            onChange(navPeriod);
+            onAnchorChange(new Date());
+          }}
+        >
+          {t(`list.createdPeriodNow.${navPeriod}`)}
+        </button>
+        <button
+          type="button"
+          className="wms-ops-quality-created-period-nav__arrow"
+          aria-label={t('list.createdPeriodNext')}
+          disabled={!canGoNext}
+          onClick={() => {
+            if (!canGoNext) return;
+            if (!value) onChange(navPeriod);
+            onAnchorChange(shiftQualityInspectionCreatedAnchor(navPeriod, anchor, 1));
+          }}
+        >
+          <ChevronRight className="size-4" aria-hidden />
+        </button>
+      </div>
+      <div
+        className="wms-ops-quality-created-periods"
+        role="tablist"
+        aria-label={t('list.createdPeriodTitle')}
+        data-no-auto-localize="true"
+      >
+        {QUALITY_INSPECTION_CREATED_PERIODS.map((period) => (
+          <button
+            key={period}
+            type="button"
+            role="tab"
+            className={cn(
+              'wms-ops-quality-created-periods__tab',
+              value === period && 'wms-ops-quality-created-periods__tab--active',
+            )}
+            aria-selected={value === period}
+            onClick={() => {
+              onChange(value === period ? null : period);
+              onAnchorChange(new Date());
+            }}
+          >
+            {t(`list.createdPeriod.${period}`)}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
