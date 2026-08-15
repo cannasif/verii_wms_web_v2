@@ -446,6 +446,22 @@
     "columns": { "code": "Code", "name": "Name", "decision": "Entscheidungstyp", "requiresNote": "Notiz erforderlich", "sortOrder": "Reihenfolge", "status": "Status", "actions": "Aktionen" },
     "fields": { "code": "Entscheidungscode", "name": "Entscheidungsname", "decision": "Zulässige Entscheidung", "sortOrder": "Anzeigereihenfolge", "description": "Beschreibung", "requiresNote": "Notiz bei Auswahl dieses Codes verlangen", "isActive": "Aktiv" }
   },
+  "reports": {
+    "eyebrow": "Qualitätsleistung und Rückverfolgbarkeit",
+    "title": "Berichte zur Wareneingangsprüfung",
+    "description": "Prüfen Sie Losmenge, erforderliche Stichprobe, tatsächlich geprüfte Menge, Entscheidung, Arbeitszeit, Unterbrechungen, Mitarbeiter und Bildnachweise in einem Bericht.",
+    "tabs": {
+      "inspection": { "title": "Prüfung nach Wareneingang", "description": "Sehen Sie je Prüfung, wie viele von 300 Einheiten geprüft wurden, wer gearbeitet hat und wie lange.", "gridDescription": "Mengen, Ergebnisse, Arbeitszeit, Unterbrechungen und Mitarbeiterleistung je Wareneingang." },
+      "stock": { "title": "Artikel-Qualitätsleistung", "description": "Historische Prüfanzahl, Abdeckung und Qualitätsarbeitszeit eines Artikels.", "gridDescription": "Aggregierte Leistung aller Prüfungen nach Artikelcode.", "timeNotice": "Arbeitszeiten werden auf Prüfungskopfebene erfasst. Enthält eine Prüfung mehrere Artikel, wird die aktive Zeit für jeden Artikel als zugehörige Prüfzeit angezeigt und ist keine exakte Stoppuhr je Artikel." }
+    },
+    "columns": {
+      "inspectionNo": "Prüfnummer", "waybillNo": "Lieferscheinnummer", "supplierCode": "Lieferantencode", "supplierName": "Lieferantenname", "warehouseCode": "Lagercode", "warehouseName": "Lagername", "totalQuantity": "Losmenge", "requiredQuantity": "Erforderliche Stichprobe", "inspectedQuantity": "Tatsächlich geprüft", "acceptedQuantity": "Angenommen", "rejectedQuantity": "Abgelehnt", "quarantineQuantity": "Quarantäne", "activeTime": "Aktive Zeit", "relatedActiveTime": "Zugehörige Prüfzeit", "elapsedTime": "Gesamtzeit", "pauseCount": "Unterbrechungen", "breakCount": "Pausen", "participants": "Mitarbeiter", "status": "Status", "createdAt": "Erstellt", "detail": "Details", "stockCode": "Artikelcode", "stockName": "Artikelname", "inspectionCount": "Prüfanzahl", "receiptCount": "Wareneingänge", "averageTime": "Ø aktive Zeit", "averageRelatedTime": "Ø zugehörige Zeit", "workerCount": "Mitarbeiterzahl", "lastInspection": "Letzte Prüfung"
+    },
+    "detail": {
+      "title": "Qualitätsbericht", "open": "Prüfen", "loading": "Bericht wird vorbereitet...", "error": "Bericht konnte nicht geladen werden.", "total": "Losmenge", "required": "Erforderliche Stichprobe", "inspected": "Tatsächlich geprüft", "activeTime": "Aktive Arbeit", "elapsedTime": "Gesamt verstrichen", "pauseTime": "Gesamte Stoppzeit", "pauseBreak": "Stopps / Pausen", "workers": "Mitarbeiter", "images": "Bildnachweise", "lines": "Artikel- und Entscheidungsdetails", "accepted": "Angenommen", "rejected": "Abgelehnt", "quarantined": "Quarantäne", "controlCount": "Kontrollaufzeichnungen", "workerPerformance": "Mitarbeiter- und Zeitverteilung", "pauseTimeline": "Stopp- und Pausenverlauf", "running": "Läuft", "sessionCount": "{{count}} Arbeitssitzungen", "noWork": "Für diese Prüfung wurde keine Arbeitssitzung erfasst.", "noPauseNote": "Keine Begründung angegeben.", "noPauses": "Keine Unterbrechung oder Pause erfasst."
+    },
+    "stopReasons": { "Break": "Pause", "MaterialWait": "Material warten", "EquipmentIssue": "Gerätestörung", "DocumentationWait": "Dokumente warten", "SupervisorWait": "Vorgesetzten warten", "ShiftEnd": "Schichtende", "Handover": "Übergabe", "Other": "Sonstiges", "DecisionApplied": "Entscheidung angewendet", "InspectionCancelled": "Prüfung storniert" }
+  },
   "settings": {
     "eyebrow": "Qualität",
     "title": "Qualitätsmanagement-Einstellungen",

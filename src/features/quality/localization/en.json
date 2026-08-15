@@ -517,6 +517,22 @@
     "columns": { "code": "Code", "name": "Name", "decision": "Decision type", "requiresNote": "Note required", "sortOrder": "Order", "status": "Status", "actions": "Actions" },
     "fields": { "code": "Decision code", "name": "Decision name", "decision": "Applicable decision", "sortOrder": "Display order", "description": "Description", "requiresNote": "Require a note when this code is selected", "isActive": "Active" }
   },
+  "reports": {
+    "eyebrow": "Quality performance and traceability",
+    "title": "Incoming Quality Control Reports",
+    "description": "Review receipt quantity, required sample, actually inspected quantity, disposition, active work, stops, operators and visual evidence in one report.",
+    "tabs": {
+      "inspection": { "title": "Receipt-based IQC", "description": "For each inspection, see how many of 300 units were checked, who worked and how long it took.", "gridDescription": "Quantity, outcome, work time, stops and operator performance by receipt and inspection." },
+      "stock": { "title": "Item Quality Performance", "description": "See an item's historical inspection count, coverage and related quality work time.", "gridDescription": "Aggregated performance of all inspections by item code.", "timeNotice": "Work sessions are recorded at inspection-header level. If one inspection contains multiple items, its active time is shown for each item as related inspection time; it is not an exact per-item stopwatch." }
+    },
+    "columns": {
+      "inspectionNo": "Inspection No", "waybillNo": "Waybill No", "supplierCode": "Supplier Code", "supplierName": "Supplier Name", "warehouseCode": "Warehouse Code", "warehouseName": "Warehouse Name", "totalQuantity": "Lot Quantity", "requiredQuantity": "Required Sample", "inspectedQuantity": "Actually Inspected", "acceptedQuantity": "Accepted", "rejectedQuantity": "Rejected", "quarantineQuantity": "Quarantine", "activeTime": "Active Time", "relatedActiveTime": "Related IQC Time", "elapsedTime": "Elapsed Time", "pauseCount": "Stops", "breakCount": "Breaks", "participants": "Operators", "status": "Status", "createdAt": "Created", "detail": "Detail", "stockCode": "Item Code", "stockName": "Item Name", "inspectionCount": "Inspection Count", "receiptCount": "Receipt Count", "averageTime": "Avg. Active Time", "averageRelatedTime": "Avg. Related Time", "workerCount": "Operator Count", "lastInspection": "Last Inspection"
+    },
+    "detail": {
+      "title": "Quality report detail", "open": "Review", "loading": "Preparing report...", "error": "Quality report detail could not be loaded.", "total": "Lot Quantity", "required": "Required Sample", "inspected": "Actually Inspected", "activeTime": "Active Work", "elapsedTime": "Total Elapsed", "pauseTime": "Total Stop Time", "pauseBreak": "Stops / Breaks", "workers": "Operators", "images": "Visual Evidence", "lines": "Item and disposition details", "accepted": "Accepted", "rejected": "Rejected", "quarantined": "Quarantine", "controlCount": "Control Records", "workerPerformance": "Operator and time distribution", "pauseTimeline": "Stop and break timeline", "running": "In progress", "sessionCount": "{{count}} work sessions", "noWork": "No work session was recorded for this inspection.", "noPauseNote": "No stop note was entered.", "noPauses": "No stop or break record."
+    },
+    "stopReasons": { "Break": "Break", "MaterialWait": "Material wait", "EquipmentIssue": "Equipment issue", "DocumentationWait": "Documentation wait", "SupervisorWait": "Supervisor wait", "ShiftEnd": "Shift end", "Handover": "Handover", "Other": "Other", "DecisionApplied": "Decision applied", "InspectionCancelled": "Inspection cancelled" }
+  },
   "settings": {
     "eyebrow": "Quality",
     "title": "Quality Management Settings",

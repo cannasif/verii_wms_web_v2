@@ -517,6 +517,22 @@
     "columns": { "code": "Kod", "name": "Ad", "decision": "Karar türü", "requiresNote": "Açıklama zorunlu", "sortOrder": "Sıra", "status": "Durum", "actions": "İşlemler" },
     "fields": { "code": "Karar kodu", "name": "Karar adı", "decision": "Kullanılacağı karar", "sortOrder": "Gösterim sırası", "description": "Açıklama", "requiresNote": "Bu kod seçildiğinde açıklama zorunlu", "isActive": "Aktif" }
   },
+  "reports": {
+    "eyebrow": "Kalite performansı ve izlenebilirlik",
+    "title": "GKK Raporları",
+    "description": "Mal kabul miktarı, zorunlu numune, fiilen kontrol edilen miktar, karar dağılımı, aktif çalışma, duruşlar, çalışanlar ve görsel kanıtları tek raporda inceleyin.",
+    "tabs": {
+      "inspection": { "title": "Mal Kabul Bazlı GKK", "description": "Her kalite kaydında 300 adetten kaçı kontrol edildi, kim çalıştı ve süreç ne kadar sürdü?", "gridDescription": "İrsaliye ve kontrol bazında miktar, sonuç, süre, mola ve çalışan performansı." },
+      "stock": { "title": "Stok Bazlı Kalite Performansı", "description": "Bir stok için geçmiş GKK sayısını, kontrol oranını ve ilişkili çalışma süresini görün.", "gridDescription": "Stok kodu bazında tüm kalite incelemelerinin toplu performansı.", "timeNotice": "Süre kaydı GKK başlığı düzeyindedir. Aynı GKK içinde birden fazla stok varsa aktif süre, bu stokların her biri için ‘ilişkili GKK süresi’ olarak gösterilir; stok başında geçirilen kesin süre anlamına gelmez." }
+    },
+    "columns": {
+      "inspectionNo": "Kontrol No", "waybillNo": "İrsaliye No", "supplierCode": "Tedarikçi Kodu", "supplierName": "Tedarikçi Adı", "warehouseCode": "Depo Kodu", "warehouseName": "Depo Adı", "totalQuantity": "Toplam Miktar", "requiredQuantity": "Zorunlu Kontrol", "inspectedQuantity": "Fiilen Kontrol", "acceptedQuantity": "Kabul", "rejectedQuantity": "Ret", "quarantineQuantity": "Karantina", "activeTime": "Aktif Süre", "relatedActiveTime": "İlişkili GKK Süresi", "elapsedTime": "Geçen Süre", "pauseCount": "Duruş", "breakCount": "Mola", "participants": "Çalışanlar", "status": "Durum", "createdAt": "Oluşturma", "detail": "Detay", "stockCode": "Stok Kodu", "stockName": "Stok Adı", "inspectionCount": "GKK Sayısı", "receiptCount": "Mal Kabul Sayısı", "averageTime": "Ort. Aktif Süre", "averageRelatedTime": "Ort. İlişkili Süre", "workerCount": "Çalışan Sayısı", "lastInspection": "Son GKK"
+    },
+    "detail": {
+      "title": "GKK rapor detayı", "open": "İncele", "loading": "Rapor hazırlanıyor...", "error": "GKK rapor detayı alınamadı.", "total": "Parti Miktarı", "required": "Zorunlu Numune", "inspected": "Fiilen Kontrol", "activeTime": "Aktif Çalışma", "elapsedTime": "Toplam Geçen", "pauseTime": "Toplam Duruş", "pauseBreak": "Duruş / Mola", "workers": "Çalışan", "images": "Görsel Kanıt", "lines": "Stok ve karar ayrıntıları", "accepted": "Kabul", "rejected": "Ret", "quarantined": "Karantina", "controlCount": "Kontrol Kaydı", "workerPerformance": "Çalışan ve süre dağılımı", "pauseTimeline": "Duruş ve mola zaman çizelgesi", "running": "Devam ediyor", "sessionCount": "{{count}} çalışma oturumu", "noWork": "Bu inceleme için çalışma oturumu kaydedilmemiş.", "noPauseNote": "Duruş açıklaması girilmemiş.", "noPauses": "Duruş veya mola kaydı yok."
+    },
+    "stopReasons": { "Break": "Mola", "MaterialWait": "Malzeme bekleme", "EquipmentIssue": "Ekipman sorunu", "DocumentationWait": "Belge bekleme", "SupervisorWait": "Yönetici bekleme", "ShiftEnd": "Vardiya sonu", "Handover": "İş devri", "Other": "Diğer", "DecisionApplied": "Karar uygulandı", "InspectionCancelled": "İnceleme iptal edildi" }
+  },
   "settings": {
     "eyebrow": "Kalite",
     "title": "Kalite Yönetimi Ayarları",

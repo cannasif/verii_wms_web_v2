@@ -446,6 +446,22 @@
     "columns": { "code": "Codice", "name": "Nome", "decision": "Tipo decisione", "requiresNote": "Nota obbligatoria", "sortOrder": "Ordine", "status": "Stato", "actions": "Azioni" },
     "fields": { "code": "Codice decisione", "name": "Nome decisione", "decision": "Decisione applicabile", "sortOrder": "Ordine visualizzazione", "description": "Descrizione", "requiresNote": "Richiedi una nota quando viene selezionato", "isActive": "Attivo" }
   },
+  "reports": {
+    "eyebrow": "Prestazioni qualità e tracciabilità",
+    "title": "Report controllo qualità in ingresso",
+    "description": "Consulta quantità lotto, campione richiesto, quantità controllata, esito, tempi, pause, operatori ed evidenze visive.",
+    "tabs": {
+      "inspection": { "title": "CQ per ricevimento", "description": "Per ogni controllo mostra quante unità su 300 sono state verificate, da chi e in quanto tempo.", "gridDescription": "Quantità, esiti, tempi, soste e operatori per ricevimento." },
+      "stock": { "title": "Prestazioni qualità articolo", "description": "Storico controlli, copertura e tempo qualità di un articolo.", "gridDescription": "Prestazioni aggregate di tutti i controlli per codice articolo.", "timeNotice": "I tempi sono registrati a livello di testata controllo. Se un controllo contiene più articoli, il tempo attivo appare per ciascuno come tempo associato e non come cronometro esatto per articolo." }
+    },
+    "columns": {
+      "inspectionNo": "N. controllo", "waybillNo": "N. DDT", "supplierCode": "Codice fornitore", "supplierName": "Nome fornitore", "warehouseCode": "Codice magazzino", "warehouseName": "Nome magazzino", "totalQuantity": "Quantità lotto", "requiredQuantity": "Campione richiesto", "inspectedQuantity": "Controllato effettivo", "acceptedQuantity": "Accettato", "rejectedQuantity": "Respinto", "quarantineQuantity": "Quarantena", "activeTime": "Tempo attivo", "relatedActiveTime": "Tempo CQ associato", "elapsedTime": "Tempo trascorso", "pauseCount": "Soste", "breakCount": "Pause", "participants": "Operatori", "status": "Stato", "createdAt": "Creato", "detail": "Dettaglio", "stockCode": "Codice articolo", "stockName": "Nome articolo", "inspectionCount": "N. controlli", "receiptCount": "N. ricevimenti", "averageTime": "Tempo attivo medio", "averageRelatedTime": "Tempo associato medio", "workerCount": "N. operatori", "lastInspection": "Ultimo controllo"
+    },
+    "detail": {
+      "title": "Dettaglio report qualità", "open": "Esamina", "loading": "Preparazione report...", "error": "Impossibile caricare il report.", "total": "Quantità lotto", "required": "Campione richiesto", "inspected": "Controllato effettivo", "activeTime": "Lavoro attivo", "elapsedTime": "Tempo totale", "pauseTime": "Tempo totale di sosta", "pauseBreak": "Soste / pause", "workers": "Operatori", "images": "Evidenze visive", "lines": "Dettaglio articoli ed esiti", "accepted": "Accettato", "rejected": "Respinto", "quarantined": "Quarantena", "controlCount": "Registrazioni controllo", "workerPerformance": "Distribuzione operatori e tempi", "pauseTimeline": "Cronologia soste e pause", "running": "In corso", "sessionCount": "{{count}} sessioni di lavoro", "noWork": "Nessuna sessione registrata.", "noPauseNote": "Nessuna nota di sosta.", "noPauses": "Nessuna sosta o pausa."
+    },
+    "stopReasons": { "Break": "Pausa", "MaterialWait": "Attesa materiale", "EquipmentIssue": "Problema attrezzatura", "DocumentationWait": "Attesa documenti", "SupervisorWait": "Attesa responsabile", "ShiftEnd": "Fine turno", "Handover": "Passaggio consegne", "Other": "Altro", "DecisionApplied": "Decisione applicata", "InspectionCancelled": "Controllo annullato" }
+  },
   "settings": {
     "eyebrow": "Qualità",
     "title": "Impostazioni di gestione della qualità",

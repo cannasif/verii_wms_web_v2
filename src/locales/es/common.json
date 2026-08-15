@@ -585,6 +585,7 @@
     "warehouseAssistant": "Asistente de almacén",
     "qualityControl": "Calidad",
     "qualityControlInspections": "Lista de inspección de calidad",
+    "qualityReports": "Informes de calidad",
     "qualityQuarantine": "Decisiones de cuarentena",
     "qualityControlRules": "Reglas de stock",
     "qualityDecisionCodes": "Códigos de decisión de calidad",

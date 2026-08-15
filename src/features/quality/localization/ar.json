@@ -446,6 +446,22 @@
     "columns": { "code": "الرمز", "name": "الاسم", "decision": "نوع القرار", "requiresNote": "الملاحظة مطلوبة", "sortOrder": "الترتيب", "status": "الحالة", "actions": "الإجراءات" },
     "fields": { "code": "رمز القرار", "name": "اسم القرار", "decision": "القرار المطبق", "sortOrder": "ترتيب العرض", "description": "الوصف", "requiresNote": "طلب ملاحظة عند اختيار هذا الرمز", "isActive": "نشط" }
   },
+  "reports": {
+    "eyebrow": "أداء الجودة وإمكانية التتبع",
+    "title": "تقارير فحص الجودة الوارد",
+    "description": "راجع كمية الدفعة والعينة المطلوبة والكمية المفحوصة فعلياً والقرار وأوقات العمل والتوقفات والعاملين والأدلة المصورة.",
+    "tabs": {
+      "inspection": { "title": "الفحص حسب الاستلام", "description": "يعرض لكل فحص عدد الوحدات المفحوصة من أصل 300 ومن عمل والوقت المستغرق.", "gridDescription": "الكميات والنتائج ووقت العمل والتوقفات والعاملون لكل استلام." },
+      "stock": { "title": "أداء جودة الصنف", "description": "سجل فحوص الصنف ونسبة التغطية ووقت عمل الجودة.", "gridDescription": "الأداء المجمع لجميع الفحوص حسب رمز الصنف.", "timeNotice": "يتم تسجيل الوقت على مستوى رأس الفحص. إذا احتوى الفحص على عدة أصناف يظهر الوقت الفعلي لكل صنف كوقت فحص مرتبط، وليس كوقت دقيق خاص بالصنف." }
+    },
+    "columns": {
+      "inspectionNo": "رقم الفحص", "waybillNo": "رقم إذن التسليم", "supplierCode": "رمز المورد", "supplierName": "اسم المورد", "warehouseCode": "رمز المستودع", "warehouseName": "اسم المستودع", "totalQuantity": "كمية الدفعة", "requiredQuantity": "العينة المطلوبة", "inspectedQuantity": "المفحوص فعلياً", "acceptedQuantity": "مقبول", "rejectedQuantity": "مرفوض", "quarantineQuantity": "حجر", "activeTime": "الوقت الفعلي", "relatedActiveTime": "وقت الفحص المرتبط", "elapsedTime": "الوقت المنقضي", "pauseCount": "التوقفات", "breakCount": "الاستراحات", "participants": "العاملون", "status": "الحالة", "createdAt": "تاريخ الإنشاء", "detail": "التفاصيل", "stockCode": "رمز الصنف", "stockName": "اسم الصنف", "inspectionCount": "عدد الفحوص", "receiptCount": "عدد الاستلامات", "averageTime": "متوسط الوقت الفعلي", "averageRelatedTime": "متوسط الوقت المرتبط", "workerCount": "عدد العاملين", "lastInspection": "آخر فحص"
+    },
+    "detail": {
+      "title": "تفاصيل تقرير الجودة", "open": "عرض", "loading": "جارٍ إعداد التقرير...", "error": "تعذر تحميل التقرير.", "total": "كمية الدفعة", "required": "العينة المطلوبة", "inspected": "المفحوص فعلياً", "activeTime": "العمل الفعلي", "elapsedTime": "إجمالي الوقت", "pauseTime": "إجمالي وقت التوقف", "pauseBreak": "التوقفات / الاستراحات", "workers": "العاملون", "images": "الأدلة المصورة", "lines": "تفاصيل الأصناف والقرارات", "accepted": "مقبول", "rejected": "مرفوض", "quarantined": "حجر", "controlCount": "سجلات الفحص", "workerPerformance": "توزيع العاملين والوقت", "pauseTimeline": "الخط الزمني للتوقفات والاستراحات", "running": "قيد التنفيذ", "sessionCount": "{{count}} جلسات عمل", "noWork": "لم تسجل جلسة عمل لهذا الفحص.", "noPauseNote": "لم تسجل ملاحظة للتوقف.", "noPauses": "لا توجد توقفات أو استراحات."
+    },
+    "stopReasons": { "Break": "استراحة", "MaterialWait": "انتظار مواد", "EquipmentIssue": "مشكلة معدات", "DocumentationWait": "انتظار مستندات", "SupervisorWait": "انتظار مشرف", "ShiftEnd": "نهاية الوردية", "Handover": "تسليم العمل", "Other": "أخرى", "DecisionApplied": "تم تطبيق القرار", "InspectionCancelled": "تم إلغاء الفحص" }
+  },
   "settings": {
     "eyebrow": "الجودة",
     "title": "إعدادات إدارة الجودة",

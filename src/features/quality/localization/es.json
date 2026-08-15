@@ -446,6 +446,22 @@
     "columns": { "code": "Código", "name": "Nombre", "decision": "Tipo de decisión", "requiresNote": "Nota obligatoria", "sortOrder": "Orden", "status": "Estado", "actions": "Acciones" },
     "fields": { "code": "Código de decisión", "name": "Nombre de decisión", "decision": "Decisión aplicable", "sortOrder": "Orden de visualización", "description": "Descripción", "requiresNote": "Exigir nota al seleccionar este código", "isActive": "Activo" }
   },
+  "reports": {
+    "eyebrow": "Rendimiento de calidad y trazabilidad",
+    "title": "Informes de control de calidad de recepción",
+    "description": "Revise cantidad de lote, muestra requerida, cantidad inspeccionada, decisión, tiempos, pausas, operarios y evidencias visuales.",
+    "tabs": {
+      "inspection": { "title": "Calidad por recepción", "description": "Vea por inspección cuántas de 300 unidades se controlaron, quién trabajó y cuánto tardó.", "gridDescription": "Cantidades, resultados, tiempos, paradas y operarios por recepción." },
+      "stock": { "title": "Rendimiento de calidad del artículo", "description": "Historial, cobertura y tiempo de calidad de un artículo.", "gridDescription": "Rendimiento agregado de todas las inspecciones por artículo.", "timeNotice": "El tiempo se registra en la cabecera de inspección. Si una inspección incluye varios artículos, su tiempo activo se muestra para cada uno como tiempo relacionado; no es un cronómetro exacto por artículo." }
+    },
+    "columns": {
+      "inspectionNo": "N.º inspección", "waybillNo": "N.º albarán", "supplierCode": "Código proveedor", "supplierName": "Nombre proveedor", "warehouseCode": "Código almacén", "warehouseName": "Nombre almacén", "totalQuantity": "Cantidad lote", "requiredQuantity": "Muestra requerida", "inspectedQuantity": "Inspeccionado real", "acceptedQuantity": "Aceptado", "rejectedQuantity": "Rechazado", "quarantineQuantity": "Cuarentena", "activeTime": "Tiempo activo", "relatedActiveTime": "Tiempo de control relacionado", "elapsedTime": "Tiempo transcurrido", "pauseCount": "Paradas", "breakCount": "Descansos", "participants": "Operarios", "status": "Estado", "createdAt": "Creado", "detail": "Detalle", "stockCode": "Código artículo", "stockName": "Nombre artículo", "inspectionCount": "N.º inspecciones", "receiptCount": "N.º recepciones", "averageTime": "Tiempo activo medio", "averageRelatedTime": "Tiempo relacionado medio", "workerCount": "N.º operarios", "lastInspection": "Última inspección"
+    },
+    "detail": {
+      "title": "Detalle del informe de calidad", "open": "Revisar", "loading": "Preparando informe...", "error": "No se pudo cargar el informe.", "total": "Cantidad lote", "required": "Muestra requerida", "inspected": "Inspeccionado real", "activeTime": "Trabajo activo", "elapsedTime": "Tiempo total", "pauseTime": "Tiempo total de parada", "pauseBreak": "Paradas / descansos", "workers": "Operarios", "images": "Evidencias visuales", "lines": "Detalle de artículos y decisiones", "accepted": "Aceptado", "rejected": "Rechazado", "quarantined": "Cuarentena", "controlCount": "Registros de control", "workerPerformance": "Distribución de operarios y tiempo", "pauseTimeline": "Cronología de paradas y descansos", "running": "En curso", "sessionCount": "{{count}} sesiones de trabajo", "noWork": "No hay sesiones registradas.", "noPauseNote": "No se indicó motivo.", "noPauses": "No hay paradas ni descansos."
+    },
+    "stopReasons": { "Break": "Descanso", "MaterialWait": "Espera de material", "EquipmentIssue": "Problema de equipo", "DocumentationWait": "Espera de documentos", "SupervisorWait": "Espera de supervisor", "ShiftEnd": "Fin de turno", "Handover": "Relevo", "Other": "Otro", "DecisionApplied": "Decisión aplicada", "InspectionCancelled": "Inspección cancelada" }
+  },
   "settings": {
     "eyebrow": "Calidad",
     "title": "Configuración de gestión de calidad",
