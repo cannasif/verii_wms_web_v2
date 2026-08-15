@@ -671,6 +671,7 @@ export function WarehouseTransferDraftPage({
       if (line.source && line.quantity > line.source.availableQuantity)
         return t(`${D}.validation.lineQuantityExceeded`, { index: lineNo });
       if (
+        variant !== "production" &&
         (effectivePolicy.requireSourceLocation || intraWarehouseOp) &&
         !line.sourceLocationId
       )

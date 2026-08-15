@@ -474,6 +474,7 @@ const isCancellationReturnRemainderContext = (
 ): boolean =>
   row.listingKind === 'CancellationReturnRemainder'
   || row.listingKind === 'PartialTransferRemainder'
+  || row.listingKind === 'UnassignedCreatedTransfer'
   || (Number.isFinite(row.transferId) && (row.transferId ?? 0) > 0
     && Number.isFinite(row.kalanTaskId) && (row.kalanTaskId ?? 0) > 0);
 
@@ -486,6 +487,7 @@ const workOrderKey = (row: ProductionSourceWorkOrder): string =>
 const sourceListingKindLabel = (kind: ProductionSourceWorkOrder['listingKind']): string => {
   if (kind === 'CancellationReturnRemainder') return 'Transfer iadesi';
   if (kind === 'PartialTransferRemainder') return 'Eksik teslim kalanı';
+  if (kind === 'UnassignedCreatedTransfer') return 'Atama bekliyor';
   if (kind === 'ManagerCancelledAssignment') return 'İptal edildi';
   if (kind === 'RestoredCancelledAssignment') return 'İş emri';
   return 'İş emri';
@@ -494,6 +496,7 @@ const sourceListingKindLabel = (kind: ProductionSourceWorkOrder['listingKind']):
 const sourceListingKindBadgeClass = (kind: ProductionSourceWorkOrder['listingKind']): string => {
   if (kind === 'CancellationReturnRemainder') return 'bg-yellow-500/15 text-yellow-800 dark:text-yellow-300';
   if (kind === 'PartialTransferRemainder') return 'bg-orange-500/15 text-orange-800 dark:text-orange-300';
+  if (kind === 'UnassignedCreatedTransfer') return 'bg-violet-500/15 text-violet-800 dark:text-violet-300';
   if (kind === 'ManagerCancelledAssignment') return 'bg-amber-500/10 text-amber-700 dark:text-amber-300';
   if (kind === 'RestoredCancelledAssignment') return 'bg-sky-500/10 text-sky-700 dark:text-sky-300';
   return 'bg-sky-500/10 text-sky-700 dark:text-sky-300';
@@ -896,6 +899,7 @@ export function ProductionWorkOrdersPage(): ReactElement {
                     <SourceListingKindBadge row={row} />
                     {row.listingKind !== 'CancellationReturnRemainder'
                       && row.listingKind !== 'PartialTransferRemainder'
+                      && row.listingKind !== 'UnassignedCreatedTransfer'
                       && row.revisionNumber > 1 ? (
                       <div className="mt-1 text-xs text-[var(--wms-app-text-muted)]">Rev. {row.revisionNumber}</div>
                     ) : null}
@@ -1327,14 +1331,20 @@ function WorkOrderDrawer({
       && Number.isFinite(value.kalanTaskId) && (value.kalanTaskId ?? 0) > 0
       && !value.existingProductionOrderId
       && !value.existingProductionHeaderId;
+    const isExistingUnassignedCreated =
+      value.listingKind === 'UnassignedCreatedTransfer'
+      && Number.isFinite(value.transferId) && (value.transferId ?? 0) > 0
+      && Number.isFinite(value.kalanTaskId) && (value.kalanTaskId ?? 0) > 0;
     setCompletingTransfer(true);
     try {
-      if (isExistingUnlinkedRemainder) {
+      if (isExistingUnlinkedRemainder || isExistingUnassignedCreated) {
         if (assigneeGroups.length !== 1) {
           throw new Error(
             value.listingKind === 'PartialTransferRemainder'
               ? 'Eksik teslim kalan transferi aynı oturumda yalnızca tek bir atama grubu ile kaydedilebilir.'
-              : 'İptal kalan transferi aynı oturumda yalnızca tek bir atama grubu ile kaydedilebilir.',
+              : value.listingKind === 'UnassignedCreatedTransfer'
+                ? 'Atama bekleyen transfer aynı oturumda yalnızca tek bir atama grubu ile kaydedilebilir.'
+                : 'İptal kalan transferi aynı oturumda yalnızca tek bir atama grubu ile kaydedilebilir.',
           );
         }
         const group = assigneeGroups[0];

@@ -15,6 +15,7 @@ type DetailTab = 'info' | 'content';
 function listingKindLabel(kind: ProductionSourceWorkOrder['listingKind']): string {
   if (kind === 'CancellationReturnRemainder') return 'Transfer iadesi';
   if (kind === 'PartialTransferRemainder') return 'Eksik teslim kalanı';
+  if (kind === 'UnassignedCreatedTransfer') return 'Atama bekliyor';
   if (kind === 'ManagerCancelledAssignment') return 'İptal edildi';
   if (kind === 'RestoredCancelledAssignment') return 'İş emri';
   return 'İş emri';
