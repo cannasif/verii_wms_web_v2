@@ -33,4 +33,12 @@ describe('grid query result scope', () => {
     expect(getGridResultScopeKey(request({ searchFields: ['name', 'code'] })))
       .toBe(getGridResultScopeKey(request()));
   });
+
+  it('does not retain rows when the list refresh key changes', () => {
+    expect(canRetainGridPlaceholder(request(), request(), 'InProgress:1', 'Passed:2')).toBe(false);
+  });
+
+  it('retains rows while paging under the same refresh key', () => {
+    expect(canRetainGridPlaceholder(request(), request({ pageNumber: 2 }), 'InProgress:1', 'InProgress:1')).toBe(true);
+  });
 });

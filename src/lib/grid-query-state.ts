@@ -24,7 +24,12 @@ export function getGridResultScopeKey(request: GridRequest): string {
 export function canRetainGridPlaceholder(
   previousRequest: GridRequest | undefined,
   nextRequest: GridRequest,
+  previousRefreshKey?: unknown,
+  nextRefreshKey?: unknown,
 ): boolean {
+  if (previousRefreshKey !== nextRefreshKey) {
+    return false;
+  }
   return Boolean(
     previousRequest
     && getGridResultScopeKey(previousRequest) === getGridResultScopeKey(nextRequest),

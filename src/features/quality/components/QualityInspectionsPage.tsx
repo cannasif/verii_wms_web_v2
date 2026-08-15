@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactElement, type ReactNode } from "react";
-import { createPortal } from "react-dom";
+import { createPortal, flushSync } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import type { TFunction } from "i18next";
 import { ChevronDown, Clock3, ClipboardPen, Flag, History, Loader2, Pause, Play, Plus, ShieldCheck, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
@@ -60,6 +60,7 @@ import {
   canToggleQualityInspectionPriority,
   qualityInspectionPriorityRowClass,
 } from "../utils/quality-inspection-priority";
+import { collapseRepeatedMessageSegments } from "../utils/quality-decision-message";
 import { cn } from "@/lib/utils";
 import { localizeEnumValue } from "@/lib/enum-localization";
 import {
@@ -117,6 +118,11 @@ type DispositionDraft = {
   targetLocationId: number | null;
   targetWarehouseId?: number | null;
 };
+
+type QualityDecisionFlow =
+  | { phase: "running"; lineCount: number; sourceLabel?: string }
+  | { phase: "error"; message: string; lineCount: number; sourceLabel?: string }
+  | { phase: "success"; result: QualityDecisionResult; lineCount: number; sourceLabel?: string };
 
 const QUALITY_LOCATION_VALUE_SEPARATOR = "|";
 
@@ -251,8 +257,9 @@ async function notifyGoodsReceiptAfterDecision(
     detail.header.sourceDocumentType === "GR" ||
     detail.header.sourceDocumentType === "GoodsReceipt";
   const actionLabel = t("goodsReceiptNotice.actionLabel");
-  const title =
-    primaryMessage?.trim() || t("goodsReceiptNotice.decidedToastTitle");
+  const title = collapseRepeatedMessageSegments(
+    primaryMessage?.trim() || t("goodsReceiptNotice.decidedToastTitle"),
+  );
   const fallbackDescription = docNo
     ? t("goodsReceiptNotice.withDoc", { docNo })
     : t("goodsReceiptNotice.withoutDoc");
@@ -323,8 +330,9 @@ async function notifyGoodsReceiptAfterDecision(
     }
 
     const options = { description, action, duration: 7000 };
-    if (tone === "warning") toast.warning(title, options);
-    else if (tone === "message") toast.message(title, options);
+    if (tone === "warning") {
+      toast.warning([title, description].filter(Boolean).join(" "), { action, duration: 7000 });
+    } else if (tone === "message") toast.message(title, options);
     else toast.success(title, options);
   } catch {
     toast.success(title, {
@@ -357,35 +365,48 @@ function emptyDraft(
   };
 }
 
+function controlQuantityError(
+  line: QualityInspectionLine,
+  inspectedRaw: string,
+  t: TFunction,
+): string | null {
+  const required = minimumControlQuantity(line);
+  const maximum = remainingInspectableQuantity(line);
+  if (!inspectedRaw.trim()) {
+    return t("errors.controlQuantityRequired", { stockCode: line.stockCode });
+  }
+  const inspected = roundQty(parseQty(inspectedRaw));
+  if (!Number.isFinite(inspected) || inspected < 0) {
+    return t("errors.controlQuantityMustBePositive", { stockCode: line.stockCode });
+  }
+  if (inspected - maximum > QTY_EPS) {
+    return t("errors.controlQuantityExceedsRemaining", {
+      stockCode: line.stockCode,
+      inspected: formatProjectNumber(inspected),
+      remaining: formatProjectNumber(maximum),
+    });
+  }
+  if (required - inspected > QTY_EPS) {
+    return t("errors.controlQuantityBelowMinimum", {
+      stockCode: line.stockCode,
+      inspected: formatProjectNumber(inspected),
+      required: formatProjectNumber(required),
+    });
+  }
+  return null;
+}
+
 function buildControlQuantityRequest(
   line: QualityInspectionLine,
   draft: LineDraft,
   t: TFunction,
 ): QualityInspectionControlQuantityRequest {
-  const required = minimumControlQuantity(line);
-  const maximum = remainingInspectableQuantity(line);
-  if (!draft.inspectedQuantity.trim()) {
-    throw new Error(t("errors.controlQuantityRequired", { stockCode: line.stockCode }));
-  }
-  const inspected = roundQty(parseQty(draft.inspectedQuantity));
-  if (!Number.isFinite(inspected) || inspected < 0) {
-    throw new Error(t("errors.controlQuantityMustBePositive", { stockCode: line.stockCode }));
-  }
-  if (inspected - maximum > QTY_EPS) {
-    throw new Error(t("errors.controlQuantityExceedsRemaining", {
-      stockCode: line.stockCode,
-      inspected: formatProjectNumber(inspected),
-      remaining: formatProjectNumber(maximum),
-    }));
-  }
-  if (required - inspected > QTY_EPS) {
-    throw new Error(t("errors.controlQuantityBelowMinimum", {
-      stockCode: line.stockCode,
-      inspected: formatProjectNumber(inspected),
-      required: formatProjectNumber(required),
-    }));
-  }
-  return { lineId: line.id, inspectedQuantity: inspected };
+  const error = controlQuantityError(line, draft.inspectedQuantity, t);
+  if (error) throw new Error(error);
+  return {
+    lineId: line.id,
+    inspectedQuantity: roundQty(parseQty(draft.inspectedQuantity)),
+  };
 }
 
 function defaultTargetForDecision(
@@ -654,6 +675,69 @@ function message(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
 }
 
+const DECIDED_LIST_STATUSES = new Set([
+  "Passed",
+  "Failed",
+  "Released",
+  "Cancelled",
+  "Quarantined",
+  "PartiallyDecided",
+]);
+
+function isAlreadyAppliedDecisionError(error: unknown): boolean {
+  return /kendi kullanıcınızla başlatın|Start the GKK inspection with your own user|Avviare il controllo GKK con il proprio|Démarrez le contrôle GKK avec votre utilisateur|Inicie la inspección GKK con su usuario|Starten Sie die GKK-Prüfung mit Ihrem Benutzer/i
+    .test(message(error, ""));
+}
+
+function isCommittedDecisionFollowUpError(error: unknown): boolean {
+  return /WMS'te tamamlandı|Kalite kararı uygulandı|Netsis REST oturumu|Netsis irsaliyesi oluşturulamadı/i
+    .test(message(error, ""));
+}
+
+function resolveDecidedListStatus(status?: string): string {
+  if (status && DECIDED_LIST_STATUSES.has(status)) return status;
+  return "Passed";
+}
+
+function removeInspectionFromGridCache(
+  queryClient: QueryClient,
+  pageKey: string,
+  inspectionId: number,
+): void {
+  queryClient.setQueriesData({ queryKey: ["advanced-grid", pageKey] }, (current) => {
+    if (!current || typeof current !== "object") return current;
+    const page = current as { items?: QualityInspection[]; totalCount?: number };
+    if (!Array.isArray(page.items) || !page.items.some((row) => row.id === inspectionId)) {
+      return current;
+    }
+    return {
+      ...page,
+      items: page.items.filter((row) => row.id !== inspectionId),
+      totalCount: Math.max(0, (page.totalCount ?? page.items.length) - 1),
+    };
+  });
+}
+
+async function waitUntilActiveGridSettled(
+  queryClient: QueryClient,
+  pageKey: string,
+): Promise<void> {
+  const deadline = Date.now() + 8000;
+  while (Date.now() < deadline) {
+    const queries = queryClient.getQueryCache().findAll({
+      queryKey: ["advanced-grid", pageKey],
+      type: "active",
+    });
+    if (
+      queries.length > 0
+      && queries.every((query) => query.state.fetchStatus === "idle" && query.state.status !== "pending")
+    ) {
+      return;
+    }
+    await new Promise((resolve) => window.setTimeout(resolve, 40));
+  }
+}
+
 function buildApplySummary(
   lines: QualityInspectionLine[],
   drafts: Record<number, LineDraft>,
@@ -766,6 +850,14 @@ export function QualityInspectionsPage({
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
   const [createdPeriod, setCreatedPeriod] = useState<QualityInspectionCreatedPeriod | null>("month");
   const [createdPeriodAnchor, setCreatedPeriodAnchor] = useState(() => new Date());
+  const [listEpoch, setListEpoch] = useState(0);
+  const [decisionFlow, setDecisionFlow] = useState<QualityDecisionFlow | null>(null);
+  const [committedInspectionIds, setCommittedInspectionIds] = useState<Set<number>>(() => new Set());
+  const listMovePendingRef = useRef(false);
+  const handleDecisionFlowChange = useCallback((flow: QualityDecisionFlow | null) => {
+    if (flow === null && listMovePendingRef.current) return;
+    setDecisionFlow(flow);
+  }, []);
   const statusFacet = selectedStatus ?? statusCatalogQuery.data?.defaultValue ?? "";
   const prioritizableStatuses = useMemo(
     () => new Set(statusCatalogQuery.data?.items.filter((item) => item.canPrioritize).map((item) => item.value) ?? []),
@@ -868,17 +960,6 @@ export function QualityInspectionsPage({
         searchable: true,
         defaultSearch: true,
         render: (r) => r.sourceWaybillNo || "—",
-      },
-      {
-        key: "sourceDocumentNo",
-        label: t("list.columns.sourceDocument"),
-        sortable: true,
-        filterable: true,
-        searchable: true,
-        defaultSearch: true,
-        render: (r) => (
-          <span className="font-mono text-xs">{r.sourceDocumentNo || "—"}</span>
-        ),
       },
       {
         key: "projectCodes",
@@ -1039,12 +1120,38 @@ export function QualityInspectionsPage({
     },
     [can, expandedId, loading, moduleReady, prioritizableStatuses, priorityLoading, t, toggle, toggleInspectionPriority],
   );
-  const decided = async () => {
-    setExpandedId(null);
-    setDetail(null);
-    await queryClient.invalidateQueries({
-      queryKey: ["advanced-grid", pageKey],
-    });
+  const decided = async (nextStatus?: string, inspectionId?: number) => {
+    const targetStatus = resolveDecidedListStatus(nextStatus);
+    listMovePendingRef.current = true;
+    try {
+      flushSync(() => {
+        if (inspectionId != null) {
+          removeInspectionFromGridCache(queryClient, pageKey, inspectionId);
+          setCommittedInspectionIds((current) => {
+            const next = new Set(current);
+            next.add(inspectionId);
+            return next;
+          });
+        }
+        if (!quarantineOnly) {
+          setSelectedStatus(targetStatus);
+        }
+        setExpandedId(null);
+        setDetail(null);
+        setListEpoch((current) => current + 1);
+      });
+      try {
+        await queryClient.refetchQueries({
+          queryKey: ["advanced-grid", pageKey],
+          type: "active",
+        });
+        await waitUntilActiveGridSettled(queryClient, pageKey);
+      } catch {
+        // Decision is already committed; keep the destination tab even if refresh fails.
+      }
+    } finally {
+      listMovePendingRef.current = false;
+    }
   };
   if (!quarantineOnly && statusCatalogQuery.isPending) {
     return (
@@ -1064,9 +1171,10 @@ export function QualityInspectionsPage({
     );
   }
   return (
+    <>
     <AdvancedDataGrid<QualityInspection>
       pageKey={pageKey}
-      refreshKey={quarantineOnly ? 0 : `${statusFacet}:${createdPeriod ?? "all"}:${createdPeriodAnchor.getTime()}`}
+      refreshKey={quarantineOnly ? listEpoch : `${statusFacet}:${createdPeriod ?? "all"}:${createdPeriodAnchor.getTime()}:${listEpoch}`}
       title={
         quarantineOnly ? t("list.titleQuarantine") : t("list.titleDefault")
       }
@@ -1111,7 +1219,9 @@ export function QualityInspectionsPage({
               setExpandedId(null);
               setDetail(null);
             }}
-            decided={() => void decided()}
+            decided={decided}
+            applyBlocked={committedInspectionIds.has(row.id) || Boolean(decisionFlow)}
+            onDecisionFlowChange={handleDecisionFlowChange}
           />
         ) : (
           <div className="flex items-center gap-2 text-sm text-slate-500">
@@ -1120,6 +1230,34 @@ export function QualityInspectionsPage({
         )
       }
     />
+    {decisionFlow && typeof document !== "undefined"
+      ? createPortal(
+          <QualityDecisionFlowOverlay>
+            {decisionFlow.phase === "success" ? (
+              <QualityReceiptCreatedSuccessPanel
+                result={decisionFlow.result}
+                lineCount={decisionFlow.lineCount}
+                sourceLabel={decisionFlow.sourceLabel}
+                onDone={() => setDecisionFlow(null)}
+              />
+            ) : (
+              <QualityApproveSubmitScreen
+                phase={decisionFlow.phase}
+                errorMessage={
+                  decisionFlow.phase === "error"
+                    ? decisionFlow.message
+                    : undefined
+                }
+                lineCount={decisionFlow.lineCount}
+                documentNo={decisionFlow.sourceLabel}
+                sourceLabel={decisionFlow.sourceLabel}
+              />
+            )}
+          </QualityDecisionFlowOverlay>,
+          document.body,
+        )
+      : null}
+    </>
   );
 }
 
@@ -1128,11 +1266,15 @@ function InspectionDetailPanel({
   refresh,
   close,
   decided,
+  applyBlocked = false,
+  onDecisionFlowChange,
 }: {
   detail: QualityInspectionDetail;
   refresh: () => Promise<void>;
   close: () => void;
-  decided: () => void;
+  decided: (nextStatus?: string, inspectionId?: number) => void | Promise<void>;
+  applyBlocked?: boolean;
+  onDecisionFlowChange: (flow: QualityDecisionFlow | null) => void;
 }): ReactElement {
   const { t } = useModuleTranslation("quality");
   const { can } = usePermissionAccess();
@@ -1220,14 +1362,10 @@ function InspectionDetailPanel({
   const [bulkReasonNote, setBulkReasonNote] = useState("");
   const [headerNote, setHeaderNote] = useState(detail.note ?? "");
   const [saving, setSaving] = useState(false);
+  const [saveLocked, setSaveLocked] = useState(false);
+  const saveLockRef = useRef(false);
   const [applyConfirmOpen, setApplyConfirmOpen] = useState(false);
   const [openLineId, setOpenLineId] = useState<number | null>(null);
-  const [decisionFlow, setDecisionFlow] = useState<
-    | { phase: "running" }
-    | { phase: "error"; message: string }
-    | { phase: "success"; result: QualityDecisionResult; lineCount: number }
-    | null
-  >(null);
   const [bulkPanelOpen, setBulkPanelOpen] = useState(false);
   const [workBusy, setWorkBusy] = useState<"start" | "pause" | null>(null);
   const [pauseDialogOpen, setPauseDialogOpen] = useState(false);
@@ -1658,10 +1796,20 @@ function InspectionDetailPanel({
       }
     }
 
+    if (saveLockRef.current) return false;
+    saveLockRef.current = true;
+    setSaveLocked(true);
     setApplyConfirmOpen(false);
     setSaving(true);
-    setDecisionFlow({ phase: "running" });
-    const startedAt = Date.now();
+    const sourceLabel =
+      detail.header.sourceWaybillNo?.trim() ||
+      detail.header.sourceDocumentNo?.trim() ||
+      undefined;
+    onDecisionFlowChange({
+      phase: "running",
+      lineCount: pending.length,
+      sourceLabel,
+    });
     try {
       let rowVersion = detail.rowVersion;
       const calls: Array<() => ReturnType<typeof qualityApi.decide>> = [];
@@ -1745,35 +1893,70 @@ function InspectionDetailPanel({
         }
       }
 
-      const elapsed = Date.now() - startedAt;
-      if (elapsed < 1400) {
-        await new Promise((resolve) => window.setTimeout(resolve, 1400 - elapsed));
+      let nextStatus = "Passed";
+      try {
+        const fresh = await qualityApi.inspection(detail.header.id);
+        if (fresh.header.status) nextStatus = fresh.header.status;
+      } catch {
+        // Keep the accepted-path default so the row still leaves the open tab.
       }
 
+      const inspectionId = detail.header.id;
+      await decided(nextStatus, inspectionId);
+
       if (receiptCreatedNow && lastResult) {
-        setDecisionFlow({
+        onDecisionFlowChange({
           phase: "success",
           result: lastResult,
           lineCount: pending.length,
+          sourceLabel,
         });
+        setSaving(false);
         return true;
       }
 
-      setDecisionFlow(null);
+      onDecisionFlowChange(null);
+      setSaving(false);
       await notifyGoodsReceiptAfterDecision(
         detail,
         () => navigate("/warehouse/goods-receipts/list"),
         t,
         completionMessage || t("decisionSaved"),
       );
-      decided();
       return true;
     } catch (error) {
-      const errorMessage = message(error, t("errors.decisionSaveFailed"));
+      let committedStatus: string | null = null;
+      try {
+        const fresh = await qualityApi.inspection(detail.header.id);
+        if (DECIDED_LIST_STATUSES.has(fresh.header.status)) {
+          committedStatus = fresh.header.status;
+        }
+      } catch {
+        if (isAlreadyAppliedDecisionError(error) || isCommittedDecisionFollowUpError(error)) {
+          committedStatus = "Passed";
+        }
+      }
+      if (committedStatus || isAlreadyAppliedDecisionError(error) || isCommittedDecisionFollowUpError(error)) {
+        await decided(committedStatus ?? "Passed", detail.header.id);
+        if (isCommittedDecisionFollowUpError(error) && !isAlreadyAppliedDecisionError(error)) {
+          toast.error(collapseRepeatedMessageSegments(message(error, t("errors.decisionSaveFailed"))));
+        }
+        onDecisionFlowChange(null);
+        setSaving(false);
+        return true;
+      }
+      const errorMessage = collapseRepeatedMessageSegments(message(error, t("errors.decisionSaveFailed")));
       toast.error(errorMessage);
-      setDecisionFlow({ phase: "error", message: errorMessage });
+      onDecisionFlowChange({
+        phase: "error",
+        message: errorMessage,
+        lineCount: pending.length,
+        sourceLabel,
+      });
       await new Promise((resolve) => window.setTimeout(resolve, 2600));
-      setDecisionFlow(null);
+      onDecisionFlowChange(null);
+      saveLockRef.current = false;
+      setSaveLocked(false);
       return false;
     } finally {
       setSaving(false);
@@ -2584,7 +2767,7 @@ function InspectionDetailPanel({
           </label>
           <OpsActionButton
             type="button"
-            disabled={saving || !canApplyDecision}
+            disabled={saving || saveLocked || applyBlocked || !canApplyDecision}
             onClick={() => setApplyConfirmOpen(true)}
             className="wms-ops-quality-decide-btn !min-h-8 !px-4 !text-[0.65rem]"
           >
@@ -2601,7 +2784,7 @@ function InspectionDetailPanel({
       <Dialog
         open={applyConfirmOpen}
         onOpenChange={(open) => {
-          if (saving) return;
+          if (saving || saveLocked || applyBlocked) return;
           setApplyConfirmOpen(open);
         }}
       >
@@ -2680,7 +2863,7 @@ function InspectionDetailPanel({
             <OpsActionButton
               type="button"
               variant="secondary"
-              disabled={saving}
+              disabled={saving || saveLocked || applyBlocked}
               onClick={() => setApplyConfirmOpen(false)}
             >
               {t("applyConfirm.cancel")}
@@ -2688,12 +2871,12 @@ function InspectionDetailPanel({
             <OpsActionButton
               type="button"
               disabled={saving
+                || saveLocked
+                || applyBlocked
                 || !canApplyDecision
                 || requiresDatTransfer && !Number(warehouseTransferDocumentSeriesId)}
               className="wms-ops-quality-decide-btn"
-              onClick={() => {
-                void save();
-              }}
+              onClick={() => save()}
             >
               {saving ? (
                 <Loader2 className="size-4 animate-spin" />
@@ -2705,49 +2888,6 @@ function InspectionDetailPanel({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {decisionFlow && typeof document !== "undefined"
-        ? createPortal(
-            <QualityDecisionFlowOverlay>
-              {decisionFlow.phase === "success" ? (
-                <QualityReceiptCreatedSuccessPanel
-                  result={decisionFlow.result}
-                  lineCount={decisionFlow.lineCount}
-                  sourceLabel={
-                    detail.header.sourceWaybillNo?.trim() ||
-                    detail.header.sourceDocumentNo?.trim() ||
-                    undefined
-                  }
-                  onDone={() => {
-                    setDecisionFlow(null);
-                    decided();
-                  }}
-                />
-              ) : (
-                <QualityApproveSubmitScreen
-                  phase={decisionFlow.phase}
-                  errorMessage={
-                    decisionFlow.phase === "error"
-                      ? decisionFlow.message
-                      : undefined
-                  }
-                  lineCount={decidedCount}
-                  documentNo={
-                    detail.header.sourceWaybillNo?.trim() ||
-                    detail.header.sourceDocumentNo?.trim() ||
-                    undefined
-                  }
-                  sourceLabel={
-                    detail.header.sourceWaybillNo?.trim() ||
-                    detail.header.sourceDocumentNo?.trim() ||
-                    undefined
-                  }
-                />
-              )}
-            </QualityDecisionFlowOverlay>,
-            document.body,
-          )
-        : null}
     </div>
   );
 }
@@ -3017,9 +3157,11 @@ function LineDecisionPopover({
   const { t } = useModuleTranslation("quality");
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const controlSectionRef = useRef<HTMLDivElement>(null);
   const [coords, setCoords] = useState<{ top: number; left: number } | null>(
     null,
   );
+  const [controlError, setControlError] = useState<string | null>(null);
   const remaining = actionableQuantity(line);
   const totalRequiredControl = totalMinimumControlQuantity(line);
   const requiredControl = minimumControlQuantity(line);
@@ -3154,6 +3296,23 @@ function LineDecisionPopover({
   }, [open, updatePosition]);
 
   useEffect(() => {
+    if (open) return;
+    setControlError(null);
+  }, [open]);
+
+  const confirmControlQuantity = (): void => {
+    const error = controlQuantityError(line, draft.inspectedQuantity, t);
+    if (error) {
+      setControlError(error);
+      controlSectionRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      return;
+    }
+    setControlError(null);
+    onChange({ confirmedInspectedQuantity: draft.inspectedQuantity });
+    onOpenChange(false);
+  };
+
+  useEffect(() => {
     if (!open) return;
     const onPointerDown = (event: PointerEvent) => {
       const target = event.target as HTMLElement | null;
@@ -3218,7 +3377,13 @@ function LineDecisionPopover({
                 </span>
                 {serial ? t("linePopover.serialNoSplit") : null}
               </p>
-              <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/[0.05] p-2.5">
+              <div
+                ref={controlSectionRef}
+                className={cn(
+                  "rounded-xl border bg-emerald-500/[0.05] p-2.5",
+                  controlError ? "border-rose-500/50" : "border-emerald-500/25",
+                )}
+              >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <div className="text-xs font-bold text-foreground">
@@ -3245,20 +3410,33 @@ function LineDecisionPopover({
                   </span>
                   <AppInput
                     value={inspectedThisDecision}
-                    onChange={(event) =>
-                      onChange({ inspectedQuantity: sanitizeQtyInput(event.target.value) })
-                    }
+                    onChange={(event) => {
+                      setControlError(null);
+                      onChange({ inspectedQuantity: sanitizeQtyInput(event.target.value) });
+                    }}
                     placeholder={formatProjectNumber(requiredControl)}
                     inputMode="decimal"
+                    invalid={Boolean(controlError)}
+                    aria-describedby={controlError ? `quality-control-quantity-error-${line.id}` : undefined}
                     className="wms-ops-quality-field h-10 text-sm"
                   />
-                  <span className="block text-[0.65rem] leading-relaxed text-slate-500">
-                    {t("linePopover.inspectedThisDecisionHelp", {
-                      totalRequired: formatProjectNumber(totalRequiredControl),
-                      required: formatProjectNumber(requiredControl),
-                      previous: formatProjectNumber(line.inspectedQuantity),
-                    })}
-                  </span>
+                  {controlError ? (
+                    <span
+                      id={`quality-control-quantity-error-${line.id}`}
+                      role="alert"
+                      className="block text-[0.7rem] font-semibold leading-relaxed text-rose-600"
+                    >
+                      {controlError}
+                    </span>
+                  ) : (
+                    <span className="block text-[0.65rem] leading-relaxed text-slate-500">
+                      {t("linePopover.inspectedThisDecisionHelp", {
+                        totalRequired: formatProjectNumber(totalRequiredControl),
+                        required: formatProjectNumber(requiredControl),
+                        previous: formatProjectNumber(line.inspectedQuantity),
+                      })}
+                    </span>
+                  )}
                 </label>
               </div>
               <QualityInspectionLineImageGallery
@@ -3620,10 +3798,7 @@ function LineDecisionPopover({
               </label>
               <OpsActionButton
                 type="button"
-                onClick={() => {
-                  onChange({ confirmedInspectedQuantity: draft.inspectedQuantity });
-                  onOpenChange(false);
-                }}
+                onClick={confirmControlQuantity}
                 className="wms-ops-quality-decide-btn w-full !min-h-9 !text-xs"
               >
                 {t("linePopover.confirmButton")}

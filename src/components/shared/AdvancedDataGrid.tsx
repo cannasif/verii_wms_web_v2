@@ -722,7 +722,12 @@ export function AdvancedDataGrid<T extends { id: number }>({
     ),
     placeholderData: (previous, previousQuery) => {
       const previousRequest = previousQuery?.queryKey?.[3] as GridRequest | undefined;
-      return canRetainGridPlaceholder(previousRequest, request) ? previous : undefined;
+      return canRetainGridPlaceholder(
+        previousRequest,
+        request,
+        previousQuery?.queryKey?.[2],
+        refreshKey,
+      ) ? previous : undefined;
     },
     staleTime: retainQueryCache ? 5 * 60 * 1000 : 0,
     refetchOnMount: retainQueryCache ? false : undefined,

@@ -8811,6 +8811,7 @@ html.skin-premium .wms-ops-quality-bulk {
   display: grid;
   place-items: center;
   padding: 1.25rem;
+  pointer-events: auto;
   background: color-mix(in oklab, #020617 72%, transparent);
   backdrop-filter: blur(6px);
 }
