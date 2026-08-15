@@ -1,7 +1,19 @@
-import { type ReactElement } from 'react';
+import { type ReactElement, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, MonitorCog, Palette, ScanLine, ShieldCheck, Sparkles, TerminalSquare, X } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  LayoutDashboard,
+  MonitorCog,
+  Palette,
+  ScanLine,
+  Settings2,
+  ShieldCheck,
+  Sparkles,
+  TerminalSquare,
+  X,
+} from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { HugeiconsIcon } from '@hugeicons/react';
@@ -27,6 +39,15 @@ import { normalizeLanguage, setAppLanguage } from '@/lib/i18n';
 import { localizeLegacyUiText } from '@/lib/legacy-ui-localization';
 import { WarehouseMotionScene } from '@/components/shared/WarehouseAmbientBackground';
 import { useMotionEnvironment } from '@/hooks/use-motion-environment';
+import {
+  DEFAULT_NAVBAR_KPI_KEYS,
+  MAX_NAVBAR_KPI_COUNT,
+  NAVBAR_KPI_KEYS,
+  coerceNavbarCenterMode,
+  coerceNavbarKpiKeys,
+  type NavbarCenterMode,
+  type NavbarKpiKey,
+} from '@/lib/navbar-preferences';
 import {
   wmsBackgroundMotionOptions,
   type WmsBackgroundMotionVariant,
@@ -70,6 +91,8 @@ const settingsIconClass =
 const settingsHugeiconSize = 22;
 const settingsHugeiconStroke = 1.75;
 
+type ProfileModalPanel = 'home' | 'app-settings';
+
 export interface UserProfileModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -83,6 +106,7 @@ export function UserProfileModal({
 }: UserProfileModalProps): ReactElement {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const [panel, setPanel] = useState<ProfileModalPanel>('home');
   const {
     resolvedTheme,
     brandTheme,
@@ -100,6 +124,11 @@ export function UserProfileModal({
   const { data: userDetail } = useUserDetail();
   const queryClient = useQueryClient();
   const { prefersReducedMotion } = useMotionEnvironment();
+
+  useEffect(() => {
+    if (!open) setPanel('home');
+  }, [open]);
+
   const appearanceMutation = useMutation({
     mutationFn: async (request: UpdateUserAppearanceDto): Promise<UserDetailDto> => {
       const response = await userDetailApi.updateAppearance(request);
@@ -111,7 +140,11 @@ export function UserProfileModal({
     onSuccess: (updated) => {
       queryClient.setQueryData(
         [USER_DETAIL_QUERY_KEYS.CURRENT, updated.userId],
-        updated,
+        {
+          ...updated,
+          navbarCenterMode: coerceNavbarCenterMode(updated.navbarCenterMode),
+          navbarKpiKeys: coerceNavbarKpiKeys(updated.navbarKpiKeys),
+        },
       );
     },
   });
@@ -139,24 +172,24 @@ export function UserProfileModal({
     navigate('/auth/login');
   };
 
-  const updateBackgroundMotion = (
-    enabled: boolean,
-    variant: WmsBackgroundMotionVariant,
+  const navbarCenterMode = coerceNavbarCenterMode(userDetail?.navbarCenterMode);
+  const navbarKpiKeys = coerceNavbarKpiKeys(userDetail?.navbarKpiKeys ?? DEFAULT_NAVBAR_KPI_KEYS);
+
+  const persistAppearance = (
+    patch: Partial<Pick<UpdateUserAppearanceDto, 'backgroundMotionEnabled' | 'backgroundMotionVariant' | 'navbarCenterMode' | 'navbarKpiKeys'>>,
+    onErrorRevert?: () => void,
   ): void => {
     if (appearanceMutation.isPending) return;
-
-    const previousEnabled = backgroundMotionEnabled;
-    const previousVariant = backgroundMotionVariant;
-    setBackgroundMotionPreferences(enabled, variant);
-
     appearanceMutation.mutate(
       {
-        backgroundMotionEnabled: enabled,
-        backgroundMotionVariant: variant,
+        backgroundMotionEnabled: patch.backgroundMotionEnabled ?? backgroundMotionEnabled,
+        backgroundMotionVariant: patch.backgroundMotionVariant ?? backgroundMotionVariant,
+        navbarCenterMode: patch.navbarCenterMode ?? navbarCenterMode,
+        navbarKpiKeys: patch.navbarKpiKeys ?? navbarKpiKeys,
       },
       {
         onError: (error) => {
-          setBackgroundMotionPreferences(previousEnabled, previousVariant);
+          onErrorRevert?.();
           toast.error(
             error instanceof Error
               ? error.message
@@ -165,6 +198,31 @@ export function UserProfileModal({
         },
       },
     );
+  };
+
+  const updateBackgroundMotion = (
+    enabled: boolean,
+    variant: WmsBackgroundMotionVariant,
+  ): void => {
+    const previousEnabled = backgroundMotionEnabled;
+    const previousVariant = backgroundMotionVariant;
+    setBackgroundMotionPreferences(enabled, variant);
+    persistAppearance(
+      { backgroundMotionEnabled: enabled, backgroundMotionVariant: variant },
+      () => setBackgroundMotionPreferences(previousEnabled, previousVariant),
+    );
+  };
+
+  const updateNavbarCenterMode = (mode: NavbarCenterMode): void => {
+    persistAppearance({ navbarCenterMode: mode });
+  };
+
+  const toggleNavbarKpi = (key: NavbarKpiKey): void => {
+    const selected = navbarKpiKeys.includes(key)
+      ? navbarKpiKeys.filter((item) => item !== key)
+      : [...navbarKpiKeys, key];
+    if (selected.length < 1 || selected.length > MAX_NAVBAR_KPI_COUNT) return;
+    persistAppearance({ navbarKpiKeys: selected });
   };
 
   return (
@@ -244,13 +302,30 @@ export function UserProfileModal({
 
         <div className="wms-ops-profile-modal__panel flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-slate-50/80 dark:bg-[#07070c]">
           <header className="wms-ops-profile-modal__header flex shrink-0 items-center justify-between gap-3 border-b border-dashed border-slate-200/70 px-6 py-5 sm:px-8 md:px-10 dark:border-white/[0.08]">
-            <div className="flex min-w-0 items-center gap-3">
-              <span
-                className="h-8 w-0.5 shrink-0 rounded-full bg-[var(--wms-brand-primary)] shadow-[0_0_10px_var(--wms-brand-shadow)]"
-                aria-hidden
-              />
-              <h2 className="text-xl font-bold uppercase tracking-[0.12em] text-slate-900 sm:text-2xl lg:text-3xl dark:text-white">
-                {t('sidebar.settings')}
+            <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+              {panel === 'app-settings' ? (
+                <button
+                  type="button"
+                  onClick={() => setPanel('home')}
+                  className={cn(
+                    'wms-ops-profile-modal__close flex size-9 shrink-0 cursor-pointer items-center justify-center transition-[border-color,box-shadow,transform] duration-300',
+                    'border border-slate-200/80 bg-white/80 text-slate-500',
+                    'hover:border-[var(--wms-brand-ring)] hover:bg-[var(--wms-brand-soft)] hover:text-[var(--wms-brand-primary)] active:scale-90',
+                    'dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-400',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--wms-brand-ring)] focus-visible:ring-offset-0',
+                  )}
+                  aria-label={t('common.back')}
+                >
+                  <ChevronLeft className="h-4 w-4" strokeWidth={2.25} aria-hidden />
+                </button>
+              ) : (
+                <span
+                  className="h-8 w-0.5 shrink-0 rounded-full bg-[var(--wms-brand-primary)] shadow-[0_0_10px_var(--wms-brand-shadow)]"
+                  aria-hidden
+                />
+              )}
+              <h2 className="truncate text-xl font-bold uppercase tracking-[0.12em] text-slate-900 sm:text-2xl lg:text-3xl dark:text-white">
+                {panel === 'app-settings' ? t('profile.settingsAppSettings') : t('sidebar.settings')}
               </h2>
             </div>
             <DialogClose
@@ -270,339 +345,446 @@ export function UserProfileModal({
           </header>
 
           <div className="wms-ops-scrollbar flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-x-hidden overflow-y-auto overscroll-contain px-6 py-4 sm:px-8 md:px-10">
-            <button type="button" onClick={onOpenProfileDetails} className={settingsProfileRowClass}>
-              <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
-                <span className={cn(settingsIconClass, 'bg-violet-600/90')}>
-                  <HugeiconsIcon
-                    icon={UserCircleIcon}
-                    size={settingsHugeiconSize}
-                    strokeWidth={settingsHugeiconStroke}
-                    className="text-white"
+            {panel === 'home' ? (
+              <>
+                <button type="button" onClick={onOpenProfileDetails} className={settingsProfileRowClass}>
+                  <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
+                    <span className={cn(settingsIconClass, 'bg-violet-600/90')}>
+                      <HugeiconsIcon
+                        icon={UserCircleIcon}
+                        size={settingsHugeiconSize}
+                        strokeWidth={settingsHugeiconStroke}
+                        className="text-white"
+                        aria-hidden
+                      />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-slate-900 sm:text-base dark:text-white">
+                        {t('profile.settingsProfileInfo')}
+                      </p>
+                      <p className="mt-0.5 text-xs leading-snug text-slate-500 sm:mt-1 sm:text-sm dark:text-slate-400">
+                        {t('profile.settingsProfileHint')}
+                      </p>
+                    </div>
+                  </div>
+                  <ChevronRight
+                    className="h-5 w-5 shrink-0 text-slate-400 opacity-30 transition-all duration-300 group-hover:translate-x-1 group-hover:opacity-60 dark:text-slate-500"
                     aria-hidden
                   />
-                </span>
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-slate-900 sm:text-base dark:text-white">
-                    {t('profile.settingsProfileInfo')}
-                  </p>
-                  <p className="mt-0.5 text-xs leading-snug text-slate-500 sm:mt-1 sm:text-sm dark:text-slate-400">
-                    {t('profile.settingsProfileHint')}
-                  </p>
-                </div>
-              </div>
-              <ChevronRight
-                className="h-5 w-5 shrink-0 text-slate-400 opacity-30 transition-all duration-300 group-hover:translate-x-1 group-hover:opacity-60 dark:text-slate-500"
-                aria-hidden
-              />
-            </button>
-
-            <div className={settingsRowBaseClass}>
-              <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
-                <span className={cn(settingsIconClass, 'bg-[var(--wms-brand-primary)] text-[var(--wms-brand-on-primary)]')}>
-                  <HugeiconsIcon
-                    icon={LanguageCircleIcon}
-                    size={settingsHugeiconSize}
-                    strokeWidth={settingsHugeiconStroke}
-                    className="text-[var(--wms-brand-on-primary)]"
-                    aria-hidden
-                  />
-                </span>
-                <span className="min-w-0 truncate text-sm font-semibold text-slate-900 sm:text-base dark:text-white">
-                  {t('profile.settingsLanguage')}
-                </span>
-              </div>
-              <AppDropdown
-                value={currentLanguage.code}
-                onValueChange={handleLanguageChange}
-                options={languageOptions}
-                ariaLabel={t('profile.settingsLanguage')}
-                searchable
-                tone="plain"
-                portalContainer={null}
-                matchTriggerWidth={false}
-                contentAlign="end"
-                renderValue={() => (
-                  <span className="flex items-center gap-2">
-                    <span aria-hidden>{currentLanguage.flagEmoji}</span>
-                    <span className="font-semibold tracking-wide">{currentLanguage.flagLabel}</span>
-                  </span>
-                )}
-                className="wms-ops-profile-lang-trigger h-10 w-auto min-w-[6.5rem] shrink-0 px-3 text-sm font-semibold sm:h-11 sm:px-4 sm:text-base"
-                contentClassName="wms-ops-profile-lang-select wms-ops-scrollbar min-w-[15rem]"
-              />
-            </div>
-
-            <div className={cn(settingsRowBaseClass, useCustomBrandThemes && 'opacity-60')}>
-              <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
-                <span className={cn(settingsIconClass, 'bg-[var(--wms-brand-accent)] text-[var(--wms-brand-on-primary)]')}>
-                  <HugeiconsIcon
-                    icon={isDark ? Moon02Icon : Sun02Icon}
-                    size={settingsHugeiconSize}
-                    strokeWidth={settingsHugeiconStroke}
-                    className="text-[var(--wms-brand-on-primary)]"
-                    aria-hidden
-                  />
-                </span>
-                <div className="min-w-0">
-                  <span className="text-sm font-semibold text-slate-900 sm:text-base dark:text-white">
-                    {t('profile.settingsAppearance')}
-                  </span>
-                  {useCustomBrandThemes ? (
-                    <p className="mt-0.5 text-xs leading-snug text-slate-500 sm:text-sm dark:text-slate-400">
-                      {t('profile.settingsAppearanceDisabledHint')}
-                    </p>
-                  ) : null}
-                </div>
-              </div>
-              <div className="wms-ops-profile-modal__switch-slot shrink-0 self-center">
-                {skin === 'premium' ? (
-                  <ThemeDayNightSwitch
-                    checked={isDark}
-                    disabled={useCustomBrandThemes}
-                    onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
-                    aria-label={t('profile.settingsAppearance')}
-                  />
-                ) : (
-                  <OpsLightSwitch
-                    checked={isDark}
-                    disabled={useCustomBrandThemes}
-                    onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
-                    onLabel={t('profile.terminal.switchOn', { defaultValue: 'ON' })}
-                    offLabel={t('profile.terminal.switchOff', { defaultValue: 'OFF' })}
-                    aria-label={t('profile.settingsAppearance')}
-                  />
-                )}
-              </div>
-            </div>
-
-            <div className={settingsRowBaseClass}>
-              <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
-                <span className={cn(settingsIconClass, 'bg-slate-700 text-white dark:bg-white/10')}>
-                  <MonitorCog className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={2} aria-hidden />
-                </span>
-                <div className="min-w-0">
-                  <span className="text-sm font-semibold text-slate-900 sm:text-base dark:text-white">
-                    {t('profile.settingsSkin')}
-                  </span>
-                  <p className="mt-0.5 text-xs leading-snug text-slate-500 sm:text-sm dark:text-slate-400">
-                    {t('profile.settingsSkinHint')}
-                  </p>
-                </div>
-              </div>
-              <div
-                className="wms-skin-switch shrink-0 self-center"
-                role="radiogroup"
-                aria-label={t('profile.settingsSkin')}
-              >
-                <span
-                  className="wms-skin-switch__glider"
-                  data-skin={skin}
-                  aria-hidden
-                />
-                <button
-                  type="button"
-                  role="radio"
-                  aria-checked={skin === 'terminal'}
-                  title={t('profile.skinTerminalHint')}
-                  onClick={() => setSkin('terminal')}
-                  className={cn('wms-skin-switch__option', skin === 'terminal' && 'wms-skin-switch__option--active')}
-                >
-                  <TerminalSquare className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden />
-                  {t('profile.skinTerminal')}
                 </button>
-                <button
-                  type="button"
-                  role="radio"
-                  aria-checked={skin === 'premium'}
-                  title={t('profile.skinPremiumHint')}
-                  onClick={() => setSkin('premium')}
-                  className={cn('wms-skin-switch__option', skin === 'premium' && 'wms-skin-switch__option--active')}
-                >
-                  <Sparkles className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden />
-                  {t('profile.skinPremium')}
-                </button>
-              </div>
-            </div>
 
-            <div
-              className={cn(
-                'wms-ops-profile-modal__theme-panel border px-4 py-4 sm:px-5',
-                'border-slate-200/70 bg-white/90 dark:border-white/[0.06] dark:bg-white/[0.03]',
-              )}
-              aria-busy={appearanceMutation.isPending}
-            >
-              <div className="flex items-center justify-between gap-3 sm:gap-4">
-                <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
-                  <span className={cn(settingsIconClass, 'bg-[var(--wms-brand-soft)] text-[var(--wms-brand-primary)]')}>
-                    <ScanLine className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={2.2} aria-hidden />
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-slate-900 sm:text-base dark:text-white">
-                      {t('profile.settingsBackgroundMotion')}
-                    </p>
-                    <p className="mt-0.5 text-xs leading-snug text-slate-500 sm:text-sm dark:text-slate-400">
-                      {t('profile.settingsBackgroundMotionHint')}
-                    </p>
+                <div className={settingsRowBaseClass}>
+                  <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
+                    <span className={cn(settingsIconClass, 'bg-[var(--wms-brand-primary)] text-[var(--wms-brand-on-primary)]')}>
+                      <HugeiconsIcon
+                        icon={LanguageCircleIcon}
+                        size={settingsHugeiconSize}
+                        strokeWidth={settingsHugeiconStroke}
+                        className="text-[var(--wms-brand-on-primary)]"
+                        aria-hidden
+                      />
+                    </span>
+                    <span className="min-w-0 truncate text-sm font-semibold text-slate-900 sm:text-base dark:text-white">
+                      {t('profile.settingsLanguage')}
+                    </span>
                   </div>
-                </div>
-                <div className="wms-ops-profile-modal__circuit-slot shrink-0">
-                  <OpsCircuitToggle
-                    horizontal
-                    checked={backgroundMotionEnabled}
-                    disabled={appearanceMutation.isPending}
-                    onCheckedChange={(checked) => updateBackgroundMotion(checked, backgroundMotionVariant)}
-                    aria-label={t('profile.settingsBackgroundMotion')}
-                  />
-                </div>
-              </div>
-
-              {backgroundMotionEnabled ? (
-                <>
-                  {prefersReducedMotion ? (
-                    <p
-                      className="mt-3 rounded-xl border border-amber-400/25 bg-amber-400/10 px-3 py-2 text-xs font-medium text-amber-700 dark:text-amber-200"
-                      role="status"
-                    >
-                      {t('profile.backgroundMotionReduced')}
-                    </p>
-                  ) : null}
-
-                  <div
-                    className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3"
-                    role="radiogroup"
-                    aria-label={t('profile.settingsBackgroundMotion')}
-                  >
-                    {wmsBackgroundMotionOptions.map((option) => {
-                      const isSelected = option.id === backgroundMotionVariant;
-                      return (
-                        <button
-                          key={option.id}
-                          type="button"
-                          role="radio"
-                          aria-checked={isSelected}
-                          disabled={appearanceMutation.isPending}
-                          onClick={() => updateBackgroundMotion(true, option.id)}
-                          className={cn(
-                            'group min-w-0 rounded-xl border p-2 text-left transition-[border-color,box-shadow,transform] duration-200',
-                            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--wms-brand-ring)] disabled:cursor-wait disabled:opacity-60',
-                            isSelected
-                              ? 'border-[var(--wms-brand-primary)] bg-[var(--wms-brand-soft)] shadow-[0_10px_24px_-18px_var(--wms-brand-shadow)]'
-                              : 'border-slate-200 bg-white/65 hover:-translate-y-0.5 hover:border-[var(--wms-brand-ring)] dark:border-white/10 dark:bg-black/10',
-                          )}
-                        >
-                          <WarehouseMotionScene
-                            variant={option.id}
-                            running={isSelected && !prefersReducedMotion && !appearanceMutation.isPending}
-                            preview
-                          />
-                          <span className="mt-2 block truncate text-xs font-bold text-slate-900 dark:text-white">
-                            {t(option.labelKey)}
-                          </span>
-                          <span className="mt-0.5 block text-[10px] leading-snug text-slate-500 dark:text-slate-400">
-                            {t(option.descriptionKey)}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </>
-              ) : null}
-            </div>
-
-            <div
-              className={cn(
-                'wms-ops-profile-modal__theme-panel border px-4 py-4 sm:px-5',
-                'border-slate-200/70 bg-white/90 dark:border-white/[0.06] dark:bg-white/[0.03]',
-              )}
-            >
-              <div className="mb-3 flex items-center justify-between gap-3 sm:gap-4">
-                <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
-                  <span className={cn(settingsIconClass, 'bg-[var(--wms-brand-soft)] text-[var(--wms-brand-primary)]')}>
-                    <Palette className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={2.2} aria-hidden />
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-slate-900 sm:text-base dark:text-white">
-                      {t('profile.settingsUseCustomBrandThemes')}
-                    </p>
-                    <p className="mt-0.5 text-xs leading-snug text-slate-500 sm:text-sm dark:text-slate-400">
-                      {t('profile.settingsUseCustomBrandThemesHint')}
-                    </p>
-                  </div>
-                </div>
-                <div className="wms-ops-profile-modal__circuit-slot shrink-0">
-                  <OpsCircuitToggle
-                    horizontal
-                    checked={useCustomBrandThemes}
-                    onCheckedChange={setUseCustomBrandThemes}
-                    aria-label={t('profile.settingsUseCustomBrandThemes')}
-                  />
-                </div>
-              </div>
-
-              {useCustomBrandThemes ? (
-              <div className="wms-ops-profile-modal__theme-grid wms-ops-scrollbar grid max-h-[260px] grid-cols-1 gap-2 overflow-y-auto pr-1 sm:grid-cols-2 md:max-h-[300px] lg:max-h-[340px]">
-                {getCustomBrandThemePickerItems().map((item) => {
-                  const isSelected = item.id === brandTheme;
-                  const appearanceLabel = item.appearance === 'light' ? t('theme.light') : t('theme.dark');
-
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => setBrandTheme(item.id)}
-                      aria-pressed={isSelected}
-                      className={cn(
-                        'wms-ops-profile-modal__theme-option group flex min-h-16 items-center gap-3 border p-3 text-left transition-all duration-200',
-                        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--wms-brand-ring)]',
-                        isSelected
-                          ? 'wms-ops-profile-modal__theme-option--selected border-[var(--wms-brand-primary)] bg-[var(--wms-brand-soft)] shadow-[0_12px_30px_-22px_var(--wms-brand-shadow)]'
-                          : 'border-slate-200 bg-white/70 hover:border-[var(--wms-brand-ring)] hover:bg-white dark:border-white/10 dark:bg-black/10 dark:hover:bg-white/5',
-                      )}
-                    >
-                      <span className="flex h-9 w-12 shrink-0 overflow-hidden border border-white/50 shadow-sm dark:border-white/10">
-                        {item.swatches.map((color, index) => (
-                          <span key={`${item.id}-${index}-${color}`} className="h-full flex-1" style={{ backgroundColor: color }} />
-                        ))}
+                  <AppDropdown
+                    value={currentLanguage.code}
+                    onValueChange={handleLanguageChange}
+                    options={languageOptions}
+                    ariaLabel={t('profile.settingsLanguage')}
+                    searchable
+                    tone="plain"
+                    portalContainer={null}
+                    matchTriggerWidth={false}
+                    contentAlign="end"
+                    renderValue={() => (
+                      <span className="flex items-center gap-2">
+                        <span aria-hidden>{currentLanguage.flagEmoji}</span>
+                        <span className="font-semibold tracking-wide">{currentLanguage.flagLabel}</span>
                       </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="flex min-w-0 items-center gap-1.5">
-                          <span className="truncate text-xs font-bold text-slate-900 sm:text-sm dark:text-white">
-                            {localizeLegacyUiText(item.label, activeLanguage)}
-                          </span>
-                          <span
+                    )}
+                    className="wms-ops-profile-lang-trigger h-10 w-auto min-w-[6.5rem] shrink-0 px-3 text-sm font-semibold sm:h-11 sm:px-4 sm:text-base"
+                    contentClassName="wms-ops-profile-lang-select wms-ops-scrollbar min-w-[15rem]"
+                  />
+                </div>
+
+                <div className={cn(settingsRowBaseClass, useCustomBrandThemes && 'opacity-60')}>
+                  <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
+                    <span className={cn(settingsIconClass, 'bg-[var(--wms-brand-accent)] text-[var(--wms-brand-on-primary)]')}>
+                      <HugeiconsIcon
+                        icon={isDark ? Moon02Icon : Sun02Icon}
+                        size={settingsHugeiconSize}
+                        strokeWidth={settingsHugeiconStroke}
+                        className="text-[var(--wms-brand-on-primary)]"
+                        aria-hidden
+                      />
+                    </span>
+                    <div className="min-w-0">
+                      <span className="text-sm font-semibold text-slate-900 sm:text-base dark:text-white">
+                        {t('profile.settingsAppearance')}
+                      </span>
+                      {useCustomBrandThemes ? (
+                        <p className="mt-0.5 text-xs leading-snug text-slate-500 sm:text-sm dark:text-slate-400">
+                          {t('profile.settingsAppearanceDisabledHint')}
+                        </p>
+                      ) : null}
+                    </div>
+                  </div>
+                  <div className="wms-ops-profile-modal__switch-slot shrink-0 self-center">
+                    {skin === 'premium' ? (
+                      <ThemeDayNightSwitch
+                        checked={isDark}
+                        disabled={useCustomBrandThemes}
+                        onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+                        aria-label={t('profile.settingsAppearance')}
+                      />
+                    ) : (
+                      <OpsLightSwitch
+                        checked={isDark}
+                        disabled={useCustomBrandThemes}
+                        onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+                        onLabel={t('profile.terminal.switchOn', { defaultValue: 'ON' })}
+                        offLabel={t('profile.terminal.switchOff', { defaultValue: 'OFF' })}
+                        aria-label={t('profile.settingsAppearance')}
+                      />
+                    )}
+                  </div>
+                </div>
+
+                <div className={settingsRowBaseClass}>
+                  <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
+                    <span className={cn(settingsIconClass, 'bg-slate-700 text-white dark:bg-white/10')}>
+                      <MonitorCog className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={2} aria-hidden />
+                    </span>
+                    <div className="min-w-0">
+                      <span className="text-sm font-semibold text-slate-900 sm:text-base dark:text-white">
+                        {t('profile.settingsSkin')}
+                      </span>
+                      <p className="mt-0.5 text-xs leading-snug text-slate-500 sm:text-sm dark:text-slate-400">
+                        {t('profile.settingsSkinHint')}
+                      </p>
+                    </div>
+                  </div>
+                  <div
+                    className="wms-skin-switch shrink-0 self-center"
+                    role="radiogroup"
+                    aria-label={t('profile.settingsSkin')}
+                  >
+                    <span
+                      className="wms-skin-switch__glider"
+                      data-skin={skin}
+                      aria-hidden
+                    />
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={skin === 'terminal'}
+                      title={t('profile.skinTerminalHint')}
+                      onClick={() => setSkin('terminal')}
+                      className={cn('wms-skin-switch__option', skin === 'terminal' && 'wms-skin-switch__option--active')}
+                    >
+                      <TerminalSquare className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden />
+                      {t('profile.skinTerminal')}
+                    </button>
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={skin === 'premium'}
+                      title={t('profile.skinPremiumHint')}
+                      onClick={() => setSkin('premium')}
+                      className={cn('wms-skin-switch__option', skin === 'premium' && 'wms-skin-switch__option--active')}
+                    >
+                      <Sparkles className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden />
+                      {t('profile.skinPremium')}
+                    </button>
+                  </div>
+                </div>
+
+                <button type="button" onClick={() => setPanel('app-settings')} className={settingsProfileRowClass}>
+                  <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
+                    <span className={cn(settingsIconClass, 'bg-[var(--wms-brand-primary)] text-[var(--wms-brand-on-primary)]')}>
+                      <Settings2 className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={2} aria-hidden />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-slate-900 sm:text-base dark:text-white">
+                        {t('profile.settingsAppSettings')}
+                      </p>
+                      <p className="mt-0.5 text-xs leading-snug text-slate-500 sm:mt-1 sm:text-sm dark:text-slate-400">
+                        {t('profile.settingsAppSettingsHint')}
+                      </p>
+                    </div>
+                  </div>
+                  <ChevronRight
+                    className="h-5 w-5 shrink-0 text-slate-400 opacity-30 transition-all duration-300 group-hover:translate-x-1 group-hover:opacity-60 dark:text-slate-500"
+                    aria-hidden
+                  />
+                </button>
+              </>
+            ) : (
+              <>
+                <div
+                  className={cn(
+                    'wms-ops-profile-modal__theme-panel border px-4 py-4 sm:px-5',
+                    'border-slate-200/70 bg-white/90 dark:border-white/[0.06] dark:bg-white/[0.03]',
+                  )}
+                >
+                  <div className="mb-3 flex items-center justify-between gap-3 sm:gap-4">
+                    <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
+                      <span className={cn(settingsIconClass, 'bg-[var(--wms-brand-soft)] text-[var(--wms-brand-primary)]')}>
+                        <Palette className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={2.2} aria-hidden />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-slate-900 sm:text-base dark:text-white">
+                          {t('profile.settingsUseCustomBrandThemes')}
+                        </p>
+                        <p className="mt-0.5 text-xs leading-snug text-slate-500 sm:text-sm dark:text-slate-400">
+                          {t('profile.settingsUseCustomBrandThemesHint')}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="wms-ops-profile-modal__circuit-slot shrink-0">
+                      <OpsCircuitToggle
+                        horizontal
+                        checked={useCustomBrandThemes}
+                        onCheckedChange={setUseCustomBrandThemes}
+                        aria-label={t('profile.settingsUseCustomBrandThemes')}
+                      />
+                    </div>
+                  </div>
+
+                  {useCustomBrandThemes ? (
+                    <div className="wms-ops-profile-modal__theme-grid wms-ops-scrollbar grid max-h-[260px] grid-cols-1 gap-2 overflow-y-auto pr-1 sm:grid-cols-2 md:max-h-[300px] lg:max-h-[340px]">
+                      {getCustomBrandThemePickerItems().map((item) => {
+                        const isSelected = item.id === brandTheme;
+                        const appearanceLabel = item.appearance === 'light' ? t('theme.light') : t('theme.dark');
+
+                        return (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => setBrandTheme(item.id)}
+                            aria-pressed={isSelected}
                             className={cn(
-                              'shrink-0 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide',
-                              item.appearance === 'light'
-                                ? 'bg-sky-500/15 text-sky-700 dark:bg-sky-400/15 dark:text-sky-300'
-                                : 'bg-slate-500/15 text-slate-700 dark:bg-white/10 dark:text-slate-300',
+                              'wms-ops-profile-modal__theme-option group flex min-h-16 items-center gap-3 border p-3 text-left transition-all duration-200',
+                              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--wms-brand-ring)]',
+                              isSelected
+                                ? 'wms-ops-profile-modal__theme-option--selected border-[var(--wms-brand-primary)] bg-[var(--wms-brand-soft)] shadow-[0_12px_30px_-22px_var(--wms-brand-shadow)]'
+                                : 'border-slate-200 bg-white/70 hover:border-[var(--wms-brand-ring)] hover:bg-white dark:border-white/10 dark:bg-black/10 dark:hover:bg-white/5',
                             )}
                           >
-                            {appearanceLabel}
-                          </span>
-                        </span>
-                        <span className="mt-0.5 line-clamp-1 text-[10px] font-medium text-[var(--wms-app-text-muted)] sm:text-[11px]">
-                          {localizeLegacyUiText(item.description, activeLanguage)}
-                        </span>
-                      </span>
-                      <span
-                        className={cn(
-                          'wms-ops-profile-theme-check',
-                          isSelected && 'wms-ops-profile-theme-check--on',
-                        )}
-                        aria-hidden
-                      >
-                        <span className="wms-ops-profile-theme-check__fill" />
-                        <span className="wms-ops-profile-theme-check__corner wms-ops-profile-theme-check__corner--tl" />
-                        <span className="wms-ops-profile-theme-check__corner wms-ops-profile-theme-check__corner--tr" />
-                        <span className="wms-ops-profile-theme-check__corner wms-ops-profile-theme-check__corner--bl" />
-                        <span className="wms-ops-profile-theme-check__corner wms-ops-profile-theme-check__corner--br" />
+                            <span className="flex h-9 w-12 shrink-0 overflow-hidden border border-white/50 shadow-sm dark:border-white/10">
+                              {item.swatches.map((color, index) => (
+                                <span key={`${item.id}-${index}-${color}`} className="h-full flex-1" style={{ backgroundColor: color }} />
+                              ))}
+                            </span>
+                            <span className="min-w-0 flex-1">
+                              <span className="flex min-w-0 items-center gap-1.5">
+                                <span className="truncate text-xs font-bold text-slate-900 sm:text-sm dark:text-white">
+                                  {localizeLegacyUiText(item.label, activeLanguage)}
+                                </span>
+                                <span
+                                  className={cn(
+                                    'shrink-0 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide',
+                                    item.appearance === 'light'
+                                      ? 'bg-sky-500/15 text-sky-700 dark:bg-sky-400/15 dark:text-sky-300'
+                                      : 'bg-slate-500/15 text-slate-700 dark:bg-white/10 dark:text-slate-300',
+                                  )}
+                                >
+                                  {appearanceLabel}
+                                </span>
+                              </span>
+                              <span className="mt-0.5 line-clamp-1 text-[10px] font-medium text-[var(--wms-app-text-muted)] sm:text-[11px]">
+                                {localizeLegacyUiText(item.description, activeLanguage)}
+                              </span>
+                            </span>
+                            <span
+                              className={cn(
+                                'wms-ops-profile-theme-check',
+                                isSelected && 'wms-ops-profile-theme-check--on',
+                              )}
+                              aria-hidden
+                            >
+                              <span className="wms-ops-profile-theme-check__fill" />
+                              <span className="wms-ops-profile-theme-check__corner wms-ops-profile-theme-check__corner--tl" />
+                              <span className="wms-ops-profile-theme-check__corner wms-ops-profile-theme-check__corner--tr" />
+                              <span className="wms-ops-profile-theme-check__corner wms-ops-profile-theme-check__corner--bl" />
+                              <span className="wms-ops-profile-theme-check__corner wms-ops-profile-theme-check__corner--br" />
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+                </div>
+
+                <div
+                  className={cn(
+                    'wms-ops-profile-modal__theme-panel border px-4 py-4 sm:px-5',
+                    'border-slate-200/70 bg-white/90 dark:border-white/[0.06] dark:bg-white/[0.03]',
+                  )}
+                  aria-busy={appearanceMutation.isPending}
+                >
+                  <div className="mb-3 flex min-w-0 items-center gap-3 sm:gap-4">
+                    <span className={cn(settingsIconClass, 'bg-[var(--wms-brand-soft)] text-[var(--wms-brand-primary)]')}>
+                      <LayoutDashboard className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={2.2} aria-hidden />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-slate-900 sm:text-base dark:text-white">
+                        {t('profile.settingsNavbarCenter')}
+                      </p>
+                      <p className="mt-0.5 text-xs leading-snug text-slate-500 sm:text-sm dark:text-slate-400">
+                        {t('profile.settingsNavbarCenterHint')}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="wms-navbar-pref-grid" role="radiogroup" aria-label={t('profile.settingsNavbarCenter')}>
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={navbarCenterMode === 'search'}
+                      disabled={appearanceMutation.isPending}
+                      onClick={() => updateNavbarCenterMode('search')}
+                      className={cn('wms-navbar-pref-option', navbarCenterMode === 'search' && 'wms-navbar-pref-option--active')}
+                    >
+                      <span className="wms-navbar-pref-mark" aria-hidden />
+                      <span>
+                        <span className="block text-sm font-semibold text-slate-900 dark:text-white">{t('profile.navbarModeSearch')}</span>
+                        <span className="mt-0.5 block text-[11px] text-slate-500 dark:text-slate-400">{t('profile.navbarModeSearchHint')}</span>
                       </span>
                     </button>
-                  );
-                })}
-              </div>
-              ) : null}
-            </div>
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={navbarCenterMode === 'kpi'}
+                      disabled={appearanceMutation.isPending}
+                      onClick={() => updateNavbarCenterMode('kpi')}
+                      className={cn('wms-navbar-pref-option', navbarCenterMode === 'kpi' && 'wms-navbar-pref-option--active')}
+                    >
+                      <span className="wms-navbar-pref-mark" aria-hidden />
+                      <span>
+                        <span className="block text-sm font-semibold text-slate-900 dark:text-white">{t('profile.navbarModeKpi')}</span>
+                        <span className="mt-0.5 block text-[11px] text-slate-500 dark:text-slate-400">{t('profile.navbarModeKpiHint')}</span>
+                      </span>
+                    </button>
+                  </div>
+
+                  {navbarCenterMode === 'kpi' ? (
+                    <div className="wms-navbar-pref-chips mt-3">
+                      {NAVBAR_KPI_KEYS.map((key) => {
+                        const checked = navbarKpiKeys.includes(key);
+                        const disableUncheck = checked && navbarKpiKeys.length <= 1;
+                        const disableCheck = !checked && navbarKpiKeys.length >= MAX_NAVBAR_KPI_COUNT;
+                        return (
+                          <button
+                            key={key}
+                            type="button"
+                            role="checkbox"
+                            aria-checked={checked}
+                            disabled={disableUncheck || disableCheck || appearanceMutation.isPending}
+                            onClick={() => toggleNavbarKpi(key)}
+                            className={cn(
+                              'wms-navbar-pref-chip',
+                              checked && 'is-on',
+                              (disableUncheck || disableCheck || appearanceMutation.isPending) && 'opacity-60',
+                            )}
+                          >
+                            <span className="wms-navbar-pref-mark" aria-hidden />
+                            <span className="text-sm font-semibold text-slate-900 dark:text-white">{t(`profile.navbarKpi.${key}`)}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+                </div>
+
+                <div
+                  className={cn(
+                    'wms-ops-profile-modal__theme-panel border px-4 py-4 sm:px-5',
+                    'border-slate-200/70 bg-white/90 dark:border-white/[0.06] dark:bg-white/[0.03]',
+                  )}
+                  aria-busy={appearanceMutation.isPending}
+                >
+                  <div className="flex items-center justify-between gap-3 sm:gap-4">
+                    <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
+                      <span className={cn(settingsIconClass, 'bg-[var(--wms-brand-soft)] text-[var(--wms-brand-primary)]')}>
+                        <ScanLine className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={2.2} aria-hidden />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-slate-900 sm:text-base dark:text-white">
+                          {t('profile.settingsBackgroundMotion')}
+                        </p>
+                        <p className="mt-0.5 text-xs leading-snug text-slate-500 sm:text-sm dark:text-slate-400">
+                          {t('profile.settingsBackgroundMotionHint')}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="wms-ops-profile-modal__circuit-slot shrink-0">
+                      <OpsCircuitToggle
+                        horizontal
+                        checked={backgroundMotionEnabled}
+                        disabled={appearanceMutation.isPending}
+                        onCheckedChange={(checked) => updateBackgroundMotion(checked, backgroundMotionVariant)}
+                        aria-label={t('profile.settingsBackgroundMotion')}
+                      />
+                    </div>
+                  </div>
+
+                  {backgroundMotionEnabled ? (
+                    <>
+                      {prefersReducedMotion ? (
+                        <p
+                          className="mt-3 rounded-xl border border-amber-400/25 bg-amber-400/10 px-3 py-2 text-xs font-medium text-amber-700 dark:text-amber-200"
+                          role="status"
+                        >
+                          {t('profile.backgroundMotionReduced')}
+                        </p>
+                      ) : null}
+
+                      <div
+                        className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3"
+                        role="radiogroup"
+                        aria-label={t('profile.settingsBackgroundMotion')}
+                      >
+                        {wmsBackgroundMotionOptions.map((option) => {
+                          const isSelected = option.id === backgroundMotionVariant;
+                          return (
+                            <button
+                              key={option.id}
+                              type="button"
+                              role="radio"
+                              aria-checked={isSelected}
+                              disabled={appearanceMutation.isPending}
+                              onClick={() => updateBackgroundMotion(true, option.id)}
+                              className={cn(
+                                'group min-w-0 rounded-xl border p-2 text-left transition-[border-color,box-shadow,transform] duration-200',
+                                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--wms-brand-ring)] disabled:cursor-wait disabled:opacity-60',
+                                isSelected
+                                  ? 'border-[var(--wms-brand-primary)] bg-[var(--wms-brand-soft)] shadow-[0_10px_24px_-18px_var(--wms-brand-shadow)]'
+                                  : 'border-slate-200 bg-white/65 hover:-translate-y-0.5 hover:border-[var(--wms-brand-ring)] dark:border-white/10 dark:bg-black/10',
+                              )}
+                            >
+                              <WarehouseMotionScene
+                                variant={option.id}
+                                running={isSelected && !prefersReducedMotion && !appearanceMutation.isPending}
+                                preview
+                              />
+                              <span className="mt-2 block truncate text-xs font-bold text-slate-900 dark:text-white">
+                                {t(option.labelKey)}
+                              </span>
+                              <span className="mt-0.5 block text-[10px] leading-snug text-slate-500 dark:text-slate-400">
+                                {t(option.descriptionKey)}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </>
+                  ) : null}
+                </div>
+              </>
+            )}
           </div>
 
           <div className="shrink-0 border-t border-dashed border-slate-200/70 bg-white/80 px-6 py-4 dark:border-white/[0.06] dark:bg-[#07070c] sm:px-8 sm:py-5 md:px-10">

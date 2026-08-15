@@ -3,6 +3,15 @@ import { userDetailApi } from '../api/user-detail-api';
 import { USER_DETAIL_QUERY_KEYS } from '../utils/query-keys';
 import type { UserDetailDto } from '../types/user-detail';
 import { useAuthStore } from '@/stores/auth-store';
+import { coerceNavbarCenterMode, coerceNavbarKpiKeys } from '@/lib/navbar-preferences';
+
+function normalizeUserDetail(detail: UserDetailDto): UserDetailDto {
+  return {
+    ...detail,
+    navbarCenterMode: coerceNavbarCenterMode(detail.navbarCenterMode),
+    navbarKpiKeys: coerceNavbarKpiKeys(detail.navbarKpiKeys),
+  };
+}
 
 export const useUserDetail = (enabled = true): ReturnType<typeof useQuery<UserDetailDto | null>> => {
   const userId = useAuthStore((state) => state.user?.id ?? null);
@@ -14,7 +23,7 @@ export const useUserDetail = (enabled = true): ReturnType<typeof useQuery<UserDe
       try {
         const response = await userDetailApi.getCurrent();
         if (response.success && response.data) {
-          return response.data;
+          return normalizeUserDetail(response.data);
         }
         return null;
       } catch (error) {

@@ -388,7 +388,49 @@
   },
   "navbar": {
     "VERII WMS": "VERII WMS",
-    "search_placeholder": "Quick search..."
+    "search_placeholder": "Search stock, warehouse, location, serial or document...",
+    "search_badge_terminal": "OPS",
+    "search_badge_premium": "LOOKUP",
+    "search_chip_document": "Document",
+    "search_chip_ops": "Shipment",
+    "search_scopes": "Search fields",
+    "search_scope_hints": {
+      "stock": "Stock code, name, or manufacturer code.",
+      "warehouse": "Warehouse code or name. A single-digit code is enough (e.g. 3).",
+      "location": "Location code, name, or barcode.",
+      "serial": "Serial number.",
+      "lot": "Lot number.",
+      "document": "Goods receipt and transfer document number.",
+      "shipment": "Shipment document number."
+    },
+    "menu_search_placeholder": "Search menus...",
+    "search_shortcut": "Ctrl+K",
+    "search_min_chars": "Type at least 2 characters",
+    "search_searching": "Searching...",
+    "search_kinds": {
+      "stock": "Stock",
+      "warehouse": "Warehouse",
+      "location": "Location",
+      "serial": "Serial",
+      "lot": "Lot",
+      "goods-receipt": "Goods receipt",
+      "shipment": "Shipment",
+      "transfer": "Transfer"
+    },
+    "inventoryLookup": {
+      "eyebrow": "Stock balance",
+      "opening": "Opening balance...",
+      "notFound": "Record not found or you do not have access.",
+      "warehouseTitle": "Warehouse",
+      "warehouseCode": "Warehouse code {{code}}",
+      "locationTitle": "Location",
+      "serialTitle": "Serial",
+      "lotTitle": "Lot",
+      "stockCount": "SKU count",
+      "emptyLines": "No balance lines for this place.",
+      "emptyMovements": "No movement history.",
+      "truncated": "Showing the first rows."
+    }
   },
   "sidebar": {
     "warehouseOperations": "Warehouse (Stockroom) Operations",
@@ -651,7 +693,44 @@
     "packingSettings": "Packing Settings",
     "projectSettings": "General Project Settings",
     "auditLogs": "Audit Logs",
-    "processParameters": "Process Parameters"
+    "processParameters": "Process Parameters",
+    "kkdPolicy": "PPE Process Policy"
+  },
+  "processParametersHub": {
+    "eyebrow": "Parameters",
+    "description": "Open all process settings from one hub. Mega-menu shortcuts keep working as before.",
+    "railHint": "Pick a tab on the left; settings open on the right.",
+    "empty": "There are no process parameters you can view.",
+    "cardFallback": "View and edit process parameters.",
+    "phases": {
+      "process": {
+        "title": "Operational Processes",
+        "description": "Manage process policies from goods receipt through shipping."
+      },
+      "definitions": {
+        "title": "Definitions and Policies",
+        "description": "Open document series, barcode, and PPE policies from one place."
+      }
+    },
+    "callout": {
+      "title": "Quick access",
+      "text": "The Process Parameters heading and its children in the Parameters menu open the same pages; this screen is only a shared starting point."
+    },
+    "cards": {
+      "goodsReceipt": "Manage goods receipt tolerance, approval, and ERP posting policies.",
+      "inbound": "Configure warehouse inbound process rules and defaults.",
+      "outbound": "Configure warehouse outbound process rules and defaults.",
+      "transfer": "Manage inter-warehouse transfer reservation and policy settings.",
+      "subcontracting": "Configure subcontracting issue/receipt process parameters.",
+      "productionTransfer": "Manage production transfer tolerance and eligibility settings.",
+      "shipping": "Edit shipping reservation, packing, and process policies.",
+      "quality": "Manage quality control, quarantine, and general quality parameters.",
+      "packing": "Configure packing station, SSCC, and tolerance policies.",
+      "documentSeries": "Manage transaction-based document series and numbering.",
+      "barcodeDesigner": "Create and print barcode label designs.",
+      "barcodePolicy": "Manage stock, serial, lot, and document barcode uniqueness policies.",
+      "kkdPolicy": "Configure PPE process and order-requirement policies."
+    }
   },
   "serviceOps": {
     "breadcrumb": {
@@ -882,6 +961,45 @@
     "recentTransactionsSubtitle": "Latest updated goods receipt and shipment activity",
     "quickAccess": "Quick Access",
     "quickAccessSubtitle": "Frequently used operation commands",
+    "quickAccessCustomize": "Add shortcut",
+    "quickAccessEdit": "Edit",
+    "quickAccessEditDone": "Done",
+    "quickAccessCustomizeTitle": "Quick access shortcuts",
+    "quickAccessCustomizeHint": "{{selected}} / {{max}} shortcuts selected. Choose from actions you can access. Use Edit on the strip to reorder.",
+    "quickAccessSelected": "Selected shortcuts",
+    "quickAccessSelectedEmpty": "No shortcuts selected yet.",
+    "quickAccessAvailable": "Available shortcuts",
+    "quickAccessAvailableEmpty": "No more permitted shortcuts to add.",
+    "quickAccessDragHandle": "Press and hold to reorder",
+    "quickAccessDragTip": "Press Edit on the strip, then drag cards to reorder.",
+    "quickAccessRemove": "Remove shortcut",
+    "quickAccessSlotsFull": "All 6 slots are full. Remove one before adding another.",
+    "quickAccessItems": {
+      "goodsReceiptNew": "New Goods Receipt",
+      "goodsReceiptNewHint": "Start a new goods receipt order",
+      "transferNew": "New Transfer",
+      "transferNewHint": "Create a transfer operation",
+      "shipmentNew": "New Shipment",
+      "shipmentNewHint": "Start a new shipment order",
+      "inventoryCount": "Inventory Count",
+      "inventoryCountHint": "Open inventory count management",
+      "stockQuery": "Stock Query",
+      "stockQueryHint": "Query warehouse stock balances",
+      "qualityControl": "Quality Control",
+      "qualityControlHint": "Open pending quality inspections",
+      "goodsReceiptAssigned": "My assigned orders",
+      "goodsReceiptAssignedHint": "Open assigned goods receipt orders",
+      "warehouseInbound": "Warehouse inbound",
+      "warehouseInboundHint": "Create a warehouse inbound order",
+      "warehouseOutbound": "Warehouse outbound",
+      "warehouseOutboundHint": "Create a warehouse outbound order",
+      "packing": "Packing",
+      "packingHint": "Open packing workbench",
+      "stockMovements": "Stock movements",
+      "stockMovementsHint": "View stock movement history",
+      "productionTransfer": "Production transfer",
+      "productionTransferHint": "Create a production transfer"
+    },
     "newGoodsReceipt": "New Goods Receipt",
     "newShipment": "New Shipment",
     "stockQuery": "Stock Query",
@@ -891,6 +1009,7 @@
     "shipmentNumber": "Shipment #{{number}}",
     "inventoryUpdate": "Inventory Update",
     "hoursAgo": "{{hours}} hours ago",
+    "minutesAgo": "{{minutes}} min ago",
     "user": "User",
     "terminal": {
       "eyebrow": "WMS / COMMAND CENTER",
@@ -932,10 +1051,11 @@
     "premium": {
       "eyebrow": "Operations Hub",
       "welcome": "Welcome, {{name}}",
-      "subtitle": "Manage warehouse operations at a glance.",
+      "subtitle": "Manage warehouse operations from one screen with live control.",
       "goodMorning": "Good morning",
       "goodAfternoon": "Good afternoon",
       "goodEvening": "Good evening",
+      "goodNight": "Good night",
       "systemClock": "System time",
       "operator": "Operator",
       "branch": "Branch",
@@ -3372,6 +3492,8 @@
     "title": "Profile",
     "settingsProfileInfo": "Profile information",
     "settingsProfileHint": "Manage your profile and security information",
+    "settingsAppSettings": "App settings",
+    "settingsAppSettingsHint": "Custom theme, top status bar and background preferences",
     "settingsLanguage": "Language option",
     "settingsAppearance": "Appearance mode",
     "settingsAppearanceDisabledHint": "Light/dark mode is unavailable while a custom theme is active",
@@ -3401,6 +3523,22 @@
     "backgroundMotionBarcodeScanHint": "Handheld label reading flow",
     "backgroundMotionReduced": "Your device prefers reduced motion. The selection is saved, but decorative motion is paused.",
     "backgroundMotionSaveError": "The background preference could not be saved.",
+    "settingsNavbarCenter": "Top status bar",
+    "settingsNavbarCenterHint": "Show a search bar or KPI cards in the middle. Counts follow your warehouse scope.",
+    "navbarModeSearch": "Search bar",
+    "navbarModeSearchHint": "Search operations, documents and stock",
+    "navbarModeKpi": "KPI cards",
+    "navbarModeKpiHint": "Choose up to 4 cards",
+    "navbarKpi": {
+      "myTasks": "Assigned to me",
+      "qualityQueue": "QC queue",
+      "pendingApproval": "Pending approval",
+      "erpIssues": "ERP alerts",
+      "openOperations": "Open operations",
+      "goodsReceiptToday": "Today's goods receipt",
+      "shipmentToday": "Today's shipments",
+      "transferToday": "Today's transfers"
+    },
     "organizationBadge": "V3RII.CO",
     "terminal": {
       "switchOn": "ON",

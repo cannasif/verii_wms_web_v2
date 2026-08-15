@@ -388,7 +388,49 @@
   },
   "navbar": {
     "VERII WMS": "VERII WMS",
-    "search_placeholder": "Hızlı arama yap..."
+    "search_placeholder": "Stok, depo, raf, seri veya belge ara...",
+    "search_badge_terminal": "OPS",
+    "search_badge_premium": "SORGU",
+    "search_chip_document": "Belge",
+    "search_chip_ops": "Sevk",
+    "search_scopes": "Arama alanları",
+    "search_scope_hints": {
+      "stock": "Stok kodu, adı veya üretici kodu.",
+      "warehouse": "Depo kodu veya adı. Tek haneli kod da yeter (ör. 3).",
+      "location": "Raf kodu, adı veya barkod.",
+      "serial": "Seri numarası.",
+      "lot": "Lot numarası.",
+      "document": "Mal kabul ve transfer belge numarası.",
+      "shipment": "Sevkiyat belge numarası."
+    },
+    "menu_search_placeholder": "Menüde ara...",
+    "search_shortcut": "Ctrl+K",
+    "search_min_chars": "En az 2 karakter yazın",
+    "search_searching": "Aranıyor...",
+    "search_kinds": {
+      "stock": "Stok",
+      "warehouse": "Depo",
+      "location": "Raf",
+      "serial": "Seri",
+      "lot": "Lot",
+      "goods-receipt": "Mal kabul",
+      "shipment": "Sevkiyat",
+      "transfer": "Transfer"
+    },
+    "inventoryLookup": {
+      "eyebrow": "Stok bakiyesi",
+      "opening": "Bakiye açılıyor...",
+      "notFound": "Kayıt bulunamadı veya yetkiniz yok.",
+      "warehouseTitle": "Depo",
+      "warehouseCode": "Depo kodu {{code}}",
+      "locationTitle": "Raf",
+      "serialTitle": "Seri",
+      "lotTitle": "Lot",
+      "stockCount": "Stok sayısı",
+      "emptyLines": "Bu konumda bakiye satırı yok.",
+      "emptyMovements": "Hareket geçmişi yok.",
+      "truncated": "İlk satırlar gösteriliyor."
+    }
   },
   "sidebar": {
     "warehouseOperations": "Depo(Ambar) İşlemleri",
@@ -621,7 +663,7 @@
     "shippingSettings": "Sevkiyat Süreç Ayarları",
     "goodsReceiptHub": "Süreç Merkezi",
     "goodsReceiptOrderless": "Siparişsiz Emir",
-    "goodsReceiptDirect": "Doğrudan Mal Kabul",
+    "goodsReceiptDirect": "Yurt İçi Mal Kabul",
     "goodsReceiptTasks": "Emir Yönetimi",
     "goodsReceiptLabels": "Ön Etiketler",
     "goodsReceiptSettings": "Mal Kabul Süreç Ayarları",
@@ -651,7 +693,44 @@
     "packingSettings": "Paketleme Ayarları",
     "projectSettings": "Genel Proje Ayarları",
     "auditLogs": "Audit Kayıtları",
-    "processParameters": "Süreç Parametreleri"
+    "processParameters": "Süreç Parametreleri",
+    "kkdPolicy": "KKD Süreç Politikası"
+  },
+  "processParametersHub": {
+    "eyebrow": "Parametreler",
+    "description": "Tüm süreç ayarlarını tek çatı altında açın. Mega menüdeki kısayollar aynı şekilde çalışmaya devam eder.",
+    "railHint": "Soldan sekme seçin; ayarlar sağda açılır.",
+    "empty": "Görüntüleyebileceğiniz süreç parametresi bulunmuyor.",
+    "cardFallback": "Süreç parametrelerini görüntüleyin ve düzenleyin.",
+    "phases": {
+      "process": {
+        "title": "Operasyon Süreçleri",
+        "description": "Mal kabulden sevkiyata kadar süreç politikalarını yönetin."
+      },
+      "definitions": {
+        "title": "Tanımlar ve Politikalar",
+        "description": "Belge serisi, barkod ve KKD politikalarını tek yerden açın."
+      }
+    },
+    "callout": {
+      "title": "Hızlı erişim",
+      "text": "Parametreler menüsündeki Süreç Parametreleri başlığı ve alt maddeleri aynı sayfalara gider; bu ekran yalnızca ortak bir başlangıç noktasıdır."
+    },
+    "cards": {
+      "goodsReceipt": "Mal kabul tolerans, onay ve ERP aktarım politikalarını yönetin.",
+      "inbound": "Ambar giriş süreç kurallarını ve varsayılanları düzenleyin.",
+      "outbound": "Ambar çıkış süreç kurallarını ve varsayılanları düzenleyin.",
+      "transfer": "Depolar arası transfer rezervasyon ve politika ayarlarını yönetin.",
+      "subcontracting": "Fason çıkış/giriş süreç parametrelerini yapılandırın.",
+      "productionTransfer": "Üretime transfer tolerans ve uygunluk ayarlarını yönetin.",
+      "shipping": "Sevkiyat rezervasyon, paketleme ve süreç politikalarını düzenleyin.",
+      "quality": "Kalite kontrol, karantina ve genel kalite parametrelerini yönetin.",
+      "packing": "Paketleme istasyonu, SSCC ve tolerans politikalarını düzenleyin.",
+      "documentSeries": "İşlem bazlı belge seri tanımlarını ve numaralandırmayı yönetin.",
+      "barcodeDesigner": "Barkod etiket tasarımlarını oluşturun ve yazdırın.",
+      "barcodePolicy": "Stok, seri, lot ve belge barkod benzersizlik politikalarını yönetin.",
+      "kkdPolicy": "KKD süreç ve sipariş zorunluluğu politikalarını yapılandırın."
+    }
   },
   "serviceOps": {
     "breadcrumb": {
@@ -882,6 +961,45 @@
     "recentTransactionsSubtitle": "Son güncellenen mal kabul ve sevkiyat hareketleri",
     "quickAccess": "Hızlı Erişim",
     "quickAccessSubtitle": "Sık kullanılan operasyon komutları",
+    "quickAccessCustomize": "Kısayol ekle",
+    "quickAccessEdit": "Düzenle",
+    "quickAccessEditDone": "Tamam",
+    "quickAccessCustomizeTitle": "Hızlı erişim kısayolları",
+    "quickAccessCustomizeHint": "{{selected}} / {{max}} kısayol seçili. Yetkiniz olan işlemler arasından seçin. Sıralama için şeritte Düzenle’ye basın.",
+    "quickAccessSelected": "Seçili kısayollar",
+    "quickAccessSelectedEmpty": "Henüz kısayol seçilmedi.",
+    "quickAccessAvailable": "Eklenebilir kısayollar",
+    "quickAccessAvailableEmpty": "Eklenecek başka yetkili kısayol yok.",
+    "quickAccessDragHandle": "Sırayı değiştirmek için basılı tutun",
+    "quickAccessDragTip": "Sıralamak için şeritte Düzenle’ye basıp kartları sürükleyin.",
+    "quickAccessRemove": "Kısayolu kaldır",
+    "quickAccessSlotsFull": "6 kısayol dolu. Yeni eklemek için önce birini kaldırın.",
+    "quickAccessItems": {
+      "goodsReceiptNew": "Yeni Mal Kabul",
+      "goodsReceiptNewHint": "Yeni mal kabul emri başlat",
+      "transferNew": "Yeni Transfer",
+      "transferNewHint": "Transfer işlemi oluştur",
+      "shipmentNew": "Yeni Sevkiyat",
+      "shipmentNewHint": "Yeni sevkiyat emri başlat",
+      "inventoryCount": "Sayım",
+      "inventoryCountHint": "Sayım yönetimini aç",
+      "stockQuery": "Stok Sorgula",
+      "stockQueryHint": "Depo stok bakiyesini sorgula",
+      "qualityControl": "Kalite Kontrol",
+      "qualityControlHint": "Bekleyen GKK incelemelerini aç",
+      "goodsReceiptAssigned": "Bana atanan emirler",
+      "goodsReceiptAssignedHint": "Atanan mal kabul emirlerine git",
+      "warehouseInbound": "Ambar giriş",
+      "warehouseInboundHint": "Yeni ambar giriş emri oluştur",
+      "warehouseOutbound": "Ambar çıkış",
+      "warehouseOutboundHint": "Yeni ambar çıkış emri oluştur",
+      "packing": "Paketleme",
+      "packingHint": "Paketleme istasyonunu aç",
+      "stockMovements": "Stok hareketleri",
+      "stockMovementsHint": "Stok hareket kayıtlarını görüntüle",
+      "productionTransfer": "Üretim transferi",
+      "productionTransferHint": "Yeni üretim transferi oluştur"
+    },
     "newGoodsReceipt": "Yeni Mal Kabul",
     "newShipment": "Yeni Sevkiyat",
     "stockQuery": "Stok Sorgula",
@@ -891,6 +1009,7 @@
     "shipmentNumber": "Sevkiyat #{{number}}",
     "inventoryUpdate": "Envanter Güncelleme",
     "hoursAgo": "{{hours}} saat önce",
+    "minutesAgo": "{{minutes}} dk önce",
     "user": "Kullanıcı",
     "terminal": {
       "eyebrow": "WMS / KOMUT MERKEZİ",
@@ -932,10 +1051,11 @@
     "premium": {
       "eyebrow": "Operasyon Merkezi",
       "welcome": "Hoş geldiniz, {{name}}",
-      "subtitle": "Depo operasyonlarınızı tek bakışta yönetin.",
+      "subtitle": "Depo operasyonlarınızı tek ekrandan yönetin, anlık kontrol sağlayın.",
       "goodMorning": "Günaydın",
       "goodAfternoon": "İyi günler",
       "goodEvening": "İyi akşamlar",
+      "goodNight": "İyi geceler",
       "systemClock": "Sistem saati",
       "operator": "Operatör",
       "branch": "Şube",
@@ -3388,6 +3508,8 @@
     "title": "Profil",
     "settingsProfileInfo": "Profil Bilgileri",
     "settingsProfileHint": "Profil ve güvenlik bilgilerinizi yönetin",
+    "settingsAppSettings": "Uygulama Ayarları",
+    "settingsAppSettingsHint": "Özel tema, üst durum çubuğu ve arka plan tercihleri",
     "settingsLanguage": "Dil Seçeneği",
     "settingsAppearance": "Görünüm Modu",
     "settingsAppearanceDisabledHint": "Özel tema aktifken aydınlık/koyu modu kullanılamaz",
@@ -3417,6 +3539,22 @@
     "backgroundMotionBarcodeScanHint": "El terminali ile etiket okuma akışı",
     "backgroundMotionReduced": "Cihazınız hareketi azaltmayı tercih ediyor. Seçim saklandı ancak dekoratif hareket durduruldu.",
     "backgroundMotionSaveError": "Arka plan tercihi kaydedilemedi.",
+    "settingsNavbarCenter": "Üst durum çubuğu",
+    "settingsNavbarCenterHint": "Ortada arama çubuğu veya KPI kartları gösterin. Sayılar sizin depo kapsamınıza göredir.",
+    "navbarModeSearch": "Arama çubuğu",
+    "navbarModeSearchHint": "Ortada işlem, belge ve stok arayın",
+    "navbarModeKpi": "KPI kartları",
+    "navbarModeKpiHint": "En fazla 4 kart seçin",
+    "navbarKpi": {
+      "myTasks": "Bana atanan",
+      "qualityQueue": "GKK kuyruğu",
+      "pendingApproval": "Onay bekleyen",
+      "erpIssues": "ERP uyarı",
+      "openOperations": "Açık operasyon",
+      "goodsReceiptToday": "Bugünkü mal kabul",
+      "shipmentToday": "Bugünkü sevkiyat",
+      "transferToday": "Bugünkü transfer"
+    },
     "organizationBadge": "V3RII.CO",
     "terminal": {
       "switchOn": "ON",
@@ -7453,7 +7591,7 @@
     "restore": "Taslağı yükle"
   },
   "operationNames": {
-    "goodsReceiptDirect": "doğrudan mal kabul",
+    "goodsReceiptDirect": "yurt içi mal kabul",
     "steelReceiptDirect": "SAC alış irsaliyesi",
     "steelReceiptPlacement": "SAC raf yerleştirme",
     "warehouseInboundDirect": "doğrudan ambar giriş",

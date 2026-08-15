@@ -3,6 +3,7 @@ import type { ApiResponse } from '@/types/api';
 import type { TFunction } from 'i18next';
 import { serializeProfileMeta } from '../utils/profile-description-meta';
 import type { WmsBackgroundMotionVariant } from '@/lib/background-motion';
+import type { NavbarCenterMode, NavbarKpiKey } from '@/lib/navbar-preferences';
 
 export const Gender = {
   NotSpecified: 0,
@@ -23,6 +24,8 @@ export interface UserDetailDto {
   gender?: Gender | null;
   backgroundMotionEnabled: boolean;
   backgroundMotionVariant: WmsBackgroundMotionVariant;
+  navbarCenterMode: NavbarCenterMode;
+  navbarKpiKeys: NavbarKpiKey[];
   createdDate?: string | null;
   updatedDate?: string | null;
 }
@@ -45,6 +48,8 @@ export interface UpdateUserDetailDto {
 export interface UpdateUserAppearanceDto {
   backgroundMotionEnabled: boolean;
   backgroundMotionVariant: WmsBackgroundMotionVariant;
+  navbarCenterMode: NavbarCenterMode;
+  navbarKpiKeys: NavbarKpiKey[];
 }
 
 export type UserDetailResponse = ApiResponse<UserDetailDto>;

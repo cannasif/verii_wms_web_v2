@@ -3,19 +3,36 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { HugeiconsIcon } from '@hugeicons/react';
 import Cancel01Icon from '@hugeicons/core-free-icons/Cancel01Icon';
+import ClipboardListIcon from '@hugeicons/core-free-icons/ClipboardListIcon';
+import DeliveryTruck01Icon from '@hugeicons/core-free-icons/DeliveryTruck01Icon';
 import Mic01Icon from '@hugeicons/core-free-icons/Mic01Icon';
+import PackageReceive01Icon from '@hugeicons/core-free-icons/PackageReceive01Icon';
 import Search01Icon from '@hugeicons/core-free-icons/Search01Icon';
 import SidebarLeft01Icon from '@hugeicons/core-free-icons/SidebarLeft01Icon';
 import { useAuthStore } from '@/stores/auth-store';
 import { useUIStore } from '@/stores/ui-store';
 import { useTheme } from '@/components/theme-provider';
+import { cn } from '@/lib/utils';
 import v3riiWmsLogo from '@/assets/v3riiwms.png';
 import { NotificationIcon } from '@/features/notification/components/NotificationIcon';
 import { NavbarGradientIcon, NavbarIconGradientDefs } from '@/components/shared/NavbarGradientIcon';
 import { navbarIconButtonClassName } from '@/components/shared/navbar-gradient-icon.styles';
-import { cn } from '@/lib/utils';
+import { NavbarKpiStrip } from '@/components/shared/NavbarKpiStrip';
+import { coerceNavbarCenterMode, coerceNavbarKpiKeys } from '@/lib/navbar-preferences';
 import { useVoiceSearch } from '@/hooks/useVoiceSearch';
 import { resolveNavItemTitle, type NavItem } from './nav-items';
+import { useUserDetail } from '@/features/user-detail/hooks/useUserDetail';
+import { useNavbarQuickSearch } from '@/features/dashboard/hooks/useNavbarQuickSearch';
+import {
+  QUICK_SEARCH_SCOPE_CHIPS,
+  readQuickSearchScopes,
+  toggleQuickSearchScope,
+  writeQuickSearchScopes,
+  type QuickSearchScope,
+} from '@/features/dashboard/lib/quick-search-scopes';
+import type { DashboardQuickSearchHit } from '@/features/dashboard/types/dashboard.types';
+import { useOptionalStockCard } from '@/features/erp-mirror/components/StockCardProvider';
+import { useOptionalInventoryLookup } from '@/features/stock-balances/components/InventoryLookupProvider';
 
 const UserProfileModal = lazy(() =>
   import('@/features/user-detail').then((module) => ({
@@ -85,23 +102,12 @@ const flattenSearchTargets = (
   return targets;
 };
 
-const searchInputClassName = (isFocused: boolean): string =>
-  cn(
-    'w-full rounded-md border py-2.5 pl-11 pr-20 text-sm font-medium outline-none transition-all duration-300',
-    'border-slate-200 bg-slate-100/60 text-slate-900 placeholder:text-slate-500',
-    isFocused
-      ? 'border-[var(--wms-brand-ring)] bg-white shadow-[0_0_0_1px_var(--wms-brand-ring),0_4px_18px_var(--wms-brand-shadow)]'
-      : '',
-    'dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-slate-500',
-    isFocused
-      ? 'dark:border-[var(--wms-brand-ring)] dark:bg-[var(--wms-app-panel-strong)] dark:shadow-[0_0_0_1px_var(--wms-brand-ring),0_0_18px_var(--wms-brand-shadow)]'
-      : '',
-  );
-
 export function Navbar({ navItems = [] }: NavbarProps): ReactElement {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const searchInputRef = useRef<HTMLInputElement>(null);
+  const menuSearchRef = useRef<HTMLInputElement>(null);
+  const centerSearchRef = useRef<HTMLInputElement>(null);
+  const voiceTargetRef = useRef<'menu' | 'center'>('menu');
   const user = useAuthStore((state) => state.user);
   const branch = useAuthStore((state) => state.branch);
   const toggleSidebar = useUIStore((state) => state.toggleSidebar);
@@ -110,9 +116,19 @@ export function Navbar({ navItems = [] }: NavbarProps): ReactElement {
   const setSidebarOpen = useUIStore((state) => state.setSidebarOpen);
   const { skin } = useTheme();
   const isPremium = skin === 'premium';
+  const { data: userDetail } = useUserDetail();
+  const stockCard = useOptionalStockCard();
+  const inventoryLookup = useOptionalInventoryLookup();
+  const navbarCenterMode = coerceNavbarCenterMode(userDetail?.navbarCenterMode);
+  const navbarKpiKeys = coerceNavbarKpiKeys(userDetail?.navbarKpiKeys);
+  const showKpiStrip = navbarCenterMode === 'kpi';
   const [userProfileModalOpen, setUserProfileModalOpen] = useState(false);
-  const [isSearchFocus, setIsSearchFocus] = useState(false);
-  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+  const [centerQuery, setCenterQuery] = useState('');
+  const [centerScopes, setCenterScopes] = useState<QuickSearchScope[]>(readQuickSearchScopes);
+  const [, setIsMenuSearchFocus] = useState(false);
+  const [isCenterSearchFocus, setIsCenterSearchFocus] = useState(false);
+  const [isMenuSearchExpanded, setIsMenuSearchExpanded] = useState(false);
+  const [isCenterSearchExpanded, setIsCenterSearchExpanded] = useState(false);
   const resolveTitle = useMemo(
     () => (item: NavItem): string => resolveNavItemTitle(t, i18n.resolvedLanguage ?? i18n.language, item),
     [i18n.language, i18n.resolvedLanguage, t],
@@ -124,16 +140,15 @@ export function Navbar({ navItems = [] }: NavbarProps): ReactElement {
 
   const { isListening, isSupported, startListening } = useVoiceSearch({
     onResult: (text) => {
-      setSearchQuery(text);
-      if (text.trim().length > 0) {
-        if (isPremium) {
-          setIsSearchExpanded(true);
-          setIsSearchFocus(true);
-        } else {
-          setSidebarOpen(true);
-          setIsSearchFocus(true);
-        }
+      if (voiceTargetRef.current === 'center') {
+        setCenterQuery(text);
+        setIsCenterSearchFocus(true);
+        if (showKpiStrip) setIsCenterSearchExpanded(true);
+        return;
       }
+      setSearchQuery(text);
+      setIsMenuSearchFocus(true);
+      setIsMenuSearchExpanded(true);
     },
   });
 
@@ -141,48 +156,69 @@ export function Navbar({ navItems = [] }: NavbarProps): ReactElement {
     () => flattenSearchTargets(navItems, resolveTitle, resolveAlias),
     [navItems, resolveTitle, resolveAlias],
   );
-  const quickResults = useMemo(() => {
+  const menuResults = useMemo(() => {
     if (!searchQuery.trim()) return [] as SearchTarget[];
     return searchTargets.filter((item) => matchesSearchQuery(item.haystack, searchQuery)).slice(0, 8);
   }, [searchQuery, searchTargets]);
+  const {
+    results: centerResults,
+    isSearching: isCenterSearching,
+    tooShort: isCenterQueryTooShort,
+  } = useNavbarQuickSearch(centerQuery, centerQuery.trim().length > 0, centerScopes);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        if (isPremium) {
-          setIsSearchExpanded(true);
-        } else {
-          setSidebarOpen(true);
+        setIsMenuSearchExpanded(false);
+        if (showKpiStrip || (typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches)) {
+          setIsCenterSearchExpanded(true);
         }
         requestAnimationFrame(() => {
-          searchInputRef.current?.focus();
-          searchInputRef.current?.select();
+          centerSearchRef.current?.focus();
+          centerSearchRef.current?.select();
         });
       }
-      if (e.key === 'Escape' && isPremium && isSearchExpanded) {
-        setSearchQuery('');
-        setIsSearchExpanded(false);
-        setIsSearchFocus(false);
+      if (e.key === 'Escape') {
+        if (isCenterSearchExpanded) {
+          setCenterQuery('');
+          setIsCenterSearchExpanded(false);
+          setIsCenterSearchFocus(false);
+        }
+        if (isMenuSearchExpanded) {
+          setSearchQuery('');
+          setIsMenuSearchExpanded(false);
+          setIsMenuSearchFocus(false);
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [setSearchQuery, setSidebarOpen, isPremium, isSearchExpanded]);
+  }, [setSearchQuery, showKpiStrip, isCenterSearchExpanded, isMenuSearchExpanded]);
 
   useEffect(() => {
-    if (isPremium && isSearchExpanded) {
-      setIsSearchFocus(true);
-      requestAnimationFrame(() => searchInputRef.current?.focus());
+    if (isMenuSearchExpanded) {
+      setIsMenuSearchFocus(true);
+      requestAnimationFrame(() => menuSearchRef.current?.focus());
     }
-  }, [isPremium, isSearchExpanded]);
+  }, [isMenuSearchExpanded]);
 
-  const openPremiumSearch = (): void => {
-    setIsSearchExpanded(true);
-    setIsSearchFocus(true);
+  useEffect(() => {
+    if (isCenterSearchExpanded) {
+      setIsCenterSearchFocus(true);
+      requestAnimationFrame(() => centerSearchRef.current?.focus());
+    }
+  }, [isCenterSearchExpanded]);
+
+  const openMenuSearch = (): void => {
+    setIsCenterSearchExpanded(false);
+    setIsMenuSearchExpanded(true);
+    setIsMenuSearchFocus(true);
+    voiceTargetRef.current = 'menu';
+    if (!isPremium) setSidebarOpen(true);
   };
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>): void => {
+  const handleMenuSearch = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const val = e.target.value;
     setSearchQuery(val);
     if (!isPremium && val.trim().length > 0) {
@@ -190,22 +226,73 @@ export function Navbar({ navItems = [] }: NavbarProps): ReactElement {
     }
   };
 
-  const handleSearchNavigate = (target: SearchTarget): void => {
-    setSearchQuery(target.title);
-    if (!isPremium) {
-      setSidebarOpen(true);
+  const handleCenterSearch = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    setCenterQuery(e.target.value);
+  };
+
+  const handleCenterScopeToggle = (scope: QuickSearchScope): void => {
+    const next = toggleQuickSearchScope(centerScopes, scope);
+    setCenterScopes(next);
+    writeQuickSearchScopes(next);
+    setIsCenterSearchFocus(true);
+    requestAnimationFrame(() => centerSearchRef.current?.focus());
+  };
+
+  const handleMenuNavigate = (target: SearchTarget): void => {
+    setSearchQuery('');
+    setIsMenuSearchFocus(false);
+    setIsMenuSearchExpanded(false);
+    navigate(target.href);
+  };
+
+  const handleCenterNavigate = (target: DashboardQuickSearchHit): void => {
+    setCenterQuery('');
+    setIsCenterSearchFocus(false);
+    setIsCenterSearchExpanded(false);
+    if (target.kind === 'stock' && stockCard) {
+      const parsedId = Number(target.id);
+      const stockId = Number.isFinite(parsedId) && parsedId > 0 ? parsedId : null;
+      void stockCard.openStockCard({
+        stockId,
+        stockCode: target.title,
+        stockName: target.subtitle || null,
+        branchCode: branch?.code ?? null,
+      });
+      return;
     }
-    setIsSearchFocus(false);
-    if (isPremium) {
-      setIsSearchExpanded(false);
+    if (target.kind === 'lot' && inventoryLookup && target.id.trim()) {
+      void inventoryLookup.openLot(target.id);
+      return;
+    }
+    const lookupId = Number(target.id);
+    if (Number.isFinite(lookupId) && lookupId > 0 && inventoryLookup) {
+      if (target.kind === 'warehouse') {
+        void inventoryLookup.openWarehouse(lookupId);
+        return;
+      }
+      if (target.kind === 'location') {
+        void inventoryLookup.openLocation(lookupId);
+        return;
+      }
+      if (target.kind === 'serial') {
+        void inventoryLookup.openSerial(lookupId);
+        return;
+      }
     }
     navigate(target.href);
   };
 
-  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>): void => {
-    if (isPremium && e.key === 'Enter' && quickResults.length > 0) {
+  const handleMenuSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>): void => {
+    if (isPremium && e.key === 'Enter' && menuResults.length > 0) {
       e.preventDefault();
-      handleSearchNavigate(quickResults[0]);
+      handleMenuNavigate(menuResults[0]);
+    }
+  };
+
+  const handleCenterSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>): void => {
+    if (e.key === 'Enter' && centerResults.length > 0) {
+      e.preventDefault();
+      handleCenterNavigate(centerResults[0]);
     }
   };
 
@@ -217,19 +304,18 @@ export function Navbar({ navItems = [] }: NavbarProps): ReactElement {
       ? `${navbarBranchCodeTrimmed} • `
       : '';
 
-  const renderSearchResults = (): ReactElement | null => {
-    // Terminal mode filters the sidebar; dropdown is premium-only.
-    if (!isPremium || !isSearchFocus || !searchQuery.trim().length) return null;
+  const renderMenuSearchResults = (): ReactElement | null => {
+    if (!isPremium || !isMenuSearchExpanded || !searchQuery.trim().length) return null;
 
     return (
-      <div className="wms-premium-navbar-search__results absolute left-0 right-0 top-[calc(100%+0.5rem)] z-50 overflow-hidden rounded-xl border border-[color-mix(in_oklab,var(--wms-brand-primary)_28%,transparent)] p-2 shadow-xl backdrop-blur-xl">
-        {quickResults.length > 0 ? (
-          quickResults.map((item) => (
+      <div className="wms-premium-navbar-search__results absolute left-0 right-0 top-[calc(100%+0.5rem)] z-50 overflow-y-auto rounded-xl border border-[color-mix(in_oklab,var(--wms-brand-primary)_28%,transparent)] p-2 shadow-xl backdrop-blur-xl">
+        {menuResults.length > 0 ? (
+          menuResults.map((item) => (
             <button
               key={item.href}
               type="button"
               onMouseDown={(e) => e.preventDefault()}
-              onClick={() => handleSearchNavigate(item)}
+              onClick={() => handleMenuNavigate(item)}
               className="wms-premium-navbar-search__result-item flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left transition hover:bg-[var(--wms-brand-soft)]"
             >
               <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-700 dark:text-slate-100">
@@ -247,35 +333,85 @@ export function Navbar({ navItems = [] }: NavbarProps): ReactElement {
     );
   };
 
-  const closePremiumSearch = (): void => {
-    setSearchQuery('');
-    setIsSearchExpanded(false);
-    setIsSearchFocus(false);
+  const renderCenterSearchResults = (): ReactElement | null => {
+    if (!isCenterSearchFocus || !centerQuery.trim().length) return null;
+
+    const kindLabel = (kind: string): string =>
+      t(`navbar.search_kinds.${kind}`, { defaultValue: kind });
+
+    let body: ReactElement;
+    if (isCenterQueryTooShort) {
+      body = <p className="px-3 py-2 text-sm text-slate-500 dark:text-slate-400">{t('navbar.search_min_chars')}</p>;
+    } else if (isCenterSearching && centerResults.length === 0) {
+      body = <p className="px-3 py-2 text-sm text-slate-500 dark:text-slate-400">{t('navbar.search_searching')}</p>;
+    } else if (centerResults.length > 0) {
+      body = (
+        <>
+          {centerResults.map((item) => (
+            <button
+              key={`${item.kind}-${item.id}`}
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => handleCenterNavigate(item)}
+              className="wms-premium-navbar-search__result-item flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left transition hover:bg-[var(--wms-brand-soft)]"
+            >
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-medium text-slate-700 dark:text-slate-100">
+                  {item.title}
+                </span>
+                {item.subtitle ? (
+                  <span className="mt-0.5 block truncate text-[11px] text-slate-400">{item.subtitle}</span>
+                ) : null}
+              </span>
+              <span className="ml-3 shrink-0 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--wms-brand-primary)]">
+                {kindLabel(item.kind)}
+              </span>
+            </button>
+          ))}
+        </>
+      );
+    } else {
+      body = <p className="px-3 py-2 text-sm text-slate-500 dark:text-slate-400">{t('common.notFound')}</p>;
+    }
+
+    return (
+      <div className="wms-premium-navbar-search__results absolute left-0 right-0 top-[calc(100%+0.5rem)] z-50 overflow-y-auto rounded-xl border border-[color-mix(in_oklab,var(--wms-brand-primary)_28%,transparent)] p-2 shadow-xl backdrop-blur-xl">
+        {body}
+      </div>
+    );
   };
 
-  const renderPremiumSearch = (): ReactElement => (
+  const closeMenuSearch = (): void => {
+    setSearchQuery('');
+    setIsMenuSearchExpanded(false);
+    setIsMenuSearchFocus(false);
+  };
+
+  const closeCenterSearchOverlay = (): void => {
+    setCenterQuery('');
+    setIsCenterSearchExpanded(false);
+    setIsCenterSearchFocus(false);
+  };
+
+  const renderMenuSearch = (): ReactElement => (
     <>
-      {!isSearchExpanded ? (
+      {!isMenuSearchExpanded ? (
         <button
           type="button"
-          onClick={openPremiumSearch}
+          onClick={openMenuSearch}
           className={cn(navbarIconButtonClassName, 'wms-premium-navbar-search__trigger')}
-          aria-label={t('navbar.search_placeholder')}
-          title={t('navbar.search_placeholder')}
+          aria-label={t('navbar.menu_search_placeholder')}
+          title={t('navbar.menu_search_placeholder')}
         >
           <NavbarGradientIcon icon={Search01Icon} size={22} />
         </button>
       ) : (
-        <div
-          className="wms-premium-navbar-search-layer"
-          role="dialog"
-          aria-modal="true"
-        >
+        <div className="wms-premium-navbar-search-layer" role="dialog" aria-modal="true">
           <button
             type="button"
             className="wms-premium-navbar-search-layer__backdrop"
             aria-label={t('common.close')}
-            onClick={closePremiumSearch}
+            onClick={closeMenuSearch}
           />
           <div className="wms-premium-navbar-search-layer__sheet">
             <div className="wms-premium-navbar-search__field relative w-full">
@@ -287,24 +423,26 @@ export function Navbar({ navItems = [] }: NavbarProps): ReactElement {
                 className="pointer-events-none absolute left-3.5 top-1/2 z-[1] -translate-y-1/2 text-[var(--wms-brand-primary)]"
               />
               <input
-                ref={searchInputRef}
+                ref={menuSearchRef}
                 type="text"
                 inputMode="search"
                 autoComplete="off"
                 value={searchQuery}
-                onChange={handleSearch}
-                onKeyDown={handleSearchKeyDown}
-                onFocus={() => setIsSearchFocus(true)}
+                onChange={handleMenuSearch}
+                onKeyDown={handleMenuSearchKeyDown}
+                onFocus={() => {
+                  voiceTargetRef.current = 'menu';
+                  setIsMenuSearchFocus(true);
+                }}
                 onBlur={() => {
-                  // Desktop: boşsa blur'da kapat; mobilde backdrop kapatır
                   if (typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches) {
                     setTimeout(() => {
-                      if (!searchQuery.trim()) closePremiumSearch();
-                      else setIsSearchFocus(false);
+                      if (!searchQuery.trim()) closeMenuSearch();
+                      else setIsMenuSearchFocus(false);
                     }, 140);
                   }
                 }}
-                placeholder={t('navbar.search_placeholder')}
+                placeholder={t('navbar.menu_search_placeholder')}
                 className="wms-premium-navbar-search__input"
               />
               <div className="absolute right-2 top-1/2 z-[1] flex -translate-y-1/2 items-center gap-0.5">
@@ -313,12 +451,13 @@ export function Navbar({ navItems = [] }: NavbarProps): ReactElement {
                     type="button"
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => {
-                      setIsSearchFocus(true);
+                      voiceTargetRef.current = 'menu';
+                      setIsMenuSearchFocus(true);
                       startListening();
                     }}
                     className={cn(
                       'rounded-xl p-1.5 transition-all duration-300',
-                      isListening
+                      isListening && voiceTargetRef.current === 'menu'
                         ? 'animate-pulse bg-[var(--wms-brand-soft)] text-[var(--wms-brand-primary)]'
                         : 'text-slate-400 hover:bg-[var(--wms-brand-soft)] hover:text-[var(--wms-brand-primary)]',
                     )}
@@ -330,14 +469,14 @@ export function Navbar({ navItems = [] }: NavbarProps): ReactElement {
                 <button
                   type="button"
                   onMouseDown={(e) => e.preventDefault()}
-                  onClick={closePremiumSearch}
+                  onClick={closeMenuSearch}
                   className="rounded-full p-1.5 text-slate-400 transition-colors duration-300 hover:bg-slate-200 hover:text-slate-700 dark:hover:bg-white/20 dark:hover:text-white"
                   aria-label={t('common.close')}
                 >
                   <HugeiconsIcon icon={Cancel01Icon} size={14} strokeWidth={1.75} />
                 </button>
               </div>
-              {renderSearchResults()}
+              {renderMenuSearchResults()}
             </div>
           </div>
         </div>
@@ -345,91 +484,125 @@ export function Navbar({ navItems = [] }: NavbarProps): ReactElement {
     </>
   );
 
-  const renderTerminalSearch = (): ReactElement => (
-    <>
-      <div className="relative hidden w-[min(100%,20rem)] shrink-0 md:block lg:w-80">
-        {isSearchFocus && (
-          <div
-            aria-hidden
-            className="pointer-events-none absolute -inset-1 -z-10 rounded-md bg-[image:var(--wms-brand-gradient-soft)] opacity-80 blur-2xl transition-opacity duration-300"
-          />
-        )}
-        <HugeiconsIcon
-          icon={Search01Icon}
-          size={18}
-          strokeWidth={1.75}
-          className={cn(
-            'pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 transition-colors duration-300',
-            isSearchFocus ? 'text-[var(--wms-brand-primary)]' : 'text-slate-400',
-          )}
-        />
+  const renderCenterSearchField = (): ReactElement => (
+    <div
+      className={cn(
+        'wms-navbar-ops-search',
+        isCenterSearchFocus && 'is-focus',
+        centerQuery && 'has-query',
+      )}
+    >
+      {isPremium ? <div aria-hidden className="wms-navbar-ops-search__glow" /> : null}
+      <div className="wms-navbar-ops-search__shell">
+        <div className="wms-navbar-ops-search__rail" aria-hidden>
+          <span className="wms-navbar-ops-search__mark">
+            <HugeiconsIcon icon={PackageReceive01Icon} size={13} strokeWidth={1.8} />
+            <HugeiconsIcon icon={ClipboardListIcon} size={13} strokeWidth={1.8} />
+            <HugeiconsIcon icon={DeliveryTruck01Icon} size={13} strokeWidth={1.8} />
+          </span>
+          <span className="wms-navbar-ops-search__badge">
+            {t(isPremium ? 'navbar.search_badge_premium' : 'navbar.search_badge_terminal')}
+          </span>
+        </div>
         <input
-          ref={searchInputRef}
+          ref={centerSearchRef}
           type="text"
-          value={searchQuery}
-          onChange={handleSearch}
-          onKeyDown={handleSearchKeyDown}
-          onFocus={() => setIsSearchFocus(true)}
-          onBlur={() => setTimeout(() => setIsSearchFocus(false), 120)}
+          inputMode="search"
+          autoComplete="off"
+          value={centerQuery}
+          onChange={handleCenterSearch}
+          onKeyDown={handleCenterSearchKeyDown}
+          onFocus={() => {
+            voiceTargetRef.current = 'center';
+            setIsCenterSearchFocus(true);
+          }}
+          onBlur={() => {
+            setTimeout(() => setIsCenterSearchFocus(false), 140);
+          }}
           placeholder={t('navbar.search_placeholder')}
-          className={searchInputClassName(isSearchFocus)}
+          className="wms-navbar-ops-search__input"
         />
-        <div className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-1">
+        <div className="wms-navbar-ops-search__scopes" role="group" aria-label={t('navbar.search_scopes')}>
+          {QUICK_SEARCH_SCOPE_CHIPS.map((chip) => {
+            const active = centerScopes.includes(chip.id);
+            return (
+              <button
+                key={chip.id}
+                type="button"
+                aria-pressed={active}
+                title={t(chip.hintKey)}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => handleCenterScopeToggle(chip.id)}
+                className={cn('wms-navbar-ops-search__scope', active && 'is-on')}
+              >
+                {t(chip.labelKey)}
+              </button>
+            );
+          })}
+        </div>
+        <div className="wms-navbar-ops-search__tools">
           {isSupported && (
             <button
               type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                setIsSearchFocus(true);
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                voiceTargetRef.current = 'center';
+                setIsCenterSearchFocus(true);
                 startListening();
               }}
               className={cn(
-                'rounded-xl p-1.5 transition-all duration-300',
-                isListening
-                  ? 'animate-pulse bg-[var(--wms-brand-soft)] text-[var(--wms-brand-primary)]'
-                  : 'text-slate-400 hover:bg-[var(--wms-brand-soft)] hover:text-[var(--wms-brand-primary)]',
+                'wms-navbar-ops-search__tool',
+                isListening && voiceTargetRef.current === 'center' && 'is-live',
               )}
               title={t('voiceSearch.start')}
             >
               <HugeiconsIcon icon={Mic01Icon} size={16} strokeWidth={1.75} />
             </button>
           )}
-          {searchQuery && (
+          {centerQuery ? (
             <button
               type="button"
-              onClick={() => setSearchQuery('')}
-              className="rounded-full p-1 text-slate-400 transition-colors duration-300 hover:bg-slate-200 hover:text-slate-700 dark:hover:bg-white/20 dark:hover:text-white"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => setCenterQuery('')}
+              className="wms-navbar-ops-search__tool"
+              aria-label={t('common.close')}
             >
-              <HugeiconsIcon icon={Cancel01Icon} size={13} strokeWidth={1.75} />
+              <HugeiconsIcon icon={Cancel01Icon} size={14} strokeWidth={1.75} />
             </button>
-          )}
+          ) : null}
         </div>
       </div>
-
-      {isSupported && (
-        <button
-          type="button"
-          onClick={() => startListening()}
-          className={cn(
-            navbarIconButtonClassName,
-            'md:hidden',
-            isListening && 'shadow-[0_0_18px_var(--wms-brand-shadow)]',
-          )}
-          title={t('voiceSearch.start')}
-          aria-label={t('voiceSearch.start')}
-        >
-          <NavbarGradientIcon icon={Mic01Icon} size={22} className={isListening ? 'animate-pulse' : undefined} />
-        </button>
-      )}
-    </>
+      {renderCenterSearchResults()}
+    </div>
   );
+
+  const renderCenterSearch = (): ReactElement => {
+    if (isCenterSearchExpanded) {
+      return (
+        <div
+          className="fixed inset-0 z-[80] flex flex-col px-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-6"
+          role="dialog"
+          aria-modal="true"
+        >
+          <button
+            type="button"
+            className="absolute inset-0 cursor-pointer border-0 bg-[rgb(2_6_14_/_52%)] backdrop-blur-[6px]"
+            aria-label={t('common.close')}
+            onClick={closeCenterSearchOverlay}
+          />
+          <div className="relative z-[1] mx-auto mt-2 w-full max-w-4xl">{renderCenterSearchField()}</div>
+        </div>
+      );
+    }
+    return renderCenterSearchField();
+  };
 
   return (
     <>
       <header className="app-navbar-panel sticky top-0 z-40 border-b border-[var(--wms-app-border)] bg-[color-mix(in_srgb,var(--wms-app-panel)_97%,var(--wms-app-background))] px-3 pt-[max(0.5rem,env(safe-area-inset-top))] shadow-[0_1px_0_rgba(15,23,42,0.04)] transition-colors duration-200 dark:shadow-[0_1px_0_rgba(255,255,255,0.04)] sm:px-6">
         <NavbarIconGradientDefs />
-        <div className="flex h-20 items-center justify-between gap-3 sm:gap-4">
-          <div className="relative flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
+        <div className="relative flex h-20 items-center">
+          <div className="relative z-20 flex min-w-0 shrink-0 items-center gap-2 sm:gap-3">
             {isPremium ? (
               <button
                 type="button"
@@ -457,10 +630,30 @@ export function Navbar({ navItems = [] }: NavbarProps): ReactElement {
               </button>
             )}
 
-            {isPremium ? renderPremiumSearch() : renderTerminalSearch()}
+            {renderMenuSearch()}
           </div>
 
-          <div className="flex shrink-0 items-center gap-2 sm:gap-4">
+          <div className="wms-navbar-center hidden min-w-0 flex-1 items-center justify-center px-3 md:flex">
+            {showKpiStrip ? (
+              <NavbarKpiStrip keys={navbarKpiKeys} />
+            ) : (
+              <>
+                <div className="hidden w-full md:block">{isCenterSearchExpanded ? null : renderCenterSearchField()}</div>
+                <button
+                  type="button"
+                  className={cn(navbarIconButtonClassName, 'md:hidden')}
+                  aria-label={t('navbar.search_placeholder')}
+                  title={t('navbar.search_placeholder')}
+                  onClick={() => setIsCenterSearchExpanded(true)}
+                >
+                  <NavbarGradientIcon icon={Search01Icon} size={22} />
+                </button>
+              </>
+            )}
+          </div>
+          {isCenterSearchExpanded ? renderCenterSearch() : null}
+
+          <div className="relative z-20 ml-auto flex shrink-0 items-center gap-2 sm:gap-4">
             <NotificationIcon />
 
             {user && <div className="hidden h-8 w-px bg-slate-200/80 dark:bg-white/10 sm:block" />}

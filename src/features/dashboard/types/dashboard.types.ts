@@ -48,6 +48,28 @@ export interface DashboardSystemHealth {
   erpIssueCount: number;
 }
 
+export type DashboardQuickSearchKind =
+  | 'stock'
+  | 'warehouse'
+  | 'location'
+  | 'serial'
+  | 'lot'
+  | 'goods-receipt'
+  | 'shipment'
+  | 'transfer';
+
+export interface DashboardQuickSearchHit {
+  kind: DashboardQuickSearchKind;
+  id: string;
+  title: string;
+  subtitle: string;
+  href: string;
+}
+
+export interface DashboardQuickSearchResult {
+  items: DashboardQuickSearchHit[];
+}
+
 export interface DashboardActivityItem {
   id: string;
   kind: DashboardActivityKind;

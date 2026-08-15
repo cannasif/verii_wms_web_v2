@@ -202,12 +202,21 @@ export function PremiumTopNav({ items }: PremiumTopNavProps): ReactElement {
               aria-hidden
             />
           </button>
+        ) : item.href ? (
+          <Link
+            to={item.href}
+            className={cn(titleClassName, 'wms-premium-nav__group-title--link')}
+            onClick={() => setOpenIndex(null)}
+          >
+            {resolveTitle(item)}
+          </Link>
         ) : (
           <p className={titleClassName}>{resolveTitle(item)}</p>
         )}
         {isExpanded ? (
           <div className="wms-premium-nav__group-body">
-            {item.href ? renderLeaf(item, depth) : null}
+            {/* Group href is the column title link; avoid duplicating it as a leaf. */}
+            {item.href && isCollapsible ? renderLeaf(item, depth) : null}
             {item.children?.map((child, childIndex) =>
               child.children?.length
                 ? renderGroupContent(child, depth + 1, `${groupKey}-${childIndex}`)

@@ -365,7 +365,35 @@
   },
   "navbar": {
     "VERII WMS": "VERII WMS",
-    "search_placeholder": "Recherche rapide..."
+    "search_placeholder": "Rechercher stock, entrepôt, emplacement, série ou document...",
+    "search_badge_terminal": "OPS",
+    "search_badge_premium": "RECH.",
+    "search_chip_document": "Document",
+    "search_chip_ops": "Expédition",
+    "search_scopes": "Champs de recherche",
+    "search_scope_hints": {
+      "stock": "Code, nom ou code fabricant du stock.",
+      "warehouse": "Code ou nom d’entrepôt. Un chiffre suffit (ex. 3).",
+      "location": "Code, nom ou code-barres d’emplacement.",
+      "serial": "Numéro de série.",
+      "lot": "Numéro de lot.",
+      "document": "N° de document de réception ou de transfert.",
+      "shipment": "N° de document d’expédition."
+    },
+    "menu_search_placeholder": "Rechercher dans le menu...",
+    "search_shortcut": "Ctrl+K",
+    "search_min_chars": "Saisissez au moins 2 caractères",
+    "search_searching": "Recherche du stock et des documents...",
+    "search_kinds": {
+      "stock": "Stock",
+      "warehouse": "Entrepôt",
+      "location": "Emplacement",
+      "serial": "Série",
+      "lot": "Lot",
+      "goods-receipt": "Réception",
+      "shipment": "Expédition",
+      "transfer": "Transfert"
+    }
   },
   "sidebar": {
     "warehouseOperations": "Opérations dépôt (magasin)",
@@ -596,7 +624,42 @@
     "packingSettings": "Paramètres d'emballage",
     "projectSettings": "Paramètres généraux du projet",
     "auditLogs": "Journaux d'audit",
-    "processParameters": "Paramètres de processus"
+    "processParameters": "Paramètres de processus",
+    "kkdPolicy": "Politique de processus EPI"
+  },
+  "processParametersHub": {
+    "eyebrow": "Paramètres",
+    "description": "Ouvrez tous les paramètres de processus depuis un hub unique. Les raccourcis du mega-menu restent inchangés.",
+    "cardFallback": "Afficher et modifier les paramètres de processus.",
+    "phases": {
+      "process": {
+        "title": "Processus opérationnels",
+        "description": "Gérez les politiques de processus de la réception à l'expédition."
+      },
+      "definitions": {
+        "title": "Définitions et politiques",
+        "description": "Ouvrez les séries de documents, codes-barres et politiques EPI au même endroit."
+      }
+    },
+    "callout": {
+      "title": "Accès rapide",
+      "text": "Le titre Paramètres de processus et ses sous-éléments du menu Paramètres ouvrent les mêmes pages ; cet écran n'est qu'un point d'entrée commun."
+    },
+    "cards": {
+      "goodsReceipt": "Gérez les politiques de tolérance, d'approbation et de transfert ERP pour la réception.",
+      "inbound": "Configurez les règles et valeurs par défaut d'entrée d'entrepôt.",
+      "outbound": "Configurez les règles et valeurs par défaut de sortie d'entrepôt.",
+      "transfer": "Gérez les paramètres de réservation et de politique de transfert.",
+      "subcontracting": "Configurez les paramètres de sous-traitance.",
+      "productionTransfer": "Gérez les tolérances et critères de transfert de production.",
+      "shipping": "Modifiez les politiques de réservation, d'emballage et d'expédition.",
+      "quality": "Gérez le contrôle qualité, la quarantaine et les paramètres qualité.",
+      "packing": "Configurez les politiques de poste d'emballage, SSCC et tolérance.",
+      "documentSeries": "Gérez les séries de documents par type d'opération.",
+      "barcodeDesigner": "Créez et imprimez des modèles d'étiquettes code-barres.",
+      "barcodePolicy": "Gérez les politiques d'unicité des codes-barres stock, série, lot et document.",
+      "kkdPolicy": "Configurez les politiques de processus EPI et d'obligation de commande."
+    }
   },
   "welcome": {
     "title": "Bienvenue",
@@ -627,6 +690,7 @@
     "shipmentNumber": "Expédition #{{number}}",
     "inventoryUpdate": "Mise à jour de l'inventaire",
     "hoursAgo": "il y a {{hours}} heures",
+    "minutesAgo": "il y a {{minutes}} min",
     "user": "Utilisateur",
     "terminal": {
       "eyebrow": "WMS / CENTRE DE COMMANDE",
@@ -672,6 +736,7 @@
       "goodMorning": "Bonjour",
       "goodAfternoon": "Bon après-midi",
       "goodEvening": "Bonsoir",
+      "goodNight": "Bonne nuit",
       "systemClock": "Heure système",
       "operator": "Opérateur",
       "branch": "Agence",
@@ -2301,6 +2366,8 @@
     "title": "Profil",
     "settingsProfileInfo": "Informations du profil",
     "settingsProfileHint": "Gérez vos informations de profil et de sécurité",
+    "settingsAppSettings": "Paramètres de l’application",
+    "settingsAppSettingsHint": "Thème personnalisé, barre d’état et arrière-plan",
     "settingsLanguage": "Langue",
     "settingsAppearance": "Mode d’apparence",
     "settingsAppearanceDisabledHint": "Le mode clair/sombre est indisponible lorsqu’un thème personnalisé est actif",
@@ -2330,6 +2397,22 @@
     "backgroundMotionBarcodeScanHint": "Lecture d’étiquette au terminal portable",
     "backgroundMotionReduced": "Votre appareil préfère réduire les mouvements. Le choix est enregistré, mais l’animation décorative est en pause.",
     "backgroundMotionSaveError": "La préférence d’arrière-plan n’a pas pu être enregistrée.",
+    "settingsNavbarCenter": "Barre d’état supérieure",
+    "settingsNavbarCenterHint": "Afficher la recherche ou des KPI au centre. Les chiffres suivent votre périmètre d’entrepôt.",
+    "navbarModeSearch": "Barre de recherche",
+    "navbarModeSearchHint": "Rechercher opérations, documents et stock",
+    "navbarModeKpi": "Cartes KPI",
+    "navbarModeKpiHint": "Choisissez jusqu’à 4 cartes",
+    "navbarKpi": {
+      "myTasks": "Assigné à moi",
+      "qualityQueue": "File CQ",
+      "pendingApproval": "Approbation en attente",
+      "erpIssues": "Alerte ERP",
+      "openOperations": "Opérations ouvertes",
+      "goodsReceiptToday": "Réceptions du jour",
+      "shipmentToday": "Expéditions du jour",
+      "transferToday": "Transferts du jour"
+    },
     "organizationBadge": "V3RII.CO",
     "profileSettings": "Paramètres du profil",
     "branchLabel": "Agence",

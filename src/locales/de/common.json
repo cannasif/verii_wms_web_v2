@@ -377,7 +377,35 @@
   },
   "navbar": {
     "VERII WMS": "VERII WMS",
-    "search_placeholder": "Schnellsuche..."
+    "search_placeholder": "Bestand, Lager, Platz, Serie oder Beleg suchen...",
+    "search_badge_terminal": "OPS",
+    "search_badge_premium": "SUCHE",
+    "search_chip_document": "Beleg",
+    "search_chip_ops": "Versand",
+    "search_scopes": "Suchfelder",
+    "search_scope_hints": {
+      "stock": "Artikelnummer, Name oder Herstellercode.",
+      "warehouse": "Lagercode oder -name. Auch eine Ziffer reicht (z. B. 3).",
+      "location": "Platzcode, Name oder Barcode.",
+      "serial": "Seriennummer.",
+      "lot": "Losnummer.",
+      "document": "Wareneingangs- und Umlagerungsbelegnummer.",
+      "shipment": "Versandbelegnummer."
+    },
+    "menu_search_placeholder": "Menüs durchsuchen...",
+    "search_shortcut": "Ctrl+K",
+    "search_min_chars": "Mindestens 2 Zeichen eingeben",
+    "search_searching": "Bestand und Belege werden gesucht...",
+    "search_kinds": {
+      "stock": "Bestand",
+      "warehouse": "Lager",
+      "location": "Platz",
+      "serial": "Serie",
+      "lot": "Los",
+      "goods-receipt": "Wareneingang",
+      "shipment": "Versand",
+      "transfer": "Umlagerung"
+    }
   },
   "sidebar": {
     "warehouseOperations": "Lager(Ambar)-Operationen",
@@ -629,7 +657,42 @@
     "packingSettings": "Verpackungseinstellungen",
     "projectSettings": "Allgemeine Projekteinstellungen",
     "auditLogs": "Prüfprotokolle",
-    "processParameters": "Prozessparameter"
+    "processParameters": "Prozessparameter",
+    "kkdPolicy": "PSA-Prozessrichtlinie"
+  },
+  "processParametersHub": {
+    "eyebrow": "Parameter",
+    "description": "Öffnen Sie alle Prozesseinstellungen über einen gemeinsamen Hub. Die Mega-Menü-Verknüpfungen bleiben unverändert.",
+    "cardFallback": "Prozessparameter anzeigen und bearbeiten.",
+    "phases": {
+      "process": {
+        "title": "Betriebsprozesse",
+        "description": "Verwalten Sie Prozessrichtlinien vom Wareneingang bis zum Versand."
+      },
+      "definitions": {
+        "title": "Definitionen und Richtlinien",
+        "description": "Öffnen Sie Belegserien-, Barcode- und PSA-Richtlinien an einem Ort."
+      }
+    },
+    "callout": {
+      "title": "Schnellzugriff",
+      "text": "Die Überschrift Prozessparameter und ihre Unterpunkte im Parametermenü öffnen dieselben Seiten; dieser Bildschirm ist nur ein gemeinsamer Einstieg."
+    },
+    "cards": {
+      "goodsReceipt": "Verwalten Sie Toleranz-, Freigabe- und ERP-Übergaberichtlinien für den Wareneingang.",
+      "inbound": "Konfigurieren Sie Lagerzugangsregeln und Standardwerte.",
+      "outbound": "Konfigurieren Sie Lagerabgangsregeln und Standardwerte.",
+      "transfer": "Verwalten Sie Reservierungs- und Richtlinieneinstellungen für Lagertransfers.",
+      "subcontracting": "Konfigurieren Sie Prozessparameter für Lohnfertigung.",
+      "productionTransfer": "Verwalten Sie Toleranz- und Eignungseinstellungen für Produktionstransfers.",
+      "shipping": "Bearbeiten Sie Versandreservierungs-, Verpackungs- und Prozessrichtlinien.",
+      "quality": "Verwalten Sie Qualitätskontrolle, Quarantäne und allgemeine Qualitätsparameter.",
+      "packing": "Konfigurieren Sie Packplatz-, SSCC- und Toleranzrichtlinien.",
+      "documentSeries": "Verwalten Sie belegartenbezogene Nummernkreise.",
+      "barcodeDesigner": "Erstellen und drucken Sie Barcode-Etikettendesigns.",
+      "barcodePolicy": "Verwalten Sie Eindeutigkeitsrichtlinien für Bestand-, Serien-, Los- und Belegbarcodes.",
+      "kkdPolicy": "Konfigurieren Sie PSA-Prozess- und Bestellpflicht-Richtlinien."
+    }
   },
   "erpReference": {
     "badge": "ERP-Spiegel",
@@ -854,6 +917,7 @@
     "shipmentNumber": "Versand #{{number}}",
     "inventoryUpdate": "Bestands-Update",
     "hoursAgo": "Vor {{hours}} Stunden",
+    "minutesAgo": "Vor {{minutes}} Min.",
     "user": "Benutzer",
     "terminal": {
       "eyebrow": "WMS / KOMMANDOZENTRALE",
@@ -899,6 +963,7 @@
       "goodMorning": "Guten Morgen",
       "goodAfternoon": "Guten Tag",
       "goodEvening": "Guten Abend",
+      "goodNight": "Gute Nacht",
       "systemClock": "Systemzeit",
       "operator": "Bediener",
       "branch": "Filiale",
@@ -3141,6 +3206,8 @@
     "title": "Profil",
     "settingsProfileInfo": "Profilinformationen",
     "settingsProfileHint": "Profil- und Sicherheitsinformationen verwalten",
+    "settingsAppSettings": "App-Einstellungen",
+    "settingsAppSettingsHint": "Sonderthema, Statusleiste und Hintergrund",
     "settingsLanguage": "Sprache",
     "settingsAppearance": "Erscheinungsbild",
     "settingsAppearanceDisabledHint": "Hell/Dunkel-Modus ist bei aktivem Sonderthema nicht verfügbar",
@@ -3170,6 +3237,22 @@
     "backgroundMotionBarcodeScanHint": "Handscanner-Etikettenlesefluss",
     "backgroundMotionReduced": "Ihr Gerät bevorzugt reduzierte Bewegung. Die Auswahl ist gespeichert, dekorative Bewegung bleibt jedoch angehalten.",
     "backgroundMotionSaveError": "Die Hintergrundeinstellung konnte nicht gespeichert werden.",
+    "settingsNavbarCenter": "Obere Statusleiste",
+    "settingsNavbarCenterHint": "Suchleiste oder KPI-Karten in der Mitte. Zahlen folgen Ihrem Lagerumfang.",
+    "navbarModeSearch": "Suchleiste",
+    "navbarModeSearchHint": "Vorgänge, Belege und Bestand suchen",
+    "navbarModeKpi": "KPI-Karten",
+    "navbarModeKpiHint": "Bis zu 4 Karten wählen",
+    "navbarKpi": {
+      "myTasks": "Mir zugewiesen",
+      "qualityQueue": "QK-Warteschlange",
+      "pendingApproval": "Freigabe ausstehend",
+      "erpIssues": "ERP-Hinweis",
+      "openOperations": "Offene Vorgänge",
+      "goodsReceiptToday": "Wareneingang heute",
+      "shipmentToday": "Versand heute",
+      "transferToday": "Umlagerung heute"
+    },
     "organizationBadge": "V3RII.CO",
     "profileSettings": "Profileinstellungen",
     "branchLabel": "Filiale",

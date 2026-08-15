@@ -365,7 +365,35 @@
   },
   "navbar": {
     "VERII WMS": "VERII WMS",
-    "search_placeholder": "Búsqueda rápida..."
+    "search_placeholder": "Buscar stock, almacén, ubicación, serie o documento...",
+    "search_badge_terminal": "OPS",
+    "search_badge_premium": "BUSCAR",
+    "search_chip_document": "Documento",
+    "search_chip_ops": "Envío",
+    "search_scopes": "Campos de búsqueda",
+    "search_scope_hints": {
+      "stock": "Código, nombre o código de fabricante.",
+      "warehouse": "Código o nombre de almacén. Basta un dígito (p. ej. 3).",
+      "location": "Código, nombre o código de barras de ubicación.",
+      "serial": "Número de serie.",
+      "lot": "Número de lote.",
+      "document": "N.º de documento de recepción o traslado.",
+      "shipment": "N.º de documento de envío."
+    },
+    "menu_search_placeholder": "Buscar en el menú...",
+    "search_shortcut": "Ctrl+K",
+    "search_min_chars": "Escriba al menos 2 caracteres",
+    "search_searching": "Buscando stock y documentos...",
+    "search_kinds": {
+      "stock": "Stock",
+      "warehouse": "Almacén",
+      "location": "Ubicación",
+      "serial": "Serie",
+      "lot": "Lote",
+      "goods-receipt": "Recepción",
+      "shipment": "Envío",
+      "transfer": "Traslado"
+    }
   },
   "sidebar": {
     "warehouseOperations": "Operaciones de almacén",
@@ -596,7 +624,42 @@
     "packingSettings": "Configuración de embalaje",
     "projectSettings": "Configuración general del proyecto",
     "auditLogs": "Registros de auditoría",
-    "processParameters": "Parámetros de proceso"
+    "processParameters": "Parámetros de proceso",
+    "kkdPolicy": "Política de proceso EPI"
+  },
+  "processParametersHub": {
+    "eyebrow": "Parámetros",
+    "description": "Abra todos los ajustes de proceso desde un hub único. Los accesos del mega menú siguen igual.",
+    "cardFallback": "Ver y editar parámetros de proceso.",
+    "phases": {
+      "process": {
+        "title": "Procesos operativos",
+        "description": "Gestione políticas de proceso desde recepción hasta envío."
+      },
+      "definitions": {
+        "title": "Definiciones y políticas",
+        "description": "Abra series de documentos, códigos de barras y políticas EPI en un solo lugar."
+      }
+    },
+    "callout": {
+      "title": "Acceso rápido",
+      "text": "El encabezado Parámetros de proceso y sus elementos del menú Parámetros abren las mismas páginas; esta pantalla es solo un punto de partida común."
+    },
+    "cards": {
+      "goodsReceipt": "Gestione políticas de tolerancia, aprobación y transferencia ERP de recepción.",
+      "inbound": "Configure reglas y valores predeterminados de entrada de almacén.",
+      "outbound": "Configure reglas y valores predeterminados de salida de almacén.",
+      "transfer": "Gestione reserva y políticas de transferencia entre almacenes.",
+      "subcontracting": "Configure parámetros del proceso de subcontratación.",
+      "productionTransfer": "Gestione tolerancia y elegibilidad de transferencia a producción.",
+      "shipping": "Edite políticas de reserva, embalaje y envío.",
+      "quality": "Gestione control de calidad, cuarentena y parámetros generales.",
+      "packing": "Configure políticas de estación de embalaje, SSCC y tolerancia.",
+      "documentSeries": "Gestione series documentales por tipo de operación.",
+      "barcodeDesigner": "Cree e imprima diseños de etiquetas de código de barras.",
+      "barcodePolicy": "Gestione políticas de unicidad de códigos de barras de stock, serie, lote y documento.",
+      "kkdPolicy": "Configure políticas de proceso EPI y de pedido obligatorio."
+    }
   },
   "welcome": {
     "title": "Bienvenido",
@@ -627,6 +690,7 @@
     "shipmentNumber": "Envío #{{number}}",
     "inventoryUpdate": "Actualización de Inventario",
     "hoursAgo": "hace {{hours}} horas",
+    "minutesAgo": "hace {{minutes}} min",
     "user": "Usuario",
     "terminal": {
       "eyebrow": "WMS / CENTRO DE MANDO",
@@ -672,6 +736,7 @@
       "goodMorning": "Buenos días",
       "goodAfternoon": "Buenas tardes",
       "goodEvening": "Buenas noches",
+      "goodNight": "Buenas noches",
       "systemClock": "Hora del sistema",
       "operator": "Operador",
       "branch": "Sucursal",
@@ -2301,6 +2366,8 @@
     "title": "Perfil",
     "settingsProfileInfo": "Información del perfil",
     "settingsProfileHint": "Gestiona la información de tu perfil y seguridad",
+    "settingsAppSettings": "Ajustes de la aplicación",
+    "settingsAppSettingsHint": "Tema personalizado, barra de estado y fondo",
     "settingsLanguage": "Idioma",
     "settingsAppearance": "Modo de apariencia",
     "settingsAppearanceDisabledHint": "El modo claro/oscuro no está disponible mientras haya un tema personalizado activo",
@@ -2330,6 +2397,22 @@
     "backgroundMotionBarcodeScanHint": "Lectura de etiqueta con terminal portátil",
     "backgroundMotionReduced": "Su dispositivo prefiere movimiento reducido. La selección se guardó, pero la animación decorativa está pausada.",
     "backgroundMotionSaveError": "No se pudo guardar la preferencia de fondo.",
+    "settingsNavbarCenter": "Barra de estado superior",
+    "settingsNavbarCenterHint": "Muestre búsqueda o KPI en el centro. Los números siguen su alcance de almacén.",
+    "navbarModeSearch": "Barra de búsqueda",
+    "navbarModeSearchHint": "Buscar operaciones, documentos y stock",
+    "navbarModeKpi": "Tarjetas KPI",
+    "navbarModeKpiHint": "Elija hasta 4 tarjetas",
+    "navbarKpi": {
+      "myTasks": "Asignado a mí",
+      "qualityQueue": "Cola de calidad",
+      "pendingApproval": "Pendiente de aprobación",
+      "erpIssues": "Alerta ERP",
+      "openOperations": "Operaciones abiertas",
+      "goodsReceiptToday": "Entradas de hoy",
+      "shipmentToday": "Envíos de hoy",
+      "transferToday": "Transferencias de hoy"
+    },
     "organizationBadge": "V3RII.CO",
     "profileSettings": "Ajustes del perfil",
     "branchLabel": "Sucursal",

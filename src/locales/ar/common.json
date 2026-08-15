@@ -310,7 +310,35 @@
   },
   "navbar": {
     "VERII WMS": "VERII WMS",
-    "search_placeholder": "بحث سريع..."
+    "search_placeholder": "ابحث في المخزون والمستودع والموقع والرقم التسلسلي أو المستند...",
+    "search_badge_terminal": "OPS",
+    "search_badge_premium": "بحث",
+    "search_chip_document": "مستند",
+    "search_chip_ops": "شحن",
+    "search_scopes": "حقول البحث",
+    "search_scope_hints": {
+      "stock": "رمز المخزون أو الاسم أو رمز الشركة المصنعة.",
+      "warehouse": "رمز المستودع أو اسمه. يكفي رقم واحد (مثل 3).",
+      "location": "رمز الموقع أو اسمه أو الباركود.",
+      "serial": "الرقم التسلسلي.",
+      "lot": "رقم الدفعة.",
+      "document": "رقم مستند الاستلام أو التحويل.",
+      "shipment": "رقم مستند الشحن."
+    },
+    "menu_search_placeholder": "ابحث في القائمة...",
+    "search_shortcut": "Ctrl+K",
+    "search_min_chars": "أدخل حرفين على الأقل",
+    "search_searching": "جاري البحث في المخزون والمستندات...",
+    "search_kinds": {
+      "stock": "مخزون",
+      "warehouse": "مستودع",
+      "location": "موقع",
+      "serial": "رقم تسلسلي",
+      "lot": "دفعة",
+      "goods-receipt": "استلام بضاعة",
+      "shipment": "شحن",
+      "transfer": "تحويل"
+    }
   },
   "sidebar": {
     "dashboard": "لوحة المؤشرات",
@@ -541,7 +569,42 @@
     "packingSettings": "إعدادات التعبئة",
     "projectSettings": "إعدادات المشروع العامة",
     "auditLogs": "سجلات التدقيق",
-    "processParameters": "معاملات العمليات"
+    "processParameters": "معاملات العمليات",
+    "kkdPolicy": "سياسة عملية معدات الوقاية"
+  },
+  "processParametersHub": {
+    "eyebrow": "المعاملات",
+    "description": "افتح جميع إعدادات العمليات من مركز واحد. اختصارات القائمة تبقى كما هي.",
+    "cardFallback": "عرض وتعديل معاملات العمليات.",
+    "phases": {
+      "process": {
+        "title": "العمليات التشغيلية",
+        "description": "أدر سياسات العمليات من الاستلام حتى الشحن."
+      },
+      "definitions": {
+        "title": "التعريفات والسياسات",
+        "description": "افتح سلاسل المستندات والباركود وسياسات معدات الوقاية من مكان واحد."
+      }
+    },
+    "callout": {
+      "title": "وصول سريع",
+      "text": "عنوان معاملات العمليات وعناصره الفرعية في قائمة المعاملات تفتح الصفحات نفسها؛ هذه الشاشة نقطة بداية مشتركة فقط."
+    },
+    "cards": {
+      "goodsReceipt": "أدر سياسات التسامح والموافقة ونقل ERP لاستلام البضائع.",
+      "inbound": "اضبط قواعد وقيم إدخال المستودع الافتراضية.",
+      "outbound": "اضبط قواعد وقيم خروج المستودع الافتراضية.",
+      "transfer": "أدر إعدادات الحجز والسياسة لنقل المستودعات.",
+      "subcontracting": "اضبط معاملات عملية التصنيع الخارجي.",
+      "productionTransfer": "أدر إعدادات التسامح والأهلية لنقل الإنتاج.",
+      "shipping": "عدّل سياسات حجز الشحن والتعبئة والعملية.",
+      "quality": "أدر مراقبة الجودة والحجر والمعاملات العامة.",
+      "packing": "اضبط سياسات محطة التعبئة وSSCC والتسامح.",
+      "documentSeries": "أدر سلاسل المستندات حسب نوع العملية.",
+      "barcodeDesigner": "أنشئ واطبع تصاميم ملصقات الباركود.",
+      "barcodePolicy": "أدر سياسات تفرد باركود المخزون والسلسلة والدفعة والمستند.",
+      "kkdPolicy": "اضبط سياسات عملية معدات الوقاية وإلزامية الطلب."
+    }
   },
   "welcome": {
     "title": "مرحباً",
@@ -572,6 +635,7 @@
     "shipmentNumber": "شحنة #{{number}}",
     "inventoryUpdate": "تحديث المخزون",
     "hoursAgo": "منذ {{hours}} ساعة",
+    "minutesAgo": "منذ {{minutes}} دقيقة",
     "user": "مستخدم",
     "commandCenter": {
       "eyebrow": "مركز عمليات المستودع",
@@ -672,6 +736,7 @@
       "goodMorning": "صباح الخير",
       "goodAfternoon": "مساء الخير",
       "goodEvening": "مساء النور",
+      "goodNight": "تصبح على خير",
       "systemClock": "وقت النظام",
       "operator": "المشغّل",
       "branch": "الفرع",
@@ -2301,6 +2366,8 @@
     "title": "الملف الشخصي",
     "settingsProfileInfo": "معلومات الملف الشخصي",
     "settingsProfileHint": "إدارة معلومات الملف الشخصي والأمان",
+    "settingsAppSettings": "إعدادات التطبيق",
+    "settingsAppSettingsHint": "السمة المخصصة وشريط الحالة والخلفية",
     "settingsLanguage": "اللغة",
     "settingsAppearance": "نمط المظهر",
     "settingsAppearanceDisabledHint": "لا يتوفر الوضع الفاتح/الداكن أثناء تفعيل سمة مخصصة",
@@ -2330,6 +2397,22 @@
     "backgroundMotionBarcodeScanHint": "قراءة الملصق بالجهاز المحمول",
     "backgroundMotionReduced": "يفضّل جهازك تقليل الحركة. تم حفظ الاختيار، لكن الحركة الزخرفية متوقفة.",
     "backgroundMotionSaveError": "تعذر حفظ تفضيل الخلفية.",
+    "settingsNavbarCenter": "شريط الحالة العلوي",
+    "settingsNavbarCenterHint": "اعرض البحث أو بطاقات المؤشرات في الوسط. الأرقام تتبع نطاق مستودعك.",
+    "navbarModeSearch": "شريط البحث",
+    "navbarModeSearchHint": "ابحث عن العمليات والمستندات والمخزون",
+    "navbarModeKpi": "بطاقات المؤشرات",
+    "navbarModeKpiHint": "اختر حتى 4 بطاقات",
+    "navbarKpi": {
+      "myTasks": "المسند إلي",
+      "qualityQueue": "طابور الجودة",
+      "pendingApproval": "بانتظار الموافقة",
+      "erpIssues": "تنبيه ERP",
+      "openOperations": "عمليات مفتوحة",
+      "goodsReceiptToday": "استلام اليوم",
+      "shipmentToday": "شحن اليوم",
+      "transferToday": "تحويل اليوم"
+    },
     "organizationBadge": "V3RII.CO",
     "profileSettings": "إعدادات الملف الشخصي",
     "branchLabel": "الفرع",
