@@ -83,6 +83,7 @@ interface PagedLookupDialogProps<T> {
   onComboboxTextChange?: (text: string) => void;
   /** Combobox'ta Enter: listeden seçilemezse yazılan metni parent'a teslim eder. */
   onCommitText?: (text: string) => unknown | PromiseLike<unknown>;
+  onTriggerKeyDown?: (event: KeyboardEvent<HTMLInputElement>) => void;
 }
 
 export function PagedLookupDialog<T>({
@@ -111,6 +112,7 @@ export function PagedLookupDialog<T>({
   onSelect,
   onComboboxTextChange,
   onCommitText,
+  onTriggerKeyDown,
 }: PagedLookupDialogProps<T>): ReactElement {
   const { t } = useTranslation(['common', 'shared']);
   const [searchInput, setSearchInput] = useState('');
@@ -394,6 +396,8 @@ export function PagedLookupDialog<T>({
   };
 
   const handleInputKeyDown = (event: KeyboardEvent<HTMLInputElement>): void => {
+    onTriggerKeyDown?.(event);
+    if (event.defaultPrevented) return;
     if (disabled || open) return;
 
     if (event.key === 'Escape') {
@@ -676,6 +680,7 @@ export function PagedLookupDialog<T>({
                       key={key}
                       id={`paged-lookup-option-${key}`}
                       type="button"
+                      tabIndex={-1}
                       role="option"
                       title={label}
                       aria-label={label}

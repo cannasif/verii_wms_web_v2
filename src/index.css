@@ -30091,7 +30091,7 @@ html.skin-premium .wms-ops-form .wms-ops-receipt-selected-lines__stat {
   color: color-mix(in oklab, var(--wms-ops-accent) 88%, var(--wms-app-text));
 }
 
-.wms-ops-form .wms-ops-receipt-selected-lines__select-all:hover:not(:disabled) {
+.wms-ops-form .wms-ops-receipt-selected-lines__select-all:hover:not(:disabled):not(.wms-ops-receipt-selected-lines__select-all--disabled) {
   border-color: color-mix(in oklab, var(--wms-ops-accent) 48%, transparent);
   background: color-mix(in oklab, var(--wms-ops-accent) 16%, transparent);
 }

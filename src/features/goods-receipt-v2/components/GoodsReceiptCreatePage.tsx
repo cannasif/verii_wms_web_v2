@@ -334,6 +334,41 @@ function putawayLocationPatch(location: {
   };
 }
 
+function focusReceiptTabTarget(element: HTMLElement | null): boolean {
+  if (!element) return false;
+  element.focus();
+  if (element instanceof HTMLInputElement) element.select();
+  return true;
+}
+
+function moveReceiptLineTab(
+  row: HTMLElement,
+  from: "qty" | "location",
+  shift: boolean,
+): boolean {
+  const list = row.closest(".wms-ops-receipt-lines-list");
+  if (!list) return false;
+  const rows = [...list.querySelectorAll<HTMLElement>(".wms-ops-receipt-entry-row")].sort(
+    (left, right) => left.getBoundingClientRect().top - right.getBoundingClientRect().top,
+  );
+  const index = rows.indexOf(row);
+  if (index < 0) return false;
+  const qtyOf = (el: HTMLElement) =>
+    el.querySelector<HTMLInputElement>('[data-wms-receipt-tab="qty"]');
+  const locOf = (el: HTMLElement) =>
+    el.querySelector<HTMLInputElement>(
+      '[data-wms-receipt-tab-field="location"] input:not([disabled])',
+    );
+  if (!shift && from === "qty") return focusReceiptTabTarget(locOf(row));
+  if (!shift && from === "location") {
+    const next = rows[index + 1];
+    return next ? focusReceiptTabTarget(qtyOf(next)) : false;
+  }
+  if (shift && from === "location") return focusReceiptTabTarget(qtyOf(row));
+  const previous = rows[index - 1];
+  return previous ? focusReceiptTabTarget(locOf(previous)) : false;
+}
+
 export function GoodsReceiptCreatePage({
   direct = false,
   embedded = false,
@@ -2760,27 +2795,33 @@ export function GoodsReceiptCreatePage({
                       {t("createFlow.selectedLines.description")}
                     </p>
                     <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
-                      <button
-                        type="button"
-                        onClick={toggleAllLinesConfirmed}
-                        disabled={confirmableLineKeys.length === 0}
+                      <div
                         className={cn(
                           "wms-ops-receipt-selected-lines__select-all inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold transition",
                           allLinesConfirmed && "wms-ops-receipt-selected-lines__select-all--active",
-                          confirmableLineKeys.length === 0 && "cursor-not-allowed opacity-45",
+                          confirmableLineKeys.length === 0
+                            ? "wms-ops-receipt-selected-lines__select-all--disabled cursor-not-allowed opacity-45"
+                            : "cursor-pointer",
                         )}
+                        onClick={() => {
+                          if (confirmableLineKeys.length === 0) return;
+                          toggleAllLinesConfirmed();
+                        }}
                       >
-                        <span className="pointer-events-none" aria-hidden>
-                          <OpsSkinCheckbox
-                            checked={allLinesConfirmed}
-                            onCheckedChange={() => undefined}
-                            disabled={confirmableLineKeys.length === 0}
-                          />
-                        </span>
+                        <OpsSkinCheckbox
+                          checked={allLinesConfirmed}
+                          onCheckedChange={() => toggleAllLinesConfirmed()}
+                          disabled={confirmableLineKeys.length === 0}
+                          aria-label={
+                            allLinesConfirmed
+                              ? t("createFlow.selectedLines.clearSelection")
+                              : t("createFlow.selectedLines.selectAll")
+                          }
+                        />
                         {allLinesConfirmed
                           ? t("createFlow.selectedLines.clearSelection")
                           : t("createFlow.selectedLines.selectAll")}
-                      </button>
+                      </div>
                     </div>
                   </header>
 
@@ -4075,6 +4116,7 @@ function ReceiptEntryRow({
                 <OpsFieldShell>
                   <div className="wms-ops-qty-stepper relative">
                     <input
+                      data-wms-receipt-tab="qty"
                       className={cn(
                         OPS_FIELD_CLASS,
                         "h-7 w-full pr-9 text-right font-mono text-sm",
@@ -4087,6 +4129,17 @@ function ReceiptEntryRow({
                       }}
                       onClick={(event) => {
                         event.currentTarget.select();
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key !== "Tab") return;
+                        const row = event.currentTarget.closest(
+                          ".wms-ops-receipt-entry-row",
+                        );
+                        if (!(row instanceof HTMLElement)) return;
+                        event.currentTarget.blur();
+                        if (moveReceiptLineTab(row, "qty", event.shiftKey)) {
+                          event.preventDefault();
+                        }
                       }}
                       onBlur={() => {
                         const parsed = parseLocalizedNumber(quantityText);
@@ -4133,6 +4186,7 @@ function ReceiptEntryRow({
                     <div className="wms-ops-qty-stepper__controls absolute inset-y-0 right-0 flex flex-col justify-center pr-0.5">
                       <button
                         type="button"
+                        tabIndex={-1}
                         className="wms-ops-qty-stepper__btn"
                         aria-label={t("createFlow.entryRow.increaseQty")}
                         onClick={() => {
@@ -4163,6 +4217,7 @@ function ReceiptEntryRow({
                       </button>
                       <button
                         type="button"
+                        tabIndex={-1}
                         className="wms-ops-qty-stepper__btn"
                         aria-label={t("createFlow.entryRow.decreaseQty")}
                         onClick={() => {
@@ -4210,10 +4265,11 @@ function ReceiptEntryRow({
                   <TooltipProvider delayDuration={180}>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <span className="block w-full min-w-0">
+                        <span tabIndex={-1} className="block w-full min-w-0">
                           <OpsFieldShell>
                             <button
                               type="button"
+                              tabIndex={-1}
                               disabled={!serialReady}
                               title={
                                 serialReady
@@ -4314,6 +4370,7 @@ function ReceiptEntryRow({
                 data-wms-error-keys="hedef depo|kabul rafı|target warehouse|receiving shelf"
               >
                 <label className="wms-ops-entry-label">{t("createFlow.entryRow.locationCode")}</label>
+                <div data-wms-receipt-tab-field="location">
                 <PagedLookupDialog<LocationOption>
                   variant="ops"
                   triggerMode="combobox"
@@ -4335,6 +4392,16 @@ function ReceiptEntryRow({
                   emptyText={t("createFlow.entryRow.receivingEmpty")}
                   disabled={!line.targetWarehouseId}
                   triggerClassName="h-7 truncate"
+                  onTriggerKeyDown={(event) => {
+                    if (event.key !== "Tab") return;
+                    const row = event.currentTarget.closest(
+                      ".wms-ops-receipt-entry-row",
+                    );
+                    if (!(row instanceof HTMLElement)) return;
+                    if (moveReceiptLineTab(row, "location", event.shiftKey)) {
+                      event.preventDefault();
+                    }
+                  }}
                   queryKey={[
                     "gr-line-location-lookup",
                     allowAnyActiveLocation ? "all-active" : "receiving",
@@ -4377,6 +4444,7 @@ function ReceiptEntryRow({
                     });
                   }}
                 />
+                </div>
               </div>
             </div>
           </div>
@@ -4390,10 +4458,12 @@ function ReceiptEntryRow({
               stockId={line.stockId}
               stockName={line.stockName}
               canUpload={canAddStockImage}
+              tabIndex={-1}
               onOpen={() => setStockImageDialogOpen(true)}
             />
             <OpsSkinCheckbox
               checked={confirmed}
+              tabIndex={-1}
               onCheckedChange={onConfirmedChange}
               aria-label={t("createFlow.entryRow.confirmLine", {
                 label: line.stockCode ?? line.siparisNo,
@@ -4448,6 +4518,7 @@ function ReceiptEntryRow({
                     <button
                       key={item.id}
                       type="button"
+                      tabIndex={-1}
                       onClick={() => {
                         if (
                           item.warehouseId != null &&
@@ -4520,6 +4591,7 @@ function ReceiptEntryRow({
           </span>
           <button
             type="button"
+            tabIndex={-1}
             onClick={() => void cancelGeneratedSerials(key)}
             className="rounded-lg border border-amber-500/40 px-3 py-2 text-xs font-semibold text-amber-700 hover:bg-amber-500/10 dark:text-amber-300"
           >

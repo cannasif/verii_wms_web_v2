@@ -14,6 +14,7 @@ export function OpsSkinCheckbox({
   indeterminate = false,
   title,
   className,
+  tabIndex,
   'aria-label': ariaLabel,
 }: {
   checked: boolean;
@@ -22,6 +23,7 @@ export function OpsSkinCheckbox({
   indeterminate?: boolean;
   title?: string;
   className?: string;
+  tabIndex?: number;
   'aria-label'?: string;
 }): ReactElement {
   const { skin } = useTheme();
@@ -47,6 +49,7 @@ export function OpsSkinCheckbox({
           type="checkbox"
           checked={checked}
           disabled={disabled}
+          tabIndex={tabIndex}
           aria-label={ariaLabel}
           onChange={(event) => onCheckedChange(event.target.checked)}
         />
@@ -63,6 +66,7 @@ export function OpsSkinCheckbox({
       aria-label={ariaLabel}
       title={title}
       disabled={disabled}
+      tabIndex={tabIndex}
       className={cn(
         'wms-ops-access-control-terminal-checkbox shrink-0',
         (checked || indeterminate) && 'wms-ops-access-control-terminal-checkbox--checked',

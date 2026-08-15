@@ -20,6 +20,7 @@ type Props = {
   stockId: number;
   stockName?: string | null;
   className?: string;
+  tabIndex?: number;
   /** Tıklanınca lightbox yerine bu callback açılır (görüntüle + yükle popup). */
   onOpen?: () => void;
   canUpload?: boolean;
@@ -38,6 +39,7 @@ export function StockImagePeekButton({
   stockId,
   stockName,
   className,
+  tabIndex,
   onOpen,
   canUpload = false,
 }: Props): ReactElement | null {
@@ -147,6 +149,7 @@ export function StockImagePeekButton({
         aria-disabled={!opensGallery && isEmpty ? true : undefined}
         aria-describedby={showHoverPeek ? tipId : undefined}
         title={titleText}
+        tabIndex={tabIndex}
         onMouseEnter={beginHover}
         onMouseLeave={endHover}
         onFocus={beginHover}
