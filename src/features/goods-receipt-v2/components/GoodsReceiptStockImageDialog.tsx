@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactElement } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Expand, ImagePlus, Images, Loader2, Upload } from "lucide-react";
+import { Camera, Expand, ImagePlus, Images, Loader2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { OpsActionButton } from "@/components/shared/OpsActionButton";
 import { ResponsiveDialog } from "@/components/shared/ResponsiveDialog";
@@ -37,6 +37,21 @@ const maximumBytes = 10 * 1024 * 1024;
 const maximumBatch = 10;
 const maximumImages = 20;
 
+function usePrefersCameraCapture(): boolean {
+  const [prefer, setPrefer] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
+    const media = window.matchMedia("(pointer: coarse), (max-width: 1023px)");
+    const sync = (): void => setPrefer(media.matches);
+    sync();
+    media.addEventListener("change", sync);
+    return () => media.removeEventListener("change", sync);
+  }, []);
+
+  return prefer;
+}
+
 export function GoodsReceiptStockImageDialog({
   open,
   stockId,
@@ -47,7 +62,9 @@ export function GoodsReceiptStockImageDialog({
 }: Props): ReactElement | null {
   const { t } = useModuleTranslation("goods-receipt-v2");
   const client = useQueryClient();
+  const prefersCamera = usePrefersCameraCapture();
   const inputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
   const [tab, setTab] = useState<ImageTab>("view");
   const [queue, setQueue] = useState<File[]>([]);
@@ -268,31 +285,60 @@ export function GoodsReceiptStockImageDialog({
             event.target.value = "";
           }}
         />
+        {prefersCamera ? (
+          <input
+            ref={cameraInputRef}
+            hidden
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            capture="environment"
+            onChange={(event) => {
+              selectFiles(Array.from(event.target.files ?? []));
+              event.target.value = "";
+            }}
+          />
+        ) : null}
         <div>
           <div className="mx-auto grid size-12 place-items-center rounded-xl bg-[color-mix(in_oklab,var(--wms-ops-accent)_12%,transparent)] text-[var(--wms-ops-accent)]">
             <ImagePlus className="size-5" aria-hidden />
           </div>
           <p className="mt-3 text-sm font-bold">
-            {t("createFlow.entryRow.stockImageUpload.dropTitle")}
+            {t(
+              prefersCamera
+                ? "createFlow.entryRow.stockImageUpload.dropTitleCamera"
+                : "createFlow.entryRow.stockImageUpload.dropTitle",
+            )}
           </p>
           <p className="mt-1 text-xs text-[var(--wms-app-text-muted)]">
             {t("createFlow.entryRow.stockImageUpload.limits")}
           </p>
-          <OpsActionButton
-            className="mt-3"
-            type="button"
-            disabled={upload.isPending}
-            onClick={() => inputRef.current?.click()}
-          >
-            {upload.isPending ? (
-              <Loader2 className="size-4 animate-spin" aria-hidden />
-            ) : (
-              <Upload className="size-4" aria-hidden />
-            )}
-            {upload.isPending
-              ? t("createFlow.entryRow.stockImageUpload.uploading")
-              : t("createFlow.entryRow.stockImageUpload.select")}
-          </OpsActionButton>
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+            <OpsActionButton
+              type="button"
+              disabled={upload.isPending}
+              onClick={() => inputRef.current?.click()}
+            >
+              {upload.isPending ? (
+                <Loader2 className="size-4 animate-spin" aria-hidden />
+              ) : (
+                <Upload className="size-4" aria-hidden />
+              )}
+              {upload.isPending
+                ? t("createFlow.entryRow.stockImageUpload.uploading")
+                : t("createFlow.entryRow.stockImageUpload.select")}
+            </OpsActionButton>
+            {prefersCamera ? (
+              <OpsActionButton
+                type="button"
+                variant="secondary"
+                disabled={upload.isPending}
+                onClick={() => cameraInputRef.current?.click()}
+              >
+                <Camera className="size-4" aria-hidden />
+                {t("createFlow.entryRow.stockImageUpload.capture")}
+              </OpsActionButton>
+            ) : null}
+          </div>
         </div>
       </div>
     </>
