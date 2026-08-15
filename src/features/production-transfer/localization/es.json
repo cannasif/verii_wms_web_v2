@@ -62,6 +62,9 @@
   },
   "policy": {
     "loading": "Cargando configuración de transferencia de producción…",
+    "loadFailed": "No se pudo cargar la configuración de transferencia de producción",
+    "loadFailedHint": "Compruebe la conexión y su permiso para ver la configuración. Vuelva a intentarlo si el problema es temporal.",
+    "retry": "Reintentar",
     "saved": "Política de transferencia de producción guardada.",
     "saveFailed": "No se pudo guardar la configuración.",
     "saving": "Guardando…",

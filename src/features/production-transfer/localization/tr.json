@@ -62,6 +62,9 @@
   },
   "policy": {
     "loading": "Üretim transfer ayarları yükleniyor…",
+    "loadFailed": "Üretim transfer ayarları yüklenemedi",
+    "loadFailedHint": "Bağlantıyı ve ayar görüntüleme yetkinizi kontrol edin. Sorun geçiciyse yeniden deneyin.",
+    "retry": "Yeniden Dene",
     "saved": "Üretim transfer politikası kaydedildi.",
     "saveFailed": "Ayarlar kaydedilemedi.",
     "saving": "Kaydediliyor…",

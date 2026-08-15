@@ -62,6 +62,9 @@
   },
   "policy": {
     "loading": "Caricamento impostazioni trasferimento produzione…",
+    "loadFailed": "Impossibile caricare le impostazioni di trasferimento produzione",
+    "loadFailedHint": "Controllare la connessione e l’autorizzazione a visualizzare le impostazioni. Riprovare se il problema è temporaneo.",
+    "retry": "Riprova",
     "saved": "Politica di trasferimento produzione salvata.",
     "saveFailed": "Impossibile salvare le impostazioni.",
     "saving": "Salvataggio…",

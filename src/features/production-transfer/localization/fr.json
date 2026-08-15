@@ -62,6 +62,9 @@
   },
   "policy": {
     "loading": "Chargement des paramètres de transfert de production…",
+    "loadFailed": "Impossible de charger les paramètres de transfert de production",
+    "loadFailedHint": "Vérifiez la connexion et votre autorisation d’afficher les paramètres. Réessayez si le problème est temporaire.",
+    "retry": "Réessayer",
     "saved": "Politique de transfert de production enregistrée.",
     "saveFailed": "Les paramètres n'ont pas pu être enregistrés.",
     "saving": "Enregistrement…",

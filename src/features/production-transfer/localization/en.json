@@ -62,6 +62,9 @@
   },
   "policy": {
     "loading": "Loading production transfer settings…",
+    "loadFailed": "Production transfer settings could not be loaded",
+    "loadFailedHint": "Check the connection and your permission to view settings. Retry if the problem is temporary.",
+    "retry": "Try Again",
     "saved": "Production transfer policy saved.",
     "saveFailed": "Settings could not be saved.",
     "saving": "Saving…",

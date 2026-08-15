@@ -164,9 +164,26 @@ export function ProductionTransferPolicyPage(){
   const {t,moduleReady}=useModuleTranslation('production-transfer');
   const branchCode=useAuthStore(x=>x.branch?.code??'0');
   const[form,setForm]=useState<ProductionTransferPolicy>();
+  const[loadError,setLoadError]=useState<string>();
   const[busy,setBusy]=useState(false);
-  useEffect(()=>{void productionTransferApi.policy(branchCode).then(setForm).catch((e:Error)=>toast.error(e.message));},[branchCode]);
-  if(!moduleReady||!form)return <section className="wms-ops-form wms-ops-pt-policy mx-auto max-w-6xl px-4 py-16"><OpsLoadingState code="POLICY" message={t('policy.loading',{defaultValue:'Politika yükleniyor…'})}/></section>;
+  const loadPolicy=useCallback(async()=>{
+    setLoadError(undefined);
+    setForm(undefined);
+    try{setForm(await productionTransferApi.policy(branchCode));}
+    catch(e){const detail=e instanceof Error?e.message:t('policy.loadFailed');setLoadError(detail);toast.error(detail);}
+  },[branchCode,t]);
+  useEffect(()=>{void loadPolicy();},[loadPolicy]);
+  if(!moduleReady)return <section className="wms-ops-form wms-ops-pt-policy mx-auto max-w-6xl px-4 py-16"><OpsLoadingState code="POLICY" message={t('policy.loading',{defaultValue:'Politika yükleniyor…'})}/></section>;
+  if(loadError)return <section className="wms-ops-form wms-ops-pt-policy mx-auto max-w-3xl px-4 py-16">
+    <div className="rounded-2xl border border-rose-500/30 bg-rose-500/5 p-6 text-center">
+      <ShieldAlert className="mx-auto size-9 text-rose-500"/>
+      <h1 className="mt-3 text-xl font-black">{t('policy.loadFailed')}</h1>
+      <p className="mt-2 text-sm text-[var(--wms-app-text-muted)]">{t('policy.loadFailedHint')}</p>
+      <p className="mt-3 rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-3 text-sm">{loadError}</p>
+      <OpsActionButton className="mt-4" onClick={loadPolicy}><RefreshCw className="size-4"/>{t('policy.retry')}</OpsActionButton>
+    </div>
+  </section>;
+  if(!form)return <section className="wms-ops-form wms-ops-pt-policy mx-auto max-w-6xl px-4 py-16"><OpsLoadingState code="POLICY" message={t('policy.loading',{defaultValue:'Politika yükleniyor…'})}/></section>;
   const set=<K extends keyof ProductionTransferPolicy>(key:K,value:ProductionTransferPolicy[K])=>setForm(x=>x?{...x,[key]:value}:x);
   const save=async()=>{setBusy(true);try{setForm(await productionTransferApi.updatePolicy(form));toast.success(t('policy.saved'));}catch(e){toast.error(e instanceof Error?e.message:t('policy.saveFailed'));}finally{setBusy(false);}};
   const orderChecks:Array<[BooleanPolicyKey,string]>=[
@@ -368,7 +385,7 @@ export function ProductionTaskPanel(){
   const[policy,setPolicy]=useState<ProductionTransferPolicy>();
   useEffect(()=>{
     if(!Number.isFinite(id)||id<=0)return;
-    void productionTransferApi.policy(branchCode).then(setPolicy).catch((e:Error)=>toast.error(e.message));
+    void productionTransferApi.effectivePolicy(branchCode).then(setPolicy).catch((e:Error)=>toast.error(e.message));
   },[branchCode,id]);
   const run=useCallback(async(action:()=>Promise<ProductionTaskBoard>)=>{
     setBusy(true);

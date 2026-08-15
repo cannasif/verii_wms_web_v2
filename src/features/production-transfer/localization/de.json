@@ -62,6 +62,9 @@
   },
   "policy": {
     "loading": "Produktionstransfer-Einstellungen werden geladen…",
+    "loadFailed": "Produktionstransfer-Einstellungen konnten nicht geladen werden",
+    "loadFailedHint": "Prüfen Sie die Verbindung und Ihre Berechtigung zum Anzeigen der Einstellungen. Versuchen Sie es bei einem vorübergehenden Problem erneut.",
+    "retry": "Erneut versuchen",
     "saved": "Produktionstransfer-Richtlinie gespeichert.",
     "saveFailed": "Einstellungen konnten nicht gespeichert werden.",
     "saving": "Wird gespeichert…",
