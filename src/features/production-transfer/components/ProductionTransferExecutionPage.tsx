@@ -15,7 +15,13 @@ import { ErpPostingPanel, ErpPostingTriggerButton } from './ProductionTransferEr
 import { productionTransferCanRetryErp } from '../production-transfer-erp-posting';
 import { PRODUCTION_WORK_ORDERS_MY_ASSIGNMENTS_URL } from '@/features/production/components/ProductionWorkOrderTransferTabPanel';
 
-export function ProductionTransferExecutionPage() {
+export function ProductionTransferExecutionPage({
+  refreshToken = 0,
+  onStateChange,
+}: {
+  refreshToken?: number;
+  onStateChange?: () => void;
+} = {}) {
   const { t } = useModuleTranslation('production-transfer');
   const id = Number(useParams().id);
   const currentUserId = useAuthStore((state) => state.user?.id);
@@ -56,7 +62,7 @@ export function ProductionTransferExecutionPage() {
     }
   }, [currentUserId, id]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => { void load(); }, [load, refreshToken]);
 
   const hasShortage = (execution?.shortageQuantity ?? 0) > 0;
   const canConfirmRequester = !execution?.requestedByUserId
@@ -69,6 +75,7 @@ export function ProductionTransferExecutionPage() {
     try {
       const result = await productionTransferApi.confirmHandover(id, hasShortage ? shortageConfirmed : false, shortageReason);
       setExecution(result);
+      onStateChange?.();
       if (result.erpIntegrationStatus === 'Succeeded') {
         toast.success(t('execution.erp.postedWithCompletion'));
       } else if (result.erpIntegrationStatus === 'Failed') {
@@ -87,6 +94,7 @@ export function ProductionTransferExecutionPage() {
     try {
       const result = await productionTransferApi.resumePicking(id);
       setExecution(result);
+      onStateChange?.();
       setCanResumePicking(false);
       setShortageConfirmed(false);
       setShortageReason('');
@@ -104,6 +112,7 @@ export function ProductionTransferExecutionPage() {
     try {
       const result = await productionTransferApi.postErp(id);
       setExecution(result);
+      onStateChange?.();
       if (result.erpIntegrationStatus === 'Succeeded') toast.success(t('execution.erp.retrySucceeded'));
       else if (result.erpIntegrationStatus === 'CommitUncertain') toast.warning(t('execution.erp.uncertainAfterCompletion'));
       else toast.error(result.erpErrorMessage || t('execution.erp.retryFailed'));
@@ -152,10 +161,13 @@ export function ProductionTransferExecutionPage() {
       <ProductionTransferReturnSection
         transferId={id}
         documentNo={execution.documentNo}
-        onBoardChange={(board) => setHasActiveReturnTask(board.tasks.some((task) =>
-          task.taskType === 'CancellationReturn'
-          && task.assignments.some((assignment) => assignment.userId === currentUserId)
-          && !['Completed', 'Cancelled'].includes(task.status)))}
+        onBoardChange={(board) => {
+          setHasActiveReturnTask(board.tasks.some((task) =>
+            task.taskType === 'CancellationReturn'
+            && task.assignments.some((assignment) => assignment.userId === currentUserId)
+            && !['Completed', 'Cancelled'].includes(task.status)));
+          onStateChange?.();
+        }}
       />
     )}
 
@@ -163,7 +175,10 @@ export function ProductionTransferExecutionPage() {
       <ProductionTransferPickingSection
         transferId={id}
         execution={execution}
-        onExecutionChange={setExecution}
+        onExecutionChange={(nextExecution) => {
+          setExecution(nextExecution);
+          onStateChange?.();
+        }}
       />
     )}
 

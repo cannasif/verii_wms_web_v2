@@ -158,7 +158,18 @@ export function ProductionTransferDraftPage(){
 }
 export function ProductionTransferListPage(){return <WarehouseTransferListPage variant="production"/>;}
 export function ProductionTransferOperationPage(){
-  return <ProductionTransferExecutionPage/>;
+  const[executionRefreshToken,setExecutionRefreshToken]=useState(0);
+  const[boardRefreshToken,setBoardRefreshToken]=useState(0);
+  return <section className="space-y-5">
+    <ProductionTaskPanel
+      refreshToken={boardRefreshToken}
+      onStateChange={()=>setExecutionRefreshToken(value=>value+1)}
+    />
+    <ProductionTransferExecutionPage
+      refreshToken={executionRefreshToken}
+      onStateChange={()=>setBoardRefreshToken(value=>value+1)}
+    />
+  </section>;
 }
 export function ProductionTransferPolicyPage(){
   const {t,moduleReady}=useModuleTranslation('production-transfer');
@@ -358,7 +369,13 @@ const TASK_TYPE_LABELS: Record<string, string> = {
 };
 const taskTypeLabel = (type: string): string => TASK_TYPE_LABELS[type] ?? type;
 
-export function ProductionTaskPanel(){
+export function ProductionTaskPanel({
+  refreshToken=0,
+  onStateChange,
+}:{
+  refreshToken?:number;
+  onStateChange?:()=>void;
+}={}){
   const id=Number(useParams().id);
   const currentUserId=useAuthStore(x=>x.user?.id);
   const branchCode=useAuthStore(x=>x.branch?.code??'0');
@@ -367,6 +384,12 @@ export function ProductionTaskPanel(){
   const boardQueryKey=useMemo(()=>['production-transfer','board',id] as const,[id]);
   const boardQuery=useQuery({queryKey:boardQueryKey,queryFn:()=>productionTransferApi.taskBoard(id),enabled:Number.isFinite(id)&&id>0});
   const detailQuery=useQuery({queryKey:['production-transfer','detail',id],queryFn:()=>transferApiFor('production').detail(id),enabled:Number.isFinite(id)&&id>0});
+  const{refetch:refetchBoardQuery}=boardQuery;
+  const{refetch:refetchDetailQuery}=detailQuery;
+  useEffect(()=>{
+    if(refreshToken<=0)return;
+    void Promise.all([refetchBoardQuery(),refetchDetailQuery()]);
+  },[refreshToken,refetchBoardQuery,refetchDetailQuery]);
   const board=boardQuery.data;
   const detail=detailQuery.data;
   const{getAvailable:sourceAvailable,isLoading:sourceAvailabilityLoading}=useProductionTaskSourceAvailability(board,detail,branchCode);
@@ -395,12 +418,13 @@ export function ProductionTaskPanel(){
       await queryClient.refetchQueries({queryKey:['production-transfer','detail',id]});
       void queryClient.invalidateQueries({queryKey:['wt-op-source']});
       void queryClient.invalidateQueries({queryKey:['production-transfer','picked-sources',id]});
+      onStateChange?.();
     }catch(e){
       toast.error(e instanceof Error?e.message:'İşlem başarısız.');
     }finally{
       setBusy(false);
     }
-  },[boardQueryKey,id,queryClient]);
+  },[boardQueryKey,id,onStateChange,queryClient]);
   const refreshBoard=useCallback(()=>void queryClient.invalidateQueries({queryKey:boardQueryKey}),[boardQueryKey,queryClient]);
   const{
     shortageDialog,
@@ -419,7 +443,7 @@ export function ProductionTaskPanel(){
     &&!['Completed','Cancelled'].includes(task.status));
   return <section className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5">
     <div className="mb-4 flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-widest text-[var(--wms-brand-primary)]">Üretim transfer görevi</p><h2 className="text-xl font-black">{board.documentNo}</h2></div><span className="rounded-full border border-[var(--wms-app-border)] px-3 py-1 text-xs font-bold">{board.transferStatus}</span></div>
-    {activeReturnTask?(<ProductionTransferReturnSection transferId={id} documentNo={board.documentNo} onBoardChange={nextBoard=>queryClient.setQueryData(boardQueryKey,nextBoard)}/>):null}
+    {activeReturnTask?(<ProductionTransferReturnSection transferId={id} documentNo={board.documentNo} onBoardChange={nextBoard=>{queryClient.setQueryData(boardQueryKey,nextBoard);onStateChange?.();}}/>):null}
     <div className="space-y-4">{board.tasks.filter(task=>!activeReturnTask||task.taskId!==activeReturnTask.taskId).map(task=><article key={task.taskId} className="rounded-xl border border-[var(--wms-app-border)] p-4">
       <div className="flex flex-wrap items-center justify-between gap-3"><div><strong>{task.taskNo}</strong>{task.taskType==='CancellationReturn'?<span className="ml-2 rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-bold text-amber-500">{taskTypeLabel(task.taskType)}</span>:<span className="ml-2 text-xs text-[var(--wms-app-text-muted)]">{taskTypeLabel(task.taskType)}</span>}<span className="ml-2 text-xs text-[var(--wms-app-text-muted)]">{task.status}</span>{task.completedAtUtc&&<span className="ml-2 text-xs text-[var(--wms-app-text-muted)]">· {new Date(task.completedAtUtc).toLocaleString('tr-TR')}</span>}</div>
         <div className="flex flex-wrap gap-2">{task.taskType!=='CancellationReturn'&&!board.sourceIsRackless&&task.lines.some(x=>x.missingQuantity>0||x.processedQuantity>0&&x.processedQuantity<x.requestedQuantity)&&!['Completed','Cancelled'].includes(task.status)&&<button disabled={busy} onClick={()=>void run(()=>productionTransferApi.refreshRoute(id,task.taskId))} className="inline-flex items-center gap-2 rounded-lg border border-amber-500 px-3 py-2 text-xs font-bold text-amber-500"><RefreshCw className="size-4"/>Rotayı güncelle</button>}{task.assignments.some(x=>x.userId===currentUserId)&&!['InProgress','PartiallyCompleted','Completed','Cancelled'].includes(task.status)&&<button disabled={busy||checkingTaskId===task.taskId} onClick={()=>void requestStart(task.taskId,task.taskNo)} className="inline-flex items-center gap-2 rounded-lg bg-[var(--wms-brand-primary)] px-3 py-2 text-xs font-bold text-[var(--wms-brand-on-primary)]"><Play className="size-4"/>Bu işi yapıyorum</button>}</div></div>
@@ -511,7 +535,7 @@ export function ProductionTaskPanel(){
       canAssign={canAssign}
       busy={busy}
       onRun={run}
-      onCancelled={refreshBoard}
+      onCancelled={()=>{refreshBoard();onStateChange?.();}}
     />
     {shortageDialog&&(
       <ProductionTaskStartShortageDialog
