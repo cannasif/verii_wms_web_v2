@@ -67,7 +67,7 @@
     "saving": "Enregistrement…",
     "save": "Enregistrer les paramètres",
     "eyebrow": "Transfert de production",
-    "title": "Politique d'approvisionnement de production",
+    "title": "Paramètres de transfert de production",
     "description": "Gérez de manière centralisée les règles d'ordre de production, de disponibilité des matières, d'affectation, d'emplacement et de tolérance.",
     "sections": { "source": "Source de l’ordre et de la recette", "order": "Ordre de production et disponibilité des matières", "execution": "Exécution physique et tolérance" },
     "source": { "netsis": "Lire depuis les fonctions Netsis ERP", "netsisHint": "Les ordres et recettes sont préparés en temps réel depuis Netsis.", "wms": "Lire depuis les tables d’intégration WMS", "wmsHint": "Un système approuvé tel que Windbox alimente les tables sources WMS.", "combined": "Afficher ensemble les ordres ERP et WMS", "combinedHint": "Les deux sources sont identifiées et les numéros identiques restent distincts.", "boundaryTitle": "Limite d’intégration", "boundaryText": "Les systèmes externes alimentent uniquement les tables sources versionnées. WMS crée les ordres opérationnels, transferts, réservations et mouvements de stock." },

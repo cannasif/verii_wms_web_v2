@@ -231,6 +231,7 @@
       "permissionDefinitionListLoadFailed": "Liste der Berechtigungsdefinitionen konnte nicht geladen werden."
     },
     "refresh": "Aktualisieren",
+    "refreshCountdown": "Aktualisieren {{seconds}}",
     "noPermission": "Sie haben keine Berechtigung für diese Aktion.",
     "note": "nicht",
     "saveSuccess": "Datensatz erfolgreich gespeichert",

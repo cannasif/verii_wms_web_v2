@@ -11,6 +11,7 @@
       "inspectionNo": "Kontrol No",
       "waybillNo": "İrsaliye No",
       "sourceDocument": "Kaynak Belge",
+      "projectCode": "Proje Kodu",
       "documentType": "Evrak Tipi",
       "processedBy": "İşlemi Yapan",
       "lineCount": "Kalem",
@@ -42,7 +43,25 @@
     "facetClear": "Filtreyi sıfırla",
     "statusOptionsLoading": "Kalite durumları yükleniyor...",
     "statusOptionsFailed": "Kalite durumları alınamadı. Liste güvenli biçimde filtrelenemedi.",
-    "retry": "Tekrar dene"
+    "retry": "Tekrar dene",
+    "statuses": {
+      "Released": "Tamamlandı"
+    },
+    "createdPeriodTitle": "Oluşturma tarihi",
+    "createdPeriodPrev": "Önceki dönem",
+    "createdPeriodNext": "Sonraki dönem",
+    "createdPeriodNow": {
+      "day": "Bugün",
+      "week": "Bu hafta",
+      "month": "Bu ay",
+      "year": "Bu yıl"
+    },
+    "createdPeriod": {
+      "day": "Gün",
+      "week": "Hafta",
+      "month": "Ay",
+      "year": "Yıl"
+    }
   },
   "goodsReceiptNotice": {
     "decidedToastTitle": "Kalite kararı ve stok hareketi kaydedildi.",

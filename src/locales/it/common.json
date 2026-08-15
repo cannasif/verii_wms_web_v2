@@ -110,6 +110,7 @@
     "documentDate": "Belge Tarihi",
     "status": "Durum",
     "refresh": "Refresh",
+    "refreshCountdown": "Refresh {{seconds}}",
     "noPermission": "Bu işlem için yetkiniz yok.",
     "note": "Not",
     "documentNo": "Belge No",

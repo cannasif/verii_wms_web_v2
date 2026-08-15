@@ -67,7 +67,7 @@
     "saving": "Salvataggio…",
     "save": "Salva impostazioni",
     "eyebrow": "Trasferimento di produzione",
-    "title": "Politica di approvvigionamento produzione",
+    "title": "Impostazioni di trasferimento produzione",
     "description": "Gestisci centralmente le regole di ordine di produzione, disponibilità materiali, assegnazione, ubicazione e tolleranza.",
     "sections": { "source": "Origine ordine e distinta", "order": "Ordine di produzione e disponibilità materiali", "execution": "Esecuzione fisica e tolleranza" },
     "source": { "netsis": "Leggi dalle funzioni Netsis ERP", "netsisHint": "Ordini e distinte vengono preparati in tempo reale da Netsis.", "wms": "Leggi dalle tabelle di integrazione WMS", "wmsHint": "Un sistema approvato come Windbox alimenta le tabelle sorgente WMS.", "combined": "Elenca insieme ordini ERP e WMS", "combinedHint": "Entrambe le origini sono etichettate e i numeri uguali restano distinti.", "boundaryTitle": "Confine di integrazione", "boundaryText": "I sistemi esterni alimentano solo tabelle sorgente versionate. WMS crea ordini operativi, trasferimenti, prenotazioni e movimenti di magazzino." },

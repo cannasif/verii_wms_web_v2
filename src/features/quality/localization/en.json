@@ -11,6 +11,7 @@
       "inspectionNo": "Inspection No",
       "waybillNo": "Waybill No",
       "sourceDocument": "Source Document",
+      "projectCode": "Project Code",
       "documentType": "Document Type",
       "processedBy": "Processed By",
       "lineCount": "Lines",
@@ -42,7 +43,25 @@
     "facetClear": "Reset filter",
     "statusOptionsLoading": "Loading quality statuses...",
     "statusOptionsFailed": "Quality statuses could not be loaded. The list cannot be filtered safely.",
-    "retry": "Try again"
+    "retry": "Try again",
+    "statuses": {
+      "Released": "Completed"
+    },
+    "createdPeriodTitle": "Created date",
+    "createdPeriodPrev": "Previous period",
+    "createdPeriodNext": "Next period",
+    "createdPeriodNow": {
+      "day": "Today",
+      "week": "This week",
+      "month": "This month",
+      "year": "This year"
+    },
+    "createdPeriod": {
+      "day": "Day",
+      "week": "Week",
+      "month": "Month",
+      "year": "Year"
+    }
   },
   "goodsReceiptNotice": {
     "decidedToastTitle": "Quality decision and stock movement recorded.",

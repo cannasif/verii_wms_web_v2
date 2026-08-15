@@ -240,6 +240,7 @@
       "permissionDefinitionListLoadFailed": "İzin tanımları listesi yüklenemedi."
     },
     "refresh": "Yenile",
+    "refreshCountdown": "Yenile {{seconds}}",
     "noPermission": "Bu işlem için yetkiniz yok.",
     "note": "Not",
     "saveSuccess": "Kayıt başarıyla kaydedildi",

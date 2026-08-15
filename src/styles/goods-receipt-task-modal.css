@@ -564,6 +564,25 @@ html.skin-premium
 }
 
 /* ── Üretim iş emri listesi: 5 sekmeli ana tab şeridi ─────────────────── */
+.wms-ops-detail-dialog [data-slot='tabs-list'].wms-ops-detail-main-tabs--dynamic {
+  grid-template-columns: repeat(var(--tab-count, 5), minmax(0, 1fr));
+}
+
+.wms-ops-detail-dialog
+  [data-slot='tabs-list'].wms-ops-detail-main-tabs--dynamic
+  .wms-ops-detail-tab-indicator {
+  width: calc((100% - 0.5rem - (var(--tab-count, 5) - 1) * 0.25rem) / var(--tab-count, 5));
+  transform: translateX(calc(var(--active-index, 0) * (100% + 0.25rem)));
+}
+
+html.skin-premium
+  .wms-ops-detail-dialog
+  [data-slot='tabs-list'].wms-ops-detail-main-tabs--dynamic
+  .wms-ops-detail-tab-indicator {
+  width: calc((100% - 0.64rem - (var(--tab-count, 5) - 1) * 0.3rem) / var(--tab-count, 5));
+  transform: translateX(calc(var(--active-index, 0) * (100% + 0.3rem)));
+}
+
 .wms-ops-detail-dialog [data-slot='tabs-list'].wms-ops-detail-main-tabs--cols-5 {
   grid-template-columns: repeat(5, minmax(0, 1fr));
 }

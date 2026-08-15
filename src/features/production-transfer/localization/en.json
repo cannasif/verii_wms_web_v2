@@ -67,7 +67,7 @@
     "saving": "Saving…",
     "save": "Save Settings",
     "eyebrow": "Production Transfer",
-    "title": "Production Supply Policy",
+    "title": "Production Transfer Settings",
     "description": "Centrally manage production order, material availability, assignment, location and tolerance rules.",
     "sections": { "source": "Work order and recipe source", "order": "Production order and material availability", "execution": "Physical execution and tolerance" },
     "source": {

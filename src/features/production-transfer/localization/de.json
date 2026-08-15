@@ -67,7 +67,7 @@
     "saving": "Wird gespeichert…",
     "save": "Einstellungen speichern",
     "eyebrow": "Produktionstransfer",
-    "title": "Produktionsversorgungsrichtlinie",
+    "title": "Produktionstransfer-Einstellungen",
     "description": "Verwalten Sie zentral Produktionsauftrag-, Materialverfügbarkeits-, Zuweisungs-, Standort- und Toleranzregeln.",
     "sections": { "source": "Quelle für Auftrag und Rezeptur", "order": "Produktionsauftrag und Materialverfügbarkeit", "execution": "Physische Ausführung und Toleranz" },
     "source": { "netsis": "Aus Netsis-ERP-Funktionen lesen", "netsisHint": "Aufträge und Rezepturen werden live aus Netsis gelesen.", "wms": "Aus WMS-Integrationstabellen lesen", "wmsHint": "Ein freigegebenes Planungssystem wie Windbox speist die WMS-Quelltabellen.", "combined": "ERP- und WMS-Aufträge gemeinsam anzeigen", "combinedHint": "Beide Quellen werden gekennzeichnet; gleiche Auftragsnummern bleiben getrennt.", "boundaryTitle": "Integrationsgrenze", "boundaryText": "Externe Systeme speisen nur versionierte Quelltabellen. WMS erstellt operative Aufträge, Transfers, Reservierungen und Bestandsbewegungen." },

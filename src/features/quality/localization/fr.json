@@ -11,6 +11,7 @@
       "inspectionNo": "N° d'inspection",
       "waybillNo": "N° de bordereau",
       "sourceDocument": "Document source",
+      "projectCode": "Code projet",
       "documentType": "Type de document",
       "processedBy": "Traité par",
       "lineCount": "Lignes",
@@ -42,7 +43,25 @@
     "facetClear": "Réinitialiser le filtre",
     "statusOptionsLoading": "Chargement des statuts qualité...",
     "statusOptionsFailed": "Les statuts qualité n’ont pas pu être chargés. La liste ne peut pas être filtrée de manière sûre.",
-    "retry": "Réessayer"
+    "retry": "Réessayer",
+    "statuses": {
+      "Released": "Terminé"
+    },
+    "createdPeriodTitle": "Date de création",
+    "createdPeriodPrev": "Période précédente",
+    "createdPeriodNext": "Période suivante",
+    "createdPeriodNow": {
+      "day": "Aujourd'hui",
+      "week": "Cette semaine",
+      "month": "Ce mois",
+      "year": "Cette année"
+    },
+    "createdPeriod": {
+      "day": "Jour",
+      "week": "Semaine",
+      "month": "Mois",
+      "year": "Année"
+    }
   },
   "goodsReceiptNotice": {
     "decidedToastTitle": "Décision qualité et mouvement de stock enregistrés.",

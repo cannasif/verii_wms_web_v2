@@ -240,6 +240,7 @@
       "permissionDefinitionListLoadFailed": "Permission definition list could not be loaded."
     },
     "refresh": "Refresh",
+    "refreshCountdown": "Refresh {{seconds}}",
     "noPermission": "Bu işlem için yetkiniz yok.",
     "note": "Not",
     "saveSuccess": "Kayıt başarıyla kaydedildi",
