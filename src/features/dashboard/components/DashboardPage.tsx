@@ -1,102 +1,49 @@
-import { type ReactElement, type ReactNode, useEffect, useMemo, useState } from 'react';
+import { type ReactElement, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   AlertCircle,
-  ArrowLeftRight,
   ArrowRight,
-  Boxes,
   CheckCircle2,
-  ClipboardCheck,
   ClipboardList,
-  Clock3,
+  Database,
   PackageCheck,
-  PackageSearch,
   RefreshCw,
-  ScanLine,
-  Send,
-  ShieldCheck,
   Truck,
   UserRoundCheck,
-  Warehouse,
-  type LucideIcon,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import warehouseBackdrop from '@/assets/v3riiwmsloginbg.webp';
+import { useTheme } from '@/components/theme-provider';
 import { useUIStore } from '@/stores/ui-store';
-import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
 import { cn } from '@/lib/utils';
+import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
 import { useDashboardMetrics } from '../hooks/useDashboardMetrics';
-import type { DashboardActivityItem, DashboardActivityKind } from '../types/dashboard.types';
+import type { DashboardActivityKind } from '../types/dashboard.types';
 import {
-  DashboardCommandMetric,
-  DashboardInventoryDonut,
-  DashboardOperationsTrend,
-  DashboardSystemHealthStrip,
-} from './dashboard-command-center';
-
-interface QuickActionConfig {
-  permission: string;
-  titleKey: string;
-  descriptionKey: string;
-  href: string;
-  icon: LucideIcon;
-}
-
-const QUICK_ACTIONS: QuickActionConfig[] = [
-  {
-    permission: 'wms.goods-receipt.create',
-    titleKey: 'dashboard.newGoodsReceipt',
-    descriptionKey: 'dashboard.terminal.quickGrDescription',
-    href: '/warehouse/goods-receipts/new',
-    icon: ClipboardCheck,
-  },
-  {
-    permission: 'wms.transfer.create',
-    titleKey: 'newTransfer',
-    descriptionKey: 'dashboard.terminal.quickTransferDescription',
-    href: '/warehouse/transfers/new-operation',
-    icon: ArrowLeftRight,
-  },
-  {
-    permission: 'wms.shipment.create',
-    titleKey: 'dashboard.newShipment',
-    descriptionKey: 'dashboard.terminal.quickShipmentDescription',
-    href: '/warehouse/shipments/new',
-    icon: Send,
-  },
-  {
-    permission: 'wms.inventory-count.view',
-    titleKey: 'inventoryCount',
-    descriptionKey: 'inventoryCountDescription',
-    href: '/warehouse/inventory-counts',
-    icon: ScanLine,
-  },
-  {
-    permission: 'wms.warehouse-balance.view',
-    titleKey: 'dashboard.stockQuery',
-    descriptionKey: 'dashboard.terminal.quickStockDescription',
-    href: '/warehouse/stock-balances',
-    icon: PackageSearch,
-  },
-  {
-    permission: 'wms.quality.inspections.view',
-    titleKey: 'qualityControl',
-    descriptionKey: 'qualityControlDescription',
-    href: '/warehouse/quality/inspections',
-    icon: ShieldCheck,
-  },
-];
+  type QuickAccessAction,
+  type QuickAccessId,
+  coerceQuickAccessIds,
+  readQuickAccessIds,
+  resolveAllowedQuickAccess,
+  resolveVisibleQuickAccess,
+  writeQuickAccessIds,
+} from '../lib/quick-access';
+import {
+  DashActivityList,
+  DashFooterStrip,
+  DashHero,
+  DashInventoryDonut,
+  DashMetricCard,
+  DashPanel,
+  DashQuickStrip,
+  DashTrendChart,
+} from './dashboard-home-ui';
+import { QuickAccessCustomizeDialog } from './QuickAccessCustomizeDialog';
 
 const ACTIVITY_HREFS: Record<DashboardActivityKind, string> = {
   'goods-receipt': '/warehouse/goods-receipts/list',
   shipment: '/warehouse/shipments/list',
   transfer: '/warehouse/transfers/list',
-};
-
-const ACTIVITY_ICONS: Record<DashboardActivityKind, LucideIcon> = {
-  'goods-receipt': PackageCheck,
-  shipment: Truck,
-  transfer: ArrowLeftRight,
 };
 
 function formatRelativeTimestamp(
@@ -116,75 +63,19 @@ function formatRelativeTimestamp(
   return date.toLocaleString(language);
 }
 
-function daypart(date: Date): 'goodMorning' | 'goodAfternoon' | 'goodEvening' {
+function daypart(date: Date): 'goodMorning' | 'goodAfternoon' | 'goodEvening' | 'goodNight' {
   const hour = date.getHours();
+  if (hour < 5) return 'goodNight';
   if (hour < 12) return 'goodMorning';
   if (hour < 18) return 'goodAfternoon';
-  return 'goodEvening';
-}
-
-function DashboardPanel({
-  title,
-  description,
-  action,
-  className,
-  children,
-}: {
-  title: string;
-  description: string;
-  action?: ReactElement;
-  className?: string;
-  children: ReactNode;
-}): ReactElement {
-  return (
-    <section className={cn('wms-command-panel', className)}>
-      <header className="wms-command-panel__header">
-        <div>
-          <h2>{title}</h2>
-          <p>{description}</p>
-        </div>
-        {action}
-      </header>
-      <div className="wms-command-panel__body">{children}</div>
-    </section>
-  );
-}
-
-function ActivityRow({
-  item,
-  kindLabel,
-  statusLabel,
-  timestamp,
-}: {
-  item: DashboardActivityItem;
-  kindLabel: string;
-  statusLabel: string;
-  timestamp: string;
-}): ReactElement {
-  const Icon = ACTIVITY_ICONS[item.kind];
-  return (
-    <li>
-      <Link className="wms-command-activity" to={ACTIVITY_HREFS[item.kind]}>
-        <span className={cn('wms-command-activity__icon', `wms-command-activity__icon--${item.kind}`)} aria-hidden>
-          <Icon size={18} strokeWidth={1.8} />
-        </span>
-        <span className="wms-command-activity__content">
-          <span className="wms-command-activity__title">{kindLabel}</span>
-          <strong>{item.title}</strong>
-          <small>{item.subtitle}</small>
-        </span>
-        <span className="wms-command-activity__meta">
-          <span className={cn('wms-command-status', `wms-command-status--${item.statusKey}`)}>{statusLabel}</span>
-          <time>{timestamp}</time>
-        </span>
-        <ArrowRight size={16} className="wms-command-activity__arrow" aria-hidden />
-      </Link>
-    </li>
-  );
+  if (hour < 22) return 'goodEvening';
+  return 'goodNight';
 }
 
 export function DashboardPage(): ReactElement {
   const { t, i18n } = useTranslation('common');
+  const { skin } = useTheme();
+  const isPremium = skin === 'premium';
   const commandCenterPrefix = i18n.exists('common.commandCenter.eyebrow')
     ? 'common.commandCenter'
     : 'dashboard.commandCenter';
@@ -192,8 +83,13 @@ export function DashboardPage(): ReactElement {
     t(`${commandCenterPrefix}.${key}`, options);
   const setPageTitle = useUIStore((state) => state.setPageTitle);
   const permissionAccess = usePermissionAccess();
-  const { user, branch, metrics, isLoading, isError, isFetching, refetch } = useDashboardMetrics();
+  const { user, metrics, isLoading, isError, isFetching, refetch } = useDashboardMetrics();
   const [now, setNow] = useState(() => new Date());
+  const userKey = user?.id != null ? String(user.id) : user?.email ?? null;
+  const [preferredQuickIds, setPreferredQuickIds] = useState<QuickAccessId[]>(() =>
+    readQuickAccessIds(userKey),
+  );
+  const [quickCustomizeOpen, setQuickCustomizeOpen] = useState(false);
 
   useEffect(() => {
     setPageTitle(t('dashboard.title'));
@@ -205,13 +101,35 @@ export function DashboardPage(): ReactElement {
     return () => window.clearInterval(id);
   }, []);
 
+  useEffect(() => {
+    setPreferredQuickIds(readQuickAccessIds(userKey));
+  }, [userKey]);
+
   const displayName = user?.name || user?.email || t('dashboard.user');
-  const branchLabel = branch?.name || branch?.code;
-  const hasBranchContext = Boolean(branchLabel && branchLabel !== '0');
-  const visibleQuickActions = useMemo(
-    () => QUICK_ACTIONS.filter((action) => permissionAccess.can(action.permission)),
+  const allowedQuickActions = useMemo(
+    () => resolveAllowedQuickAccess(permissionAccess.can),
     [permissionAccess],
   );
+  const visibleQuickActions = useMemo(
+    () => resolveVisibleQuickAccess(preferredQuickIds, permissionAccess.can),
+    [permissionAccess, preferredQuickIds],
+  );
+
+  const resolveQuickTitle = (action: QuickAccessAction): string => {
+    const translated = t(action.titleKey, { defaultValue: '' });
+    if (typeof translated === 'string' && translated.trim() && translated !== action.titleKey) {
+      return translated;
+    }
+    const viaCommand = commandText(action.titleKey.replace(/^dashboard\./, ''));
+    return typeof viaCommand === 'string' && viaCommand.trim() ? viaCommand : action.id;
+  };
+
+  const persistQuickIds = (ids: QuickAccessId[]) => {
+    const next = coerceQuickAccessIds(ids);
+    writeQuickAccessIds(next, userKey);
+    setPreferredQuickIds(next);
+  };
+
   const goodsReceiptTrend = metrics.dailyOperations.map((item) => item.goodsReceiptCount);
   const shipmentTrend = metrics.dailyOperations.map((item) => item.shipmentCount);
   const transferTrend = metrics.dailyOperations.map((item) => item.transferCount);
@@ -226,7 +144,8 @@ export function DashboardPage(): ReactElement {
     pending: t('dashboard.terminal.pending'),
   };
 
-  const formatMetric = (value: number): string => value.toLocaleString(i18n.language);
+  const formatMetric = (value: number | null | undefined): string =>
+    (value ?? 0).toLocaleString(i18n.language);
   const formatSystemTimestamp = (value: string): string => {
     const parsed = new Date(value);
     return Number.isNaN(parsed.getTime())
@@ -234,85 +153,125 @@ export function DashboardPage(): ReactElement {
       : parsed.toLocaleString(i18n.language, { dateStyle: 'short', timeStyle: 'short' });
   };
 
+  const greeting = `${t(`dashboard.premium.${daypart(now)}`)},`;
+  const heroSubtitle = isPremium
+    ? t('dashboard.premium.subtitle')
+    : commandText('subtitle');
+  const erpHealthy = metrics.systemHealth.erpIssueCount === 0;
+  const balanceReady = Boolean(metrics.systemHealth.lastBalanceProjectionAtUtc);
+  const metricsReady = !isError && Boolean(metrics.systemHealth.generatedAtUtc || !isLoading);
+
   return (
-    <div className="wms-command-page">
-      <section className="wms-command-hero">
-        <div className="wms-command-hero__intro">
-          <span className="wms-command-hero__eyebrow">{commandText('eyebrow')}</span>
-          <p className="wms-command-hero__greeting">{t(`dashboard.premium.${daypart(now)}`)}</p>
-          <h1>{commandText('welcome', { name: displayName })}</h1>
-          <p>{commandText('subtitle')}</p>
-          <div className="wms-command-hero__identity">
-            <span><UserRoundCheck size={15} aria-hidden />{displayName}</span>
-            {hasBranchContext ? <span><Warehouse size={15} aria-hidden />{branchLabel}</span> : null}
-          </div>
-        </div>
-
-        <div className="wms-command-hero__visual" style={{ backgroundImage: `url(${warehouseBackdrop})` }}>
-          <div className="wms-command-hero__visual-shade" aria-hidden />
-          <div className="wms-command-hero__pulse" aria-hidden><span /><span /><span /></div>
-          <div className="wms-command-hero__floating wms-command-hero__floating--operations">
-            <span>{commandText('openOperations')}</span>
-            <strong>{isLoading ? '…' : formatMetric(metrics.openOperationCount)}</strong>
-            <small>{commandText('liveWorkload')}</small>
-          </div>
-          <div className="wms-command-hero__floating wms-command-hero__floating--stock">
-            <span>{commandText('stockItems')}</span>
-            <strong>{isLoading ? '…' : formatMetric(metrics.stockSkuCount)}</strong>
-            <small>{commandText('withBalance')}</small>
-          </div>
-        </div>
-
-        <aside className="wms-command-clock">
-          <div>
-            <Clock3 size={17} aria-hidden />
-            <span>{t('dashboard.premium.systemClock')}</span>
-          </div>
-          <time dateTime={now.toISOString()}>{now.toLocaleTimeString(i18n.language)}</time>
-          <p>{now.toLocaleDateString(i18n.language, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-          <div className={cn('wms-command-clock__status', isError && 'wms-command-clock__status--error')}>
-            {isError ? <AlertCircle size={15} aria-hidden /> : <CheckCircle2 size={15} aria-hidden />}
-            <span>{isError ? commandText('metricsUnavailable') : commandText('systemNormal')}</span>
-          </div>
-        </aside>
-      </section>
+    <div className={cn('wms-dash', isPremium ? 'wms-dash--premium' : 'wms-dash--terminal')}>
+      <DashHero
+        greeting={greeting}
+        title={displayName}
+        subtitle={heroSubtitle}
+        visualImage={warehouseBackdrop}
+        stats={[
+          {
+            label: commandText('openOperations'),
+            value: isLoading ? '…' : formatMetric(metrics.openOperationCount),
+            hint: commandText('liveWorkload'),
+            tone: 'operations',
+          },
+          {
+            label: commandText('stockItems'),
+            value: isLoading ? '…' : formatMetric(metrics.stockSkuCount),
+            hint: commandText('withBalance'),
+            tone: 'stock',
+          },
+        ]}
+        clockLabel={t('dashboard.premium.systemClock')}
+        clockTime={now.toLocaleTimeString(i18n.language)}
+        clockDate={now.toLocaleDateString(i18n.language, {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        })}
+        clockDateTime={now.toISOString()}
+        systemLabel={t('dashboard.premium.systemPulse')}
+        systemValue={isError ? commandText('metricsUnavailable') : commandText('systemNormal')}
+        systemTone={isError ? 'warn' : 'ok'}
+        healthItems={[
+          {
+            icon: Database,
+            label: commandText('database'),
+            value: metricsReady ? commandText('connected') : commandText('metricsUnavailable'),
+            tone: metricsReady ? 'ok' : 'warn',
+          },
+          {
+            icon: erpHealthy ? CheckCircle2 : AlertCircle,
+            label: commandText('erpIntegration'),
+            value: isError
+              ? commandText('metricsUnavailable')
+              : erpHealthy
+                ? commandText('normal')
+                : commandText('issueCount', { count: metrics.systemHealth.erpIssueCount }),
+            tone: erpHealthy ? 'ok' : 'warn',
+          },
+          {
+            icon: RefreshCw,
+            label: commandText('balanceProjection'),
+            value: isError
+              ? commandText('metricsUnavailable')
+              : balanceReady
+                ? formatSystemTimestamp(metrics.systemHealth.lastBalanceProjectionAtUtc as string)
+                : commandText('awaitingFirstRun'),
+            tone: balanceReady ? 'ok' : 'warn',
+          },
+          {
+            icon: ClipboardList,
+            label: commandText('updated'),
+            value: metrics.systemHealth.generatedAtUtc
+              ? formatSystemTimestamp(metrics.systemHealth.generatedAtUtc)
+              : '—',
+          },
+        ]}
+      />
 
       {isError ? (
-        <div className="wms-command-error" role="alert">
-          <AlertCircle size={18} aria-hidden />
+        <div className="wms-dash-alert" role="alert">
           <span>{commandText('loadError')}</span>
-          <button type="button" onClick={refetch} disabled={isFetching}>
+          <button type="button" onClick={() => void refetch()}>
             <RefreshCw size={15} className={isFetching ? 'animate-spin' : undefined} aria-hidden />
             {commandText('retry')}
           </button>
         </div>
       ) : null}
 
-      <section className="wms-command-quick" aria-labelledby="dashboard-quick-actions">
-        <header>
-          <div>
-            <h2 id="dashboard-quick-actions">{t('dashboard.quickAccess')}</h2>
-            <p>{commandText('quickAccessDescription')}</p>
-          </div>
-          <span>{commandText('permissionScoped')}</span>
-        </header>
-        <div className="wms-command-quick__grid">
-          {visibleQuickActions.map((action) => {
-            const Icon = action.icon;
-            return (
-              <Link key={action.href} to={action.href} className="wms-command-quick__item">
-                <span aria-hidden><Icon size={20} strokeWidth={1.8} /></span>
-                  <strong>{action.titleKey.includes('.') ? t(action.titleKey) : commandText(action.titleKey)}</strong>
-                  <small>{action.descriptionKey.includes('.') ? t(action.descriptionKey) : commandText(action.descriptionKey)}</small>
-                <ArrowRight size={15} aria-hidden />
-              </Link>
-            );
-          })}
-        </div>
-      </section>
+      <DashQuickStrip
+        title={t('dashboard.quickAccess')}
+        emptyText={t('dashboard.terminal.quickLinksEmpty')}
+        customizeLabel={t('dashboard.quickAccessCustomize')}
+        editLabel={t('dashboard.quickAccessEdit')}
+        doneLabel={t('dashboard.quickAccessEditDone')}
+        onCustomize={() => setQuickCustomizeOpen(true)}
+        onReorder={(orderedIds) => {
+          persistQuickIds(orderedIds as QuickAccessId[]);
+        }}
+        items={visibleQuickActions.map((action) => ({
+          id: action.id,
+          href: action.href,
+          title: resolveQuickTitle(action),
+          icon: action.icon,
+          tone: action.tone,
+        }))}
+      />
 
-      <section className="wms-command-metrics" aria-label={t('dashboard.premium.metricsPanel')}>
-        <DashboardCommandMetric
+      <QuickAccessCustomizeDialog
+        open={quickCustomizeOpen}
+        onOpenChange={setQuickCustomizeOpen}
+        allowedActions={allowedQuickActions}
+        selectedIds={preferredQuickIds}
+        resolveTitle={resolveQuickTitle}
+        onSave={persistQuickIds}
+        terminalSkin={!isPremium}
+      />
+
+      <section className="wms-dash-metrics" aria-label={t('dashboard.premium.metricsPanel')}>
+        <DashMetricCard
           label={commandText('todayGoodsReceipts')}
           value={formatMetric(metrics.goodsReceiptTodayCount)}
           hint={commandText('todayGoodsReceiptsHint')}
@@ -322,7 +281,7 @@ export function DashboardPage(): ReactElement {
           trend={goodsReceiptTrend}
           isLoading={isLoading}
         />
-        <DashboardCommandMetric
+        <DashMetricCard
           label={commandText('todayShipments')}
           value={formatMetric(metrics.shipmentTodayCount)}
           hint={commandText('todayShipmentsHint')}
@@ -332,35 +291,35 @@ export function DashboardPage(): ReactElement {
           trend={shipmentTrend}
           isLoading={isLoading}
         />
-        <DashboardCommandMetric
+        <DashMetricCard
           label={commandText('todayTransfers')}
           value={formatMetric(metrics.transferTodayCount)}
           hint={commandText('todayTransfersHint')}
-          icon={ArrowLeftRight}
+          icon={ArrowRight}
           tone="cyan"
           href="/warehouse/transfers/list"
           trend={transferTrend}
           isLoading={isLoading}
         />
-        <DashboardCommandMetric
+        <DashMetricCard
           label={commandText('qualityQueue')}
           value={formatMetric(metrics.pendingQualityInspectionCount)}
           hint={commandText('qualityQueueHint')}
-          icon={ShieldCheck}
+          icon={AlertCircle}
           tone="amber"
           href="/warehouse/quality/inspections"
           isLoading={isLoading}
         />
-        <DashboardCommandMetric
+        <DashMetricCard
           label={commandText('pendingApprovals')}
           value={formatMetric(metrics.pendingApprovalCount)}
           hint={commandText('pendingApprovalsHint')}
           icon={ClipboardList}
           tone="rose"
-          href="/warehouse/goods-receipts/list"
+          href="/warehouse/goods-receipts/tasks"
           isLoading={isLoading}
         />
-        <DashboardCommandMetric
+        <DashMetricCard
           label={commandText('myAssignments')}
           value={formatMetric(metrics.myTasksCount)}
           hint={commandText('myAssignmentsHint')}
@@ -371,31 +330,39 @@ export function DashboardPage(): ReactElement {
         />
       </section>
 
-      <div className="wms-command-analytics">
-        <DashboardPanel
-          className="wms-command-panel--trend"
+      <section className="wms-dash-grid">
+        <DashPanel
+          className="wms-dash-panel--trend"
           title={commandText('operationsTrend')}
-          description={commandText('operationsTrendDescription')}
-          action={<span className="wms-command-panel__period">{commandText('lastSevenDays')}</span>}
+          action={<span className="wms-dash-chip">{commandText('lastSevenDays')}</span>}
         >
-          <DashboardOperationsTrend
+          <DashTrendChart
             data={metrics.dailyOperations}
             series={[
               { key: 'goodsReceiptCount', label: t('dashboard.goodsReceipt'), color: '#8b5cf6' },
               { key: 'shipmentCount', label: t('dashboard.shipment'), color: '#3b82f6' },
               { key: 'transferCount', label: commandText('transfer'), color: '#14b8a6' },
             ]}
-            formatDate={(value) => new Date(`${value}T00:00:00`).toLocaleDateString(i18n.language, { day: '2-digit', month: 'short' })}
+            formatDate={(value) => {
+              const parsed = new Date(value);
+              return Number.isNaN(parsed.getTime())
+                ? value
+                : parsed.toLocaleDateString(i18n.language, { day: '2-digit', month: 'short' });
+            }}
             emptyText={commandText('noTrendData')}
           />
-        </DashboardPanel>
+        </DashPanel>
 
-        <DashboardPanel
+        <DashPanel
           title={commandText('inventoryHealth')}
-          description={commandText('inventoryHealthDescription')}
-          action={<Link className="wms-command-panel__link" to="/warehouse/stock-balances">{commandText('details')}<ArrowRight size={14} aria-hidden /></Link>}
+          action={
+            <Link to="/warehouse/stock-balances" className="wms-dash-link">
+              {commandText('details')}
+              <ArrowRight size={14} aria-hidden />
+            </Link>
+          }
         >
-          <DashboardInventoryDonut
+          <DashInventoryDonut
             inventory={metrics.inventoryHealth}
             labels={{
               total: commandText('stockPositions'),
@@ -405,39 +372,31 @@ export function DashboardPage(): ReactElement {
               unavailable: commandText('unavailable'),
             }}
           />
-        </DashboardPanel>
-      </div>
+        </DashPanel>
 
-      <DashboardPanel
-        className="wms-command-panel--activity"
-        title={t('dashboard.recentTransactions')}
-        description={commandText('recentTransactionsDescription')}
-        action={<span className="wms-command-panel__live"><span aria-hidden />{commandText('live')}</span>}
-      >
-        {metrics.activityItems.length === 0 ? (
-          <div className="wms-command-empty"><Boxes size={28} aria-hidden /><p>{t('dashboard.terminal.activityEmpty')}</p></div>
-        ) : (
-          <ul className="wms-command-activity-list">
-            {metrics.activityItems.map((item) => (
-              <ActivityRow
-                key={item.id}
-                item={item}
-                kindLabel={activityKindLabels[item.kind]}
-                statusLabel={statusLabels[item.statusKey]}
-                timestamp={formatRelativeTimestamp(
-                  item.timestamp,
-                  i18n.language,
-                  (minutes) => t('dashboard.terminal.minutesAgo', { minutes }),
-                  (hours) => t('dashboard.hoursAgo', { hours }),
-                )}
-              />
-            ))}
-          </ul>
-        )}
-      </DashboardPanel>
+        <DashPanel
+          title={t('dashboard.recentTransactions')}
+          action={<span className="wms-dash-chip wms-dash-chip--live">{commandText('live')}</span>}
+        >
+          <DashActivityList
+            items={metrics.activityItems}
+            emptyText={commandText('noRecentActivity')}
+            hrefs={ACTIVITY_HREFS}
+            kindLabels={activityKindLabels}
+            statusLabels={statusLabels}
+            formatTimestamp={(value) =>
+              formatRelativeTimestamp(
+                value,
+                i18n.language,
+                (minutes) => t('dashboard.minutesAgo', { minutes }),
+                (hours) => t('dashboard.hoursAgo', { hours }),
+              )
+            }
+          />
+        </DashPanel>
+      </section>
 
-      <DashboardSystemHealthStrip
-        health={metrics.systemHealth}
+      <DashFooterStrip
         labels={{
           database: commandText('database'),
           connected: commandText('connected'),
@@ -448,7 +407,9 @@ export function DashboardPage(): ReactElement {
           awaitingFirstRun: commandText('awaitingFirstRun'),
           updated: commandText('updated'),
         }}
+        health={metrics.systemHealth}
         formatTimestamp={formatSystemTimestamp}
+        isError={isError}
       />
     </div>
   );

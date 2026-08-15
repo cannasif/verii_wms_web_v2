@@ -66,9 +66,15 @@ export function mapDashboardSummary(summary: DashboardSummary | undefined): Dash
     transferTodayCount: summary.transferTodayCount ?? 0,
     pendingQualityInspectionCount: summary.pendingQualityInspectionCount ?? 0,
     openOperationCount: summary.openOperationCount ?? 0,
-    inventoryHealth: summary.inventoryHealth ?? EMPTY_METRICS.inventoryHealth,
+    inventoryHealth: {
+      ...EMPTY_METRICS.inventoryHealth,
+      ...(summary.inventoryHealth ?? {}),
+    },
     dailyOperations: summary.dailyOperations ?? [],
-    systemHealth: summary.systemHealth ?? EMPTY_METRICS.systemHealth,
+    systemHealth: {
+      ...EMPTY_METRICS.systemHealth,
+      ...(summary.systemHealth ?? {}),
+    },
     activityItems,
   };
 }

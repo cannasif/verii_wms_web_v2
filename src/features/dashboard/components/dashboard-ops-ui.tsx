@@ -1,11 +1,19 @@
-import { type ComponentProps, type ReactElement, type ReactNode } from 'react';
+import { type ReactElement, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight02Icon } from '@hugeicons/core-free-icons';
-import { HugeiconsIcon } from '@hugeicons/react';
+import {
+  AlertTriangle,
+  ArrowRight,
+  CheckCircle2,
+  Database,
+  RefreshCw,
+  type LucideIcon,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { DashboardActivityItem } from '../types/dashboard.types';
-
-type HugeIcon = ComponentProps<typeof HugeiconsIcon>['icon'];
+import type {
+  DashboardActivityItem,
+  DashboardActivityKind,
+  DashboardSystemHealth,
+} from '../types/dashboard.types';
 
 function FlagChip({
   children,
@@ -21,6 +29,20 @@ function FlagChip({
   );
 }
 
+function sparklinePath(values: number[]): string {
+  if (values.length === 0) return '';
+  const max = Math.max(...values, 1);
+  const width = 112;
+  const height = 28;
+  return values
+    .map((value, index) => {
+      const x = values.length === 1 ? width / 2 : (index / (values.length - 1)) * width;
+      const y = height - (value / max) * (height - 4) - 2;
+      return `${index === 0 ? 'M' : 'L'} ${x.toFixed(2)} ${y.toFixed(2)}`;
+    })
+    .join(' ');
+}
+
 export function DashboardOpsHero({
   eyebrow,
   greeting,
@@ -34,6 +56,8 @@ export function DashboardOpsHero({
   clockTime,
   clockDate,
   clockDateTime,
+  visualImage,
+  stats,
 }: {
   eyebrow: string;
   greeting?: string;
@@ -47,11 +71,15 @@ export function DashboardOpsHero({
   clockTime?: string;
   clockDate?: string;
   clockDateTime?: string;
+  visualImage?: string;
+  stats?: Array<{ label: string; value: string; hint?: string; tone?: 'operations' | 'stock' }>;
 }): ReactElement {
   const showClock = Boolean(clockTime);
+  const showVisual = Boolean(visualImage);
+  const showStats = Boolean(stats?.length);
 
   return (
-    <header className="wms-ops-dashboard-hero">
+    <header className={cn('wms-ops-dashboard-hero', showVisual && 'wms-ops-dashboard-hero--pictorial')}>
       <span className="wms-ops-dashboard-hero__frame" aria-hidden>
         <span className="wms-ops-dashboard-hero__corner wms-ops-dashboard-hero__corner--tl" />
         <span className="wms-ops-dashboard-hero__corner wms-ops-dashboard-hero__corner--tr" />
@@ -60,7 +88,14 @@ export function DashboardOpsHero({
         <span className="wms-ops-dashboard-hero__glow" />
       </span>
       <div className="wms-ops-dashboard-hero__content">
-        <div className={cn('wms-ops-dashboard-hero__main', showClock && 'wms-ops-dashboard-hero__main--with-clock')}>
+        <div
+          className={cn(
+            'wms-ops-dashboard-hero__main',
+            showVisual && 'wms-ops-dashboard-hero__main--pictorial',
+            showClock && 'wms-ops-dashboard-hero__main--with-clock',
+            !showVisual && showStats && 'wms-ops-dashboard-hero__main--with-stats',
+          )}
+        >
           <div className="wms-ops-dashboard-hero__intro">
             <p className="wms-ops-dashboard-hero__eyebrow">{eyebrow}</p>
             {greeting ? <p className="wms-ops-dashboard-hero__greeting">{greeting}</p> : null}
@@ -77,6 +112,46 @@ export function DashboardOpsHero({
               </div>
             </div>
           </div>
+
+          {showVisual ? (
+            <div
+              className="wms-ops-dashboard-hero__visual"
+              style={{ backgroundImage: `url(${visualImage})` }}
+            >
+              <div className="wms-ops-dashboard-hero__visual-shade" aria-hidden />
+              <div className="wms-ops-dashboard-hero__pulse" aria-hidden>
+                <span />
+                <span />
+                <span />
+              </div>
+              {showStats
+                ? stats!.map((stat) => (
+                    <div
+                      key={stat.label}
+                      className={cn(
+                        'wms-ops-dashboard-hero__floating',
+                        `wms-ops-dashboard-hero__floating--${stat.tone ?? 'operations'}`,
+                      )}
+                    >
+                      <span>{stat.label}</span>
+                      <strong>{stat.value}</strong>
+                      {stat.hint ? <small>{stat.hint}</small> : null}
+                    </div>
+                  ))
+                : null}
+            </div>
+          ) : showStats ? (
+            <div className="wms-ops-dashboard-hero__stats">
+              {stats!.map((stat) => (
+                <div key={stat.label} className="wms-ops-dashboard-hero__stat">
+                  <span className="wms-ops-dashboard-hero__meta-label">{stat.label}</span>
+                  <strong className="wms-ops-dashboard-hero__stat-value">{stat.value}</strong>
+                  {stat.hint ? <small className="wms-ops-dashboard-hero__stat-hint">{stat.hint}</small> : null}
+                </div>
+              ))}
+            </div>
+          ) : null}
+
           {showClock ? (
             <aside className="wms-ops-dashboard-hero__clock" aria-live="polite">
               {clockLabel ? <span className="wms-ops-dashboard-hero__clock-label">{clockLabel}</span> : null}
@@ -98,15 +173,20 @@ export function DashboardOpsStatusBar({
   tasksLabel,
   tasksValue,
   hint,
+  tone = 'success',
 }: {
   pulseLabel: string;
   pulseValue: string;
   tasksLabel: string;
   tasksValue: string;
   hint: string;
+  tone?: 'success' | 'warn';
 }): ReactElement {
   return (
-    <div className="wms-ops-dashboard-status" aria-live="polite">
+    <div
+      className={cn('wms-ops-dashboard-status', tone === 'warn' && 'wms-ops-dashboard-status--warn')}
+      aria-live="polite"
+    >
       <div className="wms-ops-dashboard-status__line">
         <span className="wms-ops-dashboard-status__prompt" aria-hidden>{'> '}</span>
         <span className="wms-ops-dashboard-status__label">{pulseLabel}: {pulseValue}</span>
@@ -151,35 +231,66 @@ export function DashboardOpsMetricTile({
   hint,
   tone = 'default',
   isLoading = false,
+  href,
+  trend = [],
 }: {
   label: string;
   value: ReactNode;
   hint: string;
   tone?: 'default' | 'accent' | 'warn' | 'success';
   isLoading?: boolean;
+  href?: string;
+  trend?: number[];
 }): ReactElement {
-  return (
-    <article className={cn('wms-ops-dashboard-metric', tone !== 'default' && `wms-ops-dashboard-metric--${tone}`)}>
+  const body = (
+    <>
       <span className="wms-ops-dashboard-metric__label">{label}</span>
-      <div className="wms-ops-dashboard-metric__value">{isLoading ? '…' : value}</div>
+      <div className="wms-ops-dashboard-metric__value-row">
+        <div className="wms-ops-dashboard-metric__value">{isLoading ? '…' : value}</div>
+        {trend.length > 0 ? (
+          <svg className="wms-ops-dashboard-metric__sparkline" viewBox="0 0 112 28" role="img" aria-label={label}>
+            <path d={sparklinePath(trend)} fill="none" stroke="currentColor" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+          </svg>
+        ) : null}
+      </div>
       <p className="wms-ops-dashboard-metric__hint">{hint}</p>
-    </article>
+    </>
   );
+
+  const className = cn(
+    'wms-ops-dashboard-metric',
+    tone !== 'default' && `wms-ops-dashboard-metric--${tone}`,
+    trend.length > 0 && 'wms-ops-dashboard-metric--chart',
+  );
+
+  if (href) {
+    return (
+      <Link className={className} to={href}>
+        {body}
+      </Link>
+    );
+  }
+
+  return <article className={className}>{body}</article>;
 }
 
 export function DashboardOpsSection({
   title,
   description,
   sectionCode,
+  action,
   children,
+  compact = false,
 }: {
   title: string;
   description: string;
   sectionCode: string;
+  action?: ReactNode;
   children: ReactNode;
+  compact?: boolean;
 }): ReactElement {
   return (
-    <section className="wms-ops-dashboard-section">
+    <section className={cn('wms-ops-dashboard-section', compact && 'wms-ops-dashboard-section--compact')}>
       <span className="wms-ops-dashboard-section__frame" aria-hidden>
         <span className="wms-ops-dashboard-section__corner wms-ops-dashboard-section__corner--tl" />
         <span className="wms-ops-dashboard-section__corner wms-ops-dashboard-section__corner--tr" />
@@ -195,6 +306,7 @@ export function DashboardOpsSection({
           <p className="wms-ops-dashboard-section__description wms-ops-pt-terminal__meta text-xs">{description}</p>
         </div>
         <div className="wms-ops-dashboard-section__meta">
+          {action}
           <span className="wms-ops-code-badge wms-ops-dashboard-section__code">{sectionCode}</span>
         </div>
       </header>
@@ -208,12 +320,14 @@ export function DashboardOpsActivityFeed({
   emptyText,
   kindLabels,
   statusLabels,
+  hrefs,
   formatTimestamp,
 }: {
   items: DashboardActivityItem[];
   emptyText: string;
   kindLabels: Record<DashboardActivityItem['kind'], string>;
   statusLabels: Record<DashboardActivityItem['statusKey'], string>;
+  hrefs: Record<DashboardActivityKind, string>;
   formatTimestamp: (value: string) => string;
 }): ReactElement {
   if (items.length === 0) {
@@ -224,19 +338,21 @@ export function DashboardOpsActivityFeed({
     <div className="wms-ops-dashboard-activity-panel">
       <ul className="wms-ops-dashboard-activity">
         {items.map((item) => (
-          <li key={item.id} className="wms-ops-dashboard-activity__row">
-            <div className="wms-ops-dashboard-activity__rail" aria-hidden />
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <FlagChip tone="info">{kindLabels[item.kind]}</FlagChip>
-                <FlagChip tone={item.statusKey === 'completed' ? 'success' : item.statusKey === 'pending' ? 'warn' : 'default'}>
-                  {statusLabels[item.statusKey]}
-                </FlagChip>
+          <li key={item.id}>
+            <Link className="wms-ops-dashboard-activity__row" to={hrefs[item.kind]}>
+              <div className="wms-ops-dashboard-activity__rail" aria-hidden />
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <FlagChip tone="info">{kindLabels[item.kind]}</FlagChip>
+                  <FlagChip tone={item.statusKey === 'completed' ? 'success' : item.statusKey === 'pending' ? 'warn' : 'default'}>
+                    {statusLabels[item.statusKey]}
+                  </FlagChip>
+                </div>
+                <p className="wms-ops-dashboard-activity__title">{item.title}</p>
+                <p className="wms-ops-dashboard-activity__subtitle">{item.subtitle}</p>
+                <p className="wms-ops-dashboard-activity__time">{formatTimestamp(item.timestamp)}</p>
               </div>
-              <p className="wms-ops-dashboard-activity__title">{item.title}</p>
-              <p className="wms-ops-dashboard-activity__subtitle">{item.subtitle}</p>
-              <p className="wms-ops-dashboard-activity__time">{formatTimestamp(item.timestamp)}</p>
-            </div>
+            </Link>
           </li>
         ))}
       </ul>
@@ -250,7 +366,7 @@ export function DashboardOpsQuickLink({
   title,
   description,
   href,
-  icon,
+  icon: Icon,
   openLabel,
 }: {
   index: number;
@@ -258,7 +374,7 @@ export function DashboardOpsQuickLink({
   title: string;
   description: string;
   href: string;
-  icon: HugeIcon;
+  icon: LucideIcon;
   openLabel: string;
 }): ReactElement {
   return (
@@ -277,7 +393,7 @@ export function DashboardOpsQuickLink({
       </div>
       <div className="wms-ops-dashboard-module__body">
         <span className="wms-ops-dashboard-module__icon" aria-hidden>
-          <HugeiconsIcon icon={icon} size={22} strokeWidth={1.75} />
+          <Icon className="size-[1.35rem]" strokeWidth={1.75} />
         </span>
         <div className="min-w-0 flex-1">
           <h3 className="wms-ops-dashboard-module__title">{title}</h3>
@@ -286,8 +402,74 @@ export function DashboardOpsQuickLink({
       </div>
       <div className="wms-ops-dashboard-module__action">
         <span>{openLabel}</span>
-        <HugeiconsIcon icon={ArrowRight02Icon} size={16} strokeWidth={1.75} className="wms-ops-dashboard-module__action-icon" />
+        <ArrowRight className="wms-ops-dashboard-module__action-icon size-4" strokeWidth={1.75} />
       </div>
     </Link>
+  );
+}
+
+function HealthItem({
+  icon: Icon,
+  label,
+  value,
+  tone,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: ReactNode;
+  tone: 'success' | 'warning' | 'neutral';
+}): ReactElement {
+  return (
+    <div className={cn('wms-ops-dashboard-health__item', `wms-ops-dashboard-health__item--${tone}`)}>
+      <Icon size={17} strokeWidth={1.8} aria-hidden />
+      <span>
+        <small>{label}</small>
+        <strong>{value}</strong>
+      </span>
+    </div>
+  );
+}
+
+export function DashboardOpsHealthStrip({
+  health,
+  labels,
+  formatTimestamp,
+}: {
+  health: DashboardSystemHealth;
+  labels: {
+    database: string;
+    connected: string;
+    erpIntegration: string;
+    normal: string;
+    issueCount: (count: number) => string;
+    balanceProjection: string;
+    awaitingFirstRun: string;
+    updated: string;
+  };
+  formatTimestamp: (value: string) => string;
+}): ReactElement {
+  const erpHealthy = health.erpIssueCount === 0;
+  return (
+    <footer className="wms-ops-dashboard-health">
+      <HealthItem icon={Database} label={labels.database} value={labels.connected} tone="success" />
+      <HealthItem
+        icon={erpHealthy ? CheckCircle2 : AlertTriangle}
+        label={labels.erpIntegration}
+        value={erpHealthy ? labels.normal : labels.issueCount(health.erpIssueCount)}
+        tone={erpHealthy ? 'success' : 'warning'}
+      />
+      <HealthItem
+        icon={RefreshCw}
+        label={labels.balanceProjection}
+        value={health.lastBalanceProjectionAtUtc ? formatTimestamp(health.lastBalanceProjectionAtUtc) : labels.awaitingFirstRun}
+        tone={health.lastBalanceProjectionAtUtc ? 'neutral' : 'warning'}
+      />
+      <HealthItem
+        icon={CheckCircle2}
+        label={labels.updated}
+        value={health.generatedAtUtc ? formatTimestamp(health.generatedAtUtc) : '-'}
+        tone="neutral"
+      />
+    </footer>
   );
 }
