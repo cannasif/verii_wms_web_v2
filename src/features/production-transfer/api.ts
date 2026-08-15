@@ -333,6 +333,8 @@ export const productionTransferApi = {
   // — Politika —
   policy: async (branchCode: string): Promise<ProductionTransferPolicy> =>
     unwrap(await api.get<Envelope<ProductionTransferPolicy>>('/api/production-transfers/policy', { params: { branchCode } })),
+  effectivePolicy: async (branchCode: string): Promise<ProductionTransferPolicy> =>
+    unwrap(await api.get<Envelope<ProductionTransferPolicy>>('/api/production-transfers/effective-policy', { params: { branchCode } })),
   updatePolicy: async (payload: ProductionTransferPolicy): Promise<ProductionTransferPolicy> =>
     unwrap(await api.put<Envelope<ProductionTransferPolicy>>('/api/production-transfers/policy', payload, { useNativeHttpMethod: true })),
 

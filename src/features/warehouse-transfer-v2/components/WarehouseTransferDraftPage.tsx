@@ -421,7 +421,7 @@ export function WarehouseTransferDraftPage({
     setPolicy(null);
     setProductionPolicy(null);
     const request = variant === "production"
-      ? productionTransferApi.policy(branchCode).then(setProductionPolicy)
+      ? productionTransferApi.effectivePolicy(branchCode).then(setProductionPolicy)
       : warehouseTransferApi.policy(branchCode).then(setPolicy);
     void request.catch((error: Error) => toast.error(error.message));
   }, [branchCode, variant]);

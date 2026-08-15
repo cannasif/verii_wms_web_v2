@@ -617,7 +617,7 @@ export function ProductionWorkOrdersPage(): ReactElement {
   useEffect(() => {
     void loadPending();
   }, [loadPending]);
-  useEffect(() => { void productionTransferApi.policy(branchCode).then(setPolicy).catch((error: Error) => toast.error(error.message)); }, [branchCode]);
+  useEffect(() => { void productionTransferApi.effectivePolicy(branchCode).then(setPolicy).catch((error: Error) => toast.error(error.message)); }, [branchCode]);
 
   // Rozet varken serbest metin aramaya karışmaz; rozetsizken yazarken canlı aranır.
   useEffect(() => {

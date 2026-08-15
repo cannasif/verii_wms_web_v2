@@ -43,7 +43,7 @@ export async function loadProductionCancellationContext(
 ): Promise<ProductionCancellationContext> {
   const transferApi = transferApiFor('production');
   const [policy, detail] = await Promise.all([
-    productionTransferApi.policy(branchCode),
+    productionTransferApi.effectivePolicy(branchCode),
     transferApi.detail(row.id),
   ]);
   const transferPickedQuantity = sumTransferPickedQuantity(detail);
