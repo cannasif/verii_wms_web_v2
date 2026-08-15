@@ -32,6 +32,7 @@ export const loadQualitySettingsPage = () => import('@/features/quality/componen
 export const loadQualityRulesPage = () => import('@/features/quality/components/QualityRulesPage');
 export const loadQualityDecisionCodesPage = () => import('@/features/quality/components/QualityDecisionCodesPage');
 export const loadQualityInspectionsPage = () => import('@/features/quality/components/QualityInspectionsPage');
+export const loadQualityReportsPage = () => import('@/features/quality/components/QualityReportsPage');
 export const loadSerialNumberRulesPage = () => import('@/features/serial-number-rules');
 
 export const loadSteelReceiptHubPage = () => import('@/features/steel-receipt/components/SteelReceiptHubPage');
@@ -131,6 +132,7 @@ const routePreloaders: Array<[prefix: string, load: () => Promise<unknown>]> = [
   ['/warehouse/shipments/new', loadShippingCreatePage],
   ['/warehouse/shipments', loadShippingHubPage],
   ['/warehouse/quality/inspections', loadQualityInspectionsPage],
+  ['/warehouse/quality/reports', loadQualityReportsPage],
   ['/warehouse/quality/quarantine', loadQualityInspectionsPage],
   ['/warehouse/quality/settings', loadQualitySettingsPage],
   ['/warehouse/quality/rules', loadQualityRulesPage],

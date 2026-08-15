@@ -12,7 +12,7 @@ import {
   loadGoodsReceiptLabelsPage, loadGoodsReceiptListPage, loadGoodsReceiptManualPage, loadGoodsReceiptPolicyPage,
   loadHangfirePage, loadIncomingInvoiceArchivePage, loadLocationDefinitionsPage, loadPermissionGroupsPage, loadPermissionsPage, loadProfilePage,
   loadKkdPages,
-  loadProjectSettingsPage, loadQualityDecisionCodesPage, loadQualityInspectionsPage, loadQualityRulesPage, loadQualitySettingsPage,
+  loadProjectSettingsPage, loadQualityDecisionCodesPage, loadQualityInspectionsPage, loadQualityReportsPage, loadQualityRulesPage, loadQualitySettingsPage,
   loadProductionPages, loadGeneratorProductionPages, loadProductionTransferPages, loadSubcontractingTransferPages,
   loadProcurementPage,
   loadSupplierQuoteEntryPage,
@@ -85,6 +85,7 @@ const QualityQuarantinePage = lazy(() => loadQualityInspectionsPage().then((m) =
 const QualityRulesPage = lazy(() => loadQualityRulesPage().then((m) => ({ default: m.QualityRulesPage })));
 const QualityDecisionCodesPage = lazy(() => loadQualityDecisionCodesPage().then((m) => ({ default: m.QualityDecisionCodesPage })));
 const QualitySettingsPage = lazy(() => loadQualitySettingsPage().then((m) => ({ default: m.QualitySettingsPage })));
+const QualityReportsPage = lazy(() => loadQualityReportsPage().then((m) => ({ default: m.QualityReportsPage })));
 const SerialNumberRulesPage = lazy(() => loadSerialNumberRulesPage().then((m) => ({ default: m.SerialNumberRulesPage })));
 const SteelReceiptHubPage = lazy(() => loadSteelReceiptHubPage().then((m) => ({ default: m.SteelReceiptHubPage })));
 const SteelReceiptImportPage = lazy(() => loadSteelReceiptImportPage().then((m) => ({ default: m.SteelReceiptImportPage })));
@@ -322,6 +323,7 @@ export function App(): ReactElement {
           <Route path="warehouse/quality/rules" element={<QualityRulesPage />} />
           <Route path="warehouse/quality/decision-codes" element={<QualityDecisionCodesPage />} />
           <Route path="warehouse/quality/inspections" element={<QualityInspectionsPage />} />
+          <Route path="warehouse/quality/reports" element={<QualityReportsPage />} />
           <Route path="warehouse/quality/quarantine" element={<QualityQuarantinePage />} />
           <Route path="warehouse/stock-movements" element={<StockMovementsPage />} />
           <Route path="warehouse/location-balances" element={<LocationBalancesPage />} />
