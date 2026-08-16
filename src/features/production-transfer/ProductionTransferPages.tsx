@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Boxes, ChevronDown, ChevronRight, ClipboardList, Factory, PackageCheck, Play, RefreshCw, Rows3, Save, Settings2, ShieldAlert, Trash2, UserPlus, Warehouse } from 'lucide-react';
-import { Link, useLocation, useParams } from 'react-router-dom';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Boxes, ClipboardList, Factory, PackageCheck, RefreshCw, Rows3, Save, Settings2, ShieldAlert, UserPlus, Warehouse } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { AppInput } from '@/components/shared/AppInput';
@@ -17,18 +17,9 @@ import { WarehouseTransferDraftPage, type ProductionTransferInitialSource } from
 import { WarehouseTransferListPage } from '@/features/warehouse-transfer-v2/components/WarehouseTransferListPage';
 import { useAuthStore } from '@/stores/auth-store';
 import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
-import { warehouseTransferApi, transferApiFor } from '@/features/warehouse-transfer-v2/api/warehouse-transfer.api';
-import { productionTransferApi, type ProductionTask, type ProductionTaskBoard, type ProductionTransferPolicy } from './api';
-import { analyzeProductionCancellationReadiness } from './production-transfer-cancellation';
-import { sumTransferPickedQuantity } from './production-transfer-cancellation-loader';
-import { computeProductionTaskProgress, taskLineageHasProgress } from './production-transfer-task-progress';
-import { ProductionTransferCancellationPanel } from './components/ProductionTransferCancellationPanel';
+import { warehouseTransferApi } from '@/features/warehouse-transfer-v2/api/warehouse-transfer.api';
+import { productionTransferApi, type ProductionTransferPolicy } from './api';
 import { ProductionTransferExecutionPage } from './components/ProductionTransferExecutionPage';
-import { ProductionTransferReturnSection } from './components/ProductionTransferReturnSection';
-import { ProductionTaskSourceLocationCell } from './components/ProductionTaskSourceLocationCell';
-import { ProductionTaskStartShortageDialog } from './components/ProductionTaskStartShortageDialog';
-import { useProductionTaskSourceAvailability } from './hooks/useProductionTaskSourceAvailability';
-import { useProductionTaskStart } from './hooks/useProductionTaskStart';
 import type { ActiveUserOption, LocationOption, WarehouseOption } from '@/features/goods-receipt-v2/types/goods-receipt.types';
 import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
 import { ParameterFieldGuide, ParameterPageGuide, ParameterToggleCard } from '@/components/shared/ParameterGuidance';
@@ -158,18 +149,7 @@ export function ProductionTransferDraftPage(){
 }
 export function ProductionTransferListPage(){return <WarehouseTransferListPage variant="production"/>;}
 export function ProductionTransferOperationPage(){
-  const[executionRefreshToken,setExecutionRefreshToken]=useState(0);
-  const[boardRefreshToken,setBoardRefreshToken]=useState(0);
-  return <section className="space-y-5">
-    <ProductionTaskPanel
-      refreshToken={boardRefreshToken}
-      onStateChange={()=>setExecutionRefreshToken(value=>value+1)}
-    />
-    <ProductionTransferExecutionPage
-      refreshToken={executionRefreshToken}
-      onStateChange={()=>setBoardRefreshToken(value=>value+1)}
-    />
-  </section>;
+  return <ProductionTransferExecutionPage />;
 }
 export function ProductionTransferPolicyPage(){
   const {t,moduleReady}=useModuleTranslation('production-transfer');
@@ -360,192 +340,6 @@ export function ProductionTransferPolicyPage(){
         <Save className="size-4"/>{t('policy.save',{defaultValue:'Kaydet'})}
       </OpsActionButton>
     </div>
-  </section>;
-}
-
-const TASK_TYPE_LABELS: Record<string, string> = {
-  Pick: 'Toplama', Dispatch: 'Sevk', Receive: 'Kabul', Putaway: 'Yerleştirme',
-  CancellationReturn: 'İptal İadesi',
-};
-const taskTypeLabel = (type: string): string => TASK_TYPE_LABELS[type] ?? type;
-
-export function ProductionTaskPanel({
-  refreshToken=0,
-  onStateChange,
-}:{
-  refreshToken?:number;
-  onStateChange?:()=>void;
-}={}){
-  const id=Number(useParams().id);
-  const currentUserId=useAuthStore(x=>x.user?.id);
-  const branchCode=useAuthStore(x=>x.branch?.code??'0');
-  const{can}=usePermissionAccess();
-  const queryClient=useQueryClient();
-  const boardQueryKey=useMemo(()=>['production-transfer','board',id] as const,[id]);
-  const boardQuery=useQuery({queryKey:boardQueryKey,queryFn:()=>productionTransferApi.taskBoard(id),enabled:Number.isFinite(id)&&id>0});
-  const detailQuery=useQuery({queryKey:['production-transfer','detail',id],queryFn:()=>transferApiFor('production').detail(id),enabled:Number.isFinite(id)&&id>0});
-  const{refetch:refetchBoardQuery}=boardQuery;
-  const{refetch:refetchDetailQuery}=detailQuery;
-  useEffect(()=>{
-    if(refreshToken<=0)return;
-    void Promise.all([refetchBoardQuery(),refetchDetailQuery()]);
-  },[refreshToken,refetchBoardQuery,refetchDetailQuery]);
-  const board=boardQuery.data;
-  const detail=detailQuery.data;
-  const{getAvailable:sourceAvailable,isLoading:sourceAvailabilityLoading}=useProductionTaskSourceAvailability(board,detail,branchCode);
-  const[selectedUsers,setSelectedUsers]=useState<Record<number,number>>({});
-  const[handoffReasons,setHandoffReasons]=useState<Record<number,string>>({});
-  const[assignmentTaskId,setAssignmentTaskId]=useState<number|''>('');
-  const[expandedWorkloadUserIds,setExpandedWorkloadUserIds]=useState<Set<number>>(new Set());
-  const toggleWorkloadExpanded=(userId:number)=>setExpandedWorkloadUserIds(current=>{
-    const next=new Set(current);
-    if(next.has(userId))next.delete(userId);else next.add(userId);
-    return next;
-  });
-  const[busy,setBusy]=useState(false);
-  const canAssign=can('WMS.PRODUCTION_TRANSFER.ASSIGN');
-  const canCancel=can('WMS.PRODUCTION_TRANSFER.CANCEL');
-  const[policy,setPolicy]=useState<ProductionTransferPolicy>();
-  useEffect(()=>{
-    if(!Number.isFinite(id)||id<=0)return;
-    void productionTransferApi.effectivePolicy(branchCode).then(setPolicy).catch((e:Error)=>toast.error(e.message));
-  },[branchCode,id]);
-  const run=useCallback(async(action:()=>Promise<ProductionTaskBoard>)=>{
-    setBusy(true);
-    try{
-      queryClient.setQueryData(boardQueryKey,await action());
-      void queryClient.invalidateQueries({queryKey:['production-task-source-locations']});
-      await queryClient.refetchQueries({queryKey:['production-transfer','detail',id]});
-      void queryClient.invalidateQueries({queryKey:['wt-op-source']});
-      void queryClient.invalidateQueries({queryKey:['production-transfer','picked-sources',id]});
-      onStateChange?.();
-    }catch(e){
-      toast.error(e instanceof Error?e.message:'İşlem başarısız.');
-    }finally{
-      setBusy(false);
-    }
-  },[boardQueryKey,id,onStateChange,queryClient]);
-  const refreshBoard=useCallback(()=>void queryClient.invalidateQueries({queryKey:boardQueryKey}),[boardQueryKey,queryClient]);
-  const{
-    shortageDialog,
-    checkingTaskId,
-    requestStart,
-    confirmPartialStart,
-    cancelPartialStart,
-  }=useProductionTaskStart({transferId:id,run});
-  if(boardQuery.isLoading||detailQuery.isLoading)return <section className="animate-pulse rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5"><div className="h-4 w-40 rounded bg-[var(--wms-app-border)]"/><div className="mt-3 h-24 rounded-xl bg-[var(--wms-app-border)]/60"/></section>;
-  if(!board||board.tasks.length===0)return null;
-  const transferPickedQuantity=detailQuery.data?sumTransferPickedQuantity(detailQuery.data):0;
-  const cancellationReadiness=analyzeProductionCancellationReadiness(board,{transferPickedQuantity});
-  const activeReturnTask=board.tasks.find(task=>
-    task.taskType==='CancellationReturn'
-    &&task.assignments.some(assignment=>assignment.userId===currentUserId)
-    &&!['Completed','Cancelled'].includes(task.status));
-  return <section className="rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5">
-    <div className="mb-4 flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-widest text-[var(--wms-brand-primary)]">Üretim transfer görevi</p><h2 className="text-xl font-black">{board.documentNo}</h2></div><span className="rounded-full border border-[var(--wms-app-border)] px-3 py-1 text-xs font-bold">{board.transferStatus}</span></div>
-    {activeReturnTask?(<ProductionTransferReturnSection transferId={id} documentNo={board.documentNo} onBoardChange={nextBoard=>{queryClient.setQueryData(boardQueryKey,nextBoard);onStateChange?.();}}/>):null}
-    <div className="space-y-4">{board.tasks.filter(task=>!activeReturnTask||task.taskId!==activeReturnTask.taskId).map(task=><article key={task.taskId} className="rounded-xl border border-[var(--wms-app-border)] p-4">
-      <div className="flex flex-wrap items-center justify-between gap-3"><div><strong>{task.taskNo}</strong>{task.taskType==='CancellationReturn'?<span className="ml-2 rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-bold text-amber-500">{taskTypeLabel(task.taskType)}</span>:<span className="ml-2 text-xs text-[var(--wms-app-text-muted)]">{taskTypeLabel(task.taskType)}</span>}<span className="ml-2 text-xs text-[var(--wms-app-text-muted)]">{task.status}</span>{task.completedAtUtc&&<span className="ml-2 text-xs text-[var(--wms-app-text-muted)]">· {new Date(task.completedAtUtc).toLocaleString('tr-TR')}</span>}</div>
-        <div className="flex flex-wrap gap-2">{task.taskType!=='CancellationReturn'&&!board.sourceIsRackless&&task.lines.some(x=>x.missingQuantity>0||x.processedQuantity>0&&x.processedQuantity<x.requestedQuantity)&&!['Completed','Cancelled'].includes(task.status)&&<button disabled={busy} onClick={()=>void run(()=>productionTransferApi.refreshRoute(id,task.taskId))} className="inline-flex items-center gap-2 rounded-lg border border-amber-500 px-3 py-2 text-xs font-bold text-amber-500"><RefreshCw className="size-4"/>Rotayı güncelle</button>}{task.assignments.some(x=>x.userId===currentUserId)&&!['InProgress','PartiallyCompleted','Completed','Cancelled'].includes(task.status)&&<button disabled={busy||checkingTaskId===task.taskId} onClick={()=>void requestStart(task.taskId,task.taskNo)} className="inline-flex items-center gap-2 rounded-lg bg-[var(--wms-brand-primary)] px-3 py-2 text-xs font-bold text-[var(--wms-brand-on-primary)]"><Play className="size-4"/>Bu işi yapıyorum</button>}</div></div>
-      <div className="mt-3 overflow-x-auto"><table className="w-full min-w-[720px] text-left text-sm"><thead className="text-xs uppercase text-[var(--wms-app-text-muted)]"><tr><th className="p-2">Stok</th>{!board.sourceIsRackless&&<th className="p-2">Kaynak raf</th>}<th className="p-2 text-right">İstenen</th><th className="p-2 text-right">Rezerve</th><th className="p-2 text-right">Eksik</th><th className="p-2 text-right">Toplanan</th></tr></thead><tbody>{task.lines.map(line=><tr key={line.taskLineId} className="border-t border-[var(--wms-app-border)]"><td className="p-2"><strong>{line.stockCode}</strong><div className="text-xs text-[var(--wms-app-text-muted)]">{line.stockName}</div></td>{!board.sourceIsRackless&&<ProductionTaskSourceLocationCell line={line} getAvailable={sourceAvailable} loading={sourceAvailabilityLoading}/>}<td className="p-2 text-right">{line.requestedQuantity}</td><td className="p-2 text-right text-emerald-500">{line.reservedQuantity}</td><td className="p-2 text-right text-red-500">{line.missingQuantity}</td><td className="p-2 text-right">{line.processedQuantity}</td></tr>)}</tbody></table></div>
-      {task.assignments.length>0&&<div className="mt-3 flex flex-wrap items-center gap-2">{task.assignments.map(a=><span key={a.userId} className="inline-flex items-center gap-2 rounded-full border border-[var(--wms-app-border)] px-3 py-1 text-xs">{a.username}{a.isPrimary?' · Birincil':''}</span>)}</div>}
-    </article>)}</div>
-    {canAssign&&board.tasks.length>0&&(()=>{
-      const assignableTasks=board.tasks.filter(t=>!['Completed','Cancelled'].includes(t.status));
-      // ÖNEMLİ: arama sadece assignableTasks içinde yapılmalı — board.tasks içinde ararsak,
-      // önceki bir devir turunda seçilip artık Completed olmuş eski bir görevin id'si
-      // assignmentTaskId'de saklı kalmışsa (kullanıcı tekrar seçim yapmadıysa), o eski/kapanmış
-      // görev sessizce bulunup üzerinde işlem yapılır — tam da yaşanan "yanlış görevde sessizce
-      // silindi" sorununun nedeni budur. board.tasks Id'ye göre artan sırada (en eski önce)
-      // geldiği için, seçim yoksa/geçersizse en güncel (en son) atanabilir göreve odaklan.
-      const task=assignableTasks.find(t=>t.taskId===assignmentTaskId)??assignableTasks[assignableTasks.length-1];
-      // İş emri devirle bölünmüş olabilir (A kısmen yaptı, kalanı B'ye devretti) — iş emri henüz
-      // bitmediğinden A'nın topladığı stok da iade kapsamına girmeli. Bu yüzden "iade gerekir mi"
-      // sorusu tek görevin kendi satırlarına değil, previousTaskId zincirinin tamamına bakmalı.
-      const lineageHasProgress=(t?:ProductionTask)=>t?taskLineageHasProgress(t,board.tasks):false;
-      return <div className="mt-4 rounded-xl border border-[var(--wms-app-border)] p-4">
-        <div className="mb-3 flex items-center gap-2 font-bold"><UserPlus className="size-4"/>Görev ataması</div>
-        <select className="input mb-3 w-full sm:max-w-md" value={task?.taskId??''} onChange={e=>setAssignmentTaskId(Number(e.target.value))}>
-          {assignableTasks.length===0&&<option value="">Atanabilir görev yok</option>}
-          {assignableTasks.map(t=><option key={t.taskId} value={t.taskId}>{t.taskNo} · {t.status}{lineageHasProgress(t)?' · toplanmış stok var':''}</option>)}
-        </select>
-        {task&&<div className="flex flex-wrap items-center gap-2">
-          {task.assignments.map(a=>{
-            const hasProgress=lineageHasProgress(task);
-            return <span key={a.userId} className="inline-flex items-center gap-2 rounded-full border border-[var(--wms-app-border)] px-3 py-1 text-xs">
-              <span>{a.username}{a.isPrimary?' · Birincil':''}</span>
-              <button title={hasProgress?'Toplanmış stok varken atama kaldırılamaz; kalan işi devredin veya eksik teslim ile tamamlayın':'Atamayı kaldır'} disabled={busy||hasProgress} onClick={()=>void run(()=>productionTransferApi.removeAssignment(id,task.taskId,a.userId))}><Trash2 className="size-3.5 text-red-500"/></button>
-            </span>;
-          })}
-          <select className="input min-w-52" value={selectedUsers[task.taskId]??''} onChange={e=>setSelectedUsers(x=>({...x,[task.taskId]:Number(e.target.value)}))}><option value="">Depo çalışanı seçin</option>{board.eligibleAssignees.filter(u=>(u.warehouseIds.length===0||u.warehouseIds.includes(task.warehouseId))&&!task.assignments.some(a=>a.userId===u.userId)).map(u=><option key={u.userId} value={u.userId}>{u.username}</option>)}</select>
-          <button disabled={busy||!selectedUsers[task.taskId]} onClick={()=>void run(()=>productionTransferApi.assignTask(id,task.taskId,selectedUsers[task.taskId]))} className="inline-flex items-center gap-2 rounded-lg border border-[var(--wms-brand-primary)] px-3 py-2 text-xs font-bold text-[var(--wms-brand-primary)]"><UserPlus className="size-4"/>Ata</button>
-          {task.assignments.length>0&&task.lines.some(line=>line.processedQuantity<line.requestedQuantity)&&<><input className="input min-w-56" value={handoffReasons[task.taskId]??''} onChange={e=>setHandoffReasons(x=>({...x,[task.taskId]:e.target.value}))} placeholder="Devir nedeni (opsiyonel)"/><button disabled={busy||!selectedUsers[task.taskId]} onClick={()=>void run(()=>productionTransferApi.handoffTask(id,task.taskId,selectedUsers[task.taskId],handoffReasons[task.taskId]))} className="inline-flex items-center gap-2 rounded-lg bg-amber-500 px-3 py-2 text-xs font-black text-slate-950 disabled:opacity-40"><UserPlus className="size-4"/>Kalan işi devret</button></>}
-        </div>}
-      </div>;
-    })()}
-    {canAssign&&board.workloads.length>0&&(()=>{
-      const startedWorkloads=board.workloads.filter(w=>board.tasks.some(t=>t.startedBy===w.userId));
-      if(startedWorkloads.length===0)return null;
-      return <div className="mt-4 grid gap-2 md:grid-cols-3">{startedWorkloads.map(w=>{
-      const myTasks=board.tasks.filter(t=>t.assignments.some(a=>a.userId===w.userId));
-      const activeTask=myTasks.find(t=>t.status==='InProgress'&&t.startedBy===w.userId);
-      const nonCancelledTasks=myTasks.filter(t=>t.status!=='Cancelled');
-      const currentTask=activeTask??nonCancelledTasks[nonCancelledTasks.length-1];
-      const currentProgress=currentTask?computeProductionTaskProgress(currentTask,board.tasks,w.userId):null;
-      // Completed olsa da, eğer bu görev bir devirle başka bir göreve devam ediyorsa (başka bir
-      // görev bunu previousTaskId ile referans veriyorsa) iş emri gerçekte bitmedi — "Tamamladı"
-      // yerine "Devretti" göster, aksi halde işin bittiği yanlış izlenimi oluşur.
-      const wasHandedOff=currentTask?.status==='Completed'&&board.tasks.some(t=>t.previousTaskId===currentTask.taskId);
-      const currentLabel=activeTask?'Şu an yapıyor':wasHandedOff?'Devretti':currentTask?.status==='Completed'?'Tamamladı':'Bu transferdeki görev';
-      const expanded=expandedWorkloadUserIds.has(w.userId);
-      return <div key={w.userId} className="rounded-xl bg-[var(--wms-app-surface)] p-3 text-sm">
-        <button type="button" onClick={()=>toggleWorkloadExpanded(w.userId)} className="flex w-full items-center justify-between gap-2 text-left">
-          <strong>{w.username}</strong>
-          {expanded?<ChevronDown className="size-4 text-[var(--wms-app-text-muted)]"/>:<ChevronRight className="size-4 text-[var(--wms-app-text-muted)]"/>}
-        </button>
-        <div className="mt-1 text-xs text-[var(--wms-app-text-muted)]">Atanan {w.assignedTaskCount} · Tamamlanan {w.completedTaskCount}</div>
-        {currentProgress&&currentTask?<>
-          <div className="mt-1 text-xs font-semibold text-[var(--wms-brand-primary)]">{currentLabel}: {currentTask.taskNo}</div>
-          <div className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--wms-app-border)]"><span className="block h-full bg-emerald-500" style={{width:`${Math.min(100,Math.max(0,currentProgress.percent))}%`}}/></div>
-          <div className="mt-1 text-xs font-bold">{currentProgress.processed} / {currentProgress.planned} · %{currentProgress.percent}</div>
-        </>:<div className="mt-2 text-xs text-[var(--wms-app-text-muted)]">Bu transferde aktif görev yok.</div>}
-        {expanded&&<div className="mt-3 space-y-2 border-t border-[var(--wms-app-border)] pt-2">
-          <div className="rounded-lg bg-[var(--wms-app-panel)] p-2 text-xs text-[var(--wms-app-text-muted)]">
-            <div className="font-bold text-[var(--wms-app-text)]">Tüm görevlerde toplam</div>
-            <div className="mt-1">{w.processedQuantity} / {w.plannedQuantity} · %{w.completionPercent}</div>
-          </div>
-          <div className="space-y-1">
-            <div className="text-[.65rem] font-bold uppercase tracking-wide text-[var(--wms-app-text-muted)]">Atanmış İşler ({myTasks.length})</div>
-            {myTasks.length===0&&<p className="text-xs text-[var(--wms-app-text-muted)]">Atanmış görev yok.</p>}
-            {myTasks.map(t=><div key={t.taskId} className={`flex items-center justify-between rounded-md px-2 py-1 text-xs ${t.taskId===currentTask?.taskId?'bg-[var(--wms-brand-primary)]/10 font-bold':''}`}>
-              <span>{t.taskNo}</span><span className="text-[var(--wms-app-text-muted)]">{t.status}</span>
-            </div>)}
-          </div>
-        </div>}
-      </div>;
-      })}</div>;
-    })()}
-    <ProductionTransferCancellationPanel
-      transferId={id}
-      transferStatus={board.transferStatus}
-      sourceWarehouseId={board.sourceWarehouseId}
-      readiness={cancellationReadiness}
-      policy={policy}
-      canCancel={canCancel}
-      canAssign={canAssign}
-      busy={busy}
-      onRun={run}
-      onCancelled={()=>{refreshBoard();onStateChange?.();}}
-    />
-    {shortageDialog&&(
-      <ProductionTaskStartShortageDialog
-        taskNo={shortageDialog.taskNo}
-        shortages={shortageDialog.shortages}
-        busy={busy}
-        onConfirm={confirmPartialStart}
-        onCancel={cancelPartialStart}
-      />
-    )}
   </section>;
 }
 

@@ -1,16 +1,13 @@
-import { useCallback, useMemo, useState, type ReactElement } from 'react';
+import { useCallback, useMemo, useState, type ReactElement, type ReactNode } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Ban,
   AlertTriangle,
   ArrowRightLeft,
-  ChevronDown,
-  ChevronRight,
   Eye,
   Loader2,
   PackageCheck,
   Pencil,
-  PlayCircle,
   RotateCcw,
   Users,
 } from 'lucide-react';
@@ -23,15 +20,14 @@ import {
   type GridRequest,
 } from '@/components/shared/AdvancedDataGrid';
 import { requiredActionColumn, systemColumns } from '@/components/shared/GridSystemColumns';
-import { OpsLoadingState } from '@/components/shared/OpsLoadingState';
-import { OpsStatusBadge } from '@/components/shared/OpsStatusBadge';
+import { inferOpsStatusTone, OpsStatusBadge } from '@/components/shared/OpsStatusBadge';
 import { OpsActionButton } from '@/components/shared/OpsActionButton';
 import { AppInput } from '@/components/shared/AppInput';
 import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
 import { ResponsiveDialog } from '@/components/shared/ResponsiveDialog';
 import { OPS_SELECT_TRIGGER_CLASS } from '@/components/shared/ops-field-styles';
+import { isInstantInCreatedPeriod, type CreatedPeriod } from '@/lib/created-period';
 import { formatProjectDate, formatProjectNumber } from '@/lib/project-format';
-import { localizeEnumValue } from '@/lib/enum-localization';
 import { foldTurkishSearch } from '@/lib/turkish-search';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -47,13 +43,6 @@ import {
   productionTransferErpErrorMessage,
   productionTransferNeedsErpAttention,
 } from '@/features/production-transfer/production-transfer-erp-posting';
-import {
-  describeHandoffRelation,
-  mapBoardTasksToChainRows,
-  formatTaskAssignees,
-  orderTasksForDisplay,
-  taskDisplayName,
-} from '@/features/production-transfer/production-transfer-task-chain';
 import { useProductionTransferListCancel } from '@/features/production-transfer/hooks/useProductionTransferListCancel';
 import {
   productionTransferApi,
@@ -62,12 +51,8 @@ import {
   type ProductionTaskPoolRow,
   type ProductionWorkOrderTransferHeaderRow,
   type ProductionWorkOrderTransferTab,
-  type ProductionWorkOrderTransferTaskRow,
 } from '@/features/production-transfer/api';
-import {
-  productionTaskTypeLabel,
-  productionWorkOrderTransferPickingStatusLabel,
-} from '@/features/production-transfer/production-transfer-task-labels';
+import { productionWorkOrderTransferPickingStatusLabel } from '@/features/production-transfer/production-transfer-task-labels';
 import { productionTransferEnumLabel } from '@/features/production-transfer/localization/enum-labels';
 import { isReturnTaskType } from '@/features/production-transfer/production-transfer-task-chain';
 import type { WarehouseTransferGridRow } from '@/features/warehouse-transfer-v2/types/warehouse-transfer.types';
@@ -86,31 +71,6 @@ const TAB_LABELS: Record<ProductionWorkOrderTransferTab, string> = {
 
 const usesPickingStatusLabel = (tab: ProductionWorkOrderTransferTab): boolean =>
   tab === 'Picking' || tab === 'MyAssignments';
-
-const TASK_CELL =
-  'border-r border-[color-mix(in_oklab,var(--wms-ops-accent)_16%,var(--wms-ops-card-border))] px-2 py-2 text-center align-middle last:border-r-0';
-
-const TASK_NAME_COL = cn(
-  TASK_CELL,
-  'min-w-[20rem] w-[20rem] whitespace-normal text-left',
-);
-
-const TASK_NAME_HEAD = cn(
-  TASK_CELL,
-  'min-w-[20rem] w-[20rem] text-left',
-);
-
-const TASK_ACTIONS_COL = cn(
-  TASK_CELL,
-  'min-w-[10rem] w-[10rem] whitespace-normal text-right',
-);
-
-const TASK_HEAD = TASK_CELL;
-
-const TASK_ACTIONS_HEAD = cn(
-  TASK_CELL,
-  'min-w-[10rem] w-[10rem] text-right',
-);
 
 const transferBaseUrl = '/warehouse/production-transfers';
 const G = 'dataGrid.transferRecords';
@@ -371,6 +331,8 @@ function TransferHandoffAction({
 
 export type ProductionWorkOrderTransferGridRow = WarehouseTransferGridRow & {
   source: ProductionWorkOrderTransferHeaderRow;
+  warehouseFlow: string;
+  projectCode?: string;
   externalReferenceNo?: string;
   productionOrderNo?: string;
   cancelledWorkOrder?: ProductionSourceWorkOrder;
@@ -413,15 +375,16 @@ const isCancelledWorkOrderAssignmentRow = (
 
 const SEARCHABLE_KEYS = [
   'documentNo',
-  'sourceWarehouseCode',
-  'sourceWarehouseName',
-  'targetWarehouseCode',
-  'targetWarehouseName',
-  'initiationMode',
+  'warehouseFlow',
+  'projectCode',
   'status',
   'externalReferenceNo',
   'productionOrderNo',
 ];
+
+function warehouseFlowLabel(sourceCode: unknown, targetCode: unknown): string {
+  return `${sourceCode} → ${targetCode}`;
+}
 
 function toGridRow(row: ProductionWorkOrderTransferHeaderRow): ProductionWorkOrderTransferGridRow {
   return {
@@ -441,6 +404,8 @@ function toGridRow(row: ProductionWorkOrderTransferHeaderRow): ProductionWorkOrd
     targetWarehouseId: row.targetWarehouseId,
     targetWarehouseCode: row.targetWarehouseCode,
     targetWarehouseName: row.targetWarehouseName,
+    warehouseFlow: warehouseFlowLabel(row.sourceWarehouseCode, row.targetWarehouseCode),
+    projectCode: row.projectCode,
     lineCount: row.lineCount ?? 0,
     requestedQuantity: row.requestedQuantity,
     pickedQuantity: row.pickedQuantity,
@@ -488,6 +453,7 @@ function cancelledWorkOrderToGridRow(row: ProductionSourceWorkOrder): Production
     receivedQuantity: 0,
     putawayQuantity: 0,
     tasks: [],
+    projectCode: row.projectCode,
   };
 
   return {
@@ -497,167 +463,22 @@ function cancelledWorkOrderToGridRow(row: ProductionSourceWorkOrder): Production
   };
 }
 
-function ExpandedTransferTasks({
-  transferId,
-  tasks,
-  tab,
-  canOperate,
-}: {
-  transferId: number;
-  tasks: ProductionWorkOrderTransferTaskRow[];
-  tab: ProductionWorkOrderTransferTab;
-  canOperate: boolean;
-}): ReactElement {
-  const { t } = useModuleTranslation('production-transfer');
-  const canManageAssignments = tab !== 'Cancelled';
-  const boardQuery = useQuery({
-    queryKey: ['production-transfer', 'board', transferId],
-    queryFn: () => productionTransferApi.taskBoard(transferId),
-    enabled: canManageAssignments && Number.isFinite(transferId) && transferId > 0,
-  });
-  const board = boardQuery.data;
-  const orderedTasks = useMemo(() => {
-    if (board?.tasks.length) {
-      const metaById = new Map(tasks.map((task) => [task.taskId, task]));
-      const merged = mapBoardTasksToChainRows(board.tasks).map((row) => {
-        const meta = metaById.get(row.taskId);
-        return meta
-          ? {
-              ...row,
-              displayLabel: meta.displayLabel,
-              displaySuffix: meta.displaySuffix,
-              assignedUsernames: row.assignedUsernames.length > 0
-                ? row.assignedUsernames
-                : meta.assignedUsernames,
-            }
-          : row;
-      });
-      return orderTasksForDisplay(merged);
-    }
-    return orderTasksForDisplay(tasks);
-  }, [board?.tasks, tasks]);
-
-  if (canManageAssignments && boardQuery.isLoading) {
-    return (
-      <div className="wms-ops-grid-state-cell px-4 py-3">
-        <OpsLoadingState message="Görevler yükleniyor…" code="TASKS" compact />
-      </div>
-    );
-  }
-
-  return (
-    <div className="wms-ops-scrollbar relative block overflow-x-auto overflow-y-auto border border-[var(--wms-ops-card-border)]">
-      <table className="wms-ops-data-grid w-full min-w-[1180px] border-collapse text-sm">
-        <thead className="sticky top-0 z-10">
-          <tr>
-            <th className={TASK_NAME_HEAD}>Görev</th>
-            <th className={TASK_HEAD}>Tür</th>
-            <th className={TASK_HEAD}>Durum</th>
-            <th className={TASK_HEAD}>Planlanan</th>
-            <th className={TASK_HEAD}>Yapılan</th>
-            <th className={TASK_HEAD}>Atananlar</th>
-            <th className={TASK_ACTIONS_HEAD}>İşlem</th>
-          </tr>
-        </thead>
-        <tbody>
-          {orderedTasks.map((task) => {
-            const handoffHint = describeHandoffRelation(task, orderedTasks, t);
-            const showExecuteOperation = canOperate
-              && isReturnTaskType(task.taskType)
-              && isActiveTaskStatus(task.status);
-            return (
-              <tr key={task.taskId}>
-                <td className={TASK_NAME_COL}>
-                  <strong>{taskDisplayName(task)}</strong>
-                  {task.displaySuffix ? (
-                    <span className="ml-2 rounded-full bg-cyan-500/10 px-2 py-0.5 text-[0.65rem] font-bold text-cyan-600 dark:text-cyan-300">
-                      {task.displaySuffix.replace(/^-/, '')}
-                    </span>
-                  ) : null}
-                  <div className="text-xs text-[var(--wms-app-text-muted)]">{task.taskNo}</div>
-                  {handoffHint ? (
-                    <div className="mt-1 text-[0.65rem] text-[var(--wms-app-text-muted)]">{handoffHint}</div>
-                  ) : null}
-                </td>
-                <td className={TASK_CELL}>{productionTaskTypeLabel(task.taskType, t)}</td>
-                <td className={TASK_CELL}>{productionTransferEnumLabel(t, 'taskStatus', task.status)}</td>
-                <td className={TASK_CELL}>{formatProjectNumber(task.plannedQuantity)}</td>
-                <td className={TASK_CELL}>{formatProjectNumber(task.processedQuantity)}</td>
-                <td className={TASK_CELL}>{formatTaskAssignees(task.assignedUsernames, t)}</td>
-                <td className={TASK_ACTIONS_COL}>
-                  <div className="flex flex-wrap items-center justify-end gap-2">
-                    {showExecuteOperation ? (
-                      <Link
-                        to={`${transferBaseUrl}/${transferId}/operations`}
-                        title="Operasyonu yürüt"
-                        className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg border border-cyan-500/50 px-3 py-2 text-xs font-bold text-cyan-600 hover:bg-cyan-500/10"
-                      >
-                        <PlayCircle className="size-4" aria-hidden />
-                        Operasyonu yürüt
-                      </Link>
-                    ) : null}
-                  </div>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-function ProductionWorkOrderTransferTaskList({
-  transferId,
-  tab,
-  canOperate,
-}: {
-  transferId: number;
-  tab: ProductionWorkOrderTransferTab;
-  canOperate: boolean;
-}): ReactElement {
-  const tasksQuery = useQuery({
-    queryKey: ['production-work-order-transfer-tasks', transferId],
-    queryFn: () => productionTransferApi.workOrderTransferGroupTasks(transferId),
-    enabled: Number.isFinite(transferId) && transferId > 0,
-  });
-
-  if (tasksQuery.isLoading) {
-    return (
-      <div className="wms-ops-grid-state-cell px-4 py-3">
-        <OpsLoadingState message="Görevler yükleniyor…" code="TASKS" compact />
-      </div>
-    );
-  }
-
-  if (tasksQuery.isError) {
-    return (
-      <div className="wms-ops-grid-state-cell px-4 py-3 text-sm text-rose-500">
-        {tasksQuery.error instanceof Error ? tasksQuery.error.message : 'Görevler yüklenemedi.'}
-      </div>
-    );
-  }
-
-  return (
-    <ExpandedTransferTasks
-      transferId={transferId}
-      tasks={tasksQuery.data ?? []}
-      tab={tab}
-      canOperate={canOperate}
-    />
-  );
-}
-
 export function ProductionWorkOrderTransferTabPanel({
   tab,
   refreshKey = 0,
   hidden = false,
+  createdPeriod = null,
+  createdPeriodAnchor,
+  toolbarBelowExtra,
   onPendingQueueChanged,
   onAfterPoolClaim,
 }: {
   tab: ProductionWorkOrderTransferTab;
   refreshKey?: number;
   hidden?: boolean;
+  createdPeriod?: CreatedPeriod | null;
+  createdPeriodAnchor?: Date;
+  toolbarBelowExtra?: ReactNode;
   onPendingQueueChanged?: () => void;
   /** Havuzdan üzerine alındıktan sonra (KKD Hazırlamada → Benim İşlerim geçişi gibi). */
   onAfterPoolClaim?: () => void;
@@ -667,10 +488,8 @@ export function ProductionWorkOrderTransferTabPanel({
   const { can } = usePermissionAccess();
   const navigate = useNavigate();
   const isMyAssignmentsTab = tab === 'MyAssignments';
-  const supportsExpandedTasks = tab !== 'MyAssignments' && tab !== 'Cancelled';
   const gridLanguage = i18n.resolvedLanguage ?? i18n.language;
   const queryClient = useQueryClient();
-  const [expandedId, setExpandedId] = useState<number | null>(null);
   const [detailTarget, setDetailTarget] = useState<ProductionWorkOrderTransferHeaderRow | null>(null);
   const [withdrawTarget, setWithdrawTarget] = useState<ProductionWorkOrderTransferHeaderRow | null>(null);
   const [restoreTarget, setRestoreTarget] = useState<ProductionSourceWorkOrder | null>(null);
@@ -683,6 +502,13 @@ export function ProductionWorkOrderTransferTabPanel({
     closeConfirm,
   } = useProductionTransferListCancel();
 
+  const periodAnchor = createdPeriodAnchor ?? new Date();
+  const periodKey = `${createdPeriod ?? 'all'}:${periodAnchor.getTime()}`;
+
+  const matchesPeriod = useCallback((row: { documentDate?: string; createdDate?: string }) => (
+    isInstantInCreatedPeriod(row.documentDate ?? row.createdDate, createdPeriod, periodAnchor)
+  ), [createdPeriod, periodAnchor]);
+
   const fetchPage = useCallback(async (request: GridRequest) => {
     if (tab === 'Cancelled') {
       const [transfers, cancelledWorkOrders] = await Promise.all([
@@ -692,7 +518,7 @@ export function ProductionWorkOrderTransferTabPanel({
       const rows = [
         ...cancelledWorkOrders.map(cancelledWorkOrderToGridRow),
         ...transfers.map(toGridRow),
-      ];
+      ].filter(matchesPeriod);
       return filterLocalGridPage(rows, request, SEARCHABLE_KEYS);
     }
 
@@ -713,7 +539,7 @@ export function ProductionWorkOrderTransferTabPanel({
             hasPoolTask: poolTaskId != null,
             poolTaskId,
           };
-        }),
+        }).filter(matchesPeriod),
         request,
         SEARCHABLE_KEYS,
       );
@@ -723,11 +549,11 @@ export function ProductionWorkOrderTransferTabPanel({
       rows.map((row) => ({
         ...toGridRow(row),
         hasMyAssignment: tab === 'MyAssignments' ? true : undefined,
-      })),
+      })).filter(matchesPeriod),
       request,
       SEARCHABLE_KEYS,
     );
-  }, [tab, refreshKey]);
+  }, [matchesPeriod, tab, refreshKey]);
 
   const refreshGroups = useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: ['advanced-grid', `production-work-order-transfers-${tab}`] });
@@ -750,10 +576,9 @@ export function ProductionWorkOrderTransferTabPanel({
     onError: (error) => toast.error(error instanceof Error ? error.message : 'Görev üzerine alınamadı.'),
   });
 
-  const toggleExpanded = useCallback((transferId: number) => {
-    if (transferId < 0) return;
-    setExpandedId((current) => (current === transferId ? null : transferId));
-  }, []);
+  const openDetail = (row: ProductionWorkOrderTransferHeaderRow) => {
+    setDetailTarget(row);
+  };
 
   const handleRowDoubleClick = useCallback((row: ProductionWorkOrderTransferGridRow) => {
     if (isCancelledWorkOrderAssignmentRow(row)) return;
@@ -761,54 +586,28 @@ export function ProductionWorkOrderTransferTabPanel({
       navigate(`${transferBaseUrl}/${row.id}/operations`);
       return;
     }
-    if (!supportsExpandedTasks) return;
-    toggleExpanded(row.id);
-  }, [isMyAssignmentsTab, supportsExpandedTasks, navigate, toggleExpanded]);
-
-  const openDetail = (row: ProductionWorkOrderTransferHeaderRow) => {
-    setDetailTarget(row);
-  };
+    openDetail(row.source);
+  }, [isMyAssignmentsTab, navigate]);
 
   const openWithdrawDraft = (row: ProductionWorkOrderTransferHeaderRow) => {
     setWithdrawTarget(row);
   };
 
   const columns = useMemo<GridColumn<ProductionWorkOrderTransferGridRow>[]>(() => [
-    ...(!supportsExpandedTasks ? [] : [{
-      key: 'expand',
-      label: '',
-      width: 48,
-      sortable: false,
-      filterable: false,
-      searchable: false,
-      hideable: false,
-      render: (row: ProductionWorkOrderTransferGridRow) => {
-        if (isCancelledWorkOrderAssignmentRow(row)) return null;
-        return (
-        <button
-          type="button"
-          aria-expanded={expandedId === row.id}
-          aria-label={expandedId === row.id ? 'Satırı daralt' : 'Görevleri göster'}
-          onClick={() => toggleExpanded(row.id)}
-          className="inline-flex size-8 items-center justify-center rounded-lg hover:bg-[var(--wms-brand-primary)]/10"
-        >
-          {expandedId === row.id
-            ? <ChevronDown className="size-4 text-[var(--wms-brand-primary)]" aria-hidden />
-            : <ChevronRight className="size-4 text-[var(--wms-brand-primary)]" aria-hidden />}
-        </button>
-        );
-      },
-    }]),
     ...systemColumns<ProductionWorkOrderTransferGridRow>().map((column) => (
-      tab === 'Completed' && column.key === 'id'
+      column.key !== 'id'
+        ? column
+        : tab === 'Completed'
         ? {
             ...column,
+            label: 'id',
+            preserveLabel: true,
             render: (row: ProductionWorkOrderTransferGridRow) => {
               const erpError = productionTransferErpErrorMessage(row.source);
               const showErpWarning = productionTransferNeedsErpAttention(row.source);
               return (
                 <span className="inline-flex items-center gap-1.5">
-                  <span className="font-mono text-xs font-semibold">#{row.id}</span>
+                  <span className="font-mono text-xs font-semibold">{row.id}</span>
                   {showErpWarning ? (
                     <TooltipProvider delayDuration={120}>
                       <Tooltip>
@@ -830,25 +629,32 @@ export function ProductionWorkOrderTransferTabPanel({
               );
             },
           }
-        : tab === 'Cancelled' && column.key === 'id'
+        : tab === 'Cancelled'
           ? {
               ...column,
+              label: 'id',
+              preserveLabel: true,
               contextValue: (row: ProductionWorkOrderTransferGridRow) => (
                 isCancelledWorkOrderAssignmentRow(row)
                   ? row.cancelledWorkOrder.cancellationId ?? row.id
                   : row.id
               ),
               render: (row: ProductionWorkOrderTransferGridRow) => (
-                isCancelledWorkOrderAssignmentRow(row)
-                  ? (
-                    <span className="font-mono text-xs font-semibold">
-                      #{row.cancelledWorkOrder.cancellationId}
-                    </span>
-                  )
-                  : <span className="font-mono text-xs font-semibold">#{row.id}</span>
+                <span className="font-mono text-xs font-semibold">
+                  {isCancelledWorkOrderAssignmentRow(row)
+                    ? row.cancelledWorkOrder.cancellationId
+                    : row.id}
+                </span>
               ),
             }
-        : column
+          : {
+              ...column,
+              label: 'id',
+              preserveLabel: true,
+              render: (row: ProductionWorkOrderTransferGridRow) => (
+                <span className="font-mono text-xs font-semibold">{row.id}</span>
+              ),
+            }
     )),
     {
       key: 'documentNo',
@@ -896,55 +702,41 @@ export function ProductionWorkOrderTransferTabPanel({
       render: (row) => formatProjectDate(row.documentDate),
     },
     {
-      key: 'sourceWarehouseCode',
-      label: tc(`${G}.sourceWarehouseCode`),
+      key: 'warehouseFlow',
+      label: 'Depo akışı',
       sortable: true,
       filterable: true,
-      render: (row) => row.sourceWarehouseCode,
+      render: (row) => row.warehouseFlow,
     },
     {
-      key: 'sourceWarehouseName',
-      label: tc(`${G}.sourceWarehouseName`),
+      key: 'projectCode',
+      label: 'Proje kodu',
       sortable: true,
       filterable: true,
-      render: (row) => row.sourceWarehouseName,
-    },
-    {
-      key: 'targetWarehouseCode',
-      label: tc(`${G}.targetWarehouseCode`),
-      sortable: true,
-      filterable: true,
-      render: (row) => row.targetWarehouseCode,
-    },
-    {
-      key: 'targetWarehouseName',
-      label: tc(`${G}.targetWarehouseName`),
-      sortable: true,
-      filterable: true,
-      render: (row) => row.targetWarehouseName,
-    },
-    {
-      key: 'initiationMode',
-      label: tc(`${G}.flow`),
-      sortable: true,
-      filterable: true,
-      render: (row) => (isCancelledWorkOrderAssignmentRow(row)
-        ? 'İş emri'
-        : localizeEnumValue(row.initiationMode)),
+      render: (row) => row.projectCode || '—',
     },
     {
       key: 'status',
       label: tc(`${G}.status`),
       sortable: true,
       filterable: true,
-      render: (row) => (isCancelledWorkOrderAssignmentRow(row)
-        ? 'Atama iptali'
-        : usesPickingStatusLabel(tab)
-        ? productionWorkOrderTransferPickingStatusLabel(
-            row.source,
-            productionTransferEnumLabel(t, 'transferStatus', row.status),
-          )
-        : productionTransferEnumLabel(t, 'transferStatus', row.status)),
+      render: (row) => {
+        const label = isCancelledWorkOrderAssignmentRow(row)
+          ? 'Atama iptali'
+          : usesPickingStatusLabel(tab)
+            ? productionWorkOrderTransferPickingStatusLabel(
+                row.source,
+                productionTransferEnumLabel(t, 'transferStatus', row.status),
+              )
+            : productionTransferEnumLabel(t, 'transferStatus', row.status);
+        return (
+          <div className="flex justify-center">
+            <OpsStatusBadge tone={inferOpsStatusTone(`${row.status} ${label}`)}>
+              {label}
+            </OpsStatusBadge>
+          </div>
+        );
+      },
     },
     {
       key: 'lineCount',
@@ -1086,14 +878,11 @@ export function ProductionWorkOrderTransferTabPanel({
     beginProductionCancel,
     cancelPrecheckId,
     claimPool,
-    expandedId,
     gridLanguage,
     isMyAssignmentsTab,
-    supportsExpandedTasks,
     t,
     tab,
     tc,
-    toggleExpanded,
     refreshGroups,
   ]);
 
@@ -1103,22 +892,13 @@ export function ProductionWorkOrderTransferTabPanel({
         compactShell
         title=""
         pageKey={`production-work-order-transfers-${tab}`}
-        refreshKey={refreshKey}
+        refreshKey={`${refreshKey}:${periodKey}`}
         retainQueryCache
         columns={columns}
         fetchPage={fetchPage}
+        toolbarBelowExtra={toolbarBelowExtra}
         emptyMessage={`${TAB_LABELS[tab]} sekmesinde kayıt bulunamadı.`}
-        expandedRowId={supportsExpandedTasks ? expandedId : undefined}
         onRowDoubleClick={handleRowDoubleClick}
-        renderExpandedRow={supportsExpandedTasks ? (row) => (
-          isCancelledWorkOrderAssignmentRow(row) ? null : (
-            <ProductionWorkOrderTransferTaskList
-              transferId={row.id}
-              tab={tab}
-              canOperate={canShowTransferOperations(row, tab)}
-            />
-          )
-        ) : undefined}
       />
 
       {productionCancelBlocked ? (

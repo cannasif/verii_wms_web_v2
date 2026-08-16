@@ -61,5 +61,22 @@
     "issueMode": { "Manual": "Manuel Sarf", "Backflush": "Otomatik Sarf" },
     "status": { "Draft": "Taslak", "Released": "Serbest Bırakıldı", "InProgress": "Devam Ediyor", "PartiallyCompleted": "Kısmi Tamamlandı", "Completed": "Tamamlandı", "Cancelled": "İptal Edildi" }
   },
-  "common": { "close": "Kapat", "cancel": "Vazgeç", "processing": "İşleniyor…" }
+  "common": { "close": "Kapat", "cancel": "Vazgeç", "processing": "İşleniyor…" },
+  "workOrders": {
+    "createdPeriodTitle": "İş emri tarihi",
+    "createdPeriodPrev": "Önceki dönem",
+    "createdPeriodNext": "Sonraki dönem",
+    "createdPeriodNow": {
+      "day": "Bugün",
+      "week": "Bu hafta",
+      "month": "Bu ay",
+      "year": "Bu yıl"
+    },
+    "createdPeriod": {
+      "day": "Gün",
+      "week": "Hafta",
+      "month": "Ay",
+      "year": "Yıl"
+    }
+  }
 }

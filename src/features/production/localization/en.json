@@ -45,5 +45,22 @@
     "issueMode": { "Manual": "Manual Issue", "Backflush": "Backflush" },
     "status": { "Draft": "Draft", "Released": "Released", "InProgress": "In Progress", "PartiallyCompleted": "Partially Completed", "Completed": "Completed", "Cancelled": "Cancelled" }
   },
-  "common": { "close": "Close", "cancel": "Cancel", "processing": "Processing…" }
+  "common": { "close": "Close", "cancel": "Cancel", "processing": "Processing…" },
+  "workOrders": {
+    "createdPeriodTitle": "Work order date",
+    "createdPeriodPrev": "Previous period",
+    "createdPeriodNext": "Next period",
+    "createdPeriodNow": {
+      "day": "Today",
+      "week": "This week",
+      "month": "This month",
+      "year": "This year"
+    },
+    "createdPeriod": {
+      "day": "Day",
+      "week": "Week",
+      "month": "Month",
+      "year": "Year"
+    }
+  }
 }

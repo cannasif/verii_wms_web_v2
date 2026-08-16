@@ -45,5 +45,22 @@
     "issueMode": { "Manual": "صرف يدوي", "Backflush": "صرف تلقائي" },
     "status": { "Draft": "مسودة", "Released": "معتمد", "InProgress": "قيد التنفيذ", "PartiallyCompleted": "مكتمل جزئيًا", "Completed": "مكتمل", "Cancelled": "ملغى" }
   },
-  "common": { "close": "إغلاق", "cancel": "إلغاء", "processing": "جاري المعالجة…" }
+  "common": { "close": "إغلاق", "cancel": "إلغاء", "processing": "جاري المعالجة…" },
+  "workOrders": {
+    "createdPeriodTitle": "تاريخ أمر العمل",
+    "createdPeriodPrev": "الفترة السابقة",
+    "createdPeriodNext": "الفترة التالية",
+    "createdPeriodNow": {
+      "day": "اليوم",
+      "week": "هذا الأسبوع",
+      "month": "هذا الشهر",
+      "year": "هذه السنة"
+    },
+    "createdPeriod": {
+      "day": "يوم",
+      "week": "أسبوع",
+      "month": "شهر",
+      "year": "سنة"
+    }
+  }
 }

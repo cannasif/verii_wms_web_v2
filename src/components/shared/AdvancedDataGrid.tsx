@@ -122,6 +122,8 @@ export interface GridColumn<T> {
   defaultSearch?: boolean;
   filterType?: GridFilterType;
   filterOptions?: AppDropdownOption[];
+  /** true ise sistem sütunu çevirisi uygulanmaz; verilen `label` korunur. */
+  preserveLabel?: boolean;
 }
 export interface GridToolbarAction {
   label: string;
@@ -499,7 +501,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
   );
   const columns = useMemo(() => sourceColumns.map((column) => {
     const systemLabelKey = SYSTEM_COLUMN_LABEL_KEYS[column.key];
-    const localizedColumn = systemLabelKey
+    const localizedColumn = systemLabelKey && !column.preserveLabel
       ? { ...column, label: t(`dataGrid.systemColumns.${systemLabelKey}`) }
       : column;
     return column.key === 'id' || column.key === 'actions' || column.key === 'expand'
@@ -1567,7 +1569,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
         style={{ containerType: 'inline-size' }}
         className={cn(
           'relative mt-4 block wms-ops-table-wrap wms-ops-data-grid-wrap wms-ops-data-grid-viewport wms-ops-scrollbar wms-ops-table-h-scroll overflow-auto border border-[var(--wms-ops-card-border)] max-sm:hidden',
-          query.isLoading && 'cursor-wait',
+          query.isLoading && 'min-h-[14rem] cursor-wait',
         )}
       >
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd} autoScroll={false}>
@@ -1696,7 +1698,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
             </table>
           </DndContext>
         {query.isLoading ? (
-          <div className="wms-ops-grid-loading-overlay absolute inset-0 z-20 flex items-start justify-center pt-24" aria-live="polite" aria-busy="true">
+          <div className="wms-ops-grid-loading-overlay absolute inset-0 z-20 flex items-center justify-center p-4" aria-live="polite" aria-busy="true">
             <div className="wms-ops-grid-loading-panel">
               <OpsLoadingState message={t('common.loading')} code="FETCH" compact />
             </div>

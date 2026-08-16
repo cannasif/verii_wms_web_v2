@@ -45,5 +45,22 @@
     "issueMode": { "Manual": "Sortie manuelle", "Backflush": "Décomptage automatique" },
     "status": { "Draft": "Brouillon", "Released": "Publié", "InProgress": "En cours", "PartiallyCompleted": "Partiellement terminé", "Completed": "Terminé", "Cancelled": "Annulé" }
   },
-  "common": { "close": "Fermer", "cancel": "Annuler", "processing": "Traitement en cours…" }
+  "common": { "close": "Fermer", "cancel": "Annuler", "processing": "Traitement en cours…" },
+  "workOrders": {
+    "createdPeriodTitle": "Date de l'ordre de travail",
+    "createdPeriodPrev": "Période précédente",
+    "createdPeriodNext": "Période suivante",
+    "createdPeriodNow": {
+      "day": "Aujourd'hui",
+      "week": "Cette semaine",
+      "month": "Ce mois",
+      "year": "Cette année"
+    },
+    "createdPeriod": {
+      "day": "Jour",
+      "week": "Semaine",
+      "month": "Mois",
+      "year": "Année"
+    }
+  }
 }

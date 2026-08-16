@@ -1,10 +1,21 @@
 import type { GridFilter } from '@/components/shared/AdvancedDataGrid';
+import {
+  buildCreatedPeriodRange,
+  canAdvanceCreatedPeriod,
+  CREATED_PERIODS,
+  isCurrentCreatedPeriod,
+  shiftCreatedPeriodAnchor,
+  startOfLocalDay,
+  type CreatedPeriod,
+} from '@/lib/created-period';
 
 export const QUALITY_INSPECTION_STATUS_ALL = '__all__';
 
-export const QUALITY_INSPECTION_CREATED_PERIODS = ['day', 'week', 'month', 'year'] as const;
+export const QUALITY_INSPECTION_CREATED_PERIODS = CREATED_PERIODS;
 
-export type QualityInspectionCreatedPeriod = (typeof QUALITY_INSPECTION_CREATED_PERIODS)[number];
+export type QualityInspectionCreatedPeriod = CreatedPeriod;
+
+export { startOfLocalDay };
 
 export function buildQualityInspectionStatusFilters(statusFacet: string): GridFilter[] {
   const value = statusFacet.trim();
@@ -12,71 +23,10 @@ export function buildQualityInspectionStatusFilters(statusFacet: string): GridFi
   return [{ column: 'status', operator: 'equals', value }];
 }
 
-export function startOfLocalDay(value: Date): Date {
-  return new Date(value.getFullYear(), value.getMonth(), value.getDate());
-}
-
-export function buildQualityInspectionCreatedAtRange(
-  period: QualityInspectionCreatedPeriod,
-  now = new Date(),
-): { start: Date; end: Date } {
-  const start = startOfLocalDay(now);
-  if (period === 'day') {
-    return { start, end: new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1) };
-  }
-  if (period === 'week') {
-    const mondayOffset = (start.getDay() + 6) % 7;
-    const weekStart = new Date(start.getFullYear(), start.getMonth(), start.getDate() - mondayOffset);
-    return { start: weekStart, end: new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + 7) };
-  }
-  if (period === 'month') {
-    const monthStart = new Date(start.getFullYear(), start.getMonth(), 1);
-    return { start: monthStart, end: new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 1) };
-  }
-  const yearStart = new Date(start.getFullYear(), 0, 1);
-  return { start: yearStart, end: new Date(yearStart.getFullYear() + 1, 0, 1) };
-}
-
-export function shiftQualityInspectionCreatedAnchor(
-  period: QualityInspectionCreatedPeriod,
-  anchor: Date,
-  step: -1 | 1,
-): Date {
-  const start = startOfLocalDay(anchor);
-  if (period === 'day') {
-    return new Date(start.getFullYear(), start.getMonth(), start.getDate() + step);
-  }
-  if (period === 'week') {
-    return new Date(start.getFullYear(), start.getMonth(), start.getDate() + step * 7);
-  }
-  if (period === 'month') {
-    return new Date(start.getFullYear(), start.getMonth() + step, 1);
-  }
-  return new Date(start.getFullYear() + step, 0, 1);
-}
-
-export function isCurrentQualityInspectionCreatedPeriod(
-  period: QualityInspectionCreatedPeriod,
-  anchor: Date,
-  now = new Date(),
-): boolean {
-  const current = buildQualityInspectionCreatedAtRange(period, now);
-  const selected = buildQualityInspectionCreatedAtRange(period, anchor);
-  return selected.start.getTime() === current.start.getTime();
-}
-
-export function canAdvanceQualityInspectionCreatedPeriod(
-  period: QualityInspectionCreatedPeriod,
-  anchor: Date,
-  now = new Date(),
-): boolean {
-  const current = buildQualityInspectionCreatedAtRange(period, now);
-  const next = buildQualityInspectionCreatedAtRange(
-    period,
-    shiftQualityInspectionCreatedAnchor(period, anchor, 1),
-  );
-  return next.start.getTime() <= current.start.getTime();
-}
+export const buildQualityInspectionCreatedAtRange = buildCreatedPeriodRange;
+export const shiftQualityInspectionCreatedAnchor = shiftCreatedPeriodAnchor;
+export const isCurrentQualityInspectionCreatedPeriod = isCurrentCreatedPeriod;
+export const canAdvanceQualityInspectionCreatedPeriod = canAdvanceCreatedPeriod;
 
 export function buildQualityInspectionCreatedAtFilters(
   period: QualityInspectionCreatedPeriod | null,

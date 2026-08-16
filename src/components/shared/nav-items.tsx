@@ -121,7 +121,7 @@ export const WMS_NAV_ITEMS: NavItem[] = [
   { title: 'sidebar.production', titleFallback: 'Üretim ve Kalite', icon: productionIcon, children: [
     { title: 'sidebar.generalProductionGroup', titleFallback: 'Genel Üretim', children: [
       { title: 'sidebar.productionHub', titleFallback: 'Üretim Süreç Merkezi', href: '/warehouse/production', searchAliases: ['üretim', 'plan', 'iş emri', 'mamul', 'sarf'], requiredPermission: 'WMS.PRODUCTION.VIEW' },
-      { title: 'sidebar.productionWorkOrders', titleFallback: 'Netsis İş Emirleri', href: '/warehouse/production/work-orders', searchAliases: ['üretim', 'netsis', 'iş emri', 'reçete', 'bom'], requiredPermission: 'WMS.PRODUCTION.VIEW' },
+      { title: 'sidebar.productionWorkOrders', titleFallback: 'Üretime Transfer İş Emirleri', href: '/warehouse/production/work-orders', searchAliases: ['üretim', 'netsis', 'iş emri', 'üretime transfer', 'reçete', 'bom'], requiredPermission: 'WMS.PRODUCTION.VIEW' },
       { title: 'sidebar.productionCreate', titleFallback: 'Üretim Planı Oluştur', href: '/warehouse/production/new', searchAliases: ['üretim', 'plan', 'iş emri', 'bom', 'rota'], requiredPermission: 'WMS.PRODUCTION.CREATE' },
       { title: 'sidebar.productionList', titleFallback: 'Üretim Planları', href: '/warehouse/production/list', searchAliases: ['üretim', 'plan', 'emir', 'liste', 'serbest bırak'], requiredPermission: 'WMS.PRODUCTION.VIEW' },
     ] },

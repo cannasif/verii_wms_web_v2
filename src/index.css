@@ -7881,6 +7881,18 @@ html:not(.dark) .wms-ops-list .wms-ops-data-grid tbody tr:hover .wms-ops-table-i
   white-space: nowrap;
 }
 
+.wms-ops-pending-grid-center .wms-ops-data-grid thead,
+.wms-ops-pending-grid-center .wms-ops-data-grid th,
+.wms-ops-pending-grid-center .wms-ops-data-grid td,
+.wms-ops-pending-grid-center .wms-ops-grid-cell__inner {
+  text-align: center;
+}
+
+.wms-ops-pending-grid-center .wms-ops-table-head__layout,
+.wms-ops-pending-grid-center .wms-ops-table-head button:not(.wms-ops-table-head__grip) {
+  justify-content: center;
+}
+
 .wms-ops-list .wms-ops-grid-cell--center .wms-ops-grid-cell__inner {
   width: 100%;
   text-align: center;
@@ -8174,6 +8186,7 @@ html.skin-premium .wms-ops-list .wms-ops-gr-list-facets button.wms-ops-lookup-tr
 
 .wms-ops-list .wms-ops-quality-created-period-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;

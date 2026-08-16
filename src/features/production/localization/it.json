@@ -45,5 +45,22 @@
     "issueMode": { "Manual": "Prelievo manuale", "Backflush": "Scarico automatico" },
     "status": { "Draft": "Bozza", "Released": "Rilasciato", "InProgress": "In corso", "PartiallyCompleted": "Parzialmente completato", "Completed": "Completato", "Cancelled": "Annullato" }
   },
-  "common": { "close": "Chiudi", "cancel": "Annulla", "processing": "Elaborazione…" }
+  "common": { "close": "Chiudi", "cancel": "Annulla", "processing": "Elaborazione…" },
+  "workOrders": {
+    "createdPeriodTitle": "Data ordine di lavoro",
+    "createdPeriodPrev": "Periodo precedente",
+    "createdPeriodNext": "Periodo successivo",
+    "createdPeriodNow": {
+      "day": "Oggi",
+      "week": "Questa settimana",
+      "month": "Questo mese",
+      "year": "Quest'anno"
+    },
+    "createdPeriod": {
+      "day": "Giorno",
+      "week": "Settimana",
+      "month": "Mese",
+      "year": "Anno"
+    }
+  }
 }

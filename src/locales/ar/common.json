@@ -359,6 +359,7 @@
     "productionTransferSettings": "إعدادات نقل الإنتاج",
     "production": "الإنتاج والجودة",
     "productionHub": "مركز عمليات الإنتاج",
+    "productionWorkOrders": "أوامر عمل النقل إلى الإنتاج",
     "productionCreate": "Create Production Order",
     "productionList": "Production Plans",
     "subcontractingTransfer": "عمليات المقاولة",

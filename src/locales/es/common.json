@@ -413,6 +413,7 @@
     "productionTransferSettings": "Configuración de transferencia de producción",
     "production": "Producción y calidad",
     "productionHub": "Centro de procesos de producción",
+    "productionWorkOrders": "Órdenes de trabajo de transferencia a producción",
     "productionCreate": "Create Production Order",
     "productionList": "Production Plans",
     "subcontractingTransfer": "Operaciones subcontratadas",

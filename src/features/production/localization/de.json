@@ -45,5 +45,22 @@
     "issueMode": { "Manual": "Manuelle Entnahme", "Backflush": "Rückwärtsverbuchung" },
     "status": { "Draft": "Entwurf", "Released": "Freigegeben", "InProgress": "In Bearbeitung", "PartiallyCompleted": "Teilweise abgeschlossen", "Completed": "Abgeschlossen", "Cancelled": "Storniert" }
   },
-  "common": { "close": "Schließen", "cancel": "Abbrechen", "processing": "Wird verarbeitet…" }
+  "common": { "close": "Schließen", "cancel": "Abbrechen", "processing": "Wird verarbeitet…" },
+  "workOrders": {
+    "createdPeriodTitle": "Arbeitsauftragsdatum",
+    "createdPeriodPrev": "Vorheriger Zeitraum",
+    "createdPeriodNext": "Nächster Zeitraum",
+    "createdPeriodNow": {
+      "day": "Heute",
+      "week": "Diese Woche",
+      "month": "Dieser Monat",
+      "year": "Dieses Jahr"
+    },
+    "createdPeriod": {
+      "day": "Tag",
+      "week": "Woche",
+      "month": "Monat",
+      "year": "Jahr"
+    }
+  }
 }

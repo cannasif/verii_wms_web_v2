@@ -1,18 +1,22 @@
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowDown, ArrowUp, CheckCircle2, ChevronDown, ChevronUp, CircleHelp, Eye, Loader2, PackageOpen, Plus, RefreshCw, Search, UserPlus, UserRoundCog, X } from 'lucide-react';
+import { CheckCircle2, ChevronDown, ChevronUp, CircleHelp, Eye, Loader2, PackageOpen, Plus, UserPlus, UserRoundCog, X } from 'lucide-react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useTheme } from '@/components/theme-provider';
 import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
 import { OpsActionButton } from '@/components/shared/OpsActionButton';
-import { OpsGridEmptyState } from '@/components/shared/OpsGridEmptyState';
+import {
+  AdvancedDataGrid,
+  type GridColumn,
+  type GridRequest,
+} from '@/components/shared/AdvancedDataGrid';
+import { requiredActionColumn } from '@/components/shared/GridSystemColumns';
 import { OpsListPageShell } from '@/components/shared/OpsListPageShell';
-import { OpsListSearchField } from '@/components/shared/OpsListSearchField';
-import { OpsLoadingState } from '@/components/shared/OpsLoadingState';
 import { OpsSkinCheckbox } from '@/components/shared/OpsSkinCheckbox';
 import { GridExportMenu } from '@/components/shared/GridExportMenu';
+import { OpsCreatedPeriodTabs } from '@/components/shared/OpsCreatedPeriodTabs';
 import { OpsCodeBadge, OpsStatusBadge } from '@/components/shared/OpsStatusBadge';
 import { PagedLookupDialog } from '@/components/shared/PagedLookupDialog';
 import { buildTerminalEyebrowFromNav } from '@/components/shared/PremiumEyebrow';
@@ -21,8 +25,10 @@ import { AppDropdown } from '@/components/shared/AppDropdown';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { OPS_SELECT_TRIGGER_CLASS } from '@/components/shared/ops-field-styles';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { buildCreatedPeriodRange, toDateOnlyIso, type CreatedPeriod } from '@/lib/created-period';
 import { formatProjectDate, formatProjectNumber } from '@/lib/project-format';
-import { appendFoldedSearchToken, foldTurkishSearch } from '@/lib/turkish-search';
+import { foldTurkishSearch } from '@/lib/turkish-search';
+import { filterLocalGridPage } from '@/lib/local-grid-filter';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
@@ -151,16 +157,6 @@ const toPagedResponse = <T,>(page: DropdownPage<T>): PagedResponse<T> => ({
 });
 
 const PAGE_DESCRIPTION = 'Şube politikasında seçilen kaynaktaki iş emrini ve reçetesini inceleyin; mevcut üretim transfer akışına aktarın.';
-
-type DateSort = 'asc' | 'desc';
-
-const CELL =
-  'border-r border-[color-mix(in_oklab,var(--wms-ops-accent)_16%,var(--wms-ops-card-border))] px-2 py-2 text-center align-middle last:border-r-0';
-
-const HEAD_CELL = cn(
-  CELL,
-  'border-b border-[color-mix(in_oklab,var(--wms-ops-accent)_32%,var(--wms-ops-card-border))] bg-[var(--wms-ops-card-bg)] font-semibold uppercase tracking-wide text-[0.68rem] text-[var(--wms-app-text-muted)]',
-);
 
 const RECIPE_EXPORT_COLUMNS = [
   { key: 'lineNo', label: 'Sıra' },
@@ -484,6 +480,50 @@ const workOrderKey = (row: ProductionSourceWorkOrder): string =>
     ? `${row.sourceType}:${row.sourceSystemCode}:${row.workOrderNumber}:cancel:${row.transferId ?? 0}:${row.kalanTaskId ?? 0}`
     : `${row.sourceType}:${row.sourceSystemCode}:${row.workOrderNumber}`;
 
+type PendingWorkOrderGridRow = ProductionSourceWorkOrder & {
+  id: number;
+  rowKey: string;
+  listingKindLabel: string;
+  warehouseFlow: string;
+};
+
+const PENDING_SEARCH_KEYS = [
+  'workOrderNumber',
+  'listingKindLabel',
+  'stockCode',
+  'stockName',
+  'projectCode',
+  'warehouseFlow',
+  'description',
+] as const;
+
+const listingKindFilterOptions = [
+  { value: 'İş emri', label: 'İş emri' },
+  { value: 'Atama bekliyor', label: 'Atama bekliyor' },
+  { value: 'Transfer iadesi', label: 'Transfer iadesi' },
+  { value: 'Eksik teslim kalanı', label: 'Eksik teslim kalanı' },
+];
+
+function stableGridId(key: string): number {
+  let hash = 2166136261;
+  for (let index = 0; index < key.length; index += 1) {
+    hash ^= key.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0) || 1;
+}
+
+function toPendingGridRow(row: ProductionSourceWorkOrder): PendingWorkOrderGridRow {
+  const rowKey = workOrderKey(row);
+  return {
+    ...row,
+    id: stableGridId(rowKey),
+    rowKey,
+    listingKindLabel: sourceListingKindLabel(row.listingKind),
+    warehouseFlow: `${row.issueWarehouseCode} → ${row.warehouseCode}`,
+  };
+}
+
 const sourceListingKindLabel = (kind: ProductionSourceWorkOrder['listingKind']): string => {
   if (kind === 'CancellationReturnRemainder') return 'Transfer iadesi';
   if (kind === 'PartialTransferRemainder') return 'Eksik teslim kalanı';
@@ -510,28 +550,6 @@ function SourceListingKindBadge({ row }: { row: ProductionSourceWorkOrder }): Re
   );
 }
 
-function matchesSearch(row: ProductionSourceWorkOrder, terms: string[]): boolean {
-  if (terms.length === 0) return true;
-  const haystack = foldTurkishSearch([
-    row.workOrderNumber,
-    row.stockCode,
-    row.stockName ?? '',
-    row.sourceSystemCode,
-    row.description ?? '',
-    sourceListingKindLabel(row.listingKind),
-  ].join(' '));
-  return terms.every((term) => {
-    const folded = foldTurkishSearch(term);
-    return !folded || haystack.includes(folded);
-  });
-}
-
-function dateValue(value?: string): number {
-  if (!value) return Number.NEGATIVE_INFINITY;
-  const parsed = Date.parse(value);
-  return Number.isFinite(parsed) ? parsed : Number.NEGATIVE_INFINITY;
-}
-
 export function ProductionWorkOrdersPage(): ReactElement {
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -544,15 +562,14 @@ export function ProductionWorkOrdersPage(): ReactElement {
   const branchCode = useAuthStore((state) => state.branch?.code ?? '0');
   const isPremium = skin === 'premium';
   const [policy, setPolicy] = useState<ProductionTransferPolicy>();
-  const [searchInput, setSearchInput] = useState('');
-  const [searchTokens, setSearchTokens] = useState<string[]>([]);
-  const [activeSearch, setActiveSearch] = useState<string[]>([]);
   const [rows, setRows] = useState<ProductionSourceWorkOrder[]>([]);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<PreparedNetsisProductionWorkOrder>();
   const [detailTarget, setDetailTarget] = useState<ProductionSourceWorkOrder>();
   const [assignmentLoading, setAssignmentLoading] = useState<string>();
-  const [dateSort, setDateSort] = useState<DateSort>('desc');
+  const [pendingRefreshKey, setPendingRefreshKey] = useState(0);
+  const [createdPeriod, setCreatedPeriod] = useState<CreatedPeriod | null>('month');
+  const [createdPeriodAnchor, setCreatedPeriodAnchor] = useState(() => new Date());
   const [activeTab, setActiveTab] = useState<ProductionWorkOrderPageTab>(() => {
     const tab = searchParams.get('tab');
     return isProductionWorkOrderPageTab(tab) ? tab : 'pending';
@@ -602,12 +619,19 @@ export function ProductionWorkOrdersPage(): ReactElement {
     });
   }, [activeTab]);
 
-  const loadPending = useCallback(async (term?: string, force = false) => {
+  const createdRange = useMemo(() => {
+    if (!createdPeriod) return undefined;
+    const { start, end } = buildCreatedPeriodRange(createdPeriod, createdPeriodAnchor);
+    return { fromDate: toDateOnlyIso(start), toDate: toDateOnlyIso(end) };
+  }, [createdPeriod, createdPeriodAnchor]);
+
+  const loadPending = useCallback(async (force = false) => {
     setLoading(true);
     try {
-      const query = productionWorkOrderListQueryOptions(branchCode, term);
+      const query = productionWorkOrderListQueryOptions(branchCode, undefined, createdRange);
       if (force) {
         await queryClient.invalidateQueries({ queryKey: query.queryKey, exact: true });
+        setPendingRefreshKey((current) => current + 1);
       }
       setRows(await queryClient.fetchQuery(query));
     } catch (error) {
@@ -616,57 +640,24 @@ export function ProductionWorkOrdersPage(): ReactElement {
       setLoading(false);
       refreshTabCounts();
     }
-  }, [branchCode, queryClient, refreshTabCounts]);
+  }, [branchCode, createdRange, queryClient, refreshTabCounts]);
   useEffect(() => {
     void loadPending();
   }, [loadPending]);
   useEffect(() => { void productionTransferApi.effectivePolicy(branchCode).then(setPolicy).catch((error: Error) => toast.error(error.message)); }, [branchCode]);
 
-  // Rozet varken serbest metin aramaya karışmaz; rozetsizken yazarken canlı aranır.
-  useEffect(() => {
-    if (searchTokens.length > 0) {
-      setActiveSearch(searchTokens);
-      return;
-    }
-    const timer = window.setTimeout(() => {
-      const term = searchInput.trim();
-      setActiveSearch(term ? [term] : []);
-    }, 350);
-    return () => window.clearTimeout(timer);
-  }, [searchInput, searchTokens]);
-
-  // Servis en fazla 200 kayıt döndürdüğü için rozet eklenirken sunucu tarafında da aranır.
-  const commitSearchToken = () => {
-    const term = searchInput.trim();
-    setSearchTokens((current) => appendFoldedSearchToken(current, searchInput));
-    if (term) setSearchInput('');
-    if (activeTab === 'pending') void loadPending(term || undefined);
-  };
-
-  const clearSearch = () => {
-    setSearchInput('');
-    setSearchTokens([]);
-    setActiveSearch([]);
-    if (activeTab === 'pending') void loadPending();
-  };
-
-  const refreshActiveTab = () => {
-    refreshTabCounts();
-    if (activeTab === 'pending') void loadPending(activeSearch[0] || undefined, true);
-    else setTransferRefreshKeys((current) => ({
-      ...current,
-      [activeTab]: (current[activeTab] ?? 0) + 1,
-    }));
-  };
-
-  const visibleRows = useMemo(() => {
-    const filtered = rows.filter((row) =>
-      row.listingKind !== 'ManagerCancelledAssignment' && matchesSearch(row, activeSearch));
-    return [...filtered].sort((a, b) => {
-      const delta = dateValue(a.workOrderDate) - dateValue(b.workOrderDate);
-      return dateSort === 'asc' ? delta : -delta;
-    });
-  }, [rows, activeSearch, dateSort]);
+  const fetchPendingPage = useCallback(async (request: GridRequest) => {
+    const query = productionWorkOrderListQueryOptions(branchCode, undefined, createdRange);
+    const items = await queryClient.fetchQuery(query);
+    setRows(items);
+    const gridRows = items
+      .filter((row) => row.listingKind !== 'ManagerCancelledAssignment')
+      .map(toPendingGridRow);
+    const sortedRequest = request.sortBy
+      ? request
+      : { ...request, sortBy: 'workOrderDate', sortDirection: 'desc' as const };
+    return filterLocalGridPage(gridRows, sortedRequest, [...PENDING_SEARCH_KEYS]);
+  }, [branchCode, createdRange, queryClient]);
 
   const openDetail = (row: ProductionSourceWorkOrder): void => {
     setDetailTarget(row);
@@ -688,7 +679,170 @@ export function ProductionWorkOrdersPage(): ReactElement {
     ? `Netsis ERP + ${policy.wmsSourceSystemCode}`
     : policy?.productionOrderSource === 'WmsIntegrationTables' ? policy.wmsSourceSystemCode : 'Netsis ERP';
 
-  const toggleDateSort = () => setDateSort((current) => (current === 'asc' ? 'desc' : 'asc'));
+  const pendingColumns = useMemo<GridColumn<PendingWorkOrderGridRow>[]>(() => [
+    {
+      key: 'workOrderNumber',
+      label: 'İş emri',
+      width: 220,
+      sortable: true,
+      filterable: true,
+      defaultSearch: true,
+      render: (row) => (
+        <div className="flex items-center justify-center gap-2">
+          <strong className="font-mono font-semibold text-[var(--wms-brand-primary)]">{row.workOrderNumber}</strong>
+          <WorkOrderAssignmentProgressRing row={row} />
+        </div>
+      ),
+    },
+    {
+      key: 'listingKindLabel',
+      label: 'Tür',
+      sortable: true,
+      filterable: true,
+      filterType: 'enum',
+      filterOptions: listingKindFilterOptions,
+      render: (row) => (
+        <>
+          <SourceListingKindBadge row={row} />
+          {row.listingKind !== 'CancellationReturnRemainder'
+            && row.listingKind !== 'PartialTransferRemainder'
+            && row.listingKind !== 'UnassignedCreatedTransfer'
+            && row.revisionNumber > 1 ? (
+            <div className="mt-1 text-xs text-[var(--wms-app-text-muted)]">Rev. {row.revisionNumber}</div>
+          ) : null}
+        </>
+      ),
+    },
+    {
+      key: 'stockCode',
+      label: 'Mamul',
+      sortable: true,
+      filterable: true,
+      defaultSearch: true,
+      contextValue: (row) => [row.stockCode, row.stockName].filter(Boolean).join(' · '),
+      render: (row) => (
+        <>
+          <strong className="block">{row.stockCode}</strong>
+          <div className="mx-auto max-w-80 truncate text-xs text-[var(--wms-app-text-muted)]">{row.stockName}</div>
+        </>
+      ),
+    },
+    {
+      key: 'workOrderQuantity',
+      label: 'Miktar / birim',
+      sortable: true,
+      filterable: true,
+      filterType: 'number',
+      contextValue: (row) => `${formatProjectNumber(row.workOrderQuantity)} ${row.unitCode ?? ''}`.trim(),
+      render: (row) => (
+        <span className="font-bold">{formatProjectNumber(row.workOrderQuantity)} {row.unitCode ?? ''}</span>
+      ),
+    },
+    {
+      key: 'workOrderDate',
+      label: 'Tarih',
+      sortable: true,
+      filterable: true,
+      filterType: 'date',
+      contextValue: (row) => formatProjectDate(row.workOrderDate),
+      render: (row) => formatProjectDate(row.workOrderDate),
+    },
+    {
+      key: 'projectCode',
+      label: 'Proje',
+      sortable: true,
+      filterable: true,
+      render: (row) => row.projectCode || '—',
+    },
+    {
+      key: 'warehouseFlow',
+      label: 'Depo akışı',
+      sortable: true,
+      filterable: true,
+      render: (row) => row.warehouseFlow,
+    },
+    {
+      key: 'description',
+      label: tProduction('detail.description'),
+      sortable: true,
+      filterable: true,
+      render: (row) => (
+        <p className="mx-auto line-clamp-2 max-w-72 whitespace-pre-wrap text-center text-xs text-[var(--wms-app-text-muted)]" title={row.description?.trim()}>
+          {row.description?.trim() || '—'}
+        </p>
+      ),
+    },
+    {
+      key: 'actions',
+      label: 'İşlem',
+      ...requiredActionColumn,
+      width: 160,
+      render: (row) => (
+        <div className="wms-ops-row-actions" onClick={(event) => event.stopPropagation()}>
+          <button
+            type="button"
+            className="wms-ops-grid-icon-btn"
+            title="Detay"
+            aria-label="Detay"
+            onClick={() => openDetail(row)}
+          >
+            <Eye className="size-3.5" aria-hidden />
+          </button>
+          <button
+            type="button"
+            className="wms-ops-grid-icon-btn"
+            title="Reçeteyi aç"
+            aria-label="Reçeteyi aç"
+            disabled={assignmentLoading === row.rowKey}
+            onClick={() => void openAssignment(row)}
+          >
+            {assignmentLoading === row.rowKey ? (
+              <Loader2 className="size-3.5 animate-spin" aria-hidden />
+            ) : (
+              <UserRoundCog className="size-3.5" aria-hidden />
+            )}
+          </button>
+          {canCancelAssignment ? (
+            <button
+              type="button"
+              className="wms-ops-grid-icon-btn !text-rose-600"
+              title="İptal et"
+              aria-label="İptal et"
+              onClick={() => setCancelTarget(row)}
+            >
+              <X className="size-3.5" aria-hidden />
+            </button>
+          ) : null}
+        </div>
+      ),
+    },
+  ], [assignmentLoading, canCancelAssignment, tProduction]);
+
+  const renderCreatedPeriodTabs = (): ReactElement => (
+    <OpsCreatedPeriodTabs
+      value={createdPeriod}
+      onChange={setCreatedPeriod}
+      anchor={createdPeriodAnchor}
+      onAnchorChange={setCreatedPeriodAnchor}
+      labels={{
+        title: tProduction('workOrders.createdPeriodTitle'),
+        prev: tProduction('workOrders.createdPeriodPrev'),
+        next: tProduction('workOrders.createdPeriodNext'),
+        now: {
+          day: tProduction('workOrders.createdPeriodNow.day'),
+          week: tProduction('workOrders.createdPeriodNow.week'),
+          month: tProduction('workOrders.createdPeriodNow.month'),
+          year: tProduction('workOrders.createdPeriodNow.year'),
+        },
+        periods: {
+          day: tProduction('workOrders.createdPeriod.day'),
+          week: tProduction('workOrders.createdPeriod.week'),
+          month: tProduction('workOrders.createdPeriod.month'),
+          year: tProduction('workOrders.createdPeriod.year'),
+        },
+      }}
+    />
+  );
 
   const title = (
     <span className="inline-flex items-center gap-2">
@@ -782,278 +936,19 @@ export function ProductionWorkOrdersPage(): ReactElement {
           </Tabs>
         </div>
 
-        <div hidden={activeTab !== 'pending'}>
-        <div className="wms-ops-data-grid-toolbar flex flex-wrap items-start justify-between gap-2">
-          <div className="wms-ops-data-grid-toolbar__start flex min-w-0 !grow flex-wrap items-start gap-2">
-            <div className="wms-ops-grid-search wms-ops-grid-search--tokens" data-no-auto-localize="true">
-              <OpsListSearchField
-                value={searchInput}
-                placeholder="İş emri veya mamul ara..."
-                title="Enter ile rozet ekleyin"
-                onValueChange={setSearchInput}
-                onKeyDown={(event) => {
-                  if (event.key !== 'Enter') return;
-                  event.preventDefault();
-                  commitSearchToken();
-                }}
-                className="!w-full !max-w-none"
-                rightSlot={searchInput || searchTokens.length > 0 ? (
-                  <button
-                    type="button"
-                    aria-label="Aramayı temizle"
-                    onClick={clearSearch}
-                    className="wms-ops-voice-btn grid place-items-center"
-                  >
-                    <X className="size-3.5" />
-                  </button>
-                ) : undefined}
-              />
-              {searchTokens.length > 0 ? (
-                <div className="wms-ops-grid-search__chips" aria-label="Aktif arama rozetleri">
-                  {searchTokens.map((token) => (
-                    <span key={token} className="wms-ops-grid-search__chip">
-                      <span className="wms-ops-grid-search__chip-text">{token}</span>
-                      <button
-                        type="button"
-                        className="wms-ops-grid-search__chip-remove"
-                        onClick={() => setSearchTokens((current) => current.filter((item) => item !== token))}
-                        aria-label={`${token} rozetini kaldır`}
-                      >
-                        <X className="size-3" aria-hidden />
-                      </button>
-                    </span>
-                  ))}
-                  <button type="button" className="wms-ops-grid-search__clear" onClick={clearSearch}>
-                    Rozetleri temizle
-                  </button>
-                </div>
-              ) : null}
-            </div>
-            <OpsActionButton variant="primary" className="wms-ops-list-toolbar-btn" onClick={commitSearchToken} disabled={loading}>
-              <Search className="size-3.5" aria-hidden />
-              <span>Ara</span>
-            </OpsActionButton>
-            <OpsActionButton
-              variant="secondary"
-              className="wms-ops-list-toolbar-btn"
-              onClick={refreshActiveTab}
-              disabled={loading}
-              title="Atanmayan iş emirlerini yenile"
-            >
-              <RefreshCw className={cn('size-3.5', loading && 'animate-spin')} aria-hidden />
-              <span className="hidden md:inline">Yenile</span>
-            </OpsActionButton>
-          </div>
-        </div>
-
-        <>
-        {/* Skin'in tablo sarmalayıcı sınıfları yatay kaydırmayı zorunlu kıldığı için burada kullanılmaz; kolonlar sığıyor. */}
-        <div className="wms-ops-scrollbar relative mt-4 block max-h-[max(20rem,calc(100dvh-26rem))] overflow-x-auto overflow-y-auto border border-[var(--wms-ops-card-border)] max-sm:hidden">
-          <table className="wms-ops-data-grid w-full border-collapse text-sm">
-            <thead className="sticky top-0 z-10 bg-[var(--wms-ops-card-bg)] shadow-[inset_0_-1px_0_color-mix(in_oklab,var(--wms-ops-accent)_32%,var(--wms-ops-card-border))]">
-              <tr>
-                <th className={HEAD_CELL}>İş emri</th>
-                <th className={HEAD_CELL}>Tür</th>
-                <th className={HEAD_CELL}>Mamul</th>
-                <th className={HEAD_CELL}>Miktar / birim</th>
-                <th className={HEAD_CELL}>
-                  <button
-                    type="button"
-                    onClick={toggleDateSort}
-                    className="inline-flex items-center justify-center gap-1.5 font-semibold uppercase tracking-wide"
-                    title={dateSort === 'asc' ? 'Tarihe göre artan (tıkla: azalan)' : 'Tarihe göre azalan (tıkla: artan)'}
-                    aria-label="Tarihe göre sırala"
-                  >
-                    Tarih
-                    {dateSort === 'asc' ? <ArrowUp className="size-3.5" aria-hidden /> : <ArrowDown className="size-3.5" aria-hidden />}
-                  </button>
-                </th>
-                <th className={HEAD_CELL}>Proje</th>
-                <th className={HEAD_CELL}>Depo akışı</th>
-                <th className={HEAD_CELL}>{tProduction('detail.description')}</th>
-                <th className={HEAD_CELL} aria-label="İşlem" />
-              </tr>
-            </thead>
-            <tbody>
-              {loading && rows.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="wms-ops-grid-state-cell">
-                    <OpsLoadingState message="İş emirleri yükleniyor…" code="FETCH" compact />
-                  </td>
-                </tr>
-              ) : visibleRows.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="wms-ops-grid-state-cell">
-                    <OpsGridEmptyState message={activeSearch.length > 0 ? 'Aramaya uygun açık iş emri bulunamadı.' : 'Seçili kaynakta transfere hazır açık iş emri bulunamadı.'} />
-                  </td>
-                </tr>
-              ) : visibleRows.map((row) => (
-                <tr key={workOrderKey(row)} onClick={() => openDetail(row)} className="cursor-pointer">
-                  <td className={cn(CELL, 'font-mono font-black text-[var(--wms-brand-primary)]')}>
-                    <div className="flex items-center justify-center gap-2">
-                      <span>{row.workOrderNumber}</span>
-                      <WorkOrderAssignmentProgressRing row={row} />
-                    </div>
-                  </td>
-                  <td className={CELL}>
-                    <SourceListingKindBadge row={row} />
-                    {row.listingKind !== 'CancellationReturnRemainder'
-                      && row.listingKind !== 'PartialTransferRemainder'
-                      && row.listingKind !== 'UnassignedCreatedTransfer'
-                      && row.revisionNumber > 1 ? (
-                      <div className="mt-1 text-xs text-[var(--wms-app-text-muted)]">Rev. {row.revisionNumber}</div>
-                    ) : null}
-                  </td>
-                  <td className={CELL}>
-                    <strong className="block">{row.stockCode}</strong>
-                    <div className="mx-auto max-w-80 truncate text-xs text-[var(--wms-app-text-muted)]">{row.stockName}</div>
-                  </td>
-                  <td className={cn(CELL, 'font-bold')}>{formatProjectNumber(row.workOrderQuantity)} {row.unitCode ?? ''}</td>
-                  <td className={CELL}>{formatProjectDate(row.workOrderDate)}</td>
-                  <td className={CELL}>{row.projectCode || '—'}</td>
-                  <td className={CELL}>{row.issueWarehouseCode} → {row.warehouseCode}</td>
-                  <td className={CELL}>
-                    <p className="mx-auto line-clamp-2 max-w-72 whitespace-pre-wrap text-left text-xs text-[var(--wms-app-text-muted)]" title={row.description?.trim()}>
-                      {row.description?.trim() || '—'}
-                    </p>
-                  </td>
-                  <td className={CELL}>
-                    <div className="wms-ops-row-actions" onClick={(event) => event.stopPropagation()}>
-                      <button
-                        type="button"
-                        className="wms-ops-grid-icon-btn"
-                        title="Detay"
-                        aria-label="Detay"
-                        onClick={() => openDetail(row)}
-                      >
-                        <Eye className="size-3.5" aria-hidden />
-                      </button>
-                      <button
-                        type="button"
-                        className="wms-ops-grid-icon-btn"
-                        title="Reçeteyi aç"
-                        aria-label="Reçeteyi aç"
-                        disabled={assignmentLoading === workOrderKey(row)}
-                        onClick={() => void openAssignment(row)}
-                      >
-                        {assignmentLoading === workOrderKey(row) ? (
-                          <Loader2 className="size-3.5 animate-spin" aria-hidden />
-                        ) : (
-                          <UserRoundCog className="size-3.5" aria-hidden />
-                        )}
-                      </button>
-                      {canCancelAssignment ? (
-                        <button
-                          type="button"
-                          className="wms-ops-grid-icon-btn !text-rose-600"
-                          title="İptal et"
-                          aria-label="İptal et"
-                          onClick={() => setCancelTarget(row)}
-                        >
-                          <X className="size-3.5" aria-hidden />
-                        </button>
-                      ) : null}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="mt-4 space-y-3 sm:hidden" aria-live="polite">
-          {loading && rows.length === 0 ? (
-            <div className="border border-[color-mix(in_oklab,var(--wms-ops-accent)_28%,transparent)] p-4">
-              <OpsLoadingState message="İş emirleri yükleniyor…" code="FETCH" compact />
-            </div>
-          ) : visibleRows.length === 0 ? (
-            <OpsGridEmptyState message={activeSearch.length > 0 ? 'Aramaya uygun açık iş emri bulunamadı.' : 'Seçili kaynakta transfere hazır açık iş emri bulunamadı.'} />
-          ) : (
-            <>
-              <button
-                type="button"
-                onClick={toggleDateSort}
-                className="inline-flex items-center gap-1.5 text-[0.68rem] font-semibold uppercase tracking-wide text-[var(--wms-brand-primary)]"
-              >
-                Tarih {dateSort === 'asc' ? 'artan' : 'azalan'}
-                {dateSort === 'asc' ? <ArrowUp className="size-3.5" aria-hidden /> : <ArrowDown className="size-3.5" aria-hidden />}
-              </button>
-              {visibleRows.map((row) => (
-                <article
-                  key={`${workOrderKey(row)}-card`}
-                  className="cursor-pointer overflow-hidden border border-[var(--wms-ops-card-border)] bg-[var(--wms-ops-card-bg)]"
-                  onClick={() => openDetail(row)}
-                >
-                  <div className="border-b border-[color-mix(in_oklab,var(--wms-ops-accent)_16%,var(--wms-ops-card-border))] px-3 py-2.5">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex min-w-0 items-center gap-2 font-mono text-sm font-black text-[var(--wms-brand-primary)]">
-                        <span className="truncate">{row.workOrderNumber}</span>
-                        <WorkOrderAssignmentProgressRing row={row} />
-                      </div>
-                      <SourceListingKindBadge row={row} />
-                    </div>
-                    <strong className="mt-1 block text-sm">{row.stockCode}</strong>
-                    <div className="truncate text-xs text-[var(--wms-app-text-muted)]">{row.stockName}</div>
-                    {row.description?.trim() ? (
-                      <p className="mt-2 line-clamp-3 whitespace-pre-wrap text-xs leading-relaxed text-[var(--wms-app-text-muted)]">
-                        <span className="font-semibold text-[var(--wms-app-text)]">{tProduction('detail.description')}:</span>{' '}
-                        {row.description.trim()}
-                      </p>
-                    ) : null}
-                  </div>
-                  <dl className="grid grid-cols-2 gap-x-3 gap-y-2 px-3 py-2.5">
-                    <CardStat label="Miktar" value={`${formatProjectNumber(row.workOrderQuantity)} ${row.unitCode ?? ''}`} />
-                    <CardStat label="Tarih" value={formatProjectDate(row.workOrderDate)} />
-                    <CardStat label="Proje" value={row.projectCode || '—'} />
-                    <CardStat label="Depo akışı" value={`${row.issueWarehouseCode} → ${row.warehouseCode}`} />
-                  </dl>
-                  <div
-                    className="border-t border-[color-mix(in_oklab,var(--wms-ops-accent)_16%,var(--wms-ops-card-border))] px-3 py-2.5"
-                    onClick={(event) => event.stopPropagation()}
-                  >
-                    <div className="wms-ops-row-actions justify-start">
-                      <button
-                        type="button"
-                        className="wms-ops-grid-icon-btn"
-                        title="Detay"
-                        aria-label="Detay"
-                        onClick={() => openDetail(row)}
-                      >
-                        <Eye className="size-3.5" aria-hidden />
-                      </button>
-                      <button
-                        type="button"
-                        className="wms-ops-grid-icon-btn"
-                        title="Reçeteyi aç"
-                        aria-label="Reçeteyi aç"
-                        disabled={assignmentLoading === workOrderKey(row)}
-                        onClick={() => void openAssignment(row)}
-                      >
-                        {assignmentLoading === workOrderKey(row) ? (
-                          <Loader2 className="size-3.5 animate-spin" aria-hidden />
-                        ) : (
-                          <UserRoundCog className="size-3.5" aria-hidden />
-                        )}
-                      </button>
-                      {canCancelAssignment ? (
-                        <button
-                          type="button"
-                          className="wms-ops-grid-icon-btn !text-rose-600"
-                          title="İptal et"
-                          aria-label="İptal et"
-                          onClick={() => setCancelTarget(row)}
-                        >
-                          <X className="size-3.5" aria-hidden />
-                        </button>
-                      ) : null}
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </>
-          )}
-        </div>
-        </>
+        <div className="wms-ops-pending-grid-center" hidden={activeTab !== 'pending'}>
+          <AdvancedDataGrid<PendingWorkOrderGridRow>
+            compactShell
+            title=""
+            pageKey="production-work-order-pending"
+            refreshKey={`${pendingRefreshKey}:${createdRange?.fromDate ?? ''}:${createdRange?.toDate ?? ''}`}
+            retainQueryCache
+            columns={pendingColumns}
+            fetchPage={fetchPendingPage}
+            toolbarBelowExtra={renderCreatedPeriodTabs()}
+            emptyMessage="Seçili kaynakta transfere hazır açık iş emri bulunamadı."
+            onRowDoubleClick={(row) => openDetail(row)}
+          />
         </div>
 
         {PRODUCTION_WORK_ORDER_TRANSFER_TABS
@@ -1065,7 +960,10 @@ export function ProductionWorkOrdersPage(): ReactElement {
                 tab={tabDef.apiTab}
                 hidden={activeTab !== tabDef.key}
                 refreshKey={transferRefreshKeys[tabDef.key] ?? 0}
-                onPendingQueueChanged={() => void loadPending(activeSearch[0] || undefined, true)}
+                createdPeriod={createdPeriod}
+                createdPeriodAnchor={createdPeriodAnchor}
+                toolbarBelowExtra={renderCreatedPeriodTabs()}
+                onPendingQueueChanged={() => void loadPending(true)}
                 onAfterPoolClaim={() => {
                   refreshTabCounts();
                   setActiveTab('mine');
@@ -1100,7 +998,7 @@ export function ProductionWorkOrdersPage(): ReactElement {
         close={() => setSelected(undefined)}
         onTransferCreated={() => {
           refreshTabCounts();
-          void loadPending(undefined, true);
+          void loadPending(true);
           setTransferRefreshKeys((current) => ({
             ...current,
             picking: (current.picking ?? 0) + 1,
@@ -1116,7 +1014,7 @@ export function ProductionWorkOrdersPage(): ReactElement {
         onCompleted={() => {
           setCancelTarget(undefined);
           refreshTabCounts();
-          void loadPending(activeSearch[0] || undefined, true);
+          void loadPending(true);
           setTransferRefreshKeys((current) => ({
             ...current,
             cancelled: (current.cancelled ?? 0) + 1,

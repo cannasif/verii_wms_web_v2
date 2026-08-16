@@ -21,11 +21,17 @@ export const productionWorkOrderRecipeQueryKey = (row: WorkOrderRecipeIdentity) 
 export const productionWorkOrderListQueryOptions = (
   branchCode: string,
   search?: string,
+  range?: { fromDate?: string; toDate?: string },
 ) => {
   const normalizedSearch = search?.trim() || '';
+  const fromDate = range?.fromDate ?? '';
+  const toDate = range?.toDate ?? '';
   return queryOptions({
-    queryKey: ['production', 'source-work-orders', branchCode, normalizedSearch] as const,
-    queryFn: () => productionApi.sourceWorkOrders(normalizedSearch || undefined),
+    queryKey: ['production', 'source-work-orders', branchCode, normalizedSearch, fromDate, toDate] as const,
+    queryFn: () => productionApi.sourceWorkOrders(
+      normalizedSearch || undefined,
+      fromDate || toDate ? { fromDate: fromDate || undefined, toDate: toDate || undefined } : undefined,
+    ),
     staleTime: 30 * 1000,
     gcTime: 5 * 60 * 1000,
     retry: 1,

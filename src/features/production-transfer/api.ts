@@ -94,6 +94,7 @@ export interface ProductionWorkOrderTransferHeaderRow {
   residualTransferId?: number;
   residualDocumentNo?: string;
   isResidualHeader: boolean;
+  projectCode?: string;
   sourceWarehouseId: number;
   sourceWarehouseCode: number;
   sourceWarehouseName: string;

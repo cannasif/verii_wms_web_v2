@@ -1,15 +1,11 @@
 import { useMemo, type CSSProperties, type ReactElement } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { OpsCreatedPeriodTabs } from '@/components/shared/OpsCreatedPeriodTabs';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { localizeQualityInspectionStatus } from '../utils/quality-inspection-status-label';
 import { cn } from '@/lib/utils';
 import {
-  canAdvanceQualityInspectionCreatedPeriod,
-  isCurrentQualityInspectionCreatedPeriod,
-  QUALITY_INSPECTION_CREATED_PERIODS,
   QUALITY_INSPECTION_STATUS_ALL,
-  shiftQualityInspectionCreatedAnchor,
   type QualityInspectionCreatedPeriod,
 } from '../utils/quality-inspection-list-filters';
 import type { QualityInspectionStatusOption } from '../api/quality.api';
@@ -75,76 +71,30 @@ export function QualityInspectionCreatedPeriodTabs({
 }): ReactElement {
   const { t, moduleReady } = useModuleTranslation('quality');
   void moduleReady;
-  const navPeriod = value ?? 'day';
-  const isCurrent = isCurrentQualityInspectionCreatedPeriod(navPeriod, anchor);
-  const canGoNext = canAdvanceQualityInspectionCreatedPeriod(navPeriod, anchor);
 
   return (
-    <div className="wms-ops-quality-created-period-row">
-      <div className="wms-ops-quality-created-period-nav" data-no-auto-localize="true">
-        <button
-          type="button"
-          className="wms-ops-quality-created-period-nav__arrow"
-          aria-label={t('list.createdPeriodPrev')}
-          onClick={() => {
-            if (!value) onChange(navPeriod);
-            onAnchorChange(shiftQualityInspectionCreatedAnchor(navPeriod, anchor, -1));
-          }}
-        >
-          <ChevronLeft className="size-4" aria-hidden />
-        </button>
-        <button
-          type="button"
-          className={cn(
-            'wms-ops-quality-created-period-nav__now',
-            isCurrent && 'wms-ops-quality-created-period-nav__now--active',
-          )}
-          onClick={() => {
-            onChange(navPeriod);
-            onAnchorChange(new Date());
-          }}
-        >
-          {t(`list.createdPeriodNow.${navPeriod}`)}
-        </button>
-        <button
-          type="button"
-          className="wms-ops-quality-created-period-nav__arrow"
-          aria-label={t('list.createdPeriodNext')}
-          disabled={!canGoNext}
-          onClick={() => {
-            if (!canGoNext) return;
-            if (!value) onChange(navPeriod);
-            onAnchorChange(shiftQualityInspectionCreatedAnchor(navPeriod, anchor, 1));
-          }}
-        >
-          <ChevronRight className="size-4" aria-hidden />
-        </button>
-      </div>
-      <div
-        className="wms-ops-quality-created-periods"
-        role="tablist"
-        aria-label={t('list.createdPeriodTitle')}
-        data-no-auto-localize="true"
-      >
-        {QUALITY_INSPECTION_CREATED_PERIODS.map((period) => (
-          <button
-            key={period}
-            type="button"
-            role="tab"
-            className={cn(
-              'wms-ops-quality-created-periods__tab',
-              value === period && 'wms-ops-quality-created-periods__tab--active',
-            )}
-            aria-selected={value === period}
-            onClick={() => {
-              onChange(value === period ? null : period);
-              onAnchorChange(new Date());
-            }}
-          >
-            {t(`list.createdPeriod.${period}`)}
-          </button>
-        ))}
-      </div>
-    </div>
+    <OpsCreatedPeriodTabs
+      value={value}
+      onChange={onChange}
+      anchor={anchor}
+      onAnchorChange={onAnchorChange}
+      labels={{
+        title: t('list.createdPeriodTitle'),
+        prev: t('list.createdPeriodPrev'),
+        next: t('list.createdPeriodNext'),
+        now: {
+          day: t('list.createdPeriodNow.day'),
+          week: t('list.createdPeriodNow.week'),
+          month: t('list.createdPeriodNow.month'),
+          year: t('list.createdPeriodNow.year'),
+        },
+        periods: {
+          day: t('list.createdPeriod.day'),
+          week: t('list.createdPeriod.week'),
+          month: t('list.createdPeriod.month'),
+          year: t('list.createdPeriod.year'),
+        },
+      }}
+    />
   );
 }

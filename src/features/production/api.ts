@@ -20,9 +20,16 @@ const unwrap = <T,>(result: Envelope<T>): T => {
 };
 
 export const productionApi = {
-  sourceWorkOrders: async (search?: string): Promise<ProductionSourceWorkOrder[]> =>
+  sourceWorkOrders: async (
+    search?: string,
+    range?: { fromDate?: string; toDate?: string },
+  ): Promise<ProductionSourceWorkOrder[]> =>
     unwrap(await api.get<Envelope<ProductionSourceWorkOrder[]>>('/api/production/work-orders', {
-      params: { search: search?.trim() || undefined, take: 200 },
+      params: {
+        search: search?.trim() || undefined,
+        fromDate: range?.fromDate,
+        toDate: range?.toDate,
+      },
     })),
   returnedWorkOrders: async (search?: string): Promise<ProductionReturnedWorkOrder[]> =>
     unwrap(await api.get<Envelope<ProductionReturnedWorkOrder[]>>('/api/production/work-orders/returned', {
