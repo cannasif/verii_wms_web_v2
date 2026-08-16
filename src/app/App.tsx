@@ -125,6 +125,7 @@ const GeneratorProductionDefinitionsHubPage = lazy(() => loadGeneratorProduction
 const GeneratorProductionParametersPage = lazy(() => loadGeneratorProductionPages().then((m) => ({ default: m.GeneratorProductionParametersPage })));
 const GeneratorProductionStationsPage = lazy(() => loadGeneratorProductionPages().then((m) => ({ default: m.GeneratorProductionStationsPage })));
 const GeneratorProductionRoutesPage = lazy(() => loadGeneratorProductionPages().then((m) => ({ default: m.GeneratorProductionRoutesPage })));
+const GeneratorProductionProductsPage = lazy(() => loadGeneratorProductionPages().then((m) => ({ default: m.GeneratorProductionProductsPage })));
 const GeneratorProductionCalendarPage = lazy(() => loadGeneratorProductionPages().then((m) => ({ default: m.GeneratorProductionCalendarPage })));
 const GeneratorProductionResourcesPage = lazy(() => loadGeneratorProductionPages().then((m) => ({ default: m.GeneratorProductionResourcesPage })));
 const GeneratorProductionRulesPage = lazy(() => loadGeneratorProductionPages().then((m) => ({ default: m.GeneratorProductionRulesPage })));
@@ -268,6 +269,7 @@ export function App(): ReactElement {
           <Route path="warehouse/production/generator/definitions/all" element={<GeneratorProductionDefinitionsPage />} />
           <Route path="warehouse/production/generator/definitions/stations" element={<GeneratorProductionStationsPage />} />
           <Route path="warehouse/production/generator/definitions/routes" element={<GeneratorProductionRoutesPage />} />
+          <Route path="warehouse/production/generator/definitions/products" element={<GeneratorProductionProductsPage />} />
           <Route path="warehouse/production/generator/definitions/calendar" element={<GeneratorProductionCalendarPage />} />
           <Route path="warehouse/production/generator/definitions/resources" element={<GeneratorProductionResourcesPage />} />
           <Route path="warehouse/production/generator/definitions/rules" element={<GeneratorProductionRulesPage />} />
