@@ -60,6 +60,19 @@ import {
   canToggleQualityInspectionPriority,
   qualityInspectionPriorityRowClass,
 } from "../utils/quality-inspection-priority";
+import {
+  collectQualityProgressControlQuantities,
+  formatQualityWorkOperatorName,
+  resolveDecisionControlQuantity,
+} from "../utils/quality-work-operator";
+import {
+  applyQualityControlQuantityCache,
+  clearQualityControlQuantityCache,
+  extractQualityControlQuantityCache,
+  readQualityControlQuantityCache,
+  writeQualityControlQuantityCache,
+} from "../utils/quality-control-quantity-cache";
+import { useAuthStore } from "@/stores/auth-store";
 import { collapseRepeatedMessageSegments } from "../utils/quality-decision-message";
 import { cn } from "@/lib/utils";
 import { localizeEnumValue } from "@/lib/enum-localization";
@@ -365,6 +378,15 @@ function emptyDraft(
   };
 }
 
+function additionalControlQuantity(line: QualityInspectionLine, inspectedRaw: string): number {
+  const requested = inspectedRaw.trim() ? roundQty(parseQty(inspectedRaw)) : null;
+  return resolveDecisionControlQuantity(
+    requested != null && Number.isFinite(requested) ? requested : null,
+    remainingInspectableQuantity(line),
+    minimumControlQuantity(line),
+  ).additional;
+}
+
 function controlQuantityError(
   line: QualityInspectionLine,
   inspectedRaw: string,
@@ -372,24 +394,26 @@ function controlQuantityError(
 ): string | null {
   const required = minimumControlQuantity(line);
   const maximum = remainingInspectableQuantity(line);
-  if (!inspectedRaw.trim()) {
-    return t("errors.controlQuantityRequired", { stockCode: line.stockCode });
-  }
-  const inspected = roundQty(parseQty(inspectedRaw));
-  if (!Number.isFinite(inspected) || inspected < 0) {
+  const raw = inspectedRaw.trim();
+  const requested = raw ? roundQty(parseQty(raw)) : null;
+  if (raw && (requested == null || !Number.isFinite(requested) || requested < 0)) {
     return t("errors.controlQuantityMustBePositive", { stockCode: line.stockCode });
   }
-  if (inspected - maximum > QTY_EPS) {
+  const resolved = resolveDecisionControlQuantity(requested, maximum, required);
+  if (resolved.missingRequired) {
+    return t("errors.controlQuantityRequired", { stockCode: line.stockCode });
+  }
+  if (maximum > QTY_EPS && requested != null && requested - maximum > QTY_EPS) {
     return t("errors.controlQuantityExceedsRemaining", {
       stockCode: line.stockCode,
-      inspected: formatProjectNumber(inspected),
+      inspected: formatProjectNumber(requested),
       remaining: formatProjectNumber(maximum),
     });
   }
-  if (required - inspected > QTY_EPS) {
+  if (maximum > QTY_EPS && required - resolved.additional > QTY_EPS) {
     return t("errors.controlQuantityBelowMinimum", {
       stockCode: line.stockCode,
-      inspected: formatProjectNumber(inspected),
+      inspected: formatProjectNumber(resolved.additional),
       required: formatProjectNumber(required),
     });
   }
@@ -405,7 +429,7 @@ function buildControlQuantityRequest(
   if (error) throw new Error(error);
   return {
     lineId: line.id,
-    inspectedQuantity: roundQty(parseQty(draft.inspectedQuantity)),
+    inspectedQuantity: additionalControlQuantity(line, draft.inspectedQuantity),
   };
 }
 
@@ -658,8 +682,14 @@ function buildDispositionRequests(
   if (draft.decisionCodeRequiresNote && !draft.reasonNote.trim()) {
     throw new Error(t("errors.reasonNoteRequiredForCode"));
   }
-  if (parsed.some((part) => (part.decision === "Rejected" || part.decision === "Quarantined") && !part.targetLocationId)) {
-    throw new Error(t("errors.decisionDestinationRequired"));
+  if (parsed.some((part) => part.decision === "Accepted" && !part.targetLocationId)) {
+    throw new Error(t("errors.inspectionWarehouseAcceptedMissing"));
+  }
+  if (parsed.some((part) => part.decision === "Rejected" && !part.targetLocationId)) {
+    throw new Error(t("errors.inspectionWarehouseRejectMissing"));
+  }
+  if (parsed.some((part) => part.decision === "Quarantined" && !part.targetLocationId)) {
+    throw new Error(t("errors.inspectionWarehouseQuarantineMissing"));
   }
   return parsed.map((part) => ({
     lineId: line.id,
@@ -1008,13 +1038,23 @@ export function QualityInspectionsPage({
       },
       {
         key: "createdByName",
-        label: t("list.columns.processedBy"),
+        label: t("list.columns.createdBy"),
         sortable: true,
         filterable: true,
         searchable: true,
         defaultSearch: true,
         render: (r) =>
           r.createdByName || t("list.unknownUser", { id: r.createdBy ?? "—" }),
+      },
+      {
+        key: "workStartedByName",
+        label: t("list.columns.workOperator"),
+        sortable: true,
+        filterable: true,
+        searchable: true,
+        defaultSearch: true,
+        render: (r) =>
+          formatQualityWorkOperatorName(r.workStartedByName, r.workStoppedByName) || "—",
       },
       {
         key: "lineCount",
@@ -1053,11 +1093,7 @@ export function QualityInspectionsPage({
             <OpsStatusBadge tone={inferOpsStatusTone(r.workState)}>
               {t(`detail.work.states.${r.workState}`)}
             </OpsStatusBadge>
-            {r.activeWorkerName ? (
-              <span className="max-w-44 truncate text-[11px] text-muted-foreground" title={r.activeWorkerName}>
-                {r.activeWorkerName}
-              </span>
-            ) : r.workSessionCount > 0 ? (
+            {r.workSessionCount > 0 && !r.activeWorkerName ? (
               <span className="text-[11px] text-muted-foreground">
                 {t("detail.work.sessions")}: {r.workSessionCount}
               </span>
@@ -1133,18 +1169,23 @@ export function QualityInspectionsPage({
     },
     [can, expandedId, loading, moduleReady, prioritizableStatuses, priorityLoading, t, toggle, toggleInspectionPriority],
   );
-  const decided = async (nextStatus?: string, inspectionId?: number) => {
-    const targetStatus = resolveDecidedListStatus(nextStatus);
+  const moveInspectionToListStatus = useCallback(async (
+    targetStatus: string,
+    inspectionId?: number,
+    options?: { markCommitted?: boolean },
+  ) => {
     listMovePendingRef.current = true;
     try {
       flushSync(() => {
         if (inspectionId != null) {
           removeInspectionFromGridCache(queryClient, pageKey, inspectionId);
-          setCommittedInspectionIds((current) => {
-            const next = new Set(current);
-            next.add(inspectionId);
-            return next;
-          });
+          if (options?.markCommitted) {
+            setCommittedInspectionIds((current) => {
+              const next = new Set(current);
+              next.add(inspectionId);
+              return next;
+            });
+          }
         }
         if (!quarantineOnly) {
           setSelectedStatus(targetStatus);
@@ -1160,11 +1201,14 @@ export function QualityInspectionsPage({
         });
         await waitUntilActiveGridSettled(queryClient, pageKey);
       } catch {
-        // Decision is already committed; keep the destination tab even if refresh fails.
+        // Destination tab should stay even if refresh fails.
       }
     } finally {
       listMovePendingRef.current = false;
     }
+  }, [pageKey, queryClient, quarantineOnly]);
+  const decided = async (nextStatus?: string, inspectionId?: number) => {
+    await moveInspectionToListStatus(resolveDecidedListStatus(nextStatus), inspectionId, { markCommitted: true });
   };
   if (!quarantineOnly && statusCatalogQuery.isPending) {
     return (
@@ -1233,6 +1277,7 @@ export function QualityInspectionsPage({
               setDetail(null);
             }}
             decided={decided}
+            moveToListStatus={moveInspectionToListStatus}
             applyBlocked={committedInspectionIds.has(row.id) || Boolean(decisionFlow)}
             onDecisionFlowChange={handleDecisionFlowChange}
           />
@@ -1279,6 +1324,7 @@ function InspectionDetailPanel({
   refresh,
   close,
   decided,
+  moveToListStatus,
   applyBlocked = false,
   onDecisionFlowChange,
 }: {
@@ -1286,12 +1332,14 @@ function InspectionDetailPanel({
   refresh: () => Promise<void>;
   close: () => void;
   decided: (nextStatus?: string, inspectionId?: number) => void | Promise<void>;
+  moveToListStatus: (targetStatus: string, inspectionId?: number) => void | Promise<void>;
   applyBlocked?: boolean;
   onDecisionFlowChange: (flow: QualityDecisionFlow | null) => void;
 }): ReactElement {
   const { t } = useModuleTranslation("quality");
   const { can } = usePermissionAccess();
   const navigate = useNavigate();
+  const controlQtyCacheUserId = useAuthStore((state) => state.user?.id ?? 0);
   const actionable = useMemo(
     () => detail.lines.filter(isActionableLine),
     [detail.lines],
@@ -1337,7 +1385,6 @@ function InspectionDetailPanel({
   const defaultRejectedLocationId = detail.defaultRejectedDestination?.locationId ?? null;
   const defaultRejectedWarehouseId = detail.defaultRejectedDestination?.warehouseId ?? null;
   const configuredDefaultQuarantineDestination = quarantineDestinations.find((destination) => destination.isDefault)
-    ?? quarantineDestinations[0]
     ?? null;
   const configuredDefaultQuarantineLocationId = configuredDefaultQuarantineDestination?.locationId ?? null;
   const configuredDefaultQuarantineWarehouseId = configuredDefaultQuarantineDestination?.warehouseId ?? null;
@@ -1345,8 +1392,8 @@ function InspectionDetailPanel({
   const [selected, setSelected] = useState<number[]>(() =>
     actionable.map((line) => line.id),
   );
-  const [drafts, setDrafts] = useState<Record<number, LineDraft>>(() =>
-    Object.fromEntries(
+  const [drafts, setDrafts] = useState<Record<number, LineDraft>>(() => {
+    const initial = Object.fromEntries(
       actionable.map((line) => {
         const acceptedDestination = acceptedDestinationForLine(
           line,
@@ -1363,8 +1410,47 @@ function InspectionDetailPanel({
           ),
         ];
       }),
-    ),
-  );
+    );
+    return applyQualityControlQuantityCache(
+      initial,
+      actionable.map((line) => ({
+        id: line.id,
+        inspectedQuantity: line.inspectedQuantity,
+        remainingInspectable: remainingInspectableQuantity(line),
+      })),
+      readQualityControlQuantityCache(
+        useAuthStore.getState().user?.id ?? 0,
+        detail.header.id,
+      ),
+      (value) => roundQty(parseQty(value)),
+    );
+  });
+  const skipControlQtyCacheWriteRef = useRef(false);
+  const didRestoreControlQtyCacheRef = useRef(false);
+  useEffect(() => {
+    if (didRestoreControlQtyCacheRef.current || controlQtyCacheUserId <= 0) return;
+    didRestoreControlQtyCacheRef.current = true;
+    setDrafts((current) =>
+      applyQualityControlQuantityCache(
+        current,
+        actionable.map((line) => ({
+          id: line.id,
+          inspectedQuantity: line.inspectedQuantity,
+          remainingInspectable: remainingInspectableQuantity(line),
+        })),
+        readQualityControlQuantityCache(controlQtyCacheUserId, detail.header.id),
+        (value) => roundQty(parseQty(value)),
+      ),
+    );
+  }, [actionable, controlQtyCacheUserId, detail.header.id]);
+  useEffect(() => {
+    if (skipControlQtyCacheWriteRef.current || controlQtyCacheUserId <= 0) return;
+    writeQualityControlQuantityCache(
+      controlQtyCacheUserId,
+      detail.header.id,
+      extractQualityControlQuantityCache(drafts, actionable),
+    );
+  }, [actionable, controlQtyCacheUserId, detail.header.id, drafts]);
   const [bulkDecision, setBulkDecision] = useState(defaultDecision);
   const [bulkQuantity, setBulkQuantity] = useState("");
   const [bulkRemainderDecision, setBulkRemainderDecision] =
@@ -1400,7 +1486,11 @@ function InspectionDetailPanel({
         idempotencyKey: crypto.randomUUID(),
         rowVersion: detail.rowVersion,
       });
-      await refresh();
+      if (detail.header.status === "Pending") {
+        await moveToListStatus("InProgress", detail.header.id);
+      } else {
+        await refresh();
+      }
       toast.success(t(detail.work.state === "Paused" ? "detail.work.resumed" : "detail.work.started"));
     } catch (error) {
       toast.error(message(error, t("detail.work.startFailed")));
@@ -1411,6 +1501,31 @@ function InspectionDetailPanel({
 
   const pauseWork = async () => {
     if (workBusy || !detail.work.canPause) return;
+    const progressLines = groupQualityLines(actionable).map((group) => group.primary);
+    let controlQuantities: QualityInspectionControlQuantityRequest[] = [];
+    try {
+      controlQuantities = collectQualityProgressControlQuantities(
+        progressLines,
+        drafts,
+        (value) => roundQty(parseQty(value)),
+      );
+      for (const request of controlQuantities) {
+        const line = progressLines.find((item) => item.id === request.lineId);
+        if (!line) continue;
+        const remaining = remainingInspectableQuantity(line);
+        if (request.inspectedQuantity - remaining > QTY_EPS) {
+          toast.error(t("errors.controlQuantityExceedsRemaining", {
+            stockCode: line.stockCode,
+            inspected: formatProjectNumber(request.inspectedQuantity),
+            remaining: formatProjectNumber(remaining),
+          }));
+          return;
+        }
+      }
+    } catch (error) {
+      toast.error(message(error, t("errors.controlQuantityInvalid")));
+      return;
+    }
     setWorkBusy("pause");
     try {
       await qualityApi.pauseInspectionWork(detail.header.id, {
@@ -1418,10 +1533,17 @@ function InspectionDetailPanel({
         reason: pauseReason,
         note: pauseNote.trim() || null,
         rowVersion: detail.rowVersion,
+        controlQuantities,
       });
+      skipControlQtyCacheWriteRef.current = true;
+      clearQualityControlQuantityCache(controlQtyCacheUserId, detail.header.id);
       setPauseDialogOpen(false);
       setPauseNote("");
-      await refresh();
+      if (detail.header.status === "InProgress") {
+        await moveToListStatus("Pending", detail.header.id);
+      } else {
+        await refresh();
+      }
       toast.success(t("detail.work.paused"));
     } catch (error) {
       toast.error(message(error, t("detail.work.pauseFailed")));
@@ -1915,6 +2037,8 @@ function InspectionDetailPanel({
       }
 
       const inspectionId = detail.header.id;
+      skipControlQtyCacheWriteRef.current = true;
+      clearQualityControlQuantityCache(controlQtyCacheUserId, inspectionId);
       await decided(nextStatus, inspectionId);
 
       if (receiptCreatedNow && lastResult) {
@@ -1950,6 +2074,8 @@ function InspectionDetailPanel({
         }
       }
       if (committedStatus || isAlreadyAppliedDecisionError(error) || isCommittedDecisionFollowUpError(error)) {
+        skipControlQtyCacheWriteRef.current = true;
+        clearQualityControlQuantityCache(controlQtyCacheUserId, detail.header.id);
         await decided(committedStatus ?? "Passed", detail.header.id);
         if (isCommittedDecisionFollowUpError(error) && !isAlreadyAppliedDecisionError(error)) {
           toast.error(collapseRepeatedMessageSegments(message(error, t("errors.decisionSaveFailed"))));
@@ -2014,10 +2140,19 @@ function InspectionDetailPanel({
 
         <div className="wms-ops-quality-detail__meta">
           <MetaChip
-            label={t("detail.meta.processedBy")}
+            label={t("detail.meta.createdBy")}
             value={
               detail.header.createdByName ||
               t("list.unknownUser", { id: detail.header.createdBy ?? "—" })
+            }
+          />
+          <MetaChip
+            label={t("detail.meta.workOperator")}
+            value={
+              formatQualityWorkOperatorName(
+                detail.header.workStartedByName,
+                detail.header.workStoppedByName,
+              ) || "—"
             }
           />
           <MetaChip
@@ -2568,6 +2703,7 @@ function InspectionDetailPanel({
                     {active && !final ? (
                       <LineDecisionPopover
                         inspectionId={detail.header.id}
+                        disabled={!detail.work.canPause}
                         open={openLineId === line.id}
                         onOpenChange={(open) =>
                           setOpenLineId(open ? line.id : null)
@@ -3132,6 +3268,7 @@ function LotSerialHoverCell({
 
 function LineDecisionPopover({
   inspectionId,
+  disabled = false,
   open,
   onOpenChange,
   options,
@@ -3150,6 +3287,7 @@ function LineDecisionPopover({
   canDeleteImages,
 }: {
   inspectionId: number;
+  disabled?: boolean;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   options: Array<{ value: string; label: string }>;
@@ -3327,7 +3465,11 @@ function LineDecisionPopover({
       return;
     }
     setControlError(null);
-    onChange({ confirmedInspectedQuantity: draft.inspectedQuantity });
+    const additional = additionalControlQuantity(line, draft.inspectedQuantity);
+    onChange({
+      inspectedQuantity: additional > QTY_EPS ? draft.inspectedQuantity : "",
+      confirmedInspectedQuantity: additional > QTY_EPS ? String(additional) : "",
+    });
     onOpenChange(false);
   };
 
@@ -3362,10 +3504,12 @@ function LineDecisionPopover({
         ref={triggerRef}
         type="button"
         variant="secondary"
-        title={t("linePopover.triggerTitle")}
+        disabled={disabled}
+        title={disabled ? t("linePopover.editDisabledUntilStart") : t("linePopover.triggerTitle")}
         aria-expanded={open}
         onClick={(event) => {
           event.stopPropagation();
+          if (disabled) return;
           onOpenChange(!open);
         }}
         className={cn(
