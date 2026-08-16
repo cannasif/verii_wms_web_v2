@@ -707,7 +707,11 @@ function AnalysisCard({ row, language, t }: { row: NonNullable<WarehouseAssistan
     <article className={cn('h-full rounded-xl border border-slate-200 bg-white p-3 transition dark:border-white/10 dark:bg-slate-950/45', row.route && 'hover:-translate-y-0.5 hover:border-cyan-400 hover:shadow-md')}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0"><p className="break-words text-sm font-bold">{row.code} · {row.name}</p><p className="mt-1 text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">{row.category}</p></div>
-        {row.route ? <ExternalLink className="size-4 shrink-0 text-cyan-600" aria-label={t('actions.openModule')} /> : null}
+        {row.route ? (
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-cyan-50 px-2 py-1 text-[11px] font-bold text-cyan-700 dark:bg-cyan-400/10 dark:text-cyan-300">
+            {t('actions.openModule')}<ExternalLink className="size-3.5" aria-hidden />
+          </span>
+        ) : null}
       </div>
       {scope.length > 0 ? <p className="mt-2 text-xs text-slate-500">{scope.join(' · ')}</p> : null}
       {quantities.length > 0 ? <p className="mt-2 text-xs font-semibold leading-5 text-cyan-700 dark:text-cyan-300">{quantities.join(' · ')}</p> : null}
