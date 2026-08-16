@@ -172,7 +172,8 @@
     "tasks": "Tareas abiertas y asignadas",
     "goodsReceipts": "Recepciones y artículos recibidos",
     "steelVehicles": "Entradas de vehículos de acero y aceptación de chapas",
-    "transfers": "Documentos de transferencia"
+    "transfers": "Documentos de transferencia",
+    "analysis": "Análisis de almacén y producción"
   },
   "entityResolution": {
     "title": "¿Quiso decir uno de estos registros?",
@@ -312,6 +313,7 @@
   "exceptions": { "suggestedAction": "Acción recomendada", "ageHours_one": "abierto durante {{count}} hora", "ageHours_other": "abierto durante {{count}} horas" },
   "traceability": { "reversal": "Asiento de reversión" },
   "evidence": { "title": "Origen y actualidad de los datos", "recordCount_one": "{{count}} registro analizado", "recordCount_other": "{{count}} registros analizados", "generatedAt": "Hora de respuesta", "dataAsOf": "Último evento de datos", "truncated": "Los resultados se limitaron por rendimiento. Use la exportación para ver todos los detalles." },
+  "analysis": { "physical": "Físico", "available": "Disponible", "reserved": "Reservado", "planned": "Planificado", "actual": "Real", "variance": "Diferencia", "capacity": "Capacidad", "plannedAt": "Planificado", "actualAt": "Realizado", "statuses": {} },
   "actions": { "openModule": "Abrir pantalla relacionada" },
   "fallbacks": {
     "noReference": "Sin referencia",

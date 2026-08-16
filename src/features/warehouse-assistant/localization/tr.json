@@ -174,7 +174,8 @@
     "tasks": "Açık ve atanmış görevler",
     "goodsReceipts": "Mal kabul belgeleri ve alınan stoklar",
     "steelVehicles": "Sac araç girişleri ve levha kabulleri",
-    "transfers": "Transfer belgeleri"
+    "transfers": "Transfer belgeleri",
+    "analysis": "Depo ve üretim analizleri"
   },
   "entityResolution": {
     "title": "Bunu mu demek istediniz?",
@@ -325,6 +326,7 @@
     "dataAsOf": "Verinin son olay zamanı",
     "truncated": "Performans için sonuç sınırlandı. Tam ayrıntı için dışa aktarımı kullanın."
   },
+  "analysis": { "physical": "Fiziksel", "available": "Kullanılabilir", "reserved": "Rezerve", "planned": "Planlanan", "actual": "Gerçekleşen", "variance": "Fark", "capacity": "Kapasite", "plannedAt": "Plan zamanı", "actualAt": "Gerçekleşme zamanı", "statuses": {} },
   "actions": { "openModule": "İlgili ekranı aç" },
   "fallbacks": {
     "noReference": "Referans yok",

@@ -215,6 +215,22 @@ const result: WarehouseAssistantChatResponse = {
       completedAtUtc: "2026-08-08T11:00:00Z",
     },
   ],
+  analysisRows: [
+    {
+      category: "InventoryInsight",
+      entityType: "Stock",
+      entityId: 4,
+      code: "01/013",
+      name: "Test levha",
+      status: "InStock",
+      unitCode: "AD",
+      physicalQuantity: 9,
+      availableQuantity: 7,
+      reservedQuantity: 2,
+      detail: "Grup: Hammadde",
+      route: "/erp/stocks",
+    },
+  ],
   suggestions: [],
 };
 
@@ -247,6 +263,7 @@ describe("warehouse assistant export model", () => {
       value: "Yalnız yetkili olduğum depolar",
     });
     expect(model.sections.map((item) => item.key)).toEqual([
+      "analysis",
       "activities",
       "serial-balances",
       "stock-locations",
@@ -257,6 +274,7 @@ describe("warehouse assistant export model", () => {
       "steel-vehicles",
       "transfers",
     ]);
+    expect(model.sections.find((item) => item.key === "analysis")?.rows[0].availableQuantity).toBe(7);
     expect(
       model.sections.find((item) => item.key === "serial-balances")?.rows[0]
         .availableQuantity,

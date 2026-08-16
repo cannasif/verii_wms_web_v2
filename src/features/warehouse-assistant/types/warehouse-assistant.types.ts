@@ -17,6 +17,12 @@ export type WarehouseAssistantIntent =
   | 'traceability'
   | 'processBlockers'
   | 'composite'
+  | 'warehouseOverview'
+  | 'locationInventory'
+  | 'inventoryInsights'
+  | 'inventoryCountAnalysis'
+  | 'generatorProductionAnalysis'
+  | 'navigationHelp'
   | 'unknown';
 
 export interface WarehouseAssistantParameterHint {
@@ -47,6 +53,12 @@ export interface WarehouseAssistantCapabilities {
   semanticRoutingAvailable?: boolean;
   semanticModel?: string | null;
   canRunCompoundQueries?: boolean;
+  canQueryWarehouseOverview?: boolean;
+  canQueryLocationInventory?: boolean;
+  canQueryInventoryInsights?: boolean;
+  canQueryInventoryCounts?: boolean;
+  canQueryGeneratorProduction?: boolean;
+  canUseNavigationHelp?: boolean;
 }
 export interface WarehouseAssistantConversationRow {
   id: number;
@@ -352,6 +364,46 @@ export interface WarehouseAssistantInterpretationRow {
   transferDocumentNo?: string | null;
   documentNo?: string | null;
   transferScope: 'all' | 'interWarehouse' | 'production' | string;
+  queryKind?: string;
+  warehouseQuery?: string | null;
+  locationQuery?: string | null;
+  stockGroupQuery?: string | null;
+  projectQuery?: string | null;
+  statusQuery?: string | null;
+  stockMeasure?: string | null;
+  sort?: string;
+  limit?: number | null;
+  excludeZero?: boolean;
+  excludeCancelled?: boolean;
+  activeOnly?: boolean;
+  navigationTopic?: string | null;
+  reasonCodes?: string[] | null;
+}
+
+export interface WarehouseAssistantAnalysisRow {
+  category: string;
+  entityType: string;
+  entityId?: number | null;
+  code: string;
+  name: string;
+  warehouseCode?: number | null;
+  warehouseName?: string | null;
+  locationCode?: string | null;
+  locationName?: string | null;
+  status?: string | null;
+  unitCode?: string | null;
+  physicalQuantity?: number | null;
+  availableQuantity?: number | null;
+  reservedQuantity?: number | null;
+  plannedQuantity?: number | null;
+  actualQuantity?: number | null;
+  varianceQuantity?: number | null;
+  capacityQuantity?: number | null;
+  capacityUnit?: string | null;
+  plannedAtUtc?: string | null;
+  actualAtUtc?: string | null;
+  detail?: string | null;
+  route?: string | null;
 }
 
 export interface WarehouseAssistantChatResponse {
@@ -378,5 +430,6 @@ export interface WarehouseAssistantChatResponse {
   traceabilityEvents?: WarehouseAssistantTraceabilityEventRow[];
   evidence?: WarehouseAssistantEvidenceRow[];
   interpretations?: WarehouseAssistantInterpretationRow[];
+  analysisRows?: WarehouseAssistantAnalysisRow[];
   suggestions: string[];
 }

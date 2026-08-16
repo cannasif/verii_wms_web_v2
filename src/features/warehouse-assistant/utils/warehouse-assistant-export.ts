@@ -74,6 +74,37 @@ export function buildWarehouseAssistantExportModel({
     t(`${group}.${value}`, { defaultValue: value });
   const sections = [
     section(
+      'analysis',
+      t('results.analysis'),
+      [
+        col(t, 'entityType', 22), col(t, 'stockCode', 22), col(t, 'stockName', 34),
+        col(t, 'warehouseCode', 16), col(t, 'warehouseName', 24), col(t, 'locationCode', 20),
+        col(t, 'status', 18), col(t, 'quantity', 16), col(t, 'availableQuantity', 18),
+        col(t, 'reservedQuantity', 18, false), col(t, 'plannedQuantity', 18, false), col(t, 'processedQuantity', 18, false),
+        col(t, 'remainingQuantity', 18, false), col(t, 'unitCode', 12, false), col(t, 'plannedAt', 21, false),
+        col(t, 'occurredAt', 21, false), col(t, 'description', 46, false),
+      ],
+      (result.analysisRows ?? []).map((row) => ({
+        entityType: row.category || row.entityType,
+        stockCode: row.code,
+        stockName: row.name,
+        warehouseCode: row.warehouseCode ?? '',
+        warehouseName: textValue(row.warehouseName),
+        locationCode: textValue(row.locationCode),
+        status: textValue(row.status),
+        quantity: row.physicalQuantity ?? '',
+        availableQuantity: row.availableQuantity ?? '',
+        reservedQuantity: row.reservedQuantity ?? '',
+        plannedQuantity: row.plannedQuantity ?? '',
+        processedQuantity: row.actualQuantity ?? '',
+        remainingQuantity: row.varianceQuantity ?? row.capacityQuantity ?? '',
+        unitCode: row.unitCode ?? row.capacityUnit ?? '',
+        plannedAt: dateValue(row.plannedAtUtc),
+        occurredAt: dateValue(row.actualAtUtc),
+        description: textValue(row.detail),
+      })),
+    ),
+    section(
       'summary-metrics',
       t('results.shiftSummary'),
       [col(t, 'description', 36), col(t, 'quantity', 16), col(t, 'unitCode', 14), col(t, 'priority', 16), col(t, 'module', 20)],

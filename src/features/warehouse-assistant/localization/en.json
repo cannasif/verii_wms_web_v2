@@ -172,7 +172,8 @@
     "tasks": "Open and assigned tasks",
     "goodsReceipts": "Goods receipt documents and received items",
     "steelVehicles": "Steel vehicle entries and sheet acceptances",
-    "transfers": "Transfer documents"
+    "transfers": "Transfer documents",
+    "analysis": "Warehouse and production analysis"
   },
   "entityResolution": {
     "title": "Did you mean one of these?",
@@ -323,6 +324,7 @@
     "dataAsOf": "Latest data event",
     "truncated": "Results were limited for performance. Use export for full detail."
   },
+  "analysis": { "physical": "Physical", "available": "Available", "reserved": "Reserved", "planned": "Planned", "actual": "Actual", "variance": "Variance", "capacity": "Capacity", "plannedAt": "Planned at", "actualAt": "Actual at", "statuses": {} },
   "actions": { "openModule": "Open related screen" },
   "fallbacks": {
     "noReference": "No reference",

@@ -47,7 +47,13 @@ const emptyCapabilities: WarehouseAssistantCapabilities = {
   canQueryOperationalExceptions: false,
   canQueryTraceability: false,
   canQueryProcessBlockers: false,
-  assistantVersion: '2.5.0',
+  canQueryWarehouseOverview: false,
+  canQueryLocationInventory: false,
+  canQueryInventoryInsights: false,
+  canQueryInventoryCounts: false,
+  canQueryGeneratorProduction: false,
+  canUseNavigationHelp: true,
+  assistantVersion: '2.8.0',
   routingMode: 'InProcessNlp',
   semanticRoutingAvailable: false,
   semanticModel: null,
@@ -405,7 +411,8 @@ function AssistantResult({ result, question, language, t, settingsT, onSuggestio
   const traceabilityEvents = result.traceabilityEvents ?? [];
   const evidence = result.evidence ?? [];
   const interpretations = result.interpretations ?? [];
-  const exportableCount = result.activities.length + result.serialBalances.length + result.serialReceipts.length + result.stockLocations.length + result.movements.length + result.tasks.length + goodsReceipts.length + steelVehicles.length + transfers.length + summaryMetrics.length + exceptions.length + traceabilityEvents.length + (result.barcode ? 1 : 0);
+  const analysisRows = result.analysisRows ?? [];
+  const exportableCount = result.activities.length + result.serialBalances.length + result.serialReceipts.length + result.stockLocations.length + result.movements.length + result.tasks.length + goodsReceipts.length + steelVehicles.length + transfers.length + summaryMetrics.length + exceptions.length + traceabilityEvents.length + analysisRows.length + (result.barcode ? 1 : 0);
   const hasData = exportableCount + parameterGuides.length > 0;
   if (!hasData && entityCandidates.length === 0 && result.suggestions.length === 0 && interpretations.length === 0) return null;
   return (
@@ -421,6 +428,17 @@ function AssistantResult({ result, question, language, t, settingsT, onSuggestio
                   const intentKey = `${item.intent.charAt(0).toLowerCase()}${item.intent.slice(1)}`;
                   const identifiers = [item.serialNo, item.barcode, item.vehiclePlate, item.transferDocumentNo, item.documentNo]
                     .filter((value, valueIndex, values): value is string => Boolean(value) && values.indexOf(value) === valueIndex);
+                  const filters = [
+                    item.warehouseQuery ? `warehouse=${item.warehouseQuery}` : null,
+                    item.locationQuery ? `location=${item.locationQuery}` : null,
+                    item.stockGroupQuery ? `group=${item.stockGroupQuery}` : null,
+                    item.projectQuery ? `project=${item.projectQuery}` : null,
+                    item.statusQuery ? `status=${item.statusQuery}` : null,
+                    item.stockMeasure ? `measure=${item.stockMeasure}` : null,
+                    item.limit != null ? `limit=${item.limit}` : null,
+                    item.excludeCancelled ? 'exclude=cancelled' : null,
+                    item.excludeZero ? 'exclude=zero' : null,
+                  ].filter((value): value is string => Boolean(value));
                   return (
                     <div key={`${item.intent}-${interpretationIndex}`} className="min-w-0 rounded-xl border border-indigo-200/70 bg-white/75 px-3 py-2 dark:border-indigo-300/15 dark:bg-slate-950/45">
                       <div className="flex flex-wrap items-center gap-2">
@@ -428,9 +446,12 @@ function AssistantResult({ result, question, language, t, settingsT, onSuggestio
                         <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-bold text-indigo-700 dark:bg-indigo-400/15 dark:text-indigo-200">
                           {t('interpretation.confidence', { value: Math.round(item.confidence * 100) })}
                         </span>
+                        {item.queryKind && item.queryKind !== 'none' ? <span className="rounded-full border border-indigo-200 px-2 py-0.5 text-[10px] font-bold dark:border-indigo-300/20">{item.queryKind}</span> : null}
                         {item.usedLocalSemanticModel ? <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">{t('interpretation.localSemantic')}</span> : null}
                       </div>
                       {identifiers.length > 0 ? <p className="mt-1 break-all text-[11px] text-slate-500 dark:text-slate-400">{identifiers.join(' · ')}</p> : null}
+                      {filters.length > 0 ? <p className="mt-1 break-all font-mono text-[10px] text-indigo-700 dark:text-indigo-300">{filters.join(' · ')}</p> : null}
+                      {(item.reasonCodes?.length ?? 0) > 0 ? <p className="mt-1 text-[10px] text-slate-400">{item.reasonCodes!.join(' · ')}</p> : null}
                     </div>
                   );
                 })}
@@ -490,6 +511,13 @@ function AssistantResult({ result, question, language, t, settingsT, onSuggestio
             ))}
           </div>
         </section>
+      ) : null}
+      {analysisRows.length > 0 ? (
+        <ResultSection icon={<Layers3 className="size-4" />} title={t('results.analysis')}>
+          {analysisRows.map((row, index) => (
+            <AnalysisCard key={`${row.category}-${row.entityType}-${row.entityId ?? row.code}-${index}`} row={row} language={language} t={t} />
+          ))}
+        </ResultSection>
       ) : null}
       {result.activities.length > 0 ? (
         <ResultSection icon={<UserRoundSearch className="size-4" />} title={t('results.activities')}>
@@ -657,6 +685,37 @@ function ResultSection({ icon, title, children }: { icon: ReactElement; title: s
 
 function ResultCard({ title, meta, detail }: { title: string; meta: string; detail: string }): ReactElement {
   return <div className="rounded-xl border border-slate-200 bg-white p-3 dark:border-white/10 dark:bg-slate-950/45"><p className="text-sm font-bold">{title}</p><p className="mt-1 text-xs text-slate-500">{meta}</p><p className="mt-1 text-xs font-medium text-cyan-700 dark:text-cyan-300">{detail}</p></div>;
+}
+
+function AnalysisCard({ row, language, t }: { row: NonNullable<WarehouseAssistantChatResponse['analysisRows']>[number]; language: string; t: TFunction }): ReactElement {
+  const scope = [
+    row.warehouseCode != null ? `${row.warehouseCode} - ${row.warehouseName ?? ''}`.trim() : null,
+    row.locationCode ? `${row.locationCode}${row.locationName ? ` - ${row.locationName}` : ''}` : null,
+    row.status ? t(`analysis.statuses.${row.status}`, { defaultValue: row.status }) : null,
+  ].filter((value): value is string => Boolean(value));
+  const unit = row.unitCode ?? '';
+  const quantities = [
+    row.physicalQuantity != null ? `${t('analysis.physical')}: ${formatNumber(row.physicalQuantity, language)} ${unit}`.trim() : null,
+    row.availableQuantity != null ? `${t('analysis.available')}: ${formatNumber(row.availableQuantity, language)} ${unit}`.trim() : null,
+    row.reservedQuantity != null ? `${t('analysis.reserved')}: ${formatNumber(row.reservedQuantity, language)} ${unit}`.trim() : null,
+    row.plannedQuantity != null ? `${t('analysis.planned')}: ${formatNumber(row.plannedQuantity, language)}` : null,
+    row.actualQuantity != null ? `${t('analysis.actual')}: ${formatNumber(row.actualQuantity, language)}` : null,
+    row.varianceQuantity != null ? `${t('analysis.variance')}: ${formatNumber(row.varianceQuantity, language)} ${unit}`.trim() : null,
+    row.capacityQuantity != null ? `${t('analysis.capacity')}: ${formatNumber(row.capacityQuantity, language)} ${row.capacityUnit ?? ''}`.trim() : null,
+  ].filter((value): value is string => Boolean(value));
+  const content = (
+    <article className={cn('h-full rounded-xl border border-slate-200 bg-white p-3 transition dark:border-white/10 dark:bg-slate-950/45', row.route && 'hover:-translate-y-0.5 hover:border-cyan-400 hover:shadow-md')}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0"><p className="break-words text-sm font-bold">{row.code} · {row.name}</p><p className="mt-1 text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">{row.category}</p></div>
+        {row.route ? <ExternalLink className="size-4 shrink-0 text-cyan-600" aria-label={t('actions.openModule')} /> : null}
+      </div>
+      {scope.length > 0 ? <p className="mt-2 text-xs text-slate-500">{scope.join(' · ')}</p> : null}
+      {quantities.length > 0 ? <p className="mt-2 text-xs font-semibold leading-5 text-cyan-700 dark:text-cyan-300">{quantities.join(' · ')}</p> : null}
+      {row.detail ? <p className="mt-2 text-xs leading-5 text-slate-600 dark:text-slate-300">{row.detail}</p> : null}
+      {row.plannedAtUtc || row.actualAtUtc ? <p className="mt-2 text-[11px] text-slate-400">{[row.plannedAtUtc ? `${t('analysis.plannedAt')}: ${formatDate(row.plannedAtUtc, language)}` : null, row.actualAtUtc ? `${t('analysis.actualAt')}: ${formatDate(row.actualAtUtc, language)}` : null].filter(Boolean).join(' · ')}</p> : null}
+    </article>
+  );
+  return row.route ? <Link to={row.route}>{content}</Link> : content;
 }
 
 function MetricCard({ metric, language, t }: { metric: NonNullable<WarehouseAssistantChatResponse['summaryMetrics']>[number]; language: string; t: TFunction }): ReactElement {

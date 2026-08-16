@@ -172,7 +172,8 @@
     "tasks": "المهام المفتوحة والمُسندة",
     "goodsReceipts": "مستندات الاستلام والأصناف المستلمة",
     "steelVehicles": "دخول مركبات الصاج وقبول الصفائح",
-    "transfers": "مستندات التحويل"
+    "transfers": "مستندات التحويل",
+    "analysis": "تحليلات المستودع والإنتاج"
   },
   "entityResolution": {
     "title": "هل تقصد أحد هذه السجلات؟",
@@ -312,6 +313,7 @@
   "exceptions": { "suggestedAction": "الإجراء المقترح", "ageHours_one": "مفتوح منذ ساعة واحدة", "ageHours_other": "مفتوح منذ {{count}} ساعات" },
   "traceability": { "reversal": "قيد عكسي" },
   "evidence": { "title": "مصدر البيانات وحداثتها", "recordCount_one": "تم فحص سجل واحد", "recordCount_other": "تم فحص {{count}} سجلات", "generatedAt": "وقت الإجابة", "dataAsOf": "وقت آخر حدث للبيانات", "truncated": "تم تقييد النتائج للحفاظ على الأداء. استخدم التصدير لعرض جميع التفاصيل." },
+  "analysis": { "physical": "فعلي", "available": "متاح", "reserved": "محجوز", "planned": "مخطط", "actual": "منفذ", "variance": "فرق", "capacity": "سعة", "plannedAt": "وقت التخطيط", "actualAt": "وقت التنفيذ", "statuses": {} },
   "actions": { "openModule": "فتح الشاشة المرتبطة" },
   "fallbacks": { "noReference": "بلا مرجع", "noDriver": "لم يتم تحديد السائق" },
   "errors": {

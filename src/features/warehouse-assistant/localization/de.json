@@ -172,7 +172,8 @@
     "tasks": "Offene und zugewiesene Aufgaben",
     "goodsReceipts": "Wareneingänge und angenommene Artikel",
     "steelVehicles": "Fahrzeugeinfahrten und Blechannahmen",
-    "transfers": "Transferbelege"
+    "transfers": "Transferbelege",
+    "analysis": "Lager- und Produktionsanalysen"
   },
   "entityResolution": {
     "title": "Meinten Sie einen dieser Einträge?",
@@ -312,6 +313,7 @@
   "exceptions": { "suggestedAction": "Empfohlene Maßnahme", "ageHours_one": "seit {{count}} Stunde offen", "ageHours_other": "seit {{count}} Stunden offen" },
   "traceability": { "reversal": "Stornobuchung" },
   "evidence": { "title": "Datenquelle und Aktualität", "recordCount_one": "{{count}} Datensatz geprüft", "recordCount_other": "{{count}} Datensätze geprüft", "generatedAt": "Antwortzeit", "dataAsOf": "Letztes Datenereignis", "truncated": "Die Ergebnisse wurden aus Leistungsgründen begrenzt. Nutzen Sie den Export für alle Details." },
+  "analysis": { "physical": "Physisch", "available": "Verfügbar", "reserved": "Reserviert", "planned": "Geplant", "actual": "Ist", "variance": "Abweichung", "capacity": "Kapazität", "plannedAt": "Geplant am", "actualAt": "Tatsächlich am", "statuses": {} },
   "actions": { "openModule": "Zugehörige Seite öffnen" },
   "fallbacks": {
     "noReference": "Keine Referenz",

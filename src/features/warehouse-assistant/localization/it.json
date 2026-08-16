@@ -172,7 +172,8 @@
     "tasks": "Attività aperte e assegnate",
     "goodsReceipts": "Ricevimenti e articoli ricevuti",
     "steelVehicles": "Ingressi veicoli acciaio e accettazioni lamiere",
-    "transfers": "Documenti di trasferimento"
+    "transfers": "Documenti di trasferimento",
+    "analysis": "Analisi di magazzino e produzione"
   },
   "entityResolution": {
     "title": "Intendevi uno di questi record?",
@@ -312,6 +313,7 @@
   "exceptions": { "suggestedAction": "Azione consigliata", "ageHours_one": "aperto da {{count}} ora", "ageHours_other": "aperto da {{count}} ore" },
   "traceability": { "reversal": "Registrazione inversa" },
   "evidence": { "title": "Origine e aggiornamento dei dati", "recordCount_one": "{{count}} record esaminato", "recordCount_other": "{{count}} record esaminati", "generatedAt": "Ora della risposta", "dataAsOf": "Ultimo evento dati", "truncated": "I risultati sono stati limitati per le prestazioni. Usa l'esportazione per tutti i dettagli." },
+  "analysis": { "physical": "Fisico", "available": "Disponibile", "reserved": "Riservato", "planned": "Pianificato", "actual": "Effettivo", "variance": "Scostamento", "capacity": "Capacità", "plannedAt": "Pianificato il", "actualAt": "Effettivo il", "statuses": {} },
   "actions": { "openModule": "Apri schermata correlata" },
   "fallbacks": {
     "noReference": "Nessun riferimento",
