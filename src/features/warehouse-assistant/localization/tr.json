@@ -21,7 +21,8 @@
       "barcodeLookup": "Barkod çözümleme", "stockMovementHistory": "Stok hareketleri", "assignedTasks": "Atanmış emirler",
       "goodsReceiptAnalysis": "Mal kabul analizi", "parameterHelp": "Parametre açıklaması", "steelVehicleAnalysis": "Sac araç kabul analizi",
       "warehouseTransferAnalysis": "Transfer analizi", "shiftBrief": "Vardiya özeti", "operationalExceptions": "Operasyon sorunları",
-      "traceability": "Uçtan uca izlenebilirlik", "processBlockers": "Süreç engelleri", "composite": "Birden fazla sorgu", "unknown": "Belirsiz soru"
+      "traceability": "Uçtan uca izlenebilirlik", "processBlockers": "Süreç engelleri", "composite": "Birden fazla sorgu",
+      "warehouseOverview": "Depo özeti", "locationInventory": "Lokasyon envanteri", "inventoryInsights": "Stok analizi", "inventoryCountAnalysis": "Sayım analizi", "generatorProductionAnalysis": "Jeneratör üretim analizi", "navigationHelp": "Ekran ve süreç yardımı", "unknown": "Belirsiz soru"
     }
   },
   "eyebrow": "Yetkili WMS sorgu yardımcısı",

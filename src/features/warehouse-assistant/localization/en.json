@@ -21,7 +21,8 @@
       "barcodeLookup": "Barcode lookup", "stockMovementHistory": "Stock movements", "assignedTasks": "Assigned tasks",
       "goodsReceiptAnalysis": "Goods receipt analysis", "parameterHelp": "Parameter explanation", "steelVehicleAnalysis": "Steel vehicle analysis",
       "warehouseTransferAnalysis": "Transfer analysis", "shiftBrief": "Shift brief", "operationalExceptions": "Operational exceptions",
-      "traceability": "End-to-end traceability", "processBlockers": "Process blockers", "composite": "Multiple queries", "unknown": "Unclear question"
+      "traceability": "End-to-end traceability", "processBlockers": "Process blockers", "composite": "Multiple queries",
+      "warehouseOverview": "Warehouse overview", "locationInventory": "Location inventory", "inventoryInsights": "Inventory insights", "inventoryCountAnalysis": "Inventory count analysis", "generatorProductionAnalysis": "Generator production analysis", "navigationHelp": "Screen and workflow help", "unknown": "Unclear question"
     }
   },
   "eyebrow": "Permission-aware WMS query assistant",

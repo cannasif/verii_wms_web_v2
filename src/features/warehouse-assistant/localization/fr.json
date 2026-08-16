@@ -21,7 +21,8 @@
       "barcodeLookup": "Lecture de code-barres", "stockMovementHistory": "Mouvements de stock", "assignedTasks": "Tâches assignées",
       "goodsReceiptAnalysis": "Analyse des réceptions", "parameterHelp": "Explication du paramètre", "steelVehicleAnalysis": "Analyse des véhicules acier",
       "warehouseTransferAnalysis": "Analyse des transferts", "shiftBrief": "Résumé de poste", "operationalExceptions": "Exceptions opérationnelles",
-      "traceability": "Traçabilité de bout en bout", "processBlockers": "Blocages de processus", "composite": "Requêtes multiples", "unknown": "Question ambiguë"
+      "traceability": "Traçabilité de bout en bout", "processBlockers": "Blocages de processus", "composite": "Requêtes multiples",
+      "warehouseOverview": "Vue d’ensemble des entrepôts", "locationInventory": "Stock par emplacement", "inventoryInsights": "Analyse des stocks", "inventoryCountAnalysis": "Analyse des inventaires", "generatorProductionAnalysis": "Analyse de production des générateurs", "navigationHelp": "Aide écran et processus", "unknown": "Question ambiguë"
     }
   },
   "eyebrow": "Assistant WMS soumis aux autorisations",

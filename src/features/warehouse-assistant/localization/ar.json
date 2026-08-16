@@ -21,7 +21,8 @@
       "barcodeLookup": "قراءة الباركود", "stockMovementHistory": "حركات المخزون", "assignedTasks": "المهام المسندة",
       "goodsReceiptAnalysis": "تحليل استلام البضائع", "parameterHelp": "شرح الإعداد", "steelVehicleAnalysis": "تحليل مركبات الصلب",
       "warehouseTransferAnalysis": "تحليل التحويلات", "shiftBrief": "ملخص الوردية", "operationalExceptions": "الاستثناءات التشغيلية",
-      "traceability": "التتبع من البداية إلى النهاية", "processBlockers": "عوائق العملية", "composite": "استعلامات متعددة", "unknown": "سؤال غير واضح"
+      "traceability": "التتبع من البداية إلى النهاية", "processBlockers": "عوائق العملية", "composite": "استعلامات متعددة",
+      "warehouseOverview": "ملخص المستودعات", "locationInventory": "مخزون المواقع", "inventoryInsights": "تحليل المخزون", "inventoryCountAnalysis": "تحليل الجرد", "generatorProductionAnalysis": "تحليل إنتاج المولدات", "navigationHelp": "مساعدة الشاشات والعمليات", "unknown": "سؤال غير واضح"
     }
   },
   "eyebrow": "مساعد WMS مقيد بالصلاحيات",
