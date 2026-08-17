@@ -32274,29 +32274,30 @@ html.skin-premium .wms-ops-lookup-dialog.wms-ops-detail-dialog > [data-slot='dia
   padding: 1rem 1rem 0.5rem;
 }
 .wms-ops-form .wms-ops-gr-review__metrics {
-  padding: 0.85rem 1rem 1.15rem;
+  padding: 0.75rem 1rem 0.85rem;
 }
 .wms-ops-form .wms-ops-gr-review__metrics .wms-ops-gr-review__section-title {
-  padding: 0 0 0.75rem;
+  padding: 0 0 0.55rem;
 }
 .wms-ops-form .wms-ops-gr-review__metric-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
 }
 .wms-ops-form .wms-ops-gr-review__metric-grid--two {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 .wms-ops-form .wms-ops-gr-review__metric-card {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.35rem;
-  min-height: 10rem;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto auto;
+  align-items: start;
+  column-gap: 0.65rem;
+  row-gap: 0.12rem;
+  min-height: 0;
   width: 100%;
-  padding: 1rem 1.05rem;
-  border-radius: 0.95rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: 0.7rem;
   border: 1px solid color-mix(in oklab, var(--wms-ops-accent) 16%, var(--wms-app-border));
   background: color-mix(in oklab, var(--wms-app-panel) 88%, transparent);
   color: inherit;
@@ -32312,6 +32313,15 @@ html.skin-premium .wms-ops-lookup-dialog.wms-ops-detail-dialog > [data-slot='dia
       160deg,
       color-mix(in oklab, #22d3ee 18%, transparent) 0%,
       color-mix(in oklab, #0891b2 8%, var(--wms-app-panel)) 100%
+    );
+}
+.wms-ops-form .wms-ops-gr-review__metric-card--quantity {
+  border-color: color-mix(in oklab, #818cf8 44%, var(--wms-app-border));
+  background:
+    linear-gradient(
+      160deg,
+      color-mix(in oklab, #818cf8 16%, transparent) 0%,
+      color-mix(in oklab, #6366f1 8%, var(--wms-app-panel)) 100%
     );
 }
 .wms-ops-form .wms-ops-gr-review__metric-card--available {
@@ -32333,14 +32343,14 @@ html.skin-premium .wms-ops-lookup-dialog.wms-ops-detail-dialog > [data-slot='dia
     );
 }
 .wms-ops-form .wms-ops-gr-review__metric-card--quality-none {
-  border-color: color-mix(in oklab, var(--wms-ops-accent) 28%, var(--wms-app-border));
+  border-color: color-mix(in oklab, #94a3b8 32%, var(--wms-app-border));
   background:
     linear-gradient(
       160deg,
-      color-mix(in oklab, var(--wms-ops-accent) 10%, transparent) 0%,
-      color-mix(in oklab, var(--wms-ops-accent) 4%, var(--wms-app-panel)) 100%
+      color-mix(in oklab, #94a3b8 10%, transparent) 0%,
+      color-mix(in oklab, #64748b 4%, var(--wms-app-panel)) 100%
     );
-  opacity: 1;
+  opacity: 0.78;
 }
 .wms-ops-form .wms-ops-gr-review__metric-card--interactive {
   cursor: pointer;
@@ -32355,6 +32365,16 @@ html.skin-premium .wms-ops-lookup-dialog.wms-ops-detail-dialog > [data-slot='dia
   border-color: color-mix(in oklab, #22d3ee 78%, transparent);
   box-shadow: 0 10px 24px -14px color-mix(in oklab, #22d3ee 70%, transparent);
 }
+.wms-ops-form .wms-ops-gr-review__metric-card--quantity.wms-ops-gr-review__metric-card--interactive:hover,
+.wms-ops-form .wms-ops-gr-review__metric-card--quantity.wms-ops-gr-review__metric-card--interactive:focus-visible {
+  border-color: color-mix(in oklab, #818cf8 78%, transparent);
+  box-shadow: 0 10px 24px -14px color-mix(in oklab, #818cf8 70%, transparent);
+}
+.wms-ops-form .wms-ops-gr-review__metric-card--available.wms-ops-gr-review__metric-card--interactive:hover,
+.wms-ops-form .wms-ops-gr-review__metric-card--available.wms-ops-gr-review__metric-card--interactive:focus-visible {
+  border-color: color-mix(in oklab, #34d399 78%, transparent);
+  box-shadow: 0 10px 24px -14px color-mix(in oklab, #34d399 70%, transparent);
+}
 .wms-ops-form .wms-ops-gr-review__metric-card--quality.wms-ops-gr-review__metric-card--interactive:hover,
 .wms-ops-form .wms-ops-gr-review__metric-card--quality.wms-ops-gr-review__metric-card--interactive:focus-visible {
   border-color: color-mix(in oklab, #f59e0b 80%, transparent);
@@ -32362,18 +32382,24 @@ html.skin-premium .wms-ops-lookup-dialog.wms-ops-detail-dialog > [data-slot='dia
 }
 .wms-ops-form .wms-ops-gr-review__metric-card--quality-none.wms-ops-gr-review__metric-card--interactive:hover,
 .wms-ops-form .wms-ops-gr-review__metric-card--quality-none.wms-ops-gr-review__metric-card--interactive:focus-visible {
-  border-color: color-mix(in oklab, var(--wms-ops-accent) 58%, var(--wms-app-border));
-  box-shadow: 0 8px 20px -14px color-mix(in oklab, var(--wms-ops-accent) 48%, transparent);
+  border-color: color-mix(in oklab, #94a3b8 48%, var(--wms-app-border));
+  box-shadow: 0 8px 20px -14px color-mix(in oklab, #64748b 28%, transparent);
 }
 .wms-ops-form .wms-ops-gr-review__metric-card-icon {
   display: grid;
   place-items: center;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 0.65rem;
+  grid-row: 1 / span 2;
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 0.5rem;
   border: 1px solid color-mix(in oklab, #22d3ee 34%, transparent);
   background: color-mix(in oklab, #22d3ee 12%, transparent);
   color: color-mix(in oklab, #22d3ee 82%, hsl(var(--foreground)));
+}
+.wms-ops-form .wms-ops-gr-review__metric-card--quantity .wms-ops-gr-review__metric-card-icon {
+  border-color: color-mix(in oklab, #818cf8 38%, transparent);
+  background: color-mix(in oklab, #818cf8 14%, transparent);
+  color: color-mix(in oklab, #818cf8 85%, hsl(var(--foreground)));
 }
 .wms-ops-form .wms-ops-gr-review__metric-card--available .wms-ops-gr-review__metric-card-icon {
   border-color: color-mix(in oklab, #34d399 38%, transparent);
@@ -32386,17 +32412,20 @@ html.skin-premium .wms-ops-lookup-dialog.wms-ops-detail-dialog > [data-slot='dia
   color: #f59e0b;
 }
 .wms-ops-form .wms-ops-gr-review__metric-card--quality-none .wms-ops-gr-review__metric-card-icon {
-  border-color: color-mix(in oklab, var(--wms-ops-accent) 32%, transparent);
-  background: color-mix(in oklab, var(--wms-ops-accent) 12%, transparent);
-  color: color-mix(in oklab, var(--wms-ops-accent) 72%, hsl(var(--foreground)));
+  border-color: color-mix(in oklab, #94a3b8 28%, transparent);
+  background: color-mix(in oklab, #94a3b8 10%, transparent);
+  color: color-mix(in oklab, #94a3b8 70%, hsl(var(--muted-foreground)));
 }
 .wms-ops-form .wms-ops-gr-review__metric-card-label {
-  margin-top: 0.35rem;
-  font-size: 0.68rem;
+  margin-top: 0;
+  font-size: 0.62rem;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: color-mix(in oklab, #22d3ee 48%, hsl(var(--muted-foreground)));
+}
+.wms-ops-form .wms-ops-gr-review__metric-card--quantity .wms-ops-gr-review__metric-card-label {
+  color: color-mix(in oklab, #818cf8 52%, hsl(var(--muted-foreground)));
 }
 .wms-ops-form .wms-ops-gr-review__metric-card--available .wms-ops-gr-review__metric-card-label {
   color: color-mix(in oklab, #34d399 48%, hsl(var(--muted-foreground)));
@@ -32405,12 +32434,12 @@ html.skin-premium .wms-ops-lookup-dialog.wms-ops-detail-dialog > [data-slot='dia
   color: color-mix(in oklab, #f59e0b 58%, hsl(var(--muted-foreground)));
 }
 .wms-ops-form .wms-ops-gr-review__metric-card--quality-none .wms-ops-gr-review__metric-card-label {
-  color: color-mix(in oklab, var(--wms-ops-accent) 48%, hsl(var(--muted-foreground)));
+  color: hsl(var(--muted-foreground));
 }
 .wms-ops-form .wms-ops-gr-review__metric-card-value {
   width: 100%;
   min-width: 0;
-  font-size: 1.35rem;
+  font-size: 1.15rem;
   line-height: 1.15;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
@@ -32437,7 +32466,7 @@ html.skin-premium .wms-ops-lookup-dialog.wms-ops-detail-dialog > [data-slot='dia
   color: color-mix(in oklab, #22d3ee 40%, hsl(var(--muted-foreground)));
 }
 .wms-ops-form .wms-ops-gr-review__metric-card-stack-num {
-  font-size: 1.45rem;
+  font-size: 1.2rem;
   line-height: 1.1;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
@@ -32495,12 +32524,14 @@ html.skin-premium .wms-ops-lookup-dialog.wms-ops-detail-dialog > [data-slot='dia
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.28rem;
-  margin-top: auto;
+  gap: 0.2rem;
+  grid-column: 1 / -1;
+  margin-top: 0.2rem;
   width: 100%;
 }
 .wms-ops-form .wms-ops-gr-review__metric-card-note {
-  display: block;
+  display: grid;
+  gap: 0.15rem;
   max-width: 100%;
   font-size: 0.675rem;
   font-style: italic;
@@ -32521,11 +32552,17 @@ html.skin-premium .wms-ops-lookup-dialog.wms-ops-detail-dialog > [data-slot='dia
 .wms-ops-form .wms-ops-gr-review__metric-card--interactive .wms-ops-gr-review__metric-card-hint {
   color: color-mix(in oklab, #22d3ee 58%, hsl(var(--muted-foreground)));
 }
+.wms-ops-form .wms-ops-gr-review__metric-card--quantity.wms-ops-gr-review__metric-card--interactive .wms-ops-gr-review__metric-card-hint {
+  color: color-mix(in oklab, #818cf8 62%, hsl(var(--muted-foreground)));
+}
+.wms-ops-form .wms-ops-gr-review__metric-card--available.wms-ops-gr-review__metric-card--interactive .wms-ops-gr-review__metric-card-hint {
+  color: color-mix(in oklab, #34d399 62%, hsl(var(--muted-foreground)));
+}
 .wms-ops-form .wms-ops-gr-review__metric-card--quality.wms-ops-gr-review__metric-card--interactive .wms-ops-gr-review__metric-card-hint {
   color: color-mix(in oklab, #f59e0b 62%, hsl(var(--muted-foreground)));
 }
 .wms-ops-form .wms-ops-gr-review__metric-card--quality-none.wms-ops-gr-review__metric-card--interactive .wms-ops-gr-review__metric-card-hint {
-  color: color-mix(in oklab, var(--wms-ops-accent) 62%, hsl(var(--muted-foreground)));
+  color: hsl(var(--muted-foreground));
 }
 .wms-ops-form .wms-ops-gr-review__metric-card-hint--action {
   display: inline-flex;
@@ -32564,6 +32601,273 @@ html.skin-premium .wms-ops-lookup-dialog.wms-ops-detail-dialog > [data-slot='dia
 .wms-ops-form .wms-ops-gr-review__metric-card-force:has(input:disabled) {
   cursor: default;
   opacity: 0.72;
+}
+.wms-ops-form .wms-ops-gr-review__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(15.25rem, 18.5rem);
+  gap: 0.85rem;
+  align-items: start;
+  padding: 0 1rem 1.15rem;
+}
+.wms-ops-form .wms-ops-gr-review__items {
+  padding: 0;
+  min-width: 0;
+}
+.wms-ops-form .wms-ops-gr-review__items .wms-ops-gr-review__section-title {
+  padding: 0 0 0.6rem;
+}
+.wms-ops-form .wms-ops-gr-review__items-wrap {
+  overflow: hidden;
+  border: 1px solid color-mix(in oklab, var(--wms-ops-accent) 16%, var(--wms-ops-card-border));
+  background: color-mix(in oklab, var(--wms-app-panel) 88%, transparent);
+}
+.wms-ops-form .wms-ops-gr-review__routing {
+  min-width: 0;
+  display: grid;
+  gap: 0.65rem;
+}
+.wms-ops-form .wms-ops-gr-review__routing .wms-ops-gr-review__section-title {
+  padding: 0 0 0.15rem;
+}
+.wms-ops-form .wms-ops-gr-review__routing-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 0.75rem 0.8rem;
+  border: 1px solid color-mix(in oklab, var(--wms-ops-accent) 16%, var(--wms-ops-card-border));
+  background: color-mix(in oklab, var(--wms-app-panel) 88%, transparent);
+}
+.wms-ops-form .wms-ops-gr-review__routing-block--quality {
+  border-color: color-mix(in oklab, #f59e0b 36%, var(--wms-app-border));
+  background:
+    linear-gradient(
+      160deg,
+      color-mix(in oklab, #f59e0b 10%, transparent) 0%,
+      color-mix(in oklab, var(--wms-app-panel) 92%, transparent) 100%
+    );
+}
+.wms-ops-form .wms-ops-gr-review__routing-block--quality-none {
+  border-color: color-mix(in oklab, #94a3b8 28%, var(--wms-app-border));
+  background:
+    linear-gradient(
+      160deg,
+      color-mix(in oklab, #94a3b8 8%, transparent) 0%,
+      color-mix(in oklab, var(--wms-app-panel) 94%, transparent) 100%
+    );
+  opacity: 0.78;
+}
+.wms-ops-form .wms-ops-gr-review__routing-block--quality-none .wms-ops-gr-review__routing-icon {
+  border-color: color-mix(in oklab, #94a3b8 32%, transparent);
+  background: color-mix(in oklab, #94a3b8 10%, transparent);
+  color: color-mix(in oklab, #94a3b8 72%, hsl(var(--muted-foreground)));
+}
+.wms-ops-form .wms-ops-gr-review__routing-block--quality-none .wms-ops-gr-review__routing-count {
+  color: hsl(var(--muted-foreground));
+}
+.wms-ops-form .wms-ops-gr-review__routing-block--quality-none .wms-ops-gr-review__routing-title,
+.wms-ops-form .wms-ops-gr-review__routing-block--quality-none .wms-ops-gr-review__routing-lead,
+.wms-ops-form .wms-ops-gr-review__routing-block--quality-none .wms-ops-gr-review__routing-how {
+  color: hsl(var(--muted-foreground));
+}
+.wms-ops-form .wms-ops-gr-review__routing-block--direct {
+  border-color: color-mix(in oklab, #34d399 34%, var(--wms-app-border));
+  background:
+    linear-gradient(
+      160deg,
+      color-mix(in oklab, #34d399 9%, transparent) 0%,
+      color-mix(in oklab, var(--wms-app-panel) 92%, transparent) 100%
+    );
+}
+.wms-ops-form .wms-ops-gr-review__routing-main {
+  min-width: 0;
+}
+.wms-ops-form .wms-ops-gr-review__routing-head {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-bottom: 0.45rem;
+}
+.wms-ops-form .wms-ops-gr-review__routing-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 1.85rem;
+  height: 1.85rem;
+  border-radius: 0.55rem;
+  border: 1px solid color-mix(in oklab, #f59e0b 42%, transparent);
+  background: color-mix(in oklab, #f59e0b 12%, transparent);
+  color: #f59e0b;
+}
+.wms-ops-form .wms-ops-gr-review__routing-block--direct .wms-ops-gr-review__routing-icon {
+  border-color: color-mix(in oklab, #34d399 42%, transparent);
+  background: color-mix(in oklab, #34d399 12%, transparent);
+  color: color-mix(in oklab, #34d399 85%, hsl(var(--foreground)));
+}
+.wms-ops-form .wms-ops-gr-review__routing-head-copy {
+  display: grid;
+  gap: 0.12rem;
+  min-width: 0;
+}
+.wms-ops-form .wms-ops-gr-review__routing-title {
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1.25;
+  color: hsl(var(--foreground));
+}
+.wms-ops-form .wms-ops-gr-review__routing-count {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, #f59e0b 62%, hsl(var(--muted-foreground)));
+}
+.wms-ops-form .wms-ops-gr-review__routing-count--direct {
+  color: color-mix(in oklab, #34d399 62%, hsl(var(--muted-foreground)));
+}
+.wms-ops-form .wms-ops-gr-review__routing-lead {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: hsl(var(--muted-foreground));
+}
+.wms-ops-form .wms-ops-gr-review__routing-how {
+  margin: 0.4rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: color-mix(in oklab, hsl(var(--foreground)) 78%, hsl(var(--muted-foreground)));
+}
+.wms-ops-form .wms-ops-gr-review__routing-points {
+  display: grid;
+  gap: 0.28rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.wms-ops-form .wms-ops-gr-review__routing-points li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  font-size: 0.68rem;
+  line-height: 1.4;
+  color: color-mix(in oklab, hsl(var(--muted-foreground)) 88%, hsl(var(--foreground)));
+}
+.wms-ops-form .wms-ops-gr-review__routing-points li svg {
+  margin-top: 0.12rem;
+  color: color-mix(in oklab, #34d399 70%, hsl(var(--muted-foreground)));
+}
+.wms-ops-form .wms-ops-gr-review__routing-block--quality .wms-ops-gr-review__routing-points li svg {
+  color: color-mix(in oklab, #f59e0b 65%, hsl(var(--muted-foreground)));
+}
+.wms-ops-form .wms-ops-gr-review__routing-action {
+  align-self: stretch;
+  justify-content: center;
+  min-height: 2rem;
+  font-size: 0.72rem;
+}
+.wms-ops-form .wms-ops-gr-review__items-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.wms-ops-form .wms-ops-gr-review__items-table th,
+.wms-ops-form .wms-ops-gr-review__items-table td {
+  border-right: 1px solid color-mix(in oklab, var(--wms-ops-accent) 14%, var(--wms-ops-card-border));
+  border-bottom: 1px solid color-mix(in oklab, var(--wms-ops-accent) 12%, var(--wms-ops-card-border));
+  vertical-align: middle;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.8125rem;
+}
+.wms-ops-form .wms-ops-gr-review__items-table th:last-child,
+.wms-ops-form .wms-ops-gr-review__items-table td:last-child {
+  border-right: none;
+}
+.wms-ops-form .wms-ops-gr-review__items-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: color-mix(in oklab, var(--wms-ops-field-bg) 92%, var(--wms-ops-accent));
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--wms-ops-accent) 70%, hsl(var(--foreground)));
+  white-space: nowrap;
+}
+.wms-ops-form .wms-ops-gr-review__items-col-num,
+.wms-ops-form .wms-ops-gr-review__items-col-qty {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.wms-ops-form .wms-ops-gr-review__items-table tbody tr {
+  cursor: default;
+}
+.wms-ops-form .wms-ops-gr-review__items-table tbody tr:hover td {
+  background: color-mix(in oklab, var(--wms-ops-accent) 7%, transparent);
+}
+.wms-ops-form .wms-ops-gr-review__items-table tbody tr:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--wms-ops-accent) 55%, transparent);
+  outline-offset: -2px;
+}
+.wms-ops-form .wms-ops-gr-review__items-table tbody tr[data-status="quality"] td {
+  background: color-mix(in oklab, #f59e0b 20%, var(--wms-app-panel));
+}
+.wms-ops-form .wms-ops-gr-review__items-table tbody tr[data-status="quality"]:hover td {
+  background: color-mix(in oklab, #f59e0b 30%, var(--wms-app-panel));
+}
+.wms-ops-form .wms-ops-gr-review__items-table tbody tr[data-status="quality"] td:first-child {
+  box-shadow: inset 3px 0 0 color-mix(in oklab, #f59e0b 78%, transparent);
+}
+.wms-ops-form .wms-ops-gr-review__items-table tbody tr[data-status="deliverable"] td:first-child {
+  box-shadow: inset 3px 0 0 color-mix(in oklab, #34d399 78%, transparent);
+}
+.wms-ops-form .wms-ops-gr-review__items-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  width: 100%;
+  margin: 0;
+  padding: 0.55rem 0.75rem;
+  border: 0;
+  border-top: 1px solid color-mix(in oklab, var(--wms-ops-accent) 14%, var(--wms-ops-card-border));
+  background: color-mix(in oklab, var(--wms-app-panel) 92%, transparent);
+  color: color-mix(in oklab, var(--wms-ops-accent) 55%, hsl(var(--foreground)));
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+}
+.wms-ops-form .wms-ops-gr-review__items-more:hover,
+.wms-ops-form .wms-ops-gr-review__items-more:focus-visible {
+  background: color-mix(in oklab, var(--wms-ops-accent) 8%, var(--wms-app-panel));
+  outline: none;
+}
+.wms-ops-form .wms-ops-gr-review__items-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: transparent;
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.wms-ops-form button.wms-ops-gr-review__items-status {
+  cursor: pointer;
+}
+.wms-ops-form .wms-ops-gr-review__items-status--deliverable {
+  border-color: color-mix(in oklab, #34d399 42%, transparent);
+  background: color-mix(in oklab, #34d399 14%, transparent);
+  color: color-mix(in oklab, #34d399 42%, hsl(var(--foreground)));
+}
+.wms-ops-form .wms-ops-gr-review__items-status--quality {
+  border-color: color-mix(in oklab, #f59e0b 48%, transparent);
+  background: color-mix(in oklab, #f59e0b 16%, transparent);
+  color: color-mix(in oklab, #f59e0b 38%, hsl(var(--foreground)));
 }
 .wms-ops-form .wms-ops-gr-review__row {
   display: grid;
@@ -32736,6 +33040,15 @@ html.skin-premium .wms-ops-lookup-dialog.wms-ops-detail-dialog > [data-slot='dia
   border: 1px solid color-mix(in oklab, #f59e0b 18%, var(--wms-app-border));
   background: color-mix(in oklab, #f59e0b 5%, transparent);
 }
+.wms-ops-gr-review__quality-dialog-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  flex: none;
+  margin: 0;
+  line-height: 0;
+}
 .wms-ops-gr-review__quality-dialog-body--receipt .wms-ops-gr-review__quality-dialog-list li {
   border-color: color-mix(in oklab, var(--wms-app-border) 92%, transparent);
   background: color-mix(in oklab, var(--wms-app-panel) 88%, transparent);
@@ -32779,57 +33092,72 @@ html.skin-premium .wms-ops-lookup-dialog.wms-ops-detail-dialog > [data-slot='dia
   border-top: 1px solid color-mix(in oklab, var(--wms-ops-accent) 12%, var(--wms-app-border));
 }
 .wms-ops-gr-review__quality-dialog-list li[data-removable="true"] {
-  padding-right: 0.55rem;
+  padding-right: 0.45rem;
+}
+.wms-ops-gr-review__quality-dialog-side {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.45rem;
+  flex: none;
+  margin-left: auto;
+}
+.wms-ops-gr-review__qty-pair {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 0.28rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.wms-ops-gr-review__qty-pair-taken {
+  font-weight: 800;
+  color: hsl(var(--foreground));
+}
+.wms-ops-gr-review__qty-pair-sep {
+  color: color-mix(in oklab, hsl(var(--muted-foreground)) 72%, transparent);
+  font-weight: 600;
+}
+.wms-ops-gr-review__qty-pair-available {
+  font-weight: 700;
+  color: color-mix(in oklab, hsl(var(--muted-foreground)) 88%, hsl(var(--foreground)));
+}
+.wms-ops-gr-review__qty-pair-unit {
+  margin-left: 0.12rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: hsl(var(--muted-foreground));
+}
+.wms-ops-gr-review__quality-dialog-side .wms-ops-gr-review__qty-pair {
+  min-width: 6.25rem;
 }
 .wms-ops-gr-review__quality-dialog-remove {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.28rem;
   flex: none;
-  min-height: 1.8rem;
-  padding: 0.18rem 0.58rem 0.18rem 0.42rem;
-  border-radius: 999px;
+  width: 1.85rem;
+  height: 1.85rem;
+  padding: 0;
+  border-radius: 0.45rem;
   border: 1px solid color-mix(in oklab, #e11d48 28%, var(--wms-app-border));
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in oklab, white 22%, transparent) 0%,
-      transparent 100%
-    ),
-    color-mix(in oklab, #fb7185 14%, var(--wms-app-panel));
+  background: color-mix(in oklab, #fb7185 12%, var(--wms-app-panel));
   color: color-mix(in oklab, #be123c 82%, hsl(var(--foreground)));
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
   cursor: pointer;
-  box-shadow: inset 0 1px 0 color-mix(in oklab, white 28%, transparent);
 }
 .wms-ops-gr-review__quality-dialog-remove:hover,
 .wms-ops-gr-review__quality-dialog-remove:focus-visible {
   border-color: color-mix(in oklab, #e11d48 48%, var(--wms-app-border));
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in oklab, white 16%, transparent) 0%,
-      transparent 100%
-    ),
-    color-mix(in oklab, #fb7185 22%, var(--wms-app-panel));
+  background: color-mix(in oklab, #fb7185 22%, var(--wms-app-panel));
   color: color-mix(in oklab, #9f1239 88%, hsl(var(--foreground)));
   outline: none;
 }
 html.dark .wms-ops-gr-review__quality-dialog-remove {
   border-color: color-mix(in oklab, #fb7185 32%, var(--wms-app-border));
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in oklab, white 6%, transparent) 0%,
-      transparent 100%
-    ),
-    color-mix(in oklab, #fb7185 16%, var(--wms-app-panel));
+  background: color-mix(in oklab, #fb7185 16%, var(--wms-app-panel));
   color: color-mix(in oklab, #fda4af 78%, white);
-  box-shadow: none;
 }
 html.dark .wms-ops-gr-review__quality-dialog-remove:hover,
 html.dark .wms-ops-gr-review__quality-dialog-remove:focus-visible {
@@ -32847,7 +33175,8 @@ html.dark .wms-ops-gr-review__quality-dialog-remove:focus-visible {
 .wms-ops-gr-review__quality-dialog-identity-head {
   display: flex;
   align-items: center;
-  gap: 0.7rem;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.7rem;
   min-width: 0;
 }
 .wms-ops-gr-review__quality-dialog-code {
@@ -32920,22 +33249,15 @@ html.dark .wms-ops-gr-review__quality-dialog-loc-value {
 }
 .wms-ops-gr-review__quality-dialog-badge {
   flex: none;
-  padding: 0.16rem 0.5rem;
+  padding: 0.14rem 0.42rem;
   border-radius: 999px;
   border: 1px solid color-mix(in oklab, #f59e0b 38%, var(--wms-app-border));
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in oklab, white 20%, transparent) 0%,
-      transparent 100%
-    ),
-    color-mix(in oklab, #f59e0b 16%, var(--wms-app-panel));
-  font-size: 0.68rem;
+  background: color-mix(in oklab, #f59e0b 14%, var(--wms-app-panel));
+  font-size: 0.62rem;
   font-weight: 800;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: color-mix(in oklab, #b45309 78%, hsl(var(--foreground)));
-  box-shadow: inset 0 1px 0 color-mix(in oklab, white 26%, transparent);
 }
 .wms-ops-gr-review__quality-dialog-badge--forced {
   border-color: color-mix(in oklab, var(--wms-ops-accent) 42%, var(--wms-app-border));
@@ -32991,15 +33313,15 @@ html.dark .wms-ops-gr-review__quality-dialog-badge--forced {
   width: 100%;
   margin: 0.15rem 0 0.35rem;
   padding: 0.85rem 1rem;
-  border: 1px solid color-mix(in oklab, var(--wms-ops-accent) 32%, var(--wms-app-border));
+  border: 1px solid color-mix(in oklab, #f59e0b 38%, var(--wms-app-border));
   border-radius: 0.85rem;
   background:
     linear-gradient(
       90deg,
-      color-mix(in oklab, var(--wms-ops-accent) 12%, transparent),
+      color-mix(in oklab, #f59e0b 16%, transparent),
       transparent 58%
     ),
-    color-mix(in oklab, var(--wms-ops-accent) 6%, var(--wms-app-panel));
+    color-mix(in oklab, #f59e0b 10%, var(--wms-app-panel));
   color: hsl(var(--foreground));
   text-align: left;
   font: inherit;
@@ -33008,18 +33330,18 @@ html.dark .wms-ops-gr-review__quality-dialog-badge--forced {
   transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
 }
 .wms-ops-form .wms-ops-gr-review__quality-warn:hover {
-  border-color: color-mix(in oklab, var(--wms-ops-accent) 55%, var(--wms-app-border));
+  border-color: color-mix(in oklab, #f59e0b 58%, var(--wms-app-border));
   background:
     linear-gradient(
       90deg,
-      color-mix(in oklab, var(--wms-ops-accent) 16%, transparent),
+      color-mix(in oklab, #f59e0b 22%, transparent),
       transparent 58%
     ),
-    color-mix(in oklab, var(--wms-ops-accent) 9%, var(--wms-app-panel));
+    color-mix(in oklab, #f59e0b 14%, var(--wms-app-panel));
   transform: translateY(-1px);
 }
 .wms-ops-form .wms-ops-gr-review__quality-warn:focus-visible {
-  outline: 2px solid color-mix(in oklab, var(--wms-ops-accent) 55%, transparent);
+  outline: 2px solid color-mix(in oklab, #f59e0b 55%, transparent);
   outline-offset: 2px;
 }
 .wms-ops-form .wms-ops-gr-review__quality-warn-icon {
@@ -33029,9 +33351,9 @@ html.dark .wms-ops-gr-review__quality-dialog-badge--forced {
   width: 2.1rem;
   height: 2.1rem;
   border-radius: 0.65rem;
-  border: 1px solid color-mix(in oklab, var(--wms-ops-accent) 36%, transparent);
-  background: color-mix(in oklab, var(--wms-ops-accent) 14%, var(--wms-app-panel));
-  color: color-mix(in oklab, var(--wms-ops-accent) 72%, hsl(var(--foreground)));
+  border: 1px solid color-mix(in oklab, #f59e0b 42%, transparent);
+  background: color-mix(in oklab, #f59e0b 18%, var(--wms-app-panel));
+  color: color-mix(in oklab, #f59e0b 72%, hsl(var(--foreground)));
 }
 .wms-ops-form .wms-ops-gr-review__quality-warn-copy {
   display: flex;
@@ -34325,6 +34647,23 @@ html.skin-premium .wms-ops-form .wms-ops-gr-review__quality--active {
 html.skin-premium .wms-ops-form .wms-ops-gr-review__quality-text strong {
   font-family: var(--wms-premium-display, inherit);
 }
+html.skin-premium .wms-ops-form .wms-ops-gr-review__routing-block {
+  border-radius: 0.85rem;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+html.skin-premium .wms-ops-form .wms-ops-gr-review__routing-title {
+  font-family: var(--wms-premium-display, inherit);
+}
+html.skin-premium .wms-ops-form .wms-ops-gr-review__routing-count {
+  font-family: var(--wms-premium-font, inherit);
+}
+html:not(.skin-premium) .wms-ops-form .wms-ops-gr-review__routing-block {
+  border-radius: 0.25rem;
+}
+html:not(.skin-premium) .wms-ops-form .wms-ops-gr-review__routing-count {
+  letter-spacing: 0.06em;
+}
 html.skin-premium .wms-ops-form .wms-ops-gr-review__metric-card {
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -34332,20 +34671,128 @@ html.skin-premium .wms-ops-form .wms-ops-gr-review__metric-card {
 html.skin-premium .wms-ops-form .wms-ops-gr-review__metric-card-value {
   font-family: var(--wms-premium-display, inherit);
 }
-html.skin-premium .wms-ops-form .wms-ops-gr-review__metric-card-note {
-  font-family: inherit;
-  opacity: 0.74;
-}
 html.skin-premium .wms-ops-form .wms-ops-gr-review__metric-card--quality {
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / 5%),
     0 14px 28px -24px color-mix(in oklab, #f59e0b 55%, transparent);
 }
-@media (max-width: 900px) {
-  .wms-ops-form .wms-ops-gr-review__hero {
+html.skin-premium:not(.dark) .wms-ops-form .wms-ops-gr-review__metric-card-label {
+  color: color-mix(in oklab, #0e7490 55%, hsl(var(--foreground)));
+}
+html.skin-premium:not(.dark) .wms-ops-form .wms-ops-gr-review__metric-card--quality .wms-ops-gr-review__metric-card-label {
+  color: color-mix(in oklab, #b45309 62%, hsl(var(--foreground)));
+}
+html.skin-premium:not(.dark) .wms-ops-form .wms-ops-gr-review__metric-card--quality-none .wms-ops-gr-review__metric-card-label {
+  color: hsl(var(--muted-foreground));
+}
+html.skin-premium:not(.dark) .wms-ops-form .wms-ops-gr-review__metric-card-value,
+html.skin-premium:not(.dark) .wms-ops-form .wms-ops-gr-review__metric-card-stack-num {
+  color: hsl(var(--foreground));
+}
+html.skin-premium:not(.dark) .wms-ops-form .wms-ops-gr-review__metric-card--quality-none .wms-ops-gr-review__metric-card-value,
+html.skin-premium:not(.dark) .wms-ops-form .wms-ops-gr-review__metric-card--quality-none .wms-ops-gr-review__metric-card-stack-num {
+  color: hsl(var(--muted-foreground));
+}
+html.skin-premium:not(.dark) .wms-ops-form .wms-ops-gr-review__metric-card-note,
+html.skin-premium:not(.dark) .wms-ops-form .wms-ops-gr-review__metric-card--interactive .wms-ops-gr-review__metric-card-note {
+  opacity: 1;
+  color: color-mix(in oklab, hsl(var(--foreground)) 62%, hsl(var(--muted-foreground)));
+}
+html.skin-premium:not(.dark) .wms-ops-form .wms-ops-gr-review__metric-card-hint,
+html.skin-premium:not(.dark) .wms-ops-form .wms-ops-gr-review__metric-card--interactive .wms-ops-gr-review__metric-card-hint {
+  color: color-mix(in oklab, #0e7490 42%, hsl(var(--foreground)));
+}
+html.skin-premium:not(.dark) .wms-ops-form .wms-ops-gr-review__metric-card--quality.wms-ops-gr-review__metric-card--interactive .wms-ops-gr-review__metric-card-hint {
+  color: color-mix(in oklab, #b45309 55%, hsl(var(--foreground)));
+}
+html.skin-premium:not(.dark) .wms-ops-form .wms-ops-gr-review__metric-card-stack-unit {
+  color: color-mix(in oklab, hsl(var(--foreground)) 58%, hsl(var(--muted-foreground)));
+}
+html.skin-premium .wms-ops-form .wms-ops-gr-review__items-wrap {
+  border-radius: 0.95rem;
+  border-color: color-mix(in oklab, var(--wms-brand-primary) 18%, var(--wms-app-border));
+  background:
+    linear-gradient(
+      155deg,
+      color-mix(in oklab, var(--wms-brand-primary) 6%, transparent) 0%,
+      transparent 48%,
+      color-mix(in oklab, var(--wms-brand-accent) 4%, transparent) 100%
+    ),
+    color-mix(in srgb, var(--wms-app-panel-strong) 78%, transparent);
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+html.skin-premium .wms-ops-form .wms-ops-gr-review__items-table th,
+html.skin-premium .wms-ops-form .wms-ops-gr-review__items-table td {
+  border-bottom-color: color-mix(in oklab, var(--wms-brand-primary) 12%, var(--wms-app-border));
+  font-family: var(--wms-premium-font, inherit);
+}
+html.skin-premium .wms-ops-form .wms-ops-gr-review__items-table th:not(:last-child),
+html.skin-premium .wms-ops-form .wms-ops-gr-review__items-table td:not(:last-child) {
+  border-right-color: color-mix(in oklab, var(--wms-brand-primary) 14%, var(--wms-app-border));
+}
+html.skin-premium .wms-ops-form .wms-ops-gr-review__items-table th {
+  letter-spacing: 0.04em;
+  text-transform: none;
+  color: color-mix(in oklab, var(--wms-brand-primary) 48%, hsl(var(--foreground)));
+  background: color-mix(in oklab, var(--wms-brand-primary) 10%, var(--wms-app-panel-muted));
+  box-shadow: 0 1px 0 color-mix(in oklab, var(--wms-brand-primary) 16%, var(--wms-app-border));
+}
+html.skin-premium .wms-ops-form .wms-ops-gr-review__items-table tbody tr:nth-child(even) td {
+  background: color-mix(in oklab, var(--wms-brand-primary) 4%, transparent);
+}
+html.skin-premium .wms-ops-form .wms-ops-gr-review__items-table tbody tr:hover td {
+  background: color-mix(in oklab, var(--wms-brand-primary) 9%, transparent);
+}
+html.skin-premium .wms-ops-form .wms-ops-gr-review__items-table tbody tr[data-status="quality"] td {
+  background: color-mix(in oklab, #f59e0b 22%, var(--wms-app-panel));
+}
+html.skin-premium .wms-ops-form .wms-ops-gr-review__items-table tbody tr[data-status="quality"]:hover td {
+  background: color-mix(in oklab, #f59e0b 32%, var(--wms-app-panel));
+}
+html.skin-premium .wms-ops-form .wms-ops-gr-review__items-more {
+  font-family: var(--wms-premium-font, inherit);
+}
+html.skin-premium .wms-ops-form .wms-ops-gr-review__items-status {
+  border-radius: 0.65rem;
+  font-family: var(--wms-premium-font, inherit);
+}
+html:not(.skin-premium) .wms-ops-form .wms-ops-gr-review__metric-card {
+  border-radius: 0.45rem;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+html:not(.skin-premium) .wms-ops-form .wms-ops-gr-review__metric-card-value,
+html:not(.skin-premium) .wms-ops-form .wms-ops-gr-review__metric-card-stack-num {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  letter-spacing: -0.02em;
+}
+html:not(.skin-premium) .wms-ops-form .wms-ops-gr-review__metric-card-icon {
+  border-radius: 0.35rem;
+}
+html:not(.skin-premium) .wms-ops-form .wms-ops-gr-review__items-wrap {
+  border-radius: 0.25rem;
+}
+html:not(.skin-premium) .wms-ops-form .wms-ops-gr-review__items-table th,
+html:not(.skin-premium) .wms-ops-form .wms-ops-gr-review__items-table td {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+html:not(.skin-premium) .wms-ops-form .wms-ops-gr-review__items-status {
+  border-radius: 0.2rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+@media (max-width: 1100px) {
+  .wms-ops-form .wms-ops-gr-review__metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .wms-ops-form .wms-ops-gr-review__body {
     grid-template-columns: 1fr;
   }
-  .wms-ops-form .wms-ops-gr-review__metric-grid {
+}
+@media (max-width: 900px) {
+  .wms-ops-form .wms-ops-gr-review__hero {
     grid-template-columns: 1fr;
   }
 }
@@ -34359,8 +34806,8 @@ html.skin-premium .wms-ops-form .wms-ops-gr-review__metric-card--quality {
   .wms-ops-form .wms-ops-gr-review__row dd {
     text-align: left;
   }
-  .wms-ops-form .wms-ops-gr-review__metric-card {
-    min-height: 7.5rem;
+  .wms-ops-form .wms-ops-gr-review__metric-grid {
+    grid-template-columns: 1fr;
   }
 }
 html.skin-premium.dark .wms-ops-form .wms-ops-gr-panel {

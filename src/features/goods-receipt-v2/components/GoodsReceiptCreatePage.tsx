@@ -139,6 +139,65 @@ const today = (): string => {
 const lineKey = (
   line: Pick<SelectedReceiptLine, "siparisNo" | "orderId">,
 ): string => `${line.siparisNo}|${line.orderId}`;
+const plannedLineGoesToQuality = (
+  line: Pick<
+    SelectedReceiptLine,
+    "qualityRequiredByRule" | "forceQualityControl" | "requireQualityControl"
+  >,
+): boolean =>
+  Boolean(
+    line.qualityRequiredByRule
+    || line.forceQualityControl
+    || line.requireQualityControl,
+  );
+const reviewWarehouseLabel = (
+  line: Pick<
+    SelectedReceiptLine,
+    "targetWarehouseCode" | "targetWarehouseName" | "targetWarehouseValue"
+  >,
+  warehouseNameByCode: Map<number, string>,
+  fallback: (code: number) => string,
+): string => {
+  const warehouseCode =
+    line.targetWarehouseCode
+    ?? (line.targetWarehouseValue
+      ? Number(line.targetWarehouseValue.split("|")[2]) || undefined
+      : undefined);
+  const warehouseName =
+    line.targetWarehouseName?.trim()
+    || (warehouseCode != null ? warehouseNameByCode.get(warehouseCode)?.trim() : "")
+    || "";
+  if (warehouseName && warehouseCode != null) return `${warehouseName} (${warehouseCode})`;
+  if (warehouseName) return warehouseName;
+  if (warehouseCode != null) return fallback(warehouseCode);
+  return "—";
+};
+const reviewShelfLabel = (
+  line: Pick<SelectedReceiptLine, "receivingLocationCode" | "putawayLocationCode">,
+): string => {
+  const receiving = line.receivingLocationCode?.trim() || "";
+  const putaway = line.putawayLocationCode?.trim() || "";
+  if (receiving && putaway && receiving !== putaway) return `${receiving} · ${putaway}`;
+  return receiving || putaway || "—";
+};
+const reviewAvailableQuantity = (
+  line: {
+    availableQuantity?: number | null;
+    remainingQuantity?: number | null;
+  },
+): number | null => {
+  const raw = line.availableQuantity ?? line.remainingQuantity;
+  if (raw == null) return null;
+  const value = Number(raw);
+  if (!Number.isFinite(value)) return null;
+  return Math.max(0, value);
+};
+const formatReviewQuantity = (value: number): string =>
+  formatProjectNumber(value, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 6,
+  });
+const REVIEW_ITEMS_PREVIEW = 6;
 const groupOrderLines = (rows: OpenOrderLine[]): OpenOrderHeader[] => {
   const grouped = new Map<string, OpenOrderHeader>();
   for (const line of rows) {
@@ -617,9 +676,7 @@ export function GoodsReceiptCreatePage({
   /** ONAY tick’li kalemler — önizleme ve kayıt yalnızca bunlar. */
   const plannedLines = confirmedLines;
   const primaryLine = plannedLines[0] ?? lines[0];
-  const hasQualityLines = plannedLines.some(
-    (line) => line.qualityRequiredByRule || line.forceQualityControl || line.requireQualityControl,
-  );
+  const hasQualityLines = plannedLines.some(plannedLineGoesToQuality);
   const receiptLines = plannedLines.flatMap((line) =>
     line.stockCode
       ? [
@@ -630,6 +687,8 @@ export function GoodsReceiptCreatePage({
             stockName: line.stockName,
             quantity: line.quantity,
             unitCode: line.unitCode,
+            availableQuantity: line.availableQuantity,
+            remainingQuantity: line.remainingQuantity,
             requireQualityControl:
               Boolean(line.qualityRequiredByRule)
               || Boolean(line.forceQualityControl)
@@ -735,10 +794,6 @@ export function GoodsReceiptCreatePage({
         .join(", "),
     [plannedLines],
   );
-  const selectedAvailableQuantity = plannedLines.reduce(
-    (sum, line) => sum + Math.max(0, line.availableQuantity ?? 0),
-    0,
-  );
   const selectedQuantity = plannedLines.reduce((sum, line) => sum + line.quantity, 0);
   const reviewQuantityByUnit = useMemo(() => {
     const totals = new Map<string, number>();
@@ -750,23 +805,8 @@ export function GoodsReceiptCreatePage({
       .map(([unit, quantity]) => ({ unit, quantity }))
       .sort((left, right) => left.unit.localeCompare(right.unit, "tr-TR"));
   }, [plannedLines]);
-  const reviewAvailableByUnit = useMemo(() => {
-    const totals = new Map<string, number>();
-    for (const line of plannedLines) {
-      const unit = (line.unitCode ?? "").trim() || "—";
-      totals.set(
-        unit,
-        (totals.get(unit) ?? 0) + Math.max(0, line.availableQuantity ?? 0),
-      );
-    }
-    return [...totals.entries()]
-      .map(([unit, quantity]) => ({ unit, quantity }))
-      .sort((left, right) => left.unit.localeCompare(right.unit, "tr-TR"));
-  }, [plannedLines]);
   const reviewSingleUnit =
     reviewQuantityByUnit.length === 1 ? reviewQuantityByUnit[0] : null;
-  const reviewAvailableSingleUnit =
-    reviewAvailableByUnit.length === 1 ? reviewAvailableByUnit[0] : null;
   const lineSortOrder = useMemo(() => {
     const order = new Map<string, number>();
     confirmedLineOrder.forEach((key, index) => {
@@ -3390,78 +3430,18 @@ export function GoodsReceiptCreatePage({
                           ) : null}
                         </span>
                       }
-                      hint={t("createFlow.review.metricLinesHint")}
                       note={
-                        allowManualQualityRouting
-                          ? t("createFlow.review.metricLinesQualityNote")
-                          : undefined
+                        allowManualQualityRouting ? (
+                          <span>{t("createFlow.review.metricLinesQualityNote")}</span>
+                        ) : undefined
                       }
+                      hint={t("createFlow.review.metricLinesHint")}
                       onClick={() => setReviewLinesDialog("receipt")}
                     />
-                    {direct ? (
-                      <ReviewMetricCard
-                        variant="available"
-                        icon={<Hash className="size-4" />}
-                        label={t("createFlow.review.orderAvailableQuantity")}
-                        value={
-                          <span className="wms-ops-gr-review__metric-card-inline">
-                            <span className="wms-ops-gr-review__metric-card-inline-item">
-                              <span className="wms-ops-gr-review__metric-card-stack-num">
-                                {formatProjectNumber(selectedAvailableQuantity, {
-                                  minimumFractionDigits: 0,
-                                  maximumFractionDigits: 6,
-                                })}
-                              </span>
-                              <span className="wms-ops-gr-review__metric-card-stack-unit">
-                                {reviewAvailableSingleUnit
-                                  ? reviewAvailableSingleUnit.unit
-                                  : t("createFlow.review.metricQuantityUnit")}
-                              </span>
-                            </span>
-                            {!reviewAvailableSingleUnit &&
-                            reviewAvailableByUnit.length > 1 ? (
-                              <ReviewUnitBreakdownBadge
-                                count={reviewAvailableByUnit.length}
-                                entries={reviewAvailableByUnit}
-                                countLabel={t("createFlow.review.metricUnitCount", {
-                                  count: reviewAvailableByUnit.length,
-                                })}
-                              />
-                            ) : null}
-                          </span>
-                        }
-                        hint={
-                          Math.abs(selectedQuantity - selectedAvailableQuantity) > 1e-6
-                            ? t("createFlow.review.metricAvailableHint", {
-                                accepted: `${formatProjectNumber(selectedQuantity, {
-                                  minimumFractionDigits: 0,
-                                  maximumFractionDigits: 6,
-                                })}${reviewSingleUnit ? ` ${reviewSingleUnit.unit}` : ""}`,
-                              })
-                            : undefined
-                        }
-                      />
-                    ) : (
-                      <ReviewMetricCard
-                        variant="available"
-                        icon={<ClipboardList className="size-4" />}
-                        label={t("createFlow.assignees.title")}
-                        value={
-                          assignees.length > 0
-                            ? String(assignees.length)
-                            : "—"
-                        }
-                        hint={
-                          assignees.length > 0
-                            ? assignees.map(userLabel).join(", ")
-                            : undefined
-                        }
-                      />
-                    )}
                     <ReviewMetricCard
                       variant={hasQualityLines ? "quality" : "quality-none"}
-                      icon={<ShieldCheck className="size-4" />}
-                      label={t("createFlow.review.metricQualityLabel")}
+                      icon={<ShieldAlert className="size-4" />}
+                      label={t("createFlow.review.metricQualityToLabel")}
                       value={
                         <span className="wms-ops-gr-review__metric-card-inline">
                           <span className="wms-ops-gr-review__metric-card-inline-item">
@@ -3474,16 +3454,39 @@ export function GoodsReceiptCreatePage({
                           </span>
                         </span>
                       }
+                      note={
+                        hasQualityLines
+                          ? t("createFlow.review.metricQualityNote")
+                          : undefined
+                      }
                       hint={
                         hasQualityLines
                           ? t("createFlow.review.metricQualityHint")
-                          : t("createFlow.review.metricQualityHintEmpty")
+                          : undefined
                       }
-                      onClick={() =>
-                        setReviewLinesDialog(hasQualityLines ? "quality" : "receipt")
+                      onClick={
+                        hasQualityLines
+                          ? () => setReviewLinesDialog("quality")
+                          : undefined
                       }
                     />
                   </div>
+                </div>
+
+                <div className="wms-ops-gr-review__body">
+                  <ReviewItemsTable
+                    lines={plannedLines}
+                    warehouseNameByCode={warehouseNameByCode}
+                    branchCode={customer?.branch ?? branchCode}
+                    onQualityClick={
+                      hasQualityLines
+                        ? () => setReviewLinesDialog("quality")
+                        : undefined
+                    }
+                  />
+                  <ReviewRoutingGuide
+                    allowManualQualityRouting={allowManualQualityRouting}
+                  />
                 </div>
               </div>
 
@@ -5165,6 +5168,226 @@ function ReviewUnitBreakdownBadge({
   );
 }
 
+function TakenAvailableQty({
+  taken,
+  available,
+  unit,
+  showUnit = false,
+  ariaLabel,
+}: {
+  taken: number;
+  available: number | null;
+  unit?: string;
+  showUnit?: boolean;
+  ariaLabel: string;
+}): ReactElement {
+  return (
+    <span className="wms-ops-gr-review__qty-pair" aria-label={ariaLabel}>
+      <span className="wms-ops-gr-review__qty-pair-taken">{formatReviewQuantity(taken)}</span>
+      {available != null ? (
+        <>
+          <span className="wms-ops-gr-review__qty-pair-sep" aria-hidden>/</span>
+          <span className="wms-ops-gr-review__qty-pair-available">
+            {formatReviewQuantity(available)}
+          </span>
+        </>
+      ) : null}
+      {showUnit && unit ? (
+        <span className="wms-ops-gr-review__qty-pair-unit">{unit}</span>
+      ) : null}
+    </span>
+  );
+}
+
+function ReviewItemsTable({
+  lines,
+  warehouseNameByCode,
+  branchCode,
+  onQualityClick,
+}: {
+  lines: SelectedReceiptLine[];
+  warehouseNameByCode: Map<number, string>;
+  branchCode: string;
+  onQualityClick?: () => void;
+}): ReactElement {
+  const { t } = useTranslation("goods-receipt-v2");
+  const [expanded, setExpanded] = useState(false);
+  const canCollapse = lines.length > REVIEW_ITEMS_PREVIEW;
+  const visibleLines = expanded || !canCollapse
+    ? lines
+    : lines.slice(0, REVIEW_ITEMS_PREVIEW);
+  return (
+    <div className="wms-ops-gr-review__items">
+      <div className="wms-ops-gr-review__section-title">{t("createFlow.review.itemsTitle")}</div>
+      <div className="wms-ops-gr-review__items-wrap">
+        <table className="wms-ops-gr-review__items-table" aria-label={t("createFlow.review.itemsTableAria")}>
+          <thead>
+            <tr>
+              <th className="wms-ops-gr-review__items-col-num">#</th>
+              <th>{t("createFlow.table.stockCode")}</th>
+              <th>{t("createFlow.table.stockName")}</th>
+              <th className="wms-ops-gr-review__items-col-qty">{t("createFlow.review.itemsTakenAvailableColumn")}</th>
+              <th>{t("createFlow.review.itemUnitColumn")}</th>
+              <th>{t("createFlow.table.targetWarehouse")}</th>
+              <th>{t("createFlow.review.itemsLocationColumn")}</th>
+              <th>{t("createFlow.review.itemStatusColumn")}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {visibleLines.map((line, index) => {
+              const goesToQuality = plannedLineGoesToQuality(line);
+              const available = reviewAvailableQuantity(line);
+              const warehouse = reviewWarehouseLabel(
+                line,
+                warehouseNameByCode,
+                (code) => t("createFlow.entryRow.warehouseFallback", { code }),
+              );
+              return (
+                <tr
+                  key={lineKey(line)}
+                  data-status={goesToQuality ? "quality" : "deliverable"}
+                >
+                  <td className="wms-ops-gr-review__items-col-num">{index + 1}</td>
+                  <td className="font-mono font-semibold">
+                    <StockIdentityCell
+                      stockId={line.stockId}
+                      stockCode={line.stockCode}
+                      stockName={line.stockName}
+                      branchCode={branchCode}
+                      layout="code"
+                    />
+                  </td>
+                  <td>
+                    <StockIdentityCell
+                      stockId={line.stockId}
+                      stockCode={line.stockCode}
+                      stockName={line.stockName}
+                      branchCode={branchCode}
+                      layout="name"
+                    />
+                  </td>
+                  <td className="wms-ops-gr-review__items-col-qty font-mono">
+                    <TakenAvailableQty
+                      taken={line.quantity}
+                      available={available}
+                      ariaLabel={t("createFlow.review.itemsTakenAvailableAria", {
+                        taken: formatReviewQuantity(line.quantity),
+                        available: available == null ? "—" : formatReviewQuantity(available),
+                      })}
+                    />
+                  </td>
+                  <td>{line.unitCode || "—"}</td>
+                  <td>{warehouse}</td>
+                  <td className="font-mono">{reviewShelfLabel(line)}</td>
+                  <td>
+                    {goesToQuality && onQualityClick ? (
+                      <button
+                        type="button"
+                        className="wms-ops-gr-review__items-status wms-ops-gr-review__items-status--quality"
+                        onClick={onQualityClick}
+                      >
+                        {t("createFlow.review.itemStatusQuality")}
+                      </button>
+                    ) : (
+                      <span
+                        className={cn(
+                          "wms-ops-gr-review__items-status",
+                          goesToQuality
+                            ? "wms-ops-gr-review__items-status--quality"
+                            : "wms-ops-gr-review__items-status--deliverable",
+                        )}
+                      >
+                        {goesToQuality
+                          ? t("createFlow.review.itemStatusQuality")
+                          : t("createFlow.review.itemStatusDeliverable")}
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+        {canCollapse ? (
+          <button
+            type="button"
+            className="wms-ops-gr-review__items-more"
+            aria-expanded={expanded}
+            onClick={() => setExpanded((current) => !current)}
+          >
+            {expanded ? (
+              <>
+                <ChevronUp className="size-3.5" aria-hidden />
+                {t("createFlow.review.itemsShowLess")}
+              </>
+            ) : (
+              <>
+                <ChevronDown className="size-3.5" aria-hidden />
+                {t("createFlow.review.itemsViewAll", { count: lines.length })}
+              </>
+            )}
+          </button>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function ReviewRoutingGuide({
+  allowManualQualityRouting,
+}: {
+  allowManualQualityRouting: boolean;
+}): ReactElement {
+  const { t } = useTranslation("goods-receipt-v2");
+
+  return (
+    <aside className="wms-ops-gr-review__routing" aria-label={t("createFlow.review.routingGuideTitle")}>
+      <div className="wms-ops-gr-review__section-title">{t("createFlow.review.routingGuideTitle")}</div>
+
+      <section className="wms-ops-gr-review__routing-block wms-ops-gr-review__routing-block--quality">
+        <div className="wms-ops-gr-review__routing-main">
+          <div className="wms-ops-gr-review__routing-head">
+            <span className="wms-ops-gr-review__routing-icon" aria-hidden>
+              <ShieldAlert className="size-4" />
+            </span>
+            <div className="wms-ops-gr-review__routing-head-copy">
+              <strong className="wms-ops-gr-review__routing-title">
+                {t("createFlow.review.routingGuideQualityTitle")}
+              </strong>
+            </div>
+          </div>
+          <p className="wms-ops-gr-review__routing-lead">
+            {t("createFlow.review.routingGuideQualityLead")}
+          </p>
+          <p className="wms-ops-gr-review__routing-how">
+            {allowManualQualityRouting
+              ? t("createFlow.review.routingGuideQualityHow")
+              : t("createFlow.review.routingGuideQualityHowLocked")}
+          </p>
+        </div>
+      </section>
+
+      <section className="wms-ops-gr-review__routing-block wms-ops-gr-review__routing-block--direct">
+        <div className="wms-ops-gr-review__routing-main">
+          <div className="wms-ops-gr-review__routing-head">
+            <span className="wms-ops-gr-review__routing-icon" aria-hidden>
+              <CheckCircle2 className="size-4" />
+            </span>
+            <div className="wms-ops-gr-review__routing-head-copy">
+              <strong className="wms-ops-gr-review__routing-title">
+                {t("createFlow.review.routingGuideDirectTitle")}
+              </strong>
+            </div>
+          </div>
+          <p className="wms-ops-gr-review__routing-lead">
+            {t("createFlow.review.routingGuideDirectLead")}
+          </p>
+        </div>
+      </section>
+    </aside>
+  );
+}
+
 function ReviewMetricCard({
   variant,
   icon,
@@ -5175,12 +5398,12 @@ function ReviewMetricCard({
   onClick,
   footer,
 }: {
-  variant: "lines" | "available" | "quality" | "quality-none";
+  variant: "lines" | "quantity" | "available" | "quality" | "quality-none";
   icon: ReactNode;
   label: string;
   value: ReactNode;
   hint?: string;
-  note?: string;
+  note?: ReactNode;
   onClick?: () => void;
   footer?: ReactNode;
 }): ReactElement {
@@ -5276,6 +5499,8 @@ function QualityLinesDialog({
     stockName?: string;
     quantity: number;
     unitCode?: string;
+    availableQuantity?: number | null;
+    remainingQuantity?: number | null;
     requireQualityControl?: boolean;
     qualityRequiredByRule?: boolean;
     forcedQuality?: boolean;
@@ -5401,6 +5626,9 @@ function QualityLinesDialog({
                 && Boolean(line.lineKey);
               const location = qualityLineLocationLabel(line);
               const locationText = location.receiving || location.putaway;
+              const available = reviewAvailableQuantity(line);
+              const takenText = formatReviewQuantity(line.quantity);
+              const availableText = available == null ? "—" : formatReviewQuantity(available);
               return (
                 <li
                   key={line.lineKey ?? `${line.stockCode}-${line.quantity}-${index}`}
@@ -5417,7 +5645,7 @@ function QualityLinesDialog({
                     <OpsSkinCheckbox
                       checked={checked}
                       disabled={lockedInReceipt}
-                      className="self-start mt-0.5"
+                      className="wms-ops-gr-review__quality-dialog-check"
                       title={
                         lockedByRule
                           ? t("createFlow.qualityDialog.ruleLockedHint")
@@ -5469,6 +5697,11 @@ function QualityLinesDialog({
                           </span>
                         </span>
                       ) : null}
+                      {lockedByRule ? (
+                        <span className="wms-ops-gr-review__quality-dialog-badge">
+                          {t("createFlow.qualityDialog.qualityBadge")}
+                        </span>
+                      ) : null}
                     </span>
                     <span
                       className="wms-ops-gr-review__quality-dialog-name"
@@ -5477,45 +5710,37 @@ function QualityLinesDialog({
                       {line.stockName || "—"}
                     </span>
                   </span>
-                  {lockedByRule || checked ? (
-                    <span
-                      className={cn(
-                        "wms-ops-gr-review__quality-dialog-badge",
-                        !lockedByRule && "wms-ops-gr-review__quality-dialog-badge--forced",
-                      )}
-                    >
-                      {lockedByRule
-                        ? t("createFlow.qualityDialog.qualityBadge")
-                        : t("createFlow.qualityDialog.forcedQualityBadge")}
-                    </span>
-                  ) : null}
-                  <span className="wms-ops-gr-review__quality-dialog-qty">
-                    {formatProjectNumber(line.quantity, {
-                      minimumFractionDigits: 0,
-                      maximumFractionDigits: 6,
-                    })}{" "}
-                    {line.unitCode || ""}
-                  </span>
-                  {showForcedRemove ? (
-                    <button
-                      type="button"
-                      className="wms-ops-gr-review__quality-dialog-remove"
-                      title={t("createFlow.qualityDialog.removeForcedTitle")}
-                      aria-label={t("createFlow.qualityDialog.removeForcedAria", {
-                        code: line.stockCode,
+                  <span className="wms-ops-gr-review__quality-dialog-side">
+                    <TakenAvailableQty
+                      taken={line.quantity}
+                      available={available}
+                      unit={line.unitCode}
+                      showUnit
+                      ariaLabel={t("createFlow.review.itemsTakenAvailableAria", {
+                        taken: takenText,
+                        available: availableText,
                       })}
-                      onClick={() => {
-                        if (!line.lineKey) return;
-                        const key = line.lineKey;
-                        setDraftSelectedKeys((current) => current.filter((item) => item !== key));
-                        setBaselineSelectedKeys((current) => current.filter((item) => item !== key));
-                        onRemoveForcedQuality?.(key);
-                      }}
-                    >
-                      <X className="size-3.5" aria-hidden />
-                      <span>{t("createFlow.qualityDialog.removeForcedLabel")}</span>
-                    </button>
-                  ) : null}
+                    />
+                    {showForcedRemove ? (
+                      <button
+                        type="button"
+                        className="wms-ops-gr-review__quality-dialog-remove"
+                        title={t("createFlow.qualityDialog.removeForcedTitle")}
+                        aria-label={t("createFlow.qualityDialog.removeForcedAria", {
+                          code: line.stockCode,
+                        })}
+                        onClick={() => {
+                          if (!line.lineKey) return;
+                          const key = line.lineKey;
+                          setDraftSelectedKeys((current) => current.filter((item) => item !== key));
+                          setBaselineSelectedKeys((current) => current.filter((item) => item !== key));
+                          onRemoveForcedQuality?.(key);
+                        }}
+                      >
+                        <X className="size-3.5" aria-hidden />
+                      </button>
+                    ) : null}
+                  </span>
                 </li>
               );
             })}
