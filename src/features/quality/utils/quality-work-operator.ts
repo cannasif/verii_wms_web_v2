@@ -14,6 +14,66 @@ export function resolveDecisionControlQuantity(
   return { additional: requested, missingRequired: false };
 }
 
+export function sanitizeIntegerQuantityInput(value: string): string {
+  let result = "";
+  for (const ch of value) {
+    if (ch >= "0" && ch <= "9") {
+      result += ch;
+      continue;
+    }
+    if (ch === "." || ch === ",") break;
+  }
+  return result;
+}
+
+export function sanitizeDecimalQuantityInput(value: string): string {
+  let separatorSeen = false;
+  let result = "";
+  for (const ch of value) {
+    if (ch >= "0" && ch <= "9") {
+      result += ch;
+      continue;
+    }
+    if ((ch === "." || ch === ",") && !separatorSeen) {
+      separatorSeen = true;
+      result += ch;
+    }
+  }
+  return result;
+}
+
+function stringifyCappedQuantity(value: number): string {
+  const rounded = Math.round(Math.max(0, value) * 1_000_000) / 1_000_000;
+  return String(rounded);
+}
+
+export function capQuantityInput(value: string, maximum: number): string {
+  const sanitized = sanitizeDecimalQuantityInput(value);
+  if (!sanitized) return "";
+  const normalized = sanitized.replace(",", ".");
+  const incomplete = normalized === "." || normalized.endsWith(".");
+  const parsed = incomplete
+    ? Number(normalized === "." ? "0" : normalized.slice(0, -1))
+    : Number(normalized);
+  if (!Number.isFinite(parsed)) return sanitized;
+  const limit = Math.max(0, maximum);
+  if (parsed - limit > CONTROL_QTY_EPS) return stringifyCappedQuantity(limit);
+  return sanitized;
+}
+
+export function remainingCapacityForDistributionRow(
+  rows: Array<{ key: string; quantity: string }>,
+  key: string,
+  totalRemaining: number,
+): number {
+  const others = rows.reduce((sum, row) => {
+    if (row.key === key) return sum;
+    const qty = Number(String(row.quantity ?? "").trim().replace(",", "."));
+    return sum + (Number.isFinite(qty) && qty > 0 ? qty : 0);
+  }, 0);
+  return Math.max(0, Math.round((totalRemaining - others) * 1_000_000) / 1_000_000);
+}
+
 export function collectQualityProgressControlQuantities(
   lines: Array<{ id: number }>,
   drafts: Record<number, { confirmedInspectedQuantity?: string; inspectedQuantity?: string }>,

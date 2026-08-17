@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   collectQualityProgressControlQuantities,
   formatQualityWorkOperatorName,
+  capQuantityInput,
+  remainingCapacityForDistributionRow,
   resolveDecisionControlQuantity,
+  sanitizeIntegerQuantityInput,
 } from "./quality-work-operator";
 
 describe("resolveDecisionControlQuantity", () => {
@@ -30,6 +33,52 @@ describe("resolveDecisionControlQuantity", () => {
       additional: 5,
       missingRequired: false,
     });
+  });
+
+  it("allows any quantity up to the lot when there is no sampling minimum", () => {
+    expect(resolveDecisionControlQuantity(null, 95, 0)).toEqual({
+      additional: 0,
+      missingRequired: false,
+    });
+    expect(resolveDecisionControlQuantity(5, 95, 0)).toEqual({
+      additional: 5,
+      missingRequired: false,
+    });
+  });
+});
+
+describe("sanitizeIntegerQuantityInput", () => {
+  it("keeps whole numbers and drops the decimal part", () => {
+    expect(sanitizeIntegerQuantityInput("12")).toBe("12");
+    expect(sanitizeIntegerQuantityInput("12.5")).toBe("12");
+    expect(sanitizeIntegerQuantityInput("12,75")).toBe("12");
+    expect(sanitizeIntegerQuantityInput(".5")).toBe("");
+  });
+});
+
+describe("capQuantityInput", () => {
+  it("does not allow a value above the remaining maximum", () => {
+    expect(capQuantityInput("150", 100)).toBe("100");
+    expect(capQuantityInput("100.1", 100)).toBe("100");
+    expect(capQuantityInput("40", 100)).toBe("40");
+    expect(capQuantityInput("", 100)).toBe("");
+    expect(capQuantityInput("12.", 12)).toBe("12.");
+    expect(capQuantityInput("13.", 12)).toBe("12");
+  });
+});
+
+describe("remainingCapacityForDistributionRow", () => {
+  it("leaves only the unused remainder for the edited row", () => {
+    expect(
+      remainingCapacityForDistributionRow(
+        [
+          { key: "a", quantity: "60" },
+          { key: "b", quantity: "10" },
+        ],
+        "b",
+        100,
+      ),
+    ).toBe(40);
   });
 });
 

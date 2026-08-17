@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactElement, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type MutableRefObject, type ReactElement, type ReactNode } from "react";
 import { createPortal, flushSync } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
@@ -63,7 +63,10 @@ import {
 import {
   collectQualityProgressControlQuantities,
   formatQualityWorkOperatorName,
+  capQuantityInput,
+  remainingCapacityForDistributionRow,
   resolveDecisionControlQuantity,
+  sanitizeIntegerQuantityInput,
 } from "../utils/quality-work-operator";
 import {
   applyQualityControlQuantityCache,
@@ -75,6 +78,11 @@ import {
 import { useAuthStore } from "@/stores/auth-store";
 import { collapseRepeatedMessageSegments } from "../utils/quality-decision-message";
 import { cn } from "@/lib/utils";
+import {
+  preventDialogDismissIfImageLightbox,
+  preventDialogEscapeIfImageLightbox,
+  shouldIgnoreDialogClose,
+} from "@/lib/wms-image-lightbox";
 import { localizeEnumValue } from "@/lib/enum-localization";
 import {
   formatProjectDate,
@@ -138,6 +146,10 @@ type QualityDecisionFlow =
   | { phase: "success"; result: QualityDecisionResult; lineCount: number; sourceLabel?: string };
 
 const QUALITY_LOCATION_VALUE_SEPARATOR = "|";
+const QUALITY_DECISION_NESTED_LAYER =
+  '.wms-ops-list-select-content, [data-radix-popper-content-wrapper], [data-wms-image-lightbox], [role="listbox"]';
+const QUALITY_INSPECT_FLOATING_LAYER =
+  `.wms-ops-quality-decision-popover, ${QUALITY_DECISION_NESTED_LAYER}, .wms-ops-list-popover, .wms-floating-surface, [data-slot="dialog-content"]`;
 
 function encodeQualityLocationValue(locationId: number, warehouseId: number): string {
   return `${locationId}${QUALITY_LOCATION_VALUE_SEPARATOR}${warehouseId}`;
@@ -399,6 +411,9 @@ function controlQuantityError(
   if (raw && (requested == null || !Number.isFinite(requested) || requested < 0)) {
     return t("errors.controlQuantityMustBePositive", { stockCode: line.stockCode });
   }
+  if (requested != null && !Number.isInteger(requested)) {
+    return t("errors.controlQuantityMustBeInteger", { stockCode: line.stockCode });
+  }
   const resolved = resolveDecisionControlQuantity(requested, maximum, required);
   if (resolved.missingRequired) {
     return t("errors.controlQuantityRequired", { stockCode: line.stockCode });
@@ -525,22 +540,6 @@ function parseQty(value: string): number {
   if (!normalized) return NaN;
   const n = Number(normalized);
   return Number.isFinite(n) ? n : NaN;
-}
-
-function sanitizeQtyInput(value: string): string {
-  let separatorSeen = false;
-  let result = "";
-  for (const ch of value) {
-    if (ch >= "0" && ch <= "9") {
-      result += ch;
-      continue;
-    }
-    if ((ch === "." || ch === ",") && !separatorSeen) {
-      separatorSeen = true;
-      result += ch;
-    }
-  }
-  return result;
 }
 
 function roundQty(value: number): number {
@@ -873,9 +872,9 @@ export function QualityInspectionsPage({
     enabled: !quarantineOnly,
     staleTime: Number.POSITIVE_INFINITY,
   });
-  const [expandedId, setExpandedId] = useState<number | null>(null);
-  const [detail, setDetail] = useState<QualityInspectionDetail | null>(null);
-  const [loading, setLoading] = useState<number | null>(null);
+  const [editId, setEditId] = useState<number | null>(null);
+  const [editDetail, setEditDetail] = useState<QualityInspectionDetail | null>(null);
+  const [editLoading, setEditLoading] = useState<number | null>(null);
   const [priorityLoading, setPriorityLoading] = useState<number | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
   const [createdPeriod, setCreatedPeriod] = useState<QualityInspectionCreatedPeriod | null>("month");
@@ -884,6 +883,8 @@ export function QualityInspectionsPage({
   const [decisionFlow, setDecisionFlow] = useState<QualityDecisionFlow | null>(null);
   const [committedInspectionIds, setCommittedInspectionIds] = useState<Set<number>>(() => new Set());
   const listMovePendingRef = useRef(false);
+  const lineDecisionGuardRef = useRef({ open: false, suppressInspectClose: false });
+  const closeLineDecisionRef = useRef<() => void>(() => {});
   const handleDecisionFlowChange = useCallback((flow: QualityDecisionFlow | null) => {
     if (flow === null && listMovePendingRef.current) return;
     setDecisionFlow(flow);
@@ -910,34 +911,17 @@ export function QualityInspectionsPage({
       ),
     [createdPeriod, createdPeriodAnchor, quarantineOnly, statusFacet],
   );
-  const toggle = useCallback(
-    async (id: number) => {
-      if (expandedId === id) {
-        setExpandedId(null);
-        setDetail(null);
-        return;
-      }
-      setLoading(id);
-      try {
-        setDetail(await qualityApi.inspection(id));
-        setExpandedId(id);
-      } catch (error) {
-        toast.error(message(error, t("list.detailFetchFailed")));
-      } finally {
-        setLoading(null);
-      }
-    },
-    [expandedId, t],
-  );
   const toggleInspectionPriority = useCallback(
     async (inspection: QualityInspection) => {
       if (priorityLoading !== null) return;
       setPriorityLoading(inspection.id);
       try {
         const result = await qualityApi.togglePriority(inspection.id);
-        setDetail((current) => current?.header.id === inspection.id
-          ? { ...current, header: { ...current.header, isPriority: result.isPriority } }
-          : current);
+        const patchPriority = (current: QualityInspectionDetail | null) =>
+          current?.header.id === inspection.id
+            ? { ...current, header: { ...current.header, isPriority: result.isPriority } }
+            : current;
+        setEditDetail(patchPriority);
         await queryClient.invalidateQueries({ queryKey: ["advanced-grid", pageKey] });
         toast.success(result.isPriority ? t("list.priority.added") : t("list.priority.removed"));
       } catch (error) {
@@ -948,8 +932,50 @@ export function QualityInspectionsPage({
     },
     [pageKey, priorityLoading, queryClient, t],
   );
+  const handleInspectOutside = useCallback((event: {
+    preventDefault: () => void;
+    target: EventTarget | null;
+    detail?: { originalEvent?: Event };
+  }) => {
+    preventDialogDismissIfImageLightbox(event);
+    const target = event.detail?.originalEvent?.target ?? event.target;
+    if (target instanceof Element && target.closest(QUALITY_INSPECT_FLOATING_LAYER)) {
+      event.preventDefault();
+      return;
+    }
+    if (lineDecisionGuardRef.current.open || lineDecisionGuardRef.current.suppressInspectClose) {
+      event.preventDefault();
+      lineDecisionGuardRef.current.open = false;
+      lineDecisionGuardRef.current.suppressInspectClose = false;
+      closeLineDecisionRef.current();
+    }
+  }, []);
+  const closeEditPanel = useCallback(() => {
+    lineDecisionGuardRef.current.open = false;
+    lineDecisionGuardRef.current.suppressInspectClose = false;
+    setEditId(null);
+    setEditDetail(null);
+  }, []);
+  const openEdit = useCallback(
+    async (id: number) => {
+      if (editId === id && editDetail?.header.id === id) return;
+      setEditId(id);
+      if (editDetail?.header.id === id) return;
+      setEditLoading(id);
+      try {
+        setEditDetail(await qualityApi.inspection(id));
+      } catch (error) {
+        setEditId(null);
+        toast.error(message(error, t("list.detailFetchFailed")));
+      } finally {
+        setEditLoading(null);
+      }
+    },
+    [editDetail, editId, t],
+  );
   const refreshDetail = useCallback(async (id: number) => {
-    setDetail(await qualityApi.inspection(id));
+    const next = await qualityApi.inspection(id);
+    setEditDetail((current) => current?.header.id === id ? next : current);
     await queryClient.invalidateQueries({ queryKey: ["advanced-grid", pageKey] });
   }, [pageKey, queryClient]);
   const columns = useMemo<GridColumn<QualityInspection>[]>(
@@ -967,9 +993,13 @@ export function QualityInspectionsPage({
         render: (r) => (
           <button
             type="button"
-            onClick={() => void toggle(r.id)}
+            onClick={(event) => {
+              event.stopPropagation();
+              void openEdit(r.id);
+            }}
             className="inline-flex items-center gap-1.5 font-mono font-semibold text-cyan-600 hover:underline dark:text-cyan-300"
-            aria-expanded={expandedId === r.id}
+            aria-label={t("list.editAria")}
+            title={t("list.edit")}
           >
             {r.isPriority ? (
               <span
@@ -986,11 +1016,6 @@ export function QualityInspectionsPage({
                 ) : null}
               </span>
             ) : null}
-            <ChevronDown
-              className={`size-3.5 shrink-0 transition-transform ${
-                expandedId === r.id ? "rotate-180" : ""
-              }`}
-            />
             {r.inspectionNo}
           </button>
         ),
@@ -1122,7 +1147,7 @@ export function QualityInspectionsPage({
         key: "actions",
         label: t("list.columns.detail"),
         ...requiredActionColumn,
-        width: 260,
+        width: 220,
         render: (r) => (
           <div className="flex items-center justify-center gap-1">
           {can("WMS.QUALITY.INSPECTIONS.PRIORITIZE") && canToggleQualityInspectionPriority(r.status, prioritizableStatuses) ? (
@@ -1145,29 +1170,24 @@ export function QualityInspectionsPage({
           ) : null}
           <button
             type="button"
-            onClick={() => void toggle(r.id)}
-            disabled={loading === r.id}
-            className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-cyan-500 hover:bg-cyan-500/10"
-            aria-label={t("list.openAria")}
-            aria-expanded={expandedId === r.id}
+            onClick={(event) => {
+              event.stopPropagation();
+              void openEdit(r.id);
+            }}
+            disabled={editLoading === r.id}
+            className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-cyan-600 hover:bg-cyan-500/10 dark:text-cyan-300"
+            aria-label={t("list.editAria")}
+            title={t("list.edit")}
           >
-            {loading === r.id ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              <ChevronDown
-                className={`size-4 transition-transform ${expandedId === r.id ? "rotate-180" : ""}`}
-              />
-            )}
-            <span className="text-xs font-semibold">
-              {expandedId === r.id ? t("list.hide") : t("list.open")}
-            </span>
+            {editLoading === r.id ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}
+            <span className="text-xs font-semibold">{t("list.edit")}</span>
           </button>
           </div>
         ),
       },
     ];
     },
-    [can, expandedId, loading, moduleReady, prioritizableStatuses, priorityLoading, t, toggle, toggleInspectionPriority],
+    [can, editLoading, moduleReady, openEdit, prioritizableStatuses, priorityLoading, t, toggleInspectionPriority],
   );
   const moveInspectionToListStatus = useCallback(async (
     targetStatus: string,
@@ -1190,8 +1210,8 @@ export function QualityInspectionsPage({
         if (!quarantineOnly) {
           setSelectedStatus(targetStatus);
         }
-        setExpandedId(null);
-        setDetail(null);
+        setEditId(null);
+        setEditDetail(null);
         setListEpoch((current) => current + 1);
       });
       try {
@@ -1264,30 +1284,82 @@ export function QualityInspectionsPage({
           />
         )
       }
-      expandedRowId={expandedId}
-      onRowDoubleClick={(row) => void toggle(row.id)}
+      onRowDoubleClick={(row) => void openEdit(row.id)}
       rowClassName={(row) => qualityInspectionPriorityRowClass(row.isPriority)}
-      renderExpandedRow={(row) =>
-        detail && detail.header.id === row.id ? (
-          <InspectionDetailPanel
-            detail={detail}
-            refresh={() => refreshDetail(row.id)}
-            close={() => {
-              setExpandedId(null);
-              setDetail(null);
-            }}
-            decided={decided}
-            moveToListStatus={moveInspectionToListStatus}
-            applyBlocked={committedInspectionIds.has(row.id) || Boolean(decisionFlow)}
-            onDecisionFlowChange={handleDecisionFlowChange}
-          />
-        ) : (
-          <div className="flex items-center gap-2 text-sm text-slate-500">
-            <Loader2 className="size-4 animate-spin" /> {t("list.detailLoading")}
-          </div>
-        )
-      }
     />
+    {editId != null && typeof document !== "undefined"
+      ? createPortal(
+          <div
+            aria-hidden
+            className="pointer-events-auto fixed inset-0 z-40 bg-black/45 backdrop-blur-[2px]"
+          />,
+          document.body,
+        )
+      : null}
+    <Dialog
+      modal={false}
+      open={editId != null}
+      onOpenChange={(open) => {
+        if (!open && shouldIgnoreDialogClose()) return;
+        if (!open) closeEditPanel();
+      }}
+    >
+      <DialogContent
+        portalRoot="body"
+        tone="ops"
+        aria-describedby={undefined}
+        showCloseButton
+        onPointerDownOutside={handleInspectOutside}
+        onInteractOutside={handleInspectOutside}
+        onFocusOutside={handleInspectOutside}
+        onEscapeKeyDown={(event) => {
+          preventDialogEscapeIfImageLightbox(event);
+          if (lineDecisionGuardRef.current.open) {
+            event.preventDefault();
+            lineDecisionGuardRef.current.open = false;
+            closeLineDecisionRef.current();
+          }
+        }}
+        className={cn(
+          "wms-ops-detail-dialog wms-ops-form flex !h-auto max-h-[95dvh] w-[calc(100%-1rem)] !max-w-[min(96vw,92rem)] flex-col gap-0 overflow-hidden border-0 p-0 shadow-none sm:w-[calc(100%-2rem)]",
+        )}
+      >
+        <header className="wms-ops-detail-dialog__header shrink-0">
+          <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-600 dark:text-cyan-300">
+            {t("list.editEyebrow")}
+          </p>
+          <DialogTitle className="wms-ops-detail-dialog__title">
+            {t("list.editTitle")}
+            {editDetail?.header.inspectionNo ? (
+              <span className="ml-2 font-mono text-base font-bold text-cyan-600 dark:text-cyan-300">
+                {editDetail.header.inspectionNo}
+              </span>
+            ) : null}
+          </DialogTitle>
+          <DialogDescription className="wms-ops-detail-dialog__description">
+            {t("list.editDescription")}
+          </DialogDescription>
+        </header>
+        <div className="wms-ops-dialog__body wms-ops-scrollbar min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-5 py-4">
+          {editDetail && editDetail.header.id === editId ? (
+            <InspectionDetailPanel
+              detail={editDetail}
+              refresh={() => refreshDetail(editDetail.header.id)}
+              decided={decided}
+              moveToListStatus={moveInspectionToListStatus}
+              applyBlocked={committedInspectionIds.has(editDetail.header.id) || Boolean(decisionFlow)}
+              onDecisionFlowChange={handleDecisionFlowChange}
+              lineDecisionGuardRef={lineDecisionGuardRef}
+              closeLineDecisionRef={closeLineDecisionRef}
+            />
+          ) : (
+            <div className="flex min-h-48 items-center justify-center gap-2 text-sm text-slate-500">
+              <Loader2 className="size-4 animate-spin" /> {t("list.detailLoading")}
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
     {decisionFlow && typeof document !== "undefined"
       ? createPortal(
           <QualityDecisionFlowOverlay>
@@ -1322,19 +1394,21 @@ export function QualityInspectionsPage({
 function InspectionDetailPanel({
   detail,
   refresh,
-  close,
   decided,
   moveToListStatus,
   applyBlocked = false,
   onDecisionFlowChange,
+  lineDecisionGuardRef,
+  closeLineDecisionRef,
 }: {
   detail: QualityInspectionDetail;
   refresh: () => Promise<void>;
-  close: () => void;
   decided: (nextStatus?: string, inspectionId?: number) => void | Promise<void>;
   moveToListStatus: (targetStatus: string, inspectionId?: number) => void | Promise<void>;
   applyBlocked?: boolean;
   onDecisionFlowChange: (flow: QualityDecisionFlow | null) => void;
+  lineDecisionGuardRef: MutableRefObject<{ open: boolean; suppressInspectClose: boolean }>;
+  closeLineDecisionRef: MutableRefObject<() => void>;
 }): ReactElement {
   const { t } = useModuleTranslation("quality");
   const { can } = usePermissionAccess();
@@ -1465,6 +1539,17 @@ function InspectionDetailPanel({
   const saveLockRef = useRef(false);
   const [applyConfirmOpen, setApplyConfirmOpen] = useState(false);
   const [openLineId, setOpenLineId] = useState<number | null>(null);
+  const closeLineDecision = useCallback(() => {
+    lineDecisionGuardRef.current.open = false;
+    setOpenLineId(null);
+  }, [lineDecisionGuardRef]);
+  useEffect(() => {
+    closeLineDecisionRef.current = closeLineDecision;
+    lineDecisionGuardRef.current.open = openLineId != null;
+    return () => {
+      lineDecisionGuardRef.current.open = false;
+    };
+  }, [closeLineDecision, closeLineDecisionRef, lineDecisionGuardRef, openLineId]);
   const [bulkPanelOpen, setBulkPanelOpen] = useState(false);
   const [workBusy, setWorkBusy] = useState<"start" | "pause" | null>(null);
   const [pauseDialogOpen, setPauseDialogOpen] = useState(false);
@@ -2111,10 +2196,7 @@ function InspectionDetailPanel({
     <div className="wms-ops-quality-detail space-y-3 rounded-2xl bg-[var(--wms-app-panel)] p-3.5">
       <div className="wms-ops-quality-detail__head">
         <div className="wms-ops-quality-detail__identity min-w-0">
-          <p className="text-[0.6rem] font-semibold uppercase tracking-[0.16em] text-[var(--wms-brand-primary)]">
-            {t("detail.eyebrow")}
-          </p>
-          <div className="mt-0.5 flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-base font-bold tracking-tight font-mono">
               {detail.header.sourceWaybillNo?.trim() || "—"}
             </h3>
@@ -2180,14 +2262,6 @@ function InspectionDetailPanel({
             accent
           />
         </div>
-
-        <button
-          type="button"
-          onClick={close}
-          className="wms-ops-quality-detail__close shrink-0 rounded-lg border border-[var(--wms-app-border)] px-2.5 py-1 text-[0.65rem] font-semibold"
-        >
-          {t("detail.close")}
-        </button>
       </div>
 
       {detail.requireManagerApprovalForRelease &&
@@ -2444,9 +2518,7 @@ function InspectionDetailPanel({
             <col className="wms-ops-quality-lines__col--project" />
             <col className="wms-ops-quality-lines__col--order" />
             <col className="wms-ops-quality-lines__col--lot" />
-            <col className="wms-ops-quality-lines__col--expiry" />
             <col className="wms-ops-quality-lines__col--qty" />
-            <col className="wms-ops-quality-lines__col--sample" />
             <col className="wms-ops-quality-lines__col--inspected" />
             <col className="wms-ops-quality-lines__col--status" />
             <col className="wms-ops-quality-lines__col--decision" />
@@ -2478,14 +2550,8 @@ function InspectionDetailPanel({
               <th className="wms-ops-quality-lines__cell p-2.5 text-[0.65rem] font-semibold uppercase tracking-wider">
                 {t("detail.table.lotSerial")}
               </th>
-              <th className="wms-ops-quality-lines__cell p-2.5 text-[0.65rem] font-semibold uppercase tracking-wider">
-                {t("detail.table.expiry")}
-              </th>
               <th className="wms-ops-quality-lines__cell p-2.5 text-center text-[0.65rem] font-semibold uppercase tracking-wider">
                 {t("detail.table.quantityRemaining")}
-              </th>
-              <th className="wms-ops-quality-lines__cell p-2.5 text-center text-[0.65rem] font-semibold uppercase tracking-wider">
-                {t("detail.table.sample")}
               </th>
               <th className="wms-ops-quality-lines__cell p-2.5 text-center text-[0.65rem] font-semibold uppercase tracking-wider">
                 {t("detail.table.inspected")}
@@ -2525,13 +2591,6 @@ function InspectionDetailPanel({
               );
               const projectCodes = joinGroupedCodes(group.lines, (item) => item.projectCodes);
               const orderNumbers = joinGroupedCodes(group.lines, (item) => item.orderNumbers);
-              const expiryDates = [
-                ...new Set(
-                  group.lines
-                    .map((item) => item.expiryDate?.trim())
-                    .filter(Boolean),
-                ),
-              ] as string[];
 
               return (
                 <tr
@@ -2592,15 +2651,6 @@ function InspectionDetailPanel({
                   <td className="wms-ops-quality-lines__cell p-2.5 align-middle font-mono text-xs">
                     <LotSerialHoverCell lines={group.lines} />
                   </td>
-                  <td className="wms-ops-quality-lines__cell p-2.5 align-middle">
-                    {expiryDates.length === 1
-                      ? formatProjectDate(expiryDates[0]!)
-                      : expiryDates.length > 1
-                        ? t("detail.table.multipleExpiry", {
-                            count: expiryDates.length,
-                          })
-                        : "—"}
-                  </td>
                   <td className="wms-ops-quality-lines__cell p-2.5 align-middle text-center font-mono">
                     <span className="block">
                       {formatProjectNumber(totalQty)}
@@ -2612,9 +2662,6 @@ function InspectionDetailPanel({
                         })}
                       </span>
                     ) : null}
-                  </td>
-                  <td className="wms-ops-quality-lines__cell p-2.5 align-middle text-center font-mono">
-                    {formatProjectNumber(sampleQty)}
                   </td>
                   <td className="wms-ops-quality-lines__cell p-2.5 align-middle text-center font-mono">
                     <span className="block font-semibold">{formatProjectNumber(inspectedQty)}</span>
@@ -2705,9 +2752,16 @@ function InspectionDetailPanel({
                         inspectionId={detail.header.id}
                         disabled={!detail.work.canPause}
                         open={openLineId === line.id}
-                        onOpenChange={(open) =>
-                          setOpenLineId(open ? line.id : null)
-                        }
+                        onOpenChange={(open) => {
+                          lineDecisionGuardRef.current.open = open;
+                          setOpenLineId(open ? line.id : null);
+                        }}
+                        onDismissedByOutside={() => {
+                          lineDecisionGuardRef.current.suppressInspectClose = true;
+                          window.setTimeout(() => {
+                            lineDecisionGuardRef.current.suppressInspectClose = false;
+                          }, 0);
+                        }}
                         options={options}
                         branchCode={detail.header.branchCode}
                         quarantineDestinations={quarantineDestinations}
@@ -3209,13 +3263,27 @@ function LotSerialHoverCell({
         .filter((value): value is string => Boolean(value)),
     ),
   ];
+  const expiryDates = [
+    ...new Set(
+      lines
+        .map((line) => line.expiryDate?.trim())
+        .filter((value): value is string => Boolean(value)),
+    ),
+  ];
   const lotLabel = lots.length === 1 ? lots[0]! : lots.length > 1 ? t("detail.table.multipleLots", { count: lots.length }) : "—";
-  const summary =
+  const serialLabel =
     serials.length > 1
-      ? `${lotLabel} · ${t("detail.table.serialCount", { count: serials.length })}`
-      : `${lotLabel} / ${serials[0] || "—"}`;
+      ? t("detail.table.serialCount", { count: serials.length })
+      : serials[0] || "—";
+  const expiryLabel =
+    expiryDates.length === 1
+      ? formatProjectDate(expiryDates[0]!)
+      : expiryDates.length > 1
+        ? t("detail.table.multipleExpiry", { count: expiryDates.length })
+        : "—";
+  const summary = `${lotLabel} / ${serialLabel} / ${expiryLabel}`;
 
-  if (serials.length <= 1 && lots.length <= 1) {
+  if (serials.length <= 1 && lots.length <= 1 && expiryDates.length <= 1) {
     return <span>{summary}</span>;
   }
 
@@ -3244,7 +3312,8 @@ function LotSerialHoverCell({
             {lines.map((line) => {
               const serial = line.serialNo?.trim();
               const lot = line.lotNo?.trim();
-              if (!serial && !lot) return null;
+              const expiry = line.expiryDate?.trim();
+              if (!serial && !lot && !expiry) return null;
               return (
                 <li key={line.id} className="wms-ops-quality-lot-serial-tooltip__item">
                   <span className="wms-ops-quality-lot-serial-tooltip__lot">
@@ -3255,6 +3324,12 @@ function LotSerialHoverCell({
                   </span>
                   <span className="wms-ops-quality-lot-serial-tooltip__serial">
                     {serial || "—"}
+                  </span>
+                  <span className="wms-ops-quality-lot-serial-tooltip__sep" aria-hidden>
+                    /
+                  </span>
+                  <span className="wms-ops-quality-lot-serial-tooltip__expiry">
+                    {expiry ? formatProjectDate(expiry) : "—"}
                   </span>
                 </li>
               );
@@ -3271,6 +3346,7 @@ function LineDecisionPopover({
   disabled = false,
   open,
   onOpenChange,
+  onDismissedByOutside,
   options,
   branchCode,
   quarantineDestinations,
@@ -3290,6 +3366,7 @@ function LineDecisionPopover({
   disabled?: boolean;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onDismissedByOutside?: () => void;
   options: Array<{ value: string; label: string }>;
   branchCode: string;
   quarantineDestinations: QualityInspectionDetail["quarantineDestinations"];
@@ -3388,7 +3465,8 @@ function LineDecisionPopover({
           }
         : {}),
     });
-  const addDisposition = () =>
+  const addDisposition = () => {
+    if (unallocatedQuantity <= QTY_EPS) return;
     onChange({
       dispositions: [
         ...advancedDispositions,
@@ -3400,6 +3478,7 @@ function LineDecisionPopover({
         ),
       ],
     });
+  };
   const removeDisposition = (key: string) =>
     onChange({
       dispositions: advancedDispositions.filter((part) => part.key !== key),
@@ -3478,25 +3557,19 @@ function LineDecisionPopover({
     const onPointerDown = (event: PointerEvent) => {
       const target = event.target as HTMLElement | null;
       if (!target) return;
-      if (
-        triggerRef.current?.contains(target) ||
-        panelRef.current?.contains(target) ||
-        target.closest(
-          '.wms-ops-list-select-content, .wms-floating-surface, [data-radix-popper-content-wrapper], [data-wms-image-lightbox], [role="listbox"]',
-        )
-      ) {
-        return;
-      }
+      if (triggerRef.current?.contains(target) || panelRef.current?.contains(target)) return;
+      if (target.closest(QUALITY_DECISION_NESTED_LAYER)) return;
+      onDismissedByOutside?.();
       onOpenChange(false);
     };
     const timer = window.setTimeout(() => {
-      document.addEventListener("pointerdown", onPointerDown);
+      document.addEventListener("pointerdown", onPointerDown, true);
     }, 0);
     return () => {
       window.clearTimeout(timer);
-      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("pointerdown", onPointerDown, true);
     };
-  }, [open, onOpenChange]);
+  }, [open, onDismissedByOutside, onOpenChange]);
 
   return (
     <>
@@ -3528,7 +3601,7 @@ function LineDecisionPopover({
               role="dialog"
               aria-label={t("linePopover.ariaLabel")}
               style={{ top: coords.top, left: coords.left, maxHeight: coords.maxHeight }}
-              className="wms-ops-quality-decision-popover wms-ops-list-popover fixed z-[5000] w-[min(32rem,calc(100vw-1rem))] space-y-2.5 border-0 p-3 shadow-none outline-none"
+              className="wms-ops-quality-decision-popover wms-ops-list-popover pointer-events-auto fixed z-[5000] w-[min(32rem,calc(100vw-1rem))] space-y-2.5 border-0 p-3 shadow-none outline-none"
             >
               <div className="wms-ops-list-popover__section-title">
                 {t("linePopover.sectionTitle")}
@@ -3575,10 +3648,10 @@ function LineDecisionPopover({
                     value={inspectedThisDecision}
                     onChange={(event) => {
                       setControlError(null);
-                      onChange({ inspectedQuantity: sanitizeQtyInput(event.target.value) });
+                      onChange({ inspectedQuantity: sanitizeIntegerQuantityInput(event.target.value) });
                     }}
                     placeholder={formatProjectNumber(requiredControl)}
-                    inputMode="decimal"
+                    inputMode="numeric"
                     invalid={Boolean(controlError)}
                     aria-describedby={controlError ? `quality-control-quantity-error-${line.id}` : undefined}
                     className="wms-ops-quality-field h-10 text-sm"
@@ -3681,7 +3754,9 @@ function LineDecisionPopover({
                 </span>
                 <AppInput
                   value={draft.quantity}
-                  onChange={(e) => onChange({ quantity: e.target.value })}
+                  onChange={(e) => onChange({
+                    quantity: capQuantityInput(e.target.value, remaining),
+                  })}
                   placeholder={formatProjectNumber(remaining)}
                   inputMode="decimal"
                   disabled={serial || draft.decision === "Returned"}
@@ -3719,6 +3794,7 @@ function LineDecisionPopover({
                     quarantineDestinations={quarantineDestinations}
                     defaultAcceptedDestination={defaultAcceptedDestination}
                     defaultRejectedDestination={defaultRejectedDestination}
+                    disabled
                   />
                 </div>
               ) : null}
@@ -3796,7 +3872,16 @@ function LineDecisionPopover({
                         />
                         <AppInput
                           value={part.quantity}
-                          onChange={(event) => patchDisposition(part.key, { quantity: event.target.value })}
+                          onChange={(event) => patchDisposition(part.key, {
+                            quantity: capQuantityInput(
+                              event.target.value,
+                              remainingCapacityForDistributionRow(
+                                advancedDispositions,
+                                part.key,
+                                remaining,
+                              ),
+                            ),
+                          })}
                           inputMode="decimal"
                           disabled={part.decision === "Returned"}
                           className="wms-ops-quality-field h-10 text-xs"
@@ -3834,6 +3919,8 @@ function LineDecisionPopover({
                           }]}
                           placeholder={t("linePopover.acceptedTargetPlaceholder")}
                           searchable
+                          disabled
+                          hideChevron
                           className="wms-ops-quality-field !h-10 !min-h-10 !text-xs"
                           portalContainer={null}
                           contentClassName="!z-[5100]"
@@ -3861,6 +3948,8 @@ function LineDecisionPopover({
                           ]}
                           placeholder={t("linePopover.quarantineTargetPlaceholder")}
                           searchable
+                          disabled
+                          hideChevron
                           className="wms-ops-quality-field !h-10 !min-h-10 !text-xs"
                           portalContainer={null}
                           contentClassName="!z-[5100]"
@@ -3892,6 +3981,8 @@ function LineDecisionPopover({
                           )}
                           placeholder={t("linePopover.rejectedTargetPlaceholder")}
                           searchable
+                          disabled
+                          hideChevron
                           className="wms-ops-quality-field !h-10 !min-h-10 !text-xs"
                           portalContainer={null}
                           contentClassName="!z-[5100]"
@@ -3902,7 +3993,8 @@ function LineDecisionPopover({
                   <button
                     type="button"
                     onClick={addDisposition}
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-cyan-500/35 px-3 py-2 text-xs font-bold text-cyan-600"
+                    disabled={unallocatedQuantity <= QTY_EPS}
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-cyan-500/35 px-3 py-2 text-xs font-bold text-cyan-600 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     <Plus className="size-3.5" /> {t("linePopover.addRoute")}
                   </button>
@@ -3984,6 +4076,7 @@ function QualityDecisionTargetPicker({
   quarantineDestinations,
   defaultAcceptedDestination,
   defaultRejectedDestination,
+  disabled = false,
 }: {
   decision: string;
   targetLocationId: number | null;
@@ -3994,6 +4087,7 @@ function QualityDecisionTargetPicker({
   quarantineDestinations: QualityInspectionDetail["quarantineDestinations"];
   defaultAcceptedDestination: QualityInspectionDetail["defaultAcceptedDestination"];
   defaultRejectedDestination: QualityInspectionDetail["defaultRejectedDestination"];
+  disabled?: boolean;
 }): ReactElement | null {
   const { t } = useModuleTranslation("quality");
   if (decision === "Accepted") {
@@ -4029,6 +4123,8 @@ function QualityDecisionTargetPicker({
         }]}
         placeholder={t("linePopover.acceptedTargetPlaceholder")}
         searchable
+        disabled={disabled}
+        hideChevron={disabled}
         className="wms-ops-quality-field !h-10 !min-h-10 !text-xs"
         portalContainer={null}
         contentClassName="!z-[5100]"
@@ -4054,6 +4150,8 @@ function QualityDecisionTargetPicker({
         }))}
         placeholder={t("linePopover.quarantineTargetPlaceholder")}
         searchable
+        disabled={disabled}
+        hideChevron={disabled}
         className="wms-ops-quality-field !h-10 !min-h-10 !text-xs"
         portalContainer={null}
         contentClassName="!z-[5100]"
@@ -4088,6 +4186,8 @@ function QualityDecisionTargetPicker({
         }}
         placeholder={t("linePopover.rejectedTargetPlaceholder")}
         searchable
+        disabled={disabled}
+        hideChevron={disabled}
         className="wms-ops-quality-field !h-10 !min-h-10 !text-xs"
         portalContainer={null}
         contentClassName="!z-[5100]"

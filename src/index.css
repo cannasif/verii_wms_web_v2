@@ -8744,33 +8744,27 @@ body.wms-ops-grid-panning * {
 .wms-ops-quality-lines th:nth-child(4),
 .wms-ops-quality-lines td:nth-child(4) { min-width: 8.5rem; }
 .wms-ops-quality-lines th:nth-child(5),
-.wms-ops-quality-lines td:nth-child(5) { min-width: 10.5rem; }
+.wms-ops-quality-lines td:nth-child(5) { min-width: 14rem; }
 .wms-ops-quality-lines th:nth-child(6),
-.wms-ops-quality-lines td:nth-child(6) { min-width: 5.5rem; }
+.wms-ops-quality-lines td:nth-child(6) { min-width: 6.5rem; }
 .wms-ops-quality-lines th:nth-child(7),
-.wms-ops-quality-lines td:nth-child(7) { min-width: 6.5rem; }
+.wms-ops-quality-lines td:nth-child(7) { min-width: 12.5rem; }
 .wms-ops-quality-lines th:nth-child(8),
-.wms-ops-quality-lines td:nth-child(8) { min-width: 7.5rem; }
+.wms-ops-quality-lines td:nth-child(8) { min-width: 10.5rem; }
 .wms-ops-quality-lines th:nth-child(9),
-.wms-ops-quality-lines td:nth-child(9) { min-width: 12.5rem; }
+.wms-ops-quality-lines td:nth-child(9) { min-width: 11.5rem; }
 .wms-ops-quality-lines th:nth-child(10),
-.wms-ops-quality-lines td:nth-child(10) { min-width: 10.5rem; }
-.wms-ops-quality-lines th:nth-child(11),
-.wms-ops-quality-lines td:nth-child(11) { min-width: 11.5rem; }
-.wms-ops-quality-lines th:nth-child(12),
-.wms-ops-quality-lines td:nth-child(12) { min-width: 7rem; }
+.wms-ops-quality-lines td:nth-child(10) { min-width: 7rem; }
 
 .wms-ops-quality-lines__col--photo { width: 7%; }
-.wms-ops-quality-lines__col--stock { width: 10%; }
+.wms-ops-quality-lines__col--stock { width: 12%; }
 .wms-ops-quality-lines__col--project { width: 8%; }
 .wms-ops-quality-lines__col--order { width: 9%; }
-.wms-ops-quality-lines__col--lot { width: 11%; }
-.wms-ops-quality-lines__col--expiry { width: 5%; }
-.wms-ops-quality-lines__col--qty { width: 7%; }
-.wms-ops-quality-lines__col--sample { width: 8%; }
-.wms-ops-quality-lines__col--inspected { width: 12%; }
-.wms-ops-quality-lines__col--status { width: 10%; }
-.wms-ops-quality-lines__col--decision { width: 8%; }
+.wms-ops-quality-lines__col--lot { width: 16%; }
+.wms-ops-quality-lines__col--qty { width: 8%; }
+.wms-ops-quality-lines__col--inspected { width: 14%; }
+.wms-ops-quality-lines__col--status { width: 11%; }
+.wms-ops-quality-lines__col--decision { width: 10%; }
 .wms-ops-quality-lines__col--actions { width: 5%; }
 
 .wms-ops-quality-lines__cell--stock {
@@ -9125,6 +9119,7 @@ html.skin-premium .wms-ops-quality-detail__chip {
 
 .wms-ops-quality-decision-popover {
   min-width: 16.5rem;
+  pointer-events: auto;
 }
 
 .wms-ops-quality-decision-popover.wms-ops-list-popover {
@@ -9305,8 +9300,12 @@ html.skin-premium .wms-ops-quality-lot-serial-tooltip__head {
 }
 
 .wms-ops-quality-lot-serial-tooltip__serial {
+  color: color-mix(in oklab, var(--wms-app-text) 88%, transparent);
   font-weight: 600;
-  color: var(--wms-app-text);
+}
+
+.wms-ops-quality-lot-serial-tooltip__expiry {
+  color: color-mix(in oklab, var(--wms-app-text) 78%, transparent);
 }
 
 .dark .wms-ops-list .wms-ops-status-badge--neutral {
