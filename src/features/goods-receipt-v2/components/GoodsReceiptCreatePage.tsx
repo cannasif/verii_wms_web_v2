@@ -855,7 +855,8 @@ export function GoodsReceiptCreatePage({
       .then((policy) => {
         if (active) {
           setShowAllocatedOpenOrderLines(policy.showAllocatedOpenOrderLines);
-          setAllowAnyActiveLocation(!policy.blockPutawayUntilQualityDecision);
+          setAllowAnyActiveLocation(
+            !policy.blockPutawayUntilQualityDecision || policy.holdInventoryUntilQualityDecision);
           const manualQualityAllowed = policy.erpQualityGatePolicy === "AnyQualityPlan";
           setAllowManualQualityRouting(manualQualityAllowed);
           if (!manualQualityAllowed) {
@@ -2839,7 +2840,7 @@ export function GoodsReceiptCreatePage({
                   <ReceiptEntryRow
                     key={key}
                     allowAnyActiveLocation={
-                      allowAnyActiveLocation || !line.requireQualityControl
+                      allowAnyActiveLocation || !line.requireQualityControl || Boolean(line.forceQualityControl)
                     }
                     dataLineKey={key}
                     sortOrder={lineSortOrder.get(key) ?? 0}

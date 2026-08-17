@@ -2412,11 +2412,11 @@
       },
       "defaultAcceptedLocationId": {
         "default": {
-          "summary": "Entrepôt et emplacement proposés pour les produits acceptés par le contrôle qualité.",
-          "effect": "Cette destination est sélectionnée automatiquement pour une décision d'acceptation; un utilisateur autorisé peut la modifier.",
-          "affects": ["Décision qualité", "Mouvement de stock accepté", "Transfert inter-entrepôts"],
-          "scenario": "Un produit accepté est proposé pour ACCEPT-01; l'utilisateur peut choisir une autre destination admissible.",
-          "decision": "Choisissez cette valeur pour préremplir l'entrepôt et l'emplacement cibles tout en laissant la sélection modifiable."
+          "summary": "La destination d’acceptation ne vient pas de ce champ ; elle utilise l’emplacement choisi à la réception.",
+          "effect": "Ce champ est verrouillé. Le stock accepté va à l’emplacement choisi lors de la réception.",
+          "affects": ["Décision qualité", "Mouvement de stock accepté", "Destination de réception"],
+          "scenario": "Si A-01 est choisi à la réception, l’acceptation qualité va aussi en A-01 ; ce paramètre ne peut pas être modifié.",
+          "decision": "Ce champ est verrouillé car la destination d’acceptation vient de la réception."
         }
       },
       "defaultQuarantineLocationId": {

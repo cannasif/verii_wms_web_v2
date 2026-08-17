@@ -2412,11 +2412,11 @@
       },
       "defaultAcceptedLocationId": {
         "default": {
-          "summary": "Empfohlenes Lager und empfohlener Lagerplatz für von der Qualitätskontrolle angenommene Produkte.",
-          "effect": "Bei einer Annahmeentscheidung wird dieses Ziel automatisch ausgewählt; berechtigte Benutzer können es ändern.",
-          "affects": ["Qualitätsentscheidung", "Bestandsbewegung Annahme", "Lagerübertragung"],
-          "scenario": "Ein angenommenes Produkt wird für ANNAHME-01 vorgeschlagen; der Benutzer kann ein anderes zulässiges Ziel wählen.",
-          "decision": "Mit diesem Wert werden Ziellager und Lagerplatz bei Annahme vorausgefüllt und bleiben änderbar."
+          "summary": "Das Annahmeziel kommt nicht aus diesem Feld, sondern vom im Wareneingang gewählten Lagerplatz.",
+          "effect": "Dieses Feld ist gesperrt. Angenommener Bestand geht an den im Wareneingang gewählten Platz.",
+          "affects": ["Qualitätsentscheidung", "Bestandsbewegung Annahme", "Wareneingangsziel"],
+          "scenario": "Wird im Wareneingang A-01 gewählt, geht die Qualitätsannahme ebenfalls nach A-01; dieser Parameter ist nicht änderbar.",
+          "decision": "Dieses Feld ist gesperrt, weil das Annahmeziel vom Wareneingang kommt."
         }
       },
       "defaultQuarantineLocationId": {

@@ -2412,11 +2412,11 @@
       },
       "defaultAcceptedLocationId": {
         "default": {
-          "summary": "The suggested warehouse and location for products accepted by quality control.",
-          "effect": "This destination is selected automatically for an acceptance decision; an authorized user can change it on the decision line.",
-          "affects": ["Quality decision", "Accepted stock movement", "Inter-warehouse transfer"],
-          "scenario": "An accepted product is suggested for ACCEPT-01; the user may select another eligible warehouse and location.",
-          "decision": "Select this value to prefill the target warehouse and location for acceptance while keeping the selection editable."
+          "summary": "The accepted destination is not taken from this field; it uses the location selected on goods receipt.",
+          "effect": "This field is locked. Accepted stock goes to the location chosen during goods receipt.",
+          "affects": ["Quality decision", "Accepted stock movement", "Goods receipt destination"],
+          "scenario": "If A-01 is selected on goods receipt, quality acceptance also goes to A-01; this parameter cannot be changed.",
+          "decision": "This field is locked because the accepted destination comes from the goods receipt location."
         }
       },
       "defaultQuarantineLocationId": {

@@ -129,6 +129,8 @@ export function QualitySettingsPage() {
               value={form.defaultAcceptedLocationId}
               set={(value) => set('defaultAcceptedLocationId', value)}
               putawayOnly
+              disabled
+              hint={t('settings.locationsSection.acceptedLocationDisabledHint')}
               guideKey="defaultAcceptedLocationId"
             />
             <LocationField
@@ -431,7 +433,7 @@ function WarehouseRoutesField({
           </div>
           <div className="mt-4 grid gap-3 md:grid-cols-2">
             <RouteLocationField branch={branch} route={route} kind="quality" label={t('settings.locationsSection.qualityLocationLabel')} warehouseId={route.sourceWarehouseId || null} onChange={(locationId) => patch(index, { qualityLocationId: locationId, qualityLocation: null })} />
-            <RouteLocationField branch={branch} route={route} kind="accepted" label={t('settings.locationsSection.acceptedLocationLabel')} onChange={(locationId) => patch(index, { acceptedLocationId: locationId, acceptedLocation: null })} />
+            <RouteLocationField branch={branch} route={route} kind="accepted" label={t('settings.locationsSection.acceptedLocationLabel')} disabled hint={t('settings.locationsSection.acceptedLocationDisabledHint')} onChange={(locationId) => patch(index, { acceptedLocationId: locationId, acceptedLocation: null })} />
             <RouteLocationField branch={branch} route={route} kind="quarantine" label={t('settings.locationsSection.quarantineLocationLabel')} onChange={(locationId) => patch(index, { quarantineLocationId: locationId, quarantineLocation: null })} />
             <RouteLocationField branch={branch} route={route} kind="reject" label={t('settings.locationsSection.rejectLocationLabel')} onChange={(locationId) => patch(index, { rejectLocationId: locationId, rejectLocation: null })} />
           </div>
@@ -451,6 +453,8 @@ function RouteLocationField({
   label,
   warehouseId,
   onChange,
+  disabled = false,
+  hint,
 }: {
   branch: string;
   route: QualityWarehouseRoute;
@@ -458,6 +462,8 @@ function RouteLocationField({
   label: string;
   warehouseId?: number | null;
   onChange: (value: number | null) => void;
+  disabled?: boolean;
+  hint?: string;
 }) {
   const { t } = useModuleTranslation('quality');
   const idKey = `${kind}LocationId` as const;
@@ -488,9 +494,10 @@ function RouteLocationField({
         placeholder={kind === 'quality' && route.sourceWarehouseId <= 0
           ? t('settings.locationsSection.selectWarehouseFirst')
           : t('settings.locationsSection.inheritPlaceholder')}
-        disabled={kind === 'quality' && route.sourceWarehouseId <= 0}
+        disabled={disabled || (kind === 'quality' && route.sourceWarehouseId <= 0)}
         searchable
       />
+      {hint ? <span className="block text-xs text-slate-500">{hint}</span> : null}
     </label>
   );
 }
@@ -507,6 +514,8 @@ function LocationField({
   set,
   quarantineOnly = false,
   putawayOnly = false,
+  disabled = false,
+  hint,
   guideKey,
 }: {
   label: string;
@@ -516,6 +525,8 @@ function LocationField({
   set: (value: number | null) => void;
   quarantineOnly?: boolean;
   putawayOnly?: boolean;
+  disabled?: boolean;
+  hint?: string;
   guideKey: string;
 }) {
   return (
@@ -533,8 +544,10 @@ function LocationField({
         value={value ? String(value) : null}
         onValueChange={(next) => set(next ? Number(next) : null)}
         placeholder={placeholder}
+        disabled={disabled}
         searchable
       />
+      {hint ? <span className="block text-xs text-slate-500">{hint}</span> : null}
     </Field>
   );
 }

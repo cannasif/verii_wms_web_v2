@@ -2412,11 +2412,11 @@
       },
       "defaultAcceptedLocationId": {
         "default": {
-          "summary": "Magazzino e ubicazione suggeriti per i prodotti accettati dal controllo qualità.",
-          "effect": "Questa destinazione viene selezionata automaticamente all'accettazione; un utente autorizzato può modificarla.",
-          "affects": ["Decisione qualità", "Movimento stock accettato", "Trasferimento tra magazzini"],
-          "scenario": "Un prodotto accettato viene proposto per ACCETTA-01; l'utente può scegliere un'altra destinazione valida.",
-          "decision": "Seleziona questo valore per precompilare magazzino e ubicazione di destinazione mantenendoli modificabili."
+          "summary": "La destinazione di accettazione non proviene da questo campo; usa l’ubicazione scelta in ricevimento.",
+          "effect": "Questo campo è bloccato. Lo stock accettato va all’ubicazione scelta in ricevimento merce.",
+          "affects": ["Decisione qualità", "Movimento stock accettato", "Destinazione di ricevimento"],
+          "scenario": "Se in ricevimento si sceglie A-01, anche l’accettazione qualità va in A-01; questo parametro non è modificabile.",
+          "decision": "Questo campo è bloccato perché la destinazione di accettazione proviene dal ricevimento."
         }
       },
       "defaultQuarantineLocationId": {

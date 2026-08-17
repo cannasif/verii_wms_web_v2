@@ -130,7 +130,8 @@ export function GoodsReceiptManualPage({
       setSeriesId(preferred ? String(preferred.id) : null);
     }).catch((cause: Error) => setError(cause.message));
     void goodsReceiptV2Api.policy(policyBranchCode)
-      .then((policy) => setAllowAnyActiveLocation(!policy.blockPutawayUntilQualityDecision))
+      .then((policy) => setAllowAnyActiveLocation(
+        !policy.blockPutawayUntilQualityDecision || policy.holdInventoryUntilQualityDecision))
       .catch(() => setAllowAnyActiveLocation(false));
   }, [policyBranchCode]);
 

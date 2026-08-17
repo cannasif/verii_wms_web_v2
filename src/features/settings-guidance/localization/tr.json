@@ -2412,11 +2412,11 @@
       },
       "defaultAcceptedLocationId": {
         "default": {
-          "summary": "Kalite kontrolünde kabul edilen ürünlerin önerilen depo ve rafıdır.",
-          "effect": "Kabul kararı seçildiğinde bu hedef otomatik gelir; yetkili kullanıcı işlem satırında değiştirebilir.",
-          "affects": ["Kalite kararı", "Kabul stok hareketi", "Depolar arası transfer"],
-          "scenario": "Kabul edilen ürün ONAY-01 rafına önerilir; kullanıcı gerekirse başka uygun depo ve rafı seçer.",
-          "decision": "Bu alanı seçerseniz kabul kararında hedef depo ve raf otomatik dolar; kullanıcı onaylamadan önce hedefi değiştirebilir."
+          "summary": "Kalite kabul hedefi bu alandan alınmaz; mal kabulde seçilen raf kullanılır.",
+          "effect": "Alan kilitlidir. Kabul edilen stok, mal kabul girişi sırasında seçilen rafa gider.",
+          "affects": ["Kalite kararı", "Kabul stok hareketi", "Mal kabul hedef rafı"],
+          "scenario": "Mal kabulde A-01 seçildiyse kalite kabulü de A-01 rafına gider; bu parametre değiştirilemez.",
+          "decision": "Bu alan kilitlidir çünkü kabul hedefi mal kabulde seçilen raftan gelir."
         }
       },
       "defaultQuarantineLocationId": {

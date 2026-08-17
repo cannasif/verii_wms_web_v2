@@ -682,7 +682,7 @@ function buildDispositionRequests(
   if (draft.decisionCodeRequiresNote && !draft.reasonNote.trim()) {
     throw new Error(t("errors.reasonNoteRequiredForCode"));
   }
-  if (parsed.some((part) => part.decision === "Accepted" && !part.targetLocationId)) {
+  if (parsed.some((part) => part.decision === "Accepted" && !part.targetLocationId && !fallbackAcceptedLocationId)) {
     throw new Error(t("errors.inspectionWarehouseAcceptedMissing"));
   }
   if (parsed.some((part) => part.decision === "Rejected" && !part.targetLocationId)) {
@@ -3810,7 +3810,7 @@ function LineDecisionPopover({
                             value: encodeQualityLocationValue(location.id, location.warehouseId),
                             label: `${location.warehouseCode} / ${location.code} · ${location.name}`,
                             description: location.warehouseName,
-                            disabled: !location.isPutaway || location.isQuarantine,
+                            disabled: location.isQuarantine,
                           })}
                           value={part.targetLocationId && part.targetWarehouseId
                             ? encodeQualityLocationValue(part.targetLocationId, part.targetWarehouseId)
@@ -4005,7 +4005,7 @@ function QualityDecisionTargetPicker({
           value: encodeQualityLocationValue(location.id, location.warehouseId),
           label: `${location.warehouseCode} / ${location.code} · ${location.name}`,
           description: location.warehouseName,
-          disabled: !location.isPutaway || location.isQuarantine,
+          disabled: location.isQuarantine,
         })}
         value={targetLocationId && targetWarehouseId
           ? encodeQualityLocationValue(targetLocationId, targetWarehouseId)
