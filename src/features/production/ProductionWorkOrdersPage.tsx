@@ -492,6 +492,8 @@ const PENDING_SEARCH_KEYS = [
   'listingKindLabel',
   'stockCode',
   'stockName',
+  'workOrderQuantity',
+  'unitCode',
   'projectCode',
   'warehouseFlow',
   'description',
@@ -656,7 +658,16 @@ export function ProductionWorkOrdersPage(): ReactElement {
     const sortedRequest = request.sortBy
       ? request
       : { ...request, sortBy: 'workOrderDate', sortDirection: 'desc' as const };
-    return filterLocalGridPage(gridRows, sortedRequest, [...PENDING_SEARCH_KEYS]);
+    const visibleCellSearchFields = sortedRequest.searchFields?.flatMap((field) => {
+      if (field === 'stockCode') return ['stockCode', 'stockName'];
+      if (field === 'workOrderQuantity') return ['workOrderQuantity', 'unitCode'];
+      return [field];
+    });
+    return filterLocalGridPage(
+      gridRows,
+      { ...sortedRequest, searchFields: visibleCellSearchFields },
+      [...PENDING_SEARCH_KEYS],
+    );
   }, [branchCode, createdRange, queryClient]);
 
   const openDetail = (row: ProductionSourceWorkOrder): void => {
