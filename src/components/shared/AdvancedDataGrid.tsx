@@ -1,6 +1,11 @@
 import {
+  Children,
   Fragment,
+  cloneElement,
+  createContext,
+  isValidElement,
   useCallback,
+  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -34,6 +39,7 @@ import {
   horizontalListSortingStrategy,
   sortableKeyboardCoordinates,
   useSortable,
+  verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useTranslation } from 'react-i18next';
@@ -165,12 +171,21 @@ interface Props<T extends { id: number }> {
   onRowDoubleClick?: (row: T) => void;
   /** Sunucu durumuna göre satıra semantik vurgu sınıfı ekler. */
   rowClassName?: (row: T) => string | undefined;
+  /** Sütun sıralama durumu değiştiğinde bildirir. */
+  onSortStateChange?: (sortBy: string | null, sortDirection: 'asc' | 'desc') => void;
   /** Açık satır detayı; `renderExpandedRow` ile birlikte kullanılır. */
   expandedRowId?: number | null;
   /** Özet satırın altına açılan detay içeriği. */
   renderExpandedRow?: (row: T) => ReactNode;
   /** false ise sütun sırası/görünürlüğü localStorage'a yazılmaz ve kod tanımı kullanılır. */
   persistPreferences?: boolean;
+  /** Öncelikli satır gibi belirli kayıtlar için sol tutamaçla sıra değiştirme. */
+  rowReorder?: {
+    canDragRow: (row: T) => boolean;
+    onReorder: (activeRow: T, overRow: T) => void | Promise<void>;
+    label: string;
+    disabled?: boolean;
+  };
 }
 
 interface GridCellContext<T> {
@@ -450,6 +465,117 @@ function SortableHeader({
   );
 }
 
+const ROW_DRAG_PREFIX = '__row__:';
+
+function rowDragId(rowId: number): string {
+  return `${ROW_DRAG_PREFIX}${rowId}`;
+}
+
+function isRowDragId(id: string | number): boolean {
+  return String(id).startsWith(ROW_DRAG_PREFIX);
+}
+
+type RowReorderRowContextValue = {
+  setActivatorNodeRef: (element: HTMLElement | null) => void;
+  listeners: ReturnType<typeof useSortable>['listeners'];
+  attributes: ReturnType<typeof useSortable>['attributes'];
+};
+
+const RowReorderRowContext = createContext<RowReorderRowContextValue | null>(null);
+
+function SortableTableRow({
+  rowId,
+  disabled,
+  className,
+  onDoubleClick,
+  children,
+}: {
+  rowId: number;
+  disabled?: boolean;
+  className?: string;
+  onDoubleClick?: () => void;
+  children: ReactNode;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: rowDragId(rowId),
+    disabled: Boolean(disabled),
+  });
+
+  const sortableStyle: CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  const contextValue = useMemo<RowReorderRowContextValue>(
+    () => ({
+      setActivatorNodeRef,
+      listeners,
+      attributes,
+    }),
+    [attributes, listeners, setActivatorNodeRef],
+  );
+
+  return (
+    <RowReorderRowContext.Provider value={contextValue}>
+      <tr
+        ref={setNodeRef}
+        className={cn(
+          className,
+          isDragging && 'relative z-10 bg-[var(--wms-brand-soft)] opacity-90 shadow-md ring-1 ring-cyan-500/25',
+        )}
+        onDoubleClick={onDoubleClick}
+      >
+        {Children.map(children, (child) => {
+          if (!isValidElement<{ style?: CSSProperties }>(child)) {
+            return child;
+          }
+
+          return cloneElement(child, {
+            style: {
+              ...child.props.style,
+              ...sortableStyle,
+            },
+          });
+        })}
+      </tr>
+    </RowReorderRowContext.Provider>
+  );
+}
+
+function GridRowReorderGrip({ label }: { label: string }) {
+  const ctx = useContext(RowReorderRowContext);
+  if (!ctx) {
+    return null;
+  }
+
+  return (
+    <button
+      type="button"
+      ref={ctx.setActivatorNodeRef}
+      {...ctx.listeners}
+      {...ctx.attributes}
+      data-no-drag-scroll="true"
+      aria-label={label}
+      title={label}
+      onClick={(event) => event.stopPropagation()}
+      onDoubleClick={(event) => event.stopPropagation()}
+      className="inline-flex min-h-8 min-w-8 shrink-0 cursor-grab touch-none items-center justify-center rounded-md text-slate-400 opacity-80 hover:bg-black/5 hover:opacity-100 active:cursor-grabbing dark:hover:bg-white/10"
+    >
+      <GripVertical className="size-3.5" />
+    </button>
+  );
+}
+
+export { GridRowReorderGrip };
+
 export function AdvancedDataGrid<T extends { id: number }>({
   pageKey,
   title,
@@ -471,9 +597,11 @@ export function AdvancedDataGrid<T extends { id: number }>({
   compactShell = false,
   onRowDoubleClick,
   rowClassName,
+  onSortStateChange,
   expandedRowId = null,
   renderExpandedRow,
   persistPreferences = true,
+  rowReorder,
 }: Props<T>) {
   const { t, i18n } = useTranslation();
   const { pathname } = useLocation();
@@ -608,6 +736,10 @@ export function AdvancedDataGrid<T extends { id: number }>({
       setPage(1);
     }
   }, [defaultPreferences, persistPreferences]);
+
+  useEffect(() => {
+    onSortStateChange?.(sortBy, sortDirection);
+  }, [onSortStateChange, sortBy, sortDirection]);
 
   useEffect(() => {
     if (!persistPreferences || loadedKey !== storageKey) return;
@@ -753,6 +885,10 @@ export function AdvancedDataGrid<T extends { id: number }>({
   );
   const actionColumn = localizedColumns.find((column) => column.key === 'actions');
   const pageRows = useMemo(() => query.data?.items ?? [], [query.data?.items]);
+  const draggableRowIds = useMemo(
+    () => (rowReorder ? pageRows.filter((row) => rowReorder.canDragRow(row)).map((row) => rowDragId(row.id)) : []),
+    [pageRows, rowReorder],
+  );
   const total = query.data?.totalCount ?? 0;
   const totalPages = Math.max(1, query.data?.totalPages ?? (Math.ceil(total / pageSize) || 1));
   const first = total ? ((page - 1) * pageSize) + 1 : 0;
@@ -967,6 +1103,21 @@ export function AdvancedDataGrid<T extends { id: number }>({
 
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
     if (!over || active.id === over.id) return;
+    const activeId = String(active.id);
+    const overId = String(over.id);
+
+    if (isRowDragId(activeId) && isRowDragId(overId)) {
+      if (!rowReorder || rowReorder.disabled) return;
+      const activeRow = pageRows.find((row) => rowDragId(row.id) === activeId);
+      const overRow = pageRows.find((row) => rowDragId(row.id) === overId);
+      if (!activeRow || !overRow) return;
+      if (!rowReorder.canDragRow(activeRow) || !rowReorder.canDragRow(overRow)) return;
+      void rowReorder.onReorder(activeRow, overRow);
+      return;
+    }
+
+    if (isRowDragId(activeId) || isRowDragId(overId)) return;
+
     setOrder((current) => {
       const oldIndex = current.indexOf(String(active.id));
       let newIndex = current.indexOf(String(over.id));
@@ -1645,19 +1796,17 @@ export function AdvancedDataGrid<T extends { id: number }>({
                         <OpsGridEmptyState message={resolvedEmptyMessage} />
                       </td>
                     </tr>
-                  ) : pageRows.map((row) => (
-                    <Fragment key={row.id}>
-                      <tr
-                        className={cn(
+                  ) : (
+                    <SortableContext items={draggableRowIds} strategy={verticalListSortingStrategy}>
+                      {pageRows.map((row) => {
+                        const resolvedRowClassName = cn(
                           'border-b border-[var(--wms-app-border)] hover:bg-[var(--wms-brand-soft)]',
                           onRowDoubleClick && 'cursor-pointer',
                           cellContext?.row.id === row.id && 'bg-[var(--wms-brand-soft)]',
                           expandedRowId === row.id && 'bg-[var(--wms-brand-soft)]',
                           rowClassName?.(row),
-                        )}
-                        onDoubleClick={() => onRowDoubleClick?.(row)}
-                      >
-                        {activeColumns.map((column) => (
+                        );
+                        const rowCells = activeColumns.map((column) => (
                           <td
                             key={column.key}
                             title={getContextValue(column, row, enumLanguage) ?? undefined}
@@ -1678,8 +1827,28 @@ export function AdvancedDataGrid<T extends { id: number }>({
                                 : renderGridCell(column, row, enumLanguage)}
                             </div>
                           </td>
-                        ))}
-                      </tr>
+                        ));
+                        const canDragRow = rowReorder?.canDragRow(row) ?? false;
+
+                        return (
+                    <Fragment key={row.id}>
+                      {canDragRow ? (
+                        <SortableTableRow
+                          rowId={row.id}
+                          disabled={rowReorder?.disabled}
+                          className={resolvedRowClassName}
+                          onDoubleClick={() => onRowDoubleClick?.(row)}
+                        >
+                          {rowCells}
+                        </SortableTableRow>
+                      ) : (
+                        <tr
+                          className={resolvedRowClassName}
+                          onDoubleClick={() => onRowDoubleClick?.(row)}
+                        >
+                          {rowCells}
+                        </tr>
+                      )}
                       {expandedRowId === row.id && renderExpandedRow ? (
                         <tr className="border-b border-[var(--wms-app-border)] bg-[color-mix(in_oklab,var(--wms-brand-soft)_55%,transparent)]">
                           <td colSpan={Math.max(activeColumns.length, 1)} className="px-4 py-4">
@@ -1693,7 +1862,10 @@ export function AdvancedDataGrid<T extends { id: number }>({
                         </tr>
                       ) : null}
                     </Fragment>
-                  ))}
+                        );
+                      })}
+                    </SortableContext>
+                  )}
               </tbody>
             </table>
           </DndContext>

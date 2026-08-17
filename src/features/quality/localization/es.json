@@ -41,7 +41,12 @@
       "remove": "Quitar prioridad",
       "added": "La inspección de calidad fue priorizada y movida al principio de la lista.",
       "removed": "Se quitó la prioridad de la inspección de calidad.",
-      "failed": "No se pudo cambiar la prioridad de la inspección de calidad."
+      "failed": "No se pudo cambiar la prioridad de la inspección de calidad.",
+      "dragHandle": "Arrastre para cambiar el orden de prioridad",
+      "reordered": "Orden de prioridad actualizado.",
+      "reorderFailed": "No se pudo actualizar el orden de prioridad.",
+      "dragDisabledAllTab": "Seleccione una pestaña de estado para reordenar prioridades.",
+      "dragDisabledSorted": "Vuelva al orden predeterminado para reordenar prioridades."
     },
     "facetFiltersTitle": "Filtros de lista",
     "facetStatus": "Estado",
@@ -191,7 +196,8 @@
     "history": {
       "title": "Historial de distribución de calidad",
       "description": "Muestra la decisión y la ruta de almacén/ubicación de cada cantidad.",
-      "datReference": "Registro DAT #{{id}}"
+      "datReference": "Registro DAT #{{id}}",
+      "images": "Imágenes de distribución"
     },
     "controlHistory": {
       "title": "Historial de inspección física GKK",
@@ -326,7 +332,12 @@
     "reasonPlaceholder": "Descripción (opcional)",
     "images": {
       "title": "Imágenes de inspección", "gallery": "Imágenes", "openGallery": "Abrir imágenes de la línea de calidad", "description": "Adjunte evidencias de daños, embalaje, etiqueta o inspección física para esta línea de stock. Las imágenes pertenecen solo a esta línea GKK, no a la ficha del artículo.",
-      "add": "Añadir imagen", "uploading": "Subiendo…", "empty": "Todavía no se añadieron imágenes a esta línea de calidad.", "limits": "{{current}}/{{total}} imágenes · JPG, PNG o WebP · máximo 10 MB cada una",
+      "routeTitle": "Imagen de distribución", "routeDescription": "Añada evidencia visual para este objetivo de decisión. Aparece en el historial de distribución de calidad tras guardar.", "routeKeyRequired": "Seleccione un objetivo de distribución antes de subir imágenes.",
+      "add": "Añadir imagen", "uploading": "Subiendo…", "empty": "Todavía no se ha añadido ninguna imagen para este objetivo de distribución.", "limits": "JPG, PNG o WebP · máximo 10 MB cada una",
+      "dialogTitle": "Imagen de distribución", "dialogDescription": "Gestionar evidencia visual para {{label}}", "viewTab": "Imágenes", "uploadTab": "Subir", "libraryTitle": "Imágenes subidas", "libraryCount": "{{count}} imagen(es)",
+      "dropTitle": "Arrastre y suelte imágenes o elija archivos", "dropTitleCamera": "Capture con la cámara o elija archivos", "select": "Elegir archivos", "capture": "Cámara",
+      "draftNoticeTitle": "Editable antes de aplicar la decisión", "draftNotice": "Estas imágenes pertenecen solo a este objetivo de distribución y permanecen en su dispositivo hasta que aplique la decisión. Se suben al aplicar la decisión.",
+      "confirmButton": "Confirmar", "confirmHelp": "Úselo para confirmar que ha revisado las imágenes y volver al panel de edición. Puede cambiarlas hasta que se aplique la decisión.",
       "preview": "Ampliar {{name}}", "previewDescription": "Evidencia visual privada registrada durante la inspección de calidad.", "delete": "Eliminar imagen", "deleteTitle": "Eliminar imagen de calidad", "deleteDescription": "{{name}} se eliminará de esta línea de calidad. La acción quedará en la auditoría.", "cancel": "Cancelar",
       "uploaded": "Imágenes de calidad subidas.", "deleted": "Imagen de calidad eliminada.", "uploadFailed": "No se pudieron subir las imágenes de calidad.", "deleteFailed": "No se pudo eliminar la imagen de calidad.", "loadFailed": "No se pudieron cargar las imágenes. Haga clic para reintentar.",
       "invalidType": "Solo se permiten imágenes JPG, PNG o WebP.", "sizeLimit": "Cada imagen debe tener entre 1 byte y 10 MB.", "batchLimit": "Puede seleccionar hasta {{count}} imágenes a la vez.", "lineLimit": "Una línea de calidad puede contener hasta {{count}} imágenes."

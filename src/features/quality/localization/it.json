@@ -41,7 +41,12 @@
       "remove": "Rimuovi priorità",
       "added": "Il controllo qualità è stato reso prioritario e spostato in cima all’elenco.",
       "removed": "La priorità del controllo qualità è stata rimossa.",
-      "failed": "Non è stato possibile modificare la priorità del controllo qualità."
+      "failed": "Non è stato possibile modificare la priorità del controllo qualità.",
+      "dragHandle": "Trascina per cambiare l’ordine di priorità",
+      "reordered": "Ordine di priorità aggiornato.",
+      "reorderFailed": "Impossibile aggiornare l’ordine di priorità.",
+      "dragDisabledAllTab": "Seleziona una scheda di stato per riordinare le priorità.",
+      "dragDisabledSorted": "Torna all’ordinamento predefinito per riordinare le priorità."
     },
     "facetFiltersTitle": "Filtri elenco",
     "facetStatus": "Stato",
@@ -191,7 +196,8 @@
     "history": {
       "title": "Cronologia distribuzione qualità",
       "description": "Mostra la decisione e il percorso magazzino/ubicazione per ogni quantità.",
-      "datReference": "Registrazione DAT #{{id}}"
+      "datReference": "Registrazione DAT #{{id}}",
+      "images": "Immagini di distribuzione"
     },
     "controlHistory": {
       "title": "Storico del controllo fisico GKK",
@@ -326,7 +332,12 @@
     "reasonPlaceholder": "Descrizione (opzionale)",
     "images": {
       "title": "Immagini di controllo", "gallery": "Immagini", "openGallery": "Apri le immagini della riga qualità", "description": "Allega prove di danni, imballaggio, etichetta o controllo fisico per questa riga di stock. Le immagini appartengono solo a questa riga GKK, non alla scheda articolo.",
-      "add": "Aggiungi immagine", "uploading": "Caricamento…", "empty": "Nessuna immagine è stata ancora aggiunta a questa riga qualità.", "limits": "{{current}}/{{total}} immagini · JPG, PNG o WebP · massimo 10 MB ciascuna",
+      "routeTitle": "Immagine di distribuzione", "routeDescription": "Aggiungi prova visiva per questo obiettivo di decisione. Compare nella cronologia di distribuzione qualità dopo il salvataggio.", "routeKeyRequired": "Seleziona un obiettivo di distribuzione prima di caricare immagini.",
+      "add": "Aggiungi immagine", "uploading": "Caricamento…", "empty": "Nessuna immagine è stata ancora aggiunta per questo obiettivo di distribuzione.", "limits": "JPG, PNG o WebP · massimo 10 MB ciascuna",
+      "dialogTitle": "Immagine di distribuzione", "dialogDescription": "Gestisci la prova visiva per {{label}}", "viewTab": "Immagini", "uploadTab": "Carica", "libraryTitle": "Immagini caricate", "libraryCount": "{{count}} immagine/i",
+      "dropTitle": "Trascina e rilascia immagini o scegli file", "dropTitleCamera": "Scatta con la fotocamera o scegli file", "select": "Scegli file", "capture": "Fotocamera",
+      "draftNoticeTitle": "Modificabile prima di applicare la decisione", "draftNotice": "Queste immagini appartengono solo a questo obiettivo di distribuzione e restano sul dispositivo finché non applichi la decisione. Vengono caricate quando applichi la decisione.",
+      "confirmButton": "Conferma", "confirmHelp": "Usalo per confermare di aver revisionato le immagini e tornare al pannello di modifica. Puoi modificarle fino all’applicazione della decisione.",
       "preview": "Ingrandisci {{name}}", "previewDescription": "Prova visiva privata registrata durante il controllo qualità.", "delete": "Elimina immagine", "deleteTitle": "Elimina immagine qualità", "deleteDescription": "{{name}} verrà rimossa da questa riga qualità. L’azione resterà nel registro di audit.", "cancel": "Annulla",
       "uploaded": "Immagini qualità caricate.", "deleted": "Immagine qualità eliminata.", "uploadFailed": "Impossibile caricare le immagini qualità.", "deleteFailed": "Impossibile eliminare l’immagine qualità.", "loadFailed": "Impossibile caricare le immagini. Fare clic per riprovare.",
       "invalidType": "Sono consentite solo immagini JPG, PNG o WebP.", "sizeLimit": "Ogni immagine deve essere compresa tra 1 byte e 10 MB.", "batchLimit": "Puoi selezionare fino a {{count}} immagini alla volta.", "lineLimit": "Una riga qualità può contenere fino a {{count}} immagini."

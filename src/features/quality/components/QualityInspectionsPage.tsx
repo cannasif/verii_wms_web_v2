@@ -7,6 +7,7 @@ import { ChevronDown, Clock3, ClipboardPen, Flag, History, Loader2, Pause, Play,
 import { toast } from "sonner";
 import {
   AdvancedDataGrid,
+  GridRowReorderGrip,
   type GridColumn,
   type GridRequest,
 } from "@/components/shared/AdvancedDataGrid";
@@ -46,12 +47,11 @@ import {
   QualityDecisionFlowOverlay,
   QualityReceiptCreatedSuccessPanel,
 } from "./QualityDecisionFlowScreens";
-import {
-  QualityInspectionLineImageGallery,
-  QualityInspectionLineImageGalleryDialog,
-} from "./QualityInspectionLineImageGallery";
+import { QualityDispositionImageButton } from "./QualityInspectionDispositionImageDialog";
+import { QualityDispositionHistoryImages } from "./QualityInspectionLineImageGallery";
 import {
   mergeQualityInspectionStatusFilters,
+  QUALITY_INSPECTION_STATUS_ALL,
   type QualityInspectionCreatedPeriod,
 } from "../utils/quality-inspection-list-filters";
 import { localizeQualityInspectionStatus } from "../utils/quality-inspection-status-label";
@@ -102,6 +102,7 @@ import {
   type QualityInspectionLine,
   type QualityInspectionWorkSession,
   type QualityInspectionWorkStopReason,
+  type QualityInspectionWorkSummary,
 } from "../api/quality.api";
 
 const ACTIONABLE_DECISIONS = new Set(["Pending", "Hold", "Quarantined"]);
@@ -130,6 +131,12 @@ type LineDraft = {
   targetLocationId?: number | null;
   targetWarehouseId?: number | null;
   dispositions?: DispositionDraft[];
+  stagedDispositionKeys?: Record<string, string>;
+};
+
+type MaterializedDraftDispositions = {
+  parts: DispositionDraft[];
+  stagedDispositionKeys: Record<string, string>;
 };
 
 type DispositionDraft = {
@@ -140,6 +147,8 @@ type DispositionDraft = {
   targetWarehouseId?: number | null;
 };
 
+type DispositionDraftImages = Record<number, Record<string, File[]>>;
+
 type QualityDecisionFlow =
   | { phase: "running"; lineCount: number; sourceLabel?: string }
   | { phase: "error"; message: string; lineCount: number; sourceLabel?: string }
@@ -148,8 +157,10 @@ type QualityDecisionFlow =
 const QUALITY_LOCATION_VALUE_SEPARATOR = "|";
 const QUALITY_DECISION_NESTED_LAYER =
   '.wms-ops-list-select-content, [data-radix-popper-content-wrapper], [data-wms-image-lightbox], [role="listbox"]';
+const QUALITY_DECISION_DISMISS_IGNORE =
+  `.wms-ops-quality-decision-popover, ${QUALITY_DECISION_NESTED_LAYER}, .wms-ops-list-popover, .wms-floating-surface, .wms-quality-disposition-image-dialog`;
 const QUALITY_INSPECT_FLOATING_LAYER =
-  `.wms-ops-quality-decision-popover, ${QUALITY_DECISION_NESTED_LAYER}, .wms-ops-list-popover, .wms-floating-surface, [data-slot="dialog-content"]`;
+  `.wms-ops-quality-decision-popover, ${QUALITY_DECISION_NESTED_LAYER}, .wms-ops-list-popover, .wms-floating-surface, [data-slot="dialog-content"], [data-slot="dialog-overlay"]`;
 
 function encodeQualityLocationValue(locationId: number, warehouseId: number): string {
   return `${locationId}${QUALITY_LOCATION_VALUE_SEPARATOR}${warehouseId}`;
@@ -479,6 +490,16 @@ function acceptedDestinationForLine(
   return line.defaultAcceptedDestination ?? fallback ?? null;
 }
 
+function ensureStagedDispositionKey(
+  stagedKeys: Record<string, string>,
+  slot: string,
+): string {
+  if (!stagedKeys[slot]) {
+    stagedKeys[slot] = crypto.randomUUID();
+  }
+  return stagedKeys[slot];
+}
+
 function dispositionDraft(
   decision = "Accepted",
   quantity = 0,
@@ -501,35 +522,64 @@ function draftDispositions(
   fallbackQuarantineLocationId: number | null,
   fallbackRejectedLocationId: number | null,
   t: TFunction,
-): DispositionDraft[] {
-  if (draft.dispositions?.length) return draft.dispositions;
+): MaterializedDraftDispositions {
+  if (draft.dispositions?.length) {
+    return {
+      parts: draft.dispositions,
+      stagedDispositionKeys: draft.stagedDispositionKeys ?? {},
+    };
+  }
+  const stagedDispositionKeys = { ...(draft.stagedDispositionKeys ?? {}) };
   const allocation = buildQuantityDecision(line, draft, t);
   const result: DispositionDraft[] = [];
   if (allocation.acceptedQuantity > QTY_EPS) {
-    result.push(dispositionDraft(
-      "Accepted",
-      allocation.acceptedQuantity,
-      draft.decision === "Accepted" ? draft.targetLocationId ?? fallbackAcceptedLocationId : fallbackAcceptedLocationId,
-      draft.decision === "Accepted" ? draft.targetWarehouseId ?? null : null,
-    ));
+    result.push({
+      key: ensureStagedDispositionKey(stagedDispositionKeys, "Accepted"),
+      decision: "Accepted",
+      quantity: String(roundQty(allocation.acceptedQuantity)),
+      targetLocationId: draft.decision === "Accepted" ? draft.targetLocationId ?? fallbackAcceptedLocationId : fallbackAcceptedLocationId,
+      targetWarehouseId: draft.decision === "Accepted" ? draft.targetWarehouseId ?? null : null,
+    });
   }
   if (allocation.quarantineQuantity > QTY_EPS) {
-    result.push(dispositionDraft(
-      "Quarantined",
-      allocation.quarantineQuantity,
-      draft.decision === "Quarantined" ? draft.targetLocationId ?? fallbackQuarantineLocationId : fallbackQuarantineLocationId,
-      draft.decision === "Quarantined" ? draft.targetWarehouseId ?? null : null,
-    ));
+    result.push({
+      key: ensureStagedDispositionKey(stagedDispositionKeys, "Quarantined"),
+      decision: "Quarantined",
+      quantity: String(roundQty(allocation.quarantineQuantity)),
+      targetLocationId: draft.decision === "Quarantined" ? draft.targetLocationId ?? fallbackQuarantineLocationId : fallbackQuarantineLocationId,
+      targetWarehouseId: draft.decision === "Quarantined" ? draft.targetWarehouseId ?? null : null,
+    });
   }
   if (allocation.rejectedQuantity > QTY_EPS) {
-    result.push(dispositionDraft(
-      "Rejected",
-      allocation.rejectedQuantity,
-      draft.decision === "Rejected" ? draft.targetLocationId ?? fallbackRejectedLocationId : fallbackRejectedLocationId,
-      draft.decision === "Rejected" ? draft.targetWarehouseId ?? null : null,
-    ));
+    result.push({
+      key: ensureStagedDispositionKey(stagedDispositionKeys, "Rejected"),
+      decision: "Rejected",
+      quantity: String(roundQty(allocation.rejectedQuantity)),
+      targetLocationId: draft.decision === "Rejected" ? draft.targetLocationId ?? fallbackRejectedLocationId : fallbackRejectedLocationId,
+      targetWarehouseId: draft.decision === "Rejected" ? draft.targetWarehouseId ?? null : null,
+    });
   }
-  return result;
+  return { parts: result, stagedDispositionKeys };
+}
+
+function withMaterializedDispositionKeys(
+  line: QualityInspectionLine,
+  draft: LineDraft,
+  fallbackAcceptedLocationId: number | null,
+  fallbackQuarantineLocationId: number | null,
+  fallbackRejectedLocationId: number | null,
+  t: TFunction,
+): LineDraft {
+  if (draft.dispositions?.length) return draft;
+  const { stagedDispositionKeys } = draftDispositions(
+    line,
+    draft,
+    fallbackAcceptedLocationId,
+    fallbackQuarantineLocationId,
+    fallbackRejectedLocationId,
+    t,
+  );
+  return { ...draft, stagedDispositionKeys };
 }
 
 function parseQty(value: string): number {
@@ -648,7 +698,7 @@ function buildDispositionRequests(
   fallbackRejectedLocationId: number | null,
   t: TFunction,
 ): QualityInspectionDispositionRequest[] {
-  const parts = draftDispositions(
+  const { parts } = draftDispositions(
     line,
     draft,
     fallbackAcceptedLocationId,
@@ -697,7 +747,34 @@ function buildDispositionRequests(
     targetLocationId: part.targetLocationId,
     decisionCodeId: part.decision === "Accepted" ? undefined : Number(draft.decisionCodeId) || undefined,
     note: draft.reasonNote.trim() || undefined,
+    draftDispositionKey: part.key,
   }));
+}
+
+async function uploadPendingDispositionImages(
+  inspectionId: number,
+  requests: QualityInspectionDispositionRequest[],
+  images: DispositionDraftImages,
+  t: TFunction,
+): Promise<void> {
+  const seen = new Set<string>();
+  for (const request of requests) {
+    const dedupeKey = `${request.lineId}:${request.draftDispositionKey}`;
+    if (seen.has(dedupeKey)) continue;
+    seen.add(dedupeKey);
+    const files = images[request.lineId]?.[request.draftDispositionKey] ?? [];
+    if (files.length === 0) continue;
+    try {
+      await qualityApi.uploadInspectionImages(
+        inspectionId,
+        request.lineId,
+        files,
+        request.draftDispositionKey,
+      );
+    } catch (error) {
+      throw new Error(message(error, t("linePopover.images.uploadFailed")));
+    }
+  }
 }
 
 function message(error: unknown, fallback: string): string {
@@ -876,12 +953,13 @@ export function QualityInspectionsPage({
   const [editDetail, setEditDetail] = useState<QualityInspectionDetail | null>(null);
   const [editLoading, setEditLoading] = useState<number | null>(null);
   const [priorityLoading, setPriorityLoading] = useState<number | null>(null);
+  const [priorityReorderLoading, setPriorityReorderLoading] = useState<number | null>(null);
+  const [gridSortBy, setGridSortBy] = useState<string | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
   const [createdPeriod, setCreatedPeriod] = useState<QualityInspectionCreatedPeriod | null>("month");
   const [createdPeriodAnchor, setCreatedPeriodAnchor] = useState(() => new Date());
   const [listEpoch, setListEpoch] = useState(0);
   const [decisionFlow, setDecisionFlow] = useState<QualityDecisionFlow | null>(null);
-  const [committedInspectionIds, setCommittedInspectionIds] = useState<Set<number>>(() => new Set());
   const listMovePendingRef = useRef(false);
   const lineDecisionGuardRef = useRef({ open: false, suppressInspectClose: false });
   const closeLineDecisionRef = useRef<() => void>(() => {});
@@ -890,11 +968,31 @@ export function QualityInspectionsPage({
     setDecisionFlow(flow);
   }, []);
   const statusFacet = selectedStatus ?? statusCatalogQuery.data?.defaultValue ?? "";
+  const canPrioritizeInspections = can("WMS.QUALITY.INSPECTIONS.PRIORITIZE");
+  const singleStatusFacet =
+    quarantineOnly || (statusFacet !== QUALITY_INSPECTION_STATUS_ALL && statusFacet.trim().length > 0);
+  const pageKey = quarantineOnly ? "quality-quarantine-v2" : "quality-inspections-v2";
   const prioritizableStatuses = useMemo(
     () => new Set(statusCatalogQuery.data?.items.filter((item) => item.canPrioritize).map((item) => item.value) ?? []),
     [statusCatalogQuery.data?.items],
   );
-  const pageKey = quarantineOnly ? "quality-quarantine-v2" : "quality-inspections-v2";
+  const priorityDragEnabled = canPrioritizeInspections && singleStatusFacet && gridSortBy === null;
+  const reorderInspectionPriority = useCallback(
+    async (active: QualityInspection, over: QualityInspection) => {
+      if (priorityReorderLoading !== null || over.priorityRank == null) return;
+      setPriorityReorderLoading(active.id);
+      try {
+        await qualityApi.reorderPriority(active.id, over.priorityRank);
+        await queryClient.invalidateQueries({ queryKey: ["advanced-grid", pageKey] });
+        toast.success(t("list.priority.reordered"));
+      } catch (error) {
+        toast.error(message(error, t("list.priority.reorderFailed")));
+      } finally {
+        setPriorityReorderLoading(null);
+      }
+    },
+    [pageKey, priorityReorderLoading, queryClient, t],
+  );
   const fetchPage = useCallback(
     (request: GridRequest) =>
       qualityApi.inspectionsPaged(
@@ -978,6 +1076,11 @@ export function QualityInspectionsPage({
     setEditDetail((current) => current?.header.id === id ? next : current);
     await queryClient.invalidateQueries({ queryKey: ["advanced-grid", pageKey] });
   }, [pageKey, queryClient]);
+  const syncWorkSummary = useCallback((inspectionId: number, work: QualityInspectionWorkSummary) => {
+    setEditDetail((current) =>
+      current?.header.id === inspectionId ? { ...current, work } : current,
+    );
+  }, []);
   const columns = useMemo<GridColumn<QualityInspection>[]>(
     () => {
       void moduleReady;
@@ -990,17 +1093,17 @@ export function QualityInspectionsPage({
         filterable: true,
         searchable: true,
         defaultSearch: true,
-        render: (r) => (
-          <button
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              void openEdit(r.id);
-            }}
-            className="inline-flex items-center gap-1.5 font-mono font-semibold text-cyan-600 hover:underline dark:text-cyan-300"
-            aria-label={t("list.editAria")}
-            title={t("list.edit")}
-          >
+        render: (r) => {
+          const showPriorityGrip =
+            priorityDragEnabled
+            && r.isPriority
+            && r.priorityRank != null
+            && canToggleQualityInspectionPriority(r.status, prioritizableStatuses);
+          return (
+          <div className="inline-flex items-center gap-1">
+            {showPriorityGrip ? (
+              <GridRowReorderGrip label={t("list.priority.dragHandle")} />
+            ) : null}
             {r.isPriority ? (
               <span
                 className="inline-flex items-center gap-0.5 text-rose-600 dark:text-rose-300"
@@ -1016,9 +1119,21 @@ export function QualityInspectionsPage({
                 ) : null}
               </span>
             ) : null}
-            {r.inspectionNo}
-          </button>
-        ),
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                void openEdit(r.id);
+              }}
+              className="font-mono font-semibold text-cyan-600 hover:underline dark:text-cyan-300"
+              aria-label={t("list.editAria")}
+              title={t("list.edit")}
+            >
+              {r.inspectionNo}
+            </button>
+          </div>
+          );
+        },
       },
       {
         key: "sourceWaybillNo",
@@ -1187,25 +1302,17 @@ export function QualityInspectionsPage({
       },
     ];
     },
-    [can, editLoading, moduleReady, openEdit, prioritizableStatuses, priorityLoading, t, toggleInspectionPriority],
+    [can, editLoading, moduleReady, openEdit, prioritizableStatuses, priorityDragEnabled, priorityLoading, priorityReorderLoading, t, toggleInspectionPriority],
   );
   const moveInspectionToListStatus = useCallback(async (
     targetStatus: string,
     inspectionId?: number,
-    options?: { markCommitted?: boolean },
   ) => {
     listMovePendingRef.current = true;
     try {
       flushSync(() => {
         if (inspectionId != null) {
           removeInspectionFromGridCache(queryClient, pageKey, inspectionId);
-          if (options?.markCommitted) {
-            setCommittedInspectionIds((current) => {
-              const next = new Set(current);
-              next.add(inspectionId);
-              return next;
-            });
-          }
         }
         if (!quarantineOnly) {
           setSelectedStatus(targetStatus);
@@ -1228,7 +1335,7 @@ export function QualityInspectionsPage({
     }
   }, [pageKey, queryClient, quarantineOnly]);
   const decided = async (nextStatus?: string, inspectionId?: number) => {
-    await moveInspectionToListStatus(resolveDecidedListStatus(nextStatus), inspectionId, { markCommitted: true });
+    await moveInspectionToListStatus(resolveDecidedListStatus(nextStatus), inspectionId);
   };
   if (!quarantineOnly && statusCatalogQuery.isPending) {
     return (
@@ -1286,6 +1393,20 @@ export function QualityInspectionsPage({
       }
       onRowDoubleClick={(row) => void openEdit(row.id)}
       rowClassName={(row) => qualityInspectionPriorityRowClass(row.isPriority)}
+      onSortStateChange={setGridSortBy}
+      rowReorder={
+        priorityDragEnabled
+          ? {
+              label: t("list.priority.dragHandle"),
+              disabled: priorityReorderLoading !== null,
+              canDragRow: (row) =>
+                row.isPriority
+                && row.priorityRank != null
+                && canToggleQualityInspectionPriority(row.status, prioritizableStatuses),
+              onReorder: reorderInspectionPriority,
+            }
+          : undefined
+      }
     />
     {editId != null && typeof document !== "undefined"
       ? createPortal(
@@ -1347,7 +1468,8 @@ export function QualityInspectionsPage({
               refresh={() => refreshDetail(editDetail.header.id)}
               decided={decided}
               moveToListStatus={moveInspectionToListStatus}
-              applyBlocked={committedInspectionIds.has(editDetail.header.id) || Boolean(decisionFlow)}
+              applyBlocked={decisionFlow?.phase === "running"}
+              onWorkSummaryChange={syncWorkSummary}
               onDecisionFlowChange={handleDecisionFlowChange}
               lineDecisionGuardRef={lineDecisionGuardRef}
               closeLineDecisionRef={closeLineDecisionRef}
@@ -1397,6 +1519,7 @@ function InspectionDetailPanel({
   decided,
   moveToListStatus,
   applyBlocked = false,
+  onWorkSummaryChange,
   onDecisionFlowChange,
   lineDecisionGuardRef,
   closeLineDecisionRef,
@@ -1406,6 +1529,7 @@ function InspectionDetailPanel({
   decided: (nextStatus?: string, inspectionId?: number) => void | Promise<void>;
   moveToListStatus: (targetStatus: string, inspectionId?: number) => void | Promise<void>;
   applyBlocked?: boolean;
+  onWorkSummaryChange: (inspectionId: number, work: QualityInspectionWorkSummary) => void;
   onDecisionFlowChange: (flow: QualityDecisionFlow | null) => void;
   lineDecisionGuardRef: MutableRefObject<{ open: boolean; suppressInspectClose: boolean }>;
   closeLineDecisionRef: MutableRefObject<() => void>;
@@ -1499,6 +1623,7 @@ function InspectionDetailPanel({
       (value) => roundQty(parseQty(value)),
     );
   });
+  const [dispositionDraftImages, setDispositionDraftImages] = useState<DispositionDraftImages>({});
   const skipControlQtyCacheWriteRef = useRef(false);
   const didRestoreControlQtyCacheRef = useRef(false);
   useEffect(() => {
@@ -1567,10 +1692,11 @@ function InspectionDetailPanel({
     if (workBusy || !detail.work.canStart) return;
     setWorkBusy("start");
     try {
-      await qualityApi.startInspectionWork(detail.header.id, {
+      const workSummary = await qualityApi.startInspectionWork(detail.header.id, {
         idempotencyKey: crypto.randomUUID(),
         rowVersion: detail.rowVersion,
       });
+      onWorkSummaryChange(detail.header.id, workSummary);
       if (detail.header.status === "Pending") {
         await moveToListStatus("InProgress", detail.header.id);
       } else {
@@ -1613,13 +1739,14 @@ function InspectionDetailPanel({
     }
     setWorkBusy("pause");
     try {
-      await qualityApi.pauseInspectionWork(detail.header.id, {
+      const workSummary = await qualityApi.pauseInspectionWork(detail.header.id, {
         idempotencyKey: crypto.randomUUID(),
         reason: pauseReason,
         note: pauseNote.trim() || null,
         rowVersion: detail.rowVersion,
         controlQuantities,
       });
+      onWorkSummaryChange(detail.header.id, workSummary);
       skipControlQtyCacheWriteRef.current = true;
       clearQualityControlQuantityCache(controlQtyCacheUserId, detail.header.id);
       setPauseDialogOpen(false);
@@ -1785,6 +1912,30 @@ function InspectionDetailPanel({
         ...current,
         [id]: { ...(current[id] ?? fallback), ...patch },
       };
+    });
+
+  const setLineDispositionImages = (lineId: number, key: string, files: File[]) =>
+    setDispositionDraftImages((current) => {
+      const next = { ...current };
+      const lineBucket = { ...(next[lineId] ?? {}) };
+      if (files.length === 0) {
+        delete lineBucket[key];
+      } else {
+        lineBucket[key] = files;
+      }
+      if (Object.keys(lineBucket).length === 0) delete next[lineId];
+      else next[lineId] = lineBucket;
+      return next;
+    });
+
+  const removeLineDispositionImages = (lineId: number, key: string) =>
+    setDispositionDraftImages((current) => {
+      const lineBucket = { ...(current[lineId] ?? {}) };
+      delete lineBucket[key];
+      const next = { ...current };
+      if (Object.keys(lineBucket).length === 0) delete next[lineId];
+      else next[lineId] = lineBucket;
+      return next;
     });
 
   const applyBulkToSelected = () => {
@@ -1975,10 +2126,28 @@ function InspectionDetailPanel({
       }
     }
 
-    const returnedRows = pending.filter(
+    const resolvedPending = pending.map(({ line, draft }) => {
+      const lineAcceptedDestination = acceptedDestinationForLine(
+        line,
+        detail.defaultAcceptedDestination,
+      );
+      return {
+        line,
+        draft: withMaterializedDispositionKeys(
+          line,
+          draft,
+          lineAcceptedDestination?.locationId ?? null,
+          configuredDefaultQuarantineLocationId,
+          defaultRejectedLocationId,
+          t,
+        ),
+      };
+    });
+
+    const returnedRows = resolvedPending.filter(
       (row) => !row.draft.dispositions?.length && row.draft.decision === "Returned",
     );
-    const distributionRows = pending.filter(
+    const distributionRows = resolvedPending.filter(
       (row) => row.draft.dispositions?.length || row.draft.decision !== "Returned",
     );
 
@@ -2031,6 +2200,15 @@ function InspectionDetailPanel({
       sourceLabel,
     });
     try {
+      if (dispositionRequests.length > 0) {
+        await uploadPendingDispositionImages(
+          detail.header.id,
+          dispositionRequests,
+          dispositionDraftImages,
+          t,
+        );
+      }
+
       let rowVersion = detail.rowVersion;
       const calls: Array<() => ReturnType<typeof qualityApi.decide>> = [];
       let completionMessage = "";
@@ -2124,6 +2302,13 @@ function InspectionDetailPanel({
       const inspectionId = detail.header.id;
       skipControlQtyCacheWriteRef.current = true;
       clearQualityControlQuantityCache(controlQtyCacheUserId, inspectionId);
+      setDispositionDraftImages((current) => {
+        const next = { ...current };
+        for (const { line } of pending) {
+          delete next[line.id];
+        }
+        return next;
+      });
       await decided(nextStatus, inspectionId);
 
       if (receiptCreatedNow && lastResult) {
@@ -2179,11 +2364,11 @@ function InspectionDetailPanel({
       });
       await new Promise((resolve) => window.setTimeout(resolve, 2600));
       onDecisionFlowChange(null);
-      saveLockRef.current = false;
-      setSaveLocked(false);
       return false;
     } finally {
       setSaving(false);
+      saveLockRef.current = false;
+      setSaveLocked(false);
     }
   };
 
@@ -2619,13 +2804,7 @@ function InspectionDetailPanel({
                         })}
                       />
                     ) : (
-                      <QualityInspectionLineImageGalleryDialog
-                        inspectionId={detail.header.id}
-                        lineId={line.id}
-                        canView={can("WMS.QUALITY.INSPECTIONS.IMAGES.VIEW")}
-                        canUpload={can("WMS.QUALITY.INSPECTIONS.IMAGES.UPLOAD")}
-                        canDelete={can("WMS.QUALITY.INSPECTIONS.IMAGES.DELETE")}
-                      />
+                      <span className="inline-block size-9" aria-hidden />
                     )}
                   </td>
                   <td className="wms-ops-quality-lines__cell wms-ops-quality-lines__cell--stock p-2.5 align-middle">
@@ -2749,7 +2928,6 @@ function InspectionDetailPanel({
                   <td className="wms-ops-quality-lines__cell p-2.5 align-middle text-center">
                     {active && !final ? (
                       <LineDecisionPopover
-                        inspectionId={detail.header.id}
                         disabled={!detail.work.canPause}
                         open={openLineId === line.id}
                         onOpenChange={(open) => {
@@ -2822,6 +3000,11 @@ function InspectionDetailPanel({
                             patchDraft(member.id, memberPatch);
                           }
                         }}
+                        dispositionDraftImages={dispositionDraftImages[line.id] ?? {}}
+                        onDispositionDraftImagesChange={(key, files) =>
+                          setLineDispositionImages(line.id, key, files)}
+                        onRemoveDispositionDraftImages={(key) =>
+                          removeLineDispositionImages(line.id, key)}
                         canViewImages={can("WMS.QUALITY.INSPECTIONS.IMAGES.VIEW")}
                         canUploadImages={can("WMS.QUALITY.INSPECTIONS.IMAGES.UPLOAD")}
                         canDeleteImages={can("WMS.QUALITY.INSPECTIONS.IMAGES.DELETE")}
@@ -2897,6 +3080,7 @@ function InspectionDetailPanel({
                       {t("detail.history.datReference", { id: part.warehouseTransferId })}
                     </div>
                   ) : null}
+                  <QualityDispositionHistoryImages images={part.images ?? []} />
                 </article>
               );
             })}
@@ -3342,7 +3526,6 @@ function LotSerialHoverCell({
 }
 
 function LineDecisionPopover({
-  inspectionId,
   disabled = false,
   open,
   onOpenChange,
@@ -3358,11 +3541,13 @@ function LineDecisionPopover({
   line,
   draft,
   onChange,
+  dispositionDraftImages,
+  onDispositionDraftImagesChange,
+  onRemoveDispositionDraftImages,
   canViewImages,
   canUploadImages,
   canDeleteImages,
 }: {
-  inspectionId: number;
   disabled?: boolean;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -3378,6 +3563,9 @@ function LineDecisionPopover({
   line: QualityInspectionLine;
   draft: LineDraft;
   onChange: (patch: Partial<LineDraft>) => void;
+  dispositionDraftImages: Record<string, File[]>;
+  onDispositionDraftImagesChange: (key: string, files: File[]) => void;
+  onRemoveDispositionDraftImages: (key: string) => void;
   canViewImages: boolean;
   canUploadImages: boolean;
   canDeleteImages: boolean;
@@ -3424,17 +3612,51 @@ function LineDecisionPopover({
     }, 0),
   );
   const unallocatedQuantity = roundQty(Math.max(0, remaining - allocatedQuantity));
+  const materializedDispositions = (() => {
+    if (!draft.decision && advancedDispositions.length === 0) {
+      return { parts: [] as DispositionDraft[], stagedDispositionKeys: {} as Record<string, string> };
+    }
+    try {
+      return draftDispositions(
+        line,
+        draft,
+        defaultAcceptedLocationId,
+        fallbackQuarantineLocationId,
+        defaultRejectedLocationId,
+        t,
+      );
+    } catch {
+      return { parts: [] as DispositionDraft[], stagedDispositionKeys: {} as Record<string, string> };
+    }
+  })();
+  const editableDispositionParts = materializedDispositions.parts;
+  useLayoutEffect(() => {
+    if (draft.dispositions?.length) return;
+    const current = draft.stagedDispositionKeys ?? {};
+    const next = materializedDispositions.stagedDispositionKeys;
+    const changed = Object.keys(next).some((key) => current[key] !== next[key])
+      || Object.keys(current).some((key) => !(key in next));
+    if (!changed) return;
+    onChange({ stagedDispositionKeys: next });
+  }, [
+    draft.dispositions?.length,
+    draft.stagedDispositionKeys,
+    materializedDispositions.stagedDispositionKeys,
+    onChange,
+  ]);
   const enableDistributionPlan = () => {
     try {
+      const { parts, stagedDispositionKeys } = draftDispositions(
+        line,
+        draft,
+        defaultAcceptedLocationId,
+        fallbackQuarantineLocationId,
+        defaultRejectedLocationId,
+        t,
+      );
       onChange({
-        dispositions: draftDispositions(
-          line,
-          draft,
-          defaultAcceptedLocationId,
-          fallbackQuarantineLocationId,
-          defaultRejectedLocationId,
-          t,
-        ).map((part) => ({
+        stagedDispositionKeys,
+        dispositions: parts.map((part) => ({
           ...part,
           targetWarehouseId: part.targetWarehouseId ?? defaultWarehouseForDecision(
             part.decision,
@@ -3479,10 +3701,21 @@ function LineDecisionPopover({
       ],
     });
   };
-  const removeDisposition = (key: string) =>
+  const removeDisposition = (key: string) => {
+    onRemoveDispositionDraftImages(key);
     onChange({
       dispositions: advancedDispositions.filter((part) => part.key !== key),
     });
+  };
+  const draftCanDeleteImages = canDeleteImages || canUploadImages;
+  const dispositionImageProps = (part: DispositionDraft) => ({
+    dispositionLabel: `${localizeEnumValue(part.decision)} · ${formatProjectNumber(parseQty(part.quantity) || 0)}`,
+    draftFiles: dispositionDraftImages[part.key] ?? [],
+    onDraftFilesChange: (files: File[]) => onDispositionDraftImagesChange(part.key, files),
+    canView: canViewImages,
+    canUpload: canUploadImages,
+    canDelete: draftCanDeleteImages,
+  });
 
   const updatePosition = useCallback(() => {
     const trigger = triggerRef.current;
@@ -3558,7 +3791,7 @@ function LineDecisionPopover({
       const target = event.target as HTMLElement | null;
       if (!target) return;
       if (triggerRef.current?.contains(target) || panelRef.current?.contains(target)) return;
-      if (target.closest(QUALITY_DECISION_NESTED_LAYER)) return;
+      if (target.closest(QUALITY_DECISION_DISMISS_IGNORE)) return;
       onDismissedByOutside?.();
       onOpenChange(false);
     };
@@ -3675,13 +3908,6 @@ function LineDecisionPopover({
                   )}
                 </label>
               </div>
-              <QualityInspectionLineImageGallery
-                inspectionId={inspectionId}
-                lineId={line.id}
-                canView={canViewImages}
-                canUpload={canUploadImages}
-                canDelete={canDeleteImages}
-              />
               <div className="flex items-center justify-between gap-2 rounded-lg border border-cyan-500/20 bg-cyan-500/[0.04] p-2">
                 <div>
                   <div className="text-xs font-bold">{t("linePopover.distributionTitle")}</div>
@@ -3771,31 +3997,38 @@ function LineDecisionPopover({
                   <span className="text-xs font-semibold text-slate-500">
                     {t("linePopover.targetLocationLabel")}
                   </span>
-                  <QualityDecisionTargetPicker
-                    decision={draft.decision}
-                    targetLocationId={draft.targetLocationId ?? defaultTargetForDecision(
-                      draft.decision,
-                      defaultAcceptedLocationId,
-                      fallbackQuarantineLocationId,
-                      defaultRejectedLocationId,
-                    )}
-                    targetWarehouseId={draft.targetWarehouseId ?? defaultWarehouseForDecision(
-                      draft.decision,
-                      defaultAcceptedWarehouseId,
-                      fallbackQuarantineWarehouseId,
-                      defaultRejectedWarehouseId,
-                    )}
-                    onChange={(targetLocationId, targetWarehouseId) => onChange({
-                      targetLocationId,
-                      targetWarehouseId,
-                    })}
-                    branchCode={branchCode}
-                    queryScope={`quick-${line.id}`}
-                    quarantineDestinations={quarantineDestinations}
-                    defaultAcceptedDestination={defaultAcceptedDestination}
-                    defaultRejectedDestination={defaultRejectedDestination}
-                    disabled
-                  />
+                  <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
+                    <QualityDecisionTargetPicker
+                      decision={draft.decision}
+                      targetLocationId={draft.targetLocationId ?? defaultTargetForDecision(
+                        draft.decision,
+                        defaultAcceptedLocationId,
+                        fallbackQuarantineLocationId,
+                        defaultRejectedLocationId,
+                      )}
+                      targetWarehouseId={draft.targetWarehouseId ?? defaultWarehouseForDecision(
+                        draft.decision,
+                        defaultAcceptedWarehouseId,
+                        fallbackQuarantineWarehouseId,
+                        defaultRejectedWarehouseId,
+                      )}
+                      onChange={(targetLocationId, targetWarehouseId) => onChange({
+                        targetLocationId,
+                        targetWarehouseId,
+                      })}
+                      branchCode={branchCode}
+                      queryScope={`quick-${line.id}`}
+                      quarantineDestinations={quarantineDestinations}
+                      defaultAcceptedDestination={defaultAcceptedDestination}
+                      defaultRejectedDestination={defaultRejectedDestination}
+                      disabled
+                    />
+                    {editableDispositionParts.length <= 1 && editableDispositionParts[0] ? (
+                      <QualityDispositionImageButton
+                        {...dispositionImageProps(editableDispositionParts[0])}
+                      />
+                    ) : null}
+                  </div>
                 </div>
               ) : null}
               {hasRemainder ? (
@@ -3817,6 +4050,42 @@ function LineDecisionPopover({
                     contentClassName="!z-[5100]"
                   />
                 </label>
+              ) : null}
+              {editableDispositionParts.length > 1 ? (
+                <div className="space-y-2">
+                  {editableDispositionParts.map((part) => (
+                    <div key={part.key} className="space-y-2 rounded-xl border border-[var(--wms-app-border)] p-2.5">
+                      <OpsStatusBadge tone={inferOpsStatusTone(part.decision)}>
+                        {localizeEnumValue(part.decision)} · {formatProjectNumber(parseQty(part.quantity) || 0)}
+                      </OpsStatusBadge>
+                      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
+                        <QualityDecisionTargetPicker
+                          decision={part.decision}
+                          targetLocationId={part.targetLocationId ?? defaultTargetForDecision(
+                            part.decision,
+                            defaultAcceptedLocationId,
+                            fallbackQuarantineLocationId,
+                            defaultRejectedLocationId,
+                          )}
+                          targetWarehouseId={part.targetWarehouseId ?? defaultWarehouseForDecision(
+                            part.decision,
+                            defaultAcceptedWarehouseId,
+                            fallbackQuarantineWarehouseId,
+                            defaultRejectedWarehouseId,
+                          )}
+                          onChange={() => undefined}
+                          branchCode={branchCode}
+                          queryScope={`quick-${line.id}-${part.key}`}
+                          quarantineDestinations={quarantineDestinations}
+                          defaultAcceptedDestination={defaultAcceptedDestination}
+                          defaultRejectedDestination={defaultRejectedDestination}
+                          disabled
+                        />
+                        <QualityDispositionImageButton {...dispositionImageProps(part)} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
               ) : null}
                 </>
               ) : (
@@ -3888,105 +4157,114 @@ function LineDecisionPopover({
                         />
                       </div>
                       {part.decision === "Accepted" ? (
-                        <PagedAppDropdown
-                          queryKey={["quality-approved-target", branchCode, line.id, part.key]}
-                          fetchPage={(request) => qualityApi.locations(request, branchCode)}
-                          toOption={(location) => ({
-                            value: encodeQualityLocationValue(location.id, location.warehouseId),
-                            label: `${location.warehouseCode} / ${location.code} · ${location.name}`,
-                            description: location.warehouseName,
-                            disabled: location.isQuarantine,
-                          })}
-                          value={part.targetLocationId && part.targetWarehouseId
-                            ? encodeQualityLocationValue(part.targetLocationId, part.targetWarehouseId)
-                            : null}
-                          selectedOption={part.targetLocationId === defaultAcceptedDestination?.locationId ? {
-                            value: encodeQualityLocationValue(
-                              defaultAcceptedDestination.locationId,
-                              defaultAcceptedDestination.warehouseId,
-                            ),
-                            label: `${defaultAcceptedDestination.warehouseCode} / ${defaultAcceptedDestination.locationCode} · ${defaultAcceptedDestination.locationName}`,
-                            description: `${defaultAcceptedDestination.warehouseName} · ${t("linePopover.defaultTargetSuffix")}`,
-                          } : undefined}
-                          onValueChange={(value) => patchDisposition(
-                            part.key,
-                            decodeQualityLocationValue(value),
-                          )}
-                          staticOptions={[{
-                            value: "",
-                            label: t("linePopover.automaticAcceptedTarget"),
-                            description: t("linePopover.automaticAcceptedTargetDescription"),
-                          }]}
-                          placeholder={t("linePopover.acceptedTargetPlaceholder")}
-                          searchable
-                          disabled
-                          hideChevron
-                          className="wms-ops-quality-field !h-10 !min-h-10 !text-xs"
-                          portalContainer={null}
-                          contentClassName="!z-[5100]"
-                        />
-                      ) : part.decision === "Quarantined" ? (
-                        <AppDropdown
-                          value={part.targetLocationId && part.targetWarehouseId
-                            ? encodeQualityLocationValue(part.targetLocationId, part.targetWarehouseId)
-                            : null}
-                          onValueChange={(value) => patchDisposition(
-                            part.key,
-                            decodeQualityLocationValue(value),
-                          )}
-                          options={[
-                            ...quarantineDestinations.map((destination) => ({
+                        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
+                          <PagedAppDropdown
+                            queryKey={["quality-approved-target", branchCode, line.id, part.key]}
+                            fetchPage={(request) => qualityApi.locations(request, branchCode)}
+                            toOption={(location) => ({
+                              value: encodeQualityLocationValue(location.id, location.warehouseId),
+                              label: `${location.warehouseCode} / ${location.code} · ${location.name}`,
+                              description: location.warehouseName,
+                              disabled: location.isQuarantine,
+                            })}
+                            value={part.targetLocationId && part.targetWarehouseId
+                              ? encodeQualityLocationValue(part.targetLocationId, part.targetWarehouseId)
+                              : null}
+                            selectedOption={part.targetLocationId === defaultAcceptedDestination?.locationId ? {
                               value: encodeQualityLocationValue(
-                                destination.locationId,
-                                destination.warehouseId,
+                                defaultAcceptedDestination.locationId,
+                                defaultAcceptedDestination.warehouseId,
                               ),
-                              label: `${destination.warehouseCode} / ${destination.locationCode} · ${destination.locationName}`,
-                              description: destination.isDefault
-                                ? `${destination.warehouseName} · ${t("linePopover.defaultTargetSuffix")}`
-                                : destination.warehouseName,
-                            })),
-                          ]}
-                          placeholder={t("linePopover.quarantineTargetPlaceholder")}
-                          searchable
-                          disabled
-                          hideChevron
-                          className="wms-ops-quality-field !h-10 !min-h-10 !text-xs"
-                          portalContainer={null}
-                          contentClassName="!z-[5100]"
-                        />
+                              label: `${defaultAcceptedDestination.warehouseCode} / ${defaultAcceptedDestination.locationCode} · ${defaultAcceptedDestination.locationName}`,
+                              description: `${defaultAcceptedDestination.warehouseName} · ${t("linePopover.defaultTargetSuffix")}`,
+                            } : undefined}
+                            onValueChange={(value) => patchDisposition(
+                              part.key,
+                              decodeQualityLocationValue(value),
+                            )}
+                            staticOptions={[{
+                              value: "",
+                              label: t("linePopover.automaticAcceptedTarget"),
+                              description: t("linePopover.automaticAcceptedTargetDescription"),
+                            }]}
+                            placeholder={t("linePopover.acceptedTargetPlaceholder")}
+                            searchable
+                            disabled
+                            hideChevron
+                            className="wms-ops-quality-field !h-10 !min-h-10 !text-xs"
+                            portalContainer={null}
+                            contentClassName="!z-[5100]"
+                          />
+                          <QualityDispositionImageButton {...dispositionImageProps(part)} />
+                        </div>
+                      ) : part.decision === "Quarantined" ? (
+                        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
+                          <AppDropdown
+                            value={part.targetLocationId && part.targetWarehouseId
+                              ? encodeQualityLocationValue(part.targetLocationId, part.targetWarehouseId)
+                              : null}
+                            onValueChange={(value) => patchDisposition(
+                              part.key,
+                              decodeQualityLocationValue(value),
+                            )}
+                            options={[
+                              ...quarantineDestinations.map((destination) => ({
+                                value: encodeQualityLocationValue(
+                                  destination.locationId,
+                                  destination.warehouseId,
+                                ),
+                                label: `${destination.warehouseCode} / ${destination.locationCode} · ${destination.locationName}`,
+                                description: destination.isDefault
+                                  ? `${destination.warehouseName} · ${t("linePopover.defaultTargetSuffix")}`
+                                  : destination.warehouseName,
+                              })),
+                            ]}
+                            placeholder={t("linePopover.quarantineTargetPlaceholder")}
+                            searchable
+                            disabled
+                            hideChevron
+                            className="wms-ops-quality-field !h-10 !min-h-10 !text-xs"
+                            portalContainer={null}
+                            contentClassName="!z-[5100]"
+                          />
+                          <QualityDispositionImageButton {...dispositionImageProps(part)} />
+                        </div>
                       ) : part.decision === "Rejected" ? (
-                        <PagedAppDropdown
-                          queryKey={["quality-rejected-target", branchCode, line.id, part.key]}
-                          fetchPage={(request) => qualityApi.locations(request, branchCode)}
-                          toOption={(location) => ({
-                            value: encodeQualityLocationValue(location.id, location.warehouseId),
-                            label: `${location.warehouseCode} / ${location.code} · ${location.name}`,
-                            description: location.warehouseName,
-                            disabled: !location.isQuarantine,
-                          })}
-                          value={part.targetLocationId && part.targetWarehouseId
-                            ? encodeQualityLocationValue(part.targetLocationId, part.targetWarehouseId)
-                            : null}
-                          selectedOption={part.targetLocationId === defaultRejectedDestination?.locationId ? {
-                            value: encodeQualityLocationValue(
-                              defaultRejectedDestination.locationId,
-                              defaultRejectedDestination.warehouseId,
-                            ),
-                            label: `${defaultRejectedDestination.warehouseCode} / ${defaultRejectedDestination.locationCode} · ${defaultRejectedDestination.locationName}`,
-                            description: `${defaultRejectedDestination.warehouseName} · ${t("linePopover.defaultTargetSuffix")}`,
-                          } : undefined}
-                          onValueChange={(value) => patchDisposition(
-                            part.key,
-                            decodeQualityLocationValue(value),
-                          )}
-                          placeholder={t("linePopover.rejectedTargetPlaceholder")}
-                          searchable
-                          disabled
-                          hideChevron
-                          className="wms-ops-quality-field !h-10 !min-h-10 !text-xs"
-                          portalContainer={null}
-                          contentClassName="!z-[5100]"
-                        />
+                        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
+                          <PagedAppDropdown
+                            queryKey={["quality-rejected-target", branchCode, line.id, part.key]}
+                            fetchPage={(request) => qualityApi.locations(request, branchCode)}
+                            toOption={(location) => ({
+                              value: encodeQualityLocationValue(location.id, location.warehouseId),
+                              label: `${location.warehouseCode} / ${location.code} · ${location.name}`,
+                              description: location.warehouseName,
+                              disabled: !location.isQuarantine,
+                            })}
+                            value={part.targetLocationId && part.targetWarehouseId
+                              ? encodeQualityLocationValue(part.targetLocationId, part.targetWarehouseId)
+                              : null}
+                            selectedOption={part.targetLocationId === defaultRejectedDestination?.locationId ? {
+                              value: encodeQualityLocationValue(
+                                defaultRejectedDestination.locationId,
+                                defaultRejectedDestination.warehouseId,
+                              ),
+                              label: `${defaultRejectedDestination.warehouseCode} / ${defaultRejectedDestination.locationCode} · ${defaultRejectedDestination.locationName}`,
+                              description: `${defaultRejectedDestination.warehouseName} · ${t("linePopover.defaultTargetSuffix")}`,
+                            } : undefined}
+                            onValueChange={(value) => patchDisposition(
+                              part.key,
+                              decodeQualityLocationValue(value),
+                            )}
+                            placeholder={t("linePopover.rejectedTargetPlaceholder")}
+                            searchable
+                            disabled
+                            hideChevron
+                            className="wms-ops-quality-field !h-10 !min-h-10 !text-xs"
+                            portalContainer={null}
+                            contentClassName="!z-[5100]"
+                          />
+                          <QualityDispositionImageButton {...dispositionImageProps(part)} />
+                        </div>
                       ) : null}
                     </div>
                   ))}

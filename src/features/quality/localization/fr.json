@@ -41,7 +41,12 @@
       "remove": "Retirer la priorité",
       "added": "Le contrôle qualité a été rendu prioritaire et placé en tête de liste.",
       "removed": "La priorité du contrôle qualité a été retirée.",
-      "failed": "La priorité du contrôle qualité n’a pas pu être modifiée."
+      "failed": "La priorité du contrôle qualité n’a pas pu être modifiée.",
+      "dragHandle": "Glisser pour modifier l’ordre de priorité",
+      "reordered": "Ordre de priorité mis à jour.",
+      "reorderFailed": "Impossible de mettre à jour l’ordre de priorité.",
+      "dragDisabledAllTab": "Sélectionnez un onglet de statut pour réordonner les priorités.",
+      "dragDisabledSorted": "Revenez au tri par défaut pour réordonner les priorités."
     },
     "facetFiltersTitle": "Filtres de liste",
     "facetStatus": "Statut",
@@ -191,7 +196,8 @@
     "history": {
       "title": "Historique de répartition qualité",
       "description": "Affiche la décision et le trajet entrepôt/emplacement pour chaque quantité.",
-      "datReference": "Enregistrement DAT #{{id}}"
+      "datReference": "Enregistrement DAT #{{id}}",
+      "images": "Images de répartition"
     },
     "controlHistory": {
       "title": "Historique du contrôle physique GKK",
@@ -326,7 +332,12 @@
     "reasonPlaceholder": "Description (facultative)",
     "images": {
       "title": "Images de contrôle", "gallery": "Images", "openGallery": "Ouvrir les images de la ligne qualité", "description": "Ajoutez les preuves de dommage, emballage, étiquette ou contrôle physique de cette ligne de stock. Elles appartiennent uniquement à cette ligne GKK, pas à la fiche article.",
-      "add": "Ajouter une image", "uploading": "Téléchargement…", "empty": "Aucune image n’a encore été ajoutée à cette ligne qualité.", "limits": "{{current}}/{{total}} images · JPG, PNG ou WebP · 10 Mo maximum chacune",
+      "routeTitle": "Image de répartition", "routeDescription": "Ajoutez une preuve visuelle pour cette cible de décision. Elle apparaît dans l’historique de répartition qualité après enregistrement.", "routeKeyRequired": "Sélectionnez une cible de répartition avant de télécharger des images.",
+      "add": "Ajouter une image", "uploading": "Téléchargement…", "empty": "Aucune image n’a encore été ajoutée pour cette cible de répartition.", "limits": "JPG, PNG ou WebP · 10 Mo maximum chacune",
+      "dialogTitle": "Image de répartition", "dialogDescription": "Gérer la preuve visuelle pour {{label}}", "viewTab": "Images", "uploadTab": "Téléverser", "libraryTitle": "Images téléversées", "libraryCount": "{{count}} image(s)",
+      "dropTitle": "Glissez-déposez des images ou choisissez des fichiers", "dropTitleCamera": "Capturez avec l’appareil photo ou choisissez des fichiers", "select": "Choisir des fichiers", "capture": "Appareil photo",
+      "draftNoticeTitle": "Modifiable avant application de la décision", "draftNotice": "Ces images appartiennent uniquement à cette cible de répartition et restent sur votre appareil jusqu’à l’application de la décision. Elles sont téléversées lors de l’application.",
+      "confirmButton": "Confirmer", "confirmHelp": "Confirmez que vous avez examiné les images et revenez au panneau d’édition. Vous pouvez encore les modifier jusqu’à l’application de la décision.",
       "preview": "Agrandir {{name}}", "previewDescription": "Preuve visuelle privée enregistrée pendant le contrôle qualité.", "delete": "Supprimer l’image", "deleteTitle": "Supprimer l’image qualité", "deleteDescription": "{{name}} sera retirée de cette ligne qualité. L’action restera dans la piste d’audit.", "cancel": "Annuler",
       "uploaded": "Images qualité téléchargées.", "deleted": "Image qualité supprimée.", "uploadFailed": "Impossible de télécharger les images qualité.", "deleteFailed": "Impossible de supprimer l’image qualité.", "loadFailed": "Impossible de charger les images. Cliquez pour réessayer.",
       "invalidType": "Seules les images JPG, PNG ou WebP sont autorisées.", "sizeLimit": "Chaque image doit faire entre 1 octet et 10 Mo.", "batchLimit": "Vous pouvez sélectionner jusqu’à {{count}} images à la fois.", "lineLimit": "Une ligne qualité peut contenir jusqu’à {{count}} images."

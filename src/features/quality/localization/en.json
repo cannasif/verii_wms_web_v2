@@ -41,7 +41,12 @@
       "remove": "Remove priority",
       "added": "The quality inspection was prioritized and moved to the top of the list.",
       "removed": "Priority was removed from the quality inspection.",
-      "failed": "The quality inspection priority could not be changed."
+      "failed": "The quality inspection priority could not be changed.",
+      "dragHandle": "Drag the row handle to change priority order",
+      "reordered": "Priority order updated.",
+      "reorderFailed": "Priority order could not be updated.",
+      "dragDisabledAllTab": "Select a status tab to reorder priorities.",
+      "dragDisabledSorted": "Return to the default sort to reorder priorities."
     },
     "facetFiltersTitle": "List filters",
     "facetStatus": "Status",
@@ -255,7 +260,8 @@
     "history": {
       "title": "Quality distribution history",
       "description": "Shows the decision and warehouse/location route for every quantity portion.",
-      "datReference": "DAT record #{{id}}"
+      "datReference": "DAT record #{{id}}",
+      "images": "Distribution images"
     },
     "controlHistory": {
       "title": "Physical GKK inspection history",
@@ -391,7 +397,12 @@
     "reasonPlaceholder": "Description (optional)",
     "images": {
       "title": "Inspection images", "gallery": "Images", "openGallery": "Open quality line images", "description": "Attach damage, packaging, label or physical inspection evidence for this stock line. Images belong only to this GKK line, not to the stock card.",
-      "add": "Add image", "uploading": "Uploading…", "empty": "No image has been added to this quality line yet.", "limits": "{{current}}/{{total}} images · JPG, PNG or WebP · maximum 10 MB each",
+      "routeTitle": "Distribution image", "routeDescription": "Add visual evidence for this decision target. It appears in quality distribution history after save.", "routeKeyRequired": "Select a distribution target before uploading images.",
+      "add": "Add image", "uploading": "Uploading…", "empty": "No image has been added for this distribution target yet.", "limits": "JPG, PNG or WebP · maximum 10 MB each",
+      "dialogTitle": "Distribution image", "dialogDescription": "Manage visual evidence for {{label}}", "viewTab": "Images", "uploadTab": "Upload", "libraryTitle": "Uploaded images", "libraryCount": "{{count}} image(s)",
+      "dropTitle": "Drag and drop images or choose files", "dropTitleCamera": "Capture with camera or choose files", "select": "Choose files", "capture": "Camera",
+      "draftNoticeTitle": "Editable before decision is applied", "draftNotice": "These images belong only to this distribution target and stay on your device until you apply the decision. They are uploaded when you apply the decision.",
+      "confirmButton": "Confirm", "confirmHelp": "Use this to acknowledge that you have reviewed the images and return to the edit panel. You can still change them until the decision is applied.",
       "preview": "Enlarge {{name}}", "previewDescription": "Private visual evidence recorded during quality inspection.", "delete": "Delete image", "deleteTitle": "Delete quality image", "deleteDescription": "{{name}} will be removed from this quality line. The action remains in the audit trail.", "cancel": "Cancel",
       "uploaded": "Quality images uploaded.", "deleted": "Quality image deleted.", "uploadFailed": "Quality images could not be uploaded.", "deleteFailed": "Quality image could not be deleted.", "loadFailed": "Images could not be loaded. Click to retry.",
       "invalidType": "Only JPG, PNG or WebP images are allowed.", "sizeLimit": "Each image must be between 1 byte and 10 MB.", "batchLimit": "You can select up to {{count}} images at once.", "lineLimit": "A quality line can contain up to {{count}} images."

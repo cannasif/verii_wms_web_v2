@@ -3,14 +3,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Camera, Expand, ImagePlus, Images, Loader2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { OpsActionButton } from "@/components/shared/OpsActionButton";
+import { WmsOpsStockImagePreviewDialog } from "@/components/shared/WmsOpsStockImagePreviewDialog";
 import { ResponsiveDialog } from "@/components/shared/ResponsiveDialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   resolveStockImageUrl,
@@ -395,46 +389,18 @@ export function GoodsReceiptStockImageDialog({
       </ResponsiveDialog>
 
       {preview ? (
-        <Dialog
+        <WmsOpsStockImagePreviewDialog
           open
-          onOpenChange={(nextOpen) => {
-            if (!nextOpen) setPreview(null);
-          }}
-        >
-          <DialogContent
-            tone="ops"
-            portalRoot="body"
-            showCloseButton
-            data-wms-image-lightbox=""
-            overlayClassName="z-[80] bg-black/55"
-            className={cn(
-              "wms-ops-stock-image-dialog wms-ops-stock-image-preview-dialog",
-              "flex w-[min(100%,36rem)] !max-w-[min(92vw,36rem)] flex-col !gap-0 overflow-hidden border-0 !p-0 shadow-none",
-              "!z-[80] sm:w-[min(100%,40rem)] sm:!max-w-[min(92vw,40rem)]",
-            )}
-            onEscapeKeyDown={(event) => {
-              event.stopPropagation();
-            }}
-          >
-            <DialogHeader className="wms-ops-detail-dialog__header shrink-0 border-b px-5 py-3.5 pr-14 text-left">
-              <DialogTitle className="wms-ops-detail-dialog__title wms-ops-stock-image-dialog__title">
-                {preview.altText || preview.originalFileName}
-              </DialogTitle>
-              <DialogDescription className="wms-ops-detail-dialog__description mt-1 text-left normal-case tracking-normal">
-                {preview.isPrimary
-                  ? `${t("createFlow.entryRow.stockImageUpload.primary")} · ${label}`
-                  : label}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="wms-ops-stock-image-dialog__body">
-              <img
-                className="wms-ops-stock-image-dialog__img"
-                src={resolveStockImageUrl(preview.url)}
-                alt={preview.altText || preview.originalFileName}
-              />
-            </div>
-          </DialogContent>
-        </Dialog>
+          onClose={() => setPreview(null)}
+          title={preview.altText || preview.originalFileName}
+          description={
+            preview.isPrimary
+              ? `${t("createFlow.entryRow.stockImageUpload.primary")} · ${label}`
+              : label
+          }
+          imageSrc={resolveStockImageUrl(preview.url)}
+          imageAlt={preview.altText || preview.originalFileName}
+        />
       ) : null}
     </>
   );

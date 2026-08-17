@@ -41,7 +41,12 @@
       "remove": "Önceliği kaldır",
       "added": "GKK kaydı önceliklendirildi ve listenin üstüne alındı.",
       "removed": "GKK kaydının önceliği kaldırıldı.",
-      "failed": "GKK önceliği değiştirilemedi."
+      "failed": "GKK önceliği değiştirilemedi.",
+      "dragHandle": "Öncelik sırasını değiştirmek için satır tutamacını sürükleyin",
+      "reordered": "Öncelik sırası güncellendi.",
+      "reorderFailed": "Öncelik sırası güncellenemedi.",
+      "dragDisabledAllTab": "Sıra değiştirmek için bir durum sekmesi seçin.",
+      "dragDisabledSorted": "Sıra değiştirmek için varsayılan sıralamaya dönün."
     },
     "facetFiltersTitle": "Liste filtreleri",
     "facetStatus": "Durum",
@@ -255,7 +260,8 @@
     "history": {
       "title": "Kalite dağıtım geçmişi",
       "description": "Her miktarın hangi karar ile hangi depo ve rafa yönlendirildiğini gösterir.",
-      "datReference": "DAT kaydı #{{id}}"
+      "datReference": "DAT kaydı #{{id}}",
+      "images": "Dağıtım görselleri"
     },
     "controlHistory": {
       "title": "GKK fiziksel kontrol geçmişi",
@@ -391,7 +397,12 @@
     "reasonPlaceholder": "Açıklama (opsiyonel)",
     "images": {
       "title": "Kontrol görselleri", "gallery": "Görseller", "openGallery": "Kalite satırı görsellerini aç", "description": "Bu stok satırına ait hasar, ambalaj, etiket veya fiziksel kontrol kanıtlarını ekleyin. Görseller stok kartına değil, yalnız bu GKK satırına kaydedilir.",
-      "add": "Görsel ekle", "uploading": "Yükleniyor…", "empty": "Bu kalite satırına henüz görsel eklenmedi.", "limits": "{{current}}/{{total}} görsel · JPG, PNG veya WebP · görsel başına en fazla 10 MB",
+      "routeTitle": "Dağıtım görseli", "routeDescription": "Bu karar/hedef için görsel kanıt ekleyin. Kayıt sonrası Kalite dağıtım geçmişinde görünür.", "routeKeyRequired": "Görsel yüklemek için dağıtım hedefi seçilmelidir.",
+      "add": "Görsel ekle", "uploading": "Yükleniyor…", "empty": "Bu dağıtım hedefi için henüz görsel eklenmedi.", "limits": "JPG, PNG veya WebP · görsel başına en fazla 10 MB",
+      "dialogTitle": "Dağıtım görseli", "dialogDescription": "{{label}} hedefi için görsel kanıt yönetimi", "viewTab": "Görseller", "uploadTab": "Yükle", "libraryTitle": "Yüklenen görseller", "libraryCount": "{{count}} görsel",
+      "dropTitle": "Görselleri sürükleyip bırakın veya dosya seçin", "dropTitleCamera": "Kamera ile çekin veya dosya seçin", "select": "Dosya seç", "capture": "Kamera",
+      "draftNoticeTitle": "Karar uygulanmadan önce düzenlenebilir", "draftNotice": "Görseller yalnızca bu dağıtım hedefine aittir ve karar uygulanana kadar cihazınızda tutulur. Kararı uyguladığınızda sunucuya kaydedilir.",
+      "confirmButton": "Onayla", "confirmHelp": "Görselleri kontrol ettiğinizi onaylayıp panele dönmek için kullanın. Kararı uygulayana kadar görselleri tekrar düzenleyebilirsiniz.",
       "preview": "{{name}} görselini büyüt", "previewDescription": "Kalite kontrolü sırasında kaydedilen özel görsel kanıt.", "delete": "Görseli sil", "deleteTitle": "Kalite görselini sil", "deleteDescription": "{{name}} görseli bu kalite satırından kaldırılacak. İşlem denetim kaydına yazılır.", "cancel": "Vazgeç",
       "uploaded": "Kalite görselleri yüklendi.", "deleted": "Kalite görseli silindi.", "uploadFailed": "Kalite görselleri yüklenemedi.", "deleteFailed": "Kalite görseli silinemedi.", "loadFailed": "Görseller yüklenemedi. Yeniden denemek için tıklayın.",
       "invalidType": "Yalnızca JPG, PNG veya WebP görsel yükleyebilirsiniz.", "sizeLimit": "Her görsel 1 bayt ile 10 MB arasında olmalıdır.", "batchLimit": "Tek seferde en fazla {{count}} görsel seçebilirsiniz.", "lineLimit": "Bir kalite satırında en fazla {{count}} görsel bulunabilir."

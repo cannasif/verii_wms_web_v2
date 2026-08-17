@@ -41,7 +41,12 @@
       "remove": "Priorität entfernen",
       "added": "Die Qualitätsprüfung wurde priorisiert und an den Anfang der Liste verschoben.",
       "removed": "Die Priorität der Qualitätsprüfung wurde entfernt.",
-      "failed": "Die Priorität der Qualitätsprüfung konnte nicht geändert werden."
+      "failed": "Die Priorität der Qualitätsprüfung konnte nicht geändert werden.",
+      "dragHandle": "Ziehen, um die Prioritätsreihenfolge zu ändern",
+      "reordered": "Prioritätsreihenfolge aktualisiert.",
+      "reorderFailed": "Prioritätsreihenfolge konnte nicht aktualisiert werden.",
+      "dragDisabledAllTab": "Wählen Sie eine Statusregisterkarte, um Prioritäten neu zu ordnen.",
+      "dragDisabledSorted": "Kehren Sie zur Standardsortierung zurück, um Prioritäten neu zu ordnen."
     },
     "facetFiltersTitle": "Listenfilter",
     "facetStatus": "Status",
@@ -191,7 +196,8 @@
     "history": {
       "title": "Qualitätsverteilungsverlauf",
       "description": "Zeigt Entscheidung und Lagerplatzroute für jeden Mengenteil.",
-      "datReference": "DAT-Beleg #{{id}}"
+      "datReference": "DAT-Beleg #{{id}}",
+      "images": "Verteilungsbilder"
     },
     "controlHistory": {
       "title": "Physischer GKK-Prüfverlauf",
@@ -326,7 +332,12 @@
     "reasonPlaceholder": "Beschreibung (optional)",
     "images": {
       "title": "Prüfbilder", "gallery": "Bilder", "openGallery": "Bilder der Qualitätszeile öffnen", "description": "Fügen Sie Schadens-, Verpackungs-, Etikett- oder Prüfbelege für diese Lagerzeile hinzu. Die Bilder gehören nur zu dieser GKK-Zeile, nicht zur Artikelkarte.",
-      "add": "Bild hinzufügen", "uploading": "Wird hochgeladen…", "empty": "Für diese Qualitätszeile wurden noch keine Bilder hinzugefügt.", "limits": "{{current}}/{{total}} Bilder · JPG, PNG oder WebP · maximal 10 MB je Bild",
+      "routeTitle": "Verteilungsbild", "routeDescription": "Fügen Sie visuelle Belege für dieses Entscheidungsziel hinzu. Nach dem Speichern erscheint es im Qualitätsverteilungsverlauf.", "routeKeyRequired": "Wählen Sie ein Verteilungsziel, bevor Sie Bilder hochladen.",
+      "add": "Bild hinzufügen", "uploading": "Wird hochgeladen…", "empty": "Für dieses Verteilungsziel wurde noch kein Bild hinzugefügt.", "limits": "JPG, PNG oder WebP · maximal 10 MB je Bild",
+      "dialogTitle": "Verteilungsbild", "dialogDescription": "Visuelle Belege für {{label}} verwalten", "viewTab": "Bilder", "uploadTab": "Hochladen", "libraryTitle": "Hochgeladene Bilder", "libraryCount": "{{count}} Bild(er)",
+      "dropTitle": "Bilder per Drag & Drop ablegen oder Dateien auswählen", "dropTitleCamera": "Mit Kamera aufnehmen oder Dateien auswählen", "select": "Dateien auswählen", "capture": "Kamera",
+      "draftNoticeTitle": "Vor Anwendung der Entscheidung bearbeitbar", "draftNotice": "Diese Bilder gehören nur zu diesem Verteilungsziel und verbleiben auf Ihrem Gerät, bis Sie die Entscheidung anwenden. Beim Anwenden werden sie hochgeladen.",
+      "confirmButton": "Bestätigen", "confirmHelp": "Bestätigen Sie, dass Sie die Bilder geprüft haben, und kehren Sie zum Bearbeitungsbereich zurück. Sie können sie bis zur Anwendung der Entscheidung ändern.",
       "preview": "{{name}} vergrößern", "previewDescription": "Privater Bildnachweis der Qualitätsprüfung.", "delete": "Bild löschen", "deleteTitle": "Qualitätsbild löschen", "deleteDescription": "{{name}} wird aus dieser Qualitätszeile entfernt. Die Aktion bleibt im Audit-Protokoll.", "cancel": "Abbrechen",
       "uploaded": "Qualitätsbilder wurden hochgeladen.", "deleted": "Qualitätsbild wurde gelöscht.", "uploadFailed": "Qualitätsbilder konnten nicht hochgeladen werden.", "deleteFailed": "Qualitätsbild konnte nicht gelöscht werden.", "loadFailed": "Bilder konnten nicht geladen werden. Zum Wiederholen klicken.",
       "invalidType": "Nur JPG-, PNG- oder WebP-Bilder sind zulässig.", "sizeLimit": "Jedes Bild muss zwischen 1 Byte und 10 MB groß sein.", "batchLimit": "Sie können höchstens {{count}} Bilder gleichzeitig auswählen.", "lineLimit": "Eine Qualitätszeile kann höchstens {{count}} Bilder enthalten."

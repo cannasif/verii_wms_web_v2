@@ -27,6 +27,8 @@ interface ResponsiveDialogProps {
   variant?: ResponsiveDialogVariant;
   /** Default body — full-viewport center like v1. */
   portalRoot?: DialogPortalRoot;
+  overlayClassName?: string;
+  imageLightbox?: boolean;
   /**
    * When true, renders the standard ops header from title/description.
    * Default true for v1 parity; pass false for rich custom headers (detail + action strips).
@@ -49,6 +51,8 @@ export function ResponsiveDialog({
   variant = 'detail',
   portalRoot = 'body',
   framed = true,
+  overlayClassName,
+  imageLightbox = false,
 }: ResponsiveDialogProps): ReactElement {
   return (
     <Dialog
@@ -62,6 +66,8 @@ export function ResponsiveDialog({
         showCloseButton={showCloseButton}
         portalRoot={portalRoot}
         tone="ops"
+        overlayClassName={overlayClassName}
+        {...(imageLightbox ? { "data-wms-image-lightbox": "" } : {})}
         onPointerDownOutside={(event) => {
           preventDialogDismissIfImageLightbox(event);
           if (!showCloseButton) event.preventDefault();
