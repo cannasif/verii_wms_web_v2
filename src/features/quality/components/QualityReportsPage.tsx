@@ -45,7 +45,8 @@ export function QualityReportsPage(): ReactElement {
     column('elapsedSeconds', t('reports.columns.elapsedTime'), row => duration(row.elapsedSeconds), 135, false, 'number', false),
     column('pauseCount', t('reports.columns.pauseCount'), row => row.pauseCount, 110, false, 'number', false),
     column('breakCount', t('reports.columns.breakCount'), row => row.breakCount, 110, false, 'number', false),
-    column('participants', t('reports.columns.participants'), row => row.participants || '—', 220, true, 'text', false),
+    // Participants are enriched after server-side paging, so they cannot be a reliable search field.
+    column('participants', t('reports.columns.participants'), row => row.participants || '—', 220, false, 'text', false),
     {
       key: 'status', label: t('reports.columns.status'), width: 130, sortable: true, filterable: true, filterType: 'enum',
       filterOptions: ['Pending', 'InProgress', 'PartiallyDecided', 'Passed', 'Failed', 'Quarantined', 'Released', 'Cancelled']
