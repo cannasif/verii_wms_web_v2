@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { localizeEnumOptionLabel } from '@/lib/enum-localization';
 import { cn } from '@/lib/utils';
 import { getWorkspacePortalRoot } from '@/lib/workspace-portal';
+import { useStickyPopoverSide } from '@/hooks/useStickyPopoverSide';
 import { DROPDOWN_OVERLAY_WIDTH_CLASS, DropdownOptionLabel } from './DropdownOptionLabel';
 
 export interface AppDropdownOption<TValue extends string = string> {
@@ -134,6 +135,8 @@ export function AppDropdown<TValue extends string = string>({
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [cachedSelected, setCachedSelected] = useState<AppDropdownOption<TValue> | undefined>();
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const fetchLockRef = useRef(false);
   const remoteSearch = searchApi && typeof onSearchChange === 'function';
@@ -159,6 +162,14 @@ export function AppDropdown<TValue extends string = string>({
   }, [onSearchChange, onSearchInputChange, open, remoteSearch]);
 
   useDropdownListWheelScroll(listRef, open);
+
+  const popoverSide = useStickyPopoverSide({
+    open,
+    triggerRef,
+    contentRef,
+    preferredSide: 'bottom',
+    estimatedHeight: showSearch ? 324 : 280,
+  });
 
   const localizedOptions = useMemo(
     () => options.map((option) => ({
@@ -220,6 +231,7 @@ export function AppDropdown<TValue extends string = string>({
     <PopoverPrimitive.Root open={open} onOpenChange={(nextOpen) => { setOpen(nextOpen); onOpenChange?.(nextOpen); }}>
       <PopoverPrimitive.Trigger asChild>
         <button
+          ref={triggerRef}
           type="button"
           role="combobox"
           aria-label={ariaLabel}
@@ -247,8 +259,10 @@ export function AppDropdown<TValue extends string = string>({
 
       <PopoverPrimitive.Portal container={resolvedPortalContainer}>
         <PopoverPrimitive.Content
+          ref={contentRef}
           align={contentAlign}
-          side="top"
+          side={popoverSide}
+          avoidCollisions={false}
           sideOffset={6}
           collisionPadding={12}
           className={cn(

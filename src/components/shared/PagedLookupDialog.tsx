@@ -26,6 +26,7 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { toTurkishApiSearch } from '@/lib/turkish-search';
 import { getWorkspacePortalRoot } from '@/lib/workspace-portal';
+import { useStickyPopoverSide } from '@/hooks/useStickyPopoverSide';
 import { OpsActionButton } from './OpsActionButton';
 import { OpsFieldShell } from './OpsFieldShell';
 import { OPS_FIELD_CLASS } from './ops-field-styles';
@@ -124,7 +125,8 @@ export function PagedLookupDialog<T>({
   const [comboboxSearch, setComboboxSearch] = useState('');
   const [highlightIndex, setHighlightIndex] = useState(0);
   const [editing, setEditing] = useState(false);
-  const [anchorElement, setAnchorElement] = useState<HTMLDivElement | null>(null);
+  const anchorRef = useRef<HTMLDivElement | null>(null);
+  const popoverContentRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const dropdownListRef = useRef<HTMLDivElement | null>(null);
   const fetchLockRef = useRef(false);
@@ -463,10 +465,18 @@ export function PagedLookupDialog<T>({
   );
 
   const skipPopoverPortal = popoverPortalContainer === null;
+  const comboboxPopoverOpen = comboboxOpen && !open && !selectionFrozen;
+  const comboboxPopoverSide = useStickyPopoverSide({
+    open: comboboxPopoverOpen,
+    triggerRef: anchorRef,
+    contentRef: popoverContentRef,
+    preferredSide: 'bottom',
+    estimatedHeight: 280,
+  });
   // Dialog içinde popover, workspace portal kökünde kalırsa dialog'un arkasında görünür;
   // bu durumda dialog gövdesine portallanır.
   const portalContainer = skipPopoverPortal
-    ? ((anchorElement?.closest('[data-slot="dialog-content"]') as HTMLElement | null) ?? undefined)
+    ? ((anchorRef.current?.closest('[data-slot="dialog-content"]') as HTMLElement | null) ?? undefined)
     : (popoverPortalContainer ?? getWorkspacePortalRoot() ?? undefined);
   const displayValue = editing ? comboboxDraft : (value ?? '');
   const comboboxFetching = comboboxQuery.isFetching && !comboboxQuery.isFetchingNextPage;
@@ -536,7 +546,7 @@ export function PagedLookupDialog<T>({
       }}
     >
       <PopoverPrimitive.Anchor asChild>
-        <div className="relative w-full min-w-0" ref={setAnchorElement}>
+        <div className="relative w-full min-w-0" ref={anchorRef}>
           <input
             ref={inputRef}
             type="text"
@@ -634,8 +644,10 @@ export function PagedLookupDialog<T>({
 
       <PopoverPrimitive.Portal container={portalContainer}>
         <PopoverPrimitive.Content
+          ref={popoverContentRef}
           align="start"
-          side="top"
+          side={comboboxPopoverSide}
+          avoidCollisions={false}
           sideOffset={6}
           collisionPadding={12}
           onOpenAutoFocus={(event) => event.preventDefault()}

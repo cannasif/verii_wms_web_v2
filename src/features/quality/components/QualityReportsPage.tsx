@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { BarChart3, Boxes, Clock3, Coffee, Eye, Image, Loader2, PauseCircle, ShieldCheck, Users } from 'lucide-react';
 import { AdvancedDataGrid, type GridColumn, type GridRequest } from '@/components/shared/AdvancedDataGrid';
 import { OpsStatusBadge, inferOpsStatusTone } from '@/components/shared/OpsStatusBadge';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ResponsiveDialog } from '@/components/shared/ResponsiveDialog';
 import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { localizeEnumValue } from '@/lib/enum-localization';
@@ -113,40 +113,46 @@ export function QualityReportsPage(): ReactElement {
         </div>
       )}
 
-      <InspectionReportDialog inspectionId={detailId} onClose={() => setDetailId(null)} />
+      {detailId != null ? (
+        <InspectionReportDialog inspectionId={detailId} onClose={() => setDetailId(null)} />
+      ) : null}
     </section>
   );
 }
 
-function InspectionReportDialog({ inspectionId, onClose }: { inspectionId: number | null; onClose: () => void }): ReactElement {
+function InspectionReportDialog({ inspectionId, onClose }: { inspectionId: number; onClose: () => void }): ReactElement {
   const { t, i18n } = useModuleTranslation('quality');
   const { can } = usePermissionAccess();
   const report = useQuery({
     queryKey: ['quality-inspection-report-detail', inspectionId],
-    queryFn: () => qualityApi.inspectionReportDetail(inspectionId!),
-    enabled: inspectionId != null,
+    queryFn: () => qualityApi.inspectionReportDetail(inspectionId),
+    enabled: true,
     staleTime: 60_000,
   });
+
+  const description = report.data
+    ? [report.data.header.waybillNo, report.data.header.supplierName].filter(Boolean).join(' · ')
+    : t('reports.detail.loading');
+
   return (
-    <Dialog open={inspectionId != null} onOpenChange={open => !open && onClose()}>
-      <DialogContent className="max-h-[94dvh] w-[min(96vw,1500px)] max-w-none overflow-y-auto">
-        <DialogHeader className="border-b border-[var(--wms-app-border)] p-5 pr-14">
-          <DialogTitle>{report.data?.header.inspectionNo || t('reports.detail.title')}</DialogTitle>
-          <DialogDescription>{report.data ? [report.data.header.waybillNo, report.data.header.supplierName].filter(Boolean).join(' · ') : t('reports.detail.loading')}</DialogDescription>
-        </DialogHeader>
-        {report.isLoading ? <div className="grid min-h-72 place-items-center"><Loader2 className="size-7 animate-spin text-cyan-600" /></div> : null}
-        {report.isError ? <div role="alert" className="m-5 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-600">{t('reports.detail.error')}</div> : null}
-        {report.data ? <InspectionReportDetail report={report.data} canViewImages={can('WMS.QUALITY.INSPECTIONS.IMAGES.VIEW')} language={i18n.resolvedLanguage} /> : null}
-      </DialogContent>
-    </Dialog>
+    <ResponsiveDialog
+      onClose={onClose}
+      title={report.data?.header.inspectionNo || t('reports.detail.title')}
+      description={description}
+      className="!max-w-[min(96vw,75rem)] max-h-[95dvh]"
+    >
+      {report.isLoading ? <div className="grid min-h-72 place-items-center"><Loader2 className="size-7 animate-spin text-cyan-600" /></div> : null}
+      {report.isError ? <div role="alert" className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-600">{t('reports.detail.error')}</div> : null}
+      {report.data ? <InspectionReportDetail report={report.data} canViewImages={can('WMS.QUALITY.INSPECTIONS.IMAGES.VIEW')} language={i18n.resolvedLanguage} /> : null}
+    </ResponsiveDialog>
   );
 }
 
 function InspectionReportDetail({ report, canViewImages, language }: { report: QualityInspectionReportDetail; canViewImages: boolean; language?: string }): ReactElement {
   const { t } = useModuleTranslation('quality');
   const h = report.header;
-  return <div className="space-y-5 p-4 sm:p-5">
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6 2xl:grid-cols-9">
+  return <div className="min-w-0 space-y-5">
+    <div className="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(min(100%,8.75rem),1fr))]">
       <SummaryCard icon={<Boxes />} label={t('reports.detail.total')} value={quantity(h.totalQuantity)} />
       <SummaryCard icon={<ShieldCheck />} label={t('reports.detail.required')} value={quantity(h.requiredInspectionQuantity)} />
       <SummaryCard icon={<BarChart3 />} label={t('reports.detail.inspected')} value={`${quantity(h.inspectedQuantity)} · %${formatProjectNumber(h.inspectionCoveragePercent)}`} />
@@ -184,12 +190,12 @@ function InspectionReportDetail({ report, canViewImages, language }: { report: Q
 
 function ReportLine({ inspectionId, line, canViewImages, language }: { inspectionId: number; line: QualityInspectionReportLine; canViewImages: boolean; language?: string }): ReactElement {
   const { t } = useModuleTranslation('quality');
-  return <article className="rounded-xl border border-[var(--wms-app-border)] p-3">
+  return <article className="min-w-0 rounded-xl border border-[var(--wms-app-border)] p-3">
     <div className="flex flex-wrap items-start justify-between gap-3">
-      <div><strong>{line.stockCode}</strong><p className="text-xs text-[var(--wms-app-text-muted)]">{line.stockName || '—'}{line.lotNo ? ` · LOT ${line.lotNo}` : ''}{line.serialNo ? ` · SN ${line.serialNo}` : ''}</p></div>
+      <div className="min-w-0 flex-1"><strong className="break-words">{line.stockCode}</strong><p className="break-words text-xs text-[var(--wms-app-text-muted)]">{line.stockName || '—'}{line.lotNo ? ` · LOT ${line.lotNo}` : ''}{line.serialNo ? ` · SN ${line.serialNo}` : ''}</p></div>
       <div className="flex items-center gap-2"><OpsStatusBadge tone={inferOpsStatusTone(line.decision)}>{localizeEnumValue(line.decision, language)}</OpsStatusBadge>{line.imageCount > 0 && canViewImages ? <QualityInspectionLineImageGalleryDialog inspectionId={inspectionId} lineId={line.id} canView canUpload={false} canDelete={false} /> : null}</div>
     </div>
-    <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-7">
+    <div className="mt-3 grid gap-2 [grid-template-columns:repeat(auto-fill,minmax(min(100%,6.25rem),1fr))]">
       <SmallMetric label={t('reports.detail.total')} value={quantity(line.totalQuantity)} />
       <SmallMetric label={t('reports.detail.required')} value={quantity(line.requiredInspectionQuantity)} />
       <SmallMetric label={t('reports.detail.inspected')} value={quantity(line.inspectedQuantity)} />
@@ -207,10 +213,10 @@ function ReportTabButton({ active, icon, title, description, onClick }: { active
 }
 
 function SummaryCard({ icon, label, value }: { icon: ReactNode; label: string; value: string }): ReactElement {
-  return <div className="rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-3"><span className="flex items-center gap-1.5 text-[0.62rem] font-bold uppercase tracking-wide text-[var(--wms-app-text-muted)]"><span className="[&_svg]:size-3.5">{icon}</span>{label}</span><strong className="mt-1 block font-mono text-sm">{value}</strong></div>;
+  return <div className="min-w-0 rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-3"><span className="flex min-w-0 items-start gap-1.5 text-[0.62rem] font-bold uppercase tracking-wide text-[var(--wms-app-text-muted)]"><span className="mt-0.5 shrink-0 [&_svg]:size-3.5">{icon}</span><span className="min-w-0 break-words leading-snug">{label}</span></span><strong className="mt-1 block min-w-0 break-words font-mono text-sm leading-snug">{value}</strong></div>;
 }
 
-function SmallMetric({ label, value }: { label: string; value: string }): ReactElement { return <div className="rounded-lg bg-[var(--wms-app-bg)] p-2"><span className="block text-[0.6rem] font-bold uppercase text-[var(--wms-app-text-muted)]">{label}</span><strong className="mt-0.5 block font-mono text-xs">{value}</strong></div>; }
+function SmallMetric({ label, value }: { label: string; value: string }): ReactElement { return <div className="min-w-0 rounded-lg bg-[var(--wms-app-bg)] p-2"><span className="block break-words text-[0.6rem] font-bold uppercase leading-snug text-[var(--wms-app-text-muted)]">{label}</span><strong className="mt-0.5 block min-w-0 break-words font-mono text-xs leading-snug">{value}</strong></div>; }
 function EmptyText({ children }: { children: ReactNode }): ReactElement { return <p className="rounded-xl border border-dashed border-[var(--wms-app-border)] p-4 text-center text-sm text-[var(--wms-app-text-muted)]">{children}</p>; }
 function MetricProgress({ value, total }: { value: number; total: number }): ReactElement { const percent = total > 0 ? Math.min(100, Math.max(0, value * 100 / total)) : 0; return <div className="min-w-28"><strong className="font-mono text-xs">{quantity(value)} / {quantity(total)}</strong><div className="mt-1 h-1.5 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800"><span className="block h-full bg-cyan-500" style={{ width: `${percent}%` }} /></div></div>; }
 function quantity(value: number): string { return formatProjectNumber(value, { maximumFractionDigits: 3 }); }

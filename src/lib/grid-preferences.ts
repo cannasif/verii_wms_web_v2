@@ -126,9 +126,13 @@ function normalizePreferences(value: unknown, columns: GridPreferenceColumn[]): 
   const sortableKeys = columns.filter((column) => column.sortable !== false).map((column) => column.key);
   const searchableKeys = columns.filter((column) => column.searchable === true).map((column) => column.key);
   const storedSearchFields = uniqueValidKeys(parsed.searchFields, searchableKeys);
-  const searchFields = parsed.version === GRID_PREFERENCE_VERSION && storedSearchFields.length > 0
-    ? storedSearchFields
+  const mergedSearchFields = parsed.version === GRID_PREFERENCE_VERSION && storedSearchFields.length > 0
+    ? uniqueValidKeys(
+      [...storedSearchFields, ...defaults.searchFields.filter((key) => !storedSearchFields.includes(key))],
+      searchableKeys,
+    ).slice(0, MAX_GRID_SEARCH_FIELDS)
     : defaults.searchFields;
+  const searchFields = mergedSearchFields.length > 0 ? mergedSearchFields : defaults.searchFields;
   const sortBy = typeof parsed.sortBy === 'string' && sortableKeys.includes(parsed.sortBy) ? parsed.sortBy : null;
   const sortDirection = parsed.sortDirection === 'desc' ? 'desc' : 'asc';
   const pageSize = PAGE_SIZE_OPTIONS.includes(parsed.pageSize as (typeof PAGE_SIZE_OPTIONS)[number])

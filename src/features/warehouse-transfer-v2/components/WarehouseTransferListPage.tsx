@@ -85,13 +85,13 @@ export function WarehouseTransferListPage({
   }, [beginProductionCancel, variant]);
 
   const columns = useMemo<GridColumn<WarehouseTransferGridRow>[]>(() => [
-    ...systemColumns<WarehouseTransferGridRow>(),
-    { key: 'documentNo', label: t(`${G}.documentNo`), sortable: true, filterable: true, render: (row) => <span className="font-mono font-semibold">{row.documentNo}</span> },
-    { key: 'documentDate', label: t(`${G}.documentDate`), sortable: true, filterable: true, render: (row) => formatProjectDate(row.documentDate) },
-    { key: 'sourceWarehouseCode', label: t(`${G}.sourceWarehouseCode`), sortable: true, filterable: true, render: (row) => row.sourceWarehouseCode },
-    { key: 'sourceWarehouseName', label: t(`${G}.sourceWarehouseName`), sortable: true, filterable: true, render: (row) => row.sourceWarehouseName },
-    { key: 'targetWarehouseCode', label: t(`${G}.targetWarehouseCode`), sortable: true, filterable: true, render: (row) => row.targetWarehouseCode },
-    { key: 'targetWarehouseName', label: t(`${G}.targetWarehouseName`), sortable: true, filterable: true, render: (row) => row.targetWarehouseName },
+    ...systemColumns<WarehouseTransferGridRow>({ searchable: ['createdBy', 'updatedBy'], defaultSearch: ['createdBy', 'updatedBy'] }),
+    { key: 'documentNo', label: t(`${G}.documentNo`), sortable: true, filterable: true, searchable: true, defaultSearch: true, render: (row) => <span className="font-mono font-semibold">{row.documentNo}</span> },
+    { key: 'documentDate', label: t(`${G}.documentDate`), sortable: true, filterable: true, searchable: false, render: (row) => formatProjectDate(row.documentDate) },
+    { key: 'sourceWarehouseCode', label: t(`${G}.sourceWarehouseCode`), sortable: true, filterable: true, searchable: true, defaultSearch: true, render: (row) => row.sourceWarehouseCode },
+    { key: 'sourceWarehouseName', label: t(`${G}.sourceWarehouseName`), sortable: true, filterable: true, searchable: true, defaultSearch: true, render: (row) => row.sourceWarehouseName },
+    { key: 'targetWarehouseCode', label: t(`${G}.targetWarehouseCode`), sortable: true, filterable: true, searchable: true, defaultSearch: true, render: (row) => row.targetWarehouseCode },
+    { key: 'targetWarehouseName', label: t(`${G}.targetWarehouseName`), sortable: true, filterable: true, searchable: true, defaultSearch: true, render: (row) => row.targetWarehouseName },
     { key: 'initiationMode', label: t(`${G}.flow`), sortable: true, filterable: true, render: (row) => row.initiationMode },
     { key: 'status', label: t(`${G}.status`), sortable: true, filterable: true, render: (row) => row.status },
     { key: 'lineCount', label: t(`${G}.lineCount`), sortable: true, filterable: true, render: (row) => row.lineCount },
@@ -112,10 +112,11 @@ export function WarehouseTransferListPage({
     },
   ], [baseUrl, beginCancel, cancelPrecheckId, gridLanguage, load, loadingId, t]);
 
+  const gridPageKey = `${variant}-${subcontractingDirection ?? 'all'}-transfer-records-v2`;
   const refreshed = () => setRevision((value) => value + 1);
   return (
     <div data-no-auto-localize="true">
-      <AdvancedDataGrid key={revision} pageKey={`${variant}-${subcontractingDirection ?? 'all'}-transfers`} title={title}
+      <AdvancedDataGrid key={revision} pageKey={gridPageKey} title={title}
         description={t(`${G}.description`)}
         columns={columns} fetchPage={transferApi.paged} />
       {detail && <Detail detail={detail} baseUrl={baseUrl} close={() => setDetail(null)} />}
