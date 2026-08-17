@@ -61,6 +61,18 @@
       "week": "Week",
       "month": "Month",
       "year": "Year"
+    },
+    "assignmentProgress": {
+      "progressHover": "{{percent}}%",
+      "progress": "{{assigned}} / {{total}} recipe lines assigned ({{percent}}%)",
+      "statusNeutral": "Unassigned",
+      "statusActive": "Partially assigned",
+      "statusDone": "Fully assigned",
+      "assignedLabel": "Assigned",
+      "totalLabel": "Recipe lines",
+      "hintNeutral": "No material assignments yet.",
+      "hintActive": "Some recipe lines have been assigned.",
+      "hintDone": "All recipe lines have been assigned."
     }
   }
 }

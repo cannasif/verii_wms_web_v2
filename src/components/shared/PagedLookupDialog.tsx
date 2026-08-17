@@ -635,6 +635,7 @@ export function PagedLookupDialog<T>({
       <PopoverPrimitive.Portal container={portalContainer}>
         <PopoverPrimitive.Content
           align="start"
+          side="top"
           sideOffset={6}
           collisionPadding={12}
           onOpenAutoFocus={(event) => event.preventDefault()}

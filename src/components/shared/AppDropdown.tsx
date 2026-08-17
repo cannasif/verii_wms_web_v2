@@ -248,6 +248,7 @@ export function AppDropdown<TValue extends string = string>({
       <PopoverPrimitive.Portal container={resolvedPortalContainer}>
         <PopoverPrimitive.Content
           align={contentAlign}
+          side="top"
           sideOffset={6}
           collisionPadding={12}
           className={cn(

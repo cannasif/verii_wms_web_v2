@@ -61,6 +61,9 @@ import { filterLocalGridPage } from '../production-work-order-transfer-grid.util
 import { productionApi } from '../api';
 import type { ProductionSourceWorkOrder } from '../types';
 import { ProductionWorkOrderAssignmentRestoreDialog } from './ProductionWorkOrderAssignmentDialogs';
+import { TransferPickingProgressRing } from './TransferPickingProgressRing';
+
+const TRANSFER_TAB_GRID_PAGE_KEY = 'production-work-order-transfers-v4';
 
 const TAB_LABELS: Record<ProductionWorkOrderTransferTab, string> = {
   Picking: 'Toplamada',
@@ -182,7 +185,7 @@ function TransferHandoffAction({
       setHandoffUser(null);
       setHandoffReason('');
       onCompleted();
-      await queryClient.invalidateQueries({ queryKey: ['advanced-grid', `production-work-order-transfers-${tab}`] });
+      await queryClient.invalidateQueries({ queryKey: ['advanced-grid', `${TRANSFER_TAB_GRID_PAGE_KEY}-${tab}`] });
       await queryClient.invalidateQueries({ queryKey: ['production-work-order-transfer-tasks', transferId] });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Devir başarısız.');
@@ -335,6 +338,7 @@ export type ProductionWorkOrderTransferGridRow = WarehouseTransferGridRow & {
   projectCode?: string;
   externalReferenceNo?: string;
   productionOrderNo?: string;
+  remainingQuantity: number;
   cancelledWorkOrder?: ProductionSourceWorkOrder;
   /** Toplamada sekmesinde Benim İşlerim API'si ile eşleşen transferler. */
   hasMyAssignment?: boolean;
@@ -386,6 +390,10 @@ function warehouseFlowLabel(sourceCode: unknown, targetCode: unknown): string {
   return `${sourceCode} → ${targetCode}`;
 }
 
+function transferRemainingQuantity(requestedQuantity: number, pickedQuantity: number): number {
+  return Math.max(0, requestedQuantity - pickedQuantity);
+}
+
 function toGridRow(row: ProductionWorkOrderTransferHeaderRow): ProductionWorkOrderTransferGridRow {
   return {
     id: row.transferId,
@@ -412,6 +420,7 @@ function toGridRow(row: ProductionWorkOrderTransferHeaderRow): ProductionWorkOrd
     shippedQuantity: row.shippedQuantity ?? 0,
     receivedQuantity: row.receivedQuantity ?? 0,
     putawayQuantity: row.putawayQuantity ?? 0,
+    remainingQuantity: transferRemainingQuantity(row.requestedQuantity, row.pickedQuantity),
     priority: 3,
     plannedDispatchAtUtc: undefined,
     plannedArrivalAtUtc: undefined,
@@ -556,12 +565,12 @@ export function ProductionWorkOrderTransferTabPanel({
   }, [matchesPeriod, tab, refreshKey]);
 
   const refreshGroups = useCallback(() => {
-    void queryClient.invalidateQueries({ queryKey: ['advanced-grid', `production-work-order-transfers-${tab}`] });
+    void queryClient.invalidateQueries({ queryKey: ['advanced-grid', `${TRANSFER_TAB_GRID_PAGE_KEY}-${tab}`] });
   }, [queryClient, tab]);
 
   const refreshAllTransferGrids = useCallback(() => {
     for (const gridTab of ['Picking', 'MyAssignments', 'Completed', 'Cancelled'] as const) {
-      void queryClient.invalidateQueries({ queryKey: ['advanced-grid', `production-work-order-transfers-${gridTab}`] });
+      void queryClient.invalidateQueries({ queryKey: ['advanced-grid', `${TRANSFER_TAB_GRID_PAGE_KEY}-${gridTab}`] });
     }
   }, [queryClient]);
 
@@ -594,14 +603,13 @@ export function ProductionWorkOrderTransferTabPanel({
   };
 
   const columns = useMemo<GridColumn<ProductionWorkOrderTransferGridRow>[]>(() => [
-    ...systemColumns<ProductionWorkOrderTransferGridRow>().map((column) => (
-      column.key !== 'id'
-        ? column
-        : tab === 'Completed'
+    ...systemColumns<ProductionWorkOrderTransferGridRow>()
+      .filter((column) => column.key === 'id')
+      .map((column) => (
+        tab === 'Completed'
         ? {
             ...column,
-            label: 'id',
-            preserveLabel: true,
+            label: tc(`${G}.id`),
             render: (row: ProductionWorkOrderTransferGridRow) => {
               const erpError = productionTransferErpErrorMessage(row.source);
               const showErpWarning = productionTransferNeedsErpAttention(row.source);
@@ -632,8 +640,7 @@ export function ProductionWorkOrderTransferTabPanel({
         : tab === 'Cancelled'
           ? {
               ...column,
-              label: 'id',
-              preserveLabel: true,
+              label: tc(`${G}.id`),
               contextValue: (row: ProductionWorkOrderTransferGridRow) => (
                 isCancelledWorkOrderAssignmentRow(row)
                   ? row.cancelledWorkOrder.cancellationId ?? row.id
@@ -649,10 +656,14 @@ export function ProductionWorkOrderTransferTabPanel({
             }
           : {
               ...column,
-              label: 'id',
-              preserveLabel: true,
+              label: tc(`${G}.id`),
               render: (row: ProductionWorkOrderTransferGridRow) => (
-                <span className="font-mono text-xs font-semibold">{row.id}</span>
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="font-mono text-xs font-semibold">{row.id}</span>
+                  {tab === 'Picking' ? (
+                    <TransferPickingProgressRing source={row.source} />
+                  ) : null}
+                </span>
               ),
             }
     )),
@@ -753,33 +764,13 @@ export function ProductionWorkOrderTransferTabPanel({
       render: (row) => formatProjectNumber(row.requestedQuantity),
     },
     {
-      key: 'pickedQuantity',
-      label: tc(`${G}.picked`),
+      key: 'remainingQuantity',
+      label: tc(`${G}.remaining`),
       sortable: true,
       filterable: true,
-      render: (row) => formatProjectNumber(row.pickedQuantity),
+      render: (row) => formatProjectNumber(row.remainingQuantity),
     },
-    {
-      key: 'shippedQuantity',
-      label: tc(`${G}.shipped`),
-      sortable: true,
-      filterable: true,
-      render: (row) => formatProjectNumber(row.shippedQuantity),
-    },
-    {
-      key: 'receivedQuantity',
-      label: tc(`${G}.received`),
-      sortable: true,
-      filterable: true,
-      render: (row) => formatProjectNumber(row.receivedQuantity),
-    },
-    {
-      key: 'putawayQuantity',
-      label: tc(`${G}.putaway`),
-      sortable: true,
-      filterable: true,
-      render: (row) => formatProjectNumber(row.putawayQuantity),
-    },
+    ...systemColumns<ProductionWorkOrderTransferGridRow>().filter((column) => column.key !== 'id'),
     {
       key: 'actions',
       label: tc(`${G}.actions`),
@@ -891,7 +882,7 @@ export function ProductionWorkOrderTransferTabPanel({
       <AdvancedDataGrid<ProductionWorkOrderTransferGridRow>
         compactShell
         title=""
-        pageKey={`production-work-order-transfers-${tab}`}
+        pageKey={`${TRANSFER_TAB_GRID_PAGE_KEY}-${tab}`}
         refreshKey={`${refreshKey}:${periodKey}`}
         retainQueryCache
         columns={columns}

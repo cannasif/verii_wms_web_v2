@@ -77,6 +77,18 @@
       "week": "Hafta",
       "month": "Ay",
       "year": "Yıl"
+    },
+    "assignmentProgress": {
+      "progressHover": "%{{percent}}",
+      "progress": "{{assigned}} / {{total}} reçete satırı atandı (%{{percent}})",
+      "statusNeutral": "Atanmadı",
+      "statusActive": "Kısmi atama",
+      "statusDone": "Tam atandı",
+      "assignedLabel": "Atanan",
+      "totalLabel": "Reçete satırı",
+      "hintNeutral": "Henüz malzeme ataması yapılmadı.",
+      "hintActive": "Bazı reçete satırları atandı.",
+      "hintDone": "Tüm reçete satırları atandı."
     }
   }
 }

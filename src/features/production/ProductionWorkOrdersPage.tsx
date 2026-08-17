@@ -492,7 +492,7 @@ const PENDING_SEARCH_KEYS = [
   'listingKindLabel',
   'stockCode',
   'stockName',
-  'workOrderQuantity',
+  'recipeLineCount',
   'unitCode',
   'projectCode',
   'warehouseFlow',
@@ -592,9 +592,16 @@ export function ProductionWorkOrdersPage(): ReactElement {
     setTabCountsRevision((current) => current + 1);
   }, []);
 
+  const createdRange = useMemo(() => {
+    if (!createdPeriod) return undefined;
+    const { start, end } = buildCreatedPeriodRange(createdPeriod, createdPeriodAnchor);
+    return { fromDate: toDateOnlyIso(start), toDate: toDateOnlyIso(end) };
+  }, [createdPeriod, createdPeriodAnchor]);
+  const tabCountsPeriodKey = `${createdPeriod ?? 'all'}:${createdPeriodAnchor.getTime()}`;
+
   const tabCounts = useQuery({
-    queryKey: ['production', 'work-orders', 'tab-counts', tabCountsRevision],
-    queryFn: fetchProductionWorkOrderTabCounts,
+    queryKey: ['production', 'work-orders', 'tab-counts', tabCountsRevision, tabCountsPeriodKey],
+    queryFn: () => fetchProductionWorkOrderTabCounts(createdPeriod, createdPeriodAnchor),
     refetchInterval: 60_000,
   });
 
@@ -620,12 +627,6 @@ export function ProductionWorkOrdersPage(): ReactElement {
       return new Set(current).add(activeTab);
     });
   }, [activeTab]);
-
-  const createdRange = useMemo(() => {
-    if (!createdPeriod) return undefined;
-    const { start, end } = buildCreatedPeriodRange(createdPeriod, createdPeriodAnchor);
-    return { fromDate: toDateOnlyIso(start), toDate: toDateOnlyIso(end) };
-  }, [createdPeriod, createdPeriodAnchor]);
 
   const loadPending = useCallback(async (force = false) => {
     setLoading(true);
@@ -660,7 +661,7 @@ export function ProductionWorkOrdersPage(): ReactElement {
       : { ...request, sortBy: 'workOrderDate', sortDirection: 'desc' as const };
     const visibleCellSearchFields = sortedRequest.searchFields?.flatMap((field) => {
       if (field === 'stockCode') return ['stockCode', 'stockName'];
-      if (field === 'workOrderQuantity') return ['workOrderQuantity', 'unitCode'];
+      if (field === 'recipeLineCount') return ['recipeLineCount', 'unitCode'];
       return [field];
     });
     return filterLocalGridPage(
@@ -739,14 +740,14 @@ export function ProductionWorkOrdersPage(): ReactElement {
       ),
     },
     {
-      key: 'workOrderQuantity',
+      key: 'recipeLineCount',
       label: 'Miktar / birim',
       sortable: true,
       filterable: true,
       filterType: 'number',
-      contextValue: (row) => `${formatProjectNumber(row.workOrderQuantity)} ${row.unitCode ?? ''}`.trim(),
+      contextValue: (row) => `${formatProjectNumber(row.recipeLineCount ?? 0)} ${row.unitCode ?? ''}`.trim(),
       render: (row) => (
-        <span className="font-bold">{formatProjectNumber(row.workOrderQuantity)} {row.unitCode ?? ''}</span>
+        <span className="font-bold">{formatProjectNumber(row.recipeLineCount ?? 0)} {row.unitCode ?? ''}</span>
       ),
     },
     {

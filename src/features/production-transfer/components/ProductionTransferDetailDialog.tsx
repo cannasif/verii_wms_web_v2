@@ -142,7 +142,7 @@ export function ProductionTransferDetailDialog({
     try {
       const result = await productionTransferApi.postErp(transferId);
       queryClient.setQueryData(['production-transfer-execution', transferId], result);
-      await queryClient.invalidateQueries({ queryKey: ['advanced-grid', 'production-work-order-transfers-Completed'] });
+      await queryClient.invalidateQueries({ queryKey: ['advanced-grid', 'production-work-order-transfers-v4-Completed'] });
       if (result.erpIntegrationStatus === 'Succeeded') toast.success(t('execution.erp.retrySucceeded'));
       else if (result.erpIntegrationStatus === 'CommitUncertain') toast.warning(t('execution.erp.uncertainAfterCompletion'));
       else toast.error(result.erpErrorMessage || t('execution.erp.retryFailed'));

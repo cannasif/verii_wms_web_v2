@@ -1,14 +1,18 @@
-import { useState, type ReactElement } from 'react';
+import { useMemo, useState, type ReactElement } from 'react';
 import * as PopoverPrimitive from '@radix-ui/react-popover';
+import { useTranslation } from 'react-i18next';
 import { OpsStatusBadge, type OpsStatusTone } from '@/components/shared/OpsStatusBadge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import { formatProjectNumber } from '@/lib/project-format';
-import type { ProductionSourceWorkOrder } from '../types';
+import type { ProductionWorkOrderTransferHeaderRow } from '@/features/production-transfer/api';
+import { productionTransferEnumLabel } from '@/features/production-transfer/localization/enum-labels';
+import {
+  hasOpenCancellationReturnTask,
+  productionWorkOrderTransferPickingStatusLabel,
+} from '@/features/production-transfer/production-transfer-task-labels';
 
 const RING_SIZE = 20;
 const STROKE_WIDTH = 2.5;
-const G = 'workOrders.assignmentProgress';
 
 const RING_COLORS: Record<OpsStatusTone, string> = {
   neutral: '#64748b',
@@ -19,68 +23,92 @@ const RING_COLORS: Record<OpsStatusTone, string> = {
   quality: '#8b5cf6',
 };
 
-function resolveAssignmentProgress(
-  row: ProductionSourceWorkOrder,
-): { assigned: number; total: number; percent: number } | null {
-  const total = row.recipeLineCount ?? 0;
-  if (total <= 0) return null;
-  const assigned = Math.min(Math.max(row.assignedRecipeLineCount ?? 0, 0), total);
-  const percent = assigned <= 0 ? 0 : Math.round((assigned / total) * 100);
-  return { assigned, total, percent };
+function resolvePickingProgress(
+  pickedQuantity: number,
+  requestedQuantity: number,
+): { picked: number; planned: number; percent: number } | null {
+  const planned = requestedQuantity ?? 0;
+  if (planned <= 0) return null;
+  const picked = Math.min(Math.max(pickedQuantity ?? 0, 0), planned);
+  const percent = picked <= 0 ? 0 : Math.round((picked / planned) * 100);
+  return { picked, planned, percent };
 }
 
-function resolveAssignmentProgressTone(progress: { percent: number }): OpsStatusTone {
-  if (progress.percent >= 100) return 'done';
-  if (progress.percent > 0) return 'active';
+function resolvePickingProgressTone(
+  source: ProductionWorkOrderTransferHeaderRow,
+  progress: { percent: number },
+): OpsStatusTone {
+  const { transferStatus, workflowStatus, tasks } = source;
+
+  if (
+    transferStatus === 'Cancelled'
+    && (tasks.length === 0 || hasOpenCancellationReturnTask(tasks))
+  ) {
+    return 'danger';
+  }
+
+  if (transferStatus === 'AwaitingHandover' || workflowStatus === 'AwaitingHandover') {
+    return 'pending';
+  }
+
+  if (progress.percent >= 100) {
+    return 'done';
+  }
+
+  if (progress.percent > 0 || transferStatus === 'Released') {
+    return 'active';
+  }
+
   return 'neutral';
 }
 
-function assignmentStatusKey(tone: OpsStatusTone): string {
+function pickingProgressHintKey(tone: OpsStatusTone): string {
   switch (tone) {
     case 'done':
-      return `${G}.statusDone`;
+      return 'dataGrid.transferRecords.pickedProgressHintDone';
+    case 'pending':
+      return 'dataGrid.transferRecords.pickedProgressHintPending';
+    case 'danger':
+      return 'dataGrid.transferRecords.pickedProgressHintDanger';
     case 'active':
-      return `${G}.statusActive`;
+      return 'dataGrid.transferRecords.pickedProgressHintActive';
     default:
-      return `${G}.statusNeutral`;
+      return 'dataGrid.transferRecords.pickedProgressHintNeutral';
   }
 }
 
-function assignmentHintKey(tone: OpsStatusTone): string {
-  switch (tone) {
-    case 'done':
-      return `${G}.hintDone`;
-    case 'active':
-      return `${G}.hintActive`;
-    default:
-      return `${G}.hintNeutral`;
-  }
-}
-
-export function WorkOrderAssignmentProgressRing({
-  row,
+export function TransferPickingProgressRing({
+  source,
 }: {
-  row: ProductionSourceWorkOrder;
+  source: ProductionWorkOrderTransferHeaderRow;
 }): ReactElement | null {
-  const { t } = useModuleTranslation('production');
+  const { t } = useTranslation('common');
+  const { t: pt } = useTranslation('production-transfer');
   const [open, setOpen] = useState(false);
 
-  const progress = resolveAssignmentProgress(row);
+  const progress = resolvePickingProgress(source.pickedQuantity, source.requestedQuantity);
+  const statusLabel = useMemo(
+    () => productionWorkOrderTransferPickingStatusLabel(
+      source,
+      productionTransferEnumLabel(pt, 'transferStatus', source.transferStatus),
+    ),
+    [pt, source],
+  );
+
   if (!progress) return null;
 
-  const tone = resolveAssignmentProgressTone(progress);
+  const tone = resolvePickingProgressTone(source, progress);
   const ringColor = RING_COLORS[tone];
   const radius = (RING_SIZE - STROKE_WIDTH) / 2;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference * (1 - progress.percent / 100);
-  const statusLabel = t(assignmentStatusKey(tone));
-  const hoverLabel = t(`${G}.progressHover`, { percent: progress.percent });
-  const progressLabel = t(`${G}.progress`, {
-    assigned: formatProjectNumber(progress.assigned),
-    total: formatProjectNumber(progress.total),
+  const hoverLabel = t('dataGrid.transferRecords.pickedProgressHover', { percent: progress.percent });
+  const progressLabel = t('dataGrid.transferRecords.pickedProgress', {
+    picked: formatProjectNumber(progress.picked),
+    planned: formatProjectNumber(progress.planned),
     percent: progress.percent,
   });
-  const hint = t(assignmentHintKey(tone));
+  const hint = t(pickingProgressHintKey(tone));
   const ariaLabel = `${statusLabel}. ${progressLabel}. ${hint}`;
 
   const ringButton = (
@@ -158,9 +186,9 @@ export function WorkOrderAssignmentProgressRing({
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between gap-2 text-[0.68rem] text-[var(--wms-app-text-muted)]">
-                  <span>{t(`${G}.assignedLabel`)}</span>
+                  <span>{t('dataGrid.transferRecords.picked')}</span>
                   <span className="font-mono font-semibold text-[var(--wms-ops-shell-fg)]">
-                    {formatProjectNumber(progress.assigned)}
+                    {formatProjectNumber(progress.picked)}
                   </span>
                 </div>
                 <div
@@ -180,9 +208,9 @@ export function WorkOrderAssignmentProgressRing({
                   />
                 </div>
                 <div className="flex items-center justify-between gap-2 text-[0.68rem] text-[var(--wms-app-text-muted)]">
-                  <span>{t(`${G}.totalLabel`)}</span>
+                  <span>{t('dataGrid.transferRecords.planned')}</span>
                   <span className="font-mono font-semibold text-[var(--wms-ops-shell-fg)]">
-                    {formatProjectNumber(progress.total)}
+                    {formatProjectNumber(progress.planned)}
                   </span>
                 </div>
               </div>

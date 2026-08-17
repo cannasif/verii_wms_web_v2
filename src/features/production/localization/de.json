@@ -61,6 +61,18 @@
       "week": "Woche",
       "month": "Monat",
       "year": "Jahr"
+    },
+    "assignmentProgress": {
+      "progressHover": "{{percent}} %",
+      "progress": "{{assigned}} / {{total}} Rezeptpositionen zugewiesen ({{percent}} %)",
+      "statusNeutral": "Nicht zugewiesen",
+      "statusActive": "Teilweise zugewiesen",
+      "statusDone": "Vollständig zugewiesen",
+      "assignedLabel": "Zugewiesen",
+      "totalLabel": "Rezeptpositionen",
+      "hintNeutral": "Noch keine Materialzuweisung.",
+      "hintActive": "Einige Rezeptpositionen wurden zugewiesen.",
+      "hintDone": "Alle Rezeptpositionen wurden zugewiesen."
     }
   }
 }

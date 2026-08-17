@@ -61,6 +61,18 @@
       "week": "Settimana",
       "month": "Mese",
       "year": "Anno"
+    },
+    "assignmentProgress": {
+      "progressHover": "{{percent}}%",
+      "progress": "{{assigned}} / {{total}} righe ricetta assegnate ({{percent}}%)",
+      "statusNeutral": "Non assegnato",
+      "statusActive": "Assegnazione parziale",
+      "statusDone": "Completamente assegnato",
+      "assignedLabel": "Assegnate",
+      "totalLabel": "Righe ricetta",
+      "hintNeutral": "Nessuna assegnazione materiale ancora.",
+      "hintActive": "Alcune righe ricetta sono state assegnate.",
+      "hintDone": "Tutte le righe ricetta sono state assegnate."
     }
   }
 }

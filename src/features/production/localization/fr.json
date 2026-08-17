@@ -61,6 +61,18 @@
       "week": "Semaine",
       "month": "Mois",
       "year": "Année"
+    },
+    "assignmentProgress": {
+      "progressHover": "{{percent}} %",
+      "progress": "{{assigned}} / {{total}} lignes de nomenclature affectées ({{percent}} %)",
+      "statusNeutral": "Non affecté",
+      "statusActive": "Affectation partielle",
+      "statusDone": "Entièrement affecté",
+      "assignedLabel": "Affectées",
+      "totalLabel": "Lignes de nomenclature",
+      "hintNeutral": "Aucune affectation de matière pour l'instant.",
+      "hintActive": "Certaines lignes de nomenclature ont été affectées.",
+      "hintDone": "Toutes les lignes de nomenclature ont été affectées."
     }
   }
 }

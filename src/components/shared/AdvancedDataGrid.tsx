@@ -96,8 +96,8 @@ import {
 import { cn } from '@/lib/utils';
 import { canRetainGridPlaceholder } from '@/lib/grid-query-state';
 import {
+  isRefreshOnCooldown,
   nextRefreshAvailableAt,
-  remainingRefreshCooldownSeconds,
 } from '@/lib/grid-refresh-cooldown';
 import { withRequestAbortSignal } from '@/lib/request-utils';
 import {
@@ -705,8 +705,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
     return () => window.clearInterval(intervalId);
   }, [refreshAvailableAt]);
 
-  const refreshCooldownSeconds = remainingRefreshCooldownSeconds(refreshAvailableAt, refreshNowMs);
-  const refreshOnCooldown = refreshCooldownSeconds > 0;
+  const refreshOnCooldown = isRefreshOnCooldown(refreshAvailableAt, refreshNowMs);
 
   useEffect(() => {
     if (loadedKey === storageKey) return;
@@ -1327,14 +1326,10 @@ export function AdvancedDataGrid<T extends { id: number }>({
             onClick={handleRefreshClick}
             disabled={query.isFetching || refreshOnCooldown}
             data-wms-api-loading="off"
-            aria-live="polite"
+            aria-label={t('common.refresh')}
           >
             <RefreshCw className={cn('size-3.5', query.isFetching && 'animate-spin')} aria-hidden />
-            <span className={cn(!refreshOnCooldown && 'hidden md:inline')}>
-              {refreshOnCooldown
-                ? t('common.refreshCountdown', { seconds: refreshCooldownSeconds })
-                : t('common.refresh')}
-            </span>
+            <span className="hidden md:inline">{t('common.refresh')}</span>
           </OpsActionButton>
           {toolbarAfterRefreshExtra}
         </div>

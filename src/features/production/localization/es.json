@@ -61,6 +61,18 @@
       "week": "Semana",
       "month": "Mes",
       "year": "Año"
+    },
+    "assignmentProgress": {
+      "progressHover": "{{percent}} %",
+      "progress": "{{assigned}} / {{total}} líneas de receta asignadas ({{percent}} %)",
+      "statusNeutral": "Sin asignar",
+      "statusActive": "Asignación parcial",
+      "statusDone": "Totalmente asignado",
+      "assignedLabel": "Asignadas",
+      "totalLabel": "Líneas de receta",
+      "hintNeutral": "Aún no hay asignaciones de material.",
+      "hintActive": "Algunas líneas de receta han sido asignadas.",
+      "hintDone": "Todas las líneas de receta han sido asignadas."
     }
   }
 }

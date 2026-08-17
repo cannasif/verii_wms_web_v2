@@ -61,6 +61,18 @@
       "week": "أسبوع",
       "month": "شهر",
       "year": "سنة"
+    },
+    "assignmentProgress": {
+      "progressHover": "{{percent}}%",
+      "progress": "{{assigned}} / {{total}} سطر وصفة معيّن ({{percent}}%)",
+      "statusNeutral": "غير معيّن",
+      "statusActive": "تعيين جزئي",
+      "statusDone": "معيّن بالكامل",
+      "assignedLabel": "المعيّن",
+      "totalLabel": "سطور الوصفة",
+      "hintNeutral": "لم يتم تعيين مواد بعد.",
+      "hintActive": "تم تعيين بعض سطور الوصفة.",
+      "hintDone": "تم تعيين جميع سطور الوصفة."
     }
   }
 }

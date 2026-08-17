@@ -971,6 +971,7 @@ export function QualityInspectionsPage({
   const canPrioritizeInspections = can("WMS.QUALITY.INSPECTIONS.PRIORITIZE");
   const singleStatusFacet =
     quarantineOnly || (statusFacet !== QUALITY_INSPECTION_STATUS_ALL && statusFacet.trim().length > 0);
+  const priorityListUiEnabled = singleStatusFacet;
   const pageKey = quarantineOnly ? "quality-quarantine-v2" : "quality-inspections-v2";
   const prioritizableStatuses = useMemo(
     () => new Set(statusCatalogQuery.data?.items.filter((item) => item.canPrioritize).map((item) => item.value) ?? []),
@@ -1104,7 +1105,7 @@ export function QualityInspectionsPage({
             {showPriorityGrip ? (
               <GridRowReorderGrip label={t("list.priority.dragHandle")} />
             ) : null}
-            {r.isPriority ? (
+            {priorityListUiEnabled && r.isPriority ? (
               <span
                 className="inline-flex items-center gap-0.5 text-rose-600 dark:text-rose-300"
                 aria-label={
@@ -1265,7 +1266,7 @@ export function QualityInspectionsPage({
         width: 220,
         render: (r) => (
           <div className="flex items-center justify-center gap-1">
-          {can("WMS.QUALITY.INSPECTIONS.PRIORITIZE") && canToggleQualityInspectionPriority(r.status, prioritizableStatuses) ? (
+          {priorityListUiEnabled && can("WMS.QUALITY.INSPECTIONS.PRIORITIZE") && canToggleQualityInspectionPriority(r.status, prioritizableStatuses) ? (
             <button
               type="button"
               onClick={() => void toggleInspectionPriority(r)}
@@ -1302,7 +1303,7 @@ export function QualityInspectionsPage({
       },
     ];
     },
-    [can, editLoading, moduleReady, openEdit, prioritizableStatuses, priorityDragEnabled, priorityLoading, priorityReorderLoading, t, toggleInspectionPriority],
+    [can, editLoading, moduleReady, openEdit, prioritizableStatuses, priorityDragEnabled, priorityListUiEnabled, priorityLoading, priorityReorderLoading, t, toggleInspectionPriority],
   );
   const moveInspectionToListStatus = useCallback(async (
     targetStatus: string,
@@ -1392,7 +1393,7 @@ export function QualityInspectionsPage({
         )
       }
       onRowDoubleClick={(row) => void openEdit(row.id)}
-      rowClassName={(row) => qualityInspectionPriorityRowClass(row.isPriority)}
+      rowClassName={(row) => (priorityListUiEnabled ? qualityInspectionPriorityRowClass(row.isPriority) : undefined)}
       onSortStateChange={setGridSortBy}
       rowReorder={
         priorityDragEnabled
