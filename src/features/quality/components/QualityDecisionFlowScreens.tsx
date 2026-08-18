@@ -195,15 +195,25 @@ export function QualityReceiptCreatedSuccessPanel({
   result,
   lineCount,
   sourceLabel,
+  sourceWaybillNo,
   onDone,
 }: {
   result: QualityDecisionResult;
   lineCount: number;
   sourceLabel?: string;
+  sourceWaybillNo?: string;
   onDone: () => void;
 }): ReactElement {
   const { t } = useModuleTranslation("quality");
-  const documentValue = (result.goodsReceiptDocumentNo || "").trim();
+  const isElectronicWaybill = Boolean(
+    result.goodsReceiptElectronicWaybillNo?.trim(),
+  );
+  const documentValue = (
+    result.goodsReceiptElectronicWaybillNo ||
+    result.goodsReceiptWaybillNo ||
+    sourceWaybillNo ||
+    ""
+  ).trim();
 
   return (
     <div className="wms-ops-gr-success wms-ops-gr-success--done">
@@ -225,7 +235,11 @@ export function QualityReceiptCreatedSuccessPanel({
         </p>
         {documentValue ? (
           <SuccessDocumentChip
-            label={t("decisionFlow.success.documentLabel")}
+            label={t(
+              isElectronicWaybill
+                ? "decisionFlow.success.electronicDocumentLabel"
+                : "decisionFlow.success.documentLabel",
+            )}
             value={documentValue}
           />
         ) : null}

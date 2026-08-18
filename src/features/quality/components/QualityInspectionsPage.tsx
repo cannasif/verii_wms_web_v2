@@ -150,9 +150,9 @@ type DispositionDraft = {
 type DispositionDraftImages = Record<number, Record<string, File[]>>;
 
 type QualityDecisionFlow =
-  | { phase: "running"; lineCount: number; sourceLabel?: string }
-  | { phase: "error"; message: string; lineCount: number; sourceLabel?: string }
-  | { phase: "success"; result: QualityDecisionResult; lineCount: number; sourceLabel?: string };
+  | { phase: "running"; lineCount: number; sourceLabel?: string; sourceWaybillNo?: string }
+  | { phase: "error"; message: string; lineCount: number; sourceLabel?: string; sourceWaybillNo?: string }
+  | { phase: "success"; result: QualityDecisionResult; lineCount: number; sourceLabel?: string; sourceWaybillNo?: string };
 
 const QUALITY_LOCATION_VALUE_SEPARATOR = "|";
 const QUALITY_DECISION_NESTED_LAYER =
@@ -1491,6 +1491,7 @@ export function QualityInspectionsPage({
                 result={decisionFlow.result}
                 lineCount={decisionFlow.lineCount}
                 sourceLabel={decisionFlow.sourceLabel}
+                sourceWaybillNo={decisionFlow.sourceWaybillNo}
                 onDone={() => setDecisionFlow(null)}
               />
             ) : (
@@ -1502,7 +1503,7 @@ export function QualityInspectionsPage({
                     : undefined
                 }
                 lineCount={decisionFlow.lineCount}
-                documentNo={decisionFlow.sourceLabel}
+                documentNo={decisionFlow.sourceWaybillNo}
                 sourceLabel={decisionFlow.sourceLabel}
               />
             )}
@@ -2191,14 +2192,16 @@ function InspectionDetailPanel({
     setSaveLocked(true);
     setApplyConfirmOpen(false);
     setSaving(true);
+    const sourceWaybillNo = detail.header.sourceWaybillNo?.trim() || undefined;
     const sourceLabel =
-      detail.header.sourceWaybillNo?.trim() ||
+      sourceWaybillNo ||
       detail.header.sourceDocumentNo?.trim() ||
       undefined;
     onDecisionFlowChange({
       phase: "running",
       lineCount: pending.length,
       sourceLabel,
+      sourceWaybillNo,
     });
     try {
       if (dispositionRequests.length > 0) {
@@ -2318,6 +2321,7 @@ function InspectionDetailPanel({
           result: lastResult,
           lineCount: pending.length,
           sourceLabel,
+          sourceWaybillNo,
         });
         setSaving(false);
         return true;
@@ -2362,6 +2366,7 @@ function InspectionDetailPanel({
         message: errorMessage,
         lineCount: pending.length,
         sourceLabel,
+        sourceWaybillNo,
       });
       await new Promise((resolve) => window.setTimeout(resolve, 2600));
       onDecisionFlowChange(null);

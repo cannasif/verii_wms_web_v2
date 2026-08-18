@@ -198,6 +198,7 @@
       "subtitle": "Kalite onayı sonrası irsaliye oluşturma işlemi tamamlandı.",
       "subtitleWithSource": "{{name}} için kalite onayı sonrası irsaliye oluşturma işlemi tamamlandı.",
       "documentLabel": "İrsaliye no",
+      "electronicDocumentLabel": "E-İrsaliye no",
       "copyDocument": "İrsaliye numarasını kopyala",
       "documentCopied": "İrsaliye numarası kopyalandı",
       "documentCopyFailed": "İrsaliye numarası kopyalanamadı",

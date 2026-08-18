@@ -198,6 +198,7 @@
       "subtitle": "Waybill creation completed after quality approval.",
       "subtitleWithSource": "Waybill creation completed after quality approval for {{name}}.",
       "documentLabel": "Waybill no",
+      "electronicDocumentLabel": "E-waybill no",
       "copyDocument": "Copy waybill number",
       "documentCopied": "Waybill number copied",
       "documentCopyFailed": "Could not copy waybill number",
