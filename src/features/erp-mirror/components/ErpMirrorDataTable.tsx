@@ -11,9 +11,14 @@ export function ErpMirrorDataTable<T extends { id: number }>({ title, descriptio
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1); const [pageSize, setPageSize] = useState(25);
   const [searchInput, setSearchInput] = useState(''); const [search, setSearch] = useState(''); const [syncing, setSyncing] = useState(false);
-  useEffect(() => { const timer = window.setTimeout(() => { setSearch(searchInput.trim()); setPage(1); }, 350); return () => window.clearTimeout(timer); }, [searchInput]);
+  useEffect(() => { const timer = window.setTimeout(() => { setSearch(searchInput); setPage(1); }, 350); return () => window.clearTimeout(timer); }, [searchInput]);
   const queryKey = useMemo(() => ['erp-mirror', resource, page, pageSize, search], [resource, page, pageSize, search]);
-  const query = useQuery({ queryKey, queryFn: () => getErpMirrorPage<T>(resource, { page, pageSize, search: search || null }) });
+  const query = useQuery({ queryKey, queryFn: () => getErpMirrorPage<T>(resource, {
+    page,
+    pageSize,
+    search: search || null,
+    searchFields: search ? columns.map((column) => column.key) : undefined,
+  }) });
   const total = query.data?.totalCount ?? 0; const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const first = total === 0 ? 0 : (page - 1) * pageSize + 1; const last = Math.min(page * pageSize, total);
   const sync = async () => { setSyncing(true); try { await syncErpMirror(syncResource); await queryClient.invalidateQueries({ queryKey: ['erp-mirror', resource] }); } finally { setSyncing(false); } };

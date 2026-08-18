@@ -61,7 +61,7 @@ export function KkdOverrideManager(): ReactElement {
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      setSearch(searchInput.trim());
+      setSearch(searchInput);
       setPage(1);
     }, 350);
     return () => window.clearTimeout(timer);

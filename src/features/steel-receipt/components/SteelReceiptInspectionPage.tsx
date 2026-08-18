@@ -21,8 +21,8 @@ export function SteelReceiptInspectionPage(){
   const {t,i18n}=useTranslation('common');
   const gridLanguage=i18n.resolvedLanguage??i18n.language;
   const cache=useQueryClient();const [row,setRow]=useState<SteelLineRow|null>(null);const [batchInput,setBatchInput]=useState('');const [batchSearch,setBatchSearch]=useState('');
-  const batches=useQuery({queryKey:['steel-inspection-batch-search',batchSearch],enabled:batchSearch.length>=2,
-    queryFn:()=>steelReceiptApi.linesPaged({pageNumber:1,pageSize:50,search:batchSearch,filterLogic:'and',filters:[],sortBy:'lineNo',sortDirection:'asc'})});
+  const batches=useQuery({queryKey:['steel-inspection-batch-search',batchSearch],enabled:batchSearch.trim().length>=2,
+    queryFn:()=>steelReceiptApi.linesPaged({pageNumber:1,pageSize:50,search:batchSearch,searchFields:['dCode','stockCode','importReferenceNo','supplierSerialNo'],filterLogic:'and',filters:[],sortBy:'lineNo',sortDirection:'asc'})});
   const columns=useMemo<GridColumn<SteelLineRow>[]>(()=>[...systemColumns<SteelLineRow>(),
     {key:'dCode',label:t(`${G}.dCode`),render:r=><span className="font-mono font-bold text-cyan-500">{r.dCode}</span>},
     {key:'supplierSerialNo',label:t(`${G}.supplierSerialNo`),render:r=><><strong>{r.supplierSerialNo}</strong><small className="block text-slate-500">{r.secondarySerialNo||'-'}</small></>},
@@ -51,8 +51,8 @@ export function SteelReceiptInspectionPage(){
         </Link>
       </div>
     </section>
-    <section className="my-5 rounded-2xl border bg-[var(--wms-app-surface)] p-5"><p className="text-xs font-bold uppercase tracking-[.2em] text-cyan-500">{t(`${P}.findBatchStep`)}</p><div className="mt-4 flex gap-2"><input className="input" value={batchInput} onChange={e=>setBatchInput(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')setBatchSearch(batchInput.trim())}} placeholder={t(`${P}.searchPlaceholder`)}/><button onClick={()=>setBatchSearch(batchInput.trim())} className="rounded-xl bg-cyan-600 px-5 font-bold text-white">{t(`${P}.searchButton`)}</button></div>
-    {batchSearch.length>=2&&<div className="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-3">{(batches.data?.items??[]).map(item=><button key={item.id} onClick={()=>setRow(item)} className="rounded-xl border p-3 text-left hover:border-cyan-500"><strong className="font-mono text-cyan-500">{item.dCode}</strong><span className="ml-2 text-sm">{item.stockCode}</span><small className="block text-slate-500">{item.importReferenceNo} · {item.supplierSerialNo} · {localizeEnumValue(item.inspectionStatus)}</small></button>)}{!batches.isLoading&&!batches.data?.items.length&&<p className="text-sm text-slate-500">{t(`${P}.noMatch`)}</p>}</div>}</section>
+    <section className="my-5 rounded-2xl border bg-[var(--wms-app-surface)] p-5"><p className="text-xs font-bold uppercase tracking-[.2em] text-cyan-500">{t(`${P}.findBatchStep`)}</p><div className="mt-4 flex gap-2"><input className="input" value={batchInput} onChange={e=>setBatchInput(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')setBatchSearch(batchInput)}} placeholder={t(`${P}.searchPlaceholder`)}/><button onClick={()=>setBatchSearch(batchInput)} className="rounded-xl bg-cyan-600 px-5 font-bold text-white">{t(`${P}.searchButton`)}</button></div>
+    {batchSearch.trim().length>=2&&<div className="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-3">{(batches.data?.items??[]).map(item=><button key={item.id} onClick={()=>setRow(item)} className="rounded-xl border p-3 text-left hover:border-cyan-500"><strong className="font-mono text-cyan-500">{item.dCode}</strong><span className="ml-2 text-sm">{item.stockCode}</span><small className="block text-slate-500">{item.importReferenceNo} · {item.supplierSerialNo} · {localizeEnumValue(item.inspectionStatus)}</small></button>)}{!batches.isLoading&&!batches.data?.items.length&&<p className="text-sm text-slate-500">{t(`${P}.noMatch`)}</p>}</div>}</section>
     <AdvancedDataGrid pageKey="steel-receipt-inspection" title={t(`${G}.title`)} description={t(`${G}.description`)} columns={columns} fetchPage={steelReceiptApi.linesPaged}/>{row&&<InspectionDialog row={row} close={()=>setRow(null)} done={()=>void done()}/>}</div>;
 }
 export function InspectionDialog({row,close,done}:{row:SteelLineRow;close:()=>void;done:()=>void}){

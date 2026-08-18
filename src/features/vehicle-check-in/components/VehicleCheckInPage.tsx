@@ -267,6 +267,7 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
       pageNumber:1,
       pageSize:500,
       search:candidateSearch?.value||null,
+      searchFields:['dCode','supplierSerialNo','secondarySerialNo','stockCode','stockName','importReferenceNo','sourceFileName','netsisOrderNo'],
       filterLogic:'and',
       filters:[],
       sortBy:candidateSortBy,
@@ -324,7 +325,7 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
     const q=sheetInput.trim();
     if(q.length<2)return;
     const timer=window.setTimeout(()=>{
-      setCandidateSearch(current=>({value:q,run:(current?.run??0)+1}));
+      setCandidateSearch(current=>({value:sheetInput,run:(current?.run??0)+1}));
     },400);
     return ()=>window.clearTimeout(timer);
   },[sheetInput]);
@@ -345,7 +346,7 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
       toast.error(t('vehicleCheckIn.toast.sheetCountRange',{defaultValue:'Tek araç kabulünde SAC levha adedi 1-50 arasında olmalıdır.'}));
       return;
     }
-    setCandidateSearch(current=>({value:sheetInput.trim(),run:(current?.run??0)+1}));
+    setCandidateSearch(current=>({value:sheetInput,run:(current?.run??0)+1}));
   };
 
   const remainingSelectionSlots=Math.max(0,form.steelSheetCount-savedAcceptedCount);

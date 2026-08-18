@@ -1349,7 +1349,7 @@ function RequestFilterPickerDialog({
   const [pickedId, setPickedId] = useState<string | null>(selectedId);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setDebouncedSearch(search.trim()), 250);
+    const timer = window.setTimeout(() => setDebouncedSearch(search), 250);
     return () => window.clearTimeout(timer);
   }, [search]);
 
