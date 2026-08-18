@@ -2,9 +2,10 @@ import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import {useQuery,useQueryClient} from '@tanstack/react-query';
 import {Link} from 'react-router-dom';
 import {useTranslation} from 'react-i18next';
-import {ArrowRight,CheckCircle2,ExternalLink,FileText,Layers3,Loader2,Printer,Search} from 'lucide-react';
+import {ArrowRight,CheckCircle2,ExternalLink,FileText,Globe2,Layers3,Loader2,Printer,Search} from 'lucide-react';
 import {toast} from 'sonner';
 import {AppDateInput} from '@/components/shared/AppInput';
+import {AppDropdown} from '@/components/shared/AppDropdown';
 import {PagedAppDropdown} from '@/components/shared/PagedAppDropdown';
 import {OperationDraftRestoreDialog} from '@/features/operation-drafts/OperationDraftRestoreDialog';
 import {useOperationDraft} from '@/features/operation-drafts/useOperationDraft';
@@ -17,7 +18,7 @@ import {formatProjectDateTime,formatProjectNumber} from '@/lib/project-format';
 import {useAuthStore} from '@/stores/auth-store';
 import {StockIdentityCell} from '@/components/shared/StockIdentityCell';
 import {steelReceiptApi} from '../api/steel-receipt.api';
-import type {ConvertResult,SteelLineRow,SteelPendingPlacementSource,SteelPendingReceiptSource,SteelReceiptSource} from '../types/steel-receipt.types';
+import type {ConvertResult,SteelLineRow,SteelPendingPlacementSource,SteelPendingReceiptSource,SteelReceiptSource,SteelReceiptTradeType} from '../types/steel-receipt.types';
 import {
   fetchPlacementImportSourcesPage,
   filterPlacementLinesBySearch,
@@ -35,6 +36,7 @@ import {
   hasPendingReceiptLines,
   hasSteelReceiptReceiptDraft,
   isReceiptSourceStillPending,
+  isSteelReceiptTradeSelectionValid,
   restoreSelectedLines,
   type LoadReceiptSourceOptions,
   type SteelReceiptReceiptDraft,
@@ -65,6 +67,8 @@ function ReceiptPanel(){
   const [isElectronic,setIsElectronic]=useState(true);
   const [receiptNo,setReceiptNo]=useState('');
   const [documentDate,setDocumentDate]=useState(today);
+  const [tradeType,setTradeType]=useState<SteelReceiptTradeType>('Domestic');
+  const [importFileNumber,setImportFileNumber]=useState('');
   const [lastResult,setLastResult]=useState<ConvertResult|null>(null);
   const [printing,setPrinting]=useState(false);
   const [busy,setBusy]=useState(false);
@@ -76,6 +80,16 @@ function ReceiptPanel(){
   const selectedRows=Object.values(selected);
   const total=selectedRows.reduce((sum,row)=>sum+row.approvedQuantity,0);
   const receiptNoValid=isValidGoodsReceiptDocumentNo(receiptNo);
+  const openImportFiles=useQuery({
+    queryKey:['netsis-import-open-files'],
+    queryFn:steelReceiptApi.openImportFiles,
+    enabled:tradeType==='Foreign',
+    staleTime:30_000,
+  });
+  const importFileIsOpen=tradeType==='Domestic'||Boolean(openImportFiles.data?.some(
+    file=>file.fileNumber.trim().toUpperCase()===importFileNumber.trim().toUpperCase(),
+  ));
+  const tradeSelectionValid=isSteelReceiptTradeSelectionValid(tradeType,importFileNumber)&&importFileIsOpen;
   const eligible=(row:SteelLineRow)=>(
     (row.inspectionStatus==='Approved'||row.inspectionStatus==='PartiallyApproved')
     &&row.approvedQuantity>0
@@ -151,6 +165,8 @@ function ReceiptPanel(){
     setIsElectronic(draft.isElectronic);
     setReceiptNo(draft.receiptNo);
     setDocumentDate(draft.documentDate);
+    setTradeType(draft.tradeType??'Domestic');
+    setImportFileNumber(draft.importFileNumber??'');
     void loadSourceRef.current(draft.importReferenceNo,{
       silent:true,
       preserveResult:true,
@@ -166,7 +182,9 @@ function ReceiptPanel(){
     isElectronic,
     receiptNo,
     documentDate,
-  }),[documentDate,isElectronic,note,receiptNo,reference,selected,selectedSourceReference,source?.importReferenceNo]);
+    tradeType,
+    importFileNumber,
+  }),[documentDate,importFileNumber,isElectronic,note,receiptNo,reference,selected,selectedSourceReference,source?.importReferenceNo,tradeType]);
   const operationDraft=useOperationDraft({
     operationType:'steel-receipt-direct',
     userId,
@@ -199,11 +217,13 @@ function ReceiptPanel(){
   const convert=async()=>{
     if(!selectedRows.length||!source)return;
     if(!receiptNoValid||!documentDate){toast.error(isElectronic?t(`${R}.waybillValidationElectronic`):t(`${R}.waybillValidationPaper`));return}
+    if(!tradeSelectionValid){toast.error(t(`${R}.importFileRequired`));return}
     setBusy(true);
     try{
       const result=await steelReceiptApi.convert(source.planId,selectedRows.map(x=>x.id),{
         idempotencyKey:idempotencyKey.current,mode:'Direct',documentDate,
         waybillNo:isElectronic?undefined:receiptNo,electronicWaybillNo:isElectronic?receiptNo:undefined,
+        tradeType,importFileNumber:tradeType==='Foreign'?importFileNumber:undefined,
         description:note,priority:1,assignedUserIds:[],assignToAllActiveUsers:false,
       });
       toast.success(t(`${R}.convertSuccess`,{documentNo:result.documentNo,count:result.convertedLineCount}));
@@ -328,6 +348,43 @@ function ReceiptPanel(){
 
       <aside className="h-fit space-y-4 rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5"><SectionHead title={t(`${R}.directReceiptTitle`)} text={t(`${R}.directReceiptText`)}/>
       <Metric label={t(`${R}.selectedSheets`)} value={String(selectedRows.length)}/><Metric label={t(`${R}.totalApprovedQty`)} value={formatProjectNumber(total)}/><Metric label={t(`${R}.sacPlan`)} value={source.importReferenceNo}/><Metric label={t(`${R}.lastConversionWaybill`)} value={lastConversionWaybill??'—'} valueClassName="font-mono"/>
+      <section className="space-y-3 rounded-xl border border-violet-500/20 bg-violet-500/5 p-3">
+        <div className="flex items-start gap-2"><Globe2 className="mt-0.5 size-5 text-violet-500"/><div><strong className="text-sm">{t(`${R}.tradeTypeLabel`)}</strong><p className="text-xs text-slate-500">{t(`${R}.tradeTypeText`)}</p></div></div>
+        <AppDropdown<SteelReceiptTradeType>
+          value={tradeType}
+          onValueChange={value=>{setTradeType(value);setImportFileNumber('')}}
+          options={[
+            {value:'Domestic',label:t(`${R}.tradeTypeDomestic`)},
+            {value:'Foreign',label:t(`${R}.tradeTypeForeign`)},
+          ]}
+          ariaLabel={t(`${R}.tradeTypeLabel`)}
+          testId="steel-receipt-trade-type"
+        />
+        {tradeType==='Foreign'&&<Field label={t(`${R}.importFileLabel`)}>
+          <AppDropdown
+            value={importFileNumber}
+            onValueChange={setImportFileNumber}
+            options={(openImportFiles.data??[]).map(file=>({
+              value:file.fileNumber,
+              label:`${file.fileNumber} · ${file.customerName??file.customerCode}`,
+              description:file.deliveryCustomerName
+                ?`${file.customerCode} → ${file.deliveryCustomerName} (${file.deliveryCustomerCode??'—'})`
+                :file.customerCode,
+            }))}
+            searchable
+            isLoading={openImportFiles.isLoading}
+            disabled={openImportFiles.isLoading}
+            placeholder={t(`${R}.importFilePlaceholder`)}
+            emptyText={t(`${R}.importFileEmpty`)}
+            searchPlaceholder={t(`${R}.importFileSearchPlaceholder`)}
+            errorText={openImportFiles.isError?t(`${R}.importFileLoadFailed`):undefined}
+            onRetry={()=>openImportFiles.refetch()}
+            ariaLabel={t(`${R}.importFileLabel`)}
+            testId="steel-receipt-import-file"
+          />
+          {importFileNumber&&!importFileIsOpen&&!openImportFiles.isLoading&&!openImportFiles.isError&&<p className="text-xs font-semibold text-red-600">{t(`${R}.importFileClosed`)}</p>}
+        </Field>}
+      </section>
       <section className="space-y-3 rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3">
         <div className="flex items-start gap-2"><FileText className="mt-0.5 size-5 text-cyan-500"/><div><strong className="text-sm">{t(`${R}.waybillInfoTitle`)}</strong><p className="text-xs text-slate-500">{t(`${R}.waybillInfoText`)}</p></div></div>
         <label className="flex cursor-pointer items-center gap-3 rounded-xl border bg-[var(--wms-app-panel)] p-3"><input type="checkbox" checked={isElectronic} onChange={event=>setIsElectronic(event.target.checked)} className="size-4 accent-cyan-500"/><span className="text-sm font-bold">{t(`${R}.electronicWaybill`)}</span></label>
@@ -335,7 +392,7 @@ function ReceiptPanel(){
         <Field label={t(`${R}.waybillDate`)}><AppDateInput value={documentDate} onChange={event=>setDocumentDate(event.target.value)}/></Field>
       </section>
       <Field label={t(`${R}.orderNote`)}><textarea className="input min-h-24" value={note} onChange={e=>setNote(e.target.value)} placeholder={t(`${R}.orderNotePlaceholder`)}/></Field>
-      <button disabled={busy||!selectedRows.length||!receiptNoValid||!documentDate} onClick={()=>void convert()} className="w-full rounded-xl bg-emerald-600 px-4 py-3 font-bold text-white disabled:opacity-40">{busy?<Loader2 className="mr-2 inline size-4 animate-spin"/>:<ArrowRight className="mr-2 inline size-4"/>}{t(`${R}.completeDirectReceipt`)}</button>
+      <button disabled={busy||!selectedRows.length||!receiptNoValid||!documentDate||!tradeSelectionValid} onClick={()=>void convert()} className="w-full rounded-xl bg-emerald-600 px-4 py-3 font-bold text-white disabled:opacity-40">{busy?<Loader2 className="mr-2 inline size-4 animate-spin"/>:<ArrowRight className="mr-2 inline size-4"/>}{t(`${R}.completeDirectReceipt`)}</button>
       {lastResult&&<section className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4"><div className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 size-5 text-emerald-500"/><div><strong className="block">{lastResult.documentNo}</strong><small className="text-slate-500">{t(`${R}.receiptCompletedNote`)}</small></div></div>{(lastResult.generatedLabelIds?.length??0)>0&&<button type="button" disabled={printing} onClick={()=>void printLabels()} className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-violet-500/40 px-3 py-2 text-sm font-bold text-violet-500 disabled:opacity-40">{printing?<Loader2 className="size-4 animate-spin"/>:<Printer className="size-4"/>}{t(`${R}.printReceiptLabels`)}</button>}</section>}
     </aside>
     </div>}
