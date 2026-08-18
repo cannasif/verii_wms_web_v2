@@ -414,6 +414,13 @@ export const productionTransferApi = {
         splits,
       },
     )),
+  refreshRacklessBalance: async (
+    id: number,
+    taskLineId: number,
+  ): Promise<ProductionTransferPickingTable> =>
+    unwrap(await api.post<Envelope<ProductionTransferPickingTable>>(
+      `/api/production-transfers/${id}/task-lines/${taskLineId}/rackless-balance-split`,
+    )),
   unpickToLocation: async (
     id: number,
     payload: {

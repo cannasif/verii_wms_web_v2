@@ -33,6 +33,13 @@ import { ProductionTaskStartShortageDialog } from './ProductionTaskStartShortage
 import { useProductionTaskStart } from '../hooks/useProductionTaskStart';
 import { buildProductionTransferBulkPickPlan } from '../production-transfer-bulk-pick';
 import {
+  applyRacklessPickQuantityCap,
+  expandRacklessPartialShortageRows,
+  hasRacklessRowShortage,
+  resolveRacklessStockBalanceTone,
+  type RacklessStockBalanceTone,
+} from '../production-transfer-rackless-picking';
+import {
   canSelectProductionTransferPickingRow,
   countProductionTransferPickingRows,
   filterProductionTransferPickingRows,
@@ -165,48 +172,6 @@ function matchesPickingRowSelectionKey(row: ProductionTransferPickingRow, select
   if (key === selectedKey) return true;
   // UI split satırları seçildiğinde API satırına eşle.
   return `${key}:stocked` === selectedKey || `${key}:shortage` === selectedKey;
-}
-
-/** Rafsız: bakiyeli / bakiyesiz parçayı raflı rota bölmesi gibi iki satırda göster (yalnızca UI). */
-function expandRacklessPartialShortageRows(
-  rows: ProductionTransferPickingRow[],
-  availableLookup: ReadonlyMap<string, number>,
-): ProductionTransferPickingRow[] {
-  const expanded: ProductionTransferPickingRow[] = [];
-  for (const row of rows) {
-    if (isSerialRow(row) || row.remainingQuantity <= 0 || row.displaySplit) {
-      expanded.push(row);
-      continue;
-    }
-    const available = row.sourceLocationId
-      ? availableLookup.get(`${row.stockId}|${row.sourceLocationId}`) ?? 0
-      : 0;
-    const pickable = Math.max(0, Math.min(row.remainingQuantity, available));
-    const missing = Math.max(0, row.remainingQuantity - available);
-    if (pickable <= 0 || missing <= 0) {
-      expanded.push(row);
-      continue;
-    }
-    expanded.push({
-      ...row,
-      requestedQuantity: pickable,
-      remainingQuantity: pickable,
-      processedQuantity: 0,
-      canPick: Boolean(row.sourceLocationId),
-      displaySplit: 'stocked',
-    });
-    expanded.push({
-      ...row,
-      sourceLocationId: undefined,
-      sourceLocationCode: undefined,
-      requestedQuantity: missing,
-      remainingQuantity: missing,
-      processedQuantity: 0,
-      canPick: false,
-      displaySplit: 'shortage',
-    });
-  }
-  return expanded;
 }
 
 function serialRouteCandidateKey(candidate: ProductionTransferRouteRefreshCandidate): string {
@@ -528,37 +493,6 @@ function shouldAutoPickWithoutConfirm(
   return quantity > 0 && quantity <= Math.floor(threshold);
 }
 
-function onHandQuantity(location: {
-  quantity?: number;
-  availableQuantity: number;
-  reservedQuantity?: number;
-}): number {
-  if (location.quantity != null && Number.isFinite(location.quantity)) {
-    return Math.max(0, location.quantity);
-  }
-  return Math.max(0, location.availableQuantity + (location.reservedQuantity ?? 0));
-}
-
-/** Rafsız: barkod üst sınırını raftaki fiziksel bakiyeyle (rezerve dahil) sınırla. Raflıya dokunmaz. */
-function applyRacklessPickQuantityCap(
-  match: ResolveProductionTransferBarcodeResult,
-  availableLookup: ReadonlyMap<string, number>,
-  enabled: boolean,
-): ResolveProductionTransferBarcodeResult {
-  if (!enabled) return match;
-  const available = match.sourceLocationId
-    ? availableLookup.get(`${match.stockId}|${match.sourceLocationId}`) ?? 0
-    : 0;
-  const cappedMax = Math.max(0, Math.min(match.maxPickQuantity, available));
-  const cappedDefault = Math.max(0, Math.min(match.defaultQuantity, cappedMax));
-  if (cappedMax === match.maxPickQuantity && cappedDefault === match.defaultQuantity) return match;
-  return {
-    ...match,
-    maxPickQuantity: cappedMax,
-    defaultQuantity: cappedDefault,
-  };
-}
-
 export function ProductionTransferPickingSection({ transferId, execution, onExecutionChange }: Props) {
   const { t } = useModuleTranslation('production-transfer');
   const queryClient = useQueryClient();
@@ -795,7 +729,7 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
     const map = new Map<string, number>();
     stockIds.forEach((stockId, index) => {
       for (const location of stockLocationQueries[index]?.data ?? []) {
-        map.set(`${stockId}|${location.locationId}`, onHandQuantity(location));
+        map.set(`${stockId}|${location.locationId}`, Math.max(0, location.availableQuantity));
       }
     });
     return map;
@@ -1457,7 +1391,7 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
     }
   };
 
-  /** Rafsız: seçili stok bakiyesini yeniden çek; UI satır ayrımı (yeşil/sarı) güncellenir. Raflı rotaya dokunmaz. */
+  /** Rafsız: seçili stokun bakiyeli/bakiyesiz satırlarını kalıcı günceller. Raflı rotaya dokunmaz. */
   const refreshRacklessStockBalance = async () => {
     if (!isSourceRackless || !selectedRow || table?.isLocked || selectedRow.remainingQuantity <= 0) return;
     if (warehouseId <= 0) {
@@ -1466,6 +1400,11 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
     }
     setBusy(true);
     try {
+      const nextTable = await productionTransferApi.refreshRacklessBalance(
+        transferId,
+        selectedRow.taskLineId,
+      );
+      setTable(nextTable);
       await queryClient.refetchQueries({
         queryKey: ['production-pick-stock-locations', branchCode, warehouseId, selectedRow.stockId, 'on-hand'],
       });
@@ -2734,30 +2673,9 @@ function PickingRowTabs({
   );
 }
 
-/** Rafsız: fiziksel bakiye (rezerve dahil) yoksa eksik. Raflıda availabilityReady kapalı kalır. */
-function hasRowShortage(
-  row: ProductionTransferPickingRow,
-  availableLookup: ReadonlyMap<string, number>,
-): boolean {
-  if (row.remainingQuantity <= 0) return false;
-  const available = row.sourceLocationId
-    ? availableLookup.get(`${row.stockId}|${row.sourceLocationId}`) ?? 0
-    : 0;
-  return available <= 0;
-}
-
-type RacklessStockBalanceTone = 'shortage' | 'stocked';
-
-function resolveRacklessStockBalanceTone(
-  row: ProductionTransferPickingRow,
-  availableLookup: ReadonlyMap<string, number>,
-  availabilityReady: boolean,
-): RacklessStockBalanceTone | null {
-  if (row.remainingQuantity <= 0) return null;
-  const shortage = availabilityReady
-    ? hasRowShortage(row, availableLookup)
-    : !row.sourceLocationId;
-  return shortage ? 'shortage' : 'stocked';
+/** Rafsız: toplanabilir işaret yoksa eksik. Raflıda availabilityReady kapalı kalır. */
+function hasRowShortage(row: ProductionTransferPickingRow): boolean {
+  return hasRacklessRowShortage(row);
 }
 
 function RacklessStockBalanceIcon({ tone }: { tone: RacklessStockBalanceTone }) {
@@ -2804,8 +2722,6 @@ function PickingLocationCell({
   row,
   serialDetail = false,
   completedShelf,
-  availableLookup,
-  availabilityReady = false,
   showShelfLocationCodes = true,
 }: {
   row: ProductionTransferPickingRow;
@@ -2839,9 +2755,7 @@ function PickingLocationCell({
     );
   }
 
-  const shortage = availabilityReady
-    ? hasRowShortage(row, availableLookup)
-    : row.remainingQuantity > 0 && !row.sourceLocationId;
+  const shortage = row.remainingQuantity > 0 && hasRowShortage(row);
 
   if (shortage) {
     return (
@@ -2883,8 +2797,6 @@ function PickingLocationCell({
 
 function PickingLocationSummaryCell({
   rows,
-  availableLookup,
-  availabilityReady = false,
   showShelfLocationCodes = true,
 }: {
   rows: ProductionTransferPickingRow[];
@@ -2894,19 +2806,9 @@ function PickingLocationSummaryCell({
 }) {
   const remaining = rows.reduce((sum, row) => sum + row.remainingQuantity, 0);
   const locationLabel = showShelfLocationCodes ? summarizeSerialLocations(rows) : '—';
-  const hasShortage = availabilityReady
-    ? rows.some((row) => hasRowShortage(row, availableLookup))
-    : rows.some((row) => row.remainingQuantity > 0 && !row.sourceLocationId);
+  const hasShortage = rows.some((row) => hasRowShortage(row));
   // Raflı: stoklu satır varsa raf kodu, yoksa üçgen. Rafsız: stoklu satır varsa "—", hepsi stoksuzsa üçgen.
-  const hasStockedRemaining = availabilityReady
-    ? rows.some((row) => {
-      if (row.remainingQuantity <= 0) return false;
-      const available = row.sourceLocationId
-        ? availableLookup.get(`${row.stockId}|${row.sourceLocationId}`) ?? 0
-        : 0;
-      return available > 0;
-    })
-    : rows.some((row) => row.remainingQuantity > 0 && Boolean(row.sourceLocationId));
+  const hasStockedRemaining = rows.some((row) => row.remainingQuantity > 0 && !hasRowShortage(row));
 
   if (hasShortage && !hasStockedRemaining && locationLabel === '—' && remaining > 0) {
     return (
@@ -3019,11 +2921,11 @@ function SerialStockGroup({
   const racklessGroupTone = useMemo((): RacklessStockBalanceTone | null => {
     if (showShelfLocationCodes || locked) return null;
     const tones = rows
-      .map((row) => resolveRacklessStockBalanceTone(row, availableLookup, availabilityReady))
+      .map((row) => resolveRacklessStockBalanceTone(row))
       .filter((tone): tone is RacklessStockBalanceTone => tone != null);
     if (tones.length === 0) return null;
     return tones.every((item) => item === 'shortage') ? 'shortage' : 'stocked';
-  }, [availabilityReady, availableLookup, locked, rows, showShelfLocationCodes]);
+  }, [locked, rows, showShelfLocationCodes]);
 
   useEffect(() => {
     if (highlightedLineNo && rows.some((row) => row.lineNo === highlightedLineNo)) {
@@ -3167,7 +3069,7 @@ function PickingRow({
   const canSelect = canSelectProductionTransferPickingRow(row, pickTab, locked);
   const isCompletedTab = pickTab === 'completed';
   const racklessTone = !showShelfLocationCodes && !locked
-    ? resolveRacklessStockBalanceTone(row, availableLookup, availabilityReady)
+    ? resolveRacklessStockBalanceTone(row)
     : null;
   return (
     <tr

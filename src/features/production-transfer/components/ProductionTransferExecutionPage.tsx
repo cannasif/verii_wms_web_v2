@@ -13,6 +13,7 @@ import { ProductionTransferPickingSection } from './ProductionTransferPickingSec
 import { ProductionTransferReturnSection } from './ProductionTransferReturnSection';
 import { ErpPostingPanel, ErpPostingTriggerButton } from './ProductionTransferErpPostingControls';
 import { productionTransferCanRetryErp } from '../production-transfer-erp-posting';
+import { groupProductionTransferHandoverDisplayLines } from '../production-transfer-handover-display';
 import { PRODUCTION_WORK_ORDERS_MY_ASSIGNMENTS_URL } from '@/features/production/components/ProductionWorkOrderTransferTabPanel';
 
 export function ProductionTransferExecutionPage({
@@ -182,7 +183,7 @@ export function ProductionTransferExecutionPage({
       />
     )}
 
-    {handoverStage && <section className="wms-ops-form-card p-5">
+    {handoverStage && !showReturnSection && <section className="wms-ops-form-card p-5">
       {canResumePicking ? (
         <button
           type="button"
@@ -232,7 +233,7 @@ export function ProductionTransferExecutionPage({
 function Step({ active, done, number, title, text }: { active: boolean; done: boolean; number: string; title: string; text: string }) { return <div className={cn('rounded-xl border p-4', active ? 'border-[var(--wms-brand-primary)] bg-[color-mix(in_oklab,var(--wms-brand-primary)_8%,transparent)]' : 'border-[var(--wms-app-border)]', done && 'border-emerald-500/40')}><div className="flex items-center gap-3"><span className={cn('grid size-9 place-items-center rounded-full text-xs font-black', done ? 'bg-emerald-500 text-white' : 'bg-[var(--wms-brand-primary)] text-[var(--wms-brand-on-primary)]')}>{done ? <CheckCircle2 className="size-5" /> : number}</span><span><strong className="block">{title}</strong><span className="text-xs text-[var(--wms-app-text-muted)]">{text}</span></span></div></div>; }
 
 function LineSummary({ execution }: { execution: ProductionTransferExecution }) {
-  const pickedLines = execution.lines.filter((line) => line.pickedQuantity > 0);
+  const displayLines = groupProductionTransferHandoverDisplayLines(execution.lines);
   return (
     <div className="mt-5 overflow-x-auto rounded-xl border border-[var(--wms-app-border)]">
       <table className="w-full min-w-[680px] text-sm">
@@ -245,8 +246,8 @@ function LineSummary({ execution }: { execution: ProductionTransferExecution }) 
             </tr>
           </thead>
           <tbody>
-            {pickedLines.map((line) => (
-              <tr key={line.lineId} className="border-t border-[var(--wms-app-border)]">
+            {displayLines.map((line) => (
+              <tr key={`${line.stockId}:${line.unitCode}:${line.trackingType}`} className="border-t border-[var(--wms-app-border)]">
                 <td className="p-3">
                   <strong>{line.stockCode}</strong>
                   <span className="block text-xs text-[var(--wms-app-text-muted)]">{line.stockName}</span>

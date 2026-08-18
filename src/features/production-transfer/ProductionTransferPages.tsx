@@ -401,7 +401,7 @@ function TransferReturnLocationPanel({branchCode}:{branchCode:string}){
     code="LOC_04"
     icon={<Warehouse className="size-4" strokeWidth={1.75}/>}
     title="Depo varsayılan üretim transfer rafları"
-    description="Üretim hedef rafı ve üretim iptal/iade rafı yalnız üretim transferi akışında kullanılır; normal depolar arası transfer ayarlarını değiştirmez. İptal/iade görevi açıldığında seçilen iade rafı satırlara otomatik önerilir ve görevde değiştirilebilir."
+    description="Üretim hedef rafı ve üretim iptal/iade rafı yalnız üretim transferi akışında kullanılır; normal depolar arası transfer ayarlarını değiştirmez. İptal iade görevinde satırın hedefi, ürünün toplandığı raf olarak önerilir ve görevde değiştirilebilir."
   >
     <div className="grid items-end gap-4 xl:grid-cols-[1fr_1fr_1fr_1fr_auto]">
       <PolicyField label="Depo">
@@ -427,7 +427,7 @@ function TransferReturnLocationPanel({branchCode}:{branchCode:string}){
       </PolicyField>
       <PolicyField
         label="Varsayılan üretim iptal/iade rafı"
-        hint="İptal edilen üretim transferinde bekleme rafındaki ürünler için başlangıç iade hedefidir. Görev açılınca otomatik gelir, görev sırasında değiştirilebilir ve normal DAT ayarını etkilemez."
+        hint="İptal iade görevinde satır hedefi ürünün toplandığı raftır. Bu alan depo varsayılanıdır; görevdeki öneriyi değiştirmez ve normal DAT ayarını etkilemez."
       >
         <div className="wms-ops-field-shell">
           <PagedAppDropdown<LocationOption> queryKey={['production-return-location',warehouseId]} fetchPage={r=>warehouseTransferApi.locations(r,warehouseId)} toOption={x=>({value:String(x.id),label:`${x.code} · ${x.name}`})} enabled={warehouseId>0} dependencies={[warehouseId]} value={returnLocationValue} onValueChange={setReturnLocationValue} placeholder="Raf seçin" searchable className={OPS_SELECT_TRIGGER_CLASS}/>
